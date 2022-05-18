@@ -398,7 +398,7 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: "F.1234",
-			Status:    &crypto_proto.GrrStatus{},
+			Status:    &crypto_proto.VeloStatus{},
 		})
 	runner.Close()
 
@@ -579,8 +579,8 @@ func (self *ServerTestSuite) TestErrorMessage() {
 			Source:    self.client_id,
 			SessionId: flow_id,
 			RequestId: constants.ProcessVQLResponses,
-			Status: &crypto_proto.GrrStatus{
-				Status:       crypto_proto.GrrStatus_GENERIC_ERROR,
+			Status: &crypto_proto.VeloStatus{
+				Status:       crypto_proto.VeloStatus_GENERIC_ERROR,
 				ErrorMessage: "Error generated.",
 				Backtrace:    "I am a backtrace",
 			},
@@ -624,8 +624,8 @@ func (self *ServerTestSuite) TestCompletions() {
 			Source:    self.client_id,
 			SessionId: flow_id,
 			RequestId: constants.ProcessVQLResponses,
-			Status: &crypto_proto.GrrStatus{
-				Status: crypto_proto.GrrStatus_OK,
+			Status: &crypto_proto.VeloStatus{
+				Status: crypto_proto.VeloStatus_OK,
 			},
 		})
 	runner.Close()
@@ -648,8 +648,8 @@ func (self *ServerTestSuite) TestCompletions() {
 			Source:    self.client_id,
 			SessionId: flow_id,
 			RequestId: constants.ProcessVQLResponses,
-			Status: &crypto_proto.GrrStatus{
-				Status: crypto_proto.GrrStatus_OK,
+			Status: &crypto_proto.VeloStatus{
+				Status: crypto_proto.VeloStatus_OK,
 			},
 		})
 	runner.Close()

@@ -136,6 +136,10 @@ func (self *Builder) withAutoCertFrontendSelfSignedGUI(
 		}
 	}
 
+	if !config_obj.Frontend.ServerServices.FrontendServer {
+		return nil
+	}
+
 	// Launch a server for the frontend.
 	mux := http.NewServeMux()
 
@@ -162,9 +166,11 @@ func (self *Builder) WithAutocertGUI(
 
 	mux := http.NewServeMux()
 
-	err := server.PrepareFrontendMux(self.config_obj, self.server_obj, mux)
-	if err != nil {
-		return err
+	if self.config_obj.Frontend.ServerServices.FrontendServer {
+		err := server.PrepareFrontendMux(self.config_obj, self.server_obj, mux)
+		if err != nil {
+			return err
+		}
 	}
 
 	router, err := PrepareGUIMux(ctx, self.config_obj, mux)
@@ -190,10 +196,13 @@ func startSharedSelfSignedFrontend(
 		return errors.New("Frontend not configured")
 	}
 
-	err := server.PrepareFrontendMux(config_obj, server_obj, mux)
-	if err != nil {
-		return err
+	if config_obj.Frontend.ServerServices.FrontendServer {
+		err := server.PrepareFrontendMux(config_obj, server_obj, mux)
+		if err != nil {
+			return err
+		}
 	}
+
 	router, err := PrepareGUIMux(ctx, config_obj, mux)
 	if err != nil {
 		return err
@@ -239,6 +248,10 @@ func startSelfSignedFrontend(
 		if err != nil {
 			return err
 		}
+	}
+
+	if !config_obj.Frontend.ServerServices.FrontendServer {
+		return nil
 	}
 
 	// Launch a server for the frontend.

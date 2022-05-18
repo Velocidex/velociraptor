@@ -30,6 +30,10 @@ message VQLEnv {
 // This is the most common type of message - it specifies a query to
 // run on the endpoint.
 message VQLCollectorArgs {
+    // Number of this request compared to the entire collection.
+    int64 query_id = 32;
+    int64 total_queries = 33;
+
     // If this is specified we run this query first and if it returns
     // any rows we continue with the real query.
     string precondition = 29;

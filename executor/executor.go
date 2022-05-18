@@ -217,8 +217,8 @@ func makeErrorResponse(output chan *crypto_proto.VeloMessage,
 		SessionId:  req.SessionId,
 		RequestId:  req.RequestId,
 		ResponseId: 1,
-		Status: &crypto_proto.GrrStatus{
-			Status:       crypto_proto.GrrStatus_GENERIC_ERROR,
+		Status: &crypto_proto.VeloStatus{
+			Status:       crypto_proto.VeloStatus_GENERIC_ERROR,
 			ErrorMessage: message,
 		},
 	}

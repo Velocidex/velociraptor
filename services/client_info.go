@@ -73,6 +73,9 @@ func (self ClientInfo) OS() ClientOS {
 }
 
 type ClientInfoManager interface {
+	// Used to set a new client record.
+	Set(client_info *ClientInfo) error
+
 	Get(client_id string) (*ClientInfo, error)
 
 	GetStats(client_id string) (*Stats, error)

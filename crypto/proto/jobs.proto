@@ -63,7 +63,7 @@ message VeloMessage {
 
   // Generally only one of the following will be set.
   // Client to server:
-  GrrStatus status = 25;
+  VeloStatus status = 25;
   ForemanCheckin ForemanCheckin = 27;  // Upon initial connection.
   FileBuffer FileBuffer = 28;  // For uploads.
   Certificate CSR = 29;   // For enrollment.
@@ -96,7 +96,7 @@ message VeloMessage {
   // The rdfvalue class of the args.
   string args_rdf_name = 14;
 
-  // DEPRECATED: Status messages just carry the GrrStatus member.
+  // DEPRECATED: Status messages just carry the VeloStatus member.
   enum Type {
     MESSAGE = 0; // The main kind of message.
     STATUS = 1; //
@@ -125,7 +125,7 @@ message Certificate {
 
 // This is a status response that is sent for each complete
 // transaction. It is always the last message in the transaction.
-message GrrStatus {
+message VeloStatus {
     // Velociraptor only uses OK and GENERIC_ERROR right now.
     enum ReturnedStatus {
         OK = 0;
@@ -140,6 +140,21 @@ message GrrStatus {
 
     // Total duration the query took to run on the client.
     int64 duration = 4;
+
+    // Return statistics about the request
+
+    // A List of artifacts that had some results.
+    repeated string names_with_response = 5;
+
+    // How many log rows we generated
+    int64 log_rows = 6;
+
+    int64 result_rows = 7;
+
+    // This status corresponds to this query number out of the total
+    // in this collection.
+    int64 query_id = 8;
+    int64 total_queries = 9;
 };
 
 // This is a list of job messages.
@@ -274,14 +289,16 @@ message ClientCommunication {
 };
 
 message LogMessage {
-  string message = 1 [(sem_type) = {
-      description: "The message to send to the server.",
-    }];
+    int64 id = 5;
 
-  uint64 timestamp = 2 [(sem_type) = {
-      description: "The time when the message was generated.",
-      type: "RDFDatetime",
-    }];
+    string message = 1 [(sem_type) = {
+            description: "The message to send to the server.",
+        }];
+
+    uint64 timestamp = 2 [(sem_type) = {
+            description: "The time when the message was generated.",
+            type: "RDFDatetime",
+        }];
 
     // The artifact name that we were running at the time.
     string artifact = 3;
@@ -291,6 +308,7 @@ message LogMessage {
         ERROR = 1;
         DEBUG = 2;
     }
+
     Level level = 4;
 }
 

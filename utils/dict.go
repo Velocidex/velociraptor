@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"reflect"
+	"strconv"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
@@ -22,8 +24,19 @@ func _get(dict *ordereddict.Dict, key string) (*ordereddict.Dict, string) {
 	for _, member := range components[:len(components)-1] {
 		result, pres := dict.Get(member)
 		if !pres {
-			return ordereddict.NewDict(), ""
+			// Maybe it is an array
+			if reflect.TypeOf(dict).Kind() == reflect.Slice {
+				a_value := reflect.ValueOf(dict)
+				index, err := strconv.Atoi(member)
+				if err == nil && index > 0 && index < a_value.Len() {
+					result = a_value.Index(index).Interface()
+				}
+
+			} else {
+				return ordereddict.NewDict(), ""
+			}
 		}
+
 		nested, ok := result.(*ordereddict.Dict)
 		if !ok {
 			return ordereddict.NewDict(), ""

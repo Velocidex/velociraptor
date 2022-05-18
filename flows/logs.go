@@ -10,6 +10,7 @@ import (
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	utils "www.velocidex.com/golang/velociraptor/utils"
@@ -59,8 +60,7 @@ func flushContextLogs(
 	file_store_factory := file_store.GetFileStore(config_obj)
 	rs_writer, err := result_sets.NewResultSetWriter(
 		file_store_factory, flow_path_manager,
-		nil, /* opts */
-		completion.GetCompletionFunc(),
+		json.NoEncOpts, completion.GetCompletionFunc(),
 		false /* truncate */)
 	if err != nil {
 		return err

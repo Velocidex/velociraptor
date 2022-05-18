@@ -214,7 +214,11 @@ func createDownloadFile(
 	lock_file.Write([]byte("X"))
 	lock_file.Close()
 
-	flow_details, err := flows.GetFlowDetails(config_obj, client_id, flow_id)
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return nil, err
+	}
+	flow_details, err := launcher.GetFlowDetails(config_obj, client_id, flow_id)
 	if err != nil {
 		return nil, err
 	}
@@ -276,7 +280,11 @@ func downloadFlowToZip(
 	flow_id string,
 	zip_writer *cryptozip.Writer) error {
 
-	flow_details, err := flows.GetFlowDetails(config_obj, client_id, flow_id)
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return err
+	}
+	flow_details, err := launcher.GetFlowDetails(config_obj, client_id, flow_id)
 	if err != nil {
 		return err
 	}

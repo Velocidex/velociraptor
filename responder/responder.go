@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"runtime/debug"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"google.golang.org/protobuf/proto"
@@ -30,6 +31,7 @@ import (
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -60,9 +62,15 @@ type Responder struct {
 	request    *crypto_proto.VeloMessage
 	logger     *logging.LogContext
 	start_time int64
+	log_id     int64
 
 	// The name of the query we are currently running.
 	Artifact string
+
+	// Keep track of stats to fill into the Status message
+	names_with_response []string
+	log_rows            int64
+	result_rows         int64
 }
 
 // NewResponder returns a new Responder.
@@ -88,10 +96,48 @@ func (self *Responder) Copy() *Responder {
 	}
 }
 
+func (self *Responder) updateStats(message *crypto_proto.VeloMessage) {
+	if message.LogMessage != nil {
+		self.log_rows++
+		return
+	}
+
+	if message.VQLResponse != nil {
+		self.result_rows = int64(message.VQLResponse.QueryStartRow +
+			message.VQLResponse.TotalRows)
+
+		if message.VQLResponse.Query != nil && !utils.InString(
+			self.names_with_response, message.VQLResponse.Query.Name) {
+			self.names_with_response = append(self.names_with_response,
+				message.VQLResponse.Query.Name)
+		}
+	}
+}
+
+func (self *Responder) getStatus() *crypto_proto.VeloStatus {
+	self.Lock()
+	defer self.Unlock()
+
+	status := &crypto_proto.VeloStatus{
+		NamesWithResponse: self.names_with_response,
+		LogRows:           self.log_rows,
+		ResultRows:        self.result_rows,
+		Duration:          time.Now().UnixNano() - self.start_time,
+	}
+
+	if self.request.VQLClientAction != nil {
+		status.QueryId = self.request.VQLClientAction.QueryId
+		status.TotalQueries = self.request.VQLClientAction.TotalQueries
+	}
+
+	return status
+}
+
 func (self *Responder) AddResponse(
 	ctx context.Context, message *crypto_proto.VeloMessage) {
 	self.Lock()
 	output := self.output
+	self.updateStats(message)
 	self.Unlock()
 
 	message.QueryId = self.request.QueryId
@@ -114,21 +160,19 @@ func (self *Responder) AddResponse(
 }
 
 func (self *Responder) RaiseError(ctx context.Context, message string) {
-	self.AddResponse(ctx, &crypto_proto.VeloMessage{
-		Status: &crypto_proto.GrrStatus{
-			Backtrace:    string(debug.Stack()),
-			ErrorMessage: message,
-			Status:       crypto_proto.GrrStatus_GENERIC_ERROR,
-			Duration:     time.Now().UnixNano() - self.start_time,
-		}})
+	status := self.getStatus()
+	status.Backtrace = string(debug.Stack())
+	status.ErrorMessage = message
+	status.Status = crypto_proto.VeloStatus_GENERIC_ERROR
+
+	self.AddResponse(ctx, &crypto_proto.VeloMessage{Status: status})
 }
 
 func (self *Responder) Return(ctx context.Context) {
-	self.AddResponse(ctx, &crypto_proto.VeloMessage{
-		Status: &crypto_proto.GrrStatus{
-			Status:   crypto_proto.GrrStatus_OK,
-			Duration: time.Now().UnixNano() - self.start_time,
-		}})
+	status := self.getStatus()
+	status.Status = crypto_proto.VeloStatus_OK
+
+	self.AddResponse(ctx, &crypto_proto.VeloMessage{Status: status})
 }
 
 // Send a log message to the server.
@@ -136,10 +180,12 @@ func (self *Responder) Log(ctx context.Context, format string, v ...interface{})
 	self.AddResponse(ctx, &crypto_proto.VeloMessage{
 		RequestId: constants.LOG_SINK,
 		LogMessage: &crypto_proto.LogMessage{
+			Id:        atomic.LoadInt64(&self.log_id),
 			Message:   fmt.Sprintf(format, v...),
 			Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
 			Artifact:  self.Artifact,
 		}})
+	atomic.AddInt64(&self.log_id, 1)
 }
 
 func (self *Responder) SessionId() string {
@@ -168,7 +214,7 @@ func NormalizeVeloMessageForBackwardCompatibility(msg *crypto_proto.VeloMessage)
 
 	// Messages from client to server here.
 	case "GrrStatus":
-		msg.Status = &crypto_proto.GrrStatus{}
+		msg.Status = &crypto_proto.VeloStatus{}
 		return proto.Unmarshal(msg.Args, msg.Status)
 
 	case "ForemanCheckin":

@@ -466,8 +466,8 @@ func (self *TestSuite) TestCollectionCompletionErrorLogWithOkStatus() {
 		{
 			SessionId: self.flow_id,
 			RequestId: 1,
-			Status: &crypto_proto.GrrStatus{
-				Status:   crypto_proto.GrrStatus_OK,
+			Status: &crypto_proto.VeloStatus{
+				Status:   crypto_proto.VeloStatus_OK,
 				Duration: 100,
 			},
 		},
@@ -500,8 +500,8 @@ func (self *TestSuite) TestCollectionCompletionOkStatus() {
 		{
 			SessionId: self.flow_id,
 			RequestId: 1,
-			Status: &crypto_proto.GrrStatus{
-				Status:   crypto_proto.GrrStatus_OK,
+			Status: &crypto_proto.VeloStatus{
+				Status:   crypto_proto.VeloStatus_OK,
 				Duration: 100,
 			},
 		},
@@ -537,8 +537,8 @@ func (self *TestSuite) TestCollectionCompletionSuccessFollowedByErrLog() {
 			{
 				SessionId: self.flow_id,
 				RequestId: 1,
-				Status: &crypto_proto.GrrStatus{
-					Status:   crypto_proto.GrrStatus_OK,
+				Status: &crypto_proto.VeloStatus{
+					Status:   crypto_proto.VeloStatus_OK,
 					Duration: 100,
 				},
 			},
@@ -563,8 +563,8 @@ func (self *TestSuite) TestCollectionCompletionSuccessFollowedByErrLog() {
 			{
 				SessionId: self.flow_id,
 				RequestId: 1,
-				Status: &crypto_proto.GrrStatus{
-					Status:   crypto_proto.GrrStatus_OK,
+				Status: &crypto_proto.VeloStatus{
+					Status:   crypto_proto.VeloStatus_OK,
 					Duration: 200,
 				},
 			},
@@ -636,8 +636,8 @@ func (self *TestSuite) TestCollectionCompletionTwoSourcesIncomplete() {
 		&crypto_proto.VeloMessage{
 			SessionId: self.flow_id,
 			RequestId: 1,
-			Status: &crypto_proto.GrrStatus{
-				Status:   crypto_proto.GrrStatus_GENERIC_ERROR,
+			Status: &crypto_proto.VeloStatus{
+				Status:   crypto_proto.VeloStatus_GENERIC_ERROR,
 				Duration: 100,
 			},
 		})
@@ -686,8 +686,8 @@ func (self *TestSuite) TestCollectionCompletionTwoSourcesIncomplete() {
 		&crypto_proto.VeloMessage{
 			SessionId: self.flow_id,
 			RequestId: 1,
-			Status: &crypto_proto.GrrStatus{
-				Status:   crypto_proto.GrrStatus_OK,
+			Status: &crypto_proto.VeloStatus{
+				Status:   crypto_proto.VeloStatus_OK,
 				Duration: 100,
 			},
 		})

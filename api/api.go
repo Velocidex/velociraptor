@@ -51,7 +51,6 @@ import (
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
-	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -91,7 +90,11 @@ func (self *ApiServer) CancelFlow(
 			"User is not allowed to cancel flows.")
 	}
 
-	result, err := flows.CancelFlow(
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return nil, err
+	}
+	result, err := launcher.CancelFlow(
 		ctx, self.config, in.ClientId, in.FlowId, user_name)
 	if err != nil {
 		return nil, err
@@ -105,41 +108,6 @@ func (self *ApiServer) CancelFlow(
 			"flow_id": in.FlowId,
 			"details": fmt.Sprintf("%v", in),
 		}).Info("CancelFlow")
-
-	return result, nil
-}
-
-func (self *ApiServer) ArchiveFlow(
-	ctx context.Context,
-	in *api_proto.ApiFlowRequest) (*api_proto.StartFlowResponse, error) {
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
-
-	defer Instrument("ArchiveFlow")()
-
-	permissions := acls.COLLECT_CLIENT
-	if in.ClientId == "server" {
-		permissions = acls.COLLECT_SERVER
-	}
-
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
-	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
-			"User is not allowed to archive flows.")
-	}
-
-	result, err := flows.ArchiveFlow(self.config, in.ClientId, in.FlowId, user_name)
-	if err != nil {
-		return nil, err
-	}
-
-	// Log this event as and Audit event.
-	logging.GetLogger(self.config, &logging.Audit).
-		WithFields(logrus.Fields{
-			"user":    user_name,
-			"client":  in.ClientId,
-			"flow_id": in.FlowId,
-			"details": fmt.Sprintf("%v", in),
-		}).Info("ArchiveFlow")
 
 	return result, nil
 }
@@ -359,7 +327,11 @@ func (self *ApiServer) GetFlowDetails(
 			"User is not allowed to launch flows.")
 	}
 
-	result, err := flows.GetFlowDetails(self.config, in.ClientId, in.FlowId)
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return nil, err
+	}
+	result, err := launcher.GetFlowDetails(self.config, in.ClientId, in.FlowId)
 	return result, err
 }
 
@@ -377,7 +349,11 @@ func (self *ApiServer) GetFlowRequests(
 			"User is not allowed to view flows.")
 	}
 
-	result, err := flows.GetFlowRequests(self.config, in.ClientId, in.FlowId,
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return nil, err
+	}
+	result, err := launcher.GetFlowRequests(self.config, in.ClientId, in.FlowId,
 		in.Offset, in.Count)
 	return result, err
 }

@@ -12,7 +12,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
@@ -55,7 +54,11 @@ func WriteFlowReport(
 
 	parts := []*ReportPart{}
 
-	flow_details, err := flows.GetFlowDetails(config_obj, client_id, flow_id)
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return err
+	}
+	flow_details, err := launcher.GetFlowDetails(config_obj, client_id, flow_id)
 	if err != nil {
 		return err
 	}

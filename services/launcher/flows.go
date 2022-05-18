@@ -15,17 +15,14 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package flows
+package launcher
 
 import (
 	"context"
 	"sort"
 	"time"
 
-	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
@@ -33,21 +30,15 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
-var (
-	clientCancellationCounter = promauto.NewCounter(prometheus.CounterOpts{
-		Name: "client_flow_cancellations",
-		Help: "Total number of client cancellation messages sent.",
-	})
-)
-
 // Filter will be applied on flows to remove those we dont care about.
-func GetFlows(
+func (self *Launcher) GetFlows(
 	config_obj *config_proto.Config,
 	client_id string, include_archived bool,
 	flow_filter func(flow *flows_proto.ArtifactCollectorContext) bool,
@@ -128,7 +119,7 @@ func GetFlows(
 	return result, nil
 }
 
-func GetFlowDetails(
+func (self *Launcher) GetFlowDetails(
 	config_obj *config_proto.Config,
 	client_id string, flow_id string) (*api_proto.FlowDetails, error) {
 	if flow_id == "" || client_id == "" {
@@ -215,7 +206,7 @@ func getAvailableDownloadFiles(config_obj *config_proto.Config,
 	return result, nil
 }
 
-func CancelFlow(
+func (self *Launcher) CancelFlow(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id, flow_id, username string) (
@@ -224,16 +215,9 @@ func CancelFlow(
 		return &api_proto.StartFlowResponse{}, nil
 	}
 
-	collection_context, err := LoadCollectionContext(
+	collection_context, err := flows.LoadCollectionContext(
 		config_obj, client_id, flow_id)
 	if err == nil {
-		defer func() {
-			close_err := closeContext(config_obj, collection_context)
-			if err == nil {
-				err = close_err
-			}
-		}()
-
 		if collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING {
 			return nil, errors.New("Flow is not in the running state. " +
 				"Can only cancel running flows.")
@@ -242,7 +226,16 @@ func CancelFlow(
 		collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
 		collection_context.Status = "Cancelled by " + username
 		collection_context.Backtrace = ""
-		collection_context.Dirty = true
+
+		flow_path_manager := paths.NewFlowPathManager(
+			collection_context.ClientId, collection_context.SessionId)
+
+		db, err := datastore.GetDB(config_obj)
+		if err == nil {
+			db.SetSubjectWithCompletion(
+				config_obj, flow_path_manager.Path(),
+				collection_context, nil)
+		}
 	}
 
 	// Get all queued tasks for the client and delete only those in this flow.
@@ -270,7 +263,6 @@ func CancelFlow(
 
 	// Queue a cancellation message to the client for this flow
 	// id.
-	clientCancellationCounter.Inc()
 	err = client_manager.QueueMessageForClient(client_id,
 		&crypto_proto.VeloMessage{
 			Cancel:    &crypto_proto.Cancel{},
@@ -285,54 +277,7 @@ func CancelFlow(
 	}, nil
 }
 
-func ArchiveFlow(
-	config_obj *config_proto.Config,
-	client_id string, flow_id string, username string) (
-	res *api_proto.StartFlowResponse, err error) {
-	if flow_id == "" || client_id == "" {
-		return &api_proto.StartFlowResponse{}, nil
-	}
-
-	collection_context, err := LoadCollectionContext(
-		config_obj, client_id, flow_id)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		close_err := closeContext(config_obj, collection_context)
-		if err == nil {
-			err = close_err
-		}
-	}()
-
-	if collection_context.State != flows_proto.ArtifactCollectorContext_FINISHED &&
-		collection_context.State != flows_proto.ArtifactCollectorContext_ERROR {
-		return nil, errors.New("Flow must be stopped before it can be archived.")
-	}
-
-	collection_context.State = flows_proto.ArtifactCollectorContext_ARCHIVED
-	collection_context.Status = "Archived by " + username
-	collection_context.Backtrace = ""
-	collection_context.Dirty = true
-
-	// Keep track of archived flows so they can be purged later.
-	row := ordereddict.NewDict().
-		Set("Timestamp", time.Now().UTC().Unix()).
-		Set("Flow", collection_context)
-
-	journal, err := services.GetJournal()
-	if err != nil {
-		return nil, err
-	}
-
-	return &api_proto.StartFlowResponse{
-			FlowId: flow_id,
-		}, journal.PushRowsToArtifact(config_obj,
-			[]*ordereddict.Dict{row},
-			"System.Flow.Archive", client_id, flow_id)
-}
-
-func GetFlowRequests(
+func (self *Launcher) GetFlowRequests(
 	config_obj *config_proto.Config,
 	client_id string, flow_id string,
 	offset uint64, count uint64) (*api_proto.ApiFlowRequestDetails, error) {

@@ -31,6 +31,8 @@ message FlowDetails {
 // artifacts - they only interprect raw VQL as compiled by the server.
 message ApiFlowRequestDetails {
     repeated VeloMessage items = 1;
+    string client_id = 2;
+    string flow_id = 3;
 }
 
 message ApiFlowResultDetails {
