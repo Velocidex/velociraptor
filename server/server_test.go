@@ -688,7 +688,10 @@ func (self *ServerTestSuite) TestCancellation() {
 	assert.Equal(t, len(tasks), 2)
 
 	// Cancelling the flow will notify the client immediately.
-	response, err := flows.CancelFlow(
+	launcher, err := services.GetLauncher()
+	assert.NoError(t, err)
+
+	response, err := launcher.CancelFlow(
 		context.Background(),
 		self.ConfigObj, self.client_id, flow_id, "username")
 	require.NoError(t, err)
@@ -757,50 +760,6 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
 	err = db.GetSubject(self.ConfigObj, path_manager.Path(), collection_context)
 	require.Error(t, err, os.ErrNotExist)
-}
-
-// Test flow archiving
-func (self *ServerTestSuite) TestFlowArchives() {
-	t := self.T()
-
-	db, err := datastore.GetDB(self.ConfigObj)
-	require.NoError(t, err)
-
-	// Schedule a flow in the database.
-	flow_id, err := self.createArtifactCollection()
-	require.NoError(t, err)
-
-	// Attempt to archive a running flow.
-	_, err = flows.ArchiveFlow(
-		self.ConfigObj, self.client_id, flow_id, "username")
-	require.Error(t, err)
-
-	// Cancelling the flow will notify the client immediately.
-
-	// Now cancel the same flow.
-	response, err := flows.CancelFlow(
-		context.Background(),
-		self.ConfigObj, self.client_id, flow_id, "username")
-	require.NoError(t, err)
-	require.Equal(t, response.FlowId, flow_id)
-
-	// Now archive the flow - should work because the flow is terminated.
-	res, err := flows.ArchiveFlow(
-		self.ConfigObj, self.client_id, flow_id, "username")
-	require.NoError(t, err)
-	require.Equal(t, res.FlowId, flow_id)
-
-	// The flow must be marked as archived.
-	collection_context := &flows_proto.ArtifactCollectorContext{}
-	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
-	err = db.GetSubject(self.ConfigObj, path_manager.Path(), collection_context)
-	require.NoError(t, err)
-
-	require.Regexp(t, regexp.MustCompile("Archived by username"),
-		collection_context.Status)
-
-	require.Equal(self.T(), flows_proto.ArtifactCollectorContext_ARCHIVED,
-		collection_context.State)
 }
 
 func TestServerTestSuite(t *testing.T) {

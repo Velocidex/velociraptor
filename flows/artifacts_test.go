@@ -125,7 +125,7 @@ func (self *TestSuite) TestGetFlow() {
 
 	// Get all the responses - ask for 100 results if available
 	// but only 40 are there.
-	api_response, err := GetFlows(self.ConfigObj,
+	api_response, err := launcher.GetFlows(self.ConfigObj,
 		self.client_id, true,
 		func(flow *flows_proto.ArtifactCollectorContext) bool {
 			return true
@@ -136,7 +136,7 @@ func (self *TestSuite) TestGetFlow() {
 	assert.Equal(self.T(), 40, len(api_response.Items))
 
 	// Now only get Generic.Client.Info flows by applying a filter.
-	api_response, err = GetFlows(self.ConfigObj,
+	api_response, err = launcher.GetFlows(self.ConfigObj,
 		self.client_id, true,
 		func(flow *flows_proto.ArtifactCollectorContext) bool {
 			return flow.Request.Artifacts[0] == "Generic.Client.Info"

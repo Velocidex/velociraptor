@@ -30,7 +30,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -206,6 +205,30 @@ func getAvailableDownloadFiles(config_obj *config_proto.Config,
 	return result, nil
 }
 
+// Load the collector context from storage.
+func LoadCollectionContext(
+	config_obj *config_proto.Config,
+	client_id, flow_id string) (*flows_proto.ArtifactCollectorContext, error) {
+
+	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
+	collection_context := &flows_proto.ArtifactCollectorContext{}
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	err = db.GetSubject(
+		config_obj, flow_path_manager.Path(), collection_context)
+	if err != nil {
+		return nil, err
+	}
+
+	if collection_context.SessionId == "" {
+		return nil, errors.New("Unknown flow " + client_id + " " + flow_id)
+	}
+	return collection_context, nil
+}
+
 func (self *Launcher) CancelFlow(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -215,7 +238,7 @@ func (self *Launcher) CancelFlow(
 		return &api_proto.StartFlowResponse{}, nil
 	}
 
-	collection_context, err := flows.LoadCollectionContext(
+	collection_context, err := LoadCollectionContext(
 		config_obj, client_id, flow_id)
 	if err == nil {
 		if collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING {

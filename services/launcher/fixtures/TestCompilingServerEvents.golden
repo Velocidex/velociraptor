@@ -1,5 +1,7 @@
 [
  {
+  "query_id": 1,
+  "total_queries": 2,
   "env": [
    {
     "key": "Foo",
@@ -27,6 +29,8 @@
   "max_row": 1000
  },
  {
+  "query_id": 2,
+  "total_queries": 2,
   "env": [
    {
     "key": "Foo",

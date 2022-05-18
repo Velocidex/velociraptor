@@ -1,6 +1,8 @@
 {
  "WithPreconditions": [
   {
+   "query_id": 1,
+   "total_queries": 1,
    "precondition": "SELECT * FROM info() WHERE FALSE\n",
    "Query": [
     {
@@ -29,6 +31,8 @@
  ],
  "WithoutPreconditions": [
   {
+   "query_id": 1,
+   "total_queries": 1,
    "Query": [
     {
      "VQL": "LET Test_Artifact_Precondition_Source1_0_0 = SELECT 1 AS A FROM scope()"

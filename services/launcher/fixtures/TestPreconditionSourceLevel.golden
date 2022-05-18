@@ -1,6 +1,8 @@
 {
  "WithPreconditions": [
   {
+   "query_id": 1,
+   "total_queries": 2,
    "Query": [
     {
      "VQL": "LET Test_Artifact_Precondition_Source1_0_0 = SELECT 1 AS A FROM scope()"
@@ -13,6 +15,8 @@
    "max_row": 1000
   },
   {
+   "query_id": 2,
+   "total_queries": 2,
    "precondition": "SELECT * FROM info() WHERE FALSE\n",
    "Query": [
     {
@@ -31,6 +35,8 @@
  ],
  "WithoutPreconditions": [
   {
+   "query_id": 1,
+   "total_queries": 2,
    "Query": [
     {
      "VQL": "LET Test_Artifact_Precondition_Source1_0_0 = SELECT 1 AS A FROM scope()"
@@ -43,6 +49,8 @@
    "max_row": 1000
   },
   {
+   "query_id": 2,
+   "total_queries": 2,
    "Query": [
     {
      "VQL": "LET Test_Artifact_Precondition_Source2_0_0 = SELECT 2 AS A FROM scope()"
