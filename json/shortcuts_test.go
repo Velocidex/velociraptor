@@ -19,3 +19,12 @@ func TestJsonlShortcuts(t *testing.T) {
 		Set("Malformed2", string(AppendJsonlItem([]byte("}\n"), "bar", 2)))
 	goldie.Assert(t, "TestJsonlShortcuts", MustMarshalIndent(result))
 }
+
+func TestJsonFormat(t *testing.T) {
+	obj := ordereddict.NewDict().Set("Foo", "Bar")
+	subquery := Format(`{"Foo": %q}`, "Bar")
+
+	query := Format(`{"a": %q, "b": %q, "integer": %q, "string": %q, "subquery": %s}`,
+		obj, obj, 1, "hello", subquery)
+	goldie.Assert(t, "TestJsonFormat", []byte(query))
+}

@@ -69,6 +69,7 @@ message VeloMessage {
   Certificate CSR = 29;   // For enrollment.
   VQLResponse VQLResponse = 33;
   LogMessage LogMessage = 34;
+  Cancel     Ping = 39;
 
   // Server to client:
   VQLEventTable UpdateEventTable = 31;

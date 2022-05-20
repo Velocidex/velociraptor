@@ -284,6 +284,11 @@ func send_to_elastic(
 		return
 	}
 
+	if res == nil {
+		scope.Log("elastic: %v", err)
+		return
+	}
+
 	response := make(map[string]interface{})
 	b1, err := ioutil.ReadAll(res.Body)
 	if err == nil {
