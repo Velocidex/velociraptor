@@ -91,8 +91,13 @@ func (self *EventTable) _Close() {
 		self.cancel = nil
 	}
 
-	// Wait here until all the old queries are cancelled.
-	self.wg.Wait()
+	// Wait here until all the old queries are cancelled. Do not hold
+	// the lock while we are waiting or the event table will be
+	// deadlocked.
+	wg := self.wg
+	self.mu.Unlock()
+	wg.Wait()
+	self.mu.Lock()
 
 	// Get ready for the next run.
 	self.wg = &sync.WaitGroup{}
@@ -101,6 +106,10 @@ func (self *EventTable) _Close() {
 func (self *EventTable) Get() *flows_proto.ArtifactCollectorArgs {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	if self.request == nil {
+		return &flows_proto.ArtifactCollectorArgs{}
+	}
 
 	return proto.Clone(self.request).(*flows_proto.ArtifactCollectorArgs)
 }

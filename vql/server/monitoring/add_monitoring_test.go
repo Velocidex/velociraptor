@@ -30,6 +30,16 @@ name: Linux.Events.SSHLogin
 type: CLIENT_EVENT
 parameters:
  - name: syslogAuthLogPath
+`, `
+name: System.Hunt.Creation
+type: SERVER_EVENT
+sources:
+- query: SELECT * FROM scope()
+`, `
+name: Server.Monitor.Health
+type: SERVER_EVENT
+sources:
+- query: SELECT * FROM scope()
 `,
 	}
 )
@@ -40,13 +50,13 @@ type MonitoringTestSuite struct {
 
 func (self *MonitoringTestSuite) SetupTest() {
 	self.TestSuite.SetupTest()
+	self.LoadArtifacts(definitions)
+
 	require.NoError(self.T(), self.Sm.Start(
 		client_monitoring.StartClientMonitoringService))
 
 	require.NoError(self.T(), self.Sm.Start(
 		server_monitoring.StartServerMonitoringService))
-
-	self.LoadArtifacts(definitions)
 }
 
 func (self *MonitoringTestSuite) TestAddClientMonitoringNoPermissions() {
