@@ -627,6 +627,7 @@ class ShellViewer extends Component {
                     <textarea focus-me="controller.focus" rows="1"
                               className="form-control"
                               placeholder="Run command on client"
+                              spellCheck="false"
                               value={this.state.command}
                               onChange={(e) => this.setText(e)}>
                     </textarea> :

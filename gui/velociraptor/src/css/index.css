@@ -12,11 +12,11 @@ code {
 #content {
   position: absolute;
   left: 0;
-  top: 51px;
+  top: 50px;
   bottom: 40px;
   right: 0;
   min-width: 1024px;
   min-height: 400px;
-  background-color: var(--color-default-background);
+  background-color: var(--color-canvas-background);
   margin-left: var(--sidebar-collapsed-width);
 }

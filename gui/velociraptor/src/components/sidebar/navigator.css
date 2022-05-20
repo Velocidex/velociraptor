@@ -3,8 +3,8 @@
   padding: 0px;
 }
 
-.navbar  .space-right {
-    margin-right: 10px;
+.navbar .space-right {
+  margin-right: 10px;
 }
 
 .navbar.navbar-static-top {
@@ -22,83 +22,91 @@
 }
 
 img.velo-logo {
-    height: 36px;
-    width: 29px;
-    margin: 5px;
+  height: 36px;
+  width: 29px;
+  margin: 5px;
 }
 
+/* sidebar navbar */
+
 section.navigator a {
- text-decoration: none;
-  color: var(--sidebar-icon-color);
+  text-decoration: none;
+  color: var(--color-sidebar-foreground);
 }
 
 .navigator.nav-pills.nav:hover li {
-   color: var(--sidebar-icon-color-hover);
+  color: var(--color-sidebar-foreground-inactive-hover);
 }
 
 a.active .navigator.nav-pills.nav:hover li {
-   color: var(--color-dashboard-background);
+  color: var(--color-sidebar-foreground-active-hover);
 }
 
 .navigator.nav-pills.nav li.disabled {
-    color: var(--sidebar-icon-color-disabled);
+  color: var(--color-sidebar-foreground-disabled);
 }
 
 .navigator.nav-pills.nav {
-    width: 200px;
+  font-weight: 400;
+  width: 220px;
 }
 
-a.active ul.navigator {
-    background-color: var(--sidebar-active-icon-background-color);
-    color: var(--color-dashboard-background);
+a.active .nav.nav-pills.navigator .nav-link {
+  background-color: var(--color-sidebar-active-background);
+  color: var(--color-sidebar-foreground-active-hover);
+}
+
+.nav-pills .nav-link {
+  font-weight: 400;
+  width: 220px;
 }
 
 button a.nav-link {
-    padding: 0px;
-    color: black;
+  padding: 0px;
+  color: black;
+}
+
+.nav-link {
+  padding: 0.5rem 1rem;
 }
 
 .navicon {
-    margin-right: 10px;
-    font-size: 18px;
+  margin-right: 18px;
 }
 
-
-/* sidebar navbar */
 #navigator {
-    height: 100%;
-    position: fixed;
-    z-index: 1000; /* Must be above everything else and below the modal shadow @ 1050; */
-    top: 46px;
-    left: 0;
-    overflow-x: hidden;
-    transition: 0.5s;
-    border-right: gray;
-    border-width: 3px;
-    border-right-style: solid;
-    background-color: var(--color-sidebar-background);
+  height: 100%;
+  position: fixed;
+  z-index: 1000; /* Must be above everything else and below the modal shadow @ 1050; */
+  top: 50px;
+  left: 0;
+  overflow-x: hidden;
+  transition: 0.5s;
+  border-right: gray;
+  border-width: 2px;
+  border-right-style: solid;
+  background-color: var(--color-sidebar-background);
 }
 
 div#navigator {
-    width: 200px;
-    overflow-x: hidden;
+  width: 220px;
+  overflow-x: hidden;
 }
 
-
 div#navigator.collapsed {
-    width: var(--sidebar-collapsed-width);
+  width: var(--sidebar-collapsed-width);
 }
 
 #navigator.uncollapsed {
-    width: 200px;
+  width: 220px;
 }
 
 span.hamburger {
-    float: left;
-    font-size: 30px;
-    cursor: pointer;
+  float: left;
+  font-size: 30px;
+  cursor: pointer;
 }
 
 a.disabled {
-    pointer-events: none;
+  pointer-events: none;
 }

@@ -82,6 +82,7 @@ class VeloClientSearch extends Component {
                     renderSuggestion={(x) => <div className="search-suggestions">{x}</div>}
                     inputProps={{
                         placeholder: "Search clients",
+                        spellCheck: "false",
                         id: this.props.id || "client-search-bar",
                         value: this.state.query,
                         onChange: (e) => {

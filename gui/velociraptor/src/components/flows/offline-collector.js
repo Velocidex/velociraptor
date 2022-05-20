@@ -90,6 +90,7 @@ class OfflineCollectorParameters  extends React.Component {
                     <Col sm="8">
                       <Form.Control as="input"
                                     placeholder="Password"
+                                    spellCheck="false"
                                     value={this.props.parameters.password}
                                     onChange={e => {
                                         this.props.parameters.password = e.target.value;
@@ -141,6 +142,7 @@ class OfflineCollectorParameters  extends React.Component {
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
                                       placeholder="Bucket name"
+                                      spellCheck="false"
                                       value={this.props.parameters.target_args.bucket}
                                       onChange={e => {
                                           this.props.parameters.target_args.bucket = e.target.value;
@@ -155,6 +157,7 @@ class OfflineCollectorParameters  extends React.Component {
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
                                       placeholder="GCS Blob"
+                                      spellCheck="false"
                                       value={this.props.parameters.target_args.GCSKey}
                                       onChange={e => {
                                           this.props.parameters.target_args.GCSKey = e.target.value;
@@ -171,6 +174,7 @@ class OfflineCollectorParameters  extends React.Component {
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
                                       placeholder="Bucket name"
+                                      spellCheck="false"
                                       value={this.props.parameters.target_args.bucket}
                                       onChange={e => {
                                           this.props.parameters.target_args.bucket = e.target.value;
@@ -185,6 +189,7 @@ class OfflineCollectorParameters  extends React.Component {
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
                                       placeholder="Credentials Key"
+                                      spellCheck="false"
                                       value={this.props.parameters.target_args.credentialsKey}
                                       onChange={e => {
                                           this.props.parameters.target_args.credentialsKey = e.target.value;
@@ -199,6 +204,7 @@ class OfflineCollectorParameters  extends React.Component {
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
                                       placeholder="Credentials Secret"
+                                      spellCheck="false"
                                       value={this.props.parameters.target_args.credentialsSecret}
                                       onChange={e => {
                                           this.props.parameters.target_args.credentialsSecret = e.target.value;
@@ -212,6 +218,7 @@ class OfflineCollectorParameters  extends React.Component {
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
                                       placeholder="Region"
+                                      spellCheck="false"
                                       value={this.props.parameters.target_args.region}
                                       onChange={e => {
                                           this.props.parameters.target_args.region = e.target.value;
@@ -225,6 +232,7 @@ class OfflineCollectorParameters  extends React.Component {
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
                                       placeholder="Endpoint (blank for AWS)"
+                                      spellCheck="false"
                                       value={this.props.parameters.target_args.endpoint}
                                       onChange={e => {
                                           this.props.parameters.target_args.endpoint = e.target.value;
@@ -273,6 +281,7 @@ class OfflineCollectorParameters  extends React.Component {
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
                                       placeholder="Upload Path"
+                                      spellCheck="false"
                                       value={this.props.parameters.target_args.path}
                                       onChange={e => {
                                           this.props.parameters.target_args.path = e.target.value;
@@ -287,6 +296,7 @@ class OfflineCollectorParameters  extends React.Component {
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
                                       placeholder="Private Key"
+                                      spellCheck="false"
                                       value={this.props.parameters.target_args.privatekey}
                                       onChange={e => {
                                           this.props.parameters.target_args.privatekey = e.target.value;
@@ -301,6 +311,7 @@ class OfflineCollectorParameters  extends React.Component {
                         <Col sm="8">
                             <Form.Control as="textarea" rows={3}
                                     placeholder="User"
+                                    spellCheck="false"
                                     value={this.props.parameters.target_args.user}
                                     onChange={e => {
                                         this.props.parameters.target_args.user = e.target.value;
@@ -315,6 +326,7 @@ class OfflineCollectorParameters  extends React.Component {
                         <Col sm="8">
                             <Form.Control as="textarea" rows={3}
                                     placeholder="Endpoint"
+                                    spellCheck="false"
                                     value={this.props.parameters.target_args.endpoint}
                                     onChange={e => {
                                         this.props.parameters.target_args.endpoint = e.target.value;
@@ -329,6 +341,7 @@ class OfflineCollectorParameters  extends React.Component {
                         <Col sm="8">
                           <Form.Control as="textarea" rows={3}
                             placeholder="Leave Blank to disable host key checking"
+                            spellCheck="false"
                             value={this.props.parameters.target_args.hostkey}
                                 onChange={(e) => {
                                     this.props.parameters.target_args.hostkey = e.target.value;
@@ -358,6 +371,7 @@ class OfflineCollectorParameters  extends React.Component {
                     <Col sm="8">
                       <Form.Control as="input"
                                     placeholder="Temp location"
+                                    spellCheck="false"
                                     value={this.props.parameters.opt_tempdir}
                                     onChange={e => {
                                         this.props.parameters.opt_tempdir = e.target.value;
@@ -399,6 +413,7 @@ class OfflineCollectorParameters  extends React.Component {
                     <Col sm="8">
                       <Form.Control as="input"
                                     placeholder="Output filename prefix"
+                                    spellCheck="false"
                                     value={this.props.parameters.opt_output_directory}
                                     onChange={e => {
                                         this.props.parameters.opt_output_directory = e.target.value;

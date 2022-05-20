@@ -1,10 +1,10 @@
-import './_variables.css';
+import './css/_variables.css';
 import 'bootstrap/dist/css/bootstrap.css';
-import './css/bootstrap-theme.css';
+// import './css/bootstrap-theme.css'; // obsolete since bootstrap v4. See https://github.com/twbs/bootstrap/issues/21078
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
+import './css/index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 

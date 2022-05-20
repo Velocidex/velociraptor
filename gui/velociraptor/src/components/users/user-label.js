@@ -25,7 +25,7 @@ class UserSettings extends React.PureComponent {
     componentDidMount = () => {
         if (this.context.traits) {
             this.setState({
-                theme: this.context.traits.theme || "light-mode",
+                theme: this.context.traits.theme || "veloci-light",
                 default_password: this.context.traits.default_password || "",
             });
         }
@@ -69,9 +69,15 @@ class UserSettings extends React.PureComponent {
                                           default_password: this.state.default_password,
                                       });
                                   }}>
-                      <option value="light-mode">Light (default)</option>
-                      <option value="dark-mode">Dark</option>
-                      <option value="light-pink">Strawberry Milkshake (light)</option>
+                      <option value="no-theme">No theme</option>
+                      <option value="veloci-light">Velociraptor (light)</option>
+                      <option value="veloci-dark">Velociraptor (dark)</option>
+                      {/* <option value="github-light">Github (light)</option> */}
+                      <option value="github-dark">Github (dark)</option>
+                      <option value="ncurses">Ncurses (light)</option>
+                      {/* <option value="limacharlie-light">LimaCharlie (light)</option> */}
+                      <option value="limacharlie-dark">LimaCharlie (dark)</option>
+                      <option value="pink-light">Strawberry Milkshake (light)</option>
                     </Form.Control>
                   </Col>
                 </Form.Group>
@@ -118,12 +124,21 @@ export default class UserLabel extends React.Component {
     setSettings = (options) => {
         // Set the ACE theme according to the theme so they match.
         let ace_options = JSON.parse(this.context.traits.ui_settings || "{}");
-        if (options.theme === "dark-mode") {
+        ace_options.fontSize = "14px";
+        if (options.theme === "veloci-dark") {
             ace_options.theme = "ace/theme/terminal";
-        } else if(options.theme === "light-mode") {
+        } else if(options.theme === "veloci-light") {
             ace_options.theme = "ace/theme/xcode";
-        } else if(options.theme === "light-pink") {
+        } else if(options.theme === "pink-light") {
           ace_options.theme = "ace/theme/xcode";
+        } else if(options.theme === "github-dark") {
+          ace_options.theme = "ace/theme/vibrant_ink";
+        } else if(options.theme === "github-light") {
+          ace_options.theme = "ace/theme/sqlserver";
+        } else if(options.theme === "limacharlie-dark") {
+          ace_options.theme = "ace/theme/nord_dark";
+        } else if(options.theme === "limacharlie-light") {
+          ace_options.theme = "ace/theme/iplastic";
         }
         options.options = JSON.stringify(ace_options);
 

@@ -166,6 +166,7 @@ export default class UploadFileForm extends Component {
                   <Form.Control as="textarea"
                                 rows={1}
                                 placeholder="Type a URL "
+                                spellCheck="false"
                                 onChange={(e) => {
                                     this.props.setValue(e.currentTarget.value);
                                 }}

@@ -11,14 +11,14 @@
 }
 
 .fill-parent.no-margins {
-    left: 0;
+    left: 5px;
     right: 0;
     top: 0;
     bottom: 0;
 }
 
 .fill-parent.toolbar-margin {
-    top: 48px !important;
+    top: 50px !important;
 }
 
 

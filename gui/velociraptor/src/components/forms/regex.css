@@ -10,7 +10,7 @@
     border-style: solid;
     border-width: 1px;
     padding: 4px;
-    border-color: var(--btn-default-border);
+    border-color: var(--color-btn-default-border);
     border-radius: 0.25rem;
     resize: vertical;
 }

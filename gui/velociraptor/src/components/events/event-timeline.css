@@ -22,11 +22,11 @@
 
 .event-report-viewer .react-calendar-timeline .rct-dateHeader {
     background: var(--color-timeline-header);
-    color: var(--color-default-font);
+    color: var(--color-text-default);
 }
 
 .super-timeline .react-calendar-timeline .rct-dateHeader-primary {
-    color: var(--color-default-font);
+    color: var(--color-text-default);
 }
 
 .super-timeline .hidden-header {
@@ -50,17 +50,17 @@ td.timeline-time {
 
 .timeline-item-1 {
     background: var(--color-timeline-1);
-    color: var(--color-default-font);
+    color: var(--color-text-default);
   }
 
 .timeline-item-2 {
     background: var(--color-timeline-2);
-    color: var(--color-default-font);
+    color: var(--color-text-default);
 }
 
 .timeline-item-3 {
     background: var(--color-timeline-3);
-    color: var(--color-default-font);
+    color: var(--color-text-default);
 }
 
 .timeline-item-4 {
@@ -80,7 +80,7 @@ td.timeline-time {
 }
 
 .timeline-marker {
-    background-color: var(--color-default-font);
+    background-color: var(--color-text-default);
     width: 5px;
 }
 
@@ -89,13 +89,13 @@ td.timeline-time {
 }
 
 .page-size-dropdown .disabled {
-    background-color: var(--sidebar-icon-color-disabled);
+    background-color: var(--color-sidebar-foreground-disabled);
 }
 
 
 .timeline-table .timestamp {
     max-height: 2ex;
-    overflow-y: hidden;
+    overflow-y: visible;
     display: block;
 }
 

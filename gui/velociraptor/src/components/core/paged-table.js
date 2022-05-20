@@ -70,6 +70,7 @@ const pageListRenderer = ({
             as="input"
             className="pagination-form"
             placeholder="Goto Page"
+            spellCheck="false"
             value={currentPage || ""}
             onChange={e=> {
                 let page = parseInt(e.currentTarget.value || 0);

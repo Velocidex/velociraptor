@@ -22,10 +22,16 @@ export class UserSettings extends React.Component {
             traits.username = response.data.username;
             this.setState({traits: traits});
 
-            document.body.classList.remove('dark-mode');
-            document.body.classList.remove('light-mode');
-            document.body.classList.remove('light-pink');
-            document.body.classList.add(traits.theme || "light-mode");
+            document.body.classList.remove('no-theme');
+            document.body.classList.remove('veloci-dark');
+            document.body.classList.remove('veloci-light');
+            document.body.classList.remove('pink-light');
+            document.body.classList.remove('github-dark');
+            document.body.classList.remove('github-light');
+            document.body.classList.remove('ncurses');
+            document.body.classList.remove('limacharlie-dark');
+            document.body.classList.remove('limacharlie-light');
+            document.body.classList.add(traits.theme || "veloci-light");
         });
     }
 

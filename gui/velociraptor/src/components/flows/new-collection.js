@@ -289,6 +289,7 @@ class NewCollectionSelectArtifacts extends React.Component {
                         options={this.state.favorite_options}
                         onChange={this.setFavorite_}
                         placeholder="Favorite Name"
+                        spellCheck="false"
                       />
                     }
                     { this.state.current_favorite ?

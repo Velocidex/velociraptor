@@ -93,6 +93,7 @@ class QuarantineDialog extends Component {
                   <Form.Group>
                       <Form.Control as="textarea"
                                     placeholder="Quarantine Message"
+                                    spellCheck="false"
                                     value={this.state.message}
                                     onChange={e=>this.setState(
                                         {message: e.target.value})}

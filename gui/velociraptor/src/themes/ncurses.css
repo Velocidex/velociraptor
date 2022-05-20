@@ -1,0 +1,224 @@
+
+@font-face {
+  font-family: "jetbrains-mono";
+  font-style: normal;
+  font-weight: 400;
+  src: local(""),
+    url("../fonts/JetBrainsMono-Medium.woff2") format("woff2");
+  font-display: block;
+}
+
+body.ncurses {
+  background-color: #0a2fc4;
+  color: #fff;
+  font-family: "Courier New", Courier, Consolas, "Liberation Mono", "Ubuntu Mono", monospace;
+  font-size: 14px;
+}
+
+/* https://prurigro.github.io/css-cursesmenu/ */
+
+/* https://poerror.github.io/ncurses-css/# */
+
+.ncurses h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-size: 14px;
+  font-weight: normal;
+}
+
+.ncurses a {
+  text-decoration: none;
+}
+
+.ncurses p {
+  margin: 0;
+}
+
+.ncurses .backtitle {
+  color: #68fdfe;
+  border-bottom: 1px solid #68fdfe;
+  margin: 10px 0;
+}
+
+.ncurses .box {
+  color: #000000;
+  width: 300px;
+  margin: 0 auto;
+  padding: 10px 5px;
+  background-color: #c7c7c7;
+  box-shadow: 15px 15px 0px #000000;
+}
+.ncurses .box .content {
+  position: relative;
+  padding: 10px;
+  border-top: 1px solid #ffffff;
+  border-right: 1px solid #000000;
+  border-bottom: 1px solid #000000;
+  border-left: 1px solid #ffffff;
+}
+.ncurses .box .content::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  border-width: 1px 2px 0px;
+  border-style: solid;
+  border-color: #000;
+}
+.ncurses .box .content::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: -1px;
+  border-width: 1px 2px 0px;
+  border-style: solid;
+  border-color: #fff;
+}
+.ncurses .box .title {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translate(-50%, 0);
+  background-color: #c7c7c7;
+  color: #6a76fb;
+}
+.ncurses .box .buttons {
+  position: relative;
+  margin: 10px -10px 0;
+  padding: 10px 10px 0;
+  border-top: 1px solid #fff;
+  text-align: center;
+}
+.ncurses .box .buttons::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  border-width: 1px 2px 0px;
+  border-style: solid;
+  border-color: #000;
+}
+.ncurses .box .buttons .btn {
+  color: #686868;
+}
+.ncurses .box .buttons .btn:hover,
+.ncurses .box .buttons .btn.active {
+  background-color: #0a2fc4;
+  color: #ffffff;
+}
+.ncurses .box .buttons .btn::before {
+  content: "\003c\0000a0";
+}
+.ncurses .box .buttons .btn::after {
+  content: "\0000a0\003e";
+}
+.ncurses .box ul.menu {
+  position: relative;
+  list-style: none;
+  counter-reset: section;
+  padding: 10px 5px;
+  border-bottom: 1px solid #ffffff;
+  border-left: 1px solid #000000;
+  border-top: 1px solid #000000;
+  border-right: 1px solid #ffffff;
+  margin-bottom: 70px;
+}
+.ncurses .box ul.menu::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  border-width: 1px 2px 0px;
+  border-style: solid;
+  border-color: #fff;
+}
+.ncurses .box ul.menu::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: -1px;
+  border-width: 1px 2px 0px;
+  border-style: solid;
+  border-color: #000;
+}
+.ncurses .box ul.menu li a {
+  margin-left: 20px;
+  color: #000000;
+}
+.ncurses .box ul.menu li.active a,
+.ncurses .box ul.menu li a:hover {
+  background-color: #0a2fc4;
+  color: #ffffff;
+}
+.ncurses .box ul.menu li::before {
+  position: absolute;
+  counter-increment: section;
+  content: counters(section, ".") " ";
+  color: #c71e14;
+}
+.ncurses .box ul.menu li.active::before,
+.ncurses .box ul.menu li:hover::before {
+  background-color: #0a2fc4;
+  color: #fd6f6b;
+}
+
+.ncurses .input-group {
+  position: relative;
+  margin-bottom: 10px;
+}
+.ncurses .input-group::before {
+  content: "";
+  position: absolute;
+  top: 21.5px;
+  right: 0px;
+  border-width: 1px 2px 0px;
+  border-style: solid;
+  border-color: #fff;
+}
+.ncurses .input-group::after {
+  content: "";
+  position: absolute;
+  bottom: 0px;
+  left: 0px;
+  border-width: 1px 2px 0px;
+  border-style: solid;
+  border-color: #000;
+}
+.ncurses .input-group label {
+  display: inline-block;
+  max-width: 100%;
+  margin-bottom: 5px;
+}
+.ncurses .input-group input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 35px;
+  padding: 1px 5px;
+  background-color: #c7c7c7;
+  border-top: 1px solid #000000;
+  border-right: 1px solid #ffffff;
+  border-bottom: 1px solid #ffffff;
+  border-left: 1px solid #000000;
+  font-family: Courier new, Courier, Monaco;
+  font-size: 14px;
+}
+
+.ncurses img.velo-logo {
+  /* opacity: 0.8; */
+  height: 32px;
+  width: unset;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -o-crisp-edges;
+  -ms-interpolation-mode: nearest-neighbor;
+  content: url(data:image/png;base64,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);
+}
+
+/* Cards */
+
+.ncurses .dashboard .card {
+  border: none;
+}

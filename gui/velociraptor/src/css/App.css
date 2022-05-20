@@ -1,0 +1,107 @@
+
+body {
+    font-size: 1rem;
+    background-color: var(--color-canvas-background);
+}
+
+h1 {
+    font-size: 32px;
+    margin-bottom: 1rem;
+}
+h2 {
+    font-size: 24px;
+    margin-bottom: 1rem;
+}
+h3 {
+    font-size: 20px;
+    margin-bottom: 1rem;
+}
+h4 {
+    font-size: 16px;
+    margin-bottom: 1rem;
+}
+h5 {
+    font-size: 14px;
+    margin-bottom: 1rem;
+}
+
+.full-height .modal-body {
+    height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+
+.max-height .modal-body {
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+
+.main-navbar {
+    height: 50px;
+    border: none;
+}
+
+.no-content {
+    text-align: center;
+    margin-top: 50px;
+    font-size: 1.5em;
+    color: #bcbbbb;
+}
+
+.app-footer.fixed-bottom {
+    height: 40px;
+    z-index: 1000;
+    padding-right: 20px;
+    background: var(--color-footer-background);
+}
+
+.Snackbar {
+    z-index: 1200;
+}
+
+.floating-button {
+    z-index: 1200;
+    margin-right: 10px;
+}
+
+grr-navigator .nav-pills li.active .nav-link:hover {
+    background-color: var(--color-sidebar-foreground);
+}
+
+grr-navigator .nav-pills li.active .nav-link {
+    width: 200px;
+    background-color: var(--color-sidebar-foreground);
+}
+
+button a.nav-link {
+    padding: 0px;
+    color: black;
+}
+
+/* Scrollbars */
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-scrollbar-thumb);
+    border-radius: 4px;
+    border: 1px solid transparent
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background:var(--color-scrollbar-thumb-hover);
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-scrollbar-track);
+}
+
+.scroller {
+    width: 8px;
+    overflow-y: scroll;
+    scrollbar-color: var(--color-scrollbar-track) var(--color-scrollbar-thumb);
+}
