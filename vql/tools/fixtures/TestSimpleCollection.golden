@@ -53,6 +53,8 @@
  },
  "vql_requests": [
   {
+   "query_id": 1,
+   "total_queries": 1,
    "env": [
     {
      "key": "ChoiceSelector",

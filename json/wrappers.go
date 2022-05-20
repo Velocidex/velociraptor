@@ -7,6 +7,8 @@ import (
 	"github.com/Velocidex/json"
 )
 
+type RawMessage = json.RawMessage
+
 var (
 	EncoderCallbackSkip = json.EncoderCallbackSkip
 )

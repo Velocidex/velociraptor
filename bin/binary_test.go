@@ -454,7 +454,7 @@ func TestShowConfigWithMergePatch(t *testing.T) {
 		`[{"op": "add", "path": "/Client/server_urls/0", "value": "https://SomeServer/"}]`,
 	)
 	out, err := cmd.Output()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 
 	// Try to load it now.
 	new_config := &config_proto.Config{}

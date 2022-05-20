@@ -1,6 +1,8 @@
 {
  "CompiledRequest": [
   {
+   "query_id": 1,
+   "total_queries": 1,
    "Query": [
     {
      "VQL": "LET Test_Artifact_Precondition_0_0 = SELECT * FROM Artifact.MultiSourceSerialMode(preconditions=TRUE)"

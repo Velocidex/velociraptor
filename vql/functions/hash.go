@@ -98,7 +98,7 @@ func (self *HashFunction) Call(ctx context.Context,
 
 	file, err := fs.Open(arg.Path.String())
 	if err != nil {
-		scope.Log("hash %s: %v", arg.Path.String(), err.Error())
+		//scope.Log("hash %s: %v", arg.Path.String(), err)
 		return vfilter.Null{}
 	}
 	defer file.Close()

@@ -546,6 +546,17 @@ func (self *ClientInfoManager) Get(client_id string) (*services.ClientInfo, erro
 	return &res, nil
 }
 
+func (self *ClientInfoManager) Set(client_info *services.ClientInfo) error {
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return err
+	}
+
+	client_path_manager := paths.NewClientPathManager(client_info.ClientId)
+	return db.SetSubjectWithCompletion(
+		self.config_obj, client_path_manager.Path(), client_info, nil)
+}
+
 // Only look in the ttl cache - does not do any IO - best effort.
 func (self *ClientInfoManager) GetCacheInfoFromCache(
 	client_id string) (*CachedInfo, error) {

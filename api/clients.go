@@ -30,7 +30,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -166,6 +165,12 @@ func (self *ApiServer) GetClientFlows(
 			return false
 		}
 	}
-	return flows.GetFlows(self.config, in.ClientId,
+
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return nil, err
+	}
+
+	return launcher.GetFlows(self.config, in.ClientId,
 		in.IncludeArchived, filter, in.Offset, in.Count)
 }

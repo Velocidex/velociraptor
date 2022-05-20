@@ -1,5 +1,7 @@
 [
  {
+  "query_id": 1,
+  "total_queries": 1,
   "Query": [
    {
     "VQL": "LET Custom_CallArtifactWithImports_0_0 = SELECT * FROM Artifact.Custom.TheOneWithTheImport()"

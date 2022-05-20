@@ -43,7 +43,18 @@ Queries:
         accessor='bzip2') AS Bye
      FROM scope()
 
-  # Test the gzip plugin
+  # Test Gzip a string - often the "data" accessor does not work here
+  # because the binary data can not be serialized to a pathspec
+  # properly. This is what the "scope" accessor is for. Define a
+  # reusable function.
+  - LET gunzip(Data) = read_file(accessor="gzip",
+      filename=pathspec(DelegateAccessor="scope", DelegatePath="Data"))
+
+  # Now decompress a gzip string.
+  - SELECT gunzip(Data=read_file(
+      filename=srcDir+"/artifacts/testdata/files/hi.gz")) FROM scope()
+
+  # Test the gzip accessor
   - SELECT read_file(
        filename=srcDir+'/artifacts/testdata/files/hi.gz',
        accessor='gzip') AS Hi,

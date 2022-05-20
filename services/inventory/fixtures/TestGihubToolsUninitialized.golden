@@ -14,7 +14,9 @@
     "value": "htttp://www.example.com/file.exe"
    }
   ],
-  "max_row": 1000
+  "max_row": 1000,
+  "query_id": 1,
+  "total_queries": 1
  },
  "Tool": {
   "filename": "file.exe",

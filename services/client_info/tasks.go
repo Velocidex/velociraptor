@@ -32,6 +32,11 @@ var (
 
 	Clock utils.Clock = &utils.RealClock{}
 	g_id  uint64
+
+	clientCancellationCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "client_flow_cancellations",
+		Help: "Total number of client cancellation messages sent.",
+	})
 )
 
 type TASKS_AVAILABLE_STATUS int
@@ -137,6 +142,10 @@ func (self *ClientInfoManager) QueueMessageForClient(
 	client_id string,
 	req *crypto_proto.VeloMessage, notify bool,
 	completion func()) error {
+
+	if req.Cancel != nil {
+		clientCancellationCounter.Inc()
+	}
 
 	// Task ID is related to time.
 	req.TaskId = currentTaskId()

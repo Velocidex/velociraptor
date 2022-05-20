@@ -47,6 +47,7 @@ import (
 	"sync"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -135,4 +136,33 @@ type Launcher interface {
 		repository Repository,
 		collector_request *flows_proto.ArtifactCollectorArgs,
 		completion func()) (string, error)
+
+	// The following methods are used to manage collections
+
+	// Get a list of collections summary from a client.
+	GetFlows(
+		config_obj *config_proto.Config,
+		client_id string, include_archived bool,
+		flow_filter func(flow *flows_proto.ArtifactCollectorContext) bool,
+		offset uint64, length uint64) (*api_proto.ApiFlowResponse, error)
+
+	// Get the details of a flow - this has a lot more information
+	// than the previous method.
+	GetFlowDetails(
+		config_obj *config_proto.Config,
+		client_id string, flow_id string) (*api_proto.FlowDetails, error)
+
+	// Actively cancel the collection
+	CancelFlow(
+		ctx context.Context,
+		config_obj *config_proto.Config,
+		client_id, flow_id, username string) (
+		res *api_proto.StartFlowResponse, err error)
+
+	// Get the exact requests that were sent for this collection (for
+	// provenance).
+	GetFlowRequests(
+		config_obj *config_proto.Config,
+		client_id string, flow_id string,
+		offset uint64, count uint64) (*api_proto.ApiFlowRequestDetails, error)
 }

@@ -17,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -143,7 +144,12 @@ func (self *CancelFlowFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	res, err := flows.CancelFlow(ctx, config_obj,
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		scope.Log("cancel_flow: %v", err)
+		return vfilter.Null{}
+	}
+	res, err := launcher.CancelFlow(ctx, config_obj,
 		arg.ClientId, arg.FlowId, "VQL query")
 	if err != nil {
 		scope.Log("cancel_flow: %v", err.Error())

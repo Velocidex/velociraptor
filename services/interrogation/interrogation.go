@@ -168,21 +168,14 @@ func (self *EnrollmentService) ProcessEnrollment(
 	// flight. We are here because the client_info_manager does not
 	// have the record in cache, so next Get() will just read it from
 	// disk on all minions.
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
 
-	client_path_manager := paths.NewClientPathManager(client_id)
-	client_info := &actions_proto.ClientInfo{
-		ClientId:                    client_id,
-		FirstSeenAt:                 uint64(time.Now().Unix()),
-		LastInterrogateFlowId:       flow_id,
-		LastInterrogateArtifactName: interrogation_artifact,
-	}
-
-	err = db.SetSubjectWithCompletion(
-		config_obj, client_path_manager.Path(), client_info, nil)
+	err = client_info_manager.Set(&services.ClientInfo{
+		actions_proto.ClientInfo{
+			ClientId:                    client_id,
+			FirstSeenAt:                 uint64(time.Now().Unix()),
+			LastInterrogateFlowId:       flow_id,
+			LastInterrogateArtifactName: interrogation_artifact,
+		}})
 	if err != nil {
 		return err
 	}

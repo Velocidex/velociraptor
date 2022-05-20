@@ -461,7 +461,7 @@ func CheckForStatus(
 	}
 
 	// Only record the first error.
-	if message.Status.Status != crypto_proto.GrrStatus_OK &&
+	if message.Status.Status != crypto_proto.VeloStatus_OK &&
 		(collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING ||
 			collection_context.State == flows_proto.ArtifactCollectorContext_FINISHED) {
 		collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
@@ -484,7 +484,7 @@ func CheckForStatus(
 	collection_context.Dirty = true
 
 	// If the status is OK then we do not fail the flow.
-	if message.Status.Status == crypto_proto.GrrStatus_OK {
+	if message.Status.Status == crypto_proto.VeloStatus_OK {
 		return nil
 	}
 	return errors.New(message.Status.ErrorMessage)
@@ -725,7 +725,6 @@ func (self *FlowRunner) ProcessSingleMessage(
 				return
 			}
 
-			clientCancellationCounter.Inc()
 			err = client_manager.QueueMessageForClient(job.Source,
 				&crypto_proto.VeloMessage{
 					Cancel:    &crypto_proto.Cancel{},

@@ -298,6 +298,12 @@ func (self *Launcher) CompileCollectorArgs(
 		collector_request.IopsLimit = iops_limit
 	}
 
+	// Update the total count of requests
+	for idx, item := range result {
+		item.QueryId = int64(idx + 1)
+		item.TotalQueries = int64(len(result))
+	}
+
 	return result, nil
 }
 

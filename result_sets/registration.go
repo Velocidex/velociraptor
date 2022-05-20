@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"regexp"
+	"sync"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -12,6 +13,7 @@ import (
 )
 
 var (
+	mu               sync.Mutex
 	rs_factory       Factory
 	timed_rs_factory TimedFactory
 )
@@ -47,6 +49,9 @@ func NewTimedResultSetWriter(
 	path_manager api.PathManager,
 	opts *json.EncOpts,
 	completion func()) (TimedResultSetWriter, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	if timed_rs_factory == nil {
 		panic(errors.New("TimedFactory not initialized"))
 	}
@@ -59,6 +64,9 @@ func NewTimedResultSetWriterWithClock(
 	path_manager api.PathManager,
 	opts *json.EncOpts,
 	completion func(), clock utils.Clock) (TimedResultSetWriter, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	if timed_rs_factory == nil {
 		panic(errors.New("TimedFactory not initialized"))
 	}
@@ -70,6 +78,9 @@ func NewTimedResultSetReader(
 	ctx context.Context,
 	file_store_factory api.FileStore,
 	path_manager api.PathManager) (TimedResultSetReader, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	if timed_rs_factory == nil {
 		panic(errors.New("TimedFactory not initialized"))
 	}
@@ -105,6 +116,9 @@ func NewResultSetWriter(
 	opts *json.EncOpts,
 	completion func(),
 	truncate WriteMode) (ResultSetWriter, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	if rs_factory == nil {
 		panic(errors.New("ResultSetFactory not initialized"))
 	}
@@ -116,6 +130,9 @@ func NewResultSetWriter(
 func NewResultSetReader(
 	file_store_factory api.FileStore,
 	log_path api.FSPathSpec) (ResultSetReader, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	if rs_factory == nil {
 		panic(errors.New("ResultSetFactory not initialized"))
 	}
@@ -128,6 +145,9 @@ func NewResultSetReaderWithOptions(
 	file_store_factory api.FileStore,
 	log_path api.FSPathSpec,
 	options ResultSetOptions) (ResultSetReader, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	if rs_factory == nil {
 		panic(errors.New("ResultSetFactory not initialized"))
 	}
@@ -138,9 +158,15 @@ func NewResultSetReaderWithOptions(
 
 // Allows for registration of the result set factory.
 func RegisterResultSetFactory(impl Factory) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	rs_factory = impl
 }
 
 func RegisterTimedResultSetFactory(impl TimedFactory) {
+	mu.Lock()
+	defer mu.Unlock()
+
 	timed_rs_factory = impl
 }

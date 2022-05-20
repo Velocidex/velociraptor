@@ -28,7 +28,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -375,7 +374,13 @@ func (self FlowResultsPlugin) Call(
 		// If no artifact is specified, get the first one from
 		// the flow.
 		if arg.Artifact == "" {
-			flow, err := flows.GetFlowDetails(config_obj, arg.ClientId, arg.FlowId)
+			launcher, err := services.GetLauncher()
+			if err != nil {
+				scope.Log("hunt_results: %v", err)
+				return
+			}
+			flow, err := launcher.GetFlowDetails(
+				config_obj, arg.ClientId, arg.FlowId)
 			if err != nil {
 				scope.Log("flow_results: %v", err)
 				return

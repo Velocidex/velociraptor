@@ -55,7 +55,6 @@ type APIClient interface {
 	// Flows
 	CollectArtifact(ctx context.Context, in *proto.ArtifactCollectorArgs, opts ...grpc.CallOption) (*proto.ArtifactCollectorResponse, error)
 	CancelFlow(ctx context.Context, in *ApiFlowRequest, opts ...grpc.CallOption) (*StartFlowResponse, error)
-	ArchiveFlow(ctx context.Context, in *ApiFlowRequest, opts ...grpc.CallOption) (*StartFlowResponse, error)
 	GetFlowDetails(ctx context.Context, in *ApiFlowRequest, opts ...grpc.CallOption) (*FlowDetails, error)
 	GetFlowRequests(ctx context.Context, in *ApiFlowRequest, opts ...grpc.CallOption) (*ApiFlowRequestDetails, error)
 	GetKeywordCompletions(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*KeywordCompletions, error)
@@ -341,15 +340,6 @@ func (c *aPIClient) CollectArtifact(ctx context.Context, in *proto.ArtifactColle
 func (c *aPIClient) CancelFlow(ctx context.Context, in *ApiFlowRequest, opts ...grpc.CallOption) (*StartFlowResponse, error) {
 	out := new(StartFlowResponse)
 	err := c.cc.Invoke(ctx, "/proto.API/CancelFlow", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *aPIClient) ArchiveFlow(ctx context.Context, in *ApiFlowRequest, opts ...grpc.CallOption) (*StartFlowResponse, error) {
-	out := new(StartFlowResponse)
-	err := c.cc.Invoke(ctx, "/proto.API/ArchiveFlow", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -763,7 +753,6 @@ type APIServer interface {
 	// Flows
 	CollectArtifact(context.Context, *proto.ArtifactCollectorArgs) (*proto.ArtifactCollectorResponse, error)
 	CancelFlow(context.Context, *ApiFlowRequest) (*StartFlowResponse, error)
-	ArchiveFlow(context.Context, *ApiFlowRequest) (*StartFlowResponse, error)
 	GetFlowDetails(context.Context, *ApiFlowRequest) (*FlowDetails, error)
 	GetFlowRequests(context.Context, *ApiFlowRequest) (*ApiFlowRequestDetails, error)
 	GetKeywordCompletions(context.Context, *empty.Empty) (*KeywordCompletions, error)
@@ -901,9 +890,6 @@ func (UnimplementedAPIServer) CollectArtifact(context.Context, *proto.ArtifactCo
 }
 func (UnimplementedAPIServer) CancelFlow(context.Context, *ApiFlowRequest) (*StartFlowResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CancelFlow not implemented")
-}
-func (UnimplementedAPIServer) ArchiveFlow(context.Context, *ApiFlowRequest) (*StartFlowResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ArchiveFlow not implemented")
 }
 func (UnimplementedAPIServer) GetFlowDetails(context.Context, *ApiFlowRequest) (*FlowDetails, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFlowDetails not implemented")
@@ -1472,24 +1458,6 @@ func _API_CancelFlow_Handler(srv interface{}, ctx context.Context, dec func(inte
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(APIServer).CancelFlow(ctx, req.(*ApiFlowRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _API_ArchiveFlow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ApiFlowRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(APIServer).ArchiveFlow(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/proto.API/ArchiveFlow",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(APIServer).ArchiveFlow(ctx, req.(*ApiFlowRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2254,10 +2222,6 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CancelFlow",
 			Handler:    _API_CancelFlow_Handler,
-		},
-		{
-			MethodName: "ArchiveFlow",
-			Handler:    _API_ArchiveFlow_Handler,
 		},
 		{
 			MethodName: "GetFlowDetails",

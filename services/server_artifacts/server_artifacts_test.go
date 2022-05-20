@@ -13,7 +13,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
-	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -96,7 +95,7 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 	// Wait for the collection to complete
 	var details *api_proto.FlowDetails
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
-		details, err = flows.GetFlowDetails(self.ConfigObj, "server", flow_id)
+		details, err = launcher.GetFlowDetails(self.ConfigObj, "server", flow_id)
 		assert.NoError(self.T(), err)
 
 		return details.Context.State == flows_proto.ArtifactCollectorContext_FINISHED

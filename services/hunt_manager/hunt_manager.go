@@ -60,7 +60,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -265,7 +264,11 @@ func (self *HuntManager) maybeDirectlyAssignFlow(
 	}
 
 	// Verify the flow actually exists.
-	_, err := flows.GetFlowDetails(config_obj, assignment.ClientId,
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return err
+	}
+	_, err = launcher.GetFlowDetails(config_obj, assignment.ClientId,
 		assignment.FlowId)
 	if err != nil {
 		return err

@@ -65,7 +65,6 @@ func cancelCollection(config_obj *config_proto.Config, client_id, flow_id string
 		return err
 	}
 
-	clientCancellationCounter.Inc()
 	return client_manager.QueueMessageForClient(client_id,
 		&crypto_proto.VeloMessage{
 			Cancel:    &crypto_proto.Cancel{},

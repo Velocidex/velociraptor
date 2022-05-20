@@ -327,8 +327,10 @@ func (self OSFileSystemAccessor) OpenWithOSPath(
 			return nil, err
 		}
 
-		if !lstat.Mode().IsRegular() {
-			return nil, errors.New("Only regular files supported")
+		if !lstat.Mode().IsDir() &&
+			!lstat.Mode().IsRegular() {
+			return nil, fmt.Errorf(
+				"Only regular files supported (not %v)", path)
 		}
 	}
 
