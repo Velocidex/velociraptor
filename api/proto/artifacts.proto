@@ -10,6 +10,8 @@ option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
 message FieldSelector {
     bool name = 1;
+    bool description = 2;
+    bool type = 3;
 }
 
 message GetArtifactsRequest {

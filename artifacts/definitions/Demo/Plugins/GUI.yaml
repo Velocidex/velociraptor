@@ -82,6 +82,16 @@ parameters:
     type: upload
     description: FileUpload1 can receive a file upload. The upload content will be available in this variable when executing on the client.
 
+  - name: ArtifactSelections
+    type: artifactset
+    description: A selection of artifact
+    artifact_type: CLIENT_EVENT
+    default: |
+      Artifact
+      Windows.Detection.PsexecService
+      Windows.Events.ProcessCreation
+      Windows.Events.ServiceCreation
+
 column_types:
   - name: Hex
     type: base64hex

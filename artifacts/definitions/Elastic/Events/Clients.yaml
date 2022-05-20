@@ -16,7 +16,8 @@ parameters:
   - name: Password
   - name: APIKey
   - name: artifactsToWatch
-    type: csv
+    type: artifactset
+    artifact_type: CLIENT_EVENT
     default: |
       Artifact
       Windows.Detection.PsexecService

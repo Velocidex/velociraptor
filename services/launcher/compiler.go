@@ -84,7 +84,7 @@ func (self *Launcher) CompileSingleArtifact(
 				VQL: fmt.Sprintf("LET %v <= timestamp(epoch=%v)", escaped_name,
 					escaped_name),
 			})
-		case "csv":
+		case "csv", "artifactset":
 			// Only parse from CSV if it is a string.
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
 				VQL: fmt.Sprintf(`
