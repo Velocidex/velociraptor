@@ -61,7 +61,7 @@
   --color-tab: #444444;
   --color-tab-active: #aaaaaa;
 
-  --color-resizer: var(--color-sidebar-foreground-inactive-hover);
+  --color-resizer: #0c900a80;
   --color-scrollbar-track: var(--color-sidebar-active-background);
   --color-scrollbar-thumb: var(--color-sidebar-foreground);
   --color-scrollbar-thumb-hover: var(--color-sidebar-foreground-inactive-hover);
@@ -90,6 +90,8 @@
 
   --color-table-row-selected: rgba(255, 255, 255, 0.25);
   --color-table-row-hover: rgba(255, 255, 255, 0.1);
+
+  --color-timeline-table-shown: #5cd00a80;
 }
 
 body.veloci-dark {
@@ -217,11 +219,10 @@ body.veloci-dark {
 }
 
 .veloci-dark .navigator.nav-pills.nav li.disabled {
-  color: var(--color-sidebar-background);
+  color: var(--color-sidebar-foreground-disabled);
 }
 
 /* Buttons */
-
 .veloci-dark .btn,
 .veloci-dark .btn-default {
   font-family: var(--font-family-sans-serif);
@@ -265,7 +266,7 @@ body.veloci-dark {
 
 .veloci-dark .btn-outline-default {
   border-width: 0;
-  background: var(--color-btn-default-background);
+  background: none;
 }
 
 .veloci-dark .btn-outline-info,
@@ -354,8 +355,8 @@ body.veloci-dark {
 /* Resizer dividers */
 .veloci-dark .Resizer.horizontal {
   border: none;
-  background-color: var(--color-canvas-background);
-  height: 3px;
+  background-color: var(--color-resizer);
+  height: 10px;
 }
 
 .veloci-dark .Resizer.horizontal:hover {
@@ -540,14 +541,6 @@ body.veloci-dark {
 
 .veloci-dark .report-viewer pre > a {
   color: var(--color-foreground-inverse);
-}
-
-.veloci-dark .report-viewer .table.table.table-hover tbody {
-  pointer-events: none;
-}
-
-.veloci-dark .artifact-search-table.selectable.container tbody {
-  pointer-events: all;
 }
 
 .veloci-dark .artifact-search-table.selectable.container tbody tr:hover {

@@ -314,8 +314,8 @@ body.pink-light {
 }
 
 .pink-light .table tbody tr:nth-of-type(2n) {
-  background-color: var(--color-table-row-hover);
-  border: none;
+    background-color: var(--color-table-row-hover);
+    border: none;
 }
 
 .pink-light .table tbody tr:nth-of-type(odd) {
@@ -397,10 +397,6 @@ body.pink-light {
 .pink-light .card {
   background-color: var(--color-background);
   border-color: var(--color-btn-border);
-}
-
-.pink-light .dashboard .card {
-  border: none;
 }
 
 .pink-light .card-header {
@@ -538,14 +534,6 @@ body.pink-light {
 
 .pink-light .report-viewer {
   color: var(--color-text-default);
-}
-
-.pink-light .report-viewer .table.table.table-hover tbody {
-  pointer-events: none;
-}
-
-.pink-light .artifact-search-table.selectable.container tbody {
-  pointer-events: all;
 }
 
 .pink-light .artifact-search-table.selectable.container tbody tr:hover {
@@ -712,11 +700,6 @@ body.pink-light {
 
 .pink-light hr {
   background-color: var(--color-text-default);
-}
-
-.pink-light img.velo-logo {
-  filter: brightness(0) saturate(100%) invert(80%) sepia(10%) saturate(3160%)
-    hue-rotate(293deg) brightness(97%) contrast(96%);
 }
 
 .pink-light .no-content {

@@ -20,3 +20,35 @@ code {
   background-color: var(--color-canvas-background);
   margin-left: var(--sidebar-collapsed-width);
 }
+
+/* Style the ACE setup windows */
+#ace_settingsmenu,
+#ace_settingsmenu button,
+#ace_settingsmenu input,
+#ace_settingsmenu select
+{
+    background-color: var(--color-canvas-background);
+    color: var(--color-text-default);
+}
+
+/* Lineup the search bar's btn group so all buttons have the same height */
+.btn-group .btn,
+.btn-group select
+{
+    height: 38px;
+}
+
+.pagination .page-link {
+    height: 37px;
+}
+
+.btn-group input.text {
+    height: 27px;
+}
+
+/* outline buttons have no background */
+.btn.btn-outline-info,
+.btn.btn-link {
+    background: none;
+    color: var(--color-btn-outline-link);
+}

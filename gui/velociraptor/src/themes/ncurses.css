@@ -8,16 +8,79 @@
   font-display: block;
 }
 
-body.ncurses {
-  background-color: #0a2fc4;
-  color: #fff;
-  font-family: "Courier New", Courier, Consolas, "Liberation Mono", "Ubuntu Mono", monospace;
-  font-size: 14px;
+.ncurses {
+  --accent-color: #0a2fc4;
+  --color-accent: 0, 170, 0;
+  --color-accent-complement: #e83e8c;
+
+  --color-accent-100: rgba(var(--color-accent), 1);
+  --color-accent-75: rgba(var(--color-accent), 0.75);
+  --color-accent-50: rgba(var(--color-accent), 0.5);
+  --color-accent-25: rgba(var(--color-accent), 0.25);
+
+  --color-infoline-success: #fefefe;
+  --color-infoline-color: #fefefe;
+  --color-canvas-background: #fefefe;
+  --color-footer-background: #eaeaea;
+  --color-background: #fefefe;
+  --color-background-complement: #d2ccc4;
+  --color-text-default: #121212;
+  --color-foreground: rgb(18, 18, 18);
+  --color-foreground-dimmed: #4f4f4f;
+  --color-foreground-inverse: #eeeeee;
+
+  --color-navbar-background: #0a2fc4;
+  --color-sidebar-foreground: #404040;
+  --color-sidebar-background: #fefefe;
+  --color-sidebar-foreground-inactive-hover: #0a2fc4;
+  --color-sidebar-background-inactive-hover: #E6E6E6;
+  --color-sidebar-foreground-active-hover: var(--color-sidebar-active-foreground);
+  --color-sidebar-foreground-disabled: lightgrey;
+  --color-sidebar-active-foreground: var(--color-foreground);
+  --color-sidebar-active-background: #cbcbcb;
+
+  --color-btn-border: #dee2e6;
+
+  --color-tab: #dee2e6;
+  --color-tab-active: #555555;
+  --color-tab-active-background: #dee2e6;
+  --color-tab-non-active-background: #fefefe;
+
+  --color-resizer: #0a2fc4;
+  --color-scrollbar-track: var(--color-sidebar-background);
+  --color-scrollbar-thumb: var(--color-tab);
+  --color-scrollbar-thumb-hover: var(--color-tab-active);
+
+  --font-size-large: 16px;
+  --font-size-base: 14px;
+  --font-size-small: 12px;
+  --font-family-sans-serif: roboto-mono, SFMono-Regular, Menlo, Monaco,
+    "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-family-monospace: roboto-mono, SFMono-Regular, Menlo, Monaco,
+    "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
+
+  --color-btn-default-background: #0a2fc4;
+  --color-btn-default-background-hover: #0a2fc4;
+  --color-btn-outline-link: #0a2fc4;
+
+  --color-table-heading-background: #fefefe;
+  --color-table-row-selected: rgba(0, 0, 0, 0.05);
+  --color-table-row-hover: rgba(0, 0, 0, 0.01);
+  --color-code: #990000;
+
+  --color-timeline-table-shown: #0a2fc4;
 }
+
 
 /* https://prurigro.github.io/css-cursesmenu/ */
 
 /* https://poerror.github.io/ncurses-css/# */
+
+.ncurses code {
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-small);
+  color: var(--color-code);
+}
 
 .ncurses h1,
 h2,
@@ -106,8 +169,8 @@ h6 {
 }
 .ncurses .box .buttons .btn:hover,
 .ncurses .box .buttons .btn.active {
-  background-color: #0a2fc4;
-  color: #ffffff;
+  background-color: var(--color-navbar-background);
+  color: var(--color-text-default);
 }
 .ncurses .box .buttons .btn::before {
   content: "\003c\0000a0";
@@ -221,4 +284,181 @@ h6 {
 
 .ncurses .dashboard .card {
   border: none;
+}
+
+
+/* Top Navbar */
+.ncurses .main-navbar {
+  background-color: var(--color-navbar-background);
+  border-color: var(--color-navbar-background);
+}
+
+.ncurses li.nav-link {
+    white-space: nowrap;
+}
+
+.ncurses li.nav-link i.navicon {
+    margin-right: 20px;
+    width: 30px;
+    display: inline;
+}
+
+.ncurses .hamburger {
+  color: var(--color-sidebar-background);
+}
+
+.ncurses #client-search-bar {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  margin-left: 5px;
+  height: 25px;
+}
+
+.ncurses .client-summary {
+  padding: 5px 10px;
+  float: left;
+}
+
+.ncurses .client-status .client-name {
+  background: var(--color-btn-default-background);
+  text-decoration: none !important;
+  text-shadow: none;
+  padding: 2px 10px 5px 10px;
+  border-radius: 3px;
+  margin: 5px;
+  font-size: 15px;
+  border-color: var(--color-btn-default-border);
+}
+
+body.ncurses {
+  background-color: var(--color-canvas-background);
+  font-family: "Courier New", Courier, Consolas, "Liberation Mono", "Ubuntu Mono", monospace;
+  font-size: 14px;
+}
+
+
+
+/* Tables */
+
+.ncurses .table-bordered {
+  border: 1px solid var(--color-background);
+  box-shadow: none;
+  font-weight: 400;
+}
+
+.ncurses .table-bordered .notebook-filter td {
+  border: none;
+  text-shadow: none;
+}
+
+.ncurses .table-bordered thead th {
+  color: var(--color-foreground);
+  border: 1px solid var(--color-table-heading-background);
+  color: var(--color-foreground);
+}
+
+.ncurses .table thead th {
+  color: var(--color-foreground);
+  border: 1px solid var(--color-table-heading-background);
+  background-color: var(--color-table-heading-background);;
+}
+
+.ncurses .table {
+  background-color: var(--color-canvas-background);
+  color: var(--color-foreground);
+  vertical-align: middle;
+  font-weight: 400;
+  font-size: var(--font-size-base);
+  text-shadow: none;
+  box-shadow: none;
+}
+
+.ncurses .table tbody tr td {
+  border: none;
+}
+
+.ncurses .table tbody tr:nth-of-type(2n) {
+  background-color: var(--color-table-row-hover);
+  border: none;
+}
+
+.ncurses .table tbody tr:nth-of-type(odd) {
+  background-color: unset;
+  border: none;
+}
+
+.ncurses .table-hover tbody tr:hover {
+  background-color: var(--color-table-row-hover);
+  color: unset;
+}
+
+.ncurses .artifact-search-table td:hover {
+  background-color: var(--color-table-row-hover);
+  color: unset;
+}
+
+.ncurses table tr.row-selected,
+.ncurses table tr.row_selected td {
+  background-color: var(--color-table-row-selected);
+  color: var(--color-text-default);
+}
+
+/* Column search screen */
+.ncurses th.sortable input {
+  background-color: var(--color-canvas-background);
+  color: var(--color-foreground);
+  border-color: var(--color-btn-border);
+}
+
+/* Resizer dividers */
+.ncurses .Resizer.horizontal {
+  border: none;
+  background-color: var(--color-resizer);
+  height: 5px;
+}
+
+.ncurses .Resizer.horizontal:hover {
+  background-color: var(--color-resizer);
+}
+
+.ncurses .Resizer.vertical {
+  border: none;
+  background-color: var(--color-btn-border);
+  width: 3px;
+}
+
+.ncurses .Resizer.vertical:hover {
+  background-color: var(--color-resizer);
+}
+
+.ncurses .Resizer:hover {
+  transition: all 200ms ease-in-out;
+}
+
+/* Cards */
+
+.ncurses .card {
+  background-color: var(--color-background);
+  border-color: var(--color-btn-border);
+}
+
+.ncurses .dashboard .card {
+  border: none;
+}
+
+.ncurses .card-header {
+  background-color: var(--color-card-heading-background);
+  color: var(--color-foreground);
+  font-weight: 600;
+}
+
+.ncurses .card-body {
+  background-color: var(--color-canvas-background);
+  color: var(--color-foreground);
+}
+
+.ncurses .card-body dt,
+.ncurses .card-body label {
+  font-weight: 600;
+  color: var(--color-accent-100);
 }

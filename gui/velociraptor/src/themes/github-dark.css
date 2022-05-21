@@ -75,7 +75,7 @@
 
   --color-form-background: #fceff4;
   --color-page-link-active-background: var(--color-btn-border);
-  --color-resizer: var(--color-accent-100);
+  --color-resizer: #373e47;
   --color-scrollbar-track: var(--color-background);
   --color-scrollbar-thumb: var(--color-accent-25);
   --color-scrollbar-thumb-hover: var(--color-accent-75);
@@ -225,7 +225,7 @@ body.github-dark {
 }
 
 .github-dark .navigator.nav-pills.nav li.disabled {
-  color: var(--color-sidebar-background);
+  color: var(--color-sidebar-foreground-disabled);
 }
 
 /* Buttons */
@@ -440,8 +440,8 @@ body.github-dark {
 /* Resizer dividers */
 .github-dark .Resizer.horizontal {
   border: none;
-  background-color: var(--color-btn-border);
-  height: 3px;
+  background-color: var(--color-resizer);
+  height: 5px;
 }
 
 .github-dark .Resizer.horizontal:hover {
@@ -613,14 +613,6 @@ body.github-dark {
 
 .github-dark .report-viewer pre > a {
   color: var(--color-accent-complement);
-}
-
-.github-dark .report-viewer .table.table.table-hover tbody {
-  pointer-events: none;
-}
-
-.github-dark .artifact-search-table.selectable.container tbody {
-  pointer-events: all;
 }
 
 .github-dark .artifact-search-table.selectable.container tbody tr:hover {

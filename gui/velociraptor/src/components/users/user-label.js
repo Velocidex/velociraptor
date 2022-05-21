@@ -69,14 +69,13 @@ class UserSettings extends React.PureComponent {
                                           default_password: this.state.default_password,
                                       });
                                   }}>
-                      <option value="no-theme">No theme</option>
+                      <option value="no-theme">Default Velociraptor</option>
                       <option value="veloci-light">Velociraptor (light)</option>
                       <option value="veloci-dark">Velociraptor (dark)</option>
                       {/* <option value="github-light">Github (light)</option> */}
                       <option value="github-dark">Github (dark)</option>
                       <option value="ncurses">Ncurses (light)</option>
-                      {/* <option value="limacharlie-light">LimaCharlie (light)</option> */}
-                      <option value="limacharlie-dark">LimaCharlie (dark)</option>
+                      <option value="coolgray-dark">Cool Gray (dark)</option>
                       <option value="pink-light">Strawberry Milkshake (light)</option>
                     </Form.Control>
                   </Col>
@@ -124,21 +123,23 @@ export default class UserLabel extends React.Component {
     setSettings = (options) => {
         // Set the ACE theme according to the theme so they match.
         let ace_options = JSON.parse(this.context.traits.ui_settings || "{}");
-        ace_options.fontSize = "14px";
-        if (options.theme === "veloci-dark") {
+        ace_options.fontSize = "24px";
+        if (options.theme === "no-theme") {
+            ace_options.theme = "ace/theme/xcode";
+        } else if (options.theme === "veloci-dark") {
             ace_options.theme = "ace/theme/terminal";
         } else if(options.theme === "veloci-light") {
             ace_options.theme = "ace/theme/xcode";
         } else if(options.theme === "pink-light") {
-          ace_options.theme = "ace/theme/xcode";
+            ace_options.theme = "ace/theme/xcode";
+        } else if(options.theme === "ncurses") {
+            ace_options.theme = "ace/theme/github";
         } else if(options.theme === "github-dark") {
           ace_options.theme = "ace/theme/vibrant_ink";
         } else if(options.theme === "github-light") {
           ace_options.theme = "ace/theme/sqlserver";
-        } else if(options.theme === "limacharlie-dark") {
+        } else if(options.theme === "coolgray-dark") {
           ace_options.theme = "ace/theme/nord_dark";
-        } else if(options.theme === "limacharlie-light") {
-          ace_options.theme = "ace/theme/iplastic";
         }
         options.options = JSON.stringify(ace_options);
 

@@ -50,7 +50,7 @@
   --color-tab: #bbbbbb;
   --color-tab-active: #555555;
 
-  --color-resizer: var(--color-text-default);
+  --color-resizer: #5cd00a80;
   --color-scrollbar-track: var(--color-sidebar-background);
   --color-scrollbar-thumb: var(--color-tab);
   --color-scrollbar-thumb-hover: var(--color-tab-active);
@@ -65,12 +65,14 @@
 
   --color-btn-default-background: #5cd00a80;
   --color-btn-default-background-hover: #0c900a80;
-  --color-btn-outline-link: #5cd00a80;
+  --color-btn-outline-link: #0c900a80;
 
   --color-table-heading-background: #dee2e6;
   --color-table-row-selected: rgba(0, 0, 0, 0.05);
   --color-table-row-hover: rgba(0, 0, 0, 0.01);
   --color-code: #990000;
+
+  --color-timeline-table-shown: #5cd00a80;
 }
 
 body.veloci-light {
@@ -179,7 +181,7 @@ body.veloci-light {
 }
 
 .veloci-light .navigator.nav-pills.nav li.disabled {
-  color: var(--color-sidebar-background);
+  color: var(--color-sidebar-foreground-disabled);
 }
 
 /* Buttons */
@@ -227,12 +229,21 @@ body.veloci-light {
 
 .veloci-light .btn-outline-default {
   border-width: 0;
-  background: var(--color-btn-default-background);
+  background: none;
 }
 
-.veloci-light .btn-outline-info,
-.veloci-light .btn-link {
-  color: var(--color-btn-outline-link);
+.veloci-light .btn-group .btn {
+    height: 37px;
+}
+
+.veloci-light .btn-group input.text {
+    height: 27px;
+}
+
+.veloci-light .btn.btn-outline-info,
+.veloci-light .btn.btn-link {
+    background: var(--color-canvas-background);
+    color: var(--color-btn-outline-link);
 }
 
 .veloci-light .btn.btn-link {
@@ -242,8 +253,8 @@ body.veloci-light {
 /* Resizer dividers */
 .veloci-light .Resizer.horizontal {
   border: none;
-  background-color: var(--color-panel-background);
-  height: 3px;
+  background-color: var(--color-resizer);
+  height: 10px;
 }
 
 .veloci-light .Resizer.horizontal:hover {
@@ -445,14 +456,6 @@ body.veloci-light {
 
 .veloci-light .report-viewer pre {
   filter: invert(0);
-}
-
-.veloci-light .report-viewer .table.table.table-hover tbody {
-  pointer-events: none;
-}
-
-.veloci-light .artifact-search-table.selectable.container tbody {
-  pointer-events: all;
 }
 
 .veloci-light .artifact-search-table.selectable.container tbody tr:hover {

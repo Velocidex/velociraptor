@@ -44,10 +44,8 @@ import './themes/veloci-light.css';
 import './themes/veloci-dark.css';
 import './themes/pink-light.css';
 import './themes/github-dark.css';
-// import './themes/github-light.css';
 import './themes/ncurses.css';
-import './themes/limacharlie-dark.css';
-// import './themes/limacharlie-light.css';
+import './themes/coolgray-dark.css';
 
 /* This is the main App page.
 
