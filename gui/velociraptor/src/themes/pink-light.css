@@ -71,7 +71,8 @@
   --color-form-background: #fceff4;
   --color-page-link-active-background: #fceff4;
   --page-link-background-color: #f8bbd0;
-  --color-resizer: var(--color-btn-default-background-hover);
+  --color-resizer: #f8bbd050;
+  --color-resizer-hover: #f06292;
   --color-scrollbar-track: var(--color-sidebar-foreground-disabled);
   --color-scrollbar-thumb: var(--color-btn-default-background);
   --color-scrollbar-thumb-hover: var(--color-btn-default-background-hover);
@@ -228,7 +229,7 @@ body.pink-light {
 }
 
 .pink-light .navigator.nav-pills.nav li.disabled {
-  color: var(--color-sidebar-background);
+  color: var(--color-sidebar-foreground-disabled);
 }
 
 /* Buttons */
@@ -378,12 +379,12 @@ body.pink-light {
 
 .pink-light .Resizer.horizontal {
   border: none;
-  background-color: var(--color-canvas-background);
+  background-color: var(--color-resizer);
   height: 3px;
 }
 
 .pink-light .Resizer.horizontal:hover {
-  background-color: var(--color-resizer);
+  background-color: var(--color-resizer-hover);
 }
 
 .pink-light .Resizer.vertical {
@@ -712,4 +713,9 @@ body.pink-light {
 
 .pink-light .no-content {
   color: var(--color-no-content);
+}
+
+/* Make checkboxes pink as well */
+.pink-light input[type="checkbox"][value="Y"] {
+    filter: hue-rotate(134deg) brightness(3.4);
 }

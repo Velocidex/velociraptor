@@ -60,8 +60,11 @@ export default class VeloValueRenderer extends React.Component {
     getTheme = ()=> {
         let theme = this.context.traits &&
             this.context.traits.theme;
+
         switch (theme) {
-        case "github-dimmed-dark", "veloci-dark", "coolgray-dark":
+        case "github-dimmed-dark":
+        case "veloci-dark":
+        case "coolgray-dark":
             return darkTheme;
 
         default:

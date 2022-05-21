@@ -52,3 +52,7 @@ code {
     background: none;
     color: var(--color-btn-outline-link);
 }
+
+.report-viewer .btn-group a.btn {
+  color: var(--color-foreground);
+}
