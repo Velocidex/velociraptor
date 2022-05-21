@@ -1,0 +1,1 @@
+{"a": {"Foo":"Bar"}, "b": {"Foo":"Bar"}, "integer": 1, "string": "hello", "subquery": {"Foo": "Bar"}}

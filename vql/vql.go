@@ -49,6 +49,8 @@ var (
 func OverridePlugin(plugin vfilter.PluginGeneratorInterface) {
 	name := plugin.Info(nil, nil).Name
 	exportedPlugins[name] = plugin
+
+	ResetGlobalScopeCache()
 }
 
 func RegisterPlugin(plugin vfilter.PluginGeneratorInterface) {
@@ -59,6 +61,8 @@ func RegisterPlugin(plugin vfilter.PluginGeneratorInterface) {
 	}
 
 	exportedPlugins[name] = plugin
+
+	ResetGlobalScopeCache()
 }
 
 func RegisterFunction(plugin vfilter.FunctionInterface) {
@@ -69,10 +73,14 @@ func RegisterFunction(plugin vfilter.FunctionInterface) {
 	}
 
 	exportedFunctions[name] = plugin
+
+	ResetGlobalScopeCache()
 }
 
 func RegisterProtocol(plugin vfilter.Any) {
 	exportedProtocolImpl = append(exportedProtocolImpl, plugin)
+
+	ResetGlobalScopeCache()
 }
 
 func GetFunction(name string) (vfilter.FunctionInterface, bool) {
@@ -133,4 +141,11 @@ func MakeNewScope() vfilter.Scope {
 	}
 
 	return result
+}
+
+// Used in tests to flush the global scope - needed **after** .
+func ResetGlobalScopeCache() {
+	mu.Lock()
+	defer mu.Unlock()
+	globalScope = nil
 }

@@ -65,7 +65,7 @@ type EventTable struct {
 }
 
 // Determine if the current table is the same as the new set of
-// queries. Returns true if the queries are the same and not change is
+// queries. Returns true if the queries are the same and no change is
 // needed.
 func (self *EventTable) equal(events []*actions_proto.VQLCollectorArgs) bool {
 	if len(events) != len(self.Events) {
