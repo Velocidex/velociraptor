@@ -25,7 +25,7 @@ class UserSettings extends React.PureComponent {
     componentDidMount = () => {
         if (this.context.traits) {
             this.setState({
-                theme: this.context.traits.theme || "veloci-light",
+                theme: this.context.traits.theme || "no-theme",
                 default_password: this.context.traits.default_password || "",
             });
         }
@@ -46,7 +46,7 @@ class UserSettings extends React.PureComponent {
     render() {
         return (
             <Modal show={true}
-                   dialogClassName="modal-90w"
+                   dialogClassName="modal-70w"
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
                 <Modal.Title>User Settings</Modal.Title>
@@ -123,7 +123,7 @@ export default class UserLabel extends React.Component {
     setSettings = (options) => {
         // Set the ACE theme according to the theme so they match.
         let ace_options = JSON.parse(this.context.traits.ui_settings || "{}");
-        ace_options.fontSize = "24px";
+        ace_options.fontSize = "18px";
         if (options.theme === "no-theme") {
             ace_options.theme = "ace/theme/xcode";
         } else if (options.theme === "veloci-dark") {
