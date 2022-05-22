@@ -105,11 +105,19 @@ body.veloci-light {
 }
 
 .veloci-light #client-search-bar {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
   font-family: var(--font-family-sans-serif);
   padding-top: 5px;
   padding-bottom: 5px;
   margin-left: 5px;
   height: 25px;
+}
+
+.veloci-light .dropdown .dropdown-toggle.btn.btn-default {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left-width: 0;
 }
 
 .veloci-light .client-summary {

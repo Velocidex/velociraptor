@@ -43,7 +43,7 @@ import './themes/no-theme.css';
 import './themes/veloci-light.css';
 import './themes/veloci-dark.css';
 import './themes/pink-light.css';
-import './themes/github-dark.css';
+import './themes/github-dimmed-dark.css';
 import './themes/ncurses.css';
 import './themes/coolgray-dark.css';
 

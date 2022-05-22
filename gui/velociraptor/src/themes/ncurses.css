@@ -308,6 +308,7 @@ h6 {
 }
 
 .ncurses #client-search-bar {
+  border-radius: 0;
   padding-top: 5px;
   padding-bottom: 5px;
   margin-left: 5px;

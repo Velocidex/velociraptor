@@ -70,11 +70,11 @@ class UserSettings extends React.PureComponent {
                                       });
                                   }}>
                       <option value="no-theme">Default Velociraptor</option>
-                      <option value="veloci-light">Velociraptor (light)</option>
-                      <option value="veloci-dark">Velociraptor (dark)</option>
-                      {/* <option value="github-light">Github (light)</option> */}
-                      <option value="github-dark">Github (dark)</option>
-                      <option value="ncurses">Ncurses (light)</option>
+                      <option value="veloci-light">Velociraptor (light) [experimental]</option>
+                      <option value="veloci-dark">Velociraptor (dark) [experimental]</option>
+                      {/* <option value="github-dimmed-light">Github dimmed (light)</option> */}
+                      <option value="github-dimmed-dark">Github dimmed (dark)</option>
+                      {/* <option value="ncurses">Ncurses (light)</option> */}
                       <option value="coolgray-dark">Cool Gray (dark)</option>
                       <option value="pink-light">Strawberry Milkshake (light)</option>
                     </Form.Control>
@@ -134,9 +134,9 @@ export default class UserLabel extends React.Component {
             ace_options.theme = "ace/theme/xcode";
         } else if(options.theme === "ncurses") {
             ace_options.theme = "ace/theme/github";
-        } else if(options.theme === "github-dark") {
+        } else if(options.theme === "github-dimmed-dark") {
           ace_options.theme = "ace/theme/vibrant_ink";
-        } else if(options.theme === "github-light") {
+        } else if(options.theme === "github-dimmed-light") {
           ace_options.theme = "ace/theme/sqlserver";
         } else if(options.theme === "coolgray-dark") {
           ace_options.theme = "ace/theme/nord_dark";

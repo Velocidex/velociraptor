@@ -17,7 +17,7 @@
   font-display: block;
 }
 
-.github-dark {
+.github-dimmed-dark {
   --accent-color: #539bf5; /* https://github.com/w3c/csswg-drafts/issues/5187 */
   --color-accent: 83, 155, 245; /* --color-accent-fg */
   --color-accent-complement: #f5ac53;
@@ -101,30 +101,30 @@
   --vfs-files-timestomped: #ed5d40;
 }
 
-body.github-dark {
+body.github-dimmed-dark {
   background-color: var(--color-canvas-background);
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
   letter-spacing: 0.6px;
 }
 
-.github-dark p,
-.github-dark dl,
-.github-dark ol,
-.github-dark ul {
+.github-dimmed-dark p,
+.github-dimmed-dark dl,
+.github-dimmed-dark ol,
+.github-dimmed-dark ul {
   font-family: var(--font-family-sans-serif);
   letter-spacing: 0.6px;
 }
 
-.github-dark h1,
-.github-dark h2,
-.github-dark h3 {
+.github-dimmed-dark h1,
+.github-dimmed-dark h2,
+.github-dimmed-dark h3 {
   color: var(--color-foreground);
 }
 
-.github-dark code,
-.github-dark pre,
-.github-dark .monospace {
+.github-dimmed-dark code,
+.github-dimmed-dark pre,
+.github-dimmed-dark .monospace {
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-small);
   color: var(--color-accent-100);
@@ -132,16 +132,16 @@ body.github-dark {
 
 /* Top Navbar */
 
-.github-dark .main-navbar {
+.github-dimmed-dark .main-navbar {
   background-color: var(--color-header-background);
   border-bottom: 1px solid var(--color-btn-default-border);
 }
 
-.github-dark .hamburger {
+.github-dimmed-dark .hamburger {
   color: var(--color-sidebar-foreground);
 }
 
-.github-dark #client-search-bar {
+.github-dimmed-dark #client-search-bar {
   background-color: var(--color-canvas-background);
   border: 1px solid var(--color-btn-default-border);
   border-top-right-radius: 0;
@@ -154,19 +154,19 @@ body.github-dark {
   height: 26px;
 }
 
-.github-dark .dropdown .dropdown-toggle.btn.btn-default {
+.github-dimmed-dark .dropdown .dropdown-toggle.btn.btn-default {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
   border-left-width: 0;
 }
 
-.github-dark .client-summary {
+.github-dimmed-dark .client-summary {
   padding: 5px 10px;
   float: left;
   font-family: var(--font-family-sans-serif);
 }
 
-.github-dark .client-status .client-name {
+.github-dimmed-dark .client-status .client-name {
   background: var(--color-btn-default-background);
   text-decoration: none !important;
   text-shadow: none;
@@ -177,17 +177,17 @@ body.github-dark {
   border-color: var(--color-btn-default-border);
 }
 
-.github-dark .client-status .client-name:hover {
+.github-dimmed-dark .client-status .client-name:hover {
   color: whitesmoke;
   background: var(--color-client-link-hover);
 }
 
-.github-dark .client-status .client-name:active {
+.github-dimmed-dark .client-status .client-name:active {
   color: whitesmoke;
   background: var(--color-client-link-hover);
 }
 
-.github-dark .react-autosuggest__suggestions-container--open {
+.github-dimmed-dark .react-autosuggest__suggestions-container--open {
   margin-left: 5px;
   background-color: var(--color-canvas-background);
   font-family: var(--font-family-sans-serif);
@@ -195,13 +195,13 @@ body.github-dark {
   border: 1px solid var(--color-btn-default-border);
 }
 
-.github-dark .react-autosuggest__suggestion--highlighted {
+.github-dimmed-dark .react-autosuggest__suggestion--highlighted {
   background-color: var(--color-accent-50);
 }
 
 /* sidebar navbar */
 
-.github-dark div#navigator {
+.github-dimmed-dark div#navigator {
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
   color: var(--color-sidebar-foreground);
@@ -210,32 +210,32 @@ body.github-dark {
   box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
 }
 
-.github-dark .navigator.nav-pills.nav:hover li {
+.github-dimmed-dark .navigator.nav-pills.nav:hover li {
   color: var(--color-sidebar-foreground-inactive-hover);
   background-color: var(--color-sidebar-background-inactive-hover);
 }
 
-.github-dark a.active .navigator.nav-pills.nav li {
+.github-dimmed-dark a.active .navigator.nav-pills.nav li {
   color: var(--color-sidebar-active-foreground);
   background-color: var(--color-sidebar-active-background);
 }
 
-.github-dark a.active .navigator.nav-pills.nav:hover li {
+.github-dimmed-dark a.active .navigator.nav-pills.nav:hover li {
   color: var(--color-sidebar-foreground-active-hover);
 }
 
-.github-dark .navigator.nav-pills.nav li.disabled {
+.github-dimmed-dark .navigator.nav-pills.nav li.disabled {
   color: var(--color-sidebar-foreground-disabled);
 }
 
 /* Buttons */
 
-.github-dark .button.close:focus {
+.github-dimmed-dark .button.close:focus {
   outline: none;
 }
 
-.github-dark .btn,
-.github-dark .btn-default {
+.github-dimmed-dark .btn,
+.github-dimmed-dark .btn-default {
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
   color: var(--color-foreground);
@@ -245,66 +245,66 @@ body.github-dark {
   box-shadow: none;
 }
 
-.github-dark .btn-default:hover {
+.github-dimmed-dark .btn-default:hover {
   background: var(--color-btn-default-background-hover);
   box-shadow: none;
   color: var(--color-foreground);
   text-shadow: none;
 }
 
-.github-dark .btn.active.btn-default {
+.github-dimmed-dark .btn.active.btn-default {
   background-color: var(--color-btn-default-background-hover);
   box-shadow: none;
   color: var(--color-foreground);
   text-shadow: none;
 }
 
-.github-dark .btn-primary {
+.github-dimmed-dark .btn-primary {
   background-image: none;
   text-shadow: none;
   box-shadow: none;
   background: var(--color-accent-50);
 }
 
-.github-dark .btn-secondary {
+.github-dimmed-dark .btn-secondary {
   background-image: none;
   text-shadow: none;
   box-shadow: none;
   background: var(--color-canvas-background);
 }
 
-.github-dark .btn-default {
+.github-dimmed-dark .btn-default {
   background-image: none;
   text-shadow: none;
   box-shadow: none;
   background: var(--color-btn-default-background);
 }
 
-.github-dark .btn-outline-default {
+.github-dimmed-dark .btn-outline-default {
   border: none;
   background: var(--color-btn-default-background);
 }
 
-.github-dark .btn-outline-info,
-.github-dark .btn-link {
+.github-dimmed-dark .btn-outline-info,
+.github-dimmed-dark .btn-link {
   color: var(--color-foreground);
   background: var(--color-btn-outline-link);
   text-shadow: none;
 }
 
-.github-dark .btn-outline-info:hover {
+.github-dimmed-dark .btn-outline-info:hover {
   color: whitesmoke !important;
   background: var(--color-btn-outline-link-hover) !important;
   text-shadow: none !important;
 }
 
-.github-dark .btn-outline-info:active {
+.github-dimmed-dark .btn-outline-info:active {
   color: whitesmoke !important;
   background: var(--color-btn-outline-link-hover) !important;
   text-shadow: none !important;
 }
 
-.github-dark .client-link {
+.github-dimmed-dark .client-link {
   color: var(--color-foreground);
   background: var(--color-btn-outline-link);
   text-shadow: none;
@@ -312,7 +312,7 @@ body.github-dark {
   font-size: inherit;
 }
 
-.github-dark .btn.btn-link {
+.github-dimmed-dark .btn.btn-link {
   border-color: transparent;
   width: 100%;
   text-align: left;
@@ -320,23 +320,23 @@ body.github-dark {
   color: var(--color-foreground);
 }
 
-.github-dark .alert-secondary {
+.github-dimmed-dark .alert-secondary {
   color: var(--color-foreground);
   background-color: var(--color-table-heading-background);
 }
 
-.github-dark .alert-secondary th {
+.github-dimmed-dark .alert-secondary th {
   border: 1px solid var(--color-table-heading-background);
 }
 
-.github-dark .btn-danger:disabled,
-.github-dark .btn-danger[disabled] {
+.github-dimmed-dark .btn-danger:disabled,
+.github-dimmed-dark .btn-danger[disabled] {
   color: var(--color-foreground);
   border-color: var(--color-btn-default-border);
   background: var(--color-btn-default-background);
 }
 
-.github-dark .btn-danger:not(:disabled):not(.disabled) {
+.github-dimmed-dark .btn-danger:not(:disabled):not(.disabled) {
   color: whitesmoke;
   background-color: var(--color-danger-emphasis);
   border-color: var(--color-danger-emphasis);
@@ -344,53 +344,53 @@ body.github-dark {
 }
 
 /* Pagination */
-.github-dark .page-item .page-link {
+.github-dimmed-dark .page-item .page-link {
   background-color: var(--color-btn-default-background);
   border-color: var(--color-btn-default-border);
   color: var(--color-foreground);
 }
 
-.github-dark .page-item input {
+.github-dimmed-dark .page-item input {
   background-color: var(--color-btn-default-background-hover);
   color: var(--color-foreground);
   border: 1px solid var(--color-btn-default-border);
 }
 
-.github-dark .page-item.active .page-link {
+.github-dimmed-dark .page-item.active .page-link {
   background-color: var(--color-canvas-background);
   border-color: var(--color-btn-default-border);
 }
 
-.github-dark .react-bootstrap-table-pagination-total {
+.github-dimmed-dark .react-bootstrap-table-pagination-total {
   color: var(--color-foreground);
 }
 
 /* Tables */
 
-.github-dark .table-bordered {
+.github-dimmed-dark .table-bordered {
   border: 1px solid var(--color-background);
   box-shadow: none;
   font-weight: 400;
 }
 
-.github-dark .table-bordered .notebook-filter td {
+.github-dimmed-dark .table-bordered .notebook-filter td {
   border: none;
   text-shadow: none;
 }
 
-.github-dark .table-bordered thead th {
+.github-dimmed-dark .table-bordered thead th {
   color: var(--color-foreground);
   border: 1px solid var(--color-table-heading-background);
   color: var(--color-foreground);
 }
 
-.github-dark .table thead th {
+.github-dimmed-dark .table thead th {
   color: var(--color-foreground);
   border: 1px solid var(--color-table-heading-background);
   background-color: var(--color-table-heading-background);;
 }
 
-.github-dark .table {
+.github-dimmed-dark .table {
   background-color: var(--color-canvas-background);
   color: var(--color-foreground);
   vertical-align: middle;
@@ -400,112 +400,112 @@ body.github-dark {
   box-shadow: none;
 }
 
-.github-dark .table tbody tr td {
+.github-dimmed-dark .table tbody tr td {
   border: none;
 }
 
-.github-dark .table tbody tr:nth-of-type(2n) {
+.github-dimmed-dark .table tbody tr:nth-of-type(2n) {
   background-color: var(--color-table-row-hover);
   border: none;
 }
 
-.github-dark .table tbody tr:nth-of-type(odd) {
+.github-dimmed-dark .table tbody tr:nth-of-type(odd) {
   background-color: unset;
   border: none;
 }
 
-.github-dark .table-hover tbody tr:hover {
+.github-dimmed-dark .table-hover tbody tr:hover {
   background-color: var(--color-table-row-hover);
   color: unset;
 }
 
-.github-dark .artifact-search-table td:hover {
+.github-dimmed-dark .artifact-search-table td:hover {
   background-color: var(--color-table-row-hover);
   color: unset;
 }
 
-.github-dark table tr.row-selected,
-.github-dark table tr.row_selected td {
+.github-dimmed-dark table tr.row-selected,
+.github-dimmed-dark table tr.row_selected td {
   background-color: var(--color-table-row-selected);
   color: var(--color-text-default);
 }
 
 /* Column search screen */
-.github-dark th.sortable input {
+.github-dimmed-dark th.sortable input {
   background-color: var(--color-canvas-background);
   color: var(--color-foreground);
   border-color: var(--color-btn-border);
 }
 
 /* Resizer dividers */
-.github-dark .Resizer.horizontal {
+.github-dimmed-dark .Resizer.horizontal {
   border: none;
   background-color: var(--color-resizer);
   height: 5px;
 }
 
-.github-dark .Resizer.horizontal:hover {
+.github-dimmed-dark .Resizer.horizontal:hover {
   background-color: var(--color-resizer);
 }
 
-.github-dark .Resizer.vertical {
+.github-dimmed-dark .Resizer.vertical {
   border: none;
   background-color: var(--color-btn-border);
   width: 3px;
 }
 
-.github-dark .Resizer.vertical:hover {
+.github-dimmed-dark .Resizer.vertical:hover {
   background-color: var(--color-resizer);
 }
 
-.github-dark .Resizer:hover {
+.github-dimmed-dark .Resizer:hover {
   transition: all 200ms ease-in-out;
 }
 
 /* Cards */
 
-.github-dark .card {
+.github-dimmed-dark .card {
   background-color: var(--color-background);
   border-color: var(--color-btn-border);
 }
 
-.github-dark .dashboard .card {
+.github-dimmed-dark .dashboard .card {
   border: none;
 }
 
-.github-dark .card-header {
+.github-dimmed-dark .card-header {
   background-color: var(--color-card-heading-background);
   color: var(--color-foreground);
   font-weight: 600;
 }
 
-.github-dark .card-body {
+.github-dimmed-dark .card-body {
   background-color: var(--color-canvas-background);
   color: var(--color-foreground);
 }
 
-.github-dark .card-body dt,
-.github-dark .card-body label {
+.github-dimmed-dark .card-body dt,
+.github-dimmed-dark .card-body label {
   font-weight: 600;
   color: var(--color-accent-100);
 }
 
 /* Json container */
-.github-dark div.pretty-json-container {
+.github-dimmed-dark div.pretty-json-container {
   filter: invert(0);
 }
 
 /* Tabs */
-.github-dark .tab-content {
+.github-dimmed-dark .tab-content {
   color: var(--color-foreground);
   padding-block-start: 3px;
 }
 
-.github-dark .nav-tabs {
+.github-dimmed-dark .nav-tabs {
   border-bottom: none;
 }
 
-.github-dark .nav-tabs .nav-link {
+.github-dimmed-dark .nav-tabs .nav-link {
   background-color: var(--color-tab);
   color: var(--color-foreground-dimmed);
   border-top-color: var(--color-btn-border);
@@ -514,37 +514,37 @@ body.github-dark {
   border-bottom: 2px transparent;
 }
 
-.github-dark .nav-tabs .nav-link:hover {
+.github-dimmed-dark .nav-tabs .nav-link:hover {
   background: var(--color-btn-border);
   color: var(--color-foreground);
   border-bottom: 2px solid var(--color-foreground-dimmed);
 }
 
-.github-dark .nav-tabs .nav-link:active {
+.github-dimmed-dark .nav-tabs .nav-link:active {
   background: var(--color-btn-border);
   color: var(--color-foreground);
   border-bottom: 2px solid var(--color-tab-active-border);
 }
 
-.github-dark .nav-tabs .nav-link.active {
+.github-dimmed-dark .nav-tabs .nav-link.active {
   background-color: var(--color-tab-active);
   color: var(--color-foreground);
   border-bottom: 2px solid var(--color-tab-active-border);
 }
 
 /* Forms */
-.github-dark .form-control {
+.github-dimmed-dark .form-control {
   background-color: var(--color-btn-default-background);
   color: var(--color-foreground);
   border-color: var(--color-btn-default-border);
   font-size: var(--font-size-base);
 }
 
-.github-dark .form-control:focus {
+.github-dimmed-dark .form-control:focus {
   box-shadow: none;
 }
 
-.github-dark .input-group-prepend .input-group-text {
+.github-dimmed-dark .input-group-prepend .input-group-text {
   background-color: var(--color-btn-default-background);
   box-shadow: none;
   color: var(--color-foreground);
@@ -553,14 +553,14 @@ body.github-dark {
   font-size: var(--font-size-base);
 }
 
-.github-dark .input-group .custom-file-label {
+.github-dimmed-dark .input-group .custom-file-label {
   background-color: var(--color-canvas-background);
   color: var(--color-accent-100);
   border: 1px solid var(--color-btn-default-border);
   font-size: var(--font-size-base);
 }
 
-.github-dark .input-group .custom-file-label:after {
+.github-dimmed-dark .input-group .custom-file-label:after {
   background-color: var(--color-btn-default-background);
   box-shadow: none;
   color: var(--color-foreground);
@@ -570,36 +570,36 @@ body.github-dark {
 
 /* Artifact viewer screen */
 
-.github-dark .report-viewer h1 {
+.github-dimmed-dark .report-viewer h1 {
   color: var(--color-accent-100);
 }
 
-.github-dark .report-viewer h2 {
+.github-dimmed-dark .report-viewer h2 {
   color: var(--color-accent-100);
 }
 
-.github-dark .report-viewer h3 {
+.github-dimmed-dark .report-viewer h3 {
   margin-top: 2rem;
   color: #daaa3f;
 }
 
-.github-dark .report-viewer h4 {
+.github-dimmed-dark .report-viewer h4 {
   color: #57ab5a;
 }
 
-.github-dark .report-viewer h5 {
+.github-dimmed-dark .report-viewer h5 {
   color: #8256d0;
 }
 
-.github-dark .artifact-search-table a {
+.github-dimmed-dark .artifact-search-table a {
   color: var(--color-foreground);
 }
 
-.github-dark .report-viewer {
+.github-dimmed-dark .report-viewer {
   color: var(--color-foreground);
 }
 
-.github-dark .report-viewer pre {
+.github-dimmed-dark .report-viewer pre {
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-small);
   background: inherit;
@@ -607,59 +607,59 @@ body.github-dark {
   color: var(--color-foreground-inverse);
 }
 
-.github-dark .report-viewer a {
+.github-dimmed-dark .report-viewer a {
   color: var(--color-accent-complement);
 }
 
-.github-dark .report-viewer pre > a {
+.github-dimmed-dark .report-viewer pre > a {
   color: var(--color-accent-complement);
 }
 
-.github-dark .artifact-search-table.selectable.container tbody tr:hover {
+.github-dimmed-dark .artifact-search-table.selectable.container tbody tr:hover {
   background-color: var(--color-table-row-hover);
 }
 
-.github-dark .artifact-search-table.selectable.container tr.row-selected,
-.github-dark .artifact-search-table.selectable.container tr.row_selected > td {
+.github-dimmed-dark .artifact-search-table.selectable.container tr.row-selected,
+.github-dimmed-dark .artifact-search-table.selectable.container tr.row_selected > td {
   background-color: var(--color-table-row-selected);
   color: var(--color-text-default);
 }
 
 /* Modal dialogs */
-.github-dark .modal-content {
+.github-dimmed-dark .modal-content {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-family-sans-serif);
 }
 
-.github-dark .modal-content dt {
+.github-dimmed-dark .modal-content dt {
   color: var(--color-accent-100);
 }
 
-.github-dark .modal-header {
+.github-dimmed-dark .modal-header {
   border-bottom: 2px solid var(--color-btn-default-border);
 }
 
-.github-dark .modal-header .close {
+.github-dimmed-dark .modal-header .close {
   color: var(--color-foreground-dimmed);
   opacity: 1;
   text-shadow: none;
   outline: none;
 }
 
-.github-dark .modal-header .close:hover,
-.github-dark .modal-header .close:focus {
+.github-dimmed-dark .modal-header .close:hover,
+.github-dimmed-dark .modal-header .close:focus {
   color: var(--color-foreground);
   opacity: 1;
   text-shadow: none;
   outline: none;
 }
 
-.github-dark .modal-footer {
+.github-dimmed-dark .modal-footer {
   border-top: 2px solid var(--color-btn-default-border);
 }
 
-.github-dark .modal-content pre {
+.github-dimmed-dark .modal-content pre {
   font-family: var(--font-family-monospace);
   background: inherit;
   filter: invert(1);
@@ -667,42 +667,42 @@ body.github-dark {
 }
 
 /* Notebooks */
-.github-dark .cell-toolbar,
-.github-dark .notebook-input {
+.github-dimmed-dark .cell-toolbar,
+.github-dimmed-dark .notebook-input {
   background-color: var(--color-background);
   color: var(--color-foreground);
   border-width: 0;
 }
 
-.github-dark .notebook-input pre {
+.github-dimmed-dark .notebook-input pre {
   font-family: var(--font-family-monospace);
   font-size: inherit;
   filter: invert(1);
   border-color: #ffffff00;
 }
 
-.github-dark .notebook-cell {
+.github-dimmed-dark .notebook-cell {
   background-color: var(--color-background);
 }
 
-.github-dark .notebook-cell.selected {
+.github-dimmed-dark .notebook-cell.selected {
   border-color: var(--color-btn-border);
 }
 
 /* react timelines */
-.github-dark .react-calendar-timeline .rct-sidebar {
+.github-dimmed-dark .react-calendar-timeline .rct-sidebar {
   color: var(--color-foreground);
 }
 
 /* file tree */
-.github-dark .file-tree ul {
+.github-dimmed-dark .file-tree ul {
   font-size: 16px;
   color: var(--color-foreground);
   background: var(--color-canvas-background);
   font-family: var(--font-family-sans-serif);
 }
 
-.github-dark .tree-folder {
+.github-dimmed-dark .tree-folder {
   padding-left: 5px;
   font-size: 16px;
   color: var(--color-foreground);
@@ -715,51 +715,51 @@ body.github-dark {
 }
 
 /* Table column selector */
-.github-dark .dropdown-menu {
+.github-dimmed-dark .dropdown-menu {
   background-color: var(--color-canvas-background);
 }
 
-.github-dark .dropdown-item {
+.github-dimmed-dark .dropdown-item {
   color: var(--color-foreground);
   font-family: var(--font-family-sans-serif);
   background-color: var(--color-canvas-background);
 }
 
-.github-dark .dropdown-item:hover {
+.github-dimmed-dark .dropdown-item:hover {
   background-color: var(--color-accent-50);
 }
 
-.github-dark .dropdown-item:active {
+.github-dimmed-dark .dropdown-item:active {
   background-color: var(--color-accent-50);
 }
 
 /* Datepicker */
-.github-dark .react-datepicker,
-.github-dark .react-datetime-picker {
+.github-dimmed-dark .react-datepicker,
+.github-dimmed-dark .react-datetime-picker {
   background-color: var(--color-background);
   color: var(--color-foreground);
 }
 
-.github-dark .react-datetime-picker__inputGroup__input,
-.github-dark .react-datetime-picker__button {
+.github-dimmed-dark .react-datetime-picker__inputGroup__input,
+.github-dimmed-dark .react-datetime-picker__button {
   filter: invert(0);
 }
 
-.github-dark .react-datepicker-popper {
+.github-dimmed-dark .react-datepicker-popper {
   z-index: 10;
 }
 
-.github-dark .react-datepicker__day {
+.github-dimmed-dark .react-datepicker__day {
   color: var(--color-foreground);
 }
 
-.github-dark .react-datepicker__day[aria-disabled="false"] {
+.github-dimmed-dark .react-datepicker__day[aria-disabled="false"] {
   background-color: var(--color-table-row-selected);
   color: var(--color-foreground);
 }
 
 /* Footer */
-.github-dark .app-footer.fixed-bottom {
+.github-dimmed-dark .app-footer.fixed-bottom {
   background-color: var(--color-footer-background);
   color: var(--color-foreground-dimmed);
   font-family: var(--font-family-sans-serif);
@@ -767,12 +767,12 @@ body.github-dark {
 }
 
 /* Spinner */
-.github-dark .overlay .fa-spinner {
+.github-dimmed-dark .overlay .fa-spinner {
   filter: invert(1);
 }
 
 /* Shell input */
-.github-dark .shell-command .input-group .form-control {
+.github-dimmed-dark .shell-command .input-group .form-control {
   font-family: var(--font-family-monospace);
   background-color: var(--color-background);
   color: var(--color-foreground);
@@ -780,7 +780,7 @@ body.github-dark {
   height: auto;
 }
 
-.github-dark .shell-command .velo-ace-editor {
+.github-dimmed-dark .shell-command .velo-ace-editor {
   -webkit-flex: auto;
   flex: auto;
   width: 1%;
@@ -793,45 +793,45 @@ body.github-dark {
 }
 
 /* Shell output */
-.github-dark .notebook-output pre {
+.github-dimmed-dark .notebook-output pre {
   filter: invert(1);
   border-color: var(--color-btn-border);
   font-size: inherit;
 }
 
-.github-dark .shell-cell {
+.github-dimmed-dark .shell-cell {
   border: 1px solid var(--color-btn-border);
 }
 
 /* ACE things */
-.github-dark .ace_tooltip {
+.github-dimmed-dark .ace_tooltip {
   background-color: var(--color-canvas-background);
   color: var(--color-foreground);
   border: 1px solid var(--color-btn-border);
   font-family: var(--font-family-sans-serif);
 }
 
-.github-dark .shell-command .ace_editor {
+.github-dimmed-dark .shell-command .ace_editor {
   overflow: visible;
   font-family: var(--font-family-monospace);
 }
 
-.github-dark .shell-command .show > .btn-primary.dropdown-toggle {
+.github-dimmed-dark .shell-command .show > .btn-primary.dropdown-toggle {
   background-color: var(--color-accent-50);
   border-color: var(--color-accent-50);
 }
 
-.github-dark .shell-command .show > .btn-primary.dropdown-toggle:active {
+.github-dimmed-dark .shell-command .show > .btn-primary.dropdown-toggle:active {
   background-color: var(--color-accent-50);
   border-color: var(--color-accent-50);
 }
 
-.github-dark .shell-command .show > .dropdown-menu.show {
+.github-dimmed-dark .shell-command .show > .dropdown-menu.show {
   background: var(--color-canvas-background);
   border: 1px solid var(--color-btn-border);
 }
 
-.github-dark .custom-tooltip {
+.github-dimmed-dark .custom-tooltip {
   margin: 0;
   padding: 10px;
   background-color: var(--color-background);
@@ -840,55 +840,55 @@ body.github-dark {
   display: block;
 }
 
-.github-dark .file-hex-view td,
-.github-dark .file-hex-view th {
+.github-dimmed-dark .file-hex-view td,
+.github-dimmed-dark .file-hex-view th {
   border: 0px;
 }
 
-.github-dark .labels,
-.github-dark .velo__control,
-.github-dark .velo__menu {
+.github-dimmed-dark .labels,
+.github-dimmed-dark .velo__control,
+.github-dimmed-dark .velo__menu {
   background-color: var(--color-canvas-background);
   color: var(--color-foreground);
 }
 
-.github-dark .velo__multi-value {
+.github-dimmed-dark .velo__multi-value {
   background-color: var(--color-canvas-background);
 }
 
-.github-dark .velo__input {
+.github-dimmed-dark .velo__input {
   color: var(--color-foreground);
 }
 
-.github-dark .velo__option:hover,
-.github-dark .velo__option--is-focused,
-.github-dark .velo__multi-value:hover {
+.github-dimmed-dark .velo__option:hover,
+.github-dimmed-dark .velo__option--is-focused,
+.github-dimmed-dark .velo__multi-value:hover {
   background-color: var(--color-btn-default-background-hover);
 }
 
-.github-dark hr {
+.github-dimmed-dark hr {
   background-color: var(--color-foreground-dimmed);
 }
 
-.github-dark img.velo-logo {
+.github-dimmed-dark img.velo-logo {
   opacity: 0.8;
 }
 
-.github-dark .icon-small {
+.github-dimmed-dark .icon-small {
   vertical-align: middle;
   opacity: 0.8;
 }
 
-.github-dark input[type="checkbox"],
+.github-dimmed-dark input[type="checkbox"],
 input[type="radio"] {
   vertical-align: middle;
 }
 
-.github-dark .no-content {
+.github-dimmed-dark .no-content {
   color: var(--color-foreground-dimmed);
 }
 
-.github-dark .velo-ace-editor {
+.github-dimmed-dark .velo-ace-editor {
   border-width: 0px;
   border-style: inset;
   height: 100%;
@@ -896,12 +896,12 @@ input[type="radio"] {
   border-color: var(--color-btn-border);
 }
 
-.github-dark .error-message {
+.github-dimmed-dark .error-message {
   font-size: 12pt;
   color: #daaa3f !important;
 }
 
-.github-dark .alert {
+.github-dimmed-dark .alert {
   text-shadow: none;
   box-shadow: none;
 }

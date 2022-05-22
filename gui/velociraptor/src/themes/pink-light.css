@@ -143,12 +143,20 @@ body.pink-light {
 .pink-light #client-search-bar {
   background-color: var(--color-canvas-background);
   border: 0.655385px solid var(--color-sidebar-foreground);
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
   color: var(--color-text-default);
   font-family: var(--font-family-sans-serif);
   padding-top: 5px;
   padding-bottom: 5px;
   margin-left: 5px;
   height: 25px;
+}
+
+.pink-light .dropdown .dropdown-toggle.btn.btn-default {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left-width: 0;
 }
 
 .pink-light .client-summary {
