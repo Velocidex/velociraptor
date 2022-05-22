@@ -46,7 +46,8 @@ type EventTable struct {
 
 	tracer *QueryTracer
 
-	request *flows_proto.ArtifactCollectorArgs
+	request         *flows_proto.ArtifactCollectorArgs
+	current_queries []*actions_proto.VQLCollectorArgs
 }
 
 func (self *EventTable) Clock() utils.Clock {
@@ -77,21 +78,38 @@ func (self *EventTable) Close() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	self._Close()
+}
+
+func (self *EventTable) _Close() {
 	// Close the old table.
 	if self.cancel != nil {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.Info("Closing Server Monitoring Event table")
 
 		self.cancel()
+		self.cancel = nil
 	}
 
-	// Wait here until all the old queries are cancelled.
-	self.wg.Wait()
+	// Wait here until all the old queries are cancelled. Do not hold
+	// the lock while we are waiting or the event table will be
+	// deadlocked.
+	wg := self.wg
+	self.mu.Unlock()
+	wg.Wait()
+	self.mu.Lock()
+
+	// Get ready for the next run.
+	self.wg = &sync.WaitGroup{}
 }
 
 func (self *EventTable) Get() *flows_proto.ArtifactCollectorArgs {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	if self.request == nil {
+		return &flows_proto.ArtifactCollectorArgs{}
+	}
 
 	return proto.Clone(self.request).(*flows_proto.ArtifactCollectorArgs)
 }
@@ -117,6 +135,8 @@ func (self *EventTable) ProcessArtifactModificationEvent(
 	// event table when any artifact is changed. We dont expect
 	// this to be too frequent.
 	request := self.Get()
+
+	// Restart the queries
 	self.StartQueries(config_obj, request)
 
 }
@@ -133,8 +153,6 @@ func (self *EventTable) Update(
 				"state": request,
 			}).Info("SetServerMonitoringState")
 	}
-
-	self.Close()
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("server_monitoring: Updating monitoring table")
@@ -153,6 +171,40 @@ func (self *EventTable) Update(
 	return self.StartQueries(config_obj, request)
 }
 
+// Compare a new set of queries with the current set to see if they
+// were changed at all.
+func (self *EventTable) equal(events []*actions_proto.VQLCollectorArgs) bool {
+	if len(events) != len(self.current_queries) {
+		return false
+	}
+
+	for i := range self.current_queries {
+		lhs := self.current_queries[i]
+		rhs := events[i]
+
+		if len(lhs.Query) != len(rhs.Query) {
+			return false
+		}
+
+		for j := range lhs.Query {
+			if !proto.Equal(lhs.Query[j], rhs.Query[j]) {
+				return false
+			}
+		}
+
+		if len(lhs.Env) != len(rhs.Env) {
+			return false
+		}
+
+		for j := range lhs.Env {
+			if !proto.Equal(lhs.Env[j], rhs.Env[j]) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
 // Start the queries in the requewst
 func (self *EventTable) StartQueries(
 	config_obj *config_proto.Config,
@@ -160,9 +212,6 @@ func (self *EventTable) StartQueries(
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
-
-	self.wg = &sync.WaitGroup{}
-	self.cancel = nil
 
 	// Compile the ArtifactCollectorArgs into a list of requests.
 	launcher, err := services.GetLauncher()
@@ -184,14 +233,14 @@ func (self *EventTable) StartQueries(
 	acl_manager := vql_subsystem.NullACLManager{}
 
 	// Make a context for all the VQL queries.
-	ctx, cancel := context.WithCancel(self.parent_ctx)
-	self.cancel = cancel
+	subctx, cancel := context.WithCancel(self.parent_ctx)
+	defer cancel()
 
 	// Compile the collection request into multiple
 	// VQLCollectorArgs - each will be collected in a different
 	// goroutine.
 	vql_requests, err := launcher.CompileCollectorArgs(
-		ctx, config_obj, acl_manager, repository,
+		subctx, config_obj, acl_manager, repository,
 		services.CompilerOptions{
 			IgnoreMissingArtifacts: true,
 		}, request)
@@ -199,12 +248,28 @@ func (self *EventTable) StartQueries(
 		return err
 	}
 
+	// Check if the queries have changed at all. If not, we skip the
+	// update.
+	if self.equal(vql_requests) {
+		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		logger.Info("server_monitoring: Skipping table update because queries have not changed.")
+		return nil
+	}
+
+	// Close the current queries.
+	self._Close()
+
+	// Prepare a new run context.
 	self.request = request
+	self.current_queries = vql_requests
+
+	// Create a new ctx for the new run.
+	new_ctx, cancel := context.WithCancel(self.parent_ctx)
+	self.cancel = cancel
 
 	// Run each collection separately in parallel.
 	for _, vql_request := range vql_requests {
-
-		err = self.RunQuery(ctx, config_obj, self.wg, vql_request)
+		err = self.RunQuery(new_ctx, config_obj, self.wg, vql_request)
 		if err != nil {
 			return err
 		}
@@ -320,6 +385,7 @@ func (self *EventTable) RunQuery(
 
 			vql, err := vfilter.Parse(query.VQL)
 			if err != nil {
+				query_log.Close()
 				return
 			}
 

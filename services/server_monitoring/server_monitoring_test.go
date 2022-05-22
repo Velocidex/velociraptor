@@ -1,12 +1,14 @@
 package server_monitoring
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -14,6 +16,7 @@ import (
 	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
+	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -21,7 +24,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting"
+	"www.velocidex.com/golang/vfilter"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
@@ -56,6 +61,11 @@ sources:
 - query: |
      SELECT Foo, Foo2 FROM clock(ms=10)
      LIMIT 5
+`, `
+name: WaitForCancel
+type: SERVER_EVENT
+sources:
+- query: SELECT * FROM register_run_count() WHERE log(message="Finished!")
 `}
 )
 
@@ -65,6 +75,8 @@ type ServerMonitoringTestSuite struct {
 
 func (self *ServerMonitoringTestSuite) SetupTest() {
 	self.TestSuite.SetupTest()
+
+	self.LoadArtifacts(monitoringArtifacts)
 
 	assert.NoError(self.T(), self.Sm.Start(StartServerMonitoringService))
 }
@@ -82,8 +94,6 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), 1, len(configuration.Artifacts))
 	assert.Equal(self.T(), "Server.Monitor.Health", configuration.Artifacts[0])
-
-	self.LoadArtifacts(monitoringArtifacts)
 
 	// Install the two event artifacts.
 	err = services.GetServerEventManager().Update(
@@ -199,6 +209,61 @@ sources:
 	// Wait until all queries are done.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		return len(event_table.Tracer().Dump()) == 0
+	})
+}
+
+// Check that old event queries are properly shut down when table is
+// updated.
+func (self *ServerMonitoringTestSuite) TestQueriesAreCancelled() {
+	run_count := int64(0)
+
+	actions.QueryLog.Clear()
+
+	// A new plugin to keep track of when a query is running - Total
+	// number of runs is kept in run_count above.
+	vql_subsystem.RegisterPlugin(
+		vfilter.GenericListPlugin{
+			PluginName: "register_run_count",
+			Function: func(
+				ctx context.Context, scope vfilter.Scope,
+				args *ordereddict.Dict) []vfilter.Row {
+
+				atomic.AddInt64(&run_count, 1)
+
+				// Wait here until we get cancelled.
+				<-ctx.Done()
+				atomic.AddInt64(&run_count, -1)
+
+				return nil
+			},
+		})
+
+	// Install a table with a an artifact that uses the plugin.
+	err := services.GetServerEventManager().Update(
+		self.ConfigObj, "",
+		&flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{"WaitForCancel"},
+			Specs:     []*flows_proto.ArtifactSpec{},
+		})
+	assert.NoError(self.T(), err)
+
+	// Wait here until the query is installed.
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		return atomic.LoadInt64(&run_count) == 1
+	})
+
+	// Now install an empty table - all queries should quit.
+	err = services.GetServerEventManager().Update(
+		self.ConfigObj, "",
+		&flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{},
+			Specs:     []*flows_proto.ArtifactSpec{},
+		})
+	assert.NoError(self.T(), err)
+
+	// Wait until all queries are done and cancelled.
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		return atomic.LoadInt64(&run_count) == 0
 	})
 }
 

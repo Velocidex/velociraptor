@@ -271,6 +271,13 @@ func searchArtifact(
 						new_item.BuiltIn = artifact.BuiltIn
 					}
 
+					if fields.Description {
+						new_item.Description = artifact.Description
+					}
+					if fields.Type {
+						new_item.Type = artifact.Type
+					}
+
 					result.Items = append(result.Items, new_item)
 				}
 			}
