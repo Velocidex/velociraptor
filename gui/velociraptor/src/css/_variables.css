@@ -1,18 +1,18 @@
 :root {
     --sidebar-collapsed-width: 45px;
-    --sidebar-icon-color: #8f8f8f;
-    --sidebar-active-icon-background-color: #8f8f8f;
-    --sidebar-icon-color-hover: #000e7b;
-    --sidebar-icon-color-disabled: #8f8f8f50;
-    --sidebar-icon-color-bg: #fff;
+    --color-sidebar-foreground: #8f8f8f;
+    --color-sidebar-active-background: #8f8f8f;
+    --color-sidebar-foreground-inactive-hover: #000e7b;
+    --color-sidebar-foreground-disabled: #8f8f8f50;
+    --color-sidebar-background: #fff;
 
-    --font-json: Menlo, Monaco, Consolas, "Courier New", monospace;
-    --font-monospace: "Courier New", Courier, monospace;
+    --font-json: roboto-mono, Menlo, Monaco, Consolas, "Courier New", monospace;
+    --font-monospace: roboto-mono, "Courier New", Courier, monospace;
 
-    --color-dashboard-background: #f0f0f0;
-    --color-default-background: #ffffff;
-    --color-default-font: #000;
-    --color-default-font-inverted: #fff;
+    --color-sidebar-foreground-active-hover: #f0f0f0;
+    --color-canvas-background: #ffffff;
+    --color-text-default: #000;
+    --color-text-default-inverted: #fff;
     --color-pristine: #feffe0;
     --color-table-row-selected: #d9edf7;
     --color-table-row-modified: #471ecb;

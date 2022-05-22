@@ -1,0 +1,477 @@
+@font-face {
+  font-family: "roboto-mono";
+  font-style: normal;
+  font-weight: 400;
+  src: local(""),
+    url("../fonts/roboto-mono-v13-latin-ext_latin-regular.woff2")
+      format("woff2");
+  font-display: block;
+}
+
+@font-face {
+  font-family: "roboto";
+  font-style: normal;
+  font-weight: 400;
+  src: local(""),
+    url("../fonts/roboto-v29-latin-ext_latin-regular.woff2") format("woff2");
+  font-display: block;
+}
+
+.veloci-light {
+  --accent-color: #00aa00;
+  --color-accent: 0, 170, 0;
+  --color-accent-complement: #e83e8c;
+
+  --color-accent-100: rgba(var(--color-accent), 1);
+  --color-accent-75: rgba(var(--color-accent), 0.75);
+  --color-accent-50: rgba(var(--color-accent), 0.5);
+  --color-accent-25: rgba(var(--color-accent), 0.25);
+
+  --color-canvas-background: #ffffff;
+  --color-footer-background: #eaeaea;
+  --color-background: #fefefe;
+  --color-background-complement: #d2ccc4;
+  --color-text-default: #121212;
+  --color-foreground: rgb(18, 18, 18);
+  --color-foreground-dimmed: #4f4f4f;
+  --color-foreground-inverse: #eeeeee;
+
+  --color-sidebar-foreground: #404040;
+  --color-sidebar-background: #ededed;
+  --color-sidebar-foreground-inactive-hover: var(--color-accent-100);
+  --color-sidebar-background-inactive-hover: #E6E6E6;
+  --color-sidebar-foreground-active-hover: var(--color-sidebar-active-foreground);
+  /* --color-sidebar-foreground-disabled: lightgrey; */
+  --color-sidebar-active-foreground: var(--color-foreground);
+  --color-sidebar-active-background: #cbcbcb;
+
+  --color-btn-border: #dee2e6;
+
+  --color-tab: #bbbbbb;
+  --color-tab-active: #555555;
+
+  --color-resizer: #5cd00a80;
+  --color-scrollbar-track: var(--color-sidebar-background);
+  --color-scrollbar-thumb: var(--color-tab);
+  --color-scrollbar-thumb-hover: var(--color-tab-active);
+
+  --font-size-large: 16px;
+  --font-size-base: 14px;
+  --font-size-small: 12px;
+  --font-family-sans-serif: -apple-system, BlinkMacSystemFont, roboto,
+    "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-family-monospace: roboto-mono, SFMono-Regular, Menlo, Monaco,
+    "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
+
+  --color-btn-default-background: #5cd00a80;
+  --color-btn-default-background-hover: #0c900a80;
+  --color-btn-outline-link: #0c900a80;
+
+  --color-table-heading-background: #dee2e6;
+  --color-table-row-selected: rgba(0, 0, 0, 0.05);
+  --color-table-row-hover: rgba(0, 0, 0, 0.01);
+  --color-code: #990000;
+
+  --color-timeline-table-shown: #5cd00a80;
+}
+
+body.veloci-light {
+  background-color: var(--color-canvas-background);
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+}
+
+.veloci-light code {
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-small);
+  color: var(--color-code);
+}
+
+.veloci-light p,
+.veloci-light dl,
+.veloci-light ol,
+.veloci-light ul {
+  font-family: var(--font-family-sans-serif);
+}
+
+/* Top Navbar */
+.veloci-light .main-navbar {
+  background-color: var(--color-sidebar-background);
+  border-color: var(--color-sidebar-background);
+}
+
+.veloci-light .hamburger {
+  color: var(--color-sidebar-foreground);
+}
+
+.veloci-light #client-search-bar {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  font-family: var(--font-family-sans-serif);
+  padding-top: 5px;
+  padding-bottom: 5px;
+  margin-left: 5px;
+  height: 26px;
+}
+
+.veloci-light .dropdown .dropdown-toggle.btn.btn-default {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-left-width: 0;
+}
+
+.veloci-light .client-summary {
+  padding: 5px 10px;
+  float: left;
+  font-family: var(--font-family-sans-serif);
+}
+
+.veloci-light .client-status .client-name {
+  background: var(--color-btn-default-background);
+  text-decoration: none !important;
+  text-shadow: none;
+  padding: 2px 10px 5px 10px;
+  border-radius: 3px;
+  margin: 5px;
+  font-size: 15px;
+  border-color: var(--color-btn-default-border);
+}
+
+/* .veloci-light .client-status .client-name:hover {
+    color: whitesmoke;
+    background: var(--color-client-link-hover);
+} */
+
+/* .veloci-light .client-status .client-name:active {
+    color: whitesmoke;
+    background: var(--color-client-link-hover);
+} */
+
+/* .veloci-light .react-autosuggest__suggestions-container--open {
+    margin-left: 5px;
+    background-color: var(--color-background);
+    font-family: var(--font-family-sans-serif);
+    color: var(--color-text-default);
+} */
+
+/* .veloci-light .react-autosuggest__suggestion--highlighted {
+    background-color: var(--color-accent-50);
+} */
+
+/* sidebar navbar */
+
+.veloci-light div#navigator {
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+  color: var(--color-sidebar-foreground);
+  background-color: var(--color-sidebar-background);
+  border-color: var(--color-sidebar-foreground-inactive-hover);
+}
+
+.veloci-light .nav-pills .nav-link {
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+  color: var(--color-sidebar-foreground);
+}
+
+.veloci-light .navigator.nav-pills.nav:hover li {
+  color: var(--color-sidebar-foreground-inactive-hover);
+  background-color: var(--color-sidebar-background-inactive-hover);
+}
+
+.veloci-light a.active .navigator.nav-pills.nav li {
+  color: var(--color-sidebar-active-foreground);
+  background-color: var(--color-sidebar-active-background);
+}
+
+.veloci-light a.active .navigator.nav-pills.nav:hover li {
+  color: var(--color-sidebar-foreground-active-hover);
+}
+
+.veloci-light .navigator.nav-pills.nav li.disabled {
+  color: var(--color-sidebar-foreground-disabled);
+}
+
+/* Buttons */
+
+.veloci-light .btn,
+.veloci-light .btn-default {
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+  color: var(--color-text-default);
+  background-image: none;
+  text-shadow: none;
+  box-shadow: none;
+  background: var(--color-btn-default-background);
+  border-color: var(--color-btn-border);
+}
+
+.veloci-light .btn-default.active {
+  box-shadow: none;
+  color: var(--color-sidebar-background);
+}
+
+.veloci-light .btn-default:hover {
+  background: var(--color-btn-default-background-hover);
+  color: var(--color-text-default);
+}
+
+.veloci-light .btn-default:focus {
+  background: var(--color-btn-default-background);
+  color: var(--color-text-default);
+}
+
+.veloci-light .btn-primary {
+  background-image: none;
+  text-shadow: none;
+  box-shadow: none;
+  background: none;
+}
+
+.veloci-light .btn-secondary {
+  background-image: none;
+  text-shadow: none;
+  box-shadow: none;
+  background: var(--color-background);
+}
+
+.veloci-light .btn-outline-default {
+  border-width: 0;
+  background: none;
+}
+
+.veloci-light .btn-group .btn {
+    height: 37px;
+}
+
+.veloci-light .btn-group input.text {
+    height: 27px;
+}
+
+.veloci-light .btn.btn-outline-info,
+.veloci-light .btn.btn-link {
+    background: var(--color-canvas-background);
+    color: var(--color-btn-outline-link);
+}
+
+.veloci-light .btn.btn-link {
+  border-color: transparent;
+}
+
+/* Resizer dividers */
+.veloci-light .Resizer.horizontal {
+  border: none;
+  background-color: var(--color-resizer);
+  height: 10px;
+}
+
+.veloci-light .Resizer.horizontal:hover {
+  background-color: var(--color-resizer);
+}
+
+.veloci-light .Resizer.vertical {
+  border: none;
+  background-color: var(--color-panel-background);
+  width: 3px;
+}
+
+.veloci-light .Resizer.vertical:hover {
+  background-color: var(--color-resizer);
+}
+
+.veloci-light .Resizer:hover {
+  transition: all 200ms ease-in-out;
+}
+
+/* Cards */
+
+.veloci-light .dashboard .card {
+  border: none;
+}
+
+/* Json container */
+.veloci-light div.pretty-json-container {
+  filter: invert(0);
+}
+
+/* Tabs */
+.veloci-light .tab-content {
+  color: var(--color-text-default);
+}
+
+.veloci-light .nav-tabs > a,
+.veloci-light .nav-tabs > a:hover {
+  background-color: var(--color-tab);
+  color: var(--color-text-default);
+  border-top-color: var(--color-btn-border);
+  border-right-color: var(--color-btn-border);
+  border-bottom-color: #ffffff00;
+  border-left-color: var(--color-btn-border);
+}
+
+.veloci-light .nav-tabs > a:hover {
+  background-color: var(--color-sidebar-foreground-inactive-hover);
+  color: var(--color-background);
+}
+
+.veloci-light .nav-tabs > a.active {
+  background-color: var(--color-tab-active);
+  color: var(--color-text-default);
+  border-top-color: var(--color-btn-border);
+  border-right-color: var(--color-btn-border);
+  border-bottom-color: #ffffff00;
+  border-left-color: var(--color-btn-border);
+}
+
+/* forms */
+
+.veloci-light .form-control,
+.veloci-light .custom-file-input {
+  background-color: var(--color-canvas-background);
+  color: var(--color-text-default);
+  border-color: var(--color-btn-default-border);
+  font-size: var(--font-size-base);
+}
+
+.veloci-light .form-control:focus {
+  background-color: var(--color-canvas-background);
+  box-shadow: 0 0 0 0.2rem var(--color-accent-25);
+}
+
+.veloci-light .input-group-prepend .input-group-text {
+  background-color: var(--color-btn-default-background);
+  box-shadow: none;
+  color: var(--color-foreground);
+  text-shadow: none;
+  border: 1px solid var(--color-btn-default-border);
+  font-size: var(--font-size-base);
+}
+
+.veloci-light .input-group .custom-file-label {
+  background-color: var(--color-canvas-background);
+  color: var(--color-accent-100);
+  border: 1px solid var(--color-btn-default-border);
+  font-size: var(--font-size-base);
+}
+
+.veloci-light .input-group .custom-file-label:after {
+  background-color: var(--color-btn-default-background);
+  box-shadow: none;
+  color: var(--color-foreground);
+  text-shadow: none;
+  font-weight: 400;
+}
+
+/* Tables */
+
+.veloci-light .table {
+  color: var(--color-foreground);
+  background-color: var(--color-canvas-background);
+  vertical-align: middle;
+  font-weight: 400;
+  font-size: var(--font-size-base);
+  text-shadow: none;
+  box-shadow: none;
+}
+
+.veloci-light .table thead th {
+  border: none;
+  background-color: var(--color-table-row-selected);
+}
+
+.veloci-light .table tbody tr td {
+  border: none;
+}
+
+.veloci-light .table tbody tr:nth-of-type(2n) {
+  background-color: var(--color-table-row-hover);
+  border: none;
+}
+
+.veloci-light .table tbody tr:nth-of-type(odd) {
+  background-color: unset;
+  border: none;
+}
+
+.veloci-light .table-bordered thead th {
+  border: 1px solid var(--color-table-heading-background);
+  color: var(--color-foreground);
+  font-weight: 400;
+  vertical-align: middle;
+  text-shadow: none;
+  box-shadow: none;
+}
+
+.veloci-light .table-bordered .notebook-filter td {
+  border: none;
+  text-shadow: none;
+  box-shadow: none;
+}
+
+.veloci-light .table-bordered td {
+  border: 1px solid var(--color-btn-border);
+}
+
+.veloci-light .table-hover tbody tr:hover {
+  background-color: var(--color-table-row-hover);
+  color: unset;
+}
+
+.veloci-light .artifact-search-table td:hover {
+  background-color: var(--color-table-row-hover);
+  color: unset;
+}
+
+.veloci-light table tr.row-selected,
+.veloci-light table tr.row_selected td {
+  background-color: var(--color-table-row-selected);
+  color: var(--color-text-default);
+}
+
+/* Footer */
+
+.veloci-light .app-footer.fixed-bottom {
+  background-color: var(--color-footer-background);
+  color: var(--color-text-default);
+  font-family: var(--font-family-sans-serif);
+  border-top: 1px solid var(--color-btn-border);
+}
+
+/* Artifact viewer screen */
+
+.veloci-light .report-viewer h3 {
+  margin-top: 2rem;
+}
+
+.veloci-light .report-viewer h4 {
+  color: var(--color-accent-100);
+  font-weight: 400;
+}
+
+.veloci-light .report-viewer h5 {
+  color: var(--color-accent-complement);
+  font-weight: 400;
+  font-size: var(--font-size-base);
+}
+
+.veloci-light .artifact-search-table a {
+  color: var(--color-text-default);
+}
+
+.veloci-light .report-viewer {
+  color: var(--color-text-default);
+}
+
+.veloci-light .report-viewer pre {
+  filter: invert(0);
+}
+
+.veloci-light .artifact-search-table.selectable.container tbody tr:hover {
+  background-color: var(--color-table-row-hover);
+}
+
+.veloci-light .artifact-search-table.selectable.container tr.row-selected,
+.veloci-light .artifact-search-table.selectable.container tr.row_selected > td {
+  background-color: var(--color-table-row-selected);
+  color: var(--color-text-default);
+}

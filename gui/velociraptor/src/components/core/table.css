@@ -22,6 +22,11 @@ a.btn.btn-default.active {
     max-width: none!important;
 }
 
+.modal-70w {
+    width: 70%;
+    max-width: none!important;
+}
+
 .row.react-bootstrap-table-pagination {
     width: 100%;
 }

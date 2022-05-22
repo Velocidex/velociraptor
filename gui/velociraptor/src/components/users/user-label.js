@@ -25,7 +25,7 @@ class UserSettings extends React.PureComponent {
     componentDidMount = () => {
         if (this.context.traits) {
             this.setState({
-                theme: this.context.traits.theme || "light-mode",
+                theme: this.context.traits.theme || "no-theme",
                 default_password: this.context.traits.default_password || "",
             });
         }
@@ -46,7 +46,7 @@ class UserSettings extends React.PureComponent {
     render() {
         return (
             <Modal show={true}
-                   dialogClassName="modal-90w"
+                   dialogClassName="modal-70w"
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
                 <Modal.Title>User Settings</Modal.Title>
@@ -69,9 +69,14 @@ class UserSettings extends React.PureComponent {
                                           default_password: this.state.default_password,
                                       });
                                   }}>
-                      <option value="light-mode">Light (default)</option>
-                      <option value="dark-mode">Dark</option>
-                      <option value="light-pink">Strawberry Milkshake (light)</option>
+                      <option value="no-theme">Default Velociraptor</option>
+                      <option value="veloci-light">Velociraptor (light) [experimental]</option>
+                      <option value="veloci-dark">Velociraptor (dark) [experimental]</option>
+                      {/* <option value="github-dimmed-light">Github dimmed (light)</option> */}
+                      <option value="github-dimmed-dark">Github dimmed (dark)</option>
+                      {/* <option value="ncurses">Ncurses (light)</option> */}
+                      <option value="coolgray-dark">Cool Gray (dark)</option>
+                      <option value="pink-light">Strawberry Milkshake (light)</option>
                     </Form.Control>
                   </Col>
                 </Form.Group>
@@ -118,12 +123,23 @@ export default class UserLabel extends React.Component {
     setSettings = (options) => {
         // Set the ACE theme according to the theme so they match.
         let ace_options = JSON.parse(this.context.traits.ui_settings || "{}");
-        if (options.theme === "dark-mode") {
-            ace_options.theme = "ace/theme/terminal";
-        } else if(options.theme === "light-mode") {
+        ace_options.fontSize = "18px";
+        if (options.theme === "no-theme") {
             ace_options.theme = "ace/theme/xcode";
-        } else if(options.theme === "light-pink") {
-          ace_options.theme = "ace/theme/xcode";
+        } else if (options.theme === "veloci-dark") {
+            ace_options.theme = "ace/theme/terminal";
+        } else if(options.theme === "veloci-light") {
+            ace_options.theme = "ace/theme/xcode";
+        } else if(options.theme === "pink-light") {
+            ace_options.theme = "ace/theme/xcode";
+        } else if(options.theme === "ncurses") {
+            ace_options.theme = "ace/theme/github";
+        } else if(options.theme === "github-dimmed-dark") {
+          ace_options.theme = "ace/theme/vibrant_ink";
+        } else if(options.theme === "github-dimmed-light") {
+          ace_options.theme = "ace/theme/sqlserver";
+        } else if(options.theme === "coolgray-dark") {
+          ace_options.theme = "ace/theme/nord_dark";
         }
         options.options = JSON.stringify(ace_options);
 

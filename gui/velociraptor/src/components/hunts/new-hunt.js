@@ -58,6 +58,7 @@ class NewHuntConfigureHunt extends React.Component {
                       <Form.Control as="textarea" rows={3}
                                     id="hunt-description-text"
                                     placeholder="Hunt description"
+                                    spellCheck="false"
                                     value={this.props.parameters.description}
                                     onChange={e => this.setParam("description", e.target.value)}
                       />

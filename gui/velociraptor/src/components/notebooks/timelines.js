@@ -61,6 +61,7 @@ export class AddTimelineDialog extends React.Component {
                       this.setState({timeline: e.value});
                   }}
                   placeholder="Timeline name"
+                  spellCheck="false"
                 />
 
               </Modal.Body>
@@ -234,6 +235,7 @@ export class AddVQLCellToTimeline extends React.Component {
                       options={options}
                       onChange={(e)=>this.setState({timeline: e && e.value})}
                       placeholder="Super-timeline name"
+                      spellCheck="false"
                     />
                   </Col>
                 </Form.Group>
@@ -244,6 +246,7 @@ export class AddVQLCellToTimeline extends React.Component {
                     <Form.Control as="textarea"
                                   rows={1}
                                   placeholder="Child timeline name"
+                                  spellCheck="false"
                                   value={this.state.name}
                                   onChange={(e) => this.setState(
                                       {name: e.currentTarget.value})} />
@@ -258,6 +261,7 @@ export class AddVQLCellToTimeline extends React.Component {
                       options={column_options}
                       onChange={(e)=>this.setState({time_column: e && e.value})}
                       placeholder="Time Column"
+                      spellCheck="false"
                     />
                   </Col>
                 </Form.Group>

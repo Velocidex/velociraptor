@@ -21,7 +21,7 @@ export default class VeloLiveClock extends Component {
 
     render() {
         return (
-            <div className="float-right">{this.state.date.toISOString()}</div>
+            <div className="float-right">{this.state.date.toISOString().split('.')[0]+"Z"}</div>
         );
     }
 }

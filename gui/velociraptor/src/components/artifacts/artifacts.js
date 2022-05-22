@@ -316,6 +316,7 @@ class ArtifactInspector extends React.Component {
                                  value={this.state.current_filter}
                                  onChange={(e) => this.updateSearch(e.currentTarget.value)}
                                  placeholder="Search for artifact"
+                                 spellCheck="false"
                     />
                   </InputGroup>
                 </Form>
