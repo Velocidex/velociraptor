@@ -460,6 +460,13 @@ class ShellViewer extends Component {
             shell_type: props.default_shell || 'Powershell',
             command: "",
         };
+
+        this.state.client_os = props.client.os_info.system;
+
+        // Powershell can exist on Linux/MacOS but Bash is a more reasonable default
+        if (this.state.client_os && this.state.client_os !== "windows") {
+            this.state.shell_type = 'Bash';
+        }
     }
 
     componentDidMount() {
@@ -618,8 +625,10 @@ class ShellViewer extends Component {
                                     onSelect={(e) => this.setType(e)}
                                     id="bg-nested-dropdown">
                       <Dropdown.Item eventKey="Powershell">Powershell</Dropdown.Item>
-                      <Dropdown.Item eventKey="Cmd">Cmd</Dropdown.Item>
-                      <Dropdown.Item eventKey="Bash">Bash</Dropdown.Item>
+                      { (!this.state.client_os || this.state.client_os === "windows") &&
+                           <Dropdown.Item eventKey="Cmd">Cmd</Dropdown.Item> }
+                      { (!this.state.client_os || this.state.client_os !== "windows") &&
+                           <Dropdown.Item eventKey="Bash">Bash</Dropdown.Item> }
                       <Dropdown.Item eventKey="VQL">VQL</Dropdown.Item>
                     </DropdownButton>
                   </InputGroup.Prepend>
