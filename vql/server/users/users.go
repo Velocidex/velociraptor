@@ -6,7 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -33,6 +33,7 @@ func (self UsersPlugin) Call(
 			return
 		}
 
+		users := services.GetUserManager()
 		user_list, err := users.ListUsers(config_obj)
 		if err != nil {
 			scope.Log("users: %v", err)

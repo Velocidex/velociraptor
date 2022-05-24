@@ -7,15 +7,15 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	users "www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 func (self *ApiServer) GetUsers(
 	ctx context.Context,
 	in *emptypb.Empty) (*api_proto.Users, error) {
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
-	user_record, err := users.GetUser(self.config, user_name)
+	users_manager := services.GetUserManager()
+	user_record, err := users_manager.GetUserFromContext(self.config, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +29,7 @@ func (self *ApiServer) GetUsers(
 
 	result := &api_proto.Users{}
 
-	users, err := users.ListUsers(self.config)
+	users, err := users_manager.ListUsers(self.config)
 	if err != nil {
 		return nil, err
 	}
@@ -44,6 +44,11 @@ func (self *ApiServer) GetUserFavorites(
 	in *api_proto.Favorite) (*api_proto.Favorites, error) {
 
 	// No special permission requires to view a user's own favorites.
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
-	return users.GetFavorites(self.config, user_name, in.Type)
+	users_manager := services.GetUserManager()
+	user_record, err := users_manager.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+	user_name := user_record.Name
+	return users_manager.GetFavorites(self.config, user_name, in.Type)
 }

@@ -27,7 +27,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/users"
 )
 
 var (
@@ -105,7 +106,9 @@ func doAddUser() error {
 	}
 
 	users.SetPassword(user_record, *user_add_password)
-	err = users.SetUser(config_obj, user_record)
+
+	users_manager := services.GetUserManager()
+	err = users_manager.SetUser(config_obj, user_record)
 	if err != nil {
 		return fmt.Errorf("Unable to set user account: %w", err)
 	}
@@ -126,7 +129,8 @@ func doShowUser() error {
 	}
 	defer sm.Close()
 
-	user_record, err := users.GetUser(config_obj, *user_show_name)
+	users_manager := services.GetUserManager()
+	user_record, err := users_manager.GetUser(config_obj, *user_show_name)
 	if err != nil {
 		return fmt.Errorf("Unable to find user %s", *user_show_name)
 	}
@@ -152,14 +156,15 @@ func doLockUser() error {
 	}
 	defer sm.Close()
 
-	user_record, err := users.GetUser(config_obj, *user_lock_name)
+	users_manager := services.GetUserManager()
+	user_record, err := users_manager.GetUser(config_obj, *user_lock_name)
 	if err != nil {
 		return fmt.Errorf("Unable to find user %s", *user_lock_name)
 	}
 
 	user_record.Locked = true
 
-	err = users.SetUser(config_obj, user_record)
+	err = users_manager.SetUser(config_obj, user_record)
 	if err != nil {
 		return fmt.Errorf("Unable to set user account: %w", err)
 	}

@@ -24,6 +24,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/sanity"
 	"www.velocidex.com/golang/velociraptor/services/server_artifacts"
 	"www.velocidex.com/golang/velociraptor/services/server_monitoring"
+	"www.velocidex.com/golang/velociraptor/services/users"
 	"www.velocidex.com/golang/velociraptor/services/vfs_service"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -222,6 +223,11 @@ func StartupFrontendServices(sm *services.Service) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	err = sm.Start(users.StartUserManager)
+	if err != nil {
+		return err
 	}
 
 	return nil

@@ -8,13 +8,13 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/services"
-	users "www.velocidex.com/golang/velociraptor/users"
 )
 
 func (self *ApiServer) GetToolInfo(ctx context.Context,
 	in *artifacts_proto.Tool) (*artifacts_proto.Tool, error) {
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
-	user_record, err := users.GetUser(self.config, user_name)
+
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -35,8 +35,9 @@ func (self *ApiServer) GetToolInfo(ctx context.Context,
 
 func (self *ApiServer) SetToolInfo(ctx context.Context,
 	in *artifacts_proto.Tool) (*artifacts_proto.Tool, error) {
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
-	user_record, err := users.GetUser(self.config, user_name)
+
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
 	if err != nil {
 		return nil, err
 	}

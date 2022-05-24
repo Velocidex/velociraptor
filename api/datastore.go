@@ -12,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 // Raw Datastore access requires the DATASTORE_ACCESS permission. This
@@ -21,7 +22,13 @@ func (self *ApiServer) GetSubject(
 	ctx context.Context,
 	in *api_proto.DataRequest) (*api_proto.DataResponse, error) {
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_record.Name
 	perm, err := acls.CheckAccess(self.config, user_name, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
@@ -49,7 +56,13 @@ func (self *ApiServer) SetSubject(
 	ctx context.Context,
 	in *api_proto.DataRequest) (*api_proto.DataResponse, error) {
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_record.Name
 	perm, err := acls.CheckAccess(self.config, user_name, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
@@ -89,7 +102,13 @@ func (self *ApiServer) ListChildren(
 	ctx context.Context,
 	in *api_proto.DataRequest) (*api_proto.ListChildrenResponse, error) {
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_record.Name
 	perm, err := acls.CheckAccess(self.config, user_name, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
@@ -123,7 +142,13 @@ func (self *ApiServer) DeleteSubject(
 	ctx context.Context,
 	in *api_proto.DataRequest) (*emptypb.Empty, error) {
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_record.Name
 	perm, err := acls.CheckAccess(self.config, user_name, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,

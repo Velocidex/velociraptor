@@ -18,24 +18,32 @@
 package users
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"crypto/subtle"
+	"crypto/x509"
 	"fmt"
 	"os"
 	"regexp"
+	"sync"
 
 	errors "github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 const (
 	// Default settings for reasonable GUI
 	default_user_options = `{"selectionStyle":"line","highlightActiveLine":true,"highlightSelectedWord":true,"copyWithEmptySelection":false,"cursorStyle":"ace","mergeUndoDeltas":true,"behavioursEnabled":true,"wrapBehavioursEnabled":true,"showLineNumbers":true,"relativeLineNumbers":true,"hScrollBarAlwaysVisible":false,"vScrollBarAlwaysVisible":false,"highlightGutterLine":true,"animatedScroll":false,"showInvisibles":false,"showPrintMargin":true,"printMarginColumn":80,"printMargin":80,"fadeFoldWidgets":false,"showFoldWidgets":true,"displayIndentGuides":true,"showGutter":true,"fontSize":12,"fontFamily":"monospace","scrollPastEnd":0,"theme":"ace/theme/xcode","useTextareaForIME":true,"scrollSpeed":2,"dragDelay":0,"dragEnabled":true,"focusTimeout":0,"tooltipFollowsMouse":true,"firstLineNumber":1,"overwrite":false,"newLineMode":"auto","useSoftTabs":true,"navigateWithinSoftTabs":false,"tabSize":4,"wrap":"free","indentedSoftWrap":true,"foldStyle":"markbegin","enableMultiselect":true,"enableBlockSelect":true,"enableEmmet":true,"enableBasicAutocompletion":true,"enableLiveAutocompletion":true}`
 )
+
+type UserManager struct {
+	ca_pool *x509.CertPool
+}
 
 func NewUserRecord(name string) (*api_proto.VelociraptorUser, error) {
 	if !regexp.MustCompile("^[a-zA-Z0-9@.\\-_#]+$").MatchString(name) {
@@ -62,7 +70,7 @@ func VerifyPassword(self *api_proto.VelociraptorUser, password string) bool {
 	return subtle.ConstantTimeCompare(hash[:], self.PasswordHash) == 1
 }
 
-func SetUser(config_obj *config_proto.Config, user_record *api_proto.VelociraptorUser) error {
+func (self UserManager) SetUser(config_obj *config_proto.Config, user_record *api_proto.VelociraptorUser) error {
 	if user_record.Name == "" {
 		return errors.New("Must set a username")
 	}
@@ -76,7 +84,7 @@ func SetUser(config_obj *config_proto.Config, user_record *api_proto.Velocirapto
 		user_record)
 }
 
-func ListUsers(config_obj *config_proto.Config) ([]*api_proto.VelociraptorUser, error) {
+func (self UserManager) ListUsers(config_obj *config_proto.Config) ([]*api_proto.VelociraptorUser, error) {
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
@@ -94,7 +102,7 @@ func ListUsers(config_obj *config_proto.Config) ([]*api_proto.VelociraptorUser, 
 		}
 
 		username := child.Base()
-		user_record, err := GetUser(config_obj, username)
+		user_record, err := self.GetUser(config_obj, username)
 		if err == nil {
 			result = append(result, user_record)
 		}
@@ -105,9 +113,18 @@ func ListUsers(config_obj *config_proto.Config) ([]*api_proto.VelociraptorUser, 
 
 // Returns the user record after stripping sensitive information like
 // password hashes.
-func GetUser(config_obj *config_proto.Config, username string) (
+func (self UserManager) GetUser(config_obj *config_proto.Config, username string) (
 	*api_proto.VelociraptorUser, error) {
-	result, err := GetUserWithHashes(config_obj, username)
+
+	// For the server name we dont have a real user record, we make a
+	// hard coded user record instead.
+	if username == config_obj.Client.PinnedServerName {
+		return &api_proto.VelociraptorUser{
+			Name: username,
+		}, nil
+	}
+
+	result, err := self.GetUserWithHashes(config_obj, username)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +137,7 @@ func GetUser(config_obj *config_proto.Config, username string) (
 }
 
 // Return the user record with hashes - only used in Basic Auth.
-func GetUserWithHashes(config_obj *config_proto.Config, username string) (
+func (self UserManager) GetUserWithHashes(config_obj *config_proto.Config, username string) (
 	*api_proto.VelociraptorUser, error) {
 	if username == "" {
 		return nil, errors.New("Must set a username")
@@ -140,7 +157,7 @@ func GetUserWithHashes(config_obj *config_proto.Config, username string) (
 	return user_record, err
 }
 
-func SetUserOptions(config_obj *config_proto.Config,
+func (self UserManager) SetUserOptions(config_obj *config_proto.Config,
 	username string,
 	options *api_proto.SetGUIOptionsRequest) error {
 
@@ -151,7 +168,7 @@ func SetUserOptions(config_obj *config_proto.Config,
 	}
 
 	// Merge the old options with the new options
-	old_options, err := GetUserOptions(config_obj, username)
+	old_options, err := self.GetUserOptions(config_obj, username)
 	if err != nil {
 		old_options = &api_proto.SetGUIOptionsRequest{}
 	}
@@ -170,7 +187,7 @@ func SetUserOptions(config_obj *config_proto.Config,
 	return db.SetSubject(config_obj, path_manager.GUIOptions(), old_options)
 }
 
-func GetUserOptions(config_obj *config_proto.Config, username string) (
+func (self UserManager) GetUserOptions(config_obj *config_proto.Config, username string) (
 	*api_proto.SetGUIOptionsRequest, error) {
 
 	path_manager := paths.UserPathManager{Name: username}
@@ -185,4 +202,22 @@ func GetUserOptions(config_obj *config_proto.Config, username string) (
 		options.Options = default_user_options
 	}
 	return options, err
+}
+
+func StartUserManager(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
+
+	CA_Pool := x509.NewCertPool()
+	if config_obj.Client != nil {
+		CA_Pool.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
+	}
+
+	service := &UserManager{
+		ca_pool: CA_Pool,
+	}
+	services.RegisterUserManager(service)
+
+	return nil
 }

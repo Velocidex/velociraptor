@@ -29,7 +29,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	gui_assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
-	users "www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) {
@@ -74,6 +74,7 @@ func GetTemplateHandler(
 			return
 		}
 
+		users := services.GetUserManager()
 		user_options, err := users.GetUserOptions(config_obj, userinfo.Name)
 		if err != nil {
 			// Options may not exist yet

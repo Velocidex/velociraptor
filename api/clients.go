@@ -39,7 +39,13 @@ func (self *ApiServer) GetClientMetadata(
 	ctx context.Context,
 	in *api_proto.GetClientRequest) (*api_proto.ClientMetadata, error) {
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
 	if in.ClientId == "server" {
 		permissions = acls.SERVER_ADMIN
@@ -70,7 +76,13 @@ func (self *ApiServer) SetClientMetadata(
 	ctx context.Context,
 	in *api_proto.ClientMetadata) (*emptypb.Empty, error) {
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_record.Name
 	permissions := acls.LABEL_CLIENT
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -92,7 +104,13 @@ func (self *ApiServer) GetClient(
 	ctx context.Context,
 	in *api_proto.GetClientRequest) (*api_proto.ApiClient, error) {
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -134,7 +152,13 @@ func (self *ApiServer) GetClientFlows(
 	ctx context.Context,
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowResponse, error) {
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {

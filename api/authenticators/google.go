@@ -40,7 +40,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
-	users "www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_token="
@@ -337,6 +337,7 @@ func authenticateUserHandle(
 		picture, _ := claims["picture"].(string)
 
 		// Now check if the user is allowed to log in.
+		users := services.GetUserManager()
 		user_record, err := users.GetUser(config_obj, username)
 		if err != nil {
 			reject_cb(w, r, errors.New("Invalid user"), username)

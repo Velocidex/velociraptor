@@ -57,7 +57,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
-	users "www.velocidex.com/golang/velociraptor/users"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -77,7 +76,13 @@ func (self *ApiServer) CancelFlow(
 
 	defer Instrument("CancelFlow")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_record.Name
 
 	permissions := acls.COLLECT_CLIENT
 	if in.ClientId == "server" {
@@ -118,7 +123,13 @@ func (self *ApiServer) GetReport(
 
 	defer Instrument("GetReport")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -148,7 +159,13 @@ func (self *ApiServer) CollectArtifact(
 	defer Instrument("CollectArtifact")()
 
 	result := &flows_proto.ArtifactCollectorResponse{Request: in}
-	creator := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+	creator := user_record.Name
 
 	var acl_manager vql_subsystem.ACLManager = vql_subsystem.NullACLManager{}
 
@@ -211,8 +228,13 @@ func (self *ApiServer) ListClients(
 
 	defer Instrument("ListClients")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
 
+	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -246,7 +268,13 @@ func (self *ApiServer) NotifyClients(
 
 	defer Instrument("NotifyClients")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_record.Name
 	permissions := acls.COLLECT_CLIENT
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -276,7 +304,13 @@ func (self *ApiServer) LabelClients(
 
 	defer Instrument("LabelClients")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_record.Name
 	permissions := acls.LABEL_CLIENT
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -319,7 +353,13 @@ func (self *ApiServer) GetFlowDetails(
 
 	defer Instrument("GetFlowDetails")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -341,7 +381,13 @@ func (self *ApiServer) GetFlowRequests(
 
 	defer Instrument("GetFlowRequests")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -361,10 +407,15 @@ func (self *ApiServer) GetFlowRequests(
 func (self *ApiServer) GetUserUITraits(
 	ctx context.Context,
 	in *emptypb.Empty) (*api_proto.ApiGrrUser, error) {
-	result := NewDefaultUserObject(self.config)
-	user_info := GetGRPCUserInfo(self.config, ctx, self.ca_pool)
-
 	defer Instrument("GetUserUITraits")()
+
+	result := NewDefaultUserObject(self.config)
+
+	users := services.GetUserManager()
+	user_info, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	result.Username = user_info.Name
 	result.InterfaceTraits.Picture = user_info.Picture
@@ -385,10 +436,14 @@ func (self *ApiServer) GetUserUITraits(
 func (self *ApiServer) SetGUIOptions(
 	ctx context.Context,
 	in *api_proto.SetGUIOptionsRequest) (*emptypb.Empty, error) {
-	user_info := GetGRPCUserInfo(self.config, ctx, self.ca_pool)
+
+	users := services.GetUserManager()
+	user_info, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	defer Instrument("SetGUIOptions")()
-
 	return &emptypb.Empty{}, users.SetUserOptions(self.config, user_info.Name, in)
 }
 
@@ -398,7 +453,13 @@ func (self *ApiServer) VFSListDirectory(
 
 	defer Instrument("VFSListDirectory")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_info, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_info.Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -417,7 +478,13 @@ func (self *ApiServer) VFSStatDirectory(
 
 	defer Instrument("VFSStatDirectory")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_info, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_info.Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -436,7 +503,13 @@ func (self *ApiServer) VFSStatDownload(
 
 	defer Instrument("VFSStatDownload")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_info, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_info.Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -456,7 +529,13 @@ func (self *ApiServer) VFSRefreshDirectory(
 
 	defer Instrument("VFSRefreshDirectory")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_info, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_info.Name
 	permissions := acls.COLLECT_CLIENT
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -476,7 +555,13 @@ func (self *ApiServer) VFSGetBuffer(
 
 	defer Instrument("VFSGetBuffer")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_info, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_info.Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -515,8 +600,13 @@ func (self *ApiServer) GetTable(
 	in *api_proto.GetTableRequest) (*api_proto.GetTableResponse, error) {
 
 	defer Instrument("GetTable")()
+	users := services.GetUserManager()
+	user_info, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	user_name := user_info.Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -570,7 +660,13 @@ func (self *ApiServer) GetArtifacts(
 
 	defer Instrument("GetArtifacts")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_info, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_info.Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -617,7 +713,13 @@ func (self *ApiServer) GetArtifactFile(
 
 	defer Instrument("GetArtifactFile")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_info, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_info.Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -643,7 +745,13 @@ func (self *ApiServer) SetArtifactFile(
 
 	defer Instrument("SetArtifactFile")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_info, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_info.Name
 	permissions := acls.ARTIFACT_WRITER
 
 	// First ensure that the artifact is correct.
@@ -753,7 +861,13 @@ func (self *ApiServer) GetServerMonitoringState(
 
 	defer Instrument("GetServerMonitoringState")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_info, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_info.Name
 	permissions := acls.READ_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -772,7 +886,13 @@ func (self *ApiServer) SetServerMonitoringState(
 
 	defer Instrument("SetServerMonitoringState")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_info, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_info.Name
 	permissions := acls.SERVER_ADMIN
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -790,7 +910,13 @@ func (self *ApiServer) GetClientMonitoringState(
 
 	defer Instrument("GetClientMonitoringState")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_info, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_info.Name
 	permissions := acls.SERVER_ADMIN
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -816,7 +942,13 @@ func (self *ApiServer) SetClientMonitoringState(
 
 	defer Instrument("SetClientMonitoringState")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_info, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_info.Name
 	permissions := acls.SERVER_ADMIN
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -838,7 +970,13 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 
 	defer Instrument("CreateDownloadFile")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
+	users := services.GetUserManager()
+	user_info, err := users.GetUserFromContext(self.config, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user_name := user_info.Name
 	permissions := acls.PREPARE_RESULTS
 	perm, err := acls.CheckAccess(self.config, user_name, permissions)
 	if !perm || err != nil {
@@ -946,7 +1084,9 @@ func startAPIServer(
 
 	// Authenticate API clients using certificates.
 	CA_Pool := x509.NewCertPool()
-	CA_Pool.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
+	if config_obj.Client != nil {
+		CA_Pool.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
+	}
 
 	// Create the TLS credentials
 	creds := credentials.NewTLS(&tls.Config{

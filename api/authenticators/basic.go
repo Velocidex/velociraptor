@@ -12,7 +12,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/users"
 )
 
 // Implement basic authentication.
@@ -68,7 +69,9 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 
 		// Get the full user record with hashes so we can
 		// verify it below.
-		user_record, err := users.GetUserWithHashes(self.config_obj, username)
+		users_manager := services.GetUserManager()
+		user_record, err := users_manager.GetUserWithHashes(
+			self.config_obj, username)
 		if err != nil {
 			logger := logging.GetLogger(self.config_obj, &logging.Audit)
 			logger.WithFields(logrus.Fields{
