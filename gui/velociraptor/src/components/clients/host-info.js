@@ -19,6 +19,7 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import Spinner from '../utils/spinner.js';
 import Form from 'react-bootstrap/Form';
+import Alert from 'react-bootstrap/Alert';
 
 import { Link } from  "react-router-dom";
 import api from '../core/api-service.js';
@@ -30,23 +31,63 @@ import { runArtifact } from "../flows/utils.js";
 const POLL_TIME = 5000;
 const INTERROGATE_POLL_TIME = 2000;
 
+var quarantine_artifacts = {
+    "windows": "Windows.Remediation.Quarantine",
+    "linux": "Linux.Remediation.Quarantine",
+    "macos": "MacOS.Remediation.Quarantine",
+};
+
 class QuarantineDialog extends Component {
     static propTypes = {
         client: PropTypes.object,
         onClose: PropTypes.func.isRequired,
     }
 
-    state = {
-        loading: false,
-        message: "",
+    constructor(props) {
+        super(props);
+        this.state = {
+            loading: false,
+            message: "",
+            quarantine_available: false,
+            quarantine_artifact: quarantine_artifacts[props.client.os_info.system],
+        }
     }
 
     componentDidMount = () => {
         this.source = axios.CancelToken.source();
+        this.checkQuarantineAvailability();
     }
 
     componentWillUnmount() {
         this.source.cancel();
+    }
+
+    checkQuarantineAvailability() {
+        // If the client is running on an OS other than Windows, Linux, or MacOS,
+        // they'll need to define an artifact name to use for it
+        if (this.state.quarantine_artifact === undefined) {
+            this.setState({'quarantine_available' : false});
+            return;
+        }
+
+        api.post("v1/GetArtifacts",
+                 {
+                    names: [this.state.quarantine_artifact],
+                    number_of_results: 1,
+                    // We don't actually need the name, but if we don't specify
+                    // a field we get the entire artifact.
+                    fields: {
+                        name: true
+                    },
+                 },
+
+                 this.source.token).then((response) => {
+                    if (response.cancel) return;
+
+                    let items = response.data.items || [];
+
+                    this.setState({'quarantine_available' : items.length !== 0});
+                 });
     }
 
     startQuarantine = () => {
@@ -75,7 +116,7 @@ class QuarantineDialog extends Component {
         }
     }
 
-    render() {
+    renderAvailable() {
         return (
             <Modal show={true} onHide={this.props.onClose}>
               <Modal.Header closeButton>
@@ -110,6 +151,39 @@ class QuarantineDialog extends Component {
               </Modal.Footer>
             </Modal>
         );
+    }
+
+    renderUnavailable() {
+        let os_name = this.props.client.os_info.system || "an unknown operating system";
+
+        return (
+            <Modal show={true} onHide={this.props.onClose}>
+              <Modal.Header closeButton>
+                <Modal.Title>Cannot Quarantine host</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <Alert variant="warning">
+                { this.state.quarantine_artifact ?
+                    <p>This Velociraptor instance does not have the <b>{this.state.quarantine_artifact}</b> artifact required to quarantine hosts running {os_name}.</p> :
+                    <p>This Velociraptor instance does not have an artifact name defined to quarantine hosts running {os_name}.</p>
+                }
+                </Alert>
+              </Modal.Body>
+              <Modal.Footer>
+                <Button variant="primary" onClick={this.props.onClose}>
+                  Close
+                </Button>
+              </Modal.Footer>
+            </Modal>
+        )
+    }
+
+    render() {
+        if (this.state.quarantine_available) {
+            return this.renderAvailable();
+        } else {
+            return this.renderUnavailable();
+        }
     }
 }
 
