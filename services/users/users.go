@@ -221,3 +221,11 @@ func StartUserManager(
 
 	return nil
 }
+
+// Make sure there is always something available.
+func init() {
+	service := &UserManager{
+		ca_pool: x509.NewCertPool(),
+	}
+	services.RegisterUserManager(service)
+}

@@ -45,6 +45,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/indexing"
+	"www.velocidex.com/golang/velociraptor/services/users"
 	"www.velocidex.com/golang/velociraptor/startup"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/remapping"
@@ -292,6 +293,11 @@ func doGolden() error {
 	}
 
 	err = sm.Start(indexing.StartIndexingService)
+	if err != nil {
+		return err
+	}
+
+	err = sm.Start(users.StartUserManager)
 	if err != nil {
 		return err
 	}
