@@ -26,12 +26,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/interrogation"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
+	"www.velocidex.com/golang/velociraptor/services/users"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
@@ -67,7 +67,7 @@ func (self *TestSuite) SetupTest() {
 	require.NoError(t, self.sm.Start(interrogation.StartInterrogationService))
 	require.NoError(t, self.sm.Start(repository.StartRepositoryManager))
 	require.NoError(t, self.sm.Start(launcher.StartLauncherService))
-	require.NoError(t, self.sm.Start(client_info.StartClientInfoService))
+	require.NoError(t, self.sm.Start(users.StartUserManager))
 
 	self.EnrolClient()
 

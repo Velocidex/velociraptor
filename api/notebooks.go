@@ -30,7 +30,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
-	users "www.velocidex.com/golang/velociraptor/users"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
@@ -50,8 +49,8 @@ func (self *ApiServer) GetNotebooks(
 	defer Instrument("GetNotebooks")()
 
 	// Empty creators are called internally.
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
-	user_record, err := users.GetUser(self.config, user_name)
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -166,8 +165,8 @@ func (self *ApiServer) NewNotebook(
 
 	defer Instrument("NewNotebook")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
-	user_record, err := users.GetUser(self.config, user_name)
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +178,7 @@ func (self *ApiServer) NewNotebook(
 			"User is not allowed to create notebooks.")
 	}
 
-	in.Creator = user_name
+	in.Creator = user_record.Name
 	in.CreatedTime = time.Now().Unix()
 	in.ModifiedTime = in.CreatedTime
 
@@ -203,7 +202,7 @@ func (self *ApiServer) NewNotebook(
 		return nil, err
 	}
 
-	err = self.createInitialNotebook(ctx, user_name, in)
+	err = self.createInitialNotebook(ctx, user_record.Name, in)
 	if err != nil {
 		return nil, err
 	}
@@ -535,8 +534,8 @@ func (self *ApiServer) NewNotebookCell(
 		return nil, errors.New("Invalid NoteboookId")
 	}
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
-	user_record, err := users.GetUser(self.config, user_name)
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -633,8 +632,8 @@ func (self *ApiServer) UpdateNotebook(
 		return nil, errors.New("Invalid NoteboookId")
 	}
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
-	user_record, err := users.GetUser(self.config, user_name)
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -709,8 +708,8 @@ func (self *ApiServer) GetNotebookCell(
 		return nil, errors.New("Invalid NoteboookCellId")
 	}
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
-	user_record, err := users.GetUser(self.config, user_name)
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -777,8 +776,8 @@ func (self *ApiServer) UpdateNotebookCell(
 		return nil, errors.New("Invalid NoteboookCellId")
 	}
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
-	user_record, err := users.GetUser(self.config, user_name)
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -808,7 +807,7 @@ func (self *ApiServer) UpdateNotebookCell(
 		return nil, errors.New("Notebook is not shared with user.")
 	}
 
-	return self.updateNotebookCell(ctx, notebook_metadata, user_name, in)
+	return self.updateNotebookCell(ctx, notebook_metadata, user_record.Name, in)
 }
 
 func (self *ApiServer) updateNotebookCell(
@@ -980,8 +979,8 @@ func (self *ApiServer) CancelNotebookCell(
 		return nil, errors.New("Invalid NoteboookCellId")
 	}
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
-	user_record, err := users.GetUser(self.config, user_name)
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1026,8 +1025,8 @@ func (self *ApiServer) UploadNotebookAttachment(
 
 	defer Instrument("UploadNotebookAttachment")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
-	user_record, err := users.GetUser(self.config, user_name)
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -1071,8 +1070,8 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 
 	defer Instrument("CreateNotebookDownloadFile")()
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
-	user_record, err := users.GetUser(self.config, user_name)
+	users := services.GetUserManager()
+	user_record, err := users.GetUserFromContext(self.config, ctx)
 	if err != nil {
 		return nil, err
 	}

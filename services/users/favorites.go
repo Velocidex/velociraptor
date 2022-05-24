@@ -7,7 +7,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 )
 
-func GetFavorites(
+func (self UserManager) GetFavorites(
 	config_obj *config_proto.Config,
 	principal, fav_type string) (*api_proto.Favorites, error) {
 	result := &api_proto.Favorites{}

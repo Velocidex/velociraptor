@@ -39,7 +39,6 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
-	users "www.velocidex.com/golang/velociraptor/users"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -296,12 +295,13 @@ func (self *ApiServer) LoadArtifactPack(
 	in *api_proto.VFSFileBuffer) (
 	*api_proto.LoadArtifactPackResponse, error) {
 
-	user_name := GetGRPCUserInfo(self.config, ctx, self.ca_pool).Name
-	user_record, err := users.GetUser(self.config, user_name)
+	users_manager := services.GetUserManager()
+	user_record, err := users_manager.GetUserFromContext(self.config, ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	user_name := user_record.Name
 	permissions := acls.SERVER_ARTIFACT_WRITER
 	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
 	if !perm || err != nil {

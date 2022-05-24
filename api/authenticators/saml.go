@@ -16,7 +16,7 @@ import (
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 var samlMiddleware *samlsp.Middleware
@@ -104,6 +104,8 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 		}
 
 		username := sa.GetAttributes().Get(self.user_attribute)
+
+		users := services.GetUserManager()
 		user_record, err := users.GetUser(self.config_obj, username)
 
 		perm, err2 := acls.CheckAccess(self.config_obj, username, acls.READ_RESULTS)

@@ -180,6 +180,14 @@ func SetGlobalDatastore(
 	return err
 }
 
+// Override the datastore implementation
+func OverrideDatastoreImplementation(impl DataStore) {
+	ds_mu.Lock()
+	defer ds_mu.Unlock()
+
+	g_impl = impl
+}
+
 func Reset() {
 	ds_mu.Lock()
 	defer ds_mu.Unlock()

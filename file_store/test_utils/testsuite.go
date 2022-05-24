@@ -23,6 +23,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
+	"www.velocidex.com/golang/velociraptor/services/users"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
@@ -128,6 +129,7 @@ func (self *TestSuite) SetupTest() {
 	require.NoError(self.T(), self.Sm.Start(launcher.StartLauncherService))
 	require.NoError(self.T(), self.Sm.Start(repository.StartRepositoryManagerForTest))
 	require.NoError(self.T(), self.Sm.Start(labels.StartLabelService))
+	require.NoError(self.T(), self.Sm.Start(users.StartUserManager))
 
 	// Wait here until the indexer is all ready.
 	indexer, err := services.GetIndexer()

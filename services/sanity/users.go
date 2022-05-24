@@ -8,7 +8,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/users"
 )
 
 func createInitialUsers(
@@ -18,7 +19,8 @@ func createInitialUsers(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	for _, user := range user_names {
-		user_record, err := users.GetUser(config_obj, user.Name)
+		users_manager := services.GetUserManager()
+		user_record, err := users_manager.GetUser(config_obj, user.Name)
 		if err != nil || user_record.Name != user.Name {
 			logger.Info("Initial user %v not present, creating", user.Name)
 			new_user, err := users.NewUserRecord(user.Name)
@@ -52,7 +54,7 @@ func createInitialUsers(
 			}
 
 			// Create the new user.
-			err = users.SetUser(config_obj, new_user)
+			err = users_manager.SetUser(config_obj, new_user)
 			if err != nil {
 				return err
 			}

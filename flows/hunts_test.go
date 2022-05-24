@@ -22,6 +22,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
+	"www.velocidex.com/golang/velociraptor/services/users"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
@@ -51,6 +52,7 @@ func (self *HuntTestSuite) SetupTest() {
 	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
 	require.NoError(self.T(), self.sm.Start(hunt_dispatcher.StartHuntDispatcher))
 	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
+	require.NoError(self.T(), self.sm.Start(users.StartUserManager))
 }
 
 func (self *HuntTestSuite) TearDownTest() {
