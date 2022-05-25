@@ -121,13 +121,24 @@ func Query(query string, namespace string) ([]*ordereddict.Dict, error) {
 					row.Set(property, &vfilter.Null{})
 					continue
 				}
+
 				defer func() {
 					_ = property_raw.Clear()
 				}()
 
 				// If it is an array we convert it here.
 				if property_raw.VT&ole.VT_ARRAY > 0 {
-					row.Set(property, property_raw.ToArray().ToValueArray())
+					result := []interface{}{}
+					for _, item := range property_raw.ToArray().ToValueArray() {
+						switch item.(type) {
+						case *ole.IDispatch:
+						case *ole.IUnknown:
+						default:
+							result = append(result, item)
+						}
+					}
+
+					row.Set(property, result)
 					continue
 				}
 
