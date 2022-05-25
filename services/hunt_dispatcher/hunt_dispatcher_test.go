@@ -93,7 +93,7 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntFlushToDatastore() {
 	assert.NoError(self.T(), err)
 
 	// Modify a hunt and flush to datastore immediately
-	modification := self.master_dispatcher.ModifyHunt("H.1",
+	modification := self.master_dispatcher.ModifyHuntObject("H.1",
 		func(hunt *api_proto.Hunt) services.HuntModificationAction {
 			hunt.State = api_proto.Hunt_STOPPED
 			return services.HuntFlushToDatastore
@@ -131,7 +131,7 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntPropagateChanges() {
 	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_RUNNING)
 
 	// Now modify a hunt with services.HuntPropagateChanges
-	modification := self.master_dispatcher.ModifyHunt("H.2",
+	modification := self.master_dispatcher.ModifyHuntObject("H.2",
 		func(hunt *api_proto.Hunt) services.HuntModificationAction {
 			hunt.State = api_proto.Hunt_STOPPED
 			return services.HuntPropagateChanges

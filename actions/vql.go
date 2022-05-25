@@ -62,6 +62,12 @@ func (self VQLClientAction) StartQuery(
 	responder *responder.Responder,
 	arg *actions_proto.VQLCollectorArgs) {
 
+	// Just ignore requests that are too old.
+	if arg.Expiry > 0 && arg.Expiry < uint64(time.Now().Unix()) {
+		responder.RaiseError(ctx, "Query expired.")
+		return
+	}
+
 	// Set reasonable defaults.
 	max_wait := arg.MaxWait
 	if max_wait == 0 {

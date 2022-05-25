@@ -214,7 +214,8 @@ func (self *ServerTestSuite) TestForeman() {
 	expected := api.MakeCollectorRequest(
 		self.client_id, "Generic.Client.Info")
 
-	hunt_id, err := flows.CreateHunt(
+	hunt_dispatcher := services.GetHuntDispatcher()
+	hunt_id, err := hunt_dispatcher.CreateHunt(
 		context.Background(), self.ConfigObj,
 		vql_subsystem.NullACLManager{},
 		&api_proto.Hunt{

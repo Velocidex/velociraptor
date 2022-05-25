@@ -42,7 +42,12 @@ package hunt_dispatcher
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/base32"
+	"encoding/binary"
+	"errors"
 	"fmt"
+	"path"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -57,12 +62,14 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 var (
@@ -268,7 +275,7 @@ func (self *HuntDispatcher) MutateHunt(
 
 // Modify the hunt object under lock and also inform all other
 // dispatchers about the new state.
-func (self *HuntDispatcher) ModifyHunt(
+func (self *HuntDispatcher) ModifyHuntObject(
 	hunt_id string,
 	cb func(hunt *api_proto.Hunt) services.HuntModificationAction) services.HuntModificationAction {
 
@@ -448,6 +455,128 @@ func (self *HuntDispatcher) Refresh(config_obj *config_proto.Config) error {
 	return nil
 }
 
+func (self *HuntDispatcher) CreateHunt(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	acl_manager vql_subsystem.ACLManager,
+	hunt *api_proto.Hunt) (string, error) {
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return "", err
+	}
+
+	if hunt.Stats == nil {
+		hunt.Stats = &api_proto.HuntStats{}
+	}
+
+	if hunt.HuntId == "" {
+		hunt.HuntId = GetNewHuntId()
+	}
+
+	if hunt.StartRequest == nil || hunt.StartRequest.Artifacts == nil {
+		return "", errors.New("No artifacts to collect.")
+	}
+
+	hunt.CreateTime = uint64(time.Now().UTC().UnixNano() / 1000)
+	if hunt.Expires == 0 {
+		default_expiry := config_obj.Defaults.HuntExpiryHours
+		if default_expiry == 0 {
+			default_expiry = 7 * 24
+		}
+		hunt.Expires = uint64(time.Now().Add(
+			time.Duration(default_expiry)*time.Hour).
+			UTC().UnixNano() / 1000)
+	}
+
+	if hunt.Expires < hunt.CreateTime {
+		return "", errors.New("Hunt expiry is in the past!")
+	}
+
+	// Set the artifacts information in the hunt object itself.
+	hunt.Artifacts = hunt.StartRequest.Artifacts
+	hunt.ArtifactSources = []string{}
+	for _, artifact := range hunt.StartRequest.Artifacts {
+		for _, source := range flows.GetArtifactSources(
+			config_obj, artifact) {
+			hunt.ArtifactSources = append(
+				hunt.ArtifactSources, path.Join(artifact, source))
+		}
+	}
+
+	manager, err := services.GetRepositoryManager()
+	if err != nil {
+		return "", err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return "", err
+	}
+
+	// Compile the start request and store it in the hunt. We will
+	// use this compiled version to launch all other flows from
+	// this hunt rather than re-compile the artifact each
+	// time. This ensures that if the artifact definition is
+	// changed after this point, the hunt will continue to
+	// schedule consistent VQL on the clients.
+	launcher, err := services.GetLauncher()
+	if err != nil {
+		return "", err
+	}
+
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, config_obj, acl_manager, repository,
+		services.CompilerOptions{
+			ObfuscateNames: true,
+		},
+		hunt.StartRequest)
+	if err != nil {
+		return "", err
+	}
+	hunt.StartRequest.CompiledCollectorArgs = append(
+		hunt.StartRequest.CompiledCollectorArgs, compiled...)
+
+	// We allow our caller to determine if hunts are created in
+	// the running state or the paused state.
+	if hunt.State == api_proto.Hunt_UNSET {
+		hunt.State = api_proto.Hunt_PAUSED
+
+		// IF we are creating the hunt in the running state
+		// set it started.
+	} else if hunt.State == api_proto.Hunt_RUNNING {
+		hunt.StartTime = hunt.CreateTime
+	}
+
+	row := ordereddict.NewDict().
+		Set("Timestamp", time.Now().UTC().Unix()).
+		Set("Hunt", hunt)
+
+	journal, err := services.GetJournal()
+	if err != nil {
+		return "", err
+	}
+
+	err = journal.PushRowsToArtifact(config_obj,
+		[]*ordereddict.Dict{row}, "System.Hunt.Creation",
+		"server", hunt.HuntId)
+	if err != nil {
+		return "", err
+	}
+
+	hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
+	err = db.SetSubject(config_obj, hunt_path_manager.Path(), hunt)
+	if err != nil {
+		return "", err
+	}
+
+	// Trigger a refresh of the hunt dispatcher. This guarantees
+	// that fresh data will be read in subsequent ListHunt()
+	// calls.
+	err = services.GetHuntDispatcher().Refresh(config_obj)
+
+	return hunt.HuntId, err
+}
+
 func StartHuntDispatcher(
 	ctx context.Context,
 	wg *sync.WaitGroup,
@@ -503,6 +632,16 @@ func StartHuntDispatcher(
 	return journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"Server.Internal.HuntUpdate", "HuntDispatcher",
 		service.ProcessUpdate)
+}
+
+func GetNewHuntId() string {
+	buf := make([]byte, 8)
+	_, _ = rand.Read(buf)
+
+	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
+	result := base32.HexEncoding.EncodeToString(buf)[:13]
+
+	return constants.HUNT_PREFIX + result
 }
 
 func init() {

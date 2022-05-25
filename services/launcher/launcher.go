@@ -514,11 +514,11 @@ func (self *Launcher) ScheduleArtifactCollection(
 		args = append(args, compiled...)
 	}
 
-	return ScheduleArtifactCollectionFromCollectorArgs(
+	return self.ScheduleArtifactCollectionFromCollectorArgs(
 		config_obj, collector_request, args, completion)
 }
 
-func ScheduleArtifactCollectionFromCollectorArgs(
+func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 	config_obj *config_proto.Config,
 	collector_request *flows_proto.ArtifactCollectorArgs,
 	vql_collector_args []*actions_proto.VQLCollectorArgs,

@@ -1,4 +1,4 @@
-package hunt_manager
+package hunt_manager_test
 
 import (
 	"testing"
@@ -16,12 +16,12 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
-	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/frontend"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
+	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
@@ -44,7 +44,7 @@ func (self *HuntTestSuite) SetupTest() {
 
 	require.NoError(self.T(), self.Sm.Start(frontend.StartFrontendService))
 	require.NoError(self.T(), self.Sm.Start(hunt_dispatcher.StartHuntDispatcher))
-	require.NoError(self.T(), self.Sm.Start(StartHuntManager))
+	require.NoError(self.T(), self.Sm.Start(hunt_manager.StartHuntManager))
 
 	// Write a client record.
 	client_info_obj := &actions_proto.ClientInfo{
@@ -573,12 +573,14 @@ func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
 	}
 
 	acl_manager := vql_subsystem.NullACLManager{}
-	self.hunt_id, err = flows.CreateHunt(
+	hunt_dispatcher := services.GetHuntDispatcher()
+	self.hunt_id, err = hunt_dispatcher.CreateHunt(
 		self.Ctx, self.ConfigObj, acl_manager, hunt_obj)
 	assert.NoError(t, err)
 
 	// Force the hunt manager to process a participation row
-	err = HuntManagerForTests.ProcessParticipation(self.Ctx, self.ConfigObj,
+	err = hunt_manager.HuntManagerForTests.ProcessParticipation(
+		self.Ctx, self.ConfigObj,
 		ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id))
