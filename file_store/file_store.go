@@ -130,6 +130,14 @@ func GetFileStoreFileSystemAccessor(
 	return nil, errors.New("Unknown file store implementation")
 }
 
+// Override the implementation
+func OverrideFilestoreImplementation(impl api.FileStore) {
+	fs_mu.Lock()
+	defer fs_mu.Unlock()
+
+	g_impl = impl
+}
+
 func SetGlobalFilestore(
 	implementation string,
 	config_obj *config_proto.Config) (err error) {
