@@ -52,27 +52,6 @@ type UserManager interface {
 	GetFavorites(
 		config_obj *config_proto.Config,
 		principal, fav_type string) (*api_proto.Favorites, error)
-
-	GetPolicy(
-		config_obj *config_proto.Config,
-		principal string) (*acl_proto.ApiClientACL, error)
-
-	GetEffectivePolicy(
-		config_obj *config_proto.Config,
-		principal string) (*acl_proto.ApiClientACL, error)
-
-	SetPolicy(
-		config_obj *config_proto.Config,
-		principal string, acl_obj *acl_proto.ApiClientACL) error
-
-	CheckAccess(
-		config_obj *config_proto.Config,
-		principal string,
-		permissions ...ACL_PERMISSION) (bool, error)
-
-	CheckAccessWithToken(
-		token *acl_proto.ApiClientACL,
-		permission ACL_PERMISSION, args ...string) (bool, error)
 }
 
 func RegisterUserManager(dispatcher UserManager) {
