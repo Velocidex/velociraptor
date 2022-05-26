@@ -78,7 +78,7 @@ sources:
             {
                 SELECT if(condition=FailureActions,
                    then=parse_binary(accessor='data',
-                                     filename=FailureActions,
+                                     filename= FailureActions || " ",
                                      profile=Profile,
                                      struct='ServiceFailureActions')) as FailureActions
                 FROM read_reg_key(globs=servicesKeyGlob + Name)
