@@ -15,13 +15,11 @@ import (
 	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/actions"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
-	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -445,11 +443,11 @@ func createHuntDownloadFile(
 		return nil, err
 	}
 
-	hunt_details, err := flows.GetHunt(config_obj,
-		&api_proto.GetHuntRequest{HuntId: hunt_id})
-	if err != nil {
+	hunt_dispatcher := services.GetHuntDispatcher()
+	hunt_details, pres := hunt_dispatcher.GetHunt(hunt_id)
+	if !pres {
 		fd.Close()
-		return nil, err
+		return nil, errors.New("Hunt not found")
 	}
 
 	// Do these first to ensure errors are returned if the zip file

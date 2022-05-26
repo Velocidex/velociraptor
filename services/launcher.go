@@ -128,6 +128,14 @@ type Launcher interface {
 		collector_request *flows_proto.ArtifactCollectorArgs) (
 		[]*actions_proto.VQLCollectorArgs, error)
 
+	// Take the compiled requests from above and schedule them on the
+	// client.
+	ScheduleArtifactCollectionFromCollectorArgs(
+		config_obj *config_proto.Config,
+		collector_request *flows_proto.ArtifactCollectorArgs,
+		vql_collector_args []*actions_proto.VQLCollectorArgs,
+		completion func()) (string, error)
+
 	// Main entry point to launch an artifact collection.
 	ScheduleArtifactCollection(
 		ctx context.Context,

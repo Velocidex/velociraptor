@@ -29,7 +29,7 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
  }
 ]SELECT client_id, timestamp(epoch=create_time/1000000) as CreateTime, request.artifacts as Artifacts, session_id as Flow FROM flows(client_id='C.4f5e52adf0a337a9') WHERE Artifacts =~ "Netstat"[
  {
-  "client_id": "C.56a8dfd31eb1fa6f",
+  "client_id": "C.4f5e52adf0a337a9",
   "CreateTime": "2020-08-03T01:24:30.468293905Z",
   "Artifacts": [
    "Windows.Network.NetstatEnriched"

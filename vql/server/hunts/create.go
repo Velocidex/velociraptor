@@ -26,7 +26,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -157,7 +156,10 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	// Run the hunt in the ACL context of the caller.
 	acl_manager := vql_subsystem.NewServerACLManager(
 		config_obj, vql_subsystem.GetPrincipal(scope))
-	hunt_id, err := flows.CreateHunt(ctx, config_obj, acl_manager, hunt_request)
+
+	hunt_dispatcher := services.GetHuntDispatcher()
+	hunt_id, err := hunt_dispatcher.CreateHunt(
+		ctx, config_obj, acl_manager, hunt_request)
 	if err != nil {
 		scope.Log("hunt: %v", err)
 		return vfilter.Null{}

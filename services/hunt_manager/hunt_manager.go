@@ -174,7 +174,7 @@ func (self *HuntManager) processMutation(
 		return errors.New("Hunt Dispatcher not ready")
 	}
 
-	dispatcher.ModifyHunt(mutation.HuntId,
+	dispatcher.ModifyHuntObject(mutation.HuntId,
 		func(hunt_obj *api_proto.Hunt) services.HuntModificationAction {
 			modification := services.HuntUnmodified
 

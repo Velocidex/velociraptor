@@ -23,10 +23,13 @@ package services
 // client requests.
 
 import (
+	"context"
 	"sync"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -74,12 +77,33 @@ type IHuntDispatcher interface {
 
 	// Modify a hunt under lock. The hunt will be synchronized to
 	// all frontends. Return true to indicate the hunt was modified.
-	ModifyHunt(hunt_id string,
+	ModifyHuntObject(hunt_id string,
 		cb func(hunt *api_proto.Hunt) HuntModificationAction,
 	) HuntModificationAction
 
+	ModifyHunt(
+		ctx context.Context,
+		config_obj *config_proto.Config,
+		hunt_modification *api_proto.Hunt,
+		user string) error
+
 	// Gets read only access to the hunt object.
 	GetHunt(hunt_id string) (*api_proto.Hunt, bool)
+
+	GetFlows(
+		ctx context.Context,
+		config_obj *config_proto.Config,
+		scope vfilter.Scope,
+		hunt_id string, start int) chan *api_proto.FlowDetails
+
+	CreateHunt(ctx context.Context,
+		config_obj *config_proto.Config,
+		acl_manager vql_subsystem.ACLManager,
+		hunt *api_proto.Hunt) (string, error)
+
+	ListHunts(ctx context.Context,
+		config_obj *config_proto.Config,
+		in *api_proto.ListHuntsRequest) (*api_proto.ListHuntsResponse, error)
 
 	// Send a mutation to a hunt object.
 	MutateHunt(config_obj *config_proto.Config,

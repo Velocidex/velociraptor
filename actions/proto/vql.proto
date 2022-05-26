@@ -34,6 +34,9 @@ message VQLCollectorArgs {
     int64 query_id = 32;
     int64 total_queries = 33;
 
+    // If set we ignore any requests older than this.
+    uint64 expiry = 34;
+
     // If this is specified we run this query first and if it returns
     // any rows we continue with the real query.
     string precondition = 29;

@@ -31,12 +31,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -199,7 +199,7 @@ func (self HuntResultsPlugin) Call(
 				return
 			}
 
-			flows.FindCollectedArtifacts(config_obj, hunt_obj)
+			hunt_dispatcher.FindCollectedArtifacts(config_obj, hunt_obj)
 			if len(hunt_obj.Artifacts) == 0 {
 				scope.Log("hunt_results: no artifacts in hunt")
 				return
@@ -349,43 +349,15 @@ func (self HuntFlowsPlugin) Call(
 			return
 		}
 
-		hunt_path_manager := paths.NewHuntPathManager(arg.HuntId).Clients()
-		file_store_factory := file_store.GetFileStore(config_obj)
-		rs_reader, err := result_sets.NewResultSetReader(
-			file_store_factory, hunt_path_manager)
-		if err != nil {
-			scope.Log("hunt_flows: %v\n", err)
-			return
-		}
-		defer rs_reader.Close()
-
-		// Seek to the row we need.
-		err = rs_reader.SeekToRow(int64(arg.StartRow))
-		if err != nil {
-			scope.Log("hunt_flows: %v\n", err)
-			return
-		}
-
-		for row := range rs_reader.Rows(ctx) {
-			participation_row := &hunt_manager.ParticipationRecord{}
-			err := arg_parser.ExtractArgsWithContext(ctx, scope, row, participation_row)
-			if err != nil {
-				return
-			}
+		hunt_dispatcher := services.GetHuntDispatcher()
+		for flow_details := range hunt_dispatcher.GetFlows(
+			ctx, config_obj, scope, arg.HuntId, int(arg.StartRow)) {
 
 			result := ordereddict.NewDict().
-				Set("HuntId", participation_row.HuntId).
-				Set("ClientId", participation_row.ClientId).
-				Set("FlowId", participation_row.FlowId).
-				Set("Flow", vfilter.Null{})
-
-			collection_context, err := flows.LoadCollectionContext(
-				config_obj, participation_row.ClientId,
-				participation_row.FlowId)
-			if err == nil {
-				result.Set("Flow",
-					json.ConvertProtoToOrderedDict(collection_context))
-			}
+				Set("HuntId", arg.HuntId).
+				Set("ClientId", flow_details.Context.ClientId).
+				Set("FlowId", flow_details.Context.SessionId).
+				Set("Flow", flow_details.Context)
 
 			select {
 			case <-ctx.Done():

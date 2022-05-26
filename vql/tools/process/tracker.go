@@ -21,6 +21,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/ttlcache/v2"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -183,6 +184,7 @@ func (self *ProcessTracker) doFullSync(
 	all_updates := []*ProcessEntry{}
 
 	for row := range vql.Eval(subctx, scope) {
+		json.Dump(row)
 		update := &ProcessEntry{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope,
 			vfilter.RowToDict(ctx, scope, row),
@@ -292,7 +294,7 @@ func (self _InstallProcessTracker) Call(ctx context.Context,
 
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("process_tracker: %s", err.Error())
+		scope.Log("process_tracker: %v", err)
 		return false
 	}
 
@@ -310,7 +312,11 @@ func (self _InstallProcessTracker) Call(ctx context.Context,
 
 	if !utils.IsNil(arg.SyncQuery) {
 		// Do the first sync inline so we are all ready when we return.
-		tracker.doFullSync(ctx, scope, sync_duration, arg.SyncQuery)
+		err = tracker.doFullSync(ctx, scope, sync_duration, arg.SyncQuery)
+		if err != nil {
+			scope.Log("process_tracker: %v", err)
+			return false
+		}
 
 		// Run the sync query to refresh the tracker periodically.
 		go func() {

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -12,14 +13,10 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
-	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -41,45 +38,40 @@ func (self *ApiServer) GetHuntFlows(
 			"User is not allowed to view hunt results.")
 	}
 
-	hunt_path_manager := paths.NewHuntPathManager(in.HuntId).Clients()
-	file_store_factory := file_store.GetFileStore(self.config)
-	rs_reader, err := result_sets.NewResultSetReader(
-		file_store_factory, hunt_path_manager)
-	if err != nil {
-		return nil, err
+	hunt_dispatcher := services.GetHuntDispatcher()
+	hunt, pres := hunt_dispatcher.GetHunt(in.HuntId)
+	if !pres {
+		return nil, status.Error(codes.InvalidArgument, "No hunt known")
 	}
-	defer rs_reader.Close()
 
-	// Seek to the row we need.
-	err = rs_reader.SeekToRow(int64(in.StartRow))
-	if err != nil {
-		return nil, err
+	total_scheduled := int64(-1)
+	if hunt.Stats != nil {
+		total_scheduled = int64(hunt.Stats.TotalClientsScheduled)
 	}
 
 	result := &api_proto.GetTableResponse{
-		TotalRows: rs_reader.TotalRows(),
+		TotalRows: total_scheduled,
 		Columns: []string{
 			"ClientId", "Hostname", "FlowId", "StartedTime", "State", "Duration",
 			"TotalBytes", "TotalRows",
 		}}
 
-	for row := range rs_reader.Rows(ctx) {
-		client_id := utils.GetString(row, "ClientId")
-		flow_id := utils.GetString(row, "FlowId")
-		flow, err := flows.LoadCollectionContext(self.config, client_id, flow_id)
-		if err != nil {
+	scope := vql_subsystem.MakeScope()
+	for flow := range hunt_dispatcher.GetFlows(ctx, self.config, scope,
+		in.HuntId, int(in.StartRow)) {
+		if flow.Context == nil {
 			continue
 		}
 
 		row_data := []string{
-			client_id,
-			services.GetHostname(client_id),
-			flow_id,
-			csv.AnyToString(flow.StartTime / 1000),
-			flow.State.String(),
-			csv.AnyToString(flow.ExecutionDuration / 1000000000),
-			csv.AnyToString(flow.TotalUploadedBytes),
-			csv.AnyToString(flow.TotalCollectedRows)}
+			flow.Context.ClientId,
+			services.GetHostname(flow.Context.ClientId),
+			flow.Context.SessionId,
+			csv.AnyToString(flow.Context.StartTime / 1000),
+			flow.Context.State.String(),
+			csv.AnyToString(flow.Context.ExecutionDuration / 1000000000),
+			csv.AnyToString(flow.Context.TotalUploadedBytes),
+			csv.AnyToString(flow.Context.TotalCollectedRows)}
 
 		result.Rows = append(result.Rows, &api_proto.Row{Cell: row_data})
 
@@ -104,7 +96,7 @@ func (self *ApiServer) CreateHunt(
 
 	// Log this event as an Audit event.
 	in.Creator = user_record.Name
-	in.HuntId = flows.GetNewHuntId()
+	in.HuntId = hunt_dispatcher.GetNewHuntId()
 
 	acl_manager := vql_subsystem.NewServerACLManager(self.config, in.Creator)
 
@@ -123,7 +115,8 @@ func (self *ApiServer) CreateHunt(
 		}).Info("CreateHunt")
 
 	result := &api_proto.StartFlowResponse{}
-	hunt_id, err := flows.CreateHunt(
+	hunt_dispatcher := services.GetHuntDispatcher()
+	hunt_id, err := hunt_dispatcher.CreateHunt(
 		ctx, self.config, acl_manager, in)
 	if err != nil {
 		return nil, err
@@ -162,7 +155,8 @@ func (self *ApiServer) ModifyHunt(
 			"details": fmt.Sprintf("%v", in),
 		}).Info("ModifyHunt")
 
-	err = flows.ModifyHunt(ctx, self.config, in, in.Creator)
+	hunt_dispatcher := services.GetHuntDispatcher()
+	err = hunt_dispatcher.ModifyHunt(ctx, self.config, in, in.Creator)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +185,9 @@ func (self *ApiServer) ListHunts(
 			"User is not allowed to view hunts.")
 	}
 
-	result, err := flows.ListHunts(self.config, in)
+	hunt_dispatcher := services.GetHuntDispatcher()
+	result, err := hunt_dispatcher.ListHunts(
+		ctx, self.config, in)
 	if err != nil {
 		return nil, err
 	}
@@ -241,9 +237,10 @@ func (self *ApiServer) GetHunt(
 			"User is not allowed to view hunts.")
 	}
 
-	result, err := flows.GetHunt(self.config, in)
-	if err != nil {
-		return nil, err
+	hunt_dispatcher := services.GetHuntDispatcher()
+	result, pres := hunt_dispatcher.GetHunt(in.HuntId)
+	if !pres {
+		return nil, errors.New("Hunt not found")
 	}
 
 	return result, nil
