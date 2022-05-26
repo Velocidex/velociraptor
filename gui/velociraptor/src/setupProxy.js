@@ -1,9 +1,13 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
+
 module.exports = function(app) {
     let mw = createProxyMiddleware({
         target: 'https://0.0.0.0:8889',
         changeOrigin: true,
+        onProxyReq: (proxyReq, req, res) => {
+            proxyReq.setHeader('x-username', 'mic');
+        },
         secure: false,
     });
 

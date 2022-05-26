@@ -8,6 +8,7 @@ import (
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -48,8 +49,10 @@ type ServerACLManager struct {
 // Token must have *ALL* the specified permissions.
 func (self *ServerACLManager) CheckAccess(
 	permissions ...acls.ACL_PERMISSION) (bool, error) {
+	user_manager := services.GetUserManager()
+
 	for _, permission := range permissions {
-		ok, err := acls.CheckAccessWithToken(self.Token, permission)
+		ok, err := user_manager.CheckAccessWithToken(self.Token, permission)
 		if !ok || err != nil {
 			return ok, err
 		}
@@ -60,7 +63,8 @@ func (self *ServerACLManager) CheckAccess(
 
 func (self *ServerACLManager) CheckAccessWithArgs(
 	permission acls.ACL_PERMISSION, args ...string) (bool, error) {
-	return acls.CheckAccessWithToken(self.Token, permission, args...)
+	user_manager := services.GetUserManager()
+	return user_manager.CheckAccessWithToken(self.Token, permission, args...)
 }
 
 // NewRoleACLManager creates an ACL manager with only the assigned
@@ -78,7 +82,8 @@ func NewRoleACLManager(role string) ACLManager {
 func NewServerACLManager(
 	config_obj *config_proto.Config,
 	principal string) ACLManager {
-	policy, err := acls.GetEffectivePolicy(config_obj, principal)
+	user_manager := services.GetUserManager()
+	policy, err := user_manager.GetEffectivePolicy(config_obj, principal)
 	if err != nil {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.WithFields(logrus.Fields{

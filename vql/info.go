@@ -61,7 +61,7 @@ func init() {
 				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
 
-				err := CheckAccess(scope, acls.MACHINE_STATE)
+				err := acls.CheckAccess(scope, acls.MACHINE_STATE)
 				if err != nil {
 					scope.Log("info: %s", err)
 					return result
