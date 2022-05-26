@@ -46,6 +46,7 @@ const runArtifact = (client_id, artifact, params, on_success, token)=>{
 
     api.post("v1/CollectArtifact", {
         client_id: client_id,
+        allow_custom_overrides: true,
         artifacts: [artifact],
         specs: [{artifact: artifact,
                  parameters: artifact_params}],
@@ -64,7 +65,8 @@ const runArtifact = (client_id, artifact, params, on_success, token)=>{
                     return;
                 }
 
-                // The node is refreshed with the correct flow id, we can stop polling.
+                // The node is refreshed with the correct flow id, we
+                // can stop polling.
                 clearInterval(recursive_download_interval);
                 on_success(context);
             });
