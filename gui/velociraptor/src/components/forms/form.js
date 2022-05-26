@@ -112,14 +112,12 @@ export default class VeloForm extends React.Component {
         api.post("v1/GetArtifacts",
                 {
                     search_term: "...",
+                    type: artifact_type,
+
+                    // No field type: We want the list of sources too
+
                     // This might be too many to fetch at once but we
                     // are still fast enough for now.
-                    fields: {
-                        name: true,
-                        type: true,
-                        description: true,
-                    },
-                    type: artifact_type,
                     number_of_results: 1000,
                 },
 
@@ -134,13 +132,50 @@ export default class VeloForm extends React.Component {
                     });
 
                     for (let i=0; i < items.length; i++) {
-                        var desc = items[i];
-                        artifacts[desc.name] = {
-                            'description' : desc.description,
-                            'enabled' : false,
-                        };
-                        if (checkedArtifacts.indexOf(desc.name) !== -1) {
-                            artifacts[desc.name].enabled = true;
+                        let desc = items[i];
+
+                        let sources = desc.sources || [];
+                        let selectable_names = [];
+                        let descriptions = {};
+                        let unnamed_sources = 0;
+
+                        // Gather the list of possible sources so the user
+                        // can select them individually.  If there are
+                        // unnamed sources, we'll save them for the end
+                        // since the results will have been combined and
+                        // available under the unqualified artifact name.
+                        for (let j=0; j < sources.length; j++) {
+                            if (sources[j].name) {
+                                let name = desc.name + "/" + sources[j].name;
+
+                                selectable_names.push(name);
+                                if (sources[j].description) {
+                                    descriptions[name] = sources[j].description;
+                                } else {
+                                    descriptions[name] = desc.description;
+                                }
+                            } else {
+                                unnamed_sources++;
+                            }
+                        }
+
+                        // If there is a mix of unnamed sources and named
+                        // sources, put the bare artifact name first so the
+                        // UI will be visually consistent.
+                        if (unnamed_sources) {
+                            selectable_names.unshift(desc.name);
+                            descriptions[desc.name] = desc.description;
+                        }
+
+                        for (let j=0; j < selectable_names.length; j++) {
+                            let name = selectable_names[j];
+                            artifacts[name] = {
+                                'description' : descriptions[name],
+                                'enabled' : false,
+                            };
+                            if (checkedArtifacts.indexOf(name) !== -1) {
+                                artifacts[name].enabled = true;
+                            }
                         }
                     };
 
