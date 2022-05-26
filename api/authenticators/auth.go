@@ -4,8 +4,17 @@ import (
 	"errors"
 	"net/http"
 	"strings"
+	"sync"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+)
+
+var (
+	mu sync.Mutex
+
+	auth_dispatcher = make(map[string]func(
+		config_obj *config_proto.Config,
+		auth_config *config_proto.Authenticator) (Authenticator, error))
 )
 
 // All SSO Authenticators implement this interface.
@@ -27,41 +36,76 @@ func NewAuthenticator(config_obj *config_proto.Config) (Authenticator, error) {
 	return getAuthenticatorByType(config_obj, config_obj.GUI.Authenticator)
 }
 
+func RegisterAuthenticator(name string,
+	handler func(config_obj *config_proto.Config,
+		auth_config *config_proto.Authenticator) (Authenticator, error)) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	auth_dispatcher[strings.ToLower(name)] = handler
+}
+
 func getAuthenticatorByType(
 	config_obj *config_proto.Config,
 	auth_config *config_proto.Authenticator) (Authenticator, error) {
-	auth_type := strings.ToLower(auth_config.Type)
-	switch auth_type {
-	case "azure":
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	handler, pres := auth_dispatcher[strings.ToLower(auth_config.Type)]
+	if pres {
+		return handler(config_obj, auth_config)
+	}
+	return nil, errors.New("No valid authenticator found")
+}
+
+func init() {
+	RegisterAuthenticator("azure", func(config_obj *config_proto.Config,
+		auth_config *config_proto.Authenticator) (Authenticator, error) {
 		return &AzureAuthenticator{
 			config_obj:    config_obj,
 			authenticator: auth_config,
 		}, nil
-	case "github":
+	})
+
+	RegisterAuthenticator("github", func(config_obj *config_proto.Config,
+		auth_config *config_proto.Authenticator) (Authenticator, error) {
 		return &GitHubAuthenticator{
 			config_obj:    config_obj,
 			authenticator: auth_config,
 		}, nil
-	case "google":
+	})
+
+	RegisterAuthenticator("google", func(config_obj *config_proto.Config,
+		auth_config *config_proto.Authenticator) (Authenticator, error) {
 		return &GoogleAuthenticator{
 			config_obj:    config_obj,
 			authenticator: auth_config,
 		}, nil
-	case "saml":
-		return NewSamlAuthenticator(config_obj, auth_config)
+	})
 
-	case "basic":
+	RegisterAuthenticator("saml", func(config_obj *config_proto.Config,
+		auth_config *config_proto.Authenticator) (Authenticator, error) {
+		return NewSamlAuthenticator(config_obj, auth_config)
+	})
+
+	RegisterAuthenticator("basic", func(config_obj *config_proto.Config,
+		auth_config *config_proto.Authenticator) (Authenticator, error) {
 		return &BasicAuthenticator{
 			config_obj: config_obj,
 		}, nil
-	case "oidc":
+	})
+
+	RegisterAuthenticator("oidc", func(config_obj *config_proto.Config,
+		auth_config *config_proto.Authenticator) (Authenticator, error) {
 		return &OidcAuthenticator{
 			config_obj:    config_obj,
 			authenticator: auth_config,
 		}, nil
+	})
 
-	case "multi":
+	RegisterAuthenticator("multi", func(config_obj *config_proto.Config,
+		auth_config *config_proto.Authenticator) (Authenticator, error) {
 		return NewMultiAuthenticator(config_obj, auth_config)
-	}
-	return nil, errors.New("No valid authenticator found")
+	})
 }

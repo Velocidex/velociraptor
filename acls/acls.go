@@ -51,10 +51,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/pkg/errors"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type ACL_PERMISSION int
@@ -204,7 +206,9 @@ func GetPermission(name string) ACL_PERMISSION {
 	return NO_PERMISSIONS
 }
 
-func GetPolicy(
+type ACLManager struct{}
+
+func (self ACLManager) GetPolicy(
 	config_obj *config_proto.Config,
 	principal string) (*acl_proto.ApiClientACL, error) {
 
@@ -225,7 +229,7 @@ func GetPolicy(
 
 // GetEffectivePolicy expands any roles in the policy object to
 // produce a simple object.
-func GetEffectivePolicy(
+func (self ACLManager) GetEffectivePolicy(
 	config_obj *config_proto.Config,
 	principal string) (*acl_proto.ApiClientACL, error) {
 
@@ -261,7 +265,7 @@ func GetEffectivePolicy(
 	return acl_obj, nil
 }
 
-func SetPolicy(
+func (self ACLManager) SetPolicy(
 	config_obj *config_proto.Config,
 	principal string, acl_obj *acl_proto.ApiClientACL) error {
 
@@ -274,7 +278,7 @@ func SetPolicy(
 	return db.SetSubject(config_obj, user_path_manager.ACL(), acl_obj)
 }
 
-func CheckAccess(
+func (self ACLManager) CheckAccess(
 	config_obj *config_proto.Config,
 	principal string,
 	permissions ...ACL_PERMISSION) (bool, error) {
@@ -288,13 +292,13 @@ func CheckAccess(
 		return false, nil
 	}
 
-	acl_obj, err := GetEffectivePolicy(config_obj, principal)
+	acl_obj, err := self.GetEffectivePolicy(config_obj, principal)
 	if err != nil {
 		return false, err
 	}
 
 	for _, permission := range permissions {
-		ok, err := CheckAccessWithToken(acl_obj, permission)
+		ok, err := self.CheckAccessWithToken(acl_obj, permission)
 		if !ok || err != nil {
 			return ok, err
 		}
@@ -303,7 +307,7 @@ func CheckAccess(
 	return true, nil
 }
 
-func CheckAccessWithToken(
+func (self ACLManager) CheckAccessWithToken(
 	token *acl_proto.ApiClientACL,
 	permission ACL_PERMISSION, args ...string) (bool, error) {
 
@@ -370,4 +374,21 @@ func CheckAccessWithToken(
 	}
 
 	return false, nil
+}
+
+func (self ACLManager) GrantRoles(
+	config_obj *config_proto.Config,
+	principal string,
+	roles []string) error {
+	new_policy := &acl_proto.ApiClientACL{}
+
+	for _, role := range roles {
+		if !utils.InString(new_policy.Roles, role) {
+			if !ValidateRole(role) {
+				return errors.Errorf("Invalid role %v", role)
+			}
+			new_policy.Roles = append(new_policy.Roles, role)
+		}
+	}
+	return self.SetPolicy(config_obj, principal, new_policy)
 }
