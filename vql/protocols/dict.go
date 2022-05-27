@@ -78,7 +78,34 @@ func (self _AddDict) Add(scope types.Scope, a types.Any, b types.Any) types.Any 
 	return res
 }
 
+// Handle a map adding with a dict.
+type _AddMap struct{}
+
+func (self _AddMap) Applicable(a types.Any, b types.Any) bool {
+	a_value := reflect.Indirect(reflect.ValueOf(a))
+	if a_value.Kind() != reflect.Map {
+		return false
+	}
+
+	_, b_ok := b.(*ordereddict.Dict)
+	return b_ok
+}
+
+func (self _AddMap) Add(scope types.Scope, a types.Any, b types.Any) types.Any {
+	ctx := context.Background()
+	a_dict := vfilter.RowToDict(ctx, scope, a)
+	b_dict := vfilter.RowToDict(ctx, scope, b)
+
+	for _, k := range b_dict.Keys() {
+		v, _ := b_dict.Get(k)
+		a_dict.Set(k, v)
+	}
+
+	return a_dict
+}
+
 func init() {
 	vql_subsystem.RegisterProtocol(&_BoolDict{})
 	vql_subsystem.RegisterProtocol(&_AddDict{})
+	vql_subsystem.RegisterProtocol(&_AddMap{})
 }

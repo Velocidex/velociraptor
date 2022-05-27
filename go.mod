@@ -29,7 +29,7 @@ require (
 	github.com/alecthomas/assert v1.0.0
 	github.com/alecthomas/chroma v0.7.2
 	github.com/alecthomas/participle v0.7.1
-	github.com/alecthomas/repr v0.0.0-20220113201626-b1b626ac65ae // indirect
+	github.com/alecthomas/repr v0.1.0 // indirect
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/aws/aws-sdk-go v1.40.6
@@ -121,7 +121,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
 	www.velocidex.com/golang/oleparse v0.0.0-20211013063943-0334d69593c1
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
-	www.velocidex.com/golang/vfilter v0.0.0-20220428152704-2c10e2e5806d
+	www.velocidex.com/golang/vfilter v0.0.0-20220526150756-9e8c9cccd67e
 )
 
 require (
