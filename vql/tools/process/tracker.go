@@ -21,7 +21,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/ttlcache/v2"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -66,6 +65,8 @@ type ProcessTracker struct {
 	// Any interested parties will receive notifications of any state
 	// updates.
 	update_notifications chan *ProcessEntry
+
+	enrichments *ordereddict.Dict // map[string]*vfilter.Lambda
 }
 
 func (self *ProcessTracker) Get(id string) (*ProcessEntry, bool) {
@@ -78,6 +79,37 @@ func (self *ProcessTracker) Get(id string) (*ProcessEntry, bool) {
 	if !ok {
 		return nil, false
 	}
+	return pe, true
+}
+
+func (self *ProcessTracker) Enrich(
+	ctx context.Context, scope vfilter.Scope, id string) (*ProcessEntry, bool) {
+	any, err := self.lookup.Get(id)
+	if err != nil {
+		return nil, false
+	}
+
+	pe, ok := any.(*ProcessEntry)
+	if !ok {
+		return nil, false
+	}
+
+	for _, k := range self.enrichments.Keys() {
+		enrichment_any, _ := self.enrichments.Get(k)
+		enrichment, ok := enrichment_any.(*vfilter.Lambda)
+		if !ok {
+			continue
+		}
+		update := enrichment.Reduce(ctx, scope, []vfilter.Any{pe})
+		update_dict, ok := update.(*ordereddict.Dict)
+		if ok {
+			for _, k := range update_dict.Keys() {
+				v, _ := update_dict.Get(k)
+				pe.Data.Set(k, v)
+			}
+		}
+	}
+
 	return pe, true
 }
 
@@ -181,10 +213,9 @@ func (self *ProcessTracker) doFullSync(
 	}
 	self.mu.Unlock()
 
-	all_updates := []*ProcessEntry{}
+	all_updates := ordereddict.NewDict()
 
 	for row := range vql.Eval(subctx, scope) {
-		json.Dump(row)
 		update := &ProcessEntry{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope,
 			vfilter.RowToDict(ctx, scope, row),
@@ -198,7 +229,7 @@ func (self *ProcessTracker) doFullSync(
 		delete(existing, update.Id)
 		self.mu.Unlock()
 
-		all_updates = append(all_updates, update)
+		all_updates.Set(update.Id, update)
 	}
 
 	// Now go over all the existing processes which were not found and
@@ -259,7 +290,8 @@ func (self *ProcessTracker) CallChain(id string) []*ProcessEntry {
 
 func NewProcessTracker(max_size int) *ProcessTracker {
 	result := &ProcessTracker{
-		lookup: ttlcache.NewCache(),
+		lookup:      ttlcache.NewCache(),
+		enrichments: ordereddict.NewDict(),
 	}
 
 	result.lookup.SetCacheSizeLimit(max_size)
@@ -268,20 +300,21 @@ func NewProcessTracker(max_size int) *ProcessTracker {
 }
 
 type ProcessEntry struct {
-	Id           string      `vfilter:"required,field=id,doc=Process ID."`
-	ParentId     string      `vfilter:"optional,field=parent_id,doc=The parent's process ID."`
-	RealParentId string      `vfilter:"optional,field=real_parent_id,doc=The parent's real process ID."`
-	UpdateType   string      `vfilter:"optional,field=update_type,doc=What this row represents."`
-	StartTime    time.Time   `vfilter:"optional,field=start_time,doc=Timestamp for start,end updates"`
-	EndTime      time.Time   `vfilter:"optional,field=end_time,doc=Timestamp for start,end updates"`
-	Data         vfilter.Any `vfilter:"optional,field=data,doc=Arbitrary key/value to associate with the process"`
+	Id           string            `vfilter:"required,field=id,doc=Process ID."`
+	ParentId     string            `vfilter:"optional,field=parent_id,doc=The parent's process ID."`
+	RealParentId string            `vfilter:"optional,field=real_parent_id,doc=The parent's real process ID."`
+	UpdateType   string            `vfilter:"optional,field=update_type,doc=What this row represents."`
+	StartTime    time.Time         `vfilter:"optional,field=start_time,doc=Timestamp for start,end updates"`
+	EndTime      time.Time         `vfilter:"optional,field=end_time,doc=Timestamp for start,end updates"`
+	Data         *ordereddict.Dict `vfilter:"optional,field=data,doc=Arbitrary key/value to associate with the process"`
 }
 
 type _InstallProcessTrackerArgs struct {
-	SyncQuery    vfilter.StoredQuery `vfilter:"required,field=sync_query,doc=Source for full tracker updates. Query must emit rows with the ProcessTrackerUpdate shape - usually uses pslist() to form a full sync."`
+	SyncQuery    vfilter.StoredQuery `vfilter:"optional,field=sync_query,doc=Source for full tracker updates. Query must emit rows with the ProcessTrackerUpdate shape - usually uses pslist() to form a full sync."`
 	SyncPeriodMs int64               `vfilter:"optional,field=sync_period,doc=How often to do a full sync (default 5000 msec)."`
 	UpdateQuery  vfilter.StoredQuery `vfilter:"optional,field=update_query,doc=An Event query that produces live updates of the tracker state."`
 	MaxSize      int64               `vfilter:"optional,field=max_size,doc=Maximum size of process tracker LRU."`
+	Enrichments  []string            `vfilter:"optional,field=enrichments,doc=One or more VQL lambda functions that can enrich the data for the process."`
 }
 
 type _InstallProcessTracker struct{}
@@ -308,6 +341,18 @@ func (self _InstallProcessTracker) Call(ctx context.Context,
 	}
 
 	tracker := NewProcessTracker(int(max_size))
+	// Any any enrichments to the tracker.
+	for _, enrichment := range arg.Enrichments {
+		lambda, err := vfilter.ParseLambda(enrichment)
+		if err != nil {
+			scope.Log("process_tracker: while parsing enrichment %v: %v",
+				enrichment, err)
+			return false
+		}
+
+		tracker.enrichments.Set(enrichment, lambda)
+	}
+
 	sync_duration := time.Duration(arg.SyncPeriodMs) * time.Millisecond
 
 	if !utils.IsNil(arg.SyncQuery) {
