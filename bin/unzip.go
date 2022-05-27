@@ -76,11 +76,10 @@ func doUnzip() error {
 
 func runUnzipList(builder services.ScopeBuilder) error {
 	query := `
-       SELECT url(parse=FullPath).Fragment AS Filename,
+       SELECT OSPath.Path AS Filename,
               Size
-       FROM glob(globs=url(scheme='file',
-                           path=ZipPath,
-                           fragment=MemberGlob).String,
+       FROM glob(globs=MemberGlob,
+                 root=pathspec(DelegatePath=ZipPath),
                  accessor='zip')
        WHERE NOT IsDir`
 
@@ -98,11 +97,10 @@ func runUnzipFiles(builder services.ScopeBuilder) error {
 
 	query := `
        SELECT upload(
-               file=FullPath, accessor='zip',
-               name=url(parse=FullPath).Fragment) AS Extracted
-       FROM glob(globs=url(scheme='file',
-                           path=ZipPath,
-                           fragment=MemberGlob).String,
+               file=OSPath, accessor='zip',
+               name=OSPath.Path) AS Extracted
+       FROM glob(globs=MemberGlob,
+                 root=pathspec(DelegatePath=ZipPath),
                  accessor='zip')
        WHERE NOT IsDir`
 
@@ -117,15 +115,14 @@ func runUnzipPrint(builder services.ScopeBuilder) error {
 	query := `
        SELECT * FROM foreach(
        row={
-          SELECT FullPath
-          FROM glob(globs=url(scheme='file',
-                              path=ZipPath,
-                              fragment=MemberGlob).String,
+          SELECT OSPath
+          FROM glob(globs=MemberGlob,
+                    root=pathspec(DelegatePath=ZipPath),
                     accessor='zip')
           WHERE NOT IsDir AND FullPath =~ '.json$'
        }, query={
           SELECT *
-          FROM parse_jsonl(filename=FullPath, accessor='zip')
+          FROM parse_jsonl(filename=OSPath, accessor='zip')
        })
     `
 	return runQueryWithEnv(query, builder)
