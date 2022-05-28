@@ -159,6 +159,10 @@ var (
 	driveRegex = regexp.MustCompile(
 		`(?i)^[/\\]?([a-z]:)(.*)`)
 
+	// https://docs.microsoft.com/en-us/dotnet/standard/io/file-path-formats#unc-paths
+	uncRegex = regexp.MustCompile(
+		`(?i)^(\\\\[^\\]+)\\(.*)`)
+
 	deviceDriveRegex = regexp.MustCompile(
 		`(?i)^(\\\\[\?\.]\\[a-zA-Z]:)(.*)`)
 
@@ -171,6 +175,9 @@ var (
 // component. For example:
 // C:\Windows -> "C:\", "Windows"
 // \\.\c:\Windows -> "\\.\C:", "Windows"
+
+// We also support UNC paths like:
+// \\hostname\path\to\file -> "\\hostname", "path", "to", "file"
 
 // Other components that contain path separators need to be properly
 // quoted as usual:
@@ -195,6 +202,12 @@ func (self WindowsPathManipulator) PathParse(path string, result *OSPath) error 
 	}
 
 	m = deviceDirectoryRegex.FindStringSubmatch(path)
+	if len(m) != 0 {
+		result.Components = append([]string{m[1]}, utils.SplitComponents(m[2])...)
+		return nil
+	}
+
+	m = uncRegex.FindStringSubmatch(path)
 	if len(m) != 0 {
 		result.Components = append([]string{m[1]}, utils.SplitComponents(m[2])...)
 		return nil
