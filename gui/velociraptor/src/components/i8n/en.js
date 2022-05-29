@@ -59,7 +59,8 @@ const English = {
       You are about to permanently delete the artifact collection
       <b>{session_id}</b>.
       <br/>
-      This collection was the artifacts <b>{artifacts}</b>
+      This collection had the artifacts <b className="wrapped-text">
+                                          {artifacts}</b>
       <br/><br/>
 
       We expect to free up { total_bytes.toFixed(0) } Mb of bulk
@@ -161,6 +162,9 @@ const English = {
       Select a label group above to configure specific
       event artifacts targetting that group.
     </>,
+    "_ts": "Server Time",
+    "TablePagination": (from, to, size)=>
+    <>Showing { from } to { to } of { size }</>,
 
 };
 

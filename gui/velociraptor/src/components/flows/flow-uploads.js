@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 import React from 'react';
 import PropTypes from 'prop-types';
 import axios from 'axios';
@@ -54,7 +56,16 @@ export default class FlowUploads extends React.Component {
         api.get("v1/GetTable", params, this.source.token).then((response) => {
             if (response.cancel) return;
 
-            this.setState({loading: false, pageData: PrepareData(response.data)});
+            let prepared_data = PrepareData(response.data);
+            // Translate the columns
+            let headers = {};
+            _.each(prepared_data.columns, x=>{
+                headers[x] = T(x);
+            });
+
+            this.setState({loading: false,
+                           headers: headers,
+                           pageData: prepared_data});
         }).catch(() => {
             this.setState({loading: false, pageData: {}});
         });
@@ -100,6 +111,7 @@ export default class FlowUploads extends React.Component {
               className="col-12"
               renderers={renderers}
               rows={this.state.pageData.rows}
+              headers={this.state.headers}
               columns={this.state.pageData.columns} />
         );
     }

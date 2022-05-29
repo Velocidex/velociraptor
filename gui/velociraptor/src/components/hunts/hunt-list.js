@@ -418,7 +418,7 @@ export default withRouter(HuntList);
 
 export function getHuntColumns() {
     return formatColumns([
-        {dataField: "state", text: "State",
+        {dataField: "state", text: T("State"),
          formatter: (cell, row) => {
              let stopped = row.stats && row.stats.stopped;
 
@@ -434,7 +434,7 @@ export function getHuntColumns() {
              return <FontAwesomeIcon icon="exclamation"/>;
          }
         },
-        {dataField: "hunt_id", text: "Hunt ID"},
+        {dataField: "hunt_id", text: T("Hunt ID")},
         {dataField: "hunt_description", text: T("Description"),
          sort: true, filtered: true, editable: true},
         {dataField: "create_time", text: T("Created"),

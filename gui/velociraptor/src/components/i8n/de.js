@@ -175,7 +175,9 @@ const Deutsch = {
       Sie sind im Begriff, die Artefaktsammlung dauerhaft zu löschen
       <b>{session_id}</b>.
       <br/>
-      Diese Sammlung waren die Artefakte <b>{artifacts}</b>
+      Diese Sammlung hatte die Artefakte <b className="wrapped-text">
+         {artifacts}
+      </b>
       <br/><br/>
 
       Wir gehen davon aus, { total_bytes.toFixed(0) } MB Massenspeicher freizugeben
@@ -492,11 +494,11 @@ const Deutsch = {
     "Theme":"Thema",
     "Select a theme":"Wählen Sie ein Thema aus",
     "Default Velociraptor":"Standard-Velociraptor",
-    "Velociraptor (light)":"Velociraptor (Licht)",
+    "Velociraptor (light)":"Velociraptor (hell)",
     "Velociraptor (dark)":"Velociraptor (dunkel)",
     "Github dimmed (dark)":"Github gedimmt (dunkel)",
     "Cool Gray (dark)":"Cool Grey (dunkel)",
-    "Strawberry Milkshake (light)":"Erdbeer-Milchshake (leicht)",
+    "Strawberry Milkshake (light)":"Erdbeer-Milchshake (hell)",
     "Downloads Password":"Download-Passwort",
     "Default password to use for downloads":"Standardpasswort für Downloads",
 
@@ -555,8 +557,36 @@ const Deutsch = {
     "Select artifact": "Artefakt auswählen",
 
     "Raw Data":"Rohdaten",
-    "Logs":"Logs",
-    "Report":"Bericht"
+    "Logs":"Logdatei",
+    "Log":"Logdatei",
+    "Report":"Bericht",
+
+    "NotebookId":"Notizbuch-ID",
+    "Modified Time":"Geänderte Zeit",
+    "Time": "Zeit",
+    "No events": "Keine Ereignisse",
+    "_ts": "Serverzeit",
+
+    "Timestamp":"Zeitstempel",
+    "started":"Gestartet",
+    "vfs_path":"VFS Pfad",
+    "file_size":"Dateigröße",
+    "uploaded_size":"Hochgeladene Größe",
+    "TablePagination": (from, to, size)=>
+    <>Zeigt Zeile { from } bis { to } von { size }</>,
+
+    "Select a language":"Sprache auswählen",
+    "English":"Englisch",
+    "Deutsch":"Deutsch",
+
+    "Type":"Typ",
+    "Export notebooks":"Notizbücher exportieren",
+    "Export to HTML":"Nach HTML exportieren",
+    "Export to Zip":"Nach Zip exportieren",
+
+    "Permanently delete Notebook":"Notizbuch dauerhaft löschen",
+    "You are about to permanently delete the notebook for this hunt":"Sie sind dabei, das Notizbuch für diese Jagd dauerhaft zu löschen",
+
 };
 
 export default Deutsch;

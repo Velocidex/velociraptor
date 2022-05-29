@@ -15,6 +15,7 @@ import api from '../core/api-service.js';
 import BootstrapTable from 'react-bootstrap-table-next';
 import VeloValueRenderer from '../utils/value.js';
 import Dropdown from 'react-bootstrap/Dropdown';
+import T from '../i8n/i8n.js';
 
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -83,7 +84,7 @@ class EventTableRenderer  extends Component {
         let columns = [{dataField: '_id', hidden: true}];
         for(var i=0;i<this.props.columns.length;i++) {
             var name = this.props.columns[i];
-            let definition ={ dataField: name, text: name};
+            let definition ={ dataField: name, text: T(name)};
             if (name === "_ts") {
                 definition.text = "Server Time";
             }
