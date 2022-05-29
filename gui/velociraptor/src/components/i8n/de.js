@@ -130,7 +130,6 @@ const Deutsch = {
     "Artifact Collection": "Sammlung von Artefakten",
     "Uploaded Files": "Hochgeladene Dateien",
     "Results": "Ergebnisse",
-    "Log": "Log",
     "Flow Details": "Flow-Details",
     "Notebook for Collection": name=>"Notizbuch für die Sammlung "+name,
     "Please click a collection in the above table":"Bitte klicken Sie auf eine Sammlung in der obigen Tabelle",
