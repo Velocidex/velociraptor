@@ -108,6 +108,8 @@ class VeloPagedTable extends Component {
 
         // A version to force refresh of the table.
         version: PropTypes.object,
+
+        translate_column_headers: PropTypes.bool,
     }
 
     state = {
@@ -204,7 +206,7 @@ class VeloPagedTable extends Component {
         if (transform.filter_column) {
             result.push(
                 <Button key="1"
-                  title="Transformed"  disabled={true}
+                  title={T("Transformed")}  disabled={true}
                   variant="outline-dark">
                   { transform.filter_column } ( {transform.filter_regex} )
                   <span className="transform-button">
@@ -217,7 +219,7 @@ class VeloPagedTable extends Component {
         if (transform.sort_column) {
             result.push(
                 <Button key="2"
-                  title="Transformed"  disabled={true}
+                  title={T("Transformed")}  disabled={true}
                   variant="outline-dark">
                   {transform.sort_column}
                   <span className="transform-button">
@@ -322,7 +324,9 @@ class VeloPagedTable extends Component {
         let columns = [{dataField: '_id', hidden: true}];
         for(var i=0;i<this.state.columns.length;i++) {
             let name = this.state.columns[i];
-            let definition ={ dataField: name, text: T(name)};
+            let definition ={ dataField: name,
+                              text: this.props.translate_column_headers ?
+                              T(name) : name};
             if (this.props.renderers && this.props.renderers[name]) {
                 definition.formatter = this.props.renderers[name];
             } else {
@@ -416,14 +420,14 @@ class VeloPagedTable extends Component {
                           <InspectRawJson rows={this.state.rows} />
                           <Button variant="default"
                                   target="_blank" rel="noopener noreferrer"
-                                  title="Download JSON"
+                                  title={T("Download JSON")}
                                   href={api.base_path + "/api/v1/DownloadTable?"+
                                         qs.stringify(downloads,  {indices: false}) } >
                             <FontAwesomeIcon icon="download"/>
                           </Button>
                           <Button variant="default"
                                   target="_blank" rel="noopener noreferrer"
-                                  title="Download CSV"
+                                  title={T("Download CSV")}
                                   href={api.base_path + "/api/v1/DownloadTable?download_format=csv&"+
                                         qs.stringify(downloads,  {indices: false}) } >
                             <FontAwesomeIcon icon="file-csv"/>
@@ -432,7 +436,7 @@ class VeloPagedTable extends Component {
                                   onClick={()=>this.setState({
                                       show_transform_dialog: true,
                                   })}
-                                  title="Transform Table">
+                                  title={T("Transform Table")}>
                             <FontAwesomeIcon icon="filter"/>
                           </Button>
                         </ButtonGroup>

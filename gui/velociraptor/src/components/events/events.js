@@ -22,6 +22,7 @@ import EventTimelineViewer from "./timeline-viewer.js";
 import EventNotebook from "./event-notebook.js";
 import { get_notebook_id} from "./event-notebook.js";
 import DeleteNotebookDialog from '../notebooks/notebook-delete.js';
+import T from '../i8n/i8n.js';
 
 import { withRouter }  from "react-router-dom";
 
@@ -295,12 +296,12 @@ class EventMonitoring extends React.Component {
                 <ButtonGroup>
                   { client_id === "server" || client_id === "" ?
                     <>
-                      <Button title="Update server monitoring table"
+                      <Button title={T("Update server monitoring table")}
                               onClick={() => this.setState({showServerEventTableWizard: true})}
                               variant="default">
                         <FontAwesomeIcon icon="edit"/>
                       </Button>
-                      <Button title="Show server monitoring tables"
+                      <Button title={T("Show server monitoring tables")}
                               onClick={() => this.setState({showEventMonitoringPopup: true})}
                               variant="default">
                         <FontAwesomeIcon icon="binoculars"/>
@@ -308,12 +309,12 @@ class EventMonitoring extends React.Component {
 
                     </>:
                     <>
-                      <Button title="Update client monitoring table"
+                      <Button title={T("Update client monitoring table")}
                               onClick={() => this.setState({showEventTableWizard: true})}
                               variant="default">
                         <FontAwesomeIcon icon="edit"/>
                       </Button>
-                      <Button title="Show client monitoring tables"
+                      <Button title={T("Show client monitoring tables")}
                               onClick={() => this.setState({showEventMonitoringPopup: true})}
                               variant="default">
                         <FontAwesomeIcon icon="binoculars"/>
@@ -322,11 +323,11 @@ class EventMonitoring extends React.Component {
                   }
                   { this.state.buttonsRenderer() }
                   <Dropdown title={this.state.artifact.artifact ||
-                                   "Select artifact"} variant="default">
+                                   T("Select artifact")} variant="default">
                     <Dropdown.Toggle variant="default">
                       <FontAwesomeIcon icon="book"/>
                       <span className="button-label">
-                        {this.state.artifact.artifact || "Select artifact"}
+                        {this.state.artifact.artifact || T("Select artifact")}
                       </span>
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
@@ -349,7 +350,7 @@ class EventMonitoring extends React.Component {
 
                 <ButtonGroup className="float-right">
                   { this.state.mode === mode_notebook &&
-                    <Button title="Delete Notebook"
+                    <Button title={T("Delete Notebook")}
                             onClick={() => this.setState({showDeleteNotebook: true})}
                             variant="default">
                       <FontAwesomeIcon icon="trash"/>
@@ -358,32 +359,32 @@ class EventMonitoring extends React.Component {
                   <Dropdown title="mode" variant="default">
                     <Dropdown.Toggle variant="default">
                       <FontAwesomeIcon icon="book"/>
-                      <span className="button-label">{this.state.mode}</span>
+                      <span className="button-label">{T(this.state.mode)}</span>
                     </Dropdown.Toggle>
                     <Dropdown.Menu>
                       <Dropdown.Item
-                        title={mode_raw_data}
+                        title={T(mode_raw_data)}
                         active={this.state.mode === mode_raw_data}
                         onClick={() => this.setState({mode: mode_raw_data})}>
-                        {mode_raw_data}
+                        {T(mode_raw_data)}
                       </Dropdown.Item>
                       <Dropdown.Item
-                        title={mode_logs}
+                        title={T(mode_logs)}
                         active={this.state.mode === mode_logs}
                         onClick={() => this.setState({mode: mode_logs})}>
-                        {mode_logs}
+                        {T(mode_logs)}
                       </Dropdown.Item>
                       <Dropdown.Item
-                        title={mode_report}
+                        title={T(mode_report)}
                         active={this.state.mode === mode_report}
                         onClick={() => this.setState({mode: mode_report})}>
-                        {mode_report}
+                        {T(mode_report)}
                       </Dropdown.Item>
                       <Dropdown.Item
-                        title={mode_notebook}
+                        title={T(mode_notebook)}
                         active={this.state.mode === mode_notebook}
                         onClick={() => this.setState({mode: mode_notebook})}>
-                        {mode_notebook}
+                        {T(mode_notebook)}
                       </Dropdown.Item>
                     </Dropdown.Menu>
                   </Dropdown>

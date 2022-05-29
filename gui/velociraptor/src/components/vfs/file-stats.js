@@ -143,7 +143,7 @@ class VeloFileStats extends Component {
                       { selectedRow.Download && selectedRow.Download.mtime &&
                         <>
                           <dt className="col-4">
-                            Last Collected
+                            {T("Last Collected")}
                           </dt>
                           <dd className="col-8">
                             <VeloTimestamp usec={ selectedRow.Download.mtime / 1000 } />
@@ -162,14 +162,14 @@ class VeloFileStats extends Component {
 
                       { selectedRow.Mode[0] === '-' && client_id &&
                         <>
-                          <dt className="col-4">Fetch from Client</dt>
+                          <dt className="col-4">{T("Fetch from Client")}</dt>
                           <dd className="col-8">
                         { this.state.updateOperationFlowId ?
                           <Button title={T("Currently refreshing from the client")}
                                   onClick={this.cancelDownload}
                                   variant="default">
                             <FontAwesomeIcon icon="sync" spin/>
-                            <span className="button-label">Downloaded {(
+                            <span className="button-label">{T("Downloaded")} {(
                                 this.state.current_upload_bytes || 0) + " Mbytes"}
                             </span>
                             <span className="button-label"><FontAwesomeIcon icon="stop"/></span>
@@ -180,7 +180,8 @@ class VeloFileStats extends Component {
                             <span className="button-label">
                               {selectedRow.Download &&
                                !_.isEmpty(selectedRow.Download.components) ?
-                               T('Re-Collect') : T('Collect')} from the client
+                               T('Re-Collect from the client') :
+                               T('Collect from the client')}
                             </span>
                           </Button> }
                           </dd>

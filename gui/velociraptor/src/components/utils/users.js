@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import api from '../core/api-service.js';
 import axios from 'axios';
 import CreatableSelect from 'react-select/creatable';
+import T from '../i8n/i8n.js';
 
 // FIXME - get the current username.
 const username = "";
@@ -68,7 +69,7 @@ export default class UserForm extends React.Component {
               classNamePrefix="velo"
               options={this.state.options}
               onChange={this.handleChange}
-              placeholder="Select a user"
+              placeholder={T("Select a user")}
             />
         );
     }

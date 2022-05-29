@@ -52,6 +52,7 @@ export default class HuntClients extends React.Component {
               url="v1/GetHuntFlows"
               renderers={renderers}
               params={params}
+              translate_column_headers={true}
             />
         );
     }

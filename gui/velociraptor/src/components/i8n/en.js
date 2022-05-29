@@ -154,7 +154,14 @@ const English = {
                      language: "en",
                  })} ago
                </>;
-    }
+    },
+    "EventMonitoringCard":
+    <>
+      Event monitoring targets specific label groups.
+      Select a label group above to configure specific
+      event artifacts targetting that group.
+    </>,
+
 };
 
 export default English;

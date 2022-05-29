@@ -61,7 +61,7 @@ export class AddTimelineDialog extends React.Component {
                   onChange={(e)=>{
                       this.setState({timeline: e.value});
                   }}
-                  placeholder="Timeline name"
+                  placeholder={T("Timeline name")}
                   spellCheck="false"
                 />
 

@@ -1,6 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
+import T from '../i8n/i8n.js';
 
 import api from '../core/api-service.js';
 import Modal from 'react-bootstrap/Modal';
@@ -120,10 +121,12 @@ class EventTableLabelGroup extends React.Component {
         return (
             <>
               <Modal.Header closeButton>
-                <Modal.Title>Event Monitoring: Configure Label groups</Modal.Title>
+                <Modal.Title>
+                  {T("Event Monitoring: Configure Label groups")}
+                </Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                <h1>Configuring Label {current_label.label}</h1>
+                <h1>{T("Configuring Label")} {current_label.label}</h1>
                 <Form>
                   <Form.Group as={Row}>
                     <Form.Label column sm="3">Label group</Form.Label>
@@ -132,7 +135,7 @@ class EventTableLabelGroup extends React.Component {
                         id="label-selector"
                         autoFocus={true}
                         clearButton={true}
-                        placeholder="Select label to edit its event monitoring table"
+                        placeholder={T("Select label to edit its event monitoring table")}
                         renderToken={(option, { onRemove }, index) => (
                                 <Token
                                   key={index}
@@ -153,17 +156,20 @@ class EventTableLabelGroup extends React.Component {
                   </Form.Group>
                 </Form>
                 <Card>
-                  <Card.Header>Event Monitoring Label Groups</Card.Header>
+                  <Card.Header>{T("Event Monitoring Label Groups")}</Card.Header>
                   <Card.Body>
                     <Card.Text>
-                      Event monitoring targets specific label groups.
-                      Select a label group above to configure specific
-                      event artifacts targetting that group.
+                      {T("EventMonitoringCard")}
                     </Card.Text>
                     { !_.isEmpty(current_artifacts) &&
-                      <><h2>Label { current_label.label}</h2>
+                      <><h2>{T("Label")} { current_label.label}</h2>
                         <Table>
-                          <thead><tr><th>Artifact Collected</th></tr></thead>
+                          <thead><tr>
+                                   <th>
+                                     {T("Artifact Collected")}
+                                   </th>
+                                 </tr>
+                          </thead>
                           <tbody>
                             {_.map(current_artifacts,
                                    (x, idx)=><tr key={idx}>
@@ -345,7 +351,7 @@ export class EventTableWizard extends React.Component {
                 <NewCollectionSelectArtifacts
                   paginator={new EventTablePaginator(
                       "Select Artifacts",
-                      "Event Monitoring: Select artifacts to collect from label group " + label,
+                      T("Event Monitoring: Select artifacts to collect from label group ") + label,
                       ()=>false)}
                   artifacts={this.state.current_table.artifacts}
                   artifactType="CLIENT_EVENT"
@@ -358,20 +364,20 @@ export class EventTableWizard extends React.Component {
                   setArtifacts={this.setArtifacts}
                   paginator={new EventTablePaginator(
                       "Configure Parameters",
-                      "Event Monitoring: Configure artifact parameters for label group " + label)}
+                      T("Event Monitoring: Configure artifact parameters for label group ") + label)}
                 />
 
                 <NewCollectionRequest
                   paginator={new EventTablePaginator(
                       "Review",
-                      "Event Monitoring: Review new event tables")}
+                      T("Event Monitoring: Review new event tables"))}
                   request={this.prepareRequest()} />
 
                 <NewCollectionLaunch
                   artifacts={this.state.current_table.artifacts}
                   paginator={new PaginationBuilder(
                       "Launch",
-                      "New Collection: Launch collection")}
+                      T("New Collection: Launch collection"))}
                   launch={this.launch} />
 
               </StepWizard>
@@ -503,7 +509,7 @@ export class ServerEventTableWizard extends React.Component {
                 <NewCollectionSelectArtifacts
                   paginator={new ServerEventTablePaginator(
                       "Select Artifacts",
-                      "Server Event Monitoring: Select artifacts to collect on the server",
+                      T("Server Event Monitoring: Select artifacts to collect on the server"),
                       ()=>false)}
                   artifacts={this.state.current_table.artifacts}
                   artifactType="SERVER_EVENT"
@@ -516,20 +522,20 @@ export class ServerEventTableWizard extends React.Component {
                   setArtifacts={this.setArtifacts}
                   paginator={new ServerEventTablePaginator(
                       "Configure Parameters",
-                      "Server Event Monitoring: Configure artifact parameters for server")}
+                      T("Server Event Monitoring: Configure artifact parameters for server"))}
                 />
 
                 <NewCollectionRequest
                   paginator={new ServerEventTablePaginator(
                       "Review",
-                      "Server Event Monitoring: Review new event tables")}
+                      T("Server Event Monitoring: Review new event tables"))}
                   request={this.prepareRequest().artifacts} />
 
                 <NewCollectionLaunch
                   artifacts={this.state.current_table.artifacts}
                   paginator={new PaginationBuilder(
                       "Launch",
-                      "New Collection: Launch collection")}
+                      T("New Collection: Launch collection"))}
                   launch={this.launch} />
 
               </StepWizard>

@@ -105,7 +105,7 @@ class VeloClientSearch extends Component {
                         onClick={(e) => this.setQuery("all")}
                         variant="default" type="button">
                         <FontAwesomeIcon icon="server"/>
-                        <span className="button-label">Show All</span>
+                        <span className="button-label">{T("Show All")}</span>
                       </Dropdown.Item>
                       <Dropdown.Item
                         title="Recent"
@@ -113,7 +113,7 @@ class VeloClientSearch extends Component {
                             "recent:" + this.context.traits.username)}
                         variant="default" type="button">
                         <FontAwesomeIcon icon="bookmark"/>
-                        <span className="button-label">Recent Hosts</span>
+                        <span className="button-label">{T("Recent Hosts")}</span>
                       </Dropdown.Item>
                     </Dropdown.Menu>
                   </Dropdown>

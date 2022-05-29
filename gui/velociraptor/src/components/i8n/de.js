@@ -40,6 +40,7 @@ const Deutsch = {
     "Collected": "Gesammelt",
     "Unquarantine Host": "Quarantäne-Host aufheben",
     "Quarantine Host": "Quarantäne-Host",
+    "Quarantine Message": "Quarantänenachricht",
     "Add Label": "Etikett hinzufügen",
     "Overview": "Überblick",
     "VQL Drilldown": "Aufreißen",
@@ -161,14 +162,11 @@ const Deutsch = {
     "Unlimited": "Unbegrenzt",
     "rows": "Reihen",
     "Request sent to client": "Anfrage an Client gesendet",
-    "Uploaded Files": "Hochgeladene Dateien",
     "Description": "Beschreibung",
     "Created": "Erstellt",
     "Manually add collection to hunt": "Sammlung manuell zur Jagd hinzufügen",
     "No compatible hunts.": "Keine kompatiblen Jagden.",
     "Please create a hunt that collects one or more of the following artifacts.":"Bitte erstellen Sie eine Jagd, die eines oder mehrere der folgenden Artefakte sammelt.",
-    "Please click a collection in the above table": "Bitte klicken Sie auf eine Sammlung in der obigen Tabelle",
-    "Artifact Collection": "Sammlung von Artefakten",
     "Requests": "Anfragen",
     "Notebook": "Notizbuch",
     "Permanently delete collection": "Sammlung dauerhaft löschen",
@@ -306,7 +304,6 @@ const Deutsch = {
     "Expiry":"Ablauf",
     "Include Condition":"Bedingung einschließen",
     "Run everywhere":"Überall laufen",
-    "Match by label":"Match by label",
     "Exclude Condition":"Bedingung ausschließen",
     "Configure Hunt":"Jagd konfigurieren",
     "Estimated affected clients":"Geschätzte betroffene Kunden",
@@ -436,12 +433,23 @@ const Deutsch = {
     "Served Locally":"Lokal servieren",
     "Tool Hash Known":"Tool-Hash bekannt",
     "Re-Download File":"Datei erneut herunterladen",
+    'Re-Collect from the client': "Wiedereinholung vom Kunden",
+    'Collect from the client': 'Beim Kunden abholen',
     "Tool Name":"Werkzeugname",
     "Upstream URL":"Upstream-URL",
     "Enpoint Filename":"Enpoint-Dateiname",
     "Hash":"Hash",
     "Serve Locally":"Lokal servieren",
     "Serve URL":"URL bereitstellen",
+    "Fetch from Client": "Vom Client abrufen",
+    "Last Collected": "Zuletzt gesammelt",
+    "Offset": "Versatz",
+    "Show All": "Zeige alles",
+    "Recent Hosts": "Letzte Gastgeber",
+    "Download JSON": "JSON herunterladen",
+    "Download CSV": "CSV-Datei herunterladen",
+    "Transform Table": "Transformationstabelle",
+    "Transformed": "Transformiert",
 
     "Select a notebook from the list above.":"Wählen Sie ein Notizbuch aus der obigen Liste aus.",
     "Cancel":"Abbrechen",
@@ -479,6 +487,8 @@ const Deutsch = {
     "Edit notebook ":"Notizbuch bearbeiten ",
     "Notebook uploads":"Notebook-Uploads",
     "User Settings":"Benutzereinstellungen",
+    "Select a user": "Wähle einen Benutzer",
+
     "Theme":"Thema",
     "Select a theme":"Wählen Sie ein Thema aus",
     "Default Velociraptor":"Standard-Velociraptor",
@@ -523,7 +533,30 @@ const Deutsch = {
     "Sort Column": "Spalte sortieren",
     "Filter Regex": "Regex filtern",
     "Filter Column": "Spalte filtern",
+    "Select label to edit its event monitoring table": "Label auswählen, um seine Ereignisüberwachungstabelle zu bearbeiten",
+    "EventMonitoringCard":
+    <>
+    Die Ereignisüberwachung zielt auf bestimmte Labelgruppen ab.
+    Wählen Sie oben eine Etikettengruppe aus, um sie spezifisch zu konfigurieren
+    Ereignisartefakte, die auf diese Gruppe abzielen.
+    </>,
+    "Event Monitoring: Configure Label groups": "Ereignisüberwachung: Etikettengruppen konfigurieren",
+    "Configuring Label": "Etikett konfigurieren",
+    "Event Monitoring Label Groups": "Etikettengruppen für die Ereignisüberwachung",
+    "Event Monitoring: Select artifacts to collect from label group ": "Ereignisüberwachung: Zu sammelnde Artefakte aus der Labelgruppe auswählen ",
+    "Artifact Collected": "Artefakt gesammelt",
+    "Event Monitoring: Configure artifact parameters for label group ": "Ereignisüberwachung: Konfigurieren Sie Artefaktparameter für die Labelgruppe ",
+    "Event Monitoring: Review new event tables": "Ereignisüberwachung: Neue Ereignistabellen überprüfen",
 
+    "Server Event Monitoring: Select artifacts to collect on the server":"Serverereignisüberwachung: Wählen Sie Artefakte aus, die auf dem Server gesammelt werden sollen",
+    "Server Event Monitoring: Configure artifact parameters for server":"Serverereignisüberwachung: Artefaktparameter für Server konfigurieren",
+    "Server Event Monitoring: Review new event tables":"Serverereignisüberwachung: Neue Ereignistabellen überprüfen",
+    "Configure Label Group":"Etikettengruppe konfigurieren",
+    "Select artifact": "Artefakt auswählen",
+
+    "Raw Data":"Rohdaten",
+    "Logs":"Logs",
+    "Report":"Bericht"
 };
 
 export default Deutsch;

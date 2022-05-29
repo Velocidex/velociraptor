@@ -177,7 +177,7 @@ export default class FileHexView extends React.Component {
                     <table>
                       <thead>
                         <tr>
-                          <th className="hex_column offset">T("Offset")</th>
+                          <th className="hex_column offset">{T("Offset")}</th>
                           <th className="hex_column">00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f </th>
                           <th></th>
                         </tr>
