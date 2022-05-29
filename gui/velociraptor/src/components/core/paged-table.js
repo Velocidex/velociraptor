@@ -27,6 +27,7 @@ import VeloTimestamp from "../utils/time.js";
 import ClientLink from '../clients/client-link.js';
 import HexView from '../utils/hex.js';
 import TableTransformDialog from './table-transform-dialog.js';
+import T from '../i8n/i8n.js';
 
 import {
     InspectRawJson, ColumnToggleList,
@@ -69,7 +70,7 @@ const pageListRenderer = ({
           <Form.Control
             as="input"
             className="pagination-form"
-            placeholder="Goto Page"
+            placeholder={T("Goto Page")}
             spellCheck="false"
             value={currentPage || ""}
             onChange={e=> {
@@ -321,7 +322,7 @@ class VeloPagedTable extends Component {
         let columns = [{dataField: '_id', hidden: true}];
         for(var i=0;i<this.state.columns.length;i++) {
             let name = this.state.columns[i];
-            let definition ={ dataField: name, text: name};
+            let definition ={ dataField: name, text: T(name)};
             if (this.props.renderers && this.props.renderers[name]) {
                 definition.formatter = this.props.renderers[name];
             } else {
@@ -447,7 +448,7 @@ class VeloPagedTable extends Component {
                           hover
                           remote
                           condensed
-                          noDataIndication="Table is Empty"
+                          noDataIndication={T("Table is Empty")}
                           keyField="_id"
                           headerClasses="alert alert-secondary"
                           bodyClasses="fixed-table-body"

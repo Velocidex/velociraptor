@@ -7,7 +7,7 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Navbar from 'react-bootstrap/Navbar';
 import VeloAce, { SettingsButton } from '../core/ace.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
+import T from '../i8n/i8n.js';
 import api from '../core/api-service.js';
 import axios from 'axios';
 import Completer from './syntax.js';
@@ -90,8 +90,8 @@ export default class NewArtifactDialog extends React.Component {
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
                 <Modal.Title>{ this.props.name ?
-                               "Edit " + this.props.name :
-                               "Create a new artifact"}
+                               T("Edit Artifact", this.props.name) :
+                               T("Create a new artifact")}
                 </Modal.Title>
               </Modal.Header>
               <Modal.Body>
@@ -118,12 +118,12 @@ export default class NewArtifactDialog extends React.Component {
                   <Button variant="default"
                           onClick={this.props.onClose}>
                     <FontAwesomeIcon icon="window-close"/>
-                    <span className="button-label">Close</span>
+                    <span className="button-label">{T("Close")}</span>
                   </Button>
                   <Button variant="primary"
                           onClick={this.saveArtifact}>
                     <FontAwesomeIcon icon="save"/>
-                    <span className="button-label">Save</span>
+                    <span className="button-label">{T("Save")}</span>
                   </Button>
                 </ButtonGroup>
                 </Navbar>

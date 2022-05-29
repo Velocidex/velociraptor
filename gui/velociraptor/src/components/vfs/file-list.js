@@ -21,6 +21,7 @@ import { withRouter }  from "react-router-dom";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
+import T from '../i8n/i8n.js';
 import { formatColumns } from "../core/table.js";
 
 const POLL_TIME = 2000;
@@ -38,19 +39,17 @@ class DownloadAllDialog extends Component {
         return (
             <Modal show={true} onHide={this.props.onCancel}>
               <Modal.Header closeButton>
-                <Modal.Title>Recursively download files</Modal.Title>
+                <Modal.Title>{T("Recursively download files")}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                You are about to recursively fetch all files in <b>{path}</b>.
-                <br/><br/>
-                This may transfer a large amount of data from the endpoint. The default upload limit is 1gb but you can change it in the Collected Artifacts screen.
+                {T("RecursiveVFSMessgae")}
                 </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary" onClick={this.props.onCancel}>
-                  Close
+                  {T("Close")}
                 </Button>
                 <Button variant="primary" onClick={this.props.onClose}>
-                  Yes do it!
+                  {T("Yes do it!")}
                 </Button>
               </Modal.Footer>
             </Modal>
@@ -305,20 +304,20 @@ class VeloFileList extends Component {
             <Navbar className="toolbar">
               <ButtonGroup>
                 { this.state.lastRefreshOperationId ?
-                  <Button title="Currently refreshing"
+                  <Button title={T("Currently refreshing")}
                           onClick={this.startVfsRefreshOperation}
                           variant="default">
                     <FontAwesomeIcon icon="spinner" spin/>
                   </Button>
                   :
-                  <Button title="Refresh this directory (sync its listing with the client)"
+                  <Button title={T("Refresh this directory (sync its listing with the client)")}
                           onClick={this.startVfsRefreshOperation}
                           variant="default">
                     <FontAwesomeIcon icon="folder-open"/>
                   </Button>
                 }
                 { this.state.lastRecursiveRefreshOperationId ?
-                  <Button title="Currently refreshing from the client"
+                  <Button title={T("Currently refreshing from the client")}
                           onClick={this.cancelRecursiveRefresh}
                           variant="default">
                     <FontAwesomeIcon icon="spinner" spin/>
@@ -327,7 +326,7 @@ class VeloFileList extends Component {
                     </span>
                     <span className="button-label"><FontAwesomeIcon icon="stop"/></span>
                   </Button> :
-                  <Button title="Recursively refresh this directory (sync its listing with the client)"
+                  <Button title={T("Recursively refresh this directory (sync its listing with the client)")}
                           onClick={this.startRecursiveVfsRefreshOperation}
                           variant="default">
                     <FontAwesomeIcon icon="folder-open"/>
@@ -336,7 +335,7 @@ class VeloFileList extends Component {
                 }
 
                 { this.state.lastRecursiveDownloadOperationId ?
-                  <Button title="Currently fetching files from the client"
+                  <Button title={T("Currently fetching files from the client")}
                           onClick={this.cancelRecursiveDownload}
                           variant="default">
                     <FontAwesomeIcon icon="spinner" spin/>
@@ -347,7 +346,7 @@ class VeloFileList extends Component {
                     </span>
                     <span className="button-label"><FontAwesomeIcon icon="stop"/></span>
                   </Button> :
-                  <Button title="Recursively download this directory from the client"
+                  <Button title={T("Recursively download this directory from the client")}
                           onClick={()=>this.setState({showDownloadAllDialog: true})}
                           disabled={_.isEmpty(this.props.node && this.props.node.path)}
                           variant="default">
@@ -359,7 +358,7 @@ class VeloFileList extends Component {
 
                 <Link to={"/collected/" +this.props.client.client_id +
                           "/" + this.props.node.flow_id + "/overview"}
-                      title="View Collection"
+                      title={T("View Collection")}
                       role="button"
                       className={classNames({
                           "btn": true,
@@ -377,7 +376,7 @@ class VeloFileList extends Component {
                 <>
                   { toolbar }
                   <div className="fill-parent no-margins toolbar-margin">
-                    <h5 className="no-content">No data available. Refresh directory from client by clicking above.</h5>
+                    <h5 className="no-content">{T("No data available. Refresh directory from client by clicking above.")}</h5>
                   </div>
                 </>
             );
@@ -411,13 +410,13 @@ class VeloFileList extends Component {
                 //return <FontAwesomeIcon icon="clock"/>;
                 return <span className="file-hints">{result}</span>;
             }, sort: true, classes: "download-column"},
-            {dataField: "Name", text: "Name", sort: true, filtered: true},
-            {dataField: "Size", text: "Size", sort: true, type: "mb"},
-            {dataField: "Mode", text: "Mode", sort: true},
-            {dataField: "mtime", text: "mtime", sort: true, type: "timestamp"},
-            {dataField: "atime", text: "atime", sort: true, type: "timestamp"},
-            {dataField: "ctime", text: "ctime", sort: true, type: "timestamp"},
-            {dataField: "btime", text: "btime", sort: true, type: "timestamp"}
+            {dataField: "Name", text: T("Name"), sort: true, filtered: true},
+            {dataField: "Size", text: T("Size"), sort: true, type: "mb"},
+            {dataField: "Mode", text: T("Mode"), sort: true},
+            {dataField: "mtime", text: T("mtime"), sort: true, type: "timestamp"},
+            {dataField: "atime", text: T("atime"), sort: true, type: "timestamp"},
+            {dataField: "ctime", text: T("ctime"), sort: true, type: "timestamp"},
+            {dataField: "btime", text: T("btime"), sort: true, type: "timestamp"}
         ]);
 
         return (

@@ -13,6 +13,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import utils from './utils.js';
 import axios from 'axios';
 import qs from 'qs';
+import T from '../i8n/i8n.js';
 
 import { Join } from '../utils/paths.js';
 
@@ -106,7 +107,7 @@ class VeloFileStats extends Component {
             return (
                 <div className="card">
                   <h5 className="card-header">
-                    Click on a file in the table above.
+                    {T("Click on a file in the table above.")}
                   </h5>
                 </div>
             );
@@ -119,24 +120,24 @@ class VeloFileStats extends Component {
                 <Card.Header>{selectedRow._FullPath || selectedRow.Name}</Card.Header>
                 <Card.Body>
                     <dl className="row">
-                      <dt className="col-4">Size</dt>
+                      <dt className="col-4">{T("Size")}</dt>
                       <dd className="col-8">
                          {selectedRow.Size}
                       </dd>
 
-                      <dt className="col-4">Mode</dt>
+                      <dt className="col-4">{T("Mode")}</dt>
                       <dd className="col-8"> {selectedRow.Mode} </dd>
 
-                      <dt className="col-4">Mtime</dt>
+                      <dt className="col-4">{T("Mtime")}</dt>
                       <dd className="col-8"> {selectedRow.mtime} </dd>
 
-                      <dt className="col-4">Atime</dt>
+                      <dt className="col-4">{T("Atime")}</dt>
                       <dd className="col-8"> {selectedRow.atime} </dd>
 
-                      <dt className="col-4">Ctime</dt>
+                      <dt className="col-4">{T("Ctime")}</dt>
                       <dd className="col-8"> {selectedRow.ctime} </dd>
 
-                      <dt className="col-4">Btime</dt>
+                      <dt className="col-4">{T("Btime")}</dt>
                       <dd className="col-8"> {selectedRow.btime} </dd>
 
                       { selectedRow.Download && selectedRow.Download.mtime &&
@@ -146,7 +147,7 @@ class VeloFileStats extends Component {
                           </dt>
                           <dd className="col-8">
                             <VeloTimestamp usec={ selectedRow.Download.mtime / 1000 } />
-                            <Button variant="outline-default" title="Download"
+                            <Button variant="outline-default" title={T("Download")}
                                     href={api.base_path + "/api/v1/DownloadVFSFile?"+
                                           qs.stringify({
                                               client_id: client_id,
@@ -164,7 +165,7 @@ class VeloFileStats extends Component {
                           <dt className="col-4">Fetch from Client</dt>
                           <dd className="col-8">
                         { this.state.updateOperationFlowId ?
-                          <Button title="Currently refreshing from the client"
+                          <Button title={T("Currently refreshing from the client")}
                                   onClick={this.cancelDownload}
                                   variant="default">
                             <FontAwesomeIcon icon="sync" spin/>
@@ -179,7 +180,7 @@ class VeloFileStats extends Component {
                             <span className="button-label">
                               {selectedRow.Download &&
                                !_.isEmpty(selectedRow.Download.components) ?
-                               'Re-Collect' : 'Collect'} from the client
+                               T('Re-Collect') : T('Collect')} from the client
                             </span>
                           </Button> }
                           </dd>
@@ -188,7 +189,7 @@ class VeloFileStats extends Component {
                 </Card.Body>
               </Card>
               <Card>
-                <Card.Header>Properties</Card.Header>
+                <Card.Header>{T("Properties")}</Card.Header>
                 <Card.Body>
                   { _.map(selectedRow._Data, function(v, k) {
                       return <div className="row" key={k}>
@@ -198,7 +199,7 @@ class VeloFileStats extends Component {
                   }) }
                   { selectedRow.Download && selectedRow.Download.sparse &&
                     <div className="row">
-                      <dt>Sparse</dt>
+                      <dt>{T("Sparse")}</dt>
                     </div> }
                   { selectedRow.Download && selectedRow.Download.SHA256 &&
                     <div className="row">

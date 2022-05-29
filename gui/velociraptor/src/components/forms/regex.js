@@ -7,6 +7,8 @@ import "./regex.css";
 
 import _ from 'lodash';
 
+import T from '../i8n/i8n.js';
+
 let gcompletions=[
     {name: "\\s",
      trigger: "\\",
@@ -94,12 +96,12 @@ let Completer = {
             if (prefix === "?" || x.trigger === prefix) {
                 let completion = {
                     caption: x.name,
-                    description: x.description,
+                    description: T(x.description),
                     snippet: x.value || x.name,
                     type: x.description,
                     value: x.value || x.name,
                     score: 100,
-                    docHTML: '<div class="arg-help">' + x.description + "</div>",
+                    docHTML: '<div class="arg-help">' + T(x.description) + "</div>",
                 };
 
                 if (prefix === "?") {
@@ -159,7 +161,7 @@ export default class RegEx extends React.Component {
             enableLiveAutocompletion: true,
             enableBasicAutocompletion: true,
             showGutter: false,
-            placeholder: "? for suggestions",
+            placeholder: T("? for suggestions"),
         });
         this.setState({ace: ace});
     };

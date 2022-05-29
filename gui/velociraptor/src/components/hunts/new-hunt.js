@@ -5,6 +5,7 @@ import _ from 'lodash';
 import Modal from 'react-bootstrap/Modal';
 import axios from 'axios';
 import StepWizard from 'react-step-wizard';
+import T from '../i8n/i8n.js';
 
 import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
@@ -48,7 +49,7 @@ class NewHuntConfigureHunt extends React.Component {
         return (
             <>
               <Modal.Header closeButton>
-                <Modal.Title>New Hunt - Configure Hunt</Modal.Title>
+                <Modal.Title>{T("New Hunt - Configure Hunt")}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <Form>
@@ -57,7 +58,7 @@ class NewHuntConfigureHunt extends React.Component {
                     <Col sm="8">
                       <Form.Control as="textarea" rows={3}
                                     id="hunt-description-text"
-                                    placeholder="Hunt description"
+                                    placeholder={T("Hunt description")}
                                     spellCheck="false"
                                     value={this.props.parameters.description}
                                     onChange={e => this.setParam("description", e.target.value)}
@@ -65,7 +66,7 @@ class NewHuntConfigureHunt extends React.Component {
                     </Col>
                   </Form.Group>
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">Expiry</Form.Label>
+                    <Form.Label column sm="3">{T("Expiry")}</Form.Label>
                     <Col sm="8">
                       <DateTimePicker value={this.props.parameters.expires}
                                       onChange={(value) => this.setParam("expires", value)}
@@ -74,29 +75,29 @@ class NewHuntConfigureHunt extends React.Component {
                   </Form.Group>
 
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">Include Condition</Form.Label>
+                    <Form.Label column sm="3">{T("Include Condition")}</Form.Label>
                     <Col sm="8">
                         <Form.Control as="select"
                           value={this.props.parameters.include_condition}
                           onChange={(e) => this.setParam(
                               "include_condition", e.currentTarget.value)}
                           >
-                          <option label="Run everywhere" value="">Run everywhere</option>
-                          <option label="Match by label" value="labels">Match by label</option>
-                          <option label="Operating System" value="os">Operating System</option>
+                          <option label={T("Run everywhere")} value="">{T("Run everywhere")}</option>
+                          <option label={T("Match by label")} value="labels">{T("Match by label")}</option>
+                          <option label={T("Operating System")} value="os">{T("Operating System")}</option>
                         </Form.Control>
                     </Col>
                   </Form.Group>
                   { this.props.parameters.include_condition === "os" &&
                     <Form.Group as={Row}>
-                      <Form.Label column sm="3">Operating System Included</Form.Label>
+                      <Form.Label column sm="3">{T("Operating System Included")}</Form.Label>
                       <Col sm="8">
                         <Form.Control as="select"
                                       value={this.props.parameters.include_os}
                                       onChange={(e) => this.setParam(
                                           "include_os", e.currentTarget.value)}
                         >
-                          <option label="ALL" value="ALL">ALL</option>
+                          <option label={T("ALL")} value="ALL">{T("ALL")}</option>
                           <option label="Windows" value="WINDOWS">Windows</option>
                           <option label="Linux" value="LINUX">LINUX</option>
                           <option label="MacOS" value="OSX">OSX</option>
@@ -107,7 +108,7 @@ class NewHuntConfigureHunt extends React.Component {
 
                   { this.props.parameters.include_condition === "labels" &&
                     <Form.Group as={Row}>
-                      <Form.Label column sm="3">Include Labels</Form.Label>
+                      <Form.Label column sm="3">{T("Include Labels")}</Form.Label>
                       <Col sm="8">
                         <LabelForm
                           value={this.props.parameters.include_labels}
@@ -118,22 +119,22 @@ class NewHuntConfigureHunt extends React.Component {
                   }
 
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">Exclude Condition</Form.Label>
+                    <Form.Label column sm="3">{T("Exclude Condition")}</Form.Label>
                     <Col sm="8">
                         <Form.Control as="select"
                           value={this.props.parameters.exclude_condition}
                           onChange={(e) => this.setParam(
                               "exclude_condition", e.currentTarget.value)}
                           >
-                          <option label="Run everywhere" value="">Run everywhere</option>
-                          <option label="Match by label" value="labels">Match by label</option>
+                          <option label={T("Run everywhere")} value="">{T("Run everywhere")}</option>
+                          <option label={T("Match by label")} value="labels">{T("Match by label")}</option>
                         </Form.Control>
                     </Col>
                   </Form.Group>
 
                   { this.props.parameters.exclude_condition === "labels" &&
                     <Form.Group as={Row}>
-                      <Form.Label column sm="3">Exclude Labels</Form.Label>
+                      <Form.Label column sm="3">{T("Exclude Labels")}</Form.Label>
                       <Col sm="8">
                         <LabelForm
                           value={this.props.parameters.excluded_labels}

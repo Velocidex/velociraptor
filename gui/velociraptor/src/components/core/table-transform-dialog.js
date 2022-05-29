@@ -11,8 +11,7 @@ import VeloForm from '../forms/form.js';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
-
-
+import T from '../i8n/i8n.js';
 
 export default class TableTransformDialog extends Component {
     static propTypes = {
@@ -74,13 +73,13 @@ export default class TableTransformDialog extends Component {
                    scrollable={true}
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
-                <Modal.Title>Transform table
+                <Modal.Title>{T("Transform table")}
                 </Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
-                    Sort Column
+                    {T("Sort Column")}
                   </Form.Label>
                   <Col sm="8">
                     <ButtonGroup className="sort-button">
@@ -112,7 +111,7 @@ export default class TableTransformDialog extends Component {
                 </Form.Group>
                 <VeloForm
                   param={{name: "filter_column",
-                          friendly_name: "Filter Column",
+                          friendly_name: T("Filter Column"),
                           type:"choices",
                           choices: columns}}
                   value={this.state.filter_column}
@@ -122,7 +121,7 @@ export default class TableTransformDialog extends Component {
                   this.state.filter_column !== "Unset" &&
                   <VeloForm
                     param={{name: "filter_regex",
-                            friendly_name: "Filter Regex",
+                            friendly_name: T("Filter Regex"),
                             type:"regex",
                            }}
                     value={this.state.filter_regex}

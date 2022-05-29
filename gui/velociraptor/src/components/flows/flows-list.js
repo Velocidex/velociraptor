@@ -3,7 +3,7 @@ import "./flows.css";
 
 import React from 'react';
 import PropTypes from 'prop-types';
-
+import T from '../i8n/i8n.js';
 import _ from 'lodash';
 import BootstrapTable from 'react-bootstrap-table-next';
 import filterFactory from 'react-bootstrap-table2-filter';
@@ -78,24 +78,18 @@ export class DeleteFlowDialog extends React.PureComponent {
         return (
             <Modal show={true} onHide={this.props.onClose}>
               <Modal.Header closeButton>
-                <Modal.Title>Permanently delete collection</Modal.Title>
+            <Modal.Title>{T("Permanently delete collection")}</Modal.Title>
               </Modal.Header>
               <Modal.Body><Spinner loading={this.state.loading} />
-                You are about to permanently delete the artifact collection
-                <b>{this.props.flow.session_id}</b>.
-                <br/>
-                This collection was the artifacts <b>{artifacts}</b>
-                <br/><br/>
-
-                We expect to free up { total_bytes.toFixed(0) } Mb of bulk
-                data and { total_rows } rows.
-                </Modal.Body>
+                {T("ArtifactDeletionDialog", this.props.flow.session_id,
+                   artifacts, total_bytes, total_rows)}
+              </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary" onClick={this.props.onClose}>
-                  Close
+                  {T("Close")}
                 </Button>
                 <Button variant="primary" onClick={this.startDeleteFlow}>
-                  Yes do it!
+                  {T("Yes do it!")}
                 </Button>
               </Modal.Footer>
             </Modal>
@@ -151,22 +145,18 @@ export class SaveCollectionDialog extends React.PureComponent {
         return (
             <Modal show={true} onHide={this.props.onClose}>
               <Modal.Header closeButton>
-                <Modal.Title>Save this collection to your Favorites</Modal.Title>
+                <Modal.Title>{T("Save this collection to your Favorites")}</Modal.Title>
               </Modal.Header>
               <Modal.Body><Spinner loading={this.state.loading} />
-                You can easily collect the same collection from your
-                favorites in future.
-                <br/>
-                This collection was the artifacts <b>{artifacts}</b>
-                <br/><br/>
+                {T("ArtifactFavorites", artifacts)}
                 <VeloForm
-                  param={{name: "Name", description: "New Favorite name"}}
+                  param={{name: "Name", description: T("New Favorite name")}}
                   value={this.state.name}
                   setValue={x=>this.setState({name:x})}
                 />
                 <VeloForm
                   param={{name: "Description",
-                          description: "Describe this favorite"}}
+                          description: T("Describe this favorite")}}
                   value={this.state.description}
                   setValue={x=>this.setState({description:x})}
                 />
@@ -174,10 +164,10 @@ export class SaveCollectionDialog extends React.PureComponent {
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary" onClick={this.props.onClose}>
-                  Close
+                  {T("Close")}
                 </Button>
                 <Button variant="primary" onClick={this.startSaveFlow}>
-                  Yes do it!
+                  {T("Yes do it!")}
                 </Button>
               </Modal.Footer>
             </Modal>
@@ -469,38 +459,38 @@ class FlowsList extends React.Component {
 
               <Navbar className="flow-toolbar">
                 <ButtonGroup>
-                  <Button title="New Collection"
+                  <Button title={T("New Collection")}
                           onClick={() => this.setState({showWizard: true})}
                           variant="default">
                     <FontAwesomeIcon icon="plus"/>
                   </Button>
 
                   { client_id !== "server" &&
-                    <Button title="Add to hunt"
+                    <Button title={T("Add to hunt")}
                             onClick={()=>this.setState({showAddToHunt: true})}
                             variant="default">
                       <FontAwesomeIcon icon="crosshairs"/>
                     </Button>
                   }
-                  <Button title="Delete Artifact Collection"
+                  <Button title={T("Delete Artifact Collection")}
                           onClick={()=>this.setState({showDeleteWizard: true}) }
                           variant="default">
                     <FontAwesomeIcon icon="trash-alt"/>
                   </Button>
 
                   { this.props.selected_flow.state !== "FINISHED" &&
-                    <Button title="Cancel Artifact Collection"
+                    <Button title={T("Cancel Artifact Collection")}
                             onClick={this.cancelButtonClicked}
                             variant="default">
                     <FontAwesomeIcon icon="stop"/>
                     </Button>
                   }
-                  <Button title="Copy Collection"
+                  <Button title={T("Copy Collection")}
                           onClick={() => this.setState({showCopyWizard: true})}
                           variant="default">
                     <FontAwesomeIcon icon="copy"/>
                   </Button>
-                  <Button title="Save Collection"
+                  <Button title={T("Save Collection")}
                           onClick={() => this.setState({
                               showSaveCollectionDialog: true
                           })}
@@ -509,7 +499,7 @@ class FlowsList extends React.Component {
                   </Button>
 
                   { isServer &&
-                    <Button title="Build offline collector"
+                    <Button title={T("Build offline collector")}
                             onClick={() => this.setState({showOfflineWizard: true})}
                             variant="default">
                       <FontAwesomeIcon icon="paper-plane"/>
@@ -519,31 +509,31 @@ class FlowsList extends React.Component {
                 </ButtonGroup>
                 { tab === "notebook" &&
                   <ButtonGroup className="float-right">
-                    <Button title="Notebooks"
+                    <Button title={T("Notebooks")}
                             disabled={true}
                             variant="outline-dark">
                       <FontAwesomeIcon icon="book"/>
                     </Button>
 
-                    <Button title="Full Screen"
+                    <Button title={T("Full Screen")}
                             onClick={this.setFullScreen}
                             variant="default">
                       <FontAwesomeIcon icon="expand"/>
                     </Button>
 
-                    <Button title="Delete Notebook"
+                    <Button title={T("Delete Notebook")}
                             onClick={() => this.setState({showDeleteNotebook: true})}
                             variant="default">
                       <FontAwesomeIcon icon="trash"/>
                     </Button>
 
-                    <Button title="Notebook Uploads"
+                    <Button title={T("Notebook Uploads")}
                             onClick={() => this.setState({showNotebookUploadsDialog: true})}
                             variant="default">
                       <FontAwesomeIcon icon="fa-file-download"/>
                     </Button>
 
-                    <Button title="Export Notebook"
+                    <Button title={T("Export Notebook")}
                             onClick={() => this.setState({showExportNotebook: true})}
                             variant="default">
                       <FontAwesomeIcon icon="download"/>
@@ -579,7 +569,7 @@ export default withRouter(FlowsList);
 
 export function getFlowColumns(client_id) {
     return formatColumns([
-        {dataField: "state", text: "State", sort: true,
+        {dataField: "state", text: T("State"), sort: true,
          formatter: (cell, row) => {
              if (cell === "FINISHED") {
                  return <FontAwesomeIcon icon="check"/>;
@@ -590,23 +580,23 @@ export function getFlowColumns(client_id) {
              return <FontAwesomeIcon icon="exclamation"/>;
          }
         },
-        {dataField: "session_id", text: "FlowId", type: "flow"},
-        {dataField: "request.artifacts", text: "Artifacts",
+        {dataField: "session_id", text: T("FlowId"), type: "flow"},
+        {dataField: "request.artifacts", text: T("Artifacts"),
          sort: true, filtered: true,
          formatter: (cell, row) => {
              return _.map(cell, function(item, idx) {
                  return <div key={idx}>{item}</div>;
              });
          }},
-        {dataField: "create_time", text: "Created", sort: true,
+        {dataField: "create_time", text: T("Created"), sort: true,
          type: "timestamp"},
-        {dataField: "active_time", text: "Last Active", sort: true,
+        {dataField: "active_time", text: T("Last Active"), sort: true,
          type: "timestamp"},
-        {dataField: "request.creator", text: "Creator",
+        {dataField: "request.creator", text: T("Creator"),
          sort: true, filtered: true},
-        {dataField: "total_uploaded_bytes", text: "Mb",
+        {dataField: "total_uploaded_bytes", text: T("Mb"),
          align: 'right', sort: true, sortNumeric: true, type: "mb"},
-        {dataField: "total_collected_rows", text: "Rows",
+        {dataField: "total_collected_rows", text: T("Rows"),
          sort: true, sortNumeric: true, align: 'right'}
     ]);
 }

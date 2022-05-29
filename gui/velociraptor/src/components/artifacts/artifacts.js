@@ -18,7 +18,7 @@ import Table  from 'react-bootstrap/Table';
 import NewArtifactDialog from './new-artifact.js';
 import Container from  'react-bootstrap/Container';
 import ArtifactsUpload from './artifacts-upload.js';
-
+import T from '../i8n/i8n.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { withRouter }  from "react-router-dom";
 
@@ -35,15 +35,15 @@ class DeleteOKDialog extends React.Component {
         return (
             <Modal show={true} onHide={this.props.onClose}>
               <Modal.Header closeButton>
-                <Modal.Title>Delete an artifact</Modal.Title>
+                <Modal.Title>{T("Delete an artifact")}</Modal.Title>
               </Modal.Header>
-              <Modal.Body>You are about to delete {this.props.name}</Modal.Body>
+              <Modal.Body>{T("You are about to delete", this.props.name)}</Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary" onClick={this.props.onClose}>
-                  Close
+                  {T("Close")}
                 </Button>
                 <Button variant="primary" onClick={this.props.onAccept}>
-                  Yes do it!
+                  {T("Yes do it!")}
                 </Button>
               </Modal.Footer>
             </Modal>
@@ -259,13 +259,13 @@ class ArtifactInspector extends React.Component {
               }
               <Navbar className="artifact-toolbar justify-content-between">
                 <ButtonGroup>
-                  <Button title="Add an Artifact"
+                  <Button title={T("Add an Artifact")}
                           onClick={() => this.setState({showNewArtifactDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="plus"/>
                   </Button>
 
-                  <Button title="Edit an Artifact"
+                  <Button title={T("Edit an Artifact")}
                           onClick={() => {
                               this.setState({showEditedArtifactDialog: true});
                           }}
@@ -274,28 +274,28 @@ class ArtifactInspector extends React.Component {
                     <FontAwesomeIcon icon="pencil-alt"/>
                   </Button>
 
-                  <Button title="Delete Artifact"
+                  <Button title={T("Delete Artifact")}
                           onClick={() => this.setState({showDeleteArtifactDialog: true})}
                           disabled={!deletable}
                           variant="default">
                     <FontAwesomeIcon icon="trash"/>
                   </Button>
 
-                  <Button title="Hunt Artifact"
+                  <Button title={T("Hunt Artifact")}
                           onClick={this.huntArtifact}
                           disabled={!this.huntArtifactEnabled()}
                           variant="default">
                     <FontAwesomeIcon icon="crosshairs"/>
                   </Button>
 
-                  <Button title="Collect Artifact"
+                  <Button title={T("Collect Artifact")}
                           onClick={this.collectArtifact}
                           disabled={!this.collectArtifactEnabled()}
                           variant="default">
                     <FontAwesomeIcon icon="cloud-download-alt"/>
                   </Button>
 
-                  <Button title="Upload Artifact Pack"
+                  <Button title={T("Upload Artifact Pack")}
                           onClick={()=>this.setState({showArtifactsUploadDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="upload"/>
@@ -315,7 +315,7 @@ class ArtifactInspector extends React.Component {
                                  ref={(input) => { this.searchInput = input; }}
                                  value={this.state.current_filter}
                                  onChange={(e) => this.updateSearch(e.currentTarget.value)}
-                                 placeholder="Search for artifact"
+                                 placeholder={T("Search for artifact")}
                                  spellCheck="false"
                     />
                   </InputGroup>
@@ -332,7 +332,7 @@ class ArtifactInspector extends React.Component {
                         type="ARTIFACT_DESCRIPTION"
                         client={{client_id: this.state.selectedDescriptor.name}}
                       /> :
-                      <h2 className="no-content">Search for an artifact to view it</h2>
+                      <h2 className="no-content">{T("Search for an artifact to view it")}</h2>
                     }
                   </div>
                   <Container className="artifact-search-table selectable">

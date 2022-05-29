@@ -27,6 +27,7 @@ import axios from 'axios';
 import { parseCSV } from '../utils/csv.js';
 import "./host-info.css";
 import { runArtifact } from "../flows/utils.js";
+import T from '../i8n/i8n.js';
 
 const POLL_TIME = 5000;
 const INTERROGATE_POLL_TIME = 2000;
@@ -50,7 +51,7 @@ class QuarantineDialog extends Component {
             message: "",
             quarantine_available: false,
             quarantine_artifact: quarantine_artifacts[props.client.os_info.system],
-        }
+        };
     }
 
     componentDidMount = () => {
@@ -120,16 +121,10 @@ class QuarantineDialog extends Component {
         return (
             <Modal show={true} onHide={this.props.onClose}>
               <Modal.Header closeButton>
-                <Modal.Title>Quarantine host</Modal.Title>
+                <Modal.Title>{T("Quarantine host")}</Modal.Title>
               </Modal.Header>
               <Modal.Body><Spinner loading={this.state.loading } />
-                <p>You are about to quarantine this host.</p>
-
-                <p>
-                  While in quarantine, the host will not be able to
-                  communicate with any other networks, except for the
-                  Velociraptor server.
-                </p>
+                {T("Quarantine description")}
                 <Form>
                   <Form.Group>
                       <Form.Control as="textarea"
@@ -156,27 +151,24 @@ class QuarantineDialog extends Component {
 
     renderUnavailable() {
         let os_name = this.props.client.os_info.system || "an unknown operating system";
-
+        let message = T("Cannot Quarantine host message",
+                        os_name, this.state.quarantine_artifact);
         return (
             <Modal show={true} onHide={this.props.onClose}>
               <Modal.Header closeButton>
-                <Modal.Title>Cannot Quarantine host</Modal.Title>
+                <Modal.Title>{T("Cannot Quarantine host")}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                <Alert variant="warning">
-                { this.state.quarantine_artifact ?
-                    <p>This Velociraptor instance does not have the <b>{this.state.quarantine_artifact}</b> artifact required to quarantine hosts running {os_name}.</p> :
-                    <p>This Velociraptor instance does not have an artifact name defined to quarantine hosts running {os_name}.</p>
-                }
-                </Alert>
+                {T("Cannot Quarantine host message",
+                   os_name, this.state.quarantine_artifact)}
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="primary" onClick={this.props.onClose}>
-                  Close
+                  {T("Close")}
                 </Button>
               </Modal.Footer>
             </Modal>
-        )
+        );
     }
 
     render() {
@@ -353,35 +345,35 @@ class VeloHostInfo extends Component {
                     <Card.Header>{ info.os_info.fqdn }</Card.Header>
                     <Card.Body>
                       <dl className="row">
-                        <dt className="col-sm-3">Client ID</dt>
+                        <dt className="col-sm-3">{T("Client ID")}</dt>
                         <dd className="col-sm-9">
                           { info.client_id }
                         </dd>
 
-                        <dt className="col-sm-3">Agent Version</dt>
+                        <dt className="col-sm-3">{T("Agent Version")}</dt>
                         <dd className="col-sm-9">
                           { info.agent_information.version } </dd>
 
-                        <dt className="col-sm-3">Agent Name</dt>
+                        <dt className="col-sm-3">{T("Agent Name")}</dt>
                         <dd className="col-sm-9">
                           { info.agent_information.name } </dd>
 
-                        <dt className="col-sm-3">First Seen At</dt>
+                        <dt className="col-sm-3">{T("First Seen At")}</dt>
                         <dd className="col-sm-9">
                           <VeloTimestamp usec={info.first_seen_at * 1000} />
                         </dd>
 
-                        <dt className="col-sm-3">Last Seen At</dt>
+                        <dt className="col-sm-3">{T("Last Seen At")}</dt>
                         <dd className="col-sm-9">
                           <VeloTimestamp usec={info.last_seen_at / 1000} />
                         </dd>
 
-                        <dt className="col-sm-3">Last Seen IP</dt>
+                        <dt className="col-sm-3">{T("Last Seen IP")}</dt>
                         <dd className="col-sm-9">
                           { info.last_ip }
                         </dd>
 
-                        <dt className="col-sm-3">Labels</dt>
+                        <dt className="col-sm-3">{T("Labels")}</dt>
                         <dd className="col-sm-9">
                           { _.map(info.labels, (label, idx) =>{
                               return <Button size="sm" key={idx}
@@ -397,34 +389,34 @@ class VeloHostInfo extends Component {
                       </dl>
                       <hr />
                       <dl className="row">
-                        <dt className="col-sm-3">Operating System</dt>
+                        <dt className="col-sm-3">{T("Operating System")}</dt>
                         <dd className="col-sm-9">
                           { info.os_info.system }
                         </dd>
 
-                        <dt className="col-sm-3">Hostname</dt>
+                        <dt className="col-sm-3">{T("Hostname")}</dt>
                         <dd className="col-sm-9">
                           { info.os_info.hostname }
                         </dd>
 
-                        <dt className="col-sm-3">FQDN</dt>
+                        <dt className="col-sm-3">{T("FQDN")}</dt>
                         <dd className="col-sm-9">
                           { info.os_info.fqdn }
                         </dd>
 
-                        <dt className="col-sm-3">Release</dt>
+                        <dt className="col-sm-3">{T("Release")}</dt>
                         <dd className="col-sm-9">
                           { info.os_info.release }
                         </dd>
 
-                        <dt className="col-sm-3">Architecture</dt>
+                        <dt className="col-sm-3">{T("Architecture")}</dt>
                         <dd className="col-sm-9">
                           { info.os_info.machine }
                         </dd>
                       </dl>
                       <hr />
                       <VeloForm
-                        param={{type: "csv", name: "Client Metadata"}}
+                        param={{type: "csv", name: T("Client Metadata")}}
                         value={this.state.metadata}
                         setValue={this.setMetadata}
                       />
@@ -528,26 +520,26 @@ class VeloHostInfo extends Component {
                       { this.state.interrogateOperationId ?
                         <FontAwesomeIcon icon="spinner" spin/>:
                         <FontAwesomeIcon icon="search-plus" /> }
-                      <span className="button-label">Interrogate</span>
+                      <span className="button-label">{T("Interrogate")}</span>
                     </Button>
                     <Link to={"/vfs/" + client_id + "/"}
                       role="button" className="btn btn-default" >
                       <i><FontAwesomeIcon icon="folder-open"/></i>
-                      <span className="button-label">VFS</span>
+                      <span className="button-label">{T("VFS")}</span>
                     </Link>
                     <Link to={"/collected/" + client_id}
                           role="button" className="btn btn-default">
                       <i><FontAwesomeIcon icon="history"/></i>
-                      <span className="button-label">Collected</span>
+                      <span className="button-label">{T("Collected")}</span>
                     </Link>
                     { is_quarantined ?
                       <Button variant="default"
-                              title="Unquarantine Host"
+                              title={T("Unquarantine Host")}
                               onClick={this.unquarantineHost}>
                         <FontAwesomeIcon icon="virus-slash" />
                       </Button> :
                       <Button variant="default"
-                              title="Quarantine Host"
+                              title={T("Quarantine Host")}
                               onClick={()=>this.setState({
                                   showQuarantineDialog: true,
                               })}>
@@ -564,7 +556,7 @@ class VeloHostInfo extends Component {
                             this.updateClientInfo();
                         }}/>}
                     <Button variant="default"
-                            title="Add Label"
+                            title={T("Add Label")}
                             onClick={()=>this.setState({
                                 showLabelDialog: true,
                             })}>
@@ -580,17 +572,17 @@ class VeloHostInfo extends Component {
                     <ToggleButton variant="default"
                                   value='brief'>
                       <FontAwesomeIcon icon="laptop"/>
-                      <span className="button-label">Overview</span>
+                      <span className="button-label">{T("Overview")}</span>
                     </ToggleButton>
                     <ToggleButton variant="default"
                                   value='detailed'>
                       <FontAwesomeIcon icon="tasks"/>
-                      <span className="button-label">VQL Drilldown</span>
+                      <span className="button-label">{T("VQL Drilldown")}</span>
                     </ToggleButton>
                     <ToggleButton variant="default"
                                   value='shell'>
                       <FontAwesomeIcon icon="terminal"/>
-                      <span className="button-label">Shell</span>
+                      <span className="button-label">{T("Shell")}</span>
                     </ToggleButton>
                   </ToggleButtonGroup>
                 </div>

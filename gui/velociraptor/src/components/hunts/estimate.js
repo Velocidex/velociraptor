@@ -9,6 +9,7 @@ import axios from 'axios';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import './estimate.css';
+import T from '../i8n/i8n.js';
 
 export default class EstimateHunt extends Component {
     static propTypes = {
@@ -97,7 +98,7 @@ export default class EstimateHunt extends Component {
               <Alert className="estimate" variant="info">
                 <Form.Group as={Row}>
                   <Form.Label column sm="8">
-                    Estimated affected clients { this.state.clients_affected || "0" }
+                    {T("Estimated affected clients")} { this.state.clients_affected || "0" }
                   </Form.Label>
                   <Col sm="3">
                     <Form.Control as="select"
@@ -106,10 +107,18 @@ export default class EstimateHunt extends Component {
                                       last_active: e.currentTarget.value
                                   })}
                     >
-                      <option label="All known Clients" value="all">All Known Clients</option>
-                      <option label="1 Day actives" value="1 Day">1 Day actives</option>
-                      <option label="1 Week actives" value="1 Week">1 Week actives</option>
-                      <option label="1 Month actives" value="1 Month">1 Month actives"</option>
+                      <option label={T("All known Clients")} value="all">
+                        {T("All Known Clients")}
+                      </option>
+                      <option label={T("1 Day actives")} value="1 Day">
+                        {T("1 Day actives")}
+                      </option>
+                      <option label={T("1 Week actives")} value="1 Week">
+                        {T("1 Week actives")}
+                      </option>
+                      <option label={T("1 Month actives")} value="1 Month">
+                        {T("1 Month actives")}
+                      </option>
                     </Form.Control>
                   </Col>
                 </Form.Group>

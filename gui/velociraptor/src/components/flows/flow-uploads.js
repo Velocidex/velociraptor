@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import axios from 'axios';
 import VeloTable, { PrepareData } from '../core/table.js';
-
+import T from '../i8n/i8n.js';
 import Spinner from '../utils/spinner.js';
 import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
@@ -70,10 +70,10 @@ export default class FlowUploads extends React.Component {
             return (
                 <CardDeck>
                   <Card>
-                    <Card.Header>Uploaded Files</Card.Header>
+                    <Card.Header>{T("Uploaded Files")}</Card.Header>
                     <Card.Body>
                       <Spinner loading={this.state.loading}/>
-                      <div className="no-content">Collection did not upload files</div>
+                      <div className="no-content">{T("Collection did not upload files")}</div>
                     </Card.Body>
                   </Card>
                 </CardDeck>

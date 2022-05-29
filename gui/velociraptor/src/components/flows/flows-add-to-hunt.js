@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
-
+import T from '../i8n/i8n.js';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import Spinner from '../utils/spinner.js';
@@ -93,9 +93,9 @@ export default class AddFlowToHuntDialog extends React.Component {
         }
 
         let columns = formatColumns([
-            {dataField: "hunt_id", text: "HuntId"},
-            {dataField: "hunt_description", text: "Description"},
-            {dataField: "create_time", text: "Created",
+            {dataField: "hunt_id", text: T("HuntId")},
+            {dataField: "hunt_description", text: T("Description")},
+            {dataField: "create_time", text: T("Created"),
              type: "timestamp", sort: true},
         ]);
 
@@ -103,15 +103,14 @@ export default class AddFlowToHuntDialog extends React.Component {
             <Modal show={true} className="max-height"
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
-                <Modal.Title>Manually add collection to hunt</Modal.Title>
+                <Modal.Title>{T("Manually add collection to hunt")}</Modal.Title>
               </Modal.Header>
               <Modal.Body><Spinner loading={this.state.loading} />
                 { _.isEmpty(this.state.hunts) ?
                   <>
-                  <h3>No compatible hunts.</h3>
+                    <h3>{T("No compatible hunts.")}</h3>
                     <p>
-                      Please create a hunt that collects one or
-                      more of the following artifacts.
+                      {T("Please create a hunt that collects one or more of the following artifacts.")}
                     </p>
                     <ul className="list-group">
                       {_.map(artifacts, (x, idx)=>{
@@ -138,12 +137,12 @@ export default class AddFlowToHuntDialog extends React.Component {
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary" onClick={this.props.onClose}>
-                  Close
+                  {T("Close")}
                 </Button>
                 <Button variant="primary"
                         disabled={_.isEmpty(this.state.selected_hunt_id)}
                         onClick={this.addFlowToHunt}>
-                  Yes do it!
+                  {T("Yes do it!")}
                 </Button>
               </Modal.Footer>
             </Modal>

@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-
+import T from '../i8n/i8n.js';
 import _ from 'lodash';
 
 import api from '../core/api-service.js';
@@ -61,7 +61,7 @@ export default class LabelForm extends React.Component {
                 classNamePrefix="velo"
                 options={this.state.options}
                 onChange={this.handleChange}
-                placeholder="Select a label"
+                placeholder={T("Select a label")}
               />
             </>
         );

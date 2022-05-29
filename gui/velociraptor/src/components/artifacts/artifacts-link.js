@@ -4,6 +4,7 @@ import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import VeloReportViewer from "../artifacts/reporting.js";
 import Modal from 'react-bootstrap/Modal';
+import T from '../i8n/i8n.js';
 
 export default class ArtifactLink extends React.Component {
     static propTypes = {
@@ -25,7 +26,7 @@ export default class ArtifactLink extends React.Component {
                      scrollable={true}
                      onHide={() => this.setState({showInspector: false})} >
                   <Modal.Header closeButton>
-                    <Modal.Title>Artifact details</Modal.Title>
+                    <Modal.Title>{T("Artifact details")}</Modal.Title>
                   </Modal.Header>
                   <Modal.Body>
                     <VeloReportViewer
@@ -38,7 +39,7 @@ export default class ArtifactLink extends React.Component {
                             onClick={() => this.setState({
                                 showInspector: false,
                             })}>
-                      Close
+                      {T("Close")}
                     </Button>
                   </Modal.Footer>
                 </Modal>

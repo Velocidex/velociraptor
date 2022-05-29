@@ -2,7 +2,7 @@ import "./client-summary.css";
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-
+import T from '../i8n/i8n.js';
 import axios from 'axios';
 import api from '../core/api-service.js';
 
@@ -63,7 +63,7 @@ export default class VeloClientSummary extends Component {
         var measureUnit;
         var measureValue;
         if (differenceSec < 15) {
-            return "connected";
+            return T("Connected");
         } else if (differenceSec < 60) {
             measureUnit = 'seconds';
             measureValue = differenceSec;
@@ -79,7 +79,7 @@ export default class VeloClientSummary extends Component {
         }
 
         if (currentTimeMs >= inputTimeMs) {
-            return measureValue + ' ' + measureUnit + ' ago';
+            return T("time_ago", measureValue, measureUnit);
         };
 
         return "";

@@ -11,6 +11,7 @@ import filterFactory from 'react-bootstrap-table2-filter';
 import api from '../core/api-service.js';
 import axios from 'axios';
 
+import T from '../i8n/i8n.js';
 const POLL_TIME = 5000;
 
 export default class NotebookUploads extends Component {
@@ -70,7 +71,7 @@ export default class NotebookUploads extends Component {
                    onHide={this.props.closeDialog} >
               <Modal.Header closeButton>
                 <Modal.Title>
-                  Notebook uploads: {this.props.notebook.name}
+                  {T("Notebook uploads")}: {this.props.notebook.name}
                 </Modal.Title>
               </Modal.Header>
               <Modal.Body>
@@ -89,7 +90,7 @@ export default class NotebookUploads extends Component {
               <Modal.Footer>
                 <Button variant="secondary"
                         onClick={this.props.closeDialog}>
-                  Close
+                  {T("Close")}
                 </Button>
               </Modal.Footer>
             </Modal>

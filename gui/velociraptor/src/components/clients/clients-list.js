@@ -7,7 +7,7 @@ import _ from 'lodash';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { withRouter }  from "react-router-dom";
-
+import T from '../i8n/i8n.js';
 import api from '../core/api-service.js';
 import VeloClientStatusIcon from "./client-status.js";
 import { formatColumns } from "../core/table.js";
@@ -78,12 +78,12 @@ export class LabelClients extends Component {
     render() {
         let clients = this.props.affectedClients || [];
         let columns = formatColumns([
-            {dataField: "last_seen_at", text: "Online", sort: true,
+            {dataField: "last_seen_at", text: T("Online"), sort: true,
              formatter: (cell, row) => {
                  return <VeloClientStatusIcon client={row}/>;
              }},
-            {dataField: "client_id", text: "Client ID"},
-            {dataField: "os_info.fqdn", text: "Hostname", sort: true},
+            {dataField: "client_id", text: T("Client ID")},
+            {dataField: "os_info.fqdn", text: T("Hostname"), sort: true},
         ]);
 
         return (
@@ -91,12 +91,12 @@ export class LabelClients extends Component {
                    size="lg"
                    onHide={this.props.onResolve} >
               <Modal.Header closeButton>
-                <Modal.Title>Label Clients</Modal.Title>
+                <Modal.Title>{T("Label Clients")}</Modal.Title>
               </Modal.Header>
 
               <Modal.Body>
                 <Form.Group as={Row}>
-                  <Form.Label column sm="3">Existings</Form.Label>
+                  <Form.Label column sm="3">{T("Existing")}</Form.Label>
                   <Col sm="8">
                     <LabelForm
                       value={this.state.labels}
@@ -104,7 +104,7 @@ export class LabelClients extends Component {
                   </Col>
                 </Form.Group>
                 <Form.Group as={Row}>
-                  <Form.Label column sm="3">A new label</Form.Label>
+                  <Form.Label column sm="3">{T("A new label")}</Form.Label>
                   <Col sm="8">
                     <Form.Control as="textarea"
                       rows={1}
@@ -128,11 +128,11 @@ export class LabelClients extends Component {
               <Modal.Footer>
                 <Button variant="secondary"
                         onClick={this.props.onResolve}>
-                  Close
+                  {T("Close")}
                 </Button>
                 <Button variant="primary"
                         onClick={this.labelClients}>
-                  Add it!
+                  {T("Add it!")}
                 </Button>
               </Modal.Footer>
             </Modal>
@@ -203,12 +203,12 @@ class DeleteClients extends Component {
     render() {
         let clients = this.props.affectedClients || [];
         let columns = formatColumns([
-            {dataField: "last_seen_at", text: "Online", sort: true,
+            {dataField: "last_seen_at", text: T("Online"), sort: true,
              formatter: (cell, row) => {
                  return <VeloClientStatusIcon client={row}/>;
              }},
-            {dataField: "client_id", text: "Client ID"},
-            {dataField: "os_info.fqdn", text: "Hostname", sort: true},
+            {dataField: "client_id", text: T("Client ID")},
+            {dataField: "os_info.fqdn", text: T("Hostname"), sort: true},
         ]);
 
         return (
@@ -216,12 +216,12 @@ class DeleteClients extends Component {
                    size="lg"
                    onHide={this.props.onResolve} >
               <Modal.Header closeButton>
-                <Modal.Title>Delete Clients</Modal.Title>
+                <Modal.Title>{T("Delete Clients")}</Modal.Title>
               </Modal.Header>
 
               <Modal.Body>
                 <Alert variant="danger">
-                  You are about to permanently delete the following clients
+                  {T("DeleteMessage")}
                 </Alert>
                 <div className="deleted-client-list">
                 <BootstrapTable
@@ -240,13 +240,13 @@ class DeleteClients extends Component {
               <Modal.Footer>
                 <Button variant="secondary"
                         onClick={this.props.onResolve}>
-                  Close
+                  {T("Close")}
                 </Button>
                 <Button variant="primary"
                         disabled={this.state.flow_id}
                         onClick={this.deleteClients}>
                   {this.state.flow_id && <FontAwesomeIcon icon="spinner" spin/>}
-                  Yeah do it!
+                  {T("Yeah do it!")}
                 </Button>
               </Modal.Footer>
             </Modal>
@@ -296,7 +296,7 @@ const pageListRenderer = ({
           <Form.Control
             as="input"
             className="pagination-form"
-            placeholder="Goto Page"
+            placeholder={T("Goto Page")}
             value={currentPage || ""}
             onChange={e=> {
                 let page = parseInt(e.currentTarget.value || 0);
@@ -483,7 +483,7 @@ class VeloClientList extends Component {
         };
 
         columns.push({
-            dataField: "labels", text: "Labels",
+            dataField: "labels", text: T("Labels"),
             sort:true, filtered: true,
             formatter: (cell, row) => {
                 return _.map(cell, (label, idx) => {
@@ -528,13 +528,13 @@ class VeloClientList extends Component {
               <Spinner loading={this.state.loading}/>
               <Navbar className="toolbar">
                 <ButtonGroup>
-                  <Button title="Label Clients"
+                  <Button title={T("Label Clients")}
                           disabled={_.isEmpty(this.state.selected)}
                           onClick={() => this.setState({showLabelDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="tags"/>
                   </Button>
-                  <Button title="Delete Clients"
+                  <Button title={T("Delete Clients")}
                           disabled={_.isEmpty(this.state.selected)}
                           onClick={() => this.setState({showDeleteDialog: true})}
                           variant="default">
@@ -548,7 +548,7 @@ class VeloClientList extends Component {
                   hover
                   remote
                   condensed
-                  noDataIndication="Table is Empty"
+                  noDataIndication={T("Table is Empty")}
                   keyField="client_id"
                   bootstrap4
                   headerClasses="alert alert-secondary"
@@ -589,13 +589,13 @@ export default withRouter(VeloClientList);
 
 export function getClientColumns() {
     return formatColumns([
-        {dataField: "last_seen_at", text: "Online",
+        {dataField: "last_seen_at", text: T("Online"),
          formatter: (cell, row) => {
              return <VeloClientStatusIcon client={row}/>;
          }},
-        {dataField: "client_id", text: "Client ID", type: "client"},
-        {dataField: "os_info.hostname", text: "Hostname", sort: true},
-        {dataField: "os_info.fqdn", text: "Fqdn", sort: true},
-        {dataField: "os_info.release", text: "OS Version"},
+        {dataField: "client_id", text: T("Client ID"), type: "client"},
+        {dataField: "os_info.hostname", text: T("Hostname"), sort: true},
+        {dataField: "os_info.fqdn", text: T("FQDN"), sort: true},
+        {dataField: "os_info.release", text: T("OS Version")},
     ]);
 }

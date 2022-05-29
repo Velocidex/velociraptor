@@ -2,6 +2,7 @@ import './file-details.css';
 
 import React from 'react';
 import PropTypes from 'prop-types';
+import T from '../i8n/i8n.js';
 
 import VeloFileStats from './file-stats.js';
 import FileHexView from './file-hex-view.js';
@@ -28,7 +29,7 @@ export default class VeloFileDetails extends React.Component {
         if (!selected_name) {
             return (
                   <h5 className="no-content">
-                    Please select a file or a folder to see its details here.
+                    {T("Please select a file or a folder to see its details here.")}
                   </h5>
             );
         }
@@ -48,7 +49,7 @@ export default class VeloFileDetails extends React.Component {
                 </Tab>
                 <Tab eventKey="text"
                      disabled={!has_download}
-                     title="Textview">
+                     title={T("Textview")}>
                   { this.state.tab === "text" &&
                     <FileTextView
                       client={this.props.client}
@@ -56,7 +57,7 @@ export default class VeloFileDetails extends React.Component {
                 </Tab>
                 <Tab eventKey="hex"
                      disabled={!has_download}
-                     title="HexView">
+                     title={T("HexView")}>
                   { this.state.tab === "hex" &&
                     <FileHexView
                       node={this.props.node}

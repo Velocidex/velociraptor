@@ -7,7 +7,7 @@ import _ from 'lodash';
 import InputGroup from 'react-bootstrap/InputGroup';
 import DropdownButton from 'react-bootstrap/DropdownButton';
 import Dropdown from 'react-bootstrap/Dropdown';
-
+import T from '../i8n/i8n.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { requestToParameters } from "../flows/utils.js";
 import api from '../core/api-service.js';
@@ -117,7 +117,7 @@ class VeloShellCell extends Component {
         if (this.state.collapsed) {
             buttons.push(
                 <button className="btn btn-default" key={1}
-                        title="Expand"
+                        title={T("Expand")}
                         onClick={() => this.setState({collapsed: false})} >
                   <i><FontAwesomeIcon icon="expand"/></i>
                 </button>
@@ -125,7 +125,7 @@ class VeloShellCell extends Component {
         } else {
             buttons.push(
                 <button className="btn btn-default" key={2}
-                        title="Collapse"
+                        title={T("Collapse")}
                         onClick={() => this.setState({collapsed: true})} >
                   <i><FontAwesomeIcon icon="compress"/></i>
                 </button>
@@ -137,7 +137,7 @@ class VeloShellCell extends Component {
         if (this.state.loaded) {
             buttons.push(
                 <button className="btn btn-default" key={3}
-                        title="Hide Output"
+                        title={T("Hide Output")}
                         onClick={() => this.setState({"loaded": false})} >
                   <i><FontAwesomeIcon icon="eye-slash"/></i>
                 </button>
@@ -145,7 +145,7 @@ class VeloShellCell extends Component {
         } else {
             buttons.push(
                 <button className="btn btn-default" key={4}
-                        title="Load Output"
+                        title={T("Load Output")}
                         onClick={this.loadData}>
                   <i><FontAwesomeIcon icon="eye"/></i>
                 </button>
@@ -156,7 +156,7 @@ class VeloShellCell extends Component {
         if (this.props.flow.state  === 'RUNNING') {
             buttons.push(
                 <button className="btn btn-default" key={5}
-                        title="Stop"
+                        title={T("Stop")}
                         onClick={this.cancelFlow}>
                   <i><FontAwesomeIcon icon="stop"/></i>
                 </button>
@@ -195,7 +195,7 @@ class VeloShellCell extends Component {
 
         flow_status.push(
             <button className="btn btn-default" key={9}
-                    title="Delete"
+                    title={T("Delete")}
                     onClick={()=>this.setState({showDeleteWizard: true})}>
               <i><FontAwesomeIcon icon="trash"/></i>
             </button>
@@ -296,7 +296,7 @@ class VeloVQLCell extends Component {
         ace.setOptions({
             autoScrollEditorIntoView: true,
             maxLines: 25,
-            placeholder: "Type VQL to run on the client",
+            placeholder: T("Type VQL to run on the client"),
             readOnly: true,
         });
 
@@ -311,7 +311,7 @@ class VeloVQLCell extends Component {
         if (this.state.collapsed) {
             buttons.push(
                 <button className="btn btn-default" key={1}
-                        title="Expand"
+                        title={T("Expand")}
                         onClick={() => this.setState({collapsed: false})} >
                   <i><FontAwesomeIcon icon="expand"/></i>
                 </button>
@@ -319,7 +319,7 @@ class VeloVQLCell extends Component {
         } else {
             buttons.push(
                 <button className="btn btn-default" key={2}
-                        title="Collapse"
+                        title={T("Collapse")}
                         onClick={() => this.setState({collapsed: true})} >
                   <i><FontAwesomeIcon icon="compress"/></i>
                 </button>
@@ -331,7 +331,7 @@ class VeloVQLCell extends Component {
         if (this.state.loaded) {
             buttons.push(
                 <button className="btn btn-default" key={3}
-                        title="Hide Output"
+                        title={T("Hide Output")}
                         onClick={() => this.setState({"loaded": false})} >
                   <i><FontAwesomeIcon icon="eye-slash"/></i>
                 </button>
@@ -339,7 +339,7 @@ class VeloVQLCell extends Component {
         } else {
             buttons.push(
                 <button className="btn btn-default" key={4}
-                        title="Load Output"
+                        title={T("Load Output")}
                         onClick={() => this.setState({"loaded": true})}>
                   <i><FontAwesomeIcon icon="eye"/></i>
                 </button>
@@ -350,7 +350,7 @@ class VeloVQLCell extends Component {
         if (this.props.flow.state  === 'RUNNING') {
             buttons.push(
                 <button className="btn btn-default" key={5}
-                        title="Stop"
+                        title={T("Stop")}
                         onClick={this.cancelFlow}>
                   <i><FontAwesomeIcon icon="stop"/></i>
                 </button>
@@ -389,7 +389,7 @@ class VeloVQLCell extends Component {
 
         flow_status.push(
             <button className="btn btn-default" key={5}
-                    title="Delete"
+                    title={T("Delete")}
                     onClick={()=>this.setState({showDeleteWizard: true})}>
               <i><FontAwesomeIcon icon="trash"/></i>
             </button>
@@ -601,7 +601,7 @@ class ShellViewer extends Component {
 
         ace.setOptions({
             autoScrollEditorIntoView: true,
-            placeholder: "Run VQL on client",
+            placeholder: T("Run VQL on client"),
             maxLines: 25
         });
 
@@ -635,7 +635,7 @@ class ShellViewer extends Component {
                   { simple_textarea ?
                     <textarea focus-me="controller.focus" rows="1"
                               className="form-control"
-                              placeholder="Run command on client"
+                              placeholder={T("Run command on client")}
                               spellCheck="false"
                               value={this.state.command}
                               onChange={(e) => this.setText(e)}>

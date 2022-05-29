@@ -3,7 +3,7 @@ import './new-collection.css';
 import React from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
-
+import T from '../i8n/i8n.js';
 import Alert from 'react-bootstrap/Alert';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
@@ -63,7 +63,7 @@ class PaginationBuilder {
                        if (step === this.name) {
                            return <Pagination.Item
                                     active key={idx}>
-                                    {step}
+                                    {T(step)}
                                   </Pagination.Item>;
                        };
                        return <Pagination.Item
@@ -73,7 +73,7 @@ class PaginationBuilder {
                                 }}
                                 disabled={this.shouldFocused(isFocused, step)}
                                 key={idx}>
-                                {step}
+                                {T(step)}
                               </Pagination.Item>;
                    })}
                  </Pagination>
@@ -266,7 +266,7 @@ class NewCollectionSelectArtifacts extends React.Component {
                         },
                         filter: textFilter({
                             id: "search-for-artifact-input",
-                            placeholder: "Search for artifacts...",
+                            placeholder: T("Search for artifacts..."),
                         })}];
 
         let selectRow = {mode: "checkbox",
@@ -280,7 +280,7 @@ class NewCollectionSelectArtifacts extends React.Component {
         return (
             <>
               <Modal.Header closeButton>
-                <Modal.Title className="flex-fill">{ this.props.paginator.title }
+                <Modal.Title className="flex-fill">{ T(this.props.paginator.title) }
                   <ButtonGroup className="float-right">
                     { this.state.showFavoriteSelector &&
                       <Select
@@ -288,7 +288,7 @@ class NewCollectionSelectArtifacts extends React.Component {
                         classNamePrefix="velo"
                         options={this.state.favorite_options}
                         onChange={this.setFavorite_}
-                        placeholder="Favorite Name"
+                        placeholder={T("Favorite Name")}
                         spellCheck="false"
                       />
                     }
@@ -436,7 +436,7 @@ class NewCollectionConfigParameters extends React.Component {
         return (
             <>
               <Modal.Header closeButton>
-                <Modal.Title>{ this.props.paginator.title }</Modal.Title>
+                <Modal.Title>{ T(this.props.paginator.title) }</Modal.Title>
               </Modal.Header>
 
               <Modal.Body className="new-collection-parameter-page selectable">
@@ -444,11 +444,11 @@ class NewCollectionConfigParameters extends React.Component {
                   <BootstrapTable
                     keyField="name"
                     expandRow={ expandRow }
-                    columns={[{dataField: "name", text: "Artifact"},
+                    columns={[{dataField: "name", text: T("Artifact")},
                               {dataField: "parameter", text: "", hidden: true}]}
                     data={this.props.artifacts} /> :
                  <div className="no-content">
-                   No artifacts configured. Please add some artifacts to collect
+                   {T("No artifacts configured. Please add some artifacts to collect")}
                  </div>
                 }
               </Modal.Body>
@@ -549,10 +549,10 @@ class NewCollectionResources extends React.Component {
         });
 
         if (ops_per_second === 0) {
-            ops_per_second = "unlimited";
+            return T("Unlimited");
         }
 
-        return ops_per_second + " per second";
+        return T("X per second", ops_per_second);
     }
 
     getCpuLimit = (artifacts) => {
@@ -587,10 +587,10 @@ class NewCollectionResources extends React.Component {
         });
 
         if (iops_limit === 0) {
-            iops_limit = "unlimited";
+            return T("Unlimited");
         }
 
-        return iops_limit + " per second";
+        return T("X per second", iops_limit);
     }
 
     render() {
@@ -598,12 +598,12 @@ class NewCollectionResources extends React.Component {
         return (
             <>
               <Modal.Header closeButton>
-                <Modal.Title>{ this.props.paginator.title }</Modal.Title>
+                <Modal.Title>{ T(this.props.paginator.title) }</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <Form>
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">CPU Limit Percent</Form.Label>
+                    <Form.Label column sm="3">{T("CPU Limit Percent")}</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder={this.getCpuLimit(this.props.artifacts)}
@@ -617,7 +617,7 @@ class NewCollectionResources extends React.Component {
                     </Col>
                   </Form.Group>
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">IOps/Sec</Form.Label>
+                    <Form.Label column sm="3">{T("IOps/Sec")}</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder={this.getIopsLimit(this.props.artifacts)}
@@ -630,7 +630,7 @@ class NewCollectionResources extends React.Component {
                   </Form.Group>
 
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">Max Execution Time in Seconds</Form.Label>
+                    <Form.Label column sm="3">{T("Max Execution Time in Seconds")}</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder={this.getTimeout(this.props.artifacts)}
@@ -641,10 +641,10 @@ class NewCollectionResources extends React.Component {
                   </Form.Group>
 
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">Max Idle Time in Seconds</Form.Label>
+                    <Form.Label column sm="3">{T("Max Idle Time in Seconds")}</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
-                        placeholder="If set collection will be terminated after this many seconds with no progress."
+                        placeholder={T("If set collection will be terminated after this many seconds with no progress.")}
                         value={resources.progress_timeout}
                         setInvalid={value => this.setState({invalid_3: value})}
                         setValue={value => this.props.setResources({
@@ -653,7 +653,7 @@ class NewCollectionResources extends React.Component {
                   </Form.Group>
 
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">Max Rows</Form.Label>
+                    <Form.Label column sm="3">{T("Max Rows")}</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder={this.getMaxRows(this.props.artifacts)}
@@ -664,7 +664,7 @@ class NewCollectionResources extends React.Component {
                   </Form.Group>
 
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">Max Mb Uploaded</Form.Label>
+                    <Form.Label column sm="3">{T("Max Mb Uploaded")}</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder={this.getMaxUploadBytes(this.props.artifacts)}
@@ -697,7 +697,7 @@ class NewCollectionRequest extends React.Component {
         return (
             <>
               <Modal.Header closeButton>
-                <Modal.Title>{ this.props.paginator.title }</Modal.Title>
+             <Modal.Title>{ T(this.props.paginator.title) }</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <VeloAce text={serialized}
@@ -802,7 +802,7 @@ class NewCollectionLaunch extends React.Component {
     render() {
         return <>
                  <Modal.Header closeButton>
-                   <Modal.Title>{ this.props.paginator.title }</Modal.Title>
+                   <Modal.Title>{ T(this.props.paginator.title) }</Modal.Title>
                  </Modal.Header>
                  <Modal.Body>
                    {_.map(this.state.checking_tools, (name, idx)=>{
@@ -813,7 +813,7 @@ class NewCollectionLaunch extends React.Component {
                            if (this.state.current_error) {
                                return (
                                    <Alert key={idx} variant="danger" className="text-center">
-                                     Checking { name }: {this.state.current_error}
+                                     {T("Checking")} { name }: {this.state.current_error}
                                    </Alert>
                                );
                            }
@@ -821,7 +821,7 @@ class NewCollectionLaunch extends React.Component {
 
                        return (
                            <Alert key={idx} variant={variant} className="text-center">
-                              Checking { name }
+                             {T("Checking")} { name }
                            </Alert>
                        );
                    })}

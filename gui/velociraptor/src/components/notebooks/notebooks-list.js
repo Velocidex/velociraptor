@@ -26,6 +26,7 @@ import axios from 'axios';
 import { formatColumns } from "../core/table.js";
 import { withRouter }  from "react-router-dom";
 
+import T from '../i8n/i8n.js';
 
 class NewNotebook extends React.Component {
     static propTypes = {
@@ -85,8 +86,8 @@ class NewNotebook extends React.Component {
               <Modal.Header closeButton>
                 <Modal.Title>
                   {_.isEmpty(this.props.notebook) ?
-                   "Create a new Notebook" :
-                   "Edit notebook " + this.props.notebook.notebook_id}
+                   T("Create a new Notebook") :
+                   T("Edit notebook ") + this.props.notebook.notebook_id}
                 </Modal.Title>
               </Modal.Header>
 
@@ -103,7 +104,7 @@ class NewNotebook extends React.Component {
                 </Form.Group>
 
                 <Form.Group as={Row}>
-                  <Form.Label column sm="3">Description</Form.Label>
+                  <Form.Label column sm="3">{T("Description")}</Form.Label>
                   <Col sm="8">
                     <Form.Control as="textarea"
                                   rows={1}
@@ -114,7 +115,7 @@ class NewNotebook extends React.Component {
                 </Form.Group>
 
                 <Form.Group as={Row}>
-                  <Form.Label column sm="3">Collaborators</Form.Label>
+                  <Form.Label column sm="3">{T("Collaborators")}</Form.Label>
                   <Col sm="8">
                     <UserForm
                       value={this.state.collaborators}
@@ -125,11 +126,11 @@ class NewNotebook extends React.Component {
               <Modal.Footer>
                 <Button variant="secondary"
                         onClick={this.props.closeDialog}>
-                  Cancel
+                  {T("Cancel")}
                 </Button>
                 <Button variant="primary"
                         onClick={this.newNotebook}>
-                  Submit
+                  {T("Submit")}
                 </Button>
               </Modal.Footer>
             </Modal>

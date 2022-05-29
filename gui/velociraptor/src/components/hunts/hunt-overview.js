@@ -15,6 +15,7 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
+import T from '../i8n/i8n.js';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { formatColumns } from "../core/table.js";
@@ -112,7 +113,7 @@ export default class HuntOverview extends React.Component {
     render() {
         let hunt = this.props.hunt;
         if (!hunt) {
-            return <div>Please select a hunt to view above.</div>;
+            return <div>{T("Please select a hunt to view above.")}</div>;
         };
 
         let artifacts = hunt.start_request && hunt.start_request.artifacts;
@@ -132,10 +133,10 @@ export default class HuntOverview extends React.Component {
         return (
             <CardDeck>
               <Card>
-                <Card.Header>Overview</Card.Header>
+                <Card.Header>{T("Overview")}</Card.Header>
                 <Card.Body>
                   <dl className="row">
-                    <dt className="col-4">Artifact Names</dt>
+                    <dt className="col-4">{T("Artifact Names")}</dt>
                     <dd className="col-8">
                       { _.map(artifacts, (v, idx) => {
                           return <ArtifactLink
@@ -144,29 +145,29 @@ export default class HuntOverview extends React.Component {
                       })}
                     </dd>
 
-                    <dt className="col-4">Hunt ID</dt>
+                    <dt className="col-4">{T("Hunt ID")}</dt>
                     <dd className="col-8">{hunt.hunt_id}</dd>
 
-                    <dt className="col-4">Creator</dt>
+                    <dt className="col-4">{T("Creator")}</dt>
                     <dd className="col-8">{hunt.creator}</dd>
 
-                    <dt className="col-4">Creation Time</dt>
+                    <dt className="col-4">{T("Creation Time")}</dt>
                     <dd className="col-8"><VeloTimestamp usec={hunt.create_time / 1000}/></dd>
 
-                    <dt className="col-4">Expiry Time</dt>
+                    <dt className="col-4">{T("Expiry Time")}</dt>
                     <dd className="col-8"><VeloTimestamp usec={hunt.expires / 1000}/></dd>
 
-                    <dt className="col-4">State</dt>
+                    <dt className="col-4">{T("State")}</dt>
                     <dd className="col-8">{this.huntState(hunt)}</dd>
 
-                    <dt className="col-4">Ops/Sec</dt>
+                    <dt className="col-4">{T("Ops/Sec")}</dt>
                     <dd className="col-8">{start_request.ops_per_second || 'Unlimited'}</dd>
-                    <dt className="col-4">CPU Limit</dt>
+                    <dt className="col-4">{T("CPU Limit")}</dt>
                     <dd className="col-8">{start_request.cpu_limit || 'Unlimited'}</dd>
-                    <dt className="col-4">IOPS Limit</dt>
+                    <dt className="col-4">{T("IOPS Limit")}</dt>
                     <dd className="col-8">{start_request.iops_limit || 'Unlimited'}</dd>
                     { labels && <>
-                                  <dt className="col-4">Include Labels</dt>
+                                  <dt className="col-4">{T("Include Labels")}</dt>
                                   <dd className="col-8">
                                     {_.map(labels, (v, idx) => {
                                         return <div key={idx}>{v}</div>;
@@ -177,12 +178,12 @@ export default class HuntOverview extends React.Component {
 
                     { hunt.condition && hunt.condition.os &&
                       <>
-                        <dt className="col-4">Include OS</dt>
+                        <dt className="col-4">{T("Include OS")}</dt>
                         <dd className="col-8">{hunt.condition.os.os}</dd>
                       </>}
                     { hunt.condition && hunt.condition.excluded_labels &&
                       <>
-                        <dt className="col-4">Excluded Labels</dt>
+                        <dt className="col-4">{T("Excluded Labels")}</dt>
                         <dd className="col-8">
                           {_.map(hunt.condition.excluded_labels.label, (v, idx) => {
                               return <div key={idx}>{v}</div>;
@@ -215,19 +216,19 @@ export default class HuntOverview extends React.Component {
                 </Card.Body>
               </Card>
               <Card>
-                <Card.Header>Results</Card.Header>
+                  <Card.Header>{T("Results")}</Card.Header>
                 <Card.Body>
                   <dl className="row">
-                    <dt className="col-4">Total scheduled</dt>
+                    <dt className="col-4">{T("Total scheduled")}</dt>
                     <dd className="col-8">
                       {stats.total_clients_scheduled}
                     </dd>
 
-                    <dt className="col-4">Finished clients</dt>
+                    <dt className="col-4">{T("Finished clients")}</dt>
                     <dd className="col-8">{stats.total_clients_with_results || 0}</dd>
 
 
-                    <dt className="col-4">Download Results</dt>
+                    <dt className="col-4">{T("Download Results")}</dt>
                     <dd className="col-8">
                       <ButtonGroup>
                         { lock_password ?
@@ -244,8 +245,7 @@ export default class HuntOverview extends React.Component {
                             overlay={
                                 <Tooltip
                                   id='download-tooltip'>
-                                  Set a password in user preferences
-                                  to lock the download file.
+                                  {T("Set a password in user preferences to lock the download file.")}
                                 </Tooltip>
                             }>
                             <span className="d-inline-block">
@@ -267,19 +267,19 @@ export default class HuntOverview extends React.Component {
                           <Dropdown.Menu>
                             <Dropdown.Item
                               onClick={() => this.prepareDownload("all")}>
-                              Full Download
+                                {T("Full Download")}
                             </Dropdown.Item>
                             <Dropdown.Item
                               onClick={() => this.prepareDownload('summary')}>
-                              Summary Download
+                              {T("Summary Download")}
                             </Dropdown.Item>
                             <Dropdown.Item
                               onClick={() => this.prepareDownload('summary-csv')}>
-                              Summary (CSV Only)
+                              {T("Summary (CSV Only)")}
                             </Dropdown.Item>
                             <Dropdown.Item
                               onClick={() => this.prepareDownload('summary-json')}>
-                              Summary (JSON Only)
+                              {T("Summary (JSON Only)")}
                             </Dropdown.Item>
                           </Dropdown.Menu>
                         </Dropdown>
@@ -287,7 +287,7 @@ export default class HuntOverview extends React.Component {
                     </dd>
                   </dl>
                   <dl>
-                    <dt>Available Downloads</dt>
+                    <dt>{T("Available Downloads")}</dt>
                     <dd>
                       <BootstrapTable
                         keyField="name"
@@ -298,10 +298,10 @@ export default class HuntOverview extends React.Component {
                         bodyClasses="fixed-table-body"
                         data={files}
                         columns={formatColumns(
-                            [{dataField: "name", text: "name", sort: true,
-                              type: "download"},
-                             {dataField: "size", text: "size", sort: true},
-                             {dataField: "date", text: "date"}])}
+                              [{dataField: "name", text: T("name"), sort: true,
+                                type: "download"},
+                               {dataField: "size", text: T("size"), sort: true},
+                               {dataField: "date", text: T("date")}])}
                       />
                     </dd>
                   </dl>

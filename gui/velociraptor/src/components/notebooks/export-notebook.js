@@ -12,6 +12,7 @@ import { formatColumns } from "../core/table.js";
 import filterFactory from 'react-bootstrap-table2-filter';
 import api from '../core/api-service.js';
 import axios from 'axios';
+import T from '../i8n/i8n.js';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -69,7 +70,7 @@ export default class ExportNotebook extends React.Component {
         files = files || [];
 
         let columns = formatColumns([
-            {dataField: "type", text: "Type", formatter: (cell, row) => {
+            {dataField: "type", text: T("Type"), formatter: (cell, row) => {
                 if (cell === ".html") {
                     return <FontAwesomeIcon icon="flag"/>;
                 } else if (cell === ".zip") {
@@ -77,10 +78,10 @@ export default class ExportNotebook extends React.Component {
                 };
                 return cell;
             }, sort: true},
-            {dataField: "name", text: "Name",
+            {dataField: "name", text: T("Name"),
              sort: true, filtered: true, type: "download"},
-            {dataField: "size", text: "Size"},
-            {dataField: "date", text: "Date", type: "timestamp"},
+            {dataField: "size", text: T("Size")},
+            {dataField: "date", text: T("Date"), type: "timestamp"},
         ]);
 
         return (
@@ -90,18 +91,18 @@ export default class ExportNotebook extends React.Component {
                    dialogClassName="modal-90w"
                    onHide={this.props.onClose} >
               <Modal.Header closeButton>
-                <Modal.Title>Export notebooks</Modal.Title>
+                <Modal.Title>{T("Export notebooks")}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <Form>
                   <FormGroup>
                     <Button variant="default"
                             onClick={()=>this.exportNotebook("html")} >
-                      Export to HTML
+                      {T("Export to HTML")}
                     </Button>
                     <Button variant="default"
                             onClick={()=>this.exportNotebook("zip")} >
-                      Export to Zip
+                      {T("Export to Zip")}
                     </Button>
                   </FormGroup>
                 </Form>
@@ -109,7 +110,7 @@ export default class ExportNotebook extends React.Component {
                 <h3>{this.state.notebook.name}</h3>
                 {this.state.notebook.description}
 
-                <dt>Available Downloads</dt>
+                <dt>{T("Available Downloads")}</dt>
                 <dd>
                   <BootstrapTable
                     hover
@@ -129,7 +130,7 @@ export default class ExportNotebook extends React.Component {
               <Modal.Footer>
                 <Button variant="secondary"
                         onClick={this.props.onClose}>
-                  Cancel
+                  {T("Cancel")}
                 </Button>
               </Modal.Footer>
             </Modal>

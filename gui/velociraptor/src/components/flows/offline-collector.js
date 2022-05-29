@@ -11,7 +11,7 @@ import { HotKeys, ObserveKeys } from "react-hotkeys";
 import ValidatedInteger from '../forms/validated_int.js';
 import api from '../core/api-service.js';
 import axios from 'axios';
-
+import T from '../i8n/i8n.js';
 
 import {
     NewCollectionSelectArtifacts,
@@ -63,12 +63,12 @@ class OfflineCollectorParameters  extends React.Component {
         return (
             <>
               <Modal.Header closeButton>
-                <Modal.Title>Create Offline collector:  Configure Collector</Modal.Title>
+            <Modal.Title>{T("Create Offline collector:  Configure Collector")}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <Form>
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">Target Operating System</Form.Label>
+                    <Form.Label column sm="3">{T("Target Operating System")}</Form.Label>
                     <Col sm="8">
                       <Form.Control as="select"
                                     value={this.props.parameters.target_os}
@@ -86,10 +86,10 @@ class OfflineCollectorParameters  extends React.Component {
                   </Form.Group>
 
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">Password</Form.Label>
+                    <Form.Label column sm="3">{T("Password")}</Form.Label>
                     <Col sm="8">
                       <Form.Control as="input"
-                                    placeholder="Password"
+                                    placeholder={T("Password")}
                                     spellCheck="false"
                                     value={this.props.parameters.password}
                                     onChange={e => {
@@ -100,7 +100,7 @@ class OfflineCollectorParameters  extends React.Component {
                   </Form.Group>
 
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">Report Template</Form.Label>
+                    <Form.Label column sm="3">{T("Report Template")}</Form.Label>
                     <Col sm="8">
                       <Form.Control as="select"
                                     value={this.props.parameters.template}
@@ -109,7 +109,7 @@ class OfflineCollectorParameters  extends React.Component {
                                         this.props.setParameters(this.props.parameters);
                                     }}
                       >
-                        <option value="">No Report</option>
+                        <option value="">{T("No Report")}</option>
                         { _.map(this.state.template_artifacts, (item, i)=>{
                             return <option key={i} value={item}>{item}</option>;
                         })}
@@ -119,7 +119,7 @@ class OfflineCollectorParameters  extends React.Component {
 
 
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">Collection Type</Form.Label>
+                    <Form.Label column sm="3">{T("Collection Type")}</Form.Label>
                     <Col sm="8">
                       <Form.Control as="select"
                                     value={this.props.parameters.target}
@@ -128,20 +128,20 @@ class OfflineCollectorParameters  extends React.Component {
                                         this.props.setParameters(this.props.parameters);
                                     }}
                       >
-                        <option value="ZIP">Zip Archive</option>
-                        <option value="GCS">Google Cloud Bucket</option>
-                        <option value="S3">AWS Bucket</option>
-                        <option value="SFTP">SFTP Upload</option>
+                        <option value="ZIP">{T("Zip Archive")}</option>
+                        <option value="GCS">{T("Google Cloud Bucket")}</option>
+                        <option value="S3">{T("AWS Bucket")}</option>
+                        <option value="SFTP">{T("SFTP Upload")}</option>
                       </Form.Control>
                     </Col>
                   </Form.Group>
 
                   { this.props.parameters.target === "GCS" && <>
                     <Form.Group as={Row}>
-                      <Form.Label column sm="3">GCS Bucket</Form.Label>
+                      <Form.Label column sm="3">{T("GCS Bucket")}</Form.Label>
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
-                                      placeholder="Bucket name"
+                                      placeholder={T("Bucket name")}
                                       spellCheck="false"
                                       value={this.props.parameters.target_args.bucket}
                                       onChange={e => {
@@ -153,10 +153,10 @@ class OfflineCollectorParameters  extends React.Component {
                     </Form.Group>
 
                     <Form.Group as={Row}>
-                      <Form.Label column sm="3">GCS Key Blob</Form.Label>
+                      <Form.Label column sm="3">{T("GCS Key Blob")}</Form.Label>
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
-                                      placeholder="GCS Blob"
+                                      placeholder={T("GCS Blob")}
                                       spellCheck="false"
                                       value={this.props.parameters.target_args.GCSKey}
                                       onChange={e => {
@@ -170,10 +170,10 @@ class OfflineCollectorParameters  extends React.Component {
                   }
                   { this.props.parameters.target === "S3" && <>
                     <Form.Group as={Row}>
-                      <Form.Label column sm="3">S3 Bucket </Form.Label>
+                      <Form.Label column sm="3">{T("S3 Bucket")}</Form.Label>
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
-                                      placeholder="Bucket name"
+                                      placeholder={T("Bucket name")}
                                       spellCheck="false"
                                       value={this.props.parameters.target_args.bucket}
                                       onChange={e => {
@@ -185,10 +185,10 @@ class OfflineCollectorParameters  extends React.Component {
                     </Form.Group>
 
                     <Form.Group as={Row}>
-                      <Form.Label column sm="3">Credentials Key</Form.Label>
+                      <Form.Label column sm="3">{T("Credentials Key")}</Form.Label>
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
-                                      placeholder="Credentials Key"
+                                      placeholder={T("Credentials Key")}
                                       spellCheck="false"
                                       value={this.props.parameters.target_args.credentialsKey}
                                       onChange={e => {
@@ -200,10 +200,10 @@ class OfflineCollectorParameters  extends React.Component {
                     </Form.Group>
 
                     <Form.Group as={Row}>
-                      <Form.Label column sm="3">Credentials Secret</Form.Label>
+                      <Form.Label column sm="3">{T("Credentials Secret")}</Form.Label>
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
-                                      placeholder="Credentials Secret"
+                                      placeholder={T("Credentials Secret")}
                                       spellCheck="false"
                                       value={this.props.parameters.target_args.credentialsSecret}
                                       onChange={e => {
@@ -214,10 +214,10 @@ class OfflineCollectorParameters  extends React.Component {
                       </Col>
                     </Form.Group>
                     <Form.Group as={Row}>
-                      <Form.Label column sm="3">Region</Form.Label>
+                      <Form.Label column sm="3">{T("Region")}</Form.Label>
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
-                                      placeholder="Region"
+                                      placeholder={T("Region")}
                                       spellCheck="false"
                                       value={this.props.parameters.target_args.region}
                                       onChange={e => {
@@ -228,10 +228,10 @@ class OfflineCollectorParameters  extends React.Component {
                       </Col>
                     </Form.Group>
                     <Form.Group as={Row}>
-                      <Form.Label column sm="3">Endpoint</Form.Label>
+                      <Form.Label column sm="3">{T("Endpoint")}</Form.Label>
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
-                                      placeholder="Endpoint (blank for AWS)"
+                                      placeholder={T("Endpoint (blank for AWS)")}
                                       spellCheck="false"
                                       value={this.props.parameters.target_args.endpoint}
                                       onChange={e => {
@@ -242,7 +242,7 @@ class OfflineCollectorParameters  extends React.Component {
                       </Col>
                     </Form.Group>
                     <Form.Group as={Row}>
-                      <Form.Label column sm="3">Server Side Encryption</Form.Label>
+                      <Form.Label column sm="3">{T("Server Side Encryption")}</Form.Label>
                       <Col sm="8">
                         <Form.Control as="select"
                                         value={this.props.parameters.target_args.serverSideEncryption}
@@ -258,7 +258,7 @@ class OfflineCollectorParameters  extends React.Component {
                       </Col>
                     </Form.Group>
                     <Form.Group as={Row}>
-                        <Form.Label column sm="3">Skip Cert Verification</Form.Label>
+                        <Form.Label column sm="3">{T("Skip Cert Verification")}</Form.Label>
                         <Col sm="8">
                         <Form.Control as="select"
                                         value={this.props.parameters.target_args.noverifycert}
@@ -277,10 +277,10 @@ class OfflineCollectorParameters  extends React.Component {
 
                   { this.props.parameters.target === "SFTP" && <>
                     <Form.Group as={Row}>
-                      <Form.Label column sm="3">Upload Path</Form.Label>
+                    <Form.Label column sm="3">{T("Upload Path")}</Form.Label>
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
-                                      placeholder="Upload Path"
+                                      placeholder={T("Upload Path")}
                                       spellCheck="false"
                                       value={this.props.parameters.target_args.path}
                                       onChange={e => {
@@ -292,10 +292,10 @@ class OfflineCollectorParameters  extends React.Component {
                     </Form.Group>
 
                     <Form.Group as={Row}>
-                      <Form.Label column sm="3">Private Key</Form.Label>
+                      <Form.Label column sm="3">{T("Private Key")}</Form.Label>
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
-                                      placeholder="Private Key"
+                                      placeholder={T("Private Key")}
                                       spellCheck="false"
                                       value={this.props.parameters.target_args.privatekey}
                                       onChange={e => {
@@ -307,10 +307,10 @@ class OfflineCollectorParameters  extends React.Component {
                     </Form.Group>
 
                     <Form.Group as={Row}>
-                        <Form.Label column sm="3">User</Form.Label>
+                      <Form.Label column sm="3">{T("User")}</Form.Label>
                         <Col sm="8">
                             <Form.Control as="textarea" rows={3}
-                                    placeholder="User"
+                                          placeholder={T("User")}
                                     spellCheck="false"
                                     value={this.props.parameters.target_args.user}
                                     onChange={e => {
@@ -322,10 +322,10 @@ class OfflineCollectorParameters  extends React.Component {
                     </Form.Group>
 
                     <Form.Group as={Row}>
-                        <Form.Label column sm="3">Endpoint</Form.Label>
+                      <Form.Label column sm="3">{T("Endpoint")}</Form.Label>
                         <Col sm="8">
-                            <Form.Control as="textarea" rows={3}
-                                    placeholder="Endpoint"
+                        <Form.Control as="textarea" rows={3}
+                                      placeholder={T("Endpoint")}
                                     spellCheck="false"
                                     value={this.props.parameters.target_args.endpoint}
                                     onChange={e => {
@@ -337,10 +337,10 @@ class OfflineCollectorParameters  extends React.Component {
                     </Form.Group>
 
                     <Form.Group as={Row}>
-                      <Form.Label column sm="3">Host Key</Form.Label>
+                      <Form.Label column sm="3">{T("Host Key")}</Form.Label>
                         <Col sm="8">
                           <Form.Control as="textarea" rows={3}
-                            placeholder="Leave Blank to disable host key checking"
+                                        placeholder={T("Leave Blank to disable host key checking")}
                             spellCheck="false"
                             value={this.props.parameters.target_args.hostkey}
                                 onChange={(e) => {
@@ -354,7 +354,7 @@ class OfflineCollectorParameters  extends React.Component {
                   }
 
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">Velociraptor Binary</Form.Label>
+                    <Form.Label column sm="3">{T("Velociraptor Binary")}</Form.Label>
                     <Col sm="8">
                       {this.props.parameters.target_os === "Windows" &&
                        <ToolViewer name="VelociraptorWindows"/>}
@@ -367,10 +367,10 @@ class OfflineCollectorParameters  extends React.Component {
                     </Col>
                   </Form.Group>
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">Temp directory</Form.Label>
+                      <Form.Label column sm="3">{T("Temp directory")}</Form.Label>
                     <Col sm="8">
                       <Form.Control as="input"
-                                    placeholder="Temp location"
+                                    placeholder={T("Temp location")}
                                     spellCheck="false"
                                     value={this.props.parameters.opt_tempdir}
                                     onChange={e => {
@@ -381,7 +381,7 @@ class OfflineCollectorParameters  extends React.Component {
                     </Col>
                   </Form.Group>
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">Compression Level</Form.Label>
+                    <Form.Label column sm="3">{T("Compression Level")}</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger setValue={value=>{
                           this.props.parameters.opt_level = value;
@@ -394,7 +394,7 @@ class OfflineCollectorParameters  extends React.Component {
                   </Form.Group>
 
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">Output format</Form.Label>
+                      <Form.Label column sm="3">{T("Output format")}</Form.Label>
                     <Col sm="8">
                       <Form.Control as="select"
                                     value={this.props.parameters.opt_format}
@@ -403,16 +403,16 @@ class OfflineCollectorParameters  extends React.Component {
                                         this.props.setParameters(this.props.parameters);
                                     }}
                       >
-                        <option value="jsonl">JSON</option>
-                        <option value="csv">CSV and JSON</option>
+                          <option value="jsonl">JSON</option>
+                          <option value="csv">{T("CSV and JSON")}</option>
                       </Form.Control>
                     </Col>
                   </Form.Group>
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">Output Prefix</Form.Label>
+                      <Form.Label column sm="3">{T("Output Prefix")}</Form.Label>
                     <Col sm="8">
                       <Form.Control as="input"
-                                    placeholder="Output filename prefix"
+                                    placeholder={T("Output filename prefix")}
                                     spellCheck="false"
                                     value={this.props.parameters.opt_output_directory}
                                     onChange={e => {
@@ -496,12 +496,12 @@ class OfflineCollectionResources extends React.Component {
         return (
             <>
               <Modal.Header closeButton>
-                <Modal.Title>{ this.props.paginator.title }</Modal.Title>
+                  <Modal.Title>{ T(this.props.paginator.title) }</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <Form>
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">CPU Limit Percent</Form.Label>
+                      <Form.Label column sm="3">{T("CPU Limit Percent")}</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder={this.getCpuLimit(this.props.artifacts)}
@@ -516,7 +516,7 @@ class OfflineCollectionResources extends React.Component {
                   </Form.Group>
 
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">Max Execution Time in Seconds</Form.Label>
+                      <Form.Label column sm="3">{T("Max Execution Time in Seconds")}</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder={this.getTimeout(this.props.artifacts)}
@@ -530,7 +530,7 @@ class OfflineCollectionResources extends React.Component {
                     <Form.Label column sm="3">Max Idle Time in Seconds</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
-                        placeholder="If set collection will be terminated after this many seconds with no progress."
+                          placeholder={T("If set collection will be terminated after this many seconds with no progress.")}
                         value={resources.progress_timeout}
                         setInvalid={value => this.setState({invalid_3: value})}
                         setValue={value => this.props.setResources({

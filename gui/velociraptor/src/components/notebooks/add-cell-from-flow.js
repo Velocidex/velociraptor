@@ -7,6 +7,7 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import filterFactory from 'react-bootstrap-table2-filter';
 import Button from 'react-bootstrap/Button';
 import VeloClientSearch from '../clients/search.js';
+import T from '../i8n/i8n.js';
 
 import { getClientColumns } from '../clients/clients-list.js';
 import { getFlowColumns } from '../flows/flows-list.js';
@@ -144,7 +145,7 @@ export default class AddCellFromFlowDialog extends React.Component {
                    dialogClassName="modal-90w"
                    onHide={this.props.closeDialog} >
               <Modal.Header closeButton>
-                <Modal.Title>Add cell from Flow</Modal.Title>
+                <Modal.Title>{T("Add cell from Flow")}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 {!this.state.selectedClient ?
@@ -153,11 +154,11 @@ export default class AddCellFromFlowDialog extends React.Component {
               <Modal.Footer>
                 <Button variant="secondary"
                         onClick={this.props.closeDialog}>
-                  Cancel
+                  {T("Cancel")}
                 </Button>
                 <Button variant="primary"
                         onClick={this.addCellFromHunt}>
-                  Submit
+                  {T("Submit")}
                 </Button>
               </Modal.Footer>
             </Modal>

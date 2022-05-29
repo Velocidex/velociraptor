@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import VeloAce from '../core/ace.js';
 import language_tools from 'ace-builds/src-min-noconflict/ext-language_tools.js';
 import "./regex.css";
+import T from '../i8n/i8n.js';
 
 import _ from 'lodash';
 
@@ -26,12 +27,12 @@ let Completer = {
             if (prefix === "?" || x.trigger === prefix) {
                 let completion = {
                     caption: x.name,
-                    description: x.description,
-                    snippet: x.value || x.name,
-                    type: x.description,
+                    description: T(x.description),
+                    snippet: x.value || T(x.name),
+                    type: T(x.description),
                     value: x.value || x.name,
                     score: 100,
-                    docHTML: '<div class="arg-help">' + x.description + "</div>",
+                    docHTML: '<div class="arg-help">' + T(x.description) + "</div>",
                 };
 
                 if (prefix === "?") {
@@ -85,7 +86,7 @@ export default class YaraEditor extends React.Component {
             enableLiveAutocompletion: true,
             enableBasicAutocompletion: true,
             autoScrollEditorIntoView: true,
-            placeholder: "? for suggestions",
+            placeholder: T("? for suggestions"),
             showGutter: false,
             maxLines: 25,
         });
