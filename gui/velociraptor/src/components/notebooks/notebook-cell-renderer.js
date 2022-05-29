@@ -537,22 +537,22 @@ export default class NotebookCellRenderer extends React.Component {
                   <Dropdown.Item
                     title={T("Add Timeline")}
                     onClick={()=>this.setState({showAddTimeline: true})}>
-                    Add Timeline
+                    {T("Add Timeline")}
                   </Dropdown.Item>
                   <Dropdown.Item
                     title={T("Add Cell From This Cell")}
                     onClick={this.addCellFromCell}>
-                    Add Cell From This Cell
+                    {T("Add Cell From This Cell")}
                   </Dropdown.Item>
                   <Dropdown.Item
                     title={T("Add Cell From Hunt")}
                     onClick={()=>this.setState({showAddCellFromHunt: true})}>
-                    Add Cell From Hunt
+                    {T("Add Cell From Hunt")}
                   </Dropdown.Item>
                   <Dropdown.Item
                     title={T("Add Cell From Flow")}
                     onClick={()=>this.setState({showAddCellFromFlow: true})}>
-                    Add Cell From Flow
+                    {T("Add Cell From Flow")}
                   </Dropdown.Item>
                   {this.state.cell && this.state.cell.type === "VQL" &&
                    <Dropdown.Item

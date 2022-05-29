@@ -1,12 +1,9 @@
 import _ from 'lodash';
 
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-import UserConfig from '../core/user.js';
 import English from './en.js';
 import Deutsch from './de.js';
 
-const debug = false;
+const debug = true;
 
 function dict(item) {
     let lang = (window.globals && window.globals.lang) || "en";

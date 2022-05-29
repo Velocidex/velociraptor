@@ -19,7 +19,6 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import Spinner from '../utils/spinner.js';
 import Form from 'react-bootstrap/Form';
-import Alert from 'react-bootstrap/Alert';
 
 import { Link } from  "react-router-dom";
 import api from '../core/api-service.js';
@@ -128,7 +127,7 @@ class QuarantineDialog extends Component {
                 <Form>
                   <Form.Group>
                       <Form.Control as="textarea"
-                                    placeholder="Quarantine Message"
+                                    placeholder={T("Quarantine Message")}
                                     spellCheck="false"
                                     value={this.state.message}
                                     onChange={e=>this.setState(
@@ -151,8 +150,6 @@ class QuarantineDialog extends Component {
 
     renderUnavailable() {
         let os_name = this.props.client.os_info.system || "an unknown operating system";
-        let message = T("Cannot Quarantine host message",
-                        os_name, this.state.quarantine_artifact);
         return (
             <Modal show={true} onHide={this.props.onClose}>
               <Modal.Header closeButton>

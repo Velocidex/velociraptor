@@ -44,6 +44,7 @@ export default class FlowLogs extends React.Component {
                   flow_id: this.props.flow.session_id,
                   type: "log",
               }}
+              translate_column_headers={true}
               version={getFlowState(this.props.flow)}
             />
         );
