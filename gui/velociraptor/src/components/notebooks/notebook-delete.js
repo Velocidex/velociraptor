@@ -6,6 +6,8 @@ import Spinner from '../utils/spinner.js';
 import Button from 'react-bootstrap/Button';
 import axios from 'axios';
 
+import T from '../i8n/i8n.js';
+
 export default class DeleteNotebookDialog extends React.PureComponent {
     static propTypes = {
         notebook_id: PropTypes.string,
@@ -41,18 +43,18 @@ export default class DeleteNotebookDialog extends React.PureComponent {
         return (
             <Modal show={true} onHide={this.props.onClose}>
               <Modal.Header closeButton>
-                <Modal.Title>Permanently delete Notebook</Modal.Title>
+                <Modal.Title>{T("Permanently delete Notebook")}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <Spinner loading={this.state.loading} />
-                You are about to permanently delete the notebook for this hunt
+                {T("You are about to permanently delete the notebook for this hunt")}
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary" onClick={this.props.onClose}>
-                  Close
+                  {T("Close")}
                 </Button>
                 <Button variant="primary" onClick={this.startDeleteNotebook}>
-                  Yes do it!
+                  {T("Yes do it!")}
                 </Button>
               </Modal.Footer>
             </Modal>

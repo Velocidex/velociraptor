@@ -10,11 +10,11 @@ import InputGroup from 'react-bootstrap/InputGroup';
 import classNames from "classnames";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Tooltip from 'react-bootstrap/Tooltip';
-
+import T from '../i8n/i8n.js';
 
 const renderToolTip = (props, params) => (
     <Tooltip show={params.description} {...props}>
-       {params.description}
+       {T(params.description)}
      </Tooltip>
 );
 
@@ -102,7 +102,7 @@ export default class UploadFileForm extends Component {
                       onClick={this.uploadFile}>
                       { this.state.loading ?
                         <FontAwesomeIcon icon="spinner" spin /> :
-                        "Upload"
+                        T("Upload")
                       }
                     </InputGroup.Text>
                   </InputGroup.Prepend>
@@ -126,7 +126,7 @@ export default class UploadFileForm extends Component {
                       <Form.File.Label data-browse="Select file">
                         { this.state.upload.name ?
                           this.state.upload.name:
-                          "Click to upload file"}
+                          T("Click to upload file")}
                       </Form.File.Label>
                     }
                   </Form.File>
@@ -165,7 +165,7 @@ export default class UploadFileForm extends Component {
                   </InputGroup.Prepend>
                   <Form.Control as="textarea"
                                 rows={1}
-                                placeholder="Type a URL "
+                                placeholder={T("Type a URL")}
                                 spellCheck="false"
                                 onChange={(e) => {
                                     this.props.setValue(e.currentTarget.value);

@@ -4,6 +4,7 @@ import axios from 'axios';
 import api from '../core/api-service.js';
 import NotebookRenderer from '../notebooks/notebook-renderer.js';
 import _ from 'lodash';
+import T from '../i8n/i8n.js';
 
 const POLL_TIME = 5000;
 
@@ -59,9 +60,9 @@ export default class HuntNotebook extends React.Component {
             }
 
             let request = {
-                name: "Notebook for Hunt " + hunt_id,
+                name: T("Notebook for Hunt", hunt_id),
                 description: this.props.hunt.description ||
-                    "This is a notebook for processing a hunt.",
+                    T("This is a notebook for processing a hunt."),
                 notebook_id: notebook_id,
                 context: {
                     type: "Hunt",

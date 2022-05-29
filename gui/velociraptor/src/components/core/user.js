@@ -19,6 +19,10 @@ export class UserSettings extends React.Component {
                 return;
             }
 
+            if (traits.lang) {
+                window.globals.lang = traits.lang;
+            }
+
             traits.username = response.data.username;
             this.setState({traits: traits});
 

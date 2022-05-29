@@ -8,6 +8,7 @@ import axios from 'axios';
 import api from '../core/api-service.js';
 import Spinner from '../utils/spinner.js';
 import { withRouter }  from "react-router-dom";
+import T from '../i8n/i8n.js';
 
 // Poll for new notebooks list.
 const POLL_TIME = 5000;
@@ -77,7 +78,7 @@ class FullScreenNotebook extends React.Component {
               <Spinner loading={this.state.loading} />
               <Navbar className="toolbar">
                 <ButtonGroup className="float-right floating-button">
-                  <Button title="Exit Fullscreen"
+                  <Button title={T("Exit Fullscreen")}
                           onClick={this.setSelectedNotebook}
                           variant="default">
                     <FontAwesomeIcon icon="compress"/>

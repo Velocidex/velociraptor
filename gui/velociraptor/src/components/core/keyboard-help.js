@@ -4,42 +4,43 @@ import React from 'react';
 import Button from 'react-bootstrap/Button';
 import { GlobalHotKeys } from "react-hotkeys";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import T from '../i8n/i8n.js';
 
 const KeyMap = {
     SHOW_HELP: "ctrl+/",
 };
 
 const helpTextCol1 = [
-    ["Global hotkeys", [
-        ["alt+d", "Goto dashboard"],
-        ["alt+n", "Goto notebooks"],
-        ["alt+c", "Collected artifacts"],
-        ["ctrl+/", "Show/Hide keyboard hotkeys help"],
-        ["ctrl+?", "Focus client search box"],
+    [T("Global hotkeys"), [
+        ["alt+d", T("Goto dashboard")],
+        ["alt+n", T("Goto notebooks")],
+        ["alt+c", T("Collected artifacts")],
+        ["ctrl+/", T("Show/Hide keyboard hotkeys help")],
+        ["ctrl+?", T("Focus client search box")],
     ]],
 
-    ["New Artifact Collection Wizard", [
-        ["alt+a", "Artifact Selection Step"],
-        ["alt+p", "Parameters configuration Step"],
-        ["alt+r", "Collection resource specification"],
-        ["ctrl+l", "Launch artifact"],
-        ["ctrl+right", "Go to next step"],
-        ["ctrl+left", "Go to previous step"],
+    [T("New Artifact Collection Wizard"), [
+        ["alt+a", T("Artifact Selection Step")],
+        ["alt+p", T("Parameters configuration Step")],
+        ["alt+r", T("Collection resource specification")],
+        ["ctrl+l", T("Launch artifact")],
+        ["ctrl+right", T("Go to next step")],
+        ["ctrl+left", T("Go to previous step")],
     ]],
 ];
 
 const helpTextCol2 = [
-    ["Collected Artifacts", [
-        ["n", "Select next collection"],
-        ["p", "Select previous collection"],
-        ["r", "View selected collection results"],
-        ["o", "View selected collection overview"],
-        ["l", "View selected collection logs"],
-        ["u", "View selected collection uploaded files"],
+    [T("Collected Artifacts"), [
+        ["n", T("Select next collection")],
+        ["p", T("Select previous collection")],
+        ["r", T("View selected collection results")],
+        ["o", T("View selected collection overview")],
+        ["l", T("View selected collection logs")],
+        ["u", T("View selected collection uploaded files")],
     ]],
-    ["Editor shortcuts", [
-        ["ctrl+,", "Popup the editor configuration dialog"],
-        ["ctrl+enter", "Save editor contents"],
+    [T("Editor shortcuts"), [
+        ["ctrl+,", T("Popup the editor configuration dialog")],
+        ["ctrl+enter", T("Save editor contents")],
     ]],
 ];
 
@@ -82,11 +83,11 @@ export default class KeyboardHelp extends React.PureComponent {
                        return (<React.Fragment key={v}>
                                 <tr><td></td>
                                   <td className="heading">
-                                    {title}
+                                    {T(title)}
                                   </td></tr>
                                 { _.map(desc, (x, i)=>{
                                     return <tr key={i}>
-                                              <td className="key">
+                                             <td className="key">
                                                 {this.renderKey(x[0])}  :
                                               </td>
                                               <td className="desc">{x[1]}</td>
@@ -119,7 +120,7 @@ export default class KeyboardHelp extends React.PureComponent {
                   <div className="keyboard-help-content">
                     <table className="page-heading">
                       <tbody>
-                        <tr><td>Keyboard shortcuts</td>
+                        <tr><td>{T("Keyboard shortcuts")}</td>
                           <td><Button size="lg"
                                 className="float-right"
                                 variant="link">

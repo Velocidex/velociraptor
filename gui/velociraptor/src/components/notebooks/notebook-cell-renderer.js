@@ -24,6 +24,7 @@ import Completer from '../artifacts/syntax.js';
 import { getHuntColumns } from '../hunts/hunt-list.js';
 import VeloTimestamp from "../utils/time.js";
 import { AddTimelineDialog, AddVQLCellToTimeline } from "./timelines.js";
+import T from '../i8n/i8n.js';
 
 import axios from 'axios';
 import api from '../core/api-service.js';
@@ -93,7 +94,7 @@ class AddCellFromHunt extends React.PureComponent {
                    dialogClassName="modal-90w"
                    onHide={this.props.closeDialog} >
               <Modal.Header closeButton>
-                <Modal.Title>Add cell from Hunt</Modal.Title>
+                <Modal.Title>{T("Add cell from Hunt")}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <div className="no-margins selectable">
@@ -110,18 +111,18 @@ class AddCellFromHunt extends React.PureComponent {
                     selectRow={ selectRow }
                   />
                   { _.isEmpty(this.state.hunts) &&
-                    <div className="no-content">No hunts exist in the system. You can start a new hunt by clicking the New Hunt button above.</div>}
+                    <div className="no-content">{T("No hunts exist in the system. You can start a new hunt by clicking the New Hunt button above.")}</div>}
                 </div>
 
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary"
                         onClick={this.props.closeDialog}>
-                  Cancel
+                  {T("Cancel")}
                 </Button>
                 <Button variant="primary"
                         onClick={this.addCellFromHunt}>
-                  Submit
+                  {T("Submit")}
                 </Button>
               </Modal.Footer>
             </Modal>
@@ -435,47 +436,47 @@ export default class NotebookCellRenderer extends React.Component {
         let non_editing_toolbar = (
             <>
             <ButtonGroup>
-              <Button title="Cancel"
+              <Button title={T("Cancel")}
                       onClick={() => {this.props.setSelectedCellId("");}}
                       variant="default">
                 <FontAwesomeIcon icon="window-close"/>
               </Button>
 
-              <Button title="Recalculate"
+              <Button title={T("Recalculate")}
                       disabled={this.state.cell.calculating}
                       onClick={this.recalculate}
                       variant="default">
                 <FontAwesomeIcon icon="sync"/>
               </Button>
 
-              <Button title="Stop Calculating"
+              <Button title={T("Stop Calculating")}
                       disabled={!this.state.cell.calculating}
                       onClick={this.stopCalculating}
                       variant="default">
                 <FontAwesomeIcon icon="stop"/>
               </Button>
               { !this.state.collapsed &&
-                <Button title="Collapse"
+                <Button title={T("Collapse")}
                         onClick={() => this.setState({collapsed: true})}
                         variant="default">
                   <FontAwesomeIcon icon="compress"/>
                 </Button>
               }
               { this.state.collapsed &&
-                <Button title="Expand"
+                <Button title={T("Expand")}
                         onClick={() => this.setState({collapsed: false})}
                         variant="default">
                   <FontAwesomeIcon icon="expand"/>
                 </Button>
               }
-              <Button title="Edit Cell"
+              <Button title={T("Edit Cell")}
                       disabled={this.state.cell.calculating}
                       onClick={() => { this.setEditing(true); }}
                       variant="default">
                 <FontAwesomeIcon icon="pencil-alt"/>
               </Button>
 
-              <Button title="Up Cell"
+              <Button title={T("Up Cell")}
                       onClick={() => {
                           this.props.upCell(this.state.cell.cell_id);
                       }}
@@ -483,7 +484,7 @@ export default class NotebookCellRenderer extends React.Component {
                 <FontAwesomeIcon icon="arrow-up"/>
               </Button>
 
-              <Button title="Down Cell"
+              <Button title={T("Down Cell")}
                       onClick={() => {
                           this.props.downCell(this.state.cell.cell_id);
                       }}
@@ -492,13 +493,13 @@ export default class NotebookCellRenderer extends React.Component {
               </Button>
 
               {this.state.cell && this.state.cell.type === "vql" &&
-               <Button title="Add Timeline"
+               <Button title={T("Add Timeline")}
                        onClick={()=>this.setState({showAddCellToTimeline: true})}
                        variant="default">
                  <FontAwesomeIcon icon="calendar-alt"/>
                </Button>}
 
-              <Dropdown title="Add Cell" variant="default">
+              <Dropdown title={T("Add Cell")} variant="default">
                 <Dropdown.Toggle variant="default">
                   <FontAwesomeIcon icon="plus"/>
                 </Dropdown.Toggle>
@@ -521,49 +522,49 @@ export default class NotebookCellRenderer extends React.Component {
                   <hr/>
 
                   <Dropdown
-                    title="Suggestion"
+                    title={T("Suggestion")}
                     drop="right"
                     variant="default-outline">
                     <Dropdown.Toggle
                       className="dropdown-item"
                       variant="default-outline">
-                      Suggestions
+                      {T("Suggestions")}
                     </Dropdown.Toggle>
                     { this.showSuggestions() }
                   </Dropdown>
                   <hr/>
 
                   <Dropdown.Item
-                    title="Add Timeline"
+                    title={T("Add Timeline")}
                     onClick={()=>this.setState({showAddTimeline: true})}>
                     Add Timeline
                   </Dropdown.Item>
                   <Dropdown.Item
-                    title="Add Cell From This Cell"
+                    title={T("Add Cell From This Cell")}
                     onClick={this.addCellFromCell}>
                     Add Cell From This Cell
                   </Dropdown.Item>
                   <Dropdown.Item
-                    title="Add Cell From Hunt"
+                    title={T("Add Cell From Hunt")}
                     onClick={()=>this.setState({showAddCellFromHunt: true})}>
                     Add Cell From Hunt
                   </Dropdown.Item>
                   <Dropdown.Item
-                    title="Add Cell From Flow"
+                    title={T("Add Cell From Flow")}
                     onClick={()=>this.setState({showAddCellFromFlow: true})}>
                     Add Cell From Flow
                   </Dropdown.Item>
                   {this.state.cell && this.state.cell.type === "VQL" &&
                    <Dropdown.Item
-                     title="Create Artifact from VQL"
+                     title={T("Create Artifact from VQL")}
                      onClick={()=>this.setState({showCreateArtifactFromCell: true})}>
-                     Create Artifact from VQL
+                     {T("Create Artifact from VQL")}
                    </Dropdown.Item>}
                 </Dropdown.Menu>
               </Dropdown>
             </ButtonGroup>
             <ButtonGroup className="float-right">
-              <Button title="Rendered" disabled
+              <Button title={T("Rendered")} disabled
                       variant="outline-info">
                 <VeloTimestamp usec={this.state.cell.timestamp * 1000} />
                 { this.state.cell.duration &&
@@ -576,7 +577,7 @@ export default class NotebookCellRenderer extends React.Component {
         let ace_toolbar = (
             <>
               <ButtonGroup>
-                <Button title="Undo"
+                <Button title={T("Undo")}
                         onClick={() => {this.setEditing(false); }}
                         variant="default">
                   <FontAwesomeIcon icon="window-close"/>
@@ -584,13 +585,13 @@ export default class NotebookCellRenderer extends React.Component {
 
                 <SettingsButton ace={this.state.ace}/>
 
-                <Button title="Stop Calculating"
+                <Button title={T("Stop Calculating")}
                         onClick={this.stopCalculating}
                         variant="default">
                   <FontAwesomeIcon icon="stop"/>
                 </Button>
 
-                <Button title="Save"
+                <Button title={T("Save")}
                         onClick={this.saveCell}
                         variant="default">
                   <FontAwesomeIcon icon="save"/>
@@ -598,7 +599,7 @@ export default class NotebookCellRenderer extends React.Component {
               </ButtonGroup>
 
               <ButtonGroup className="float-right">
-                <Button title="Delete Cell"
+                <Button title={T("Delete Cell")}
                         onClick={this.deleteCell}
                         variant="default">
                   <FontAwesomeIcon icon="trash"/>

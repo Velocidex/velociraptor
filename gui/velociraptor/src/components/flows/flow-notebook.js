@@ -4,7 +4,7 @@ import axios from 'axios';
 import api from '../core/api-service.js';
 import NotebookRenderer from '../notebooks/notebook-renderer.js';
 import _ from 'lodash';
-
+import T from '../i8n/i8n.js';
 const POLL_TIME = 5000;
 
 
@@ -76,7 +76,7 @@ export default class FlowNotebook extends React.Component {
 
             // If no notebook was found, try to create one.
             let request = {
-                name: "Notebook for Collection " + flow_id,
+                name: T("Notebook for Collection", flow_id),
                 notebook_id: notebook_id,
                 context: {
                     type: "flow",

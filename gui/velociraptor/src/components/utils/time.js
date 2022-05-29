@@ -5,18 +5,13 @@ import PropTypes from 'prop-types';
 import moment from 'moment/moment.js';
 import Tooltip from 'react-bootstrap/Tooltip';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import humanizeDuration from "humanize-duration";
+import T from '../i8n/i8n.js';
 
 const renderToolTip = (props, ts) => {
     let now = new Date().getTime();
     let difference = (now-ts.getTime());
-    if (difference < 0) {
-        return <Tooltip {...props}>
-                 In {humanizeDuration(difference, { round: true })}
-               </Tooltip>;
-    }
     return <Tooltip {...props}>
-             {humanizeDuration(difference, { round: true })} ago
+             {T("HumanizeDuration", difference)}
            </Tooltip>;
 };
 

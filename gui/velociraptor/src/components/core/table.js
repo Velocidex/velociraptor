@@ -29,7 +29,7 @@ import ClientLink from '../clients/client-link.js';
 import { HexViewPopup } from '../utils/hex.js';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
-
+import T from '../i8n/i8n.js';
 
 // Shows the InspectRawJson modal dialog UI.
 export class InspectRawJson extends Component {
@@ -75,7 +75,7 @@ export class InspectRawJson extends Component {
         return (
             <>
               <Button variant="default"
-                      title="Inspect Raw JSON"
+                      title={T("Inspect Raw JSON")}
                       onClick={() => this.setState({show: true})} >
                 <FontAwesomeIcon icon="binoculars"/>
               </Button>
@@ -86,7 +86,7 @@ export class InspectRawJson extends Component {
                      dialogClassName="modal-90w"
                      onHide={(e) => this.setState({show: false})}>
                 <Modal.Header closeButton>
-                  <Modal.Title>Raw Response JSON</Modal.Title>
+                  <Modal.Title>{T("Raw Response JSON")}</Modal.Title>
                 </Modal.Header>
 
                 <Modal.Body>
@@ -104,7 +104,7 @@ export class InspectRawJson extends Component {
                     <ButtonGroup className="float-right">
                       <Button variant="secondary"
                               onClick={() => this.setState({show: false})} >
-                        Close
+                        {T("Close")}
                       </Button>
                     </ButtonGroup>
                   </Navbar>
@@ -142,7 +142,7 @@ export const ColumnToggleList = (e) => {
                  eventKey={column.dataField}
                  active={!hidden}
                  onSelect={c=>onColumnToggle(c)}
-                 title="Show/Hide Columns"
+                 title={T("Show/Hide Columns")}
                >
                  { column.text }
                </Dropdown.Item>;
@@ -165,7 +165,7 @@ export const ColumnToggleList = (e) => {
                           }
                       });
                   }}>
-                  Set All
+                  {T("Set All")}
                 </Dropdown.Item> :
                 <Dropdown.Item
                   onSelect={()=>{
@@ -175,7 +175,7 @@ export const ColumnToggleList = (e) => {
                           }
                       });
                   }}>
-                  Clear All
+                  {T("Clear All")}
                 </Dropdown.Item> }
               <Dropdown.Divider />
               { buttons }

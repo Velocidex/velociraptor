@@ -18,6 +18,7 @@ import { formatColumns } from "../core/table.js";
 import NewHuntWizard from './new-hunt.js';
 import DeleteNotebookDialog from '../notebooks/notebook-delete.js';
 import ExportNotebook from '../notebooks/export-notebook.js';
+import T from '../i8n/i8n.js';
 
 import api from '../core/api-service.js';
 import axios from 'axios';
@@ -252,21 +253,21 @@ class HuntList extends React.Component {
                <Modal show={this.state.showRunHuntDialog}
                       onHide={() => this.setState({showRunHuntDialog: false})} >
                  <Modal.Header closeButton>
-                   <Modal.Title>Run this hunt?</Modal.Title>
+                   <Modal.Title>{T("Run this hunt?")}</Modal.Title>
                  </Modal.Header>
 
                  <Modal.Body>
-                   <p>Are you sure you want to run this hunt?</p>
+                   <p>{T("Are you sure you want to run this hunt?")}</p>
                  </Modal.Body>
 
                  <Modal.Footer>
                    <Button variant="secondary"
                            onClick={() => this.setState({showRunHuntDialog: false})}>
-                     Close
+                     {T("Close")}
                    </Button>
                    <Button variant="primary"
                            onClick={this.startHunt}>
-                     Run it!
+                     {T("Run it!")}
                    </Button>
                  </Modal.Footer>
                </Modal>
@@ -297,22 +298,21 @@ class HuntList extends React.Component {
                 <Modal show={true}
                        onHide={() => this.setState({showDeleteHuntDialog: false})} >
                   <Modal.Header closeButton>
-                    <Modal.Title>Permanently delete this hunt?</Modal.Title>
+                    <Modal.Title>{T("Permanently delete this hunt?")}</Modal.Title>
                   </Modal.Header>
 
                   <Modal.Body>
-                    <p>You are about to permanently stop and delete all data from this hunt.</p>
-                    <p>Are you sure you want to cancel this hunt and delete the collected data?</p>
-                  </Modal.Body>
+                    {T("DeleteHuntDialog")}
+                 </Modal.Body>
 
                   <Modal.Footer>
                     <Button variant="secondary"
                             onClick={() => this.setState({showDeleteHuntDialog: false})}>
-                      Close
+                      {T("Close")}
                     </Button>
                     <Button variant="primary"
                             onClick={this.deleteHunt}>
-                      Kill it!
+                      {T("Kill it!")}
                     </Button>
                   </Modal.Footer>
                 </Modal>
@@ -320,30 +320,30 @@ class HuntList extends React.Component {
 
               <Navbar className="hunt-toolbar">
                 <ButtonGroup>
-                  <Button title="New Hunt"
+                  <Button title={T("New Hunt")}
                           onClick={() => this.setState({showWizard: true})}
                           variant="default">
                     <FontAwesomeIcon icon="plus"/>
                   </Button>
-                  <Button title="Run Hunt"
+                  <Button title={T("Run Hunt")}
                           disabled={state !== 'PAUSED' && state !== 'STOPPED'}
                           onClick={() => this.setState({showRunHuntDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="play"/>
                   </Button>
-                  <Button title="Stop Hunt"
+                  <Button title={T("Stop Hunt")}
                           disabled={state !== 'RUNNING'}
                           onClick={this.stopHunt}
                           variant="default">
                     <FontAwesomeIcon icon="stop"/>
                   </Button>
-                  <Button title="Delete Hunt"
+                  <Button title={T("Delete Hunt")}
                           disabled={state === 'RUNNING'}
                           onClick={() => this.setState({showDeleteHuntDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="trash-alt"/>
                   </Button>
-                  <Button title="Copy Hunt"
+                  <Button title={T("Copy Hunt")}
                           disabled={!selected_hunt}
                           onClick={this.copyHunt}
                           variant="default">
@@ -352,31 +352,31 @@ class HuntList extends React.Component {
                 </ButtonGroup>
                 { tab === "notebook" &&
                   <ButtonGroup className="float-right">
-                    <Button title="Notebooks"
+                  <Button title={T("Notebooks")}
                             disabled={true}
                             variant="outline-dark">
                       <FontAwesomeIcon icon="book"/>
                     </Button>
 
-                    <Button title="Full Screen"
+                  <Button title={T("Full Screen")}
                             onClick={this.setFullScreen}
                             variant="default">
                       <FontAwesomeIcon icon="expand"/>
                     </Button>
 
-                    <Button title="Delete Notebook"
+                    <Button title={T("Delete Notebook")}
                             onClick={() => this.setState({showDeleteNotebook: true})}
                             variant="default">
                       <FontAwesomeIcon icon="trash"/>
                     </Button>
 
-                    <Button title="Notebook Uploads"
+                    <Button title={T("Notebook Uploads")}
                             onClick={() => this.setState({showNotebookUploadsDialog: true})}
                             variant="default">
                       <FontAwesomeIcon icon="fa-file-download"/>
                     </Button>
 
-                    <Button title="Export Notebook"
+                    <Button title={T("Export Notebook")}
                             onClick={() => this.setState({showExportNotebook: true})}
                             variant="default">
                       <FontAwesomeIcon icon="download"/>
@@ -406,7 +406,7 @@ class HuntList extends React.Component {
                   }) }
                 />
             { _.isEmpty(this.props.hunts) &&
-              <div className="no-content">No hunts exist in the system. You can start a new hunt by clicking the New Hunt button above.</div>}
+              <div className="no-content">{T("No hunts exist in the system. You can start a new hunt by clicking the New Hunt button above.")}</div>}
               </div>
             </>
         );
@@ -435,16 +435,16 @@ export function getHuntColumns() {
          }
         },
         {dataField: "hunt_id", text: "Hunt ID"},
-        {dataField: "hunt_description", text: "Description",
+        {dataField: "hunt_description", text: T("Description"),
          sort: true, filtered: true, editable: true},
-        {dataField: "create_time", text: "Created",
+        {dataField: "create_time", text: T("Created"),
          type: "timestamp", sort: true},
-        {dataField: "start_time", text: "Started",
+        {dataField: "start_time", text: T("Started"),
          type: "timestamp", sort: true },
         {dataField: "expires",
-         text: "Expires", sort: true,
+         text: T("Expires"), sort: true,
          type: "timestamp"},
-        {dataField: "stats.total_clients_scheduled", text: "Scheduled"},
-        {dataField: "creator", text: "Creator"},
+        {dataField: "stats.total_clients_scheduled", text: T("Scheduled")},
+        {dataField: "creator", text: T("Creator")},
     ]);
 }

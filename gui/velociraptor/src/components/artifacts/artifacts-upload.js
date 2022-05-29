@@ -12,7 +12,7 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import axios from 'axios';
 import filterFactory from 'react-bootstrap-table2-filter';
 import { formatColumns } from "../core/table.js";
-
+import T from '../i8n/i8n.js';
 
 export default class ArtifactsUpload extends React.Component {
     static propTypes = {
@@ -59,14 +59,15 @@ export default class ArtifactsUpload extends React.Component {
 
     render() {
         let columns = formatColumns([
-            {dataField: "name", text: "Artifact Name", sort: true, filtered: true}
+            {dataField: "name", text: T("Artifact Name"),
+             sort: true, filtered: true}
         ]);
 
         return (
             <>
               <Modal show={true} onHide={this.props.onClose}>
                 <Modal.Header closeButton>
-                  <Modal.Title>Upload artifacts from a Zip pack</Modal.Title>
+                  <Modal.Title>{T("Upload artifacts from a Zip pack")}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                   { _.isEmpty(this.state.uploaded) ?
@@ -82,7 +83,7 @@ export default class ArtifactsUpload extends React.Component {
                           </InputGroup.Text>
                         </InputGroup.Prepend>
                         <Form.File
-                          label="Select artifact pack (Zip file with YAML definitions)"
+                          label={T("Select artifact pack (Zip file with YAML definitions)")}
                           custom>
                           <Form.File.Input
                             onChange={e => {
@@ -93,7 +94,7 @@ export default class ArtifactsUpload extends React.Component {
                           />
                           <Form.File.Label data-browse="Select file">
                             { this.state.pack_file ? this.state.pack_file.name :
-                              "Click to upload artifact pack file"}
+                              T("Click to upload artifact pack file")}
                           </Form.File.Label>
                         </Form.File>
                       </InputGroup>
@@ -117,7 +118,7 @@ export default class ArtifactsUpload extends React.Component {
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary" onClick={this.props.onClose}>
-                  Close
+                  {T("Close")}
                 </Button>
               </Modal.Footer>
             </Modal>

@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import NotebookCellRenderer from './notebook-cell-renderer.js';
 import Spinner from '../utils/spinner.js';
 import _ from 'lodash';
+import T from '../i8n/i8n.js';
 
 import api from '../core/api-service.js';
 import axios from 'axios';
@@ -160,7 +161,9 @@ export default class NotebookRenderer extends React.Component {
 
     render() {
         if (!this.props.notebook || _.isEmpty(this.props.notebook.cell_metadata)) {
-            return <h5 className="no-content">Select a notebook from the list above.</h5>;
+            return <h5 className="no-content">
+                     {T("Select a notebook from the list above.")}
+                   </h5>;
         }
 
         return (

@@ -426,6 +426,7 @@ func (self *ApiServer) GetUserUITraits(
 	if err == nil {
 		result.InterfaceTraits.UiSettings = user_options.Options
 		result.InterfaceTraits.Theme = user_options.Theme
+		result.InterfaceTraits.Lang = user_options.Lang
 		result.InterfaceTraits.DefaultPassword = user_options.DefaultPassword
 		result.InterfaceTraits.DefaultDownloadsLock = user_options.DefaultDownloadsLock
 	}

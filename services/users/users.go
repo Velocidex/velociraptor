@@ -173,6 +173,10 @@ func (self UserManager) SetUserOptions(config_obj *config_proto.Config,
 		old_options = &api_proto.SetGUIOptionsRequest{}
 	}
 
+	if options.Lang != "" {
+		old_options.Lang = options.Lang
+	}
+
 	if options.Theme != "" {
 		old_options.Theme = options.Theme
 	}

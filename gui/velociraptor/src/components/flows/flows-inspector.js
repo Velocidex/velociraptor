@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
-
+import T from '../i8n/i8n.js';
 import FlowOverview from './flow-overview.js';
 import FlowUploads from './flow-uploads.js';
 import FlowRequests from './flow-requests.js';
@@ -95,34 +95,36 @@ class FlowInspector extends React.Component {
         let artifacts = flow && flow.request && flow.request.artifacts;
 
         if (!flow || !flow.session_id || !artifacts)  {
-            return <h5 className="no-content">Please click a collection in the above table</h5>;
+            return <h5 className="no-content">
+                     {T("Please click a collection in the above table")}
+                   </h5>;
         }
 
         return (
             <div className="padded">
               <Tabs activeKey={this.state.tab}
                     onSelect={this.setDefaultTab}>
-                <Tab eventKey="overview" title="Artifact Collection">
+                <Tab eventKey="overview" title={T("Artifact Collection")}>
                   { this.state.tab === "overview" &&
                     <FlowOverview flow={this.state.detailed_flow.context}/>}
                 </Tab>
-                <Tab eventKey="uploads" title="Uploaded Files">
+                <Tab eventKey="uploads" title={T("Uploaded Files")}>
                   { this.state.tab === "uploads" &&
                     <FlowUploads flow={this.props.flow}/> }
                 </Tab>
-                <Tab eventKey="requests" title="Requests">
+                <Tab eventKey="requests" title={T("Requests")}>
                   { this.state.tab === "requests" &&
                     <FlowRequests flow={this.props.flow} />}
                 </Tab>
-                <Tab eventKey="results" title="Results">
+                <Tab eventKey="results" title={T("Results")}>
                   { this.state.tab === "results" &&
                     <FlowResults flow={this.state.detailed_flow.context} />}
                 </Tab>
-                <Tab eventKey="logs" title="Log">
+                <Tab eventKey="logs" title={T("Log")}>
                   { this.state.tab === "logs" &&
                     <FlowLogs flow={this.state.detailed_flow.context} />}
                 </Tab>
-                <Tab eventKey="notebook" title="Notebook">
+                <Tab eventKey="notebook" title={T("Notebook")}>
                   { this.state.tab === "notebook" &&
                     <FlowNotebook flow={this.props.flow} />}
                 </Tab>

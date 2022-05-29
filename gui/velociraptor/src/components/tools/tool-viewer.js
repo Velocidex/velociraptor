@@ -11,6 +11,7 @@ import Card from 'react-bootstrap/Card';
 import CardDeck from 'react-bootstrap/CardDeck';
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
+import T from '../i8n/i8n.js';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -119,7 +120,7 @@ export default class ToolViewer extends React.Component {
             cards.push(
                 <Card key={1}>
                   <Card.Header>
-                    Served Locally
+                    {T("Served Locally")}
                     <span className="float-right clickable close-icon"
                           onClick={()=>this.setState({hide_1: true})}
                           data-effect="fadeOut">
@@ -128,11 +129,7 @@ export default class ToolViewer extends React.Component {
                   </Card.Header>
                   <Card.Body>
                     <Card.Text>
-                      Tool will be served from the Velociraptor server
-                      to clients if needed. The client will
-                      cache the tool on its own disk and compare the hash next
-                      time it is needed. Tools will only be downloaded if their
-                      hash has changed.
+                      {T("ToolLocalDesc")}
                     </Card.Text>
                     { tool.url && <Button
                                     disabled={this.state.inflight}
@@ -146,7 +143,7 @@ export default class ToolViewer extends React.Component {
             cards.push(
                 <Card key={2}>
                   <Card.Header>
-                    Served from URL
+                    {T("Served from URL")}
                     <span className="float-right clickable close-icon"
                           onClick={()=>this.setState({hide_2: true})}
                           data-effect="fadeOut">
@@ -155,10 +152,7 @@ export default class ToolViewer extends React.Component {
                   </Card.Header>
                   <Card.Body>
                     <Card.Text>
-                        Clients will fetch the tool directly from
-                        <a href={api.base_path + tool.url}>{tool.url}</a> if
-                        needed. Note that if the hash does not match the
-                        expected hash the clients will reject the file.
+                      {T("ServedFromURL", api.base_path, tool.url)}
                     </Card.Text>
                       { tool.url && <Button
                                       disabled={this.state.inflight}
@@ -173,7 +167,7 @@ export default class ToolViewer extends React.Component {
             cards.push(
                 <Card key={3}>
                   <Card.Header>
-                    Served from GitHub
+                    {T("Served from GitHub")}
                     <span className="float-right clickable close-icon"
                           onClick={()=>this.setState({hide_3: true})}
                           data-effect="fadeOut">
@@ -182,14 +176,12 @@ export default class ToolViewer extends React.Component {
                   </Card.Header>
                   <Card.Body>
                     <Card.Text>
-                     Tool URL will be refreshed from
-                        GitHub as the latest release from the project
-                        <b>{tool.github_project}</b> that matches
-                        <b>{tool.github_asset_regex}</b>
+                      {T("ServedFromGithub", tool.github_project,
+                         tool.github_asset_regex)}
                     </Card.Text>
                       <Button variant="primary"
                               disabled={this.state.inflight}
-                              onClick={this.redownloadFile}>Refresh Github
+                              onClick={this.redownloadFile}>{T("Refresh Github")}
                       </Button>
 
                   </Card.Body>
@@ -201,7 +193,7 @@ export default class ToolViewer extends React.Component {
             cards.push(
                 <Card key={4}>
                   <Card.Header>
-                    Placeholder Definition
+                    {T("Placeholder Definition")}
                     <span className="float-right clickable close-icon"
                           onClick={()=>this.setState({hide_4: true})}
                           data-effect="fadeOut">
@@ -210,13 +202,11 @@ export default class ToolViewer extends React.Component {
                   </Card.Header>
                   <Card.Body>
                     <Card.Text>
-                        Tool hash is currently unknown. The first time the tool
-                        is needed, Velociraptor will download it from it's
-                        upstream URL and calculate its hash.
+                      {T("PlaceHolder")}
                     </Card.Text>
                       <Button variant="primary"
                               disabled={this.state.inflight}
-                              onClick={this.calculateHash}>Materialize Hash
+                              onClick={this.calculateHash}>{T("Materialize Hash")}
                       </Button>
 
                   </Card.Body>
@@ -228,7 +218,7 @@ export default class ToolViewer extends React.Component {
             cards.push(
                 <Card key={5}>
                   <Card.Header>
-                    Tool Hash Known
+                     {T("Tool Hash Known")}
                     <span className="float-right clickable close-icon"
                           onClick={()=>this.setState({hide_5: true})}
                           data-effect="fadeOut">
@@ -237,13 +227,11 @@ export default class ToolViewer extends React.Component {
                   </Card.Header>
                   <Card.Body>
                     <Card.Text>
-                        Tool hash has been calculated. When clients need to use
-                        this tool they will ensure this hash matches what they
-                        download.
+                      {T("ToolHash")}
                     </Card.Text>
                       <Button variant="primary"
                               disabled={this.state.inflight}
-                              onClick={this.redownloadFile}>Re-Download File
+                              onClick={this.redownloadFile}>{T("Re-Download File")}
                       </Button>
 
                   </Card.Body>
@@ -255,7 +243,7 @@ export default class ToolViewer extends React.Component {
             cards.push(
                 <Card key={6}>
                   <Card.Header>
-                    Admin Override
+                    {T("Admin Override")}
                     <span className="float-right clickable close-icon"
                           onClick={()=>this.setState({hide_6: true})}
                           data-effect="fadeOut">
@@ -264,9 +252,7 @@ export default class ToolViewer extends React.Component {
                   </Card.Header>
                   <Card.Body>
                     <Card.Text>
-                      Tool was manually uploaded by an
-                        admin - it will not be automatically upgraded on the
-                        next Velociraptor server update.
+                      {T("AdminOverride")}
                     </Card.Text>
                   </Card.Body>
                 </Card>
@@ -277,14 +263,11 @@ export default class ToolViewer extends React.Component {
             cards.push(
                 <Card key={7}>
                   <Card.Header>
-                    Error
+                     {T("Error")}
                   </Card.Header>
                   <Card.Body>
                     <Card.Text>
-                        Tool's hash is not known and no URL
-                        is defined. It will be impossible to use this tool in an
-                        artifact because Velociraptor is unable to resolve it. You
-                        can manually upload a file.
+                      {T("ToolError")}
                     </Card.Text>
                   </Card.Body>
                 </Card>
@@ -301,65 +284,61 @@ export default class ToolViewer extends React.Component {
                      scrollable={true}
                      onHide={() => this.setState({showDialog: false})}>
                 <Modal.Header closeButton>
-                  <Modal.Title>Tool {this.props.name}</Modal.Title>
+                  <Modal.Title>{T("Tool")} {this.props.name}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body className="tool-viewer">
                   <dl className="row">
                     { tool.name &&
                       <>
-                        <dt className="col-4">Tool Name</dt>
+                        <dt className="col-4">{T("Tool Name")}</dt>
                         <dd className="col-8">{tool.name}</dd></>}
 
                     { tool.url &&
                       <>
-                        <dt className="col-4">Upstream URL</dt>
+                        <dt className="col-4">{T("Upstream URL")}</dt>
                         <dd className="col-8">{tool.url}</dd> </>}
 
                     { tool.filename &&
                       <>
-                        <dt className="col-4">Enpoint Filename</dt>
+                        <dt className="col-4">{T("Enpoint Filename")}</dt>
                         <dd className="col-8">{tool.filename}</dd></>}
 
                     { tool.hash &&
                       <>
-                        <dt className="col-4">Hash</dt>
+                        <dt className="col-4">{T("Hash")}</dt>
                         <dd className="col-8">{ tool.hash }</dd> </>}
 
                     { tool.github_project &&
                       <>
-                        <dt className="col-4">Github Project</dt>
+                        <dt className="col-4">{T("Github Project")}</dt>
                         <dd className="col-8">{ tool.github_project}</dd></>}
 
                     { tool.github_asset_regex &&
                       <>
-                        <dt className="col-4">Github Asset Regex</dt>
+                        <dt className="col-4">{T("Github Asset Regex")}</dt>
                         <dd className="col-8">{ tool.github_asset_regex}</dd></>}
 
                     { tool.serve_locally &&
                       <>
-                        <dt className="col-4">Serve Locally</dt>
+                        <dt className="col-4">{T("Serve Locally")}</dt>
                         <dd className="col-8">{ tool.serve_locally }</dd></>}
 
                     { tool.serve_url &&
                       <>
-                        <dt className="col-4">Serve URL</dt>
+                        <dt className="col-4">{T("Serve URL")}</dt>
                         <dd className="col-8">{ tool.serve_url }</dd></>}
 
                     { tool.admin_override &&
                       <>
-                        <dt className="col-4">Admin Override</dt>
+                        <dt className="col-4">{T("Admin Override")}</dt>
                         <dd className="col-8">{ tool.admin_override }</dd></>}
                   </dl>
                   <CardDeck>
                     <Card>
-                      <Card.Header className="text-center">Override Tool</Card.Header>
+                      <Card.Header className="text-center">{T("Override Tool")}</Card.Header>
                       <Card.Body>
                         <Card.Text>
-                          As an admin you can manually upload a
-                          binary to be used as that tool. This will override the
-                          upstream URL setting and provide your tool to all
-                          artifacts that need it. Alternative, set a URL for clients
-                          to fetch tools from.
+                          {T("OverrideToolDesc")}
                         </Card.Text>
                         <Form className="selectable">
                           <InputGroup className="mb-3">
@@ -380,9 +359,9 @@ export default class ToolViewer extends React.Component {
                                     }
                                 }}
                               />
-                              <Form.File.Label data-browse="Select file">
+                              <Form.File.Label data-browse={T("Select file")}>
                                 { this.state.tool_file ? this.state.tool_file.name :
-                                  "Click to upload file"}
+                                  T("Click to upload file")}
                               </Form.File.Label>
                             </Form.File>
                           </InputGroup>
@@ -395,7 +374,7 @@ export default class ToolViewer extends React.Component {
                                 onClick={this.setServeUrl}>
                                 { this.state.inflight ?
                                   <FontAwesomeIcon icon="spinner" spin /> :
-                                  "Set Serve URL" }
+                                  T("Set Serve URL") }
                               </InputGroup.Text>
                             </InputGroup.Prepend>
                             <Form.Control as="input"

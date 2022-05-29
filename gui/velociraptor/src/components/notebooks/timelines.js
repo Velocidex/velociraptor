@@ -17,6 +17,7 @@ import Row from 'react-bootstrap/Row';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { ToStandardTime } from '../utils/time.js';
 
+import T from '../i8n/i8n.js';
 
 const POLL_TIME = 2000;
 
@@ -222,11 +223,11 @@ export class AddVQLCellToTimeline extends React.Component {
                    size="lg"
                    onHide={this.props.closeDialog} >
               <Modal.Header closeButton>
-                <Modal.Title>Add Timeline</Modal.Title>
+                <Modal.Title>{T("Add Timeline")}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <Form.Group as={Row}>
-                  <Form.Label column sm="3">Super Timeline</Form.Label>
+                  <Form.Label column sm="3">{T("Super Timeline")}</Form.Label>
                   <Col sm="8">
                     <CreatableSelect
                       isClearable
@@ -234,18 +235,18 @@ export class AddVQLCellToTimeline extends React.Component {
                       classNamePrefix="velo"
                       options={options}
                       onChange={(e)=>this.setState({timeline: e && e.value})}
-                      placeholder="Super-timeline name"
+                      placeholder={T("Super-timeline name")}
                       spellCheck="false"
                     />
                   </Col>
                 </Form.Group>
 
                 <Form.Group as={Row}>
-                  <Form.Label column sm="3">Timeline Name</Form.Label>
+                  <Form.Label column sm="3">{T("Timeline Name")}</Form.Label>
                   <Col sm="8">
                     <Form.Control as="textarea"
                                   rows={1}
-                                  placeholder="Child timeline name"
+                                  placeholder={T("Child timeline name")}
                                   spellCheck="false"
                                   value={this.state.name}
                                   onChange={(e) => this.setState(
@@ -253,14 +254,14 @@ export class AddVQLCellToTimeline extends React.Component {
                   </Col>
                 </Form.Group>
                 <Form.Group as={Row}>
-                  <Form.Label column sm="3">Time column</Form.Label>
+                  <Form.Label column sm="3">{T("Time column")}</Form.Label>
                   <Col sm="8">
                     <Select
                       className="time-column"
                       classNamePrefix="velo"
                       options={column_options}
                       onChange={(e)=>this.setState({time_column: e && e.value})}
-                      placeholder="Time Column"
+                      placeholder={T("Time Column")}
                       spellCheck="false"
                     />
                   </Col>
@@ -276,8 +277,8 @@ export class AddVQLCellToTimeline extends React.Component {
                         disabled={!this.state.timeline || !this.state.time_column ||
                                   !this.state.name || this.state.loading }
                         onClick={this.addTimeline}>
-                  { this.state.loading ?  <><FontAwesomeIcon icon="spinner" spin /> Running </>:
-                    <> Add Timeline </> }
+                  { this.state.loading ?  <><FontAwesomeIcon icon="spinner" spin /> {T("Running")} </>:
+                    <> {T("Add Timeline")} </> }
                 </Button>
               </Modal.Footer>
             </Modal>

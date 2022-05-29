@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-
+import T from '../i8n/i8n.js';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Spinner from '../utils/spinner.js';
@@ -35,19 +35,19 @@ class FlowPopupInspector extends React.Component {
             <div className="padded">
               <Tabs activeKey={this.state.tab}
                     onSelect={tab=>this.setState({tab: tab})}>
-                <Tab eventKey="overview" title="Artifact Collection">
+                <Tab eventKey="overview" title={T("Artifact Collection")}>
                   { this.state.tab === "overview" &&
                     <FlowOverview flow={this.props.flow}/>}
                 </Tab>
-                <Tab eventKey="uploads" title="Uploaded Files">
+                <Tab eventKey="uploads" title={T("Uploaded Files")}>
                   { this.state.tab === "uploads" &&
                     <FlowUploads flow={this.props.flow}/> }
                 </Tab>
-                <Tab eventKey="results" title="Results">
+                <Tab eventKey="results" title={T("Results")}>
                   { this.state.tab === "results" &&
                     <FlowResults flow={this.props.flow} />}
                 </Tab>
-                <Tab eventKey="logs" title="Log">
+                <Tab eventKey="logs" title={T("Log")}>
                   { this.state.tab === "logs" &&
                     <FlowLogs flow={this.props.flow} />}
                 </Tab>
@@ -100,7 +100,7 @@ export default class FlowLink extends React.Component {
                      scrollable={true}
                      onHide={() => this.setState({showFlowInspector: false})} >
                   <Modal.Header closeButton>
-                    <Modal.Title>Flow Details</Modal.Title>
+                    <Modal.Title>{T("Flow Details")}</Modal.Title>
                   </Modal.Header>
                   <Modal.Body>
                     <Spinner loading={this.state.loading}/>
@@ -109,7 +109,7 @@ export default class FlowLink extends React.Component {
                   <Modal.Footer>
                     <Button variant="secondary"
                             onClick={() => this.setState({showFlowInspector: false})}>
-                      Close
+                      {T("Close")}
                     </Button>
                   </Modal.Footer>
                 </Modal>

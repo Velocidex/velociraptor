@@ -7,6 +7,7 @@ import Spinner from '../utils/spinner.js';
 import utils from './utils.js';
 import axios from 'axios';
 import "./file-hex-view.css";
+import T from '../i8n/i8n.js';
 
 export default class FileHexView extends React.Component {
     static propTypes = {
@@ -118,7 +119,7 @@ export default class FileHexView extends React.Component {
         let selectedRow = utils.getSelectedRow(this.props.node);
         let mtime = selectedRow && selectedRow.Download && selectedRow.Download.mtime;
         if (!mtime) {
-            return <h5 className="no-content">File has no data, please collect file first.</h5>;
+            return <h5 className="no-content">{T("File has no data, please collect file first.")}</h5>;
         }
 
         var total_size = selectedRow.Size || 0;
@@ -141,7 +142,7 @@ export default class FileHexView extends React.Component {
             },
         };
 
-        let hexArea = this.state.loading ? "Loading" :
+        let hexArea = this.state.loading ? T("Loading") :
             <table className="hex-area">
               <tbody>
                 { _.map(this.state.hexDataRows, function(row, idx) {
@@ -176,7 +177,7 @@ export default class FileHexView extends React.Component {
                     <table>
                       <thead>
                         <tr>
-                          <th className="hex_column offset">Offset</th>
+                          <th className="hex_column offset">T("Offset")</th>
                           <th className="hex_column">00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f </th>
                           <th></th>
                         </tr>

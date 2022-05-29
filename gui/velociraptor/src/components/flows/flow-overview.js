@@ -14,7 +14,7 @@ import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Tooltip from 'react-bootstrap/Tooltip';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-
+import T from '../i8n/i8n.js';
 import BootstrapTable from 'react-bootstrap-table-next';
 import _ from 'lodash';
 import axios from 'axios';
@@ -104,7 +104,7 @@ export default class FlowOverview extends React.Component {
                 return <Spinner loading={true}/>;
             }
 
-            return <h5 className="no-content">Please click a collection in the above table</h5>;
+            return <h5 className="no-content">{T("Please click a collection in the above table")}</h5>;
         }
 
         let parameters = requestToParameters(flow.request);
@@ -118,10 +118,10 @@ export default class FlowOverview extends React.Component {
             <>
             <CardDeck>
               <Card>
-                <Card.Header>Overview</Card.Header>
+                <Card.Header>{T("Overview")}</Card.Header>
                 <Card.Body>
                   <dl className="row">
-                    <dt className="col-4">Artifact Names</dt>
+                    <dt className="col-4">{T("Artifact Names")}</dt>
                     <dd className="col-8">
                       { _.map(artifacts, function(v, idx) {
                           return <ArtifactLink
@@ -130,55 +130,56 @@ export default class FlowOverview extends React.Component {
                       })}
                     </dd>
 
-                    <dt className="col-4">Flow ID</dt>
+                    <dt className="col-4">{T("Flow ID")}</dt>
                     <dd className="col-8">  { flow.session_id } </dd>
 
-                    <dt className="col-4">Creator</dt>
+                    <dt className="col-4">{T("Creator")}</dt>
                     <dd className="col-8"> { flow.request.creator } </dd>
 
-                    <dt className="col-4">Create Time</dt>
+                    <dt className="col-4">{T("Create Time")}</dt>
                     <dd className="col-8">
                       <VeloTimestamp usec={flow.create_time / 1000}/>
                     </dd>
 
-                    <dt className="col-4">Start Time</dt>
+                    <dt className="col-4">{T("Start Time")}</dt>
                     <dd className="col-8">
                       <VeloTimestamp usec={flow.start_time / 1000}/>
                     </dd>
 
-                    <dt className="col-4">Last Active</dt>
+                    <dt className="col-4">{T("Last Active")}</dt>
                     <dd className="col-8">
                       <VeloTimestamp usec={flow.active_time / 1000}/>
                     </dd>
 
-                    <dt className="col-4">Duration</dt>
+                    <dt className="col-4">{T("Duration")}</dt>
                     <dd className="col-8">
                       { flow.execution_duration ?
-                        ((flow.execution_duration)/1000000000).toFixed(2) + " Seconds" :
-                        flow.state === "RUNNING" && " Running..."}
+                        ((flow.execution_duration)/1000000000).toFixed(2) +
+                        " " + T("seconds") :
+                        flow.state === "RUNNING" && T(" Running...")}
                     </dd>
 
-                    <dt className="col-4">State</dt>
-                    <dd className="col-8">{ flow.state }</dd>
+                    <dt className="col-4">{T("State")}</dt>
+                    <dd className="col-8">{ T(flow.state) }</dd>
 
                     { flow.state === "ERROR" &&
                       <Fragment>
-                        <dt className="col-4">Error</dt>
-                        <dd className="col-8">{flow.status }</dd>
+                        <dt className="col-4">{T("Error")}</dt>
+                        <dd className="col-8">{ flow.status }</dd>
                       </Fragment>
                     }
 
-                    <dt className="col-4">Ops/Sec</dt>
-                    <dd className="col-8"> {flow.request.ops_per_second || 'Unlimited'} </dd>
-                    <dt className="col-4">CPU Limit</dt>
-                    <dd className="col-8"> {flow.request.cpu_limit || 'Unlimited'} </dd>
-                    <dt className="col-4">IOPS Limit</dt>
-                    <dd className="col-8"> {flow.request.iops_limit || 'Unlimited'} </dd>
-                    <dt className="col-4">Timeout</dt>
-                    <dd className="col-8"> {flow.request.timeout || '600' } seconds</dd>
-                    <dt className="col-4">Max Rows</dt>
-                    <dd className="col-8"> {flow.request.max_rows || '1m'} rows</dd>
-                    <dt className="col-4">Max Mb</dt>
+                    <dt className="col-4">{T("Ops/Sec")}</dt>
+                    <dd className="col-8"> {flow.request.ops_per_second || T('Unlimited')} </dd>
+                    <dt className="col-4">{T("CPU Limit")}</dt>
+                    <dd className="col-8"> {flow.request.cpu_limit || T('Unlimited')} </dd>
+                    <dt className="col-4">{T("IOPS Limit")}</dt>
+                    <dd className="col-8"> {flow.request.iops_limit || T('Unlimited')} </dd>
+                    <dt className="col-4">{T("Timeout")}</dt>
+                    <dd className="col-8"> {flow.request.timeout || '600' } {T("seconds")}</dd>
+                    <dt className="col-4">{T("Max Rows")}</dt>
+                    <dd className="col-8"> {flow.request.max_rows || '1m'} {T("rows")}</dd>
+                    <dt className="col-4">{T("Max Mb")}</dt>
                     <dd className="col-8"> { ((flow.request.max_upload_bytes || 1048576000)
                                               / 1024 / 1024).toFixed(2) } Mb</dd>
                     <br />
@@ -206,33 +207,33 @@ export default class FlowOverview extends React.Component {
                 </Card.Body>
               </Card>
               <Card>
-                <Card.Header>Results</Card.Header>
+                <Card.Header>{T("Results")}</Card.Header>
                 <Card.Body>
                   <dl className="row">
-                    <dt className="col-4">Artifacts with Results</dt>
+                    <dt className="col-4">{T("Artifacts with Results")}</dt>
                     <dd className="col-8">
                       { _.map(artifacts_with_results, function(item, idx) {
                           return <VeloValueRenderer value={item} key={idx}/>;
                       })}
                     </dd>
 
-                    <dt className="col-4">Total Rows</dt>
+                    <dt className="col-4">{T("Total Rows")}</dt>
                     <dd className="col-8">
                       { flow.total_collected_rows || 0 }
                     </dd>
 
-                    <dt className="col-4">Uploaded Bytes</dt>
+                    <dt className="col-4">{T("Uploaded Bytes")}</dt>
                     <dd className="col-8">
                       { (flow.total_uploaded_bytes || 0) } / {
                         (flow.total_expected_uploaded_bytes || 0) }
                     </dd>
 
-                    <dt className="col-4">Files uploaded</dt>
+                    <dt className="col-4">{T("Files uploaded")}</dt>
                     <dd className="col-8">
                       {uploaded_files.length || flow.total_uploaded_files || 0 }
                     </dd>
 
-                    <dt className="col-4">Download Results</dt>
+                    <dt className="col-4">{T("Download Results")}</dt>
                     <dd className="col-8">
                       <ButtonGroup>
                         { lock_password ?
@@ -249,8 +250,7 @@ export default class FlowOverview extends React.Component {
                             overlay={
                                 <Tooltip
                                   id='download-tooltip'>
-                                  Set a password in user preferences
-                                  to lock the download file.
+                                  {T("Set a password in user preferences to lock the download file.")}
                                 </Tooltip>
                             }>
                             <span className="d-inline-block">
@@ -270,11 +270,11 @@ export default class FlowOverview extends React.Component {
                           <Dropdown.Menu>
                             <Dropdown.Item
                               onClick={()=>this.prepareDownload()}>
-                              Prepare Download
+                              {T("Prepare Download")}
                             </Dropdown.Item>
                             <Dropdown.Item
                               onClick={()=>this.prepareDownload('report')}>
-                              Prepare Collection Report
+                              {T("Prepare Collection Report")}
                             </Dropdown.Item>
                           </Dropdown.Menu>
                         </Dropdown>
@@ -282,7 +282,7 @@ export default class FlowOverview extends React.Component {
                     </dd>
                   </dl>
                   <dl>
-                    <dt>Available Downloads</dt>
+                    <dt>{T("Available Downloads")}</dt>
                     <dd>
                       <BootstrapTable
                         keyField="name"
@@ -293,11 +293,11 @@ export default class FlowOverview extends React.Component {
                         bodyClasses="fixed-table-body"
                         data={this.state.available_downloads}
                         columns={formatColumns(
-                            [{dataField: "name", text: "Name", sort: true,
+                            [{dataField: "name", text: T("Name"), sort: true,
                               type: "download"},
-                             {dataField: "size", text: "Size (Mb)", sort: true, type: "mb",
+                             {dataField: "size", text: T("Size (Mb)"), sort: true, type: "mb",
                               align: 'right'},
-                             {dataField: "date", text: "Date"}])}
+                             {dataField: "date", text: T("Date")}])}
                       />
                     </dd>
                   </dl>

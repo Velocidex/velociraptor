@@ -143,6 +143,11 @@ func StartupFrontendServices(sm *services.Service) error {
 		return err
 	}
 
+	err = sm.Start(users.StartUserManager)
+	if err != nil {
+		return err
+	}
+
 	_, err = services.GetClientInfoManager()
 	if err != nil {
 		err := sm.Start(client_info.StartClientInfoService)
@@ -223,11 +228,6 @@ func StartupFrontendServices(sm *services.Service) error {
 		if err != nil {
 			return err
 		}
-	}
-
-	err = sm.Start(users.StartUserManager)
-	if err != nil {
-		return err
 	}
 
 	return nil

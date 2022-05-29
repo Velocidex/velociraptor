@@ -1,5 +1,5 @@
 import React from 'react';
-
+import T from '../i8n/i8n.js';
 import FlowNotebook from './flow-notebook.js';
 import { withRouter }  from "react-router-dom";
 
@@ -38,7 +38,7 @@ class FullScreenFlowNotebook extends React.Component {
         return <>
                  <Navbar className="toolbar">
                    <ButtonGroup className="float-right floating-button">
-                     <Button title="Exit Fullscreen"
+                     <Button title={T("Exit Fullscreen")}
                              onClick={this.setSelectedNotebook}
                              variant="default">
                        <FontAwesomeIcon icon="compress"/>

@@ -9,7 +9,7 @@ import utils from './utils.js';
 import VeloAce from '../core/ace.js';
 import axios from 'axios';
 import "./file-hex-view.css";
-
+import T from '../i8n/i8n.js';
 
 const pagesize = 100 * 1024;
 
@@ -110,7 +110,7 @@ export default class FileTextView extends React.Component {
         let selectedRow = utils.getSelectedRow(this.props.node);
         let mtime = selectedRow && selectedRow.Download && selectedRow.Download.mtime;
         if (!mtime) {
-            return <h5 className="no-content">File has no data, please collect file first.</h5>;
+            return <h5 className="no-content">{T("File has no data, please collect file first.")}</h5>;
         }
         var total_size = selectedRow.Size || 0;
         let pageCount = Math.ceil(total_size / pagesize);

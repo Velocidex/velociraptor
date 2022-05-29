@@ -14,7 +14,7 @@ import UserConfig from '../core/user.js';
 
 import api from '../core/api-service.js';
 import axios from 'axios';
-
+import T from '../i8n/i8n.js';
 
 class VeloClientSearch extends Component {
     static contextType = UserConfig;
@@ -81,7 +81,7 @@ class VeloClientSearch extends Component {
                     getSuggestionValue={x=>x}
                     renderSuggestion={(x) => <div className="search-suggestions">{x}</div>}
                     inputProps={{
-                        placeholder: "Search clients",
+                        placeholder: T("SEARCH_CLIENTS"),
                         spellCheck: "false",
                         id: this.props.id || "client-search-bar",
                         value: this.state.query,

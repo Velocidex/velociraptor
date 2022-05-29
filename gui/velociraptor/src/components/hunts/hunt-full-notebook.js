@@ -6,7 +6,7 @@ import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
+import T from '../i8n/i8n.js';
 
 class FullScreenHuntNotebook extends React.Component {
     static propTypes = {};
@@ -29,7 +29,7 @@ class FullScreenHuntNotebook extends React.Component {
         return <>
                  <Navbar className="toolbar">
                    <ButtonGroup className="float-right floating-button">
-                     <Button title="Exit Fullscreen"
+                     <Button title={T("Exit Fullscreen")}
                              onClick={this.setSelectedNotebook}
                              variant="default">
                        <FontAwesomeIcon icon="compress"/>

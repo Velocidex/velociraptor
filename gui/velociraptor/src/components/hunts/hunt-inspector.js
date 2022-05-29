@@ -9,7 +9,7 @@ import HuntRequest from './hunt-request.js';
 import HuntClients from './hunt-clients.js';
 import HuntNotebook from './hunt-notebook.js';
 import Spinner from '../utils/spinner.js';
-
+import T from '../i8n/i8n.js';
 import { withRouter }  from "react-router-dom";
 
 class HuntInspector extends React.Component {
@@ -34,7 +34,7 @@ class HuntInspector extends React.Component {
         }
 
         if (!this.props.hunt || !this.props.hunt.hunt_id) {
-            return <div className="no-content">Please select a hunt above</div>;
+            return <div className="no-content">{T("Please select a hunt above")}</div>;
         }
 
         // Default tab comes from the router
@@ -45,21 +45,21 @@ class HuntInspector extends React.Component {
         return (
             <div className="padded">
               <Tabs defaultActiveKey={tab} onSelect={this.setDefaultTab}>
-                <Tab eventKey="overview" title="Overview">
+                <Tab eventKey="overview" title={T("Overview")}>
                   { tab === "overview" &&
                     <HuntOverview
                       fetch_hunts={this.props.fetch_hunts}
                       hunt={this.props.hunt}/> }
                 </Tab>
-                <Tab eventKey="requests" title="Requests">
+                <Tab eventKey="requests" title={T("Requests")}>
                   { tab === "requests" &&
                     <HuntRequest hunt={this.props.hunt}/> }
                 </Tab>
-                <Tab eventKey="clients" title="Clients">
+                <Tab eventKey="clients" title={T("Clients")}>
                   { tab === "clients" &&
                     <HuntClients hunt={this.props.hunt} />}
                 </Tab>
-                <Tab eventKey="notebook" title="Notebook">
+                <Tab eventKey="notebook" title={T("Notebook")}>
                   { tab === "notebook" &&
                     <HuntNotebook hunt={this.props.hunt} />}
                 </Tab>

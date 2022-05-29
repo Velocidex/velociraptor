@@ -14,6 +14,7 @@ import Row from 'react-bootstrap/Row';
 import api from '../core/api-service.js';
 import axios from 'axios';
 import VeloForm from '../forms/form.js';
+import T from '../i8n/i8n.js';
 
 class UserSettings extends React.PureComponent {
     static contextType = UserConfig;
@@ -26,6 +27,7 @@ class UserSettings extends React.PureComponent {
         if (this.context.traits) {
             this.setState({
                 theme: this.context.traits.theme || "no-theme",
+                lang: this.context.traits.lang || "en",
                 default_password: this.context.traits.default_password || "",
             });
         }
@@ -39,6 +41,7 @@ class UserSettings extends React.PureComponent {
     saveSettings = ()=> {
         this.props.setSetting({
             theme: this.state.theme,
+            lang: this.state.lang,
             default_password: this.state.default_password,
         });
     }
@@ -49,17 +52,17 @@ class UserSettings extends React.PureComponent {
                    dialogClassName="modal-70w"
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
-                <Modal.Title>User Settings</Modal.Title>
+                <Modal.Title>{T("User Settings")}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
-                    Theme
+                    {T("Theme")}
                   </Form.Label>
                   <Col sm="8">
                     <Form.Control as="select"
                                   value={this.state.theme}
-                                  placeholder="Select a theme"
+                                  placeholder={T("Select a theme")}
                                   onChange={(e) => {
                                       this.setState({theme: e.currentTarget.value});
 
@@ -69,31 +72,56 @@ class UserSettings extends React.PureComponent {
                                           default_password: this.state.default_password,
                                       });
                                   }}>
-                      <option value="no-theme">Default Velociraptor</option>
-                      <option value="veloci-light">Velociraptor (light) [experimental]</option>
-                      <option value="veloci-dark">Velociraptor (dark) [experimental]</option>
+                      <option value="no-theme">{T("Default Velociraptor")}</option>
+                      <option value="veloci-light">{T("Velociraptor (light)")}</option>
+                      <option value="veloci-dark">{T("Velociraptor (dark)")}</option>
                       {/* <option value="github-dimmed-light">Github dimmed (light)</option> */}
-                      <option value="github-dimmed-dark">Github dimmed (dark)</option>
+                      <option value="github-dimmed-dark">{T("Github dimmed (dark)")}</option>
                       {/* <option value="ncurses">Ncurses (light)</option> */}
-                      <option value="coolgray-dark">Cool Gray (dark)</option>
-                      <option value="pink-light">Strawberry Milkshake (light)</option>
+                      <option value="coolgray-dark">{T("Cool Gray (dark)")}</option>
+                      <option value="pink-light">{T("Strawberry Milkshake (light)")}</option>
                     </Form.Control>
                   </Col>
                 </Form.Group>
                 <VeloForm
                   param={{name: "Downloads Password",
-                          description: "Default password to use for downloads",
+                          friendly_name: T("Downloads Password"),
+                          description: T("Default password to use for downloads"),
                           type: "string"}}
                   value={this.state.default_password}
                   setValue={value=>this.setState({default_password: value})}
                 />
+                <Form.Group as={Row}>
+                  <Form.Label column sm="3">
+                    {T("Language")}
+                  </Form.Label>
+                  <Col sm="8">
+                    <Form.Control as="select"
+                                  value={this.state.lang}
+                                  placeholder={T("Select a language")}
+                                  onChange={(e) => {
+                                      this.setState({lang: e.currentTarget.value});
+
+                                      // Change the theme instantly
+                                      this.props.setSetting({
+                                          lang: e.currentTarget.value,
+                                          theme: this.state.theme,
+                                          default_password: this.state.default_password,
+                                      });
+                                  }}>
+                      <option value="en">{T("English")}</option>
+                      <option value="de">{T("Deutsch")}</option>
+                    </Form.Control>
+                  </Col>
+                </Form.Group>
+
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary" onClick={()=>{
                     this.saveSettings();
                     this.props.onClose();
                 }}>
-                  Save
+                  {T("Save")}
                 </Button>
               </Modal.Footer>
             </Modal>
