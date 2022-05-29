@@ -69,7 +69,8 @@ class VeloNavigator extends Component {
                         <ul className="nav nav-pills navigator">
                           <li className="nav-link" state="userDashboard">
                             <span>
-                            <i className="navicon"><FontAwesomeIcon icon="home"/></i>
+                              <i className="navicon">
+                                <FontAwesomeIcon icon="home"/></i>
                             </span>
                             {T("Home")}
                           </li>
@@ -80,7 +81,8 @@ class VeloNavigator extends Component {
                         <ul className="nav nav-pills navigator">
                           <li className="nav-link" state="hunts" >
                             <span>
-                            <i className="navicon"><FontAwesomeIcon icon="crosshairs"/></i>
+                              <i className="navicon">
+                                <FontAwesomeIcon icon="crosshairs"/></i>
                             </span>
                             {T("Hunt Manager")}
                           </li>
@@ -103,7 +105,8 @@ class VeloNavigator extends Component {
                         <ul className="nav nav-pills  navigator">
                           <li className="nav-link" state="server_events" >
                             <span>
-                            <i className="navicon"><FontAwesomeIcon icon="eye"/></i>
+                              <i className="navicon">
+                                <FontAwesomeIcon icon="eye"/></i>
                             </span>
                             {T("Server Events")}
                           </li>
@@ -114,7 +117,8 @@ class VeloNavigator extends Component {
                         <ul className="nav nav-pills  navigator">
                           <li className="nav-link" state="server_artifacts" >
                             <span>
-                            <i className="navicon"><FontAwesomeIcon icon="server"/></i>
+                              <i className="navicon">
+                                <FontAwesomeIcon icon="server"/></i>
                             </span>
                             {T("Server Artifacts")}
                           </li>
@@ -125,7 +129,8 @@ class VeloNavigator extends Component {
                         <ul className="nav nav-pills navigator">
                           <li className="nav-link" state="notebook" >
                             <span>
-                            <i className="navicon"><FontAwesomeIcon icon="book"/></i>
+                              <i className="navicon">
+                                <FontAwesomeIcon icon="book"/></i>
                             </span>
                             {T("Notebooks")}
                           </li>
@@ -139,7 +144,8 @@ class VeloNavigator extends Component {
                                 "nav-link": true,
                                 disabled: disabled})}>
                               <span>
-                              <i className="navicon"><FontAwesomeIcon icon="laptop"/> </i>
+                                <i className="navicon">
+                                  <FontAwesomeIcon icon="laptop"/> </i>
                               </span>
                               {T("Host Information")}
                             </li>
@@ -150,7 +156,8 @@ class VeloNavigator extends Component {
                                 "nav-link": true,
                                 disabled: disabled})}>
                               <span>
-                              <i className="navicon"><FontAwesomeIcon icon="folder-open"/> </i>
+                                <i className="navicon">
+                                  <FontAwesomeIcon icon="folder-open"/> </i>
                               </span>
                               {T("Virtual Filesystem")}
                             </li>
@@ -159,7 +166,10 @@ class VeloNavigator extends Component {
                             <li className={classNames({
                                 "nav-link": true,
                                 disabled: disabled})}>
-                              <i className="navicon"><FontAwesomeIcon icon="history"/></i>
+                              <span>
+                                <i className="navicon">
+                                  <FontAwesomeIcon icon="history"/></i>
+                              </span>
                               {T("Collected Artifacts")}
                             </li>
                           </ul>
@@ -167,7 +177,10 @@ class VeloNavigator extends Component {
                             <li className={classNames({
                                 "nav-link": true,
                                 disabled: disabled})}>
-                              <i className="navicon"><FontAwesomeIcon icon="binoculars"/></i>
+                              <span>
+                                <i className="navicon">
+                                  <FontAwesomeIcon icon="binoculars"/></i>
+                              </span>
                               {T("Client Events")}
                             </li>
                           </ul>
@@ -181,7 +194,8 @@ class VeloNavigator extends Component {
                                   "nav-link": true,
                                   disabled: disabled})}>
                                 <span>
-                                <i className="navicon"><FontAwesomeIcon icon="laptop"/> </i>
+                                  <i className="navicon">
+                                    <FontAwesomeIcon icon="laptop"/> </i>
                                 </span>
                                 {T("Host Information")}
                               </li>
@@ -196,7 +210,8 @@ class VeloNavigator extends Component {
                                   "nav-link": true,
                                   disabled: disabled})}>
                                 <span>
-                                <i className="navicon"><FontAwesomeIcon icon="folder-open"/> </i>
+                                  <i className="navicon">
+                                    <FontAwesomeIcon icon="folder-open"/> </i>
                                 </span>
                                 {T("Virtual Filesystem")}
                               </li>
@@ -211,7 +226,8 @@ class VeloNavigator extends Component {
                                   "nav-link": true,
                                   disabled: disabled})}>
                                 <span>
-                                <i className="navicon"><FontAwesomeIcon icon="history"/></i>
+                                  <i className="navicon">
+                                    <FontAwesomeIcon icon="history"/></i>
                                 </span>
                                 {T("Collected Artifacts")}
                               </li>
@@ -226,7 +242,8 @@ class VeloNavigator extends Component {
                                   "nav-link": true,
                                   disabled: disabled})}>
                                 <span>
-                                <i className="navicon"><FontAwesomeIcon icon="binoculars"/></i>
+                                  <i className="navicon">
+                                    <FontAwesomeIcon icon="binoculars"/></i>
                                 </span>
                                 {T("Client Events")}
                               </li>

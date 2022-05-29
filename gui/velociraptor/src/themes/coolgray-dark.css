@@ -679,6 +679,11 @@ body.coolgray-dark {
   color: #dead87;
 }
 
+.coolgray-dark .modal-title {
+    font-size: 1.2rem;
+    height: 50px;
+}
+
 .coolgray-dark .report-viewer h4 {
   font-size: 16px;
   color: #8dde87;

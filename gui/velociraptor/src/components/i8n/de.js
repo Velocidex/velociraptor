@@ -586,6 +586,16 @@ const Deutsch = {
     "Permanently delete Notebook":"Notizbuch dauerhaft löschen",
     "You are about to permanently delete the notebook for this hunt":"Sie sind dabei, das Notizbuch für diese Jagd dauerhaft zu löschen",
 
+    "Data":"Daten",
+    "Served from GitHub":"Von GitHub bereitgestellt",
+    "Refresh Github":"Von GitHub aktualisieren",
+    "Github Project":"GitHub-Projekt",
+    "Github Asset Regex":"Github Asset Regex",
+    "Admin Override":"Admin-Überschreibung",
+    "Serve from upstream":"Vom Upstream servieren",
+
+    "Update server monitoring table":"Server-Überwachungstabelle aktualisieren",
+    "Show server monitoring tables":"Server-Überwachungstabellen anzeigen",
 };
 
 export default Deutsch;
