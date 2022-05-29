@@ -14,7 +14,7 @@ import (
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
-func (self HuntDispatcher) GetFlows(
+func (self *HuntDispatcher) GetFlows(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	scope vfilter.Scope,
