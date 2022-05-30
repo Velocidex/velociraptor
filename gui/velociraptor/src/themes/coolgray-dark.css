@@ -364,9 +364,10 @@ body.coolgray-dark {
 .coolgray-dark .btn-outline-info,
 .coolgray-dark .btn-link {
   color: var(--color-foreground);
-  background: var(--color-btn-outline-link);
+  background: var(--color-background);
   text-shadow: none;
   border-radius: 0;
+  margin: 1px;
 }
 
 .coolgray-dark .btn-outline-info:hover {
@@ -481,10 +482,12 @@ body.coolgray-dark {
   color: var(--color-foreground);
   border: 1px solid var(--color-btn-default-border);
   /* background-color: var(--color-table-heading-background); */
+  vertical-align: text-bottom;
 }
 
 .coolgray-dark .table tbody tr td {
   border: none;
+  vertical-align: text-bottom;
 }
 
 .coolgray-dark .table tbody tr:nth-of-type(2n) {
@@ -830,8 +833,9 @@ body.coolgray-dark {
 
 .coolgray-dark .dropdown-item {
   color: var(--color-foreground);
+  background-color: var(--color-background);
   font-family: var(--font-family-sans-serif);
-  background-color: var(--color-canvas-background);
+  font-size: var(--font-size-base);
 }
 
 .coolgray-dark .dropdown-item:hover {
@@ -936,7 +940,7 @@ body.coolgray-dark {
 }
 
 .coolgray-dark .shell-command .show > .dropdown-menu.show {
-  background: var(--color-canvas-background);
+  background: var(--color-background);
   border: 1px solid var(--color-btn-border);
 }
 

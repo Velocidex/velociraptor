@@ -45,10 +45,10 @@
   --color-sidebar-active-foreground: var(--color-foreground);
   --color-sidebar-active-background: var(--color-table-row-selected);
 
-  --font-size-large: 16px;
-  --font-size-base: 14px;
-  --font-size-small: 12px;
-  --font-family-sans-serif: -apple-system, BlinkMacSystemFont, roboto,
+  --font-size-large: 17px;
+  --font-size-base: 15px;
+  --font-size-small: 13px;
+  --font-family-sans-serif: roboto, -apple-system, BlinkMacSystemFont,
     "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --font-family-monospace: roboto-mono, SFMono-Regular, Menlo, Monaco,
     "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
@@ -98,6 +98,7 @@ body.veloci-dark {
   background-color: var(--color-canvas-background);
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
+  letter-spacing: 0.4px;
 }
 
 .veloci-dark code {
@@ -280,6 +281,7 @@ body.veloci-dark {
 .veloci-dark .btn-outline-info,
 .veloci-dark .btn-link {
   color: var(--color-btn-outline-link);
+  margin: 1px;
 }
 
 .veloci-dark .btn.btn-link {
@@ -302,10 +304,12 @@ body.veloci-dark {
 .veloci-dark .table thead th {
   border: none;
   background-color: var(--color-table-row-selected);
+  vertical-align: text-bottom;
 }
 
 .veloci-dark .table tbody tr td {
   border: none;
+  vertical-align: text-bottom;
 }
 
 .veloci-dark .table tbody tr:nth-of-type(2n) {
@@ -436,7 +440,7 @@ body.veloci-dark {
 
 .veloci-dark .form-control:focus {
   background-color: var(--color-canvas-background);
-  box-shadow: 0 0 0 0.2rem var(--color-accent-25);
+  box-shadow: 0 0 0 1px var(--color-text-default);
 }
 
 .veloci-dark .input-group-prepend .input-group-text {
@@ -526,7 +530,7 @@ body.veloci-dark {
 }
 
 .veloci-dark .report-viewer h5 {
-  color: var(--color-accent-complement);
+  color: var(--color-accent-100);
   font-weight: 400;
   font-size: var(--font-size-base);
 }
@@ -602,6 +606,8 @@ body.veloci-dark {
 
 .veloci-dark .dropdown-item {
   color: var(--color-text-default);
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
 }
 
 .veloci-dark .dropdown-item:hover {

@@ -51,9 +51,9 @@
   --color-danger-emphasis: #c93c37;
   --color-primer-border-active: #ec775c;
 
-  --font-size-large: 16px;
-  --font-size-base: 14px;
-  --font-size-small: 12px;
+  --font-size-large: 17px;
+  --font-size-base: 15px;
+  --font-size-small: 13px;
   --font-family-sans-serif: titillium-web, -apple-system, BlinkMacSystemFont,
     Roboto, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --font-family-monospace: roboto-mono, SFMono-Regular, Menlo, Monaco,
@@ -290,6 +290,7 @@ body.github-dimmed-dark {
   color: var(--color-foreground);
   background: var(--color-btn-outline-link);
   text-shadow: none;
+  margin: 1px;
 }
 
 .github-dimmed-dark .btn-outline-info:hover {
@@ -387,7 +388,8 @@ body.github-dimmed-dark {
 .github-dimmed-dark .table thead th {
   color: var(--color-foreground);
   border: 1px solid var(--color-table-heading-background);
-  background-color: var(--color-table-heading-background);;
+  background-color: var(--color-table-heading-background);
+  vertical-align: text-bottom;
 }
 
 .github-dimmed-dark .table {
@@ -402,6 +404,7 @@ body.github-dimmed-dark {
 
 .github-dimmed-dark .table tbody tr td {
   border: none;
+  vertical-align: text-bottom;
 }
 
 .github-dimmed-dark .table tbody tr:nth-of-type(2n) {
@@ -435,6 +438,7 @@ body.github-dimmed-dark {
   background-color: var(--color-canvas-background);
   color: var(--color-foreground);
   border-color: var(--color-btn-border);
+  font-weight: 600;
 }
 
 /* Resizer dividers */
@@ -512,6 +516,7 @@ body.github-dimmed-dark {
   border-right-color: var(--color-btn-border);
   border-left-color: var(--color-btn-border);
   border-bottom: 2px transparent;
+  font-weight: 600;
 }
 
 .github-dimmed-dark .nav-tabs .nav-link:hover {
@@ -588,7 +593,7 @@ body.github-dimmed-dark {
 }
 
 .github-dimmed-dark .report-viewer h5 {
-  color: #8256d0;
+  color: #57ab5a;
 }
 
 .github-dimmed-dark .artifact-search-table a {
@@ -710,7 +715,7 @@ body.github-dimmed-dark {
 
 /* Scrollbars */
 
-::-webkit-scrollbar-thumb {
+.github-dimmed-dark ::-webkit-scrollbar-thumb {
   border-radius: 3px;
 }
 
@@ -721,8 +726,9 @@ body.github-dimmed-dark {
 
 .github-dimmed-dark .dropdown-item {
   color: var(--color-foreground);
+  background-color: var(--color-btn-default-background);
   font-family: var(--font-family-sans-serif);
-  background-color: var(--color-canvas-background);
+  font-size: var(--font-size-base);
 }
 
 .github-dimmed-dark .dropdown-item:hover {
@@ -827,7 +833,7 @@ body.github-dimmed-dark {
 }
 
 .github-dimmed-dark .shell-command .show > .dropdown-menu.show {
-  background: var(--color-canvas-background);
+  background: var(--color-btn-default-background);
   border: 1px solid var(--color-btn-border);
 }
 
