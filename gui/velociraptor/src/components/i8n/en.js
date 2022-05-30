@@ -79,7 +79,7 @@ const English = {
                     <p>Are you sure you want to cancel this hunt and delete the collected data?</p>
                         </>,
     "Notebook for Hunt": hunt_id=>"Notebook for Hunt " + hunt_id,
-    "RecursiveVFSMessgae": path=><>
+    "RecursiveVFSMessage": path=><>
        You are about to recursively fetch all files in <b>{path}</b>.
        <br/><br/>
         This may transfer a large amount of data from the endpoint. The default upload limit is 1gb but you can change it in the Collected Artifacts screen.

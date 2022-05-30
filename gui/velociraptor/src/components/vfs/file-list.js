@@ -42,7 +42,7 @@ class DownloadAllDialog extends Component {
                 <Modal.Title>{T("Recursively download files")}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                {T("RecursiveVFSMessgae", path)}
+                {T("RecursiveVFSMessage", path)}
                 </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary" onClick={this.props.onCancel}>
