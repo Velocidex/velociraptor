@@ -30,6 +30,9 @@ darwin_m1:
 linux_m1:
 	go run make.go -v LinuxM1
 
+linux_musl:
+	go run make.go -v LinuxMusl
+
 linux:
 	go run make.go -v linux
 
