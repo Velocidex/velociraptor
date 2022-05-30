@@ -44,10 +44,8 @@
 }
 
 .no-theme .btn {
-    background-color: transparent;
     border: 1px solid transparent;
     border-radius: .25rem;
-    color: #212529;
     display: inline-block;
     font-size: 1rem;
     font-weight: 400;

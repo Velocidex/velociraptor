@@ -48,7 +48,7 @@ a.active .navigator.nav-pills.nav:hover li {
 
 .navigator.nav-pills.nav {
   font-weight: 400;
-  width: 220px;
+  width: 260px;
 }
 
 a.active .nav.nav-pills.navigator .nav-link {
@@ -58,7 +58,7 @@ a.active .nav.nav-pills.navigator .nav-link {
 
 .nav-pills .nav-link {
   font-weight: 400;
-  width: 220px;
+  width: 260px;
 }
 
 button a.nav-link {
@@ -89,7 +89,7 @@ button a.nav-link {
 }
 
 div#navigator {
-  width: 220px;
+  width: 260px;
   overflow-x: hidden;
 }
 
@@ -97,8 +97,14 @@ div#navigator.collapsed {
   width: var(--sidebar-collapsed-width);
 }
 
+.nav-link span {
+  width: 18px;
+  margin-right: 12px;
+  display: inline-block;
+}
+
 #navigator.uncollapsed {
-  width: 220px;
+  width: 260px;
 }
 
 span.hamburger {

@@ -59,10 +59,10 @@ export default class NotebookUploads extends Component {
         files = files || [];
 
         let columns = formatColumns([
-            {dataField: "name", text: "Name",
+            {dataField: "name", text: T("Name"),
              sort: true, filtered: true, type: "download"},
-            {dataField: "size", text: "Size"},
-            {dataField: "date", text: "Date", type: "timestamp"},
+            {dataField: "size", text: T("Size")},
+            {dataField: "date", text: T("Date"), type: "timestamp"},
         ]);
 
         return (

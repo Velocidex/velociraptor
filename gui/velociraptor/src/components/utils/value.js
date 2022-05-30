@@ -63,7 +63,6 @@ export default class VeloValueRenderer extends React.Component {
 
         switch (theme) {
         case "github-dimmed-dark":
-        case "veloci-dark":
         case "coolgray-dark":
             return darkTheme;
 

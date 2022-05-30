@@ -221,6 +221,7 @@ class VeloTable extends Component {
         // name to save column preferences in the application user
         // context.
         name: PropTypes.string,
+        headers: PropTypes.object,
     }
 
     state = {
@@ -242,6 +243,12 @@ class VeloTable extends Component {
         return <VeloValueRenderer value={cell}/>;
     }
 
+    customTotal = (from, to, size) => (
+        <span className="react-bootstrap-table-pagination-total">
+          {T("TablePagination", from, to, size)}
+        </span>
+    );
+
     render() {
         if (!this.props.rows || !this.props.columns) {
             return <div></div>;
@@ -252,7 +259,8 @@ class VeloTable extends Component {
         let columns = [{dataField: '_id', hidden: true}];
         for(var i=0;i<this.props.columns.length;i++) {
             var name = this.props.columns[i];
-            let definition ={ dataField: name, text: name};
+            var header = (this.props.headers || {})[name] || name;
+            let definition ={ dataField: name, text: header};
             if (this.props.renderers && this.props.renderers[name]) {
                 definition.formatter = this.props.renderers[name];
             } else {
@@ -317,6 +325,7 @@ class VeloTable extends Component {
                           toggles={this.state.toggles}
                           pagination={ paginationFactory({
                               showTotal: true,
+                              paginationTotalRenderer: this.customTotal,
                               sizePerPageRenderer
                           }) }
                         />

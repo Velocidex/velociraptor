@@ -3,7 +3,7 @@ import _ from 'lodash';
 import English from './en.js';
 import Deutsch from './de.js';
 
-const debug = true;
+const debug = false;
 
 function dict(item) {
     let lang = (window.globals && window.globals.lang) || "en";

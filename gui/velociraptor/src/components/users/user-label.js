@@ -15,6 +15,8 @@ import api from '../core/api-service.js';
 import axios from 'axios';
 import VeloForm from '../forms/form.js';
 import T from '../i8n/i8n.js';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Tooltip from 'react-bootstrap/Tooltip';
 
 class UserSettings extends React.PureComponent {
     static contextType = UserConfig;
@@ -93,7 +95,13 @@ class UserSettings extends React.PureComponent {
                 />
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
-                    {T("Language")}
+                    <OverlayTrigger
+                      delay={{show: 250, hide: 400}}
+                      overlay={(props)=><Tooltip {...props}>
+                                          {T("Select a language")}
+                                        </Tooltip>}>
+                      <div>{T("Language")}</div>
+                    </OverlayTrigger>
                   </Form.Label>
                   <Col sm="8">
                     <Form.Control as="select"

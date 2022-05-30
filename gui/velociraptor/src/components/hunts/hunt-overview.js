@@ -158,14 +158,17 @@ export default class HuntOverview extends React.Component {
                     <dd className="col-8"><VeloTimestamp usec={hunt.expires / 1000}/></dd>
 
                     <dt className="col-4">{T("State")}</dt>
-                    <dd className="col-8">{this.huntState(hunt)}</dd>
+                    <dd className="col-8">{T(this.huntState(hunt))}</dd>
 
                     <dt className="col-4">{T("Ops/Sec")}</dt>
-                    <dd className="col-8">{start_request.ops_per_second || 'Unlimited'}</dd>
+                    <dd className="col-8">{start_request.ops_per_second ||
+                                           T('Unlimited')}</dd>
                     <dt className="col-4">{T("CPU Limit")}</dt>
-                    <dd className="col-8">{start_request.cpu_limit || 'Unlimited'}</dd>
+                    <dd className="col-8">{start_request.cpu_limit ||
+                                           T('Unlimited')}</dd>
                     <dt className="col-4">{T("IOPS Limit")}</dt>
-                    <dd className="col-8">{start_request.iops_limit || 'Unlimited'}</dd>
+                    <dd className="col-8">{start_request.iops_limit ||
+                                           T('Unlimited')}</dd>
                     { labels && <>
                                   <dt className="col-4">{T("Include Labels")}</dt>
                                   <dd className="col-8">

@@ -294,6 +294,12 @@ class VeloPagedTable extends Component {
         });
     }
 
+    customTotal = (from, to, size) => (
+        <span className="react-bootstrap-table-pagination-total">
+          {T("TablePagination", from, to, size)}
+        </span>
+    );
+
     render() {
         if (_.isEmpty(this.state.columns) && this.state.loading) {
             return <>
@@ -464,6 +470,7 @@ class VeloPagedTable extends Component {
                               showTotal: true,
                               sizePerPage: this.state.page_size,
                               totalSize: total_size,
+                              paginationTotalRenderer: this.customTotal,
                               currSizePerPage: this.state.page_size,
                               onSizePerPageChange: value=>{
                                   this.setState({page_size: value});

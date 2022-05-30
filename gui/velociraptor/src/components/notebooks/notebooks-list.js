@@ -220,21 +220,21 @@ class NotebooksList extends React.Component {
 
     render() {
         let columns = formatColumns([
-            {dataField: "notebook_id", text: "NotebookId"},
-            {dataField: "name", text: "Name",
+            {dataField: "notebook_id", text: T("NotebookId")},
+            {dataField: "name", text: T("Name"),
              sort: true, filtered: true },
-            {dataField: "description", text: "Description",
+            {dataField: "description", text: T("Description"),
              sort: true, filtered: true },
-            {dataField: "created_time", text: "Creation Time",
+            {dataField: "created_time", text: T("Creation Time"),
              sort: true, formatter: (cell, row) => {
                 return <VeloTimestamp usec={cell * 1000}/>;
             }},
-            {dataField: "modified_time", text: "Modified Time",
+            {dataField: "modified_time", text: T("Modified Time"),
              sort: true, formatter: (cell, row) => {
                  return <VeloTimestamp usec={cell * 1000}/>;
              }},
-            {dataField: "creator", text: "Creator"},
-            {dataField: "collaborators", text: "Collaborators",
+            {dataField: "creator", text: T("Creator")},
+            {dataField: "collaborators", text: T("Collaborators"),
              sort: true, formatter: (cell, row) => {
                  return _.map(cell, function(item, idx) {
                      return <div key={idx}>{item}</div>;

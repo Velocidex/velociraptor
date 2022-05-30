@@ -134,7 +134,8 @@ export default class ToolViewer extends React.Component {
                     { tool.url && <Button
                                     disabled={this.state.inflight}
                                     onClick={this.serve_upstream}>
-                                    Serve from upstream</Button> }
+                                    {T("Serve from upstream")}
+                                  </Button> }
                   </Card.Body>
                 </Card>
             );
@@ -157,7 +158,8 @@ export default class ToolViewer extends React.Component {
                       { tool.url && <Button
                                       disabled={this.state.inflight}
                                       onClick={this.serve_locally}>
-                                      Serve Locally</Button> }
+                                      {T("Serve Locally")}
+                                    </Button> }
 
                   </Card.Body>
                 </Card> );

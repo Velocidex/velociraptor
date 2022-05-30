@@ -22,6 +22,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import BootstrapTable from 'react-bootstrap-table-next';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Navbar from 'react-bootstrap/Navbar';
+import T from '../i8n/i8n.js';
 
 class TimelineValueRenderer extends Component {
     static propTypes = {
@@ -84,14 +85,14 @@ class TimelineTableRenderer  extends Component {
 
     render() {
         if (_.isEmpty(this.props.rows)) {
-            return <div className="no-content velo-table">No events</div>;
+            return <div className="no-content velo-table">{T("No events")}</div>;
         }
 
         let rows = this.props.rows;
         let columns = [
             {dataField: '_id', hidden: true},
             {dataField: 'Time',
-             text: "Time",
+             text: T("Time"),
              classes: "timeline-time",
              formatter: (cell, row, rowIndex) => {
                  return <div className={this.getTimelineClass(
@@ -100,7 +101,7 @@ class TimelineTableRenderer  extends Component {
                         </div>;
              }},
             {dataField: 'Data',
-             text: "Data",
+             text: T("Data"),
              formatter: (cell, row, rowIndex) => {
                  return <TimelineValueRenderer value={cell}/>;
              }},
