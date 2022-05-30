@@ -130,7 +130,6 @@ const Deutsch = {
     "Artifact Collection": "Sammlung von Artefakten",
     "Uploaded Files": "Hochgeladene Dateien",
     "Results": "Ergebnisse",
-    "Log":"Logdatei",
     "Flow Details": "Flow-Details",
     "Notebook for Collection": name=>"Notizbuch für die Sammlung "+name,
     "Please click a collection in the above table":"Bitte klicken Sie auf eine Sammlung in der obigen Tabelle",
@@ -327,7 +326,6 @@ const Deutsch = {
     "client_time":"Client-Zeit",
     "level":"Ebene",
     "message":"Nachricht",
-    "Type":"Typ",
 
     "RecursiveVFSMessage": path=><>
     Sie sind dabei, alle Dateien in <b>{path}</b> rekursiv abzurufen.

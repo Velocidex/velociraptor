@@ -46,9 +46,18 @@ var (
 	})
 )
 
+// Used when we deliberately want to override a registered plugin.
 func OverridePlugin(plugin vfilter.PluginGeneratorInterface) {
 	name := plugin.Info(nil, nil).Name
 	exportedPlugins[name] = plugin
+
+	ResetGlobalScopeCache()
+}
+
+// Used when we deliberately want to override a registered function.
+func OverrideFunction(function vfilter.FunctionInterface) {
+	name := function.Info(nil, nil).Name
+	exportedFunctions[name] = function
 
 	ResetGlobalScopeCache()
 }

@@ -290,6 +290,7 @@ func (self *HuntDispatcher) ModifyHuntObject(
 	self.mu.Lock()
 	hunt_obj, pres := self.hunts[hunt_id]
 	if !pres {
+		self.mu.Unlock()
 		return services.HuntUnmodified
 	}
 
