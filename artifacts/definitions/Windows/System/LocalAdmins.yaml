@@ -7,12 +7,17 @@ reference:
 
 type: CLIENT
 
+parameters:
+  - name: groupname
+    default: Administrators
+    description: "The name of the administrators group. Must match the language of the target system(s)."
+
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
 
     query: |
-      LET script <= 'Get-LocalGroupMember -Group "Administrators" | SELECT -ExpandProperty SID -Property Name, PrincipalSource | select  Name, Value, PrincipalSource | convertto-json'
+      LET script <= 'Get-LocalGroupMember -Group "' + groupname + '" | SELECT -ExpandProperty SID -Property Name, PrincipalSource | select  Name, Value, PrincipalSource | convertto-json'
 
       LET out = SELECT parse_json_array(data=Stdout) AS Output
           FROM execve(argv=["powershell",
