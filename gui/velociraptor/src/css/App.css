@@ -82,8 +82,8 @@ button a.nav-link {
 /* Scrollbars */
 
 ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -101,7 +101,7 @@ button a.nav-link {
 }
 
 .scroller {
-    width: 8px;
+    width: 10px;
     overflow-y: scroll;
     scrollbar-color: var(--color-scrollbar-track) var(--color-scrollbar-thumb);
 }

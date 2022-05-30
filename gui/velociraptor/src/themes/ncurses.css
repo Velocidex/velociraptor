@@ -51,12 +51,12 @@
   --color-scrollbar-thumb: var(--color-tab);
   --color-scrollbar-thumb-hover: var(--color-tab-active);
 
-  --font-size-large: 16px;
-  --font-size-base: 14px;
-  --font-size-small: 12px;
-  --font-family-sans-serif: roboto-mono, SFMono-Regular, Menlo, Monaco,
+  --font-size-large: 17px;
+  --font-size-base: 15px;
+  --font-size-small: 13px;
+  --font-family-sans-serif: jetbrains-mono, SFMono-Regular, Menlo, Monaco,
     "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
-  --font-family-monospace: roboto-mono, SFMono-Regular, Menlo, Monaco,
+  --font-family-monospace: jetbrains-mono, SFMono-Regular, Menlo, Monaco,
     "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
 
   --color-btn-default-background: #0a2fc4;
@@ -361,7 +361,8 @@ body.ncurses {
 .ncurses .table thead th {
   color: var(--color-foreground);
   border: 1px solid var(--color-table-heading-background);
-  background-color: var(--color-table-heading-background);;
+  background-color: var(--color-table-heading-background);
+  vertical-align: text-bottom;
 }
 
 .ncurses .table {
@@ -376,6 +377,7 @@ body.ncurses {
 
 .ncurses .table tbody tr td {
   border: none;
+  vertical-align: text-bottom;
 }
 
 .ncurses .table tbody tr:nth-of-type(2n) {
