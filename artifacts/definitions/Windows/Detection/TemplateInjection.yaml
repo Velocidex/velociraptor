@@ -129,7 +129,7 @@ sources:
                 OSPath.Path as Section,
                 parse_string_with_regex(
                     string=Line,
-                    regex=['\\s+Target="(?P<Target>.+)"\\s+TargetMode='
+                    regex=['\\s+Target="(?P<Target>[^"]+)"\\s+TargetMode='
                         ]).Target as TemplateTarget,
                 Mtime as SectionMtime,
                 Atime as SectionAtime,
