@@ -126,6 +126,8 @@ class UserSettings extends React.PureComponent {
                                   }}>
                       <option value="en">{T("English")}</option>
                       <option value="de">{T("Deutsch")}</option>
+                      <option value="es">{T("Spanish")}</option>
+                      <option value="por">{T("Portuguese")}</option>
                     </Form.Control>
                   </Col>
                 </Form.Group>
@@ -157,6 +159,7 @@ class UserSettings extends React.PureComponent {
                       </InputGroup.Prepend>
                       <Select
                         className="timezone-selector"
+                        classNamePrefix="velo"
                         placeholder={this.state.timezone}
                         onChange={(e)=>{
                             this.setState({timezone: e.value});

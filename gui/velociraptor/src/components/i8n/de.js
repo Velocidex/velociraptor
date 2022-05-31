@@ -577,6 +577,8 @@ const Deutsch = {
     "Select a language":"Sprache auswählen",
     "English":"Englisch",
     "Deutsch":"Deutsch",
+    "Spanish": "Spanisch",
+    "Portuguese": "Portugiesisch",
 
     "Type":"Typ",
     "Export notebooks":"Notizbücher exportieren",
@@ -596,6 +598,9 @@ const Deutsch = {
 
     "Update server monitoring table":"Server-Überwachungstabelle aktualisieren",
     "Show server monitoring tables":"Server-Überwachungstabellen anzeigen",
+
+    "Display timezone": "Zeitzone anzeigen",
+    "Select a timezone": "Wählen Sie eine Zeitzone aus",
 };
 
 export default Deutsch;
