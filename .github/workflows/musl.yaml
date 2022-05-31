@@ -1,0 +1,59 @@
+# Only trigger when a PR is committed.
+name: Linux Build Musl Static
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  build:
+    if: github.event.pull_request.merged
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - uses: actions/setup-go@v2
+      with:
+        go-version: '^1.17'
+
+    - run: go version
+
+    - name: Get dependencies
+      run: |
+        go get -v -t -d ./...
+        sudo apt-get update
+        sudo apt-get install -y zip build-essential pkg-config libssl-dev
+    - name: Install Musl
+      run: |
+        wget http://www.musl-libc.org/releases/musl-1.1.23.tar.gz
+        tar -xvzf musl-1.1.23.tar.gz
+        cd musl-1.1.23
+        ./configure
+        sudo make install
+        cd ..
+
+    - name: Use Node.js v12
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12
+
+    - name: npm install gui
+      run: |
+            cd gui/velociraptor/
+            npm install
+            npm run build
+            cd ../../
+
+    - name: Build Musl Binary
+      run: |
+        mkdir ./output/
+        export PATH=$PATH:~/go/bin/:/usr/local/musl/bin
+        go run make.go -v LinuxMusl
+
+    - name: StoreBinaries
+      uses: actions/upload-artifact@v1
+      with:
+        name: Binaries
+        path: output

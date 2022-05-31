@@ -47,22 +47,27 @@ var (
 
 	// apt-get install gcc-mingw-w64
 	mingw_xcompiler_32 = "i686-w64-mingw32-gcc"
+	musl_xcompiler     = "musl-gcc"
 	name               = "velociraptor"
 	version            = "v" + constants.VERSION
 	base_tags          = " server_vql extras "
 )
 
 type Builder struct {
-	goos        string
-	arch        string
-	extension   string
-	extra_tags  string
-	extra_flags []string
+	goos          string
+	arch          string
+	extension     string
+	extra_tags    string
+	extra_flags   []string
+	extra_ldflags string
+	cc            string
 
 	disable_cgo bool
 
 	// Set to override the output filename.
 	filename string
+
+	extra_name string
 }
 
 func (self *Builder) Name() string {
@@ -83,6 +88,8 @@ func (self *Builder) Name() string {
 	if self.disable_cgo {
 		name += "-nocgo"
 	}
+
+	name += self.extra_name
 
 	return name
 }
@@ -112,6 +119,10 @@ func (self *Builder) Env() map[string]string {
 				env["CC"] = mingw_xcompiler_32
 			}
 		}
+	}
+
+	if self.cc != "" {
+		env["CC"] = self.cc
 	}
 
 	return env
@@ -159,7 +170,7 @@ func (self Builder) Run() error {
 		"build",
 		"-o", filepath.Join("output", self.Name()),
 		"-tags", tags,
-		"-ldflags=-s -w " + flags(),
+		"-ldflags=-s -w " + self.extra_ldflags + flags(),
 	}
 	args = append(args, self.extra_flags...)
 	args = append(args, "./bin/")
@@ -222,6 +233,16 @@ func Linux() error {
 		extra_tags: " release yara ",
 		goos:       "linux",
 		arch:       "amd64"}.Run()
+}
+
+func LinuxMusl() error {
+	return Builder{
+		extra_tags:    " release yara ",
+		goos:          "linux",
+		cc:            "musl-gcc",
+		extra_name:    "-musl",
+		extra_ldflags: "-linkmode external -extldflags \"-static\"",
+		arch:          "amd64"}.Run()
 }
 
 // A Linux binary without the GUI
@@ -437,6 +458,11 @@ func ensure_assets() error {
 
 func mingwxcompiler_exists() bool {
 	err := sh.Run(mingw_xcompiler, "--version")
+	return err == nil
+}
+
+func musl_exists() bool {
+	err := sh.Run(musl_xcompiler, "--version")
 	return err == nil
 }
 
