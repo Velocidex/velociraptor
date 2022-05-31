@@ -74,6 +74,7 @@ message ApiGrrUserInterfaceTraits {
 
     // Get the user's preferred theme.
     string theme = 2;
+    string timezone = 23;
 
     // Downloads will be protected using this password.
     string default_password = 3;
@@ -159,7 +160,7 @@ message GetUserNotificationsRequest {
 
 message SetGUIOptionsRequest {
     string theme = 2;
-
+    string timezone = 6;
     string lang = 5;
 
     // Downloads will be protected using this password.

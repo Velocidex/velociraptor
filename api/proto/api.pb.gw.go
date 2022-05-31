@@ -22,7 +22,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
-	proto_3 "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	proto_4 "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	proto_2 "www.velocidex.com/golang/velociraptor/flows/proto"
 )
 
@@ -1317,7 +1317,7 @@ var (
 )
 
 func request_API_GetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_3.Tool
+	var protoReq proto_4.Tool
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -1333,7 +1333,7 @@ func request_API_GetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler,
 }
 
 func local_request_API_GetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_3.Tool
+	var protoReq proto_4.Tool
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -1349,7 +1349,7 @@ func local_request_API_GetToolInfo_0(ctx context.Context, marshaler runtime.Mars
 }
 
 func request_API_SetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_3.Tool
+	var protoReq proto_4.Tool
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1366,7 +1366,7 @@ func request_API_SetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler,
 }
 
 func local_request_API_SetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_3.Tool
+	var protoReq proto_4.Tool
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)

@@ -8,3 +8,7 @@
     padding: 0;
     margin-left: 5px;
 }
+
+.timezone-selector {
+    flex: 1 1 auto;
+}
