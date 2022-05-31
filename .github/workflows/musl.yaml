@@ -1,15 +1,12 @@
 # Only trigger when a PR is committed.
 name: Linux Build Musl Static
-on: [pull_request]
-#on:
-#  pull_request:
-#    types: [closed]
-#    branches:
-#      - master
+on:
+  pull_request:
+    types: [closed]
 
 jobs:
   build:
-    #if: github.event.pull_request.merged
+    if: github.event.pull_request.merged
     name: Build
     runs-on: ubuntu-latest
     steps:
@@ -37,30 +34,17 @@ jobs:
         sudo make install
         cd ..
 
-#    - name: Use Node.js v12
-#      uses: actions/setup-node@v1
-#      with:
-#        node-version: 12
+    - name: Use Node.js v12
+      uses: actions/setup-node@v1
+      with:
+        node-version: 12
 
-#    - name: Cache node-modules
-#      uses: actions/cache@v2
-#      env:
-#        cache-name: cache-node-modules
-#      with:
-#        path: |
-#          **/node_modules/
-#        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-#        restore-keys: |
-#          ${{ runner.os }}-build-${{ env.cache-name }}-
-#          ${{ runner.os }}-build-
-#          ${{ runner.os }}-
-
-#    - name: npm install gui
-#      run: |
-#            cd gui/velociraptor/
-#            npm install
-#            npm run build
-#            cd ../../
+    - name: npm install gui
+      run: |
+            cd gui/velociraptor/
+            npm install
+            npm run build
+            cd ../../
 
     - name: Build Musl Binary
       run: |
