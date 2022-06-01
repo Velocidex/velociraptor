@@ -2,6 +2,8 @@ import _ from 'lodash';
 
 import English from './en.js';
 import Deutsch from './de.js';
+import Spanish from './es.js';
+import Portuguese from './por.js';
 
 const debug = false;
 
@@ -10,6 +12,12 @@ function dict(item) {
     switch (lang) {
     case "en":
         return English[item];
+
+    case "es":
+        return Spanish[item];
+
+    case "por":
+        return Portuguese[item];
 
     case "de":
         return Deutsch[item];

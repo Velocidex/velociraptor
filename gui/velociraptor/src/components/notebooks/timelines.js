@@ -58,6 +58,7 @@ export class AddTimelineDialog extends React.Component {
               <Modal.Body>
                 <CreatableSelect
                   options={options}
+                  classNamePrefix="velo"
                   onChange={(e)=>{
                       this.setState({timeline: e.value});
                   }}
