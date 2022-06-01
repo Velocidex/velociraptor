@@ -85,13 +85,19 @@ func (self GlobPlugin) Call(
 		// Get the root of the glob. If not provided we use the
 		// default root for the accessor.
 		root := arg.Root
+		accessor_root, err := accessor.ParsePath("")
+		if err != nil {
+			scope.Log("glob: %v", err)
+			return
+		}
+
+		// Ensure the root has the require pathspec type by copying
+		// the null manipulator.
 		if root == nil {
 			// Get the default top level path for this accessor.
-			root, err = accessor.ParsePath("")
-			if err != nil {
-				scope.Log("glob: %v", err)
-				return
-			}
+			root = accessor_root
+		} else {
+			root.Manipulator = accessor_root.Manipulator
 		}
 
 		options := glob.GlobOptions{
