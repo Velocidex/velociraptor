@@ -12,6 +12,9 @@ parameters:
   - name: Path
     description: The path of the file to download.
     default: /
+  - name: Components
+    type: json_array
+    description: Alternatively, this is an explicit list of components.
   - name: Accessor
     default: file
   - name: Recursively
@@ -22,14 +25,33 @@ parameters:
 
 sources:
   - query: |
-      LET download_one_file = SELECT FullPath AS Path, Accessor,
-          Size, upload(file=FullPath, accessor=Accessor) AS Upload
-      FROM stat(filename=Path, accessor=Accessor)
+      LET download_one_file = if(
+         condition=version(plugin="stat") > 1,
+         then= {
+           SELECT OSPath AS Path, Accessor,
+              Size, upload(file=OSPath, accessor=Accessor) AS Upload
+           FROM stat(filename=Components, accessor=Accessor)
+        },
+        else= {
+           SELECT FullPath AS Path, Accessor,
+              Size, upload(file=FullPath, accessor=Accessor) AS Upload
+          FROM stat(filename=Path, accessor=Accessor)
+        })
 
-      LET download_recursive = SELECT FullPath AS Path, Accessor,
-          Size, upload(file=FullPath, accessor=Accessor) AS Upload
-      FROM glob(globs="**", root=Path, accessor=Accessor)
-      WHERE Mode.IsRegular
+      LET download_recursive = if(
+         condition=version(plugin="stat") > 1,
+         then= {
+           SELECT OSPath AS Path, Accessor,
+              Size, upload(file=OSPath, accessor=Accessor) AS Upload
+           FROM glob(globs="**", root=Components, accessor=Accessor)
+           WHERE Mode.IsRegular
+        },
+        else={
+          SELECT FullPath AS Path, Accessor,
+            Size, upload(file=FullPath, accessor=Accessor) AS Upload
+          FROM glob(globs="**", root=Path, accessor=Accessor)
+          WHERE Mode.IsRegular
+       })
 
       SELECT Path, Accessor,
              Upload.Size AS Size,

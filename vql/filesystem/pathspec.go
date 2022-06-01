@@ -115,6 +115,7 @@ func (self *PathSpecFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 		Name:    "pathspec",
 		Doc:     "Create a structured path spec to pass to certain accessors.",
 		ArgType: type_map.AddType(scope, &PathSpecArgs{}),
+		Version: 1,
 	}
 }
 

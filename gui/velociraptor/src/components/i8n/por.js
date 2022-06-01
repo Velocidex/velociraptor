@@ -1,4 +1,4 @@
-﻿import Alert from 'react-bootstrap/Alert';
+import Alert from 'react-bootstrap/Alert';
 import humanizeDuration from "humanize-duration";
 
 const Portuguese = {

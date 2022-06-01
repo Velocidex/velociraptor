@@ -82,20 +82,16 @@ func (self GlobPlugin) Call(
 		// the alternatives to cover entire paths.
 		globs := glob.ExpandBraces(arg.Globs)
 
-		// FIXME: Reinterpret the OSPath according to the
-		// accessor. This is not very efficient - the path is
-		// serialized and parsed again. We need to extend OSPath API
-		// to allow for cheaper interpretations.
-		root_str := ""
-		if arg.Root != nil {
-			root_str = arg.Root.String()
-		}
-
-		// Get the default top level path for this accessor.
-		root, err := accessor.ParsePath(root_str)
-		if err != nil {
-			scope.Log("glob: %v", err)
-			return
+		// Get the root of the glob. If not provided we use the
+		// default root for the accessor.
+		root := arg.Root
+		if root == nil {
+			// Get the default top level path for this accessor.
+			root, err = accessor.ParsePath("")
+			if err != nil {
+				scope.Log("glob: %v", err)
+				return
+			}
 		}
 
 		options := glob.GlobOptions{
@@ -186,7 +182,7 @@ func (self GlobPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfi
 		Name:    "glob",
 		Doc:     "Retrieve files based on a list of glob expressions",
 		ArgType: type_map.AddType(scope, &GlobPluginArgs{}),
-		Version: 2,
+		Version: 3,
 	}
 }
 
@@ -378,8 +374,8 @@ func (self ReadFileFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 }
 
 type StatArgs struct {
-	Filename []string `vfilter:"required,field=filename,doc=One or more files to open."`
-	Accessor string   `vfilter:"optional,field=accessor,doc=An accessor to use."`
+	Filename *accessors.OSPath `vfilter:"required,field=filename,doc=One or more files to open."`
+	Accessor string            `vfilter:"optional,field=accessor,doc=An accessor to use."`
 }
 
 type StatPlugin struct{}
@@ -411,15 +407,14 @@ func (self *StatPlugin) Call(
 			scope.Log("stat: %s", err.Error())
 			return
 		}
-		for _, filename := range arg.Filename {
-			f, err := accessor.Lstat(filename)
-			if err == nil {
-				select {
-				case <-ctx.Done():
-					return
 
-				case output_chan <- f:
-				}
+		f, err := accessor.LstatWithOSPath(arg.Filename)
+		if err == nil {
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- f:
 			}
 		}
 	}()
@@ -436,6 +431,7 @@ func (self StatPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfi
 		Name:    "stat",
 		Doc:     "Get file information. Unlike glob() this does not support wildcards.",
 		ArgType: type_map.AddType(scope, &StatArgs{}),
+		Version: 2,
 	}
 }
 
