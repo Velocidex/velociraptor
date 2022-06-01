@@ -149,10 +149,10 @@
      "VQL": "\nLET CSVData2 \u003c= SELECT * FROM if(\n    condition=format(format=\"%T\", args=CSVData2) =~ \"string\",\n    then={SELECT * FROM parse_csv(filename=CSVData2, accessor='data')},\n    else=CSVData2)\n"
     },
     {
-     "VQL": "\nLET JSONData \u003c= if(\n    condition=format(format=\"%T\", args=JSONData) =~ \"string\",\n    then=parse_json_array(data=JSONData),\n    else=JSONData)\n"
+     "VQL": "\nLET JSONData \u003c= if(\n    condition=format(format=\"%T\", args=JSONData) = \"string\",\n    then=parse_json_array(data=JSONData),\n    else=JSONData)\n"
     },
     {
-     "VQL": "\nLET JSONData2 \u003c= if(\n    condition=format(format=\"%T\", args=JSONData2) =~ \"string\",\n    then=parse_json_array(data=JSONData2),\n    else=JSONData2)\n"
+     "VQL": "\nLET JSONData2 \u003c= if(\n    condition=format(format=\"%T\", args=JSONData2) = \"string\",\n    then=parse_json_array(data=JSONData2),\n    else=JSONData2)\n"
     },
     {
      "VQL": "LET FileUpload1_ \u003c= if(condition=FileUpload1, then={\n   SELECT Content FROM http_client(url=FileUpload1)\n})"

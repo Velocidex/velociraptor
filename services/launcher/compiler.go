@@ -111,12 +111,10 @@ LET %v <= if(
 		case "json_array":
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
 				VQL: fmt.Sprintf(`
-
 LET %v <= if(
     condition=format(format="%%T", args=%v) = "string",
     then=parse_json_array(data=%v),
     else=%v)
-
 `,
 					escaped_name, escaped_name, escaped_name, escaped_name),
 			})
