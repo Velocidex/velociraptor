@@ -78,6 +78,16 @@ func parseOSPath(ctx context.Context,
 		base.Components = append(base.Components, components...)
 		return base, nil
 
+	case []string:
+		// Build a pathspec from the accessor and the components.
+		base, err := accessor.ParsePath("")
+		if err != nil {
+			return nil, err
+		}
+
+		base.Components = append(base.Components, t...)
+		return base, nil
+
 	case string:
 		return accessor.ParsePath(t)
 
