@@ -241,7 +241,12 @@ func (self *HuntDispatcher) GetHunt(hunt_id string) (*api_proto.Hunt, bool) {
 
 	hunt_obj, pres := self.hunts[hunt_id]
 	if pres {
-		return proto.Clone(hunt_obj.Hunt).(*api_proto.Hunt), true
+		hunt := proto.Clone(hunt_obj.Hunt).(*api_proto.Hunt)
+		if hunt_obj != nil && hunt_obj.Stats != nil {
+			hunt.Stats.AvailableDownloads, _ = availableHuntDownloadFiles(
+				self.config_obj, hunt_id)
+			return hunt, true
+		}
 	}
 
 	return nil, false

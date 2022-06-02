@@ -385,6 +385,11 @@ func (self _GetFunction) Call(
 	return result
 }
 
+// Allow anything to be settable.
+type Setter interface {
+	Set(key string, value interface{})
+}
+
 type _SetFunctionArgs struct {
 	Item  vfilter.Any `vfilter:"required,field=item,docs=A dict to set"`
 	Field string      `vfilter:"required,field=field,docs=The field to set"`
@@ -429,6 +434,10 @@ func (self _SetFunction) Call(
 
 	case map[string]interface{}:
 		t[arg.Field] = arg.Value
+		return t
+
+	case Setter:
+		t.Set(arg.Field, arg.Value)
 		return t
 
 	default:

@@ -1,0 +1,6 @@
+LET Cache <= lru(size=3)[]SELECT set(item=Cache, field=_value, value=format(format="Message %d", args=_value)) AS Set FROM range(start=0, end=10, step=1) WHERE Set AND FALSE[]SELECT get(item=Cache, field="6"), get(item=Cache, field="8") FROM scope()[
+ {
+  "get(item=Cache, field=\"6\")": null,
+  "get(item=Cache, field=\"8\")": "Message 8"
+ }
+]
