@@ -334,6 +334,26 @@
     repeated: true
     required: true
   category: server
+- name: client_create
+  description: Create a new client in the data store.
+  type: Function
+  args:
+  - name: first_seen_at
+    type: time.Time
+  - name: last_seen_at
+    type: time.Time
+  - name: labels
+    type: string
+    repeated: true
+  - name: os
+    type: string
+    description: What type of OS this is (default offline)
+  - name: hostname
+    type: string
+    description: The hostname of the system
+  - name: client_id
+    type: string
+    description: if set we use this client id otherwise we make a new one
 - name: client_delete
   description: |
     Delete all information related to a client from the filestore.
@@ -1771,6 +1791,14 @@
     Retrieve the list of users on the server.
   type: Plugin
   category: server
+- name: gunzip
+  description: Apply Gunzip to the data.
+  type: Function
+  args:
+  - name: string
+    type: string
+    description: Data to apply Gunzip
+    required: true
 - name: handles
   description: |
     Enumerate process handles.
@@ -2492,11 +2520,6 @@
 - name: lookupSID
   description: Get information about the SID.
   type: Function
-  args:
-  - name: sid
-    type: string
-    description: 'A SID to lookup using LookupAccountSid '
-    required: true
   category: windows
 - name: lowcase
   type: Function
@@ -2506,6 +2529,39 @@
     description: A string to lower
     required: true
   category: basic
+- name: lru
+  description: |
+    Creates an LRU object
+
+    A LRU is like a dict, except that older items are expired. It is
+    useful to creating running lookup values without exceeding memory
+    constraints.
+
+    An example of this query is maintaining lookups between Kernel
+    objects and key names within the Windows Kernel Registry provider.
+
+    ```vql
+    LET Cache <= lru()
+
+    SELECT *, EventData,
+        get(item=Cache, field=EventData.KeyObject) AS KeyName
+    FROM watch_etw(guid="{70EB4F03-C1DE-4F73-A051-33D13D5413BD}")
+    WHERE if(
+       condition=System.ID = 2,  -- KeyOpen event
+       then=set(item=Cache,
+                field=EventData.KeyObject,
+                value=EventData.RelativeName),
+       else=TRUE)
+    ```
+
+    Note how `set()` can be used to add items to the cache and `get()`
+    is used to retrieve items.
+
+  type: Function
+  args:
+  - name: size
+    type: int64
+    description: Size of the LRU (default 1000)
 - name: lzxpress_decompress
   description: |
     Decompress an lzxpress blob.
@@ -3748,7 +3804,6 @@
     type: StoredQuery
     description: Source for full tracker updates. Query must emit rows with the ProcessTrackerUpdate
       shape - usually uses pslist() to form a full sync.
-    required: true
   - name: sync_period
     type: int64
     description: How often to do a full sync (default 5000 msec).
@@ -3758,6 +3813,14 @@
   - name: max_size
     type: int64
     description: Maximum size of process tracker LRU.
+  - name: enrichments
+    type: string
+    description: One or more VQL lambda functions that can enrich the data for the
+      process.
+    repeated: true
+- name: process_tracker_all
+  description: Get all prcesses stored in the tracker.
+  type: Function
 - name: process_tracker_callchain
   description: Get a call chain from the global process tracker.
   type: Function
@@ -3774,6 +3837,17 @@
     type: string
     description: Process ID.
     required: true
+- name: process_tracker_get
+  description: Get a single process from the global tracker.
+  type: Function
+  args:
+  - name: id
+    type: string
+    description: Process ID.
+    required: true
+- name: process_tracker_updates
+  description: Get the process tracker update events from the global process tracker.
+  type: Plugin
 - name: profile
   description: Returns a profile dump from the running process.
   type: Plugin
@@ -4562,9 +4636,8 @@
   type: Plugin
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: One or more files to open.
-    repeated: true
     required: true
   - name: accessor
     type: string
@@ -5526,4 +5599,3 @@
     type: string
     description: If set use this key to cache the  yara rules.
   category: plugin
-

@@ -169,7 +169,6 @@ func (self _CacheFunc) Call(ctx context.Context, scope vfilter.Scope,
 	}
 
 	return value
-
 }
 
 type _MemoizeFunctionArgs struct {

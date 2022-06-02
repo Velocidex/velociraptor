@@ -28,25 +28,28 @@ func (self *BasicAuthenticator) AddHandlers(mux *http.ServeMux) error {
 
 func (self *BasicAuthenticator) AddLogoff(mux *http.ServeMux) error {
 	base := self.config_obj.GUI.BasePath
-	mux.Handle(base+"/logoff", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		username, _, ok := r.BasicAuth()
-		if !ok {
+	homepage := base + "/app/index.html"
+	mux.Handle(base+"/app/logoff.html",
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			username, _, ok := r.BasicAuth()
+			if !ok {
+				w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
+				http.Error(w, "authorization failed", http.StatusUnauthorized)
+				return
+			}
+
+			// The previous username is given as a query parameter.
+			params := r.URL.Query()
+			old_username, ok := params["username"]
+			if ok && len(old_username) == 1 && old_username[0] != username {
+				// Authenticated as someone else.
+				http.Redirect(w, r, homepage, http.StatusTemporaryRedirect)
+				return
+			}
+
 			w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
 			http.Error(w, "authorization failed", http.StatusUnauthorized)
-			return
-		}
-
-		// The previous username is given as a query parameter.
-		params := r.URL.Query()
-		old_username, ok := params["username"]
-		if ok && len(old_username) == 1 && old_username[0] != username {
-			http.Redirect(w, r, base, http.StatusTemporaryRedirect)
-			return
-		}
-
-		w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
-		http.Error(w, "authorization failed", http.StatusUnauthorized)
-	}))
+		}))
 
 	return nil
 }

@@ -58,6 +58,9 @@ message FileBuffer {
     int64 atime = 11;
     int64 ctime = 12;
     int64 btime = 13;
+
+    // Set when the actual file is stored somewhere else (e.g. S3)
+    string reference = 14;
 }
 
 message ForemanCheckin {

@@ -237,14 +237,23 @@ func (self *HuntDispatcher) ApplyFuncOnHunts(
 
 func (self *HuntDispatcher) GetHunt(hunt_id string) (*api_proto.Hunt, bool) {
 	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	hunt_obj, pres := self.hunts[hunt_id]
-	if pres {
-		return proto.Clone(hunt_obj.Hunt).(*api_proto.Hunt), true
+	if !pres || hunt_obj == nil {
+		self.mu.Unlock()
+		return nil, false
 	}
 
-	return nil, false
+	// Make a copy of the hunt object so we can update it safely
+	hunt := proto.Clone(hunt_obj.Hunt).(*api_proto.Hunt)
+	self.mu.Unlock()
+
+	if hunt.Stats == nil {
+		hunt.Stats = &api_proto.HuntStats{}
+	}
+
+	hunt.Stats.AvailableDownloads, _ = availableHuntDownloadFiles(
+		self.config_obj, hunt_id)
+	return hunt, true
 }
 
 // This is called by the local server to mutate the hunt
