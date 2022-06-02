@@ -237,18 +237,18 @@ func (self *HuntDispatcher) ApplyFuncOnHunts(
 
 func (self *HuntDispatcher) GetHunt(hunt_id string) (*api_proto.Hunt, bool) {
 	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	hunt_obj, pres := self.hunts[hunt_id]
 	if pres {
 		hunt := proto.Clone(hunt_obj.Hunt).(*api_proto.Hunt)
-		if hunt_obj != nil && hunt_obj.Stats != nil {
+		self.mu.Unlock()
+
+		if hunt != nil && hunt.Stats != nil {
 			hunt.Stats.AvailableDownloads, _ = availableHuntDownloadFiles(
 				self.config_obj, hunt_id)
 			return hunt, true
 		}
 	}
-
+	self.mu.Unlock()
 	return nil, false
 }
 
