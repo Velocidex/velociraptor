@@ -302,10 +302,16 @@ func vfsRefreshDirectory(
 	vfs_components []string,
 	depth uint64) (*flows_proto.ArtifactCollectorResponse, error) {
 
+	var components string
+	if len(vfs_components) > 0 {
+		components = json.MustMarshalString(vfs_components[1:])
+	}
+
 	client_path, accessor := GetClientPath(vfs_components)
 	request := MakeCollectorRequest(
 		client_id, "System.VFS.ListDirectory",
 		"Path", client_path,
+		"Components", components,
 		"Accessor", accessor,
 		"Depth", fmt.Sprintf("%v", depth))
 

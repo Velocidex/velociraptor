@@ -56,6 +56,38 @@ func parseOSPath(ctx context.Context,
 		}
 		return MustNewFileStorePath("ds:").Append(components...), nil
 
+		// WHERE version(plugin="glob") > 2:
+		// Initializer can be a list of components. In this case we
+		// take the base pathspec (which is accessor determined) and
+		// add the components to it.
+	case []types.Any:
+		components := make([]string, 0, len(t))
+		for _, i := range t {
+			i_str, ok := i.(string)
+			if ok {
+				components = append(components, i_str)
+			}
+		}
+
+		// Build a pathspec from the accessor and the components.
+		base, err := accessor.ParsePath("")
+		if err != nil {
+			return nil, err
+		}
+
+		base.Components = append(base.Components, components...)
+		return base, nil
+
+	case []string:
+		// Build a pathspec from the accessor and the components.
+		base, err := accessor.ParsePath("")
+		if err != nil {
+			return nil, err
+		}
+
+		base.Components = append(base.Components, t...)
+		return base, nil
+
 	case string:
 		return accessor.ParsePath(t)
 

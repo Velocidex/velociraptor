@@ -10,6 +10,10 @@ parameters:
     description: The path of the file to download.
     default: "/"
 
+  - name: Components
+    type: json_array
+    description: Alternatively, this is an explicit list of components.
+
   - name: Accessor
     default: file
 
@@ -19,6 +23,10 @@ parameters:
 
 sources:
   - query: |
+      // Glob > v2 accepts a component list for the root parameter.
+      LET Path <= if(condition=version(plugin="glob") > 2 AND Components,
+        then=Components, else=Path)
+
       // Old versions do not have the root parameter to glob()
       // Fixes https://github.com/Velocidex/velociraptor/issues/322
       LET LegacyQuery = SELECT FullPath as _FullPath,

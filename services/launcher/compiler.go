@@ -112,7 +112,7 @@ LET %v <= if(
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
 				VQL: fmt.Sprintf(`
 LET %v <= if(
-    condition=format(format="%%T", args=%v) =~ "string",
+    condition=format(format="%%T", args=%v) = "string",
     then=parse_json_array(data=%v),
     else=%v)
 `,

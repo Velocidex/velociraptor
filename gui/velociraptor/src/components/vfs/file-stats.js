@@ -59,6 +59,14 @@ class VeloFileStats extends Component {
             return;
         }
 
+        let new_path = [...this.props.node.path];
+
+        // The accessor is the first top level.
+        let accessor = new_path.shift();
+
+        // Add the filename to the node.
+        new_path.push(selectedRow.Name);
+
         api.post("v1/CollectArtifact", {
             urgent: true,
             client_id: this.props.client.client_id,
@@ -66,7 +74,8 @@ class VeloFileStats extends Component {
             specs: [{artifact: "System.VFS.DownloadFile",
                      parameters: {
                          env: [{key: "Path", value: selectedRow._FullPath},
-                               {key: "Accessor", value: selectedRow._Accessor}],
+                               {key: "Components", value: JSON.stringify(new_path)},
+                               {key: "Accessor", value: accessor}],
                      }}],
         }, this.source.token).then(response => {
             let flow_id = response.data.flow_id;
