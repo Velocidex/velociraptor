@@ -122,7 +122,7 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 	}
 
 	_ = scope.AddDestructor(func() {
-		scope.Log("Query Stats: %v", json.MustMarshalString(
+		scope.Log("DEBUG:Query Stats: %v", json.MustMarshalString(
 			scope.GetStats().Snapshot()))
 	})
 

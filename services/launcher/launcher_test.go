@@ -807,8 +807,9 @@ func (self *LauncherTestSuite) TestParameterTypesDepsQuery() {
 		Config:     self.ConfigObj,
 		ACLManager: vql_subsystem.NullACLManager{},
 		Repository: repository,
-		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
-		Env:        ordereddict.NewDict(),
+		Logger: logging.NewPlainLogger(
+			self.ConfigObj, &logging.FrontendComponent),
+		Env: ordereddict.NewDict(),
 	}
 
 	manager, err := services.GetRepositoryManager()

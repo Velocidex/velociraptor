@@ -60,7 +60,8 @@
   --color-btn-border: #555555;
   --color-btn-default-background: #5cd00a80;
   --color-btn-default-background-hover: #0c900a80;
-  --color-btn-outline-link: #5cd00a80;
+  --color-btn-outline-link: #bfbfbf;
+  --color-btn-outline-background: #0c900a40;
 
   --color-tab: #444444;
   --color-tab-active: #aaaaaa;
@@ -69,7 +70,7 @@
   --color-scrollbar-track: var(--color-sidebar-active-background);
   --color-scrollbar-thumb: var(--color-sidebar-foreground);
   --color-scrollbar-thumb-hover: var(--color-sidebar-inactive-foreground-hover);
-
+  --color-pagination-disabled: #444444;
   --color-cell-toolbar-background: #121212;
   --page-link-background: #121212;
   --color-page-link-active-background: #444444;
@@ -77,7 +78,7 @@
   --color-card-heading-background: #444444;
   --color-table-heading-background: #444444;
   --color-monospace-color: #eeeeee;
-
+  --color-calendar-background: #121212;
 
   --color-timeline-header: #cdcdcd20;
   --color-timeline-table-shown: #dd4b3920;
@@ -95,6 +96,7 @@
   --color-table-row-hover: rgba(255, 255, 255, 0.1);
 
   --color-timeline-table-shown: #5cd00a80;
+  --color-level-error: #aa0000;
 }
 
 body.veloci-dark {
@@ -278,7 +280,10 @@ body.veloci-dark {
 .veloci-dark .btn-outline-info,
 .veloci-dark .btn-link {
   color: var(--color-btn-outline-link);
+  background: var(--color-btn-outline-background);
   margin: 1px;
+  text-align: left;
+  width: 100%;
 }
 
 .veloci-dark .btn.btn-link {
@@ -496,7 +501,7 @@ body.veloci-dark {
 /* Pagination */
 .veloci-dark .page-item .page-link {
   background: var(--page-link-background);
-  border-color: var(--color-btn-default-border);
+  border-color: var(--color-btn-border);
   color: var(--color-text-default);
 }
 
@@ -505,37 +510,19 @@ body.veloci-dark {
 }
 
 .veloci-dark .page-item input {
-  background: var(--color-canvas-background);
-  color: var(--color-text-default);
-  border: 1px solid var(--color-form-background);
-}
-
-.veloci-dark .page-item.active .page-link {
-  background: var(--color-page-link-active-background);
-  border-color: var(--color-btn-default-border);
-}
-
-.veloci-dark .react-bootstrap-table-pagination-total {
-  color: var(--color-text-default);
-}
-
-
-/* Pagination */
-.veloci-dark .page-item .page-link {
-  background: var(--page-link-background);
-  border-color: var(--color-btn-border);
-  color: var(--color-text-default);
-}
-
-.veloci-dark .page-item input {
   background: var(--color-form-background);
   color: var(--color-text-default);
   border: 1px solid var(--color-form-background);
 }
 
+.veloci-dark .page-item.active .page-link:hover,
 .veloci-dark .page-item.active .page-link {
   background: var(--color-page-link-active-background);
   border-color: var(--color-btn-border);
+}
+
+.veloci-dark .page-item .page-link:hover {
+  background: var(--color-page-link-hover-background);
 }
 
 .veloci-dark .react-bootstrap-table-pagination-total {
@@ -617,6 +604,20 @@ body.veloci-dark {
 /* react timelines */
 .veloci-dark .react-calendar-timeline .rct-sidebar {
   color: var(--color-text-default);
+}
+
+/* react calendar */
+.veloci-dark .react-calendar {
+    background: var(--color-calendar-background);
+}
+
+.veloci-dark .react-calendar .react-calendar__navigation button,
+.veloci-dark .react-calendar .react-calendar__tile {
+    color: var(--color-foreground-dimmed);
+}
+
+.veloci-dark .react-calendar .react-calendar__month-view__days__day--weekend {
+    color: var(--accent-color);
 }
 
 /* file tree */

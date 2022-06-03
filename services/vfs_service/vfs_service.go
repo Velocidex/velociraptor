@@ -23,6 +23,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -323,6 +324,7 @@ func StartVFSService(
 	config_obj *config_proto.Config) error {
 
 	vfs_service := &VFSService{}
+	services.RegisterVFSService(vfs_service)
 
 	return vfs_service.Start(ctx, config_obj, wg)
 }

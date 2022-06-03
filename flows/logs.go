@@ -11,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	utils "www.velocidex.com/golang/velociraptor/utils"
@@ -71,11 +72,17 @@ func flushContextLogs(
 		// If the log message matches the error regex mark the
 		// collection as errored out. Only record the first error.
 		if collection_context.State != flows_proto.
-			ArtifactCollectorContext_ERROR &&
-			getLogErrorRegex(config_obj).FindStringIndex(row.Message) != nil {
-			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
-			collection_context.Status = row.Message
-			collection_context.Dirty = true
+			ArtifactCollectorContext_ERROR {
+
+			// If any messages are of level ERROR or the message
+			// matches the regex, then the collection is considered
+			// errored.
+			if row.Level == logging.ERROR ||
+				getLogErrorRegex(config_obj).FindStringIndex(row.Message) != nil {
+				collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
+				collection_context.Status = row.Message
+				collection_context.Dirty = true
+			}
 		}
 
 		collection_context.TotalLogs++

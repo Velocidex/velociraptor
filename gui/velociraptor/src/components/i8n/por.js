@@ -494,6 +494,7 @@ const Portuguese = {
     "Select a theme":"Selecione um tópico",
     "Default Velociraptor":"Velociraptor padrão",
     "Velociraptor (light)":"Velociraptor (luz)",
+    "Ncurses (light)":"Ncurses (luz)",
     "Velociraptor (dark)":"Velociraptor (escuro)",
     "Github dimmed (dark)":"Github esmaecido (escuro)",
     "Cool Gray (dark)":"Cinza frio (escuro)",
@@ -601,6 +602,9 @@ const Portuguese = {
 
     "Display timezone": "Mostrar fuso horário",
     "Select a timezone": "Selecione um fuso horário",
+
+    "Update client monitoring table":"Atualizar tabela de monitoramento de clientes",
+    "Show client monitoring tables":"Mostrar tabelas de monitoramento de clientes",
 };
 
 export default Portuguese;

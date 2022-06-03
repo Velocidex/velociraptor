@@ -493,6 +493,7 @@ const Spanish = {
     "Select a theme":"Seleccionar un tema",
     "Default Velociraptor":"Velociraptor predeterminado",
     "Velociraptor (light)":"Velociraptor (luz)",
+    "Ncurses (light)":"Ncurses (luz)",
     "Velociraptor (dark)":"Velociraptor (oscuro)",
     "Github dimmed (dark)":"Github atenuado (oscuro)",
     "Cool Gray (dark)":"Gris frío (oscuro)",
@@ -600,6 +601,10 @@ const Spanish = {
 
     "Display timezone": "Mostrar zona horaria",
     "Select a timezone": "Seleccione una zona horaria",
+
+    "Update client monitoring table":"Actualizar tabla de seguimiento de clientes",
+    "Show client monitoring tables":"Mostrar tablas de seguimiento de clientes",
+
 };
 
 export default Spanish;

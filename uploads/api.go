@@ -19,6 +19,7 @@ type UploadResponse struct {
 	Sha256     string `json:"sha256,omitempty"`
 	Md5        string `json:"md5,omitempty"`
 	StoredName string `json:"StoredName,omitempty"`
+	Reference  string `json:"Reference,omitempty"`
 }
 
 // Provide an uploader capable of uploading any reader object.

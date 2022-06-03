@@ -176,7 +176,8 @@ func (self *Responder) Return(ctx context.Context) {
 }
 
 // Send a log message to the server.
-func (self *Responder) Log(ctx context.Context, format string, v ...interface{}) {
+func (self *Responder) Log(ctx context.Context, level string,
+	format string, v ...interface{}) {
 	self.AddResponse(ctx, &crypto_proto.VeloMessage{
 		RequestId: constants.LOG_SINK,
 		LogMessage: &crypto_proto.LogMessage{
@@ -184,6 +185,7 @@ func (self *Responder) Log(ctx context.Context, format string, v ...interface{})
 			Message:   fmt.Sprintf(format, v...),
 			Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
 			Artifact:  self.Artifact,
+			Level:     level,
 		}})
 	atomic.AddInt64(&self.log_id, 1)
 }

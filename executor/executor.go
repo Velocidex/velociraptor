@@ -209,6 +209,7 @@ func makeErrorResponse(output chan *crypto_proto.VeloMessage,
 		RequestId: constants.LOG_SINK,
 		LogMessage: &crypto_proto.LogMessage{
 			Message:   message,
+			Level:     logging.ERROR,
 			Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
 		},
 	}

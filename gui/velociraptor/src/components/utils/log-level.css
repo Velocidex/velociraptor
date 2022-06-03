@@ -1,0 +1,7 @@
+.log-level {
+    word-break: initial;
+}
+
+.log-level.level-ERROR {
+    color: var(--color-level-error);
+}

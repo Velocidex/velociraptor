@@ -8,13 +8,13 @@
   ""
  ],
  "/server_artifact_logs/Server.Clock/2020-10-07.json": [
-  "{\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"server_monitoring: Collecting \\u003cgreen\\u003eServer.Clock\\u003c/\\u003e\\n\"}",
-  "{\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"server_monitoring: Finished collecting Server.Clock\\n\"}",
-  "{\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"
+  "{\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Level\":\"DEFAULT\",\"Message\":\"server_monitoring: Collecting \\u003cgreen\\u003eServer.Clock\\u003c/\\u003e\\n\"}",
+  "{\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Level\":\"DEFAULT\",\"Message\":\"server_monitoring: Finished collecting Server.Clock\\n\"}",
+  "{\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Level\":\"DEBUG\",\"Message\":\"
   ""
  ],
  "/server_artifacts/Server.Clock/2020-10-07.json.tidx": "00 98 30 07 8b d0 3b 16 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 30 07 8b d0 3b 16 41 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 30 07 8b d0 3b 16 82 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 30 07 8b d0 3b 16 c3 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 30 07 8b d0 3b 16 04 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00",
- "/server_artifact_logs/Server.Clock/2020-10-07.json.tidx": "00 98 30 07 8b d0 3b 16 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 30 07 8b d0 3b 16 85 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 30 07 8b d0 3b 16 f5 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00",
+ "/server_artifact_logs/Server.Clock/2020-10-07.json.tidx": "00 98 30 07 8b d0 3b 16 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 30 07 8b d0 3b 16 97 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 30 07 8b d0 3b 16 19 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00",
  "/server_artifacts/Server.Clock2/2020-10-07.json": [
   "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_ts\":1602103388}",
   "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_ts\":1602103388}",
@@ -24,9 +24,9 @@
   ""
  ],
  "/server_artifact_logs/Server.Clock2/2020-10-07.json": [
-  "{\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"server_monitoring: Collecting \\u003cgreen\\u003eServer.Clock2\\u003c/\\u003e\\n\"}",
-  "{\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"server_monitoring: Finished collecting Server.Clock2\\n\"}",
-  "{\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Message\":\"
+  "{\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Level\":\"DEFAULT\",\"Message\":\"server_monitoring: Collecting \\u003cgreen\\u003eServer.Clock2\\u003c/\\u003e\\n\"}",
+  "{\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Level\":\"DEFAULT\",\"Message\":\"server_monitoring: Finished collecting Server.Clock2\\n\"}",
+  "{\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Level\":\"DEBUG\",\"Message\":\"
   ""
  ],
  "/config/server_monitoring.json.db": {

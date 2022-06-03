@@ -76,6 +76,12 @@
   --color-code: #990000;
 
   --color-timeline-table-shown: #5cd00a80;
+
+  --color-page-link-active-background: #0c900a;
+  --color-page-link-hover-background: #5cd00a80;
+  --color-pagination-disabled: #c0c0c0;
+
+  --color-level-error: #990000;
 }
 
 body.veloci-light {
@@ -224,6 +230,12 @@ body.veloci-light {
   text-shadow: none;
   box-shadow: none;
   background: none;
+}
+
+.veloci-light .dropdown-toggle.btn-primary,
+.veloci-light .show .dropdown-toggle.btn-primary {
+  background: var(--color-btn-default-background);
+  border-color: var(--color-btn-border);
 }
 
 .veloci-light .btn-secondary {
@@ -516,5 +528,37 @@ body.veloci-light {
 .veloci-light .artifact-search-table.selectable.container tr.row-selected,
 .veloci-light .artifact-search-table.selectable.container tr.row_selected > td {
   background: var(--color-table-row-selected);
+  color: var(--color-text-default);
+}
+
+
+/* Pagination */
+.veloci-light .page-item .page-link {
+  background: var(--page-link-background);
+  border-color: var(--color-btn-default-border);
+  color: var(--color-text-default);
+}
+
+.veloci-light .page-item.disabled span {
+  color: var(--color-pagination-disabled);
+}
+
+.veloci-light .page-item input {
+  background: var(--color-canvas-background);
+  color: var(--color-text-default);
+  border: 1px solid var(--color-form-background);
+}
+
+.veloci-light .page-item.active .page-link:hover,
+.veloci-light .page-item.active .page-link {
+  background: var(--color-page-link-active-background);
+  border-color: var(--color-btn-default-border);
+}
+
+.veloci-light .page-item .page-link:hover {
+  background: var(--color-page-link-hover-background);
+}
+
+.veloci-light .react-bootstrap-table-pagination-total {
   color: var(--color-text-default);
 }

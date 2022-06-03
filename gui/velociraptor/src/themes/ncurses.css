@@ -31,6 +31,7 @@
   --color-footer-background: lightgrey;
   --color-canvas-background: #0a2fc4;
   --color-canvas-background-complement: #c49f0a;
+  --color-background-form-control: white;
 
   --color-foreground: white;
   --color-foreground-inverse: black;
@@ -60,6 +61,7 @@
   --color-no-content: var(--color-foreground-dimmed);
   --color-btn-border: red;
   --color-btn-default-border: darkgrey;
+  --color-btn-default-color: black;
   --color-btn-default-background: lightgrey;
   --color-btn-default-background-hover: cyan;
   --color-btn-outline-link: lightgrey;
@@ -68,13 +70,11 @@
   --color-cell-toolbar-background: #222222;
   --color-monospace-color: var(--color-foreground);
 
-
-
   --color-table-heading-background: darkgrey;
   --color-table-row-selected: rgba(0, 0, 0, 0.05);
   --color-table-row-hover: rgba(0, 0, 0, 0.01);
   --color-code: #990000;
-
+  --color-level-error: #aa0000;
   --color-timeline-table-shown: #0a2fc4;
 }
 
@@ -365,6 +365,7 @@ body.ncurses {
 }
 
 .ncurses .btn,
+.ncurses a.btn.btn-default,
 .ncurses .btn-default {
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
@@ -537,7 +538,7 @@ body.ncurses {
 
 /* Forms */
 .ncurses .form-control {
-  background: white;
+  background: var(--color-background-form-control);
   color: black;
   border-color: var(--color-btn-default-border);
   border-radius: 0;
@@ -908,4 +909,29 @@ body.ncurses {
 
 .ncurses ::-webkit-scrollbar-thumb {
   border-radius: 0px;
+}
+
+.ncurses .labels,
+.ncurses .velo__control {
+  background: var(--color-background-form-control);
+  color: var(--color-foreground);
+}
+
+.ncurses .velo__menu  {
+  background: var(--color-canvas-background);
+  color: var(--color-foreground);
+}
+
+.ncurses .velo__multi-value {
+  background: var(--color-canvas-background);
+}
+
+.ncurses .velo__input {
+  color: var(--color-canvas-background);
+}
+
+.ncurses .velo__option:hover,
+.ncurses .velo__option--is-focused,
+.ncurses .velo__multi-value:hover {
+  background: var(--color-btn-default-background-hover);
 }

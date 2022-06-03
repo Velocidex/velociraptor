@@ -56,3 +56,8 @@ code {
 .report-viewer .btn-group a.btn {
   color: var(--color-foreground);
 }
+
+
+.react-datetime-picker__clock {
+    display: none;
+}

@@ -210,6 +210,8 @@ const Deutsch = {
     "STOPPED": "GESTOPPT",
     "PAUSED": "ANGEHALTEN",
     "ERROR": "Fehler",
+    "INFO": "Info",
+    "DEBUG": "Debug",
     "CANCELLED": "Abgesagt",
     "Search for artifacts...": "Suche nach Artefakten...",
     "Favorite Name": "Lieblingsname",
@@ -496,6 +498,7 @@ const Deutsch = {
     "Velociraptor (light)":"Velociraptor (hell)",
     "Velociraptor (dark)":"Velociraptor (dunkel)",
     "Github dimmed (dark)":"Github gedimmt (dunkel)",
+    "Ncurses (light)":"Ncurses (hell)",
     "Cool Gray (dark)":"Cool Grey (dunkel)",
     "Strawberry Milkshake (light)":"Erdbeer-Milchshake (hell)",
     "Downloads Password":"Download-Passwort",
@@ -601,6 +604,10 @@ const Deutsch = {
 
     "Display timezone": "Zeitzone anzeigen",
     "Select a timezone": "Wählen Sie eine Zeitzone aus",
+
+    "Update client monitoring table":"Client-Überwachungstabelle aktualisieren",
+    "Show client monitoring tables":"Client-Überwachungstabellen anzeigen",
+
 };
 
 export default Deutsch;

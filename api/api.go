@@ -469,7 +469,11 @@ func (self *ApiServer) VFSListDirectory(
 			"User is not allowed to view the VFS.")
 	}
 
-	result, err := vfsListDirectory(
+	vfs_service, err := services.GetVFSService()
+	if err != nil {
+		return nil, err
+	}
+	result, err := vfs_service.ListDirectory(
 		self.config, in.ClientId, in.VfsComponents)
 	return result, err
 }
@@ -494,7 +498,12 @@ func (self *ApiServer) VFSStatDirectory(
 			"User is not allowed to launch flows.")
 	}
 
-	result, err := vfsStatDirectory(
+	vfs_service, err := services.GetVFSService()
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := vfs_service.StatDirectory(
 		self.config, in.ClientId, in.VfsComponents)
 	return result, err
 }
@@ -519,7 +528,12 @@ func (self *ApiServer) VFSStatDownload(
 			"User is not allowed to view the VFS.")
 	}
 
-	result, err := vfsStatDownload(
+	vfs_service, err := services.GetVFSService()
+	if err != nil {
+		return nil, err
+	}
+
+	result, err := vfs_service.StatDownload(
 		self.config, in.ClientId, in.Accessor, in.Components)
 	return result, err
 }

@@ -101,6 +101,7 @@
   --color-timeline-7: #471ecb;
 
   --vfs-files-timestomped: #ed5d40;
+  --color-level-error: #ff0000;
 }
 
 body.coolgray-dark {

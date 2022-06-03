@@ -10,6 +10,9 @@ type LogWriter struct {
 }
 
 func (self *LogWriter) Write(b []byte) (int, error) {
-	logging.GetLogger(self.config_obj, &logging.ClientComponent).Info("%v", string(b))
+	level, msg := logging.SplitIntoLevelAndLog(b)
+	logging.GetLogger(self.config_obj, &logging.ClientComponent).
+		LogWithLevel(level, "%s", msg)
+
 	return len(b), nil
 }

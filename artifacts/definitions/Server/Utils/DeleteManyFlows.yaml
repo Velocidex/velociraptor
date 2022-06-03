@@ -40,7 +40,7 @@ sources:
             WHERE hostname =~ HostnameRegex
         },
         query={
-          SELECT client_id, os_info.hostname AS hostname,
+          SELECT client_id, hostname,
                  session_id, request.creator AS creator,
                  request.artifacts as artifacts,
                  timestamp(epoch=create_time) AS created
