@@ -3,13 +3,12 @@ import PropTypes from 'prop-types';
 
 import VeloPagedTable from '../core/paged-table.js';
 import VeloTimestamp from "../utils/time.js";
-
+import LogLevel from '../utils/log_level.js';
 
 function getFlowState(flow) {
     return {flow_id: flow.session_id,
             total_logs: flow.total_logs};
 }
-
 
 export default class FlowLogs extends React.Component {
     static propTypes = {
@@ -27,6 +26,9 @@ export default class FlowLogs extends React.Component {
                 return (
                     <VeloTimestamp usec={cell * 1000}/>
                 );
+            },
+            level:  (cell, row, rowIndex) => {
+                return <LogLevel type={cell}/>;
             },
             Timestamp: (cell, row, rowIndex) => {
                 return (

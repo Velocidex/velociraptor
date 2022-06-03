@@ -634,6 +634,7 @@ func LogMessage(config_obj *config_proto.Config,
 	collection_context.Logs = append(
 		collection_context.Logs, &crypto_proto.LogMessage{
 			Message:   log_msg,
+			Level:     msg.Level,
 			Artifact:  artifact_name,
 			Timestamp: msg.Timestamp,
 		})
@@ -647,6 +648,7 @@ func Log(config_obj *config_proto.Config,
 	collection_context.Logs = append(
 		collection_context.Logs, &crypto_proto.LogMessage{
 			Message:   log_msg,
+			Level:     logging.DEFAULT,
 			Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
 		})
 	collection_context.Dirty = true

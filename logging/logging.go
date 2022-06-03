@@ -25,6 +25,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"sync"
 	"time"
 
@@ -161,6 +162,21 @@ func (self *LogContext) Warn(format string, v ...interface{}) {
 func (self *LogContext) Error(format string, v ...interface{}) {
 	if self.Logger != nil {
 		self.Logger.Error(fmt.Sprintf(format, v...))
+	}
+}
+
+func (self *LogContext) LogWithLevel(level string, format string, v ...interface{}) {
+	switch level {
+	case ERROR:
+		self.Error(format, v...)
+	case WARNING:
+		self.Warn(format, v...)
+	case INFO:
+		self.Info(format, v...)
+	case DEBUG:
+		self.Debug(format, v...)
+	default:
+		self.Info(format, v...)
 	}
 }
 
@@ -354,12 +370,26 @@ func AddLogFile(filename string) error {
 	return nil
 }
 
+func SplitIntoLevelAndLog(b []byte) (level, message string) {
+	parts := strings.SplitN(string(b), ":", 2)
+	if len(parts) == 2 {
+		level := strings.ToUpper(parts[0])
+		switch level {
+		case DEFAULT, ERROR, INFO, WARNING, DEBUG:
+			return level, parts[1]
+		}
+	}
+
+	return DEFAULT, string(b)
+}
+
 type logWriter struct {
 	logger *LogContext
 }
 
 func (self *logWriter) Write(b []byte) (int, error) {
-	self.logger.Info("%s", string(b))
+	level, msg := SplitIntoLevelAndLog(b)
+	self.logger.LogWithLevel(level, "%v", msg)
 	return len(b), nil
 }
 

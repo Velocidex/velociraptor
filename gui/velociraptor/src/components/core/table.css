@@ -47,4 +47,5 @@ td .number {
 
 .fixed-table-body td {
     overflow: hidden;
+    word-break: break-word;
 }

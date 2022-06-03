@@ -35,7 +35,7 @@ func doCSV() error {
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NullACLManager{},
-		Logger:     log.New(os.Stderr, "velociraptor: ", 0),
+		Logger:     log.New(&LogWriter{config_obj}, "", 0),
 		Env: ordereddict.NewDict().
 			Set(vql_subsystem.ACL_MANAGER_VAR,
 				vql_subsystem.NewRoleACLManager("administrator")).

@@ -304,13 +304,8 @@ message LogMessage {
     // The artifact name that we were running at the time.
     string artifact = 3;
 
-    enum Level {
-        DEFAULT = 0; // INFO level
-        ERROR = 1;
-        DEBUG = 2;
-    }
-
-    Level level = 4;
+    // DEFAULT, ERROR, DEBUG
+    string level = 4;
 }
 
 // Message written to the data store with the PEM of the client's

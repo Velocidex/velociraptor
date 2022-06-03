@@ -86,7 +86,7 @@ class UserSettings extends React.PureComponent {
                       <option value="veloci-dark">{T("Velociraptor (dark)")}</option>
                       {/* <option value="github-dimmed-light">Github dimmed (light)</option> */}
                       <option value="github-dimmed-dark">{T("Github dimmed (dark)")}</option>
-                      <option value="ncurses">Ncurses (light)</option>
+                      <option value="ncurses">{T("Ncurses (light)")}</option>
                       <option value="coolgray-dark">{T("Cool Gray (dark)")}</option>
                       <option value="pink-light">{T("Strawberry Milkshake (light)")}</option>
                     </Form.Control>

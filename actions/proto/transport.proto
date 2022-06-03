@@ -61,6 +61,7 @@ message FileBuffer {
 
     // Set when the actual file is stored somewhere else (e.g. S3)
     string reference = 14;
+    int64 upload_number = 15;
 }
 
 message ForemanCheckin {

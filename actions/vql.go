@@ -49,8 +49,10 @@ type LogWriter struct {
 }
 
 func (self *LogWriter) Write(b []byte) (int, error) {
-	logging.GetLogger(self.config_obj, &logging.ClientComponent).Info("%v", string(b))
-	self.responder.Log(self.ctx, "%s", string(b))
+	level, msg := logging.SplitIntoLevelAndLog(b)
+	self.responder.Log(self.ctx, level, msg)
+	logging.GetLogger(self.config_obj, &logging.ClientComponent).
+		LogWithLevel(level, "%v", msg)
 	return len(b), nil
 }
 
@@ -147,7 +149,7 @@ func (self VQLClientAction) StartQuery(
 		Env:        ordereddict.NewDict(),
 		Uploader:   uploader,
 		Repository: repository,
-		Logger:     log.New(&LogWriter{config_obj, responder, ctx}, "vql: ", 0),
+		Logger:     log.New(&LogWriter{config_obj, responder, ctx}, "", 0),
 	}
 
 	for _, env_spec := range arg.Env {
@@ -164,7 +166,7 @@ func (self VQLClientAction) StartQuery(
 			"incorrect or missed results or even crashes.")
 	}
 
-	scope.Log("Starting query execution.")
+	scope.Log("INFO:Starting query execution.")
 
 	scope.SetThrottler(NewThrottler(ctx, scope, float64(rate),
 		float64(cpu_limit), float64(iops_limit)))
@@ -181,7 +183,7 @@ func (self VQLClientAction) StartQuery(
 			responder.RaiseError(ctx, msg)
 		}
 
-		scope.Log("Collection is done after %v", time.Since(start))
+		scope.Log("INFO:Collection is done after %v", time.Since(start))
 	}()
 
 	ok, err := CheckPreconditions(ctx, scope, arg)
@@ -239,7 +241,8 @@ func (self VQLClientAction) StartQuery(
 				deadline = time.After(time.Second * time.Duration(timeout))
 
 			case <-time.After(time.Second * time.Duration(heartbeat)):
-				responder.Log(ctx, "Time %v: %s: Waiting for rows.",
+				responder.Log(ctx, logging.DEFAULT,
+					"Time %v: %s: Waiting for rows.",
 					(uint64(time.Now().UTC().UnixNano()/1000)-
 						query_start)/1000000, query.Name)
 
@@ -267,6 +270,7 @@ func (self VQLClientAction) StartQuery(
 				// Don't log empty VQL statements.
 				if query.Name != "" {
 					responder.Log(ctx,
+						logging.DEFAULT,
 						"Time %v: %s: Sending response part %d %s (%d rows).",
 						(response.Timestamp-query_start)/1000000,
 						query.Name,
@@ -283,7 +287,8 @@ func (self VQLClientAction) StartQuery(
 	}
 
 	if uploader.Count > 0 {
-		responder.Log(ctx, "Uploaded %v files.", uploader.Count)
+		responder.Log(ctx, logging.DEFAULT,
+			"Uploaded %v files.", uploader.Count)
 	}
 
 	responder.Return(ctx)

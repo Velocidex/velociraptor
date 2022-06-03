@@ -21,9 +21,11 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -43,6 +45,7 @@ type LogFunctionArgs struct {
 	Message   string      `vfilter:"required,field=message,doc=Message to log."`
 	DedupTime int64       `vfilter:"optional,field=dedup,doc=Suppress same message in this many seconds (default 60 sec)."`
 	Args      vfilter.Any `vfilter:"optional,field=args,doc=An array of elements to apply into the format string."`
+	Level     string      `vfilter:"optional,field=level,doc=Level to log at (DEFAULT, WARN, ERROR, INFO)."`
 }
 
 type LogFunction struct{}
@@ -62,7 +65,16 @@ func (self *LogFunction) Call(ctx context.Context,
 	}
 
 	now := time.Now().Unix()
-	message := arg.Message
+	level := strings.ToUpper(arg.Level)
+	switch level {
+	case logging.DEFAULT, logging.ERROR, logging.INFO,
+		logging.WARNING, logging.DEBUG:
+
+	default:
+		level = logging.DEFAULT
+	}
+
+	message := fmt.Sprintf("%s:%s", level, arg.Message)
 	if !utils.IsNil(arg.Args) {
 		slice := reflect.ValueOf(arg.Args)
 		var format_args []interface{}

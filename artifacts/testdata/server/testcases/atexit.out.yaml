@@ -6,19 +6,19 @@ SELECT * FROM query(query=''' LET Foo = SELECT log(message="I Ran at the end") F
   "Log": "Velociraptor: query: running query  LET Foo = SELECT log(message=\"I Ran at the end\") FROM scope() LET _ \u003c= log(message=\"First!\") LET _ \u003c= atexit(query=Foo, env=dict(X=\"Me too\", Y=2)) LET _ \u003c= log(message=\"Second!\") \n"
  },
  {
-  "Log": "Velociraptor: First!\n"
+  "Log": "Velociraptor: DEFAULT:First!\n"
  },
  {
-  "Log": "Velociraptor: Second!\n"
+  "Log": "Velociraptor: DEFAULT:Second!\n"
  },
  {
   "Log": "Velociraptor: Running AtExit query\n"
  },
  {
-  "Log": "Velociraptor: I Ran at the end\n"
+  "Log": "Velociraptor: DEFAULT:I Ran at the end\n"
  },
  {
-  "Log": "Velociraptor: Query Stats: {\"RowsScanned\":1,\"PluginsCalled\":1,\"FunctionsCalled\":5,\"ProtocolSearch\":0,\"ScopeCopy\":4}\n"
+  "Log": "Velociraptor: DEBUG:Query Stats: {\"RowsScanned\":1,\"PluginsCalled\":1,\"FunctionsCalled\":5,\"ProtocolSearch\":0,\"ScopeCopy\":4}\n"
  },
  {
   "Log": "Velociraptor: Running query SELECT * FROM test_read_logs()\n"

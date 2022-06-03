@@ -97,6 +97,9 @@
   --color-timeline-7: #471ecb;
 
   --vfs-files-timestomped: #ed5d40;
+
+  --color-calendar-background: #121212;
+  --color-level-error: #aa0000;
 }
 
 body.github-dimmed-dark {
@@ -733,6 +736,9 @@ body.github-dimmed-dark {
 
 /* Datepicker */
 .github-dimmed-dark .react-datepicker,
+.github-dimmed-dark .react-datetime-picker input,
+.github-dimmed-dark .react-datetime-picker select,
+.github-dimmed-dark .react-datetime-picker button,
 .github-dimmed-dark .react-datetime-picker {
   background: var(--color-canvas-background);
   color: var(--color-foreground);
@@ -917,4 +923,19 @@ input[type="radio"] {
 .github-dimmed-dark .alert {
   text-shadow: none;
   box-shadow: none;
+}
+
+
+/* react calendar */
+.github-dimmed-dark .react-calendar {
+    background: var(--color-calendar-background);
+}
+
+.github-dimmed-dark .react-calendar .react-calendar__navigation button,
+.github-dimmed-dark .react-calendar .react-calendar__tile {
+    color: var(--color-foreground-dimmed);
+}
+
+.github-dimmed-dark .react-calendar .react-calendar__month-view__days__day--weekend {
+    color: var(--accent-color);
 }
