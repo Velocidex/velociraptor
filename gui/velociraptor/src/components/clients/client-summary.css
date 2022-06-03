@@ -1,15 +1,17 @@
 .client-summary {
-    padding: 5px 10px;
+    padding: 8px 10px;
     float: left;
-}
-.client-name {
-    color: var(--color-infoline-success);
-    display: inline;
+    color: var(--color-foreground);
 }
 
-.client-name .nav-link {
+.client-name {
     display: inline;
-    color: var(--color-infoline-success);
+    color: var(--color-foreground);
+}
+
+.client-name:hover {
+    display: inline;
+    color: var(--color-client-link-hover);
 }
 
 client-status-icons > div {
@@ -17,6 +19,3 @@ client-status-icons > div {
     display: inline;
 }
 
-.client-status, .client-ip-info {
-    color: var(--color-infoline-color);
-}

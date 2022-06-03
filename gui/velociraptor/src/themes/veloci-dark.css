@@ -18,33 +18,6 @@
 }
 
 .veloci-dark {
-  --accent-color: #00aa00;
-  --color-accent: 0, 170, 0;
-  --color-accent-complement: #e83e8c;
-
-  --color-accent-100: rgba(var(--color-accent), 1);
-  --color-accent-75: rgba(var(--color-accent), 0.75);
-  --color-accent-50: rgba(var(--color-accent), 0.5);
-  --color-accent-25: rgba(var(--color-accent), 0.25);
-
-  --color-canvas-background: #121212;
-  --color-background: #121212;
-  --color-footer-background: var(--color-tab);
-  --color-text-default: #eeeeee;
-  --color-foreground: rgb(240, 242, 244);
-  --color-foreground-dimmed: rgb(210, 217, 223);
-  --color-foreground-inverse: #100e0c;
-  --color-background-complement: #3b352d;
-
-  --color-sidebar-foreground: #bfbfbf;
-  --color-sidebar-background: #121212;
-  --color-sidebar-foreground-inactive-hover: var(--color-accent-100);
-  --color-sidebar-background-inactive-hover: var(--color-table-row-hover);
-  --color-sidebar-foreground-active-hover: var(--color-sidebar-active-foreground);
-  /* --color-sidebar-foreground-disabled: #8f8f8f50; */
-  --color-sidebar-active-foreground: var(--color-foreground);
-  --color-sidebar-active-background: var(--color-table-row-selected);
-
   --font-size-large: 17px;
   --font-size-base: 15px;
   --font-size-small: 13px;
@@ -52,6 +25,37 @@
     "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --font-family-monospace: roboto-mono, SFMono-Regular, Menlo, Monaco,
     "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
+
+  --accent-color: #098204;
+  --color-accent: 9, 130, 4;
+  --color-accent-complement: #7E0482;
+  --color-accent-100: rgba(var(--color-accent), 1);
+  --color-accent-75: rgba(var(--color-accent), 0.75);
+  --color-accent-50: rgba(var(--color-accent), 0.5);
+  --color-accent-25: rgba(var(--color-accent), 0.25);
+
+  --color-header-background: var(--color-canvas-background);
+  --color-footer-background: var(--color-tab);
+  --color-canvas-background: #121212;
+  --color-canvas-background-complement: #3b352d;
+
+  --color-foreground: rgb(240, 242, 244);
+  --color-foreground-inverse: #100e0c;
+  --color-foreground-dimmed: rgb(210, 217, 223);
+
+  --color-text-default: #eeeeee;
+
+  --color-sidebar-inactive-foreground-hover: var(--color-accent-100);
+  --color-sidebar-inactive-background-hover: var(--color-table-row-hover);
+  --color-sidebar-foreground: #bfbfbf;
+  --color-sidebar-background: #121212;
+  --color-sidebar-active-foreground: var(--color-foreground);
+  --color-sidebar-active-foreground-hover: var(--color-sidebar-active-foreground);
+  --color-sidebar-active-background: var(--color-table-row-selected);
+  /* --color-sidebar-disabled-foreground: #8f8f8f50; */
+
+  --color-client-link: #7aed40;
+  --color-client-link-hover: var(--color-foreground-dimmed);
 
   --color-btn-border: #555555;
   --color-btn-default-background: #5cd00a80;
@@ -64,17 +68,16 @@
   --color-resizer: #0c900a80;
   --color-scrollbar-track: var(--color-sidebar-active-background);
   --color-scrollbar-thumb: var(--color-sidebar-foreground);
-  --color-scrollbar-thumb-hover: var(--color-sidebar-foreground-inactive-hover);
+  --color-scrollbar-thumb-hover: var(--color-sidebar-inactive-foreground-hover);
 
   --color-cell-toolbar-background: #121212;
-  --page-link-background-color: #121212;
+  --page-link-background: #121212;
   --color-page-link-active-background: #444444;
   --color-form-background: #121212;
   --color-card-heading-background: #444444;
   --color-table-heading-background: #444444;
   --color-monospace-color: #eeeeee;
 
-  --color-infoline-success: #7aed40;
 
   --color-timeline-header: #cdcdcd20;
   --color-timeline-table-shown: #dd4b3920;
@@ -95,7 +98,7 @@
 }
 
 body.veloci-dark {
-  background-color: var(--color-canvas-background);
+  background: var(--color-canvas-background);
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
   letter-spacing: 0.4px;
@@ -122,7 +125,7 @@ body.veloci-dark {
 
 .veloci-dark .alert-secondary {
   color: var(--color-text-default);
-  background-color: var(--color-table-heading-background);
+  background: var(--color-table-heading-background);
 }
 
 .veloci-dark .alert-secondary th {
@@ -132,7 +135,7 @@ body.veloci-dark {
 
 /* Top Navbar */
 .veloci-dark .main-navbar {
-  background-color: var(--color-sidebar-background);
+  background: var(--color-sidebar-background);
   border-color: var(--color-sidebar-background);
 }
 
@@ -141,7 +144,7 @@ body.veloci-dark {
 }
 
 .veloci-dark #client-search-bar {
-  background-color: var(--color-background);
+  background: var(--color-canvas-background);
   border: 0.655385px solid #485a5f;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
@@ -160,7 +163,6 @@ body.veloci-dark {
 }
 
 .veloci-dark .client-summary {
-  padding: 5px 10px;
   float: left;
   font-family: var(--font-family-sans-serif);
 }
@@ -169,7 +171,7 @@ body.veloci-dark {
   background: var(--color-btn-default-background);
   text-decoration: none !important;
   text-shadow: none;
-  padding: 2px 10px 5px 10px;
+  padding: 6px 10px 8px 10px;
   border-radius: 3px;
   margin: 5px;
   font-size: 15px;
@@ -177,24 +179,19 @@ body.veloci-dark {
 }
 
 .veloci-dark .client-status .client-name:hover {
-  color: whitesmoke;
-  background: var(--color-client-link-hover);
-}
-
-.veloci-dark .client-status .client-name:active {
-  color: whitesmoke;
-  background: var(--color-client-link-hover);
+  color: var(--color-accent-100);
+  background: var(--color-btn-default-background-hover);
 }
 
 .veloci-dark .react-autosuggest__suggestions-container--open {
   margin-left: 5px;
-  background-color: var(--color-background);
+  background: var(--color-canvas-background);
   font-family: var(--font-family-sans-serif);
   color: var(--color-text-default);
 }
 
 .veloci-dark .react-autosuggest__suggestion--highlighted {
-  background-color: var(--color-accent-50);
+  background: var(--color-accent-50);
 }
 
 /* sidebar navbar */
@@ -203,8 +200,8 @@ body.veloci-dark {
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
   color: var(--color-sidebar-foreground);
-  background-color: var(--color-sidebar-background);
-  border-color: var(--color-sidebar-foreground-inactive-hover);
+  background: var(--color-sidebar-background);
+  border-color: var(--color-sidebar-inactive-foreground-hover);
 }
 
 .veloci-dark .nav-pills .nav-link {
@@ -214,21 +211,21 @@ body.veloci-dark {
 }
 
 .veloci-dark .navigator.nav-pills.nav:hover li {
-  color: var(--color-sidebar-foreground-inactive-hover);
-  background-color: var(--color-sidebar-background-inactive-hover);
+  color: var(--color-sidebar-inactive-foreground-hover);
+  background: var(--color-sidebar-inactive-background-hover);
 }
 
 .veloci-dark a.active .navigator.nav-pills.nav li {
   color: var(--color-sidebar-active-foreground);
-  background-color: var(--color-sidebar-active-background);
+  background: var(--color-sidebar-active-background);
 }
 
 .veloci-dark a.active .navigator.nav-pills.nav:hover li {
-  color: var(--color-sidebar-foreground-active-hover);
+  color: var(--color-sidebar-active-foreground-hover);
 }
 
 .veloci-dark .navigator.nav-pills.nav li.disabled {
-  color: var(--color-sidebar-foreground-disabled);
+  color: var(--color-sidebar-disabled-foreground);
 }
 
 /* Buttons */
@@ -270,7 +267,7 @@ body.veloci-dark {
   background-image: none;
   text-shadow: none;
   box-shadow: none;
-  background: var(--color-background);
+  background: var(--color-canvas-background);
 }
 
 .veloci-dark .btn-outline-default {
@@ -293,7 +290,7 @@ body.veloci-dark {
 
 .veloci-dark .table {
   color: var(--color-foreground);
-  background-color: var(--color-canvas-background);
+  background: var(--color-canvas-background);
   vertical-align: middle;
   font-weight: 400;
   font-size: var(--font-size-base);
@@ -303,7 +300,7 @@ body.veloci-dark {
 
 .veloci-dark .table thead th {
   border: none;
-  background-color: var(--color-table-row-selected);
+  background: var(--color-table-row-selected);
   vertical-align: text-bottom;
 }
 
@@ -313,12 +310,12 @@ body.veloci-dark {
 }
 
 .veloci-dark .table tbody tr:nth-of-type(2n) {
-  background-color: var(--color-table-row-hover);
+  background: var(--color-table-row-hover);
   border: none;
 }
 
 .veloci-dark .table tbody tr:nth-of-type(odd) {
-  background-color: unset;
+  background: unset;
   border: none;
 }
 
@@ -342,24 +339,24 @@ body.veloci-dark {
 }
 
 .veloci-dark .table-hover tbody tr:hover {
-  background-color: var(--color-table-row-hover);
+  background: var(--color-table-row-hover);
   color: unset;
 }
 
 .veloci-dark .artifact-search-table td:hover {
-  background-color: var(--color-table-row-hover);
+  background: var(--color-table-row-hover);
   color: unset;
 }
 
 .veloci-dark table tr.row-selected,
 .veloci-dark table tr.row_selected td {
-  background-color: var(--color-table-row-selected);
+  background: var(--color-table-row-selected);
   color: var(--color-text-default);
 }
 
 /* Column search screen */
 .veloci-dark th.sortable input {
-  background-color: var(--color-background);
+  background: var(--color-canvas-background);
   color: var(--color-text-default);
   border-color: var(--color-btn-border);
 }
@@ -367,22 +364,22 @@ body.veloci-dark {
 /* Resizer dividers */
 .veloci-dark .Resizer.horizontal {
   border: none;
-  background-color: var(--color-resizer);
+  background: var(--color-resizer);
   height: 10px;
 }
 
 .veloci-dark .Resizer.horizontal:hover {
-  background-color: var(--color-resizer);
+  background: var(--color-resizer);
 }
 
 .veloci-dark .Resizer.vertical {
   border: none;
-  background-color: var(--color-canvas-background);
+  background: var(--color-canvas-background);
   width: 3px;
 }
 
 .veloci-dark .Resizer.vertical:hover {
-  background-color: var(--color-resizer);
+  background: var(--color-resizer);
 }
 
 .veloci-dark .Resizer:hover {
@@ -392,7 +389,7 @@ body.veloci-dark {
 /* Cards */
 
 .veloci-dark .card {
-  background-color: var(--color-table-heading-background);
+  background: var(--color-table-heading-background);
 }
 
 .veloci-dark .dashboard .card {
@@ -400,13 +397,19 @@ body.veloci-dark {
 }
 
 .veloci-dark .card-header {
-  background-color: var(--color-card-heading-background);
+  background: var(--color-card-heading-background);
   color: var(--color-text-default);
 }
 
 .veloci-dark .card-body {
-  background-color: var(--color-background);
+  background: var(--color-canvas-background);
   color: var(--color-text-default);
+}
+
+.veloci-dark .card-body dt,
+.veloci-dark .card-body label {
+  font-weight: 400;
+  color: lightgreen;
 }
 
 /* Json container */
@@ -419,32 +422,55 @@ body.veloci-dark {
   color: var(--color-text-default);
 }
 
+.veloci-dark .nav-tabs {
+  border-bottom: 1px solid var(--color-btn-border);
+}
+
 .veloci-dark .nav-tabs > a {
-  background-color: var(--color-tab);
+  background: var(--color-tab);
   color: var(--color-text-default);
+  border-top-color: var(--color-btn-border);
+  border-right-color: var(--color-btn-border);
+  border-bottom: var(--color-btn-border);
+  border-left-color: var(--color-btn-border);
+}
+
+.veloci-dark .nav-tabs > a:hover {
+  background: var(--color-sidebar-inactive-foreground-hover);
+  color: var(--color-canvas-background);
 }
 
 .veloci-dark .nav-tabs > a.active {
-  background-color: var(--color-tab-active);
+  background: var(--color-tab-active);
+  color: var(--color-text-default);
+  border-top-color: var(--color-btn-border);
+  border-right-color: var(--color-btn-border);
+  border-bottom-color: transparent;
+  border-left-color: var(--color-btn-border);
+}
+
+.veloci-dark .tooltip.show {
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
 }
 
 /* forms */
 
 .veloci-dark .form-control,
 .veloci-dark .custom-file-input {
-  background-color: var(--color-canvas-background);
+  background: var(--color-canvas-background);
   color: var(--color-text-default);
   border-color: var(--color-btn-default-border);
   font-size: var(--font-size-base);
 }
 
 .veloci-dark .form-control:focus {
-  background-color: var(--color-canvas-background);
+  background: var(--color-canvas-background);
   box-shadow: 0 0 0 1px var(--color-text-default);
 }
 
 .veloci-dark .input-group-prepend .input-group-text {
-  background-color: var(--color-btn-default-background);
+  background: var(--color-btn-default-background);
   box-shadow: none;
   color: var(--color-foreground);
   text-shadow: none;
@@ -453,14 +479,14 @@ body.veloci-dark {
 }
 
 .veloci-dark .input-group .custom-file-label {
-  background-color: var(--color-canvas-background);
+  background: var(--color-canvas-background);
   color: var(--color-accent-100);
   border: 1px solid var(--color-btn-default-border);
   font-size: var(--font-size-base);
 }
 
 .veloci-dark .input-group .custom-file-label:after {
-  background-color: var(--color-btn-default-background);
+  background: var(--color-btn-default-background);
   box-shadow: none;
   color: var(--color-foreground);
   text-shadow: none;
@@ -469,7 +495,7 @@ body.veloci-dark {
 
 /* Pagination */
 .veloci-dark .page-item .page-link {
-  background-color: var(--page-link-background-color);
+  background: var(--page-link-background);
   border-color: var(--color-btn-default-border);
   color: var(--color-text-default);
 }
@@ -479,13 +505,13 @@ body.veloci-dark {
 }
 
 .veloci-dark .page-item input {
-  background-color: var(--color-canvas-background);
+  background: var(--color-canvas-background);
   color: var(--color-text-default);
   border: 1px solid var(--color-form-background);
 }
 
 .veloci-dark .page-item.active .page-link {
-  background-color: var(--color-page-link-active-background);
+  background: var(--color-page-link-active-background);
   border-color: var(--color-btn-default-border);
 }
 
@@ -496,19 +522,19 @@ body.veloci-dark {
 
 /* Pagination */
 .veloci-dark .page-item .page-link {
-  background-color: var(--page-link-background-color);
+  background: var(--page-link-background);
   border-color: var(--color-btn-border);
   color: var(--color-text-default);
 }
 
 .veloci-dark .page-item input {
-  background-color: var(--color-form-background);
+  background: var(--color-form-background);
   color: var(--color-text-default);
   border: 1px solid var(--color-form-background);
 }
 
 .veloci-dark .page-item.active .page-link {
-  background-color: var(--color-page-link-active-background);
+  background: var(--color-page-link-active-background);
   border-color: var(--color-btn-border);
 }
 
@@ -556,31 +582,31 @@ body.veloci-dark {
 }
 
 .veloci-dark .artifact-search-table.selectable.container tbody tr:hover {
-  background-color: var(--color-table-row-hover);
+  background: var(--color-table-row-hover);
 }
 
 .veloci-dark .artifact-search-table.selectable.container tr.row-selected,
 .veloci-dark .artifact-search-table.selectable.container tr.row_selected > td {
-  background-color: var(--color-table-row-selected);
+  background: var(--color-table-row-selected);
   color: var(--color-text-default);
 }
 
 /* modal dialogs */
 
 .veloci-dark .modal-content {
-  background-color: var(--color-page-link-active-background);
+  background: var(--color-page-link-active-background);
   color: var(--color-text-default);
 }
 
 /* notebooks */
 .veloci-dark .cell-toolbar,
 .veloci-dark .notebook-input {
-  background-color: var(--color-page-link-active-background);
+  background: var(--color-page-link-active-background);
   color: var(--color-text-default);
 }
 
 .veloci-dark .notebook-input pre {
-  background-color: var(--color-background);
+  background: var(--color-canvas-background);
   color: var(--color-text-default);
 }
 
@@ -594,14 +620,23 @@ body.veloci-dark {
 }
 
 /* file tree */
-.veloci-dark div.file-tree ul {
-  font-size: 16px;
-  background-color: var(--color-background);
+.veloci-dark .file-tree ul {
+  background: var(--color-canvas-background);
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+  padding-left: 12px;
 }
 
-/* Table column selector */
+.veloci-dark .tree-folder {
+  color: var(--color-foreground);
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+  font-weight: 600;
+}
+
+/* Dropdown menus */
 .veloci-dark .dropdown-menu {
-  background-color: var(--color-background);
+  background: var(--color-canvas-background);
 }
 
 .veloci-dark .dropdown-item {
@@ -611,17 +646,17 @@ body.veloci-dark {
 }
 
 .veloci-dark .dropdown-item:hover {
-  background-color: var(--color-btn-default-background-hover);
+  background: var(--color-btn-default-background-hover);
 }
 
 .veloci-dark .dropdown-item.active {
-  background-color: var(--color-table-row-selected);
+  background: var(--color-table-row-selected);
 }
 
 /* Datepicker */
 .veloci-dark .react-datepicker,
 .veloci-dark .react-datetime-picker {
-  background-color: var(--color-background);
+  background: var(--color-canvas-background);
   color: var(--color-text-default);
 }
 
@@ -639,13 +674,13 @@ body.veloci-dark {
 }
 
 .veloci-dark .react-datepicker__day[aria-disabled="false"] {
-  background-color: var(--color-table-row-selected);
+  background: var(--color-table-row-selected);
   color: var(--color-text-default);
 }
 
 /* Footer */
 .veloci-dark .app-footer.fixed-bottom {
-  background-color: var(--color-footer-background);
+  background: var(--color-footer-background);
   color: var(--color-text-default);
   font-family: var(--font-family-sans-serif);
   border-top: 1px solid var(--color-btn-border);
@@ -663,14 +698,14 @@ body.veloci-dark {
 
 /* ACE things */
 .veloci-dark .ace_tooltip {
-  background-color: var(--color-background);
+  background: var(--color-canvas-background);
   color: var(--color-text-default);
 }
 
 .veloci-dark .custom-tooltip {
   margin: 0;
   padding: 10px;
-  background-color: var(--color-background);
+  background: var(--color-canvas-background);
   border: 1px solid #ccc;
   white-space: nowrap;
   display: block;
@@ -684,12 +719,12 @@ body.veloci-dark {
 .veloci-dark .labels,
 .veloci-dark .velo__control,
 .veloci-dark .velo__menu {
-  background-color: var(--color-background);
+  background: var(--color-canvas-background);
   color: var(--color-text-default);
 }
 
 .veloci-dark .velo__multi-value {
-  background-color: var(--color-btn-default-background);
+  background: var(--color-btn-default-background);
 }
 
 .veloci-dark .velo__input {
@@ -699,9 +734,9 @@ body.veloci-dark {
 .veloci-dark .velo__option:hover,
 .veloci-dark .velo__option--is-focused,
 .veloci-dark .velo__multi-value:hover {
-  background-color: var(--color-btn-default-background-hover);
+  background: var(--color-btn-default-background-hover);
 }
 
 .veloci-dark hr {
-  background-color: var(--color-text-default);
+  background: var(--color-text-default);
 }

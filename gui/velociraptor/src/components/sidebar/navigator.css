@@ -35,15 +35,15 @@ section.navigator a {
 }
 
 .navigator.nav-pills.nav:hover li {
-  color: var(--color-sidebar-foreground-inactive-hover);
+  color: var(--color-sidebar-inactive-foreground-hover);
 }
 
 a.active .navigator.nav-pills.nav:hover li {
-  color: var(--color-sidebar-foreground-active-hover);
+  color: var(--color-sidebar-active-foreground-hover);
 }
 
 .navigator.nav-pills.nav li.disabled {
-  color: var(--color-sidebar-foreground-disabled);
+  color: var(--color-sidebar-disabled-foreground);
 }
 
 .navigator.nav-pills.nav {
@@ -53,7 +53,7 @@ a.active .navigator.nav-pills.nav:hover li {
 
 a.active .nav.nav-pills.navigator .nav-link {
   background-color: var(--color-sidebar-active-background);
-  color: var(--color-sidebar-foreground-active-hover);
+  color: var(--color-sidebar-active-foreground-hover);
 }
 
 .nav-pills .nav-link {

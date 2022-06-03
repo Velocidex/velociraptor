@@ -89,7 +89,7 @@ td.timeline-time {
 }
 
 .page-size-dropdown .disabled {
-    background-color: var(--color-sidebar-foreground-disabled);
+    background-color: var(--color-sidebar-disabled-foreground);
 }
 
 

@@ -1,6 +1,6 @@
 .estimate.alert-info {
     background-image: none;
-    background-color: var(--color-background);
+    background-color: var(--color-canvas-background);
     color: var(--color-text-default);
     border-color: var(--color-btn-outline-link);
 }

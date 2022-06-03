@@ -2,14 +2,14 @@
     --sidebar-collapsed-width: 45px;
     --color-sidebar-foreground: #8f8f8f;
     --color-sidebar-active-background: #8f8f8f;
-    --color-sidebar-foreground-inactive-hover: #000e7b;
-    --color-sidebar-foreground-disabled: #8f8f8f50;
+    --color-sidebar-inactive-foreground-hover: #000e7b;
+    --color-sidebar-disabled-foreground: #8f8f8f50;
     --color-sidebar-background: #fff;
 
     --font-json: roboto-mono, Menlo, Monaco, Consolas, "Courier New", monospace;
     --font-monospace: roboto-mono, "Courier New", Courier, monospace;
 
-    --color-sidebar-foreground-active-hover: #f0f0f0;
+    --color-sidebar-active-foreground-hover: #f0f0f0;
     --color-canvas-background: #ffffff;
     --color-text-default: #000;
     --color-text-default-inverted: #fff;
@@ -45,14 +45,14 @@
     --color-monospace-color: #000;
     --color-notifications-reference: #000;
     --color-headline-color: #dd4b39;
-    --color-infoline-color: #888;
+    --color-client-link: #888;
+    --color-client-link-hover: blue;
     --color-no-link-color: #bbb;
     --color-notification-highlight-color: #eee;
     --color-no-content-color: #e0e0e0;
     --color-grr-blue: #2aabd2;
     --color-hint-border-color: #f0c36d;
     --color-hint-background-color: #f9edbe;
-    --color-infoline-success: rgb(60, 118, 61);
     --color-section-separator: #efefef;
     --color-section-box-shadow: rgba(0, 0, 0, .3);
     --color-dim-grey: #696969;

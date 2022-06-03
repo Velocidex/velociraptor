@@ -572,12 +572,15 @@ export function getFlowColumns(client_id) {
         {dataField: "state", text: T("State"), sort: true,
          formatter: (cell, row) => {
              if (cell === "FINISHED") {
-                 return <FontAwesomeIcon icon="check"/>;
+                 return <div className="flow-status-icon">
+                          <FontAwesomeIcon icon="check"/></div>;
              }
              if (cell === "RUNNING") {
-                 return <FontAwesomeIcon icon="hourglass"/>;
+                 return <div className="flow-status-icon">
+                          <FontAwesomeIcon icon="hourglass"/></div>;
              }
-             return <FontAwesomeIcon icon="exclamation"/>;
+             return <div className="flow-status-icon">
+             <FontAwesomeIcon icon="exclamation"/></div>;
          }
         },
         {dataField: "session_id", text: T("FlowId"), type: "flow"},

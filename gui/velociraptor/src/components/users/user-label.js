@@ -86,7 +86,7 @@ class UserSettings extends React.PureComponent {
                       <option value="veloci-dark">{T("Velociraptor (dark)")}</option>
                       {/* <option value="github-dimmed-light">Github dimmed (light)</option> */}
                       <option value="github-dimmed-dark">{T("Github dimmed (dark)")}</option>
-                      {/* <option value="ncurses">Ncurses (light)</option> */}
+                      <option value="ncurses">Ncurses (light)</option>
                       <option value="coolgray-dark">{T("Cool Gray (dark)")}</option>
                       <option value="pink-light">{T("Strawberry Milkshake (light)")}</option>
                     </Form.Control>
@@ -220,13 +220,13 @@ export default class UserLabel extends React.Component {
         if (options.theme === "no-theme") {
             ace_options.theme = "ace/theme/xcode";
         } else if (options.theme === "veloci-dark") {
-            ace_options.theme = "ace/theme/terminal";
+            ace_options.theme = "ace/theme/vibrant_ink";
         } else if(options.theme === "veloci-light") {
             ace_options.theme = "ace/theme/xcode";
         } else if(options.theme === "pink-light") {
             ace_options.theme = "ace/theme/xcode";
         } else if(options.theme === "ncurses") {
-            ace_options.theme = "ace/theme/github";
+            ace_options.theme = "ace/theme/sqlserver";
         } else if(options.theme === "github-dimmed-dark") {
           ace_options.theme = "ace/theme/vibrant_ink";
         } else if(options.theme === "github-dimmed-light") {
