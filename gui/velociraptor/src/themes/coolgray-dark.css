@@ -18,40 +18,6 @@
 }
 
 .coolgray-dark {
-  --accent-color: #87b8dd;
-  --color-accent: 135, 184, 221;
-  --color-accent-complement: #dead87;
-
-  --color-accent-100: rgba(var(--color-accent), 1);
-  --color-accent-75: rgba(var(--color-accent), 0.75);
-  --color-accent-50: rgba(var(--color-accent), 0.5);
-  --color-accent-25: rgba(var(--color-accent), 0.25);
-
-  --color-canvas-background: rgb(52, 65, 75);
-  --color-footer-background: var(--color-canvas-background);
-  --color-text-default: rgb(240, 242, 244);
-  --color-foreground: rgb(240, 242, 244);
-  --color-foreground-dimmed: rgb(210, 217, 223);
-  --color-foreground-inverse: #100e0c;
-  --color-background: rgb(42, 52, 60);
-  --color-background-complement: #3d332b;
-
-  --color-navbar-background: #141a1d;
-
-  --color-sidebar-foreground: var(--color-foreground-dimmed);
-  --color-sidebar-background: #2a343c;
-  --color-sidebar-foreground-inactive-hover: var(--color-accent-100);
-  --color-sidebar-background-inactive-hover: rgb(52, 65, 75);
-  --color-sidebar-foreground-active-hover: var(--color-sidebar-active-foreground);
-  /* --color-sidebar-foreground-disabled: var(--color-canvas-background); */
-  --color-sidebar-active-foreground: var(--color-foreground);
-  --color-sidebar-active-background: rgb(68, 85, 97);
-
-  --color-infoline-color: var(--color-foreground-dimmed);
-  --color-infoline-success: #57ab5a;
-  --color-danger-emphasis: #c93c37;
-  --color-primer-border-active: #ec775c;
-
   --font-size-large: 16px;
   --font-size-base: 14px;
   --font-size-small: 13px;
@@ -61,6 +27,37 @@
     "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
   --font-family-paragraph: -apple-system, BlinkMacSystemFont, roboto, "Segoe UI",
     "Helvetica Neue", Arial, sans-serif;
+
+  --accent-color: #87b8dd;
+  --color-accent: 135, 184, 221;
+  --color-accent-complement: #dead87;
+  --color-accent-100: rgba(var(--color-accent), 1);
+  --color-accent-75: rgba(var(--color-accent), 0.75);
+  --color-accent-50: rgba(var(--color-accent), 0.5);
+  --color-accent-25: rgba(var(--color-accent), 0.25);
+
+  --color-header-background: #141a1d;
+  --color-footer-background: var(--color-canvas-background);
+  --color-canvas-background: rgb(42, 52, 60);
+  --color-canvas-background-complement: #3d332b;
+
+  --color-foreground: rgb(240, 242, 244);
+  --color-foreground-inverse: #100e0c;
+  --color-foreground-dimmed: rgb(210, 217, 223);
+
+  --color-text-default: rgb(240, 242, 244);
+
+  --color-sidebar-inactive-foreground-hover: var(--color-accent-100);
+  --color-sidebar-inactive-background-hover: rgb(52, 65, 75);
+  --color-sidebar-foreground: var(--color-foreground-dimmed);
+  --color-sidebar-background: #2a343c;
+  --color-sidebar-active-foreground: var(--color-foreground);
+  --color-sidebar-active-foreground-hover: var(--color-sidebar-active-foreground);
+  --color-sidebar-active-background: rgb(68, 85, 97);
+  /* --color-sidebar-disabled-foreground: var(--color-canvas-background); */
+
+  --color-client-link: var(--color-foreground-dimmed);
+  --color-client-link-hover: var(--color-accent-100);
 
   --color-no-content: var(--color-foreground-dimmed);
   --color-btn-border: #373e47; /* --color-border-muted  --color-scale-gray-7 */
@@ -82,7 +79,7 @@
   --color-form-background: #fceff4;
   --color-page-link-active-background: var(--color-btn-border);
   --color-resizer: #797d82;
-  --color-scrollbar-track: var(--color-background);
+  --color-scrollbar-track: var(--color-canvas-background);
   --color-scrollbar-thumb: var(--color-accent-25);
   --color-scrollbar-thumb-hover: var(--color-accent-50);
 
@@ -91,7 +88,6 @@
   --color-tab-active-border: var(--color-foreground);
   --color-tab-hover-border: var(--color-btn-default-border);
 
-  --color-client-link-hover: var(--color-accent-100);
 
   --color-text-default: var(--color-foreground);
   --color-timeline-header: #cdcdcd20;
@@ -108,7 +104,7 @@
 }
 
 body.coolgray-dark {
-  background-color: var(--color-canvas-background);
+  background: var(--color-canvas-background);
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-small);
   letter-spacing: 0.4px;
@@ -149,7 +145,7 @@ body.coolgray-dark {
 .coolgray-dark pre {
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-small);
-  background-color: #d5cbc3;
+  background: #d5cbc3;
   border: 1px solid #9c9184;
   filter: invert(1);
   color: var(--color-foreground-inverse);
@@ -159,13 +155,13 @@ body.coolgray-dark {
 .coolgray-dark td > pre {
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-base);
-  background-color: inherit;
+  background: inherit;
   border: none;
   letter-spacing: 0.4px;
 }
 
 .coolgray-dark span.chromaln {
-  background-color: #e9c9b0;
+  background: #e9c9b0;
 }
 
 .coolgray-dark .monospace {
@@ -177,8 +173,8 @@ body.coolgray-dark {
 
 /* Top Navbar */
 .coolgray-dark .main-navbar {
-  background-color: var(--color-navbar-background);
-  border-color: var(--color-navbar-background);
+  background: var(--color-header-background);
+  border-color: var(--color-header-background);
   box-shadow: 1px 1px 5px rgb(0 0 0 / 50%);
   height: 72px;
 }
@@ -188,7 +184,7 @@ body.coolgray-dark {
 }
 
 .coolgray-dark #client-search-bar {
-  background-color: var(--color-canvas-background);
+  background: var(--color-canvas-background);
   border: 1px solid var(--color-btn-default-border);
   border-radius: 0;
   color: var(--color-foreground);
@@ -205,16 +201,15 @@ body.coolgray-dark {
 }
 
 .coolgray-dark .client-summary {
-  padding: 5px 10px;
-  float: left;
   font-family: var(--font-family-sans-serif);
+  color: var(--color-foreground);
 }
 
 .coolgray-dark .client-status .client-name {
   background: var(--color-btn-default-background);
   text-decoration: none !important;
   text-shadow: none;
-  padding: 2px 10px 5px 10px;
+  padding: 6px 10px 8px 10px;
   border-radius: 0;
   margin: 5px;
   font-size: var(--font-size-small);
@@ -226,21 +221,16 @@ body.coolgray-dark {
   background: var(--color-client-link-hover);
 }
 
-.coolgray-dark .client-status .client-name:active {
-  color: whitesmoke;
-  background: var(--color-client-link-hover);
-}
-
 .coolgray-dark .react-autosuggest__suggestions-container--open {
   margin-left: 5px;
-  background-color: var(--color-canvas-background);
+  background: var(--color-canvas-background);
   font-family: var(--font-family-sans-serif);
   color: var(--color-foreground);
   border: 1px solid var(--color-btn-default-border);
 }
 
 .coolgray-dark .react-autosuggest__suggestion--highlighted {
-  background-color: var(--color-accent-50);
+  background: var(--color-accent-50);
 }
 
 /* sidebar navbar */
@@ -249,7 +239,7 @@ body.coolgray-dark {
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
   color: var(--color-sidebar-foreground);
-  background-color: var(--color-background);
+  background: var(--color-canvas-background);
   border-width: 1px;
   border-color: var(--color-btn-default-border);
   top: 72px;
@@ -264,21 +254,21 @@ body.coolgray-dark {
 }
 
 .coolgray-dark .navigator.nav-pills.nav:hover li {
-  color: var(--color-sidebar-foreground-inactive-hover);
-  background-color: var(--color-sidebar-background-inactive-hover);
+  color: var(--color-sidebar-inactive-foreground-hover);
+  background: var(--color-sidebar-inactive-background-hover);
 }
 
 .coolgray-dark a.active .navigator.nav-pills.nav li {
   color: var(--color-sidebar-active-foreground);
-  background-color: var(--color-sidebar-active-background);
+  background: var(--color-sidebar-active-background);
 }
 
 .coolgray-dark a.active .navigator.nav-pills.nav:hover li {
-  color: var(--color-sidebar-foreground-active-hover);
+  color: var(--color-sidebar-active-foreground-hover);
 }
 
 .coolgray-dark .navigator.nav-pills.nav li.disabled {
-  color: var(--color-sidebar-foreground-disabled);
+  color: var(--color-sidebar-disabled-foreground);
 }
 
 .coolgray-dark .nav-link span {
@@ -324,7 +314,7 @@ body.coolgray-dark {
 }
 
 .coolgray-dark .btn.active.btn-default {
-  background-color: var(--color-btn-default-background-hover);
+  background: var(--color-btn-default-background-hover);
   box-shadow: none;
   color: var(--color-foreground);
   text-shadow: none;
@@ -364,7 +354,7 @@ body.coolgray-dark {
 .coolgray-dark .btn-outline-info,
 .coolgray-dark .btn-link {
   color: var(--color-foreground);
-  background: var(--color-background);
+  background: var(--color-canvas-background);
   text-shadow: none;
   border-radius: 0;
   margin: 1px;
@@ -404,7 +394,7 @@ body.coolgray-dark {
 
 .coolgray-dark .alert-secondary {
   color: var(--color-foreground);
-  background-color: var(--color-table-heading-background);
+  background: var(--color-table-heading-background);
 }
 
 .coolgray-dark .alert-secondary th {
@@ -421,7 +411,7 @@ body.coolgray-dark {
 
 .coolgray-dark .btn-danger:not(:disabled):not(.disabled) {
   color: whitesmoke;
-  background-color: var(--color-danger-emphasis);
+  background: var(--color-danger-emphasis);
   border-color: var(--color-danger-emphasis);
   /* box-shadow: 0 0 0 0.2rem rgba(201 60 55 / 0.5); */
   border-radius: 0;
@@ -429,19 +419,19 @@ body.coolgray-dark {
 
 /* Pagination */
 .coolgray-dark .page-item .page-link {
-  background-color: var(--color-btn-default-background);
+  background: var(--color-btn-default-background);
   border-color: var(--color-btn-default-border);
   color: var(--color-foreground);
 }
 
 .coolgray-dark .page-item input {
-  background-color: var(--color-btn-default-background-hover);
+  background: var(--color-btn-default-background-hover);
   color: var(--color-foreground);
   border: 1px solid var(--color-btn-default-border);
 }
 
 .coolgray-dark .page-item.active .page-link {
-  background-color: var(--color-canvas-background);
+  background: var(--color-canvas-background);
   border-color: var(--color-btn-default-border);
 }
 
@@ -463,7 +453,7 @@ body.coolgray-dark {
 }
 
 .coolgray-dark .table {
-  background-color: var(--color-canvas-background);
+  background: var(--color-canvas-background);
   color: var(--color-foreground);
   vertical-align: middle;
   font-weight: 400;
@@ -475,13 +465,13 @@ body.coolgray-dark {
 .coolgray-dark .table-bordered thead th {
   color: var(--color-foreground);
   border: 1px solid var(--color-btn-default-border);
-  /* background-color: var(--color-table-heading-background); */
+  /* background: var(--color-table-heading-background); */
 }
 
 .coolgray-dark .table thead th {
   color: var(--color-foreground);
   border: 1px solid var(--color-btn-default-border);
-  /* background-color: var(--color-table-heading-background); */
+  /* background: var(--color-table-heading-background); */
   vertical-align: text-bottom;
 }
 
@@ -491,29 +481,29 @@ body.coolgray-dark {
 }
 
 .coolgray-dark .table tbody tr:nth-of-type(2n) {
-  background-color: var(--color-table-row-stripe);
+  background: var(--color-table-row-stripe);
   border: none;
 }
 
 .coolgray-dark .table tbody tr:nth-of-type(odd) {
-  background-color: unset;
+  background: unset;
   border: none;
 }
 
 .coolgray-dark .table-hover tbody tr:hover {
-  background-color: var(--color-table-row-hover);
+  background: var(--color-table-row-hover);
   color: unset;
 }
 
 .coolgray-dark table tr.row-selected,
 .coolgray-dark table tr.row_selected td {
-  background-color: var(--color-table-row-selected);
+  background: var(--color-table-row-selected);
   color: var(--color-text-default);
 }
 
 /* Column search screen */
 .coolgray-dark th.sortable input {
-  background-color: rgba(0,0,0,.3);
+  background: rgba(0,0,0,.3);
   color: var(--color-foreground);
   border-color: var(--color-btn-border);
   font-size: var(--font-size-small);
@@ -523,22 +513,22 @@ body.coolgray-dark {
 /* Resizer dividers */
 .coolgray-dark .Resizer.horizontal {
   border: none;
-  background-color: var(--color-btn-default-border);
+  background: var(--color-btn-default-border);
   height: 3px;
 }
 
 .coolgray-dark .Resizer.horizontal:hover {
-  background-color: var(--color-resizer);
+  background: var(--color-resizer);
 }
 
 .coolgray-dark .Resizer.vertical {
   border: none;
-  background-color: var(--color-navbar-background);
+  background: var(--color-header-background);
   width: 3px;
 }
 
 .coolgray-dark .Resizer.vertical:hover {
-  background-color: var(--color-resizer);
+  background: var(--color-resizer);
 }
 
 .coolgray-dark .Resizer:hover {
@@ -548,7 +538,7 @@ body.coolgray-dark {
 /* Cards */
 
 .coolgray-dark .card {
-  background-color: var(--color-canvas-background);
+  background: var(--color-canvas-background);
   border-color: var(--color-canvas-background);
 }
 
@@ -557,14 +547,14 @@ body.coolgray-dark {
 }
 
 .coolgray-dark .card-header {
-  background-color: var(--color-card-heading-background);
+  background: var(--color-card-heading-background);
   color: var(--color-foreground);
   font-weight: 600;
   border-bottom: none;
 }
 
 .coolgray-dark .card-body {
-  background-color: var(--color-canvas-background);
+  background: var(--color-canvas-background);
   color: var(--color-foreground);
 }
 
@@ -602,7 +592,7 @@ body.coolgray-dark {
 }
 
 .coolgray-dark .nav-tabs .nav-link {
-  background-color: var(--color-tab);
+  background: var(--color-tab);
   color: var(--color-foreground-dimmed);
   border-top-color: var(--color-tab);
   border-right-color: var(--color-tab);
@@ -624,14 +614,14 @@ body.coolgray-dark {
 }
 
 .coolgray-dark .nav-tabs .nav-link.active {
-  background-color: var(--color-tab-active);
+  background: var(--color-tab-active);
   color: var(--color-foreground);
   border-bottom: 2px solid var(--color-tab-active-border);
 }
 
 /* Forms */
 .coolgray-dark .form-control {
-  background-color: var(--color-btn-default-background);
+  background: var(--color-btn-default-background);
   color: var(--color-foreground);
   border-color: var(--color-btn-default-border);
   border-radius: 0;
@@ -643,7 +633,7 @@ body.coolgray-dark {
 }
 
 .coolgray-dark .input-group-prepend .input-group-text {
-  background-color: var(--color-btn-default-background);
+  background: var(--color-btn-default-background);
   box-shadow: none;
   color: var(--color-foreground);
   text-shadow: none;
@@ -652,14 +642,14 @@ body.coolgray-dark {
 }
 
 .coolgray-dark .input-group .custom-file-label {
-  background-color: var(--color-canvas-background);
+  background: var(--color-canvas-background);
   color: var(--color-accent-100);
   border: 1px solid var(--color-btn-default-border);
   font-size: var(--font-size-base);
 }
 
 .coolgray-dark .input-group .custom-file-label:after {
-  background-color: var(--color-btn-default-background);
+  background: var(--color-btn-default-background);
   box-shadow: none;
   color: var(--color-foreground);
   text-shadow: none;
@@ -712,7 +702,7 @@ body.coolgray-dark {
 /* artifact search */
 
 .coolgray-dark .artifact-search-table td:hover {
-  background-color: var(--color-table-row-hover);
+  background: var(--color-table-row-hover);
   color: unset;
 }
 
@@ -725,7 +715,7 @@ body.coolgray-dark {
 }
 
 .coolgray-dark .artifact-search-table.selectable.container tbody tr:hover {
-  background-color: var(--color-table-row-hover);
+  background: var(--color-table-row-hover);
 }
 
 .coolgray-dark .artifact-search-table.selectable.container tr.row-selected,
@@ -733,13 +723,13 @@ body.coolgray-dark {
   .artifact-search-table.selectable.container
   tr.row_selected
   > td {
-  background-color: var(--color-table-row-selected);
+  background: var(--color-table-row-selected);
   color: var(--color-text-default);
 }
 
 /* Modal dialogs */
 .coolgray-dark .modal-content {
-  background-color: var(--color-background);
+  background: var(--color-canvas-background);
   color: var(--color-foreground);
   font-family: var(--font-family-sans-serif);
 }
@@ -781,7 +771,7 @@ body.coolgray-dark {
 /* Notebooks */
 .coolgray-dark .cell-toolbar,
 .coolgray-dark .notebook-input {
-  background-color: var(--color-background);
+  background: var(--color-canvas-background);
   color: var(--color-foreground);
   border-width: 0;
 }
@@ -794,7 +784,7 @@ body.coolgray-dark {
 }
 
 .coolgray-dark .notebook-cell {
-  background-color: var(--color-background);
+  background: var(--color-canvas-background);
 }
 
 .coolgray-dark .notebook-cell.selected {
@@ -808,16 +798,16 @@ body.coolgray-dark {
 
 /* file tree */
 .coolgray-dark .file-tree ul {
-  font-size: 16px;
-  color: var(--color-foreground);
   background: var(--color-canvas-background);
   font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+  padding-left: 12px;
 }
 
 .coolgray-dark .tree-folder {
-  padding-left: 5px;
-  font-size: 16px;
   color: var(--color-foreground);
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
 }
 
 /* Scrollbars */
@@ -826,30 +816,30 @@ body.coolgray-dark {
   border-radius: 0px;
 }
 
-/* Table column selector */
+/* Dropdown menus */
 .coolgray-dark .dropdown-menu {
-  background-color: var(--color-canvas-background);
+  background: var(--color-canvas-background);
 }
 
 .coolgray-dark .dropdown-item {
   color: var(--color-foreground);
-  background-color: var(--color-background);
+  background: var(--color-canvas-background);
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
 }
 
 .coolgray-dark .dropdown-item:hover {
-  background-color: var(--color-accent-50);
+  background: var(--color-accent-50);
 }
 
 .coolgray-dark .dropdown-item:active {
-  background-color: var(--color-accent-50);
+  background: var(--color-accent-50);
 }
 
 /* Datepicker */
 .coolgray-dark .react-datepicker,
 .coolgray-dark .react-datetime-picker {
-  background-color: var(--color-background);
+  background: var(--color-canvas-background);
   color: var(--color-foreground);
 }
 
@@ -867,13 +857,13 @@ body.coolgray-dark {
 }
 
 .coolgray-dark .react-datepicker__day[aria-disabled="false"] {
-  background-color: var(--color-table-row-selected);
+  background: var(--color-table-row-selected);
   color: var(--color-foreground);
 }
 
 /* Footer */
 .coolgray-dark .app-footer.fixed-bottom {
-  background-color: var(--color-footer-background);
+  background: var(--color-footer-background);
   color: var(--color-foreground-dimmed);
   font-family: var(--font-family-sans-serif);
   border-top: 1px solid var(--color-btn-border);
@@ -887,7 +877,7 @@ body.coolgray-dark {
 /* Shell input */
 .coolgray-dark .shell-command .input-group .form-control {
   font-family: var(--font-family-monospace);
-  background-color: var(--color-background);
+  background: var(--color-canvas-background);
   color: var(--color-foreground);
   border-color: var(--color-btn-default-border);
   height: auto;
@@ -918,10 +908,20 @@ body.coolgray-dark {
 
 /* ACE things */
 .coolgray-dark .ace_tooltip {
-  background-color: var(--color-canvas-background);
+  background: var(--color-canvas-background);
   color: var(--color-foreground);
   border: 1px solid var(--color-btn-border);
   font-family: var(--font-family-sans-serif);
+}
+
+.coolgray-dark #ace_settingsmenu {
+  background: var(--color-footer-background);
+}
+
+.coolgray-dark #ace_settingsmenu button,
+.coolgray-dark #ace_settingsmenu input,
+.coolgray-dark #ace_settingsmenu select {
+  background: var(--color-sidebar-active-background);
 }
 
 .coolgray-dark .shell-command .ace_editor {
@@ -930,27 +930,23 @@ body.coolgray-dark {
 }
 
 .coolgray-dark .shell-command .show > .btn-primary.dropdown-toggle {
-  background-color: var(--color-accent-50);
+  background: var(--color-accent-50);
   border-color: var(--color-accent-50);
 }
 
 .coolgray-dark .shell-command .show > .btn-primary.dropdown-toggle:active {
-  background-color: var(--color-accent-50);
+  background: var(--color-accent-50);
   border-color: var(--color-accent-50);
 }
 
 .coolgray-dark .shell-command .show > .dropdown-menu.show {
-  background: var(--color-background);
+  background: var(--color-canvas-background);
   border: 1px solid var(--color-btn-border);
 }
 
-.coolgray-dark .custom-tooltip {
-  margin: 0;
-  padding: 10px;
-  background-color: var(--color-background);
-  border: 1px solid var(--color-btn-border);
-  white-space: nowrap;
-  display: block;
+.coolgray-dark .tooltip.show {
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
 }
 
 .coolgray-dark .file-hex-view td,
@@ -961,12 +957,12 @@ body.coolgray-dark {
 .coolgray-dark .labels,
 .coolgray-dark .velo__control,
 .coolgray-dark .velo__menu {
-  background-color: var(--color-canvas-background);
+  background: var(--color-canvas-background);
   color: var(--color-foreground);
 }
 
 .coolgray-dark .velo__multi-value {
-  background-color: var(--color-canvas-background);
+  background: var(--color-canvas-background);
 }
 
 .coolgray-dark .velo__input {
@@ -976,11 +972,11 @@ body.coolgray-dark {
 .coolgray-dark .velo__option:hover,
 .coolgray-dark .velo__option--is-focused,
 .coolgray-dark .velo__multi-value:hover {
-  background-color: var(--color-btn-default-background-hover);
+  background: var(--color-btn-default-background-hover);
 }
 
 .coolgray-dark hr {
-  background-color: var(--color-foreground-dimmed);
+  background: var(--color-foreground-dimmed);
 }
 
 .coolgray-dark img.velo-logo {

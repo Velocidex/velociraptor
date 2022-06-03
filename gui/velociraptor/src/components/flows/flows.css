@@ -13,3 +13,7 @@
 .wrapped-text {
     overflow-wrap: break-word;
 }
+
+div .flow-status-icon {
+    text-align: center;
+}

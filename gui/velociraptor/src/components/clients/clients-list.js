@@ -591,7 +591,11 @@ export function getClientColumns() {
     return formatColumns([
         {dataField: "last_seen_at", text: T("Online"),
          formatter: (cell, row) => {
-             return <VeloClientStatusIcon client={row}/>;
+             return <Button variant="outline-default" className="online-status">
+             <span className="button-label">
+             <VeloClientStatusIcon client={row}/>
+             </span>
+             </Button>;
          }},
         {dataField: "client_id", text: T("Client ID"), type: "client"},
         {dataField: "os_info.hostname", text: T("Hostname"), sort: true},

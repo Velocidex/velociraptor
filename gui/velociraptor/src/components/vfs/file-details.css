@@ -11,6 +11,9 @@
     background-color: var(--color-canvas-background);
 }
 
+.nav-tabs {
+    margin-block-end: 5px;
+}
 
 .nav-tabs .nav-item {
     border-color: #dee2e6 #dee2e6 #fff;

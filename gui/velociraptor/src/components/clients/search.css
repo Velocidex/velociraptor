@@ -2,10 +2,6 @@
     margin-left: 5px;
 }
 
-body {
-  font-family: Helvetica, sans-serif;
-}
-
 .status {
   line-height: 52px;
 }
@@ -16,14 +12,13 @@ body {
 
 .react-autosuggest__input {
   width: 240px;
-  padding: 10px 20px;
+  padding: 5px 20px;
   font-family: Helvetica, sans-serif;
-  font-weight: 300;
   font-size: 16px;
   border: 1px solid #aaa;
   border-radius: 4px;
   box-sizing: content-box;
-  height: 1em;
+  height: 26px;
 }
 
 .react-autosuggest__input--focused {
