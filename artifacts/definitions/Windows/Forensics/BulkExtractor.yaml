@@ -26,15 +26,13 @@ description: |
     to parse find.txt output.
 
     **Note**
-    1. This artifact uses the 3rd party binaries feature. You will need to run
-    Server.Utils.DownloadBinaries on the server prior to execution.
-    2. Currently only supported for x64 bit machines.
-    3. This artifact usually takes a long time. Ensure default timeout is high
+    1. Currently only supported for x64 bit machines.
+    2. This artifact usually takes a long time. Ensure default timeout is high
     enough for completion.
-    4. This content is NOT recommended for hunting without great consideration as
+    3. This content is NOT recommended for hunting without great consideration as
     bulk_extractor is a multithreaded tool and utilises all CPU available on the
     endpoint.
-    5. The artifact copies carved data to the local disk prior to upload which
+    4. The artifact copies carved data to the local disk prior to upload which
     is not ideal from a forensic viewpoint.
 
 reference:
@@ -48,8 +46,9 @@ required_permissions:
   - EXECVE
 
 tools:
-  - name: Bulk_Extractor
-    url: https://github.com/4n6ist/bulk_extractor-rec/releases/download/rec03/bulk_extractor-rec03_x64.zip
+  - name: Bulk_Extractor_Binary
+    url: https://github.com/Velocidex/Tools/raw/main/BulkExtractor/bulk_extractor.exe
+    serve_locally: true
 
 precondition: SELECT OS From info() where OS = 'windows'
 
@@ -74,17 +73,9 @@ parameters:
 sources:
   - query: |
       LET bin <= SELECT *
-        FROM Artifact.Generic.Utils.FetchBinary(ToolName="Bulk_Extractor")
+        FROM Artifact.Generic.Utils.FetchBinary(ToolName="Bulk_Extractor_Binary")
       LET tempfolder <= tempdir()
       LET ExePath <= tempfile(extension=".exe")
-      LET zip_file <= SELECT
-            copy(
-              filename=pathspec(
-                 DelegatePath=bin[0].FullPath,
-                 Path="bulk_extractor.exe"),
-              dest=ExePath,
-              accessor='zip') AS Payload
-        FROM scope()
 
       LET target = SELECT
             DeviceID,
@@ -121,10 +112,10 @@ sources:
             })
             GROUP BY _DeviceID
 
-      LET cmdline = SELECT (zip_file[0].Payload,'-q','99999999999','-R') +
-                           CMD + ('-o') as CMD FROM switch(
+      LET cmdline = SELECT (bin[0].FullPath, '-q', '99999999999', '-R') +
+                           CMD + '-o' as CMD FROM switch(
             a= {
-                SELECT split(string=FreeCommand, sep=' ') AS CMD
+                SELECT commandline_split(command=FreeCommand) AS CMD
                 FROM scope()
                 WHERE FreeCommand
             },
@@ -152,8 +143,12 @@ sources:
         row=target,
         query= {
             SELECT *
-            FROM execve(argv=cmdline[0].CMD + (tempfolder + '\\' + base, DeviceID)
-                , length=10000000, sep='\n')})
+            FROM execve(
+             argv=cmdline[0].CMD + (
+                tempfolder + '\\' +
+                  regex_replace(source=base, re='[^a-zA-Z]', replace='_'),
+                  DeviceID),
+             length=10000000, sep='\n')})
 
   - name: FindResults
     query: |
