@@ -123,8 +123,8 @@ func (self SourcePlugin) Call(
 
 	// Hunt mode is just a proxy for the hunt_results()
 	// plugin.
-
-	if arg.NotebookId == "" && arg.HuntId != "" {
+	if arg.NotebookCellId == "" &&
+		arg.HuntId != "" {
 		new_args := ordereddict.NewDict().
 			Set("hunt_id", arg.HuntId).
 			Set("artifact", arg.Artifact).
@@ -135,7 +135,7 @@ func (self SourcePlugin) Call(
 	}
 
 	// Event artifacts just proxy for the monitoring plugin.
-	if arg.NotebookId == "" && arg.Artifact != "" {
+	if arg.NotebookCellId == "" && arg.Artifact != "" {
 		ok, _ := isArtifactEvent(config_obj, arg)
 		if ok {
 			// Just delegate directly to the monitoring plugin.

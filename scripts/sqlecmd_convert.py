@@ -82,7 +82,7 @@ sources:
                    atime=Atime,
                    ctime=Ctime,
                    btime=Btime)) AS Upload
-   FROM glob(globs=GlobExpr, accessor=Accessor)
+   FROM glob(globs=GlobExpr.Glob, accessor=Accessor)
    WHERE NOT IsDir
      AND if(condition=UseFilenames, then=Name =~ AllFilenamesRegex, else=TRUE)
      AND Magic =~ "SQLite format 3"
