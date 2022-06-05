@@ -262,10 +262,6 @@ func (self _RegexReplace) Call(
 		return vfilter.Null{}
 	}
 
-	if arg.Replace != "" {
-		return re.ReplaceAllString(arg.Source, arg.Replace)
-	}
-
 	if arg.ReplaceLambda != "" {
 		var lambda *vfilter.Lambda
 
@@ -292,8 +288,7 @@ func (self _RegexReplace) Call(
 			})
 	}
 
-	scope.Log("regex_replace: Either of 'replace' or 'replace_lambda' should be specified")
-	return vfilter.Null{}
+	return re.ReplaceAllString(arg.Source, arg.Replace)
 }
 
 func (self _RegexReplace) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

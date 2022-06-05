@@ -5,9 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -35,7 +36,7 @@ func (self *DummyProcessTracker) Get(ctx context.Context,
 
 		for row := range pslist.Call(
 			ctx, scope, ordereddict.NewDict().Set("pid", pid)) {
-			return getProcessEntry(vfilter.RowToDict(ctx, scope, row))
+			return getProcessEntry(scope, vfilter.RowToDict(ctx, scope, row))
 		}
 	}
 	return nil, false
@@ -56,7 +57,7 @@ func (self *DummyProcessTracker) Processes(
 
 	result := []*ProcessEntry{}
 	for row := range pslist.Call(ctx, scope, ordereddict.NewDict()) {
-		item, ok := getProcessEntry(vfilter.RowToDict(ctx, scope, row))
+		item, ok := getProcessEntry(scope, vfilter.RowToDict(ctx, scope, row))
 		if ok {
 			result = append(result, item)
 		}
@@ -115,9 +116,16 @@ type ProcessInfoWindows struct {
 	StartTime string `json:"CreateTime"`
 }
 
+type ProcessInfoLinux struct {
+	Pid       int   `json:"Pid"`
+	PPid      int   `json:"Ppid"`
+	StartTime int64 `json:"CreateTime"`
+}
+
 // Parses the output of various pslist implementations to give a
 // ProcessEntry item.
-func getProcessEntry(row *ordereddict.Dict) (*ProcessEntry, bool) {
+func getProcessEntry(
+	scope vfilter.Scope, row *ordereddict.Dict) (*ProcessEntry, bool) {
 	serialized, err := row.MarshalJSON()
 	if err != nil {
 		return nil, false
@@ -126,11 +134,24 @@ func getProcessEntry(row *ordereddict.Dict) (*ProcessEntry, bool) {
 	windows_item := &ProcessInfoWindows{}
 	err = json.Unmarshal(serialized, windows_item)
 	if err != nil {
+		// Maybe we are running on linux
+		unix_item := &ProcessInfoLinux{}
+		err = json.Unmarshal(serialized, unix_item)
+		if err == nil {
+
+			return &ProcessEntry{
+				Id:        fmt.Sprintf("%v", unix_item.Pid),
+				ParentId:  fmt.Sprintf("%v", unix_item.PPid),
+				StartTime: utils.ParseTimeFromInt64(unix_item.StartTime),
+				Data:      row,
+			}, true
+		}
+
 		return nil, false
 	}
 
-	create_time := time.Time{}
-	_ = json.Unmarshal([]byte(windows_item.StartTime), &create_time)
+	create_time, _ := functions.ParseTimeFromString(scope,
+		windows_item.StartTime)
 
 	return &ProcessEntry{
 		Id:        fmt.Sprintf("%v", windows_item.Pid),
