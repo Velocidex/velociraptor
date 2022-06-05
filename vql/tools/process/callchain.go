@@ -34,7 +34,7 @@ func (self getChain) Call(ctx context.Context,
 		return &vfilter.Null{}
 	}
 
-	return tracker.CallChain(arg.Id)
+	return tracker.CallChain(ctx, scope, arg.Id)
 }
 
 func (self getChain) Info(scope types.Scope,

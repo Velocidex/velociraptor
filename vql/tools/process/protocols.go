@@ -29,20 +29,14 @@ func (self ProcessTrackerUpdater) Call(
 	output_chan := make(chan types.Row)
 
 	tracker := GetGlobalTracker()
-
-	tracker.mu.Lock()
-	if tracker.update_notifications == nil {
-		tracker.update_notifications = make(chan *ProcessEntry)
-	}
-	update_notifications := tracker.update_notifications
-	tracker.mu.Unlock()
+	update_notifications := tracker.Updates()
 
 	go func() {
 		defer close(output_chan)
 
 		// First message is a full sync message.
 		update := ordereddict.NewDict()
-		for _, p := range tracker.Processes() {
+		for _, p := range tracker.Processes(ctx, scope) {
 			update.Set(p.Id, p)
 		}
 		event := &ProcessEntry{

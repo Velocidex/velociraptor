@@ -28,6 +28,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 type _ParseFileWithRegexArgs struct {
@@ -237,9 +238,10 @@ func (self _ParseStringWithRegexFunction) Info(scope vfilter.Scope, type_map *vf
 }
 
 type _RegexReplaceArg struct {
-	Source  string `vfilter:"required,field=source,doc=The source string to replace."`
-	Replace string `vfilter:"required,field=replace,doc=The substitute string."`
-	Re      string `vfilter:"required,field=re,doc=A regex to apply"`
+	Source        string `vfilter:"required,field=source,doc=The source string to replace."`
+	Replace       string `vfilter:"optional,field=replace,doc=The substitute string."`
+	ReplaceLambda string `vfilter:"optional,field=replace_lambda,doc=Optionally the replacement can be a lambda."`
+	Re            string `vfilter:"required,field=re,doc=A regex to apply"`
 }
 
 type _RegexReplace struct{}
@@ -251,7 +253,7 @@ func (self _RegexReplace) Call(
 	arg := &_RegexReplaceArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("regex_replace: %s", err.Error())
+		scope.Log("regex_replace: %v", err)
 		return vfilter.Null{}
 	}
 	re, err := regexp.Compile("(?i)" + arg.Re)
@@ -260,7 +262,38 @@ func (self _RegexReplace) Call(
 		return vfilter.Null{}
 	}
 
-	return re.ReplaceAllString(arg.Source, arg.Replace)
+	if arg.Replace != "" {
+		return re.ReplaceAllString(arg.Source, arg.Replace)
+	}
+
+	if arg.ReplaceLambda != "" {
+		var lambda *vfilter.Lambda
+
+		cache_key := "re:" + arg.ReplaceLambda
+		lambda_any := vql_subsystem.CacheGet(scope, cache_key)
+		if lambda_any != nil {
+			lambda, _ = lambda_any.(*vfilter.Lambda)
+		}
+
+		if lambda == nil {
+			lambda, err = vfilter.ParseLambda(arg.ReplaceLambda)
+			if err != nil {
+				scope.Log("regex_replace: Unable to compile lambda %s",
+					arg.ReplaceLambda)
+				return vfilter.Null{}
+			}
+			vql_subsystem.CacheSet(scope, cache_key, lambda)
+		}
+
+		return re.ReplaceAllStringFunc(arg.Source,
+			func(str string) string {
+				return fmt.Sprintf("%v",
+					lambda.Reduce(ctx, scope, []types.Any{str}))
+			})
+	}
+
+	scope.Log("regex_replace: Either of 'replace' or 'replace_lambda' should be specified")
+	return vfilter.Null{}
 }
 
 func (self _RegexReplace) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
