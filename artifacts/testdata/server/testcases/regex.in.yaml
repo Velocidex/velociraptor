@@ -1,0 +1,8 @@
+Queries:
+  - LET URLEscaped = "my%2Fcool%2Bescaped%2y6string%2Cwith%2cmalform"
+
+  # Test lambda replace target: Unescape the URL string with a simple
+  # dumb replace (not correct but resilient to malformed strings)
+  - SELECT regex_replace(source=URLEscaped,
+       replace_lambda="x=>unhex(string=x[1:]) || x", re="%..")
+    FROM scope()

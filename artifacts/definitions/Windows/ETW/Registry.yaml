@@ -1,0 +1,69 @@
+name: Windows.ETW.Registry
+description: |
+  Windows Registry access is a great source of visibility into system
+  activity.
+
+  There are many ways of gaining visibility into this, the most
+  reliable being Sysmon. However it is also possible to gain some
+  visibility using ETW. The Microsoft-Windows-Kernel-Registry provides
+  ETW events for registry modifications.
+
+  This artifact parses these events and ties them back to the
+  accessing process. It is recommended to run this artifact with the
+  process tracker.
+
+  NOTE: Experience shows this ETW provider is not very reliable and
+  seems to miss a lot of registry events.
+
+  This artifact is experimental.
+
+type: CLIENT_EVENT
+
+precondition: SELECT * FROM info() WHERE OS = "windows"
+
+parameters:
+- name: KeyNameRegex
+  type: regex
+  default: .
+- name: ProcessRegex
+  type: regex
+  default: .
+
+sources:
+- query: |
+    LET Cache <= lru(size=1000)
+    LET EventLookup <= dict(
+        `1`="CreateKey",
+        `2`="OpenKey",
+        `3`="DeleteKey",
+        `4`="QueryKey",
+        `5`="SetValueKey",
+        `6`="DeleteValueKey",
+        `7`="QueryValue",
+        `8`="EnumerateKey",
+        `9`="EnumerateValueKey"
+    )
+
+    LET registry_access = SELECT System, EventData,
+       get(item=EventLookup, field=str(str=System.ID)) AS EventType,
+       get(item=Cache, field=EventData.KeyObject) || EventData.KeyName AS KeyName
+    FROM watch_etw(guid="{70EB4F03-C1DE-4F73-A051-33D13D5413BD}", any=0x7720)
+    WHERE System.ProcessID != getpid() -- exclude ourselves
+        AND EventType  -- we only care about these events
+        AND if(condition=System.ID in (1, 2, 4),
+              then=set(item=Cache, field=EventData.KeyObject,
+                       value=EventData.RelativeName),
+              else=TRUE) -- set KeyName in the lru
+
+    LET hits = SELECT System.TimeStamp AS Timestamp,
+       process_tracker_get(id=System.ProcessID).Data AS Process,
+       EventType, KeyName, EventData
+    FROM registry_access
+    WHERE KeyName =~ KeyNameRegex
+
+    SELECT Timestamp, EventType,
+       Process.Name AS ProcessName, Process.Username AS Owner,
+       Process.CommandLine AS CommandLine,
+       KeyName, EventData.ValueName AS ValueName
+    FROM hits
+    WHERE ProcessName =~ ProcessRegex

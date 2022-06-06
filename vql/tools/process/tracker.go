@@ -33,11 +33,11 @@ var (
 
 	// A global tracker that can be registered with
 	// process_tracker_install() and retrieved with process_tracker().
-	g_tracker *ProcessTracker = NewProcessTracker(1000)
+	g_tracker IProcessTracker = &DummyProcessTracker{}
 	clock     utils.Clock     = &utils.RealClock{}
 )
 
-func GetGlobalTracker() *ProcessTracker {
+func GetGlobalTracker() IProcessTracker {
 	clock_mu.Lock()
 	defer clock_mu.Unlock()
 
@@ -69,7 +69,8 @@ type ProcessTracker struct {
 	enrichments *ordereddict.Dict // map[string]*vfilter.Lambda
 }
 
-func (self *ProcessTracker) Get(id string) (*ProcessEntry, bool) {
+func (self *ProcessTracker) Get(
+	ctx context.Context, scope vfilter.Scope, id string) (*ProcessEntry, bool) {
 	any, err := self.lookup.Get(id)
 	if err != nil {
 		return nil, false
@@ -113,14 +114,26 @@ func (self *ProcessTracker) Enrich(
 	return pe, true
 }
 
-func (self *ProcessTracker) Processes() []*ProcessEntry {
+func (self *ProcessTracker) Updates() chan *ProcessEntry {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.update_notifications == nil {
+		self.update_notifications = make(chan *ProcessEntry)
+	}
+
+	return self.update_notifications
+}
+
+func (self *ProcessTracker) Processes(
+	ctx context.Context, scope vfilter.Scope) []*ProcessEntry {
 	res := []*ProcessEntry{}
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	for _, id := range self.lookup.GetKeys() {
-		v, pres := self.Get(id)
+		v, pres := self.Get(ctx, scope, id)
 		if pres {
 			res = append(res, v)
 		}
@@ -130,14 +143,15 @@ func (self *ProcessTracker) Processes() []*ProcessEntry {
 }
 
 // Return all the processes that are children of this id
-func (self *ProcessTracker) Children(id string) []*ProcessEntry {
+func (self *ProcessTracker) Children(
+	ctx context.Context, scope vfilter.Scope, id string) []*ProcessEntry {
 	res := []*ProcessEntry{}
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	for _, item_id := range self.lookup.GetKeys() {
-		v, pres := self.Get(item_id)
+		v, pres := self.Get(ctx, scope, item_id)
 		if pres {
 			if v.ParentId == id {
 				res = append(res, v)
@@ -187,7 +201,7 @@ func (self *ProcessTracker) doUpdateQuery(
 				self.maybeSendUpdate(update)
 
 				self.mu.Lock()
-				entry, pres := self.Get(update.Id)
+				entry, pres := self.Get(ctx, scope, update.Id)
 				if pres {
 					entry.EndTime = update.EndTime
 					self.lookup.Set(update.Id, entry)
@@ -236,7 +250,7 @@ func (self *ProcessTracker) doFullSync(
 	// update exit time if needed.
 	self.mu.Lock()
 	for id := range existing {
-		item, pres := self.Get(id)
+		item, pres := self.Get(ctx, scope, id)
 		if pres {
 			item.EndTime = now
 		}
@@ -266,13 +280,14 @@ func (self *ProcessTracker) maybeSendUpdate(update *ProcessEntry) {
 	}
 }
 
-func (self *ProcessTracker) CallChain(id string) []*ProcessEntry {
+func (self *ProcessTracker) CallChain(
+	ctx context.Context, scope vfilter.Scope, id string) []*ProcessEntry {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	result := []*ProcessEntry{}
 	for {
-		proc, pres := self.Get(id)
+		proc, pres := self.Get(ctx, scope, id)
 		if !pres {
 			return reverse(result)
 		}
@@ -341,6 +356,7 @@ func (self _InstallProcessTracker) Call(ctx context.Context,
 	}
 
 	tracker := NewProcessTracker(int(max_size))
+
 	// Any any enrichments to the tracker.
 	for _, enrichment := range arg.Enrichments {
 		lambda, err := vfilter.ParseLambda(enrichment)
@@ -383,9 +399,18 @@ func (self _InstallProcessTracker) Call(ctx context.Context,
 
 	// Register this tracker as a global tracker.
 	clock_mu.Lock()
-	defer clock_mu.Unlock()
-
 	g_tracker = tracker
+	clock_mu.Unlock()
+
+	// When this query is done we remove the process tracker and use
+	// the dummy one. This restores the state to the initial state.
+	vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+		clock_mu.Lock()
+		g_tracker = &DummyProcessTracker{}
+		clock_mu.Unlock()
+
+		scope.Log("Uninstalling process tracker.")
+	})
 
 	return tracker
 }

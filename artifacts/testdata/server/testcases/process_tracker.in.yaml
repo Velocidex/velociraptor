@@ -1,0 +1,5 @@
+Queries:
+  # A default process tracker always exists and it is equivalent to pslist().
+  - |
+    SELECT process_tracker_get(id=str(str=getpid())).Id = str(str=getpid())
+    FROM scope()

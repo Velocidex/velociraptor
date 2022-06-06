@@ -28,7 +28,7 @@ func (self getChildren) Call(ctx context.Context,
 		return &vfilter.Null{}
 	}
 
-	return tracker.Children(arg.Id)
+	return tracker.Children(ctx, scope, arg.Id)
 }
 
 func (self getChildren) Info(scope types.Scope,
@@ -51,7 +51,7 @@ func (self getAll) Call(ctx context.Context,
 		return &vfilter.Null{}
 	}
 
-	return tracker.Processes()
+	return tracker.Processes(ctx, scope)
 }
 
 func (self getAll) Info(scope types.Scope,

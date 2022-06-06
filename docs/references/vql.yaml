@@ -2516,6 +2516,9 @@
   - name: args
     type: Any
     description: An array of elements to apply into the format string.
+  - name: level
+    type: string
+    description: Level to log at (DEFAULT, WARN, ERROR, INFO).
   category: basic
 - name: lookupSID
   description: Get information about the SID.
@@ -2556,7 +2559,6 @@
 
     Note how `set()` can be used to add items to the cache and `get()`
     is used to retrieve items.
-
   type: Function
   args:
   - name: size
@@ -3845,6 +3847,9 @@
     type: string
     description: Process ID.
     required: true
+- name: process_tracker_pslist
+  description: List all processes from the process tracker.
+  type: Plugin
 - name: process_tracker_updates
   description: Get the process tracker update events from the global process tracker.
   type: Plugin
@@ -4094,7 +4099,9 @@
   - name: replace
     type: string
     description: The substitute string.
-    required: true
+  - name: replace_lambda
+    type: string
+    description: Optionally the replacement can be a lambda.
   - name: re
     type: string
     description: A regex to apply
@@ -5599,3 +5606,4 @@
     type: string
     description: If set use this key to cache the  yara rules.
   category: plugin
+
