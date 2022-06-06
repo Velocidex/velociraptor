@@ -40,7 +40,16 @@ import (
 
 // A one stop shop plugin for retrieving result sets collected from
 // various places. Depending on the options used, the results come
-// from different places in the filestore.
+// from different places in the filestore. Because multiple sources
+// can be specified at the same time there is a preference order:
+
+// 1. If NotebookId is specified, then it is a notebook cell we read
+//    from.
+// 2. If a HuntId is specified we read from the hunt
+// 3. If an event Artifact is specified we read from the monitoring
+//    log for that artifact.
+// 4. If a FlowId is specified then we read from the collection.
+
 type SourcePluginArgs struct {
 	// Collected artifacts from clients should specify the client
 	// id and flow id as well as the artifact and source.
@@ -114,7 +123,8 @@ func (self SourcePlugin) Call(
 
 	// Hunt mode is just a proxy for the hunt_results()
 	// plugin.
-	if arg.HuntId != "" {
+
+	if arg.NotebookId == "" && arg.HuntId != "" {
 		new_args := ordereddict.NewDict().
 			Set("hunt_id", arg.HuntId).
 			Set("artifact", arg.Artifact).
@@ -125,7 +135,7 @@ func (self SourcePlugin) Call(
 	}
 
 	// Event artifacts just proxy for the monitoring plugin.
-	if arg.Artifact != "" {
+	if arg.NotebookId == "" && arg.Artifact != "" {
 		ok, _ := isArtifactEvent(config_obj, arg)
 		if ok {
 			// Just delegate directly to the monitoring plugin.
