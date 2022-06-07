@@ -146,10 +146,11 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
 		}
-		userInfo, err := provider.UserInfo(r.Context(), oauth2.StaticTokenSource(oauthToken))
+		userInfo, err := provider.UserInfo(
+			r.Context(), oauth2.StaticTokenSource(oauthToken))
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
-				Error("can not get UserInfo from OIDC provider")
+				Error("can not get UserInfo from OIDC provider: %v", err)
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 			return
 		}

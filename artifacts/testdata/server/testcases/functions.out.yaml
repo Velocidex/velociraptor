@@ -50,10 +50,11 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
    "B": 2
   }
  }
-]SELECT cidr_contains(ip="192.168.0.132", ranges="192.168.0.0/24"), cidr_contains(ip="191.168.0.132", ranges="192.168.0.0/24") FROM scope()[
+]SELECT cidr_contains(ip="192.168.0.132", ranges="192.168.0.0/24"), cidr_contains(ip="191.168.0.132", ranges="192.168.0.0/24"), cidr_contains(ip="10.168.0.132", ranges=["192.168.0.0/24", "10.0.0.0/8"]) FROM scope()[
  {
   "cidr_contains(ip=\"192.168.0.132\", ranges=\"192.168.0.0/24\")": true,
-  "cidr_contains(ip=\"191.168.0.132\", ranges=\"192.168.0.0/24\")": false
+  "cidr_contains(ip=\"191.168.0.132\", ranges=\"192.168.0.0/24\")": false,
+  "cidr_contains(ip=\"10.168.0.132\", ranges= [\"192.168.0.0/24\", \"10.0.0.0/8\"])": true
  }
 ]SELECT commandline_split(command='''"C:\Program Files\Velociraptor\Velociraptor.exe" service run'''), commandline_split(command="/usr/bin/ls -l 'file with space.txt'", bash_style=TRUE) FROM scope()[
  {
