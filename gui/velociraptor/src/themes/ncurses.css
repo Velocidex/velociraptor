@@ -109,8 +109,6 @@ body.ncurses {
 }
 
 .ncurses .ace_content {
-  font-family: var(--font-family-monospace);
-  font-size: var(--font-size-base);
   color: var(--color-text-default);
 }
 
