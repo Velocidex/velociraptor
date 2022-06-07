@@ -50,9 +50,8 @@ func getAuthenticatorByType(
 	auth_config *config_proto.Authenticator) (Authenticator, error) {
 
 	mu.Lock()
-	defer mu.Unlock()
-
 	handler, pres := auth_dispatcher[strings.ToLower(auth_config.Type)]
+	mu.Unlock()
 	if pres {
 		return handler(config_obj, auth_config)
 	}
