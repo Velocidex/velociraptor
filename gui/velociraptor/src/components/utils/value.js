@@ -3,6 +3,9 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 import ReactJson from 'react-json-view';
 import UserConfig from '../core/user.js';
+import VeloTimestamp from "./time.js";
+
+const timestamp_regex = new RegExp('^\\d\\d\\d\\d-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d.+$');
 
 const defaultTheme = {
     scheme: 'rjv-default',
@@ -71,11 +74,20 @@ export default class VeloValueRenderer extends React.Component {
         }
     }
 
+    // If the cell contains something that looks like a timestamp,
+    // format it as such.
+    maybeFormatTime = x => {
+        if (timestamp_regex.test(x)) {
+            return <VeloTimestamp iso={x} />;
+        }
+        return x;
+    }
+
     render() {
         let v = this.props.value;
 
         if (_.isString(v)) {
-            return <>{v}</>;
+            return <>{this.maybeFormatTime(v)}</>;
         }
 
         if (_.isNumber(v)) {
