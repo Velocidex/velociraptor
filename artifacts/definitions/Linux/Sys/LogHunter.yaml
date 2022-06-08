@@ -31,9 +31,9 @@ sources:
         FROM glob(globs=TargetFiles,nosymlink=True,
             recursion_callback="x=> NOT x.OSPath =~ '^/(shared|proc|snap)'")
         WHERE NOT IsDir
-          AND WHERE NOT if(condition=ExcludePathRegex,
-                            then= OSPath=~ExcludePathRegex,
-                            else= False )
+            AND NOT if(condition=ExcludePathRegex,
+                                then= OSPath=~ExcludePathRegex,
+                                else= False )
 
       SELECT * FROM foreach(row=files,
           query={
