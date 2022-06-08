@@ -32,14 +32,15 @@ parameters:
 sources:
   - query: |
       LET RecursionCB <= if(condition= ExcludeDirectoryRegex,
-         then="x => x.OSPath =~ ExcludeDirectoryRegex",
-         else="x => x.OSPath =~ '^/proc' ")
+         then="x => NOT x.OSPath =~ ExcludeDirectoryRegex",
+         else="x => NOT x.OSPath =~ '^/proc' ")
       
       LET files = SELECT OSPath 
         FROM glob(globs=TargetFiles,
             nosymlink=TRUE,
             recursion_callback=RecursionCB)
-        WHERE NOT IsDir AND OSPath =~ ExcludePathRegex
+        WHERE NOT IsDir AND NOT OSPath =~ ExcludePathRegex
+          AND log(message="Scanning %v", args=OSPath)
 
       LET hits = SELECT * FROM foreach(row=files,
           query={
