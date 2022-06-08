@@ -16,30 +16,43 @@ parameters:
     description: "Regex of strings to search in log line."
     default: ' POST '
     type: regex
-  - name: WhitelistRegex
+  - name: FilterRegex
     description: "Regex of strings to leave out of output."
     default:
     type: regex
+  - name: ExcludeDirectoryRegex
+    type: regex
+    description: "Does not descend into directories that match this Regex."
+    default: "^/(shared|proc|snap)"
   - name: ExcludePathRegex
-    description: "Regex of paths to exclude."
-    default: '^/(shared|proc|snap)|.journal$'
+    description: "Regex of paths to exclude from scanning."
+    default: '.journal$'
     type: regex
     
 sources:
   - query: |
+      LET RecursionCB <= if(condition= ExcludeDirectoryRegex,
+         then="x => x.OSPath =~ ExcludeDirectoryRegex",
+         else="x => x.OSPath =~ '^/proc' ")
+      
       LET files = SELECT OSPath 
-        FROM glob(globs=TargetFiles,nosymlink=True,
-            recursion_callback="x=> NOT if(condition= ExcludePathRegex,
-                                            then= x.OSPath=~ExcludePathRegex,
-                                            else= False)" )
+        FROM glob(globs=TargetFiles,
+            nosymlink=TRUE,
+            recursion_callback=RecursionCB)
         WHERE NOT IsDir
 
-      SELECT * FROM foreach(row=files,
+      LET hits = SELECT * FROM foreach(row=files,
           query={
               SELECT OSPath, Line FROM parse_lines(filename=OSPath)
-              WHERE
-                Line =~ SearchRegex
-                AND NOT if(condition= WhitelistRegex,
-                    then= Line =~ WhitelistRegex,
-                    else= FALSE)
+              WHERE Line =~ SearchRegex
           })
+          
+      SELECT * FROM if(condition=FilterRegex,
+        then={ 
+           SELECT * FROM hits
+           WHERE NOT Line =~ FilterRegex
+        },
+        else={ 
+           SELECT * FROM hits        
+        })
+        
