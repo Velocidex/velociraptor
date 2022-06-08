@@ -39,7 +39,7 @@ sources:
         FROM glob(globs=TargetFiles,
             nosymlink=TRUE,
             recursion_callback=RecursionCB)
-        WHERE NOT IsDir
+        WHERE NOT IsDir AND OSPath =~ ExcludePathRegex
 
       LET hits = SELECT * FROM foreach(row=files,
           query={
