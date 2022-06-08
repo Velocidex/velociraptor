@@ -94,7 +94,7 @@ func (self *OidcAuthenticator) getGenOauthConfig(
 
 	var scope []string
 	switch strings.ToLower(self.authenticator.Type) {
-	case "oidc":
+	case "oidc", "oidc-cognito":
 		scope = []string{oidc.ScopeOpenID, "email"}
 	}
 
