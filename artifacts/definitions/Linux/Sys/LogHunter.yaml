@@ -3,8 +3,8 @@ author: "Matt Green - @mgreen27"
 description: |
   This artifact enables grep of Linux, MacOS and Windows logs. 
   Parameters include SearchRegex and WhitelistRegex as regex terms.  
-  I have also included a Path exclusion regex to improve performance and skip 
-  notorious locations like /proc.  
+  I have also included a Path exclusion regex to improve result output 
+  and automatically skip hitting notorious locations like /proc.  
   
   NOTE: nosymlink feature of glob is set so unexpected results may occur if 
   targetting includes symlink files.
