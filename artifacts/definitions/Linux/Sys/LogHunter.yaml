@@ -1,0 +1,43 @@
+name: Linux.Sys.LogHunter
+author: "Matt Green - @mgreen27"
+description: |
+  This artifact enables grep of Linux, MacOS and Windows logs. 
+  Parameters include SearchRegex and WhitelistRegex as regex terms.  
+  I have also included a Path exclusion regex to improve performance and skip 
+  notorious locations like /proc.  
+  
+  NOTE: nosymlink feature of glob is set so unexpected results may occur if 
+  targetting includes symlink files.
+  
+parameters:
+  - name: TargetFiles
+    default: '/var/log/**'
+  - name: SearchRegex
+    description: "Regex of strings to search in log line."
+    default: ' POST '
+    type: regex
+  - name: WhitelistRegex
+    description: "Regex of strings to leave out of output."
+    default:
+    type: regex
+  - name: ExcludePathRegex
+    description: "Regex of paths to exclude."
+    default: '^/(proc|sys|run|snap)|\.journal$'
+    type: regex
+    
+sources:
+  - query: |
+      LET files = SELECT OSPath FROM glob(globs=TargetFiles,nosymlink=True)
+        WHERE NOT if(condition=ExcludePathRegex,
+                                then= OSPath=~ExcludePathRegex,
+                                else= False )
+
+      SELECT * FROM foreach(row=files,
+          query={
+              SELECT OSPath, Line FROM parse_lines(filename=OSPath)
+              WHERE
+                Line =~ SearchRegex
+                AND NOT if(condition= WhitelistRegex,
+                    then= Line =~ WhitelistRegex,
+                    else= FALSE)
+          })
