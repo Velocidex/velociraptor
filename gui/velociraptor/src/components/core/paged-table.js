@@ -110,6 +110,13 @@ class VeloPagedTable extends Component {
         version: PropTypes.object,
 
         translate_column_headers: PropTypes.bool,
+
+        // An optional toolbar that can be passed to the table.
+        toolbar: PropTypes.object,
+
+        // If specified we notify that a transform is set.
+        transform: PropTypes.object,
+        setTransform: PropTypes.func,
     }
 
     state = {
@@ -145,6 +152,11 @@ class VeloPagedTable extends Component {
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (!_.isEqual(prevProps.version, this.props.version)) {
             this.fetchRows();
+        };
+
+        if (this.props.transform &&
+            !_.isEqual(prevProps.transform, this.props.transform)) {
+            this.setState({transform: this.props.transform});
         };
 
         if (!_.isEqual(prevProps.params, this.props.params)) {
@@ -312,16 +324,31 @@ class VeloPagedTable extends Component {
 
         if (_.isEmpty(this.state.columns)) {
             if (this.props.refresh) {
-                return <div className="no-content">
-                         <div>No Data Available.</div>
-                         <Button variant="default" onClick={this.props.refresh}>
-                           Recalculate <FontAwesomeIcon icon="sync"/>
-                         </Button>
-                       </div>;
+                return <>
+                         <div className="col-12">
+                           <Navbar className="toolbar">
+                             { this.props.toolbar || <></> }
+                           </Navbar>
+                           <div className="no-content">
+                             <div>{T("No Data Available.")}</div>
+                             <Button variant="default" onClick={this.props.refresh}>
+                               {T("Recalculate")} <FontAwesomeIcon icon="sync"/>
+                             </Button>
+                           </div>
+                         </div>
+                       </>;
+
             }
-            return <div className="no-content">
-                     <div>No Data Available.</div>
-                   </div>;
+            return <>
+                     <div className="col-12">
+                       <Navbar className="toolbar">
+                         { this.props.toolbar || <></> }
+                       </Navbar>
+                       <div className="no-content">
+                         <div>{T("No Data Available.")}</div>
+                       </div>
+                     </div>
+                   </>;
         }
 
         let table_options = this.props.params.TableOptions || {};
@@ -392,6 +419,10 @@ class VeloPagedTable extends Component {
                           transform: x,
                           start_row: 0,
                       });
+
+                      if(this.props.setTransform) {
+                          this.props.setTransform(x);
+                      }
                   }}
                   onClose={()=>this.setState({show_transform_dialog: false})}
                 />
@@ -451,6 +482,7 @@ class VeloPagedTable extends Component {
                             { transformed }
                           </ButtonGroup>
                         }
+                        { this.props.toolbar || <></> }
                       </Navbar>
                       <div className="row col-12">
                         <BootstrapTable

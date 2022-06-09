@@ -17,3 +17,7 @@
 div .flow-status-icon {
     text-align: center;
 }
+
+.flow-log-filter {
+    margin-right: 4px;
+}

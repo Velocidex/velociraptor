@@ -33,8 +33,8 @@ export default class DeleteNotebookDialog extends React.PureComponent {
                         "Server.Utils.DeleteNotebook",
                         {NotebookId: this.props.notebook_id,
                          ReallyDoIt: "Y"}, ()=>{
-                             this.props.onClose();
                              this.setState({loading: false});
+                             this.props.onClose();
                          }, this.source.token);
         }
     }
