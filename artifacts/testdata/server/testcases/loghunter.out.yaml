@@ -1,0 +1,11 @@
+SELECT relpath(path=OSPath, base=srcDir, sep="/") as RelativePath, Line FROM Artifact.Linux.Sys.LogHunter(TargetFiles=srcDir + '/artifacts/testdata/files/access.log',SearchRegex='66.102.6.218',FilterRegex='')[
+ {
+  "RelativePath": "artifacts/testdata/files/access.log",
+  "Line": "66.102.6.218 - - [29/Dec/2019:09:38:39 +1000] \"GET / HTTP/1.1\" 401 4481 \"-\" \"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.75 Safari/537.36 Google Favicon\""
+ }
+]SELECT relpath(path=OSPath, base=srcDir, sep="/") as RelativePath, Line FROM Artifact.Linux.Sys.LogHunter(TargetFiles=srcDir + '/artifacts/testdata/files/access.log',SearchRegex='masscan',FilterRegex='170.238.36.21')[
+ {
+  "RelativePath": "artifacts/testdata/files/access.log",
+  "Line": "159.203.83.217 - - [29/Dec/2019:10:28:43 +1000] \"GET / HTTP/1.0\" 401 691 \"-\" \"masscan/1.0 (https://github.com/robertdavidgraham/masscan)\""
+ }
+]
