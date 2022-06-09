@@ -219,7 +219,7 @@ func doArtifactCollect() error {
 		return err
 	}
 
-	logger := log.New(&LogWriter{config_obj}, " ", 0)
+	logger := log.New(&LogWriter{config_obj}, "", 0)
 
 	scope := manager.BuildScope(services.ScopeBuilder{
 		Config:     config_obj,

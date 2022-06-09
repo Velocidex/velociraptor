@@ -265,7 +265,7 @@ func doCp(path, accessor string, dump_dir string) error {
 
 	builder := services.ScopeBuilder{
 		Config: config_obj,
-		Logger: log.New(&LogWriter{config_obj}, "Velociraptor: ", 0),
+		Logger: log.New(&LogWriter{config_obj}, "", 0),
 		Env: ordereddict.NewDict().
 			Set("accessor", accessor).
 			Set("path", path),

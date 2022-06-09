@@ -58,7 +58,7 @@ func doUnzip() error {
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
-		Logger:     log.New(&LogWriter{config_obj}, "Velociraptor: ", 0),
+		Logger:     log.New(&LogWriter{config_obj}, "", 0),
 		Env: ordereddict.NewDict().
 			Set("ZipPath", filename).
 			Set("DumpDir", *unzip_path).

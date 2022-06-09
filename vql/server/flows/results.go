@@ -371,7 +371,7 @@ func (self FlowResultsPlugin) Call(
 		arg := &FlowResultsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("hunt_results: %v", err)
+			scope.Log("flow_results: %v", err)
 			return
 		}
 
@@ -386,7 +386,7 @@ func (self FlowResultsPlugin) Call(
 		if arg.Artifact == "" {
 			launcher, err := services.GetLauncher()
 			if err != nil {
-				scope.Log("hunt_results: %v", err)
+				scope.Log("flow_results: %v", err)
 				return
 			}
 			flow, err := launcher.GetFlowDetails(

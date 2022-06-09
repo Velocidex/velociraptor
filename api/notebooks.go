@@ -467,6 +467,19 @@ func getCellsForFlow(ctx context.Context,
 		sources = flow_context.Request.Artifacts
 	}
 
+	notebook_metadata.Suggestions = append(notebook_metadata.Suggestions,
+		&api_proto.NotebookCellRequest{
+			Name: "Collection logs",
+			Type: "vql",
+			Input: `
+/*
+# Flow logs
+*/
+
+SELECT * FROM flow_logs(client_id=ClientId, flow_id=FlowId)
+`,
+		})
+
 	return getDefaultCellsForSources(config_obj, sources, notebook_metadata)
 }
 

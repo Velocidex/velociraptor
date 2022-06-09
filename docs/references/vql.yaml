@@ -1367,6 +1367,18 @@
   - name: Name
     type: string
   category: plugin
+- name: flow_logs
+  description: Retrieve the query logs of a flow.
+  type: Plugin
+  args:
+  - name: flow_id
+    type: string
+    description: The flow id to read.
+    required: true
+  - name: client_id
+    type: string
+    description: The client id to extract
+    required: true
 - name: flow_results
   description: |
     Retrieve the results of a flow.
@@ -5606,4 +5618,3 @@
     type: string
     description: If set use this key to cache the  yara rules.
   category: plugin
-
