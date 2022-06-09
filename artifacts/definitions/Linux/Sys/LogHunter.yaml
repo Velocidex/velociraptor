@@ -1,14 +1,14 @@
 name: Linux.Sys.LogHunter
 author: "Matt Green - @mgreen27"
 description: |
-  This artifact enables grep of Linux, MacOS and Windows logs. 
-  Parameters include SearchRegex and WhitelistRegex as regex terms.  
-  I have also included a Path exclusion regex to improve result output 
-  and automatically skip hitting notorious locations like /proc.  
-  
-  NOTE: nosymlink feature of glob is set so unexpected results may occur if 
+  This artifact enables grep of Linux, MacOS and Windows logs.
+  Parameters include SearchRegex and WhitelistRegex as regex terms.
+  I have also included a Path exclusion regex to improve result output
+  and automatically skip hitting notorious locations like /proc.
+
+  NOTE: nosymlink feature of glob is set so unexpected results may occur if
   targetting includes symlink files.
-  
+
 parameters:
   - name: TargetFiles
     default: '/var/log/**'
@@ -28,14 +28,14 @@ parameters:
     description: "Regex of paths to exclude from scanning."
     default: '\.journal$'
     type: regex
-    
+
 sources:
   - query: |
       LET RecursionCB <= if(condition= ExcludeDirectoryRegex,
          then="x => NOT x.OSPath =~ ExcludeDirectoryRegex",
          else="x => NOT x.OSPath =~ '^/proc' ")
-      
-      LET files = SELECT OSPath 
+
+      LET files = SELECT OSPath
         FROM glob(globs=TargetFiles,
             nosymlink=TRUE,
             recursion_callback=RecursionCB)
@@ -47,13 +47,12 @@ sources:
               SELECT OSPath, Line FROM parse_lines(filename=OSPath)
               WHERE Line =~ SearchRegex
           })
-          
+
       SELECT * FROM if(condition=FilterRegex,
-        then={ 
+        then={
            SELECT * FROM hits
            WHERE NOT Line =~ FilterRegex
         },
-        else={ 
-           SELECT * FROM hits        
+        else={
+           SELECT * FROM hits
         })
-        
