@@ -64,7 +64,7 @@ sources:
             PathName, ServiceType, StartName as UserAccount,
             {
                 SELECT Mtime as Created
-                FROM stat(filename=servicesKeyGlob + Name, accessor='reg')
+                FROM stat(filename=servicesKeyGlob + Name, accessor='registry')
             } AS Created,
             {
                 SELECT expand(path=ServiceDll) AS ServiceDll
