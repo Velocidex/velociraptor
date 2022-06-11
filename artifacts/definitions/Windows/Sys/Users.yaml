@@ -1,48 +1,91 @@
 name: Windows.Sys.Users
 description: |
   List User accounts. We combine two data sources - the output from
-  the NetUserEnum() call and the list of SIDs in the registry.
+  the `NetUserEnum` API (termed `local` users) and the list of SIDs in
+  the registry (termed `remote` users).
 
-  On Domain Controllers the API will return the contents of the ActiveDirectory as a list of 'local' users, however this does not mean that the users have logged into the DC locally.
+  In this artifact, 'remote' means that user profile was cached in the
+  registry, but the user does not appear in the output of the
+  `NetUserEnum` API - this normally happens for users remotely logging
+  into the system using domain credentials.
+
+  On Domain Controllers the `NetUserEnum` API will return the contents
+  of the entire ActiveDirectory as a list of 'local' users, however
+  this does not mean that the users have logged into the DC
+  locally. To check the users which have logged in, select the
+  `OnlyRemote` parameter.
+
+  By selecting the `OnlyRemote` parameter we only return a list of
+  users with profiles cached in the registry (i.e. that were logged in
+  at some point).
 
 parameters:
   - name: remoteRegKey
     default: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\*
+  - name: OnlyRemote
+    type: bool
+    description: Only show users that actually were logged in.
 
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
     query: |
-        LET roaming_users <= SELECT "" as Uid, "" as Gid,
-               lookupSID(
-                 sid=basename(path=Key.FullPath)
-               ) as Name,
-               Key.FullPath as Description,
-               ProfileImagePath as Directory,
-               basename(path=Key.FullPath) as UUID,
-               Key.Mtime as Mtime,
-               "roaming" as Type
-           FROM read_reg_key(globs=remoteRegKey, accessor="registry")
+        LET GetTimestamp(High, Low) = if(condition=High,
+                then=timestamp(winfiletime=High * 4294967296 + Low))
 
-        LET local_users <= select User_id as Uid, Primary_group_id as Gid, Name,
-               Comment as Description, {
-                 SELECT Directory from roaming_users WHERE User_sid = UUID
-               } as Directory, User_sid as UUID, 0 AS Mtime, "local" AS Type
+        -- lookupSID() may not be available on deaddisk analysis
+        LET roaming_users <= SELECT
+           split(string=Key.OSPath.Basename, sep="-")[-1] as Uid,
+           "" AS Gid,
+           lookupSID(sid=Key.OSPath.Basename) || "" AS Name,
+           Key.OSPath as Description,
+           ProfileImagePath as Directory,
+           Key.OSPath.Basename as UUID,
+           Key.Mtime as Mtime,
+           {
+                SELECT Mtime
+                FROM stat(filename=expand(path=ProfileImagePath))
+            } AS HomedirMtime,
+           "roaming" as Type,
+           dict(ProfileLoadTime=GetTimestamp(
+                  High=LocalProfileLoadTimeHigh, Low=LocalProfileLoadTimeLow),
+                ProfileUnloadTime=GetTimestamp(
+                  High=LocalProfileUnloadTimeHigh, Low=LocalProfileUnloadTimeLow)
+           ) AS Data
+        FROM read_reg_key(globs=remoteRegKey, accessor="registry")
+
+        LET local_users <= select User_id as Uid,
+           Primary_group_id as Gid, Name,
+           Comment as Description, {
+             SELECT *
+             FROM roaming_users
+             WHERE User_sid = UUID
+           } as RoamingData,
+           User_sid as UUID,
+           "local" AS Type
         FROM users()
 
+        -- Populate the mtime from the user's home directory.
         LET local_users_with_mtime = SELECT Uid, Gid, Name, Description,
-            Directory, UUID, {
-                SELECT Mtime FROM stat(filename=expand(path=Directory))
-            } As Mtime, Type
+            RoamingData.Directory AS Directory,
+            UUID,
+            RoamingData.Mtime As Mtime,
+            RoamingData.HomedirMtime AS HomedirMtime,
+            Type,
+            RoamingData.Data || dict() AS Data
         FROM local_users
 
-        SELECT * from chain(
+        LET combined = SELECT * from chain(
          q1=local_users_with_mtime,
          q2={
            -- Only show users not already shown in the local_users above.
            SELECT * from roaming_users
-           where not UUID in local_users.UUID
+           WHERE NOT UUID IN local_users.UUID
          })
+
+        SELECT * FROM if(condition=OnlyRemote,
+          then=roaming_users,
+          else=combined)
 
 
 reports:

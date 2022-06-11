@@ -114,10 +114,15 @@ func (self DSPathSpec) AsClientPath() string {
 
 func (self DSPathSpec) AsDatastoreDirectory(
 	config_obj *config_proto.Config) string {
-	if self.is_safe {
-		return self.asSafeDirWithRoot(config_obj.Datastore.Location)
+	location := ""
+	if config_obj.Datastore != nil {
+		location = config_obj.Datastore.Location
 	}
-	return self.asUnsafeDirWithRoot(config_obj.Datastore.Location)
+
+	if self.is_safe {
+		return self.asSafeDirWithRoot(location)
+	}
+	return self.asUnsafeDirWithRoot(location)
 }
 
 // When we are unsafe we need to Sanitize components hitting the

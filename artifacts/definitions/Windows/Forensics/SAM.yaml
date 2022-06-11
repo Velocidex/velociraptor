@@ -117,8 +117,8 @@ sources:
       SELECT OS From info() where OS = 'windows'
 
     query: |
-        SELECT OSPath.Path AS Key,
-           OSPath.DelegatePath AS Hive,
+        SELECT Key.OSPath.Path AS Key,
+           Key.OSPath.DelegatePath AS Hive,
            get(field="F") AS _F,
            get(field="V") AS _V,
            get(field="SupplementalCredentials") AS _SupplementalCredentials,

@@ -180,7 +180,8 @@ type NotebookCellQuery struct {
 
 func (self *NotebookCellQuery) Path() api.FSPathSpec {
 	return self.root.AddChild(self.notebook_id, self.cell_id,
-		fmt.Sprintf("query_%d", self.id))
+		fmt.Sprintf("query_%d", self.id)).
+		SetTag("NotebookQuery")
 }
 
 func (self *NotebookCellQuery) Params() *ordereddict.Dict {

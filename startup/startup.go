@@ -19,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
+	"www.velocidex.com/golang/velociraptor/services/notebook"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/services/sanity"
@@ -174,11 +175,9 @@ func StartupFrontendServices(sm *services.Service) error {
 		}
 	}
 
-	if spec.SanityChecker {
-		err := sm.Start(sanity.StartSanityCheckService)
-		if err != nil {
-			return err
-		}
+	err = sm.Start(notebook.StartNotebookManagerService)
+	if err != nil {
+		return err
 	}
 
 	if spec.HuntDispatcher {
@@ -225,6 +224,15 @@ func StartupFrontendServices(sm *services.Service) error {
 	// Run any server artifacts the user asks for.
 	if spec.ServerArtifacts {
 		err := sm.Start(server_artifacts.StartServerArtifactService)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Sanity checker needs to start last so it can check all the
+	// other services.
+	if spec.SanityChecker {
+		err := sm.Start(sanity.StartSanityCheckService)
 		if err != nil {
 			return err
 		}
