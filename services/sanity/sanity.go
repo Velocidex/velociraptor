@@ -18,8 +18,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/notebook"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -90,15 +90,19 @@ func (self *SanityChecks) Check(
 	}
 
 	// Reindex all the notebooks.
-	notebooks, err := reporting.GetAllNotebooks(config_obj)
+	notebooks, err := notebook.GetAllNotebooks(config_obj)
 	if err != nil {
 		return err
 	}
 
+	notebook_manager, err := services.GetNotebookManager()
+	if err != nil {
+		return err
+	}
 	for _, notebook := range notebooks {
 		if !strings.HasPrefix(notebook.NotebookId, "N.H.") &&
 			!strings.HasPrefix(notebook.NotebookId, "N.F.") {
-			err = reporting.UpdateShareIndex(config_obj, notebook)
+			err = notebook_manager.UpdateShareIndex(notebook)
 			if err != nil {
 				return err
 			}
