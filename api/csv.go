@@ -32,7 +32,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/timelines"
-	"www.velocidex.com/golang/velociraptor/utils"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -191,15 +190,7 @@ func getPathSpec(
 
 		switch in.Type {
 		case "log":
-			// Handle legacy locations. TODO: Remove by 0.6.7
-			file_store_factory := file_store.GetFileStore(config_obj)
-			pathspec := flow_path_manager.Log()
-			_, err := file_store_factory.StatFile(pathspec)
-			if err != nil {
-				utils.Debug(flow_path_manager.LogLegacy())
-				return flow_path_manager.LogLegacy(), nil
-			}
-			return pathspec, nil
+			return flow_path_manager.Log(), nil
 
 		case "uploads":
 			return flow_path_manager.UploadMetadata(), nil
