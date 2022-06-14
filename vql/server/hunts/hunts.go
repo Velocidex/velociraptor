@@ -27,10 +27,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
@@ -45,6 +42,8 @@ import (
 
 type HuntsPluginArgs struct {
 	HuntId string `vfilter:"optional,field=hunt_id,doc=A hunt id to read, if not specified we list all of them."`
+	Offset uint64 `vfilter:"optional,field=offset,doc=Start offset."`
+	Count  uint64 `vfilter:"optional,field=count,doc=Max number of results to return."`
 }
 
 type HuntsPlugin struct{}
@@ -76,55 +75,38 @@ func (self HuntsPlugin) Call(
 			return
 		}
 
-		db, err := datastore.GetDB(config_obj)
-		if err != nil {
-			scope.Log("Error: %v", err)
+		count := arg.Count
+		if count == 0 {
+			count = 1000
+		}
+
+		hunt_dispatcher := services.GetHuntDispatcher()
+
+		// Show a specific hunt
+		if arg.HuntId != "" {
+			hunt_obj, pres := hunt_dispatcher.GetHunt(arg.HuntId)
+			if pres {
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- json.ConvertProtoToOrderedDict(hunt_obj):
+				}
+			}
 			return
 		}
 
-		var hunts []api.DSPathSpec
-		if arg.HuntId == "" {
-			hunt_path_manager := paths.NewHuntPathManager("")
-			hunts, err = db.ListChildren(
-				config_obj, hunt_path_manager.HuntDirectory())
-			if err != nil {
-				scope.Log("Error: %v", err)
-				return
-			}
-		} else {
-			hunt_path_manager := paths.NewHuntPathManager(arg.HuntId)
-			hunts = append(hunts, hunt_path_manager.Path())
+		// Show all hunts.
+		hunts, err := hunt_dispatcher.ListHunts(
+			ctx, config_obj, &api_proto.ListHuntsRequest{
+				Count:  count,
+				Offset: arg.Offset,
+			})
+		if err != nil {
+			scope.Log("hunts: %v", err)
+			return
 		}
 
-		for _, hunt_urn := range hunts {
-			if hunt_urn.IsDir() {
-				continue
-			}
-
-			hunt_id := hunt_urn.Base()
-			if !constants.HuntIdRegex.MatchString(hunt_id) {
-				continue
-			}
-
-			hunt_obj := &api_proto.Hunt{}
-			err = db.GetSubject(config_obj, hunt_urn, hunt_obj)
-			if err != nil || hunt_obj.HuntId == "" {
-				continue
-			}
-
-			// Re-read the stats into the hunt object.
-			hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
-			hunt_stats := &api_proto.HuntStats{}
-			err := db.GetSubject(config_obj,
-				hunt_path_manager.Stats(), hunt_stats)
-			if err == nil {
-				hunt_obj.Stats = hunt_stats
-			}
-
-			if hunt_obj.HuntId != hunt_id {
-				continue
-			}
-
+		for _, hunt_obj := range hunts.Items {
 			select {
 			case <-ctx.Done():
 				return
@@ -184,18 +166,9 @@ func (self HuntResultsPlugin) Call(
 		// If no artifact is specified, get the first one from
 		// the hunt.
 		if arg.Artifact == "" {
-			db, err := datastore.GetDB(config_obj)
-			if err != nil {
-				scope.Log("hunt_results: %v", err)
-				return
-			}
-
-			hunt_path_manager := paths.NewHuntPathManager(arg.HuntId)
-			hunt_obj := &api_proto.Hunt{}
-			err = db.GetSubject(config_obj,
-				hunt_path_manager.Path(), hunt_obj)
-			if err != nil || hunt_obj.HuntId == "" {
-				scope.Log("hunt_results: %v", err)
+			hunt_dispatcher_service := services.GetHuntDispatcher()
+			hunt_obj, pres := hunt_dispatcher_service.GetHunt(arg.HuntId)
+			if !pres {
 				return
 			}
 
