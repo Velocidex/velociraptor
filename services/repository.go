@@ -26,6 +26,7 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"log"
 	"sync"
@@ -109,7 +110,12 @@ type Repository interface {
 	Del(name string)
 
 	// List
-	List() []string
+	List(ctx context.Context, config_obj *config_proto.Config) ([]string, error)
+
+	// The artifact repository plugin allows VQL to run arbitrary
+	// artifacts using syntax like `SELECT * FROM
+	// Artifact.Windows.Sys.Users()`
+	NewArtifactRepositoryPlugin(config_obj *config_proto.Config) vfilter.PluginGeneratorInterface
 }
 
 // Manages the global artifact repository
@@ -151,7 +157,8 @@ type RepositoryManager interface {
 }
 
 type MockablePlugin interface {
-	SetMock(rows []vfilter.Row)
+	SetMock(name string, rows []vfilter.Row)
+	Name() string
 }
 
 // A helper function to build a new scope from an existing scope. This

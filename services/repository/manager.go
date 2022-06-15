@@ -23,7 +23,7 @@ import (
 type RepositoryManager struct {
 	mu                sync.Mutex
 	id                uint64
-	global_repository *Repository
+	global_repository services.Repository
 	wg                *sync.WaitGroup
 }
 
@@ -128,13 +128,7 @@ func (self *RepositoryManager) SetGlobalRepositoryForTests(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	// Wait until the compile cycle is finished so we can remove
-	// the current repository.
-	for _, name := range self.global_repository.List() {
-		_, _ = self.global_repository.Get(config_obj, name)
-	}
-
-	self.global_repository = repository.(*Repository)
+	self.global_repository = repository.(services.Repository)
 }
 
 func (self *RepositoryManager) SetArtifactFile(
@@ -366,8 +360,13 @@ func LoadBuiltInArtifacts(ctx context.Context,
 	self.wg.Add(1)
 	go func() {
 		defer self.wg.Done()
+		names, err := grepository.List(ctx, config_obj)
+		if err != nil {
+			logger.Error("Error: %v", err)
+			return
+		}
 
-		for _, name := range grepository.List() {
+		for _, name := range names {
 			select {
 			case <-ctx.Done():
 				return

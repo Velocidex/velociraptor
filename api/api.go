@@ -713,12 +713,12 @@ func (self *ApiServer) GetArtifacts(
 
 	if in.ReportType != "" {
 		return getReportArtifacts(
-			self.config, in.ReportType, in.NumberOfResults)
+			ctx, self.config, in.ReportType, in.NumberOfResults)
 	}
 
 	terms := strings.Split(in.SearchTerm, " ")
 	result, err := searchArtifact(
-		self.config, terms, in.Type, in.NumberOfResults, in.Fields)
+		ctx, self.config, terms, in.Type, in.NumberOfResults, in.Fields)
 	return result, err
 }
 

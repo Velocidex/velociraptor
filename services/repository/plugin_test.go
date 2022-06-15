@@ -18,7 +18,6 @@
 package repository_test
 
 import (
-	"sync"
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
@@ -33,7 +32,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/repository"
-	repository_impl "www.velocidex.com/golang/velociraptor/services/repository"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 
@@ -63,7 +61,10 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 
 	new_repository := manager.NewRepository()
 
-	for _, artifact_name := range repository.List() {
+	names, err := repository.List(self.Ctx, ConfigObj)
+	assert.NoError(self.T(), err)
+
+	for _, artifact_name := range names {
 		artifact, pres := repository.Get(ConfigObj, artifact_name)
 		assert.True(self.T(), pres)
 
@@ -105,17 +106,6 @@ sources:
 - query: SELECT * FROM info()
 `}
 )
-
-func (self *PluginTestSuite) TestArtifactPlugin() {
-	repository := self.LoadArtifacts(artifact_definitions)
-
-	wg := &sync.WaitGroup{}
-	p := repository_impl.NewArtifactRepositoryPlugin(
-		wg, repository.(*repository_impl.Repository)).(*repository_impl.ArtifactRepositoryPlugin)
-
-	g := goldie.New(self.T())
-	g.Assert(self.T(), "TestArtifactPlugin", []byte(p.Print()))
-}
 
 var (
 	artifact_definitions_precondition = []string{`

@@ -19,6 +19,7 @@ package repository
 */
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -51,8 +52,6 @@ type Repository struct {
 	mu          sync.Mutex
 	Data        map[string]*artifacts_proto.Artifact
 	loaded_dirs []string
-
-	artifact_plugin vfilter.PluginGeneratorInterface
 }
 
 func (self *Repository) Copy() services.Repository {
@@ -166,9 +165,6 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 
 	// Make a copy of the artifact to store in the repository.
 	artifact = proto.Clone(artifact).(*artifacts_proto.Artifact)
-
-	self.mu.Lock()
-	defer self.mu.Unlock()
 
 	if !artifactNameRegex.MatchString(artifact.Name) {
 		return nil, errors.New(
@@ -318,27 +314,25 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 
 	// Prevent artifact from being overridden.
 	if !artifact.BuiltIn {
+		self.mu.Lock()
 		existing_artifact, pres := self.Data[artifact.Name]
+		self.mu.Unlock()
 		if pres && existing_artifact.BuiltIn {
 			return nil, fmt.Errorf("Unable to override built in artifact %v",
 				artifact.Name)
 		}
 	}
 
+	self.mu.Lock()
 	self.Data[artifact.Name] = artifact
-
-	// Clear the cache to force a rebuild.
-	self.artifact_plugin = nil
+	self.mu.Unlock()
 
 	return artifact, nil
 }
 
 func (self *Repository) GetArtifactType(
 	config_obj *config_proto.Config, artifact_name string) (string, error) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	artifact, pres := self.get(artifact_name)
+	artifact, pres := self.Get(config_obj, artifact_name)
 	if !pres {
 		return "", fmt.Errorf("Artifact %s not known", artifact_name)
 	}
@@ -349,10 +343,7 @@ func (self *Repository) GetArtifactType(
 func (self *Repository) GetSource(
 	config_obj *config_proto.Config, name string) (*artifacts_proto.ArtifactSource, bool) {
 	artifact_name, source_name := paths.SplitFullSourceName(name)
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	artifact, pres := self.get(artifact_name)
+	artifact, pres := self.Get(config_obj, artifact_name)
 	if !pres {
 		return nil, false
 	}
@@ -435,14 +426,14 @@ func (self *Repository) Del(name string) {
 	defer self.mu.Unlock()
 
 	delete(self.Data, name)
-	self.artifact_plugin = nil
 }
 
-func (self *Repository) List() []string {
+func (self *Repository) List(ctx context.Context,
+	config_obj *config_proto.Config) ([]string, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return self.list()
+	return self.list(), nil
 }
 
 func (self *Repository) list() []string {
@@ -452,6 +443,14 @@ func (self *Repository) list() []string {
 	}
 	sort.Strings(result)
 	return result
+}
+
+func (self *Repository) NewArtifactRepositoryPlugin(
+	config_obj *config_proto.Config) vfilter.PluginGeneratorInterface {
+	return &ArtifactRepositoryPlugin{
+		repository: self,
+		mocks:      make(map[string][]vfilter.Row),
+	}
 }
 
 func Parse(filename string) (*artifacts_proto.Artifact, error) {

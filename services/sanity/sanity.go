@@ -217,7 +217,12 @@ func checkForServerUpgrade(
 
 		seen := make(map[string]bool)
 
-		for _, name := range repository.List() {
+		names, err := repository.List(ctx, config_obj)
+		if err != nil {
+			return err
+		}
+
+		for _, name := range names {
 			artifact, pres := repository.Get(config_obj, name)
 			if !pres {
 				continue

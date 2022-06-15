@@ -148,6 +148,7 @@ func setArtifactFile(config_obj *config_proto.Config, principal string,
 }
 
 func getReportArtifacts(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	report_type string,
 	number_of_results uint64) (
@@ -167,7 +168,11 @@ func getReportArtifacts(
 	}
 
 	result := &artifacts_proto.ArtifactDescriptors{}
-	for _, name := range repository.List() {
+	names, err := repository.List(ctx, config_obj)
+	if err != nil {
+		return nil, err
+	}
+	for _, name := range names {
 		artifact, pres := repository.Get(config_obj, name)
 		if pres {
 			for _, report := range artifact.Reports {
@@ -187,6 +192,7 @@ func getReportArtifacts(
 }
 
 func searchArtifact(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	terms []string,
 	artifact_type string,
@@ -244,7 +250,12 @@ func searchArtifact(
 		return nil, err
 	}
 
-	for _, name := range repository.List() {
+	names, err := repository.List(ctx, config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, name := range names {
 		if name_filter.FindString(name) == "" {
 			continue
 		}
