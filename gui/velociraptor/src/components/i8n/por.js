@@ -580,6 +580,7 @@ const Portuguese = {
     "Deutsch":"Alemão",
     "Spanish": "Espanhol",
     "Portuguese": "Português",
+    "French": "Francês",
 
     "Type":"Tipo",
     "Export notebooks":"Exportar Cadernos",

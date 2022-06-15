@@ -580,6 +580,7 @@ const Deutsch = {
     "Deutsch":"Deutsch",
     "Spanish": "Spanisch",
     "Portuguese": "Portugiesisch",
+    "French": "Französisch",
 
     "Type":"Typ",
     "Export notebooks":"Notizbücher exportieren",
