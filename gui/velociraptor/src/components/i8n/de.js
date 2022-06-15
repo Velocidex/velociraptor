@@ -2,7 +2,7 @@ import Alert from 'react-bootstrap/Alert';
 import humanizeDuration from "humanize-duration";
 
 const Deutsch = {
-    SEARCH_CLIENTS: "Clients Suchen",
+    SEARCH_CLIENTS: "Clients suchen",
     "Quarantine description": (
         <>
           <p>Sie sind dabei, diesen Host unter Quarantäne zu stellen.</p>
@@ -22,7 +22,7 @@ const Deutsch = {
         </>,
     "Client ID": "Client ID",
     "Agent Version": "Agent Version",
-    "Agent Name": "NAme des Agentens",
+    "Agent Name": "Name des Agentens",
     "First Seen At": "Zuerst gesehen bei",
     "Last Seen At": "Zuletzt gesehen bei",
     "Last Seen IP": "Zuletzt gesehene IP",
@@ -36,7 +36,7 @@ const Deutsch = {
     "Interrogate": "Abfragen",
     "VFS": "Virtuelles Dateisystem",
     "Collected": "Gesammelt",
-    "Unquarantine Host": "Quarantäne-Host aufheben",
+    "Unquarantine Host": "Hostquarantäne aufheben",
     "Quarantine Host": "Quarantäne-Host",
     "Quarantine Message": "Quarantänenachricht",
     "Add Label": "Label hinzufügen",
@@ -57,7 +57,7 @@ const Deutsch = {
     "Label Clients": "Client Label",
     "Existing": "Vorhandenen",
     "A new label": "Ein neues Label",
-    "Add it!": "Fügen Sie es hinzu!",
+    "Add it!": "Hinzufügen!",
     "Delete Clients": "Clients löschen",
     "DeleteMessage": "Sie sind im Begriff, die folgenden Clients endgültig zu löschen",
     "Yeah do it!": "Ja, mach es!",
@@ -67,8 +67,8 @@ const Deutsch = {
     "Select a label": "Wählen Sie ein Label aus",
     "Expand": "Aufklappen",
     "Collapse": "Zuklappen",
-    "Hide Output": "Ausgabe ausblenden",
-    "Load Output": "Leistung laden",
+    "Hide Output": "Ausgaben ausblenden",
+    "Load Output": "Ausgaben laden",
     "Stop": "Stop",
     "Delete": "Löschen",
     "Run command on client": "Befehl auf dem Client ausführen",
@@ -80,19 +80,19 @@ const Deutsch = {
     "Select artifact pack (Zip file with YAML definitions)": "Artefaktpaket auswählen (Zip-Datei mit YAML-Definitionen)",
     "Click to upload artifact pack file": "Klicken Sie hier, um die Artefaktpaketdatei hochzuladen",
     "Delete an artifact": "Löschen Sie ein Artefakt",
-    "You are about to delete": name=>"Sie sind im Begriff zu löschen " + name,
-    "Add an Artifact": "Fügen Sie ein Artefakt hinzu",
-    "Edit an Artifact": "Bearbeiten Sie ein Artefakt",
+    "You are about to delete": name=>"Sie sind im Begriff " + name + " zu löschen",
+    "Add an Artifact": "Hinzufügen eines Artefaktes",
+    "Edit an Artifact": "Bearbeiten eines Artefaktes",
     "Delete Artifact": "Artefakt löschen",
-    "Hunt Artifact": "Hunting Artefakt",
-    "Collect Artifact": "Sammle Artefakt",
+    "Hunt Artifact": "Artefakt suchen",
+    "Collect Artifact": "Artefakte einsammeln",
     "Upload Artifact Pack": "Artefaktpaket hochladen",
-    "Search for artifact": "Artefakt suchen",
+    "Search for artifact": "Artefakte suchen",
     "Search for an artifact to view it": "Suchen Sie nach einem Artefakt, um es anzuzeigen",
     "Edit Artifact": name=>{
         return "Artefakt bearbeiten " + name;
     },
-    "Create a new artifact": "Erstellen Sie ein neues Artefakt",
+    "Create a new artifact": "Erstellen eines neuen Artefakt",
     "Save": "Speichern",
 
     // Keyboard navigation.
@@ -101,13 +101,13 @@ const Deutsch = {
     "Collected artifacts": "Gesammelte Artefakte",
     "Show/Hide keyboard hotkeys help": "Hilfe zum Ein-/Ausblenden von Tastatur-Hotkeys",
     "Focus client search box": "Fokus-Client-Suchfeld",
-    "New Artifact Collection Wizard": "Neuer Assistent zum Sammeln von Artefakten",
+    "New Artifact Collection Wizard": "Wizard zum Sammeln neuer Artefakte",
     "Artifact Selection Step": "Artefaktauswahlschritt",
     "Parameters configuration Step": "Parameterkonfigurationsschritt",
     "Collection resource specification": "Spezifikation der Erfassungsressourcen",
     "Launch artifact": "Artefakt starten",
-    "Go to next step": "Gehen Sie zum nächsten Schritt",
-    "Go to previous step": "Gehen Sie zum vorherigen Schritt",
+    "Go to next step": "Nächster Schritt",
+    "Go to previous step": "Vorheriger Schritt",
     "Select next collection": "Wählen Sie die nächste Sammlung aus",
     "Select previous collection": "Vorherige Sammlung auswählen",
     "View selected collection results": "Zeigen Sie ausgewählte Sammlungsergebnisse an",
@@ -117,12 +117,12 @@ const Deutsch = {
     "Editor shortcuts": "Editor-Shortcuts",
     "Popup the editor configuration dialog": "Öffnen Sie den Konfigurationsdialog des Editors",
     "Save editor contents": "Editorinhalte speichern",
-    "Keyboard shortcuts": "Tastatürkürzel",
-    "Yes do it!": "Ja mach das!",
-    "Inspect Raw JSON": "Rohes JSON prüfen",
-    "Raw Response JSON": "Unformatierte Antwort JSON",
+    "Keyboard shortcuts": "Tastaturkürzel",
+    "Yes do it!": "Ja, mach das!",
+    "Inspect Raw JSON": "Raw JSON prüfen",
+    "Raw Response JSON": "Raw Response JSON",
     "Show/Hide Columns": "Spalten ein-/ausblenden",
-    "Set All": "Setzen Sie alle",
+    "Set All": "Alles setzen",
     "Clear All": "Alles löschen",
     "Exit Fullscreen": "Vollbild beenden",
     "Artifact Collection": "Sammlung von Artefakten",
@@ -132,17 +132,17 @@ const Deutsch = {
     "Notebook for Collection": name=>"Notizbuch für die Sammlung "+name,
     "Please click a collection in the above table":"Bitte klicken Sie auf eine Sammlung in der obigen Tabelle",
     "Artifact Names": "Artefaktnamen",
-    "Creator": "Schöpfer",
-    "Create Time": "Zeit schaffen",
+    "Creator": "Creator",
+    "Create Time": "Creation Zeit ",
     "Start Time": "Startzeit",
     "Last Active": "Letzte Aktivität",
     "Duration": "Dauer",
     " Running...": " Betrieb...",
     "State": "Zustand",
     "Error": "Fehler",
-    "CPU Limit": "CPU-Beschränkungen",
+    "CPU Limit": "CPU-Limit",
     "IOPS Limit": "IOPS-Beschränkungen",
-    "Timeout": "Auszeit",
+    "Timeout": "Timeout",
     "Max Rows": "Max. Zeilen",
     "Max MB": "Max MB",
     "Artifacts with Results": "Artefakte mit Ergebnissen",
@@ -150,9 +150,9 @@ const Deutsch = {
     "Uploaded Bytes": "Hochgeladene Bytes",
     "Files uploaded": "Hochgeladene Dateien",
     "Download Results": "Ergebnisse herunterladen",
-    "Set a password in user preferences to lock the download file.": "Legen Sie in den Benutzereinstellungen ein Passwort fest, um die Download-Datei zu sperren.",
+    "Set a password in user preferences to lock the download file.": "Legen Sie in den Benutzereinstellungen ein Passwort fest, um die Download-Datei zu sichern.",
     "Prepare Download": "Download vorbereiten",
-    "Prepare Collection Report": "Sammlungsbericht erstellen",
+    "Prepare Collection Report": "SammlungsReport erstellen",
     "Available Downloads": "Verfügbare Downloads",
     "Size (Mb)": "Größe (MB)",
     "Date": "Datum",
@@ -161,15 +161,15 @@ const Deutsch = {
     "Request sent to client": "Anfrage an Client gesendet",
     "Description": "Beschreibung",
     "Created": "Erstellt",
-    "Manually add collection to hunt": "Sammlung manuell zur Jagd hinzufügen",
-    "No compatible hunts.": "Keine kompatiblen Jagden.",
-    "Please create a hunt that collects one or more of the following artifacts.":"Bitte erstellen Sie eine Jagd, die eines oder mehrere der folgenden Artefakte sammelt.",
+    "Manually add collection to hunt": "Sammlung manuell zur Hunt hinzufügen",
+    "No compatible hunts.": "Keine kompatiblen Hunts.",
+    "Please create a hunt that collects one or more of the following artifacts.":"Bitte erstellen Sie eine Hunt, die eines oder mehrere der folgenden Artefakte sammelt.",
     "Requests": "Anfragen",
     "Notebook": "Notizbuch",
-    "Permanently delete collection": "Sammlung dauerhaft löschen",
+    "Permanently delete collection": "Sammlung endgültig löschen",
     "ArtifactDeletionDialog": (session_id, artifacts, total_bytes, total_rows)=>
     <>
-      Sie sind im Begriff, die Artefaktsammlung dauerhaft zu löschen
+      Sie sind im Begriff, die Artefaktsammlung endgültig zu löschen
       <b>{session_id}</b>.
       <br/>
       Diese Sammlung hatte die Artefakte <b className="wrapped-text">
@@ -189,10 +189,10 @@ const Deutsch = {
       Diese Sammlung waren die Artefakte <b>{artifacts}</b>
       <br/><br/>
     </>,
-    "New Favorite name": "Neuer Lieblingsname",
+    "New Favorite name": "Neuer Name für Favoriten",
     "Describe this favorite": "Beschreibe diesen Favoriten",
     "New Collection": "Neue Kollektion",
-    "Add to hunt": "Zur Jagd hinzufügen",
+    "Add to hunt": "Zur Hunt hinzufügen",
     "Delete Artifact Collection": "Artefaktsammlung löschen",
     "Cancel Artifact Collection": "Artefaktsammlung abbrechen",
     "Copy Collection": "Sammlung kopieren",
@@ -204,22 +204,22 @@ const Deutsch = {
     "Notebook Uploads": "Notizbuch Uploads",
     "Export Notebook": "Notizbuch exportieren",
     "FINISHED": "FERTIG",
-    "RUNNING": "LAUFEND",
+    "RUNNING": "LÄUFT",
     "STOPPED": "GESTOPPT",
     "PAUSED": "ANGEHALTEN",
     "ERROR": "Fehler",
     "INFO": "Info",
     "DEBUG": "Debug",
-    "CANCELLED": "Abgesagt",
+    "CANCELLED": "Abgebrochen",
     "Search for artifacts...": "Suche nach Artefakten...",
-    "Favorite Name": "Lieblingsname",
+    "Favorite Name": "Name des Favoriten",
     "Artifact": "Artefakt",
-    "No artifacts configured. Please add some artifacts to collect": "Keine Artefakte konfiguriert. Bitte fügen Sie einige Artefakte zum Sammeln hinzu",
+    "No artifacts configured. Please add some artifacts to collect": "Keine Artefakte konfiguriert. Bitte fügen Sie einige Artefakte zum Sammelung hinzu",
 
     "Artifacts": "Artefakte",
     "Collected Artifacts": "Gesammelte Artefakte",
-    "Flow ID": "Fluss-ID",
-    "FlowId": "Fluss-ID",
+    "Flow ID": "Flow-ID",
+    "FlowId": "Flow-ID",
     "Goto notebooks": "Gehe zu Notizbüchern",
     "Max Mb": "Max Mb",
     "Mb": "Mb",
@@ -229,15 +229,15 @@ const Deutsch = {
     "New Collection: Select Artifacts to collect":"Neue Sammlung: Artefakte zum Sammeln auswählen",
     "Select Artifacts":"Artefakte auswählen",
     "Configure Parameters":"Parameter konfigurieren",
-    "Specify Resources":"Ressourcen angeben",
-    "Review":"Rezension",
+    "Specify Resources":"Ressourcen festlegen",
+    "Review":"Review",
     "Launch":"Starten",
     "New Collection: Configure Parameters":"Neue Sammlung: Parameter konfigurieren",
     "New Collection: Specify Resources":"Neue Sammlung: Ressourcen angeben",
-    "New Collection: Review request":"Neue Sammlung: Überprüfungsanfrage",
+    "New Collection: Review request":"Neue Sammlung: Anfrage prüfen",
     "New Collection: Launch collection":"Neue Kollektion: Kollektion starten",
 
-    "CPU Limit Percent":"CPU Limit Percent",
+    "CPU Limit Percent":"CPU Limit (Prozent)",
     "IOps/Sec":"IOps/Sec",
     "Max Execution Time in Seconds":"Max. Ausführungszeit in Sekunden",
     "Max Idle Time in Seconds":"Maximale Leerlaufzeit in Sekunden",
@@ -246,7 +246,7 @@ const Deutsch = {
     "Collection did not upload files":"Sammlung hat keine Dateien hochgeladen",
 
     "Create Offline collector: Select artifacts to collect":"Offline-Collector erstellen: Zu sammelnde Artefakte auswählen",
-    "Configure Collection":"Sammlung konfigurieren",
+    "Configure Collection":"Collection konfigurieren",
     "Create Offline Collector: Configure artifact parameters":"Offline-Collector erstellen: Artefaktparameter konfigurieren",
     "Create Offline Collector: Review request":"Offline-Collector erstellen: Anfrage prüfen",
     "Create Offline Collector: Create collector":"Offline-Collector erstellen: Collector erstellen",
@@ -254,17 +254,17 @@ const Deutsch = {
     "Create Offline collector:  Configure Collector":"Offline-Collector erstellen: Collector konfigurieren",
     "Target Operating System":"Zielbetriebssystem",
     "Password":"Passwort",
-    "Report Template":"Berichtsvorlage",
-    "No Report":"Kein Bericht",
-    "Collection Type":"Sammlungstyp",
+    "Report Template":"Reportvorlage",
+    "No Report":"Kein Report",
+    "Collection Type":"Collection typ",
     "Zip Archive":"Zip-Archiv",
     "Google Cloud Bucket":"Google Cloud Bucket",
     "AWS Bucket":"AWS Bucket",
     "SFTP Upload":"SFTP Upload",
-    "Velociraptor Binary":"Velociraptor Binär",
+    "Velociraptor Binary":"Velociraptor Binary",
     "Temp directory":"Temp-Verzeichnis",
-    "Temp location":"Temporärer Standort",
-    "Compression Level":"Komprimierungsstufe",
+    "Temp location":"Temp Ort",
+    "Compression Level":"Komprimierungslevel",
     "Output format":"Ausgabeformat",
     "CSV and JSON":"CSV und JSON",
     "Output Prefix":"Ausgabe-Präfix",
@@ -278,21 +278,20 @@ const Deutsch = {
     "Started":"Gestartet",
     "Expires":"Läuft ab",
     "Scheduled":"Geplant",
-    "New Hunt":"Neue Jagd",
-    "Run Hunt":"Run Hunt",
-    "Stop Hunt":"Stop Hunt",
-    "Delete Hunt":"Jagd löschen",
-    "Copy Hunt":"Copy Hunt",
-    "No hunts exist in the system. You can start a new hunt by clicking the New Hunt button above.":"Im System sind keine Jagden vorhanden. Sie können eine neue Jagd starten, indem Sie oben auf die Schaltfläche \"Neue Jagd\" klicken.",
-    "Please select a hunt above":"Bitte wähle oben eine Jagd aus",
+    "New Hunt":"Neue Hunt",
+    "Run Hunt":"Hunt starten",
+    "Stop Hunt":"Hunt beenden",
+    "Delete Hunt":"Hunt löschen",
+    "Copy Hunt":"Hunt kopieren",
+    "No hunts exist in the system. You can start a new hunt by clicking the New Hunt button above.":"Auf dem System sind keine Hunts vorhanden. Sie können eine neue Hunt starten, indem Sie oben auf die Schaltfläche \"Neue Hunt\" klicken.",
+    "Please select a hunt above":"Bitte wähle oben eine Hunt aus",
     "Clients":"Clients",
-    "Notebook for Hunt": hunt_id=>"Notizbuch für Jagd " + hunt_id,
-
-    "Hunt ID":"Jagd-ID",
+    "Notebook for Hunt": hunt_id=>"Notizbuch für Hunt " + hunt_id,
+    "Hunt ID":"Hunt-ID",
     "Creation Time":"Erstellungszeit",
     "Expiry Time":"Ablaufzeit",
     "Total scheduled":"Gesamt geplant",
-    "Finished clients":"Fertige Kunden",
+    "Finished clients":"Fertige Clients",
     "Full Download":"Vollständiger Download",
     "Summary Download":"Zusammenfassung Download",
     "Summary (CSV Only)":"Zusammenfassung (nur CSV)",
@@ -300,45 +299,45 @@ const Deutsch = {
     "name":"Name",
     "size":"Größe",
     "date":"Datum",
-    "New Hunt - Configure Hunt":"Neue Jagd - Jagd konfigurieren",
-    "Hunt description":"Jagdbeschreibung",
+    "New Hunt - Configure Hunt":"Neue Hunt - Hunt konfigurieren",
+    "Hunt description":"Beschreibung der Hunt",
     "Expiry":"Ablauf",
     "Include Condition":"Bedingung einschließen",
-    "Run everywhere":"Überall laufen",
+    "Run everywhere":"Überall starten",
     "Exclude Condition":"Bedingung ausschließen",
-    "Configure Hunt":"Jagd konfigurieren",
-    "Estimated affected clients":"Geschätzte betroffene Kunden",
+    "Configure Hunt":"Hunt konfigurieren",
+    "Estimated affected clients":"Geschätzte betroffene Clients",
     "All Known Clients":"Alle bekannten Clients",
     "1 Day actives":"1 Tag aktiv",
     "1 Week actives":"1 Woche aktiv",
     "1 Month actives":"1 Monat aktiv",
-    "Create Hunt: Select artifacts to collect":"Jagd erstellen: Artefakte zum Sammeln auswählen",
-    "Create Hunt: Configure artifact parameters":"Jagd erstellen: Artefaktparameter konfigurieren",
-    "Create Hunt: Specify resource limits":"Jagd erstellen: Ressourcenlimits angeben",
-    "Create Hunt: Review request":"Jagd erstellen: Anfrage prüfen",
-    "Create Hunt: Launch hunt":"Jagd erstellen: Jagd starten",
+    "Create Hunt: Select artifacts to collect":"Hunt erstellen: Artefakte zum Sammeln auswählen",
+    "Create Hunt: Configure artifact parameters":"Hunt erstellen: Artefaktparameter konfigurieren",
+    "Create Hunt: Specify resource limits":"Hunt erstellen: Ressourcenlimits angeben",
+    "Create Hunt: Review request":"Hunt erstellen: Anfrage prüfen",
+    "Create Hunt: Launch hunt":"Hunt erstellen: Hunt starten",
 
-    "ClientId": "Kunden-ID",
+    "ClientId": "Client-ID",
     "StartedTime":"Startzeit",
     "TotalBytes":"Gesamtbytes",
     "TotalRows":"Gesamtzeilen",
 
     "client_time":"Client-Zeit",
-    "level":"Ebene",
+    "level":"Level",
     "message":"Nachricht",
 
     "RecursiveVFSMessage": path=><>
     Sie sind dabei, alle Dateien in <b>{path}</b> rekursiv abzurufen.
     <br/><br/>
-    Dadurch können große Datenmengen vom Endpunkt übertragen werden. Das Standard-Upload-Limit beträgt 1 GB, aber Sie können es im Bildschirm „Gesammelte Artefakte“ ändern.
+    Dadurch können große Datenmengen vom Client übertragen werden. Das Standard-Upload-Limit beträgt 1 GB, aber Sie können es im Bildschirm „Gesammelte Artefakte“ ändern.
     </>,
 
     "Textview":"Textansicht",
     "HexView":"HexView",
-    "Refresh this directory (sync its listing with the client)":"Dieses Verzeichnis aktualisieren (seinen Eintrag mit dem Client synchronisieren)",
-    "Recursively refresh this directory (sync its listing with the client)":"Dieses Verzeichnis rekursiv aktualisieren (seinen Eintrag mit dem Client synchronisieren)",
+    "Refresh this directory (sync its listing with the client)":"Dieses Verzeichnis aktualisieren (Eintrag mit dem Client synchronisieren)",
+    "Recursively refresh this directory (sync its listing with the client)":"Dieses Verzeichnis rekursiv aktualisieren (Eintrag mit dem Client synchronisieren)",
     "Recursively download this directory from the client":"Dieses Verzeichnis rekursiv vom Client herunterladen",
-    "View Collection":"Sammlung anzeigen",
+    "View Collection":"Collection anzeigen",
     "Size":"Größe",
     "Mode":"Modus",
     "mtime":"mtime",
@@ -355,88 +354,86 @@ const Deutsch = {
     "Currently refreshing from the client":"Aktuelle Aktualisierung vom Client",
     "Recursively download files":"Dateien rekursiv herunterladen",
 
-    "Home":"Zu Hause",
-    "Hunt Manager":"Jagd Manager",
+    "Home":"Home",
+    "Hunt Manager":"Hunt Manager",
     "View Artifacts":"Artefakte anzeigen",
     "Server Events":"Server-Ereignisse",
-    "Server Artifacts":"Server Artifacts",
+    "Server Artifacts":"Server Artifakte",
     "Host Information":"Host-Informationen",
     "Virtual Filesystem":"Virtuelles Dateisystem",
     "Client Events":"Client-Ereignisse",
-    "This is a notebook for processing a hunt.":"Dies ist ein Notizbuch zur Abwicklung einer Jagd.",
+    "This is a notebook for processing a hunt.":"Dies ist ein Notizbuch zur Abwicklung einer Hunt.",
     "ToolLocalDesc":
     <>
-    Das Tool wird vom Velociraptor-Server bereitgestellt
-    Kunden ggf. Der Kunde wird
-    Zwischenspeichern Sie das Tool auf seiner eigenen Festplatte und vergleichen Sie als Nächstes den Hash
-    Zeit es benötigt wird. Tools werden nur heruntergeladen, wenn ihre
-    Haschisch hat sich geändert.
+    Das Tool wird bei Bedarf vom Velociraptor-Server an die Clients 
+    ausgeliefert. Der Client speichert das Tool auf seiner eigenen 
+    Festplatte und vergleicht den Hash, wenn es das nächste Mal 
+    benötigt wird. Die Tools werden nur heruntergeladen, wenn sich ihr 
+    Hash geändert hat.
     </>,
     "ServedFromURL": (base_path, url)=>
     <>
-    Kunden holen sich das Tool direkt von
-    <a href={base_path + url}>{url}</a> wenn
-    erforderlich. Beachten Sie, dass, wenn der Hash nicht mit dem übereinstimmt
-    erwarteten Hash werden die Clients die Datei ablehnen.
+    Die Clients rufen das Tool bei Bedarf direkt von
+    <a href={base_path + url}>{url}</a> ab. Wenn der Hashwert nicht mit dem 
+    erwarteten Hashwert übereinstimmt, weisen die Clients die Datei zurück.
     </>,
     "ServedFromGithub": (github_project, github_asset_regex)=>
     <>
-    Tool-URL wird aktualisiert von
-    GitHub als neueste Version des Projekts
-    <b>{github_project}</b> das passt
-    <b>{github_asset_regex}</b>
+    Die Tool-URL wird von GitHub als die neueste Version des Projekts 
+    <b>{github_project}</b>, die mit <b>{github_asset_regex}</b> 
+    übereinstimmt, aktualisiert.
     </>,
     "PlaceHolder":
     <>
-    Tool-Hash ist derzeit unbekannt. Das erste Mal das Werkzeug
-    erforderlich ist, wird Velociraptor es von dort herunterladen
-    Upstream-URL und berechnen Sie ihren Hash.
+    Der Hash-Wert des Tools ist derzeit unbekannt. Das erste Mal, 
+    wenn das Tool benötigt wird, lädt Velociraptor es von seiner 
+    Upstream-URL herunter und berechnet den Hash.
     </>,
     "ToolHash":
     <>
-    Tool-Hash wurde berechnet. Wenn Kunden verwenden müssen
-    Mit diesem Tool stellen sie sicher, dass dieser Hash mit dem übereinstimmt, was sie tun
-    Download.
+    Der Hashwert des Tools wurde berechnet. Wenn Clients dieses Tool 
+    verwenden müssen, stellt es sicher, dass dieser Hash mit dem herunter
+    geladenen Binary übereinstimmt.
     </>,
     "AdminOverride":
     <>
-    Tool wurde manuell von einem hochgeladen
-    admin - es wird nicht automatisch auf dem aktualisiert
-    nächstes Update des Velociraptor-Servers.
+    Das Tool wurde manuell von einem Administrator hochgeladen - 
+    es wird beim nächsten Velociraptor-Server-Update nicht 
+    automatisch aktualisiert.
     </>,
     "ToolError":
     <>
-    Der Hash des Tools ist nicht bekannt und keine URL
-    ist definiert. Es wird unmöglich sein, dieses Tool in einem zu verwenden
-    Artefakt, weil Velociraptor es nicht auflösen kann. Du
-    kann eine Datei manuell hochladen.
+    Der Hash des Tools ist nicht bekannt und es ist keine URL definiert. 
+    Es wird unmöglich sein, dieses Tools in einem Artefakt zu verwenden, 
+    da Velociraptor nicht in der Lage ist, es aufzulösen. 
+    Sie können eine Datei manuell hochladen.
     </>,
     "OverrideToolDesc":
     <>
-    Als Administrator können Sie manuell eine Datei hochladen
-    binär als dieses Werkzeug verwendet werden. Dies überschreibt die
-    Upstream-URL-Einstellung und stellen Sie Ihr Tool allen zur Verfügung
-    Artefakte, die es brauchen. Legen Sie alternativ eine URL für Clients fest
-    Werkzeug zu holen.
+    Als Administrator können Sie manuell eine Binärdatei hochladen, die als 
+    dieses Tool verwendet werden soll. Dadurch wird die Upstream-URL-Einstellung 
+    außer Kraft gesetzt und Ihr Tool allen Artefakten zur Verfügung gestellt, 
+    die es benötigen. Alternativ können Sie eine URL festlegen, von der die 
+    Clients die Tools abrufen können.
     </>,
 
-    "Include Labels":"Etiketten einschließen",
-    "Exclude Labels":"Etiketten ausschließen",
+    "Include Labels":"Labels einschließen",
+    "Exclude Labels":"Labels ausschließen",
     "? for suggestions":"? für Vorschläge",
     "Served from URL":"Bereitgestellt von URL",
     "Placeholder Definition":"Platzhalterdefinition",
     "Materialize Hash":"Hash materialisieren",
-    "Tool":"Werkzeug",
-    "Override Tool":"Werkzeug überschreiben",
+    "Tool":"Tool",
+    "Override Tool":"Tools überschreiben",
     "Select file":"Datei auswählen",
     "Click to upload file":"Klicken, um Datei hochzuladen",
     "Set Serve URL":"Server-URL festlegen",
-    "Served Locally":"Lokal servieren",
+    "Served Locally":"Lokal ausliefern",
     "Tool Hash Known":"Tool-Hash bekannt",
     "Re-Download File":"Datei erneut herunterladen",
-    'Re-Collect from the client': "Wiedereinholung vom Kunden",
-    'Collect from the client': 'Beim Kunden abholen',
-    "Tool Name":"Werkzeugname",
+    'Re-Collect from the client': "Nochmal vom Client einsammeln",
+    'Collect from the client': 'Beim Client abholen',
+    "Tool Name":"Toolname",
     "Upstream URL":"Upstream-URL",
     "Enpoint Filename":"Enpoint-Dateiname",
     "Hash":"Hash",
@@ -444,9 +441,9 @@ const Deutsch = {
     "Serve URL":"URL bereitstellen",
     "Fetch from Client": "Vom Client abrufen",
     "Last Collected": "Zuletzt gesammelt",
-    "Offset": "Versatz",
+    "Offset": "Offset",
     "Show All": "Zeige alles",
-    "Recent Hosts": "Letzte Gastgeber",
+    "Recent Hosts": "Letzte Hosts",
     "Download JSON": "JSON herunterladen",
     "Download CSV": "CSV-Datei herunterladen",
     "Transform Table": "Transformationstabelle",
@@ -464,7 +461,7 @@ const Deutsch = {
     "Suggestions":"Vorschläge",
     "Add Timeline":"Zeitachse hinzufügen",
     "Add Cell From This Cell":"Zelle aus dieser Zelle hinzufügen",
-    "Add Cell From Hunt":"Zelle von Jagd hinzufügen",
+    "Add Cell From Hunt":"Zelle von Hunt hinzufügen",
     "Add Cell From Flow":"Zelle aus Fluss hinzufügen",
     "Rendered":"Gerendert",
     "Undo":"Rückgängig machen",
@@ -474,11 +471,11 @@ const Deutsch = {
     "Procs":"Procs",
     "OS":"Betriebssystem",
     "Platform":"Platform",
-    "PlatformFamily":"PlatformFamily",
-    "PlatformVersion":"PlatformVersion",
-    "KernelVersion":"KernelVersion",
-    "VirtualizationSystem":"VirtualizationSystem",
-    "VirtualizationRole":"VirtualizationRole",
+    "PlatformFamily":"Platformfamilie",
+    "PlatformVersion":"Platformversion",
+    "KernelVersion":"Kernelversion",
+    "VirtualizationSystem":"Virtualizationsystem",
+    "VirtualizationRole":"Virtualizationrolle",
     "HostID":"HostID",
     "Exe":"Exe",
     "Fqdn":"Fqdn",
@@ -490,8 +487,8 @@ const Deutsch = {
     "User Settings":"Benutzereinstellungen",
     "Select a user": "Wähle einen Benutzer",
 
-    "Theme":"Thema",
-    "Select a theme":"Wählen Sie ein Thema aus",
+    "Theme":"Theme",
+    "Select a theme":"Wählen Sie ein Theme aus",
     "Default Velociraptor":"Standard-Velociraptor",
     "Velociraptor (light)":"Velociraptor (hell)",
     "Velociraptor (dark)":"Velociraptor (dunkel)",
@@ -505,15 +502,15 @@ const Deutsch = {
     "Create Artifact from VQL":"Artefakt aus VQL erstellen",
     "Member":"Mitglied",
     "Response":"Antwort",
-    "Super Timeline":"Super Zeitleiste",
-    "Super-timeline name":"Name der Super Zeitleiste",
-    "Timeline Name":"Name der Zeitspalte",
-    "Child timeline name":"Name der untergeordneten Zeitachse",
-    "Time column":"Zeitspalte",
-    "Time Column":"Zeitspalte",
+    "Super Timeline":"Super Timeline",
+    "Super-timeline name":"Name der Super Timeline",
+    "Timeline Name":"Name der Timeline",
+    "Child timeline name":"Name der untergeordneten Timeline",
+    "Time column":"Zeit Spalte",
+    "Time Column":"Zeit Spalte",
     "Language": "Sprache",
-    "Match by label": "Übereinstimmung nach Etikett",
-    "All known Clients": "Alle bekannten Kunden",
+    "Match by label": "Übereinstimmung nach Label",
+    "All known Clients": "Alle bekannten Clients",
     "X per second": x=><>{x} pro Sekunde</>,
     "HumanizeDuration": difference=>{
         if (difference<0) {
@@ -535,31 +532,31 @@ const Deutsch = {
     "Sort Column": "Spalte sortieren",
     "Filter Regex": "Regex filtern",
     "Filter Column": "Spalte filtern",
-    "Select label to edit its event monitoring table": "Label auswählen, um seine Ereignisüberwachungstabelle zu bearbeiten",
+    "Select label to edit its event monitoring table": "Label auswählen, um seine Event-Monitoringtabelle zu bearbeiten",
     "EventMonitoringCard":
     <>
-    Die Ereignisüberwachung zielt auf bestimmte Labelgruppen ab.
-    Wählen Sie oben eine Etikettengruppe aus, um sie spezifisch zu konfigurieren
-    Ereignisartefakte, die auf diese Gruppe abzielen.
+    Die Event-Monitoring zielt auf bestimmte Labelgruppen ab. Wählen Sie oben 
+    eine Kennzeichnungsgruppe aus, um spezifische Ereignisartefakte für 
+    diese Gruppe zu konfigurieren. 
     </>,
-    "Event Monitoring: Configure Label groups": "Ereignisüberwachung: Etikettengruppen konfigurieren",
-    "Configuring Label": "Etikett konfigurieren",
-    "Event Monitoring Label Groups": "Etikettengruppen für die Ereignisüberwachung",
-    "Event Monitoring: Select artifacts to collect from label group ": "Ereignisüberwachung: Zu sammelnde Artefakte aus der Labelgruppe auswählen ",
+    "Event Monitoring: Configure Label groups": "Event-Monitoring: Labelgruppen konfigurieren",
+    "Configuring Label": "Label konfigurieren",
+    "Event Monitoring Label Groups": "Labelgruppen für das Event-Monitoring",
+    "Event Monitoring: Select artifacts to collect from label group ": "Event-Monitoring: Zu sammelnde Artefakte aus der Labelgruppe auswählen ",
     "Artifact Collected": "Artefakt gesammelt",
-    "Event Monitoring: Configure artifact parameters for label group ": "Ereignisüberwachung: Konfigurieren Sie Artefaktparameter für die Labelgruppe ",
-    "Event Monitoring: Review new event tables": "Ereignisüberwachung: Neue Ereignistabellen überprüfen",
+    "Event Monitoring: Configure artifact parameters for label group ": "Event-Monitoring: Konfigurieren Sie Artefaktparameter für die Labelgruppe ",
+    "Event Monitoring: Review new event tables": "Event-Monitoring: Neue Eventtabellen überprüfen",
 
-    "Server Event Monitoring: Select artifacts to collect on the server":"Serverereignisüberwachung: Wählen Sie Artefakte aus, die auf dem Server gesammelt werden sollen",
-    "Server Event Monitoring: Configure artifact parameters for server":"Serverereignisüberwachung: Artefaktparameter für Server konfigurieren",
-    "Server Event Monitoring: Review new event tables":"Serverereignisüberwachung: Neue Ereignistabellen überprüfen",
-    "Configure Label Group":"Etikettengruppe konfigurieren",
+    "Server Event Monitoring: Select artifacts to collect on the server":"Server Event-Monitoring: Wählen Sie Artefakte aus, die auf dem Server gesammelt werden sollen",
+    "Server Event Monitoring: Configure artifact parameters for server":"Server Event-Monitoring: Artefaktparameter für Server konfigurieren",
+    "Server Event Monitoring: Review new event tables":"Server Event-Monitoring: Neue Eventtabellen überprüfen",
+    "Configure Label Group":"Labelgruppe konfigurieren",
     "Select artifact": "Artefakt auswählen",
 
     "Raw Data":"Rohdaten",
     "Logs":"Logdatei",
     "Log":"Logdatei",
-    "Report":"Bericht",
+    "Report":"Report",
 
     "NotebookId":"Notizbuch-ID",
     "Modified Time":"Geänderte Zeit",
@@ -586,8 +583,8 @@ const Deutsch = {
     "Export to HTML":"Nach HTML exportieren",
     "Export to Zip":"Nach Zip exportieren",
 
-    "Permanently delete Notebook":"Notizbuch dauerhaft löschen",
-    "You are about to permanently delete the notebook for this hunt":"Sie sind dabei, das Notizbuch für diese Jagd dauerhaft zu löschen",
+    "Permanently delete Notebook":"Notizbuch endgültig löschen",
+    "You are about to permanently delete the notebook for this hunt":"Sie sind dabei, das Notizbuch für diese Hunt endgültig zu löschen",
 
     "Data":"Daten",
     "Served from GitHub":"Von GitHub bereitgestellt",
