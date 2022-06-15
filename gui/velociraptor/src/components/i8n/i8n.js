@@ -22,6 +22,7 @@ function dict(item) {
 
     case "de":
         return Deutsch[item];
+
     case "fr":
         return French[item];
 
