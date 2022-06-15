@@ -579,6 +579,7 @@ const Spanish = {
     "Deutsch":"Alemán",
     "Spanish": "Español",
     "Portuguese": "Portugués",
+    "French": "Francés",
 
     "Type":"Tipo",
     "Export notebooks":"Exportar cuadernos",
