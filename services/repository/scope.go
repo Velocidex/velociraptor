@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -17,7 +16,7 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) vfilter.Scope {
+func _build(self services.ScopeBuilder, from_scratch bool) vfilter.Scope {
 	env := ordereddict.NewDict()
 	if self.Env != nil {
 		env.MergeFrom(self.Env)
@@ -78,7 +77,7 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 	// Use our own sorter
 	scope.SetSorter(sorter.MergeSorter{ChunkSize: 10000})
 
-	artifact_plugin := NewArtifactRepositoryPlugin(wg, self.Repository.(*Repository))
+	artifact_plugin := self.Repository.NewArtifactRepositoryPlugin(self.Config)
 	env.Set("Artifact", artifact_plugin)
 
 	scope.AppendVars(env).AddProtocolImpl(
@@ -130,10 +129,10 @@ func _build(wg *sync.WaitGroup, self services.ScopeBuilder, from_scratch bool) v
 }
 
 func (self *RepositoryManager) BuildScope(builder services.ScopeBuilder) vfilter.Scope {
-	return _build(self.wg, builder, false)
+	return _build(builder, false)
 }
 
 func (self *RepositoryManager) BuildScopeFromScratch(
 	builder services.ScopeBuilder) vfilter.Scope {
-	return _build(self.wg, builder, true)
+	return _build(builder, true)
 }

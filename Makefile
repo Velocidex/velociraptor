@@ -7,6 +7,9 @@ auto:
 test:
 	go test -race -v --tags server_vql ./...
 
+test_light:
+	go test -v --tags server_vql ./...
+
 golden:
 	./output/velociraptor -v --config artifacts/testdata/windows/test.config.yaml golden artifacts/testdata/server/testcases/ --env srcDir=`pwd` --filter=${GOLDEN}
 

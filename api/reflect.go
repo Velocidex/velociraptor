@@ -111,7 +111,12 @@ func (self *ApiServer) GetKeywordCompletions(
 	if err != nil {
 		return nil, err
 	}
-	for _, name := range repository.List() {
+	names, err := repository.List(ctx, self.config)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, name := range names {
 		artifact, pres := repository.Get(self.config, name)
 		if !pres {
 			continue
