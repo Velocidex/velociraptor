@@ -70,6 +70,7 @@ func (self USNPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfil
 
 type WatchUSNPluginArgs struct {
 	Device *accessors.OSPath `vfilter:"required,field=device,doc=The device file to open."`
+	Accessor string          `vfilter:"optional,field=accessor,doc=The accessor to use."`
 }
 
 type WatchUSNPlugin struct{}
