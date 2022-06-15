@@ -218,7 +218,7 @@ func (self *TestSuite) TestServerRotateKeyE2E() {
 	self.makeServer(server_ctx, server_wg)
 
 	// Make sure the client properly rekeys and continues to talk to the server
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		err := comm.sender.sendToURL(client_ctx, [][]byte{}, false)
 		if err != nil {
 			return false
