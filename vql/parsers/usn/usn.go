@@ -120,8 +120,13 @@ func (self WatchUSNPlugin) Call(
 		}
 
 		// Register our interest in the log.
-		cancel := GlobalEventLogService.Register(
+		cancel, err := GlobalEventLogService.Register(
 			ntfs_device, "ntfs", ctx, config_obj, scope, event_channel)
+		if err != nil {
+			scope.Log("watch_usn: %v", err)
+			return
+		}
+
 		defer cancel()
 
 		for {
