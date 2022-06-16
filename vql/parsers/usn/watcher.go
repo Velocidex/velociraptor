@@ -2,6 +2,7 @@ package usn
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -46,18 +47,18 @@ func NewUSNWatcherService() *USNWatcherService {
 
 func (self *USNWatcherService) Register(
 	device *accessors.OSPath,
+	accessor string,
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	scope vfilter.Scope,
-	output_chan chan vfilter.Row) func() {
+	output_chan chan vfilter.Row) (func(), error) {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	ntfs_ctx, err := readers.GetNTFSContext(scope, device, "ntfs")
+	ntfs_ctx, err := readers.GetNTFSContext(scope, device, accessor)
 	if err != nil {
-		scope.Log("watch_usn: %v", err)
-		return func() {}
+		return nil, fmt.Errorf("while opening device %v: %w", device, err)
 	}
 
 	subctx, cancel := context.WithCancel(ctx)
@@ -113,7 +114,7 @@ func (self *USNWatcherService) Register(
 			self.registrations[key] = new_handles
 		}
 		cancel()
-	}
+	}, nil
 }
 
 // Monitor the filename for new events and emit them to all interested

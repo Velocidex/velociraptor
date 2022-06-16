@@ -38,6 +38,17 @@ func (self USNPlugin) Call(
 			return
 		}
 
+		// If an accessor is not specified we interpret the path as an
+		// NTFS path.
+		if arg.Accessor == "" {
+			arg.Accessor = "ntfs"
+			arg.Device, err = accessors.NewWindowsNTFSPath(arg.Device.String())
+			if err != nil {
+				scope.Log("parse_usn: %v", err)
+				return
+			}
+		}
+
 		device, accessor, err := readers.GetRawDeviceAndAccessor(
 			scope, arg.Device, arg.Accessor)
 		if err != nil {
@@ -69,7 +80,7 @@ func (self USNPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfil
 }
 
 type WatchUSNPluginArgs struct {
-	Device *accessors.OSPath `vfilter:"required,field=device,doc=The device file to open."`
+	Device string `vfilter:"required,field=device,doc=The device file to open (as an NTFS device)."`
 }
 
 type WatchUSNPlugin struct{}
@@ -99,9 +110,23 @@ func (self WatchUSNPlugin) Call(
 
 		event_channel := make(chan vfilter.Row)
 
+		// We need to interpret the device as an NTFS path in all
+		// cases because we can only really watch a raw NTFS partition
+		// (it does not make sense to watch a static file).
+		ntfs_device, err := accessors.NewWindowsNTFSPath(arg.Device)
+		if err != nil {
+			scope.Log("watch_usn: %v", err)
+			return
+		}
+
 		// Register our interest in the log.
-		cancel := GlobalEventLogService.Register(
-			arg.Device, ctx, config_obj, scope, event_channel)
+		cancel, err := GlobalEventLogService.Register(
+			ntfs_device, "ntfs", ctx, config_obj, scope, event_channel)
+		if err != nil {
+			scope.Log("watch_usn: %v", err)
+			return
+		}
+
 		defer cancel()
 
 		for {

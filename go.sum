@@ -1026,8 +1026,8 @@ www.velocidex.com/golang/evtx v0.2.1-0.20220404133451-1fdf8be7325e h1:AhcXPgNKhJ
 www.velocidex.com/golang/evtx v0.2.1-0.20220404133451-1fdf8be7325e/go.mod h1:ykEQ7AUF9AL+mfCefDmLwmZOnU2So6wM3qKM8xdsHhU=
 www.velocidex.com/golang/go-ese v0.1.1-0.20220107095505-c38622559671 h1:pfvo7NFo0eJj6Zr7d+4vMx/Zr2JriMMPEWRHUf1YjUw=
 www.velocidex.com/golang/go-ese v0.1.1-0.20220107095505-c38622559671/go.mod h1:qnzHyB9yD2khtYO+wf3ck9FQxX3wFhXeJHFBnuUIZcc=
-www.velocidex.com/golang/go-ntfs v0.1.2-0.20220506011637-ec1ee7499352 h1:hOlKJFKaey3VuzdX5GzFJ26N0Q4yHdDzZK2f5SGe4DU=
-www.velocidex.com/golang/go-ntfs v0.1.2-0.20220506011637-ec1ee7499352/go.mod h1:Ha0bxCjZeLVvNM7zU6B7bj5nWkWn2UyHs2QWSj3OspQ=
+www.velocidex.com/golang/go-ntfs v0.1.2-0.20220616022946-852572498c13 h1:FHcUvOaYKJTjW94hIVBfes1+VXerEF7x1VHw3sRJQpg=
+www.velocidex.com/golang/go-ntfs v0.1.2-0.20220616022946-852572498c13/go.mod h1:Ha0bxCjZeLVvNM7zU6B7bj5nWkWn2UyHs2QWSj3OspQ=
 www.velocidex.com/golang/go-pe v0.1.1-0.20220107093716-e91743c801de/go.mod h1:j9Xy8Z9wxzY2SCB8CqDkkoSzy+eUwevnOrRm/XM2q/A=
 www.velocidex.com/golang/go-pe v0.1.1-0.20220506020923-9fac492a9b0d h1:OQKwxK0O4a/8YTmfkQNzUspyrvlpRbLi318L08DC0oY=
 www.velocidex.com/golang/go-pe v0.1.1-0.20220506020923-9fac492a9b0d/go.mod h1:TPJ3phbAuZIu7XuPyNqgoP2k3P+eNHfHHGcivhcsxaA=
