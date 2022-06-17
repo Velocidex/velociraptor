@@ -46,6 +46,7 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/Velocidex/ordereddict"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -58,6 +59,12 @@ var (
 	launcher_mu sync.Mutex
 	g_launcher  Launcher = nil
 )
+
+type DeleteFlowResponse struct {
+	Type  string            `json:"type"`
+	Data  *ordereddict.Dict `json:"data"`
+	Error string            `json:"error"`
+}
 
 func GetLauncher() (Launcher, error) {
 	launcher_mu.Lock()
@@ -173,4 +180,10 @@ type Launcher interface {
 		config_obj *config_proto.Config,
 		client_id string, flow_id string,
 		offset uint64, count uint64) (*api_proto.ApiFlowRequestDetails, error)
+
+	DeleteFlow(
+		ctx context.Context,
+		config_obj *config_proto.Config,
+		client_id string, flow_id string,
+		really_do_it bool) ([]*DeleteFlowResponse, error)
 }
