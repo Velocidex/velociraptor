@@ -2,6 +2,7 @@ package notebook
 
 import (
 	"errors"
+	"time"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -63,7 +64,32 @@ func (self *NotebookStoreImpl) SetNotebookCell(
 
 	notebook_path_manager := paths.NewNotebookPathManager(
 		notebook_id).Cell(in.CellId)
-	return db.SetSubject(self.config_obj, notebook_path_manager.Path(), in)
+	err = db.SetSubject(self.config_obj, notebook_path_manager.Path(), in)
+	if err != nil {
+
+	}
+
+	// Open the notebook and update the cell's timestamp.
+	notebook, err := self.GetNotebook(notebook_id)
+	if err != nil {
+		return err
+	}
+
+	// Update the cell's timestamp so the gui will refresh it.
+	new_cell_md := []*api_proto.NotebookCell{}
+	for _, cell_md := range notebook.CellMetadata {
+		if cell_md.CellId == in.CellId {
+			new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
+				CellId:    in.CellId,
+				Timestamp: time.Now().Unix(),
+			})
+			continue
+		}
+		new_cell_md = append(new_cell_md, cell_md)
+	}
+	notebook.CellMetadata = new_cell_md
+
+	return self.SetNotebook(notebook)
 }
 
 func (self *NotebookStoreImpl) GetNotebookCell(notebook_id, cell_id string) (*api_proto.NotebookCell, error) {

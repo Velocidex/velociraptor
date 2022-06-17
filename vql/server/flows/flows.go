@@ -59,47 +59,54 @@ func (self FlowsPlugin) Call(
 			return
 		}
 
-		db, err := datastore.GetDB(config_obj)
+		launcher, err := services.GetLauncher()
 		if err != nil {
-			scope.Log("Error: %v", err)
+			scope.Log("flows: %v", err)
 			return
 		}
 
-		sender := func(flow_id string, client_id string) {
-			collection_context, err := flows.LoadCollectionContext(
-				config_obj, client_id, flow_id)
-			if err != nil {
-				scope.Log("Error: %v", err)
-				return
-			}
-
-			select {
-			case <-ctx.Done():
-				return
-			case output_chan <- json.ConvertProtoToOrderedDict(collection_context):
-			}
-
-		}
-
+		// The user only cares about one flow
 		if arg.FlowId != "" {
-			sender(arg.FlowId, arg.ClientId)
-			scope.ChargeOp()
-			return
-		}
+			flow_details, err := launcher.GetFlowDetails(
+				config_obj, arg.ClientId, arg.FlowId)
+			if err == nil {
+				item := json.ConvertProtoToOrderedDict(
+					flow_details.Context)
+				item.Set("AvailableDownloads", flow_details.AvailableDownloads)
 
-		flow_path_manager := paths.NewFlowPathManager(arg.ClientId, arg.FlowId)
-		flow_urns, err := db.ListChildren(
-			config_obj, flow_path_manager.ContainerPath())
-		if err != nil {
-			scope.Log("Error: %v", err)
-			return
-		}
-
-		for _, child_urn := range flow_urns {
-			if !child_urn.IsDir() {
-				sender(child_urn.Base(), arg.ClientId)
-				scope.ChargeOp()
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- item:
+				}
 			}
+			return
+		}
+
+		length := uint64(1000)
+		offset := uint64(0)
+
+		for {
+			result, err := launcher.GetFlows(config_obj,
+				arg.ClientId, true, nil, offset, length)
+			if err != nil {
+				scope.Log("flows: %v", err)
+				return
+			}
+
+			if len(result.Items) == 0 {
+				return
+			}
+
+			for _, item := range result.Items {
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- json.ConvertProtoToOrderedDict(item):
+				}
+			}
+
+			offset += uint64(len(result.Items))
 		}
 	}()
 

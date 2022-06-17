@@ -209,7 +209,7 @@ func (self *NotebookManager) updateCellContents(
 		notebook_cell := make_cell(output)
 		notebook_cell.Messages = append(notebook_cell.Messages,
 			fmt.Sprintf("Error: %v", err))
-		self.setCell(notebook_id, notebook_cell)
+		self.store.SetNotebookCell(notebook_id, notebook_cell)
 		return notebook_cell, err
 	}
 
@@ -277,37 +277,5 @@ func (self *NotebookManager) updateCellContents(
 	tmpl.Close()
 
 	notebook_cell := make_cell(output)
-	return notebook_cell, self.setCell(notebook_id, notebook_cell)
-}
-
-func (self *NotebookManager) setCell(
-	notebook_id string,
-	notebook_cell *api_proto.NotebookCell) error {
-
-	err := self.store.SetNotebookCell(notebook_id, notebook_cell)
-	if err != nil {
-		return err
-	}
-
-	// Open the notebook and update the cell's timestamp.
-	notebook, err := self.store.GetNotebook(notebook_id)
-	if err != nil {
-		return err
-	}
-
-	// Update the cell's timestamp so the gui will refresh it.
-	new_cell_md := []*api_proto.NotebookCell{}
-	for _, cell_md := range notebook.CellMetadata {
-		if cell_md.CellId == notebook_cell.CellId {
-			new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
-				CellId:    notebook_cell.CellId,
-				Timestamp: time.Now().Unix(),
-			})
-			continue
-		}
-		new_cell_md = append(new_cell_md, cell_md)
-	}
-	notebook.CellMetadata = new_cell_md
-
-	return self.store.SetNotebook(notebook)
+	return notebook_cell, self.store.SetNotebookCell(notebook_id, notebook_cell)
 }

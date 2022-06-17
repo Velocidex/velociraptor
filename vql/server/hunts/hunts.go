@@ -34,7 +34,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
-	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -210,32 +209,17 @@ func (self HuntResultsPlugin) Call(
 			arg.Artifact += "/" + arg.Source
 		}
 
-		// Backwards compatibility.
-		hunt_path_manager := paths.NewHuntPathManager(arg.HuntId).Clients()
-		file_store_factory := file_store.GetFileStore(config_obj)
-		rs_reader, err := result_sets.NewResultSetReader(
-			file_store_factory, hunt_path_manager)
-		if err != nil {
-			return
-		}
-		defer rs_reader.Close()
-
 		indexer, err := services.GetIndexer()
 		if err != nil {
 			return
 		}
 
-		// Read each file and emit it with some extra columns
-		// for context.
-		for row := range rs_reader.Rows(ctx) {
-			participation_row := &hunt_manager.ParticipationRecord{}
-			err := arg_parser.ExtractArgsWithContext(ctx, scope, row, participation_row)
-			if err != nil {
-				continue
-			}
+		hunt_dispatcher := services.GetHuntDispatcher()
+		for flow_details := range hunt_dispatcher.GetFlows(
+			ctx, config_obj, scope, arg.HuntId, 0) {
 
 			api_client, err := indexer.FastGetApiClient(ctx,
-				config_obj, participation_row.ClientId)
+				config_obj, flow_details.Context.ClientId)
 			if err != nil {
 				scope.Log("hunt_results: %v", err)
 				continue
@@ -244,12 +228,14 @@ func (self HuntResultsPlugin) Call(
 			// Read individual flow's results.
 			path_manager, err := artifact_paths.NewArtifactPathManager(
 				config_obj,
-				participation_row.ClientId,
-				participation_row.FlowId,
+				flow_details.Context.ClientId,
+				flow_details.Context.SessionId,
 				arg.Artifact)
 			if err != nil {
 				continue
 			}
+
+			file_store_factory := file_store.GetFileStore(config_obj)
 
 			reader, err := result_sets.NewResultSetReader(
 				file_store_factory, path_manager.Path())
@@ -261,8 +247,8 @@ func (self HuntResultsPlugin) Call(
 			// with some extra columns for
 			// context.
 			for row := range reader.Rows(ctx) {
-				row.Set("FlowId", participation_row.FlowId).
-					Set("ClientId", participation_row.ClientId)
+				row.Set("FlowId", flow_details.Context.SessionId).
+					Set("ClientId", flow_details.Context.ClientId)
 
 				if api_client.OsInfo != nil {
 					row.Set("Fqdn", api_client.OsInfo.Fqdn)
@@ -330,7 +316,8 @@ func (self HuntFlowsPlugin) Call(
 				Set("HuntId", arg.HuntId).
 				Set("ClientId", flow_details.Context.ClientId).
 				Set("FlowId", flow_details.Context.SessionId).
-				Set("Flow", flow_details.Context)
+				Set("Flow", json.ConvertProtoToOrderedDict(
+					flow_details.Context))
 
 			select {
 			case <-ctx.Done():
