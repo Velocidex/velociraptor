@@ -112,6 +112,7 @@ func _OLEVBAPlugin_ParseFile(
 
 	zfd, err := zip.NewReader(reader, stat.Size())
 	if err == nil {
+		results := []*oleparse.VBAModule{}
 		for _, f := range zfd.File {
 			if oleparse.BINFILE_NAME.MatchString(f.Name) {
 				rc, err := f.Open()
@@ -123,12 +124,14 @@ func _OLEVBAPlugin_ParseFile(
 				if err != nil {
 					return nil, err
 				}
-				return oleparse.ParseBuffer(data)
+				modules, err :=  oleparse.ParseBuffer(data)
+				if err == nil {
+					 results = append(results,modules...)
+				}
 			}
 		}
-
+		return results, nil
 	}
-
 	return nil, errors.New("Not an OLE file.")
 }
 
