@@ -10,9 +10,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -93,7 +91,7 @@ func (self ParallelPlugin) Call(
 			workers = int64(runtime.NumCPU())
 		}
 
-		job_chan, err := breakIntoScopes(ctx, config_obj, arg)
+		job_chan, err := breakIntoScopes(ctx, config_obj, scope, arg)
 		if err != nil {
 			scope.Log("parallel: %v", err)
 			return
@@ -135,11 +133,12 @@ func (self ParallelPlugin) Info(
 func breakIntoScopes(
 	ctx context.Context,
 	config_obj *config_proto.Config,
+	scope vfilter.Scope,
 	arg *ParallelPluginArgs) (<-chan *ordereddict.Dict, error) {
 
 	// Handle hunts especially.
 	if arg.HuntId != "" {
-		return breakHuntIntoScopes(ctx, config_obj, arg)
+		return breakHuntIntoScopes(ctx, config_obj, scope, arg)
 	}
 
 	// Other sources are strored in a single reader.  Depending on
@@ -206,29 +205,22 @@ func breakIntoScopes(
 func breakHuntIntoScopes(
 	ctx context.Context,
 	config_obj *config_proto.Config,
+	scope vfilter.Scope,
 	arg *ParallelPluginArgs) (<-chan *ordereddict.Dict, error) {
-	file_store_factory := file_store.GetFileStore(config_obj)
-
-	hunt_path_manager := paths.NewHuntPathManager(arg.HuntId).Clients()
-	hunt_rs_reader, err := result_sets.NewResultSetReader(
-		file_store_factory, hunt_path_manager)
-	if err != nil {
-		return nil, err
-	}
 
 	output_chan := make(chan *ordereddict.Dict)
 	go func() {
 		defer close(output_chan)
 
-		for row := range hunt_rs_reader.Rows(ctx) {
-			client_id, _ := row.GetString("ClientId")
-			flow_id, _ := row.GetString("FlowId")
+		hunt_dispatcher := services.GetHuntDispatcher()
+		for flow_details := range hunt_dispatcher.GetFlows(
+			ctx, config_obj, scope, arg.HuntId, 0) {
 
-			flow_job, err := breakIntoScopes(ctx, config_obj,
+			flow_job, err := breakIntoScopes(ctx, config_obj, scope,
 				&ParallelPluginArgs{
 					Artifact:  arg.Artifact,
-					ClientId:  client_id,
-					FlowId:    flow_id,
+					ClientId:  flow_details.Context.ClientId,
+					FlowId:    flow_details.Context.SessionId,
 					Workers:   arg.Workers,
 					BatchSize: arg.BatchSize,
 				})
