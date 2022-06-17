@@ -17,9 +17,6 @@ Queries:
   # enumerate_flow emits some fs paths and some ds paths. Here we test
   # that we can read both these types. file_store operating on the
   # string version should be same as directly.
-  - SELECT hash(path=VFSPath, accessor="fs"), VFSPath, Type,
-           format(format="%T should be FSPathSpec / DSPathSpec", args=VFSPath),
-           file_store(path=VFSPath) = file_store(path=str(str=VFSPath)),
-           basename(path=file_store(path=VFSPath))
+  - SELECT hash(path=Data.VFSPath, accessor="fs"), Data
     FROM enumerate_flow(client_id="C.4f5e52adf0a337a9", flow_id="F.BN2HP3OSS3LK6")
     WHERE Type IN ("Log", "CollectionContext", "Task", "Result")
