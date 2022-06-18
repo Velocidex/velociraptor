@@ -2,6 +2,10 @@ package clients
 
 import (
 	"context"
+	"io/fs"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
@@ -56,7 +60,28 @@ ping.db`
 
 type DeleteTestSuite struct {
 	test_utils.TestSuite
+	dir       string
 	client_id string
+}
+
+func (self *DeleteTestSuite) SetupTest() {
+	self.ConfigObj = self.LoadConfig()
+
+	var err error
+	self.dir, err = ioutil.TempDir("", "delete_test")
+	assert.NoError(self.T(), err)
+
+	self.ConfigObj.Datastore.Implementation = "FileBaseDataStore"
+	self.ConfigObj.Datastore.FilestoreDirectory = self.dir
+	self.ConfigObj.Datastore.Location = self.dir
+
+	self.client_id = "C.12312"
+	self.TestSuite.SetupTest()
+}
+
+func (self *DeleteTestSuite) TearDownTest() {
+	err := os.RemoveAll(self.dir)
+	assert.NoError(self.T(), err)
 }
 
 func (self *DeleteTestSuite) TestDeleteClient() {
@@ -64,13 +89,12 @@ func (self *DeleteTestSuite) TestDeleteClient() {
 	db, err := datastore.GetDB(ConfigObj)
 	assert.NoError(self.T(), err)
 
-	memory_db := test_utils.GetMemoryFileStore(self.T(), self.ConfigObj)
 	golden := ordereddict.NewDict()
 
 	file_store_factory := file_store.GetFileStore(ConfigObj)
 
 	for _, line := range strings.Split(sample_flow, "\n") {
-		line = "/clients/C.123/" + line
+		line = "/clients/" + self.client_id + "/" + line
 		if strings.HasSuffix(line, ".db") {
 			db.SetSubject(self.ConfigObj,
 				paths.DSPathSpecFromClientPath(line),
@@ -96,11 +120,15 @@ func (self *DeleteTestSuite) TestDeleteClient() {
 
 	// Get a list of all filestore items before deletion
 	before := []string{}
-	for _, k := range memory_db.Paths.Keys() {
-		if strings.Contains(k, "C.123") {
-			before = append(before, k)
-		}
-	}
+	err = filepath.WalkDir(self.dir,
+		func(path string, d fs.DirEntry, err error) error {
+			path = strings.TrimPrefix(path, self.dir)
+			path = strings.ReplaceAll(path, "\\", "/")
+
+			before = append(before, path)
+			return nil
+		})
+	assert.NoError(self.T(), err)
 	golden.Set("Before filestore", before)
 
 	manager, _ := services.GetRepositoryManager()
@@ -124,12 +152,15 @@ func (self *DeleteTestSuite) TestDeleteClient() {
 			Set("client_id", self.client_id)))
 
 	after := []string{}
-	for _, k := range test_utils.GetMemoryFileStore(
-		self.T(), self.ConfigObj).Paths.Keys() {
-		if strings.Contains(k, "C.123") {
-			after = append(after, k)
-		}
-	}
+	err = filepath.WalkDir(self.dir,
+		func(path string, d fs.DirEntry, err error) error {
+			path = strings.TrimPrefix(path, self.dir)
+			path = strings.ReplaceAll(path, "\\", "/")
+
+			after = append(after, path)
+			return nil
+		})
+	assert.NoError(self.T(), err)
 	golden.Set("After filestore", after)
 
 	sort.Slice(result, func(i, j int) bool {
@@ -143,7 +174,5 @@ func (self *DeleteTestSuite) TestDeleteClient() {
 }
 
 func TestDeletePlugin(t *testing.T) {
-	suite.Run(t, &DeleteTestSuite{
-		client_id: "C.123",
-	})
+	suite.Run(t, &DeleteTestSuite{})
 }

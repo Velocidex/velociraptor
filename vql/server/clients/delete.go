@@ -91,6 +91,16 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 			return
 		}
 
+		// Delete the actual client record.
+		if arg.ReallyDoIt {
+			err = reallyDeleteClient(ctx, config_obj, scope, db, arg)
+			if err != nil {
+				scope.Log("client_delete: %s", err)
+				return
+			}
+
+		}
+
 		// Delete the filestore files.
 		err = api.Walk(file_store_factory,
 			client_path_manager.Path().AsFilestorePath(),
