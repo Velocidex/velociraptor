@@ -64,6 +64,7 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 
 		// Indiscriminately delete all the client's datastore files.
 		err = datastore.Walk(config_obj, db, client_path_manager.Path(),
+			datastore.WalkWithoutDirectories,
 			func(filename api.DSPathSpec) error {
 				select {
 				case <-ctx.Done():
@@ -77,7 +78,7 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 				}
 
 				if arg.ReallyDoIt {
-					err = db.DeleteSubject(config_obj, filename)
+					err := db.DeleteSubject(config_obj, filename)
 					if err != nil && errors.Is(err, os.ErrNotExist) {
 						scope.Log("client_delete: while deleting %v: %s",
 							filename, err)
@@ -88,16 +89,6 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 		if err != nil {
 			scope.Log("client_delete: %s", err.Error())
 			return
-		}
-
-		// Delete the actual client record.
-		if arg.ReallyDoIt {
-			err = reallyDeleteClient(ctx, config_obj, scope, db, arg)
-			if err != nil {
-				scope.Log("client_delete: %s", err)
-				return
-			}
-
 		}
 
 		// Delete the filestore files.
@@ -127,6 +118,26 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 		if err != nil {
 			scope.Log("client_delete: %s", err)
 			return
+		}
+
+		// Remove the empty directories
+		err = datastore.Walk(config_obj, db, client_path_manager.Path(),
+			datastore.WalkWithDirectories,
+			func(filename api.DSPathSpec) error {
+				err := db.DeleteSubject(config_obj, filename)
+				if err != nil {
+					scope.Log("client_delete: Removig directory %v: %v",
+						filename.AsClientPath(), err)
+				}
+				return nil
+			})
+
+		// Finally remove the containing directory
+		err = db.DeleteSubject(
+			config_obj,
+			paths.NewClientPathManager(arg.ClientId).Path().SetDir())
+		if err != nil {
+			scope.Log("client_delete: %s", err)
 		}
 
 		// Notify the client to force it to disconnect in case

@@ -9,6 +9,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
 
+const (
+	WalkWithDirectories    = true
+	WalkWithoutDirectories = false
+)
+
 type MultiGetSubjectRequest struct {
 	Path    api.DSPathSpec
 	Message proto.Message
@@ -48,7 +53,9 @@ func MultiGetSubject(
 }
 
 func Walk(config_obj *config_proto.Config,
-	datastore DataStore, root api.DSPathSpec, walkFn WalkFunc) error {
+	datastore DataStore, root api.DSPathSpec,
+	with_directories bool,
+	walkFn WalkFunc) error {
 
 	TraceDirectory(config_obj, "Walk", root)
 	all_children, err := datastore.ListChildren(config_obj, root)
@@ -56,20 +63,40 @@ func Walk(config_obj *config_proto.Config,
 		return err
 	}
 
+	directories := []api.DSPathSpec{}
+	files := []api.DSPathSpec{}
+
 	for _, child := range all_children {
 		// Recurse into directories
 		if child.IsDir() {
-			err := Walk(config_obj, datastore, child, walkFn)
-			if err != nil {
-				// Do not quit the walk early.
-			}
-
+			directories = append(directories, child)
 		} else {
-			err := walkFn(child)
+			files = append(files, child)
+		}
+	}
+
+	// Depth first walk - first directories then files. This allows us
+	// to remove empty directories recursively.
+	for _, d := range directories {
+		err := Walk(config_obj, datastore, d, with_directories, walkFn)
+		if err != nil {
+			// Do not quit the walk early.
+		}
+	}
+
+	if with_directories {
+		for _, d := range directories {
+			err := walkFn(d)
 			if err == StopIteration {
 				return nil
 			}
-			continue
+		}
+	}
+
+	for _, f := range files {
+		err := walkFn(f)
+		if err == StopIteration {
+			return nil
 		}
 	}
 

@@ -271,19 +271,23 @@ func (self *FileBaseDataStore) ListChildren(
 	for _, child := range children {
 		var child_pathspec api.DSPathSpec
 
-		// Strip data store extensions
-		spec_type, name := api.GetDataStorePathTypeFromExtension(
-			utils.UnsanitizeComponent(child.Name()))
-		if name == "" {
+		if child.IsDir() {
+			name := utils.UnsanitizeComponent(child.Name())
+			result = append(result, urn.AddUnsafeChild(name).SetDir())
 			continue
 		}
 
-		if child.IsDir() {
-			child_pathspec = urn.AddUnsafeChild(name).
-				SetType(api.PATH_TYPE_DATASTORE_DIRECTORY).SetDir()
+		// Strip data store extensions
+		spec_type, extension := api.GetDataStorePathTypeFromExtension(
+			child.Name())
+		if spec_type == api.PATH_TYPE_DATASTORE_UNKNOWN {
+			continue
+		}
 
-			// Skip over files that do not belong in the data store.
-		} else if spec_type == api.PATH_TYPE_DATASTORE_UNKNOWN {
+		name := utils.UnsanitizeComponent(child.Name()[:len(extension)])
+
+		// Skip over files that do not belong in the data store.
+		if spec_type == api.PATH_TYPE_DATASTORE_UNKNOWN {
 			continue
 
 		} else {
