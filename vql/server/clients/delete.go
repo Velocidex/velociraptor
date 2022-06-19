@@ -91,16 +91,6 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 			return
 		}
 
-		// Delete the actual client record.
-		if arg.ReallyDoIt {
-			err = reallyDeleteClient(ctx, config_obj, scope, db, arg)
-			if err != nil {
-				scope.Log("client_delete: %s", err)
-				return
-			}
-
-		}
-
 		// Delete the filestore files.
 		err = api.Walk(file_store_factory,
 			client_path_manager.Path().AsFilestorePath(),
@@ -142,12 +132,21 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 				return nil
 			})
 
-		// Finally remove the containing directory
-		err = db.DeleteSubject(
-			config_obj,
-			paths.NewClientPathManager(arg.ClientId).Path().SetDir())
-		if err != nil {
-			scope.Log("client_delete: %s", err)
+		// Delete the actual client record.
+		if arg.ReallyDoIt {
+			err = reallyDeleteClient(ctx, config_obj, scope, db, arg)
+			if err != nil {
+				scope.Log("client_delete: %s", err)
+				return
+			}
+
+			// Finally remove the containing directory
+			err = db.DeleteSubject(
+				config_obj,
+				paths.NewClientPathManager(arg.ClientId).Path().SetDir())
+			if err != nil {
+				scope.Log("client_delete: %s", err)
+			}
 		}
 
 		// Notify the client to force it to disconnect in case
@@ -168,6 +167,13 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 func reallyDeleteClient(ctx context.Context,
 	config_obj *config_proto.Config, scope vfilter.Scope,
 	db datastore.DataStore, arg *DeleteClientArgs) error {
+
+	client_info_manager, err := services.GetClientInfoManager()
+	if err != nil {
+		return err
+	}
+
+	client_info_manager.Remove(arg.ClientId)
 
 	indexer, err := services.GetIndexer()
 	if err != nil {

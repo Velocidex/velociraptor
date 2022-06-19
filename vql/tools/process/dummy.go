@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/Velocidex/ttlcache/v2"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
@@ -40,6 +41,10 @@ func (self *DummyProcessTracker) Get(ctx context.Context,
 		}
 	}
 	return nil, false
+}
+
+func (self *DummyProcessTracker) Stats() ttlcache.Metrics {
+	return ttlcache.Metrics{}
 }
 
 func (self *DummyProcessTracker) Enrich(

@@ -211,5 +211,5 @@ func makeDefaultConfigLoader() *config.Loader {
 		WithOverride(*override_flag).
 		WithConfigMutator(applyMinionRole).
 		WithCustomValidator(ensureProxy).
-		WithCustomValidator(applyAnalysisTarget)
+		WithConfigMutator(applyAnalysisTarget)
 }

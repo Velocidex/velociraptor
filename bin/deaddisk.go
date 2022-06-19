@@ -32,6 +32,10 @@ var (
 	deaddisk_command_add_windows_disk = deaddisk_command.Flag(
 		"add_windows_disk", "Add a Windows Hard Disk Image").String()
 
+	deaddisk_command_add_windows_disk_offset = deaddisk_command.Flag(
+		"offset", "The offset of the partition inside the disk").
+		Default("-1").Int64()
+
 	deaddisk_command_add_windows_directory = deaddisk_command.Flag(
 		"add_windows_directory", "Add a Windows mounted directory").String()
 
@@ -154,7 +158,9 @@ func addWindowsDirectory(
 	return nil
 }
 
-func addWindowsHardDisk(image string, config_obj *config_proto.Config) error {
+func addWindowsHardDisk(
+	image string, config_obj *config_proto.Config) error {
+
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: vql_subsystem.NullACLManager{},
@@ -172,6 +178,36 @@ func addWindowsHardDisk(image string, config_obj *config_proto.Config) error {
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
+	if *deaddisk_command_add_windows_disk_offset < 0 {
+		rows, err := getPartitionOffsets(scope, image, config_obj)
+		if err != nil {
+			return err
+		}
+
+		for _, row := range rows {
+			// Here we are looking for a partition with a Windows
+			// directory
+			if checkForName(scope, row, "TopLevelDirectory", "Windows") {
+				partition_start := vql_subsystem.GetIntFromRow(scope, row, "StartOffset")
+				addWindowsPartition(config_obj, scope, image, partition_start)
+			}
+		}
+
+	} else {
+		addWindowsPartition(
+			config_obj, scope, image,
+			uint64(*deaddisk_command_add_windows_disk_offset))
+	}
+
+	addCommonShadowAccessors(config_obj)
+
+	return nil
+}
+
+func getPartitionOffsets(
+	scope vfilter.Scope,
+	image string,
+	config_obj *config_proto.Config) ([]*ordereddict.Dict, error) {
 	scope.Log("Enumerating partitions using Windows.Forensics.PartitionTable")
 	query := `
 SELECT *
@@ -179,25 +215,19 @@ FROM Artifact.Windows.Forensics.PartitionTable(ImagePath=ImagePath)
 `
 	vqls, err := vfilter.MultiParse(query)
 	if err != nil {
-		return fmt.Errorf("Unable to parse VQL Query: %w", err)
+		return nil, fmt.Errorf("Unable to parse VQL Query: %w", err)
 	}
 
 	ctx, cancel := InstallSignalHandler(nil, scope)
 	defer cancel()
 
+	results := []*ordereddict.Dict{}
 	for _, vql := range vqls {
 		for row := range vql.Eval(ctx, scope) {
-			// Here we are looking for a partition with a Windows
-			// directory
-			if checkForName(scope, row, "TopLevelDirectory", "Windows") {
-				addWindowsPartition(config_obj, scope, image, row)
-			}
+			results = append(results, vfilter.RowToDict(ctx, scope, row))
 		}
 	}
-
-	addCommonShadowAccessors(config_obj)
-
-	return nil
+	return results, nil
 }
 
 func doDeadDisk() error {
@@ -387,10 +417,8 @@ func addWindowsPartition(
 	config_obj *config_proto.Config,
 	scope vfilter.Scope,
 	image string,
-	row vfilter.Row) {
+	partition_start uint64) {
 	addCommonPermissions(config_obj)
-
-	partition_start := vql_subsystem.GetIntFromRow(scope, row, "StartOffset")
 
 	scope.Log("Adding windows partition at offset %v", partition_start)
 
