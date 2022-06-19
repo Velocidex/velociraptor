@@ -1,0 +1,42 @@
+name: Windows.Events.TrackProcessesBasic
+description: |
+  This artifact is a basic Process tracker using a simple polled
+  pslist(). The Process Tracker keeps track of exited processes, and
+  resolves process callchains from it in memory cache.
+
+  This event artifact enables the global process tracker and makes it
+  possible to run many other artifacts that depend on the process
+  tracker.
+
+  This tracker DOES NOT require sysmon and is **incompatible** with
+  Windows.Events.TrackProcesses (only one should be running).
+
+type: CLIENT_EVENT
+
+parameters:
+  - name: MaxSize
+    type: int64
+    description: Maximum size of the in memory process cache (default 10k)
+  - name: PollPeriod
+    type: int64
+    description: How often to run pslist to track processes (in Seconds)
+    default: 60
+
+sources:
+  - query: |
+      LET SyncQuery =
+              SELECT Pid AS id,
+                 Ppid AS parent_id,
+                 CreateTime AS start_time,
+                 dict(
+                   Name=Name,
+                   Username=Username,
+                   Exe=Exe,
+                   CommandLine=CommandLine) AS data
+              FROM pslist()
+
+      LET Tracker <= process_tracker(
+        sync_query=SyncQuery, sync_period=1000 * PollPeriod)
+
+      SELECT * FROM process_tracker_updates()
+      WHERE update_type = "stats"

@@ -8,8 +8,19 @@ description: |
   a number of intemediary processes) it could mean word was
   compromised.
 
+  This artifact uses the process tracker which was introduced in
+  release 0.6.5. (Import an older version of this artifact using the
+  Server.Import.PreviousReleases if your client is older than this).
+
+  A more accurate call chain will be available when the
+  Windows.Events.TrackProcesses artifact is collected (required
+  Sysmon) or Windows.Events.TrackProcessesBasic (does not require
+  Sysmon)
+
+  Minimum Version: 0.6.5
+
 parameters:
-  - name: ProcessNameRegex
+  - name: CommandlineRegex
     default: .
     type: regex
 
@@ -23,56 +34,13 @@ parameters:
     type: regex
 
   - name: CallChainSep
-    default: " <- "
+    default: " -> "
 
 sources:
   - query: |
-      // Cache the process listing in memory as we will be going
-      // through it many times.
-      LET processes <= SELECT Name, Pid, Ppid FROM pslist() WHERE Pid > 0
-
-      LET m <= memoize(query={ SELECT Name, Pid, Ppid FROM pslist()}, key="Pid", period=1)
-
-      // Recursive function to find process parent (clients > 0.4.9).
-      // Catch recursion loops by limiting the depth of traversal to 10 deep.
-      LET pstree_memoized(LookupPid, Depth) = SELECT * FROM foreach(
-      row=if(condition=Depth < 10, then=get(item=m, field=LookupPid)),
-        query={
-           SELECT * FROM chain(
-           a={
-             SELECT Name, Pid, Ppid FROM scope()
-           },
-           b={
-             SELECT Name, Pid, Ppid FROM pstree_memoized(
-                    LookupPid=Ppid, Depth=Depth + 1)
-           })
-        })
-
-      // Recursive function to find process parent (clients < 0.4.9).
-      LET pstree_legacy(LookupPid) = SELECT * FROM foreach(
-         row={
-           SELECT Name, Pid, Ppid FROM processes
-           WHERE Pid = LookupPid
-         },
-         query={
-           SELECT * FROM chain(
-           b={
-             SELECT Name, Pid, Ppid FROM pstree(LookupPid=Ppid)
-           },
-           a={
-             SELECT Name, Pid, Ppid FROM scope()
-           })
-      })
-
-      // Select which version we should use
-      LET pstree(LookupPid) = SELECT * FROM if(
-        condition=version(function="memoize") >= 0,
-        then={ SELECT * FROM pstree_memoized(LookupPid=LookupPid, Depth=0) },
-        else={ SELECT * FROM pstree_legacy})
-
-      SELECT Name, Pid, Ppid,
-             join(array=pstree(LookupPid=Pid).Name, sep=CallChainSep) AS CallChain
-      FROM processes
-      WHERE Name =~ ProcessNameRegex
+      SELECT Pid, Ppid, Name, Username, Exe, CommandLine, StartTime, EndTime,
+          join(array=process_tracker_callchain(id=Pid).Data.Name, sep=CallChainSep) AS CallChain
+      FROM process_tracker_pslist()
+      WHERE CommandLine =~ CommandlineRegex
         AND CallChain =~ CallChainFilter
-        AND str(str=Pid) =~ str(str=PidFilter)
+        AND Pid =~ PidFilter

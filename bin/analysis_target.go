@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
@@ -15,24 +16,36 @@ import (
 
 var (
 	remapping_flag = app.Flag(
-		"remap", "A remapping configuration for dead disk analysis.").Strings()
+		"remap", "A remapping configuration file for dead disk analysis.").String()
 )
 
 func applyAnalysisTarget(config_obj *config_proto.Config) error {
-	for _, remap := range *remapping_flag {
-		remapping_config := &config_proto.RemappingConfig{}
-		err := yaml.Unmarshal([]byte(remap), remapping_config)
+	if remapping_flag == nil || *remapping_flag == "" {
+		return nil
+	}
+
+	data, err := ioutil.ReadFile(*remapping_flag)
+	if err != nil {
+		fmt.Printf("*** %v\n", err)
+		return err
+	}
+
+	remapping_config := []*config_proto.RemappingConfig{}
+	err = yaml.Unmarshal(data, remapping_config)
+	if err != nil {
+		// It might be a regular config file
+		full_config := &config_proto.Config{}
+		err := yaml.Unmarshal(data, full_config)
 		if err != nil {
 			return err
 		}
-		logging.Prelog("Applying remapping %v", remapping_config)
-
-		config_obj.Remappings = append(config_obj.Remappings, remapping_config)
+		remapping_config = full_config.Remappings
 	}
-
-	if len(config_obj.Remappings) == 0 {
+	if len(remapping_config) == 0 {
 		return nil
 	}
+
+	logging.Prelog("Applying remapping from %v", *remapping_flag)
 
 	// Apply the remapping once to check for syntax errors so we can
 	// fail early.
@@ -46,13 +59,19 @@ func applyAnalysisTarget(config_obj *config_proto.Config) error {
 		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
 	defer scope.Close()
 
-	err := remapping.ApplyRemappingOnScope(
+	// Apply the remapping on this scope to catch any errors in the
+	// remapping config.
+	err = remapping.ApplyRemappingOnScope(
 		context.Background(), scope, scope, device_manager,
 		ordereddict.NewDict(),
-		config_obj.Remappings)
+		remapping_config)
 	if err != nil {
 		return fmt.Errorf(
 			"%v: Please check your config file's `remappings` setting", err)
 	}
+
+	// It is all good! Remapping accepted
+	config_obj.Remappings = remapping_config
+
 	return nil
 }
