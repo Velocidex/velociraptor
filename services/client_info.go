@@ -78,6 +78,8 @@ type ClientInfoManager interface {
 
 	Get(client_id string) (*ClientInfo, error)
 
+	Remove(client_id string)
+
 	GetStats(client_id string) (*Stats, error)
 	UpdateStats(client_id string, stats *Stats) error
 

@@ -532,6 +532,10 @@ func (self *ClientInfoManager) Clear() {
 	self.lru.Purge()
 }
 
+func (self *ClientInfoManager) Remove(client_id string) {
+	self.lru.Remove(client_id)
+}
+
 func (self *ClientInfoManager) Get(client_id string) (*services.ClientInfo, error) {
 	cached_info, err := self.GetCacheInfo(client_id)
 	if err != nil {

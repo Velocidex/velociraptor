@@ -159,6 +159,13 @@ func reallyDeleteClient(ctx context.Context,
 	config_obj *config_proto.Config, scope vfilter.Scope,
 	db datastore.DataStore, arg *DeleteClientArgs) error {
 
+	client_info_manager, err := services.GetClientInfoManager()
+	if err != nil {
+		return err
+	}
+
+	client_info_manager.Remove(arg.ClientId)
+
 	indexer, err := services.GetIndexer()
 	if err != nil {
 		return err
