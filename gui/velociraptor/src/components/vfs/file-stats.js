@@ -88,7 +88,7 @@ class VeloFileStats extends Component {
                     client_id: this.props.client.client_id,
                     flow_id: flow_id,
                 }, this.source.token).then((response) => {
-                    if (response.data.context.state !== "RUNNING") {
+                    if (response.data && response.data.context.state !== "RUNNING") {
                         this.source.cancel("unmounted");
                         clearInterval(this.interval);
 

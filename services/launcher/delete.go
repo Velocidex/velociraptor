@@ -98,8 +98,17 @@ func (self *Launcher) DeleteFlow(
 
 	r.emit_ds("Notebook", flow_path_manager.Notebook().Path())
 	datastore.Walk(config_obj, db, flow_path_manager.Notebook().DSDirectory(),
+		datastore.WalkWithoutDirectories,
 		func(path api.DSPathSpec) error {
 			r.emit_ds("NotebookData", path)
+			return nil
+		})
+
+	// Clean the empty directories
+	datastore.Walk(config_obj, db, flow_path_manager.Notebook().DSDirectory(),
+		datastore.WalkWithDirectories,
+		func(path api.DSPathSpec) error {
+			_ = db.DeleteSubject(config_obj, path)
 			return nil
 		})
 

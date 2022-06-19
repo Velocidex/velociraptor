@@ -9,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -25,11 +26,12 @@ func (self *serverLogger) Close() {
 }
 
 func (self *serverLogger) Write(b []byte) (int, error) {
-	msg := artifacts.DeobfuscateString(self.config_obj, string(b))
+	level, msg := logging.SplitIntoLevelAndLog(b)
+	msg = artifacts.DeobfuscateString(self.config_obj, msg)
 
 	self.writer.Write(ordereddict.NewDict().
 		Set("Timestamp", time.Now().UTC().UnixNano()/1000).
-		Set("time", time.Now().UTC().String()).
+		Set("Level", level).
 		Set("message", msg))
 
 	// Increment the log count.

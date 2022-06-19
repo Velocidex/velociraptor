@@ -128,7 +128,7 @@ func (self *DirectoryFileStore) ListDirectory(dirname api.FSPathSpec) (
 		name_type, name := api.GetFileStorePathTypeFromExtension(name)
 		result = append(result, file_store_accessor.NewFileStoreFileInfo(
 			self.config_obj,
-			dirname.AddChild(
+			dirname.AddUnsafeChild(
 				utils.UnsanitizeComponent(name)).
 				SetType(name_type),
 			fileinfo))

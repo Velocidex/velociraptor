@@ -40,6 +40,7 @@ func maybeMigrateClientIndex(
 
 	// Migrate the old index to the new index.
 	err = datastore.Walk(config_obj, db, paths.CLIENT_INDEX_URN_DEPRECATED,
+		datastore.WalkWithoutDirectories,
 		func(path api.DSPathSpec) error {
 			client_id := path.Base()
 			term := path.Dir().Base()
