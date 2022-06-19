@@ -132,12 +132,21 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 				return nil
 			})
 
-		// Finally remove the containing directory
-		err = db.DeleteSubject(
-			config_obj,
-			paths.NewClientPathManager(arg.ClientId).Path().SetDir())
-		if err != nil {
-			scope.Log("client_delete: %s", err)
+		// Delete the actual client record.
+		if arg.ReallyDoIt {
+			err = reallyDeleteClient(ctx, config_obj, scope, db, arg)
+			if err != nil {
+				scope.Log("client_delete: %s", err)
+				return
+			}
+
+			// Finally remove the containing directory
+			err = db.DeleteSubject(
+				config_obj,
+				paths.NewClientPathManager(arg.ClientId).Path().SetDir())
+			if err != nil {
+				scope.Log("client_delete: %s", err)
+			}
 		}
 
 		// Notify the client to force it to disconnect in case
