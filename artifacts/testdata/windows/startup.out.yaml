@@ -1,10 +1,7 @@
-SELECT * FROM Artifact.Windows.Sys.StartupItems() WHERE Name =~ 'msht' ORDER BY Name[
+SELECT Name, Details, Enabled FROM Artifact.Windows.Sys.StartupItems() WHERE Name =~ 'msht' ORDER BY Name[
  {
   "Name": "c:\\windows\\system32\\msht.exe",
-  "OSPath": "HKEY_USERS\\S-1-5-21-3026640767-601176999-3470186877-500\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\\"c:\\windows\\system32\\msht.exe\"",
   "Details": "Hello",
-  "Enabled": "disabled",
-  "Upload": "",
-  "_Source": "Windows.Sys.StartupItems"
+  "Enabled": "disabled"
  }
 ]
