@@ -24,7 +24,7 @@ parameters:
     default: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\*
   - name: OnlyRemote
     type: bool
-    description: Only show users that actually were logged in.
+    description: Only show users that actually were logged in (i.e. have cached profiles).
 
 sources:
   - precondition:

@@ -366,7 +366,7 @@ export default class ToolViewer extends React.Component {
                               />
                               <Form.File.Label data-browse={T("Select file")}>
                                 { this.state.tool_file ? this.state.tool_file.name :
-                                  T("Click to upload file")}
+                                  T("Select file")}
                               </Form.File.Label>
                             </Form.File>
                           </InputGroup>
