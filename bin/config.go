@@ -33,11 +33,13 @@ import (
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/acls"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 var (
@@ -411,6 +413,21 @@ func doDumpApiClientConfig() error {
 		if err != nil {
 			return fmt.Errorf("Unable to set role ACL: %w", err)
 		}
+
+		// Make sure the user actually exists.
+		user_manager := services.GetUserManager()
+		_, err = user_manager.GetUser(config_obj,
+			*config_api_client_common_name)
+		if err != nil {
+			// Need to ensure we have a user
+			err := user_manager.SetUser(config_obj, &api_proto.VelociraptorUser{
+				Name: *config_api_client_common_name,
+			})
+			if err != nil {
+				return err
+			}
+		}
+
 	} else {
 		fmt.Printf("No role added to user %v. You will need to do this later using the 'acl grant' command.", *config_api_client_common_name)
 	}
