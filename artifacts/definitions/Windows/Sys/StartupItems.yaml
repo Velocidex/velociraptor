@@ -1,63 +1,104 @@
 name: Windows.Sys.StartupItems
-description: Applications that will be started up from the various run key locations.
+description: |
+    Applications that will be started up from the various run key
+    locations.
+
 reference:
   - https://docs.microsoft.com/en-us/windows/desktop/setupapi/run-and-runonce-registry-keys
 
+imports:
+ - Windows.Forensics.Lnk
+
 parameters:
+  - name: AlsoUpload
+    type: bool
+    description: If set we also upload the files in the startup folders
+
   - name: runKeyGlobs
-    default: >
-      HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run*\*,
-      HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run*\*,
+    type: csv
+    default: |
+      KeyGlobs
+      HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Run*\*
+      HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run*\*
       HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer\Run*\*
-      HKEY_USERS\*\SOFTWARE\Microsoft\Windows\CurrentVersion\Run*\*,
-      HKEY_USERS\*\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run*\*,
+      HKEY_USERS\*\SOFTWARE\Microsoft\Windows\CurrentVersion\Run*\*
+      HKEY_USERS\*\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Run*\*
       HKEY_USERS\*\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\Explorer\Run*\*
+
   - name: startupApprovedGlobs
-    default: >
-      HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\**,
+    type: csv
+    default: |
+      KeyGlobs
+      HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\**
       HKEY_USERS\*\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\**
+
   - name: startupFolderDirectories
-    default: >
-      C:/ProgramData/Microsoft/Windows/Start Menu/Programs/Startup/**,
+    type: csv
+    default: |
+      FileGlobs
+      C:/ProgramData/Microsoft/Windows/Start Menu/Programs/Startup/**
       C:/Users/*/AppData/Roaming/Microsoft/Windows/Start Menu/Programs/Startup/**
 
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
+
     query: |
-        /* We need to search this multiple times so we materialize it
-           into a variable (using the <= operator)
-         */
         LET approved <=
            SELECT Name as ApprovedName,
                   encode(string=Data, type="hex") as Enabled
-           FROM glob(globs=split(string=startupApprovedGlobs, sep="[, ]+"),
+           FROM glob(globs=startupApprovedGlobs.KeyGlobs,
                      accessor="registry")
            WHERE Enabled =~ "^0[0-9]0+$"
 
         LET registry_runners = SELECT Name,
-          FullPath, Data.value as Command,
+          OSPath, Data.value as Details,
           if(
            condition={
                 SELECT Enabled from approved
                 WHERE Name = ApprovedName
            },
-           then="enabled", else="disabled") as Enabled
+           then="enabled", else="disabled") as Enabled,
+           "" AS Upload
           FROM glob(
-           globs=split(string=runKeyGlobs, sep="[, ]+"),
+           globs=runKeyGlobs.KeyGlobs,
            accessor="registry")
 
-        LET file_runners = SELECT * FROM foreach(
-           row={
-              SELECT Name, FullPath
-              FROM glob(
-                 globs=split(string=startupFolderDirectories, sep=",\\s*"))
-           }, query={
-              SELECT Name, FullPath, "enable" as Enabled,
-                  encode(string=Data, type='utf16') as Command
-              FROM read_file(filenames=FullPath)
-           })
+        LET enrich_file(OSPath) = SELECT * FROM switch(
+        ini={
+            SELECT regex_replace(re="[^0-9a-z_]", replace=".",
+                 source=read_file(filename=OSPath, length=1024)) AS Details
+            FROM scope()
+            WHERE OSPath.Basename =~ ".(bat|ini|ps1)$"
+        }, lnk={
+            SELECT dict(
+               _Parsed=_value,
+               HeaderCreationTime=_value.CreationTime,
+               HeaderAccessTime=_value.AccessTime,
+               HeaderWriteTime=_value.WriteTime,
+               FileSize=_value.FileSize,
+               Target=_value.LinkInfo.Target,
+               Name=_value.NameInfo.Name,
+               RelativePath=_value.RelativePathInfo.RelativePath,
+               WorkingDir=_value.WorkingDirInfo.WorkingDir,
+               Arguments=_value.ArgumentInfo.Arguments,
+               Icons=_value.IconInfo.IconLocations) AS Details
+            FROM foreach(row=parse_binary(
+               filename=OSPath, profile=Profile, struct="ShellLinkHeader"))
+            WHERE OSPath.Basename =~ ".lnk"
+        }, default={
+            SELECT hash(path=OSPath) AS Details
+            FROM scope()
+        })
 
-        SELECT * from chain(
+        LET file_runners =
+          SELECT Name, OSPath,
+                 enrich_file(OSPath=OSPath)[0].Details AS Details,
+                 "enable" as Enabled,
+                 if(condition=AlsoUpload, then=upload(file=OSPath)) AS Upload
+          FROM glob(globs=startupFolderDirectories.FileGlobs)
+
+        SELECT *
+        FROM chain(
            first=registry_runners,
            second=file_runners)
