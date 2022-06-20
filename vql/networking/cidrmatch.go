@@ -40,11 +40,11 @@ func (self _CIDRContains) Call(
 			return false
 		}
 
-		if !ipNet.Contains(ip) {
-			return false
+		if ipNet.Contains(ip) {
+			return true
 		}
 	}
-	return true
+	return false
 }
 
 func (self _CIDRContains) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

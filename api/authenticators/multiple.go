@@ -107,6 +107,14 @@ func NewMultiAuthenticator(
 					ProviderAvatar: t.authenticator.Avatar,
 				})
 
+		case *OidcAuthenticatorCognito:
+			result.delegate_info = append(result.delegate_info,
+				velociraptor.AuthenticatorInfo{
+					LoginURL:       t.LoginURL(),
+					ProviderName:   t.authenticator.OidcName,
+					ProviderAvatar: t.authenticator.Avatar,
+				})
+
 		default:
 			return nil, fmt.Errorf("MultiAuthenticator does not support %v as a child authenticator",
 				authenticator_config.Type)

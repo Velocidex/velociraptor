@@ -83,6 +83,10 @@ func (self *ProcessTracker) Get(
 	return pe, true
 }
 
+func (self *ProcessTracker) Stats() ttlcache.Metrics {
+	return self.lookup.GetMetrics()
+}
+
 func (self *ProcessTracker) Enrich(
 	ctx context.Context, scope vfilter.Scope, id string) (*ProcessEntry, bool) {
 	any, err := self.lookup.Get(id)

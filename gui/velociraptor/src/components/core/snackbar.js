@@ -17,6 +17,10 @@ class Snackbar extends React.Component {
     }
 
     warn = (message) => {
+        if (/Network Error/.test(message)) {
+            return;
+        }
+
         this.props.openSnackbar(
             <div>{message}</div>, 5000);
     };

@@ -324,12 +324,38 @@ func (self *RawRegFileSystemAccessor) ReadDirWithOSPath(
 
 func (self *RawRegFileSystemAccessor) Open(path string) (
 	accessors.ReadSeekCloser, error) {
-	return nil, errors.New("Not implemented")
+	stat, err := self.Lstat(path)
+	if err != nil {
+		return nil, err
+	}
+
+	value_info, ok := stat.(*RawRegValueInfo)
+	if ok {
+		return NewValueBuffer(
+			value_info.value.ValueData().Data, stat), nil
+	}
+
+	// Keys do not have any data.
+	serialized, _ := json.Marshal(stat.Data)
+	return NewValueBuffer(serialized, stat), nil
 }
 
 func (self *RawRegFileSystemAccessor) OpenWithOSPath(path *accessors.OSPath) (
 	accessors.ReadSeekCloser, error) {
-	return nil, errors.New("Not implemented")
+	stat, err := self.LstatWithOSPath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	value_info, ok := stat.(*RawRegValueInfo)
+	if ok {
+		return NewValueBuffer(
+			value_info.value.ValueData().Data, stat), nil
+	}
+
+	// Keys do not have any data.
+	serialized, _ := json.Marshal(stat.Data)
+	return NewValueBuffer(serialized, stat), nil
 }
 
 func (self *RawRegFileSystemAccessor) Lstat(filename string) (

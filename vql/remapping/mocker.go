@@ -256,7 +256,7 @@ func (self *MockFunction) Call(ctx context.Context,
 			scope.Log("mock: artifact is not defined")
 			return types.Null{}
 		}
-		artifact_plugin.SetMock(rows)
+		artifact_plugin.SetMock(artifact_plugin.Name(), rows)
 	} else {
 		scope.Log("mock: either plugin or artifact should be specified")
 		return types.Null{}

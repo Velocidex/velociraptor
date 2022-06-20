@@ -3,7 +3,7 @@
   font-style: normal;
   font-weight: 400;
   src: local(""),
-    url("../fonts/fixedsys-ligatures.woff2") format("woff2");
+    url("../fonts/FSEX300.woff2") format("woff2");
   font-display: block;
 }
 
@@ -109,8 +109,6 @@ body.ncurses {
 }
 
 .ncurses .ace_content {
-  font-family: var(--font-family-monospace);
-  font-size: var(--font-size-base);
   color: var(--color-text-default);
 }
 

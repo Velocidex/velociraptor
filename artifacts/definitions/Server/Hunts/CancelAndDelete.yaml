@@ -42,16 +42,6 @@ sources:
       FROM flows
       WHERE FlowState = "RUNNING"
 
-  - name: FlowFiles
-    query: |
-      LET files = SELECT * FROM foreach(
-          row = flows,
-          query = {
-              SELECT *, file_store_delete(path=VFSPath) as delete
-              FROM enumerate_flow(flow_id=FlowId, client_id=ClientId)
-          })
-      SELECT * FROM if(condition=DeleteAllFiles, then=files)
-
   - name: HuntFiles
     query: |
       SELECT * FROM hunt_delete(hunt_id=HuntId, really_do_it=DeleteAllFiles)

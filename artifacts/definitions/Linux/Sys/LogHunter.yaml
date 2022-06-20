@@ -1,0 +1,58 @@
+name: Linux.Sys.LogHunter
+author: "Matt Green - @mgreen27"
+description: |
+  This artifact enables grep of Linux, MacOS and Windows logs.
+  Parameters include SearchRegex and WhitelistRegex as regex terms.
+  I have also included a Path exclusion regex to improve result output
+  and automatically skip hitting notorious locations like /proc.
+
+  NOTE: nosymlink feature of glob is set so unexpected results may occur if
+  targetting includes symlink files.
+
+parameters:
+  - name: TargetFiles
+    default: '/var/log/**'
+  - name: SearchRegex
+    description: "Regex of strings to search in log line."
+    default: ' POST '
+    type: regex
+  - name: FilterRegex
+    description: "Regex of strings to leave out of output."
+    default:
+    type: regex
+  - name: ExcludeDirectoryRegex
+    type: regex
+    description: "Does not descend into directories that match this Regex."
+    default: "^/(shared|proc|snap)"
+  - name: ExcludePathRegex
+    description: "Regex of paths to exclude from scanning."
+    default: '\.journal$'
+    type: regex
+
+sources:
+  - query: |
+      LET RecursionCB <= if(condition= ExcludeDirectoryRegex,
+         then="x => NOT x.OSPath =~ ExcludeDirectoryRegex",
+         else="x => NOT x.OSPath =~ '^/proc' ")
+
+      LET files = SELECT OSPath
+        FROM glob(globs=TargetFiles,
+            nosymlink=TRUE,
+            recursion_callback=RecursionCB)
+        WHERE NOT IsDir AND NOT OSPath =~ ExcludePathRegex
+          AND log(message="Scanning %v", args=OSPath)
+
+      LET hits = SELECT * FROM foreach(row=files,
+          query={
+              SELECT OSPath, Line FROM parse_lines(filename=OSPath)
+              WHERE Line =~ SearchRegex
+          })
+
+      SELECT * FROM if(condition=FilterRegex,
+        then={
+           SELECT * FROM hits
+           WHERE NOT Line =~ FilterRegex
+        },
+        else={
+           SELECT * FROM hits
+        })

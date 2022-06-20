@@ -27,17 +27,13 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
-	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -45,6 +41,8 @@ import (
 
 type HuntsPluginArgs struct {
 	HuntId string `vfilter:"optional,field=hunt_id,doc=A hunt id to read, if not specified we list all of them."`
+	Offset uint64 `vfilter:"optional,field=offset,doc=Start offset."`
+	Count  uint64 `vfilter:"optional,field=count,doc=Max number of results to return."`
 }
 
 type HuntsPlugin struct{}
@@ -76,55 +74,38 @@ func (self HuntsPlugin) Call(
 			return
 		}
 
-		db, err := datastore.GetDB(config_obj)
-		if err != nil {
-			scope.Log("Error: %v", err)
+		count := arg.Count
+		if count == 0 {
+			count = 1000
+		}
+
+		hunt_dispatcher := services.GetHuntDispatcher()
+
+		// Show a specific hunt
+		if arg.HuntId != "" {
+			hunt_obj, pres := hunt_dispatcher.GetHunt(arg.HuntId)
+			if pres {
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- json.ConvertProtoToOrderedDict(hunt_obj):
+				}
+			}
 			return
 		}
 
-		var hunts []api.DSPathSpec
-		if arg.HuntId == "" {
-			hunt_path_manager := paths.NewHuntPathManager("")
-			hunts, err = db.ListChildren(
-				config_obj, hunt_path_manager.HuntDirectory())
-			if err != nil {
-				scope.Log("Error: %v", err)
-				return
-			}
-		} else {
-			hunt_path_manager := paths.NewHuntPathManager(arg.HuntId)
-			hunts = append(hunts, hunt_path_manager.Path())
+		// Show all hunts.
+		hunts, err := hunt_dispatcher.ListHunts(
+			ctx, config_obj, &api_proto.ListHuntsRequest{
+				Count:  count,
+				Offset: arg.Offset,
+			})
+		if err != nil {
+			scope.Log("hunts: %v", err)
+			return
 		}
 
-		for _, hunt_urn := range hunts {
-			if hunt_urn.IsDir() {
-				continue
-			}
-
-			hunt_id := hunt_urn.Base()
-			if !constants.HuntIdRegex.MatchString(hunt_id) {
-				continue
-			}
-
-			hunt_obj := &api_proto.Hunt{}
-			err = db.GetSubject(config_obj, hunt_urn, hunt_obj)
-			if err != nil || hunt_obj.HuntId == "" {
-				continue
-			}
-
-			// Re-read the stats into the hunt object.
-			hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
-			hunt_stats := &api_proto.HuntStats{}
-			err := db.GetSubject(config_obj,
-				hunt_path_manager.Stats(), hunt_stats)
-			if err == nil {
-				hunt_obj.Stats = hunt_stats
-			}
-
-			if hunt_obj.HuntId != hunt_id {
-				continue
-			}
-
+		for _, hunt_obj := range hunts.Items {
 			select {
 			case <-ctx.Done():
 				return
@@ -184,18 +165,9 @@ func (self HuntResultsPlugin) Call(
 		// If no artifact is specified, get the first one from
 		// the hunt.
 		if arg.Artifact == "" {
-			db, err := datastore.GetDB(config_obj)
-			if err != nil {
-				scope.Log("hunt_results: %v", err)
-				return
-			}
-
-			hunt_path_manager := paths.NewHuntPathManager(arg.HuntId)
-			hunt_obj := &api_proto.Hunt{}
-			err = db.GetSubject(config_obj,
-				hunt_path_manager.Path(), hunt_obj)
-			if err != nil || hunt_obj.HuntId == "" {
-				scope.Log("hunt_results: %v", err)
+			hunt_dispatcher_service := services.GetHuntDispatcher()
+			hunt_obj, pres := hunt_dispatcher_service.GetHunt(arg.HuntId)
+			if !pres {
 				return
 			}
 
@@ -237,32 +209,17 @@ func (self HuntResultsPlugin) Call(
 			arg.Artifact += "/" + arg.Source
 		}
 
-		// Backwards compatibility.
-		hunt_path_manager := paths.NewHuntPathManager(arg.HuntId).Clients()
-		file_store_factory := file_store.GetFileStore(config_obj)
-		rs_reader, err := result_sets.NewResultSetReader(
-			file_store_factory, hunt_path_manager)
-		if err != nil {
-			return
-		}
-		defer rs_reader.Close()
-
 		indexer, err := services.GetIndexer()
 		if err != nil {
 			return
 		}
 
-		// Read each file and emit it with some extra columns
-		// for context.
-		for row := range rs_reader.Rows(ctx) {
-			participation_row := &hunt_manager.ParticipationRecord{}
-			err := arg_parser.ExtractArgsWithContext(ctx, scope, row, participation_row)
-			if err != nil {
-				continue
-			}
+		hunt_dispatcher := services.GetHuntDispatcher()
+		for flow_details := range hunt_dispatcher.GetFlows(
+			ctx, config_obj, scope, arg.HuntId, 0) {
 
 			api_client, err := indexer.FastGetApiClient(ctx,
-				config_obj, participation_row.ClientId)
+				config_obj, flow_details.Context.ClientId)
 			if err != nil {
 				scope.Log("hunt_results: %v", err)
 				continue
@@ -271,12 +228,14 @@ func (self HuntResultsPlugin) Call(
 			// Read individual flow's results.
 			path_manager, err := artifact_paths.NewArtifactPathManager(
 				config_obj,
-				participation_row.ClientId,
-				participation_row.FlowId,
+				flow_details.Context.ClientId,
+				flow_details.Context.SessionId,
 				arg.Artifact)
 			if err != nil {
 				continue
 			}
+
+			file_store_factory := file_store.GetFileStore(config_obj)
 
 			reader, err := result_sets.NewResultSetReader(
 				file_store_factory, path_manager.Path())
@@ -288,8 +247,8 @@ func (self HuntResultsPlugin) Call(
 			// with some extra columns for
 			// context.
 			for row := range reader.Rows(ctx) {
-				row.Set("FlowId", participation_row.FlowId).
-					Set("ClientId", participation_row.ClientId)
+				row.Set("FlowId", flow_details.Context.SessionId).
+					Set("ClientId", flow_details.Context.ClientId)
 
 				if api_client.OsInfo != nil {
 					row.Set("Fqdn", api_client.OsInfo.Fqdn)
@@ -357,7 +316,8 @@ func (self HuntFlowsPlugin) Call(
 				Set("HuntId", arg.HuntId).
 				Set("ClientId", flow_details.Context.ClientId).
 				Set("FlowId", flow_details.Context.SessionId).
-				Set("Flow", flow_details.Context)
+				Set("Flow", json.ConvertProtoToOrderedDict(
+					flow_details.Context))
 
 			select {
 			case <-ctx.Done():

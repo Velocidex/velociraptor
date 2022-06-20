@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/logging"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/tools/process"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -273,6 +274,9 @@ func (self *ProfilePlugin) Call(ctx context.Context,
 
 		if arg.Metrics {
 			writeMetrics(scope, output_chan)
+			output_chan <- ordereddict.NewDict().
+				Set("Type", "process_tracker").
+				Set("Line", process.GetGlobalTracker().Stats())
 		}
 
 		if arg.Logs {

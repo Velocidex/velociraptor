@@ -4,6 +4,7 @@ import English from './en.js';
 import Deutsch from './de.js';
 import Spanish from './es.js';
 import Portuguese from './por.js';
+import French from './fr.js';
 
 const debug = false;
 
@@ -21,6 +22,9 @@ function dict(item) {
 
     case "de":
         return Deutsch[item];
+
+    case "fr":
+        return French[item];
 
     default:
         return English[item];

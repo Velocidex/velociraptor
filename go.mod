@@ -116,10 +116,10 @@ require (
 	howett.net/plist v0.0.0-20201203080718-1454fab16a06
 	www.velocidex.com/golang/evtx v0.2.1-0.20220404133451-1fdf8be7325e
 	www.velocidex.com/golang/go-ese v0.1.1-0.20220107095505-c38622559671
-	www.velocidex.com/golang/go-ntfs v0.1.2-0.20220506011637-ec1ee7499352
+	www.velocidex.com/golang/go-ntfs v0.1.2-0.20220616022946-852572498c13
 	www.velocidex.com/golang/go-pe v0.1.1-0.20220506020923-9fac492a9b0d
 	www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca
-	www.velocidex.com/golang/oleparse v0.0.0-20211013063943-0334d69593c1
+	www.velocidex.com/golang/oleparse v0.0.0-20220617011920-94df2342d0b7
 	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
 	www.velocidex.com/golang/vfilter v0.0.0-20220606015754-7f03acba2fc4
 )
@@ -210,7 +210,7 @@ require (
 // replace github.com/Velocidex/sflags => /home/mic/projects/sflags
 // replace github.com/Velocidex/etw => /home/mic/projects/etw
 // replace github.com/Velocidex/grpc-go-pool => /home/mic/projects/grpc-go-pool
-
+// replace www.velocidex.com/golang/oleparse => /home/matt/git/oleparse
 replace github.com/russross/blackfriday/v2 => github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b
 
 go 1.17

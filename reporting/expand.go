@@ -119,7 +119,7 @@ func (self *Expansions) Query(queries ...string) string {
 
 	defer scope.Close()
 
-	scope.SetLogger(log.New(os.Stderr, " ", 0))
+	scope.SetLogger(log.New(os.Stderr, "", 0))
 
 	for _, query := range queries {
 		query_log := actions.QueryLog.AddQuery(query)

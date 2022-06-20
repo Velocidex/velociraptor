@@ -20,14 +20,11 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
-	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -40,139 +37,6 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-type contextManager struct {
-	context      *flows_proto.ArtifactCollectorContext
-	mu           sync.Mutex
-	config_obj   *config_proto.Config
-	path_manager *paths.FlowPathManager
-}
-
-func NewCollectionContext(
-	config_obj *config_proto.Config,
-	client_id string,
-	flow_id string) (*contextManager, error) {
-
-	self := &contextManager{
-		config_obj:   config_obj,
-		path_manager: paths.NewFlowPathManager(client_id, flow_id),
-		context:      &flows_proto.ArtifactCollectorContext{},
-	}
-
-	return self, self.Load(self.context)
-}
-
-func (self *contextManager) GetContext() *flows_proto.ArtifactCollectorContext {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	return proto.Clone(self.context).(*flows_proto.ArtifactCollectorContext)
-}
-
-// Starts a go routine which saves the context state so the GUI can monitor progress.
-func (self *contextManager) StartRefresh(ctx context.Context) {
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				self.Save()
-				return
-
-			case <-time.After(time.Duration(10) * time.Second):
-				// Context is finalized no more modifications are allowed.
-				if self.context.State != flows_proto.ArtifactCollectorContext_RUNNING {
-					return
-				}
-				self.Save()
-			}
-		}
-	}()
-}
-
-// Allow modification of the context under lock.
-func (self *contextManager) Modify(cb func(context *flows_proto.ArtifactCollectorContext)) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	cb(self.context)
-}
-
-func (self *contextManager) Load(context *flows_proto.ArtifactCollectorContext) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	return self.load(context)
-}
-
-func (self *contextManager) load(context *flows_proto.ArtifactCollectorContext) error {
-	// Ignore monitoring sessions.
-	if self.path_manager.Path().Base() == "F.Monitoring" {
-		return nil
-	}
-
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return err
-	}
-
-	err = db.GetSubject(self.config_obj, self.path_manager.Path(), context)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Flush the context to disk.
-func (self *contextManager) Save() error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	// Ignore collections which are not running.
-	collection_context := &flows_proto.ArtifactCollectorContext{}
-	err := self.load(collection_context)
-	if err == nil && collection_context.Request != nil &&
-		collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING {
-		return nil
-	}
-
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return err
-	}
-	return db.SetSubjectWithCompletion(
-		self.config_obj, self.path_manager.Path(), self.context, nil)
-}
-
-type serverLogger struct {
-	collection_context *contextManager
-	config_obj         *config_proto.Config
-	path               api.FSPathSpec
-}
-
-// Send each log message individually to avoid any buffering - logs
-// need to be available immediately.
-func (self *serverLogger) Write(b []byte) (int, error) {
-	msg := artifacts.DeobfuscateString(self.config_obj, string(b))
-	journal, err := services.GetJournal()
-	if err != nil {
-		return 0, err
-	}
-
-	err = journal.AppendToResultSet(self.config_obj,
-		self.path, []*ordereddict.Dict{
-			ordereddict.NewDict().
-				Set("Timestamp", time.Now().UTC().UnixNano()/1000).
-				Set("time", time.Now().UTC().String()).
-				Set("message", msg)})
-
-	// Increment the log count.
-	self.collection_context.Modify(func(context *flows_proto.ArtifactCollectorContext) {
-		context.TotalLogs++
-	})
-
-	return len(b), err
-}
-
 type ServerArtifactsRunner struct {
 	config_obj       *config_proto.Config
 	timeout          time.Duration
@@ -181,40 +45,13 @@ type ServerArtifactsRunner struct {
 	cancellationPool map[string]func()
 }
 
-func (self *ServerArtifactsRunner) getTasks(
-	config_obj *config_proto.Config) ([]*crypto_proto.VeloMessage, error) {
-
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
+func NewServerArtifactRunner(config_obj *config_proto.Config) *ServerArtifactsRunner {
+	return &ServerArtifactsRunner{
+		config_obj:       config_obj,
+		cancellationPool: make(map[string]func()),
+		timeout:          time.Second * time.Duration(600),
+		wg:               &sync.WaitGroup{},
 	}
-
-	client_path_manager := paths.NewClientPathManager("server")
-	tasks, err := db.ListChildren(
-		config_obj, client_path_manager.TasksDirectory())
-	if err != nil {
-		return nil, err
-	}
-
-	result := []*crypto_proto.VeloMessage{}
-	for _, task_urn := range tasks {
-		task_urn = task_urn.SetTag("ServerTask")
-
-		// Here we read the task from the task_urn and remove
-		// it from the queue.
-		message := &crypto_proto.VeloMessage{}
-		err = db.GetSubject(config_obj, task_urn, message)
-		if err != nil {
-			continue
-		}
-
-		err = db.DeleteSubject(config_obj, task_urn)
-		if err != nil {
-			return nil, err
-		}
-		result = append(result, message)
-	}
-	return result, nil
 }
 
 func (self *ServerArtifactsRunner) process(
@@ -222,10 +59,12 @@ func (self *ServerArtifactsRunner) process(
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) error {
 
-	logger := logging.GetLogger(
-		self.config_obj, &logging.FrontendComponent)
+	client_info_manager, err := services.GetClientInfoManager()
+	if err != nil {
+		return err
+	}
 
-	tasks, err := self.getTasks(config_obj)
+	tasks, err := client_info_manager.GetClientTasks("server")
 	if err != nil {
 		return err
 	}
@@ -234,19 +73,45 @@ func (self *ServerArtifactsRunner) process(
 	defer func() {
 		defer wg.Done()
 
+		// Group tasks by session id so we only create one context
+		// per session id
+		group := make(map[string][]*crypto_proto.VeloMessage)
 		for _, task := range tasks {
-			err := self.processTask(ctx, config_obj, task)
-			if err != nil {
-				logger.Error("ServerArtifactsRunner: %v", err)
+			existing, _ := group[task.SessionId]
+			existing = append(existing, task)
+			group[task.SessionId] = existing
+		}
 
+		for session_id, tasks := range group {
+			collection_context, err := NewCollectionContextManager(
+				ctx, self.config_obj, "server", session_id)
+			if err != nil {
+				continue
 			}
+			logger, err := NewServerLogger(
+				collection_context, config_obj, session_id)
+			if err != nil {
+				continue
+			}
+
+			for _, task := range tasks {
+				err = self.ProcessTask(
+					ctx, config_obj, task, collection_context, logger)
+				if err != nil {
+					logger.Write([]byte(
+						fmt.Sprintf("ServerArtifactsRunner: %v", err)))
+				}
+			}
+
+			collection_context.Close()
+			logger.Close()
 		}
 	}()
 
 	return nil
 }
 
-func (self *ServerArtifactsRunner) cancel(flow_id string) {
+func (self *ServerArtifactsRunner) Cancel(flow_id string) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -257,16 +122,12 @@ func (self *ServerArtifactsRunner) cancel(flow_id string) {
 	}
 }
 
-func (self *ServerArtifactsRunner) processTask(
+func (self *ServerArtifactsRunner) ProcessTask(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	task *crypto_proto.VeloMessage) error {
-
-	collection_context, err := NewCollectionContext(
-		self.config_obj, "server", task.SessionId)
-	if err != nil {
-		return err
-	}
+	task *crypto_proto.VeloMessage,
+	collection_context CollectionContextManager,
+	logger *serverLogger) error {
 
 	// Cancel the current collection
 	if task.Cancel != nil {
@@ -284,34 +145,27 @@ func (self *ServerArtifactsRunner) processTask(
 					Set("message", "Cancelling Query")})
 
 		// This task is now done.
-		self.cancel(task.SessionId)
+		self.Cancel(task.SessionId)
 
 		return err
 	}
 
-	// Kick off processing in the background and go back to
-	// listening for new tasks. We can then cancel this task
-	// later.
-	self.wg.Add(1)
-	go func() {
-		defer self.wg.Done()
-		err := self.runQuery(ctx, task, collection_context)
-		if err != nil {
-			return
+	err := self.runQuery(ctx, task, collection_context, logger)
+	if err != nil {
+		return err
+	}
+
+	collection_context.Modify(func(context *flows_proto.ArtifactCollectorContext) {
+		if context.State == flows_proto.ArtifactCollectorContext_RUNNING {
+			context.State = flows_proto.ArtifactCollectorContext_FINISHED
 		}
+		context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
+		context.ExecutionDuration = (time.Now().UnixNano()/1000 -
+			int64(context.StartTime)) * 1000
 
-		collection_context.Modify(func(context *flows_proto.ArtifactCollectorContext) {
-			if context.State == flows_proto.ArtifactCollectorContext_RUNNING {
-				context.State = flows_proto.ArtifactCollectorContext_FINISHED
-			}
-			context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
-			context.ExecutionDuration = (time.Now().UnixNano()/1000 -
-				int64(context.StartTime)) * 1000
+	})
 
-		})
-
-		_ = collection_context.Save()
-	}()
+	_ = collection_context.Save()
 
 	return nil
 }
@@ -319,7 +173,8 @@ func (self *ServerArtifactsRunner) processTask(
 func (self *ServerArtifactsRunner) runQuery(
 	ctx context.Context,
 	task *crypto_proto.VeloMessage,
-	collection_context *contextManager) (err error) {
+	collection_context CollectionContextManager,
+	logger *serverLogger) (err error) {
 
 	// Set up the logger for writing query logs. Note this must be
 	// destroyed last since we need to be able to receive logs
@@ -351,12 +206,8 @@ func (self *ServerArtifactsRunner) runQuery(
 	self.cancellationPool[task.SessionId] = cancel
 	self.mu.Unlock()
 
-	// Write collection context periodically to disk so the GUI
-	// can track progress.
-	collection_context.StartRefresh(sub_ctx)
-
 	defer func() {
-		self.cancel(task.SessionId)
+		self.Cancel(task.SessionId)
 
 		// Send a completion event when the query is finished..
 		flow_context := collection_context.GetContext()
@@ -404,11 +255,7 @@ func (self *ServerArtifactsRunner) runQuery(
 		// Run this query on behalf of the caller so they are
 		// subject to ACL checks
 		ACLManager: vql_subsystem.NewServerACLManager(self.config_obj, principal),
-		Logger: log.New(&serverLogger{
-			collection_context: collection_context,
-			config_obj:         self.config_obj,
-			path:               path_manager.Log(),
-		}, "", 0),
+		Logger:     log.New(logger, "", 0),
 	})
 	defer scope.Close()
 

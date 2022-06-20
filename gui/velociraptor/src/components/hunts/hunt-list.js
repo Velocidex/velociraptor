@@ -423,15 +423,19 @@ export function getHuntColumns() {
              let stopped = row.stats && row.stats.stopped;
 
              if (stopped || cell === "STOPPED") {
-                 return <FontAwesomeIcon icon="stop"/>;
+                 return <div className="hunt-status-icon">
+                          <FontAwesomeIcon icon="stop"/></div>;
              }
              if (cell === "RUNNING") {
-                 return <FontAwesomeIcon icon="hourglass"/>;
+                 return <div className="hunt-status-icon">
+                          <FontAwesomeIcon icon="hourglass"/></div>;
              }
              if (cell === "PAUSED") {
-                 return <FontAwesomeIcon icon="pause"/>;
+                 return <div className="hunt-status-icon">
+                          <FontAwesomeIcon icon="pause"/></div>;
              }
-             return <FontAwesomeIcon icon="exclamation"/>;
+             return <div className="hunt-status-icon">
+                          <FontAwesomeIcon icon="exclamation"/></div>;
          }
         },
         {dataField: "hunt_id", text: T("Hunt ID")},

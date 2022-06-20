@@ -834,6 +834,15 @@
     description: Rc4 key (1-256bytes).
     required: true
   category: plugin
+- name: delete_flow
+  description: Delete all the files that make up a flow.
+  type: Plugin
+  args:
+  - name: client_id
+    type: string
+    required: true
+  - name: flow_id
+    type: string
 - name: dict
   description: |
     Construct a dict from arbitrary keyword args.
@@ -1154,6 +1163,9 @@
   - name: env
     type: LazyExpr
     description: Environment variables to launch with.
+  - name: cwd
+    type: string
+    description: If specified we change to this working directory first.
   category: plugin
 - name: expand
   description: |
@@ -1367,6 +1379,18 @@
   - name: Name
     type: string
   category: plugin
+- name: flow_logs
+  description: Retrieve the query logs of a flow.
+  type: Plugin
+  args:
+  - name: flow_id
+    type: string
+    description: The flow id to read.
+    required: true
+  - name: client_id
+    type: string
+    description: The client id to extract
+    required: true
 - name: flow_results
   description: |
     Retrieve the results of a flow.
@@ -2141,6 +2165,12 @@
   - name: hunt_id
     type: string
     description: A hunt id to read, if not specified we list all of them.
+  - name: offset
+    type: uint64
+    description: Start offset.
+  - name: count
+    type: uint64
+    description: Max number of results to return.
   category: server
 - name: if
   description: |
@@ -5426,8 +5456,8 @@
   type: Plugin
   args:
   - name: device
-    type: accessors.OSPath
-    description: The device file to open.
+    type: string
+    description: The device file to open (as an NTFS device).
     required: true
   category: event
 - name: whoami

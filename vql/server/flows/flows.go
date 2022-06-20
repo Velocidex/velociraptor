@@ -4,21 +4,11 @@ package flows
 
 import (
 	"context"
-	"os"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
-	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/paths"
-	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
-	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -59,47 +49,54 @@ func (self FlowsPlugin) Call(
 			return
 		}
 
-		db, err := datastore.GetDB(config_obj)
+		launcher, err := services.GetLauncher()
 		if err != nil {
-			scope.Log("Error: %v", err)
+			scope.Log("flows: %v", err)
 			return
 		}
 
-		sender := func(flow_id string, client_id string) {
-			collection_context, err := flows.LoadCollectionContext(
-				config_obj, client_id, flow_id)
-			if err != nil {
-				scope.Log("Error: %v", err)
-				return
-			}
-
-			select {
-			case <-ctx.Done():
-				return
-			case output_chan <- json.ConvertProtoToOrderedDict(collection_context):
-			}
-
-		}
-
+		// The user only cares about one flow
 		if arg.FlowId != "" {
-			sender(arg.FlowId, arg.ClientId)
-			scope.ChargeOp()
-			return
-		}
+			flow_details, err := launcher.GetFlowDetails(
+				config_obj, arg.ClientId, arg.FlowId)
+			if err == nil {
+				item := json.ConvertProtoToOrderedDict(
+					flow_details.Context)
+				item.Set("AvailableDownloads", flow_details.AvailableDownloads)
 
-		flow_path_manager := paths.NewFlowPathManager(arg.ClientId, arg.FlowId)
-		flow_urns, err := db.ListChildren(
-			config_obj, flow_path_manager.ContainerPath())
-		if err != nil {
-			scope.Log("Error: %v", err)
-			return
-		}
-
-		for _, child_urn := range flow_urns {
-			if !child_urn.IsDir() {
-				sender(child_urn.Base(), arg.ClientId)
-				scope.ChargeOp()
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- item:
+				}
 			}
+			return
+		}
+
+		length := uint64(1000)
+		offset := uint64(0)
+
+		for {
+			result, err := launcher.GetFlows(config_obj,
+				arg.ClientId, true, nil, offset, length)
+			if err != nil {
+				scope.Log("flows: %v", err)
+				return
+			}
+
+			if len(result.Items) == 0 {
+				return
+			}
+
+			for _, item := range result.Items {
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- json.ConvertProtoToOrderedDict(item):
+				}
+			}
+
+			offset += uint64(len(result.Items))
 		}
 	}()
 
@@ -197,135 +194,29 @@ func (self EnumerateFlowPlugin) Call(
 			return
 		}
 
-		collection_context, err := flows.LoadCollectionContext(
-			config_obj, arg.ClientId, arg.FlowId)
+		launcher, err := services.GetLauncher()
 		if err != nil {
-			scope.Log("enumerate_flow: %v", err)
+			scope.Log("delete_flow: %v", err)
 			return
 		}
 
-		flow_path_manager := paths.NewFlowPathManager(
-			arg.ClientId, arg.FlowId)
-
-		upload_metadata_path := flow_path_manager.UploadMetadata()
-		r := &reporter{
-			ctx: ctx, output_chan: output_chan,
-			seen: make(map[string]bool),
-		}
-		file_store_factory := file_store.GetFileStore(config_obj)
-		reader, err := result_sets.NewResultSetReader(
-			file_store_factory, flow_path_manager.UploadMetadata())
-		if err == nil {
-			for row := range reader.Rows(ctx) {
-				upload, pres := row.GetString("vfs_path")
-				if pres {
-					// Each row is the full filestore path of the upload.
-					pathspec := path_specs.NewUnsafeFilestorePath(
-						utils.SplitComponents(upload)...).
-						SetType(api.PATH_TYPE_FILESTORE_ANY)
-
-					r.emit_fs("Upload", pathspec)
-				}
-			}
-		}
-
-		// Order results to facilitate deletion - container deletion
-		// happens after we read its contents.
-		r.emit_fs("UploadMetadata", upload_metadata_path)
-		r.emit_fs("UploadMetadataIndex", upload_metadata_path.
-			SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
-
-		// Remove all result sets from artifacts.
-		for _, artifact_name := range collection_context.ArtifactsWithResults {
-			path_manager, err := artifact_paths.NewArtifactPathManager(
-				config_obj, arg.ClientId, arg.FlowId, artifact_name)
-			if err != nil {
-				scope.Log("enumerate_flow: %v", err)
-				continue
-			}
-
-			result_path, err := path_manager.GetPathForWriting()
-			if err != nil {
-				scope.Log("enumerate_flow: %v", err)
-				continue
-			}
-			r.emit_fs("Result", result_path)
-			r.emit_fs("ResultIndex",
-				result_path.SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
-
-		}
-
-		r.emit_fs("Log", flow_path_manager.Log())
-		r.emit_fs("LogIndex", flow_path_manager.Log().
-			SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
-		r.emit_ds("CollectionContext", flow_path_manager.Path())
-		r.emit_ds("Task", flow_path_manager.Task())
-
-		// Walk the flow's datastore and filestore
-		db, err := datastore.GetDB(config_obj)
+		responses, err := launcher.DeleteFlow(ctx, config_obj,
+			arg.ClientId, arg.FlowId, false /* really_do_it */)
 		if err != nil {
+			scope.Log("delete_flow: %v", err)
 			return
 		}
 
-		r.emit_ds("Notebook", flow_path_manager.Notebook().Path())
-		datastore.Walk(config_obj, db, flow_path_manager.Notebook().DSDirectory(),
-			func(path api.DSPathSpec) error {
-				r.emit_ds("NotebookData", path)
-				return nil
-			})
-
-		api.Walk(file_store_factory,
-			flow_path_manager.Notebook().Directory(),
-			func(path api.FSPathSpec, info os.FileInfo) error {
-				r.emit_fs("NotebookItem", path)
-				return nil
-			})
-
+		for _, resp := range responses {
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- resp:
+			}
+		}
 	}()
 
 	return output_chan
-}
-
-type reporter struct {
-	ctx         context.Context
-	output_chan chan<- vfilter.Row
-	seen        map[string]bool
-}
-
-func (self *reporter) emit_ds(
-	item_type string, target api.DSPathSpec) {
-	client_path := target.AsClientPath()
-
-	if self.seen[client_path] {
-		return
-	}
-	self.seen[client_path] = true
-
-	select {
-	case <-self.ctx.Done():
-		return
-	case self.output_chan <- ordereddict.NewDict().
-		Set("Type", item_type).
-		Set("VFSPath", target):
-	}
-}
-
-func (self *reporter) emit_fs(
-	item_type string, target api.FSPathSpec) {
-	client_path := target.AsClientPath()
-
-	if self.seen[client_path] {
-		return
-	}
-	self.seen[client_path] = true
-
-	select {
-	case <-self.ctx.Done():
-		return
-	case self.output_chan <- ordereddict.NewDict().
-		Set("Type", item_type).
-		Set("VFSPath", target):
-	}
 }
 
 func (self EnumerateFlowPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {

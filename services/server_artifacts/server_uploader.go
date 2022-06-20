@@ -20,7 +20,7 @@ import (
 type ServerUploader struct {
 	*uploader.FileStoreUploader
 	path_manager       *paths.FlowPathManager
-	collection_context *contextManager
+	collection_context CollectionContextManager
 	config_obj         *config_proto.Config
 }
 
@@ -74,7 +74,7 @@ func (self *ServerUploader) Upload(
 func NewServerUploader(
 	config_obj *config_proto.Config,
 	path_manager *paths.FlowPathManager,
-	collection_context *contextManager) uploads.Uploader {
+	collection_context CollectionContextManager) uploads.Uploader {
 	return &ServerUploader{
 		FileStoreUploader: uploader.NewFileStoreUploader(config_obj,
 			file_store.GetFileStore(config_obj),

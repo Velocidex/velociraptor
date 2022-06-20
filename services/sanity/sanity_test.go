@@ -18,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
+	"www.velocidex.com/golang/velociraptor/services/notebook"
 	"www.velocidex.com/golang/velociraptor/services/sanity"
 	"www.velocidex.com/golang/velociraptor/utils"
 
@@ -28,6 +29,12 @@ type ServicesTestSuite struct {
 	test_utils.TestSuite
 	client_id string
 	flow_id   string
+}
+
+func (self *ServicesTestSuite) SetupTest() {
+	self.TestSuite.SetupTest()
+
+	require.NoError(self.T(), self.Sm.Start(notebook.StartNotebookManagerService))
 }
 
 // Check tool upgrade.

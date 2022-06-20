@@ -52,7 +52,7 @@ export class LabelClients extends Component {
     }
 
     labelClients = () => {
-        let labels = this.state.labels;
+        let labels = [...this.state.labels];
         if (this.state.new_label) {
             labels.push(this.state.new_label);
         }

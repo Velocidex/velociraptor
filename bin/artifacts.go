@@ -115,13 +115,19 @@ var (
 
 func listArtifactsHint() []string {
 	config_obj := config.GetDefaultConfig()
+	ctx := context.Background()
 	result := []string{}
 
 	repository, err := getRepository(config_obj)
 	if err != nil {
 		return result
 	}
-	result = append(result, repository.List()...)
+	names, err := repository.List(ctx, config_obj)
+	if err != nil {
+		return result
+	}
+
+	result = append(result, names...)
 	return result
 }
 
@@ -219,7 +225,7 @@ func doArtifactCollect() error {
 		return err
 	}
 
-	logger := log.New(&LogWriter{config_obj}, " ", 0)
+	logger := log.New(&LogWriter{config_obj}, "", 0)
 
 	scope := manager.BuildScope(services.ScopeBuilder{
 		Config:     config_obj,
@@ -356,7 +362,12 @@ func doArtifactList() error {
 		name_regex = re
 	}
 
-	for _, name := range repository.List() {
+	names, err := repository.List(ctx, config_obj)
+	if err != nil {
+		return err
+	}
+
+	for _, name := range names {
 		// Skip artifacts that do not match.
 		if name_regex != nil && name_regex.FindString(name) == "" {
 			continue

@@ -227,7 +227,12 @@ func (self ArtifactsPlugin) Call(
 
 		// No args means just dump all artifacts
 		if len(arg.Names) == 0 {
-			for _, name := range repository.List() {
+			names, err := repository.List(ctx, config_obj)
+			if err != nil {
+				scope.Log("artifact_definitions: %v", err)
+				return
+			}
+			for _, name := range names {
 				artifact, pres := repository.Get(config_obj, name)
 				if pres {
 					select {

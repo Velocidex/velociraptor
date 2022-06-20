@@ -452,13 +452,6 @@ service API {
         };
     }
 
-    rpc ExportNotebook(NotebookExportRequest) returns (google.protobuf.Empty) {
-        option (google.api.http) = {
-            post: "/api/v1/ExportNotebook",
-            body: "*",
-        };
-    }
-
     // The below are API client methods - not available over HTTP
 
     // This can be used by API clients to fetch file content.

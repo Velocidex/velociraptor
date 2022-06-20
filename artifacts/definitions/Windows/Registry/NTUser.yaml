@@ -40,7 +40,7 @@ sources:
  - query: |
        LET UserProfiles = SELECT Uid,
             Gid,
-            Name as Username,
+            Name || "" as Username,
             Description,
             UUID,
             {
@@ -51,7 +51,7 @@ sources:
             } as OSPath,
             expand(path=Directory) as Directory
        FROM Artifact.Windows.Sys.Users()
-       WHERE Directory and OSPath AND Name =~ userRegex
+       WHERE Directory and OSPath AND Username =~ userRegex
 
        SELECT * FROM foreach(
             row={

@@ -39,6 +39,7 @@ type ShellPluginArgs struct {
 	Sep    string           `vfilter:"optional,field=sep,doc=The separator that will be used to split the stdout into rows."`
 	Length int64            `vfilter:"optional,field=length,doc=Size of buffer to capture output per row."`
 	Env    vfilter.LazyExpr `vfilter:"optional,field=env,doc=Environment variables to launch with."`
+	Cwd    string           `vfilter:"optional,field=cwd,doc=If specified we change to this working directory first."`
 }
 
 type ShellResult struct {
@@ -116,6 +117,7 @@ func (self ShellPlugin) Call(
 				}
 			}
 		}
+		command.Dir = arg.Cwd
 
 		stdout_pipe, err := command.StdoutPipe()
 		if err != nil {

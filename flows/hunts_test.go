@@ -65,6 +65,7 @@ func (self *HuntTestSuite) TestCompilation() {
 	assert.NoError(self.T(), err)
 
 	repository := manager.NewRepository()
+
 	manager.SetGlobalRepositoryForTests(self.config_obj, repository)
 	repository.LoadYaml(`
 name: TestArtifact

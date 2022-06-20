@@ -79,8 +79,9 @@ sources:
       -- first find all matching files mft
       LET files = SELECT IsDir,
             DriveLetter + "/" + FullPath as FullPath
-        FROM Artifact.Windows.NTFS.MFT(MFTFilename=DriveLetter + "/$MFT", AllDrives=AllDrives,
-                PathRegex=PathRegex, SizeMax=SizeMax, SizeMin=SizeMin)
+        FROM Artifact.Windows.NTFS.MFT(
+            MFTDrive=DriveLetter, AllDrives=AllDrives,
+            PathRegex=PathRegex, SizeMax=SizeMax, SizeMin=SizeMin)
         WHERE NOT IsDir
           AND if(condition=EarliestSILastChanged,
             then= LastRecordChange0x10 > EarliestSILastChanged,

@@ -19,3 +19,19 @@ Queries:
   # Test the SAM parsers
   - SELECT ParsedF, ParsedV FROM Artifact.Windows.Forensics.SAM(
        SAMPath=srcDir+"/artifacts/testdata/files/SAM")
+
+  # Check raw reg can read values as files - REG_SZ.
+  - SELECT utf16(string=read_file(filename=pathspec(
+        Path="\\Root\\DeviceCensus\\Processor\\ProcessorIdentifier",
+        DelegatePath=srcDir+"/artifacts/testdata/files/Amcache.hve",
+        DelegateAccessor='file'),
+      accessor="raw_reg"))
+    FROM scope()
+
+  # Check raw reg can read values as files - REG_DWORD
+  - SELECT utf16(string=read_file(filename=pathspec(
+        Path="\\Root\\DeviceCensus\\WritePermissionsCheck",
+        DelegatePath=srcDir+"/artifacts/testdata/files/Amcache.hve",
+        DelegateAccessor='file'),
+      accessor="raw_reg"))
+    FROM scope()

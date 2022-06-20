@@ -25,6 +25,5 @@ parameters:
 
 sources:
   - query: |
-       SELECT Type, if(condition=ReallyDoIt,
-                    then=file_store_delete(path=VFSPath)) as deleted
-       FROM enumerate_flow(flow_id=FlowId,client_id=ClientId)
+       SELECT Type, VFSPath
+       FROM delete_flow(flow_id=FlowId, client_id=ClientId, really_do_it=ReallyDoIt)

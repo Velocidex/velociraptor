@@ -741,3 +741,9 @@ body.veloci-dark {
 .veloci-dark hr {
   background: var(--color-text-default);
 }
+
+.veloci-dark .flow-log-filter,
+.veloci-dark .flow-log-filter:focus {
+    border-color: transparent;
+    box-shadow: none;
+}

@@ -116,6 +116,8 @@ type _PathSpec interface {
 	Components() []string
 	Base() string
 	Type() PathType
+
+	String() string
 }
 
 type DSPathSpec interface {

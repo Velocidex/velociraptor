@@ -1,0 +1,5 @@
+Queries:
+  - SELECT relpath(path=OSPath, base=srcDir, sep="/") as RelativePath, Line
+    FROM Artifact.Linux.Sys.LogHunter(TargetFiles=srcDir + '/artifacts/testdata/files/access.log',SearchRegex='66.102.6.218',FilterRegex='')
+  - SELECT relpath(path=OSPath, base=srcDir, sep="/") as RelativePath, Line
+    FROM Artifact.Linux.Sys.LogHunter(TargetFiles=srcDir + '/artifacts/testdata/files/access.log',SearchRegex='masscan',FilterRegex='170.238.36.21')

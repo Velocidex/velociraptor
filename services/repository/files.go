@@ -11,13 +11,14 @@ import (
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 // Loads the global repository with artifacts from the frontend path
 // and the file store.
 func InitializeGlobalRepositoryFromFilesystem(
 	ctx context.Context, config_obj *config_proto.Config,
-	global_repository *Repository) (*Repository, error) {
+	global_repository services.Repository) (services.Repository, error) {
 	if config_obj.Frontend == nil ||
 		config_obj.Frontend.ArtifactDefinitionsDirectory == "" {
 		return global_repository, nil
