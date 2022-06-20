@@ -276,7 +276,6 @@ export default class ToolViewer extends React.Component {
             );
         }
 
-
         return (
             <>
               <Modal show={this.state.showDialog}
@@ -345,13 +344,17 @@ export default class ToolViewer extends React.Component {
                         <Form className="selectable">
                           <InputGroup className="mb-3">
                             <InputGroup.Prepend>
-                              <InputGroup.Text
-                                className={classNames({"disabled": !this.state.tool_file})}
-                                onClick={this.uploadFile}>
-                                { this.state.loading ?
-                                  <FontAwesomeIcon icon="spinner" spin /> :
-                                  "Upload" }
-                              </InputGroup.Text>
+                              { this.state.tool_file ?
+                                <InputGroup.Text
+                                  className={classNames({"foo": "bar","disabled": !this.state.tool_file})}
+                                  disabled={!this.state.tool_file}
+                                  onClick={this.uploadFile}>
+                                  { this.state.loading ?
+                                    <FontAwesomeIcon icon="spinner" spin /> :
+                                    T("Click to upload file")
+                                  }
+                                </InputGroup.Text> : <></>
+                              }
                             </InputGroup.Prepend>
                             <Form.File custom>
                               <Form.File.Input
