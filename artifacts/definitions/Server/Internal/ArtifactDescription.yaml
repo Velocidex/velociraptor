@@ -13,11 +13,11 @@ reports:
 
       {{ if $artifact.BuiltIn }}
       {{ else }}
-      #### User Added
+      ##### Custom Artifact
       {{ end }}
 
       {{ if $artifact.Author }}
-      ##### by {{ $artifact.Author }}
+      ##### Author: {{ $artifact.Author }}
       {{end}}
 
       {{ $artifact.Description }}

@@ -33,6 +33,7 @@
 table  tr.row_selected td,
 table  tr.row-selected {
     background-color: var(--color-table-row-selected) !important;
+    color: var(--color-table-row-selected-text) !important;
   }
 
 table  tr.highlighted td {
