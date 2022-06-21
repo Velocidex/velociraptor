@@ -1,23 +1,29 @@
+/* theme inspirations */
+/* https://prurigro.github.io/css-cursesmenu/ */
+/* https://poerror.github.io/ncurses-css/# */
+
+/* monospace font created per the procedure described at: */
+/* https://askubuntu.com/questions/210283/how-to-use-fixedsys-in-the-gnome-terminal-or-wherever-monospaced-fonts-are-requ */
+/* https://brettklamer.com/diversions/non-statistical/subset-and-self-host-webfonts/ */
 @font-face {
   font-family: "fixedsys";
   font-style: normal;
   font-weight: 400;
   src: local(""),
-    url("../fonts/FSEX300.woff2") format("woff2");
+    url("../fonts/fixedsysexcelsioriiib-l2-mono-webfont.woff2") format("woff2");
   font-display: block;
 }
 
-/* https://prurigro.github.io/css-cursesmenu/ */
-/* https://poerror.github.io/ncurses-css/# */
-
 .ncurses {
-  --font-size-large: 20px;
-  --font-size-base: 16px;
-  --font-size-small: 14px;
+  --font-size-xlarge: 24px;
+  --font-size-large: 17px;
+  --font-size-base: 15px;
+  --font-size-small: 12px;
   --font-family-sans-serif: fixedsys, "Courier New", monospace;
   --font-family-monospace: fixedsys, "Courier New", monospace;
 
-  --color-text-default: black;
+  --color-foreground: black;
+  --color-foreground-inverse: white;
 
   --accent-color: cyan;
   --color-accent: 84, 254, 254;
@@ -31,51 +37,65 @@
   --color-footer-background: lightgrey;
   --color-canvas-background: #0a2fc4;
   --color-canvas-background-complement: #c49f0a;
-  --color-background-form-control: white;
+  --color-form-control-background: white;
 
-  --color-foreground: white;
-  --color-foreground-inverse: black;
-  --color-foreground-dimmed: lightgrey;
-
-  --color-sidebar-inactive-foreground-hover: white;
+  --color-sidebar-inactive-foreground-hover: var(--color-foreground);
   --color-sidebar-inactive-background-hover: var(--color-accent-75);
-  --color-sidebar-foreground: white;
+  --color-sidebar-foreground: var(--color-foreground-inverse);
   --color-sidebar-disabled-foreground: lightgrey;
   --color-sidebar-background: darkgrey;
-  --color-sidebar-active-foreground: white;
-  --color-sidebar-active-foreground-hover: var(--color-sidebar-active-foreground);
-  --color-sidebar-active-background: black;
+  --color-sidebar-active-foreground: var(--color-foreground-inverse);
+  --color-sidebar-active-background: var(--color-foreground);
 
-  --color-client-link: #57ab5a;
   --color-client-link-hover: white;
 
   --color-tab: var(--color-btn-default-background);
-  --color-tab-active: white;
+  --color-tab-active: var(--color-foreground-inverse);
   --color-tab-active-background: black;
 
-  --color-resizer: var(--color-accent-complement);
-  --color-scrollbar-track: var(--color-sidebar-background);
+  --color-resizer: var(--color-btn-default-background);
+  --color-resizer-hover: var(--color-accent-complement);
+  --color-scrollbar-track: #808080;
   --color-scrollbar-thumb: var(--color-tab);
   --color-scrollbar-thumb-hover: var(--color-accent-100);
 
-  --color-no-content: var(--color-foreground-dimmed);
-  --color-btn-border: red;
+  --color-btn-border: var(--color-btn-default-border);
   --color-btn-default-border: darkgrey;
-  --color-btn-default-color: black;
   --color-btn-default-background: lightgrey;
   --color-btn-default-background-hover: cyan;
   --color-btn-outline-link: lightgrey;
   --color-btn-outline-link-hover: var(--color-accent-100);
+
   --color-card-heading-background: var(--color-canvas-background);
   --color-cell-toolbar-background: #222222;
   --color-monospace-color: var(--color-foreground);
 
+  --color-table-row-stripe: rgba(0, 0, 0, 0.05);
+  --color-table-row-selected: var(--color-accent-100);
+  --color-table-row-selected-text: var(--color-foreground);
+  --color-table-row-hover: rgba(255, 255, 255, 0.4);
   --color-table-heading-background: darkgrey;
-  --color-table-row-selected: rgba(0, 0, 0, 0.05);
-  --color-table-row-hover: rgba(0, 0, 0, 0.01);
+
+  --color-no-content: var(--color-foreground);
   --color-code: #990000;
+  --color-proto-error: #990000;
+
+  --color-page-link-active-background: var(--color-tab-active-background);
+  --color-page-link-background: var(--color-btn-default-background);
+  --color-pagination-disabled: #888;
+
+  --color-timeline-header: #cdcdcd20;
+  --color-timeline-table-shown: green;
+  --color-timeline-1: #dff0d820;
+  --color-timeline-2: #a9444220;
+  --color-timeline-3: #2aabd2;
+  --color-timeline-4: #f0c36d;
+  --color-timeline-5: #bbb;
+  --color-timeline-6: #008000;
+  --color-timeline-7: #471ecb;
+
+  --color-vfs-files-timestomped: #ed5d40;
   --color-level-error: #aa0000;
-  --color-timeline-table-shown: #0a2fc4;
 }
 
 body.ncurses {
@@ -94,7 +114,7 @@ body.ncurses {
 .ncurses .ace_tooltip {
   background: var(--color-canvas-background);
   color: var(--color-foreground);
-  border: 1px solid var(--color-btn-border);
+  border: 1px solid var(--color-btn-default-border);
   font-family: var(--font-family-sans-serif);
 }
 
@@ -105,17 +125,42 @@ body.ncurses {
 .ncurses #ace_settingsmenu button,
 .ncurses #ace_settingsmenu input,
 .ncurses #ace_settingsmenu select {
-  background: var(--color-foreground);
-}
-
-.ncurses .ace_content {
-  color: var(--color-text-default);
+  background: var(--color-foreground-inverse);
 }
 
 .ncurses .ace_placeholder {
+  color: darkgrey;
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-base) !important;
+}
+
+/* this is for the context help popup */
+.ncurses .ace_editor {
+  font-family: var(--font-family-monospace) !important;
+  font-size: var(--font-size-base);
+  min-height: 30px !important;
+}
+
+.ncurses .velo-ace-editor.regex-form {
+  border-top: 1px solid black;
+  border-left: 1px solid black;
+  border-right: 1px solid white;
+  border-bottom: 1px solid white;
+  padding: 0;
+  border-color: var(--color-btn-default-border);
+  border-radius: 0;
+  resize: vertical;
+}
+
+.ncurses .velo-ace-editor.regex-form > .ace_editor {
+  min-height: 36px !important;
+  font-size: var(--font-size-base) !important;
+}
+
+.ncurses .react-datetime-picker * {
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-base);
-  color: darkgrey;
+  background: white;
 }
 
 .ncurses .react-datetime-picker__calendar {
@@ -124,14 +169,22 @@ body.ncurses {
   background: lightgrey;
 }
 
+.ncurses .react-calendar__tile:hover *,
+.ncurses .react-calendar button:enabled:hover {
+  background: var(--color-accent-100);
+}
+
 .ncurses code, pre {
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-base);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .ncurses h1,
-.ncurses h2,
+.ncurses h2 {
+  font-size: var(--font-size-xlarge);
+  font-weight: 400;
+}
 .ncurses h3,
 .ncurses h4,
 .ncurses h5,
@@ -150,12 +203,17 @@ body.ncurses {
   margin: 0;
 }
 
+.ncurses b {
+  font-weight: 400;
+  color: var(--color-canvas-background);
+}
+
 .ncurses input[type="checkbox"], input[type="radio"] {
   vertical-align: middle;
   outline: 2px solid black;
 }
 
-.ncurses .icon-small[alt="online"]  {
+.ncurses .icon-small[alt="online"] {
   -ms-interpolation-mode: nearest-neighbor;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: -moz-crisp-edges;
@@ -164,7 +222,7 @@ body.ncurses {
   content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAAXNSR0IArs4c6QAAAEpJREFUKJFjZMAGnjn+R+FL7WdEV4IqgK4BHSAZgNBISBOaZkaSNCFpZiJJAxJgJNk2KCDbRvprHIhQhQGyEgCxmrEmOXwGYEnkAPO7GjovQ5ELAAAAAElFTkSuQmCC) !important;
 }
 
-.ncurses .icon-small[alt="online1d"]  {
+.ncurses .icon-small[alt="online1d"] {
   -ms-interpolation-mode: nearest-neighbor;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: -moz-crisp-edges;
@@ -173,7 +231,7 @@ body.ncurses {
   content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAAXNSR0IArs4c6QAAAEpJREFUKJFjZMAGnjn+R+FL7WdEV4IqgK4BHSAZgNBISBOaZkaSNCFpZiJJAxJgJNk2KCDbRvprHIhQhQGyEgCxmrEmOXwGYEnkAPO7GjovQ5ELAAAAAElFTkSuQmCC) !important;
 }
 
-.ncurses .icon-small[alt="offline"]  {
+.ncurses .icon-small[alt="offline"] {
   -ms-interpolation-mode: nearest-neighbor;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: -moz-crisp-edges;
@@ -182,7 +240,7 @@ body.ncurses {
   content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAAXNSR0IArs4c6QAAAEtJREFUKJFjZMAC/jMw/EfmMzIwMKKrQRFA14BFMSMSmzhN6JoZSdGErJmJFA0omkm1DQbItpH+GgcgVGEMshIAsZqxJjl8BmBL5ABs7xISlBYkBgAAAABJRU5ErkJggg==) !important;
 }
 
-.ncurses .icon-small[alt="any state"]  {
+.ncurses .icon-small[alt="any state"] {
   -ms-interpolation-mode: nearest-neighbor;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: -moz-crisp-edges;
@@ -191,25 +249,14 @@ body.ncurses {
   content: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA4AAAAOCAYAAAAfSC3RAAAAAXNSR0IArs4c6QAAAExJREFUKJFjZMAC/v///x+Zz8jIyIiuBkUAXQOGYiQD4AxCmtA1M5KiCVkzEykaUDSTahsMkG0j/TUOQKjCGGQlAGI1Y01y+AzAlsgBt5QkEBfdS7QAAAAASUVORK5CYII=) !important;
 }
 
-.ncurses svg.svg-inline--fa.fa-sign-out-alt  {
+.ncurses svg.svg-inline--fa.fa-sign-out-alt {
   color: transparent;
   -ms-interpolation-mode: nearest-neighbor;
   image-rendering: -webkit-optimize-contrast;
   image-rendering: -moz-crisp-edges;
   image-rendering: -o-pixelated;
   image-rendering: pixelated;
-  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAJ2AAACdgHaYONPAAAAB3RJTUUH5gUeDBQuj43eHQAAAIZJREFUOMutk80JgDAMRh8e3EDRVcQB61paT3rSgxPoGvXSgkhKDTXwnZq8pPmBH6wEBuACnJfVAMwjMGjUAE4f1CX8LLAA9fshZE3Z6v32N+QroAI273sArRYQhUiAWWispKWIZHKaKeR8oclpYvPbGMMi9QnAFFskaZWt9pjMoxL1LWTZDVZCRLghWLSYAAAAAElFTkSuQmCC) !important;
-  background-repeat: no-repeat;
-}
-
-.ncurses svg.svg-inline--fa.fa-search {
-  color: transparent;
-  -ms-interpolation-mode: nearest-neighbor;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: -moz-crisp-edges;
-  image-rendering: -o-pixelated;
-  image-rendering: pixelated;
-  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAJ2AAACdgHaYONPAAAAB3RJTUUH5gUeDA4JmqqRrQAAAOpJREFUOMul0ktKxEAUheEPcS44ceZz6BI69gLsjbmA7qkTlY4ZuBEd6QJEJBMVwcZHpEGdXKEsko7ogXCL/OeeVKUuPzVAiRqPUSsM9WgZY3wueCbha1Xa/IwjHGCKl4SN25oHieEC2xlfx1XwDxR5QBlwhq2OHe6iCV+ZwzrAYc9/Ogtfnb5cwkqsb3oCrqOu5gGzWG/0BHwf7yEHVWztCWsLmt/CN83hMLmFc+xkfBOXiado+8Ikm4OTmIMKrwmbY9Q1iZOeSZxHbbpCYA+ncVXvuI0zF9HU/CZkkfKQ/f+G3PmjRrjH8Rd4dFs+rwIBIgAAAABJRU5ErkJggg==) !important;
+  background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAQCAYAAADNo/U5AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAABOIAAATiAGjigkoAAAAB3RJTUUH5gYHFSYs9bURegAAAN5JREFUKM+N0r8uRFEQx/FP0KHkBdxys8ITbKMTGpXGC2ypovYK60V0SuVGQidsR6KikXAL/5qxGSf3bHaSSc6Zme+Z32QOdWswCW9S/GdhBrSPjfA9c1qDB9wHOO2Ui3ZwjXfc4AybHY9NoRN8RSD7N85r0DM+A27inOGjLqiPXpxPU/Ff9wmWumYSiacEjXCX7m0X1Ctk9TEI+VVoGS+R+Kjs5x+0jWNs4TZ1u8BKCbWFpMOYbYjXiA1nQWOspYKriB/U5JW2HvtqsTrvh93FIi7xVu6lZo8x06iU9QtTjFLWuJhdygAAAABJRU5ErkJggg==) !important;
   background-repeat: no-repeat;
 }
 
@@ -226,8 +273,17 @@ body.ncurses {
 
 /* Cards */
 
+.ncurses .dashboard.card-deck {
+  background: var(--color-canvas-background);
+}
+
 .ncurses .dashboard .card {
-  border: none;
+  border-radius: 0;
+  border-top: 1px solid white;
+  border-left: 1px solid white;
+  border-right: 1px solid black;
+  border-bottom: 1px solid black;
+  box-shadow: 10px 10px 0px #000000;
 }
 
 
@@ -258,7 +314,7 @@ body.ncurses {
   background: white;
   border-radius: 0;
   color: black;
-  font-size: var(--font-size-large);
+  font-size: var(--font-size-base);
   font-family: var(--font-family-sans-serif);
   padding-top: 5px;
   padding-bottom: 5px;
@@ -274,6 +330,7 @@ body.ncurses {
   float: left;
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
+  color: var(--color-foreground-inverse);
 }
 
 .ncurses .client-status .client-name {
@@ -307,17 +364,18 @@ body.ncurses {
   background: var(--color-accent-75);
 }
 
-/* sidebar navbar */
+/* Sidebar navbar */
 
 .ncurses div#navigator {
-  font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
+  font-family: var(--font-family-sans-serif);
   color: var(--color-sidebar-foreground);
-  background: var(--color-sidebar-background);
+  box-shadow: none;
   border-right: 2px solid black;
+  background: var(--color-sidebar-background);
 }
 
-.ncurses .navigator.nav-pills.nav:hover li {
+.ncurses .navigator.nav-pills.nav li:hover {
   color: var(--color-sidebar-inactive-foreground-hover);
   background: var(--color-sidebar-inactive-background-hover);
 }
@@ -327,12 +385,9 @@ body.ncurses {
   background: var(--color-sidebar-active-background);
 }
 
-.ncurses a.active .navigator.nav-pills.nav:hover li {
-  color: var(--color-sidebar-active-foreground-hover);
-}
-
-.ncurses .navigator.nav-pills.nav li.disabled {
+.ncurses .navigator.nav-pills.nav .nav-link.disabled {
   color: var(--color-sidebar-disabled-foreground);
+  background: var(--color-sidebar-background);
   pointer-events: none;
 }
 
@@ -363,8 +418,9 @@ body.ncurses {
 }
 
 .ncurses .btn,
-.ncurses a.btn.btn-default,
-.ncurses .btn-default {
+.ncurses .btn-outline-default
+.ncurses .btn.btn-default,
+.ncurses .report-viewer .btn-group a.btn {
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
   font-size: inherit;
@@ -380,7 +436,10 @@ body.ncurses {
   border-bottom: 1px solid #000000;
 }
 
-.ncurses .btn-default:hover {
+.ncurses .btn:hover,
+.ncurses .btn-outline-default:hover,
+.ncurses .btn.btn-default:hover,
+.ncurses .report-viewer .btn-group a.btn:hover {
   background: var(--color-btn-default-background-hover);
   box-shadow: none;
   color: black;
@@ -389,9 +448,9 @@ body.ncurses {
 }
 
 .ncurses .btn.active.btn-default {
-  background: var(--color-btn-default-background-hover);
+  background: var(--color-sidebar-active-background);
   box-shadow: none;
-  color: var(--color-text-default);
+  color: var(--color-foreground-inverse);
   text-shadow: none;
   border-radius: 0;
 }
@@ -400,40 +459,46 @@ body.ncurses {
   background-image: none;
   text-shadow: none;
   box-shadow: none;
-  background: var(--color-accent-100);
+  background: darkgrey;
   border-radius: 0;
 }
 
+.ncurses .btn-primary:hover {
+  background: var(--color-accent-100);
+}
+
 .ncurses .btn-secondary {
+  color: var(--color-foreground-inverse);
   text-shadow: none;
   box-shadow: none;
-  background: var(--color-btn-default-background);
+  background: var(--color-page-link-active-background);
   border-radius: 0;
 }
 
 .ncurses .btn-secondary:hover {
-
   background: var(--color-accent-100);
 }
 
-.ncurses .btn-default {
+/* .ncurses .btn-default {
   background-image: none;
   text-shadow: none;
   box-shadow: none;
   background: var(--color-btn-default-background);
   border-radius: 0;
-}
-
-.ncurses .btn-outline-default {
-  border: none;
-  background: var(--color-btn-default-background);
-  border-radius: 0;
-}
+} */
 
 .ncurses .btn-outline-info,
 .ncurses .btn-link {
   color: black;
   background: var(--color-btn-default-background);
+  text-shadow: none;
+  border-radius: 0;
+  margin: 1px;
+}
+
+.ncurses .btn.btn-outline-info[title="Rendered"] {
+  color: black;
+  background: var(--color-foreground-inverse);
   text-shadow: none;
   border-radius: 0;
   margin: 1px;
@@ -480,13 +545,17 @@ body.ncurses {
   border: 1px solid var(--color-table-heading-background);
 }
 
-.ncurses .btn[disabled] {
+.ncurses .btn[disabled],
+.ncurses a.btn.disabled {
   color: var(--color-sidebar-background);
-  border-color: var(--color-btn-default-border);
   background: var(--color-btn-default-background);
   border-radius: 0;
   opacity: 1;
   pointer-events: none;
+  border-top: 1px solid darkgrey;
+  border-right: 1px solid white;
+  border-bottom: 1px solid black;
+  border-left: 1px solid darkgrey;
 }
 
 .ncurses .btn-danger:not(:disabled):not(.disabled) {
@@ -497,6 +566,55 @@ body.ncurses {
   border-radius: 0;
 }
 
+.ncurses button.log-level {
+  border: none;
+  background: transparent;
+}
+
+
+/* Report viewer and dashboard */
+
+.ncurses .report-viewer {
+  color: var(--color-foreground);
+  padding-left: 0px;
+  overflow-y: hidden;
+}
+
+.ncurses .client-details {
+  background: lightgrey;
+}
+
+.ncurses .dashboard {
+  background: white;
+  max-height: calc(100vh - 138px);
+}
+
+.ncurses .container.dashboard {
+  background: white;
+  max-height: calc(100vh - 90px);
+}
+
+.ncurses .toolbar {
+  background: transparent;
+}
+
+.ncurses .velo-table {
+  margin-top: 1px;
+  overflow-y: hidden;
+  background: lightgrey;
+}
+
+.ncurses .notebook-cell {
+  padding: 0;
+}
+
+.ncurses .notebook-input {
+  background: lightgrey;
+}
+
+.ncurses .notebook-output {
+  background: lightgrey;
+}
 
 /* Tabs */
 .ncurses .tab-content {
@@ -509,20 +627,20 @@ body.ncurses {
   box-shadow: 10px 10px 0px #000000;
 }
 
-
 .ncurses .nav-tabs {
   margin-block-end: 0;
+  border-bottom: none;
 }
 
 .ncurses .nav-tabs .nav-link {
   background: var(--color-tab);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
   font-size: var(--font-size-base);
   border-radius: 0;
   border-top: 1px solid white;
   border-left: 1px solid white;
   border-right: 1px solid black;
-  border-bottom: 1px solid black;
+  border-bottom: 1px solid darkgrey;
 }
 
 .ncurses .nav-tabs .nav-link:hover {
@@ -534,33 +652,129 @@ body.ncurses {
   background: var(--color-tab-active-background);
 }
 
-/* Forms */
-.ncurses .form-control {
-  background: var(--color-background-form-control);
-  color: black;
-  border-color: var(--color-btn-default-border);
+.ncurses .nav-tabs .nav-link.disabled {
+  color: var(--color-sidebar-disabled-foreground);
+}
+
+/* Form controls */
+
+.ncurses .form-control,
+.ncurses .velo__control,
+.ncurses .velo__menu {
+  font-size: var(--font-size-base);
+  color: var(--color-foreground) !important;
+  border-radius: 0;
+  border-top: 1px solid black;
+  border-right: 1px solid darkgrey;
+  border-left: 1px solid black;
+  border-bottom: 1px solid darkgrey;
+  background: var(--color-form-control-background);
+  box-shadow: none;
+}
+
+.ncurses .form-control:focus,
+.ncurses .velo__control:focus {
+  font-size: var(--font-size-base);
+  color: var(--color-foreground);
+  border-radius: 0;
+  border-top: 1px solid black;
+  border-right: 1px solid darkgrey;
+  border-left: 1px solid black;
+  border-bottom: 1px solid darkgrey;
+  box-shadow: none;
+}
+
+.ncurses .form-control:hover,
+.ncurses .velo__control:hover {
   border-radius: 0;
   font-size: var(--font-size-base);
+  color: var(--color-foreground);
   border-top: 1px solid black;
   border-right: 1px solid darkgrey;
   border-bottom: 1px solid darkgrey;
   border-left: 1px solid black;
+  box-shadow: none;
+}
+
+/* Timezone selector */
+
+.ncurses .velo__option,
+.ncurses .velo__option--is-focused {
+  background: var(--color-form-control-background) !important;
+}
+
+.ncurses .velo__option:hover {
+  background: var(--color-accent-100) !important;
+}
+
+.ncurses .velo__input {
+  color: var(--color-foreground) !important;
+}
+
+.ncurses .velo__option.velo__option--is-selected {
+  background: black !important;
+  color: var(--color-foreground-inverse) !important;
+}
+
+.ncurses .velo__indicator-separator {
+  width: 0;
 }
 
 .ncurses label.form-label {
   font-weight: 400;
-  color: var(--color-text-default);
-}
-
-/* Pagination */
-.ncurses .page-item .page-link {
-  background: var(--color-btn-default-background);
-  border-color: var(--color-btn-default-border);
   color: var(--color-foreground);
 }
 
+.ncurses .input-group-prepend {
+  box-shadow: none;
+  border-radius: 0;
+  max-height: 36.5px;
+  border-top: 1px solid black;
+  border-right: 1px solid darkgrey;
+  border-left: 1px solid black;
+  border-bottom: 1px solid darkgrey;
+}
+
+.ncurses .pretty-json-container.object-container {
+  font-size: var(--font-size-base);
+  font-family: var(--font-family-sans-serif);
+}
+
+.ncurses .invalid.form-control {
+  background: rgba(255,0,0,0.5);
+}
+
+.ncurses .custom-file-input ~ .custom-file-label {
+  box-shadow: none;
+  border-radius: 0;
+  border-top: 1px solid black;
+  border-right: 1px solid darkgrey;
+  border-left: 1px solid black;
+  border-bottom: 1px solid darkgrey;
+}
+
+.ncurses .custom-file-input:focus ~ .custom-file-label {
+  box-shadow: none;
+}
+
+/* Pagination */
+
 .ncurses .page-item:first-child .page-link {
   border-radius: 0;
+}
+
+.ncurses .page-item .page-link {
+  color: var(--color-foreground);
+  background: var(--color-btn-default-background);
+  border-radius: 0;
+  border-left: 1px solid #ffffff;
+  border-top: 1px solid #ffffff;
+  border-right: 1px solid #000000;
+  border-bottom: 1px solid #000000;
+}
+
+.ncurses .page-item .page-link:hover {
+  background: var(--color-accent-100);
 }
 
 .ncurses .page-item input {
@@ -570,26 +784,32 @@ body.ncurses {
 }
 
 .ncurses .page-item.active .page-link {
-  background: var(--color-canvas-background);
+  color: var(--color-foreground-inverse);
+  background: black;
   border-color: var(--color-btn-default-border);
 }
 
 .ncurses .react-bootstrap-table-pagination-total {
-  color: var(--color-foreground);
+  padding-left: 5px;
 }
 
 
 /* Tables */
 
+.ncurses .table,
 .ncurses .table-bordered {
   border-radius: 0;
   border-top: 1px solid white;
   border-left: 1px solid white;
   border-right: 1px solid black;
   border-bottom: 1px solid black;
-  box-shadow: none;
-  font-weight: 400;
+  box-shadow: 5px 3px 0px black;
+  background: lightgrey;
+  color: black;
   vertical-align: text-bottom;
+  font-weight: 400;
+  font-size: var(--font-size-base);
+  text-shadow: none;
 }
 
 .ncurses .table-bordered .notebook-filter td {
@@ -621,34 +841,9 @@ body.ncurses {
   vertical-align: text-bottom;
 }
 
-.ncurses .fixed-table-body  {
+.ncurses .fixed-table-body {
   border-left: 2px solid white;
   vertical-align: text-bottom;
-}
-
-.ncurses .table tbody tr:nth-of-type(2n) {
-    background: var(--color-table-row-hover);
-    border: 1px solid black;
-}
-
-.ncurses .table tbody tr:nth-of-type(odd) {
-  background: unset;
-  border: 1px solid black;
-}
-
-.ncurses .table {
-  border-radius: 0;
-  border-top: 1px solid white;
-  border-left: 1px solid white;
-  border-right: 1px solid black;
-  border-bottom: 1px solid black;
-  box-shadow: 5px 3px 0px black;
-  background: lightgrey;
-  color: black;
-  vertical-align: text-bottom;
-  font-weight: 400;
-  font-size: var(--font-size-base);
-  text-shadow: none;
 }
 
 .ncurses .table::before {
@@ -658,7 +853,9 @@ body.ncurses {
   right: -1px;
   border-width: 1px 2px 0px;
   border-style: solid;
-  border-color: #000; }
+  border-color: #000;
+}
+
 .ncurses .table::after {
   content: "";
   position: absolute;
@@ -666,7 +863,8 @@ body.ncurses {
   left: -1px;
   border-width: 1px 2px 0px;
   border-style: solid;
-  border-color: #fff; }
+  border-color: #fff;
+}
 
 .ncurses .table tbody td {
   border: 1px solid black;
@@ -674,7 +872,7 @@ body.ncurses {
 }
 
 .ncurses .table tbody tr:nth-of-type(2n) {
-  background: var(--color-table-row-hover);
+  background: var(--color-table-row-stripe);
   border: none;
 }
 
@@ -685,38 +883,29 @@ body.ncurses {
 
 .ncurses .table-hover tbody tr:hover {
   background: var(--color-table-row-hover);
-  color: unset;
 }
 
-.ncurses table tr.row-selected,
-.ncurses table tr.row_selected td {
-  background: var(--color-table-row-selected);
-  color: var(--color-text-default);
+.ncurses .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td > button {
+  background: var(--color-accent-100);
+}
+
+.ncurses th > button.btn.btn-outline-default {
+  background: darkgrey;
 }
 
 /* Artifact viewer screen */
 
 .ncurses .artifact-search-table a {
-  color: var(--color-text-default);
-}
-
-.ncurses .report-viewer {
-  color: var(--color-text-default);
-  padding-left: 10px;
-  background: white;
-  overflow-y: hidden;
-}
-
-.ncurses .toolbar {
-  background: transparent;
+  color: var(--color-foreground);
 }
 
 .ncurses .new-artifact-description {
-  color: var(--color-text-default);
+  color: var(--color-foreground);
+  background: var(--color-foreground-inverse);
 }
 
 .ncurses .artifact-search-report {
-  background: white;
+  background: var(--color-foreground-inverse);
   height: calc(100vh - 138px);
 }
 
@@ -729,6 +918,17 @@ body.ncurses {
   color: unset;
 }
 
+.ncurses .event-report-viewer {
+  background: lightgrey;
+}
+
+.ncurses .report-viewer h1,
+.ncurses .report-viewer h2 {
+  margin-top: 2rem;
+  font-weight: 400;
+  font-size: var(--font-size-xlarge);
+  color: var(--color-foreground);
+}
 .ncurses .report-viewer h3 {
   margin-top: 2rem;
   font-weight: 400;
@@ -748,22 +948,12 @@ body.ncurses {
   color: green;
 }
 
-
-/* Column search screen */
-.ncurses th.sortable input {
-  background: darkgrey;
-  color: var(--color-foreground);
-  border-top: 1px solid black;
-  border-left: 1px solid black;
-  border-right: 1px solid lightgrey;
-  border-bottom: 1px solid lightgrey;
-}
-
 /* Resizer dividers */
 .ncurses .Resizer.horizontal {
   background: darkgrey;
   border: none;
   height: 3px;
+  margin-top: 5px;
 }
 
 .ncurses .Resizer.horizontal:hover {
@@ -788,7 +978,7 @@ body.ncurses {
 
 .ncurses .app-footer.fixed-bottom {
   background: darkgrey;
-  color: white;
+  color: var(--color-foreground-inverse);
   font-family: var(--font-family-sans-serif);
   border: none;
 }
@@ -802,7 +992,7 @@ body.ncurses {
 }
 
 .ncurses .tree-folder {
-  color: var(--color-foreground);
+  color: var(--color-foreground-inverse);
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
 }
@@ -817,21 +1007,11 @@ body.ncurses {
   border-bottom: 1px solid black;
 }
 
-.ncurses .dashboard .card {
-  border-radius: 0;
-  border-top: 1px solid white;
-  border-left: 1px solid white;
-  border-right: 1px solid black;
-  border-bottom: 1px solid black;
-  box-shadow: 10px 10px 0px #000000;
-}
-
-
 .ncurses .card-header {
-  font-size: var(--font-size-large);
+  font-size: var(--font-size-base);
   border-radius: 0;
   background: darkgrey;
-  color: white;
+  color: var(--color-foreground-inverse);
 }
 
 .ncurses .card-body {
@@ -859,7 +1039,7 @@ body.ncurses {
 
 /* Modal dialogs */
 .ncurses .modal-content {
-  background: var(--color-foreground-dimmed);
+  background: var(--color-btn-default-background);
   color: var(--color-foreground);
   font-family: var(--font-family-sans-serif);
   border-radius: 0;
@@ -869,7 +1049,13 @@ body.ncurses {
 }
 
 .ncurses .modal-content dt {
-  color: var(--color-accent-100);
+  color: green;
+  font-weight: 400;
+}
+
+.ncurses .modal-content dd {
+  color: blue;
+  font-weight: 400;
 }
 
 .ncurses .modal-header {
@@ -877,11 +1063,11 @@ body.ncurses {
 }
 
 .ncurses .modal-title {
-  color: var(--color-text-default)
+  color: var(--color-foreground)
 }
 
 .ncurses .modal-header .close {
-  color: var(--color-text-default);
+  color: var(--color-foreground);
   opacity: 1;
   text-shadow: none;
   outline: none;
@@ -907,17 +1093,19 @@ body.ncurses {
 
 .ncurses ::-webkit-scrollbar-thumb {
   border-radius: 0px;
+  border-top: 1px solid white;
+  border-left: 1px solid white;
+  border-right: 1px solid black;
+  border-bottom: 1px solid black;
 }
 
-.ncurses .labels,
-.ncurses .velo__control {
-  background: var(--color-background-form-control);
-  color: var(--color-foreground);
+/* Timelines */
+.ncurses .react-calendar-timeline {
+  background: white;
 }
 
-.ncurses .velo__menu  {
-  background: var(--color-canvas-background);
-  color: var(--color-foreground);
+.ncurses .react-calendar-timeline .rct-calendar-header {
+  font-size: var(--font-size-base);
 }
 
 .ncurses .velo__multi-value {
@@ -932,4 +1120,8 @@ body.ncurses {
 .ncurses .velo__option--is-focused,
 .ncurses .velo__multi-value:hover {
   background: var(--color-btn-default-background-hover);
+}
+
+.ncurses div.error-message {
+  color: var(--color-level-error) !important;
 }

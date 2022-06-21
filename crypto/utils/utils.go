@@ -172,7 +172,7 @@ func VerifyConfig(config_obj *config_proto.Config) error {
 		writeback.PrivateKey = string(pem)
 		err = config.UpdateWriteback(config_obj.Client, writeback)
 		if err != nil {
-			return err
+			return fmt.Errorf("During UpdateWriteback: %w", err)
 		}
 	}
 

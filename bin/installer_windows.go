@@ -51,8 +51,13 @@ import (
 var (
 	service_command = app.Command(
 		"service", "Manipulate the Velociraptor service.")
+
 	installl_command = service_command.Command(
 		"install", "Install Velociraptor as a Windows service.")
+
+	installl_command_argv = service_command.Flag(
+		"argv", "Service args (default 'service', 'run').").
+		Strings()
 
 	remove_command = service_command.Command(
 		"remove", "Remove the Velociraptor Windows service.")
@@ -202,6 +207,14 @@ func installService(
 		return err
 	}
 	defer m.Disconnect()
+
+	argv := *installl_command_argv
+	if len(argv) == 0 {
+		argv = []string{"service", "run"}
+	}
+
+	logger.Info("Starting service with argv %v\n", argv)
+
 	s, err := m.CreateService(
 		config_obj.Client.WindowsInstaller.ServiceName,
 		executable,
@@ -212,7 +225,8 @@ func installService(
 		},
 
 		// Executable will be started with this command line args:
-		"service", "run")
+		argv...)
+
 	if err != nil {
 		return err
 	}
@@ -358,7 +372,7 @@ func loadClientConfig() (*config_proto.Config, error) {
 		// Config obj is not valid here, we can not actually
 		// log anything since we dont know where to send it so
 		// prelog instead.
-		logging.Prelog("Failed to load %v will try again soon.\n", *config_path)
+		Prelog("Failed to load %v: %v will try again soon.\n", err, *config_path)
 		return nil, err
 	}
 
@@ -367,6 +381,7 @@ func loadClientConfig() (*config_proto.Config, error) {
 	// Make sure the config is ok.
 	err = crypto_utils.VerifyConfig(config_obj)
 	if err != nil {
+		Prelog("VerifyConfig: %v.\n", err)
 		return nil, err
 	}
 
@@ -383,12 +398,14 @@ func doRun() error {
 	ctx := context.Background()
 	service, err := NewVelociraptorService(ctx, name)
 	if err != nil {
+		Prelog("NewVelociraptorService: %v", err)
 		return err
 	}
 	defer service.Close()
 
 	isIntSess, err := svc.IsAnInteractiveSession()
 	if err != nil {
+		Prelog("IsAnInteractiveSession: %v", err)
 		return err
 	}
 
@@ -398,6 +415,7 @@ func doRun() error {
 		err = svc.Run(name, service)
 	}
 	if err != nil {
+		Prelog("svc.Run: %v", err)
 		return err
 	}
 
@@ -568,9 +586,14 @@ func NewVelociraptorService(
 			subctx, cancel := context.WithCancel(ctx)
 			lwg := &sync.WaitGroup{}
 			lwg.Add(1)
-			go runOnce(subctx, lwg, result, elog)
+			go func() {
+				defer cancel()
+				runOnce(subctx, lwg, result, elog)
+			}()
 
 			select {
+			case <-subctx.Done():
+				continue
 			case <-ctx.Done():
 				// Wait for the client to shutdown.
 				cancel()

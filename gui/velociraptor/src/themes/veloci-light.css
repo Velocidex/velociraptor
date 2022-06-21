@@ -43,16 +43,15 @@
   --color-foreground-inverse: #eeeeee;
   --color-foreground-dimmed: #4f4f4f;
 
-  --color-text-default: #121212;
+  --color-foreground: #121212;
 
-  --color-sidebar-inactive-foreground-hover: var(--color-accent-100);
-  --color-sidebar-inactive-background-hover: #c0c0c0;
+  --color-sidebar-inactive-foreground-hover: var(--color-foreground);
+  --color-sidebar-inactive-background-hover: var(--color-canvas-background);
   --color-sidebar-foreground: #404040;
+  --color-sidebar-disabled-foreground: #B0B0B0;
   --color-sidebar-background: #ededed;
   --color-sidebar-active-foreground: var(--color-accent-100);
-  --color-sidebar-active-foreground-hover: var(--color-sidebar-active-foreground);
-  --color-sidebar-active-background: var(--color-sidebar-inactive-background-hover);
-  /* --color-sidebar-disabled-foreground: lightgrey; */
+  --color-sidebar-active-background: var(--color-canvas-background);
 
   --color-client-link: green;
   --color-client-link-hover: var(--color-foreground-dimmed);
@@ -75,12 +74,21 @@
   --color-table-row-hover: rgba(0, 0, 0, 0.01);
   --color-code: #990000;
 
+  --color-timeline-header: #cdcdcd20;
   --color-timeline-table-shown: #5cd00a80;
+  --color-timeline-1: #dff0d820;
+  --color-timeline-2: #a9444220;
+  --color-timeline-3: #2aabd2;
+  --color-timeline-4: #f0c36d;
+  --color-timeline-5: #bbb;
+  --color-timeline-6: #008000;
+  --color-timeline-7: #471ecb;
 
   --color-page-link-active-background: #0c900a;
   --color-page-link-hover-background: #5cd00a80;
   --color-pagination-disabled: #c0c0c0;
 
+  --color-vfs-files-timestomped: #ed5d40;
   --color-level-error: #990000;
 }
 
@@ -155,30 +163,25 @@ body.veloci-light {
     margin-left: 5px;
     background: var(--color-canvas-background);
     font-family: var(--font-family-sans-serif);
-    color: var(--color-text-default);
+    color: var(--color-foreground);
 } */
 
 /* .veloci-light .react-autosuggest__suggestion--highlighted {
     background: var(--color-accent-50);
 } */
 
-/* sidebar navbar */
+/* Sidebar navbar */
 
 .veloci-light div#navigator {
-  font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
+  font-family: var(--font-family-sans-serif);
   color: var(--color-sidebar-foreground);
+  box-shadow: none;
+  border-right: none;
   background: var(--color-sidebar-background);
-  border-color: var(--color-sidebar-inactive-foreground-hover);
 }
 
-.veloci-light .nav-pills .nav-link {
-  font-family: var(--font-family-sans-serif);
-  font-size: var(--font-size-base);
-  color: var(--color-sidebar-foreground);
-}
-
-.veloci-light .navigator.nav-pills.nav:hover li {
+.veloci-light .navigator.nav-pills.nav li:hover {
   color: var(--color-sidebar-inactive-foreground-hover);
   background: var(--color-sidebar-inactive-background-hover);
 }
@@ -188,12 +191,10 @@ body.veloci-light {
   background: var(--color-sidebar-active-background);
 }
 
-.veloci-light a.active .navigator.nav-pills.nav:hover li {
-  color: var(--color-sidebar-active-foreground-hover);
-}
-
-.veloci-light .navigator.nav-pills.nav li.disabled {
+.veloci-light .navigator.nav-pills.nav .nav-link.disabled {
   color: var(--color-sidebar-disabled-foreground);
+  background: var(--color-sidebar-background);
+  pointer-events: none;
 }
 
 /* Buttons */
@@ -202,7 +203,7 @@ body.veloci-light {
 .veloci-light .btn-default {
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
   background-image: none;
   text-shadow: none;
   box-shadow: none;
@@ -217,12 +218,12 @@ body.veloci-light {
 
 .veloci-light .btn-default:hover {
   background: var(--color-btn-default-background-hover);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .veloci-light .btn-default:focus {
   background: var(--color-btn-default-background);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .veloci-light .btn-primary {
@@ -306,12 +307,12 @@ body.veloci-light {
 
 .veloci-light .card-header {
   background: var(--color-card-heading-background);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .veloci-light .card-body {
   background: var(--color-canvas-background);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .veloci-light .card-body dt,
@@ -327,7 +328,7 @@ body.veloci-light {
 
 /* Tabs */
 .veloci-light .tab-content {
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .veloci-light .nav-tabs {
@@ -336,7 +337,7 @@ body.veloci-light {
 
 .veloci-light .nav-tabs > a {
   background: var(--color-tab);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
   border-top-color: var(--color-btn-border);
   border-right-color: var(--color-btn-border);
   border-bottom-color: var(--color-btn-border);
@@ -350,7 +351,7 @@ body.veloci-light {
 
 .veloci-light .nav-tabs > a.active {
   background: var(--color-tab-active);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
   border-top-color: var(--color-btn-border);
   border-right-color: var(--color-btn-border);
   border-bottom-color: transparent;
@@ -362,19 +363,19 @@ body.veloci-light {
   font-size: var(--font-size-base);
 }
 
-/* forms */
+/* Form controls */
 
 .veloci-light .form-control,
 .veloci-light .custom-file-input {
   background: var(--color-canvas-background);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
   border-color: var(--color-btn-default-border);
   font-size: var(--font-size-base);
 }
 
 .veloci-light .form-control:focus {
   background: var(--color-canvas-background);
-  box-shadow: 0 0 0 1px var(--color-text-default);
+  box-shadow: 0 0 0 1px var(--color-foreground);
 }
 
 .veloci-light .input-group-prepend .input-group-text {
@@ -466,14 +467,14 @@ body.veloci-light {
 .veloci-light table tr.row-selected,
 .veloci-light table tr.row_selected td {
   background: var(--color-table-row-selected);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 /* Footer */
 
 .veloci-light .app-footer.fixed-bottom {
   background: var(--color-footer-background);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
   font-family: var(--font-family-sans-serif);
   border-top: 1px solid var(--color-btn-border);
 }
@@ -510,11 +511,11 @@ body.veloci-light {
 }
 
 .veloci-light .artifact-search-table a {
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .veloci-light .report-viewer {
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .veloci-light .report-viewer pre {
@@ -528,15 +529,15 @@ body.veloci-light {
 .veloci-light .artifact-search-table.selectable.container tr.row-selected,
 .veloci-light .artifact-search-table.selectable.container tr.row_selected > td {
   background: var(--color-table-row-selected);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 
 /* Pagination */
 .veloci-light .page-item .page-link {
-  background: var(--page-link-background);
+  background: var(--color-page-link-background);
   border-color: var(--color-btn-default-border);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .veloci-light .page-item.disabled span {
@@ -545,7 +546,7 @@ body.veloci-light {
 
 .veloci-light .page-item input {
   background: var(--color-canvas-background);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
   border: 1px solid var(--color-form-background);
 }
 
@@ -560,7 +561,7 @@ body.veloci-light {
 }
 
 .veloci-light .react-bootstrap-table-pagination-total {
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .veloci-light .flow-log-filter,

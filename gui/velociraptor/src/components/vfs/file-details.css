@@ -18,7 +18,7 @@
 .nav-tabs .nav-item {
     border-color: #dee2e6 #dee2e6 #fff;
     background-color: var(--color-tab-non-active-background);
-    color: var(--color-text-default);
+    color: var(--color-foreground);
 }
 
 .nav-tabs .nav-item.active {
