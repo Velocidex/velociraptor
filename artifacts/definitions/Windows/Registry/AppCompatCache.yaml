@@ -39,9 +39,7 @@ sources:
                       filenames=AppCompatKeys.OSPath, accessor='registry')
               }, query={
                   SELECT Filename AS Key, Name, time AS ModificationTime,
-                    parse_string_with_regex(string=Filename,
-                        regex='^HKEY_LOCAL_MACHINE\\\\System\\\\(?P<ControlSet>[^\\\\]+)\\\\.+$'
-                            ).ControlSet as ControlSet
+                    pathspec(parse=Filename)[2] as ControlSet
                   FROM appcompatcache(value=Data)
             })
       
