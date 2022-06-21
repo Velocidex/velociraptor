@@ -43,8 +43,6 @@
   --color-foreground-inverse: #32261a;
   --color-foreground-dimmed: #909dab; /* --color-scale-gray-2 */
 
-  --color-foreground: var(--color-foreground);
-
   --color-sidebar-inactive-foreground-hover: var(--color-sidebar-foreground);
   --color-sidebar-inactive-background-hover: var(--color-btn-border);
   --color-sidebar-foreground: var(--color-foreground-dimmed);
@@ -84,8 +82,6 @@
   --color-table-heading-foreground: var(--color-foreground-dimmed);
   --color-table-heading-background: var(--color-card-heading-background);
   --color-client-link-hover: var(--color-accent-100);
-
-  --color-foreground: var(--color-foreground);
 
   --color-timeline-header: #cdcdcd20;
   --color-timeline-table-shown: #dd4b3920;
@@ -213,12 +209,6 @@ body.github-dimmed-dark {
 .github-dimmed-dark a.active .navigator.nav-pills.nav li {
   color: var(--color-sidebar-active-foreground);
   background: var(--color-sidebar-active-background);
-}
-
-.github-dimmed-dark .navigator.nav-pills.nav .nav-link.disabled {
-  color: var(--color-sidebar-disabled-foreground);
-  background: var(--color-sidebar-background);
-  pointer-events: none;
 }
 
 /* Buttons */
@@ -510,7 +500,7 @@ body.github-dimmed-dark {
   border-top-color: var(--color-btn-border);
   border-right-color: var(--color-btn-border);
   border-left-color: var(--color-btn-border);
-  border-bottom: 2px transparent;
+  border-bottom: 2px solid var(--color-canvas-background);
   font-weight: 600;
 }
 
