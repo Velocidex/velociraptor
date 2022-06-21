@@ -1,22 +1,87 @@
 name: Windows.Registry.AppCompatCache
+author: Matt Green - @mgreen27
 description: |
-  Parses the system's app compatibility cache.
+  This artifact parses AppCompatCache (shimcache) from target hives. 
+  
+  AppCompatCache, also known as Shimcache, is a component of the Application 
+  Compatibility Database, which was created by Microsoft and used by the Windows 
+  operating system to identify application compatibility issues. This helps 
+  developers troubleshoot legacy functions and contains data related to Windows 
+  features.
+  
+  Note: the appcompatcache plugin does not currently support execution flag in 
+  Windows 7 and 8/8.1 Systems.
+
+reference:
+  - https://www.mandiant.com/resources/caching-out-the-val
 
 parameters:
   - name: AppCompatCacheKey
     default: HKEY_LOCAL_MACHINE/System/ControlSet*/Control/Session Manager/AppCompatCache/AppCompatCache
+    
 
 precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
   - query: |
-      LET AppCompatKeys = SELECT * FROM glob(
-          globs=AppCompatCacheKey, accessor='registry')
-      SELECT * FROM foreach(
-          row={
-              SELECT Filename, Data FROM read_file(
-                  filenames=AppCompatKeys.FullPath, accessor='registry')
-          }, query={
-              SELECT Filename AS Key, name as Name, epoch, time AS ModificationTime
-              FROM appcompatcache(value=Data)
-        }) WHERE epoch < 2000000000
+      -- first find all ControlSet Keys in scope
+      LET AppCompatKeys <= SELECT OSPath FROM glob(globs=AppCompatCacheKey, accessor='registry')
+      
+      -- when greater than one key we need to extract results and order later
+      LET results <= SELECT
+            ModificationTime,
+            Name as Path,
+            ControlSet,
+            Key
+          FROM foreach(
+              row={
+                  SELECT Filename, Data FROM read_file(
+                      filenames=AppCompatKeys.OSPath, accessor='registry')
+              }, query={
+                  SELECT Filename AS Key, Name, time AS ModificationTime,
+                    parse_string_with_regex(string=Filename,
+                        regex='^HKEY_LOCAL_MACHINE\\\\System\\\\(?P<ControlSet>[^\\\\]+)\\\\.+$'
+                            ).ControlSet as ControlSet
+                  FROM appcompatcache(value=Data)
+            })
+      
+      -- find position of entry for each ControlSet. Lower numbers more recent
+      LET ControlSetPosition(cs) = SELECT *, count() - 1 as Position 
+        FROM results WHERE ControlSet = cs
+      LET position = SELECT ControlSetPosition(cs=ControlSet) as Results
+            FROM foreach(
+                row={ 
+                    SELECT ControlSet, count(items=ControlSet) as Entries 
+                    FROM results GROUP BY ControlSet 
+                })
+      
+      LET mutli_controlset = SELECT *
+        FROM foreach(
+                row=position.Results, 
+                query={
+                    SELECT * FROM foreach(row=_value)
+                })
+            
+      -- output results
+      SELECT 
+        Position,
+        ModificationTime,
+        Path,
+        ControlSet,
+        Key
+      FROM if(condition= len(list=AppCompatKeys.OSPath)=1,
+        then={
+            SELECT *, count() - 1 as Position FROM results
+        },
+        else= mutli_controlset )
+        
+    
+      
+   
+      
+      
+      
+      
+      
+      
+      
