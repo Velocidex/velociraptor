@@ -47,7 +47,7 @@
   --color-sidebar-inactive-foreground-hover: #f06292;
   --color-sidebar-inactive-background-hover: #fce4ec;
   --color-sidebar-foreground: #f48fb1;
-  --color-sidebar-disabled-foreground: var(--color-sidebar-background);
+  --color-sidebar-disabled-foreground: var(--color-tab-active);
   --color-sidebar-background: #fef4f8;
   --color-sidebar-active-foreground: white;
   --color-sidebar-active-background: var(--color-sidebar-foreground);

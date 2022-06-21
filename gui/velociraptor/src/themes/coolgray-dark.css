@@ -48,8 +48,8 @@
 
   --color-sidebar-inactive-foreground-hover: #73C3FF;
   --color-sidebar-inactive-background-hover: rgb(52, 65, 75);
-  --color-sidebar-foreground: var(--color-foreground-dimmed);
-  --color-sidebar-disabled-foreground: var(--color-sidebar-background);
+  --color-sidebar-foreground: var(--color-foreground);
+  --color-sidebar-disabled-foreground: #B2B4B5;
   --color-sidebar-background: #2a343c;
   --color-sidebar-active-foreground: var(--color-foreground);
   --color-sidebar-active-background: rgb(68, 85, 97);

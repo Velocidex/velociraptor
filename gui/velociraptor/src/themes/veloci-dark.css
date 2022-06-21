@@ -48,7 +48,7 @@
   --color-sidebar-inactive-foreground-hover: var(--color-foreground);
   --color-sidebar-inactive-background-hover: var(--color-btn-border);
   --color-sidebar-foreground: #bfbfbf;
-  --color-sidebar-disabled-foreground: var(--color-sidebar-background);
+  --color-sidebar-disabled-foreground: #5E5E5E;
   --color-sidebar-background: #121212;
   --color-sidebar-active-foreground: var(--color-foreground);
   --color-sidebar-active-background: var(--color-accent-100);
@@ -210,9 +210,19 @@ body.veloci-dark {
   background: var(--color-sidebar-inactive-background-hover);
 }
 
+.veloci-dark a {
+    color: var(--color-client-link);
+}
+
 .veloci-dark a.active .navigator.nav-pills.nav li {
   color: var(--color-sidebar-active-foreground);
   background: var(--color-sidebar-active-background);
+}
+
+.veloci-dark .navigator.nav-pills.nav .nav-link.disabled {
+  color: var(--color-sidebar-disabled-foreground);
+  background: var(--color-sidebar-background);
+  pointer-events: none;
 }
 
 /* Buttons */
@@ -260,10 +270,6 @@ body.veloci-dark {
 .veloci-dark .btn-outline-default {
   border-width: 0;
   background: none;
-}
-
-.veloci-dark a {
-    color: var(--color-client-link);
 }
 
 .veloci-dark .btn-outline-info,
