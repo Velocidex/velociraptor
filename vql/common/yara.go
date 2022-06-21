@@ -320,7 +320,7 @@ func (self *scanReporter) scanFile(
 	defer fd.Close()
 
 	// Fill in the file stat if possible.
-	file_accessor, err := accessors.GetAccessor("file", self.scope)
+	file_accessor, err := accessors.GetAccessor("auto", self.scope)
 	if err == nil {
 		self.file_info, _ = file_accessor.LstatWithOSPath(self.filename)
 	}
