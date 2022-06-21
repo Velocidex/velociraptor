@@ -45,8 +45,8 @@
 
   --color-sidebar-inactive-foreground-hover: var(--color-sidebar-foreground);
   --color-sidebar-inactive-background-hover: var(--color-btn-border);
-  --color-sidebar-foreground: var(--color-foreground-dimmed);
-  --color-sidebar-disabled-foreground: var(--color-sidebar-background);
+  --color-sidebar-foreground: var(--color-foreground);
+  --color-sidebar-disabled-foreground: var(--color-foreground-dimmed);
   --color-sidebar-background: var(--color-canvas-background);
   --color-sidebar-active-foreground: var(--color-foreground);
   --color-sidebar-active-background: var(--color-table-row-selected);
@@ -209,6 +209,12 @@ body.github-dimmed-dark {
 .github-dimmed-dark a.active .navigator.nav-pills.nav li {
   color: var(--color-sidebar-active-foreground);
   background: var(--color-sidebar-active-background);
+}
+
+.github-dimmed-dark .navigator.nav-pills.nav .nav-link.disabled {
+  color: var(--color-sidebar-disabled-foreground);
+  background: var(--color-sidebar-background);
+  pointer-events: none;
 }
 
 /* Buttons */
@@ -524,16 +530,8 @@ body.github-dimmed-dark {
 
 /* Form controls */
 .github-dimmed-dark .form-control,
-.github-dimmed-dark .timezone-selector,
-.github-dimmed-dark .labels,
-.github-dimmed-dark .velo__multi-value,
-.github-dimmed-dark .velo__option,
 .github-dimmed-dark .velo__control,
-.github-dimmed-dark .velo__value-container,
-.github-dimmed-dark .velo__indicator,
-.github-dimmed-dark .velo__dropdown-indicator,
-.github-dimmed-dark .velo__menu,
-.github-dimmed-dark .velo__input {
+.github-dimmed-dark .velo__menu {
   background: var(--color-btn-default-background);
   color: var(--color-foreground) !important;
   border-color: var(--color-btn-default-border);
@@ -541,23 +539,13 @@ body.github-dimmed-dark {
   box-shadow: none;
 }
 
-.github-dimmed-dark .form-control:focus {
+.github-dimmed-dark .form-control:focus,
+.github-dimmed-dark .velo__control:focus{
   box-shadow: none;
 }
 
 .github-dimmed-dark .form-control:hover,
-.github-dimmed-dark .timezone-selector:hover,
-.github-dimmed-dark .labels:hover,
-.github-dimmed-dark .velo__multi-value:hover,
-.github-dimmed-dark .velo__option:hover,
-.github-dimmed-dark .velo__control:hover,
-.github-dimmed-dark .velo__menu:hover,
-.github-dimmed-dark .velo__input:hover,
-.github-dimmed-dark .velo__option:hover,
-.github-dimmed-dark .velo__option--is-focused,
-.github-dimmed-dark .velo__control--is-focused,
-.github-dimmed-dark .velo__control--menu-is-open,
-.github-dimmed-dark .velo__multi-value:hover {
+.github-dimmed-dark .velo__control:hover {
   border-color: var(--color-btn-default-border-hover);
   box-shadow: none;
 }

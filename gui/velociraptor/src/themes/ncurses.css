@@ -42,7 +42,7 @@
   --color-sidebar-inactive-foreground-hover: var(--color-foreground);
   --color-sidebar-inactive-background-hover: var(--color-accent-75);
   --color-sidebar-foreground: var(--color-foreground-inverse);
-  --color-sidebar-disabled-foreground: var(--color-sidebar-background);
+  --color-sidebar-disabled-foreground: lightgrey;
   --color-sidebar-background: darkgrey;
   --color-sidebar-active-foreground: var(--color-foreground-inverse);
   --color-sidebar-active-background: var(--color-foreground);

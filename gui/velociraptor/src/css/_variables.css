@@ -3,7 +3,7 @@
     --color-sidebar-inactive-foreground-hover: #000e7b;
     --color-sidebar-inactive-background-hover: var(--color-sidebar-background);
     --color-sidebar-foreground: #8f8f8f;
-    --color-sidebar-disabled-foreground: var(--color-sidebar-background);
+    --color-sidebar-disabled-foreground: lightgrey;
     --color-sidebar-background: #f5f5f5;
     --color-sidebar-active-foreground: #f0f0f0;
     --color-sidebar-active-background: #8f8f8f;
