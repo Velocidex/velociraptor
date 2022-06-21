@@ -5,6 +5,7 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 
 	"github.com/Velocidex/yaml/v2"
@@ -70,7 +71,7 @@ func UpdateWriteback(
 	// Make sure the new file is only readable by root.
 	err = ioutil.WriteFile(location, bytes, 0600)
 	if err != nil {
-		return errors.WithStack(err)
+		return fmt.Errorf("WriteFile to %v: %w", location, err)
 	}
 
 	return nil

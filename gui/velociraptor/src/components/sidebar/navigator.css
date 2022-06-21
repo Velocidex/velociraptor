@@ -40,8 +40,6 @@ section.navigator a {
 }
 
 .navigator.nav-pills.nav .nav-link.disabled {
-  color: var(--color-sidebar-disabled-foreground);
-  background: var(--color-sidebar-background);
   pointer-events: none;
 }
 

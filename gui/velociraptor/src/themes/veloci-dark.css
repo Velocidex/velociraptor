@@ -215,12 +215,6 @@ body.veloci-dark {
   background: var(--color-sidebar-active-background);
 }
 
-.veloci-dark .navigator.nav-pills.nav .nav-link.disabled {
-  color: var(--color-sidebar-disabled-foreground);
-  background: var(--color-sidebar-background);
-  pointer-events: none;
-}
-
 /* Buttons */
 .veloci-dark .btn,
 .veloci-dark .btn-default {
@@ -266,6 +260,10 @@ body.veloci-dark {
 .veloci-dark .btn-outline-default {
   border-width: 0;
   background: none;
+}
+
+.veloci-dark a {
+    color: var(--color-client-link);
 }
 
 .veloci-dark .btn-outline-info,
@@ -637,7 +635,8 @@ body.veloci-dark {
   font-size: var(--font-size-base);
 }
 
-.veloci-dark .dropdown-item:hover {
+.veloci-dark .dropdown-item:hover,
+.veloci-dark .dropdown-item:focus {
   background: var(--color-btn-default-background-hover);
 }
 
