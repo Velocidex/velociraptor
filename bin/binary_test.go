@@ -229,7 +229,7 @@ func TestCPULimit(t *testing.T) {
 	assert.Regexp(t, "Starting collection of GoHard", string(out))
 
 	// Make sure the collection timed out and dumped the goroutines.
-	assert.Regexp(t, "Will throttle query to 5% of", string(out))
+	assert.Regexp(t, "Will throttle query to 5 percent of", string(out))
 }
 
 func TestBuildDeb(t *testing.T) {

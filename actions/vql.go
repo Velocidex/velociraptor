@@ -86,10 +86,6 @@ func (self VQLClientAction) StartQuery(
 	}
 
 	rate := arg.OpsPerSecond
-	if rate == 0 {
-		rate = 1000000
-	}
-
 	cpu_limit := arg.CpuLimit
 	iops_limit := arg.IopsLimit
 

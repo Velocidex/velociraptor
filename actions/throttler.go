@@ -238,12 +238,13 @@ func NewThrottler(
 	ctx context.Context, scope vfilter.Scope,
 	ops_per_sec, cpu_percent, iops_limit float64) types.Throttler {
 
-	if ops_per_sec > 0 {
+	if ops_per_sec > 0 && ops_per_sec < 100 {
 		cpu_percent = ops_per_sec
 	}
 
 	// cpu throttler can only work from 0 to 100%
-	if cpu_percent <= 0 || cpu_percent > 100 {
+	if cpu_percent < 0 || cpu_percent > 100 {
+		scope.Log("Throttler: Cpu limit %v outside range 0-100 , ignoring\n", cpu_percent)
 		cpu_percent = 0
 	}
 
@@ -265,7 +266,7 @@ func NewThrottler(
 	stats.mu.Lock()
 	throttlerCurrentGauge.Inc()
 	stats.waiters++
-	scope.Log("Will throttle query to %v%% of %v available CPU resources (%v cores long term average).",
+	scope.Log("Will throttle query to %.0f percent of %.0f available CPU resources (%0.02f cores long term average).",
 		cpu_percent, stats.number_of_cores,
 		cpu_percent*stats.number_of_cores/100)
 	stats.mu.Unlock()
