@@ -1,8 +1,9 @@
 .velo-line-chart svg {
     user-select: none;
-    border-radius: 2px;
-    border-width: 3px;
+    border-radius: 0;
+    border-width: 1px;
     border-style: solid;
+    padding: 10px;
 }
 
 .custom-tooltip {

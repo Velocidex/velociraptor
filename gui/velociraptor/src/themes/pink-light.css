@@ -26,6 +26,10 @@
   --font-family-monospace: roboto-mono, SFMono-Regular, Menlo, Monaco,
     "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
 
+  --color-foreground: #222222;
+  --color-foreground-inverse: #eeeeee;
+  --color-foreground-dimmed: #4f4f4f;
+
   --accent-color: #f48fb1;
   --color-accent: 244, 143, 177;
   --color-accent-complement: cornflowerblue;
@@ -38,26 +42,28 @@
   --color-footer-background: #fce4ec;
   --color-canvas-background: white;
   --color-canvas-background-complement: #f5fffb;
-
-  --color-foreground: #121212;
-  --color-foreground-inverse: #eeeeee;
-  --color-foreground-dimmed: #4f4f4f;
-
-  --color-text-default: #121212;
+  --color-form-control-background: #fceff4;
 
   --color-sidebar-inactive-foreground-hover: #f06292;
   --color-sidebar-inactive-background-hover: #fce4ec;
   --color-sidebar-foreground: #f48fb1;
+  --color-sidebar-disabled-foreground: var(--color-sidebar-background);
   --color-sidebar-background: #fef4f8;
   --color-sidebar-active-foreground: white;
-  --color-sidebar-active-foreground-hover: var(--color-sidebar-active-foreground);
-  --color-sidebar-active-background: #f8bbd0;
-  /* --color-sidebar-disabled-foreground: #fef4f8; */
+  --color-sidebar-active-background: var(--color-sidebar-foreground);
 
   --color-client-link: var(--color-foreground);
   --color-client-link-hover: #57ab5a;
 
-  --color-no-content: #bbbbbb;
+  --color-tab: #fceff4;
+  --color-tab-active: #f8bbd0;
+  --color-tab-active-background: black;
+
+  --color-resizer: #f8bbd050;
+  --color-resizer-hover: #f06292;
+  --color-scrollbar-track: var(--color-sidebar-disabled-foreground);
+  --color-scrollbar-thumb: var(--color-btn-default-background);
+  --color-scrollbar-thumb-hover: var(--color-btn-default-background-hover);
 
   --color-btn-border: var(--color-sidebar-foreground);
   --color-btn-default-border: var(--color-sidebar-foreground);
@@ -65,29 +71,25 @@
   --color-btn-default-background-hover: #f48fb1;
   --color-btn-outline-link: var(--color-btn-default-border);
   --color-btn-outline-link-hover: var(--color-sidebar-inactive-foreground-hover);
+
   --color-card-heading-background: #f8bbd080;
   --color-cell-toolbar-background: #222222;
   --color-monospace-color: #eeeeee;
 
-  --color-table-row-selected: rgba(244, 143, 177, 0.25);
-  --color-table-row-hover: rgba(244, 143, 177, 0.05);
+  --color-table-row-stripe: rgba(0,0,0, 0.03);
+  --color-table-row-selected: var(--color-accent-50);
+  --color-table-row-selected-text: var(--color-foreground);
+  --color-table-row-hover: rgba(var(--color-accent), 0.2);
+  --color-table-heading-background: var(--color-btn-default-background);
 
-  --color-form-background: #fceff4;
-  --color-page-link-active-background: #fceff4;
-  --page-link-background: #f8bbd0;
-  --color-resizer: #f8bbd050;
-  --color-resizer-hover: #f06292;
-  --color-scrollbar-track: var(--color-sidebar-disabled-foreground);
-  --color-scrollbar-thumb: var(--color-btn-default-background);
-  --color-scrollbar-thumb-hover: var(--color-btn-default-background-hover);
-
-  --color-tab-active: #f8bbd0;
-  --color-tab: #fceff4;
-  --color-table-heading-background: var(--color-accent-25);
-  --color-text-default: #222222;
+  --color-no-content: #bbbbbb;
+  --color-code: #990000;
   --color-proto-error: #f06292;
+
+  --color-page-link-active-background: var(--color-tab);
+  --color-page-link-background: var(--color-btn-default-background);
   --color-pagination-disabled: #888;
-  --color-text-default: #222222;
+
   --color-timeline-header: #cdcdcd20;
   --color-timeline-table-shown: #dd4b3920;
   --color-timeline-1: #dff0d820;
@@ -98,7 +100,7 @@
   --color-timeline-6: #008000;
   --color-timeline-7: #471ecb;
 
-  --vfs-files-timestomped: #ed5d40;
+  --color-vfs-files-timestomped: #ed5d40;
   --color-level-error: #ed5d40;
 }
 
@@ -124,11 +126,11 @@ body.pink-light {
 .pink-light h1,
 .pink-light h2,
 .pink-light h3 {
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .pink-light .alert-secondary {
-  color: var(--color-text-default);
+  color: var(--color-foreground);
   background: var(--color-table-heading-background);
 }
 
@@ -151,7 +153,7 @@ body.pink-light {
   border: 0.655385px solid var(--color-sidebar-foreground);
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
-  color: var(--color-text-default);
+  color: var(--color-foreground);
   font-family: var(--font-family-sans-serif);
   padding-top: 5px;
   padding-bottom: 5px;
@@ -183,37 +185,32 @@ body.pink-light {
 
 .pink-light .client-status .client-name:hover {
   color: var(--color-sidebar-active-foreground);
-  background: var(--color-btn-default-background-hover);
+  background: var(--color-btn-outline-link-hover);
 }
 
 .pink-light .react-autosuggest__suggestions-container--open {
   margin-left: 5px;
   background: var(--color-canvas-background);
   font-family: var(--font-family-sans-serif);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .pink-light .react-autosuggest__suggestion--highlighted {
   background: var(--color-sidebar-inactive-foreground-hover);
 }
 
-/* sidebar navbar */
+/* Sidebar navbar */
 
 .pink-light div#navigator {
-  font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
+  font-family: var(--font-family-sans-serif);
   color: var(--color-sidebar-foreground);
-  background: #fff0f5;
-  border-color: #fff0f5;
+  box-shadow: none;
+  border-right: none;
+  background: var(--color-sidebar-background);
 }
 
-.pink-light .nav-pills .nav-link {
-  font-family: var(--font-family-sans-serif);
-  font-size: var(--font-size-base);
-  color: var(--color-sidebar-foreground);
-}
-
-.pink-light .navigator.nav-pills.nav:hover li {
+.pink-light .navigator.nav-pills.nav li:hover {
   color: var(--color-sidebar-inactive-foreground-hover);
   background: var(--color-sidebar-inactive-background-hover);
 }
@@ -223,12 +220,10 @@ body.pink-light {
   background: var(--color-sidebar-active-background);
 }
 
-.pink-light a.active .navigator.nav-pills.nav:hover li {
-  color: var(--color-sidebar-active-foreground-hover);
-}
-
-.pink-light .navigator.nav-pills.nav li.disabled {
+.pink-light .navigator.nav-pills.nav .nav-link.disabled {
   color: var(--color-sidebar-disabled-foreground);
+  background: var(--color-sidebar-background);
+  pointer-events: none;
 }
 
 /* Buttons */
@@ -237,7 +232,7 @@ body.pink-light {
 .pink-light .btn-default {
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
   background-image: none;
   text-shadow: none;
   box-shadow: none;
@@ -252,26 +247,24 @@ body.pink-light {
 
 .pink-light .btn-default:hover {
   background: var(--color-btn-default-background-hover);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .pink-light .btn-default:focus {
   background: var(--color-btn-default-background);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .pink-light .btn-primary {
-  background-image: none;
   text-shadow: none;
   box-shadow: none;
   background: var(--color-sidebar-foreground);
 }
 
 .pink-light .btn-secondary {
-  background-image: none;
   text-shadow: none;
   box-shadow: none;
-  background: var(--color-canvas-background);
+  background: var(--color-page-link-active-background);
 }
 
 .pink-light .btn-outline-default {
@@ -297,7 +290,7 @@ body.pink-light {
   width: 100%;
   text-align: left;
   background: none;
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 
@@ -325,7 +318,7 @@ body.pink-light {
 }
 
 .pink-light .table tbody tr:nth-of-type(2n) {
-    background: var(--color-table-row-hover);
+    background: var(--color-table-row-stripe);
     border: none;
 }
 
@@ -355,25 +348,23 @@ body.pink-light {
 
 .pink-light .table-hover tbody tr:hover {
   background: var(--color-table-row-hover);
-  color: unset;
 }
 
 .pink-light .artifact-search-table td:hover {
   background: var(--color-table-row-hover);
-  color: unset;
 }
 
 .pink-light table tr.row-selected,
 .pink-light table tr.row_selected td {
   background: var(--color-table-row-selected);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 /* Column search screen */
 
 .pink-light th.sortable input {
   background: var(--color-canvas-background);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
   border-color: var(--color-btn-border);
 }
 
@@ -421,7 +412,7 @@ body.pink-light {
 
 .pink-light .card-body {
   background: var(--color-canvas-background);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .pink-light .card-body dt,
@@ -437,7 +428,7 @@ body.pink-light {
 
 /* Tabs */
 .pink-light .tab-content {
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .pink-light .nav-tabs {
@@ -446,7 +437,7 @@ body.pink-light {
 
 .pink-light .nav-tabs > a {
   background: var(--color-tab);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
   border-top-color: var(--color-accent-50);
   border-right-color: var(--color-accent-50);
   border-bottom-color: var(--color-btn-default-background);
@@ -460,19 +451,19 @@ body.pink-light {
 
 .pink-light .nav-tabs > a.active {
   background: var(--color-tab-active);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
   border-top-color: var(--color-accent-50);
   border-right-color: var(--color-accent-50);
   border-bottom-color: transparent;
   border-left-color: var(--color-accent-50);
 }
 
-/* forms */
+/* Form controls */
 
 .pink-light .form-control,
 .pink-light .custom-file-input {
   background: var(--color-canvas-background);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
   border-color: var(--color-btn-default-border);
   font-size: var(--font-size-base);
 }
@@ -509,9 +500,9 @@ body.pink-light {
 
 /* Pagination */
 .pink-light .page-item .page-link {
-  background: var(--page-link-background);
+  background: var(--color-page-link-background);
   border-color: var(--color-btn-default-border);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .pink-light .page-item.disabled span {
@@ -520,8 +511,8 @@ body.pink-light {
 
 .pink-light .page-item input {
   background: var(--color-canvas-background);
-  color: var(--color-text-default);
-  border: 1px solid var(--color-form-background);
+  color: var(--color-foreground);
+  border: 1px solid var(--color-form-control-background);
 }
 
 .pink-light .page-item.active .page-link {
@@ -530,7 +521,7 @@ body.pink-light {
 }
 
 .pink-light .react-bootstrap-table-pagination-total {
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 /* Artifact viewer screen */
@@ -553,11 +544,11 @@ body.pink-light {
 }
 
 .pink-light .artifact-search-table a {
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .pink-light .report-viewer {
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .pink-light .artifact-search-table.selectable.container tbody tr:hover {
@@ -567,26 +558,26 @@ body.pink-light {
 .pink-light .artifact-search-table.selectable.container tr.row-selected,
 .pink-light .artifact-search-table.selectable.container tr.row_selected > td {
   background: var(--color-table-row-selected);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 /* modal dialogs */
 .pink-light .modal-content {
   background: var(--color-page-link-active-background);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 /* notebooks */
 .pink-light .cell-toolbar,
 .pink-light .notebook-input {
   background: var(--color-page-link-active-background);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
   border-width: 0;
 }
 
 .pink-light .notebook-input pre {
   background: var(--color-canvas-background);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
   border-color: #ffffff00;
 }
 
@@ -600,7 +591,7 @@ body.pink-light {
 
 /* react timelines */
 .pink-light .react-calendar-timeline .rct-sidebar {
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 /* file tree */
@@ -624,7 +615,7 @@ body.pink-light {
 }
 
 .pink-light .dropdown-item {
-  color: var(--color-text-default);
+  color: var(--color-foreground);
   background: var(--color-canvas-background);
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
@@ -642,7 +633,7 @@ body.pink-light {
 .pink-light .react-datepicker,
 .pink-light .react-datetime-picker {
   background: var(--color-canvas-background);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .pink-light .react-datetime-picker__inputGroup__input,
@@ -655,12 +646,12 @@ body.pink-light {
 }
 
 .pink-light .react-datepicker__day {
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .pink-light .react-datepicker__day[aria-disabled="false"] {
   background: var(--color-table-row-selected);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 /* Footer */
@@ -685,7 +676,7 @@ body.pink-light {
 /* ACE things */
 .pink-light .ace_tooltip {
   background: var(--color-canvas-background);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .pink-light .custom-tooltip {
@@ -703,14 +694,14 @@ body.pink-light {
 }
 
 .pink-light .monospace {
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .pink-light .labels,
 .pink-light .velo__control,
 .pink-light .velo__menu {
   background: var(--color-canvas-background);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .pink-light .velo__multi-value {
@@ -718,7 +709,7 @@ body.pink-light {
 }
 
 .pink-light .velo__input {
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 .pink-light .velo__option:hover,
@@ -728,7 +719,7 @@ body.pink-light {
 }
 
 .pink-light hr {
-  background: var(--color-text-default);
+  background: var(--color-foreground);
 }
 
 .pink-light .no-content {

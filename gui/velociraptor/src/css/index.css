@@ -28,7 +28,7 @@ code {
 #ace_settingsmenu select
 {
     background-color: var(--color-canvas-background);
-    color: var(--color-text-default);
+    color: var(--color-foreground);
 }
 
 /* Lineup the search bar's btn group so all buttons have the same height */
