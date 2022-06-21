@@ -51,6 +51,8 @@ let theme_template  =  ()=>{return {
             margin: 0,
             padding: 0,
             color: text_color,
+            marginLeft: '-20px',
+            marginTop: '-20px',
         },
         node: {
             base: {
