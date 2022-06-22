@@ -6,7 +6,7 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 import axios from 'axios';
 import {Treebeard, decorators} from 'react-treebeard';
-
+import UserConfig from '../core/user.js';
 import { SplitPathComponents, Join } from '../utils/paths.js';
 
 import api from '../core/api-service.js';
@@ -43,93 +43,112 @@ Header.defaultProps = {
     customStyles: {}
 };
 
-let theme = {
-  tree: {
-    base: {
-      listStyle: 'none',
-      backgroundColor: background_color,
-      margin: 0,
-      padding: 0,
-      color: text_color,
-      fontFamily: 'lucida grande ,tahoma,verdana,arial,sans-serif',
-      fontSize: '14px',
-        marginLeft: '-20px',
-        marginTop: '-20px',
-    },
-    node: {
-      base: {
-        position: 'relative'
-      },
-      link: {
-        cursor: 'pointer',
-        position: 'relative',
-        padding: '0px 5px',
-        display: 'block'
-      },
-      activeLink: {
-        background: active_background_color,
-      },
-      toggle: {
+let theme_template  =  ()=>{return {
+    tree: {
         base: {
-          position: 'relative',
-          display: 'none',
-          verticalAlign: 'top',
-          marginLeft: '-5px',
-          height: '24px',
-          width: '24px'
+            listStyle: 'none',
+            backgroundColor: background_color,
+            margin: 0,
+            padding: 0,
+            color: text_color,
+            marginLeft: '-20px',
+            marginTop: '-20px',
         },
-        wrapper: {
-          position: 'absolute',
-          top: '20%',
-          left: '50%',
-          margin: '-7px 0 0 -7px',
-          height: '9px'
-        },
-        height: 9,
-        width: 9,
-        arrow: {
-          fill: text_color,
-          strokeWidth: 0
+        node: {
+            base: {
+                position: 'relative'
+            },
+            link: {
+                cursor: 'pointer',
+                position: 'relative',
+                padding: '0px 5px',
+                display: 'block'
+            },
+            activeLink: {
+                background: active_background_color,
+            },
+            toggle: {
+                base: {
+                    position: 'relative',
+                    display: 'none',
+                    verticalAlign: 'top',
+                    marginLeft: '-5px',
+                    height: '24px',
+                    width: '24px'
+                },
+                wrapper: {
+                    position: 'absolute',
+                    top: '20%',
+                    left: '50%',
+                    margin: '-7px 0 0 -7px',
+                    height: '9px'
+                },
+                height: 9,
+                width: 9,
+                arrow: {
+                    fill: text_color,
+                    strokeWidth: 0
+                }
+            },
+            header: {
+                base: {
+                    display: 'inline-block',
+                    verticalAlign: 'top',
+                    color: "black"
+                },
+                connector: {
+                    width: '2px',
+                    height: '12px',
+                    borderLeft: 'solid 2px black',
+                    borderBottom: 'solid 2px black',
+                    position: 'absolute',
+                    top: '0px',
+                    left: '-21px'
+                },
+                title: {
+                    lineHeight: '24px',
+                    verticalAlign: 'middle'
+                }
+            },
+            subtree: {
+                listStyle: 'none',
+                paddingLeft: '19px'
+            },
+            loading: {
+                color: '#E2C089'
+            }
         }
-      },
-      header: {
-          base: {
-          display: 'inline-block',
-          verticalAlign: 'top',
-          color: text_color,
-        },
-        connector: {
-          width: '2px',
-          height: '12px',
-          borderLeft: 'solid 2px black',
-          borderBottom: 'solid 2px black',
-          position: 'absolute',
-          top: '0px',
-          left: '-21px'
-        },
-        title: {
-          lineHeight: '24px',
-          verticalAlign: 'middle'
-        }
-      },
-      subtree: {
-        listStyle: 'none',
-        paddingLeft: '19px'
-      },
-      loading: {
-        color: '#E2C089'
-      }
     }
-  }
-};
+}};
 
 class VeloFileTree extends Component {
+    static contextType = UserConfig;
     static propTypes = {
         client: PropTypes.object,
         vfs_path: PropTypes.array,
         version: PropTypes.string,
         updateVFSPath: PropTypes.func,
         updateCurrentNode: PropTypes.func,
+    }
+
+    getTheme = ()=> {
+        let result = theme_template();
+        let theme = this.context.traits && this.context.traits.theme;
+
+        switch (theme) {
+        case "github-dimmed-dark":
+        case "veloci-dark":
+        case "ncurses":
+        case "coolgray-dark":
+            result.tree.base.backgroundColor = '#030303';
+            result.tree.base.color = '#010101';
+            result.tree.node.activeLink.background = '#202020';
+            result.tree.node.header.base.color = '#020202';
+            return result;
+
+        default:
+            return result;
+        }
     }
 
     componentDidMount() {
@@ -272,7 +291,7 @@ class VeloFileTree extends Component {
 
             api.get("v1/VFSListDirectory/" + client_id, {
                 vfs_components: prev_components,
-            }, this.source.token).then(function(response) {
+            }, this.source.token).then(response=>{
                 if (response.cancel) return;
 
                 node.loading = false;
@@ -314,7 +333,7 @@ class VeloFileTree extends Component {
                 this.updateComponent(node, prev_components, next_components, completion_cb);
                 this.setState(this.state);
 
-            }.bind(this) , function(response) {
+            }, response=>{
                 node.loading = false;
                 completion_cb(node, false);
             });
@@ -363,7 +382,7 @@ class VeloFileTree extends Component {
             <div className="file-tree">
               <Treebeard
                 data={this.state}
-                style={theme}
+                style={this.getTheme()}
                 onToggle={this.onToggle}
                 decorators={{...decorators, Header}}
               />

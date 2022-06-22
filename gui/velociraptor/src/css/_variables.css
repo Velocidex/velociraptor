@@ -1,18 +1,19 @@
 :root {
     --sidebar-collapsed-width: 45px;
-    --color-sidebar-foreground: #8f8f8f;
-    --color-sidebar-active-background: #8f8f8f;
     --color-sidebar-inactive-foreground-hover: #000e7b;
-    --color-sidebar-disabled-foreground: #8f8f8f50;
-    --color-sidebar-background: #fff;
+    --color-sidebar-inactive-background-hover: var(--color-sidebar-background);
+    --color-sidebar-foreground: #8f8f8f;
+    --color-sidebar-disabled-foreground: lightgrey;
+    --color-sidebar-background: #f5f5f5;
+    --color-sidebar-active-foreground: #f0f0f0;
+    --color-sidebar-active-background: #8f8f8f;
 
     --font-json: roboto-mono, Menlo, Monaco, Consolas, "Courier New", monospace;
     --font-monospace: roboto-mono, "Courier New", Courier, monospace;
 
-    --color-sidebar-active-foreground-hover: #f0f0f0;
     --color-canvas-background: #ffffff;
-    --color-text-default: #000;
-    --color-text-default-inverted: #fff;
+    --color-foreground: #000;
+    --color-foreground-inverse: #fff;
     --color-pristine: #feffe0;
     --color-table-row-selected: #d9edf7;
     --color-table-row-modified: #471ecb;
@@ -21,7 +22,6 @@
 
     --color-tab-active-background: #f0f0f0;
     --color-tab-non-active-background: #e2e3e5;
-    --color-sidebar-background: #f5f5f5;
     --color-footer-background: #eaeaea;
     --color-proto-background: #f0f0f0;
     --color-proto-border: #ddd;
@@ -73,5 +73,5 @@
     --color-timeline-6: #008000;
     --color-timeline-7: #471ecb;
 
-    --vfs-files-timestomped: #bbdfff;
+    --color-vfs-files-timestomped: #bbdfff;
 }

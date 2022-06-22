@@ -300,7 +300,7 @@ func (self _ESECatalogPlugin) Call(
 		}
 
 		if arg.Accessor == "" {
-			arg.Accessor = "file"
+			arg.Accessor = "auto"
 		}
 
 		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)

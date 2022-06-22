@@ -27,23 +27,21 @@ img.velo-logo {
   margin: 5px;
 }
 
-/* sidebar navbar */
+/* Sidebar navbar */
 
 section.navigator a {
   text-decoration: none;
   color: var(--color-sidebar-foreground);
 }
 
-.navigator.nav-pills.nav:hover li {
+.navigator.nav-pills.nav li:hover {
   color: var(--color-sidebar-inactive-foreground-hover);
+  background: var(--color-sidebar-inactive-background-hover);
 }
 
-a.active .navigator.nav-pills.nav:hover li {
-  color: var(--color-sidebar-active-foreground-hover);
-}
-
-.navigator.nav-pills.nav li.disabled {
-  color: var(--color-sidebar-disabled-foreground);
+.navigator.nav-pills.nav .nav-link.disabled {
+    opacity: 30%;
+    pointer-events: none;
 }
 
 .navigator.nav-pills.nav {
@@ -53,7 +51,7 @@ a.active .navigator.nav-pills.nav:hover li {
 
 a.active .nav.nav-pills.navigator .nav-link {
   background-color: var(--color-sidebar-active-background);
-  color: var(--color-sidebar-active-foreground-hover);
+  color: var(--color-sidebar-active-foreground);
 }
 
 .nav-pills .nav-link {

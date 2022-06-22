@@ -43,16 +43,13 @@
   --color-foreground-inverse: #32261a;
   --color-foreground-dimmed: #909dab; /* --color-scale-gray-2 */
 
-  --color-text-default: var(--color-foreground);
-
   --color-sidebar-inactive-foreground-hover: var(--color-sidebar-foreground);
-  --color-sidebar-inactive-background-hover: var(var(--color-btn-border));
-  --color-sidebar-foreground: var(--color-foreground-dimmed);
+  --color-sidebar-inactive-background-hover: var(--color-btn-border);
+  --color-sidebar-foreground: var(--color-foreground);
+  --color-sidebar-disabled-foreground: var(--color-foreground-dimmed);
   --color-sidebar-background: var(--color-canvas-background);
   --color-sidebar-active-foreground: var(--color-foreground);
-  --color-sidebar-active-foreground-hover: var(--color-sidebar-active-foreground);
   --color-sidebar-active-background: var(--color-table-row-selected);
-  /* --color-sidebar-disabled-foreground: grey; */
 
   --color-client-link: #57ab5a;
   --color-client-link-hover: var(--color-foreground-dimmed);
@@ -60,6 +57,7 @@
   --color-no-content: var(--color-foreground-dimmed);
   --color-btn-border: #373e47; /* --color-border-muted  --color-scale-gray-7 */
   --color-btn-default-border: #636e7b; /* --color-btn-border */
+  --color-btn-default-border-hover: #A4B7CC;
   --color-btn-default-background: #373e47; /* --color-btn-bg --color-scale-gray-7 */
   --color-btn-default-background-hover: #545d68; /* --color-scale-gray-5 */
   --color-btn-outline-link: #373e47; /* --color-btn-bg --color-scale-gray-7 */
@@ -85,7 +83,6 @@
   --color-table-heading-background: var(--color-card-heading-background);
   --color-client-link-hover: var(--color-accent-100);
 
-  --color-text-default: var(--color-foreground);
   --color-timeline-header: #cdcdcd20;
   --color-timeline-table-shown: #dd4b3920;
   --color-timeline-1: #dff0d820;
@@ -96,8 +93,7 @@
   --color-timeline-6: #008000;
   --color-timeline-7: #471ecb;
 
-  --vfs-files-timestomped: #ed5d40;
-
+  --color-vfs-files-timestomped: #ed5d40;
   --color-calendar-background: #121212;
   --color-level-error: #aa0000;
 }
@@ -194,18 +190,18 @@ body.github-dimmed-dark {
   background: var(--color-accent-50);
 }
 
-/* sidebar navbar */
+/* Sidebar navbar */
 
 .github-dimmed-dark div#navigator {
-  font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
+  font-family: var(--font-family-sans-serif);
   color: var(--color-sidebar-foreground);
-  background: var(--color-canvas-background);
-  border-width: 0;
   box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.5);
+  border-width: 0;
+  background: var(--color-canvas-background);
 }
 
-.github-dimmed-dark .navigator.nav-pills.nav:hover li {
+.github-dimmed-dark .navigator.nav-pills.nav li:hover {
   color: var(--color-sidebar-inactive-foreground-hover);
   background: var(--color-sidebar-inactive-background-hover);
 }
@@ -215,12 +211,10 @@ body.github-dimmed-dark {
   background: var(--color-sidebar-active-background);
 }
 
-.github-dimmed-dark a.active .navigator.nav-pills.nav:hover li {
-  color: var(--color-sidebar-active-foreground-hover);
-}
-
-.github-dimmed-dark .navigator.nav-pills.nav li.disabled {
+.github-dimmed-dark .navigator.nav-pills.nav .nav-link.disabled {
   color: var(--color-sidebar-disabled-foreground);
+  background: var(--color-sidebar-background);
+  pointer-events: none;
 }
 
 /* Buttons */
@@ -240,6 +234,8 @@ body.github-dimmed-dark {
   box-shadow: none;
 }
 
+.github-dimmed-dark .input-group-text:hover,
+.github-dimmed-dark .btn:hover,
 .github-dimmed-dark .btn-default:hover {
   background: var(--color-btn-default-background-hover);
   box-shadow: none;
@@ -425,7 +421,7 @@ body.github-dimmed-dark {
 .github-dimmed-dark table tr.row-selected,
 .github-dimmed-dark table tr.row_selected td {
   background: var(--color-table-row-selected);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 /* Column search screen */
@@ -510,7 +506,7 @@ body.github-dimmed-dark {
   border-top-color: var(--color-btn-border);
   border-right-color: var(--color-btn-border);
   border-left-color: var(--color-btn-border);
-  border-bottom: 2px transparent;
+  border-bottom: 2px solid var(--color-canvas-background);
   font-weight: 600;
 }
 
@@ -532,20 +528,30 @@ body.github-dimmed-dark {
   border-bottom: 2px solid var(--color-tab-active-border);
 }
 
-/* Forms */
-.github-dimmed-dark .form-control {
+/* Form controls */
+.github-dimmed-dark .form-control,
+.github-dimmed-dark .velo__control,
+.github-dimmed-dark .velo__menu {
   background: var(--color-btn-default-background);
-  color: var(--color-foreground);
+  color: var(--color-foreground) !important;
   border-color: var(--color-btn-default-border);
   font-size: var(--font-size-base);
-}
-
-.github-dimmed-dark .form-control:focus {
   box-shadow: none;
 }
 
-.github-dimmed-dark .input-group-prepend .input-group-text {
-  background: var(--color-btn-default-background);
+.github-dimmed-dark .form-control:focus,
+.github-dimmed-dark .velo__control:focus{
+  box-shadow: none;
+}
+
+.github-dimmed-dark .form-control:hover,
+.github-dimmed-dark .velo__control:hover {
+  border-color: var(--color-btn-default-border-hover);
+  box-shadow: none;
+}
+
+.github-dimmed-dark .input-group-text {
+  background: var(--color-btn-default-background-hover);
   box-shadow: none;
   color: var(--color-foreground);
   text-shadow: none;
@@ -622,7 +628,7 @@ body.github-dimmed-dark {
 .github-dimmed-dark .artifact-search-table.selectable.container tr.row-selected,
 .github-dimmed-dark .artifact-search-table.selectable.container tr.row_selected > td {
   background: var(--color-table-row-selected);
-  color: var(--color-text-default);
+  color: var(--color-foreground);
 }
 
 /* Modal dialogs */

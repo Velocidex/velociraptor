@@ -122,10 +122,9 @@ func (self *ApiServer) GetKeywordCompletions(
 			continue
 		}
 		result.Items = append(result.Items, &api_proto.Completion{
-			Name:        "Artifact." + name,
-			Type:        "Artifact",
-			Description: artifact.Description,
-			Args:        getArtifactParamDescriptors(artifact),
+			Name: "Artifact." + name,
+			Type: "Artifact",
+			Args: getArtifactParamDescriptors(artifact),
 		})
 	}
 
