@@ -58,11 +58,13 @@ sources:
             split(string=Name,sep=':')[1] as AdsName,
             Data.mft as Inode,
             Size,
-            regex_replace(source=OSPath,re=':'+ split(string=Name,sep=':')[1] + '$',replace='') as HostObject,
+            OSPath.Dirname + split(string=Name,sep=':')[0] as HostObject,
             dict(Mtime=Mtime,Atime=Atime,Ctime=Ctime,Btime=Btime) as HostTimestampsSI
-        FROM glob(globs=TargetFolder + "/**/*:" + AdsNameGlob, accessor="ntfs",nosymlink='Y')
+        FROM glob(globs=TargetFolder + "/**/*:" + AdsNameGlob, 
+                  accessor="ntfs",
+                  nosymlink='Y')
         WHERE 
-            NOT OSPath =~ '\\$Secure:\\$SDS|\\$Extend|\\$BadClus|\\$Bitmap|\\$UpCase'
+            NOT OSPath.Basename =~ '\\$Secure:\\$SDS|\\$Repair|\\$BadClus|\\$Bitmap|\\$UpCase'
             AND if(condition=MinSize,
                     then= Size > MinSize,
                     else= True )
