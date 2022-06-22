@@ -2,6 +2,31 @@ import axios from 'axios';
 
 import _ from 'lodash';
 
+import axiosRetry from 'axios-retry';
+import isNetworkOrIdempotentRequestError from 'axios-retry';
+
+// https://github.com/softonic/axios-retry/issues/87
+function retryDelay(retryNumber = 0) {
+    const delay = Math.pow(2, retryNumber) * 500;
+    const randomSum = delay * 0.2 * Math.random(); // 0-20% of the delay
+    console.log("retrying API call in " + (delay + randomSum));
+    return delay + randomSum;
+}
+
+function simpleNetworkErrorCheck(error) {
+  if (error.message === 'Network Error') {
+    return true;
+  } else {
+    return isNetworkOrIdempotentRequestError(error);
+  }
+}
+
+axiosRetry(axios, {
+  retries: 3,
+  retryDelay,
+
+  retryCondition: simpleNetworkErrorCheck,
+});
 
 let base_path = window.base_path || "";
 
