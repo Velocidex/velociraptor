@@ -7,9 +7,9 @@ import isNetworkOrIdempotentRequestError from 'axios-retry';
 
 // https://github.com/softonic/axios-retry/issues/87
 function retryDelay(retryNumber = 0) {
-    const delay = Math.pow(2, retryNumber) * 1000;
+    const delay = Math.pow(2, retryNumber) * 500;
     const randomSum = delay * 0.2 * Math.random(); // 0-20% of the delay
-    console.log("retryDelay " + (delay + randomSum));
+    console.log("retrying API call in " + (delay + randomSum));
     return delay + randomSum;
 }
 
@@ -22,7 +22,7 @@ function simpleNetworkErrorCheck(error) {
 }
 
 axiosRetry(axios, {
-  retries: 2,
+  retries: 3,
   retryDelay,
 
   retryCondition: simpleNetworkErrorCheck,
