@@ -40,7 +40,8 @@ section.navigator a {
 }
 
 .navigator.nav-pills.nav .nav-link.disabled {
-  pointer-events: none;
+    opacity: 30%;
+    pointer-events: none;
 }
 
 .navigator.nav-pills.nav {

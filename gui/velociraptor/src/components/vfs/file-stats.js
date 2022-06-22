@@ -138,16 +138,24 @@ class VeloFileStats extends Component {
                       <dd className="col-8"> {selectedRow.Mode} </dd>
 
                       <dt className="col-4">{T("Mtime")}</dt>
-                      <dd className="col-8"> {selectedRow.mtime} </dd>
+                      <dd className="col-8">
+                        <VeloTimestamp usec={selectedRow.mtime}/>
+                      </dd>
 
                       <dt className="col-4">{T("Atime")}</dt>
-                      <dd className="col-8"> {selectedRow.atime} </dd>
+                      <dd className="col-8">
+                        <VeloTimestamp usec={selectedRow.atime}/>
+                      </dd>
 
                       <dt className="col-4">{T("Ctime")}</dt>
-                      <dd className="col-8"> {selectedRow.ctime} </dd>
+                      <dd className="col-8">
+                        <VeloTimestamp usec={selectedRow.ctime}/>
+                      </dd>
 
                       <dt className="col-4">{T("Btime")}</dt>
-                      <dd className="col-8"> {selectedRow.btime} </dd>
+                      <dd className="col-8">
+                        <VeloTimestamp usec={selectedRow.btime}/>
+                      </dd>
 
                       { selectedRow.Download && selectedRow.Download.mtime &&
                         <>
