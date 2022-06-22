@@ -30,7 +30,7 @@ func renderRootVFS(client_id string) *api_proto.VFSListResponse {
 	return &api_proto.VFSListResponse{
 		Response: `
    [
-    {"Mode": "drwxrwxrwx", "Name": "file"},
+    {"Mode": "drwxrwxrwx", "Name": "auto"},
     {"Mode": "drwxrwxrwx", "Name": "ntfs"},
     {"Mode": "drwxrwxrwx", "Name": "registry"}
    ]`,
