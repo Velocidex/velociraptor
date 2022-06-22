@@ -7,11 +7,11 @@ description: |
   same time (with the same privileges).
 
   There is an additional key for x86 executables HKEY_LOCAL_MACHINE\
-  SOFTWARE\wow6432node\Microsoft\Windows NT\CurrentVersion\Image File 
-  Execution Options\* however this is kept inlign with the x64 key and 
+  SOFTWARE\wow6432node\Microsoft\Windows NT\CurrentVersion\Image File
+  Execution Options\* however this is kept inlign with the x64 key and
   therefore does not need to be processed.
 
-  Limitations: This queries the live registry and therefore does not 
+  Limitations: This queries the live registry and therefore does not
   parse data in Windows.old or Regback folders, or VSS.
 
 reference:
@@ -23,10 +23,11 @@ parameters:
 
 sources:
   - query: |
+        LET X = scope()
         SELECT Key.ModTime as KeyLastWriteTimestamp,
                Key.FullPath as _Key,
                Key.Name AS Program,
-               Debugger 
+               X.Debugger AS Debugger
         FROM read_reg_key(globs=imageFileExecutionOptions)
         WHERE Debugger
         Order By KeyLastWriteTimestamp

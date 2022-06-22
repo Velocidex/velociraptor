@@ -28,17 +28,18 @@ precondition: |
 sources:
   - name: InventoryApplicationFile
     query: |
+        LET X = scope()
         SELECT FileId,
                Key.OSPath.Path as Key,
                Key.OSPath.DelegatePath AS Hive,
                Key.Mtime as LastModified,
-               LowerCaseLongPath as Binary,
-               Name,
-               Size,
-               ProductName,
-               Publisher,
-               Version,
-               BinFileVersion
+               X.LowerCaseLongPath as Binary,
+               X.Name AS Name,
+               X.Size AS Size,
+               X.ProductName AS ProductName,
+               X.Publisher AS Publisher,
+               X.Version AS Version,
+               X.BinFileVersion AS BinFileVersion
         FROM foreach(
           row={
             SELECT FullPath from glob(globs=expand(path=amCacheGlob))
