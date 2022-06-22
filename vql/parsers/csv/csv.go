@@ -246,7 +246,7 @@ func (self WriteCSVPlugin) Call(
 		var writer *csv.CSVWriter
 
 		switch arg.Accessor {
-		case "", "file":
+		case "", "auto", "file":
 			err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 			if err != nil {
 				scope.Log("write_csv: %s", err)

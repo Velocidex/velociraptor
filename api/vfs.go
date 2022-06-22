@@ -85,7 +85,7 @@ func GetClientPath(components []string) (client_path string, accessor string) {
 	}
 
 	switch components[0] {
-	case "file", "registry":
+	case "auto", "file", "registry":
 		return utils.JoinComponents(components[1:], "/"), components[0]
 
 	case "ntfs":
