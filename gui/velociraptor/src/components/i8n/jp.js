@@ -555,11 +555,6 @@ const Japanese = {
     <>{ size }単位で{ from }から{ to }まで表示している</>,
 
     "Select a language":"言語を選択する",
-    "English":"Inglés",
-    "Deutsch":"Alemán",
-    "Spanish": "Español",
-    "Portuguese": "Portugués",
-    "French": "Francés",
     "Japanese": "日本語",
 
     "Type":"タイプ",
