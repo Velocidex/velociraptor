@@ -3851,7 +3851,7 @@
       process.
     repeated: true
 - name: process_tracker_all
-  description: Get all prcesses stored in the tracker.
+  description: Get all processes stored in the tracker.
   type: Function
 - name: process_tracker_callchain
   description: Get a call chain from the global process tracker.
@@ -5636,4 +5636,3 @@
     type: string
     description: If set use this key to cache the  yara rules.
   category: plugin
-

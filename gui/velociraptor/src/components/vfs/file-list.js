@@ -187,14 +187,14 @@ class VeloFileList extends Component {
 
         // path is a list of components starting with the accessor
         let accessor = node.path[0];
-        let search_path = full_path;
         api.post("v1/CollectArtifact", {
             urgent: true,
             client_id: this.props.client.client_id,
             artifacts: ["System.VFS.DownloadFile"],
             specs: [{artifact: "System.VFS.DownloadFile",
                      parameters: {"env": [
-                         { "key": "Path", "value": search_path},
+                         { "key": "Components",
+                           "value": JSON.stringify(node.path.slice(1))},
                          { "key": "Accessor", "value": accessor},
                          { "key": "Recursively", "value": "Y"}]}}],
             max_upload_bytes: 1048576000,

@@ -21,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/services/notebook"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
+	"www.velocidex.com/golang/velociraptor/services/orgs"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/services/sanity"
 	"www.velocidex.com/golang/velociraptor/services/server_artifacts"
@@ -77,6 +78,11 @@ func StartupEssentialServices(sm *services.Service) error {
 		if err != nil {
 			return err
 		}
+	}
+
+	err = sm.Start(orgs.StartOrgManager)
+	if err != nil {
+		return err
 	}
 
 	j, _ := services.GetJournal()

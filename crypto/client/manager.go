@@ -322,6 +322,8 @@ func (self *CryptoManager) extractMessageInfo(
 		return nil, errors.WithStack(err)
 	}
 
+	// TODO - use org manager to get orgid here
+
 	// Check the nonce is correct.
 	if self.config.Client == nil ||
 		packed_message_list.Nonce != self.config.Client.Nonce {

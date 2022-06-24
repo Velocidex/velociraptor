@@ -58,7 +58,7 @@ func (self getAll) Info(scope types.Scope,
 	type_map *types.TypeMap) *types.FunctionInfo {
 	return &types.FunctionInfo{
 		Name: "process_tracker_all",
-		Doc:  "Get all prcesses stored in the tracker.",
+		Doc:  "Get all processes stored in the tracker.",
 	}
 }
 
