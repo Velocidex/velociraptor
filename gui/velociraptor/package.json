@@ -47,7 +47,7 @@
         "react-dom": "^16.14.0",
         "react-hotkeys": "^2.0.0",
         "react-json-view": "^1.19.1",
-        "react-overlays": "5.1.2",
+        "react-overlays": "5.2.0",
         "react-router-dom": "^5.3.3",
         "react-scripts": "^5.0.1",
         "react-select": "^3.2.0",
