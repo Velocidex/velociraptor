@@ -30,6 +30,7 @@ const (
 	FLOW_PREFIX             = "F."
 	FOREMAN_WELL_KNOWN_FLOW = "E.Foreman"
 	HUNT_PREFIX             = "H."
+	ORG_PREFIX              = "O."
 
 	// Well known flows - Request ID:
 	LOG_SINK uint64 = 980

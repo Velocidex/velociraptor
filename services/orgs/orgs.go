@@ -3,14 +3,21 @@ package orgs
 import (
 	"context"
 	"sync"
+	"time"
 
+	"google.golang.org/protobuf/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
 type OrgManager struct {
-	mu         sync.Mutex
+	mu sync.Mutex
+
+	// The base global config object
 	config_obj *config_proto.Config
 
 	// Each org has a separate config object.
@@ -30,6 +37,9 @@ func (self *OrgManager) GetOrgConfig(org_id string) (*config_proto.Config, error
 }
 
 func (self *OrgManager) OrgIdByNonce(nonce string) (string, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	result, pres := self.org_id_by_nonce[nonce]
 	if !pres {
 		return "", services.NotFoundError
@@ -37,8 +47,85 @@ func (self *OrgManager) OrgIdByNonce(nonce string) (string, error) {
 	return result, nil
 }
 
-func (self *OrgManager) CreateNewOrg() (string, error) {
-	return "", services.NotFoundError
+func (self *OrgManager) CreateNewOrg(name string) (
+	*api_proto.OrgRecord, error) {
+
+	org_record := &api_proto.OrgRecord{
+		Name:  name,
+		OrgId: NewOrgId(),
+		Nonce: NewNonce(),
+	}
+	org_path_manager := paths.NewOrgPathManager(
+		org_record.OrgId)
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.org_id_by_nonce[org_record.Nonce] = org_record.OrgId
+	self.org_configs[org_record.OrgId] = self.makeNewConfigObj(org_record)
+
+	err = db.SetSubject(self.config_obj,
+		org_path_manager.Path(), org_record)
+	return org_record, err
+}
+
+func (self *OrgManager) makeNewConfigObj(
+	record *api_proto.OrgRecord) *config_proto.Config {
+	result := proto.Clone(self.config_obj).(*config_proto.Config)
+	if result.Client != nil {
+		result.Client.OrgId = record.OrgId
+		result.Client.Nonce = record.Nonce
+	}
+
+	if result.Datastore != nil {
+		if result.Datastore.Location != "" {
+			result.Datastore.Location += "/orgs/" + record.OrgId
+		}
+		if result.Datastore.FilestoreDirectory != "" {
+			result.Datastore.FilestoreDirectory += "/orgs/" + record.OrgId
+		}
+	}
+
+	return result
+}
+
+func (self *OrgManager) Scan() error {
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return err
+	}
+
+	children, err := db.ListChildren(
+		self.config_obj, paths.ORGS_ROOT)
+	if err != nil {
+		return err
+	}
+
+	for _, org_path := range children {
+		org_id := org_path.Base()
+		org_path_manager := paths.NewOrgPathManager(org_id)
+		org_record := &api_proto.OrgRecord{}
+		err := db.GetSubject(self.config_obj,
+			org_path_manager.Path(), org_record)
+		if err != nil {
+			continue
+		}
+
+		self.mu.Lock()
+		org_config, pres := self.org_configs[org_id]
+		if !pres {
+			org_config = self.makeNewConfigObj(org_record)
+			self.org_configs[org_id] = org_config
+		}
+		self.org_id_by_nonce[org_record.Nonce] = org_record.OrgId
+		self.mu.Unlock()
+	}
+
+	return nil
 }
 
 func (self *OrgManager) Start(
@@ -52,6 +139,17 @@ func (self *OrgManager) Start(
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			case <-time.After(10 * time.Second):
+				self.Scan()
+			}
+		}
+
 	}()
 
 	return nil

@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
@@ -34,5 +35,5 @@ func RegisterOrgManager(m OrgManager) {
 type OrgManager interface {
 	GetOrgConfig(org_id string) (*config_proto.Config, error)
 	OrgIdByNonce(nonce string) (string, error)
-	CreateNewOrg() (string, error)
+	CreateNewOrg(name string) (*api_proto.OrgRecord, error)
 }
