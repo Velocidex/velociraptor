@@ -188,7 +188,7 @@ const Japanese = {
     </>,
     "New Favorite name": "新規お気に入りの名前",
     "Describe this favorite": "お気に入りを設定する",
-    "New Collection": "新規コレクション",
+    "New Collection": "収集する",
     "Add to hunt": "ハントに追加する",
     "Delete Artifact Collection": "アーティファクトコレクションを削除する",
     "Cancel Artifact Collection": "アーティファクトコレクションをキャンセルする",
@@ -227,10 +227,10 @@ const Japanese = {
     "Specify Resources":"リソースを指定する",
     "Review":"レビュー",
     "Launch":"起動",
-    "New Collection: Configure Parameters":"新規: パラメータを設定する",
+    "New Collection: Configure Parameters":"新規コレクション: パラメータを設定する",
     "New Collection: Specify Resources":"新規コレクション: リソースを指定する",
     "New Collection: Review request":"新規コレクション: レビューをリクエストする",
-    "New Collection: Launch collection":"新規コレクション: コレクションを起動する",
+    "New Collection: Launch collection":"新規コレクション: 収集する",
 
     "CPU Limit Percent":"CPUリミット率",
     "IOps/Sec":"IOps/Sec",
@@ -241,7 +241,7 @@ const Japanese = {
     "Collection did not upload files":"コレクションがファイルをアップロードしていない",
 
     "Create Offline collector: Select artifacts to collect":"オフライン: 収集するアーティファクトを選択する",
-    "Configure Collection":"収集の設定",
+    "Configure Collection":"コレクションの設定",
     "Create Offline Collector: Configure artifact parameters":"オフラインコレクタ作成: アーティファクトのパラメータを設定する",
     "Create Offline Collector: Review request":"オフラインコレクタ作成: リクエストをレビューする",
     "Create Offline Collector: Create collector":"オフラインコレクタ作成: コレクタを作成する",
@@ -250,7 +250,7 @@ const Japanese = {
     "Password":"パスワード",
     "Report Template":"レポートテンプレート",
     "No Report":"レポートなし",
-    "Collection Type":"収集タイプ",
+    "Collection Type":"コレクションタイプ",
     "Zip Archive":"Zipアーカイブ",
     "Google Cloud Bucket":"Google Cloudバケット",
     "AWS Bucket":"AWSバケット",
@@ -324,7 +324,7 @@ const Japanese = {
     "RecursiveVFSMessage": path=><>
        <b>{path}</b>にあるすべてのファイルを再帰的に取得しようとしています。
        <br/><br/>
-       これにより、端末から大量のデータが転送される可能性があります。アップロードの上限はデフォルトで1gbですが、Collected Artifactsの画面で変更することができます。
+       これにより、端末から大量のデータが転送される可能性があります。アップロードの上限はデフォルトで1gbですが、収集されたアーティファクトの画面で変更することができます。
     </>,
 
     "Textview":"Textビュー",
@@ -366,50 +366,38 @@ const Japanese = {
     </>,
     "ServedFromURL": (base_path, url)=>
     <>
-    Los clientes obtienen la herramienta directamente de
-    <a href={base_path + url}>{url}</a> si
-    necesario. Tenga en cuenta que si el hash no coincide con el
-    hash esperado, los clientes rechazarán el archivo.
+      クライアントは必要に応じて、<a href={base_path + url}>{url}</a> から直接ツールを取得します。
+      もしハッシュが期待されるハッシュと一致しない場合、クライアントはそのファイルを拒否することに注意してください。
     </>,
     "ServedFromGithub": (github_project, github_asset_regex)=>
     <>
-    La URL de la herramienta es actualizada por
-    GitHub como la última versión del proyecto
-    <b>{github_project}</b>  que se ajuste
-    <b>{github_asset_regex}</b>
+      ツールのURLは、<b>{github_asset_regex}</b>にマッチするプロジェクト<b>{github_project}</b>の最新リリースとしてGitHubからリフレッシュされます。
     </>,
     "PlaceHolder":
     <>
-    El hash de la herramienta es actualmente desconocido. La herramienta por primera vez
-    es requerido, Velociraptor lo descargará desde allí
-    url ascendente y calcular su hash.
+      ツールのハッシュは現在不明です。
+      初めてツールが必要になったとき、Velociraptorはその上流のURLからツールをダウンロードし、そのハッシュを計算します。
     </>,
     "ToolHash":
     <>
-    Se calculó el hash de la herramienta. Si los clientes necesitan usar
-    Usan esta herramienta para asegurarse de que este hash coincida con lo que están haciendo.
-    Descargar.
+      ツールのハッシュが計算されました。
+      クライアントがこのツールを使用する必要がある場合、このハッシュがダウンロードするものと一致することを確認します。
     </>,
     "AdminOverride":
     <>
-    La herramienta fue cargada manualmente por un
-    admin - no se actualiza automáticamente en el
-    próxima actualización del servidor Velociraptor.
+      ツールは管理者が手動でアップロードしたもので、次回のVelociraptorサーバの更新時には自動的にアップグレードされません。
     </>,
     "ToolError":
     <>
-    Se desconoce el hash de la herramienta y no una URL
-    se define. Será imposible utilizar esta herramienta en una
-    Artefacto porque Velociraptor no puede disiparlo. Tú
-    puede cargar un archivo manualmente.
+      ツールのハッシュは不明で、URLも定義されていません。
+      Velociraptorが解決できないため、このツールをアーティファクトで使用することは不可能になります。
+      手動でファイルをアップロードすることはできます。
     </>,
     "OverrideToolDesc":
     <>
-    Como administrador, puede cargar manualmente un archivo
-    binary se puede utilizar como esta herramienta. Esto sobrescribe el
-    configuración de URL ascendente y haga que su herramienta esté disponible para todos
-    Artefactos que lo necesitan. Alternativamente, establezca una URL para clientes
-    para conseguir herramientas.
+      管理者として、そのツールとして使用されるバイナリを手動でアップロードすることができます。
+      これは、上流のURL設定をオーバーライドし、それを必要とするすべてのアーティファクトにあなたのツールを提供します。
+      別の方法として、クライアントがツールを取得するための URL を設定します。
     </>,
 
     "Include Labels":"ラベルを含む",
@@ -508,20 +496,20 @@ const Japanese = {
     "All known Clients": "既存のクライアント",
     "X per second": x=><>{x}毎秒</>,
     "HumanizeDuration": difference=>{
-        if (difference<0) {
-            return <>
-                     En {humanizeDuration(difference, {
-                         round: true,
-                         language: "jp",
-                     })}
-                   </>;
-        }
-        return <>
-                 Antes de {humanizeDuration(difference, {
-                     round: true,
-                     language: "jp",
-                 })}
-               </>;
+      if (difference<0) {
+          return <>
+                   In {humanizeDuration(difference, {
+                       round: true,
+                       language: "jp",
+                   })}
+                 </>;
+      }
+      return <>
+               {humanizeDuration(difference, {
+                   round: true,
+                   language: "jp",
+               })} 前
+             </>;
     },
     "Transform table": "トランスフォームテーブル",
     "Sort Column": "カラムのソート",
@@ -530,7 +518,7 @@ const Japanese = {
     "Select label to edit its event monitoring table": "ラベルを選択して、そのイベント監視テーブルを編集する",
     "EventMonitoringCard":
     <>
-    イベントモニタリングは、特定のラベルグループを対象とします。
+    イベント監視は、特定のラベルグループを対象とします。
     上のラベルグループを選択すると、そのグループを対象とした特定のイベントアーチファクトを設定することができます。
     </>,
     "Event Monitoring: Configure Label groups": "イベント監視: ラベルグループの設定",
@@ -556,7 +544,7 @@ const Japanese = {
     "Modified Time":"変更時間",
     "Time": "時間",
     "No events": "イベントなし",
-    "_ts": "サービス時間",
+    "_ts": "サーバ時間",
 
     "Timestamp":"タイムスタンプ",
     "started":"開始された",
@@ -564,7 +552,7 @@ const Japanese = {
     "file_size":"ファイルサイズ",
     "uploaded_size":"アップロードサイズ",
     "TablePagination": (from, to, size)=>
-    <>Mostrar línea { from } a { to } de { size }</>,
+    <>{ size }単位で{ from }から{ to }まで表示している</>,
 
     "Select a language":"言語を選択する",
     "English":"Inglés",
@@ -586,7 +574,7 @@ const Japanese = {
     "Served from GitHub":"GitHubから提供",
     "Refresh Github":"GitHubをリフレッシュする",
     "Github Project":"GitHubプロジェクト",
-    "Github Asset Regex":"GitHubアセットの正規表現",
+    "Github Asset Regex":"GitHubアセット正規表現",
     "Admin Override":"管理者のオーバーライド",
     "Serve from upstream":"上流からの提供",
 
