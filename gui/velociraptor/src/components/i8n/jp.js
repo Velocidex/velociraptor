@@ -556,6 +556,11 @@ const Japanese = {
 
     "Select a language":"言語を選択する",
     "Japanese": "日本語",
+    "English":"英語",
+    "Deutsch":"ドイツ語",
+    "Spanish": "スペイン語",
+    "Portuguese": "ポルトガル語",
+    "French": "フランス語",
 
     "Type":"タイプ",
     "Export notebooks":"ノートブックのエクスポート",
