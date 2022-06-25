@@ -579,6 +579,7 @@ const Spanish = {
     "Spanish": "Español",
     "Portuguese": "Portugués",
     "French": "Francés",
+    "Japanese": "Japonés",
 
     "Type":"Tipo",
     "Export notebooks":"Exportar bloc de notas",
