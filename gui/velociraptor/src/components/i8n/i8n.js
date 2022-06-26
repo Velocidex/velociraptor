@@ -1,10 +1,12 @@
 import _ from 'lodash';
 
-import English from './en.js';
 import Deutsch from './de.js';
-import Spanish from './es.js';
-import Portuguese from './por.js';
+import English from './en.js';
 import French from './fr.js';
+import Japanese from './jp.js';
+import Portuguese from './por.js';
+import Spanish from './es.js';
+
 
 const debug = false;
 
@@ -25,6 +27,9 @@ function dict(item) {
 
     case "fr":
         return French[item];
+
+    case "jp":
+        return Japanese[item];
 
     default:
         return English[item];
