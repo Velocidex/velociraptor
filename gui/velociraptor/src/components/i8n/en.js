@@ -162,6 +162,7 @@ const English = {
       Select a label group above to configure specific
       event artifacts targetting that group.
     </>,
+    "Deutsch": "German",
     "_ts": "Server Time",
     "TablePagination": (from, to, size)=>
     <>Showing { from } to { to } of { size }</>,
