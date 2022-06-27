@@ -58,7 +58,7 @@ func doRebuildIndex() error {
 		fmt.Printf("Done in %v\n", time.Now().Sub(now))
 	}()
 
-	new_indexer := indexing.NewIndexer()
+	new_indexer := indexing.NewIndexer(config_obj)
 	err = new_indexer.LoadIndexFromDatastore(sm.Ctx, config_obj)
 	if err != nil {
 		return fmt.Errorf("Building index: %w", err)

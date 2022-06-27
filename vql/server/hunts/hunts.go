@@ -209,7 +209,7 @@ func (self HuntResultsPlugin) Call(
 			arg.Artifact += "/" + arg.Source
 		}
 
-		indexer, err := services.GetIndexer()
+		indexer, err := services.GetIndexer(config_obj)
 		if err != nil {
 			return
 		}

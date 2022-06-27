@@ -12,6 +12,11 @@ func ClientIdFromConfigObj(source string,
 		org_id := config_obj.OrgId
 		return source + "-" + org_id
 	}
+
+	if strings.Contains(source, "-") {
+		panic(1)
+	}
+
 	return source
 }
 

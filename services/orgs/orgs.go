@@ -114,7 +114,14 @@ func (self *OrgManager) CreateNewOrg(name string) (
 
 func (self *OrgManager) makeNewConfigObj(
 	record *api_proto.OrgRecord) *config_proto.Config {
+
 	result := proto.Clone(self.config_obj).(*config_proto.Config)
+
+	// The Root org is untouched.
+	if record.OrgId == "" {
+		return result
+	}
+
 	if result.Client != nil {
 		result.OrgId = record.OrgId
 		result.OrgName = record.Name

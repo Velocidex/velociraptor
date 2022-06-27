@@ -307,7 +307,7 @@ func (self *ApiServer) EstimateHunt(
 		return nil, err
 	}
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(self.config)
 	if err != nil {
 		return nil, err
 	}

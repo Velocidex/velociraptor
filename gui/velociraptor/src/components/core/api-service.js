@@ -62,6 +62,10 @@ const get = function(url, params, cancel_token) {
         method: 'get',
         url: api_handlers + url,
         params: params,
+        headers: {
+            "X-CSRF-Token": window.CsrfToken,
+            "Grpc-Metadata-OrgId": window.globals.OrgId || "",
+        },
         cancelToken: cancel_token,
     }).then(response=>{
         // Update the csrf token.
@@ -79,6 +83,10 @@ const get_blob = function(url, params, cancel_token) {
         method: 'get',
         url: api_handlers + url,
         params: params,
+        headers: {
+            "X-CSRF-Token": window.CsrfToken,
+            "Grpc-Metadata-OrgId": window.globals.OrgId || "",
+        },
         cancelToken: cancel_token,
     }).then((blob) => {
         var arrayPromise = new Promise(function(resolve) {
@@ -107,6 +115,7 @@ const post = function(url, params, cancel_token) {
         cancelToken: cancel_token,
         headers: {
             "X-CSRF-Token": window.CsrfToken,
+            "Grpc-Metadata-OrgId": window.globals.OrgId || "",
         }
     }).then(response=>{
         // Update the csrf token.
@@ -132,6 +141,7 @@ const upload = function(url, files, params) {
         data: fd,
         headers: {
             "X-CSRF-Token": window.CsrfToken,
+            "Grpc-Metadata-OrgId": window.globals.OrgId || "",
         }
     }).catch(handle_error);
 };

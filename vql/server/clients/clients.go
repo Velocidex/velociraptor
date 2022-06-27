@@ -72,7 +72,7 @@ func (self ClientsPlugin) Call(
 
 		// If a client id is specified we do not need to search at all.
 		if arg.ClientId != "" {
-			indexer, err := services.GetIndexer()
+			indexer, err := services.GetIndexer(config_obj)
 			if err != nil {
 				scope.Log("clients: %v", err)
 				return
@@ -100,7 +100,7 @@ func (self ClientsPlugin) Call(
 			limit = 100000
 		}
 
-		indexer, err := services.GetIndexer()
+		indexer, err := services.GetIndexer(config_obj)
 		if err != nil {
 			scope.Log("client_info: %s", err.Error())
 			return
@@ -162,7 +162,7 @@ func (self *ClientInfoFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
 		scope.Log("client_info: %s", err.Error())
 		return vfilter.Null{}

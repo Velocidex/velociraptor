@@ -17,8 +17,14 @@ import (
 func (self UserManager) GetUserFromContext(config_obj *config_proto.Config, ctx context.Context) (
 	*api_proto.VelociraptorUser, error) {
 
-	user_name := GetGRPCUserInfo(config_obj, ctx, self.ca_pool).Name
-	return self.GetUser(config_obj, user_name)
+	grpc_user_info := GetGRPCUserInfo(config_obj, ctx, self.ca_pool)
+	user_record, err := self.GetUser(config_obj, grpc_user_info.Name)
+	if err != nil {
+		return nil, err
+	}
+
+	user_record.CurrentOrg = grpc_user_info.CurrentOrg
+	return user_record, nil
 }
 
 // GetGRPCUserInfo: Extracts user information from GRPC context.
@@ -65,6 +71,16 @@ func GetGRPCUserInfo(
 									&logging.FrontendComponent)
 								logger.Error("GetGRPCUserInfo: %v", err)
 								result.Name = ""
+							}
+						}
+
+						// Corresponds to the Grpc-Metadata-OrgId
+						// header added by api-service.js
+						org_id := md.Get("OrgId")
+						if len(org_id) > 0 {
+							result.CurrentOrg = org_id[0]
+							if result.CurrentOrg == "root" {
+								result.CurrentOrg = ""
 							}
 						}
 					}

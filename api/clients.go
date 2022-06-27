@@ -118,7 +118,7 @@ func (self *ApiServer) GetClient(
 			"User is not allowed to view clients.")
 	}
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(self.config)
 	if err != nil {
 		return nil, err
 	}

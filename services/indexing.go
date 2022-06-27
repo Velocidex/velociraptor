@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"errors"
 	"sync"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -16,15 +15,13 @@ var (
 	indexer_mu sync.Mutex
 )
 
-func GetIndexer() (Indexer, error) {
-	indexer_mu.Lock()
-	defer indexer_mu.Unlock()
-
-	if indexer == nil {
-		return nil, errors.New("Indexing service not initialized")
+func GetIndexer(config_obj *config_proto.Config) (Indexer, error) {
+	org_manager, err := GetOrgManager()
+	if err != nil {
+		return nil, err
 	}
 
-	return indexer, nil
+	return org_manager.Services(config_obj.OrgId).Indexer()
 }
 
 func RegisterIndexer(m Indexer) {

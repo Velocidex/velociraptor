@@ -175,7 +175,7 @@ func reallyDeleteClient(ctx context.Context,
 
 	client_info_manager.Remove(arg.ClientId)
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
 		return err
 	}

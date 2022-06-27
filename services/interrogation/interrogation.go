@@ -180,7 +180,7 @@ func (self *EnrollmentService) ProcessEnrollment(
 		return err
 	}
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
 		return err
 	}
@@ -310,7 +310,7 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 		}
 	}
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
 		return err
 	}

@@ -8,6 +8,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_info"
+	"www.velocidex.com/golang/velociraptor/services/indexing"
 	"www.velocidex.com/golang/velociraptor/services/interrogation"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 )
@@ -17,6 +18,19 @@ type ServiceContainer struct {
 
 	journal             services.JournalService
 	client_info_manager services.ClientInfoManager
+	indexer             services.Indexer
+}
+
+func (self ServiceContainer) Indexer() (services.Indexer, error) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.indexer == nil {
+		return nil, errors.New("Indexing service not initialized")
+	}
+
+	return self.indexer, nil
 }
 
 func (self ServiceContainer) Journal() (services.JournalService, error) {
@@ -82,8 +96,18 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 	if err != nil {
 		return err
 	}
+
 	service_container.mu.Lock()
 	service_container.client_info_manager = c
+	service_container.mu.Unlock()
+
+	i, err := indexing.NewIndexingService(self.ctx, self.wg, org_config)
+	if err != nil {
+		return err
+	}
+
+	service_container.mu.Lock()
+	service_container.indexer = i
 	service_container.mu.Unlock()
 
 	return err

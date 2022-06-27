@@ -8,6 +8,11 @@ package proto;
 
 option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
+message Org {
+    string name = 1;
+    string id = 2;
+}
+
 message VelociraptorUser {
     string name = 1 [(sem_type) = {
             description: "The username"
@@ -31,6 +36,13 @@ message VelociraptorUser {
         }];
 
     ApiClientACL Permissions = 9;
+
+    // A list of org id's the user belongs to.
+    repeated Org orgs = 11;
+
+    // Only used by the GUI/API to determine the currently selected
+    // org the user wants to see.
+    string current_org = 12;
 }
 
 
@@ -62,7 +74,7 @@ message UILink {
 
 // These traits are used by the AdminUI Angular app to disable certain
 // UI elements based on the user's permission set.
-message ApiGrrUserInterfaceTraits {
+message ApiUserInterfaceTraits {
     ApiClientACL Permissions = 9;
 
     string lang = 22;
@@ -84,16 +96,19 @@ message ApiGrrUserInterfaceTraits {
 
     // An opaque setting object stored by the GUI.
     string ui_settings = 1;
+
+    // Current selected Org.
+    string org = 24;
 };
 
-message ApiGrrUser {
+message ApiUser {
     string username = 1 [(sem_type) = {
             description: "The name of the user."
         }];
     GUISettings settings = 2 [(sem_type) = {
             description: "User UI settings."
         }];
-    ApiGrrUserInterfaceTraits interface_traits = 3 [(sem_type) = {
+    ApiUserInterfaceTraits interface_traits = 3 [(sem_type) = {
             description: "User's interface traits (what they can and can't do "
             "in the UI)."
         }];
@@ -104,6 +119,8 @@ message ApiGrrUser {
         USER_TYPE_ADMIN = 2;
     }
     UserType user_type = 4;
+
+    repeated Org orgs = 11;
 }
 
 
@@ -170,6 +187,9 @@ message SetGUIOptionsRequest {
     bool default_downloads_lock = 4;
 
     string options = 1;
+
+    // Current org id
+    string org = 7;
 }
 
 message Users {

@@ -657,7 +657,7 @@ func checkHuntRanOnClient(
 	config_obj *config_proto.Config,
 	client_id, hunt_id string) error {
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
 		return err
 	}
@@ -675,7 +675,7 @@ func checkHuntRanOnClient(
 func setHuntRanOnClient(config_obj *config_proto.Config,
 	client_id, hunt_id string) error {
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
 		return err
 	}

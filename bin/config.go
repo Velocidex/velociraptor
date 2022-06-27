@@ -47,7 +47,7 @@ var (
 	config_command = app.Command(
 		"config", "Manipulate the configuration.")
 
-	config_command_org = app.Flag("org", "Org ID to show").
+	config_command_org = config_command.Flag("org", "Org ID to show").
 				String()
 
 	config_show_command = config_command.Command(

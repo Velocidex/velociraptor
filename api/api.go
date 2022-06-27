@@ -234,20 +234,30 @@ func (self *ApiServer) ListClients(
 		return nil, err
 	}
 
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return nil, err
+	}
+
+	org_config_obj, err := org_manager.GetOrgConfig(user_record.CurrentOrg)
+	if err != nil {
+		return nil, err
+	}
+
 	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view clients.")
 	}
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := indexer.SearchClients(ctx, self.config, in, user_name)
+	result, err := indexer.SearchClients(ctx, org_config_obj, in, user_name)
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +267,7 @@ func (self *ApiServer) ListClients(
 	notifier := services.GetNotifier()
 	for _, item := range result.Items {
 		notifier.IsClientConnected(
-			ctx, self.config, item.ClientId, 0 /* timeout */)
+			ctx, org_config_obj, item.ClientId, 0 /* timeout */)
 	}
 	return result, nil
 }
@@ -406,7 +416,7 @@ func (self *ApiServer) GetFlowRequests(
 
 func (self *ApiServer) GetUserUITraits(
 	ctx context.Context,
-	in *emptypb.Empty) (*api_proto.ApiGrrUser, error) {
+	in *emptypb.Empty) (*api_proto.ApiUser, error) {
 	defer Instrument("GetUserUITraits")()
 
 	result := NewDefaultUserObject(self.config)
@@ -421,9 +431,18 @@ func (self *ApiServer) GetUserUITraits(
 	result.InterfaceTraits.Picture = user_info.Picture
 	result.InterfaceTraits.Permissions, _ = acls.GetEffectivePolicy(self.config,
 		result.Username)
+	result.Orgs = user_info.Orgs
+
+	for _, item := range result.Orgs {
+		if item.Id == "" {
+			item.Name = "<root>"
+			item.Id = "root"
+		}
+	}
 
 	user_options, err := users.GetUserOptions(self.config, result.Username)
 	if err == nil {
+		result.InterfaceTraits.Org = user_options.Org
 		result.InterfaceTraits.UiSettings = user_options.Options
 		result.InterfaceTraits.Theme = user_options.Theme
 		result.InterfaceTraits.Timezone = user_options.Timezone

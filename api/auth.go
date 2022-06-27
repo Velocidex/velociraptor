@@ -22,13 +22,13 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
-func NewDefaultUserObject(config_obj *config_proto.Config) *api_proto.ApiGrrUser {
-	result := &api_proto.ApiGrrUser{
-		UserType: api_proto.ApiGrrUser_USER_TYPE_ADMIN,
+func NewDefaultUserObject(config_obj *config_proto.Config) *api_proto.ApiUser {
+	result := &api_proto.ApiUser{
+		UserType: api_proto.ApiUser_USER_TYPE_ADMIN,
 	}
 
 	if config_obj.GUI != nil {
-		result.InterfaceTraits = &api_proto.ApiGrrUserInterfaceTraits{
+		result.InterfaceTraits = &api_proto.ApiUserInterfaceTraits{
 			AuthUsingGoogle: config_obj.GUI.GoogleOauthClientId != "",
 			Links:           []*api_proto.UILink{},
 		}

@@ -112,11 +112,14 @@ type Indexer struct {
 	dirty bool
 
 	last_snapshot_read time.Time
+
+	config_obj *config_proto.Config
 }
 
-func NewIndexer() *Indexer {
+func NewIndexer(config_obj *config_proto.Config) *Indexer {
 	return &Indexer{
-		btree: btree.New(10),
+		btree:      btree.New(10),
+		config_obj: config_obj,
 	}
 }
 
@@ -182,9 +185,9 @@ func (self *Indexer) WriteSnapshot(
 
 	defer func() {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-		logger.Debug("<green>Indexing Service</>: Wrote index on %v in %v\n",
+		logger.Debug("<green>Indexing Service</>: Wrote index on %v in %v (%v entries)\n",
 			dest.AsFilestoreFilename(config_obj),
-			time.Now().Sub(now))
+			time.Now().Sub(now), self.btree.Len())
 	}()
 
 	// Write the snapshot syncronously to make sure it hits the
@@ -451,20 +454,28 @@ func (self *Indexer) SearchIndexWithPrefix(
 
 func StartIndexingService(ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
-
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> Indexing Service.")
-
-	indexer := NewIndexer()
-	indexer.Start(ctx, wg, config_obj)
+	indexer, err := NewIndexingService(ctx, wg, config_obj)
 
 	services.RegisterIndexer(indexer)
 
-	return nil
+	return err
+}
+
+func NewIndexingService(ctx context.Context, wg *sync.WaitGroup,
+	config_obj *config_proto.Config) (services.Indexer, error) {
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("<green>Starting</> Indexing Service for %v.",
+		services.GetOrgName(config_obj))
+
+	indexer := NewIndexer(config_obj)
+	indexer.Start(ctx, wg, config_obj)
+
+	return indexer, nil
 }
 
 // Register a dummy indexer for all cases - this does not read or
 // write snapshots.
 func init() {
-	services.RegisterIndexer(NewIndexer())
+	services.RegisterIndexer(NewIndexer(nil))
 }

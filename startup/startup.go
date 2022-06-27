@@ -12,7 +12,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/ddclient"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
-	"www.velocidex.com/golang/velociraptor/services/indexing"
 	"www.velocidex.com/golang/velociraptor/services/interrogation"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/labels"
@@ -156,13 +155,6 @@ func StartupFrontendServices(sm *services.Service) error {
 	err = sm.Start(users.StartUserManager)
 	if err != nil {
 		return err
-	}
-
-	if spec.IndexServer {
-		err = sm.Start(indexing.StartIndexingService)
-		if err != nil {
-			return err
-		}
 	}
 
 	// Check everything is ok before we can start.

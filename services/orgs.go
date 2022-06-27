@@ -35,6 +35,7 @@ func RegisterOrgManager(m OrgManager) {
 type ServiceContainer interface {
 	Journal() (JournalService, error)
 	ClientInfoManager() (ClientInfoManager, error)
+	Indexer() (Indexer, error)
 }
 
 // The org manager manages multi-tenancies.

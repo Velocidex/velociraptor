@@ -230,7 +230,7 @@ func (self *Labeler) SetClientLabel(
 
 	// Also adjust the index so client searches work. If there is no
 	// indexing services it is not an error.
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err == nil {
 		return indexer.SetIndex(client_id, "label:"+new_label)
 	}
@@ -283,7 +283,7 @@ func (self *Labeler) RemoveClientLabel(
 	}
 
 	// Also adjust the index.
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
 		return err
 	}

@@ -231,6 +231,10 @@ func (self UserManager) SetUserOptions(config_obj *config_proto.Config,
 		old_options.Timezone = options.Timezone
 	}
 
+	if options.Org != "" {
+		old_options.Org = options.Org
+	}
+
 	if options.Options != "" {
 		old_options.Options = options.Options
 	}
