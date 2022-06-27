@@ -65,7 +65,7 @@ func WatchQueueWithCB(ctx context.Context,
 		config_obj *config_proto.Config,
 		row *ordereddict.Dict) error) error {
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}

@@ -173,7 +173,7 @@ func (self *Labeler) notifyClient(
 	config_obj *config_proto.Config,
 	client_id, new_label, operation string) error {
 	// Notify other frontends about this change.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -339,7 +339,7 @@ func (self *Labeler) Start(ctx context.Context,
 		metricLabelLRU.Dec()
 	})
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}

@@ -57,7 +57,7 @@ func (self *EnrollmentService) Start(
 	wg *sync.WaitGroup) error {
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> Enrollment service.")
+	logger.Info("<green>Starting</> Enrollment service for %v.", services.GetOrgName(config_obj))
 
 	// Also watch for customized interrogation artifacts.
 	err := journal.WatchForCollectionWithCB(ctx, config_obj, wg,
@@ -104,7 +104,7 @@ func (self *EnrollmentService) ProcessEnrollment(
 	}
 
 	// Get the client info from the client info manager.
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -273,12 +273,12 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	client_info.FirstSeenAt = public_key_info.EnrollTime
 
 	// Expire the client info manager to force it to fetch fresh data.
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return err
 	}
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}

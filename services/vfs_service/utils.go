@@ -28,7 +28,7 @@ func watchForFlowCompletion(
 		scope vfilter.Scope, row *ordereddict.Dict,
 		flow *proto.ArtifactCollectorContext)) error {
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}

@@ -59,7 +59,7 @@ func (self *ServerArtifactsRunner) process(
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) error {
 
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func (self *ServerArtifactsRunner) ProcessTask(
 
 	// Cancel the current collection
 	if task.Cancel != nil {
-		journal, err := services.GetJournal()
+		journal, err := services.GetJournal(config_obj)
 		if err != nil {
 			return err
 		}
@@ -217,7 +217,7 @@ func (self *ServerArtifactsRunner) runQuery(
 			Set("FlowId", flow_context.SessionId).
 			Set("ClientId", "server")
 
-		journal, err := services.GetJournal()
+		journal, err := services.GetJournal(self.config_obj)
 		if err != nil {
 			return
 		}

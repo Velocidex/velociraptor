@@ -349,7 +349,7 @@ func (self *MemcacheDatastore) GetSubject(
 
 	defer Instrument("read", "MemcacheDatastore", urn)()
 
-	path := urn.AsClientPath()
+	path := urn.AsDatastoreFilename(config_obj)
 	bulk_data_any, err := self.data_cache.Get(path)
 	if err != nil {
 		// Second try the old DB without json. This supports
@@ -358,7 +358,7 @@ func (self *MemcacheDatastore) GetSubject(
 		// read old files.
 		if urn.Type() == api.PATH_TYPE_DATASTORE_JSON {
 			bulk_data_any, err = self.data_cache.Get(
-				urn.SetType(api.PATH_TYPE_DATASTORE_PROTO).AsClientPath())
+				urn.SetType(api.PATH_TYPE_DATASTORE_PROTO).AsDatastoreFilename(config_obj))
 		}
 
 		if err != nil {
@@ -456,7 +456,7 @@ func (self *MemcacheDatastore) SetData(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec, data []byte) (err error) {
 
-	err = self.data_cache.Set(urn.AsClientPath(), &BulkData{
+	err = self.data_cache.Set(urn.AsDatastoreFilename(config_obj), &BulkData{
 		data: data,
 	})
 	if err != nil {
@@ -495,7 +495,7 @@ func (self *MemcacheDatastore) DeleteSubject(
 	urn api.DSPathSpec) error {
 	defer Instrument("delete", "MemcacheDatastore", urn)()
 
-	err := self.data_cache.Remove(urn.AsClientPath())
+	err := self.data_cache.Remove(urn.AsDatastoreFilename(config_obj))
 	if err != nil {
 		return err
 	}
@@ -579,7 +579,7 @@ func (self *MemcacheDatastore) Clear() {
 func (self *MemcacheDatastore) GetBuffer(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) ([]byte, error) {
-	path := urn.AsClientPath()
+	path := urn.AsDatastoreFilename(config_obj)
 	bulk_data_any, err := self.data_cache.Get(path)
 	bulk_data, ok := bulk_data_any.(*BulkData)
 	if !ok {

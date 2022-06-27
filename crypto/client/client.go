@@ -15,7 +15,9 @@ type ClientCryptoManager struct {
 }
 
 // Adds the server certificate to the crypto manager.
-func (self *ClientCryptoManager) AddCertificate(certificate_pem []byte) (string, error) {
+func (self *ClientCryptoManager) AddCertificate(
+	config_obj *config_proto.Config,
+	certificate_pem []byte) (string, error) {
 	server_cert, err := crypto_utils.ParseX509CertFromPemStr(certificate_pem)
 	if err != nil {
 		return "", err
@@ -37,7 +39,7 @@ func (self *ClientCryptoManager) AddCertificate(certificate_pem []byte) (string,
 
 	server_name := crypto_utils.GetSubjectName(server_cert)
 	err = self.Resolver.SetPublicKey(
-		server_name, server_cert.PublicKey.(*rsa.PublicKey))
+		config_obj, server_name, server_cert.PublicKey.(*rsa.PublicKey))
 	if err != nil {
 		return "", err
 	}

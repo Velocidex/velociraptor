@@ -525,7 +525,7 @@ func (self *HTTPConnector) rekeyNextServer(ctx context.Context) error {
 
 	// This will replace the current server_name certificate in
 	// the manager.
-	server_name, err := self.manager.AddCertificate(pem)
+	server_name, err := self.manager.AddCertificate(self.config_obj, pem)
 	if err != nil {
 		self.logger.Error("AddCertificate: %v", err)
 		self.server_name = ""

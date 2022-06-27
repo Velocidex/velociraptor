@@ -122,7 +122,7 @@ func doVacuum() error {
 func generateTasks(
 	ctx context.Context, config_obj *config_proto.Config,
 	number int) error {
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return err
 	}

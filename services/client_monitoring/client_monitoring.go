@@ -235,7 +235,7 @@ func (self *ClientEventTable) setClientMonitoringState(
 
 	// Notify all the client monitoring tables that we got
 	// updated. This should cause all frontends to refresh.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -460,7 +460,7 @@ func StartClientMonitoringService(
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Client Monitoring Service")
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}

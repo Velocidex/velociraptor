@@ -209,7 +209,7 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	journal, _ := services.GetJournal()
+	journal, _ := services.GetJournal(config_obj)
 	if journal == nil {
 		return vfilter.Null{}
 	}

@@ -40,11 +40,16 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/orgs"
 )
 
 var (
 	config_command = app.Command(
 		"config", "Manipulate the configuration.")
+
+	config_command_org = app.Flag("org", "Org ID to show").
+				String()
+
 	config_show_command = config_command.Command(
 		"show", "Show the current config.")
 
@@ -106,11 +111,51 @@ var (
 		"Reissue all certificates with the same keys.")
 )
 
+func maybeGetOrgConfig(config_obj *config_proto.Config) (
+	*config_proto.Config, func(), error) {
+
+	if *config_command_org == "" {
+		return config_obj, func() {}, nil
+	}
+
+	ctx, cancel := install_sig_handler()
+	sm := services.NewServiceManager(ctx, config_obj)
+
+	closer := func() {
+		sm.Close()
+		cancel()
+	}
+
+	if config_obj.Frontend != nil {
+		err := sm.Start(orgs.StartOrgManager)
+		if err != nil {
+			return config_obj, closer, err
+		}
+	}
+
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return config_obj, closer, err
+	}
+
+	config_obj, err = org_manager.GetOrgConfig(
+		*config_command_org)
+	return config_obj, closer, err
+}
+
 func doShowConfig() error {
 	config_obj, err := makeDefaultConfigLoader().LoadAndValidate()
 	if err != nil {
 		return err
 	}
+
+	config_obj_, closer, err := maybeGetOrgConfig(config_obj)
+	defer closer()
+
+	if err != nil {
+		return err
+	}
+	config_obj = config_obj_
 
 	err = applyMergesAndPatches(config_obj,
 		*config_show_command_merge_file,
@@ -310,6 +355,14 @@ func doDumpClientConfig() error {
 	if err != nil {
 		return err
 	}
+
+	config_obj_, closer, err := maybeGetOrgConfig(config_obj)
+	defer closer()
+
+	if err != nil {
+		return err
+	}
+	config_obj = config_obj_
 
 	client_config := getClientConfig(config_obj)
 	res, err := yaml.Marshal(client_config)

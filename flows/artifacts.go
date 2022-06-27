@@ -122,7 +122,7 @@ func NewCollectionContext(config_obj *config_proto.Config) *CollectionContext {
 			Set("FlowId", self.SessionId).
 			Set("ClientId", self.ClientId)
 
-		journal, err := services.GetJournal()
+		journal, err := services.GetJournal(config_obj)
 		if err == nil {
 			journal.PushRowsToArtifactAsync(
 				config_obj, row, "System.Flow.Completion")
@@ -609,7 +609,7 @@ func appendUploadDataToFile(
 			Set("Size", file_buffer.Size).
 			Set("UploadedSize", file_buffer.StoredSize)
 
-		journal, err := services.GetJournal()
+		journal, err := services.GetJournal(config_obj)
 		if err != nil {
 			return err
 		}
@@ -722,7 +722,7 @@ func (self *FlowRunner) ProcessSingleMessage(
 
 			logger.Error(fmt.Sprintf("Unable to load flow %s: %v", job.SessionId, err))
 
-			client_manager, err := services.GetClientInfoManager()
+			client_manager, err := services.GetClientInfoManager(self.config_obj)
 			if err != nil {
 				return
 			}

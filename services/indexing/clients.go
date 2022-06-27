@@ -48,7 +48,7 @@ func GetApiClient(
 
 	result.Labels = labeler.GetClientLabels(config_obj, client_id)
 
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (self *Indexer) FastGetApiClient(
 	config_obj *config_proto.Config,
 	client_id string) (*api_proto.ApiClient, error) {
 
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return nil, err
 	}

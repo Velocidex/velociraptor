@@ -99,7 +99,7 @@ func (self *ClientInfoManager) QueueMessagesForClient(
 	/* Also notify the client about the new task */
 	notify bool) error {
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(self.config_obj)
 	if err != nil {
 		return err
 	}
@@ -150,7 +150,7 @@ func (self *ClientInfoManager) QueueMessageForClient(
 	// Task ID is related to time.
 	req.TaskId = currentTaskId()
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(self.config_obj)
 	if err != nil {
 		return err
 	}

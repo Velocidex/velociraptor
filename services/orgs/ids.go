@@ -4,19 +4,15 @@ import (
 	"crypto/rand"
 	"encoding/base32"
 	"encoding/base64"
-	"encoding/binary"
-	"time"
 
 	"www.velocidex.com/golang/velociraptor/constants"
 )
 
 func NewOrgId() string {
-	buf := make([]byte, 8)
+	buf := make([]byte, 2)
 	_, _ = rand.Read(buf)
 
-	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
-	result := base32.HexEncoding.EncodeToString(buf)[:13]
-
+	result := base32.HexEncoding.EncodeToString(buf)[:4]
 	return constants.ORG_PREFIX + result
 }
 

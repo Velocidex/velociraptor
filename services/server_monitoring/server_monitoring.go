@@ -456,7 +456,7 @@ func StartServerMonitoringService(
 		tracer:     NewQueryTracer(),
 	}
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}

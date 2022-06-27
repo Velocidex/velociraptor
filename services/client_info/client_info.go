@@ -275,7 +275,8 @@ func (self *ClientInfoManager) Start(
 	wg *sync.WaitGroup) error {
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> Client Info service.")
+	logger.Info("<green>Starting</> Client Info service for %v.",
+		services.GetOrgName(config_obj))
 
 	// Start syncing the mutation_manager
 	wg.Add(1)
@@ -350,7 +351,7 @@ func (self *ClientInfoManager) MutationSync(
 		sync_time = time.Duration(config_obj.Frontend.Resources.ClientInfoSyncTime) * time.Millisecond
 	}
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return
 	}

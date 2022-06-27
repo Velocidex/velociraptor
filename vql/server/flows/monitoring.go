@@ -162,7 +162,13 @@ func (self WatchMonitoringPlugin) Call(
 			return
 		}
 
-		journal, _ := services.GetJournal()
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
+		if !ok {
+			scope.Log("Command can only run on the server")
+			return
+		}
+
+		journal, _ := services.GetJournal(config_obj)
 		if err != nil {
 			return
 		}
@@ -176,12 +182,6 @@ func (self WatchMonitoringPlugin) Call(
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("watch_monitoring: %v", err)
-			return
-		}
-
-		config_obj, ok := vql_subsystem.GetServerConfig(scope)
-		if !ok {
-			scope.Log("Command can only run on the server")
 			return
 		}
 

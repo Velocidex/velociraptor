@@ -455,7 +455,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 		// Must be before the Process() call to prevent race.
 		source := message_info.Source
 
-		client_info_manager, err := services.GetClientInfoManager()
+		client_info_manager, err := services.GetClientInfoManager(config_obj)
 		if err != nil {
 			http.Error(w, "", http.StatusServiceUnavailable)
 			return
@@ -469,7 +469,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 		// client info manager's LRU.
 		_, err = client_info_manager.Get(source)
 		if err != nil {
-			journal, err := services.GetJournal()
+			journal, err := services.GetJournal(config_obj)
 			if err != nil {
 				http.Error(w, "", http.StatusServiceUnavailable)
 				return
@@ -499,7 +499,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 		if notifier.IsClientDirectlyConnected(source) {
 
 			// Send a message that there is a client conflict.
-			journal, err := services.GetJournal()
+			journal, err := services.GetJournal(config_obj)
 			if err == nil {
 				journal.PushRowsToArtifactAsync(config_obj,
 					ordereddict.NewDict().Set("ClientId", source),

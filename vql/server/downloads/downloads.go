@@ -181,7 +181,7 @@ func createDownloadFile(
 		return nil, errors.New("Client Id and Flow Id should be specified.")
 	}
 
-	hostname := services.GetHostname(client_id)
+	hostname := services.GetHostname(config_obj, client_id)
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	download_file := flow_path_manager.GetDownloadsFile(hostname, password != "")
 
@@ -611,7 +611,7 @@ func createHuntDownloadFile(
 				continue
 			}
 
-			hostname := services.GetHostname(client_id)
+			hostname := services.GetHostname(config_obj, client_id)
 			err := downloadFlowToZip(
 				sub_ctx, config_obj, write_csv, password, client_id, hostname,
 				flow_id, zip_writer)

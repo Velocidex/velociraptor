@@ -46,7 +46,7 @@ func streamEvents(
 		"user": peer_name,
 	}).Info("Replicating Events")
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}

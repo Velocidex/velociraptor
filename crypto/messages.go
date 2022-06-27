@@ -18,6 +18,7 @@ type MessageInfo struct {
 	Source        string
 	RemoteAddr    string
 	Compression   crypto_proto.PackedMessageList_CompressionType
+	OrgId         string
 }
 
 // Apply the callback on each job message. This saves memory since we
@@ -44,7 +45,8 @@ func (self *MessageInfo) IterateJobs(
 			if self.Authenticated {
 				job.AuthState = crypto_proto.VeloMessage_AUTHENTICATED
 			}
-			job.Source = self.Source
+			job.Source = utils.ClientIdFromSourceAndOrg(self.Source, self.OrgId)
+			job.OrgId = self.OrgId
 
 			// For backwards compatibility normalize old
 			// client messages to new format.

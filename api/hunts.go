@@ -65,7 +65,7 @@ func (self *ApiServer) GetHuntFlows(
 
 		row_data := []string{
 			flow.Context.ClientId,
-			services.GetHostname(flow.Context.ClientId),
+			services.GetHostname(self.config, flow.Context.ClientId),
 			flow.Context.SessionId,
 			csv.AnyToString(flow.Context.StartTime / 1000),
 			flow.Context.State.String(),
@@ -302,7 +302,7 @@ func (self *ApiServer) EstimateHunt(
 			"User is not allowed to view hunt results.")
 	}
 
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(self.config)
 	if err != nil {
 		return nil, err
 	}
@@ -369,7 +369,7 @@ func (self *ApiServer) EstimateHunt(
 				os_name = "darwin"
 			}
 
-			client_info_manager, err := services.GetClientInfoManager()
+			client_info_manager, err := services.GetClientInfoManager(self.config)
 			if err != nil {
 				return nil, err
 			}

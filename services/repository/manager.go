@@ -37,7 +37,7 @@ func (self *RepositoryManager) StartWatchingForUpdates(
 	ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -194,7 +194,7 @@ func (self *RepositoryManager) SetArtifactFile(
 	}
 
 	// Tell interested parties that we modified this artifact.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -229,7 +229,7 @@ func (self *RepositoryManager) DeleteArtifactFile(
 	global_repository.Del(name)
 
 	// Now let interested parties know it is removed.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}

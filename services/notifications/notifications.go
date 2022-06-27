@@ -108,7 +108,7 @@ func StartNotificationService(
 	}
 
 	// Watch the journal.
-	journal_service, err := services.GetJournal()
+	journal_service, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -204,7 +204,7 @@ func (self *Notifier) ProcessPing(ctx context.Context,
 		return nil
 	}
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -236,7 +236,7 @@ func (self *Notifier) ListenForNotification(client_id string) (chan bool, func()
 
 func (self *Notifier) NotifyListener(config_obj *config_proto.Config,
 	id, tag string) error {
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -259,7 +259,7 @@ func (self *Notifier) NotifyDirectListener(client_id string) {
 
 func (self *Notifier) NotifyListenerAsync(config_obj *config_proto.Config,
 	id, tag string) {
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return
 	}
@@ -303,7 +303,7 @@ func (self *Notifier) IsClientConnected(
 	}
 
 	// We deem a client connected if the last ping time is within 10 seconds
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return false
 	}
@@ -323,7 +323,7 @@ func (self *Notifier) IsClientConnected(
 
 	// Send ping to all nodes, they will reply with a
 	// notification.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return false
 	}

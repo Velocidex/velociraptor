@@ -231,8 +231,19 @@ func NewServer(ctx context.Context,
 func (self *Server) ProcessSingleUnauthenticatedMessage(
 	ctx context.Context,
 	message *crypto_proto.VeloMessage) {
+
 	if message.CSR != nil {
-		err := enroll(ctx, self.config, self, message.CSR)
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return
+		}
+
+		config_obj, err := org_manager.GetOrgConfig(message.OrgId)
+		if err != nil {
+			return
+		}
+
+		err = enroll(ctx, config_obj, self, message.CSR)
 		if err != nil {
 			self.logger.Error(fmt.Sprintf("Enrol Error: %s", err))
 		}
@@ -264,15 +275,25 @@ func (self *Server) Process(
 
 	// json.TraceMessage(message_info.Source, message_info)
 
-	runner := flows.NewFlowRunner(self.config)
-	defer runner.Close()
-
-	err := runner.ProcessMessages(ctx, message_info)
+	org_manager, err := services.GetOrgManager()
 	if err != nil {
 		return nil, 0, err
 	}
 
-	client_info_manager, err := services.GetClientInfoManager()
+	config_obj, err := org_manager.GetOrgConfig(message_info.OrgId)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	runner := flows.NewFlowRunner(config_obj)
+	defer runner.Close()
+
+	err = runner.ProcessMessages(ctx, message_info)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return nil, 0, err
 	}

@@ -8,7 +8,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/broadcast"
-	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/ddclient"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
@@ -16,7 +15,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/indexing"
 	"www.velocidex.com/golang/velociraptor/services/interrogation"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
-	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/services/notebook"
@@ -80,18 +78,23 @@ func StartupEssentialServices(sm *services.Service) error {
 		}
 	}
 
-	err = sm.Start(orgs.StartOrgManager)
-	if err != nil {
-		return err
-	}
-
-	j, _ := services.GetJournal()
-	if j == nil {
-		err := sm.Start(journal.StartJournalService)
+	o, _ := services.GetOrgManager()
+	if o == nil {
+		err = sm.Start(orgs.StartOrgManager)
 		if err != nil {
 			return err
 		}
 	}
+
+	/*
+		j, _ := services.GetJournal()
+		if j == nil {
+			err := sm.Start(journal.StartJournalService)
+			if err != nil {
+				return err
+			}
+		}
+	*/
 
 	b, _ := services.GetBroadcastService()
 	if b == nil {
@@ -153,14 +156,6 @@ func StartupFrontendServices(sm *services.Service) error {
 	err = sm.Start(users.StartUserManager)
 	if err != nil {
 		return err
-	}
-
-	_, err = services.GetClientInfoManager()
-	if err != nil {
-		err := sm.Start(client_info.StartClientInfoService)
-		if err != nil {
-			return err
-		}
 	}
 
 	if spec.IndexServer {
@@ -247,12 +242,12 @@ func StartupFrontendServices(sm *services.Service) error {
 	return nil
 }
 
-func Reset() {
+func Reset(config_obj *config_proto.Config) {
 	// This function should not find any active services. Services
 	// are responsible for unregistering themselves and holding
 	// the service manager for the duration of their lifetime.
 
-	journal, _ := services.GetJournal()
+	journal, _ := services.GetJournal(config_obj)
 	if journal != nil {
 		fmt.Printf("Journal not reset.\n")
 	}

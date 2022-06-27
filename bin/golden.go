@@ -273,7 +273,7 @@ func doGolden() error {
 	failures := []string{}
 
 	//Force a clean slate for each test.
-	startup.Reset()
+	startup.Reset(config_obj)
 
 	sm, err := startEssentialServices(config_obj)
 	if err != nil {

@@ -81,7 +81,7 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 				HuntId: arg.HuntId,
 				State:  api_proto.Hunt_ARCHIVED,
 			}
-			journal, err := services.GetJournal()
+			journal, err := services.GetJournal(config_obj)
 			if err != nil {
 				scope.Log("hunt_delete: %s", err)
 				return

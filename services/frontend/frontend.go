@@ -56,7 +56,7 @@ func PushMetrics(ctx context.Context, wg *sync.WaitGroup,
 			// Journal may not be ready yet so it is not
 			// an error if its not there, just try again
 			// later.
-			journal, err := services.GetJournal()
+			journal, err := services.GetJournal(config_obj)
 			if err != nil {
 				continue
 			}
@@ -246,7 +246,7 @@ func (self *MasterFrontendManager) UpdateStats(ctx context.Context) {
 			Set("MemoryUse", total_ProcessResidentMemoryBytes).
 			Set("client_comms_current_connections", total_ClientCommsCurrentConnections)
 
-		journal, err := services.GetJournal()
+		journal, err := services.GetJournal(self.config_obj)
 		if err != nil {
 			continue
 		}

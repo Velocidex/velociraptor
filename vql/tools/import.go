@@ -307,7 +307,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	// Generate a fake System.Flow.Completion event for the
 	// uploaded flow in case there are any listeners who are
 	// interested.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		scope.Log("import_collection: %v", err)
 		return vfilter.Null{}

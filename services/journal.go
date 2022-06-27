@@ -16,7 +16,6 @@ package services
 
 import (
 	"context"
-	"errors"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
@@ -31,15 +30,13 @@ var (
 	GJournal JournalService
 )
 
-func GetJournal() (JournalService, error) {
-	journal_mu.Lock()
-	defer journal_mu.Unlock()
-
-	if GJournal == nil {
-		return nil, errors.New("Journal service not ready")
+func GetJournal(config_obj *config_proto.Config) (JournalService, error) {
+	org_manager, err := GetOrgManager()
+	if err != nil {
+		return nil, err
 	}
 
-	return GJournal, nil
+	return org_manager.Services(config_obj.OrgId).Journal()
 }
 
 func RegisterJournal(journal JournalService) {

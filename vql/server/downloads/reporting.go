@@ -141,7 +141,7 @@ func CreateFlowReport(
 	flow_id, client_id, template string,
 	wait bool) (api.FSPathSpec, error) {
 
-	hostname := services.GetHostname(client_id)
+	hostname := services.GetHostname(config_obj, client_id)
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	download_file := flow_path_manager.GetReportsFile(hostname)
 	lock_file_spec := download_file.SetType(api.PATH_TYPE_FILESTORE_LOCK)

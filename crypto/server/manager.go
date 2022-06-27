@@ -17,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type ServerCryptoManager struct {
@@ -27,7 +28,9 @@ func (self *ServerCryptoManager) Delete(client_id string) {
 
 }
 
-func (self *ServerCryptoManager) AddCertificateRequest(csr_pem []byte) (string, error) {
+func (self *ServerCryptoManager) AddCertificateRequest(
+	config_obj *config_proto.Config,
+	csr_pem []byte) (string, error) {
 	csr, err := crypto_utils.ParseX509CSRFromPemStr(csr_pem)
 	if err != nil {
 		return "", err
@@ -57,11 +60,16 @@ func (self *ServerCryptoManager) AddCertificateRequest(csr_pem []byte) (string, 
 		return "", errors.New("Invalid CSR")
 	}
 	err = self.Resolver.SetPublicKey(
-		common_name, csr.PublicKey.(*rsa.PublicKey))
+		config_obj,
+		utils.ClientIdFromConfigObj(common_name, config_obj),
+		csr.PublicKey.(*rsa.PublicKey))
 	if err != nil {
 		return "", err
 	}
-	return csr.Subject.CommonName, nil
+
+	// Derive the client id from the common name and the org id
+	client_id := utils.ClientIdFromConfigObj(csr.Subject.CommonName, config_obj)
+	return client_id, nil
 }
 
 func NewServerCryptoManager(
@@ -111,21 +119,20 @@ func NewServerCryptoManager(
 	return server_manager, nil
 }
 
-type serverPublicKeyResolver struct {
-	config_obj *config_proto.Config
-}
+type serverPublicKeyResolver struct{}
 
 func (self *serverPublicKeyResolver) GetPublicKey(
+	config_obj *config_proto.Config,
 	client_id string) (*rsa.PublicKey, bool) {
 
 	client_path_manager := paths.NewClientPathManager(client_id)
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, false
 	}
 
 	pem := &crypto_proto.PublicKey{}
-	err = db.GetSubject(self.config_obj,
+	err = db.GetSubject(config_obj,
 		client_path_manager.Key(), pem)
 	if err != nil {
 		return nil, false
@@ -140,10 +147,11 @@ func (self *serverPublicKeyResolver) GetPublicKey(
 }
 
 func (self *serverPublicKeyResolver) SetPublicKey(
+	config_obj *config_proto.Config,
 	client_id string, key *rsa.PublicKey) error {
 
 	client_path_manager := paths.NewClientPathManager(client_id)
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
@@ -152,7 +160,7 @@ func (self *serverPublicKeyResolver) SetPublicKey(
 		Pem:        crypto_utils.PublicKeyToPem(key),
 		EnrollTime: uint64(time.Now().Unix()),
 	}
-	return db.SetSubjectWithCompletion(self.config_obj,
+	return db.SetSubjectWithCompletion(config_obj,
 		client_path_manager.Key(), pem, nil)
 }
 
@@ -162,9 +170,7 @@ func NewServerPublicKeyResolver(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) (client.PublicKeyResolver, error) {
-	result := &serverPublicKeyResolver{
-		config_obj: config_obj,
-	}
+	result := &serverPublicKeyResolver{}
 
 	return result, nil
 }

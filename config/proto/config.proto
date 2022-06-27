@@ -125,7 +125,6 @@ message ClientConfig {
             description: "The CA's certificate encoded in PEM. The client will trust any server signed with this CA."
         }];
 
-    string org_id = 34;
     string nonce = 12 [(sem_type) = {
             description: "A shared nonce the client will present. The server will reject clients which do not present this key so it must be embedded in the client's configuration."
         }];
@@ -937,4 +936,7 @@ message Config {
     // The list of data sources which Velociraptor should map instead of the
     // host's own file system.
     repeated RemappingConfig remappings = 35;
+
+    string org_id = 36;
+    string org_name = 37;
 }

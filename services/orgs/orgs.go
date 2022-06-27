@@ -17,19 +17,52 @@ import (
 type OrgManager struct {
 	mu sync.Mutex
 
+	ctx context.Context
+	wg  *sync.WaitGroup
+
 	// The base global config object
 	config_obj *config_proto.Config
 
 	// Each org has a separate config object.
+	org_records     map[string]*api_proto.OrgRecord
 	org_configs     map[string]*config_proto.Config
+	org_services    map[string]services.ServiceContainer
 	org_id_by_nonce map[string]string
+}
+
+func (self *OrgManager) ListOrgs() []*api_proto.OrgRecord {
+	result := []*api_proto.OrgRecord{}
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	for _, item := range self.org_records {
+		result = append(result, proto.Clone(item).(*api_proto.OrgRecord))
+	}
+
+	return result
 }
 
 func (self *OrgManager) GetOrgConfig(org_id string) (*config_proto.Config, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	// An empty org id corresponds to the root org.
+	if org_id == "" {
+		return self.config_obj, nil
+	}
+
 	result, pres := self.org_configs[org_id]
+	if !pres {
+		return nil, services.NotFoundError
+	}
+	return result, nil
+}
+
+func (self *OrgManager) GetOrg(org_id string) (*api_proto.OrgRecord, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	result, pres := self.org_records[org_id]
 	if !pres {
 		return nil, services.NotFoundError
 	}
@@ -39,6 +72,12 @@ func (self *OrgManager) GetOrgConfig(org_id string) (*config_proto.Config, error
 func (self *OrgManager) OrgIdByNonce(nonce string) (string, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	// Nonce corresponds to the root config
+	if self.config_obj.Client != nil &&
+		self.config_obj.Client.Nonce == nonce {
+		return "", nil
+	}
 
 	result, pres := self.org_id_by_nonce[nonce]
 	if !pres {
@@ -55,18 +94,18 @@ func (self *OrgManager) CreateNewOrg(name string) (
 		OrgId: NewOrgId(),
 		Nonce: NewNonce(),
 	}
+
+	err := self.startOrg(org_record)
+	if err != nil {
+		return nil, err
+	}
+
 	org_path_manager := paths.NewOrgPathManager(
 		org_record.OrgId)
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return nil, err
 	}
-
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	self.org_id_by_nonce[org_record.Nonce] = org_record.OrgId
-	self.org_configs[org_record.OrgId] = self.makeNewConfigObj(org_record)
 
 	err = db.SetSubject(self.config_obj,
 		org_path_manager.Path(), org_record)
@@ -77,7 +116,8 @@ func (self *OrgManager) makeNewConfigObj(
 	record *api_proto.OrgRecord) *config_proto.Config {
 	result := proto.Clone(self.config_obj).(*config_proto.Config)
 	if result.Client != nil {
-		result.Client.OrgId = record.OrgId
+		result.OrgId = record.OrgId
+		result.OrgName = record.Name
 		result.Client.Nonce = record.Nonce
 	}
 
@@ -115,14 +155,13 @@ func (self *OrgManager) Scan() error {
 			continue
 		}
 
-		self.mu.Lock()
-		org_config, pres := self.org_configs[org_id]
-		if !pres {
-			org_config = self.makeNewConfigObj(org_record)
-			self.org_configs[org_id] = org_config
+		_, err = self.GetOrgConfig(org_id)
+		if err != nil {
+			err = self.startOrg(org_record)
+			if err != nil {
+				return err
+			}
 		}
-		self.org_id_by_nonce[org_record.Nonce] = org_record.OrgId
-		self.mu.Unlock()
 	}
 
 	return nil
@@ -134,6 +173,16 @@ func (self *OrgManager) Start(
 	wg *sync.WaitGroup) error {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Org Manager service.")
+
+	// First start all services for the root org
+	self.startOrg(&api_proto.OrgRecord{
+		OrgId: "",
+		Name:  "<root org>",
+		Nonce: config_obj.Client.Nonce,
+	})
+
+	// Do first scan inline so we have valid data on exit.
+	self.Scan()
 
 	// Start syncing the mutation_manager
 	wg.Add(1)
@@ -161,7 +210,12 @@ func StartOrgManager(
 	config_obj *config_proto.Config) error {
 
 	service := &OrgManager{
-		config_obj:      config_obj,
+		config_obj: config_obj,
+		ctx:        ctx,
+		wg:         wg,
+
+		org_services:    make(map[string]services.ServiceContainer),
+		org_records:     make(map[string]*api_proto.OrgRecord),
 		org_configs:     make(map[string]*config_proto.Config),
 		org_id_by_nonce: make(map[string]string),
 	}

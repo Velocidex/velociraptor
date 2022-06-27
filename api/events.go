@@ -78,7 +78,7 @@ func (self *ApiServer) PushEvents(
 		}
 
 		// Only return the first row
-		journal, err := services.GetJournal()
+		journal, err := services.GetJournal(self.config)
 		if err != nil {
 			return nil, err
 		}
@@ -149,7 +149,7 @@ func (self *ApiServer) WriteEvent(
 
 		// Only return the first row
 		if true {
-			journal, err := services.GetJournal()
+			journal, err := services.GetJournal(self.config)
 			if err != nil {
 				return nil, err
 			}

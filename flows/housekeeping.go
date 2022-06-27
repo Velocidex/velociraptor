@@ -42,7 +42,7 @@ func CheckClientStatus(
 	config_obj *config_proto.Config,
 	client_id string) error {
 
-	client_manager, err := services.GetClientInfoManager()
+	client_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -126,7 +126,7 @@ func CheckClientStatus(
 		return nil
 	}
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}

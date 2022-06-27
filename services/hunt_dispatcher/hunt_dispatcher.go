@@ -123,7 +123,7 @@ func (self *HuntDispatcher) participateAllConnectedClients(
 	config_obj *config_proto.Config, hunt_id string) error {
 
 	notifier := services.GetNotifier()
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -268,7 +268,7 @@ func (self *HuntDispatcher) GetHunt(hunt_id string) (*api_proto.Hunt, bool) {
 func (self *HuntDispatcher) MutateHunt(
 	config_obj *config_proto.Config,
 	mutation *api_proto.HuntMutation) error {
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -320,7 +320,7 @@ func (self *HuntDispatcher) ModifyHuntObject(
 		self.mu.Unlock()
 
 		// Relay the new update to all other hunt dispatchers.
-		journal, err := services.GetJournal()
+		journal, err := services.GetJournal(self.config_obj)
 		if err == nil {
 			// Make sure these are pushed out ASAP to the other
 			// dispatchers.
@@ -342,7 +342,7 @@ func (self *HuntDispatcher) ModifyHuntObject(
 		self.mu.Unlock()
 
 		// Relay the new update to all other hunt dispatchers.
-		journal, err := services.GetJournal()
+		journal, err := services.GetJournal(self.config_obj)
 		if err == nil {
 			// Make sure these are pushed out ASAP to the other
 			// dispatchers.
@@ -561,7 +561,7 @@ func (self *HuntDispatcher) CreateHunt(
 		Set("Timestamp", time.Now().UTC().Unix()).
 		Set("Hunt", hunt)
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return "", err
 	}

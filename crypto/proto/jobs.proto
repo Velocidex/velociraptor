@@ -38,6 +38,8 @@ message VeloMessage {
       "(Filled in by the frontend)."
     }];
 
+  string org_id = 40;
+
   // A Flag to indicate if the message is authenticated. Note that the client
   // does not get to decide this - the server will verify the message and tag it
   // as such. The message is then passed down the chain of components carrying

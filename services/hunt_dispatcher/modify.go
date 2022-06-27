@@ -43,7 +43,7 @@ func (self *HuntDispatcher) ModifyHunt(
 			Set("User", user)
 
 		// Alert listeners that the hunt is being archived.
-		journal, err := services.GetJournal()
+		journal, err := services.GetJournal(config_obj)
 		if err != nil {
 			return err
 		}

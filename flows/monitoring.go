@@ -136,7 +136,7 @@ func flushMonitoringLogs(
 	config_obj *config_proto.Config,
 	collection_context *CollectionContext) error {
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}

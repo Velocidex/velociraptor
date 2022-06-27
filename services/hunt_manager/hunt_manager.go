@@ -275,7 +275,7 @@ func (self *HuntManager) maybeDirectlyAssignFlow(
 	}
 
 	// Append the flow to the client's table.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -382,7 +382,7 @@ func (self *HuntManager) ProcessFlowCompletion(
 		return err
 	}
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -429,7 +429,7 @@ func (self *HuntManager) participateInAllHunts(ctx context.Context,
 	config_obj *config_proto.Config, client_id string,
 	should_participate_cb func(hunt *api_proto.Hunt) bool) error {
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -471,7 +471,7 @@ func (self *HuntManager) ProcessParticipation(
 	}
 
 	// Get some info about the client
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -729,7 +729,7 @@ func scheduleHuntOnClient(
 		return err
 	}
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}

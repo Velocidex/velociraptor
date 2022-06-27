@@ -41,7 +41,7 @@ func (self *ServerUploader) Upload(
 		accessor, store_as_name, expected_size,
 		mtime, atime, ctime, btime, reader)
 	if err == nil {
-		journal, err := services.GetJournal()
+		journal, err := services.GetJournal(self.config_obj)
 		if err != nil {
 			return nil, err
 		}

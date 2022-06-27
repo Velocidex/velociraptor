@@ -20,11 +20,15 @@ package client
 import (
 	"crypto/rsa"
 	"sync"
+
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
 type PublicKeyResolver interface {
-	GetPublicKey(subject string) (*rsa.PublicKey, bool)
-	SetPublicKey(subject string, key *rsa.PublicKey) error
+	GetPublicKey(
+		config_obj *config_proto.Config, subject string) (*rsa.PublicKey, bool)
+	SetPublicKey(
+		config_obj *config_proto.Config, subject string, key *rsa.PublicKey) error
 	Clear() // Flush all internal caches.
 }
 
@@ -54,7 +58,8 @@ func NewInMemoryPublicKeyResolver() PublicKeyResolver {
   sources and their public keys.
 
 */
-func (self *inMemoryPublicKeyResolver) GetPublicKey(subject string) (*rsa.PublicKey, bool) {
+func (self *inMemoryPublicKeyResolver) GetPublicKey(
+	config_obj *config_proto.Config, subject string) (*rsa.PublicKey, bool) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -63,7 +68,7 @@ func (self *inMemoryPublicKeyResolver) GetPublicKey(subject string) (*rsa.Public
 }
 
 func (self *inMemoryPublicKeyResolver) SetPublicKey(
-	subject string, key *rsa.PublicKey) error {
+	config_obj *config_proto.Config, subject string, key *rsa.PublicKey) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 

@@ -534,7 +534,7 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 		return "", err
 	}
 
-	client_manager, err := services.GetClientInfoManager()
+	client_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return "", err
 	}
