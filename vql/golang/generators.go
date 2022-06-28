@@ -24,25 +24,29 @@ type Generator struct {
 func (self Generator) Eval(ctx context.Context, scope types.Scope) <-chan types.Row {
 	result := make(chan vfilter.Row)
 
-	b, err := services.GetBroadcastService()
-	if err != nil {
-		scope.Log("generate: %v", err)
-		close(result)
-		return result
-	}
-
-	output_chan, cancel, err := b.Watch(ctx, self.name, api.QueueOptions{
-		DisableFileBuffering: self.disable_file_buffering,
-	})
-
-	if err != nil {
-		scope.Log("generate: %v", err)
-		close(result)
-		return result
-	}
-
 	go func() {
 		defer close(result)
+
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
+		if !ok {
+			scope.Log("Command can only run on the server")
+			return
+		}
+
+		b, err := services.GetBroadcastService(config_obj)
+		if err != nil {
+			scope.Log("generate: %v", err)
+			return
+		}
+
+		output_chan, cancel, err := b.Watch(ctx, self.name, api.QueueOptions{
+			DisableFileBuffering: self.disable_file_buffering,
+		})
+		if err != nil {
+			scope.Log("generate: %v", err)
+			return
+		}
+
 		// Remove the watcher when we are done.
 		defer cancel()
 
@@ -78,11 +82,17 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 		return false
 	}
 
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		scope.Log("Command can only run on the server")
+		return false
+	}
+
 	if arg.Name == "" {
 		arg.Name = types.ToString(arg.Query, scope)
 	}
 
-	b, err := services.GetBroadcastService()
+	b, err := services.GetBroadcastService(config_obj)
 	if err != nil {
 		scope.Log("generate: %v", err)
 		return types.Null{}

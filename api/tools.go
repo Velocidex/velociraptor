@@ -26,11 +26,15 @@ func (self *ApiServer) GetToolInfo(ctx context.Context,
 			"User is not allowed to view tools.")
 	}
 
+	inventory, err := services.GetInventory(org_config_obj)
+	if err != nil {
+		return nil, err
+	}
 	if in.Materialize {
-		return services.GetInventory().GetToolInfo(ctx, org_config_obj, in.Name)
+		return inventory.GetToolInfo(ctx, org_config_obj, in.Name)
 	}
 
-	return services.GetInventory().ProbeToolInfo(in.Name)
+	return inventory.ProbeToolInfo(in.Name)
 }
 
 func (self *ApiServer) SetToolInfo(ctx context.Context,
@@ -54,7 +58,13 @@ func (self *ApiServer) SetToolInfo(ctx context.Context,
 
 	materialize := in.Materialize
 	in.Materialize = false
-	err = services.GetInventory().AddTool(org_config_obj, in,
+
+	inventory, err := services.GetInventory(org_config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	err = inventory.AddTool(org_config_obj, in,
 		services.ToolOptions{
 			AdminOverride: true,
 		})
@@ -65,8 +75,7 @@ func (self *ApiServer) SetToolInfo(ctx context.Context,
 	// If materialized we re-fetch the tool and send back the full
 	// record.
 	if materialize {
-		return services.GetInventory().GetToolInfo(ctx, org_config_obj,
-			in.Name)
+		return inventory.GetToolInfo(ctx, org_config_obj, in.Name)
 	}
 
 	return in, nil

@@ -14,6 +14,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
+type OrgContext struct {
+	record     *api_proto.OrgRecord
+	config_obj *config_proto.Config
+	service    services.ServiceContainer
+}
+
 type OrgManager struct {
 	mu sync.Mutex
 
@@ -24,9 +30,7 @@ type OrgManager struct {
 	config_obj *config_proto.Config
 
 	// Each org has a separate config object.
-	org_records     map[string]*api_proto.OrgRecord
-	org_configs     map[string]*config_proto.Config
-	org_services    map[string]services.ServiceContainer
+	orgs            map[string]*OrgContext
 	org_id_by_nonce map[string]string
 }
 
@@ -35,8 +39,8 @@ func (self *OrgManager) ListOrgs() []*api_proto.OrgRecord {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	for _, item := range self.org_records {
-		result = append(result, proto.Clone(item).(*api_proto.OrgRecord))
+	for _, item := range self.orgs {
+		result = append(result, proto.Clone(item.record).(*api_proto.OrgRecord))
 	}
 
 	return result
@@ -51,22 +55,22 @@ func (self *OrgManager) GetOrgConfig(org_id string) (*config_proto.Config, error
 		return self.config_obj, nil
 	}
 
-	result, pres := self.org_configs[org_id]
+	result, pres := self.orgs[org_id]
 	if !pres {
 		return nil, services.NotFoundError
 	}
-	return result, nil
+	return result.config_obj, nil
 }
 
 func (self *OrgManager) GetOrg(org_id string) (*api_proto.OrgRecord, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	result, pres := self.org_records[org_id]
+	result, pres := self.orgs[org_id]
 	if !pres {
 		return nil, services.NotFoundError
 	}
-	return result, nil
+	return result.record, nil
 }
 
 func (self *OrgManager) OrgIdByNonce(nonce string) (string, error) {
@@ -221,9 +225,7 @@ func StartOrgManager(
 		ctx:        ctx,
 		wg:         wg,
 
-		org_services:    make(map[string]services.ServiceContainer),
-		org_records:     make(map[string]*api_proto.OrgRecord),
-		org_configs:     make(map[string]*config_proto.Config),
+		orgs:            make(map[string]*OrgContext),
 		org_id_by_nonce: make(map[string]string),
 	}
 	services.RegisterOrgManager(service)

@@ -242,17 +242,6 @@ func (self *JournalService) Start(config_obj *config_proto.Config) error {
 	return nil
 }
 
-func StartJournalService(
-	ctx context.Context, wg *sync.WaitGroup, config_obj *config_proto.Config) error {
-	service, err := NewJournalService(ctx, wg, config_obj)
-	if err != nil {
-		return err
-	}
-
-	services.RegisterJournal(service)
-	return nil
-}
-
 func NewJournalService(
 	ctx context.Context, wg *sync.WaitGroup, config_obj *config_proto.Config) (services.JournalService, error) {
 	// Are we running on a minion frontend? If so we try to start
@@ -274,14 +263,6 @@ func NewJournalService(
 	if err != nil || qm != nil {
 		service.qm = qm
 	}
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		defer services.RegisterJournal(nil)
-
-		<-ctx.Done()
-	}()
 
 	return service, service.Start(config_obj)
 }

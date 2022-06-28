@@ -697,8 +697,5 @@ func NewReplicationService(
 	}
 
 	err = service.Start(ctx, config_obj, wg)
-	if err == nil {
-		services.RegisterJournal(service)
-	}
 	return service, err
 }

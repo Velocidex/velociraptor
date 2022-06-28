@@ -22,8 +22,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/frontend"
 	"www.velocidex.com/golang/velociraptor/services/indexing"
-	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/labels"
+	"www.velocidex.com/golang/velociraptor/services/orgs"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
@@ -87,7 +87,7 @@ func doVacuum() error {
 		return err
 	}
 
-	err = sm.Start(journal.StartJournalService)
+	err = sm.Start(orgs.StartOrgManager)
 	if err != nil {
 		return err
 	}

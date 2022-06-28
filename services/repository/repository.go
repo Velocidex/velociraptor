@@ -505,8 +505,8 @@ func compileArtifact(
 	}
 
 	// Make sure tools are all defined.
-	inventory := services.GetInventory()
-	if inventory == nil {
+	inventory, err := services.GetInventory(config_obj)
+	if err != nil {
 		return nil
 	}
 

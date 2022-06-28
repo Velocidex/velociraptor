@@ -312,10 +312,10 @@ func (self *Dummy) RemoveTool(
 	return nil
 }
 
-func StartInventoryDummyService(
+func NewInventoryDummyService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config) (services.Inventory, error) {
 
 	inventory_service := &Dummy{
 		Clock:    utils.RealClock{},
@@ -339,7 +339,6 @@ func StartInventoryDummyService(
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer services.RegisterInventory(nil)
 		defer inventory_service.Close(config_obj)
 
 		<-ctx.Done()
@@ -348,6 +347,5 @@ func StartInventoryDummyService(
 	logger := logging.GetLogger(config_obj, &logging.GenericComponent)
 	logger.Info("Installing <green>Dummy inventory_service</>. Will download tools to temp directory.")
 
-	services.RegisterInventory(inventory_service)
-	return nil
+	return inventory_service, nil
 }

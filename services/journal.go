@@ -39,13 +39,6 @@ func GetJournal(config_obj *config_proto.Config) (JournalService, error) {
 	return org_manager.Services(config_obj.OrgId).Journal()
 }
 
-func RegisterJournal(journal JournalService) {
-	journal_mu.Lock()
-	defer journal_mu.Unlock()
-
-	GJournal = journal
-}
-
 type JournalService interface {
 	// Watch the artifact named by queue_name for new rows. This only
 	// makes sense for artifacts of type CLIENT_EVENT and

@@ -347,18 +347,18 @@ func (self *InventoryService) LoadFromFile(config_obj *config_proto.Config) erro
 	return nil
 }
 
-func StartInventoryService(
+func NewInventoryService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config) (services.Inventory, error) {
 
 	if config_obj.Datastore == nil {
-		return StartInventoryDummyService(ctx, wg, config_obj)
+		return NewInventoryDummyService(ctx, wg, config_obj)
 	}
 
 	default_client, err := networking.GetDefaultHTTPClient(config_obj.Client, "")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	inventory_service := &InventoryService{
@@ -367,19 +367,16 @@ func StartInventoryService(
 		// Use the VQL http client so it can accept the same certs.
 		Client: default_client,
 	}
-	services.RegisterInventory(inventory_service)
-
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	notifier := services.GetNotifier()
 	if notifier == nil {
-		return errors.New("Notification service not started")
+		return nil, errors.New("Notification service not started")
 	}
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer services.RegisterInventory(nil)
 		defer inventory_service.Close()
 
 		for {
@@ -410,9 +407,11 @@ func StartInventoryService(
 
 	logger.Info("<green>Starting</> Inventory Service")
 
+	// If we fail to load from the file start from a new empty
+	// inventory.
 	_ = inventory_service.LoadFromFile(config_obj)
 
-	return nil
+	return inventory_service, nil
 }
 
 func isDefinitionBetter(old, new *artifacts_proto.Tool) bool {

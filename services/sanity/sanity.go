@@ -213,7 +213,10 @@ func checkForServerUpgrade(
 			return err
 		}
 
-		inventory := services.GetInventory()
+		inventory, err := services.GetInventory(config_obj)
+		if err != nil {
+			return err
+		}
 
 		seen := make(map[string]bool)
 

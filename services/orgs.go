@@ -36,6 +36,8 @@ type ServiceContainer interface {
 	Journal() (JournalService, error)
 	ClientInfoManager() (ClientInfoManager, error)
 	Indexer() (Indexer, error)
+	BroadcastService() (BroadcastService, error)
+	Inventory() (Inventory, error)
 }
 
 // The org manager manages multi-tenancies.

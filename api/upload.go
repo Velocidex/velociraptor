@@ -95,7 +95,14 @@ func toolUploadHandler(
 
 		tool.Hash = hex.EncodeToString(sha_sum.Sum(nil))
 
-		err = services.GetInventory().AddTool(config_obj, tool,
+		inventory, err := services.GetInventory(config_obj)
+		if err != nil {
+			returnError(w, http.StatusInternalServerError,
+				fmt.Sprintf("Error: %v", err))
+			return
+		}
+
+		err = inventory.AddTool(config_obj, tool,
 			services.ToolOptions{
 				AdminOverride: true,
 			})
@@ -106,7 +113,7 @@ func toolUploadHandler(
 		}
 
 		// Now materialize the tool
-		tool, err = services.GetInventory().GetToolInfo(
+		tool, err = inventory.GetToolInfo(
 			r.Context(), config_obj, tool.Name)
 		if err != nil {
 			returnError(w, http.StatusInternalServerError,

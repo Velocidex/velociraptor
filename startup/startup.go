@@ -7,13 +7,11 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/broadcast"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/ddclient"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
 	"www.velocidex.com/golang/velociraptor/services/interrogation"
-	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/services/notebook"
@@ -85,33 +83,8 @@ func StartupEssentialServices(sm *services.Service) error {
 		}
 	}
 
-	/*
-		j, _ := services.GetJournal()
-		if j == nil {
-			err := sm.Start(journal.StartJournalService)
-			if err != nil {
-				return err
-			}
-		}
-	*/
-
-	b, _ := services.GetBroadcastService()
-	if b == nil {
-		err := sm.Start(broadcast.StartBroadcastService)
-		if err != nil {
-			return err
-		}
-	}
-
 	if services.GetNotifier() == nil {
 		err := sm.Start(notifications.StartNotificationService)
-		if err != nil {
-			return err
-		}
-	}
-
-	if services.GetInventory() == nil {
-		err := sm.Start(inventory.StartInventoryService)
 		if err != nil {
 			return err
 		}
@@ -248,7 +221,8 @@ func Reset(config_obj *config_proto.Config) {
 		fmt.Printf("Notifier not reset.\n")
 	}
 
-	if services.GetInventory() != nil {
+	_, err := services.GetInventory(config_obj)
+	if err != nil {
 		fmt.Printf("Inventory not reset.\n")
 	}
 
@@ -269,13 +243,4 @@ func Reset(config_obj *config_proto.Config) {
 	if services.GetHuntDispatcher() != nil {
 		fmt.Printf("HuntDispatcher not reset.\n")
 	}
-
-	services.RegisterJournal(nil)
-	services.RegisterNotifier(nil)
-	services.RegisterInventory(nil)
-	services.RegisterRepositoryManager(nil)
-	services.RegisterLauncher(nil)
-	services.RegisterLabeler(nil)
-	services.RegisterHuntDispatcher(nil)
-	services.RegisterClientEventManager(nil)
 }
