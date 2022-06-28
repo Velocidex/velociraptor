@@ -15,13 +15,13 @@ func (self *ApiServer) GetUsers(
 	in *emptypb.Empty) (*api_proto.Users, error) {
 
 	users_manager := services.GetUserManager()
-	user_record, err := users_manager.GetUserFromContext(self.config, ctx)
+	user_record, org_config_obj, err := users_manager.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_record.Name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to enumerate users.")
@@ -29,7 +29,7 @@ func (self *ApiServer) GetUsers(
 
 	result := &api_proto.Users{}
 
-	users, err := users_manager.ListUsers(self.config)
+	users, err := users_manager.ListUsers()
 	if err != nil {
 		return nil, err
 	}
@@ -45,10 +45,10 @@ func (self *ApiServer) GetUserFavorites(
 
 	// No special permission requires to view a user's own favorites.
 	users_manager := services.GetUserManager()
-	user_record, err := users_manager.GetUserFromContext(self.config, ctx)
+	user_record, org_config_obj, err := users_manager.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 	user_name := user_record.Name
-	return users_manager.GetFavorites(self.config, user_name, in.Type)
+	return users_manager.GetFavorites(org_config_obj, user_name, in.Type)
 }

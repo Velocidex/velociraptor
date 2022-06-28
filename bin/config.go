@@ -469,11 +469,10 @@ func doDumpApiClientConfig() error {
 
 		// Make sure the user actually exists.
 		user_manager := services.GetUserManager()
-		_, err = user_manager.GetUser(config_obj,
-			*config_api_client_common_name)
+		_, err = user_manager.GetUser(*config_api_client_common_name)
 		if err != nil {
 			// Need to ensure we have a user
-			err := user_manager.SetUser(config_obj, &api_proto.VelociraptorUser{
+			err := user_manager.SetUser(&api_proto.VelociraptorUser{
 				Name: *config_api_client_common_name,
 			})
 			if err != nil {

@@ -85,6 +85,12 @@ func (self *ApiServer) GetKeywordCompletions(
 	ctx context.Context,
 	in *emptypb.Empty) (*api_proto.KeywordCompletions, error) {
 
+	users := services.GetUserManager()
+	_, org_config_obj, err := users.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	result := &api_proto.KeywordCompletions{
 		Items: []*api_proto.Completion{
 			{Name: "SELECT", Type: "Keyword"},
@@ -107,17 +113,17 @@ func (self *ApiServer) GetKeywordCompletions(
 	if err != nil {
 		return nil, err
 	}
-	repository, err := manager.GetGlobalRepository(self.config)
+	repository, err := manager.GetGlobalRepository(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
-	names, err := repository.List(ctx, self.config)
+	names, err := repository.List(ctx, org_config_obj)
 	if err != nil {
 		return nil, err
 	}
 
 	for _, name := range names {
-		artifact, pres := repository.Get(self.config, name)
+		artifact, pres := repository.Get(org_config_obj, name)
 		if !pres {
 			continue
 		}

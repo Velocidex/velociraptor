@@ -89,6 +89,10 @@ const (
 
 type UserManager struct {
 	ca_pool *x509.CertPool
+
+	// This is the root org's config since there is only a single user
+	// manager.
+	config_obj *config_proto.Config
 }
 
 func NewUserRecord(name string) (*api_proto.VelociraptorUser, error) {
@@ -116,27 +120,27 @@ func VerifyPassword(self *api_proto.VelociraptorUser, password string) bool {
 	return subtle.ConstantTimeCompare(hash[:], self.PasswordHash) == 1
 }
 
-func (self UserManager) SetUser(config_obj *config_proto.Config, user_record *api_proto.VelociraptorUser) error {
+func (self UserManager) SetUser(user_record *api_proto.VelociraptorUser) error {
 	if user_record.Name == "" {
 		return errors.New("Must set a username")
 	}
-	db, err := datastore.GetDB(config_obj)
+	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
 	}
 
-	return db.SetSubject(config_obj,
+	return db.SetSubject(self.config_obj,
 		paths.UserPathManager{Name: user_record.Name}.Path(),
 		user_record)
 }
 
-func (self UserManager) ListUsers(config_obj *config_proto.Config) ([]*api_proto.VelociraptorUser, error) {
-	db, err := datastore.GetDB(config_obj)
+func (self UserManager) ListUsers() ([]*api_proto.VelociraptorUser, error) {
+	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	children, err := db.ListChildren(config_obj, paths.USERS_ROOT)
+	children, err := db.ListChildren(self.config_obj, paths.USERS_ROOT)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +152,7 @@ func (self UserManager) ListUsers(config_obj *config_proto.Config) ([]*api_proto
 		}
 
 		username := child.Base()
-		user_record, err := self.GetUser(config_obj, username)
+		user_record, err := self.GetUser(username)
 		if err == nil {
 			result = append(result, user_record)
 		}
@@ -159,18 +163,18 @@ func (self UserManager) ListUsers(config_obj *config_proto.Config) ([]*api_proto
 
 // Returns the user record after stripping sensitive information like
 // password hashes.
-func (self UserManager) GetUser(config_obj *config_proto.Config, username string) (
+func (self UserManager) GetUser(username string) (
 	*api_proto.VelociraptorUser, error) {
 
 	// For the server name we dont have a real user record, we make a
 	// hard coded user record instead.
-	if username == config_obj.Client.PinnedServerName {
+	if username == self.config_obj.Client.PinnedServerName {
 		return &api_proto.VelociraptorUser{
 			Name: username,
 		}, nil
 	}
 
-	result, err := self.GetUserWithHashes(config_obj, username)
+	result, err := self.GetUserWithHashes(username)
 	if err != nil {
 		return nil, err
 	}
@@ -183,18 +187,18 @@ func (self UserManager) GetUser(config_obj *config_proto.Config, username string
 }
 
 // Return the user record with hashes - only used in Basic Auth.
-func (self UserManager) GetUserWithHashes(config_obj *config_proto.Config, username string) (
+func (self UserManager) GetUserWithHashes(username string) (
 	*api_proto.VelociraptorUser, error) {
 	if username == "" {
 		return nil, errors.New("Must set a username")
 	}
-	db, err := datastore.GetDB(config_obj)
+	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return nil, err
 	}
 
 	user_record := &api_proto.VelociraptorUser{}
-	err = db.GetSubject(config_obj,
+	err = db.GetSubject(self.config_obj,
 		paths.UserPathManager{Name: username}.Path(), user_record)
 	if errors.Is(err, os.ErrNotExist) || user_record.Name == "" {
 		return nil, errors.New("User not found")
@@ -203,18 +207,17 @@ func (self UserManager) GetUserWithHashes(config_obj *config_proto.Config, usern
 	return user_record, err
 }
 
-func (self UserManager) SetUserOptions(config_obj *config_proto.Config,
-	username string,
+func (self UserManager) SetUserOptions(username string,
 	options *api_proto.SetGUIOptionsRequest) error {
 
 	path_manager := paths.UserPathManager{Name: username}
-	db, err := datastore.GetDB(config_obj)
+	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
 	}
 
 	// Merge the old options with the new options
-	old_options, err := self.GetUserOptions(config_obj, username)
+	old_options, err := self.GetUserOptions(username)
 	if err != nil {
 		old_options = &api_proto.SetGUIOptionsRequest{}
 	}
@@ -242,20 +245,20 @@ func (self UserManager) SetUserOptions(config_obj *config_proto.Config,
 	old_options.DefaultPassword = options.DefaultPassword
 	old_options.DefaultDownloadsLock = options.DefaultDownloadsLock
 
-	return db.SetSubject(config_obj, path_manager.GUIOptions(), old_options)
+	return db.SetSubject(self.config_obj, path_manager.GUIOptions(), old_options)
 }
 
-func (self UserManager) GetUserOptions(config_obj *config_proto.Config, username string) (
+func (self UserManager) GetUserOptions(username string) (
 	*api_proto.SetGUIOptionsRequest, error) {
 
 	path_manager := paths.UserPathManager{Name: username}
-	db, err := datastore.GetDB(config_obj)
+	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return nil, err
 	}
 
 	options := &api_proto.SetGUIOptionsRequest{}
-	err = db.GetSubject(config_obj, path_manager.GUIOptions(), options)
+	err = db.GetSubject(self.config_obj, path_manager.GUIOptions(), options)
 	if options.Options == "" {
 		options.Options = default_user_options
 	}
@@ -273,7 +276,8 @@ func StartUserManager(
 	}
 
 	service := &UserManager{
-		ca_pool: CA_Pool,
+		ca_pool:    CA_Pool,
+		config_obj: config_obj,
 	}
 	services.RegisterUserManager(service)
 

@@ -85,7 +85,7 @@ func doOrgUserAdd() error {
 
 	user_manager := services.GetUserManager()
 	record, err := user_manager.GetUserWithHashes(
-		config_obj, *orgs_user_add_user)
+		*orgs_user_add_user)
 	if err != nil {
 		return err
 	}
@@ -105,7 +105,7 @@ func doOrgUserAdd() error {
 		Id:   org_record.OrgId,
 	})
 
-	return user_manager.SetUser(config_obj, record)
+	return user_manager.SetUser(record)
 }
 
 func doOrgCreate() error {

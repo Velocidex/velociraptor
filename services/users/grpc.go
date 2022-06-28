@@ -12,19 +12,28 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
-func (self UserManager) GetUserFromContext(config_obj *config_proto.Config, ctx context.Context) (
-	*api_proto.VelociraptorUser, error) {
+func (self UserManager) GetUserFromContext(ctx context.Context) (
+	*api_proto.VelociraptorUser, *config_proto.Config, error) {
 
-	grpc_user_info := GetGRPCUserInfo(config_obj, ctx, self.ca_pool)
-	user_record, err := self.GetUser(config_obj, grpc_user_info.Name)
+	grpc_user_info := GetGRPCUserInfo(self.config_obj, ctx, self.ca_pool)
+	user_record, err := self.GetUser(grpc_user_info.Name)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	user_record.CurrentOrg = grpc_user_info.CurrentOrg
-	return user_record, nil
+
+	// Fetch the appropriate config file fro the org manager.
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	org_config_obj, err := org_manager.GetOrgConfig(user_record.CurrentOrg)
+	return user_record, org_config_obj, err
 }
 
 // GetGRPCUserInfo: Extracts user information from GRPC context.

@@ -92,7 +92,7 @@ func (self UserCreateFunction) Call(
 
 	// Write the user record.
 	users_manager := services.GetUserManager()
-	err = users_manager.SetUser(config_obj, user_record)
+	err = users_manager.SetUser(user_record)
 	if err != nil {
 		scope.Log("user_create: %s", err)
 		return vfilter.Null{}

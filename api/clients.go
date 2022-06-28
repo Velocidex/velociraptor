@@ -40,7 +40,7 @@ func (self *ApiServer) GetClientMetadata(
 	in *api_proto.GetClientRequest) (*api_proto.ClientMetadata, error) {
 
 	users := services.GetUserManager()
-	user_record, err := users.GetUserFromContext(self.config, ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -51,20 +51,20 @@ func (self *ApiServer) GetClientMetadata(
 		permissions = acls.SERVER_ADMIN
 	}
 
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view clients.")
 	}
 
 	client_path_manager := paths.NewClientPathManager(in.ClientId)
-	db, err := datastore.GetDB(self.config)
+	db, err := datastore.GetDB(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
 
 	result := &api_proto.ClientMetadata{}
-	err = db.GetSubject(self.config, client_path_manager.Metadata(), result)
+	err = db.GetSubject(org_config_obj, client_path_manager.Metadata(), result)
 	if errors.Is(err, os.ErrNotExist) {
 		// Metadata not set, start with empty set.
 		err = nil
@@ -77,26 +77,26 @@ func (self *ApiServer) SetClientMetadata(
 	in *api_proto.ClientMetadata) (*emptypb.Empty, error) {
 
 	users := services.GetUserManager()
-	user_record, err := users.GetUserFromContext(self.config, ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
 	permissions := acls.LABEL_CLIENT
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to modify client labels.")
 	}
 
 	client_path_manager := paths.NewClientPathManager(in.ClientId)
-	db, err := datastore.GetDB(self.config)
+	db, err := datastore.GetDB(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	err = db.SetSubject(self.config, client_path_manager.Metadata(), in)
+	err = db.SetSubject(org_config_obj, client_path_manager.Metadata(), in)
 	return &emptypb.Empty{}, err
 }
 
@@ -105,33 +105,33 @@ func (self *ApiServer) GetClient(
 	in *api_proto.GetClientRequest) (*api_proto.ApiClient, error) {
 
 	users := services.GetUserManager()
-	user_record, err := users.GetUserFromContext(self.config, ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view clients.")
 	}
 
-	indexer, err := services.GetIndexer(self.config)
+	indexer, err := services.GetIndexer(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
 
 	// Update the user's MRU
 	if in.UpdateMru {
-		err = indexer.UpdateMRU(self.config, user_name, in.ClientId)
+		err = indexer.UpdateMRU(org_config_obj, user_name, in.ClientId)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	api_client, err := indexer.FastGetApiClient(ctx, self.config, in.ClientId)
+	api_client, err := indexer.FastGetApiClient(ctx, org_config_obj, in.ClientId)
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func (self *ApiServer) GetClient(
 		if !in.Lightweight &&
 			// Wait up to 2 seconds to find out if clients are connected.
 			services.GetNotifier().IsClientConnected(ctx,
-				self.config, in.ClientId, 2) {
+				org_config_obj, in.ClientId, 2) {
 			api_client.LastSeenAt = uint64(time.Now().UnixNano() / 1000)
 		}
 	}
@@ -153,14 +153,14 @@ func (self *ApiServer) GetClientFlows(
 	in *api_proto.ApiFlowRequest) (*api_proto.ApiFlowResponse, error) {
 
 	users := services.GetUserManager()
-	user_record, err := users.GetUserFromContext(self.config, ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view flows.")
@@ -195,6 +195,6 @@ func (self *ApiServer) GetClientFlows(
 		return nil, err
 	}
 
-	return launcher.GetFlows(self.config, in.ClientId,
+	return launcher.GetFlows(org_config_obj, in.ClientId,
 		in.IncludeArchived, filter, in.Offset, in.Count)
 }

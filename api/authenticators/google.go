@@ -338,7 +338,7 @@ func authenticateUserHandle(
 
 		// Now check if the user is allowed to log in.
 		users := services.GetUserManager()
-		user_record, err := users.GetUser(config_obj, username)
+		user_record, err := users.GetUser(username)
 		if err != nil {
 			reject_cb(w, r, errors.New("Invalid user"), username)
 			return
