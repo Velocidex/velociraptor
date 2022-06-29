@@ -80,7 +80,7 @@ func runUnzipList(builder services.ScopeBuilder) error {
               Size
        FROM glob(globs=MemberGlob,
                  root=pathspec(DelegatePath=ZipPath),
-                 accessor='zip')
+                 accessor='collector')
        WHERE NOT IsDir`
 
 	if *unzip_cmd_filter != "" {
@@ -97,11 +97,11 @@ func runUnzipFiles(builder services.ScopeBuilder) error {
 
 	query := `
        SELECT upload(
-               file=OSPath, accessor='zip',
+               file=OSPath, accessor='collector',
                name=OSPath.Path) AS Extracted
        FROM glob(globs=MemberGlob,
                  root=pathspec(DelegatePath=ZipPath),
-                 accessor='zip')
+                 accessor='collector')
        WHERE NOT IsDir`
 
 	if *unzip_cmd_filter != "" {
@@ -118,11 +118,11 @@ func runUnzipPrint(builder services.ScopeBuilder) error {
           SELECT OSPath
           FROM glob(globs=MemberGlob,
                     root=pathspec(DelegatePath=ZipPath),
-                    accessor='zip')
+                    accessor='collector')
           WHERE NOT IsDir AND FullPath =~ '.json$'
        }, query={
           SELECT *
-          FROM parse_jsonl(filename=OSPath, accessor='zip')
+          FROM parse_jsonl(filename=OSPath, accessor='collector')
        })
     `
 	return runQueryWithEnv(query, builder)

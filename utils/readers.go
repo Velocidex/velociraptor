@@ -153,3 +153,12 @@ func (self *RangedReader) readFromARun(
 
 	return 0, errors.New("IO Error")
 }
+
+type ZeroReader struct{}
+
+func (self ZeroReader) Read(b []byte) (n int, err error) {
+	for i := 0; i < len(b); i++ {
+		b[i] = 0
+	}
+	return len(b), nil
+}

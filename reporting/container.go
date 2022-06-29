@@ -14,7 +14,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Velocidex/ordereddict"
 	"github.com/alexmullins/zip"
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -22,6 +21,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/uploads"
@@ -229,7 +229,7 @@ func (self *Container) Upload(
 
 	// Try to collect sparse files if possible
 	result, err := self.maybeCollectSparseFile(
-		ctx, reader, store_as_name, sanitized_name, mtime)
+		ctx, scope, reader, store_as_name, sanitized_name, mtime)
 	if err == nil {
 		return result, nil
 	}
@@ -260,6 +260,7 @@ func (self *Container) Upload(
 
 func (self *Container) maybeCollectSparseFile(
 	ctx context.Context,
+	scope vfilter.Scope,
 	reader io.Reader, store_as_name, sanitized_name string, mtime time.Time) (
 	*uploads.UploadResponse, error) {
 
@@ -282,7 +283,7 @@ func (self *Container) maybeCollectSparseFile(
 	count := 0
 
 	// An index array for sparse files.
-	index := []*ordereddict.Dict{}
+	index := &actions_proto.Index{}
 	is_sparse := false
 
 	for _, rng := range range_reader.Ranges() {
@@ -291,11 +292,13 @@ func (self *Container) maybeCollectSparseFile(
 			file_length = 0
 		}
 
-		index = append(index, ordereddict.NewDict().
-			Set("file_offset", count).
-			Set("original_offset", rng.Offset).
-			Set("file_length", file_length).
-			Set("length", rng.Length))
+		index.Ranges = append(index.Ranges,
+			&actions_proto.Range{
+				FileOffset:     int64(count),
+				OriginalOffset: rng.Offset,
+				FileLength:     file_length,
+				Length:         rng.Length,
+			})
 
 		if rng.IsSparse {
 			is_sparse = true
@@ -309,13 +312,25 @@ func (self *Container) maybeCollectSparseFile(
 			}, err
 		}
 
-		n, err := utils.CopyN(ctx, utils.NewTee(writer, sha_sum, md5_sum),
-			range_reader, rng.Length)
+		run_writer := utils.NewTee(writer, sha_sum, md5_sum)
+		n, err := utils.CopyN(ctx, run_writer, range_reader, rng.Length)
 		if err != nil {
 			return &uploads.UploadResponse{
 				Error: err.Error(),
 			}, err
 		}
+
+		// We were unable to fully copy this run - this could indicate
+		// an issue with decompression of the ntfs for
+		// example. However we still need to maintain alignment here
+		// so we pad with zeros.
+		if int64(n) < rng.Length {
+			scope.Log("Unable to fully copy range %v in %v - padding %v bytes",
+				rng, store_as_name, rng.Length-int64(n))
+			_, _ = utils.CopyN(
+				ctx, run_writer, utils.ZeroReader{}, rng.Length-int64(n))
+		}
+
 		count += n
 	}
 
@@ -327,7 +342,7 @@ func (self *Container) maybeCollectSparseFile(
 		}
 		defer writer.Close()
 
-		serialized, err := utils.DictsToJson(index, nil)
+		serialized, err := json.Marshal(index)
 		if err != nil {
 			return &uploads.UploadResponse{
 				Error: err.Error(),
