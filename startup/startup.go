@@ -7,12 +7,9 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/ddclient"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
-	"www.velocidex.com/golang/velociraptor/services/sanity"
 	"www.velocidex.com/golang/velociraptor/services/server_artifacts"
-	"www.velocidex.com/golang/velociraptor/services/server_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/users"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -99,37 +96,9 @@ func StartupFrontendServices(sm *services.Service) (err error) {
 		return err
 	}
 
-	// Check everything is ok before we can start.
-	if spec.ClientMonitoring {
-		// Maintans the client's event monitoring table. All frontends
-		// need to follow this so they can propagate changes to
-		// clients.
-		err := sm.Start(client_monitoring.StartClientMonitoringService)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Runs server event queries. Should only run on one frontend.
-	if spec.ServerMonitoring {
-		err := sm.Start(server_monitoring.StartServerMonitoringService)
-		if err != nil {
-			return err
-		}
-	}
-
 	// Run any server artifacts the user asks for.
 	if spec.ServerArtifacts {
 		err := sm.Start(server_artifacts.StartServerArtifactService)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Sanity checker needs to start last so it can check all the
-	// other services.
-	if spec.SanityChecker {
-		err := sm.Start(sanity.StartSanityCheckService)
 		if err != nil {
 			return err
 		}
@@ -151,10 +120,4 @@ func Reset(config_obj *config_proto.Config) {
 	if services.GetNotifier() != nil {
 		fmt.Printf("Notifier not reset.\n")
 	}
-
-	_, err := services.GetInventory(config_obj)
-	if err != nil {
-		fmt.Printf("Inventory not reset.\n")
-	}
-
 }

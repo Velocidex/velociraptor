@@ -283,7 +283,7 @@ func checkForServerUpgrade(
 	return nil
 }
 
-func StartSanityCheckService(
+func NewSanityCheckService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {

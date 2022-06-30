@@ -447,22 +447,21 @@ func (self *ClientEventTable) load_from_file(
 }
 
 // Runs at frontend start to initialize the client monitoring table.
-func StartClientMonitoringService(
+func NewClientMonitoringService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config) (services.ClientEventTable, error) {
 
 	event_table := &ClientEventTable{
 		Clock: &utils.RealClock{},
 		id:    uuid.New().String(),
 	}
-	services.RegisterClientEventManager(event_table)
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Client Monitoring Service")
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	events, cancel := journal.Watch(
@@ -473,7 +472,6 @@ func StartClientMonitoringService(
 	go func() {
 		defer wg.Done()
 		defer cancel()
-		defer services.RegisterClientEventManager(nil)
 
 		for {
 			select {
@@ -490,5 +488,5 @@ func StartClientMonitoringService(
 		}
 	}()
 
-	return event_table.LoadFromFile(ctx, config_obj)
+	return event_table, event_table.LoadFromFile(ctx, config_obj)
 }

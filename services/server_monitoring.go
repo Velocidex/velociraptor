@@ -6,32 +6,20 @@ package services
 // server.
 
 import (
-	"sync"
-
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 )
 
-var (
-	server_event_mu    sync.Mutex
-	ServerEventManager serverEvent
-)
+func GetServerEventManager(config_obj *config_proto.Config) (ServerEventManager, error) {
+	org_manager, err := GetOrgManager()
+	if err != nil {
+		return nil, err
+	}
 
-func RegisterServerEventManager(manager serverEvent) {
-	server_event_mu.Lock()
-	defer server_event_mu.Unlock()
-
-	ServerEventManager = manager
+	return org_manager.Services(config_obj.OrgId).ServerEventManager()
 }
 
-func GetServerEventManager() serverEvent {
-	server_event_mu.Lock()
-	defer server_event_mu.Unlock()
-
-	return ServerEventManager
-}
-
-type serverEvent interface {
+type ServerEventManager interface {
 	// Update the server's event table.
 	Update(config_obj *config_proto.Config,
 		principal string,

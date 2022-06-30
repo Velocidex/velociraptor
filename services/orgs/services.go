@@ -9,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/broadcast"
 	"www.velocidex.com/golang/velociraptor/services/client_info"
+	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
 	"www.velocidex.com/golang/velociraptor/services/indexing"
@@ -20,23 +21,49 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/notebook"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
+	"www.velocidex.com/golang/velociraptor/services/sanity"
+	"www.velocidex.com/golang/velociraptor/services/server_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/vfs_service"
 )
 
 type ServiceContainer struct {
 	mu sync.Mutex
 
-	journal             services.JournalService
-	client_info_manager services.ClientInfoManager
-	indexer             services.Indexer
-	broadcast           services.BroadcastService
-	inventory           services.Inventory
-	vfs_service         services.VFSService
-	labeler             services.Labeler
-	repository          services.RepositoryManager
-	hunt_dispatcher     services.IHuntDispatcher
-	launcher            services.Launcher
-	notebook_manager    services.NotebookManager
+	journal              services.JournalService
+	client_info_manager  services.ClientInfoManager
+	indexer              services.Indexer
+	broadcast            services.BroadcastService
+	inventory            services.Inventory
+	vfs_service          services.VFSService
+	labeler              services.Labeler
+	repository           services.RepositoryManager
+	hunt_dispatcher      services.IHuntDispatcher
+	launcher             services.Launcher
+	notebook_manager     services.NotebookManager
+	client_event_manager services.ClientEventTable
+	server_event_manager services.ServerEventManager
+}
+
+func (self ServiceContainer) ServerEventManager() (services.ServerEventManager, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.server_event_manager == nil {
+		return nil, errors.New("Server Monitoring Manager service not initialized")
+	}
+
+	return self.server_event_manager, nil
+}
+
+func (self ServiceContainer) ClientEventManager() (services.ClientEventTable, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.client_event_manager == nil {
+		return nil, errors.New("Client Monitoring Manager service not initialized")
+	}
+
+	return self.client_event_manager, nil
 }
 
 func (self ServiceContainer) NotebookManager() (services.NotebookManager, error) {
@@ -328,6 +355,29 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 
 	service_container.mu.Lock()
 	service_container.notebook_manager = n
+	service_container.mu.Unlock()
+
+	err = sanity.NewSanityCheckService(self.ctx, self.wg, org_config)
+	if err != nil {
+		return err
+	}
+
+	client_event_manager, err := client_monitoring.NewClientMonitoringService(self.ctx, self.wg, org_config)
+	if err != nil {
+		return err
+	}
+
+	service_container.mu.Lock()
+	service_container.client_event_manager = client_event_manager
+	service_container.mu.Unlock()
+
+	server_event_manager, err := server_monitoring.NewServerMonitoringService(self.ctx, self.wg, org_config)
+	if err != nil {
+		return err
+	}
+
+	service_container.mu.Lock()
+	service_container.server_event_manager = server_event_manager
 	service_container.mu.Unlock()
 
 	return err

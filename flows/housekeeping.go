@@ -53,7 +53,11 @@ func CheckClientStatus(
 	}
 
 	// Check the client's event table for validity.
-	client_event_manager := services.ClientEventManager()
+	client_event_manager, err := services.ClientEventManager(config_obj)
+	if err != nil {
+		return err
+	}
+
 	if client_event_manager != nil &&
 		client_event_manager.CheckClientEventsVersion(
 			config_obj, client_id, stats.LastEventTableVersion) {

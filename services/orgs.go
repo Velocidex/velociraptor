@@ -46,6 +46,8 @@ type ServiceContainer interface {
 	HuntDispatcher() (IHuntDispatcher, error)
 	Launcher() (Launcher, error)
 	NotebookManager() (NotebookManager, error)
+	ClientEventManager() (ClientEventTable, error)
+	ServerEventManager() (ServerEventManager, error)
 }
 
 // The org manager manages multi-tenancies.

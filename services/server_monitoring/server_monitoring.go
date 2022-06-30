@@ -423,14 +423,14 @@ func (self *EventTable) RunQuery(
 }
 
 // Bring up the server monitoring service.
-func StartServerMonitoringService(
+func NewServerMonitoringService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config) (services.ServerEventManager, error) {
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	artifacts := &flows_proto.ArtifactCollectorArgs{}
@@ -458,7 +458,7 @@ func StartServerMonitoringService(
 
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	events, cancel := journal.Watch(
 		ctx, "Server.Internal.ArtifactModification",
@@ -468,7 +468,6 @@ func StartServerMonitoringService(
 	go func() {
 		defer wg.Done()
 		defer cancel()
-		defer services.RegisterServerEventManager(nil)
 
 		// Shut down all server queries in an orderly fasion
 		defer manager.Close()
@@ -488,7 +487,5 @@ func StartServerMonitoringService(
 		}
 	}()
 
-	services.RegisterServerEventManager(manager)
-
-	return manager.Update(config_obj, "", artifacts)
+	return manager, manager.Update(config_obj, "", artifacts)
 }

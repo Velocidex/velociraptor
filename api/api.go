@@ -922,7 +922,11 @@ func (self *ApiServer) GetClientMonitoringState(
 			"User is not allowed to read monitoring artifacts (%v).", permissions))
 	}
 
-	manager := services.ClientEventManager()
+	manager, err := services.ClientEventManager(org_config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	result := manager.GetClientMonitoringState()
 	if in.ClientId != "" {
 		message := manager.GetClientUpdateEventTableMessage(org_config_obj,
@@ -954,8 +958,12 @@ func (self *ApiServer) SetClientMonitoringState(
 			"User is not allowed to modify monitoring artifacts (%v).", permissions))
 	}
 
-	err = services.ClientEventManager().SetClientMonitoringState(
-		ctx, org_config_obj, user_name, in)
+	manager, err := services.ClientEventManager(org_config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	err = manager.SetClientMonitoringState(ctx, org_config_obj, user_name, in)
 	if err != nil {
 		return nil, err
 	}

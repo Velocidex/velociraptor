@@ -71,7 +71,13 @@ func (self AddClientMonitoringFunction) Call(
 		return vfilter.Null{}
 	}
 
-	event_config := services.ClientEventManager().GetClientMonitoringState()
+	client_event_manager, err := services.ClientEventManager(config_obj)
+	if err != nil {
+		scope.Log("add_client_monitoring: %v", err)
+		return vfilter.Null{}
+	}
+
+	event_config := client_event_manager.GetClientMonitoringState()
 
 	label_config := getArtifactCollectorArgs(event_config, arg.Label)
 
@@ -110,7 +116,7 @@ func (self AddClientMonitoringFunction) Call(
 
 	// Actually set the table
 	principal := vql_subsystem.GetPrincipal(scope)
-	err = services.ClientEventManager().SetClientMonitoringState(
+	err = client_event_manager.SetClientMonitoringState(
 		ctx, config_obj, principal, event_config)
 	if err != nil {
 		scope.Log("add_client_monitoring: %v", err)
@@ -225,7 +231,13 @@ func (self AddServerMonitoringFunction) Call(
 		return vfilter.Null{}
 	}
 
-	event_config := services.ServerEventManager.Get()
+	server_event_manager, err := services.GetServerEventManager(config_obj)
+	if err != nil {
+		scope.Log("add_server_monitoring: %v", err)
+		return vfilter.Null{}
+	}
+
+	event_config := server_event_manager.Get()
 
 	// First remove the current artifact if it is there already
 	removeArtifact(event_config, arg.Artifact)
@@ -265,8 +277,13 @@ func (self AddServerMonitoringFunction) Call(
 
 	// Actually set the table
 	principal := vql_subsystem.GetPrincipal(scope)
-	err = services.ServerEventManager.Update(
-		config_obj, principal, event_config)
+	server_manager, err := services.GetServerEventManager(config_obj)
+	if err != nil {
+		scope.Log("add_server_monitoring: %v", err)
+		return vfilter.Null{}
+	}
+
+	err = server_manager.Update(config_obj, principal, event_config)
 	if err != nil {
 		scope.Log("add_server_monitoring: %v", err)
 		return vfilter.Null{}
