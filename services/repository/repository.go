@@ -449,6 +449,7 @@ func (self *Repository) NewArtifactRepositoryPlugin(
 	config_obj *config_proto.Config) vfilter.PluginGeneratorInterface {
 	return &ArtifactRepositoryPlugin{
 		repository: self,
+		config_obj: config_obj,
 		mocks:      make(map[string][]vfilter.Row),
 	}
 }
