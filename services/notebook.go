@@ -3,11 +3,13 @@ package services
 import (
 	"context"
 	"errors"
+	"sync"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 )
 
 var (
+	mu               sync.Mutex
 	notebook_manager NotebookManager
 )
 

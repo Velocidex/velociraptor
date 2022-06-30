@@ -102,7 +102,8 @@ func (self *HuntManager) Start(
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) error {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> the hunt manager service with rate limit %v/s.",
+	logger.Info("<green>Starting</> hunt manager service for %v with rate limit %v/s.",
+		services.GetOrgName(config_obj),
 		config_obj.Frontend.Resources.NotificationsPerSecond)
 
 	err := journal.WatchQueueWithCB(ctx, config_obj, wg,
@@ -163,15 +164,16 @@ func (self *HuntManager) ProcessMutation(
 		return err
 	}
 
-	return self.processMutation(mutation)
+	return self.processMutation(config_obj, mutation)
 }
 
 func (self *HuntManager) processMutation(
+	config_obj *config_proto.Config,
 	mutation *api_proto.HuntMutation) error {
 
-	dispatcher := services.GetHuntDispatcher()
-	if dispatcher == nil {
-		return errors.New("Hunt Dispatcher not ready")
+	dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		return err
 	}
 
 	dispatcher.ModifyHuntObject(mutation.HuntId,
@@ -377,7 +379,7 @@ func (self *HuntManager) ProcessFlowCompletion(
 	// status, so we dont bother broadcasting a mutation for them. We
 	// only need to update the local hunt dispatcher on the master
 	// node which will flush to disk eventually.
-	err = self.processMutation(mutation)
+	err = self.processMutation(config_obj, mutation)
 	if err != nil {
 		return err
 	}
@@ -435,9 +437,9 @@ func (self *HuntManager) participateInAllHunts(ctx context.Context,
 	}
 
 	// Get hunt information about this hunt.
-	dispatcher := services.GetHuntDispatcher()
-	if dispatcher == nil {
-		return errors.New("hunt dispatcher invalid")
+	dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		return err
 	}
 
 	return dispatcher.ApplyFuncOnHunts(func(hunt *api_proto.Hunt) error {
@@ -496,9 +498,9 @@ func (self *HuntManager) ProcessParticipation(
 	}
 
 	// Get hunt information about this hunt.
-	dispatcher := services.GetHuntDispatcher()
-	if dispatcher == nil {
-		return errors.New("hunt dispatcher invalid")
+	dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		return err
 	}
 
 	hunt_obj, pres := dispatcher.GetHunt(participation_row.HuntId)
@@ -553,7 +555,7 @@ func (self *HuntManager) ProcessParticipation(
 		config_obj, hunt_obj, participation_row.ClientId)
 }
 
-func StartHuntManager(
+func NewHuntManager(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
@@ -750,9 +752,9 @@ func scheduleHuntOnClient(
 	}
 
 	// Modify the hunt stats.
-	dispatcher := services.GetHuntDispatcher()
-	if dispatcher == nil {
-		return errors.New("hunt dispatcher invalid")
+	dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		return err
 	}
 
 	err = dispatcher.MutateHunt(config_obj,

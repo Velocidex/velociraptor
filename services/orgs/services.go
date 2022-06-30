@@ -9,6 +9,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/broadcast"
 	"www.velocidex.com/golang/velociraptor/services/client_info"
+	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
+	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
 	"www.velocidex.com/golang/velociraptor/services/indexing"
 	"www.velocidex.com/golang/velociraptor/services/interrogation"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
@@ -30,6 +32,19 @@ type ServiceContainer struct {
 	vfs_service         services.VFSService
 	labeler             services.Labeler
 	repository          services.RepositoryManager
+	hunt_dispatcher     services.IHuntDispatcher
+}
+
+func (self ServiceContainer) HuntDispatcher() (services.IHuntDispatcher, error) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.hunt_dispatcher == nil {
+		return nil, errors.New("Hunt Dispatcher service not initialized")
+	}
+
+	return self.hunt_dispatcher, nil
 }
 
 func (self ServiceContainer) Indexer() (services.Indexer, error) {
@@ -208,7 +223,23 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 	service_container.inventory = i
 	service_container.mu.Unlock()
 
-	err = interrogation.StartInterrogationService(
+	hd, err := hunt_dispatcher.NewHuntDispatcher(
+		self.ctx, self.wg, org_config)
+	if err != nil {
+		return err
+	}
+
+	err = hunt_manager.NewHuntManager(
+		self.ctx, self.wg, org_config)
+	if err != nil {
+		return err
+	}
+
+	service_container.mu.Lock()
+	service_container.hunt_dispatcher = hd
+	service_container.mu.Unlock()
+
+	err = interrogation.NewInterrogationService(
 		self.ctx, self.wg, org_config)
 
 	if err != nil {

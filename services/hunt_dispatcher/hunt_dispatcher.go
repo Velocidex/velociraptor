@@ -582,15 +582,17 @@ func (self *HuntDispatcher) CreateHunt(
 	// Trigger a refresh of the hunt dispatcher. This guarantees
 	// that fresh data will be read in subsequent ListHunt()
 	// calls.
-	err = services.GetHuntDispatcher().Refresh(config_obj)
-
-	return hunt.HuntId, err
+	hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		return "", err
+	}
+	return hunt.HuntId, hunt_dispatcher.Refresh(config_obj)
 }
 
-func StartHuntDispatcher(
+func NewHuntDispatcher(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config) (services.IHuntDispatcher, error) {
 
 	service := &HuntDispatcher{
 		config_obj:  config_obj,
@@ -598,13 +600,11 @@ func StartHuntDispatcher(
 		uuid:        utils.GetGUID(),
 		i_am_master: services.IsMaster(config_obj),
 	}
-	services.RegisterHuntDispatcher(service)
 
 	// flush the hunts every 10 seconds.
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer services.RegisterHuntDispatcher(nil)
 
 		// On the client we register a dummy dispatcher since
 		// there is nothing to sync from.
@@ -613,7 +613,8 @@ func StartHuntDispatcher(
 		}
 
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-		logger.Info("<green>Starting</> Hunt Dispatcher Service.")
+		logger.Info("<green>Starting</> Hunt Dispatcher Service for %v.",
+			services.GetOrgName(config_obj))
 
 		for {
 			select {
@@ -639,7 +640,7 @@ func StartHuntDispatcher(
 		logger.Error("Unable to Refresh hunt dispatcher: %v", err)
 	}
 
-	return journal.WatchQueueWithCB(ctx, config_obj, wg,
+	return service, journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"Server.Internal.HuntUpdate", "HuntDispatcher",
 		service.ProcessUpdate)
 }

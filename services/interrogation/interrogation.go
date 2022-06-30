@@ -339,7 +339,7 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	return nil
 }
 
-func StartInterrogationService(
+func NewInterrogationService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {

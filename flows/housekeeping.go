@@ -81,9 +81,9 @@ func CheckClientStatus(
 
 	// Check the client's hunt status
 	// Process any needed hunts.
-	dispatcher := services.GetHuntDispatcher()
-	if dispatcher == nil {
-		return nil
+	dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		return err
 	}
 
 	// Can we get away without a lock? If the client is already up

@@ -9,9 +9,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/ddclient"
-	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
-	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
-	"www.velocidex.com/golang/velociraptor/services/interrogation"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/services/notebook"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
@@ -128,30 +125,6 @@ func StartupFrontendServices(sm *services.Service) (err error) {
 		return err
 	}
 
-	if spec.HuntDispatcher {
-		// Hunt dispatcher manages client's hunt membership.
-		err := sm.Start(hunt_dispatcher.StartHuntDispatcher)
-		if err != nil {
-			return err
-		}
-	}
-
-	if spec.HuntManager {
-		err := sm.Start(hunt_manager.StartHuntManager)
-		if err != nil {
-			return err
-		}
-	}
-
-	// Interrogation service populates indexes etc for new
-	// clients.
-	if spec.Interrogation {
-		err := sm.Start(interrogation.StartInterrogationService)
-		if err != nil {
-			return err
-		}
-	}
-
 	// Runs server event queries. Should only run on one frontend.
 	if spec.ServerMonitoring {
 		err := sm.Start(server_monitoring.StartServerMonitoringService)
@@ -204,7 +177,4 @@ func Reset(config_obj *config_proto.Config) {
 		fmt.Printf("Launcher not reset.\n")
 	}
 
-	if services.GetHuntDispatcher() != nil {
-		fmt.Printf("HuntDispatcher not reset.\n")
-	}
 }

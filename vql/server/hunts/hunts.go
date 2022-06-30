@@ -79,7 +79,11 @@ func (self HuntsPlugin) Call(
 			count = 1000
 		}
 
-		hunt_dispatcher := services.GetHuntDispatcher()
+		hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
+		if err != nil {
+			scope.Log("hunts: %v", err)
+			return
+		}
 
 		// Show a specific hunt
 		if arg.HuntId != "" {
@@ -165,7 +169,12 @@ func (self HuntResultsPlugin) Call(
 		// If no artifact is specified, get the first one from
 		// the hunt.
 		if arg.Artifact == "" {
-			hunt_dispatcher_service := services.GetHuntDispatcher()
+			hunt_dispatcher_service, err := services.GetHuntDispatcher(config_obj)
+			if err != nil {
+				scope.Log("hunt_results: %v", err)
+				return
+			}
+
 			hunt_obj, pres := hunt_dispatcher_service.GetHunt(arg.HuntId)
 			if !pres {
 				return
@@ -214,7 +223,11 @@ func (self HuntResultsPlugin) Call(
 			return
 		}
 
-		hunt_dispatcher := services.GetHuntDispatcher()
+		hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
+		if err != nil {
+			return
+		}
+
 		for flow_details := range hunt_dispatcher.GetFlows(
 			ctx, config_obj, scope, arg.HuntId, 0) {
 
@@ -308,7 +321,12 @@ func (self HuntFlowsPlugin) Call(
 			return
 		}
 
-		hunt_dispatcher := services.GetHuntDispatcher()
+		hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
+		if err != nil {
+			scope.Log("hunt_flows: %v", err)
+			return
+		}
+
 		for flow_details := range hunt_dispatcher.GetFlows(
 			ctx, config_obj, scope, arg.HuntId, int(arg.StartRow)) {
 

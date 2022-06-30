@@ -54,7 +54,11 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 			return
 		}
 
-		hunt_dispatcher := services.GetHuntDispatcher()
+		hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
+		if err != nil {
+			scope.Log("hunt_delete: %s", err)
+			return
+		}
 		for flow_details := range hunt_dispatcher.GetFlows(
 			ctx, config_obj, scope, arg.HuntId, 0) {
 

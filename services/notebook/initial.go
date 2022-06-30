@@ -252,8 +252,8 @@ func getCellsForHunt(ctx context.Context,
 	hunt_id string,
 	notebook_metadata *api_proto.NotebookMetadata) []*api_proto.NotebookCellRequest {
 
-	dispatcher := services.GetHuntDispatcher()
-	if dispatcher == nil {
+	dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
 		return nil
 	}
 

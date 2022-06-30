@@ -43,7 +43,8 @@ func watchForFlowCompletion(
 		defer wg.Done()
 		defer cancel()
 
-		defer logger.Info("Stopping watch for %v", artifact_name)
+		defer logger.Info("Stopping watch for %v for %v (%v)",
+			artifact_name, services.GetOrgName(config_obj), watcher_name)
 
 		builder := services.ScopeBuilder{
 			Config:     config_obj,

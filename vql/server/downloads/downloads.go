@@ -443,7 +443,11 @@ func createHuntDownloadFile(
 		return nil, err
 	}
 
-	hunt_dispatcher := services.GetHuntDispatcher()
+	hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	hunt_details, pres := hunt_dispatcher.GetHunt(hunt_id)
 	if !pres {
 		fd.Close()

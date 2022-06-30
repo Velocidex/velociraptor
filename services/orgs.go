@@ -41,6 +41,7 @@ type ServiceContainer interface {
 	VFSService() (VFSService, error)
 	Labeler() (Labeler, error)
 	RepositoryManager() (RepositoryManager, error)
+	HuntDispatcher() (IHuntDispatcher, error)
 }
 
 // The org manager manages multi-tenancies.

@@ -38,7 +38,11 @@ func (self *ApiServer) GetHuntFlows(
 			"User is not allowed to view hunt results.")
 	}
 
-	hunt_dispatcher := services.GetHuntDispatcher()
+	hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	hunt, pres := hunt_dispatcher.GetHunt(in.HuntId)
 	if !pres {
 		return nil, status.Error(codes.InvalidArgument, "No hunt known")
@@ -115,7 +119,11 @@ func (self *ApiServer) CreateHunt(
 		}).Info("CreateHunt")
 
 	result := &api_proto.StartFlowResponse{}
-	hunt_dispatcher := services.GetHuntDispatcher()
+	hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	hunt_id, err := hunt_dispatcher.CreateHunt(
 		ctx, org_config_obj, acl_manager, in)
 	if err != nil {
@@ -155,7 +163,11 @@ func (self *ApiServer) ModifyHunt(
 			"details": fmt.Sprintf("%v", in),
 		}).Info("ModifyHunt")
 
-	hunt_dispatcher := services.GetHuntDispatcher()
+	hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	err = hunt_dispatcher.ModifyHunt(ctx, org_config_obj, in, in.Creator)
 	if err != nil {
 		return nil, err
@@ -185,7 +197,11 @@ func (self *ApiServer) ListHunts(
 			"User is not allowed to view hunts.")
 	}
 
-	hunt_dispatcher := services.GetHuntDispatcher()
+	hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	result, err := hunt_dispatcher.ListHunts(
 		ctx, org_config_obj, in)
 	if err != nil {
@@ -237,7 +253,11 @@ func (self *ApiServer) GetHunt(
 			"User is not allowed to view hunts.")
 	}
 
-	hunt_dispatcher := services.GetHuntDispatcher()
+	hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	result, pres := hunt_dispatcher.GetHunt(in.HuntId)
 	if !pres {
 		return nil, errors.New("Hunt not found")
