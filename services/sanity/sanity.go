@@ -95,7 +95,7 @@ func (self *SanityChecks) Check(
 		return err
 	}
 
-	notebook_manager, err := services.GetNotebookManager()
+	notebook_manager, err := services.GetNotebookManager(config_obj)
 	if err != nil {
 		return err
 	}

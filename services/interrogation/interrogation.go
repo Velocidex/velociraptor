@@ -140,7 +140,7 @@ func (self *EnrollmentService) ProcessEnrollment(
 	}
 
 	// Issue the flow on the client.
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return err
 	}

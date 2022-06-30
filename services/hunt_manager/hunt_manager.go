@@ -266,7 +266,7 @@ func (self *HuntManager) maybeDirectlyAssignFlow(
 	}
 
 	// Verify the flow actually exists.
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return err
 	}
@@ -709,7 +709,7 @@ func scheduleHuntOnClient(
 		return err
 	}
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return err
 	}

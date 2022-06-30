@@ -48,7 +48,7 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 			return
 		}
 
-		launcher, err := services.GetLauncher()
+		launcher, err := services.GetLauncher(config_obj)
 		if err != nil {
 			scope.Log("hunt_delete: %s", err)
 			return

@@ -54,7 +54,7 @@ func WriteFlowReport(
 
 	parts := []*ReportPart{}
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return err
 	}

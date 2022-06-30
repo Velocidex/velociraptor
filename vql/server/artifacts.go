@@ -138,7 +138,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		acl_manager = vql_subsystem.NullACLManager{}
 	}
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return vfilter.Null{}
 	}

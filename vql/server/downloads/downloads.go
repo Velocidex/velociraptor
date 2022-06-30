@@ -212,7 +212,7 @@ func createDownloadFile(
 	lock_file.Write([]byte("X"))
 	lock_file.Close()
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +278,7 @@ func downloadFlowToZip(
 	flow_id string,
 	zip_writer *cryptozip.Writer) error {
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return err
 	}

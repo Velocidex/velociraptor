@@ -92,7 +92,7 @@ func (self *ApiServer) CancelFlow(
 			"User is not allowed to cancel flows.")
 	}
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +194,7 @@ func (self *ApiServer) CollectArtifact(
 	if err != nil {
 		return nil, err
 	}
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -364,7 +364,7 @@ func (self *ApiServer) GetFlowDetails(
 			"User is not allowed to launch flows.")
 	}
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -392,7 +392,7 @@ func (self *ApiServer) GetFlowRequests(
 			"User is not allowed to view flows.")
 	}
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(org_config_obj)
 	if err != nil {
 		return nil, err
 	}

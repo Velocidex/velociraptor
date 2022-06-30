@@ -49,7 +49,7 @@ func (self FlowsPlugin) Call(
 			return
 		}
 
-		launcher, err := services.GetLauncher()
+		launcher, err := services.GetLauncher(config_obj)
 		if err != nil {
 			scope.Log("flows: %v", err)
 			return
@@ -141,7 +141,7 @@ func (self *CancelFlowFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		scope.Log("cancel_flow: %v", err)
 		return vfilter.Null{}
@@ -194,7 +194,7 @@ func (self EnumerateFlowPlugin) Call(
 			return
 		}
 
-		launcher, err := services.GetLauncher()
+		launcher, err := services.GetLauncher(config_obj)
 		if err != nil {
 			scope.Log("delete_flow: %v", err)
 			return

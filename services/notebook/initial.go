@@ -114,7 +114,7 @@ func CreateInitialNotebook(ctx context.Context,
 		}
 	}
 
-	notebook_manager, err := services.GetNotebookManager()
+	notebook_manager, err := services.GetNotebookManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -325,7 +325,7 @@ func getCellsForFlow(ctx context.Context,
 	client_id, flow_id string,
 	notebook_metadata *api_proto.NotebookMetadata) []*api_proto.NotebookCellRequest {
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return nil
 	}

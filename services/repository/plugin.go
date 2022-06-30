@@ -122,7 +122,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 			acl_manager = vql_subsystem.NullACLManager{}
 		}
 
-		launcher, err := services.GetLauncher()
+		launcher, err := services.GetLauncher(self.config_obj)
 		if err != nil {
 			scope.Log("Launcher not available")
 			return

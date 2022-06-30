@@ -384,7 +384,7 @@ func (self FlowResultsPlugin) Call(
 		// If no artifact is specified, get the first one from
 		// the flow.
 		if arg.Artifact == "" {
-			launcher, err := services.GetLauncher()
+			launcher, err := services.GetLauncher(config_obj)
 			if err != nil {
 				scope.Log("flow_results: %v", err)
 				return

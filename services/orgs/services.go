@@ -16,6 +16,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/labels"
+	"www.velocidex.com/golang/velociraptor/services/launcher"
+	"www.velocidex.com/golang/velociraptor/services/notebook"
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/services/vfs_service"
@@ -33,6 +35,30 @@ type ServiceContainer struct {
 	labeler             services.Labeler
 	repository          services.RepositoryManager
 	hunt_dispatcher     services.IHuntDispatcher
+	launcher            services.Launcher
+	notebook_manager    services.NotebookManager
+}
+
+func (self ServiceContainer) NotebookManager() (services.NotebookManager, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.notebook_manager == nil {
+		return nil, errors.New("Notebook Manager service not initialized")
+	}
+
+	return self.notebook_manager, nil
+}
+
+func (self ServiceContainer) Launcher() (services.Launcher, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.launcher == nil {
+		return nil, errors.New("Launcher service not initialized")
+	}
+
+	return self.launcher, nil
 }
 
 func (self ServiceContainer) HuntDispatcher() (services.IHuntDispatcher, error) {
@@ -283,6 +309,25 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 
 	service_container.mu.Lock()
 	service_container.labeler = l
+	service_container.mu.Unlock()
+
+	launch, err := launcher.NewLauncherService(
+		self.ctx, self.wg, org_config)
+	if err != nil {
+		return err
+	}
+
+	service_container.mu.Lock()
+	service_container.launcher = launch
+	service_container.mu.Unlock()
+
+	n, err := notebook.NewNotebookManagerService(self.ctx, self.wg, org_config)
+	if err != nil {
+		return err
+	}
+
+	service_container.mu.Lock()
+	service_container.notebook_manager = n
 	service_container.mu.Unlock()
 
 	return err

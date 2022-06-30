@@ -2,33 +2,18 @@ package services
 
 import (
 	"context"
-	"errors"
-	"sync"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
-var (
-	mu               sync.Mutex
-	notebook_manager NotebookManager
-)
-
-func GetNotebookManager() (NotebookManager, error) {
-	mu.Lock()
-	defer mu.Unlock()
-
-	if notebook_manager == nil {
-		return nil, errors.New("Notebook Manager not initialized")
+func GetNotebookManager(config_obj *config_proto.Config) (NotebookManager, error) {
+	org_manager, err := GetOrgManager()
+	if err != nil {
+		return nil, err
 	}
 
-	return notebook_manager, nil
-}
-
-func RegisterNotebookManager(m NotebookManager) {
-	mu.Lock()
-	defer mu.Unlock()
-
-	notebook_manager = m
+	return org_manager.Services(config_obj.OrgId).NotebookManager()
 }
 
 type NotebookManager interface {

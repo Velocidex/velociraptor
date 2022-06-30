@@ -146,7 +146,7 @@ func (self *ClientEventTable) compileArtifactCollectorArgs(
 	artifact *flows_proto.ArtifactCollectorArgs) (
 	[]*actions_proto.VQLCollectorArgs, error) {
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return nil, err
 	}

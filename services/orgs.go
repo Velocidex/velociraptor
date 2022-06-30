@@ -3,12 +3,14 @@ package services
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
 var (
+	mu          sync.Mutex
 	org_manager OrgManager
 
 	NotFoundError = errors.New("Org not found")
@@ -42,6 +44,8 @@ type ServiceContainer interface {
 	Labeler() (Labeler, error)
 	RepositoryManager() (RepositoryManager, error)
 	HuntDispatcher() (IHuntDispatcher, error)
+	Launcher() (Launcher, error)
+	NotebookManager() (NotebookManager, error)
 }
 
 // The org manager manages multi-tenancies.

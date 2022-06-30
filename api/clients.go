@@ -190,7 +190,7 @@ func (self *ApiServer) GetClientFlows(
 		}
 	}
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(org_config_obj)
 	if err != nil {
 		return nil, err
 	}

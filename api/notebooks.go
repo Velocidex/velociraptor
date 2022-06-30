@@ -47,7 +47,7 @@ func (self *ApiServer) GetNotebooks(
 
 	result := &api_proto.Notebooks{}
 
-	notebook_manager, err := services.GetNotebookManager()
+	notebook_manager, err := services.GetNotebookManager(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (self *ApiServer) NewNotebook(
 			"User is not allowed to create notebooks.")
 	}
 
-	notebook_manager, err := services.GetNotebookManager()
+	notebook_manager, err := services.GetNotebookManager(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func (self *ApiServer) NewNotebookCell(
 			"User is not allowed to edit notebooks.")
 	}
 
-	notebook_manager, err := services.GetNotebookManager()
+	notebook_manager, err := services.GetNotebookManager(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +179,7 @@ func (self *ApiServer) UpdateNotebook(
 
 	// If the notebook is not properly shared with the user they
 	// may not edit it.
-	notebook_manager, err := services.GetNotebookManager()
+	notebook_manager, err := services.GetNotebookManager(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -244,7 +244,7 @@ func (self *ApiServer) GetNotebookCell(
 			"User is not allowed to read notebooks.")
 	}
 
-	notebook_manager, err := services.GetNotebookManager()
+	notebook_manager, err := services.GetNotebookManager(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -288,7 +288,7 @@ func (self *ApiServer) UpdateNotebookCell(
 			"User is not allowed to edit notebooks.")
 	}
 
-	notebook_manager, err := services.GetNotebookManager()
+	notebook_manager, err := services.GetNotebookManager(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -334,7 +334,7 @@ func (self *ApiServer) CancelNotebookCell(
 			"User is not allowed to edit notebooks.")
 	}
 
-	notebook_manager, err := services.GetNotebookManager()
+	notebook_manager, err := services.GetNotebookManager(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -362,7 +362,7 @@ func (self *ApiServer) UploadNotebookAttachment(
 			"User is not allowed to edit notebooks.")
 	}
 
-	notebook_manager, err := services.GetNotebookManager()
+	notebook_manager, err := services.GetNotebookManager(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -414,7 +414,7 @@ func exportZipNotebook(
 		return err
 	}
 
-	notebook_manager, err := services.GetNotebookManager()
+	notebook_manager, err := services.GetNotebookManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -472,7 +472,7 @@ func exportHTMLNotebook(config_obj *config_proto.Config,
 		return err
 	}
 
-	notebook_manager, err := services.GetNotebookManager()
+	notebook_manager, err := services.GetNotebookManager(config_obj)
 	if err != nil {
 		return err
 	}

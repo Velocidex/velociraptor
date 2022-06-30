@@ -529,7 +529,7 @@ func (self *HuntDispatcher) CreateHunt(
 	// time. This ensures that if the artifact definition is
 	// changed after this point, the hunt will continue to
 	// schedule consistent VQL on the clients.
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return "", err
 	}

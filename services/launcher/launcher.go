@@ -670,23 +670,10 @@ func NewFlowId(client_id string) string {
 	return constants.FLOW_PREFIX + result
 }
 
-func StartLauncherService(
+func NewLauncherService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config) (services.Launcher, error) {
 
-	services.RegisterLauncher(&Launcher{})
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		defer services.RegisterLauncher(nil)
-
-		<-ctx.Done()
-
-		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-		logger.Info("Exiting Launcher Service")
-	}()
-
-	return nil
+	return &Launcher{}, nil
 }

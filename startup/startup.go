@@ -9,8 +9,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/ddclient"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/notebook"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
 	"www.velocidex.com/golang/velociraptor/services/sanity"
 	"www.velocidex.com/golang/velociraptor/services/server_artifacts"
@@ -76,14 +74,6 @@ func StartupEssentialServices(sm *services.Service) error {
 		}
 	}
 
-	launcher_obj, _ := services.GetLauncher()
-	if launcher_obj == nil {
-		err := sm.Start(launcher.StartLauncherService)
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
@@ -118,11 +108,6 @@ func StartupFrontendServices(sm *services.Service) (err error) {
 		if err != nil {
 			return err
 		}
-	}
-
-	err = sm.Start(notebook.StartNotebookManagerService)
-	if err != nil {
-		return err
 	}
 
 	// Runs server event queries. Should only run on one frontend.
@@ -170,11 +155,6 @@ func Reset(config_obj *config_proto.Config) {
 	_, err := services.GetInventory(config_obj)
 	if err != nil {
 		fmt.Printf("Inventory not reset.\n")
-	}
-
-	launcher, _ := services.GetLauncher()
-	if launcher != nil {
-		fmt.Printf("Launcher not reset.\n")
 	}
 
 }

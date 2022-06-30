@@ -160,16 +160,13 @@ func NewNotebookManager(
 	return result
 }
 
-func StartNotebookManagerService(
+func NewNotebookManagerService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config) (services.NotebookManager, error) {
 
-	service := NewNotebookManager(config_obj,
+	return NewNotebookManager(config_obj,
 		&NotebookStoreImpl{
 			config_obj: config_obj,
-		})
-	services.RegisterNotebookManager(service)
-
-	return nil
+		}), nil
 }

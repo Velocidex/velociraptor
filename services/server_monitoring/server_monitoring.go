@@ -214,7 +214,7 @@ func (self *EventTable) StartQueries(
 	defer self.mu.Unlock()
 
 	// Compile the ArtifactCollectorArgs into a list of requests.
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return err
 	}

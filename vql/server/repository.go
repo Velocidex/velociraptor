@@ -253,7 +253,7 @@ func (self ArtifactsPlugin) Call(
 			}
 		}
 
-		launcher, err := services.GetLauncher()
+		launcher, err := services.GetLauncher(config_obj)
 		if err != nil {
 			scope.Log("artifact_definitions: Command can only run on the server %v", err)
 			return
