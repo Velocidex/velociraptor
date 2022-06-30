@@ -452,15 +452,6 @@ func (self *Indexer) SearchIndexWithPrefix(
 	return output_chan
 }
 
-func StartIndexingService(ctx context.Context, wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
-	indexer, err := NewIndexingService(ctx, wg, config_obj)
-
-	services.RegisterIndexer(indexer)
-
-	return err
-}
-
 func NewIndexingService(ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) (services.Indexer, error) {
 
@@ -472,10 +463,4 @@ func NewIndexingService(ctx context.Context, wg *sync.WaitGroup,
 	indexer.Start(ctx, wg, config_obj)
 
 	return indexer, nil
-}
-
-// Register a dummy indexer for all cases - this does not read or
-// write snapshots.
-func init() {
-	services.RegisterIndexer(NewIndexer(nil))
 }

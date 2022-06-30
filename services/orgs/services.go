@@ -13,6 +13,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/interrogation"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/labels"
+	"www.velocidex.com/golang/velociraptor/services/notifications"
+	"www.velocidex.com/golang/velociraptor/services/repository"
+	"www.velocidex.com/golang/velociraptor/services/vfs_service"
 )
 
 type ServiceContainer struct {
@@ -23,6 +27,9 @@ type ServiceContainer struct {
 	indexer             services.Indexer
 	broadcast           services.BroadcastService
 	inventory           services.Inventory
+	vfs_service         services.VFSService
+	labeler             services.Labeler
+	repository          services.RepositoryManager
 }
 
 func (self ServiceContainer) Indexer() (services.Indexer, error) {
@@ -35,6 +42,42 @@ func (self ServiceContainer) Indexer() (services.Indexer, error) {
 	}
 
 	return self.indexer, nil
+}
+
+func (self ServiceContainer) RepositoryManager() (services.RepositoryManager, error) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.repository == nil {
+		return nil, errors.New("Repository Manager service not initialized")
+	}
+
+	return self.repository, nil
+}
+
+func (self ServiceContainer) VFSService() (services.VFSService, error) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.vfs_service == nil {
+		return nil, errors.New("VFS service not initialized")
+	}
+
+	return self.vfs_service, nil
+}
+
+func (self ServiceContainer) Labeler() (services.Labeler, error) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.labeler == nil {
+		return nil, errors.New("Labeling service not initialized")
+	}
+
+	return self.labeler, nil
 }
 
 func (self ServiceContainer) Journal() (services.JournalService, error) {
@@ -110,6 +153,15 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 	service_container.broadcast = broadcast.NewBroadcastService(org_config)
 	service_container.mu.Unlock()
 
+	// The notifications service is global currently.
+	if services.GetNotifier() == nil {
+		err := notifications.StartNotificationService(
+			self.ctx, self.wg, self.config_obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	i, err := inventory.NewInventoryService(
 		self.ctx, self.wg, org_config)
 	if err != nil {
@@ -144,6 +196,37 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 
 	service_container.mu.Lock()
 	service_container.indexer = inv
+	service_container.mu.Unlock()
+
+	repo_manager, err := repository.NewRepositoryManager(
+		self.ctx, self.wg, org_config)
+
+	if err != nil {
+		return err
+	}
+
+	service_container.mu.Lock()
+	service_container.repository = repo_manager
+	service_container.mu.Unlock()
+
+	vfs, err := vfs_service.NewVFSService(
+		self.ctx, self.wg, org_config)
+	if err != nil {
+		return err
+	}
+
+	service_container.mu.Lock()
+	service_container.vfs_service = vfs
+	service_container.mu.Unlock()
+
+	l, err := labels.NewLabelerService(
+		self.ctx, self.wg, org_config)
+	if err != nil {
+		return err
+	}
+
+	service_container.mu.Lock()
+	service_container.labeler = l
 	service_container.mu.Unlock()
 
 	return err

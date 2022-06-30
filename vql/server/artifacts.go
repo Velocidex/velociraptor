@@ -91,7 +91,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		scope.Log("collect_client: Command can only run on the server")
 		return vfilter.Null{}

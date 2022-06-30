@@ -120,7 +120,7 @@ func (self *EnrollmentService) ProcessEnrollment(
 	// Wait for rate token
 	self.limiter.Wait(ctx)
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -301,7 +301,7 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 
 	// Set labels in the labeler.
 	if len(client_info.Labels) > 0 {
-		labeler := services.GetLabeler()
+		labeler := services.GetLabeler(config_obj)
 		for _, label := range client_info.Labels {
 			err := labeler.SetClientLabel(config_obj, client_id, label)
 			if err != nil {

@@ -47,7 +47,7 @@ func (self *NotebookManager) UpdateNotebookCell(
 
 	acl_manager := vql_subsystem.NewServerACLManager(self.config_obj, user_name)
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.config_obj)
 	if err != nil {
 		return nil, err
 	}

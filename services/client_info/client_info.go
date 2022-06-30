@@ -683,17 +683,6 @@ func NewClientInfoManager(config_obj *config_proto.Config) *ClientInfoManager {
 	return service
 }
 
-func StartClientInfoService(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
-
-	service := NewClientInfoManager(config_obj)
-	services.RegisterClientInfoManager(service)
-
-	return service.Start(ctx, config_obj, wg)
-}
-
 func getDict(item *ordereddict.Dict, name string) (*ordereddict.Dict, bool) {
 	res, pres := item.Get(name)
 	if !pres {

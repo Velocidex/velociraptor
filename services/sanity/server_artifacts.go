@@ -40,7 +40,7 @@ func maybeStartInitialArtifacts(
 	if config_obj.Frontend != nil &&
 		len(config_obj.Frontend.InitialServerArtifacts) > 0 {
 
-		manager, err := services.GetRepositoryManager()
+		manager, err := services.GetRepositoryManager(config_obj)
 		if err != nil {
 			return err
 		}

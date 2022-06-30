@@ -232,7 +232,7 @@ func (self *ServerArtifactsRunner) runQuery(
 
 	// Server artifacts run with full access. In order to collect
 	// them in the first place we need COLLECT_SERVER permissions.
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.config_obj)
 	if err != nil {
 		return err
 	}

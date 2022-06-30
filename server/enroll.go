@@ -39,7 +39,7 @@ func enroll(
 
 	client_id, err := server.manager.AddCertificateRequest(config_obj, csr.Pem)
 	if err != nil {
-		logger := logging.GetLogger(server.config, &logging.FrontendComponent)
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Error("While enrolling %v: %v", client_id, err)
 		return err
 	}

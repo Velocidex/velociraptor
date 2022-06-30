@@ -2,17 +2,11 @@ package services
 
 import (
 	"context"
-	"sync"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/vfilter"
-)
-
-var (
-	indexer    Indexer
-	indexer_mu sync.Mutex
 )
 
 func GetIndexer(config_obj *config_proto.Config) (Indexer, error) {
@@ -22,13 +16,6 @@ func GetIndexer(config_obj *config_proto.Config) (Indexer, error) {
 	}
 
 	return org_manager.Services(config_obj.OrgId).Indexer()
-}
-
-func RegisterIndexer(m Indexer) {
-	indexer_mu.Lock()
-	defer indexer_mu.Unlock()
-
-	indexer = m
 }
 
 type Indexer interface {

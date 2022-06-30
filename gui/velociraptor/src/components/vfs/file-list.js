@@ -113,7 +113,7 @@ class VeloFileList extends Component {
         let vfs_path = [...path];
         vfs_path.push(row.Name);
         this.props.history.push(
-           EncodePathInURL("/vfs/"+ this.props.client.client_id + Join(vfs_path)));
+           "/vfs/"+ this.props.client.client_id + EncodePathInURL(Join(vfs_path)));
     }
 
     startRecursiveVfsRefreshOperation = () => {

@@ -710,6 +710,10 @@ func (self *FlowRunner) ProcessSingleMessage(
 			return
 		}
 
+		if job.Source == "" {
+			panic(1)
+		}
+
 		collection_context, err = LoadCollectionContext(
 			self.config_obj, job.Source, job.SessionId)
 		if err != nil {

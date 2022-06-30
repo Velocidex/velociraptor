@@ -109,7 +109,7 @@ func (self *ApiServer) GetKeywordCompletions(
 	}
 	result.Items = append(result.Items, descriptions...)
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(org_config_obj)
 	if err != nil {
 		return nil, err
 	}

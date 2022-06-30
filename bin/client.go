@@ -31,7 +31,6 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
-	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
 )
@@ -138,15 +137,6 @@ func runClientOnce(
 	err = sm.Start(orgs.StartClientOrgManager)
 	if err != nil {
 		return err
-	}
-
-	// Start the repository manager before we can handle any VQL
-	repo_manager, _ := services.GetRepositoryManager()
-	if repo_manager == nil {
-		err = sm.Start(repository.StartRepositoryManager)
-		if err != nil {
-			return err
-		}
 	}
 
 	exe, err := executor.NewClientExecutor(ctx, config_obj)

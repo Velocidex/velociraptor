@@ -129,8 +129,8 @@ func PrepareFrontendMux(
 	base := config_obj.Frontend.BasePath
 	router.Handle(base+"/healthz", healthz(server_obj))
 	router.Handle(base+"/server.pem", server_pem(config_obj))
-	router.Handle(base+"/control", RecordHTTPStats(control(server_obj)))
-	router.Handle(base+"/reader", RecordHTTPStats(reader(config_obj, server_obj)))
+	router.Handle(base+"/control", RecordHTTPStats(control(config_obj, server_obj)))
+	router.Handle(base+"/reader", RecordHTTPStats(reader(server_obj)))
 
 	// Publicly accessible part of the filestore. NOTE: this
 	// does not have to be a physical directory - it is served
@@ -224,18 +224,16 @@ func readWithLimits(
 	}
 	receiveBytesCounter.Add(float64(n))
 
-	logger := logging.GetLogger(server_obj.config, &logging.FrontendComponent)
-
 	message_info, err := server_obj.Decrypt(ctx, buffer.Bytes())
 	if err != nil {
-		logger.Debug("Unable to decrypt body from %v: %+v "+
+		server_obj.Debug("Unable to decrypt body from %v: %+v "+
 			"(%v out of max %v)", req.RemoteAddr, err, n, max_upload_size*2)
 
 		receiveDecryptionErrors.Inc()
 		return nil, errors.New("Unable to decrypt")
 	}
-	message_info.RemoteAddr = utils.RemoteAddr(req, server_obj.config.Frontend.GetProxyHeader())
-	logger.Debug("Received a post of length %v from %v (%v)",
+	message_info.RemoteAddr = utils.RemoteAddr(req, config_obj.Frontend.GetProxyHeader())
+	server_obj.Debug("Received a post of length %v from %v (%v)",
 		n, message_info.RemoteAddr, message_info.Source)
 
 	return message_info, nil
@@ -244,11 +242,11 @@ func readWithLimits(
 // This handler is used to receive messages from the client to the
 // server. These connections are short lived - the client will just
 // post its message and then disconnect.
-func control(server_obj *Server) http.Handler {
+func control(
+	config_obj *config_proto.Config, server_obj *Server) http.Handler {
 	pad := &crypto_proto.ClientCommunication{}
 	pad.Padding = append(pad.Padding, 0)
 	serialized_pad, _ := proto.Marshal(pad)
-	logger := logging.GetLogger(server_obj.config, &logging.FrontendComponent)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		flusher, ok := w.(http.Flusher)
@@ -313,8 +311,7 @@ func control(server_obj *Server) http.Handler {
 		}()
 
 		// Read the payload from the client.
-		message_info, err := readWithLimits(
-			ctx, server_obj.config, server_obj, req)
+		message_info, err := readWithLimits(ctx, config_obj, server_obj, req)
 		if err != nil {
 			// Just plain reject with a 403.
 			http.Error(w, "", http.StatusForbidden)
@@ -335,14 +332,13 @@ func control(server_obj *Server) http.Handler {
 				// indicate this by providing it with
 				// an HTTP error code.
 				enrollmentCounter.Inc()
-				logger.Debug("Please Enrol (%v)", message_info.Source)
+				server_obj.Debug("Please Enrol (%v)", message_info.Source)
 				http.Error(
 					w,
 					"Please Enrol",
 					http.StatusNotAcceptable)
 			} else {
-				server_obj.Error("Unable to process", err)
-				logger.Debug("Unable to process (%v)", message_info.Source)
+				server_obj.Debug("Unable to process (%v)", message_info.Source)
 				http.Error(w, "", http.StatusServiceUnavailable)
 			}
 			return
@@ -407,11 +403,10 @@ func control(server_obj *Server) http.Handler {
 // connection will persist up to Client.MaxPoll so we always have a
 // channel to the client. This allows us to send the client jobs
 // immediately with low latency.
-func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
+func reader(server_obj *Server) http.Handler {
 	pad := &crypto_proto.ClientCommunication{}
 	pad.Padding = append(pad.Padding, 0)
 	serialized_pad, _ := proto.Marshal(pad)
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
@@ -451,11 +446,25 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 			return
 		}
 
+		// Recover the org for this client
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			http.Error(w, "", http.StatusServiceUnavailable)
+			return
+		}
+
+		org_config_obj, err := org_manager.GetOrgConfig(message_info.OrgId)
+		if err != nil {
+			server_obj.Info("reader: Unknown org ID %v", message_info.OrgId)
+			http.Error(w, "", http.StatusServiceUnavailable)
+			return
+		}
+
 		// Get a notification for this client from the pool -
 		// Must be before the Process() call to prevent race.
 		source := message_info.Source
 
-		client_info_manager, err := services.GetClientInfoManager(config_obj)
+		client_info_manager, err := services.GetClientInfoManager(org_config_obj)
 		if err != nil {
 			http.Error(w, "", http.StatusServiceUnavailable)
 			return
@@ -469,14 +478,14 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 		// client info manager's LRU.
 		_, err = client_info_manager.Get(source)
 		if err != nil {
-			journal, err := services.GetJournal(config_obj)
+			journal, err := services.GetJournal(org_config_obj)
 			if err != nil {
 				http.Error(w, "", http.StatusServiceUnavailable)
 				return
 			}
 
 			// This should triggen an enrollment flow.
-			err = journal.PushRowsToArtifact(config_obj,
+			err = journal.PushRowsToArtifact(org_config_obj,
 				[]*ordereddict.Dict{
 					ordereddict.NewDict().
 						Set("ClientId", source)},
@@ -499,9 +508,9 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 		if notifier.IsClientDirectlyConnected(source) {
 
 			// Send a message that there is a client conflict.
-			journal, err := services.GetJournal(config_obj)
+			journal, err := services.GetJournal(org_config_obj)
 			if err == nil {
-				journal.PushRowsToArtifactAsync(config_obj,
+				journal.PushRowsToArtifactAsync(org_config_obj,
 					ordereddict.NewDict().Set("ClientId", source),
 					"Server.Internal.ClientConflict")
 			}
@@ -524,7 +533,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 		// close the connection and expect the client to
 		// reconnect again. We add a bit of jitter to ensure
 		// clients do not get synchronized.
-		wait := time.Duration(config_obj.Client.MaxPoll+
+		wait := time.Duration(org_config_obj.Client.MaxPoll+
 			uint64(rand.Intn(30))) * time.Second
 
 		deadline := time.After(wait)
@@ -566,7 +575,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 
 			case quit := <-notification:
 				if quit {
-					logger.Info("reader: quit.")
+					server_obj.Debug("reader: quit.")
 					return
 				}
 				response, _, err := server_obj.Process(
@@ -583,7 +592,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 				// and finish the request off.
 				n, err := w.Write(response)
 				if err != nil || n < len(serialized_pad) {
-					logger.Debug("reader: Error %v", err)
+					server_obj.Debug("reader: Error %v", err)
 				}
 
 				flusher.Flush()
@@ -594,7 +603,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 				// send it. The client will reconnect immediately.
 				_, err := w.Write(serialized_pad)
 				if err != nil {
-					logger.Info("reader: Error %v", err)
+					server_obj.Debug("reader: Error %v", err)
 					return
 				}
 
@@ -606,7 +615,7 @@ func reader(config_obj *config_proto.Config, server_obj *Server) http.Handler {
 			case <-time.After(10 * time.Second):
 				_, err := w.Write(serialized_pad)
 				if err != nil {
-					logger.Info("reader: Error %v", err)
+					server_obj.Debug("reader: Error %v", err)
 					return
 				}
 

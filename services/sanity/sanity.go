@@ -203,7 +203,7 @@ func checkForServerUpgrade(
 
 		// Go through all the artifacts and update their tool
 		// definitions.
-		manager, err := services.GetRepositoryManager()
+		manager, err := services.GetRepositoryManager(config_obj)
 		if err != nil {
 			return err
 		}

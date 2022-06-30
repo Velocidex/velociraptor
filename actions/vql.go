@@ -112,7 +112,7 @@ func (self VQLClientAction) StartQuery(
 
 	// Clients do not have a copy of artifacts so they need to be
 	// sent all artifacts from the server.
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		responder.RaiseError(ctx, fmt.Sprintf("%v", err))
 		return

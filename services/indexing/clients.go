@@ -41,7 +41,7 @@ func GetApiClient(
 		return nil, err
 	}
 
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(config_obj)
 	if labeler == nil {
 		return nil, errors.New("Labeler not ready")
 	}
@@ -113,7 +113,7 @@ func (self *Indexer) FastGetApiClient(
 		return nil, errors.New("Invalid client_info")
 	}
 
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(config_obj)
 	if labeler == nil {
 		return nil, errors.New("Labeler not ready")
 	}

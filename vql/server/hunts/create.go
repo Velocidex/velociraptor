@@ -95,7 +95,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		scope.Log("hunt: %v", err)
 		return vfilter.Null{}

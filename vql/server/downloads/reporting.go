@@ -162,7 +162,7 @@ func CreateFlowReport(
 	}
 	lock_file.Close()
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil, err
 	}

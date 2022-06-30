@@ -193,7 +193,7 @@ func reallyDeleteClient(ctx context.Context,
 	}
 
 	// Remove any labels
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(config_obj)
 	for _, label := range labeler.GetClientLabels(config_obj, arg.ClientId) {
 		err := labeler.RemoveClientLabel(config_obj, arg.ClientId, label)
 		if err != nil && errors.Is(err, os.ErrNotExist) {

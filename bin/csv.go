@@ -42,7 +42,7 @@ func doCSV() error {
 			Set("Files", *csv_cmd_files),
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}

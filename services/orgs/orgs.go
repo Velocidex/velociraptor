@@ -193,7 +193,10 @@ func (self *OrgManager) Start(
 	})
 
 	// Do first scan inline so we have valid data on exit.
-	self.Scan()
+	err := self.Scan()
+	if err != nil {
+		return err
+	}
 
 	// Start syncing the mutation_manager
 	wg.Add(1)

@@ -173,7 +173,7 @@ func resolveImports(config_obj *config_proto.Config,
 		return nil
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}

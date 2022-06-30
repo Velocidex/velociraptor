@@ -204,7 +204,7 @@ class VeloNavigator extends Component {
 
                           <NavLink className={disabled}
                                    disabled={disabled}
-                                   to={"/vfs/" + EncodePathInURL(this.props.client.client_id + vfs_path) }>
+                                   to={"/vfs/" + this.props.client.client_id + EncodePathInURL(vfs_path) }>
                             <ul className="nav nav-pills navigator">
                               <li className={classNames({
                                   "nav-link": true,

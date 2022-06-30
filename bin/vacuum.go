@@ -19,10 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/frontend"
-	"www.velocidex.com/golang/velociraptor/services/indexing"
-	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -93,21 +90,6 @@ func doVacuum() error {
 	}
 
 	err = sm.Start(frontend.StartFrontendService)
-	if err != nil {
-		return err
-	}
-
-	err = sm.Start(labels.StartLabelService)
-	if err != nil {
-		return err
-	}
-
-	err = sm.Start(client_info.StartClientInfoService)
-	if err != nil {
-		return err
-	}
-
-	err = sm.Start(indexing.StartIndexingService)
 	if err != nil {
 		return err
 	}

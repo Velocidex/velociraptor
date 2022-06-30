@@ -16,18 +16,10 @@ package services
 
 import (
 	"context"
-	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-)
-
-var (
-	journal_mu sync.Mutex
-
-	// Service is only available in the frontend.
-	GJournal JournalService
 )
 
 func GetJournal(config_obj *config_proto.Config) (JournalService, error) {

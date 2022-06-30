@@ -21,6 +21,14 @@ func ClientIdFromConfigObj(source string,
 }
 
 func ClientIdFromSourceAndOrg(source, org_id string) string {
+	if strings.Contains(source, "-") {
+		panic(1)
+	}
+
+	if org_id == "" {
+		return source
+	}
+
 	return source + "-" + org_id
 }
 

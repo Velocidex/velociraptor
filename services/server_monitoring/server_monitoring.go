@@ -219,7 +219,7 @@ func (self *EventTable) StartQueries(
 		return err
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -295,7 +295,7 @@ func (self *EventTable) RunQuery(
 	wg *sync.WaitGroup,
 	vql_request *actions_proto.VQLCollectorArgs) error {
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}

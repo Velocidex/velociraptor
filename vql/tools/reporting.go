@@ -56,7 +56,7 @@ func produceReport(
 	// Build scope from scratch and replace the source()
 	// plugin. We hook the source plugin to read results from the
 	// collection container.
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}

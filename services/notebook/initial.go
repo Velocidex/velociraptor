@@ -145,7 +145,7 @@ func getCellsForEvents(ctx context.Context,
 	client_id string, artifact_name string,
 	notebook_metadata *api_proto.NotebookMetadata) []*api_proto.NotebookCellRequest {
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil
 	}
@@ -362,7 +362,7 @@ func getDefaultCellsForSources(
 	config_obj *config_proto.Config,
 	sources []string,
 	notebook_metadata *api_proto.NotebookMetadata) []*api_proto.NotebookCellRequest {
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil
 	}

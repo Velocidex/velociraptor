@@ -1,17 +1,10 @@
 package services
 
 import (
-	"sync"
-
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-)
-
-var (
-	client_info_manager    ClientInfoManager
-	client_info_manager_mu sync.Mutex
 )
 
 const (
@@ -39,13 +32,6 @@ func GetClientInfoManager(config_obj *config_proto.Config) (ClientInfoManager, e
 	}
 
 	return org_manager.Services(config_obj.OrgId).ClientInfoManager()
-}
-
-func RegisterClientInfoManager(m ClientInfoManager) {
-	client_info_manager_mu.Lock()
-	defer client_info_manager_mu.Unlock()
-
-	client_info_manager = m
 }
 
 type ClientInfo struct {

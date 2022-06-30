@@ -1,35 +1,18 @@
 package services
 
 import (
-	"errors"
-	"sync"
-
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 )
 
-var (
-	vfs_service    VFSService
-	vfs_service_mu sync.Mutex
-)
-
-func GetVFSService() (VFSService, error) {
-	vfs_service_mu.Lock()
-	defer vfs_service_mu.Unlock()
-
-	if vfs_service == nil {
-		return nil, errors.New("VFSService not initialized")
+func GetVFSService(config_obj *config_proto.Config) (VFSService, error) {
+	org_manager, err := GetOrgManager()
+	if err != nil {
+		return nil, err
 	}
 
-	return vfs_service, nil
-}
-
-func RegisterVFSService(m VFSService) {
-	vfs_service_mu.Lock()
-	defer vfs_service_mu.Unlock()
-
-	vfs_service = m
+	return org_manager.Services(config_obj.OrgId).VFSService()
 }
 
 type VFSService interface {

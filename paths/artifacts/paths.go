@@ -279,7 +279,7 @@ func DayNameToTimestamp(name string) time.Time {
 }
 
 func GetArtifactMode(config_obj *config_proto.Config, artifact_name string) (int, error) {
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return 0, err
 	}

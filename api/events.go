@@ -240,7 +240,7 @@ func getAllArtifacts(
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}

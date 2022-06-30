@@ -255,26 +255,25 @@ func (self *RepositoryManager) DeleteArtifactFile(
 
 // Start a mostly empty repository manager without loading built in
 // artifacts.
-func StartRepositoryManagerForTest(
+func NewRepositoryManagerForTest(
 	ctx context.Context, wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
-	self := NewRepositoryManager(wg)
+	config_obj *config_proto.Config) (services.RepositoryManager, error) {
+	self := _newRepositoryManager(wg)
 
+	// Load some artifacts via the autoexec mechanism.
 	if config_obj.Autoexec != nil {
 		for _, def := range config_obj.Autoexec.ArtifactDefinitions {
 			_, err := self.global_repository.LoadProto(def, true)
 			if err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
 
-	services.RegisterRepositoryManager(self)
-
-	return self.StartWatchingForUpdates(ctx, wg, config_obj)
+	return self, self.StartWatchingForUpdates(ctx, wg, config_obj)
 }
 
-func NewRepositoryManager(wg *sync.WaitGroup) *RepositoryManager {
+func _newRepositoryManager(wg *sync.WaitGroup) *RepositoryManager {
 	return &RepositoryManager{
 		wg: wg,
 		id: utils.GetId(),
@@ -284,20 +283,20 @@ func NewRepositoryManager(wg *sync.WaitGroup) *RepositoryManager {
 	}
 }
 
-func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+func NewRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
+	config_obj *config_proto.Config) (services.RepositoryManager, error) {
 
 	// Load all the artifacts in the repository and compile them in the background.
-	self := NewRepositoryManager(wg)
+	self := _newRepositoryManager(wg)
 
 	// Assume the built in artifacts are OK so we dont need to
 	// validate them at runtime.
 	err := LoadBuiltInArtifacts(ctx, config_obj, self, false /* validate */)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return self.StartWatchingForUpdates(ctx, wg, config_obj)
+	return self, self.StartWatchingForUpdates(ctx, wg, config_obj)
 }
 
 func LoadBuiltInArtifacts(ctx context.Context,
@@ -382,16 +381,7 @@ func LoadBuiltInArtifacts(ctx context.Context,
 		grepository.Del("")
 	}()
 
-	self.wg.Add(1)
-	go func() {
-		defer self.wg.Done()
-		defer services.RegisterRepositoryManager(nil)
-
-		<-ctx.Done()
-	}()
-
 	logger.Info("Loaded %d built in artifacts in %v", count, time.Since(now))
-	services.RegisterRepositoryManager(self)
 
 	return nil
 }

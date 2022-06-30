@@ -513,7 +513,7 @@ func (self *HuntDispatcher) CreateHunt(
 		}
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return "", err
 	}

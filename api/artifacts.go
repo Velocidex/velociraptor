@@ -72,7 +72,7 @@ func getArtifactFile(
 	config_obj *config_proto.Config,
 	name string) (string, error) {
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return "", err
 	}
@@ -114,7 +114,7 @@ func setArtifactFile(config_obj *config_proto.Config, principal string,
 	required_prefix string) (
 	*artifacts_proto.Artifact, error) {
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ func getReportArtifacts(
 		number_of_results = 100
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +241,7 @@ func searchArtifact(
 		return true
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil, err
 	}

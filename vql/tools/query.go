@@ -42,12 +42,29 @@ func (self QueryPlugin) Call(
 			return
 		}
 
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
+		if !ok {
+			// If we are not running on the server, we need to get the
+			// root config from the org manager.
+			org_manager, err := services.GetOrgManager()
+			if err != nil {
+				scope.Log("query: %v", err)
+				return
+			}
+
+			config_obj, err = org_manager.GetOrgConfig("")
+			if err != nil {
+				scope.Log("query: %v", err)
+				return
+			}
+		}
+
 		// Build a completely new scope to evaluate the query
 		// in.
 		builder := services.ScopeBuilderFromScope(scope)
 
 		// Make a new scope for each artifact.
-		manager, err := services.GetRepositoryManager()
+		manager, err := services.GetRepositoryManager(config_obj)
 		if err != nil {
 			scope.Log("query: %v", err)
 			return

@@ -9,10 +9,11 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/services/repository"
 )
 
 type ClientOrgManager struct {
-	services   services.ServiceContainer
+	services   *ServiceContainer
 	config_obj *config_proto.Config
 }
 
@@ -45,14 +46,24 @@ func (self *ClientOrgManager) Start(
 	config_obj *config_proto.Config) (err error) {
 
 	// Now start the services for this org.
-	services := &ServiceContainer{}
-	services.journal, err = journal.NewJournalService(
-		ctx, wg, config_obj)
+	j, err := journal.NewJournalService(ctx, wg, config_obj)
 	if err != nil {
 		return err
 	}
 
-	self.services = services
+	self.services.mu.Lock()
+	self.services.journal = j
+	self.services.mu.Unlock()
+
+	repo_manager, err := repository.NewRepositoryManager(ctx, wg, config_obj)
+	if err != nil {
+		return err
+	}
+
+	self.services.mu.Lock()
+	self.services.repository = repo_manager
+	self.services.mu.Unlock()
+
 	return nil
 }
 
@@ -63,6 +74,7 @@ func StartClientOrgManager(
 
 	service := &ClientOrgManager{
 		config_obj: config_obj,
+		services:   &ServiceContainer{},
 	}
 	services.RegisterOrgManager(service)
 

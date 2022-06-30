@@ -186,7 +186,7 @@ func (self HuntResultsPlugin) Call(
 			// first named source from the artifact
 			// definition.
 			if arg.Source == "" {
-				manager, err := services.GetRepositoryManager()
+				manager, err := services.GetRepositoryManager(config_obj)
 				if err != nil {
 					scope.Log("hunt_results: %v", err)
 					return

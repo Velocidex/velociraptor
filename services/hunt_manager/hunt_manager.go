@@ -558,7 +558,7 @@ func StartHuntManager(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -582,7 +582,7 @@ func StartHuntManager(
 func huntHasLabel(
 	config_obj *config_proto.Config,
 	hunt_obj *api_proto.Hunt, client_id string) bool {
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(config_obj)
 
 	if hunt_obj.Condition == nil {
 		return true
@@ -611,7 +611,7 @@ func huntHasExcludeLabel(
 		return true
 	}
 
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(config_obj)
 
 	for _, label := range hunt_obj.Condition.ExcludedLabels.Label {
 		if labeler.IsLabelSet(config_obj, client_id, label) {
@@ -697,7 +697,7 @@ func scheduleHuntOnClient(
 
 	hunt_id := hunt_obj.HuntId
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}

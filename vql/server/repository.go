@@ -38,7 +38,7 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	manager, _ := services.GetRepositoryManager()
+	manager, _ := services.GetRepositoryManager(config_obj)
 	if manager == nil {
 		scope.Log("artifact_set: Command can only run on the server")
 		return vfilter.Null{}
@@ -121,7 +121,7 @@ func (self *ArtifactDeleteFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	manager, _ := services.GetRepositoryManager()
+	manager, _ := services.GetRepositoryManager(config_obj)
 	if manager == nil {
 		scope.Log("artifact_delete: Command can only run on the server")
 		return vfilter.Null{}
@@ -214,7 +214,7 @@ func (self ArtifactsPlugin) Call(
 			return
 		}
 
-		manager, err := services.GetRepositoryManager()
+		manager, err := services.GetRepositoryManager(config_obj)
 		if err != nil {
 			scope.Log("Command can only run on the server")
 			return

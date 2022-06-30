@@ -12,17 +12,13 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
 	"www.velocidex.com/golang/velociraptor/services/interrogation"
-	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/services/notebook"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
-	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/services/sanity"
 	"www.velocidex.com/golang/velociraptor/services/server_artifacts"
 	"www.velocidex.com/golang/velociraptor/services/server_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/users"
-	"www.velocidex.com/golang/velociraptor/services/vfs_service"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
@@ -75,24 +71,9 @@ func StartupEssentialServices(sm *services.Service) error {
 		}
 	}
 
-	o, _ := services.GetOrgManager()
-	if o == nil {
+	_, err = services.GetOrgManager()
+	if err != nil {
 		err = sm.Start(orgs.StartOrgManager)
-		if err != nil {
-			return err
-		}
-	}
-
-	if services.GetNotifier() == nil {
-		err := sm.Start(notifications.StartNotificationService)
-		if err != nil {
-			return err
-		}
-	}
-
-	manager, _ := services.GetRepositoryManager()
-	if manager == nil {
-		err := sm.Start(repository.StartRepositoryManager)
 		if err != nil {
 			return err
 		}
@@ -106,21 +87,22 @@ func StartupEssentialServices(sm *services.Service) error {
 		}
 	}
 
-	if services.GetLabeler() == nil {
-		err := sm.Start(labels.StartLabelService)
+	return nil
+}
+
+// Start usual services that run on frontends only (i.e. not the client).
+func StartupFrontendServices(sm *services.Service) (err error) {
+	spec := getServerServices(sm.Config)
+
+	_, err = services.GetOrgManager()
+	if err != nil {
+		err = sm.Start(orgs.StartOrgManager)
 		if err != nil {
 			return err
 		}
 	}
 
-	return nil
-}
-
-// Start usual services that run on frontends only (i.e. not the client).
-func StartupFrontendServices(sm *services.Service) error {
-	spec := getServerServices(sm.Config)
-
-	err := sm.Start(datastore.StartMemcacheFileService)
+	err = sm.Start(datastore.StartMemcacheFileService)
 	if err != nil {
 		return err
 	}
@@ -178,15 +160,6 @@ func StartupFrontendServices(sm *services.Service) error {
 		}
 	}
 
-	// VFS service maintains the VFS GUI structures by parsing the
-	// output of VFS artifacts collected.
-	if spec.VfsService {
-		err := sm.Start(vfs_service.StartVFSService)
-		if err != nil {
-			return err
-		}
-	}
-
 	// Run any server artifacts the user asks for.
 	if spec.ServerArtifacts {
 		err := sm.Start(server_artifacts.StartServerArtifactService)
@@ -226,18 +199,9 @@ func Reset(config_obj *config_proto.Config) {
 		fmt.Printf("Inventory not reset.\n")
 	}
 
-	manager, _ := services.GetRepositoryManager()
-	if manager != nil {
-		fmt.Printf("Repository Manager not reset.\n")
-	}
-
 	launcher, _ := services.GetLauncher()
 	if launcher != nil {
 		fmt.Printf("Launcher not reset.\n")
-	}
-
-	if services.GetLabeler() != nil {
-		fmt.Printf("Labeler not reset.\n")
 	}
 
 	if services.GetHuntDispatcher() != nil {

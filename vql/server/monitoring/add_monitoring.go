@@ -46,7 +46,7 @@ func (self AddClientMonitoringFunction) Call(
 	}
 
 	// Now verify the artifact actually exists
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		scope.Log("add_client_monitoring: %v", err)
 		return vfilter.Null{}
@@ -200,7 +200,7 @@ func (self AddServerMonitoringFunction) Call(
 	}
 
 	// Now verify the artifact actually exists
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		scope.Log("add_server_monitoring: %v", err)
 		return vfilter.Null{}

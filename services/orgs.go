@@ -38,6 +38,9 @@ type ServiceContainer interface {
 	Indexer() (Indexer, error)
 	BroadcastService() (BroadcastService, error)
 	Inventory() (Inventory, error)
+	VFSService() (VFSService, error)
+	Labeler() (Labeler, error)
+	RepositoryManager() (RepositoryManager, error)
 }
 
 // The org manager manages multi-tenancies.

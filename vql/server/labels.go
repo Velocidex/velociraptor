@@ -61,7 +61,7 @@ func (self *AddLabels) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(config_obj)
 	for _, label := range arg.Labels {
 		if label == "" {
 			continue

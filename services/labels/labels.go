@@ -351,7 +351,6 @@ func (self *Labeler) Start(ctx context.Context,
 	go func() {
 		defer wg.Done()
 		defer cancel()
-		defer services.RegisterLabeler(nil)
 
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("<green>Starting</> Label service.")
@@ -376,25 +375,17 @@ func (self *Labeler) Start(ctx context.Context,
 	return nil
 }
 
-func StartLabelService(
+func NewLabelerService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config) (services.Labeler, error) {
 
 	if config_obj.Frontend == nil {
-		services.RegisterLabeler(Dummy{})
-		return nil
+		return Dummy{}, nil
 	}
 
 	labeler := &Labeler{
 		Clock: &utils.RealClock{},
 	}
-	err := labeler.Start(ctx, config_obj, wg)
-	if err != nil {
-		return err
-	}
-
-	services.RegisterLabeler(labeler)
-
-	return nil
+	return labeler, labeler.Start(ctx, config_obj, wg)
 }

@@ -136,7 +136,7 @@ func getColumnTypes(
 	// For artifacts column types are specified in the `column_types`
 	// artifact definition.
 	if in.Artifact != "" {
-		manager, err := services.GetRepositoryManager()
+		manager, err := services.GetRepositoryManager(config_obj)
 		if err != nil {
 			return nil
 		}

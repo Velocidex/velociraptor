@@ -108,7 +108,7 @@ func (self *ClientEventTable) CheckClientEventsVersion(
 	}
 
 	// Now check the label group
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(config_obj)
 	if labeler == nil {
 		return false
 	}
@@ -151,7 +151,7 @@ func (self *ClientEventTable) compileArtifactCollectorArgs(
 		return nil, err
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -290,7 +290,7 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 	}
 
 	// Now apply any event queries that belong to this client based on labels.
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(config_obj)
 	for _, table := range state.LabelEvents {
 		if labeler.IsLabelSet(config_obj, client_id, table.Label) {
 			for _, event := range table.Artifacts.CompiledCollectorArgs {

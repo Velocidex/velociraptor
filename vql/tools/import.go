@@ -100,7 +100,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		scope.Log("import_collection: %v", err)
 		return vfilter.Null{}

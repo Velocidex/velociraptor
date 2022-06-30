@@ -157,7 +157,7 @@ func GenerateArtifactDescriptionReport(
 	string, error) {
 	artifact := template_engine.GetArtifact()
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return "", err
 	}
@@ -338,7 +338,7 @@ func newBaseTemplateEngine(
 	// SetEnv() can update it later.
 	env := ordereddict.NewDict()
 	if scope == nil {
-		manager, err := services.GetRepositoryManager()
+		manager, err := services.GetRepositoryManager(config_obj)
 		if err != nil {
 			return nil, err
 		}

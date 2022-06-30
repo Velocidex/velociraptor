@@ -136,7 +136,7 @@ func (self *ApiServer) GetReport(
 
 	acl_manager := vql_subsystem.NewServerACLManager(org_config_obj, user_name)
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +185,7 @@ func (self *ApiServer) CollectArtifact(
 		}
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +318,7 @@ func (self *ApiServer) LabelClients(
 				"User is not allowed to label clients.")
 	}
 
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(org_config_obj)
 	for _, client_id := range in.ClientIds {
 		for _, label := range in.Labels {
 			switch in.Operation {
@@ -474,7 +474,7 @@ func (self *ApiServer) VFSListDirectory(
 			"User is not allowed to view the VFS.")
 	}
 
-	vfs_service, err := services.GetVFSService()
+	vfs_service, err := services.GetVFSService(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -503,7 +503,7 @@ func (self *ApiServer) VFSStatDirectory(
 			"User is not allowed to launch flows.")
 	}
 
-	vfs_service, err := services.GetVFSService()
+	vfs_service, err := services.GetVFSService(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -533,7 +533,7 @@ func (self *ApiServer) VFSStatDownload(
 			"User is not allowed to view the VFS.")
 	}
 
-	vfs_service, err := services.GetVFSService()
+	vfs_service, err := services.GetVFSService(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -656,7 +656,7 @@ func (self *ApiServer) GetTable(
 	}
 
 	if in.Artifact != "" {
-		manager, err := services.GetRepositoryManager()
+		manager, err := services.GetRepositoryManager(org_config_obj)
 		if err != nil {
 			return nil, err
 		}
@@ -697,7 +697,7 @@ func (self *ApiServer) GetArtifacts(
 
 	if len(in.Names) > 0 {
 		result := &artifacts_proto.ArtifactDescriptors{}
-		manager, err := services.GetRepositoryManager()
+		manager, err := services.GetRepositoryManager(org_config_obj)
 		if err != nil {
 			return nil, err
 		}
@@ -776,7 +776,7 @@ func (self *ApiServer) SetArtifactFile(
 	permissions := acls.ARTIFACT_WRITER
 
 	// First ensure that the artifact is correct.
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -1019,7 +1019,7 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 			Set("OnlyCombined", in.OnlyCombinedHunt)
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(org_config_obj)
 	if err != nil {
 		return nil, err
 	}

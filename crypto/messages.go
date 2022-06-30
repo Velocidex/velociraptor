@@ -45,7 +45,7 @@ func (self *MessageInfo) IterateJobs(
 			if self.Authenticated {
 				job.AuthState = crypto_proto.VeloMessage_AUTHENTICATED
 			}
-			job.Source = utils.ClientIdFromSourceAndOrg(self.Source, self.OrgId)
+			job.Source = self.Source
 			job.OrgId = self.OrgId
 
 			// For backwards compatibility normalize old

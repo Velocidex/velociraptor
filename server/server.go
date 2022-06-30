@@ -35,7 +35,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	crypto_server "www.velocidex.com/golang/velociraptor/crypto/server"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -55,7 +54,6 @@ var (
 )
 
 type Server struct {
-	config  *config_proto.Config
 	manager *crypto_server.ServerCryptoManager
 	logger  *logging.LogContext
 
@@ -154,9 +152,6 @@ func (self *Server) ManageConcurrency(max_concurrency uint64, target_heap_size u
 
 func (self *Server) Close() {
 	close(self.done)
-	db, _ := datastore.GetDB(self.config)
-	db.Close()
-
 	if self.throttler != nil {
 		self.throttler.Close()
 	}
@@ -190,7 +185,6 @@ func NewServer(ctx context.Context,
 	}
 
 	result := Server{
-		config:              config_obj,
 		manager:             manager,
 		logger:              logging.GetLogger(config_obj, &logging.FrontendComponent),
 		concurrency_timeout: time.Duration(concurrency) * time.Second,
@@ -347,4 +341,8 @@ func (self *Server) Error(msg string, err error) {
 
 func (self *Server) Info(format string, v ...interface{}) {
 	self.logger.Info(format, v...)
+}
+
+func (self *Server) Debug(format string, v ...interface{}) {
+	self.logger.Debug(format, v...)
 }
