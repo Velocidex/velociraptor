@@ -120,6 +120,8 @@ type RepositoryManager interface {
 	// Only used for tests.
 	SetGlobalRepositoryForTests(config_obj *config_proto.Config, repository Repository)
 
+	SetParent(config_obj *config_proto.Config, parent Repository)
+
 	// Before callers can run VQL queries they need to create a
 	// query scope. This function uses the builder pattern above
 	// to create a new scope.

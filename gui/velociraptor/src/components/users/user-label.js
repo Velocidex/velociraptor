@@ -47,6 +47,7 @@ class UserSettings extends React.PureComponent {
         timezone: "",
         default_password: "",
         org: "",
+        org_changed: false,
     }
 
     saveSettings = ()=> {
@@ -84,9 +85,9 @@ class UserSettings extends React.PureComponent {
                                     value={this.state.org}
                                     placeholder={T("Select a language")}
                                     onChange={(e) => {
-                                        this.setState({org: e.currentTarget.value});
-                                        this.props.setSetting({
+                                        this.setState({
                                             org: e.currentTarget.value,
+                                            org_changed: true,
                                         });
                                     }}>
                         {_.map(this.context.traits.orgs || [], function(x) {

@@ -153,6 +153,42 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 	service_container.broadcast = broadcast.NewBroadcastService(org_config)
 	service_container.mu.Unlock()
 
+	repo_manager, err := repository.NewRepositoryManager(
+		self.ctx, self.wg, org_config)
+	if err != nil {
+		return err
+	}
+
+	// The Root org will contain all the built in artifacts
+	if org_id == "" {
+		// Assume the built in artifacts are OK so we dont need to
+		// validate them at runtime.
+		err = repository.LoadBuiltInArtifacts(self.ctx, org_config,
+			repo_manager.(*repository.RepositoryManager), false /* validate */)
+		if err != nil {
+			return err
+		}
+	} else {
+		root_org_config, _ := self.GetOrgConfig("")
+		root_repo_manager, _ := self.Services("").RepositoryManager()
+		root_repo, _ := root_repo_manager.GetGlobalRepository(root_org_config)
+		repo_manager.SetParent(root_org_config, root_repo)
+
+		global_repository, err := repo_manager.GetGlobalRepository(org_config)
+		if err != nil {
+			return err
+		}
+
+		_, err = repository.InitializeGlobalRepositoryFromFilestore(self.ctx, org_config, global_repository)
+		if err != nil {
+			return err
+		}
+	}
+
+	service_container.mu.Lock()
+	service_container.repository = repo_manager
+	service_container.mu.Unlock()
+
 	// The notifications service is global currently.
 	if services.GetNotifier() == nil {
 		err := notifications.StartNotificationService(
@@ -196,17 +232,6 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 
 	service_container.mu.Lock()
 	service_container.indexer = inv
-	service_container.mu.Unlock()
-
-	repo_manager, err := repository.NewRepositoryManager(
-		self.ctx, self.wg, org_config)
-
-	if err != nil {
-		return err
-	}
-
-	service_container.mu.Lock()
-	service_container.repository = repo_manager
 	service_container.mu.Unlock()
 
 	vfs, err := vfs_service.NewVFSService(
