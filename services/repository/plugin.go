@@ -354,6 +354,7 @@ func (self _ArtifactRepositoryPluginAssociativeProtocol) Associative(
 	return &ArtifactRepositoryPlugin{
 		prefix:     append(prefix, key),
 		repository: value.repository,
+		config_obj: value.config_obj,
 		mocks:      value.mocks,
 	}, true
 }
