@@ -12,7 +12,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 )
@@ -35,7 +34,7 @@ func FindCollectedArtifacts(
 	hunt.Artifacts = hunt.StartRequest.Artifacts
 	hunt.ArtifactSources = []string{}
 	for _, artifact := range hunt.StartRequest.Artifacts {
-		for _, source := range flows.GetArtifactSources(
+		for _, source := range GetArtifactSources(
 			config_obj, artifact) {
 			hunt.ArtifactSources = append(
 				hunt.ArtifactSources,

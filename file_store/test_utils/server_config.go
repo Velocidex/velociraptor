@@ -1,6 +1,7 @@
 package test_utils
 
 const SERVER_CONFIG = `
+autoexec:
 version:
   name: velociraptor
   version: 0.6.4-rc4
@@ -204,6 +205,33 @@ Frontend:
   - Generic.Client.Stats
   GRPC_pool_max_size: 100
   GRPC_pool_max_wait: 60
+  server_services:
+    hunt_manager: false
+    hunt_dispatcher: false
+    stats_collector: false
+    server_monitoring: false
+    server_artifacts: false
+    dyn_dns: false
+    interrogation: false
+    sanity_checker: false
+    vfs_service: false
+    user_manager: true
+    client_monitoring: false
+    monitoring_service: false
+    api_server: false
+    frontend_server: true
+    gui_server: false
+    index_server: true
+    journal_service: true
+    notification_service: true
+    repository_manager: false
+    test_repository_manager: true
+    inventory_service: true
+    client_info: true
+    label: true
+    launcher: true
+    notebook_service: false
+
   resources:
     connections_per_second: 100
     notifications_per_second: 10

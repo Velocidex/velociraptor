@@ -461,7 +461,8 @@ func NewClientMonitoringService(
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> Client Monitoring Service")
+	logger.Info("<green>Starting</> Client Monitoring Service for %v",
+		services.GetOrgName(config_obj))
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return nil, err

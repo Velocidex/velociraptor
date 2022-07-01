@@ -1,63 +1,23 @@
-package flows_test
+package hunt_dispatcher
 
 import (
-	"context"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
-	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
-	"www.velocidex.com/golang/velociraptor/services/repository"
-	"www.velocidex.com/golang/velociraptor/services/users"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 type HuntTestSuite struct {
-	suite.Suite
-	config_obj *config_proto.Config
-	sm         *services.Service
-	ctx        context.Context
-}
-
-func (self *HuntTestSuite) SetupTest() {
-	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().
-		LoadAndValidate()
-	require.NoError(self.T(), err)
-
-	// Start essential services.
-	self.ctx, _ = context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(self.ctx, self.config_obj)
-
-	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
-	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
-	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
-	require.NoError(self.T(), self.sm.Start(hunt_dispatcher.StartHuntDispatcher))
-	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
-	require.NoError(self.T(), self.sm.Start(users.StartUserManager))
-}
-
-func (self *HuntTestSuite) TearDownTest() {
-	self.sm.Close()
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
-	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
+	test_utils.TestSuite
 }
 
 func (self *HuntTestSuite) TestCompilation() {

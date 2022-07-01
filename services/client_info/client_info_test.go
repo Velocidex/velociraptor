@@ -58,7 +58,7 @@ type: INTERNAL
 
 func (self *ClientInfoTestSuite) TestClientInfo() {
 	// Fetch the client from the manager
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	client_info_manager.(*client_info.ClientInfoManager).Clock = self.clock
@@ -102,7 +102,7 @@ func (self *ClientInfoTestSuite) TestClientInfo() {
 // Check that master and minion update each other.
 func (self *ClientInfoTestSuite) TestMasterMinion() {
 	// Fetch the master client info manager
-	master_client_info_manager, err := services.GetClientInfoManager()
+	master_client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 	master_client_info_manager.(*client_info.ClientInfoManager).Clock = self.clock
 

@@ -356,8 +356,10 @@ func (self *ClientInfoManager) MutationSync(
 		return
 	}
 
-	frontend_manager := services.GetFrontendManager()
-
+	frontend_manager, err := services.GetFrontendManager(config_obj)
+	if err != nil {
+		return
+	}
 	for {
 		select {
 		case <-ctx.Done():

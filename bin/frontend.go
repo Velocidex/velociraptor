@@ -26,7 +26,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/frontend"
 	"www.velocidex.com/golang/velociraptor/startup"
 )
 
@@ -111,13 +110,8 @@ func startFrontend(sm *services.Service) (*api.Builder, error) {
 		config_obj.Datastore.Implementation = "RemoteFileDataStore"
 	}
 
-	err := sm.Start(frontend.StartFrontendService)
-	if err != nil {
-		return nil, err
-	}
-
 	// These services must start on all frontends
-	err = startup.StartupEssentialServices(sm)
+	err := startup.StartupEssentialServices(sm)
 	if err != nil {
 		return nil, err
 	}

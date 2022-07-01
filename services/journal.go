@@ -28,7 +28,9 @@ func GetJournal(config_obj *config_proto.Config) (JournalService, error) {
 		return nil, err
 	}
 
-	return org_manager.Services(config_obj.OrgId).Journal()
+	s := org_manager.Services(config_obj.OrgId)
+
+	return s.Journal()
 }
 
 type JournalService interface {

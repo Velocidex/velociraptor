@@ -110,9 +110,12 @@ func (self *ReplicationService) isEventRegistered(artifact string) bool {
 	return pres && ok
 }
 
-func (self *ReplicationService) pumpEventFromBufferFile() {
+func (self *ReplicationService) pumpEventFromBufferFile() error {
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	frontend_manager := services.GetFrontendManager()
+	frontend_manager, err := services.GetFrontendManager(self.config_obj)
+	if err != nil {
+		return err
+	}
 
 	for {
 		event, err := self.Buffer.Lease()
@@ -121,7 +124,7 @@ func (self *ReplicationService) pumpEventFromBufferFile() {
 		if err != nil {
 			select {
 			case <-self.ctx.Done():
-				return
+				return nil
 
 			case <-time.After(self.RetryDuration()):
 				continue
@@ -151,13 +154,14 @@ func (self *ReplicationService) pumpEventFromBufferFile() {
 			select {
 			case <-self.ctx.Done():
 				closer()
-				return
+				return nil
 
 			case <-time.After(self.RetryDuration()):
 			}
 			closer()
 		}
 	}
+	return nil
 }
 
 // Periodically flush the batches built up during
@@ -199,9 +203,9 @@ func (self *ReplicationService) Start(
 	config_obj *config_proto.Config, wg *sync.WaitGroup) (err error) {
 
 	// If we are the master node we do not replicate anywhere.
-	frontend_manager := services.GetFrontendManager()
-	if frontend_manager == nil {
-		return errors.New("Frontend not configured")
+	frontend_manager, err := services.GetFrontendManager(config_obj)
+	if err != nil {
+		return err
 	}
 
 	// Initialize our default values and start the service for
@@ -621,7 +625,13 @@ func (self *ReplicationService) watchOnce(
 
 	subctx, cancel := context.WithCancel(ctx)
 
-	frontend_manager := services.GetFrontendManager()
+	frontend_manager, err := services.GetFrontendManager(self.config_obj)
+	if err != nil {
+		logger.Error("<red>ReplicationService</>Unable to connect %v", err)
+		close(output_chan)
+		return output_chan
+	}
+
 	api_client, closer, err := frontend_manager.GetMasterAPIClient(ctx)
 	if err != nil {
 		logger.Error("<red>ReplicationService</>Unable to connect %v", err)

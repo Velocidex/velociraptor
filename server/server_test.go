@@ -30,9 +30,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
-	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
-	"www.velocidex.com/golang/velociraptor/services/interrogation"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
@@ -83,13 +80,14 @@ func (self MockAPIClientFactory) GetAPIClient(
 }
 
 func (self *ServerTestSuite) SetupTest() {
+	self.ConfigObj = self.LoadConfig()
+	self.ConfigObj.Frontend.ServerServices.HuntDispatcher = true
+	self.ConfigObj.Frontend.ServerServices.ClientMonitoring = true
+	self.ConfigObj.Frontend.ServerServices.Interrogation = true
+
 	var err error
 	self.TestSuite.SetupTest()
 	self.LoadArtifacts(mock_definitions)
-
-	require.NoError(self.T(), self.Sm.Start(client_monitoring.StartClientMonitoringService))
-	require.NoError(self.T(), self.Sm.Start(hunt_dispatcher.StartHuntDispatcher))
-	require.NoError(self.T(), self.Sm.Start(interrogation.StartInterrogationService))
 
 	self.server, err = server.NewServer(self.Sm.Ctx, self.ConfigObj, self.Sm.Wg)
 	require.NoError(self.T(), err)
@@ -98,7 +96,7 @@ func (self *ServerTestSuite) SetupTest() {
 		self.ConfigObj, []byte(self.ConfigObj.Writeback.PrivateKey))
 	require.NoError(self.T(), err)
 
-	_, err = self.client_crypto.AddCertificate([]byte(
+	_, err = self.client_crypto.AddCertificate(self.ConfigObj, []byte(
 		self.ConfigObj.Frontend.Certificate))
 
 	require.NoError(self.T(), err)
@@ -164,7 +162,10 @@ func (self *ServerTestSuite) TestClientEventTable() {
 	defer runner.Close()
 
 	// Set a new event monitoring table
-	err := services.ClientEventManager().SetClientMonitoringState(
+	client_event_manager, err := services.ClientEventManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	err = client_event_manager.SetClientMonitoringState(
 		context.Background(), self.ConfigObj, "",
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
@@ -174,7 +175,7 @@ func (self *ServerTestSuite) TestClientEventTable() {
 	require.NoError(t, err)
 
 	// The version of the currently installed table.
-	version := services.ClientEventManager().GetClientMonitoringState().Version
+	version := client_event_manager.GetClientMonitoringState().Version
 
 	// Wait a bit.
 	time.Sleep(time.Second)
@@ -184,7 +185,7 @@ func (self *ServerTestSuite) TestClientEventTable() {
 		Source: self.client_id,
 	})
 
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	tasks, err := client_info_manager.PeekClientTasks(self.client_id)
@@ -214,7 +215,9 @@ func (self *ServerTestSuite) TestForeman() {
 	expected := api.MakeCollectorRequest(
 		self.client_id, "Generic.Client.Info")
 
-	hunt_dispatcher := services.GetHuntDispatcher()
+	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	hunt_id, err := hunt_dispatcher.CreateHunt(
 		context.Background(), self.ConfigObj,
 		vql_subsystem.NullACLManager{},
@@ -243,7 +246,7 @@ func (self *ServerTestSuite) TestForeman() {
 	})
 
 	// Server should schedule the new hunt on the client.
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(t, err)
 
 	tasks, err := client_info_manager.PeekClientTasks(self.client_id)
@@ -386,7 +389,7 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 	t := self.T()
 
 	// Cancellation message should never be sent due to log.
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	tasks, err := client_info_manager.PeekClientTasks(self.client_id)
@@ -432,13 +435,13 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 		Artifacts: []string{"Generic.Client.Info"},
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	repository, err := manager.GetGlobalRepository(self.ConfigObj)
 	require.NoError(t, err)
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	flow_id, err := launcher.ScheduleArtifactCollection(
@@ -452,7 +455,7 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 	require.NoError(t, err)
 
 	// Launching the artifact will schedule one query on the client.
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	tasks, err := client_info_manager.PeekClientTasks(self.client_id)
@@ -469,14 +472,14 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 
 // Schedule a flow in the database and return its flow id
 func (self *ServerTestSuite) createArtifactCollection() (string, error) {
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	repository, err := manager.GetGlobalRepository(self.ConfigObj)
 	require.NoError(self.T(), err)
 
 	// Schedule a flow in the database.
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	flow_id, err := launcher.ScheduleArtifactCollection(
@@ -679,7 +682,7 @@ func (self *ServerTestSuite) TestCancellation() {
 	require.NoError(t, err)
 
 	// One task is scheduled for the client.
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	tasks, err := client_info_manager.PeekClientTasks(self.client_id)
@@ -689,7 +692,7 @@ func (self *ServerTestSuite) TestCancellation() {
 	assert.Equal(t, len(tasks), 2)
 
 	// Cancelling the flow will notify the client immediately.
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(t, err)
 
 	response, err := launcher.CancelFlow(
@@ -744,7 +747,7 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 		})
 
 	// This should send a cancellation message to the client.
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(t, err)
 
 	tasks, err := client_info_manager.PeekClientTasks(self.client_id)

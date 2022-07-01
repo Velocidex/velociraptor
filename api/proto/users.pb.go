@@ -331,7 +331,9 @@ type VelociraptorUser struct {
 	Locked        bool                `protobuf:"varint,8,opt,name=locked,proto3" json:"locked,omitempty"`
 	Permissions   *proto.ApiClientACL `protobuf:"bytes,9,opt,name=Permissions,proto3" json:"Permissions,omitempty"`
 	// A list of org id's the user belongs to.
-	Orgs       []*Org `protobuf:"bytes,11,rep,name=orgs,proto3" json:"orgs,omitempty"`
+	Orgs []*Org `protobuf:"bytes,11,rep,name=orgs,proto3" json:"orgs,omitempty"`
+	// Only used by the GUI/API to determine the currently selected
+	// org the user wants to see.
 	CurrentOrg string `protobuf:"bytes,12,opt,name=current_org,json=currentOrg,proto3" json:"current_org,omitempty"`
 }
 

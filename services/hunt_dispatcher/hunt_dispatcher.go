@@ -62,7 +62,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -509,7 +508,7 @@ func (self *HuntDispatcher) CreateHunt(
 	hunt.Artifacts = hunt.StartRequest.Artifacts
 	hunt.ArtifactSources = []string{}
 	for _, artifact := range hunt.StartRequest.Artifacts {
-		for _, source := range flows.GetArtifactSources(
+		for _, source := range GetArtifactSources(
 			config_obj, artifact) {
 			hunt.ArtifactSources = append(
 				hunt.ArtifactSources, path.Join(artifact, source))

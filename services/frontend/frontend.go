@@ -269,24 +269,7 @@ func (self *MasterFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup
 	// on the master frontend.
 	if config_obj.Frontend.ServerServices == nil ||
 		!config_obj.Frontend.ServerServices.FrontendServer {
-		config_obj.Frontend.ServerServices = &config_proto.ServerServicesConfig{
-			HuntManager:       true,
-			HuntDispatcher:    true,
-			StatsCollector:    true,
-			ServerMonitoring:  true,
-			ServerArtifacts:   true,
-			DynDns:            true,
-			Interrogation:     true,
-			SanityChecker:     true,
-			VfsService:        true,
-			UserManager:       true,
-			ClientMonitoring:  true,
-			MonitoringService: true,
-			ApiServer:         true,
-			FrontendServer:    true,
-			GuiServer:         true,
-			IndexServer:       true,
-		}
+		config_obj.Frontend.ServerServices = services.AllServicesSpec()
 	}
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
@@ -363,15 +346,7 @@ func (self *MinionFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup
 	// If no service specification is set, we start only some
 	// services on minion frontends.
 	if config_obj.Frontend.ServerServices == nil {
-		config_obj.Frontend.ServerServices = &config_proto.ServerServicesConfig{
-			HuntDispatcher:    true,
-			StatsCollector:    true,
-			ClientMonitoring:  true,
-			SanityChecker:     true,
-			FrontendServer:    true,
-			MonitoringService: true,
-			DynDns:            true,
-		}
+		config_obj.Frontend.ServerServices = services.MinionServicesSpec()
 	}
 
 	self.name = services.GetNodeName(config_obj.Frontend)
@@ -402,10 +377,10 @@ func (self *MinionFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup
 // Install a frontend manager. This must be the first service created
 // in the frontend. The service will determine if we are running in
 // master or minion context.
-func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+func NewFrontendService(ctx context.Context, wg *sync.WaitGroup,
+	config_obj *config_proto.Config) (services.FrontendManager, error) {
 	if config_obj.Frontend == nil {
-		return errors.New("Frontend not configured")
+		return nil, errors.New("Frontend not configured")
 	}
 
 	if services.IsMaster(config_obj) {
@@ -413,13 +388,11 @@ func StartFrontendService(ctx context.Context, wg *sync.WaitGroup,
 			config_obj: config_obj,
 			stats:      make(map[string]*FrontendMetrics),
 		}
-		services.RegisterFrontendManager(manager)
-		return manager.Start(ctx, wg, config_obj)
+		return manager, manager.Start(ctx, wg, config_obj)
 	}
 
 	manager := &MinionFrontendManager{config_obj: config_obj}
-	services.RegisterFrontendManager(manager)
-	return manager.Start(ctx, wg, config_obj)
+	return manager, manager.Start(ctx, wg, config_obj)
 }
 
 // Selects the node by name from the extra frontends configuration

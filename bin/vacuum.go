@@ -19,7 +19,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/frontend"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -85,11 +84,6 @@ func doVacuum() error {
 	}
 
 	err = sm.Start(orgs.StartOrgManager)
-	if err != nil {
-		return err
-	}
-
-	err = sm.Start(frontend.StartFrontendService)
 	if err != nil {
 		return err
 	}

@@ -10,21 +10,16 @@ func ClientIdFromConfigObj(source string,
 	config_obj *config_proto.Config) string {
 	if config_obj.Client != nil {
 		org_id := config_obj.OrgId
+		if org_id == "" {
+			return source
+		}
 		return source + "-" + org_id
-	}
-
-	if strings.Contains(source, "-") {
-		panic(1)
 	}
 
 	return source
 }
 
 func ClientIdFromSourceAndOrg(source, org_id string) string {
-	if strings.Contains(source, "-") {
-		panic(1)
-	}
-
 	if org_id == "" {
 		return source
 	}

@@ -80,7 +80,7 @@ type: CLIENT
 }
 
 func (self *TestSuite) TestGetFlow() {
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	repository, err := manager.GetGlobalRepository(
@@ -99,7 +99,7 @@ func (self *TestSuite) TestGetFlow() {
 
 	// Schedule new flows.
 	ctx := context.Background()
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	flow_ids := []string{}
@@ -151,7 +151,7 @@ func (self *TestSuite) TestGetFlow() {
 }
 
 func (self *TestSuite) TestRetransmission() {
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	repository, err := manager.GetGlobalRepository(
@@ -165,7 +165,7 @@ func (self *TestSuite) TestRetransmission() {
 
 	// Schedule a new flow.
 	ctx := context.Background()
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	flow_id, err := launcher.ScheduleArtifactCollection(
@@ -211,7 +211,7 @@ func (self *TestSuite) TestRetransmission() {
 }
 
 func (self *TestSuite) TestResourceLimits() {
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 	repository, err := manager.GetGlobalRepository(
 		self.ConfigObj)
@@ -227,7 +227,7 @@ func (self *TestSuite) TestResourceLimits() {
 
 	// Schedule a new flow.
 	ctx := context.Background()
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	flow_id, err := launcher.ScheduleArtifactCollection(
@@ -238,7 +238,7 @@ func (self *TestSuite) TestResourceLimits() {
 	assert.NoError(self.T(), err)
 
 	// Drain messages to the client.
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	messages, err := client_info_manager.GetClientTasks(self.client_id)

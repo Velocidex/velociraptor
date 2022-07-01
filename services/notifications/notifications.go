@@ -296,7 +296,11 @@ func (self *Notifier) IsClientConnected(
 
 	// No directly connected minions right now, and the client is not
 	// connected to us - therefore the client is not available.
-	minion_count := services.GetFrontendManager().GetMinionCount()
+	frontend_manager, err := services.GetFrontendManager(config_obj)
+	if err != nil {
+		return false
+	}
+	minion_count := frontend_manager.GetMinionCount()
 	if minion_count == 0 {
 		return false
 	}

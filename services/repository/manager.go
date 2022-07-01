@@ -306,6 +306,26 @@ func NewRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 	return self, self.StartWatchingForUpdates(ctx, wg, config_obj)
 }
 
+func LoadArtifactsFromConfig(
+	repo_manager services.RepositoryManager,
+	config_obj *config_proto.Config) error {
+	global_repository, err := repo_manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
+	}
+
+	// Load some artifacts via the autoexec mechanism.
+	if config_obj.Autoexec != nil {
+		for _, def := range config_obj.Autoexec.ArtifactDefinitions {
+			_, err := global_repository.LoadProto(def, true)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
+}
+
 func LoadBuiltInArtifacts(ctx context.Context,
 	config_obj *config_proto.Config,
 	self *RepositoryManager, validate bool) error {

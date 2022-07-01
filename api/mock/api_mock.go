@@ -41,26 +41,6 @@ func (m *MockAPIClient) EXPECT() *MockAPIClientMockRecorder {
 	return m.recorder
 }
 
-// ArchiveFlow mocks base method.
-func (m *MockAPIClient) ArchiveFlow(arg0 context.Context, arg1 *proto0.ApiFlowRequest, arg2 ...grpc.CallOption) (*proto0.StartFlowResponse, error) {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0, arg1}
-	for _, a := range arg2 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "ArchiveFlow", varargs...)
-	ret0, _ := ret[0].(*proto0.StartFlowResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ArchiveFlow indicates an expected call of ArchiveFlow.
-func (mr *MockAPIClientMockRecorder) ArchiveFlow(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0, arg1}, arg2...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ArchiveFlow", reflect.TypeOf((*MockAPIClient)(nil).ArchiveFlow), varargs...)
-}
-
 // CancelFlow mocks base method.
 func (m *MockAPIClient) CancelFlow(arg0 context.Context, arg1 *proto0.ApiFlowRequest, arg2 ...grpc.CallOption) (*proto0.StartFlowResponse, error) {
 	m.ctrl.T.Helper()
@@ -239,26 +219,6 @@ func (mr *MockAPIClientMockRecorder) EstimateHunt(arg0, arg1 interface{}, arg2 .
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EstimateHunt", reflect.TypeOf((*MockAPIClient)(nil).EstimateHunt), varargs...)
-}
-
-// ExportNotebook mocks base method.
-func (m *MockAPIClient) ExportNotebook(arg0 context.Context, arg1 *proto0.NotebookExportRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0, arg1}
-	for _, a := range arg2 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "ExportNotebook", varargs...)
-	ret0, _ := ret[0].(*emptypb.Empty)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ExportNotebook indicates an expected call of ExportNotebook.
-func (mr *MockAPIClientMockRecorder) ExportNotebook(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0, arg1}, arg2...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ExportNotebook", reflect.TypeOf((*MockAPIClient)(nil).ExportNotebook), varargs...)
 }
 
 // GetArtifactFile mocks base method.
@@ -662,14 +622,14 @@ func (mr *MockAPIClientMockRecorder) GetUserFavorites(arg0, arg1 interface{}, ar
 }
 
 // GetUserUITraits mocks base method.
-func (m *MockAPIClient) GetUserUITraits(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto0.ApiGrrUser, error) {
+func (m *MockAPIClient) GetUserUITraits(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto0.ApiUser, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetUserUITraits", varargs...)
-	ret0, _ := ret[0].(*proto0.ApiGrrUser)
+	ret0, _ := ret[0].(*proto0.ApiUser)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

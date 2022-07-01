@@ -35,6 +35,7 @@ func RegisterOrgManager(m OrgManager) {
 }
 
 type ServiceContainer interface {
+	FrontendManager() (FrontendManager, error)
 	Journal() (JournalService, error)
 	ClientInfoManager() (ClientInfoManager, error)
 	Indexer() (Indexer, error)
