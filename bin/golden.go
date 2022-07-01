@@ -43,7 +43,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/users"
-	"www.velocidex.com/golang/velociraptor/startup"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/remapping"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -268,9 +267,6 @@ func doGolden() error {
 	log_writer = &MemoryLogWriter{config_obj: config_obj}
 
 	failures := []string{}
-
-	//Force a clean slate for each test.
-	startup.Reset(config_obj)
 
 	sm, err := startEssentialServices(config_obj)
 	if err != nil {

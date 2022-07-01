@@ -122,7 +122,10 @@ func (self *HuntDispatcher) participateAllConnectedClients(
 	ctx context.Context,
 	config_obj *config_proto.Config, hunt_id string) error {
 
-	notifier := services.GetNotifier()
+	notifier, err := services.GetNotifier(config_obj)
+	if err != nil {
+		return err
+	}
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err

@@ -104,7 +104,11 @@ func (self *NotebookManager) UpdateNotebookCell(
 	go func() {
 		defer query_cancel()
 
-		cancel_notify, remove_notification := services.GetNotifier().
+		notifier, err := services.GetNotifier(self.config_obj)
+		if err != nil {
+			return
+		}
+		cancel_notify, remove_notification := notifier.
 			ListenForNotification(in.CellId)
 		defer remove_notification()
 

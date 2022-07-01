@@ -154,8 +154,8 @@ func (self *EnrollmentService) ProcessEnrollment(
 			Artifacts: []string{interrogation_artifact},
 		}, func() {
 			// Notify the client
-			notifier := services.GetNotifier()
-			if notifier != nil {
+			notifier, err := services.GetNotifier(config_obj)
+			if err == nil {
 				notifier.NotifyListener(
 					config_obj, client_id, "Interrogate")
 			}

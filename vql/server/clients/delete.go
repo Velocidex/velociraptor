@@ -151,8 +151,8 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 
 		// Notify the client to force it to disconnect in case
 		// it is already up.
-		notifier := services.GetNotifier()
-		if notifier != nil {
+		notifier, err := services.GetNotifier(config_obj)
+		if err == nil {
 			err = notifier.NotifyListener(
 				config_obj, arg.ClientId, "DeleteClient")
 			if err != nil {

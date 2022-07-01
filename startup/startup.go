@@ -3,52 +3,14 @@
 package startup
 
 import (
-	"fmt"
-
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/ddclient"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
-	"www.velocidex.com/golang/velociraptor/services/server_artifacts"
 	"www.velocidex.com/golang/velociraptor/services/users"
-
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
-func getServerServices(config_obj *config_proto.Config) *config_proto.ServerServicesConfig {
-	if config_obj.Frontend == nil {
-		return &config_proto.ServerServicesConfig{}
-	}
-
-	// If no service specification is set, we start all services
-	// on the primary frontend.
-	if config_obj.Frontend.ServerServices == nil {
-		return &config_proto.ServerServicesConfig{
-			HuntManager:       true,
-			HuntDispatcher:    true,
-			StatsCollector:    true,
-			ServerMonitoring:  true,
-			ServerArtifacts:   true,
-			DynDns:            true,
-			Interrogation:     true,
-			SanityChecker:     true,
-			VfsService:        true,
-			UserManager:       true,
-			ClientMonitoring:  true,
-			MonitoringService: true,
-			ApiServer:         true,
-			FrontendServer:    true,
-			GuiServer:         true,
-			IndexServer:       true,
-		}
-	}
-
-	return config_obj.Frontend.ServerServices
-}
-
 func StartupEssentialServices(sm *services.Service) error {
-	spec := getServerServices(sm.Config)
-
 	err := sm.Start(datastore.StartRemoteDatastore)
 	if err != nil {
 		return err
@@ -56,11 +18,14 @@ func StartupEssentialServices(sm *services.Service) error {
 
 	// Updates DynDNS records if needed. Frontends need to maintain
 	// their IP addresses.
-	if spec.DynDns {
-		err := sm.Start(ddclient.StartDynDNSService)
-		if err != nil {
-			return err
-		}
+	err = sm.Start(ddclient.StartDynDNSService)
+	if err != nil {
+		return err
+	}
+
+	err = sm.Start(users.StartUserManager)
+	if err != nil {
+		return err
 	}
 
 	_, err = services.GetOrgManager()
@@ -76,48 +41,10 @@ func StartupEssentialServices(sm *services.Service) error {
 
 // Start usual services that run on frontends only (i.e. not the client).
 func StartupFrontendServices(sm *services.Service) (err error) {
-	spec := getServerServices(sm.Config)
-
-	_, err = services.GetOrgManager()
-	if err != nil {
-		err = sm.Start(orgs.StartOrgManager)
-		if err != nil {
-			return err
-		}
-	}
-
 	err = sm.Start(datastore.StartMemcacheFileService)
 	if err != nil {
 		return err
 	}
 
-	err = sm.Start(users.StartUserManager)
-	if err != nil {
-		return err
-	}
-
-	// Run any server artifacts the user asks for.
-	if spec.ServerArtifacts {
-		err := sm.Start(server_artifacts.StartServerArtifactService)
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
-}
-
-func Reset(config_obj *config_proto.Config) {
-	// This function should not find any active services. Services
-	// are responsible for unregistering themselves and holding
-	// the service manager for the duration of their lifetime.
-
-	journal, _ := services.GetJournal(config_obj)
-	if journal != nil {
-		fmt.Printf("Journal not reset.\n")
-	}
-
-	if services.GetNotifier() != nil {
-		fmt.Printf("Notifier not reset.\n")
-	}
 }

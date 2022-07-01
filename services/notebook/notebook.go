@@ -124,8 +124,12 @@ func (self *NotebookManager) CancelNotebookCell(
 	}
 
 	// Notify the calculator immediately
-	return services.GetNotifier().NotifyListener(
-		self.config_obj, cell_id, "CancelNotebookCell")
+	notifier, err := services.GetNotifier(self.config_obj)
+	if err != nil {
+		return err
+	}
+	return notifier.NotifyListener(self.config_obj, cell_id,
+		"CancelNotebookCell")
 }
 
 func (self *NotebookManager) UploadNotebookAttachment(ctx context.Context,

@@ -48,6 +48,7 @@ type ServiceContainer interface {
 	NotebookManager() (NotebookManager, error)
 	ClientEventManager() (ClientEventTable, error)
 	ServerEventManager() (ServerEventManager, error)
+	Notifier() (Notifier, error)
 }
 
 // The org manager manages multi-tenancies.

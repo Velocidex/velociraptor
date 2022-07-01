@@ -499,8 +499,8 @@ func reader(server_obj *Server) http.Handler {
 			return
 		}
 
-		notifier := services.GetNotifier()
-		if notifier == nil {
+		notifier, err := services.GetNotifier(org_config_obj)
+		if err != nil {
 			http.Error(w, "Shutting down", http.StatusServiceUnavailable)
 			return
 		}

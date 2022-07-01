@@ -243,8 +243,8 @@ func (self *ClientInfoManager) GetStats(client_id string) (*services.Stats, erro
 // Checks the notification service for all currently connected clients
 // so we may send the most up to date Ping information possible.
 func (self *ClientInfoManager) UpdateMostRecentPing() {
-	notifier := services.GetNotifier()
-	if notifier == nil {
+	notifier, err := services.GetNotifier(self.config_obj)
+	if err != nil {
 		return
 	}
 	now := uint64(time.Now().UnixNano() / 1000)

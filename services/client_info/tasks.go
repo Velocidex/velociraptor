@@ -72,8 +72,8 @@ func (self *ClientInfoManager) ProcessNotification(
 		tasksClearCount.Inc()
 		cached_info.SetHasTasks(TASKS_AVAILABLE_STATUS_YES)
 
-		notifier := services.GetNotifier()
-		if notifier != nil {
+		notifier, err := services.GetNotifier(config_obj)
+		if err == nil {
 			notifier.NotifyDirectListener(client_id)
 		}
 	}

@@ -260,8 +260,11 @@ func (self *ClientEventTable) setClientMonitoringState(
 		return err
 	}
 
+	notifier, err := services.GetNotifier(config_obj)
+	if err != nil {
+		return err
+	}
 	if config_obj.Defaults.EventChangeNotifyAllClients {
-		notifier := services.GetNotifier()
 		for _, c := range notifier.ListClients() {
 			notifier.NotifyDirectListener(c)
 		}

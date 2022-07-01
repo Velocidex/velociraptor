@@ -147,8 +147,8 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		ctx, config_obj, acl_manager, repository, request,
 		func() {
 			// Notify the client about it.
-			notifier := services.GetNotifier()
-			if notifier != nil {
+			notifier, err := services.GetNotifier(config_obj)
+			if err == nil {
 				notifier.NotifyListener(
 					config_obj, arg.ClientId, "collect_client")
 			}

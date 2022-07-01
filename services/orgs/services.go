@@ -22,6 +22,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/services/sanity"
+	"www.velocidex.com/golang/velociraptor/services/server_artifacts"
 	"www.velocidex.com/golang/velociraptor/services/server_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/vfs_service"
 )
@@ -42,6 +43,18 @@ type ServiceContainer struct {
 	notebook_manager     services.NotebookManager
 	client_event_manager services.ClientEventTable
 	server_event_manager services.ServerEventManager
+	notifier             services.Notifier
+}
+
+func (self ServiceContainer) Notifier() (services.Notifier, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.notifier == nil {
+		return nil, errors.New("Notification service not initialized")
+	}
+
+	return self.notifier, nil
 }
 
 func (self ServiceContainer) ServerEventManager() (services.ServerEventManager, error) {
@@ -211,6 +224,7 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 	// Now start the services for this org. Services depend on other
 	// services so they need to be accessible as soon as they are
 	// ready.
+
 	j, err := journal.NewJournalService(
 		self.ctx, self.wg, org_config)
 	if err != nil {
@@ -219,6 +233,15 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 	service_container.mu.Lock()
 	service_container.journal = j
 	service_container.broadcast = broadcast.NewBroadcastService(org_config)
+	service_container.mu.Unlock()
+
+	n, err := notifications.NewNotificationService(
+		self.ctx, self.wg, org_config)
+	if err != nil {
+		return err
+	}
+	service_container.mu.Lock()
+	service_container.notifier = n
 	service_container.mu.Unlock()
 
 	repo_manager, err := repository.NewRepositoryManager(
@@ -256,15 +279,6 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 	service_container.mu.Lock()
 	service_container.repository = repo_manager
 	service_container.mu.Unlock()
-
-	// The notifications service is global currently.
-	if services.GetNotifier() == nil {
-		err := notifications.StartNotificationService(
-			self.ctx, self.wg, self.config_obj)
-		if err != nil {
-			return err
-		}
-	}
 
 	i, err := inventory.NewInventoryService(
 		self.ctx, self.wg, org_config)
@@ -348,16 +362,21 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 	service_container.launcher = launch
 	service_container.mu.Unlock()
 
-	n, err := notebook.NewNotebookManagerService(self.ctx, self.wg, org_config)
+	nb, err := notebook.NewNotebookManagerService(self.ctx, self.wg, org_config)
 	if err != nil {
 		return err
 	}
 
 	service_container.mu.Lock()
-	service_container.notebook_manager = n
+	service_container.notebook_manager = nb
 	service_container.mu.Unlock()
 
 	err = sanity.NewSanityCheckService(self.ctx, self.wg, org_config)
+	if err != nil {
+		return err
+	}
+
+	err = server_artifacts.NewServerArtifactService(self.ctx, self.wg, org_config)
 	if err != nil {
 		return err
 	}

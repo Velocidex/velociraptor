@@ -369,9 +369,9 @@ func NewInventoryService(
 	}
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
-	notifier := services.GetNotifier()
-	if notifier == nil {
-		return nil, errors.New("Notification service not started")
+	notifier, err := services.GetNotifier(config_obj)
+	if err != nil {
+		return nil, err
 	}
 
 	wg.Add(1)

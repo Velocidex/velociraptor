@@ -78,39 +78,39 @@ type Notifier struct {
 // the current process. This allows multiprocess communication as the
 // notifications may arrive from other frontend processes through the
 // journal service.
-func StartNotificationService(
+func NewNotificationService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config) (services.Notifier, error) {
 
 	self := &Notifier{
 		notification_pool:         notifications.NewNotificationPool(),
 		uuid:                      utils.GetGUID(),
 		client_connection_tracker: make(map[string]*tracker),
 	}
-	services.RegisterNotifier(self)
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> the notification service.")
+	logger.Info("<green>Starting</> the notification service for %v.",
+		services.GetOrgName(config_obj))
 
 	err := journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"Server.Internal.Ping", "NotificationService",
 		self.ProcessPing)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"Server.Internal.Pong", "NotificationService",
 		self.ProcessPong)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Watch the journal.
 	journal_service, err := services.GetJournal(config_obj)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	events, cancel := journal_service.Watch(ctx,
 		"Server.Internal.Notifications", "NotificationService")
@@ -120,7 +120,6 @@ func StartNotificationService(
 		defer wg.Done()
 		defer cancel()
 
-		defer services.RegisterNotifier(nil)
 		defer func() {
 			self.mu.Lock()
 			defer self.mu.Unlock()
@@ -150,7 +149,7 @@ func StartNotificationService(
 		}
 	}()
 
-	return nil
+	return self, nil
 }
 
 func (self *Notifier) ProcessPong(ctx context.Context,

@@ -251,7 +251,10 @@ func (self *ApiServer) ListClients(
 
 	// Warm up the cache pre-emptively so we have fresh connected
 	// status
-	notifier := services.GetNotifier()
+	notifier, err := services.GetNotifier(org_config_obj)
+	if err != nil {
+		return nil, err
+	}
 	for _, item := range result.Items {
 		notifier.IsClientConnected(
 			ctx, org_config_obj, item.ClientId, 0 /* timeout */)
@@ -279,15 +282,15 @@ func (self *ApiServer) NotifyClients(
 			"User is not allowed to launch flows.")
 	}
 
-	notifier := services.GetNotifier()
-	if notifier == nil {
-		return nil, errors.New("Notifier not ready")
+	notifier, err := services.GetNotifier(org_config_obj)
+	if err != nil {
+		return nil, err
 	}
 
 	if in.ClientId != "" {
 		self.server_obj.Info("sending notification to %s", in.ClientId)
-		err = services.GetNotifier().NotifyListener(
-			org_config_obj, in.ClientId, "API.NotifyClients")
+		err = notifier.NotifyListener(org_config_obj, in.ClientId,
+			"API.NotifyClients")
 	} else {
 		return nil, status.Error(codes.InvalidArgument,
 			"client id should be specified")

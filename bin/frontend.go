@@ -148,8 +148,8 @@ func startFrontend(sm *services.Service) (*api.Builder, error) {
 		return nil, err
 	}
 
-	// Start the gRPC API server.
-	if config_obj.Frontend.ServerServices.ApiServer {
+	// Start the gRPC API server on the master only.
+	if services.IsMaster(config_obj) {
 		err = server_builder.WithAPIServer(sm.Ctx, sm.Wg)
 		if err != nil {
 			return nil, err

@@ -133,15 +133,20 @@ func (self *ApiServer) GetClient(
 
 	api_client, err := indexer.FastGetApiClient(ctx, org_config_obj, in.ClientId)
 	if err != nil {
-		return nil, err
+		return &api_proto.ApiClient{}, nil
 	}
 
 	if self.server_obj != nil {
-		if !in.Lightweight &&
+		if !in.Lightweight {
 			// Wait up to 2 seconds to find out if clients are connected.
-			services.GetNotifier().IsClientConnected(ctx,
+			notifier, err := services.GetNotifier(org_config_obj)
+			if err != nil {
+				return nil, err
+			}
+			if notifier.IsClientConnected(ctx,
 				org_config_obj, in.ClientId, 2) {
-			api_client.LastSeenAt = uint64(time.Now().UnixNano() / 1000)
+				api_client.LastSeenAt = uint64(time.Now().UnixNano() / 1000)
+			}
 		}
 	}
 

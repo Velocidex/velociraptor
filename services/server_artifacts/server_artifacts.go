@@ -372,7 +372,7 @@ func (self *ServerArtifactsRunner) runQuery(
 	return nil
 }
 
-func StartServerArtifactService(
+func NewServerArtifactService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
@@ -388,9 +388,9 @@ func StartServerArtifactService(
 		config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Server Artifact Runner Service")
 
-	notifier := services.GetNotifier()
-	if notifier == nil {
-		return errors.New("Notifier not configured")
+	notifier, err := services.GetNotifier(config_obj)
+	if err != nil {
+		return err
 	}
 
 	wg.Add(1)
