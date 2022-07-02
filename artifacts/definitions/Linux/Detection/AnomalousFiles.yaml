@@ -1,0 +1,43 @@
+name: Linux.Detection.AnomalousFiles
+
+description: |
+  Detects anomalous files in a Linux filesystem.
+   
+  An anomalous file is considered one that matches at least one criteria:
+
+  - Hidden (prefixed with a dot);
+
+  - Large, with a size over a specified limit; or
+
+  - With SUID bit set.
+
+author: George-Andrei Iosif (@iosifache)
+
+type: CLIENT
+
+parameters:
+  - name: MaxNormalSize
+    description: Size (in bytes) above which a file is considered large
+    type: int
+    default: 10485760
+  - name: PathsToSearch
+    description: Paths to search, separated by comma
+    type: str
+    default: "/home/**,tmp/**"
+
+sources:
+  - precondition: |
+      SELECT OS
+      FROM info()
+      WHERE OS = 'linux'
+
+    query: |
+      SELECT Fqdn AS Host,
+             FullPath,
+             substr(str=Name, start=0, end=1) = "." AS IsHidden,
+             Size,
+             Size > MaxNormalSize AS IsLarge,
+             Mode.String AS Mode,
+             Mode =~ "^u" as HasSUID
+      FROM glob(globs=split(string=PathsToSearch, sep_string=","))
+      WHERE IsHidden OR IsLarge OR HasSUID
