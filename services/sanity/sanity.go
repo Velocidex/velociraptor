@@ -95,7 +95,7 @@ func (self *SanityChecks) Check(
 		return err
 	}
 
-	notebook_manager, err := services.GetNotebookManager()
+	notebook_manager, err := services.GetNotebookManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -203,7 +203,7 @@ func checkForServerUpgrade(
 
 		// Go through all the artifacts and update their tool
 		// definitions.
-		manager, err := services.GetRepositoryManager()
+		manager, err := services.GetRepositoryManager(config_obj)
 		if err != nil {
 			return err
 		}
@@ -213,7 +213,10 @@ func checkForServerUpgrade(
 			return err
 		}
 
-		inventory := services.GetInventory()
+		inventory, err := services.GetInventory(config_obj)
+		if err != nil {
+			return err
+		}
 
 		seen := make(map[string]bool)
 
@@ -280,7 +283,7 @@ func checkForServerUpgrade(
 	return nil
 }
 
-func StartSanityCheckService(
+func NewSanityCheckService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {

@@ -37,13 +37,19 @@ func (self GetClientMonitoring) Call(
 		return vfilter.Null{}
 	}
 
-	_, ok := vql_subsystem.GetServerConfig(scope)
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		scope.Log("Command can only run on the server")
 		return vfilter.Null{}
 	}
 
-	return services.ClientEventManager().GetClientMonitoringState()
+	client_event_manager, err := services.ClientEventManager(config_obj)
+	if err != nil {
+		scope.Log("get_client_monitoring: %v", err)
+		return vfilter.Null{}
+	}
+
+	return client_event_manager.GetClientMonitoringState()
 }
 
 func (self GetClientMonitoring) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
@@ -108,7 +114,13 @@ func (self SetClientMonitoring) Call(
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
-	err = services.ClientEventManager().SetClientMonitoringState(
+	client_event_manager, err := services.ClientEventManager(config_obj)
+	if err != nil {
+		scope.Log("set_client_monitoring: %v", err)
+		return vfilter.Null{}
+	}
+
+	err = client_event_manager.SetClientMonitoringState(
 		ctx, config_obj, principal, value)
 	if err != nil {
 		scope.Log("set_client_monitoring: %s", err.Error())
@@ -234,8 +246,8 @@ func (self SetServerMonitoring) Call(
 		return vfilter.Null{}
 	}
 
-	server_manager := services.GetServerEventManager()
-	if server_manager == nil {
+	server_manager, err := services.GetServerEventManager(config_obj)
+	if err != nil {
 		scope.Log("set_server_monitoring: server_manager not ready")
 		return vfilter.Null{}
 	}

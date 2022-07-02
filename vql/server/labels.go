@@ -61,7 +61,7 @@ func (self *AddLabels) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(config_obj)
 	for _, label := range arg.Labels {
 		if label == "" {
 			continue
@@ -84,7 +84,7 @@ func (self *AddLabels) Call(ctx context.Context,
 			return vfilter.Null{}
 		}
 	}
-	return arg
+	return vfilter.RowToDict(ctx, scope, arg)
 }
 
 func (self AddLabels) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

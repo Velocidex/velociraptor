@@ -6,7 +6,6 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/indexing"
 )
 
@@ -33,19 +32,9 @@ func doRebuildIndex() error {
 	}
 	defer sm.Close()
 
-	err = sm.Start(client_info.StartClientInfoService)
-	if err != nil {
-		return fmt.Errorf("Starting services: %w", err)
-	}
-
 	err = sm.Start(datastore.StartMemcacheFileService)
 	if err != nil {
 		return fmt.Errorf("Starting services: %w", err)
-	}
-
-	err = sm.Start(indexing.StartIndexingService)
-	if err != nil {
-		return fmt.Errorf("Starting index service: %w", err)
 	}
 
 	now := time.Now()
@@ -58,7 +47,7 @@ func doRebuildIndex() error {
 		fmt.Printf("Done in %v\n", time.Now().Sub(now))
 	}()
 
-	new_indexer := indexing.NewIndexer()
+	new_indexer := indexing.NewIndexer(config_obj)
 	err = new_indexer.LoadIndexFromDatastore(sm.Ctx, config_obj)
 	if err != nil {
 		return fmt.Errorf("Building index: %w", err)

@@ -128,9 +128,10 @@ func runUnzipPrint(builder services.ScopeBuilder) error {
 	return runQueryWithEnv(query, builder)
 }
 
-func getAllStats(query string, builder services.ScopeBuilder) (
+func getAllStats(
+	query string, builder services.ScopeBuilder) (
 	[]*ordereddict.Dict, error) {
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(builder.Config)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +159,7 @@ func getAllStats(query string, builder services.ScopeBuilder) (
 
 func runQueryWithEnv(
 	query string, builder services.ScopeBuilder) error {
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(builder.Config)
 	if err != nil {
 		return err
 	}

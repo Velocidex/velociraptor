@@ -212,7 +212,11 @@ func breakHuntIntoScopes(
 	go func() {
 		defer close(output_chan)
 
-		hunt_dispatcher := services.GetHuntDispatcher()
+		hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
+		if err != nil {
+			return
+		}
+
 		for flow_details := range hunt_dispatcher.GetFlows(
 			ctx, config_obj, scope, arg.HuntId, 0) {
 

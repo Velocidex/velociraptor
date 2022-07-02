@@ -31,6 +31,12 @@ func (self *ClientInfoTestSuite) SetupTest() {
 	// For this test make the master write and sync quickly
 	self.ConfigObj.Frontend.Resources.ClientInfoSyncTime = 1
 	self.ConfigObj.Frontend.Resources.ClientInfoWriteTime = 1
+
+	self.LoadArtifacts([]string{`
+name: Server.Internal.ClientPing
+type: INTERNAL
+`})
+
 	self.TestSuite.SetupTest()
 
 	// Create a client in the datastore
@@ -49,16 +55,11 @@ func (self *ClientInfoTestSuite) SetupTest() {
 	self.clock = &utils.MockClock{
 		MockNow: time.Unix(100, 0),
 	}
-
-	self.LoadArtifacts([]string{`
-name: Server.Internal.ClientPing
-type: INTERNAL
-`})
 }
 
 func (self *ClientInfoTestSuite) TestClientInfo() {
 	// Fetch the client from the manager
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	client_info_manager.(*client_info.ClientInfoManager).Clock = self.clock
@@ -102,7 +103,7 @@ func (self *ClientInfoTestSuite) TestClientInfo() {
 // Check that master and minion update each other.
 func (self *ClientInfoTestSuite) TestMasterMinion() {
 	// Fetch the master client info manager
-	master_client_info_manager, err := services.GetClientInfoManager()
+	master_client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 	master_client_info_manager.(*client_info.ClientInfoManager).Clock = self.clock
 

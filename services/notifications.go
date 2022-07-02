@@ -16,28 +16,17 @@ package services
 
 import (
 	"context"
-	"sync"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
-var (
-	notification_mu sync.Mutex
-	g_notification  Notifier = nil
-)
+func GetNotifier(config_obj *config_proto.Config) (Notifier, error) {
+	org_manager, err := GetOrgManager()
+	if err != nil {
+		return nil, err
+	}
 
-func GetNotifier() Notifier {
-	notification_mu.Lock()
-	defer notification_mu.Unlock()
-
-	return g_notification
-}
-
-func RegisterNotifier(n Notifier) {
-	notification_mu.Lock()
-	defer notification_mu.Unlock()
-
-	g_notification = n
+	return org_manager.Services(config_obj.OrgId).Notifier()
 }
 
 type Notifier interface {

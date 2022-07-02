@@ -254,7 +254,7 @@ func getTransformer(
 
 			return ordereddict.NewDict().
 				Set("ClientId", client_id).
-				Set("Hostname", services.GetHostname(client_id)).
+				Set("Hostname", services.GetHostname(config_obj, client_id)).
 				Set("FlowId", flow_id).
 				Set("StartedTime", time.Unix(utils.GetInt64(row, "Timestamp"), 0)).
 				Set("State", flow.State.String()).

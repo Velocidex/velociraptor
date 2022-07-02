@@ -42,7 +42,12 @@ func (self RemoveClientMonitoringFunction) Call(
 		return vfilter.Null{}
 	}
 
-	event_config := services.ClientEventManager().GetClientMonitoringState()
+	client_event_manager, err := services.ClientEventManager(config_obj)
+	if err != nil {
+		scope.Log("rm_client_monitoring: %v", err)
+		return vfilter.Null{}
+	}
+	event_config := client_event_manager.GetClientMonitoringState()
 
 	label_config := getArtifactCollectorArgs(event_config, arg.Label)
 
@@ -51,7 +56,7 @@ func (self RemoveClientMonitoringFunction) Call(
 
 	// Actually set the table
 	principal := vql_subsystem.GetPrincipal(scope)
-	err = services.ClientEventManager().SetClientMonitoringState(
+	err = client_event_manager.SetClientMonitoringState(
 		ctx, config_obj, principal, event_config)
 	if err != nil {
 		scope.Log("rm_client_monitoring: %v", err)
@@ -99,17 +104,22 @@ func (self RemoveServerMonitoringFunction) Call(
 		return vfilter.Null{}
 	}
 
-	event_config := services.ServerEventManager.Get()
+	server_manager, err := services.GetServerEventManager(config_obj)
+	if err != nil {
+		scope.Log("rm_server_monitoring: server_manager not ready")
+		return vfilter.Null{}
+	}
+
+	event_config := server_manager.Get()
 
 	// First remove the current artifact if it is there already
 	removeArtifact(event_config, arg.Artifact)
 
 	// Actually set the table
 	principal := vql_subsystem.GetPrincipal(scope)
-	err = services.ServerEventManager.Update(
-		config_obj, principal, event_config)
+	err = server_manager.Update(config_obj, principal, event_config)
 	if err != nil {
-		scope.Log("rm_client_monitoring: %v", err)
+		scope.Log("rm_server_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 

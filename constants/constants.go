@@ -23,13 +23,14 @@ import (
 )
 
 const (
-	VERSION                    = "0.6.5"
+	VERSION                    = "0.6.6-dev"
 	ENROLLMENT_WELL_KNOWN_FLOW = "E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW = FLOW_PREFIX + "Monitoring"
 
 	FLOW_PREFIX             = "F."
 	FOREMAN_WELL_KNOWN_FLOW = "E.Foreman"
 	HUNT_PREFIX             = "H."
+	ORG_PREFIX              = "O"
 
 	// Well known flows - Request ID:
 	LOG_SINK uint64 = 980

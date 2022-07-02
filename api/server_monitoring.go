@@ -34,7 +34,12 @@ func setServerMonitoringState(
 		return err
 	}
 
-	err = services.GetServerEventManager().Update(config_obj, principal, args)
+	server_manager, err := services.GetServerEventManager(config_obj)
+	if err != nil {
+		return err
+	}
+
+	err = server_manager.Update(config_obj, principal, args)
 	if err != nil {
 		return err
 	}

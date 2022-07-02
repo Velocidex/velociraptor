@@ -23,19 +23,19 @@ func (self *ApiServer) GetSubject(
 	in *api_proto.DataRequest) (*api_proto.DataResponse, error) {
 
 	users := services.GetUserManager()
-	user_record, err := users.GetUserFromContext(self.config, ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
-	perm, err := acls.CheckAccess(self.config, user_name, acls.DATASTORE_ACCESS)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to access datastore.")
 	}
 
-	db, err := datastore.GetDB(self.config)
+	db, err := datastore.GetDB(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (self *ApiServer) GetSubject(
 			"Datastore has no raw access.")
 	}
 
-	data, err := raw_db.GetBuffer(self.config, getURN(in))
+	data, err := raw_db.GetBuffer(org_config_obj, getURN(in))
 	return &api_proto.DataResponse{
 		Data: data,
 	}, err
@@ -57,19 +57,19 @@ func (self *ApiServer) SetSubject(
 	in *api_proto.DataRequest) (*api_proto.DataResponse, error) {
 
 	users := services.GetUserManager()
-	user_record, err := users.GetUserFromContext(self.config, ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
-	perm, err := acls.CheckAccess(self.config, user_name, acls.DATASTORE_ACCESS)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to access datastore.")
 	}
 
-	db, err := datastore.GetDB(self.config)
+	db, err := datastore.GetDB(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (self *ApiServer) SetSubject(
 
 		// Wait for the data to hit the disk.
 		wg.Add(1)
-		err = raw_db.SetBuffer(self.config, getURN(in), in.Data, func() {
+		err = raw_db.SetBuffer(org_config_obj, getURN(in), in.Data, func() {
 			wg.Done()
 		})
 		wg.Wait()
@@ -93,7 +93,7 @@ func (self *ApiServer) SetSubject(
 	} else {
 
 		// Just write quickly.
-		err = raw_db.SetBuffer(self.config, getURN(in), in.Data, nil)
+		err = raw_db.SetBuffer(org_config_obj, getURN(in), in.Data, nil)
 	}
 	return &api_proto.DataResponse{}, err
 }
@@ -103,24 +103,24 @@ func (self *ApiServer) ListChildren(
 	in *api_proto.DataRequest) (*api_proto.ListChildrenResponse, error) {
 
 	users := services.GetUserManager()
-	user_record, err := users.GetUserFromContext(self.config, ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
-	perm, err := acls.CheckAccess(self.config, user_name, acls.DATASTORE_ACCESS)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to access datastore.")
 	}
 
-	db, err := datastore.GetDB(self.config)
+	db, err := datastore.GetDB(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	children, err := db.ListChildren(self.config, getURN(in))
+	children, err := db.ListChildren(org_config_obj, getURN(in))
 	if err != nil {
 		return nil, err
 	}
@@ -143,24 +143,24 @@ func (self *ApiServer) DeleteSubject(
 	in *api_proto.DataRequest) (*emptypb.Empty, error) {
 
 	users := services.GetUserManager()
-	user_record, err := users.GetUserFromContext(self.config, ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
-	perm, err := acls.CheckAccess(self.config, user_name, acls.DATASTORE_ACCESS)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to access datastore.")
 	}
 
-	db, err := datastore.GetDB(self.config)
+	db, err := datastore.GetDB(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	return &emptypb.Empty{}, db.DeleteSubject(self.config, getURN(in))
+	return &emptypb.Empty{}, db.DeleteSubject(org_config_obj, getURN(in))
 }
 
 func getURN(in *api_proto.DataRequest) api.DSPathSpec {

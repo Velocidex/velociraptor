@@ -3,9 +3,9 @@ package services
 import (
 	"context"
 	"errors"
-	"sync"
 
 	"github.com/Velocidex/ordereddict"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
 
@@ -40,28 +40,17 @@ import (
 //    to the async=TRUE option, the queries will all run in parallel.
 
 var (
-	broadcast_mu     sync.Mutex
-	broadcastService BroadcastService
-
 	AlreadyRegisteredError = errors.New("Already Registered")
 )
 
-func RegisterBroadcast(b BroadcastService) {
-	broadcast_mu.Lock()
-	defer broadcast_mu.Unlock()
-
-	broadcastService = b
-}
-
-func GetBroadcastService() (BroadcastService, error) {
-	broadcast_mu.Lock()
-	defer broadcast_mu.Unlock()
-
-	if broadcastService == nil {
-		return nil, errors.New("Broadcast service not ready")
+func GetBroadcastService(
+	config_obj *config_proto.Config) (BroadcastService, error) {
+	org_manager, err := GetOrgManager()
+	if err != nil {
+		return nil, err
 	}
 
-	return broadcastService, nil
+	return org_manager.Services(config_obj.OrgId).BroadcastService()
 }
 
 type BroadcastService interface {

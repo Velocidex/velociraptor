@@ -14,7 +14,7 @@ import (
 )
 
 func (self *ClientInfoTestSuite) TestQueueMessages() {
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	message1 := &crypto_proto.VeloMessage{Source: "Server", SessionId: "1"}
@@ -43,7 +43,7 @@ func (self *ClientInfoTestSuite) TestQueueMessages() {
 }
 
 func (self *ClientInfoTestSuite) TestFastQueueMessages() {
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	written := []*crypto_proto.VeloMessage{}
@@ -74,7 +74,7 @@ func (self *ClientInfoTestSuite) TestFastQueueMessages() {
 
 // Make sure we internally cache the client tasks list.
 func (self *ClientInfoTestSuite) TestGetClientTasksIsCached() {
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	// Get metrics snapshot

@@ -18,6 +18,7 @@
 package crypto
 
 import (
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 
@@ -31,5 +32,5 @@ type ICryptoManager interface {
 
 type IClientCryptoManager interface {
 	ICryptoManager
-	AddCertificate(certificate_pem []byte) (string, error)
+	AddCertificate(config_obj *config_proto.Config, certificate_pem []byte) (string, error)
 }

@@ -69,7 +69,7 @@ func (self *TestSuite) TestSQLite() {
 		Env:        ordereddict.NewDict(),
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	scope := manager.BuildScope(builder)

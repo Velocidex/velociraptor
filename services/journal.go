@@ -16,37 +16,21 @@ package services
 
 import (
 	"context"
-	"errors"
-	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
 
-var (
-	journal_mu sync.Mutex
-
-	// Service is only available in the frontend.
-	GJournal JournalService
-)
-
-func GetJournal() (JournalService, error) {
-	journal_mu.Lock()
-	defer journal_mu.Unlock()
-
-	if GJournal == nil {
-		return nil, errors.New("Journal service not ready")
+func GetJournal(config_obj *config_proto.Config) (JournalService, error) {
+	org_manager, err := GetOrgManager()
+	if err != nil {
+		return nil, err
 	}
 
-	return GJournal, nil
-}
+	s := org_manager.Services(config_obj.OrgId)
 
-func RegisterJournal(journal JournalService) {
-	journal_mu.Lock()
-	defer journal_mu.Unlock()
-
-	GJournal = journal
+	return s.Journal()
 }
 
 type JournalService interface {

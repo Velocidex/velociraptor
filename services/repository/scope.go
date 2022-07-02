@@ -23,7 +23,7 @@ func _build(self services.ScopeBuilder, from_scratch bool) vfilter.Scope {
 	}
 
 	if self.Repository == nil {
-		manager, _ := services.GetRepositoryManager()
+		manager, _ := services.GetRepositoryManager(self.Config)
 		if manager == nil {
 			return vfilter.NewScope()
 		}

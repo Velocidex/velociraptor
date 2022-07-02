@@ -45,6 +45,9 @@ var (
 	ACL_ROOT = path_specs.NewUnsafeDatastorePath("acl").
 			SetType(api.PATH_TYPE_DATASTORE_JSON)
 
+	ORGS_ROOT = path_specs.NewSafeDatastorePath("orgs").
+			SetType(api.PATH_TYPE_DATASTORE_JSON)
+
 	// The public directory is exported without authentication and
 	// is used to distribute the client binaries.
 	PUBLIC_ROOT = path_specs.NewUnsafeFilestorePath("public").

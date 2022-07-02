@@ -37,7 +37,7 @@ func (self *NotebookManager) UpdateNotebookCell(
 	notebook_path_manager := paths.NewNotebookPathManager(
 		notebook_metadata.NotebookId)
 
-	err := self.store.SetNotebook(notebook_metadata)
+	err := self.Store.SetNotebook(notebook_metadata)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (self *NotebookManager) UpdateNotebookCell(
 
 	acl_manager := vql_subsystem.NewServerACLManager(self.config_obj, user_name)
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (self *NotebookManager) UpdateNotebookCell(
 		notebook_cell: notebook_cell,
 		notebook_id:   in.NotebookId,
 		start:         time.Now(),
-		store:         self.store,
+		store:         self.Store,
 	}
 
 	// Add the notebook environment into the cell template.
@@ -104,7 +104,11 @@ func (self *NotebookManager) UpdateNotebookCell(
 	go func() {
 		defer query_cancel()
 
-		cancel_notify, remove_notification := services.GetNotifier().
+		notifier, err := services.GetNotifier(self.config_obj)
+		if err != nil {
+			return
+		}
+		cancel_notify, remove_notification := notifier.
 			ListenForNotification(in.CellId)
 		defer remove_notification()
 
@@ -209,7 +213,7 @@ func (self *NotebookManager) updateCellContents(
 		notebook_cell := make_cell(output)
 		notebook_cell.Messages = append(notebook_cell.Messages,
 			fmt.Sprintf("Error: %v", err))
-		self.store.SetNotebookCell(notebook_id, notebook_cell)
+		self.Store.SetNotebookCell(notebook_id, notebook_cell)
 		return notebook_cell, err
 	}
 
@@ -277,5 +281,5 @@ func (self *NotebookManager) updateCellContents(
 	tmpl.Close()
 
 	notebook_cell := make_cell(output)
-	return notebook_cell, self.store.SetNotebookCell(notebook_id, notebook_cell)
+	return notebook_cell, self.Store.SetNotebookCell(notebook_id, notebook_cell)
 }

@@ -44,9 +44,15 @@ func (self *KillClientFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		scope.Log("Command can only run on the server")
+		return vfilter.Null{}
+	}
+
 	// Queue a cancellation message to the client for this flow
 	// id.
-	client_manager, err := services.GetClientInfoManager()
+	client_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		scope.Log("killkillkill: %s", err.Error())
 		return vfilter.Null{}

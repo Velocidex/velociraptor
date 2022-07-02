@@ -73,8 +73,7 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 		// Get the full user record with hashes so we can
 		// verify it below.
 		users_manager := services.GetUserManager()
-		user_record, err := users_manager.GetUserWithHashes(
-			self.config_obj, username)
+		user_record, err := users_manager.GetUserWithHashes(username)
 		if err != nil {
 			logger := logging.GetLogger(self.config_obj, &logging.Audit)
 			logger.WithFields(logrus.Fields{

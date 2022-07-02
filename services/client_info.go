@@ -1,17 +1,10 @@
 package services
 
 import (
-	"errors"
-	"sync"
-
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-)
-
-var (
-	client_info_manager    ClientInfoManager
-	client_info_manager_mu sync.Mutex
 )
 
 const (
@@ -32,22 +25,13 @@ type Stats struct {
 	IpAddress             string `json:"IpAddress,omitempty"`
 }
 
-func GetClientInfoManager() (ClientInfoManager, error) {
-	client_info_manager_mu.Lock()
-	defer client_info_manager_mu.Unlock()
-
-	if client_info_manager == nil {
-		return nil, errors.New("Client Info Manager not initialized")
+func GetClientInfoManager(config_obj *config_proto.Config) (ClientInfoManager, error) {
+	org_manager, err := GetOrgManager()
+	if err != nil {
+		return nil, err
 	}
 
-	return client_info_manager, nil
-}
-
-func RegisterClientInfoManager(m ClientInfoManager) {
-	client_info_manager_mu.Lock()
-	defer client_info_manager_mu.Unlock()
-
-	client_info_manager = m
+	return org_manager.Services(config_obj.OrgId).ClientInfoManager()
 }
 
 type ClientInfo struct {
@@ -110,8 +94,10 @@ type ClientInfoManager interface {
 	Flush(client_id string)
 }
 
-func GetHostname(client_id string) string {
-	client_info_manager, err := GetClientInfoManager()
+func GetHostname(
+	config_obj *config_proto.Config,
+	client_id string) string {
+	client_info_manager, err := GetClientInfoManager(config_obj)
 	if err != nil {
 		return ""
 	}

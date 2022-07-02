@@ -10,13 +10,10 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
-	"www.velocidex.com/golang/velociraptor/services/server_monitoring"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 
@@ -24,8 +21,10 @@ import (
 )
 
 var (
-	definitions = []string{
-		`
+	definitions = []string{`
+name: Generic.Client.Info
+type: CLIENT
+`, `
 name: Linux.Events.SSHLogin
 type: CLIENT_EVENT
 parameters:
@@ -49,14 +48,12 @@ type MonitoringTestSuite struct {
 }
 
 func (self *MonitoringTestSuite) SetupTest() {
-	self.TestSuite.SetupTest()
+	self.ConfigObj = self.LoadConfig()
+	self.ConfigObj.Frontend.ServerServices.ClientMonitoring = true
+	self.ConfigObj.Frontend.ServerServices.MonitoringService = true
+
 	self.LoadArtifacts(definitions)
-
-	require.NoError(self.T(), self.Sm.Start(
-		client_monitoring.StartClientMonitoringService))
-
-	require.NoError(self.T(), self.Sm.Start(
-		server_monitoring.StartServerMonitoringService))
+	self.TestSuite.SetupTest()
 }
 
 func (self *MonitoringTestSuite) TestAddClientMonitoringNoPermissions() {
@@ -105,7 +102,7 @@ func (self *MonitoringTestSuite) TestAddServerMonitoring() {
 		Env:        ordereddict.NewDict(),
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	scope := manager.BuildScope(builder)
@@ -131,14 +128,17 @@ func (self *MonitoringTestSuite) TestAddServerMonitoring() {
 
 	log_buffer.Reset()
 
-	_ = AddServerMonitoringFunction{}.Call(
+	res = AddServerMonitoringFunction{}.Call(
 		sub_ctx, scope, ordereddict.NewDict().
 			Set("artifact", "System.Hunt.Creation").
 			Set("parameters", ordereddict.NewDict().
 				Set("syslogAuthLogPath", "AppliesToAll")))
 
 	// Load the table from the service manager.
-	monitoring_table := services.ServerEventManager.Get()
+	server_event_manager, err := services.GetServerEventManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	monitoring_table := server_event_manager.Get()
 
 	golden := ordereddict.NewDict().
 		Set("Add artifact", monitoring_table)
@@ -148,7 +148,7 @@ func (self *MonitoringTestSuite) TestAddServerMonitoring() {
 		sub_ctx, scope, ordereddict.NewDict().
 			Set("artifact", "System.Hunt.Creation"))
 
-	monitoring_table = services.ServerEventManager.Get()
+	monitoring_table = server_event_manager.Get()
 
 	golden.Set("Removing artifact from label", monitoring_table)
 

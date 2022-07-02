@@ -1,4 +1,4 @@
-package timed
+package timed_test
 
 import (
 	"time"

@@ -47,7 +47,7 @@ func (self DeleteFlowPlugin) Call(
 			return
 		}
 
-		launcher, err := services.GetLauncher()
+		launcher, err := services.GetLauncher(config_obj)
 		if err != nil {
 			scope.Log("delete_flow: %v", err)
 			return

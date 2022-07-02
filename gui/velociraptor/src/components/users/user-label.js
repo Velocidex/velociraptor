@@ -36,6 +36,7 @@ class UserSettings extends React.PureComponent {
                 theme: this.context.traits.theme || "no-theme",
                 timezone: this.context.traits.timezone || "UTC",
                 lang: this.context.traits.lang || "en",
+                org: this.context.traits.org || "root",
                 default_password: this.context.traits.default_password || "",
             });
         }
@@ -45,6 +46,8 @@ class UserSettings extends React.PureComponent {
         theme: "",
         timezone: "",
         default_password: "",
+        org: "",
+        org_changed: false,
     }
 
     saveSettings = ()=> {
@@ -52,6 +55,7 @@ class UserSettings extends React.PureComponent {
             theme: this.state.theme,
             timezone: this.state.timezone,
             lang: this.state.lang,
+            org: this.state.org,
             default_password: this.state.default_password,
         });
     }
@@ -65,6 +69,35 @@ class UserSettings extends React.PureComponent {
                 <Modal.Title>{T("User Settings")}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
+                { this.context.traits.orgs &&
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">
+                      <OverlayTrigger
+                        delay={{show: 250, hide: 400}}
+                        overlay={(props)=><Tooltip {...props}>
+                                  {T("Switch to a different org")}
+                                </Tooltip>}>
+                        <div>{T("Organization")}</div>
+                      </OverlayTrigger>
+                    </Form.Label>
+                    <Col sm="8">
+                      <Form.Control as="select"
+                                    value={this.state.org}
+                                    placeholder={T("Select a language")}
+                                    onChange={(e) => {
+                                        this.setState({
+                                            org: e.currentTarget.value,
+                                            org_changed: true,
+                                        });
+                                    }}>
+                        {_.map(this.context.traits.orgs || [], function(x) {
+                            return <option key={x.id} value={x.id}>{x.name}</option>;
+                        })}
+                      </Form.Control>
+                    </Col>
+                  </Form.Group>
+                }
+
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
                     {T("Theme")}

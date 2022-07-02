@@ -110,9 +110,12 @@ func (self *ReplicationService) isEventRegistered(artifact string) bool {
 	return pres && ok
 }
 
-func (self *ReplicationService) pumpEventFromBufferFile() {
+func (self *ReplicationService) pumpEventFromBufferFile() error {
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	frontend_manager := services.GetFrontendManager()
+	frontend_manager, err := services.GetFrontendManager(self.config_obj)
+	if err != nil {
+		return err
+	}
 
 	for {
 		event, err := self.Buffer.Lease()
@@ -121,7 +124,7 @@ func (self *ReplicationService) pumpEventFromBufferFile() {
 		if err != nil {
 			select {
 			case <-self.ctx.Done():
-				return
+				return nil
 
 			case <-time.After(self.RetryDuration()):
 				continue
@@ -142,6 +145,10 @@ func (self *ReplicationService) pumpEventFromBufferFile() {
 
 			_, err = api_client.PushEvents(self.ctx, event)
 			if err == nil {
+				//logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+				//logger.Debug("<green>ReplicationService</> Sending %v rows (%v bytes) to %v for %v.",
+				//	event.Rows, len(event.Jsonl), event.Artifact, event.ClientId)
+
 				closer()
 				break
 			}
@@ -151,13 +158,14 @@ func (self *ReplicationService) pumpEventFromBufferFile() {
 			select {
 			case <-self.ctx.Done():
 				closer()
-				return
+				return nil
 
 			case <-time.After(self.RetryDuration()):
 			}
 			closer()
 		}
 	}
+	return nil
 }
 
 // Periodically flush the batches built up during
@@ -199,9 +207,9 @@ func (self *ReplicationService) Start(
 	config_obj *config_proto.Config, wg *sync.WaitGroup) (err error) {
 
 	// If we are the master node we do not replicate anywhere.
-	frontend_manager := services.GetFrontendManager()
-	if frontend_manager == nil {
-		return errors.New("Frontend not configured")
+	frontend_manager, err := services.GetFrontendManager(config_obj)
+	if err != nil {
+		return err
 	}
 
 	// Initialize our default values and start the service for
@@ -554,17 +562,18 @@ func (self *ReplicationService) PushRowsToArtifact(
 		ClientId: client_id,
 		FlowId:   flow_id,
 		Jsonl:    serialized,
+		Rows:     int64(len(rows)),
 	}
-
-	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Debug("<green>ReplicationService</> Sending %v rows (%v bytes) to %v for %v.",
-		len(rows), len(serialized), artifact, client_id)
 
 	// Should not block! If the channel is full we save the event
 	// into the file buffer for later.
 	select {
 	case self.sender <- request:
+		//logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		//logger.Debug("<green>ReplicationService</> Sending %v rows (%v bytes) to %v for %v.",
+		//len(rows), len(serialized), artifact, client_id)
 		return nil
+
 	default:
 		return self.Buffer.Enqueue(request)
 	}
@@ -621,7 +630,13 @@ func (self *ReplicationService) watchOnce(
 
 	subctx, cancel := context.WithCancel(ctx)
 
-	frontend_manager := services.GetFrontendManager()
+	frontend_manager, err := services.GetFrontendManager(self.config_obj)
+	if err != nil {
+		logger.Error("<red>ReplicationService</>Unable to connect %v", err)
+		close(output_chan)
+		return output_chan
+	}
+
 	api_client, closer, err := frontend_manager.GetMasterAPIClient(ctx)
 	if err != nil {
 		logger.Error("<red>ReplicationService</>Unable to connect %v", err)
@@ -697,8 +712,5 @@ func NewReplicationService(
 	}
 
 	err = service.Start(ctx, config_obj, wg)
-	if err == nil {
-		services.RegisterJournal(service)
-	}
 	return service, err
 }

@@ -181,7 +181,7 @@ func createDownloadFile(
 		return nil, errors.New("Client Id and Flow Id should be specified.")
 	}
 
-	hostname := services.GetHostname(client_id)
+	hostname := services.GetHostname(config_obj, client_id)
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	download_file := flow_path_manager.GetDownloadsFile(hostname, password != "")
 
@@ -212,7 +212,7 @@ func createDownloadFile(
 	lock_file.Write([]byte("X"))
 	lock_file.Close()
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +278,7 @@ func downloadFlowToZip(
 	flow_id string,
 	zip_writer *cryptozip.Writer) error {
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return err
 	}
@@ -443,7 +443,11 @@ func createHuntDownloadFile(
 		return nil, err
 	}
 
-	hunt_dispatcher := services.GetHuntDispatcher()
+	hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	hunt_details, pres := hunt_dispatcher.GetHunt(hunt_id)
 	if !pres {
 		fd.Close()
@@ -611,7 +615,7 @@ func createHuntDownloadFile(
 				continue
 			}
 
-			hostname := services.GetHostname(client_id)
+			hostname := services.GetHostname(config_obj, client_id)
 			err := downloadFlowToZip(
 				sub_ctx, config_obj, write_csv, password, client_id, hostname,
 				flow_id, zip_writer)

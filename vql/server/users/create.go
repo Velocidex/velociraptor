@@ -18,6 +18,7 @@ type UserCreateFunctionArgs struct {
 	Username string   `vfilter:"required,field=user,docs=The user to create or update."`
 	Roles    []string `vfilter:"required,field=roles,docs=List of roles to give the user."`
 	Password string   `vfilter:"optional,field=password,docs=A password to set for the user (If not using SSO this might be needed)."`
+	OrgIds   []string `vfilter:"optional,field=orgs,docs=One or more org IDs to grant access to."`
 }
 
 type UserCreateFunction struct{}
@@ -91,7 +92,7 @@ func (self UserCreateFunction) Call(
 
 	// Write the user record.
 	users_manager := services.GetUserManager()
-	err = users_manager.SetUser(config_obj, user_record)
+	err = users_manager.SetUser(user_record)
 	if err != nil {
 		scope.Log("user_create: %s", err)
 		return vfilter.Null{}

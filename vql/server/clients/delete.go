@@ -151,8 +151,8 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 
 		// Notify the client to force it to disconnect in case
 		// it is already up.
-		notifier := services.GetNotifier()
-		if notifier != nil {
+		notifier, err := services.GetNotifier(config_obj)
+		if err == nil {
 			err = notifier.NotifyListener(
 				config_obj, arg.ClientId, "DeleteClient")
 			if err != nil {
@@ -168,14 +168,14 @@ func reallyDeleteClient(ctx context.Context,
 	config_obj *config_proto.Config, scope vfilter.Scope,
 	db datastore.DataStore, arg *DeleteClientArgs) error {
 
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return err
 	}
 
 	client_info_manager.Remove(arg.ClientId)
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
 		return err
 	}
@@ -193,7 +193,7 @@ func reallyDeleteClient(ctx context.Context,
 	}
 
 	// Remove any labels
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(config_obj)
 	for _, label := range labeler.GetClientLabels(config_obj, arg.ClientId) {
 		err := labeler.RemoveClientLabel(config_obj, arg.ClientId, label)
 		if err != nil && errors.Is(err, os.ErrNotExist) {
@@ -216,7 +216,7 @@ func reallyDeleteClient(ctx context.Context,
 	}
 
 	// Send an event that the client was deleted.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}

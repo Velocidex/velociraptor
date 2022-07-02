@@ -25,7 +25,7 @@ func GetPublishedEvents(
 	go func() {
 		defer wg.Done()
 
-		journal, err := GetJournal()
+		journal, err := GetJournal(config_obj)
 		if err != nil {
 			return
 		}

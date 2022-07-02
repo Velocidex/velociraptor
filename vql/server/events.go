@@ -47,7 +47,7 @@ func (self *SendEventFunction) Call(ctx context.Context,
 		return &vfilter.Null{}
 	}
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return &vfilter.Null{}
 	}

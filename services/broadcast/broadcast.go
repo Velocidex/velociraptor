@@ -83,15 +83,11 @@ func (self *BroadcastService) Watch(
 	return output_chan, cancel, nil
 }
 
-func StartBroadcastService(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
-	services.RegisterBroadcast(&BroadcastService{
+func NewBroadcastService(
+	config_obj *config_proto.Config) services.BroadcastService {
+	return &BroadcastService{
 		pool:             directory.NewQueuePool(config_obj),
 		generators:       make(map[string]<-chan *ordereddict.Dict),
 		listener_closers: make(map[string][]func()),
-	})
-
-	return nil
+	}
 }

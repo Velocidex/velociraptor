@@ -105,7 +105,13 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		}
 	}
 
-	err = services.GetInventory().AddTool(
+	inventory, err := services.GetInventory(config_obj)
+	if err != nil {
+		scope.Log("inventory_add: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	err = inventory.AddTool(
 		config_obj, tool, services.ToolOptions{
 			AdminOverride: true,
 		})
@@ -159,7 +165,13 @@ func (self *InventoryGetFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	tool, err := services.GetInventory().GetToolInfo(ctx, config_obj, arg.Tool)
+	inventory, err := services.GetInventory(config_obj)
+	if err != nil {
+		scope.Log("inventory_get: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	tool, err := inventory.GetToolInfo(ctx, config_obj, arg.Tool)
 	if err != nil {
 		scope.Log("inventory_get: %s", err.Error())
 		return vfilter.Null{}
@@ -199,7 +211,18 @@ func (self InventoryPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		for _, item := range services.GetInventory().Get().Tools {
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
+		if !ok {
+			scope.Log("Command can only run on the server")
+		}
+
+		inventory, err := services.GetInventory(config_obj)
+		if err != nil {
+			scope.Log("inventory: %s", err.Error())
+			return
+		}
+
+		for _, item := range inventory.Get().Tools {
 			select {
 			case <-ctx.Done():
 				return

@@ -132,7 +132,7 @@ func listArtifactsHint() []string {
 }
 
 func getRepository(config_obj *config_proto.Config) (services.Repository, error) {
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +220,7 @@ func doArtifactCollect() error {
 		spec.Set(name, collect_args)
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -389,7 +389,7 @@ func doArtifactList() error {
 			continue
 		}
 
-		launcher, err := services.GetLauncher()
+		launcher, err := services.GetLauncher(config_obj)
 		if err != nil {
 			return err
 		}
@@ -423,7 +423,7 @@ func load_config_artifacts(config_obj *config_proto.Config) error {
 		return nil
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}

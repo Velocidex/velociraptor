@@ -154,7 +154,7 @@ func doLS(path, accessor string) error {
 			Set("path", path),
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -211,7 +211,7 @@ func doRM(path, accessor string) error {
 			Set("accessor", accessor).
 			Set("path", path),
 	}
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -289,7 +289,7 @@ func doCp(path, accessor string, dump_dir string) error {
 		return fmt.Errorf("Can not write to accessor %v\n", output_accessor)
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}

@@ -78,39 +78,39 @@ type Notifier struct {
 // the current process. This allows multiprocess communication as the
 // notifications may arrive from other frontend processes through the
 // journal service.
-func StartNotificationService(
+func NewNotificationService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config) (services.Notifier, error) {
 
 	self := &Notifier{
 		notification_pool:         notifications.NewNotificationPool(),
 		uuid:                      utils.GetGUID(),
 		client_connection_tracker: make(map[string]*tracker),
 	}
-	services.RegisterNotifier(self)
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> the notification service.")
+	logger.Info("<green>Starting</> the notification service for %v.",
+		services.GetOrgName(config_obj))
 
 	err := journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"Server.Internal.Ping", "NotificationService",
 		self.ProcessPing)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"Server.Internal.Pong", "NotificationService",
 		self.ProcessPong)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Watch the journal.
-	journal_service, err := services.GetJournal()
+	journal_service, err := services.GetJournal(config_obj)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	events, cancel := journal_service.Watch(ctx,
 		"Server.Internal.Notifications", "NotificationService")
@@ -120,7 +120,6 @@ func StartNotificationService(
 		defer wg.Done()
 		defer cancel()
 
-		defer services.RegisterNotifier(nil)
 		defer func() {
 			self.mu.Lock()
 			defer self.mu.Unlock()
@@ -150,7 +149,7 @@ func StartNotificationService(
 		}
 	}()
 
-	return nil
+	return self, nil
 }
 
 func (self *Notifier) ProcessPong(ctx context.Context,
@@ -204,7 +203,7 @@ func (self *Notifier) ProcessPing(ctx context.Context,
 		return nil
 	}
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -236,7 +235,7 @@ func (self *Notifier) ListenForNotification(client_id string) (chan bool, func()
 
 func (self *Notifier) NotifyListener(config_obj *config_proto.Config,
 	id, tag string) error {
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -259,7 +258,7 @@ func (self *Notifier) NotifyDirectListener(client_id string) {
 
 func (self *Notifier) NotifyListenerAsync(config_obj *config_proto.Config,
 	id, tag string) {
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return
 	}
@@ -297,13 +296,17 @@ func (self *Notifier) IsClientConnected(
 
 	// No directly connected minions right now, and the client is not
 	// connected to us - therefore the client is not available.
-	minion_count := services.GetFrontendManager().GetMinionCount()
+	frontend_manager, err := services.GetFrontendManager(config_obj)
+	if err != nil {
+		return false
+	}
+	minion_count := frontend_manager.GetMinionCount()
 	if minion_count == 0 {
 		return false
 	}
 
 	// We deem a client connected if the last ping time is within 10 seconds
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return false
 	}
@@ -323,7 +326,7 @@ func (self *Notifier) IsClientConnected(
 
 	// Send ping to all nodes, they will reply with a
 	// notification.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return false
 	}

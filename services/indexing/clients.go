@@ -41,14 +41,14 @@ func GetApiClient(
 		return nil, err
 	}
 
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(config_obj)
 	if labeler == nil {
 		return nil, errors.New("Labeler not ready")
 	}
 
 	result.Labels = labeler.GetClientLabels(config_obj, client_id)
 
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (self *Indexer) FastGetApiClient(
 	config_obj *config_proto.Config,
 	client_id string) (*api_proto.ApiClient, error) {
 
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -113,7 +113,7 @@ func (self *Indexer) FastGetApiClient(
 		return nil, errors.New("Invalid client_info")
 	}
 
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(config_obj)
 	if labeler == nil {
 		return nil, errors.New("Labeler not ready")
 	}

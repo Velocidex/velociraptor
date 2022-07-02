@@ -1,7 +1,6 @@
 package artifacts_test
 
 import (
-	"context"
 	"io/ioutil"
 	"os"
 	"path"
@@ -12,19 +11,11 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
+	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
-	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/inventory"
-	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
-	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
@@ -59,42 +50,42 @@ var path_tests = []path_tests_t{
 }
 
 type PathManageTestSuite struct {
-	suite.Suite
-	config_obj *config_proto.Config
-	sm         *services.Service
-	ctx        context.Context
-	dirname    string
+	test_utils.TestSuite
+	dirname string
 }
 
 func (self *PathManageTestSuite) SetupTest() {
-	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().
-		LoadAndValidate()
-	require.NoError(self.T(), err)
+	self.ConfigObj = self.LoadConfig()
 
+	var err error
 	self.dirname, err = ioutil.TempDir("", "path_manager_test")
 	assert.NoError(self.T(), err)
 
-	self.config_obj.Datastore.Implementation = "FileBaseDataStore"
-	self.config_obj.Datastore.FilestoreDirectory = self.dirname
-	self.config_obj.Datastore.Location = self.dirname
+	self.ConfigObj.Datastore.Implementation = "FileBaseDataStore"
+	self.ConfigObj.Datastore.FilestoreDirectory = self.dirname
+	self.ConfigObj.Datastore.Location = self.dirname
 
-	// Start essential services.
-	self.ctx, _ = context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(self.ctx, self.config_obj)
-	assert.NotNil(self.T(), self.sm)
+	self.LoadArtifacts([]string{`
+name: Windows.Sys.Users
+type: CLIENT
+`, `
+name: Server.Utils.CreateCollector
+type: SERVER
+`, `
+name: Elastic.Flows.Upload
+type: SERVER_EVENT
+`, `
+name: Windows.Events.ProcessCreation
+type: CLIENT_EVENT
+`})
 
-	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
-	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
-	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
-	require.NoError(self.T(), self.sm.Start(inventory.StartInventoryService))
-	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
+	self.TestSuite.SetupTest()
+
 }
 
 func (self *PathManageTestSuite) TearDownTest() {
-	self.sm.Close()
+	self.TestSuite.TearDownTest()
+
 	os.RemoveAll(self.dirname) // clean up
 }
 
@@ -106,7 +97,7 @@ func (self *PathManageTestSuite) TestPathManager() {
 
 	for _, testcase := range path_tests {
 		path_manager, err := artifacts.NewArtifactPathManager(
-			self.config_obj,
+			self.ConfigObj,
 			testcase.client_id,
 			testcase.flow_id,
 			testcase.full_artifact_name)
@@ -116,14 +107,14 @@ func (self *PathManageTestSuite) TestPathManager() {
 		path, err := path_manager.GetPathForWriting()
 		assert.NoError(self.T(), err)
 		assert.Equal(self.T(),
-			cleanPath(path.AsFilestoreFilename(self.config_obj)),
+			cleanPath(path.AsFilestoreFilename(self.ConfigObj)),
 			cleanPath(self.dirname+"/"+testcase.expected))
 
-		file_store := memory.NewMemoryFileStore(self.config_obj)
+		file_store := memory.NewMemoryFileStore(self.ConfigObj)
 		file_store.Clear()
 
 		qm := memory.NewMemoryQueueManager(
-			self.config_obj, file_store).(*memory.MemoryQueueManager)
+			self.ConfigObj, file_store).(*memory.MemoryQueueManager)
 		qm.Clock = path_manager.Clock
 
 		err = qm.PushEventRows(path_manager,

@@ -95,7 +95,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		scope.Log("hunt: %v", err)
 		return vfilter.Null{}
@@ -157,7 +157,11 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	acl_manager := vql_subsystem.NewServerACLManager(
 		config_obj, vql_subsystem.GetPrincipal(scope))
 
-	hunt_dispatcher := services.GetHuntDispatcher()
+	hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		scope.Log("hunt: %v", err)
+		return vfilter.Null{}
+	}
 	hunt_id, err := hunt_dispatcher.CreateHunt(
 		ctx, config_obj, acl_manager, hunt_request)
 	if err != nil {
@@ -209,7 +213,7 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	journal, _ := services.GetJournal()
+	journal, _ := services.GetJournal(config_obj)
 	if journal == nil {
 		return vfilter.Null{}
 	}

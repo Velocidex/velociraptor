@@ -155,7 +155,7 @@ func (self *ProcessTrackerTestSuite) TestProcessTracker() {
 			Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		}
 
-		manager, err := services.GetRepositoryManager()
+		manager, err := services.GetRepositoryManager(self.ConfigObj)
 		assert.NoError(self.T(), err)
 
 		scope := manager.BuildScope(builder)

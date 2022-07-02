@@ -4,17 +4,17 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"www.velocidex.com/golang/velociraptor/config"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/journal"
-	repository_impl "www.velocidex.com/golang/velociraptor/services/repository"
+	"www.velocidex.com/golang/velociraptor/services/orgs"
 )
 
 func TestLoadingFromFilestore(t *testing.T) {
@@ -41,14 +41,19 @@ func TestLoadingFromFilestore(t *testing.T) {
 	fd.Write([]byte(`name: Custom.TestArtifact`))
 	fd.Close()
 
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	sm := services.NewServiceManager(ctx, config_obj)
-	defer sm.Close()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
+	defer cancel()
 
-	require.NoError(t, sm.Start(journal.StartJournalService))
-	require.NoError(t, sm.Start(repository_impl.StartRepositoryManager))
+	config_obj.Frontend.ServerServices = &config_proto.ServerServicesConfig{
+		JournalService:    true,
+		RepositoryManager: true,
+	}
 
-	manager, err := services.GetRepositoryManager()
+	err = orgs.StartTestOrgManager(ctx, wg, config_obj, nil)
+
+	manager, err := services.GetRepositoryManager(config_obj)
 	assert.NoError(t, err)
 
 	repository, err := manager.GetGlobalRepository(config_obj)

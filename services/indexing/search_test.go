@@ -13,7 +13,7 @@ import (
 )
 
 func (self *TestSuite) TestWildCardSearch() {
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	// Read all clients.
@@ -44,7 +44,7 @@ func (self *TestSuite) TestWildCardSearch() {
 }
 
 func (self *TestSuite) TestPrefixSearch() {
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	// Read all clients.

@@ -28,7 +28,7 @@ func watchForFlowCompletion(
 		scope vfilter.Scope, row *ordereddict.Dict,
 		flow *proto.ArtifactCollectorContext)) error {
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -43,7 +43,8 @@ func watchForFlowCompletion(
 		defer wg.Done()
 		defer cancel()
 
-		defer logger.Info("Stopping watch for %v", artifact_name)
+		defer logger.Info("Stopping watch for %v for %v (%v)",
+			artifact_name, services.GetOrgName(config_obj), watcher_name)
 
 		builder := services.ScopeBuilder{
 			Config:     config_obj,
@@ -54,8 +55,9 @@ func watchForFlowCompletion(
 				&logging.FrontendComponent),
 		}
 
-		manager, err := services.GetRepositoryManager()
+		manager, err := services.GetRepositoryManager(config_obj)
 		if err != nil {
+			logger.Error("watchForFlowCompletion: %v", err)
 			return
 		}
 

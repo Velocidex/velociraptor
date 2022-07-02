@@ -27,9 +27,7 @@ package services
 
 import (
 	"context"
-	"errors"
 	"log"
-	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
@@ -40,27 +38,13 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-var (
-	repository_mu sync.Mutex
-	grepository   RepositoryManager
-)
-
-func GetRepositoryManager() (RepositoryManager, error) {
-	repository_mu.Lock()
-	defer repository_mu.Unlock()
-
-	if grepository == nil {
-		return nil, errors.New("Repository Manager not ready")
+func GetRepositoryManager(config_obj *config_proto.Config) (RepositoryManager, error) {
+	org_manager, err := GetOrgManager()
+	if err != nil {
+		return nil, err
 	}
 
-	return grepository, nil
-}
-
-func RegisterRepositoryManager(repository RepositoryManager) {
-	repository_mu.Lock()
-	defer repository_mu.Unlock()
-
-	grepository = repository
+	return org_manager.Services(config_obj.OrgId).RepositoryManager()
 }
 
 // Make it easier to build a query scope using the aritfact
@@ -135,6 +119,8 @@ type RepositoryManager interface {
 
 	// Only used for tests.
 	SetGlobalRepositoryForTests(config_obj *config_proto.Config, repository Repository)
+
+	SetParent(config_obj *config_proto.Config, parent Repository)
 
 	// Before callers can run VQL queries they need to create a
 	// query scope. This function uses the builder pattern above

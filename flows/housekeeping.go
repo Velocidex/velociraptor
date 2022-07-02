@@ -42,7 +42,7 @@ func CheckClientStatus(
 	config_obj *config_proto.Config,
 	client_id string) error {
 
-	client_manager, err := services.GetClientInfoManager()
+	client_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -53,7 +53,11 @@ func CheckClientStatus(
 	}
 
 	// Check the client's event table for validity.
-	client_event_manager := services.ClientEventManager()
+	client_event_manager, err := services.ClientEventManager(config_obj)
+	if err != nil {
+		return err
+	}
+
 	if client_event_manager != nil &&
 		client_event_manager.CheckClientEventsVersion(
 			config_obj, client_id, stats.LastEventTableVersion) {
@@ -81,9 +85,9 @@ func CheckClientStatus(
 
 	// Check the client's hunt status
 	// Process any needed hunts.
-	dispatcher := services.GetHuntDispatcher()
-	if dispatcher == nil {
-		return nil
+	dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		return err
 	}
 
 	// Can we get away without a lock? If the client is already up
@@ -126,7 +130,7 @@ func CheckClientStatus(
 		return nil
 	}
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}

@@ -1,4 +1,4 @@
-package client_monitoring
+package client_monitoring_test
 
 import (
 	"context"
@@ -15,6 +15,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
@@ -58,11 +59,36 @@ type ClientMonitoringTestSuite struct {
 }
 
 func (self *ClientMonitoringTestSuite) SetupTest() {
-	self.TestSuite.SetupTest()
-	self.LoadArtifacts(mock_definitions)
-	require.NoError(self.T(), self.Sm.Start(StartClientMonitoringService))
+	self.ConfigObj = self.TestSuite.LoadConfig()
+	self.ConfigObj.Frontend.ServerServices.ClientMonitoring = true
 
+	self.LoadArtifacts(mock_definitions)
+
+	self.TestSuite.SetupTest()
 	self.client_id = "C.12312"
+
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	repository, err := manager.GetGlobalRepository(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	_, err = repository.LoadYaml(`
+name: TestArtifact
+sources:
+- query:
+    SELECT * FROM info()
+`, true, false)
+
+	assert.NoError(self.T(), err)
+	_, err = repository.LoadYaml(`
+name: SomethingElse
+sources:
+- query:
+    SELECT * FROM info()
+`, true, false)
+	assert.NoError(self.T(), err)
+
 }
 
 // Check that monitoring tables eventually follow when artifact
@@ -70,22 +96,10 @@ func (self *ClientMonitoringTestSuite) SetupTest() {
 func (self *ClientMonitoringTestSuite) TestUpdatingArtifacts() {
 	current_clock := &utils.IncClock{NowTime: 10}
 
-	self.LoadCustomArtifacts([]string{`
-name: TestArtifact
-sources:
-- query:
-    SELECT * FROM info()
-`, `
-name: SomethingElse
-sources:
-- query:
-    SELECT * FROM info()
-`})
+	manager, err := services.ClientEventManager(self.ConfigObj)
+	manager.(*client_monitoring.ClientEventTable).SetClock(current_clock)
 
-	manager := services.ClientEventManager().(*ClientEventTable)
-	manager.SetClock(current_clock)
-
-	err := manager.SetClientMonitoringState(
+	err = manager.SetClientMonitoringState(
 		context.Background(), self.ConfigObj, "",
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
@@ -101,14 +115,16 @@ sources:
 	table_version := old_table_message.UpdateEventTable.Version
 
 	// Now update the artifact.
-	repository_manager, _ := services.GetRepositoryManager()
+	repository_manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	_, err = repository_manager.SetArtifactFile(self.ConfigObj, "", `
 name: TestArtifact
 sources:
 - query:
     SELECT *, Crib FROM info()
 `, "")
-	assert.NoError(self.T(), err)
+	require.NoError(self.T(), err)
 
 	var new_table_message *crypto_proto.VeloMessage
 
@@ -156,7 +172,7 @@ sources:
 func (self *ClientMonitoringTestSuite) TestUpdatingClientTable() {
 	current_clock := &utils.IncClock{NowTime: 10}
 
-	repository_manager, _ := services.GetRepositoryManager()
+	repository_manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository_manager.SetArtifactFile(self.ConfigObj, "", `
 name: TestArtifact
 sources:
@@ -164,11 +180,13 @@ sources:
     SELECT * FROM info()
 `, "")
 
-	manager := services.ClientEventManager().(*ClientEventTable)
-	manager.SetClock(current_clock)
+	manager, err := services.ClientEventManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	manager.(*client_monitoring.ClientEventTable).SetClock(current_clock)
 
 	// Set the initial table.
-	err := manager.SetClientMonitoringState(
+	err = manager.SetClientMonitoringState(
 		context.Background(), self.ConfigObj, "",
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
@@ -201,7 +219,7 @@ sources:
 func (self *ClientMonitoringTestSuite) TestUpdatingClientTableMultiFrontend() {
 	current_clock := &utils.IncClock{NowTime: 10}
 
-	repository_manager, _ := services.GetRepositoryManager()
+	repository_manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository_manager.SetArtifactFile(self.ConfigObj, "", `
 name: TestArtifact
 sources:
@@ -209,11 +227,13 @@ sources:
     SELECT * FROM info()
 `, "")
 
-	manager1 := services.ClientEventManager().(*ClientEventTable)
-	manager1.SetClock(current_clock)
+	manager1, err := services.ClientEventManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	manager1.(*client_monitoring.ClientEventTable).SetClock(current_clock)
 
 	// Set the initial table.
-	err := manager1.SetClientMonitoringState(
+	err = manager1.SetClientMonitoringState(
 		context.Background(), self.ConfigObj, "",
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
@@ -226,9 +246,11 @@ sources:
 	old_table := manager1.GetClientUpdateEventTableMessage(self.ConfigObj, self.client_id)
 
 	// Now another frontend sets the client monitoring state
-	require.NoError(self.T(), self.Sm.Start(StartClientMonitoringService))
-	manager2 := services.ClientEventManager().(*ClientEventTable)
-	manager2.SetClock(current_clock)
+	manager2, err := client_monitoring.NewClientMonitoringService(
+		self.Ctx, self.Wg, self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	manager2.(*client_monitoring.ClientEventTable).SetClock(current_clock)
 
 	// Now update the monitoring state
 	err = manager2.SetClientMonitoringState(
@@ -253,12 +275,13 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 	// increment.
 	current_clock := &utils.IncClock{NowTime: 10}
 
-	labeler := services.GetLabeler().(*labels.Labeler)
-	labeler.SetClock(current_clock)
+	labeler := services.GetLabeler(self.ConfigObj)
+	labeler.(*labels.Labeler).SetClock(current_clock)
 
 	// If no table exists, we will get a default table.
-	manager := services.ClientEventManager().(*ClientEventTable)
-	manager.SetClock(current_clock)
+	manager, err := services.ClientEventManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+	manager.(*client_monitoring.ClientEventTable).SetClock(current_clock)
 
 	// Install an initial monitoring table: Everyone gets ServiceCreation.
 	manager.SetClientMonitoringState(
@@ -370,12 +393,14 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 func (self *ClientMonitoringTestSuite) TestClientMonitoringCompilingMultipleArtifacts() {
 	current_clock := &utils.IncClock{NowTime: 10}
 
-	labeler := services.GetLabeler().(*labels.Labeler)
-	labeler.SetClock(current_clock)
+	labeler := services.GetLabeler(self.ConfigObj)
+	labeler.(*labels.Labeler).SetClock(current_clock)
 
 	// If no table exists, we will get a default table.
-	manager := services.ClientEventManager().(*ClientEventTable)
-	manager.SetClock(current_clock)
+	manager, err := services.ClientEventManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	manager.(*client_monitoring.ClientEventTable).SetClock(current_clock)
 
 	// Install an initial monitoring table: Everyone gets ServiceCreation.
 	manager.SetClientMonitoringState(
@@ -424,15 +449,18 @@ func extractArtifacts(args *actions_proto.VQLEventTable) []string {
 func (self *ClientMonitoringTestSuite) TestClientMonitoring() {
 	current_clock := &utils.MockClock{MockNow: time.Unix(10, 0)}
 
-	labeler := services.GetLabeler().(*labels.Labeler)
-	labeler.SetClock(current_clock)
+	labeler := services.GetLabeler(self.ConfigObj)
+	labeler.(*labels.Labeler).SetClock(current_clock)
 
 	// If no table exists, we will get a default table.
-	manager := services.ClientEventManager().(*ClientEventTable)
-	manager.SetClock(current_clock)
+	manager, err := services.ClientEventManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+	manager.(*client_monitoring.ClientEventTable).SetClock(current_clock)
 
 	test_utils.GetMemoryDataStore(self.T(), self.ConfigObj).Clear()
-	assert.NoError(self.T(), manager.LoadFromFile(context.Background(), self.ConfigObj))
+	assert.NoError(self.T(),
+		manager.(*client_monitoring.ClientEventTable).LoadFromFile(
+			context.Background(), self.ConfigObj))
 
 	table := manager.GetClientMonitoringState()
 

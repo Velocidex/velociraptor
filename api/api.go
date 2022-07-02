@@ -38,7 +38,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -48,7 +47,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -63,7 +61,6 @@ import (
 
 type ApiServer struct {
 	proto.UnimplementedAPIServer
-	config             *config_proto.Config
 	server_obj         *server.Server
 	ca_pool            *x509.CertPool
 	wg                 *sync.WaitGroup
@@ -77,7 +74,7 @@ func (self *ApiServer) CancelFlow(
 	defer Instrument("CancelFlow")()
 
 	users := services.GetUserManager()
-	user_record, err := users.GetUserFromContext(self.config, ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -89,24 +86,24 @@ func (self *ApiServer) CancelFlow(
 		permissions = acls.COLLECT_SERVER
 	}
 
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to cancel flows.")
 	}
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
 	result, err := launcher.CancelFlow(
-		ctx, self.config, in.ClientId, in.FlowId, user_name)
+		ctx, org_config_obj, in.ClientId, in.FlowId, user_name)
 	if err != nil {
 		return nil, err
 	}
 
 	// Log this event as and Audit event.
-	logging.GetLogger(self.config, &logging.Audit).
+	logging.GetLogger(org_config_obj, &logging.Audit).
 		WithFields(logrus.Fields{
 			"user":    user_name,
 			"client":  in.ClientId,
@@ -124,32 +121,32 @@ func (self *ApiServer) GetReport(
 	defer Instrument("GetReport")()
 
 	users := services.GetUserManager()
-	user_record, err := users.GetUserFromContext(self.config, ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view reports.")
 	}
 
-	acl_manager := vql_subsystem.NewServerACLManager(self.config, user_name)
+	acl_manager := vql_subsystem.NewServerACLManager(org_config_obj, user_name)
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	global_repo, err := manager.GetGlobalRepository(self.config)
+	global_repo, err := manager.GetGlobalRepository(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	return getReport(ctx, self.config, acl_manager, global_repo, in)
+	return getReport(ctx, org_config_obj, acl_manager, global_repo, in)
 }
 
 func (self *ApiServer) CollectArtifact(
@@ -161,7 +158,7 @@ func (self *ApiServer) CollectArtifact(
 	result := &flows_proto.ArtifactCollectorResponse{Request: in}
 
 	users := services.GetUserManager()
-	user_record, err := users.GetUserFromContext(self.config, ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +167,7 @@ func (self *ApiServer) CollectArtifact(
 	var acl_manager vql_subsystem.ACLManager = vql_subsystem.NullACLManager{}
 
 	// Internal calls from the frontend can set the creator.
-	if creator != self.config.Client.PinnedServerName {
+	if creator != org_config_obj.Client.PinnedServerName {
 		in.Creator = creator
 
 		permissions := acls.COLLECT_CLIENT
@@ -178,7 +175,7 @@ func (self *ApiServer) CollectArtifact(
 			permissions = acls.COLLECT_SERVER
 		}
 
-		acl_manager = vql_subsystem.NewServerACLManager(self.config,
+		acl_manager = vql_subsystem.NewServerACLManager(org_config_obj,
 			creator)
 
 		perm, err := acl_manager.CheckAccess(permissions)
@@ -188,22 +185,22 @@ func (self *ApiServer) CollectArtifact(
 		}
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	repository, err := manager.GetGlobalRepository(self.config)
+	repository, err := manager.GetGlobalRepository(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
 
 	flow_id, err := launcher.ScheduleArtifactCollection(
-		ctx, self.config, acl_manager, repository, in, nil)
+		ctx, org_config_obj, acl_manager, repository, in, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -211,7 +208,7 @@ func (self *ApiServer) CollectArtifact(
 	result.FlowId = flow_id
 
 	// Log this event as an Audit event.
-	logging.GetLogger(self.config, &logging.Audit).
+	logging.GetLogger(org_config_obj, &logging.Audit).
 		WithFields(logrus.Fields{
 			"user":    in.Creator,
 			"client":  in.ClientId,
@@ -229,35 +226,38 @@ func (self *ApiServer) ListClients(
 	defer Instrument("ListClients")()
 
 	users := services.GetUserManager()
-	user_record, err := users.GetUserFromContext(self.config, ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view clients.")
 	}
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	result, err := indexer.SearchClients(ctx, self.config, in, user_name)
+	result, err := indexer.SearchClients(ctx, org_config_obj, in, user_name)
 	if err != nil {
 		return nil, err
 	}
 
 	// Warm up the cache pre-emptively so we have fresh connected
 	// status
-	notifier := services.GetNotifier()
+	notifier, err := services.GetNotifier(org_config_obj)
+	if err != nil {
+		return nil, err
+	}
 	for _, item := range result.Items {
 		notifier.IsClientConnected(
-			ctx, self.config, item.ClientId, 0 /* timeout */)
+			ctx, org_config_obj, item.ClientId, 0 /* timeout */)
 	}
 	return result, nil
 }
@@ -269,28 +269,28 @@ func (self *ApiServer) NotifyClients(
 	defer Instrument("NotifyClients")()
 
 	users := services.GetUserManager()
-	user_record, err := users.GetUserFromContext(self.config, ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
 	permissions := acls.COLLECT_CLIENT
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to launch flows.")
 	}
 
-	notifier := services.GetNotifier()
-	if notifier == nil {
-		return nil, errors.New("Notifier not ready")
+	notifier, err := services.GetNotifier(org_config_obj)
+	if err != nil {
+		return nil, err
 	}
 
 	if in.ClientId != "" {
 		self.server_obj.Info("sending notification to %s", in.ClientId)
-		err = services.GetNotifier().NotifyListener(
-			self.config, in.ClientId, "API.NotifyClients")
+		err = notifier.NotifyListener(org_config_obj, in.ClientId,
+			"API.NotifyClients")
 	} else {
 		return nil, status.Error(codes.InvalidArgument,
 			"client id should be specified")
@@ -305,14 +305,14 @@ func (self *ApiServer) LabelClients(
 	defer Instrument("LabelClients")()
 
 	users := services.GetUserManager()
-	user_record, err := users.GetUserFromContext(self.config, ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
 	permissions := acls.LABEL_CLIENT
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return &api_proto.APIResponse{
 				Error:        true,
@@ -321,15 +321,15 @@ func (self *ApiServer) LabelClients(
 				"User is not allowed to label clients.")
 	}
 
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(org_config_obj)
 	for _, client_id := range in.ClientIds {
 		for _, label := range in.Labels {
 			switch in.Operation {
 			case "set":
-				err = labeler.SetClientLabel(self.config, client_id, label)
+				err = labeler.SetClientLabel(org_config_obj, client_id, label)
 
 			case "remove":
-				err = labeler.RemoveClientLabel(self.config, client_id, label)
+				err = labeler.RemoveClientLabel(org_config_obj, client_id, label)
 
 			default:
 				return nil, errors.New("Unknown label operation")
@@ -354,24 +354,24 @@ func (self *ApiServer) GetFlowDetails(
 	defer Instrument("GetFlowDetails")()
 
 	users := services.GetUserManager()
-	user_record, err := users.GetUserFromContext(self.config, ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to launch flows.")
 	}
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
-	result, err := launcher.GetFlowDetails(self.config, in.ClientId, in.FlowId)
+	result, err := launcher.GetFlowDetails(org_config_obj, in.ClientId, in.FlowId)
 	return result, err
 }
 
@@ -382,48 +382,56 @@ func (self *ApiServer) GetFlowRequests(
 	defer Instrument("GetFlowRequests")()
 
 	users := services.GetUserManager()
-	user_record, err := users.GetUserFromContext(self.config, ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view flows.")
 	}
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
-	result, err := launcher.GetFlowRequests(self.config, in.ClientId, in.FlowId,
+	result, err := launcher.GetFlowRequests(org_config_obj, in.ClientId, in.FlowId,
 		in.Offset, in.Count)
 	return result, err
 }
 
 func (self *ApiServer) GetUserUITraits(
 	ctx context.Context,
-	in *emptypb.Empty) (*api_proto.ApiGrrUser, error) {
+	in *emptypb.Empty) (*api_proto.ApiUser, error) {
 	defer Instrument("GetUserUITraits")()
 
-	result := NewDefaultUserObject(self.config)
-
 	users := services.GetUserManager()
-	user_info, err := users.GetUserFromContext(self.config, ctx)
+	user_info, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
+	result := NewDefaultUserObject(org_config_obj)
 	result.Username = user_info.Name
 	result.InterfaceTraits.Picture = user_info.Picture
-	result.InterfaceTraits.Permissions, _ = acls.GetEffectivePolicy(self.config,
+	result.InterfaceTraits.Permissions, _ = acls.GetEffectivePolicy(org_config_obj,
 		result.Username)
+	result.Orgs = user_info.Orgs
 
-	user_options, err := users.GetUserOptions(self.config, result.Username)
+	for _, item := range result.Orgs {
+		if item.Id == "" {
+			item.Name = "<root>"
+			item.Id = "root"
+		}
+	}
+
+	user_options, err := users.GetUserOptions(result.Username)
 	if err == nil {
+		result.InterfaceTraits.Org = user_options.Org
 		result.InterfaceTraits.UiSettings = user_options.Options
 		result.InterfaceTraits.Theme = user_options.Theme
 		result.InterfaceTraits.Timezone = user_options.Timezone
@@ -440,13 +448,13 @@ func (self *ApiServer) SetGUIOptions(
 	in *api_proto.SetGUIOptionsRequest) (*emptypb.Empty, error) {
 
 	users := services.GetUserManager()
-	user_info, err := users.GetUserFromContext(self.config, ctx)
+	user_info, _, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	defer Instrument("SetGUIOptions")()
-	return &emptypb.Empty{}, users.SetUserOptions(self.config, user_info.Name, in)
+	return &emptypb.Empty{}, users.SetUserOptions(user_info.Name, in)
 }
 
 func (self *ApiServer) VFSListDirectory(
@@ -456,25 +464,25 @@ func (self *ApiServer) VFSListDirectory(
 	defer Instrument("VFSListDirectory")()
 
 	users := services.GetUserManager()
-	user_info, err := users.GetUserFromContext(self.config, ctx)
+	user_info, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_info.Name
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view the VFS.")
 	}
 
-	vfs_service, err := services.GetVFSService()
+	vfs_service, err := services.GetVFSService(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
 	result, err := vfs_service.ListDirectory(
-		self.config, in.ClientId, in.VfsComponents)
+		org_config_obj, in.ClientId, in.VfsComponents)
 	return result, err
 }
 
@@ -485,26 +493,26 @@ func (self *ApiServer) VFSStatDirectory(
 	defer Instrument("VFSStatDirectory")()
 
 	users := services.GetUserManager()
-	user_info, err := users.GetUserFromContext(self.config, ctx)
+	user_info, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_info.Name
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to launch flows.")
 	}
 
-	vfs_service, err := services.GetVFSService()
+	vfs_service, err := services.GetVFSService(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
 
 	result, err := vfs_service.StatDirectory(
-		self.config, in.ClientId, in.VfsComponents)
+		org_config_obj, in.ClientId, in.VfsComponents)
 	return result, err
 }
 
@@ -515,26 +523,26 @@ func (self *ApiServer) VFSStatDownload(
 	defer Instrument("VFSStatDownload")()
 
 	users := services.GetUserManager()
-	user_info, err := users.GetUserFromContext(self.config, ctx)
+	user_info, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_info.Name
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view the VFS.")
 	}
 
-	vfs_service, err := services.GetVFSService()
+	vfs_service, err := services.GetVFSService(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
 
 	result, err := vfs_service.StatDownload(
-		self.config, in.ClientId, in.Accessor, in.Components)
+		org_config_obj, in.ClientId, in.Accessor, in.Components)
 	return result, err
 }
 
@@ -546,14 +554,14 @@ func (self *ApiServer) VFSRefreshDirectory(
 	defer Instrument("VFSRefreshDirectory")()
 
 	users := services.GetUserManager()
-	user_info, err := users.GetUserFromContext(self.config, ctx)
+	user_info, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_info.Name
 	permissions := acls.COLLECT_CLIENT
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to launch flows.")
@@ -572,14 +580,14 @@ func (self *ApiServer) VFSGetBuffer(
 	defer Instrument("VFSGetBuffer")()
 
 	users := services.GetUserManager()
-	user_info, err := users.GetUserFromContext(self.config, ctx)
+	user_info, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_info.Name
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view the VFS.")
@@ -606,7 +614,7 @@ func (self *ApiServer) VFSGetBuffer(
 			"Invalid pathspec")
 	}
 	result, err := vfsGetBuffer(
-		self.config, in.ClientId, pathspec, in.Offset, in.Length)
+		org_config_obj, in.ClientId, pathspec, in.Offset, in.Length)
 
 	return result, err
 }
@@ -617,14 +625,14 @@ func (self *ApiServer) GetTable(
 
 	defer Instrument("GetTable")()
 	users := services.GetUserManager()
-	user_info, err := users.GetUserFromContext(self.config, ctx)
+	user_info, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_info.Name
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view results.")
@@ -634,16 +642,16 @@ func (self *ApiServer) GetTable(
 
 	// We want an event table.
 	if in.Type == "TIMELINE" {
-		result, err = getTimeline(ctx, self.config, in)
+		result, err = getTimeline(ctx, org_config_obj, in)
 
 	} else if in.Type == "CLIENT_EVENT_LOGS" || in.Type == "SERVER_EVENT_LOGS" {
-		result, err = getEventTableLogs(ctx, self.config, in)
+		result, err = getEventTableLogs(ctx, org_config_obj, in)
 
 	} else if in.Type == "CLIENT_EVENT" || in.Type == "SERVER_EVENT" {
-		result, err = getEventTable(ctx, self.config, in)
+		result, err = getEventTable(ctx, org_config_obj, in)
 
 	} else {
-		result, err = getTable(ctx, self.config, in)
+		result, err = getTable(ctx, org_config_obj, in)
 	}
 
 	if err != nil {
@@ -651,17 +659,17 @@ func (self *ApiServer) GetTable(
 	}
 
 	if in.Artifact != "" {
-		manager, err := services.GetRepositoryManager()
+		manager, err := services.GetRepositoryManager(org_config_obj)
 		if err != nil {
 			return nil, err
 		}
 
-		repository, err := manager.GetGlobalRepository(self.config)
+		repository, err := manager.GetGlobalRepository(org_config_obj)
 		if err != nil {
 			return nil, err
 		}
 
-		artifact, pres := repository.Get(self.config, in.Artifact)
+		artifact, pres := repository.Get(org_config_obj, in.Artifact)
 		if pres {
 			result.ColumnTypes = artifact.ColumnTypes
 		}
@@ -677,14 +685,14 @@ func (self *ApiServer) GetArtifacts(
 	defer Instrument("GetArtifacts")()
 
 	users := services.GetUserManager()
-	user_info, err := users.GetUserFromContext(self.config, ctx)
+	user_info, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_info.Name
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view custom artifacts.")
@@ -692,18 +700,18 @@ func (self *ApiServer) GetArtifacts(
 
 	if len(in.Names) > 0 {
 		result := &artifacts_proto.ArtifactDescriptors{}
-		manager, err := services.GetRepositoryManager()
+		manager, err := services.GetRepositoryManager(org_config_obj)
 		if err != nil {
 			return nil, err
 		}
 
-		repository, err := manager.GetGlobalRepository(self.config)
+		repository, err := manager.GetGlobalRepository(org_config_obj)
 		if err != nil {
 			return nil, err
 		}
 
 		for _, name := range in.Names {
-			artifact, pres := repository.Get(self.config, name)
+			artifact, pres := repository.Get(org_config_obj, name)
 			if pres {
 				result.Items = append(result.Items, artifact)
 			}
@@ -713,12 +721,12 @@ func (self *ApiServer) GetArtifacts(
 
 	if in.ReportType != "" {
 		return getReportArtifacts(
-			ctx, self.config, in.ReportType, in.NumberOfResults)
+			ctx, org_config_obj, in.ReportType, in.NumberOfResults)
 	}
 
 	terms := strings.Split(in.SearchTerm, " ")
 	result, err := searchArtifact(
-		ctx, self.config, terms, in.Type, in.NumberOfResults, in.Fields)
+		ctx, org_config_obj, terms, in.Type, in.NumberOfResults, in.Fields)
 	return result, err
 }
 
@@ -730,20 +738,20 @@ func (self *ApiServer) GetArtifactFile(
 	defer Instrument("GetArtifactFile")()
 
 	users := services.GetUserManager()
-	user_info, err := users.GetUserFromContext(self.config, ctx)
+	user_info, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_info.Name
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view custom artifacts.")
 	}
 
-	artifact, err := getArtifactFile(self.config, in.Name)
+	artifact, err := getArtifactFile(org_config_obj, in.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -762,7 +770,7 @@ func (self *ApiServer) SetArtifactFile(
 	defer Instrument("SetArtifactFile")()
 
 	users := services.GetUserManager()
-	user_info, err := users.GetUserFromContext(self.config, ctx)
+	user_info, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -771,7 +779,7 @@ func (self *ApiServer) SetArtifactFile(
 	permissions := acls.ARTIFACT_WRITER
 
 	// First ensure that the artifact is correct.
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -790,13 +798,13 @@ func (self *ApiServer) SetArtifactFile(
 		permissions = acls.SERVER_ARTIFACT_WRITER
 	}
 
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
 			"User is not allowed to modify artifacts (%v).", permissions))
 	}
 
-	definition, err := setArtifactFile(self.config, user_name, in, "")
+	definition, err := setArtifactFile(org_config_obj, user_name, in, "")
 	if err != nil {
 		message := &api_proto.APIResponse{
 			Error:        true,
@@ -805,7 +813,7 @@ func (self *ApiServer) SetArtifactFile(
 		return message, errors.New(message.ErrorMessage)
 	}
 
-	logging.GetLogger(self.config, &logging.Audit).
+	logging.GetLogger(org_config_obj, &logging.Audit).
 		WithFields(logrus.Fields{
 			"user":     user_name,
 			"artifact": definition.Name,
@@ -819,55 +827,32 @@ func (self *ApiServer) Query(
 	in *actions_proto.VQLCollectorArgs,
 	stream api_proto.API_QueryServer) error {
 
-	// Get the TLS context from the peer and verify its
-	// certificate.
-	peer, ok := peer.FromContext(stream.Context())
+	defer Instrument("Query")()
+
+	users := services.GetUserManager()
+	user_info, org_config_obj, err := users.GetUserFromContext(stream.Context())
+	if err != nil {
+		return err
+	}
+
+	user_name := user_info.Name
+
+	// Check that the principal is allowed to issue queries.
+	permissions := acls.ANY_QUERY
+	ok, err := acls.CheckAccess(org_config_obj, user_name, permissions)
+	if err != nil {
+		return status.Error(codes.PermissionDenied,
+			fmt.Sprintf("User %v is not allowed to run queries.",
+				user_name))
+	}
+
 	if !ok {
-		return status.Error(codes.InvalidArgument, "cant get peer info")
+		return status.Error(codes.PermissionDenied, fmt.Sprintf(
+			"Permission denied: User %v requires permission %v to run queries",
+			user_name, permissions))
 	}
 
-	tlsInfo, ok := peer.AuthInfo.(credentials.TLSInfo)
-	if !ok {
-		return status.Error(codes.InvalidArgument, "unable to get credentials")
-	}
-
-	// Authenticate API clients using certificates.
-	for _, peer_cert := range tlsInfo.State.PeerCertificates {
-		chains, err := peer_cert.Verify(
-			x509.VerifyOptions{Roots: self.ca_pool})
-		if err != nil {
-			return err
-		}
-
-		if len(chains) == 0 {
-			return status.Error(codes.InvalidArgument, "no chains verified")
-		}
-
-		peer_name := crypto_utils.GetSubjectName(peer_cert)
-
-		// Check that the principal is allowed to issue queries.
-		permissions := acls.ANY_QUERY
-		ok, err := acls.CheckAccess(self.config, peer_name, permissions)
-		if err != nil {
-			return status.Error(codes.PermissionDenied,
-				fmt.Sprintf("User %v is not allowed to run queries.",
-					peer_name))
-		}
-
-		if !ok {
-			return status.Error(codes.PermissionDenied, fmt.Sprintf(
-				"Permission denied: User %v requires permission %v to run queries",
-				peer_name, permissions))
-		}
-
-		// return the first good match
-		if true {
-			// Cert is good enough for us, run the query.
-			return streamQuery(stream.Context(), self.config, in, stream, peer_name)
-		}
-	}
-
-	return status.Error(codes.InvalidArgument, "no peer certs?")
+	return streamQuery(stream.Context(), org_config_obj, in, stream, user_name)
 }
 
 func (self *ApiServer) GetServerMonitoringState(
@@ -878,20 +863,20 @@ func (self *ApiServer) GetServerMonitoringState(
 	defer Instrument("GetServerMonitoringState")()
 
 	users := services.GetUserManager()
-	user_info, err := users.GetUserFromContext(self.config, ctx)
+	user_info, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_info.Name
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
 			"User is not allowed to read results (%v).", permissions))
 	}
 
-	result, err := getServerMonitoringState(self.config)
+	result, err := getServerMonitoringState(org_config_obj)
 	return result, err
 }
 
@@ -903,20 +888,20 @@ func (self *ApiServer) SetServerMonitoringState(
 	defer Instrument("SetServerMonitoringState")()
 
 	users := services.GetUserManager()
-	user_info, err := users.GetUserFromContext(self.config, ctx)
+	user_info, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_info.Name
 	permissions := acls.SERVER_ADMIN
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
 			"User is not allowed to modify artifacts (%v).", permissions))
 	}
 
-	err = setServerMonitoringState(self.config, user_name, in)
+	err = setServerMonitoringState(org_config_obj, user_name, in)
 	return in, err
 }
 
@@ -927,23 +912,27 @@ func (self *ApiServer) GetClientMonitoringState(
 	defer Instrument("GetClientMonitoringState")()
 
 	users := services.GetUserManager()
-	user_info, err := users.GetUserFromContext(self.config, ctx)
+	user_info, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_info.Name
 	permissions := acls.SERVER_ADMIN
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
 			"User is not allowed to read monitoring artifacts (%v).", permissions))
 	}
 
-	manager := services.ClientEventManager()
+	manager, err := services.ClientEventManager(org_config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	result := manager.GetClientMonitoringState()
 	if in.ClientId != "" {
-		message := manager.GetClientUpdateEventTableMessage(self.config,
+		message := manager.GetClientUpdateEventTableMessage(org_config_obj,
 			in.ClientId)
 		result.ClientMessage = message
 	}
@@ -959,21 +948,25 @@ func (self *ApiServer) SetClientMonitoringState(
 	defer Instrument("SetClientMonitoringState")()
 
 	users := services.GetUserManager()
-	user_info, err := users.GetUserFromContext(self.config, ctx)
+	user_info, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_info.Name
 	permissions := acls.SERVER_ADMIN
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
 			"User is not allowed to modify monitoring artifacts (%v).", permissions))
 	}
 
-	err = services.ClientEventManager().SetClientMonitoringState(
-		ctx, self.config, user_name, in)
+	manager, err := services.ClientEventManager(org_config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	err = manager.SetClientMonitoringState(ctx, org_config_obj, user_name, in)
 	if err != nil {
 		return nil, err
 	}
@@ -987,21 +980,21 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 	defer Instrument("CreateDownloadFile")()
 
 	users := services.GetUserManager()
-	user_info, err := users.GetUserFromContext(self.config, ctx)
+	user_info, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_info.Name
 	permissions := acls.PREPARE_RESULTS
-	perm, err := acls.CheckAccess(self.config, user_name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
 			"User is not allowed to create downloads (%v).", permissions))
 	}
 
 	// Log an audit event.
-	logging.GetLogger(self.config, &logging.Audit).
+	logging.GetLogger(org_config_obj, &logging.Audit).
 		WithFields(logrus.Fields{
 			"user":    user_name,
 			"request": in,
@@ -1037,17 +1030,17 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 			Set("OnlyCombined", in.OnlyCombinedHunt)
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(org_config_obj)
 	if err != nil {
 		return nil, err
 	}
 
 	scope := manager.BuildScope(
 		services.ScopeBuilder{
-			Config:     self.config,
+			Config:     org_config_obj,
 			Env:        env,
-			ACLManager: vql_subsystem.NewServerACLManager(self.config, user_name),
-			Logger:     logging.NewPlainLogger(self.config, &logging.FrontendComponent),
+			ACLManager: vql_subsystem.NewServerACLManager(org_config_obj, user_name),
+			Logger:     logging.NewPlainLogger(org_config_obj, &logging.FrontendComponent),
 		})
 	defer scope.Close()
 
@@ -1116,7 +1109,6 @@ func startAPIServer(
 	api_proto.RegisterAPIServer(
 		grpcServer,
 		&ApiServer{
-			config:             config_obj,
 			server_obj:         server_obj,
 			ca_pool:            CA_Pool,
 			api_client_factory: grpc_client.GRPCAPIClient{},

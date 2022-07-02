@@ -18,7 +18,7 @@ func (self *NotebookManager) NewNotebookCell(
 	in *api_proto.NotebookCellRequest, username string) (
 	*api_proto.NotebookMetadata, error) {
 
-	notebook, err := self.store.GetNotebook(in.NotebookId)
+	notebook, err := self.Store.GetNotebook(in.NotebookId)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (self *NotebookManager) NewNotebookCell(
 	}
 
 	notebook.CellMetadata = new_cell_md
-	err = self.store.SetNotebook(notebook)
+	err = self.Store.SetNotebook(notebook)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +114,7 @@ func CreateInitialNotebook(ctx context.Context,
 		}
 	}
 
-	notebook_manager, err := services.GetNotebookManager()
+	notebook_manager, err := services.GetNotebookManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func getCellsForEvents(ctx context.Context,
 	client_id string, artifact_name string,
 	notebook_metadata *api_proto.NotebookMetadata) []*api_proto.NotebookCellRequest {
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil
 	}
@@ -252,8 +252,8 @@ func getCellsForHunt(ctx context.Context,
 	hunt_id string,
 	notebook_metadata *api_proto.NotebookMetadata) []*api_proto.NotebookCellRequest {
 
-	dispatcher := services.GetHuntDispatcher()
-	if dispatcher == nil {
+	dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
 		return nil
 	}
 
@@ -325,7 +325,7 @@ func getCellsForFlow(ctx context.Context,
 	client_id, flow_id string,
 	notebook_metadata *api_proto.NotebookMetadata) []*api_proto.NotebookCellRequest {
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return nil
 	}
@@ -362,7 +362,7 @@ func getDefaultCellsForSources(
 	config_obj *config_proto.Config,
 	sources []string,
 	notebook_metadata *api_proto.NotebookMetadata) []*api_proto.NotebookCellRequest {
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil
 	}

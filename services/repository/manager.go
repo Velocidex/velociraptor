@@ -23,13 +23,15 @@ import (
 type RepositoryManager struct {
 	mu                sync.Mutex
 	id                uint64
-	global_repository services.Repository
+	global_repository *Repository
 	wg                *sync.WaitGroup
+	config_obj        *config_proto.Config
 }
 
 func (self *RepositoryManager) NewRepository() services.Repository {
 	return &Repository{
-		Data: make(map[string]*artifacts_proto.Artifact)}
+		Data: make(map[string]*artifacts_proto.Artifact),
+	}
 }
 
 // Watch for updates from other nodes to the repository manager.
@@ -37,7 +39,7 @@ func (self *RepositoryManager) StartWatchingForUpdates(
 	ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -128,7 +130,7 @@ func (self *RepositoryManager) SetGlobalRepositoryForTests(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.global_repository = repository.(services.Repository)
+	self.global_repository = repository.(*Repository)
 }
 
 func (self *RepositoryManager) SetArtifactFile(
@@ -194,7 +196,7 @@ func (self *RepositoryManager) SetArtifactFile(
 	}
 
 	// Tell interested parties that we modified this artifact.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -210,6 +212,12 @@ func (self *RepositoryManager) SetArtifactFile(
 		}, "Server.Internal.ArtifactModification", "server", "")
 
 	return artifact, err
+}
+
+func (self *RepositoryManager) SetParent(
+	config_obj *config_proto.Config, parent services.Repository) {
+	self.global_repository.parent = parent.(*Repository)
+	self.global_repository.parent_config_obj = config_obj
 }
 
 func (self *RepositoryManager) DeleteArtifactFile(
@@ -229,7 +237,7 @@ func (self *RepositoryManager) DeleteArtifactFile(
 	global_repository.Del(name)
 
 	// Now let interested parties know it is removed.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -255,49 +263,70 @@ func (self *RepositoryManager) DeleteArtifactFile(
 
 // Start a mostly empty repository manager without loading built in
 // artifacts.
-func StartRepositoryManagerForTest(
+func NewRepositoryManagerForTest(
 	ctx context.Context, wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
-	self := NewRepositoryManager(wg)
+	config_obj *config_proto.Config) (services.RepositoryManager, error) {
+	self := _newRepositoryManager(config_obj, wg)
 
+	// Load some artifacts via the autoexec mechanism.
 	if config_obj.Autoexec != nil {
 		for _, def := range config_obj.Autoexec.ArtifactDefinitions {
 			_, err := self.global_repository.LoadProto(def, true)
 			if err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
 
-	services.RegisterRepositoryManager(self)
-
-	return self.StartWatchingForUpdates(ctx, wg, config_obj)
+	return self, self.StartWatchingForUpdates(ctx, wg, config_obj)
 }
 
-func NewRepositoryManager(wg *sync.WaitGroup) *RepositoryManager {
+func _newRepositoryManager(
+	config_obj *config_proto.Config,
+	wg *sync.WaitGroup) *RepositoryManager {
 	return &RepositoryManager{
-		wg: wg,
-		id: utils.GetId(),
+		wg:         wg,
+		id:         utils.GetId(),
+		config_obj: config_obj,
 		global_repository: &Repository{
 			Data: make(map[string]*artifacts_proto.Artifact),
 		},
 	}
 }
 
-func StartRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+func NewRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
+	config_obj *config_proto.Config) (services.RepositoryManager, error) {
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("Starting repository manager for %v", services.GetOrgName(config_obj))
 
 	// Load all the artifacts in the repository and compile them in the background.
-	self := NewRepositoryManager(wg)
+	self := _newRepositoryManager(config_obj, wg)
 
-	// Assume the built in artifacts are OK so we dont need to
-	// validate them at runtime.
-	err := LoadBuiltInArtifacts(ctx, config_obj, self, false /* validate */)
+	return self, self.StartWatchingForUpdates(ctx, wg, config_obj)
+}
+
+func LoadArtifactsFromConfig(
+	repo_manager services.RepositoryManager,
+	config_obj *config_proto.Config) error {
+	global_repository, err := repo_manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
 	}
 
-	return self.StartWatchingForUpdates(ctx, wg, config_obj)
+	// Load some artifacts via the autoexec mechanism.
+	if config_obj.Autoexec != nil {
+		for _, def := range config_obj.Autoexec.ArtifactDefinitions {
+
+			// Artifacts loaded from the config file are considered built in.
+			def.BuiltIn = true
+			_, err := global_repository.LoadProto(def, true)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 func LoadBuiltInArtifacts(ctx context.Context,
@@ -382,16 +411,7 @@ func LoadBuiltInArtifacts(ctx context.Context,
 		grepository.Del("")
 	}()
 
-	self.wg.Add(1)
-	go func() {
-		defer self.wg.Done()
-		defer services.RegisterRepositoryManager(nil)
-
-		<-ctx.Done()
-	}()
-
 	logger.Info("Loaded %d built in artifacts in %v", count, time.Since(now))
-	services.RegisterRepositoryManager(self)
 
 	return nil
 }

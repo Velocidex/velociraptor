@@ -106,7 +106,7 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 		username := sa.GetAttributes().Get(self.user_attribute)
 
 		users := services.GetUserManager()
-		user_record, err := users.GetUser(self.config_obj, username)
+		user_record, err := users.GetUser(username)
 
 		perm, err2 := acls.CheckAccess(self.config_obj, username, acls.READ_RESULTS)
 		if err != nil || !perm || err2 != nil ||

@@ -59,7 +59,7 @@ func (self *ServerArtifactsRunner) process(
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) error {
 
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func (self *ServerArtifactsRunner) ProcessTask(
 
 	// Cancel the current collection
 	if task.Cancel != nil {
-		journal, err := services.GetJournal()
+		journal, err := services.GetJournal(config_obj)
 		if err != nil {
 			return err
 		}
@@ -217,7 +217,7 @@ func (self *ServerArtifactsRunner) runQuery(
 			Set("FlowId", flow_context.SessionId).
 			Set("ClientId", "server")
 
-		journal, err := services.GetJournal()
+		journal, err := services.GetJournal(self.config_obj)
 		if err != nil {
 			return
 		}
@@ -232,7 +232,7 @@ func (self *ServerArtifactsRunner) runQuery(
 
 	// Server artifacts run with full access. In order to collect
 	// them in the first place we need COLLECT_SERVER permissions.
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.config_obj)
 	if err != nil {
 		return err
 	}
@@ -372,7 +372,7 @@ func (self *ServerArtifactsRunner) runQuery(
 	return nil
 }
 
-func StartServerArtifactService(
+func NewServerArtifactService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
@@ -388,9 +388,9 @@ func StartServerArtifactService(
 		config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Server Artifact Runner Service")
 
-	notifier := services.GetNotifier()
-	if notifier == nil {
-		return errors.New("Notifier not configured")
+	notifier, err := services.GetNotifier(config_obj)
+	if err != nil {
+		return err
 	}
 
 	wg.Add(1)

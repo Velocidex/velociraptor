@@ -24,18 +24,11 @@ package services
 
 import (
 	"context"
-	"sync"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
-)
-
-var (
-	mu sync.Mutex
-
-	global_hunt_dispatcher IHuntDispatcher
 )
 
 // How was the hunt modified and what should be done about it?
@@ -119,16 +112,11 @@ type IHuntDispatcher interface {
 	Close(config_obj *config_proto.Config)
 }
 
-func RegisterHuntDispatcher(dispatcher IHuntDispatcher) {
-	mu.Lock()
-	defer mu.Unlock()
+func GetHuntDispatcher(config_obj *config_proto.Config) (IHuntDispatcher, error) {
+	org_manager, err := GetOrgManager()
+	if err != nil {
+		return nil, err
+	}
 
-	global_hunt_dispatcher = dispatcher
-}
-
-func GetHuntDispatcher() IHuntDispatcher {
-	mu.Lock()
-	defer mu.Unlock()
-
-	return global_hunt_dispatcher
+	return org_manager.Services(config_obj.OrgId).HuntDispatcher()
 }

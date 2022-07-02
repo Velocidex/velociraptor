@@ -23,7 +23,13 @@ export class UserSettings extends React.Component {
                 window.globals.lang = traits.lang;
             }
 
+            if (traits.org) {
+                window.globals.OrgId = traits.org;
+            }
+
             traits.username = response.data.username;
+            traits.orgs = response.data.orgs;
+
             this.setState({traits: traits});
 
             document.body.classList.remove('no-theme');

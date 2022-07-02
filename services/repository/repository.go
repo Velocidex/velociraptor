@@ -52,6 +52,11 @@ type Repository struct {
 	mu          sync.Mutex
 	Data        map[string]*artifacts_proto.Artifact
 	loaded_dirs []string
+
+	// Each repository may have a parent - we search for the artifact
+	// in our parents as well.
+	parent            *Repository
+	parent_config_obj *config_proto.Config
 }
 
 func (self *Repository) Copy() services.Repository {
@@ -59,7 +64,10 @@ func (self *Repository) Copy() services.Repository {
 	defer self.mu.Unlock()
 
 	result := &Repository{
-		Data: make(map[string]*artifacts_proto.Artifact)}
+		Data:              make(map[string]*artifacts_proto.Artifact),
+		parent:            self.parent,
+		parent_config_obj: self.parent_config_obj,
+	}
 	for k, v := range self.Data {
 		result.Data[k] = v
 	}
@@ -362,6 +370,11 @@ func (self *Repository) Get(
 	cached_artifact, pres := self.get(name)
 	if !pres {
 		self.mu.Unlock()
+
+		// If we have a parent repository just get it from there.
+		if self.parent != nil {
+			return self.parent.Get(self.parent_config_obj, name)
+		}
 		return nil, false
 	}
 
@@ -433,7 +446,15 @@ func (self *Repository) List(ctx context.Context,
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return self.list(), nil
+	results := self.list()
+	if self.parent != nil {
+		parent_list, err := self.parent.List(ctx, self.parent_config_obj)
+		if err == nil {
+			results = append(results, parent_list...)
+		}
+	}
+
+	return results, nil
 }
 
 func (self *Repository) list() []string {
@@ -505,8 +526,8 @@ func compileArtifact(
 	}
 
 	// Make sure tools are all defined.
-	inventory := services.GetInventory()
-	if inventory == nil {
+	inventory, err := services.GetInventory(config_obj)
+	if err != nil {
 		return nil
 	}
 

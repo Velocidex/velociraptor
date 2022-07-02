@@ -34,42 +34,44 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	crypto_server "www.velocidex.com/golang/velociraptor/crypto/server"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
+	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type TestSuite struct {
-	suite.Suite
-	config_obj     *config_proto.Config
+	test_utils.TestSuite
 	server_manager *crypto_server.ServerCryptoManager
 	client_manager *crypto_client.ClientCryptoManager
 	client_id      string
 }
 
 func (self *TestSuite) SetupTest() {
-	t := self.T()
-	config_obj, err := new(config.Loader).WithFileLoader(
-		"../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().
-		LoadAndValidate()
-	require.NoError(t, err)
+	self.ConfigObj = self.LoadConfig()
+	self.ConfigObj.Frontend.ServerServices = &config_proto.ServerServicesConfig{
+		IndexServer: true,
+	}
+	self.ConfigObj.Client.WritebackLinux = ""
+	self.ConfigObj.Client.WritebackWindows = ""
 
-	self.config_obj = config_obj
-	self.config_obj.Client.WritebackLinux = ""
-	self.config_obj.Client.WritebackWindows = ""
-	key, _ := crypto_utils.GeneratePrivateKey()
-	self.config_obj.Writeback.PrivateKey = string(key)
+	self.TestSuite.SetupTest()
+
+	key, err := crypto_utils.GeneratePrivateKey()
+	assert.NoError(self.T(), err)
+
+	self.ConfigObj.Writeback.PrivateKey = string(key)
 
 	// Configure the client manager.
 	self.client_manager, err = crypto_client.NewClientCryptoManager(
-		self.config_obj, []byte(self.config_obj.Writeback.PrivateKey))
-	require.NoError(t, err)
+		self.ConfigObj, []byte(self.ConfigObj.Writeback.PrivateKey))
+	require.NoError(self.T(), err)
 
 	_, err = self.client_manager.AddCertificate(
-		[]byte(self.config_obj.Frontend.Certificate))
-	require.NoError(t, err)
+		self.ConfigObj,
+		[]byte(self.ConfigObj.Frontend.Certificate))
+	require.NoError(self.T(), err)
 
 	private_key, err := crypto_utils.ParseRsaPrivateKeyFromPemStr(key)
-	assert.NoError(t, err)
+	assert.NoError(self.T(), err)
 
 	self.client_id = crypto_utils.ClientIDFromPublicKey(&private_key.PublicKey)
 
@@ -77,13 +79,13 @@ func (self *TestSuite) SetupTest() {
 	ctx := context.Background()
 	wg := &sync.WaitGroup{}
 	self.server_manager, err = crypto_server.NewServerCryptoManager(
-		ctx, self.config_obj, wg)
-	require.NoError(t, err)
+		ctx, self.ConfigObj, wg)
+	require.NoError(self.T(), err)
 
 	// Install an in memory public key resolver.
 	self.server_manager.Resolver = crypto_client.NewInMemoryPublicKeyResolver()
 	self.server_manager.Resolver.SetPublicKey(
-		self.client_id, &private_key.PublicKey)
+		self.ConfigObj, self.client_id, &private_key.PublicKey)
 }
 
 func (self *TestSuite) TestEncDecServerToClient() {
@@ -134,11 +136,11 @@ func (self *TestSuite) TestEncDecClientToServer() {
 				Name: "OMG it's a string"})
 	}
 
-	config_obj := config.GetDefaultConfig()
+	ConfigObj := config.GetDefaultConfig()
 	cipher_text, err := self.client_manager.EncryptMessageList(
 		message_list,
 		crypto_proto.PackedMessageList_ZCOMPRESSION,
-		config_obj.Client.PinnedServerName)
+		ConfigObj.Client.PinnedServerName)
 	assert.NoError(t, err)
 
 	initial_c := testutil.ToFloat64(crypto_client.RsaDecryptCounter)
@@ -168,7 +170,7 @@ func (self *TestSuite) TestEncryption() {
 	t := self.T()
 	plain_text := []byte("hello world")
 
-	config_obj := config.GetDefaultConfig()
+	ConfigObj := config.GetDefaultConfig()
 	initial_c := testutil.ToFloat64(crypto_client.RsaDecryptCounter)
 	for i := 0; i < 100; i++ {
 		compressed, err := utils.Compress(plain_text)
@@ -177,7 +179,7 @@ func (self *TestSuite) TestEncryption() {
 		cipher_text, err := self.client_manager.Encrypt(
 			[][]byte{compressed},
 			crypto_proto.PackedMessageList_ZCOMPRESSION,
-			config_obj.Client.PinnedServerName)
+			ConfigObj.Client.PinnedServerName)
 		assert.NoError(t, err)
 
 		result, err := self.server_manager.Decrypt(cipher_text)
@@ -198,7 +200,7 @@ func (self *TestSuite) TestClientIDFromPublicKey() {
 	t := self.T()
 
 	client_private_key, err := crypto_utils.ParseRsaPrivateKeyFromPemStr(
-		[]byte(self.config_obj.Writeback.PrivateKey))
+		[]byte(self.ConfigObj.Writeback.PrivateKey))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -26,18 +26,24 @@ type ManagerTestSuite struct {
 }
 
 func (self *ManagerTestSuite) SetupTest() {
+	self.ConfigObj = self.LoadConfig()
+	self.LoadArtifacts([]string{`
+name: Generic.Client.Info
+type: CLIENT
+`})
+
 	self.TestSuite.SetupTest()
 }
 
 func (self *ManagerTestSuite) TestSetArtifact() {
 	clock := &utils.MockClock{MockNow: time.Unix(1000000000, 0)}
-	journal_manager, err := services.GetJournal()
+	journal_manager, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	// Install a mock clock for this test.
 	journal_manager.(*journal.JournalService).Clock = clock
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	// Coerce artifact into a prefix.
@@ -82,18 +88,13 @@ func (self *ManagerTestSuite) TestSetArtifactDetectedByMinion() {
 	}
 
 	clock := &utils.MockClock{MockNow: time.Unix(1000000000, 0)}
-	journal_manager, err := services.GetJournal()
+	journal_manager, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	// Install a mock clock for this test.
 	journal_manager.(*journal.JournalService).Clock = clock
 
-	// The global repository manager.
-	err = repository.StartRepositoryManagerForTest(
-		self.Sm.Ctx, self.Sm.Wg, self.ConfigObj)
-	assert.NoError(self.T(), err)
-
-	master_manager, err := services.GetRepositoryManager()
+	master_manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	// Start another manager for the minion.
@@ -102,11 +103,8 @@ func (self *ManagerTestSuite) TestSetArtifactDetectedByMinion() {
 	minion_config := proto.Clone(self.ConfigObj).(*config_proto.Config)
 	minion_config.Frontend.IsMinion = true
 
-	err = repository.StartRepositoryManagerForTest(
+	minion_manager, err := repository.NewRepositoryManagerForTest(
 		self.Sm.Ctx, self.Sm.Wg, self.ConfigObj)
-	assert.NoError(self.T(), err)
-
-	minion_manager, err := services.GetRepositoryManager()
 	assert.NoError(self.T(), err)
 
 	// Make sure they are not actually the same object.
@@ -145,7 +143,7 @@ name: TestArtifact
 // If the artifact name already contains the prefix then prefix is not
 // added.
 func (self *ManagerTestSuite) TestSetArtifactWithExistingPrefix() {
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	// Coerce artifact into a prefix.
@@ -166,7 +164,7 @@ name: Custom.TestArtifact
 }
 
 func (self *ManagerTestSuite) TestSetArtifactWithInvalidArtifact() {
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	// Invalid YAML
@@ -189,7 +187,7 @@ sources:
 }
 
 func (self *ManagerTestSuite) TestSetArtifactOverrideBuiltIn() {
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	// Try to override an existing artifact

@@ -20,7 +20,7 @@ func createInitialUsers(
 
 	for _, user := range user_names {
 		users_manager := services.GetUserManager()
-		user_record, err := users_manager.GetUser(config_obj, user.Name)
+		user_record, err := users_manager.GetUser(user.Name)
 		if err != nil || user_record.Name != user.Name {
 			logger.Info("Initial user %v not present, creating", user.Name)
 			new_user, err := users.NewUserRecord(user.Name)
@@ -54,7 +54,7 @@ func createInitialUsers(
 			}
 
 			// Create the new user.
-			err = users_manager.SetUser(config_obj, new_user)
+			err = users_manager.SetUser(new_user)
 			if err != nil {
 				return err
 			}

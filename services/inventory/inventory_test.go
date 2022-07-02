@@ -59,8 +59,10 @@ func (self *ServicesTestSuite) TestGihubTools() {
 	self.installGitHubMock()
 
 	// Add a new tool from github.
-	inventory := services.GetInventory()
-	err := inventory.AddTool(
+	inventory, err := services.GetInventory(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	err = inventory.AddTool(
 		self.ConfigObj, &artifacts_proto.Tool{
 			Name:             tool_name,
 			GithubProject:    "Velocidex/velociraptor",
@@ -110,8 +112,10 @@ func (self *ServicesTestSuite) installGitHubMock() {
 		},
 	}
 
-	inventory := services.GetInventory().(*inventory.InventoryService)
-	inventory.Client = self.mock
+	inventory_service, err := services.GetInventory(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	inventory_service.(*inventory.InventoryService).Client = self.mock
 }
 
 func (self *ServicesTestSuite) installGitHubMockVersion2() {
@@ -125,8 +129,10 @@ func (self *ServicesTestSuite) installGitHubMockVersion2() {
 		},
 	}
 
-	inventory := services.GetInventory().(*inventory.InventoryService)
-	inventory.Client = self.mock
+	inventory_service, err := services.GetInventory(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	inventory_service.(*inventory.InventoryService).Client = self.mock
 }
 
 // Test that an artifact can add its own tools.
@@ -141,7 +147,7 @@ tools:
   github_project: Velocidex/velociraptor
   github_asset_regex: windows-amd64.exe
 `
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	repository := manager.NewRepository()
@@ -152,7 +158,7 @@ tools:
 
 	// Launch the artifact - this will result in the tool being
 	// downloaded and the hash calculated on demand.
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	response, err := launcher.CompileCollectorArgs(
@@ -167,8 +173,10 @@ tools:
 	// What is the tool info - should have resolved the final
 	// destination and the hash.
 	tool_name := "SampleTool"
-	inventory := services.GetInventory()
-	tool, err := inventory.GetToolInfo(ctx, self.ConfigObj, tool_name)
+	inventory_service, err := services.GetInventory(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	tool, err := inventory_service.GetToolInfo(ctx, self.ConfigObj, tool_name)
 	assert.NoError(self.T(), err)
 
 	// Make sure the tool is served directly from upstream.
@@ -199,11 +207,13 @@ func (self *ServicesTestSuite) TestUpgrade() {
 		GithubAssetRegex: "windows-amd64.exe",
 	}
 
-	inventory := services.GetInventory()
-	err := inventory.AddTool(self.ConfigObj, tool_definition, services.ToolOptions{})
+	inventory_service, err := services.GetInventory(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	tool, err := inventory.GetToolInfo(ctx, self.ConfigObj, tool_name)
+	err = inventory_service.AddTool(self.ConfigObj, tool_definition, services.ToolOptions{})
+	assert.NoError(self.T(), err)
+
+	tool, err := inventory_service.GetToolInfo(ctx, self.ConfigObj, tool_name)
 	assert.NoError(self.T(), err)
 
 	// First version.
@@ -213,11 +223,11 @@ func (self *ServicesTestSuite) TestUpgrade() {
 	// Now force the tool to update by re-adding it but this time it is a new version.
 	self.installGitHubMockVersion2()
 
-	err = inventory.AddTool(self.ConfigObj, tool_definition, services.ToolOptions{})
+	err = inventory_service.AddTool(self.ConfigObj, tool_definition, services.ToolOptions{})
 	assert.NoError(self.T(), err)
 
 	// Check the tool information.
-	tool, err = inventory.GetToolInfo(ctx, self.ConfigObj, tool_name)
+	tool, err = inventory_service.GetToolInfo(ctx, self.ConfigObj, tool_name)
 	assert.NoError(self.T(), err)
 
 	// Make sure the tool is updated and the hash is changed.
@@ -238,7 +248,7 @@ tools:
   github_asset_regex: windows-amd64.exe
   serve_locally: true
 `
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	repository := manager.NewRepository()
@@ -246,7 +256,7 @@ tools:
 	assert.NoError(self.T(), err)
 
 	self.installGitHubMock()
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	response, err := launcher.CompileCollectorArgs(
@@ -261,8 +271,10 @@ tools:
 	assert.Equal(self.T(), response[0].Env[2].Key, "Tool_SampleTool_URL")
 	assert.Contains(self.T(), response[0].Env[2].Value, "https://localhost:8000/")
 
-	tool, err := services.GetInventory().GetToolInfo(
-		ctx, self.ConfigObj, "SampleTool")
+	inventory_service, err := services.GetInventory(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	tool, err := inventory_service.GetToolInfo(ctx, self.ConfigObj, "SampleTool")
 	assert.NoError(self.T(), err)
 
 	golden := ordereddict.NewDict().Set("Tool", tool).Set("Request", response[0])
@@ -289,10 +301,10 @@ name: TestArtifact2
 tools:
 - name: SampleTool
 `
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	repository := manager.NewRepository()
+	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
 	_, err = repository.LoadYaml(test_artifact, true /* validate */, true)
 	assert.NoError(self.T(), err)
 
@@ -305,7 +317,10 @@ tools:
 	_, pres = repository.Get(self.ConfigObj, "TestArtifact2")
 	assert.True(self.T(), pres)
 
-	tool, err := services.GetInventory().ProbeToolInfo("SampleTool")
+	inventory_service, err := services.GetInventory(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	tool, err := inventory_service.ProbeToolInfo("SampleTool")
 	assert.NoError(self.T(), err)
 
 	// The tool definition retains the original URL
@@ -325,7 +340,10 @@ tools:
 `
 
 	// The admin sets a very minimal tool definition.
-	err := services.GetInventory().AddTool(self.ConfigObj,
+	inventory_service, err := services.GetInventory(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	err = inventory_service.AddTool(self.ConfigObj,
 		&artifacts_proto.Tool{
 			Name: "SampleTool",
 			Hash: "XXXXX",
@@ -334,17 +352,17 @@ tools:
 
 	// Parsing the artifact does not update the tool - admins can
 	// pin the tool definition.
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	repository := manager.NewRepository()
+	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
 	_, err = repository.LoadYaml(test_artifact, true /* validate */, true)
 	assert.NoError(self.T(), err)
 
 	_, pres := repository.Get(self.ConfigObj, "TestArtifact")
 	assert.True(self.T(), pres)
 
-	tool, err := services.GetInventory().ProbeToolInfo("SampleTool")
+	tool, err := inventory_service.ProbeToolInfo("SampleTool")
 	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), tool.Url, "")
@@ -364,10 +382,10 @@ tools:
   serve_locally: true
 `
 	// Parsing the artifact should insert the tool.
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	repository := manager.NewRepository()
+	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
 	_, err = repository.LoadYaml(test_artifact, true /* validate */, true)
 	assert.NoError(self.T(), err)
 
@@ -377,14 +395,17 @@ tools:
 	// The admin sets a very minimal tool definition which would
 	// normally be less than the existing tool - but they should
 	// prevail.
-	err = services.GetInventory().AddTool(self.ConfigObj,
+	inventory_service, err := services.GetInventory(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	err = inventory_service.AddTool(self.ConfigObj,
 		&artifacts_proto.Tool{
 			Name: "SampleTool",
 			Hash: "XXXXX",
 		}, services.ToolOptions{AdminOverride: true})
 	assert.NoError(self.T(), err)
 
-	tool, err := services.GetInventory().ProbeToolInfo("SampleTool")
+	tool, err := inventory_service.ProbeToolInfo("SampleTool")
 	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), tool.Url, "")
@@ -394,21 +415,24 @@ tools:
 
 // If the admin set the tool previously, they should be able to upgrade it.
 func (self *ServicesTestSuite) TestAdminOverrideAdminSet() {
-	err := services.GetInventory().AddTool(self.ConfigObj,
+	inventory_service, err := services.GetInventory(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	err = inventory_service.AddTool(self.ConfigObj,
 		&artifacts_proto.Tool{
 			Name: "SampleTool",
 			Hash: "XXXXX",
 		}, services.ToolOptions{AdminOverride: true})
 	assert.NoError(self.T(), err)
 
-	err = services.GetInventory().AddTool(self.ConfigObj,
+	err = inventory_service.AddTool(self.ConfigObj,
 		&artifacts_proto.Tool{
 			Name: "SampleTool",
 			Hash: "YYYYY",
 		}, services.ToolOptions{AdminOverride: true})
 	assert.NoError(self.T(), err)
 
-	tool, err := services.GetInventory().ProbeToolInfo("SampleTool")
+	tool, err := inventory_service.ProbeToolInfo("SampleTool")
 	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), tool.Url, "")

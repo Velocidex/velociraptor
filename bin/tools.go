@@ -64,15 +64,21 @@ func doThirdPartyShow() error {
 	}
 	defer sm.Close()
 
+	inventory_manager, err := services.GetInventory(config_obj)
+	if err != nil {
+		return err
+	}
+
 	if *third_party_show_file == "" {
-		inventory := services.GetInventory().Get()
+
+		inventory := inventory_manager.Get()
 		serialized, err := yaml.Marshal(inventory)
 		if err != nil {
 			return err
 		}
 		fmt.Println(string(serialized))
 	} else {
-		tool, err := services.GetInventory().ProbeToolInfo(*third_party_show_file)
+		tool, err := inventory_manager.ProbeToolInfo(*third_party_show_file)
 		if err != nil {
 			return fmt.Errorf("Tool not found: %w", err)
 		}
@@ -99,7 +105,12 @@ func doThirdPartyRm() error {
 	}
 	defer sm.Close()
 
-	return services.GetInventory().RemoveTool(config_obj, *third_party_rm_name)
+	inventory_manager, err := services.GetInventory(config_obj)
+	if err != nil {
+		return err
+	}
+
+	return inventory_manager.RemoveTool(config_obj, *third_party_rm_name)
 }
 
 func doThirdPartyUpload() error {
@@ -171,7 +182,12 @@ func doThirdPartyUpload() error {
 	defer cancel()
 
 	// Now add the tool to the inventory with the correct hash.
-	err = services.GetInventory().AddTool(
+	inventory_manager, err := services.GetInventory(config_obj)
+	if err != nil {
+		return err
+	}
+
+	err = inventory_manager.AddTool(
 		config_obj, tool, services.ToolOptions{
 			AdminOverride: true,
 		})
@@ -180,7 +196,7 @@ func doThirdPartyUpload() error {
 	}
 
 	if *third_party_upload_download {
-		_, err = services.GetInventory().GetToolInfo(ctx, config_obj, tool.Name)
+		_, err = inventory_manager.GetToolInfo(ctx, config_obj, tool.Name)
 		return err
 	}
 

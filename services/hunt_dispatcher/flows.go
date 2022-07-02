@@ -41,7 +41,7 @@ func (self *HuntDispatcher) GetFlows(
 			return
 		}
 
-		launcher, err := services.GetLauncher()
+		launcher, err := services.GetLauncher(config_obj)
 		if err != nil {
 			scope.Log("hunt_flows: %v\n", err)
 			return

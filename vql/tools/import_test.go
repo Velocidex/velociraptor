@@ -17,7 +17,7 @@ import (
 )
 
 func (self *TestSuite) TestImportCollection() {
-	manager, _ := services.GetRepositoryManager()
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
 	_, err := repository.LoadYaml(CustomTestArtifactDependent, true, true)
 	assert.NoError(self.T(), err)
@@ -57,7 +57,7 @@ func (self *TestSuite) TestImportCollection() {
 	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_FINISHED,
 		context.State)
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	// Check the indexes are correct for the new client_id

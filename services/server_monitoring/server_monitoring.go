@@ -50,6 +50,10 @@ type EventTable struct {
 	current_queries []*actions_proto.VQLCollectorArgs
 }
 
+func (self *EventTable) Wait() {
+	self.wg.Wait()
+}
+
 func (self *EventTable) Clock() utils.Clock {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -214,12 +218,12 @@ func (self *EventTable) StartQueries(
 	defer self.mu.Unlock()
 
 	// Compile the ArtifactCollectorArgs into a list of requests.
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return err
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -295,7 +299,7 @@ func (self *EventTable) RunQuery(
 	wg *sync.WaitGroup,
 	vql_request *actions_proto.VQLCollectorArgs) error {
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -423,14 +427,14 @@ func (self *EventTable) RunQuery(
 }
 
 // Bring up the server monitoring service.
-func StartServerMonitoringService(
+func NewServerMonitoringService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config) (services.ServerEventManager, error) {
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	artifacts := &flows_proto.ArtifactCollectorArgs{}
@@ -456,9 +460,9 @@ func StartServerMonitoringService(
 		tracer:     NewQueryTracer(),
 	}
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	events, cancel := journal.Watch(
 		ctx, "Server.Internal.ArtifactModification",
@@ -468,7 +472,6 @@ func StartServerMonitoringService(
 	go func() {
 		defer wg.Done()
 		defer cancel()
-		defer services.RegisterServerEventManager(nil)
 
 		// Shut down all server queries in an orderly fasion
 		defer manager.Close()
@@ -488,7 +491,5 @@ func StartServerMonitoringService(
 		}
 	}()
 
-	services.RegisterServerEventManager(manager)
-
-	return manager.Update(config_obj, "", artifacts)
+	return manager, manager.Update(config_obj, "", artifacts)
 }

@@ -262,7 +262,7 @@ func (self *Launcher) CancelFlow(
 	}
 
 	// Get all queued tasks for the client and delete only those in this flow.
-	client_manager, err := services.GetClientInfoManager()
+	client_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return nil, err
 	}

@@ -43,7 +43,9 @@ type LauncherTestSuite struct {
 }
 
 func (self *LauncherTestSuite) LoadArtifacts(artifact_definitions []string) services.Repository {
-	manager, _ := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	repository := manager.NewRepository()
 
 	for _, definition := range artifact_definitions {
@@ -113,7 +115,7 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	// collection can not be scheduled. The server needs to
 	// download the file in order to calculate its hash - even
 	// though it is not serving it to clients.
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(ctx, self.ConfigObj,
@@ -148,7 +150,10 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 
 	// Now serve the tool from Velociraptor's public directory
 	// instead.
-	err = services.GetInventory().AddTool(
+	inventory_service, err := services.GetInventory(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	err = inventory_service.AddTool(
 		self.ConfigObj, &artifacts_proto.Tool{
 			Name: "Tool1",
 			// This will force Velociraptor to generate a stable
@@ -205,7 +210,7 @@ sources:
 func (self *LauncherTestSuite) TestGetDependentArtifacts() {
 	repository := self.LoadArtifacts(DependentArtifacts)
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	res, err := launcher.GetDependentArtifacts(self.ConfigObj,
@@ -244,7 +249,7 @@ sources:
 func (self *LauncherTestSuite) TestGetDependentArtifactsWithImports() {
 	repository := self.LoadArtifacts(DependentArtifactsWithImports)
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	res, err := launcher.GetDependentArtifacts(self.ConfigObj,
@@ -309,7 +314,7 @@ sources:
 	acl_manager := vql_subsystem.NullACLManager{}
 
 	// Compile the request.
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(ctx, self.ConfigObj,
@@ -377,7 +382,7 @@ func (self *LauncherTestSuite) TestCompiling() {
 	ctx := context.Background()
 	acl_manager := vql_subsystem.NullACLManager{}
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
@@ -459,7 +464,7 @@ func (self *LauncherTestSuite) TestCompilingMultipleArtifacts() {
 	ctx := context.Background()
 	acl_manager := vql_subsystem.NullACLManager{}
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
@@ -519,7 +524,7 @@ sources:
 	ctx := context.Background()
 	acl_manager := vql_subsystem.NullACLManager{}
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
@@ -549,7 +554,7 @@ func (self *LauncherTestSuite) TestCompilingObfuscation() {
 	ctx := context.Background()
 	acl_manager := vql_subsystem.NullACLManager{}
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
@@ -584,7 +589,7 @@ sources:
 	acl_manager := vql_subsystem.NewServerACLManager(self.ConfigObj, "UserX")
 
 	// Permission denied - the principal is not allowed to compile this artifact.
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
@@ -642,7 +647,9 @@ func (self *LauncherTestSuite) TestParameterTypes() {
 
 	// Compile the artifact request into VQL
 	acl_manager := vql_subsystem.NullACLManager{}
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	compiled, err := launcher.CompileCollectorArgs(
 		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
@@ -781,7 +788,9 @@ func (self *LauncherTestSuite) TestParameterTypesDeps() {
 
 	// Compile the artifact request into VQL
 	acl_manager := vql_subsystem.NullACLManager{}
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	compiled, err := launcher.CompileCollectorArgs(
 		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
@@ -812,7 +821,7 @@ func (self *LauncherTestSuite) TestParameterTypesDepsQuery() {
 		Env: ordereddict.NewDict(),
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
@@ -873,7 +882,7 @@ sources:
 
 	// Compile the artifact request into VQL
 	acl_manager := vql_subsystem.NullACLManager{}
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
@@ -922,7 +931,7 @@ sources:
 
 	// Compile the artifact request into VQL
 	acl_manager := vql_subsystem.NullACLManager{}
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
@@ -976,7 +985,7 @@ sources:
 
 	// Compile the artifact request into VQL
 	acl_manager := vql_subsystem.NullACLManager{}
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
@@ -1038,7 +1047,7 @@ sources:
     SELECT 1 FORM
 `}
 
-	manager, _ := services.GetRepositoryManager()
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository := manager.NewRepository()
 
 	for _, definition := range artifact_definitions {
@@ -1066,7 +1075,7 @@ sources:
     SELECT * FROM scope()
 `}
 
-	manager, _ := services.GetRepositoryManager()
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository := manager.NewRepository()
 
 	for _, definition := range artifact_definitions {
@@ -1085,7 +1094,7 @@ sources:
 
 	// Compile the artifact request into VQL
 	acl_manager := vql_subsystem.NullACLManager{}
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	// No timeout specified in the request causes the timeout to

@@ -57,7 +57,7 @@ func (self *EnrollmentService) Start(
 	wg *sync.WaitGroup) error {
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> Enrollment service.")
+	logger.Info("<green>Starting</> Enrollment service for %v.", services.GetOrgName(config_obj))
 
 	// Also watch for customized interrogation artifacts.
 	err := journal.WatchForCollectionWithCB(ctx, config_obj, wg,
@@ -104,7 +104,7 @@ func (self *EnrollmentService) ProcessEnrollment(
 	}
 
 	// Get the client info from the client info manager.
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -120,7 +120,7 @@ func (self *EnrollmentService) ProcessEnrollment(
 	// Wait for rate token
 	self.limiter.Wait(ctx)
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func (self *EnrollmentService) ProcessEnrollment(
 	}
 
 	// Issue the flow on the client.
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return err
 	}
@@ -154,8 +154,8 @@ func (self *EnrollmentService) ProcessEnrollment(
 			Artifacts: []string{interrogation_artifact},
 		}, func() {
 			// Notify the client
-			notifier := services.GetNotifier()
-			if notifier != nil {
+			notifier, err := services.GetNotifier(config_obj)
+			if err == nil {
 				notifier.NotifyListener(
 					config_obj, client_id, "Interrogate")
 			}
@@ -180,7 +180,7 @@ func (self *EnrollmentService) ProcessEnrollment(
 		return err
 	}
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
 		return err
 	}
@@ -273,12 +273,12 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	client_info.FirstSeenAt = public_key_info.EnrollTime
 
 	// Expire the client info manager to force it to fetch fresh data.
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return err
 	}
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -301,7 +301,7 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 
 	// Set labels in the labeler.
 	if len(client_info.Labels) > 0 {
-		labeler := services.GetLabeler()
+		labeler := services.GetLabeler(config_obj)
 		for _, label := range client_info.Labels {
 			err := labeler.SetClientLabel(config_obj, client_id, label)
 			if err != nil {
@@ -310,7 +310,7 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 		}
 	}
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
 		return err
 	}
@@ -339,7 +339,7 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	return nil
 }
 
-func StartInterrogationService(
+func NewInterrogationService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {

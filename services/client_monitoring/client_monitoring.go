@@ -108,7 +108,7 @@ func (self *ClientEventTable) CheckClientEventsVersion(
 	}
 
 	// Now check the label group
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(config_obj)
 	if labeler == nil {
 		return false
 	}
@@ -146,12 +146,12 @@ func (self *ClientEventTable) compileArtifactCollectorArgs(
 	artifact *flows_proto.ArtifactCollectorArgs) (
 	[]*actions_proto.VQLCollectorArgs, error) {
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -235,7 +235,7 @@ func (self *ClientEventTable) setClientMonitoringState(
 
 	// Notify all the client monitoring tables that we got
 	// updated. This should cause all frontends to refresh.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -260,8 +260,11 @@ func (self *ClientEventTable) setClientMonitoringState(
 		return err
 	}
 
+	notifier, err := services.GetNotifier(config_obj)
+	if err != nil {
+		return err
+	}
 	if config_obj.Defaults.EventChangeNotifyAllClients {
-		notifier := services.GetNotifier()
 		for _, c := range notifier.ListClients() {
 			notifier.NotifyDirectListener(c)
 		}
@@ -290,7 +293,7 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 	}
 
 	// Now apply any event queries that belong to this client based on labels.
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(config_obj)
 	for _, table := range state.LabelEvents {
 		if labeler.IsLabelSet(config_obj, client_id, table.Label) {
 			for _, event := range table.Artifacts.CompiledCollectorArgs {
@@ -447,22 +450,22 @@ func (self *ClientEventTable) load_from_file(
 }
 
 // Runs at frontend start to initialize the client monitoring table.
-func StartClientMonitoringService(
+func NewClientMonitoringService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config) (services.ClientEventTable, error) {
 
 	event_table := &ClientEventTable{
 		Clock: &utils.RealClock{},
 		id:    uuid.New().String(),
 	}
-	services.RegisterClientEventManager(event_table)
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> Client Monitoring Service")
-	journal, err := services.GetJournal()
+	logger.Info("<green>Starting</> Client Monitoring Service for %v",
+		services.GetOrgName(config_obj))
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	events, cancel := journal.Watch(
@@ -473,7 +476,6 @@ func StartClientMonitoringService(
 	go func() {
 		defer wg.Done()
 		defer cancel()
-		defer services.RegisterClientEventManager(nil)
 
 		for {
 			select {
@@ -490,5 +492,5 @@ func StartClientMonitoringService(
 		}
 	}()
 
-	return event_table.LoadFromFile(ctx, config_obj)
+	return event_table, event_table.LoadFromFile(ctx, config_obj)
 }

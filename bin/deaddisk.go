@@ -59,7 +59,7 @@ func addWindowsDirectory(
 		Logger:     log.New(&LogWriter{config_obj}, "", 0),
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func addWindowsHardDisk(
 			Set("ImagePath", image),
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}

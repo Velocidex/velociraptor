@@ -1,31 +1,20 @@
 package services
 
 import (
-	"sync"
-
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
 // The Label service is responsible for manipulating client's labels
 // in a fast and efficient manner.
 
-var (
-	labeler_mu sync.Mutex
-	labeler    Labeler
-)
+func GetLabeler(config_obj *config_proto.Config) Labeler {
+	org_manager, err := GetOrgManager()
+	if err != nil {
+		return nil
+	}
 
-func GetLabeler() Labeler {
-	labeler_mu.Lock()
-	defer labeler_mu.Unlock()
-
-	return labeler
-}
-
-func RegisterLabeler(l Labeler) {
-	labeler_mu.Lock()
-	defer labeler_mu.Unlock()
-
-	labeler = l
+	l, _ := org_manager.Services(config_obj.OrgId).Labeler()
+	return l
 }
 
 type Labeler interface {

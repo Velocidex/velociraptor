@@ -35,7 +35,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	crypto_server "www.velocidex.com/golang/velociraptor/crypto/server"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -55,7 +54,6 @@ var (
 )
 
 type Server struct {
-	config  *config_proto.Config
 	manager *crypto_server.ServerCryptoManager
 	logger  *logging.LogContext
 
@@ -154,9 +152,6 @@ func (self *Server) ManageConcurrency(max_concurrency uint64, target_heap_size u
 
 func (self *Server) Close() {
 	close(self.done)
-	db, _ := datastore.GetDB(self.config)
-	db.Close()
-
 	if self.throttler != nil {
 		self.throttler.Close()
 	}
@@ -190,7 +185,6 @@ func NewServer(ctx context.Context,
 	}
 
 	result := Server{
-		config:              config_obj,
 		manager:             manager,
 		logger:              logging.GetLogger(config_obj, &logging.FrontendComponent),
 		concurrency_timeout: time.Duration(concurrency) * time.Second,
@@ -231,8 +225,19 @@ func NewServer(ctx context.Context,
 func (self *Server) ProcessSingleUnauthenticatedMessage(
 	ctx context.Context,
 	message *crypto_proto.VeloMessage) {
+
 	if message.CSR != nil {
-		err := enroll(ctx, self.config, self, message.CSR)
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return
+		}
+
+		config_obj, err := org_manager.GetOrgConfig(message.OrgId)
+		if err != nil {
+			return
+		}
+
+		err = enroll(ctx, config_obj, self, message.CSR)
 		if err != nil {
 			self.logger.Error(fmt.Sprintf("Enrol Error: %s", err))
 		}
@@ -264,15 +269,25 @@ func (self *Server) Process(
 
 	// json.TraceMessage(message_info.Source, message_info)
 
-	runner := flows.NewFlowRunner(self.config)
-	defer runner.Close()
-
-	err := runner.ProcessMessages(ctx, message_info)
+	org_manager, err := services.GetOrgManager()
 	if err != nil {
 		return nil, 0, err
 	}
 
-	client_info_manager, err := services.GetClientInfoManager()
+	config_obj, err := org_manager.GetOrgConfig(message_info.OrgId)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	runner := flows.NewFlowRunner(config_obj)
+	defer runner.Close()
+
+	err = runner.ProcessMessages(ctx, message_info)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -326,4 +341,8 @@ func (self *Server) Error(msg string, err error) {
 
 func (self *Server) Info(format string, v ...interface{}) {
 	self.logger.Info(format, v...)
+}
+
+func (self *Server) Debug(format string, v ...interface{}) {
+	self.logger.Debug(format, v...)
 }

@@ -85,7 +85,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		}
 	}
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
 		scope.Log("import_collection: %v", err)
 		return vfilter.Null{}
@@ -100,7 +100,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		scope.Log("import_collection: %v", err)
 		return vfilter.Null{}
@@ -307,7 +307,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	// Generate a fake System.Flow.Completion event for the
 	// uploaded flow in case there are any listeners who are
 	// interested.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		scope.Log("import_collection: %v", err)
 		return vfilter.Null{}
@@ -351,7 +351,7 @@ func getExistingClientOrNewClient(
 	config_obj *config_proto.Config,
 	hostname string) (string, error) {
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
 		return "", err
 	}
@@ -396,7 +396,7 @@ func makeNewClient(
 		return "", err
 	}
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
 		return "", err
 	}

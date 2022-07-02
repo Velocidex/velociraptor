@@ -102,7 +102,8 @@ func (self *HuntManager) Start(
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) error {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> the hunt manager service with rate limit %v/s.",
+	logger.Info("<green>Starting</> hunt manager service for %v with rate limit %v/s.",
+		services.GetOrgName(config_obj),
 		config_obj.Frontend.Resources.NotificationsPerSecond)
 
 	err := journal.WatchQueueWithCB(ctx, config_obj, wg,
@@ -163,15 +164,16 @@ func (self *HuntManager) ProcessMutation(
 		return err
 	}
 
-	return self.processMutation(mutation)
+	return self.processMutation(config_obj, mutation)
 }
 
 func (self *HuntManager) processMutation(
+	config_obj *config_proto.Config,
 	mutation *api_proto.HuntMutation) error {
 
-	dispatcher := services.GetHuntDispatcher()
-	if dispatcher == nil {
-		return errors.New("Hunt Dispatcher not ready")
+	dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		return err
 	}
 
 	dispatcher.ModifyHuntObject(mutation.HuntId,
@@ -264,7 +266,7 @@ func (self *HuntManager) maybeDirectlyAssignFlow(
 	}
 
 	// Verify the flow actually exists.
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return err
 	}
@@ -275,7 +277,7 @@ func (self *HuntManager) maybeDirectlyAssignFlow(
 	}
 
 	// Append the flow to the client's table.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -377,12 +379,12 @@ func (self *HuntManager) ProcessFlowCompletion(
 	// status, so we dont bother broadcasting a mutation for them. We
 	// only need to update the local hunt dispatcher on the master
 	// node which will flush to disk eventually.
-	err = self.processMutation(mutation)
+	err = self.processMutation(config_obj, mutation)
 	if err != nil {
 		return err
 	}
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -429,15 +431,15 @@ func (self *HuntManager) participateInAllHunts(ctx context.Context,
 	config_obj *config_proto.Config, client_id string,
 	should_participate_cb func(hunt *api_proto.Hunt) bool) error {
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
 
 	// Get hunt information about this hunt.
-	dispatcher := services.GetHuntDispatcher()
-	if dispatcher == nil {
-		return errors.New("hunt dispatcher invalid")
+	dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		return err
 	}
 
 	return dispatcher.ApplyFuncOnHunts(func(hunt *api_proto.Hunt) error {
@@ -471,7 +473,7 @@ func (self *HuntManager) ProcessParticipation(
 	}
 
 	// Get some info about the client
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -496,9 +498,9 @@ func (self *HuntManager) ProcessParticipation(
 	}
 
 	// Get hunt information about this hunt.
-	dispatcher := services.GetHuntDispatcher()
-	if dispatcher == nil {
-		return errors.New("hunt dispatcher invalid")
+	dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		return err
 	}
 
 	hunt_obj, pres := dispatcher.GetHunt(participation_row.HuntId)
@@ -553,12 +555,12 @@ func (self *HuntManager) ProcessParticipation(
 		config_obj, hunt_obj, participation_row.ClientId)
 }
 
-func StartHuntManager(
+func NewHuntManager(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -582,7 +584,7 @@ func StartHuntManager(
 func huntHasLabel(
 	config_obj *config_proto.Config,
 	hunt_obj *api_proto.Hunt, client_id string) bool {
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(config_obj)
 
 	if hunt_obj.Condition == nil {
 		return true
@@ -611,7 +613,7 @@ func huntHasExcludeLabel(
 		return true
 	}
 
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(config_obj)
 
 	for _, label := range hunt_obj.Condition.ExcludedLabels.Label {
 		if labeler.IsLabelSet(config_obj, client_id, label) {
@@ -657,7 +659,7 @@ func checkHuntRanOnClient(
 	config_obj *config_proto.Config,
 	client_id, hunt_id string) error {
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
 		return err
 	}
@@ -675,7 +677,7 @@ func checkHuntRanOnClient(
 func setHuntRanOnClient(config_obj *config_proto.Config,
 	client_id, hunt_id string) error {
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
 		return err
 	}
@@ -697,7 +699,7 @@ func scheduleHuntOnClient(
 
 	hunt_id := hunt_obj.HuntId
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
 	}
@@ -707,7 +709,7 @@ func scheduleHuntOnClient(
 		return err
 	}
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return err
 	}
@@ -729,7 +731,7 @@ func scheduleHuntOnClient(
 		return err
 	}
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -750,9 +752,9 @@ func scheduleHuntOnClient(
 	}
 
 	// Modify the hunt stats.
-	dispatcher := services.GetHuntDispatcher()
-	if dispatcher == nil {
-		return errors.New("hunt dispatcher invalid")
+	dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		return err
 	}
 
 	err = dispatcher.MutateHunt(config_obj,

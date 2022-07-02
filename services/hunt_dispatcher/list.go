@@ -12,7 +12,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 )
@@ -35,7 +34,7 @@ func FindCollectedArtifacts(
 	hunt.Artifacts = hunt.StartRequest.Artifacts
 	hunt.ArtifactSources = []string{}
 	for _, artifact := range hunt.StartRequest.Artifacts {
-		for _, source := range flows.GetArtifactSources(
+		for _, source := range GetArtifactSources(
 			config_obj, artifact) {
 			hunt.ArtifactSources = append(
 				hunt.ArtifactSources,
@@ -49,9 +48,9 @@ func (self HuntDispatcher) ListHunts(
 	in *api_proto.ListHuntsRequest) (
 	*api_proto.ListHuntsResponse, error) {
 
-	dispatcher := services.GetHuntDispatcher()
-	if dispatcher == nil {
-		return nil, errors.New("Hunt dispatcher not initialized")
+	dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		return nil, err
 	}
 
 	end := in.Count + in.Offset
@@ -63,7 +62,7 @@ func (self HuntDispatcher) ListHunts(
 	// creation time. This should be very fast because all hunts
 	// are kept in memory inside the hunt dispatcher.
 	items := make([]*api_proto.Hunt, 0, end)
-	err := dispatcher.ApplyFuncOnHunts(
+	err = dispatcher.ApplyFuncOnHunts(
 		func(hunt *api_proto.Hunt) error {
 			// Only show non-archived hunts.
 			if in.IncludeArchived ||
@@ -99,9 +98,9 @@ func GetHunt(config_obj *config_proto.Config, in *api_proto.GetHuntRequest) (
 
 	var hunt_obj *api_proto.Hunt
 
-	dispatcher := services.GetHuntDispatcher()
-	if dispatcher == nil {
-		return nil, errors.New("Hunt dispatcher not valid")
+	dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		return nil, err
 	}
 
 	hunt_obj, pres := dispatcher.GetHunt(in.HuntId)

@@ -42,11 +42,7 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/client_info"
-	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
-	"www.velocidex.com/golang/velociraptor/services/indexing"
 	"www.velocidex.com/golang/velociraptor/services/users"
-	"www.velocidex.com/golang/velociraptor/startup"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/remapping"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -198,7 +194,7 @@ func runTest(fixture *testFixture, sm *services.Service,
 	}
 
 	// Cleanup after the query.
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return "", err
 	}
@@ -272,30 +268,14 @@ func doGolden() error {
 
 	failures := []string{}
 
-	//Force a clean slate for each test.
-	startup.Reset()
+	config_obj.Frontend.ServerServices = services.AllServicesSpec()
+	config_obj.Frontend.ServerServices.SanityChecker = false
 
 	sm, err := startEssentialServices(config_obj)
 	if err != nil {
 		return err
 	}
 	defer sm.Close()
-
-	// Start specific services needed for golden files
-	err = sm.Start(hunt_dispatcher.StartHuntDispatcher)
-	if err != nil {
-		return err
-	}
-
-	err = sm.Start(client_info.StartClientInfoService)
-	if err != nil {
-		return err
-	}
-
-	err = sm.Start(indexing.StartIndexingService)
-	if err != nil {
-		return err
-	}
 
 	err = sm.Start(users.StartUserManager)
 	if err != nil {

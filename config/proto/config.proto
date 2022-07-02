@@ -800,6 +800,16 @@ message ServerServicesConfig {
    bool frontend_server = 14;
    bool gui_server = 15;
    bool index_server = 16;
+   bool journal_service = 17;
+   bool replication_service = 26;
+   bool notification_service = 18;
+   bool repository_manager = 19;
+   bool test_repository_manager = 25;
+   bool inventory_service = 20;
+   bool client_info = 21;
+   bool label = 22;
+   bool launcher = 23;
+   bool notebook_service = 24;
 }
 
 message Defaults {
@@ -936,4 +946,7 @@ message Config {
     // The list of data sources which Velociraptor should map instead of the
     // host's own file system.
     repeated RemappingConfig remappings = 35;
+
+    string org_id = 36;
+    string org_name = 37;
 }

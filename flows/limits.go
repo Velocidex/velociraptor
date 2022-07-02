@@ -60,7 +60,7 @@ func checkContextResourceLimits(config_obj *config_proto.Config,
 func cancelCollection(config_obj *config_proto.Config, client_id, flow_id string) error {
 	// Cancel the collection to stop the client from generating
 	// more data.
-	client_manager, err := services.GetClientInfoManager()
+	client_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return err
 	}

@@ -9,29 +9,18 @@ package services
 
 import (
 	"context"
-	"sync"
 
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
-var (
-	inventory_mu sync.Mutex
-	ginventory   Inventory
-)
+func GetInventory(config_obj *config_proto.Config) (Inventory, error) {
+	org_manager, err := GetOrgManager()
+	if err != nil {
+		return nil, err
+	}
 
-func GetInventory() Inventory {
-	inventory_mu.Lock()
-	defer inventory_mu.Unlock()
-
-	return ginventory
-}
-
-func RegisterInventory(inventory Inventory) {
-	inventory_mu.Lock()
-	defer inventory_mu.Unlock()
-
-	ginventory = inventory
+	return org_manager.Services(config_obj.OrgId).Inventory()
 }
 
 type ToolOptions struct {

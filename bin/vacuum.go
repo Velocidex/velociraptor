@@ -19,11 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/client_info"
-	"www.velocidex.com/golang/velociraptor/services/frontend"
-	"www.velocidex.com/golang/velociraptor/services/indexing"
-	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/labels"
+	"www.velocidex.com/golang/velociraptor/services/orgs"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
@@ -87,27 +83,7 @@ func doVacuum() error {
 		return err
 	}
 
-	err = sm.Start(journal.StartJournalService)
-	if err != nil {
-		return err
-	}
-
-	err = sm.Start(frontend.StartFrontendService)
-	if err != nil {
-		return err
-	}
-
-	err = sm.Start(labels.StartLabelService)
-	if err != nil {
-		return err
-	}
-
-	err = sm.Start(client_info.StartClientInfoService)
-	if err != nil {
-		return err
-	}
-
-	err = sm.Start(indexing.StartIndexingService)
+	err = sm.Start(orgs.StartOrgManager)
 	if err != nil {
 		return err
 	}
@@ -122,13 +98,13 @@ func doVacuum() error {
 func generateTasks(
 	ctx context.Context, config_obj *config_proto.Config,
 	number int) error {
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return err
 	}
 	_ = client_info_manager
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
 		return err
 	}
@@ -172,7 +148,7 @@ func deleteTasks(
 		return err
 	}
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
 		return err
 	}

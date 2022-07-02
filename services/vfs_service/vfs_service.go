@@ -37,7 +37,8 @@ func (self *VFSService) Start(
 	wg *sync.WaitGroup) error {
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> VFS writing service.")
+	logger.Info("<green>Starting</> VFS writing service for %v.",
+		services.GetOrgName(config_obj))
 
 	err := watchForFlowCompletion(
 		ctx, wg, config_obj, "System.VFS.ListDirectory",
@@ -318,13 +319,12 @@ func (self *VFSService) flush_state(
 		})
 }
 
-func StartVFSService(
+func NewVFSService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config) (
+	services.VFSService, error) {
 
 	vfs_service := &VFSService{}
-	services.RegisterVFSService(vfs_service)
-
-	return vfs_service.Start(ctx, config_obj, wg)
+	return vfs_service, vfs_service.Start(ctx, config_obj, wg)
 }

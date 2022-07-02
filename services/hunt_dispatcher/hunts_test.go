@@ -1,72 +1,38 @@
-package flows_test
+package hunt_dispatcher_test
 
 import (
-	"context"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
-	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
-	"www.velocidex.com/golang/velociraptor/services/repository"
-	"www.velocidex.com/golang/velociraptor/services/users"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 type HuntTestSuite struct {
-	suite.Suite
-	config_obj *config_proto.Config
-	sm         *services.Service
-	ctx        context.Context
+	test_utils.TestSuite
 }
 
 func (self *HuntTestSuite) SetupTest() {
-	var err error
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().
-		LoadAndValidate()
-	require.NoError(self.T(), err)
-
-	// Start essential services.
-	self.ctx, _ = context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(self.ctx, self.config_obj)
-
-	require.NoError(self.T(), self.sm.Start(journal.StartJournalService))
-	require.NoError(self.T(), self.sm.Start(notifications.StartNotificationService))
-	require.NoError(self.T(), self.sm.Start(launcher.StartLauncherService))
-	require.NoError(self.T(), self.sm.Start(hunt_dispatcher.StartHuntDispatcher))
-	require.NoError(self.T(), self.sm.Start(repository.StartRepositoryManager))
-	require.NoError(self.T(), self.sm.Start(users.StartUserManager))
-}
-
-func (self *HuntTestSuite) TearDownTest() {
-	self.sm.Close()
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
-	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
+	self.ConfigObj = self.TestSuite.LoadConfig()
+	self.ConfigObj.Frontend.ServerServices.HuntDispatcher = true
+	self.TestSuite.SetupTest()
 }
 
 func (self *HuntTestSuite) TestCompilation() {
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	repository := manager.NewRepository()
+	repository, err := manager.GetGlobalRepository(self.ConfigObj)
+	assert.NoError(self.T(), err)
 
-	manager.SetGlobalRepositoryForTests(self.config_obj, repository)
 	repository.LoadYaml(`
 name: TestArtifact
 parameters:
@@ -100,18 +66,20 @@ sources:
 	}
 
 	acl_manager := vql_subsystem.NullACLManager{}
-	hunt_dispatcher := services.GetHuntDispatcher()
+	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	hunt_id, err := hunt_dispatcher.CreateHunt(
-		self.ctx, self.config_obj, acl_manager, request)
+		self.Ctx, self.ConfigObj, acl_manager, request)
 
 	assert.NoError(self.T(), err)
 
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	hunt_path_manager := paths.NewHuntPathManager(hunt_id)
 	hunt_obj := &api_proto.Hunt{}
-	err = db.GetSubject(self.config_obj, hunt_path_manager.Path(), hunt_obj)
+	err = db.GetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), hunt_obj.HuntDescription, request.HuntDescription)

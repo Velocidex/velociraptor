@@ -171,10 +171,6 @@ func (self *DirectoryFileStore) StatFile(
 
 func (self *DirectoryFileStore) WriteFile(
 	filename api.FSPathSpec) (api.FileWriter, error) {
-	if strings.Contains(filename.AsClientPath(), "Generic.Client.Stats") {
-		utils.DlvBreak()
-	}
-
 	return self.WriteFileWithCompletion(filename, nil)
 }
 

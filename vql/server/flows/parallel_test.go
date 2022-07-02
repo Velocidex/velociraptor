@@ -9,7 +9,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -21,7 +20,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -41,12 +39,14 @@ type TestSuite struct {
 }
 
 func (self *TestSuite) SetupTest() {
+	self.ConfigObj = self.LoadConfig()
+	self.ConfigObj.Frontend.ServerServices.HuntDispatcher = true
+
 	self.TestSuite.SetupTest()
-	require.NoError(self.T(), self.Sm.Start(hunt_dispatcher.StartHuntDispatcher))
 }
 
 func (self *TestSuite) TestArtifactSource() {
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	repository, err := manager.GetGlobalRepository(self.ConfigObj)
@@ -123,7 +123,7 @@ SELECT * FROM parallelize(
 }
 
 func (self *TestSuite) TestHuntsSource() {
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	repository, err := manager.GetGlobalRepository(self.ConfigObj)
@@ -133,7 +133,9 @@ func (self *TestSuite) TestHuntsSource() {
 	assert.NoError(self.T(), err)
 	ctx := context.Background()
 
-	hunt_dispatcher := services.GetHuntDispatcher()
+	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	hunt_id, err := hunt_dispatcher.CreateHunt(ctx,
 		self.ConfigObj, vql_subsystem.NullACLManager{},
 		&api_proto.Hunt{
@@ -143,7 +145,7 @@ func (self *TestSuite) TestHuntsSource() {
 		})
 	assert.NoError(self.T(), err)
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	file_store_factory := file_store.GetFileStore(self.ConfigObj)

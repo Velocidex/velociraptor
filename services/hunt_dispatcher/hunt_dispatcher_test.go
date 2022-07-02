@@ -1,4 +1,4 @@
-package hunt_dispatcher
+package hunt_dispatcher_test
 
 import (
 	"fmt"
@@ -6,14 +6,13 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/frontend"
+	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
@@ -26,24 +25,27 @@ type HuntDispatcherTestSuite struct {
 
 	hunt_id string
 
-	master_dispatcher *HuntDispatcher
-	minion_dispatcher *HuntDispatcher
+	master_dispatcher *hunt_dispatcher.HuntDispatcher
+	minion_dispatcher *hunt_dispatcher.HuntDispatcher
 }
 
 func (self *HuntDispatcherTestSuite) SetupTest() {
-	self.TestSuite.SetupTest()
+	self.ConfigObj = self.TestSuite.LoadConfig()
+	self.ConfigObj.Frontend.ServerServices.FrontendServer = true
+	self.ConfigObj.Frontend.ServerServices.HuntDispatcher = true
+
 	self.LoadArtifacts([]string{`
 name: Server.Internal.HuntUpdate
 type: INTERNAL
 `})
 
-	Clock = &utils.IncClock{}
+	hunt_dispatcher.Clock = &utils.IncClock{}
 
 	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	for i := 0; i < 5; i++ {
-		now := Clock.Now().Unix()
+		now := hunt_dispatcher.Clock.Now().Unix()
 		hunt_obj := &api_proto.Hunt{
 			HuntId:    fmt.Sprintf("H.%d", i),
 			State:     api_proto.Hunt_RUNNING,
@@ -56,16 +58,21 @@ type: INTERNAL
 				hunt_path_manager.Path(), hunt_obj))
 	}
 
-	require.NoError(self.T(), self.Sm.Start(frontend.StartFrontendService))
+	self.TestSuite.SetupTest()
 
 	// Make a master and minion dispatchers.
-	require.NoError(self.T(), self.Sm.Start(StartHuntDispatcher))
-	self.master_dispatcher = services.GetHuntDispatcher().(*HuntDispatcher)
-	self.master_dispatcher.i_am_master = true
+	master_dispatcher, err := hunt_dispatcher.NewHuntDispatcher(
+		self.Ctx, self.Wg, self.ConfigObj)
+	assert.NoError(self.T(), err)
 
-	require.NoError(self.T(), self.Sm.Start(StartHuntDispatcher))
-	self.minion_dispatcher = services.GetHuntDispatcher().(*HuntDispatcher)
-	self.minion_dispatcher.i_am_master = false
+	self.master_dispatcher = master_dispatcher.(*hunt_dispatcher.HuntDispatcher)
+	self.master_dispatcher.I_am_master = true
+
+	minion_dispatcher, err := hunt_dispatcher.NewHuntDispatcher(
+		self.Ctx, self.Wg, self.ConfigObj)
+	assert.NoError(self.T(), err)
+	self.minion_dispatcher = minion_dispatcher.(*hunt_dispatcher.HuntDispatcher)
+	self.minion_dispatcher.I_am_master = false
 
 	// Wait until the hunt dispatchers are fully loaded.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {

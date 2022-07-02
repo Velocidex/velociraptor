@@ -91,7 +91,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		scope.Log("collect_client: Command can only run on the server")
 		return vfilter.Null{}
@@ -138,7 +138,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		acl_manager = vql_subsystem.NullACLManager{}
 	}
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return vfilter.Null{}
 	}
@@ -147,8 +147,8 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		ctx, config_obj, acl_manager, repository, request,
 		func() {
 			// Notify the client about it.
-			notifier := services.GetNotifier()
-			if notifier != nil {
+			notifier, err := services.GetNotifier(config_obj)
+			if err == nil {
 				notifier.NotifyListener(
 					config_obj, arg.ClientId, "collect_client")
 			}

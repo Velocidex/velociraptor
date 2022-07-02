@@ -413,7 +413,12 @@ func (self *Launcher) EnsureToolsDeclared(
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	for _, tool := range artifact.Tools {
-		_, err := services.GetInventory().GetToolInfo(ctx, config_obj, tool.Name)
+		inventory, err := services.GetInventory(config_obj)
+		if err != nil {
+			return err
+		}
+
+		_, err = inventory.GetToolInfo(ctx, config_obj, tool.Name)
 		if err != nil {
 			// Add tool info if it is not known but do not
 			// override existing tool. This allows the
@@ -421,7 +426,7 @@ func (self *Launcher) EnsureToolsDeclared(
 			// itself.
 			logger.Info("Adding tool %v from artifact %v",
 				tool.Name, artifact.Name)
-			err = services.GetInventory().AddTool(
+			err = inventory.AddTool(
 				config_obj, tool,
 				services.ToolOptions{
 					Upgrade: true,
@@ -438,9 +443,9 @@ func AddToolDependency(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	tool string, vql_collector_args *actions_proto.VQLCollectorArgs) error {
-	inventory := services.GetInventory()
-	if inventory == nil {
-		return errors.New("Inventory server not configured")
+	inventory, err := services.GetInventory(config_obj)
+	if err != nil {
+		return err
 	}
 
 	tool_info, err := inventory.GetToolInfo(ctx, config_obj, tool)
@@ -534,7 +539,7 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 		return "", err
 	}
 
-	client_manager, err := services.GetClientInfoManager()
+	client_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return "", err
 	}
@@ -665,23 +670,10 @@ func NewFlowId(client_id string) string {
 	return constants.FLOW_PREFIX + result
 }
 
-func StartLauncherService(
+func NewLauncherService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config) (services.Launcher, error) {
 
-	services.RegisterLauncher(&Launcher{})
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		defer services.RegisterLauncher(nil)
-
-		<-ctx.Done()
-
-		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-		logger.Info("Exiting Launcher Service")
-	}()
-
-	return nil
+	return &Launcher{}, nil
 }

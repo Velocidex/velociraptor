@@ -43,8 +43,6 @@ package services
 
 import (
 	"context"
-	"errors"
-	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -55,33 +53,19 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
-var (
-	launcher_mu sync.Mutex
-	g_launcher  Launcher = nil
-)
-
 type DeleteFlowResponse struct {
 	Type  string            `json:"type"`
 	Data  *ordereddict.Dict `json:"data"`
 	Error string            `json:"error"`
 }
 
-func GetLauncher() (Launcher, error) {
-	launcher_mu.Lock()
-	defer launcher_mu.Unlock()
-
-	if g_launcher == nil {
-		return nil, errors.New("Launcher not ready")
+func GetLauncher(config_obj *config_proto.Config) (Launcher, error) {
+	org_manager, err := GetOrgManager()
+	if err != nil {
+		return nil, err
 	}
 
-	return g_launcher, nil
-}
-
-func RegisterLauncher(l Launcher) {
-	launcher_mu.Lock()
-	defer launcher_mu.Unlock()
-
-	g_launcher = l
+	return org_manager.Services(config_obj.OrgId).Launcher()
 }
 
 type CompilerOptions struct {

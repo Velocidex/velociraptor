@@ -23,6 +23,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -173,13 +174,14 @@ func decryptSymmetric(
 }
 
 func (self *CryptoManager) getAuthState(
+	config_obj *config_proto.Config,
 	cipher_metadata *crypto_proto.CipherMetadata,
 	serialized_cipher []byte,
 	cipher_properties *crypto_proto.CipherProperties) (bool, error) {
 
 	// Verify the cipher signature using the certificate known for
 	// the sender.
-	public_key, pres := self.Resolver.GetPublicKey(cipher_metadata.Source)
+	public_key, pres := self.Resolver.GetPublicKey(config_obj, cipher_metadata.Source)
 	if !pres {
 		// We dont know who we are talking to so we can not
 		// trust them.
@@ -225,9 +227,17 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, er
 			return nil, errors.New("HMAC did not verify")
 		}
 
-		return self.extractMessageInfo(
-			cipher.cipher_properties, communications,
-			true /* auth_state */)
+		msg_info, _, err := self.extractMessageInfo(
+			cipher.cipher_properties, communications)
+		if err != nil {
+			return nil, err
+		}
+
+		// Cipher was cached so we trust it
+		msg_info.Authenticated = true
+
+		return msg_info, nil
+
 	}
 
 	// Decrypt the CipherProperties
@@ -269,22 +279,24 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, er
 		return nil, errors.WithStack(err)
 	}
 
+	msg_info, org_config_obj, err := self.extractMessageInfo(
+		cipher_properties, communications)
+	if err != nil {
+		return nil, err
+	}
+
 	// Verify the cipher metadata signature.
-	auth_state, err := self.getAuthState(cipher_metadata,
-		serialized_cipher,
-		cipher_properties)
+	cipher_metadata.Source = utils.ClientIdFromSourceAndOrg(
+		cipher_metadata.Source, msg_info.OrgId)
+
+	msg_info.Authenticated, err = self.getAuthState(
+		org_config_obj, cipher_metadata, serialized_cipher, cipher_properties)
 
 	// If we could verify the authentication state and it
 	// was authenticated, we are now allowed to cache the
 	// cipher in the input cache. The next packet from
 	// this session will NOT be verified.
-	if err == nil && auth_state {
-		msg_info, err := self.extractMessageInfo(
-			cipher_properties, communications, auth_state)
-		if err != nil {
-			return nil, err
-		}
-
+	if err == nil && msg_info.Authenticated {
 		self.cipher_lru.Set(
 			msg_info.Source,
 			&_Cipher{
@@ -293,18 +305,16 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, er
 			},
 			nil, /* outbound_cipher */
 		)
-		return msg_info, nil
 	}
-
-	return self.extractMessageInfo(cipher_properties, communications, auth_state)
+	return msg_info, nil
 }
 
 // Decrypt the message from the communications using the cipher
 // properties.
 func (self *CryptoManager) extractMessageInfo(
 	cipher_properties *crypto_proto.CipherProperties,
-	communications *crypto_proto.ClientCommunication,
-	auth_state bool) (*vcrypto.MessageInfo, error) {
+	communications *crypto_proto.ClientCommunication) (
+	*vcrypto.MessageInfo, *config_proto.Config, error) {
 
 	// Decrypt the cipher metadata.
 	plain, err := decryptSymmetric(
@@ -312,30 +322,41 @@ func (self *CryptoManager) extractMessageInfo(
 		communications.Encrypted,
 		communications.PacketIv)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// Unpack the message list.
 	packed_message_list := &crypto_proto.PackedMessageList{}
 	err = proto.Unmarshal(plain, packed_message_list)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, nil, errors.WithStack(err)
 	}
 
-	// Check the nonce is correct.
-	if self.config.Client == nil ||
-		packed_message_list.Nonce != self.config.Client.Nonce {
-		return nil, errors.New(
+	// Get the org id from the nonce
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	org_id, err := org_manager.OrgIdByNonce(packed_message_list.Nonce)
+	if err != nil {
+		return nil, nil, errors.New(
 			"Client Nonce is not valid - rejecting message.")
+	}
+
+	org_config_obj, err := org_manager.GetOrgConfig(org_id)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	return &vcrypto.MessageInfo{
 		// Hold onto the compressed MessageList buffers.
 		RawCompressed: packed_message_list.MessageList,
-		Authenticated: auth_state,
-		Source:        packed_message_list.Source,
-		Compression:   packed_message_list.Compression,
-	}, nil
+		Source: utils.ClientIdFromSourceAndOrg(
+			packed_message_list.Source, org_id),
+		Compression: packed_message_list.Compression,
+		OrgId:       org_id,
+	}, org_config_obj, nil
 }
 
 // Serialize, compress and encrypt a single message list proto. NOTE:
@@ -381,8 +402,19 @@ func (self *CryptoManager) Encrypt(
 	// operations for all messages in the session.
 	output_cipher, ok := self.cipher_lru.GetOutboundCipher(destination)
 	if !ok {
+		org_id := utils.OrgIdFromClientId(destination)
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return nil, err
+		}
+
+		org_config_obj, err := org_manager.GetOrgConfig(org_id)
+		if err != nil {
+			return nil, err
+		}
+
 		// Build a new cipher
-		public_key, pres := self.Resolver.GetPublicKey(destination)
+		public_key, pres := self.Resolver.GetPublicKey(org_config_obj, destination)
 		if !pres {
 			return nil, errors.New(fmt.Sprintf(
 				"No certificate found for destination %v",

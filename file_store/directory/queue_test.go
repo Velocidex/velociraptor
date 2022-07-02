@@ -74,7 +74,7 @@ func (self *TestSuite) TearDownTest() {
 }
 
 func (self *TestSuite) TestQueueManager() {
-	repo_manager, err := services.GetRepositoryManager()
+	repo_manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	repository, err := repo_manager.GetGlobalRepository(self.ConfigObj)
@@ -150,7 +150,7 @@ func (self *TestSuite) TestQueueManager() {
 }
 
 func (self *TestSuite) TestQueueManagerJsonl() {
-	repo_manager, err := services.GetRepositoryManager()
+	repo_manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	repository, err := repo_manager.GetGlobalRepository(self.ConfigObj)

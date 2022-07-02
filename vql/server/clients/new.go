@@ -43,7 +43,13 @@ func (self NewClientFunction) Call(ctx context.Context,
 		return &vfilter.Null{}
 	}
 
-	client_info_manager, err := services.GetClientInfoManager()
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		scope.Log("Command can only run on the server")
+		return &vfilter.Null{}
+	}
+
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		scope.Log("client_create: %s", err)
 		return &vfilter.Null{}

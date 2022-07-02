@@ -93,11 +93,12 @@ func (self *contextManager) Modify(cb func(context *flows_proto.ArtifactCollecto
 	cb(self.context)
 }
 
-func (self *contextManager) Load(context *flows_proto.ArtifactCollectorContext) error {
+func (self *contextManager) Load(
+	context *flows_proto.ArtifactCollectorContext) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.config_obj)
 	if err != nil {
 		return err
 	}
@@ -122,7 +123,7 @@ func (self *contextManager) Save() error {
 	defer self.mu.Unlock()
 
 	// Ignore collections which are not running.
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.config_obj)
 	if err != nil {
 		return err
 	}

@@ -180,7 +180,7 @@ func (self CollectPlugin) Call(
 			acl_manager = vql_subsystem.NullACLManager{}
 		}
 
-		launcher, err := services.GetLauncher()
+		launcher, err := services.GetLauncher(config_obj)
 		if err != nil {
 			scope.Log("collect: %v", err)
 			return
@@ -198,7 +198,7 @@ func (self CollectPlugin) Call(
 		for _, vql_request := range vql_requests {
 
 			// Make a new scope for each artifact.
-			manager, err := services.GetRepositoryManager()
+			manager, err := services.GetRepositoryManager(config_obj)
 			if err != nil {
 				scope.Log("collect: %v", err)
 				return
@@ -351,7 +351,7 @@ func getRepository(
 	scope vfilter.Scope,
 	config_obj *config_proto.Config,
 	extra_artifacts vfilter.Any) (services.Repository, error) {
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil, err
 	}

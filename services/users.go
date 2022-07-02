@@ -29,28 +29,18 @@ var (
 )
 
 type UserManager interface {
-	SetUser(config_obj *config_proto.Config,
-		user_record *api_proto.VelociraptorUser) error
-
-	ListUsers(config_obj *config_proto.Config) ([]*api_proto.VelociraptorUser, error)
-	GetUserFromContext(config_obj *config_proto.Config, ctx context.Context) (
-		*api_proto.VelociraptorUser, error)
-
-	GetUser(config_obj *config_proto.Config, username string) (
-		*api_proto.VelociraptorUser, error)
-
-	GetUserWithHashes(config_obj *config_proto.Config, username string) (
-		*api_proto.VelociraptorUser, error)
-
-	SetUserOptions(config_obj *config_proto.Config,
-		username string,
+	SetUser(user_record *api_proto.VelociraptorUser) error
+	ListUsers() ([]*api_proto.VelociraptorUser, error)
+	GetUserFromContext(ctx context.Context) (
+		*api_proto.VelociraptorUser, *config_proto.Config, error)
+	GetUser(username string) (*api_proto.VelociraptorUser, error)
+	GetUserWithHashes(username string) (*api_proto.VelociraptorUser, error)
+	SetUserOptions(username string,
 		options *api_proto.SetGUIOptionsRequest) error
+	GetUserOptions(username string) (*api_proto.SetGUIOptionsRequest, error)
 
-	GetUserOptions(config_obj *config_proto.Config, username string) (
-		*api_proto.SetGUIOptionsRequest, error)
-
-	GetFavorites(
-		config_obj *config_proto.Config,
+	// Favorites are stored per org.
+	GetFavorites(config_obj *config_proto.Config,
 		principal, fav_type string) (*api_proto.Favorites, error)
 }
 

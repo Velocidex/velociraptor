@@ -26,7 +26,7 @@ func RunQuery(
 			config_obj, &logging.FrontendComponent),
 		Env: env,
 	}
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil, err
 	}

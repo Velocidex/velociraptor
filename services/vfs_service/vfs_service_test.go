@@ -1,4 +1,4 @@
-package vfs_service
+package vfs_service_test
 
 import (
 	"path"
@@ -7,7 +7,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -38,10 +37,11 @@ type VFSServiceTestSuite struct {
 }
 
 func (self *VFSServiceTestSuite) SetupTest() {
-	self.TestSuite.SetupTest()
-
-	require.NoError(self.T(), self.Sm.Start(StartVFSService))
+	self.ConfigObj = self.TestSuite.LoadConfig()
+	self.ConfigObj.Frontend.ServerServices.VfsService = true
 	self.LoadArtifacts(definitions)
+
+	self.TestSuite.SetupTest()
 
 	self.client_id = "C.12312"
 	self.flow_id = "F.1232"
@@ -52,7 +52,7 @@ func (self *VFSServiceTestSuite) EmulateCollection(
 
 	// Emulate a Generic.Client.Info collection: First write the
 	// result set, then write the collection context.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	journal.PushRowsToArtifact(self.ConfigObj, rows,
@@ -100,7 +100,7 @@ func (self *VFSServiceTestSuite) TestVFSListDirectory() {
 }
 
 func (self *VFSServiceTestSuite) TestVFSListDirectoryEmpty() {
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	// Emulate a flow completion message coming from the flow processor.

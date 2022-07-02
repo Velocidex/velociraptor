@@ -243,8 +243,8 @@ func (self *ClientInfoManager) GetStats(client_id string) (*services.Stats, erro
 // Checks the notification service for all currently connected clients
 // so we may send the most up to date Ping information possible.
 func (self *ClientInfoManager) UpdateMostRecentPing() {
-	notifier := services.GetNotifier()
-	if notifier == nil {
+	notifier, err := services.GetNotifier(self.config_obj)
+	if err != nil {
 		return
 	}
 	now := uint64(time.Now().UnixNano() / 1000)
@@ -275,7 +275,8 @@ func (self *ClientInfoManager) Start(
 	wg *sync.WaitGroup) error {
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> Client Info service.")
+	logger.Info("<green>Starting</> Client Info service for %v.",
+		services.GetOrgName(config_obj))
 
 	// Start syncing the mutation_manager
 	wg.Add(1)
@@ -350,13 +351,19 @@ func (self *ClientInfoManager) MutationSync(
 		sync_time = time.Duration(config_obj.Frontend.Resources.ClientInfoSyncTime) * time.Millisecond
 	}
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Info("MutationSync: %v.", err)
 		return
 	}
 
-	frontend_manager := services.GetFrontendManager()
-
+	frontend_manager, err := services.GetFrontendManager(config_obj)
+	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Info("MutationSync: %v.", err)
+		return
+	}
 	for {
 		select {
 		case <-ctx.Done():
@@ -680,17 +687,6 @@ func NewClientInfoManager(config_obj *config_proto.Config) *ClientInfoManager {
 	})
 
 	return service
-}
-
-func StartClientInfoService(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
-
-	service := NewClientInfoManager(config_obj)
-	services.RegisterClientInfoManager(service)
-
-	return service.Start(ctx, config_obj, wg)
 }
 
 func getDict(item *ordereddict.Dict, name string) (*ordereddict.Dict, bool) {

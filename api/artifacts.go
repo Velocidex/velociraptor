@@ -72,7 +72,7 @@ func getArtifactFile(
 	config_obj *config_proto.Config,
 	name string) (string, error) {
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return "", err
 	}
@@ -114,7 +114,7 @@ func setArtifactFile(config_obj *config_proto.Config, principal string,
 	required_prefix string) (
 	*artifacts_proto.Artifact, error) {
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -158,7 +158,7 @@ func getReportArtifacts(
 		number_of_results = 100
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +241,7 @@ func searchArtifact(
 		return true
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -307,14 +307,14 @@ func (self *ApiServer) LoadArtifactPack(
 	*api_proto.LoadArtifactPackResponse, error) {
 
 	users_manager := services.GetUserManager()
-	user_record, err := users_manager.GetUserFromContext(self.config, ctx)
+	user_record, org_config_obj, err := users_manager.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
 	permissions := acls.SERVER_ARTIFACT_WRITER
-	perm, err := acls.CheckAccess(self.config, user_record.Name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_record.Name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to upload artifact packs.")
@@ -355,9 +355,9 @@ func (self *ApiServer) LoadArtifactPack(
 			}
 
 			definition, err := setArtifactFile(
-				self.config, user_name, request, prefix)
+				org_config_obj, user_name, request, prefix)
 			if err == nil {
-				logging.GetLogger(self.config, &logging.Audit).
+				logging.GetLogger(org_config_obj, &logging.Audit).
 					WithFields(logrus.Fields{
 						"user":     user_name,
 						"artifact": definition.Name,

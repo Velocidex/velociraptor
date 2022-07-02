@@ -157,8 +157,14 @@ func (self *JournalService) PushRowsToArtifactAsync(
 	config_obj *config_proto.Config, row *ordereddict.Dict,
 	artifact string) {
 
-	go self.PushRowsToArtifact(config_obj, []*ordereddict.Dict{row},
-		artifact, "server", "")
+	go func() {
+		err := self.PushRowsToArtifact(config_obj, []*ordereddict.Dict{row},
+			artifact, "server", "")
+		if err != nil {
+			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+			logger.Error("<red>PushRowsToArtifactAsync</> %v", err)
+		}
+	}()
 }
 
 func (self *JournalService) Broadcast(
@@ -236,19 +242,19 @@ func (self *JournalService) PushRowsToArtifact(
 
 func (self *JournalService) Start(config_obj *config_proto.Config) error {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> Journal service.")
+	logger.Info("<green>Starting</> Journal service for %v.",
+		services.GetOrgName(config_obj))
 
 	return nil
 }
 
-func StartJournalService(
-	ctx context.Context, wg *sync.WaitGroup, config_obj *config_proto.Config) error {
-
+func NewJournalService(
+	ctx context.Context, wg *sync.WaitGroup, config_obj *config_proto.Config) (services.JournalService, error) {
 	// Are we running on a minion frontend? If so we try to start
 	// our replication service.
 	if !services.IsMaster(config_obj) {
 		_, err := NewReplicationService(ctx, wg, config_obj)
-		return err
+		return nil, err
 	}
 
 	// It is valid to have a journal service with no configured datastore:
@@ -264,15 +270,5 @@ func StartJournalService(
 		service.qm = qm
 	}
 
-	services.RegisterJournal(service)
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		defer services.RegisterJournal(nil)
-
-		<-ctx.Done()
-	}()
-
-	return service.Start(config_obj)
+	return service, service.Start(config_obj)
 }

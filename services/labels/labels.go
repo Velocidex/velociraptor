@@ -173,7 +173,7 @@ func (self *Labeler) notifyClient(
 	config_obj *config_proto.Config,
 	client_id, new_label, operation string) error {
 	// Notify other frontends about this change.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -230,7 +230,7 @@ func (self *Labeler) SetClientLabel(
 
 	// Also adjust the index so client searches work. If there is no
 	// indexing services it is not an error.
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err == nil {
 		return indexer.SetIndex(client_id, "label:"+new_label)
 	}
@@ -283,7 +283,7 @@ func (self *Labeler) RemoveClientLabel(
 	}
 
 	// Also adjust the index.
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
 		return err
 	}
@@ -339,7 +339,7 @@ func (self *Labeler) Start(ctx context.Context,
 		metricLabelLRU.Dec()
 	})
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
@@ -351,7 +351,6 @@ func (self *Labeler) Start(ctx context.Context,
 	go func() {
 		defer wg.Done()
 		defer cancel()
-		defer services.RegisterLabeler(nil)
 
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("<green>Starting</> Label service.")
@@ -376,25 +375,17 @@ func (self *Labeler) Start(ctx context.Context,
 	return nil
 }
 
-func StartLabelService(
+func NewLabelerService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config) (services.Labeler, error) {
 
 	if config_obj.Frontend == nil {
-		services.RegisterLabeler(Dummy{})
-		return nil
+		return Dummy{}, nil
 	}
 
 	labeler := &Labeler{
 		Clock: &utils.RealClock{},
 	}
-	err := labeler.Start(ctx, config_obj, wg)
-	if err != nil {
-		return err
-	}
-
-	services.RegisterLabeler(labeler)
-
-	return nil
+	return labeler, labeler.Start(ctx, config_obj, wg)
 }

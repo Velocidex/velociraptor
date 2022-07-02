@@ -371,7 +371,7 @@ class VeloFileTree extends Component {
 
         // When clicking the tree the user navigates to the directory
         // - file pane is unselected.
-        this.props.history.push(EncodePathInURL("/vfs/" + client_id + path +"/"));
+        this.props.history.push("/vfs/" + client_id + EncodePathInURL(path +"/"));
 
         node.known = false;
         this.updateComponent(node, node.path, []);

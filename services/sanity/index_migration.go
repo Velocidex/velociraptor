@@ -33,7 +33,7 @@ func maybeMigrateClientIndex(
 
 	count := 0
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
 		return err
 	}

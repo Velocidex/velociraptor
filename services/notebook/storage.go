@@ -136,7 +136,7 @@ func (self *NotebookStoreImpl) UpdateShareIndex(
 	}
 
 	users := append([]string{notebook.Creator}, notebook.Collaborators...)
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(self.config_obj)
 	if err != nil {
 		return err
 	}

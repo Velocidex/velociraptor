@@ -9,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -29,6 +30,8 @@ var (
 
 	grant_command = acl_command.Command(
 		"grant", "Grant a principal  a policy.")
+
+	grant_command_org = grant_command.Flag("org", "OrgID to grant").String()
 
 	grant_command_principal = grant_command.Arg(
 		"principal", "Name of principal (User or cert) to grant.").
@@ -62,11 +65,21 @@ func doGrant() error {
 	}
 	defer sm.Close()
 
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return err
+	}
+
+	org_config_obj, err := org_manager.GetOrgConfig(*grant_command_org)
+	if err != nil {
+		return err
+	}
+
 	principal := *grant_command_principal
 
-	existing_policy, err := acls.GetPolicy(config_obj, principal)
+	existing_policy, err := acls.GetPolicy(org_config_obj, principal)
 	if err != nil && err != io.EOF {
-		return fmt.Errorf("Unable to load existing policy for %v", principal)
+		existing_policy = &acl_proto.ApiClientACL{}
 	}
 
 	new_policy := &acl_proto.ApiClientACL{}
@@ -109,7 +122,7 @@ func doGrant() error {
 		}
 	}
 
-	return acls.SetPolicy(config_obj, principal, new_policy)
+	return acls.SetPolicy(org_config_obj, principal, new_policy)
 }
 
 func doShow() error {

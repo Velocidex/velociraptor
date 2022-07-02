@@ -23,21 +23,8 @@ import (
 )
 
 var (
-	mu   sync.Mutex
-	pool *QueuePool
+	mu sync.Mutex
 )
-
-func GlobalQueuePool(config_obj *config_proto.Config) *QueuePool {
-	mu.Lock()
-	defer mu.Unlock()
-
-	if pool != nil {
-		return pool
-	}
-
-	pool = NewQueuePool(config_obj)
-	return pool
-}
 
 // A queue pool is an in-process listener for events.
 type Listener struct {
@@ -176,6 +163,7 @@ func NewQueuePool(config_obj *config_proto.Config) *QueuePool {
 
 type MemoryQueueManager struct {
 	FileStore  api.FileStore
+	pool       *QueuePool
 	config_obj *config_proto.Config
 	Clock      utils.Clock
 }
@@ -189,11 +177,10 @@ func (self *MemoryQueueManager) Debug() {
 
 func (self *MemoryQueueManager) Broadcast(
 	path_manager api.PathManager, dict_rows []*ordereddict.Dict) {
-	pool := GlobalQueuePool(self.config_obj)
 	for _, row := range dict_rows {
 		// Set a timestamp per event for easier querying.
 		row.Set("_ts", int(self.Clock.Now().Unix()))
-		pool.Broadcast(path_manager.GetQueueName(), row)
+		self.pool.Broadcast(path_manager.GetQueueName(), row)
 	}
 }
 
@@ -211,9 +198,7 @@ func (self *MemoryQueueManager) PushEventJsonl(
 	jsonl = json.AppendJsonlItem(jsonl, "_ts", int(self.Clock.Now().Unix()))
 	rs_writer.WriteJSONL(jsonl, 0)
 
-	GlobalQueuePool(self.config_obj).BroadcastJsonl(
-		path_manager.GetQueueName(), jsonl)
-
+	self.pool.BroadcastJsonl(path_manager.GetQueueName(), jsonl)
 	return nil
 }
 
@@ -232,26 +217,26 @@ func (self *MemoryQueueManager) PushEventRows(
 		// Set a timestamp per event for easier querying.
 		row.Set("_ts", int(self.Clock.Now().Unix()))
 		rs_writer.Write(row)
-		GlobalQueuePool(self.config_obj).Broadcast(
-			path_manager.GetQueueName(), row)
+		self.pool.Broadcast(path_manager.GetQueueName(), row)
 	}
 	return nil
 }
 
 func (self *MemoryQueueManager) GetWatchers() []string {
-	return GlobalQueuePool(self.config_obj).GetWatchers()
+	return self.pool.GetWatchers()
 }
 
 func (self *MemoryQueueManager) Watch(
 	ctx context.Context, queue_name string,
 	queue_options *api.QueueOptions) (output <-chan *ordereddict.Dict, cancel func()) {
-	return GlobalQueuePool(self.config_obj).Register(queue_name)
+	return self.pool.Register(queue_name)
 }
 
 func NewMemoryQueueManager(config_obj *config_proto.Config,
 	file_store api.FileStore) api.QueueManager {
 	return &MemoryQueueManager{
 		FileStore:  file_store,
+		pool:       NewQueuePool(config_obj),
 		config_obj: config_obj,
 		Clock:      utils.RealClock{},
 	}
