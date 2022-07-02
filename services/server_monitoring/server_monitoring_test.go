@@ -1,4 +1,4 @@
-package server_monitoring
+package server_monitoring_test
 
 import (
 	"context"
@@ -23,6 +23,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/server_monitoring"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting"
@@ -74,29 +75,30 @@ type ServerMonitoringTestSuite struct {
 }
 
 func (self *ServerMonitoringTestSuite) SetupTest() {
-	self.TestSuite.SetupTest()
+	self.ConfigObj = self.TestSuite.LoadConfig()
+	self.ConfigObj.Frontend.ServerServices.MonitoringService = true
 
 	self.LoadArtifacts(monitoringArtifacts)
-
-	assert.NoError(self.T(), self.Sm.Start(StartServerMonitoringService))
+	self.TestSuite.SetupTest()
 }
 
 func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 	db := test_utils.GetMemoryDataStore(self.T(), self.ConfigObj)
 
-	event_table := services.GetServerEventManager().(*EventTable)
-	event_table.SetClock(&utils.MockClock{MockNow: time.Unix(1602103388, 0)})
+	event_table, err := services.GetServerEventManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+	event_table.(*server_monitoring.EventTable).SetClock(&utils.MockClock{MockNow: time.Unix(1602103388, 0)})
 
 	// Initially Server.Monitor.Health should be created if no
 	// other config exists.
 	configuration := &flows_proto.ArtifactCollectorArgs{}
-	err := db.GetSubject(self.ConfigObj, paths.ServerMonitoringFlowURN, configuration)
+	err = db.GetSubject(self.ConfigObj, paths.ServerMonitoringFlowURN, configuration)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), 1, len(configuration.Artifacts))
 	assert.Equal(self.T(), "Server.Monitor.Health", configuration.Artifacts[0])
 
 	// Install the two event artifacts.
-	err = services.GetServerEventManager().Update(
+	err = event_table.Update(
 		self.ConfigObj, "",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"Server.Clock", "Server.Clock2"},
@@ -121,7 +123,7 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 	assert.Equal(self.T(), "Server.Clock", configuration.Artifacts[0])
 
 	// Wait here until all the queries are done.
-	event_table.wg.Wait()
+	event_table.(*server_monitoring.EventTable).Wait()
 
 	// Expected Server.Clock rows:
 	// {"Foo":"Y","Foo2":"DefaultFoo2","BoolFoo":true,"_ts":1602103388}
@@ -166,10 +168,11 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 }
 
 func (self *ServerMonitoringTestSuite) TestEmptyTable() {
-	event_table := services.GetServerEventManager().(*EventTable)
-	event_table.SetClock(&utils.MockClock{MockNow: time.Unix(1602103388, 0)})
+	event_table, err := services.GetServerEventManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+	event_table.(*server_monitoring.EventTable).SetClock(&utils.MockClock{MockNow: time.Unix(1602103388, 0)})
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	repository, err := manager.GetGlobalRepository(self.ConfigObj)
@@ -184,7 +187,7 @@ sources:
 	assert.NoError(self.T(), err)
 
 	// Install a table with a sleep artifact.
-	err = services.GetServerEventManager().Update(
+	err = event_table.Update(
 		self.ConfigObj, "",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"Sleep"},
@@ -194,11 +197,11 @@ sources:
 
 	// Wait until the query is installed.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		return len(event_table.Tracer().Dump()) > 0
+		return len(event_table.(*server_monitoring.EventTable).Tracer().Dump()) > 0
 	})
 
 	// Now install an empty table - all queries should quit.
-	err = services.GetServerEventManager().Update(
+	err = event_table.Update(
 		self.ConfigObj, "",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{},
@@ -208,7 +211,7 @@ sources:
 
 	// Wait until all queries are done.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		return len(event_table.Tracer().Dump()) == 0
+		return len(event_table.(*server_monitoring.EventTable).Tracer().Dump()) == 0
 	})
 }
 
@@ -239,7 +242,10 @@ func (self *ServerMonitoringTestSuite) TestQueriesAreCancelled() {
 		})
 
 	// Install a table with a an artifact that uses the plugin.
-	err := services.GetServerEventManager().Update(
+	event_table, err := services.GetServerEventManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	err = event_table.Update(
 		self.ConfigObj, "",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"WaitForCancel"},
@@ -253,7 +259,7 @@ func (self *ServerMonitoringTestSuite) TestQueriesAreCancelled() {
 	})
 
 	// Now install an empty table - all queries should quit.
-	err = services.GetServerEventManager().Update(
+	err = event_table.Update(
 		self.ConfigObj, "",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{},
@@ -273,10 +279,10 @@ func (self *ServerMonitoringTestSuite) TestUpdateWhenArtifactModified() {
 
 	defer os.RemoveAll(tempdir)
 
-	event_table := services.GetServerEventManager().(*EventTable)
-	event_table.SetClock(&utils.MockClock{MockNow: time.Unix(1602103388, 0)})
+	event_table, err := services.GetServerEventManager(self.ConfigObj)
+	event_table.(*server_monitoring.EventTable).SetClock(&utils.MockClock{MockNow: time.Unix(1602103388, 0)})
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	repository, err := manager.GetGlobalRepository(self.ConfigObj)
@@ -297,7 +303,7 @@ sources:
 
 	// Install a table with an initial artifact
 	filename := filepath.Join(tempdir, "testfile1.txt")
-	err = services.GetServerEventManager().Update(
+	err = event_table.Update(
 		self.ConfigObj, "VelociraptorServer",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},

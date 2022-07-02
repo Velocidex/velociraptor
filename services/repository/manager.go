@@ -317,6 +317,9 @@ func LoadArtifactsFromConfig(
 	// Load some artifacts via the autoexec mechanism.
 	if config_obj.Autoexec != nil {
 		for _, def := range config_obj.Autoexec.ArtifactDefinitions {
+
+			// Artifacts loaded from the config file are considered built in.
+			def.BuiltIn = true
 			_, err := global_repository.LoadProto(def, true)
 			if err != nil {
 				return err

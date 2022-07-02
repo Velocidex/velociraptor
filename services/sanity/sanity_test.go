@@ -7,7 +7,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -18,7 +17,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
-	"www.velocidex.com/golang/velociraptor/services/notebook"
 	"www.velocidex.com/golang/velociraptor/services/sanity"
 	"www.velocidex.com/golang/velociraptor/utils"
 
@@ -32,13 +30,7 @@ type ServicesTestSuite struct {
 }
 
 func (self *ServicesTestSuite) SetupTest() {
-	self.TestSuite.SetupTest()
-
-	require.NoError(self.T(), self.Sm.Start(notebook.StartNotebookManagerService))
-}
-
-// Check tool upgrade.
-func (self *ServicesTestSuite) TestUpgradeTools() {
+	self.ConfigObj = self.TestSuite.LoadConfig()
 	self.LoadArtifacts([]string{`
 name: TestArtifact
 tools:
@@ -49,17 +41,25 @@ tools:
   url: https://www.example2.com/
 
 `})
+	self.ConfigObj.Frontend.ServerServices.NotebookService = true
+	self.ConfigObj.Frontend.ServerServices.UserManager = true
+
+	self.TestSuite.SetupTest()
+}
+
+// Check tool upgrade.
+func (self *ServicesTestSuite) TestUpgradeTools() {
 
 	// Admin forces Tool1 to non-default
-	inventory := services.GetInventory().(*inventory.InventoryService)
-	inventory.Clock = &utils.MockClock{MockNow: time.Unix(100, 0)}
-	inventory.ClearForTests()
+	inventory_service, err := services.GetInventory(self.ConfigObj)
+	inventory_service.(*inventory.InventoryService).Clock = &utils.MockClock{MockNow: time.Unix(100, 0)}
+	inventory_service.(*inventory.InventoryService).ClearForTests()
 
 	tool_definition := &artifacts_proto.Tool{
 		Name: "Tool1",
 		Url:  "https://www.company.com",
 	}
-	err := inventory.AddTool(self.ConfigObj, tool_definition,
+	err = inventory_service.AddTool(self.ConfigObj, tool_definition,
 		services.ToolOptions{
 			// This flag signifies that an admin explicitly set
 			// this tool. We never overwrite an admin's setting.
@@ -67,7 +67,8 @@ tools:
 		})
 	assert.NoError(self.T(), err)
 
-	require.NoError(self.T(), self.Sm.Start(sanity.StartSanityCheckService))
+	err = sanity.NewSanityCheckService(self.Ctx, self.Wg, self.ConfigObj)
+	assert.NoError(self.T(), err)
 
 	db := test_utils.GetMemoryDataStore(self.T(), self.ConfigObj)
 	inventory_config := &artifacts_proto.ThirdParty{}
@@ -94,13 +95,15 @@ func (self *ServicesTestSuite) TestCreateUser() {
 			PasswordSalt: "0f61ad0fd6391513021242efb9ac780245cc21527fa3f9c5e552d47223e383a2",
 		},
 	}
-	require.NoError(self.T(), self.Sm.Start(sanity.StartSanityCheckService))
+
+	err := sanity.NewSanityCheckService(self.Ctx, self.Wg, self.ConfigObj)
+	assert.NoError(self.T(), err)
 
 	db := test_utils.GetMemoryDataStore(self.T(), self.ConfigObj)
 
 	user1 := &api_proto.VelociraptorUser{}
 	user_path_manager := paths.NewUserPathManager("User1")
-	err := db.GetSubject(self.ConfigObj, user_path_manager.Path(), user1)
+	err = db.GetSubject(self.ConfigObj, user_path_manager.Path(), user1)
 	assert.NoError(self.T(), err)
 
 	acl_obj := &acl_proto.ApiClientACL{}

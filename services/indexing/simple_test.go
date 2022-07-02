@@ -9,7 +9,7 @@ import (
 func (self *TestSuite) TestSimpleIndex() {
 	client_id := "C.1234"
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	err = indexer.SetSimpleIndex(self.ConfigObj,

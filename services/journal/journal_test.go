@@ -41,8 +41,6 @@ func (self *JournalTestSuite) SetupTest() {
 	self.ConfigObj.Datastore.FilestoreDirectory = dir
 	self.ConfigObj.Datastore.Location = dir
 
-	self.TestSuite.SetupTest()
-
 	self.LoadArtifacts([]string{`
 name: System.Flow.Completion
 type: CLIENT_EVENT
@@ -50,6 +48,8 @@ type: CLIENT_EVENT
 name: System.Hunt.Participation
 type: SERVER_EVENT
 `})
+
+	self.TestSuite.SetupTest()
 }
 
 func (self *JournalTestSuite) TearDownTest() {
@@ -59,7 +59,7 @@ func (self *JournalTestSuite) TearDownTest() {
 }
 
 func (self *JournalTestSuite) TestJournalWriting() {
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	clock := &utils.MockClock{}
@@ -111,7 +111,7 @@ func (self *JournalTestSuite) TestJournalWriting() {
 }
 
 func (self *JournalTestSuite) TestJournalJsonlWriting() {
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	clock := &utils.MockClock{}

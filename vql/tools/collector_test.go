@@ -134,7 +134,7 @@ func (self *TestSuite) TestSimpleCollection() {
 		repository, scope, simpleCollectorArgs)
 	assert.NoError(self.T(), err)
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	acl_manager := vql_subsystem.NullACLManager{}
@@ -169,7 +169,7 @@ func (self *TestSuite) TestCollectionWithArtifacts() {
 		Env:        ordereddict.NewDict(),
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	scope := manager.BuildScope(builder)
@@ -215,7 +215,7 @@ func (self *TestSuite) TestCollectionWithTypes() {
 		Env:        ordereddict.NewDict(),
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	scope := manager.BuildScope(builder)
@@ -255,7 +255,7 @@ func (self *TestSuite) TestCollectionWithUpload() {
 		Env:        ordereddict.NewDict(),
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	scope := manager.BuildScope(builder)

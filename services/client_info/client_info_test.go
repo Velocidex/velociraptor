@@ -31,6 +31,12 @@ func (self *ClientInfoTestSuite) SetupTest() {
 	// For this test make the master write and sync quickly
 	self.ConfigObj.Frontend.Resources.ClientInfoSyncTime = 1
 	self.ConfigObj.Frontend.Resources.ClientInfoWriteTime = 1
+
+	self.LoadArtifacts([]string{`
+name: Server.Internal.ClientPing
+type: INTERNAL
+`})
+
 	self.TestSuite.SetupTest()
 
 	// Create a client in the datastore
@@ -49,11 +55,6 @@ func (self *ClientInfoTestSuite) SetupTest() {
 	self.clock = &utils.MockClock{
 		MockNow: time.Unix(100, 0),
 	}
-
-	self.LoadArtifacts([]string{`
-name: Server.Internal.ClientPing
-type: INTERNAL
-`})
 }
 
 func (self *ClientInfoTestSuite) TestClientInfo() {

@@ -18,7 +18,7 @@ func (self *NotebookManager) NewNotebookCell(
 	in *api_proto.NotebookCellRequest, username string) (
 	*api_proto.NotebookMetadata, error) {
 
-	notebook, err := self.store.GetNotebook(in.NotebookId)
+	notebook, err := self.Store.GetNotebook(in.NotebookId)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +54,7 @@ func (self *NotebookManager) NewNotebookCell(
 	}
 
 	notebook.CellMetadata = new_cell_md
-	err = self.store.SetNotebook(notebook)
+	err = self.Store.SetNotebook(notebook)
 	if err != nil {
 		return nil, err
 	}

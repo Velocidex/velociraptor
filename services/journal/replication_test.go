@@ -11,23 +11,15 @@ import (
 	"github.com/alecthomas/assert"
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/types/known/emptypb"
 	mock_proto "www.velocidex.com/golang/velociraptor/api/mock"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/config"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/journal"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
-	"www.velocidex.com/golang/velociraptor/services/notifications"
-	"www.velocidex.com/golang/velociraptor/services/repository"
+	"www.velocidex.com/golang/velociraptor/services/orgs"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
@@ -49,73 +41,35 @@ func (self MockFrontendService) GetMasterAPIClient(ctx context.Context) (
 }
 
 type ReplicationTestSuite struct {
-	suite.Suite
-	config_obj *config_proto.Config
-	sm         *services.Service
-	ctrl       *gomock.Controller
-	mock       *mock_proto.MockAPIClient
-}
+	test_utils.TestSuite
 
-func (self *ReplicationTestSuite) startServices() {
-	t := self.T()
-
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*60)
-	self.sm = services.NewServiceManager(ctx, self.config_obj)
-
-	replicator, err := journal.NewReplicationService(
-		self.sm.Ctx, self.sm.Wg, self.config_obj)
-	assert.NoError(t, err)
-
-	replicator.SetRetryDuration(100 * time.Millisecond)
-
-	assert.NoError(t, self.sm.Start(notifications.StartNotificationService))
-	assert.NoError(t, self.sm.Start(inventory.StartInventoryService))
-	assert.NoError(t, self.sm.Start(launcher.StartLauncherService))
-	assert.NoError(t, self.sm.Start(repository.StartRepositoryManagerForTest))
-}
-
-func (self *ReplicationTestSuite) LoadArtifacts(definitions []string) {
-	manager, _ := services.GetRepositoryManager()
-	global_repo, err := manager.GetGlobalRepository(self.config_obj)
-	assert.NoError(self.T(), err)
-
-	for _, def := range definitions {
-		_, err := global_repo.LoadYaml(def, true, true)
-		assert.NoError(self.T(), err)
-	}
+	ctrl *gomock.Controller
+	mock *mock_proto.MockAPIClient
 }
 
 func (self *ReplicationTestSuite) SetupTest() {
-	var err error
-	file_store.Reset()
-	datastore.Reset()
+	self.ConfigObj = self.TestSuite.LoadConfig()
+	self.ConfigObj.Frontend.IsMinion = true
+	self.ConfigObj.Frontend.ServerServices.FrontendServer = false
+	self.ConfigObj.Frontend.ServerServices.ReplicationService = true
 
-	self.config_obj, err = new(config.Loader).WithFileLoader(
-		"../../http_comms/test_data/server.config.yaml").
-		WithRequiredFrontend().WithWriteback().
-		LoadAndValidate()
-	require.NoError(self.T(), err)
+	self.LoadArtifacts([]string{`
+name: Test.Artifact
+type: CLIENT_EVENT
+`})
 
-	self.config_obj.Frontend.IsMinion = true
+	self.Services = &orgs.ServiceContainer{}
+	self.Services.MockFrontendManager(&MockFrontendService{self.mock})
 
 	self.ctrl = gomock.NewController(self.T())
 	self.mock = mock_proto.NewMockAPIClient(self.ctrl)
-
-	// Replication service only runs on the minion node. We mock
-	// the minion frontend manager so we can inject the RPC mock.
-	services.RegisterFrontendManager(&MockFrontendService{self.mock})
 }
 
-func (self *ReplicationTestSuite) TearDownTest() {
-	self.sm.Close()
-	self.ctrl.Finish()
-
-	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Clear()
-	test_utils.GetMemoryDataStore(self.T(), self.config_obj).Clear()
+func (self *ReplicationTestSuite) setupTest() {
+	self.TestSuite.SetupTest()
 }
 
 func (self *ReplicationTestSuite) TestReplicationServiceStandardWatchers() {
-
 	// The ReplicationService will call WatchEvents for both the
 	// Server.Internal.Ping and Server.Internal.Notifications
 	// queues.
@@ -147,27 +101,15 @@ func (self *ReplicationTestSuite) TestReplicationServiceStandardWatchers() {
 		//gomock.AssignableToTypeOf(&api_proto.EventRequest{})).
 		DoAndReturn(mock_watch_event_recorder).AnyTimes()
 
-	// Replication service only runs on the minion node. We mock
-	// the minion frontend manager so we can inject the RPC mock.
-	services.RegisterFrontendManager(&MockFrontendService{self.mock})
-
-	self.startServices()
-
-	// Replication service only runs on the minion node. We mock
-	// the minion frontend manager so we can inject the RPC mock.
-	services.RegisterFrontendManager(&MockFrontendService{self.mock})
-
-	self.LoadArtifacts([]string{`
-name: Test.Artifact
-type: CLIENT_EVENT
-`})
+	self.Services.MockFrontendManager(&MockFrontendService{self.mock})
+	self.setupTest()
 
 	// Wait here until we call all the watchers.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		mu.Lock()
 		defer mu.Unlock()
 
-		return vtesting.CompareStrings(watched, []string{
+		expected := []string{
 			"Server.Internal.ArtifactModification",
 			"Server.Internal.MasterRegistrations",
 
@@ -180,7 +122,14 @@ type: CLIENT_EVENT
 			// if a client is connected to us.
 			"Server.Internal.Ping",
 			"Server.Internal.Pong",
-		})
+		}
+
+		for _, e := range expected {
+			if !utils.InString(watched, e) {
+				return false
+			}
+		}
+		return true
 	})
 }
 
@@ -215,7 +164,7 @@ func (self *ReplicationTestSuite) TestSendingEvents() {
 	my_event := []*ordereddict.Dict{
 		ordereddict.NewDict().Set("Foo", "Bar")}
 
-	journal_service, err := services.GetJournal()
+	journal_service, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	replicator := journal_service.(*journal.ReplicationService)
@@ -224,7 +173,7 @@ func (self *ReplicationTestSuite) TestSendingEvents() {
 		Set("Events", []interface{}{"Test.Artifact"}))
 
 	events = nil
-	err = journal_service.PushRowsToArtifact(self.config_obj,
+	err = journal_service.PushRowsToArtifact(self.ConfigObj,
 		my_event, "Test.Artifact", "C.1234", "F.123")
 	assert.NoError(self.T(), err)
 
@@ -250,7 +199,7 @@ func (self *ReplicationTestSuite) TestSendingEvents() {
 	// is often on the critical path. We just dump 1000 messages
 	// into the queue - this should overflow into the file.
 	for i := 0; i < 1000; i++ {
-		err = journal_service.PushRowsToArtifact(self.config_obj,
+		err = journal_service.PushRowsToArtifact(self.ConfigObj,
 			my_event, "Test.Artifact", "C.1234", "F.123")
 		assert.NoError(self.T(), err)
 	}

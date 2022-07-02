@@ -78,7 +78,7 @@ type ArtifactTestSuite struct {
 func (self *ArtifactTestSuite) SetupTest() {
 	self.TestSuite.SetupTest()
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	self.repository = manager.NewRepository()
@@ -93,7 +93,7 @@ func (self *ArtifactTestSuite) TestUnknownArtifact() {
 		Artifacts: []string{"Artifact5"},
 	}
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	_, err = launcher.CompileCollectorArgs(context.Background(), self.ConfigObj,
@@ -111,7 +111,7 @@ func (self *ArtifactTestSuite) TestStackOverflow() {
 	}
 
 	// It should compile ok but overflow at runtime.
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 	vql_requests, err := launcher.CompileCollectorArgs(context.Background(),
 		self.ConfigObj, vql_subsystem.NullACLManager{},
@@ -138,7 +138,7 @@ func (self *ArtifactTestSuite) TestArtifactDependencies() {
 	request := &flows_proto.ArtifactCollectorArgs{
 		Artifacts: []string{"Artifact6"},
 	}
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	vql_requests, err := launcher.CompileCollectorArgs(context.Background(),

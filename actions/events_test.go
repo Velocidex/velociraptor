@@ -19,7 +19,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
-	"www.velocidex.com/golang/velociraptor/services/indexing"
 	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
@@ -51,33 +50,31 @@ type EventsTestSuite struct {
 }
 
 func (self *EventsTestSuite) SetupTest() {
-	self.TestSuite.SetupTest()
+	self.ConfigObj = self.LoadConfig()
+	self.LoadArtifacts(artifact_definitions)
 
-	assert.NoError(self.T(),
-		self.Sm.Start(client_monitoring.StartClientMonitoringService))
-	assert.NoError(self.T(), self.Sm.Start(indexing.StartIndexingService))
-
-	self.client_id = "C.2232"
-	self.Clock = &utils.IncClock{}
-
+	// Set a tempfile for the writeback we need to check that the
+	// new event query is written there.
 	tmpfile, err := ioutil.TempFile("", "")
 	assert.NoError(self.T(), err)
 	tmpfile.Close()
 
-	// Set a tempfile for the writeback we need to check that the
-	// new event query is written there.
 	self.writeback = tmpfile.Name()
 	self.ConfigObj.Client.WritebackLinux = self.writeback
 	self.ConfigObj.Client.WritebackWindows = self.writeback
 	self.ConfigObj.Client.WritebackDarwin = self.writeback
+	self.ConfigObj.Frontend.ServerServices.ClientMonitoring = true
+	self.ConfigObj.Frontend.ServerServices.IndexServer = true
+	self.TestSuite.SetupTest()
+
+	self.client_id = "C.2232"
+	self.Clock = &utils.IncClock{}
 
 	self.responder = responder.TestResponder()
 
 	actions.GlobalEventTable = actions.NewEventTable(
 		self.ConfigObj, self.responder,
 		&actions_proto.VQLEventTable{})
-
-	self.LoadArtifacts(artifact_definitions)
 }
 
 func (self *EventsTestSuite) TearDownTest() {
@@ -103,7 +100,7 @@ var server_state = &flows_proto.ClientEventTable{
 }
 
 func (self *EventsTestSuite) TestEventTableUpdate() {
-	client_manager := services.ClientEventManager()
+	client_manager, err := services.ClientEventManager(self.ConfigObj)
 	client_manager.(*client_monitoring.ClientEventTable).Clock = self.Clock
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
@@ -162,7 +159,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// actually change the label groups, the new event table will
 	// be the same as the old one, except the version will be
 	// advanced.
-	label_manager := services.GetLabeler()
+	label_manager := services.GetLabeler(self.ConfigObj)
 	label_manager.(*labels.Labeler).Clock = self.Clock
 
 	require.NoError(self.T(),

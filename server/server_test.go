@@ -45,6 +45,9 @@ type: SERVER_EVENT
 name: System.Hunt.Creation
 type: SERVER_EVENT
 `, `
+name: Server.Internal.ClientPing
+type: SERVER
+`, `
 name: System.Flow.Archive
 type: SERVER
 `, `
@@ -85,9 +88,10 @@ func (self *ServerTestSuite) SetupTest() {
 	self.ConfigObj.Frontend.ServerServices.ClientMonitoring = true
 	self.ConfigObj.Frontend.ServerServices.Interrogation = true
 
+	self.LoadArtifacts(mock_definitions)
+
 	var err error
 	self.TestSuite.SetupTest()
-	self.LoadArtifacts(mock_definitions)
 
 	self.server, err = server.NewServer(self.Sm.Ctx, self.ConfigObj, self.Sm.Wg)
 	require.NoError(self.T(), err)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/ioutil"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/Velocidex/yaml/v2"
@@ -94,6 +95,9 @@ type TestSuite struct {
 	Ctx       context.Context
 	cancel    func()
 	Sm        *services.Service
+	Wg        *sync.WaitGroup
+
+	Services *orgs.ServiceContainer
 }
 
 func (self *TestSuite) LoadConfig() *config_proto.Config {
@@ -119,9 +123,11 @@ func (self *TestSuite) SetupTest() {
 	// Start essential services.
 	self.Ctx, self.cancel = context.WithTimeout(context.Background(), time.Second*60)
 	self.Sm = services.NewServiceManager(self.Ctx, self.ConfigObj)
+	self.Wg = &sync.WaitGroup{}
 
-	require.NoError(self.T(),
-		self.Sm.Start(orgs.StartTestOrgManager))
+	err := orgs.StartTestOrgManager(
+		self.Ctx, self.Wg, self.ConfigObj, self.Services)
+	require.NoError(self.T(), err)
 
 	// Wait here until the indexer is all ready.
 	indexer, err := services.GetIndexer(self.ConfigObj)
@@ -134,20 +140,30 @@ func (self *TestSuite) SetupTest() {
 // Parse the definitions and add them to the config so they will be
 // loaded by the repository manager.
 func (self *TestSuite) LoadArtifacts(definitions []string) {
-	artifacts := []*artifacts_proto.Artifact{}
-	for _, definition := range definitions {
-		artifact := &artifacts_proto.Artifact{}
-		err := yaml.Unmarshal([]byte(definition), artifact)
-		assert.NoError(self.T(), err)
-		artifacts = append(artifacts, artifact)
-	}
-
 	if self.ConfigObj.Autoexec == nil {
 		self.ConfigObj.Autoexec = &config_proto.AutoExecConfig{}
 	}
 
-	self.ConfigObj.Autoexec.ArtifactDefinitions = append(
-		self.ConfigObj.Autoexec.ArtifactDefinitions, artifacts...)
+	existing_artifacts := make(map[string]*artifacts_proto.Artifact)
+	for _, def := range self.ConfigObj.Autoexec.ArtifactDefinitions {
+		existing_artifacts[def.Name] = def
+	}
+
+	for _, definition := range definitions {
+		artifact := &artifacts_proto.Artifact{}
+		err := yaml.Unmarshal([]byte(definition), artifact)
+		assert.NoError(self.T(), err)
+		_, pres := existing_artifacts[artifact.Name]
+		if !pres {
+			existing_artifacts[artifact.Name] = artifact
+		}
+	}
+	artifacts := []*artifacts_proto.Artifact{}
+	for _, v := range existing_artifacts {
+		artifacts = append(artifacts, v)
+	}
+
+	self.ConfigObj.Autoexec.ArtifactDefinitions = artifacts
 }
 
 func (self *TestSuite) LoadArtifactFiles(paths ...string) {

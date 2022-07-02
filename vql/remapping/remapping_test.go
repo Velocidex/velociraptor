@@ -83,7 +83,7 @@ func (self *RemapTestSuite) TestConfigFileRemap() {
 		Env:        ordereddict.NewDict(),
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	scope := manager.BuildScope(builder)
@@ -145,7 +145,7 @@ func (self *RemapTestSuite) TestRemapByPlugin() {
 			Set("RemappingConfig", serialized),
 	}
 
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	scope := manager.BuildScope(builder)

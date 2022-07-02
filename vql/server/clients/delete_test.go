@@ -131,7 +131,7 @@ func (self *DeleteTestSuite) TestDeleteClient() {
 	assert.NoError(self.T(), err)
 	golden.Set("Before filestore", before)
 
-	manager, _ := services.GetRepositoryManager()
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
 		ACLManager: vql_subsystem.NullACLManager{},

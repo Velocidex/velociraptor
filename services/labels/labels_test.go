@@ -34,8 +34,8 @@ func (self *LabelsTestSuite) SetupTest() {
 	self.Clock = &utils.IncClock{}
 
 	// Set an incremental clock on the labeler.
-	labeler := services.GetLabeler().(*labels.Labeler)
-	labeler.Clock = self.Clock
+	labeler := services.GetLabeler(self.ConfigObj)
+	labeler.(*labels.Labeler).Clock = self.Clock
 }
 
 func (self *LabelsTestSuite) TestAddLabel() {
@@ -44,7 +44,7 @@ func (self *LabelsTestSuite) TestAddLabel() {
 
 	now := uint64(self.Clock.Now().UnixNano())
 
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(self.ConfigObj)
 	err = labeler.SetClientLabel(self.ConfigObj, self.client_id, "Label1")
 	assert.NoError(self.T(), err)
 
@@ -91,13 +91,12 @@ func (self *LabelsTestSuite) TestAddLabel() {
 // Check that two labelers can syncronize changes between them via the
 // journal.
 func (self *LabelsTestSuite) TestSyncronization() {
-	labeler1 := services.GetLabeler()
+	labeler1 := services.GetLabeler(self.ConfigObj)
 
 	// Make a second labeler to emulate a disjointed labeler from
 	// another frontend.
-	self.Sm.Start(labels.StartLabelService)
-
-	labeler2 := services.GetLabeler()
+	labeler2, err := labels.NewLabelerService(self.Ctx, self.Wg, self.ConfigObj)
+	assert.NoError(self.T(), err)
 
 	assert.NotEqual(self.T(), fmt.Sprintf("%v", labeler1),
 		fmt.Sprintf("%v", labeler2))
@@ -108,7 +107,7 @@ func (self *LabelsTestSuite) TestSyncronization() {
 
 	// Set the label in one labeler and wait for the change to be
 	// propagagted to the second labeler.
-	err := labeler1.SetClientLabel(self.ConfigObj, self.client_id, "Label1")
+	err = labeler1.SetClientLabel(self.ConfigObj, self.client_id, "Label1")
 	assert.NoError(self.T(), err)
 
 	assert.True(self.T(), labeler1.IsLabelSet(self.ConfigObj, self.client_id, "Label1"))

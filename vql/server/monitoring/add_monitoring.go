@@ -277,13 +277,7 @@ func (self AddServerMonitoringFunction) Call(
 
 	// Actually set the table
 	principal := vql_subsystem.GetPrincipal(scope)
-	server_manager, err := services.GetServerEventManager(config_obj)
-	if err != nil {
-		scope.Log("add_server_monitoring: %v", err)
-		return vfilter.Null{}
-	}
-
-	err = server_manager.Update(config_obj, principal, event_config)
+	err = server_event_manager.Update(config_obj, principal, event_config)
 	if err != nil {
 		scope.Log("add_server_monitoring: %v", err)
 		return vfilter.Null{}

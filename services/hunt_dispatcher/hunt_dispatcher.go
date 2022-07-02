@@ -107,7 +107,7 @@ type HuntDispatcher struct {
 
 	// Set to true for the master's hunt dispatcher. On the master
 	// node the dispatcher has more responsibility.
-	i_am_master bool
+	I_am_master bool
 }
 
 func (self *HuntDispatcher) GetLastTimestamp() uint64 {
@@ -191,7 +191,7 @@ func (self *HuntDispatcher) ProcessUpdate(
 	}
 
 	// On the master we also write it to storage.
-	if self.i_am_master {
+	if self.I_am_master {
 		hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
 		db, err := datastore.GetDB(config_obj)
 		if err != nil {
@@ -292,7 +292,7 @@ func (self *HuntDispatcher) ModifyHuntObject(
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 
-	if !self.i_am_master {
+	if !self.I_am_master {
 		// This is really a critical error.
 		logger.Error("Unable to modify hunts on a minion node. Please use MutateHunt()")
 		return services.HuntUnmodified
@@ -448,7 +448,7 @@ func (self *HuntDispatcher) Refresh(config_obj *config_proto.Config) error {
 		if pres && old_hunt_obj.Version >= hunt_obj.Version {
 			// The in memory copy is newer than the stored version,
 			// Master node will synchronize
-			if self.i_am_master {
+			if self.I_am_master {
 				db.SetSubjectWithCompletion(
 					config_obj, request.Path, old_hunt_obj, nil)
 			}
@@ -600,7 +600,7 @@ func NewHuntDispatcher(
 		config_obj:  config_obj,
 		hunts:       make(map[string]*HuntRecord),
 		uuid:        utils.GetGUID(),
-		i_am_master: services.IsMaster(config_obj),
+		I_am_master: services.IsMaster(config_obj),
 	}
 
 	// flush the hunts every 10 seconds.

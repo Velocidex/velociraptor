@@ -50,6 +50,10 @@ type EventTable struct {
 	current_queries []*actions_proto.VQLCollectorArgs
 }
 
+func (self *EventTable) Wait() {
+	self.wg.Wait()
+}
+
 func (self *EventTable) Clock() utils.Clock {
 	self.mu.Lock()
 	defer self.mu.Unlock()

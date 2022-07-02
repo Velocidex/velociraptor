@@ -157,8 +157,14 @@ func (self *JournalService) PushRowsToArtifactAsync(
 	config_obj *config_proto.Config, row *ordereddict.Dict,
 	artifact string) {
 
-	go self.PushRowsToArtifact(config_obj, []*ordereddict.Dict{row},
-		artifact, "server", "")
+	go func() {
+		err := self.PushRowsToArtifact(config_obj, []*ordereddict.Dict{row},
+			artifact, "server", "")
+		if err != nil {
+			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+			logger.Error("<red>PushRowsToArtifactAsync</> %v", err)
+		}
+	}()
 }
 
 func (self *JournalService) Broadcast(

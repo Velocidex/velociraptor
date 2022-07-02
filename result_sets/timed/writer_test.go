@@ -1,4 +1,4 @@
-package timed
+package timed_test
 
 import (
 	"fmt"
@@ -17,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/result_sets/timed"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
@@ -59,11 +60,13 @@ type TimedResultSetTestSuite struct {
 }
 
 func (self *TimedResultSetTestSuite) SetupTest() {
-	self.TestSuite.SetupTest()
+	self.ConfigObj = self.LoadConfig()
+
 	self.LoadArtifacts([]string{`
 name: Windows.Events.ProcessCreation
 type: CLIENT_EVENT
 `})
+	self.TestSuite.SetupTest()
 
 	self.client_id = "C.12312"
 	self.flow_id = "F.1232"
@@ -86,7 +89,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWriting() {
 	path_manager.Clock = clock
 
 	file_store_factory := file_store.GetFileStore(self.ConfigObj)
-	writer, err := NewTimedResultSetWriter(
+	writer, err := timed.NewTimedResultSetWriter(
 		file_store_factory, path_manager, nil, func() {
 			mu.Lock()
 			completion_result = append(completion_result, "Done")
@@ -94,7 +97,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWriting() {
 		})
 	assert.NoError(self.T(), err)
 
-	writer.(*TimedResultSetWriterImpl).Clock = clock
+	writer.(*timed.TimedResultSetWriterImpl).Clock = clock
 
 	// Push an event every hour for 48 hours.
 	for i := int64(0); i < 50; i++ {
@@ -163,7 +166,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWritingJsonl() {
 	path_manager.Clock = clock
 
 	file_store_factory := file_store.GetFileStore(self.ConfigObj)
-	writer, err := NewTimedResultSetWriter(
+	writer, err := timed.NewTimedResultSetWriter(
 		file_store_factory, path_manager, nil, func() {
 			mu.Lock()
 			completion_result = append(completion_result, "Done")
@@ -171,7 +174,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWritingJsonl() {
 		})
 	assert.NoError(self.T(), err)
 
-	writer.(*TimedResultSetWriterImpl).Clock = clock
+	writer.(*timed.TimedResultSetWriterImpl).Clock = clock
 
 	// Push an event every hour for 48 hours.
 	for i := int64(0); i < 50; i++ {
@@ -242,7 +245,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWritingNoFlushing() {
 	path_manager.Clock = clock
 
 	file_store_factory := file_store.GetFileStore(self.ConfigObj)
-	writer, err := NewTimedResultSetWriter(
+	writer, err := timed.NewTimedResultSetWriter(
 		file_store_factory, path_manager, nil, func() {
 			mu.Lock()
 			completion_result = append(completion_result, "Done")
@@ -250,7 +253,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWritingNoFlushing() {
 		})
 	assert.NoError(self.T(), err)
 
-	writer.(*TimedResultSetWriterImpl).Clock = clock
+	writer.(*timed.TimedResultSetWriterImpl).Clock = clock
 
 	// Push an event every hour for 48 hours.
 	for i := int64(0); i < 50; i++ {

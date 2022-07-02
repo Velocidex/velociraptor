@@ -94,6 +94,8 @@ message PushEventRequest {
     string flow_id = 3;
 
     bytes jsonl = 4;
+
+    int64 rows = 5;
 }
 
 

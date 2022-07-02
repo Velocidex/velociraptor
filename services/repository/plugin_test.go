@@ -47,7 +47,7 @@ type PluginTestSuite struct {
 // Load all built in artifacts and make sure they validate
 // syntax. This should catch syntax errors in built in artifacts.
 func (self *PluginTestSuite) TestArtifactsSyntax() {
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	err = repository.LoadBuiltInArtifacts(
@@ -76,7 +76,7 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 }
 
 func (self *PluginTestSuite) LoadArtifacts(artifact_definitions []string) services.Repository {
-	manager, _ := services.GetRepositoryManager()
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository := manager.NewRepository()
 
 	for _, definition := range artifact_definitions {
@@ -135,7 +135,7 @@ func (self *PluginTestSuite) TestArtifactPluginWithPrecondition() {
 		Env:        ordereddict.NewDict(),
 	}
 
-	manager, _ := services.GetRepositoryManager()
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
@@ -192,7 +192,7 @@ func (self *PluginTestSuite) TestClientPluginMultipleSources() {
 	}
 
 	acl_manager := vql_subsystem.NullACLManager{}
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	compiled, err := launcher.CompileCollectorArgs(
@@ -243,7 +243,7 @@ func (self *PluginTestSuite) TestClientPluginMultipleSourcesAndPrecondtions() {
 		Env: ordereddict.NewDict(),
 	}
 
-	manager, _ := services.GetRepositoryManager()
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
@@ -303,7 +303,7 @@ func (self *PluginTestSuite) TestClientPluginMultipleSourcesAndPrecondtionsEvent
 		Env: ordereddict.NewDict(),
 	}
 
-	manager, _ := services.GetRepositoryManager()
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 

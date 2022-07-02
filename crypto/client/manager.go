@@ -296,7 +296,7 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, er
 	// was authenticated, we are now allowed to cache the
 	// cipher in the input cache. The next packet from
 	// this session will NOT be verified.
-	if err != nil && msg_info.Authenticated {
+	if err == nil && msg_info.Authenticated {
 		self.cipher_lru.Set(
 			msg_info.Source,
 			&_Cipher{

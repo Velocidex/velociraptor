@@ -128,5 +128,5 @@ func GetAllNotebooks(
 // Update the notebook index for all the users and collaborators.
 func (self *NotebookManager) UpdateShareIndex(
 	notebook *api_proto.NotebookMetadata) error {
-	return self.store.UpdateShareIndex(notebook)
+	return self.Store.UpdateShareIndex(notebook)
 }

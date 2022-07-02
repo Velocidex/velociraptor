@@ -25,6 +25,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/sanity"
 	"www.velocidex.com/golang/velociraptor/services/server_artifacts"
 	"www.velocidex.com/golang/velociraptor/services/server_monitoring"
+	"www.velocidex.com/golang/velociraptor/services/users"
 	"www.velocidex.com/golang/velociraptor/services/vfs_service"
 )
 
@@ -46,6 +47,12 @@ type ServiceContainer struct {
 	client_event_manager services.ClientEventTable
 	server_event_manager services.ServerEventManager
 	notifier             services.Notifier
+}
+
+func (self *ServiceContainer) MockFrontendManager(svc services.FrontendManager) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self.frontend = svc
 }
 
 func (self *ServiceContainer) FrontendManager() (services.FrontendManager, error) {
@@ -222,22 +229,29 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Starting services for %v", services.GetOrgName(org_config))
 
+	org_ctx := &OrgContext{
+		record:     org_record,
+		config_obj: org_config,
+		service:    &ServiceContainer{},
+	}
+
+	self.mu.Lock()
+	self.orgs[org_record.OrgId] = org_ctx
+	self.org_id_by_nonce[org_record.Nonce] = org_record.OrgId
+	self.mu.Unlock()
+
+	return self.startOrgFromContext(org_ctx)
+}
+
+func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
+	org_id := org_ctx.record.OrgId
+	org_config := org_ctx.config_obj
+	service_container := org_ctx.service.(*ServiceContainer)
+
 	spec := org_config.Frontend.ServerServices
 	if spec == nil {
 		spec = services.AllServicesSpec()
 	}
-
-	self.mu.Lock()
-	org_id := org_record.OrgId
-
-	service_container := &ServiceContainer{}
-	self.orgs[org_id] = &OrgContext{
-		record:     org_record,
-		config_obj: org_config,
-		service:    service_container,
-	}
-	self.org_id_by_nonce[org_record.Nonce] = org_id
-	self.mu.Unlock()
 
 	if spec.FrontendServer && org_id == "" {
 		f, err := frontend.NewFrontendService(
@@ -250,11 +264,32 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 		service_container.mu.Unlock()
 	}
 
+	// The user manager is global across all orgs.
+	if spec.UserManager && org_id == "" {
+		err := users.StartUserManager(
+			self.ctx, self.wg, org_config)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Now start the services for this org. Services depend on other
 	// services so they need to be accessible as soon as they are
 	// ready.
 	if spec.JournalService {
 		j, err := journal.NewJournalService(
+			self.ctx, self.wg, org_config)
+		if err != nil {
+			return err
+		}
+		service_container.mu.Lock()
+		service_container.journal = j
+		service_container.broadcast = broadcast.NewBroadcastService(org_config)
+		service_container.mu.Unlock()
+	}
+
+	if spec.ReplicationService {
+		j, err := journal.NewReplicationService(
 			self.ctx, self.wg, org_config)
 		if err != nil {
 			return err

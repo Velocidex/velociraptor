@@ -1,4 +1,4 @@
-package hunt_dispatcher
+package hunt_dispatcher_test
 
 import (
 	"testing"
@@ -20,13 +20,19 @@ type HuntTestSuite struct {
 	test_utils.TestSuite
 }
 
+func (self *HuntTestSuite) SetupTest() {
+	self.ConfigObj = self.TestSuite.LoadConfig()
+	self.ConfigObj.Frontend.ServerServices.HuntDispatcher = true
+	self.TestSuite.SetupTest()
+}
+
 func (self *HuntTestSuite) TestCompilation() {
-	manager, err := services.GetRepositoryManager()
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	repository := manager.NewRepository()
+	repository, err := manager.GetGlobalRepository(self.ConfigObj)
+	assert.NoError(self.T(), err)
 
-	manager.SetGlobalRepositoryForTests(self.config_obj, repository)
 	repository.LoadYaml(`
 name: TestArtifact
 parameters:
@@ -60,18 +66,20 @@ sources:
 	}
 
 	acl_manager := vql_subsystem.NullACLManager{}
-	hunt_dispatcher := services.GetHuntDispatcher()
+	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	hunt_id, err := hunt_dispatcher.CreateHunt(
-		self.ctx, self.config_obj, acl_manager, request)
+		self.Ctx, self.ConfigObj, acl_manager, request)
 
 	assert.NoError(self.T(), err)
 
-	db, err := datastore.GetDB(self.config_obj)
+	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	hunt_path_manager := paths.NewHuntPathManager(hunt_id)
 	hunt_obj := &api_proto.Hunt{}
-	err = db.GetSubject(self.config_obj, hunt_path_manager.Path(), hunt_obj)
+	err = db.GetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), hunt_obj.HuntDescription, request.HuntDescription)

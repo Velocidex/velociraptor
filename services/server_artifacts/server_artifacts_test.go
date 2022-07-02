@@ -1,4 +1,4 @@
-package server_artifacts
+package server_artifacts_test
 
 import (
 	"context"
@@ -29,9 +29,10 @@ type ServerArtifactsTestSuite struct {
 }
 
 func (self *ServerArtifactsTestSuite) SetupTest() {
-	self.TestSuite.SetupTest()
+	self.ConfigObj = self.TestSuite.LoadConfig()
+	self.ConfigObj.Frontend.ServerServices.ServerArtifacts = true
 
-	assert.NoError(self.T(), self.Sm.Start(StartServerArtifactService))
+	self.TestSuite.SetupTest()
 
 	// Create an administrator user
 	err := acls.GrantRoles(self.ConfigObj, "admin", []string{"administrator"})
@@ -39,7 +40,7 @@ func (self *ServerArtifactsTestSuite) SetupTest() {
 }
 
 func (self *ServerArtifactsTestSuite) LoadArtifacts(definition string) services.Repository {
-	manager, _ := services.GetRepositoryManager()
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
 
 	_, err := repository.LoadYaml(definition, false, true)
@@ -51,7 +52,7 @@ func (self *ServerArtifactsTestSuite) LoadArtifacts(definition string) services.
 func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 	name, user string) *api_proto.FlowDetails {
 
-	manager, _ := services.GetRepositoryManager()
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
 
 	var mu sync.Mutex
@@ -72,7 +73,7 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 		})
 	assert.NoError(self.T(), err)
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	acl_manager := vql_subsystem.NewServerACLManager(self.ConfigObj, user)
@@ -86,7 +87,9 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 			Artifacts: []string{name},
 		}, func() {
 			// Notify it about the new job
-			notifier := services.GetNotifier()
+			notifier, err := services.GetNotifier(self.ConfigObj)
+			assert.NoError(self.T(), err)
+
 			err = notifier.NotifyListener(self.ConfigObj, "server", "")
 			assert.NoError(self.T(), err)
 		})

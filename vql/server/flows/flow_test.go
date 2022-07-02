@@ -87,7 +87,7 @@ func (self *FilestoreTestSuite) TestEnumerateFlow() {
 		"ntfs", `\\.\C:\Windows\notepad.exe`).Path())
 	fd.Close()
 
-	manager, _ := services.GetRepositoryManager()
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
 		ACLManager: vql_subsystem.NullACLManager{},

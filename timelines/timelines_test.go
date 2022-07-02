@@ -1,4 +1,4 @@
-package timelines
+package timelines_test
 
 import (
 	"context"
@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/timelines"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -46,7 +47,7 @@ func (self *TimelineTestSuite) TestSuperTimelineWriter() {
 		Name: "Test",
 		Root: paths.NewNotebookPathManager("N.1234").Path(),
 	}
-	super, err := NewSuperTimelineWriter(self.config_obj, path_manager)
+	super, err := timelines.NewSuperTimelineWriter(self.config_obj, path_manager)
 	assert.NoError(self.T(), err)
 
 	timeline, err := super.AddChild("1")
@@ -67,7 +68,7 @@ func (self *TimelineTestSuite) TestSuperTimelineWriter() {
 	super.Close()
 
 	// test_utils.GetMemoryFileStore(self.T(), self.config_obj).Debug()
-	reader, err := NewSuperTimelineReader(self.config_obj, path_manager, nil)
+	reader, err := timelines.NewSuperTimelineReader(self.config_obj, path_manager, nil)
 	assert.NoError(self.T(), err)
 	defer reader.Close()
 
@@ -98,7 +99,7 @@ func (self *TimelineTestSuite) TestTimelineWriter() {
 		SuperTimeline("T.1234").GetChild("Test")
 
 	file_store_factory := file_store.GetFileStore(self.config_obj)
-	timeline, err := NewTimelineWriter(file_store_factory, path_manager,
+	timeline, err := timelines.NewTimelineWriter(file_store_factory, path_manager,
 		utils.SyncCompleter, result_sets.TruncateMode)
 	assert.NoError(self.T(), err)
 
@@ -117,7 +118,7 @@ func (self *TimelineTestSuite) TestTimelineWriter() {
 
 	//test_utils.GetMemoryFileStore(self.T(), self.config_obj).Debug()
 
-	reader, err := NewTimelineReader(file_store_factory, path_manager)
+	reader, err := timelines.NewTimelineReader(file_store_factory, path_manager)
 	assert.NoError(self.T(), err)
 	defer reader.Close()
 

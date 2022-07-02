@@ -7,7 +7,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -19,8 +18,6 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/frontend"
-	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting"
@@ -37,14 +34,15 @@ type HuntTestSuite struct {
 }
 
 func (self *HuntTestSuite) SetupTest() {
+	self.ConfigObj = self.TestSuite.LoadConfig()
+	self.ConfigObj.Frontend.ServerServices.FrontendServer = true
+	self.ConfigObj.Frontend.ServerServices.HuntDispatcher = true
+	self.ConfigObj.Frontend.ServerServices.HuntManager = true
+
 	self.TestSuite.SetupTest()
 
 	self.hunt_id += "A"
 	self.expected.Creator = self.hunt_id
-
-	require.NoError(self.T(), self.Sm.Start(frontend.StartFrontendService))
-	require.NoError(self.T(), self.Sm.Start(hunt_dispatcher.StartHuntDispatcher))
-	require.NoError(self.T(), self.Sm.Start(hunt_manager.StartHuntManager))
 
 	// Write a client record.
 	client_info_obj := &actions_proto.ClientInfo{
@@ -60,7 +58,7 @@ func (self *HuntTestSuite) SetupTest() {
 func (self *HuntTestSuite) TestHuntManager() {
 	t := self.T()
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(t, err)
 
 	launcher.SetFlowIdForTests("F.1234")
@@ -81,10 +79,12 @@ func (self *HuntTestSuite) TestHuntManager() {
 	err = db.SetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(t, err)
 
-	services.GetHuntDispatcher().Refresh(self.ConfigObj)
+	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
+	assert.NoError(t, err)
+	hunt_dispatcher.Refresh(self.ConfigObj)
 
 	// Simulate a System.Hunt.Participation event
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(t, err)
 
 	journal.PushRowsToArtifact(self.ConfigObj,
@@ -94,7 +94,7 @@ func (self *HuntTestSuite) TestHuntManager() {
 		},
 		"System.Hunt.Participation", self.client_id, "")
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
@@ -119,7 +119,7 @@ func (self *HuntTestSuite) TestHuntManager() {
 func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	t := self.T()
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(t, err)
 
 	launcher.SetFlowIdForTests("F.1234")
@@ -147,10 +147,11 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	err = db.SetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(t, err)
 
-	services.GetHuntDispatcher().Refresh(self.ConfigObj)
+	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
+	hunt_dispatcher.Refresh(self.ConfigObj)
 
 	// Simulate a System.Hunt.Participation event
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(t, err)
 
 	journal.PushRowsToArtifact(self.ConfigObj,
@@ -169,11 +170,11 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 
 	// Now add the label to the client. The hunt will now be
 	// scheduled automatically.
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(self.ConfigObj)
 	err = labeler.SetClientLabel(self.ConfigObj, self.client_id, "MyLabel")
 	assert.NoError(t, err)
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
@@ -190,7 +191,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 
 func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	t := self.T()
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(t, err)
 
 	launcher.SetFlowIdForTests("F.1234")
@@ -218,15 +219,17 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	err = db.SetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(t, err)
 
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(self.ConfigObj)
 
 	err = labeler.SetClientLabel(self.ConfigObj, self.client_id, "lAbEl")
 	assert.NoError(t, err)
 
-	services.GetHuntDispatcher().Refresh(self.ConfigObj)
+	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
+	assert.NoError(t, err)
+	hunt_dispatcher.Refresh(self.ConfigObj)
 
 	// Simulate a System.Hunt.Participation event
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(t, err)
 
 	journal.PushRowsToArtifact(self.ConfigObj,
@@ -237,7 +240,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 		},
 		"System.Hunt.Participation", self.client_id, "")
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
@@ -260,7 +263,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 func (self *HuntTestSuite) TestHuntWithOverride() {
 	t := self.T()
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(t, err)
 
 	launcher.SetFlowIdForTests("F.1234")
@@ -281,10 +284,12 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 	err = db.SetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(t, err)
 
-	services.GetHuntDispatcher().Refresh(self.ConfigObj)
+	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
+	assert.NoError(t, err)
+	hunt_dispatcher.Refresh(self.ConfigObj)
 
 	// Simulate a System.Hunt.Participation event
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(t, err)
 
 	journal.PushRowsToArtifact(self.ConfigObj,
@@ -295,7 +300,7 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 		},
 		"System.Hunt.Participation", self.client_id, "")
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
@@ -320,7 +325,7 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	t := self.T()
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(t, err)
 
 	launcher.SetFlowIdForTests("F.1234")
@@ -348,14 +353,16 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	err = db.SetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(t, err)
 
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(self.ConfigObj)
 	err = labeler.SetClientLabel(self.ConfigObj, self.client_id, "MyLabel")
 	assert.NoError(t, err)
 
-	services.GetHuntDispatcher().Refresh(self.ConfigObj)
+	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
+	assert.NoError(t, err)
+	hunt_dispatcher.Refresh(self.ConfigObj)
 
 	// Simulate a System.Hunt.Participation event
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(t, err)
 
 	journal.PushRowsToArtifact(self.ConfigObj,
@@ -366,7 +373,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 		},
 		"System.Hunt.Participation", self.client_id, "")
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(self.ConfigObj)
 	assert.NoError(t, err)
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
@@ -391,7 +398,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 	t := self.T()
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(t, err)
 
 	launcher.SetFlowIdForTests("F.1234")
@@ -423,7 +430,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 	err = db.SetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(t, err)
 
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(self.ConfigObj)
 	err = labeler.SetClientLabel(self.ConfigObj, self.client_id, "MyLabel")
 	assert.NoError(t, err)
 
@@ -431,10 +438,12 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 	err = labeler.SetClientLabel(self.ConfigObj, self.client_id, "DoNotRunHunts")
 	assert.NoError(t, err)
 
-	services.GetHuntDispatcher().Refresh(self.ConfigObj)
+	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
+	assert.NoError(t, err)
+	hunt_dispatcher.Refresh(self.ConfigObj)
 
 	// Simulate a System.Hunt.Participation event
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(t, err)
 
 	journal.PushRowsToArtifact(self.ConfigObj,
@@ -455,7 +464,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 func (self *HuntTestSuite) TestHuntClientOSCondition() {
 	t := self.T()
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(t, err)
 
 	launcher.SetFlowIdForTests("F.1234")
@@ -501,10 +510,12 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 	err = db.SetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(t, err)
 
-	services.GetHuntDispatcher().Refresh(self.ConfigObj)
+	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
+	assert.NoError(t, err)
+	hunt_dispatcher.Refresh(self.ConfigObj)
 
 	// Simulate a System.Hunt.Participation event
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(t, err)
 
 	journal.PushRowsToArtifact(self.ConfigObj,
@@ -538,7 +549,7 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
 	t := self.T()
 
-	launcher, err := services.GetLauncher()
+	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(t, err)
 
 	db, err := datastore.GetDB(self.ConfigObj)
@@ -573,7 +584,9 @@ func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
 	}
 
 	acl_manager := vql_subsystem.NullACLManager{}
-	hunt_dispatcher := services.GetHuntDispatcher()
+	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
+	assert.NoError(t, err)
+
 	self.hunt_id, err = hunt_dispatcher.CreateHunt(
 		self.Ctx, self.ConfigObj, acl_manager, hunt_obj)
 	assert.NoError(t, err)
@@ -594,12 +607,12 @@ func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
 		})
 	assert.NoError(t, err)
 
-	client_info_manager, err := services.GetClientInfoManager()
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(t, err)
 
 	client_info_manager.Flush(self.client_id)
 
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	assert.NoError(self.T(), journal.PushRowsToArtifact(self.ConfigObj,
@@ -638,12 +651,13 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 	err = db.SetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(self.T(), err)
 
-	dispatcher := services.GetHuntDispatcher()
+	dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
+	assert.NoError(self.T(), err)
 	dispatcher.Refresh(self.ConfigObj)
 
 	// Schedule a new hunt on this client if we receive a
 	// participation event.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	assert.NoError(self.T(), journal.PushRowsToArtifact(self.ConfigObj,
@@ -723,12 +737,13 @@ func (self *HuntTestSuite) TestHuntManagerErrors() {
 	err = db.SetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
 	assert.NoError(self.T(), err)
 
-	dispatcher := services.GetHuntDispatcher()
+	dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
+	assert.NoError(self.T(), err)
 	dispatcher.Refresh(self.ConfigObj)
 
 	// Schedule a new hunt on this client if we receive a
 	// participation event.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	assert.NoError(self.T(), journal.PushRowsToArtifact(self.ConfigObj,

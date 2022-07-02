@@ -1,4 +1,4 @@
-package interrogation
+package interrogation_test
 
 import (
 	"testing"
@@ -6,7 +6,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -27,15 +26,16 @@ type ServicesTestSuite struct {
 }
 
 func (self *ServicesTestSuite) SetupTest() {
-	self.TestSuite.SetupTest()
-
-	require.NoError(self.T(), self.Sm.Start(StartInterrogationService))
+	self.ConfigObj = self.TestSuite.LoadConfig()
+	self.ConfigObj.Frontend.ServerServices.Interrogation = true
 
 	self.LoadArtifacts([]string{`
 name: Server.Internal.Enrollment
 type: INTERNAL
 `,
 	})
+
+	self.TestSuite.SetupTest()
 
 	self.client_id = "C.12312"
 	self.flow_id = "F.1232"
@@ -47,7 +47,7 @@ func (self *ServicesTestSuite) EmulateCollection(
 	// Emulate a Generic.Client.Info collection: First write the
 	// result set, then write the collection context.
 	// Write a result set for this artifact.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	journal.PushRowsToArtifact(self.ConfigObj,
@@ -96,7 +96,7 @@ func (self *ServicesTestSuite) TestInterrogationService() {
 	assert.Equal(self.T(), client_info.Labels, []string{"Foo"})
 
 	// Check the label is set on the client.
-	labeler := services.GetLabeler()
+	labeler := services.GetLabeler(self.ConfigObj)
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
 		return labeler.IsLabelSet(self.ConfigObj, self.client_id, "Foo")
 	})
@@ -122,7 +122,7 @@ func (self *ServicesTestSuite) TestEnrollService() {
 	// enrollment messages are being written before the client is
 	// able to be enrolled. We should always generate only a
 	// single interrogate flow if the client is not known.
-	journal, err := services.GetJournal()
+	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	err = journal.PushRowsToArtifact(self.ConfigObj,

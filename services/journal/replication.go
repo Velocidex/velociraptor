@@ -145,6 +145,10 @@ func (self *ReplicationService) pumpEventFromBufferFile() error {
 
 			_, err = api_client.PushEvents(self.ctx, event)
 			if err == nil {
+				//logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+				//logger.Debug("<green>ReplicationService</> Sending %v rows (%v bytes) to %v for %v.",
+				//	event.Rows, len(event.Jsonl), event.Artifact, event.ClientId)
+
 				closer()
 				break
 			}
@@ -558,17 +562,18 @@ func (self *ReplicationService) PushRowsToArtifact(
 		ClientId: client_id,
 		FlowId:   flow_id,
 		Jsonl:    serialized,
+		Rows:     int64(len(rows)),
 	}
-
-	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Debug("<green>ReplicationService</> Sending %v rows (%v bytes) to %v for %v.",
-		len(rows), len(serialized), artifact, client_id)
 
 	// Should not block! If the channel is full we save the event
 	// into the file buffer for later.
 	select {
 	case self.sender <- request:
+		//logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		//logger.Debug("<green>ReplicationService</> Sending %v rows (%v bytes) to %v for %v.",
+		//len(rows), len(serialized), artifact, client_id)
 		return nil
+
 	default:
 		return self.Buffer.Enqueue(request)
 	}

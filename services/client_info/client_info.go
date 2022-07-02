@@ -353,11 +353,15 @@ func (self *ClientInfoManager) MutationSync(
 
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Info("MutationSync: %v.", err)
 		return
 	}
 
 	frontend_manager, err := services.GetFrontendManager(config_obj)
 	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Info("MutationSync: %v.", err)
 		return
 	}
 	for {

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/alecthomas/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -28,10 +27,10 @@ type TestSuite struct {
 
 func (self *TestSuite) SetupTest() {
 	self.ConfigObj = self.LoadConfig()
+	self.ConfigObj.Frontend.ServerServices.IndexServer = true
 	self.ConfigObj.Frontend.Resources.IndexSnapshotFrequency = 100000
 
 	self.TestSuite.SetupTest()
-	require.NoError(self.T(), self.Sm.Start(indexing.StartIndexingService))
 
 	self.populatedClients()
 }
@@ -42,7 +41,7 @@ func (self *TestSuite) populatedClients() {
 	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	// Wait here until the indexer is ready
@@ -75,7 +74,7 @@ func (self *TestSuite) populatedClients() {
 }
 
 func (self *TestSuite) TestEnumerateIndex() {
-	indexer, err := services.GetIndexer()
+	indexer, err := services.GetIndexer(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	// Read all clients.

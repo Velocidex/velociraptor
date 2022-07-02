@@ -12,6 +12,7 @@ import (
 
 type TestOrgManager struct {
 	*OrgManager
+	services *ServiceContainer
 }
 
 func (self *TestOrgManager) Start(
@@ -23,6 +24,10 @@ func (self *TestOrgManager) Start(
 
 	self.mu.Lock()
 	service_container := &ServiceContainer{}
+	if self.services != nil {
+		service_container = self.services
+	}
+
 	org_context := &OrgContext{
 		record:     &api_proto.OrgRecord{},
 		config_obj: org_config,
@@ -31,22 +36,25 @@ func (self *TestOrgManager) Start(
 	self.orgs[""] = org_context
 	self.mu.Unlock()
 
-	return self.startOrg(org_context.record)
+	return self.startOrgFromContext(org_context)
 }
 
 func StartTestOrgManager(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config,
+	service_container *ServiceContainer) error {
 
-	service := &TestOrgManager{&OrgManager{
-		config_obj: config_obj,
-		ctx:        ctx,
-		wg:         wg,
+	service := &TestOrgManager{
+		services: service_container,
+		OrgManager: &OrgManager{
+			config_obj: config_obj,
+			ctx:        ctx,
+			wg:         wg,
 
-		orgs:            make(map[string]*OrgContext),
-		org_id_by_nonce: make(map[string]string),
-	}}
+			orgs:            make(map[string]*OrgContext),
+			org_id_by_nonce: make(map[string]string),
+		}}
 	services.RegisterOrgManager(service)
 
 	return service.Start(ctx, config_obj, wg)

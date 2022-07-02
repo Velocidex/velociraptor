@@ -6,13 +6,14 @@ import (
 
 func MinionServicesSpec() *config_proto.ServerServicesConfig {
 	return &config_proto.ServerServicesConfig{
-		HuntDispatcher:    true,
-		StatsCollector:    true,
-		ClientMonitoring:  true,
-		SanityChecker:     true,
-		FrontendServer:    true,
-		MonitoringService: true,
-		DynDns:            true,
+		HuntDispatcher:     true,
+		StatsCollector:     true,
+		ClientMonitoring:   true,
+		ReplicationService: true,
+		SanityChecker:      true,
+		FrontendServer:     true,
+		MonitoringService:  true,
+		DynDns:             true,
 	}
 }
 
