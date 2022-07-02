@@ -268,6 +268,9 @@ func doGolden() error {
 
 	failures := []string{}
 
+	config_obj.Frontend.ServerServices = services.AllServicesSpec()
+	config_obj.Frontend.ServerServices.SanityChecker = false
+
 	sm, err := startEssentialServices(config_obj)
 	if err != nil {
 		return err
