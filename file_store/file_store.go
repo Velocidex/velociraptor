@@ -84,10 +84,6 @@ func getImpl(implementation string,
 // Gets an accessor that can access the file store.
 func GetFileStoreFileSystemAccessor(
 	config_obj *config_proto.Config) (accessors.FileSystemAccessor, error) {
-
-	fs_mu.Lock()
-	defer fs_mu.Unlock()
-
 	return file_store_accessor.NewFileStoreFileSystemAccessor(
 		config_obj, GetFileStore(config_obj)), nil
 }

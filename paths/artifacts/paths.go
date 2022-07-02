@@ -10,6 +10,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -80,7 +81,11 @@ func (self *ArtifactPathManager) GetQueueName() string {
 }
 
 func (self *ArtifactPathManager) Path() api.FSPathSpec {
-	result, _ := self.GetPathForWriting()
+	result, err := self.GetPathForWriting()
+	if err != nil {
+		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		logger.Error("ArtifactPathManager: %v\n", err)
+	}
 	return result
 }
 

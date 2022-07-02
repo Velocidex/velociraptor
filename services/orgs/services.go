@@ -248,11 +248,13 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 	org_config := org_ctx.config_obj
 	service_container := org_ctx.service.(*ServiceContainer)
 
-	spec := org_config.Frontend.ServerServices
-	if spec == nil {
-		spec = services.AllServicesSpec()
+	spec := services.ClientServicesSpec()
+	if org_config.Frontend != nil &&
+		org_config.Frontend.ServerServices != nil {
+		spec = org_config.Frontend.ServerServices
 	}
 
+	// Now start service on the root org
 	if spec.FrontendServer && org_id == "" {
 		f, err := frontend.NewFrontendService(
 			self.ctx, self.wg, org_config)

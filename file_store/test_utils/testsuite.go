@@ -66,6 +66,9 @@ type: CLIENT_EVENT
 name: System.Hunt.Participation
 type: INTERNAL
 `, `
+name: System.Upload.Completion
+type: SERVER
+`, `
 name: Server.Internal.Enrollment
 type: INTERNAL
 `, `

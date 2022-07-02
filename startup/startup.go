@@ -7,7 +7,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/ddclient"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
-	"www.velocidex.com/golang/velociraptor/services/users"
 )
 
 func StartupEssentialServices(sm *services.Service) error {
@@ -19,11 +18,6 @@ func StartupEssentialServices(sm *services.Service) error {
 	// Updates DynDNS records if needed. Frontends need to maintain
 	// their IP addresses.
 	err = sm.Start(ddclient.StartDynDNSService)
-	if err != nil {
-		return err
-	}
-
-	err = sm.Start(users.StartUserManager)
 	if err != nil {
 		return err
 	}

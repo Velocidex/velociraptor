@@ -4,6 +4,16 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
+func ClientServicesSpec() *config_proto.ServerServicesConfig {
+	return &config_proto.ServerServicesConfig{
+		JournalService:      true,
+		RepositoryManager:   true,
+		InventoryService:    true,
+		NotificationService: true,
+		Launcher:            true,
+	}
+}
+
 func MinionServicesSpec() *config_proto.ServerServicesConfig {
 	return &config_proto.ServerServicesConfig{
 		HuntDispatcher:     true,

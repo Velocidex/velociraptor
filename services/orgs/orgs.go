@@ -147,7 +147,7 @@ func (self *OrgManager) makeNewConfigObj(
 func (self *OrgManager) Scan() error {
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
-		return err
+		return nil
 	}
 
 	children, err := db.ListChildren(
@@ -185,12 +185,23 @@ func (self *OrgManager) Start(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Org Manager service.")
 
+	nonce := ""
+	if config_obj.Client != nil {
+		nonce = config_obj.Client.Nonce
+	}
+
 	// First start all services for the root org
 	self.startOrg(&api_proto.OrgRecord{
 		OrgId: "",
 		Name:  "<root org>",
-		Nonce: config_obj.Client.Nonce,
+		Nonce: nonce,
 	})
+
+	// If a datastore is not configured we are running on the client
+	// or as a tool so we dont need to scan for new orgs.
+	if config_obj.Datastore == nil {
+		return nil
+	}
 
 	// Do first scan inline so we have valid data on exit.
 	err := self.Scan()
