@@ -52,7 +52,6 @@ parameters:
     type: timestamp
   - name: YaraUrl
     description: If configured will attempt to download Yara rules form Url
-    default:
     type: upload
   - name: YaraRule
     type: yara
