@@ -71,7 +71,7 @@ sources:
 
     query: |
       -- check which Yara to use
-      LET yara_rules = YaraUrl || YaraRule
+      LET yara_rules <= YaraUrl || YaraRule
 
       LET SparsePath = pathspec(
            DelegateAccessor='raw_file',
