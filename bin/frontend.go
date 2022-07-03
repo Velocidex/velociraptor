@@ -67,6 +67,15 @@ func doFrontend() error {
 	sm := services.NewServiceManager(ctx, config_obj)
 	defer sm.Close()
 
+	// Come up with a suitable services plan.
+	if config_obj.Frontend.ServerServices == nil {
+		if *frontend_cmd_minion {
+			config_obj.Frontend.ServerServices = services.MinionServicesSpec()
+		} else {
+			config_obj.Frontend.ServerServices = services.AllServicesSpec()
+		}
+	}
+
 	server, err := startFrontend(sm)
 	if err != nil {
 		return fmt.Errorf("starting frontend: %w", err)

@@ -177,6 +177,10 @@ func doGUI() error {
 	sm := services.NewServiceManager(ctx, config_obj)
 	defer sm.Close()
 
+	if config_obj.Frontend.ServerServices == nil {
+		config_obj.Frontend.ServerServices = services.AllServicesSpec()
+	}
+
 	server, err := startFrontend(sm)
 	if err != nil {
 		return fmt.Errorf("Starting services: %w", err)

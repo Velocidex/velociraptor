@@ -24,6 +24,7 @@ import (
 	"sync"
 
 	"www.velocidex.com/golang/velociraptor/config"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/executor"
@@ -132,6 +133,15 @@ func runClientOnce(
 	err = sm.Start(executor.StartNannyService)
 	if err != nil {
 		return err
+	}
+
+	// Create a suitable service plan.
+	if config_obj.Frontend == nil {
+		config_obj.Frontend = &config_proto.FrontendConfig{}
+	}
+
+	if config_obj.Frontend.ServerServices == nil {
+		config_obj.Frontend.ServerServices = services.ClientServicesSpec()
 	}
 
 	err = sm.Start(orgs.StartClientOrgManager)
