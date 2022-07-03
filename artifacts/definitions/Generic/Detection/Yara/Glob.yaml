@@ -67,7 +67,7 @@ parameters:
 sources:
   - query: |
       -- check which Yara to use
-      LET yara = SELECT * FROM if(condition=YaraUrl,
+      LET yara <= SELECT * FROM if(condition=YaraUrl,
             then= { SELECT Content FROM http_client( url=YaraUrl, method='GET') },
             else= { SELECT YaraRule as Content FROM scope() })
 
