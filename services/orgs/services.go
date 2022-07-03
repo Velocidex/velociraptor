@@ -248,6 +248,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 	org_config := org_ctx.config_obj
 	service_container := org_ctx.service.(*ServiceContainer)
 
+	// If there is not frontend defined we are running as a client.
 	spec := services.ClientServicesSpec()
 	if org_config.Frontend != nil &&
 		org_config.Frontend.ServerServices != nil {
