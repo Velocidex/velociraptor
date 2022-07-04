@@ -57,9 +57,7 @@ sources:
 
     query: |
       -- check which Yara to use
-      LET yara <= if(condition=YaraUrl,
-            then= { SELECT Content FROM http_client( url=YaraUrl, method='GET') },
-            else= { SELECT YaraRule as Content FROM scope() })
+      LET yara_rules <= YaraUrl || YaraRule
 
       -- find velociraptor process
       LET me = SELECT Pid FROM pslist(pid=getpid())
@@ -95,7 +93,7 @@ sources:
                 String.Name as HitName,
                 String.HexData as HitHexData
              FROM yara(files=format(format="/%d", args=Pid),
-                       accessor='process',rules=yara.Content[0])
+                       accessor='process',rules=yara_rules)
              LIMIT 1
           })
 
