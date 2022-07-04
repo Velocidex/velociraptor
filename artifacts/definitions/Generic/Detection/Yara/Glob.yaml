@@ -67,9 +67,7 @@ parameters:
 sources:
   - query: |
       -- check which Yara to use
-      LET yara <= SELECT * FROM if(condition=YaraUrl,
-            then= { SELECT Content FROM http_client( url=YaraUrl, method='GET') },
-            else= { SELECT YaraRule as Content FROM scope() })
+      LET yara_rules <= YaraUrl || YaraRule
 
       -- time testing
       LET time_test(stamp) =
@@ -111,7 +109,7 @@ sources:
                     Rule, Tags, Meta,
                     str(str=String.Data) AS HitContext,
                     String.Offset AS HitOffset
-                FROM yara(rules=yara.Content[0],files=FullPath)
+                FROM yara(rules=yara_rules,files=FullPath)
                 LIMIT 1
             })
 
