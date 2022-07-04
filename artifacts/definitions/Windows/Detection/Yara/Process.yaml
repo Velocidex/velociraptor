@@ -28,7 +28,6 @@ parameters:
     type: bool
   - name: YaraUrl
     description: If configured will attempt to download Yara rules from Url
-    type: upload
   - name: YaraRule
     type: yara
     description: Final Yara option and the default if no other options provided.

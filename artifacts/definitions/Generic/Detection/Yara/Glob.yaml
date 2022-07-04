@@ -50,7 +50,6 @@ parameters:
     description: "search for events before this date. YYYY-MM-DDTmm:hh:ssZ"
   - name: YaraUrl
     description: If configured will attempt to download Yara rules form Url
-    type: upload
   - name: YaraRule
     type: yara
     description: Final Yara option and the default if no other options provided.
