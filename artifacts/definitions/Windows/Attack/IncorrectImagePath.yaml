@@ -3,7 +3,7 @@ name: Windows.Attack.IncorrectImagePath
 Description: |
   Some malware are hiding in plain text by masqurading a legitimate executable name.
 
-  This artifact looks for processes with known names that are being loaded from unexcpected 
+  This artifact looks for processes with known names that are being loaded from unexpected 
   locations.
 
 reference: 
