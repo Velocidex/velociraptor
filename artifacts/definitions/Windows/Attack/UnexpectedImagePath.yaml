@@ -1,0 +1,59 @@
+name: Windows.Attack.UnexpectedImagePath
+
+Description: |
+  Some malware are hiding in plain text by masqurading a legitimate executable name.
+
+  This artifact looks for processes with known names that are being loaded from unexpected 
+  locations.
+
+reference: 
+  - https://www.sans.org/posters/hunt-evil/
+  - https://github.com/teoseller/osquery-attck/blob/master/windows-incorrect_path_process.conf
+
+author: Amged Wageh
+
+parameters:
+   - name: expected_paths
+     type: csv
+     default: |
+        ProcName,ImagePath
+        csrss.exe,c:\windows\system32\csrss.exe
+        smss.exe,c:\windows\system32\smss.exe
+        services.exe,c:\windows\system32\services.exe
+        wininit.exe,c:\windows\system32\wininit.exe
+        svchost.exe,c:\windows\system32\svchost.exe
+        svchost.exe,c:\windows\syswow64\svchost.exe
+        runtimebroker.exe,c:\windows\system32\runtimebroker.exe
+        lsaiso.exe,c:\windows\system32\lsaiso.exe
+        taskhostw.exe,c:\windows\system32\taskhostw.exe
+        lsass.exe,c:\windows\system32\lsass.exe
+        winlogon.exe,c:\windows\system32\winlogon.exe
+        explorer.exe,c:\windows\explorer.exe
+        explorer.exe,c:\windows\syswow64\explorer.exe
+        conhost.exe,c:\windows\system32\conhost.exe
+        dllhost.exe,c:\windows\system32\dllhost.exe
+        dllhost.exe,c:\windows\syswow64\dllhost.exe
+        wmiprvse.exe,c:\windows\system32\wbem\wmiprvse.exe
+        wmiprvse.exe,c:\windows\syswow64\wbem\wmiprvse.exe
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    query: |
+      LET running_processes_lookup <= SELECT Pid AS PID, Name AS ProcessName, Ppid AS PPID, Exe AS ImagePath, CommandLine, Username, StartTime, EndTime FROM process_tracker_pslist()
+      LET running_processes <= SELECT PID, ProcessName, PPID, {SELECT Name FROM process_tracker_pslist() WHERE Pid=PPID} AS ParentProcessName, ImagePath, CommandLine, {SELECT CommandLine FROM process_tracker_pslist() WHERE Pid=PPID} AS ParentCommandLine, Username, StartTime, EndTime FROM running_processes_lookup
+    
+      LET expected_paths_tmp <= SELECT ProcName AS ProcessName FROM expected_paths
+      LET expected_paths_lookup <= SELECT ProcessName AS ProcName, array(a1={SELECT ExpectedPath FROM expected_paths WHERE ProcessName=ProcName}) AS ExpectedPaths FROM expected_paths_tmp
+    
+
+      LET suspicious_processes <= SELECT * FROM foreach(
+          row=expected_paths_lookup,
+          query={
+              SELECT * FROM running_processes 
+              WHERE ImagePath!="" AND lowcase(string=ProcessName)=ProcName AND NOT lowcase(string=ImagePath) IN ExpectedPaths
+          }
+      )
+      
+      SELECT *, {SELECT Name, CommandLine FROM process_tracker_pslist() WHERE Ppid=PID} AS SubProcesses FROM suspicious_processes
