@@ -41,12 +41,20 @@ sources:
       SELECT OS From info() where OS = 'windows'
 
     query: |
-      LET running_processes_lookup <= SELECT Pid AS PID, Name AS ProcessName, Ppid AS PPID, Exe AS ImagePath, CommandLine, Username, StartTime, EndTime FROM process_tracker_pslist()
-      LET running_processes <= SELECT PID, ProcessName, PPID, {SELECT Name FROM process_tracker_pslist() WHERE Pid=PPID} AS ParentProcessName, ImagePath, CommandLine, {SELECT CommandLine FROM process_tracker_pslist() WHERE Pid=PPID} AS ParentCommandLine, Username, StartTime, EndTime FROM running_processes_lookup
-    
       LET expected_paths_tmp <= SELECT ProcName AS ProcessName FROM expected_paths
-      LET expected_paths_lookup <= SELECT ProcessName AS ProcName, array(a1={SELECT ExpectedPath FROM expected_paths WHERE ProcessName=ProcName}) AS ExpectedPaths FROM expected_paths_tmp
+      LET expected_paths_lookup <= SELECT ProcessName AS ProcName, 
+        array(a1={SELECT ExpectedPath FROM expected_paths WHERE ProcessName=ProcName}) AS ExpectedPaths FROM expected_paths_tmp
     
+      LET running_processes <= SELECT Pid AS PID, Name AS ProcessName, Ppid AS PPID, 
+        process_tracker_callchain(id=Pid)[-2].Data.Name As ParentProcessName, Exe AS ImagePath, 
+        process_tracker_callchain(id=Pid)[-2].Data.Exe As ParentImagePath, CommandLine, 
+        process_tracker_callchain(id=Pid)[-2].Data.CommandLine As ParentCommandLine, 
+        Username, process_tracker_callchain(id=Pid)[-2].Data.Username As ParentUsername, 
+        TokenIsElevated, process_tracker_callchain(id=Pid)[-2].Data.TokenIsElevated As ParentTokenIsElevated, 
+        StartTime, if(condition=EndTime<StartTime, then="", else=EndTime) AS EndTime, 
+        process_tracker_callchain(id=Pid)[-2].StartTime As ParentStartTime, 
+        if(condition=process_tracker_callchain(id=Pid)[-2].EndTime<StartTime, then="", else=process_tracker_callchain(id=Pid)[-2].EndTime) As ParentEndTime 
+        FROM process_tracker_pslist()
 
       LET suspicious_processes <= SELECT * FROM foreach(
           row=expected_paths_lookup,
@@ -55,5 +63,7 @@ sources:
               WHERE ImagePath!="" AND lowcase(string=ProcessName)=ProcName AND NOT lowcase(string=ImagePath) IN ExpectedPaths
           }
       )
-      
-      SELECT *, {SELECT Name, CommandLine FROM process_tracker_pslist() WHERE Ppid=PID} AS SubProcesses FROM suspicious_processes
+
+      SELECT *, {SELECT Pid, Name, Ppid, Exe, CommandLine, Username, TokenIsElevated, StartTime, 
+        if(condition=EndTime<StartTime, then="", else=EndTime) AS EndTime FROM process_tracker_pslist() 
+        WHERE Ppid=PID} AS SubProcesses FROM suspicious_processes
