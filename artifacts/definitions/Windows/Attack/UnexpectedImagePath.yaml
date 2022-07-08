@@ -1,6 +1,6 @@
 name: Windows.Attack.UnexpectedImagePath
 
-Description: |
+description: |
   Some malware are hiding in plain text by masqurading a legitimate executable name.
 
   This artifact looks for processes with known names that are being loaded from unexpected 
@@ -16,7 +16,7 @@ parameters:
    - name: expected_paths
      type: csv
      default: |
-        ProcName,ImagePath
+        ProcName,ExpectedPath
         csrss.exe,c:\windows\system32\csrss.exe
         smss.exe,c:\windows\system32\smss.exe
         services.exe,c:\windows\system32\services.exe
@@ -46,15 +46,11 @@ sources:
         array(a1={SELECT ExpectedPath FROM expected_paths WHERE ProcessName=ProcName}) AS ExpectedPaths FROM expected_paths_tmp
     
       LET running_processes <= SELECT Pid AS PID, Name AS ProcessName, Ppid AS PPID, 
-        process_tracker_callchain(id=Pid)[-2].Data.Name As ParentProcessName, Exe AS ImagePath, 
-        process_tracker_callchain(id=Pid)[-2].Data.Exe As ParentImagePath, CommandLine, 
-        process_tracker_callchain(id=Pid)[-2].Data.CommandLine As ParentCommandLine, 
-        Username, process_tracker_callchain(id=Pid)[-2].Data.Username As ParentUsername, 
-        TokenIsElevated, process_tracker_callchain(id=Pid)[-2].Data.TokenIsElevated As ParentTokenIsElevated, 
-        StartTime, if(condition=EndTime<StartTime, then="", else=EndTime) AS EndTime, 
-        process_tracker_callchain(id=Pid)[-2].StartTime As ParentStartTime, 
-        if(condition=process_tracker_callchain(id=Pid)[-2].EndTime<StartTime, then="", else=process_tracker_callchain(id=Pid)[-2].EndTime) As ParentEndTime 
+        Exe AS ImagePath, CommandLine, Username, TokenIsElevated, StartTime, 
+        if(condition=EndTime<StartTime, then="", else=EndTime) AS EndTime
         FROM process_tracker_pslist()
+        WHERE lowcase(string=Name) IN expected_paths.ProcName
+        
 
       LET suspicious_processes <= SELECT * FROM foreach(
           row=expected_paths_lookup,
@@ -64,6 +60,14 @@ sources:
           }
       )
 
-      SELECT *, {SELECT Pid, Name, Ppid, Exe, CommandLine, Username, TokenIsElevated, StartTime, 
+      SELECT PID, ProcessName, ImagePath, CommandLine, Username, TokenIsElevated, StartTime, EndTime, 
+        PPID, process_tracker_callchain(id=PID)[-2].Data.Name As ParentProcessName, 
+        process_tracker_callchain(id=PID)[-2].Data.Exe As ParentImagePath, 
+        process_tracker_callchain(id=PID)[-2].Data.CommandLine As ParentCommandLine, 
+        process_tracker_callchain(id=PID)[-2].Data.Username As ParentUsername,
+        process_tracker_callchain(id=PID)[-2].Data.TokenIsElevated As ParentTokenIsElevated, 
+        process_tracker_callchain(id=PID)[-2].StartTime As ParentStartTime, 
+        if(condition=process_tracker_callchain(id=PID)[-2].EndTime<StartTime, then="", else=process_tracker_callchain(id=PID)[-2].EndTime) As ParentEndTime,
+        {SELECT Pid, Name, Ppid, Exe, CommandLine, Username, TokenIsElevated, StartTime, 
         if(condition=EndTime<StartTime, then="", else=EndTime) AS EndTime FROM process_tracker_pslist() 
         WHERE Ppid=PID} AS SubProcesses FROM suspicious_processes
