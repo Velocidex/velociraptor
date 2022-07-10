@@ -414,6 +414,12 @@ message DynDNSConfig {
     string ddns_password = 3;
     string update_url = 4;
     uint64 frequency = 5;
+
+    // The url we will use to check the ip. Should return a plain IP address
+    string checkip_url = 6;
+
+    // DNS server we query for our own hostname/ip mapping (default 8.8.8.8:53)
+    string dns_server = 7;
 }
 
 message FrontendResourceControl {
