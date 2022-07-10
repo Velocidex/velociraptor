@@ -124,7 +124,9 @@ func NewNotificationService(
 			self.mu.Lock()
 			defer self.mu.Unlock()
 
-			self.notification_pool.Shutdown()
+			if self.notification_pool != nil {
+				self.notification_pool.Shutdown()
+			}
 			self.notification_pool = nil
 		}()
 		defer logger.Info("Exiting notification service!")
@@ -143,8 +145,10 @@ func NewNotificationService(
 				if !ok {
 					continue
 				}
-				notificationsReceivedCounter.Inc()
-				self.notification_pool.Notify(target)
+				if self.notification_pool != nil {
+					notificationsReceivedCounter.Inc()
+					self.notification_pool.Notify(target)
+				}
 			}
 		}
 	}()
@@ -213,12 +217,17 @@ func (self *Notifier) ProcessPing(ctx context.Context,
 		return nil
 	}
 
+	is_client_connected := false
+	if self.notification_pool != nil {
+		is_client_connected = self.notification_pool.IsClientConnected(client_id)
+	}
+
 	return journal.PushRowsToArtifact(config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", client_id).
 			Set("NotifyTarget", notify_target).
 			Set("From", self.uuid).
-			Set("Connected", self.notification_pool.IsClientConnected(client_id))},
+			Set("Connected", is_client_connected)},
 		"Server.Internal.Pong", "server", "")
 }
 
@@ -251,7 +260,9 @@ func (self *Notifier) NotifyListener(config_obj *config_proto.Config,
 }
 
 func (self *Notifier) NotifyDirectListener(client_id string) {
-	if self.notification_pool.IsClientConnected(client_id) {
+
+	if self.notification_pool != nil &&
+		self.notification_pool.IsClientConnected(client_id) {
 		self.notification_pool.Notify(client_id)
 	}
 }
@@ -272,10 +283,18 @@ func (self *Notifier) NotifyListenerAsync(config_obj *config_proto.Config,
 }
 
 func (self *Notifier) IsClientDirectlyConnected(client_id string) bool {
+	if self.notification_pool == nil {
+		return false
+	}
+
 	return self.notification_pool.IsClientConnected(client_id)
 }
 
 func (self *Notifier) ListClients() []string {
+	if self.notification_pool == nil {
+		return nil
+	}
+
 	return self.notification_pool.ListClients()
 }
 
