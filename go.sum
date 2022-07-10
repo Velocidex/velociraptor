@@ -1033,14 +1033,12 @@ www.velocidex.com/golang/go-pe v0.1.1-0.20220506020923-9fac492a9b0d h1:OQKwxK0O4
 www.velocidex.com/golang/go-pe v0.1.1-0.20220506020923-9fac492a9b0d/go.mod h1:TPJ3phbAuZIu7XuPyNqgoP2k3P+eNHfHHGcivhcsxaA=
 www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca h1:wQlRPcnpblrt/xc5rSe6a0K/Rh7yDEfwD0/qMrnOTrI=
 www.velocidex.com/golang/go-prefetch v0.0.0-20200722101157-37e4751dd5ca/go.mod h1:UNIUmQhflpSTt7TH4o/6O/GiMCjSzIALXe9/zzTKFCw=
-www.velocidex.com/golang/oleparse v0.0.0-20211013063943-0334d69593c1 h1:kJ0DxDTq2Q2FugzppV0bUMPLjhJ1GiW6mvaiSfs6u1s=
-www.velocidex.com/golang/oleparse v0.0.0-20211013063943-0334d69593c1/go.mod h1:4h7B5QRoBEngb7vTlZXsXYVB930xsDjo9OqJy99FQRM=
 www.velocidex.com/golang/oleparse v0.0.0-20220617011920-94df2342d0b7 h1:xPnrfl387hbyufT1ADd4RHdvHiKK7/O0O4FEsvnxhEE=
 www.velocidex.com/golang/oleparse v0.0.0-20220617011920-94df2342d0b7/go.mod h1:R7IisRzDO7q5LVRJsCQf1xA50LrIavsPWzAjVE4THyY=
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500 h1:XqZddiAbjPIsTZcEPbqqqABS/ZV5SB7j33eczNsqD60=
 www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500/go.mod h1:DVzloLH8L+oF3zma1Jisaat5bGF+4VLggDcYlIp00ns=
 www.velocidex.com/golang/vfilter v0.0.0-20220103082604-85bb38175cb7/go.mod h1:eEFMhAmoFHWGCKF39j+iOhTH8REpqBndc3OsdPsxqo8=
-www.velocidex.com/golang/vfilter v0.0.0-20220606015754-7f03acba2fc4 h1:k+juwYypOcGO3zt6lUHC77lNhVyhHzfi3KhyRM2Ccmk=
-www.velocidex.com/golang/vfilter v0.0.0-20220606015754-7f03acba2fc4/go.mod h1:HVtgbXGQZxVN3eR3q6PD46ZoIJkyfT7E62SvCVNg5+A=
+www.velocidex.com/golang/vfilter v0.0.0-20220710103309-8877819381dd h1:NpevUNTZECyoRN89Y6if3rmkf6zA+YyvcAeK35SGsSs=
+www.velocidex.com/golang/vfilter v0.0.0-20220710103309-8877819381dd/go.mod h1:HVtgbXGQZxVN3eR3q6PD46ZoIJkyfT7E62SvCVNg5+A=
 www.velocidex.com/golang/vtypes v0.0.0-20220107071957-49947f744c34 h1:4lnDIznMHDrd1irccF3HSh843/T7kzwCVXw0dWokzoE=
 www.velocidex.com/golang/vtypes v0.0.0-20220107071957-49947f744c34/go.mod h1:gpuRaiyhcuPmZYvI/zw+rjlDXklR2ORaLQBuzCXe84o=

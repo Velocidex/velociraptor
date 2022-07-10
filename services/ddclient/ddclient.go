@@ -22,7 +22,12 @@ var (
 	ddns_service = "domains.google.com"
 )
 
-type DynDNSService struct{}
+type DynDNSService struct {
+	config_obj *config_proto.Config
+
+	external_ip_url string
+	dns_server      string
+}
 
 func (self *DynDNSService) updateIP(config_obj *config_proto.Config) {
 	if config_obj.Frontend == nil || config_obj.Frontend.DynDns == nil {
@@ -30,16 +35,16 @@ func (self *DynDNSService) updateIP(config_obj *config_proto.Config) {
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("Checking DNS")
+	logger.Info("Checking DNS with %v", self.external_ip_url)
 
-	externalIP, err := GetExternalIp()
+	externalIP, err := self.GetExternalIp()
 	if err != nil {
 		logger.Error("Unable to get external IP: %v", err)
 		return
 	}
 
 	ddns_hostname := config_obj.Frontend.Hostname
-	hostnameIPs, err := GetCurrentDDNSIp(ddns_hostname)
+	hostnameIPs, err := self.GetCurrentDDNSIp(ddns_hostname)
 	if err != nil {
 		logger.Error("Unable to resolve DDNS hostname IP: %v", err)
 		return
@@ -85,8 +90,8 @@ func (self *DynDNSService) Start(
 	defer wg.Done()
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Starting</> the DynDNS service: Updating hostname %v",
-		config_obj.Frontend.Hostname)
+	logger.Info("<green>Starting</> the DynDNS service: Updating hostname %v with checkip URL %v",
+		config_obj.Frontend.Hostname, self.external_ip_url)
 
 	min_update_wait := config_obj.Frontend.DynDns.Frequency
 	if min_update_wait == 0 {
@@ -114,7 +119,6 @@ func StartDynDNSService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
-	result := &DynDNSService{}
 
 	if config_obj.Frontend == nil ||
 		config_obj.Frontend.DynDns == nil ||
@@ -123,14 +127,30 @@ func StartDynDNSService(
 		return nil
 	}
 
+	result := &DynDNSService{
+		config_obj:      config_obj,
+		external_ip_url: config_obj.Frontend.DynDns.CheckipUrl,
+		dns_server:      config_obj.Frontend.DynDns.DnsServer,
+	}
+
+	// Set sensible defaults that should work reliably most of the
+	// time.
+	if result.external_ip_url == "" {
+		result.external_ip_url = "https://domains.google.com/checkip"
+	}
+
+	if result.dns_server == "" {
+		result.dns_server = "8.8.8.8:53"
+	}
+
 	wg.Add(1)
 	go result.Start(ctx, wg, config_obj)
 
 	return nil
 }
 
-func GetExternalIp() (string, error) {
-	resp, err := http.Get("http://myexternalip.com/raw")
+func (self *DynDNSService) GetExternalIp() (string, error) {
+	resp, err := http.Get(self.external_ip_url)
 	if err != nil {
 		return "Unable to determine external IP: %v ", err
 	}
@@ -145,15 +165,15 @@ func GetExternalIp() (string, error) {
 	return result, nil
 }
 
-func GoogleDNSDialer(ctx context.Context, network, address string) (net.Conn, error) {
+func (self *DynDNSService) GoogleDNSDialer(ctx context.Context, network, address string) (net.Conn, error) {
 	d := net.Dialer{}
-	return d.DialContext(ctx, "udp", "8.8.8.8:53")
+	return d.DialContext(ctx, "udp", self.dns_server)
 }
 
-func GetCurrentDDNSIp(fqdn string) ([]string, error) {
+func (self *DynDNSService) GetCurrentDDNSIp(fqdn string) ([]string, error) {
 	r := net.Resolver{
 		PreferGo: true,
-		Dial:     GoogleDNSDialer,
+		Dial:     self.GoogleDNSDialer,
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())

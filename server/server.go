@@ -22,9 +22,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"runtime"
-	"runtime/debug"
 	"sync"
 	"time"
 
@@ -327,16 +325,8 @@ func (self *Server) Process(
 	return response, len(message_list.Job), nil
 }
 
-// Fatal error - terminate immediately.
-func (self *Server) Fatal(msg string, err error) {
-	message := fmt.Sprintf(msg, err)
-	message += "\n" + string(debug.Stack())
-	self.logger.Error(message)
-	os.Exit(-1)
-}
-
-func (self *Server) Error(msg string, err error) {
-	self.logger.Error(fmt.Sprintf(msg, err))
+func (self *Server) Error(format string, v ...interface{}) {
+	self.logger.Error(format, v...)
 }
 
 func (self *Server) Info(format string, v ...interface{}) {
