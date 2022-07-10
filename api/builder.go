@@ -360,14 +360,16 @@ func StartFrontendHttps(
 
 		listener, err, closer := server_obj.NewLoadSheddingListener(server.Addr)
 		if err != nil {
-			server_obj.Fatal("Frontend server: Can not listen on "+server.Addr,
-				err)
+			server_obj.Error("Frontend server: Can not listen on %v: %v",
+				server.Addr, err)
+			return
 		}
 		defer closer()
 
 		err = server.ServeTLS(listener, "", "")
 		if err != nil && err != http.ErrServerClosed {
-			server_obj.Fatal("Frontend server error %v", err)
+			server_obj.Error("Frontend server error %v", err)
+			return
 		}
 	}()
 
@@ -432,7 +434,8 @@ func StartFrontendPlainHttp(
 
 		err := server.ListenAndServe()
 		if err != nil && err != http.ErrServerClosed {
-			server_obj.Fatal("Frontend server error %v", err)
+			server_obj.Error("Frontend server error %v", err)
+			return
 		}
 	}()
 
@@ -518,14 +521,16 @@ func StartFrontendWithAutocert(
 		// makes sense?
 		listener, err, closer := server_obj.NewLoadSheddingListener(server.Addr)
 		if err != nil {
-			server_obj.Fatal("Frontend server: Can not listen on "+server.Addr,
-				err)
+			server_obj.Error("Frontend server: Can not listen on %v: %v",
+				server.Addr, err)
+			return
 		}
 		defer closer()
 
 		err = server.ServeTLS(listener, "", "")
 		if err != nil && err != http.ErrServerClosed {
-			server_obj.Fatal("Frontend server error", err)
+			server_obj.Error("Frontend server error: %v", err)
+			return
 		}
 	}()
 
