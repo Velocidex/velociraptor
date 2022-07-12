@@ -19,6 +19,8 @@ parameters:
       C:/Users/*/NTUSER.dat,\Software\Microsoft\Windows\Shell\BagMRU\**
       C:/Users/*/AppData/Local/Microsoft/Windows/UsrClass.dat,\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\**
 
+precondition: SELECT OS From info() where OS = 'windows'
+
 imports:
   # Link files use the same internal format as shellbags so we import
   # the profile here.
