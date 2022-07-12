@@ -71,6 +71,10 @@ type ProcessTracker struct {
 
 func (self *ProcessTracker) Get(
 	ctx context.Context, scope vfilter.Scope, id string) (*ProcessEntry, bool) {
+	return self.get(id)
+}
+
+func (self *ProcessTracker) get(id string) (*ProcessEntry, bool) {
 	any, err := self.lookup.Get(id)
 	if err != nil {
 		return nil, false
@@ -81,6 +85,77 @@ func (self *ProcessTracker) Get(
 		return nil, false
 	}
 	return pe, true
+}
+
+func (self *ProcessTracker) SetEntry(id string, entry *ProcessEntry) (old_id string, pres bool) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	// Get the existing entry for this id if it exists
+	item, pres := self.get(id)
+
+	// No existing entry - just set it
+	if !pres || item == nil {
+		self.lookup.Set(id, entry)
+		return id, false
+	}
+
+	// Use the start time to identify the same process entry. If the
+	// start times are identical then it is the same record.
+	if item.Id == entry.Id &&
+		item.StartTime.Equal(entry.StartTime) {
+		entry.ParentId = item.ParentId
+		self.lookup.Set(id, entry)
+		return id, false
+	}
+
+	// We are here when the records have the same pid and different
+	// create times. This means they are not the same process and pid
+	// is reused. In this case we change the id of the old process
+	// record and set the new record. The new id is a combination of
+	// pid and start time.
+
+	// Once the old ID is migrated, lookups for the pid will not fetch
+	// the old entry, but will get the new entry instead. However any
+	// parent/child relations will still refer to the old ID by its
+	// unique ID.
+	new_id := fmt.Sprintf("%v-%v", id, item.StartTime.Unix())
+	self.moveId(id, new_id)
+
+	// Set the new entry as the same id
+	self.lookup.Set(id, entry)
+
+	// Indicate the old record's ID to our caller
+	return new_id, true
+}
+
+// Sweep through the entire tracker and replace all referencee from
+// the old id to the new id.
+func (self *ProcessTracker) moveId(old_id, new_id string) {
+	for _, k := range self.lookup.GetKeys() {
+		any, err := self.lookup.Get(k)
+		if err != nil || any == nil {
+			continue
+		}
+
+		pe, ok := any.(*ProcessEntry)
+		if !ok {
+			continue
+		}
+
+		// Update the IDs as needed.
+		if pe.Id == old_id {
+			pe.Id = new_id
+
+			// Set the entry under the new key in the LRU
+			self.lookup.Remove(old_id)
+			self.lookup.Set(new_id, pe)
+		}
+
+		if pe.ParentId == old_id {
+			pe.ParentId = new_id
+		}
+	}
 }
 
 func (self *ProcessTracker) Stats() ttlcache.Metrics {
@@ -192,14 +267,12 @@ func (self *ProcessTracker) doUpdateQuery(
 			switch update.UpdateType {
 			case "start":
 				self.maybeSendUpdate(update)
-				self.mu.Lock()
-				self.lookup.Set(update.Id, &ProcessEntry{
+				self.SetEntry(update.Id, &ProcessEntry{
 					StartTime: update.StartTime,
 					Id:        update.Id,
 					ParentId:  update.ParentId,
 					Data:      update.Data,
 				})
-				self.mu.Unlock()
 
 			case "exit":
 				self.maybeSendUpdate(update)
@@ -211,7 +284,6 @@ func (self *ProcessTracker) doUpdateQuery(
 					self.lookup.Set(update.Id, entry)
 				}
 				self.mu.Unlock()
-
 			}
 		}
 	}
@@ -223,14 +295,7 @@ func (self *ProcessTracker) doFullSync(
 	subctx, cancel := context.WithTimeout(ctx, sync_period)
 	defer cancel()
 
-	now := GetClock().Now()
-	existing := make(map[string]bool)
-	self.mu.Lock()
-	for _, k := range self.lookup.GetKeys() {
-		existing[k] = true
-	}
-	self.mu.Unlock()
-
+	now := GetClock().Now().UTC()
 	all_updates := ordereddict.NewDict()
 
 	for row := range vql.Eval(subctx, scope) {
@@ -242,25 +307,29 @@ func (self *ProcessTracker) doFullSync(
 			return fmt.Errorf("SyncQuery does not return correct rows: %w", err)
 		}
 
-		self.mu.Lock()
-		self.lookup.Set(update.Id, update)
-		delete(existing, update.Id)
-		self.mu.Unlock()
-
+		self.SetEntry(update.Id, update)
 		all_updates.Set(update.Id, update)
 	}
 
-	// Now go over all the existing processes which were not found and
-	// update exit time if needed.
-	self.mu.Lock()
-	for id := range existing {
-		item, pres := self.Get(ctx, scope, id)
-		if pres {
-			item.EndTime = now
+	// Now go over all the existing processes in the tracker and if we
+	// have not just updated them, then we assume they were exited so
+	// we update exit time if needed.
+	for _, id := range self.lookup.GetKeys() {
+		// Set the exit time if the process still exists.
+		item, pres := self.get(id)
+		if !pres || !item.EndTime.IsZero() {
+			continue
 		}
-		self.lookup.Set(id, item)
+
+		// Check if we just updated the entry.
+		_, pres = all_updates.Get(id)
+		if !pres {
+			// No we have not seen this entry and it has no end time
+			// set - update that now.
+			item.EndTime = now
+			self.lookup.Set(id, item)
+		}
 	}
-	self.mu.Unlock()
 
 	self.maybeSendUpdate(&ProcessEntry{
 		UpdateType: "sync",
