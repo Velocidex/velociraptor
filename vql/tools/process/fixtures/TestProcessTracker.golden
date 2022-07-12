@@ -88,8 +88,7 @@
    "process_tracker_callchain(id=2).Data.Name": [
     "Process5",
     "Process2"
-   ],
-   "mock_pslist_next()": null
+   ]
   },
   {
    "process_tracker_callchain(id=2)": [
@@ -107,6 +106,68 @@
     {
      "Id": "2",
      "ParentId": "5",
+     "RealParentId": "",
+     "UpdateType": "",
+     "StartTime": "2021-01-01T12:30:00Z",
+     "EndTime": "2022-04-26TZ",
+     "Data": {
+      "Name": "Process2"
+     }
+    }
+   ]
+  }
+ ],
+ "Pid reuse": [
+  {
+   "process_tracker_callchain(id=2).Data.Name": [
+    "Process5",
+    "Process2"
+   ]
+  },
+  {
+   "process_tracker_callchain(id=2)": [
+    {
+     "Id": "5-1609497000",
+     "ParentId": "1",
+     "RealParentId": "",
+     "UpdateType": "",
+     "StartTime": "2021-01-01T10:30:00Z",
+     "EndTime": "2022-04-26TZ",
+     "Data": {
+      "Name": "Process5"
+     }
+    },
+    {
+     "Id": "2",
+     "ParentId": "5-1609497000",
+     "RealParentId": "",
+     "UpdateType": "",
+     "StartTime": "2021-01-01T12:30:00Z",
+     "EndTime": "2022-04-26TZ",
+     "Data": {
+      "Name": "Process2"
+     }
+    }
+   ]
+  }
+ ],
+ "Spoof (update)": [
+  {
+   "process_tracker_callchain(id=2)": [
+    {
+     "Id": "5-1609497000",
+     "ParentId": "1",
+     "RealParentId": "",
+     "UpdateType": "",
+     "StartTime": "2021-01-01T10:30:00Z",
+     "EndTime": "0001-01-01T00:00:00Z",
+     "Data": {
+      "Name": "Process5"
+     }
+    },
+    {
+     "Id": "2",
+     "ParentId": "5-1609497000",
      "RealParentId": "",
      "UpdateType": "",
      "StartTime": "2021-01-01T12:30:00Z",

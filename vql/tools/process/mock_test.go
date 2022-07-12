@@ -11,6 +11,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 var (
@@ -18,12 +19,55 @@ var (
 
 	plugin_responses      [][]*ordereddict.Dict
 	plugin_responses_idx  = 0
-	plugin_responses_sync = make(chan bool)
+	plugin_responses_sync chan bool
 
 	// Update plugin will signal plugin_update_done when done.
 	plugin_update_responses []*ordereddict.Dict
 	plugin_update_done      bool
 )
+
+type _MockPslist struct {
+}
+
+func (self _MockPslist) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name: "mock_pslist",
+	}
+}
+
+func (self _MockPslist) Call(
+	ctx context.Context, scope types.Scope,
+	args *ordereddict.Dict) <-chan types.Row {
+
+	output_chan := make(chan types.Row)
+
+	// Wait for signal here
+	mu.Lock()
+	w := plugin_responses_sync
+	mu.Unlock()
+
+	select {
+	case <-w:
+	}
+
+	go func() {
+		defer close(output_chan)
+
+		mu.Lock()
+		responses := plugin_responses[plugin_responses_idx]
+		plugin_responses_idx++
+		if plugin_responses_idx >= len(plugin_responses) {
+			plugin_responses_idx = 0
+		}
+		mu.Unlock()
+
+		for _, res := range responses {
+			output_chan <- res
+		}
+	}()
+
+	return output_chan
+}
 
 func loadMockPlugin(t *testing.T, serialized string) {
 	mu.Lock()
@@ -35,6 +79,9 @@ func loadMockPlugin(t *testing.T, serialized string) {
 	assert.NoError(t, err)
 
 	plugin_responses = result
+	plugin_responses_idx = 0
+	plugin_responses_sync = make(chan bool, 1)
+	plugin_responses_sync <- true
 }
 
 func loadMockUpdatePlugin(t *testing.T, serialized string) {
@@ -51,33 +98,7 @@ func loadMockUpdatePlugin(t *testing.T, serialized string) {
 }
 
 func init() {
-	vql_subsystem.RegisterPlugin(vfilter.GenericListPlugin{
-		PluginName: "mock_pslist",
-		Function: func(
-			ctx context.Context,
-			scope vfilter.Scope,
-			args *ordereddict.Dict) []vfilter.Row {
-			var result []vfilter.Row
-
-			mu.Lock()
-			defer mu.Unlock()
-
-			if plugin_responses_idx > len(plugin_responses)-1 {
-				plugin_responses_idx = 0
-			}
-
-			for _, i := range plugin_responses[plugin_responses_idx] {
-				result = append(result, i)
-			}
-
-			// Try to notify any waiters
-			select {
-			case plugin_responses_sync <- true:
-			default:
-			}
-
-			return result
-		}})
+	vql_subsystem.RegisterPlugin(&_MockPslist{})
 
 	vql_subsystem.RegisterPlugin(vfilter.GenericListPlugin{
 		PluginName: "mock_update",
@@ -103,12 +124,10 @@ func init() {
 			ctx context.Context,
 			scope vfilter.Scope,
 			args *ordereddict.Dict) vfilter.Any {
-			mu.Lock()
-			plugin_responses_idx++
-			mu.Unlock()
 
-			// Wait here until the tracker is updated.
-			<-plugin_responses_sync
+			plugin_responses_sync <- true
+
+			time.Sleep(100 * time.Millisecond)
 
 			return &vfilter.Null{}
 		}})
