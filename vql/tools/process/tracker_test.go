@@ -59,9 +59,13 @@ LET Tracker <= process_tracker(sync_query={
   FROM mock_pslist()
 }, sync_period=5)
 
+LET _ <= mock_pslist_next()
+
 -- First call Pid 5 is still around.
-SELECT process_tracker_callchain(id=2).Data.Name, mock_pslist_next()
+SELECT process_tracker_callchain(id=2).Data.Name
 FROM scope()
+
+LET _ <= mock_pslist_next()
 
 -- Second call Pid 5 is exited - should mark Pid 5 as exited.
 SELECT process_tracker_callchain(id=2)
@@ -110,6 +114,8 @@ FROM scope()
 
 		{
 			Name: "Parent Process Exiting (pslist)",
+			// First pass has pid 2 and 5, second pass has only 2 (5
+			// exited). Check that exit time is set properly.
 			Mock: `
 [
  [{"Pid":2,"Name":"Process2","Ppid":5,"CreateTime": "2021-01-01T12:30Z"},
@@ -118,7 +124,42 @@ FROM scope()
  [{"Pid":2,"Name":"Process2","Ppid":5,"CreateTime": "2021-01-01T12:30Z"}]
 ]`,
 			Query: stockSyncTest,
-			//			Clock: &utils.MockClock{time.Unix(1651000000, 0).UTC()},
+			Clock: &utils.IncClock{NowTime: 1651000000},
+		},
+
+		{
+			Name: "Pid reuse",
+			// Pid 2 is child of pid 5. First pass pid 5 has one
+			// create time, second pass pid 5 has a different create
+			// time (ie was reused). This should replace old pid 5
+			// with guid and reparent pid 2 to the original pid 5.
+			Mock: `
+[
+ [{"Pid":2,"Name":"Process2","Ppid":5,"CreateTime": "2021-01-01T12:30Z"},
+  {"Pid":5,"Name":"Process5","Ppid":1,"CreateTime": "2021-01-01T10:30Z"}
+ ],
+ [{"Pid":2,"Name":"Process2","Ppid":5,"CreateTime": "2021-01-01T12:30Z"},
+  {"Pid":5,"Name":"NewProcess5","Ppid":1,"CreateTime": "2021-01-11T10:30Z"}
+ ]
+]`,
+			Query: stockSyncTest,
+			Clock: &utils.IncClock{NowTime: 1651000000},
+		},
+
+		{
+			Name: "Spoof (update)",
+			Mock: `
+[
+ [{"Pid":2,"Name":"Process2","Ppid":5,"CreateTime": "2021-01-01T12:30Z"},
+  {"Pid":5,"Name":"Process5","Ppid":1,"CreateTime": "2021-01-01T10:30Z"}
+ ]
+]`,
+			UpdateMock: `
+[
+ {"update_type":"start","id":5,"parent_id":1,"start_time":"2021-01-11T12:30Z",
+   "data": {"Name": "NewProcess5"}}
+]`,
+			Query: stockUpdateTest,
 			Clock: &utils.IncClock{NowTime: 1651000000},
 		},
 	}
@@ -135,11 +176,10 @@ func (self *ProcessTrackerTestSuite) TestProcessTracker() {
 	defer cancel()
 
 	for idx, test_case := range testCases {
-		/*
-			if idx != 1 {
-				continue
-			}
-		*/
+		//if idx != 5 {
+		//	continue
+		//}
+
 		_ = idx
 		SetClock(test_case.Clock)
 
