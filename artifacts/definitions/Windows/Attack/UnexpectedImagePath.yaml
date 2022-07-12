@@ -41,33 +41,34 @@ sources:
       SELECT OS From info() where OS = 'windows'
 
     query: |
-      LET expected_paths_tmp <= SELECT ProcName AS ProcessName FROM expected_paths
-      LET expected_paths_lookup <= SELECT ProcessName AS ProcName, 
-        array(a1={SELECT ExpectedPath FROM expected_paths WHERE ProcessName=ProcName}) AS ExpectedPaths FROM expected_paths_tmp
+      LET expected_paths_lookup <= memoize(key="ProcName", query={
+        SELECT ProcName, enumerate(items=ExpectedPath) AS Path 
+        FROM expected_paths
+        GROUP BY ProcName
+      })
     
-      LET running_processes <= SELECT Pid AS PID, Name AS ProcessName, Ppid AS PPID, 
+      LET suspicious_processes = SELECT Pid AS PID, Name AS ProcessName, Ppid AS PPID, 
         Exe AS ImagePath, CommandLine, Username, TokenIsElevated, StartTime, 
-        if(condition=EndTime<StartTime, then="", else=EndTime) AS EndTime
+        if(condition=EndTime<StartTime, then="", else=EndTime) AS EndTime,
+        get(item=expected_paths_lookup, field=Name).Path AS ExpectedPaths,
+        process_tracker_callchain(id=Pid) AS CallChain,
+        process_tracker_get(id=Ppid) AS Parent
         FROM process_tracker_pslist()
-        WHERE lowcase(string=Name) IN expected_paths.ProcName
-        
-
-      LET suspicious_processes <= SELECT * FROM foreach(
-          row=expected_paths_lookup,
-          query={
-              SELECT * FROM running_processes 
-              WHERE ImagePath!="" AND lowcase(string=ProcessName)=ProcName AND NOT lowcase(string=ImagePath) IN ExpectedPaths
-          }
-      )
+        WHERE ImagePath != "" AND ExpectedPaths AND
+          NOT lowcase(string=ImagePath) IN ExpectedPaths
 
       SELECT PID, ProcessName, ImagePath, CommandLine, Username, TokenIsElevated, StartTime, EndTime, 
-        PPID, process_tracker_callchain(id=PID)[-2].Data.Name As ParentProcessName, 
-        process_tracker_callchain(id=PID)[-2].Data.Exe As ParentImagePath, 
-        process_tracker_callchain(id=PID)[-2].Data.CommandLine As ParentCommandLine, 
-        process_tracker_callchain(id=PID)[-2].Data.Username As ParentUsername,
-        process_tracker_callchain(id=PID)[-2].Data.TokenIsElevated As ParentTokenIsElevated, 
-        process_tracker_callchain(id=PID)[-2].StartTime As ParentStartTime, 
-        if(condition=process_tracker_callchain(id=PID)[-2].EndTime<StartTime, then="", else=process_tracker_callchain(id=PID)[-2].EndTime) As ParentEndTime,
-        {SELECT Pid, Name, Ppid, Exe, CommandLine, Username, TokenIsElevated, StartTime, 
-        if(condition=EndTime<StartTime, then="", else=EndTime) AS EndTime FROM process_tracker_pslist() 
-        WHERE Ppid=PID} AS SubProcesses FROM suspicious_processes
+        PPID, Parent.Data.Name As ParentProcessName, 
+        Parent.Data.Exe As ParentImagePath, 
+        Parent.Data.CommandLine As ParentCommandLine, 
+        Parent.Data.Username As ParentUsername,
+        Parent.Data.TokenIsElevated As ParentTokenIsElevated, 
+        Parent.StartTime As ParentStartTime, 
+        if(condition=Parent.EndTime<Parent.StartTime, then=NULL, else=EndTime) AS ParentEndTime,
+        CallChain.Data AS _CallChain,
+        { SELECT Pid, Name, Ppid, Exe, 
+                 CommandLine, Username, TokenIsElevated, StartTime, EndTime
+          FROM 
+          foreach(row=process_tracker_children(id=PID).Data)
+        } AS SubProcesses
+        FROM suspicious_processes
