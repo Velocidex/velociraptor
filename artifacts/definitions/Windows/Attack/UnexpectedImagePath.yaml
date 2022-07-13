@@ -1,0 +1,74 @@
+name: Windows.Attack.UnexpectedImagePath
+
+description: |
+  Some malware are hiding in plain text by masqurading a legitimate executable name.
+
+  This artifact looks for processes with known names that are being loaded from unexpected 
+  locations.
+
+reference: 
+  - https://www.sans.org/posters/hunt-evil/
+  - https://github.com/teoseller/osquery-attck/blob/master/windows-incorrect_path_process.conf
+
+author: Amged Wageh
+
+parameters:
+   - name: expected_paths
+     type: csv
+     default: |
+        ProcName,ExpectedPath
+        csrss.exe,c:\windows\system32\csrss.exe
+        smss.exe,c:\windows\system32\smss.exe
+        services.exe,c:\windows\system32\services.exe
+        wininit.exe,c:\windows\system32\wininit.exe
+        svchost.exe,c:\windows\system32\svchost.exe
+        svchost.exe,c:\windows\syswow64\svchost.exe
+        runtimebroker.exe,c:\windows\system32\runtimebroker.exe
+        lsaiso.exe,c:\windows\system32\lsaiso.exe
+        taskhostw.exe,c:\windows\system32\taskhostw.exe
+        lsass.exe,c:\windows\system32\lsass.exe
+        winlogon.exe,c:\windows\system32\winlogon.exe
+        explorer.exe,c:\windows\explorer.exe
+        explorer.exe,c:\windows\syswow64\explorer.exe
+        conhost.exe,c:\windows\system32\conhost.exe
+        dllhost.exe,c:\windows\system32\dllhost.exe
+        dllhost.exe,c:\windows\syswow64\dllhost.exe
+        wmiprvse.exe,c:\windows\system32\wbem\wmiprvse.exe
+        wmiprvse.exe,c:\windows\syswow64\wbem\wmiprvse.exe
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    query: |
+      LET expected_paths_lookup <= memoize(key="ProcName", query={
+        SELECT ProcName, enumerate(items=ExpectedPath) AS Path 
+        FROM expected_paths
+        GROUP BY ProcName
+      })
+    
+      LET suspicious_processes = SELECT Pid AS PID, Name AS ProcessName, Ppid AS PPID, 
+        Exe AS ImagePath, CommandLine, Username, TokenIsElevated, StartTime, 
+        if(condition=EndTime<StartTime, then="", else=EndTime) AS EndTime,
+        get(item=expected_paths_lookup, field=Name).Path AS ExpectedPaths,
+        process_tracker_callchain(id=Pid) AS CallChain,
+        process_tracker_get(id=Ppid) AS Parent
+        FROM process_tracker_pslist()
+        WHERE ImagePath != "" AND ExpectedPaths AND
+          NOT lowcase(string=ImagePath) IN ExpectedPaths
+
+      SELECT PID, ProcessName, ImagePath, CommandLine, Username, TokenIsElevated, StartTime, EndTime, 
+        PPID, Parent.Data.Name As ParentProcessName, 
+        Parent.Data.Exe As ParentImagePath, 
+        Parent.Data.CommandLine As ParentCommandLine, 
+        Parent.Data.Username As ParentUsername,
+        Parent.Data.TokenIsElevated As ParentTokenIsElevated, 
+        Parent.StartTime As ParentStartTime, 
+        if(condition=Parent.EndTime<Parent.StartTime, then=NULL, else=EndTime) AS ParentEndTime,
+        CallChain.Data AS _CallChain,
+        { SELECT Pid, Name, Ppid, Exe, 
+                 CommandLine, Username, TokenIsElevated, StartTime, EndTime
+          FROM 
+          foreach(row=process_tracker_children(id=PID).Data)
+        } AS SubProcesses
+        FROM suspicious_processes
