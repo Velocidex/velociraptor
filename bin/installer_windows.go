@@ -526,7 +526,8 @@ func runOnce(ctx context.Context,
 		return
 	}
 
-	exe, err := executor.NewClientExecutor(ctx, config_obj)
+	exe, err := executor.NewClientExecutor(
+		ctx, manager.ClientId(), config_obj)
 	if err != nil {
 		elog.Error(1, fmt.Sprintf(
 			"Can not create client: %v", err))
