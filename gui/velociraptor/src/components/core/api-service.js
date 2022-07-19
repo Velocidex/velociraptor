@@ -51,8 +51,10 @@ function retryDelay(retryNumber = 0) {
     console.log("retrying API call in " + (delay + randomSum));
     return delay + randomSum;
 }
+
 function isRetryableError(error) {
-  return error.code !== 'ECONNABORTED' && (!error.response || error.response.status >= 500 && error.response.status <= 599);
+  return error.code !== 'ECONNABORTED' && (!error.response || (
+      error.response.status >= 500 && error.response.status <= 599));
 }
 
 function isNetworkError(error) {

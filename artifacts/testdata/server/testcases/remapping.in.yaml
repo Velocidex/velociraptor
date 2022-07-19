@@ -153,8 +153,8 @@ Queries:
 
   # Make sure we can parse the mft as normal.
   - SELECT * FROM parse_mft(filename="C:/$MFT", accessor="ntfs")
-    WHERE FullPath =~ 'Hello world'
-    ORDER BY FullPath
+    WHERE OSPath =~ 'Hello world'
+    ORDER BY OSPath
 
   - SELECT parse_ntfs(device="C:/$MFT", inode="46-128-0", accessor="ntfs")
     FROM scope()
@@ -165,7 +165,7 @@ Queries:
   - SELECT * FROM parse_ntfs_ranges(accessor='ntfs', device='c:/$MFT',
            inode="46-128-5")
 
-  - SELECT FullPath FROM glob(accessor='registry', globs="/HKLM/*/xbox*")
+  - SELECT OSPath FROM glob(accessor='registry', globs="/HKLM/*/xbox*")
 
   # Test data remapping
   - SELECT read_file(filename="hello world", accessor="data")
