@@ -19,7 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/orgs"
+	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
@@ -69,7 +69,13 @@ func doVacuum() error {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
-	sm := services.NewServiceManager(ctx, config_obj)
+	config_obj.Frontend.ServerServices = services.GenericToolServices()
+	config_obj.Frontend.ServerServices.IndexServer = true
+
+	sm, err := startup.StartToolServices(ctx, config_obj)
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
 	defer sm.Close()
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
@@ -79,11 +85,6 @@ func doVacuum() error {
 	server.IncreaseLimits(config_obj)
 
 	err = sm.Start(datastore.StartMemcacheFileService)
-	if err != nil {
-		return err
-	}
-
-	err = sm.Start(orgs.StartOrgManager)
 	if err != nil {
 		return err
 	}

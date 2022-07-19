@@ -129,7 +129,8 @@ func NewNotificationService(
 			}
 			self.notification_pool = nil
 		}()
-		defer logger.Info("Exiting notification service!")
+		defer logger.Info("Exiting notification service for %v!",
+			services.GetOrgName(config_obj))
 
 		for {
 			select {

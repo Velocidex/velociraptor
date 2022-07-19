@@ -378,10 +378,12 @@ func LoadBuiltInArtifacts(ctx context.Context,
 		return err
 	}
 
-	grepository, err = InitializeGlobalRepositoryFromFilestore(
-		ctx, config_obj, self.global_repository)
-	if err != nil {
-		return err
+	if config_obj.Datastore != nil {
+		grepository, err = InitializeGlobalRepositoryFromFilestore(
+			ctx, config_obj, self.global_repository)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Compile the artifacts in the background so they are ready

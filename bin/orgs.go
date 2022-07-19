@@ -6,8 +6,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/orgs"
-	"www.velocidex.com/golang/velociraptor/services/users"
+	"www.velocidex.com/golang/velociraptor/startup"
 )
 
 var (
@@ -38,10 +37,9 @@ func doOrgLs() error {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
-	sm := services.NewServiceManager(ctx, config_obj)
+	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
 
-	err = sm.Start(orgs.StartOrgManager)
 	if err != nil {
 		return err
 	}
@@ -70,15 +68,9 @@ func doOrgUserAdd() error {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
-	sm := services.NewServiceManager(ctx, config_obj)
+	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
 
-	err = sm.Start(users.StartUserManager)
-	if err != nil {
-		return err
-	}
-
-	err = sm.Start(orgs.StartOrgManager)
 	if err != nil {
 		return err
 	}
@@ -120,10 +112,9 @@ func doOrgCreate() error {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
-	sm := services.NewServiceManager(ctx, config_obj)
+	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
 
-	err = sm.Start(orgs.StartOrgManager)
 	if err != nil {
 		return err
 	}

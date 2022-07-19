@@ -1,7 +1,7 @@
 config
 public
 server_artifacts
-server_artifacts_logs
+server_artifact_logs
 *.json.db
 client_idx
 artifact_definitions

@@ -5,11 +5,14 @@ import (
 	"sync"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/broadcast"
 	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
+	"www.velocidex.com/golang/velociraptor/services/ddclient"
 	"www.velocidex.com/golang/velociraptor/services/frontend"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
@@ -243,20 +246,12 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 	return self.startOrgFromContext(org_ctx)
 }
 
-func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
-	org_id := org_ctx.record.OrgId
-	org_config := org_ctx.config_obj
-	service_container := org_ctx.service.(*ServiceContainer)
+func (self *OrgManager) startRootOrgServices(
+	spec *config_proto.ServerServicesConfig,
+	org_config *config_proto.Config,
+	service_container *ServiceContainer) (err error) {
 
-	// If there is not frontend defined we are running as a client.
-	spec := services.ClientServicesSpec()
-	if org_config.Frontend != nil &&
-		org_config.Frontend.ServerServices != nil {
-		spec = org_config.Frontend.ServerServices
-	}
-
-	// Now start service on the root org
-	if spec.FrontendServer && org_id == "" {
+	if spec.FrontendServer {
 		f, err := frontend.NewFrontendService(
 			self.ctx, self.wg, org_config)
 		if err != nil {
@@ -265,12 +260,53 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		service_container.mu.Lock()
 		service_container.frontend = f
 		service_container.mu.Unlock()
+
+		err = datastore.StartMemcacheFileService(
+			self.ctx, self.wg, org_config)
+		if err != nil {
+			return err
+		}
 	}
 
 	// The user manager is global across all orgs.
-	if spec.UserManager && org_id == "" {
+	if spec.UserManager {
 		err := users.StartUserManager(
 			self.ctx, self.wg, org_config)
+		if err != nil {
+			return err
+		}
+	}
+
+	err = ddclient.StartDynDNSService(
+		self.ctx, self.wg, org_config)
+	if err != nil {
+		return err
+	}
+
+	err = datastore.StartRemoteDatastore(
+		self.ctx, self.wg, org_config)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
+	org_id := org_ctx.record.OrgId
+	org_config := org_ctx.config_obj
+	service_container := org_ctx.service.(*ServiceContainer)
+
+	// If there is no frontend defined we are running as a client.
+	spec := services.ClientServicesSpec()
+	if org_config.Frontend != nil &&
+		org_config.Frontend.ServerServices != nil {
+		spec = org_config.Frontend.ServerServices
+	}
+
+	// Now start service on the root org
+	if org_id == "" {
+		err := self.startRootOrgServices(spec, org_config, service_container)
 		if err != nil {
 			return err
 		}
@@ -349,6 +385,12 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 			// validate them at runtime.
 			err = repository.LoadBuiltInArtifacts(self.ctx, org_config,
 				repo_manager.(*repository.RepositoryManager), false /* validate */)
+			if err != nil {
+				return err
+			}
+
+			err = repository.LoadArtifactsFromConfig(
+				repo_manager.(*repository.RepositoryManager), org_config)
 			if err != nil {
 				return err
 			}

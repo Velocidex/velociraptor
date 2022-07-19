@@ -24,7 +24,8 @@ import (
 
 func NewDefaultUserObject(config_obj *config_proto.Config) *api_proto.ApiUser {
 	result := &api_proto.ApiUser{
-		UserType: api_proto.ApiUser_USER_TYPE_ADMIN,
+		UserType:        api_proto.ApiUser_USER_TYPE_ADMIN,
+		InterfaceTraits: &api_proto.ApiUserInterfaceTraits{},
 	}
 
 	if config_obj.GUI != nil {

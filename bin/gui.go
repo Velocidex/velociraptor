@@ -13,6 +13,7 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/users"
+	"www.velocidex.com/golang/velociraptor/startup"
 )
 
 var (
@@ -170,22 +171,20 @@ func doGUI() error {
 		fd.Close()
 	}
 
+	if config_obj.Frontend.ServerServices == nil {
+		config_obj.Frontend.ServerServices = services.AllServerServicesSpec()
+	}
+
 	// Now start the frontend
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
-	sm := services.NewServiceManager(ctx, config_obj)
-	defer sm.Close()
-
-	if config_obj.Frontend.ServerServices == nil {
-		config_obj.Frontend.ServerServices = services.AllServicesSpec()
-	}
-
-	server, err := startFrontend(sm)
+	// Now start the frontend services
+	sm, err := startup.StartFrontendServices(ctx, config_obj)
 	if err != nil {
-		return fmt.Errorf("Starting services: %w", err)
+		return fmt.Errorf("starting frontend: %w", err)
 	}
-	defer server.Close()
+	defer sm.Close()
 
 	// Just try to open the browser in the background.
 	if !*gui_command_no_browser {
@@ -207,7 +206,18 @@ func doGUI() error {
 		*verbose_flag = true
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("Running client from %v", client_config_path)
-		go RunClient(ctx, sm.Wg, &client_config_path)
+
+		// Include the writeback in the client's configuratio.
+		config_obj, err := makeDefaultConfigLoader().
+			WithRequiredClient().
+			WithRequiredLogging().
+			WithFileLoader(client_config_path).
+			WithWriteback().LoadAndValidate()
+		if err != nil {
+			return err
+		}
+
+		go RunClient(ctx, config_obj)
 	}
 
 	sm.Wg.Wait()

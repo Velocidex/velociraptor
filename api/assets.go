@@ -46,13 +46,15 @@ func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) 
 
 func GetTemplateHandler(
 	config_obj *config_proto.Config, template_name string) (http.Handler, error) {
+	gui_assets.Init()
+
 	data, err := gui_assets.ReadFile(template_name)
 	if err != nil {
 		// It is possible that the binary was not built with the GUI
 		// app. This is not a fatal error but it is not very useful :-).
 		data = []byte(
 			`<html><body>
-  <h1>This binary was not build with GUI support!</h1>
+  <h1>This binary was not built with GUI support!</h1>
 
   Search for building instructions on https://docs.velociraptor.app/
 </body></html>`)

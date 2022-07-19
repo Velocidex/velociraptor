@@ -69,15 +69,14 @@ func NewClientCryptoManager(config_obj *config_proto.Config, client_private_key_
 	}
 
 	lru_size := int64(100)
-	if config_obj.Frontend != nil {
+	if config_obj.Frontend != nil &&
+		config_obj.Frontend.Resources != nil {
 		lru_size = config_obj.Frontend.Resources.ExpectedClients
 	}
 
 	return &ClientCryptoManager{CryptoManager{
-		config:      config_obj,
-		ClientId:    client_id,
+		client_id:   client_id,
 		private_key: private_key,
-		source:      client_id,
 		Resolver:    NewInMemoryPublicKeyResolver(),
 		cipher_lru:  NewCipherLRU(lru_size),
 		caPool:      roots,

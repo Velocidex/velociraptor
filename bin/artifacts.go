@@ -171,23 +171,12 @@ func doArtifactCollect() error {
 		return fmt.Errorf("Unable to create config: %w", err)
 	}
 
-	top_ctx, top_cancel := install_sig_handler()
+	ctx, top_cancel := install_sig_handler()
 	defer top_cancel()
 
-	ctx, cancel := context.WithCancel(top_ctx)
-	defer cancel()
-
-	sm := services.NewServiceManager(ctx, config_obj)
+	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
 
-	err = startup.StartupEssentialServices(sm)
-	if err != nil {
-		return err
-	}
-
-	// Load any artifacts defined in the config file after all the
-	// services are up.
-	err = load_config_artifacts(config_obj)
 	if err != nil {
 		return err
 	}
@@ -260,17 +249,12 @@ func doArtifactCollect() error {
 			MaxMemoryHardLimit: *artifact_command_collect_hardmemory,
 			Logger: logging.GetLogger(
 				config_obj, &logging.ToolComponent),
-			OnExit: cancel,
+			OnExit: sm.Close,
 		}
 
 		// Keep the nanny running after the query is done so it can
 		// hard kill the process if cancellation is not enough.
-		Nanny.Start(top_ctx, &sync.WaitGroup{})
-	}
-
-	_, err = getRepository(config_obj)
-	if err != nil {
-		return err
+		Nanny.Start(ctx, &sync.WaitGroup{})
 	}
 
 	now := time.Now()
@@ -293,7 +277,7 @@ func doArtifactCollect() error {
                         cpu_limit=CpuLimit,
                         password=Password, args=Args, format=Format)`
 	return eval_local_query(
-		ctx, config_obj,
+		sm.Ctx, config_obj,
 		*artifact_command_collect_format, query, scope)
 }
 
@@ -310,15 +294,24 @@ func doArtifactShow() error {
 		return fmt.Errorf("Unable to create config: %w", err)
 	}
 
-	sm, err := startEssentialServices(config_obj)
-	if err != nil {
-		return fmt.Errorf("Can't load service: %w", err)
-	}
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
+	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
 
-	repository, err := getRepository(config_obj)
 	if err != nil {
-		return fmt.Errorf("Loading extra artifacts: %w", err)
+		return err
+	}
+
+	manager, err := services.GetRepositoryManager(config_obj)
+	if err != nil {
+		return err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
 	}
 
 	artifact, pres := repository.Get(config_obj, *artifact_command_show_name)
@@ -338,16 +331,12 @@ func doArtifactList() error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	sm, err := startEssentialServices(config_obj)
-	if err != nil {
-		return fmt.Errorf("Starting services: %w", err)
-	}
-	defer sm.Close()
-
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
-	repository, err := getRepository(config_obj)
+	sm, err := startup.StartToolServices(ctx, config_obj)
+	defer sm.Close()
+
 	if err != nil {
 		return err
 	}
@@ -362,7 +351,17 @@ func doArtifactList() error {
 		name_regex = re
 	}
 
-	names, err := repository.List(ctx, config_obj)
+	manager, err := services.GetRepositoryManager(config_obj)
+	if err != nil {
+		return err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return err
+	}
+
+	names, err := repository.List(sm.Ctx, config_obj)
 	if err != nil {
 		return err
 	}
@@ -395,7 +394,7 @@ func doArtifactList() error {
 		}
 
 		request, err := launcher.CompileCollectorArgs(
-			ctx, config_obj, vql_subsystem.NullACLManager{}, repository,
+			sm.Ctx, config_obj, vql_subsystem.NullACLManager{}, repository,
 			services.CompilerOptions{
 				DisablePrecondition: true,
 			},
@@ -413,42 +412,6 @@ func doArtifactList() error {
 
 		fmt.Printf("VQLCollectorArgs %s:\n***********\n%v\n",
 			artifact.Name, string(res))
-	}
-	return nil
-}
-
-// Load any artifacts defined inside the config file.
-func load_config_artifacts(config_obj *config_proto.Config) error {
-	if config_obj.Autoexec == nil {
-		return nil
-	}
-
-	manager, err := services.GetRepositoryManager(config_obj)
-	if err != nil {
-		return err
-	}
-
-	repository, err := manager.GetGlobalRepository(config_obj)
-	if err != nil {
-		return err
-	}
-
-	for _, definition := range config_obj.Autoexec.ArtifactDefinitions {
-		serialized, err := yaml.Marshal(definition)
-		if err != nil {
-			return err
-		}
-
-		// Config artifacts are considered built in.
-		artifact, err := repository.LoadYaml(
-			string(serialized), true /* validate */, true /* built_in */)
-		if err != nil {
-			logging.Prelog("<red>Error Loading config artifact %v</>: %v",
-				artifact.Name, err)
-			return err
-		}
-		logging.Prelog("Loading config artifact: %v", artifact.Name)
-
 	}
 	return nil
 }

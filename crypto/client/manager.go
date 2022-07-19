@@ -28,13 +28,10 @@ import (
 )
 
 type CryptoManager struct {
-	config      *config_proto.Config
 	private_key *rsa.PrivateKey
 
-	source string
-
-	Resolver PublicKeyResolver
-	ClientId string
+	Resolver  PublicKeyResolver
+	client_id string
 
 	// Cache output cipher sessions for each destination. Sending
 	// to the same destination will reuse the same cipher object
@@ -50,6 +47,10 @@ type CryptoManager struct {
 func (self *CryptoManager) Clear() {
 	self.cipher_lru.Clear()
 	self.Resolver.Clear()
+}
+
+func (self *CryptoManager) ClientId() string {
+	return self.client_id
 }
 
 func (self *CryptoManager) GetCSR() ([]byte, error) {
@@ -70,7 +71,7 @@ func (self *CryptoManager) GetCSR() ([]byte, error) {
 }
 
 func NewCryptoManager(config_obj *config_proto.Config,
-	source string,
+	client_id string,
 	private_key_pem []byte,
 	public_key_resolver PublicKeyResolver,
 	logger *logging.LogContext) (
@@ -81,9 +82,8 @@ func NewCryptoManager(config_obj *config_proto.Config,
 	}
 
 	return &CryptoManager{
-		config:      config_obj,
 		private_key: private_key,
-		source:      source,
+		client_id:   client_id,
 		Resolver:    public_key_resolver,
 		cipher_lru:  NewCipherLRU(config_obj.Frontend.Resources.ExpectedClients),
 		logger:      logging.GetLogger(config_obj, &logging.ClientComponent),
@@ -397,22 +397,23 @@ func (self *CryptoManager) Encrypt(
 	destination string) (
 	[]byte, error) {
 
+	// Get the config that relates to the destination.
+	org_id := utils.OrgIdFromClientId(destination)
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return nil, err
+	}
+
+	org_config_obj, err := org_manager.GetOrgConfig(org_id)
+	if err != nil {
+		return nil, err
+	}
+
 	// The cipher is kept the same for all future communications
 	// to enable the remote end to cache it - thereby saving RSA
 	// operations for all messages in the session.
 	output_cipher, ok := self.cipher_lru.GetOutboundCipher(destination)
 	if !ok {
-		org_id := utils.OrgIdFromClientId(destination)
-		org_manager, err := services.GetOrgManager()
-		if err != nil {
-			return nil, err
-		}
-
-		org_config_obj, err := org_manager.GetOrgConfig(org_id)
-		if err != nil {
-			return nil, err
-		}
-
 		// Build a new cipher
 		public_key, pres := self.Resolver.GetPublicKey(org_config_obj, destination)
 		if !pres {
@@ -421,7 +422,7 @@ func (self *CryptoManager) Encrypt(
 				destination))
 		}
 
-		cipher, err := _NewCipher(self.source, self.private_key, public_key)
+		cipher, err := _NewCipher(self.client_id, self.private_key, public_key)
 		if err != nil {
 			return nil, err
 		}
@@ -434,9 +435,11 @@ func (self *CryptoManager) Encrypt(
 		// We always compress the data.
 		Compression: compression,
 		MessageList: compressed_message_lists,
-		Source:      self.source,
-		Nonce:       self.config.Client.Nonce,
-		Timestamp:   uint64(time.Now().UnixNano() / 1000),
+		Source:      self.client_id,
+
+		// Use the correct nonce for the destination
+		Nonce:     org_config_obj.Client.Nonce,
+		Timestamp: uint64(time.Now().UnixNano() / 1000),
 	}
 
 	serialized_packed_message_list, err := proto.Marshal(packed_message_list)

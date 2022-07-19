@@ -25,14 +25,10 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/executor"
-	"www.velocidex.com/golang/velociraptor/http_comms"
 	logging "www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/orgs"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
 )
 
@@ -43,12 +39,27 @@ var (
 		"Do not output anything to stdout/stderr").Bool()
 )
 
+func doClient() error {
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
+	// Include the writeback in the client's configuratio.
+	config_obj, err := makeDefaultConfigLoader().
+		WithRequiredClient().
+		WithRequiredLogging().
+		WithFileLoader(*config_path).
+		WithWriteback().LoadAndValidate()
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
+
+	return RunClient(ctx, config_obj)
+}
+
+// Run the client - if the client exits restart it.
 func RunClient(
 	ctx context.Context,
-	wg *sync.WaitGroup,
-	config_path *string) error {
-
-	defer wg.Done()
+	config_obj *config_proto.Config) error {
 
 	err := checkMutex()
 	if err != nil {
@@ -61,7 +72,7 @@ func RunClient(
 
 		lwg.Add(1)
 		go func() {
-			runClientOnce(subctx, lwg, config_path)
+			runClientOnce(subctx, lwg, config_obj)
 			cancel()
 		}()
 
@@ -83,20 +94,9 @@ func RunClient(
 func runClientOnce(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_path *string) (err error) {
+	config_obj *config_proto.Config) (err error) {
+
 	defer wg.Done()
-
-	lwg := &sync.WaitGroup{}
-
-	// Include the writeback in the client's configuration.
-	config_obj, err := makeDefaultConfigLoader().
-		WithRequiredClient().
-		WithRequiredLogging().
-		WithFileLoader(*config_path).
-		WithWriteback().LoadAndValidate()
-	if err != nil {
-		return fmt.Errorf("Unable to load config file: %w", err)
-	}
 
 	// Report any errors from this function.
 	defer func() {
@@ -119,76 +119,19 @@ func runClientOnce(
 		return err
 	}
 
-	manager, err := crypto_client.NewClientCryptoManager(
-		config_obj, []byte(writeback.PrivateKey))
-	if err != nil {
-		return err
-	}
-
-	// Start all the services
-	sm := services.NewServiceManager(ctx, config_obj)
-	defer sm.Close()
-
-	// Start the nanny first so we are covered from here on.
-	err = sm.Start(executor.StartNannyService)
-	if err != nil {
-		return err
-	}
-
-	// Create a suitable service plan.
-	if config_obj.Frontend == nil {
-		config_obj.Frontend = &config_proto.FrontendConfig{}
-	}
-
-	if config_obj.Frontend.ServerServices == nil {
-		config_obj.Frontend.ServerServices = services.ClientServicesSpec()
-	}
-
-	err = sm.Start(orgs.StartClientOrgManager)
-	if err != nil {
-		return err
-	}
-
-	exe, err := executor.NewClientExecutor(ctx, config_obj)
+	exe, err := executor.NewClientExecutor(
+		ctx, writeback.ClientId, config_obj)
 	if err != nil {
 		return fmt.Errorf("Can not create executor: %w", err)
 	}
 
-	// Now start the communicator so we can talk with the server.
-	comm, err := http_comms.NewHTTPCommunicator(
-		ctx,
-		config_obj,
-		manager,
-		exe,
-		config_obj.Client.ServerUrls,
-		func() { on_error(ctx, config_obj) },
-		utils.RealClock{},
-	)
+	sm, err := startup.StartClientServices(ctx, config_obj, exe, on_error)
+	sm.Close()
 	if err != nil {
-		return fmt.Errorf("Can not create HTTPCommunicator: %w", err)
+		return err
 	}
 
-	lwg.Add(1)
-	go comm.Run(ctx, lwg)
-
-	// Start services **after** the communicator is up in case
-	// services need to send messages.
-	err = executor.StartServices(sm, manager.ClientId, exe)
-	if err != nil {
-		return fmt.Errorf("Starting services: %w", err)
-	}
-
-	lwg.Add(1)
-	go func() {
-		defer lwg.Done()
-		<-ctx.Done()
-
-		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-		logger.Info("<cyan>Interrupted!</> Shutting down\n")
-	}()
-
-	lwg.Wait()
-
+	<-ctx.Done()
 	return nil
 }
 
@@ -204,15 +147,7 @@ func init() {
 		if command == client.FullCommand() {
 			maybeCloseOutput()
 
-			wg := &sync.WaitGroup{}
-			ctx, cancel := install_sig_handler()
-			defer cancel()
-
-			FatalIfError(client, func() error {
-				wg.Add(1)
-				return RunClient(ctx, wg, config_path)
-			})
-
+			FatalIfError(client, doClient)
 			return true
 		}
 		return false

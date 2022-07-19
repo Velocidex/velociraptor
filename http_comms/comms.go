@@ -890,7 +890,8 @@ func NewHTTPCommunicator(
 		sender:  sender,
 		receiver: NewNotificationReader(
 			config_obj, connector, manager, executor, enroller,
-			logger, "Receiver", "reader", child_on_exit, clock),
+			logger, "Receiver "+executor.ClientId(),
+			"reader", child_on_exit, clock),
 	}
 
 	return result, nil

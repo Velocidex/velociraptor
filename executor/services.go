@@ -11,34 +11,13 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
-	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/startup"
 )
-
-// Start services that are available on the client.
-func StartServices(
-	sm *services.Service,
-	client_id string,
-	exe *ClientExecutor) error {
-
-	err := startup.StartupEssentialServices(sm)
-	if err != nil {
-		return err
-	}
-
-	// Now start client specific services.
-	return sm.Start(func(ctx context.Context,
-		wg *sync.WaitGroup,
-		config_obj *config_proto.Config) error {
-		return StartEventTableService(ctx, wg, config_obj, exe)
-	})
-}
 
 func StartEventTableService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
-	exe *ClientExecutor) error {
+	output_chan chan *crypto_proto.VeloMessage) error {
 
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 	logger.Info("<green>Starting</> event query service with version %v.",
@@ -47,7 +26,7 @@ func StartEventTableService(
 	responder := responder.NewResponder(
 		config_obj, &crypto_proto.VeloMessage{
 			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
-		}, exe.Outbound)
+		}, output_chan)
 
 	actions.InitializeEventTable(ctx, wg)
 

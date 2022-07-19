@@ -36,6 +36,7 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -89,7 +90,7 @@ func eval_query(
 }
 
 func eval_local_query(
-	top_ctx context.Context,
+	ctx context.Context,
 	config_obj *config_proto.Config, format string,
 	query string, scope vfilter.Scope) error {
 
@@ -97,9 +98,6 @@ func eval_local_query(
 	if err != nil {
 		return fmt.Errorf("Unable to parse VQL Query: %w", err)
 	}
-
-	ctx, cancel := InstallSignalHandler(top_ctx, scope)
-	defer cancel()
 
 	for _, vql := range vqls {
 		switch format {
@@ -126,11 +124,15 @@ func doLS(path, accessor string) error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	sm, err := startEssentialServices(config_obj)
-	if err != nil {
-		return fmt.Errorf("Starting services: %w", err)
-	}
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
+	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
+
+	if err != nil {
+		return err
+	}
 
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {
@@ -182,11 +184,15 @@ func doRM(path, accessor string) error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	sm, err := startEssentialServices(config_obj)
-	if err != nil {
-		return fmt.Errorf("Starting services: %w", err)
-	}
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
+	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
+
+	if err != nil {
+		return err
+	}
 
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {
@@ -233,11 +239,15 @@ func doCp(path, accessor string, dump_dir string) error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	sm, err := startEssentialServices(config_obj)
-	if err != nil {
-		return fmt.Errorf("Starting services: %w", err)
-	}
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
+	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
+
+	if err != nil {
+		return err
+	}
 
 	matches := accessor_reg.FindStringSubmatch(path)
 	if matches != nil {

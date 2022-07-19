@@ -169,6 +169,13 @@ func VerifyConfig(config_obj *config_proto.Config) error {
 			return errors.WithStack(err)
 		}
 
+		private_key, err := ParseRsaPrivateKeyFromPemStr(pem)
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		// Add a client id for information here
+		writeback.ClientId = ClientIDFromPublicKey(&private_key.PublicKey)
 		writeback.PrivateKey = string(pem)
 		err = config.UpdateWriteback(config_obj.Client, writeback)
 		if err != nil {
