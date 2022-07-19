@@ -228,8 +228,9 @@ func (self *PoolClientExecutor) maybeTransformResponse(
 
 func NewPoolClientExecutor(
 	ctx context.Context,
+	client_id string,
 	config_obj *config_proto.Config, id int) (*PoolClientExecutor, error) {
-	exe, err := NewClientExecutor(ctx, config_obj)
+	exe, err := NewClientExecutor(ctx, client_id, config_obj)
 	if err != nil {
 		return nil, err
 	}

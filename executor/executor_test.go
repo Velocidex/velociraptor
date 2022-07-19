@@ -27,7 +27,7 @@ func (self *ExecutorTestSuite) TestCancellation() {
 
 	wg := &sync.WaitGroup{}
 	config_obj := config.GetDefaultConfig()
-	executor, err := NewClientExecutor(ctx, config_obj)
+	executor, err := NewClientExecutor(ctx, "", config_obj)
 	require.NoError(t, err)
 
 	var received_messages []*crypto_proto.VeloMessage

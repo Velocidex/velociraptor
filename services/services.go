@@ -29,6 +29,16 @@ var (
 	ServiceManager *Service
 )
 
+// The service manager manages the orderly startup and shutdown of
+// various services. A new service manager is created at startup. The
+// service manager exports a Ctx and a Wg. When a service creates a
+// new goroutine, the Wg should be incremented and decremeneted when
+// the goroutine exits.
+
+// The Ctx variable will be cancelled when the program needs to
+// shutdown. Callers should call sm.Wait() to wait for the manager to
+// exit. This will only happen when all goroutines have closed
+// properly.
 func NewServiceManager(ctx context.Context,
 	config_obj *config_proto.Config) *Service {
 	service_mu.Lock()
@@ -62,4 +72,9 @@ type StarterFunc func(ctx context.Context, wg *sync.WaitGroup, config_obj *confi
 
 func (self *Service) Start(starter StarterFunc) error {
 	return starter(self.Ctx, self.Wg, self.Config)
+}
+
+// Wait for all services to shutdown.
+func (self *Service) Wait() {
+	self.Wg.Wait()
 }

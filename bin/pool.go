@@ -18,20 +18,18 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"path"
 	"sync"
 
 	config "www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/executor"
-	"www.velocidex.com/golang/velociraptor/http_comms"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/server"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/startup"
 )
 
 var (
@@ -71,9 +69,6 @@ func doPoolClient() error {
 		number_of_clients = 2
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	client_config, err := makeDefaultConfigLoader().
 		WithRequiredClient().
 		WithVerbose(*verbose_flag).
@@ -82,10 +77,10 @@ func doPoolClient() error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	sm, err := startEssentialServices(client_config)
-	if err != nil {
-		return fmt.Errorf("Starting services: %w", err)
-	}
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
+	sm := services.NewServiceManager(ctx, client_config)
 	defer sm.Close()
 
 	server.IncreaseLimits(client_config)
@@ -129,32 +124,19 @@ func doPoolClient() error {
 				return err
 			}
 
-			manager, err := crypto_client.NewClientCryptoManager(
-				client_config, []byte(writeback.PrivateKey))
-			if err != nil {
-				return fmt.Errorf("Unable to parse config file: %w", err)
-			}
-
-			exe, err := executor.NewPoolClientExecutor(ctx, client_config, i)
+			exe, err := executor.NewPoolClientExecutor(
+				ctx, writeback.ClientId, client_config, i)
 			if err != nil {
 				return fmt.Errorf("Can not create executor: %w", err)
 			}
 
-			comm, err := http_comms.NewHTTPCommunicator(ctx,
-				client_config,
-				manager,
-				exe,
-				client_config.Client.ServerUrls,
-				nil,
-				utils.RealClock{},
-			)
+			err = startup.StartPoolClientServices(sm, client_config, exe)
 			if err != nil {
-				return fmt.Errorf("Can not create HTTPCommunicator: %w", err)
+				return err
 			}
 
 			c.Inc()
-			// Run the client in the background.
-			comm.Run(ctx, sm.Wg)
+
 			return nil
 		}(i)
 	}

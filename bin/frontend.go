@@ -21,7 +21,6 @@ import (
 	"fmt"
 
 	"github.com/sirupsen/logrus"
-	"www.velocidex.com/golang/velociraptor/api"
 	assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
@@ -52,6 +51,7 @@ func doFrontendWithPanicGuard() error {
 	return doFrontend()
 }
 
+// Start the frontend
 func doFrontend() error {
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().
@@ -64,33 +64,15 @@ func doFrontend() error {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
-	sm := services.NewServiceManager(ctx, config_obj)
-	defer sm.Close()
-
-	// Come up with a suitable services plan.
+	// Come up with a suitable services plan depending on the frontend
+	// role.
 	if config_obj.Frontend.ServerServices == nil {
 		if *frontend_cmd_minion {
 			config_obj.Frontend.ServerServices = services.MinionServicesSpec()
 		} else {
-			config_obj.Frontend.ServerServices = services.AllServicesSpec()
+			config_obj.Frontend.ServerServices = services.AllServerServicesSpec()
 		}
 	}
-
-	server, err := startFrontend(sm)
-	if err != nil {
-		return fmt.Errorf("starting frontend: %w", err)
-	}
-	defer server.Close()
-
-	// Wait here for completion.
-	sm.Wg.Wait()
-
-	return nil
-}
-
-// Start the frontend service.
-func startFrontend(sm *services.Service) (*api.Builder, error) {
-	config_obj := sm.Config
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.WithFields(logrus.Fields{
@@ -119,47 +101,17 @@ func startFrontend(sm *services.Service) (*api.Builder, error) {
 		config_obj.Datastore.Implementation = "RemoteFileDataStore"
 	}
 
-	// These services must start on all frontends
-	err := startup.StartupEssentialServices(sm)
+	// Now start the frontend services
+	sm, err := startup.StartFrontendServices(ctx, config_obj)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("starting frontend: %w", err)
 	}
+	defer sm.Close()
 
-	// Parse extra artifacts from --definitions flag before we start
-	// any services just in case these services need to access these
-	// custom artifacts.
-	_, err = getRepository(config_obj)
-	if err != nil {
-		return nil, err
-	}
+	// Wait here for completion.
+	sm.Wg.Wait()
 
-	// Load any artifacts defined in the config file before the
-	// frontend services are started so they may use them.
-	err = load_config_artifacts(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	// These services must start only on the frontends.
-	err = startup.StartupFrontendServices(sm)
-	if err != nil {
-		return nil, err
-	}
-
-	server_builder, err := api.NewServerBuilder(sm.Ctx, config_obj, sm.Wg)
-	if err != nil {
-		return nil, err
-	}
-
-	// Start the gRPC API server on the master only.
-	if services.IsMaster(config_obj) {
-		err = server_builder.WithAPIServer(sm.Ctx, sm.Wg)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return server_builder, server_builder.StartServer(sm.Ctx, sm.Wg)
+	return nil
 }
 
 func init() {

@@ -449,6 +449,7 @@ func getArtifactCollectorArgs(
 	repository services.Repository,
 	scope vfilter.Scope,
 	arg *CollectPluginArgs) (*flows_proto.ArtifactCollectorArgs, error) {
+
 	request := &flows_proto.ArtifactCollectorArgs{
 		Artifacts: arg.Artifacts,
 	}
@@ -457,6 +458,7 @@ func getArtifactCollectorArgs(
 	if err != nil {
 		return nil, err
 	}
+
 	return request, nil
 }
 

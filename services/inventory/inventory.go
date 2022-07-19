@@ -405,7 +405,8 @@ func NewInventoryService(
 		}
 	}()
 
-	logger.Info("<green>Starting</> Inventory Service")
+	logger.Info("<green>Starting</> Inventory Service for %v",
+		services.GetOrgName(config_obj))
 
 	// If we fail to load from the file start from a new empty
 	// inventory.

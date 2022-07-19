@@ -229,10 +229,10 @@ func (self *OrgManager) Start(
 	return nil
 }
 
-func StartOrgManager(
+func NewOrgManager(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config) (services.OrgManager, error) {
 
 	service := &OrgManager{
 		config_obj: config_obj,
@@ -242,7 +242,13 @@ func StartOrgManager(
 		orgs:            make(map[string]*OrgContext),
 		org_id_by_nonce: make(map[string]string),
 	}
-	services.RegisterOrgManager(service)
 
-	return service.Start(ctx, config_obj, wg)
+	// Usually only one org manager exists at one time. However for
+	// the "gui" command this may be invoked multiple times.
+	_, err := services.GetOrgManager()
+	if err != nil {
+		services.RegisterOrgManager(service)
+	}
+
+	return service, service.Start(ctx, config_obj, wg)
 }

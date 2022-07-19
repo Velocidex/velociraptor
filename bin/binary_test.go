@@ -106,7 +106,7 @@ func TestAutoexec(t *testing.T) {
 
 	// Repack the config in the binary.
 	cmd := exec.Command(binary,
-		"config", "repack", config_file.Name(), exe.Name())
+		"config", "repack", config_file.Name(), exe.Name(), "-v")
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err, string(out))
 

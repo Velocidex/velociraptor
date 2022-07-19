@@ -7,6 +7,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services/indexing"
+	"www.velocidex.com/golang/velociraptor/startup"
 )
 
 var (
@@ -26,11 +27,15 @@ func doRebuildIndex() error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	sm, err := startEssentialServices(config_obj)
-	if err != nil {
-		return fmt.Errorf("Starting services: %w", err)
-	}
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
+	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
+
+	if err != nil {
+		return err
+	}
 
 	err = sm.Start(datastore.StartMemcacheFileService)
 	if err != nil {

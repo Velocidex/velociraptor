@@ -30,6 +30,7 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/config"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/startup"
 )
 
 var (
@@ -62,16 +63,14 @@ func doRepack() error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	sm, err := startEssentialServices(config_obj)
-	if err != nil {
-		return fmt.Errorf("Starting services: %w", err)
-	}
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
+	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
 
-	// Load any embedded artifacts so we can identity syntax errors
-	err = load_config_artifacts(config_obj)
 	if err != nil {
-		return fmt.Errorf("Validating config: %w", err)
+		return err
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)

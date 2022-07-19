@@ -29,6 +29,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/users"
+	"www.velocidex.com/golang/velociraptor/startup"
 )
 
 var (
@@ -60,7 +61,12 @@ func doAddUser() error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	sm, err := startEssentialServices(config_obj)
+	config_obj.Frontend.ServerServices = services.GenericToolServices()
+
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
+	sm, err := startup.StartToolServices(ctx, config_obj)
 	if err != nil {
 		return fmt.Errorf("Starting services: %w", err)
 	}
@@ -123,11 +129,21 @@ func doShowUser() error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	sm, err := startEssentialServices(config_obj)
+	config_obj.Frontend.ServerServices = services.GenericToolServices()
+
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
+	sm, err := startup.StartToolServices(ctx, config_obj)
 	if err != nil {
 		return fmt.Errorf("Starting services: %w", err)
 	}
 	defer sm.Close()
+
+	err = users.StartUserManager(ctx, sm.Wg, config_obj)
+	if err != nil {
+		return err
+	}
 
 	users_manager := services.GetUserManager()
 	user_record, err := users_manager.GetUser(*user_show_name)
@@ -150,7 +166,12 @@ func doLockUser() error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	sm, err := startEssentialServices(config_obj)
+	config_obj.Frontend.ServerServices = services.GenericToolServices()
+
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
+	sm, err := startup.StartToolServices(ctx, config_obj)
 	if err != nil {
 		return fmt.Errorf("Starting services: %w", err)
 	}

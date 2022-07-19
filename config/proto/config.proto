@@ -45,6 +45,10 @@ message Writeback {
             description: "The client's private key in PEM encoding."
         }];
 
+    // This is calculated from the public key above so it is only here
+    // for information.
+    string client_id = 15;
+
     uint64 hunt_last_timestamp = 13 [(sem_type) = {
             description: "The last hunt timestamp this client ran."
         }];
@@ -789,6 +793,10 @@ message AutoExecConfig {
     repeated Artifact artifact_definitions = 2;
 }
 
+// When a binary starts it initializes some services depending on its
+// role. The startup code will update the config object to request the
+// right services, depending on the required role. Services are
+// actually started by the org manager.
 message ServerServicesConfig {
    bool hunt_manager = 1;
    bool hunt_dispatcher = 2;
@@ -816,6 +824,10 @@ message ServerServicesConfig {
    bool label = 22;
    bool launcher = 23;
    bool notebook_service = 24;
+
+    // Client services
+   bool http_communicator = 27;
+   bool client_event_table = 28;
 }
 
 message Defaults {

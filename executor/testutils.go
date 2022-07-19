@@ -8,6 +8,10 @@ import (
 
 type TestExecutor struct{}
 
+func (self *TestExecutor) ClientId() string {
+	return ""
+}
+
 func (self *TestExecutor) ReadFromServer() *crypto_proto.VeloMessage {
 	return nil
 }

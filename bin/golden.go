@@ -42,7 +42,7 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/users"
+	"www.velocidex.com/golang/velociraptor/startup"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/remapping"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -268,23 +268,16 @@ func doGolden() error {
 
 	failures := []string{}
 
-	config_obj.Frontend.ServerServices = services.AllServicesSpec()
-	config_obj.Frontend.ServerServices.SanityChecker = false
+	config_obj.Frontend.ServerServices = services.GoldenServicesSpec()
 
-	sm, err := startEssentialServices(config_obj)
-	if err != nil {
-		return err
-	}
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
+	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
 
-	err = sm.Start(users.StartUserManager)
 	if err != nil {
 		return err
-	}
-
-	_, err = getRepository(config_obj)
-	if err != nil {
-		return fmt.Errorf("Loading extra artifacts: %w", err)
 	}
 
 	err = filepath.Walk(*golden_command_directory, func(file_path string, info os.FileInfo, err error) error {

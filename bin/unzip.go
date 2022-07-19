@@ -9,6 +9,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -39,11 +40,15 @@ func doUnzip() error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	sm, err := startEssentialServices(config_obj)
-	if err != nil {
-		return fmt.Errorf("Starting services: %w", err)
-	}
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
+	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
+
+	if err != nil {
+		return err
+	}
 
 	filename, err := filepath.Abs(*unzip_cmd_file)
 	if err != nil {

@@ -69,6 +69,8 @@ func (self *canceller) IsCancelled(flow_id string) bool {
 }
 
 type Executor interface {
+	ClientId() string
+
 	// These are called by the executor code.
 	ReadFromServer() *crypto_proto.VeloMessage
 	SendToServer(message *crypto_proto.VeloMessage)
@@ -95,6 +97,8 @@ type _FlowContext struct {
 }
 
 type ClientExecutor struct {
+	client_id string
+
 	Inbound  chan *crypto_proto.VeloMessage
 	Outbound chan *crypto_proto.VeloMessage
 
@@ -105,6 +109,10 @@ type ClientExecutor struct {
 	next_id    int
 
 	concurrency *utils.Concurrency
+}
+
+func (self *ClientExecutor) ClientId() string {
+	return self.client_id
 }
 
 func (self *ClientExecutor) Cancel(
@@ -296,6 +304,7 @@ func (self *ClientExecutor) processRequestPlugin(
 
 func NewClientExecutor(
 	ctx context.Context,
+	client_id string,
 	config_obj *config_proto.Config) (*ClientExecutor, error) {
 
 	level := int(config_obj.Client.Concurrency)
@@ -304,6 +313,7 @@ func NewClientExecutor(
 	}
 
 	result := &ClientExecutor{
+		client_id:   client_id,
 		Inbound:     make(chan *crypto_proto.VeloMessage, 10),
 		Outbound:    make(chan *crypto_proto.VeloMessage, 10),
 		in_flight:   make(map[string][]*_FlowContext),

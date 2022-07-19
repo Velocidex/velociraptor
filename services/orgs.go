@@ -16,6 +16,8 @@ var (
 	NotFoundError = errors.New("Org not found")
 )
 
+// Currently the org manager is the only binary wide global - all
+// other services use the org manager to find other services.
 func GetOrgManager() (OrgManager, error) {
 	mu.Lock()
 	defer mu.Unlock()

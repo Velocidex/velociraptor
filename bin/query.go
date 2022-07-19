@@ -246,33 +246,21 @@ func doRemoteQuery(
 	return nil
 }
 
-func startEssentialServices(
-	config_obj *config_proto.Config) (
-	*services.Service, error) {
-
-	sm := services.NewServiceManager(context.Background(), config_obj)
-	err := startup.StartupEssentialServices(sm)
-	if err != nil {
-		return nil, err
-	}
-
-	// Load any artifacts defined in the config file after all the
-	// services are up.
-	err = load_config_artifacts(config_obj)
-	return sm, err
-}
-
 func doQuery() error {
 	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	if err != nil {
 		return err
 	}
 
-	sm, err := startEssentialServices(config_obj)
-	if err != nil {
-		return fmt.Errorf("Starting services: %w", err)
-	}
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
+	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
+
+	if err != nil {
+		return err
+	}
 
 	env := ordereddict.NewDict()
 	for k, v := range *env_map {
@@ -340,9 +328,6 @@ func doQuery() error {
 		}
 
 	}
-
-	ctx, cancel := InstallSignalHandler(sm.Ctx, scope)
-	defer cancel()
 
 	if *query_command_collect_timeout > 0 {
 		start := time.Now()

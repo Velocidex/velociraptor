@@ -8,7 +8,7 @@
         "@fortawesome/react-fontawesome": "^0.1.18",
         "ace-builds": "1.6.1",
         "axios": ">=0.27.2",
-        "axios-retry": "3.2.5",
+        "axios-retry": "3.3.1",
         "bootstrap": "^4.6.1",
         "cacache": "^15.0.6",
         "chokidar": "^3.5.3",

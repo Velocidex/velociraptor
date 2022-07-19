@@ -4,6 +4,23 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
+// The Golden test harness starts all services except for the sanity service.
+func GoldenServicesSpec() *config_proto.ServerServicesConfig {
+	result := AllServerServicesSpec()
+	result.SanityChecker = false
+	return result
+}
+
+func GenericToolServices() *config_proto.ServerServicesConfig {
+	return &config_proto.ServerServicesConfig{
+		RepositoryManager:   true,
+		InventoryService:    true,
+		JournalService:      true,
+		UserManager:         true,
+		NotificationService: true,
+	}
+}
+
 func ClientServicesSpec() *config_proto.ServerServicesConfig {
 	return &config_proto.ServerServicesConfig{
 		JournalService:      true,
@@ -11,9 +28,13 @@ func ClientServicesSpec() *config_proto.ServerServicesConfig {
 		InventoryService:    true,
 		NotificationService: true,
 		Launcher:            true,
+
+		HttpCommunicator: true,
+		ClientEventTable: true,
 	}
 }
 
+// The minion only runs a small subset of services.
 func MinionServicesSpec() *config_proto.ServerServicesConfig {
 	return &config_proto.ServerServicesConfig{
 		HuntDispatcher:     true,
@@ -27,7 +48,8 @@ func MinionServicesSpec() *config_proto.ServerServicesConfig {
 	}
 }
 
-func AllServicesSpec() *config_proto.ServerServicesConfig {
+// The GUI/Frontend runs all services.
+func AllServerServicesSpec() *config_proto.ServerServicesConfig {
 	return &config_proto.ServerServicesConfig{
 		HuntManager:         true,
 		HuntDispatcher:      true,

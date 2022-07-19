@@ -265,13 +265,6 @@ func (self *MasterFrontendManager) GetMasterAPIClient(ctx context.Context) (
 func (self *MasterFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	// If no service specification is set, we start all services
-	// on the master frontend.
-	if config_obj.Frontend.ServerServices == nil ||
-		!config_obj.Frontend.ServerServices.FrontendServer {
-		config_obj.Frontend.ServerServices = services.AllServicesSpec()
-	}
-
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Frontend:</> Server will be master.")
 

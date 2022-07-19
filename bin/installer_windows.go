@@ -43,7 +43,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
 	logging "www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
 )
@@ -526,7 +526,8 @@ func runOnce(ctx context.Context,
 		return
 	}
 
-	exe, err := executor.NewClientExecutor(ctx, config_obj)
+	exe, err := executor.NewClientExecutor(
+		ctx, manager.ClientId(), config_obj)
 	if err != nil {
 		elog.Error(1, fmt.Sprintf(
 			"Can not create client: %v", err))
@@ -554,22 +555,16 @@ func runOnce(ctx context.Context,
 	result.comms = comm
 	result.mu.Unlock()
 
-	// Wait for all services to properly start
-	// before we begin the comms.
-	sm := services.NewServiceManager(ctx, config_obj)
+	sm, err := startup.StartClientServices(ctx, config_obj, exe, on_error)
 	defer sm.Close()
 
-	// Start the nanny first so we are covered from here on.
-	err = sm.Start(executor.StartNannyService)
 	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+		logger.Error("StartClientServices: %v", err)
 		return
 	}
 
-	err = executor.StartServices(sm, manager.ClientId, exe)
-	if err != nil {
-		return
-	}
-	comm.Run(ctx, wg)
+	comm.Run(sm.Ctx, sm.Wg)
 }
 
 func NewVelociraptorService(

@@ -170,8 +170,10 @@ func (self *MemcacheFileDataStore) StartWriter(
 	if buffer_size < 0 {
 		buffer_size = 1000
 	}
+	self.mu.Lock()
 	self.writer = make(chan *Mutation, buffer_size)
 	self.ctx = ctx
+	self.mu.Unlock()
 
 	if writers == 0 {
 		writers = 100
@@ -185,12 +187,16 @@ func (self *MemcacheFileDataStore) StartWriter(
 		go func() {
 			defer wg.Done()
 
+			self.mu.Lock()
+			writer := self.writer
+			self.mu.Unlock()
+
 			for {
 				select {
 				case <-ctx.Done():
 					return
 
-				case mutation, ok := <-self.writer:
+				case mutation, ok := <-writer:
 					if !ok {
 						return
 					}

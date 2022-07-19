@@ -105,7 +105,7 @@ func (self *ServerTestSuite) SetupTest() {
 
 	require.NoError(self.T(), err)
 
-	self.client_id = self.client_crypto.ClientId
+	self.client_id = self.client_crypto.ClientId()
 	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
 

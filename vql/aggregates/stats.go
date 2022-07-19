@@ -1,6 +1,4 @@
-// +build server_vql
-
-package server
+package aggregates
 
 import (
 	"context"

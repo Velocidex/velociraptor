@@ -37,7 +37,7 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -456,17 +456,15 @@ func NewVelociraptorServerService(name string) (
 			ctx, cancel := install_sig_handler()
 			defer cancel()
 
-			sm := services.NewServiceManager(ctx, config_obj)
+			// Now start the frontend services
+			sm, err := startup.StartFrontendServices(ctx, config_obj)
+			if err != nil {
+				elog.Info(1, fmt.Sprintf("starting frontend: %v", err))
+				return
+			}
 			defer sm.Close()
 
 			elog.Info(1, fmt.Sprintf("%s service started", name))
-			server, err := startFrontend(sm)
-			if err != nil {
-				elog.Info(1, fmt.Sprintf("%s service error", err))
-				return
-			}
-			defer server.Close()
-
 			// Wait here until everything is done.
 			sm.Wg.Wait()
 

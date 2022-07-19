@@ -113,7 +113,8 @@ func (self *TestSuite) makeClient(
 		self.ConfigObj, []byte(self.ConfigObj.Writeback.PrivateKey))
 	assert.NoError(self.T(), err)
 
-	exe, err := executor.NewClientExecutor(client_ctx, self.ConfigObj)
+	exe, err := executor.NewClientExecutor(
+		client_ctx, manager.ClientId(), self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	on_error := func() {}
