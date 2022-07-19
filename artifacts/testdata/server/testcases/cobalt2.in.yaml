@@ -1,0 +1,30 @@
+Parameters:
+  RemappingTemplate: |
+    remappings:
+      - type: mount
+        from:
+          accessor: zip
+          path_type: linux
+          prefix: |
+            {
+              "DelegateAccessor": "scope",
+              "DelegatePath": "Content",
+              "Path": "/"
+            }
+        on:
+          accessor: "auto"
+          prefix: "/"
+          path_type: "windows"
+
+Queries:
+  # tests embedded pe in data section parsing
+  - LET Content <= xor(key='infected',string=read_file(filename=srcDir+"/artifacts/testdata/files/CSSectionPE.zip.xor"))
+  - LET _ <= remap(config=RemappingTemplate, copy=["zip", "data", "scope"], clear=TRUE)
+
+  # Scan all the files in the container.
+  - SELECT Rule,FullPath,Hash,Xor,DecodedConfig
+    FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob="/**")
+
+  # Use byte scanning of the raw file.
+  - SELECT Rule,Hash,Xor,DecodedConfig
+    FROM Artifact.Windows.Carving.CobaltStrike(TargetBytes=read_file(filename="C:/CSSectionPE.bin"))
