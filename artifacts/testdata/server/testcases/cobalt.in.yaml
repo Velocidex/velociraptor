@@ -1,17 +1,42 @@
+Parameters:
+  RemappingTemplate: |
+    remappings:
+      - type: mount
+        from:
+          accessor: scope
+          path_type: "pathspec"
+          prefix: |
+            {
+              "Path": "Content"
+            }
+        on:
+          accessor: "auto"
+          prefix: "artifacts/testdata/files/CSSectionPE.bin"
+          path_type: "windows"
+
 Queries:
+  #prefix: srcDir + "/artifacts/testdata/files/CSSectionPE.bin"
   # tests for file parsing
-  - SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Offset,Xor,DecodedConfig
+  - SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Xor,DecodedConfig
     FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir + "/artifacts/testdata/files/CSDump.bin")
 
   # Test for data stream parsing, DecodedData output and bruteforce xor
   - LET Encoded = SELECT Data FROM read_file(filenames=srcDir + "/artifacts/testdata/files/CSDump.bin")
-  - SELECT Rule,Hash,Offset,Xor,DecodedConfig,DecodedData
+  - SELECT Rule,Hash,Xor,DecodedConfig,DecodedData
     FROM Artifact.Windows.Carving.CobaltStrike(TargetBytes=Encoded.Data[0],BruteXor="T", IncludeDecodedData="Y")
 
   # tests shellcode parsing
-  - SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Offset,Xor,DecodedConfig
+  - SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Xor,DecodedConfig
     FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir + "/artifacts/testdata/files/CSShellcode.bin")
   
-  # tests sleepfunctino parsing
-  - SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Offset,Xor,DecodedConfig
+  # tests sleepfunction parsing
+  - SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Xor,DecodedConfig
     FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir + "/artifacts/testdata/files/CSx86sleep.bin")
+
+  # tests embedded pe in data section parsing
+  - LET Content <= xor(key='MATT RULES!',string=read_file(filename=srcDir+"/artifacts/testdata/files/CSSectionPE.bin"))
+  - SELECT Rule,Hash,Xor,DecodedConfig FROM Artifact.Windows.Carving.CobaltStrike(TargetBytes=Content)
+
+  - LET _ <= remap(config=RemappingTemplate, copy=["scope"], clear=TRUE)
+  - SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Xor,DecodedConfig
+    FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob="artifacts/testdata/files/CSSectionPE.bin")
