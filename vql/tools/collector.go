@@ -23,6 +23,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -177,7 +178,7 @@ func (self CollectPlugin) Call(
 		// bypass the ACL manager and get more permissions.
 		acl_manager, ok := artifacts.GetACLManager(scope)
 		if !ok {
-			acl_manager = vql_subsystem.NullACLManager{}
+			acl_manager = acl_managers.NullACLManager{}
 		}
 
 		launcher, err := services.GetLauncher(config_obj)

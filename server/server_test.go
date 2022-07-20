@@ -30,7 +30,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
@@ -224,7 +224,7 @@ func (self *ServerTestSuite) TestForeman() {
 
 	hunt_id, err := hunt_dispatcher.CreateHunt(
 		context.Background(), self.ConfigObj,
-		vql_subsystem.NullACLManager{},
+		acl_managers.NullACLManager{},
 		&api_proto.Hunt{
 			State:        api_proto.Hunt_RUNNING,
 			StartRequest: expected,
@@ -451,7 +451,7 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 	flow_id, err := launcher.ScheduleArtifactCollection(
 		context.Background(),
 		self.ConfigObj,
-		vql_subsystem.NullACLManager{},
+		acl_managers.NullACLManager{},
 		repository,
 		request, nil)
 
@@ -489,7 +489,7 @@ func (self *ServerTestSuite) createArtifactCollection() (string, error) {
 	flow_id, err := launcher.ScheduleArtifactCollection(
 		context.Background(),
 		self.ConfigObj,
-		vql_subsystem.NullACLManager{},
+		acl_managers.NullACLManager{},
 		repository,
 		&flows_proto.ArtifactCollectorArgs{
 			ClientId:  self.client_id,

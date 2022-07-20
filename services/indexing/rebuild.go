@@ -2,6 +2,7 @@ package indexing
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"time"
 
@@ -33,6 +34,12 @@ func (self *Indexer) LoadIndexFromDatastore(
 	now := time.Now()
 	count := 0
 	for _, child := range children {
+		select {
+		case <-ctx.Done():
+			return errors.New("Cancelled")
+		default:
+		}
+
 		if child.IsDir() {
 			continue
 		}

@@ -30,6 +30,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -154,7 +155,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	}
 
 	// Run the hunt in the ACL context of the caller.
-	acl_manager := vql_subsystem.NewServerACLManager(
+	acl_manager := acl_managers.NewServerACLManager(
 		config_obj, vql_subsystem.GetPrincipal(scope))
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)

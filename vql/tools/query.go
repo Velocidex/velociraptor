@@ -5,9 +5,11 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -18,6 +20,8 @@ type QueryPluginArgs struct {
 	CpuLimit        float64           `vfilter:"optional,field=cpu_limit,doc=Average CPU usage in percent of a core."`
 	IopsLimit       float64           `vfilter:"optional,field=iops_limit,doc=Average IOPs to target."`
 	ProgressTimeout float64           `vfilter:"optional,field=progress_timeout,doc=If no progress is detected in this many seconds, we terminate the query and output debugging information"`
+	OrgId           string            `vfilter:"optional,field=org_id,doc=If specified, the query will run in the specified org space (Use 'root' to refer to the root org)"`
+	Principal       string            `vfilter:"optional,field=runas,doc=If specified, the query will run as the specified user"`
 }
 
 type QueryPlugin struct{}
@@ -42,29 +46,56 @@ func (self QueryPlugin) Call(
 			return
 		}
 
+		// If we are not running on the server, we need to get the
+		// root config from the org manager.
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			scope.Log("query: %v", err)
+			return
+		}
+
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			// If we are not running on the server, we need to get the
-			// root config from the org manager.
-			org_manager, err := services.GetOrgManager()
-			if err != nil {
-				scope.Log("query: %v", err)
-				return
-			}
-
 			config_obj, err = org_manager.GetOrgConfig("")
 			if err != nil {
 				scope.Log("query: %v", err)
 				return
 			}
 		}
+		org_config_obj := config_obj
 
 		// Build a completely new scope to evaluate the query
 		// in.
 		builder := services.ScopeBuilderFromScope(scope)
 
+		// Did the user request running in the specified org? Switch
+		// orgs if so.
+		if arg.OrgId != "" {
+			org_config_obj, err = org_manager.GetOrgConfig(arg.OrgId)
+			if err != nil {
+				scope.Log("query: %v", err)
+				return
+			}
+
+			// The subscoope will switch to the specified org.
+			builder.Config = org_config_obj
+		}
+
+		if arg.Principal != "" {
+			// Impersonation is only allowed for administrator users.
+			err := vql_subsystem.CheckAccess(scope, acls.IMPERSONATION)
+			if err != nil {
+				scope.Log("query: Permission required for runas: %v", err)
+				return
+			}
+
+			// Run as the specified user.
+			builder.ACLManager = acl_managers.NewServerACLManager(
+				org_config_obj, arg.Principal)
+		}
+
 		// Make a new scope for each artifact.
-		manager, err := services.GetRepositoryManager(config_obj)
+		manager, err := services.GetRepositoryManager(org_config_obj)
 		if err != nil {
 			scope.Log("query: %v", err)
 			return

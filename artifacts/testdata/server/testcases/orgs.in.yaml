@@ -1,0 +1,111 @@
+Queries:
+# Initially we only have the root org
+- SELECT Name, OrgId FROM orgs() ORDER BY OrgId
+
+# Try to add a user to a nonexistant org
+- LET _ <= user_create(user="FailedUser",
+    roles="reader", password="X",
+    orgs=["ORGID"])
+
+- SELECT * FROM test_read_logs() WHERE Log =~ "Org not found" AND NOT Log =~ "SELECT"
+
+- SELECT * FROM gui_users(all_orgs=TRUE) ORDER BY name
+
+# Now create a new org
+- LET _ <= org_create(name="MyOrg", org_id="ORGID")
+
+# Now we can see it
+- SELECT Name, OrgId FROM orgs() ORDER BY OrgId
+
+# Add some users to the orgs
+- SELECT user_create(user="ReaderUser",
+    roles="reader", password="X",
+    orgs=["root", "ORGID"]),
+  user_create(user="OrgUser",
+    roles="administrator", password="X",
+    orgs=["ORGID"]),
+  user_create(user="OrgAdmin",
+    roles="administrator", password="X")
+  FROM scope()
+
+- SELECT * FROM gui_users(all_orgs=TRUE) ORDER BY name
+
+# We are at the root org - gui_users should show only root org users
+- SELECT * FROM gui_users() ORDER BY name
+
+# Run the query from the suborg, query should show only users in that org.
+- SELECT * FROM query(query={
+   SELECT * FROM gui_users() ORDER BY name
+  }, org_id="ORGID")
+
+# Running the orgs() plugin as the reader will fail due to access
+# denied.
+- SELECT * FROM query(query={
+   SELECT * FROM orgs() ORDER BY OrgId
+  }, runas="ReaderUser")
+
+- SELECT * FROM test_read_logs() WHERE Log =~ "Permission denied.+ORG_ADMIN" AND NOT Log =~ "SELECT"
+
+# Running the orgs() plugin as an administrator works but only in the
+# root org
+- SELECT * FROM query(query={
+   SELECT OrgId FROM orgs() ORDER BY OrgId
+  }, runas="OrgAdmin", org_id="root")
+
+# In a non-root org an admin user needs to explicitely have the
+# org_admin role to do org things.
+- SELECT * FROM query(query={
+   SELECT OrgId FROM orgs() ORDER BY OrgId
+  }, runas="OrgUser", org_id="ORGID")
+
+- SELECT * FROM test_read_logs() WHERE Log =~ "Permission denied.+ORG_ADMIN" AND NOT Log =~ "SELECT"
+
+# Test incrementally adding a user to an org. Create another org.
+- LET _ <= org_create(name="MySecondOrg", org_id="ORGID2")
+
+# Give OrgUser a reader role in that org.
+- LET _ <= user_create(user="OrgUser",
+    roles="reader", password="X", orgs=["ORGID2"])
+
+# OrgUser should be an admin in ORGID and reader in ORGID2
+- SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "OrgUser" ORDER BY name
+
+# Launching collections on different orgs can be done using a number of ways.
+# 1. Use the query() plugin to run the query on another org.
+- SELECT * FROM query(query={
+      SELECT collect_client(client_id="C.123", artifacts="Generic.Client.Info").request.artifacts
+      FROM scope()
+  }, runas="OrgUser", org_id="ORGID")
+
+- SELECT * FROM query(query={
+    SELECT client_id, request.artifacts AS artifacts
+    FROM flows(client_id="C.123")
+  }, runas="OrgUser", org_id="ORGID")
+
+# The flow is not scheduled in the root org or in the second org
+- SELECT client_id, request.artifacts AS artifacts
+  FROM flows(client_id="C.123")
+- SELECT * FROM query(query={
+    SELECT client_id, request.artifacts AS artifacts
+    FROM flows(client_id="C.123")
+  }, runas="OrgUser", org_id="ORGID2")
+
+# OrgUser is a reader in ORGID2 so can not schedule collections
+- SELECT * FROM query(query={
+      SELECT collect_client(client_id="C.123", artifacts="Generic.Client.Info").request.artifacts
+      FROM scope()
+  }, runas="OrgUser", org_id="ORGID2")
+
+- SELECT * FROM test_read_logs() WHERE Log =~ "Permission denied.+COLLECT_CLIENT" AND NOT Log =~ "SELECT"
+
+# Second way to schedule collections is directly by specifying org id
+- SELECT * FROM query(query={
+      SELECT collect_client(client_id="C.123",
+          artifacts="Generic.Client.DiskSpace", org_id="ORGID").request.artifacts
+      FROM scope()
+  }, runas="OrgUser")
+
+- SELECT * FROM query(query={
+    SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123")
+    WHERE artifacts =~ "Disk"
+  }, runas="OrgUser", org_id="ORGID")

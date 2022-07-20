@@ -201,7 +201,7 @@ func (self UserManager) GetUserWithHashes(username string) (
 	err = db.GetSubject(self.config_obj,
 		paths.UserPathManager{Name: username}.Path(), user_record)
 	if errors.Is(err, os.ErrNotExist) || user_record.Name == "" {
-		return nil, errors.New("User not found")
+		return nil, services.UserNotFoundError
 	}
 
 	return user_record, err

@@ -2,6 +2,7 @@ package orgs
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
@@ -50,6 +51,10 @@ func (self *OrgManager) GetOrgConfig(org_id string) (*config_proto.Config, error
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	if org_id == "root" {
+		org_id = ""
+	}
+
 	// An empty org id corresponds to the root org.
 	if org_id == "" {
 		return self.config_obj, nil
@@ -65,6 +70,10 @@ func (self *OrgManager) GetOrgConfig(org_id string) (*config_proto.Config, error
 func (self *OrgManager) GetOrg(org_id string) (*api_proto.OrgRecord, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	if org_id == "root" {
+		org_id = ""
+	}
 
 	result, pres := self.orgs[org_id]
 	if !pres {
@@ -90,13 +99,25 @@ func (self *OrgManager) OrgIdByNonce(nonce string) (string, error) {
 	return result, nil
 }
 
-func (self *OrgManager) CreateNewOrg(name string) (
+func (self *OrgManager) CreateNewOrg(name, id string) (
 	*api_proto.OrgRecord, error) {
+
+	if id == "" {
+		id = NewOrgId()
+	}
 
 	org_record := &api_proto.OrgRecord{
 		Name:  name,
-		OrgId: NewOrgId(),
+		OrgId: id,
 		Nonce: NewNonce(),
+	}
+
+	// Check if the org already exists
+	self.mu.Lock()
+	_, pres := self.orgs[id]
+	self.mu.Unlock()
+	if pres {
+		return nil, errors.New("Org ID already exists")
 	}
 
 	err := self.startOrg(org_record)

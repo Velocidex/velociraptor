@@ -11,7 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/uploads"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -62,7 +62,7 @@ func doUnzip() error {
 
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
-		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+		ACLManager: acl_managers.NewRoleACLManager("administrator"),
 		Logger:     log.New(&LogWriter{config_obj}, "", 0),
 		Env: ordereddict.NewDict().
 			Set("ZipPath", filename).

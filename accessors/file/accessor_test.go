@@ -17,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/glob"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/ntfs"
 )
@@ -47,7 +48,7 @@ func (self *AccessorWindowsTestSuite) TestACL() {
 
 	// Try again with more premissions.
 	scope = vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
-		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
+		Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}))
 	scope.SetLogger(log.New(os.Stderr, " ", 0))
 
 	accessor, err = accessors.GetAccessor("file", scope)
@@ -90,7 +91,7 @@ func (self *AccessorWindowsTestSuite) TestSymlinks() {
 	assert.NoError(self.T(), err)
 
 	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
-		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
+		Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}))
 	scope.SetLogger(log.New(os.Stderr, " ", 0))
 	accessor, err := accessors.GetAccessor("file", scope)
 	assert.NoError(self.T(), err)

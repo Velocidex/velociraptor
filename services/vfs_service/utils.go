@@ -12,7 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -43,12 +43,12 @@ func watchForFlowCompletion(
 		defer wg.Done()
 		defer cancel()
 
-		defer logger.Info("Stopping watch for %v for %v (%v)",
+		defer logger.Info("<red>Stopping</> watch for %v for %v (%v)",
 			artifact_name, services.GetOrgName(config_obj), watcher_name)
 
 		builder := services.ScopeBuilder{
 			Config:     config_obj,
-			ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+			ACLManager: acl_managers.NewRoleACLManager("administrator"),
 			Env: ordereddict.NewDict().
 				Set("artifact_name", artifact_name),
 			Logger: logging.NewPlainLogger(config_obj,

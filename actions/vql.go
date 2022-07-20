@@ -38,6 +38,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -141,7 +142,7 @@ func (self VQLClientAction) StartQuery(
 		// client context.
 		ClientConfig: config_obj.Client,
 		// Disable ACLs on the client.
-		ACLManager: vql_subsystem.NullACLManager{},
+		ACLManager: acl_managers.NullACLManager{},
 		Env:        ordereddict.NewDict(),
 		Uploader:   uploader,
 		Repository: repository,

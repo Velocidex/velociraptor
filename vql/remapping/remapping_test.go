@@ -15,12 +15,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
 	_ "www.velocidex.com/golang/velociraptor/accessors/raw_registry"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	_ "www.velocidex.com/golang/velociraptor/vql/filesystem"
 	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
 )
@@ -78,7 +78,7 @@ func (self *RemapTestSuite) TestConfigFileRemap() {
 	// Just build a standard scope.
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: vql_subsystem.NullACLManager{},
+		ACLManager: acl_managers.NullACLManager{},
 		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}
@@ -139,7 +139,7 @@ func (self *RemapTestSuite) TestRemapByPlugin() {
 	// Just build a standard scope.
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: vql_subsystem.NullACLManager{},
+		ACLManager: acl_managers.NullACLManager{},
 		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env: ordereddict.NewDict().
 			Set("RemappingConfig", serialized),

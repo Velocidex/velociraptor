@@ -1,0 +1,263 @@
+SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
+ {
+  "Name": "\u003croot org\u003e",
+  "OrgId": ""
+ }
+]LET _ <= user_create(user="FailedUser", roles="reader", password="X", orgs=["ORGID"])[]SELECT * FROM test_read_logs() WHERE Log =~ "Org not found" AND NOT Log =~ "SELECT"[
+ {
+  "Log": "Velociraptor: user_create: Org not found\n"
+ }
+]SELECT * FROM gui_users(all_orgs=TRUE) ORDER BY name[]LET _ <= org_create(name="MyOrg", org_id="ORGID")[]SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
+ {
+  "Name": "\u003croot org\u003e",
+  "OrgId": ""
+ },
+ {
+  "Name": "MyOrg",
+  "OrgId": "ORGID"
+ }
+]SELECT user_create(user="ReaderUser", roles="reader", password="X", orgs=["root", "ORGID"]), user_create(user="OrgUser", roles="administrator", password="X", orgs=["ORGID"]), user_create(user="OrgAdmin", roles="administrator", password="X") FROM scope()[
+ {
+  "user_create(user=\"ReaderUser\", roles=\"reader\", password=\"X\", orgs= [\"root\", \"ORGID\"])": "ReaderUser",
+  "user_create(user=\"OrgUser\", roles=\"administrator\", password=\"X\", orgs= [\"ORGID\"])": "OrgUser",
+  "user_create(user=\"OrgAdmin\", roles=\"administrator\", password=\"X\")": "OrgAdmin"
+ }
+]SELECT * FROM gui_users(all_orgs=TRUE) ORDER BY name[
+ {
+  "name": "OrgAdmin",
+  "org_id": "",
+  "picture": "",
+  "email": false,
+  "roles": [
+   "administrator"
+  ],
+  "effective_policy": {
+   "all_query": true,
+   "any_query": true,
+   "read_results": true,
+   "label_clients": true,
+   "collect_client": true,
+   "collect_server": true,
+   "artifact_writer": true,
+   "server_artifact_writer": true,
+   "execve": true,
+   "notebook_editor": true,
+   "org_admin": true,
+   "impersonation": true,
+   "server_admin": true,
+   "filesystem_read": true,
+   "filesystem_write": true,
+   "machine_state": true,
+   "prepare_results": true
+  }
+ },
+ {
+  "name": "OrgUser",
+  "org_id": "ORGID",
+  "picture": "",
+  "email": false,
+  "roles": [
+   "administrator"
+  ],
+  "effective_policy": {
+   "all_query": true,
+   "any_query": true,
+   "read_results": true,
+   "label_clients": true,
+   "collect_client": true,
+   "collect_server": true,
+   "artifact_writer": true,
+   "server_artifact_writer": true,
+   "execve": true,
+   "notebook_editor": true,
+   "impersonation": true,
+   "server_admin": true,
+   "filesystem_read": true,
+   "filesystem_write": true,
+   "machine_state": true,
+   "prepare_results": true
+  }
+ },
+ {
+  "name": "ReaderUser",
+  "org_id": "",
+  "picture": "",
+  "email": false,
+  "roles": [
+   "reader"
+  ],
+  "effective_policy": {
+   "read_results": true
+  }
+ },
+ {
+  "name": "ReaderUser",
+  "org_id": "ORGID",
+  "picture": "",
+  "email": false,
+  "roles": [
+   "reader"
+  ],
+  "effective_policy": {
+   "read_results": true
+  }
+ }
+]SELECT * FROM gui_users() ORDER BY name[
+ {
+  "name": "OrgAdmin",
+  "org_id": "",
+  "picture": "",
+  "email": false,
+  "roles": [
+   "administrator"
+  ],
+  "effective_policy": {
+   "all_query": true,
+   "any_query": true,
+   "read_results": true,
+   "label_clients": true,
+   "collect_client": true,
+   "collect_server": true,
+   "artifact_writer": true,
+   "server_artifact_writer": true,
+   "execve": true,
+   "notebook_editor": true,
+   "org_admin": true,
+   "impersonation": true,
+   "server_admin": true,
+   "filesystem_read": true,
+   "filesystem_write": true,
+   "machine_state": true,
+   "prepare_results": true
+  }
+ }
+]SELECT * FROM query(query={ SELECT * FROM gui_users() ORDER BY name }, org_id="ORGID")[
+ {
+  "name": "OrgUser",
+  "org_id": "ORGID",
+  "picture": "",
+  "email": false,
+  "roles": [
+   "administrator"
+  ],
+  "effective_policy": {
+   "all_query": true,
+   "any_query": true,
+   "read_results": true,
+   "label_clients": true,
+   "collect_client": true,
+   "collect_server": true,
+   "artifact_writer": true,
+   "server_artifact_writer": true,
+   "execve": true,
+   "notebook_editor": true,
+   "impersonation": true,
+   "server_admin": true,
+   "filesystem_read": true,
+   "filesystem_write": true,
+   "machine_state": true,
+   "prepare_results": true
+  }
+ },
+ {
+  "name": "ReaderUser",
+  "org_id": "ORGID",
+  "picture": "",
+  "email": false,
+  "roles": [
+   "reader"
+  ],
+  "effective_policy": {
+   "read_results": true
+  }
+ }
+]SELECT * FROM query(query={ SELECT * FROM orgs() ORDER BY OrgId }, runas="ReaderUser")[]SELECT * FROM test_read_logs() WHERE Log =~ "Permission denied.+ORG_ADMIN" AND NOT Log =~ "SELECT"[
+ {
+  "Log": "Velociraptor: orgs: Permission denied: [ORG_ADMIN]\n"
+ }
+]SELECT * FROM query(query={ SELECT OrgId FROM orgs() ORDER BY OrgId }, runas="OrgAdmin", org_id="root")[
+ {
+  "OrgId": ""
+ },
+ {
+  "OrgId": "ORGID"
+ }
+]SELECT * FROM query(query={ SELECT OrgId FROM orgs() ORDER BY OrgId }, runas="OrgUser", org_id="ORGID")[]SELECT * FROM test_read_logs() WHERE Log =~ "Permission denied.+ORG_ADMIN" AND NOT Log =~ "SELECT"[
+ {
+  "Log": "Velociraptor: orgs: Permission denied: [ORG_ADMIN]\n"
+ }
+]LET _ <= org_create(name="MySecondOrg", org_id="ORGID2")[]LET _ <= user_create(user="OrgUser", roles="reader", password="X", orgs=["ORGID2"])[]SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "OrgUser" ORDER BY name[
+ {
+  "name": "OrgUser",
+  "org_id": "ORGID",
+  "picture": "",
+  "email": false,
+  "roles": [
+   "administrator"
+  ],
+  "effective_policy": {
+   "all_query": true,
+   "any_query": true,
+   "read_results": true,
+   "label_clients": true,
+   "collect_client": true,
+   "collect_server": true,
+   "artifact_writer": true,
+   "server_artifact_writer": true,
+   "execve": true,
+   "notebook_editor": true,
+   "impersonation": true,
+   "server_admin": true,
+   "filesystem_read": true,
+   "filesystem_write": true,
+   "machine_state": true,
+   "prepare_results": true
+  }
+ },
+ {
+  "name": "OrgUser",
+  "org_id": "ORGID2",
+  "picture": "",
+  "email": false,
+  "roles": [
+   "reader"
+  ],
+  "effective_policy": {
+   "read_results": true
+  }
+ }
+]SELECT * FROM query(query={ SELECT collect_client(client_id="C.123", artifacts="Generic.Client.Info").request.artifacts FROM scope() }, runas="OrgUser", org_id="ORGID")[
+ {
+  "collect_client(client_id=\"C.123\", artifacts=\"Generic.Client.Info\").request.artifacts": [
+   "Generic.Client.Info"
+  ]
+ }
+]SELECT * FROM query(query={ SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123") }, runas="OrgUser", org_id="ORGID")[
+ {
+  "client_id": "C.123",
+  "artifacts": [
+   "Generic.Client.Info"
+  ]
+ }
+]SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123")[]SELECT * FROM query(query={ SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123") }, runas="OrgUser", org_id="ORGID2")[]SELECT * FROM query(query={ SELECT collect_client(client_id="C.123", artifacts="Generic.Client.Info").request.artifacts FROM scope() }, runas="OrgUser", org_id="ORGID2")[
+ {
+  "collect_client(client_id=\"C.123\", artifacts=\"Generic.Client.Info\").request.artifacts": null
+ }
+]SELECT * FROM test_read_logs() WHERE Log =~ "Permission denied.+COLLECT_CLIENT" AND NOT Log =~ "SELECT"[
+ {
+  "Log": "Velociraptor: collect_client: Permission denied: [COLLECT_CLIENT]\n"
+ }
+]SELECT * FROM query(query={ SELECT collect_client(client_id="C.123", artifacts="Generic.Client.DiskSpace", org_id="ORGID").request.artifacts FROM scope() }, runas="OrgUser")[
+ {
+  "collect_client(client_id=\"C.123\", artifacts=\"Generic.Client.DiskSpace\", org_id=\"ORGID\").request.artifacts": [
+   "Generic.Client.DiskSpace"
+  ]
+ }
+]SELECT * FROM query(query={ SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123") WHERE artifacts =~ "Disk" }, runas="OrgUser", org_id="ORGID")[
+ {
+  "client_id": "C.123",
+  "artifacts": [
+   "Generic.Client.DiskSpace"
+  ]
+ }
+]

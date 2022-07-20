@@ -105,6 +105,8 @@ func setOneValue(result *ordereddict.Dict, value protoreflect.Value,
 		result.Set(field_name, descriptorToDict(value.Message()))
 
 	default:
-		result.Set(field_name, value.Interface())
+		// Skip empty values
+		v := value.Interface()
+		result.Set(field_name, v)
 	}
 }

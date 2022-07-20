@@ -31,6 +31,7 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
 	_ "www.velocidex.com/golang/velociraptor/accessors/ntfs"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	_ "www.velocidex.com/golang/velociraptor/vql/filesystem"
 	_ "www.velocidex.com/golang/velociraptor/vql/networking"
 	_ "www.velocidex.com/golang/velociraptor/vql/windows"
@@ -108,7 +109,7 @@ func (self *TestSuite) TestGetFlow() {
 	for i := 0; i < 20; i++ {
 		flow_id, err := launcher.ScheduleArtifactCollection(
 			ctx, self.ConfigObj,
-			vql_subsystem.NullACLManager{},
+			acl_managers.NullACLManager{},
 			repository, request1, nil)
 		assert.NoError(self.T(), err)
 
@@ -116,7 +117,7 @@ func (self *TestSuite) TestGetFlow() {
 
 		flow_id, err = launcher.ScheduleArtifactCollection(
 			ctx, self.ConfigObj,
-			vql_subsystem.NullACLManager{},
+			acl_managers.NullACLManager{},
 			repository, request2, nil)
 		assert.NoError(self.T(), err)
 
@@ -170,7 +171,7 @@ func (self *TestSuite) TestRetransmission() {
 
 	flow_id, err := launcher.ScheduleArtifactCollection(
 		ctx, self.ConfigObj,
-		vql_subsystem.NullACLManager{},
+		acl_managers.NullACLManager{},
 		repository, request, nil)
 	assert.NoError(self.T(), err)
 
@@ -233,7 +234,7 @@ func (self *TestSuite) TestResourceLimits() {
 	flow_id, err := launcher.ScheduleArtifactCollection(
 		ctx,
 		self.ConfigObj,
-		vql_subsystem.NullACLManager{},
+		acl_managers.NullACLManager{},
 		repository, request, nil)
 	assert.NoError(self.T(), err)
 
@@ -356,7 +357,7 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 	}
 
 	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
-		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
+		Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}))
 	uploader.Upload(context.Background(), scope,
 		filename, "ntfs", "", 1000,
 		nilTime, nilTime, nilTime, nilTime, reader)
@@ -800,7 +801,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 	}
 
 	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
-		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
+		Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}))
 	uploader.Upload(context.Background(), scope,
 		sparse_filename, "ntfs", "", 1000,
 		nilTime, nilTime, nilTime, nilTime, reader)
@@ -914,7 +915,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 	cmd.CombinedOutput()
 
 	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
-		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
+		Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}))
 	accessor, err := accessors.GetAccessor("ntfs", scope)
 	assert.NoError(self.T(), err)
 

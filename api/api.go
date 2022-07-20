@@ -56,6 +56,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -134,7 +135,7 @@ func (self *ApiServer) GetReport(
 			"User is not allowed to view reports.")
 	}
 
-	acl_manager := vql_subsystem.NewServerACLManager(org_config_obj, user_name)
+	acl_manager := acl_managers.NewServerACLManager(org_config_obj, user_name)
 
 	manager, err := services.GetRepositoryManager(org_config_obj)
 	if err != nil {
@@ -164,7 +165,7 @@ func (self *ApiServer) CollectArtifact(
 	}
 	creator := user_record.Name
 
-	var acl_manager vql_subsystem.ACLManager = vql_subsystem.NullACLManager{}
+	var acl_manager vql_subsystem.ACLManager = acl_managers.NullACLManager{}
 
 	// Internal calls from the frontend can set the creator.
 	if creator != org_config_obj.Client.PinnedServerName {
@@ -175,7 +176,7 @@ func (self *ApiServer) CollectArtifact(
 			permissions = acls.COLLECT_SERVER
 		}
 
-		acl_manager = vql_subsystem.NewServerACLManager(org_config_obj,
+		acl_manager = acl_managers.NewServerACLManager(org_config_obj,
 			creator)
 
 		perm, err := acl_manager.CheckAccess(permissions)
@@ -1039,7 +1040,7 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 		services.ScopeBuilder{
 			Config:     org_config_obj,
 			Env:        env,
-			ACLManager: vql_subsystem.NewServerACLManager(org_config_obj, user_name),
+			ACLManager: acl_managers.NewServerACLManager(org_config_obj, user_name),
 			Logger:     logging.NewPlainLogger(org_config_obj, &logging.FrontendComponent),
 		})
 	defer scope.Close()

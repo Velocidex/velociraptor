@@ -10,6 +10,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
@@ -18,7 +19,7 @@ import (
 
 func TestAccessorGzip(t *testing.T) {
 	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
-		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
+		Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}))
 	scope.SetLogger(log.New(os.Stderr, " ", 0))
 
 	gzip_accessor, err := accessors.GetAccessor("gzip", scope)
@@ -37,7 +38,7 @@ func TestAccessorGzip(t *testing.T) {
 
 func TestAccessorBzip2(t *testing.T) {
 	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
-		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
+		Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}))
 	scope.SetLogger(log.New(os.Stderr, " ", 0))
 
 	gzip_accessor, err := accessors.GetAccessor("bzip2", scope)

@@ -35,7 +35,7 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
 var (
@@ -218,7 +218,7 @@ func doArtifactCollect() error {
 
 	scope := manager.BuildScope(services.ScopeBuilder{
 		Config:     config_obj,
-		ACLManager: vql_subsystem.NullACLManager{},
+		ACLManager: acl_managers.NullACLManager{},
 		Logger:     logger,
 		Env: ordereddict.NewDict().
 			Set("Artifacts", *artifact_command_collect_names).
@@ -394,7 +394,7 @@ func doArtifactList() error {
 		}
 
 		request, err := launcher.CompileCollectorArgs(
-			sm.Ctx, config_obj, vql_subsystem.NullACLManager{}, repository,
+			sm.Ctx, config_obj, acl_managers.NullACLManager{}, repository,
 			services.CompilerOptions{
 				DisablePrecondition: true,
 			},

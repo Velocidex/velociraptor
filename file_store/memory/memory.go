@@ -23,6 +23,13 @@ var (
 	Test_memory_file_store *MemoryFileStore
 )
 
+func ResetMemoryFileStore() {
+	mu.Lock()
+	defer mu.Unlock()
+
+	Test_memory_file_store = nil
+}
+
 func NewMemoryFileStore(config_obj *config_proto.Config) *MemoryFileStore {
 	mu.Lock()
 	defer mu.Unlock()
@@ -393,6 +400,9 @@ func (self *MemoryFileStore) Clear() {
 
 	self.Data = ordereddict.NewDict()
 	self.Paths = ordereddict.NewDict()
+
+	// Next filestore will be pristine.
+	ResetMemoryFileStore()
 }
 
 func (self *MemoryFileStore) Close() error {

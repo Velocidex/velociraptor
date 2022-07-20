@@ -32,9 +32,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/repository"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	_ "www.velocidex.com/golang/velociraptor/vql/common"
 )
 
@@ -129,7 +129,7 @@ func (self *PluginTestSuite) TestArtifactPluginWithPrecondition() {
 
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: vql_subsystem.NullACLManager{},
+		ACLManager: acl_managers.NullACLManager{},
 		Repository: repository,
 		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
@@ -191,7 +191,7 @@ func (self *PluginTestSuite) TestClientPluginMultipleSources() {
 		Artifacts: []string{"Call"},
 	}
 
-	acl_manager := vql_subsystem.NullACLManager{}
+	acl_manager := acl_managers.NullACLManager{}
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
@@ -236,7 +236,7 @@ func (self *PluginTestSuite) TestClientPluginMultipleSourcesAndPrecondtions() {
 	repository := self.LoadArtifacts(precondition_source_definitions)
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: vql_subsystem.NullACLManager{},
+		ACLManager: acl_managers.NullACLManager{},
 		Repository: repository,
 		Logger: logging.NewPlainLogger(
 			self.ConfigObj, &logging.FrontendComponent),
@@ -296,7 +296,7 @@ func (self *PluginTestSuite) TestClientPluginMultipleSourcesAndPrecondtionsEvent
 	repository := self.LoadArtifacts(precondition_source_events_definitions)
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: vql_subsystem.NullACLManager{},
+		ACLManager: acl_managers.NullACLManager{},
 		Repository: repository,
 		Logger: logging.NewPlainLogger(
 			self.ConfigObj, &logging.FrontendComponent),

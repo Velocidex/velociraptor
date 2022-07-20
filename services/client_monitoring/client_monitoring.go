@@ -35,7 +35,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
 type ClientEventTable struct {
@@ -162,7 +162,7 @@ func (self *ClientEventTable) compileArtifactCollectorArgs(
 	}
 
 	return launcher.CompileCollectorArgs(
-		ctx, config_obj, vql_subsystem.NullACLManager{},
+		ctx, config_obj, acl_managers.NullACLManager{},
 		repository, services.CompilerOptions{
 			ObfuscateNames:         true,
 			IgnoreMissingArtifacts: true,

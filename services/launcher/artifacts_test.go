@@ -14,7 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
 var (
@@ -97,7 +97,7 @@ func (self *ArtifactTestSuite) TestUnknownArtifact() {
 	assert.NoError(self.T(), err)
 
 	_, err = launcher.CompileCollectorArgs(context.Background(), self.ConfigObj,
-		vql_subsystem.NullACLManager{},
+		acl_managers.NullACLManager{},
 		self.repository, services.CompilerOptions{}, request)
 	assert.Error(self.T(), err)
 	assert.Contains(self.T(), err.Error(), "Unknown artifact reference")
@@ -114,7 +114,7 @@ func (self *ArtifactTestSuite) TestStackOverflow() {
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 	vql_requests, err := launcher.CompileCollectorArgs(context.Background(),
-		self.ConfigObj, vql_subsystem.NullACLManager{},
+		self.ConfigObj, acl_managers.NullACLManager{},
 		self.repository, services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
@@ -142,7 +142,7 @@ func (self *ArtifactTestSuite) TestArtifactDependencies() {
 	assert.NoError(self.T(), err)
 
 	vql_requests, err := launcher.CompileCollectorArgs(context.Background(),
-		self.ConfigObj, vql_subsystem.NullACLManager{},
+		self.ConfigObj, acl_managers.NullACLManager{},
 		self.repository, services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 

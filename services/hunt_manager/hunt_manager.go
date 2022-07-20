@@ -66,7 +66,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -725,7 +725,7 @@ func scheduleHuntOnClient(
 	request.Creator = hunt_id
 
 	flow_id, err := launcher.ScheduleArtifactCollection(
-		ctx, config_obj, vql_subsystem.NullACLManager{},
+		ctx, config_obj, acl_managers.NullACLManager{},
 		repository, request, nil)
 	if err != nil {
 		return err

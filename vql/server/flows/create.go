@@ -1,5 +1,3 @@
-// +build server_vql
-
 /*
    Velociraptor - Hunting Evil
    Copyright (C) 2019 Velocidex Innovations.
@@ -17,7 +15,7 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package server
+package flows
 
 import (
 	"context"
@@ -30,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -47,6 +46,7 @@ type ScheduleCollectionFunctionArg struct {
 	MaxRows      uint64      `vfilter:"optional,field=max_rows,doc=Max number of rows to fetch"`
 	MaxBytes     uint64      `vfilter:"optional,field=max_bytes,doc=Max number of bytes to upload"`
 	Urgent       bool        `vfilter:"optional,field=urgent,doc=Set the collection as urgent - skips other queues collections on the client."`
+	OrgId        string      `vfilter:"optional,field=org_id,doc=If set the collection will be started in the specified org."`
 }
 
 type ScheduleCollectionFunction struct{}
@@ -67,6 +67,12 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		scope.Log("collect_client: Command can only run on the server")
+		return vfilter.Null{}
+	}
+
 	// Scheduling artifacts on the server requires higher
 	// permissions.
 	var permission acls.ACL_PERMISSION
@@ -79,16 +85,33 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	err = vql_subsystem.CheckAccess(scope, permission)
-	if err != nil {
-		scope.Log("collect_client: %v", err)
-		return vfilter.Null{}
-	}
+	// Which org should this be collected on
+	if arg.OrgId == "" {
+		err = vql_subsystem.CheckAccess(scope, permission)
+		if err != nil {
+			scope.Log("collect_client: %v", err)
+			return vfilter.Null{}
+		}
 
-	config_obj, ok := vql_subsystem.GetServerConfig(scope)
-	if !ok {
-		scope.Log("collect_client: Command can only run on the server")
-		return vfilter.Null{}
+	} else {
+		err = vql_subsystem.CheckAccessInOrg(scope, arg.OrgId, permission)
+		if err != nil {
+			scope.Log("collect_client: %v", err)
+			return vfilter.Null{}
+		}
+
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			scope.Log("collect_client: %v", err)
+			return vfilter.Null{}
+		}
+
+		// If an org is specied we use the config obj from the org.
+		config_obj, err = org_manager.GetOrgConfig(arg.OrgId)
+		if err != nil {
+			scope.Log("collect_client: %v", err)
+			return vfilter.Null{}
+		}
 	}
 
 	manager, err := services.GetRepositoryManager(config_obj)
@@ -135,7 +158,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	result := &flows_proto.ArtifactCollectorResponse{Request: request}
 	acl_manager, ok := artifacts.GetACLManager(scope)
 	if !ok {
-		acl_manager = vql_subsystem.NullACLManager{}
+		acl_manager = acl_managers.NullACLManager{}
 	}
 
 	launcher, err := services.GetLauncher(config_obj)

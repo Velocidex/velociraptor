@@ -11,6 +11,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/remapping"
 )
 
@@ -56,7 +57,7 @@ func applyAnalysisTarget(config_obj *config_proto.Config) error {
 	// repository manager so we just make it up.
 	scope := vql_subsystem.MakeScope()
 	scope.AppendVars(ordereddict.NewDict().
-		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
+		Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}))
 	defer scope.Close()
 
 	// Apply the remapping on this scope to catch any errors in the

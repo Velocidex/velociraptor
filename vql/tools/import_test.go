@@ -13,7 +13,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
 func (self *TestSuite) TestImportCollection() {
@@ -24,7 +24,7 @@ func (self *TestSuite) TestImportCollection() {
 
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: vql_subsystem.NullACLManager{},
+		ACLManager: acl_managers.NullACLManager{},
 		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}

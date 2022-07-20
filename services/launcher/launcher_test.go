@@ -27,12 +27,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 
 	// Load plugins (timestamp, parse_csv)
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/csv"
 	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
@@ -108,7 +108,7 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 		Timeout:      73,
 	}
 	ctx := context.Background()
-	acl_manager := vql_subsystem.NullACLManager{}
+	acl_manager := acl_managers.NullACLManager{}
 
 	// Simulate an error downloading the tool on demand - this
 	// prevents the VQL from being compiled, and therefore
@@ -267,7 +267,7 @@ func (self *LauncherTestSuite) TestGetDependentArtifactsWithImports() {
 		Artifacts: []string{"Custom.CallArtifactWithImports"},
 	}
 	ctx := context.Background()
-	acl_manager := vql_subsystem.NullACLManager{}
+	acl_manager := acl_managers.NullACLManager{}
 
 	// Compile the request.
 	compiled, err := launcher.CompileCollectorArgs(ctx, self.ConfigObj,
@@ -311,7 +311,7 @@ sources:
 		Timeout:      73,
 	}
 	ctx := context.Background()
-	acl_manager := vql_subsystem.NullACLManager{}
+	acl_manager := acl_managers.NullACLManager{}
 
 	// Compile the request.
 	launcher, err := services.GetLauncher(self.ConfigObj)
@@ -380,7 +380,7 @@ func (self *LauncherTestSuite) TestCompiling() {
 		Timeout:      73,
 	}
 	ctx := context.Background()
-	acl_manager := vql_subsystem.NullACLManager{}
+	acl_manager := acl_managers.NullACLManager{}
 
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -462,7 +462,7 @@ func (self *LauncherTestSuite) TestCompilingMultipleArtifacts() {
 		Timeout:      73,
 	}
 	ctx := context.Background()
-	acl_manager := vql_subsystem.NullACLManager{}
+	acl_manager := acl_managers.NullACLManager{}
 
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -522,7 +522,7 @@ sources:
 	}
 
 	ctx := context.Background()
-	acl_manager := vql_subsystem.NullACLManager{}
+	acl_manager := acl_managers.NullACLManager{}
 
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -552,7 +552,7 @@ func (self *LauncherTestSuite) TestCompilingObfuscation() {
 		Artifacts: []string{"Test.Artifact"},
 	}
 	ctx := context.Background()
-	acl_manager := vql_subsystem.NullACLManager{}
+	acl_manager := acl_managers.NullACLManager{}
 
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -586,7 +586,7 @@ sources:
 	}
 	ctx := context.Background()
 
-	acl_manager := vql_subsystem.NewServerACLManager(self.ConfigObj, "UserX")
+	acl_manager := acl_managers.NewServerACLManager(self.ConfigObj, "UserX")
 
 	// Permission denied - the principal is not allowed to compile this artifact.
 	launcher, err := services.GetLauncher(self.ConfigObj)
@@ -604,7 +604,7 @@ sources:
 	assert.NoError(self.T(), err)
 
 	// Should be fine now.
-	acl_manager = vql_subsystem.NewServerACLManager(self.ConfigObj, "UserX")
+	acl_manager = acl_managers.NewServerACLManager(self.ConfigObj, "UserX")
 	compiled, err = launcher.CompileCollectorArgs(
 		ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
@@ -646,7 +646,7 @@ func (self *LauncherTestSuite) TestParameterTypes() {
 	defer cancel()
 
 	// Compile the artifact request into VQL
-	acl_manager := vql_subsystem.NullACLManager{}
+	acl_manager := acl_managers.NullACLManager{}
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
@@ -787,7 +787,7 @@ func (self *LauncherTestSuite) TestParameterTypesDeps() {
 	defer cancel()
 
 	// Compile the artifact request into VQL
-	acl_manager := vql_subsystem.NullACLManager{}
+	acl_manager := acl_managers.NullACLManager{}
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
@@ -814,7 +814,7 @@ func (self *LauncherTestSuite) TestParameterTypesDepsQuery() {
 
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: vql_subsystem.NullACLManager{},
+		ACLManager: acl_managers.NullACLManager{},
 		Repository: repository,
 		Logger: logging.NewPlainLogger(
 			self.ConfigObj, &logging.FrontendComponent),
@@ -881,7 +881,7 @@ sources:
 	defer cancel()
 
 	// Compile the artifact request into VQL
-	acl_manager := vql_subsystem.NullACLManager{}
+	acl_manager := acl_managers.NullACLManager{}
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
@@ -930,7 +930,7 @@ sources:
 	defer cancel()
 
 	// Compile the artifact request into VQL
-	acl_manager := vql_subsystem.NullACLManager{}
+	acl_manager := acl_managers.NullACLManager{}
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
@@ -984,7 +984,7 @@ sources:
 	defer cancel()
 
 	// Compile the artifact request into VQL
-	acl_manager := vql_subsystem.NullACLManager{}
+	acl_manager := acl_managers.NullACLManager{}
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
@@ -1093,7 +1093,7 @@ sources:
 	defer cancel()
 
 	// Compile the artifact request into VQL
-	acl_manager := vql_subsystem.NullACLManager{}
+	acl_manager := acl_managers.NullACLManager{}
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 

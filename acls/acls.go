@@ -100,6 +100,12 @@ const (
 	// Allowed to manage server configuration.
 	SERVER_ADMIN
 
+	// Allowed to manage orgs
+	ORG_ADMIN
+
+	// Allows the user to specify a different username for the query() plugin
+	IMPERSONATION
+
 	// Allowed to read arbitrary files from the filesystem.
 	FILESYSTEM_READ
 
@@ -147,6 +153,10 @@ func (self ACL_PERMISSION) String() string {
 		return "NOTEBOOK_EDITOR"
 	case SERVER_ADMIN:
 		return "SERVER_ADMIN"
+	case ORG_ADMIN:
+		return "ORG_ADMIN"
+	case IMPERSONATION:
+		return "IMPERSONATION"
 	case FILESYSTEM_READ:
 		return "FILESYSTEM_READ"
 	case FILESYSTEM_WRITE:
@@ -191,6 +201,10 @@ func GetPermission(name string) ACL_PERMISSION {
 		return NOTEBOOK_EDITOR
 	case "SERVER_ADMIN":
 		return SERVER_ADMIN
+	case "ORG_ADMIN":
+		return ORG_ADMIN
+	case "IMPERSONATION":
+		return IMPERSONATION
 	case "FILESYSTEM_READ":
 		return FILESYSTEM_READ
 	case "FILESYSTEM_WRITE":
@@ -355,6 +369,12 @@ func (self ACLManager) CheckAccessWithToken(
 
 	case SERVER_ADMIN:
 		return token.ServerAdmin, nil
+
+	case ORG_ADMIN:
+		return token.OrgAdmin, nil
+
+	case IMPERSONATION:
+		return token.Impersonation, nil
 
 	case FILESYSTEM_READ:
 		return token.FilesystemRead, nil

@@ -80,6 +80,10 @@ func SanitizeString(component string) string {
 			result[result_idx+2] = hexTable[c&15]
 			result_idx += 3
 		}
+
+		if result_idx > len(result)-1 {
+			break
+		}
 	}
 
 	return string(result[:result_idx])

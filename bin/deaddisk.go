@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -56,7 +57,7 @@ func addWindowsDirectory(
 
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
-		ACLManager: vql_subsystem.NullACLManager{},
+		ACLManager: acl_managers.NullACLManager{},
 		Logger:     log.New(&LogWriter{config_obj}, "", 0),
 	}
 
@@ -164,11 +165,11 @@ func addWindowsHardDisk(
 
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
-		ACLManager: vql_subsystem.NullACLManager{},
+		ACLManager: acl_managers.NullACLManager{},
 		Logger:     log.New(&LogWriter{config_obj}, "", 0),
 		Env: ordereddict.NewDict().
 			Set(vql_subsystem.ACL_MANAGER_VAR,
-				vql_subsystem.NewRoleACLManager("administrator")).
+				acl_managers.NewRoleACLManager("administrator")).
 			Set("ImagePath", image),
 	}
 
