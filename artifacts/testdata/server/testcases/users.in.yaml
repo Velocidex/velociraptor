@@ -7,7 +7,7 @@ Queries:
        user="TestUser", password="hunter2",
        roles=["reader", "investigator"]) FROM scope()
 
-  - SELECT name, Permissions.roles FROM gui_users() WHERE name =~ "TestUser"
+  - SELECT name, roles FROM gui_users() WHERE name =~ "TestUser"
 
   # Now delete it
   - SELECT user_delete(user="TestUser") FROM scope()

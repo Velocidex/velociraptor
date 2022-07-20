@@ -12,3 +12,9 @@
 .timezone-selector {
     flex: 1 1 auto;
 }
+
+.org-label {
+    padding-left: 1ex;
+    display: inline;
+    opacity: 50%;
+}

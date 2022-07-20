@@ -70,15 +70,8 @@ reports:
       ## Users
 
       {{ define "UserPermissions" }}
-        LET cleanup(permission) = to_dict(item={
-            SELECT * FROM foreach(row=items(item=permission), query={
-               SELECT _key, _value FROM scope()
-               WHERE _value AND NOT _key = "roles"
-            })
-        })
-
-        SELECT name, cleanup(permission=Permissions) AS Permissions,
-               join(array=Permissions.roles, sep=", ") AS Roles
+        SELECT name, effective_policy AS _EffectivePolicy,
+               join(array=roles, sep=", ") AS Roles
         FROM gui_users()
       {{ end }}
 
