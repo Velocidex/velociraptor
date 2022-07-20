@@ -15,7 +15,7 @@ import (
 )
 
 type UsersPluginArgs struct {
-	AllOrgs bool `vfilter:"optional,field=all_orgs,docs=If set we enumberate permission for all orgs, otherwise just for this org."`
+	AllOrgs bool `vfilter:"optional,field=all_orgs,doc=If set we enumberate permission for all orgs, otherwise just for this org."`
 }
 
 type UsersPlugin struct{}

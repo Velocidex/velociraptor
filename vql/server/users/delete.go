@@ -13,7 +13,7 @@ import (
 )
 
 type UserDeleteFunctionArgs struct {
-	Username string `vfilter:"required,field=user,docs=The user to delete."`
+	Username string `vfilter:"required,field=user,doc=The user to delete."`
 }
 
 type UserDeleteFunction struct{}

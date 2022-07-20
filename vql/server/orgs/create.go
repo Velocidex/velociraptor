@@ -12,8 +12,8 @@ import (
 )
 
 type OrgCreateFunctionArgs struct {
-	OrgName string `vfilter:"required,field=name,docs=The name of the org."`
-	OrgId   string `vfilter:"optional,field=org_id,docs=An ID for the new org (if not set use a random ID)."`
+	OrgName string `vfilter:"required,field=name,doc=The name of the org."`
+	OrgId   string `vfilter:"optional,field=org_id,doc=An ID for the new org (if not set use a random ID)."`
 }
 
 type OrgCreateFunction struct{}
