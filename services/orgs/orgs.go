@@ -3,6 +3,7 @@ package orgs
 import (
 	"context"
 	"errors"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -150,15 +151,20 @@ func (self *OrgManager) makeNewConfigObj(
 	if result.Client != nil {
 		result.OrgId = record.OrgId
 		result.OrgName = record.Name
+
+		// Client config does not leak org id! We use the nonce to tie
+		// org id back to the org.
 		result.Client.Nonce = record.Nonce
 	}
 
 	if result.Datastore != nil {
 		if result.Datastore.Location != "" {
-			result.Datastore.Location += "/orgs/" + record.OrgId
+			result.Datastore.Location = filepath.Join(
+				result.Datastore.Location, "orgs", record.OrgId)
 		}
 		if result.Datastore.FilestoreDirectory != "" {
-			result.Datastore.FilestoreDirectory += "/orgs/" + record.OrgId
+			result.Datastore.FilestoreDirectory = filepath.Join(
+				result.Datastore.FilestoreDirectory, "orgs", record.OrgId)
 		}
 	}
 

@@ -49,7 +49,7 @@ func (self UserCreateFunction) Call(
 	}
 
 	users_manager := services.GetUserManager()
-	user_record, err := users_manager.GetUser(arg.Username)
+	user_record, err := users_manager.GetUserWithHashes(arg.Username)
 	if err == services.UserNotFoundError {
 		// OK - Lets make the user now
 		user_record, err = users.NewUserRecord(arg.Username)
@@ -81,6 +81,9 @@ func (self UserCreateFunction) Call(
 			return vfilter.Null{}
 		}
 		users.SetPassword(user_record, string(password))
+
+	} else if len(user_record.PasswordHash) > 0 {
+		// Password is already set - leave it alone.
 
 	} else if arg.Password == "" {
 		// Do not accept an empty password if we are using a password
