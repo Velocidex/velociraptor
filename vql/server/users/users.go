@@ -64,7 +64,11 @@ func (self UsersPlugin) Call(
 			// org id for all orgs the user belongs to.
 			var orgs []string
 			for _, org_record := range user_details.Orgs {
-				orgs = append(orgs, org_record.Id)
+				id := org_record.Id
+				if id == "root" {
+					id = ""
+				}
+				orgs = append(orgs, id)
 			}
 
 			// If not specific org, the user belongs to the root org.

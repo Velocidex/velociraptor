@@ -6,6 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
 	"www.velocidex.com/golang/velociraptor/acls"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -40,7 +41,12 @@ func (self OrgsPlugin) Call(
 				continue
 			}
 
-			serialized, err := yaml.Marshal(org_config_obj)
+			client_config := &config_proto.Config{
+				Version: org_config_obj.Version,
+				Client:  org_config_obj.Client,
+			}
+
+			serialized, err := yaml.Marshal(client_config)
 			if err != nil {
 				continue
 			}

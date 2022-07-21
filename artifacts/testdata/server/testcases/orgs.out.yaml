@@ -130,6 +130,18 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
    "machine_state": true,
    "prepare_results": true
   }
+ },
+ {
+  "name": "ReaderUser",
+  "org_id": "",
+  "picture": "",
+  "email": false,
+  "roles": [
+   "reader"
+  ],
+  "effective_policy": {
+   "read_results": true
+  }
  }
 ]SELECT * FROM query(query={ SELECT * FROM gui_users() ORDER BY name }, org_id="ORGID")[
  {

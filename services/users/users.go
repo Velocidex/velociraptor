@@ -161,6 +161,32 @@ func (self UserManager) ListUsers() ([]*api_proto.VelociraptorUser, error) {
 	return result, nil
 }
 
+func normalizeOrgList(user_record *api_proto.VelociraptorUser) error {
+	// Ensure some org is specified
+	if len(user_record.Orgs) == 0 {
+		user_record.Orgs = append(user_record.Orgs, &api_proto.Org{
+			Id: "root",
+		})
+	}
+
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return err
+	}
+
+	// Fill in the org names if needed
+	for _, org_record := range user_record.Orgs {
+		org, err := org_manager.GetOrg(org_record.Id)
+		if err == nil {
+			org_record.Name = org.Name
+		} else {
+			org_record.Name = org_record.Id
+		}
+	}
+
+	return nil
+}
+
 // Returns the user record after stripping sensitive information like
 // password hashes.
 func (self UserManager) GetUser(username string) (
@@ -204,6 +230,11 @@ func (self UserManager) GetUserWithHashes(username string) (
 		return nil, services.UserNotFoundError
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
+	err = normalizeOrgList(user_record)
 	return user_record, err
 }
 
@@ -262,6 +293,7 @@ func (self UserManager) GetUserOptions(username string) (
 	if options.Options == "" {
 		options.Options = default_user_options
 	}
+
 	return options, err
 }
 
