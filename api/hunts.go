@@ -18,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
 func (self *ApiServer) GetHuntFlows(
@@ -102,7 +103,7 @@ func (self *ApiServer) CreateHunt(
 	in.Creator = user_record.Name
 	in.HuntId = hunt_dispatcher.GetNewHuntId()
 
-	acl_manager := vql_subsystem.NewServerACLManager(org_config_obj, in.Creator)
+	acl_manager := acl_managers.NewServerACLManager(org_config_obj, in.Creator)
 
 	permissions := acls.COLLECT_CLIENT
 	perm, err := acls.CheckAccess(org_config_obj, in.Creator, permissions)

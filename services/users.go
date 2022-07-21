@@ -19,6 +19,7 @@ package services
 
 import (
 	"context"
+	"errors"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -26,14 +27,18 @@ import (
 
 var (
 	global_user_manager UserManager
+
+	UserNotFoundError = errors.New("User not found")
 )
 
 type UserManager interface {
 	SetUser(user_record *api_proto.VelociraptorUser) error
+	GetUser(username string) (*api_proto.VelociraptorUser, error)
+
 	ListUsers() ([]*api_proto.VelociraptorUser, error)
 	GetUserFromContext(ctx context.Context) (
 		*api_proto.VelociraptorUser, *config_proto.Config, error)
-	GetUser(username string) (*api_proto.VelociraptorUser, error)
+
 	GetUserWithHashes(username string) (*api_proto.VelociraptorUser, error)
 	SetUserOptions(username string,
 		options *api_proto.SetGUIOptionsRequest) error

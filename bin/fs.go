@@ -39,6 +39,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
@@ -147,11 +148,11 @@ func doLS(path, accessor string) error {
 
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
-		ACLManager: vql_subsystem.NullACLManager{},
+		ACLManager: acl_managers.NullACLManager{},
 		Logger:     log.New(&LogWriter{config_obj}, "", 0),
 		Env: ordereddict.NewDict().
 			Set(vql_subsystem.ACL_MANAGER_VAR,
-				vql_subsystem.NewRoleACLManager("administrator")).
+				acl_managers.NewRoleACLManager("administrator")).
 			Set("accessor", accessor).
 			Set("path", path),
 	}
@@ -211,7 +212,7 @@ func doRM(path, accessor string) error {
 
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
-		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+		ACLManager: acl_managers.NewRoleACLManager("administrator"),
 		Logger:     log.New(&LogWriter{config_obj}, "", 0),
 		Env: ordereddict.NewDict().
 			Set("accessor", accessor).
@@ -279,7 +280,7 @@ func doCp(path, accessor string, dump_dir string) error {
 		Env: ordereddict.NewDict().
 			Set("accessor", accessor).
 			Set("path", path),
-		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+		ACLManager: acl_managers.NewRoleACLManager("administrator"),
 	}
 
 	switch output_accessor {

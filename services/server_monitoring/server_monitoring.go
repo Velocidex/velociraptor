@@ -26,6 +26,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -89,7 +90,8 @@ func (self *EventTable) _Close() {
 	// Close the old table.
 	if self.cancel != nil {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-		logger.Info("Closing Server Monitoring Event table")
+		logger.Info("<red>Closing</> Server Monitoring Event table for %v",
+			services.GetOrgName(self.config_obj))
 
 		self.cancel()
 		self.cancel = nil
@@ -234,7 +236,7 @@ func (self *EventTable) StartQueries(
 	}
 
 	// No ACLs enforced on server events.
-	acl_manager := vql_subsystem.NullACLManager{}
+	acl_manager := acl_managers.NullACLManager{}
 
 	// Make a context for all the VQL queries.
 	subctx, cancel := context.WithCancel(self.parent_ctx)
@@ -337,7 +339,7 @@ func (self *EventTable) RunQuery(
 		// Run the monitoring queries as the server account. If the
 		// artifact launches other artifacts then it will indicate the
 		// creator was the server.
-		ACLManager: vql_subsystem.NewServerACLManager(
+		ACLManager: acl_managers.NewServerACLManager(
 			self.config_obj,
 			self.config_obj.Client.PinnedServerName),
 		Env:        ordereddict.NewDict(),
@@ -450,7 +452,8 @@ func NewServerMonitoringService(
 
 	logger := logging.GetLogger(
 		config_obj, &logging.FrontendComponent)
-	logger.Info("server_monitoring: <green>Starting</> Server Monitoring Service")
+	logger.Info("server_monitoring: <green>Starting</> Server Monitoring Service for %v",
+		services.GetOrgName(config_obj))
 
 	manager := &EventTable{
 		config_obj: config_obj,

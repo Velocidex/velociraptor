@@ -8,6 +8,8 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
+import { withRouter }  from "react-router-dom";
+
 import UserConfig from '../core/user.js';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
@@ -60,6 +62,20 @@ class UserSettings extends React.PureComponent {
         });
     }
 
+    changeOrg = org=>{
+        // Force navigation to the
+        // welcome screen to make sure
+        // the GUI is reset
+        this.props.history.push("/welcome");
+        this.props.setSetting({
+            theme: this.state.theme,
+            timezone: this.state.timezone,
+            lang: this.state.lang,
+            org: org,
+            default_password: this.state.default_password,
+        });
+        this.props.onClose();
+    }
     render() {
         return (
             <Modal show={true}
@@ -83,13 +99,9 @@ class UserSettings extends React.PureComponent {
                     <Col sm="8">
                       <Form.Control as="select"
                                     value={this.state.org}
-                                    placeholder={T("Select a language")}
-                                    onChange={(e) => {
-                                        this.setState({
-                                            org: e.currentTarget.value,
-                                            org_changed: true,
-                                        });
-                                    }}>
+                                    placeholder={T("Select an org")}
+                                    onChange={e=>this.changeOrg(e.currentTarget.value)}
+                  >
                         {_.map(this.context.traits.orgs || [], function(x) {
                             return <option key={x.id} value={x.id}>{x.name}</option>;
                         })}
@@ -229,6 +241,7 @@ class UserSettings extends React.PureComponent {
     };
 }
 
+const UserSettingsWithRouter = withRouter(UserSettings);
 
 export default class UserLabel extends React.Component {
     static contextType = UserConfig;
@@ -283,11 +296,25 @@ export default class UserLabel extends React.Component {
         });
     }
 
+    orgName() {
+        let id = this.context.traits && this.context.traits.org;
+        if (!id || id==="root") {
+            return <></>;
+        }
+        let orgs = (this.context.traits && this.context.traits.orgs) || [];
+        for(let i=0; i<orgs.length;i++) {
+            if (orgs[i].id===id) {
+                return <div className="org-label">{orgs[i].name}</div>;
+            }
+        };
+        return <></>;
+    }
+
     render() {
         return (
             <>
               { this.state.showUserSettings &&
-                <UserSettings
+                <UserSettingsWithRouter
                   setSetting={this.setSettings}
                   onClose={()=>this.setState({showUserSettings: false})} /> }
               <ButtonGroup className="user-label">
@@ -305,6 +332,7 @@ export default class UserLabel extends React.Component {
                          src={ this.context.traits.picture}
                     />
                   }
+                  { this.orgName() }
                 </Button>
               </ButtonGroup>
             </>

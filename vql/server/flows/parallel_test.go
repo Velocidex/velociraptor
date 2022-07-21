@@ -21,7 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
@@ -76,7 +76,7 @@ func (self *TestSuite) TestArtifactSource() {
 	ctx := context.Background()
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: vql_subsystem.NullACLManager{},
+		ACLManager: acl_managers.NullACLManager{},
 		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env: ordereddict.NewDict().
 			Set("ClientId", self.client_id).
@@ -137,7 +137,7 @@ func (self *TestSuite) TestHuntsSource() {
 	assert.NoError(self.T(), err)
 
 	hunt_id, err := hunt_dispatcher.CreateHunt(ctx,
-		self.ConfigObj, vql_subsystem.NullACLManager{},
+		self.ConfigObj, acl_managers.NullACLManager{},
 		&api_proto.Hunt{
 			StartRequest: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"Test.Artifact"},
@@ -160,7 +160,7 @@ func (self *TestSuite) TestHuntsSource() {
 
 		client_id := fmt.Sprintf("%s_%v", self.client_id, client_number)
 		flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx,
-			self.ConfigObj, vql_subsystem.NullACLManager{},
+			self.ConfigObj, acl_managers.NullACLManager{},
 			repository, &flows_proto.ArtifactCollectorArgs{
 				ClientId:  client_id,
 				Artifacts: []string{"Test.Artifact"},
@@ -196,7 +196,7 @@ func (self *TestSuite) TestHuntsSource() {
 
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: vql_subsystem.NullACLManager{},
+		ACLManager: acl_managers.NullACLManager{},
 		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict().Set("MyHuntId", hunt_id),
 	}

@@ -25,7 +25,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -45,7 +45,7 @@ func RunVQL(
 	scope := manager.BuildScope(services.ScopeBuilder{
 		Config:     config_obj,
 		Env:        env,
-		ACLManager: vql_subsystem.NewServerACLManager(config_obj, principal),
+		ACLManager: acl_managers.NewServerACLManager(config_obj, principal),
 		Logger:     logging.NewPlainLogger(config_obj, &logging.ToolComponent),
 	})
 	defer scope.Close()

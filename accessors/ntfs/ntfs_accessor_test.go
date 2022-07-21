@@ -15,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
@@ -23,7 +24,7 @@ import (
 func TestNTFSFilesystemAccessor(t *testing.T) {
 	config_obj := config.GetDefaultConfig()
 	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
-		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
+		Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}))
 	scope.SetLogger(log.New(os.Stderr, " ", 0))
 
 	abs_path, _ := filepath.Abs("../../artifacts/testdata/files/test.ntfs.dd")
@@ -77,7 +78,7 @@ func TestNTFSFilesystemAccessorRemapping(t *testing.T) {
 		accessors.MustNewWindowsOSPath(""), root_fs_accessor)
 
 	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
-		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}))
+		Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}))
 	scope.SetLogger(log.New(os.Stderr, " ", 0))
 
 	abs_path, _ := filepath.Abs("../../artifacts/testdata/files/test.ntfs.dd")

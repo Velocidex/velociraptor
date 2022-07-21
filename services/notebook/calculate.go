@@ -14,7 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
 func (self *NotebookManager) UpdateNotebookCell(
@@ -45,7 +45,7 @@ func (self *NotebookManager) UpdateNotebookCell(
 	// Run the actual query independently.
 	query_ctx, query_cancel := context.WithCancel(context.Background())
 
-	acl_manager := vql_subsystem.NewServerACLManager(self.config_obj, user_name)
+	acl_manager := acl_managers.NewServerACLManager(self.config_obj, user_name)
 
 	manager, err := services.GetRepositoryManager(self.config_obj)
 	if err != nil {

@@ -17,10 +17,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
 )
 
@@ -76,7 +76,7 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	acl_manager := vql_subsystem.NewServerACLManager(self.ConfigObj, user)
+	acl_manager := acl_managers.NewServerACLManager(self.ConfigObj, user)
 
 	// Schedule a job for the server runner.
 	flow_id, err := launcher.ScheduleArtifactCollection(

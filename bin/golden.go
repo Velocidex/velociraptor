@@ -44,6 +44,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/remapping"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -174,7 +175,7 @@ func runTest(fixture *testFixture, sm *services.Service,
 
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
-		ACLManager: vql_subsystem.NewRoleACLManager("administrator"),
+		ACLManager: acl_managers.NewRoleACLManager("administrator", "org_admin"),
 		Logger:     log.New(log_writer, "Velociraptor: ", 0),
 		Uploader:   container,
 		Env: ordereddict.NewDict().
@@ -423,6 +424,8 @@ func (self MemoryLogPlugin) Call(
 				output_chan <- ordereddict.NewDict().
 					Set("Log", line)
 			}
+
+			log_writer.Clear()
 		}
 
 	}()

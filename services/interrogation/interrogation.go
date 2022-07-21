@@ -44,7 +44,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
 type EnrollmentService struct {
@@ -146,7 +146,7 @@ func (self *EnrollmentService) ProcessEnrollment(
 	}
 
 	flow_id, err := launcher.ScheduleArtifactCollection(
-		ctx, config_obj, vql_subsystem.NullACLManager{},
+		ctx, config_obj, acl_managers.NullACLManager{},
 		repository,
 		&flows_proto.ArtifactCollectorArgs{
 			Creator:   "InterrogationService",

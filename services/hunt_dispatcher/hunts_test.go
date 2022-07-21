@@ -11,7 +11,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
@@ -65,7 +65,7 @@ sources:
 		},
 	}
 
-	acl_manager := vql_subsystem.NullACLManager{}
+	acl_manager := acl_managers.NullACLManager{}
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 

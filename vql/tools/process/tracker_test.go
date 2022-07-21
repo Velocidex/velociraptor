@@ -14,12 +14,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/vfilter"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
 )
 
@@ -191,7 +191,7 @@ func (self *ProcessTrackerTestSuite) TestProcessTracker() {
 		// Just build a standard scope.
 		builder := services.ScopeBuilder{
 			Config:     self.ConfigObj,
-			ACLManager: vql_subsystem.NullACLManager{},
+			ACLManager: acl_managers.NullACLManager{},
 			Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		}
 

@@ -124,7 +124,7 @@ func doOrgCreate() error {
 		return err
 	}
 
-	record, err := org_manager.CreateNewOrg(*orgs_create_name)
+	record, err := org_manager.CreateNewOrg(*orgs_create_name, "")
 	if err != nil {
 		return err
 	}

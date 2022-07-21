@@ -11,7 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
 func maybeStartInitialArtifacts(
@@ -64,7 +64,7 @@ func maybeStartInitialArtifacts(
 		}
 
 		_, err = launcher.ScheduleArtifactCollection(ctx, config_obj,
-			vql_subsystem.NewRoleACLManager("administrator"),
+			acl_managers.NewRoleACLManager("administrator"),
 			repository,
 			&flows_proto.ArtifactCollectorArgs{
 				Creator:   principal,

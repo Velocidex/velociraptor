@@ -7,6 +7,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/users"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -15,10 +16,10 @@ import (
 )
 
 type UserCreateFunctionArgs struct {
-	Username string   `vfilter:"required,field=user,docs=The user to create or update."`
-	Roles    []string `vfilter:"required,field=roles,docs=List of roles to give the user."`
-	Password string   `vfilter:"optional,field=password,docs=A password to set for the user (If not using SSO this might be needed)."`
-	OrgIds   []string `vfilter:"optional,field=orgs,docs=One or more org IDs to grant access to."`
+	Username string   `vfilter:"required,field=user,doc=The user to create or update."`
+	Roles    []string `vfilter:"required,field=roles,doc=List of roles to give the user."`
+	Password string   `vfilter:"optional,field=password,doc=A password to set for the user (If not using SSO this might be needed)."`
+	OrgIds   []string `vfilter:"optional,field=orgs,doc=One or more org IDs to grant access to."`
 }
 
 type UserCreateFunction struct{}
@@ -34,12 +35,6 @@ func (self UserCreateFunction) Call(
 		return vfilter.Null{}
 	}
 
-	config_obj, ok := vql_subsystem.GetServerConfig(scope)
-	if !ok {
-		scope.Log("Command can only run on the server")
-		return vfilter.Null{}
-	}
-
 	arg := &UserCreateFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -47,9 +42,23 @@ func (self UserCreateFunction) Call(
 		return vfilter.Null{}
 	}
 
-	// OK - Lets make the user now
-	user_record, err := users.NewUserRecord(arg.Username)
-	if err != nil {
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		scope.Log("Command can only run on the server")
+		return vfilter.Null{}
+	}
+
+	users_manager := services.GetUserManager()
+	user_record, err := users_manager.GetUser(arg.Username)
+	if err == services.UserNotFoundError {
+		// OK - Lets make the user now
+		user_record, err = users.NewUserRecord(arg.Username)
+		if err != nil {
+			scope.Log("user_create: %s", err)
+			return vfilter.Null{}
+		}
+
+	} else if err != nil {
 		scope.Log("user_create: %s", err)
 		return vfilter.Null{}
 	}
@@ -83,15 +92,58 @@ func (self UserCreateFunction) Call(
 		users.SetPassword(user_record, arg.Password)
 	}
 
-	// Grant the roles to the user
-	err = acls.GrantRoles(config_obj, arg.Username, arg.Roles)
-	if err != nil {
-		scope.Log("user_create: %s", err)
-		return vfilter.Null{}
+	// Grat the user the roles in all orgs.
+	org_config_obj := config_obj
+
+	// No OrgIds specified - the user will be created in the root org.
+	if len(arg.OrgIds) == 0 {
+		// Grant the roles to the user
+		err = acls.GrantRoles(config_obj, arg.Username, arg.Roles)
+		if err != nil {
+			scope.Log("user_create: %s", err)
+			return vfilter.Null{}
+		}
+
+		// OrgIds specified, grant the user an ACL in each org specified.
+	} else {
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			scope.Log("user_create: %v", err)
+			return vfilter.Null{}
+		}
+
+		for _, org_id := range arg.OrgIds {
+			org_config_obj, err = org_manager.GetOrgConfig(org_id)
+			if err != nil {
+				scope.Log("user_create: %v", err)
+				return vfilter.Null{}
+			}
+
+			// Grant the roles to the user
+			err = acls.GrantRoles(org_config_obj, arg.Username, arg.Roles)
+			if err != nil {
+				scope.Log("user_create: %s", err)
+				return vfilter.Null{}
+			}
+		}
+
+		org_exists := func(org_id string) bool {
+			for _, org := range user_record.Orgs {
+				if org.Id == org_id {
+					return true
+				}
+			}
+			return false
+		}
+		for _, org_id := range arg.OrgIds {
+			if !org_exists(org_id) {
+				user_record.Orgs = append(user_record.Orgs,
+					&api_proto.Org{Id: org_id})
+			}
+		}
 	}
 
 	// Write the user record.
-	users_manager := services.GetUserManager()
 	err = users_manager.SetUser(user_record)
 	if err != nil {
 		scope.Log("user_create: %s", err)

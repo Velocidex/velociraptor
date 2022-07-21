@@ -10,7 +10,7 @@ import (
 
 func ValidateRole(role string) bool {
 	switch role {
-	case "administrator", "reader", "analyst", "investigator", "artifact_writer", "api":
+	case "org_admin", "administrator", "reader", "analyst", "investigator", "artifact_writer", "api":
 		return true
 	}
 
@@ -43,6 +43,10 @@ func SetTokenPermission(
 			token.NotebookEditor = true
 		case "SERVER_ADMIN":
 			token.ServerAdmin = true
+		case "ORG_ADMIN":
+			token.OrgAdmin = true
+		case "IMPERSONATION":
+			token.Impersonation = true
 		case "FILESYSTEM_READ":
 			token.FilesystemRead = true
 		case "FILESYSTEM_WRITE":
@@ -69,11 +73,15 @@ func GetRolePermissions(
 	for _, role := range roles {
 		switch role {
 
+		case "org_admin":
+			result.OrgAdmin = true
+
 		// Admins get all query access
 		case "administrator":
 			result.AllQuery = true
 			result.AnyQuery = true
 			result.ReadResults = true
+			result.Impersonation = true
 			result.LabelClients = true
 			result.CollectClient = true
 			result.CollectServer = true
@@ -86,6 +94,12 @@ func GetRolePermissions(
 			result.FilesystemWrite = true
 			result.MachineState = true
 			result.PrepareResults = true
+
+			// An administrator for the root org is allowed to
+			// manipulate orgs.
+			if config_obj != nil && config_obj.OrgId == "" {
+				result.OrgAdmin = true
+			}
 
 			// Readers can view results but not edit or
 			// modify anything.

@@ -36,6 +36,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -83,7 +84,7 @@ func streamQuery(
 
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
-		ACLManager: vql_subsystem.NewServerACLManager(config_obj, peer_name),
+		ACLManager: acl_managers.NewServerACLManager(config_obj, peer_name),
 		Logger:     scope_logger,
 		Repository: repository,
 		Env:        ordereddict.NewDict(),

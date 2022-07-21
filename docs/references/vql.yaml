@@ -607,6 +607,9 @@
     type: bool
     description: Set the collection as urgent - skips other queues collections on
       the client.
+  - name: org_id
+    type: string
+    description: If set the collection will be started in the specified org.
   category: server
 - name: column_filter
   description: |
@@ -2950,6 +2953,20 @@
     type: int64
     description: Maximum size of file we load into memory.
   category: parsers
+- name: org_create
+  description: Creates a new organizaion.
+  type: Function
+  args:
+  - name: name
+    type: string
+    description: The name of the org.
+    required: true
+  - name: org_id
+    type: string
+    description: An ID for the new org (if not set use a random ID).
+- name: orgs
+  description: Retrieve the list of orgs on this server.
+  type: Plugin
 - name: parallelize
   description: |
     Runs query on result batches in parallel.
@@ -3968,6 +3985,13 @@
     type: float64
     description: If no progress is detected in this many seconds, we terminate the
       query and output debugging information
+  - name: org_id
+    type: string
+    description: If specified, the query will run in the specified org space (Use
+      'root' to refer to the root org)
+  - name: runas
+    type: string
+    description: If specified, the query will run as the specified user
 - name: rand
   description: Selects a random number.
   type: Function
@@ -4386,9 +4410,11 @@
   args:
   - name: item
     type: Any
+    description: A dict to set
     required: true
   - name: field
     type: string
+    description: The field to set
     required: true
   - name: value
     type: Any
@@ -5250,13 +5276,20 @@
   args:
   - name: user
     type: string
+    description: The user to create or update.
     required: true
   - name: roles
     type: string
+    description: List of roles to give the user.
     repeated: true
     required: true
   - name: password
     type: string
+    description: A password to set for the user (If not using SSO this might be needed).
+  - name: orgs
+    type: string
+    description: One or more org IDs to grant access to.
+    repeated: true
   category: server
 - name: user_delete
   description: Deletes a user from the server.
@@ -5264,6 +5297,7 @@
   args:
   - name: user
     type: string
+    description: The user to delete.
     required: true
   category: server
 - name: users
@@ -5636,3 +5670,4 @@
     type: string
     description: If set use this key to cache the  yara rules.
   category: plugin
+

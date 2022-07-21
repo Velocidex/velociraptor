@@ -22,6 +22,7 @@ import (
 
 	// Load all needed plugins
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
 	_ "www.velocidex.com/golang/velociraptor/vql/networking"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers"
@@ -137,7 +138,7 @@ func (self *TestSuite) TestSimpleCollection() {
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	acl_manager := vql_subsystem.NullACLManager{}
+	acl_manager := acl_managers.NullACLManager{}
 	vql_requests, err := launcher.CompileCollectorArgs(
 		context.Background(), self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
@@ -164,7 +165,7 @@ func (self *TestSuite) TestCollectionWithArtifacts() {
 
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: vql_subsystem.NullACLManager{},
+		ACLManager: acl_managers.NullACLManager{},
 		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}
@@ -210,7 +211,7 @@ func (self *TestSuite) TestCollectionWithTypes() {
 
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: vql_subsystem.NullACLManager{},
+		ACLManager: acl_managers.NullACLManager{},
 		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}
@@ -250,7 +251,7 @@ func (self *TestSuite) TestCollectionWithUpload() {
 
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: vql_subsystem.NullACLManager{},
+		ACLManager: acl_managers.NullACLManager{},
 		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}

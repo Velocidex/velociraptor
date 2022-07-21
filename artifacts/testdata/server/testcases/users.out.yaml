@@ -2,10 +2,10 @@ SELECT * FROM gui_users() WHERE name =~ "TestUser"[]SELECT user_create( user="Te
  {
   "user_create(user=\"TestUser\", password=\"hunter2\", roles= [\"reader\", \"investigator\"])": "TestUser"
  }
-]SELECT name, Permissions.roles FROM gui_users() WHERE name =~ "TestUser"[
+]SELECT name, roles FROM gui_users() WHERE name =~ "TestUser"[
  {
   "name": "TestUser",
-  "Permissions.roles": [
+  "roles": [
    "reader",
    "investigator"
   ]

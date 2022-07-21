@@ -19,7 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
@@ -162,7 +162,7 @@ tools:
 	assert.NoError(self.T(), err)
 
 	response, err := launcher.CompileCollectorArgs(
-		ctx, self.ConfigObj, vql_subsystem.NullACLManager{}, repository,
+		ctx, self.ConfigObj, acl_managers.NullACLManager{}, repository,
 		services.CompilerOptions{},
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},
@@ -260,7 +260,7 @@ tools:
 	assert.NoError(self.T(), err)
 
 	response, err := launcher.CompileCollectorArgs(
-		ctx, self.ConfigObj, vql_subsystem.NullACLManager{}, repository,
+		ctx, self.ConfigObj, acl_managers.NullACLManager{}, repository,
 		services.CompilerOptions{},
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},

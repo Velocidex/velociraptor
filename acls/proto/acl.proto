@@ -28,6 +28,14 @@ message ApiClientACL {
     bool server_artifact_writer = 15;
     bool execve = 7;
     bool notebook_editor = 8;
+
+    // Has the ability to add/remove/list orgs. A user with
+    // server_admin on the root org will also receive org_admin.
+    bool org_admin = 19;
+
+    // Allows a user to run queries as another user.
+    bool impersonation = 20;
+
     bool server_admin = 12;
     bool filesystem_read = 13;
     bool filesystem_write = 14;

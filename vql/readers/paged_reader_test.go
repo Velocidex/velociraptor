@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/vfilter"
 
@@ -34,7 +35,7 @@ func (self *TestSuite) SetupTest() {
 	self.scope = vql_subsystem.MakeScope()
 	self.scope.AppendVars(ordereddict.NewDict().
 		Set(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache()).
-		Set(vql_subsystem.ACL_MANAGER_VAR, vql_subsystem.NullACLManager{}).
+		Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}).
 		Set(constants.SCOPE_ROOT, self.scope))
 
 	// Make a very small pool

@@ -17,6 +17,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -119,7 +120,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 		acl_manager, ok := artifacts.GetACLManager(scope)
 		if !ok {
-			acl_manager = vql_subsystem.NullACLManager{}
+			acl_manager = acl_managers.NullACLManager{}
 		}
 
 		launcher, err := services.GetLauncher(self.config_obj)

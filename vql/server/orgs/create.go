@@ -12,7 +12,8 @@ import (
 )
 
 type OrgCreateFunctionArgs struct {
-	OrgName string `vfilter:"required,field=name,docs=The name of the org."`
+	OrgName string `vfilter:"required,field=name,doc=The name of the org."`
+	OrgId   string `vfilter:"optional,field=org_id,doc=An ID for the new org (if not set use a random ID)."`
 }
 
 type OrgCreateFunction struct{}
@@ -22,7 +23,7 @@ func (self OrgCreateFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+	err := vql_subsystem.CheckAccess(scope, acls.ORG_ADMIN)
 	if err != nil {
 		scope.Log("org_create: %s", err)
 		return vfilter.Null{}
@@ -41,7 +42,7 @@ func (self OrgCreateFunction) Call(
 		return vfilter.Null{}
 	}
 
-	org_record, err := org_manager.CreateNewOrg(arg.OrgName)
+	org_record, err := org_manager.CreateNewOrg(arg.OrgName, arg.OrgId)
 	if err != nil {
 		scope.Log("org_create: %s", err)
 		return vfilter.Null{}

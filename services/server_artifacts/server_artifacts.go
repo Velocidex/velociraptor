@@ -30,6 +30,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -254,7 +255,7 @@ func (self *ServerArtifactsRunner) runQuery(
 
 		// Run this query on behalf of the caller so they are
 		// subject to ACL checks
-		ACLManager: vql_subsystem.NewServerACLManager(self.config_obj, principal),
+		ACLManager: acl_managers.NewServerACLManager(self.config_obj, principal),
 		Logger:     log.New(logger, "", 0),
 	})
 	defer scope.Close()

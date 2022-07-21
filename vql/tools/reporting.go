@@ -11,7 +11,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -85,7 +85,7 @@ func produceReport(
 			// generate arbitrary HTML.
 			template_engine, err := reporting.NewHTMLTemplateEngine(
 				config_obj, ctx, subscope,
-				vql_subsystem.NullACLManager{}, repository,
+				acl_managers.NullACLManager{}, repository,
 				definition.Name, false /* sanitize_html */)
 			if err != nil {
 				return err
@@ -110,7 +110,7 @@ func produceReport(
 
 	template_engine, err := reporting.NewHTMLTemplateEngine(
 		config_obj, ctx, subscope,
-		vql_subsystem.NullACLManager{}, repository,
+		acl_managers.NullACLManager{}, repository,
 		template, false /* sanitize_html */)
 	if err != nil {
 		return err

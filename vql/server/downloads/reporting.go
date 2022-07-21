@@ -16,7 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -89,7 +89,7 @@ func WriteFlowReport(
 			// generate arbitrary HTML.
 			template_engine, err := reporting.NewHTMLTemplateEngine(
 				config_obj, context.Background(), scope,
-				vql_subsystem.NullACLManager{}, repository,
+				acl_managers.NullACLManager{}, repository,
 				definition.Name, false /* sanitize_html */)
 			if err != nil {
 				scope.Log("Error creating report for %v: %v",
@@ -116,7 +116,7 @@ func WriteFlowReport(
 
 	template_engine, err := reporting.NewHTMLTemplateEngine(
 		config_obj, context.Background(), scope,
-		vql_subsystem.NullACLManager{}, repository,
+		acl_managers.NullACLManager{}, repository,
 		template, false /* sanitize_html */)
 	if err != nil {
 		return err

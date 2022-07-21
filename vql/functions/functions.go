@@ -391,8 +391,8 @@ type Setter interface {
 }
 
 type _SetFunctionArgs struct {
-	Item  vfilter.Any `vfilter:"required,field=item,docs=A dict to set"`
-	Field string      `vfilter:"required,field=field,docs=The field to set"`
+	Item  vfilter.Any `vfilter:"required,field=item,doc=A dict to set"`
+	Field string      `vfilter:"required,field=field,doc=The field to set"`
 	Value vfilter.Any `vfilter:"required,field=value"`
 }
 

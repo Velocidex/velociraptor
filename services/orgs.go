@@ -58,7 +58,7 @@ type ServiceContainer interface {
 type OrgManager interface {
 	GetOrgConfig(org_id string) (*config_proto.Config, error)
 	OrgIdByNonce(nonce string) (string, error)
-	CreateNewOrg(name string) (*api_proto.OrgRecord, error)
+	CreateNewOrg(name, id string) (*api_proto.OrgRecord, error)
 	ListOrgs() []*api_proto.OrgRecord
 	GetOrg(org_id string) (*api_proto.OrgRecord, error)
 

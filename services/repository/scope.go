@@ -11,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/remapping"
 	"www.velocidex.com/golang/velociraptor/vql/sorter"
 	"www.velocidex.com/golang/vfilter"
@@ -110,7 +111,7 @@ func _build(self services.ScopeBuilder, from_scratch bool) vfilter.Scope {
 
 		// Reduce permissions based on the configuration.
 		if self.ACLManager != nil {
-			new_acl_manager, err := accessors.GetRemappingACLManager(
+			new_acl_manager, err := acl_managers.GetRemappingACLManager(
 				self.ACLManager, self.Config.Remappings)
 			if err != nil {
 				scope.Log("Applying remapping: %v", err)
