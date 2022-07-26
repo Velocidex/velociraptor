@@ -5,6 +5,15 @@ import language_tools from 'ace-builds/src-min-noconflict/ext-language_tools.js'
 // Custom VQL syntax highlighter
 import VqlMode from '../core/mode-vql.js';
 
+const escapeHTML = function(htmlStr) {
+   let str = htmlStr || "";
+   return str.replace(/&/g, "&amp;")
+         .replace(/</g, "&lt;")
+         .replace(/>/g, "&gt;")
+         .replace(/"/g, "&quot;")
+         .replace(/'/g, "&#39;");
+}
+
 // This is a syntax editor class controlling suggestions from the
 // server.
 export default class Completer {
@@ -138,7 +147,8 @@ export default class Completer {
                     type: "plugin",
                     value: item.name,
                     meta: item.type,
-                    docHTML: '<div class="arg-help">' + item.description + "</div>",
+                    docHTML: '<div class="arg-help">' +
+                        escapeHTML(item.description) + "</div>",
                 });
             }
         }
@@ -165,7 +175,9 @@ export default class Completer {
                     replacement += "(";
 
                     if (item.description) {
-                        html = '<div class="arg-help">' + item.description + "</div>";
+                        html = '<div class="arg-help">' +
+                            escapeHTML(item.description) + "</div>" +
+                            "<script>alert(1)</script>";
                     }
                 }
 
@@ -223,7 +235,8 @@ export default class Completer {
                         value: arg.name,
                         score: 1000,
                         meta: meta,
-                        docHTML: '<div class="arg-help">' + arg.description + "</div>",
+                        docHTML: '<div class="arg-help">' +
+                            escapeHTML(arg.description) + "</div>",
                     });
                 }
             }
@@ -246,7 +259,8 @@ export default class Completer {
 
                 var html = "";
                 if (item.description) {
-                    html = '<div class="arg-help">' + item.description + "</div>";
+                    html = '<div class="arg-help">' +
+                        escapeHTML(item.description) + "</div>";
                 }
 
                 completions.push({
@@ -302,7 +316,8 @@ export default class Completer {
                         score: 1000,
                         value: arg.name,
                         meta: meta,
-                        docHTML: '<div class="arg-help">' + arg.description + "</div>",
+                        docHTML: '<div class="arg-help">' +
+                            escapeHTML(arg.description) + "</div>",
                     });
                 }
             }
