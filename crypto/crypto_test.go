@@ -19,10 +19,14 @@ package crypto_test
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
+	errors "github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -30,6 +34,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	crypto_server "www.velocidex.com/golang/velociraptor/crypto/server"
@@ -42,7 +47,10 @@ type TestSuite struct {
 	config_obj     *config_proto.Config
 	server_manager *crypto_server.ServerCryptoManager
 	client_manager *crypto_client.ClientCryptoManager
-	client_id      string
+
+	client_private_key *rsa.PrivateKey
+	server_private_key *rsa.PrivateKey
+	client_id          string
 }
 
 func (self *TestSuite) SetupTest() {
@@ -63,6 +71,14 @@ func (self *TestSuite) SetupTest() {
 	self.client_manager, err = crypto_client.NewClientCryptoManager(
 		self.config_obj, []byte(self.config_obj.Writeback.PrivateKey))
 	require.NoError(t, err)
+
+	self.client_private_key, err = crypto_utils.ParseRsaPrivateKeyFromPemStr(
+		[]byte(self.config_obj.Writeback.PrivateKey))
+	require.NoError(self.T(), err)
+
+	self.server_private_key, err = crypto_utils.ParseRsaPrivateKeyFromPemStr(
+		[]byte(self.config_obj.Frontend.PrivateKey))
+	require.NoError(self.T(), err)
 
 	_, err = self.client_manager.AddCertificate(
 		[]byte(self.config_obj.Frontend.Certificate))
@@ -123,6 +139,100 @@ func (self *TestSuite) TestEncDecServerToClient() {
 	// hit the LRU cache each time.
 	c := testutil.ToFloat64(crypto_client.RsaDecryptCounter)
 	assert.Equal(t, c-initial_c, float64(1))
+}
+
+func (self *TestSuite) TestEncDecClientToServerWithSpoof() {
+	// The source may be present in two places:
+
+	// 1. The cipher_metadata.Source is verified by the encryption
+	//    itself (client id is derived from hash of public key).
+	// 2. The entire message is packed into a MessageInfo
+	t := self.T()
+	message_list := &crypto_proto.MessageList{}
+	message_list.Job = append(
+		message_list.Job, &crypto_proto.VeloMessage{
+			// Spoof the source in the actual message - this will be
+			// corrected to the real client id.
+			Source: "C.1234Spoof",
+			Name:   "OMG it's a string"})
+
+	ConfigObj := config.GetDefaultConfig()
+	cipher_text, err := self._EncryptMessageListWithSpoofedPackedMessage(
+		message_list, ConfigObj.Client.PinnedServerName)
+	assert.NoError(t, err)
+
+	message_info, err := self.server_manager.Decrypt(cipher_text)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, message_info.Source, self.client_id)
+	err = message_info.IterateJobs(context.Background(),
+		func(ctx context.Context, msg *crypto_proto.VeloMessage) {
+			// Make sure the spoofed source is ignored, and the
+			// correct source is relayed in the VeloMessage.
+			assert.Equal(t, msg.Source, self.client_id)
+		})
+	assert.NoError(t, err)
+}
+
+// Encrypt the messages but deliberately spoofed the client id in the
+// PackedMessageList inner message. This should be caught by the
+// decryption and not allowed.
+func (self *TestSuite) _EncryptMessageListWithSpoofedPackedMessage(
+	message_list *crypto_proto.MessageList,
+	destination string) ([]byte, error) {
+
+	plain_text, err := proto.Marshal(message_list)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	compressed_message_lists := [][]byte{plain_text}
+	output_cipher, err := client.NewCipher(self.client_id,
+		self.client_private_key, &self.server_private_key.PublicKey)
+	if err != nil {
+		return nil, err
+	}
+
+	packed_message_list := &crypto_proto.PackedMessageList{
+		Compression: crypto_proto.PackedMessageList_UNCOMPRESSED,
+		MessageList: compressed_message_lists,
+		Nonce:       self.config_obj.Client.Nonce,
+		Timestamp:   uint64(time.Now().UnixNano() / 1000),
+	}
+
+	serialized_packed_message_list, err := proto.Marshal(packed_message_list)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	comms := output_cipher.ClientCommunication()
+
+	// Each packet has a new IV.
+	_, err = rand.Read(comms.PacketIv)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	encrypted_serialized_packed_message_list, err := client.EncryptSymmetric(
+		output_cipher.CipherProperties(),
+		serialized_packed_message_list,
+		comms.PacketIv)
+	if err != nil {
+		return nil, err
+
+	}
+
+	comms.Encrypted = encrypted_serialized_packed_message_list
+	comms.FullHmac = client.CalcHMAC(comms, output_cipher.CipherProperties())
+
+	result, err := proto.Marshal(comms)
+	if err != nil {
+		return nil, errors.WithStack(err)
+	}
+
+	return result, nil
 }
 
 func (self *TestSuite) TestEncDecClientToServer() {

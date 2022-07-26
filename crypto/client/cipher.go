@@ -49,7 +49,20 @@ func (self *_Cipher) Size() int {
 	return 1
 }
 
-func _NewCipher(
+func (self *_Cipher) CipherProperties() *crypto_proto.CipherProperties {
+	return self.cipher_properties
+}
+
+func (self *_Cipher) ClientCommunication() *crypto_proto.ClientCommunication {
+	return &crypto_proto.ClientCommunication{
+		EncryptedCipher:         self.encrypted_cipher,
+		EncryptedCipherMetadata: self.encrypted_cipher_metadata,
+		PacketIv:                make([]byte, self.key_size/8),
+		ApiVersion:              3,
+	}
+}
+
+func NewCipher(
 	source string,
 	private_key *rsa.PrivateKey,
 	public_key *rsa.PublicKey) (*_Cipher, error) {
@@ -115,7 +128,7 @@ func _NewCipher(
 		return nil, errors.WithStack(err)
 	}
 
-	encrypted_cipher_metadata, err := encryptSymmetric(
+	encrypted_cipher_metadata, err := EncryptSymmetric(
 		result.cipher_properties,
 		serialized_cipher_metadata,
 		result.cipher_properties.MetadataIv)
