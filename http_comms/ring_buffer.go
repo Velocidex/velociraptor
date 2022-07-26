@@ -335,6 +335,25 @@ func (self *FileBasedRingBuffer) Commit() {
 	}).Info("File Ring Buffer: Commit")
 }
 
+// Open an existing ring buffer file.
+func OpenFileBasedRingBuffer(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	log_ctx *logging.LogContext) (*FileBasedRingBuffer, error) {
+
+	filename := getLocalBufferName(config_obj)
+	if filename == "" {
+		return nil, errors.New("Unsupport platform")
+	}
+
+	fd, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0700)
+	if err != nil {
+		return nil, err
+	}
+
+	return newFileBasedRingBuffer(fd, config_obj, log_ctx)
+}
+
 func NewFileBasedRingBuffer(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -369,6 +388,14 @@ func NewFileBasedRingBuffer(
 	if err != nil {
 		return nil, err
 	}
+
+	return newFileBasedRingBuffer(fd, config_obj, log_ctx)
+}
+
+func newFileBasedRingBuffer(
+	fd *os.File,
+	config_obj *config_proto.Config,
+	log_ctx *logging.LogContext) (*FileBasedRingBuffer, error) {
 
 	header := &Header{
 		// Pad the header a bit to allow for extensions.
@@ -423,7 +450,7 @@ func NewFileBasedRingBuffer(
 	result.c = sync.NewCond(&result.mu)
 
 	log_ctx.WithFields(logrus.Fields{
-		"filename": filename,
+		"filename": fd.Name(),
 		"max_size": result.header.MaxSize,
 	}).Info("Ring Buffer: Creation")
 
