@@ -66,6 +66,11 @@ func doAddUser() error {
 	}
 	defer sm.Close()
 
+	err = sm.Start(users.StartUserManager)
+	if err != nil {
+		return err
+	}
+
 	user_record, err := users.NewUserRecord(*user_add_name)
 	if err != nil {
 		return fmt.Errorf("add user: %s", err)

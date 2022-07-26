@@ -93,7 +93,7 @@ func NewCryptoManager(config_obj *config_proto.Config,
 
    The HMAC ensures that the cipher properties can not be modified.
 */
-func (self *CryptoManager) calcHMAC(
+func CalcHMAC(
 	comms *crypto_proto.ClientCommunication,
 	cipher *crypto_proto.CipherProperties) []byte {
 	msg := comms.Encrypted
@@ -110,10 +110,9 @@ func (self *CryptoManager) calcHMAC(
 	return mac.Sum(nil)
 }
 
-func encryptSymmetric(
+func EncryptSymmetric(
 	cipher_properties *crypto_proto.CipherProperties,
-	plain_text []byte,
-	iv []byte) ([]byte, error) {
+	plain_text []byte, iv []byte) ([]byte, error) {
 	if len(cipher_properties.Key) != 16 {
 		return nil, errors.New("Incorrect key length provided.")
 	}
@@ -220,14 +219,23 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, er
 		// Check HMAC to save checking the RSA signature for
 		// malformed packets.
 		if !hmac.Equal(
-			self.calcHMAC(communications, cipher.cipher_properties),
+			CalcHMAC(communications, cipher.cipher_properties),
 			communications.FullHmac) {
 			return nil, errors.New("HMAC did not verify")
 		}
 
-		return self.extractMessageInfo(
+		msg_info, err := self.extractMessageInfo(
 			cipher.cipher_properties, communications,
 			true /* auth_state */)
+		if err != nil {
+			return nil, err
+		}
+
+		// Cipher was cached so we trust it
+		msg_info.Authenticated = true
+		msg_info.Source = cipher.cipher_metadata.Source
+
+		return msg_info, nil
 	}
 
 	// Decrypt the CipherProperties
@@ -250,7 +258,7 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, er
 	// Check HMAC first to save checking the RSA signature for
 	// malformed packets.
 	if !hmac.Equal(
-		self.calcHMAC(communications, cipher_properties),
+		CalcHMAC(communications, cipher_properties),
 		communications.FullHmac) {
 		return nil, errors.New("HMAC did not verify")
 	}
@@ -288,15 +296,29 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, er
 		self.cipher_lru.Set(
 			msg_info.Source,
 			&_Cipher{
+				cipher_metadata:   cipher_metadata,
 				encrypted_cipher:  communications.EncryptedCipher,
 				cipher_properties: cipher_properties,
 			},
 			nil, /* outbound_cipher */
 		)
+
+		msg_info.Authenticated = true
+		msg_info.Source = cipher_metadata.Source
 		return msg_info, nil
 	}
 
-	return self.extractMessageInfo(cipher_properties, communications, auth_state)
+	msg_info, err := self.extractMessageInfo(
+		cipher_properties, communications, auth_state)
+	if err != nil {
+		return nil, err
+	}
+
+	// Make sure the message source is set from the cipher_metadata
+	// overriding the internal Source. The source is cryptographically
+	// verified by the encryption of the outer envelop.
+	msg_info.Source = cipher_metadata.Source
+	return msg_info, nil
 }
 
 // Decrypt the message from the communications using the cipher
@@ -333,7 +355,6 @@ func (self *CryptoManager) extractMessageInfo(
 		// Hold onto the compressed MessageList buffers.
 		RawCompressed: packed_message_list.MessageList,
 		Authenticated: auth_state,
-		Source:        packed_message_list.Source,
 		Compression:   packed_message_list.Compression,
 	}, nil
 }
@@ -359,7 +380,6 @@ func (self *CryptoManager) EncryptMessageList(
 		if err != nil {
 			return nil, errors.WithStack(err)
 		}
-
 	}
 
 	cipher_text, err := self.Encrypt(
@@ -389,7 +409,7 @@ func (self *CryptoManager) Encrypt(
 				destination))
 		}
 
-		cipher, err := _NewCipher(self.source, self.private_key, public_key)
+		cipher, err := NewCipher(self.source, self.private_key, public_key)
 		if err != nil {
 			return nil, err
 		}
@@ -402,7 +422,6 @@ func (self *CryptoManager) Encrypt(
 		// We always compress the data.
 		Compression: compression,
 		MessageList: compressed_message_lists,
-		Source:      self.source,
 		Nonce:       self.config.Client.Nonce,
 		Timestamp:   uint64(time.Now().UnixNano() / 1000),
 	}
@@ -412,12 +431,7 @@ func (self *CryptoManager) Encrypt(
 		return nil, errors.WithStack(err)
 	}
 
-	comms := &crypto_proto.ClientCommunication{
-		EncryptedCipher:         output_cipher.encrypted_cipher,
-		EncryptedCipherMetadata: output_cipher.encrypted_cipher_metadata,
-		PacketIv:                make([]byte, output_cipher.key_size/8),
-		ApiVersion:              3,
-	}
+	comms := output_cipher.ClientCommunication()
 
 	// Each packet has a new IV.
 	_, err = rand.Read(comms.PacketIv)
@@ -425,7 +439,7 @@ func (self *CryptoManager) Encrypt(
 		return nil, errors.WithStack(err)
 	}
 
-	encrypted_serialized_packed_message_list, err := encryptSymmetric(
+	encrypted_serialized_packed_message_list, err := EncryptSymmetric(
 		output_cipher.cipher_properties,
 		serialized_packed_message_list,
 		comms.PacketIv)
@@ -435,7 +449,7 @@ func (self *CryptoManager) Encrypt(
 	}
 
 	comms.Encrypted = encrypted_serialized_packed_message_list
-	comms.FullHmac = self.calcHMAC(comms, output_cipher.cipher_properties)
+	comms.FullHmac = CalcHMAC(comms, output_cipher.cipher_properties)
 
 	result, err := proto.Marshal(comms)
 	if err != nil {
