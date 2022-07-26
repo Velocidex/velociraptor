@@ -386,7 +386,15 @@ func NewFileBasedRingBuffer(
 
 	err = os.Rename(fd.Name(), filename)
 	if err != nil {
-		return nil, err
+		// On Windows the above rename operation does not work because
+		// the file is still open.
+		fd.Close()
+		os.Remove(fd.Name())
+
+		fd, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0700)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return newFileBasedRingBuffer(fd, config_obj, log_ctx)
