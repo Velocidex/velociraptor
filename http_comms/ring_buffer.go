@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"io"
+	"io/ioutil"
 	"os"
 	"runtime"
 	"sync"
@@ -348,7 +349,23 @@ func NewFileBasedRingBuffer(
 		return nil, errors.New("Unsupport platform")
 	}
 
-	fd, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0700)
+	// Reset the buffer file by removing old data. We prevent symlink
+	// attacks by replacing any existing file with a new file. In this
+	// case we do not want to use a random file name because the
+	// Velociraptor client is often killed without warning and
+	// restarted (e.g. system reboot). This means we dont always get a
+	// chance to cleanup and after a lot of restarts random file names
+	// will accumulate.  By default the temp directory is created
+	// inside a protected directory
+	// (`C:\Program Files\Velociraptor\Tools`) so symlink attacks are
+	// mitigated but in case Velociraptor is misconfigured we are
+	// extra careful.
+	fd, err := ioutil.TempFile(".", "")
+	if err != nil {
+		return nil, err
+	}
+
+	err = os.Rename(fd.Name(), filename)
 	if err != nil {
 		return nil, err
 	}
