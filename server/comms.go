@@ -341,7 +341,8 @@ func control(server_obj *Server) http.Handler {
 					"Please Enrol",
 					http.StatusNotAcceptable)
 			} else {
-				server_obj.Error("Unable to process", err)
+				server_obj.Error("Unable to process (%v): %v",
+					message_info.Source, err)
 				logger.Debug("Unable to process (%v)", message_info.Source)
 				http.Error(w, "", http.StatusServiceUnavailable)
 			}
