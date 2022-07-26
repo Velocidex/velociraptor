@@ -64,7 +64,7 @@ func renderObject(value interface{}) string {
 		return ""
 
 	case string:
-		return t
+		return html.EscapeString(t)
 
 	case int, int64, int32, int16, int8,
 		uint64, uint32, uint16, uint8,
@@ -98,7 +98,7 @@ func (self *HTMLTemplateEngine) Table(values ...interface{}) interface{} {
 				columns = item.Keys()
 				result += "  <tr>\n"
 				for _, name := range columns {
-					result += "    <th>" + name + "</th>\n"
+					result += "    <th>" + html.EscapeString(name) + "</th>\n"
 				}
 				result += "  </tr>\n"
 				result += "</thead>\n<tbody>\n"
@@ -123,7 +123,7 @@ func (self *HTMLTemplateEngine) Table(values ...interface{}) interface{} {
 				columns = item.Keys()
 				result += "  <tr>\n"
 				for _, name := range columns {
-					result += "    <th>" + name + "</th>\n"
+					result += "    <th>" + html.EscapeString(name) + "</th>\n"
 				}
 				result += "  </tr>\n"
 				result += "</thead>\n<tbody>\n"
