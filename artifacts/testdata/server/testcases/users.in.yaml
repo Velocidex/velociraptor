@@ -9,8 +9,17 @@ Queries:
 
   - SELECT name, roles FROM gui_users() WHERE name =~ "TestUser"
 
+  # Grant replaces all roles (should lose investigator).
+  - LET _ <= user_grant(user="TestUser", roles="reader")
+  - SELECT name, roles FROM gui_users() WHERE name =~ "TestUser"
+
   # Now delete it
   - SELECT user_delete(user="TestUser") FROM scope()
 
   # Should be gone now.
   - SELECT * FROM gui_users() WHERE name =~ "TestUser"
+
+  # Grant a non existant user a role
+  - SELECT user_grant(user="TestUserNotThere", roles="reader") FROM scope()
+  - SELECT * FROM test_read_logs() WHERE Log =~ "User not found" AND NOT Log =~ "SELECT"
+  - SELECT * FROM gui_users() WHERE name =~ "TestUserNotThere"

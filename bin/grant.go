@@ -63,9 +63,20 @@ func doGrant() error {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
+	config_obj.Frontend.ServerServices = services.GenericToolServices()
+
 	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
 
+	if err != nil {
+		return err
+	}
+
+	principal := *grant_command_principal
+
+	// Check the user actually exists first
+	user_manager := services.GetUserManager()
+	_, err = user_manager.GetUser(principal)
 	if err != nil {
 		return err
 	}
@@ -79,8 +90,6 @@ func doGrant() error {
 	if err != nil {
 		return err
 	}
-
-	principal := *grant_command_principal
 
 	existing_policy, err := acls.GetPolicy(org_config_obj, principal)
 	if err != nil && err != io.EOF {
