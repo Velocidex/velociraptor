@@ -145,11 +145,6 @@ func doShowUser() error {
 	}
 	defer sm.Close()
 
-	err = users.StartUserManager(ctx, sm.Wg, config_obj)
-	if err != nil {
-		return err
-	}
-
 	users_manager := services.GetUserManager()
 	user_record, err := users_manager.GetUser(*user_show_name)
 	if err != nil {
