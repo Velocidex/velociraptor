@@ -10,8 +10,23 @@ SELECT * FROM gui_users() WHERE name =~ "TestUser"[]SELECT user_create( user="Te
    "investigator"
   ]
  }
+]LET _ <= user_grant(user="TestUser", roles="reader")[]SELECT name, roles FROM gui_users() WHERE name =~ "TestUser"[
+ {
+  "name": "TestUser",
+  "roles": [
+   "reader"
+  ]
+ }
 ]SELECT user_delete(user="TestUser") FROM scope()[
  {
   "user_delete(user=\"TestUser\")": "TestUser"
  }
-]SELECT * FROM gui_users() WHERE name =~ "TestUser"[]
+]SELECT * FROM gui_users() WHERE name =~ "TestUser"[]SELECT user_grant(user="TestUserNotThere", roles="reader") FROM scope()[
+ {
+  "user_grant(user=\"TestUserNotThere\", roles=\"reader\")": null
+ }
+]SELECT * FROM test_read_logs() WHERE Log =~ "User not found" AND NOT Log =~ "SELECT"[
+ {
+  "Log": "Velociraptor: user_grant: User not found\n"
+ }
+]SELECT * FROM gui_users() WHERE name =~ "TestUserNotThere"[]

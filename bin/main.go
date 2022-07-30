@@ -168,6 +168,7 @@ func main() {
 		WithCustomValidator(initDebugServer).
 		WithConfigMutator(applyMinionRole).
 		WithCustomValidator(applyAnalysisTarget).
+		WithOverride(*override_flag).
 		WithLogFile(*logging_flag)
 
 	if *trace_flag != "" {
