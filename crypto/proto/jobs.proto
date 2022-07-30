@@ -33,6 +33,13 @@ message VeloMessage {
       description: "Responses for each request are also numbered from 1."
     }];
 
+  // The source of this message. Note that clients may group together
+  // many messages from the same source. The authenticity of the
+  // source is cryptographically determined by the CipherMetadata but
+  // the source is also copied down to each job by the server after
+  // verification. This means that we ignore what the client actually
+  // stores in this field and override it from the
+  // CipherMetadata.Source field.
   string source = 6  [(sem_type) = {
       description: "Client name where the message came from "
       "(Filled in by the frontend)."
@@ -180,11 +187,6 @@ message PackedMessageList {
 
   // A serialized and compressed MessageList for signing
   repeated bytes message_list = 1;
-
-  string source = 3 [(sem_type) = {
-      type: "RDFURN",
-      description: "The source where this message came from."
-    }];
 
   uint64 timestamp = 6 [(sem_type) = {
       type: "RDFDatetime",

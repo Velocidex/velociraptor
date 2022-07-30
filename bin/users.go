@@ -72,6 +72,11 @@ func doAddUser() error {
 	}
 	defer sm.Close()
 
+	err = sm.Start(users.StartUserManager)
+	if err != nil {
+		return err
+	}
+
 	user_record, err := users.NewUserRecord(*user_add_name)
 	if err != nil {
 		return fmt.Errorf("add user: %s", err)
@@ -139,11 +144,6 @@ func doShowUser() error {
 		return fmt.Errorf("Starting services: %w", err)
 	}
 	defer sm.Close()
-
-	err = users.StartUserManager(ctx, sm.Wg, config_obj)
-	if err != nil {
-		return err
-	}
 
 	users_manager := services.GetUserManager()
 	user_record, err := users_manager.GetUser(*user_show_name)

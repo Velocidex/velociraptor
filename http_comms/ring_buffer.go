@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/binary"
 	"io"
+	"io/ioutil"
 	"os"
 	"runtime"
 	"sync"
@@ -334,6 +335,25 @@ func (self *FileBasedRingBuffer) Commit() {
 	}).Info("File Ring Buffer: Commit")
 }
 
+// Open an existing ring buffer file.
+func OpenFileBasedRingBuffer(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	log_ctx *logging.LogContext) (*FileBasedRingBuffer, error) {
+
+	filename := getLocalBufferName(config_obj)
+	if filename == "" {
+		return nil, errors.New("Unsupport platform")
+	}
+
+	fd, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0700)
+	if err != nil {
+		return nil, err
+	}
+
+	return newFileBasedRingBuffer(fd, config_obj, log_ctx)
+}
+
 func NewFileBasedRingBuffer(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -348,10 +368,42 @@ func NewFileBasedRingBuffer(
 		return nil, errors.New("Unsupport platform")
 	}
 
-	fd, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0700)
+	// Reset the buffer file by removing old data. We prevent symlink
+	// attacks by replacing any existing file with a new file. In this
+	// case we do not want to use a random file name because the
+	// Velociraptor client is often killed without warning and
+	// restarted (e.g. system reboot). This means we dont always get a
+	// chance to cleanup and after a lot of restarts random file names
+	// will accumulate.  By default the temp directory is created
+	// inside a protected directory
+	// (`C:\Program Files\Velociraptor\Tools`) so symlink attacks are
+	// mitigated but in case Velociraptor is misconfigured we are
+	// extra careful.
+	fd, err := ioutil.TempFile(".", "")
 	if err != nil {
 		return nil, err
 	}
+
+	err = os.Rename(fd.Name(), filename)
+	if err != nil {
+		// On Windows the above rename operation does not work because
+		// the file is still open.
+		fd.Close()
+		os.Remove(fd.Name())
+
+		fd, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0700)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return newFileBasedRingBuffer(fd, config_obj, log_ctx)
+}
+
+func newFileBasedRingBuffer(
+	fd *os.File,
+	config_obj *config_proto.Config,
+	log_ctx *logging.LogContext) (*FileBasedRingBuffer, error) {
 
 	header := &Header{
 		// Pad the header a bit to allow for extensions.
@@ -406,7 +458,7 @@ func NewFileBasedRingBuffer(
 	result.c = sync.NewCond(&result.mu)
 
 	log_ctx.WithFields(logrus.Fields{
-		"filename": filename,
+		"filename": fd.Name(),
 		"max_size": result.header.MaxSize,
 	}).Info("Ring Buffer: Creation")
 

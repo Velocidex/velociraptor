@@ -30,11 +30,12 @@ sources:
       SELECT OS From info() where OS = 'windows'
 
     query:  |
-      LET packages = SELECT Name, DisplayName,UninstallString FROM Artifact.Windows.Sys.Programs()
+      LET packages = SELECT KeyName, DisplayName,UninstallString FROM Artifact.Windows.Sys.Programs()
       WHERE DisplayName =~ DisplayNameRegex AND
         log(message="Will uninstall " + DisplayName)
 
-      LET uninstall(UninstallString) = SELECT * FROM execve(argv=[commandline_split(command=UninstallString) + "/quiet"])
+      LET uninstall(UninstallString) = SELECT * FROM execve(
+          argv=commandline_split(command=UninstallString) + "/quiet")
 
       SELECT Name, DisplayName, UninstallString,
           if(condition=ReallyDoIt, then=uninstall(Name=UninstallString).Stdout) AS UninstallLog
