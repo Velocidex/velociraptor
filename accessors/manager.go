@@ -16,11 +16,6 @@ var (
 
 	// A global device manager is used to register handles.
 	globalDeviceManager *DefaultDeviceManager = NewDefaultDeviceManager()
-
-	// A cache of default device managers for each org - each org will
-	// receive a fresh copy of the globalDeviceManager to allow org
-	// specific caching.
-	globalDeviceManagerCache = make(map[string]DeviceManager)
 )
 
 // A device manager is a factory for creating accessors.
@@ -52,22 +47,7 @@ func GetDefaultDeviceManager(config_obj *config_proto.Config) DeviceManager {
 	mu.Lock()
 	defer mu.Unlock()
 
-	org_id := ""
-	if config_obj != nil {
-		org_id = config_obj.OrgId
-	}
-
-	manager, pres := globalDeviceManagerCache[org_id]
-	if pres {
-		return manager
-	}
-
-	// Make a new manager for this org.
-	new_manager := globalDeviceManager.copy()
-	new_manager.org = org_id
-	globalDeviceManagerCache[org_id] = new_manager
-
-	return new_manager
+	return globalDeviceManager
 }
 
 func GetAccessor(scheme string, scope vfilter.Scope) (FileSystemAccessor, error) {
