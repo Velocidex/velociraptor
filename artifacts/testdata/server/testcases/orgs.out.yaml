@@ -272,4 +272,22 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
    "Generic.Client.DiskSpace"
   ]
  }
+]SELECT * FROM query(query={ SELECT write_filestore(data="X", path="/clients/C.123/uploads/ORG1_file.txt") FROM scope() }, org_id="ORGID")[
+ {
+  "write_filestore(data=\"X\", path=\"/clients/C.123/uploads/ORG1_file.txt\")": true
+ }
+]SELECT * FROM query(query={ SELECT write_filestore(data="X", path="/clients/C.123/uploads/ORG2_file.txt") FROM scope() }, org_id="ORGID2")[
+ {
+  "write_filestore(data=\"X\", path=\"/clients/C.123/uploads/ORG2_file.txt\")": true
+ }
+]SELECT * FROM query(query={ SELECT OSPath, file_store(path=OSPath) =~ "ORGID" AS PathHasORGID FROM glob(globs="/**", accessor="fs") WHERE OSPath =~ "file.txt" }, org_id="ORGID")[
+ {
+  "OSPath": "fs:/clients/C.123/uploads/ORG1_file.txt",
+  "PathHasORGID": true
+ }
+]SELECT * FROM query(query={ SELECT OSPath, file_store(path=OSPath) =~ "ORGID" AS PathHasORGID FROM glob(globs="/**", accessor="fs") WHERE OSPath =~ "file.txt" }, org_id="ORGID2")[
+ {
+  "OSPath": "fs:/clients/C.123/uploads/ORG2_file.txt",
+  "PathHasORGID": true
+ }
 ]

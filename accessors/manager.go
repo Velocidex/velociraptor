@@ -5,12 +5,22 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/pkg/errors"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
 var (
-	GlobalDeviceManager = NewDefaultDeviceManager()
+	mu sync.Mutex
+
+	// A global device manager is used to register handles.
+	globalDeviceManager *DefaultDeviceManager = NewDefaultDeviceManager()
+
+	// A cache of default device managers for each org - each org will
+	// receive a fresh copy of the globalDeviceManager to allow org
+	// specific caching.
+	globalDeviceManagerCache = make(map[string]DeviceManager)
 )
 
 // A device manager is a factory for creating accessors.
@@ -30,7 +40,34 @@ func GetManager(scope vfilter.Scope) DeviceManager {
 		}
 	}
 
-	return GlobalDeviceManager
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		return NewDefaultDeviceManager()
+	}
+
+	return GetDefaultDeviceManager(config_obj)
+}
+
+func GetDefaultDeviceManager(config_obj *config_proto.Config) DeviceManager {
+	mu.Lock()
+	defer mu.Unlock()
+
+	org_id := ""
+	if config_obj != nil {
+		org_id = config_obj.OrgId
+	}
+
+	manager, pres := globalDeviceManagerCache[org_id]
+	if pres {
+		return manager
+	}
+
+	// Make a new manager for this org.
+	new_manager := globalDeviceManager.copy()
+	new_manager.org = org_id
+	globalDeviceManagerCache[org_id] = new_manager
+
+	return new_manager
 }
 
 func GetAccessor(scheme string, scope vfilter.Scope) (FileSystemAccessor, error) {
@@ -56,6 +93,8 @@ type DefaultDeviceManager struct {
 	mu           sync.Mutex
 	handlers     map[string]FileSystemAccessor
 	descriptions *ordereddict.Dict
+
+	org string
 }
 
 func NewDefaultDeviceManager() *DefaultDeviceManager {
@@ -107,6 +146,10 @@ func (self *DefaultDeviceManager) Copy() DeviceManager {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	return self.copy()
+}
+
+func (self *DefaultDeviceManager) copy() *DefaultDeviceManager {
 	result := NewDefaultDeviceManager()
 	for k, v := range self.handlers {
 		result.handlers[k] = v
@@ -114,14 +157,15 @@ func (self *DefaultDeviceManager) Copy() DeviceManager {
 
 	result.descriptions = ordereddict.NewDict()
 	result.descriptions.MergeFrom(self.descriptions)
+	result.org = self.org
 	return result
 }
 
 func Register(
 	scheme string, accessor FileSystemAccessor, description string) {
-	GlobalDeviceManager.Register(scheme, accessor, description)
+	globalDeviceManager.Register(scheme, accessor, description)
 }
 
 func DescribeAccessors() *ordereddict.Dict {
-	return GlobalDeviceManager.DescribeAccessors()
+	return globalDeviceManager.DescribeAccessors()
 }

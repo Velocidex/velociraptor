@@ -109,3 +109,27 @@ Queries:
     SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123")
     WHERE artifacts =~ "Disk"
   }, runas="OrgUser", org_id="ORGID")
+
+# Check the fs accessor in multitenant mode. First create a file in the client's org filestore.
+- SELECT * FROM query(query={
+    SELECT write_filestore(data="X", path="/clients/C.123/uploads/ORG1_file.txt") FROM scope()
+  }, org_id="ORGID")
+
+# Now create another file in a different org.
+- SELECT * FROM query(query={
+    SELECT write_filestore(data="X", path="/clients/C.123/uploads/ORG2_file.txt") FROM scope()
+  }, org_id="ORGID2")
+
+# Only the first org files should be visible
+- SELECT * FROM query(query={
+    SELECT OSPath, file_store(path=OSPath) =~ "ORGID" AS PathHasORGID
+    FROM glob(globs="/**", accessor="fs")
+    WHERE OSPath =~ "file.txt"
+  }, org_id="ORGID")
+
+# Now only the second org should only show second file
+- SELECT * FROM query(query={
+    SELECT OSPath, file_store(path=OSPath) =~ "ORGID" AS PathHasORGID
+    FROM glob(globs="/**", accessor="fs")
+    WHERE OSPath =~ "file.txt"
+  }, org_id="ORGID2")

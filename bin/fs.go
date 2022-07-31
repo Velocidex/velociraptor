@@ -29,6 +29,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
@@ -351,25 +352,12 @@ func doCat(path, accessor_name string) error {
 	return err
 }
 
-// Install a fs accessor to enable access to the file store. But make
-// it lazy - no need to connect to the file store un-neccesarily.
-type FileStoreAccessorFactory struct {
-	accessors.VirtualFilesystemAccessor
-	config_obj *config_proto.Config
-}
-
-func (self FileStoreAccessorFactory) New(scope vfilter.Scope) (
-	accessors.FileSystemAccessor, error) {
-	return file_store.GetFileStoreFileSystemAccessor(self.config_obj)
-}
-
 // Only register the filesystem accessor if we have a proper valid server config.
 func initFilestoreAccessor(config_obj *config_proto.Config) error {
 	if config_obj.Datastore != nil {
-		accessors.Register("fs", &FileStoreAccessorFactory{
-			config_obj: config_obj,
-		},
-			`Provide access the the server's filestore and datastore.
+		fs_factory := file_store_accessor.NewFileStoreFileSystemAccessor(config_obj)
+		accessors.Register("fs", fs_factory,
+			`Provide access to the server's filestore and datastore.
 
 Many VQL plugins produce references to files stored on the server. This accessor can be used to open those files and read them. Typically references to filestore or datastore files have the "fs:" or "ds:" prefix.
 `)

@@ -63,7 +63,7 @@ func applyAnalysisTarget(config_obj *config_proto.Config) error {
 	// Apply the remapping on this scope to catch any errors in the
 	// remapping config.
 	err = remapping.ApplyRemappingOnScope(
-		context.Background(), scope, scope, device_manager,
+		context.Background(), config_obj, scope, scope, device_manager,
 		ordereddict.NewDict(),
 		remapping_config)
 	if err != nil {

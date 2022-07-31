@@ -39,7 +39,9 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
@@ -47,6 +49,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/remapping"
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 var (
@@ -246,6 +249,7 @@ func runTest(fixture *testFixture, sm *services.Service,
 
 func doGolden() error {
 	vql_subsystem.RegisterPlugin(&MemoryLogPlugin{})
+	vql_subsystem.RegisterFunction(&WriteFilestoreFunction{})
 
 	if !*disable_alarm {
 		_, cancel := makeCtxWithTimeout(120)
@@ -438,5 +442,52 @@ func (self MemoryLogPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 		Name:    "test_read_logs",
 		Doc:     "Read logs in golden test.",
 		ArgType: type_map.AddType(scope, vfilter.Null{}),
+	}
+}
+
+type WriteFilestoreFunctionArgs struct {
+	Data   string `vfilter:"optional,field=data"`
+	FSPath string `vfilter:"optional,field=path"`
+}
+
+type WriteFilestoreFunction struct{}
+
+func (self WriteFilestoreFunction) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	arg := &WriteFilestoreFunctionArgs{}
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("write_filestore: %s", err)
+		return &vfilter.Null{}
+	}
+
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		scope.Log("Command can only run on the server")
+		return &vfilter.Null{}
+	}
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+	pathspec := paths.FSPathSpecFromClientPath(arg.FSPath)
+	writer, err := file_store_factory.WriteFile(pathspec)
+	if err != nil {
+		scope.Log("write_filestore: %s", err)
+		return &vfilter.Null{}
+	}
+	defer writer.Close()
+
+	writer.Write([]byte(arg.Data))
+
+	return true
+}
+
+func (self WriteFilestoreFunction) Info(
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "write_filestore",
+		Doc:     "Write a file on the filestore.",
+		ArgType: type_map.AddType(scope, &WriteFilestoreFunctionArgs{}),
 	}
 }
