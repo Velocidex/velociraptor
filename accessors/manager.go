@@ -37,7 +37,7 @@ func GetManager(scope vfilter.Scope) DeviceManager {
 
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
-		return NewDefaultDeviceManager()
+		return globalDeviceManager.Copy()
 	}
 
 	return GetDefaultDeviceManager(config_obj)

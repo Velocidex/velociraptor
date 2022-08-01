@@ -75,12 +75,3 @@ func NewFileSystem(
 		prefix:     prefix,
 	}
 }
-
-/*
-// Gets an accessor that can access the file store.
-func GetFileStoreFileSystemAccessor(
-	config_obj *config_proto.Config) (accessors.FileSystemAccessor, error) {
-	return file_store_accessor.NewFileStoreFileSystemAccessor(
-		config_obj, GetFileStore(config_obj)), nil
-}
-*/

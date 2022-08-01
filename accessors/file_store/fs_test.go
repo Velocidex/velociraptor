@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/file_store"
+	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	file_store_api "www.velocidex.com/golang/velociraptor/file_store"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -36,9 +37,7 @@ func (self *FileStoreAccessorTestSuite) createFilestoreContents() {
 func (self *FileStoreAccessorTestSuite) TestGlob() {
 	self.createFilestoreContents()
 
-	fs_accessor, err := file_store_api.GetFileStoreFileSystemAccessor(
-		self.ConfigObj)
-	assert.NoError(self.T(), err)
+	fs_accessor := file_store_accessor.NewFileStoreFileSystemAccessor(self.ConfigObj)
 
 	globber := glob.NewGlobber()
 
