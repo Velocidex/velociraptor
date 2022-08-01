@@ -43,7 +43,8 @@ func _build(self services.ScopeBuilder, from_scratch bool) vfilter.Scope {
 	cache := vql_subsystem.NewScopeCache()
 	env.Set(vql_subsystem.CACHE_VAR, cache)
 
-	device_manager := accessors.GlobalDeviceManager.Copy()
+	device_manager := accessors.GetDefaultDeviceManager(
+		self.Config).Copy()
 	env.Set(constants.SCOPE_DEVICE_MANAGER, device_manager)
 
 	if self.Config != nil {
@@ -94,13 +95,14 @@ func _build(self services.ScopeBuilder, from_scratch bool) vfilter.Scope {
 		pristine_scope := scope.Copy()
 		pristine_scope.AppendVars(ordereddict.NewDict().
 			Set(constants.SCOPE_DEVICE_MANAGER,
-				accessors.GlobalDeviceManager.Copy()))
+				accessors.GetDefaultDeviceManager(self.Config).Copy()))
 
 		device_manager.Clear()
 
 		// Pass pristine scope to delegates.
 		err := remapping.ApplyRemappingOnScope(
 			context.Background(),
+			self.Config,
 			pristine_scope, // Pristine scope
 			scope,          // Remapped scope
 			device_manager,

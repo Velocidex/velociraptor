@@ -46,7 +46,8 @@ func (self RemappingFunc) Call(ctx context.Context,
 		manager.Clear()
 	}
 
-	global_device_manager := accessors.GlobalDeviceManager.Copy()
+	global_device_manager := accessors.GetDefaultDeviceManager(
+		config_obj).Copy()
 	for _, cp := range arg.Copy {
 		accessor, err := global_device_manager.GetAccessor(cp, scope)
 		if err != nil {
@@ -61,9 +62,9 @@ func (self RemappingFunc) Call(ctx context.Context,
 	pristine_scope := scope.Copy()
 	pristine_scope.AppendVars(ordereddict.NewDict().
 		Set(constants.SCOPE_DEVICE_MANAGER,
-			accessors.GlobalDeviceManager.Copy()))
+			accessors.GetDefaultDeviceManager(config_obj).Copy()))
 
-	err = ApplyRemappingOnScope(ctx, pristine_scope, scope, manager,
+	err = ApplyRemappingOnScope(ctx, config_obj, pristine_scope, scope, manager,
 		ordereddict.NewDict(), remapping_config)
 	if err != nil {
 		scope.Log("remap: %v", err)

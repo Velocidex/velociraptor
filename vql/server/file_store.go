@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -157,6 +158,9 @@ func (self *FileStore) Call(ctx context.Context,
 
 	case path_specs.DSPathSpec:
 		return t.AsDatastoreFilename(config_obj)
+
+	case *accessors.OSPath:
+		return path_specs.NewUnsafeFilestorePath(t.Components...).AsFilestoreFilename(config_obj)
 
 	case string:
 		// Things that produce strings normally encode the path spec

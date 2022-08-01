@@ -26,6 +26,7 @@ import (
 // Means when VQL opens a path using accessor "file" in all paths
 // below "/", the "file" accessor will be used on "/mnt/data" instead.
 func InstallMountPoints(
+	config_obj *config_proto.Config,
 	pristine_scope vfilter.Scope,
 	manager accessors.DeviceManager,
 	remappings []*config_proto.RemappingConfig,
@@ -61,7 +62,8 @@ func InstallMountPoints(
 			from_accessor = "file"
 		}
 
-		from_fs, err := accessors.GlobalDeviceManager.GetAccessor(
+		from_fs, err := accessors.GetDefaultDeviceManager(
+			config_obj).GetAccessor(
 			from_accessor, pristine_scope)
 		if err != nil {
 			return err
@@ -117,6 +119,7 @@ func getTypedOSPath(path_type string, path string) (*accessors.OSPath, error) {
 // Update the scope with the new device manager.
 func ApplyRemappingOnScope(
 	ctx context.Context,
+	config_obj *config_proto.Config,
 	pristine_scope vfilter.Scope,
 	remapped_scope vfilter.Scope,
 	manager accessors.DeviceManager,
@@ -134,8 +137,8 @@ func ApplyRemappingOnScope(
 						"mount points should be specified.")
 			}
 
-			from_fs, err := accessors.GlobalDeviceManager.GetAccessor(
-				remapping.From.Accessor, pristine_scope)
+			from_fs, err := accessors.GetDefaultDeviceManager(config_obj).
+				GetAccessor(remapping.From.Accessor, pristine_scope)
 			if err != nil {
 				return err
 			}
@@ -191,7 +194,8 @@ func ApplyRemappingOnScope(
 	}
 
 	for to_accessor, remappings := range mounts {
-		err := InstallMountPoints(pristine_scope, manager, remappings, to_accessor)
+		err := InstallMountPoints(config_obj, pristine_scope,
+			manager, remappings, to_accessor)
 		if err != nil {
 			return err
 		}

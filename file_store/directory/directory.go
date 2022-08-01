@@ -33,7 +33,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
+	"www.velocidex.com/golang/velociraptor/accessors/file_store_file_info"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	logging "www.velocidex.com/golang/velociraptor/logging"
@@ -126,7 +126,7 @@ func (self *DirectoryFileStore) ListDirectory(dirname api.FSPathSpec) (
 		}
 
 		name_type, name := api.GetFileStorePathTypeFromExtension(name)
-		result = append(result, file_store_accessor.NewFileStoreFileInfo(
+		result = append(result, file_store_file_info.NewFileStoreFileInfo(
 			self.config_obj,
 			dirname.AddUnsafeChild(
 				utils.UnsanitizeComponent(name)).
@@ -164,7 +164,7 @@ func (self *DirectoryFileStore) StatFile(
 		return nil, err
 	}
 
-	return &file_store_accessor.FileStoreFileInfo{
+	return &file_store_file_info.FileStoreFileInfo{
 		FileInfo: file,
 	}, nil
 }

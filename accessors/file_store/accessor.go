@@ -5,17 +5,15 @@ package file_store
 // store regardless of the specific filestore implementation.
 import (
 	"errors"
-	"os"
-	"time"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/accessors/file_store_file_info"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
-	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/utils"
 
-	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -24,20 +22,24 @@ type FileStoreFileSystemAccessor struct {
 	config_obj *config_proto.Config
 }
 
-func NewFileStoreFileSystemAccessor(
-	config_obj *config_proto.Config, fs api.FileStore) *FileStoreFileSystemAccessor {
+func NewFileStoreFileSystemAccessor(config_obj *config_proto.Config) *FileStoreFileSystemAccessor {
 	return &FileStoreFileSystemAccessor{
-		file_store: fs,
+		file_store: file_store.GetFileStore(config_obj),
 		config_obj: config_obj,
 	}
 }
 
 func (self FileStoreFileSystemAccessor) New(
 	scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
-	return &FileStoreFileSystemAccessor{
-		file_store: self.file_store,
-		config_obj: self.config_obj,
-	}, nil
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		return &FileStoreFileSystemAccessor{
+			file_store: self.file_store,
+			config_obj: self.config_obj,
+		}, nil
+	}
+
+	return NewFileStoreFileSystemAccessor(config_obj), nil
 }
 
 func (self FileStoreFileSystemAccessor) Lstat(filename string) (
@@ -59,12 +61,8 @@ func (self FileStoreFileSystemAccessor) LstatWithOSPath(filename *accessors.OSPa
 		return nil, err
 	}
 
-	return &FileStoreFileInfo{
-		FileInfo:   lstat,
-		ospath:     filename,
-		fullpath:   fullpath,
-		config_obj: self.config_obj,
-	}, nil
+	return file_store_file_info.NewFileStoreFileInfoWithOSPath(
+		self.config_obj, filename, fullpath, lstat), nil
 }
 
 func (self FileStoreFileSystemAccessor) ParsePath(path string) (
@@ -94,7 +92,7 @@ func (self FileStoreFileSystemAccessor) ReadDirWithOSPath(
 
 	var result []accessors.FileInfo
 	for _, f := range files {
-		result = append(result, NewFileStoreFileInfo(
+		result = append(result, file_store_file_info.NewFileStoreFileInfo(
 			self.config_obj, f.PathSpec(), f))
 	}
 
@@ -138,117 +136,6 @@ func (self FileStoreFileSystemAccessor) OpenWithOSPath(filename *accessors.OSPat
 	}
 
 	return file, nil
-}
-
-func NewFileStoreFileInfo(
-	config_obj *config_proto.Config,
-	fullpath api.FSPathSpec,
-	info os.FileInfo) *FileStoreFileInfo {
-
-	// Create an OSPath to represent the abstract filestore path.
-	// Restore the file extension from the filestore abstract
-	// pathspec.
-	components := utils.CopySlice(fullpath.Components())
-	if len(components) > 0 {
-		last_idx := len(components) - 1
-		components[last_idx] += api.GetExtensionForFilestore(fullpath)
-	}
-	ospath := accessors.MustNewFileStorePath("fs:").Append(components...)
-
-	return &FileStoreFileInfo{
-		config_obj: config_obj,
-		FileInfo:   info,
-		fullpath:   fullpath,
-		ospath:     ospath,
-	}
-}
-
-type FileStoreFileInfo struct {
-	os.FileInfo
-	ospath     *accessors.OSPath
-	fullpath   api.FSPathSpec
-	config_obj *config_proto.Config
-	Data_      *ordereddict.Dict
-}
-
-func (self FileStoreFileInfo) Name() string {
-	return self.fullpath.Base()
-}
-
-func (self *FileStoreFileInfo) Data() *ordereddict.Dict {
-	if self.Data_ == nil {
-		return ordereddict.NewDict()
-	}
-
-	return self.Data_
-}
-
-// The FullPath contains the full URL to access the filestore.
-func (self *FileStoreFileInfo) FullPath() string {
-	return self.ospath.String()
-}
-
-func (self *FileStoreFileInfo) OSPath() *accessors.OSPath {
-	return self.ospath
-}
-
-func (self *FileStoreFileInfo) PathSpec() api.FSPathSpec {
-	return self.fullpath
-}
-
-func (self *FileStoreFileInfo) Btime() time.Time {
-	return time.Time{}
-}
-
-func (self *FileStoreFileInfo) Mtime() time.Time {
-	return time.Time{}
-}
-
-func (self *FileStoreFileInfo) Ctime() time.Time {
-	return time.Time{}
-}
-
-func (self *FileStoreFileInfo) Atime() time.Time {
-	return time.Time{}
-}
-
-func (self *FileStoreFileInfo) IsLink() bool {
-	return self.Mode()&os.ModeSymlink != 0
-}
-
-// Filestores do not implementat links
-func (self *FileStoreFileInfo) GetLink() (*accessors.OSPath, error) {
-	return nil, errors.New("Not implemented")
-}
-
-func (self *FileStoreFileInfo) MarshalJSON() ([]byte, error) {
-	result, err := json.Marshal(&struct {
-		FullPath string
-		Size     int64
-		Mode     os.FileMode
-		ModeStr  string
-		ModTime  time.Time
-		Btime    time.Time
-		Mtime    time.Time
-		Ctime    time.Time
-		Atime    time.Time
-	}{
-		FullPath: self.FullPath(),
-		Size:     self.Size(),
-		Mode:     self.Mode(),
-		ModeStr:  self.Mode().String(),
-		ModTime:  self.ModTime(),
-		Btime:    self.Btime(),
-		Mtime:    self.Mtime(),
-		Ctime:    self.Ctime(),
-		Atime:    self.Atime(),
-	})
-
-	return result, err
-}
-
-func (self *FileStoreFileInfo) UnmarshalJSON(data []byte) error {
-	return nil
 }
 
 func getFSPathSpec(filename *accessors.OSPath) api.FSPathSpec {
