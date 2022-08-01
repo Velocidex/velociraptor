@@ -448,9 +448,19 @@ func (self *Repository) List(ctx context.Context,
 
 	results := self.list()
 	if self.parent != nil {
+		seen := make(map[string]bool)
+		for _, name := range results {
+			seen[name] = true
+		}
+
 		parent_list, err := self.parent.List(ctx, self.parent_config_obj)
 		if err == nil {
-			results = append(results, parent_list...)
+			for _, name := range parent_list {
+				_, pres := seen[name]
+				if !pres {
+					results = append(results, name)
+				}
+			}
 		}
 	}
 
