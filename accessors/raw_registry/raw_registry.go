@@ -145,8 +145,11 @@ func (self *RawRegValueInfo) Data() *ordereddict.Dict {
 		Set("data_len", len(value_data.Data))
 
 	switch value_data.Type {
-	case regparser.REG_SZ, regparser.REG_MULTI_SZ, regparser.REG_EXPAND_SZ:
+	case regparser.REG_SZ, regparser.REG_EXPAND_SZ:
 		result.Set("value", strings.TrimRight(value_data.String, "\x00"))
+
+	case regparser.REG_MULTI_SZ:
+		result.Set("value", value_data.MultiSz)
 
 	case regparser.REG_DWORD, regparser.REG_QWORD, regparser.REG_DWORD_BIG_ENDIAN:
 		result.Set("value", value_data.Uint64)

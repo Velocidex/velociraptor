@@ -90,7 +90,7 @@ require (
 	github.com/sebdah/goldie/v2 v2.5.3
 	github.com/sergi/go-diff v1.2.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.8.0
 	github.com/tink-ab/tempfile v0.0.0-20180226111222-33beb0518f1a
 	github.com/tklauser/go-sysconf v0.3.9 // indirect
 	github.com/vjeantet/grok v1.0.0
@@ -120,7 +120,7 @@ require (
 	www.velocidex.com/golang/go-pe v0.1.1-0.20220506020923-9fac492a9b0d
 	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
 	www.velocidex.com/golang/oleparse v0.0.0-20220617011920-94df2342d0b7
-	www.velocidex.com/golang/regparser v0.0.0-20190625082115-b02dc43c2500
+	www.velocidex.com/golang/regparser v0.0.0-20220803120500-8e74df808b0a
 	www.velocidex.com/golang/vfilter v0.0.0-20220710103309-8877819381dd
 )
 
@@ -188,11 +188,12 @@ require (
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	www.velocidex.com/golang/binparsergen v0.1.1-0.20220107080050-ae6122c5ed14 // indirect
 )
 
 // replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter
+// replace www.velocidex.com/golang/regparser => /home/mic/projects/regparser
 // replace www.velocidex.com/golang/go-ntfs => /home/mic/projects/go-ntfs
 // replace www.velocidex.com/golang/go-pe => /home/mic/projects/go-pe
 // replace www.velocidex.com/golang/evtx => /home/mic/projects/evtx
