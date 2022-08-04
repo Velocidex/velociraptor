@@ -62,7 +62,7 @@ sources:
                    expiration,
                    type
             FROM sqlite(
-              file=FullPath,
+              file=OSPath,
               query=urlSQLQuery)
             ORDER BY last_modified DESC
           })
