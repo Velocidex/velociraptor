@@ -1817,6 +1817,11 @@
   description: |
     Retrieve the list of users on the server.
   type: Plugin
+  args:
+  - name: all_orgs
+    type: bool
+    description: If set we enumberate permission for all orgs, otherwise just for
+      this org.
   category: server
 - name: gunzip
   description: Apply Gunzip to the data.
@@ -2953,6 +2958,9 @@
     type: int64
     description: Maximum size of file we load into memory.
   category: parsers
+- name: org
+  description: Return the details of the current org.
+  type: Function
 - name: org_create
   description: Creates a new organizaion.
   type: Function
@@ -5300,6 +5308,23 @@
     description: The user to delete.
     required: true
   category: server
+- name: user_grant
+  description: Grants the user the specified roles.
+  type: Function
+  args:
+  - name: user
+    type: string
+    description: The user to create or update.
+    required: true
+  - name: roles
+    type: string
+    description: List of roles to give the user.
+    repeated: true
+    required: true
+  - name: orgs
+    type: string
+    description: One or more org IDs to grant access to.
+    repeated: true
 - name: users
   description: Display information about workstation local users. This is obtained
     through the NetUserEnum() API.

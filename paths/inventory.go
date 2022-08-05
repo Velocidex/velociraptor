@@ -12,7 +12,10 @@ import (
 func ObfuscateName(
 	config_obj *config_proto.Config, name string) string {
 	sha_sum := sha256.New()
-	_, err := sha_sum.Write([]byte(config_obj.ObfuscationNonce + name))
+
+	// Each org may store different files under the same name - we mix
+	// in orgs id to keep them separated.
+	_, err := sha_sum.Write([]byte(config_obj.ObfuscationNonce + name + config_obj.OrgId))
 	if err != nil {
 		return name
 	}
