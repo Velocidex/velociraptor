@@ -172,7 +172,18 @@ func (self *InventoryService) materializeTool(
 			tool.Name)
 	}
 
-	file_store_factory := file_store.GetFileStore(config_obj)
+	// All tools are stored at the global public directory which is
+	// mapped to a http static handler. The downloaded URL is
+	// regardless of org - however each org has a different download
+	// name. We need to write the tool on the root org's public
+	// directory.
+	org_manager, err := services.GetOrgManager()
+	root_org_config, err := org_manager.GetOrgConfig("root")
+	if err != nil {
+		return err
+	}
+
+	file_store_factory := file_store.GetFileStore(root_org_config)
 	if file_store_factory == nil {
 		return errors.New("No filestore configured")
 	}

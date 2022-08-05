@@ -324,10 +324,11 @@ func (self _RegexMap) Call(
 		return vfilter.Null{}
 	}
 
-	key := "$regex_map_" + arg.Key
+	key := arg.Key
 	if key == "" {
 		key = arg.Map.String()
 	}
+	key = "$regex_map_" + key
 
 	var transforms []*_Transform
 	regex_map := vql_subsystem.CacheGet(scope, key)

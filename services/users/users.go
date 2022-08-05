@@ -29,6 +29,7 @@ import (
 	"sync"
 
 	errors "github.com/pkg/errors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
@@ -161,13 +162,9 @@ func (self UserManager) ListUsers() ([]*api_proto.VelociraptorUser, error) {
 	return result, nil
 }
 
+// Fill in the orgs the user has any permissions in.
 func normalizeOrgList(user_record *api_proto.VelociraptorUser) error {
-	// Ensure some org is specified
-	if len(user_record.Orgs) == 0 {
-		user_record.Orgs = append(user_record.Orgs, &api_proto.Org{
-			Id: "root",
-		})
-	}
+	user_record.Orgs = nil
 
 	org_manager, err := services.GetOrgManager()
 	if err != nil {
@@ -175,13 +172,21 @@ func normalizeOrgList(user_record *api_proto.VelociraptorUser) error {
 	}
 
 	// Fill in the org names if needed
-	for _, org_record := range user_record.Orgs {
-		org, err := org_manager.GetOrg(org_record.Id)
-		if err == nil {
-			org_record.Name = org.Name
-		} else {
-			org_record.Name = org_record.Id
+	for _, org_record := range org_manager.ListOrgs() {
+		org_config_obj, err := org_manager.GetOrgConfig(org_record.OrgId)
+		if err != nil {
+			continue
 		}
+
+		ok, _ := acls.CheckAccess(org_config_obj, user_record.Name, acls.READ_RESULTS)
+		if !ok {
+			continue
+		}
+
+		user_record.Orgs = append(user_record.Orgs, &api_proto.Org{
+			Id:   org_record.OrgId,
+			Name: org_record.Name,
+		})
 	}
 
 	return nil
