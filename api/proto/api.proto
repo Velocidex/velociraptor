@@ -77,6 +77,8 @@ message EventRequest {
     string node = 2;
 
     string watcher_name = 3;
+
+    string org_id = 4;
 }
 
 message EventResponse {
@@ -96,6 +98,8 @@ message PushEventRequest {
     bytes jsonl = 4;
 
     int64 rows = 5;
+
+    string org_id = 6;
 }
 
 

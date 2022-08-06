@@ -8,6 +8,9 @@ option go_package = "www.velocidex.com/golang/velociraptor/acls/proto";
 
 
 message ApiClientACL {
+    // if this is set we allow everything - normally only set by
+    // server-server comms.
+    bool super_user = 21;
 
     bool all_query = 1 [(sem_type) = {
             description: "Provides arbitrary query level access.",

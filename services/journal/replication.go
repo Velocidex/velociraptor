@@ -137,18 +137,14 @@ func (self *ReplicationService) pumpEventFromBufferFile() error {
 			api_client, closer, err := frontend_manager.GetMasterAPIClient(
 				self.ctx)
 			if err != nil {
-				logger.Error("<red>ReplicationService</>Unable to connect %v",
-					err)
+				logger.Error("<red>ReplicationService %v</>Unable to connect %v",
+					services.GetOrgName(self.config_obj), err)
 				time.Sleep(time.Second)
 				continue
 			}
 
 			_, err = api_client.PushEvents(self.ctx, event)
 			if err == nil {
-				//logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-				//logger.Debug("<green>ReplicationService</> Sending %v rows (%v bytes) to %v for %v.",
-				//	event.Rows, len(event.Jsonl), event.Artifact, event.ClientId)
-
 				closer()
 				break
 			}
@@ -272,6 +268,13 @@ func (self *ReplicationService) Start(
 						// to the buffer file instead
 						// for later delivery.
 						_ = self.Buffer.Enqueue(request)
+
+						logger := logging.GetLogger(self.config_obj,
+							&logging.FrontendComponent)
+						logger.Error(
+							"<red>ReplicationService %v</> Error %v - will queue for later",
+							services.GetOrgName(self.config_obj), err)
+
 					}
 					closer()
 				}
@@ -286,7 +289,8 @@ func (self *ReplicationService) Start(
 	self.startMasterRegistrationLoop(ctx, wg, config_obj)
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Debug("<green>Starting</> Replication service to master frontend at %v",
+	logger.Debug("<green>Starting</> Replication service %v to master frontend at %v",
+		services.GetOrgName(config_obj),
 		grpc_client.GetAPIConnectionString(self.config_obj))
 
 	return nil
@@ -518,10 +522,12 @@ func (self *ReplicationService) PushJsonlToArtifact(
 		ClientId: client_id,
 		FlowId:   flow_id,
 		Jsonl:    jsonl,
+		OrgId:    self.config_obj.OrgId,
 	}
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Debug("<green>ReplicationService</> Sending %v bytes to %v for %v.",
+	logger.Debug("<green>ReplicationService %v</> Sending %v bytes to %v for %v.",
+		services.GetOrgName(config_obj),
 		len(jsonl), artifact, client_id)
 
 	// Should not block! If the channel is full we save the event
@@ -563,15 +569,13 @@ func (self *ReplicationService) PushRowsToArtifact(
 		FlowId:   flow_id,
 		Jsonl:    serialized,
 		Rows:     int64(len(rows)),
+		OrgId:    self.config_obj.OrgId,
 	}
 
 	// Should not block! If the channel is full we save the event
 	// into the file buffer for later.
 	select {
 	case self.sender <- request:
-		//logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-		//logger.Debug("<green>ReplicationService</> Sending %v rows (%v bytes) to %v for %v.",
-		//len(rows), len(serialized), artifact, client_id)
 		return nil
 
 	default:
@@ -608,8 +612,9 @@ func (self *ReplicationService) Watch(
 
 			logger := logging.GetLogger(self.config_obj,
 				&logging.FrontendComponent)
-			logger.Info("<green>ReplicationService Reconnect</>%s: "+
-				"Watch for events from %v", watcher_name, queue)
+			logger.Info("<green>ReplicationService Reconnect %s</> %s: "+
+				"Watch for events from %v",
+				services.GetOrgName(self.config_obj), watcher_name, queue)
 		}
 	}()
 
@@ -625,26 +630,29 @@ func (self *ReplicationService) watchOnce(
 	output_chan := make(chan *ordereddict.Dict)
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Info("<green>ReplicationService</>%s: Watching for events from %v",
-		watcher_name, queue)
+	logger.Info("<green>ReplicationService %s</> %s: Watching for events from %v",
+		services.GetOrgName(self.config_obj), watcher_name, queue)
 
 	subctx, cancel := context.WithCancel(ctx)
 
 	frontend_manager, err := services.GetFrontendManager(self.config_obj)
 	if err != nil {
-		logger.Error("<red>ReplicationService</>Unable to connect %v", err)
+		logger.Error("<red>ReplicationService %v</> Unable to connect %v",
+			services.GetOrgName(self.config_obj), err)
 		close(output_chan)
 		return output_chan
 	}
 
 	api_client, closer, err := frontend_manager.GetMasterAPIClient(ctx)
 	if err != nil {
-		logger.Error("<red>ReplicationService</>Unable to connect %v", err)
+		logger.Error("<red>ReplicationService %v</> Unable to connect %v",
+			services.GetOrgName(self.config_obj), err)
 		close(output_chan)
 		return output_chan
 	}
 
 	stream, err := api_client.WatchEvent(subctx, &api_proto.EventRequest{
+		OrgId: self.config_obj.OrgId,
 		Queue: queue,
 		WatcherName: watcher_name + "_" +
 			services.GetNodeName(self.config_obj.Frontend),
@@ -677,8 +685,8 @@ func (self *ReplicationService) watchOnce(
 					return
 
 				case output_chan <- dict:
-					//logger.Debug("<green>ReplicationService</>: Received event on %v: %v\n", queue, dict)
-					logger.Debug("<green>ReplicationService</>: Received event on %v\n", queue)
+					logger.Debug("<green>ReplicationService %v</>: Received event on %v\n",
+						services.GetOrgName(self.config_obj), queue)
 				}
 			}
 		}

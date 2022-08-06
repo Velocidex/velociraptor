@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"path/filepath"
+	"sort"
 	"sync"
 	"time"
 
@@ -44,6 +45,11 @@ func (self *OrgManager) ListOrgs() []*api_proto.OrgRecord {
 	for _, item := range self.orgs {
 		result = append(result, proto.Clone(item.record).(*api_proto.OrgRecord))
 	}
+
+	// Sort orgs by names
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Name < result[j].Name
+	})
 
 	return result
 }
@@ -218,11 +224,14 @@ func (self *OrgManager) Start(
 	}
 
 	// First start all services for the root org
-	self.startOrg(&api_proto.OrgRecord{
+	err := self.startOrg(&api_proto.OrgRecord{
 		OrgId: "",
 		Name:  "<root org>",
 		Nonce: nonce,
 	})
+	if err != nil {
+		return err
+	}
 
 	// If a datastore is not configured we are running on the client
 	// or as a tool so we dont need to scan for new orgs.
@@ -231,7 +240,7 @@ func (self *OrgManager) Start(
 	}
 
 	// Do first scan inline so we have valid data on exit.
-	err := self.Scan()
+	err = self.Scan()
 	if err != nil {
 		return err
 	}

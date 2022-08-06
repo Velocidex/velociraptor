@@ -67,6 +67,9 @@ check:
 debug:
 	dlv debug --wd=. --build-flags="-tags 'server_vql extras'" ./bin/ -- frontend --disable-panic-guard -v --debug
 
+debug_minion:
+	dlv debug --wd=. --build-flags="-tags 'server_vql extras'" ./bin/ -- frontend --disable-panic-guard -v --debug --minion --node ${NODE}
+
 debug_client:
 	dlv debug --build-flags="-tags 'server_vql extras'" ./bin/ -- client -v
 

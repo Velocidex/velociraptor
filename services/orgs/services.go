@@ -251,21 +251,16 @@ func (self *OrgManager) startRootOrgServices(
 	org_config *config_proto.Config,
 	service_container *ServiceContainer) (err error) {
 
-	if spec.FrontendServer {
-		f, err := frontend.NewFrontendService(
+	if spec.ReplicationService {
+		j, err := journal.NewReplicationService(
 			self.ctx, self.wg, org_config)
 		if err != nil {
 			return err
 		}
 		service_container.mu.Lock()
-		service_container.frontend = f
+		service_container.journal = j
+		service_container.broadcast = broadcast.NewBroadcastService(org_config)
 		service_container.mu.Unlock()
-
-		err = datastore.StartMemcacheFileService(
-			self.ctx, self.wg, org_config)
-		if err != nil {
-			return err
-		}
 	}
 
 	// The user manager is global across all orgs.
@@ -304,6 +299,23 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		spec = org_config.Frontend.ServerServices
 	}
 
+	if spec.FrontendServer {
+		f, err := frontend.NewFrontendService(
+			self.ctx, self.wg, org_config)
+		if err != nil {
+			return err
+		}
+		service_container.mu.Lock()
+		service_container.frontend = f
+		service_container.mu.Unlock()
+
+		err = datastore.StartMemcacheFileService(
+			self.ctx, self.wg, org_config)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Now start service on the root org
 	if org_id == "" {
 		err := self.startRootOrgServices(spec, org_config, service_container)
@@ -317,18 +329,6 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 	// ready.
 	if spec.JournalService {
 		j, err := journal.NewJournalService(
-			self.ctx, self.wg, org_config)
-		if err != nil {
-			return err
-		}
-		service_container.mu.Lock()
-		service_container.journal = j
-		service_container.broadcast = broadcast.NewBroadcastService(org_config)
-		service_container.mu.Unlock()
-	}
-
-	if spec.ReplicationService {
-		j, err := journal.NewReplicationService(
 			self.ctx, self.wg, org_config)
 		if err != nil {
 			return err

@@ -19,6 +19,8 @@ message DataRequest {
     // If set the request will block until the data is committed to
     // disk.
     bool sync = 3;
+
+    string org_id = 4;
 }
 
 message DataResponse {
