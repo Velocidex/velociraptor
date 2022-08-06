@@ -145,28 +145,16 @@ func (self *ApiServer) ListAvailableEventResults(
 	*api_proto.ListAvailableEventResultsResponse, error) {
 
 	users := services.GetUserManager()
-	user_record, config_obj, err := users.GetUserFromContext(ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(config_obj, user_record.Name, permissions)
+	perm, err := acls.CheckAccess(org_config_obj, user_record.Name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view results.")
-	}
-
-	// The call can access the datastore from any org becuase it is a
-	// server->server call.
-	org_manager, err := services.GetOrgManager()
-	if err != nil {
-		return nil, err
-	}
-
-	org_config_obj, err := org_manager.GetOrgConfig(in.OrgId)
-	if err != nil {
-		return nil, err
 	}
 
 	if in.Artifact == "" {
