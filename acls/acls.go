@@ -257,12 +257,7 @@ func (self ACLManager) GetEffectivePolicy(
 	// The server identity is special - it means the user is an admin.
 	if config_obj != nil && config_obj.Client != nil &&
 		config_obj.Client.PinnedServerName == principal {
-		err = GetRolePermissions(config_obj,
-			[]string{"administrator"}, acl_obj)
-		if err != nil {
-			return nil, err
-		}
-		return acl_obj, nil
+		return &acl_proto.ApiClientACL{SuperUser: true}, nil
 	}
 
 	user_path_manager := paths.UserPathManager{Name: principal}
@@ -276,6 +271,8 @@ func (self ACLManager) GetEffectivePolicy(
 		return nil, err
 	}
 
+	// Reserved for the server itself - can not be set by normal means.
+	acl_obj.SuperUser = false
 	return acl_obj, nil
 }
 
@@ -324,6 +321,11 @@ func (self ACLManager) CheckAccess(
 func (self ACLManager) CheckAccessWithToken(
 	token *acl_proto.ApiClientACL,
 	permission ACL_PERMISSION, args ...string) (bool, error) {
+
+	// The super user can do everything.
+	if token.SuperUser {
+		return true, nil
+	}
 
 	// Requested permission
 	switch permission {

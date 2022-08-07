@@ -140,6 +140,9 @@ message VQLResponse {
     uint64 query_start_row = 11;
 
     string log = 9;
+
+    // Used only for server-server comms
+    string org_id = 12;
 }
 
 

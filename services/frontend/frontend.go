@@ -376,6 +376,20 @@ func NewFrontendService(ctx context.Context, wg *sync.WaitGroup,
 		return nil, errors.New("Frontend not configured")
 	}
 
+	// Sub orgs just use the same frontend manager
+	if config_obj.OrgId != "" {
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return nil, err
+		}
+
+		root_org_config, err := org_manager.GetOrgConfig("root")
+		if err != nil {
+			return nil, err
+		}
+		return services.GetFrontendManager(root_org_config)
+	}
+
 	if services.IsMaster(config_obj) {
 		manager := &MasterFrontendManager{
 			config_obj: config_obj,

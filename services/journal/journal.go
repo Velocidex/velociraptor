@@ -253,8 +253,8 @@ func NewJournalService(
 	// Are we running on a minion frontend? If so we try to start
 	// our replication service.
 	if !services.IsMaster(config_obj) {
-		_, err := NewReplicationService(ctx, wg, config_obj)
-		return nil, err
+		j, err := NewReplicationService(ctx, wg, config_obj)
+		return j, err
 	}
 
 	// It is valid to have a journal service with no configured datastore:

@@ -28,13 +28,13 @@ func (self *ApiServer) PushEvents(
 	defer Instrument("PushEvents")()
 
 	users := services.GetUserManager()
-	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
+	user_record, config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
-	token, err := acls.GetEffectivePolicy(org_config_obj, user_name)
+	token, err := acls.GetEffectivePolicy(config_obj, user_name)
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +51,18 @@ func (self *ApiServer) PushEvents(
 	}
 
 	rows, err := utils.ParseJsonToDicts([]byte(in.Jsonl))
+	if err != nil {
+		return nil, err
+	}
+
+	// The call can access the datastore from any org becuase it is a
+	// server->server call.
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return nil, err
+	}
+
+	org_config_obj, err := org_manager.GetOrgConfig(in.OrgId)
 	if err != nil {
 		return nil, err
 	}
@@ -76,20 +88,19 @@ func (self *ApiServer) WriteEvent(
 	defer Instrument("WriteEvent")()
 
 	users := services.GetUserManager()
-	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
+	user_record, config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
-	token, err := acls.GetEffectivePolicy(org_config_obj, user_name)
+	token, err := acls.GetEffectivePolicy(config_obj, user_name)
 	if err != nil {
 		return nil, err
 	}
 
 	// Check that the principal is allowed to push to the queue.
-	ok, err := acls.CheckAccessWithToken(token,
-		acls.MACHINE_STATE, in.Query.Name)
+	ok, err := acls.CheckAccessWithToken(token, acls.MACHINE_STATE, in.Query.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -101,6 +112,18 @@ func (self *ApiServer) WriteEvent(
 	}
 
 	rows, err := utils.ParseJsonToDicts([]byte(in.Response))
+	if err != nil {
+		return nil, err
+	}
+
+	// The call can access the datastore from any org becuase it is a
+	// server->server call.
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return nil, err
+	}
+
+	org_config_obj, err := org_manager.GetOrgConfig(in.OrgId)
 	if err != nil {
 		return nil, err
 	}

@@ -103,7 +103,7 @@ func (self *ApiServer) WatchEvent(
 	// certificate.
 	ctx := stream.Context()
 	users := services.GetUserManager()
-	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
+	user_record, config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func (self *ApiServer) WatchEvent(
 
 	// Check that the principal is allowed to issue queries.
 	permissions := acls.ANY_QUERY
-	ok, err := acls.CheckAccess(org_config_obj, peer_name, permissions)
+	ok, err := acls.CheckAccess(config_obj, peer_name, permissions)
 	if err != nil {
 		return status.Error(codes.PermissionDenied,
 			fmt.Sprintf("User %v is not allowed to run queries.",
@@ -128,6 +128,18 @@ func (self *ApiServer) WatchEvent(
 	// Wait here for orderly shutdown of event streams.
 	self.wg.Add(1)
 	defer self.wg.Done()
+
+	// The call can access the datastore from any org becuase it is a
+	// server->server call.
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return err
+	}
+
+	org_config_obj, err := org_manager.GetOrgConfig(in.OrgId)
+	if err != nil {
+		return err
+	}
 
 	// Cert is good enough for us, run the query.
 	return streamEvents(

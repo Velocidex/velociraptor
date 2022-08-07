@@ -99,6 +99,7 @@ func (self *RemoteDataStore) _GetSubject(
 	defer closer()
 
 	result, err := conn.GetSubject(ctx, &api_proto.DataRequest{
+		OrgId: config_obj.OrgId,
 		Pathspec: &api_proto.DSPathSpec{
 			Components: urn.Components(),
 			PathType:   int64(urn.Type()),
@@ -189,8 +190,9 @@ func (self *RemoteDataStore) _SetSubjectWithCompletion(
 	defer closer()
 
 	_, err = conn.SetSubject(ctx, &api_proto.DataRequest{
-		Data: value,
-		Sync: completion != nil,
+		OrgId: config_obj.OrgId,
+		Data:  value,
+		Sync:  completion != nil,
 		Pathspec: &api_proto.DSPathSpec{
 			Components: urn.Components(),
 			PathType:   int64(urn.Type()),
@@ -222,7 +224,8 @@ func (self *RemoteDataStore) _DeleteSubjectWithCompletion(
 	defer closer()
 
 	_, err = conn.DeleteSubject(ctx, &api_proto.DataRequest{
-		Sync: completion != nil,
+		OrgId: config_obj.OrgId,
+		Sync:  completion != nil,
 		Pathspec: &api_proto.DSPathSpec{
 			Components: urn.Components(),
 			PathType:   int64(urn.Type()),
@@ -258,6 +261,7 @@ func (self *RemoteDataStore) _DeleteSubject(
 	defer closer()
 
 	_, err = conn.DeleteSubject(ctx, &api_proto.DataRequest{
+		OrgId: config_obj.OrgId,
 		Pathspec: &api_proto.DSPathSpec{
 			Components: urn.Components(),
 			PathType:   int64(urn.Type()),
@@ -297,6 +301,7 @@ func (self *RemoteDataStore) _ListChildren(
 	defer closer()
 
 	result, err := conn.ListChildren(ctx, &api_proto.DataRequest{
+		OrgId: config_obj.OrgId,
 		Pathspec: &api_proto.DSPathSpec{
 			Components: urn.Components(),
 			PathType:   int64(urn.Type()),

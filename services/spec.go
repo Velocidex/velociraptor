@@ -37,14 +37,19 @@ func ClientServicesSpec() *config_proto.ServerServicesConfig {
 // The minion only runs a small subset of services.
 func MinionServicesSpec() *config_proto.ServerServicesConfig {
 	return &config_proto.ServerServicesConfig{
-		HuntDispatcher:     true,
-		StatsCollector:     true,
-		ClientMonitoring:   true,
-		ReplicationService: true,
-		SanityChecker:      true,
-		FrontendServer:     true,
-		MonitoringService:  true,
-		DynDns:             true,
+		HuntDispatcher:      true,
+		StatsCollector:      true,
+		ClientMonitoring:    true,
+		ClientInfo:          true,
+		Label:               true,
+		NotificationService: true,
+		ReplicationService:  true,
+		Launcher:            true,
+		RepositoryManager:   true,
+		FrontendServer:      true,
+		MonitoringService:   true,
+		JournalService:      true,
+		DynDns:              true,
 	}
 }
 

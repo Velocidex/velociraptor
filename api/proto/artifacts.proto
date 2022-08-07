@@ -149,6 +149,8 @@ message ListAvailableEventResultsRequest {
 
     // This can be empty or "logs" to list the logs.
     string log_type = 3;
+
+    string org_id = 4;
 }
 
 message AvailableEvent {
