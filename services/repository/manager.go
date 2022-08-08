@@ -216,8 +216,7 @@ func (self *RepositoryManager) SetArtifactFile(
 
 func (self *RepositoryManager) SetParent(
 	config_obj *config_proto.Config, parent services.Repository) {
-	self.global_repository.parent = parent.(*Repository)
-	self.global_repository.parent_config_obj = config_obj
+	self.global_repository.SetParent(parent, config_obj)
 }
 
 func (self *RepositoryManager) DeleteArtifactFile(

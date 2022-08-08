@@ -95,11 +95,6 @@ type Repository interface {
 
 	// List
 	List(ctx context.Context, config_obj *config_proto.Config) ([]string, error)
-
-	// The artifact repository plugin allows VQL to run arbitrary
-	// artifacts using syntax like `SELECT * FROM
-	// Artifact.Windows.Sys.Users()`
-	NewArtifactRepositoryPlugin(config_obj *config_proto.Config) vfilter.PluginGeneratorInterface
 }
 
 // Manages the global artifact repository

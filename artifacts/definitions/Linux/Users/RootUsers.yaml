@@ -1,4 +1,4 @@
-name: Custom.Linux.SudoUsers
+name: Linux.Users.RootUsers
 
 description: |
   Detects users added in the `sudo` group.

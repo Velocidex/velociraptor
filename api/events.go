@@ -28,13 +28,13 @@ func (self *ApiServer) PushEvents(
 	defer Instrument("PushEvents")()
 
 	users := services.GetUserManager()
-	user_record, config_obj, err := users.GetUserFromContext(ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
-	token, err := acls.GetEffectivePolicy(config_obj, user_name)
+	token, err := acls.GetEffectivePolicy(org_config_obj, user_name)
 	if err != nil {
 		return nil, err
 	}
@@ -57,14 +57,16 @@ func (self *ApiServer) PushEvents(
 
 	// The call can access the datastore from any org becuase it is a
 	// server->server call.
-	org_manager, err := services.GetOrgManager()
-	if err != nil {
-		return nil, err
-	}
+	if token.SuperUser && org_config_obj.OrgId != in.OrgId {
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return nil, err
+		}
 
-	org_config_obj, err := org_manager.GetOrgConfig(in.OrgId)
-	if err != nil {
-		return nil, err
+		org_config_obj, err = org_manager.GetOrgConfig(in.OrgId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Only return the first row

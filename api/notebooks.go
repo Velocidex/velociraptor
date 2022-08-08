@@ -57,7 +57,8 @@ func (self *ApiServer) GetNotebooks(
 		notebook_metadata, err := notebook_manager.GetNotebook(ctx, in.NotebookId)
 		// Handle the EOF especially: it means there is no such
 		// notebook and return an empty result set.
-		if errors.Is(err, os.ErrNotExist) || notebook_metadata.NotebookId == "" {
+		if errors.Is(err, os.ErrNotExist) ||
+			(notebook_metadata != nil && notebook_metadata.NotebookId == "") {
 			return result, nil
 		}
 

@@ -55,8 +55,17 @@ type Repository struct {
 
 	// Each repository may have a parent - we search for the artifact
 	// in our parents as well.
-	parent            *Repository
+	parent            services.Repository
 	parent_config_obj *config_proto.Config
+}
+
+func (self *Repository) SetParent(
+	parent services.Repository, parent_config_obj *config_proto.Config) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.parent = parent
+	self.parent_config_obj = parent_config_obj
 }
 
 func (self *Repository) Copy() services.Repository {
@@ -74,6 +83,7 @@ func (self *Repository) Copy() services.Repository {
 	return result
 }
 
+// FIXME: Deprecate this method.
 func (self *Repository) LoadDirectory(
 	config_obj *config_proto.Config, dirname string,
 	override_builtins bool) (int, error) {
@@ -476,8 +486,8 @@ func (self *Repository) list() []string {
 	return result
 }
 
-func (self *Repository) NewArtifactRepositoryPlugin(
-	config_obj *config_proto.Config) vfilter.PluginGeneratorInterface {
+func NewArtifactRepositoryPlugin(
+	self services.Repository, config_obj *config_proto.Config) vfilter.PluginGeneratorInterface {
 	return &ArtifactRepositoryPlugin{
 		repository: self,
 		config_obj: config_obj,
