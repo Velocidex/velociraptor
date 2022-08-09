@@ -10,7 +10,7 @@ description: |
 
     Add additional entries to the VersionInfoTable parameter. For straight
     detection on an Internal or Original name, the Filename entry can be set to
-    an unlikely value - e.g XXXXX or left blank.
+    an unlikely value - e.g ANY or left blank.
 
 
 reference:
@@ -25,52 +25,85 @@ parameters:
   - name: VersionInfoTable
     type: csv
     default: |
-        Filename,Internal,Original,Description
-        cmd.exe,cmd,Cmd.Exe,Windows Command Processor
-        conhost.exe,ConHost,CONHOST.EXE,Console Windows Host - observed as a lolbin.
-        7z.exe,7z,7z.exe,7-Zip Console
-        certutil.exe,CertUtil.exe,CertUtil.exe,CertUtil
-        cmstp.exe,CMSTP,CMSTP.EXE,Microsoft Connection Manager Profile Installer
-        cscript.exe,cscript.exe,cscript.exe,Microsoft ® Console Based Script Host
-        mshta.exe,MSHTA.EXE,MSHTA.EXE,Microsoft (R) HTML Application host
-        msiexec.exe,msiexec,msiexec.exe,Windows® installer
-        powershell.exe,POWERSHELL,PowerShell.EXE,Windows PowerShell
-        psexec.exe,PsExec,psexec.c,Sysinternals PSExec
-        psexec64.exe,PsExec,psexec.exe,Sysinternals PSExec
-        regsvr32.exe,REGSVR32,REGSVR32.EXE,Microsoft(C) Register Server
-        rundll32.exe,rundll,RUNDLL32.EXE,Windows host process (Rundll32)
-        winrar.exe,WinRAR,WinRAR.exe,WinRAR archiver
-        wmic.exe,wmic.exe,wmic.exe,WMI Commandline Utility
-        wscript.exe,wscript.exe,wscript.exe,Microsoft ® Windows Based Script Host
-        wevtutil.exe,wevtutil.exe,wevtutil.exe,
-        net.exe,net.exe,net.exe,
-        net1.exe,net1.exe,net1.exe,
-        netsh.exe,netsh.exe,netsh.exe,
-        powershell_ise.exe,powershell_ise.exe,powershell_ise.exe,
-        dsquery.exe,dsquery.exe,dsquery.exe,Microsoft AD DS/LDS query command line utility
-        nbtstat.exe,nbtinfo.exe,nbtinfo.exe,Microsoft TCP/IP NetBios Information
-        nltest.exe,nltestrk.exe,nltestrk.exe,Microsoft® Logon Server Test Utility
-        qprocess.exe,qprocess,qprocess.exe,Query Process Utility
-        qwinsta.exe,qwinsta,qwinsta.exe,Query Session Utility
-        XXXXX,nc,nc.exe,NetCat for Windows - https://github.com/diegocr/netcat
-        XXXXX,AdFind.exe,AdFind.exe,Joeware ADFind
-        XXXXX,rclone,rclone.exe,Rsync for cloud storage
-        XXXXX,MEGAsync.exe,MEGAsync.exe,MEGAsync
-        XXXXX,MEGAcmdShell.exe,MEGAcmdShell,MEGAcmdShell
-        XXXXX,pCloud.exe,pCloud.exe,pCloud cloud storage
-        XXXXX,,pCloud Drive.exe,pCloud setup
-        XXXXX,mimikatz,mimikatz.exe,Top 5 tool: Mimikatz
-        procdump.exe,ProcDump,procdump,Sysinternals process dump utility
-        procdump64.exe,ProcDump,procdump,Sysinternals process dump utility
+        Filename,Internal,Original,Description,Note
+        cmd.exe,cmd,Cmd.Exe,Windows Command Processor,cmd.exe
+        7z.exe,7z,7z.exe,7-Zip Console,7z.exe
+        certutil.exe,CertUtil.exe,CertUtil.exe,CertUtil,certutil.exe
+        cmstp.exe,CMSTP,CMSTP.EXE,Microsoft Connection Manager Profile Installer,cmstp.exe
+        cscript.exe,cscript.exe,cscript.exe,Microsoft ® Console Based Script Host,cscript.exe
+        mshta.exe,MSHTA.EXE,MSHTA.EXE,Microsoft ® HTML Application host,mshta.exe
+        msiexec.exe,msiexec,msiexec.exe,Windows® installer,msiexec.exe
+        powershell.exe,POWERSHELL,PowerShell.EXE,Windows PowerShell,powershell.exe
+        psexec.exe,PsExec,psexec.c,Sysinternals PSExec,psexec.exe
+        psexec64.exe,PsExec,psexec.exe,Sysinternals PSExec,psexec64.exe
+        regsvr32.exe,REGSVR32,REGSVR32.EXE,Microsoft© Register Server,regsvr32.exe
+        rundll32.exe,rundll,RUNDLL32.EXE,Windows host process (Rundll32),rundll32.exe
+        winrar.exe,WinRAR,WinRAR.exe,WinRAR archiver,winrar.exe
+        wmic.exe,wmic.exe,wmic.exe,WMI Commandline Utility,wmic.exe
+        wscript.exe,wscript.exe,wscript.exe,Microsoft ® Windows Based Script Host,wscript.exe
+        wevtutil.exe,wevtutil.exe,wevtutil.exe,,wevtutil.exe
+        net.exe,net.exe,net.exe,,net.exe
+        net1.exe,net1.exe,net1.exe,,net1.exe
+        netsh.exe,netsh.exe,netsh.exe,,netsh.exe
+        powershell_ise.exe,powershell_ise.exe,powershell_ise.exe,,powershell_ise.exe
+        dsquery.exe,dsquery.exe,dsquery.exe,Microsoft AD DS/LDS query command line utility,dsquery.exe
+        nbtstat.exe,nbtinfo.exe,nbtinfo.exe,Microsoft TCP/IP NetBios Information,nbtstat.exe
+        nltest.exe,nltestrk.exe,nltestrk.exe,Microsoft® Logon Server Test Utility,nltest.exe
+        qprocess.exe,qprocess,qprocess.exe,Query Process Utility,qprocess.exe
+        qwinsta.exe,qwinsta,qwinsta.exe,Query Session Utility,qwinsta.exe
+        ANY,nc,nc.exe,NetCat for Windows - https://github.com/diegocr/netcat,nc.exe
+        ANY,AdFind.exe,AdFind.exe,Joeware ADFind,AdFind.exe
+        ANY,rclone,rclone.exe,Rsync for cloud storage,rclone.exe
+        ANY,MEGAsync.exe,MEGAsync.exe,MEGAsync,MEGAsync.exe
+        ANY,MEGAcmdShell.exe,MEGAcmdShell,MEGAcmdShell,MEGAcmdShell
+        ANY,pCloud.exe,pCloud.exe,pCloud cloud storage,pCloud.exe
+        ANY,,pCloud Drive.exe,pCloud setup,pCloud Drive.exe
+        ANY,mimikatz,mimikatz.exe,mimikatz for Windows,mimikatz.exe
+        ANY,ProcDump,procdump,Sysinternals process dump utility,procdump.exe
+        ANY,ProcDump,procdump,Sysinternals process dump utility,procdump64.exe
+        ANY,Ammyy Admin,,Ammyy Admin,AA_v3.exe
+        ANY,,,AnyDesk,AnyDesk.exe
+        ANY,PDQDeploySetup.exe,PDQDeploySetup.exe,PDQ Deploy Install,Deploy_19.3.298.0.exe
+        ANY,PDQInventory.exe,PDQInventory.exe,PDQ Inventory Installer,Inventory_19.3.298.0.exe
+        ANY,,,UltraVNC Setup,UltraVNC_1_3_81_X64_Setup.exe
+        ANY,,,File Shredder by PowTools,file_shredder_setup.exe
+        ANY,,pCloud Drive.exe,pCloud Drive,pCloud_Windows_3.11.12_x64.exe
+        ANY,Plink,Plink,"Command-line SSH, Telnet, and Rlogin client",plink.exe
+        ANY,PSCP,PSCP,Command-line SCP/SFTP client,pscp.exe
+        ANY,PSFTP,PSFTP,Command-line interactive SFTP client,psftp.exe
+        ANY,,,Total Commander Installer,tcmd1000x32.exe
+        ANY,BulletsPassView,BulletsPassView.exe,BulletsPassView,BulletsPassView.exe
+        ANY,WinLister,WinLister.exe,WinLister,winlister.exe
+        ANY,HRSword,HRSword.exe,Huorong Sword GUI Frontend,HRSword v5.0.47.bin
+        ANY,,,Email  Password-Recovery,mailpv.exe
+        ANY,Process Hacker,ProcessHacker.exe,Process Hacker,ProcessHacker.exe
+        ANY,peview,peview.exe,PE Viewer,peview.exe
+        ANY,ChromePass,  ChromePass,Chrome Password Recovery,ChromePass.exe
+        ANY,,,Application for scanning networks,netscan.exe
+        ANY,WKV,,Extracts wireless keys stored by Windows,WirelessKeyView.exe
+        ANY,Remote Desktop PassView,rdpv.exe,Password Recovery for Remote Desktop,rdpv.exe
+        ANY,RouterPassView,RouterPassView.exe,Decrypts Router files.,RouterPassView.exe
+        ANY,RemCom,RemCom.exe,Remote Command Executor,RemCom.exe
+        ANY,,,Remote Utilities,host7.1.2.0.exe
+        ANY,,viewer.7.1.2.0.exe,Remote Utilities - Viewer,viewer7.1.2.0.exe
+        ANY,Web Browser Pass View,,Web Browser Password Viewer,WebBrowserPassView.exe
+        ANY,PowerTool.exe,PowerTool.exe,Anti-virus/rootkit/bootkit Tool,PowerTool64.exe
+        ANY,,winscp.com,Console interface for WinSCP,WinSCP.com
+        ANY,winscp,winscp.exe,"WinSCP: SFTP, FTP, WebDAV, S3 and SCP client",WinSCP.exe
+        ANY,iepv,iepv.exe,IE Passwords Viewer,iepv.exe
+        ANY,VNCPassView,VNCPassView.exe,VNCPassView,VNCPassView.exe
+        ANY,PCHunter,PCHunter.exe,Epoolsoft Windows Information View Tools,PCHunter32.exe
+        ANY,Massscan_GUI.exe,Massscan_GUI.exe,Masscan_GUI,Massscan_GUI.exe
+
 
 sources:
   - query: |
       LET bins <= SELECT
-            if(condition=Filename='',then='XXXXX',
+            if(condition=Filename='',then='ANY',
                 else=lowcase(string=Filename)) AS Filename,
-            if(condition=Internal='',then='XXXXX',
+            if(condition=Internal='',then='ANY',
                 else=lowcase(string=Internal)) AS Internal,
-            if(condition=Original='',then='XXXXX',
+            if(condition=Original='',then='ANY',
                 else=lowcase(string=Original)) AS Original
         FROM VersionInfoTable
 
