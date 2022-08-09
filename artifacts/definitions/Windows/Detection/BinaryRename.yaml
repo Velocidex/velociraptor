@@ -10,7 +10,7 @@ description: |
 
     Add additional entries to the VersionInfoTable parameter. For straight
     detection on an Internal or Original name, the Filename entry can be set to
-    an unlikely value - e.g XXXXX or left blank.
+    an unlikely value - e.g ANY or left blank.
 
 
 reference:
@@ -51,59 +51,59 @@ parameters:
         nltest.exe,nltestrk.exe,nltestrk.exe,Microsoft® Logon Server Test Utility,nltest.exe
         qprocess.exe,qprocess,qprocess.exe,Query Process Utility,qprocess.exe
         qwinsta.exe,qwinsta,qwinsta.exe,Query Session Utility,qwinsta.exe
-        XXXXX,nc,nc.exe,NetCat for Windows - https://github.com/diegocr/netcat,nc.exe
-        XXXXX,AdFind.exe,AdFind.exe,Joeware ADFind,AdFind.exe
-        XXXXX,rclone,rclone.exe,Rsync for cloud storage,rclone.exe
-        XXXXX,MEGAsync.exe,MEGAsync.exe,MEGAsync,MEGAsync.exe
-        XXXXX,MEGAcmdShell.exe,MEGAcmdShell,MEGAcmdShell,MEGAcmdShell
-        XXXXX,pCloud.exe,pCloud.exe,pCloud cloud storage,pCloud.exe
-        XXXXX,,pCloud Drive.exe,pCloud setup,pCloud Drive.exe
-        XXXXX,mimikatz,mimikatz.exe,mimikatz for Windows,mimikatz.exe
-        XXXXX,ProcDump,procdump,Sysinternals process dump utility,procdump.exe
-        XXXXX,ProcDump,procdump,Sysinternals process dump utility,procdump64.exe
-        XXXXX,Ammyy Admin,,Ammyy Admin,AA_v3.exe
-        XXXXX,,,AnyDesk,AnyDesk.exe
-        XXXXX,PDQDeploySetup.exe,PDQDeploySetup.exe,PDQ Deploy Install,Deploy_19.3.298.0.exe
-        XXXXX,PDQInventory.exe,PDQInventory.exe,PDQ Inventory Installer,Inventory_19.3.298.0.exe
-        XXXXX,,,UltraVNC Setup,UltraVNC_1_3_81_X64_Setup.exe
-        XXXXX,,,File Shredder by PowTools,file_shredder_setup.exe
-        XXXXX,,pCloud Drive.exe,pCloud Drive,pCloud_Windows_3.11.12_x64.exe
-        XXXXX,Plink,Plink,"Command-line SSH, Telnet, and Rlogin client",plink.exe
-        XXXXX,PSCP,PSCP,Command-line SCP/SFTP client,pscp.exe
-        XXXXX,PSFTP,PSFTP,Command-line interactive SFTP client,psftp.exe
-        XXXXX,,,Total Commander Installer,tcmd1000x32.exe
-        XXXXX,BulletsPassView,BulletsPassView.exe,BulletsPassView,BulletsPassView.exe
-        XXXXX,WinLister,WinLister.exe,WinLister,winlister.exe
-        XXXXX,HRSword,HRSword.exe,Huorong Sword GUI Frontend,HRSword v5.0.47.bin
-        XXXXX,,,Email  Password-Recovery,mailpv.exe
-        XXXXX,Process Hacker,ProcessHacker.exe,Process Hacker,ProcessHacker.exe
-        XXXXX,peview,peview.exe,PE Viewer,peview.exe
-        XXXXX,ChromePass,  ChromePass,Chrome Password Recovery,ChromePass.exe
-        XXXXX,,,Application for scanning networks,netscan.exe
-        XXXXX,WKV,,Extracts wireless keys stored by Windows,WirelessKeyView.exe
-        XXXXX,Remote Desktop PassView,rdpv.exe,Password Recovery for Remote Desktop,rdpv.exe
-        XXXXX,RouterPassView,RouterPassView.exe,Decrypts Router files.,RouterPassView.exe
-        XXXXX,RemCom,RemCom.exe,Remote Command Executor,RemCom.exe
-        XXXXX,,,Remote Utilities,host7.1.2.0.exe
-        XXXXX,,viewer.7.1.2.0.exe,Remote Utilities - Viewer,viewer7.1.2.0.exe
-        XXXXX,Web Browser Pass View,,Web Browser Password Viewer,WebBrowserPassView.exe
-        XXXXX,PowerTool.exe,PowerTool.exe,Anti-virus/rootkit/bootkit Tool,PowerTool64.exe
-        XXXXX,,winscp.com,Console interface for WinSCP,WinSCP.com
-        XXXXX,winscp,winscp.exe,"WinSCP: SFTP, FTP, WebDAV, S3 and SCP client",WinSCP.exe
-        XXXXX,iepv,iepv.exe,IE Passwords Viewer,iepv.exe
-        XXXXX,VNCPassView,VNCPassView.exe,VNCPassView,VNCPassView.exe
-        XXXXX,PCHunter,PCHunter.exe,Epoolsoft Windows Information View Tools,PCHunter32.exe
-        XXXXX,Massscan_GUI.exe,Massscan_GUI.exe,Masscan_GUI,Massscan_GUI.exe
+        ANY,nc,nc.exe,NetCat for Windows - https://github.com/diegocr/netcat,nc.exe
+        ANY,AdFind.exe,AdFind.exe,Joeware ADFind,AdFind.exe
+        ANY,rclone,rclone.exe,Rsync for cloud storage,rclone.exe
+        ANY,MEGAsync.exe,MEGAsync.exe,MEGAsync,MEGAsync.exe
+        ANY,MEGAcmdShell.exe,MEGAcmdShell,MEGAcmdShell,MEGAcmdShell
+        ANY,pCloud.exe,pCloud.exe,pCloud cloud storage,pCloud.exe
+        ANY,,pCloud Drive.exe,pCloud setup,pCloud Drive.exe
+        ANY,mimikatz,mimikatz.exe,mimikatz for Windows,mimikatz.exe
+        ANY,ProcDump,procdump,Sysinternals process dump utility,procdump.exe
+        ANY,ProcDump,procdump,Sysinternals process dump utility,procdump64.exe
+        ANY,Ammyy Admin,,Ammyy Admin,AA_v3.exe
+        ANY,,,AnyDesk,AnyDesk.exe
+        ANY,PDQDeploySetup.exe,PDQDeploySetup.exe,PDQ Deploy Install,Deploy_19.3.298.0.exe
+        ANY,PDQInventory.exe,PDQInventory.exe,PDQ Inventory Installer,Inventory_19.3.298.0.exe
+        ANY,,,UltraVNC Setup,UltraVNC_1_3_81_X64_Setup.exe
+        ANY,,,File Shredder by PowTools,file_shredder_setup.exe
+        ANY,,pCloud Drive.exe,pCloud Drive,pCloud_Windows_3.11.12_x64.exe
+        ANY,Plink,Plink,"Command-line SSH, Telnet, and Rlogin client",plink.exe
+        ANY,PSCP,PSCP,Command-line SCP/SFTP client,pscp.exe
+        ANY,PSFTP,PSFTP,Command-line interactive SFTP client,psftp.exe
+        ANY,,,Total Commander Installer,tcmd1000x32.exe
+        ANY,BulletsPassView,BulletsPassView.exe,BulletsPassView,BulletsPassView.exe
+        ANY,WinLister,WinLister.exe,WinLister,winlister.exe
+        ANY,HRSword,HRSword.exe,Huorong Sword GUI Frontend,HRSword v5.0.47.bin
+        ANY,,,Email  Password-Recovery,mailpv.exe
+        ANY,Process Hacker,ProcessHacker.exe,Process Hacker,ProcessHacker.exe
+        ANY,peview,peview.exe,PE Viewer,peview.exe
+        ANY,ChromePass,  ChromePass,Chrome Password Recovery,ChromePass.exe
+        ANY,,,Application for scanning networks,netscan.exe
+        ANY,WKV,,Extracts wireless keys stored by Windows,WirelessKeyView.exe
+        ANY,Remote Desktop PassView,rdpv.exe,Password Recovery for Remote Desktop,rdpv.exe
+        ANY,RouterPassView,RouterPassView.exe,Decrypts Router files.,RouterPassView.exe
+        ANY,RemCom,RemCom.exe,Remote Command Executor,RemCom.exe
+        ANY,,,Remote Utilities,host7.1.2.0.exe
+        ANY,,viewer.7.1.2.0.exe,Remote Utilities - Viewer,viewer7.1.2.0.exe
+        ANY,Web Browser Pass View,,Web Browser Password Viewer,WebBrowserPassView.exe
+        ANY,PowerTool.exe,PowerTool.exe,Anti-virus/rootkit/bootkit Tool,PowerTool64.exe
+        ANY,,winscp.com,Console interface for WinSCP,WinSCP.com
+        ANY,winscp,winscp.exe,"WinSCP: SFTP, FTP, WebDAV, S3 and SCP client",WinSCP.exe
+        ANY,iepv,iepv.exe,IE Passwords Viewer,iepv.exe
+        ANY,VNCPassView,VNCPassView.exe,VNCPassView,VNCPassView.exe
+        ANY,PCHunter,PCHunter.exe,Epoolsoft Windows Information View Tools,PCHunter32.exe
+        ANY,Massscan_GUI.exe,Massscan_GUI.exe,Masscan_GUI,Massscan_GUI.exe
 
 
 sources:
   - query: |
       LET bins <= SELECT
-            if(condition=Filename='',then='XXXXX',
+            if(condition=Filename='',then='ANY',
                 else=lowcase(string=Filename)) AS Filename,
-            if(condition=Internal='',then='XXXXX',
+            if(condition=Internal='',then='ANY',
                 else=lowcase(string=Internal)) AS Internal,
-            if(condition=Original='',then='XXXXX',
+            if(condition=Original='',then='ANY',
                 else=lowcase(string=Original)) AS Original
         FROM VersionInfoTable
 
