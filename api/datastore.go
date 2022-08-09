@@ -23,28 +23,34 @@ func (self *ApiServer) GetSubject(
 	in *api_proto.DataRequest) (*api_proto.DataResponse, error) {
 
 	users := services.GetUserManager()
-	user_record, config_obj, err := users.GetUserFromContext(ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
-	perm, err := acls.CheckAccess(config_obj, user_name, acls.DATASTORE_ACCESS)
+	token, err := acls.GetEffectivePolicy(org_config_obj, user_name)
+	if err != nil {
+		return nil, err
+	}
+
+	perm, err := acls.CheckAccessWithToken(token, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to access datastore.")
 	}
 
-	// The call can access the datastore from any org becuase it is a
-	// server->server call.
-	org_manager, err := services.GetOrgManager()
-	if err != nil {
-		return nil, err
-	}
+	// Only the superuser is allowed to switch orgs.
+	if token.SuperUser && org_config_obj.OrgId != in.OrgId {
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return nil, err
+		}
 
-	org_config_obj, err := org_manager.GetOrgConfig(in.OrgId)
-	if err != nil {
-		return nil, err
+		org_config_obj, err = org_manager.GetOrgConfig(in.OrgId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	db, err := datastore.GetDB(org_config_obj)
@@ -69,28 +75,34 @@ func (self *ApiServer) SetSubject(
 	in *api_proto.DataRequest) (*api_proto.DataResponse, error) {
 
 	users := services.GetUserManager()
-	user_record, config_obj, err := users.GetUserFromContext(ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
-	perm, err := acls.CheckAccess(config_obj, user_name, acls.DATASTORE_ACCESS)
+	token, err := acls.GetEffectivePolicy(org_config_obj, user_name)
+	if err != nil {
+		return nil, err
+	}
+
+	perm, err := acls.CheckAccessWithToken(token, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to access datastore.")
 	}
 
-	// The call can access the datastore from any org becuase it is a
-	// server->server call.
-	org_manager, err := services.GetOrgManager()
-	if err != nil {
-		return nil, err
-	}
+	// Only the superuser is allowed to switch orgs.
+	if token.SuperUser && org_config_obj.OrgId != in.OrgId {
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return nil, err
+		}
 
-	org_config_obj, err := org_manager.GetOrgConfig(in.OrgId)
-	if err != nil {
-		return nil, err
+		org_config_obj, err = org_manager.GetOrgConfig(in.OrgId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	db, err := datastore.GetDB(org_config_obj)
@@ -127,13 +139,18 @@ func (self *ApiServer) ListChildren(
 	in *api_proto.DataRequest) (*api_proto.ListChildrenResponse, error) {
 
 	users := services.GetUserManager()
-	user_record, config_obj, err := users.GetUserFromContext(ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
-	perm, err := acls.CheckAccess(config_obj, user_name, acls.DATASTORE_ACCESS)
+	token, err := acls.GetEffectivePolicy(org_config_obj, user_name)
+	if err != nil {
+		return nil, err
+	}
+
+	perm, err := acls.CheckAccessWithToken(token, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to access datastore.")
@@ -141,14 +158,16 @@ func (self *ApiServer) ListChildren(
 
 	// The call can access the datastore from any org becuase it is a
 	// server->server call.
-	org_manager, err := services.GetOrgManager()
-	if err != nil {
-		return nil, err
-	}
+	if token.SuperUser && org_config_obj.OrgId != in.OrgId {
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return nil, err
+		}
 
-	org_config_obj, err := org_manager.GetOrgConfig(in.OrgId)
-	if err != nil {
-		return nil, err
+		org_config_obj, err = org_manager.GetOrgConfig(in.OrgId)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	db, err := datastore.GetDB(org_config_obj)
@@ -179,30 +198,34 @@ func (self *ApiServer) DeleteSubject(
 	in *api_proto.DataRequest) (*emptypb.Empty, error) {
 
 	users := services.GetUserManager()
-	user_record, config_obj, err := users.GetUserFromContext(ctx)
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, err
 	}
 
 	user_name := user_record.Name
-	perm, err := acls.CheckAccess(config_obj, user_name, acls.DATASTORE_ACCESS)
+	token, err := acls.GetEffectivePolicy(org_config_obj, user_name)
+	if err != nil {
+		return nil, err
+	}
+
+	perm, err := acls.CheckAccessWithToken(token, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to access datastore.")
 	}
 
-	// The call can access the datastore from any org becuase it is a
-	// server->server call.
-	org_manager, err := services.GetOrgManager()
-	if err != nil {
-		return nil, err
-	}
+	if token.SuperUser && org_config_obj.OrgId != in.OrgId {
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return nil, err
+		}
 
-	org_config_obj, err := org_manager.GetOrgConfig(in.OrgId)
-	if err != nil {
-		return nil, err
+		org_config_obj, err = org_manager.GetOrgConfig(in.OrgId)
+		if err != nil {
+			return nil, err
+		}
 	}
-
 	db, err := datastore.GetDB(org_config_obj)
 	if err != nil {
 		return nil, err

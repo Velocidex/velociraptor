@@ -79,7 +79,7 @@ func _build(self services.ScopeBuilder, from_scratch bool) vfilter.Scope {
 	// Use our own sorter
 	scope.SetSorter(sorter.MergeSorter{ChunkSize: 10000})
 
-	artifact_plugin := self.Repository.NewArtifactRepositoryPlugin(self.Config)
+	artifact_plugin := NewArtifactRepositoryPlugin(self.Repository, self.Config)
 	env.Set("Artifact", artifact_plugin)
 
 	scope.AppendVars(env).AddProtocolImpl(
