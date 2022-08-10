@@ -1,0 +1,44 @@
+name: Custom.Windows.ETW.DNSOfflineCollector
+author: Jos Clephas - @jos-ir
+description: |
+  This artifact collects DNS queries for a specified duration. It can be used 
+  with an Offline Collector (which is not the case with Windows.ETW.DNS).
+
+  It uses the artifact (Windows.ETW.DNS) that was built by Matt Green - @mgreen27
+
+parameters:
+  - name: duration
+    default: 60
+    type: int
+  - name: arg_ImageRegex
+    description: "ImagePath regex filter for"
+    default: .
+    type: regex
+  - name: arg_CommandLineRegex
+    description: "Commandline to filter for."
+    default: .
+    type: regex
+  - name: arg_QueryRegex
+    description: "DNS query request (domain) to filter for."
+    default: .
+    type: regex
+  - name: arg_AnswerRegex
+    description: "DNS answer to filter for."
+    default: .
+    type: regex
+  - name: arg_CommandLineExclusion
+    description: "Commandline to filter out. Typically we do not want Dnscache events."
+    default: svchost.exe -k NetworkService -p -s Dnscache$
+    type: regex
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    query: |
+      SELECT * FROM collect(artifacts='Windows.ETW.DNS', timeout=duration, args=dict(`Windows.ETW.DNS`=dict(
+            ImageRegex=arg_ImageRegex,
+            CommandLineRegex=arg_CommandLineRegex,
+            QueryRegex=arg_QueryRegex,
+            AnswerRegex=arg_AnswerRegex,
+            CommandLineExclusion=arg_CommandLineExclusion)))
