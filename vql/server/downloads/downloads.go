@@ -510,7 +510,7 @@ func createHuntDownloadFile(
 				logging.GetLogger(config_obj, &logging.GUIComponent).
 					WithFields(logrus.Fields{
 						"artifact": artifact,
-						"error":    err,
+						"error":    err.Error(),
 					}).Error("ExportHuntArtifact")
 			}
 
