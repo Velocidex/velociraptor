@@ -449,7 +449,7 @@ func exportZipNotebook(
 			logger.WithFields(logrus.Fields{
 				"notebook_id": notebook.NotebookId,
 				"export_file": filename,
-				"error":       err,
+				"error":       err.Error(),
 			}).Error("CreateNotebookDownloadFile")
 			return
 		}
@@ -510,7 +510,7 @@ func exportHTMLNotebook(config_obj *config_proto.Config,
 			logger.WithFields(logrus.Fields{
 				"notebook_id": notebook.NotebookId,
 				"export_file": filename,
-				"error":       err,
+				"error":       err.Error(),
 			}).Error("CreateNotebookDownloadFile")
 			return
 		}
