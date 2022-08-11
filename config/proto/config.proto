@@ -965,6 +965,10 @@ message Config {
     // host's own file system.
     repeated RemappingConfig remappings = 35;
 
+    // These should **not** be set by the user - they are tags
+    // internally that mark each org's config object. They should
+    // definitely not be set on the client's config because the client
+    // does not know or use its own org id.
     string org_id = 36;
     string org_name = 37;
 }
