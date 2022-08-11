@@ -56,7 +56,10 @@ sources:
                        EventData.ParentProcessId AS parent_id,
                        "start" AS update_type,
                        EventData + dict(
+                           Name=split(sep_string="\\", string=EventData.Image)[-1],
+                           Username=EventData.User,
                            CreateTime=EventData.UtcTime,
+                           Exe=EventData.Image,
                            Hashes=parse_string_with_regex(regex=[
                              "SHA256=(?P<SHA256>[^,]+)",
                              "MD5=(?P<MD5>[^,]+)",
@@ -85,12 +88,11 @@ sources:
                  Ppid AS parent_id,
                  CreateTime AS start_time,
                  dict(
-                   Image=Exe,
-                   CommandLine=CommandLine,
-                   CreateTime=CreateTime) AS data
+                   Name=Name,
+                   Username=Username,
+                   Exe=Exe,
+                   CommandLine=CommandLine) AS data
               FROM pslist()
-
-
 
       LET Tracker <= process_tracker(
          enrichments=[

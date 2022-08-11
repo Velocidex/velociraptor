@@ -91,7 +91,7 @@ func WatchQueueWithCB(ctx context.Context,
 					logger.WithFields(logrus.Fields{
 						"Owner":    watcher_name,
 						"Artifact": artifact,
-						"Error":    err,
+						"Error":    err.Error(),
 					}).Debug("Event Processor Error")
 				}
 

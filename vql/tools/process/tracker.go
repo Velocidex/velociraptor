@@ -101,9 +101,10 @@ func (self *ProcessTracker) SetEntry(id string, entry *ProcessEntry) (old_id str
 	}
 
 	// Use the start time to identify the same process entry. If the
-	// start times are identical then it is the same record.
-	if item.Id == entry.Id &&
-		item.StartTime.Equal(entry.StartTime) {
+	// start times are identical (within one second) then it is the
+	// same record.
+	time_diff := item.StartTime.Unix() - entry.StartTime.Unix()
+	if item.Id == entry.Id && time_diff < 2 && time_diff > -2 {
 		entry.ParentId = item.ParentId
 		self.lookup.Set(id, entry)
 		return id, false

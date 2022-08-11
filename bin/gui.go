@@ -119,6 +119,13 @@ func doGUI() error {
 		config_obj.Defaults.EventMaxWaitJitter = 1
 		config_obj.Defaults.EventChangeNotifyAllClients = true
 
+		// Load the "fs" accessor this time (It will be loaded
+		// automatically after restart).
+		err = initFilestoreAccessor(config_obj)
+		if err != nil {
+			return err
+		}
+
 		// Create a user with default password
 		user_record, err := users.NewUserRecord("admin")
 		if err != nil {

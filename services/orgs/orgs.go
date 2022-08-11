@@ -149,21 +149,16 @@ func (self *OrgManager) makeNewConfigObj(
 
 	result := proto.Clone(self.config_obj).(*config_proto.Config)
 
-	// The Root org is untouched.
-	if record.OrgId == "" {
-		return result
-	}
+	result.OrgId = record.OrgId
+	result.OrgName = record.Name
 
 	if result.Client != nil {
-		result.OrgId = record.OrgId
-		result.OrgName = record.Name
-
 		// Client config does not leak org id! We use the nonce to tie
 		// org id back to the org.
 		result.Client.Nonce = record.Nonce
 	}
 
-	if result.Datastore != nil {
+	if result.Datastore != nil && record.OrgId != "" {
 		if result.Datastore.Location != "" {
 			result.Datastore.Location = filepath.Join(
 				result.Datastore.Location, "orgs", record.OrgId)
