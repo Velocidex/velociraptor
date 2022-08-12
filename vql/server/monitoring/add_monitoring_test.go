@@ -2,6 +2,7 @@ package monitoring
 
 import (
 	"context"
+	"errors"
 	"log"
 	"strings"
 	"testing"
@@ -12,6 +13,7 @@ import (
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -73,6 +75,35 @@ func (self *MonitoringTestSuite) TestAddClientMonitoringNoPermissions() {
 
 	assert.Contains(self.T(), log_buffer.String(), "Permission denied:")
 	log_buffer.Reset()
+}
+
+func (self *MonitoringTestSuite) TestAddClientMonitoringNoParams() {
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: acl_managers.NullACLManager{},
+		Env:        ordereddict.NewDict(),
+	}
+
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
+
+	sub_ctx, cancel := context.WithTimeout(self.Sm.Ctx, time.Second)
+	defer cancel()
+
+	res := AddClientMonitoringFunction{}.Call(
+		sub_ctx, scope, ordereddict.NewDict().
+			Set("artifact", "Linux.Events.SSHLogin").
+			Set("label", "test"))
+
+	event, err := findLabelClause(res, "test")
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), event.Label, "test")
+	assert.Equal(self.T(), event.Artifacts.Artifacts[0],
+		"Linux.Events.SSHLogin")
 }
 
 func (self *MonitoringTestSuite) TestAddServerMonitoringNoPermissions() {
@@ -159,4 +190,20 @@ func (self *MonitoringTestSuite) TestAddServerMonitoring() {
 
 func TestMonitoringPlugins(t *testing.T) {
 	suite.Run(t, &MonitoringTestSuite{})
+}
+
+func findLabelClause(any interface{}, label string) (
+	*flows_proto.LabelEvents, error) {
+
+	table, ok := any.(*flows_proto.ClientEventTable)
+	if !ok {
+		return nil, errors.New("Not found")
+	}
+
+	for _, event := range table.LabelEvents {
+		if event.Label == label {
+			return event, nil
+		}
+	}
+	return nil, errors.New("Not found")
 }
