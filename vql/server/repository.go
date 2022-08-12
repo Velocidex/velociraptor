@@ -210,13 +210,13 @@ func (self ArtifactsPlugin) Call(
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			scope.Log("Command can only run on the server")
+			scope.Log("artifact_definitions: Command can only run on the server")
 			return
 		}
 
 		manager, err := services.GetRepositoryManager(config_obj)
 		if err != nil {
-			scope.Log("Command can only run on the server")
+			scope.Log("artifact_definitions: %v", err)
 			return
 		}
 		repository, err := manager.GetGlobalRepository(config_obj)

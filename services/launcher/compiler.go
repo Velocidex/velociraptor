@@ -500,7 +500,8 @@ func (self *Launcher) GetDependentArtifacts(
 
 		_, pres = repository.Get(config_obj, name)
 		if !pres {
-			return nil, errors.New("Artifact not found")
+			return nil, fmt.Errorf(
+				"GetDependentArtifacts: Artifact %v not found", name)
 		}
 
 		err := GetQueryDependencies(config_obj, repository,

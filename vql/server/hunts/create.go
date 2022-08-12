@@ -52,6 +52,7 @@ type ScheduleHuntFunctionArg struct {
 	Pause         bool             `vfilter:"optional,field=pause,doc=If specified the new hunt will be in the paused state"`
 	IncludeLabels []string         `vfilter:"optional,field=include_labels,doc=If specified only include these labels"`
 	ExcludeLabels []string         `vfilter:"optional,field=exclude_labels,doc=If specified exclude these labels"`
+	OS            string           `vfilter:"optional,field=os,doc=If specified target this OS"`
 }
 
 type ScheduleHuntFunction struct{}
@@ -139,6 +140,10 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	}
 
 	if len(arg.IncludeLabels) > 0 {
+		if arg.OS != "" {
+			scope.Log("hunt: Both OS and label conditions set, ignoring OS")
+		}
+
 		hunt_request.Condition = &api_proto.HuntCondition{
 			UnionField: &api_proto.HuntCondition_Labels{
 				Labels: &api_proto.HuntLabelCondition{
@@ -152,6 +157,40 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 				Label: arg.ExcludeLabels,
 			}
 		}
+	}
+
+	switch arg.OS {
+	case "":
+		// Not specified
+	case "linux":
+		hunt_request.Condition = &api_proto.HuntCondition{
+			UnionField: &api_proto.HuntCondition_Os{
+				Os: &api_proto.HuntOsCondition{
+					Os: api_proto.HuntOsCondition_LINUX,
+				},
+			},
+		}
+	case "windows":
+		hunt_request.Condition = &api_proto.HuntCondition{
+			UnionField: &api_proto.HuntCondition_Os{
+				Os: &api_proto.HuntOsCondition{
+					Os: api_proto.HuntOsCondition_WINDOWS,
+				},
+			},
+		}
+
+	case "darwin":
+		hunt_request.Condition = &api_proto.HuntCondition{
+			UnionField: &api_proto.HuntCondition_Os{
+				Os: &api_proto.HuntOsCondition{
+					Os: api_proto.HuntOsCondition_OSX,
+				},
+			},
+		}
+
+	default:
+		scope.Log("hunt: OS condition invalid %v (should be linux, windows, darwin)", arg.OS)
+		return vfilter.Null{}
 	}
 
 	// Run the hunt in the ACL context of the caller.

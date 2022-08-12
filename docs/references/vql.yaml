@@ -2067,6 +2067,9 @@
     type: string
     description: If specified exclude these labels
     repeated: true
+  - name: os
+    type: string
+    description: If specified target this OS
   category: server
 - name: hunt_add
   description: |
