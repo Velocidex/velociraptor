@@ -58,4 +58,37 @@ FROM scope()[
   "hunt(description='Test Hunt3', artifacts='Generic.Client.Info', pause=TRUE, expires=timestamp(epoch=now() + 18000).UnixNano).Request.hunt_description": "Test Hunt3",
   "hunt(description='Test Hunt expires in past', artifacts='Generic.Client.Info', pause=TRUE, expires=now() - 18000)": null
  }
+]SELECT hunt(description='Test Hunt1', artifacts='Generic.Client.Info', include_labels="Foo").Request.condition, hunt(description='Test Hunt1', artifacts='Generic.Client.Info', include_labels="Foo", exclude_labels="Bar").Request.condition, hunt(description='Test Hunt1', artifacts='Generic.Client.Info', os="linux").Request.condition FROM scope()[
+ {
+  "hunt(description='Test Hunt1', artifacts='Generic.Client.Info', include_labels=\"Foo\").Request.condition": {
+   "UnionField": {
+    "Labels": {
+     "label": [
+      "Foo"
+     ]
+    }
+   }
+  },
+  "hunt(description='Test Hunt1', artifacts='Generic.Client.Info', include_labels=\"Foo\", exclude_labels=\"Bar\").Request.condition": {
+   "excluded_labels": {
+    "label": [
+     "Bar"
+    ]
+   },
+   "UnionField": {
+    "Labels": {
+     "label": [
+      "Foo"
+     ]
+    }
+   }
+  },
+  "hunt(description='Test Hunt1', artifacts='Generic.Client.Info', os=\"linux\").Request.condition": {
+   "UnionField": {
+    "Os": {
+     "os": 2
+    }
+   }
+  }
+ }
 ]
