@@ -39,7 +39,7 @@ sources:
                    timestamp(winfiletime=visit_time * 10) AS visit_time,
                    url as visited_url,
                    title,visit_count,typed_count,
-                   timestamp(epoch=last_visit_time) AS last_visit_time,
+                   timestamp(winfiletime=last_visit_time * 10) AS last_visit_time,
                    hidden,
                    from_visit AS from_url_id,
                    visit_duration,transition,
