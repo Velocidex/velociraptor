@@ -3287,8 +3287,12 @@ type Config struct {
 	// The list of data sources which Velociraptor should map instead of the
 	// host's own file system.
 	Remappings []*RemappingConfig `protobuf:"bytes,35,rep,name=remappings,proto3" json:"remappings,omitempty"`
-	OrgId      string             `protobuf:"bytes,36,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
-	OrgName    string             `protobuf:"bytes,37,opt,name=org_name,json=orgName,proto3" json:"org_name,omitempty"`
+	// These should **not** be set by the user - they are tags
+	// internally that mark each org's config object. They should
+	// definitely not be set on the client's config because the client
+	// does not know or use its own org id.
+	OrgId   string `protobuf:"bytes,36,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
+	OrgName string `protobuf:"bytes,37,opt,name=org_name,json=orgName,proto3" json:"org_name,omitempty"`
 }
 
 func (x *Config) Reset() {

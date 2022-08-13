@@ -837,6 +837,22 @@
     description: Rc4 key (1-256bytes).
     required: true
   category: plugin
+- name: delay
+  description: Executes 'query' and delays relaying the rows by the specified number
+    of seconds.
+  type: Plugin
+  args:
+  - name: query
+    type: StoredQuery
+    description: Source for rows.
+    required: true
+  - name: delay
+    type: int64
+    description: Number of seconds to delay.
+    required: true
+  - name: buffer_size
+    type: int64
+    description: Maximum number of rows to buffer (default 1000).
 - name: delete_flow
   description: Delete all the files that make up a flow.
   type: Plugin
@@ -3630,6 +3646,18 @@
     type: bool
     description: If specified list all Partitions
   category: windows
+- name: passwd
+  description: Updates the user's password.
+  type: Function
+  args:
+  - name: user
+    type: string
+    description: The user to set password for. If not set, changes the current user's
+      password.
+  - name: password
+    type: string
+    description: The new password to set.
+    required: true
 - name: patch
   description: |
     Patch a JSON object with a json patch or merge.

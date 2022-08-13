@@ -231,7 +231,14 @@ service API {
         };
     }
 
-    // VFS
+    rpc SetPassword(SetPasswordRequest) returns(google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/SetPassword",
+            body: "*"
+        };
+    }
+
+// VFS
     rpc VFSListDirectory(VFSListRequest) returns (VFSListResponse) {
         option (google.api.http) = {
             get: "/api/v1/VFSListDirectory/{client_id}",

@@ -981,6 +981,26 @@ func (mr *MockAPIClientMockRecorder) SetGUIOptions(arg0, arg1 interface{}, arg2 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetGUIOptions", reflect.TypeOf((*MockAPIClient)(nil).SetGUIOptions), varargs...)
 }
 
+// SetPassword mocks base method.
+func (m *MockAPIClient) SetPassword(arg0 context.Context, arg1 *proto0.SetPasswordRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "SetPassword", varargs...)
+	ret0, _ := ret[0].(*emptypb.Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// SetPassword indicates an expected call of SetPassword.
+func (mr *MockAPIClientMockRecorder) SetPassword(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetPassword", reflect.TypeOf((*MockAPIClient)(nil).SetPassword), varargs...)
+}
+
 // SetServerMonitoringState mocks base method.
 func (m *MockAPIClient) SetServerMonitoringState(arg0 context.Context, arg1 *proto2.ArtifactCollectorArgs, arg2 ...grpc.CallOption) (*proto2.ArtifactCollectorArgs, error) {
 	m.ctrl.T.Helper()

@@ -30,8 +30,7 @@ func NewDefaultUserObject(config_obj *config_proto.Config) *api_proto.ApiUser {
 
 	if config_obj.GUI != nil {
 		result.InterfaceTraits = &api_proto.ApiUserInterfaceTraits{
-			AuthUsingGoogle: config_obj.GUI.GoogleOauthClientId != "",
-			Links:           []*api_proto.UILink{},
+			Links: []*api_proto.UILink{},
 		}
 
 		for _, link := range config_obj.GUI.Links {
