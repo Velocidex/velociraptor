@@ -37,9 +37,17 @@ var (
 	client            = app.Command("client", "Run the velociraptor client")
 	client_quiet_flag = client.Flag("quiet",
 		"Do not output anything to stdout/stderr").Bool()
+	client_admin_flag = client.Flag("require_admin", "Ensure the user is an admin").Bool()
 )
 
 func doClient() error {
+	if *client_admin_flag {
+		err := checkAdmin()
+		if err != nil {
+			return err
+		}
+	}
+
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 

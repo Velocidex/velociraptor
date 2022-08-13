@@ -1,0 +1,4 @@
+.velo__multi-value, .velo__multi-value__label {
+    color: var(--color-foreground);
+    background: var(--color-canvas-background);
+}

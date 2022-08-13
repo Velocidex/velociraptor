@@ -877,10 +877,6 @@ body.github-dimmed-dark {
   color: var(--color-foreground);
 }
 
-.github-dimmed-dark .velo__multi-value {
-  background: var(--color-canvas-background);
-}
-
 .github-dimmed-dark .velo__input {
   color: var(--color-foreground);
 }

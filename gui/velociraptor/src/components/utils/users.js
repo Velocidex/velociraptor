@@ -1,10 +1,12 @@
+import "./users.css";
+
 import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
 import api from '../core/api-service.js';
 import axios from 'axios';
-import CreatableSelect from 'react-select/creatable';
+import Select from 'react-select';
 import T from '../i8n/i8n.js';
 
 // FIXME - get the current username.
@@ -61,7 +63,7 @@ export default class UserForm extends React.Component {
             return {value: x, label: x};});
 
         return (
-            <CreatableSelect
+            <Select
               isMulti
               isClearable
               value={default_value}
