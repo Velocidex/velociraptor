@@ -41,6 +41,7 @@ class NewNotebook extends React.Component {
             this.setState({
                 name: this.props.notebook.name,
                 notebook_id: this.props.notebook.notebook_id,
+                public: this.props.notebook.public,
                 description: this.props.notebook.description,
                 modified_time: this.props.notebook.modified_time,
                 cell_metadata: this.props.notebook.cell_metadata,
@@ -62,6 +63,7 @@ class NewNotebook extends React.Component {
         api.post(api_url, {
             name: this.state.name,
             description: this.state.description,
+            public: this.state.public,
             collaborators: this.state.collaborators,
             modified_time: this.state.modified_time,
             notebook_id: this.state.notebook_id,
@@ -74,6 +76,7 @@ class NewNotebook extends React.Component {
         description: "",
         collaborators: [],
         users: [],
+        public: false,
         notebook_id: undefined,
         modified_time: undefined,
     }
@@ -115,13 +118,28 @@ class NewNotebook extends React.Component {
                 </Form.Group>
 
                 <Form.Group as={Row}>
+                  <Form.Label column sm="3">{T("Public")}</Form.Label>
+                  <Col sm="8">
+                    <Form.Check
+                      type="checkbox"
+                      label="Share with all users"
+                      checked={this.state.public}
+                      value={this.state.public}
+                      onChange={(e) => this.setState(
+                          {public: e.currentTarget.checked})}/>
+                  </Col>
+                </Form.Group>
+
+                { !this.state.public &&
+                <Form.Group as={Row}>
                   <Form.Label column sm="3">{T("Collaborators")}</Form.Label>
                   <Col sm="8">
                     <UserForm
                       value={this.state.collaborators}
                       onChange={(value) => this.setState({collaborators: value})}/>
                   </Col>
-                </Form.Group>
+                </Form.Group>}
+
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary"
