@@ -160,9 +160,11 @@ func getRepository(config_obj *config_proto.Config) (services.Repository, error)
 }
 
 func doArtifactCollect() error {
-	err := checkAdmin()
-	if err != nil {
-		return err
+	if *artificat_command_collect_admin_flag {
+		err := checkAdmin()
+		if err != nil {
+			return err
+		}
 	}
 
 	config_obj, err := makeDefaultConfigLoader().

@@ -41,9 +41,11 @@ var (
 )
 
 func doClient() error {
-	err := checkAdmin()
-	if err != nil {
-		return err
+	if *client_admin_flag {
+		err := checkAdmin()
+		if err != nil {
+			return err
+		}
 	}
 
 	ctx, cancel := install_sig_handler()
