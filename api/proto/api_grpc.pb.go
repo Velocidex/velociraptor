@@ -46,6 +46,7 @@ type APIClient interface {
 	// List all the GUI users known on this server.
 	GetUsers(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Users, error)
 	GetUserFavorites(ctx context.Context, in *Favorite, opts ...grpc.CallOption) (*Favorites, error)
+	SetPassword(ctx context.Context, in *SetPasswordRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	// VFS
 	VFSListDirectory(ctx context.Context, in *VFSListRequest, opts ...grpc.CallOption) (*VFSListResponse, error)
 	VFSRefreshDirectory(ctx context.Context, in *VFSRefreshDirectoryRequest, opts ...grpc.CallOption) (*proto.ArtifactCollectorResponse, error)
@@ -276,6 +277,15 @@ func (c *aPIClient) GetUsers(ctx context.Context, in *empty.Empty, opts ...grpc.
 func (c *aPIClient) GetUserFavorites(ctx context.Context, in *Favorite, opts ...grpc.CallOption) (*Favorites, error) {
 	out := new(Favorites)
 	err := c.cc.Invoke(ctx, "/proto.API/GetUserFavorites", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aPIClient) SetPassword(ctx context.Context, in *SetPasswordRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/proto.API/SetPassword", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -734,6 +744,7 @@ type APIServer interface {
 	// List all the GUI users known on this server.
 	GetUsers(context.Context, *empty.Empty) (*Users, error)
 	GetUserFavorites(context.Context, *Favorite) (*Favorites, error)
+	SetPassword(context.Context, *SetPasswordRequest) (*empty.Empty, error)
 	// VFS
 	VFSListDirectory(context.Context, *VFSListRequest) (*VFSListResponse, error)
 	VFSRefreshDirectory(context.Context, *VFSRefreshDirectoryRequest) (*proto.ArtifactCollectorResponse, error)
@@ -858,6 +869,9 @@ func (UnimplementedAPIServer) GetUsers(context.Context, *empty.Empty) (*Users, e
 }
 func (UnimplementedAPIServer) GetUserFavorites(context.Context, *Favorite) (*Favorites, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserFavorites not implemented")
+}
+func (UnimplementedAPIServer) SetPassword(context.Context, *SetPasswordRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetPassword not implemented")
 }
 func (UnimplementedAPIServer) VFSListDirectory(context.Context, *VFSListRequest) (*VFSListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VFSListDirectory not implemented")
@@ -1318,6 +1332,24 @@ func _API_GetUserFavorites_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(APIServer).GetUserFavorites(ctx, req.(*Favorite))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _API_SetPassword_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetPasswordRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).SetPassword(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/SetPassword",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).SetPassword(ctx, req.(*SetPasswordRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2162,6 +2194,10 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUserFavorites",
 			Handler:    _API_GetUserFavorites_Handler,
+		},
+		{
+			MethodName: "SetPassword",
+			Handler:    _API_SetPassword_Handler,
 		},
 		{
 			MethodName: "VFSListDirectory",

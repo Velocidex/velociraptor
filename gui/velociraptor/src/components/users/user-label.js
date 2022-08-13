@@ -10,6 +10,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import { withRouter }  from "react-router-dom";
 
+import Accordion from 'react-bootstrap/Accordion';
+import Card  from 'react-bootstrap/Card';
 import UserConfig from '../core/user.js';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
@@ -23,6 +25,81 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import InputGroup from 'react-bootstrap/InputGroup';
 import Select from 'react-select';
+
+
+class _PasswordChange extends React.Component {
+    static propTypes = {
+        onClose: PropTypes.func.isRequired,
+    }
+
+    componentDidMount() {
+        this.source = axios.CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+    }
+
+    updatePassword = ()=>{
+        api.post("v1/SetPassword", {
+            password: this.state.password1,
+        }, this.source.token).then((response) => {
+            this.props.history.push("/welcome");
+            this.props.onClose();
+        });
+    }
+
+    state = {
+        password1: "",
+        password2: "",
+    }
+
+    render() {
+        return  (
+            <Form.Group as={Row}>
+              <Form.Label column sm="3">
+                {T("Password")}
+              </Form.Label>
+              <Col sm="8">
+                <Accordion>
+                  <Card>
+                    <Accordion.Toggle as={Card.Header} eventKey="0">
+                      {T("Update Password")}
+                      <span className="float-right">
+                        <FontAwesomeIcon icon="chevron-down"/>
+                      </span>
+                    </Accordion.Toggle>
+                    <Accordion.Collapse eventKey="0">
+                      <>
+                        <Form.Control type="password"
+                                      value={this.state.password1}
+                                      onChange={e=>this.setState({password1: e.currentTarget.value})}
+                                      placeholder={T("Password")} />
+                        <Form.Control type="password"
+                                      value={this.state.password2}
+                                      onChange={e=>this.setState({password2: e.currentTarget.value})}
+                                      placeholder={T("Retype Password")} />
+                        { this.state.password1 && this.state.password2 &&
+                          <Button variant={this.state.password1 !== this.state.password2 ? "warning" : "default"}
+                                  size="sm"
+                                  className="set-password-button"
+                                  disabled={this.state.password1 !== this.state.password2}
+                                  onClick={this.updatePassword}
+                          >
+                            {this.state.password1 !== this.state.password2 ? T("Passwords do not match") : T("Submit")}
+                          </Button>
+                        }
+                      </>
+                    </Accordion.Collapse>
+                  </Card>
+                </Accordion>
+              </Col>
+            </Form.Group>
+        );
+    }
+}
+
+const PasswordChange = withRouter(_PasswordChange);
 
 
 class UserSettings extends React.PureComponent {
@@ -76,6 +153,7 @@ class UserSettings extends React.PureComponent {
         });
         this.props.onClose();
     }
+
     render() {
         return (
             <Modal show={true}
@@ -109,7 +187,11 @@ class UserSettings extends React.PureComponent {
                     </Col>
                   </Form.Group>
                 }
-
+                { !this.context.traits.password_less &&
+                  <PasswordChange
+                    onClose={this.props.onClose}
+                    >
+                  </PasswordChange> }
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
                     {T("Theme")}

@@ -1,6 +1,7 @@
 package api
 
 import (
+	errors "github.com/pkg/errors"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -8,7 +9,32 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/users"
 )
+
+// This is only used to set the user's own password which is always
+// allowed for any user.
+func (self *ApiServer) SetPassword(
+	ctx context.Context,
+	in *api_proto.SetPasswordRequest) (*emptypb.Empty, error) {
+
+	// Enforce a minimum length password
+	if len(in.Password) < 4 {
+		return nil, errors.New("Password is not set or too short")
+	}
+
+	users_manager := services.GetUserManager()
+	user_record, _, err := users_manager.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set the password on the record.
+	users.SetPassword(user_record, in.Password)
+
+	// Store the record
+	return &emptypb.Empty{}, users_manager.SetUser(user_record)
+}
 
 func (self *ApiServer) GetUsers(
 	ctx context.Context,

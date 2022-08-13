@@ -72,14 +72,17 @@ message UILink {
     string url = 2;
 }
 
-// These traits are used by the AdminUI Angular app to disable certain
-// UI elements based on the user's permission set.
+// These traits are used to control the GUI App. Many of these fields
+// are constructed from the VelociraptorUser, the config file, the
+// GUIOptions etc.
 message ApiUserInterfaceTraits {
     ApiClientACL Permissions = 9;
 
     string lang = 22;
 
-    bool auth_using_google = 19;
+    // Set if the authenticator is password less (e.g. OAuth, SAML
+    // etc)
+    bool password_less = 25;
     string picture = 20;
 
     repeated UILink links = 21;
@@ -194,6 +197,10 @@ message SetGUIOptionsRequest {
 
 message Users {
     repeated VelociraptorUser users = 1;
+}
+
+message SetPasswordRequest {
+    string password = 1;
 }
 
 // Store favorite collections (essential preset collection specs)

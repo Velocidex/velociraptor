@@ -365,55 +365,55 @@ const Deutsch = {
     "This is a notebook for processing a hunt.":"Dies ist ein Notizbuch zur Abwicklung einer Hunt.",
     "ToolLocalDesc":
     <>
-    Das Tool wird bei Bedarf vom Velociraptor-Server an die Clients 
-    ausgeliefert. Der Client speichert das Tool auf seiner eigenen 
-    Festplatte und vergleicht den Hash, wenn es das nächste Mal 
-    benötigt wird. Die Tools werden nur heruntergeladen, wenn sich ihr 
+    Das Tool wird bei Bedarf vom Velociraptor-Server an die Clients
+    ausgeliefert. Der Client speichert das Tool auf seiner eigenen
+    Festplatte und vergleicht den Hash, wenn es das nächste Mal
+    benötigt wird. Die Tools werden nur heruntergeladen, wenn sich ihr
     Hash geändert hat.
     </>,
     "ServedFromURL": (base_path, url)=>
     <>
     Die Clients rufen das Tool bei Bedarf direkt von
-    <a href={base_path + url}>{url}</a> ab. Wenn der Hashwert nicht mit dem 
+    <a href={base_path + url}>{url}</a> ab. Wenn der Hashwert nicht mit dem
     erwarteten Hashwert übereinstimmt, weisen die Clients die Datei zurück.
     </>,
     "ServedFromGithub": (github_project, github_asset_regex)=>
     <>
-    Die Tool-URL wird von GitHub als die neueste Version des Projekts 
-    <b>{github_project}</b>, die mit <b>{github_asset_regex}</b> 
+    Die Tool-URL wird von GitHub als die neueste Version des Projekts
+    <b>{github_project}</b>, die mit <b>{github_asset_regex}</b>
     übereinstimmt, aktualisiert.
     </>,
     "PlaceHolder":
     <>
-    Der Hash-Wert des Tools ist derzeit unbekannt. Das erste Mal, 
-    wenn das Tool benötigt wird, lädt Velociraptor es von seiner 
+    Der Hash-Wert des Tools ist derzeit unbekannt. Das erste Mal,
+    wenn das Tool benötigt wird, lädt Velociraptor es von seiner
     Upstream-URL herunter und berechnet den Hash.
     </>,
     "ToolHash":
     <>
-    Der Hashwert des Tools wurde berechnet. Wenn Clients dieses Tool 
+    Der Hashwert des Tools wurde berechnet. Wenn Clients dieses Tool
     verwenden müssen, stellt es sicher, dass dieser Hash mit dem herunter
     geladenen Binary übereinstimmt.
     </>,
     "AdminOverride":
     <>
-    Das Tool wurde manuell von einem Administrator hochgeladen - 
-    es wird beim nächsten Velociraptor-Server-Update nicht 
+    Das Tool wurde manuell von einem Administrator hochgeladen -
+    es wird beim nächsten Velociraptor-Server-Update nicht
     automatisch aktualisiert.
     </>,
     "ToolError":
     <>
-    Der Hash des Tools ist nicht bekannt und es ist keine URL definiert. 
-    Es wird unmöglich sein, dieses Tools in einem Artefakt zu verwenden, 
-    da Velociraptor nicht in der Lage ist, es aufzulösen. 
+    Der Hash des Tools ist nicht bekannt und es ist keine URL definiert.
+    Es wird unmöglich sein, dieses Tools in einem Artefakt zu verwenden,
+    da Velociraptor nicht in der Lage ist, es aufzulösen.
     Sie können eine Datei manuell hochladen.
     </>,
     "OverrideToolDesc":
     <>
-    Als Administrator können Sie manuell eine Binärdatei hochladen, die als 
-    dieses Tool verwendet werden soll. Dadurch wird die Upstream-URL-Einstellung 
-    außer Kraft gesetzt und Ihr Tool allen Artefakten zur Verfügung gestellt, 
-    die es benötigen. Alternativ können Sie eine URL festlegen, von der die 
+    Als Administrator können Sie manuell eine Binärdatei hochladen, die als
+    dieses Tool verwendet werden soll. Dadurch wird die Upstream-URL-Einstellung
+    außer Kraft gesetzt und Ihr Tool allen Artefakten zur Verfügung gestellt,
+    die es benötigen. Alternativ können Sie eine URL festlegen, von der die
     Clients die Tools abrufen können.
     </>,
 
@@ -535,9 +535,9 @@ const Deutsch = {
     "Select label to edit its event monitoring table": "Label auswählen, um seine Event-Monitoringtabelle zu bearbeiten",
     "EventMonitoringCard":
     <>
-    Die Event-Monitoring zielt auf bestimmte Labelgruppen ab. Wählen Sie oben 
-    eine Kennzeichnungsgruppe aus, um spezifische Ereignisartefakte für 
-    diese Gruppe zu konfigurieren. 
+    Die Event-Monitoring zielt auf bestimmte Labelgruppen ab. Wählen Sie oben
+    eine Kennzeichnungsgruppe aus, um spezifische Ereignisartefakte für
+    diese Gruppe zu konfigurieren.
     </>,
     "Event Monitoring: Configure Label groups": "Event-Monitoring: Labelgruppen konfigurieren",
     "Configuring Label": "Label konfigurieren",
@@ -604,7 +604,9 @@ const Deutsch = {
 
     "Update client monitoring table":"Client-Überwachungstabelle aktualisieren",
     "Show client monitoring tables":"Client-Überwachungstabellen anzeigen",
-
+    "Update Password": "Passwort aktualisieren",
+    "Retype Password": "Passwort erneut eingeben",
+    "Passwords do not match": "Passwörter stimmen nicht überein",
 };
 
 export default Deutsch;

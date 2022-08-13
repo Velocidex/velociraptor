@@ -43,6 +43,7 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	"www.velocidex.com/golang/velociraptor/api/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -416,8 +417,14 @@ func (self *ApiServer) GetUserUITraits(
 		return nil, err
 	}
 
+	authenticator, err := authenticators.NewAuthenticator(org_config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	result := NewDefaultUserObject(org_config_obj)
 	result.Username = user_info.Name
+	result.InterfaceTraits.PasswordLess = authenticator.IsPasswordLess()
 	result.InterfaceTraits.Picture = user_info.Picture
 	result.InterfaceTraits.Permissions, _ = acls.GetEffectivePolicy(org_config_obj,
 		result.Username)
