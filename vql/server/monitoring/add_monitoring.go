@@ -93,25 +93,28 @@ func (self AddClientMonitoringFunction) Call(
 		Parameters: &flows_proto.ArtifactParameters{},
 	}
 
-	params := arg.Parameters.Reduce(ctx)
-	params_dict, ok := params.(*ordereddict.Dict)
-	if !ok {
-		scope.Log("add_client_monitoring: parameters should be a dict")
-		return vfilter.Null{}
-	}
-
-	for _, k := range params_dict.Keys() {
-		v, _ := params_dict.Get(k)
-		v_str, ok := v.(string)
+	if arg.Parameters != nil {
+		params := arg.Parameters.Reduce(ctx)
+		params_dict, ok := params.(*ordereddict.Dict)
 		if !ok {
-			scope.Log(
-				"add_client_monitoring: parameter %v should has a string value",
-				k)
+			scope.Log("add_client_monitoring: parameters should be a dict")
 			return vfilter.Null{}
 		}
-		new_specs.Parameters.Env = append(new_specs.Parameters.Env,
-			&actions_proto.VQLEnv{Key: k, Value: v_str})
+
+		for _, k := range params_dict.Keys() {
+			v, _ := params_dict.Get(k)
+			v_str, ok := v.(string)
+			if !ok {
+				scope.Log(
+					"add_client_monitoring: parameter %v should has a string value",
+					k)
+				return vfilter.Null{}
+			}
+			new_specs.Parameters.Env = append(new_specs.Parameters.Env,
+				&actions_proto.VQLEnv{Key: k, Value: v_str})
+		}
 	}
+
 	label_config.Specs = append(label_config.Specs, new_specs)
 
 	// Actually set the table
