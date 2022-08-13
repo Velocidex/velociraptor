@@ -21,7 +21,7 @@
 // package with the client configuration.
 
 /*
-   Velociraptor - Hunting Evil
+   Velociraptor - Dig Deeper
    Copyright (C) 2019 Velocidex Enterprises.
 
    This program is free software: you can redistribute it and/or modify
