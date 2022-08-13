@@ -1,12 +1,13 @@
 name: Windows.Attack.UnexpectedImagePath
 
 description: |
-  Some malware are hiding in plain text by masqurading a legitimate executable name.
+  Some malware are hiding in plain text by masqurading a legitimate
+  executable name.
 
-  This artifact looks for processes with known names that are being loaded from unexpected 
-  locations.
+  This artifact looks for processes with known names that are being
+  loaded from unexpected locations.
 
-reference: 
+reference:
   - https://www.sans.org/posters/hunt-evil/
   - https://github.com/teoseller/osquery-attck/blob/master/windows-incorrect_path_process.conf
 
@@ -42,13 +43,13 @@ sources:
 
     query: |
       LET expected_paths_lookup <= memoize(key="ProcName", query={
-        SELECT ProcName, enumerate(items=ExpectedPath) AS Path 
+        SELECT ProcName, enumerate(items=ExpectedPath) AS Path
         FROM expected_paths
         GROUP BY ProcName
       })
-    
-      LET suspicious_processes = SELECT Pid AS PID, Name AS ProcessName, Ppid AS PPID, 
-        Exe AS ImagePath, CommandLine, Username, TokenIsElevated, StartTime, 
+
+      LET suspicious_processes = SELECT Pid AS PID, Name AS ProcessName, Ppid AS PPID,
+        Exe AS ImagePath, CommandLine, Username, StartTime,
         if(condition=EndTime<StartTime, then="", else=EndTime) AS EndTime,
         get(item=expected_paths_lookup, field=Name).Path AS ExpectedPaths,
         process_tracker_callchain(id=Pid) AS CallChain,
@@ -57,18 +58,17 @@ sources:
         WHERE ImagePath != "" AND ExpectedPaths AND
           NOT lowcase(string=ImagePath) IN ExpectedPaths
 
-      SELECT PID, ProcessName, ImagePath, CommandLine, Username, TokenIsElevated, StartTime, EndTime, 
-        PPID, Parent.Data.Name As ParentProcessName, 
-        Parent.Data.Exe As ParentImagePath, 
-        Parent.Data.CommandLine As ParentCommandLine, 
+      SELECT PID, ProcessName, ImagePath, CommandLine, Username, StartTime, EndTime,
+        PPID, Parent.Data.Name As ParentProcessName,
+        Parent.Data.Exe As ParentImagePath,
+        Parent.Data.CommandLine As ParentCommandLine,
         Parent.Data.Username As ParentUsername,
-        Parent.Data.TokenIsElevated As ParentTokenIsElevated, 
-        Parent.StartTime As ParentStartTime, 
+        Parent.StartTime As ParentStartTime,
         if(condition=Parent.EndTime<Parent.StartTime, then=NULL, else=EndTime) AS ParentEndTime,
         CallChain.Data AS _CallChain,
-        { SELECT Pid, Name, Ppid, Exe, 
-                 CommandLine, Username, TokenIsElevated, StartTime, EndTime
-          FROM 
+        { SELECT Pid, Name, Ppid, Exe,
+                 CommandLine, Username, StartTime, EndTime
+          FROM
           foreach(row=process_tracker_children(id=PID).Data)
         } AS SubProcesses
         FROM suspicious_processes

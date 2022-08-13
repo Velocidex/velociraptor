@@ -1,5 +1,5 @@
 /*
-   Velociraptor - Hunting Evil
+   Velociraptor - Dig Deeper
    Copyright (C) 2022 Velocidex Innovations.
 
    This program is free software: you can redistribute it and/or modify
