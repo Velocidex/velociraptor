@@ -151,6 +151,17 @@ class InspectRawJson extends React.PureComponent {
     };
 }
 
+const getLogArtifact = function (logs, router_artifact) {
+    for(let i=0; i<logs.length;i++) {
+        let log=logs[i];
+        if (log.artifact === router_artifact) {
+            return log;
+        }
+    }
+    return {};
+};
+
+
 class EventMonitoring extends React.Component {
     static propTypes = {
         client: PropTypes.object,
@@ -224,12 +235,8 @@ class EventMonitoring extends React.Component {
                 this.props.match.params.artifact;
             if (router_artifact) {
                 let logs = resp.data.logs || [];
-                for(let i=0; i<logs.length;i++) {
-                    let log=logs[i];
-                    if (log.artifact === router_artifact) {
-                        this.setState({artifact: log});
-                    }
-                }
+                let available = getLogArtifact(logs, router_artifact);
+                this.setState({artifact: available});
             }
 
             this.setState({available_artifacts: resp.data.logs});
@@ -393,15 +400,19 @@ class EventMonitoring extends React.Component {
               { (this.state.mode === mode_raw_data ||
                  this.state.mode === mode_logs) && this.state.artifact.artifact &&
                 <Container className="event-report-viewer">
-                <EventTimelineViewer
-                  toolbar={x=>this.setState({buttonsRenderer: x})}
-                  client_id={client_id}
-                  artifact={this.state.artifact.artifact}
-                  mode={this.state.mode}
-                  renderers={renderers}
-                  column_types={column_types}
-                  time_range_setter={this.setTimeRange}
-                 />
+                  <EventTimelineViewer
+                    toolbar={x=>{
+                        this.setState({
+                            buttonsRenderer: x,
+                        });
+                    }}
+                    client_id={client_id}
+                    artifact={this.state.artifact.artifact}
+                    mode={this.state.mode}
+                    renderers={renderers}
+                    column_types={column_types}
+                    time_range_setter={this.setTimeRange}
+                  />
                 </Container> }
 
             { this.state.mode === mode_report &&

@@ -43,6 +43,7 @@ package services
 
 import (
 	"context"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -169,5 +170,12 @@ type Launcher interface {
 		ctx context.Context,
 		config_obj *config_proto.Config,
 		client_id string, flow_id string,
+		really_do_it bool) ([]*DeleteFlowResponse, error)
+
+	DeleteEvents(
+		ctx context.Context,
+		config_obj *config_proto.Config,
+		artifact, client_id string,
+		start_time, end_time time.Time,
 		really_do_it bool) ([]*DeleteFlowResponse, error)
 }

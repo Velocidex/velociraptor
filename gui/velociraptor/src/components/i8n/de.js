@@ -607,6 +607,9 @@ const Deutsch = {
     "Update Password": "Passwort aktualisieren",
     "Retype Password": "Passwort erneut eingeben",
     "Passwords do not match": "Passwörter stimmen nicht überein",
+
+    "Delete Events": "Ereignisse löschen",
+
 };
 
 export default Deutsch;

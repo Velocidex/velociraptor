@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -12,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -182,4 +184,97 @@ func (self *reporter) emit_fs(
 		Data:  ordereddict.NewDict().Set("VFSPath", client_path),
 		Error: error_message,
 	})
+}
+
+/* For now we do not bisect the event log files - we just remove the
+   entire file if the time stamp requested is in it. Since files are
+   split by day this will remove the entire day's worth of data.
+*/
+func (self *Launcher) DeleteEvents(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	artifact, client_id string,
+	start_time, end_time time.Time,
+	really_do_it bool) ([]*services.DeleteFlowResponse, error) {
+
+	path_manager, err := artifacts.NewArtifactPathManager(
+		config_obj, client_id, "", artifact)
+	if err != nil {
+		return nil, err
+	}
+	if !path_manager.IsEvent() {
+		return nil, fmt.Errorf("Artifact %v is not an event artifact", artifact)
+	}
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+
+	result := []*services.DeleteFlowResponse{}
+	for _, f := range path_manager.GetAvailableFiles(ctx) {
+		if f.EndTime.After(start_time) &&
+			f.StartTime.Before(end_time) {
+			var error_message string
+
+			if really_do_it {
+				err := file_store_factory.Delete(f.Path)
+				if err != nil {
+					error_message = fmt.Sprintf(
+						"Error deleting %v: %v",
+						f.Path.AsClientPath(), err)
+				}
+
+				path_spec := f.Path.SetType(api.PATH_TYPE_FILESTORE_JSON_TIME_INDEX)
+				err = file_store_factory.Delete(path_spec)
+				if err != nil {
+					error_message += fmt.Sprintf(
+						"Error deleting %v: %v",
+						path_spec.AsClientPath(), err)
+				}
+			}
+
+			result = append(result, &services.DeleteFlowResponse{
+				Type: "EventFile",
+				Data: ordereddict.NewDict().Set(
+					"VFSPath", f.Path.AsClientPath()),
+				Error: error_message,
+			})
+		}
+	}
+
+	log_path_manager, err := artifacts.NewArtifactLogPathManager(
+		config_obj, client_id, "", artifact)
+	if err != nil {
+		return nil, err
+	}
+	for _, f := range log_path_manager.GetAvailableFiles(ctx) {
+		if f.EndTime.After(start_time) &&
+			f.StartTime.Before(end_time) {
+			var error_message string
+
+			if really_do_it {
+				err := file_store_factory.Delete(f.Path)
+				if err != nil {
+					error_message = fmt.Sprintf(
+						"Error deleting %v: %v",
+						f.Path.AsClientPath(), err)
+				}
+
+				path_spec := f.Path.SetType(api.PATH_TYPE_FILESTORE_JSON_TIME_INDEX)
+				err = file_store_factory.Delete(path_spec)
+				if err != nil {
+					error_message += fmt.Sprintf(
+						"Error deleting %v: %v",
+						path_spec.AsClientPath(), err)
+				}
+			}
+
+			result = append(result, &services.DeleteFlowResponse{
+				Type: "EventQueryLogFile",
+				Data: ordereddict.NewDict().Set(
+					"VFSPath", f.Path.AsClientPath()),
+				Error: error_message,
+			})
+		}
+	}
+
+	return result, nil
 }

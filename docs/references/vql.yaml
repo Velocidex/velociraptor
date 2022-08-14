@@ -853,6 +853,27 @@
   - name: buffer_size
     type: int64
     description: Maximum number of rows to buffer (default 1000).
+- name: delete_events
+  description: Delete all the files that make up a flow.
+  type: Plugin
+  args:
+  - name: artifact
+    type: string
+    description: Name of artifact events to remove
+    required: true
+  - name: client_id
+    type: string
+    description: Client ID of events to remove (use 'server' for server events)
+    required: true
+  - name: start_time
+    type: time.Time
+    description: Start time to be deleted
+  - name: end_time
+    type: time.Time
+    description: End time to be deleted
+  - name: really_do_it
+    type: bool
+    description: If not specified, just show what files will be removed
 - name: delete_flow
   description: Delete all the files that make up a flow.
   type: Plugin
