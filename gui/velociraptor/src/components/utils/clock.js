@@ -1,6 +1,7 @@
 import "./clock.css";
 
 import React, { Component } from 'react';
+import VeloTimestamp from "./time.js";
 
 const POLL_TIME = 1000; // 1 sec
 
@@ -21,7 +22,9 @@ export default class VeloLiveClock extends Component {
 
     render() {
         return (
-            <div className="float-right">{this.state.date.toISOString().split('.')[0]+"Z"}</div>
+            <VeloTimestamp
+              iso={this.state.date}
+              className="float-right"/>
         );
     }
 }
