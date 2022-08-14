@@ -458,7 +458,14 @@ func doSingleServerRPM(
 /bin/systemctl stop velociraptor_server.service
 `)
 
-	fd, err = os.OpenFile(*server_rpm_command_output,
+	output_file := *server_rpm_command_output
+	if variant != "" {
+		output_file = strings.TrimSuffix(output_file, ".rpm") + variant + ".rpm"
+	}
+
+	fmt.Printf("Creating a package for %v\n", output_file)
+
+	fd, err = os.OpenFile(output_file,
 		os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		return fmt.Errorf("Unable to create output file: %w", err)

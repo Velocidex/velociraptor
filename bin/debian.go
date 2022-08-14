@@ -286,6 +286,8 @@ func doSingleServerDeb(
 	output_file := fmt.Sprintf("velociraptor_%s_server%s.deb",
 		constants.VERSION, variant)
 
+	fmt.Printf("Creating a package for %v\n", output_file)
+
 	if *server_debian_command_output != "" {
 		output_file = fmt.Sprintf("%s%s.deb",
 			strings.TrimSuffix(*server_debian_command_output, ".deb"),
