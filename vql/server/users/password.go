@@ -89,8 +89,7 @@ func (self SetPasswordFunction) Call(
 	logger.WithFields(logrus.Fields{
 		"Username":  arg.Username,
 		"Principal": principal,
-	}).Info("passwd: Updating password for user %v",
-		user_record.Name)
+	}).Info("passwd: Updating password for user")
 
 	// Store the record
 	err = users_manager.SetUser(user_record)
