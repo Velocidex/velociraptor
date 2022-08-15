@@ -4,8 +4,10 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/users"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -82,6 +84,12 @@ func (self SetPasswordFunction) Call(
 
 	// Set the password on the record.
 	users.SetPassword(user_record, arg.Password)
+
+	logger := logging.GetLogger(config_obj, &logging.Audit)
+	logger.WithFields(logrus.Fields{
+		"Username":  arg.Username,
+		"Principal": principal,
+	}).Info("passwd: Updating password for user")
 
 	// Store the record
 	err = users_manager.SetUser(user_record)

@@ -4,8 +4,10 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -47,6 +49,13 @@ func (self UserDeleteFunction) Call(
 		scope.Log("user_delete: %s", err)
 		return vfilter.Null{}
 	}
+
+	principal := vql_subsystem.GetPrincipal(scope)
+	logger := logging.GetLogger(config_obj, &logging.Audit)
+	logger.WithFields(logrus.Fields{
+		"Username":  arg.Username,
+		"Principal": principal,
+	}).Info("user_delete")
 
 	user_path_manager := paths.NewUserPathManager(arg.Username)
 	err = db.DeleteSubject(config_obj, user_path_manager.Path())

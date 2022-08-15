@@ -5,9 +5,11 @@ import (
 	"crypto/rand"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/users"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -152,6 +154,15 @@ func (self UserCreateFunction) Call(
 		scope.Log("user_create: %s", err)
 		return vfilter.Null{}
 	}
+
+	principal := vql_subsystem.GetPrincipal(scope)
+	logger := logging.GetLogger(config_obj, &logging.Audit)
+	logger.WithFields(logrus.Fields{
+		"Username":  arg.Username,
+		"Roles":     arg.Roles,
+		"OrgIds":    arg.OrgIds,
+		"Principal": principal,
+	}).Info("user_create")
 
 	return arg.Username
 }

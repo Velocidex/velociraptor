@@ -22,5 +22,5 @@ sources:
     LET org_record <= org_create(name=OrgName)
 
     SELECT org_record.name as Name, org_record.org_id AS OrgId,
-           user_create(orgs=org_record.org_id, roles="administrator", user=whoami())
+           user_create(orgs=org_record.org_id, roles="administrator", user=whoami()) AS AdminUser
     FROM scope()
