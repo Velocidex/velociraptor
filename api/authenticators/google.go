@@ -27,7 +27,6 @@ import (
 	"net/http"
 	"time"
 
-	jwt "github.com/golang-jwt/jwt"
 	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
@@ -173,18 +172,13 @@ func (self *GoogleAuthenticator) oauthGoogleCallback() http.Handler {
 			return
 		}
 
-		// Create a new token object, specifying signing method and the claims
-		// you would like it to contain.
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"user": user_info.Email,
-			// Required re-auth after one day.
-			"expires": float64(time.Now().AddDate(0, 0, 1).Unix()),
-			"picture": user_info.Picture,
-		})
-
 		// Sign and get the complete encoded token as a string using the secret
-		tokenString, err := token.SignedString(
-			[]byte(self.config_obj.Frontend.PrivateKey))
+		cookie, err := getSignedJWTTokenCookie(
+			self.config_obj, self.authenticator,
+			&Claims{
+				Username: user_info.Email,
+				Picture:  user_info.Picture,
+			})
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
@@ -194,15 +188,6 @@ func (self *GoogleAuthenticator) oauthGoogleCallback() http.Handler {
 			return
 		}
 
-		// Set the cookie and redirect.
-		cookie := &http.Cookie{
-			Name:     "VelociraptorAuth",
-			Value:    tokenString,
-			Path:     "/",
-			Secure:   true,
-			HttpOnly: true,
-			Expires:  time.Now().AddDate(0, 0, 1),
-		}
 		http.SetCookie(w, cookie)
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 	})
@@ -277,64 +262,13 @@ func authenticateUserHandle(
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-CSRF-Token", csrf.Token(r))
 
-		reject := func(err error) {
-			reject_cb(w, r, err, "")
-		}
-
-		// We store the user name and their details in a local
-		// cookie. It is stored as a JWT so we can trust it.
-		auth_cookie, err := r.Cookie("VelociraptorAuth")
+		claims, err := getDetailsFromCookie(config_obj, r)
 		if err != nil {
-			reject(err)
+			reject_cb(w, r, err, claims.Username)
 			return
 		}
 
-		// Parse the JWT.
-		token, err := jwt.Parse(
-			auth_cookie.Value,
-			func(token *jwt.Token) (interface{}, error) {
-				_, ok := token.Method.(*jwt.SigningMethodHMAC)
-				if !ok {
-					return nil, errors.New("invalid signing method")
-				}
-				return []byte(config_obj.Frontend.PrivateKey), nil
-			})
-		if err != nil {
-			reject(err)
-			return
-		}
-
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok || !token.Valid {
-			reject(errors.New("token not valid"))
-			return
-		}
-
-		// Record the username for handlers lower in the
-		// stack.
-		username, pres := claims["user"].(string)
-		if !pres {
-			reject(errors.New("username not present"))
-			return
-		}
-
-		// Check if the claim is too old.
-		expires, pres := claims["expires"].(float64)
-		if !pres {
-			reject_cb(w, r,
-				errors.New("expires field not present in JWT"),
-				username)
-			return
-		}
-
-		if expires < float64(time.Now().Unix()) {
-			reject_cb(w, r,
-				errors.New("the JWT is expired - reauthenticate"),
-				username)
-			return
-		}
-
-		picture, _ := claims["picture"].(string)
+		username := claims.Username
 
 		// Now check if the user is allowed to log in.
 		users := services.GetUserManager()
@@ -356,7 +290,7 @@ func authenticateUserHandle(
 		// service with metadata about the user.
 		user_info := &api_proto.VelociraptorUser{
 			Name:    username,
-			Picture: picture,
+			Picture: claims.Picture,
 		}
 
 		// Must use json encoding because grpc can not handle
