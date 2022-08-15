@@ -64,6 +64,10 @@ func createInitialUsers(
 			if err != nil {
 				return err
 			}
+
+			logger := logging.GetLogger(config_obj, &logging.Audit)
+			logger.Info("Granting administrator role to %v because they are specified in the config's initial users",
+				user.Name)
 		}
 	}
 	return nil

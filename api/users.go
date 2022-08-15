@@ -2,12 +2,14 @@ package api
 
 import (
 	errors "github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/users"
 )
@@ -31,6 +33,23 @@ func (self *ApiServer) SetPassword(
 
 	// Set the password on the record.
 	users.SetPassword(user_record, in.Password)
+
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return nil, err
+	}
+
+	org_config_obj, err := org_manager.GetOrgConfig("root")
+	if err != nil {
+		return nil, err
+	}
+
+	logger := logging.GetLogger(org_config_obj, &logging.Audit)
+	logger.WithFields(logrus.Fields{
+		"Username":  user_record.Name,
+		"Principal": user_record.Name,
+	}).Info("passwd: Updating password for user %v via API",
+		user_record.Name)
 
 	// Store the record
 	return &emptypb.Empty{}, users_manager.SetUser(user_record)

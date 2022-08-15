@@ -1,0 +1,67 @@
+name: Server.Utils.AddUser
+description: |
+  This server artifact is used to add new user to the Velociraptor
+  GUI.
+
+  A new random password is generated for the user and stored in the
+  server metadata object (to ensure it can not be seen in the output
+  of the artifact itself). The Administrator can share this password
+  with the user later.
+
+  When using SSO (e.g. oauth) this password is not used and can be
+  ignored (Becuase the SSO provider will do the authentication).
+
+type: SERVER
+
+parameters:
+  - name: UserName
+    description: The new username to add
+
+  - name: ResetPassword
+    type: bool
+    default: "Y"
+    description: |
+      Reset the user's password. This must be set when
+      creating the user in the first place.
+
+  - name: Role
+    description: The role to grant the new user.
+    type: choices
+    default: reader
+    choices:
+      - reader
+      - analyst
+      - investigator
+      - administrator
+
+sources:
+  - query: |
+      LET Password <= format(format="%02x", args=rand(range=0xffffffffffff))
+      LET ServerMetadataKey <= "User Password " + UserName
+
+      LET DoIt = SELECT * FROM if(condition=ResetPassword,
+      then={
+        SELECT
+          server_set_metadata(metadata=set(
+             item=server_metadata(),
+             field=ServerMetadataKey, value=Password)),
+          user_create(roles=Role, user=UserName, password=Password)
+        FROM scope()
+        WHERE log(message="New password for user is stored in server metadata under key " + ServerMetadataKey)
+      }, else={
+        -- Just grant the user the specified role
+        SELECT user_create(roles=Role, user=UserName)
+        FROM scope()
+      })
+
+      SELECT * FROM if(condition=UserName,
+      then={
+        SELECT * FROM foreach(row=DoIt,
+        query={
+           SELECT * FROM gui_users()
+           WHERE name =~ UserName
+        })
+      }, else={
+        SELECT * FROM scope()
+        WHERE log(message="A Username must be set") AND FALSE
+      })
