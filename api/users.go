@@ -48,8 +48,7 @@ func (self *ApiServer) SetPassword(
 	logger.WithFields(logrus.Fields{
 		"Username":  user_record.Name,
 		"Principal": user_record.Name,
-	}).Info("passwd: Updating password for user %v via API",
-		user_record.Name)
+	}).Info("passwd: Updating password for user via API")
 
 	// Store the record
 	return &emptypb.Empty{}, users_manager.SetUser(user_record)
