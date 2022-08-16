@@ -315,6 +315,12 @@ message Authenticator {
 
     // MultiAuthenticator delegates to multiple other authenticators.
     repeated Authenticator sub_authenticators = 17;
+
+    // Defaults - no need to change these generally.
+
+    // How long to keep the session alive between auth flows - default
+    // 24 hours
+    uint64 default_session_expiry_min = 20;
 }
 
 message GUIConfig {
