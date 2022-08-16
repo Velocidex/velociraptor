@@ -8,10 +8,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"time"
 
 	oidc "github.com/coreos/go-oidc"
-	jwt "github.com/golang-jwt/jwt"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -72,13 +70,11 @@ func (self *OidcAuthenticatorCognito) oauthOidcCallback(
 			return
 		}
 
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"user":    userInfo.Email,
-			"expires": float64(time.Now().AddDate(0, 0, 1).Unix()),
-		})
-
-		tokenString, err := token.SignedString(
-			[]byte(self.config_obj.Frontend.PrivateKey))
+		cookie, err := getSignedJWTTokenCookie(
+			self.config_obj, self.authenticator,
+			&Claims{
+				Username: userInfo.Email,
+			})
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
@@ -88,14 +84,6 @@ func (self *OidcAuthenticatorCognito) oauthOidcCallback(
 			return
 		}
 
-		cookie := &http.Cookie{
-			Name:     "VelociraptorAuth",
-			Value:    tokenString,
-			Path:     "/",
-			HttpOnly: true,
-			Secure:   true,
-			Expires:  time.Now().AddDate(0, 0, 1),
-		}
 		http.SetCookie(w, cookie)
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 	})

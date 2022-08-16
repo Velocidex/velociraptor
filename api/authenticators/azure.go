@@ -18,14 +18,11 @@
 package authenticators
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
-	"time"
 
-	jwt "github.com/golang-jwt/jwt"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"golang.org/x/oauth2"
@@ -127,18 +124,13 @@ func (self *AzureAuthenticator) oauthAzureCallback() http.Handler {
 
 		// Create a new token object, specifying signing method and the claims
 		// you would like it to contain.
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"user": user_info.Mail,
-
-			// Require re-auth after one day.
-			"expires": float64(time.Now().AddDate(0, 0, 1).Unix()),
-			"picture": "/auth/azure/picture",
-			"token":   user_info.Token,
-		})
-
-		// Sign and get the complete encoded token as a string using the secret
-		tokenString, err := token.SignedString(
-			[]byte(self.config_obj.Frontend.PrivateKey))
+		cookie, err := getSignedJWTTokenCookie(
+			self.config_obj, self.authenticator,
+			&Claims{
+				Username: user_info.Mail,
+				Picture:  "/auth/azure/picture",
+				Token:    user_info.Token,
+			})
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
@@ -148,15 +140,6 @@ func (self *AzureAuthenticator) oauthAzureCallback() http.Handler {
 			return
 		}
 
-		// Set the cookie and redirect.
-		cookie := &http.Cookie{
-			Name:     "VelociraptorAuth",
-			Value:    tokenString,
-			Path:     "/",
-			Secure:   true,
-			HttpOnly: true,
-			Expires:  time.Now().AddDate(0, 0, 1),
-		}
 		http.SetCookie(w, cookie)
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 	})
@@ -225,43 +208,14 @@ func (self *AzureAuthenticator) oauthAzurePicture() http.Handler {
 			w.WriteHeader(http.StatusUnauthorized)
 		}
 
-		auth_cookie, err := r.Cookie("VelociraptorAuth")
+		claims, err := getDetailsFromCookie(self.config_obj, r)
 		if err != nil {
 			reject(err)
-			return
-		}
-
-		// Parse the JWT.
-		token, err := jwt.Parse(
-			auth_cookie.Value,
-			func(token *jwt.Token) (interface{}, error) {
-				_, ok := token.Method.(*jwt.SigningMethodHMAC)
-				if !ok {
-					return nil, errors.New("invalid signing method")
-				}
-				return []byte(self.config_obj.Frontend.PrivateKey), nil
-			})
-		if err != nil {
-			reject(err)
-			return
-		}
-
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if !ok || !token.Valid {
-			reject(errors.New("token not valid"))
-			return
-		}
-
-		// Record the username for handlers lower in the
-		// stack.
-		token_str, pres := claims["token"].(string)
-		if !pres {
-			reject(errors.New("token not present"))
 			return
 		}
 
 		oauth_token := &oauth2.Token{}
-		err = json.Unmarshal([]byte(token_str), &oauth_token)
+		err = json.Unmarshal([]byte(claims.Token), &oauth_token)
 		if err != nil {
 			reject(err)
 			return

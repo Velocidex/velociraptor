@@ -22,9 +22,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"time"
 
-	jwt "github.com/golang-jwt/jwt"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"golang.org/x/oauth2"
@@ -133,18 +131,12 @@ func (self *GitHubAuthenticator) oauthGithubCallback() http.Handler {
 			return
 		}
 
-		// Create a new token object, specifying signing method and the claims
-		// you would like it to contain.
-		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"user": user_info.Login,
-			// Required re-auth after one day.
-			"expires": float64(time.Now().AddDate(0, 0, 1).Unix()),
-			"picture": user_info.AvatarUrl,
-		})
-
-		// Sign and get the complete encoded token as a string using the secret
-		tokenString, err := token.SignedString(
-			[]byte(self.config_obj.Frontend.PrivateKey))
+		cookie, err := getSignedJWTTokenCookie(
+			self.config_obj, self.authenticator,
+			&Claims{
+				Username: user_info.Login,
+				Picture:  user_info.AvatarUrl,
+			})
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				WithFields(logrus.Fields{
@@ -154,15 +146,6 @@ func (self *GitHubAuthenticator) oauthGithubCallback() http.Handler {
 			return
 		}
 
-		// Set the cookie and redirect.
-		cookie := &http.Cookie{
-			Name:     "VelociraptorAuth",
-			Value:    tokenString,
-			Path:     "/",
-			Secure:   true,
-			HttpOnly: true,
-			Expires:  time.Now().AddDate(0, 0, 1),
-		}
 		http.SetCookie(w, cookie)
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 	})
