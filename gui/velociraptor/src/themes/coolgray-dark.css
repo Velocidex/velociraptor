@@ -877,7 +877,7 @@ body.coolgray-dark {
   background: var(--color-accent-50);
 }
 
-.coolgray-dark .dropdown-item:active {
+.coolgray-dark .dropdown-item.active {
   background: var(--color-accent-50);
 }
 

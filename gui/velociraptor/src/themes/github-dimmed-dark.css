@@ -736,7 +736,7 @@ body.github-dimmed-dark {
   background: var(--color-accent-50);
 }
 
-.github-dimmed-dark .dropdown-item:active {
+.github-dimmed-dark .dropdown-item.active {
   background: var(--color-accent-50);
 }
 
