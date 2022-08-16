@@ -408,7 +408,7 @@ body.ncurses {
   background: var(--color-btn-default-background-hover);
 }
 
-.ncurses .dropdown-item:active {
+.ncurses .dropdown-item.active {
   background: var(--color-btn-default-background-hover);
 }
 
