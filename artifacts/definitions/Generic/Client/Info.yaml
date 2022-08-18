@@ -39,7 +39,21 @@ sources:
     query: |
       SELECT
       {
-            SELECT DNSHostName,  Name, Domain, TotalPhysicalMemory
+            SELECT DNSHostName,  Name, Domain, TotalPhysicalMemory,
+                  if(condition= DomainRole=0,
+                    then='Standalone Workstation',
+                    else=if(condition= DomainRole=1,
+                        then='Member Workstation',
+                        else=if(condition= DomainRole=2,
+                            then='Standalone Server',
+                            else=if(condition= DomainRole=3,
+                                then='Member Server',
+                                else=if(condition= DomainRole=4,
+                                    then='Backup Domain Controller',
+                                    else=if(condition= DomainRole=5,
+                                        then= 'Primary Domain Controller',
+                                        else= 'Unknown' )))))
+                    ) AS DomainRole
             FROM wmi(
                query='SELECT * FROM win32_computersystem')
           } AS `Computer Info`,
