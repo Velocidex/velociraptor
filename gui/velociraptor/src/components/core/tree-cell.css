@@ -1,0 +1,12 @@
+.tree-button {
+    padding-left: 10px;
+}
+
+.tree-modal-body {
+    padding: 0;
+}
+
+.tree-data-pane {
+    height: 100%;
+    overflow: auto;
+}
