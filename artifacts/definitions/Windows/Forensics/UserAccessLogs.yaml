@@ -11,11 +11,24 @@ reference:
   - https://docs.microsoft.com/en-us/windows-server/administration/user-access-logging/manage-user-access-logging
   - https://www.crowdstrike.com/blog/user-access-logging-ual-overview/
 
+export: |
+    LET IPProfile = '''[
+      ["X", 0, [
+        ["A", 0, "uint8"],
+        ["B", 1, "uint8"],
+        ["C", 2, "uint8"],
+        ["D", 3, "uint8"],
+        ["IP", 0, "Value", {
+           value: "x=> format(format='%d.%d.%d.%d', args=[x.A, x.B, x.C, x.D])"
+        }]
+      ]]
+    ]'''
+
 parameters:
    - name: SUMGlob
      description: The SUM ESE files to search for.
-     default: |
-       C:\Windows\System32\LogFiles\SUM\*.mdb
+     default: >-
+       C:/Windows/System32/LogFiles/SUM/*.mdb
 
 sources:
   - query: |
@@ -46,7 +59,9 @@ sources:
         LET FormatAddress(x) = if(condition=len(list=x) = 4,
 
          -- IPv4 address should be formatted in dot notation
-         then=format(format="%d.%d.%d.%d", args=[x[0], x[1], x[2], x[3]]),
+         then=parse_binary(accessor="data",
+                           filename=Address, struct="X",
+                           profile=IPProfile).IP,
          else=if(condition=len(list=x)=16,
            -- IPv6 addresses are usually shortened
            then=regex_replace(source=format(format="%x", args=x),
@@ -55,9 +70,10 @@ sources:
            -- We dont know what kind of address it is.
            else=format(format="%x", args=x)))
 
-        LET ParseESE = SELECT FullPath AS _FullPath, RoleGuid,
+        LET ParseESE = SELECT OSPath AS _OSPath, RoleGuid,
                GetRoleName(guid=RoleGuid)[0].RoleName AS RoleName,
                TenantId, TotalAccesses, InsertDate, LastAccess,
+               format(format="%02x", args=Address) AS RawAddress,
                FormatAddress(x=Address) AS Address,
                AuthenticatedUserName,
                -- Only show the days that have something in them.
@@ -68,9 +84,9 @@ sources:
                  FROM range(start=0, end=366, step=1)
                  WHERE _value
                }) AS Days
-        FROM parse_ese(file=FullPath, table="CLIENTS")
+        FROM parse_ese(file=OSPath, table="CLIENTS", accessor="auto")
 
         SELECT * FROM foreach(row={
-          SELECT FullPath
-          FROM glob(globs=SUMGlob)
+          SELECT OSPath
+          FROM glob(globs=SUMGlob, accessor="auto")
         }, query=ParseESE)
