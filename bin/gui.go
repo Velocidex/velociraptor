@@ -178,6 +178,9 @@ func doGUI() error {
 		fd.Close()
 	}
 
+	if config_obj.Frontend == nil {
+		config_obj.Frontend = &config_proto.FrontendConfig{}
+	}
 	if config_obj.Frontend.ServerServices == nil {
 		config_obj.Frontend.ServerServices = services.AllServerServicesSpec()
 	}
