@@ -395,6 +395,20 @@ func doDumpApiClientConfig() error {
 			"api keys with this name.")
 	}
 
+	if config_obj.Frontend == nil {
+		config_obj.Frontend = &config_proto.FrontendConfig{}
+	}
+	config_obj.Frontend.ServerServices = services.GenericToolServices()
+
+	ctx, cancel := install_sig_handler()
+	defer cancel()
+
+	sm, err := startup.StartToolServices(ctx, config_obj)
+	if err != nil {
+		return fmt.Errorf("Starting services: %w", err)
+	}
+	defer sm.Close()
+
 	bundle, err := crypto.GenerateServerCert(
 		config_obj, *config_api_client_common_name)
 	if err != nil {

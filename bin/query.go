@@ -54,6 +54,10 @@ var (
 		"timeout", "Time collection out after this many seconds.").
 		Default("0").Float64()
 
+	query_org_id = query.Flag(
+		"org", "The Org ID to target with this query").
+		Default("root").String()
+
 	query_command_collect_cpu_limit = query.Flag(
 		"cpu_limit", "A number between 0 to 100 representing maximum CPU utilization.").
 		Default("0").Float64()
@@ -164,6 +168,7 @@ func doRemoteQuery(
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 
 	request := &actions_proto.VQLCollectorArgs{
+		OrgId:    *query_org_id,
 		MaxRow:   1000,
 		MaxWait:  1,
 		CpuLimit: float32(*query_command_collect_cpu_limit),
@@ -252,6 +257,11 @@ func doQuery() error {
 	if err != nil {
 		return err
 	}
+
+	if config_obj.Frontend == nil {
+		config_obj.Frontend = &config_proto.FrontendConfig{}
+	}
+	config_obj.Frontend.ServerServices = services.GenericToolServices()
 
 	ctx, cancel := install_sig_handler()
 	defer cancel()

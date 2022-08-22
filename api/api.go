@@ -845,6 +845,22 @@ func (self *ApiServer) Query(
 
 	user_name := user_info.Name
 
+	// If the caller wants to switch orgs, change the config to point
+	// to that org. We check permission immediately below to ensure
+	// they actually have the permission to query this org.
+	if in.OrgId != "" {
+		// Fetch the appropriate config file fro the org manager.
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return err
+		}
+
+		org_config_obj, err = org_manager.GetOrgConfig(in.OrgId)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Check that the principal is allowed to issue queries.
 	permissions := acls.ANY_QUERY
 	ok, err := acls.CheckAccess(org_config_obj, user_name, permissions)
