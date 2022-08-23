@@ -77,12 +77,12 @@ What OS will the server be deployed on?
 	}
 
 	output_question = &survey.Input{
-		Message: "Where should i write the server config file?",
+		Message: "Where should I write the server config file?",
 		Default: "server.config.yaml",
 	}
 
 	client_output_question = &survey.Input{
-		Message: "Where should i write the client config file?",
+		Message: "Where should I write the client config file?",
 		Default: "client.config.yaml",
 	}
 
