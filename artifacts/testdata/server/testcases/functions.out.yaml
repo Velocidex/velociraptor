@@ -95,11 +95,11 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
   "all(items= [\"Hi\", \"There\"], regex='Hi')": false,
   "all(items= [\"Hi\", \"There\"], regex='Hi|There')": true
  }
-]SELECT all(items=TestArray, regex=['Hello', 'Uni', 'Wo', 'G']), all(items=TestArray, regex=['Hello', 'Uni']), all(items=["Hi", "There"], regex=['Hi', 'There']) FROM scope()[
+]SELECT all(items="Hi There", regex=['Hi', "Goodbye"]), all(items="Hi There", regex=['Hi', "ere"]), all(items=["Hi", "There"], regex=['H|T', 'i|r']) FROM scope()[
  {
-  "all(items=TestArray, regex= ['Hello', 'Uni', 'Wo', 'G'])": true,
-  "all(items=TestArray, regex= ['Hello', 'Uni'])": false,
-  "all(items= [\"Hi\", \"There\"], regex= ['Hi', 'There'])": true
+  "all(items=\"Hi There\", regex= ['Hi', \"Goodbye\"])": false,
+  "all(items=\"Hi There\", regex= ['Hi', \"ere\"])": true,
+  "all(items= [\"Hi\", \"There\"], regex= ['H|T', 'i|r'])": true
  }
 ]LET TestArray <= (dict(X=1, Y="Hello"), dict(X=2, Y="Goodbye"), dict(X=1, Y="World"))[]SELECT *, all(items=Y, filter="x=>x =~ 'Hello|World'"), all(items=Y, filter="x=>x =~ 'World'"), all(items=Y, filter="x=>x =~ 'Goodby'") FROM foreach(row=TestArray) GROUP BY X[
  {
