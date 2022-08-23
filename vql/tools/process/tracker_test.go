@@ -147,6 +147,25 @@ FROM scope()
 		},
 
 		{
+			Name: "Pid reuse with missing parent",
+			// First sync has a process with the missing parent (pid 5
+			// is not known). On the second sync that process is
+			// reused with a new process with pid 5 (and a different
+			// parent 10). The tracker should **not** associate the
+			// 2->5->10 chain sincce this is not correct.
+			Mock: `
+[
+ [{"Pid":2,"Name":"Process2","Ppid":5,"CreateTime": "2021-01-01T12:30Z"}
+ ],
+ [{"Pid":5,"Name":"Process2","Ppid":10,"CreateTime": "2021-01-01T12:30Z"},
+  {"Pid":2,"Name":"NewProcess5","Ppid":5,"CreateTime": "2021-01-01T12:30Z"}
+ ]
+]`,
+			Query: stockSyncTest,
+			Clock: &utils.IncClock{NowTime: 1651000000},
+		},
+
+		{
 			Name: "Spoof (update)",
 			Mock: `
 [
