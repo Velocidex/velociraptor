@@ -34,22 +34,21 @@ func (self _AllFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *v
 	}
 }
 
-func evalCondition(
+func evalAllCondition(
 	ctx context.Context,
 	scope vfilter.Scope,
 	arg *_AllFunctionArgs,
 	value vfilter.Any) bool {
 
-	// If a list of regex is given then we match if any of the regex
-	// match - this is a convenience for the regex alternate operator
-	// (X|Y|Z).
+	// If a list of regex is given then we match if all of the regex
+	// match.
 	if len(arg.Regex) > 0 {
 		for _, regex := range arg.Regex {
-			if scope.Match(regex, value) {
-				return true
+			if !scope.Match(regex, value) {
+				return false
 			}
 		}
-		return false
+		return true
 	}
 
 	if arg.Filter != nil {
@@ -108,7 +107,7 @@ func (self _AllFunction) Call(
 	case types.StoredQuery:
 		for row := range t.Eval(ctx, scope) {
 			// Evaluate the row with the callback
-			triggered = evalCondition(ctx, scope, arg, row)
+			triggered = evalAllCondition(ctx, scope, arg, row)
 			if !triggered {
 				return false
 			}
@@ -122,7 +121,7 @@ func (self _AllFunction) Call(
 	if a_type.Kind() == reflect.Slice {
 		for i := 0; i < a_value.Len(); i++ {
 			element := a_value.Index(i).Interface()
-			triggered = evalCondition(ctx, scope, arg, element)
+			triggered = evalAllCondition(ctx, scope, arg, element)
 			if !triggered {
 				return false
 			}
@@ -137,7 +136,7 @@ func (self _AllFunction) Call(
 		for _, item := range members {
 			value, pres := scope.Associative(arg.Items, item)
 			if pres {
-				triggered = evalCondition(ctx, scope, arg, value)
+				triggered = evalAllCondition(ctx, scope, arg, value)
 				if !triggered {
 					return false
 				}
@@ -147,7 +146,7 @@ func (self _AllFunction) Call(
 	}
 
 	// We dont know what the item actually is - let the callback tell us
-	triggered = evalCondition(ctx, scope, arg, arg.Items)
+	triggered = evalAllCondition(ctx, scope, arg, arg.Items)
 	return triggered
 }
 

@@ -90,10 +90,11 @@ Queries:
            all(items=["Hi", "There"], regex='Hi|There')
     FROM scope()
 
-  # Or multiple regex
-  - SELECT all(items=TestArray, regex=['Hello', 'Uni', 'Wo', 'G']),
-           all(items=TestArray, regex=['Hello', 'Uni']),
-           all(items=["Hi", "There"], regex=['Hi', 'There'])
+  # Or multiple regex in an array - in which case ALL regex must match
+  # every item
+  - SELECT all(items="Hi There", regex=['Hi', "Goodbye"]),
+           all(items="Hi There", regex=['Hi', "ere"]),
+           all(items=["Hi", "There"], regex=['H|T', 'i|r'])
     FROM scope()
 
   # all() can also operate on GROUP BY

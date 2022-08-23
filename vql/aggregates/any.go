@@ -24,6 +24,31 @@ func (self _AnyFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *v
 	}
 }
 
+func evalAnyCondition(
+	ctx context.Context,
+	scope vfilter.Scope,
+	arg *_AllFunctionArgs,
+	value vfilter.Any) bool {
+
+	// If a list of regex is given then we match if any of the regex
+	// match - this is a convenience for the regex alternate operator
+	// (X|Y|Z).
+	if len(arg.Regex) > 0 {
+		for _, regex := range arg.Regex {
+			if scope.Match(regex, value) {
+				return true
+			}
+		}
+		return false
+	}
+
+	if arg.Filter != nil {
+		return scope.Bool(arg.Filter.Reduce(ctx, scope, []types.Any{value}))
+	}
+
+	return false
+}
+
 func (self _AnyFunction) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
@@ -73,7 +98,7 @@ func (self _AnyFunction) Call(
 	case types.StoredQuery:
 		for row := range t.Eval(ctx, scope) {
 			// Evaluate the row with the canyback
-			triggered = evalCondition(ctx, scope, arg, row)
+			triggered = evalAnyCondition(ctx, scope, arg, row)
 			if triggered {
 				return true
 			}
@@ -87,7 +112,7 @@ func (self _AnyFunction) Call(
 	if a_type.Kind() == reflect.Slice {
 		for i := 0; i < a_value.Len(); i++ {
 			element := a_value.Index(i).Interface()
-			triggered = evalCondition(ctx, scope, arg, element)
+			triggered = evalAnyCondition(ctx, scope, arg, element)
 			if triggered {
 				return true
 			}
@@ -102,7 +127,7 @@ func (self _AnyFunction) Call(
 		for _, item := range members {
 			value, pres := scope.Associative(arg.Items, item)
 			if pres {
-				triggered = evalCondition(ctx, scope, arg, value)
+				triggered = evalAnyCondition(ctx, scope, arg, value)
 				if triggered {
 					return true
 				}
@@ -112,7 +137,7 @@ func (self _AnyFunction) Call(
 	}
 
 	// We dont know what the item actuanyy is - let the canyback tell us
-	triggered = evalCondition(ctx, scope, arg, arg.Items)
+	triggered = evalAnyCondition(ctx, scope, arg, arg.Items)
 	return triggered
 }
 
