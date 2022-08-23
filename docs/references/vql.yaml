@@ -26,6 +26,22 @@
     type: LazyExpr
     description: A dict of artifact parameters
   category: server
+- name: all
+  description: Returns TRUE if all items are true.
+  type: Function
+  args:
+  - name: items
+    type: Any
+    description: The items to consider. Can be an array, subquery or stored query.
+      Will only be lazily evaluted!
+    required: true
+  - name: filter
+    type: vfilter.Lambda
+    description: A callback to consider each item
+  - name: regex
+    type: string
+    description: Optionally one or more regex can be provided for convenience
+    repeated: true
 - name: amsi
   description: |
     AMSI is an interface on windows to scan a string for malware. This
@@ -38,6 +54,22 @@
     description: A string to scan
     required: true
   category: windows
+- name: any
+  description: Returns TRUE if any items are true.
+  type: Function
+  args:
+  - name: items
+    type: Any
+    description: The items to consider. Can be an array, subquery or stored query.
+      Will only be lazily evaluted!
+    required: true
+  - name: filter
+    type: vfilter.Lambda
+    description: A callback to consider each item
+  - name: regex
+    type: string
+    description: Optionally one or more regex can be provided for convenience
+    repeated: true
 - name: appcompatcache
   description: Parses the appcompatcache.
   type: Plugin
@@ -3957,6 +3989,17 @@
 - name: process_tracker_pslist
   description: List all processes from the process tracker.
   type: Plugin
+- name: process_tracker_tree
+  description: Get the full process tree under the process id.
+  type: Function
+  args:
+  - name: id
+    type: string
+    description: Process ID.
+  - name: data_callback
+    type: vfilter.Lambda
+    description: A VQL Lambda function to that receives a ProcessEntry and returns
+      the data node for each process.
 - name: process_tracker_updates
   description: Get the process tracker update events from the global process tracker.
   type: Plugin

@@ -5,6 +5,7 @@ package protocols
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/vfilter"
@@ -21,11 +22,14 @@ func parseLambda(ctx context.Context, scope types.Scope, args *ordereddict.Dict,
 	value interface{}) (interface{}, error) {
 
 	switch t := value.(type) {
+	case types.LazyExpr:
+		return parseLambda(ctx, scope, args, t.Reduce(ctx))
+
 	case string:
 		// Compile the batch lambda.
 		return vfilter.ParseLambda(t)
 	default:
-		return nil, invalidLambdaError
+		return nil, fmt.Errorf("Got field type %T: %w", value, invalidLambdaError)
 	}
 }
 
