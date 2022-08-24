@@ -592,6 +592,11 @@ func NewNotificationReader(
 		maxPollDev = 30
 	}
 
+	minPoll := config_obj.Client.MinPoll
+	if minPoll == 0 {
+		minPoll = 1
+	}
+
 	return &NotificationReader{
 		config_obj:            config_obj,
 		connector:             connector,
@@ -601,7 +606,7 @@ func NewNotificationReader(
 		name:                  name,
 		handler:               handler,
 		logger:                logger,
-		minPoll:               time.Duration(1) * time.Second,
+		minPoll:               time.Duration(minPoll) * time.Second,
 		maxPoll:               time.Duration(config_obj.Client.MaxPoll) * time.Second,
 		maxPollDev:            maxPollDev,
 		current_poll_duration: time.Second,
