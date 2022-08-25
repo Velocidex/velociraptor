@@ -611,3 +611,41 @@ func NewFileStorePath(path string) (*OSPath, error) {
 	err := manipulator.PathParse(path, result)
 	return result, err
 }
+
+// The OSPath object for raw files is unchanged - We must pass exactly
+// the same form as given to the underlying filesystem APIs. On
+// Windows this is some kind of device description like
+// \\?\GLOBALROOT\Device\Harddisk0\DR0 for example, but we never
+// attempt to parse it - just forward to the API as is.
+type RawFileManipulator struct{}
+
+func (self RawFileManipulator) AsPathSpec(path *OSPath) *PathSpec {
+	result := &PathSpec{}
+	if len(path.Components) == 0 {
+		return result
+	}
+
+	result.Path = path.Components[0]
+	return result
+}
+
+func (self RawFileManipulator) PathJoin(path *OSPath) string {
+	if len(path.Components) == 0 {
+		return ""
+	}
+	return path.Components[0]
+}
+
+func (self RawFileManipulator) PathParse(
+	path string, result *OSPath) error {
+	result.Components = []string{path}
+	return nil
+}
+
+func NewRawFilePath(path string) (*OSPath, error) {
+	manipulator := &RawFileManipulator{}
+	return &OSPath{
+		Components:  []string{path},
+		Manipulator: manipulator,
+	}, nil
+}

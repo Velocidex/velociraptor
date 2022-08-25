@@ -26,7 +26,7 @@ import (
 type RawFileSystemAccessor struct{}
 
 func (self RawFileSystemAccessor) ParsePath(path string) (*accessors.OSPath, error) {
-	return accessors.NewPathspecOSPath(path)
+	return accessors.NewRawFilePath(path)
 }
 
 func (self RawFileSystemAccessor) New(scope vfilter.Scope) (
@@ -54,7 +54,7 @@ func (self RawFileSystemAccessor) ReadDirWithOSPath(
 
 func (self RawFileSystemAccessor) OpenWithOSPath(
 	filename *accessors.OSPath) (accessors.ReadSeekCloser, error) {
-	return self.Open(filename.String())
+	return self.Open(filename.Path())
 }
 
 func (self RawFileSystemAccessor) Open(filename string) (accessors.ReadSeekCloser, error) {

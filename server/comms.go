@@ -472,7 +472,7 @@ func reader(server_obj *Server) http.Handler {
 
 		// If client is not known, make it enrol. This can happen for
 		// example, when the client was just deleted, but we still
-		// have ciphers cached to it - the client is not know but we
+		// have ciphers cached to it - the client is not known but we
 		// can still verify the comms as authenticated. NOTE: this
 		// check should be very quick since it is just a lookup in the
 		// client info manager's LRU.
@@ -484,7 +484,7 @@ func reader(server_obj *Server) http.Handler {
 				return
 			}
 
-			// This should triggen an enrollment flow.
+			// This should trigger an enrollment flow.
 			err = journal.PushRowsToArtifact(org_config_obj,
 				[]*ordereddict.Dict{
 					ordereddict.NewDict().
