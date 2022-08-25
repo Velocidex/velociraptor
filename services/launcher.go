@@ -123,6 +123,7 @@ type Launcher interface {
 	// Take the compiled requests from above and schedule them on the
 	// client.
 	ScheduleArtifactCollectionFromCollectorArgs(
+		ctx context.Context,
 		config_obj *config_proto.Config,
 		collector_request *flows_proto.ArtifactCollectorArgs,
 		vql_collector_args []*actions_proto.VQLCollectorArgs,

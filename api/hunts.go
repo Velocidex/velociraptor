@@ -70,7 +70,7 @@ func (self *ApiServer) GetHuntFlows(
 
 		row_data := []string{
 			flow.Context.ClientId,
-			services.GetHostname(org_config_obj, flow.Context.ClientId),
+			services.GetHostname(ctx, org_config_obj, flow.Context.ClientId),
 			flow.Context.SessionId,
 			csv.AnyToString(flow.Context.StartTime / 1000),
 			flow.Context.State.String(),
@@ -342,7 +342,7 @@ func (self *ApiServer) EstimateHunt(
 			return
 		}
 
-		stats, err := client_info_manager.GetStats(client_id)
+		stats, err := client_info_manager.GetStats(ctx, client_id)
 		if err == nil && now-in.LastActive*1000000 < stats.Ping {
 			seen[client_id] = true
 		}
@@ -398,7 +398,7 @@ func (self *ApiServer) EstimateHunt(
 			for hit := range indexer.SearchIndexWithPrefix(ctx,
 				org_config_obj, "all") {
 				client_id := hit.Entity
-				client_info, err := client_info_manager.Get(client_id)
+				client_info, err := client_info_manager.Get(ctx, client_id)
 				if err == nil {
 					if os_name == client_info.System {
 						is_client_recent(hit.Entity, seen)

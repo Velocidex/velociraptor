@@ -1,6 +1,7 @@
 package labels_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -45,11 +46,11 @@ func (self *LabelsTestSuite) TestAddLabel() {
 	now := uint64(self.Clock.Now().UnixNano())
 
 	labeler := services.GetLabeler(self.ConfigObj)
-	err = labeler.SetClientLabel(self.ConfigObj, self.client_id, "Label1")
+	err = labeler.SetClientLabel(context.Background(), self.ConfigObj, self.client_id, "Label1")
 	assert.NoError(self.T(), err)
 
 	// Set the label twice - it should only set one label.
-	err = labeler.SetClientLabel(self.ConfigObj, self.client_id, "Label1")
+	err = labeler.SetClientLabel(context.Background(), self.ConfigObj, self.client_id, "Label1")
 	assert.NoError(self.T(), err)
 
 	// Make sure the new record is created in the data store.
@@ -62,30 +63,38 @@ func (self *LabelsTestSuite) TestAddLabel() {
 	assert.Equal(self.T(), record.Label, []string{"Label1"})
 
 	// Checking against the label should work
-	assert.True(self.T(), labeler.IsLabelSet(self.ConfigObj, self.client_id, "Label1"))
+	assert.True(self.T(), labeler.IsLabelSet(
+		context.Background(), self.ConfigObj, self.client_id, "Label1"))
 	// case insensitive.
-	assert.True(self.T(), labeler.IsLabelSet(self.ConfigObj, self.client_id, "label1"))
+	assert.True(self.T(), labeler.IsLabelSet(
+		context.Background(), self.ConfigObj, self.client_id, "label1"))
 
-	assert.False(self.T(), labeler.IsLabelSet(self.ConfigObj, self.client_id, "Label2"))
+	assert.False(self.T(), labeler.IsLabelSet(
+		context.Background(), self.ConfigObj, self.client_id, "Label2"))
 
 	// All clients belong to the All label.
-	assert.True(self.T(), labeler.IsLabelSet(self.ConfigObj, self.client_id, "All"))
+	assert.True(self.T(), labeler.IsLabelSet(
+		context.Background(), self.ConfigObj, self.client_id, "All"))
 
 	// The timestamp should be reasonable
 	assert.Greater(self.T(), labeler.LastLabelTimestamp(
-		self.ConfigObj, self.client_id), now)
+		context.Background(), self.ConfigObj, self.client_id), now)
 
 	// remember the time of the last update
-	now = labeler.LastLabelTimestamp(self.ConfigObj, self.client_id)
+	now = labeler.LastLabelTimestamp(
+		context.Background(), self.ConfigObj, self.client_id)
 
 	// Now remove the label.
-	err = labeler.RemoveClientLabel(self.ConfigObj, self.client_id, "Label1")
+	err = labeler.RemoveClientLabel(
+		context.Background(), self.ConfigObj, self.client_id, "Label1")
 	assert.NoError(self.T(), err)
 
-	assert.False(self.T(), labeler.IsLabelSet(self.ConfigObj, self.client_id, "Label1"))
+	assert.False(self.T(), labeler.IsLabelSet(
+		context.Background(), self.ConfigObj, self.client_id, "Label1"))
 
 	// The timestamp should be later than the previous time
-	assert.Greater(self.T(), labeler.LastLabelTimestamp(self.ConfigObj, self.client_id), now)
+	assert.Greater(self.T(), labeler.LastLabelTimestamp(
+		context.Background(), self.ConfigObj, self.client_id), now)
 }
 
 // Check that two labelers can syncronize changes between them via the
@@ -102,20 +111,25 @@ func (self *LabelsTestSuite) TestSyncronization() {
 		fmt.Sprintf("%v", labeler2))
 
 	// Label is not set - fill the internal caches.
-	assert.False(self.T(), labeler1.IsLabelSet(self.ConfigObj, self.client_id, "Label1"))
-	assert.False(self.T(), labeler2.IsLabelSet(self.ConfigObj, self.client_id, "Label1"))
+	assert.False(self.T(), labeler1.IsLabelSet(
+		context.Background(), self.ConfigObj, self.client_id, "Label1"))
+	assert.False(self.T(), labeler2.IsLabelSet(
+		context.Background(), self.ConfigObj, self.client_id, "Label1"))
 
 	// Set the label in one labeler and wait for the change to be
 	// propagagted to the second labeler.
-	err = labeler1.SetClientLabel(self.ConfigObj, self.client_id, "Label1")
+	err = labeler1.SetClientLabel(
+		context.Background(), self.ConfigObj, self.client_id, "Label1")
 	assert.NoError(self.T(), err)
 
-	assert.True(self.T(), labeler1.IsLabelSet(self.ConfigObj, self.client_id, "Label1"))
+	assert.True(self.T(), labeler1.IsLabelSet(
+		context.Background(), self.ConfigObj, self.client_id, "Label1"))
 
 	// Labeler2 should be able to pick up the changes by itself
 	// within a short time.
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		return labeler2.IsLabelSet(self.ConfigObj, self.client_id, "Label1")
+		return labeler2.IsLabelSet(
+			context.Background(), self.ConfigObj, self.client_id, "Label1")
 	})
 }
 

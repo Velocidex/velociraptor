@@ -171,6 +171,7 @@ func updateContext(
 // therefore ensure that we only send a System.Flow.Completion message
 // once a status is received and not again.
 func closeContext(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	collection_context *CollectionContext) error {
 
@@ -185,7 +186,7 @@ func closeContext(
 	}
 
 	// Decide if this collection exceeded its quota.
-	err := checkContextResourceLimits(config_obj, collection_context)
+	err := checkContextResourceLimits(ctx, config_obj, collection_context)
 	if err != nil {
 		return err
 	}
@@ -668,12 +669,12 @@ func NewFlowRunner(config_obj *config_proto.Config) *FlowRunner {
 	}
 }
 
-func (self *FlowRunner) Close() {
+func (self *FlowRunner) Close(ctx context.Context) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	for _, collection_context := range self.context_map {
-		err := closeContext(self.config_obj, collection_context)
+		err := closeContext(ctx, self.config_obj, collection_context)
 		if err != nil {
 			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 			logger.Error("While closing flow %v for client %v: %v",
@@ -731,7 +732,7 @@ func (self *FlowRunner) ProcessSingleMessage(
 				return
 			}
 
-			err = client_manager.QueueMessageForClient(job.Source,
+			err = client_manager.QueueMessageForClient(ctx, job.Source,
 				&crypto_proto.VeloMessage{
 					Cancel:    &crypto_proto.Cancel{},
 					SessionId: job.SessionId,

@@ -231,7 +231,8 @@ func (self *ClientInfoManager) GetCachedClients() []string {
 	return self.lru.GetKeys()
 }
 
-func (self *ClientInfoManager) GetStats(client_id string) (*services.Stats, error) {
+func (self *ClientInfoManager) GetStats(
+	ctx context.Context, client_id string) (*services.Stats, error) {
 	cached_info, err := self.GetCacheInfo(client_id)
 	if err != nil {
 		return nil, err
@@ -242,7 +243,7 @@ func (self *ClientInfoManager) GetStats(client_id string) (*services.Stats, erro
 
 // Checks the notification service for all currently connected clients
 // so we may send the most up to date Ping information possible.
-func (self *ClientInfoManager) UpdateMostRecentPing() {
+func (self *ClientInfoManager) UpdateMostRecentPing(ctx context.Context) {
 	notifier, err := services.GetNotifier(self.config_obj)
 	if err != nil {
 		return
@@ -252,12 +253,13 @@ func (self *ClientInfoManager) UpdateMostRecentPing() {
 	for _, client_id := range self.mutation_manager.pings.Keys() {
 		if notifier.IsClientDirectlyConnected(client_id) {
 			update_stat.Ping = now
-			self.UpdateStats(client_id, update_stat)
+			self.UpdateStats(ctx, client_id, update_stat)
 		}
 	}
 }
 
 func (self *ClientInfoManager) UpdateStats(
+	ctx context.Context,
 	client_id string,
 	stats *services.Stats) error {
 	cached_info, err := self.GetCacheInfo(client_id)
@@ -498,7 +500,7 @@ func (self *ClientInfoManager) ProcessPing(
 	return nil
 }
 
-func (self *ClientInfoManager) Flush(client_id string) {
+func (self *ClientInfoManager) Flush(ctx context.Context, client_id string) {
 	cache_info, err := self.GetCacheInfo(client_id)
 	if err == nil {
 		cache_info.Flush()
@@ -539,11 +541,12 @@ func (self *ClientInfoManager) Clear() {
 	self.lru.Purge()
 }
 
-func (self *ClientInfoManager) Remove(client_id string) {
+func (self *ClientInfoManager) Remove(ctx context.Context, client_id string) {
 	self.lru.Remove(client_id)
 }
 
-func (self *ClientInfoManager) Get(client_id string) (*services.ClientInfo, error) {
+func (self *ClientInfoManager) Get(
+	ctx context.Context, client_id string) (*services.ClientInfo, error) {
 	cached_info, err := self.GetCacheInfo(client_id)
 	if err != nil {
 		return nil, err
@@ -557,7 +560,8 @@ func (self *ClientInfoManager) Get(client_id string) (*services.ClientInfo, erro
 	return &res, nil
 }
 
-func (self *ClientInfoManager) Set(client_info *services.ClientInfo) error {
+func (self *ClientInfoManager) Set(
+	ctx context.Context, client_info *services.ClientInfo) error {
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err

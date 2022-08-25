@@ -81,7 +81,7 @@ func (self *ClientInfoManager) ProcessNotification(
 }
 
 func (self *ClientInfoManager) UnQueueMessageForClient(
-	client_id string,
+	ctx context.Context, client_id string,
 	message *crypto_proto.VeloMessage) error {
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
@@ -94,6 +94,7 @@ func (self *ClientInfoManager) UnQueueMessageForClient(
 }
 
 func (self *ClientInfoManager) QueueMessagesForClient(
+	ctx context.Context,
 	client_id string,
 	req []*crypto_proto.VeloMessage,
 	/* Also notify the client about the new task */
@@ -139,6 +140,7 @@ func (self *ClientInfoManager) QueueMessagesForClient(
 }
 
 func (self *ClientInfoManager) QueueMessageForClient(
+	ctx context.Context,
 	client_id string,
 	req *crypto_proto.VeloMessage, notify bool,
 	completion func()) error {
@@ -178,8 +180,8 @@ func (self *ClientInfoManager) QueueMessageForClient(
 
 // Get the client tasks but do not dequeue them (Generally only called
 // by tests).
-func (self *ClientInfoManager) PeekClientTasks(client_id string) (
-	[]*crypto_proto.VeloMessage, error) {
+func (self *ClientInfoManager) PeekClientTasks(ctx context.Context,
+	client_id string) ([]*crypto_proto.VeloMessage, error) {
 
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
@@ -209,7 +211,8 @@ func (self *ClientInfoManager) PeekClientTasks(client_id string) (
 	return result, nil
 }
 
-func (self *ClientInfoManager) GetClientTasks(client_id string) (
+func (self *ClientInfoManager) GetClientTasks(
+	ctx context.Context, client_id string) (
 	[]*crypto_proto.VeloMessage, error) {
 	cached_info, err := self.GetCacheInfo(client_id)
 	if err != nil {

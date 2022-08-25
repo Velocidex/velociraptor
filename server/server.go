@@ -278,7 +278,7 @@ func (self *Server) Process(
 	}
 
 	runner := flows.NewFlowRunner(config_obj)
-	defer runner.Close()
+	defer runner.Close(ctx)
 
 	err = runner.ProcessMessages(ctx, message_info)
 	if err != nil {
@@ -289,7 +289,7 @@ func (self *Server) Process(
 	if err != nil {
 		return nil, 0, err
 	}
-	err = client_info_manager.UpdateStats(message_info.Source,
+	err = client_info_manager.UpdateStats(ctx, message_info.Source,
 		&services.Stats{
 			Ping:      uint64(time.Now().UnixNano() / 1000),
 			IpAddress: message_info.RemoteAddr,
@@ -300,7 +300,7 @@ func (self *Server) Process(
 
 	message_list := &crypto_proto.MessageList{}
 	if drain_requests_for_client {
-		tasks, err := client_info_manager.GetClientTasks(message_info.Source)
+		tasks, err := client_info_manager.GetClientTasks(ctx, message_info.Source)
 		if err == nil {
 			message_list.Job = append(message_list.Job, tasks...)
 		}

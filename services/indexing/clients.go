@@ -46,14 +46,14 @@ func GetApiClient(
 		return nil, errors.New("Labeler not ready")
 	}
 
-	result.Labels = labeler.GetClientLabels(config_obj, client_id)
+	result.Labels = labeler.GetClientLabels(ctx, config_obj, client_id)
 
 	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	client_info, err := client_info_manager.Get(client_id)
+	client_info, err := client_info_manager.Get(ctx, client_id)
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func (self *Indexer) FastGetApiClient(
 		return nil, err
 	}
 
-	client_info, err := client_info_manager.Get(client_id)
+	client_info, err := client_info_manager.Get(ctx, client_id)
 	if err != nil {
 		return nil, err
 	}
@@ -120,7 +120,7 @@ func (self *Indexer) FastGetApiClient(
 
 	return &api_proto.ApiClient{
 		ClientId: client_id,
-		Labels:   labeler.GetClientLabels(config_obj, client_id),
+		Labels:   labeler.GetClientLabels(ctx, config_obj, client_id),
 		AgentInformation: &api_proto.AgentInformation{
 			Version: client_info.ClientVersion,
 			Name:    client_info.ClientName,

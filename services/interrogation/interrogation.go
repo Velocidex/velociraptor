@@ -108,7 +108,7 @@ func (self *EnrollmentService) ProcessEnrollment(
 	if err != nil {
 		return err
 	}
-	_, err = client_info_manager.Get(client_id)
+	_, err = client_info_manager.Get(ctx, client_id)
 
 	// If we have a valid client record we do not need to
 	// interrogate. Interrogation happens automatically only once
@@ -169,7 +169,7 @@ func (self *EnrollmentService) ProcessEnrollment(
 	// have the record in cache, so next Get() will just read it from
 	// disk on all minions.
 
-	err = client_info_manager.Set(&services.ClientInfo{
+	err = client_info_manager.Set(ctx, &services.ClientInfo{
 		actions_proto.ClientInfo{
 			ClientId:                    client_id,
 			FirstSeenAt:                 uint64(time.Now().Unix()),
@@ -288,7 +288,7 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 
 		// Completion
 		func() {
-			client_info_manager.Flush(client_id)
+			client_info_manager.Flush(ctx, client_id)
 
 			journal.PushRowsToArtifactAsync(config_obj,
 				ordereddict.NewDict().
@@ -303,7 +303,7 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	if len(client_info.Labels) > 0 {
 		labeler := services.GetLabeler(config_obj)
 		for _, label := range client_info.Labels {
-			err := labeler.SetClientLabel(config_obj, client_id, label)
+			err := labeler.SetClientLabel(ctx, config_obj, client_id, label)
 			if err != nil {
 				return err
 			}

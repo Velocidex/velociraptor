@@ -163,7 +163,7 @@ func (self *ServerTestSuite) TestClientEventTable() {
 	defer ctrl.Finish()
 
 	runner := flows.NewFlowRunner(self.ConfigObj)
-	defer runner.Close()
+	defer runner.Close(context.Background())
 
 	// Set a new event monitoring table
 	client_event_manager, err := services.ClientEventManager(self.ConfigObj)
@@ -192,7 +192,7 @@ func (self *ServerTestSuite) TestClientEventTable() {
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	tasks, err := client_info_manager.PeekClientTasks(self.client_id)
+	tasks, err := client_info_manager.PeekClientTasks(context.Background(), self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
 
@@ -210,7 +210,7 @@ func (self *ServerTestSuite) TestClientEventTable() {
 func (self *ServerTestSuite) TestForeman() {
 	t := self.T()
 	runner := flows.NewFlowRunner(self.ConfigObj)
-	defer runner.Close()
+	defer runner.Close(context.Background())
 
 	db, err := datastore.GetDB(self.ConfigObj)
 	require.NoError(self.T(), err)
@@ -253,7 +253,7 @@ func (self *ServerTestSuite) TestForeman() {
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(t, err)
 
-	tasks, err := client_info_manager.PeekClientTasks(self.client_id)
+	tasks, err := client_info_manager.PeekClientTasks(context.Background(), self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
 
@@ -262,7 +262,7 @@ func (self *ServerTestSuite) TestForeman() {
 	require.NotNil(t, tasks[0].UpdateEventTable)
 
 	// The client_info_manager will remember the last hunt timestamp
-	stats, err := client_info_manager.GetStats(self.client_id)
+	stats, err := client_info_manager.GetStats(context.Background(), self.client_id)
 	assert.NoError(t, err)
 
 	assert.Equal(t, stats.LastHuntTimestamp, hunt.StartTime)
@@ -302,7 +302,7 @@ func (self *ServerTestSuite) TestMonitoring() {
 				},
 			},
 		})
-	runner.Close()
+	runner.Close(context.Background())
 
 	path_manager, err := artifacts.NewArtifactPathManager(self.ConfigObj,
 		self.client_id, constants.MONITORING_WELL_KNOWN_FLOW,
@@ -329,7 +329,7 @@ func (self *ServerTestSuite) TestMonitoringWithUpload() {
 				Size: 10000,
 			},
 		})
-	runner.Close()
+	runner.Close(context.Background())
 
 	path_manager := paths.NewFlowPathManager(
 		self.client_id, "F.Monitoring").GetUploadsFile("file", "/etc/passwd")
@@ -356,7 +356,7 @@ func (self *ServerTestSuite) TestLog() {
 				Message: "Foobar",
 			},
 		})
-	runner.Close()
+	runner.Close(context.Background())
 
 	runner.ProcessSingleMessage(
 		context.Background(),
@@ -367,7 +367,7 @@ func (self *ServerTestSuite) TestLog() {
 				Message: "ZooBar",
 			},
 		})
-	runner.Close()
+	runner.Close(context.Background())
 
 	path_spec := paths.NewFlowPathManager(self.client_id, flow_id).Log()
 	self.RequiredFilestoreContains(path_spec, "Foobar")
@@ -388,7 +388,7 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 				Message: "Foobar",
 			},
 		})
-	runner.Close()
+	runner.Close(context.Background())
 
 	t := self.T()
 
@@ -396,7 +396,8 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	tasks, err := client_info_manager.PeekClientTasks(self.client_id)
+	tasks, err := client_info_manager.PeekClientTasks(
+		context.Background(), self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 0)
 
@@ -408,10 +409,10 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 			SessionId: "F.1234",
 			Status:    &crypto_proto.VeloStatus{},
 		})
-	runner.Close()
+	runner.Close(context.Background())
 
 	// Cancellation message should never be sent due to status.
-	tasks, err = client_info_manager.PeekClientTasks(self.client_id)
+	tasks, err = client_info_manager.PeekClientTasks(context.Background(), self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 0)
 
@@ -423,11 +424,11 @@ func (self *ServerTestSuite) TestLogToUnknownFlow() {
 			SessionId:   "F.1234",
 			VQLResponse: &actions_proto.VQLResponse{},
 		})
-	runner.Close()
+	runner.Close(context.Background())
 
 	// Cancellation message should be sent due to response
 	// messages.
-	tasks, err = client_info_manager.PeekClientTasks(self.client_id)
+	tasks, err = client_info_manager.PeekClientTasks(context.Background(), self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
 }
@@ -462,7 +463,7 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	tasks, err := client_info_manager.PeekClientTasks(self.client_id)
+	tasks, err := client_info_manager.PeekClientTasks(context.Background(), self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 2)
 
@@ -525,7 +526,7 @@ func (self *ServerTestSuite) TestUploadBuffer() {
 				Size:   11,
 			},
 		})
-	runner.Close()
+	runner.Close(context.Background())
 
 	flow_path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
 	self.RequiredFilestoreContains(
@@ -562,7 +563,7 @@ func (self *ServerTestSuite) TestVQLResponse() {
 				},
 			},
 		})
-	runner.Close()
+	runner.Close(context.Background())
 
 	flow_path_manager, err := artifacts.NewArtifactPathManager(self.ConfigObj,
 		self.client_id, flow_id, "Generic.Client.Info")
@@ -593,7 +594,7 @@ func (self *ServerTestSuite) TestErrorMessage() {
 				Backtrace:    "I am a backtrace",
 			},
 		})
-	runner.Close()
+	runner.Close(context.Background())
 
 	db, _ := datastore.GetDB(self.ConfigObj)
 
@@ -636,7 +637,7 @@ func (self *ServerTestSuite) TestCompletions() {
 				Status: crypto_proto.VeloStatus_OK,
 			},
 		})
-	runner.Close()
+	runner.Close(context.Background())
 
 	db, _ := datastore.GetDB(self.ConfigObj)
 
@@ -660,7 +661,7 @@ func (self *ServerTestSuite) TestCompletions() {
 				Status: crypto_proto.VeloStatus_OK,
 			},
 		})
-	runner.Close()
+	runner.Close(context.Background())
 
 	// Flow should be complete now that second response arrived.
 	err = db.GetSubject(self.ConfigObj, path_manager.Path(), collection_context)
@@ -689,7 +690,7 @@ func (self *ServerTestSuite) TestCancellation() {
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	tasks, err := client_info_manager.PeekClientTasks(self.client_id)
+	tasks, err := client_info_manager.PeekClientTasks(context.Background(), self.client_id)
 	assert.NoError(t, err)
 
 	// Generic.Client.Info has two source preconditions in parallel
@@ -707,7 +708,7 @@ func (self *ServerTestSuite) TestCancellation() {
 
 	// Cancelling a flow simply schedules a cancel message for the
 	// client and removes all pending tasks.
-	tasks, err = client_info_manager.PeekClientTasks(self.client_id)
+	tasks, err = client_info_manager.PeekClientTasks(context.Background(), self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
 
@@ -738,7 +739,7 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 	require.NoError(t, err)
 
 	runner := flows.NewFlowRunner(self.ConfigObj)
-	defer runner.Close()
+	defer runner.Close(context.Background())
 
 	// Send a message to a random non-existant flow from client.
 	flow_id := "F.NONEXISTENT"
@@ -754,7 +755,7 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(t, err)
 
-	tasks, err := client_info_manager.PeekClientTasks(self.client_id)
+	tasks, err := client_info_manager.PeekClientTasks(context.Background(), self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
 

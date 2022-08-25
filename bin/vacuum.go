@@ -133,7 +133,7 @@ func generateTasks(
 		fmt.Printf("ClientInfo %v %v\n", client_info.ClientId,
 			client_info.OsInfo.Hostname)
 		err = client_info_manager.QueueMessagesForClient(
-			client_info.ClientId, tasks, false)
+			ctx, client_info.ClientId, tasks, false)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 		}

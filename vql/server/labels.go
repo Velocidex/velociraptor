@@ -69,13 +69,13 @@ func (self *AddLabels) Call(ctx context.Context,
 
 		switch arg.Op {
 		case "set":
-			err = labeler.SetClientLabel(config_obj, arg.ClientId, label)
+			err = labeler.SetClientLabel(ctx, config_obj, arg.ClientId, label)
 
 		case "remove":
-			err = labeler.RemoveClientLabel(config_obj, arg.ClientId, label)
+			err = labeler.RemoveClientLabel(ctx, config_obj, arg.ClientId, label)
 
 		case "check":
-			if !labeler.IsLabelSet(config_obj, arg.ClientId, label) {
+			if !labeler.IsLabelSet(ctx, config_obj, arg.ClientId, label) {
 				return false
 			}
 		}

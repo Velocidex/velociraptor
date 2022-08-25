@@ -331,7 +331,7 @@ func (self *Notifier) IsClientConnected(
 		return false
 	}
 
-	stats, err := client_info_manager.GetStats(client_id)
+	stats, err := client_info_manager.GetStats(ctx, client_id)
 	if err != nil {
 		return false
 	}

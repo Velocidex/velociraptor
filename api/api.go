@@ -328,10 +328,12 @@ func (self *ApiServer) LabelClients(
 		for _, label := range in.Labels {
 			switch in.Operation {
 			case "set":
-				err = labeler.SetClientLabel(org_config_obj, client_id, label)
+				err = labeler.SetClientLabel(ctx,
+					org_config_obj, client_id, label)
 
 			case "remove":
-				err = labeler.RemoveClientLabel(org_config_obj, client_id, label)
+				err = labeler.RemoveClientLabel(ctx,
+					org_config_obj, client_id, label)
 
 			default:
 				return nil, errors.New("Unknown label operation")
@@ -956,8 +958,8 @@ func (self *ApiServer) GetClientMonitoringState(
 
 	result := manager.GetClientMonitoringState()
 	if in.ClientId != "" {
-		message := manager.GetClientUpdateEventTableMessage(org_config_obj,
-			in.ClientId)
+		message := manager.GetClientUpdateEventTableMessage(
+			ctx, org_config_obj, in.ClientId)
 		result.ClientMessage = message
 	}
 
