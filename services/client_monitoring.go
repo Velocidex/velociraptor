@@ -41,12 +41,14 @@ type ClientEventTable interface {
 	// client. If the client's version is lower then we resync the
 	// client's event table.
 	CheckClientEventsVersion(
+		ctx context.Context,
 		config_obj *config_proto.Config,
 		client_id string, client_version uint64) bool
 
 	// Get the message to send to the client in order to force it
 	// to update.
 	GetClientUpdateEventTableMessage(
+		ctx context.Context,
 		config_obj *config_proto.Config,
 		client_id string) *crypto_proto.VeloMessage
 

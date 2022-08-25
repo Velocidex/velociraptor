@@ -65,7 +65,7 @@ func (self *ServerArtifactsRunner) process(
 		return err
 	}
 
-	tasks, err := client_info_manager.GetClientTasks("server")
+	tasks, err := client_info_manager.GetClientTasks(ctx, "server")
 	if err != nil {
 		return err
 	}

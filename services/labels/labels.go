@@ -30,30 +30,35 @@ var (
 type Dummy struct{}
 
 func (self Dummy) LastLabelTimestamp(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string) uint64 {
 	return 0
 }
 
 func (self Dummy) IsLabelSet(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string, label string) bool {
 	return false
 }
 
 func (self Dummy) SetClientLabel(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id, label string) error {
 	return nil
 }
 
 func (self Dummy) RemoveClientLabel(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id, label string) error {
 	return nil
 }
 
 func (self Dummy) GetClientLabels(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string) []string {
 	return nil
@@ -129,6 +134,7 @@ func preCalculatedLowCase(cached *CachedLabels) {
 }
 
 func (self *Labeler) LastLabelTimestamp(
+	ctx context.Context,
 	config_obj *config_proto.Config, client_id string) uint64 {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -142,6 +148,7 @@ func (self *Labeler) LastLabelTimestamp(
 }
 
 func (self *Labeler) IsLabelSet(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string, checked_label string) bool {
 	self.mu.Lock()
@@ -188,6 +195,7 @@ func (self *Labeler) notifyClient(
 }
 
 func (self *Labeler) SetClientLabel(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id, new_label string) error {
 	self.mu.Lock()
@@ -238,6 +246,7 @@ func (self *Labeler) SetClientLabel(
 }
 
 func (self *Labeler) RemoveClientLabel(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id, new_label string) error {
 	self.mu.Lock()
@@ -292,6 +301,7 @@ func (self *Labeler) RemoveClientLabel(
 }
 
 func (self *Labeler) GetClientLabels(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string) []string {
 	self.mu.Lock()

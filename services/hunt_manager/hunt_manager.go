@@ -478,7 +478,7 @@ func (self *HuntManager) ProcessParticipation(
 		return err
 	}
 
-	client_info, err := client_info_manager.Get(participation_row.ClientId)
+	client_info, err := client_info_manager.Get(ctx, participation_row.ClientId)
 	if err != nil {
 		return fmt.Errorf("hunt_manager: failed to get client %v: %w",
 			participation_row.ClientId, err)
@@ -528,7 +528,7 @@ func (self *HuntManager) ProcessParticipation(
 		// Ignore hunts with label conditions which
 		// exclude this client.
 
-	} else if !huntHasLabel(config_obj, hunt_obj,
+	} else if !huntHasLabel(ctx, config_obj, hunt_obj,
 		participation_row.ClientId) {
 		return fmt.Errorf("Hunt %v: hunt label does not match with %v",
 			participation_row.HuntId, participation_row.ClientId)
@@ -582,6 +582,7 @@ func NewHuntManager(
 
 // Check if the client should be scheduled based on required labels.
 func huntHasLabel(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	hunt_obj *api_proto.Hunt, client_id string) bool {
 	labeler := services.GetLabeler(config_obj)
@@ -592,12 +593,12 @@ func huntHasLabel(
 
 	label_condition := hunt_obj.Condition.GetLabels()
 	if label_condition == nil {
-		return huntHasExcludeLabel(config_obj, hunt_obj, client_id)
+		return huntHasExcludeLabel(ctx, config_obj, hunt_obj, client_id)
 	}
 
 	for _, label := range label_condition.Label {
-		if labeler.IsLabelSet(config_obj, client_id, label) {
-			return huntHasExcludeLabel(config_obj, hunt_obj, client_id)
+		if labeler.IsLabelSet(ctx, config_obj, client_id, label) {
+			return huntHasExcludeLabel(ctx, config_obj, hunt_obj, client_id)
 		}
 	}
 
@@ -606,6 +607,7 @@ func huntHasLabel(
 
 // Check if the client should be scheduled based on excluded labels.
 func huntHasExcludeLabel(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	hunt_obj *api_proto.Hunt, client_id string) bool {
 
@@ -616,7 +618,7 @@ func huntHasExcludeLabel(
 	labeler := services.GetLabeler(config_obj)
 
 	for _, label := range hunt_obj.Condition.ExcludedLabels.Label {
-		if labeler.IsLabelSet(config_obj, client_id, label) {
+		if labeler.IsLabelSet(ctx, config_obj, client_id, label) {
 			// Label is set on the client, it should be
 			// excluded from the hunt.
 			return false

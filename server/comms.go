@@ -476,7 +476,7 @@ func reader(server_obj *Server) http.Handler {
 		// can still verify the comms as authenticated. NOTE: this
 		// check should be very quick since it is just a lookup in the
 		// client info manager's LRU.
-		_, err = client_info_manager.Get(source)
+		_, err = client_info_manager.Get(ctx, source)
 		if err != nil {
 			journal, err := services.GetJournal(org_config_obj)
 			if err != nil {

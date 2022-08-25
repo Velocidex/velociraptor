@@ -47,7 +47,7 @@ func CheckClientStatus(
 		return err
 	}
 
-	stats, err := client_manager.GetStats(client_id)
+	stats, err := client_manager.GetStats(ctx, client_id)
 	if err != nil {
 		return err
 	}
@@ -60,10 +60,10 @@ func CheckClientStatus(
 
 	if client_event_manager != nil &&
 		client_event_manager.CheckClientEventsVersion(
-			config_obj, client_id, stats.LastEventTableVersion) {
+			ctx, config_obj, client_id, stats.LastEventTableVersion) {
 
 		update_message := client_event_manager.GetClientUpdateEventTableMessage(
-			config_obj, client_id)
+			ctx, config_obj, client_id)
 
 		if update_message.UpdateEventTable == nil {
 			return errors.New("Invalid event update")
@@ -71,13 +71,13 @@ func CheckClientStatus(
 
 		// Inform the client manager that this client will now receive
 		// the latest event table.
-		client_manager.UpdateStats(client_id, &services.Stats{
+		client_manager.UpdateStats(ctx, client_id, &services.Stats{
 			LastEventTableVersion: update_message.UpdateEventTable.Version,
 		})
 
 		clientEventUpdateCounter.Inc()
 		err := client_manager.QueueMessageForClient(
-			client_id, update_message, true, nil)
+			ctx, client_id, update_message, true, nil)
 		if err != nil {
 			return err
 		}
@@ -150,7 +150,7 @@ func CheckClientStatus(
 		}
 	}
 
-	client_manager.UpdateStats(client_id, &services.Stats{
+	client_manager.UpdateStats(ctx, client_id, &services.Stats{
 		LastHuntTimestamp: latest_timestamp,
 	})
 	return nil

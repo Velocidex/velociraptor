@@ -75,7 +75,7 @@ func (self NewClientFunction) Call(ctx context.Context,
 		record.FirstSeenAt = uint64(arg.FirstSeenAt.Unix())
 	}
 
-	err = client_info_manager.Set(&services.ClientInfo{record})
+	err = client_info_manager.Set(ctx, &services.ClientInfo{record})
 	if err != nil {
 		scope.Log("client_create: %s", err)
 		return &vfilter.Null{}

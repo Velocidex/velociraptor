@@ -1,6 +1,8 @@
 package services
 
 import (
+	"context"
+
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -58,50 +60,58 @@ func (self ClientInfo) OS() ClientOS {
 
 type ClientInfoManager interface {
 	// Used to set a new client record.
-	Set(client_info *ClientInfo) error
+	Set(ctx context.Context,
+		client_info *ClientInfo) error
 
-	Get(client_id string) (*ClientInfo, error)
+	Get(ctx context.Context,
+		client_id string) (*ClientInfo, error)
 
-	Remove(client_id string)
+	Remove(ctx context.Context, client_id string)
 
-	GetStats(client_id string) (*Stats, error)
-	UpdateStats(client_id string, stats *Stats) error
+	GetStats(ctx context.Context, client_id string) (*Stats, error)
+	UpdateStats(ctx context.Context, client_id string, stats *Stats) error
 
 	// Get the client's tasks and remove them from the queue.
-	GetClientTasks(client_id string) ([]*crypto_proto.VeloMessage, error)
+	GetClientTasks(ctx context.Context,
+		client_id string) ([]*crypto_proto.VeloMessage, error)
 
 	// Get all the tasks without de-queuing them.
-	PeekClientTasks(client_id string) ([]*crypto_proto.VeloMessage, error)
+	PeekClientTasks(ctx context.Context,
+		client_id string) ([]*crypto_proto.VeloMessage, error)
 
 	QueueMessagesForClient(
+		ctx context.Context,
 		client_id string,
 		req []*crypto_proto.VeloMessage,
 		notify bool, /* Also notify the client about the new task */
 	) error
 
 	QueueMessageForClient(
+		ctx context.Context,
 		client_id string,
 		req *crypto_proto.VeloMessage,
 		notify bool, /* Also notify the client about the new task */
 		completion func()) error
 
 	UnQueueMessageForClient(
+		ctx context.Context,
 		client_id string,
 		req *crypto_proto.VeloMessage) error
 
 	// Remove client id from the cache - this is needed when the
 	// record chages and we need to force a read from storage.
-	Flush(client_id string)
+	Flush(ctx context.Context, client_id string)
 }
 
 func GetHostname(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string) string {
 	client_info_manager, err := GetClientInfoManager(config_obj)
 	if err != nil {
 		return ""
 	}
-	info, err := client_info_manager.Get(client_id)
+	info, err := client_info_manager.Get(ctx, client_id)
 	if err != nil {
 		return ""
 	}
