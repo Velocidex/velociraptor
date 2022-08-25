@@ -1,6 +1,7 @@
 package client_info_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -65,28 +66,30 @@ func (self *ClientInfoTestSuite) TestClientInfo() {
 	client_info_manager.(*client_info.ClientInfoManager).Clock = self.clock
 
 	// Get a non-existing client id - should return an error
-	_, err = client_info_manager.Get("C.DOESNOTEXIT")
+	_, err = client_info_manager.Get(context.Background(), "C.DOESNOTEXIT")
 	assert.Error(self.T(), err)
 
-	info, err := client_info_manager.Get(self.client_id)
+	info, err := client_info_manager.Get(context.Background(), self.client_id)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), info.ClientId, self.client_id)
 	assert.Equal(self.T(), info.Ping, uint64(0))
 
 	// Update the IP address
-	client_info_manager.UpdateStats(self.client_id, &services.Stats{
-		Ping:      uint64(100 * 1000000),
-		IpAddress: "127.0.0.1",
-	})
+	client_info_manager.UpdateStats(context.Background(),
+		self.client_id, &services.Stats{
+			Ping:      uint64(100 * 1000000),
+			IpAddress: "127.0.0.1",
+		})
 
 	// Now get the client record and check that it is updated
-	info, err = client_info_manager.Get(self.client_id)
+	info, err = client_info_manager.Get(
+		context.Background(), self.client_id)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), info.Ping, uint64(100*1000000))
 	assert.Equal(self.T(), info.IpAddress, "127.0.0.1")
 
 	// Now flush the record to storage
-	client_info_manager.Flush(self.client_id)
+	client_info_manager.Flush(context.Background(), self.client_id)
 
 	// Check the stored ping record
 	db, err := datastore.GetDB(self.ConfigObj)
@@ -122,12 +125,14 @@ func (self *ClientInfoTestSuite) TestMasterMinion() {
 	assert.NoError(self.T(), err)
 
 	// Update the minion timestamp
-	minion_client_info_manager.UpdateStats(self.client_id, &services.Stats{
-		IpAddress: "127.0.0.1",
-	})
+	minion_client_info_manager.UpdateStats(
+		context.Background(), self.client_id, &services.Stats{
+			IpAddress: "127.0.0.1",
+		})
 
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		client_info, err := master_client_info_manager.Get(self.client_id)
+		client_info, err := master_client_info_manager.Get(
+			context.Background(), self.client_id)
 		assert.NoError(self.T(), err)
 		return client_info.IpAddress == "127.0.0.1"
 	})

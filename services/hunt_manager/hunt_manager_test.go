@@ -1,6 +1,7 @@
 package hunt_manager_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -171,7 +172,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	// Now add the label to the client. The hunt will now be
 	// scheduled automatically.
 	labeler := services.GetLabeler(self.ConfigObj)
-	err = labeler.SetClientLabel(self.ConfigObj, self.client_id, "MyLabel")
+	err = labeler.SetClientLabel(
+		context.Background(), self.ConfigObj, self.client_id, "MyLabel")
 	assert.NoError(t, err)
 
 	indexer, err := services.GetIndexer(self.ConfigObj)
@@ -221,7 +223,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 
 	labeler := services.GetLabeler(self.ConfigObj)
 
-	err = labeler.SetClientLabel(self.ConfigObj, self.client_id, "lAbEl")
+	err = labeler.SetClientLabel(
+		context.Background(), self.ConfigObj, self.client_id, "lAbEl")
 	assert.NoError(t, err)
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
@@ -354,7 +357,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	assert.NoError(t, err)
 
 	labeler := services.GetLabeler(self.ConfigObj)
-	err = labeler.SetClientLabel(self.ConfigObj, self.client_id, "MyLabel")
+	err = labeler.SetClientLabel(
+		context.Background(), self.ConfigObj, self.client_id, "MyLabel")
 	assert.NoError(t, err)
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
@@ -431,11 +435,13 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 	assert.NoError(t, err)
 
 	labeler := services.GetLabeler(self.ConfigObj)
-	err = labeler.SetClientLabel(self.ConfigObj, self.client_id, "MyLabel")
+	err = labeler.SetClientLabel(
+		context.Background(), self.ConfigObj, self.client_id, "MyLabel")
 	assert.NoError(t, err)
 
 	// Also set the excluded label - this trumps an include label.
-	err = labeler.SetClientLabel(self.ConfigObj, self.client_id, "DoNotRunHunts")
+	err = labeler.SetClientLabel(
+		context.Background(), self.ConfigObj, self.client_id, "DoNotRunHunts")
 	assert.NoError(t, err)
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
@@ -610,7 +616,7 @@ func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(t, err)
 
-	client_info_manager.Flush(self.client_id)
+	client_info_manager.Flush(context.Background(), self.client_id)
 
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
