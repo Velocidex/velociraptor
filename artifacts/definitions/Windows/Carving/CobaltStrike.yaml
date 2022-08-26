@@ -373,8 +373,8 @@ export: |
         ["__Position", 0, "Value",{"value":"x=>unhex(string=position(data=_Data))"}],
         ["Server", 0, "Value",{"value":"x=>regex_replace(source=x.__Position,re='\\x{00}.{4}[^$]*$',replace='')"}],
         ["TargetUri", 0, "Value",{"value":"x=>find_strings(data=_Data,length=5,filter='^/').Strings[0]"}],
-        ["__LicenceBytes", 0, "Value",{"value":"x=>read_file(accessor='data',filename=x.__Position, offset=len(list=x.Server) + 1 ,length=4)"}],
-        ["Licence", 0, "Value",{"value":"x=>parse_binary(accessor='data', filename=x.__LicenceBytes,struct='uint32b')"}],
+        ["__LicenseBytes", 0, "Value",{"value":"x=>read_file(accessor='data',filename=x.__Position, offset=len(list=x.Server) + 1 ,length=4)"}],
+        ["License", 0, "Value",{"value":"x=>parse_binary(accessor='data', filename=x.__LicenseBytes,struct='uint32b')"}],
         ["Strings", 0, "Value",{"value":"x=>find_strings(data=_Data,length=5,filter='.').Strings"}],
     ]],
 
@@ -612,10 +612,10 @@ sources:
                 else= ProcessConfiguration))
         WHERE _Data
             AND
-                ( DecodedConfig.C2Server =~ '^[ -~]+$'
-            OR ( DecodedConfig.Server =~ '^[ -~]+$' AND DecodedConfig.TargetUri )
-            OR ( DecodedConfig.Pipename AND DecodedConfig.BeaconType )
-            OR Rule='cobalt_strike_sleepfunction')
+              (( DecodedConfig.C2Server =~ '^[ -~]+$' AND DecodedConfig.BeaconType )
+            OR ( DecodedConfig.Pipename =~ '^[ -~]+$' AND DecodedConfig.BeaconType )
+            OR DecodedConfig.Server =~ '^[ -~]+$' -- AND DecodedConfig.TargetUri )
+            OR Rule='cobalt_strike_sleepfunction' )
 
       -- add decoded data seperate to keep pretty output
       LET output_decoded_data = SELECT *,
@@ -625,9 +625,19 @@ sources:
                 else=_Data)) as DecodedData
         FROM results
 
-
+      LET cleanup(config) = to_dict(item= 
+            { 
+                SELECT _key, _value 
+                FROM items(item=config) 
+                WHERE NOT _key =~ '^__'  AND ( _value  OR _key =~ '^license' )
+            })
+      
       -- output rows, standard config priority, exclude _Data
-      LET y = SELECT * FROM column_filter(
+      SELECT *,
+        if(condition= format(format='%T',args=DecodedConfig)='string',
+            then= DecodedConfig,
+            else= cleanup(config=DecodedConfig)) as DecodedConfig
+      FROM column_filter(
         query={
             SELECT * ,
                  -- NOTE: some junk strings for shellcode _Group are removed in GROUP BY
@@ -639,4 +649,3 @@ sources:
                 else= results)
             GROUP BY _Group
         }, exclude=["_Data","_Group"])
-      SELECT * FROM y --FileConfiguration
