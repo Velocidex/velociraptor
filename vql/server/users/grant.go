@@ -46,7 +46,7 @@ func (self GrantFunction) Call(
 
 	users_manager := services.GetUserManager()
 	user_record, err := users_manager.GetUserWithHashes(arg.Username)
-	if err == services.UserNotFoundError {
+	if err != nil {
 		scope.Log("user_grant: %s", err)
 		return vfilter.Null{}
 	}

@@ -92,8 +92,9 @@ func getProcessData(process *process.Process) *ordereddict.Dict {
 	ppid, _ := process.Ppid()
 	result.Set("Ppid", ppid)
 
+	// Make it compatible with the Windows pslist()
 	cmdline, _ := process.Cmdline()
-	result.Set("Cmdline", cmdline)
+	result.Set("CommandLine", cmdline)
 
 	create_time, _ := process.CreateTime()
 	result.Set("CreateTime", create_time)

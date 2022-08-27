@@ -73,10 +73,6 @@ func (self SetPasswordFunction) Call(
 
 	users_manager := services.GetUserManager()
 	user_record, err := users_manager.GetUserWithHashes(principal)
-	if err == services.UserNotFoundError {
-		scope.Log("passwd: %v", err)
-		return vfilter.Null{}
-	}
 	if err != nil {
 		scope.Log("passwd: %v", err)
 		return vfilter.Null{}
