@@ -9,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -64,13 +65,24 @@ func (self UserDeleteFunction) Call(
 		return vfilter.Null{}
 	}
 
-	// Also remove the ACLs for the user.
-	err = db.DeleteSubject(config_obj, user_path_manager.ACL())
+	// Also remove the ACLs for the user from all orgs.
+	org_manager, err := services.GetOrgManager()
 	if err != nil {
-		scope.Log("user_delete: %s", err)
+		scope.Log("user_delete: %v", err)
 		return vfilter.Null{}
 	}
 
+	for _, org_record := range org_manager.ListOrgs() {
+		org_config_obj, err := org_manager.GetOrgConfig(org_record.OrgId)
+		if err != nil {
+			continue
+		}
+
+		err = db.DeleteSubject(org_config_obj, user_path_manager.ACL())
+		if err != nil {
+			continue
+		}
+	}
 	return arg.Username
 }
 

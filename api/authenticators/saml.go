@@ -9,7 +9,6 @@ import (
 	"github.com/crewjam/saml/samlsp"
 	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
-	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -104,13 +103,14 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 		}
 
 		username := sa.GetAttributes().Get(self.user_attribute)
-
 		users := services.GetUserManager()
 		user_record, err := users.GetUser(username)
+		if err == nil && user_record.Name == username {
+			// Does the user have access to the specified org?
+			err = CheckOrgAccess(r, user_record)
+		}
 
-		perm, err2 := acls.CheckAccess(self.config_obj, username, acls.READ_RESULTS)
-		if err != nil || !perm || err2 != nil ||
-			user_record.Locked || user_record.Name != username {
+		if err != nil {
 			w.Header().Set("Content-Type", "text/html; charset=utf-8")
 			w.WriteHeader(http.StatusUnauthorized)
 
@@ -126,6 +126,7 @@ Contact your system administrator to get an account, then try again.
 					"user":   username,
 					"remote": r.RemoteAddr,
 					"method": r.Method,
+					"error":  err.Error(),
 				}).Error("User rejected by GUI")
 
 			return
