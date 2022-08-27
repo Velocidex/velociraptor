@@ -11,10 +11,10 @@ precondition: SELECT OS From info() where OS = 'linux'
 
 sources:
   - query: |
-        SELECT Pid, Ppid, Name, Cmdline, Exe,
+        SELECT Pid, Ppid, Name, CommandLine, Exe,
                hash(path=Exe) as Hash,
                Username, timestamp(epoch=CreateTime/1000) AS CreatedTime,
                MemoryInfo.RSS AS RSS,
                Exe =~ "\\(deleted\\)$" AS Deleted
-        FROM pslist()
+        FROM process_tracker_pslist()
         WHERE Name =~ processRegex
