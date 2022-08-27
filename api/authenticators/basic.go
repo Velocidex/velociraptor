@@ -6,7 +6,6 @@ import (
 
 	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
-	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -74,25 +73,12 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 		// verify it below.
 		users_manager := services.GetUserManager()
 		user_record, err := users_manager.GetUserWithHashes(username)
-		if err != nil {
+		if err != nil || user_record.Name != username {
 			logger := logging.GetLogger(self.config_obj, &logging.Audit)
 			logger.WithFields(logrus.Fields{
 				"username": username,
 				"status":   http.StatusUnauthorized,
 			}).Error("Unknown username")
-
-			http.Error(w, "authorization failed", http.StatusUnauthorized)
-			return
-		}
-
-		// Must have at least reader.
-		perm, err := acls.CheckAccess(self.config_obj, username, acls.READ_RESULTS)
-		if !perm || err != nil || user_record.Locked || user_record.Name != username {
-			logger := logging.GetLogger(self.config_obj, &logging.Audit)
-			logger.WithFields(logrus.Fields{
-				"username": username,
-				"status":   http.StatusUnauthorized,
-			}).Error("Unauthorized username")
 
 			http.Error(w, "authorization failed", http.StatusUnauthorized)
 			return
@@ -104,6 +90,19 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 				"username": username,
 				"status":   http.StatusUnauthorized,
 			}).Error("Invalid password")
+
+			http.Error(w, "authorization failed", http.StatusUnauthorized)
+			return
+		}
+
+		// Does the user have access to the specified org?
+		err = CheckOrgAccess(r, user_record)
+		if err != nil {
+			logger := logging.GetLogger(self.config_obj, &logging.Audit)
+			logger.WithFields(logrus.Fields{
+				"username": username,
+				"status":   http.StatusUnauthorized,
+			}).Error("Unauthorized username")
 
 			http.Error(w, "authorization failed", http.StatusUnauthorized)
 			return
