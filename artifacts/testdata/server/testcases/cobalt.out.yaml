@@ -170,4 +170,65 @@ SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Xor,D
   "Xor": "0x00",
   "DecodedConfig": "Sleep mask 32-bit 4.2 deobfuscation routine found."
  }
+]SELECT Rule,FullPath,Hash,Xor,DecodedConfig FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir+"/artifacts/testdata/files/CSsectionStager.exe")[
+ {
+  "Rule": "Embedded data section: cobalt_strike_shellcode",
+  "FullPath": "X:\\artifacts\\testdata\\files\\CSsectionStager.exe",
+  "Hash": {
+   "MD5": "12dd068bb362a3ef64fc0b19ad752ed5",
+   "SHA1": "184bb361cec7fcc10b1ab98d7f9aa0eb05e2ce35",
+   "SHA256": "f43613dc64d3ea3be263392da938242201ed2dfe4580f6ca340250ae516bf9b5"
+  },
+  "Xor": "0x00",
+  "DecodedConfig": {
+   "Server": "test_cobaltstrike.velociraptor.rocks",
+   "TargetUri": "/jquery-3.3.2.slim.min.js",
+   "License": 0,
+   "Strings": [
+    "AQAPRQVH1",
+    "AXAX^YZAXAYAZH",
+    "XAYZH",
+    "wininet",
+    "APAPA",
+    "AQAQj",
+    "/jquery-3.3.2.slim.min.js",
+    "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language: en-US,en;q=0.5",
+    "Referer: http://code.jquery.com/",
+    "Accept-Encoding: gzip, deflate",
+    "User-Agent: Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko",
+    "test_cobaltstrike.velociraptor.rocks"
+   ]
+  }
+ }
+]SELECT Rule,Hash,Xor,DecodedConfig FROM Artifact.Windows.Carving.CobaltStrike(TargetBytes=read_file(filename=srcDir+"/artifacts/testdata/files/CSsectionStager.exe"))[
+ {
+  "Rule": "Embedded data section: cobalt_strike_shellcode",
+  "Hash": {
+   "MD5": "12dd068bb362a3ef64fc0b19ad752ed5",
+   "SHA1": "184bb361cec7fcc10b1ab98d7f9aa0eb05e2ce35",
+   "SHA256": "f43613dc64d3ea3be263392da938242201ed2dfe4580f6ca340250ae516bf9b5"
+  },
+  "Xor": "0x00",
+  "DecodedConfig": {
+   "Server": "test_cobaltstrike.velociraptor.rocks",
+   "TargetUri": "/jquery-3.3.2.slim.min.js",
+   "License": 0,
+   "Strings": [
+    "AQAPRQVH1",
+    "AXAX^YZAXAYAZH",
+    "XAYZH",
+    "wininet",
+    "APAPA",
+    "AQAQj",
+    "/jquery-3.3.2.slim.min.js",
+    "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language: en-US,en;q=0.5",
+    "Referer: http://code.jquery.com/",
+    "Accept-Encoding: gzip, deflate",
+    "User-Agent: Mozilla/5.0 (Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko",
+    "test_cobaltstrike.velociraptor.rocks"
+   ]
+  }
+ }
 ]
