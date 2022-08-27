@@ -13,9 +13,6 @@ description: |
   (depending on version) but trivial to change.
   - Configuration is built in a typical index / type / length / value structure
   with either big endian values or zero terminated strings.
-  - During testing, some fields were observed presenting best with a zero byte
-  terminator, others as the defined length. Defined length have been base64
-  encoded to account for binary output for post processing.
   - If no beacon is found, parser will fallback to CobaltStrike Shellcode analysis.
 
   This content simply carves the configuration and does not unpack files on
@@ -66,6 +63,7 @@ parameters:
                 $header = { FC }
                 $s1 = "hwini"
                 $s2 = "hws2_"
+                $s3 = "wininet"
 
             condition:
                 ( $header at 0 and filesize < 4096 )
@@ -84,7 +82,7 @@ parameters:
         }
 
 export: |
-  LET Profile = '''[
+  LET PROFILE = '''[
     [CobaltConfig, 0, [
         # 0x0001:BeaconType, 0x0001:Type, 0x0002:Length
         ["BeaconType", 6, "Enumeration", {
@@ -371,7 +369,7 @@ export: |
     ]],
     [Shellcode, 0, [
         ["__Position", 0, "Value",{"value":"x=>unhex(string=position(data=_Data))"}],
-        ["Server", 0, "Value",{"value":"x=>regex_replace(source=x.__Position,re='\\x{00}.{4}[^$]*$',replace='')"}],
+        ["Server", 0, "Value",{"value":"x=>regex_replace(source=regex_replace(source=x.__Position,re='\\x{00}.{4}[^$]*$',replace=''),re='\u0000',replace='')"}],
         ["TargetUri", 0, "Value",{"value":"x=>find_strings(data=_Data,length=5,filter='^/').Strings[0]"}],
         ["__LicenseBytes", 0, "Value",{"value":"x=>read_file(accessor='data',filename=x.__Position, offset=len(list=x.Server) + 1 ,length=4)"}],
         ["License", 0, "Value",{"value":"x=>parse_binary(accessor='data', filename=x.__LicenseBytes,struct='uint32b')"}],
@@ -387,12 +385,12 @@ export: |
         ["XorKey", 8, "Value",{"value":"x=>format(format='0x%08x',args=x.__XorKey)"}],
         ["__Id2", 12, "uint32"],
         ["Id2", 12, "Value",{"value":"x=>format(format='0x%08x',args=x.__Id2)"}],
-        ["__Payload", 16, "Value",{"value":"x=>read_file(accessor='data',filename=embedded_section(path=TargetBytes || FullPath,
+        ["__Payload", 24, "Value",{"value":"x=>read_file(accessor='data',filename=embedded_section(path=TargetBytes || FullPath,
                 type=if(condition=TargetBytes,then='data',else='auto'))[0].Data,offset=16,length=x.__PayloadSize)"}],
-        #["__Payload", 16, "String",{"term_hex":"",length=x.__PayloadSize)"}],
-        ["DecodedPayload", 16, "Value",{"value":"x=>xor(string=x.__Payload,key=unhex(string=x.XorKey))"}],
-        ["PayloadHash", 16, "Value",{"value":"x=>hash(path=xor(string=x.__Payload,key=unhex(string=x.XorKey)),accessor='data')"}],
-        ["OriginalFileHash", 16, "Value",{"value":"x=>hash(path=FullPath)"}],
+        #["__Payload", 24, "String",{"term_hex":"",length=x.__PayloadSize)"}],
+        ["DecodedPayload", 24, "Value",{"value":"x=>xor(string=x.__Payload,key=unhex(string=x.XorKey))"}],
+        ["PayloadHash", 24, "Value",{"value":"x=>hash(path=xor(string=x.__Payload,key=unhex(string=x.XorKey)),accessor='data')"}],
+        ["OriginalFileHash", 24, "Value",{"value":"x=>hash(path=FullPath)"}],
     ]]]'''
 
 
@@ -438,21 +436,17 @@ sources:
 
 
       -- function to extract potential additional encoded PE in data section
-      LET embedded_section(path,type) = SELECT *,
-            read_file(filename=path,accessor=type,offset=FileOffset,length=Size) as Data
-        FROM foreach(row= parse_pe(file=path,accessor=type).Sections,
-            query={
-                    SELECT
-                        path as OriginalFileName,
-                        _value.Name as Name,
-                        _value.Size as Size,
-                        _value.FileOffset as FileOffset,
-                        _value.VMA as VMA,
-                        _value.RVA as RVA,
-                        _value.Perm as Perm
-                    FROM scope() WHERE Name = '.data' AND Size > 15
-                })
-
+      LET embedded_section(path,type) = SELECT 
+            path as OriginalFileName,
+            _value.Name as Name,
+            _value.Size as Size,
+            _value.FileOffset as FileOffset,
+            _value.VMA as VMA,
+            _value.RVA as RVA,
+            _value.Perm as Perm,
+            read_file(filename=path,accessor=type,offset=_value.FileOffset,length=_value.Size) as Data
+        FROM foreach(row= parse_pe(file=path,accessor=type).Sections)
+        WHERE Name = '.data' AND Size > 15
 
 
       -- scan DataBytes for CobaltStrike config
@@ -474,21 +468,28 @@ sources:
                         read_file(accessor='data',filename=TargetBytes,offset=String.Offset,length=4096) as _Data
                     FROM yara(accessor='data',files=TargetBytes, rules=FindShellcode, number=99)
                 },
+                section_encoded_pe = {
+                    SELECT
+                        FullPath,Size,
+                        'Embedded data section: ' + Rule as Rule,
+                        substr(start=0,end=1,str=String.Data) as Xor,
+                        read_file(accessor='data',filename=File.FullPath,offset=String.Offset,length=ExtractBytes) as _Data
+                    FROM yara(files=parse_binary(accessor='data',filename= embedded_section(path=TargetBytes,type='data')[0].Data,profile=PROFILE,struct="EmbeddedPE").DecodedPayload, accessor='data', rules=FindConfig, number=99)
+                },
+                    section_encoded_stager = {
+                        SELECT 
+                            FullPath,Size,
+                            '' as Xor,
+                            'Embedded data section: ' + Rule as Rule,
+                            read_file(accessor='data',filename=File.FullPath) as _Data
+                        FROM yara(files=parse_binary(accessor='data',filename= embedded_section(path=TargetBytes,type='data')[0].Data,profile=PROFILE,struct="EmbeddedPE").DecodedPayload, accessor='data', rules=FindShellcode, number=99)
+                    },
                 sleepfunction = {
                     SELECT *, '' as Xor,
                     if(condition= String.Name= '$x86',
                             then= 'Sleep mask 32-bit 4.2 deobfuscation routine found.',
                             else= 'Sleep mask 64-bit 4.2 deobfuscation routine found.') as _Data
                     FROM yara(accessor='data',files=TargetBytes, rules=FindSleepFunction, number=1)
-                },
-                section_encoded_pe = {
-                    SELECT
-                        FullPath,Size,
-                        'Embedded data section: ' + Rule as Rule,
-                        substr(start=0,end=1,str=String.Data) as Xor,
-                        --parse_binary(accessor='data',filename= embedded_section(path=FullPath)[0].Data,profile=Profile,struct="EmbeddedPE") as ParsedSection,
-                        read_file(accessor='data',filename=File.FullPath,offset=String.Offset,length=ExtractBytes) as _Data
-                    FROM yara(files=parse_binary(accessor='data',filename= embedded_section(path=TargetBytes,type='data')[0].Data,profile=Profile,struct="EmbeddedPE").DecodedPayload, accessor='data', rules=FindConfig, number=99)
                 })
 
       -- find target files
@@ -517,21 +518,28 @@ sources:
                             read_file(filename=FullPath,length=4096) as _Data
                         FROM yara(files=FullPath, rules=FindShellcode, number=99)
                     },
+                    section_encoded_pe = {
+                        SELECT
+                            FullPath,Size,
+                            'Embedded data section: ' + Rule as Rule,
+                            substr(start=0,end=1,str=String.Data) as Xor,
+                            read_file(accessor='data',filename=File.FullPath,offset=String.Offset,length=ExtractBytes) as _Data
+                        FROM yara(files=parse_binary(accessor='data',filename= embedded_section(path=FullPath,type='auto')[0].Data,profile=PROFILE,struct="EmbeddedPE").DecodedPayload, accessor='data', rules=FindConfig, number=99)
+                    },
+                    section_encoded_stager = {
+                        SELECT 
+                            FullPath,Size,
+                            '' as Xor,
+                            'Embedded data section: ' + Rule as Rule,
+                            read_file(accessor='data',filename=File.FullPath,length=ExtractBytes) as _Data
+                        FROM yara(files=parse_binary(accessor='data',filename= embedded_section(path=FullPath,type='auto')[0].Data,profile=PROFILE,struct="EmbeddedPE").DecodedPayload, accessor='data', rules=FindShellcode, number=99)
+                    },
                     sleepfunction = {
                         SELECT *, '' as Xor,
                             if(condition= String.Name= '$x86',
                                 then= 'Sleep mask 32-bit 4.2 deobfuscation routine found.',
                                 else= 'Sleep mask 64-bit 4.2 deobfuscation routine found.') as _Data
                         FROM yara(files=FullPath, rules=FindSleepFunction, number=1)
-                    },
-                    section_encoded_pe = {
-                        SELECT
-                            FullPath,Size,
-                            'Embedded data section: ' + Rule as Rule,
-                            substr(start=0,end=1,str=String.Data) as Xor,
-                            --parse_binary(accessor='data',filename= embedded_section(path=FullPath)[0].Data,profile=Profile,struct="EmbeddedPE") as ParsedSection,
-                            read_file(accessor='data',filename=File.FullPath,offset=String.Offset,length=ExtractBytes) as _Data
-                        FROM yara(files=parse_binary(accessor='data',filename= embedded_section(path=FullPath,type='auto')[0].Data,profile=Profile,struct="EmbeddedPE").DecodedPayload, accessor='data', rules=FindConfig, number=99)
                     })
             })
 
@@ -600,10 +608,10 @@ sources:
                 then= format(format='0x%x',args=Xor),else='0x00') as Xor,
             if(condition= Rule=~'cobalt_strike_beacon',
                 then= parse_binary(accessor='data',filename= xor(string=_Data,key=Xor),
-                    profile = Profile,struct  = "CobaltConfig"),
-                else= if(condition= Rule='cobalt_strike_shellcode',
+                    profile = PROFILE,struct  = "CobaltConfig"),
+                else= if(condition= Rule=~'cobalt_strike_shellcode',
                     then= parse_binary(accessor='data',filename= _Data,
-                        profile=Profile,struct="Shellcode"),
+                        profile = PROFILE,struct="Shellcode"),
                     else= _Data )) AS DecodedConfig
         FROM if(condition=TargetBytes,
             then=ByteConfiguration,
@@ -614,7 +622,7 @@ sources:
             AND
               (( DecodedConfig.C2Server =~ '^[ -~]+$' AND DecodedConfig.BeaconType )
             OR ( DecodedConfig.Pipename =~ '^[ -~]+$' AND DecodedConfig.BeaconType )
-            OR DecodedConfig.Server =~ '^[ -~]+$' -- AND DecodedConfig.TargetUri )
+            OR DecodedConfig.Server =~ '^[ -~]+' -- AND DecodedConfig.TargetUri )
             OR Rule='cobalt_strike_sleepfunction' )
 
       -- add decoded data seperate to keep pretty output
