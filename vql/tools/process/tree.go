@@ -2,6 +2,8 @@ package process
 
 import (
 	"context"
+	"sort"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -13,10 +15,11 @@ import (
 // The tree consists of nodes of the same format accepted by the GUI's
 // more generic "tree" column type.
 type node struct {
-	Name     string            `json:"name"`
-	Id       string            `json::"id"`
-	Data     *ordereddict.Dict `json:"data"`
-	Children []*node           `json:"children"`
+	Name      string            `json:"name"`
+	Id        string            `json:"id"`
+	StartTime time.Time         `json:"start_time"`
+	Data      *ordereddict.Dict `json:"data"`
+	Children  []*node           `json:"children"`
 }
 
 type getProcessTreeArgs struct {
@@ -48,10 +51,12 @@ func (self getProcessTree) Call(ctx context.Context,
 	}
 
 	new_node := &node{
-		Id:   entry.Id,
-		Name: getEntryName(entry),
-		Data: entry.Data,
+		Id:        entry.Id,
+		Name:      getEntryName(entry),
+		StartTime: entry.StartTime,
+		Data:      entry.Data,
 	}
+
 	seen := make(map[string]bool)
 	depth := 0
 	getTreeChildren(ctx, scope, new_node, seen, tracker, depth)
@@ -89,13 +94,19 @@ func getTreeChildren(
 		e.Data.Update("EndTime", e.EndTime)
 
 		new_node := &node{
-			Id:   e.Id,
-			Name: getEntryName(e),
-			Data: e.Data,
+			Id:        e.Id,
+			Name:      getEntryName(e),
+			StartTime: e.StartTime,
+			Data:      e.Data,
 		}
 		n.Children = append(n.Children, new_node)
 		getTreeChildren(ctx, scope, new_node, seen, tracker, depth+1)
 	}
+
+	// Sort the children by start time
+	sort.Slice(n.Children, func(i, j int) bool {
+		return n.Children[i].StartTime.Before(n.Children[j].StartTime)
+	})
 }
 
 func (self getProcessTree) Info(scope types.Scope,

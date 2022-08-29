@@ -59,11 +59,27 @@ sources:
                 SELECT EventData.ProcessId AS id,
                        EventData.ParentProcessId AS parent_id,
                        "start" AS update_type,
-                       EventData + dict(
+
+                       -- We need to manually build the dict here so
+                       -- we can maintain column ordering.
+                       dict(
+                           Pid=EventData.ProcessId,
+                           Ppid=EventData.ParentProcessId,
                            Name=split(sep_string="\\", string=EventData.Image)[-1],
+                           StartTime=EventData.UtcTime,
+                           EndTime=NULL,
                            Username=EventData.User,
-                           CreateTime=EventData.UtcTime,
                            Exe=EventData.Image,
+                           CommandLine= EventData.CommandLine,
+                           CurrentDirectory= EventData.CurrentDirectory,
+                           FileVersion=EventData.FileVersion,
+                           Description= EventData.Description,
+                           Company= EventData.Company,
+                           Product= EventData.Product,
+                           ParentImage= EventData.ParentImage,
+                           ParentCommandLine= EventData.ParentCommandLine,
+                           TerminalSessionId= EventData.TerminalSessionId,
+                           IntegrityLevel= EventData.IntegrityLevel,
                            Hashes=parse_string_with_regex(regex=[
                              "SHA256=(?P<SHA256>[^,]+)",
                              "MD5=(?P<MD5>[^,]+)",
