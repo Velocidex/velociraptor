@@ -1,7 +1,6 @@
 package services
 
 /*
-
    The Velociraptor client maintains a table of event queries it runs
    on startup. This service manages this table. It provides methods
    for the Velociraptor administrator to update the table for this
@@ -22,6 +21,7 @@ package services
 import (
 	"context"
 
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -61,4 +61,9 @@ type ClientEventTable interface {
 		config_obj *config_proto.Config,
 		principal string,
 		state *flows_proto.ClientEventTable) error
+
+	ListAvailableEventResults(
+		ctx context.Context,
+		in *api_proto.ListAvailableEventResultsRequest) (
+		*api_proto.ListAvailableEventResultsResponse, error)
 }

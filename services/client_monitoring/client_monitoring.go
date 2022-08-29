@@ -73,7 +73,9 @@ type ClientEventTable struct {
 
 	Clock utils.Clock
 
-	id string
+	// There is a separate manager for each org.
+	config_obj *config_proto.Config
+	id         string
 }
 
 func (self *ClientEventTable) SetClock(clock utils.Clock) {
@@ -458,8 +460,9 @@ func NewClientMonitoringService(
 	config_obj *config_proto.Config) (services.ClientEventTable, error) {
 
 	event_table := &ClientEventTable{
-		Clock: &utils.RealClock{},
-		id:    uuid.New().String(),
+		Clock:      &utils.RealClock{},
+		id:         uuid.New().String(),
+		config_obj: config_obj,
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)

@@ -47,6 +47,7 @@ func GetApiClient(
 	}
 
 	result.Labels = labeler.GetClientLabels(ctx, config_obj, client_id)
+	result.LastLabelTimestamp = labeler.LastLabelTimestamp(ctx, config_obj, client_id)
 
 	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
