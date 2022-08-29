@@ -33,5 +33,5 @@ sources:
       LET NTFS_CACHE_TIME = 30
       LET USN_FREQUENCY = 60
 
-      SELECT * FROM watch_usn(device=Device, accessor="ntfs")
+      SELECT * FROM watch_usn(device=Device)
       WHERE FullPath =~ PathRegex
