@@ -448,6 +448,7 @@ func (self *ApiServer) GetUserUITraits(
 		result.InterfaceTraits.Lang = user_options.Lang
 		result.InterfaceTraits.DefaultPassword = user_options.DefaultPassword
 		result.InterfaceTraits.DefaultDownloadsLock = user_options.DefaultDownloadsLock
+		result.InterfaceTraits.Customizations = user_options.Customizations
 	}
 
 	return result, nil

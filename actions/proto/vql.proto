@@ -195,4 +195,5 @@ message ClientInfo {
 
     uint64 last_hunt_timestamp = 17;
     uint64 last_event_table_version = 18;
+    uint64 labels_timestamp = 23;
 }

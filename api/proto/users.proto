@@ -45,28 +45,6 @@ message VelociraptorUser {
     string current_org = 12;
 }
 
-
-// Next field: 4
-message GUISettings {
-    option (semantic) = {
-        description: "User GUI settings and preferences."
-    };
-
-    enum UIMode {
-        BASIC = 0;
-        ADVANCED = 1;
-        DEBUG = 2;
-    }
-
-    UIMode mode = 1 [(sem_type) = {
-            description: "User interface mode.",
-        }];
-
-    bool canary_mode = 3 [(sem_type) = {
-            description: "If true, show features that are being canaried."
-        }];
-}
-
 message UILink {
     string text = 1;
     string url = 2;
@@ -77,6 +55,7 @@ message UILink {
 // GUIOptions etc.
 message ApiUserInterfaceTraits {
     ApiClientACL Permissions = 9;
+    GUICustomizations customizations = 10;
 
     string lang = 22;
 
@@ -102,15 +81,17 @@ message ApiUserInterfaceTraits {
 
     // Current selected Org.
     string org = 24;
+
+    bool disable_server_events = 26;
 };
 
+// Describe the user to the GUI.
 message ApiUser {
     string username = 1 [(sem_type) = {
             description: "The name of the user."
         }];
-    GUISettings settings = 2 [(sem_type) = {
-            description: "User UI settings."
-        }];
+
+    // Gets constructed from the users.GetUserOptions()
     ApiUserInterfaceTraits interface_traits = 3 [(sem_type) = {
             description: "User's interface traits (what they can and can't do "
             "in the UI)."
@@ -178,6 +159,11 @@ message GetUserNotificationsRequest {
         }];
 }
 
+// Contol the GUI per user.
+message GUICustomizations {
+    bool disable_server_events = 1;
+}
+
 message SetGUIOptionsRequest {
     string theme = 2;
     string timezone = 6;
@@ -193,6 +179,8 @@ message SetGUIOptionsRequest {
 
     // Current org id
     string org = 7;
+
+    GUICustomizations customizations = 8;
 }
 
 message Users {
