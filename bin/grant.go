@@ -8,6 +8,7 @@ import (
 	jsonpatch "github.com/evanphx/json-patch"
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
@@ -63,6 +64,9 @@ func doGrant() error {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
+	if config_obj.Frontend == nil {
+		config_obj.Frontend = &config_proto.FrontendConfig{}
+	}
 	config_obj.Frontend.ServerServices = services.GenericToolServices()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)

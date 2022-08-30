@@ -68,7 +68,7 @@ sources:
       -- find all processes and add filters
       LET processes = SELECT
              Name as ProcessName,
-             Cmdline AS CommandLine, Pid
+             CommandLine, Pid
         FROM pslist()
         WHERE
             Name =~ ProcessRegex

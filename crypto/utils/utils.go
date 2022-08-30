@@ -183,6 +183,21 @@ func VerifyConfig(config_obj *config_proto.Config) error {
 		}
 	}
 
+	// Make sure the client if is set in the writeback.
+	if writeback.ClientId == "" {
+		private_key, err := ParseRsaPrivateKeyFromPemStr([]byte(writeback.PrivateKey))
+		if err != nil {
+			return errors.WithStack(err)
+		}
+
+		// Add a client id for information here
+		writeback.ClientId = ClientIDFromPublicKey(&private_key.PublicKey)
+		err = config.UpdateWriteback(config_obj.Client, writeback)
+		if err != nil {
+			return fmt.Errorf("During UpdateWriteback: %w", err)
+		}
+	}
+
 	return nil
 }
 

@@ -74,8 +74,8 @@ func (self *CreateFlowDownload) Call(ctx context.Context,
 	switch arg.Type {
 	case "report":
 		result, err := CreateFlowReport(
-			config_obj, scope, arg.FlowId, arg.ClientId,
-			arg.Template, arg.Wait)
+			ctx, config_obj, scope,
+			arg.FlowId, arg.ClientId, arg.Template, arg.Wait)
 		if err != nil {
 			scope.Log("create_flow_download: %s", err)
 			return vfilter.Null{}
@@ -89,7 +89,8 @@ func (self *CreateFlowDownload) Call(ctx context.Context,
 			return vfilter.Null{}
 		}
 
-		result, err := createDownloadFile(config_obj, write_csv,
+		result, err := createDownloadFile(
+			ctx, config_obj, write_csv,
 			arg.FlowId, arg.ClientId, arg.Password, arg.Wait)
 		if err != nil {
 			scope.Log("create_flow_download: %s", err)
@@ -173,6 +174,7 @@ func (self CreateHuntDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 }
 
 func createDownloadFile(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	write_csv bool,
 	flow_id, client_id, password string,
@@ -181,7 +183,7 @@ func createDownloadFile(
 		return nil, errors.New("Client Id and Flow Id should be specified.")
 	}
 
-	hostname := services.GetHostname(config_obj, client_id)
+	hostname := services.GetHostname(ctx, config_obj, client_id)
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	download_file := flow_path_manager.GetDownloadsFile(hostname, password != "")
 
@@ -615,7 +617,7 @@ func createHuntDownloadFile(
 				continue
 			}
 
-			hostname := services.GetHostname(config_obj, client_id)
+			hostname := services.GetHostname(ctx, config_obj, client_id)
 			err := downloadFlowToZip(
 				sub_ctx, config_obj, write_csv, password, client_id, hostname,
 				flow_id, zip_writer)

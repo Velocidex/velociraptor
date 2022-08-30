@@ -80,7 +80,6 @@ func (self *VFSService) ProcessDownloadFile(
 	artifact_path_manager, err := artifacts.NewArtifactPathManager(config_obj,
 		client_id, flow_id, "System.VFS.DownloadFile")
 	if err != nil {
-		utils.Debug(err)
 		logger.Error("Unable to read artifact: %v", err)
 		return
 	}
@@ -191,6 +190,12 @@ func (self *VFSService) ProcessListDirectory(
 		return
 	}
 
+	directory_limit := 10000
+	if config_obj.Defaults != nil &&
+		config_obj.Defaults.MaxVfsDirectorySize > 0 {
+		directory_limit = int(config_obj.Defaults.MaxVfsDirectorySize)
+	}
+
 	client_id, _ := row.GetString("ClientId")
 	flow_id, _ := row.GetString("FlowId")
 	ts, _ := row.GetInt64("_ts")
@@ -236,14 +241,12 @@ func (self *VFSService) ProcessListDirectory(
 			continue
 		}
 
-		// This row does not belong in the current
-		// collection - flush the collection and start
-		// a new one.
+		// This row does not belong in the current collection - flush
+		// the collection and start a new one.
 		if !utils.StringSliceEq(dir_components, current_vfs_components) ||
 
-			// Do not let our memory footprint
-			// grow without bounds.
-			len(rows) > 100000 {
+			// Do not let our memory footprint grow without bounds.
+			len(rows) > directory_limit {
 
 			// current_vfs_components == nil represents
 			// the first collection before the first row

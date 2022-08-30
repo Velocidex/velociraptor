@@ -23,15 +23,14 @@ parameters:
   - name: Device
     description: The NTFS drive to watch
     default: C:\\
+  - name: USN_FREQUENCY
+    type: int
+    description: How many seconds before rechecking the USN journal.
+    default: "30"
 
 precondition: SELECT OS from info() where OS = "windows"
 
 sources:
   - query: |
-      -- We need to make sure the NTFS cache is not too old to make
-      -- sure we can pick up changes quickly.
-      LET NTFS_CACHE_TIME = 30
-      LET USN_FREQUENCY = 60
-
-      SELECT * FROM watch_usn(device=Device, accessor="ntfs")
+      SELECT * FROM watch_usn(device=Device)
       WHERE FullPath =~ PathRegex

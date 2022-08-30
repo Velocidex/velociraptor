@@ -28,55 +28,15 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/shirou/gopsutil/v3/process"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
-	"www.velocidex.com/golang/vfilter/protocols"
 )
-
-// Block potentially dangerous methods.
-var _BlockedMembers = []string{"Terminate", "Kill", "Suspend", "Resume"}
-
-type _ProcessFieldImpl struct{}
-
-func (self _ProcessFieldImpl) Applicable(a vfilter.Any, b vfilter.Any) bool {
-	_, b_ok := b.(string)
-	switch a.(type) {
-	case process.Process, *process.Process:
-		return b_ok
-	}
-	return false
-}
-
-func (self _ProcessFieldImpl) Associative(
-	scope vfilter.Scope, a vfilter.Any, b vfilter.Any) (vfilter.Any, bool) {
-	field := b.(string)
-
-	if utils.InString(_BlockedMembers, field) {
-		return false, true
-	}
-
-	res, pres := protocols.DefaultAssociative{}.Associative(scope, a, b)
-	return res, pres
-}
-
-func (self _ProcessFieldImpl) GetMembers(scope vfilter.Scope, a vfilter.Any) []string {
-	var result []string
-	for _, item := range (protocols.DefaultAssociative{}).GetMembers(scope, a) {
-		if !utils.InString(_BlockedMembers, item) {
-			result = append(result, item)
-		}
-	}
-
-	return result
-}
 
 type PslistArgs struct {
 	Pid int64 `vfilter:"optional,field=pid,doc=A pid to list. If this is provided we are able to operate much faster by only opening a single process."`
 }
 
 func init() {
-	RegisterProtocol(&_ProcessFieldImpl{})
 	RegisterPlugin(vfilter.GenericListPlugin{
 		PluginName: "pslist",
 		Function: func(
@@ -111,7 +71,7 @@ func init() {
 			processes, err := process.Processes()
 			if err == nil {
 				for _, item := range processes {
-					result = append(result, item)
+					result = append(result, getProcessData(item))
 				}
 			}
 			return result
@@ -119,4 +79,37 @@ func init() {
 		ArgType: &PslistArgs{},
 		Doc:     "List processes",
 	})
+}
+
+// Only get a few fields from the process object otherwise we will
+// spend too much time calling into virtual methods.
+func getProcessData(process *process.Process) *ordereddict.Dict {
+	result := ordereddict.NewDict().Set("Pid", process.Pid)
+
+	name, _ := process.Name()
+	result.Set("Name", name)
+
+	ppid, _ := process.Ppid()
+	result.Set("Ppid", ppid)
+
+	// Make it compatible with the Windows pslist()
+	cmdline, _ := process.Cmdline()
+	result.Set("CommandLine", cmdline)
+
+	create_time, _ := process.CreateTime()
+	result.Set("CreateTime", create_time)
+
+	exe, _ := process.Exe()
+	result.Set("Exe", exe)
+
+	cwd, _ := process.Cwd()
+	result.Set("Cwd", cwd)
+
+	user, _ := process.Username()
+	result.Set("Username", user)
+
+	memory_info, _ := process.MemoryInfo()
+	result.Set("MemoryInfo", memory_info)
+
+	return result
 }

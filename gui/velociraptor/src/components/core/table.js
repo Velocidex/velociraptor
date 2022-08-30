@@ -30,6 +30,7 @@ import { HexViewPopup } from '../utils/hex.js';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import T from '../i8n/i8n.js';
+import TreeCell from './tree-cell.js';
 
 // Shows the InspectRawJson modal dialog UI.
 export class InspectRawJson extends Component {
@@ -478,6 +479,15 @@ export function formatColumns(columns) {
         case "nano_timestamp":
             x.formatter= (cell, row) => {
                 return <VeloTimestamp usec={cell}/>;
+            };
+            x.type = null;
+            break;
+
+        case "tree":
+            x.formatter= (cell, row) => {
+                return <TreeCell
+                         name={x.text}
+                         data={cell}/>;
             };
             x.type = null;
             break;

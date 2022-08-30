@@ -1,0 +1,10 @@
+Parameters:
+  TestString: This is a test
+
+Queries:
+  - SELECT TestString, TestString[0], TestString[-1],
+           TestString[0:5], TestString[:5], TestString[5:]
+    FROM scope()
+
+  # Regex on integers and times should convert to string first.
+  - SELECT 10 =~ "1", timestamp(epoch=1666796776)  =~ "2022" FROM scope()

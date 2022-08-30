@@ -269,7 +269,7 @@ func (self *Launcher) CancelFlow(
 
 	// Get all the tasks but only dequeue the ones intended for the
 	// cancelled flow.
-	tasks, err := client_manager.PeekClientTasks(client_id)
+	tasks, err := client_manager.PeekClientTasks(ctx, client_id)
 	if err != nil {
 		return nil, err
 	}
@@ -277,7 +277,7 @@ func (self *Launcher) CancelFlow(
 	// Cancel all the relevant tasks
 	for _, task := range tasks {
 		if task.SessionId == flow_id {
-			err = client_manager.UnQueueMessageForClient(client_id, task)
+			err = client_manager.UnQueueMessageForClient(ctx, client_id, task)
 			if err != nil {
 				return nil, err
 			}
@@ -286,7 +286,7 @@ func (self *Launcher) CancelFlow(
 
 	// Queue a cancellation message to the client for this flow
 	// id.
-	err = client_manager.QueueMessageForClient(client_id,
+	err = client_manager.QueueMessageForClient(ctx, client_id,
 		&crypto_proto.VeloMessage{
 			Cancel:    &crypto_proto.Cancel{},
 			SessionId: flow_id,

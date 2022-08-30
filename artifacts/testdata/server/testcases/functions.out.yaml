@@ -81,4 +81,48 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
  {
   "gunzip(string=base64decode(string=base64_shellcode))": "function ouAKa {\n\tParam ($zFG, $cJ)\t\t\n\t$clOSG = ([AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GlobalAssemblyCache -And $_.Location.Split('\\\\')[-1].Equals('System.dll') }).GetType('Microsoft.Win32.UnsafeNativeMethods')\n\t\n\treturn $clOSG.GetMethod('GetProcAddress', [Type[]]@([System.Runtime.InteropServices.HandleRef], [String])).Invoke($null, @([System.Runtime.InteropServices.HandleRef](New-Object System.Runtime.InteropServices.HandleRef((New-Object IntPtr), ($clOSG.GetMethod('GetModuleHandle')).Invoke($null, @($zFG)))), $cJ))\n}\n\nfunction x9 {\n\tParam (\n\t\t[Parameter(Position = 0, Mandatory = $True)] [Type[]] $ajJNm,\n\t\t[Parameter(Position = 1)] [Type] $qm9 = [Void]\n\t)\n\t\n\t$vNS5J = [AppDomain]::CurrentDomain.DefineDynamicAssembly((New-Object System.Reflection.AssemblyName('ReflectedDelegate')), [System.Reflection.Emit.AssemblyBuilderAccess]::Run).DefineDynamicModule('InMemoryModule', $false).DefineType('MyDelegateType', 'Class, Public, Sealed, AnsiClass, AutoClass', [System.MulticastDelegate])\n\t$vNS5J.DefineConstructor('RTSpecialName, HideBySig, Public', [System.Reflection.CallingConventions]::Standard, $ajJNm).SetImplementationFlags('Runtime, Managed')\n\t$vNS5J.DefineMethod('Invoke', 'Public, HideBySig, NewSlot, Virtual', $qm9, $ajJNm).SetImplementationFlags('Runtime, Managed')\n\t\n\treturn $vNS5J.CreateType()\n}\n\n[Byte[]]$nY2 = [System.Convert]::FromBase64String(\"VmVsb2NpcmFwdG9yIHJvY2tzIQ==\")\n\t\t\n$hh = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer((ouAKa kernel32.dll VirtualAlloc), (x9 @([IntPtr], [UInt32], [UInt32], [UInt32]) ([IntPtr]))).Invoke([IntPtr]::Zero, $nY2.Length,0x3000, 0x40)\n[System.Runtime.InteropServices.Marshal]::Copy($nY2, 0, $hh, $nY2.length)\n\n$usf7K = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer((ouAKa kernel32.dll CreateThread), (x9 @([IntPtr], [UInt32], [IntPtr], [IntPtr], [UInt32], [IntPtr]) ([IntPtr]))).Invoke([IntPtr]::Zero,0,$hh,[IntPtr]::Zero,0,[IntPtr]::Zero)\n[System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer((ouAKa kernel32.dll WaitForSingleObject), (x9 @([IntPtr], [Int32]))).Invoke($usf7K,0xffffffff) | Out-Null\n"
  }
+]LET TestArray <= ("Hello", "World", "Goodbye", "Universe")[]SELECT all(items=TestArray, filter="x=>x=~'Hello|Uni|Wo|G'"), all(items=TestArray, filter="x=>x=~'Hello|Uni'"), all(items=["Hi", "There"], filter="x=>x =~ 'Hi'"), all(items=["Hi", "There"], filter="x=>x =~ 'Hi|There'") FROM scope()[
+ {
+  "all(items=TestArray, filter=\"x=\u003ex=~'Hello|Uni|Wo|G'\")": true,
+  "all(items=TestArray, filter=\"x=\u003ex=~'Hello|Uni'\")": false,
+  "all(items= [\"Hi\", \"There\"], filter=\"x=\u003ex =~ 'Hi'\")": false,
+  "all(items= [\"Hi\", \"There\"], filter=\"x=\u003ex =~ 'Hi|There'\")": true
+ }
+]SELECT all(items=TestArray, regex='Hello|Uni|Wo|G'), all(items=TestArray, regex='Hello|Uni'), all(items=["Hi", "There"], regex='Hi'), all(items=["Hi", "There"], regex='Hi|There') FROM scope()[
+ {
+  "all(items=TestArray, regex='Hello|Uni|Wo|G')": true,
+  "all(items=TestArray, regex='Hello|Uni')": false,
+  "all(items= [\"Hi\", \"There\"], regex='Hi')": false,
+  "all(items= [\"Hi\", \"There\"], regex='Hi|There')": true
+ }
+]SELECT all(items="Hi There", regex=['Hi', "Goodbye"]), all(items="Hi There", regex=['Hi', "ere"]), all(items=["Hi", "There"], regex=['H|T', 'i|r']) FROM scope()[
+ {
+  "all(items=\"Hi There\", regex= ['Hi', \"Goodbye\"])": false,
+  "all(items=\"Hi There\", regex= ['Hi', \"ere\"])": true,
+  "all(items= [\"Hi\", \"There\"], regex= ['H|T', 'i|r'])": true
+ }
+]LET TestArray <= (dict(X=1, Y="Hello"), dict(X=2, Y="Goodbye"), dict(X=1, Y="World"))[]SELECT *, all(items=Y, filter="x=>x =~ 'Hello|World'"), all(items=Y, filter="x=>x =~ 'World'"), all(items=Y, filter="x=>x =~ 'Goodby'") FROM foreach(row=TestArray) GROUP BY X[
+ {
+  "X": 1,
+  "Y": "World",
+  "all(items=Y, filter=\"x=\u003ex =~ 'Hello|World'\")": true,
+  "all(items=Y, filter=\"x=\u003ex =~ 'World'\")": false,
+  "all(items=Y, filter=\"x=\u003ex =~ 'Goodby'\")": false
+ },
+ {
+  "X": 2,
+  "Y": "Goodbye",
+  "all(items=Y, filter=\"x=\u003ex =~ 'Hello|World'\")": false,
+  "all(items=Y, filter=\"x=\u003ex =~ 'World'\")": false,
+  "all(items=Y, filter=\"x=\u003ex =~ 'Goodby'\")": true
+ }
+]SELECT all(items={ SELECT * FROM foreach(row=TestArray) WHERE X = 1 }, filter="x=> x.Y =~ 'Hel|Worl'") FROM scope()[
+ {
+  "all(items= { SELECT * FROM foreach(row=TestArray) WHERE X = 1}, filter=\"x=\u003e x.Y =~ 'Hel|Worl'\")": true
+ }
+]SELECT any(items=TestArray, filter="x=>x.Y =~ 'Good'"), all(items=TestArray, filter="x=>x.Y =~ 'Good'") FROM scope()[
+ {
+  "any(items=TestArray, filter=\"x=\u003ex.Y =~ 'Good'\")": true,
+  "all(items=TestArray, filter=\"x=\u003ex.Y =~ 'Good'\")": false
+ }
 ]

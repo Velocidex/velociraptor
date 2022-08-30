@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
+	"sort"
+	"sync"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/ttlcache/v2"
@@ -22,25 +24,48 @@ import (
 // If a proper process tracker is installed these artifacts will
 // suddenly become much more useful.
 
-type DummyProcessTracker struct{}
+type DummyProcessTracker struct {
+	mu     sync.Mutex
+	lookup map[string]*ProcessEntry
+	age    time.Time
+}
+
+// Refresh the local cache to avoid having to make too many pslist calls.
+func (self *DummyProcessTracker) getLookup(
+	ctx context.Context, scope vfilter.Scope) map[string]*ProcessEntry {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	// Expire old looksup after 10 seconds
+	now := time.Now()
+	if now.Before(self.age.Add(10 * time.Second)) {
+		return self.lookup
+	}
+
+	self.lookup = make(map[string]*ProcessEntry)
+	pslist, pres := scope.GetPlugin("pslist")
+	if !pres {
+		return self.lookup
+	}
+
+	self.age = now
+
+	for row := range pslist.Call(ctx, scope, ordereddict.NewDict()) {
+		entry, pres := getProcessEntry(scope, vfilter.RowToDict(ctx, scope, row))
+		if pres {
+			self.lookup[entry.Id] = entry
+		}
+	}
+
+	return self.lookup
+}
 
 func (self *DummyProcessTracker) Get(ctx context.Context,
 	scope vfilter.Scope, id string) (*ProcessEntry, bool) {
 
-	pslist, pres := scope.GetPlugin("pslist")
-	if !pres {
-		return nil, false
-	}
-
-	pid, err := strconv.ParseInt(id, 0, 64)
-	if err == nil {
-
-		for row := range pslist.Call(
-			ctx, scope, ordereddict.NewDict().Set("pid", pid)) {
-			return getProcessEntry(scope, vfilter.RowToDict(ctx, scope, row))
-		}
-	}
-	return nil, false
+	lookup := self.getLookup(ctx, scope)
+	entry, pres := lookup[id]
+	return entry, pres
 }
 
 func (self *DummyProcessTracker) Stats() ttlcache.Metrics {
@@ -55,30 +80,22 @@ func (self *DummyProcessTracker) Enrich(
 func (self *DummyProcessTracker) Processes(
 	ctx context.Context, scope vfilter.Scope) []*ProcessEntry {
 
-	pslist, pres := scope.GetPlugin("pslist")
-	if !pres {
-		return nil
-	}
-
+	lookup := self.getLookup(ctx, scope)
 	result := []*ProcessEntry{}
-	for row := range pslist.Call(ctx, scope, ordereddict.NewDict()) {
-		item, ok := getProcessEntry(scope, vfilter.RowToDict(ctx, scope, row))
-		if ok {
-			result = append(result, item)
-		}
+	for _, v := range lookup {
+		result = append(result, v)
 	}
 
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].Id < result[j].Id
+	})
 	return result
 }
 
 func (self *DummyProcessTracker) CallChain(
 	ctx context.Context, scope vfilter.Scope, id string) []*ProcessEntry {
 
-	lookup := make(map[string]*ProcessEntry)
-	for _, proc := range self.Processes(ctx, scope) {
-		lookup[proc.Id] = proc
-	}
-
+	lookup := self.getLookup(ctx, scope)
 	result := []*ProcessEntry{}
 
 	for depth := 0; depth < 10; depth++ {

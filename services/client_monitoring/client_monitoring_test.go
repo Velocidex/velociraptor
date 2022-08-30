@@ -109,7 +109,7 @@ func (self *ClientMonitoringTestSuite) TestUpdatingArtifacts() {
 	assert.NoError(self.T(), err)
 
 	old_table_message := manager.GetClientUpdateEventTableMessage(
-		self.ConfigObj, self.client_id)
+		context.Background(), self.ConfigObj, self.client_id)
 	assert.NotContains(self.T(), json.StringIndent(old_table_message), "Crib")
 
 	table_version := old_table_message.UpdateEventTable.Version
@@ -131,12 +131,12 @@ sources:
 	// The table should magically be updated!
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		if !manager.CheckClientEventsVersion(
-			self.ConfigObj, self.client_id, table_version) {
+			context.Background(), self.ConfigObj, self.client_id, table_version) {
 			return false
 		}
 
 		new_table_message = manager.GetClientUpdateEventTableMessage(
-			self.ConfigObj, self.client_id)
+			context.Background(), self.ConfigObj, self.client_id)
 		return strings.Contains(json.StringIndent(new_table_message), "Crib")
 	})
 
@@ -153,12 +153,12 @@ sources:
 	table_json := ""
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		if !manager.CheckClientEventsVersion(
-			self.ConfigObj, self.client_id, table_version) {
+			context.Background(), self.ConfigObj, self.client_id, table_version) {
 			return false
 		}
 
 		table := manager.GetClientUpdateEventTableMessage(
-			self.ConfigObj, self.client_id)
+			context.Background(), self.ConfigObj, self.client_id)
 		table_json = json.StringIndent(table)
 
 		// The table should not contain the Crib any more
@@ -196,7 +196,8 @@ sources:
 	assert.NoError(self.T(), err)
 
 	// Get the client's event table
-	old_table := manager.GetClientUpdateEventTableMessage(self.ConfigObj, self.client_id)
+	old_table := manager.GetClientUpdateEventTableMessage(
+		context.Background(), self.ConfigObj, self.client_id)
 
 	// Now update the monitoring state
 	err = manager.SetClientMonitoringState(
@@ -209,7 +210,8 @@ sources:
 	assert.NoError(self.T(), err)
 
 	// Get the client event table again
-	table := manager.GetClientUpdateEventTableMessage(self.ConfigObj, self.client_id)
+	table := manager.GetClientUpdateEventTableMessage(
+		context.Background(), self.ConfigObj, self.client_id)
 
 	// Make sure the client event table version is updated.
 	assert.True(self.T(),
@@ -243,7 +245,8 @@ sources:
 	assert.NoError(self.T(), err)
 
 	// Get the client's event table
-	old_table := manager1.GetClientUpdateEventTableMessage(self.ConfigObj, self.client_id)
+	old_table := manager1.GetClientUpdateEventTableMessage(
+		context.Background(), self.ConfigObj, self.client_id)
 
 	// Now another frontend sets the client monitoring state
 	manager2, err := client_monitoring.NewClientMonitoringService(
@@ -263,7 +266,8 @@ sources:
 	assert.NoError(self.T(), err)
 
 	// Get the client event table again
-	table := manager2.GetClientUpdateEventTableMessage(self.ConfigObj, self.client_id)
+	table := manager2.GetClientUpdateEventTableMessage(
+		context.Background(), self.ConfigObj, self.client_id)
 
 	// Make sure the client event table version is updated.
 	assert.True(self.T(),
@@ -292,7 +296,8 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 			},
 		})
 
-	table := manager.GetClientUpdateEventTableMessage(self.ConfigObj, self.client_id)
+	table := manager.GetClientUpdateEventTableMessage(
+		context.Background(), self.ConfigObj, self.client_id)
 
 	// There should be one event table sent.
 	assert.Equal(self.T(), len(table.UpdateEventTable.Event), 1)
@@ -301,19 +306,23 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 	assert.True(self.T(), version > 0)
 
 	// Now the client upgraded its table, do we need to update it again?
-	assert.False(self.T(), manager.CheckClientEventsVersion(self.ConfigObj,
+	assert.False(self.T(), manager.CheckClientEventsVersion(
+		context.Background(), self.ConfigObj,
 		self.client_id, version))
 
 	// Add a label to the client
-	require.NoError(self.T(), labeler.SetClientLabel(self.ConfigObj,
+	require.NoError(self.T(), labeler.SetClientLabel(
+		context.Background(), self.ConfigObj,
 		self.client_id, "Label1"))
 
 	// Since the client's label changed it might need to be updated.
-	assert.True(self.T(), manager.CheckClientEventsVersion(self.ConfigObj,
+	assert.True(self.T(), manager.CheckClientEventsVersion(
+		context.Background(), self.ConfigObj,
 		self.client_id, version))
 
 	// But the event table does not include a rule for this label anyway.
-	table = manager.GetClientUpdateEventTableMessage(self.ConfigObj, self.client_id)
+	table = manager.GetClientUpdateEventTableMessage(
+		context.Background(), self.ConfigObj, self.client_id)
 	assert.Equal(self.T(), len(table.UpdateEventTable.Event), 1)
 
 	// New table is still updated though.
@@ -342,11 +351,13 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 		})
 
 	// A new table is installed, this client must update.
-	assert.True(self.T(), manager.CheckClientEventsVersion(self.ConfigObj,
+	assert.True(self.T(), manager.CheckClientEventsVersion(
+		context.Background(), self.ConfigObj,
 		self.client_id, version))
 
 	// The new table includes 2 rules - the default and for Label1
-	table = manager.GetClientUpdateEventTableMessage(self.ConfigObj, self.client_id)
+	table = manager.GetClientUpdateEventTableMessage(
+		context.Background(), self.ConfigObj, self.client_id)
 	assert.Equal(self.T(), len(table.UpdateEventTable.Event), 2)
 
 	// New table has a later version.
@@ -358,14 +369,16 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 		[]string{"Windows.Events.ServiceCreation", "Windows.Events.DNSQueries"})
 
 	// Lets add Label2 to this client.
-	labeler.SetClientLabel(self.ConfigObj, self.client_id, "Label2")
+	labeler.SetClientLabel(context.Background(), self.ConfigObj, self.client_id, "Label2")
 
 	// A new table is installed, this client must update.
-	assert.True(self.T(), manager.CheckClientEventsVersion(self.ConfigObj,
+	assert.True(self.T(), manager.CheckClientEventsVersion(
+		context.Background(), self.ConfigObj,
 		self.client_id, version))
 
 	// The new table includes 3 rules - the default and for Label1 and Label2
-	table = manager.GetClientUpdateEventTableMessage(self.ConfigObj, self.client_id)
+	table = manager.GetClientUpdateEventTableMessage(
+		context.Background(), self.ConfigObj, self.client_id)
 	assert.Equal(self.T(), len(table.UpdateEventTable.Event), 3)
 
 	// New table has a later version.
@@ -379,7 +392,8 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompiling() {
 			"Windows.Events.ProcessCreation"})
 
 	// We are done now... no need to update anymore.
-	assert.False(self.T(), manager.CheckClientEventsVersion(self.ConfigObj,
+	assert.False(self.T(), manager.CheckClientEventsVersion(
+		context.Background(), self.ConfigObj,
 		self.client_id, version))
 }
 
@@ -413,7 +427,8 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoringCompilingMultipleArti
 				},
 			},
 		})
-	table := manager.GetClientUpdateEventTableMessage(self.ConfigObj, self.client_id)
+	table := manager.GetClientUpdateEventTableMessage(
+		context.Background(), self.ConfigObj, self.client_id)
 
 	// Count how many SELECT statements exist in each event table.
 	for _, event := range table.UpdateEventTable.Event {
@@ -470,20 +485,23 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoring() {
 
 	// If a client presents an earlier version table they will
 	// need to update.
-	assert.True(self.T(), manager.CheckClientEventsVersion(self.ConfigObj,
+	assert.True(self.T(), manager.CheckClientEventsVersion(
+		context.Background(), self.ConfigObj,
 		self.client_id, 50))
 
 	// If a client presents the same table version they dont need to do anything.
-	assert.False(self.T(), manager.CheckClientEventsVersion(self.ConfigObj,
+	assert.False(self.T(), manager.CheckClientEventsVersion(
+		context.Background(), self.ConfigObj,
 		self.client_id, uint64(10000000000)))
 
 	// Some time later we label the client.
 	current_clock.MockNow = time.Unix(20, 0)
-	labeler.SetClientLabel(self.ConfigObj, self.client_id, "Foobar")
+	labeler.SetClientLabel(context.Background(), self.ConfigObj, self.client_id, "Foobar")
 
 	// Client will now be required to update its event table to
 	// make sure the new label does not apply.
-	assert.True(self.T(), manager.CheckClientEventsVersion(self.ConfigObj,
+	assert.True(self.T(), manager.CheckClientEventsVersion(
+		context.Background(), self.ConfigObj,
 		self.client_id, uint64(10000000000)))
 
 }

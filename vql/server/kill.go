@@ -57,7 +57,7 @@ func (self *KillClientFunction) Call(ctx context.Context,
 		scope.Log("killkillkill: %s", err.Error())
 		return vfilter.Null{}
 	}
-	err = client_manager.QueueMessageForClient(arg.ClientId,
+	err = client_manager.QueueMessageForClient(ctx, arg.ClientId,
 		&crypto_proto.VeloMessage{
 			KillKillKill: &crypto_proto.Cancel{},
 			SessionId:    constants.MONITORING_WELL_KNOWN_FLOW,

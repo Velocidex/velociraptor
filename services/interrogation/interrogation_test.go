@@ -1,6 +1,7 @@
 package interrogation_test
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -98,7 +99,8 @@ func (self *ServicesTestSuite) TestInterrogationService() {
 	// Check the label is set on the client.
 	labeler := services.GetLabeler(self.ConfigObj)
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		return labeler.IsLabelSet(self.ConfigObj, self.client_id, "Foo")
+		return labeler.IsLabelSet(
+			context.Background(), self.ConfigObj, self.client_id, "Foo")
 	})
 	assert.NoError(self.T(), err)
 }

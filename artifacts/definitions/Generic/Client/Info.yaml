@@ -37,9 +37,19 @@ sources:
     description: Windows specific information about the host
     precondition: SELECT OS From info() where OS = 'windows'
     query: |
+      LET DomainLookup <= dict(
+         `0`='Standalone Workstation',
+         `1`='Member Workstation',
+         `2`='Standalone Server',
+         `3`='Member Server',
+         `4`='Backup Domain Controller',
+         `5`='Primary Domain Controller')
+
       SELECT
-      {
-            SELECT DNSHostName,  Name, Domain, TotalPhysicalMemory
+          {
+            SELECT DNSHostName,  Name, Domain, TotalPhysicalMemory,
+                   get(item=DomainLookup,
+                       field=str(str=DomainRole), default="Unknown") AS DomainRole
             FROM wmi(
                query='SELECT * FROM win32_computersystem')
           } AS `Computer Info`,
@@ -56,6 +66,30 @@ sources:
             WHERE IPAddress
           } AS `Network Info`
       FROM scope()
+
+    notebook:
+      - type: vql_suggestion
+        name: "Enumerate Domain Roles"
+        template: |
+          /*
+          # Enumerate Domain Roles
+
+          Search all clients' enrollment information for their domain roles.
+          */
+          --
+          -- Remove the below comments to label Domain Controllers
+          SELECT *--, label(client_id=client_id, labels="DomainController", op="set") AS Label
+          FROM foreach(row={
+             SELECT * FROM clients()
+          }, query={
+              SELECT
+                `Computer Info`.Name AS Name, client_id,
+                `Computer Info`.DomainRole AS DomainRole
+              FROM source(client_id=client_id,
+                  flow_id=last_interrogate_flow_id,
+                  artifact="Generic.Client.Info/WindowsInfo")
+          })
+          -- WHERE DomainRole =~ "Controller"
 
   - name: Users
     precondition: SELECT OS From info() where OS = 'windows'

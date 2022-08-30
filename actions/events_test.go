@@ -121,11 +121,12 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// We definitely need to update the table on this client.
 	assert.True(self.T(),
 		client_manager.CheckClientEventsVersion(
+			context.Background(),
 			self.ConfigObj, self.client_id, version))
 
 	// Get the new table
 	message := client_manager.GetClientUpdateEventTableMessage(
-		self.ConfigObj, self.client_id)
+		context.Background(), self.ConfigObj, self.client_id)
 
 	// Only one query will be selected now since no label is set
 	// on the client.
@@ -151,7 +152,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// We no longer need to update the event table - it is up to date.
 	assert.False(self.T(),
 		client_manager.CheckClientEventsVersion(
-			self.ConfigObj, self.client_id,
+			context.Background(), self.ConfigObj, self.client_id,
 			actions.GlobalEventTableVersion()))
 
 	// Now we set a label on the client. This should cause the
@@ -163,18 +164,18 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	label_manager.(*labels.Labeler).Clock = self.Clock
 
 	require.NoError(self.T(),
-		label_manager.SetClientLabel(self.ConfigObj, self.client_id,
-			"Foobar"))
+		label_manager.SetClientLabel(
+			context.Background(), self.ConfigObj, self.client_id, "Foobar"))
 
 	// Setting the label will cause the client_monitoring manager
 	// to want to upgrade the event table.
 	assert.True(self.T(),
 		client_manager.CheckClientEventsVersion(
-			self.ConfigObj, self.client_id,
+			context.Background(), self.ConfigObj, self.client_id,
 			actions.GlobalEventTableVersion()))
 
 	new_message := client_manager.GetClientUpdateEventTableMessage(
-		self.ConfigObj, self.client_id)
+		context.Background(), self.ConfigObj, self.client_id)
 
 	assert.True(self.T(), new_message.UpdateEventTable.Version >
 		message.UpdateEventTable.Version)
@@ -206,19 +207,19 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 
 	// Now lets set the label to Label1
 	require.NoError(self.T(),
-		label_manager.SetClientLabel(self.ConfigObj, self.client_id,
-			"Label1"))
+		label_manager.SetClientLabel(
+			context.Background(), self.ConfigObj, self.client_id, "Label1"))
 
 	// We need to update the table again (takes a while for the
 	// client manager to notice the label change).
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		return client_manager.CheckClientEventsVersion(
-			self.ConfigObj, self.client_id,
+			context.Background(), self.ConfigObj, self.client_id,
 			actions.GlobalEventTableVersion())
 	})
 
 	new_message = client_manager.GetClientUpdateEventTableMessage(
-		self.ConfigObj, self.client_id)
+		context.Background(), self.ConfigObj, self.client_id)
 
 	// The new table has 2 event queries - one for the All label
 	// and one for Label1 label.

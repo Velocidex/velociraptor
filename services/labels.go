@@ -1,6 +1,8 @@
 package services
 
 import (
+	"context"
+
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
@@ -21,22 +23,32 @@ type Labeler interface {
 
 	// Get the last time any labeling operation modified the
 	// client's labels.
-	LastLabelTimestamp(config_obj *config_proto.Config,
+	LastLabelTimestamp(
+		ctx context.Context,
+		config_obj *config_proto.Config,
 		client_id string) uint64
 
 	// Is the label set for this client.
-	IsLabelSet(config_obj *config_proto.Config,
+	IsLabelSet(
+		ctx context.Context,
+		config_obj *config_proto.Config,
 		client_id string, label string) bool
 
 	// Set the label
-	SetClientLabel(config_obj *config_proto.Config,
+	SetClientLabel(
+		ctx context.Context,
+		config_obj *config_proto.Config,
 		client_id, label string) error
 
 	// Remove the label from the client.
-	RemoveClientLabel(config_obj *config_proto.Config,
+	RemoveClientLabel(
+		ctx context.Context,
+		config_obj *config_proto.Config,
 		client_id, label string) error
 
 	// Gets all the labels in a client.
-	GetClientLabels(config_obj *config_proto.Config,
+	GetClientLabels(
+		ctx context.Context,
+		config_obj *config_proto.Config,
 		client_id string) []string
 }

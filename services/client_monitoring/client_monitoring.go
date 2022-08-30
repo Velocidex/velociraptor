@@ -73,7 +73,9 @@ type ClientEventTable struct {
 
 	Clock utils.Clock
 
-	id string
+	// There is a separate manager for each org.
+	config_obj *config_proto.Config
+	id         string
 }
 
 func (self *ClientEventTable) SetClock(clock utils.Clock) {
@@ -96,6 +98,7 @@ func (self ClientEventTable) GetClock() utils.Clock {
 // When the table is refreshed its version is set to the current
 // timestamp which implied after both of these conditions.
 func (self *ClientEventTable) CheckClientEventsVersion(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string, client_version uint64) bool {
 
@@ -115,7 +118,7 @@ func (self *ClientEventTable) CheckClientEventsVersion(
 
 	// If the client's labels have changed after their table
 	// timestamp, then they will need to update as well.
-	if client_version < labeler.LastLabelTimestamp(config_obj, client_id) {
+	if client_version < labeler.LastLabelTimestamp(ctx, config_obj, client_id) {
 		return true
 	}
 
@@ -274,6 +277,7 @@ func (self *ClientEventTable) setClientMonitoringState(
 }
 
 func (self *ClientEventTable) GetClientUpdateEventTableMessage(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string) *crypto_proto.VeloMessage {
 	self.mu.Lock()
@@ -295,7 +299,7 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 	// Now apply any event queries that belong to this client based on labels.
 	labeler := services.GetLabeler(config_obj)
 	for _, table := range state.LabelEvents {
-		if labeler.IsLabelSet(config_obj, client_id, table.Label) {
+		if labeler.IsLabelSet(ctx, config_obj, client_id, table.Label) {
 			for _, event := range table.Artifacts.CompiledCollectorArgs {
 				result.Event = append(result.Event,
 					proto.Clone(event).(*actions_proto.VQLCollectorArgs))
@@ -456,8 +460,9 @@ func NewClientMonitoringService(
 	config_obj *config_proto.Config) (services.ClientEventTable, error) {
 
 	event_table := &ClientEventTable{
-		Clock: &utils.RealClock{},
-		id:    uuid.New().String(),
+		Clock:      &utils.RealClock{},
+		id:         uuid.New().String(),
+		config_obj: config_obj,
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)

@@ -26,8 +26,6 @@ func GetNTFSCacheTime(ctx context.Context, scope vfilter.Scope) time.Duration {
 	}
 	if cache_life == 0 {
 		cache_life = 60
-	} else {
-		scope.Log("Will expire NTFS cache every %v sec\n", cache_life)
 	}
 
 	return time.Duration(cache_life) * time.Second

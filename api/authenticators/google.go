@@ -32,7 +32,6 @@ import (
 	context "golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
-	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -144,7 +143,7 @@ func (self *GoogleAuthenticator) oauthGoogleCallback() http.Handler {
 		// Read oauthState from Cookie
 		oauthState, _ := r.Cookie("oauthstate")
 
-		if r.FormValue("state") != oauthState.Value {
+		if oauthState == nil || r.FormValue("state") != oauthState.Value {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("invalid oauth google state")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
@@ -273,14 +272,14 @@ func authenticateUserHandle(
 		// Now check if the user is allowed to log in.
 		users := services.GetUserManager()
 		user_record, err := users.GetUser(username)
-		if err != nil {
+		if err != nil || user_record.Name != username {
 			reject_cb(w, r, errors.New("Invalid user"), username)
 			return
 		}
 
-		// Must have at least reader permission.
-		perm, err := acls.CheckAccess(config_obj, username, acls.READ_RESULTS)
-		if !perm || err != nil || user_record.Locked || user_record.Name != username {
+		// Does the user have access to the specified org?
+		err = CheckOrgAccess(r, user_record)
+		if err != nil {
 			reject_cb(w, r, errors.New("Insufficient permissions"), username)
 			return
 		}

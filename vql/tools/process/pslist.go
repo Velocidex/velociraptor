@@ -33,10 +33,10 @@ func (self _ProcessTrackerPsList) Call(
 				return
 
 			case output_chan <- proc.Data.
-				Set("Pid", proc.Id).
-				Set("Ppid", proc.ParentId).
-				Set("StartTime", proc.StartTime).
-				Set("EndTime", proc.EndTime):
+				Update("Pid", proc.Id).
+				Update("Ppid", proc.ParentId).
+				Update("StartTime", proc.StartTime).
+				Update("EndTime", proc.EndTime):
 			}
 		}
 	}()
