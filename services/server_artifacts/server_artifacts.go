@@ -65,7 +65,7 @@ func (self *ServerArtifactsRunner) process(
 		return err
 	}
 
-	tasks, err := client_info_manager.GetClientTasks("server")
+	tasks, err := client_info_manager.GetClientTasks(ctx, "server")
 	if err != nil {
 		return err
 	}
@@ -246,10 +246,10 @@ func (self *ServerArtifactsRunner) runQuery(
 	scope := manager.BuildScope(services.ScopeBuilder{
 		Config: self.config_obj,
 
-		// For server artifacts, upload() ends up writing in
-		// the file store. NOTE: This allows arbitrary
-		// filestore write. Using this we can manager the
-		// files in the filestore using VQL artifacts.
+		// For server artifacts, upload() ends up writing in the file
+		// store. NOTE: This allows arbitrary filestore write. Using
+		// this we can manage the files in the filestore using VQL
+		// artifacts.
 		Uploader: NewServerUploader(self.config_obj,
 			path_manager, collection_context),
 

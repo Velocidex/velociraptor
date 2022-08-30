@@ -273,6 +273,9 @@ func doGolden() error {
 
 	failures := []string{}
 
+	if config_obj.Frontend == nil {
+		config_obj.Frontend = &config_proto.FrontendConfig{}
+	}
 	config_obj.Frontend.ServerServices = services.GoldenServicesSpec()
 
 	ctx, cancel := install_sig_handler()

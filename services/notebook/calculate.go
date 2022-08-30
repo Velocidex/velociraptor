@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -221,7 +222,8 @@ func (self *NotebookManager) updateCellContents(
 	defer func() {
 		r := recover()
 		if r != nil {
-			res, err = make_error_cell("", fmt.Errorf("PANIC: %v", r))
+			res, err = make_error_cell("", fmt.Errorf(
+				"PANIC: %v: %v", r, string(debug.Stack())))
 		}
 	}()
 

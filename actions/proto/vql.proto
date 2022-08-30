@@ -89,6 +89,9 @@ message VQLCollectorArgs {
     repeated string tools = 26 [(sem_type)={
             description: "A list of tools we will need to run this VQL.",
         }];
+
+    // Used only for API based calls
+    string org_id = 35;
 }
 
 message VQLTypeMap {
@@ -192,4 +195,5 @@ message ClientInfo {
 
     uint64 last_hunt_timestamp = 17;
     uint64 last_event_table_version = 18;
+    uint64 labels_timestamp = 23;
 }

@@ -1,6 +1,7 @@
 package client_info_test
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"time"
@@ -19,25 +20,26 @@ func (self *ClientInfoTestSuite) TestQueueMessages() {
 
 	message1 := &crypto_proto.VeloMessage{Source: "Server", SessionId: "1"}
 	err = client_info_manager.QueueMessageForClient(
+		context.Background(),
 		self.client_id, message1, true, nil)
 	assert.NoError(self.T(), err)
 
 	manager := client_info_manager.(*client_info.ClientInfoManager)
 
 	// Now retrieve all messages.
-	tasks, err := manager.PeekClientTasks(self.client_id)
+	tasks, err := manager.PeekClientTasks(context.Background(), self.client_id)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), 1, len(tasks))
 	assert.True(self.T(), proto.Equal(tasks[0], message1))
 
 	// We did not lease, so the tasks are not removed, but this
 	// time we will lease.
-	tasks, err = manager.GetClientTasks(self.client_id)
+	tasks, err = manager.GetClientTasks(context.Background(), self.client_id)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), len(tasks), 1)
 
 	// No tasks available.
-	tasks, err = manager.PeekClientTasks(self.client_id)
+	tasks, err = manager.PeekClientTasks(context.Background(), self.client_id)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), len(tasks), 0)
 }
@@ -51,6 +53,7 @@ func (self *ClientInfoTestSuite) TestFastQueueMessages() {
 	for i := 0; i < 10; i++ {
 		message := &crypto_proto.VeloMessage{Source: "Server", SessionId: fmt.Sprintf("%d", i)}
 		err := client_info_manager.QueueMessageForClient(
+			context.Background(),
 			self.client_id, message, true, nil)
 		assert.NoError(self.T(), err)
 
@@ -58,7 +61,8 @@ func (self *ClientInfoTestSuite) TestFastQueueMessages() {
 	}
 
 	// Now retrieve all messages.
-	tasks, err := client_info_manager.GetClientTasks(self.client_id)
+	tasks, err := client_info_manager.GetClientTasks(
+		context.Background(), self.client_id)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), 10, len(tasks))
 
@@ -83,7 +87,8 @@ func (self *ClientInfoTestSuite) TestGetClientTasksIsCached() {
 
 	// Get the client tasks list once - the first time will hit the
 	// datastore.
-	tasks, err := client_info_manager.GetClientTasks(self.client_id)
+	tasks, err := client_info_manager.GetClientTasks(
+		context.Background(), self.client_id)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), 0, len(tasks))
 	metrics := vtesting.GetMetricsDifference(self.T(), ".", snapshot)
@@ -93,7 +98,8 @@ func (self *ClientInfoTestSuite) TestGetClientTasksIsCached() {
 
 	// Now hit it 100 more times
 	for i := 0; i < 100; i++ {
-		tasks, err := client_info_manager.GetClientTasks(self.client_id)
+		tasks, err := client_info_manager.GetClientTasks(
+			context.Background(), self.client_id)
 		assert.NoError(self.T(), err)
 		assert.Equal(self.T(), 0, len(tasks))
 	}
@@ -105,13 +111,14 @@ func (self *ClientInfoTestSuite) TestGetClientTasksIsCached() {
 	assert.Equal(self.T(), int64(1), client_queue_list_ops)
 
 	// Schedule a new task for the client.
-	err = client_info_manager.QueueMessageForClient(self.client_id,
+	err = client_info_manager.QueueMessageForClient(
+		context.Background(), self.client_id,
 		&crypto_proto.VeloMessage{}, true, nil)
 	assert.NoError(self.T(), err)
 
 	// Wait until we can see the new task
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		tasks, _ := client_info_manager.GetClientTasks(self.client_id)
+		tasks, _ := client_info_manager.GetClientTasks(context.Background(), self.client_id)
 		return len(tasks) == 1
 	})
 
@@ -125,7 +132,7 @@ func (self *ClientInfoTestSuite) TestGetClientTasksIsCached() {
 
 	// Further reads are coming from the cache.
 	for i := 0; i < 100; i++ {
-		tasks, err := client_info_manager.GetClientTasks(self.client_id)
+		tasks, err := client_info_manager.GetClientTasks(context.Background(), self.client_id)
 		assert.NoError(self.T(), err)
 		assert.Equal(self.T(), 0, len(tasks))
 	}

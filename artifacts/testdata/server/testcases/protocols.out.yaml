@@ -1,0 +1,15 @@
+SELECT TestString, TestString[0], TestString[-1], TestString[0:5], TestString[:5], TestString[5:] FROM scope()[
+ {
+  "TestString": "This is a test",
+  "TestString[0]": 84,
+  "TestString[-1]": 116,
+  "TestString[0 : 5]": "This ",
+  "TestString[ : 5]": "This ",
+  "TestString[5 : ]": "is a test"
+ }
+]SELECT 10 =~ "1", timestamp(epoch=1666796776)  =~ "2022" FROM scope()[
+ {
+  "10 =~ \"1\"": true,
+  "timestamp(epoch=1666796776) =~ \"2022\"": true
+ }
+]

@@ -74,3 +74,46 @@ Queries:
   # Test gunzip function
   - LET base64_shellcode = 'H4sIAK4zh2IA/7VWbW/bNhD+bP0KohAgCVAE1+k2JECAOU7tOq0dr0oTZK4xMNLZYkuRKkm5Ubv+9x71kjpoUiQD5i/my93x7nmeO3tdisQwKYgsh68p+er0FlTRnPjul/EkJG5yGvR6Ts9N+Fk8IUfEXw6L4kTmlInV4eGoVAqEafbRBMxQa8ivOQPtB+RfcpmBgr2z6w+QGPKVuP9EEy6vKW/NqhFNMiB7Q5HauzcyoTaXKC44M773/r0XLPeer6KXn0rKte/FlTaQRynnXkC+BfbB86oA35uxREkt1ya6ZGJ/EL0Tmq5hjtG2MAOTyVR7gYN1KDClEliWLcf6N7e+h8uFkskwTRVo7YVkaSMvV6s//WX77NtSGJZDNBUGlCxiUFuWgI5eUZFyeAvrFXrFRjGxWQUBmm3lR/BdUXIekqeE8efwuQPtsU7+rhNaLYwKQmTxvkJnMi05NK7ePZla6gP8NPQHzjfHuZXJzcGORpxeb1kvAbPyF1Kz2uaI9EMyw/DUSFXh1j1XJQSrW0yJSz+czvPwQf/nnTGafsoP8GR5IVm6cno1i+52Hv92ak8fFuMJrJmAk0rQnCWd3u6g1EELa45bq7vObI4Z+V57AekJcNhQY7GyDP/k9jJn5tb3uGQ8BTVMkB6NWSFzwd1kGvh9bypmkCNAzR4l565R5dBZt8quutftHo28Eadah2RRYpslIYmBckhDMhSatVfD0sh6aWXcpjsruWEJ1aYLt0IkGxzb90ZSaKPKBDnD2s/jAhJGuYUiJK9YCsdVzDbduzuRd4AYUc5R/Rhpi0TgiQUgNlYJClNsWA+iGMw0LzjkaFQ3/JjTDbZ3K/JaO3QDqW3ZOyl2Gm4Ea8HoUNhJEBmOuTQhuWDK4NywwKKG/tvzPyZGk8dIQUuFX/fF8rgyVtGuuBpYPbaY1Agog9WPlcyPqYbfXzSTwX92kV/o68G8SPLx53RyUE1fnW6vBubL9K+jo2f4ZM9xs2wn1kOtP6NKZ5TjG9jSHatjqcZtqy4ksx6+30z2j6AEcJyNOD07aIacy8SOCexqHFDN2LBT7B0u9wf3rgL8CWgNcUR0s6M7Ojz8G5NErBGP6A2IjcnC/s1+v48ToX/zoh84jy9rJIsKh9LVAF0xYpa1YXkdNnAct9TrP17/z1C1jGf4lf4aqh9nv7h9FHz90Fb70+Hdg6dA+fSyLykzaBqjZDk0A/O+6ltN7PyI1Jwg5+v2Y/8GnJVmb44/Ls53zqaNf24IAAA='
   - SELECT gunzip(string=base64decode(string=base64_shellcode)) FROM scope()
+
+  # Test the ALL function
+  - LET TestArray <= ("Hello", "World", "Goodbye", "Universe")
+  - SELECT all(items=TestArray, filter="x=>x=~'Hello|Uni|Wo|G'"),
+           all(items=TestArray, filter="x=>x=~'Hello|Uni'"),
+           all(items=["Hi", "There"], filter="x=>x =~ 'Hi'"),
+           all(items=["Hi", "There"], filter="x=>x =~ 'Hi|There'")
+    FROM scope()
+
+  # For convenience all() also supports just a bunch of regex
+  - SELECT all(items=TestArray, regex='Hello|Uni|Wo|G'),
+           all(items=TestArray, regex='Hello|Uni'),
+           all(items=["Hi", "There"], regex='Hi'),
+           all(items=["Hi", "There"], regex='Hi|There')
+    FROM scope()
+
+  # Or multiple regex in an array - in which case ALL regex must match
+  # every item
+  - SELECT all(items="Hi There", regex=['Hi', "Goodbye"]),
+           all(items="Hi There", regex=['Hi', "ere"]),
+           all(items=["Hi", "There"], regex=['H|T', 'i|r'])
+    FROM scope()
+
+  # all() can also operate on GROUP BY
+  - LET TestArray <= (dict(X=1, Y="Hello"), dict(X=2, Y="Goodbye"), dict(X=1, Y="World"))
+  - SELECT *,
+           all(items=Y, filter="x=>x =~ 'Hello|World'"),
+           all(items=Y, filter="x=>x =~ 'World'"),
+           all(items=Y, filter="x=>x =~ 'Goodby'")
+    FROM foreach(row=TestArray)
+    GROUP BY X
+
+  # all() can also operate on subqueries
+  - SELECT all(items={
+      SELECT * FROM foreach(row=TestArray)
+      WHERE X = 1
+    }, filter="x=> x.Y =~ 'Hel|Worl'")
+    FROM scope()
+
+  # Test the any function
+  - SELECT any(items=TestArray, filter="x=>x.Y =~ 'Good'"),
+           all(items=TestArray, filter="x=>x.Y =~ 'Good'")
+    FROM scope()

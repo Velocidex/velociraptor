@@ -49,7 +49,6 @@ message ApiClientACL {
     // A list of roles in lieu of the permissions above. These will be
     // interpolated into this ACL object.
     repeated string roles = 9;
-
 }
 
 // A role is a named sets of ACL permissions. A user may possess

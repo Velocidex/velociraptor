@@ -46,10 +46,11 @@ func (self *ServerUploader) Upload(
 			return nil, err
 		}
 
+		timestamp := time.Now().UTC().Unix()
 		err = journal.AppendToResultSet(self.config_obj,
 			self.path_manager.UploadMetadata(),
 			[]*ordereddict.Dict{ordereddict.NewDict().
-				Set("Timestamp", time.Now().UTC().Unix()).
+				Set("Timestamp", timestamp).
 				Set("started", time.Now().UTC().String()).
 				Set("vfs_path", result.Path).
 				Set("expected_size", result.Size).
@@ -64,6 +65,24 @@ func (self *ServerUploader) Upload(
 			context.TotalUploadedBytes += uint64(result.Size)
 			context.TotalExpectedUploadedBytes += uint64(result.Size)
 		})
+
+		row := ordereddict.NewDict().
+			Set("Timestamp", timestamp).
+			Set("ClientId", "server").
+			Set("VFSPath", result.Path).
+			Set("UploadName", store_as_name).
+			Set("Accessor", "fs").
+			Set("Size", result.Size).
+			Set("UploadedSize", result.Size)
+
+		err = journal.PushRowsToArtifact(self.config_obj,
+			[]*ordereddict.Dict{row},
+			"System.Upload.Completion",
+			"server", self.collection_context.GetContext().SessionId,
+		)
+		if err != nil {
+			return nil, err
+		}
 
 		return result, self.collection_context.Save()
 

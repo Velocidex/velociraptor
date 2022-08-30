@@ -16,6 +16,7 @@ package process
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -186,7 +187,7 @@ func (self *ProcessTracker) Enrich(
 		if ok {
 			for _, k := range update_dict.Keys() {
 				v, _ := update_dict.Get(k)
-				pe.Data.Set(k, v)
+				pe.Data.Update(k, v)
 			}
 		}
 	}
@@ -329,6 +330,16 @@ func (self *ProcessTracker) doFullSync(
 			// set - update that now.
 			item.EndTime = now
 			self.lookup.Set(id, item)
+		}
+
+		// If a process has no valid parent at this time we must mark
+		// its parent id so as to prevent a new process with the same
+		// pid being added in future and clashing with it.
+		if !strings.Contains(item.ParentId, "-") {
+			_, pres := self.get(item.ParentId)
+			if !pres {
+				item.ParentId = fmt.Sprintf("%s-?", item.ParentId)
+			}
 		}
 	}
 

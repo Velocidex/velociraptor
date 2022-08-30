@@ -54,9 +54,9 @@ sources:
         get(item=expected_paths_lookup, field=Name).Path AS ExpectedPaths,
         process_tracker_callchain(id=Pid) AS CallChain,
         process_tracker_get(id=Ppid) AS Parent
-        FROM process_tracker_pslist()
-        WHERE ImagePath != "" AND ExpectedPaths AND
-          NOT lowcase(string=ImagePath) IN ExpectedPaths
+      FROM process_tracker_pslist()
+      WHERE ImagePath != "" AND ExpectedPaths AND
+        NOT lowcase(string=ImagePath) IN ExpectedPaths
 
       SELECT PID, ProcessName, ImagePath, CommandLine, Username, StartTime, EndTime,
         PPID, Parent.Data.Name As ParentProcessName,

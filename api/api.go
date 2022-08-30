@@ -328,10 +328,12 @@ func (self *ApiServer) LabelClients(
 		for _, label := range in.Labels {
 			switch in.Operation {
 			case "set":
-				err = labeler.SetClientLabel(org_config_obj, client_id, label)
+				err = labeler.SetClientLabel(ctx,
+					org_config_obj, client_id, label)
 
 			case "remove":
-				err = labeler.RemoveClientLabel(org_config_obj, client_id, label)
+				err = labeler.RemoveClientLabel(ctx,
+					org_config_obj, client_id, label)
 
 			default:
 				return nil, errors.New("Unknown label operation")
@@ -446,6 +448,7 @@ func (self *ApiServer) GetUserUITraits(
 		result.InterfaceTraits.Lang = user_options.Lang
 		result.InterfaceTraits.DefaultPassword = user_options.DefaultPassword
 		result.InterfaceTraits.DefaultDownloadsLock = user_options.DefaultDownloadsLock
+		result.InterfaceTraits.Customizations = user_options.Customizations
 	}
 
 	return result, nil
@@ -845,6 +848,22 @@ func (self *ApiServer) Query(
 
 	user_name := user_info.Name
 
+	// If the caller wants to switch orgs, change the config to point
+	// to that org. We check permission immediately below to ensure
+	// they actually have the permission to query this org.
+	if in.OrgId != "" {
+		// Fetch the appropriate config file fro the org manager.
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return err
+		}
+
+		org_config_obj, err = org_manager.GetOrgConfig(in.OrgId)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Check that the principal is allowed to issue queries.
 	permissions := acls.ANY_QUERY
 	ok, err := acls.CheckAccess(org_config_obj, user_name, permissions)
@@ -940,8 +959,8 @@ func (self *ApiServer) GetClientMonitoringState(
 
 	result := manager.GetClientMonitoringState()
 	if in.ClientId != "" {
-		message := manager.GetClientUpdateEventTableMessage(org_config_obj,
-			in.ClientId)
+		message := manager.GetClientUpdateEventTableMessage(
+			ctx, org_config_obj, in.ClientId)
 		result.ClientMessage = message
 	}
 

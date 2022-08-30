@@ -104,7 +104,7 @@ func (self *AzureAuthenticator) oauthAzureCallback() http.Handler {
 		// Read oauthState from Cookie
 		oauthState, _ := r.Cookie("oauthstate")
 
-		if r.FormValue("state") != oauthState.Value {
+		if oauthState == nil || r.FormValue("state") != oauthState.Value {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("invalid oauth azure state")
 			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)

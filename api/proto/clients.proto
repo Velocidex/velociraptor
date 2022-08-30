@@ -17,6 +17,10 @@ message AgentInformation {
 
 // Describe a client. We fill in some metadata about the client but
 // this is by no means exhaustive.
+
+// TODO: This is an older protobuf that is now largely supeceeded by
+// actions_proto.ClientInfo. We need to replace use of this protobuf
+// by ClientInfo.
 message ApiClient {
     string client_id = 1 [(sem_type) = {
             type: "ApiClientId",
@@ -42,6 +46,12 @@ message ApiClient {
     string last_interrogate_artifact_name = 21;
 
     repeated string labels = 18;
+
+    uint64 last_hunt_timestamp = 22;
+    uint64 last_event_table_version = 23;
+
+    // Last time the labels on this client were updated.
+    uint64 last_label_timestamp = 24;
 }
 
 message SearchClientsRequest {

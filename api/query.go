@@ -50,6 +50,7 @@ func streamQuery(
 	logger := logging.GetLogger(config_obj, &logging.APICmponent)
 	logger.WithFields(logrus.Fields{
 		"arg":  arg,
+		"org":  arg.OrgId,
 		"user": peer_name,
 	}).Info("Query API call")
 

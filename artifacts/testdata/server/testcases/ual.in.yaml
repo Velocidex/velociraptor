@@ -1,5 +1,5 @@
 Queries:
-  - SELECT *, basename(path=_FullPath) AS _FullPath
+  - SELECT *, basename(path=_OSPath) AS _OSPath
     FROM Artifact.Windows.Forensics.UserAccessLogs(
       SUMGlob=srcDir+"/artifacts/testdata/files/*03A01CC5*.mdb")
     LIMIT 1

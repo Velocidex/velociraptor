@@ -54,7 +54,7 @@ func (self OrgCreateFunction) Call(
 func (self OrgCreateFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "org_create",
-		Doc:     "Creates a new organizaion.",
+		Doc:     "Creates a new organization.",
 		ArgType: type_map.AddType(scope, &OrgCreateFunctionArgs{}),
 	}
 }

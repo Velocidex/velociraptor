@@ -192,14 +192,14 @@ func (self *TestSuite) TestRetransmission() {
 
 	runner := NewFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(ctx, message)
-	runner.Close()
+	runner.Close(context.Background())
 
 	// Retransmit the same row again - this can happen if the
 	// server is loaded and the client is re-uploading the same
 	// payload multiple times.
 	runner = NewFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(ctx, message)
-	runner.Close()
+	runner.Close(context.Background())
 
 	// Load the collection context and see what happened.
 	collection_context, err := LoadCollectionContext(self.ConfigObj,
@@ -242,7 +242,8 @@ func (self *TestSuite) TestResourceLimits() {
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	messages, err := client_info_manager.GetClientTasks(self.client_id)
+	messages, err := client_info_manager.GetClientTasks(
+		context.Background(), self.client_id)
 	assert.NoError(self.T(), err)
 
 	// Two requests since there are two source preconditions on
@@ -266,7 +267,7 @@ func (self *TestSuite) TestResourceLimits() {
 
 	runner := NewFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(ctx, message)
-	runner.Close()
+	runner.Close(context.Background())
 
 	// Load the collection context and see what happened.
 	collection_context, err := LoadCollectionContext(self.ConfigObj,
@@ -282,7 +283,7 @@ func (self *TestSuite) TestResourceLimits() {
 	message.ResponseId++
 	runner = NewFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(ctx, message)
-	runner.Close()
+	runner.Close(context.Background())
 
 	// Load the collection context and see what happened.
 	collection_context, err = LoadCollectionContext(self.ConfigObj,
@@ -300,7 +301,7 @@ func (self *TestSuite) TestResourceLimits() {
 	message.ResponseId++
 	runner = NewFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(ctx, message)
-	runner.Close()
+	runner.Close(context.Background())
 
 	// Load the collection context and see what happened.
 	collection_context, err = LoadCollectionContext(self.ConfigObj,
@@ -315,7 +316,7 @@ func (self *TestSuite) TestResourceLimits() {
 	assert.Contains(self.T(), collection_context.Status, "Row count exceeded")
 
 	// Make sure a cancel message was sent to the client.
-	messages, err = client_info_manager.PeekClientTasks(self.client_id)
+	messages, err = client_info_manager.PeekClientTasks(context.Background(), self.client_id)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), len(messages), 1)
 	assert.NotNil(self.T(), messages[0].Cancel)
@@ -326,7 +327,7 @@ func (self *TestSuite) TestResourceLimits() {
 	message.ResponseId++
 	runner = NewFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(ctx, message)
-	runner.Close()
+	runner.Close(context.Background())
 
 	// We still collect these rows but the flow is still in the
 	// error state. We do this so we dont lose the last few
@@ -382,7 +383,7 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 
 	// Close the context should force uploaded files to be
 	// flushed.
-	closeContext(self.ConfigObj, collection_context)
+	closeContext(context.Background(), self.ConfigObj, collection_context)
 
 	assert.Equal(self.T(), collection_context.TotalUploadedFiles, uint64(1))
 
@@ -642,7 +643,7 @@ func (self *TestSuite) TestCollectionCompletionTwoSourcesIncomplete() {
 				Duration: 100,
 			},
 		})
-	runner.Close()
+	runner.Close(context.Background())
 
 	// Re-read the context
 	collection_context, err = LoadCollectionContext(
@@ -692,7 +693,7 @@ func (self *TestSuite) TestCollectionCompletionTwoSourcesIncomplete() {
 				Duration: 100,
 			},
 		})
-	runner.Close()
+	runner.Close(context.Background())
 
 	// The Completion message had gone out
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
@@ -762,7 +763,7 @@ func (self *TestSuite) testCollectionCompletion(
 		runner.ProcessSingleMessage(self.Ctx, resp)
 	}
 
-	runner.Close()
+	runner.Close(context.Background())
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
 		mu.Lock()
@@ -828,7 +829,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 
 	// Close the context should force uploaded files to be
 	// flushed.
-	closeContext(self.ConfigObj, collection_context)
+	closeContext(context.Background(), self.ConfigObj, collection_context)
 
 	// One file is uploaded
 	assert.Equal(self.T(), collection_context.TotalUploadedFiles, uint64(1))
@@ -949,7 +950,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 
 	// Close the context should force uploaded files to be
 	// flushed.
-	closeContext(self.ConfigObj, collection_context)
+	closeContext(context.Background(), self.ConfigObj, collection_context)
 
 	// One file is uploaded
 	assert.Equal(self.T(), collection_context.TotalUploadedFiles, uint64(1))

@@ -3,20 +3,33 @@ description: |
   UAL is a feature that can help server administrators quantify the
   number of unique client requests of roles and services on a local
   server.
-
-  The UAL only exists on Windows Server edition later than 2012.
-
+  
+  The UAL only exists on Windows Server edition 2012 and above.
+  
 reference:
   - https://advisory.kpmg.us/blog/2021/digital-forensics-incident-response.html
   - https://docs.microsoft.com/en-us/windows-server/administration/user-access-logging/manage-user-access-logging
   - https://www.crowdstrike.com/blog/user-access-logging-ual-overview/
 
+export: |
+    LET IPProfile = '''[
+      ["X", 0, [
+        ["A", 0, "uint8"],
+        ["B", 1, "uint8"],
+        ["C", 2, "uint8"],
+        ["D", 3, "uint8"],
+        ["IP", 0, "Value", {
+           value: "x=> format(format='%d.%d.%d.%d', args=[x.A, x.B, x.C, x.D])"
+        }]
+      ]]
+    ]'''
+    
 parameters:
    - name: SUMGlob
      description: The SUM ESE files to search for.
-     default: |
-       C:\Windows\System32\LogFiles\SUM\*.mdb
-
+     default: >-
+       C:/Windows/System32/LogFiles/SUM/*.mdb
+       
 sources:
   - query: |
         -- These come from the SystemIdentity.mdb ROLE_IDS table but
@@ -37,27 +50,36 @@ sources:
         "{910cbaf9-b612-4782-a21f-f7c75105434a}",BranchCache
         "{952285d9-edb7-4b6b-9d85-0c09e3da0bbd}",Remote Access
         "{ad495fc3-0eaa-413d-ba7d-8b13fa7ec598}",Active Directory Domain Services
+        "{bd7f7c0d-7c36-4721-afa8-0ba700e26d9e}",SQL Server Database Engine
+        "{dde30b98-449e-4b93-84a6-ea86af0b19fe}",MSMQ
+        "{1479a8c1-9808-411e-9739-2d3c5923e86a}",Windows Server 2016 DatacenterRemote Desktop Gateway
+        "{90e64afa-70db-4fef-878b-7eb8c868f091}",Windows ServerRemote Desktop Services
+        "{2414bc1b-1572-4cd9-9ca5-65166d8def3d}",SQL Server Analysis Services
+        "{8cc0ac85-40f7-4886-9dab-021519800418}",Reporting Services
         ''')
-
+        
         -- Resolve GUID to name
         LET GetRoleName(guid) = SELECT RoleName FROM Roles WHERE RoleGuid = guid
-
+        
         -- Format the address - it can be IPv4, IPv6 or something else.
         LET FormatAddress(x) = if(condition=len(list=x) = 4,
-
+        
          -- IPv4 address should be formatted in dot notation
-         then=format(format="%d.%d.%d.%d", args=[x[0], x[1], x[2], x[3]]),
+         then=parse_binary(accessor="data",
+                           filename=Address, struct="X",
+                           profile=IPProfile).IP,
          else=if(condition=len(list=x)=16,
            -- IPv6 addresses are usually shortened
            then=regex_replace(source=format(format="%x", args=x),
                               re="(00)+", replace=":"),
-
+                              
            -- We dont know what kind of address it is.
            else=format(format="%x", args=x)))
-
-        LET ParseESE = SELECT FullPath AS _FullPath, RoleGuid,
+           
+        LET ParseESE = SELECT OSPath AS _OSPath, RoleGuid,
                GetRoleName(guid=RoleGuid)[0].RoleName AS RoleName,
                TenantId, TotalAccesses, InsertDate, LastAccess,
+               format(format="%02x", args=Address) AS RawAddress,
                FormatAddress(x=Address) AS Address,
                AuthenticatedUserName,
                -- Only show the days that have something in them.
@@ -68,9 +90,9 @@ sources:
                  FROM range(start=0, end=366, step=1)
                  WHERE _value
                }) AS Days
-        FROM parse_ese(file=FullPath, table="CLIENTS")
-
+        FROM parse_ese(file=OSPath, table="CLIENTS", accessor="auto")
+        
         SELECT * FROM foreach(row={
-          SELECT FullPath
-          FROM glob(globs=SUMGlob)
+          SELECT OSPath
+          FROM glob(globs=SUMGlob, accessor="auto")
         }, query=ParseESE)

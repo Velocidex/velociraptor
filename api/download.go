@@ -240,6 +240,7 @@ func getRows(
 // exporting we need to replicate this transformation, otherwise the
 // results can be surprising.
 func getTransformer(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	in *api_proto.GetTableRequest) func(row *ordereddict.Dict) *ordereddict.Dict {
 	if in.HuntId != "" && in.Type == "clients" {
@@ -254,7 +255,7 @@ func getTransformer(
 
 			return ordereddict.NewDict().
 				Set("ClientId", client_id).
-				Set("Hostname", services.GetHostname(config_obj, client_id)).
+				Set("Hostname", services.GetHostname(ctx, config_obj, client_id)).
 				Set("FlowId", flow_id).
 				Set("StartedTime", time.Unix(utils.GetInt64(row, "Timestamp"), 0)).
 				Set("State", flow.State.String()).
@@ -288,7 +289,7 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 		}
 		defer closer()
 
-		transform := getTransformer(config_obj, request)
+		transform := getTransformer(r.Context(), config_obj, request)
 
 		download_name := request.DownloadFilename
 		if download_name == "" {

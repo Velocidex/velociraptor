@@ -69,6 +69,9 @@ func doVacuum() error {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
+	if config_obj.Frontend == nil {
+		config_obj.Frontend = &config_proto.FrontendConfig{}
+	}
 	config_obj.Frontend.ServerServices = services.GenericToolServices()
 	config_obj.Frontend.ServerServices.IndexServer = true
 
@@ -130,7 +133,7 @@ func generateTasks(
 		fmt.Printf("ClientInfo %v %v\n", client_info.ClientId,
 			client_info.OsInfo.Hostname)
 		err = client_info_manager.QueueMessagesForClient(
-			client_info.ClientId, tasks, false)
+			ctx, client_info.ClientId, tasks, false)
 		if err != nil {
 			fmt.Printf("Error: %v\n", err)
 		}

@@ -153,6 +153,12 @@ message ClientConfig {
     string tempdir_windows = 2;
     string tempdir_darwin = 3;
 
+    // Number of seconds to wait between polls (default 1
+    // second). NOTE: Velociraptor typically holds the connection up
+    // for at least max_poll time and then refreshes the
+    // connection. The min poll is used to determine how quickly
+    // connections should resume.
+    uint64 min_poll = 14;
     uint64 max_poll = 15 [(sem_type) = {
             description: "The maximum number of seconds between server polls."
             default: "600",
@@ -850,6 +856,8 @@ message Defaults {
     // changed. This causes a lot of load on large deployments so it
     // is off by default.
     bool event_change_notify_all_clients = 6;
+
+    uint64 max_vfs_directory_size = 7;
 }
 
 // Configures crypto preferences
