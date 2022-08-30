@@ -121,7 +121,12 @@ func (self *AccessorReader) Size() int {
 func (self *AccessorReader) Key() string {
 	return self.key
 }
-func (self *AccessorReader) Close() {
+
+func (self *AccessorReader) Flush() {
+	self.Close()
+}
+
+func (self *AccessorReader) Close() error {
 	self.mu.Lock()
 
 	cancel := self.cancel
@@ -141,6 +146,8 @@ func (self *AccessorReader) Close() {
 	if reader != nil {
 		reader.Close()
 	}
+
+	return nil
 }
 
 func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
