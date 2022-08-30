@@ -187,7 +187,7 @@ func (self *ProcessTracker) Enrich(
 		if ok {
 			for _, k := range update_dict.Keys() {
 				v, _ := update_dict.Get(k)
-				pe.Data.Set(k, v)
+				pe.Data.Update(k, v)
 			}
 		}
 	}
