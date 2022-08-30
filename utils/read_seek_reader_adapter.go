@@ -5,12 +5,30 @@ import (
 	"io"
 )
 
+type Flusher interface {
+	Flush()
+}
+
+type Closer interface {
+	Close() error
+}
+
 type ReadSeekReaderAdapter struct {
 	reader io.ReaderAt
 	offset int64
 }
 
 func (self ReadSeekReaderAdapter) Close() error {
+	// Try to close our delegate if possible
+	switch t := self.reader.(type) {
+	case Flusher:
+		t.Flush()
+
+	case Closer:
+		t.Close()
+
+	default:
+	}
 	return nil
 }
 
