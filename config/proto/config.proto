@@ -329,6 +329,12 @@ message Authenticator {
     uint64 default_session_expiry_min = 20;
 }
 
+// Configures integrations within the GUI
+message GUIApplications {
+    // Defaults to https://gchq.github.io/CyberChef/
+    string cyberchef_url = 1;
+}
+
 message GUIConfig {
     string bind_address = 1 [(sem_type) = {
             description: "Address to bind GUI endpoint. This should usually only be 127.0.0.1, otherwise be sure to properly secure it."
@@ -377,8 +383,9 @@ message GUIConfig {
             description: "Additional links to present in the GUI."
         }];
 
-    // These users are created if they do no already exist in the data
-    // store.
+    // These users are created with administrator role if they do not
+    // already exist in the data store. This is useful for
+    // initializing the server with some valid administrators.
     repeated GUIUser initial_users = 17;
 
     // The authenticator to use - can not be null.
@@ -389,6 +396,8 @@ message GUIConfig {
     // available in the GUI to a small subset (e.g. only certain
     // packs).
     string artifact_search_filter = 18;
+
+    GUIApplications applications = 22;
 
     // SAML info deprecated - will be moved to a sample authenticator.
     string saml_certificate = 12;
@@ -405,7 +414,6 @@ message GUIUser {
     string name = 1;
     string password_hash = 2;
     string password_salt = 3;
-
 }
 
 message CAConfig {

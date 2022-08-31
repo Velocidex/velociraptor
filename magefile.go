@@ -381,6 +381,16 @@ func Clean() error {
 	return nil
 }
 
+// Only build the assets without building the actual code.
+func Assets() error {
+	err := build_gui_files()
+	if err != nil {
+		return err
+	}
+
+	return ensure_assets()
+}
+
 func build_gui_files() error {
 	cwd, err := os.Getwd()
 	if err != nil {

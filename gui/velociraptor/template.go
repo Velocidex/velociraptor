@@ -2,14 +2,15 @@ package velociraptor
 
 // The template to expand into the index.html page
 type HTMLtemplateArgs struct {
-	Timestamp  int64
-	Heading    string
-	Help_url   string
-	Report_url string
-	Version    string
-	CsrfToken  string
-	BasePath   string
-	UserTheme  string
+	Timestamp    int64
+	Heading      string
+	Help_url     string
+	Report_url   string
+	Version      string
+	CsrfToken    string
+	BasePath     string
+	UserTheme    string
+	Applications string
 
 	// This is a JSON serialized instance of ErrState
 	ErrState string

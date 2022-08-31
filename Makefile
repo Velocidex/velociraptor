@@ -1,6 +1,9 @@
 all:
 	go run make.go -v autoDev
 
+assets:
+	go run make.go -v assets
+
 auto:
 	go run make.go -v auto
 
