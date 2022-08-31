@@ -34,7 +34,7 @@ export function ContextMenuPopup() {
     // the config file.
     let applications = {};
     try {
-        applications = JSON.parse(window.applications);
+        applications = JSON.parse(window.applications) || {};
     } catch(e) {};
 
     // Set a default URL - the user may override with custom
