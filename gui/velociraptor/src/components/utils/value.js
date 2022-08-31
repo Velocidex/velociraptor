@@ -4,6 +4,7 @@ import _ from 'lodash';
 import ReactJson from 'react-json-view';
 import UserConfig from '../core/user.js';
 import VeloTimestamp from "./time.js";
+import ContextMenu from './context.js';
 
 const timestamp_regex = new RegExp('^\\d\\d\\d\\d-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d.+$');
 
@@ -87,7 +88,7 @@ export default class VeloValueRenderer extends React.Component {
         let v = this.props.value;
 
         if (_.isString(v)) {
-            return <>{this.maybeFormatTime(v)}</>;
+            return <ContextMenu value={v}>{this.maybeFormatTime(v)}</ContextMenu>;
         }
 
         if (_.isNumber(v)) {
@@ -101,14 +102,16 @@ export default class VeloValueRenderer extends React.Component {
         let theme = this.getTheme();
 
         return (
-            <ReactJson name={false}
-                       collapsed={1}
-                       theme={theme}
-                       enableClipboard={false}
-                       collapseStringsAfterLength={100}
-                       displayObjectSize={false}
-                       displayDataTypes={false}
-                       src={v} />
+            <ContextMenu value={v}>
+              <ReactJson name={false}
+                         collapsed={1}
+                         theme={theme}
+                         enableClipboard={false}
+                         collapseStringsAfterLength={100}
+                         displayObjectSize={false}
+                         displayDataTypes={false}
+                         src={v} />
+            </ContextMenu>
         );
     }
 };

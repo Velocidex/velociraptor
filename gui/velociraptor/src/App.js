@@ -29,7 +29,7 @@ import LoginPage from './components/welcome/login.js';
 import LogoffPage from './components/welcome/logoff.js';
 import KeyboardHelp from './components/core/keyboard-help.js';
 import { UserSettings } from './components/core/user.js';
-
+import { ContextMenuPopup } from './components/utils/context.js';
 import { Switch, Route } from "react-router-dom";
 import { Join } from './components/utils/paths.js';
 import { withRouter }  from "react-router-dom";
@@ -223,6 +223,7 @@ class App extends Component {
                   <KeyboardHelp />
                 </SnackbarProvider>
               </UserSettings>
+              <ContextMenuPopup/>
             </div>
         );
     };

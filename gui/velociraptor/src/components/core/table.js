@@ -31,6 +31,7 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import T from '../i8n/i8n.js';
 import TreeCell from './tree-cell.js';
+import ContextMenu from '../utils/context.js';
 
 // Shows the InspectRawJson modal dialog UI.
 export class InspectRawJson extends Component {
@@ -556,7 +557,9 @@ export function formatColumns(columns) {
                 try {
                     cell = atob(cell);
                 } catch(e) {};
-                return <HexViewPopup data={cell}/>;
+                return <ContextMenu value={cell}>
+                         <HexViewPopup data={cell}/>
+                       </ContextMenu>;
             };
             x.type = null;
             break;
