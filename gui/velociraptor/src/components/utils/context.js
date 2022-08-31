@@ -3,8 +3,6 @@ import _ from 'lodash';
 import {
   Menu,
   Item,
-  Separator,
-  Submenu,
   useContextMenu,
 } from "react-contexify";
 import "react-contexify/dist/ReactContexify.css";
@@ -31,10 +29,6 @@ export default function ContextMenu({children, value}) {
 // Render the main popup menu on the root DOM page. Should only be
 // called once.
 export function ContextMenuPopup() {
-    function handleItemClick({ event, props, triggerEvent, data }){
-        console.log(event, props, triggerEvent, data );
-    }
-
     // Get the context menu options from the server - this will be
     // injected into window.applications from GUI.Applications from
     // the config file.
