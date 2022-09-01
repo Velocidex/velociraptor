@@ -486,9 +486,12 @@ export function formatColumns(columns) {
 
         case "tree":
             x.formatter= (cell, row) => {
-                return <TreeCell
-                         name={x.text}
-                         data={cell}/>;
+                if (_.isObject(cell)) {
+                    return <TreeCell
+                                name={x.text}
+                                data={cell}/>;
+                };
+                return cell;
             };
             x.type = null;
             break;
