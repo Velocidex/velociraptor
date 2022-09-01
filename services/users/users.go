@@ -309,7 +309,7 @@ func (self UserManager) GetUserOptions(username string) (
 	}
 
 	// Add the defaults.
-	options.Links = MergeGUILinks(options.Links, defaultLinks)
+	options.Links = MergeGUILinks(options.Links, DefaultLinks)
 
 	// NOTE: It is possible for a user to disable one of the default
 	// targets by simply adding an entry with disabled: true - we will

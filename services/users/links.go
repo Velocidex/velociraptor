@@ -3,7 +3,7 @@ package users
 import config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 
 var (
-	defaultLinks = []*config_proto.GUILink{
+	DefaultLinks = []*config_proto.GUILink{
 		{
 			Text:      "Google",
 			Url:       "https://www.google.com",
