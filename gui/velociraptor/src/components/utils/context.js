@@ -10,6 +10,8 @@ import {
   useContextMenu,
 } from "react-contexify";
 import "react-contexify/dist/ReactContexify.css";
+import T from '../i8n/i8n.js';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 const MENU_ID = "menu-id";
 
@@ -114,6 +116,13 @@ export class ContextMenuPopup extends Component {
             x=>x.type === "context" && !x.disabled);
 
         return <Menu id={MENU_ID}>
+                 <Item
+                   onClick={e=>{ e.props &&
+                                 navigator.clipboard.writeText(
+                                     e.props && e.props.value);}}>
+                   <FontAwesomeIcon className="context-icon" icon="copy"/>
+                   {T("Clipboard")}
+                 </Item>
                  {_.map(context_links, x=>{
                      return (
                          <Item
