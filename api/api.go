@@ -449,6 +449,7 @@ func (self *ApiServer) GetUserUITraits(
 		result.InterfaceTraits.DefaultPassword = user_options.DefaultPassword
 		result.InterfaceTraits.DefaultDownloadsLock = user_options.DefaultDownloadsLock
 		result.InterfaceTraits.Customizations = user_options.Customizations
+		result.InterfaceTraits.Links = user_options.Links
 	}
 
 	return result, nil

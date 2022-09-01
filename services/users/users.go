@@ -258,6 +258,10 @@ func (self UserManager) SetUserOptions(username string,
 		old_options = &api_proto.SetGUIOptionsRequest{}
 	}
 
+	// For now we do not allow the user to set the links in their
+	// profile.
+	old_options.Links = nil
+
 	if options.Lang != "" {
 		old_options.Lang = options.Lang
 	}
@@ -298,6 +302,19 @@ func (self UserManager) GetUserOptions(username string) (
 	if options.Options == "" {
 		options.Options = default_user_options
 	}
+
+	// Add any links in the config file to the user's preferences.
+	if self.config_obj.GUI != nil {
+		options.Links = MergeGUILinks(options.Links, self.config_obj.GUI.Links)
+	}
+
+	// Add the defaults.
+	options.Links = MergeGUILinks(options.Links, defaultLinks)
+
+	// NOTE: It is possible for a user to disable one of the default
+	// targets by simply adding an entry with disabled: true - we will
+	// not override the configured link from the default and it will
+	// be ignored.
 
 	return options, err
 }

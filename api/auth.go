@@ -30,12 +30,7 @@ func NewDefaultUserObject(config_obj *config_proto.Config) *api_proto.ApiUser {
 
 	if config_obj.GUI != nil {
 		result.InterfaceTraits = &api_proto.ApiUserInterfaceTraits{
-			Links: []*api_proto.UILink{},
-		}
-
-		for _, link := range config_obj.GUI.Links {
-			result.InterfaceTraits.Links = append(result.InterfaceTraits.Links,
-				&api_proto.UILink{Text: link.Text, Url: link.Url})
+			Links: config_obj.GUI.Links,
 		}
 	}
 
