@@ -29,7 +29,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	gui_assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -85,12 +84,11 @@ func GetTemplateHandler(
 		}
 
 		args := velociraptor.HTMLtemplateArgs{
-			Timestamp:    time.Now().UTC().UnixNano() / 1000,
-			CsrfToken:    csrf.Token(r),
-			BasePath:     base,
-			Heading:      "Heading",
-			UserTheme:    user_options.Theme,
-			Applications: json.MustMarshalString(config_obj.GUI.Applications),
+			Timestamp: time.Now().UTC().UnixNano() / 1000,
+			CsrfToken: csrf.Token(r),
+			BasePath:  base,
+			Heading:   "Heading",
+			UserTheme: user_options.Theme,
 		}
 		err = tmpl.Execute(w, args)
 		if err != nil {

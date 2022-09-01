@@ -279,6 +279,23 @@ message ApiClientConfig {
 message GUILink {
     string text = 1;
     string url = 2;
+    string icon_url = 3;
+
+    // This can be "sidebar" (default), "context"
+    string type = 4;
+
+    // If set we open in new tab
+    bool new_tab = 5;
+
+    // Encode value first using this (can be "plain", "base64")
+    string encode = 6;
+    string parameter = 7;
+
+    // Can be GET (default) or POST
+    string method = 8;
+
+    // If set we ignore this entry completely
+    bool disabled = 9;
 }
 
 message Authenticator {
@@ -327,12 +344,6 @@ message Authenticator {
     // How long to keep the session alive between auth flows - default
     // 24 hours
     uint64 default_session_expiry_min = 20;
-}
-
-// Configures integrations within the GUI
-message GUIApplications {
-    // Defaults to https://gchq.github.io/CyberChef/
-    string cyberchef_url = 1;
 }
 
 message GUIConfig {
@@ -396,8 +407,6 @@ message GUIConfig {
     // available in the GUI to a small subset (e.g. only certain
     // packs).
     string artifact_search_filter = 18;
-
-    GUIApplications applications = 22;
 
     // SAML info deprecated - will be moved to a sample authenticator.
     string saml_certificate = 12;
