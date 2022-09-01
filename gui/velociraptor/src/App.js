@@ -222,8 +222,8 @@ class App extends Component {
                   </Switch>
                   <KeyboardHelp />
                 </SnackbarProvider>
+                <ContextMenuPopup/>
               </UserSettings>
-              <ContextMenuPopup/>
             </div>
         );
     };

@@ -1,4 +1,5 @@
 import "./navigator.css";
+import _ from 'lodash';
 import logo from  "./velo.svg";
 import UserConfig from '../core/user.js';
 
@@ -55,6 +56,11 @@ class VeloNavigator extends Component {
 
         let customization = this.context.traits && this.context.traits.customizations;
         customization = customization || {};
+
+        // Add sidebar links
+        let sidebar_links = _.filter(
+            this.context.traits ? this.context.traits.links : [],
+            x=>x.type === "" || x.type === "sidebar");
 
         return (
             <>
@@ -258,6 +264,27 @@ class VeloNavigator extends Component {
                             </ul>
                           </NavLink>
                         </>
+                      }
+
+                      { _.map(sidebar_links, x=>{
+                          return  (
+                           <ul key={x.text}
+                               className="nav nav-pills navigator">
+                             <li className={classNames({
+                                 "nav-link": true})}>
+                               <a href={x.url} rel="noreferrer"
+                                  target={x.new_tab ? "_blank" : ""}>
+                                 <span>
+                                   <img className="sidebar-icon"
+                                        alt={x.text}
+                                        src={x.icon_url}/>
+                                 </span>
+                                 {T(x.text)}
+                               </a>
+                              </li>
+                            </ul>
+                          );
+                          })
                       }
                     </section>
                   </div>
