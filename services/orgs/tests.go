@@ -32,6 +32,7 @@ func (self *TestOrgManager) Start(
 		record:     &api_proto.OrgRecord{},
 		config_obj: org_config,
 		service:    service_container,
+		ctx:        ctx,
 	}
 	self.orgs[""] = org_context
 	self.mu.Unlock()

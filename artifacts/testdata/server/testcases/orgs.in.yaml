@@ -133,3 +133,6 @@ Queries:
     FROM glob(globs="/**", accessor="fs")
     WHERE OSPath =~ "file.txt"
   }, org_id="ORGID2")
+
+- LET _ <= org_delete(org="ORGID2")
+- SELECT OrgId FROM orgs()

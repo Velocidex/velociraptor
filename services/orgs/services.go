@@ -369,6 +369,18 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		service_container.mu.Unlock()
 	}
 
+	if spec.Launcher {
+		launch, err := launcher.NewLauncherService(
+			ctx, self.wg, org_config)
+		if err != nil {
+			return err
+		}
+
+		service_container.mu.Lock()
+		service_container.launcher = launch
+		service_container.mu.Unlock()
+	}
+
 	if spec.RepositoryManager {
 		repo_manager, err := repository.NewRepositoryManager(
 			ctx, self.wg, org_config)
@@ -503,18 +515,6 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 
 		service_container.mu.Lock()
 		service_container.labeler = l
-		service_container.mu.Unlock()
-	}
-
-	if spec.Launcher {
-		launch, err := launcher.NewLauncherService(
-			ctx, self.wg, org_config)
-		if err != nil {
-			return err
-		}
-
-		service_container.mu.Lock()
-		service_container.launcher = launch
 		service_container.mu.Unlock()
 	}
 

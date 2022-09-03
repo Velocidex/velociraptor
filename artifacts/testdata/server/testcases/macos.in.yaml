@@ -10,3 +10,6 @@ Queries:
     }) FROM scope()
 
   - SELECT * FROM Artifact.MacOS.System.Packages()
+
+  - SELECT File, path, id, flags
+    FROM Artifact.MacOS.Forensics.FSEvents(Glob=srcDir+"/artifacts/testdata/files/fs_events_*")

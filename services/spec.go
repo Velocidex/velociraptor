@@ -15,6 +15,7 @@ func GenericToolServices() *config_proto.ServerServicesConfig {
 	return &config_proto.ServerServicesConfig{
 		RepositoryManager:   true,
 		InventoryService:    true,
+		Launcher:            true,
 		JournalService:      true,
 		UserManager:         true,
 		NotificationService: true,
@@ -28,9 +29,8 @@ func ClientServicesSpec() *config_proto.ServerServicesConfig {
 		InventoryService:    true,
 		NotificationService: true,
 		Launcher:            true,
-
-		HttpCommunicator: true,
-		ClientEventTable: true,
+		HttpCommunicator:    true,
+		ClientEventTable:    true,
 	}
 }
 
