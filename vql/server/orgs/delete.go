@@ -1,4 +1,4 @@
-package users
+package orgs
 
 import (
 	"context"
@@ -13,62 +13,66 @@ import (
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
-type UserDeleteFunctionArgs struct {
-	Username string `vfilter:"required,field=user,doc=The user to delete."`
+type OrgDeleteFunctionArgs struct {
+	OrgId string `vfilter:"required,field=org,doc=The org ID to delete."`
 }
 
-type UserDeleteFunction struct{}
+type OrgDeleteFunction struct{}
 
-func (self UserDeleteFunction) Call(
+func (self OrgDeleteFunction) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
-		scope.Log("user_delete: %s", err)
+		scope.Log("org_delete: %s", err)
 		return vfilter.Null{}
 	}
 
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
-		scope.Log("Command can only run on the server")
+		scope.Log("org_delete: Command can only run on the server")
 		return vfilter.Null{}
 	}
 
-	arg := &UserDeleteFunctionArgs{}
+	arg := &OrgDeleteFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("user_delete: %s", err)
+		scope.Log("org_delete: %s", err)
 		return vfilter.Null{}
 	}
 
-	user_manager := services.GetUserManager()
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		scope.Log("org_delete: %s", err)
+		return vfilter.Null{}
+	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
 	logger := logging.GetLogger(config_obj, &logging.Audit)
 	logger.WithFields(logrus.Fields{
-		"Username":  arg.Username,
+		"OrgId":     arg.OrgId,
 		"Principal": principal,
-	}).Info("user_delete")
+	}).Info("org_delete")
 
-	err = user_manager.DeleteUser(config_obj, arg.Username)
+	err = org_manager.DeleteOrg(arg.OrgId)
 	if err != nil {
-		scope.Log("user_delete: %s", err)
+		scope.Log("org_delete: %s", err)
 		return vfilter.Null{}
 	}
 
-	return arg.Username
+	return arg.OrgId
 }
 
-func (self UserDeleteFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self OrgDeleteFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "user_delete",
-		Doc:     "Deletes a user from the server.",
-		ArgType: type_map.AddType(scope, &UserDeleteFunctionArgs{}),
+		Name:    "org_delete",
+		Doc:     "Deletes an Org from the server.",
+		ArgType: type_map.AddType(scope, &OrgDeleteFunctionArgs{}),
 	}
 }
 
 func init() {
-	vql_subsystem.RegisterFunction(&UserDeleteFunction{})
+	vql_subsystem.RegisterFunction(&OrgDeleteFunction{})
 }

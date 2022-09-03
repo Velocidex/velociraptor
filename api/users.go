@@ -39,7 +39,7 @@ func (self *ApiServer) SetPassword(
 		return nil, err
 	}
 
-	org_config_obj, err := org_manager.GetOrgConfig("root")
+	org_config_obj, err := org_manager.GetOrgConfig(services.ROOT_ORG_ID)
 	if err != nil {
 		return nil, err
 	}
