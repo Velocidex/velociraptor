@@ -41,7 +41,7 @@ func RemoveOrgFromUsers(org_id string) error {
 	return nil
 }
 
-func (self OrgManager) DeleteOrg(org_id string) error {
+func (self *OrgManager) DeleteOrg(org_id string) error {
 	if utils.IsRootOrg(org_id) {
 		return errors.New("Can not remove root org.")
 	}
