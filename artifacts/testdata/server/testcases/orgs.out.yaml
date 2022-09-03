@@ -300,4 +300,11 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "OSPath": "fs:/clients/C.123/uploads/ORG2_file.txt",
   "PathHasORGID": true
  }
+]LET _ <= org_delete(org="ORGID2")[]SELECT OrgId FROM orgs()[
+ {
+  "OrgId": ""
+ },
+ {
+  "OrgId": "ORGID"
+ }
 ]

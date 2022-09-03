@@ -56,6 +56,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
@@ -433,7 +434,7 @@ func (self *ApiServer) GetUserUITraits(
 	result.Orgs = user_info.Orgs
 
 	for _, item := range result.Orgs {
-		if item.Id == "" {
+		if utils.IsRootOrg(item.Id) {
 			item.Name = "<root>"
 			item.Id = "root"
 		}

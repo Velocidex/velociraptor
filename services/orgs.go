@@ -9,6 +9,10 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
+const (
+	ROOT_ORG_ID = "root"
+)
+
 var (
 	mu          sync.Mutex
 	org_manager OrgManager
@@ -61,6 +65,7 @@ type OrgManager interface {
 	CreateNewOrg(name, id string) (*api_proto.OrgRecord, error)
 	ListOrgs() []*api_proto.OrgRecord
 	GetOrg(org_id string) (*api_proto.OrgRecord, error)
+	DeleteOrg(org_id string) error
 
 	// The manager is responsible for running multiple services - one
 	// for each org. This ensures org services are separated out and

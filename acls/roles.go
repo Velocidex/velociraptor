@@ -6,6 +6,7 @@ import (
 
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func ValidateRole(role string) bool {
@@ -97,7 +98,7 @@ func GetRolePermissions(
 
 			// An administrator for the root org is allowed to
 			// manipulate orgs.
-			if config_obj != nil && config_obj.OrgId == "" {
+			if config_obj != nil && utils.IsRootOrg(config_obj.OrgId) {
 				result.OrgAdmin = true
 			}
 

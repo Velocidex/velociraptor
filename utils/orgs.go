@@ -34,3 +34,7 @@ func OrgIdFromClientId(client_id string) string {
 	}
 	return ""
 }
+
+func IsRootOrg(org_id string) bool {
+	return org_id == "" || org_id == "root"
+}

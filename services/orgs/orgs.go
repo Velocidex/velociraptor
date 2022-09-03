@@ -15,12 +15,16 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type OrgContext struct {
 	record     *api_proto.OrgRecord
 	config_obj *config_proto.Config
 	service    services.ServiceContainer
+
+	ctx    context.Context
+	cancel func()
 }
 
 type OrgManager struct {
@@ -58,12 +62,8 @@ func (self *OrgManager) GetOrgConfig(org_id string) (*config_proto.Config, error
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if org_id == "root" {
-		org_id = ""
-	}
-
 	// An empty org id corresponds to the root org.
-	if org_id == "" {
+	if utils.IsRootOrg(org_id) {
 		return self.config_obj, nil
 	}
 

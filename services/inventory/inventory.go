@@ -178,7 +178,7 @@ func (self *InventoryService) materializeTool(
 	// name. We need to write the tool on the root org's public
 	// directory.
 	org_manager, err := services.GetOrgManager()
-	root_org_config, err := org_manager.GetOrgConfig("root")
+	root_org_config, err := org_manager.GetOrgConfig(services.ROOT_ORG_ID)
 	if err != nil {
 		return err
 	}

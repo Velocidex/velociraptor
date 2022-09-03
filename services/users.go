@@ -47,6 +47,8 @@ type UserManager interface {
 	// Favorites are stored per org.
 	GetFavorites(config_obj *config_proto.Config,
 		principal, fav_type string) (*api_proto.Favorites, error)
+
+	DeleteUser(config_obj *config_proto.Config, username string) error
 }
 
 func RegisterUserManager(dispatcher UserManager) {

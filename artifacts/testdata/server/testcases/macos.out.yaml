@@ -21,4 +21,11 @@ SELECT OSPath.Basename, Content.home FROM Artifact.MacOS.System.Plist( PlistGlob
   "Name": "Slack",
   "_Source": "MacOS.System.Packages"
  }
+]SELECT File, path, id, flags FROM Artifact.MacOS.Forensics.FSEvents(Glob=srcDir+"/artifacts/testdata/files/fs_events_*")[
+ {
+  "File": "fs_events_00000000007cff3d",
+  "path": ".fseventsd/sl-compat",
+  "id": 163194,
+  "flags": "IsDirectory"
+ }
 ]
