@@ -383,7 +383,7 @@ func NewFrontendService(ctx context.Context, wg *sync.WaitGroup,
 			return nil, err
 		}
 
-		root_org_config, err := org_manager.GetOrgConfig("root")
+		root_org_config, err := org_manager.GetOrgConfig(services.ROOT_ORG_ID)
 		if err != nil {
 			return nil, err
 		}

@@ -1,6 +1,7 @@
 package orgs
 
 import (
+	"context"
 	"errors"
 	"sync"
 
@@ -232,10 +233,14 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Starting services for %v", services.GetOrgName(org_config))
 
+	ctx, cancel := context.WithCancel(self.ctx)
+
 	org_ctx := &OrgContext{
 		record:     org_record,
 		config_obj: org_config,
 		service:    &ServiceContainer{},
+		ctx:        ctx,
+		cancel:     cancel,
 	}
 
 	self.mu.Lock()
@@ -290,6 +295,7 @@ func (self *OrgManager) startRootOrgServices(
 func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 	org_id := org_ctx.record.OrgId
 	org_config := org_ctx.config_obj
+	ctx := org_ctx.ctx
 	service_container := org_ctx.service.(*ServiceContainer)
 
 	// If there is no frontend defined we are running as a client.
@@ -300,8 +306,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 	}
 
 	if spec.FrontendServer {
-		f, err := frontend.NewFrontendService(
-			self.ctx, self.wg, org_config)
+		f, err := frontend.NewFrontendService(ctx, self.wg, org_config)
 		if err != nil {
 			return err
 		}
@@ -309,8 +314,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		service_container.frontend = f
 		service_container.mu.Unlock()
 
-		err = datastore.StartMemcacheFileService(
-			self.ctx, self.wg, org_config)
+		err = datastore.StartMemcacheFileService(ctx, self.wg, org_config)
 		if err != nil {
 			return err
 		}
@@ -328,8 +332,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 	// services so they need to be accessible as soon as they are
 	// ready.
 	if spec.JournalService {
-		j, err := journal.NewJournalService(
-			self.ctx, self.wg, org_config)
+		j, err := journal.NewJournalService(ctx, self.wg, org_config)
 		if err != nil {
 			return err
 		}
@@ -340,8 +343,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 	}
 
 	if spec.NotificationService {
-		n, err := notifications.NewNotificationService(
-			self.ctx, self.wg, org_config)
+		n, err := notifications.NewNotificationService(ctx, self.wg, org_config)
 		if err != nil {
 			return err
 		}
@@ -352,7 +354,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 
 	if spec.TestRepositoryManager {
 		repo_manager, err := repository.NewRepositoryManager(
-			self.ctx, self.wg, org_config)
+			ctx, self.wg, org_config)
 		if err != nil {
 			return err
 		}
@@ -367,9 +369,21 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		service_container.mu.Unlock()
 	}
 
+	if spec.Launcher {
+		launch, err := launcher.NewLauncherService(
+			ctx, self.wg, org_config)
+		if err != nil {
+			return err
+		}
+
+		service_container.mu.Lock()
+		service_container.launcher = launch
+		service_container.mu.Unlock()
+	}
+
 	if spec.RepositoryManager {
 		repo_manager, err := repository.NewRepositoryManager(
-			self.ctx, self.wg, org_config)
+			ctx, self.wg, org_config)
 		if err != nil {
 			return err
 		}
@@ -383,7 +397,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		if org_id == "" {
 			// Assume the built in artifacts are OK so we dont need to
 			// validate them at runtime.
-			err = repository.LoadBuiltInArtifacts(self.ctx, org_config,
+			err = repository.LoadBuiltInArtifacts(ctx, org_config,
 				repo_manager.(*repository.RepositoryManager), false /* validate */)
 			if err != nil {
 				return err
@@ -405,7 +419,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 				return err
 			}
 
-			_, err = repository.InitializeGlobalRepositoryFromFilestore(self.ctx, org_config, global_repository)
+			_, err = repository.InitializeGlobalRepositoryFromFilestore(ctx, org_config, global_repository)
 			if err != nil {
 				return err
 			}
@@ -418,7 +432,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 
 	if spec.InventoryService {
 		i, err := inventory.NewInventoryService(
-			self.ctx, self.wg, org_config)
+			ctx, self.wg, org_config)
 		if err != nil {
 			return err
 		}
@@ -430,7 +444,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 
 	if spec.HuntDispatcher {
 		hd, err := hunt_dispatcher.NewHuntDispatcher(
-			self.ctx, self.wg, org_config)
+			ctx, self.wg, org_config)
 		if err != nil {
 			return err
 		}
@@ -442,7 +456,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 
 	if spec.HuntManager {
 		err = hunt_manager.NewHuntManager(
-			self.ctx, self.wg, org_config)
+			ctx, self.wg, org_config)
 		if err != nil {
 			return err
 		}
@@ -450,7 +464,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 
 	if spec.Interrogation {
 		err = interrogation.NewInterrogationService(
-			self.ctx, self.wg, org_config)
+			ctx, self.wg, org_config)
 
 		if err != nil {
 			return err
@@ -459,7 +473,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 
 	if spec.ClientInfo {
 		c := client_info.NewClientInfoManager(org_config)
-		err = c.Start(self.ctx, org_config, self.wg)
+		err = c.Start(ctx, org_config, self.wg)
 		if err != nil {
 			return err
 		}
@@ -470,7 +484,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 	}
 
 	if spec.IndexServer {
-		inv, err := indexing.NewIndexingService(self.ctx, self.wg, org_config)
+		inv, err := indexing.NewIndexingService(ctx, self.wg, org_config)
 		if err != nil {
 			return err
 		}
@@ -482,7 +496,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 
 	if spec.VfsService {
 		vfs, err := vfs_service.NewVFSService(
-			self.ctx, self.wg, org_config)
+			ctx, self.wg, org_config)
 		if err != nil {
 			return err
 		}
@@ -494,7 +508,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 
 	if spec.Label {
 		l, err := labels.NewLabelerService(
-			self.ctx, self.wg, org_config)
+			ctx, self.wg, org_config)
 		if err != nil {
 			return err
 		}
@@ -504,20 +518,8 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		service_container.mu.Unlock()
 	}
 
-	if spec.Launcher {
-		launch, err := launcher.NewLauncherService(
-			self.ctx, self.wg, org_config)
-		if err != nil {
-			return err
-		}
-
-		service_container.mu.Lock()
-		service_container.launcher = launch
-		service_container.mu.Unlock()
-	}
-
 	if spec.NotebookService {
-		nb, err := notebook.NewNotebookManagerService(self.ctx, self.wg, org_config)
+		nb, err := notebook.NewNotebookManagerService(ctx, self.wg, org_config)
 		if err != nil {
 			return err
 		}
@@ -528,21 +530,21 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 	}
 
 	if spec.SanityChecker {
-		err = sanity.NewSanityCheckService(self.ctx, self.wg, org_config)
+		err = sanity.NewSanityCheckService(ctx, self.wg, org_config)
 		if err != nil {
 			return err
 		}
 	}
 
 	if spec.ServerArtifacts {
-		err = server_artifacts.NewServerArtifactService(self.ctx, self.wg, org_config)
+		err = server_artifacts.NewServerArtifactService(ctx, self.wg, org_config)
 		if err != nil {
 			return err
 		}
 	}
 
 	if spec.ClientMonitoring {
-		client_event_manager, err := client_monitoring.NewClientMonitoringService(self.ctx, self.wg, org_config)
+		client_event_manager, err := client_monitoring.NewClientMonitoringService(ctx, self.wg, org_config)
 		if err != nil {
 			return err
 		}
@@ -553,7 +555,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 	}
 
 	if spec.MonitoringService {
-		server_event_manager, err := server_monitoring.NewServerMonitoringService(self.ctx, self.wg, org_config)
+		server_event_manager, err := server_monitoring.NewServerMonitoringService(ctx, self.wg, org_config)
 		if err != nil {
 			return err
 		}
