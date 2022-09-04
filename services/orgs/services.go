@@ -237,6 +237,16 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 		sm:         services.NewServiceManager(self.ctx, org_config),
 	}
 
+	// Make our parent waits for all the services to properly
+	// exit. Each org service can be stopped independently but we can
+	// not exit the org manager until they all shut down properly.
+	self.parent_wg.Add(1)
+	go func() {
+		<-org_ctx.sm.Ctx.Done()
+		org_ctx.sm.Wg.Wait()
+		self.parent_wg.Done()
+	}()
+
 	self.mu.Lock()
 	self.orgs[org_record.OrgId] = org_ctx
 	self.org_id_by_nonce[org_record.Nonce] = org_record.OrgId
@@ -562,6 +572,22 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		service_container.mu.Unlock()
 	}
 
+	return maybeFlushFilesOnClose(ctx, wg, org_config)
+}
+
+// Flush the datastore if possible when the org is closed to ensure
+// all its data is flushed to disk. Some data stores delay writes so
+// we need to make sure all the datastore files hit the disk before we
+// close the org - for example if we delete the org subsequently we
+// need to ensure no file writes are still in flight while we delete.
+func maybeFlushFilesOnClose(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	org_config *config_proto.Config) error {
+	if org_config.Datastore == nil {
+		return nil
+	}
+
 	// Flush the filestore if needed. Not all filestores need
 	// flushing.
 	file_store_factory := file_store.GetFileStore(org_config)
@@ -579,6 +605,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 	if err != nil {
 		return err
 	}
+
 	flusher, ok = db.(Flusher)
 	if ok {
 		wg.Add(1)
@@ -589,7 +616,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		}()
 	}
 
-	return err
+	return nil
 }
 
 func (self *OrgManager) Services(org_id string) services.ServiceContainer {

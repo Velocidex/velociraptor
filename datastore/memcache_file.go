@@ -660,6 +660,10 @@ func StartMemcacheFileService(
 	ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
+	if config_obj.Datastore == nil {
+		return nil
+	}
+
 	db, err := GetDB(config_obj)
 	if err != nil {
 		return err
