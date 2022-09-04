@@ -114,9 +114,12 @@ type MemcacheFileDataStore struct {
 	mu    sync.Mutex
 	cache *MemcacheDatastore
 
-	writer chan *Mutation
-	ctx    context.Context
-	cancel func()
+	writer     chan *Mutation
+	ctx        context.Context
+	cancel     func()
+	config_obj *config_proto.Config
+
+	started bool
 }
 
 func (self *MemcacheFileDataStore) Stats() *MemcacheStats {
@@ -148,6 +151,20 @@ func (self *MemcacheFileDataStore) ExpirationPolicy(
 	return true
 }
 
+func (self *MemcacheFileDataStore) Flush() {
+	for {
+		select {
+		case mutation, ok := <-self.writer:
+			if !ok {
+				return
+			}
+			self.processMutation(self.config_obj, mutation)
+		default:
+			return
+		}
+	}
+}
+
 // Starts the writer loop.
 func (self *MemcacheFileDataStore) StartWriter(
 	ctx context.Context, wg *sync.WaitGroup,
@@ -173,6 +190,7 @@ func (self *MemcacheFileDataStore) StartWriter(
 	self.mu.Lock()
 	self.writer = make(chan *Mutation, buffer_size)
 	self.ctx = ctx
+	self.started = true
 	self.mu.Unlock()
 
 	if writers == 0 {
@@ -200,37 +218,41 @@ func (self *MemcacheFileDataStore) StartWriter(
 					if !ok {
 						return
 					}
-
-					metricIdleWriters.Dec()
-					switch mutation.op {
-					case MUTATION_OP_SET_SUBJECT:
-						writeContentToFile(config_obj, mutation.urn, mutation.data)
-						self.invalidateDirCache(config_obj, mutation.urn)
-
-						// Call the completion function once we hit
-						// the directory datastore.
-						if mutation.completion != nil {
-							mutation.completion()
-						}
-
-					case MUTATION_OP_DEL_SUBJECT:
-						file_based_imp.DeleteSubject(config_obj, mutation.urn)
-						self.invalidateDirCache(config_obj, mutation.urn.Dir())
-
-						// Call the completion function once we hit
-						// the directory datastore.
-						if mutation.completion != nil {
-							mutation.completion()
-						}
-					}
-
-					metricIdleWriters.Inc()
-					if mutation.wg != nil {
-						mutation.wg.Done()
-					}
+					self.processMutation(config_obj, mutation)
 				}
 			}
 		}()
+	}
+}
+
+func (self *MemcacheFileDataStore) processMutation(
+	config_obj *config_proto.Config, mutation *Mutation) {
+	metricIdleWriters.Dec()
+	switch mutation.op {
+	case MUTATION_OP_SET_SUBJECT:
+		writeContentToFile(config_obj, mutation.urn, mutation.data)
+		self.invalidateDirCache(config_obj, mutation.urn)
+
+		// Call the completion function once we hit
+		// the directory datastore.
+		if mutation.completion != nil {
+			mutation.completion()
+		}
+
+	case MUTATION_OP_DEL_SUBJECT:
+		file_based_imp.DeleteSubject(config_obj, mutation.urn)
+		self.invalidateDirCache(config_obj, mutation.urn.Dir())
+
+		// Call the completion function once we hit
+		// the directory datastore.
+		if mutation.completion != nil {
+			mutation.completion()
+		}
+	}
+
+	metricIdleWriters.Inc()
+	if mutation.wg != nil {
+		mutation.wg.Done()
 	}
 }
 
@@ -621,6 +643,7 @@ func NewMemcacheFileDataStore(config_obj *config_proto.Config) *MemcacheFileData
 	}
 
 	result := &MemcacheFileDataStore{
+		config_obj: config_obj,
 		cache: &MemcacheDatastore{
 			data_cache: NewDataLRUCache(config_obj,
 				data_max_size, data_max_item_size),
@@ -637,15 +660,22 @@ func StartMemcacheFileService(
 	ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	_, err := GetDB(config_obj)
+	db, err := GetDB(config_obj)
 	if err != nil {
 		return err
 	}
 
-	if memcache_file_imp != nil {
+	memcache_file_db, ok := db.(*MemcacheFileDataStore)
+	if !ok {
+		// If it not a MemcacheFileDataStore so we dont need to do
+		// anything to it.
+		return nil
+	}
+
+	if !memcache_file_db.started {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("<green>Starting</> memcache service")
-		memcache_file_imp.StartWriter(ctx, wg, config_obj)
+		memcache_file_db.StartWriter(ctx, wg, config_obj)
 	}
 
 	return nil

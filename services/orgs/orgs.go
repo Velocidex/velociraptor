@@ -23,15 +23,23 @@ type OrgContext struct {
 	config_obj *config_proto.Config
 	service    services.ServiceContainer
 
-	ctx    context.Context
-	cancel func()
+	// Manages the lifetime of the org's services.
+	sm *services.Service
 }
 
 type OrgManager struct {
 	mu sync.Mutex
 
+	// Sync the scan
+	scan_mu sync.Mutex
+
+	// The root org's ctx and wg
 	ctx context.Context
-	wg  *sync.WaitGroup
+
+	// We keep track of each org's services using its own wg and
+	// control overall lifetime using our parent's wg. This allows us
+	// to cancel each org's sevices independently.
+	parent_wg *sync.WaitGroup
 
 	// The base global config object
 	config_obj *config_proto.Config
@@ -47,7 +55,12 @@ func (self *OrgManager) ListOrgs() []*api_proto.OrgRecord {
 	defer self.mu.Unlock()
 
 	for _, item := range self.orgs {
-		result = append(result, proto.Clone(item.record).(*api_proto.OrgRecord))
+		copy := proto.Clone(item.record).(*api_proto.OrgRecord)
+		if utils.IsRootOrg(copy.OrgId) {
+			copy.OrgId = "root"
+			copy.Name = "<root>"
+		}
+		result = append(result, copy)
 	}
 
 	// Sort orgs by names
@@ -123,13 +136,9 @@ func (self *OrgManager) CreateNewOrg(name, id string) (
 	self.mu.Lock()
 	_, pres := self.orgs[id]
 	self.mu.Unlock()
+
 	if pres {
 		return nil, errors.New("Org ID already exists")
-	}
-
-	err := self.startOrg(org_record)
-	if err != nil {
-		return nil, err
 	}
 
 	org_path_manager := paths.NewOrgPathManager(
@@ -139,9 +148,15 @@ func (self *OrgManager) CreateNewOrg(name, id string) (
 		return nil, err
 	}
 
-	err = db.SetSubject(self.config_obj,
-		org_path_manager.Path(), org_record)
-	return org_record, err
+	// Must appear immediately to ensure the org appears before we can
+	// scan for it.
+	err = db.SetSubjectWithCompletion(self.config_obj,
+		org_path_manager.Path(), org_record, utils.SyncCompleter)
+	if err != nil {
+		return nil, err
+	}
+
+	return org_record, self.startOrg(org_record)
 }
 
 func (self *OrgManager) makeNewConfigObj(
@@ -173,19 +188,24 @@ func (self *OrgManager) makeNewConfigObj(
 }
 
 func (self *OrgManager) Scan() error {
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return nil
+	existing := make(map[string]bool)
+	for _, o := range self.ListOrgs() {
+		existing[o.OrgId] = true
 	}
 
-	children, err := db.ListChildren(
-		self.config_obj, paths.ORGS_ROOT)
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return err
+	}
+
+	children, err := db.ListChildren(self.config_obj, paths.ORGS_ROOT)
 	if err != nil {
 		return err
 	}
 
 	for _, org_path := range children {
 		org_id := org_path.Base()
+
 		org_path_manager := paths.NewOrgPathManager(org_id)
 		org_record := &api_proto.OrgRecord{}
 		err := db.GetSubject(self.config_obj,
@@ -194,12 +214,37 @@ func (self *OrgManager) Scan() error {
 			continue
 		}
 
+		delete(existing, org_id)
+
 		_, err = self.GetOrgConfig(org_id)
 		if err != nil {
 			err = self.startOrg(org_record)
 			if err != nil {
 				return err
 			}
+		}
+	}
+
+	// Now shut down the orgs that were removed
+	for org_id := range existing {
+		// Do not remove the root org
+		if utils.IsRootOrg(org_id) {
+			continue
+		}
+
+		self.mu.Lock()
+		org_context, pres := self.orgs[org_id]
+		self.mu.Unlock()
+		if pres {
+			org_context.sm.Close()
+
+			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+			logger.Info("<yellow>Removing org %v</>", org_id)
+
+			self.mu.Lock()
+			delete(self.orgs, org_id)
+			delete(self.org_id_by_nonce, org_id)
+			self.mu.Unlock()
 		}
 	}
 
@@ -251,6 +296,7 @@ func (self *OrgManager) Start(
 				return
 
 			case <-time.After(10 * time.Second):
+				logger.Info("<green>Scanning for new orgs</>")
 				self.Scan()
 			}
 		}
@@ -268,7 +314,7 @@ func NewOrgManager(
 	service := &OrgManager{
 		config_obj: config_obj,
 		ctx:        ctx,
-		wg:         wg,
+		parent_wg:  wg,
 
 		orgs:            make(map[string]*OrgContext),
 		org_id_by_nonce: make(map[string]string),

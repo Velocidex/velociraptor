@@ -2,8 +2,8 @@ package orgs
 
 import (
 	"errors"
+	"fmt"
 	"os"
-	"time"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -54,34 +54,35 @@ func (self *OrgManager) DeleteOrg(org_id string) error {
 	org_path_manager := paths.NewOrgPathManager(org_id)
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	err = db.DeleteSubject(self.config_obj, org_path_manager.Path())
 	if err != nil {
-		return nil
+		return err
 	}
 
 	// Remove the org from the manager and cancel all its services.
 	self.mu.Lock()
 	org_context, pres := self.orgs[org_id]
-	if pres {
-		org_context.cancel()
-		delete(self.orgs, org_id)
-		delete(self.org_id_by_nonce, org_id)
-	}
 	self.mu.Unlock()
 
-	if org_context == nil {
-		return nil
+	if !pres {
+		return fmt.Errorf("Org %v does not exist.", org_id)
 	}
+
+	// Shut down the org's services
+	org_context.sm.Close()
+
+	self.mu.Lock()
+	delete(self.orgs, org_id)
+	delete(self.org_id_by_nonce, org_id)
+	self.mu.Unlock()
 
 	// Wait a bit for the services to shut down so we can remove files
 	// safely.
 	go func() {
-		time.Sleep(10 * time.Second)
-
-		datastore.Walk(self.config_obj, db, org_path_manager.OrgDirectories(),
+		datastore.Walk(self.config_obj, db, org_path_manager.Path(),
 			datastore.WalkWithoutDirectories,
 			func(path api.DSPathSpec) error {
 				_ = db.DeleteSubject(self.config_obj, path)
@@ -90,7 +91,7 @@ func (self *OrgManager) DeleteOrg(org_id string) error {
 
 		file_store_factory := file_store.GetFileStore(self.config_obj)
 		api.Walk(file_store_factory,
-			org_path_manager.OrgDirectories().AsFilestorePath(),
+			org_path_manager.Path().AsFilestorePath(),
 			func(path api.FSPathSpec, info os.FileInfo) error {
 				file_store_factory.Delete(path)
 				return nil

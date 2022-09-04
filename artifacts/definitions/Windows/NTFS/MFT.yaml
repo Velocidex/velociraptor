@@ -14,23 +14,23 @@ description: |
   MFT artifact. Due to the multi-drive features, the MFTPath will output the MFT
   path of the entry.
 
-  Available filters include:  
-  
-  - PathRegex (OSPath): e.g `^C:\\folder\\file\.ext$` or partial `\\folder\\folder2\\` or `string|string2|string3`    
-  - Fileregex: `^filename.ext$` or partial `string1|string2`  
-  - Time bounds to select files with a timestamp within time ranges  
-  - FileSize bounds  
-  - MFTDrive: drive to target collection and show as source in results during offline pricessing.  
-  - MFTPath: optional filter for offline MFT processing.  
-  
-  NOTE: Generally more efficient to filter on filename. 
+  Available filters include:
+
+  - PathRegex (OSPath): e.g `^C:\\folder\\file\.ext$` or partial `\\folder\\folder2\\` or `string|string2|string3`
+  - Fileregex: `^filename.ext$` or partial `string1|string2`
+  - Time bounds to select files with a timestamp within time ranges
+  - FileSize bounds
+  - MFTDrive: drive to target collection and show as source in results during offline pricessing.
+  - MFTPath: optional filter for offline MFT processing.
+
+  NOTE: Generally more efficient to filter on filename.
   Multiple filters are cumulative.
   OSPath output now uses expected Windows backslash "`\`".
-  
+
 parameters:
   - name: MFTDrive
     description: |
-      The path to to the drive that holds the MFT file (can be a pathspec). This 
+      The path to to the drive that holds the MFT file (can be a pathspec). This
       drive is also used for results for offline processing.
     default: "C:"
   - name: MFTPath
@@ -67,7 +67,7 @@ parameters:
 
 sources:
   - query: |
-      -- The path to to the drive that holds the MFT file (can be a pathspec)
+      -- The path to to the drive that holds the M}FT file (can be a pathspec)
       LET Drive <= pathspec(parse=MFTDrive, path_type="windows")
 
       -- time testing
@@ -96,9 +96,9 @@ sources:
         SELECT EntryNumber, InUse, ParentEntryNumber,
             Drive + OSPath AS OSPath,
             FileName, FileSize, ReferenceCount, IsDir,
-            Created0x10, Created0x30, 
+            Created0x10, Created0x30,
             LastModified0x10, LastModified0x30,
-            LastRecordChange0x10, LastRecordChange0x30, 
+            LastRecordChange0x10, LastRecordChange0x30,
             LastAccess0x10,LastAccess0x30,
             HasADS, SI_Lt_FN, uSecZeros, Copied,
             FileNames, FileNameTypes
@@ -108,13 +108,13 @@ sources:
 
       -- Check only one date bound
       LET mftsearch_after_date(Drive, MFTPath) =
-        SELECT 
+        SELECT
             EntryNumber, InUse, ParentEntryNumber,
             Drive + OSPath AS OSPath,
             FileName, FileSize, ReferenceCount, IsDir,
-            Created0x10, Created0x30, 
+            Created0x10, Created0x30,
             LastModified0x10, LastModified0x30,
-            LastRecordChange0x10, LastRecordChange0x30, 
+            LastRecordChange0x10, LastRecordChange0x30,
             LastAccess0x10,LastAccess0x30,
             HasADS, SI_Lt_FN, uSecZeros, Copied,
             FileNames, FileNameTypes
@@ -133,9 +133,9 @@ sources:
         SELECT EntryNumber, InUse, ParentEntryNumber,
             Drive + OSPath AS OSPath,
             FileName, FileSize, ReferenceCount, IsDir,
-            Created0x10, Created0x30, 
+            Created0x10, Created0x30,
             LastModified0x10, LastModified0x30,
-            LastRecordChange0x10, LastRecordChange0x30, 
+            LastRecordChange0x10, LastRecordChange0x30,
             LastAccess0x10,LastAccess0x30,
             HasADS, SI_Lt_FN, uSecZeros, Copied,
             FileNames, FileNameTypes
@@ -155,9 +155,9 @@ sources:
         SELECT EntryNumber, InUse, ParentEntryNumber,
             Drive + OSPath AS OSPath,
             FileName, FileSize, ReferenceCount, IsDir,
-            Created0x10, Created0x30, 
+            Created0x10, Created0x30,
             LastModified0x10, LastModified0x30,
-            LastRecordChange0x10, LastRecordChange0x30, 
+            LastRecordChange0x10, LastRecordChange0x30,
             LastAccess0x10,LastAccess0x30,
             HasADS, SI_Lt_FN, uSecZeros, Copied,
             FileNames, FileNameTypes
@@ -221,7 +221,7 @@ sources:
               SELECT * FROM all_drives
             },
             else={
-              SELECT * FROM mftsearch(Drive=Drive, 
+              SELECT * FROM mftsearch(Drive=Drive,
                                 MFTPath=if(condition= MFTPath ,
                                             then= MFTPath,
                                             else= Drive + "$MFT"))
@@ -230,7 +230,7 @@ sources:
       LET enriched_results = SELECT *,
             parse_ntfs(mft=EntryNumber, device=Drive ) as NtfsMetadata
         FROM results
-        
+
       -- return rows
       SELECT * FROM if(condition=AllNtfs,
         then= enriched_results,
