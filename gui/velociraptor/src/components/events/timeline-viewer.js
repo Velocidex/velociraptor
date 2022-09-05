@@ -8,7 +8,6 @@ import Timeline, {
     CustomMarker,
 } from 'react-calendar-timeline';
 import moment from 'moment-timezone';
-import qs from 'qs';
 import axios from 'axios';
 import { PrepareData } from '../core/table.js';
 import api from '../core/api-service.js';
@@ -374,8 +373,7 @@ export default class EventTimelineViewer extends React.Component {
                    </Dropdown.Toggle>
                    <Dropdown.Menu>
                      <Dropdown.Item as="a"
-                       href={api.base_path + "/api/v1/DownloadTable?" +
-                             qs.stringify(downloads_csv,  {indices: false})}
+                       href={api.href("/api/v1/DownloadTable", downloads_csv)}
                        variant="default" type="button">
                        <FontAwesomeIcon icon="file-csv"/>
                        <span className="button-label">
@@ -386,8 +384,7 @@ export default class EventTimelineViewer extends React.Component {
                        </span>
                      </Dropdown.Item>
                      <Dropdown.Item as="a"
-                       href={api.base_path + "/api/v1/DownloadTable?" +
-                             qs.stringify(downloads_json,  {indices: false})}
+                       href={api.href("/api/v1/DownloadTable", downloads_json)}
                        variant="default" type="button">
                        <FontAwesomeIcon icon="file-code"/>
                        <span className="button-label">

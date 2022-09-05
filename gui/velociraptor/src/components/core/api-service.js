@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 import _ from 'lodash';
-
+import qs from 'qs';
 import axiosRetry from 'axios-retry';
 
 // The following is copied from axios-retry to avoid a bug "cannot
@@ -130,7 +130,7 @@ const get = function(url, params, cancel_token) {
         params: params,
         headers: {
             "X-CSRF-Token": window.CsrfToken,
-            "Grpc-Metadata-OrgId": window.globals.OrgId || "",
+            "Grpc-Metadata-OrgId": window.globals.OrgId || "root",
         },
         cancelToken: cancel_token,
     }).then(response=>{
@@ -151,7 +151,7 @@ const get_blob = function(url, params, cancel_token) {
         params: params,
         headers: {
             "X-CSRF-Token": window.CsrfToken,
-            "Grpc-Metadata-OrgId": window.globals.OrgId || "",
+            "Grpc-Metadata-OrgId": window.globals.OrgId || "root",
         },
         cancelToken: cancel_token,
     }).then((blob) => {
@@ -181,7 +181,7 @@ const post = function(url, params, cancel_token) {
         cancelToken: cancel_token,
         headers: {
             "X-CSRF-Token": window.CsrfToken,
-            "Grpc-Metadata-OrgId": window.globals.OrgId || "",
+            "Grpc-Metadata-OrgId": window.globals.OrgId || "root",
         }
     }).then(response=>{
         // Update the csrf token.
@@ -207,10 +207,22 @@ const upload = function(url, files, params) {
         data: fd,
         headers: {
             "X-CSRF-Token": window.CsrfToken,
-            "Grpc-Metadata-OrgId": window.globals.OrgId || "",
+            "Grpc-Metadata-OrgId": window.globals.OrgId || "root",
         }
     }).catch(handle_error);
 };
+
+// Prepare a suitable href link for <a>
+const href = function(url, params, options) {
+    params = params || {};
+    Object.assign(params, {org_id: window.globals.OrgId || "root"});
+
+    options = options || {};
+    Object.assign(options, {indices: false});
+
+    return base_path + url + "?" + qs.stringify(params, options);
+};
+
 
 var hooks = [];
 
@@ -222,4 +234,5 @@ export default {
     upload: upload,
     hooks: hooks,
     base_path: base_path,
+    href: href,
 };

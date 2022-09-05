@@ -513,7 +513,7 @@ export function formatColumns(columns) {
         case "download":
             x.formatter= (cell, row) =>{
                 if (row.complete) {
-                    return <a href={api.base_path + row.path}  target="_blank" download
+                    return <a href={api.href(row.path)}  target="_blank" download
                               rel="noopener noreferrer">{cell}</a>;
                 };
                 return <>
