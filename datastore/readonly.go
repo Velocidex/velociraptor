@@ -7,6 +7,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -34,7 +35,8 @@ func (self *ReadOnlyDataStore) SetSubjectWithCompletion(
 	completion func()) error {
 
 	err := self.cache.SetSubject(config_obj, urn, message)
-	if completion != nil {
+	if completion != nil &&
+		!utils.CompareFuncs(completion, utils.SyncCompleter) {
 		completion()
 	}
 	return err

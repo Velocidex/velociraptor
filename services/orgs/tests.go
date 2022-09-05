@@ -32,7 +32,7 @@ func (self *TestOrgManager) Start(
 		record:     &api_proto.OrgRecord{},
 		config_obj: org_config,
 		service:    service_container,
-		ctx:        ctx,
+		sm:         services.NewServiceManager(ctx, org_config),
 	}
 	self.orgs[""] = org_context
 	self.mu.Unlock()
@@ -51,7 +51,7 @@ func StartTestOrgManager(
 		OrgManager: &OrgManager{
 			config_obj: config_obj,
 			ctx:        ctx,
-			wg:         wg,
+			parent_wg:  wg,
 
 			orgs:            make(map[string]*OrgContext),
 			org_id_by_nonce: make(map[string]string),
