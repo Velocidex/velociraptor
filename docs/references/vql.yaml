@@ -3034,7 +3034,7 @@
   description: Return the details of the current org.
   type: Function
 - name: org_create
-  description: Creates a new organizaion.
+  description: Creates a new organization.
   type: Function
   args:
   - name: name
@@ -5798,4 +5798,3 @@
     type: string
     description: If set use this key to cache the  yara rules.
   category: plugin
-

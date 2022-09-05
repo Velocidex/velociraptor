@@ -58,6 +58,10 @@ message GetTableRequest {
     bool sort_direction = 20;
     string filter_column = 21;
     string filter_regex = 22;
+
+    // The org id may be specified in the query string - The protobuf
+    // is normally parsed from the query string directly.
+    string org_id = 23;
 }
 
 message Row {

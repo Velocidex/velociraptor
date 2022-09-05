@@ -119,7 +119,7 @@ export default class UploadFileForm extends Component {
                     />
                     { this.state.upload_info.filename ?
                       <Form.File.Label data-browse="Select a different file">
-                        <a href={ this.state.upload_info.url }>
+                        <a href={ api.href(this.state.upload_info.url) }>
                           { this.state.upload_info.filename }
                         </a>
                       </Form.File.Label>:

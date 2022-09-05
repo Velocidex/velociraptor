@@ -296,7 +296,6 @@ func (self *OrgManager) Start(
 				return
 
 			case <-time.After(10 * time.Second):
-				logger.Info("<green>Scanning for new orgs</>")
 				self.Scan()
 			}
 		}

@@ -12,7 +12,6 @@ import axios from 'axios';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import qs from 'qs';
 import BootstrapTable from 'react-bootstrap-table-next';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import Button from 'react-bootstrap/Button';
@@ -458,15 +457,19 @@ class VeloPagedTable extends Component {
                           <Button variant="default"
                                   target="_blank" rel="noopener noreferrer"
                                   title={T("Download JSON")}
-                                  href={api.base_path + "/api/v1/DownloadTable?"+
-                                        qs.stringify(downloads,  {indices: false}) } >
+                                  href={api.href("/api/v1/DownloadTable",
+                                                 Object.assign(downloads, {
+                                                     download_format: "json",
+                                                 }))}>
                             <FontAwesomeIcon icon="download"/>
                           </Button>
                           <Button variant="default"
                                   target="_blank" rel="noopener noreferrer"
                                   title={T("Download CSV")}
-                                  href={api.base_path + "/api/v1/DownloadTable?download_format=csv&"+
-                                        qs.stringify(downloads,  {indices: false}) } >
+                                  href={api.href("/api/v1/DownloadTable",
+                                                 Object.assign(downloads, {
+                                                     download_format: "csv",
+                                                 }))}>
                             <FontAwesomeIcon icon="file-csv"/>
                           </Button>
                           <Button variant="default"
