@@ -470,6 +470,8 @@ func CheckForStatus(
 		collection_context.Backtrace = message.Status.Backtrace
 	}
 
+	json.Dump(message.Status)
+
 	// But these are updated for each response.
 	collection_context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
 	collection_context.ExecutionDuration += message.Status.Duration

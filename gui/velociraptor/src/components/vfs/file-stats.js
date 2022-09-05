@@ -12,7 +12,6 @@ import api from '../core/api-service.js';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import utils from './utils.js';
 import axios from 'axios';
-import qs from 'qs';
 import T from '../i8n/i8n.js';
 
 import { Join } from '../utils/paths.js';
@@ -165,12 +164,11 @@ class VeloFileStats extends Component {
                           <dd className="col-8">
                             <VeloTimestamp usec={ selectedRow.Download.mtime / 1000 } />
                             <Button variant="outline-default" title={T("Download")}
-                                    href={api.base_path + "/api/v1/DownloadVFSFile?"+
-                                          qs.stringify({
+                                    href={api.href("/api/v1/DownloadVFSFile", {
                                               client_id: client_id,
                                               vfs_path: Join(
                                                   selectedRow.Download.components),
-                                          }, {  arrayFormat: 'brackets' }) }>
+                                          }, {arrayFormat: 'brackets'})}>
                               <FontAwesomeIcon icon="download"/>
                             </Button>
                           </dd>

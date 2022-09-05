@@ -3,23 +3,44 @@ package authenticators
 import (
 	"errors"
 	"net/http"
+	"net/url"
 
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
-func CheckOrgAccess(r *http.Request, user_record *api_proto.VelociraptorUser) error {
-
-	// Now we have to determine which org the user wants to
-	// use. First let's check if the user specified an org in the
-	// header.
-	org_id := "root"
-	current_orgid_array := r.Header.Get("Grpc-Metadata-Orgid")
-	if len(current_orgid_array) == 1 {
-		org_id = string(current_orgid_array[0])
+func GetOrgIdFromRequest(r *http.Request) string {
+	// Now we have to determine which org the user wants to use. First
+	// let's check if the user specified an org in the header.
+	org_id := r.Header.Get("Grpc-Metadata-Orgid")
+	if org_id != "" {
+		return org_id
 	}
 
+	// Maybe the org id is specified in the URL itself. We allow
+	// the org id to be specified as a query string in order to
+	// support plain href links. However ultimately the GRPC
+	// gateway needs to check the org id in a header - so if an
+	// org is specified using a query string and NOT specified
+	// using a header, we set the header from it for further
+	// checks by the GRPC layer (in services/users/grpc.go)
+	q, err := url.ParseQuery(r.URL.RawQuery)
+	if err == nil {
+		org_id = q.Get("org_id")
+		if org_id != "" {
+			r.Header.Set("Grpc-Metadata-Orgid", org_id)
+			return org_id
+		}
+	}
+
+	org_id = "root"
+	r.Header.Set("Grpc-Metadata-Orgid", org_id)
+	return org_id
+}
+
+func CheckOrgAccess(r *http.Request, user_record *api_proto.VelociraptorUser) error {
+	org_id := GetOrgIdFromRequest(r)
 	err := _checkOrgAccess(r, org_id, user_record)
 	if err == nil {
 		return nil

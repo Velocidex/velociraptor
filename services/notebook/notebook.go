@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"net/url"
 	"os"
 	"strings"
 	"sync"
@@ -12,6 +13,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type NotebookManager struct {
@@ -149,7 +151,8 @@ func (self *NotebookManager) UploadNotebookAttachment(ctx context.Context,
 	}
 
 	result := &api_proto.NotebookFileUploadResponse{
-		Url: full_path.AsClientPath(),
+		Url: full_path.AsClientPath() + "?org_id=" +
+			url.QueryEscape(utils.NormalizedOrgId(self.config_obj.OrgId)),
 	}
 	return result, nil
 }

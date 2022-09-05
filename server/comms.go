@@ -21,17 +21,19 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"html"
 	"io"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
-	"strings"
+	"net/url"
 	"sync/atomic"
 	"time"
 
-	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 
@@ -136,10 +138,8 @@ func PrepareFrontendMux(
 	// does not have to be a physical directory - it is served
 	// from the filestore.
 	router.Handle(base+"/public/", GetLoggingHandler(config_obj, "/public")(
-		http.StripPrefix(base, forceMime(http.FileServer(
-			file_store_accessor.NewFileSystem(config_obj,
-				file_store.GetFileStore(config_obj),
-				"/public/"))))))
+		http.StripPrefix(base,
+			downloadPublic(config_obj, []string{"public"}))))
 
 	return nil
 }
@@ -672,18 +672,42 @@ func GetLoggingHandler(config_obj *config_proto.Config,
 	}
 }
 
-// Force mime type to binary stream.
-func forceMime(parent http.Handler) http.Handler {
+func downloadPublic(
+	config_obj *config_proto.Config, prefix []string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Prevent directory listings.
-		if strings.HasSuffix(r.URL.Path, "/") {
-			http.NotFound(w, r)
+		path_spec := paths.FSPathSpecFromClientPath(r.URL.Path)
+		components := path_spec.Components()
+
+		// make sure the prefix is correct
+		for i, p := range prefix {
+			if len(components) <= i || p != components[i] {
+				returnError(w, 404, "Not Found")
+				return
+			}
+		}
+
+		file_store_factory := file_store.GetFileStore(config_obj)
+		fd, err := file_store_factory.ReadFile(path_spec)
+		if err != nil {
+			returnError(w, 404, err.Error())
 			return
 		}
 
+		// From here on we already sent the headers and we can
+		// not really report an error to the client.
+		w.Header().Set("Content-Disposition", "attachment; filename="+
+			url.PathEscape(path_spec.Base())+api.GetExtensionForFilestore(path_spec))
+
 		w.Header().Set("Content-Type", "binary/octet-stream")
-		parent.ServeHTTP(w, r)
+		w.WriteHeader(200)
+
+		utils.Copy(r.Context(), w, fd)
 	})
+}
+
+func returnError(w http.ResponseWriter, code int, message string) {
+	w.WriteHeader(code)
+	_, _ = w.Write([]byte(html.EscapeString(message)))
 }
 
 // Calculate QPS
