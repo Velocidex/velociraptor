@@ -103,7 +103,7 @@
   --color-timeline-7: #471ecb;
 
   --color-vfs-files-timestomped: #ed5d40;
-  --color-calendar-background: #121212;
+  --color-calendar-background: var(--color-canvas-background);
   --color-level-error: #ff0000;
 }
 
@@ -838,7 +838,7 @@ body.coolgray-dark {
 
 /* react timelines */
 .coolgray-dark .react-calendar-timeline .rct-sidebar {
-  color: var(--color-foreground);
+    color: var(--color-foreground);
 }
 
 /* file tree */
@@ -890,7 +890,7 @@ body.coolgray-dark {
 
 .coolgray-dark .react-datetime-picker__inputGroup__input,
 .coolgray-dark .react-datetime-picker__button {
-  filter: invert(0);
+  filter: invert(0.7);
 }
 
 .coolgray-dark .react-datepicker-popper {

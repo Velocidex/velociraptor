@@ -262,7 +262,9 @@ sources:
           /*
           ## Adding timelines
 
-          Add a timeline from this time series data
+          Add a timeline from this time series data. (This only works
+          for root org because it relies on server health events).
+
           */
           SELECT timestamp(epoch=_ts) AS Timestamp, CPUPercent
           FROM monitoring(
@@ -325,9 +327,11 @@ sources:
           These apply to notebooks automatically without needing to
           define them again.
 
+          Hash column should right click to VT
+
           */
 
           LET ColumnTypes = dict(`StartDate`='timestamp')
 
-          SELECT Hex, StartDate
+          SELECT Hex, StartDate, hash(accessor="data", path="Hello") AS Hash
           FROM source()

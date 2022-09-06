@@ -92,9 +92,10 @@ func (self *EventLogWatcherService) StartMonitoring(
 	scope.Log("StartMonitoring")
 	defer utils.CheckForPanic("StartMonitoring")
 
-	// By default check every 3 seconds.
+	// By default check every 15 seconds. Event logs are not flushed
+	// that often so checking more frequently does not help much.
 	if frequency == 0 {
-		frequency = 3
+		frequency = 15
 	}
 
 	// A resolver for messages
