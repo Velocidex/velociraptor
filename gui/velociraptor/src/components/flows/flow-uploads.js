@@ -10,8 +10,6 @@ import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
 
 import api from '../core/api-service.js';
-import qs from 'qs';
-
 const MAX_ROWS_PER_TABLE = 500;
 
 export default class FlowUploads extends React.Component {
@@ -96,10 +94,9 @@ export default class FlowUploads extends React.Component {
             // make a zip file.
             vfs_path: (cell, row, rowIndex) => {
                 return (
-                    <a href={api.base_path + "/api/v1/DownloadVFSFile?" +
-                             qs.stringify({client_id: this.props.flow.client_id,
-                                           vfs_path:cell})
-                            }>
+                    <a href={api.href("/api/v1/DownloadVFSFile", {
+                        client_id: this.props.flow.client_id,
+                        vfs_path: cell})}>
                       {cell}
                     </a>
                 );

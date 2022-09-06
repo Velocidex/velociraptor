@@ -208,7 +208,7 @@ func closeContext(
 	// until after all artifacts have been collected so users can
 	// watch them and expect to see results.
 	if collection_context.Request != nil &&
-		collection_context.OutstandingRequests <= 0 &&
+		int64(len(collection_context.QueryStats)) >= collection_context.TotalRequests &&
 		!collection_context.UserNotified {
 
 		// Record the message was sent - so we never resent the
@@ -461,26 +461,13 @@ func CheckForStatus(
 		return errors.New("Invalid collection context")
 	}
 
-	// Only record the first error.
-	if message.Status.Status != crypto_proto.VeloStatus_OK &&
-		(collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING ||
-			collection_context.State == flows_proto.ArtifactCollectorContext_FINISHED) {
-		collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
-		collection_context.Status = message.Status.ErrorMessage
-		collection_context.Backtrace = message.Status.Backtrace
-	}
+	// Update our record of all the status messages from this
+	// collection.
+	updateQueryStats(collection_context, message.Status)
+	UpdateFlowStats(collection_context)
 
-	// But these are updated for each response.
+	// Update the active time for each response.
 	collection_context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
-	collection_context.ExecutionDuration += message.Status.Duration
-
-	// Each status message decreases outstanding_requests by one -
-	// when we hit 0 we can mark the flow as finished.
-	collection_context.OutstandingRequests--
-	if collection_context.OutstandingRequests <= 0 &&
-		collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING {
-		collection_context.State = flows_proto.ArtifactCollectorContext_FINISHED
-	}
 
 	collection_context.Dirty = true
 

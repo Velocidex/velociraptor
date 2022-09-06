@@ -34,3 +34,20 @@ func OrgIdFromClientId(client_id string) string {
 	}
 	return ""
 }
+
+func IsRootOrg(org_id string) bool {
+	return org_id == "" || org_id == "root"
+}
+
+func NormalizedOrgId(org_id string) string {
+	if IsRootOrg(org_id) {
+		return "root"
+	}
+	return org_id
+}
+func CompareOrgIds(a, b string) bool {
+	if IsRootOrg(a) && IsRootOrg(b) {
+		return true
+	}
+	return a == b
+}

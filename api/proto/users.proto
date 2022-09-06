@@ -2,6 +2,7 @@ syntax = "proto3";
 
 import "proto/semantic.proto";
 import "acls/proto/acl.proto";
+import "config/proto/config.proto";
 import "flows/proto/artifact_collector.proto";
 
 package proto;
@@ -45,10 +46,6 @@ message VelociraptorUser {
     string current_org = 12;
 }
 
-message UILink {
-    string text = 1;
-    string url = 2;
-}
 
 // These traits are used to control the GUI App. Many of these fields
 // are constructed from the VelociraptorUser, the config file, the
@@ -64,7 +61,7 @@ message ApiUserInterfaceTraits {
     bool password_less = 25;
     string picture = 20;
 
-    repeated UILink links = 21;
+    repeated GUILink links = 21;
 
     // Get the user's preferred theme.
     string theme = 2;
@@ -181,6 +178,8 @@ message SetGUIOptionsRequest {
     string org = 7;
 
     GUICustomizations customizations = 8;
+
+    repeated GUILink links = 9;
 }
 
 message Users {

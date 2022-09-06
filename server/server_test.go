@@ -634,7 +634,8 @@ func (self *ServerTestSuite) TestCompletions() {
 			SessionId: flow_id,
 			RequestId: constants.ProcessVQLResponses,
 			Status: &crypto_proto.VeloStatus{
-				Status: crypto_proto.VeloStatus_OK,
+				Status:  crypto_proto.VeloStatus_OK,
+				QueryId: 0,
 			},
 		})
 	runner.Close(context.Background())
@@ -658,7 +659,8 @@ func (self *ServerTestSuite) TestCompletions() {
 			SessionId: flow_id,
 			RequestId: constants.ProcessVQLResponses,
 			Status: &crypto_proto.VeloStatus{
-				Status: crypto_proto.VeloStatus_OK,
+				Status:  crypto_proto.VeloStatus_OK,
+				QueryId: 1,
 			},
 		})
 	runner.Close(context.Background())

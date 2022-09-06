@@ -21,6 +21,7 @@ import (
 	"fmt"
 
 	"github.com/sirupsen/logrus"
+	"www.velocidex.com/golang/velociraptor/config"
 	assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
@@ -58,6 +59,7 @@ func doFrontend() error {
 		WithRequiredUser().
 		WithRequiredLogging().LoadAndValidate()
 	if err != nil {
+		logging.FlushPrelogs(config.GetDefaultConfig())
 		return fmt.Errorf("loading config file: %w", err)
 	}
 

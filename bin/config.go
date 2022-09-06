@@ -1,5 +1,3 @@
-// +build !aix
-
 /*
    Velociraptor - Dig Deeper
    Copyright (C) 2019-2022 Rapid7 Inc.
@@ -47,8 +45,8 @@ var (
 	config_command = app.Command(
 		"config", "Manipulate the configuration.")
 
-	config_command_org = config_command.Flag("org", "Org ID to show").
-				String()
+	config_command_org = config_command.Flag(
+		"org", "Org ID to show").String()
 
 	config_show_command = config_command.Command(
 		"show", "Show the current config.")
@@ -115,7 +113,6 @@ func maybeGetOrgConfig(
 	org_id string, config_obj *config_proto.Config) (
 	*config_proto.Config, error) {
 
-	// For for proper initialization to catch bugs earlier.
 	org_manager, err := services.GetOrgManager()
 	if err != nil {
 		return config_obj, err

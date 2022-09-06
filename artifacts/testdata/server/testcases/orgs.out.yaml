@@ -1,7 +1,7 @@
 SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
  {
-  "Name": "\u003croot org\u003e",
-  "OrgId": ""
+  "Name": "\u003croot\u003e",
+  "OrgId": "root"
  }
 ]LET _ <= user_create(user="FailedUser", roles="reader", password="X", orgs=["ORGID"])[]SELECT * FROM test_read_logs() WHERE Log =~ "Org not found" AND NOT Log =~ "SELECT"[
  {
@@ -9,12 +9,12 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
  }
 ]SELECT * FROM gui_users(all_orgs=TRUE) ORDER BY name[]LET _ <= org_create(name="MyOrg", org_id="ORGID")[]SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
  {
-  "Name": "\u003croot org\u003e",
-  "OrgId": ""
- },
- {
   "Name": "MyOrg",
   "OrgId": "ORGID"
+ },
+ {
+  "Name": "\u003croot\u003e",
+  "OrgId": "root"
  }
 ]SELECT user_create(user="ReaderUser", roles="reader", password="X", orgs=["root", "ORGID"]), user_create(user="OrgUser", roles="administrator", password="X", orgs=["ORGID"]), user_create(user="OrgAdmin", roles="administrator", password="X") FROM scope()[
  {
@@ -25,8 +25,8 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
 ]SELECT * FROM gui_users(all_orgs=TRUE) ORDER BY name[
  {
   "name": "OrgAdmin",
-  "org_id": "",
-  "org_name": "\u003croot org\u003e",
+  "org_id": "root",
+  "org_name": "\u003croot\u003e",
   "picture": "",
   "email": false,
   "roles": [
@@ -82,8 +82,8 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
  },
  {
   "name": "ReaderUser",
-  "org_id": "",
-  "org_name": "\u003croot org\u003e",
+  "org_id": "root",
+  "org_name": "\u003croot\u003e",
   "picture": "",
   "email": false,
   "roles": [
@@ -109,8 +109,8 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
 ]SELECT * FROM gui_users() ORDER BY name[
  {
   "name": "OrgAdmin",
-  "org_id": "",
-  "org_name": "\u003croot org\u003e",
+  "org_id": "root",
+  "org_name": "\u003croot\u003e",
   "picture": "",
   "email": false,
   "roles": [
@@ -138,8 +138,8 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
  },
  {
   "name": "ReaderUser",
-  "org_id": "",
-  "org_name": "\u003croot org\u003e",
+  "org_id": "root",
+  "org_name": "\u003croot\u003e",
   "picture": "",
   "email": false,
   "roles": [
@@ -197,10 +197,10 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
  }
 ]SELECT * FROM query(query={ SELECT OrgId FROM orgs() ORDER BY OrgId }, runas="OrgAdmin", org_id="root")[
  {
-  "OrgId": ""
+  "OrgId": "ORGID"
  },
  {
-  "OrgId": "ORGID"
+  "OrgId": "root"
  }
 ]SELECT * FROM query(query={ SELECT OrgId FROM orgs() ORDER BY OrgId }, runas="OrgUser", org_id="ORGID")[]SELECT * FROM test_read_logs() WHERE Log =~ "Permission denied.+ORG_ADMIN" AND NOT Log =~ "SELECT"[
  {
@@ -299,5 +299,12 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
  {
   "OSPath": "fs:/clients/C.123/uploads/ORG2_file.txt",
   "PathHasORGID": true
+ }
+]LET _ <= org_delete(org="ORGID2")[]SELECT OrgId FROM orgs()[
+ {
+  "OrgId": "root"
+ },
+ {
+  "OrgId": "ORGID"
  }
 ]

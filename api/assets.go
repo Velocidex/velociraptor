@@ -89,6 +89,7 @@ func GetTemplateHandler(
 			BasePath:  base,
 			Heading:   "Heading",
 			UserTheme: user_options.Theme,
+			OrgId:     user_options.Org,
 		}
 		err = tmpl.Execute(w, args)
 		if err != nil {

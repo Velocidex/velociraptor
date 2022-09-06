@@ -33,6 +33,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 )
@@ -258,6 +259,10 @@ func (self UserManager) SetUserOptions(username string,
 		old_options = &api_proto.SetGUIOptionsRequest{}
 	}
 
+	// For now we do not allow the user to set the links in their
+	// profile.
+	old_options.Links = nil
+
 	if options.Lang != "" {
 		old_options.Lang = options.Lang
 	}
@@ -299,6 +304,19 @@ func (self UserManager) GetUserOptions(username string) (
 		options.Options = default_user_options
 	}
 
+	// Add any links in the config file to the user's preferences.
+	if self.config_obj.GUI != nil {
+		options.Links = MergeGUILinks(options.Links, self.config_obj.GUI.Links)
+	}
+
+	// Add the defaults.
+	options.Links = MergeGUILinks(options.Links, DefaultLinks)
+
+	// NOTE: It is possible for a user to disable one of the default
+	// targets by simply adding an entry with disabled: true - we will
+	// not override the configured link from the default and it will
+	// be ignored.
+
 	return options, err
 }
 
@@ -306,6 +324,9 @@ func StartUserManager(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("<green>Starting</> user manager service for org %v", config_obj.OrgId)
 
 	CA_Pool := x509.NewCertPool()
 	if config_obj.Client != nil {
@@ -324,7 +345,8 @@ func StartUserManager(
 // Make sure there is always something available.
 func init() {
 	service := &UserManager{
-		ca_pool: x509.NewCertPool(),
+		ca_pool:    x509.NewCertPool(),
+		config_obj: &config_proto.Config{},
 	}
 	services.RegisterUserManager(service)
 }

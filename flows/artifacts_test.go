@@ -534,6 +534,7 @@ func (self *TestSuite) TestCollectionCompletionSuccessFollowedByErrLog() {
 					Query: &actions_proto.VQLRequest{
 						Name: "Generic.Client.Info/BasicInformation",
 					},
+					QueryId: 0,
 				},
 			},
 			{
@@ -542,6 +543,7 @@ func (self *TestSuite) TestCollectionCompletionSuccessFollowedByErrLog() {
 				Status: &crypto_proto.VeloStatus{
 					Status:   crypto_proto.VeloStatus_OK,
 					Duration: 100,
+					QueryId:  0,
 				},
 			},
 			{
@@ -553,6 +555,7 @@ func (self *TestSuite) TestCollectionCompletionSuccessFollowedByErrLog() {
 					Query: &actions_proto.VQLRequest{
 						Name: "Generic.Client.Info/Users",
 					},
+					QueryId: 1,
 				},
 			},
 			{
@@ -568,6 +571,7 @@ func (self *TestSuite) TestCollectionCompletionSuccessFollowedByErrLog() {
 				Status: &crypto_proto.VeloStatus{
 					Status:   crypto_proto.VeloStatus_OK,
 					Duration: 200,
+					QueryId:  1,
 				},
 			},
 		})
@@ -595,7 +599,7 @@ func (self *TestSuite) TestCollectionCompletionTwoSourcesIncomplete() {
 		State:     flows_proto.ArtifactCollectorContext_RUNNING,
 
 		// Two sources running in parallel.
-		OutstandingRequests: 2,
+		TotalRequests: 2,
 		Request: &flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"Generic.Client.Info"},
 		},
@@ -630,6 +634,7 @@ func (self *TestSuite) TestCollectionCompletionTwoSourcesIncomplete() {
 				Query: &actions_proto.VQLRequest{
 					Name: "Generic.Client.Info/BasicInformation",
 				},
+				QueryId: 0,
 			},
 		})
 
@@ -641,6 +646,7 @@ func (self *TestSuite) TestCollectionCompletionTwoSourcesIncomplete() {
 			Status: &crypto_proto.VeloStatus{
 				Status:   crypto_proto.VeloStatus_GENERIC_ERROR,
 				Duration: 100,
+				QueryId:  0,
 			},
 		})
 	runner.Close(context.Background())
@@ -680,6 +686,7 @@ func (self *TestSuite) TestCollectionCompletionTwoSourcesIncomplete() {
 				Query: &actions_proto.VQLRequest{
 					Name: "Generic.Client.Info/Users",
 				},
+				QueryId: 1,
 			},
 		})
 
@@ -691,6 +698,7 @@ func (self *TestSuite) TestCollectionCompletionTwoSourcesIncomplete() {
 			Status: &crypto_proto.VeloStatus{
 				Status:   crypto_proto.VeloStatus_OK,
 				Duration: 100,
+				QueryId:  1,
 			},
 		})
 	runner.Close(context.Background())

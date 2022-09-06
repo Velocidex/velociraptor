@@ -42,6 +42,7 @@ import (
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -81,18 +82,34 @@ type vfsFileDownloadRequest struct {
 	Offset     int64    `schema:"offset"`
 	Length     int      `schema:"length"`
 	Encoding   string   `schema:"encoding"`
+	OrgId      string   `schema:"org_id"`
 }
 
 // URL format: /api/v1/DownloadVFSFile
 
 // This URL allows the caller to download **any** member of the
 // filestore (providing they have at least read permissions).
-func vfsFileDownloadHandler(
-	config_obj *config_proto.Config) http.Handler {
+func vfsFileDownloadHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		request := vfsFileDownloadRequest{}
 		decoder := schema.NewDecoder()
 		err := decoder.Decode(&request, r.URL.Query())
+		if err != nil {
+			returnError(w, 404, err.Error())
+			return
+		}
+
+		org_id := request.OrgId
+		if org_id == "" {
+			org_id = authenticators.GetOrgIdFromRequest(r)
+		}
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			returnError(w, 404, err.Error())
+			return
+		}
+
+		org_config_obj, err := org_manager.GetOrgConfig(org_id)
 		if err != nil {
 			returnError(w, 404, err.Error())
 			return
@@ -111,7 +128,7 @@ func vfsFileDownloadHandler(
 			}
 
 		} else {
-			db, err := datastore.GetDB(config_obj)
+			db, err := datastore.GetDB(org_config_obj)
 			if err != nil {
 				returnError(w, 404, err.Error())
 				return
@@ -121,7 +138,7 @@ func vfsFileDownloadHandler(
 				request.Components)
 			download_info := &flows_proto.VFSDownloadInfo{}
 
-			err = db.GetSubject(config_obj, info_path_spec, download_info)
+			err = db.GetSubject(org_config_obj, info_path_spec, download_info)
 			if err != nil {
 				returnError(w, 404, err.Error())
 				return
@@ -132,7 +149,7 @@ func vfsFileDownloadHandler(
 
 		}
 
-		file, err := file_store.GetFileStore(config_obj).ReadFile(path_spec)
+		file, err := file_store.GetFileStore(org_config_obj).ReadFile(path_spec)
 		if err != nil {
 			returnError(w, 404, err.Error())
 			return
@@ -146,7 +163,7 @@ func vfsFileDownloadHandler(
 
 		var reader_at io.ReaderAt = &utils.ReaderAtter{Reader: file}
 
-		index, err := getIndex(config_obj, path_spec)
+		index, err := getIndex(org_config_obj, path_spec)
 
 		// If the file is sparse, we use the sparse reader.
 		if err == nil && len(index.Ranges) > 0 {
@@ -269,8 +286,53 @@ func getTransformer(
 	return func(row *ordereddict.Dict) *ordereddict.Dict { return row }
 }
 
+func downloadFileStore(prefix []string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		path_spec := paths.FSPathSpecFromClientPath(r.URL.Path)
+		components := path_spec.Components()
+
+		// make sure the prefix is correct
+		for i, p := range prefix {
+			if len(components) <= i || p != components[i] {
+				returnError(w, 404, "Not Found")
+				return
+			}
+		}
+
+		org_id := authenticators.GetOrgIdFromRequest(r)
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			returnError(w, 404, err.Error())
+			return
+		}
+
+		org_config_obj, err := org_manager.GetOrgConfig(org_id)
+		if err != nil {
+			returnError(w, 404, err.Error())
+			return
+		}
+
+		file_store_factory := file_store.GetFileStore(org_config_obj)
+		fd, err := file_store_factory.ReadFile(path_spec)
+		if err != nil {
+			returnError(w, 404, err.Error())
+			return
+		}
+
+		// From here on we already sent the headers and we can
+		// not really report an error to the client.
+		w.Header().Set("Content-Disposition", "attachment; filename="+
+			url.PathEscape(path_spec.Base())+api.GetExtensionForFilestore(path_spec))
+
+		w.Header().Set("Content-Type", "binary/octet-stream")
+		w.WriteHeader(200)
+
+		utils.Copy(r.Context(), w, fd)
+	})
+}
+
 // Download the table as specified by the v1/GetTable API.
-func downloadTable(config_obj *config_proto.Config) http.Handler {
+func downloadTable() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		request := &api_proto.GetTableRequest{}
 		decoder := schema.NewDecoder()
@@ -281,15 +343,27 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 			return
 		}
 
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			returnError(w, 404, err.Error())
+			return
+		}
+
+		org_config_obj, err := org_manager.GetOrgConfig(request.OrgId)
+		if err != nil {
+			returnError(w, 404, err.Error())
+			return
+		}
+
 		row_chan, closer, log_path, err := getRows(
-			r.Context(), config_obj, request)
+			r.Context(), org_config_obj, request)
 		if err != nil {
 			returnError(w, 400, "Invalid request")
 			return
 		}
 		defer closer()
 
-		transform := getTransformer(r.Context(), config_obj, request)
+		transform := getTransformer(r.Context(), org_config_obj, request)
 
 		download_name := request.DownloadFilename
 		if download_name == "" {
@@ -297,7 +371,7 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 		}
 
 		// Log an audit event.
-		userinfo := GetUserInfo(r.Context(), config_obj)
+		userinfo := GetUserInfo(r.Context(), org_config_obj)
 
 		// This should never happen!
 		if userinfo.Name == "" {
@@ -317,7 +391,7 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 			w.Header().Set("Content-Type", "binary/octet-stream")
 			w.WriteHeader(200)
 
-			logger := logging.GetLogger(config_obj, &logging.Audit)
+			logger := logging.GetLogger(org_config_obj, &logging.Audit)
 			logger.WithFields(logrus.Fields{
 				"user":    userinfo.Name,
 				"request": request,
@@ -326,7 +400,7 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 
 			scope := vql_subsystem.MakeScope()
 			csv_writer := csv.GetCSVAppender(
-				config_obj, scope, w, true /* write_headers */)
+				org_config_obj, scope, w, true /* write_headers */)
 			for row := range row_chan {
 				csv_writer.Write(
 					filterColumns(request.Columns, transform(row)))
@@ -346,7 +420,7 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 			w.Header().Set("Content-Type", "binary/octet-stream")
 			w.WriteHeader(200)
 
-			logger := logging.GetLogger(config_obj, &logging.Audit)
+			logger := logging.GetLogger(org_config_obj, &logging.Audit)
 			logger.WithFields(logrus.Fields{
 				"user":    userinfo.Name,
 				"request": request,

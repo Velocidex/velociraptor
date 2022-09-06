@@ -18,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -147,7 +148,8 @@ func (self *RemoteDataStore) SetSubjectWithCompletion(
 	// Make sure to always call the completion regardless of error
 	// paths.
 	defer func() {
-		if completion != nil {
+		if completion != nil &&
+			!utils.CompareFuncs(completion, utils.SyncCompleter) {
 			completion()
 		}
 	}()

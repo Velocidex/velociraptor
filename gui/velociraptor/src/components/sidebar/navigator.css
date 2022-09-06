@@ -114,3 +114,8 @@ span.hamburger {
 a.disabled {
   pointer-events: none;
 }
+
+.sidebar-icon {
+    width: 15px;
+    height: 15px;
+}

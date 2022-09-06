@@ -11,6 +11,11 @@
     --font-json: roboto-mono, Menlo, Monaco, Consolas, "Courier New", monospace;
     --font-monospace: roboto-mono, "Courier New", Courier, monospace;
 
+    --color-calendar-background: #f0f0f0;
+    --background-calendar-tile-now: #feffe0;
+    --background-calendar-tile-active: var(--color-table-row-selected);
+    --color-calendar-tile: var(--color-foreground);
+
     --color-canvas-background: #ffffff;
     --color-foreground: #000;
     --color-foreground-inverse: #fff;
@@ -50,7 +55,6 @@
     --color-no-link-color: #bbb;
     --color-notification-highlight-color: #eee;
     --color-no-content-color: #e0e0e0;
-    --color-grr-blue: #2aabd2;
     --color-hint-border-color: #f0c36d;
     --color-hint-background-color: #f9edbe;
     --color-section-separator: #efefef;
@@ -74,4 +78,10 @@
     --color-timeline-7: #471ecb;
 
     --color-vfs-files-timestomped: #bbdfff;
+
+    --color-accent: #0096ff;
+    --color-accent-100: #0096ff;
+    --color-accent-75: #0096ffb0;
+    --color-accent-50: #0096ff80;
+    --color-accent-25: #0096ff40;
 }

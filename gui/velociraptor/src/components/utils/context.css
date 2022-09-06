@@ -1,0 +1,14 @@
+.context-icon {
+    width: 15px;
+    height: 15px;
+    margin-right: 10px;
+}
+
+div.react-contexify {
+    background-color: var(--color-canvas-background);
+    z-index: 1000;
+}
+
+div.react-contexify .react-contexify__item__content {
+    color: var(--color-foreground);
+}

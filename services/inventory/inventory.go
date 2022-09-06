@@ -139,7 +139,7 @@ func (self *InventoryService) GetToolInfo(
 // calls to this function will just retrieve those fields directly.
 func (self *InventoryService) materializeTool(
 	ctx context.Context,
-	config_obj *config_proto.Config,
+	org_config_obj *config_proto.Config,
 	tool *artifacts_proto.Tool) error {
 
 	if self.Client == nil {
@@ -150,7 +150,7 @@ func (self *InventoryService) materializeTool(
 	// verify the binary URL now.
 	if tool.GithubProject != "" {
 		var err error
-		tool.Url, err = getGithubRelease(ctx, self.Client, config_obj, tool)
+		tool.Url, err = getGithubRelease(ctx, self.Client, org_config_obj, tool)
 		if err != nil {
 			return errors.Wrap(
 				err, "While resolving github release "+tool.GithubProject)
@@ -178,7 +178,7 @@ func (self *InventoryService) materializeTool(
 	// name. We need to write the tool on the root org's public
 	// directory.
 	org_manager, err := services.GetOrgManager()
-	root_org_config, err := org_manager.GetOrgConfig("root")
+	root_org_config, err := org_manager.GetOrgConfig(services.ROOT_ORG_ID)
 	if err != nil {
 		return err
 	}
@@ -188,7 +188,13 @@ func (self *InventoryService) materializeTool(
 		return errors.New("No filestore configured")
 	}
 
-	path_manager := paths.NewInventoryPathManager(config_obj, tool)
+	// All tools are written to the root org's public directory since
+	// this is the only one mapped for external access. File names
+	// should never clash because the names are derived from a hash
+	// mixed with org id and filename so should be unique to each
+	// org. Therefore we use the root orgs file store but get a path
+	// manager specific to each org.
+	path_manager := paths.NewInventoryPathManager(org_config_obj, tool)
 	fd, err := file_store_factory.WriteFile(path_manager.Path())
 	if err != nil {
 		return err
@@ -200,7 +206,7 @@ func (self *InventoryService) materializeTool(
 		return err
 	}
 
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger := logging.GetLogger(org_config_obj, &logging.FrontendComponent)
 	logger.Info("Downloading tool <green>%v</> FROM <red>%v</>", tool.Name,
 		tool.Url)
 	request, err := http.NewRequestWithContext(ctx, "GET", tool.Url, nil)
@@ -226,20 +232,20 @@ func (self *InventoryService) materializeTool(
 	}
 
 	if tool.ServeLocally {
-		if config_obj.Client == nil || len(config_obj.Client.ServerUrls) == 0 {
+		if org_config_obj.Client == nil || len(org_config_obj.Client.ServerUrls) == 0 {
 			return errors.New("No server URLs configured!")
 		}
-		tool.ServeUrl = config_obj.Client.ServerUrls[0] + "public/" + tool.FilestorePath
+		tool.ServeUrl = org_config_obj.Client.ServerUrls[0] + "public/" + tool.FilestorePath
 
 	} else {
 		tool.ServeUrl = tool.Url
 	}
 
-	db, err := datastore.GetDB(config_obj)
+	db, err := datastore.GetDB(org_config_obj)
 	if err != nil {
 		return err
 	}
-	return db.SetSubject(config_obj, paths.ThirdPartyInventory, self.binaries)
+	return db.SetSubject(org_config_obj, paths.ThirdPartyInventory, self.binaries)
 }
 
 func (self *InventoryService) RemoveTool(

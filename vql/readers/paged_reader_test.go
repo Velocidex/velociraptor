@@ -145,7 +145,12 @@ func (self *TestSuite) TestPagedReader() {
 	self.scope.Close()
 
 	// Destoying the scope should close the readers.
-	assert.Nil(self.T(), reader.reader)
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		reader.mu.Lock()
+		defer reader.mu.Unlock()
+
+		return reader.reader == nil
+	})
 
 	// No outstanding readers
 	assert.Equal(self.T(), int64(0), self.pool.lru.Size())

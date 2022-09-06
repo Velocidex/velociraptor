@@ -3034,7 +3034,7 @@
   description: Return the details of the current org.
   type: Function
 - name: org_create
-  description: Creates a new organizaion.
+  description: Creates a new organization.
   type: Function
   args:
   - name: name
@@ -3044,6 +3044,14 @@
   - name: org_id
     type: string
     description: An ID for the new org (if not set use a random ID).
+- name: org_delete
+  description: Deletes an Org from the server.
+  type: Function
+  args:
+  - name: org
+    type: string
+    description: The org ID to delete.
+    required: true
 - name: orgs
   description: Retrieve the list of orgs on this server.
   type: Plugin
@@ -5790,4 +5798,3 @@
     type: string
     description: If set use this key to cache the  yara rules.
   category: plugin
-

@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strings"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	errors "github.com/pkg/errors"
@@ -32,13 +31,11 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/protobuf/encoding/protojson"
-	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
-	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 )
@@ -141,56 +138,40 @@ func PrepareGUIMux(
 		auther.AuthenticateUserHandler(h)))
 
 	mux.Handle(base+"/api/v1/DownloadTable", csrfProtect(config_obj,
-		auther.AuthenticateUserHandler(
-			downloadTable(config_obj))))
+		auther.AuthenticateUserHandler(downloadTable())))
 
 	mux.Handle(base+"/api/v1/DownloadVFSFile", csrfProtect(config_obj,
-		auther.AuthenticateUserHandler(
-			vfsFileDownloadHandler(config_obj))))
+		auther.AuthenticateUserHandler(vfsFileDownloadHandler())))
 
 	mux.Handle(base+"/api/v1/UploadTool", csrfProtect(config_obj,
-		auther.AuthenticateUserHandler(
-			toolUploadHandler(config_obj))))
+		auther.AuthenticateUserHandler(toolUploadHandler())))
 
 	mux.Handle(base+"/api/v1/UploadFormFile", csrfProtect(config_obj,
-		auther.AuthenticateUserHandler(
-			formUploadHandler(config_obj))))
+		auther.AuthenticateUserHandler(formUploadHandler())))
 
 	// Serve prepared zip files.
 	mux.Handle(base+"/downloads/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
-			http.StripPrefix(base, forceMime(http.FileServer(
-				file_store_accessor.NewFileSystem(
-					config_obj,
-					file_store.GetFileStore(config_obj),
-					"/downloads/")))))))
+			http.StripPrefix(base,
+				downloadFileStore([]string{"downloads"})))))
 
 	// Serve notebook items
 	mux.Handle(base+"/notebooks/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
-			http.StripPrefix(base, forceMime(http.FileServer(
-				file_store_accessor.NewFileSystem(
-					config_obj,
-					file_store.GetFileStore(config_obj),
-					"/notebooks/")))))))
+			http.StripPrefix(base,
+				downloadFileStore([]string{"notebooks"})))))
 
 	// Serve files from hunt notebooks
 	mux.Handle(base+"/hunts/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
-			http.StripPrefix(base, forceMime(http.FileServer(
-				file_store_accessor.NewFileSystem(
-					config_obj,
-					file_store.GetFileStore(config_obj),
-					"/hunts/")))))))
+			http.StripPrefix(base,
+				downloadFileStore([]string{"hunts"})))))
 
 	// Serve files from client notebooks
 	mux.Handle(base+"/clients/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(
-			http.StripPrefix(base, forceMime(http.FileServer(
-				file_store_accessor.NewFileSystem(
-					config_obj,
-					file_store.GetFileStore(config_obj),
-					"/clients/")))))))
+			http.StripPrefix(base,
+				downloadFileStore([]string{"clients"})))))
 
 	// Assets etc do not need auth.
 	install_static_assets(config_obj, mux)
@@ -308,18 +289,4 @@ func GetAPIHandler(
 		http.StripPrefix(base, grpc_proxy_mux))
 
 	return reverse_proxy_mux, nil
-}
-
-// Force mime type to binary stream.
-func forceMime(parent http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Prevent directory listings.
-		if strings.HasSuffix(r.URL.Path, "/") {
-			http.NotFound(w, r)
-			return
-		}
-
-		w.Header().Set("Content-Type", "binary/octet-stream")
-		parent.ServeHTTP(w, r)
-	})
 }

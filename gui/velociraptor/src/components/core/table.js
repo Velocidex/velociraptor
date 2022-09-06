@@ -31,6 +31,7 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import T from '../i8n/i8n.js';
 import TreeCell from './tree-cell.js';
+import ContextMenu from '../utils/context.js';
 
 // Shows the InspectRawJson modal dialog UI.
 export class InspectRawJson extends Component {
@@ -485,9 +486,12 @@ export function formatColumns(columns) {
 
         case "tree":
             x.formatter= (cell, row) => {
-                return <TreeCell
-                         name={x.text}
-                         data={cell}/>;
+                if (_.isObject(cell)) {
+                    return <TreeCell
+                                name={x.text}
+                                data={cell}/>;
+                };
+                return cell;
             };
             x.type = null;
             break;
@@ -509,7 +513,7 @@ export function formatColumns(columns) {
         case "download":
             x.formatter= (cell, row) =>{
                 if (row.complete) {
-                    return <a href={api.base_path + row.path}  target="_blank" download
+                    return <a href={api.href(row.path)}  target="_blank" download
                               rel="noopener noreferrer">{cell}</a>;
                 };
                 return <>
@@ -556,7 +560,9 @@ export function formatColumns(columns) {
                 try {
                     cell = atob(cell);
                 } catch(e) {};
-                return <HexViewPopup data={cell}/>;
+                return <ContextMenu value={cell}>
+                         <HexViewPopup data={cell}/>
+                       </ContextMenu>;
             };
             x.type = null;
             break;
