@@ -281,8 +281,7 @@ func (self *OrgManager) startRootOrgServices(
 
 	// The user manager is global across all orgs.
 	if spec.UserManager {
-		err := users.StartUserManager(
-			ctx, wg, org_config)
+		err := users.StartUserManager(ctx, wg, org_config)
 		if err != nil {
 			return err
 		}
