@@ -33,6 +33,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 )
@@ -324,6 +325,9 @@ func StartUserManager(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("<green>Starting</> user manager service for org %v", config_obj.OrgId)
+
 	CA_Pool := x509.NewCertPool()
 	if config_obj.Client != nil {
 		CA_Pool.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
@@ -341,7 +345,8 @@ func StartUserManager(
 // Make sure there is always something available.
 func init() {
 	service := &UserManager{
-		ca_pool: x509.NewCertPool(),
+		ca_pool:    x509.NewCertPool(),
+		config_obj: &config_proto.Config{},
 	}
 	services.RegisterUserManager(service)
 }

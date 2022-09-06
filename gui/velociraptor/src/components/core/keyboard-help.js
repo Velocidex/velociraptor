@@ -24,8 +24,8 @@ const helpTextCol1 = [
         ["alt+p", T("Parameters configuration Step")],
         ["alt+r", T("Collection resource specification")],
         ["ctrl+l", T("Launch artifact")],
-        ["ctrl+right", T("Go to next step")],
-        ["ctrl+left", T("Go to previous step")],
+        ["ctrl+shift+right", T("Go to next step")],
+        ["ctrl+shift+left", T("Go to previous step")],
     ]],
 ];
 

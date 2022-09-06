@@ -74,6 +74,8 @@
   --color-table-row-hover: rgba(0, 0, 0, 0.01);
   --color-code: #990000;
 
+  --background-calendar-tile-active: #5cd00a80;
+
   --color-timeline-header: #cdcdcd20;
   --color-timeline-table-shown: #5cd00a80;
   --color-timeline-1: #dff0d820;

@@ -36,6 +36,7 @@ func maybeStartInitialArtifacts(
 	if err != nil {
 		return err
 	}
+
 	// Start any initial artifact collections.
 	if config_obj.Frontend != nil &&
 		len(config_obj.Frontend.InitialServerArtifacts) > 0 {

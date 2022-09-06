@@ -1014,8 +1014,10 @@ class NewCollectionWizard extends React.Component {
             GOTO_PREVIEW: "alt+v",
             GOTO_RESOURCES: "alt+r",
             GOTO_LAUNCH: "ctrl+l",
-            NEXT_STEP: "ctrl+right",
-            PREV_STEP: "ctrl+left",
+
+            // These do not work inside text entries.
+            NEXT_STEP: "ctrl+shift+right",
+            PREV_STEP: "ctrl+shift+left",
         };
         let handlers={
             GOTO_ARTIFACTS: this.gotoStep(1),

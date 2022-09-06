@@ -36,6 +36,11 @@ func (self OrgCreateFunction) Call(
 		return vfilter.Null{}
 	}
 
+	if arg.OrgName == "" {
+		scope.Log("ERROR:org_create: An Org name must be specified")
+		return vfilter.Null{}
+	}
+
 	org_manager, err := services.GetOrgManager()
 	if err != nil {
 		scope.Log("org_create: %s", err)

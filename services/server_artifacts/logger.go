@@ -37,6 +37,12 @@ func (self *serverLogger) Write(b []byte) (int, error) {
 	// Increment the log count.
 	self.collection_context.Modify(func(context *flows_proto.ArtifactCollectorContext) {
 		context.TotalLogs++
+
+		// If an error occured mark the collection failed.
+		if level == "ERROR" {
+			context.State = flows_proto.ArtifactCollectorContext_ERROR
+			context.Status = msg
+		}
 	})
 
 	return len(b), nil

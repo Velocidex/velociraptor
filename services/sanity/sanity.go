@@ -27,7 +27,8 @@ import (
 // conditions.
 type SanityChecks struct{}
 
-func (self *SanityChecks) Check(
+// Check sanity of general server state - this is only done for the root org.
+func (self *SanityChecks) CheckRootOrg(
 	ctx context.Context, config_obj *config_proto.Config) error {
 	if config_obj.Logging != nil &&
 		config_obj.Logging.OutputDirectory != "" {
@@ -89,6 +90,23 @@ func (self *SanityChecks) Check(
 		}
 	}
 
+	err := maybeStartInitialArtifacts(ctx, config_obj)
+	if err != nil {
+		return err
+	}
+
+	return checkForServerUpgrade(ctx, config_obj)
+}
+
+func (self *SanityChecks) Check(
+	ctx context.Context, config_obj *config_proto.Config) error {
+	if utils.IsRootOrg(config_obj.OrgId) {
+		err := self.CheckRootOrg(ctx, config_obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Reindex all the notebooks.
 	notebooks, err := notebook.GetAllNotebooks(config_obj)
 	if err != nil {
@@ -119,12 +137,7 @@ func (self *SanityChecks) Check(
 		return err
 	}
 
-	err = maybeStartInitialArtifacts(ctx, config_obj)
-	if err != nil {
-		return err
-	}
-
-	return checkForServerUpgrade(ctx, config_obj)
+	return nil
 }
 
 // Sets the server metadata to defaults.
@@ -242,10 +255,8 @@ func checkForServerUpgrade(
 				if !pres {
 					seen[tool_definition.Name] = true
 
-					// If the existing tool
-					// definition was overridden
-					// by the admin do not alter
-					// it.
+					// If the existing tool definition was overridden
+					// by the admin do not alter it.
 					tool, err := inventory.ProbeToolInfo(tool_definition.Name)
 					if err == nil && tool.AdminOverride {
 						logger.Info("<red>Skipping update</> of tool <green>%v</> because an admin manually overrode its definition.",
@@ -261,9 +272,8 @@ func checkForServerUpgrade(
 					tool_definition = proto.Clone(
 						tool_definition).(*artifacts_proto.Tool)
 
-					// Re-add the tool to force
-					// hashes to be taken when the
-					// tool is used next.
+					// Re-add the tool to force hashes to be taken
+					// when the tool is used next.
 					tool_definition.Hash = ""
 
 					err = inventory.AddTool(

@@ -11,6 +11,11 @@
     --font-json: roboto-mono, Menlo, Monaco, Consolas, "Courier New", monospace;
     --font-monospace: roboto-mono, "Courier New", Courier, monospace;
 
+    --color-calendar-background: #f0f0f0;
+    --background-calendar-tile-now: #feffe0;
+    --background-calendar-tile-active: var(--color-table-row-selected);
+    --color-calendar-tile: var(--color-foreground);
+
     --color-canvas-background: #ffffff;
     --color-foreground: #000;
     --color-foreground-inverse: #fff;
