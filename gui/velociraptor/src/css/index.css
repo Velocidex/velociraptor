@@ -67,17 +67,21 @@ code {
 }
 
 
-.dropdown-item {
+.dropdown-item,
+.dropdown-item:focus {
   color: var(--color-foreground);
   background: var(--color-btn-default-background);
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
 }
 
-.dropdown-item:hover {
-  background: var(--color-accent-50);
+.dropdown-item:hover,
+.dropdown-item.active:hover {
+  background: var(--color-accent-75);
 }
 
-.dropdown-item.active {
+.dropdown-item.active,
+.dropdown-item.active:focus {
   background: var(--color-accent-50);
+  color: var(--color-foreground);
 }
