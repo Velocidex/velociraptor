@@ -17,9 +17,8 @@ Queries:
   - SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Xor,DecodedConfig
     FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir + "/artifacts/testdata/files/CSx86sleep.bin")
 
-
   # tests embedded shellcode in data section parsing
-  - SELECT Rule,FullPath,Hash,Xor,DecodedConfig
+  - SELECT Rule,FullPath.Basename,Hash,Xor,DecodedConfig
     FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir+"/artifacts/testdata/files/CSsectionStager.exe")
 
   # Use byte scanning of the raw file.

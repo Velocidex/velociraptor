@@ -118,6 +118,8 @@ func (self *Launcher) GetFlows(
 	return result, nil
 }
 
+// Gets more detailed information about the flow context - fills in
+// availableDownloads etc.
 func (self *Launcher) GetFlowDetails(
 	config_obj *config_proto.Config,
 	client_id string, flow_id string) (*api_proto.FlowDetails, error) {
@@ -125,20 +127,18 @@ func (self *Launcher) GetFlowDetails(
 		return &api_proto.FlowDetails{}, nil
 	}
 
+	collection_context, err := LoadCollectionContext(config_obj, client_id, flow_id)
+	if err != nil {
+		return nil, err
+	}
+
+	ping := &flows_proto.PingContext{}
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
 	}
 
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	collection_context := &flows_proto.ArtifactCollectorContext{}
-	err = db.GetSubject(config_obj,
-		flow_path_manager.Path(), collection_context)
-	if err != nil {
-		return nil, err
-	}
-
-	ping := &flows_proto.PingContext{}
 	err = db.GetSubject(config_obj, flow_path_manager.Ping(), ping)
 	if err == nil && ping.ActiveTime > collection_context.ActiveTime {
 		collection_context.ActiveTime = ping.ActiveTime
@@ -226,6 +226,7 @@ func LoadCollectionContext(
 	if collection_context.SessionId == "" {
 		return nil, errors.New("Unknown flow " + client_id + " " + flow_id)
 	}
+
 	return collection_context, nil
 }
 
@@ -333,12 +334,5 @@ func (self *Launcher) GetFlowRequests(
 	}
 
 	result.Items = flow_details.Items[offset:end]
-
-	// Remove unimportant fields
-	for _, item := range result.Items {
-		item.SessionId = ""
-		item.RequestId = 0
-	}
-
 	return result, nil
 }
