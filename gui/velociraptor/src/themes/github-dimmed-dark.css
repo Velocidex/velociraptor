@@ -730,18 +730,8 @@ body.github-dimmed-dark {
 }
 
 .github-dimmed-dark .dropdown-item {
-  color: var(--color-foreground);
-  background: var(--color-btn-default-background);
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
-}
-
-.github-dimmed-dark .dropdown-item:hover {
-  background: var(--color-accent-50);
-}
-
-.github-dimmed-dark .dropdown-item.active {
-  background: var(--color-accent-50);
 }
 
 .github-dimmed-dark .react-datetime-picker__inputGroup__input,
