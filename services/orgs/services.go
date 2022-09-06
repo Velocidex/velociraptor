@@ -281,8 +281,7 @@ func (self *OrgManager) startRootOrgServices(
 
 	// The user manager is global across all orgs.
 	if spec.UserManager {
-		err := users.StartUserManager(
-			ctx, wg, org_config)
+		err := users.StartUserManager(ctx, wg, org_config)
 		if err != nil {
 			return err
 		}
@@ -536,13 +535,6 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		service_container.mu.Unlock()
 	}
 
-	if spec.SanityChecker {
-		err = sanity.NewSanityCheckService(ctx, wg, org_config)
-		if err != nil {
-			return err
-		}
-	}
-
 	if spec.ServerArtifacts {
 		err = server_artifacts.NewServerArtifactService(ctx, wg, org_config)
 		if err != nil {
@@ -570,6 +562,14 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		service_container.mu.Lock()
 		service_container.server_event_manager = server_event_manager
 		service_container.mu.Unlock()
+	}
+
+	// Must be run after all the other services are up
+	if spec.SanityChecker {
+		err = sanity.NewSanityCheckService(ctx, wg, org_config)
+		if err != nil {
+			return err
+		}
 	}
 
 	return maybeFlushFilesOnClose(ctx, wg, org_config)

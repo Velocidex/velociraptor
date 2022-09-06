@@ -77,7 +77,9 @@
   --color-card-heading-background: #444444;
   --color-table-heading-background: #444444;
   --color-monospace-color: #eeeeee;
+
   --color-calendar-background: #121212;
+  --color-calendar-tile: #121212;
 
   --color-timeline-header: #cdcdcd20;
   --color-timeline-table-shown: #dd4b3920;
@@ -599,20 +601,6 @@ body.veloci-dark {
 /* react timelines */
 .veloci-dark .react-calendar-timeline .rct-sidebar {
   color: var(--color-foreground);
-}
-
-/* react calendar */
-.veloci-dark .react-calendar {
-    background: var(--color-calendar-background);
-}
-
-.veloci-dark .react-calendar .react-calendar__navigation button,
-.veloci-dark .react-calendar .react-calendar__tile {
-    color: var(--color-foreground-dimmed);
-}
-
-.veloci-dark .react-calendar .react-calendar__month-view__days__day--weekend {
-    color: var(--accent-color);
 }
 
 /* file tree */
