@@ -582,6 +582,7 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 		State:               flows_proto.ArtifactCollectorContext_RUNNING,
 		Request:             collector_request,
 		ClientId:            client_id,
+		TotalRequests:       int64(len(tasks)),
 		OutstandingRequests: int64(len(tasks)),
 	}
 

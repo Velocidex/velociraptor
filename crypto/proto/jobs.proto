@@ -156,6 +156,9 @@ message VeloStatus {
     // A List of artifacts that had some results.
     repeated string names_with_response = 5;
 
+    // The artifact that this status refers to
+    string Artifact = 10;
+
     // How many log rows we generated
     int64 log_rows = 6;
 

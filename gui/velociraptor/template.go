@@ -14,6 +14,7 @@ type HTMLtemplateArgs struct {
 
 	// This is a JSON serialized instance of ErrState
 	ErrState string
+	OrgId    string
 }
 
 type AuthenticatorInfo struct {
