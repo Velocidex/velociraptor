@@ -84,6 +84,15 @@ func NewResponder(
 		logger:     logging.GetLogger(config_obj, &logging.ClientComponent),
 		start_time: time.Now().UnixNano(),
 	}
+
+	if request.VQLClientAction != nil {
+		for _, q := range request.VQLClientAction.Query {
+			if q.Name != "" {
+				result.Artifact = q.Name
+			}
+		}
+	}
+
 	return result
 }
 
@@ -123,6 +132,7 @@ func (self *Responder) getStatus() *crypto_proto.VeloStatus {
 		LogRows:           self.log_rows,
 		ResultRows:        self.result_rows,
 		Duration:          time.Now().UnixNano() - self.start_time,
+		Artifact:          self.Artifact,
 	}
 
 	if self.request.VQLClientAction != nil {
@@ -164,6 +174,8 @@ func (self *Responder) RaiseError(ctx context.Context, message string) {
 	status.Backtrace = string(debug.Stack())
 	status.ErrorMessage = message
 	status.Status = crypto_proto.VeloStatus_GENERIC_ERROR
+	status.NamesWithResponse = self.names_with_response
+	status.Artifact = self.Artifact
 
 	self.AddResponse(ctx, &crypto_proto.VeloMessage{Status: status})
 }

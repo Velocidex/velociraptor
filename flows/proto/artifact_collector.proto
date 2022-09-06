@@ -92,12 +92,24 @@ message ArtifactUploadedFileInfo {
 // updated each time anyting about the collection is changed, without
 // having to race updating the main record. The read active_time is
 // the latest between this record and the one in
-// ArtifactCollectorContext
+// ArtifactCollectorContext. This is mainly used by the GUI to notice
+// when a collection is updated.
 message PingContext {
     uint64 active_time = 1;
 }
 
-// This context is serialized into the data store.
+// Keep track of each individual query and its status - a collection
+// can contain multiple queries and artifacts some may fail and others
+// may succeed. We keep track of the total here.
+message QueryStats {
+    uint64 query_id = 1;
+    uint64 execution_duration = 2;
+    string status = 3;
+    string query_name = 4;
+}
+
+// This context is serialized into the data store. We keep track of
+// all aspects of a collection.
 message ArtifactCollectorContext {
     string client_id = 27;
     string session_id = 13;
@@ -120,6 +132,7 @@ message ArtifactCollectorContext {
     uint64 total_collected_rows = 28;
     uint64 total_logs = 32;
 
+    int64 total_requests = 35;
     int64 outstanding_requests = 31;
 
     // We expect the next response from the client to have this id.
@@ -147,6 +160,9 @@ message ArtifactCollectorContext {
             description: "Contents of an error status sent by the client."
         }];
 
+    // This is used to keep track of any System.Flow.Completion events
+    // we already sent. We only send exactly one such message when the
+    // flow is completed.
     bool user_notified = 16;
 
     // Some of the collected artifacts may not have results.
@@ -154,6 +170,9 @@ message ArtifactCollectorContext {
             description: "The full path to the artifacts with their results. "
             "This takes the form artifact name/source name."
         }];
+
+    // Keep detailed track of each query status.
+    repeated VeloStatus query_stats = 34;
 
     // The below are not serialized but are used during execution.
 
