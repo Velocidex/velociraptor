@@ -2933,6 +2933,11 @@
     description: The accessor to use.
   metadata:
     permissions: FILESYSTEM_READ
+- name: linux_sysinfo
+  description: Collect system information on Linux clients
+  type: Plugin
+  metadata:
+    permissions: MACHINE_STATE
 - name: log
   description: |
     Log the message and return TRUE.
