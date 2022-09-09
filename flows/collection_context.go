@@ -37,6 +37,13 @@ func updateQueryStats(
 				stat.NamesWithResponse = status.NamesWithResponse
 			}
 
+			// On older versions of the client QueryId is not
+			// propagated properly so we end up with all statuses with
+			// a query id of 0. In this case we should keep all the
+			// statuses even if they are already received so we can
+			// terminate the flow.
+			status.Duration = 0
+			collection_context.QueryStats = append(collection_context.QueryStats, status)
 			return
 		}
 	}

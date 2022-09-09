@@ -211,7 +211,7 @@ func closeContext(
 		int64(len(collection_context.QueryStats)) >= collection_context.TotalRequests &&
 		!collection_context.UserNotified {
 
-		// Record the message was sent - so we never resent the
+		// Record the message was sent - so we never resend the
 		// message, even with new data.
 		collection_context.UserNotified = true
 
