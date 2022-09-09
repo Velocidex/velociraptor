@@ -11,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/users"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func createInitialUsers(
@@ -65,15 +66,22 @@ func createInitialUsers(
 			}
 
 			for _, org_id := range org_list {
+				// Turn the org id into an org name.
 				org_config_obj, err := org_manager.GetOrgConfig(org_id)
 				if err != nil {
 					return err
 				}
 
-				new_user.Orgs = append(new_user.Orgs, &api_proto.Org{
+				org_record := &api_proto.Org{
 					Name: org_config_obj.OrgName,
 					Id:   org_config_obj.OrgId,
-				})
+				}
+
+				if utils.IsRootOrg(org_id) {
+					org_record.Name = "<root>"
+					org_record.Id = "root"
+				}
+				new_user.Orgs = append(new_user.Orgs, org_record)
 
 				// Give them the administrator role in the respective org
 				err = acls.GrantRoles(

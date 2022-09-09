@@ -6,6 +6,12 @@
  },
  "/users/User1": {
   "name": "User1",
+  "orgs": [
+   {
+    "id": "root",
+    "name": "\u003croot\u003e"
+   }
+  ],
   "password_hash": "DX3EdpodhRYoAnA6GFW3bjtlK9o+BYKrMkM/Y9xqBzY=",
   "password_salt": "D2GtD9Y5FRMCEkLvuax4AkXMIVJ/o/nF5VLUciPjg6I="
  }

@@ -545,6 +545,10 @@ body.veloci-dark {
   font-size: var(--font-size-base);
 }
 
+.veloci-dark pre {
+    color: var(--color-canvas-background);
+}
+
 .veloci-dark .artifact-search-table a {
   color: var(--color-foreground);
 }
