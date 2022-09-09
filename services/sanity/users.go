@@ -14,9 +14,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-func createInitialUsers(
-	config_obj *config_proto.Config,
-	user_names []*config_proto.GUIUser) error {
+func createInitialUsers(config_obj *config_proto.Config) error {
+	if config_obj.GUI == nil && config_obj.GUI.Authenticator == nil {
+		return nil
+	}
+
+	user_names := config_obj.GUI.InitialUsers
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 

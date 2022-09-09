@@ -40,25 +40,26 @@ func (self *SanityChecks) CheckRootOrg(
 		}
 	}
 
-	// Make sure the initial user accounts are created with the
-	// administrator roles.
-	if config_obj.GUI != nil && config_obj.GUI.Authenticator != nil {
-		// Create initial orgs
-		org_manager, err := services.GetOrgManager()
+	if isFirstRun(ctx, config_obj) {
+		// Create any initial orgs required.
+		err := createInitialOrgs(config_obj)
 		if err != nil {
 			return err
 		}
 
-		for _, org := range config_obj.GUI.InitialOrgs {
-			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-			logger.Info("<green>Creating initial org for</> %v", org.Name)
-			_, err := org_manager.CreateNewOrg(org.Name, org.OrgId)
-			if err != nil {
-				return err
-			}
+		// Make sure the initial user accounts are created with the
+		// administrator roles.
+		err = createInitialUsers(config_obj)
+		if err != nil {
+			return err
 		}
 
-		err = createInitialUsers(config_obj, config_obj.GUI.InitialUsers)
+		err = startInitialArtifacts(ctx, config_obj)
+		if err != nil {
+			return err
+		}
+
+		err = setFirstRun(ctx, config_obj)
 		if err != nil {
 			return err
 		}
@@ -103,11 +104,6 @@ func (self *SanityChecks) CheckRootOrg(
 				err, fmt.Sprintf("Autocert cache directory not writable %v: ",
 					config_obj.AutocertCertCache))
 		}
-	}
-
-	err := maybeStartInitialArtifacts(ctx, config_obj)
-	if err != nil {
-		return err
 	}
 
 	return checkForServerUpgrade(ctx, config_obj)

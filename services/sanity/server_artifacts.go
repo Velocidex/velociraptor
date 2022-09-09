@@ -2,8 +2,10 @@ package sanity
 
 import (
 	"context"
+	"os"
 	"time"
 
+	"github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -14,28 +16,51 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
-func maybeStartInitialArtifacts(
-	ctx context.Context, config_obj *config_proto.Config) error {
+// Check if this is the first ever run.
+func isFirstRun(ctx context.Context,
+	config_obj *config_proto.Config) bool {
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return false
+	}
 
 	path_manager := paths.ServerStatePathManager{}
+	install_record := &api_proto.ServerInstallRecord{}
+	err = db.GetSubject(config_obj, path_manager.Install(), install_record)
+	if err != nil && errors.Is(err, os.ErrNotExist) {
+		return true
+	}
+
+	if err != nil {
+		return false
+	}
+
+	return install_record.InstallTime == 0
+}
+
+// Sets the install time record so we know never to run initial things
+// again.
+func setFirstRun(ctx context.Context,
+	config_obj *config_proto.Config) error {
+
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
 
-	install_record := &api_proto.ServerInstallRecord{}
-	err = db.GetSubject(config_obj, path_manager.Install(), install_record)
-	if err == nil && install_record.InstallTime > 0 {
-		return nil
+	path_manager := paths.ServerStatePathManager{}
+	install_record := &api_proto.ServerInstallRecord{
+		InstallTime: uint64(time.Now().Unix()),
 	}
 
-	// Install record does not exist! make a new one
-	install_record.InstallTime = uint64(time.Now().Unix())
+	return db.SetSubject(config_obj, path_manager.Install(), install_record)
+}
 
-	err = db.SetSubject(config_obj, path_manager.Install(), install_record)
-	if err != nil {
-		return err
-	}
+// Start the initial artifacts specified in the config file. Should
+// only happen on first install run.
+func startInitialArtifacts(
+	ctx context.Context, config_obj *config_proto.Config) error {
 
 	// Start any initial artifact collections.
 	if config_obj.Frontend != nil &&

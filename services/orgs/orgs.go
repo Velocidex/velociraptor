@@ -59,6 +59,9 @@ func (self *OrgManager) ListOrgs() []*api_proto.OrgRecord {
 		if utils.IsRootOrg(copy.OrgId) {
 			copy.OrgId = "root"
 			copy.Name = "<root>"
+			if self.config_obj.Client != nil {
+				copy.Nonce = self.config_obj.Client.Nonce
+			}
 		}
 		result = append(result, copy)
 	}
@@ -123,7 +126,12 @@ func (self *OrgManager) CreateNewOrg(name, id string) (
 	*api_proto.OrgRecord, error) {
 
 	if id == "" {
-		id = NewOrgId()
+		id = self.NewOrgId()
+	}
+
+	_, err := self.GetOrg(id)
+	if err == nil {
+		return nil, errors.New("CreateNewOrg: Org ID already in use")
 	}
 
 	org_record := &api_proto.OrgRecord{
