@@ -60,6 +60,15 @@ message Writeback {
     VQLEventTable event_queries = 1;
 }
 
+// TODO - refactor from api/orgs.proto
+message InitialOrgRecord {
+    string org_id = 1;
+    string name = 2;
+
+    // If this is empty we use the org id
+    string nonce = 3;
+}
+
 // Configuration for the windows installer. NOTE: This is not used
 // much - it is only used when running `velociraptor service
 // install`. We typically use an MSI to deploy (see the docs/wix/
@@ -398,6 +407,8 @@ message GUIConfig {
     // already exist in the data store. This is useful for
     // initializing the server with some valid administrators.
     repeated GUIUser initial_users = 17;
+
+    repeated InitialOrgRecord initial_orgs = 22;
 
     // The authenticator to use - can not be null.
     Authenticator authenticator = 19;

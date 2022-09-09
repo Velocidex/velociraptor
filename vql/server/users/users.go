@@ -99,11 +99,15 @@ func (self UsersPlugin) Call(
 				policy, err := acls.GetPolicy(org_config_obj, user_details.Name)
 				if err == nil {
 					details.Set("roles", policy.Roles)
+				} else {
+					details.Set("roles", &vfilter.Null{})
 				}
 
 				effective_policy, err := acls.GetEffectivePolicy(org_config_obj, user_details.Name)
 				if err == nil {
 					details.Set("effective_policy", ConvertPolicyToOrderedDict(effective_policy))
+				} else {
+					details.Set("effective_policy", &vfilter.Null{})
 				}
 
 				select {

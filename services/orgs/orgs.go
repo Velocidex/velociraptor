@@ -91,7 +91,7 @@ func (self *OrgManager) GetOrg(org_id string) (*api_proto.OrgRecord, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if org_id == "root" {
+	if utils.IsRootOrg(org_id) {
 		org_id = ""
 	}
 

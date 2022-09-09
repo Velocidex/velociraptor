@@ -755,7 +755,8 @@ type VeloStatus struct {
 	Duration int64 `protobuf:"varint,4,opt,name=duration,proto3" json:"duration,omitempty"`
 	// A List of artifacts that had some results.
 	NamesWithResponse []string `protobuf:"bytes,5,rep,name=names_with_response,json=namesWithResponse,proto3" json:"names_with_response,omitempty"`
-	Artifact          string   `protobuf:"bytes,10,opt,name=Artifact,proto3" json:"Artifact,omitempty"`
+	// The artifact that this status refers to
+	Artifact string `protobuf:"bytes,10,opt,name=Artifact,proto3" json:"Artifact,omitempty"`
 	// How many log rows we generated
 	LogRows    int64 `protobuf:"varint,6,opt,name=log_rows,json=logRows,proto3" json:"log_rows,omitempty"`
 	ResultRows int64 `protobuf:"varint,7,opt,name=result_rows,json=resultRows,proto3" json:"result_rows,omitempty"`
