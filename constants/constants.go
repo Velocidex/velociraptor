@@ -90,5 +90,6 @@ type key int
 
 var (
 	HuntIdRegex    = regexp.MustCompile(`^H\.[^.]+$`)
+	ClientIdRegex  = regexp.MustCompile(`^C\.[^\./ ]+$`)
 	STOP_ITERATION = errors.New("Stop Iteration")
 )
