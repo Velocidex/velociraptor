@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"www.velocidex.com/golang/velociraptor/acls"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -17,6 +18,16 @@ func createInitialUsers(
 	user_names []*config_proto.GUIUser) error {
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+
+	// We rely on the orgs to already be existing here.
+	org_list := []string{"root"}
+	for _, org := range config_obj.GUI.InitialOrgs {
+		org_list = append(org_list, org.OrgId)
+	}
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return err
+	}
 
 	for _, user := range user_names {
 		users_manager := services.GetUserManager()
@@ -53,14 +64,27 @@ func createInitialUsers(
 				users.SetPassword(new_user, string(password))
 			}
 
-			// Create the new user.
-			err = users_manager.SetUser(new_user)
-			if err != nil {
-				return err
+			for _, org_id := range org_list {
+				org_config_obj, err := org_manager.GetOrgConfig(org_id)
+				if err != nil {
+					return err
+				}
+
+				new_user.Orgs = append(new_user.Orgs, &api_proto.Org{
+					Name: org_config_obj.OrgName,
+					Id:   org_config_obj.OrgId,
+				})
+
+				// Give them the administrator role in the respective org
+				err = acls.GrantRoles(
+					org_config_obj, user.Name, []string{"administrator"})
+				if err != nil {
+					return err
+				}
 			}
 
-			// Give them the administrator roles
-			err = acls.GrantRoles(config_obj, user.Name, []string{"administrator"})
+			// Create the new user.
+			err = users_manager.SetUser(new_user)
 			if err != nil {
 				return err
 			}

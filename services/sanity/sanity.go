@@ -43,7 +43,22 @@ func (self *SanityChecks) CheckRootOrg(
 	// Make sure the initial user accounts are created with the
 	// administrator roles.
 	if config_obj.GUI != nil && config_obj.GUI.Authenticator != nil {
-		err := createInitialUsers(config_obj, config_obj.GUI.InitialUsers)
+		// Create initial orgs
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return err
+		}
+
+		for _, org := range config_obj.GUI.InitialOrgs {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Info("<green>Creating initial org for</> %v", org.Name)
+			_, err := org_manager.CreateNewOrg(org.Name, org.OrgId)
+			if err != nil {
+				return err
+			}
+		}
+
+		err = createInitialUsers(config_obj, config_obj.GUI.InitialUsers)
 		if err != nil {
 			return err
 		}

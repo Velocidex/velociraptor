@@ -80,6 +80,10 @@ func (self *Dummy) Get() *artifacts_proto.ThirdParty {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	if self.binaries == nil {
+		self.binaries = &artifacts_proto.ThirdParty{}
+	}
+
 	return proto.Clone(self.binaries).(*artifacts_proto.ThirdParty)
 }
 
