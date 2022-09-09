@@ -1,4 +1,23 @@
 {
+ "/users/User1": {
+  "name": "User1",
+  "orgs": [
+   {
+    "id": "root",
+    "name": "\u003croot\u003e"
+   },
+   {
+    "id": "O01",
+    "name": "Org1"
+   },
+   {
+    "id": "OT02",
+    "name": "Org2"
+   }
+  ],
+  "password_hash": "DX3EdpodhRYoAnA6GFW3bjtlK9o+BYKrMkM/Y9xqBzY=",
+  "password_salt": "D2GtD9Y5FRMCEkLvuax4AkXMIVJ/o/nF5VLUciPjg6I="
+ },
  "O01/acl/User1.json": {
   "roles": [
    "administrator"
@@ -9,53 +28,15 @@
   "nonce": "Nonce Of O01",
   "org_id": "O01"
  },
- "O01/users/User1": {
-  "name": "User1",
-  "orgs": [
-   {
-    "id": "root",
-    "name": "\u003croot\u003e"
-   },
-   {
-    "id": "O01",
-    "name": "Org1"
-   },
-   {
-    "id": "O02",
-    "name": "Org2"
-   }
-  ],
-  "password_hash": "DX3EdpodhRYoAnA6GFW3bjtlK9o+BYKrMkM/Y9xqBzY=",
-  "password_salt": "D2GtD9Y5FRMCEkLvuax4AkXMIVJ/o/nF5VLUciPjg6I="
- },
- "O02/acl/User1.json": {
+ "OT02/acl/User1.json": {
   "roles": [
    "administrator"
   ]
  },
- "O02/org": {
+ "OT02/org": {
   "name": "Org2",
-  "nonce": "Nonce Of O02",
-  "org_id": "O02"
- },
- "O02/users/User1": {
-  "name": "User1",
-  "orgs": [
-   {
-    "id": "root",
-    "name": "\u003croot\u003e"
-   },
-   {
-    "id": "O01",
-    "name": "Org1"
-   },
-   {
-    "id": "O02",
-    "name": "Org2"
-   }
-  ],
-  "password_hash": "DX3EdpodhRYoAnA6GFW3bjtlK9o+BYKrMkM/Y9xqBzY=",
-  "password_salt": "D2GtD9Y5FRMCEkLvuax4AkXMIVJ/o/nF5VLUciPjg6I="
+  "nonce": "Nonce Of OT02",
+  "org_id": "OT02"
  },
  "root/acl/User1.json": {
   "roles": [
@@ -66,24 +47,5 @@
   "name": "\u003croot\u003e",
   "nonce": "Nonce Of root",
   "org_id": "root"
- },
- "root/users/User1": {
-  "name": "User1",
-  "orgs": [
-   {
-    "id": "root",
-    "name": "\u003croot\u003e"
-   },
-   {
-    "id": "O01",
-    "name": "Org1"
-   },
-   {
-    "id": "O02",
-    "name": "Org2"
-   }
-  ],
-  "password_hash": "DX3EdpodhRYoAnA6GFW3bjtlK9o+BYKrMkM/Y9xqBzY=",
-  "password_salt": "D2GtD9Y5FRMCEkLvuax4AkXMIVJ/o/nF5VLUciPjg6I="
  }
 }

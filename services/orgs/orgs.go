@@ -47,6 +47,8 @@ type OrgManager struct {
 	// Each org has a separate config object.
 	orgs            map[string]*OrgContext
 	org_id_by_nonce map[string]string
+
+	NextOrgIdForTesting *string
 }
 
 func (self *OrgManager) ListOrgs() []*api_proto.OrgRecord {

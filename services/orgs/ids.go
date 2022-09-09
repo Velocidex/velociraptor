@@ -8,6 +8,13 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 )
 
+func (self *OrgManager) SetOrgIdForTesting(a string) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.NextOrgIdForTesting = &a
+}
+
 // Make sure the new ID is unique (There are only 64k possibilities so
 // chance of a clash are high)
 func (self *OrgManager) NewOrgId() string {
@@ -17,6 +24,13 @@ func (self *OrgManager) NewOrgId() string {
 
 		org_id := constants.ORG_PREFIX + base32.HexEncoding.EncodeToString(buf)[:4]
 		self.mu.Lock()
+		if self.NextOrgIdForTesting != nil {
+			org_id = *self.NextOrgIdForTesting
+			self.mu.Unlock()
+
+			return org_id
+		}
+
 		_, pres := self.orgs[org_id]
 		self.mu.Unlock()
 
