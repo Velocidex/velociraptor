@@ -8,6 +8,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -45,6 +46,11 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("client_delete: %s", err)
+			return
+		}
+
+		if !constants.ClientIdRegex.MatchString(arg.ClientId) {
+			scope.Log("ERROR:client_delete: Client Id should be of the form C.XXXX")
 			return
 		}
 
