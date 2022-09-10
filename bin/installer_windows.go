@@ -38,7 +38,6 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
@@ -517,17 +516,8 @@ func runOnce(ctx context.Context,
 		return
 	}
 
-	manager, err := crypto_client.NewClientCryptoManager(
-		config_obj, []byte(writeback.PrivateKey))
-	if err != nil {
-		elog.Error(1, fmt.Sprintf(
-			"Can not create crypto: %v", err))
-		time.Sleep(10 * time.Second)
-		return
-	}
-
 	exe, err := executor.NewClientExecutor(
-		ctx, manager.ClientId(), config_obj)
+		ctx, writeback.ClientId, config_obj)
 	if err != nil {
 		elog.Error(1, fmt.Sprintf(
 			"Can not create client: %v", err))
@@ -535,36 +525,10 @@ func runOnce(ctx context.Context,
 		return
 	}
 
-	comm, err := http_comms.NewHTTPCommunicator(
-		ctx,
-		config_obj,
-		manager,
-		exe,
-		config_obj.Client.ServerUrls,
-		func() { on_error(ctx, config_obj) },
-		utils.RealClock{},
-	)
-	if err != nil {
-		elog.Error(1, fmt.Sprintf(
-			"Can not create comms: %v", err))
-		time.Sleep(10 * time.Second)
-		return
-	}
-
-	result.mu.Lock()
-	result.comms = comm
-	result.mu.Unlock()
-
 	sm, err := startup.StartClientServices(ctx, config_obj, exe, on_error)
 	defer sm.Close()
 
-	if err != nil {
-		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-		logger.Error("StartClientServices: %v", err)
-		return
-	}
-
-	comm.Run(sm.Ctx, sm.Wg)
+	<-ctx.Done()
 }
 
 func NewVelociraptorService(
