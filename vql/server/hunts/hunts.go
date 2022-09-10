@@ -330,10 +330,17 @@ func (self HuntFlowsPlugin) Call(
 		for flow_details := range hunt_dispatcher.GetFlows(
 			ctx, config_obj, scope, arg.HuntId, int(arg.StartRow)) {
 
+			client_id := ""
+			flow_id := ""
+			if flow_details.Context != nil {
+				client_id = flow_details.Context.ClientId
+				flow_id = flow_details.Context.SessionId
+			}
+
 			result := ordereddict.NewDict().
 				Set("HuntId", arg.HuntId).
-				Set("ClientId", flow_details.Context.ClientId).
-				Set("FlowId", flow_details.Context.SessionId).
+				Set("ClientId", client_id).
+				Set("FlowId", flow_id).
 				Set("Flow", json.ConvertProtoToOrderedDict(
 					flow_details.Context))
 

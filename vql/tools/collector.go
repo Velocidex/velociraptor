@@ -463,6 +463,35 @@ func getArtifactCollectorArgs(
 	return request, nil
 }
 
+func convertToArtifactSpecs(spec vfilter.Any) (*ordereddict.Dict, error) {
+	serialized, err := json.Marshal(spec)
+	if err != nil {
+		return nil, err
+	}
+	specs := []*flows_proto.ArtifactSpec{}
+	err = json.Unmarshal(serialized, &specs)
+	if err != nil {
+		spec := &flows_proto.ArtifactSpec{}
+		err = json.Unmarshal(serialized, spec)
+		if err != nil {
+			return nil, err
+		}
+		specs = append(specs, spec)
+	}
+
+	spec_dict := ordereddict.NewDict()
+	for _, spec := range specs {
+		env := ordereddict.NewDict()
+		if spec.Parameters != nil {
+			for _, item := range spec.Parameters.Env {
+				env.Set(item.Key, item.Value)
+			}
+		}
+		spec_dict.Set(spec.Artifact, env)
+	}
+	return spec_dict, nil
+}
+
 // Builds a spec protobuf from the arg.Args that was passed. Note that
 // artifact parameters are always strings, encoded according to the
 // parameter type.
@@ -471,6 +500,16 @@ func AddSpecProtobuf(
 	repository services.Repository,
 	scope vfilter.Scope, spec vfilter.Any,
 	request *flows_proto.ArtifactCollectorArgs) error {
+
+	// The spec might be received from Flow.request.specs already
+	// which would make it in protobuf form.
+	_, pres := scope.Associative(spec, "artifact")
+	if pres {
+		spec_dict, err := convertToArtifactSpecs(spec)
+		if err == nil {
+			spec = spec_dict
+		}
+	}
 
 	for _, name := range scope.GetMembers(spec) {
 		artifact_definitions, pres := repository.Get(config_obj, name)
