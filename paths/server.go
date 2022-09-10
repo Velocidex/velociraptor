@@ -9,5 +9,6 @@ func (self *ServerStatePathManager) Path() api.DSPathSpec {
 }
 
 func (self *ServerStatePathManager) Install() api.DSPathSpec {
-	return CONFIG_ROOT.AddChild("install_time")
+	return CONFIG_ROOT.AddChild("install_time").
+		SetTag("ServerState")
 }

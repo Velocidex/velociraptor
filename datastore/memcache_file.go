@@ -56,6 +56,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -335,6 +336,21 @@ func (self *MemcacheFileDataStore) SetSubjectWithCompletion(
 
 	// Send a SetSubject mutation to the writer loop.
 	var wg sync.WaitGroup
+	mutation := &Mutation{
+		op:         MUTATION_OP_SET_SUBJECT,
+		urn:        urn,
+		wg:         &wg,
+		completion: completion,
+		data:       serialized_content}
+
+	// If the call is synchronous we need to wait here until it is
+	// flushed to disk.
+	if utils.CompareFuncs(mutation.completion, utils.SyncCompleter) {
+		wg.Add(1)
+		defer wg.Wait()
+		mutation.completion = wg.Done
+	}
+
 	wg.Add(1)
 	select {
 	case <-self.ctx.Done():
@@ -345,12 +361,7 @@ func (self *MemcacheFileDataStore) SetSubjectWithCompletion(
 
 		// After we send this to the channel, the writer will
 		// complete.
-	case self.writer <- &Mutation{
-		op:         MUTATION_OP_SET_SUBJECT,
-		urn:        urn,
-		wg:         &wg,
-		completion: completion,
-		data:       serialized_content}:
+	case self.writer <- mutation:
 	}
 
 	// Config file switches off asynchronous writes, wait here for

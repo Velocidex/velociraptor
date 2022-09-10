@@ -16,6 +16,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -424,6 +425,15 @@ func (self *MemcacheDatastore) SetSubjectWithCompletion(
 	completion func()) error {
 
 	defer Instrument("write", "MemcacheDatastore", urn)()
+
+	// If we were called with utils.SyncCompleter it means we need to
+	// wait here until the transaction is flushed to disk.
+	if utils.CompareFuncs(completion, utils.SyncCompleter) {
+		var wg sync.WaitGroup
+		wg.Add(1)
+		defer wg.Wait()
+		completion = wg.Done
+	}
 
 	// Make sure to call the completer on all exit points
 	// (MemcacheDatastore is actually synchronous).

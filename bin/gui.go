@@ -140,6 +140,14 @@ func doGUI() error {
 				PasswordSalt: hex.EncodeToString(user_record.PasswordSalt),
 			})
 
+		// For the GUI org create a separate org.
+		config_obj.GUI.InitialOrgs = append(config_obj.GUI.InitialOrgs,
+			&config_proto.InitialOrgRecord{
+				OrgId: "O123",
+				Name:  "ACME Inc",
+				Nonce: "ACMEINCNONCE",
+			})
+
 		// Write the config for next time
 		serialized, err := yaml.Marshal(config_obj)
 		if err != nil {
