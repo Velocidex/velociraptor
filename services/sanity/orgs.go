@@ -22,10 +22,14 @@ func createInitialOrgs(config_obj *config_proto.Config) error {
 	for _, org := range config_obj.GUI.InitialOrgs {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("<green>Creating initial org for</> %v", org.Name)
-		_, err := org_manager.CreateNewOrg(org.Name, org.OrgId)
+		org_record, err := org_manager.CreateNewOrg(org.Name, org.OrgId)
 		if err != nil {
 			return err
 		}
+
+		// Receive the newly created orgid and update the config file
+		// with it
+		org.OrgId = org_record.OrgId
 	}
 
 	return nil

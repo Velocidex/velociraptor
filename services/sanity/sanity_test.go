@@ -17,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/inventory"
+	"www.velocidex.com/golang/velociraptor/services/orgs"
 	"www.velocidex.com/golang/velociraptor/services/sanity"
 	"www.velocidex.com/golang/velociraptor/utils"
 
@@ -133,10 +134,19 @@ func (self *ServicesTestSuite) TestCreateUserInOrgs() {
 	}
 	self.ConfigObj.GUI.InitialOrgs = []*config_proto.InitialOrgRecord{
 		{Name: "Org1", OrgId: "O01"},
-		{Name: "Org2", OrgId: "O02"},
+
+		// Second org has no org id - means it should get a new random
+		// one.
+		{Name: "Org2"},
 	}
 
-	err := sanity.NewSanityCheckService(self.Ctx, self.Wg, self.ConfigObj)
+	org_manager, err := services.GetOrgManager()
+	assert.NoError(self.T(), err)
+
+	// Mock the org id so it is not really random.
+	org_manager.(*orgs.TestOrgManager).SetOrgIdForTesting("OT02")
+
+	err = sanity.NewSanityCheckService(self.Ctx, self.Wg, self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	db := test_utils.GetMemoryDataStore(self.T(), self.ConfigObj)
@@ -148,10 +158,9 @@ func (self *ServicesTestSuite) TestCreateUserInOrgs() {
 		err = db.GetSubject(self.ConfigObj, user_path_manager.Path(), user1)
 		assert.NoError(self.T(), err)
 
-		org_manager, err := services.GetOrgManager()
-		assert.NoError(self.T(), err)
+		golden := ordereddict.NewDict().
+			Set("/users/User1", user1)
 
-		golden := ordereddict.NewDict()
 		for _, org_record := range org_manager.ListOrgs() {
 			// The nonce will be random each time so we eliminate it from
 			// the golden image.
@@ -167,7 +176,6 @@ func (self *ServicesTestSuite) TestCreateUserInOrgs() {
 			assert.NoError(self.T(), err)
 
 			golden.Set(org_id+"/org", org_record).
-				Set(org_id+"/users/User1", user1).
 				Set(org_id+"/acl/User1.json", acl_obj)
 		}
 		serialized, err := json.MarshalIndentNormalized(golden)

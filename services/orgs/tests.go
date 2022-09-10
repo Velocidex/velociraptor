@@ -15,6 +15,10 @@ type TestOrgManager struct {
 	services *ServiceContainer
 }
 
+func (self *TestOrgManager) SetOrgIdForTesting(a string) {
+	self.OrgManager.SetOrgIdForTesting(a)
+}
+
 func (self *TestOrgManager) Start(
 	ctx context.Context,
 	org_config *config_proto.Config,
