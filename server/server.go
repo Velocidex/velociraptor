@@ -312,11 +312,17 @@ func (self *Server) Process(
 		}
 	*/
 
+	nonce := ""
+	if config_obj.Client != nil {
+		nonce = config_obj.Client.Nonce
+	}
+
 	// Messages sent to clients are typically small and we do not
 	// benefit from compression.
 	response, err := self.manager.EncryptMessageList(
 		message_list,
 		crypto_proto.PackedMessageList_UNCOMPRESSED,
+		nonce,
 		message_info.Source)
 	if err != nil {
 		return nil, 0, err

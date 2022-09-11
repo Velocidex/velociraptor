@@ -156,7 +156,9 @@ func (self *CommsTestSuite) SetupTest() {
 
 	cm := &crypto_test.NullCryptoManager{}
 	self.empty_response, _ = cm.EncryptMessageList(
-		&crypto_proto.MessageList{}, "C.1234")
+		&crypto_proto.MessageList{},
+		self.config_obj.Client.Nonce,
+		"C.1234")
 
 	// Disable randomness for the test.
 	mu.Lock()

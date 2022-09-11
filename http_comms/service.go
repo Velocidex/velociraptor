@@ -48,8 +48,6 @@ func StartHttpCommunicatorService(
 		return fmt.Errorf("Can not create HTTPCommunicator: %w", err)
 	}
 
-	fmt.Printf("Starting HTTPCommunicator with nonce %v\n", config_obj.Client.Nonce)
-
 	wg.Add(1)
 	go comm.Run(ctx, wg)
 

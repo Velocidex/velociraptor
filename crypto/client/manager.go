@@ -349,8 +349,6 @@ func (self *CryptoManager) extractMessageInfo(
 		return nil, nil, err
 	}
 
-	fmt.Printf("Received package with nonce %v\n\n", packed_message_list.Nonce)
-
 	org_id, err := org_manager.OrgIdByNonce(packed_message_list.Nonce)
 	if err != nil {
 		return nil, nil, errors.New(
@@ -379,7 +377,7 @@ func (self *CryptoManager) extractMessageInfo(
 func (self *CryptoManager) EncryptMessageList(
 	message_list *crypto_proto.MessageList,
 	compression crypto_proto.PackedMessageList_CompressionType,
-	destination string) ([]byte, error) {
+	nonce, destination string) ([]byte, error) {
 
 	plain_text, err := proto.Marshal(message_list)
 	if err != nil {
@@ -396,8 +394,7 @@ func (self *CryptoManager) EncryptMessageList(
 	cipher_text, err := self.Encrypt(
 		[][]byte{plain_text},
 		compression,
-		self.config.Client.Nonce,
-		destination)
+		nonce, destination)
 	return cipher_text, err
 }
 
@@ -442,8 +439,6 @@ func (self *CryptoManager) Encrypt(
 		self.cipher_lru.Set(destination, nil, cipher)
 		output_cipher = cipher
 	}
-
-	fmt.Printf("Encrypting message with nonce %v\n", nonce)
 
 	packed_message_list := &crypto_proto.PackedMessageList{
 		// We always compress the data.

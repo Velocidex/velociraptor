@@ -15,7 +15,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/users"
 	"www.velocidex.com/golang/velociraptor/startup"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -237,7 +236,6 @@ func doGUI() error {
 			return err
 		}
 
-		utils.Debug(config_obj)
 		sm.Wg.Add(1)
 		go func() {
 			RunClient(ctx, config_obj)
@@ -246,7 +244,6 @@ func doGUI() error {
 
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
-			utils.Debug(err)
 			return err
 		}
 
@@ -262,8 +259,6 @@ func doGUI() error {
 			org_client_config.Client.WritebackWindows = write_back
 			org_client_config.Client.WritebackLinux = write_back
 			org_client_config.Client.WritebackDarwin = write_back
-
-			utils.Debug(org_client_config.Client.Nonce)
 
 			sm.Wg.Add(1)
 			go func() {
