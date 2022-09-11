@@ -684,6 +684,7 @@ func (self *NotificationReader) sendToURL(
 	cipher_text, err := self.manager.Encrypt(
 		message_list,
 		crypto_proto.PackedMessageList_ZCOMPRESSION,
+		self.config_obj.Client.Nonce,
 		self.connector.ServerName())
 	if err != nil {
 		return err

@@ -80,7 +80,7 @@ func doGrant() error {
 
 	// Check the user actually exists first
 	user_manager := services.GetUserManager()
-	_, err = user_manager.GetUser(principal)
+	_, err = user_manager.GetUser(ctx, principal)
 	if err != nil {
 		return err
 	}

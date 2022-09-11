@@ -296,6 +296,7 @@ func InitializeEventTable(ctx context.Context, service_wg *sync.WaitGroup) {
 		mu.Lock()
 		if GlobalEventTable.Done != nil {
 			close(GlobalEventTable.Done)
+			GlobalEventTable.Done = nil
 		}
 		mu.Unlock()
 	}()

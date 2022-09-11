@@ -77,7 +77,7 @@ func GetTemplateHandler(
 		}
 
 		users := services.GetUserManager()
-		user_options, err := users.GetUserOptions(userinfo.Name)
+		user_options, err := users.GetUserOptions(r.Context(), userinfo.Name)
 		if err != nil {
 			// Options may not exist yet
 			user_options = &proto.SetGUIOptionsRequest{}

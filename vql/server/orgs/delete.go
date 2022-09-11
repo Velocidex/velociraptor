@@ -56,7 +56,7 @@ func (self OrgDeleteFunction) Call(
 		"Principal": principal,
 	}).Info("org_delete")
 
-	err = org_manager.DeleteOrg(arg.OrgId)
+	err = org_manager.DeleteOrg(ctx, arg.OrgId)
 	if err != nil {
 		scope.Log("org_delete: %s", err)
 		return vfilter.Null{}

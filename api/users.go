@@ -51,7 +51,7 @@ func (self *ApiServer) SetPassword(
 	}).Info("passwd: Updating password for user via API")
 
 	// Store the record
-	return &emptypb.Empty{}, users_manager.SetUser(user_record)
+	return &emptypb.Empty{}, users_manager.SetUser(ctx, user_record)
 }
 
 func (self *ApiServer) GetUsers(
@@ -73,7 +73,7 @@ func (self *ApiServer) GetUsers(
 
 	result := &api_proto.Users{}
 
-	users, err := users_manager.ListUsers()
+	users, err := users_manager.ListUsers(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -94,5 +94,5 @@ func (self *ApiServer) GetUserFavorites(
 		return nil, err
 	}
 	user_name := user_record.Name
-	return users_manager.GetFavorites(org_config_obj, user_name, in.Type)
+	return users_manager.GetFavorites(ctx, org_config_obj, user_name, in.Type)
 }

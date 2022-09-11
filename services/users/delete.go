@@ -1,6 +1,8 @@
 package users
 
 import (
+	"context"
+
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -8,6 +10,7 @@ import (
 )
 
 func (self *UserManager) DeleteUser(
+	ctx context.Context,
 	org_config_obj *config_proto.Config, username string) error {
 
 	org_manager, err := services.GetOrgManager()

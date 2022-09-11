@@ -1,6 +1,8 @@
 package users
 
 import (
+	"context"
+
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
@@ -8,6 +10,7 @@ import (
 )
 
 func (self UserManager) GetFavorites(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	principal, fav_type string) (*api_proto.Favorites, error) {
 	result := &api_proto.Favorites{}

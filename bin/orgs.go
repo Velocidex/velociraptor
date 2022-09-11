@@ -83,7 +83,7 @@ func doOrgUserAdd() error {
 
 	user_manager := services.GetUserManager()
 	record, err := user_manager.GetUserWithHashes(
-		*orgs_user_add_user)
+		ctx, *orgs_user_add_user)
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func doOrgUserAdd() error {
 		Id:   org_record.OrgId,
 	})
 
-	return user_manager.SetUser(record)
+	return user_manager.SetUser(ctx, record)
 }
 
 func doOrgCreate() error {
@@ -171,7 +171,7 @@ func doOrgDelete() error {
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 	logger.Info("Will remove org %v\n", *orgs_delete_org_id)
 
-	return org_manager.DeleteOrg(*orgs_delete_org_id)
+	return org_manager.DeleteOrg(ctx, *orgs_delete_org_id)
 }
 
 func init() {

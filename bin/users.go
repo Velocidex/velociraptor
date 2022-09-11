@@ -125,7 +125,7 @@ func doAddUser() error {
 	users.SetPassword(user_record, *user_add_password)
 
 	users_manager := services.GetUserManager()
-	err = users_manager.SetUser(user_record)
+	err = users_manager.SetUser(ctx, user_record)
 	if err != nil {
 		return fmt.Errorf("Unable to set user account: %w", err)
 	}
@@ -155,13 +155,13 @@ func doShowUser() error {
 	defer sm.Close()
 
 	users_manager := services.GetUserManager()
-	user_record, err := users_manager.GetUser(*user_show_name)
+	user_record, err := users_manager.GetUser(ctx, *user_show_name)
 	if err != nil {
 		return err
 	}
 
 	if *user_show_hashes {
-		user_record, err := users_manager.GetUserWithHashes(*user_show_name)
+		user_record, err := users_manager.GetUserWithHashes(ctx, *user_show_name)
 		if err != nil {
 			return err
 		}
@@ -201,14 +201,14 @@ func doLockUser() error {
 	defer sm.Close()
 
 	users_manager := services.GetUserManager()
-	user_record, err := users_manager.GetUser(*user_lock_name)
+	user_record, err := users_manager.GetUser(ctx, *user_lock_name)
 	if err != nil {
 		return fmt.Errorf("Unable to find user %s", *user_lock_name)
 	}
 
 	user_record.Locked = true
 
-	err = users_manager.SetUser(user_record)
+	err = users_manager.SetUser(ctx, user_record)
 	if err != nil {
 		return fmt.Errorf("Unable to set user account: %w", err)
 	}

@@ -52,7 +52,7 @@ func (self UserDeleteFunction) Call(
 		"Principal": principal,
 	}).Info("user_delete")
 
-	err = user_manager.DeleteUser(config_obj, arg.Username)
+	err = user_manager.DeleteUser(ctx, config_obj, arg.Username)
 	if err != nil {
 		scope.Log("user_delete: %s", err)
 		return vfilter.Null{}

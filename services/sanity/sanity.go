@@ -49,7 +49,7 @@ func (self *SanityChecks) CheckRootOrg(
 
 		// Make sure the initial user accounts are created with the
 		// administrator roles.
-		err = createInitialUsers(config_obj)
+		err = createInitialUsers(ctx, config_obj)
 		if err != nil {
 			return err
 		}

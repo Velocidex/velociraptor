@@ -2,6 +2,7 @@ package startup
 
 import (
 	"context"
+	"fmt"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/executor"
@@ -27,6 +28,8 @@ func StartClientServices(
 	if config_obj.Frontend.ServerServices == nil {
 		config_obj.Frontend.ServerServices = services.ClientServicesSpec()
 	}
+
+	fmt.Printf("StartClientServices for nonce %v\n\n", config_obj.Client.Nonce)
 
 	// Wait for all services to properly start
 	// before we begin the comms.

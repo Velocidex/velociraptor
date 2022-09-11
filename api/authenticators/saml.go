@@ -104,7 +104,7 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 
 		username := sa.GetAttributes().Get(self.user_attribute)
 		users := services.GetUserManager()
-		user_record, err := users.GetUser(username)
+		user_record, err := users.GetUser(r.Context(), username)
 		if err == nil && user_record.Name == username {
 			// Does the user have access to the specified org?
 			err = CheckOrgAccess(r, user_record)

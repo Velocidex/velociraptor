@@ -10,7 +10,7 @@ jobs:
   build:
     if: github.event.pull_request.merged
     name: Build
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
 
     - name: Check out code into the Go module directory

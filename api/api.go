@@ -440,7 +440,7 @@ func (self *ApiServer) GetUserUITraits(
 		}
 	}
 
-	user_options, err := users.GetUserOptions(result.Username)
+	user_options, err := users.GetUserOptions(ctx, result.Username)
 	if err == nil {
 		result.InterfaceTraits.Org = user_options.Org
 		result.InterfaceTraits.UiSettings = user_options.Options
@@ -467,7 +467,7 @@ func (self *ApiServer) SetGUIOptions(
 	}
 
 	defer Instrument("SetGUIOptions")()
-	return &emptypb.Empty{}, users.SetUserOptions(user_info.Name, in)
+	return &emptypb.Empty{}, users.SetUserOptions(ctx, user_info.Name, in)
 }
 
 func (self *ApiServer) VFSListDirectory(

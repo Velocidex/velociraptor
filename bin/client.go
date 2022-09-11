@@ -134,7 +134,7 @@ func runClientOnce(
 	}
 
 	sm, err := startup.StartClientServices(ctx, config_obj, exe, on_error)
-	sm.Close()
+	defer sm.Close()
 	if err != nil {
 		return err
 	}
