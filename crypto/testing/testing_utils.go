@@ -44,14 +44,14 @@ func (self *NullCryptoManager) EncryptMessageList(
 	cipher_text, err := self.Encrypt(
 		[][]byte{compressed},
 		crypto_proto.PackedMessageList_ZCOMPRESSION,
-		destination)
+		"", destination)
 	return cipher_text, err
 }
 
 func (self *NullCryptoManager) Encrypt(
 	compressed_message_lists [][]byte,
 	compression crypto_proto.PackedMessageList_CompressionType,
-	destination string) (
+	nonce, destination string) (
 	[]byte, error) {
 	packed_message_list := &crypto_proto.PackedMessageList{
 		MessageList: compressed_message_lists,
