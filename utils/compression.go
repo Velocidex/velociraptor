@@ -3,10 +3,9 @@ package utils
 import (
 	"bytes"
 	"compress/zlib"
-	"context"
 	"io"
 
-	errors "github.com/pkg/errors"
+	"github.com/pkg/errors"
 )
 
 func Compress(plain_text []byte) ([]byte, error) {
@@ -16,7 +15,7 @@ func Compress(plain_text []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	_, err = w.Write([]byte(plain_text))
+	_, err = w.Write(plain_text)
 	if err != nil {
 		return nil, err
 	}
@@ -26,10 +25,7 @@ func Compress(plain_text []byte) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func Uncompress(
-	ctx context.Context, compressed []byte) ([]byte, error) {
-
-	result := bytes.NewBuffer(make([]byte, 0, len(compressed)*2))
+func Uncompress(compressed []byte) ([]byte, error) {
 	var reader io.Reader = bytes.NewReader(compressed)
 	z, err := zlib.NewReader(reader)
 	if err != nil {
@@ -37,10 +33,5 @@ func Uncompress(
 	}
 	defer z.Close()
 
-	_, err = Copy(ctx, result, z)
-	if err != nil {
-		return nil, errors.WithStack(err)
-	}
-
-	return result.Bytes(), nil
+	return io.ReadAll(z)
 }
