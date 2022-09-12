@@ -463,7 +463,7 @@ func CheckForStatus(
 
 	// Update our record of all the status messages from this
 	// collection.
-	updateQueryStats(collection_context, message.Status)
+	updateQueryStats(config_obj, collection_context, message.Status)
 	UpdateFlowStats(collection_context)
 
 	// Update the active time for each response.
