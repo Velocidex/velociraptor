@@ -2,60 +2,39 @@ package flows
 
 import (
 	"google.golang.org/protobuf/proto"
-	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	utils "www.velocidex.com/golang/velociraptor/utils"
 )
-
-func deobfuscateNames(config_obj *config_proto.Config,
-	names []string) []string {
-	deobfuscated_names := make([]string, 0, len(names))
-	for _, n := range names {
-		deobfuscated_names = append(deobfuscated_names,
-			artifacts.DeobfuscateString(config_obj, n))
-	}
-
-	return deobfuscated_names
-}
 
 // Track stats for each query independently - then combine the whole
 // thing into the overall collection stats.
 func updateQueryStats(
-	config_obj *config_proto.Config,
 	collection_context *CollectionContext,
 	status *crypto_proto.VeloStatus) {
-
-	if len(status.NamesWithResponse) > 0 {
-		status.NamesWithResponse = deobfuscateNames(config_obj, status.NamesWithResponse)
-	}
-
-	for idx, existing_stat := range collection_context.QueryStats {
-		if status.QueryId == existing_stat.QueryId {
+	for idx, stat := range collection_context.QueryStats {
+		if status.QueryId == stat.QueryId {
 			// Error statuses are sticky - the first error stats for a
 			// query id will stick to the status and remove previous
 			// OK status. Further error status will be ignored.
 			if status.Status != crypto_proto.VeloStatus_OK &&
-				existing_stat.Status == crypto_proto.VeloStatus_OK {
+				stat.Status == crypto_proto.VeloStatus_OK {
 				new_stat := proto.Clone(status).(*crypto_proto.VeloStatus)
 				new_stat.Duration += status.Duration
-				new_stat.NamesWithResponse = append(new_stat.NamesWithResponse,
-					existing_stat.NamesWithResponse...)
+				new_stat.NamesWithResponse = append(new_stat.NamesWithResponse, stat.NamesWithResponse...)
 				collection_context.QueryStats[idx] = new_stat
 				continue
 			}
 
 			if status.Artifact != "" {
-				existing_stat.Artifact = status.Artifact
+				stat.Artifact = status.Artifact
 			}
 
-			if status.Duration > existing_stat.Duration {
-				existing_stat.Duration = status.Duration
+			if status.Duration > stat.Duration {
+				stat.Duration = status.Duration
 			}
 
-			if len(status.NamesWithResponse) > len(existing_stat.NamesWithResponse) {
-				existing_stat.NamesWithResponse = status.NamesWithResponse
+			if len(status.NamesWithResponse) > len(stat.NamesWithResponse) {
+				stat.NamesWithResponse = status.NamesWithResponse
 			}
 
 			// On older versions of the client QueryId is not
@@ -104,13 +83,6 @@ func UpdateFlowStats(collection_context *CollectionContext) {
 	collection_context.ExecutionDuration = 0
 	for _, s := range collection_context.QueryStats {
 		collection_context.ExecutionDuration += s.Duration
-
-		for _, a := range s.NamesWithResponse {
-			if !utils.InString(collection_context.ArtifactsWithResults, a) {
-				collection_context.ArtifactsWithResults = append(
-					collection_context.ArtifactsWithResults, a)
-			}
-		}
 	}
 
 	collection_context.OutstandingRequests = collection_context.TotalRequests -
