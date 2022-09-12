@@ -359,7 +359,16 @@ func control(
 		go func() {
 			defer close(sync)
 
-			response, _, err := server_obj.Process(ctx, message_info,
+			// Process the request with a different context - if the
+			// client disconnects quickly the request will be
+			// cancelled and aborted. This seems to happen sometimes
+			// on some clients so we enforce a hard timeout for
+			// processing anyway.
+			subctx, cancel := context.WithTimeout(context.Background(),
+				60*time.Second)
+			defer cancel()
+
+			response, _, err := server_obj.Process(subctx, message_info,
 				false, // drain_requests_for_client
 			)
 			if err != nil {

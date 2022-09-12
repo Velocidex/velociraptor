@@ -4,6 +4,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Track stats for each query independently - then combine the whole
@@ -83,6 +84,13 @@ func UpdateFlowStats(collection_context *CollectionContext) {
 	collection_context.ExecutionDuration = 0
 	for _, s := range collection_context.QueryStats {
 		collection_context.ExecutionDuration += s.Duration
+
+		for _, a := range s.NamesWithResponse {
+			if !utils.InString(collection_context.ArtifactsWithResults, a) {
+				collection_context.ArtifactsWithResults = append(
+					collection_context.ArtifactsWithResults, a)
+			}
+		}
 	}
 
 	collection_context.OutstandingRequests = collection_context.TotalRequests -
