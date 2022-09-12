@@ -377,7 +377,7 @@ func (self *CryptoManager) extractMessageInfo(
 func (self *CryptoManager) EncryptMessageList(
 	message_list *crypto_proto.MessageList,
 	compression crypto_proto.PackedMessageList_CompressionType,
-	destination string) ([]byte, error) {
+	nonce, destination string) ([]byte, error) {
 
 	plain_text, err := proto.Marshal(message_list)
 	if err != nil {
@@ -394,7 +394,7 @@ func (self *CryptoManager) EncryptMessageList(
 	cipher_text, err := self.Encrypt(
 		[][]byte{plain_text},
 		compression,
-		destination)
+		nonce, destination)
 	return cipher_text, err
 }
 
@@ -402,6 +402,7 @@ func (self *CryptoManager) EncryptMessageList(
 func (self *CryptoManager) Encrypt(
 	compressed_message_lists [][]byte,
 	compression crypto_proto.PackedMessageList_CompressionType,
+	nonce string,
 	destination string) (
 	[]byte, error) {
 
@@ -437,11 +438,6 @@ func (self *CryptoManager) Encrypt(
 
 		self.cipher_lru.Set(destination, nil, cipher)
 		output_cipher = cipher
-	}
-
-	nonce := ""
-	if org_config_obj.Client != nil {
-		nonce = org_config_obj.Client.Nonce
 	}
 
 	packed_message_list := &crypto_proto.PackedMessageList{

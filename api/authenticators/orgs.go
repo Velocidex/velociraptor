@@ -54,7 +54,8 @@ func CheckOrgAccess(r *http.Request, user_record *api_proto.VelociraptorUser) er
 
 			// Update the user's org preferences
 			user_manager := services.GetUserManager()
-			user_options, err := user_manager.GetUserOptions(user_record.Name)
+			user_options, err := user_manager.GetUserOptions(
+				r.Context(), user_record.Name)
 			if err == nil {
 				user_options.Org = org.Id
 			} else {
@@ -62,7 +63,8 @@ func CheckOrgAccess(r *http.Request, user_record *api_proto.VelociraptorUser) er
 					Org: org.Id,
 				}
 			}
-			user_manager.SetUserOptions(user_record.Name, user_options)
+			user_manager.SetUserOptions(
+				r.Context(), user_record.Name, user_options)
 
 			return nil
 		}

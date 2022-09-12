@@ -1,6 +1,7 @@
 package sanity
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"strings"
@@ -14,7 +15,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-func createInitialUsers(config_obj *config_proto.Config) error {
+func createInitialUsers(
+	ctx context.Context, config_obj *config_proto.Config) error {
 	if config_obj.GUI == nil && config_obj.GUI.Authenticator == nil {
 		return nil
 	}
@@ -35,7 +37,7 @@ func createInitialUsers(config_obj *config_proto.Config) error {
 
 	for _, user := range user_names {
 		users_manager := services.GetUserManager()
-		user_record, err := users_manager.GetUser(user.Name)
+		user_record, err := users_manager.GetUser(ctx, user.Name)
 		if err != nil || user_record.Name != user.Name {
 			logger.Info("Initial user %v not present, creating", user.Name)
 			new_user, err := users.NewUserRecord(user.Name)
@@ -95,7 +97,7 @@ func createInitialUsers(config_obj *config_proto.Config) error {
 			}
 
 			// Create the new user.
-			err = users_manager.SetUser(new_user)
+			err = users_manager.SetUser(ctx, new_user)
 			if err != nil {
 				return err
 			}

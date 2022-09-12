@@ -119,6 +119,7 @@ func (self *TestSuite) TestEncDecServerToClient() {
 	cipher_text, err := self.server_manager.Encrypt(
 		[][]byte{serialized},
 		crypto_proto.PackedMessageList_ZCOMPRESSION,
+		self.ConfigObj.Client.Nonce,
 		self.client_id)
 	assert.NoError(t, err)
 
@@ -246,11 +247,12 @@ func (self *TestSuite) TestEncDecClientToServer() {
 				Name: "OMG it's a string"})
 	}
 
-	ConfigObj := config.GetDefaultConfig()
+	nonce := self.ConfigObj.Client.Nonce
+
 	cipher_text, err := self.client_manager.EncryptMessageList(
 		message_list,
 		crypto_proto.PackedMessageList_ZCOMPRESSION,
-		ConfigObj.Client.PinnedServerName)
+		nonce, self.ConfigObj.Client.PinnedServerName)
 	assert.NoError(t, err)
 
 	initial_c := testutil.ToFloat64(crypto_client.RsaDecryptCounter)
@@ -280,7 +282,6 @@ func (self *TestSuite) TestEncryption() {
 	t := self.T()
 	plain_text := []byte("hello world")
 
-	ConfigObj := config.GetDefaultConfig()
 	initial_c := testutil.ToFloat64(crypto_client.RsaDecryptCounter)
 	for i := 0; i < 100; i++ {
 		compressed, err := utils.Compress(plain_text)
@@ -289,7 +290,8 @@ func (self *TestSuite) TestEncryption() {
 		cipher_text, err := self.client_manager.Encrypt(
 			[][]byte{compressed},
 			crypto_proto.PackedMessageList_ZCOMPRESSION,
-			ConfigObj.Client.PinnedServerName)
+			self.ConfigObj.Client.Nonce,
+			self.ConfigObj.Client.PinnedServerName)
 		assert.NoError(t, err)
 
 		result, err := self.server_manager.Decrypt(cipher_text)

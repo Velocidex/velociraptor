@@ -8,6 +8,7 @@ import (
 
 	"github.com/Velocidex/yaml/v2"
 	errors "github.com/pkg/errors"
+	proto "google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
@@ -145,7 +146,7 @@ func doGUI() error {
 			&config_proto.InitialOrgRecord{
 				OrgId: "O123",
 				Name:  "ACME Inc",
-				Nonce: "ACMEINCNONCE",
+				Nonce: "ACME",
 			})
 
 		// Write the config for next time
@@ -235,7 +236,36 @@ func doGUI() error {
 			return err
 		}
 
-		go RunClient(ctx, config_obj)
+		sm.Wg.Add(1)
+		go func() {
+			RunClient(ctx, config_obj)
+			sm.Wg.Done()
+		}()
+
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return err
+		}
+
+		// Try to start a client in our own org - it may not exist but
+		// this is not an error.
+		org_config_obj, err := org_manager.GetOrgConfig("O123")
+		if err == nil {
+			org_client_config := &config_proto.Config{
+				Client: proto.Clone(org_config_obj.Client).(*config_proto.ClientConfig),
+			}
+
+			write_back := filepath.Join(datastore_directory, "Velociraptor.Acme.writeback.yaml")
+			org_client_config.Client.WritebackWindows = write_back
+			org_client_config.Client.WritebackLinux = write_back
+			org_client_config.Client.WritebackDarwin = write_back
+
+			sm.Wg.Add(1)
+			go func() {
+				RunClient(ctx, org_client_config)
+				sm.Wg.Done()
+			}()
+		}
 	}
 
 	sm.Wg.Wait()

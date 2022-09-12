@@ -122,7 +122,9 @@ func VerifyPassword(self *api_proto.VelociraptorUser, password string) bool {
 	return subtle.ConstantTimeCompare(hash[:], self.PasswordHash) == 1
 }
 
-func (self UserManager) SetUser(user_record *api_proto.VelociraptorUser) error {
+func (self UserManager) SetUser(
+	ctx context.Context,
+	user_record *api_proto.VelociraptorUser) error {
 	if user_record.Name == "" {
 		return errors.New("Must set a username")
 	}
@@ -136,7 +138,8 @@ func (self UserManager) SetUser(user_record *api_proto.VelociraptorUser) error {
 		user_record)
 }
 
-func (self UserManager) ListUsers() ([]*api_proto.VelociraptorUser, error) {
+func (self UserManager) ListUsers(
+	ctx context.Context) ([]*api_proto.VelociraptorUser, error) {
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return nil, err
@@ -154,7 +157,7 @@ func (self UserManager) ListUsers() ([]*api_proto.VelociraptorUser, error) {
 		}
 
 		username := child.Base()
-		user_record, err := self.GetUser(username)
+		user_record, err := self.GetUser(ctx, username)
 		if err == nil {
 			result = append(result, user_record)
 		}
@@ -195,7 +198,7 @@ func normalizeOrgList(user_record *api_proto.VelociraptorUser) error {
 
 // Returns the user record after stripping sensitive information like
 // password hashes.
-func (self UserManager) GetUser(username string) (
+func (self UserManager) GetUser(ctx context.Context, username string) (
 	*api_proto.VelociraptorUser, error) {
 
 	// For the server name we dont have a real user record, we make a
@@ -206,7 +209,7 @@ func (self UserManager) GetUser(username string) (
 		}, nil
 	}
 
-	result, err := self.GetUserWithHashes(username)
+	result, err := self.GetUserWithHashes(ctx, username)
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +222,7 @@ func (self UserManager) GetUser(username string) (
 }
 
 // Return the user record with hashes - only used in Basic Auth.
-func (self UserManager) GetUserWithHashes(username string) (
+func (self UserManager) GetUserWithHashes(ctx context.Context, username string) (
 	*api_proto.VelociraptorUser, error) {
 	if username == "" {
 		return nil, errors.New("Must set a username")
@@ -244,7 +247,8 @@ func (self UserManager) GetUserWithHashes(username string) (
 	return user_record, err
 }
 
-func (self UserManager) SetUserOptions(username string,
+func (self UserManager) SetUserOptions(ctx context.Context,
+	username string,
 	options *api_proto.SetGUIOptionsRequest) error {
 
 	path_manager := paths.UserPathManager{Name: username}
@@ -254,7 +258,7 @@ func (self UserManager) SetUserOptions(username string,
 	}
 
 	// Merge the old options with the new options
-	old_options, err := self.GetUserOptions(username)
+	old_options, err := self.GetUserOptions(ctx, username)
 	if err != nil {
 		old_options = &api_proto.SetGUIOptionsRequest{}
 	}
@@ -289,7 +293,7 @@ func (self UserManager) SetUserOptions(username string,
 	return db.SetSubject(self.config_obj, path_manager.GUIOptions(), old_options)
 }
 
-func (self UserManager) GetUserOptions(username string) (
+func (self UserManager) GetUserOptions(ctx context.Context, username string) (
 	*api_proto.SetGUIOptionsRequest, error) {
 
 	path_manager := paths.UserPathManager{Name: username}

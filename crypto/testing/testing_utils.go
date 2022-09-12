@@ -30,7 +30,7 @@ func (self *NullCryptoManager) AddCertificate(
 
 func (self *NullCryptoManager) EncryptMessageList(
 	message_list *crypto_proto.MessageList,
-	destination string) ([]byte, error) {
+	nonce, destination string) ([]byte, error) {
 	plain_text, err := proto.Marshal(message_list)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -44,14 +44,14 @@ func (self *NullCryptoManager) EncryptMessageList(
 	cipher_text, err := self.Encrypt(
 		[][]byte{compressed},
 		crypto_proto.PackedMessageList_ZCOMPRESSION,
-		destination)
+		nonce, destination)
 	return cipher_text, err
 }
 
 func (self *NullCryptoManager) Encrypt(
 	compressed_message_lists [][]byte,
 	compression crypto_proto.PackedMessageList_CompressionType,
-	destination string) (
+	nonce, destination string) (
 	[]byte, error) {
 	packed_message_list := &crypto_proto.PackedMessageList{
 		MessageList: compressed_message_lists,

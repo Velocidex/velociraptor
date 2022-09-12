@@ -1,6 +1,7 @@
 package orgs
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -14,16 +15,17 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-func RemoveOrgFromUsers(org_id string) error {
+func RemoveOrgFromUsers(
+	ctx context.Context, org_id string) error {
 	// Remove the org from all the users.
 	user_manager := services.GetUserManager()
-	users, err := user_manager.ListUsers()
+	users, err := user_manager.ListUsers(ctx)
 	if err != nil {
 		return err
 	}
 
 	for _, u := range users {
-		record, err := user_manager.GetUserWithHashes(u.Name)
+		record, err := user_manager.GetUserWithHashes(ctx, u.Name)
 		if err == nil {
 			new_orgs := []*api_proto.Org{}
 			for _, org := range record.Orgs {
@@ -33,7 +35,7 @@ func RemoveOrgFromUsers(org_id string) error {
 			}
 			if len(new_orgs) != len(record.Orgs) {
 				record.Orgs = new_orgs
-				_ = user_manager.SetUser(record)
+				_ = user_manager.SetUser(ctx, record)
 			}
 		}
 	}
@@ -41,12 +43,12 @@ func RemoveOrgFromUsers(org_id string) error {
 	return nil
 }
 
-func (self *OrgManager) DeleteOrg(org_id string) error {
+func (self *OrgManager) DeleteOrg(ctx context.Context, org_id string) error {
 	if utils.IsRootOrg(org_id) {
 		return errors.New("Can not remove root org.")
 	}
 
-	err := RemoveOrgFromUsers(org_id)
+	err := RemoveOrgFromUsers(ctx, org_id)
 	if err != nil {
 		return err
 	}

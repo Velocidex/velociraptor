@@ -58,7 +58,7 @@ func (self UsersPlugin) Call(
 		}
 
 		users := services.GetUserManager()
-		user_list, err := users.ListUsers()
+		user_list, err := users.ListUsers(ctx)
 		if err != nil {
 			scope.Log("users: %v", err)
 			return

@@ -26,7 +26,7 @@ type ICryptoManager interface {
 	GetCSR() ([]byte, error)
 	Encrypt(compressed_message_lists [][]byte,
 		compression crypto_proto.PackedMessageList_CompressionType,
-		destination string) ([]byte, error)
+		nonce, destination string) ([]byte, error)
 	Decrypt(cipher_text []byte) (*MessageInfo, error)
 }
 

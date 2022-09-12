@@ -72,7 +72,7 @@ func (self SetPasswordFunction) Call(
 	}
 
 	users_manager := services.GetUserManager()
-	user_record, err := users_manager.GetUserWithHashes(principal)
+	user_record, err := users_manager.GetUserWithHashes(ctx, principal)
 	if err != nil {
 		scope.Log("passwd: %v", err)
 		return vfilter.Null{}
@@ -88,7 +88,7 @@ func (self SetPasswordFunction) Call(
 	}).Info("passwd: Updating password for user")
 
 	// Store the record
-	err = users_manager.SetUser(user_record)
+	err = users_manager.SetUser(ctx, user_record)
 	if err != nil {
 		scope.Log("passwd: Unable to set user account: %v", err)
 		return vfilter.Null{}
