@@ -28,4 +28,5 @@ type ErrState struct {
 	Type           string
 	Username       string
 	Authenticators []AuthenticatorInfo
+	BasePath       string
 }

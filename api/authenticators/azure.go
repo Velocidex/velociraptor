@@ -22,6 +22,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
@@ -40,13 +41,14 @@ type AzureUser struct {
 }
 
 type AzureAuthenticator struct {
-	config_obj    *config_proto.Config
-	authenticator *config_proto.Authenticator
+	config_obj       *config_proto.Config
+	authenticator    *config_proto.Authenticator
+	base, public_url string
 }
 
 // The URL that will be used to log in.
 func (self *AzureAuthenticator) LoginURL() string {
-	return self.config_obj.GUI.PublicUrl + "auth/azure/login"
+	return self.base + "auth/azure/login"
 }
 
 func (self *AzureAuthenticator) IsPasswordLess() bool {
@@ -54,9 +56,9 @@ func (self *AzureAuthenticator) IsPasswordLess() bool {
 }
 
 func (self *AzureAuthenticator) AddHandlers(mux *http.ServeMux) error {
-	mux.Handle("/auth/azure/login", self.oauthAzureLogin())
-	mux.Handle("/auth/azure/callback", self.oauthAzureCallback())
-	mux.Handle("/auth/azure/picture", self.oauthAzurePicture())
+	mux.Handle(self.base+"auth/azure/login", self.oauthAzureLogin())
+	mux.Handle(self.base+"auth/azure/callback", self.oauthAzureCallback())
+	mux.Handle(self.base+"auth/azure/picture", self.oauthAzurePicture())
 	return nil
 }
 
@@ -73,7 +75,7 @@ func (self *AzureAuthenticator) AuthenticateUserHandler(
 		self.config_obj,
 		func(w http.ResponseWriter, r *http.Request, err error, username string) {
 			reject_with_username(self.config_obj, w, r, err, username,
-				"/auth/azure/login", "Microsoft O365/Azure AD")
+				self.base+"auth/azure/login", "Microsoft O365/Azure AD")
 		},
 		parent)
 }
@@ -81,7 +83,8 @@ func (self *AzureAuthenticator) AuthenticateUserHandler(
 func (self *AzureAuthenticator) oauthAzureLogin() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var azureOauthConfig = &oauth2.Config{
-			RedirectURL:  self.config_obj.GUI.PublicUrl + "auth/azure/callback",
+			RedirectURL: self.public_url +
+				strings.TrimPrefix(self.base, "/") + "auth/azure/callback",
 			ClientID:     self.authenticator.OauthClientId,
 			ClientSecret: self.authenticator.OauthClientSecret,
 			Scopes:       []string{"User.Read"},
@@ -107,7 +110,7 @@ func (self *AzureAuthenticator) oauthAzureCallback() http.Handler {
 		if oauthState == nil || r.FormValue("state") != oauthState.Value {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("invalid oauth azure state")
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
 			return
 		}
 
@@ -118,7 +121,7 @@ func (self *AzureAuthenticator) oauthAzureCallback() http.Handler {
 				WithFields(logrus.Fields{
 					"err": err.Error(),
 				}).Error("getUserDataFromAzure")
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
 			return
 		}
 
@@ -128,7 +131,7 @@ func (self *AzureAuthenticator) oauthAzureCallback() http.Handler {
 			self.config_obj, self.authenticator,
 			&Claims{
 				Username: user_info.Mail,
-				Picture:  "/auth/azure/picture",
+				Picture:  self.base + "auth/azure/picture",
 				Token:    user_info.Token,
 			})
 		if err != nil {
@@ -136,18 +139,19 @@ func (self *AzureAuthenticator) oauthAzureCallback() http.Handler {
 				WithFields(logrus.Fields{
 					"err": err.Error(),
 				}).Error("getUserDataFromAzure")
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
 			return
 		}
 
 		http.SetCookie(w, cookie)
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
 	})
 }
 
 func (self *AzureAuthenticator) getAzureOauthConfig() *oauth2.Config {
 	return &oauth2.Config{
-		RedirectURL:  self.config_obj.GUI.PublicUrl + "auth/azure/callback",
+		RedirectURL: self.public_url +
+			strings.TrimPrefix(self.base, "/") + "auth/azure/callback",
 		ClientID:     self.authenticator.OauthClientId,
 		ClientSecret: self.authenticator.OauthClientSecret,
 		Scopes:       []string{"User.Read"},

@@ -17,7 +17,8 @@ import (
 
 // Implement basic authentication.
 type BasicAuthenticator struct {
-	config_obj *config_proto.Config
+	config_obj       *config_proto.Config
+	base, public_url string
 }
 
 // Basic auth does not need any special handlers.
@@ -26,9 +27,8 @@ func (self *BasicAuthenticator) AddHandlers(mux *http.ServeMux) error {
 }
 
 func (self *BasicAuthenticator) AddLogoff(mux *http.ServeMux) error {
-	base := self.config_obj.GUI.BasePath
-	homepage := base + "/app/index.html"
-	mux.Handle(base+"/app/logoff.html",
+	homepage := self.base + "app/index.html"
+	mux.Handle(self.base+"app/logoff.html",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			username, _, ok := r.BasicAuth()
 			if !ok {
