@@ -29,8 +29,8 @@ func writeLogOnPanic() error {
 			// Create a special log file in the log directory.
 			filename := filepath.Join(
 				config_obj.Logging.OutputDirectory,
-				fmt.Sprintf("panic-%v.log", strings.Replace(":", "_",
-					time.Now().Format(time.RFC3339), -1)))
+				fmt.Sprintf("panic-%v.log", strings.Replace(
+					time.Now().Format(time.RFC3339), ":", "_", -1)))
 
 			fd, err := os.OpenFile(filename,
 				os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)

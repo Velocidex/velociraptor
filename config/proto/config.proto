@@ -233,6 +233,8 @@ message ClientConfig {
     uint64 connection_timeout = 35;
 
     CryptoConfig Crypto = 33;
+
+    bool disable_compression = 37;
 }
 
 message APIConfig {

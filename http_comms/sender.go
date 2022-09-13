@@ -41,6 +41,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+const (
+	URGENT = true
+)
+
 type Sender struct {
 	*NotificationReader
 
@@ -179,40 +183,39 @@ func (self *Sender) PumpRingBufferToSendMessage(
 	// We should never exit from this.
 	defer self.maybeCallOnExit()
 
+	compression := crypto_proto.PackedMessageList_ZCOMPRESSION
+	if self.config_obj.Client.DisableCompression {
+		compression = crypto_proto.PackedMessageList_UNCOMPRESSED
+	}
+
 	for {
 		executor.Nanny.UpdatePumpRbToServer()
 
 		if atomic.LoadInt32(&self.IsPaused) == 0 {
 			// Grab some messages from the urgent ring buffer.
 			compressed_messages := LeaseAndCompress(self.urgent_buffer,
-				self.config_obj.Client.MaxUploadSize)
+				self.config_obj.Client.MaxUploadSize, compression)
 			if len(compressed_messages) > 0 {
-				self.sendMessageList(ctx, compressed_messages,
-					true /* urgent */)
+				self.sendMessageList(ctx, compressed_messages, URGENT, compression)
 				self.urgent_buffer.Commit()
 			}
 
 			// Grab some messages from the ring buffer.
 			compressed_messages = LeaseAndCompress(self.ring_buffer,
-				self.config_obj.Client.MaxUploadSize)
+				self.config_obj.Client.MaxUploadSize, compression)
 			if len(compressed_messages) > 0 {
-				// sendMessageList will block until
-				// the messages are successfully sent
-				// to the server. When it returns we
-				// know the messages are sent so we
-				// can commit them from the ring
-				// buffer.
-				self.sendMessageList(ctx, compressed_messages, false /* urgent */)
+				// sendMessageList will block until the messages are
+				// successfully sent to the server. When it returns we
+				// know the messages are sent so we can commit them
+				// from the ring buffer.
+				self.sendMessageList(ctx, compressed_messages, !URGENT, compression)
 				self.ring_buffer.Commit()
 
-				// We need to make sure our memory
-				// footprint is as small as
-				// possible. The Velociraptor client
-				// prioritizes low memory footprint
-				// over latency. We just sent data to
-				// the server and we wont need that
-				// for a while so we can free our
-				// memory to the OS.
+				// We need to make sure our memory footprint is as
+				// small as possible. The Velociraptor client
+				// prioritizes low memory footprint over latency. We
+				// just sent data to the server and we wont need that
+				// for a while so we can free our memory to the OS.
 				debug.FreeOSMemory()
 			}
 		}

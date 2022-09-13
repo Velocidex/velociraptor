@@ -176,7 +176,8 @@ func (self *FileBasedRingBuffer) AvailableBytes() uint64 {
 
 // Call Lease() repeatadly and compress each result until we get
 // closer to the required size.
-func LeaseAndCompress(self IRingBuffer, size uint64) [][]byte {
+func LeaseAndCompress(self IRingBuffer, size uint64,
+	compression crypto_proto.PackedMessageList_CompressionType) [][]byte {
 	result := [][]byte{}
 	total_len := uint64(0)
 	step := size / 4
@@ -189,15 +190,21 @@ func LeaseAndCompress(self IRingBuffer, size uint64) [][]byte {
 			break
 		}
 
-		compressed_message_list, err := utils.Compress(next_message_list)
-		if err != nil || len(compressed_message_list) == 0 {
-			// Something terrible happened! The file is
-			// corrupted and it is better to start again.
-			self.Reset()
-			break
+		if compression == crypto_proto.PackedMessageList_ZCOMPRESSION {
+			compressed_message_list, err := utils.Compress(next_message_list)
+			if err != nil || len(compressed_message_list) == 0 {
+				// Something terrible happened! The file is
+				// corrupted and it is better to start again.
+				self.Reset()
+				break
+			}
+			result = append(result, compressed_message_list)
+			total_len += uint64(len(compressed_message_list))
+
+		} else {
+			result = append(result, next_message_list)
+			total_len += uint64(len(next_message_list))
 		}
-		result = append(result, compressed_message_list)
-		total_len += uint64(len(compressed_message_list))
 	}
 
 	return result

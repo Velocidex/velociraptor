@@ -29,6 +29,7 @@ import (
 	humanize "github.com/dustin/go-humanize"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
@@ -124,6 +125,11 @@ func on_error(ctx context.Context, config_obj *config_proto.Config) {
 		// Log the error.
 		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 		logger.Error("Exiting hard due to bug or KillKillKill! This should not happen!")
+		r := recover()
+		if r != nil {
+			utils.Debug(r)
+		}
+		utils.PrintStack()
 
 		os.Exit(-1)
 	}

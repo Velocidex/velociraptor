@@ -43,7 +43,7 @@ func FindCollectedArtifacts(
 	}
 }
 
-func (self HuntDispatcher) ListHunts(
+func (self *HuntDispatcher) ListHunts(
 	ctx context.Context, config_obj *config_proto.Config,
 	in *api_proto.ListHuntsRequest) (
 	*api_proto.ListHuntsResponse, error) {
