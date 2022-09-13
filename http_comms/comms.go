@@ -619,11 +619,12 @@ func NewNotificationReader(
 // the server.
 func (self *NotificationReader) sendMessageList(
 	ctx context.Context, message_list [][]byte,
-	urgent bool) {
+	urgent bool,
+	compression crypto_proto.PackedMessageList_CompressionType) {
 
 	for {
 		if atomic.LoadInt32(&self.IsPaused) == 0 {
-			err := self.sendToURL(ctx, message_list, urgent)
+			err := self.sendToURL(ctx, message_list, urgent, compression)
 			// Success!
 			if err == nil {
 				return
@@ -672,7 +673,8 @@ func (self *NotificationReader) sendMessageList(
 func (self *NotificationReader) sendToURL(
 	ctx context.Context,
 	message_list [][]byte,
-	urgent bool) (err error) {
+	urgent bool,
+	compression crypto_proto.PackedMessageList_CompressionType) (err error) {
 
 	if self.connector.ServerName() == "" {
 		self.connector.ReKeyNextServer(ctx)
@@ -680,10 +682,11 @@ func (self *NotificationReader) sendToURL(
 
 	self.logger.Info("%s: Connected to %s", self.name,
 		self.connector.GetCurrentUrl(self.handler))
+
 	// Clients always compress messages to the server.
 	cipher_text, err := self.manager.Encrypt(
 		message_list,
-		crypto_proto.PackedMessageList_ZCOMPRESSION,
+		compression,
 		self.config_obj.Client.Nonce,
 		self.connector.ServerName())
 	if err != nil {
@@ -748,10 +751,16 @@ func (self *NotificationReader) maybeCallOnExit() {
 func (self *NotificationReader) Start(
 	ctx context.Context, wg *sync.WaitGroup) {
 
+	compression := crypto_proto.PackedMessageList_ZCOMPRESSION
+	if self.config_obj.Client.DisableCompression {
+		compression = crypto_proto.PackedMessageList_UNCOMPRESSED
+	}
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		defer self.maybeCallOnExit()
+		defer utils.CheckForPanic("Panic in main loop")
 
 		// Periodically read from executor and push to ring buffer.
 		for {
@@ -763,10 +772,16 @@ func (self *NotificationReader) Start(
 			message_list := self.GetMessageList()
 			serialized_message_list, err := proto.Marshal(message_list)
 			if err == nil {
-				compressed, err := utils.Compress(serialized_message_list)
-				if err == nil {
+				if compression == crypto_proto.PackedMessageList_ZCOMPRESSION {
+					compressed, err := utils.Compress(serialized_message_list)
+					if err == nil {
+						self.sendMessageList(
+							ctx, [][]byte{compressed}, !URGENT, compression)
+					}
+
+				} else {
 					self.sendMessageList(
-						ctx, [][]byte{compressed}, false)
+						ctx, [][]byte{serialized_message_list}, !URGENT, compression)
 				}
 			}
 

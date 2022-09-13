@@ -29,6 +29,8 @@ func Compress(plain_text []byte) ([]byte, error) {
 func Uncompress(
 	ctx context.Context, compressed []byte) ([]byte, error) {
 
+	// Allocate a reasonable initial buffer. The decompression step
+	// below may increase it as required.
 	result := bytes.NewBuffer(make([]byte, 0, len(compressed)*2))
 	var reader io.Reader = bytes.NewReader(compressed)
 	z, err := zlib.NewReader(reader)

@@ -154,7 +154,8 @@ func (self *TestSuite) TestServerRotateKeyE2E() {
 
 	// Make sure the client is properly enrolled
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		err := comm.sender.sendToURL(client_ctx, [][]byte{}, false)
+		err := comm.sender.sendToURL(client_ctx, [][]byte{},
+			!URGENT, crypto_proto.PackedMessageList_ZCOMPRESSION)
 		assert.NoError(self.T(), err)
 
 		return vtesting.ContainsString("response with status: 200",
@@ -189,7 +190,8 @@ func (self *TestSuite) TestServerRotateKeyE2E() {
 
 	// Make sure the client properly rekeys and continues to talk to the server
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		err := comm.sender.sendToURL(client_ctx, [][]byte{}, false)
+		err := comm.sender.sendToURL(client_ctx, [][]byte{},
+			!URGENT, crypto_proto.PackedMessageList_ZCOMPRESSION)
 		if err != nil {
 			return false
 		}

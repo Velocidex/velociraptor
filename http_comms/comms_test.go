@@ -246,7 +246,9 @@ func (self *CommsTestSuite) TestEnrollment() {
 		{data: "", status: 406},
 	}
 
-	communicator.receiver.sendMessageList(context.Background(), nil, false)
+	communicator.receiver.sendMessageList(
+		context.Background(), nil, !URGENT,
+		crypto_proto.PackedMessageList_ZCOMPRESSION)
 
 	checkResponses(self.T(), self.frontend1.events, []string{
 		// First request looks for server.pem but fails on frontend1
@@ -281,7 +283,9 @@ func (self *CommsTestSuite) TestServerError() {
 		{data: string(self.empty_response), status: 200},
 	}
 
-	communicator.receiver.sendMessageList(context.Background(), nil, false)
+	communicator.receiver.sendMessageList(
+		context.Background(), nil, !URGENT,
+		crypto_proto.PackedMessageList_ZCOMPRESSION)
 
 	checkResponses(self.T(), self.frontend1.events, []string{
 		// First request looks for server.pem
@@ -334,7 +338,8 @@ func (self *CommsTestSuite) TestMultiFrontends() {
 		{data: string(self.empty_response), status: 200},
 	}
 
-	communicator.receiver.sendMessageList(context.Background(), nil, false)
+	communicator.receiver.sendMessageList(context.Background(), nil,
+		!URGENT, crypto_proto.PackedMessageList_ZCOMPRESSION)
 
 	// Message ordering is important
 	checkResponses(self.T(), self.frontend1.events, []string{
@@ -395,7 +400,8 @@ func (self *CommsTestSuite) TestMultiFrontendsAllIsBorked() {
 		{data: string(self.empty_response), status: 200},
 	}
 
-	communicator.receiver.sendMessageList(context.Background(), nil, false)
+	communicator.receiver.sendMessageList(context.Background(), nil,
+		!URGENT, crypto_proto.PackedMessageList_ZCOMPRESSION)
 
 	//utils.Debug(self.frontend1.events)
 	//utils.Debug(self.frontend2.events)
@@ -469,7 +475,8 @@ func (self *CommsTestSuite) TestMultiFrontendsIntermittantFailure() {
 		{data: string(self.empty_response), status: 200},
 	}
 
-	communicator.receiver.sendMessageList(context.Background(), nil, false)
+	communicator.receiver.sendMessageList(context.Background(), nil,
+		!URGENT, crypto_proto.PackedMessageList_ZCOMPRESSION)
 
 	//utils.Debug(self.frontend1.events)
 	//utils.Debug(self.frontend2.events)
@@ -529,7 +536,8 @@ func (self *CommsTestSuite) TestMultiFrontendsHeavyFailure() {
 		{data: "", status: 500},
 	}
 
-	communicator.receiver.sendMessageList(context.Background(), nil, false)
+	communicator.receiver.sendMessageList(context.Background(), nil,
+		!URGENT, crypto_proto.PackedMessageList_ZCOMPRESSION)
 
 	//utils.Debug(self.frontend1.events)
 	//utils.Debug(self.frontend2.events)
@@ -602,8 +610,10 @@ func (self *CommsTestSuite) TestMultiFrontendRedirect() {
 	}
 
 	// Request 2 packets.
-	communicator.receiver.sendMessageList(context.Background(), nil, false)
-	communicator.receiver.sendMessageList(context.Background(), nil, false)
+	communicator.receiver.sendMessageList(context.Background(), nil,
+		!URGENT, crypto_proto.PackedMessageList_ZCOMPRESSION)
+	communicator.receiver.sendMessageList(context.Background(), nil,
+		!URGENT, crypto_proto.PackedMessageList_ZCOMPRESSION)
 
 	//utils.Debug(self.frontend1.events)
 	//utils.Debug(self.frontend2.events)
@@ -672,8 +682,10 @@ func (self *CommsTestSuite) TestMultiFrontendRedirectWithErrors() {
 		{data: string(self.empty_response), status: 200},
 	}
 
-	communicator.receiver.sendMessageList(context.Background(), nil, false)
-	communicator.receiver.sendMessageList(context.Background(), nil, false)
+	communicator.receiver.sendMessageList(context.Background(), nil,
+		!URGENT, crypto_proto.PackedMessageList_ZCOMPRESSION)
+	communicator.receiver.sendMessageList(context.Background(), nil,
+		!URGENT, crypto_proto.PackedMessageList_ZCOMPRESSION)
 
 	//utils.Debug(self.frontend1.events)
 	//utils.Debug(self.frontend2.events)
@@ -759,7 +771,8 @@ func (self *CommsTestSuite) TestMultiRedirects() {
 		{data: string(self.empty_response), status: 200},
 	}
 
-	communicator.receiver.sendMessageList(context.Background(), nil, false)
+	communicator.receiver.sendMessageList(context.Background(), nil,
+		!URGENT, crypto_proto.PackedMessageList_ZCOMPRESSION)
 
 	//utils.Debug(self.frontend1.events)
 	//utils.Debug(self.frontend2.events)
