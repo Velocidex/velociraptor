@@ -48,7 +48,7 @@ func (self *OidcAuthenticatorCognito) oauthOidcCallback(
 		if oauthState == nil || r.FormValue("state") != oauthState.Value {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("invalid oauth state of OIDC")
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
 			return
 		}
 
@@ -58,7 +58,7 @@ func (self *OidcAuthenticatorCognito) oauthOidcCallback(
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("can not get oauthToken from OIDC provider: %v", err)
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
 			return
 		}
 		userInfo, err := getUserInfo(
@@ -66,7 +66,7 @@ func (self *OidcAuthenticatorCognito) oauthOidcCallback(
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("can not get UserInfo from OIDC provider: %v", err)
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
 			return
 		}
 
@@ -80,12 +80,12 @@ func (self *OidcAuthenticatorCognito) oauthOidcCallback(
 				WithFields(logrus.Fields{
 					"err": err.Error(),
 				}).Error("can not get a signed tokenString")
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
 			return
 		}
 
 		http.SetCookie(w, cookie)
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
 	})
 }
 
@@ -95,6 +95,8 @@ func init() {
 		return &OidcAuthenticatorCognito{OidcAuthenticator{
 			config_obj:    config_obj,
 			authenticator: auth_config,
+			base:          getBasePath(config_obj),
+			public_url:    getPublicURL(config_obj),
 		}}, nil
 	})
 }

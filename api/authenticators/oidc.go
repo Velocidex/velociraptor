@@ -13,8 +13,9 @@ import (
 )
 
 type OidcAuthenticator struct {
-	config_obj    *config_proto.Config
-	authenticator *config_proto.Authenticator
+	config_obj       *config_proto.Config
+	authenticator    *config_proto.Authenticator
+	base, public_url string
 }
 
 func (self *OidcAuthenticator) IsPasswordLess() bool {
@@ -32,26 +33,26 @@ func (self *OidcAuthenticator) Name() string {
 func (self *OidcAuthenticator) LoginHandler() string {
 	name := self.authenticator.OidcName
 	if name != "" {
-		return "/auth/oidc/" + name + "/login"
+		return self.base + "auth/oidc/" + name + "/login"
 	}
-	return "/auth/oidc/login"
+	return self.base + "auth/oidc/login"
 }
 
 func (self *OidcAuthenticator) LoginURL() string {
-	return self.config_obj.GUI.PublicUrl +
+	return self.public_url +
 		strings.TrimPrefix(self.LoginHandler(), "/")
 }
 
 func (self *OidcAuthenticator) CallbackHandler() string {
 	name := self.authenticator.OidcName
 	if name != "" {
-		return "/auth/oidc/" + name + "/callback"
+		return self.base + "auth/oidc/" + name + "/callback"
 	}
-	return "/auth/oidc/callback"
+	return self.base + "auth/oidc/callback"
 }
 
 func (self *OidcAuthenticator) CallbackURL() string {
-	return self.config_obj.GUI.PublicUrl +
+	return self.public_url +
 		strings.TrimPrefix(self.LoginHandler(), "/")
 }
 
@@ -131,7 +132,7 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 		if oauthState == nil || r.FormValue("state") != oauthState.Value {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("invalid oauth state of OIDC")
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
 			return
 		}
 
@@ -141,7 +142,7 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("can not get oauthToken from OIDC provider: %v", err)
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
 			return
 		}
 		userInfo, err := provider.UserInfo(
@@ -149,7 +150,7 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("can not get UserInfo from OIDC provider: %v", err)
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
 			return
 		}
 
@@ -163,11 +164,11 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 				WithFields(logrus.Fields{
 					"err": err.Error(),
 				}).Error("can not get a signed tokenString")
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
 			return
 		}
 
 		http.SetCookie(w, cookie)
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
 	})
 }

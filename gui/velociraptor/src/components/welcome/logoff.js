@@ -10,6 +10,7 @@ import "./login.css";
 export default class LogoffPage extends Component {
     render() {
         let username = window.ErrorState && window.ErrorState.Username;
+        let base_path = window.ErrorState && window.ErrorState.BasePath || "/";
 
         return (
             <Modal className="full-height"
@@ -41,7 +42,7 @@ export default class LogoffPage extends Component {
                     <Col sm="6">
                       <Button
                         variant="outline" className="login">
-                        <a href="/">
+                        <a href={base_path}>
                           <Row>
                             <Col sm="1">
                               <img src={logo}

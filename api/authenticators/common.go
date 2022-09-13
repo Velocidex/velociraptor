@@ -55,10 +55,14 @@ func getSignedJWTTokenCookie(
 		return nil, err
 	}
 
+	// Sets the cookie on the browser so it is only valid from the
+	// base down.
+	base := getBasePath(config_obj)
+
 	return &http.Cookie{
 		Name:     "VelociraptorAuth",
 		Value:    tokenString,
-		Path:     "/",
+		Path:     base,
 		Secure:   true,
 		HttpOnly: true,
 		Expires:  expiry,

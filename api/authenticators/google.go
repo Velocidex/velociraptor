@@ -25,6 +25,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/csrf"
@@ -46,23 +47,26 @@ const oauthGoogleUrlAPI = "https://www.googleapis.com/oauth2/v2/userinfo?access_
 type GoogleAuthenticator struct {
 	config_obj    *config_proto.Config
 	authenticator *config_proto.Authenticator
+	base          string
+	public_url    string
 }
 
 func (self *GoogleAuthenticator) LoginHandler() string {
-	return "/auth/google/login"
+	return self.base + "auth/google/login"
 }
 
 // The URL that will be used to log in.
 func (self *GoogleAuthenticator) LoginURL() string {
-	return self.config_obj.GUI.PublicUrl + "auth/google/login"
+	return self.base + "auth/google/login"
 }
 
 func (self *GoogleAuthenticator) CallbackHandler() string {
-	return "/auth/google/callback"
+	return self.base + "auth/google/callback"
 }
 
 func (self *GoogleAuthenticator) CallbackURL() string {
-	return self.config_obj.GUI.PublicUrl + "auth/google/callback"
+	return self.public_url +
+		strings.TrimPrefix(self.base, "/") + "auth/google/callback"
 }
 
 func (self *GoogleAuthenticator) ProviderName() string {
@@ -142,11 +146,10 @@ func (self *GoogleAuthenticator) oauthGoogleCallback() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Read oauthState from Cookie
 		oauthState, _ := r.Cookie("oauthstate")
-
 		if oauthState == nil || r.FormValue("state") != oauthState.Value {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("invalid oauth google state")
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
 			return
 		}
 
@@ -156,7 +159,7 @@ func (self *GoogleAuthenticator) oauthGoogleCallback() http.Handler {
 				WithFields(logrus.Fields{
 					"err": err.Error(),
 				}).Error("getUserDataFromGoogle")
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
 			return
 		}
 
@@ -167,7 +170,7 @@ func (self *GoogleAuthenticator) oauthGoogleCallback() http.Handler {
 				WithFields(logrus.Fields{
 					"err": err.Error(),
 				}).Error("getUserDataFromGoogle")
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
 			return
 		}
 
@@ -183,12 +186,12 @@ func (self *GoogleAuthenticator) oauthGoogleCallback() http.Handler {
 				WithFields(logrus.Fields{
 					"err": err.Error(),
 				}).Error("getUserDataFromGoogle")
-			http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
 			return
 		}
 
 		http.SetCookie(w, cookie)
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
+		http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
 	})
 }
 
@@ -223,8 +226,8 @@ func (self *GoogleAuthenticator) getUserDataFromGoogle(
 }
 
 func installLogoff(config_obj *config_proto.Config, mux *http.ServeMux) {
-	base := config_obj.GUI.BasePath
-	mux.Handle(base+"/app/logoff.html",
+	base := getBasePath(config_obj)
+	mux.Handle(base+"app/logoff.html",
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			params := r.URL.Query()
 			old_username, ok := params["username"]
@@ -238,17 +241,14 @@ func installLogoff(config_obj *config_proto.Config, mux *http.ServeMux) {
 			// Clear the cookie
 			http.SetCookie(w, &http.Cookie{
 				Name:     "VelociraptorAuth",
-				Path:     "/",
-				Value:    "",
+				Path:     base,
+				Value:    "deleted",
 				Secure:   true,
 				HttpOnly: true,
 				Expires:  time.Unix(0, 0),
 			})
 
-			//w.Header().Set("Content-Type", "text/html; charset=utf-8")
-			//w.WriteHeader(http.StatusUnauthorized)
-
-			renderLogoffMessage(w, username)
+			renderLogoffMessage(config_obj, w, username)
 		}))
 }
 
@@ -322,10 +322,11 @@ func reject_with_username(
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusUnauthorized)
 
-	renderRejectionMessage(w, username, []velociraptor.AuthenticatorInfo{
-		{
-			LoginURL:     login_url,
-			ProviderName: provider,
-		},
-	})
+	renderRejectionMessage(config_obj,
+		w, username, []velociraptor.AuthenticatorInfo{
+			{
+				LoginURL:     login_url,
+				ProviderName: provider,
+			},
+		})
 }
