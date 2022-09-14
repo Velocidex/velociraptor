@@ -10,7 +10,7 @@ import "./login.css";
 export default class LogoffPage extends Component {
     render() {
         let username = window.ErrorState && window.ErrorState.Username;
-        let base_path = window.ErrorState && window.ErrorState.BasePath || "/";
+        let base_path = (window.ErrorState && window.ErrorState.BasePath) || "/";
 
         return (
             <Modal className="full-height"
