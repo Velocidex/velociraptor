@@ -102,10 +102,13 @@ const (
 
 // Mark a mutation to be written to the backing data store.
 type Mutation struct {
-	op   int
-	urn  api.DSPathSpec
-	wg   *sync.WaitGroup
-	data []byte
+	op  int
+	urn api.DSPathSpec
+
+	// The config object related to the org this call came from
+	org_config_obj *config_proto.Config
+	wg             *sync.WaitGroup
+	data           []byte
 
 	// Will run when committed to disk.
 	completion func()
@@ -115,10 +118,9 @@ type MemcacheFileDataStore struct {
 	mu    sync.Mutex
 	cache *MemcacheDatastore
 
-	writer     chan *Mutation
-	ctx        context.Context
-	cancel     func()
-	config_obj *config_proto.Config
+	writer chan *Mutation
+	ctx    context.Context
+	cancel func()
 
 	started bool
 }
@@ -159,7 +161,7 @@ func (self *MemcacheFileDataStore) Flush() {
 			if !ok {
 				return
 			}
-			self.processMutation(self.config_obj, mutation)
+			self.processMutation(mutation)
 		default:
 			return
 		}
@@ -219,20 +221,19 @@ func (self *MemcacheFileDataStore) StartWriter(
 					if !ok {
 						return
 					}
-					self.processMutation(config_obj, mutation)
+					self.processMutation(mutation)
 				}
 			}
 		}()
 	}
 }
 
-func (self *MemcacheFileDataStore) processMutation(
-	config_obj *config_proto.Config, mutation *Mutation) {
+func (self *MemcacheFileDataStore) processMutation(mutation *Mutation) {
 	metricIdleWriters.Dec()
 	switch mutation.op {
 	case MUTATION_OP_SET_SUBJECT:
-		writeContentToFile(config_obj, mutation.urn, mutation.data)
-		self.invalidateDirCache(config_obj, mutation.urn)
+		writeContentToFile(mutation.org_config_obj, mutation.urn, mutation.data)
+		self.invalidateDirCache(mutation.org_config_obj, mutation.urn)
 
 		// Call the completion function once we hit
 		// the directory datastore.
@@ -241,8 +242,8 @@ func (self *MemcacheFileDataStore) processMutation(
 		}
 
 	case MUTATION_OP_DEL_SUBJECT:
-		file_based_imp.DeleteSubject(config_obj, mutation.urn)
-		self.invalidateDirCache(config_obj, mutation.urn.Dir())
+		file_based_imp.DeleteSubject(mutation.org_config_obj, mutation.urn)
+		self.invalidateDirCache(mutation.org_config_obj, mutation.urn.Dir())
 
 		// Call the completion function once we hit
 		// the directory datastore.
@@ -337,11 +338,12 @@ func (self *MemcacheFileDataStore) SetSubjectWithCompletion(
 	// Send a SetSubject mutation to the writer loop.
 	var wg sync.WaitGroup
 	mutation := &Mutation{
-		op:         MUTATION_OP_SET_SUBJECT,
-		urn:        urn,
-		wg:         &wg,
-		completion: completion,
-		data:       serialized_content}
+		op:             MUTATION_OP_SET_SUBJECT,
+		urn:            urn,
+		org_config_obj: config_obj,
+		wg:             &wg,
+		completion:     completion,
+		data:           serialized_content}
 
 	// If the call is synchronous we need to wait here until it is
 	// flushed to disk.
@@ -441,8 +443,9 @@ func (self *MemcacheFileDataStore) DeleteSubject(
 
 		// When we complete make sure the cache is also invalidated to
 		// avoid racing with GetSubject().
-		completion: completion,
-		urn:        urn}:
+		completion:     completion,
+		urn:            urn,
+		org_config_obj: config_obj}:
 	}
 
 	if config_obj.Datastore.MemcacheWriteMutationBuffer < 0 {
@@ -482,8 +485,9 @@ func (self *MemcacheFileDataStore) DeleteSubjectWithCompletion(
 
 		// When we complete make sure the cache is also invalidated to
 		// avoid racing with GetSubject().
-		completion: __completion,
-		urn:        urn}:
+		completion:     __completion,
+		urn:            urn,
+		org_config_obj: config_obj}:
 	}
 
 	return nil
@@ -578,11 +582,12 @@ func (self *MemcacheFileDataStore) SetBuffer(
 		return nil
 
 	case self.writer <- &Mutation{
-		op:         MUTATION_OP_SET_SUBJECT,
-		urn:        urn,
-		wg:         &wg,
-		data:       data,
-		completion: completion,
+		op:             MUTATION_OP_SET_SUBJECT,
+		urn:            urn,
+		org_config_obj: config_obj,
+		wg:             &wg,
+		data:           data,
+		completion:     completion,
 	}:
 	}
 
@@ -636,7 +641,6 @@ func get_file_dir_metadata(
 }
 
 func NewMemcacheFileDataStore(config_obj *config_proto.Config) *MemcacheFileDataStore {
-
 	data_max_size := 10000
 	if config_obj.Datastore != nil &&
 		config_obj.Datastore.MemcacheDatastoreMaxSize > 0 {
@@ -654,7 +658,6 @@ func NewMemcacheFileDataStore(config_obj *config_proto.Config) *MemcacheFileData
 	}
 
 	result := &MemcacheFileDataStore{
-		config_obj: config_obj,
 		cache: &MemcacheDatastore{
 			data_cache: NewDataLRUCache(config_obj,
 				data_max_size, data_max_item_size),
