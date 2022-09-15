@@ -98,7 +98,7 @@ type UserManager struct {
 }
 
 func NewUserRecord(name string) (*api_proto.VelociraptorUser, error) {
-	if !regexp.MustCompile("^[a-zA-Z0-9@.\\-_#]+$").MatchString(name) {
+	if !regexp.MustCompile("^[a-zA-Z0-9@.\\-_#+]+$").MatchString(name) {
 		return nil, errors.New(fmt.Sprintf(
 			"Unacceptable username %v", name))
 	}
