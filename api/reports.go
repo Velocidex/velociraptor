@@ -28,8 +28,11 @@ func getReport(ctx context.Context,
 
 	// Dashboards receive their own notebook ID in a predictable
 	// location.
+	bare_artifact_name := strings.TrimPrefix(in.Artifact,
+		constants.ARTIFACT_CUSTOM_NAME_PREFIX)
+
 	notebook_cell_path_manager := paths.NewNotebookPathManager(
-		"Dashboard." + in.Artifact).Cell(in.Artifact)
+		"Dashboard." + bare_artifact_name).Cell(bare_artifact_name)
 
 	template_engine, err := reporting.NewGuiTemplateEngine(
 		config_obj, ctx, nil, /* default scope */
@@ -43,8 +46,7 @@ func getReport(ctx context.Context,
 				config_obj, ctx, nil, /* default scope */
 				acl_manager, repository,
 				notebook_cell_path_manager,
-				strings.TrimPrefix(in.Artifact,
-					constants.ARTIFACT_CUSTOM_NAME_PREFIX))
+				bare_artifact_name)
 		}
 		if err != nil {
 			return nil, err
