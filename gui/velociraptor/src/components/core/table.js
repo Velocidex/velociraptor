@@ -496,8 +496,13 @@ export function formatColumns(columns) {
             x.type = null;
             break;
 
+            // A URL can be formatted as a markdown URL: [desc](url)
+            // or can be a JSON object {url:"...", desc:"..."}
         case "url":
             x.formatter = (cell, row) => {
+                if(_.isObject(cell)) {
+                    return <URLViewer url={cell.url} desc={cell.desc}/>;
+                }
                 return <URLViewer url={cell}/>;
             };
             x.type = null;

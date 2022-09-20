@@ -773,5 +773,5 @@ func (self *FlowRunner) ProcessMessages(ctx context.Context,
 		logger.Error("ForemanCheckin for client %v: %v", message_info.Source, err)
 	}
 
-	return message_info.IterateJobs(ctx, self.ProcessSingleMessage)
+	return message_info.IterateJobs(ctx, self.config_obj, self.ProcessSingleMessage)
 }

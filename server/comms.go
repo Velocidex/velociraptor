@@ -322,7 +322,7 @@ func control(
 		// - currently only enrolment requests.
 		if !message_info.Authenticated {
 			err := server_obj.ProcessUnauthenticatedMessages(
-				req.Context(), message_info)
+				req.Context(), config_obj, message_info)
 			if err == nil {
 				// We need to indicate to the client
 				// to start the enrolment

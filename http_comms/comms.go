@@ -714,7 +714,7 @@ func (self *NotificationReader) sendToURL(
 		return err
 	}
 
-	return message_info.IterateJobs(ctx,
+	return message_info.IterateJobs(ctx, self.config_obj,
 		func(ctx context.Context, msg *crypto_proto.VeloMessage) {
 
 			// Abort the client, but leave the client

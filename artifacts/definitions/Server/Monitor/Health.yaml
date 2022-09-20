@@ -63,6 +63,19 @@ reports:
             </span>
       </span>
 
+      {{ if Query "SELECT org() FROM scope() WHERE org().name =~ 'root org' " }}
+      ## Current Orgs
+
+      {{ Query "LET ColumnTypes <= dict(ClientConfig='url') \
+                SELECT Name, OrgId, \
+                       format(format='[%s](/notebooks/Dashboards/Dashboard.%s/uploads/client.%s.config.yaml)', \
+                       args=[OrgId, ArtifactName, OrgId]) AS ClientConfig, \
+                       upload(accessor='data', file=_client_config, \
+                              name='client.'+OrgId+'.config.yaml') AS _Upload \
+                FROM orgs() " | Table }}
+
+      {{ end }}
+
       ## Disk Space
 
       {{ Query "SELECT * FROM Artifact.Generic.Client.DiskSpace()" | Table }}

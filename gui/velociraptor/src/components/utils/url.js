@@ -11,7 +11,10 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 
 export default class URLViewer extends Component {
     static propTypes = {
+        // The URL can be formatted as a markdown URL: [text](url)
+        // Alternativly an explicit description can be passed to the link.
         url: PropTypes.string,
+        desc: PropTypes.string,
         safe: PropTypes.bool,
     }
 
@@ -26,6 +29,10 @@ export default class URLViewer extends Component {
         if (md_regex) {
             url = md_regex[2];
             desc = md_regex[1];
+        }
+
+        if(this.props.desc) {
+            desc = this.props.desc;
         }
 
         if (!this.props.safe) {

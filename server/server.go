@@ -243,10 +243,11 @@ func (self *Server) ProcessSingleUnauthenticatedMessage(
 }
 
 func (self *Server) ProcessUnauthenticatedMessages(
-	ctx context.Context,
+	ctx context.Context, config_obj *config_proto.Config,
 	message_info *crypto.MessageInfo) error {
 
-	return message_info.IterateJobs(ctx, self.ProcessSingleUnauthenticatedMessage)
+	return message_info.IterateJobs(ctx, config_obj,
+		self.ProcessSingleUnauthenticatedMessage)
 }
 
 func (self *Server) Decrypt(ctx context.Context, request []byte) (

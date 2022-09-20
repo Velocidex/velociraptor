@@ -147,7 +147,7 @@ class App extends Component {
                      <Route path="/hunts/:hunt_id?/:tab?">
                        <VeloHunts/>
                      </Route>
-                     <Route path="/host/:client_id(C[^/]+)/:action?">
+                     <Route path="/host/:client_id([^/]+)/:action?">
                        <ClientSetterFromRoute
                          client={this.state.client}
                          setClient={this.setClient} />
@@ -171,7 +171,7 @@ class App extends Component {
                        * client is starts with C - the ServerFlowsView is
                        * invoked when client_id == "server"
                        */}
-                     <Route path="/collected/:client_id(C[^/]+)/:flow_id?/:tab?">
+                     <Route path="/collected/:client_id([^/]+)/:flow_id?/:tab?">
                        <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
                        <ClientFlowsView client={this.state.client} />
                      </Route>
@@ -181,7 +181,7 @@ class App extends Component {
                      <Route path="/notebooks/:notebook_id?">
                        <Notebook />
                      </Route>
-                     <Route path="/events/:client_id(C[^/]+)/:artifact?/:time?">
+                     <Route path="/events/:client_id([^/]+)/:artifact?/:time?">
                        <ClientSetterFromRoute client={this.state.client} setClient={this.setClient} />
                        <EventMonitoring client={this.state.client}/>
                      </Route>

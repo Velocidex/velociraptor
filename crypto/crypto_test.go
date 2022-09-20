@@ -131,7 +131,7 @@ func (self *TestSuite) TestEncDecServerToClient() {
 		if err != nil {
 			t.Fatal(err)
 		}
-		message_info.IterateJobs(context.Background(),
+		message_info.IterateJobs(context.Background(), self.ConfigObj,
 			func(ctx context.Context, item *crypto_proto.VeloMessage) {
 				assert.Equal(t, item.Name, "OMG it's a string")
 				assert.Equal(t, item.AuthState, crypto_proto.VeloMessage_AUTHENTICATED)
@@ -170,7 +170,7 @@ func (self *TestSuite) TestEncDecClientToServerWithSpoof() {
 	}
 
 	assert.Equal(t, message_info.Source, self.client_id)
-	err = message_info.IterateJobs(context.Background(),
+	err = message_info.IterateJobs(context.Background(), self.ConfigObj,
 		func(ctx context.Context, msg *crypto_proto.VeloMessage) {
 			// Make sure the spoofed source is ignored, and the
 			// correct source is relayed in the VeloMessage.
@@ -264,7 +264,7 @@ func (self *TestSuite) TestEncDecClientToServer() {
 			t.Fatal(err)
 		}
 
-		message_info.IterateJobs(context.Background(),
+		message_info.IterateJobs(context.Background(), self.ConfigObj,
 			func(ctx context.Context, item *crypto_proto.VeloMessage) {
 				assert.Equal(t, item.Name, "OMG it's a string")
 				assert.Equal(

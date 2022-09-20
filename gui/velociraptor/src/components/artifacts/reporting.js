@@ -12,8 +12,15 @@ import { VeloLineChart, VeloTimeChart } from './line-charts.js';
 import Spinner from '../utils/spinner.js';
 import ToolViewer from "../tools/tool-viewer.js";
 import Timeline from "../timeline/timeline.js";
+import NotebookTableRenderer from '../notebooks/notebook-table-renderer.js';
+import { NotebookLineChart, NotebookTimeChart,
+         NotebookScatterChart, NotebookBarChart
+       } from '../notebooks/notebook-chart-renderer.js';
 
 // Renders a report in the DOM.
+
+const parse_param = domNode=>JSON.parse(decodeURIComponent(
+    domNode.attribs.params || "{}"));
 
 // NOTE: The server sanitizes reports using the bluemonday
 // sanitization. We therefore trust the output and are allowed to
@@ -66,6 +73,27 @@ export default class VeloReportViewer extends React.Component {
             !_.isEqual(client_id, next_client_id) ||
             !_.isEqual(this.props.artifact, nextProps.artifact);
     }
+
+    // Notebook charts make API calls to actually get their data.
+    maybeProcessNotebookChart = domNode=>{
+        switch (domNode.name) {
+        case "notebook-line-chart":
+            return <NotebookLineChart params={parse_param(domNode)} />;
+
+        case "notebook-bar-chart":
+            return <NotebookBarChart params={parse_param(domNode)} />;
+
+        case "notebook-scatter-chart":
+            return <NotebookScatterChart params={parse_param(domNode)} />;
+
+        case "notebook-time-chart":
+            return <NotebookTimeChart params={parse_param(domNode)} />;
+
+        default:
+            return null;
+        };
+    };
+
 
     updateReport() {
         let client_id = this.props.client && this.props.client.client_id;
@@ -146,13 +174,26 @@ export default class VeloReportViewer extends React.Component {
                     // Figure out where the data is: attribs.value is something like data['table2']
                     let re = /'([^']+)'/;
                     let value = decodeURIComponent(domNode.attribs.value || "");
-                    let match = re.exec(value);
-                    let data = this.state.data[match[1]];
-                    let rows = JSON.parse(data.Response);
+                    if (value) {
+                        let match = re.exec(value);
+                        let data = this.state.data[match[1]];
+                        let rows = JSON.parse(data.Response);
 
-                    return (
-                        <VeloTable rows={rows} columns={data.Columns} />
-                    );
+                        return (
+                            <VeloTable rows={rows} columns={data.Columns} />
+                        );
+                    }
+
+                    try {
+                        return (
+                            <NotebookTableRenderer
+                              refresh={this.props.refresh}
+                              params={parse_param(domNode)}
+                            />
+                        );
+                    } catch(e) {
+                        return domNode;
+                    }
                 };
 
                 if (domNode.name === "grr-tool-viewer") {
@@ -210,6 +251,12 @@ export default class VeloReportViewer extends React.Component {
                         return domNode;
                     }
                 };
+
+                let res = this.maybeProcessNotebookChart(domNode);
+                if (res) {
+                    return res;
+                }
+
 
                 return domNode;
             }

@@ -888,6 +888,8 @@ message Defaults {
     bool event_change_notify_all_clients = 6;
 
     uint64 max_vfs_directory_size = 7;
+
+    repeated string artifact_definitions_directories = 8;
 }
 
 // Configures crypto preferences
