@@ -453,6 +453,8 @@ func (self *GuiTemplateEngine) getMultiLineQuery(query string) (string, error) {
 }
 
 func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
+	defer utils.CheckForPanic("Evaluating Query")
+
 	if self.path_manager == nil {
 		return self.queryRows(queries...)
 	}
@@ -515,7 +517,9 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 			next_progress := time.Now().Add(4 * time.Second)
 			eval_chan := vql.Eval(self.ctx, self.Scope)
 
-			defer self.Progress.Report("Completed query")
+			if self.Progress != nil {
+				defer self.Progress.Report("Completed query")
+			}
 
 		do_query:
 			for {

@@ -107,6 +107,8 @@ func doPoolClient() error {
 			client_config.Client.WritebackLinux = path.Join(
 				*pool_client_writeback_dir, filename)
 
+			// Create an in memory ring buffer because the file ring
+			// buffer assumes there is only one communicator!
 			client_config.Client.WritebackWindows = client_config.Client.WritebackLinux
 			if client_config.Client.LocalBuffer != nil {
 				client_config.Client.LocalBuffer.DiskSize = 0

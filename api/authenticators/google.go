@@ -292,6 +292,12 @@ func authenticateUserHandle(
 			Picture: claims.Picture,
 		}
 
+		// NOTE: This context is NOT the same context that is received
+		// by the API handlers. This context sits on the incoming side
+		// of the GRPC gateway. We stuff our data into the
+		// GRPC_USER_CONTEXT of the context and the code will convert
+		// this value into a GRPC metadata.
+
 		// Must use json encoding because grpc can not handle
 		// binary data in metadata.
 		serialized, _ := json.Marshal(user_info)

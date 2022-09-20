@@ -89,6 +89,11 @@ var client_notebook_regex = regexp.MustCompile(`^N\.(F\.[^-]+?)-(C\..+|server)$`
 var event_notebook_regex = regexp.MustCompile(`^N\.E\.([^-]+?)-(C\..+|server)$`)
 
 func rootPathFromNotebookID(notebook_id string) api.DSPathSpec {
+	if strings.HasPrefix(notebook_id, "Dashboard") {
+		return NOTEBOOK_ROOT.AddChild("Dashboards").
+			SetType(api.PATH_TYPE_DATASTORE_JSON)
+	}
+
 	if strings.HasPrefix(notebook_id, "N.H.") {
 		// For hunt notebooks store them in the hunt itself.
 		return HUNTS_ROOT.AddChild(
