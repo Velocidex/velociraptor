@@ -45,6 +45,8 @@ type MockHTTPConnector struct {
 	received  []string
 	connected bool
 	t         *testing.T
+
+	config_obj *config_proto.Config
 }
 
 func (self *MockHTTPConnector) GetCurrentUrl(handler string) string {
@@ -83,7 +85,7 @@ func (self *MockHTTPConnector) Post(ctx context.Context,
 	message_info, err := manager.Decrypt(data)
 	require.NoError(self.t, err)
 
-	message_info.IterateJobs(context.Background(),
+	message_info.IterateJobs(context.Background(), self.config_obj,
 		func(ctx context.Context, item *crypto_proto.VeloMessage) {
 			self.received = append(self.received, item.Name)
 		})
@@ -138,7 +140,10 @@ func testRingBuffer(
 	// We use this to wait for messages to be delivered to the mock
 	mock_wg := &sync.WaitGroup{}
 
-	connector := &MockHTTPConnector{wg: mock_wg, t: t}
+	connector := &MockHTTPConnector{
+		config_obj: config_obj,
+		wg:         mock_wg,
+		t:          t}
 
 	// The connector is not connected initially.
 	connector.SetConnected(false)
