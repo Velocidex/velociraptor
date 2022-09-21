@@ -113,6 +113,20 @@ func (self *GitHubAuthenticator) oauthGithubCallback() http.Handler {
 			return
 		}
 
+		formError := r.FormValue("error")
+		if formError != "" {
+			desc := r.FormValue("error_description")
+			if desc != "" {
+				formError = desc
+			}
+			logging.GetLogger(self.config_obj, &logging.GUIComponent).
+				WithFields(logrus.Fields{
+					"err": formError,
+				}).Error("getUserDataFromGithub")
+			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
+			return
+		}
+
 		data, err := self.getUserDataFromGithub(r.Context(), r.FormValue("code"))
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).

@@ -2,6 +2,7 @@ package authenticators
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"sync"
@@ -58,9 +59,22 @@ func getAuthenticatorByType(
 	return nil, errors.New("No valid authenticator found")
 }
 
+func configRequirePublicUrl(config_obj *config_proto.Config) error {
+	if config_obj.GUI.PublicUrl == "" {
+		return fmt.Errorf("Authentication type `%s' requires valid public_url parameter",
+				  config_obj.GUI.Authenticator.Type)
+	}
+	return nil
+
+}
+
 func init() {
 	RegisterAuthenticator("azure", func(config_obj *config_proto.Config,
 		auth_config *config_proto.Authenticator) (Authenticator, error) {
+		err := configRequirePublicUrl(config_obj)
+		if err != nil {
+			return nil, err
+		}
 		return &AzureAuthenticator{
 			config_obj:    config_obj,
 			authenticator: auth_config,
@@ -71,6 +85,10 @@ func init() {
 
 	RegisterAuthenticator("github", func(config_obj *config_proto.Config,
 		auth_config *config_proto.Authenticator) (Authenticator, error) {
+		err := configRequirePublicUrl(config_obj)
+		if err != nil {
+			return nil, err
+		}
 		return &GitHubAuthenticator{
 			config_obj:    config_obj,
 			authenticator: auth_config,
@@ -81,6 +99,10 @@ func init() {
 
 	RegisterAuthenticator("google", func(config_obj *config_proto.Config,
 		auth_config *config_proto.Authenticator) (Authenticator, error) {
+		err := configRequirePublicUrl(config_obj)
+		if err != nil {
+			return nil, err
+		}
 		return &GoogleAuthenticator{
 			config_obj:    config_obj,
 			authenticator: auth_config,
@@ -105,6 +127,10 @@ func init() {
 
 	RegisterAuthenticator("oidc", func(config_obj *config_proto.Config,
 		auth_config *config_proto.Authenticator) (Authenticator, error) {
+		err := configRequirePublicUrl(config_obj)
+		if err != nil {
+			return nil, err
+		}
 		return &OidcAuthenticator{
 			config_obj:    config_obj,
 			authenticator: auth_config,
