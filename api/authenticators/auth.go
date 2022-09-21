@@ -123,6 +123,9 @@ func init() {
 func getBasePath(config_obj *config_proto.Config) string {
 	bare := strings.TrimSuffix(config_obj.GUI.BasePath, "/")
 	bare = strings.TrimPrefix(bare, "/")
+	if bare == "" {
+		return "/"
+	}
 	return "/" + bare + "/"
 }
 
