@@ -431,6 +431,7 @@ func exportZipNotebook(
 	if err != nil {
 		return err
 	}
+	lock_file.Write([]byte("X"))
 	lock_file.Close()
 
 	// Allow 1 hour to export the notebook.
@@ -489,6 +490,7 @@ func exportHTMLNotebook(config_obj *config_proto.Config,
 	if err != nil {
 		return err
 	}
+	lock_file.Write([]byte("X"))
 	lock_file.Close()
 
 	writer, err := file_store_factory.WriteFile(filename)
