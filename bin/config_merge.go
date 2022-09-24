@@ -32,8 +32,14 @@ func applyMergesAndPatches(
 	config_obj *config_proto.Config,
 	merge_file *os.File, merges []string,
 	patch_file *os.File, json_patches []string) error {
+
 	// First apply merge patches
-	for _, merge_patch := range getMergePatches(merge_file, merges) {
+	merge_strings, err := getMergePatches(merge_file, merges)
+	if err != nil {
+		return err
+	}
+
+	for _, merge_patch := range merge_strings {
 		serialized, err := json.Marshal(config_obj)
 		if err != nil {
 			return fmt.Errorf("Marshal config_obj: %w", err)
@@ -79,10 +85,13 @@ func applyMergesAndPatches(
 	return nil
 }
 
-func getMergePatches(merge_file *os.File, merges []string) [][]byte {
+func getMergePatches(merge_file *os.File, merges []string) ([][]byte, error) {
 	result := make([][]byte, 0)
-	if *config_generate_command_merge_file != nil {
-		data, _ := ioutil.ReadAll(merge_file)
+	if merge_file != nil {
+		data, err := ioutil.ReadAll(merge_file)
+		if err != nil {
+			return nil, err
+		}
 		result = append(result, data)
 	}
 
@@ -90,7 +99,7 @@ func getMergePatches(merge_file *os.File, merges []string) [][]byte {
 		result = append(result, []byte(merge))
 	}
 
-	return result
+	return result, nil
 }
 
 func getJsonPatches(patch_file *os.File, patches []string) ([]jsonpatch.Patch, error) {

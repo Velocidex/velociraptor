@@ -1630,6 +1630,31 @@
       WHERE System.EventID.Value = 104
     })
     ```
+
+    NOTE: The generate() function produces a stored query that can be
+    used as the target of any `SELECT ... FROM` statement. Therefore
+    it does not make sense to materialize the output of generate()
+    because it is equivalent to materializing the actual target query
+    itself.
+
+    In other words this:
+
+    ```
+    LET X <= generate(query={ SELECT * FROM watch_etw(...) })
+    ```
+
+    Will attempt to enumerate the target query into an array and is
+    equivalent to:
+
+    ```
+    LET X <= SELECT * FROM watch_etw(...)
+    ```
+
+    Neither of those queries will terminate as VQL waits for them to
+    produce all their rows before moving to the next statement but the
+    `watch_etw()` query will never terminate since it is an event
+    query.
+
   type: Function
   args:
   - name: name
