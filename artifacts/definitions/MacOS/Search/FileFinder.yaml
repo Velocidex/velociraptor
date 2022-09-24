@@ -122,7 +122,7 @@ sources:
         else={SELECT * FROM modified_before})
 
     SELECT FullPath, Inode, Mode, Size, Modified, ATime,
-             MTime, CTime, Keywords,
+             MTime, CTime, get(field='Keywords') AS Keywords,
                if(condition=Upload_File and Mode.IsRegular,
                   then=upload(file=FullPath,
                               accessor="file")) AS Upload,
