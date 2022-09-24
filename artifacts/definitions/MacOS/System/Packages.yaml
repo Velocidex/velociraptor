@@ -20,6 +20,7 @@ sources:
                 path AS Path, 
                 lastModified AS LastModified, 
                 obtained_from AS ObtainedFrom,
-                get(field="signed_by") AS SignedBy
+                get(field="signed_by") AS SignedBy,
+                arch_kind AS _Architecture
         FROM foreach(
            row=packages[0].Json.SPApplicationsDataType)
