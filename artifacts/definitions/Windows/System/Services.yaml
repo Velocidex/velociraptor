@@ -97,9 +97,9 @@ sources:
         if(condition=Calculate_hashes,
             then=hash(path=AbsoluteExePath, accessor="auto")) AS HashServiceExe,
                  if(condition=CertificateInfo,
-                    then=authenticode(filename=AbsoluteExePath)) AS CertinfoServiceExe,
+                    then=authenticode(filename=AbsoluteExePath || " ")) AS CertinfoServiceExe,
                  if(condition=Calculate_hashes,
-                    then=hash(path=ServiceDll,accessor="auto")) AS HashServiceDll,
+                    then=hash(path=ServiceDll || " ",accessor="auto")) AS HashServiceDll,
                  if(condition=CertificateInfo,
-                    then=authenticode(filename=ServiceDll)) AS CertinfoServiceDll
+                    then=authenticode(filename=ServiceDll || " ")) AS CertinfoServiceDll
       FROM service
