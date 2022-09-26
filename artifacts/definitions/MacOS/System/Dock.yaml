@@ -9,10 +9,9 @@ description: |
    have tampered with an entry, or if an entry has been added to
    emulate a legitimate application.
 
-  **ATT&CK**: [T1547.009/T1547.011 - Shortcut modification/Plist modification](https://attack.mitre.org/techniques/T1547/)
-
 reference:
   - https://specterops.io/so-con2020/event-758922
+  - ATT&CK T1547.009/T1547.011 - Shortcut modification/Plist modification - https://attack.mitre.org/techniques/T1547/
 
 author: Wes Lambert - @therealwlambert
 

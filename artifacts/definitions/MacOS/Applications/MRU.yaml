@@ -2,10 +2,10 @@ name: MacOS.Applications.MRU
 description: |
    Parse the MRU from MacOS users
 
-   ### references
-   * https://mac-alias.readthedocs.io/en/latest/bookmark_fmt.html
-   * https://github.com/al45tair/mac_alias
-   * https://www.mac4n6.com/blog/2016/7/10/new-script-macmru-most-recently-used-plist-parser
+reference:
+  - https://mac-alias.readthedocs.io/en/latest/bookmark_fmt.html
+  - https://github.com/al45tair/mac_alias
+  - https://www.mac4n6.com/blog/2016/7/10/new-script-macmru-most-recently-used-plist-parser
 
 type: CLIENT
 

@@ -22,6 +22,15 @@ reports:
 
       {{ $artifact.Description }}
 
+      {{ if $artifact.Reference }}
+      References:
+      <ul>
+      {{- range $item := $artifact.Reference -}}
+      <li>{{ $item }}</li>
+      {{- end -}}
+      </ul>
+      {{ end }}
+
       {{ if $artifact.Tools }}
       ### Tools
 

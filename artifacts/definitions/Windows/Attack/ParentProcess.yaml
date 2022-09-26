@@ -7,9 +7,9 @@ description: |
   artifacts, this will be able to retrieve information about exited
   processes.
 
-  ### References:
-  * https://www.sans.org/security-resources/posters/hunt-evil/165/download
-  * https://github.com/teoseller/osquery-attck/blob/master/windows-incorrect_parent_process.conf
+reference:
+  - https://www.sans.org/security-resources/posters/hunt-evil/165/download
+  - https://github.com/teoseller/osquery-attck/blob/master/windows-incorrect_parent_process.conf
 
 precondition: SELECT OS From info() where OS = 'windows'
 
