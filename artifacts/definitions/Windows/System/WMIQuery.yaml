@@ -13,7 +13,6 @@ description: |
 
     Please see the second reference link for an example of built in system classes.
 
-
 reference:
     - https://docs.microsoft.com/en-us/windows/win32/wmisdk/wmi-start-page
     - https://docs.microsoft.com/en-us/windows/win32/cimwin32prov/operating-system-classes
