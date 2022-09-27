@@ -52,6 +52,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/server"
@@ -111,7 +112,7 @@ func (self *ApiServer) CancelFlow(
 			"user":    user_name,
 			"client":  in.ClientId,
 			"flow_id": in.FlowId,
-			"details": fmt.Sprintf("%v", in),
+			"details": json.MustMarshalString(in),
 		}).Info("CancelFlow")
 
 	return result, nil
@@ -216,7 +217,7 @@ func (self *ApiServer) CollectArtifact(
 			"user":    in.Creator,
 			"client":  in.ClientId,
 			"flow_id": flow_id,
-			"details": fmt.Sprintf("%v", in),
+			"details": json.MustMarshalString(in),
 		}).Info("CollectArtifact")
 
 	return result, nil

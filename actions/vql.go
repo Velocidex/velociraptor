@@ -196,7 +196,7 @@ func (self VQLClientAction) StartQuery(
 		return
 	}
 
-	start_row := 0
+	row_tracker := NewQueryTracker()
 
 	// All the queries will use the same scope. This allows one
 	// query to define functions for the next query in order.
@@ -258,11 +258,11 @@ func (self VQLClientAction) StartQuery(
 					Part:          uint64(result.Part),
 					JSONLResponse: string(result.Payload),
 					TotalRows:     uint64(result.TotalRows),
-					QueryStartRow: uint64(start_row),
+					QueryStartRow: row_tracker.GetStartRow(query),
 					Timestamp:     uint64(time.Now().UTC().UnixNano() / 1000),
 				}
 
-				start_row += result.TotalRows
+				row_tracker.AddRows(query, uint64(result.TotalRows))
 
 				// Don't log empty VQL statements.
 				if query.Name != "" {
