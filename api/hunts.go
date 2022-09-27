@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -14,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
@@ -116,7 +116,7 @@ func (self *ApiServer) CreateHunt(
 		WithFields(logrus.Fields{
 			"user":    in.Creator,
 			"hunt_id": in.HuntId,
-			"details": fmt.Sprintf("%v", in),
+			"details": json.MustMarshalString(in),
 		}).Info("CreateHunt")
 
 	result := &api_proto.StartFlowResponse{}
@@ -161,7 +161,7 @@ func (self *ApiServer) ModifyHunt(
 		WithFields(logrus.Fields{
 			"user":    in.Creator,
 			"hunt_id": in.HuntId,
-			"details": fmt.Sprintf("%v", in),
+			"details": json.MustMarshalString(in),
 		}).Info("ModifyHunt")
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
