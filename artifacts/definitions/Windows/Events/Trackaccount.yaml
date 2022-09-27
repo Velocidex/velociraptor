@@ -1,8 +1,8 @@
 name: Windows.Events.Trackaccount
 description: |
-  Artifact to detect account usage by monitoring event id 4624. This is useful for tracking attacker activity. If you want to receive Slack notifications you can enable the server_event artifact named 'Server.Alerts.Trackaccount'
+  Artifact to detect account usage by monitoring event id 4624. This is useful for tracking attacker activity. If you want to receive Slack/Teams/Discord/etc alerts you can enable the server_event artifact named 'Server.Alerts.Trackaccount'
 
-author: Jos Clephas
+author: Jos Clephas - @DfirJos
 
 type: CLIENT_EVENT
 
