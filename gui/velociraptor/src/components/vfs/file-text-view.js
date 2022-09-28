@@ -60,21 +60,13 @@ export default class FileTextView extends React.Component {
             return;
         }
 
-        let fileComponents = this.props.node.path.slice();
-        if (_.isEmpty(fileComponents)) {
-            return;
-        }
-        fileComponents.push(name);
-
-        let vfs_path = selectedRow.Download && selectedRow.Download.vfs_path;
-
+        let vfs_components = selectedRow.Download && selectedRow.Download.components;
         var url = 'v1/DownloadVFSFile';
         var params = {
             offset: page * pagesize,
             length: pagesize,
-            components: fileComponents,
+            fs_components: vfs_components,
             client_id: client_id,
-            vfs_path: vfs_path,
         };
 
         this.setState({loading: true});

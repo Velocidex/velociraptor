@@ -56,13 +56,7 @@ export default class FileHexView extends React.Component {
             return;
         }
 
-        let fileComponents = this.props.node.path.slice();
-        if (_.isEmpty(fileComponents)) {
-            return;
-        }
-        fileComponents.push(name);
-
-        let vfs_path = selectedRow.Download && selectedRow.Download.vfs_path;
+        let vfs_components = selectedRow.Download && selectedRow.Download.components;
         var chunkSize = this.state.rows * this.state.columns;
         var url = 'v1/DownloadVFSFile';
 
@@ -70,9 +64,8 @@ export default class FileHexView extends React.Component {
         var params = {
             offset: page * chunkSize,
             length: chunkSize,
-            components: fileComponents,
+            fs_components: vfs_components,
             client_id: client_id,
-            vfs_path: vfs_path,
         };
 
         this.setState({loading: true});

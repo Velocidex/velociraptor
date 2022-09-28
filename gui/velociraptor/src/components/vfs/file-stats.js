@@ -14,8 +14,6 @@ import utils from './utils.js';
 import axios from 'axios';
 import T from '../i8n/i8n.js';
 
-import { Join } from '../utils/paths.js';
-
 const POLL_TIME = 2000;
 
 class VeloFileStats extends Component {
@@ -111,6 +109,7 @@ class VeloFileStats extends Component {
 
     render() {
         let selectedRow = utils.getSelectedRow(this.props.node);
+
         if (!selectedRow || !selectedRow.Name) {
             return (
                 <div className="card">
@@ -165,10 +164,10 @@ class VeloFileStats extends Component {
                             <VeloTimestamp usec={ selectedRow.Download.mtime / 1000 } />
                             <Button variant="outline-default" title={T("Download")}
                                     href={api.href("/api/v1/DownloadVFSFile", {
-                                              client_id: client_id,
-                                              vfs_path: Join(
-                                                  selectedRow.Download.components),
-                                          }, {arrayFormat: 'brackets'})}>
+                                        client_id: client_id,
+                                        fs_components: selectedRow.Download.components,
+                                        vfs_path: selectedRow.Name,
+                                    }, {arrayFormat: 'brackets'})}>
                               <FontAwesomeIcon icon="download"/>
                             </Button>
                           </dd>

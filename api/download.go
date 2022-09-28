@@ -45,13 +45,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/flows"
-	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -83,16 +81,10 @@ type vfsFileDownloadRequest struct {
 	// this field to determine the download attachment name.
 	VfsPath string `schema:"vfs_path"`
 
-	// in the VFS abstration these components are given as the path
-	// within the VFS UI. We use these to open the VFSDownloadInfoPath
-	// datastore item to figure out where the actual file is stored.
-	Components []string `schema:"components[]"`
-
 	// This is the file store path to fetch.
-	FSComponents []string `schema:"fs_components"`
+	FSComponents []string `schema:"fs_components[]"`
 	Offset       int64    `schema:"offset"`
 	Length       int      `schema:"length"`
-	Encoding     string   `schema:"encoding"`
 	OrgId        string   `schema:"org_id"`
 }
 
@@ -126,8 +118,11 @@ func vfsFileDownloadHandler() http.Handler {
 			return
 		}
 
+		// Where to read from the file store
 		var path_spec api.FSPathSpec
-		filename := "upload.bin"
+
+		// The filename for the attachment header.
+		var filename string
 
 		client_path_manager := paths.NewClientPathManager(request.ClientId)
 
@@ -149,29 +144,9 @@ func vfsFileDownloadHandler() http.Handler {
 			}
 			filename = strings.Replace(path_spec.Base(), "\"", "_", -1)
 
-			// Use the Components field to fetch the
-			// VFSDownloadInfoPath record for this directory.
 		} else {
-			db, err := datastore.GetDB(org_config_obj)
-			if err != nil {
-				returnError(w, 404, err.Error())
-				return
-			}
-
-			info_path_spec := client_path_manager.VFSDownloadInfoPath(
-				request.Components)
-			download_info := &flows_proto.VFSDownloadInfo{}
-
-			err = db.GetSubject(org_config_obj, info_path_spec, download_info)
-			if err != nil {
-				returnError(w, 404, err.Error())
-				return
-			}
-			path_spec = path_specs.NewUnsafeFilestorePath(
-				download_info.Components...).
-				SetType(api.PATH_TYPE_FILESTORE_ANY)
-
-			filename = strings.Replace(path_spec.Base(), "\"", "_", -1)
+			returnError(w, 404, err.Error())
+			return
 		}
 
 		file, err := file_store.GetFileStore(org_config_obj).ReadFile(path_spec)
