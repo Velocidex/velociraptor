@@ -10,7 +10,8 @@ import (
 // path incorporates the filename on the client so it is not safe to
 // directly use in the file store.
 type UploadFile struct {
-	path api.FSPathSpec
+	path        api.FSPathSpec
+	client_path string
 }
 
 // Where the uploaded file is stored in the filestore.
@@ -22,6 +23,10 @@ func (self UploadFile) Path() api.FSPathSpec {
 // file, an index file will be written with the ranges.
 func (self UploadFile) IndexPath() api.FSPathSpec {
 	return self.path.SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX)
+}
+
+func (self UploadFile) VisibleVFSPath() string {
+	return self.client_path
 }
 
 // Manage information about each collection.
@@ -127,6 +132,7 @@ func (self FlowPathManager) GetUploadsFile(
 		SetType(api.PATH_TYPE_FILESTORE_ANY)
 
 	return &UploadFile{
+		client_path: client_path,
 		path: base_path.AddUnsafeChild(accessor).
 			AddChild(ExtractClientPathComponents(client_path)...),
 	}

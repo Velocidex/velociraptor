@@ -76,13 +76,24 @@ func returnError(w http.ResponseWriter, code int, message string) {
 }
 
 type vfsFileDownloadRequest struct {
-	ClientId   string   `schema:"client_id"`
-	VfsPath    string   `schema:"vfs_path"`
+	ClientId string `schema:"client_id"`
+
+	// This is the path within the client VFS in the usual client path
+	// notation - this is what is seen in the uploads table. We use
+	// this field to determine the download attachment name.
+	VfsPath string `schema:"vfs_path"`
+
+	// in the VFS abstration these components are given as the path
+	// within the VFS UI. We use these to open the VFSDownloadInfoPath
+	// datastore item to figure out where the actual file is stored.
 	Components []string `schema:"components[]"`
-	Offset     int64    `schema:"offset"`
-	Length     int      `schema:"length"`
-	Encoding   string   `schema:"encoding"`
-	OrgId      string   `schema:"org_id"`
+
+	// This is the file store path to fetch.
+	FSComponents []string `schema:"fs_components"`
+	Offset       int64    `schema:"offset"`
+	Length       int      `schema:"length"`
+	Encoding     string   `schema:"encoding"`
+	OrgId        string   `schema:"org_id"`
 }
 
 // URL format: /api/v1/DownloadVFSFile
@@ -116,17 +127,30 @@ func vfsFileDownloadHandler() http.Handler {
 		}
 
 		var path_spec api.FSPathSpec
+		filename := "upload.bin"
+
 		client_path_manager := paths.NewClientPathManager(request.ClientId)
 
-		// Uploads table has direct vfs paths
-		if request.VfsPath != "" {
+		// Newer API calls pass the filestore components directly
+		if len(request.FSComponents) > 0 {
+			path_spec = path_specs.NewUnsafeFilestorePath(request.FSComponents...).
+				SetType(api.PATH_TYPE_FILESTORE_ANY)
+
+			base := utils.Base(request.VfsPath)
+			filename = strings.Replace(base, "\"", "_", -1)
+
+			// Uploads table has direct vfs paths
+		} else if request.VfsPath != "" {
 			path_spec, err = client_path_manager.GetUploadsFileFromVFSPath(
 				request.VfsPath)
 			if err != nil {
 				returnError(w, 404, err.Error())
 				return
 			}
+			filename = strings.Replace(path_spec.Base(), "\"", "_", -1)
 
+			// Use the Components field to fetch the
+			// VFSDownloadInfoPath record for this directory.
 		} else {
 			db, err := datastore.GetDB(org_config_obj)
 			if err != nil {
@@ -147,6 +171,7 @@ func vfsFileDownloadHandler() http.Handler {
 				download_info.Components...).
 				SetType(api.PATH_TYPE_FILESTORE_ANY)
 
+			filename = strings.Replace(path_spec.Base(), "\"", "_", -1)
 		}
 
 		file, err := file_store.GetFileStore(org_config_obj).ReadFile(path_spec)
@@ -175,40 +200,51 @@ func vfsFileDownloadHandler() http.Handler {
 
 		offset := request.Offset
 
-		// From here on we sent the headers and we can not
-		// really report an error to the client.
-		filename := strings.Replace(path_spec.Base(), "\"", "_", -1)
-		w.Header().Set("Content-Disposition", "attachment; filename="+
-			url.PathEscape(filename))
-		w.Header().Set("Content-Type", "binary/octet-stream")
-		w.WriteHeader(200)
-
+		// Read the first buffer now so we can report errors
 		length_sent := 0
+		headers_sent := false
+
 		buf := pool.Get().([]byte)
 		defer pool.Put(buf)
 
 		for {
-			n, _ := reader_at.ReadAt(buf, offset)
-			if n > 0 {
-				if request.Length != 0 {
-					length_to_send := request.Length - length_sent
-					if n > length_to_send {
-						n = length_to_send
-					}
+			n, err := reader_at.ReadAt(buf, offset)
+			if err != nil && err != io.EOF {
+				// Only send errors if the headers have not yet been
+				// sent.
+				if !headers_sent {
+					returnError(w, 500, err.Error())
+					headers_sent = true
 				}
-				if n == 0 {
-					return
-				}
-
-				_, err := w.Write(buf[:n])
-				if err != nil {
-					return
-				}
-				length_sent += n
-				offset += int64(n)
-			} else {
 				return
 			}
+			if request.Length != 0 {
+				length_to_send := request.Length - length_sent
+				if n > length_to_send {
+					n = length_to_send
+				}
+			}
+			if n <= 0 {
+				return
+			}
+
+			// Write an ok status which includes the attachment name
+			// but only if no other data was sent.
+			if !headers_sent {
+				w.Header().Set("Content-Disposition", "attachment; filename="+
+					url.PathEscape(filename))
+				w.Header().Set("Content-Type", "binary/octet-stream")
+				w.WriteHeader(200)
+				headers_sent = true
+			}
+
+			written, err := w.Write(buf[:n])
+			if err != nil {
+				return
+			}
+
+			length_sent += written
+			offset += int64(n)
 		}
 	})
 }

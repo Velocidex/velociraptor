@@ -72,10 +72,27 @@ func (self UploadsPlugins) Call(
 				continue
 			}
 
-			// Each row is the full filestore path of the upload.
-			pathspec := path_specs.NewUnsafeFilestorePath(
-				utils.SplitComponents(vfs_path)...).
-				SetType(api.PATH_TYPE_FILESTORE_ANY)
+			var components []string
+			var pathspec api.FSPathSpec
+
+			// The we have the components we get the file store path
+			// from there.
+			components_any, ok := row.Get("_Components")
+			if ok {
+				components = utils.ConvertToStringSlice(components_any)
+			}
+
+			if len(components) > 0 {
+				pathspec = path_specs.NewUnsafeFilestorePath(components...).
+					SetType(api.PATH_TYPE_FILESTORE_ANY)
+
+				row.Set("client_path", vfs_path)
+			} else {
+				// Each row is the full filestore path of the upload.
+				pathspec = path_specs.NewUnsafeFilestorePath(
+					utils.SplitComponents(vfs_path)...).
+					SetType(api.PATH_TYPE_FILESTORE_ANY)
+			}
 
 			row.Update("vfs_path", pathspec)
 

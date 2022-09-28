@@ -292,6 +292,7 @@ func flushContextUploadedFiles(
 			Set("Timestamp", time.Now().UTC().Unix()).
 			Set("started", time.Now().UTC().String()).
 			Set("vfs_path", row.Name).
+			Set("_Components", row.Components).
 			Set("file_size", row.Size).
 			Set("uploaded_size", row.StoredSize))
 	}
@@ -529,7 +530,7 @@ func appendUploadDataToFile(
 		collection_context.UploadedFiles = append(
 			collection_context.UploadedFiles,
 			&flows_proto.ArtifactUploadedFileInfo{
-				Name:       file_path_manager.Path().AsClientPath(),
+				Name:       file_path_manager.VisibleVFSPath(),
 				Components: file_path_manager.Path().Components(),
 				Size:       file_buffer.Size,
 				StoredSize: size,
@@ -573,10 +574,8 @@ func appendUploadDataToFile(
 		collection_context.UploadedFiles = append(
 			collection_context.UploadedFiles,
 			&flows_proto.ArtifactUploadedFileInfo{
-				Name: file_path_manager.IndexPath().
-					AsClientPath(),
-				Components: file_path_manager.IndexPath().
-					Components(),
+				Name:       file_path_manager.VisibleVFSPath() + ".idx",
+				Components: file_path_manager.IndexPath().Components(),
 				Size:       uint64(len(data)),
 				StoredSize: uint64(len(data)),
 			})
