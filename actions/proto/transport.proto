@@ -26,6 +26,8 @@ message PathSpec {
             "This value is interpreted by the accessor in its own way.",
         }];
 
+    repeated string components = 4;
+
     string accessor = 3 [(sem_type) = {
             description: "The accessor used to retrieve the file.",
         }];

@@ -25,6 +25,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
@@ -407,10 +408,15 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 
 	assert.Equal(self.T(), len(upload_metadata_rows), 1)
 
+	// The vfs_path indicates only the client's path
 	vfs_path, _ := upload_metadata_rows[0].GetString("vfs_path")
-	assert.Equal(self.T(), vfs_path,
+	assert.Equal(self.T(), vfs_path, "foo")
+
+	// The _Components field is the path to the filestore components
+	vfs_components := utils.DictGetStringSlice(upload_metadata_rows[0], "_Components")
+	assert.Equal(self.T(), vfs_components,
 		flow_path_manager.GetUploadsFile("ntfs", "foo").
-			Path().AsClientPath())
+			Path().Components())
 
 	file_size, _ := upload_metadata_rows[0].GetInt64("file_size")
 	assert.Equal(self.T(), file_size, int64(12))
@@ -864,9 +870,12 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 	assert.Equal(self.T(), len(upload_metadata_rows), 2)
 
 	vfs_path, _ := upload_metadata_rows[0].GetString("vfs_path")
-	assert.Equal(self.T(), vfs_path,
+	assert.Equal(self.T(), vfs_path, "sparse")
+
+	vfs_components := utils.DictGetStringSlice(upload_metadata_rows[0], "_Components")
+	assert.Equal(self.T(), vfs_components,
 		flow_path_manager.GetUploadsFile("ntfs", "sparse").
-			Path().AsClientPath())
+			Path().Components())
 
 	// The file is actually 18 bytes on the client.
 	file_size, _ := upload_metadata_rows[0].GetInt64("file_size")
@@ -878,9 +887,12 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 
 	// Second row is for the index.
 	vfs_path, _ = upload_metadata_rows[1].GetString("vfs_path")
-	assert.Equal(self.T(), vfs_path,
+	assert.Equal(self.T(), vfs_path, "sparse.idx")
+
+	vfs_components = utils.DictGetStringSlice(upload_metadata_rows[0], "_Components")
+	assert.Equal(self.T(), vfs_components,
 		flow_path_manager.GetUploadsFile("ntfs", "sparse").
-			IndexPath().AsClientPath())
+			IndexPath().Components())
 
 	// Check the System.Upload.Completion event.
 	artifact_path_manager, err := artifacts.NewArtifactPathManager(
@@ -985,9 +997,12 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 	assert.Equal(self.T(), len(upload_metadata_rows), 2)
 
 	vfs_path, _ := upload_metadata_rows[0].GetString("vfs_path")
-	assert.Equal(self.T(), vfs_path,
+	assert.Equal(self.T(), vfs_path, "sparse")
+
+	vfs_components := utils.DictGetStringSlice(upload_metadata_rows[0], "_Components")
+	assert.Equal(self.T(), vfs_components,
 		flow_path_manager.GetUploadsFile("ntfs", "sparse").
-			Path().AsClientPath())
+			Path().Components())
 
 	// The file is actually 0x100000 bytes on the client.
 	file_size, _ := upload_metadata_rows[0].GetInt64("file_size")
@@ -999,9 +1014,12 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 
 	// Second row is for the index.
 	vfs_path, _ = upload_metadata_rows[1].GetString("vfs_path")
-	assert.Equal(self.T(), vfs_path,
+	assert.Equal(self.T(), vfs_path, "sparse.idx")
+
+	vfs_components = utils.DictGetStringSlice(upload_metadata_rows[0], "_Components")
+	assert.Equal(self.T(), vfs_components,
 		flow_path_manager.GetUploadsFile("ntfs", "sparse").
-			IndexPath().AsClientPath())
+			IndexPath().Components())
 
 	// Check the System.Upload.Completion event.
 	artifact_path_manager, err := artifacts.NewArtifactPathManager(

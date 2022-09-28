@@ -96,6 +96,7 @@ export default class FlowUploads extends React.Component {
                 return (
                     <a href={api.href("/api/v1/DownloadVFSFile", {
                         client_id: this.props.flow.client_id,
+                        fs_components: row._Components,
                         vfs_path: cell})}>
                       {cell}
                     </a>
