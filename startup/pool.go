@@ -34,7 +34,7 @@ func StartPoolClientServices(
 		}
 	}
 
-	err = http_comms.StartHttpCommunicatorService(
+	_, err = http_comms.StartHttpCommunicatorService(
 		sm.Ctx, sm.Wg, config_obj, exe,
 		func(ctx context.Context, config_obj *config_proto.Config) {})
 	if err != nil {

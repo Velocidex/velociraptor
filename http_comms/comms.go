@@ -828,6 +828,8 @@ type HTTPCommunicator struct {
 
 	// Will be called when we exit the communicator.
 	on_exit func()
+
+	Manager crypto.ICryptoManager
 }
 
 func (self *HTTPCommunicator) SetPause(is_paused bool) {
@@ -913,6 +915,7 @@ func NewHTTPCommunicator(
 			config_obj, connector, manager, executor, enroller,
 			logger, "Receiver "+executor.ClientId(),
 			"reader", child_on_exit, clock),
+		Manager: manager,
 	}
 
 	return result, nil
