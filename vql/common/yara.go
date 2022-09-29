@@ -374,6 +374,7 @@ func (self *scanReporter) RuleMatching(rule *yara.Rule) (bool, error) {
 			File:     self.file_info,
 			FileName: self.filename,
 		}
+
 		select {
 		case <-self.ctx.Done():
 			return false, nil
