@@ -43,7 +43,7 @@ func StartClientServices(
 		return sm, err
 	}
 
-	err = http_comms.StartHttpCommunicatorService(
+	_, err = http_comms.StartHttpCommunicatorService(
 		ctx, sm.Wg, config_obj, exe, on_error)
 	if err != nil {
 		return sm, err

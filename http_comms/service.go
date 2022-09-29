@@ -17,21 +17,22 @@ func StartHttpCommunicatorService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
 	exe executor.Executor,
-	on_error func(ctx context.Context, config_obj *config_proto.Config)) error {
+	on_error func(ctx context.Context, config_obj *config_proto.Config)) (
+	*HTTPCommunicator, error) {
 
 	if config_obj.Client == nil {
-		return nil
+		return nil, nil
 	}
 
 	writeback, err := config.GetWriteback(config_obj.Client)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	manager, err := crypto_client.NewClientCryptoManager(
 		config_obj, []byte(writeback.PrivateKey))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Now start the communicator so we can talk with the server.
@@ -45,11 +46,11 @@ func StartHttpCommunicatorService(
 		utils.RealClock{},
 	)
 	if err != nil {
-		return fmt.Errorf("Can not create HTTPCommunicator: %w", err)
+		return nil, fmt.Errorf("Can not create HTTPCommunicator: %w", err)
 	}
 
 	wg.Add(1)
 	go comm.Run(ctx, wg)
 
-	return nil
+	return comm, nil
 }
