@@ -40,4 +40,4 @@ sources:
               file=OSPath,
               query=urlSQLQuery)
           })
-      WHERE url_visited =~ URLRegex
+          WHERE url_visited =~ URLRegex
