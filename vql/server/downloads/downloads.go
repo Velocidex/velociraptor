@@ -781,7 +781,7 @@ func maybeExpandSparse(
 	}
 
 	reader_at := &utils.RangedReader{
-		ReaderAt: &utils.ReaderAtter{Reader: reader},
+		ReaderAt: utils.MakeReaderAtter(reader),
 		Index:    index,
 	}
 

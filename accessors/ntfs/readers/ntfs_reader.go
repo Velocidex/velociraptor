@@ -136,12 +136,19 @@ func (self *NTFSCachedContext) GetNTFSContext() (*ntfs.NTFSContext, error) {
 		return self.ntfs_ctx, nil
 	}
 
+	directory_depth := vql_subsystem.GetIntFromRow(
+		self.scope, self.scope, constants.NTFS_MAX_DIRECTORY_DEPTH)
+	if directory_depth == 0 {
+		directory_depth = 20
+	}
+
 	ntfs_ctx, err := ntfs.GetNTFSContext(self.paged_reader, 0)
 	if err != nil {
 		self._CloseWithLock()
 		return nil, err
 	}
 
+	ntfs_ctx.MaxDirectoryDepth = int(directory_depth)
 	self.ntfs_ctx = ntfs_ctx
 
 	return self.ntfs_ctx, nil

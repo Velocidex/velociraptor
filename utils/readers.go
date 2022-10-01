@@ -15,11 +15,11 @@ type ReaderAtter struct {
 	Reader io.ReadSeeker
 }
 
-func (self ReaderAtter) DebugString() string {
+func (self *ReaderAtter) DebugString() string {
 	return fmt.Sprintf("ReaderAtter of %v", DebugString(self.Reader))
 }
 
-func (self ReaderAtter) ReadAt(buf []byte, offset int64) (int, error) {
+func (self *ReaderAtter) ReadAt(buf []byte, offset int64) (int, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 

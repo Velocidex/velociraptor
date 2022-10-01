@@ -124,7 +124,7 @@ func (self *CollectorAccessor) OpenWithOSPath(
 	if err == nil {
 		return &rangedReader{
 			delegate: &utils.RangedReader{
-				ReaderAt: utils.ReaderAtter{Reader: reader},
+				ReaderAt: utils.MakeReaderAtter(reader),
 				Index:    index,
 			},
 			fd: reader,
