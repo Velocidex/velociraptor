@@ -1,0 +1,20 @@
+Queries:
+  # If sparse files are not expanded we should have a 10 byte file
+  # with an idx file.
+  - LET Download <= create_flow_download(
+       client_id="C.4f5e52adf0a337a9", name="sparse",
+       flow_id="F.BN2HJBD1R85EA", wait=TRUE, expand_sparse=FALSE)
+  - SELECT OSPath, Size
+    FROM glob(globs="**", accessor="zip",
+              root=pathspec(DelegateAccessor="fs", DelegatePath=Download))
+    WHERE OSPath =~ "uploads" AND NOT IsDir
+
+  # When we expand the sparse files we get a 15 byte file and no idx
+  # file.
+  - LET Download <= create_flow_download(
+       client_id="C.4f5e52adf0a337a9", name="not-sparse",
+       flow_id="F.BN2HJBD1R85EA", wait=TRUE, expand_sparse=TRUE)
+  - SELECT OSPath, Size
+    FROM glob(globs="**", accessor="zip",
+              root=pathspec(DelegateAccessor="fs", DelegatePath=Download))
+    WHERE OSPath =~ "uploads" AND NOT IsDir

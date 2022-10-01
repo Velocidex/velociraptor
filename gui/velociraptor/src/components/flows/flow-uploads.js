@@ -2,12 +2,16 @@ import _ from 'lodash';
 
 import React from 'react';
 import PropTypes from 'prop-types';
+import Button from 'react-bootstrap/Button';
 import axios from 'axios';
 import VeloTable, { PrepareData } from '../core/table.js';
 import T from '../i8n/i8n.js';
 import Spinner from '../utils/spinner.js';
 import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
+import Tooltip from 'react-bootstrap/Tooltip';
 
 import api from '../core/api-service.js';
 const MAX_ROWS_PER_TABLE = 500;
@@ -93,14 +97,46 @@ export default class FlowUploads extends React.Component {
             // Let users directly download the file without having to
             // make a zip file.
             vfs_path: (cell, row, rowIndex) => {
-                return (
-                    <a href={api.href("/api/v1/DownloadVFSFile", {
-                        client_id: this.props.flow.client_id,
-                        fs_components: row._Components,
-                        vfs_path: cell}, {arrayFormat: 'brackets'})}>
-                      {cell}
-                    </a>
-                );
+                let filename = cell;
+
+                if (filename.endsWith(".idx")) {
+                    filename = filename.slice(0, -4);
+                    return <>
+                             <OverlayTrigger
+                               delay={{show: 250, hide: 400}}
+                               overlay={(props)=>{
+                                   return <Tooltip {...props}>
+                                            Download padded file.
+                                          </Tooltip>;
+                               }}>
+                               <Button as="a"
+                                       href={api.href("/api/v1/DownloadVFSFile", {
+                                           client_id: this.props.flow.client_id,
+                                           fs_components: row._Components,
+                                           padding: true,
+                                           vfs_path: filename}, {arrayFormat: 'brackets'})}>
+                                 {filename} &nbsp;&nbsp; <FontAwesomeIcon icon="expand"/>
+                               </Button>
+                             </OverlayTrigger>
+                           </>;
+                }
+
+                return <OverlayTrigger
+                         delay={{show: 250, hide: 400}}
+                         overlay={(props)=>{
+                             return <Tooltip {...props}>
+                                      Download file.
+                                    </Tooltip>;
+                         }}>
+                         <Button as="a"
+                                 href={api.href("/api/v1/DownloadVFSFile", {
+                                     client_id: this.props.flow.client_id,
+                                     fs_components: row._Components,
+                                     padding: false,
+                                     vfs_path: filename}, {arrayFormat: 'brackets'})}>
+                           {filename}
+                         </Button>
+                       </OverlayTrigger>;
             },
         };
 

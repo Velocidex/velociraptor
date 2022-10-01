@@ -1041,23 +1041,27 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 	env := ordereddict.NewDict()
 	if in.FlowId != "" && in.ClientId != "" {
 		query = `SELECT create_flow_download(password=Password,
+      expand_sparse=ExpandSparse,
       client_id=ClientId, flow_id=FlowId, type=DownloadType) AS VFSPath
       FROM scope()`
 
 		env.Set("ClientId", in.ClientId).
 			Set("FlowId", in.FlowId).
 			Set("Password", in.Password).
-			Set("DownloadType", in.DownloadType)
+			Set("DownloadType", in.DownloadType).
+			Set("ExpandSparse", in.ExpandSparse)
 
 	} else if in.HuntId != "" {
 		query = `SELECT create_hunt_download(password=Password,
+      expand_sparse=ExpandSparse,
       hunt_id=HuntId, only_combined=OnlyCombined, format=Format) AS VFSPath
       FROM scope()`
 
 		env.Set("HuntId", in.HuntId).
 			Set("Format", format).
 			Set("Password", in.Password).
-			Set("OnlyCombined", in.OnlyCombinedHunt)
+			Set("OnlyCombined", in.OnlyCombinedHunt).
+			Set("ExpandSparse", in.ExpandSparse)
 	}
 
 	manager, err := services.GetRepositoryManager(org_config_obj)

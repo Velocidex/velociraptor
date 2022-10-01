@@ -22,6 +22,9 @@ message CreateDownloadRequest {
 
     // If set we lock the file with this password.
     string password = 8;
+
+    // If set we expand all sparse files in the archive.
+    bool expand_sparse = 9;
 }
 
 message CreateDownloadResponse {
