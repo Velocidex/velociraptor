@@ -1,5 +1,21 @@
 SELECT FullPath, hash(path=FullPath, accessor="fs") FROM glob( globs='/clients/C.4f5e52adf0a337a9/artifacts/**', accessor="fs") WHERE NOT IsDir ORDER BY FullPath[
  {
+  "FullPath": "fs:/clients/C.4f5e52adf0a337a9/artifacts/System.VFS.ListDirectory/F.BN2HJBD1R85EA.json",
+  "hash(path=FullPath, accessor=\"fs\")": {
+   "MD5": "5807c27988d9024a9d25ad1ca2f27fa7",
+   "SHA1": "0c3260ab5e098c812455bb7b39414d8edeea182e",
+   "SHA256": "d127fc0d6d52cdaf3f1eadb0ef3de17645b9ecf054b813f8d59e1ff0272a587e"
+  }
+ },
+ {
+  "FullPath": "fs:/clients/C.4f5e52adf0a337a9/artifacts/System.VFS.ListDirectory/F.BN2HJBD1R85EA.json.index",
+  "hash(path=FullPath, accessor=\"fs\")": {
+   "MD5": "7dea362b3fac8e00956a4952a3d4f474",
+   "SHA1": "05fe405753166f125559e7c9ac558654f107c7e9",
+   "SHA256": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+  }
+ },
+ {
   "FullPath": "fs:/clients/C.4f5e52adf0a337a9/artifacts/Windows.Applications.ChocolateyPackages/F.BN2HP3OSS3LK6.csv",
   "hash(path=FullPath, accessor=\"fs\")": {
    "MD5": "33f3ec906865e66d534fcae4fee1c996",
