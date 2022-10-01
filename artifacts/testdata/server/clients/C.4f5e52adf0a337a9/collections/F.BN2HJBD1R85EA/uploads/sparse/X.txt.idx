@@ -1,0 +1,19 @@
+{
+ "ranges": [
+  {
+   "file_length": 5,
+   "length": 5
+  },
+  {
+   "file_offset": 5,
+   "original_offset": 5,
+   "length": 5
+  },
+  {
+   "file_offset": 5,
+   "original_offset": 10,
+   "file_length": 5,
+   "length": 5
+  }
+ ]
+}

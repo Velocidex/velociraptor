@@ -95,6 +95,10 @@ func (self FlowPathManager) GetDownloadsDirectory() api.FSPathSpec {
 	return DOWNLOADS_ROOT.AddUnsafeChild(self.client_id, self.flow_id)
 }
 
+func (self FlowPathManager) GetDownloadsFileRawName(filename string) api.FSPathSpec {
+	return DOWNLOADS_ROOT.AddUnsafeChild(self.client_id, self.flow_id, filename)
+}
+
 func (self FlowPathManager) GetDownloadsFile(
 	hostname string, encrypted bool) api.FSPathSpec {
 	// If there is no hostname we drop the leading -
