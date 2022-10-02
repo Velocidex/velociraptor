@@ -3,11 +3,13 @@ description: |
   GUI Program execution launched on the Win10 system is tracked in the
   RecentApps key.
   
-  NOTE: This artifact is available up to Windows 10, version 1803. After that, the RecentApps key no longer exists in the referenced location.
+  NOTE: This artifact is available up from Windows 10 1607 to 1709. 
+  After that, the RecentApps key is no longer populated in the referenced location. Previously existing data is not removed.
 
 reference:
   - https://www.sans.org/security-resources/posters/windows-forensics-evidence-of/75/download
   - https://www.forensicfocus.com/forums/general/forensics-windows-registry-program-launch-history/
+  - https://thinkdfir.com/2020/10/23/when-did-recentapps-go/
 
 precondition: SELECT OS From info() where OS = 'windows'
 
