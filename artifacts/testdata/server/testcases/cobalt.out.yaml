@@ -170,7 +170,26 @@ SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Xor,D
   "Xor": "0x00",
   "DecodedConfig": "Sleep mask 32-bit 4.2 deobfuscation routine found."
  }
-]SELECT Rule,FullPath.Basename,Hash,Xor,DecodedConfig FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir+"/artifacts/testdata/files/CSsectionStager.exe")[
+]LET Content <= xor(key="infected", string=read_file( filename=srcDir+"/artifacts/testdata/files/CSsectionStager.zip.xor"))[]LET _ <= remap(config=RemappingTemplate, copy=["zip", "scope", "data"], clear=TRUE)[]SELECT * FROM glob(globs="/*.exe")[
+ {
+  "Name": "CSsectionStager.exe",
+  "ModTime": "2022-10-01T15:58:23Z",
+  "FullPath": "CSsectionStager.exe",
+  "OSPath": "CSsectionStager.exe",
+  "Mtime": "2022-10-01T15:58:23Z",
+  "Btime": "2022-10-01T15:58:23Z",
+  "Ctime": "2022-10-01T15:58:23Z",
+  "Atime": "2022-10-01T15:58:23Z",
+  "Data": {
+   "CompressedSize": 8263,
+   "Method": "zlib"
+  },
+  "Size": 17920,
+  "IsDir": false,
+  "IsLink": false,
+  "Mode": 493
+ }
+]SELECT Rule,FullPath.Basename,Hash,Xor,DecodedConfig FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob="/*.exe")[
  {
   "Rule": "Embedded data section: cobalt_strike_shellcode",
   "FullPath.Basename": "CSsectionStager.exe",
@@ -201,7 +220,7 @@ SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Xor,D
    ]
   }
  }
-]SELECT Rule,Hash,Xor,DecodedConfig FROM Artifact.Windows.Carving.CobaltStrike(TargetBytes=read_file(filename=srcDir+"/artifacts/testdata/files/CSsectionStager.exe"))[
+]SELECT Rule,Hash,Xor,DecodedConfig FROM Artifact.Windows.Carving.CobaltStrike(TargetBytes=read_file(filename="/CSsectionStager.exe"))[
  {
   "Rule": "Embedded data section: cobalt_strike_shellcode",
   "Hash": {

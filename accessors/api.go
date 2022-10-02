@@ -135,7 +135,7 @@ func (self *OSPath) TrimComponents(components ...string) *OSPath {
 	for idx, c := range result.Components {
 		if idx >= len(components) || c != components[idx] {
 			result := &OSPath{
-				Components:  self.Components[idx:],
+				Components:  utils.CopySlice(self.Components[idx:]),
 				pathspec:    self.pathspec,
 				Manipulator: self.Manipulator,
 			}

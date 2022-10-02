@@ -1,3 +1,21 @@
+Parameters:
+  RemappingTemplate: |
+    remappings:
+      - type: mount
+        from:
+          accessor: zip
+          path_type: linux
+          prefix: |
+            {
+              "DelegateAccessor": "scope",
+              "DelegatePath": "Content",
+              "Path": "/"
+            }
+        on:
+          accessor: "auto"
+          prefix: "/"
+          path_type: "windows"
+
 Queries:
   #prefix: srcDir + "/artifacts/testdata/files/CSSectionPE.bin"
   # tests for file parsing
@@ -17,10 +35,20 @@ Queries:
   - SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Xor,DecodedConfig
     FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir + "/artifacts/testdata/files/CSx86sleep.bin")
 
+  # Generate this file with
+  # SELECT copy(accessor="data", filename=xor(key="infected",
+  # string=read_file(filename="F:/malware/infected.zip")),
+  # dest="F:/malware/infected.zip.xor") FROM scope()
+  - LET Content <= xor(key="infected", string=read_file(
+        filename=srcDir+"/artifacts/testdata/files/CSsectionStager.zip.xor"))
+  - LET _ <= remap(config=RemappingTemplate, copy=["zip", "scope", "data"], clear=TRUE)
+
+  - SELECT * FROM glob(globs="/*.exe")
+
   # tests embedded shellcode in data section parsing
   - SELECT Rule,FullPath.Basename,Hash,Xor,DecodedConfig
-    FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir+"/artifacts/testdata/files/CSsectionStager.exe")
+    FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob="/*.exe")
 
   # Use byte scanning of the raw file.
   - SELECT Rule,Hash,Xor,DecodedConfig
-    FROM Artifact.Windows.Carving.CobaltStrike(TargetBytes=read_file(filename=srcDir+"/artifacts/testdata/files/CSsectionStager.exe"))
+    FROM Artifact.Windows.Carving.CobaltStrike(TargetBytes=read_file(filename="/CSsectionStager.exe"))

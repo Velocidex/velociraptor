@@ -164,7 +164,7 @@ func vfsFileDownloadHandler() http.Handler {
 			return
 		}
 
-		var reader_at io.ReaderAt = &utils.ReaderAtter{Reader: file}
+		var reader_at io.ReaderAt = utils.MakeReaderAtter(file)
 
 		index, err := getIndex(org_config_obj, path_spec)
 
@@ -467,7 +467,7 @@ func vfsGetBuffer(
 	}
 	defer file.Close()
 
-	var reader_at io.ReaderAt = &utils.ReaderAtter{Reader: file}
+	var reader_at io.ReaderAt = utils.MakeReaderAtter(file)
 
 	result := &api_proto.VFSFileBuffer{
 		Data: make([]byte, length),

@@ -165,6 +165,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "NtfsMetadata": {
    "FullPath": "/just_a_file.txt",
    "MFTID": 49,
+   "SequenceNumber": 1,
    "Size": 12,
    "Allocated": true,
    "IsDir": false,
@@ -183,7 +184,9 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
       "AccessedTime": "2022-03-18T04:15:18.5166156Z"
      },
      "Type": "POSIX",
-     "Name": "just_a_file.txt"
+     "Name": "just_a_file.txt",
+     "ParentEntryNumber": 5,
+     "ParentSequenceNumber": 5
     }
    ],
    "Attributes": [

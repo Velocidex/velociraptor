@@ -98,7 +98,7 @@ func (self _SRUMLookupId) Call(
 		defer fd.Close()
 
 		reader, err := ntfs.NewPagedReader(
-			utils.ReaderAtter{Reader: fd}, 1024, 10000)
+			utils.MakeReaderAtter(fd), 1024, 10000)
 		if err != nil {
 			scope.Log("parse_ese: Unable to open file %s: %v",
 				arg.Filename, err)
@@ -225,7 +225,7 @@ func (self _ESEPlugin) Call(
 		defer fd.Close()
 
 		reader, err := ntfs.NewPagedReader(
-			utils.ReaderAtter{Reader: fd}, 1024, 10000)
+			utils.MakeReaderAtter(fd), 1024, 10000)
 		if err != nil {
 			scope.Log("parse_ese: Unable to open file %s: %v",
 				arg.Filename, err)
@@ -323,7 +323,7 @@ func (self _ESECatalogPlugin) Call(
 		defer fd.Close()
 
 		reader, err := ntfs.NewPagedReader(
-			utils.ReaderAtter{Reader: fd}, 1024, 10000)
+			utils.MakeReaderAtter(fd), 1024, 10000)
 		if err != nil {
 			scope.Log("parse_ese_catalog: Unable to open file %s: %v",
 				arg.Filename, err)
