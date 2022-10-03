@@ -17,12 +17,13 @@ import VeloPagedTable from "../core/paged-table.js";
 import VeloAce from '../core/ace.js';
 import Completer from '../artifacts/syntax.js';
 import { DeleteFlowDialog } from "../flows/flows-list.js";
-
+import Button from 'react-bootstrap/Button';
+import { withRouter }  from "react-router-dom";
 
 // Refresh every 5 seconds
 const SHELL_POLL_TIME = 5000;
 
-class VeloShellCell extends Component {
+class _VeloShellCell extends Component {
     static propTypes = {
         flow: PropTypes.object,
         client: PropTypes.object,
@@ -59,6 +60,18 @@ class VeloShellCell extends Component {
             }
         }
         return "";
+    }
+
+    viewFlow = target=>{
+        if (!this.props.flow || !this.props.flow.session_id ||
+            !this.props.flow.client_id) {
+            return;
+        }
+
+        let client_id = this.props.flow.client_id;
+        let session_id = this.props.flow.session_id;
+        this.props.history.push('/collected/' + client_id +
+                                "/" + session_id + "/" + target);
     }
 
     // Retrieve the flow result from the server and show it.
@@ -152,6 +165,13 @@ class VeloShellCell extends Component {
             );
         }
 
+        let flow_status = [
+            <button className="btn btn-outline-info"
+              onClick={e=>{this.viewFlow("overview");}}
+            >
+              <i><FontAwesomeIcon icon="external-link-alt"/></i>
+            </button>];
+
         // If the flow is currently running we may be able to stop it.
         if (this.props.flow.state  === 'RUNNING') {
             buttons.push(
@@ -161,10 +181,7 @@ class VeloShellCell extends Component {
                   <i><FontAwesomeIcon icon="stop"/></i>
                 </button>
             );
-        }
 
-        let flow_status = [];
-        if (this.props.flow.state  === 'RUNNING') {
             flow_status.push(
                 <button className="btn btn-outline-info" key={6}
                         disabled>
@@ -173,6 +190,7 @@ class VeloShellCell extends Component {
                 by {this.props.flow.request.creator}
                 </button>
             );
+
         } else if (this.props.flow.state  === 'FINISHED') {
             flow_status.push(
                 <button className="btn btn-outline-info" key={7}
@@ -204,11 +222,26 @@ class VeloShellCell extends Component {
 
         let output = "";
         if (this.state.loaded) {
-            output = this.state.output.map((item, index) => {
+            output = [this.state.output.map((item, index) => {
                 return <div className='notebook-output' key={index} >
                          <pre> {item.Stdout} </pre>
                        </div>;
-            });
+            })];
+
+            if (this.props.flow.state  === 'ERROR') {
+                output.push(<Button variant="danger"
+                                    onClick={e=>{this.viewFlow("logs")}}
+                                    size="lg" block>
+                              {T('Error')}
+                            </Button>);
+            } else {
+                output.push(<Button variant="link"
+                                    onClick={e=>{this.viewFlow("logs")}}
+                                    size="lg" block>
+                              {T('Logs')}
+                            </Button>);
+            }
+
         }
 
         return (
@@ -247,9 +280,9 @@ class VeloShellCell extends Component {
     };
 };
 
+const VeloShellCell = withRouter(_VeloShellCell);
 
-
-class VeloVQLCell extends Component {
+class _VeloVQLCell extends Component {
     static propTypes = {
         flow: PropTypes.object,
         client: PropTypes.object,
@@ -276,6 +309,18 @@ class VeloVQLCell extends Component {
             }
         }
         return "";
+    }
+
+    viewFlow = target=>{
+        if (!this.props.flow || !this.props.flow.session_id ||
+            !this.props.flow.client_id) {
+            return;
+        }
+
+        let client_id = this.props.flow.client_id;
+        let session_id = this.props.flow.session_id;
+        this.props.history.push('/collected/' + client_id +
+                                "/" + session_id + "/" + target);
     }
 
     cancelFlow = (e) => {
@@ -346,6 +391,13 @@ class VeloVQLCell extends Component {
             );
         }
 
+        let flow_status = [
+            <button className="btn btn-outline-info"
+              onClick={e=>{this.viewFlow("overview");}}
+            >
+              <i><FontAwesomeIcon icon="external-link-alt"/></i>
+            </button>];
+
         // If the flow is currently running we may be able to stop it.
         if (this.props.flow.state  === 'RUNNING') {
             buttons.push(
@@ -355,10 +407,7 @@ class VeloVQLCell extends Component {
                   <i><FontAwesomeIcon icon="stop"/></i>
                 </button>
             );
-        }
 
-        let flow_status = [];
-        if (this.props.flow.state  === 'RUNNING') {
             flow_status.push(
                 <button className="btn btn-outline-info" key={15}
                         disabled>
@@ -367,6 +416,7 @@ class VeloVQLCell extends Component {
                 by {this.props.flow.request.creator}
                 </button>
             );
+
         } else if (this.props.flow.state  === 'FINISHED') {
             flow_status.push(
                 <button className="btn btn-outline-info" key={12}
@@ -404,7 +454,21 @@ class VeloVQLCell extends Component {
                 client_id: this.props.flow.client_id,
                 flow_id: this.props.flow.session_id,
             };
-            output = <VeloPagedTable params={params} />;
+            output = [<VeloPagedTable params={params} />];
+
+            if (this.props.flow.state  === 'ERROR') {
+                output.push(<Button variant="danger"
+                                    onClick={e=>{this.viewFlow("logs");}}
+                                    size="lg" block>
+                              {T('Error')}
+                            </Button>);
+            } else {
+                output.push(<Button variant="link"
+                                    onClick={e=>{this.viewFlow("logs");}}
+                                    size="lg" block>
+                              {T('Logs')}
+                            </Button>);
+            }
         }
 
         return (
@@ -445,7 +509,7 @@ class VeloVQLCell extends Component {
     };
 };
 
-
+const VeloVQLCell = withRouter(_VeloVQLCell);
 
 class ShellViewer extends Component {
     static propTypes = {
@@ -642,6 +706,7 @@ class ShellViewer extends Component {
                     </textarea> :
                     <VeloAce
                       mode="VQL"
+                      className="vql-shell-input"
                       aceConfig={this.aceConfig}
                       text={this.state.command}
                       onChange={(value) => {this.setState({command: value});}}

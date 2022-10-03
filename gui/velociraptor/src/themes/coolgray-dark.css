@@ -105,6 +105,8 @@
   --color-vfs-files-timestomped: #ed5d40;
   --color-calendar-background: var(--color-canvas-background);
   --color-level-error: #ff0000;
+
+  --color-danger-emphasis: #dd4b3920;
 }
 
 body.coolgray-dark {
@@ -389,7 +391,6 @@ body.coolgray-dark {
 .coolgray-dark .btn.btn-link {
   border-color: transparent;
   width: 100%;
-  text-align: left;
   background: none;
   color: var(--color-foreground);
   border-radius: 0;

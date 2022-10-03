@@ -63,7 +63,7 @@ const (
   "showFoldWidgets":true,
   "displayIndentGuides":true,
   "showGutter":true,
-  "fontSize":14,
+  "fontSize":20,
   "fontFamily":"monospace",
   "scrollPastEnd":0,
   "theme":"ace/theme/xcode",
@@ -321,7 +321,7 @@ func (self UserManager) GetUserOptions(ctx context.Context, username string) (
 	// not override the configured link from the default and it will
 	// be ignored.
 
-	return options, err
+	return options, nil
 }
 
 func StartUserManager(
