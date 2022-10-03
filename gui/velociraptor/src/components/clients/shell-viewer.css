@@ -107,6 +107,7 @@ div.dt-buttons {
     /* Toolbar - padding - host toolbar - shell command controls - footer */
     max-height: calc(100vh - 50px - 20px - 47px -  66px - 40px);
     overflow-y: auto;
+    padding-bottom: 100px;
 }
 
 .shell-command .velo-ace-editor {
@@ -117,4 +118,8 @@ div.dt-buttons {
 
 .shell-results .timestamp {
     padding: 5px;
+}
+
+.shell-command .vql-shell-input {
+    min-height: 38px;
 }
