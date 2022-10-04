@@ -30,20 +30,21 @@ import (
 )
 
 type CollectPluginArgs struct {
-	Artifacts           []string    `vfilter:"required,field=artifacts,doc=A list of artifacts to collect."`
-	Output              string      `vfilter:"optional,field=output,doc=A path to write the output file on."`
-	Report              string      `vfilter:"optional,field=report,doc=A path to write the report on."`
-	Args                vfilter.Any `vfilter:"optional,field=args,doc=Optional parameters."`
-	Password            string      `vfilter:"optional,field=password,doc=An optional password to encrypt the collection zip."`
-	Format              string      `vfilter:"optional,field=format,doc=Output format (csv, jsonl)."`
-	ArtifactDefinitions vfilter.Any `vfilter:"optional,field=artifact_definitions,doc=Optional additional custom artifacts."`
-	Template            string      `vfilter:"optional,field=template,doc=The name of a template artifact (i.e. one which has report of type HTML)."`
-	Level               int64       `vfilter:"optional,field=level,doc=Compression level between 0 (no compression) and 9."`
-	OpsPerSecond        int64       `vfilter:"optional,field=ops_per_sec,doc=Rate limiting for collections (deprecated)."`
-	CpuLimit            float64     `vfilter:"optional,field=cpu_limit,doc=Set query cpu_limit value"`
-	IopsLimit           float64     `vfilter:"optional,field=iops_limit,doc=Set query iops_limit value"`
-	ProgressTimeout     float64     `vfilter:"optional,field=progress_timeout,doc=If no progress is detected in this many seconds, we terminate the query and output debugging information"`
-	Timeout             float64     `vfilter:"optional,field=timeout,doc=Total amount of time in seconds, this collection will take. Collection is cancelled when timeout is exceeded."`
+	Artifacts           []string            `vfilter:"required,field=artifacts,doc=A list of artifacts to collect."`
+	Output              string              `vfilter:"optional,field=output,doc=A path to write the output file on."`
+	Report              string              `vfilter:"optional,field=report,doc=A path to write the report on."`
+	Args                vfilter.Any         `vfilter:"optional,field=args,doc=Optional parameters."`
+	Password            string              `vfilter:"optional,field=password,doc=An optional password to encrypt the collection zip."`
+	Format              string              `vfilter:"optional,field=format,doc=Output format (csv, jsonl)."`
+	ArtifactDefinitions vfilter.Any         `vfilter:"optional,field=artifact_definitions,doc=Optional additional custom artifacts."`
+	Template            string              `vfilter:"optional,field=template,doc=The name of a template artifact (i.e. one which has report of type HTML)."`
+	Level               int64               `vfilter:"optional,field=level,doc=Compression level between 0 (no compression) and 9."`
+	OpsPerSecond        int64               `vfilter:"optional,field=ops_per_sec,doc=Rate limiting for collections (deprecated)."`
+	CpuLimit            float64             `vfilter:"optional,field=cpu_limit,doc=Set query cpu_limit value"`
+	IopsLimit           float64             `vfilter:"optional,field=iops_limit,doc=Set query iops_limit value"`
+	ProgressTimeout     float64             `vfilter:"optional,field=progress_timeout,doc=If no progress is detected in this many seconds, we terminate the query and output debugging information"`
+	Timeout             float64             `vfilter:"optional,field=timeout,doc=Total amount of time in seconds, this collection will take. Collection is cancelled when timeout is exceeded."`
+	Metadata            vfilter.StoredQuery `vfilter:"optional,field=metadata,doc=Metadata to store in the zip archive. Outputs to metadata.json in top level of zip file."`
 }
 
 type CollectPlugin struct{}
@@ -287,8 +288,17 @@ func makeContainer(
 
 	scope.Log("Setting compression level to %v", arg.Level)
 
+	var metadata []vfilter.Row
+	new_scope := scope.Copy()
+	if arg.Metadata != nil {
+		metadata = []vfilter.Row{}
+		for row := range arg.Metadata.Eval(ctx, new_scope) {
+			metadata = append(metadata, row)
+		}
+	}
+
 	container, err = reporting.NewContainer(
-		config_obj, arg.Output, arg.Password, arg.Level)
+		config_obj, arg.Output, arg.Password, arg.Level, metadata)
 	if err != nil {
 		return nil, nil, err
 	}

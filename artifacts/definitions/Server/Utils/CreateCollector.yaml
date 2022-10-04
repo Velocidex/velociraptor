@@ -51,6 +51,11 @@ parameters:
 
   - name: Password
     description: If set we encrypt collected zip files with this password.
+      
+  - name: PGPKey
+    description: |
+      If set, generate a session password and then encrypt that password using this key.
+      The encrypted zip key will be placed in an empty file in uploads
 
   - name: parameters
     description: A dict containing the parameters to set.
@@ -149,12 +154,27 @@ parameters:
 
       LET _ <= log(message="Will collect package " + filename)
       LET report_filename <= if(condition=Template, then=filename + ".html")
-      SELECT * FROM collect(artifacts=Artifacts, report=report_filename,
-          args=Parameters, output=filename + ".zip", template=Template,
-          cpu_limit=CpuLimit,
-          progress_timeout=ProgressTimeout,
-          timeout=Timeout,
-          password=Password, level=Level, format=Format)
+      LET RandPass <= uuid() + rand(range=50000) + rand(range=50000) + rand(range=50000)
+      SELECT * FROM switch(
+        a={SELECT * FROM collect(artifacts=Artifacts, report=report_filename,
+            args=Parameters, output=filename + ".zip", template=Template,
+            cpu_limit=CpuLimit,
+            progress_timeout=ProgressTimeout,
+            timeout=Timeout,
+            password=RandPass, 
+            level=Level, 
+            format=Format,
+            metadata={
+                SELECT pgp_encrypt(data=RandPass, public_key=PGPKey)  AS EncryptedPass FROM scope()
+                }
+            )  WHERE PGPKey != ""
+          },
+        b={SELECT * FROM collect(artifacts=Artifacts, report=report_filename,
+            args=Parameters, output=filename + ".zip", template=Template,
+            cpu_limit=CpuLimit,
+            progress_timeout=ProgressTimeout,
+            timeout=Timeout,
+            password=Password, level=Level, format=Format)})
 
   - name: S3Collection
     type: hidden
