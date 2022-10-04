@@ -181,7 +181,7 @@ func (self PGPDecryptFunction) Info(
 	return &vfilter.FunctionInfo{
 		Name:    "pgp_decrypt",
 		Doc:     "Decrypt files using PGP",
-		ArgType: type_map.AddType(scope, &PGPEncryptArgs{}),
+		ArgType: type_map.AddType(scope, &PGPDecryptArgs{}),
 	}
 }
 
