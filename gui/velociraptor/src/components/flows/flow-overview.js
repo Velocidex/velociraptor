@@ -68,7 +68,10 @@ export default class FlowOverview extends React.Component {
             client_id: this.props.flow.client_id,
             download_type: download_type || "",
             password: lock_password,
-        }, this.source.token);
+            expand_sparse: this.state.expand_sparse,
+        }, this.source.token).then((response) => {
+            this.getDetailedFlow();
+        });
     };
 
     getDetailedFlow = () => {
@@ -93,6 +96,7 @@ export default class FlowOverview extends React.Component {
         loading: false,
         available_downloads: [],
         lock: false,
+        expand_sparse: false,
     };
 
     render() {
@@ -262,6 +266,40 @@ export default class FlowOverview extends React.Component {
                               </Button>
                             </span>
                           </OverlayTrigger>
+                        }
+                        {this.state.expand_sparse ?
+                         <OverlayTrigger
+                           delay={{show: 250, hide: 400}}
+                           overlay={
+                               <Tooltip
+                                 id='expand-sparse'>
+                                 {T("Sparse files will be expanded in export.")}
+                               </Tooltip>
+                           }>
+                           <span className="d-inline-block">
+                             <Button
+                               onClick={()=>this.setState({expand_sparse: false})}
+                               variant="default">
+                               <FontAwesomeIcon icon="expand"/>
+                             </Button>
+                           </span>
+                         </OverlayTrigger> :
+                         <OverlayTrigger
+                           delay={{show: 250, hide: 400}}
+                           overlay={
+                               <Tooltip
+                                 id='expand-sparse'>
+                                 {T("Sparse files will remain sparse in export.")}
+                               </Tooltip>
+                           }>
+                           <span className="d-inline-block">
+                             <Button
+                               onClick={()=>this.setState({expand_sparse: !this.state.expand_sparse})}
+                               variant="default">
+                               <FontAwesomeIcon icon="compress"/>
+                             </Button>
+                           </span>
+                         </OverlayTrigger>
                         }
                         <Dropdown>
                           <Dropdown.Toggle variant="default">

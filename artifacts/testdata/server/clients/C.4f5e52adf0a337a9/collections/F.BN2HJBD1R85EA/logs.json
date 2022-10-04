@@ -1,0 +1,5 @@
+{"_ts":1664618674,"client_time":1664618673,"level":"INFO","message":"Starting query execution.\n"}
+{"_ts":1664618674,"client_time":1664618673,"level":"DEFAULT","message":"Time 0: Custom.SparseTest: Sending response part 0 397 B (1 rows)."}
+{"_ts":1664618674,"client_time":1664618673,"level":"DEFAULT","message":"Uploaded 1 files."}
+{"_ts":1664618674,"client_time":1664618673,"level":"INFO","message":"Collection is done after 4.13673ms\n"}
+{"_ts":1664618674,"client_time":1664618673,"level":"DEBUG","message":"Query Stats: {\"RowsScanned\":2,\"PluginsCalled\":1,\"FunctionsCalled\":5,\"ProtocolSearch\":0,\"ScopeCopy\":7}\n"}

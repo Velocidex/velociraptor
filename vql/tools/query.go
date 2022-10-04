@@ -85,7 +85,7 @@ func (self QueryPlugin) Call(
 			// Impersonation is only allowed for administrator users.
 			err := vql_subsystem.CheckAccess(scope, acls.IMPERSONATION)
 			if err != nil {
-				scope.Log("query: Permission required for runas: %v", err)
+				scope.Log("ERROR:query: Permission required for runas: %v", err)
 				return
 			}
 
@@ -97,7 +97,7 @@ func (self QueryPlugin) Call(
 		// Make a new scope for each artifact.
 		manager, err := services.GetRepositoryManager(org_config_obj)
 		if err != nil {
-			scope.Log("query: %v", err)
+			scope.Log("ERROR:query: %v", err)
 			return
 		}
 
@@ -141,7 +141,7 @@ func runQuery(
 		runQuery(ctx, scope, output_chan, t.ReduceWithScope(ctx, scope))
 
 	default:
-		scope.Log("query: query should be a string or subquery")
+		scope.Log("ERROR:query: query should be a string or subquery")
 		return
 	}
 }
@@ -177,7 +177,7 @@ func runStringQuery(
 	scope.Log("query: running query %v", query_string)
 	statements, err := vfilter.MultiParse(query_string)
 	if err != nil {
-		scope.Log("query: %v", err)
+		scope.Log("ERROR:query: %v", err)
 		return
 	}
 

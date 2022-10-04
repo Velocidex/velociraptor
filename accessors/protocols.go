@@ -181,7 +181,7 @@ func (self _AssociativeOSPath) Associative(
 		if t < 0 {
 			t += length
 		}
-		if t < 0 || t > length {
+		if t < 0 || t >= length {
 			return &vfilter.Null{}, true
 		}
 		return a_os_path.Components[t], true

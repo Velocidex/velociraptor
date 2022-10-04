@@ -62,7 +62,8 @@ func (self *ProcessReader) getRange(offset uint64) *process.VMemInfo {
 func (self *ProcessReader) readDistinctPages(buf []byte) (int, error) {
 	page_count := len(buf) / PAGE_SIZE
 	if page_count <= 1 {
-		return page_count * PAGE_SIZE, nil
+		// Buffer is smaller than pagesize, just return a null buffer
+		return len(buf), nil
 	}
 
 	// Read as many pages as possible into the buffer ignoring errors.
@@ -112,7 +113,8 @@ func (self *ProcessReader) Read(buf []byte) (int, error) {
 	// no data, we never return an error - just zero pad those
 	// regions.
 	if err != nil {
-		return self.readDistinctPages(buf)
+		res, err := self.readDistinctPages(buf)
+		return res, err
 	}
 
 	// Advance the read pointer.

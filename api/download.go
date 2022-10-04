@@ -86,6 +86,9 @@ type vfsFileDownloadRequest struct {
 	Offset       int64    `schema:"offset"`
 	Length       int      `schema:"length"`
 	OrgId        string   `schema:"org_id"`
+
+	// If set we pad the file out.
+	Padding bool `schema:"padding"`
 }
 
 // URL format: /api/v1/DownloadVFSFile
@@ -161,12 +164,12 @@ func vfsFileDownloadHandler() http.Handler {
 			return
 		}
 
-		var reader_at io.ReaderAt = &utils.ReaderAtter{Reader: file}
+		var reader_at io.ReaderAt = utils.MakeReaderAtter(file)
 
 		index, err := getIndex(org_config_obj, path_spec)
 
 		// If the file is sparse, we use the sparse reader.
-		if err == nil && len(index.Ranges) > 0 {
+		if err == nil && len(index.Ranges) > 0 && request.Padding {
 			reader_at = &utils.RangedReader{
 				ReaderAt: reader_at,
 				Index:    index,
@@ -464,7 +467,7 @@ func vfsGetBuffer(
 	}
 	defer file.Close()
 
-	var reader_at io.ReaderAt = &utils.ReaderAtter{Reader: file}
+	var reader_at io.ReaderAt = utils.MakeReaderAtter(file)
 
 	result := &api_proto.VFSFileBuffer{
 		Data: make([]byte, length),
