@@ -36,6 +36,9 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "FileNames": [
    "Hello world text document.txt"
   ],
+  "Links": [
+   "Folder A\\Folder B\\Hello world text document.txt"
+  ],
   "FileNameTypes": "POSIX",
   "FileSize": 12,
   "ReferenceCount": 1,
@@ -65,6 +68,9 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "FileName": "Hello world text document.txt:goodbye.txt",
   "FileNames": [
    "Hello world text document.txt:goodbye.txt"
+  ],
+  "Links": [
+   "Folder A\\Folder B\\Hello world text document.txt"
   ],
   "FileNameTypes": "POSIX",
   "FileSize": 64,
@@ -155,6 +161,9 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
      "Size": 20,
      "Name": "goodbye.txt"
     }
+   ],
+   "Hardlinks": [
+    "Folder A\\Folder B\\Hello world text document.txt"
    ],
    "Device": "\\\\.\\C:"
   }

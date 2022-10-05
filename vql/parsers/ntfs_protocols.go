@@ -80,6 +80,7 @@ func (self _MFTHighlightAssociative) GetMembers(
 		"ParentSequenceNumber",
 		"FileName",
 		"FileNames",
+		"Links",
 		"FileNameTypes",
 		"FileSize",
 		"ReferenceCount",

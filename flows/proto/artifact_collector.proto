@@ -86,6 +86,9 @@ message ArtifactUploadedFileInfo {
     uint64 size = 3;
     uint64 stored_size = 4;
     repeated string components = 5;
+
+    // idx for index files.
+    string type = 6;
 }
 
 // Maintain this also outside the collector context. It will be
