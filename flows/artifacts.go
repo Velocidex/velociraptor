@@ -578,6 +578,7 @@ func appendUploadDataToFile(
 				Components: file_path_manager.IndexPath().Components(),
 				Size:       uint64(len(data)),
 				StoredSize: uint64(len(data)),
+				Type:       "idx",
 			})
 		collection_context.Dirty = true
 	}
