@@ -437,7 +437,7 @@ const Portuguese = {
     'Recolher do cliente': 'Baixar Novamente do Cliente',
     "Tool Name":"Nome da Ferramenta",
     "Upstream URL":"URL Upstream",
-    "Enpoint Filename":"Nome do Arquivo no Host",
+    "Endpoint Filename":"Nome do Arquivo no Host",
     "Hash":"Hash",
     "Serve Locally":"Servir Localmente",
     "Serve URL":"URL Servindo",

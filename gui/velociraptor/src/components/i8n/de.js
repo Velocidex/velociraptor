@@ -435,7 +435,7 @@ const Deutsch = {
     'Collect from the client': 'Beim Client abholen',
     "Tool Name":"Toolname",
     "Upstream URL":"Upstream-URL",
-    "Enpoint Filename":"Enpoint-Dateiname",
+    "Endpoint Filename":"Dateiname auf dem Client",
     "Hash":"Hash",
     "Serve Locally":"Lokal servieren",
     "Serve URL":"URL bereitstellen",

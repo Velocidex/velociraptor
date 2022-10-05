@@ -418,7 +418,7 @@ const Japanese = {
     'Collect from the client': 'クライアントから収集する',
     "Tool Name":"ツール名",
     "Upstream URL":"上流のURL",
-    "Enpoint Filename":"ホストのファイル名",
+    "Endpoint Filename":"ホストのファイル名",
     "Hash":"ハッシュ",
     "Serve Locally":"ローカルで提供する",
     "Serve URL":"URLを提供する",
