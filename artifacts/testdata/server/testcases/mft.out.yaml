@@ -4,6 +4,9 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "InUse": true,
   "ParentEntryNumber": 5,
   "OSPath": "C:\\just_a_file.txt",
+  "_Links": [
+   "just_a_file.txt"
+  ],
   "FileName": "just_a_file.txt",
   "FileSize": 12,
   "ReferenceCount": 1,
@@ -32,6 +35,9 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "InUse": true,
   "ParentEntryNumber": 45,
   "OSPath": "C:\\Folder A\\Folder B\\Hello world text document.txt",
+  "_Links": [
+   "Folder A\\Folder B\\Hello world text document.txt"
+  ],
   "FileName": "Hello world text document.txt",
   "FileSize": 12,
   "ReferenceCount": 1,
@@ -59,6 +65,9 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "InUse": true,
   "ParentEntryNumber": 45,
   "OSPath": "C:\\Folder A\\Folder B\\Hello world text document.txt:goodbye.txt",
+  "_Links": [
+   "Folder A\\Folder B\\Hello world text document.txt"
+  ],
   "FileName": "Hello world text document.txt:goodbye.txt",
   "FileSize": 64,
   "ReferenceCount": 1,
@@ -87,6 +96,9 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "InUse": true,
   "ParentEntryNumber": 5,
   "OSPath": "C:\\another_file.txt",
+  "_Links": [
+   "another_file.txt"
+  ],
   "FileName": "another_file.txt",
   "FileSize": 14,
   "ReferenceCount": 1,
@@ -114,6 +126,9 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "InUse": true,
   "ParentEntryNumber": 5,
   "OSPath": "C:\\just_a_file.txt",
+  "_Links": [
+   "just_a_file.txt"
+  ],
   "FileName": "just_a_file.txt",
   "FileSize": 12,
   "ReferenceCount": 1,
@@ -142,6 +157,9 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "InUse": true,
   "ParentEntryNumber": 5,
   "OSPath": "C:\\just_a_file.txt",
+  "_Links": [
+   "just_a_file.txt"
+  ],
   "FileName": "just_a_file.txt",
   "FileSize": 12,
   "ReferenceCount": 1,
@@ -230,6 +248,9 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
      "Size": 10268,
      "Name": ""
     }
+   ],
+   "Hardlinks": [
+    "just_a_file.txt"
    ],
    "Device": "\\\\.\\C:"
   },

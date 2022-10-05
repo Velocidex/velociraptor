@@ -14,6 +14,9 @@ SELECT parse_ntfs( filename=srcDir+'/artifacts/testdata/files/test.ntfs.dd', ino
   "FileNames": [
    "Hello world text document.txt:goodbye.txt"
   ],
+  "Links": [
+   "Folder A\\Folder B\\Hello world text document.txt"
+  ],
   "FileNameTypes": "POSIX",
   "FileSize": 64,
   "ReferenceCount": 1,

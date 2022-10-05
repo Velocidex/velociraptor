@@ -70,6 +70,9 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
      "Name": ""
     }
    ],
+   "Hardlinks": [
+    "another_file.txt"
+   ],
    "Device": "\\\\.\\C:"
   },
   "EA": {
@@ -158,6 +161,9 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
      "Size": 92,
      "Name": ""
     }
+   ],
+   "Hardlinks": [
+    "another_file.txt"
    ],
    "Device": "\\\\.\\C:"
   },
@@ -248,6 +254,9 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
      "Size": 10268,
      "Name": ""
     }
+   ],
+   "Hardlinks": [
+    "just_a_file.txt"
    ],
    "Device": "\\\\.\\C:"
   },
