@@ -106,7 +106,7 @@ func (self *SanityChecks) CheckRootOrg(
 		}
 	}
 
-	return checkForServerUpgrade(ctx, config_obj)
+	return nil
 }
 
 func (self *SanityChecks) Check(
@@ -148,7 +148,7 @@ func (self *SanityChecks) Check(
 		return err
 	}
 
-	return nil
+	return checkForServerUpgrade(ctx, config_obj)
 }
 
 // Sets the server metadata to defaults.
