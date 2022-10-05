@@ -85,7 +85,7 @@ class OfflineCollectorParameters  extends React.Component {
                     </Col>
                   </Form.Group>
 
-                  <Form.Group as={Row}>
+                  <Form.Group as={Row} disabled={this.props.parameters.pgpkey}>
                     <Form.Label column sm="3">{T("Password")}</Form.Label>
                     <Col sm="8">
                       <Form.Control as="input"
@@ -94,6 +94,20 @@ class OfflineCollectorParameters  extends React.Component {
                                     value={this.props.parameters.password}
                                     onChange={e => {
                                         this.props.parameters.password = e.target.value;
+                                        this.props.setParameters(this.props.parameters);
+                                    }} />
+                    </Col>
+                  </Form.Group>
+
+                  <Form.Group as={Row} disabled={this.props.parameters.password}>
+                    <Form.Label column sm="3">{T("PGP Key")}</Form.Label>
+                    <Col sm="8">
+                      <Form.Control as="textarea"
+                                    placeholder={T("PGP Key")}
+                                    spellCheck="false"
+                                    value={this.props.parameters.pgpkey}
+                                    onChange={e => {
+                                        this.props.parameters.pgpkey = e.target.value;
                                         this.props.setParameters(this.props.parameters);
                                     }} />
                     </Col>
@@ -581,6 +595,7 @@ export default class OfflineCollectorWizard extends React.Component {
             },
             template: "",
             password: "",
+            pgpkey: "",
             opt_level: 5,
             opt_output_directory: "",
             opt_format: "jsonl",
@@ -613,6 +628,7 @@ export default class OfflineCollectorWizard extends React.Component {
         env.push({key: "target_args", value: JSON.stringify(
             this.state.collector_parameters.target_args)});
         env.push({key: "Password", value: this.state.collector_parameters.password});
+        env.push({key: "PGPKey", value: this.state.collector_parameters.pgpkey});
         env.push({key: "template", value: this.state.collector_parameters.template});
         env.push({key: "opt_verbose", value: "Y"});
         env.push({key: "opt_banner", value: "Y"});
