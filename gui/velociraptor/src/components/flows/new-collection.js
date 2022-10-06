@@ -673,6 +673,21 @@ class NewCollectionResources extends React.Component {
                         setValue={value => this.props.setResources({max_mbytes: value})} />
                     </Col>
                   </Form.Group>
+
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">
+                      {T("Urgent")}
+                    </Form.Label>
+                    <Col sm="8">
+                      <Form.Check
+                        type="checkbox"
+                        checked={resources.urgent}
+                        label={T("Skip queues and run query urgently")}
+                        onChange={e=>this.props.setResources({urgent: e.currentTarget.checked})}
+                      />
+                    </Col>
+                  </Form.Group>
+
                 </Form>
               </Modal.Body>
               <Modal.Footer>
@@ -950,6 +965,8 @@ class NewCollectionWizard extends React.Component {
             artifacts: artifacts,
             specs: specs,
         };
+
+        result.urgent = this.state.resources.urgent;
 
         if (this.state.resources.ops_per_second) {
             result.ops_per_second = this.state.resources.ops_per_second;

@@ -586,7 +586,8 @@ const Japanese = {
 
     "Update client monitoring table":"クライアント監視テーブルの更新",
     "Show client monitoring tables":"クライアント監視テーブルの表示",
-
+    "Urgent": "急",
+    "Skip queues and run query urgently": "キューをスキップしてクエリを緊急に実行する",
 };
 
 export default Japanese;

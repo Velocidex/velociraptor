@@ -9,6 +9,15 @@
 }
 
 @font-face {
+  font-family: "roboto-mono";
+  font-style: normal;
+  font-weight: 700;
+  src: local(""),
+    url("../fonts/roboto-bold.woff2") format("woff2");
+  font-display: block;
+}
+
+@font-face {
   font-family: "roboto";
   font-style: normal;
   font-weight: 400;

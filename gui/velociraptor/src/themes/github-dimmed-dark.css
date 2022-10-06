@@ -8,6 +8,15 @@
 }
 
 @font-face {
+  font-family: "titillium-web";
+  font-style: normal;
+  font-weight: 900;
+  src: local(""),
+    url("../fonts/titillium-web-v15-latin-900.woff2") format("woff2");
+  font-display: block;
+}
+
+@font-face {
   font-family: "roboto-mono";
   font-style: normal;
   font-weight: 400;

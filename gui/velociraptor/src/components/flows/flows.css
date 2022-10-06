@@ -21,3 +21,7 @@ div .flow-status-icon {
 .flow-log-filter {
     margin-right: 4px;
 }
+
+.table tr.flow-urgent {
+    font-weight: bold;
+}

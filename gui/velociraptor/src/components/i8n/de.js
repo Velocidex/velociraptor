@@ -609,7 +609,8 @@ const Deutsch = {
     "Passwords do not match": "Passwörter stimmen nicht überein",
 
     "Delete Events": "Ereignisse löschen",
-
+    "Urgent": "Dringend",
+    "Skip queues and run query urgently": "Warteschlangen überspringen und Abfrage dringend ausführen",
 };
 
 export default Deutsch;

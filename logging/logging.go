@@ -84,6 +84,7 @@ func InitLogging(config_obj *config_proto.Config) error {
 
 		logger, err := Manager.makeNewComponent(config_obj, component)
 		if err != nil {
+			mu.Unlock()
 			return err
 		}
 		Manager.contexts[component] = logger
