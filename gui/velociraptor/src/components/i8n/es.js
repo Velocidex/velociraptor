@@ -436,7 +436,7 @@ const Spanish = {
     'Collect from the client': 'Recopilar desde el host',
     "Tool Name":"Nombre de la herramienta",
     "Upstream URL":"URL",
-    "Enpoint Filename":"nombre de archivo en el equipo destino",
+    "Endpoint Filename":"nombre de archivo en el equipo destino",
     "Hash":"Hash",
     "Serve Locally":"Servir archivo localmente",
     "Serve URL":"Servir archivo desde URL",

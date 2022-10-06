@@ -439,7 +439,7 @@ const French = {
     'Collect from the client': 'Collecte auprès du client',
     "Tool Name":"Nom de l'outil",
     "Upstream URL":"URL en amont",
-    "Enpoint Filename":"enpoint filename",
+    "Endpoint Filename":"nom de fichier sur client",
     "Hash":"Hachage",
     "Serve Locally":"Servir localement",
     "Serve URL":"Fournir l'URL",

@@ -301,7 +301,7 @@ export default class ToolViewer extends React.Component {
 
                     { tool.filename &&
                       <>
-                        <dt className="col-4">{T("Enpoint Filename")}</dt>
+                        <dt className="col-4">{T("Endpoint Filename")}</dt>
                         <dd className="col-8">{tool.filename}</dd></>}
 
                     { tool.hash &&
