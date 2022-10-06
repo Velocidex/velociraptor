@@ -178,7 +178,7 @@ const Spanish = {
       </b>
       <br/><br/>
 
-      Se espera liberar { total_bytes.toFixed(0) } MB  de 
+      Se espera liberar { total_bytes.toFixed(0) } MB  de
       datos y { total_rows } filas.
     </>,
     "Save this collection to your Favorites": "Guardar esta colección en favoritos",
@@ -415,7 +415,7 @@ const Spanish = {
     ejecutable para ser utilizado como herramienta. Esto sobreescribirá la
     configuración de URL, y proporcionará la herramienta a todos aquellos
     Artefactos que lo necesitan. Como alternativa, puede configurar una URL para que
-	los hosts puedan obtener herramientas.
+    los hosts puedan obtener herramientas.
     </>,
 
     "Include Labels":"Incluir Etiquetas",
@@ -605,7 +605,8 @@ const Spanish = {
 
     "Update client monitoring table":"Actualizar tabla de monitorización de hosts",
     "Show client monitoring tables":"Mostrar tablas de monitorización de hosts",
-
+    "Urgent": "Urgente",
+    "Skip queues and run query urgently": "Omita las colas y ejecute la consulta con urgencia",
 };
 
 export default Spanish;

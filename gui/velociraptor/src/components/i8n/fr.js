@@ -96,7 +96,7 @@ const French = {
     },
     "Create a new artifact": "Créer un nouvel artefact",
     "Save": "Enregistrer",
-    
+
     // Navigation au clavier.
     "Global hotkeys": "Raccourcis globaux",
     "Goto dashboard": "Aller au tableau de bord",
@@ -185,7 +185,7 @@ const French = {
      "Save this collection to your Favorites": "Enregistrer cette collection dans vos favoris",
      "ArtifactFavorites": artifacts=>
      <>
-       Vous pouvez facilement collecter la même collection de vos 
+       Vous pouvez facilement collecter la même collection de vos
        favoris à l'avenir.
        <br/>
        Cette collection était les artefacts <b>{artifacts}</b>
@@ -217,7 +217,7 @@ const French = {
     "Favorite Name": "Nom préféré",
     "Artifact": "Artefact",
     "No artifacts configured. Please add some artifacts to collect": "Aucun artefact configuré. Veuillez ajouter quelques artefacts à collecter",
-    
+
     "Artifacts": "Artefacts",
     "Collected Artifacts": "Artefacts collectés",
     "Flow ID": "ID de flux",
@@ -252,7 +252,7 @@ const French = {
     "Create Offline Collector: Configure artifact parameters":"Créer un collecteur hors ligne: configurer les paramètres d'artefact",
     "Create Offline Collector: Review request": "Créer un collecteur hors ligne: vérifier la demande",
     "Create Offline Collector: Create collector":"Créer un collecteur hors ligne: Créer un collecteur",
-    
+
     "Create Offline collector:  Configure Collector":"Créer un collecteur hors ligne: configurer le collecteur",
     "Target Operating System":"Système d'exploitation cible",
     "Password":"Mot de passe",
@@ -289,7 +289,7 @@ const French = {
     "Please select a hunt above":"Veuillez sélectionner une chasse ci-dessus",
     "Clients":"Clients",
     "Notebook for Hunt": hunt_id=>"Carnet de notes de chasse" + hunt_id,
-    
+
     "Hunt ID":"ID de chasse",
     "Creation Time":"Heure de création",
     "Expiry Time":"Délai d'expiration",
@@ -328,7 +328,7 @@ const French = {
     "client_time":"Temps client",
     "level":"Niveau",
     "message":"Message",
-    
+
     "RecursiveVFSMessage": path=><>
     Vous êtes sur le point de récupérer de manière récursive tous les fichiers dans <b>{path}</b>.
     <br/><br/>
@@ -370,7 +370,7 @@ const French = {
     <>
     L'outil sera servi du serveur Velociraptor aux clients si nécessaire.
     Le client mettra l'outil en cache sur son propre disque et comparera
-    le hachage la prochaine fois qu'il en aura besoin. 
+    le hachage la prochaine fois qu'il en aura besoin.
     Les outils ne seront téléchargés que si leur hachage a changé.
     </>,
     "ServedFromURL": (base_path, url)=>
@@ -396,14 +396,14 @@ const French = {
     </>,
     "ToolHash":
     <>
-    Le hachage de l'outil a été calculé. 
+    Le hachage de l'outil a été calculé.
     Lorsque les clients ont besoin d'utiliser cet outil,
     ils s'assurent que ce hachage correspond à ce qu'ils téléchargent.
     </>,
     "AdminOverride":
     <>
     L'outil a été téléchargé manuellement par un administrateur
-    - il ne sera pas automatiquement mis à jour 
+    - il ne sera pas automatiquement mis à jour
     lors de la prochaine mise à jour du serveur Velociraptor
     </>,
     "ToolError":
@@ -416,7 +416,7 @@ const French = {
     "OverrideToolDesc":
     <>
     En tant qu'administrateur, vous pouvez télécharger manuellement un fichier binaire
-    à utiliser comme outil. Cela remplacera le paramètre d'URL en amont et fournira 
+    à utiliser comme outil. Cela remplacera le paramètre d'URL en amont et fournira
     votre outil à tous les artefacts qui en ont besoin. Alternative, définissez une URL
     pour que les clients récupèrent les outils.
     </>,
@@ -452,7 +452,7 @@ const French = {
     "Download CSV": "Télécharger le fichier CSV",
     "Transform Table": "Tableau de transformation",
     "Transformed": "Transformé",
-    
+
     "Select a notebook from the list above.":"Sélectionnez un carnet de notes dans la liste ci-dessus.",
     "Cancel":"Annuler",
     "Recalculate":"Recalculer",
@@ -502,7 +502,7 @@ const French = {
     "Strawberry Milkshake (light)":"Milkshake aux fraises (léger)",
     "Downloads Password":"Télécharger le mot de passe",
     "Default password to use for downloads":"Mot de passe par défaut pour les téléchargements",
-    
+
     "Create Artifact from VQL":"Créer un artefact à partir de VQL",
     "Member":"Membre",
     "Response":"Réponse",
@@ -540,7 +540,7 @@ const French = {
     "EventMonitoringCard":
     <>
     La surveillance des événements cible des groupes de labels spécifiques.
-    Sélectionnez un groupe de labels ci-dessus pour configurer des 
+    Sélectionnez un groupe de labels ci-dessus pour configurer des
     artefacts d'événement spécifiques ciblant ce groupe.
     </>,
     "Event Monitoring: Configure Label groups": "Moniteur d'événements: configurer les groupes de libellés",
@@ -588,7 +588,7 @@ const French = {
     "Export notebooks":"Exporter les carnets de notes",
     "Export to HTML":"Exporter au format HTML",
     "Export to Zip":"Exporter au format Zip",
-    
+
     "Permanently delete Notebook":"Supprimer définitivement le carnet de notes",
     "You are about to permanently delete the notebook for this hunt":"Vous êtes sur le point de supprimer définitivement le carnet de notes de cette chasse",
 
@@ -608,7 +608,8 @@ const French = {
 
     "Update client monitoring table":"Mettre à jour le tableau de surveillance des clients",
     "Show client monitoring tables":"Afficher les tableaux de surveillance des clients",
-
+    "Urgent": "Urgent",
+    "Skip queues and run query urgently": "Ignorer les files d'attente et exécuter la requête de toute urgence",
 };
 
 export default French;

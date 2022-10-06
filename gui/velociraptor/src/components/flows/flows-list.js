@@ -556,6 +556,7 @@ class FlowsList extends React.Component {
                     data={this.props.flows}
                     columns={columns}
                     selectRow={ selectRow }
+                    rowClasses={ rowClassRenderer }
                     filter={ filterFactory() }
                   />
                 </HotKeys>
@@ -567,21 +568,34 @@ class FlowsList extends React.Component {
 
 export default withRouter(FlowsList);
 
+
+const stateRenderer = (cell, row) => {
+    let result = <></>;
+
+    if (cell === "FINISHED") {
+        result = <FontAwesomeIcon icon="check"/>;
+
+    } else if (cell === "RUNNING") {
+        result = <FontAwesomeIcon icon="hourglass"/>;
+
+    } else {
+        result = <FontAwesomeIcon icon="exclamation"/>;
+    }
+
+    return <div className="flow-status-icon">{result}</div>;
+};
+
+const rowClassRenderer = (row, rowIndex) => {
+    if (row.request.urgent) {
+        return 'flow-urgent';
+    }
+    return '';
+};
+
 export function getFlowColumns(client_id) {
     return formatColumns([
         {dataField: "state", text: T("State"), sort: true,
-         formatter: (cell, row) => {
-             if (cell === "FINISHED") {
-                 return <div className="flow-status-icon">
-                          <FontAwesomeIcon icon="check"/></div>;
-             }
-             if (cell === "RUNNING") {
-                 return <div className="flow-status-icon">
-                          <FontAwesomeIcon icon="hourglass"/></div>;
-             }
-             return <div className="flow-status-icon">
-             <FontAwesomeIcon icon="exclamation"/></div>;
-         }
+         formatter: stateRenderer,
         },
         {dataField: "session_id", text: T("FlowId"), type: "flow"},
         {dataField: "request.artifacts", text: T("Artifacts"),

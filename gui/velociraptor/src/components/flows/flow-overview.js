@@ -135,7 +135,9 @@ export default class FlowOverview extends React.Component {
                     </dd>
 
                     <dt className="col-4">{T("Flow ID")}</dt>
-                    <dd className="col-8">  { flow.session_id } </dd>
+                    <dd className="col-8">
+                      { flow.session_id } { flow.request.urgent && "( " + T("Urgent") + " )" }
+                    </dd>
 
                     <dt className="col-4">{T("Creator")}</dt>
                     <dd className="col-8"> { flow.request.creator } </dd>

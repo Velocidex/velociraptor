@@ -366,9 +366,9 @@ const Portuguese = {
     "This is a notebook for processing a hunt.":"Este é um notebook para lidar com uma investigação.",
     "ToolLocalDesc":
         <>
-        A ferramenta é fornecida pelo Servidor Velociraptor, 
-    se aplicável. O cliente armazena a ferramenta em cache 
-    em seu próprio disco e depois compara seu hash quando necessário. 
+        A ferramenta é fornecida pelo Servidor Velociraptor,
+    se aplicável. O cliente armazena a ferramenta em cache
+    em seu próprio disco e depois compara seu hash quando necessário.
     As ferramentas só serão baixadas se o hash mudar.
         </>,
     "ServedFromURL": (base_path, url)=>
@@ -388,7 +388,7 @@ const Portuguese = {
     "PlaceHolder":
         <>
         O hash da ferramenta é atualmente desconhecido. Na primeira vez que a
-    ferramenta for requisitada, o Velociraptor irá baixá-la da URL indicada 
+    ferramenta for requisitada, o Velociraptor irá baixá-la da URL indicada
     e calculará seu hash.
         </>,
     "ToolHash":
@@ -415,7 +415,7 @@ const Portuguese = {
         Como administrador, você pode carregar manualmente um arquivo
     binário para utilizá-lo como ferramenta. Isso sobrescreve o
     configuração de URL upstream e disponibiliza sua ferramenta para todos
-    Artefatos que precisam. Como alternativa, defina uma URL conhecida para 
+    Artefatos que precisam. Como alternativa, defina uma URL conhecida para
     clientes obterem ferramentas.
         </>,
 
@@ -606,6 +606,8 @@ const Portuguese = {
 
     "Update client monitoring table":"Atualizar tabela de monitoramento de clientes",
     "Show client monitoring tables":"Mostrar tabelas de monitoramento de clientes",
+    "Urgent": "Urgente",
+    "Skip queues and run query urgently": "Pule filas e execute a consulta com urgência",
 };
 
 export default Portuguese;

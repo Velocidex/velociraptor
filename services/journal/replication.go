@@ -304,6 +304,7 @@ func (self *ReplicationService) ProcessMasterRegistrations(event *ordereddict.Di
 
 	names, ok := names_any.([]interface{})
 	if ok {
+		// -----
 		self.mu.Lock()
 		self.masterRegistrations = make(map[string]bool)
 
@@ -318,6 +319,7 @@ func (self *ReplicationService) ProcessMasterRegistrations(event *ordereddict.Di
 			"events": names,
 		}).Info("Master event registrations")
 		self.mu.Unlock()
+		// -----
 	}
 }
 

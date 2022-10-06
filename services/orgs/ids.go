@@ -26,8 +26,8 @@ func (self *OrgManager) NewOrgId() string {
 		self.mu.Lock()
 		if self.NextOrgIdForTesting != nil {
 			org_id = *self.NextOrgIdForTesting
-			self.mu.Unlock()
 
+			self.mu.Unlock()
 			return org_id
 		}
 
