@@ -54,6 +54,10 @@ func (self *GitHubAuthenticator) IsPasswordLess() bool {
 	return true
 }
 
+func (self *GitHubAuthenticator) AuthRedirectTemplate() string {
+	return self.authenticator.AuthRedirectTemplate
+}
+
 func (self *GitHubAuthenticator) AddHandlers(mux *http.ServeMux) error {
 	mux.Handle(self.base+"auth/github/login", self.oauthGithubLogin())
 	mux.Handle(self.base+"auth/github/callback", self.oauthGithubCallback())

@@ -429,6 +429,7 @@ func (self *ApiServer) GetUserUITraits(
 	result := NewDefaultUserObject(org_config_obj)
 	result.Username = user_info.Name
 	result.InterfaceTraits.PasswordLess = authenticator.IsPasswordLess()
+	result.InterfaceTraits.AuthRedirectTemplate = authenticator.AuthRedirectTemplate()
 	result.InterfaceTraits.Picture = user_info.Picture
 	result.InterfaceTraits.Permissions, _ = acls.GetEffectivePolicy(org_config_obj,
 		result.Username)

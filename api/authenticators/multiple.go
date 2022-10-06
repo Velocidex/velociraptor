@@ -64,6 +64,10 @@ func (self *MultiAuthenticator) IsPasswordLess() bool {
 	return true
 }
 
+func (self *MultiAuthenticator) AuthRedirectTemplate() string {
+	return ""
+}
+
 func NewMultiAuthenticator(
 	config_obj *config_proto.Config,
 	auth_config *config_proto.Authenticator) (Authenticator, error) {

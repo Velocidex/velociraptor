@@ -57,6 +57,10 @@ func (self *BasicAuthenticator) IsPasswordLess() bool {
 	return false
 }
 
+func (self *BasicAuthenticator) AuthRedirectTemplate() string {
+	return ""
+}
+
 func (self *BasicAuthenticator) AuthenticateUserHandler(
 	parent http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

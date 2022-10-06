@@ -25,6 +25,7 @@ type Authenticator interface {
 	AuthenticateUserHandler(parent http.Handler) http.Handler
 
 	IsPasswordLess() bool
+	AuthRedirectTemplate() string
 }
 
 func NewAuthenticator(config_obj *config_proto.Config) (Authenticator, error) {
@@ -62,7 +63,7 @@ func getAuthenticatorByType(
 func configRequirePublicUrl(config_obj *config_proto.Config) error {
 	if config_obj.GUI.PublicUrl == "" {
 		return fmt.Errorf("Authentication type `%s' requires valid public_url parameter",
-				  config_obj.GUI.Authenticator.Type)
+			config_obj.GUI.Authenticator.Type)
 	}
 	return nil
 
