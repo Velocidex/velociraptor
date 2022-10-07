@@ -48,14 +48,17 @@ parameters:
   - name: template
     default:
     description: The HTML report template to use.
-
-  - name: Password
-    description: If set we encrypt collected zip files with this password.
       
-  - name: PGPKey
+  - name: encryption_scheme
     description: |
-      If set, generate a session password and then encrypt that password using this key.
-      The encrypted zip key will be placed in an empty file in uploads
+      Encryption scheme to use. Currently supported are Passowrd and PGP
+
+  - name: encryption_args
+    description: |
+      Encryption arguments
+    type: json
+    default: |
+      {}
 
   - name: parameters
     description: A dict containing the parameters to set.
@@ -155,28 +158,23 @@ parameters:
       LET _ <= log(message="Will collect package " + filename)
       LET report_filename <= if(condition=Template, then=filename + ".html")
       LET X <=  SELECT format(format="%02x", args=rand(range=255)) AS A FROM range(end=25) 
-      LET RandPass <= join(array=X.A)          
 
-      SELECT * FROM switch(
-        a={SELECT * FROM collect(artifacts=Artifacts, report=report_filename,
+      LET pass = SELECT * FROM switch(a={SELECT join(array=X.A) as Pass From scope() WHERE encryption_scheme =~ "pgp"},
+                        b={SELECT encryption_args.password as Pass FROM scope() WHERE encryption_scheme =~ "password"},
+                        c={SELECT Null as Pass FROM scope()})
+
+      SELECT * FROM collect(artifacts=Artifacts, report=report_filename,
             args=Parameters, output=filename + ".zip", template=Template,
             cpu_limit=CpuLimit,
             progress_timeout=ProgressTimeout,
             timeout=Timeout,
-            password=RandPass, 
-            level=Level, 
+            password=pass[0].Pass,
+            level=Level,
             format=Format,
-            metadata={
-                SELECT pgp_encrypt(data=RandPass, public_key=PGPKey)  AS EncryptedPass FROM scope()
-                }
-            )  WHERE PGPKey != ""
-          },
-        b={SELECT * FROM collect(artifacts=Artifacts, report=report_filename,
-            args=Parameters, output=filename + ".zip", template=Template,
-            cpu_limit=CpuLimit,
-            progress_timeout=ProgressTimeout,
-            timeout=Timeout,
-            password=Password, level=Level, format=Format)})
+            metadata=if(condition=encryption_args.public_key, then={
+                  SELECT pk_encrypt(data=pass[0].Pass, public_key=encryption_args.public_key, scheme=encryption_scheme)  AS EncryptedPass FROM scope()
+                })
+            )
 
   - name: S3Collection
     type: hidden
@@ -249,6 +247,12 @@ parameters:
       LET _ <= log(message="Will collect package " + filename +
          " and upload to cloud bucket " + TargetArgs.bucket)
       LET report_filename <= if(condition=Template, then=tempfile(extension=".html"))
+
+      LET X <=  SELECT format(format="%02x", args=rand(range=255)) AS A FROM range(end=25) 
+      LET pass = SELECT * FROM switch(a={SELECT join(array=X.A) as Pass From scope() WHERE encryption_scheme =~ "pgp"},
+                        b={SELECT encryption_args.password as Pass FROM scope() WHERE encryption_scheme =~ "password"},
+                        c={SELECT Null as Pass FROM scope()})
+
       LET collect_and_upload = SELECT
           upload_file(filename=Container,
                       name=filename+".zip",
@@ -269,46 +273,15 @@ parameters:
           cpu_limit=CpuLimit,
           progress_timeout=ProgressTimeout,
           timeout=Timeout,
-          password=Password,
-          level=Level)
-
-        LET X <=  SELECT format(format="%02x", args=rand(range=255)) AS A FROM range(end=25) 
-        LET RandPass <= join(array=X.A)          
-        LET collect_and_upload_pgp = SELECT
-          upload_file(filename=Container,
-                      name=filename+".zip",
-                      accessor="file") AS Upload,
-          if(condition=Template,
-             then=upload_file(filename=Report,
-                              name=filename+".html",
-                              accessor="file")) AS ReportUpload,
-          upload_file(filename=baseline[0].Exe + ".log",
-                      name=filename+".log",
-                      accessor="file") AS LogUpload
-          FROM collect(artifacts=Artifacts,
-              report=report_filename,
-              args=Parameters,
-              format=Format,
-              output=tempfile(extension=".zip"),
-              template=Template,
-              cpu_limit=CpuLimit,
-              progress_timeout=ProgressTimeout,
-              timeout=Timeout,
-              password=RandPass,
-              level=Level,
-              metadata={
-                  SELECT base64encode(string=pgp_encrypt(data=RandPass, public_key=PGPKey))  AS EncryptedPass FROM scope()
-                  },
-              ) WHERE PGPKey != ""
-
-       LET collection = SELECT * FROM switch(
-        a=collect_and_upload_pgp,
-        b=collect_and_upload
-       ) 
-
+          password=pass[0].Pass,
+          level=Level,
+          metadata=if(condition=encryption_args.public_key, then={
+                SELECT pk_encrypt(data=pass.Pass, public_key=encryption_args.public_key, scheme=encryption_scheme)  AS EncryptedPass FROM scope()
+              })
+           )
 
       SELECT * FROM if(condition=upload_test.Path,
-          then=collection,
+          then=collect_and_upload,
           else={SELECT log(message="Aborting collection: Failed to upload to cloud bucket!")
                 FROM scope()})
 
@@ -448,8 +421,11 @@ sources:
                          default=serialize(format='json', item=parameters),
                          type="json"),
                     dict(name="Template", default=template),
-                    dict(name="Password", default=Password),
-                    dict(name="PGPKey", default=PGPKey),
+                    dict(name="encryption_scheme", default=encryption_scheme),
+                    dict(name="encryption_args", 
+                         default=serialize(format='json', item=encryption_args),
+                         type="json"
+                         ),
                     dict(name="Level", default=opt_level, type="int"),
                     dict(name="Format", default=opt_format),
                     dict(name="OutputPrefix", default=opt_output_directory),

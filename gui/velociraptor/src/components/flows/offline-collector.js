@@ -85,33 +85,54 @@ class OfflineCollectorParameters  extends React.Component {
                     </Col>
                   </Form.Group>
 
-                  <Form.Group as={Row} disabled={this.props.parameters.pgpkey}>
-                    <Form.Label column sm="3">{T("Password")}</Form.Label>
+
+
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">{T("Encryption Scheme")}</Form.Label>
                     <Col sm="8">
-                      <Form.Control as="input"
-                                    placeholder={T("Password")}
-                                    spellCheck="false"
-                                    value={this.props.parameters.password}
-                                    onChange={e => {
-                                        this.props.parameters.password = e.target.value;
+                      <Form.Control as="select"
+                                    value={this.props.parameters.encryption_scheme}
+                                    onChange={(e) => {
+                                        this.props.parameters.encryption_scheme = e.currentTarget.value;
                                         this.props.setParameters(this.props.parameters);
-                                    }} />
+                                    }}
+                      >
+                        <option value="None">{T("None")}</option>
+                        <option value="PGP">{T("PGP Encryption")}</option>
+                        <option value="Password">{T("Password")}</option>
+                      </Form.Control>
                     </Col>
                   </Form.Group>
-
-                  <Form.Group as={Row} disabled={this.props.parameters.password}>
-                    <Form.Label column sm="3">{T("PGP Key")}</Form.Label>
+                  {this.props.parameters.encryption_scheme == "PGP" && <>
+                  <Form.Group as={Row} >
+                    <Form.Label column sm="3">{T("Public Key")}</Form.Label>
                     <Col sm="8">
                       <Form.Control as="textarea"
-                                    placeholder={T("PGP Key")}
+                                    placeholder={T("Public Key To Encrypt With")}
                                     spellCheck="false"
-                                    value={this.props.parameters.pgpkey}
+                                    value={this.props.parameters.encryption_args.public_key}
                                     onChange={e => {
-                                        this.props.parameters.pgpkey = e.target.value;
+                                        this.props.parameters.encryption_args.public_key = e.target.value;
                                         this.props.setParameters(this.props.parameters);
                                     }} />
                     </Col>
-                  </Form.Group>
+                  </Form.Group></>
+                  }
+                  {this.props.parameters.encryption_scheme == "Password" && <>
+                    <Form.Group as={Row} >
+                      <Form.Label column sm="3">{T("Password")}</Form.Label>
+                      <Col sm="8">
+                        <Form.Control as="input"
+                                      placeholder={T("Password")}
+                                      spellCheck="false"
+                                      value={this.props.parameters.encryption_args.password}
+                                      onChange={e => {
+                                          this.props.parameters.encryption_args.password = e.target.value;
+                                          this.props.setParameters(this.props.parameters);
+                                      }} />
+                      </Col>
+                    </Form.Group></>
+                  }
 
                   <Form.Group as={Row}>
                     <Form.Label column sm="3">{T("Report Template")}</Form.Label>
@@ -595,7 +616,12 @@ export default class OfflineCollectorWizard extends React.Component {
             },
             template: "",
             password: "",
-            pgpkey: "",
+            pubkey: "",
+            encryption_scheme: "None",
+            encryption_args: {
+              public_key: "",
+              password: ""
+            },
             opt_level: 5,
             opt_output_directory: "",
             opt_format: "jsonl",
@@ -627,8 +653,8 @@ export default class OfflineCollectorWizard extends React.Component {
         env.push({key: "target", value: this.state.collector_parameters.target});
         env.push({key: "target_args", value: JSON.stringify(
             this.state.collector_parameters.target_args)});
-        env.push({key: "Password", value: this.state.collector_parameters.password});
-        env.push({key: "PGPKey", value: this.state.collector_parameters.pgpkey});
+        env.push({key: "encryption_scheme", value: this.state.collector_parameters.encryption_scheme});
+        env.push({key: "encryption_args", value: JSON.stringify(this.state.collector_parameters.encryption_args)});
         env.push({key: "template", value: this.state.collector_parameters.template});
         env.push({key: "opt_verbose", value: "Y"});
         env.push({key: "opt_banner", value: "Y"});
