@@ -350,6 +350,10 @@ message Authenticator {
     // MultiAuthenticator delegates to multiple other authenticators.
     repeated Authenticator sub_authenticators = 17;
 
+    string auth_redirect_template = 21 [(sem_type) = {
+            description: "URL to redirect to on Unauthorized API call",
+        }];
+
     // Defaults - no need to change these generally.
 
     // How long to keep the session alive between auth flows - default

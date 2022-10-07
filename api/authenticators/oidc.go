@@ -22,6 +22,10 @@ func (self *OidcAuthenticator) IsPasswordLess() bool {
 	return true
 }
 
+func (self *OidcAuthenticator) AuthRedirectTemplate() string {
+	return self.authenticator.AuthRedirectTemplate
+}
+
 func (self *OidcAuthenticator) Name() string {
 	name := self.authenticator.OidcName
 	if name == "" {

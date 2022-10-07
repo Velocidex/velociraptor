@@ -88,6 +88,10 @@ func (self *GoogleAuthenticator) IsPasswordLess() bool {
 	return true
 }
 
+func (self *GoogleAuthenticator) AuthRedirectTemplate() string {
+	return self.authenticator.AuthRedirectTemplate
+}
+
 // Check that the user is proerly authenticated.
 func (self *GoogleAuthenticator) AuthenticateUserHandler(
 	parent http.Handler) http.Handler {

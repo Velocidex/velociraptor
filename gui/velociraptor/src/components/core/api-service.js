@@ -108,14 +108,26 @@ const handle_error = err=>{
         return {data: {}, cancel: true};
     };
 
+    if (err.response && err.response.status === 401) {
+        const redirectTemplate = window.globals.AuthRedirectTemplate || ""
+        if (redirectTemplate !== "") {
+            const instantiatedTemplate = redirectTemplate.replaceAll('%LOCATION%', encodeURIComponent(window.location.href));
+            window.location.assign(instantiatedTemplate)
+            return {data: {}, cancel: false};
+        }
+    }
+
     let data = err.response && err.response.data;
     data = data || err.message;
 
+    const contentType = err.response && err.response.headers["content-type"];
     if (data instanceof Blob) {
         return data.text();
     } else if(data.message) {
         data = data.message;
-    };
+    } else if(contentType === "text/html") {
+      data = ""
+    }
 
     // Call all the registered hooks.
     _.each(hooks, h=>h("Error: " + data));

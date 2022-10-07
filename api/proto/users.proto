@@ -80,6 +80,8 @@ message ApiUserInterfaceTraits {
     string org = 24;
 
     bool disable_server_events = 26;
+
+    string auth_redirect_template = 27;
 };
 
 // Describe the user to the GUI.

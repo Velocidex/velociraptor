@@ -55,6 +55,10 @@ func (self *AzureAuthenticator) IsPasswordLess() bool {
 	return true
 }
 
+func (self *AzureAuthenticator) AuthRedirectTemplate() string {
+	return self.authenticator.AuthRedirectTemplate
+}
+
 func (self *AzureAuthenticator) AddHandlers(mux *http.ServeMux) error {
 	mux.Handle(self.base+"auth/azure/login", self.oauthAzureLogin())
 	mux.Handle(self.base+"auth/azure/callback", self.oauthAzureCallback())

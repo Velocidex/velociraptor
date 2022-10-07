@@ -30,6 +30,10 @@ func (self *SamlAuthenticator) IsPasswordLess() bool {
 	return true
 }
 
+func (self *SamlAuthenticator) AuthRedirectTemplate() string {
+	return self.authenticator.AuthRedirectTemplate
+}
+
 func (self *SamlAuthenticator) AddHandlers(mux *http.ServeMux) error {
 
 	logger := logging.Manager.GetLogger(self.config_obj, &logging.GUIComponent)

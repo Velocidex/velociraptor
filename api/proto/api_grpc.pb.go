@@ -4,10 +4,10 @@ package proto
 
 import (
 	context "context"
-	empty "github.com/golang/protobuf/ptypes/empty"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	proto2 "www.velocidex.com/golang/velociraptor/actions/proto"
 	proto1 "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -29,24 +29,24 @@ type APIClient interface {
 	EstimateHunt(ctx context.Context, in *HuntEstimateRequest, opts ...grpc.CallOption) (*HuntStats, error)
 	ListHunts(ctx context.Context, in *ListHuntsRequest, opts ...grpc.CallOption) (*ListHuntsResponse, error)
 	GetHunt(ctx context.Context, in *GetHuntRequest, opts ...grpc.CallOption) (*Hunt, error)
-	ModifyHunt(ctx context.Context, in *Hunt, opts ...grpc.CallOption) (*empty.Empty, error)
+	ModifyHunt(ctx context.Context, in *Hunt, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetHuntFlows(ctx context.Context, in *GetTableRequest, opts ...grpc.CallOption) (*GetTableResponse, error)
 	GetHuntResults(ctx context.Context, in *GetHuntResultsRequest, opts ...grpc.CallOption) (*GetTableResponse, error)
 	// Clients.
-	NotifyClients(ctx context.Context, in *NotificationRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	NotifyClients(ctx context.Context, in *NotificationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	LabelClients(ctx context.Context, in *LabelClientsRequest, opts ...grpc.CallOption) (*APIResponse, error)
 	ListClients(ctx context.Context, in *SearchClientsRequest, opts ...grpc.CallOption) (*SearchClientsResponse, error)
 	GetClient(ctx context.Context, in *GetClientRequest, opts ...grpc.CallOption) (*ApiClient, error)
 	GetClientMetadata(ctx context.Context, in *GetClientRequest, opts ...grpc.CallOption) (*ClientMetadata, error)
-	SetClientMetadata(ctx context.Context, in *ClientMetadata, opts ...grpc.CallOption) (*empty.Empty, error)
+	SetClientMetadata(ctx context.Context, in *ClientMetadata, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetClientFlows(ctx context.Context, in *ApiFlowRequest, opts ...grpc.CallOption) (*ApiFlowResponse, error)
 	// Users
-	GetUserUITraits(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ApiUser, error)
-	SetGUIOptions(ctx context.Context, in *SetGUIOptionsRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	GetUserUITraits(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ApiUser, error)
+	SetGUIOptions(ctx context.Context, in *SetGUIOptionsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// List all the GUI users known on this server.
-	GetUsers(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Users, error)
+	GetUsers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Users, error)
 	GetUserFavorites(ctx context.Context, in *Favorite, opts ...grpc.CallOption) (*Favorites, error)
-	SetPassword(ctx context.Context, in *SetPasswordRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	SetPassword(ctx context.Context, in *SetPasswordRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// VFS
 	VFSListDirectory(ctx context.Context, in *VFSListRequest, opts ...grpc.CallOption) (*VFSListResponse, error)
 	VFSRefreshDirectory(ctx context.Context, in *VFSRefreshDirectoryRequest, opts ...grpc.CallOption) (*proto.ArtifactCollectorResponse, error)
@@ -58,7 +58,7 @@ type APIClient interface {
 	CancelFlow(ctx context.Context, in *ApiFlowRequest, opts ...grpc.CallOption) (*StartFlowResponse, error)
 	GetFlowDetails(ctx context.Context, in *ApiFlowRequest, opts ...grpc.CallOption) (*FlowDetails, error)
 	GetFlowRequests(ctx context.Context, in *ApiFlowRequest, opts ...grpc.CallOption) (*ApiFlowRequestDetails, error)
-	GetKeywordCompletions(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*KeywordCompletions, error)
+	GetKeywordCompletions(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*KeywordCompletions, error)
 	// Artifacts
 	GetArtifacts(ctx context.Context, in *GetArtifactsRequest, opts ...grpc.CallOption) (*proto1.ArtifactDescriptors, error)
 	GetArtifactFile(ctx context.Context, in *GetArtifactRequest, opts ...grpc.CallOption) (*GetArtifactResponse, error)
@@ -71,7 +71,7 @@ type APIClient interface {
 	GetReport(ctx context.Context, in *GetReportRequest, opts ...grpc.CallOption) (*GetReportResponse, error)
 	// Server Monitoring Artifacts - manage the Server Monitoring
 	// Service..
-	GetServerMonitoringState(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*proto.ArtifactCollectorArgs, error)
+	GetServerMonitoringState(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*proto.ArtifactCollectorArgs, error)
 	// Server Monitoring Artifacts - manage the Server Monitoring
 	// Service.
 	SetServerMonitoringState(ctx context.Context, in *proto.ArtifactCollectorArgs, opts ...grpc.CallOption) (*proto.ArtifactCollectorArgs, error)
@@ -80,7 +80,7 @@ type APIClient interface {
 	GetClientMonitoringState(ctx context.Context, in *proto.GetClientMonitoringStateRequest, opts ...grpc.CallOption) (*proto.ClientEventTable, error)
 	// Client Monitoring Artifacts - manage the Client Monitoring
 	// Service.
-	SetClientMonitoringState(ctx context.Context, in *proto.ClientEventTable, opts ...grpc.CallOption) (*empty.Empty, error)
+	SetClientMonitoringState(ctx context.Context, in *proto.ClientEventTable, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListAvailableEventResults(ctx context.Context, in *ListAvailableEventResultsRequest, opts ...grpc.CallOption) (*ListAvailableEventResultsResponse, error)
 	// Schedule downloads.
 	CreateDownloadFile(ctx context.Context, in *CreateDownloadRequest, opts ...grpc.CallOption) (*CreateDownloadResponse, error)
@@ -91,8 +91,8 @@ type APIClient interface {
 	NewNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*NotebookMetadata, error)
 	GetNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*NotebookCell, error)
 	UpdateNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*NotebookCell, error)
-	CancelNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*empty.Empty, error)
-	CreateNotebookDownloadFile(ctx context.Context, in *NotebookExportRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	CancelNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	CreateNotebookDownloadFile(ctx context.Context, in *NotebookExportRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	UploadNotebookAttachment(ctx context.Context, in *NotebookFileUploadRequest, opts ...grpc.CallOption) (*NotebookFileUploadResponse, error)
 	// This can be used by API clients to fetch file content.
 	VFSGetBuffer(ctx context.Context, in *VFSFileBuffer, opts ...grpc.CallOption) (*VFSFileBuffer, error)
@@ -101,13 +101,13 @@ type APIClient interface {
 	// Watch for events from the master.
 	WatchEvent(ctx context.Context, in *EventRequest, opts ...grpc.CallOption) (API_WatchEventClient, error)
 	// Push the events to the master
-	PushEvents(ctx context.Context, in *PushEventRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	PushEvents(ctx context.Context, in *PushEventRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Push monitoring event to the server.
-	WriteEvent(ctx context.Context, in *proto2.VQLResponse, opts ...grpc.CallOption) (*empty.Empty, error)
+	WriteEvent(ctx context.Context, in *proto2.VQLResponse, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// Remote data store access.
 	GetSubject(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*DataResponse, error)
 	SetSubject(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*DataResponse, error)
-	DeleteSubject(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	DeleteSubject(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListChildren(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*ListChildrenResponse, error)
 	// Health check protocol as in https://github.com/grpc/grpc/blob/master/doc/health-checking.md
 	Check(ctx context.Context, in *HealthCheckRequest, opts ...grpc.CallOption) (*HealthCheckResponse, error)
@@ -157,8 +157,8 @@ func (c *aPIClient) GetHunt(ctx context.Context, in *GetHuntRequest, opts ...grp
 	return out, nil
 }
 
-func (c *aPIClient) ModifyHunt(ctx context.Context, in *Hunt, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *aPIClient) ModifyHunt(ctx context.Context, in *Hunt, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/proto.API/ModifyHunt", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -184,8 +184,8 @@ func (c *aPIClient) GetHuntResults(ctx context.Context, in *GetHuntResultsReques
 	return out, nil
 }
 
-func (c *aPIClient) NotifyClients(ctx context.Context, in *NotificationRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *aPIClient) NotifyClients(ctx context.Context, in *NotificationRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/proto.API/NotifyClients", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -229,8 +229,8 @@ func (c *aPIClient) GetClientMetadata(ctx context.Context, in *GetClientRequest,
 	return out, nil
 }
 
-func (c *aPIClient) SetClientMetadata(ctx context.Context, in *ClientMetadata, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *aPIClient) SetClientMetadata(ctx context.Context, in *ClientMetadata, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/proto.API/SetClientMetadata", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -247,7 +247,7 @@ func (c *aPIClient) GetClientFlows(ctx context.Context, in *ApiFlowRequest, opts
 	return out, nil
 }
 
-func (c *aPIClient) GetUserUITraits(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*ApiUser, error) {
+func (c *aPIClient) GetUserUITraits(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ApiUser, error) {
 	out := new(ApiUser)
 	err := c.cc.Invoke(ctx, "/proto.API/GetUserUITraits", in, out, opts...)
 	if err != nil {
@@ -256,8 +256,8 @@ func (c *aPIClient) GetUserUITraits(ctx context.Context, in *empty.Empty, opts .
 	return out, nil
 }
 
-func (c *aPIClient) SetGUIOptions(ctx context.Context, in *SetGUIOptionsRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *aPIClient) SetGUIOptions(ctx context.Context, in *SetGUIOptionsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/proto.API/SetGUIOptions", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -265,7 +265,7 @@ func (c *aPIClient) SetGUIOptions(ctx context.Context, in *SetGUIOptionsRequest,
 	return out, nil
 }
 
-func (c *aPIClient) GetUsers(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*Users, error) {
+func (c *aPIClient) GetUsers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Users, error) {
 	out := new(Users)
 	err := c.cc.Invoke(ctx, "/proto.API/GetUsers", in, out, opts...)
 	if err != nil {
@@ -283,8 +283,8 @@ func (c *aPIClient) GetUserFavorites(ctx context.Context, in *Favorite, opts ...
 	return out, nil
 }
 
-func (c *aPIClient) SetPassword(ctx context.Context, in *SetPasswordRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *aPIClient) SetPassword(ctx context.Context, in *SetPasswordRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/proto.API/SetPassword", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -373,7 +373,7 @@ func (c *aPIClient) GetFlowRequests(ctx context.Context, in *ApiFlowRequest, opt
 	return out, nil
 }
 
-func (c *aPIClient) GetKeywordCompletions(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*KeywordCompletions, error) {
+func (c *aPIClient) GetKeywordCompletions(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*KeywordCompletions, error) {
 	out := new(KeywordCompletions)
 	err := c.cc.Invoke(ctx, "/proto.API/GetKeywordCompletions", in, out, opts...)
 	if err != nil {
@@ -445,7 +445,7 @@ func (c *aPIClient) GetReport(ctx context.Context, in *GetReportRequest, opts ..
 	return out, nil
 }
 
-func (c *aPIClient) GetServerMonitoringState(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*proto.ArtifactCollectorArgs, error) {
+func (c *aPIClient) GetServerMonitoringState(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*proto.ArtifactCollectorArgs, error) {
 	out := new(proto.ArtifactCollectorArgs)
 	err := c.cc.Invoke(ctx, "/proto.API/GetServerMonitoringState", in, out, opts...)
 	if err != nil {
@@ -472,8 +472,8 @@ func (c *aPIClient) GetClientMonitoringState(ctx context.Context, in *proto.GetC
 	return out, nil
 }
 
-func (c *aPIClient) SetClientMonitoringState(ctx context.Context, in *proto.ClientEventTable, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *aPIClient) SetClientMonitoringState(ctx context.Context, in *proto.ClientEventTable, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/proto.API/SetClientMonitoringState", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -553,8 +553,8 @@ func (c *aPIClient) UpdateNotebookCell(ctx context.Context, in *NotebookCellRequ
 	return out, nil
 }
 
-func (c *aPIClient) CancelNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *aPIClient) CancelNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/proto.API/CancelNotebookCell", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -562,8 +562,8 @@ func (c *aPIClient) CancelNotebookCell(ctx context.Context, in *NotebookCellRequ
 	return out, nil
 }
 
-func (c *aPIClient) CreateNotebookDownloadFile(ctx context.Context, in *NotebookExportRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *aPIClient) CreateNotebookDownloadFile(ctx context.Context, in *NotebookExportRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/proto.API/CreateNotebookDownloadFile", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -653,8 +653,8 @@ func (x *aPIWatchEventClient) Recv() (*EventResponse, error) {
 	return m, nil
 }
 
-func (c *aPIClient) PushEvents(ctx context.Context, in *PushEventRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *aPIClient) PushEvents(ctx context.Context, in *PushEventRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/proto.API/PushEvents", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -662,8 +662,8 @@ func (c *aPIClient) PushEvents(ctx context.Context, in *PushEventRequest, opts .
 	return out, nil
 }
 
-func (c *aPIClient) WriteEvent(ctx context.Context, in *proto2.VQLResponse, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *aPIClient) WriteEvent(ctx context.Context, in *proto2.VQLResponse, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/proto.API/WriteEvent", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -689,8 +689,8 @@ func (c *aPIClient) SetSubject(ctx context.Context, in *DataRequest, opts ...grp
 	return out, nil
 }
 
-func (c *aPIClient) DeleteSubject(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *aPIClient) DeleteSubject(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/proto.API/DeleteSubject", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -727,24 +727,24 @@ type APIServer interface {
 	EstimateHunt(context.Context, *HuntEstimateRequest) (*HuntStats, error)
 	ListHunts(context.Context, *ListHuntsRequest) (*ListHuntsResponse, error)
 	GetHunt(context.Context, *GetHuntRequest) (*Hunt, error)
-	ModifyHunt(context.Context, *Hunt) (*empty.Empty, error)
+	ModifyHunt(context.Context, *Hunt) (*emptypb.Empty, error)
 	GetHuntFlows(context.Context, *GetTableRequest) (*GetTableResponse, error)
 	GetHuntResults(context.Context, *GetHuntResultsRequest) (*GetTableResponse, error)
 	// Clients.
-	NotifyClients(context.Context, *NotificationRequest) (*empty.Empty, error)
+	NotifyClients(context.Context, *NotificationRequest) (*emptypb.Empty, error)
 	LabelClients(context.Context, *LabelClientsRequest) (*APIResponse, error)
 	ListClients(context.Context, *SearchClientsRequest) (*SearchClientsResponse, error)
 	GetClient(context.Context, *GetClientRequest) (*ApiClient, error)
 	GetClientMetadata(context.Context, *GetClientRequest) (*ClientMetadata, error)
-	SetClientMetadata(context.Context, *ClientMetadata) (*empty.Empty, error)
+	SetClientMetadata(context.Context, *ClientMetadata) (*emptypb.Empty, error)
 	GetClientFlows(context.Context, *ApiFlowRequest) (*ApiFlowResponse, error)
 	// Users
-	GetUserUITraits(context.Context, *empty.Empty) (*ApiUser, error)
-	SetGUIOptions(context.Context, *SetGUIOptionsRequest) (*empty.Empty, error)
+	GetUserUITraits(context.Context, *emptypb.Empty) (*ApiUser, error)
+	SetGUIOptions(context.Context, *SetGUIOptionsRequest) (*emptypb.Empty, error)
 	// List all the GUI users known on this server.
-	GetUsers(context.Context, *empty.Empty) (*Users, error)
+	GetUsers(context.Context, *emptypb.Empty) (*Users, error)
 	GetUserFavorites(context.Context, *Favorite) (*Favorites, error)
-	SetPassword(context.Context, *SetPasswordRequest) (*empty.Empty, error)
+	SetPassword(context.Context, *SetPasswordRequest) (*emptypb.Empty, error)
 	// VFS
 	VFSListDirectory(context.Context, *VFSListRequest) (*VFSListResponse, error)
 	VFSRefreshDirectory(context.Context, *VFSRefreshDirectoryRequest) (*proto.ArtifactCollectorResponse, error)
@@ -756,7 +756,7 @@ type APIServer interface {
 	CancelFlow(context.Context, *ApiFlowRequest) (*StartFlowResponse, error)
 	GetFlowDetails(context.Context, *ApiFlowRequest) (*FlowDetails, error)
 	GetFlowRequests(context.Context, *ApiFlowRequest) (*ApiFlowRequestDetails, error)
-	GetKeywordCompletions(context.Context, *empty.Empty) (*KeywordCompletions, error)
+	GetKeywordCompletions(context.Context, *emptypb.Empty) (*KeywordCompletions, error)
 	// Artifacts
 	GetArtifacts(context.Context, *GetArtifactsRequest) (*proto1.ArtifactDescriptors, error)
 	GetArtifactFile(context.Context, *GetArtifactRequest) (*GetArtifactResponse, error)
@@ -769,7 +769,7 @@ type APIServer interface {
 	GetReport(context.Context, *GetReportRequest) (*GetReportResponse, error)
 	// Server Monitoring Artifacts - manage the Server Monitoring
 	// Service..
-	GetServerMonitoringState(context.Context, *empty.Empty) (*proto.ArtifactCollectorArgs, error)
+	GetServerMonitoringState(context.Context, *emptypb.Empty) (*proto.ArtifactCollectorArgs, error)
 	// Server Monitoring Artifacts - manage the Server Monitoring
 	// Service.
 	SetServerMonitoringState(context.Context, *proto.ArtifactCollectorArgs) (*proto.ArtifactCollectorArgs, error)
@@ -778,7 +778,7 @@ type APIServer interface {
 	GetClientMonitoringState(context.Context, *proto.GetClientMonitoringStateRequest) (*proto.ClientEventTable, error)
 	// Client Monitoring Artifacts - manage the Client Monitoring
 	// Service.
-	SetClientMonitoringState(context.Context, *proto.ClientEventTable) (*empty.Empty, error)
+	SetClientMonitoringState(context.Context, *proto.ClientEventTable) (*emptypb.Empty, error)
 	ListAvailableEventResults(context.Context, *ListAvailableEventResultsRequest) (*ListAvailableEventResultsResponse, error)
 	// Schedule downloads.
 	CreateDownloadFile(context.Context, *CreateDownloadRequest) (*CreateDownloadResponse, error)
@@ -789,8 +789,8 @@ type APIServer interface {
 	NewNotebookCell(context.Context, *NotebookCellRequest) (*NotebookMetadata, error)
 	GetNotebookCell(context.Context, *NotebookCellRequest) (*NotebookCell, error)
 	UpdateNotebookCell(context.Context, *NotebookCellRequest) (*NotebookCell, error)
-	CancelNotebookCell(context.Context, *NotebookCellRequest) (*empty.Empty, error)
-	CreateNotebookDownloadFile(context.Context, *NotebookExportRequest) (*empty.Empty, error)
+	CancelNotebookCell(context.Context, *NotebookCellRequest) (*emptypb.Empty, error)
+	CreateNotebookDownloadFile(context.Context, *NotebookExportRequest) (*emptypb.Empty, error)
 	UploadNotebookAttachment(context.Context, *NotebookFileUploadRequest) (*NotebookFileUploadResponse, error)
 	// This can be used by API clients to fetch file content.
 	VFSGetBuffer(context.Context, *VFSFileBuffer) (*VFSFileBuffer, error)
@@ -799,13 +799,13 @@ type APIServer interface {
 	// Watch for events from the master.
 	WatchEvent(*EventRequest, API_WatchEventServer) error
 	// Push the events to the master
-	PushEvents(context.Context, *PushEventRequest) (*empty.Empty, error)
+	PushEvents(context.Context, *PushEventRequest) (*emptypb.Empty, error)
 	// Push monitoring event to the server.
-	WriteEvent(context.Context, *proto2.VQLResponse) (*empty.Empty, error)
+	WriteEvent(context.Context, *proto2.VQLResponse) (*emptypb.Empty, error)
 	// Remote data store access.
 	GetSubject(context.Context, *DataRequest) (*DataResponse, error)
 	SetSubject(context.Context, *DataRequest) (*DataResponse, error)
-	DeleteSubject(context.Context, *DataRequest) (*empty.Empty, error)
+	DeleteSubject(context.Context, *DataRequest) (*emptypb.Empty, error)
 	ListChildren(context.Context, *DataRequest) (*ListChildrenResponse, error)
 	// Health check protocol as in https://github.com/grpc/grpc/blob/master/doc/health-checking.md
 	Check(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error)
@@ -828,7 +828,7 @@ func (UnimplementedAPIServer) ListHunts(context.Context, *ListHuntsRequest) (*Li
 func (UnimplementedAPIServer) GetHunt(context.Context, *GetHuntRequest) (*Hunt, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetHunt not implemented")
 }
-func (UnimplementedAPIServer) ModifyHunt(context.Context, *Hunt) (*empty.Empty, error) {
+func (UnimplementedAPIServer) ModifyHunt(context.Context, *Hunt) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ModifyHunt not implemented")
 }
 func (UnimplementedAPIServer) GetHuntFlows(context.Context, *GetTableRequest) (*GetTableResponse, error) {
@@ -837,7 +837,7 @@ func (UnimplementedAPIServer) GetHuntFlows(context.Context, *GetTableRequest) (*
 func (UnimplementedAPIServer) GetHuntResults(context.Context, *GetHuntResultsRequest) (*GetTableResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetHuntResults not implemented")
 }
-func (UnimplementedAPIServer) NotifyClients(context.Context, *NotificationRequest) (*empty.Empty, error) {
+func (UnimplementedAPIServer) NotifyClients(context.Context, *NotificationRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method NotifyClients not implemented")
 }
 func (UnimplementedAPIServer) LabelClients(context.Context, *LabelClientsRequest) (*APIResponse, error) {
@@ -852,25 +852,25 @@ func (UnimplementedAPIServer) GetClient(context.Context, *GetClientRequest) (*Ap
 func (UnimplementedAPIServer) GetClientMetadata(context.Context, *GetClientRequest) (*ClientMetadata, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetClientMetadata not implemented")
 }
-func (UnimplementedAPIServer) SetClientMetadata(context.Context, *ClientMetadata) (*empty.Empty, error) {
+func (UnimplementedAPIServer) SetClientMetadata(context.Context, *ClientMetadata) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetClientMetadata not implemented")
 }
 func (UnimplementedAPIServer) GetClientFlows(context.Context, *ApiFlowRequest) (*ApiFlowResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetClientFlows not implemented")
 }
-func (UnimplementedAPIServer) GetUserUITraits(context.Context, *empty.Empty) (*ApiUser, error) {
+func (UnimplementedAPIServer) GetUserUITraits(context.Context, *emptypb.Empty) (*ApiUser, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserUITraits not implemented")
 }
-func (UnimplementedAPIServer) SetGUIOptions(context.Context, *SetGUIOptionsRequest) (*empty.Empty, error) {
+func (UnimplementedAPIServer) SetGUIOptions(context.Context, *SetGUIOptionsRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetGUIOptions not implemented")
 }
-func (UnimplementedAPIServer) GetUsers(context.Context, *empty.Empty) (*Users, error) {
+func (UnimplementedAPIServer) GetUsers(context.Context, *emptypb.Empty) (*Users, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUsers not implemented")
 }
 func (UnimplementedAPIServer) GetUserFavorites(context.Context, *Favorite) (*Favorites, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserFavorites not implemented")
 }
-func (UnimplementedAPIServer) SetPassword(context.Context, *SetPasswordRequest) (*empty.Empty, error) {
+func (UnimplementedAPIServer) SetPassword(context.Context, *SetPasswordRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetPassword not implemented")
 }
 func (UnimplementedAPIServer) VFSListDirectory(context.Context, *VFSListRequest) (*VFSListResponse, error) {
@@ -900,7 +900,7 @@ func (UnimplementedAPIServer) GetFlowDetails(context.Context, *ApiFlowRequest) (
 func (UnimplementedAPIServer) GetFlowRequests(context.Context, *ApiFlowRequest) (*ApiFlowRequestDetails, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetFlowRequests not implemented")
 }
-func (UnimplementedAPIServer) GetKeywordCompletions(context.Context, *empty.Empty) (*KeywordCompletions, error) {
+func (UnimplementedAPIServer) GetKeywordCompletions(context.Context, *emptypb.Empty) (*KeywordCompletions, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetKeywordCompletions not implemented")
 }
 func (UnimplementedAPIServer) GetArtifacts(context.Context, *GetArtifactsRequest) (*proto1.ArtifactDescriptors, error) {
@@ -924,7 +924,7 @@ func (UnimplementedAPIServer) SetToolInfo(context.Context, *proto1.Tool) (*proto
 func (UnimplementedAPIServer) GetReport(context.Context, *GetReportRequest) (*GetReportResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetReport not implemented")
 }
-func (UnimplementedAPIServer) GetServerMonitoringState(context.Context, *empty.Empty) (*proto.ArtifactCollectorArgs, error) {
+func (UnimplementedAPIServer) GetServerMonitoringState(context.Context, *emptypb.Empty) (*proto.ArtifactCollectorArgs, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetServerMonitoringState not implemented")
 }
 func (UnimplementedAPIServer) SetServerMonitoringState(context.Context, *proto.ArtifactCollectorArgs) (*proto.ArtifactCollectorArgs, error) {
@@ -933,7 +933,7 @@ func (UnimplementedAPIServer) SetServerMonitoringState(context.Context, *proto.A
 func (UnimplementedAPIServer) GetClientMonitoringState(context.Context, *proto.GetClientMonitoringStateRequest) (*proto.ClientEventTable, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetClientMonitoringState not implemented")
 }
-func (UnimplementedAPIServer) SetClientMonitoringState(context.Context, *proto.ClientEventTable) (*empty.Empty, error) {
+func (UnimplementedAPIServer) SetClientMonitoringState(context.Context, *proto.ClientEventTable) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetClientMonitoringState not implemented")
 }
 func (UnimplementedAPIServer) ListAvailableEventResults(context.Context, *ListAvailableEventResultsRequest) (*ListAvailableEventResultsResponse, error) {
@@ -960,10 +960,10 @@ func (UnimplementedAPIServer) GetNotebookCell(context.Context, *NotebookCellRequ
 func (UnimplementedAPIServer) UpdateNotebookCell(context.Context, *NotebookCellRequest) (*NotebookCell, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateNotebookCell not implemented")
 }
-func (UnimplementedAPIServer) CancelNotebookCell(context.Context, *NotebookCellRequest) (*empty.Empty, error) {
+func (UnimplementedAPIServer) CancelNotebookCell(context.Context, *NotebookCellRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CancelNotebookCell not implemented")
 }
-func (UnimplementedAPIServer) CreateNotebookDownloadFile(context.Context, *NotebookExportRequest) (*empty.Empty, error) {
+func (UnimplementedAPIServer) CreateNotebookDownloadFile(context.Context, *NotebookExportRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateNotebookDownloadFile not implemented")
 }
 func (UnimplementedAPIServer) UploadNotebookAttachment(context.Context, *NotebookFileUploadRequest) (*NotebookFileUploadResponse, error) {
@@ -978,10 +978,10 @@ func (UnimplementedAPIServer) Query(*proto2.VQLCollectorArgs, API_QueryServer) e
 func (UnimplementedAPIServer) WatchEvent(*EventRequest, API_WatchEventServer) error {
 	return status.Errorf(codes.Unimplemented, "method WatchEvent not implemented")
 }
-func (UnimplementedAPIServer) PushEvents(context.Context, *PushEventRequest) (*empty.Empty, error) {
+func (UnimplementedAPIServer) PushEvents(context.Context, *PushEventRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PushEvents not implemented")
 }
-func (UnimplementedAPIServer) WriteEvent(context.Context, *proto2.VQLResponse) (*empty.Empty, error) {
+func (UnimplementedAPIServer) WriteEvent(context.Context, *proto2.VQLResponse) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WriteEvent not implemented")
 }
 func (UnimplementedAPIServer) GetSubject(context.Context, *DataRequest) (*DataResponse, error) {
@@ -990,7 +990,7 @@ func (UnimplementedAPIServer) GetSubject(context.Context, *DataRequest) (*DataRe
 func (UnimplementedAPIServer) SetSubject(context.Context, *DataRequest) (*DataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetSubject not implemented")
 }
-func (UnimplementedAPIServer) DeleteSubject(context.Context, *DataRequest) (*empty.Empty, error) {
+func (UnimplementedAPIServer) DeleteSubject(context.Context, *DataRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteSubject not implemented")
 }
 func (UnimplementedAPIServer) ListChildren(context.Context, *DataRequest) (*ListChildrenResponse, error) {
@@ -1265,7 +1265,7 @@ func _API_GetClientFlows_Handler(srv interface{}, ctx context.Context, dec func(
 }
 
 func _API_GetUserUITraits_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1277,7 +1277,7 @@ func _API_GetUserUITraits_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: "/proto.API/GetUserUITraits",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(APIServer).GetUserUITraits(ctx, req.(*empty.Empty))
+		return srv.(APIServer).GetUserUITraits(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1301,7 +1301,7 @@ func _API_SetGUIOptions_Handler(srv interface{}, ctx context.Context, dec func(i
 }
 
 func _API_GetUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1313,7 +1313,7 @@ func _API_GetUsers_Handler(srv interface{}, ctx context.Context, dec func(interf
 		FullMethod: "/proto.API/GetUsers",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(APIServer).GetUsers(ctx, req.(*empty.Empty))
+		return srv.(APIServer).GetUsers(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1517,7 +1517,7 @@ func _API_GetFlowRequests_Handler(srv interface{}, ctx context.Context, dec func
 }
 
 func _API_GetKeywordCompletions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1529,7 +1529,7 @@ func _API_GetKeywordCompletions_Handler(srv interface{}, ctx context.Context, de
 		FullMethod: "/proto.API/GetKeywordCompletions",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(APIServer).GetKeywordCompletions(ctx, req.(*empty.Empty))
+		return srv.(APIServer).GetKeywordCompletions(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1661,7 +1661,7 @@ func _API_GetReport_Handler(srv interface{}, ctx context.Context, dec func(inter
 }
 
 func _API_GetServerMonitoringState_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1673,7 +1673,7 @@ func _API_GetServerMonitoringState_Handler(srv interface{}, ctx context.Context,
 		FullMethod: "/proto.API/GetServerMonitoringState",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(APIServer).GetServerMonitoringState(ctx, req.(*empty.Empty))
+		return srv.(APIServer).GetServerMonitoringState(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }

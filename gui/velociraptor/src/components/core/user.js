@@ -27,6 +27,10 @@ export class UserSettings extends React.Component {
                 window.globals.OrgId = traits.org;
             }
 
+            if (traits.auth_redirect_template) {
+                window.globals.AuthRedirectTemplate = traits.auth_redirect_template;
+            }
+
             traits.username = response.data.username;
             traits.orgs = response.data.orgs;
 
