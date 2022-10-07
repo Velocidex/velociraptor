@@ -27,14 +27,14 @@ type PKEncryptArgs struct {
 	Data       string `vfilter:"required,field=data,doc=The data to encrypt"`
 	SigningKey string `vfilter:"optional,field=signing_key,doc=Private key to sign with"`
 	PublicKey  string `vfilter:"required,field=public_key,doc=Public key to encrypt with"`
-	Scheme     string `vfilter:"required,field=scheme,doc=Encryption scheme to use. Currently supported: PGP"`
+	Scheme     string `vfilter:"required,field=scheme,doc=Encryption scheme to use. Currently supported: PGP,X509"`
 }
 
 type PKDecryptArgs struct {
 	Data       string `vfilter:"required,field=data,doc=The data to decrypt"`
 	SigningKey string `vfilter:"optional,field=signing_key,doc=Public key to verify signature"`
 	PrivateKey string `vfilter:"required,field=private_key,doc=Private key to decrypt with"`
-	Scheme     string `vfilter:"required,field=scheme,doc=Encryption scheme to use. Currently supported: PGP"`
+	Scheme     string `vfilter:"required,field=scheme,doc=Encryption scheme to use. Currently supported: PGP,RSA"`
 }
 
 type PKEncryptFunction struct{}
@@ -187,15 +187,30 @@ func (self *PKDecryptFunction) Call(ctx context.Context,
 			reader := strings.NewReader(arg.Data)
 			m, err := decryptPGP(pk_entity, signing_key_entity, reader)
 			if err != nil {
-				scope.Log("pk_decrypt: %s", err.Error())
+				scope.Log("ERROR:pk_decrypt: %s", err.Error())
 				return vfilter.Null{}
 			}
 			bytes, err := ioutil.ReadAll(m.UnverifiedBody)
 			if err != nil {
-				scope.Log("pk_decrypt: %s", err.Error())
+				scope.Log("ERROR:pk_decrypt: %s", err.Error())
 				return vfilter.Null{}
 			}
 			return bytes
+		}
+	case "rsa":
+		{
+			key, err := x509.ParsePKCS1PrivateKey([]byte(arg.PrivateKey))
+			if err != nil {
+				scope.Log("ERROR:pk_decrypt: %s", err.Error())
+				return vfilter.Null{}
+			}
+			hash := sha512.New()
+			plaintext, err := rsa.DecryptOAEP(hash, rand.Reader, key, []byte(arg.Data), nil)
+			if err != nil {
+				scope.Log("ERROR:pk_decrypt: %s", err.Error())
+				return vfilter.Null{}
+			}
+			return plaintext
 		}
 	default:
 		scope.Log("ERROR:pk_encrypt: Unsupported Encryption Scheme.")
