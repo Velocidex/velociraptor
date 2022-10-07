@@ -172,7 +172,7 @@ parameters:
             level=Level,
             format=Format,
             metadata=if(condition=encryption_args.public_key, then={
-                  SELECT pk_encrypt(data=pass[0].Pass, public_key=encryption_args.public_key, scheme=encryption_scheme)  AS EncryptedPass FROM scope()
+                  SELECT pk_encrypt(data=pass[0].Pass, public_key=encryption_args.public_key, scheme=encryption_scheme)  AS EncryptedPass, encryption_scheme as Scheme FROM scope()
                 })
             )
 
@@ -276,7 +276,7 @@ parameters:
           password=pass[0].Pass,
           level=Level,
           metadata=if(condition=encryption_args.public_key, then={
-                SELECT pk_encrypt(data=pass.Pass, public_key=encryption_args.public_key, scheme=encryption_scheme)  AS EncryptedPass FROM scope()
+                SELECT pk_encrypt(data=pass.Pass, public_key=encryption_args.public_key, scheme=encryption_scheme)  AS EncryptedPass, encryption_scheme as Scheme  FROM scope()
               })
            )
 

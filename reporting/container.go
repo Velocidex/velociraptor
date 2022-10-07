@@ -429,7 +429,7 @@ func NewContainer(
 	if password != "" {
 
 		result.delegate_zip = zip.NewWriter(result.writer)
-		if metadata != nil {
+		if metadata != nil && len(metadata) != 0 {
 			fh, err := result.delegate_zip.Create("metadata.json")
 			if err != nil {
 				return nil, err
@@ -455,7 +455,7 @@ func NewContainer(
 			zip.Deflate, func(out io.Writer) (io.WriteCloser, error) {
 				return flate.NewWriter(out, int(level))
 			})
-		if metadata != nil {
+		if metadata != nil && len(metadata) != 0 {
 			fh, err := result.zip.Create("metadata.json")
 			if err != nil {
 				return nil, err
