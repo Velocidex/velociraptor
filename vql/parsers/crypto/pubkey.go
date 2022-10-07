@@ -3,6 +3,11 @@ package crypto
 import (
 	"bufio"
 	"bytes"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/sha512"
+	"crypto/x509"
+	"errors"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -78,9 +83,35 @@ func (self *PKEncryptFunction) Call(ctx context.Context,
 			writer.Flush()
 			return b.Bytes()
 		}
+	case "x509":
+		{
+			cert, err := x509.ParseCertificate([]byte(arg.PublicKey))
+			if err != nil {
+				scope.Log("ERROR:pk_encrypt: %s", err.Error())
+				return vfilter.Null{}
+			}
+			ciphertext, err := encryptWithX509PubKey([]byte(arg.Data), cert)
+			if err != nil {
+				scope.Log("ERROR:pk_encrypt: %s", err.Error())
+				return vfilter.Null{}
+			}
+			return ciphertext
+		}
+
 	default:
 		scope.Log("ERROR:pk_encrypt: Unsupported Encryption Scheme.")
 		return vfilter.Null{}
+	}
+}
+
+func encryptWithX509PubKey(msg []byte, cert *x509.Certificate) ([]byte, error) {
+	pub := cert.PublicKey
+	switch pub := pub.(type) {
+	case *rsa.PublicKey:
+		hash := sha512.New()
+		return rsa.EncryptOAEP(hash, rand.Reader, pub, msg, nil)
+	default:
+		return nil, errors.New("Unsupported Type of Public Key")
 	}
 }
 
