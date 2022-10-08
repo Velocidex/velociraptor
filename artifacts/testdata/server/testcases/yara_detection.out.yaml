@@ -7,7 +7,8 @@ LET _ <= SELECT
         dict(
           Name='wkscli.dll',
           ModTime=timestamp(string='2021-06-21T05:57:50.185936246Z'),
-          FullPath=srcDir + '/artifacts/testdata/files/wkscli.dll',
+          FullPath=pathspec(Path=srcDir + '/artifacts/testdata/files/wkscli.dll'),
+          OSPath=pathspec(Path=srcDir + '/artifacts/testdata/files/wkscli.dll'),
           Mtime=timestamp(string='2021-06-21T05:57:50.185936246Z'),
           Btime=timestamp(string='2021-06-21T05:57:50.185836399Z'),
           Ctime=timestamp(string='2021-06-21T05:57:50.185936246Z'),
@@ -20,7 +21,8 @@ LET _ <= SELECT
         dict(
           Name='notnbt.exe',
           ModTime=timestamp(string='2021-06-21T05:57:50.184145696Z'),
-          FullPath=srcDir + '/artifacts/testdata/files/notnbt.exe',
+          FullPath=pathspec(Path=srcDir + '/artifacts/testdata/files/notnbt.exe'),
+          OSPath=pathspec(Path=srcDir + '/artifacts/testdata/files/notnbt.exe'),
           Mtime=timestamp(string='2021-01-01T05:57:50.184145696Z'),
           Btime=timestamp(string='2021-03-01T05:57:50.184086639Z'),
           Ctime=timestamp(string='2021-03-21T05:57:50.184145696Z'),
@@ -38,7 +40,8 @@ LET _ <= SELECT
           InUse = true,
           ParentEntryNumber = 3589,
           MFTPath = srcDir + "$MFT",
-          FullPath = "/artifacts/testdata/files/wkscli.dll",
+          FullPath =pathspec(Path=srcDir + "/artifacts/testdata/files/wkscli.dll"),
+          OSPath =pathspec(Path=srcDir + "/artifacts/testdata/files/wkscli.dll"),
           FileName = "wkscli.dll",
           FileSize = 764976,
           ReferenceCount = 2,
@@ -53,7 +56,7 @@ LET _ <= SELECT
           LastAccess0x30 = "2021-01-24T06:57:36.7073284Z")
       ])
 FROM scope()
-[]SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath, Size, Rule, HitContext, HitOffset FROM Artifact.Windows.Detection.Yara.NTFS( DriveLetter=srcDir, PathRegex='wkscli.dll', YaraRule=MZRule)[
+[]SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath, Size, Rule, HitContext, HitOffset FROM Artifact.Windows.Detection.Yara.NTFS( DriveLetter=srcDir, PathRegex='wkscli.dll', YaraRule=MZRule)[
  {
   "TestPath": "artifacts/testdata/files/wkscli.dll",
   "Size": 9728,
@@ -61,7 +64,15 @@ FROM scope()
   "HitContext": "MZ",
   "HitOffset": 0
  }
-]SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath, Size, Rule, HitContext, HitOffset FROM Artifact.Windows.Detection.Yara.NTFS( DriveLetter=srcDir, PathRegex='wkscli.dll', YaraRule=IsPE)[
+]SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath, Size, Rule, HitContext, HitOffset FROM Artifact.Windows.Detection.Yara.NTFS( DriveLetter=srcDir, PathRegex='wkscli.dll', ContextBytes=10, YaraRule=MZRule)[
+ {
+  "TestPath": "artifacts/testdata/files/wkscli.dll",
+  "Size": 9728,
+  "Rule": "X",
+  "HitContext": "MZ\ufffd\u0000\u0003\u0000\u0000\u0000\u0004\u0000\u0000\u0000",
+  "HitOffset": 0
+ }
+]SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath, Size, Rule, HitContext, HitOffset FROM Artifact.Windows.Detection.Yara.NTFS( DriveLetter=srcDir, PathRegex='wkscli.dll', YaraRule=IsPE)[
  {
   "TestPath": "artifacts/testdata/files/wkscli.dll",
   "Size": 9728,
@@ -69,7 +80,7 @@ FROM scope()
   "HitContext": "Null",
   "HitOffset": null
  }
-]SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime FROM Artifact.Generic.Detection.Yara.Glob(YaraRule=IsPE)[
+]SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime FROM Artifact.Generic.Detection.Yara.Glob(YaraRule=IsPE)[
  {
   "TestPath": "artifacts/testdata/files/wkscli.dll",
   "Size": 9728,
@@ -88,7 +99,7 @@ FROM scope()
   "Ctime": "2021-03-21T05:57:50.184145696Z",
   "Btime": "2021-03-01T05:57:50.184086639Z"
  }
-]SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime FROM Artifact.Generic.Detection.Yara.Glob(DateAfter='2021-03-01', DateBefore='2021-07-01',YaraRule=IsPE)[
+]SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime FROM Artifact.Generic.Detection.Yara.Glob(DateAfter='2021-03-01', DateBefore='2021-07-01',YaraRule=IsPE)[
  {
   "TestPath": "artifacts/testdata/files/wkscli.dll",
   "Size": 9728,
@@ -107,11 +118,12 @@ FROM scope()
   "Ctime": "2021-03-21T05:57:50.184145696Z",
   "Btime": "2021-03-01T05:57:50.184086639Z"
  }
-]SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime FROM Artifact.Generic.Detection.Yara.Glob(DateBefore='2021-04-01',YaraRule=IsPE)[
+]SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath,HitContext,Size,Rule,Mtime,Atime,Ctime,Btime FROM Artifact.Generic.Detection.Yara.Glob(DateBefore='2021-04-01',ContextBytes=10,YaraRule=MZRule)[
  {
   "TestPath": "artifacts/testdata/files/notnbt.exe",
+  "HitContext": "MZ\ufffd\u0000\u0003\u0000\u0000\u0000\u0004\u0000\u0000\u0000",
   "Size": 17920,
-  "Rule": "IsPE",
+  "Rule": "X",
   "Mtime": "2021-01-01T05:57:50.184145696Z",
   "Atime": "2021-03-21T05:57:50.184157002Z",
   "Ctime": "2021-03-21T05:57:50.184145696Z",

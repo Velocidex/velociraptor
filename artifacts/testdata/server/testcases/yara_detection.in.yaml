@@ -2,7 +2,7 @@ Parameters:
   MZRule: |
       rule X { strings: $a = "MZ" condition: any of them }
   IsPE: |
-      rule IsPE:TestRule {
+      rule IsPE {
         meta:
           author = "the internet"
           date = "2021-03-04"
@@ -25,7 +25,8 @@ Queries:
             dict(
               Name='wkscli.dll',
               ModTime=timestamp(string='2021-06-21T05:57:50.185936246Z'),
-              FullPath=srcDir + '/artifacts/testdata/files/wkscli.dll',
+              FullPath=pathspec(Path=srcDir + '/artifacts/testdata/files/wkscli.dll'),
+              OSPath=pathspec(Path=srcDir + '/artifacts/testdata/files/wkscli.dll'),
               Mtime=timestamp(string='2021-06-21T05:57:50.185936246Z'),
               Btime=timestamp(string='2021-06-21T05:57:50.185836399Z'),
               Ctime=timestamp(string='2021-06-21T05:57:50.185936246Z'),
@@ -38,7 +39,8 @@ Queries:
             dict(
               Name='notnbt.exe',
               ModTime=timestamp(string='2021-06-21T05:57:50.184145696Z'),
-              FullPath=srcDir + '/artifacts/testdata/files/notnbt.exe',
+              FullPath=pathspec(Path=srcDir + '/artifacts/testdata/files/notnbt.exe'),
+              OSPath=pathspec(Path=srcDir + '/artifacts/testdata/files/notnbt.exe'),
               Mtime=timestamp(string='2021-01-01T05:57:50.184145696Z'),
               Btime=timestamp(string='2021-03-01T05:57:50.184086639Z'),
               Ctime=timestamp(string='2021-03-21T05:57:50.184145696Z'),
@@ -56,7 +58,8 @@ Queries:
               InUse = true,
               ParentEntryNumber = 3589,
               MFTPath = srcDir + "$MFT",
-              FullPath = "/artifacts/testdata/files/wkscli.dll",
+              FullPath =pathspec(Path=srcDir + "/artifacts/testdata/files/wkscli.dll"),
+              OSPath =pathspec(Path=srcDir + "/artifacts/testdata/files/wkscli.dll"),
               FileName = "wkscli.dll",
               FileSize = 764976,
               ReferenceCount = 2,
@@ -73,22 +76,27 @@ Queries:
     FROM scope()
 
   # Test NTFS yara outputs from shorthand and standard yara
-  - SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath,
-           Size, Rule, HitContext, HitOffset
+  - SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath,
+      Size, Rule, HitContext, HitOffset
     FROM Artifact.Windows.Detection.Yara.NTFS(
        DriveLetter=srcDir,
        PathRegex='wkscli.dll', YaraRule=MZRule)
+  - SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath,
+      Size, Rule, HitContext, HitOffset
+    FROM Artifact.Windows.Detection.Yara.NTFS(
+       DriveLetter=srcDir,
+       PathRegex='wkscli.dll', ContextBytes=10, YaraRule=MZRule)
 
-  - SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath,
+  - SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath,
            Size, Rule, HitContext, HitOffset
     FROM Artifact.Windows.Detection.Yara.NTFS(
          DriveLetter=srcDir,
          PathRegex='wkscli.dll', YaraRule=IsPE)
 
   # test Generic glob based yara then a couple of time bounded queries
-  - SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime
+  - SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime
     FROM Artifact.Generic.Detection.Yara.Glob(YaraRule=IsPE)
-  - SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime
+  - SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime
     FROM Artifact.Generic.Detection.Yara.Glob(DateAfter='2021-03-01', DateBefore='2021-07-01',YaraRule=IsPE)
-  - SELECT relpath(path=FullPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime
-    FROM Artifact.Generic.Detection.Yara.Glob(DateBefore='2021-04-01',YaraRule=IsPE)
+  - SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath,HitContext,Size,Rule,Mtime,Atime,Ctime,Btime
+    FROM Artifact.Generic.Detection.Yara.Glob(DateBefore='2021-04-01',ContextBytes=10,YaraRule=MZRule)

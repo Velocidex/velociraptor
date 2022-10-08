@@ -23,10 +23,13 @@ description: |
   * More wildcards: `/var/www/**/*.js`
   * Multiple extentions: `/var/www/*\.{php,aspx,js,html}`
   * Windows: `C:/Users/**/*.{exe,dll,ps1,bat}`
+  * Windows: `C:\Users\**\*.{exe,dll,ps1,bat}`
 
   NOTE: this artifact runs the glob plugin with the nosymlink switch turned on.
   This will NOT follow any symlinks and may cause unexpected results if
-  unknowingly targeting a folder with symlinks.
+  unknowingly targeting a folder with symlinks.    
+  If upload is selected NumberOfHits is redundant and not advised as hits are 
+  grouped by path to ensure files only downloaded once.
 
 
 type: CLIENT
@@ -63,6 +66,14 @@ parameters:
           condition:
              uint32(0) == 0x464c457f
         }
+  - name: NumberOfHits
+    description: This artifact will stop by default at one hit. This setting allows additional hits
+    default: 1
+    type: int
+  - name: ContextBytes
+    description: Include this amount of bytes around hit as context.
+    default: 0
+    type: int
 
 sources:
   - query: |
@@ -83,7 +94,7 @@ sources:
             )))
 
       -- first find all matching glob
-      LET files = SELECT FullPath, Name, Size, Mtime, Atime, Ctime, Btime
+      LET files = SELECT OSPath, Name, Size, Mtime, Atime, Ctime, Btime
         FROM glob(globs=PathGlob,nosymlink='True')
         WHERE
           NOT IsDir AND NOT IsLink
@@ -103,20 +114,21 @@ sources:
       LET hits = SELECT * FROM foreach(row=files,
             query={
                 SELECT
-                    FileName as FullPath,
+                    OSPath,
                     File.Size AS Size,
                     Mtime, Atime, Ctime, Btime,
                     Rule, Tags, Meta,
                     str(str=String.Data) AS HitContext,
                     String.Offset AS HitOffset
-                FROM yara(rules=yara_rules,files=FullPath)
-                LIMIT 1
+                FROM yara(rules=yara_rules,files=OSPath, 
+                  context=ContextBytes,number=NumberOfHits)
             })
 
       -- upload files that have hit
       LET upload_hits=SELECT *,
-            upload(file=FullPath) AS Upload
+            upload(file=OSPath) AS Upload
         FROM hits
+        GROUP BY OSPath
 
       -- return rows
       SELECT * FROM if(condition=UploadHits,

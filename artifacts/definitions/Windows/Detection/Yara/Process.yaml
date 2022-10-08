@@ -13,8 +13,10 @@ description: |
   Regex parameters can be applied for process name and pid for targeting. The
   artifact also has an option to upload any process with Yara hits.
 
-  Note: the Yara scan will stop after one hit. Multi-string rules will also only
-  show one string in returned rows.
+  Note: by default the Yara scan will stop after one hit. Multi-string rules will also only
+  show one string in returned rows. 
+  If upload is selected NumberOfHits is redundant and not advised as hits are 
+  grouped by path to ensure files only downloaded once.
 
 type: CLIENT
 parameters:
@@ -65,6 +67,14 @@ parameters:
         condition:
             7 of them
       }
+  - name: NumberOfHits
+    description: THis artifact will stop by default at one hit. This setting allows additional hits
+    default: 1
+    type: int64
+  - name: ContextBytes
+    description: Include this amount of bytes around hit as context.
+    default: 0
+    type: int
   - name: PathWhitelist
     description: |
         Process paths to exclude. Default is common AntiVirus we have seen cause
@@ -111,12 +121,14 @@ sources:
                 Meta,
                 String.Offset as HitOffset,
                 String.Name as HitName,
+                str(str=String.Data) AS HitContext,
                 String.HexData as HitHexData
              FROM yara(
                 files=format(format="/%d", args=Pid),
                 accessor='process',
-                rules=yara_rules)
-             LIMIT 1
+                rules=yara_rules,
+                context=ContextBytes,
+                number=NumberOfHits)
           })
 
       -- upload hits using proc_dump plugin
@@ -132,6 +144,7 @@ sources:
                 Meta,
                 HitOffset,
                 HitName,
+                HitContext,
                 HitHexData,
                 upload(
                   file=FullPath,
@@ -140,6 +153,7 @@ sources:
                 ) as ProcessDump
             FROM proc_dump(pid=Pid)
           })
+          GROUP BY Pid
 
       -- return rows
       SELECT * FROM if(condition=UploadHits,
