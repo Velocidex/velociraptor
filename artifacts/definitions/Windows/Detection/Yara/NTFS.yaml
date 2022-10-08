@@ -25,6 +25,8 @@ description: |
 
   Note: no drive and forward slashes - these expressions are for paths
   relative to the root of the filesystem.
+  If upload is selected NumberOfHits is redundant and not advised as hits are 
+  grouped by path to ensure files only downloaded once.
 
 type: CLIENT
 parameters:
@@ -124,8 +126,9 @@ sources:
 
       -- upload files that have hit
       LET upload_hits=SELECT *,
-            upload(file=FullPath) AS Upload
+            upload(file=OSPath) AS Upload
         FROM hits
+        GROUP BY OSPath
 
       -- return rows
       SELECT * FROM if(condition=UploadHits,
