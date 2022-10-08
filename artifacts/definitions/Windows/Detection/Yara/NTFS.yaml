@@ -18,9 +18,9 @@ description: |
 
   Some examples of path regex may include:
 
-  * Extension at a path: `Windows/System32/.+\\.dll$`
-  * More wildcards: `Windows/.+/.+\\.dll$`
-  * Specific file: `Windows/System32/kernel32\.dll$`
+  * Extension at a path: `C:\\Windows\\System32\\.+\.dll$`
+  * More wildcards: `Windows\\.+\\.+\.dll$`
+  * Specific file: `Windows\\System32\\kernel32\.dll$`
   * Multiple extentions: `\.(php|aspx|resx|asmx)$`
 
   Note: no drive and forward slashes - these expressions are for paths
@@ -28,9 +28,12 @@ description: |
 
 type: CLIENT
 parameters:
-  - name: PathRegex
+  - name: FileNameRegex
     description: Only file names that match this regular expression will be scanned.
-    default: Windows/System32/kernel32\.dll$
+    default: ^kernel32\.dll$
+  - name: PathRegex
+    description: Only paths that match this regular expression will be scanned.
+    default: ^C:\\Windows\\System32\\
   - name: DriveLetter
     description: "Target drive. Default is a C:"
     default: "C:"
@@ -52,6 +55,7 @@ parameters:
     type: timestamp
   - name: YaraUrl
     description: If configured will attempt to download Yara rules form Url
+    default:
     type: upload
   - name: YaraRule
     type: yara
@@ -66,21 +70,31 @@ parameters:
              uint16(0) == 0x5A4D and
              uint32(uint32(0x3C)) == 0x00004550
         }
-
+  - name: NumberOfHits
+    description: THis artifact will stop by default at one hit. This setting allows additional hits
+    default: 1
+    type: int64
+  - name: ContextBytes
+    description: Include this amount of bytes around hit as context.
+    default: 0
+    type: int
+    
+    
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
 
     query: |
       -- check which Yara to use
-      LET yara_rules <= YaraUrl || YaraRule
+      LET yara_rules = YaraUrl || YaraRule
 
       -- first find all matching files mft
-      LET files = SELECT IsDir,
-            DriveLetter + "/" + FullPath as FullPath
+      LET files = SELECT
+            OSPath, IsDir
         FROM Artifact.Windows.NTFS.MFT(
             MFTDrive=DriveLetter, AllDrives=AllDrives,
-            PathRegex=PathRegex, SizeMax=SizeMax, SizeMin=SizeMin)
+            FileRegex=FileNameRegex,PathRegex=PathRegex, 
+            SizeMax=SizeMax, SizeMin=SizeMin)
         WHERE NOT IsDir
           AND if(condition=EarliestSILastChanged,
             then= LastRecordChange0x10 > EarliestSILastChanged,
@@ -99,14 +113,13 @@ sources:
       LET hits = SELECT * FROM foreach(row=files,
             query={
                 SELECT
-                    FileName as FullPath,
+                    FileName, OSPath,
                     File.Size AS Size,
                     File.ModTime AS ModTime,
                     Rule, Tags, Meta,
                     str(str=String.Data) AS HitContext,
                     String.Offset AS HitOffset
-                FROM yara(rules=yara_rules, files=FullPath)
-                LIMIT 1
+                FROM yara(rules=yara_rules, files=OSPath, context=ContextBytes,number=NumberOfHits)
             })
 
       -- upload files that have hit
