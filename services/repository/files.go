@@ -14,6 +14,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
+const (
+	BUILTIN = true
+)
+
 // Loads the global repository with artifacts from the frontend path
 // and the file store.
 func InitializeGlobalRepositoryFromFilesystem(
@@ -24,7 +28,8 @@ func InitializeGlobalRepositoryFromFilesystem(
 	if config_obj.Frontend != nil &&
 		config_obj.Frontend.ArtifactDefinitionsDirectory != "" {
 		global_repository, err = loadRepositoryFromDirectory(
-			ctx, config_obj, global_repository, config_obj.Frontend.ArtifactDefinitionsDirectory)
+			ctx, config_obj, global_repository,
+			config_obj.Frontend.ArtifactDefinitionsDirectory, BUILTIN)
 
 		if err != nil {
 			return nil, err
@@ -34,7 +39,7 @@ func InitializeGlobalRepositoryFromFilesystem(
 	if config_obj.Defaults != nil {
 		for _, directory := range config_obj.Defaults.ArtifactDefinitionsDirectories {
 			global_repository, err = loadRepositoryFromDirectory(
-				ctx, config_obj, global_repository, directory)
+				ctx, config_obj, global_repository, directory, BUILTIN)
 			if err != nil {
 				return nil, err
 			}
@@ -47,7 +52,7 @@ func InitializeGlobalRepositoryFromFilesystem(
 func loadRepositoryFromDirectory(
 	ctx context.Context, config_obj *config_proto.Config,
 	global_repository services.Repository,
-	directory string) (services.Repository, error) {
+	directory string, builtin bool) (services.Repository, error) {
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	err := filepath.Walk(directory,
@@ -85,7 +90,7 @@ func loadRepositoryFromDirectory(
 			artifact_obj, err := global_repository.LoadYaml(
 				string(data),
 				false, /* validate */
-				false /* built_in */)
+				builtin)
 			if err != nil {
 				logger.Info("Unable to load custom "+
 					"artifact %s: %v", path, err)
