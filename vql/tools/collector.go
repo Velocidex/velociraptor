@@ -247,7 +247,11 @@ func (self CollectPlugin) Call(
 						return
 					}
 					for row := range vql.Eval(subctx, subscope) {
-						output_chan <- row
+						select {
+						case <-subctx.Done():
+							return
+						case output_chan <- row:
+						}
 					}
 					query_log.Close()
 

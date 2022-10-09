@@ -48,7 +48,6 @@ func (self MergeSorter) sortWithCtx(ctx context.Context,
 		},
 		ChunkSize: self.ChunkSize,
 	}
-	sort_ctx.merge_files = []provider{sort_ctx}
 
 	go func() {
 		defer close(output_chan)
@@ -89,21 +88,23 @@ type MergeSorterCtx struct {
 	idx       int
 }
 
-func (self *MergeSorterCtx) AddProvider(p provider) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
+func (self *MergeSorterCtx) addProvider(p provider) {
 	self.merge_files = append(self.merge_files, p)
 }
 
 // Feed the current sorter until we reach the chunk size then flush it
 // to a disk file.
 func (self *MergeSorterCtx) Feed(row types.Row) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	self.memory_sorter.Items = append(self.memory_sorter.Items, row)
 
 	if len(self.memory_sorter.Items) >= self.ChunkSize {
 		// Replace the embedded sorter context.
 		memory_sorter := self.memory_sorter
+		sort.Sort(memory_sorter)
+
 		self.memory_sorter = &vsort.DefaultSorterCtx{
 			Scope:   memory_sorter.Scope,
 			OrderBy: memory_sorter.OrderBy,
@@ -115,11 +116,15 @@ func (self *MergeSorterCtx) Feed(row types.Row) {
 		go func() {
 			defer self.wg.Done()
 
-			sort.Sort(memory_sorter)
-			self.AddProvider(newDataFile(
+			self.mu.Lock()
+			defer self.mu.Unlock()
+
+			new_data_file := newDataFile(
 				memory_sorter.Scope,
 				memory_sorter.Items,
-				memory_sorter.OrderBy))
+				memory_sorter.OrderBy)
+
+			self.addProvider(new_data_file)
 		}()
 	}
 }
@@ -127,11 +132,17 @@ func (self *MergeSorterCtx) Feed(row types.Row) {
 func (self *MergeSorterCtx) Close() {}
 
 func (self *MergeSorterCtx) Consume() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	self.idx++
 }
 
 // Returns the last row
 func (self *MergeSorterCtx) Last() types.Row {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	if self.idx < len(self.memory_sorter.Items) {
 		return self.memory_sorter.Items[self.idx]
 	}
@@ -141,16 +152,27 @@ func (self *MergeSorterCtx) Last() types.Row {
 func (self *MergeSorterCtx) Merge(ctx context.Context, output_chan chan types.Row) {
 	// Close all the files when we are done.
 	defer func() {
+		self.mu.Lock()
+		self.mu.Unlock()
+
 		for _, provider := range self.merge_files {
 			provider.Close()
 		}
 	}()
 
-	// Sort the in-memory chunk
-	sort.Sort(self.memory_sorter)
-
 	// Wait for all the chunks to be ready.
 	self.wg.Wait()
+
+	self.mu.Lock()
+	self.mu.Unlock()
+
+	// Sort the last in-memory chunk and add it as a provider.
+	if len(self.memory_sorter.Items) > 0 {
+		sort.Sort(self.memory_sorter)
+		self.addProvider(&memoryProvider{
+			Items: self.memory_sorter.Items,
+		})
+	}
 
 	for {
 		var smallest_value types.Any
@@ -227,6 +249,8 @@ type provider interface {
 
 // Maintain a list of rows on a temporary file.
 type dataFile struct {
+	mu sync.Mutex
+
 	fd        *os.File
 	reader    *bufio.Reader
 	lastValue *ordereddict.Dict
@@ -256,7 +280,6 @@ func (self *dataFile) Consume() {
 
 	row_data, err := self.reader.ReadBytes('\n')
 	if err != nil {
-
 		// File is exhausted, close it and reset.
 		self.lastValue = nil
 		self.Close()
@@ -313,3 +336,22 @@ func newDataFile(scope types.Scope, items []types.Row, key string) *dataFile {
 
 	return result
 }
+
+// A provider for in memory rows
+type memoryProvider struct {
+	Items []types.Row
+	idx   int
+}
+
+func (self *memoryProvider) Last() types.Row {
+	if self.idx < len(self.Items) {
+		return self.Items[self.idx]
+	}
+	return nil
+}
+
+func (self *memoryProvider) Consume() {
+	self.idx++
+}
+
+func (self *memoryProvider) Close() {}

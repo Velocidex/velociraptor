@@ -230,7 +230,6 @@ type HuntCondition struct {
 
 	ExcludedLabels *HuntLabelCondition `protobuf:"bytes,4,opt,name=excluded_labels,json=excludedLabels,proto3" json:"excluded_labels,omitempty"`
 	// Types that are assignable to UnionField:
-	//
 	//	*HuntCondition_Labels
 	//	*HuntCondition_Os
 	UnionField isHuntCondition_UnionField `protobuf_oneof:"union_field"`

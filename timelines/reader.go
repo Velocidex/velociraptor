@@ -4,14 +4,17 @@ import (
 	"bufio"
 	"context"
 	"encoding/binary"
+	"io"
 	"os"
 	"sort"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
 	timelines_proto "www.velocidex.com/golang/velociraptor/timelines/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type TimelineItem struct {
@@ -21,22 +24,23 @@ type TimelineItem struct {
 }
 
 type TimelineReader struct {
-	id          string
-	current_idx int
-	offset      int64
-	fd          api.FileReader
-	index_fd    api.FileReader
-	index_stat  api.FileInfo
+	id                string
+	current_idx       int
+	offset            int64
+	fd                api.FileReader
+	index_fd          api.FileReader
+	buffered_index_fd io.ReadSeeker
+	index_stat        api.FileInfo
 }
 
 func (self *TimelineReader) getIndex(i int) (*IndexRecord, error) {
 	idx_record := &IndexRecord{}
-	_, err := self.index_fd.Seek(int64(i)*IndexRecordSize, 0)
+	_, err := self.buffered_index_fd.Seek(int64(i)*IndexRecordSize, 0)
 	if err != nil {
 		return nil, err
 	}
 
-	err = binary.Read(self.index_fd, binary.LittleEndian, idx_record)
+	err = binary.Read(self.buffered_index_fd, binary.LittleEndian, idx_record)
 	return idx_record, err
 }
 
@@ -148,11 +152,18 @@ func NewTimelineReader(
 		return nil, err
 	}
 
+	paged, err := ntfs.NewPagedReader(
+		utils.MakeReaderAtter(index_fd), 1024*8, 10)
+	if err != nil {
+		return nil, err
+	}
+
 	return &TimelineReader{
-		id:         path_manager.Name(),
-		fd:         fd,
-		index_fd:   index_fd,
-		index_stat: stats,
+		id:                path_manager.Name(),
+		fd:                fd,
+		index_fd:          index_fd,
+		buffered_index_fd: utils.NewReadSeekReaderAdapter(paged),
+		index_stat:        stats,
 	}, nil
 
 }
