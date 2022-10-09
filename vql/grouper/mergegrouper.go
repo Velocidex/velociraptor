@@ -148,6 +148,7 @@ func (self *MergeSortGrouper) groupWithSorting(
 	}
 
 	self.flushContext(ctx, output_chan, last_gb_element, aggregate_ctx)
+	self.emitBins(ctx, output_chan)
 }
 
 func (self *MergeSortGrouper) transformRow(
