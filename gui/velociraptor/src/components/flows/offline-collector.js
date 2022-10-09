@@ -98,17 +98,18 @@ class OfflineCollectorParameters  extends React.Component {
                                     }}
                       >
                         <option value="None">{T("None")}</option>
+                        <option value="X509">{T("X509 Certificate/Frontend Cert")}</option>
                         <option value="PGP">{T("PGP Encryption")}</option>
                         <option value="Password">{T("Password")}</option>
                       </Form.Control>
                     </Col>
                   </Form.Group>
-                  {this.props.parameters.encryption_scheme == "PGP" && <>
+                  {(this.props.parameters.encryption_scheme == "PGP" || this.props.parameters.encryption_scheme == "X509") && <>
                   <Form.Group as={Row} >
-                    <Form.Label column sm="3">{T("Public Key")}</Form.Label>
+                    <Form.Label column sm="3">{T("Public Key/Cert")}</Form.Label>
                     <Col sm="8">
                       <Form.Control as="textarea"
-                                    placeholder={T("Public Key To Encrypt With")}
+                                    placeholder={T("Public Key/Certificate To Encrypt With. If X509, Defaults To Frontend Cert")}
                                     spellCheck="false"
                                     value={this.props.parameters.encryption_args.public_key}
                                     onChange={e => {

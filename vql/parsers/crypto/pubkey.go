@@ -18,6 +18,8 @@ import (
 	"golang.org/x/crypto/openpgp/packet"
 
 	"golang.org/x/net/context"
+	"www.velocidex.com/golang/velociraptor/acls"
+	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -26,15 +28,15 @@ import (
 type PKEncryptArgs struct {
 	Data       string `vfilter:"required,field=data,doc=The data to encrypt"`
 	SigningKey string `vfilter:"optional,field=signing_key,doc=Private key to sign with"`
-	PublicKey  string `vfilter:"required,field=public_key,doc=Public key to encrypt with"`
-	Scheme     string `vfilter:"required,field=scheme,doc=Encryption scheme to use. Currently supported: PGP,X509"`
+	PublicKey  string `vfilter:"optional,field=public_key,doc=Public key to encrypt with. Defaults to server public key"`
+	Scheme     string `vfilter:"optional,field=scheme,doc=Encryption scheme to use. Defaults to X509. Currently supported: PGP,X509"`
 }
 
 type PKDecryptArgs struct {
 	Data       string `vfilter:"required,field=data,doc=The data to decrypt"`
 	SigningKey string `vfilter:"optional,field=signing_key,doc=Public key to verify signature"`
-	PrivateKey string `vfilter:"required,field=private_key,doc=Private key to decrypt with"`
-	Scheme     string `vfilter:"required,field=scheme,doc=Encryption scheme to use. Currently supported: PGP,RSA"`
+	PrivateKey string `vfilter:"optional,field=private_key,doc=Private key to decrypt with. Defaults to server private key"`
+	Scheme     string `vfilter:"optional,field=scheme,doc=Encryption scheme to use. Defaults to RSA. Currently supported: PGP,RSA"`
 }
 
 type PKEncryptFunction struct{}
@@ -50,6 +52,16 @@ func (self *PKEncryptFunction) Call(ctx context.Context,
 	if err != nil {
 		scope.Log("ERROR:pk_encrypt: %s", err.Error())
 		return vfilter.Null{}
+	}
+
+	if arg.PublicKey == "" && (arg.Scheme == "" || strings.ToLower(arg.Scheme) == "x509") {
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
+		if !ok {
+			scope.Log("ERROR:pk_encrypt: Must specify public key if not running on server")
+			return vfilter.Null{}
+		}
+		arg.PublicKey = config_obj.Frontend.Certificate
+		arg.Scheme = "x509"
 	}
 
 	switch strings.ToLower(arg.Scheme) {
@@ -85,11 +97,12 @@ func (self *PKEncryptFunction) Call(ctx context.Context,
 		}
 	case "x509":
 		{
-			cert, err := x509.ParseCertificate([]byte(arg.PublicKey))
+			cert, err := crypto_utils.ParseX509CertFromPemStr([]byte(arg.PublicKey))
 			if err != nil {
 				scope.Log("ERROR:pk_encrypt: %s", err.Error())
 				return vfilter.Null{}
 			}
+
 			ciphertext, err := encryptWithX509PubKey([]byte(arg.Data), cert)
 			if err != nil {
 				scope.Log("ERROR:pk_encrypt: %s", err.Error())
@@ -97,7 +110,6 @@ func (self *PKEncryptFunction) Call(ctx context.Context,
 			}
 			return ciphertext
 		}
-
 	default:
 		scope.Log("ERROR:pk_encrypt: Unsupported Encryption Scheme.")
 		return vfilter.Null{}
@@ -108,11 +120,15 @@ func encryptWithX509PubKey(msg []byte, cert *x509.Certificate) ([]byte, error) {
 	pub := cert.PublicKey
 	switch pub := pub.(type) {
 	case *rsa.PublicKey:
-		hash := sha512.New()
-		return rsa.EncryptOAEP(hash, rand.Reader, pub, msg, nil)
+		return encryptMsgRSA(msg, pub)
 	default:
 		return nil, errors.New("Unsupported Type of Public Key")
 	}
+}
+
+func encryptMsgRSA(msg []byte, pub *rsa.PublicKey) ([]byte, error) {
+	hash := sha512.New()
+	return rsa.EncryptOAEP(hash, rand.Reader, pub, msg, nil)
 }
 
 func readPGPEntity(reader io.Reader) (*openpgp.Entity, error) {
@@ -162,6 +178,21 @@ func (self *PKDecryptFunction) Call(ctx context.Context,
 		scope.Log("ERROR:pk_decrypt: %s", err.Error())
 		return vfilter.Null{}
 	}
+	if arg.PrivateKey == "" && (arg.Scheme == "" || strings.ToLower(arg.Scheme) == "rsa") {
+		err = vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+		if err != nil {
+			scope.Log("ERROR:pk_decrypt: Must be server admin to use private key")
+			return vfilter.Null{}
+		}
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
+		if !ok {
+			scope.Log("ERROR:pk_decrypt: Must specify public key if not running on server")
+			return vfilter.Null{}
+		}
+		arg.PrivateKey = config_obj.Frontend.PrivateKey
+		arg.Scheme = "rsa"
+
+	}
 
 	switch strings.ToLower(arg.Scheme) {
 	case "pgp":
@@ -199,7 +230,7 @@ func (self *PKDecryptFunction) Call(ctx context.Context,
 		}
 	case "rsa":
 		{
-			key, err := x509.ParsePKCS1PrivateKey([]byte(arg.PrivateKey))
+			key, err := crypto_utils.ParseRsaPrivateKeyFromPemStr([]byte(arg.PrivateKey))
 			if err != nil {
 				scope.Log("ERROR:pk_decrypt: %s", err.Error())
 				return vfilter.Null{}
@@ -213,7 +244,7 @@ func (self *PKDecryptFunction) Call(ctx context.Context,
 			return plaintext
 		}
 	default:
-		scope.Log("ERROR:pk_encrypt: Unsupported Encryption Scheme.")
+		scope.Log("ERROR:pk_decrypt: Unsupported Encryption Scheme.")
 		return vfilter.Null{}
 	}
 }

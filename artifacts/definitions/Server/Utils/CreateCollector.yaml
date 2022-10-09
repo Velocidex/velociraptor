@@ -157,9 +157,9 @@ parameters:
 
       LET _ <= log(message="Will collect package " + filename)
       LET report_filename <= if(condition=Template, then=filename + ".html")
-      LET X <=  SELECT format(format="%02x", args=rand(range=255)) AS A FROM range(end=25) 
 
-      LET pass = SELECT * FROM switch(a={SELECT join(array=X.A) as Pass From scope() WHERE encryption_scheme =~ "pgp"},
+      LET X <=  SELECT format(format="%02x", args=rand(range=255)) AS A FROM range(end=25)
+      LET pass = SELECT * FROM switch(a={SELECT join(array=X.A) as Pass From scope() WHERE encryption_scheme =~ "pgp|x509"},
                         b={SELECT encryption_args.password as Pass FROM scope() WHERE encryption_scheme =~ "password"},
                         c={SELECT Null as Pass FROM scope()})
 
@@ -172,7 +172,10 @@ parameters:
             level=Level,
             format=Format,
             metadata=if(condition=encryption_args.public_key, then={
-                  SELECT pk_encrypt(data=pass[0].Pass, public_key=encryption_args.public_key, scheme=encryption_scheme)  AS EncryptedPass, encryption_scheme as Scheme FROM scope()
+                  SELECT pk_encrypt(data=pass[0].Pass, public_key=encryption_args.public_key, 
+                                    scheme=encryption_scheme)  AS EncryptedPass, 
+                                    encryption_scheme as Scheme,
+                                    encryption_args.public_key as PublicKey FROM scope()
                 })
             )
 
@@ -396,6 +399,14 @@ sources:
         e = { SELECT "" AS Value  FROM scope() WHERE log(message="Unknown collection type " + target) }
       )
 
+
+      LET use_server_cert = SELECT log(message="Pubkey encryption specified, but no cert/key provided. Defaulting to server frontend cert") FROM scope() WHERE encryption_scheme =~ "x509" AND encryption_args.public_key =~ ""
+      LET updated_encryption_args <= if(condition=use_server_cert,
+                                        then=dict(public_key=server_frontend_cert(),
+                                                  scheme="x509"),
+                                        else=encryption_args
+                                        )
+
       LET definitions <= SELECT * FROM chain(
       a = { SELECT name, description, tools, parameters, sources, reports
             FROM artifact_definitions(names=artifacts)
@@ -423,7 +434,7 @@ sources:
                     dict(name="Template", default=template),
                     dict(name="encryption_scheme", default=encryption_scheme),
                     dict(name="encryption_args", 
-                         default=serialize(format='json', item=encryption_args),
+                         default=serialize(format='json', item=updated_encryption_args),
                          type="json"
                          ),
                     dict(name="Level", default=opt_level, type="int"),

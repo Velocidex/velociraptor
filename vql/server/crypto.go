@@ -1,0 +1,49 @@
+package server
+
+import (
+	"context"
+
+	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
+)
+
+type ServerFrontendCertFunction struct{}
+
+func (self *ServerFrontendCertFunction) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+	if err != nil {
+		scope.Log("ERROR:server_frontend_cert%s", err)
+		return vfilter.Null{}
+	}
+
+	arg := vfilter.Empty{}
+	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("ERROR:server_frontend_cert %s", err.Error())
+		return vfilter.Null{}
+	}
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		scope.Log("ERROR:server_frontend_cert: Must be run on server")
+		return vfilter.Null{}
+	}
+	return config_obj.Frontend.Certificate
+}
+
+func (self ServerFrontendCertFunction) Info(
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "server_frontend_cert",
+		Doc:     "Get Server Frontend Certificate",
+		ArgType: type_map.AddType(scope, &vfilter.Empty{}),
+	}
+}
+
+func init() {
+	vql_subsystem.RegisterFunction(&ServerFrontendCertFunction{})
+}
