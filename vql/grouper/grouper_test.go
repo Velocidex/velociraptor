@@ -24,7 +24,14 @@ var (
 )
 
 func generateRows(column string, num_of_bins, num_of_repeats int) []*ordereddict.Dict {
-	result := []*ordereddict.Dict{}
+	// Insert a unique value at the start so it remains when we switch
+	// to merge sort.
+	result := []*ordereddict.Dict{
+		ordereddict.NewDict().
+			Set(column, "11").
+			Set("IgnoreMe", 1).
+			Set("YX", "21"),
+	}
 
 	for i := 0; i < num_of_repeats; i++ {
 		for j := 0; j < num_of_bins; j++ {
@@ -34,12 +41,6 @@ func generateRows(column string, num_of_bins, num_of_repeats int) []*ordereddict
 				Set("Y"+column, i))
 		}
 	}
-
-	// Add another random result to break the pattern
-	result = append(result, ordereddict.NewDict().
-		Set(column, "1").
-		Set("IgnoreMe", 1).
-		Set("YX", "21"))
 
 	return result
 }
@@ -53,7 +54,7 @@ func runQuery(t *testing.T,
 	scope.SetLogger(log.New(os.Stderr, " ", 0))
 	ctx := context.Background()
 
-	vql, err := vfilter.Parse("SELECT X, YX, count() AS Count FROM rows GROUP BY X")
+	vql, err := vfilter.Parse("SELECT X, YX, count() AS Count FROM rows GROUP BY X ORDER BY X")
 	assert.NoError(t, err)
 
 	rows := []vfilter.Row{}

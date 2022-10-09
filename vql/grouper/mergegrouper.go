@@ -2,12 +2,12 @@ package grouper
 
 import (
 	"context"
-	"sort"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/sorter"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
@@ -55,7 +55,20 @@ type MergeSortGrouper struct {
 	ChunkSize  int
 	config_obj *config_proto.Config
 
-	bins map[string]*AggregateContext
+	bins *ordereddict.Dict // map[string]*AggregateContext
+}
+
+func (self *MergeSortGrouper) getContext(key string) *AggregateContext {
+	aggregate_ctx, pres := self.bins.Get(key)
+	if pres && !utils.IsNil(aggregate_ctx) {
+		return aggregate_ctx.(*AggregateContext)
+	}
+
+	new_aggregate_ctx := &AggregateContext{
+		context: ordereddict.NewDict(),
+	}
+	self.bins.Set(key, new_aggregate_ctx)
+	return new_aggregate_ctx
 }
 
 func (self *MergeSortGrouper) flushContext(
@@ -70,9 +83,7 @@ func (self *MergeSortGrouper) flushContext(
 
 		case output_chan <- aggregate_ctx.row:
 		}
-
-		// Clear the old context - we wont need it again.
-		delete(self.bins, key)
+		self.bins.Delete(key)
 	}
 }
 
@@ -129,16 +140,7 @@ func (self *MergeSortGrouper) groupWithSorting(
 			last_gb_element = gb_element
 
 			// Check if the aggregate context was seen previously
-			aggregate_ctx, pres = self.bins[gb_element]
-
-			// No previous aggregate_row - initialize with a new
-			// context.
-			if !pres {
-				aggregate_ctx = &AggregateContext{
-					row:     materialized_row,
-					context: ordereddict.NewDict(),
-				}
-			}
+			aggregate_ctx = self.getContext(gb_element)
 		}
 
 		// Evaluate the row with the current bin context and keep the
@@ -196,14 +198,7 @@ func (self *MergeSortGrouper) Group(
 			}
 
 			// Try to find the context in the map
-			aggregate_ctx, pres := self.bins[bin_idx]
-			// No previous aggregate_row - initialize with a new context.
-			if !pres {
-				aggregate_ctx = &AggregateContext{
-					context: ordereddict.NewDict(),
-				}
-				self.bins[bin_idx] = aggregate_ctx
-			}
+			aggregate_ctx := self.getContext(bin_idx)
 
 			// The transform function receives its own unique context
 			// for the specific aggregate group.
@@ -218,7 +213,7 @@ func (self *MergeSortGrouper) Group(
 
 			// Bins are too large we switch to the slower sort method
 			// which is memory constrained.
-			if len(self.bins) > int(max_in_memory_group_by) {
+			if self.bins.Len() > int(max_in_memory_group_by) {
 				self.groupWithSorting(ctx, scope, output_chan, actor)
 				return
 			}
@@ -234,22 +229,13 @@ func (self *MergeSortGrouper) Group(
 func (self *MergeSortGrouper) emitBins(
 	ctx context.Context, output_chan chan vfilter.Row) {
 
-	keys := make([]string, 0, len(self.bins))
-	for k := range self.bins {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
+	for _, key := range self.bins.Keys() {
+		aggregate_ctx := self.getContext(key)
+		select {
+		case <-ctx.Done():
+			return
 
-	for _, key := range keys {
-		aggregate_ctx, ok := self.bins[key]
-		if ok {
-			select {
-			case <-ctx.Done():
-				return
-
-			case output_chan <- aggregate_ctx.row:
-			}
-			delete(self.bins, key)
+		case output_chan <- aggregate_ctx.row:
 		}
 	}
 }
@@ -272,7 +258,9 @@ func (self MergeSortGrouperFactory) Group(
 	grouper := &MergeSortGrouper{
 		config_obj: self.config_obj,
 		ChunkSize:  self.ChunkSize,
-		bins:       make(map[string]*AggregateContext),
+
+		// Use an ordereddict here to maintain stable row ordering.
+		bins: ordereddict.NewDict(),
 	}
 	return grouper.Group(ctx, scope, actor)
 }
