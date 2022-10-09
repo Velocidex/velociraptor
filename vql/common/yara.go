@@ -423,7 +423,11 @@ func (self *scanReporter) RuleMatching(rule *yara.Rule) (bool, error) {
 		}
 
 		// Emit the results.
-		self.output_chan <- res
+		select {
+		case <-self.ctx.Done():
+			return false, nil
+		case self.output_chan <- res:
+		}
 
 		self.number_of_hits--
 		if self.number_of_hits <= 0 {

@@ -48,7 +48,7 @@ require (
 	github.com/golang-jwt/jwt v3.2.1+incompatible
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/mock v1.6.0
-	github.com/golang/protobuf v1.5.2
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/btree v1.0.1
 	github.com/google/rpmpack v0.0.0-20210518075352-dc539ef4f2ea
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
@@ -121,7 +121,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
 	www.velocidex.com/golang/oleparse v0.0.0-20220617011920-94df2342d0b7
 	www.velocidex.com/golang/regparser v0.0.0-20220803120500-8e74df808b0a
-	www.velocidex.com/golang/vfilter v0.0.0-20220821025017-911b14d15652
+	www.velocidex.com/golang/vfilter v0.0.0-20221009130033-4de0683e9d19
 )
 
 require (

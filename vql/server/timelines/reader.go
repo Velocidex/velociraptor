@@ -83,7 +83,11 @@ func (self TimelinePlugin) Call(
 		}
 
 		for item := range reader.Read(ctx) {
-			output_chan <- item.Row.Set("_ts", item.Time)
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- item.Row.Set("_ts", item.Time):
+			}
 		}
 	}()
 

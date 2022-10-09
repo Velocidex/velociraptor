@@ -43,7 +43,11 @@ func (self ProcessTrackerUpdater) Call(
 			UpdateType: "sync",
 			Data:       update,
 		}
-		output_chan <- event
+		select {
+		case <-ctx.Done():
+			return
+		case output_chan <- event:
+		}
 
 		for {
 			select {

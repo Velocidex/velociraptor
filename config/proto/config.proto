@@ -894,6 +894,11 @@ message Defaults {
     uint64 max_vfs_directory_size = 7;
 
     repeated string artifact_definitions_directories = 8;
+
+    // The number of rows to keep in memory during a group by
+    // operation. Once this is exceeded we switch to disk mode which
+    // is a lot slower. Default 30000
+    uint64 max_in_memory_group_by = 9;
 }
 
 // Configures crypto preferences

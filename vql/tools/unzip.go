@@ -151,7 +151,11 @@ func (self UnzipPlugin) Call(
 					NewPath:      output_path,
 					Size:         int64(n),
 				}
-				output_chan <- output
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- output:
+				}
 			}()
 		}
 	}()

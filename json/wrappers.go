@@ -3,6 +3,7 @@ package json
 import (
 	"bytes"
 	"reflect"
+	"sync"
 
 	"github.com/Velocidex/json"
 )
@@ -11,7 +12,22 @@ type RawMessage = json.RawMessage
 
 var (
 	EncoderCallbackSkip = json.EncoderCallbackSkip
+
+	bufferPool = sync.Pool{
+		New: func() interface{} {
+			return new(bytes.Buffer)
+		},
+	}
 )
+
+func GetBuffer() *bytes.Buffer {
+	return bufferPool.Get().(*bytes.Buffer)
+}
+
+func PutBuffer(buf *bytes.Buffer) {
+	buf.Reset()
+	bufferPool.Put(buf)
+}
 
 func MarshalWithOptions(v interface{}, opts *json.EncOpts) ([]byte, error) {
 	if opts == nil {
@@ -59,8 +75,10 @@ func MarshalIndentWithOptions(v interface{}, opts *json.EncOpts) ([]byte, error)
 	if err != nil {
 		return nil, err
 	}
-	var buf bytes.Buffer
-	err = json.Indent(&buf, b, "", " ")
+
+	buf := GetBuffer()
+	defer PutBuffer(buf)
+	err = json.Indent(buf, b, "", " ")
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +94,10 @@ func MarshalJsonl(v interface{}) ([]byte, error) {
 	a_slice := reflect.ValueOf(v)
 
 	options := NewEncOpts()
-	out := bytes.Buffer{}
+
+	out := GetBuffer()
+	defer PutBuffer(out)
+
 	for i := 0; i < a_slice.Len(); i++ {
 		row := a_slice.Index(i).Interface()
 		serialized, err := json.MarshalWithOptions(row, options)
