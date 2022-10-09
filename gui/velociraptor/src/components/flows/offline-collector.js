@@ -12,10 +12,10 @@ import ValidatedInteger from '../forms/validated_int.js';
 import api from '../core/api-service.js';
 import axios from 'axios';
 import T from '../i8n/i8n.js';
+import NewCollectionConfigParameters from './new-collections-parameters.js';
 
 import {
     NewCollectionSelectArtifacts,
-    NewCollectionConfigParameters,
     NewCollectionRequest,
     NewCollectionLaunch,
     PaginationBuilder

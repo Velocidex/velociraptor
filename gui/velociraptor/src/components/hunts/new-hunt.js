@@ -15,10 +15,10 @@ import DateTimePicker from 'react-datetime-picker';
 import EstimateHunt from './estimate.js';
 import LabelForm from '../utils/labels.js';
 import api from '../core/api-service.js';
+import NewCollectionConfigParameters from '../flows/new-collections-parameters.js';
 
 import {
     NewCollectionSelectArtifacts,
-    NewCollectionConfigParameters,
     NewCollectionResources,
     NewCollectionRequest,
     NewCollectionLaunch,
