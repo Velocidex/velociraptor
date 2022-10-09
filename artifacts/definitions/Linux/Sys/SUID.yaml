@@ -35,4 +35,4 @@ sources:
                Mtime,
                Sys.Uid AS OwnerID,
                Sys.Gid AS GroupID
-      FROM glob(globs=GlobExpression) WHERE Mode =~ '^u'
+      FROM glob(globs=GlobExpression) WHERE Mode =~ '^g|u'
