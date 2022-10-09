@@ -368,7 +368,10 @@ func (self *CollectorTestSuite) TestCollector() {
 	assert.Equal(t, 1, len(zip_files))
 
 	// Clean it up after we are done.
-	defer os.Remove(zip_files[0])
+	defer func() {
+		err := os.Remove(zip_files[0])
+		assert.NoError(t, err)
+	}()
 
 	// Inspect the collection zip file - there should be a single
 	// artifact output from our custom artifact, and the data it
@@ -504,7 +507,10 @@ func (self *CollectorTestSuite) TestCollectorEncrypted() {
 	assert.Equal(t, 1, len(zip_files))
 
 	// Clean up after we are done.
-	defer os.Remove(zip_files[0])
+	defer func() {
+		err := os.Remove(zip_files[0])
+		assert.NoError(t, err)
+	}()
 
 	// Inspect the collection zip file - The zip file is encrypted
 	// therefore contains only a single metadata file (with the
