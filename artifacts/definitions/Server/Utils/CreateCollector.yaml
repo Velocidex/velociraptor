@@ -48,9 +48,17 @@ parameters:
   - name: template
     default:
     description: The HTML report template to use.
+      
+  - name: encryption_scheme
+    description: |
+      Encryption scheme to use. Currently supported are Passowrd and PGP
 
-  - name: Password
-    description: If set we encrypt collected zip files with this password.
+  - name: encryption_args
+    description: |
+      Encryption arguments
+    type: json
+    default: |
+      {}
 
   - name: parameters
     description: A dict containing the parameters to set.
@@ -149,12 +157,27 @@ parameters:
 
       LET _ <= log(message="Will collect package " + filename)
       LET report_filename <= if(condition=Template, then=filename + ".html")
+
+      LET X <=  SELECT format(format="%02x", args=rand(range=255)) AS A FROM range(end=25)
+      LET pass = SELECT * FROM switch(a={SELECT join(array=X.A) as Pass From scope() WHERE encryption_scheme =~ "pgp|x509"},
+                        b={SELECT encryption_args.password as Pass FROM scope() WHERE encryption_scheme =~ "password"},
+                        c={SELECT Null as Pass FROM scope()})
+
       SELECT * FROM collect(artifacts=Artifacts, report=report_filename,
-          args=Parameters, output=filename + ".zip", template=Template,
-          cpu_limit=CpuLimit,
-          progress_timeout=ProgressTimeout,
-          timeout=Timeout,
-          password=Password, level=Level, format=Format)
+            args=Parameters, output=filename + ".zip", template=Template,
+            cpu_limit=CpuLimit,
+            progress_timeout=ProgressTimeout,
+            timeout=Timeout,
+            password=pass[0].Pass,
+            level=Level,
+            format=Format,
+            metadata=if(condition=encryption_args.public_key, then={
+                  SELECT pk_encrypt(data=pass[0].Pass, public_key=encryption_args.public_key, 
+                                    scheme=encryption_scheme)  AS EncryptedPass, 
+                                    encryption_scheme as Scheme,
+                                    encryption_args.public_key as PublicKey FROM scope()
+                })
+            )
 
   - name: S3Collection
     type: hidden
@@ -227,6 +250,12 @@ parameters:
       LET _ <= log(message="Will collect package " + filename +
          " and upload to cloud bucket " + TargetArgs.bucket)
       LET report_filename <= if(condition=Template, then=tempfile(extension=".html"))
+
+      LET X <=  SELECT format(format="%02x", args=rand(range=255)) AS A FROM range(end=25) 
+      LET pass = SELECT * FROM switch(a={SELECT join(array=X.A) as Pass From scope() WHERE encryption_scheme =~ "pgp"},
+                        b={SELECT encryption_args.password as Pass FROM scope() WHERE encryption_scheme =~ "password"},
+                        c={SELECT Null as Pass FROM scope()})
+
       LET collect_and_upload = SELECT
           upload_file(filename=Container,
                       name=filename+".zip",
@@ -247,8 +276,12 @@ parameters:
           cpu_limit=CpuLimit,
           progress_timeout=ProgressTimeout,
           timeout=Timeout,
-          password=Password,
-          level=Level)
+          password=pass[0].Pass,
+          level=Level,
+          metadata=if(condition=encryption_args.public_key, then={
+                SELECT pk_encrypt(data=pass.Pass, public_key=encryption_args.public_key, scheme=encryption_scheme)  AS EncryptedPass, encryption_scheme as Scheme  FROM scope()
+              })
+           )
 
       SELECT * FROM if(condition=upload_test.Path,
           then=collect_and_upload,
@@ -366,6 +399,14 @@ sources:
         e = { SELECT "" AS Value  FROM scope() WHERE log(message="Unknown collection type " + target) }
       )
 
+
+      LET use_server_cert = SELECT log(message="Pubkey encryption specified, but no cert/key provided. Defaulting to server frontend cert") FROM scope() WHERE encryption_scheme =~ "x509" AND encryption_args.public_key =~ ""
+      LET updated_encryption_args <= if(condition=use_server_cert,
+                                        then=dict(public_key=server_frontend_cert(),
+                                                  scheme="x509"),
+                                        else=encryption_args
+                                        )
+
       LET definitions <= SELECT * FROM chain(
       a = { SELECT name, description, tools, parameters, sources, reports
             FROM artifact_definitions(names=artifacts)
@@ -391,7 +432,11 @@ sources:
                          default=serialize(format='json', item=parameters),
                          type="json"),
                     dict(name="Template", default=template),
-                    dict(name="Password", default=Password),
+                    dict(name="encryption_scheme", default=encryption_scheme),
+                    dict(name="encryption_args", 
+                         default=serialize(format='json', item=updated_encryption_args),
+                         type="json"
+                         ),
                     dict(name="Level", default=opt_level, type="int"),
                     dict(name="Format", default=opt_format),
                     dict(name="OutputPrefix", default=opt_output_directory),

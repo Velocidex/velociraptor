@@ -404,7 +404,7 @@ func (self *Container) Close() error {
 
 func NewContainer(
 	config_obj *config_proto.Config,
-	path string, password string, level int64) (*Container, error) {
+	path string, password string, level int64, metadata []vfilter.Row) (*Container, error) {
 	fd, err := os.OpenFile(
 		path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 	if err != nil {
@@ -427,8 +427,15 @@ func NewContainer(
 
 	// We need to build a protected container.
 	if password != "" {
-		result.delegate_zip = zip.NewWriter(result.writer)
 
+		result.delegate_zip = zip.NewWriter(result.writer)
+		if metadata != nil && len(metadata) != 0 {
+			fh, err := result.delegate_zip.Create("metadata.json")
+			if err != nil {
+				return nil, err
+			}
+			fh.Write(json.MustMarshalIndent(metadata))
+		}
 		// We are writing a zip file into here - no need to
 		// compress.
 		fh := &zip.FileHeader{
@@ -448,6 +455,15 @@ func NewContainer(
 			zip.Deflate, func(out io.Writer) (io.WriteCloser, error) {
 				return flate.NewWriter(out, int(level))
 			})
+		if metadata != nil && len(metadata) != 0 {
+			fh, err := result.zip.Create("metadata.json")
+			if err != nil {
+				return nil, err
+			}
+			fh.Write(json.MustMarshalIndent(metadata))
+			fh.Close()
+
+		}
 	}
 
 	return result, nil

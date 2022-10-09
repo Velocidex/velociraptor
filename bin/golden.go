@@ -170,7 +170,7 @@ func runTest(fixture *testFixture, sm *services.Service,
 	defer os.Remove(tmpfile.Name())
 
 	container, err := reporting.NewContainer(
-		config_obj, tmpfile.Name(), "", 5)
+		config_obj, tmpfile.Name(), "", 5, nil)
 	if err != nil {
 		return "", fmt.Errorf("Can not create output container: %w", err)
 	}
