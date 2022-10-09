@@ -77,12 +77,14 @@ func TestMergeSorter(t *testing.T) {
 
 	sort_ctx.wg.Wait()
 
-	// 2 providers - in memory and 2 files.
-	assert.Equal(t, len(sort_ctx.merge_files), 3)
-
 	// Now read the data out
 	res := make([]types.Row, 0)
 	for row := range sorter {
+		sort_ctx.mu.Lock()
+		// 2 providers - in memory and 2 files.
+		assert.Equal(t, len(sort_ctx.merge_files), 3)
+		sort_ctx.mu.Unlock()
+
 		res = append(res, row)
 	}
 
@@ -111,12 +113,15 @@ func TestMergeSorterDesc(t *testing.T) {
 
 	sort_ctx.wg.Wait()
 
-	// 2 providers - in memory and 2 files.
-	assert.Equal(t, len(sort_ctx.merge_files), 3)
-
 	// Now read the data out
 	res := make([]types.Row, 0)
 	for row := range sorter {
+
+		sort_ctx.mu.Lock()
+		// 2 providers - in memory and 2 files.
+		assert.Equal(t, len(sort_ctx.merge_files), 3)
+		sort_ctx.mu.Unlock()
+
 		res = append(res, row)
 	}
 
