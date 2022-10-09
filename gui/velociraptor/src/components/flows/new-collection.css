@@ -44,3 +44,21 @@
 .favorite-button {
     height: 42px;
 }
+
+table.param-form-table {
+    width: 100%;
+}
+
+.param-form-autosuggest .react-autosuggest__input {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.param-form-autosuggest .react-autosuggest__suggestions-container {
+    width: 130%;
+    margin: 0px;
+}
+
+.param-form-autosuggest div.react-autosuggest__suggestions-container--open {
+    margin-left: 0px;
+}

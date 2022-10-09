@@ -18,9 +18,9 @@ import axios from 'axios';
 
 import "react-bootstrap-typeahead/css/Typeahead.css";
 
+import NewCollectionConfigParameters from '../flows/new-collections-parameters.js';
 import {
     NewCollectionSelectArtifacts,
-    NewCollectionConfigParameters,
     NewCollectionRequest,
     NewCollectionLaunch,
     PaginationBuilder

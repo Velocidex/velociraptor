@@ -15,6 +15,7 @@ import Row from 'react-bootstrap/Row';
 import VeloReportViewer from "../artifacts/reporting.js";
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Select from 'react-select';
+import NewCollectionConfigParameters from './new-collections-parameters.js';
 
 import Spinner from '../utils/spinner.js';
 import Col from 'react-bootstrap/Col';
@@ -361,106 +362,6 @@ class NewCollectionSelectArtifacts extends React.Component {
         );
     }
 };
-
-class NewCollectionConfigParameters extends React.Component {
-    static propTypes = {
-        request: PropTypes.object,
-        artifacts: PropTypes.array,
-        setArtifacts: PropTypes.func.isRequired,
-        parameters: PropTypes.object,
-        setParameters: PropTypes.func.isRequired,
-        paginator: PropTypes.object,
-    };
-
-    setValue = (artifact, name, value) => {
-        let parameters = this.props.parameters;
-        let artifact_parameters = parameters[artifact] || {};
-        artifact_parameters[name] = value;
-        parameters[artifact] = artifact_parameters;
-        this.props.setParameters(parameters);
-    }
-
-    removeArtifact = (name) => {
-        this.props.setArtifacts(remove_artifact(this.props.artifacts, name));
-    }
-
-    render() {
-        const expandRow = {
-            expandHeaderColumnRenderer: ({ isAnyExpands }) => {
-                if (isAnyExpands) {
-                    return <b>-</b>;
-                }
-                return <b>+</b>;
-            },
-            expandColumnRenderer: ({ expanded, rowKey }) => {
-                if (expanded) {
-                    return (
-                        <b key={rowKey}>-</b>
-                    );
-                }
-                return (<ButtonGroup>
-                          <Button variant="outline-default"><FontAwesomeIcon icon="wrench"/></Button>
-                          <Button variant="outline-default" onClick={
-                              () => this.props.setArtifacts(remove_artifact(
-                                  this.props.artifacts, rowKey))} >
-                            <FontAwesomeIcon icon="trash"/>
-                          </Button>
-                        </ButtonGroup>
-                );
-            },
-            showExpandColumn: true,
-            renderer: artifact => {
-                return _.map(artifact.parameters || [], (param, idx) => {
-                    let artifact_parameters = (
-                        this.props.parameters &&
-                            this.props.parameters[artifact.name]) || {};
-                    let value = artifact_parameters[param.name];
-                    // Only set default value if the parameter is not
-                    // defined. If it is an empty string then so be
-                    // it.
-                    if (_.isUndefined(value)) {
-                        value = param.default || "";
-                    }
-
-                    return (
-                        <VeloForm param={param} key={idx}
-                                  value={value}
-                                  setValue={(value) => this.setValue(
-                                      artifact.name,
-                                      param.name,
-                                      value)}/>
-                    );
-                });
-            }
-        };
-        return (
-            <>
-              <Modal.Header closeButton>
-                <Modal.Title>{ T(this.props.paginator.title) }</Modal.Title>
-              </Modal.Header>
-
-              <Modal.Body className="new-collection-parameter-page selectable">
-                { !_.isEmpty(this.props.artifacts) ?
-                  <BootstrapTable
-                    keyField="name"
-                    expandRow={ expandRow }
-                    columns={[{dataField: "name", text: T("Artifact")},
-                              {dataField: "parameter", text: "", hidden: true}]}
-                    data={this.props.artifacts} /> :
-                 <div className="no-content">
-                   {T("No artifacts configured. Please add some artifacts to collect")}
-                 </div>
-                }
-              </Modal.Body>
-              <Modal.Footer>
-                { this.props.paginator.makePaginator({
-                    props: this.props,
-                }) }
-              </Modal.Footer>
-            </>
-        );
-    };
-}
 
 class NewCollectionResources extends React.Component {
     static propTypes = {
@@ -1105,7 +1006,6 @@ class NewCollectionWizard extends React.Component {
 export {
     NewCollectionWizard as default,
     NewCollectionSelectArtifacts,
-    NewCollectionConfigParameters,
     NewCollectionResources,
     NewCollectionRequest,
     NewCollectionLaunch,

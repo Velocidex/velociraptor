@@ -218,8 +218,6 @@ func (self *ProcessTrackerTestSuite) TestProcessTracker() {
 		assert.NoError(self.T(), err)
 
 		scope := manager.BuildScope(builder)
-		defer scope.Close()
-
 		rows := make([]*ordereddict.Dict, 0)
 		mvql, err := vfilter.MultiParse(test_case.Query)
 		for _, vql := range mvql {
@@ -227,6 +225,7 @@ func (self *ProcessTrackerTestSuite) TestProcessTracker() {
 				rows = append(rows, vfilter.RowToDict(ctx, scope, row))
 			}
 		}
+		scope.Close()
 
 		results.Set(test_case.Name, rows)
 	}
