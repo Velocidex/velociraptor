@@ -24,20 +24,19 @@ parameters:
 
 sources:
   - query: |
-       LET DockList = SELECT FullPath from glob(globs=DockGlob)
-
-       LET PersistentApps = SELECT get(member="persistent-apps") as PA
-         FROM plist(file=DockList.FullPath)
-
-       SELECT GUID,
-          get(member="tile-data.file-label") AS FileLabel,
-          get(member="tile-data.file-data._CFURLString") AS AppLocation,
-          timestamp(mactime=get(member="tile-data.file-mod-date")) AS FileModDate,
-          timestamp(mactime=get(member="tile-data.parent-mod-date")) AS ParentModDate,
-          get(member="tile-data.bundle-identifier") AS BundleIdentifier,
-          get(member="tile-data.dock-extra") AS DockExtra,
-          base64encode(string=get(member="tile-data.book")) AS Book
-       FROM foreach(row=plist(file=DockList.FullPath).`persistent-apps`)
+       SELECT * FROM foreach(row={
+          SELECT OSPath from glob(globs=DockGlob)
+       }, query={
+         SELECT OSPath, GUID,
+           get(member="tile-data.file-label") AS FileLabel,
+           get(member="tile-data.file-data._CFURLString") AS AppLocation,
+           timestamp(mactime=get(member="tile-data.file-mod-date")) AS FileModDate,
+           timestamp(mactime=get(member="tile-data.parent-mod-date")) AS ParentModDate,
+           get(member="tile-data.bundle-identifier") AS BundleIdentifier,
+           get(member="tile-data.dock-extra") AS DockExtra,
+           base64encode(string=get(member="tile-data.book")) AS Book
+         FROM foreach(row=plist(file=OSPath).`persistent-apps`)
+       })
 
 column_types:
   - name: Book
