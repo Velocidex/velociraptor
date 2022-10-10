@@ -379,6 +379,7 @@ func (self *CollectorTestSuite) TestCollector() {
 	r, err = zip.OpenReader(zip_files[0])
 	assert.NoError(t, err)
 
+	defer r.Close()
 	assert.True(t, len(r.File) > 0)
 
 	for _, f := range r.File {
@@ -518,6 +519,8 @@ func (self *CollectorTestSuite) TestCollectorEncrypted() {
 	// password encrypted.
 	r, err = zip.OpenReader(zip_files[0])
 	assert.NoError(t, err)
+
+	defer r.Close()
 
 	assert.True(t, len(r.File) > 0)
 
