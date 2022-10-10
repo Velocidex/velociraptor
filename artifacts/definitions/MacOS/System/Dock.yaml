@@ -11,7 +11,8 @@ description: |
 
 reference:
   - https://specterops.io/so-con2020/event-758922
-  - ATT&CK T1547.009/T1547.011 - Shortcut modification/Plist modification - https://attack.mitre.org/techniques/T1547/
+  - https://attack.mitre.org/techniques/T1547/009/
+  - https://attack.mitre.org/techniques/T1647/
 
 author: Wes Lambert - @therealwlambert
 
@@ -19,36 +20,24 @@ type: CLIENT
 
 parameters:
    - name: DockGlob
-     default: Users/*/Library/Preferences/com.apple.dock.plist
-
-precondition:
-      SELECT OS From info() where OS = 'darwin'
+     default: /Users/*/Library/Preferences/com.apple.dock.plist
 
 sources:
   - query: |
-       LET DockList = SELECT FullPath from glob(globs=DockGlob)
-
-       LET PersistentApps = SELECT get(member="persistent-apps") as PA
-         FROM plist(file=DockList.FullPath)
-
-       LET TD = SELECT GUID, TileData from foreach(row=PersistentApps,
-       query={
-          SELECT get(item=PA, member="GUID") AS GUID,
-                 get(item=PA, member="tile-data") AS TileData
-          FROM scope()
+       SELECT * FROM foreach(row={
+          SELECT OSPath from glob(globs=DockGlob)
+       }, query={
+         SELECT OSPath, GUID,
+           get(member="tile-data.file-label") AS FileLabel,
+           get(member="tile-data.file-data._CFURLString") AS AppLocation,
+           timestamp(mactime=get(member="tile-data.file-mod-date")) AS FileModDate,
+           timestamp(mactime=get(member="tile-data.parent-mod-date")) AS ParentModDate,
+           get(member="tile-data.bundle-identifier") AS BundleIdentifier,
+           get(member="tile-data.dock-extra") AS DockExtra,
+           base64encode(string=get(member="tile-data.book")) AS Book
+         FROM foreach(row=plist(file=OSPath).`persistent-apps`)
        })
 
-       LET TDEach = SELECT GUID, TileData FROM foreach(row=TD,
-       query={
-           SELECT GUID, TileData from scope()
-       })
-
-       SELECT
-          get(member="file-label") AS FileLabel,
-          get(member="file-data._CFURLString") AS AppLocation,
-          timestamp(mactime=get(member="file-mod-date")) AS FileModDate,
-          timestamp(mactime=get(member="parent-mod-date")) AS ParentModDate,
-          get(member="bundle-identifier") AS BundleIdentifier,
-          get(member="dock-extra") AS DockExtra,
-          book AS Book
-        FROM foreach(row=TDEach,query={SELECT * from foreach(row=TileData)})
+column_types:
+  - name: Book
+    type: base64hex
