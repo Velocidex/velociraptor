@@ -51,6 +51,7 @@ type LogWriter struct {
 
 func (self *LogWriter) Write(b []byte) (int, error) {
 	level, msg := logging.SplitIntoLevelAndLog(b)
+
 	self.responder.Log(self.ctx, level, msg)
 	logging.GetLogger(self.config_obj, &logging.ClientComponent).
 		LogWithLevel(level, "%v", msg)
@@ -239,9 +240,9 @@ func (self VQLClientAction) StartQuery(
 
 			case <-time.After(time.Second * time.Duration(heartbeat)):
 				responder.Log(ctx, logging.DEFAULT,
-					"Time %v: %s: Waiting for rows.",
-					(uint64(time.Now().UTC().UnixNano()/1000)-
-						query_start)/1000000, query.Name)
+					fmt.Sprintf("Time %v: %s: Waiting for rows.",
+						(uint64(time.Now().UTC().UnixNano()/1000)-
+							query_start)/1000000, query.Name))
 
 			case result, ok := <-result_chan:
 				if !ok {
@@ -268,13 +269,14 @@ func (self VQLClientAction) StartQuery(
 				if query.Name != "" {
 					responder.Log(ctx,
 						logging.DEFAULT,
-						"Time %v: %s: Sending response part %d %s (%d rows).",
-						(response.Timestamp-query_start)/1000000,
-						query.Name,
-						result.Part,
-						humanize.Bytes(uint64(len(result.Payload))),
-						result.TotalRows,
-					)
+						fmt.Sprintf(
+							"Time %v: %s: Sending response part %d %s (%d rows).",
+							(response.Timestamp-query_start)/1000000,
+							query.Name,
+							result.Part,
+							humanize.Bytes(uint64(len(result.Payload))),
+							result.TotalRows,
+						))
 				}
 				response.Columns = result.Columns
 				responder.AddResponse(ctx, &crypto_proto.VeloMessage{
@@ -285,7 +287,7 @@ func (self VQLClientAction) StartQuery(
 
 	if uploader.Count > 0 {
 		responder.Log(ctx, logging.DEFAULT,
-			"Uploaded %v files.", uploader.Count)
+			fmt.Sprintf("Uploaded %v files.", uploader.Count))
 	}
 
 	responder.Return(ctx)

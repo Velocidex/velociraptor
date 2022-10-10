@@ -19,7 +19,6 @@ package responder
 
 import (
 	"context"
-	"fmt"
 	"runtime/debug"
 	"sync"
 	"sync/atomic"
@@ -189,13 +188,12 @@ func (self *Responder) Return(ctx context.Context) {
 }
 
 // Send a log message to the server.
-func (self *Responder) Log(ctx context.Context, level string,
-	format string, v ...interface{}) {
+func (self *Responder) Log(ctx context.Context, level string, msg string) {
 	self.AddResponse(ctx, &crypto_proto.VeloMessage{
 		RequestId: constants.LOG_SINK,
 		LogMessage: &crypto_proto.LogMessage{
 			Id:        int64(atomic.LoadInt32(&self.log_id)),
-			Message:   fmt.Sprintf(format, v...),
+			Message:   msg,
 			Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
 			Artifact:  self.Artifact,
 			Level:     level,
