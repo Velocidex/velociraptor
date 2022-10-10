@@ -11,7 +11,8 @@ description: |
 
 reference:
   - https://specterops.io/so-con2020/event-758922
-  - ATT&CK T1547.009/T1547.011 - Shortcut modification/Plist modification - https://attack.mitre.org/techniques/T1547/
+  - https://attack.mitre.org/techniques/T1547/009/
+  - https://attack.mitre.org/techniques/T1647/
 
 author: Wes Lambert - @therealwlambert
 
@@ -43,12 +44,11 @@ sources:
            SELECT GUID, TileData from scope()
        })
 
-       SELECT
-          get(member="file-label") AS FileLabel,
-          get(member="file-data._CFURLString") AS AppLocation,
-          timestamp(mactime=get(member="file-mod-date")) AS FileModDate,
-          timestamp(mactime=get(member="parent-mod-date")) AS ParentModDate,
-          get(member="bundle-identifier") AS BundleIdentifier,
-          get(member="dock-extra") AS DockExtra,
-          book AS Book
+       SELECT 
+          _value.`file-label` AS FileLabel,
+          _value.`file-data`.`_CFURLString` AS AppLocation,
+          timestamp(mactime=int(int=_value.`file-mod-date`)) AS FileModDate,
+          timestamp(mactime=int(int=_value.`parent-mod-date`)) AS ParentModDate,
+          _value.`bundle-identifier` AS BundleIdentifier,
+          _value.`dock-extra` AS DockExtra
         FROM foreach(row=TDEach,query={SELECT * from foreach(row=TileData)})
