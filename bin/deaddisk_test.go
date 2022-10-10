@@ -4,15 +4,13 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
-func TestDeaddisk(t *testing.T) {
-	self := CollectorSetupTest(t)
-	defer self.TearDownTest()
+func (self *CollectorTestSuite) TestDeaddisk() {
+	t := self.T()
 
 	// Create a "Windows" directory in the tmpdir
 	windows_dir := filepath.Join(self.tmpdir, "Windows")

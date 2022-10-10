@@ -21,7 +21,6 @@ import Spinner from '../utils/spinner.js';
 import Col from 'react-bootstrap/Col';
 
 import StepWizard from 'react-step-wizard';
-import VeloForm from '../forms/form.js';
 
 import ValidatedInteger from "../forms/validated_int.js";
 

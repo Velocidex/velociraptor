@@ -104,22 +104,23 @@ class OfflineCollectorParameters  extends React.Component {
                       </Form.Control>
                     </Col>
                   </Form.Group>
-                  {(this.props.parameters.encryption_scheme == "PGP" || this.props.parameters.encryption_scheme == "X509") && <>
-                  <Form.Group as={Row} >
-                    <Form.Label column sm="3">{T("Public Key/Cert")}</Form.Label>
-                    <Col sm="8">
-                      <Form.Control as="textarea"
-                                    placeholder={T("Public Key/Certificate To Encrypt With. If X509, Defaults To Frontend Cert")}
-                                    spellCheck="false"
-                                    value={this.props.parameters.encryption_args.public_key}
-                                    onChange={e => {
-                                        this.props.parameters.encryption_args.public_key = e.target.value;
-                                        this.props.setParameters(this.props.parameters);
-                                    }} />
-                    </Col>
-                  </Form.Group></>
+                  {(this.props.parameters.encryption_scheme === "PGP" ||
+                    this.props.parameters.encryption_scheme === "X509") &&
+                   <Form.Group as={Row} >
+                     <Form.Label column sm="3">{T("Public Key/Cert")}</Form.Label>
+                     <Col sm="8">
+                       <Form.Control as="textarea"
+                                     placeholder={T("Public Key/Certificate To Encrypt With. If X509, Defaults To Frontend Cert")}
+                                     spellCheck="false"
+                                     value={this.props.parameters.encryption_args.public_key}
+                                     onChange={e => {
+                                         this.props.parameters.encryption_args.public_key = e.target.value;
+                                         this.props.setParameters(this.props.parameters);
+                                     }} />
+                     </Col>
+                   </Form.Group>
                   }
-                  {this.props.parameters.encryption_scheme == "Password" && <>
+                  { this.props.parameters.encryption_scheme === "Password" &&
                     <Form.Group as={Row} >
                       <Form.Label column sm="3">{T("Password")}</Form.Label>
                       <Col sm="8">
@@ -132,7 +133,7 @@ class OfflineCollectorParameters  extends React.Component {
                                           this.props.setParameters(this.props.parameters);
                                       }} />
                       </Col>
-                    </Form.Group></>
+                    </Form.Group>
                   }
 
                   <Form.Group as={Row}>
