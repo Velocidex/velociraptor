@@ -36,9 +36,11 @@ sources:
                   then="TCP",
                   else=if(condition=Record.Protocol = "17",
                           then="UDP",
-                          else=Record.Protocol)) as Protocol,
+                          else=if(condition=Record.Protocol = "Any",
+                            then="Any", 
+                            else=int(int=Record.Protocol)))) as Protocol
                if(condition=Record.LPort = NULL,
                   then="Any",
-                  else=Record.LPort) as LPort,
+                  else=int(int=Record.LPort)) as LPort,
                Record.Name as Name
         FROM rules
