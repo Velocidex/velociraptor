@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	cryptozip "github.com/Velocidex/cryptozip"
+	cryptozip "www.velocidex.com/golang/velociraptor/third_party/zip"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"

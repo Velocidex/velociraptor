@@ -18,7 +18,6 @@
 package api
 
 import (
-	"archive/zip"
 	"bytes"
 	"errors"
 	"fmt"
@@ -39,6 +38,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 

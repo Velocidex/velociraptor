@@ -12,7 +12,6 @@ require (
 	github.com/Showmax/go-fqdn v1.0.0
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/amsi v0.0.0-20200608120838-e5d93b76f119
-	github.com/Velocidex/cryptozip v0.0.0-20200812111814-37033c799bd9
 	github.com/Velocidex/etw v0.0.0-20210723072214-4d0cffd1ff22
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-magic v0.0.0-20211018155418-c5dc48282f28

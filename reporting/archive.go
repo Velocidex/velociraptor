@@ -1,7 +1,6 @@
 package reporting
 
 import (
-	"archive/zip"
 	"bufio"
 	"context"
 	"io"
@@ -10,6 +9,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/vfilter"
 )
 
