@@ -84,3 +84,16 @@ Queries:
          DelegateAccessor="file",
          DelegatePath=srcDir + '/artifacts/testdata/files/test.zip',
          Path="test"))
+
+  # Test that unzip can unencrypt zip files transparently.  Password
+  # is set in the scope so it can not leak in output
+  - LET ZIP_PASSWORDS = 'hello'
+  - |
+    SELECT read_file(filename=OSPath, accessor='zip')
+    FROM glob(globs='**/BasicInformation.json',
+      accessor='zip',
+      root=pathspec(
+        DelegateAccessor='zip',
+        DelegatePath=pathspec(DelegateAccessor='file',
+          DelegatePath=srcDir + '/artifacts/testdata/files/encrypted_collector.zip',
+          Path='/data.zip')))

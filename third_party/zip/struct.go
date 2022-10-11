@@ -20,6 +20,7 @@ fields must be used instead.
 package zip
 
 import (
+	"io/fs"
 	"os"
 	"path"
 	"time"
@@ -42,7 +43,7 @@ const (
 	directoryHeaderLen       = 46         // + filename + extra + comment
 	directoryEndLen          = 22         // + comment
 	dataDescriptorLen        = 16         // four uint32: descriptor signature, crc32, compressed size, size
-	dataDescriptor64Len      = 24         // descriptor with 8 byte sizes
+	dataDescriptor64Len      = 24         // two uint32: signature, crc32 | two uint64: compressed size, size
 	directory64LocLen        = 20         //
 	directory64EndLen        = 56         // + extra
 
@@ -75,6 +76,7 @@ const (
 	unixExtraID        = 0x000d // UNIX
 	extTimeExtraID     = 0x5455 // Extended timestamp
 	infoZipUnixExtraID = 0x5855 // Info-ZIP Unix extension
+	winzipAesExtraID   = 0x9901 // winzip AES Extra Field
 )
 
 // FileHeader describes a file within a zip file.
@@ -135,14 +137,27 @@ type FileHeader struct {
 	UncompressedSize64 uint64
 	Extra              []byte
 	ExternalAttrs      uint32 // Meaning depends on CreatorVersion
+
+	// DeferAuth being set to true will delay hmac auth/integrity
+	// checks when decrypting a file meaning the reader will be
+	// getting unauthenticated plaintext. It is recommended to leave
+	// this set to false. For more detail:
+	// https://www.imperialviolet.org/2014/06/27/streamingencryption.html
+	// https://www.imperialviolet.org/2015/05/16/aeads.html
+	DeferAuth bool
+
+	encryption  EncryptionMethod
+	password    passwordFn // Returns the password to use when reading/writing
+	ae          uint16
+	aesStrength byte
 }
 
-// FileInfo returns an os.FileInfo for the FileHeader.
-func (h *FileHeader) FileInfo() os.FileInfo {
+// FileInfo returns an fs.FileInfo for the FileHeader.
+func (h *FileHeader) FileInfo() fs.FileInfo {
 	return headerFileInfo{h}
 }
 
-// headerFileInfo implements os.FileInfo.
+// headerFileInfo implements fs.FileInfo.
 type headerFileInfo struct {
 	fh *FileHeader
 }
@@ -154,10 +169,15 @@ func (fi headerFileInfo) Size() int64 {
 	}
 	return int64(fi.fh.UncompressedSize)
 }
-func (fi headerFileInfo) IsDir() bool        { return fi.Mode().IsDir() }
-func (fi headerFileInfo) ModTime() time.Time { return fi.fh.ModTime() }
-func (fi headerFileInfo) Mode() os.FileMode  { return fi.fh.Mode() }
-func (fi headerFileInfo) Sys() interface{}   { return fi.fh }
+func (fi headerFileInfo) IsDir() bool { return fi.Mode().IsDir() }
+func (fi headerFileInfo) ModTime() time.Time {
+	if fi.fh.Modified.IsZero() {
+		return fi.fh.ModTime()
+	}
+	return fi.fh.Modified.UTC()
+}
+func (fi headerFileInfo) Mode() os.FileMode { return fi.fh.Mode() }
+func (fi headerFileInfo) Sys() interface{}  { return fi.fh }
 
 // FileInfoHeader creates a partially-populated FileHeader from an
 // os.FileInfo.

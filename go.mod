@@ -128,6 +128,8 @@ require (
 	github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11
 	github.com/Velocidex/ordereddict v0.0.0-20220428153415-da46091cd216
 	github.com/evanphx/json-patch/v5 v5.6.0
+	github.com/hillu/go-archive-zip-crypto v0.0.0-20200712202847-bd5cf365dd44
+	github.com/rogpeppe/go-internal v1.8.0
 	github.com/shirou/gopsutil/v3 v3.21.11
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.1.0
 	www.velocidex.com/golang/vtypes v0.0.0-20220816192452-6a27ae078f12
@@ -158,7 +160,6 @@ require (
 	github.com/gorilla/securecookie v1.1.1 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
-	github.com/hillu/go-archive-zip-crypto v0.0.0-20200712202847-bd5cf365dd44 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/jstemmer/go-junit-report v0.9.1 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect

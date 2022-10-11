@@ -109,6 +109,7 @@ func (z *Reader) init(r io.ReaderAt, size int64) error {
 	// the file count modulo 65536 is incorrect.
 	for {
 		f := &File{zip: z, zipr: r, zipsize: size}
+
 		err = readDirectoryHeader(f, buf, int64(startOfArchive))
 		if err == ErrFormat || err == io.ErrUnexpectedEOF {
 			break
@@ -170,12 +171,27 @@ func (f *File) Open() (io.ReadCloser, error) {
 		return nil, err
 	}
 	size := int64(f.CompressedSize64)
-	r := io.NewSectionReader(f.zipr, f.headerOffset+bodyOffset, size)
+	var r io.Reader
+	er := io.NewSectionReader(f.zipr, f.headerOffset+bodyOffset, size)
+	if f.IsEncrypted() {
+		if f.ae == 0 {
+			if r, err = ZipCryptoDecryptor(er, f.password()); err != nil {
+				return nil, err
+			}
+		} else if r, err = newDecryptionReader(er, f); err != nil {
+			return nil, err
+		}
+	} else {
+		r = er
+	}
 	dcomp := f.zip.decompressor(f.Method)
 	if dcomp == nil {
 		return nil, ErrAlgorithm
 	}
 	var rc io.ReadCloser = dcomp(r)
+	if f.isAE2() {
+		return rc, nil
+	}
 	var desr io.Reader
 	if f.hasDataDescriptor() {
 		desr = io.NewSectionReader(f.zipr, f.headerOffset+bodyOffset+size, dataDescriptorLen)
@@ -252,7 +268,7 @@ func (f *File) findBodyOffset() (int64, error) {
 	}
 	b := readBuf(buf[:])
 	if sig := b.uint32(); sig != fileHeaderSignature {
-		return 0, fmt.Errorf("findBodyOffset: %w", ErrFormat)
+		return 0, ErrFormat
 	}
 	b = b[22:] // skip over most of the header
 	filenameLen := int(b.uint16())
@@ -270,7 +286,7 @@ func readDirectoryHeader(f *File, r io.Reader, startOfArchive int64) error {
 	}
 	b := readBuf(buf[:])
 	if sig := b.uint32(); sig != directoryHeaderSignature {
-		return fmt.Errorf("readDirectoryHeader: %w", ErrFormat)
+		return ErrFormat
 	}
 	f.CreatorVersion = b.uint16()
 	f.ReaderVersion = b.uint16()
@@ -395,6 +411,14 @@ parseExtras:
 			}
 			ts := int64(fieldBuf.uint32()) // ModTime since Unix epoch
 			modified = time.Unix(ts, 0)
+		case winzipAesExtraID:
+			if len(fieldBuf) < 7 {
+				continue parseExtras
+			}
+			f.ae = fieldBuf.uint16()
+			_ = fieldBuf.uint16()
+			f.aesStrength = fieldBuf.uint8()
+			f.Method = fieldBuf.uint16()
 		}
 	}
 
