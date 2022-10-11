@@ -133,6 +133,15 @@ func GetDefaultConfig() *config_proto.Config {
 			Authenticator: &config_proto.Authenticator{
 				Type: "Basic",
 			},
+			Links: []*config_proto.GUILink{
+				{
+					Text:    "Documentation",
+					Url:     "https://docs.velociraptor.app/",
+					NewTab:  true,
+					Type:    "sidebar",
+					IconUrl: VeloIconDataURL,
+				},
+			},
 		},
 		CA: &config_proto.CAConfig{},
 		Frontend: &config_proto.FrontendConfig{
