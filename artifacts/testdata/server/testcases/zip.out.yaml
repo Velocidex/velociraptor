@@ -51,4 +51,16 @@ LET zip_files = SELECT FullPath, Size FROM glob( globs=srcDir+"/artifacts/testda
  {
   "Member": "/test/secret.txt"
  }
+]LET ZIP_PASSWORDS = 'hello'[]SELECT read_file(filename=OSPath, accessor='zip')
+FROM glob(globs='**/BasicInformation.json',
+  accessor='zip',
+  root=pathspec(
+    DelegateAccessor='zip',
+    DelegatePath=pathspec(DelegateAccessor='file',
+      DelegatePath=srcDir + '/artifacts/testdata/files/encrypted_collector.zip',
+      Path='/data.zip')))
+[
+ {
+  "read_file(filename=OSPath, accessor='zip')": "{\"Name\":\"velociraptor\",\"BuildTime\":\"2022-10-10T07:34:08+10:00\",\"Version\":\"0.6.7-dev\",\"build_url\":\"\",\"Labels\":null,\"Hostname\":\"DESKTOP-SU8FH31\",\"OS\":\"windows\",\"Architecture\":\"amd64\",\"Platform\":\"Microsoft Windows 11 Enterprise Evaluation\",\"PlatformVersion\":\"10.0.22000 Build 22000\",\"KernelVersion\":\"10.0.22000 Build 22000\",\"Fqdn\":\"DESKTOP-SU8FH31.lan\",\"MACAddresses\":[\"00:0c:29:00:26:7e\"]}\n"
+ }
 ]

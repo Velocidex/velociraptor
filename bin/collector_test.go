@@ -1,7 +1,6 @@
 package main
 
 import (
-	"archive/zip"
 	"context"
 	"fmt"
 	"io"
@@ -24,6 +23,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 

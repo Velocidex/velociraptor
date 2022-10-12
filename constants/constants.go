@@ -85,6 +85,9 @@ const (
 	// collection. We use this RegExp to determine if log messages
 	// represent failure.
 	VQL_ERROR_REGEX = "(?i)(Error:|Symbol.+?not found|Expecting a path arg type, not)"
+
+	// Set in the scope with one or more passwords
+	ZIP_PASSWORDS = "ZIP_PASSWORDS"
 )
 
 type key int

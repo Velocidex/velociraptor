@@ -190,6 +190,7 @@ func _GetZipFile(self *ZipFileSystemAccessor,
 		// One reference to the scope.
 		refs:          1,
 		zip_file_name: base_pathspec.GetDelegatePath(),
+		scope:         self.scope,
 	}
 
 	for _, i := range zip_file.File {
