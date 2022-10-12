@@ -252,6 +252,7 @@ func (self *NTFSFileSystemAccessor) ReadDirWithOSPath(
 	return result, nil
 }
 
+// Adapt a ReadSeeker onto the ReadAtter that go-ntfs provides.
 type readAdapter struct {
 	sync.Mutex
 
@@ -286,12 +287,28 @@ func (self *readAdapter) Read(buf []byte) (res int, err error) {
 	}()
 
 	res, err = self.reader.ReadAt(buf, self.pos)
-	self.pos += int64(res)
-
 	// If ReadAt is unable to read anything it means an EOF.
 	if res == 0 {
-		return res, io.EOF
+		// The NTFS cache may be flushed during this read and in this
+		// case the file handle will be closed on us during the
+		// read. This usually shows up as an EOF read with 0 length.
+		// See Issue
+		// https://github.com/Velocidex/velociraptor/issues/2153
+
+		// We catch this issue by issuing one more read just to make
+		// sure. Usually we are wrapping a ReadAtter here and we do
+		// not expect to see a EOF anyway. In the case of NTFS the
+		// extra read will re-open the underlying device file with a
+		// new NTFS context (reparsing the $MFT and purging all the
+		// caches) so the next read will succeed.
+		res, err = self.reader.ReadAt(buf, self.pos)
+		if res == 0 {
+			// Still EOF - give up
+			return res, io.EOF
+		}
 	}
+
+	self.pos += int64(res)
 
 	return res, err
 }

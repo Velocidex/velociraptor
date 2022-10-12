@@ -41,6 +41,11 @@ parameters:
     default: |
 %(rules)s
 
+  - name: NTFS_CACHE_TIME
+    type: int
+    description: How often to flush the NTFS cache. (Default is never).
+    default: "1000000"
+
 sources:
   - name: All File Metadata
     query: |
@@ -125,4 +130,3 @@ reports:
       {{ end }}
 
       {{ Query $query | Table }}
-
