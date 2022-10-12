@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import classNames from "classnames";
 
 const text_color = "#8f8f8f";
 const background_color = '#f5f5f5';
@@ -8,7 +9,10 @@ const active_background_color = "#dee0ff";
 export const Header = ({onSelect, style, customStyles, node}) => {
     return (
         <div style={style.base} onClick={onSelect}>
-          <div className="tree-folder">
+          <div className={classNames({
+              "tree-folder": true,
+              "active": node.active,
+              })}>
             {node.toggled ? <FontAwesomeIcon icon="folder-open" /> : <FontAwesomeIcon icon="folder" /> }
             {node.name}
           </div>
@@ -41,13 +45,13 @@ const theme_template = ()=>{return {
         },
         node: {
             base: {
-                position: 'relative'
+                position: 'relative',
             },
             link: {
                 cursor: 'pointer',
                 position: 'relative',
                 padding: '0px 5px',
-                display: 'block'
+                display: 'block',
             },
             activeLink: {
                 background: active_background_color,
@@ -71,7 +75,6 @@ const theme_template = ()=>{return {
                 height: 9,
                 width: 9,
                 arrow: {
-                    fill: text_color,
                     strokeWidth: 0
                 }
             },
@@ -79,7 +82,7 @@ const theme_template = ()=>{return {
                 base: {
                     display: 'inline-block',
                     verticalAlign: 'top',
-                    color: "black"
+                    color: text_color,
                 },
                 connector: {
                     width: '2px',

@@ -581,7 +581,7 @@ class NewCollectionResources extends React.Component {
                     <Col sm="8">
                       <Form.Check
                         type="checkbox"
-                        checked={resources.urgent}
+                        checked={resources.urgent || false}
                         label={T("Skip queues and run query urgently")}
                         onChange={e=>this.props.setResources({urgent: e.currentTarget.checked})}
                       />
