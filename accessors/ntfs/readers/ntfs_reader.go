@@ -103,6 +103,7 @@ func (self *NTFSCachedContext) Start(
 				return
 
 			case <-time.After(cache_life):
+				scope.Log("DEBUG:Resetting NTFS Cache")
 				self.Close()
 			}
 		}

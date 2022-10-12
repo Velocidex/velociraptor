@@ -624,6 +624,10 @@ body.veloci-dark {
   padding-left: 12px;
 }
 
+.veloci-dark .tree-folder.active {
+  color: var(--color-header-background);
+}
+
 .veloci-dark .tree-folder {
   color: var(--color-foreground);
   font-family: var(--font-family-sans-serif);
