@@ -50,6 +50,11 @@ parameters:
     description: Normally we prefer to use lazy_ntfs for speed. Sometimes this might miss stuff so setting this will fallback to the regular ntfs accessor.
     type: bool
 
+  - name: NTFS_CACHE_TIME
+    type: int
+    description: How often to flush the NTFS cache. (Default is never).
+    default: "1000000"
+
 sources:
   - name: All File Metadata
     query: |

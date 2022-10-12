@@ -54,7 +54,7 @@ func CopyN(ctx context.Context, dst io.Writer, src io.Reader, count int64) (
 	for count > 0 {
 		select {
 		case <-ctx.Done():
-			return n, nil
+			return offset, nil
 
 		default:
 			read_buff := *buff
