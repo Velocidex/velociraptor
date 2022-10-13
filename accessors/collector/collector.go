@@ -7,10 +7,16 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/zip"
+	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
+
+	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -52,7 +58,8 @@ func (self StatWrapper) Size() int64 {
 
 type CollectorAccessor struct {
 	*zip.ZipFileSystemAccessor
-	scope vfilter.Scope
+	scope       vfilter.Scope
+	passwordSet bool
 }
 
 func (self *CollectorAccessor) New(scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
@@ -63,6 +70,72 @@ func (self *CollectorAccessor) New(scope vfilter.Scope) (accessors.FileSystemAcc
 	}, err
 }
 
+// Try to set a password if it exists in metadata
+func (self *CollectorAccessor) maybeSetZipPassword(full_path *accessors.OSPath) error {
+	if self.passwordSet {
+		return nil
+	}
+	self.passwordSet = true
+	ps := full_path.PathSpec().Copy()
+	ps.Path = "metadata.json"
+	meta, err := self.ParsePath(ps.String())
+	if err != nil {
+		return err
+	}
+
+	// Check if metadata.json exists. If so, try to extract password
+	if finfo, _ := self.LstatWithOSPath(meta); finfo != nil {
+		mhandle, err := self.OpenWithOSPath(meta)
+		if err != nil {
+			return err
+		}
+		buf, err := ioutil.ReadAll(mhandle)
+		if err != nil {
+			return err
+		}
+		rows := []*ordereddict.Dict{}
+		err = json.Unmarshal(buf, &rows)
+		if err != nil {
+			return err
+		}
+		// metadata.json can be multiple rows
+		for _, row := range rows {
+			scheme, _ := row.Get("Scheme")
+			scheme_str, ok := scheme.(string)
+			if !ok {
+				// Maybe multiple rows?
+				continue
+			}
+			if strings.ToLower(scheme_str) == "x509" {
+				ep, _ := row.Get("EncryptedPass")
+
+				ep_str, ok := ep.(string)
+				if !ok {
+					return errors.New("EncryptedPass must be of type string!")
+				}
+
+				err = vql_subsystem.CheckAccess(self.scope, acls.SERVER_ADMIN)
+				if err != nil {
+					return errors.New("Must be server admin to use private key")
+				}
+
+				key, err := crypto_utils.GetPrivateKeyFromScope(self.scope)
+				if err != nil {
+					return err
+				}
+
+				zip_pass, err := crypto_utils.Base64DecryptRSAOAEP(key, ep_str)
+				if err != nil {
+					return err
+				}
+				self.scope.SetContext(constants.ZIP_PASSWORDS, string(zip_pass))
+				return nil
+			}
+		}
+	}
+	return nil
+}
+
 func (self *CollectorAccessor) Open(
 	filename string) (accessors.ReadSeekCloser, error) {
 
@@ -71,7 +144,12 @@ func (self *CollectorAccessor) Open(
 		return nil, err
 	}
 
-	return self.OpenWithOSPath(full_path)
+	reader, err := self.OpenWithOSPath(full_path)
+	if err != nil {
+		return nil, err
+	}
+
+	return reader, nil
 }
 
 func (self *CollectorAccessor) getIndex(
@@ -114,6 +192,10 @@ func (self *CollectorAccessor) getIndex(
 
 func (self *CollectorAccessor) OpenWithOSPath(
 	full_path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
+	err := self.maybeSetZipPassword(full_path)
+	if err != nil {
+		self.scope.Log(err.Error())
+	}
 
 	reader, err := self.ZipFileSystemAccessor.OpenWithOSPath(full_path)
 	if err != nil {
@@ -147,6 +229,10 @@ func (self *CollectorAccessor) Lstat(file_path string) (
 func (self *CollectorAccessor) LstatWithOSPath(
 	full_path *accessors.OSPath) (accessors.FileInfo, error) {
 
+	err := self.maybeSetZipPassword(full_path)
+	if err != nil {
+		self.scope.Log(err.Error())
+	}
 	stat, err := self.ZipFileSystemAccessor.LstatWithOSPath(full_path)
 	if err != nil {
 		return nil, err

@@ -21,7 +21,9 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
+	"crypto/sha512"
 	"crypto/x509"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/pem"
@@ -30,7 +32,59 @@ import (
 	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/vfilter"
 )
+
+// Retrieve frontend private key frome scope
+// Must be running on server
+func GetPrivateKeyFromScope(scope vfilter.Scope) (*rsa.PrivateKey, error) {
+
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		return nil, errors.New("Must be running on server!")
+	}
+
+	private_key := config_obj.Frontend.PrivateKey
+
+	key, err := ParseRsaPrivateKeyFromPemStr([]byte(private_key))
+	if err != nil {
+		return nil, err
+	}
+	return key, nil
+}
+
+// Decode base64 encoded data and decrypt RSA-OAEP
+func Base64DecryptRSAOAEP(pk *rsa.PrivateKey, data string) ([]byte, error) {
+	decoded, err := base64.StdEncoding.DecodeString(data)
+	if err != nil {
+		return nil, err
+	}
+	return DecryptRSAOAEP(pk, decoded)
+}
+
+// Decrypt RSA-OAEP
+func DecryptRSAOAEP(pk *rsa.PrivateKey, data []byte) ([]byte, error) {
+	hash := sha512.New()
+	return rsa.DecryptOAEP(hash, rand.Reader, pk, data, nil)
+}
+
+// Encrypt data using public key from X509 certificate
+func EncryptWithX509PubKey(msg []byte, cert *x509.Certificate) ([]byte, error) {
+	pub := cert.PublicKey
+	switch pub := pub.(type) {
+	case *rsa.PublicKey:
+		return EncryptRSAOAEP(msg, pub)
+	default:
+		return nil, errors.New("Unsupported Type of Public Key")
+	}
+}
+
+// Encrypt data using RSA-OAEP
+func EncryptRSAOAEP(msg []byte, pub *rsa.PublicKey) ([]byte, error) {
+	hash := sha512.New()
+	return rsa.EncryptOAEP(hash, rand.Reader, pub, msg, nil)
+}
 
 func ParseRsaPrivateKeyFromPemStr(pem_str []byte) (*rsa.PrivateKey, error) {
 	for {

@@ -285,6 +285,14 @@ func (self *ZipFileCache) maybeGetPassword() string {
 		}
 
 	}
+	// If not in scope, check context
+	password_any, ok := self.scope.GetContext(constants.ZIP_PASSWORDS)
+	if ok {
+		password, ok := password_any.(string)
+		if ok {
+			return password
+		}
+	}
 	return ""
 }
 
@@ -308,7 +316,7 @@ func (self *ZipFileCache) Open(full_path *accessors.OSPath) (
 	if err == zip.ErrPassword {
 		password := self.maybeGetPassword()
 		if password != "" {
-			info.member_file.SetPassword("hello")
+			info.member_file.SetPassword(password)
 			fd, err = info.member_file.Open()
 		}
 	}
