@@ -19,6 +19,7 @@ package filesystem
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -96,8 +97,18 @@ func (self GlobPlugin) Call(
 		if root == nil {
 			// Get the default top level path for this accessor.
 			root = accessor_root
+			if root.DelegateAccessor() == "" {
+				ps := root.PathSpec()
+				ps.DelegateAccessor = arg.Accessor
+				root.SetPathSpec(ps)
+			}
 		} else {
 			root.Manipulator = accessor_root.Manipulator
+			if root.DelegateAccessor() == "" {
+				ps := root.PathSpec()
+				ps.DelegateAccessor = arg.Accessor
+				root.SetPathSpec(ps)
+			}
 		}
 
 		options := glob.GlobOptions{
@@ -216,6 +227,21 @@ func (self ReadFilePlugin) processFile(
 	output_chan chan vfilter.Row) {
 	total_len := int64(0)
 
+	if arg.Accessor == "" {
+		da, err := getDelegateAccessor(file)
+		if err != nil {
+			scope.Log("read_file: %v", err)
+			return
+		}
+		if da != "" {
+			accessor, err = accessors.GetAccessor(da, scope)
+			if err != nil {
+				scope.Log("read_file: %v", err)
+				return
+			}
+
+		}
+	}
 	fd, err := accessor.Open(file)
 	if err != nil {
 		return
@@ -321,6 +347,17 @@ type ReadFileFunctionArgs struct {
 
 type ReadFileFunction struct{}
 
+func getDelegateAccessor(filename string) (string, error) {
+	if strings.HasPrefix(filename, "{") {
+		ps, err := accessors.PathSpecFromString(filename)
+		if err != nil {
+			return "", fmt.Errorf("%s: %s", filename, err)
+		}
+		return ps.DelegateAccessor, nil
+	}
+	return "", nil
+}
+
 func (self *ReadFileFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
@@ -341,6 +378,15 @@ func (self *ReadFileFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	da, err := getDelegateAccessor(arg.Filename)
+	if err != nil {
+		scope.Log("read_file: %s", err)
+		return vfilter.Null{}
+	}
+	if da != "" && arg.Accessor == "" {
+		scope.Log("SETTING ACCESSOR: %s", da)
+		arg.Accessor = da
+	}
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("read_file: %v", err)

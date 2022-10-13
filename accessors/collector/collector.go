@@ -58,8 +58,9 @@ func (self StatWrapper) Size() int64 {
 
 type CollectorAccessor struct {
 	*zip.ZipFileSystemAccessor
-	scope       vfilter.Scope
-	passwordSet bool
+	scope           vfilter.Scope
+	passwordChecked bool
+	isEncrypted     bool
 }
 
 func (self *CollectorAccessor) New(scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
@@ -72,12 +73,17 @@ func (self *CollectorAccessor) New(scope vfilter.Scope) (accessors.FileSystemAcc
 
 // Try to set a password if it exists in metadata
 func (self *CollectorAccessor) maybeSetZipPassword(full_path *accessors.OSPath) error {
-	if self.passwordSet {
+	if self.passwordChecked {
 		return nil
 	}
-	self.passwordSet = true
+	self.passwordChecked = true
 	ps := full_path.PathSpec().Copy()
+	if !strings.HasSuffix(ps.Path, "zip") {
+		return nil
+	}
+	ps.DelegatePath = ps.Path
 	ps.Path = "metadata.json"
+
 	meta, err := self.ParsePath(ps.String())
 	if err != nil {
 		return err
@@ -129,11 +135,23 @@ func (self *CollectorAccessor) maybeSetZipPassword(full_path *accessors.OSPath) 
 					return err
 				}
 				self.scope.SetContext(constants.ZIP_PASSWORDS, string(zip_pass))
+				self.isEncrypted = true
 				return nil
 			}
 		}
 	}
 	return nil
+}
+
+// Update pathspec if encrypted to automatically read data.zip
+func (self *CollectorAccessor) updatePathSpec(full_path *accessors.OSPath) {
+	path_spec_override := full_path.PathSpec()
+	if strings.HasSuffix(path_spec_override.Path, "zip") {
+		path_spec_override.DelegatePath = path_spec_override.Path
+		path_spec_override.Path = "data.zip"
+
+	}
+	full_path.SetPathSpec(path_spec_override)
 }
 
 func (self *CollectorAccessor) Open(
@@ -189,7 +207,11 @@ func (self *CollectorAccessor) OpenWithOSPath(
 	full_path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
 	err := self.maybeSetZipPassword(full_path)
 	if err != nil {
-		self.scope.Log(err.Error())
+		self.scope.Log("OpenWithOSPath: %s, %s", full_path.String(), err.Error())
+	}
+
+	if self.isEncrypted {
+		self.updatePathSpec(full_path)
 	}
 
 	reader, err := self.ZipFileSystemAccessor.OpenWithOSPath(full_path)
@@ -226,7 +248,10 @@ func (self *CollectorAccessor) LstatWithOSPath(
 
 	err := self.maybeSetZipPassword(full_path)
 	if err != nil {
-		self.scope.Log(err.Error())
+		self.scope.Log("LstatWithOSPath: %s", err.Error())
+	}
+	if self.isEncrypted {
+		self.updatePathSpec(full_path)
 	}
 	stat, err := self.ZipFileSystemAccessor.LstatWithOSPath(full_path)
 	if err != nil {
