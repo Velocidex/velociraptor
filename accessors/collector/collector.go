@@ -144,12 +144,7 @@ func (self *CollectorAccessor) Open(
 		return nil, err
 	}
 
-	reader, err := self.OpenWithOSPath(full_path)
-	if err != nil {
-		return nil, err
-	}
-
-	return reader, nil
+	return self.OpenWithOSPath(full_path)
 }
 
 func (self *CollectorAccessor) getIndex(
