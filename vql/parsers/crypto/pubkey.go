@@ -3,11 +3,6 @@ package crypto
 import (
 	"bufio"
 	"bytes"
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/sha512"
-	"crypto/x509"
-	"errors"
 	"io"
 	"io/ioutil"
 	"strings"
@@ -103,7 +98,7 @@ func (self *PKEncryptFunction) Call(ctx context.Context,
 				return vfilter.Null{}
 			}
 
-			ciphertext, err := encryptWithX509PubKey([]byte(arg.Data), cert)
+			ciphertext, err := crypto_utils.EncryptWithX509PubKey([]byte(arg.Data), cert)
 			if err != nil {
 				scope.Log("ERROR:pk_encrypt: %s", err.Error())
 				return vfilter.Null{}
@@ -114,21 +109,6 @@ func (self *PKEncryptFunction) Call(ctx context.Context,
 		scope.Log("ERROR:pk_encrypt: Unsupported Encryption Scheme.")
 		return vfilter.Null{}
 	}
-}
-
-func encryptWithX509PubKey(msg []byte, cert *x509.Certificate) ([]byte, error) {
-	pub := cert.PublicKey
-	switch pub := pub.(type) {
-	case *rsa.PublicKey:
-		return encryptMsgRSA(msg, pub)
-	default:
-		return nil, errors.New("Unsupported Type of Public Key")
-	}
-}
-
-func encryptMsgRSA(msg []byte, pub *rsa.PublicKey) ([]byte, error) {
-	hash := sha512.New()
-	return rsa.EncryptOAEP(hash, rand.Reader, pub, msg, nil)
 }
 
 func readPGPEntity(reader io.Reader) (*openpgp.Entity, error) {
@@ -235,8 +215,7 @@ func (self *PKDecryptFunction) Call(ctx context.Context,
 				scope.Log("ERROR:pk_decrypt: %s", err.Error())
 				return vfilter.Null{}
 			}
-			hash := sha512.New()
-			plaintext, err := rsa.DecryptOAEP(hash, rand.Reader, key, []byte(arg.Data), nil)
+			plaintext, err := crypto_utils.DecryptRSAOAEP(key, []byte(arg.Data))
 			if err != nil {
 				scope.Log("ERROR:pk_decrypt: %s", err.Error())
 				return vfilter.Null{}
