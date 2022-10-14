@@ -36,7 +36,7 @@ type ImportCollectionFunctionArgs struct {
 	ClientId string `vfilter:"required,field=client_id,doc=The client id to import to. Use 'auto' to generate a new client id."`
 	Hostname string `vfilter:"optional,field=hostname,doc=When creating a new client, set this as the hostname."`
 	Filename string `vfilter:"required,field=filename,doc=Path on server to the collector zip."`
-	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use. Defaults to collector"`
 }
 
 type ImportCollectionFunction struct{}
@@ -56,6 +56,10 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	if err != nil {
 		scope.Log("import_collection: %v", err)
 		return vfilter.Null{}
+	}
+
+	if arg.Accessor == "" {
+		arg.Accessor = "collector"
 	}
 
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
