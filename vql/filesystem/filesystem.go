@@ -313,10 +313,10 @@ func (self ReadFilePlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 }
 
 type ReadFileFunctionArgs struct {
-	Length   int    `vfilter:"optional,field=length,doc=Max length of the file to read."`
-	Offset   int64  `vfilter:"optional,field=offset,doc=Where to read from the file."`
-	Filename string `vfilter:"required,field=filename,doc=One or more files to open."`
-	Accessor string `vfilter:"optional,field=accessor,doc=An accessor to use."`
+	Length   int               `vfilter:"optional,field=length,doc=Max length of the file to read."`
+	Offset   int64             `vfilter:"optional,field=offset,doc=Where to read from the file."`
+	Filename *accessors.OSPath `vfilter:"required,field=filename,doc=One or more files to open."`
+	Accessor string            `vfilter:"optional,field=accessor,doc=An accessor to use."`
 }
 
 type ReadFileFunction struct{}
@@ -349,9 +349,9 @@ func (self *ReadFileFunction) Call(ctx context.Context,
 
 	buf := make([]byte, arg.Length)
 
-	fd, err := accessor.Open(arg.Filename)
+	fd, err := accessor.OpenWithOSPath(arg.Filename)
 	if err != nil {
-		scope.Log("read_file: %v", err)
+		scope.Log("read_file: %v: %v", arg.Filename.String(), err)
 		return ""
 	}
 	defer fd.Close()

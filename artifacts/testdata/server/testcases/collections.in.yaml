@@ -1,0 +1,30 @@
+# This file tests the collector accessor which provides transparent
+# access to Velociraptor offline collections with automatic decryption
+# if possible.
+
+Queries:
+  # First unencrypted file
+  - SELECT read_file(filename=OSPath, accessor='collector')
+    FROM glob(globs='**/BasicInformation.json',
+      accessor='collector',
+      root=pathspec(
+          DelegatePath=srcDir +
+              '/artifacts/testdata/files/unencrypted_collector.zip'))
+
+  # Test that unzip can unencrypt zip files transparently. This file
+  # was build from the server certificate.
+  - SELECT read_file(filename=OSPath, accessor='collector')
+    FROM glob(globs='**/BasicInformation.json',
+      accessor='collector',
+      root=pathspec(
+          DelegatePath=srcDir +
+              '/artifacts/testdata/files/encrypted_collector_pki.zip'))
+
+  # Password is set in the scope so it can not leak in output
+  - LET ZIP_PASSWORDS = "hello"
+  - SELECT read_file(filename=OSPath, accessor='collector')
+    FROM glob(globs='**/BasicInformation.json',
+      accessor='collector',
+      root=pathspec(
+          DelegatePath=srcDir +
+              '/artifacts/testdata/files/encrypted_collector_password.zip'))

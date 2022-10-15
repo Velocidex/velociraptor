@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/Velocidex/ordereddict"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
@@ -35,13 +36,17 @@ var (
 )
 
 func doUnzip() error {
-	config_obj, err := makeDefaultConfigLoader().WithNullLoader().LoadAndValidate()
+
+	server_config_obj, err := makeDefaultConfigLoader().WithNullLoader().LoadAndValidate()
 	if err != nil {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
 	ctx, cancel := install_sig_handler()
 	defer cancel()
+
+	config_obj := &config_proto.Config{}
+	config_obj.Frontend = server_config_obj.Frontend
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
@@ -61,9 +66,9 @@ func doUnzip() error {
 	}
 
 	builder := services.ScopeBuilder{
-		Config:     config_obj,
+		Config:     sm.Config,
 		ACLManager: acl_managers.NewRoleACLManager("administrator"),
-		Logger:     log.New(&LogWriter{config_obj}, "", 0),
+		Logger:     log.New(&LogWriter{sm.Config}, "", 0),
 		Env: ordereddict.NewDict().
 			Set("ZipPath", filename).
 			Set("DumpDir", *unzip_path).

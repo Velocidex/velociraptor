@@ -26,6 +26,22 @@ import (
 // files).  The accessor is designed to read the offline collector
 // containers.
 
+// This accessor wraps the zip accessor to provide access to these
+// specially formated conatiners. In particular the collector accessor
+// handles the following two properties transparently:
+
+// 1. Zip encryption: Velociraptor uses an ecnryption scheme to work
+// around Zip encryption limitations. All data is stored in an
+// encrypted file called "data.zip" inside the main zip archive. This
+// is because Zip encryption does not protect the central directory or
+// the filenames - only data content.
+
+// 2. Public Key Encryption: Velociraptor stored metadata in a
+// "metadata.json" file containing the encrypted session key. This
+// allows private/public key encryption and transparent decryption.
+
+// This accessor facilitates this transparent decryption.
+
 type rangedReader struct {
 	delegate io.ReaderAt
 	fd       accessors.ReadSeekCloser
@@ -56,10 +72,21 @@ func (self StatWrapper) Size() int64 {
 	return self.real_size
 }
 
+// Paths returned by our underlying zip delegator need to be
+// transformed back so that further access to them can retrieve from
+// the same zip file.
+func (self StatWrapper) OSPath() *accessors.OSPath {
+	delegate_path := self.FileInfo.OSPath()
+	res, err := delegatePathToCollectorPath(delegate_path)
+	if err != nil {
+		return delegate_path
+	}
+	return res
+}
+
 type CollectorAccessor struct {
 	*zip.ZipFileSystemAccessor
-	scope       vfilter.Scope
-	passwordSet bool
+	scope vfilter.Scope
 }
 
 func (self *CollectorAccessor) New(scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
@@ -70,70 +97,165 @@ func (self *CollectorAccessor) New(scope vfilter.Scope) (accessors.FileSystemAcc
 	}, err
 }
 
-// Try to set a password if it exists in metadata
-func (self *CollectorAccessor) maybeSetZipPassword(full_path *accessors.OSPath) error {
-	if self.passwordSet {
-		return nil
+/*
+  Go from a pathspec like:
+
+  PathSpec{
+    Path: "path/within/zip",
+    DelegatePath: "/path/to/zip/collection",
+    DelegateAccessor: "accssor_to_zip_collection",
+  }
+
+  To a pathspec like
+  PathSpec{
+     Path: "path/within/zip",
+     DelegateAccessor: "collector",
+     DelegatePath: PathSpec{
+        Path: "data.zip",
+        DelegatePath: "/path/to/zip/collection",
+        DelegateAccessor: "accssor_to_zip_collection",
+     },
+  }
+
+*/
+
+func collectorPathToDelegatePath(full_path *accessors.OSPath) *accessors.OSPath {
+	// Detect an already transformed path and leave it alone.
+	if len(full_path.Components) == 1 &&
+		full_path.Components[0] == "data.zip" {
+		return full_path
 	}
-	self.passwordSet = true
-	ps := full_path.PathSpec().Copy()
-	ps.Path = "metadata.json"
-	meta, err := self.ParsePath(ps.String())
+
+	if full_path.DelegateAccessor() == "collector" {
+		return full_path
+	}
+
+	collector_pathspec := full_path.PathSpec()
+
+	res := full_path.Copy()
+	res.SetPathSpec(&accessors.PathSpec{
+		Path:             collector_pathspec.Path,
+		DelegateAccessor: "collector",
+		DelegatePath: accessors.PathSpec{
+			DelegateAccessor: collector_pathspec.DelegateAccessor,
+			DelegatePath:     collector_pathspec.DelegatePath,
+			Path:             "data.zip",
+		}.String(),
+	})
+	res.Components = full_path.Components
+
+	return res
+}
+
+func delegatePathToCollectorPath(full_path *accessors.OSPath) (
+	*accessors.OSPath, error) {
+	delegate_pathspec := full_path.PathSpec()
+
+	nested_pathspec, err := accessors.PathSpecFromString(delegate_pathspec.DelegatePath)
 	if err != nil {
-		return err
+		return nil, err
+	}
+
+	res := full_path.Copy()
+	res.SetPathSpec(&accessors.PathSpec{
+		Path:             nested_pathspec.DelegatePath,
+		DelegateAccessor: "collector_pathspec",
+		DelegatePath:     nested_pathspec.DelegateAccessor,
+	})
+	res.Components = full_path.Components
+
+	return res, nil
+}
+
+// Try to set a password if it exists in metadata
+func (self *CollectorAccessor) maybeSetZipPassword(
+	full_path *accessors.OSPath) (*accessors.OSPath, error) {
+
+	// Password is already cached in the context - just return it as is.
+	_, pres := self.scope.GetContext(constants.ZIP_PASSWORDS)
+	if pres {
+
+		// Transform the path so it is ready to be used by the zip
+		// accessor.
+		return collectorPathToDelegatePath(full_path), nil
+	}
+
+	// Check if data.zip exists.
+	datazip := full_path.Dirname().Append("data.zip")
+	_, err := self.ZipFileSystemAccessor.LstatWithOSPath(datazip)
+	if err != nil {
+		// Nope - no data.zip so do not transform the pathspec.
+		return full_path, nil
+	}
+
+	// If password is already set in the scope, just use it as it is.
+	pass, pres := self.scope.Resolve(constants.ZIP_PASSWORDS)
+	if pres && !utils.IsNil(pass) {
+		return collectorPathToDelegatePath(full_path), nil
 	}
 
 	// Check if metadata.json exists. If so, try to extract password
-	if finfo, _ := self.LstatWithOSPath(meta); finfo != nil {
-		mhandle, err := self.OpenWithOSPath(meta)
-		if err != nil {
-			return err
+	meta := full_path.Dirname().Append("metadata.json")
+	mhandle, err := self.ZipFileSystemAccessor.OpenWithOSPath(meta)
+	if err != nil {
+		// No metadata file is found - this might be a plain
+		// collection zip.
+		return full_path, nil
+	}
+
+	buf, err := ioutil.ReadAll(mhandle)
+	if err != nil {
+		return nil, err
+	}
+
+	rows := []*ordereddict.Dict{}
+	err = json.Unmarshal(buf, &rows)
+	if err != nil {
+		return nil, err
+	}
+
+	// metadata.json can be multiple rows
+	for _, row := range rows {
+		scheme, ok := row.GetString("Scheme")
+		if !ok {
+			// Maybe multiple rows?
+			continue
 		}
-		buf, err := ioutil.ReadAll(mhandle)
-		if err != nil {
-			return err
-		}
-		rows := []*ordereddict.Dict{}
-		err = json.Unmarshal(buf, &rows)
-		if err != nil {
-			return err
-		}
-		// metadata.json can be multiple rows
-		for _, row := range rows {
-			scheme, _ := row.Get("Scheme")
-			scheme_str, ok := scheme.(string)
+
+		if strings.ToLower(scheme) == "x509" {
+			ep, ok := row.GetString("EncryptedPass")
 			if !ok {
-				// Maybe multiple rows?
-				continue
+				return nil, errors.New(
+					"EncryptedPass must be given and be of type string!")
 			}
-			if strings.ToLower(scheme_str) == "x509" {
-				ep, _ := row.Get("EncryptedPass")
 
-				ep_str, ok := ep.(string)
-				if !ok {
-					return errors.New("EncryptedPass must be of type string!")
-				}
-
-				err = vql_subsystem.CheckAccess(self.scope, acls.SERVER_ADMIN)
-				if err != nil {
-					return errors.New("Must be server admin to use private key")
-				}
-
-				key, err := crypto_utils.GetPrivateKeyFromScope(self.scope)
-				if err != nil {
-					return err
-				}
-
-				zip_pass, err := crypto_utils.Base64DecryptRSAOAEP(key, ep_str)
-				if err != nil {
-					return err
-				}
-				self.scope.SetContext(constants.ZIP_PASSWORDS, string(zip_pass))
-				return nil
+			err = vql_subsystem.CheckAccess(self.scope, acls.SERVER_ADMIN)
+			if err != nil {
+				return nil, errors.New(
+					"Must be server admin to use private key")
 			}
+
+			key, err := crypto_utils.GetPrivateKeyFromScope(self.scope)
+			if err != nil {
+				return nil, err
+			}
+
+			zip_pass, err := crypto_utils.Base64DecryptRSAOAEP(key, ep)
+			if err != nil {
+				return nil, err
+			}
+
+			self.scope.SetContext(constants.ZIP_PASSWORDS, string(zip_pass))
+
+			// Transform the path so it can be used by the zip
+			// collector.
+			return collectorPathToDelegatePath(full_path), nil
 		}
 	}
-	return nil
+
+	// No metadata found - this might be a plain unencrypted
+	// collection.
+	return full_path, nil
 }
 
 func (self *CollectorAccessor) Open(
@@ -187,17 +309,17 @@ func (self *CollectorAccessor) getIndex(
 
 func (self *CollectorAccessor) OpenWithOSPath(
 	full_path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
-	err := self.maybeSetZipPassword(full_path)
+	updated_full_path, err := self.maybeSetZipPassword(full_path)
 	if err != nil {
 		self.scope.Log(err.Error())
 	}
 
-	reader, err := self.ZipFileSystemAccessor.OpenWithOSPath(full_path)
+	reader, err := self.ZipFileSystemAccessor.OpenWithOSPath(updated_full_path)
 	if err != nil {
 		return nil, err
 	}
 
-	index, err := self.getIndex(full_path)
+	index, err := self.getIndex(updated_full_path)
 	if err == nil {
 		return &rangedReader{
 			delegate: &utils.RangedReader{
@@ -224,16 +346,16 @@ func (self *CollectorAccessor) Lstat(file_path string) (
 func (self *CollectorAccessor) LstatWithOSPath(
 	full_path *accessors.OSPath) (accessors.FileInfo, error) {
 
-	err := self.maybeSetZipPassword(full_path)
+	updated_full_path, err := self.maybeSetZipPassword(full_path)
 	if err != nil {
 		self.scope.Log(err.Error())
 	}
-	stat, err := self.ZipFileSystemAccessor.LstatWithOSPath(full_path)
+	stat, err := self.ZipFileSystemAccessor.LstatWithOSPath(updated_full_path)
 	if err != nil {
 		return nil, err
 	}
 
-	index, err1 := self.getIndex(full_path)
+	index, err1 := self.getIndex(updated_full_path)
 	if err1 == nil {
 		real_size := int64(0)
 		for _, r := range index.Ranges {
@@ -247,6 +369,28 @@ func (self *CollectorAccessor) LstatWithOSPath(
 	}
 
 	return stat, err
+}
+
+func (self *CollectorAccessor) ReadDir(
+	file_path string) ([]accessors.FileInfo, error) {
+
+	full_path, err := self.ParsePath(file_path)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.ReadDirWithOSPath(full_path)
+}
+
+func (self *CollectorAccessor) ReadDirWithOSPath(
+	full_path *accessors.OSPath) ([]accessors.FileInfo, error) {
+
+	updated_full_path, err := self.maybeSetZipPassword(full_path)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.ZipFileSystemAccessor.ReadDirWithOSPath(updated_full_path)
 }
 
 func init() {
