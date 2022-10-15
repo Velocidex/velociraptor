@@ -21,11 +21,13 @@ var (
 )
 
 func GetBuffer() *bytes.Buffer {
-	return bufferPool.Get().(*bytes.Buffer)
+	buf := bufferPool.Get().(*bytes.Buffer)
+	buf.Reset()
+
+	return buf
 }
 
 func PutBuffer(buf *bytes.Buffer) {
-	buf.Reset()
 	bufferPool.Put(buf)
 }
 
@@ -107,7 +109,8 @@ func MarshalJsonl(v interface{}) ([]byte, error) {
 		out.Write(serialized)
 		out.Write([]byte{'\n'})
 	}
-	return out.Bytes(), nil
+	// Need to make a copy because the real buffer will be reused in the pool.
+	return CopySlice(out.Bytes()), nil
 }
 
 func Unmarshal(b []byte, v interface{}) error {
@@ -129,4 +132,10 @@ func MarshalIndentNormalized(v interface{}) ([]byte, error) {
 	}
 
 	return MarshalIndent(data)
+}
+
+func CopySlice(in []byte) []byte {
+	result := make([]byte, len(in))
+	copy(result, in)
+	return result
 }

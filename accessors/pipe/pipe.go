@@ -192,7 +192,10 @@ func (self PipeFilesystemAccessor) Open(variable string) (accessors.ReadSeekClos
 
 func (self PipeFilesystemAccessor) OpenWithOSPath(
 	path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
-	return self.Open(path.Path())
+	if len(path.Components) != 1 {
+		return nil, os.ErrNotExist
+	}
+	return self.Open(path.Components[0])
 }
 
 func init() {

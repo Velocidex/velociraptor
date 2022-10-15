@@ -546,7 +546,13 @@ func (self *ReplicationService) PushRowsToArtifact(
 	config_obj *config_proto.Config,
 	rows []*ordereddict.Dict, artifact, client_id, flow_id string) error {
 
-	err := self.pushRowsToLocalQueueManager(
+	serialized, err := json.MarshalJsonl(rows)
+	if err != nil {
+		return err
+	}
+	replicationItemSize.Observe(float64(len(serialized)))
+
+	err = self.pushRowsToLocalQueueManager(
 		config_obj, rows, artifact, client_id, flow_id)
 	if err != nil {
 		return err
@@ -558,12 +564,6 @@ func (self *ReplicationService) PushRowsToArtifact(
 	}
 
 	replicationTotalSent.Inc()
-
-	serialized, err := json.MarshalJsonl(rows)
-	if err != nil {
-		return err
-	}
-	replicationItemSize.Observe(float64(len(serialized)))
 
 	request := &api_proto.PushEventRequest{
 		Artifact: artifact,

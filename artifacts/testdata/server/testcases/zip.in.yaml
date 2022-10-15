@@ -95,5 +95,5 @@ Queries:
       root=pathspec(
         DelegateAccessor='zip',
         DelegatePath=pathspec(DelegateAccessor='file',
-          DelegatePath=srcDir + '/artifacts/testdata/files/encrypted_collector.zip',
+          DelegatePath=srcDir + '/artifacts/testdata/files/encrypted_collector_password.zip',
           Path='/data.zip')))
