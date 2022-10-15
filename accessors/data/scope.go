@@ -44,7 +44,11 @@ func (self ScopeFilesystemAccessor) ParsePath(path string) (
 
 func (self ScopeFilesystemAccessor) LstatWithOSPath(path *accessors.OSPath) (
 	accessors.FileInfo, error) {
-	return self.Lstat(path.Path())
+	if len(path.Components) != 1 {
+		return nil, os.ErrNotExist
+	}
+
+	return self.Lstat(path.Components[0])
 }
 
 func (self ScopeFilesystemAccessor) Lstat(variable string) (
@@ -77,7 +81,11 @@ func (self ScopeFilesystemAccessor) ReadDirWithOSPath(path *accessors.OSPath) (
 
 func (self ScopeFilesystemAccessor) OpenWithOSPath(path *accessors.OSPath) (
 	accessors.ReadSeekCloser, error) {
-	return self.Open(path.Path())
+	if len(path.Components) != 1 {
+		return nil, os.ErrNotExist
+	}
+
+	return self.Open(path.Components[0])
 }
 
 func (self ScopeFilesystemAccessor) Open(path string) (
