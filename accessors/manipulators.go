@@ -649,3 +649,51 @@ func NewRawFilePath(path string) (*OSPath, error) {
 		Manipulator: manipulator,
 	}, nil
 }
+
+// Represent files inside the zip file for the offline collector -
+// Similar to LinuxPathManipulator except that extra escaping is used
+// to avoid more characters.
+type ZipFileManipulator struct{}
+
+func (self ZipFileManipulator) AsPathSpec(path *OSPath) *PathSpec {
+	result := path.pathspec
+	if result == nil {
+		result = &PathSpec{}
+		path.pathspec = result
+	}
+	components := make([]string, 0, len(path.Components))
+	for _, c := range path.Components {
+		if c != "" {
+			components = append(components, utils.SanitizeString(c))
+		}
+	}
+	result.Path = "/" + strings.Join(components, "/")
+	return result
+}
+
+func (self ZipFileManipulator) PathJoin(path *OSPath) string {
+	result := self.AsPathSpec(path)
+	return result.Path
+}
+
+func (self ZipFileManipulator) PathParse(
+	path string, result *OSPath) error {
+
+	components := strings.Split(path, "/")
+	result.Components = make([]string, 0, len(components))
+	for _, c := range components {
+		if c == "" || c == "." || c == ".." {
+			continue
+		}
+		result.Components = append(result.Components, utils.UnsanitizeComponent(c))
+	}
+	return nil
+}
+
+func NewZipFilePath(path string) *OSPath {
+	manipulator := &ZipFileManipulator{}
+	return &OSPath{
+		Components:  []string{path},
+		Manipulator: manipulator,
+	}
+}

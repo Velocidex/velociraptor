@@ -38,6 +38,11 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+const (
+	ValidateArtifact  = true
+	ArtifactIsBuiltIn = true
+)
+
 func GetRepositoryManager(config_obj *config_proto.Config) (RepositoryManager, error) {
 	org_manager, err := GetOrgManager()
 	if err != nil {

@@ -121,13 +121,13 @@ sources:
     LET RecursionCallback = if(
        condition=LocalFilesystemOnly,
          then=if(condition=ExcludePathRegex,
-                 then="x=>x.Data.DevMajor IN LocalDeviceMajor AND NOT x.FullPath =~ ExcludePathRegex",
+                 then="x=>x.Data.DevMajor IN LocalDeviceMajor AND NOT x.OSPath =~ ExcludePathRegex",
                  else="x=>x.Data.DevMajor IN LocalDeviceMajor"),
          else=if(condition=ExcludePathRegex,
-                 then="x=>NOT x.FullPath =~ ExcludePathRegex",
+                 then="x=>NOT x.OSPath =~ ExcludePathRegex",
                  else=""))
 
-    LET file_search = SELECT FullPath,
+    LET file_search = SELECT OSPath,
                Sys.mft as Inode,
                Mode.String AS Mode, Size,
                Mtime AS MTime,
@@ -167,11 +167,11 @@ sources:
                WHERE Mode.IsRegular
             },
             query={
-               SELECT FullPath, Inode, Mode,
+               SELECT OSPath, Inode, Mode,
                       Size, ATime, MTime, CTime,
                       str(str=String.Data) As Keywords
 
-               FROM yara(files=FullPath,
+               FROM yara(files=OSPath,
                          key="A",
                          rules=YaraRule,
                          accessor="file")
@@ -180,13 +180,13 @@ sources:
           SELECT *, NULL AS Keywords FROM modified_before
         })
 
-    SELECT FullPath, Inode, Mode, Size, ATime,
+    SELECT OSPath, Inode, Mode, Size, ATime,
              MTime, CTime, Keywords,
                if(condition=Upload_File and Mode.IsRegular,
-                  then=upload(file=FullPath,
+                  then=upload(file=OSPath,
                               accessor="file")) AS Upload,
                if(condition=Calculate_Hash and Mode.IsRegular,
-                  then=hash(path=FullPath,
+                  then=hash(path=OSPath,
                             accessor="file")) AS Hash
     FROM keyword_search
 

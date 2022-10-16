@@ -1,4 +1,4 @@
-package tools
+package collector
 
 import (
 	"context"
@@ -17,7 +17,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 
 	// Load all needed plugins
@@ -123,34 +122,6 @@ func (self *TestSuite) SetupTest() {
 	)
 }
 
-func (self *TestSuite) TestSimpleCollection() {
-	scope := vql_subsystem.MakeScope()
-
-	scope.SetLogger(logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent))
-
-	repository, err := getRepository(scope, self.ConfigObj, nil)
-	assert.NoError(self.T(), err)
-
-	request, err := getArtifactCollectorArgs(self.ConfigObj,
-		repository, scope, simpleCollectorArgs)
-	assert.NoError(self.T(), err)
-
-	launcher, err := services.GetLauncher(self.ConfigObj)
-	assert.NoError(self.T(), err)
-
-	acl_manager := acl_managers.NullACLManager{}
-	vql_requests, err := launcher.CompileCollectorArgs(
-		context.Background(), self.ConfigObj, acl_manager, repository,
-		services.CompilerOptions{}, request)
-
-	serialized, err := json.MarshalIndent(ordereddict.NewDict().
-		Set("ArtifactCollectorArgs", request).
-		Set("vql_requests", vql_requests))
-	assert.NoError(self.T(), err)
-
-	goldie.Assert(self.T(), "TestSimpleCollection", serialized)
-}
-
 func (self *TestSuite) TestCollectionWithArtifacts() {
 	output_file, err := ioutil.TempFile(os.TempDir(), "zip")
 	assert.NoError(self.T(), err)
@@ -187,14 +158,6 @@ func (self *TestSuite) TestCollectionWithArtifacts() {
 
 	zip_contents, err := openZipFile(output_file.Name())
 	assert.NoError(self.T(), err)
-
-	fd, err := os.Open(report_file.Name())
-	assert.NoError(self.T(), err)
-	report_data, err := ioutil.ReadAll(fd)
-	assert.NoError(self.T(), err)
-
-	// Ensure the variable ends up inside the report.
-	assert.Contains(self.T(), string(report_data), "HelloFooVar")
 
 	serialized, err := json.MarshalIndent(ordereddict.NewDict().
 		Set("zip_contents", zip_contents))

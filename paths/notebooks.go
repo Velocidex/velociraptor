@@ -229,11 +229,11 @@ type ContainerPathManager struct {
 }
 
 func (self *ContainerPathManager) Path() string {
-	return self.artifact + ".json"
+	return "results/" + self.artifact + ".json"
 }
 
 func (self *ContainerPathManager) CSVPath() string {
-	return self.artifact + ".csv"
+	return "results/" + self.artifact + ".csv"
 }
 
 func NewContainerPathManager(artifact string) *ContainerPathManager {

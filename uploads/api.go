@@ -12,14 +12,15 @@ import (
 
 // Returned as the result of the query.
 type UploadResponse struct {
-	Path       string `json:"Path"`
-	Size       uint64 `json:"Size"`
-	StoredSize uint64 `json:"StoredSize,omitempty"`
-	Error      string `json:"Error,omitempty"`
-	Sha256     string `json:"sha256,omitempty"`
-	Md5        string `json:"md5,omitempty"`
-	StoredName string `json:"StoredName,omitempty"`
-	Reference  string `json:"Reference,omitempty"`
+	Path       string   `json:"Path"`
+	Size       uint64   `json:"Size"`
+	StoredSize uint64   `json:"StoredSize,omitempty"`
+	Error      string   `json:"Error,omitempty"`
+	Sha256     string   `json:"sha256,omitempty"`
+	Md5        string   `json:"md5,omitempty"`
+	StoredName string   `json:"StoredName,omitempty"`
+	Reference  string   `json:"Reference,omitempty"`
+	Components []string `json:"Components,omitempty"`
 }
 
 // Provide an uploader capable of uploading any reader object.
