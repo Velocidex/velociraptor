@@ -25,3 +25,8 @@ div .flow-status-icon {
 .table tr.flow-urgent {
     font-weight: bold;
 }
+
+.flow-file-download-button {
+    width: 100%;
+    text-align: left;
+}

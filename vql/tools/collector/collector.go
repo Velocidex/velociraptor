@@ -83,7 +83,7 @@ func (self CollectPlugin) Call(
 			return
 		}
 
-		err = collection_manager.collect(request)
+		err = collection_manager.Collect(request)
 		if err != nil {
 			scope.Log("collect: %v", err)
 			return
@@ -100,25 +100,25 @@ func (self CollectPlugin) configureCollection(
 	*flows_proto.ArtifactCollectorArgs, error) {
 
 	// Set the output format
-	err := manager.setFormat(arg.Format)
+	err := manager.SetFormat(arg.Format)
 	if err != nil {
 		return nil, err
 	}
 
 	// Add any additional artifacts from the provided definitions into
 	// a temporary repository.
-	err = manager.getRepository(arg.ArtifactDefinitions)
+	err = manager.GetRepository(arg.ArtifactDefinitions)
 	if err != nil {
 		return nil, err
 	}
 
 	// Set any timeout if needed.
 	if arg.Timeout > 0 {
-		manager.setTimeout(arg.Timeout)
+		manager.SetTimeout(arg.Timeout)
 	}
 
 	// Apply a throttler if needed.
-	manager.addThrottler(float64(arg.OpsPerSecond), arg.CpuLimit,
+	manager.AddThrottler(float64(arg.OpsPerSecond), arg.CpuLimit,
 		arg.IopsLimit, arg.ProgressTimeout)
 
 	// If required create an output container
@@ -126,12 +126,12 @@ func (self CollectPlugin) configureCollection(
 
 		// Set any metadata for the container.
 		if !utils.IsNil(arg.Metadata) {
-			manager.setMetadata(arg.Metadata)
+			manager.SetMetadata(arg.Metadata)
 		}
 
 		// Build the container to receive the output from the
 		// queries. The container may be password protected.
-		err = manager.makeContainer(arg.Output, arg.Password, arg.Level)
+		err = manager.MakeContainer(arg.Output, arg.Password, arg.Level)
 		if err != nil {
 			return nil, err
 		}

@@ -9,8 +9,6 @@ import Col from 'react-bootstrap/Col';
 import ToolViewer from "../tools/tool-viewer.js";
 import { HotKeys, ObserveKeys } from "react-hotkeys";
 import ValidatedInteger from '../forms/validated_int.js';
-import api from '../core/api-service.js';
-import axios from 'axios';
 import T from '../i8n/i8n.js';
 import NewCollectionConfigParameters from './new-collections-parameters.js';
 

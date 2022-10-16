@@ -9,7 +9,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/tools"
+	"www.velocidex.com/golang/velociraptor/vql/tools/collector"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -59,7 +59,7 @@ func (self NewClientFunction) Call(ctx context.Context,
 	// hash of its public key) but for offline clients the client id
 	// is pretty random.
 	if arg.ClientId == "" {
-		arg.ClientId = tools.NewClientId()
+		arg.ClientId = collector.NewClientId()
 	}
 
 	// Create a client record and index with elastic.

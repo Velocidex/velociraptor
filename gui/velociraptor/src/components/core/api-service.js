@@ -120,13 +120,14 @@ const handle_error = err=>{
     let data = err.response && err.response.data;
     data = data || err.message;
 
-    const contentType = err.response && err.response.headers["content-type"];
+    const contentType = err.response && err.response.headers &&
+          err.response.headers["content-type"];
     if (data instanceof Blob) {
         return data.text();
     } else if(data.message) {
         data = data.message;
     } else if(contentType === "text/html") {
-      data = ""
+      data = "";
     }
 
     // Call all the registered hooks.

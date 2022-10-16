@@ -25,9 +25,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 
+	"github.com/Velocidex/ordereddict"
 	concurrent_zip "github.com/Velocidex/zip"
 )
 
@@ -131,17 +131,14 @@ func (self *Container) StoreArtifact(
 
 	// The name to use in the zip file to store results from this artifact
 	path_manager := paths.NewContainerPathManager(artifact_name)
-	fd, err := self.Create(path_manager.Path(), time.Time{})
+	result_set_writer, err := NewResultSetWriter(self, path_manager.Path())
 	if err != nil {
 		return total_rows, err
 	}
 
 	// Preserve the error for our caller.
 	defer func() {
-		err_ := fd.Close()
-		if err == nil {
-			err = err_
-		}
+		result_set_writer.Close()
 	}()
 
 	// Optionally include CSV in the output
@@ -166,7 +163,6 @@ func (self *Container) StoreArtifact(
 	}
 
 	// Store as line delimited JSON
-	marshaler := vql_subsystem.MarshalJsonl(scope)
 	for row := range vql.Eval(ctx, scope) {
 		total_rows++
 
@@ -175,15 +171,9 @@ func (self *Container) StoreArtifact(
 			return
 
 		default:
-			// Re-serialize it as compact json.
-			serialized, err := marshaler([]vfilter.Row{row})
+			err := result_set_writer.Write(row)
 			if err != nil {
 				continue
-			}
-
-			_, err = fd.Write(serialized)
-			if err != nil {
-				return total_rows, errors.WithStack(err)
 			}
 
 			if csv_writer != nil {
@@ -231,6 +221,7 @@ func (self *Container) Upload(
 
 	result := &uploads.UploadResponse{
 		Path: filename.String(),
+		Size: uint64(expected_size),
 	}
 
 	// Avoid sending huge strings inside the JSON
@@ -287,12 +278,12 @@ func (self *Container) Upload(
 
 	count, err := utils.Copy(ctx, utils.NewTee(writer, sha_sum, md5_sum), reader)
 	if err != nil {
-		result.Size = uint64(count)
+		result.StoredSize = uint64(count)
 		result.Error = err.Error()
 		return result, err
 	}
 
-	result.Size = uint64(count)
+	result.StoredSize = uint64(count)
 	result.Sha256 = hex.EncodeToString(sha_sum.Sum(nil))
 	result.Md5 = hex.EncodeToString(md5_sum.Sum(nil))
 
@@ -395,7 +386,7 @@ func (self *Container) maybeCollectSparseFile(
 		}
 	}
 
-	result.Size = uint64(count)
+	result.StoredSize = uint64(count)
 	result.Sha256 = hex.EncodeToString(sha_sum.Sum(nil))
 	result.Md5 = hex.EncodeToString(md5_sum.Sum(nil))
 	return nil
@@ -420,11 +411,22 @@ func (self *Container) Close() error {
 	self.closed = true
 
 	if len(self.uploads) > 0 {
-		fd, err := self.Create("uploads.json", time.Time{})
+		result_set_writer, err := NewResultSetWriter(self, "uploads.json")
 		if err == nil {
-			fd.Write(json.MustMarshalIndent(self.uploads))
+			for _, record := range self.uploads {
+				err = result_set_writer.Write(ordereddict.NewDict().
+					Set("Timestamp", time.Now()).
+					Set("started", time.Now().UTC().String()).
+					Set("vfs_path", record.Path).
+					Set("_Components", record.Components).
+					Set("file_size", record.Size).
+					Set("uploaded_size", record.StoredSize))
+				if err != nil {
+					break
+				}
+			}
+			result_set_writer.Close()
 		}
-		fd.Close()
 	}
 
 	// Wait for all outstanding writers to finish before we close the

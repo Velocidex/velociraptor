@@ -3,7 +3,6 @@ package collector
 import (
 	"context"
 	"fmt"
-	"io"
 	"log"
 	"sync"
 	"time"
@@ -11,6 +10,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -40,11 +40,15 @@ type collectionManager struct {
 	custom_artifacts []*artifacts_proto.Artifact
 	container        *reporting.Container
 	Output           string
-	log_file         io.WriteCloser
+	log_file         *reporting.ContainerResultSetWriter
 
 	start_time         time.Time
 	collection_context *flows.CollectionContext
 	logger             *logWriter
+
+	// The VQL requests we actuall collected. We store those in the
+	// container for provenance.
+	requests api_proto.ApiFlowRequestDetails
 
 	output_chan chan vfilter.Row
 
@@ -55,7 +59,10 @@ type collectionManager struct {
 	scope vfilter.Scope
 }
 
-func (self *collectionManager) getRepository(extra_artifacts vfilter.Any) (err error) {
+func (self *collectionManager) GetRepository(extra_artifacts vfilter.Any) (err error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	manager, err := services.GetRepositoryManager(self.config_obj)
 	if err != nil {
 		return err
@@ -143,9 +150,12 @@ func (self *collectionManager) getRepository(extra_artifacts vfilter.Any) (err e
 }
 
 // Install throttler into the scope.
-func (self *collectionManager) addThrottler(
+func (self *collectionManager) AddThrottler(
 	ops_per_sec float64, cpu_limit float64, iops_limit float64,
 	progress_timeout float64) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	throttler := actions.NewThrottler(self.ctx, self.scope,
 		ops_per_sec, cpu_limit, iops_limit)
@@ -159,11 +169,17 @@ func (self *collectionManager) addThrottler(
 	self.scope.SetThrottler(throttler)
 }
 
-func (self *collectionManager) setMetadata(metadata vfilter.StoredQuery) {
+func (self *collectionManager) SetMetadata(metadata vfilter.StoredQuery) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	self.metadata = types.Materialize(self.ctx, self.scope, metadata)
 }
 
-func (self *collectionManager) setFormat(format string) error {
+func (self *collectionManager) SetFormat(format string) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	switch format {
 	case "jsonl", "csv", "json":
 	case "":
@@ -176,13 +192,13 @@ func (self *collectionManager) setFormat(format string) error {
 	return nil
 }
 
-func (self *collectionManager) storeCollectionMetadata(request *flows_proto.ArtifactCollectorArgs) error {
-	fd, err := self.container.Create("request.json", time.Now())
+func (self *collectionManager) storeCollectionMetadata() error {
+	fd, err := self.container.Create("requests.json", time.Now())
 	if err != nil {
 		return err
 	}
 
-	fd.Write(json.MustMarshalIndent(request))
+	fd.Write(json.MustMarshalIndent(self.requests))
 	fd.Close()
 
 	if len(self.custom_artifacts) > 0 {
@@ -208,13 +224,11 @@ func (self *collectionManager) collectQuery(
 	}
 
 	defer func() {
-		self.mu.Lock()
-		defer self.mu.Unlock()
-
 		status.Duration = time.Now().UnixNano() - query_start_time.UnixNano()
 
 		self.collection_context.QueryStats = append(
 			self.collection_context.QueryStats, status)
+		self.collection_context.TotalCollectedRows += uint64(status.ResultRows)
 	}()
 
 	// Useful to know what is going on with the collection.
@@ -250,6 +264,10 @@ func (self *collectionManager) collectQuery(
 
 	total_rows, err := self.container.StoreArtifact(
 		self.config_obj, self.ctx, subscope, query, self.format)
+
+	status.LogRows = int64(self.logger.Count())
+	status.ResultRows = int64(total_rows)
+
 	if err != nil {
 		status.Status = crypto_proto.VeloStatus_GENERIC_ERROR
 		status.ErrorMessage = err.Error()
@@ -261,23 +279,16 @@ func (self *collectionManager) collectQuery(
 		subscope.Log("Collected %v rows for %s", total_rows, query.Name)
 	}
 
-	status.LogRows = int64(self.logger.Count())
-
 	return nil
 }
 
-func (self *collectionManager) collect(request *flows_proto.ArtifactCollectorArgs) error {
+func (self *collectionManager) Collect(request *flows_proto.ArtifactCollectorArgs) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	self.start_time = time.Now()
 	self.collection_context.Request = request
 
-	// Record the exact request in the collection for provenance.
-	if self.container != nil {
-		err := self.storeCollectionMetadata(request)
-		if err != nil {
-			return err
-		}
-	}
 	// Create a sub scope to run the new collection in - based on our
 	// existing scope but override the uploader with the container.
 	builder := services.ScopeBuilderFromScope(self.scope)
@@ -312,7 +323,15 @@ func (self *collectionManager) collect(request *flows_proto.ArtifactCollectorArg
 	}
 
 	// Run each collection separately, one after the other.
-	for _, vql_request := range vql_requests {
+	for request_number, vql_request := range vql_requests {
+
+		// Emulate the same type of requests a client would receive so
+		// the import is smoother.
+		self.requests.Items = append(self.requests.Items,
+			&crypto_proto.VeloMessage{
+				SessionId:       self.collection_context.SessionId,
+				RequestId:       uint64(request_number + 1),
+				VQLClientAction: vql_request})
 
 		// Make a new scope for each artifact.
 		manager, err := services.GetRepositoryManager(self.config_obj)
@@ -344,7 +363,7 @@ func (self *collectionManager) collect(request *flows_proto.ArtifactCollectorArg
 	return nil
 }
 
-func (self *collectionManager) setTimeout(ns float64) {
+func (self *collectionManager) SetTimeout(ns float64) {
 	go func() {
 		start := time.Now()
 
@@ -378,7 +397,10 @@ func newCollectionManager(
 	}
 }
 
-func (self *collectionManager) makeContainer(filename, password string, level int64) (err error) {
+func (self *collectionManager) MakeContainer(filename, password string, level int64) (err error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	// Should we encrypt it?
 	if password != "" {
 		self.scope.Log("Will password protect container")
@@ -396,17 +418,21 @@ func (self *collectionManager) makeContainer(filename, password string, level in
 	self.scope.Log("Will create container at %s", filename)
 
 	self.collection_context.SessionId = launcher.NewFlowId("")
-	self.log_file, err = self.container.Create("log.json", time.Now())
+	self.log_file, err = reporting.NewResultSetWriter(
+		self.container, "log.json")
 	return err
 }
 
 func (self *collectionManager) Close() error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	if self.container == nil || self.container.IsClosed() {
 		return nil
 	}
 
 	if self.log_file != nil {
-		_ = self.log_file.Close()
+		self.log_file.Close()
 	}
 
 	fd, err := self.container.Create("collection_context.json", time.Now())
@@ -416,10 +442,23 @@ func (self *collectionManager) Close() error {
 
 		flows.UpdateFlowStats(self.collection_context)
 
+		// Merge in the container stats
+		container_stats := self.container.Stats()
+		self.collection_context.TotalUploadedFiles = container_stats.TotalUploadedFiles
+		self.collection_context.TotalUploadedBytes = container_stats.TotalUploadedBytes
+		self.collection_context.TotalExpectedUploadedBytes = container_stats.TotalUploadedBytes
+
 		fd.Write([]byte(json.MustMarshalIndent(self.collection_context)))
 		fd.Close()
 	}
 
+	// Record the collection metadata.
+	err = self.storeCollectionMetadata()
+	if err != nil {
+		return err
+	}
+
+	// Finalize the container now.
 	err = self.container.Close()
 
 	// Emit the result set for consumption by the
@@ -438,7 +477,7 @@ func (self *collectionManager) Close() error {
 type logWriter struct {
 	mu           sync.Mutex
 	parent_scope vfilter.Scope
-	log_file     io.WriteCloser
+	log_file     *reporting.ContainerResultSetWriter
 	count        int
 }
 
@@ -462,7 +501,7 @@ func (self *logWriter) Write(b []byte) (int, error) {
 
 	level, msg := logging.SplitIntoLevelAndLog(b)
 	now := int(time.Now().Unix())
-	return self.log_file.Write([]byte(json.Format(
+	return self.log_file.WriteJSONL([]byte(json.Format(
 		"{\"_ts\":%d,\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
 		now, now, level, msg)))
 }

@@ -679,6 +679,12 @@ func (self ZipFileManipulator) PathJoin(path *OSPath) string {
 func (self ZipFileManipulator) PathParse(
 	path string, result *OSPath) error {
 
+	err := maybeParsePathSpec(path, result)
+	if err != nil {
+		return err
+	}
+	path = result.pathspec.Path
+
 	components := strings.Split(path, "/")
 	result.Components = make([]string, 0, len(components))
 	for _, c := range components {

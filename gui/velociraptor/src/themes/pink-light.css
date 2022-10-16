@@ -742,3 +742,7 @@ body.pink-light {
 .pink-light button.log-level {
     background: none;
 }
+
+.pink-light .flow-file-download-button {
+    background: var(--color-accent-25);
+}
