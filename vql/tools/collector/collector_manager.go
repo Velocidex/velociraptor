@@ -8,11 +8,13 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/shirou/gopsutil/v3/host"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/flows"
@@ -23,6 +25,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
@@ -192,8 +195,34 @@ func (self *collectionManager) SetFormat(format string) error {
 	return nil
 }
 
+func (self *collectionManager) storeHostInfo() error {
+	return nil
+
+	fd, err := self.container.Create("info.json", Clock.Now())
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+
+	version := config.GetVersion()
+	var info_dict *ordereddict.Dict
+	host_info, err := host.Info()
+	if err != nil {
+		info_dict = ordereddict.NewDict()
+	} else {
+		info_dict = vql.GetInfo(host_info)
+	}
+
+	fd.Write(json.MustMarshalIndent(info_dict.
+		Set("Name", version.Name).
+		Set("BuildTime", version.BuildTime).
+		Set("build_url", version.CiBuildUrl)))
+
+	return nil
+}
+
 func (self *collectionManager) storeCollectionMetadata() error {
-	fd, err := self.container.Create("requests.json", time.Now())
+	fd, err := self.container.Create("requests.json", Clock.Now())
 	if err != nil {
 		return err
 	}
@@ -202,7 +231,7 @@ func (self *collectionManager) storeCollectionMetadata() error {
 	fd.Close()
 
 	if len(self.custom_artifacts) > 0 {
-		fd, err := self.container.Create("custom_artifacts.json", time.Now())
+		fd, err := self.container.Create("custom_artifacts.json", Clock.Now())
 		if err != nil {
 			return err
 		}
@@ -217,14 +246,14 @@ func (self *collectionManager) storeCollectionMetadata() error {
 func (self *collectionManager) collectQuery(
 	subscope vfilter.Scope, query *actions_proto.VQLRequest) (err error) {
 
-	query_start_time := time.Now()
+	query_start_time := Clock.Now()
 
 	status := &crypto_proto.VeloStatus{
 		Status: crypto_proto.VeloStatus_OK,
 	}
 
 	defer func() {
-		status.Duration = time.Now().UnixNano() - query_start_time.UnixNano()
+		status.Duration = Clock.Now().UnixNano() - query_start_time.UnixNano()
 
 		self.collection_context.QueryStats = append(
 			self.collection_context.QueryStats, status)
@@ -286,7 +315,7 @@ func (self *collectionManager) Collect(request *flows_proto.ArtifactCollectorArg
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.start_time = time.Now()
+	self.start_time = Clock.Now()
 	self.collection_context.Request = request
 
 	// Create a sub scope to run the new collection in - based on our
@@ -365,7 +394,7 @@ func (self *collectionManager) Collect(request *flows_proto.ArtifactCollectorArg
 
 func (self *collectionManager) SetTimeout(ns float64) {
 	go func() {
-		start := time.Now()
+		start := Clock.Now()
 
 		select {
 		case <-self.ctx.Done():
@@ -435,7 +464,7 @@ func (self *collectionManager) Close() error {
 		self.log_file.Close()
 	}
 
-	fd, err := self.container.Create("collection_context.json", time.Now())
+	fd, err := self.container.Create("collection_context.json", Clock.Now())
 	if err == nil {
 		self.collection_context.StartTime = uint64(self.start_time.UnixNano())
 		self.collection_context.CreateTime = uint64(self.start_time.UnixNano())
@@ -454,6 +483,12 @@ func (self *collectionManager) Close() error {
 
 	// Record the collection metadata.
 	err = self.storeCollectionMetadata()
+	if err != nil {
+		return err
+	}
+
+	// Store host information
+	err = self.storeHostInfo()
 	if err != nil {
 		return err
 	}
@@ -500,7 +535,7 @@ func (self *logWriter) Write(b []byte) (int, error) {
 	self.count++
 
 	level, msg := logging.SplitIntoLevelAndLog(b)
-	now := int(time.Now().Unix())
+	now := int(Clock.Now().Unix())
 	return self.log_file.WriteJSONL([]byte(json.Format(
 		"{\"_ts\":%d,\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
 		now, now, level, msg)))

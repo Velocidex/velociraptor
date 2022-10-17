@@ -2,6 +2,8 @@ package clients
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -9,7 +11,6 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/tools/collector"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -59,7 +60,7 @@ func (self NewClientFunction) Call(ctx context.Context,
 	// hash of its public key) but for offline clients the client id
 	// is pretty random.
 	if arg.ClientId == "" {
-		arg.ClientId = collector.NewClientId()
+		arg.ClientId = NewClientId()
 	}
 
 	// Create a client record and index with elastic.
@@ -81,6 +82,26 @@ func (self NewClientFunction) Call(ctx context.Context,
 		return &vfilter.Null{}
 	}
 
+	indexer, err := services.GetIndexer(config_obj)
+	if err != nil {
+		scope.Log("client_create: %s", err)
+		return &vfilter.Null{}
+	}
+
+	// Add the new client to the index.
+	for _, term := range []string{
+		"all", // This is used for "." search
+		record.ClientId,
+		"host:" + record.Fqdn,
+		"host:" + record.Hostname,
+	} {
+		err = indexer.SetIndex(arg.ClientId, term)
+		if err != nil {
+			scope.Log("client_create: %s", err)
+			return &vfilter.Null{}
+		}
+	}
+
 	return record
 }
 
@@ -95,4 +116,13 @@ func (self NewClientFunction) Info(
 
 func init() {
 	vql_subsystem.RegisterFunction(&NewClientFunction{})
+}
+
+// Generate a new client id
+func NewClientId() string {
+	buf := make([]byte, 8)
+	_, _ = rand.Read(buf)
+	dst := make([]byte, hex.EncodedLen(8))
+	hex.Encode(dst, buf)
+	return "C." + string(dst)
 }

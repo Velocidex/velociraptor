@@ -31,6 +31,10 @@ import (
 	concurrent_zip "github.com/Velocidex/zip"
 )
 
+var (
+	Clock utils.Clock = utils.RealClock{}
+)
+
 type MemberWriter struct {
 	io.WriteCloser
 	writer_wg *sync.WaitGroup
@@ -258,8 +262,6 @@ func (self *Container) Upload(
 	// Try to collect sparse files if possible
 	err := self.maybeCollectSparseFile(ctx, scope, reader, result, mtime)
 	if err == nil {
-		result.Error = err.Error()
-
 		self.mu.Lock()
 		self.uploads = append(self.uploads, result)
 		self.mu.Unlock()
@@ -415,8 +417,8 @@ func (self *Container) Close() error {
 		if err == nil {
 			for _, record := range self.uploads {
 				err = result_set_writer.Write(ordereddict.NewDict().
-					Set("Timestamp", time.Now()).
-					Set("started", time.Now().UTC().String()).
+					Set("Timestamp", Clock.Now()).
+					Set("started", Clock.Now().UTC().String()).
 					Set("vfs_path", record.Path).
 					Set("_Components", record.Components).
 					Set("file_size", record.Size).

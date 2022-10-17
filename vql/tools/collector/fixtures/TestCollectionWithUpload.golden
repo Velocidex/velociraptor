@@ -1,14 +1,66 @@
 {
  "zip_contents": {
-  "file.txt": "hello world",
-  "Custom.TestArtifactUpload.json": [
+  "uploads/data/file.txt": "hello world",
+  "results/Custom.TestArtifactUpload.json.index": "\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000",
+  "results/Custom.TestArtifactUpload.json": [
    {
     "Upload": {
-     "Path": "file.txt",
+     "Path": "data",
      "Size": 11,
+     "StoredSize": 11,
      "sha256": "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9",
-     "md5": "5eb63bbbe01eeed093cb22bb8f5acdc3"
+     "md5": "5eb63bbbe01eeed093cb22bb8f5acdc3",
+     "StoredName": "/uploads/data/file.txt",
+     "Components": [
+      "uploads",
+      "data",
+      "file.txt"
+     ]
     }
+   }
+  ],
+  "log.json.index": "\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000}\u0000\u0000\u0000\u0000\u0001\u0000\u0000\u000c\u0001\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0001\u0000\u0000\u0000\u0001\u0000\u0000",
+  "log.json": [
+   {
+    "_ts": 1602103388,
+    "client_time": 1602103388,
+    "level": "DEFAULT",
+    "message": "Starting collection of Custom.TestArtifactUpload\n"
+   },
+   {
+    "_ts": 1602103388,
+    "client_time": 1602103388,
+    "level": "DEFAULT",
+    "message": "Collecting file hello world into /uploads/data/file.txt (11 bytes)\n"
+   },
+   {
+    "_ts": 1602103388,
+    "client_time": 1602103388,
+    "level": "DEFAULT",
+    "message": "Collected 1 rows for Custom.TestArtifactUpload\n"
+   },
+   {
+    "_ts": 1602103388,
+    "client_time": 1602103388,
+    "level": "DEBUG",
+    "message": "Query Stats: {\"RowsScanned\":2,\"PluginsCalled\":1,\"FunctionsCalled\":1,\"ProtocolSearch\":0,\"ScopeCopy\":6}\n"
+   }
+  ],
+  "collection_context.json": "{\n \"session_id\": \"F.1234\",\n \"request\": {\n  \"artifacts\": [\n   \"Custom.TestArtifactUpload\"\n  ]\n },\n \"create_time\": 1602103388000000000,\n \"start_time\": 1602103388000000000,\n \"total_uploaded_files\": 1,\n \"total_expected_uploaded_bytes\": 11,\n \"total_uploaded_bytes\": 11,\n \"total_collected_rows\": 1,\n \"total_requests\": 2,\n \"state\": 2,\n \"artifacts_with_results\": [\n  \"Custom.TestArtifactUpload\"\n ],\n \"query_stats\": [\n  {},\n  {\n   \"names_with_response\": [\n    \"Custom.TestArtifactUpload\"\n   ],\n   \"log_rows\": 2,\n   \"result_rows\": 1\n  }\n ]\n}",
+  "requests.json": "{\n \"items\": [\n  {\n   \"session_id\": \"F.1234\",\n   \"request_id\": 1,\n   \"VQLClientAction\": {\n    \"query_id\": 1,\n    \"total_queries\": 1,\n    \"Query\": [\n     {\n      \"VQL\": \"LET Custom_TestArtifactUpload_0_0 = SELECT upload(file=\\\"hello world\\\", accessor=\\\"data\\\", name=\\\"file.txt\\\") AS Upload FROM scope()\"\n     },\n     {\n      \"Name\": \"Custom.TestArtifactUpload\",\n      \"VQL\": \"SELECT * FROM Custom_TestArtifactUpload_0_0\"\n     }\n    ],\n    \"max_row\": 1000\n   }\n  }\n ]\n}",
+  "uploads.json.index": "\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000",
+  "uploads.json": [
+   {
+    "Timestamp": "2020-10-07T20:43:08Z",
+    "started": "2020-10-07 20:43:08 +0000 UTC",
+    "vfs_path": "data",
+    "_Components": [
+     "uploads",
+     "data",
+     "file.txt"
+    ],
+    "file_size": 11,
+    "uploaded_size": 11
    }
   ]
  }

@@ -259,6 +259,9 @@ func (self *Indexer) LoadSnapshot(
 	config_obj *config_proto.Config,
 	pathspec api.FSPathSpec) error {
 
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	self.last_snapshot_read = time.Now()
 
 	file_store_factory := file_store.GetFileStore(config_obj)
@@ -290,8 +293,8 @@ func (self *Indexer) LoadSnapshot(
 
 		// We should be able to search for the client by client id
 		// directly.
-		self.SetIndex(entity, entity)
-		self.SetIndex(entity, term)
+		self.setIndex(entity, entity)
+		self.setIndex(entity, term)
 		count++
 	}
 
@@ -303,9 +306,8 @@ func (self *Indexer) LoadSnapshot(
 	logger.Info("<green>Loaded index from snapshot</> in %v\n",
 		time.Now().Sub(self.last_snapshot_read))
 
-	self.mu.Lock()
 	self.ready = true
-	self.mu.Unlock()
+	self.dirty = false
 
 	go func() {
 		for c := range clients {
@@ -376,6 +378,10 @@ func (self *Indexer) SetIndex(client_id, term string) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	return self.setIndex(client_id, term)
+}
+
+func (self *Indexer) setIndex(client_id, term string) error {
 	record := NewRecord(&api_proto.IndexRecord{
 		Term:   term,
 		Entity: client_id,

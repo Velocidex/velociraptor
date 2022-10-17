@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -117,9 +118,16 @@ type TestSuite struct {
 func (self *TestSuite) SetupTest() {
 	self.TestSuite.SetupTest()
 	self.LoadArtifactFiles(
-		"../../artifacts/definitions/Demo/Plugins/GUI.yaml",
-		"../../artifacts/definitions/Reporting/Default.yaml",
+		"../../../artifacts/definitions/Demo/Plugins/GUI.yaml",
+		"../../../artifacts/definitions/Reporting/Default.yaml",
 	)
+
+	Clock = &utils.MockClock{MockNow: time.Unix(1602103388, 0)}
+	reporting.Clock = Clock
+	launcher, err := services.GetLauncher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+	launcher.SetFlowIdForTests("F.1234")
+
 }
 
 func (self *TestSuite) TestCollectionWithArtifacts() {

@@ -20,11 +20,11 @@ const MAX_ROWS_PER_TABLE = 500;
 // to the file, but this is un necessary because the file must reside
 // int he client's upload directory. Handle both cases here.
 const normalizeComponentList = (components, client_id, flow_id)=>{
-    if (components.length==0) {
+    if (!components) {
         return components;
     }
 
-    if (components[0] == "clients") {
+    if (components[0] === "clients") {
         return components;
     }
 

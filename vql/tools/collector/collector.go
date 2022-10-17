@@ -24,6 +24,10 @@ import (
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
+var (
+	Clock utils.Clock = utils.RealClock{}
+)
+
 type CollectPluginArgs struct {
 	Artifacts           []string            `vfilter:"required,field=artifacts,doc=A list of artifacts to collect."`
 	Output              string              `vfilter:"optional,field=output,doc=A path to write the output file on."`

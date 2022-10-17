@@ -358,10 +358,14 @@ func (self *CollectorTestSuite) TestCollector() {
 	defer r.Close()
 	assert.True(t, len(r.File) > 0)
 
+	checked := false
+
 	for _, f := range r.File {
-		if !strings.HasPrefix(f.Name, "results") {
+		if f.Name != "results/Custom.TestArtifact.json" {
 			continue
 		}
+
+		checked = true
 
 		fmt.Printf("Contents of %s:\n", f.Name)
 		assert.Equal(t, f.Name, "results/Custom.TestArtifact.json")
@@ -383,6 +387,8 @@ func (self *CollectorTestSuite) TestCollector() {
 		// Make sure the data file has the .yar extension
 		assert.Contains(t, string(data), `"HasYarExtension":true`)
 	}
+
+	assert.True(t, checked)
 }
 
 // Check that we can properly generated encrypted containers.

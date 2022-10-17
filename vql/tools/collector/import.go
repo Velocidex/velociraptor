@@ -2,10 +2,9 @@ package collector
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"errors"
 	"io"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -24,14 +23,18 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/server/clients"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+	"www.velocidex.com/golang/vfilter/types"
 
+	_ "www.velocidex.com/golang/velociraptor/accessors/collector"
+	_ "www.velocidex.com/golang/velociraptor/accessors/file"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
 const (
-	BUFF_SIZE = 10000
+	BUFF_SIZE = 1000000
 )
 
 type ImportCollectionFunctionArgs struct {
@@ -96,6 +99,15 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	if err != nil || collection_context.SessionId == "" {
 		scope.Log("import_collection: unable to load collection_context: %v", err)
 		return vfilter.Null{}
+	}
+
+	if arg.ClientId == "auto" || arg.ClientId == "" {
+		arg.ClientId, err = self.getClientId(
+			ctx, scope, config_obj, arg.Hostname)
+		if err != nil {
+			scope.Log("import_collection: %v", err)
+			return vfilter.Null{}
+		}
 	}
 
 	flow_path_manager := paths.NewFlowPathManager(
@@ -178,7 +190,45 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		}
 	}
 
-	return collection_context.SessionId
+	return collection_context
+}
+
+func (self ImportCollectionFunction) getClientId(
+	ctx context.Context, scope types.Scope,
+	config_obj *config_proto.Config, hostname string) (string, error) {
+
+	indexer, err := services.GetIndexer(config_obj)
+	if err != nil {
+		return "", err
+	}
+
+	scope.Log("Searching for a client id with name '%v'", hostname)
+
+	// Search for an existing client with the same hostname
+	search_resp, err := indexer.SearchClients(ctx, config_obj,
+		&api_proto.SearchClientsRequest{Query: "host:" + hostname}, "")
+	if err == nil && len(search_resp.Items) > 0 {
+		client_id := search_resp.Items[0].ClientId
+		scope.Log("client id found '%v'", client_id)
+		return client_id, nil
+	}
+
+	// Create a new client
+	res := clients.NewClientFunction{}.Call(ctx, scope, ordereddict.NewDict().
+		Set("first_seen_at", time.Now()).
+		Set("last_seen_at", time.Now()).
+		Set("hostname", hostname))
+	if !utils.IsNil(res) {
+		client_id_any, pres := scope.Associative(res, "ClientId")
+		if pres {
+			client_id, ok := client_id_any.(string)
+			if ok {
+				return client_id, nil
+			}
+		}
+	}
+
+	return clients.NewClientId(), nil
 }
 
 func (self ImportCollectionFunction) copyResultSet(
@@ -273,15 +323,6 @@ func (self ImportCollectionFunction) Info(scope vfilter.Scope, type_map *vfilter
 	}
 }
 
-// Generate a new client id
-func NewClientId() string {
-	buf := make([]byte, 8)
-	_, _ = rand.Read(buf)
-	dst := make([]byte, hex.EncodedLen(8))
-	hex.Encode(dst, buf)
-	return "C." + string(dst)
-}
-
 func getExistingClientOrNewClient(
 	ctx context.Context,
 	scope vfilter.Scope,
@@ -317,7 +358,7 @@ func makeNewClient(
 		return "", errors.New("New clients must have a hostname")
 	}
 
-	client_id := NewClientId()
+	client_id := clients.NewClientId()
 	client_info := &actions_proto.ClientInfo{
 		ClientId:     client_id,
 		Hostname:     hostname,
