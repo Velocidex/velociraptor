@@ -5,12 +5,12 @@ Queries:
   # Import a collection once
   - LET X <= SELECT * FROM Artifact.Server.Utils.ImportCollection(
       Hostname="FooBarHost",
-      Path=srcDir+"/artifacts/testdata/files/Collection-DESKTOP-BTI2T9T-2021-10-25T19_30_52-07_00.zip")
+      Path=srcDir+"/vql/tools/collector/fixtures/import.zip")
 
   # Import the same collection again - it should re-use the same client id
   - LET Y <= SELECT * FROM Artifact.Server.Utils.ImportCollection(
       Hostname="FooBarHost",
-      Path=srcDir+"/artifacts/testdata/files/Collection-DESKTOP-BTI2T9T-2021-10-25T19_30_52-07_00.zip")
+      Path=srcDir+"/vql/tools/collector/fixtures/import.zip")
 
   # Make sure the client ids were the same
   - SELECT X[0].ClientId = Y[0].ClientId AS ClientIdEqual

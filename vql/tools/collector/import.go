@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"io/ioutil"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -89,7 +90,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 
 	root := accessors.NewZipFilePath("/")
 	root.SetPathSpec(&accessors.PathSpec{
-		DelegateAccessor: "auto",
+		DelegateAccessor: "file",
 		DelegatePath:     arg.Filename,
 	})
 
@@ -259,13 +260,13 @@ func (self ImportCollectionFunction) getFile(
 	}
 	defer fd.Close()
 
-	buff := make([]byte, BUFF_SIZE)
-	n, err := fd.Read(buff)
+	limitedReader := &io.LimitedReader{R: fd, N: BUFF_SIZE}
+	data, err := ioutil.ReadAll(limitedReader)
 	if err != nil && err != io.EOF {
 		return err
 	}
 
-	return json.Unmarshal(buff[:n], target)
+	return json.Unmarshal(data, target)
 }
 
 func (self ImportCollectionFunction) copyFileWithIndex(
