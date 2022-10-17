@@ -173,6 +173,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		scope.Log("import_collection: %v", err)
 		return vfilter.Null{}
 	}
+	defer reader.Close()
 
 	for row := range reader.Rows(ctx) {
 		components, pres := row.GetStrings("_Components")
