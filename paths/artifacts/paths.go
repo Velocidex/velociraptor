@@ -27,6 +27,27 @@ type ArtifactPathManager struct {
 	file_store                         api.FileStore
 }
 
+func NewArtifactPathManagerWithMode(
+	config_obj *config_proto.Config,
+	client_id, flow_id, full_artifact_name string,
+	mode int) *ArtifactPathManager {
+
+	artifact_name, artifact_source := paths.SplitFullSourceName(full_artifact_name)
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+	return &ArtifactPathManager{
+		config_obj:         config_obj,
+		ClientId:           client_id,
+		FlowId:             flow_id,
+		FullArtifactName:   full_artifact_name,
+		base_artifact_name: artifact_name,
+		source:             artifact_source,
+		mode:               mode,
+		Clock:              utils.RealClock{},
+		file_store:         file_store_factory,
+	}
+}
+
 func NewArtifactPathManager(
 	config_obj *config_proto.Config,
 	client_id, flow_id, full_artifact_name string) (

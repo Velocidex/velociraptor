@@ -1,0 +1,77 @@
+{
+ "zip_contents": {
+  "results/Demo.Plugins.GUI.json.index": "\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000",
+  "results/Demo.Plugins.GUI.json": [
+   {
+    "Hex": "VGhpcyBzaG91bGQgcG9wdXAgaW4gYSBoZXggZWRpdG9y",
+    "ChoiceSelector": "InvalidChoice",
+    "Flag": false,
+    "Flag2": false,
+    "Flag3": true,
+    "OffFlag": true,
+    "StartDate": "2020-12-15T06:50:35Z",
+    "StartDate2": "2020-12-15T06:50:35Z",
+    "StartDate3": "2020-12-15T06:50:35Z",
+    "CSVData": [
+     {
+      "Foo": "Bar",
+      "Baz": "Baz"
+     },
+     {
+      "Foo": "Bar2",
+      "Baz": "Baz2"
+     }
+    ],
+    "CSVData2": [
+     {
+      "Column1": "A",
+      "Column2": "B"
+     },
+     {
+      "Column1": "C",
+      "Column2": "D"
+     }
+    ],
+    "JSONData": [
+     {
+      "Foo": "Bar",
+      "Baz": "Baz"
+     },
+     {
+      "Foo": "Bar2",
+      "Baz": "Baz2"
+     }
+    ],
+    "JSONData2": [
+     {
+      "foo": "bar"
+     }
+    ],
+    "FileUpload1Length": 0
+   }
+  ],
+  "log.json.index": "\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000t\u0000\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0000\u0000\u0000\u0000\u0001\u0000\u0000",
+  "log.json": [
+   {
+    "_ts": 1602103388,
+    "client_time": 1602103388,
+    "level": "DEFAULT",
+    "message": "Starting collection of Demo.Plugins.GUI\n"
+   },
+   {
+    "_ts": 1602103388,
+    "client_time": 1602103388,
+    "level": "DEFAULT",
+    "message": "Collected 1 rows for Demo.Plugins.GUI\n"
+   },
+   {
+    "_ts": 1602103388,
+    "client_time": 1602103388,
+    "level": "DEBUG",
+    "message": "Query Stats: {\"RowsScanned\":16,\"PluginsCalled\":7,\"FunctionsCalled\":23,\"ProtocolSearch\":0,\"ScopeCopy\":37}\n"
+   }
+  ],
+  "collection_context.json": "{\n \"session_id\": \"F.1234\",\n \"request\": {\n  \"artifacts\": [\n   \"Demo.Plugins.GUI\"\n  ],\n  \"specs\": [\n   {\n    \"artifact\": \"Demo.Plugins.GUI\",\n    \"parameters\": {\n     \"env\": [\n      {\n       \"key\": \"ChoiceSelector\",\n       \"value\": \"InvalidChoice\"\n      },\n      {\n       \"key\": \"Flag\"\n      },\n      {\n       \"key\": \"Flag2\"\n      },\n      {\n       \"key\": \"OffFlag\",\n       \"value\": \"Y\"\n      },\n      {\n       \"key\": \"StartDate\",\n       \"value\": \"2020-12-15 06:50:35 +0000 UTC\"\n      },\n      {\n       \"key\": \"StartDate2\",\n       \"value\": \"2020-12-15 06:50:35 +0000 UTC\"\n      },\n      {\n       \"key\": \"StartDate3\",\n       \"value\": \"2020-12-15 06:50:35 +0000 UTC\"\n      },\n      {\n       \"key\": \"CSVData\",\n       \"value\": \"Foo,Baz\\nBar,Baz\\nBar2,Baz2\\n\"\n      },\n      {\n       \"key\": \"JSONData\",\n       \"value\": \"[\\n {\\n  \\\"Foo\\\": \\\"Bar\\\",\\n  \\\"Baz\\\": \\\"Baz\\\"\\n },\\n {\\n  \\\"Foo\\\": \\\"Bar2\\\",\\n  \\\"Baz\\\": \\\"Baz2\\\"\\n }\\n]\"\n      }\n     ]\n    }\n   }\n  ],\n  \"ops_per_second\": 60,\n  \"timeout\": 20,\n  \"max_rows\": 213,\n  \"max_upload_bytes\": 545454\n },\n \"create_time\": 1602103388000000000,\n \"start_time\": 1602103388000000000,\n \"total_collected_rows\": 1,\n \"total_requests\": 16,\n \"state\": 2,\n \"artifacts_with_results\": [\n  \"Demo.Plugins.GUI\"\n ],\n \"query_stats\": [\n  {},\n  {},\n  {},\n  {},\n  {},\n  {},\n  {},\n  {},\n  {},\n  {},\n  {},\n  {},\n  {},\n  {},\n  {},\n  {\n   \"names_with_response\": [\n    \"Demo.Plugins.GUI\"\n   ],\n   \"log_rows\": 1,\n   \"result_rows\": 1\n  }\n ]\n}",
+  "requests.json": "{\n \"items\": [\n  {\n   \"session_id\": \"F.1234\",\n   \"request_id\": 1,\n   \"VQLClientAction\": {\n    \"query_id\": 1,\n    \"total_queries\": 1,\n    \"env\": [\n     {\n      \"key\": \"ChoiceSelector\",\n      \"value\": \"InvalidChoice\"\n     },\n     {\n      \"key\": \"Hashes\"\n     },\n     {\n      \"key\": \"RegularExpression\",\n      \"value\": \".\"\n     },\n     {\n      \"key\": \"YaraRule\"\n     },\n     {\n      \"key\": \"Flag\"\n     },\n     {\n      \"key\": \"Flag2\"\n     },\n     {\n      \"key\": \"Flag3\",\n      \"value\": \"Y\"\n     },\n     {\n      \"key\": \"OffFlag\",\n      \"value\": \"Y\"\n     },\n     {\n      \"key\": \"StartDate\",\n      \"value\": \"2020-12-15 06:50:35 +0000 UTC\"\n     },\n     {\n      \"key\": \"StartDate2\",\n      \"value\": \"2020-12-15 06:50:35 +0000 UTC\"\n     },\n     {\n      \"key\": \"StartDate3\",\n      \"value\": \"2020-12-15 06:50:35 +0000 UTC\"\n     },\n     {\n      \"key\": \"CSVData\",\n      \"value\": \"Foo,Baz\\nBar,Baz\\nBar2,Baz2\\n\"\n     },\n     {\n      \"key\": \"CSVData2\",\n      \"value\": \"Column1,Column2\\nA,B\\nC,D\\n\"\n     },\n     {\n      \"key\": \"JSONData\",\n      \"value\": \"[\\n {\\n  \\\"Foo\\\": \\\"Bar\\\",\\n  \\\"Baz\\\": \\\"Baz\\\"\\n },\\n {\\n  \\\"Foo\\\": \\\"Bar2\\\",\\n  \\\"Baz\\\": \\\"Baz2\\\"\\n }\\n]\"\n     },\n     {\n      \"key\": \"JSONData2\",\n      \"value\": \"[{\\\"foo\\\": \\\"bar\\\"}]\\n\"\n     },\n     {\n      \"key\": \"FileUpload1\"\n     },\n     {\n      \"key\": \"ArtifactSelections\",\n      \"value\": \"Artifact\\nWindows.Detection.PsexecService\\nWindows.Events.ProcessCreation\\nWindows.Events.ServiceCreation\\n\"\n     }\n    ],\n    \"Query\": [\n     {\n      \"VQL\": \"LET Flag \\u003c= get(field='Flag') = TRUE OR get(field='Flag') =~ '^(Y|TRUE|YES|OK)$' \"\n     },\n     {\n      \"VQL\": \"LET Flag2 \\u003c= get(field='Flag2') = TRUE OR get(field='Flag2') =~ '^(Y|TRUE|YES|OK)$' \"\n     },\n     {\n      \"VQL\": \"LET Flag3 \\u003c= get(field='Flag3') = TRUE OR get(field='Flag3') =~ '^(Y|TRUE|YES|OK)$' \"\n     },\n     {\n      \"VQL\": \"LET OffFlag \\u003c= get(field='OffFlag') = TRUE OR get(field='OffFlag') =~ '^(Y|TRUE|YES|OK)$' \"\n     },\n     {\n      \"VQL\": \"LET StartDate \\u003c= timestamp(epoch=StartDate)\"\n     },\n     {\n      \"VQL\": \"LET StartDate2 \\u003c= timestamp(epoch=StartDate2)\"\n     },\n     {\n      \"VQL\": \"LET StartDate3 \\u003c= timestamp(epoch=StartDate3)\"\n     },\n     {\n      \"VQL\": \"\\nLET CSVData \\u003c= SELECT * FROM if(\\n    condition=format(format=\\\"%T\\\", args=CSVData) =~ \\\"string\\\",\\n    then={SELECT * FROM parse_csv(filename=CSVData, accessor='data')},\\n    else=CSVData)\\n\"\n     },\n     {\n      \"VQL\": \"\\nLET CSVData2 \\u003c= SELECT * FROM if(\\n    condition=format(format=\\\"%T\\\", args=CSVData2) =~ \\\"string\\\",\\n    then={SELECT * FROM parse_csv(filename=CSVData2, accessor='data')},\\n    else=CSVData2)\\n\"\n     },\n     {\n      \"VQL\": \"\\nLET JSONData \\u003c= if(\\n    condition=format(format=\\\"%T\\\", args=JSONData) = \\\"string\\\",\\n    then=parse_json_array(data=JSONData),\\n    else=JSONData)\\n\"\n     },\n     {\n      \"VQL\": \"\\nLET JSONData2 \\u003c= if(\\n    condition=format(format=\\\"%T\\\", args=JSONData2) = \\\"string\\\",\\n    then=parse_json_array(data=JSONData2),\\n    else=JSONData2)\\n\"\n     },\n     {\n      \"VQL\": \"LET FileUpload1_ \\u003c= if(condition=FileUpload1, then={\\n   SELECT Content FROM http_client(url=FileUpload1)\\n})\"\n     },\n     {\n      \"VQL\": \"LET FileUpload1 \\u003c= FileUpload1_.Content[0]\"\n     },\n     {\n      \"VQL\": \"\\nLET ArtifactSelections \\u003c= SELECT * FROM if(\\n    condition=format(format=\\\"%T\\\", args=ArtifactSelections) =~ \\\"string\\\",\\n    then={SELECT * FROM parse_csv(filename=ArtifactSelections, accessor='data')},\\n    else=ArtifactSelections)\\n\"\n     },\n     {\n      \"VQL\": \"LET Demo_Plugins_GUI_0_0 = SELECT base64encode(string=\\\"This should popup in a hex editor\\\") AS Hex, ChoiceSelector, Flag, Flag2, Flag3, OffFlag, StartDate, StartDate2, StartDate3, CSVData, CSVData2, JSONData, JSONData2, len(list=FileUpload1) AS FileUpload1Length FROM scope()\"\n     },\n     {\n      \"Name\": \"Demo.Plugins.GUI\",\n      \"VQL\": \"SELECT * FROM Demo_Plugins_GUI_0_0\"\n     }\n    ],\n    \"max_row\": 1000,\n    \"ops_per_second\": 60,\n    \"timeout\": 20\n   }\n  }\n ]\n}"
+ }
+}

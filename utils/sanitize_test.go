@@ -19,6 +19,7 @@ func TestSanitize(t *testing.T) {
 		"../../../",
 		"foo.db",
 		"bar.json.db",
+		"filename:with:col.db",
 		// Binary string with invalid utf8 sequence
 		"\x00\x01\xf0\xf2\xff\xc3\x28",
 		`\\.\C:\你好世界\"你好/世界.db"`,

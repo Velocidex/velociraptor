@@ -159,7 +159,7 @@ func delegatePathToCollectorPath(full_path *accessors.OSPath) (
 	res := full_path.Copy()
 	res.SetPathSpec(&accessors.PathSpec{
 		Path:             nested_pathspec.DelegatePath,
-		DelegateAccessor: "collector_pathspec",
+		DelegateAccessor: "collector",
 		DelegatePath:     nested_pathspec.DelegateAccessor,
 	})
 	res.Components = full_path.Components

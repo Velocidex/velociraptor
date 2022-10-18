@@ -1,7 +1,6 @@
 package flows
 
 import (
-	"fmt"
 	"regexp"
 	"sync"
 	"time"
@@ -86,7 +85,7 @@ func flushContextLogs(
 		}
 
 		collection_context.TotalLogs++
-		rs_writer.WriteJSONL([]byte(fmt.Sprintf(
+		rs_writer.WriteJSONL([]byte(json.Format(
 			"{\"_ts\":%d,\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
 			int(time.Now().Unix()),
 			int64(row.Timestamp)/1000000,

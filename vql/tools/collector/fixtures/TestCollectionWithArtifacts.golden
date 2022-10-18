@@ -1,0 +1,33 @@
+{
+ "zip_contents": {
+  "results/Custom.TestArtifactDependent.json.index": "\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000",
+  "results/Custom.TestArtifactDependent.json": [
+   {
+    "FooVar": "HelloFooVar"
+   }
+  ],
+  "log.json.index": "\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0000\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0000\u0000\u0000\u0000\u0001\u0000\u0000",
+  "log.json": [
+   {
+    "_ts": 1602103388,
+    "client_time": 1602103388,
+    "level": "DEFAULT",
+    "message": "Starting collection of Custom.TestArtifactDependent\n"
+   },
+   {
+    "_ts": 1602103388,
+    "client_time": 1602103388,
+    "level": "DEFAULT",
+    "message": "Collected 1 rows for Custom.TestArtifactDependent\n"
+   },
+   {
+    "_ts": 1602103388,
+    "client_time": 1602103388,
+    "level": "DEBUG",
+    "message": "Query Stats: {\"RowsScanned\":2,\"PluginsCalled\":1,\"FunctionsCalled\":0,\"ProtocolSearch\":0,\"ScopeCopy\":6}\n"
+   }
+  ],
+  "collection_context.json": "{\n \"session_id\": \"F.1234\",\n \"request\": {\n  \"artifacts\": [\n   \"Custom.TestArtifactDependent\"\n  ],\n  \"specs\": [\n   {\n    \"artifact\": \"Custom.TestArtifactDependent\",\n    \"parameters\": {\n     \"env\": [\n      {\n       \"key\": \"FooVar\",\n       \"value\": \"HelloFooVar\"\n      }\n     ]\n    }\n   }\n  ]\n },\n \"create_time\": 1602103388000000000,\n \"start_time\": 1602103388000000000,\n \"total_collected_rows\": 1,\n \"total_requests\": 2,\n \"state\": 2,\n \"artifacts_with_results\": [\n  \"Custom.TestArtifactDependent\"\n ],\n \"query_stats\": [\n  {},\n  {\n   \"names_with_response\": [\n    \"Custom.TestArtifactDependent\"\n   ],\n   \"log_rows\": 1,\n   \"result_rows\": 1\n  }\n ]\n}",
+  "requests.json": "{\n \"items\": [\n  {\n   \"session_id\": \"F.1234\",\n   \"request_id\": 1,\n   \"VQLClientAction\": {\n    \"query_id\": 1,\n    \"total_queries\": 1,\n    \"env\": [\n     {\n      \"key\": \"FooVar\",\n      \"value\": \"HelloFooVar\"\n     }\n    ],\n    \"Query\": [\n     {\n      \"VQL\": \"LET Custom_TestArtifactDependent_0_0 = SELECT FooVar FROM scope()\"\n     },\n     {\n      \"Name\": \"Custom.TestArtifactDependent\",\n      \"VQL\": \"SELECT * FROM Custom_TestArtifactDependent_0_0\"\n     }\n    ],\n    \"max_row\": 1000\n   }\n  }\n ]\n}"
+ }
+}

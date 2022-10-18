@@ -374,7 +374,7 @@ loop:
 		}, nil
 	}
 
-	return nil, errors.New("Not found.")
+	return nil, fmt.Errorf("Zip: Not found: %v.", full_path.String())
 }
 
 func (self *ZipFileCache) GetChildren(

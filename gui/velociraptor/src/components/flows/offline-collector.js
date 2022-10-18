@@ -9,8 +9,6 @@ import Col from 'react-bootstrap/Col';
 import ToolViewer from "../tools/tool-viewer.js";
 import { HotKeys, ObserveKeys } from "react-hotkeys";
 import ValidatedInteger from '../forms/validated_int.js';
-import api from '../core/api-service.js';
-import axios from 'axios';
 import T from '../i8n/i8n.js';
 import NewCollectionConfigParameters from './new-collections-parameters.js';
 
@@ -35,28 +33,6 @@ class OfflineCollectorParameters  extends React.Component {
     static propTypes = {
         parameters: PropTypes.object,
         setParameters: PropTypes.func.isRequired,
-    }
-
-    state = {
-        template_artifacts: [],
-    }
-
-    componentDidMount = () => {
-        this.source = axios.CancelToken.source();
-        api.post("v1/GetArtifacts", {report_type: "html"},
-                this.source.token).then((response) => {
-            let template_artifacts = [];
-            for(var i = 0; i<response.data.items.length; i++) {
-                var item = response.data.items[i];
-                template_artifacts.push(item["name"]);
-            };
-
-            this.setState({template_artifacts: template_artifacts});
-        });
-    }
-
-    componentWillUnmount() {
-        this.source.cancel("unmounted");
     }
 
     render() {
@@ -135,25 +111,6 @@ class OfflineCollectorParameters  extends React.Component {
                       </Col>
                     </Form.Group>
                   }
-
-                  <Form.Group as={Row}>
-                    <Form.Label column sm="3">{T("Report Template")}</Form.Label>
-                    <Col sm="8">
-                      <Form.Control as="select"
-                                    value={this.props.parameters.template}
-                                    onChange={(e) => {
-                                        this.props.parameters.template = e.currentTarget.value;
-                                        this.props.setParameters(this.props.parameters);
-                                    }}
-                      >
-                        <option value="">{T("No Report")}</option>
-                        { _.map(this.state.template_artifacts, (item, i)=>{
-                            return <option key={i} value={item}>{item}</option>;
-                        })}
-                      </Form.Control>
-                    </Col>
-                  </Form.Group>
-
 
                   <Form.Group as={Row}>
                     <Form.Label column sm="3">{T("Collection Type")}</Form.Label>
@@ -616,7 +573,6 @@ export default class OfflineCollectorWizard extends React.Component {
                 endpoint: "",
                 serverSideEncryption: "",
             },
-            template: "",
             password: "",
             pubkey: "",
             encryption_scheme: "None",
@@ -657,7 +613,6 @@ export default class OfflineCollectorWizard extends React.Component {
             this.state.collector_parameters.target_args)});
         env.push({key: "encryption_scheme", value: this.state.collector_parameters.encryption_scheme});
         env.push({key: "encryption_args", value: JSON.stringify(this.state.collector_parameters.encryption_args)});
-        env.push({key: "template", value: this.state.collector_parameters.template});
         env.push({key: "opt_verbose", value: "Y"});
         env.push({key: "opt_banner", value: "Y"});
         env.push({key: "opt_prompt", value: "N"});

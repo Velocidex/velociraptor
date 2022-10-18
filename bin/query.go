@@ -262,6 +262,11 @@ func doQuery() error {
 		config_obj.Frontend = &config_proto.FrontendConfig{}
 	}
 	config_obj.Frontend.ServerServices = services.GenericToolServices()
+	if config_obj.Datastore != nil && config_obj.Datastore.Location != "" {
+		config_obj.Frontend.ServerServices.IndexServer = true
+		config_obj.Frontend.ServerServices.ClientInfo = true
+		config_obj.Frontend.ServerServices.Label = true
+	}
 
 	ctx, cancel := install_sig_handler()
 	defer cancel()

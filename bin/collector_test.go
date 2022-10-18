@@ -181,30 +181,6 @@ sources:
  - query: |
      SELECT *, MyParameter, MyDefaultParameter
      FROM Artifact.Custom.TestArtifactDependent()
-
-reports:
- - type: HTML
-   template: |
-     <html><body><h1>This is the html report template</h1> {{ .main \
-            }} </body></html>
-
- - type: CLIENT
-   template: |
-     # This is the report.
-
-     {{ Query "SELECT * FROM source()" | Table }}
-
-     {{ $foundit := Query "SELECT * FROM source()" | Expand }}
-
-     {{ if $foundit }}
-
-     ## Found a Scheduled Task
-
-     {{ else }}
-
-     ## Did not find a Scheduled Task!
-
-     {{ end }}
 `))
 	fd.Close()
 
@@ -330,7 +306,7 @@ func (self *CollectorTestSuite) TestCollector() {
 	for _, f := range r.File {
 		fmt.Printf("Contents of collector:  %s (%v bytes)\n",
 			f.Name, f.UncompressedSize)
-		if strings.HasPrefix(f.Name, "Collector") {
+		if strings.HasPrefix(f.Name, "uploads/file/Collector") {
 			fmt.Printf("Extracting %v to %v\n", f.Name, output_executable)
 
 			rc, err := f.Open()
@@ -382,9 +358,17 @@ func (self *CollectorTestSuite) TestCollector() {
 	defer r.Close()
 	assert.True(t, len(r.File) > 0)
 
+	checked := false
+
 	for _, f := range r.File {
+		if f.Name != "results/Custom.TestArtifact.json" {
+			continue
+		}
+
+		checked = true
+
 		fmt.Printf("Contents of %s:\n", f.Name)
-		assert.Equal(t, f.Name, "Custom.TestArtifact.json")
+		assert.Equal(t, f.Name, "results/Custom.TestArtifact.json")
 
 		rc, err := f.Open()
 		assert.NoError(t, err)
@@ -404,36 +388,7 @@ func (self *CollectorTestSuite) TestCollector() {
 		assert.Contains(t, string(data), `"HasYarExtension":true`)
 	}
 
-	// Inspect the produced HTML report.
-	html_files, err := filepath.Glob("Collection-*.html")
-	assert.NoError(t, err)
-	assert.Equal(t, 1, len(html_files))
-
-	html_fd, err := os.Open(html_files[0])
-	assert.NoError(t, err)
-
-	data, err := ioutil.ReadAll(html_fd)
-	assert.NoError(t, err)
-
-	// Ensure the report contains the data that was passed.
-	assert.Contains(t, string(data), "MyValue")
-
-	// And the default parameter is still there.
-	assert.Contains(t, string(data), "DefaultMyDefaultParameter")
-
-	assert.Contains(t, string(data), "Foobar")
-	assert.Contains(t, string(data), "This is the report")
-
-	// Make sure we found the artifact in the report
-	assert.Contains(t, string(data), "Windows.System.TaskScheduler")
-	assert.Contains(t, string(data), "Found a Scheduled Task")
-
-	// Check that we used the default template from the
-	// Reporting.Default artifact:
-	assert.Contains(t, string(data), "<html>")
-	assert.Contains(t, string(data), "This is the html report template")
-
-	// fmt.Println(string(data))
+	assert.True(t, checked)
 }
 
 // Check that we can properly generated encrypted containers.
@@ -477,7 +432,7 @@ func (self *CollectorTestSuite) TestCollectorEncrypted() {
 	for _, f := range r.File {
 		fmt.Printf("Contents of collector:  %s (%v bytes)\n",
 			f.Name, f.UncompressedSize)
-		if strings.HasPrefix(f.Name, "Collector") {
+		if strings.HasPrefix(f.Name, "uploads/file/Collector") {
 			fmt.Printf("Extracting %v to %v\n", f.Name, output_executable)
 
 			rc, err := f.Open()

@@ -31,7 +31,7 @@ import (
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
-func getInfo(host *host.InfoStat) *ordereddict.Dict {
+func GetInfo(host *host.InfoStat) *ordereddict.Dict {
 	me, _ := os.Executable()
 	return ordereddict.NewDict().
 		Set("Hostname", host.Hostname).
@@ -87,7 +87,7 @@ func init() {
 					CacheSet(scope, "__info", info)
 				}
 
-				item := getInfo(info).
+				item := GetInfo(info).
 					Set("Fqdn", fqdn.Get()).
 					Set("Architecture", runtime.GOARCH)
 				result = append(result, item)

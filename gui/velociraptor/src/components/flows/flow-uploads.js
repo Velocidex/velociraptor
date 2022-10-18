@@ -16,6 +16,22 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import api from '../core/api-service.js';
 const MAX_ROWS_PER_TABLE = 500;
 
+// Older collections had the upload includes the full filestore path
+// to the file, but this is un necessary because the file must reside
+// int he client's upload directory. Handle both cases here.
+const normalizeComponentList = (components, client_id, flow_id)=>{
+    if (!components) {
+        return components;
+    }
+
+    if (components[0] === "clients") {
+        return components;
+    }
+
+    return ["clients", client_id, "collections", flow_id].concat(components);
+};
+
+
 export default class FlowUploads extends React.Component {
     static propTypes = {
         flow: PropTypes.object,
@@ -110,9 +126,12 @@ export default class FlowUploads extends React.Component {
                                           </Tooltip>;
                                }}>
                                <Button as="a"
+                                       className="flow-file-download-button"
                                        href={api.href("/api/v1/DownloadVFSFile", {
                                            client_id: this.props.flow.client_id,
-                                           fs_components: row._Components,
+                                           fs_components: normalizeComponentList(
+                                               row._Components, this.props.flow.client_id,
+                                               this.props.flow.session_id),
                                            padding: true,
                                            vfs_path: filename}, {arrayFormat: 'brackets'})}>
                                  {filename} &nbsp;&nbsp; <FontAwesomeIcon icon="expand"/>
@@ -129,9 +148,12 @@ export default class FlowUploads extends React.Component {
                                     </Tooltip>;
                          }}>
                          <Button as="a"
+                                 className="flow-file-download-button"
                                  href={api.href("/api/v1/DownloadVFSFile", {
                                      client_id: this.props.flow.client_id,
-                                     fs_components: row._Components,
+                                     fs_components: normalizeComponentList(
+                                         row._Components, this.props.flow.client_id,
+                                         this.props.flow.session_id),
                                      padding: false,
                                      vfs_path: filename}, {arrayFormat: 'brackets'})}>
                            {filename}

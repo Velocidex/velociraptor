@@ -580,3 +580,7 @@ body.veloci-light {
     border-color: transparent;
     box-shadow: none;
 }
+
+.veloci-light .flow-file-download-button {
+    background: var(--color-accent-25);
+}

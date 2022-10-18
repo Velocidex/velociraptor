@@ -229,16 +229,13 @@ type ContainerPathManager struct {
 }
 
 func (self *ContainerPathManager) Path() string {
-	return self.artifact + ".json"
+	return "results/" + utils.SanitizeString(self.artifact) + ".json"
 }
 
 func (self *ContainerPathManager) CSVPath() string {
-	return self.artifact + ".csv"
+	return "results/" + utils.SanitizeString(self.artifact) + ".csv"
 }
 
 func NewContainerPathManager(artifact string) *ContainerPathManager {
-	// Zip paths must not have leading /
-	artifact = strings.TrimPrefix(artifact, "/")
-
 	return &ContainerPathManager{artifact: artifact}
 }

@@ -161,11 +161,18 @@ func init() {
 }
 
 func makeUSNRecord(item *ntfs.USN_RECORD) *ordereddict.Dict {
+	links := item.Links()
+	fullpath := ""
+	if len(links) > 0 {
+		fullpath = links[0]
+	}
+
 	return ordereddict.NewDict().
 		Set("Usn", item.Usn()).
 		Set("Timestamp", item.TimeStamp().Time).
 		Set("Filename", item.Filename()).
-		Set("FullPath", item.FullPath()).
+		Set("_Links", links).
+		Set("FullPath", fullpath).
 		Set("FileAttributes", item.FileAttributes()).
 		Set("Reason", item.Reason()).
 		Set("SourceInfo", item.SourceInfo()).

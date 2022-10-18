@@ -1,9 +1,7 @@
-package tools
+package collector
 
 import (
 	"context"
-	"io/ioutil"
-	"os"
 	"path/filepath"
 
 	"github.com/Velocidex/ordereddict"
@@ -14,6 +12,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+
+	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
 )
 
 func (self *TestSuite) TestImportCollection() {
@@ -35,23 +35,16 @@ func (self *TestSuite) TestImportCollection() {
 	import_file_path, err := filepath.Abs("fixtures/import.zip")
 	assert.NoError(self.T(), err)
 
-	fd, err := os.Open(import_file_path)
-	assert.NoError(self.T(), err)
-	defer fd.Close()
-	data, err := ioutil.ReadAll(fd)
-	assert.NoError(self.T(), err)
-
 	result := ImportCollectionFunction{}.Call(ctx, scope,
 		ordereddict.NewDict().
 			Set("client_id", "auto").
 			Set("hostname", "MyNewHost").
-			Set("accessor", "data").
-			Set("filename", data))
+			Set("filename", import_file_path))
 	context, ok := result.(*proto.ArtifactCollectorContext)
 	assert.True(self.T(), ok)
 
 	// Check the improt was successful.
-	assert.Equal(self.T(), []string{"Custom.TestArtifactDependent"},
+	assert.Equal(self.T(), []string{"Linux.Search.FileFinder"},
 		context.ArtifactsWithResults)
 	assert.Equal(self.T(), uint64(1), context.TotalCollectedRows)
 	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_FINISHED,
@@ -76,8 +69,7 @@ func (self *TestSuite) TestImportCollection() {
 		ordereddict.NewDict().
 			Set("client_id", "auto").
 			Set("hostname", "MyNewHost").
-			Set("accessor", "data").
-			Set("filename", data))
+			Set("filename", import_file_path))
 	context2, ok := result2.(*proto.ArtifactCollectorContext)
 	assert.True(self.T(), ok)
 

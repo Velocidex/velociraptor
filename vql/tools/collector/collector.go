@@ -1,16 +1,13 @@
-package tools
+package collector
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"strings"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -19,20 +16,22 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
+var (
+	Clock utils.Clock = utils.RealClock{}
+)
+
 type CollectPluginArgs struct {
 	Artifacts           []string            `vfilter:"required,field=artifacts,doc=A list of artifacts to collect."`
 	Output              string              `vfilter:"optional,field=output,doc=A path to write the output file on."`
-	Report              string              `vfilter:"optional,field=report,doc=A path to write the report on."`
+	Report              string              `vfilter:"optional,field=report,doc=A path to write the report on (deprecated and ignored)."`
 	Args                vfilter.Any         `vfilter:"optional,field=args,doc=Optional parameters."`
 	Password            string              `vfilter:"optional,field=password,doc=An optional password to encrypt the collection zip."`
 	Format              string              `vfilter:"optional,field=format,doc=Output format (csv, jsonl)."`
@@ -58,9 +57,6 @@ func (self CollectPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		var container *reporting.Container
-		var closer func()
-
 		// This plugin allows one to create files (for the output
 		// zip), It is very privileged.
 		err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
@@ -76,376 +72,79 @@ func (self CollectPlugin) Call(
 			return
 		}
 
-		switch arg.Format {
-		case "jsonl", "csv", "json":
-		case "":
-			arg.Format = "jsonl"
-		default:
-			scope.Log("collect: format %v not supported", arg.Format)
-			return
-		}
-
-		if arg.Template == "" {
-			arg.Template = "Reporting.Default"
-		}
-
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			config_obj = config.GetDefaultConfig()
 		}
 
-		// Get a new artifact repository with extra definitions added.
-		repository, err := getRepository(scope, config_obj, arg.ArtifactDefinitions)
+		collection_manager := newCollectionManager(ctx, config_obj,
+			output_chan, scope)
+		defer collection_manager.Close()
+
+		request, err := self.configureCollection(collection_manager, arg)
 		if err != nil {
 			scope.Log("collect: %v", err)
 			return
 		}
 
-		// Compile the request into vql requests protobuf
-		request, err := getArtifactCollectorArgs(config_obj, repository, scope, arg)
+		err = collection_manager.Collect(request)
 		if err != nil {
 			scope.Log("collect: %v", err)
 			return
 		}
 
-		// Run the query with a potential subctx with timeout and
-		// cancellation different than our own.
-		subctx, cancel := context.WithCancel(ctx)
-		defer cancel()
-
-		// Apply a timeout if requested.
-		if arg.Timeout > 0 {
-			start := time.Now()
-			timed_ctx, timed_cancel := context.WithTimeout(
-				ctx, time.Duration(arg.Timeout*1e9)*time.Nanosecond)
-
-			go func() {
-				select {
-				case <-ctx.Done():
-					timed_cancel()
-
-				case <-timed_ctx.Done():
-					scope.Log("collect: <red>Timeout Error:</> Collection timed out after %v",
-						time.Now().Sub(start))
-					// Cancel the main context.
-					cancel()
-					timed_cancel()
-				}
-			}()
-		}
-
-		// Create the output container
-		if arg.Output != "" {
-			container, closer, err = makeContainer(ctx,
-				config_obj, scope, repository, arg)
-			if err != nil {
-				scope.Log("collect: %v", err)
-				return
-			}
-
-			// If the query is interrupted we may not get to run the
-			// closer function. Add to scope destructors to ensure it
-			// gets called at query wind-down and that we wait for it
-			// to actually close.
-			vql_subsystem.GetRootScope(scope).AddDestructor(closer)
-
-			// When we exit, close the container and flush the
-			// name to the output channel.
-			defer func() {
-				// Close the container.
-				closer()
-
-				// Emit the result set for consumption by the
-				// rest of the query.
-				select {
-				case <-subctx.Done():
-					return
-
-				case output_chan <- ordereddict.NewDict().
-					Set("Container", arg.Output).
-					Set("Report", arg.Report):
-				}
-			}()
-		}
-
-		// Create a sub scope to run the new collection in -
-		// based on our existing scope but override the
-		// uploader with the container.
-		builder := services.ScopeBuilderFromScope(scope)
-		builder.Uploader = container
-
-		// When run within an ACL context, copy the ACL
-		// manager to the subscope - otherwise the user can
-		// bypass the ACL manager and get more permissions.
-		acl_manager, ok := artifacts.GetACLManager(scope)
-		if !ok {
-			acl_manager = acl_managers.NullACLManager{}
-		}
-
-		launcher, err := services.GetLauncher(config_obj)
-		if err != nil {
-			scope.Log("collect: %v", err)
-			return
-		}
-
-		vql_requests, err := launcher.CompileCollectorArgs(
-			subctx, config_obj, acl_manager, repository,
-			services.CompilerOptions{}, request)
-		if err != nil {
-			scope.Log("collect: %v", err)
-			return
-		}
-
-		// Run each collection separately, one after the other.
-		for _, vql_request := range vql_requests {
-
-			// Make a new scope for each artifact.
-			manager, err := services.GetRepositoryManager(config_obj)
-			if err != nil {
-				scope.Log("collect: %v", err)
-				return
-			}
-
-			// Create a new environment for each request.
-			env := ordereddict.NewDict()
-			for _, env_spec := range vql_request.Env {
-				env.Set(env_spec.Key, env_spec.Value)
-			}
-
-			subscope := manager.BuildScope(builder)
-			subscope.AppendVars(env)
-			defer subscope.Close()
-
-			// Install throttler into the scope.
-			throttler := actions.NewThrottler(subctx, scope,
-				float64(arg.OpsPerSecond),
-				float64(arg.CpuLimit),
-				float64(arg.IopsLimit))
-
-			if arg.ProgressTimeout > 0 {
-				throttler = actions.NewProgressThrottler(
-					subctx, scope, cancel, throttler,
-					time.Duration(arg.ProgressTimeout*1e9)*time.Nanosecond)
-			}
-
-			subscope.SetThrottler(throttler)
-
-			// Run each query and store the results in the container
-			for _, query := range vql_request.Query {
-				// Useful to know what is going on with the collection.
-				if query.Name != "" {
-					subscope.Log("Starting collection of %s", query.Name)
-				}
-
-				// If there is no container we just
-				// return the rows to our caller.
-				if container == nil {
-					query_log := actions.QueryLog.AddQuery(query.VQL)
-
-					vql, err := vfilter.Parse(query.VQL)
-					if err != nil {
-						subscope.Log("collect: %v", err)
-						return
-					}
-					for row := range vql.Eval(subctx, subscope) {
-						select {
-						case <-subctx.Done():
-							return
-						case output_chan <- row:
-						}
-					}
-					query_log.Close()
-
-					continue
-				}
-
-				err = container.StoreArtifact(
-					config_obj, subctx, subscope, query, arg.Format)
-				if err != nil {
-					subscope.Log("collect: %v", err)
-					return
-				}
-
-				if query.Name != "" {
-					subscope.Log("Collected %s", query.Name)
-				}
-			}
-		}
 	}()
 
 	return output_chan
 }
 
-// Creates a container to write the results on. Results are completed
-// when container is closed.
-func makeContainer(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	scope vfilter.Scope,
-	repository services.Repository,
-	arg *CollectPluginArgs) (
-	container *reporting.Container, closer func(), err error) {
-	// Should we encrypt it?
-	if arg.Password != "" {
-		scope.Log("Will password protect container")
-	}
+// Configures the collection manager with the provided args.
+func (self CollectPlugin) configureCollection(
+	manager *collectionManager, arg *CollectPluginArgs) (
+	*flows_proto.ArtifactCollectorArgs, error) {
 
-	scope.Log("Setting compression level to %v", arg.Level)
-
-	var metadata []vfilter.Row
-	new_scope := scope.Copy()
-	if arg.Metadata != nil {
-		metadata = []vfilter.Row{}
-		for row := range arg.Metadata.Eval(ctx, new_scope) {
-			metadata = append(metadata, row)
-		}
-	}
-
-	container, err = reporting.NewContainer(
-		config_obj, arg.Output, arg.Password, arg.Level, metadata)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	scope.Log("Will create container at %s", arg.Output)
-
-	// On exit we create a report.
-	closer = func() {
-		if container.IsClosed() {
-			return
-		}
-		container.Close()
-
-		if arg.Report != "" {
-			scope.Log("Producing collection report at %v", arg.Report)
-
-			// Open the archive back up again. // TODO: Support password.
-			archive, err := reporting.NewArchiveReader(arg.Output)
-			if err != nil {
-				scope.Log("Error opening archive: %v", err)
-				return
-			}
-			defer archive.Close()
-
-			// Produce a report for each of the collected
-			// artifacts.
-			definitions := []*artifacts_proto.Artifact{}
-			for _, name := range arg.Artifacts {
-				artifact, pres := repository.Get(config_obj, name)
-				if !pres {
-					scope.Log("Artifact %v not known.", name)
-					return
-				}
-				definitions = append(definitions, artifact)
-			}
-
-			fd, err := os.OpenFile(
-				arg.Report, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
-			if err != nil {
-				scope.Log("Error creating report: %v", err)
-				return
-			}
-			defer fd.Close()
-
-			err = produceReport(ctx,
-				config_obj, archive,
-				arg.Template,
-				repository, fd,
-				definitions,
-				scope, arg)
-			if err != nil {
-				scope.Log("Error creating report: %v", err)
-			}
-		}
-	}
-
-	return container, closer, nil
-}
-
-func getRepository(
-	scope vfilter.Scope,
-	config_obj *config_proto.Config,
-	extra_artifacts vfilter.Any) (services.Repository, error) {
-	manager, err := services.GetRepositoryManager(config_obj)
-	if err != nil {
-		return nil, err
-	}
-	repository, err := manager.GetGlobalRepository(config_obj)
+	// Set the output format
+	err := manager.SetFormat(arg.Format)
 	if err != nil {
 		return nil, err
 	}
 
-	if extra_artifacts == nil {
-		return repository, nil
+	// Add any additional artifacts from the provided definitions into
+	// a temporary repository.
+	err = manager.GetRepository(arg.ArtifactDefinitions)
+	if err != nil {
+		return nil, err
 	}
 
-	// Private copy of the repository.
-	repository = repository.Copy()
-
-	loader := func(item *ordereddict.Dict) error {
-		serialized, err := json.Marshal(item)
-		if err != nil {
-			return err
-		}
-
-		artifact, err := repository.LoadYaml(
-			string(serialized), true /* validate */, false)
-		if err != nil {
-			return err
-		}
-
-		// Check if we are allows to add these artifacts
-		err = CheckArtifactModification(scope, artifact)
-		if err != nil {
-			return err
-		}
-
-		return nil
+	// Set any timeout if needed.
+	if arg.Timeout > 0 {
+		manager.SetTimeout(arg.Timeout)
 	}
 
-	switch t := extra_artifacts.(type) {
-	case []*ordereddict.Dict:
-		for _, item := range t {
-			err := loader(item)
-			if err != nil {
-				return nil, err
-			}
+	// Apply a throttler if needed.
+	manager.AddThrottler(float64(arg.OpsPerSecond), arg.CpuLimit,
+		arg.IopsLimit, arg.ProgressTimeout)
+
+	// If required create an output container
+	if arg.Output != "" {
+
+		// Set any metadata for the container.
+		if !utils.IsNil(arg.Metadata) {
+			manager.SetMetadata(arg.Metadata)
 		}
 
-	case *ordereddict.Dict:
-		err := loader(t)
-		if err != nil {
-			return nil, err
-		}
-
-	case []string:
-		for _, item := range t {
-			artifact, err := repository.LoadYaml(item,
-				true /* validate */, false /* built_in */)
-			if err != nil {
-				return nil, err
-			}
-
-			err = CheckArtifactModification(scope, artifact)
-			if err != nil {
-				return nil, err
-			}
-		}
-
-	case string:
-		artifact, err := repository.LoadYaml(t,
-			true /* validate */, false /* built_in */)
-		if err != nil {
-			return nil, err
-		}
-
-		err = CheckArtifactModification(scope, artifact)
+		// Build the container to receive the output from the
+		// queries. The container may be password protected.
+		err = manager.MakeContainer(arg.Output, arg.Password, arg.Level)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return repository, nil
+	// Compile the request into vql requests protobuf ready for
+	// acquisition.
+	return getArtifactCollectorArgs(
+		manager.config_obj, manager.repository, manager.scope, arg)
 }
 
 func (self CollectPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
