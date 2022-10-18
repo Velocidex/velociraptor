@@ -243,9 +243,10 @@ type GetArtifactRequest struct {
 	unknownFields protoimpl.UnknownFields
 
 	// Deprecated.
-	// string vfs_path = 1 [(sem_type) = {
-	//        description: "The vfs path relative to the artifacts definition store."
-	//    }];
+	//
+	//	string vfs_path = 1 [(sem_type) = {
+	//	       description: "The vfs path relative to the artifacts definition store."
+	//	   }];
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 }
 

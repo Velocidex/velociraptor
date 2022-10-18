@@ -44,6 +44,10 @@ message VelociraptorUser {
     // Only used by the GUI/API to determine the currently selected
     // org the user wants to see.
     string current_org = 12;
+
+    // Can be set by Authenticators to require current_org to be set to
+    // value in OrgId header rather than selected by the user
+    bool restrict_org = 13;
 }
 
 

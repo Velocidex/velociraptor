@@ -2295,11 +2295,11 @@ type DatastoreConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// 4. FileBasedWithRPC - Large files are written to disk (File
-	//    store) but small files are accessed via RPC to a local
-	//    memcache server. This configuration is suitable for the
-	//    Minion node on a slow EFS backed filesystem. All data store
-	//    access will go through to the master memcache using gRPC.
+	//  4. FileBasedWithRPC - Large files are written to disk (File
+	//     store) but small files are accessed via RPC to a local
+	//     memcache server. This configuration is suitable for the
+	//     Minion node on a slow EFS backed filesystem. All data store
+	//     access will go through to the master memcache using gRPC.
 	Implementation string `protobuf:"bytes,1,opt,name=implementation,proto3" json:"implementation,omitempty"`
 	// For FileBaseDataStore
 	Location           string `protobuf:"bytes,2,opt,name=location,proto3" json:"location,omitempty"`
