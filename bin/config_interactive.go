@@ -11,7 +11,7 @@ import (
 	"regexp"
 	"runtime"
 
-	"github.com/Velocidex/survey"
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/Velocidex/yaml/v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"

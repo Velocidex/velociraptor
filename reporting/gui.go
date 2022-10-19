@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/Depado/bfchroma"
-	"github.com/Masterminds/sprig"
+	"github.com/Masterminds/sprig/v3"
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/errors"
 

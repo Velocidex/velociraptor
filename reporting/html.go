@@ -12,7 +12,7 @@ import (
 	"text/template"
 
 	"github.com/Depado/bfchroma"
-	"github.com/Masterminds/sprig"
+	"github.com/Masterminds/sprig/v3"
 	"github.com/Velocidex/ordereddict"
 
 	chroma_html "github.com/alecthomas/chroma/formatters/html"

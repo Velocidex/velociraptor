@@ -19,6 +19,7 @@ package main
 
 import (
 	"fmt"
+	"runtime/debug"
 
 	"github.com/Velocidex/yaml/v2"
 	"gopkg.in/alecthomas/kingpin.v2"
@@ -38,6 +39,14 @@ func init() {
 			}
 
 			fmt.Printf("%v", string(res))
+
+			if *verbose_flag {
+				info, ok := debug.ReadBuildInfo()
+				if ok {
+					fmt.Printf("\n\nBuild Info:\n%v\n", info)
+				}
+			}
+
 			return true
 		}
 		return false
