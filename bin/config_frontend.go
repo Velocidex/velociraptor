@@ -5,7 +5,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/Velocidex/survey"
+	"github.com/AlecAivazis/survey/v2"
 	errors "github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"

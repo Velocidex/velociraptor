@@ -26,7 +26,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Velocidex/survey"
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/Velocidex/yaml/v2"
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"

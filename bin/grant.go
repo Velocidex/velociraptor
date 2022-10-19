@@ -5,7 +5,7 @@ import (
 	"io"
 	"strings"
 
-	jsonpatch "github.com/evanphx/json-patch"
+	jsonpatch "github.com/evanphx/json-patch/v5"
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"

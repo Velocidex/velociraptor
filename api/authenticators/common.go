@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	jwt "github.com/golang-jwt/jwt"
+	jwt "github.com/golang-jwt/jwt/v4"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 

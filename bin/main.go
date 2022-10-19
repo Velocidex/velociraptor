@@ -24,7 +24,7 @@ import (
 	"runtime/pprof"
 	"runtime/trace"
 
-	"github.com/Velocidex/survey"
+	"github.com/AlecAivazis/survey/v2"
 	errors "github.com/pkg/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"

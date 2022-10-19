@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	oidc "github.com/coreos/go-oidc"
+	oidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
