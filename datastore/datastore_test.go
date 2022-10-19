@@ -74,31 +74,6 @@ func (self BaseTestSuite) TestSetGetJSON() {
 	assert.Equal(self.T(), []string{"d", "d/a", "d?\""}, results)
 }
 
-// Old server versions might have data encoded in protobufs. As we
-// port new data to json, we need to support reading the old data
-// properly.
-func (self BaseTestSuite) TestSetGetMigration() {
-	message := &crypto_proto.VeloMessage{Source: "Server"}
-	for _, path := range []path_specs.DSPathSpec{
-		path_specs.NewUnsafeDatastorePath("a", "b", "c"),
-	} {
-		// Write a protobuf based file
-		urn := path_specs.NewSafeDatastorePath(path.Components()...).
-			SetType(api.PATH_TYPE_DATASTORE_PROTO)
-		err := self.datastore.SetSubject(
-			self.config_obj, urn, message)
-		assert.NoError(self.T(), err)
-
-		// Even if we read it with json it should work.
-		read_message := &crypto_proto.VeloMessage{}
-		err = self.datastore.GetSubject(self.config_obj,
-			path.SetType(api.PATH_TYPE_DATASTORE_JSON), read_message)
-		assert.NoError(self.T(), err)
-
-		assert.Equal(self.T(), message.Source, read_message.Source)
-	}
-}
-
 func (self BaseTestSuite) TestSetGetSubjectWithEscaping() {
 	message := &crypto_proto.VeloMessage{Source: "Server"}
 	for _, testcase := range testPaths {
