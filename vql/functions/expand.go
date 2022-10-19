@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"regexp"
-	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -51,7 +50,7 @@ func expand_env(v string) string {
 
 func getenv(v string) string {
 	// Allow $ to be escaped (#850) by doubling up $
-	switch strings.ToLower(v) {
+	switch v {
 	case "$":
 		return "$"
 	}

@@ -85,7 +85,7 @@ func doInstall() error {
 
 	// Try to copy the executable to the target_path.
 	err = utils.CopyFile(ctx, executable, target_path, 0755)
-	if err != nil && os.IsNotExist(errors.Cause(err)) {
+	if err != nil && errors.Is(err, os.ErrNotExist) {
 		dirname := filepath.Dir(target_path)
 		logger.Info("Attempting to create intermediate directory %s.",
 			dirname)

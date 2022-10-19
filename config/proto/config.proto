@@ -448,7 +448,6 @@ message CAConfig {
         }];
 }
 
-
 message ReverseProxyConfig {
     string route = 1;
     string url = 2;
@@ -843,6 +842,8 @@ message AutoExecConfig {
 // role. The startup code will update the config object to request the
 // right services, depending on the required role. Services are
 // actually started by the org manager.
+
+// Do not set these in the configuration file - they are used internally.
 message ServerServicesConfig {
    bool hunt_manager = 1;
    bool hunt_dispatcher = 2;
