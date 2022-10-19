@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/Velocidex/yaml/v2"
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 	proto "google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -57,7 +57,7 @@ func doGUI() error {
 		// Stop on hard errors but if the file does not exist we need
 		// to create it below..
 		hard_err, ok := err.(config.HardError)
-		if ok && !os.IsNotExist(errors.Cause(hard_err.Err)) {
+		if ok && !errors.Is(hard_err.Err, os.ErrNotExist) {
 			return err
 		}
 

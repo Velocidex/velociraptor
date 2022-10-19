@@ -37,8 +37,9 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	errors "github.com/go-errors/errors"
 	"github.com/gorilla/schema"
-	errors "github.com/pkg/errors"
+
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -56,6 +57,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
@@ -169,7 +171,12 @@ func vfsFileDownloadHandler() http.Handler {
 		index, err := getIndex(org_config_obj, path_spec)
 
 		// If the file is sparse, we use the sparse reader.
-		if err == nil && len(index.Ranges) > 0 && request.Padding {
+		if err == nil && request.Padding && len(index.Ranges) > 0 {
+			if !uploads.ShouldPadFile(index) {
+				returnError(w, 400, "Sparse file is too sparse - unable to pad")
+				return
+			}
+
 			reader_at = &utils.RangedReader{
 				ReaderAt: reader_at,
 				Index:    index,
@@ -485,8 +492,9 @@ func vfsGetBuffer(
 	}
 
 	n, err := reader_at.ReadAt(result.Data, int64(offset))
-	if err != nil && errors.Is(err, os.ErrNotExist) &&
-		errors.Cause(err) != io.ErrUnexpectedEOF {
+	if err != nil &&
+		errors.Is(err, os.ErrNotExist) &&
+		!errors.Is(err, io.ErrUnexpectedEOF) {
 		return nil, err
 	}
 

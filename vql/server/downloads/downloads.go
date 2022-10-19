@@ -10,9 +10,10 @@ import (
 	"time"
 
 	cryptozip "www.velocidex.com/golang/velociraptor/third_party/zip"
+	"www.velocidex.com/golang/velociraptor/uploads"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -716,11 +717,11 @@ func StoreVQLAsCSVAndJsonFile(
 			}
 			_, err = json_fd.Write(serialized)
 			if err != nil {
-				return errors.WithStack(err)
+				return errors.Wrap(err, 0)
 			}
 			_, err = json_fd.Write([]byte("\n"))
 			if err != nil {
-				return errors.WithStack(err)
+				return errors.Wrap(err, 0)
 			}
 		}
 	}
@@ -775,7 +776,8 @@ func maybeExpandSparse(
 	}
 
 	index, err := getIndex(file_store_factory, upload_name)
-	if err != nil || len(index.Ranges) == 0 {
+	if err != nil || len(index.Ranges) == 0 ||
+		!uploads.ShouldPadFile(index) {
 		// No index exists
 		return reader, reader.Close, nil
 	}

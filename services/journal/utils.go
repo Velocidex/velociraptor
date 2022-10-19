@@ -2,10 +2,10 @@ package journal
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"

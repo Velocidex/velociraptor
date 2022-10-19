@@ -51,7 +51,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pkg/errors"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -407,7 +406,7 @@ func (self ACLManager) GrantRoles(
 	for _, role := range roles {
 		if !utils.InString(new_policy.Roles, role) {
 			if !ValidateRole(role) {
-				return errors.Errorf("Invalid role %v", role)
+				return fmt.Errorf("Invalid role %v", role)
 			}
 			new_policy.Roles = append(new_policy.Roles, role)
 		}

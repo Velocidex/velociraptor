@@ -519,7 +519,7 @@
     description: A path to write the output file on.
   - name: report
     type: string
-    description: A path to write the report on.
+    description: A path to write the report on (deprecated and ignored).
   - name: args
     type: Any
     description: Optional parameters.
@@ -556,6 +556,10 @@
     type: float64
     description: Total amount of time in seconds, this collection will take. Collection
       is cancelled when timeout is exceeded.
+  - name: metadata
+    type: StoredQuery
+    description: Metadata to store in the zip archive. Outputs to metadata.json in
+      top level of zip file.
   category: plugin
 - name: collect_client
   description: |
@@ -823,6 +827,13 @@
   - name: format
     type: string
     description: Format to export (csv,json) defaults to both.
+  - name: expand_sparse
+    type: bool
+    description: If set we expand sparse files in the archive.
+  - name: name
+    type: string
+    description: If specified we call the file this name otherwise we generate name
+      based on flow id.
   category: server
 - name: create_hunt_download
   description: |
@@ -855,6 +866,9 @@
   - name: password
     type: string
     description: An optional password to encrypt the collection zip.
+  - name: expand_sparse
+    type: bool
+    description: If set we expand sparse files in the archive.
   category: server
 - name: crypto_rc4
   description: Apply rc4 to the string and key.
@@ -1448,8 +1462,9 @@
     the entire row once for each item.
   type: Plugin
   args:
-  - name: Name
-    type: string
+  - name: query
+    type: StoredQuery
+    required: true
   category: plugin
 - name: flow_logs
   description: Retrieve the query logs of a flow.
@@ -1654,7 +1669,6 @@
     produce all their rows before moving to the next statement but the
     `watch_etw()` query will never terminate since it is an event
     query.
-
   type: Function
   args:
   - name: name
@@ -1931,9 +1945,12 @@
   type: Plugin
   args:
   - name: pid
-    type: int64
-    description: The PID to dump out.
-    required: true
+    type: uint64
+    description: If specified only get handles from these PIDs.
+  - name: types
+    type: string
+    description: If specified only get handles of this type.
+    repeated: true
   category: windows
 - name: hash
   description: |
@@ -2354,9 +2371,6 @@
     type: string
     description: Path on server to the collector zip.
     required: true
-  - name: accessor
-    type: string
-    description: The accessor to use
   category: server
 - name: info
   description: |
@@ -2658,6 +2672,11 @@
 - name: lookupSID
   description: Get information about the SID.
   type: Function
+  args:
+  - name: sid
+    type: string
+    description: 'A SID to lookup using LookupAccountSid '
+    required: true
   category: windows
 - name: lowcase
   type: Function
@@ -3887,6 +3906,42 @@
     description: 'The separator that will be used to split each read (default: no
       separator will be used)'
   category: plugin
+- name: pk_decrypt
+  description: Decrypt files using pubkey encryption
+  type: Function
+  args:
+  - name: data
+    type: string
+    description: The data to decrypt
+    required: true
+  - name: signing_key
+    type: string
+    description: Public key to verify signature
+  - name: private_key
+    type: string
+    description: Private key to decrypt with. Defaults to server private key
+  - name: scheme
+    type: string
+    description: 'Encryption scheme to use. Defaults to RSA. Currently supported:
+      PGP,RSA'
+- name: pk_encrypt
+  description: Encrypt files using pubkey encryption
+  type: Function
+  args:
+  - name: data
+    type: string
+    description: The data to encrypt
+    required: true
+  - name: signing_key
+    type: string
+    description: Private key to sign with
+  - name: public_key
+    type: string
+    description: Public key to encrypt with. Defaults to server public key
+  - name: scheme
+    type: string
+    description: 'Encryption scheme to use. Defaults to X509. Currently supported:
+      PGP,X509'
 - name: plist
   description: Parse plist file
   type: Function
@@ -4089,8 +4144,7 @@
   args:
   - name: pid
     type: int64
-    description: A pid to list. If this is provided we are able to operate much faster
-      by only opening a single process.
+    description: A process ID to list. If not provided list all processes.
   category: plugin
 - name: query
   description: Launch a subquery and materialize it into a list of rows.
@@ -4117,6 +4171,9 @@
   - name: iops_limit
     type: float64
     description: Average IOPs to target.
+  - name: timeout
+    type: float64
+    description: Cancel the query after this many seconds
   - name: progress_timeout
     type: float64
     description: If no progress is detected in this many seconds, we terminate the
@@ -4183,7 +4240,7 @@
     type: int64
     description: Where to read from the file.
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: One or more files to open.
     required: true
   - name: accessor
@@ -4514,6 +4571,9 @@
     type: string
     description: Encoding format (csv,json,yaml,hex,base64)
   category: basic
+- name: server_frontend_cert
+  description: Get Server Frontend Certificate
+  type: Function
 - name: server_metadata
   description: Returns client metadata from the datastore. Client metadata is a set
     of free form key/value data
@@ -5823,3 +5883,4 @@
     type: string
     description: If set use this key to cache the  yara rules.
   category: plugin
+

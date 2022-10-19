@@ -3,7 +3,7 @@ package crypto
 import (
 	"context"
 
-	"github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -39,7 +39,7 @@ func (self *MessageInfo) IterateJobs(
 		message_list := &crypto_proto.MessageList{}
 		err := proto.Unmarshal(raw, message_list)
 		if err != nil {
-			return errors.WithStack(err)
+			return errors.Wrap(err, 0)
 		}
 
 		for _, job := range message_list.Job {

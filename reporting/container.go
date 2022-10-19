@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/alexmullins/zip"
-	"github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"

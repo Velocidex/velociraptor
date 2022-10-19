@@ -26,7 +26,7 @@ import (
 	"testing"
 	"time"
 
-	errors "github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"www.velocidex.com/golang/velociraptor/config"

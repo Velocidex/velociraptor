@@ -29,7 +29,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -47,7 +47,7 @@ func doRemove() error {
 	config_obj, err := makeDefaultConfigLoader().WithRequiredClient().
 		WithWriteback().LoadAndValidate()
 	if err != nil {
-		return errors.Wrap(err, "Unable to load config file")
+		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
 	if config_obj.Client.DarwinInstaller == nil {
@@ -68,7 +68,7 @@ func doInstall() error {
 	config_obj, err := makeDefaultConfigLoader().WithRequiredClient().
 		WithWriteback().LoadAndValidate()
 	if err != nil {
-		return errors.Wrap(err, "Unable to load config file")
+		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
 	executable, err := os.Executable()
@@ -91,12 +91,12 @@ func doInstall() error {
 			dirname)
 		err = os.MkdirAll(dirname, 0700)
 		if err != nil {
-			return errors.Wrap(err, "Create intermediate directories")
+			return fmt.Errorf("Create intermediate directories: %w", err)
 		}
 		err = utils.CopyFile(ctx, executable, target_path, 0755)
 	}
 	if err != nil {
-		return errors.Wrap(err, "Cant copy binary into destination dir.")
+		return fmt.Errorf("Cant copy binary into destination dir: %w", err)
 	}
 
 	logger.Info("Copied binary to %s", target_path)

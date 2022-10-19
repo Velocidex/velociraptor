@@ -4,7 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
 	"www.velocidex.com/golang/vfilter"

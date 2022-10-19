@@ -5,7 +5,7 @@ import (
 	"io"
 	"sync"
 
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 )
 

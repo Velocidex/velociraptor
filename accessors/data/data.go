@@ -22,7 +22,7 @@ package data
 import (
 	"strings"
 
-	errors "github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/vfilter"
 )

@@ -25,7 +25,7 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	vjson "www.velocidex.com/golang/velociraptor/json"

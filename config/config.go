@@ -23,7 +23,7 @@ import (
 	"runtime"
 
 	"github.com/Velocidex/yaml/v2"
-	errors "github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 )
@@ -223,7 +223,7 @@ func WriteConfigToFile(filename string, config *config_proto.Config) error {
 	// Make sure the new file is only readable by root.
 	err = ioutil.WriteFile(filename, bytes, 0600)
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Wrap(err, 0)
 	}
 
 	return nil

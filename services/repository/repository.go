@@ -30,7 +30,7 @@ import (
 	"sync"
 
 	"github.com/Velocidex/yaml/v2"
-	errors "github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/acls"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -103,7 +103,7 @@ func (self *Repository) LoadDirectory(
 	err := filepath.Walk(dirname,
 		func(file_path string, info os.FileInfo, err error) error {
 			if err != nil {
-				return errors.WithStack(err)
+				return errors.Wrap(err, 0)
 			}
 
 			if !info.IsDir() && (strings.HasSuffix(info.Name(), ".yaml") ||
@@ -165,7 +165,7 @@ func (self *Repository) LoadYaml(data string, validate, built_in bool) (
 	artifact := &artifacts_proto.Artifact{}
 	err := yaml.UnmarshalStrict([]byte(sanitize_artifact_yaml(data)), artifact)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	artifact.Raw = data
@@ -200,8 +200,7 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 
 		case "html": // HTML reports form a main HTML page for report exports.
 		default:
-			return nil, errors.New(fmt.Sprintf("Invalid report type %s",
-				report.Type))
+			return nil, fmt.Errorf("Invalid report type %s", report.Type)
 		}
 	}
 
@@ -294,19 +293,17 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 			for idx2, vql := range queries {
 				if idx2 < len(queries)-1 {
 					if vql.Let == "" {
-						return nil, errors.New(
-							"Invalid artifact " + artifact.Name +
-								": All Queries in a source " +
-								"must be LET queries, except for the " +
-								"final one.")
+						return nil, fmt.Errorf(
+							"Invalid artifact %s: All Queries in a source "+
+								"must be LET queries, except for the "+
+								"final one.", artifact.Name)
 					}
 				} else {
 					if vql.Let != "" {
-						return nil, errors.New(
-							"Invalid artifact " + artifact.Name +
-								": All Queries in a source " +
-								"must be LET queries, except for the " +
-								"final one.")
+						return nil, fmt.Errorf(
+							"Invalid artifact  %s: All Queries in a source "+
+								"must be LET queries, except for the "+
+								"final one.", artifact.Name)
 					}
 				}
 			}
@@ -499,12 +496,12 @@ func Parse(filename string) (*artifacts_proto.Artifact, error) {
 	result := &artifacts_proto.Artifact{}
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	err = yaml.UnmarshalStrict(data, result)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 	result.Raw = string(data)
 

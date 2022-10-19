@@ -4,7 +4,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/vfilter"

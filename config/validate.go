@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	errors "github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 

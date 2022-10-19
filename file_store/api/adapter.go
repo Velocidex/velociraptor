@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 

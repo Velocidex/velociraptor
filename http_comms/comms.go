@@ -35,7 +35,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	errors "github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
@@ -270,7 +270,7 @@ func (self *HTTPConnector) Post(
 		self.logger.Info("Post to %v returned %v - advancing to next server\n",
 			self.GetCurrentUrl(handler), err)
 		self.advanceToNextServer(ctx)
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	trace := &httptrace.ClientTrace{
@@ -298,7 +298,7 @@ func (self *HTTPConnector) Post(
 
 		// POST error - rotate to next URL
 		self.advanceToNextServer(ctx)
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 	// Must make sure to close the body or we leak sockets.
 	defer resp.Body.Close()
@@ -376,7 +376,7 @@ func (self *HTTPConnector) Post(
 		// ioutil.ReadAll()
 		n, err := utils.Copy(ctx, encrypted, resp.Body)
 		if err != nil {
-			return nil, errors.WithStack(err)
+			return nil, errors.Wrap(err, 0)
 		}
 
 		self.logger.Info("%s: received %d bytes", name, n)
@@ -493,7 +493,7 @@ func (self *HTTPConnector) rekeyNextServer(ctx context.Context) error {
 
 	req, err := http.NewRequest("GET", url+"server.pem", nil)
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Wrap(err, 0)
 	}
 	req.Header.Set("User-Agent", constants.USER_AGENT)
 	req.Header.Set("Content-Type", "application/binary")
@@ -520,7 +520,7 @@ func (self *HTTPConnector) rekeyNextServer(ctx context.Context) error {
 	pem, err := ioutil.ReadAll(io.LimitReader(resp.Body, constants.MAX_MEMORY))
 	if err != nil {
 		self.server_name = ""
-		return errors.WithStack(err)
+		return errors.Wrap(err, 0)
 	}
 
 	// This will replace the current server_name certificate in
@@ -633,7 +633,7 @@ func (self *NotificationReader) sendMessageList(
 			// If we are being redirected do not wait -
 			// just retry again.
 
-			if errors.Cause(err) == RedirectError {
+			if errors.Is(err, RedirectError) {
 				continue
 			}
 

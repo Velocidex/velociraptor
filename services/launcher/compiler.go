@@ -8,7 +8,7 @@ import (
 	"sort"
 	"strings"
 
-	errors "github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"

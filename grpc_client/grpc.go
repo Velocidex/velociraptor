@@ -22,11 +22,10 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"sync"
 	"time"
-
-	"github.com/pkg/errors"
 
 	grpcpool "github.com/Velocidex/grpc-go-pool"
 	"github.com/prometheus/client_golang/prometheus"
@@ -231,7 +230,7 @@ func EnsureInit(
 	pool, err = grpcpool.NewWithContext(ctx,
 		factory, 1, max_size, time.Duration(max_wait)*time.Second)
 	if err != nil {
-		return errors.Errorf(
+		return fmt.Errorf(
 			"Unable to connect to gRPC server: %v: %v", address, err)
 	}
 	return nil

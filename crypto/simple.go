@@ -7,7 +7,7 @@ import (
 	"encoding/hex"
 	"sync"
 
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
@@ -50,7 +50,7 @@ func (self *Obfuscator) generateCrypter(config_obj *config_proto.Config) error {
 	self.key = hash[:]
 	crypter, err := aes.NewCipher(self.key)
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Wrap(err, 0)
 	}
 	self.crypter = crypter
 	return nil

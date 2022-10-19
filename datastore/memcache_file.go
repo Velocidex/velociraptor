@@ -43,12 +43,12 @@ package datastore
 
 import (
 	"context"
+	"errors"
 	"os"
 	"strings"
 	"sync"
 	"time"
 
-	errors "github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"google.golang.org/protobuf/encoding/protojson"
