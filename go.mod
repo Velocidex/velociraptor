@@ -212,6 +212,7 @@ require (
 // replace github.com/Velocidex/etw => /home/mic/projects/etw
 // replace github.com/Velocidex/grpc-go-pool => /home/mic/projects/grpc-go-pool
 // replace www.velocidex.com/golang/oleparse => /home/matt/git/oleparse
+// replace github.com/go-errors/errors => /home/mic/projects/errors
 
 // Remove search for html end block. This allows inserting unbalanced
 // HTML tags into the markdown
@@ -224,3 +225,5 @@ replace github.com/alecthomas/chroma => github.com/Velocidex/chroma v0.6.8-0.202
 
 // Fix broken version issue.
 replace github.com/crewjam/saml v0.4.8 => github.com/Velocidex/saml v0.0.0-20221019055034-272f55e26c8d
+
+replace github.com/go-errors/errors => github.com/Velocidex/errors v0.0.0-20221019164655-9ace6bf61e26

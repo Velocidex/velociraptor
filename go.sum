@@ -98,6 +98,8 @@ github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b h1:ZIf5
 github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/Velocidex/chroma v0.6.8-0.20200418131129-82edc291369c h1:ipQHX4FX5HKRAUA6n8EQGZK/ROLXHQ7tVwtoEwo57Hg=
 github.com/Velocidex/chroma v0.6.8-0.20200418131129-82edc291369c/go.mod h1:sko8vR34/90zvl5QdcUdvzL3J8NKjAUx9va9jPuFNoM=
+github.com/Velocidex/errors v0.0.0-20221019164655-9ace6bf61e26 h1:VwbeNpMRuS3bRieg7WLaSYIMaI8RjH/wGxd37oj6H1g=
+github.com/Velocidex/errors v0.0.0-20221019164655-9ace6bf61e26/go.mod h1:sIVyrIiJhuEF+Pj9Ebtd6P/rEYROXFi3BopGUQ5a5Og=
 github.com/Velocidex/etw v0.0.0-20210723072214-4d0cffd1ff22 h1:dDMLVs1Uj4xuKsYH1T/J6W+wJyWeyfmkT9RQq27WzTs=
 github.com/Velocidex/etw v0.0.0-20210723072214-4d0cffd1ff22/go.mod h1:F3/xFKE2Puol7bJKW5xcj/9H2O8n/sJN87Xgm66G6sc=
 github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11 h1:pQY9p6hvmbFKXJg8suzGSG9/t8Ij9ece32GUFIdHgqg=
@@ -241,8 +243,6 @@ github.com/envoyproxy/protoc-gen-validate v0.1.0/go.mod h1:iSmxcyjqTsJpI2R4NaDN7
 github.com/evanphx/json-patch/v5 v5.6.0 h1:b91NhWfaz02IuVxO9faSllyAtNXHMPkC5J8sJCLunww=
 github.com/evanphx/json-patch/v5 v5.6.0/go.mod h1:G79N1coSVB93tBe7j6PhzjmR3/2VvlbKOFpnXhI9Bw4=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=
-github.com/go-errors/errors v1.4.2 h1:J6MZopCL4uSllY1OfXM374weqZFFItUbrImctkmUxIA=
-github.com/go-errors/errors v1.4.2/go.mod h1:sIVyrIiJhuEF+Pj9Ebtd6P/rEYROXFi3BopGUQ5a5Og=
 github.com/go-gl/glfw v0.0.0-20190409004039-e6da0acd62b1/go.mod h1:vR7hzQXu2zJy9AVAgeJqvqgH9Q5CA+iKCZ2gyEVpxRU=
 github.com/go-gl/glfw/v3.3/glfw v0.0.0-20191125211704-12ad95a8df72/go.mod h1:tQ2UAYgL5IevRw8kRxooKSPJfGvJ9fJQFa0TUsXzTg8=
 github.com/go-gl/glfw/v3.3/glfw v0.0.0-20200222043503-6f7a984d4dc4/go.mod h1:tQ2UAYgL5IevRw8kRxooKSPJfGvJ9fJQFa0TUsXzTg8=
