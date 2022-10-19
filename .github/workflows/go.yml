@@ -43,10 +43,10 @@ jobs:
         go get -v -t -d ./...
         sudo apt-get install mingw-w64-x86-64-dev gcc-mingw-w64-x86-64 gcc-mingw-w64
 
-    - name: Use Node.js v12
+    - name: Use Node.js v16
       uses: actions/setup-node@v1
       with:
-        node-version: 12
+        node-version: 16
 
     - name: Cache node-modules
       uses: actions/cache@v2
