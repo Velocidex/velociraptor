@@ -28,7 +28,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/Velocidex/yaml/v2"
-	errors "github.com/pkg/errors"
+
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -185,7 +185,7 @@ func doShowConfig() error {
 func generateNewKeys(config_obj *config_proto.Config) error {
 	ca_bundle, err := crypto.GenerateCACert(2048)
 	if err != nil {
-		return errors.Wrap(err, "Unable to create CA cert")
+		return fmt.Errorf("Unable to create CA cert: %w", err)
 	}
 
 	config_obj.Client.CaCertificate = ca_bundle.Cert
@@ -194,14 +194,14 @@ func generateNewKeys(config_obj *config_proto.Config) error {
 	nonce := make([]byte, 8)
 	_, err = rand.Read(nonce)
 	if err != nil {
-		return errors.Wrap(err, "Unable to create nonce")
+		return fmt.Errorf("Unable to create nonce: %w", err)
 	}
 	config_obj.Client.Nonce = base64.StdEncoding.EncodeToString(nonce)
 
 	// Make another nonce for VQL obfuscation.
 	_, err = rand.Read(nonce)
 	if err != nil {
-		return errors.Wrap(err, "Unable to create nonce")
+		return fmt.Errorf("Unable to create nonce: %w", err)
 	}
 	config_obj.ObfuscationNonce = base64.StdEncoding.EncodeToString(nonce)
 
@@ -211,7 +211,7 @@ func generateNewKeys(config_obj *config_proto.Config) error {
 	frontend_cert, err := crypto.GenerateServerCert(
 		config_obj, config_obj.Client.PinnedServerName)
 	if err != nil {
-		return errors.Wrap(err, "Unable to create Frontend cert")
+		return fmt.Errorf("Unable to create Frontend cert: %w", err)
 	}
 
 	config_obj.Frontend.Certificate = frontend_cert.Cert
@@ -221,7 +221,7 @@ func generateNewKeys(config_obj *config_proto.Config) error {
 	gw_certificate, err := crypto.GenerateServerCert(
 		config_obj, config_obj.API.PinnedGwName)
 	if err != nil {
-		return errors.Wrap(err, "Unable to create Frontend cert")
+		return fmt.Errorf("Unable to create Frontend cert: %w", err)
 	}
 
 	config_obj.GUI.GwCertificate = gw_certificate.Cert

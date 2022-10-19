@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"os"
 
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 )
 
 // https://stackoverflow.com/questions/21060945/simple-way-to-copy-a-file-in-golang
@@ -34,7 +34,7 @@ func CopyFile(ctx context.Context,
 	src, dst string, mode os.FileMode) (err error) {
 	sfi, err := os.Stat(src)
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Wrap(err, 0)
 	}
 	if !sfi.Mode().IsRegular() {
 		// cannot copy non-regular files (e.g., directories,
@@ -45,13 +45,13 @@ func CopyFile(ctx context.Context,
 	if err != nil {
 		// File may not exist yet so this is not an error.
 		if !os.IsNotExist(err) {
-			return errors.WithStack(err)
+			return errors.Wrap(err, 0)
 		}
 	} else {
 		if !(dfi.Mode().IsRegular()) {
-			return errors.New(fmt.Sprintf(
+			return fmt.Errorf(
 				"CopyFile: non-regular destination file %s (%q)",
-				dfi.Name(), dfi.Mode().String()))
+				dfi.Name(), dfi.Mode().String())
 		}
 		// Files are the same - it is not an error but there
 		// is nothing else to do.
@@ -62,7 +62,7 @@ func CopyFile(ctx context.Context,
 
 	// Try to use Link for more efficient copying.
 	if err = os.Link(src, dst); err == nil {
-		return errors.WithStack(err)
+		return errors.Wrap(err, 0)
 	}
 
 	// This may not work if the files are on different filesystems
@@ -79,24 +79,24 @@ func copyFileContents(ctx context.Context,
 	src, dst string, mode os.FileMode) (err error) {
 	in, err := os.Open(src)
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Wrap(err, 0)
 	}
 	defer in.Close()
 
 	out, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, mode)
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Wrap(err, 0)
 	}
 
 	defer func() {
 		cerr := out.Close()
 		if err == nil {
-			err = errors.WithStack(cerr)
+			err = errors.Wrap(cerr, 0)
 		}
 	}()
 
 	if _, err = Copy(ctx, out, in); err != nil {
-		return errors.WithStack(err)
+		return errors.Wrap(err, 0)
 	}
 
 	return out.Sync()

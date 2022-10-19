@@ -26,11 +26,11 @@ package interrogation
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/pkg/errors"
 	"golang.org/x/time/rate"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"

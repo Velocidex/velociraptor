@@ -32,7 +32,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/shirou/gopsutil/v3/process"
 	"www.velocidex.com/golang/velociraptor/actions"

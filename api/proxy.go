@@ -24,8 +24,9 @@ import (
 	"net/http/httputil"
 	"net/url"
 
+	errors "github.com/go-errors/errors"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
-	errors "github.com/pkg/errors"
+
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -257,7 +258,7 @@ func GetAPIHandler(
 
 	_, err = gw_cert.Verify(x509.VerifyOptions{Roots: CA_Pool})
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	gw_name := crypto_utils.GetSubjectName(gw_cert)

@@ -7,7 +7,7 @@ import (
 	"io"
 	"sync"
 
-	"github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"

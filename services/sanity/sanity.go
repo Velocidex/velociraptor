@@ -2,13 +2,13 @@ package sanity
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
 	"strings"
 	"sync"
 
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -34,9 +34,8 @@ func (self *SanityChecks) CheckRootOrg(
 		config_obj.Logging.OutputDirectory != "" {
 		err := utils.CheckDirWritable(config_obj.Logging.OutputDirectory)
 		if err != nil {
-			return errors.Wrap(
-				err, fmt.Sprintf("Unable to write logs to directory %v: ",
-					config_obj.Logging.OutputDirectory))
+			return fmt.Errorf("Unable to write logs to directory %v: %w",
+				config_obj.Logging.OutputDirectory, err)
 		}
 	}
 
@@ -100,9 +99,8 @@ func (self *SanityChecks) CheckRootOrg(
 	if config_obj.AutocertCertCache != "" {
 		err := utils.CheckDirWritable(config_obj.AutocertCertCache)
 		if err != nil {
-			return errors.Wrap(
-				err, fmt.Sprintf("Autocert cache directory not writable %v: ",
-					config_obj.AutocertCertCache))
+			return fmt.Errorf("Autocert cache directory not writable %v: %w",
+				config_obj.AutocertCertCache, err)
 		}
 	}
 

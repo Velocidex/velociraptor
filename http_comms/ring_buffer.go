@@ -9,7 +9,7 @@ import (
 	"runtime"
 	"sync"
 
-	errors "github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"

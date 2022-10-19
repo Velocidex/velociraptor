@@ -29,7 +29,7 @@ import (
 
 	"context"
 
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/debug"
 	"golang.org/x/sys/windows/svc/eventlog"
@@ -80,7 +80,7 @@ func doInstallServerService(config_obj *config_proto.Config) (err error) {
 	pres, err := checkServiceExists(service_name)
 	if err != nil {
 		logger.Info("checkServiceExists: %v", err)
-		return errors.WithStack(err)
+		return errors.Wrap(err, 0)
 	}
 	if pres {
 		// We have to stop the service first, or we can not overwrite the file.
@@ -96,20 +96,20 @@ func doInstallServerService(config_obj *config_proto.Config) (err error) {
 
 	// Try to copy the executable to the target_path.
 	err = utils.CopyFile(ctx, executable, target_path, 0755)
-	if err != nil && os.IsNotExist(errors.Cause(err)) {
+	if err != nil && errors.Is(err, os.ErrNotExist) {
 		dirname := filepath.Dir(target_path)
 		logger.Info("Attempting to create intermediate directory %s.",
 			dirname)
 		err = os.MkdirAll(dirname, 0700)
 		if err != nil {
 			logger.Info("MkdirAll %s: %v", dirname, err)
-			return errors.Wrap(err, "Create intermediate directories")
+			return fmt.Errorf("Create intermediate directories: %w", err)
 		}
 		err = utils.CopyFile(ctx, executable, target_path, 0755)
 	}
 	if err != nil {
 		logger.Info("Cant copy binary to destination %s: %v", target_path, err)
-		return errors.Wrap(err, "Cant copy binary into destination dir.")
+		return fmt.Errorf("Cant copy binary into destination dir: %w", err)
 	}
 
 	logger.Info("Copied binary to %s", target_path)
@@ -136,18 +136,18 @@ func doInstallServerService(config_obj *config_proto.Config) (err error) {
 	pres, err = checkServiceExists(service_name)
 	if err != nil {
 		logger.Info("checkServiceExists: %v", err)
-		return errors.WithStack(err)
+		return errors.Wrap(err, 0)
 	}
 	if pres {
 		err = removeServiceServerService(service_name)
 		if err != nil {
-			errors.Wrap(err, "Remove old service")
+			fmt.Errorf("Remove old service: %w", err)
 		}
 	}
 
 	err = installServiceServerService(config_obj, target_path, logger)
 	if err != nil {
-		return errors.Wrap(err, "Install service")
+		return fmt.Errorf("Install service: %w", err)
 	}
 
 	logger.Info("Installed service %s", service_name)
@@ -271,7 +271,7 @@ func removeServiceServerService(name string) error {
 	defer m.Disconnect()
 	s, err := m.OpenService(name)
 	if err != nil {
-		return errors.New(fmt.Sprintf("service %s is not installed", name))
+		return fmt.Errorf("service %s is not installed: %w", name, err)
 	}
 	defer s.Close()
 	err = s.Delete()
@@ -280,7 +280,7 @@ func removeServiceServerService(name string) error {
 	}
 	err = eventlog.Remove(name)
 	if err != nil {
-		return errors.New(fmt.Sprintf("RemoveEventLogSource() failed: %s", err))
+		return fmt.Errorf("RemoveEventLogSource() failed: %w", err)
 	}
 	return nil
 }

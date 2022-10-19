@@ -26,7 +26,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/dustin/go-humanize"
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
+
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/actions"

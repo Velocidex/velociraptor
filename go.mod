@@ -64,7 +64,6 @@ require (
 	github.com/mitchellh/panicwrap v1.0.0
 	github.com/olekukonko/tablewriter v0.0.4
 	github.com/oschwald/maxminddb-golang v1.8.0
-	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.1
 	github.com/prometheus/client_golang v1.12.1
 	github.com/prometheus/client_model v0.2.0
@@ -115,6 +114,7 @@ require (
 	github.com/Velocidex/ordereddict v0.0.0-20220428153415-da46091cd216
 	github.com/coreos/go-oidc/v3 v3.4.0
 	github.com/evanphx/json-patch/v5 v5.6.0
+	github.com/go-errors/errors v1.4.2
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/hillu/go-archive-zip-crypto v0.0.0-20200712202847-bd5cf365dd44
 	github.com/rogpeppe/go-internal v1.8.0
@@ -168,6 +168,7 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/paulmach/orb v0.1.5 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/prometheus/common v0.37.0 // indirect

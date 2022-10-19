@@ -16,7 +16,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	vcrypto "www.velocidex.com/golang/velociraptor/crypto"
@@ -130,7 +130,7 @@ func EncryptSymmetric(
 
 	base_crypter, err := aes.NewCipher(cipher_properties.Key)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	mode := cipher.NewCBCEncrypter(base_crypter, iv)
@@ -154,7 +154,7 @@ func decryptSymmetric(
 
 	base_crypter, err := aes.NewCipher(cipher_properties.Key)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	mode := cipher.NewCBCDecrypter(base_crypter, iv)
@@ -186,8 +186,8 @@ func (self *CryptoManager) getAuthState(
 	if !pres {
 		// We dont know who we are talking to so we can not
 		// trust them.
-		return false, errors.New(
-			fmt.Sprintf("No cert found for %s", cipher_metadata.Source))
+		return false,
+			fmt.Errorf("No cert found for %s", cipher_metadata.Source)
 	}
 
 	hashed := sha256.Sum256(serialized_cipher)
@@ -196,7 +196,7 @@ func (self *CryptoManager) getAuthState(
 	err := rsa.VerifyPKCS1v15(public_key, crypto.SHA256, hashed[:],
 		cipher_metadata.Signature)
 	if err != nil {
-		return false, errors.WithStack(err)
+		return false, errors.Wrap(err, 0)
 	}
 
 	return true, nil
@@ -209,7 +209,7 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, er
 	communications := &crypto_proto.ClientCommunication{}
 	err = proto.Unmarshal(cipher_text, communications)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	// An empty message is not an error but we can't figure out the
@@ -255,7 +255,7 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, er
 	cipher_properties := &crypto_proto.CipherProperties{}
 	err = proto.Unmarshal(serialized_cipher, cipher_properties)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	// Check HMAC first to save checking the RSA signature for
@@ -277,7 +277,7 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, er
 	cipher_metadata := &crypto_proto.CipherMetadata{}
 	err = proto.Unmarshal(serialized_metadata, cipher_metadata)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	msg_info, org_config_obj, err := self.extractMessageInfo(
@@ -340,7 +340,7 @@ func (self *CryptoManager) extractMessageInfo(
 	packed_message_list := &crypto_proto.PackedMessageList{}
 	err = proto.Unmarshal(plain, packed_message_list)
 	if err != nil {
-		return nil, nil, errors.WithStack(err)
+		return nil, nil, errors.Wrap(err, 0)
 	}
 
 	// Get the org id from the nonce
@@ -381,13 +381,13 @@ func (self *CryptoManager) EncryptMessageList(
 
 	plain_text, err := proto.Marshal(message_list)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	if compression == crypto_proto.PackedMessageList_ZCOMPRESSION {
 		plain_text, err = utils.Compress(plain_text)
 		if err != nil {
-			return nil, errors.WithStack(err)
+			return nil, errors.Wrap(err, 0)
 		}
 	}
 
@@ -426,9 +426,9 @@ func (self *CryptoManager) Encrypt(
 		// Build a new cipher
 		public_key, pres := self.Resolver.GetPublicKey(org_config_obj, destination)
 		if !pres {
-			return nil, errors.New(fmt.Sprintf(
+			return nil, fmt.Errorf(
 				"No certificate found for destination %v",
-				destination))
+				destination)
 		}
 
 		cipher, err := NewCipher(self.client_id, self.private_key, public_key)
@@ -450,7 +450,7 @@ func (self *CryptoManager) Encrypt(
 
 	serialized_packed_message_list, err := proto.Marshal(packed_message_list)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	comms := output_cipher.ClientCommunication()
@@ -458,7 +458,7 @@ func (self *CryptoManager) Encrypt(
 	// Each packet has a new IV.
 	_, err = rand.Read(comms.PacketIv)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	encrypted_serialized_packed_message_list, err := EncryptSymmetric(
@@ -475,7 +475,7 @@ func (self *CryptoManager) Encrypt(
 
 	result, err := proto.Marshal(comms)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	return result, nil

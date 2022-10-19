@@ -17,7 +17,7 @@ import (
 	"github.com/Depado/bfchroma"
 	"github.com/Masterminds/sprig/v3"
 	"github.com/Velocidex/ordereddict"
-	"github.com/pkg/errors"
+	"github.com/go-errors/errors"
 
 	chroma_html "github.com/alecthomas/chroma/formatters/html"
 	"github.com/microcosm-cc/bluemonday"

@@ -7,7 +7,7 @@ import (
 	"crypto/sha1"
 	"crypto/sha256"
 
-	"github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"google.golang.org/protobuf/proto"
@@ -81,17 +81,17 @@ func NewCipher(
 
 	_, err := rand.Read(result.cipher_properties.Key)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	_, err = rand.Read(result.cipher_properties.MetadataIv)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	_, err = rand.Read(result.cipher_properties.HmacKey)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	result.cipher_metadata = &crypto_proto.CipherMetadata{
@@ -100,7 +100,7 @@ func NewCipher(
 
 	serialized_cipher, err := proto.Marshal(result.cipher_properties)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	hashed := sha256.Sum256(serialized_cipher)
@@ -108,7 +108,7 @@ func NewCipher(
 	signature, err := rsa.SignPKCS1v15(
 		rand.Reader, private_key, crypto.SHA256, hashed[:])
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 	result.cipher_metadata.Signature = signature
 
@@ -118,14 +118,14 @@ func NewCipher(
 		public_key,
 		serialized_cipher, []byte(""))
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	result.encrypted_cipher = encrypted_cipher
 
 	serialized_cipher_metadata, err := proto.Marshal(result.cipher_metadata)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	encrypted_cipher_metadata, err := EncryptSymmetric(

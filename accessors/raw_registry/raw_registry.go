@@ -30,13 +30,14 @@ package raw_registry
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	errors "github.com/pkg/errors"
+
 	"www.velocidex.com/golang/regparser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/constants"

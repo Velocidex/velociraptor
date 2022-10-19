@@ -1,13 +1,13 @@
 package datastore
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"sort"
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 
@@ -392,9 +392,8 @@ func unmarshalData(serialized_content []byte,
 	}
 
 	if err != nil {
-		return errors.WithMessage(os.ErrNotExist,
-			fmt.Sprintf("While decoding %v: %v",
-				urn.AsClientPath(), err))
+		return fmt.Errorf("While decoding %v: %w",
+			urn.AsClientPath(), os.ErrNotExist)
 	}
 	return nil
 }

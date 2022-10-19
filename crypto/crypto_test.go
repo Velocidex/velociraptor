@@ -26,7 +26,7 @@ import (
 	"testing"
 	"time"
 
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -188,7 +188,7 @@ func (self *TestSuite) _EncryptMessageListWithSpoofedPackedMessage(
 
 	plain_text, err := proto.Marshal(message_list)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	compressed_message_lists := [][]byte{plain_text}
@@ -207,7 +207,7 @@ func (self *TestSuite) _EncryptMessageListWithSpoofedPackedMessage(
 
 	serialized_packed_message_list, err := proto.Marshal(packed_message_list)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	comms := output_cipher.ClientCommunication()
@@ -215,7 +215,7 @@ func (self *TestSuite) _EncryptMessageListWithSpoofedPackedMessage(
 	// Each packet has a new IV.
 	_, err = rand.Read(comms.PacketIv)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	encrypted_serialized_packed_message_list, err := client.EncryptSymmetric(
@@ -232,7 +232,7 @@ func (self *TestSuite) _EncryptMessageListWithSpoofedPackedMessage(
 
 	result, err := proto.Marshal(comms)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	return result, nil

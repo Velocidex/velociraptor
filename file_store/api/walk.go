@@ -3,7 +3,7 @@ package api
 import (
 	"os"
 
-	"github.com/pkg/errors"
+	"github.com/go-errors/errors"
 )
 
 var (

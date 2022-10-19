@@ -3,7 +3,7 @@ package flows
 import (
 	"context"
 
-	errors "github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"

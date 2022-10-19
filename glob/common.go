@@ -18,10 +18,9 @@
 package glob
 
 import (
+	"errors"
 	"os"
 	"time"
-
-	errors "github.com/pkg/errors"
 )
 
 // Virtual FileInfo for root directory - represent all drives as
