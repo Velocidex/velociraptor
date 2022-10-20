@@ -1,4 +1,4 @@
-SELECT FullPath FROM glob(globs="/*", accessor="reg")[
+SELECT FullPath FROM glob(globs="/*", accessor="registry")[
  {
   "FullPath": "HKEY_CLASSES_ROOT"
  },
@@ -17,7 +17,7 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
  {
   "FullPath": "HKEY_USERS"
  }
-]SELECT FullPath FROM glob(globs="\\*", accessor="reg")[
+]SELECT FullPath FROM glob(globs="\\*", accessor="registry")[
  {
   "FullPath": "HKEY_CLASSES_ROOT"
  },
@@ -36,7 +36,7 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
  {
   "FullPath": "HKEY_USERS"
  }
-]SELECT FullPath FROM glob(globs="\\HKEY_LOCAL_MACHINE\\*", accessor="reg")[
+]SELECT FullPath FROM glob(globs="\\HKEY_LOCAL_MACHINE\\*", accessor="registry")[
  {
   "FullPath": "HKEY_LOCAL_MACHINE\\BCD00000000"
  },
@@ -55,7 +55,7 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
  {
   "FullPath": "HKEY_LOCAL_MACHINE\\SYSTEM"
  }
-]SELECT FullPath FROM glob(globs="HKEY_LOCAL_MACHINE\\*", accessor="reg")[
+]SELECT FullPath FROM glob(globs="HKEY_LOCAL_MACHINE\\*", accessor="registry")[
  {
   "FullPath": "HKEY_LOCAL_MACHINE\\BCD00000000"
  },
@@ -74,36 +74,27 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
  {
   "FullPath": "HKEY_LOCAL_MACHINE\\SYSTEM"
  }
-]SELECT FullPath FROM glob( globs="HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\*", accessor="reg")[
+]SELECT FullPath FROM glob( globs="HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\*", accessor="registry")[
  {
   "FullPath": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\\"c:\\windows\\system32\\msht.exe\""
  }
-]SELECT FullPath FROM stat( filename="HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\\"c:\\windows\\system32\\msht.exe\"", accessor="reg")[
+]SELECT FullPath FROM stat( filename="HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\\"c:\\windows\\system32\\msht.exe\"", accessor="registry")[
  {
   "FullPath": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\\"c:\\windows\\system32\\msht.exe\""
  }
-]SELECT FullPath, Name FROM glob(globs="HKEY_USERS\\S-1-5-18\\http*\\*", accessor='reg')[
+]SELECT FullPath, Name FROM glob(globs="HKEY_USERS\\S-1-5-18\\http*\\*", accessor='registry')[
  {
   "FullPath": "HKEY_USERS\\S-1-5-18\\\"http://www.google.com\"\\\"\\a\\b\\c\\d\"",
   "Name": "\\a\\b\\c\\d"
  }
-]SELECT Name, FullPath, basename(path=FullPath), dirname(path=FullPath, path_type='windows') FROM glob(globs="HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\16.0\\Word\\Security\\Trusted Documents\\TrustRecords\\*", accessor="reg")[
+]SELECT Name, FullPath, basename(path=FullPath), dirname(path=FullPath, path_type='windows') FROM glob(globs="HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\16.0\\Word\\Security\\Trusted Documents\\TrustRecords\\*", accessor="registry")[
  {
   "Name": "%USERPROFILE%/Desktop/test.docx",
   "FullPath": "HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\16.0\\Word\\Security\\Trusted Documents\\TrustRecords\\\"%USERPROFILE%/Desktop/test.docx\"",
   "basename(path=FullPath)": "%USERPROFILE%/Desktop/test.docx",
   "dirname(path=FullPath, path_type='windows')": "HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\16.0\\Word\\Security\\Trusted Documents\\TrustRecords"
  }
-]SELECT User, ProgramName FROM Artifact.Windows.Registry.Sysinternals.Eulacheck()[
- {
-  "User": "runneradmin",
-  "ProgramName": "AutoRuns"
- },
- {
-  "User": "runneradmin",
-  "ProgramName": "PsExec"
- }
-]SELECT FullPath FROM glob(globs='HKEY_LOCAL_MACHINE\\SYSTEM\\*ControlSet*\\services\\PortProxy\\**', accessor='reg') WHERE Type ORDER BY FullPath[
+]SELECT FullPath FROM glob(globs='HKEY_LOCAL_MACHINE\\SYSTEM\\*ControlSet*\\services\\PortProxy\\**', accessor='registry') WHERE Type ORDER BY FullPath[
  {
   "FullPath": "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Services\\PortProxy\\v4tov4\\tcp\\\"0.0.0.0/3389\""
  },
@@ -136,5 +127,18 @@ SELECT FullPath FROM glob(globs="/*", accessor="reg")[
  {
   "c:\\windows\\system32\\msht.exe": "Hello",
   "Key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+ }
+]SELECT User, ProgramName FROM Artifact.Windows.Registry.Sysinternals.Eulacheck()[
+ {
+  "User": "runneradmin",
+  "ProgramName": "AutoRuns"
+ },
+ {
+  "User": "runneradmin",
+  "ProgramName": "PsExec"
+ },
+ {
+  "User": null,
+  "ProgramName": "PsExec"
  }
 ]
