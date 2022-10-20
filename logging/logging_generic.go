@@ -4,13 +4,13 @@ package logging
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
+	"www.velocidex.com/golang/velociraptor/json"
 )
 
 var (

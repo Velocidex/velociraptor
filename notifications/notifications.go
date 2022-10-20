@@ -1,6 +1,7 @@
 package notifications
 
 import (
+	"strings"
 	"sync"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -25,6 +26,21 @@ func NewNotificationPool() *NotificationPool {
 		clients: make(map[string]chan bool),
 		done:    make(chan bool),
 	}
+}
+
+func (self *NotificationPool) Count() uint64 {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	result := uint64(0)
+	for k := range self.clients {
+		// Only report real clients waiting for notifications.
+		if strings.HasPrefix(k, "C.") {
+			result++
+		}
+	}
+
+	return result
 }
 
 func (self *NotificationPool) ListClients() []string {

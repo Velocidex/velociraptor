@@ -59,6 +59,8 @@ type Notifier interface {
 	// Returns a list of all clients directly connected at present.
 	ListClients() []string
 
+	CountConnectedClients() uint64
+
 	// Check only the current node if the client is connected.
 	IsClientDirectlyConnected(client_id string) bool
 }

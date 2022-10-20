@@ -9,6 +9,7 @@ import (
 )
 
 type RawMessage = json.RawMessage
+type Marshaler = json.Marshaler
 
 var (
 	EncoderCallbackSkip = json.EncoderCallbackSkip

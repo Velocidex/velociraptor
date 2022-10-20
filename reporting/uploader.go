@@ -48,6 +48,11 @@ func (self *NotebookUploader) Upload(
 	}
 	defer writer.Close()
 
+	err = writer.Truncate()
+	if err != nil {
+		return nil, err
+	}
+
 	md5_sum := md5.New()
 	sha_sum := sha256.New()
 

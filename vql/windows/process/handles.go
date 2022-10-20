@@ -359,10 +359,16 @@ func GetThreadInfo(scope vfilter.Scope, handle syscall.Handle, result *HandleInf
 
 	status = windows.NtOpenThreadToken(handle,
 		syscall.TOKEN_READ, true, &token_handle)
-
 	if status == windows.STATUS_SUCCESS {
 		result.ThreadInfo.TokenInfo = GetTokenInfo(scope, token_handle)
 		windows.CloseHandle(token_handle)
+
+		// If the thread is not impersonating the error will be
+		// STATUS_NO_TOKEN
+	} else if status != windows.STATUS_NO_TOKEN &&
+		status != windows.STATUS_ACCESS_DENIED {
+		scope.Log("windows.NtOpenThreadToken status %v",
+			windows.NTStatus_String(status))
 	}
 }
 

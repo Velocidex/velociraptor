@@ -20,7 +20,6 @@ package parsers
 import (
 	"bufio"
 	"context"
-	"encoding/json"
 	"reflect"
 	"strconv"
 	"strings"
@@ -28,6 +27,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/json"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"

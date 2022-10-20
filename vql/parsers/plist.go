@@ -2,11 +2,11 @@ package parsers
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/Velocidex/ordereddict"
 	"howett.net/plist"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/json"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
