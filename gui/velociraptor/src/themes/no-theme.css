@@ -58,3 +58,10 @@
     user-select: none;
     vertical-align: middle;
 }
+
+
+.no-theme .btn.btn-primary.flow-file-download-button {
+    background: transparent;
+    color: var(--color-foreground);
+    text-align: left;
+}

@@ -25,13 +25,13 @@ func (self *ApiServer) GetSubject(
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	user_name := user_record.Name
 	token, err := acls.GetEffectivePolicy(org_config_obj, user_name)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	perm, err := acls.CheckAccessWithToken(token, acls.DATASTORE_ACCESS)
@@ -44,18 +44,18 @@ func (self *ApiServer) GetSubject(
 	if token.SuperUser && org_config_obj.OrgId != in.OrgId {
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
-			return nil, err
+			return nil, Status(self.verbose, err)
 		}
 
 		org_config_obj, err = org_manager.GetOrgConfig(in.OrgId)
 		if err != nil {
-			return nil, err
+			return nil, Status(self.verbose, err)
 		}
 	}
 
 	db, err := datastore.GetDB(org_config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	raw_db, ok := db.(datastore.RawDataStore)
@@ -77,13 +77,13 @@ func (self *ApiServer) SetSubject(
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	user_name := user_record.Name
 	token, err := acls.GetEffectivePolicy(org_config_obj, user_name)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	perm, err := acls.CheckAccessWithToken(token, acls.DATASTORE_ACCESS)
@@ -96,18 +96,18 @@ func (self *ApiServer) SetSubject(
 	if token.SuperUser && org_config_obj.OrgId != in.OrgId {
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
-			return nil, err
+			return nil, Status(self.verbose, err)
 		}
 
 		org_config_obj, err = org_manager.GetOrgConfig(in.OrgId)
 		if err != nil {
-			return nil, err
+			return nil, Status(self.verbose, err)
 		}
 	}
 
 	db, err := datastore.GetDB(org_config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	raw_db, ok := db.(datastore.RawDataStore)
@@ -141,13 +141,13 @@ func (self *ApiServer) ListChildren(
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	user_name := user_record.Name
 	token, err := acls.GetEffectivePolicy(org_config_obj, user_name)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	perm, err := acls.CheckAccessWithToken(token, acls.DATASTORE_ACCESS)
@@ -161,23 +161,23 @@ func (self *ApiServer) ListChildren(
 	if token.SuperUser && org_config_obj.OrgId != in.OrgId {
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
-			return nil, err
+			return nil, Status(self.verbose, err)
 		}
 
 		org_config_obj, err = org_manager.GetOrgConfig(in.OrgId)
 		if err != nil {
-			return nil, err
+			return nil, Status(self.verbose, err)
 		}
 	}
 
 	db, err := datastore.GetDB(org_config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	children, err := db.ListChildren(org_config_obj, getURN(in))
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	result := &api_proto.ListChildrenResponse{}
@@ -200,13 +200,13 @@ func (self *ApiServer) DeleteSubject(
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	user_name := user_record.Name
 	token, err := acls.GetEffectivePolicy(org_config_obj, user_name)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	perm, err := acls.CheckAccessWithToken(token, acls.DATASTORE_ACCESS)
@@ -218,17 +218,17 @@ func (self *ApiServer) DeleteSubject(
 	if token.SuperUser && org_config_obj.OrgId != in.OrgId {
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
-			return nil, err
+			return nil, Status(self.verbose, err)
 		}
 
 		org_config_obj, err = org_manager.GetOrgConfig(in.OrgId)
 		if err != nil {
-			return nil, err
+			return nil, Status(self.verbose, err)
 		}
 	}
 	db, err := datastore.GetDB(org_config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	return &emptypb.Empty{}, db.DeleteSubject(org_config_obj, getURN(in))

@@ -15,14 +15,17 @@ parameters:
      default: .
      type: regex
 
+imports:
+   - Windows.Registry.NTUser
+
 sources:
   - precondition:
       SELECT OS From info() where OS = 'windows'
-
+    name: RegistryAPI
     query: |
       LET users <= SELECT Name, UUID
           FROM Artifact.Windows.Sys.Users()
-          WHERE Name =~ userRegex
+      WHERE Name =~ userRegex
 
       SELECT Key.Name as ProgramName,
              Key.FullPath as Key,
@@ -33,3 +36,13 @@ sources:
              } as User,
              EulaAccepted
       FROM read_reg_key(globs=split(string=Sysinternals_Reg_Key, sep=',[\\s]*'))
+
+  - name: RawRegistry
+    description: Detect keys using Raw Registry Analysis
+    query: |
+      -- Apply Raw Registry Mappings
+      LET _ <= MapRawRegistryHives
+
+      -- Make sure to call the other sources otherwise we get recursion errors!
+      SELECT *
+      FROM Artifact.Windows.Registry.Sysinternals.Eulacheck(source="RegistryAPI")

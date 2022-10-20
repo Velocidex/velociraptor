@@ -21,19 +21,19 @@ func (self *ApiServer) PushEvents(
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	user_name := user_record.Name
 	token, err := acls.GetEffectivePolicy(org_config_obj, user_name)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	// Check that the principal is allowed to push to the queue.
 	ok, err := acls.CheckAccessWithToken(token, acls.PUBLISH, in.Artifact)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	if !ok {
@@ -43,7 +43,7 @@ func (self *ApiServer) PushEvents(
 
 	rows, err := utils.ParseJsonToDicts([]byte(in.Jsonl))
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	// The call can access the datastore from any org becuase it is a
@@ -51,19 +51,19 @@ func (self *ApiServer) PushEvents(
 	if token.SuperUser && org_config_obj.OrgId != in.OrgId {
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
-			return nil, err
+			return nil, Status(self.verbose, err)
 		}
 
 		org_config_obj, err = org_manager.GetOrgConfig(in.OrgId)
 		if err != nil {
-			return nil, err
+			return nil, Status(self.verbose, err)
 		}
 	}
 
 	// Only return the first row
 	journal, err := services.GetJournal(org_config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	// only broadcast the events for local listeners. Minions
@@ -83,19 +83,19 @@ func (self *ApiServer) WriteEvent(
 	users := services.GetUserManager()
 	user_record, config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	user_name := user_record.Name
 	token, err := acls.GetEffectivePolicy(config_obj, user_name)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	// Check that the principal is allowed to push to the queue.
 	ok, err := acls.CheckAccessWithToken(token, acls.MACHINE_STATE, in.Query.Name)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	if !ok {
@@ -106,25 +106,25 @@ func (self *ApiServer) WriteEvent(
 
 	rows, err := utils.ParseJsonToDicts([]byte(in.Response))
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	// The call can access the datastore from any org becuase it is a
 	// server->server call.
 	org_manager, err := services.GetOrgManager()
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	org_config_obj, err := org_manager.GetOrgConfig(in.OrgId)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	// Only return the first row
 	journal, err := services.GetJournal(org_config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	err = journal.PushRowsToArtifact(org_config_obj,
@@ -140,7 +140,7 @@ func (self *ApiServer) ListAvailableEventResults(
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	permissions := acls.READ_RESULTS
@@ -152,7 +152,7 @@ func (self *ApiServer) ListAvailableEventResults(
 
 	client_monitoring_service, err := services.ClientEventManager(org_config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	return client_monitoring_service.ListAvailableEventResults(ctx, in)

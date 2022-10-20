@@ -184,17 +184,29 @@ func resolveImports(config_obj *config_proto.Config,
 
 	// These are a list of names to be imported.
 	for _, imported := range artifact.Imports {
+		scope := vql_subsystem.MakeScope()
+
 		dependent_artifact, pres := global_repo.Get(config_obj, imported)
 		if !pres {
 			return fmt.Errorf("Artifact %v imports %v which is not known.",
 				artifact.Name, imported)
 		}
 		if dependent_artifact.Export != "" {
-			result.Query = append(result.Query, &actions_proto.VQLRequest{
-				VQL: dependent_artifact.Export,
-			})
+			queries, err := vfilter.MultiParse(dependent_artifact.Export)
+			if err != nil {
+				return fmt.Errorf("While parsing export in %s: %w",
+					artifact.Name, err)
+			}
+
+			for _, q := range queries {
+				result.Query = append(result.Query,
+					&actions_proto.VQLRequest{
+						VQL: q.ToString(scope),
+					})
+			}
 		}
 	}
+
 	return nil
 }
 

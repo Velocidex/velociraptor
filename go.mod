@@ -23,7 +23,7 @@ require (
 	github.com/alecthomas/assert v1.0.0
 	github.com/alecthomas/chroma v0.7.3
 	github.com/alecthomas/participle v0.7.1
-	github.com/alecthomas/repr v0.1.0 // indirect
+	github.com/alecthomas/repr v0.1.1 // indirect
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/aws/aws-sdk-go v1.44.118
@@ -104,7 +104,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
 	www.velocidex.com/golang/oleparse v0.0.0-20220617011920-94df2342d0b7
 	www.velocidex.com/golang/regparser v0.0.0-20220803120500-8e74df808b0a
-	www.velocidex.com/golang/vfilter v0.0.0-20221009130033-4de0683e9d19
+	www.velocidex.com/golang/vfilter v0.0.0-20221020070405-7af3cd80b934
 )
 
 require (
@@ -114,10 +114,11 @@ require (
 	github.com/Velocidex/ordereddict v0.0.0-20220428153415-da46091cd216
 	github.com/coreos/go-oidc/v3 v3.4.0
 	github.com/evanphx/json-patch/v5 v5.6.0
+	github.com/glaslos/tlsh v0.2.0
 	github.com/go-errors/errors v1.4.2
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/hillu/go-archive-zip-crypto v0.0.0-20200712202847-bd5cf365dd44
-	github.com/rogpeppe/go-internal v1.8.0
+	github.com/rogpeppe/go-internal v1.9.0
 	github.com/shirou/gopsutil/v3 v3.21.11
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
@@ -144,7 +145,6 @@ require (
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/dustmop/soup v1.1.2-0.20190516214245-38228baa104e // indirect
-	github.com/glaslos/tlsh v0.2.0 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect

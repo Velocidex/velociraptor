@@ -358,6 +358,9 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 	logging.Reset()
 	logging.SuppressLogging = !self.verbose
 
+	// Mark the config as verbose.
+	config_obj.Verbose = self.verbose
+
 	// Apply any configuration mutators
 	for _, mutator := range self.config_mutators {
 		err = mutator(config_obj)

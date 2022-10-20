@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	errors "github.com/go-errors/errors"
 
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
@@ -29,7 +28,7 @@ func (self *ApiServer) GetHuntFlows(
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	user_name := user_record.Name
@@ -42,7 +41,7 @@ func (self *ApiServer) GetHuntFlows(
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	hunt, pres := hunt_dispatcher.GetHunt(in.HuntId)
@@ -97,7 +96,7 @@ func (self *ApiServer) CreateHunt(
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	// Log this event as an Audit event.
@@ -123,13 +122,13 @@ func (self *ApiServer) CreateHunt(
 	result := &api_proto.StartFlowResponse{}
 	hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	hunt_id, err := hunt_dispatcher.CreateHunt(
 		ctx, org_config_obj, acl_manager, in)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	result.FlowId = hunt_id
@@ -147,7 +146,7 @@ func (self *ApiServer) ModifyHunt(
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 	in.Creator = user_record.Name
 
@@ -167,12 +166,12 @@ func (self *ApiServer) ModifyHunt(
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	err = hunt_dispatcher.ModifyHunt(ctx, org_config_obj, in, in.Creator)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	result := &emptypb.Empty{}
@@ -188,7 +187,7 @@ func (self *ApiServer) ListHunts(
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	user_name := user_record.Name
@@ -201,13 +200,13 @@ func (self *ApiServer) ListHunts(
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	result, err := hunt_dispatcher.ListHunts(
 		ctx, org_config_obj, in)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	// Provide only a summary for list hunts GUI
@@ -244,7 +243,7 @@ func (self *ApiServer) GetHunt(
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	user_name := user_record.Name
@@ -257,12 +256,12 @@ func (self *ApiServer) GetHunt(
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	result, pres := hunt_dispatcher.GetHunt(in.HuntId)
 	if !pres {
-		return nil, errors.New("Hunt not found")
+		return nil, InvalidStatus("Hunt not found")
 	}
 
 	return result, nil
@@ -277,7 +276,7 @@ func (self *ApiServer) GetHuntResults(
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	user_name := user_record.Name
@@ -299,7 +298,7 @@ func (self *ApiServer) GetHuntResults(
 		"SELECT * FROM hunt_results(hunt_id=HuntID, "+
 			"artifact=ArtifactName) LIMIT 100")
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	return result, nil
@@ -313,7 +312,7 @@ func (self *ApiServer) EstimateHunt(
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	user_name := user_record.Name
@@ -326,12 +325,12 @@ func (self *ApiServer) EstimateHunt(
 
 	client_info_manager, err := services.GetClientInfoManager(org_config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	indexer, err := services.GetIndexer(org_config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	now := uint64(time.Now().UnixNano() / 1000)
@@ -393,7 +392,7 @@ func (self *ApiServer) EstimateHunt(
 
 			client_info_manager, err := services.GetClientInfoManager(org_config_obj)
 			if err != nil {
-				return nil, err
+				return nil, Status(self.verbose, err)
 			}
 
 			for hit := range indexer.SearchIndexWithPrefix(ctx,
