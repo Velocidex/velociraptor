@@ -162,6 +162,11 @@ func (self *NotebookCellPathManager) NewQueryStorage() *NotebookCellQuery {
 	}
 }
 
+func (self *NotebookCellPathManager) Logs() api.FSPathSpec {
+	return self.root.AddChild(self.notebook_id, self.cell_id, "logs").
+		AsFilestorePath().SetTag("NotebookCellLogs")
+}
+
 func (self *NotebookCellPathManager) QueryStorage(id int64) *NotebookCellQuery {
 	return &NotebookCellQuery{
 		notebook_id: self.notebook_id,

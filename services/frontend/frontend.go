@@ -227,8 +227,6 @@ func (self *MasterFrontendManager) prepareOrgStats() (
 	result := make(map[string]*ordereddict.Dict)
 	now := time.Now()
 
-	json.Dump(self.stats)
-
 	// Calculate totals across all frontends
 	total_CpuLoadPercent := int64(0)
 	total_ProcessResidentMemoryBytes := int64(0)
