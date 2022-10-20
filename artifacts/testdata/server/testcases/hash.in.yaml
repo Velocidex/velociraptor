@@ -5,3 +5,5 @@ Queries:
      hash(path=srcDir+"/artifacts/testdata/files/hello.zip",
           hashselect=["md5", "sha256"]) AS MDHashAndSha256
     FROM scope()
+
+  - SELECT tlsh_hash(path=srcDir+"/artifacts/testdata/files/hello.zip") FROM scope()

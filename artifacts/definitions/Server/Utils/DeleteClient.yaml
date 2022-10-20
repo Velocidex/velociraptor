@@ -23,7 +23,7 @@ sources:
       let clients_list = SELECT ClientId
       FROM parse_records_with_regex(
           accessor="data", file=ClientIdList,
-          regex="(?P<ClientId>C.+)")
+          regex="(?P<ClientId>C\\.[0-9a-z-]+)")
       WHERE log(message="Deleting client " + ClientId)
 
       SELECT * FROM foreach(row=clients_list,
