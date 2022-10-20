@@ -1,7 +1,6 @@
 package file_store_file_info
 
 import (
-	"encoding/json"
 	"errors"
 	"os"
 	"time"
@@ -10,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 

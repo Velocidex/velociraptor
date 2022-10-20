@@ -2,7 +2,6 @@ package notebook
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"runtime/debug"
@@ -11,6 +10,7 @@ import (
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
