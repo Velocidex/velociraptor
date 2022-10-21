@@ -55,7 +55,7 @@ type GuiTemplateEngine struct {
 	*BaseTemplateEngine
 	tmpl         *template.Template
 	ctx          context.Context
-	log_writer   *logWriter
+	log_writer   *notebooCellLogger
 	path_manager *paths.NotebookCellPathManager
 	Data         map[string]*actions_proto.VQLResponse
 	Progress     utils.ProgressReporter
@@ -602,6 +602,17 @@ func (self *GuiTemplateEngine) Messages() []string {
 	return self.log_writer.Messages()
 }
 
+func (self *GuiTemplateEngine) MoreMessages() bool {
+	return self.log_writer.MoreMessages()
+}
+
+func (self *GuiTemplateEngine) Close() {
+	if self.log_writer != nil {
+		self.log_writer.Flush()
+	}
+	self.BaseTemplateEngine.Close()
+}
+
 type logWriter struct {
 	mu       sync.Mutex
 	messages []string
@@ -648,7 +659,13 @@ func NewGuiTemplateEngine(
 		return nil, err
 	}
 
-	log_writer := &logWriter{}
+	// Write logs to this result set.
+	log_writer, err := newNotebookCellLogger(
+		config_obj, notebook_cell_path_manager.Logs())
+	if err != nil {
+		return nil, err
+	}
+
 	base_engine.Scope.SetLogger(log.New(log_writer, "", 0))
 	template_engine := &GuiTemplateEngine{
 		BaseTemplateEngine: base_engine,

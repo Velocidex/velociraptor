@@ -185,12 +185,9 @@ func (self *NotebookManager) updateCellContents(
 
 	// Create a new cell to set the result in.
 	make_cell := func(output string) *api_proto.NotebookCell {
-		messages := tmpl.Messages()
-
 		encoded_data, err := json.Marshal(tmpl.Data)
 		if err != nil {
-			messages = append(messages,
-				fmt.Sprintf("Error: %v", err))
+			tmpl.Scope.Log("Error: %v", err)
 		}
 
 		return &api_proto.NotebookCell{
@@ -198,6 +195,7 @@ func (self *NotebookManager) updateCellContents(
 			Output:           output,
 			Data:             string(encoded_data),
 			Messages:         tmpl.Messages(),
+			MoreMessages:     tmpl.MoreMessages(),
 			CellId:           cell_id,
 			Type:             cell_type,
 			Env:              env,
@@ -211,11 +209,8 @@ func (self *NotebookManager) updateCellContents(
 	// still written with an error message.
 	make_error_cell := func(output string, err error) (
 		*api_proto.NotebookCell, error) {
-		notebook_cell := make_cell(output)
-		notebook_cell.Messages = append(notebook_cell.Messages,
-			fmt.Sprintf("Error: %v", err))
-		self.Store.SetNotebookCell(notebook_id, notebook_cell)
-		return notebook_cell, err
+		tmpl.Scope.Log("Error: %v", err)
+		return make_cell(output), err
 	}
 
 	// Do not let exceptions take down the server.

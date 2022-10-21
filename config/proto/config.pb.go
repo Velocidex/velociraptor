@@ -2818,10 +2818,7 @@ func (x *AutoExecConfig) GetArtifactDefinitions() []*proto1.Artifact {
 	return nil
 }
 
-// When a binary starts it initializes some services depending on its
-// role. The startup code will update the config object to request the
-// right services, depending on the required role. Services are
-// actually started by the org manager.
+// Do not set these in the configuration file - they are used internally.
 type ServerServicesConfig struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
