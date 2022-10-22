@@ -7,14 +7,16 @@ Parameters:
       c7ccf7f7c65e24137798b2af967620896bdc032c
       ba4a435cff1897ac653b4c6af43c40b4d01c154c
       75082bb8c6c3529a298b5e3432a2769362efe451
+      d4601077f1005bf0e23533e0ded7d2bc54945d7b
+
   SHA256s: |
       162e56481955b032cd7b146e0fb08f943dc6bb5ec135a47714de77604b3e032d
       2227d7bd3c7a36a4d1d103e41df9a18798bf0d22b3e6357ee689d320fd318a24
       771e8bef3711e8327b5ddb9c6109bd23e494488cccd31097e91033a427e413ef
+      1241d3651cba501b3b2151dafcf6f8481a12a74781afb95103f848255fd2ee2f
 
 Queries:
   # HashHunter Detection
   - SELECT Name,Size,Hash FROM Artifact.Generic.Detection.HashHunter(TargetGlob=srcDir + "/artifacts/testdata/files/*", SHA1List=SHA1s,SizeMax=30000)
   - SELECT Name,Size,Hash FROM Artifact.Generic.Detection.HashHunter(TargetGlob=srcDir + "/artifacts/testdata/files/*", MD5List=MD5s,SizeMin=20000,SizeMax=30000)
   - SELECT Name,Size,Hash FROM Artifact.Generic.Detection.HashHunter(TargetGlob=srcDir + "/artifacts/testdata/files/*", SHA256List=SHA256s,SizeMax=1000)
- 

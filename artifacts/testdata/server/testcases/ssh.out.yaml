@@ -1,4 +1,4 @@
-SELECT basename(path=FullPath) AS Name, KeyType, Cipher, Header FROM Artifact.Linux.Ssh.PrivateKeys( KeyGlobs=srcDir+"/artifacts/testdata/files/**/*.pem")[
+SELECT OSPath.Basename AS Name, KeyType, Cipher, Header FROM Artifact.Linux.Ssh.PrivateKeys( KeyGlobs=srcDir+"/artifacts/testdata/files/**/*.pem")[
  {
   "Name": "EncryptedRSAKeyPair.pem",
   "KeyType": "PKCS8",
