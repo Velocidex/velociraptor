@@ -62,7 +62,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.16
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/panicwrap v1.0.0
-	github.com/olekukonko/tablewriter v0.0.4
+	github.com/olekukonko/tablewriter v0.0.5
 	github.com/oschwald/maxminddb-golang v1.8.0
 	github.com/pkg/sftp v1.13.1
 	github.com/prometheus/client_golang v1.12.1
@@ -99,7 +99,7 @@ require (
 	howett.net/plist v1.0.0
 	www.velocidex.com/golang/evtx v0.2.1-0.20220404133451-1fdf8be7325e
 	www.velocidex.com/golang/go-ese v0.1.1-0.20220107095505-c38622559671
-	www.velocidex.com/golang/go-ntfs v0.1.2-0.20221016032938-a192c126681e
+	www.velocidex.com/golang/go-ntfs v0.1.2-0.20221022134455-f91169ef8a39
 	www.velocidex.com/golang/go-pe v0.1.1-0.20220506020923-9fac492a9b0d
 	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
 	www.velocidex.com/golang/oleparse v0.0.0-20220617011920-94df2342d0b7
@@ -163,7 +163,7 @@ require (
 	github.com/lestrrat-go/strftime v1.0.5 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/mattermost/xml-roundtrip-validator v0.1.0 // indirect
-	github.com/mattn/go-runewidth v0.0.10 // indirect
+	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
@@ -174,7 +174,7 @@ require (
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
-	github.com/rivo/uniseg v0.1.0 // indirect
+	github.com/rivo/uniseg v0.4.2 // indirect
 	github.com/russellhaering/goxmldsig v1.2.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
