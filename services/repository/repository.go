@@ -404,7 +404,10 @@ func (self *Repository) Get(
 
 	// Store the compiled version in the repository for next time.
 	self.mu.Lock()
-	self.Data[result.Name] = result
+	_, pres = self.Data[name]
+	if pres {
+		self.Data[name] = result
+	}
 	self.mu.Unlock()
 
 	return result, true

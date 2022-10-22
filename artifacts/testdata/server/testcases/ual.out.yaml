@@ -1,19 +1,194 @@
-SELECT *, basename(path=_OSPath) AS _OSPath FROM Artifact.Windows.Forensics.UserAccessLogs( SUMGlob=srcDir+"/artifacts/testdata/files/*03A01CC5*.mdb") LIMIT 1[
+SELECT *, basename(path=_OSPath) AS _OSPath FROM Artifact.Windows.Forensics.UserAccessLogs( source="Clients", SUMGlob=srcDir+"/artifacts/testdata/files/*.mdb") GROUP BY AuthenticatedUserName ORDER BY CreationTime[
  {
-  "RoleGuid": "{ad495fc3-0eaa-413d-ba7d-8b13fa7ec598}",
-  "RoleName": "Active Directory Domain Services",
-  "TenantId": "{5e210c24-fb44-45c2-996d-4139d5b7fc4c}",
-  "TotalAccesses": 310,
-  "InsertDate": "2021-06-12T23:47:21Z",
-  "LastAccess": "2021-06-13T15:48:08Z",
+  "RoleGuid": "{10a9226f-50ee-49d8-a393-9a501d47ce04}",
+  "TenantId": "{00000000-0000-0000-0000-000000000000}",
+  "TotalAccesses": 1,
+  "InsertDate": "2022-08-21T09:28:38Z",
+  "LastAccess": "2022-08-21T09:28:38Z",
+  "AuthenticatedUserName": "win-e5k9rc5gu23\\administrator",
+  "RoleName": "File Server",
   "RawAddress": "00000000000000000000000000000001",
   "Address": ":01",
-  "AuthenticatedUserName": "lab\\dc-1$",
   "Days": {
-   "Day163": 61,
-   "Day164": 249
+   "Day233": 1
   },
-  "_Source": "Windows.Forensics.UserAccessLogs",
+  "_Source": "Windows.Forensics.UserAccessLogs/Clients",
+  "_OSPath": "Current.mdb"
+ },
+ {
+  "RoleGuid": "{ad495fc3-0eaa-413d-ba7d-8b13fa7ec598}",
+  "TenantId": "{5e210c24-fb44-45c2-996d-4139d5b7fc4c}",
+  "TotalAccesses": 1954,
+  "InsertDate": "2021-06-13T15:49:52Z",
+  "LastAccess": "2021-06-23T10:27:12Z",
+  "AuthenticatedUserName": "lab\\dc-1$",
+  "RoleName": null,
+  "RawAddress": "7f000001",
+  "Address": "127.0.0.1",
+  "Days": {
+   "Day164": 76,
+   "Day165": 33,
+   "Day166": 56,
+   "Day169": 762,
+   "Day170": 1013,
+   "Day171": 5,
+   "Day172": 3,
+   "Day173": 4,
+   "Day174": 2
+  },
+  "_Source": "Windows.Forensics.UserAccessLogs/Clients",
   "_OSPath": "{03A01CC5-91BB-4936-B685-63697785D39E}.mdb"
+ },
+ {
+  "RoleGuid": "{ad495fc3-0eaa-413d-ba7d-8b13fa7ec598}",
+  "TenantId": "{5e210c24-fb44-45c2-996d-4139d5b7fc4c}",
+  "TotalAccesses": 7,
+  "InsertDate": "2021-06-20T20:48:48Z",
+  "LastAccess": "2021-06-20T22:20:14Z",
+  "AuthenticatedUserName": "lab\\administrator",
+  "RoleName": null,
+  "RawAddress": "7f000001",
+  "Address": "127.0.0.1",
+  "Days": {
+   "Day171": 7
+  },
+  "_Source": "Windows.Forensics.UserAccessLogs/Clients",
+  "_OSPath": "{03A01CC5-91BB-4936-B685-63697785D39E}.mdb"
+ },
+ {
+  "RoleGuid": "{ad495fc3-0eaa-413d-ba7d-8b13fa7ec598}",
+  "TenantId": "{5e210c24-fb44-45c2-996d-4139d5b7fc4c}",
+  "TotalAccesses": 8,
+  "InsertDate": "2021-06-13T15:53:00Z",
+  "LastAccess": "2021-06-22T18:53:38Z",
+  "AuthenticatedUserName": "lab\\dc-2$",
+  "RoleName": null,
+  "RawAddress": "7f000001",
+  "Address": "127.0.0.1",
+  "Days": {
+   "Day164": 2,
+   "Day170": 2,
+   "Day172": 2,
+   "Day173": 2
+  },
+  "_Source": "Windows.Forensics.UserAccessLogs/Clients",
+  "_OSPath": "{03A01CC5-91BB-4936-B685-63697785D39E}.mdb"
+ },
+ {
+  "RoleGuid": "{10a9226f-50ee-49d8-a393-9a501d47ce04}",
+  "TenantId": "{00000000-0000-0000-0000-000000000000}",
+  "TotalAccesses": 4,
+  "InsertDate": "2021-06-13T16:10:50Z",
+  "LastAccess": "2021-06-13T16:46:05Z",
+  "AuthenticatedUserName": "lab\\waldo",
+  "RoleName": "File Server",
+  "RawAddress": "0a0000de",
+  "Address": "10.0.0.222",
+  "Days": {
+   "Day164": 4
+  },
+  "_Source": "Windows.Forensics.UserAccessLogs/Clients",
+  "_OSPath": "{03A01CC5-91BB-4936-B685-63697785D39E}.mdb"
+ },
+ {
+  "RoleGuid": "{ad495fc3-0eaa-413d-ba7d-8b13fa7ec598}",
+  "TenantId": "{5e210c24-fb44-45c2-996d-4139d5b7fc4c}",
+  "TotalAccesses": 1,
+  "InsertDate": "2021-06-13T16:18:37Z",
+  "LastAccess": "2021-06-13T16:18:37Z",
+  "AuthenticatedUserName": "lab\\desktop-waldo$",
+  "RoleName": null,
+  "RawAddress": "7f000001",
+  "Address": "127.0.0.1",
+  "Days": {
+   "Day164": 1
+  },
+  "_Source": "Windows.Forensics.UserAccessLogs/Clients",
+  "_OSPath": "{03A01CC5-91BB-4936-B685-63697785D39E}.mdb"
+ },
+ {
+  "RoleGuid": "{10a9226f-50ee-49d8-a393-9a501d47ce04}",
+  "TenantId": "{00000000-0000-0000-0000-000000000000}",
+  "TotalAccesses": 293,
+  "InsertDate": "2021-06-13T16:26:11Z",
+  "LastAccess": "2021-06-23T00:10:32Z",
+  "AuthenticatedUserName": "lab\\desktop-jane$",
+  "RoleName": "File Server",
+  "RawAddress": "0a00006f",
+  "Address": "10.0.0.111",
+  "Days": {
+   "Day164": 2,
+   "Day165": 4,
+   "Day166": 1,
+   "Day169": 39,
+   "Day170": 59,
+   "Day171": 24,
+   "Day172": 109,
+   "Day173": 54,
+   "Day174": 1
+  },
+  "_Source": "Windows.Forensics.UserAccessLogs/Clients",
+  "_OSPath": "{03A01CC5-91BB-4936-B685-63697785D39E}.mdb"
+ },
+ {
+  "RoleGuid": "{ad495fc3-0eaa-413d-ba7d-8b13fa7ec598}",
+  "TenantId": "{5e210c24-fb44-45c2-996d-4139d5b7fc4c}",
+  "TotalAccesses": 15,
+  "InsertDate": "2021-06-15T01:27:53Z",
+  "LastAccess": "2021-06-15T01:49:46Z",
+  "AuthenticatedUserName": "lab\\jane",
+  "RoleName": null,
+  "RawAddress": "0a00006f",
+  "Address": "10.0.0.111",
+  "Days": {
+   "Day166": 15
+  },
+  "_Source": "Windows.Forensics.UserAccessLogs/Clients",
+  "_OSPath": "{03A01CC5-91BB-4936-B685-63697785D39E}.mdb"
+ },
+ {
+  "RoleGuid": "{ad495fc3-0eaa-413d-ba7d-8b13fa7ec598}",
+  "TenantId": "{5e210c24-fb44-45c2-996d-4139d5b7fc4c}",
+  "TotalAccesses": 1,
+  "InsertDate": "2021-06-20T12:54:06Z",
+  "LastAccess": "2021-06-20T12:54:06Z",
+  "AuthenticatedUserName": "lab\\laptop-bob$",
+  "RoleName": null,
+  "RawAddress": "7f000001",
+  "Address": "127.0.0.1",
+  "Days": {
+   "Day171": 1
+  },
+  "_Source": "Windows.Forensics.UserAccessLogs/Clients",
+  "_OSPath": "{03A01CC5-91BB-4936-B685-63697785D39E}.mdb"
+ }
+]SELECT *, basename(path=_OSPath) AS _OSPath FROM Artifact.Windows.Forensics.UserAccessLogs( source="SystemIdentity", SUMGlob=srcDir+"/artifacts/testdata/files/*.mdb") ORDER BY CreationTime LIMIT 1[
+ {
+  "CreationTime": "2022-08-21T03:08:08Z",
+  "PhysicalProcessorCount": 16,
+  "CoresPerPhysicalProcessor": 1,
+  "LogicalProcessorsPerPhysicalProcessor": 16,
+  "MaximumMemory": 7478444032,
+  "OSMajor": 10,
+  "OSMinor": 0,
+  "OSBuildNumber": 20348,
+  "OSPlatformId": 2,
+  "ServicePackMajor": 0,
+  "ServicePackMinor": 0,
+  "OSSuiteMask": 272,
+  "OSProductType": 3,
+  "OSCurrentTimeZone": 65116,
+  "OSDaylightInEffect": true,
+  "SystemManufacturer": "VMware, Inc.",
+  "SystemProductName": "VMware7,1",
+  "SystemSMBIOSUUID": "E18F4D56-479A-30F4-5D14-95C7B6D6C6F0",
+  "SystemSerialNumber": "VMware-56 4d 8f e1 9a 47 f4 30-5d 14 95 c7 b6 d6 c6 f0",
+  "SystemDNSHostName": "WIN-E5K9RC5GU23",
+  "SystemDomainName": "WORKGROUP",
+  "OSSerialNumber": "00454-40000-00001-AA671",
+  "OSCountryCode": "1",
+  "OSLastBootUpTime": "20220821023149.500000-420",
+  "_Source": "Windows.Forensics.UserAccessLogs/SystemIdentity",
+  "_OSPath": "SystemIdentity.mdb"
  }
 ]
