@@ -231,6 +231,16 @@ func installService(
 	}
 	defer s.Close()
 
+	// Set the service to autostart
+	err = s.SetRecoveryActions([]mgr.RecoveryAction{
+		{Type: mgr.ServiceRestart, Delay: time.Second * 60},
+		{Type: mgr.ServiceRestart, Delay: time.Second * 60},
+		{Type: mgr.ServiceRestart, Delay: time.Second * 60},
+	}, 60)
+	if err != nil {
+		logger.Info("SetRecoveryActions() failed: %s", err)
+	}
+
 	// Try to create an event source but dont sweat it if it does
 	// not work.
 	err = eventlog.InstallAsEventCreate(

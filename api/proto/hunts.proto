@@ -141,6 +141,9 @@ message Hunt {
     State state = 8 [(sem_type) = {
             description: "This is state of the hunt. This field is manupulated by the GUI."
         }];
+
+    // A list of the org IDs that the hunt will be launched on
+    repeated string org_ids = 22;
 }
 
 message HuntEstimateRequest {
