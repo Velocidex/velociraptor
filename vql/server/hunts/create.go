@@ -137,11 +137,6 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
-	if principal == "" {
-		scope.Log("hunt: Username not specified")
-		return vfilter.Null{}
-	}
-
 	err = collector.AddSpecProtobuf(config_obj, repository, scope,
 		arg.Spec, request)
 	if err != nil {

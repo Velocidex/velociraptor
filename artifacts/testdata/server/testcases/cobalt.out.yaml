@@ -142,18 +142,22 @@ SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Xor,D
   "Xor": "0x00",
   "DecodedConfig": "Sleep mask 32-bit 4.2 deobfuscation routine found."
  }
-]LET CSsectionStager <= xor(key="infected", string=read_file( filename=srcDir+"/artifacts/testdata/files/CSsectionStager.zip.xor"))[]LET CSShellcode <= xor(key="infected", string=read_file( filename=srcDir+"/artifacts/testdata/files/CSShellcode.zip.xor"))[]LET _ <= remap(config=RemappingTemplate, copy=["zip", "scope", "data", "process"], clear=TRUE)[]SELECT OSPath FROM glob(globs="/**") ORDER BY OSPath[
+]LET CSsectionStager <= xor(key="infected", string=read_file( filename=srcDir+"/artifacts/testdata/files/CSsectionStager.zip.xor"))[]LET CSShellcode <= xor(key="infected", string=read_file( filename=srcDir+"/artifacts/testdata/files/CSShellcode.zip.xor"))[]LET _ <= remap(config=RemappingTemplate, copy=["zip", "scope", "data", "process"], clear=TRUE)[]SELECT OSPath, Name FROM glob(globs="/**") ORDER BY Name[
  {
-  "OSPath": "CSShellcode"
+  "OSPath": "CSShellcode",
+  "Name": "CSShellcode"
  },
  {
-  "OSPath": "CSsectionStager"
+  "OSPath": "CSShellcode\\CSShellcode.bin",
+  "Name": "CSShellcode.bin"
  },
  {
-  "OSPath": "CSsectionStager\\CSsectionStager.exe"
+  "OSPath": "CSsectionStager",
+  "Name": "CSsectionStager"
  },
  {
-  "OSPath": "CSShellcode\\CSShellcode.bin"
+  "OSPath": "CSsectionStager\\CSsectionStager.exe",
+  "Name": "CSsectionStager.exe"
  }
 ]SELECT Rule,FullPath.Basename,Hash,Xor,DecodedConfig FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob="/**/*.exe")[
  {
