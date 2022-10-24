@@ -58,7 +58,7 @@ Queries:
 
   - LET _ <= remap(config=RemappingTemplate, copy=["zip", "scope", "data", "process"], clear=TRUE)
 
-  - SELECT OSPath FROM glob(globs="/**") ORDER BY OSPath
+  - SELECT OSPath, Name FROM glob(globs="/**") ORDER BY Name
 
   # tests embedded shellcode in data section parsing
   - SELECT Rule,FullPath.Basename,Hash,Xor,DecodedConfig
