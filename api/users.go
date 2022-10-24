@@ -1,6 +1,8 @@
 package api
 
 import (
+	"sort"
+
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -71,6 +73,7 @@ func (self *ApiServer) GetUsers(
 		return nil, Status(self.verbose, err)
 	}
 
+	sort.Slice(users, func(i, j int) bool { return users[i].Name < users[j].Name })
 	result.Users = users
 
 	return result, nil
