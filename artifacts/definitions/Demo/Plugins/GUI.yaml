@@ -27,7 +27,7 @@ parameters:
     type: regex
     default: "."
 
-  - name: MultupleRegularExpression
+  - name: MultipleRegularExpression
     type: regex_array
     default: '[".+"]'
 

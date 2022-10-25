@@ -34,7 +34,7 @@ type CreateDownloadRequest struct {
 	JsonFormat       bool `protobuf:"varint,5,opt,name=json_format,json=jsonFormat,proto3" json:"json_format,omitempty"`
 	CsvFormat        bool `protobuf:"varint,6,opt,name=csv_format,json=csvFormat,proto3" json:"csv_format,omitempty"`
 	// Can be "report" for html report or "" for just files.
-	DownloadType string `protobuf:"bytes,7,opt,name=download_type,json=downloadType,proto3" json:"download_type,omitempty"`
+	DownloadType string `protobuf:"bytes,7,opt,name=download_type,json=downloadType,proto3" json:"download_type,omitempty"` // DEPRECATED
 	// If set we lock the file with this password.
 	Password string `protobuf:"bytes,8,opt,name=password,proto3" json:"password,omitempty"`
 	// If set we expand all sparse files in the archive.

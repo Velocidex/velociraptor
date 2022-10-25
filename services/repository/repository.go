@@ -204,6 +204,15 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 		}
 	}
 
+	// Make sure none of the aliases already exist
+	for _, alias := range artifact.Aliases {
+		_, pres := self.Data[alias]
+		if pres {
+			return nil, fmt.Errorf("%s: Artifact Alias is already taken %s",
+				artifact.Name, alias)
+		}
+	}
+
 	// Normalize the type.
 	artifact.Type = strings.ToLower(artifact.Type)
 	switch artifact.Type {
@@ -340,6 +349,12 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 
 	self.mu.Lock()
 	self.Data[artifact.Name] = artifact
+	for _, alias := range artifact.Aliases {
+		// Make a copy of the artifact definition
+		artifact_copy := proto.Clone(artifact).(*artifacts_proto.Artifact)
+		artifact_copy.Name = alias
+		self.Data[alias] = artifact_copy
+	}
 	self.mu.Unlock()
 
 	return artifact, nil

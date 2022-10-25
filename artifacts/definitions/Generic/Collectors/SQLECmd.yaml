@@ -111,7 +111,7 @@ parameters:
 
 sources:
 - query: |
-   LET AllFilenamesRegex <= '''^(CarsDB.db|Contacts.db|random.sqlite|ActivitiesCache.db|Antiphishing.db|RansomwareRecover.db|cache.db|es.db|Web Data|Web Data|Cookies|History|Favicons|History|History|Web Data|Media History|Media History|Network Action Predictor|Shortcuts|Top Sites|aggregation.dbx|config.db|filecache.db|icon.db|instance.dbx|home.db|home.db|home.db|home.db|sync_history.db|tray-thumbnails.db|EventTranscript.db|EventTranscript.db|queue.sqlite3|places.sqlite|cookies.sqlite|downloads.sqlite|places.sqlite|favicons.sqlite|formhistory.sqlite|places.sqlite|random.db|cloud_graph.db|snapshot.db|sync_config.db|metadata_sqlite_db|plum.sqlite|nessusd.db|random.db|Main.db|wpndatabase.db|wpndatabase.db|Store.db|contacts.db|Notifications.db|Phone.db|photos.db|settings.db|accounts4.db|callhistory.storedata)$'''
+   LET AllFilenamesRegex <= '''^(CarsDB.db|Contacts.db|random.sqlite|ActivitiesCache.db|Antiphishing.db|RansomwareRecover.db|cache.db|es.db|Web Data|Web Data|Cookies|History|Favicons|History|History|Web Data|Media History|Media History|Network Action Predictor|Shortcuts|Top Sites|aggregation.dbx|config.db|filecache.db|icon.db|instance.dbx|home.db|home.db|home.db|home.db|sync_history.db|tray-thumbnails.db|EventTranscript.db|EventTranscript.db|queue.sqlite3|places.sqlite|cookies.sqlite|downloads.sqlite|places.sqlite|favicons.sqlite|formhistory.sqlite|places.sqlite|random.db|cloud_graph.db|snapshot.db|sync_config.db|metadata_sqlite_db|plum.sqlite|nessusd.db|MediaDb.v1.sqlite|random.db|Main.db|wpndatabase.db|wpndatabase.db|Store.db|contacts.db|Notifications.db|Phone.db|photos.db|settings.db|accounts4.db|callhistory.storedata)$'''
    LET SQLiteFiles <=
    SELECT OSPath,
     read_file(filename=OSPath, length=15, accessor=Accessor) AS Magic,
@@ -4582,6 +4582,48 @@ sources:
     ORDER BY
     	Timestamp'''
     LET FileName = '''random.db'''
+
+    SELECT * FROM ApplyFile(
+      SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
+
+- name: Windows Photos Items
+  query: |
+    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='Item' OR name='Folder');'''
+    LET IdentifyValue = 2
+    LET SQLQuery = '''select item.Item_FileName AS Item_FileName,
+    item.Item_FileSize AS Item_FileSize,
+    item.Item_Width AS Item_Width,
+    item.Item_Height AS Item_Height,
+    item.Item_Latitude AS Item_Latitude,
+    item.Item_Longitude AS Item_Longitude,
+    ApplicationName.ApplicationName_Text,
+    CameraManufacturer.CameraManufacturer_Text,
+    CameraModel.CameraModel_Text,
+    datetime((item.Item_DateTaken - 116444736000000000) / 10000000, 'unixepoch', 'localtime') AS Item_DateTaken,
+    datetime((item.Item_DateCreated - 116444736000000000) / 10000000, 'unixepoch', 'localtime') AS Item_DateCreated,
+    datetime((item.Item_DateModified - 116444736000000000) / 10000000, 'unixepoch', 'localtime') AS Item_DateModified,
+    datetime((item.Item_DateIngested - 116444736000000000) / 10000000, 'unixepoch', 'localtime') AS Item_DateIngested
+    FROM item
+    LEFT JOIN ApplicationName ON item.Item_ApplicationNameId = ApplicationName.ApplicationName_Id
+    LEFT JOIN CameraManufacturer ON item.Item_CameraManufacturerId = CameraManufacturer.CameraManufacturer_Id
+    LEFT JOIN CameraModel ON item.Item_CameraModelId = CameraModel.CameraModel_Id
+    ORDER BY Item_DateCreated DESC'''
+    LET FileName = '''MediaDb.v1.sqlite'''
+
+    SELECT * FROM ApplyFile(
+      SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
+
+- name: Windows Photos Folders
+  query: |
+    LET IdentifyQuery = '''SELECT count(*) FROM sqlite_master WHERE type='table' AND (name='Item' OR name='Folder');'''
+    LET IdentifyValue = 2
+    LET SQLQuery = '''select Folder.Folder_Path AS Folder_Path,
+    Folder.Folder_DisplayName AS Folder_DisplayName,
+    Folder.Folder_ItemCount AS Folder_ItemCount,
+    datetime((Folder.Folder_DateCreated - 116444736000000000) / 10000000, 'unixepoch', 'localtime') AS Folder_DateCreated,
+    datetime((Folder.Folder_DateModified - 116444736000000000) / 10000000, 'unixepoch', 'localtime') AS Folder_DateModified
+    FROM Folder ORDER BY Folder_DateCreated DESC'''
+    LET FileName = '''MediaDb.v1.sqlite'''
 
     SELECT * FROM ApplyFile(
       SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
