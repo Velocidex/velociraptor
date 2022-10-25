@@ -1035,24 +1035,27 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 		}).Info("CreateDownloadRequest")
 
 	format := ""
-	if in.JsonFormat {
+	if in.JsonFormat && !in.CsvFormat {
 		format = "json"
-	} else if in.CsvFormat {
+	} else if in.CsvFormat && !in.JsonFormat {
+		format = "csv_only"
+	} else if in.CsvFormat && in.JsonFormat {
 		format = "csv"
+	} else {
+		format = "json"
 	}
 
 	query := ""
 	env := ordereddict.NewDict()
 	if in.FlowId != "" && in.ClientId != "" {
-		query = `SELECT create_flow_download(password=Password,
-      expand_sparse=ExpandSparse,
-      client_id=ClientId, flow_id=FlowId, type=DownloadType) AS VFSPath
+		query = `SELECT create_flow_download(password=Password, format=Format,
+      expand_sparse=ExpandSparse, client_id=ClientId, flow_id=FlowId) AS VFSPath
       FROM scope()`
 
 		env.Set("ClientId", in.ClientId).
 			Set("FlowId", in.FlowId).
 			Set("Password", in.Password).
-			Set("DownloadType", in.DownloadType).
+			Set("Format", format).
 			Set("ExpandSparse", in.ExpandSparse)
 
 	} else if in.HuntId != "" {

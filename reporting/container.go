@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"hash"
 	"io"
 	"os"
@@ -30,6 +31,33 @@ import (
 	"github.com/Velocidex/ordereddict"
 	concurrent_zip "github.com/Velocidex/zip"
 )
+
+type ContainerFormat int
+
+const (
+	ContainerFormatJson       ContainerFormat = 1
+	ContainerFormatCSV        ContainerFormat = 2
+	ContainerFormatCSVAndJson ContainerFormat = ContainerFormatJson |
+		ContainerFormatCSV
+)
+
+func GetContainerFormat(format string) (ContainerFormat, error) {
+	switch format {
+	case "json", "jsonl", "":
+		return ContainerFormatJson, nil
+
+	case "csv":
+		return ContainerFormatCSVAndJson, nil
+
+	case "csv_only":
+		return ContainerFormatCSV, nil
+
+	default:
+	}
+	return 0, fmt.Errorf(
+		"Unknown format parameter %v either 'json', 'jsonl', 'cvs' or 'csv_only'.",
+		format)
+}
 
 var (
 	Clock utils.Clock = utils.RealClock{}
@@ -112,7 +140,10 @@ func (self *Container) StoreArtifact(
 	ctx context.Context,
 	scope vfilter.Scope,
 	query *actions_proto.VQLRequest,
-	format string) (total_rows int, err error) {
+	format ContainerFormat) (total_rows int, err error) {
+
+	subctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	// Record query progress for stats and debugging.
 	query_log := actions.QueryLog.AddQuery(query.VQL)
@@ -127,7 +158,7 @@ func (self *Container) StoreArtifact(
 
 	// Dont store un-named queries but run them anyway.
 	if artifact_name == "" {
-		for range vql.Eval(ctx, scope) {
+		for range vql.Eval(subctx, scope) {
 			total_rows++
 		}
 		return total_rows, nil
@@ -135,20 +166,35 @@ func (self *Container) StoreArtifact(
 
 	// The name to use in the zip file to store results from this artifact
 	path_manager := paths.NewContainerPathManager(artifact_name)
-	result_set_writer, err := NewResultSetWriter(self, path_manager.Path())
-	if err != nil {
-		return total_rows, err
-	}
+	return self.WriteResultSet(subctx, config_obj, scope, format,
+		path_manager.Path(), vql.Eval(subctx, scope))
+}
 
-	// Preserve the error for our caller.
-	defer func() {
-		result_set_writer.Close()
-	}()
+func (self *Container) WriteResultSet(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	scope vfilter.Scope, format ContainerFormat,
+	dest string, in <-chan vfilter.Row) (total_rows int, err error) {
+
+	var result_set_writer *ContainerResultSetWriter
+
+	// Only create JSON files if required.
+	if format&ContainerFormatJson > 0 {
+		result_set_writer, err = NewResultSetWriter(self, dest)
+		if err != nil {
+			return total_rows, err
+		}
+
+		defer func() {
+			result_set_writer.Close()
+		}()
+	}
 
 	// Optionally include CSV in the output
 	var csv_writer *csv.CSVWriter
-	if format == "csv" {
-		csv_fd, err := self.Create(path_manager.CSVPath(), time.Time{})
+	if format&ContainerFormatCSV > 0 {
+		csv_filename := strings.TrimSuffix(dest, ".json") + ".csv"
+		csv_fd, err := self.Create(csv_filename, time.Time{})
 		if err != nil {
 			return total_rows, err
 		}
@@ -167,7 +213,7 @@ func (self *Container) StoreArtifact(
 	}
 
 	// Store as line delimited JSON
-	for row := range vql.Eval(ctx, scope) {
+	for row := range in {
 		total_rows++
 
 		select {
@@ -175,9 +221,11 @@ func (self *Container) StoreArtifact(
 			return
 
 		default:
-			err := result_set_writer.Write(row)
-			if err != nil {
-				continue
+			if format&ContainerFormatJson > 0 {
+				err := result_set_writer.Write(row)
+				if err != nil {
+					continue
+				}
 			}
 
 			if csv_writer != nil {
@@ -187,6 +235,17 @@ func (self *Container) StoreArtifact(
 	}
 
 	return total_rows, nil
+}
+
+func (self *Container) WriteJSON(name string, data interface{}) error {
+	fd, err := self.Create(name, Clock.Now())
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+
+	_, err = fd.Write(json.MustMarshalIndent(data))
+	return err
 }
 
 // Parse the path according to the accessor to return the components
@@ -473,6 +532,15 @@ func NewContainer(
 	if err != nil {
 		return nil, err
 	}
+
+	return NewContainerFromWriter(config_obj, fd, password, level, metadata)
+}
+
+func NewContainerFromWriter(
+	config_obj *config_proto.Config, fd io.WriteCloser,
+	password string, level int64, metadata []vfilter.Row) (*Container, error) {
+
+	var err error
 
 	if level < 0 || level > 9 {
 		level = 5
