@@ -183,7 +183,9 @@ export default class RegEx extends React.Component {
     render() {
         return (
             <>
-              <div ref={this.myRef}>
+              <div ref={this.myRef}
+                className="regex-form"
+              >
                 <Overlay target={this.myRef}
                          show={!_.isEmpty(this.state.error)}
                          placement="top">
