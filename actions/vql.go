@@ -166,8 +166,16 @@ func (self VQLClientAction) StartQuery(
 
 	scope.Log("INFO:Starting query execution.")
 
-	scope.SetThrottler(NewThrottler(ctx, scope, float64(rate),
-		float64(cpu_limit), float64(iops_limit)))
+	throttler := NewThrottler(ctx, scope, float64(rate),
+		float64(cpu_limit), float64(iops_limit))
+
+	if arg.ProgressTimeout > 0 {
+		duration := time.Duration(arg.ProgressTimeout) * time.Second
+		throttler = NewProgressThrottler(
+			sub_ctx, scope, cancel, throttler, duration)
+		scope.Log("query: Installing a progress alarm for %v", duration)
+	}
+	scope.SetThrottler(throttler)
 
 	start := time.Now()
 

@@ -253,6 +253,10 @@ func (self *Launcher) CompileCollectorArgs(
 				vql_collector_args.CpuLimit = collector_request.CpuLimit
 			}
 
+			if collector_request.ProgressTimeout > 0 {
+				vql_collector_args.ProgressTimeout = collector_request.ProgressTimeout
+			}
+
 			if collector_request.IopsLimit > 0 {
 				vql_collector_args.IopsLimit = collector_request.IopsLimit
 			}
