@@ -353,6 +353,7 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 		// Make a copy of the artifact definition
 		artifact_copy := proto.Clone(artifact).(*artifacts_proto.Artifact)
 		artifact_copy.Name = alias
+		artifact_copy.IsAlias = true
 		self.Data[alias] = artifact_copy
 	}
 	self.mu.Unlock()

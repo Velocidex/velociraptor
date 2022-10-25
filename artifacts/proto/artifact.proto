@@ -201,6 +201,7 @@ message Artifact {
 
     // The artifact is built into the Velociraptor binary.
     bool built_in = 20;
+    bool is_alias = 22;
 }
 
 message ArtifactDescriptors {

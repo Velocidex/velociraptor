@@ -68,7 +68,7 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 		artifact, pres := repository.Get(ConfigObj, artifact_name)
 		assert.True(self.T(), pres)
 
-		if artifact != nil {
+		if artifact != nil && !artifact.IsAlias {
 			_, err = new_repository.LoadProto(artifact, true /* validate */)
 			assert.NoError(self.T(), err, "Error compiling "+artifact_name)
 		}
