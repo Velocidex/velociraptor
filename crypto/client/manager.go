@@ -77,6 +77,7 @@ func NewCryptoManager(config_obj *config_proto.Config,
 	public_key_resolver PublicKeyResolver,
 	logger *logging.LogContext) (
 	*CryptoManager, error) {
+
 	private_key, err := crypto_utils.ParseRsaPrivateKeyFromPemStr(private_key_pem)
 	if err != nil {
 		return nil, err
@@ -182,12 +183,19 @@ func (self *CryptoManager) getAuthState(
 
 	// Verify the cipher signature using the certificate known for
 	// the sender.
-	public_key, pres := self.Resolver.GetPublicKey(config_obj, cipher_metadata.Source)
+	client_id := utils.ClientIdFromSource(cipher_metadata.Source)
+	public_key, pres := self.Resolver.GetPublicKey(
+		config_obj, cipher_metadata.Source)
 	if !pres {
-		// We dont know who we are talking to so we can not
-		// trust them.
-		return false,
-			fmt.Errorf("No cert found for %s", cipher_metadata.Source)
+		// Try to extract an org id from the source in case the public
+		// key was added without one.
+		public_key, pres = self.Resolver.GetPublicKey(config_obj, client_id)
+		if !pres {
+			// We dont know who we are talking to so we can not trust
+			// them.
+			return false,
+				fmt.Errorf("No cert found for %s", cipher_metadata.Source)
+		}
 	}
 
 	hashed := sha256.Sum256(serialized_cipher)

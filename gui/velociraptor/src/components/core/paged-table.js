@@ -110,6 +110,9 @@ class VeloPagedTable extends Component {
 
         translate_column_headers: PropTypes.bool,
 
+        // If set we remove the option to filter/sort the table.
+        no_transformations: PropTypes.bool,
+
         // An optional toolbar that can be passed to the table.
         toolbar: PropTypes.object,
 
@@ -472,13 +475,14 @@ class VeloPagedTable extends Component {
                                                  }))}>
                             <FontAwesomeIcon icon="file-csv"/>
                           </Button>
-                          <Button variant="default"
-                                  onClick={()=>this.setState({
-                                      show_transform_dialog: true,
-                                  })}
-                                  title={T("Transform Table")}>
-                            <FontAwesomeIcon icon="filter"/>
-                          </Button>
+                          {!this.props.no_transformations &&
+                           <Button variant="default"
+                                   onClick={()=>this.setState({
+                                       show_transform_dialog: true,
+                                   })}
+                                   title={T("Transform Table")}>
+                             <FontAwesomeIcon icon="filter"/>
+                           </Button>}
                         </ButtonGroup>
                         { transformed.length > 0 &&
                           <ButtonGroup className="float-right">

@@ -59,6 +59,8 @@ import (
 
 var (
 	file_based_imp = &FileBaseDataStore{}
+
+	datastoreNotConfiguredError = errors.New("Datastore not configured")
 )
 
 const (
@@ -294,6 +296,10 @@ func (self *FileBaseDataStore) Close() {}
 func writeContentToFile(config_obj *config_proto.Config,
 	urn api.DSPathSpec, data []byte) error {
 
+	if config_obj.Datastore == nil {
+		return datastoreNotConfiguredError
+	}
+
 	filename := urn.AsDatastoreFilename(config_obj)
 	file, err := os.OpenFile(
 		filename, os.O_RDWR|os.O_CREATE, 0660)
@@ -331,6 +337,11 @@ func writeContentToFile(config_obj *config_proto.Config,
 func readContentFromFile(
 	config_obj *config_proto.Config, urn api.DSPathSpec,
 	must_exist bool) ([]byte, error) {
+
+	if config_obj.Datastore == nil {
+		return nil, datastoreNotConfiguredError
+	}
+
 	file, err := os.Open(urn.AsDatastoreFilename(config_obj))
 	if err == nil {
 		defer file.Close()

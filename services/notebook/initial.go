@@ -286,7 +286,9 @@ LET ColumnTypes <= dict(
 /*
 # Flows with ERROR status
 */
-SELECT ClientId, FlowId, Flow.start_time As StartedTime,
+SELECT ClientId,
+       client_info(client_id=ClientId).os_info.hostname AS Hostname,
+       FlowId, Flow.start_time As StartedTime,
        Flow.state AS FlowState, Flow.status as FlowStatus,
        Flow.execution_duration as Duration,
        Flow.total_collected_bytes as TotalBytes,
@@ -297,7 +299,9 @@ WHERE FlowState =~ 'ERROR'
 /*
 ## Flows with RUNNING status
 */
-SELECT ClientId, FlowId, Flow.start_time As StartedTime,
+SELECT ClientId,
+       client_info(client_id=ClientId).os_info.hostname AS Hostname,
+       FlowId, Flow.start_time As StartedTime,
        Flow.state AS FlowState, Flow.status as FlowStatus,
        Flow.execution_duration as Duration,
        Flow.total_collected_bytes as TotalBytes,
@@ -308,13 +312,16 @@ WHERE FlowState =~ 'RUNNING'
 /*
 ## Flows with FINISHED status
 */
-SELECT ClientId, FlowId, Flow.start_time As StartedTime,
+SELECT ClientId,
+       client_info(client_id=ClientId).os_info.hostname AS Hostname,
+       FlowId, Flow.start_time As StartedTime,
        Flow.state AS FlowState, Flow.status as FlowStatus,
        Flow.execution_duration as Duration,
        Flow.total_collected_bytes as TotalBytes,
        Flow.total_collected_rows as TotalRows
 FROM hunt_flows(hunt_id=HuntId)
 WHERE FlowState =~ 'Finished'
+LIMIT 1000
 `})
 
 	return getDefaultCellsForSources(config_obj, sources, notebook_metadata)
