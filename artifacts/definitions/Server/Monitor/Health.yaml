@@ -63,7 +63,7 @@ reports:
             </span>
       </span>
 
-      {{ if Query "SELECT org() FROM scope() WHERE org().name =~ 'root org' " }}
+      {{ if ( Query "SELECT org() FROM scope() WHERE org().name =~ 'root org' " | Expand ) }}
       ## Current Orgs
 
       {{ Query "LET ColumnTypes <= dict(ClientConfig='url') \
