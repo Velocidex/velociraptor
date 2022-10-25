@@ -335,12 +335,14 @@ class NotebooksList extends React.Component {
                   </Button>
 
                   <Button title="Delete Notebook"
+                          disabled={_.isEmpty(this.props.selected_notebook)}
                           onClick={()=>this.setState({showDeleteNotebookDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="trash"/>
                   </Button>
 
                   <Button title="Edit Notebook"
+                          disabled={_.isEmpty(this.props.selected_notebook)}
                           onClick={()=>this.setState({showEditNotebookDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="wrench"/>

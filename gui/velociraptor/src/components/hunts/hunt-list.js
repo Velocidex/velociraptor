@@ -338,7 +338,7 @@ class HuntList extends React.Component {
                     <FontAwesomeIcon icon="stop"/>
                   </Button>
                   <Button title={T("Delete Hunt")}
-                          disabled={state === 'RUNNING'}
+                          disabled={state === 'RUNNING' || !selected_hunt}
                           onClick={() => this.setState({showDeleteHuntDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="trash-alt"/>
