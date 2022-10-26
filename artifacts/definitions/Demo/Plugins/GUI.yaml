@@ -27,6 +27,10 @@ parameters:
     type: regex
     default: "."
 
+  - name: MultupleRegularExpression
+    type: regex_array
+    default: '[".+"]'
+
   - name: YaraRule
     type: yara
 
