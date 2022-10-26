@@ -31,7 +31,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk/v2"
+	"github.com/clayscode/Go-Splunk-HTTP/splunk/v2"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -55,6 +55,7 @@ type _SplunkPluginArgs struct {
 	RootCerts      string              `vfilter:"optional,field=root_ca,doc=As a better alternative to skip_verify, allows root ca certs to be added here."`
 	WaitTime       int64               `vfilter:"optional,field=wait_time,doc=Batch splunk upload this long (2 sec)."`
 	TimestampField string              `vfilter:"optional,field=timestamp_field,doc=Field to use as event timestamp"`
+	Hostname       string              `vfilter:"optional,field=hostname,doc=Hostname for Splunk Events. Defaults to server hostname"`
 }
 
 type _SplunkPlugin struct{}
@@ -161,6 +162,7 @@ func _upload_rows(
 		arg.Source,
 		arg.Sourcetype,
 		arg.Index,
+		arg.Hostname,
 	)
 
 	wait_time := time.Duration(arg.WaitTime) * time.Second

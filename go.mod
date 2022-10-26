@@ -131,7 +131,6 @@ require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1 // indirect
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/PuerkitoBio/goquery v1.8.0 // indirect
-	github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk/v2 v2.0.2 // indirect
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
@@ -141,6 +140,7 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cavaliergopher/cpio v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.1-0.20221026122553-3bc8157da558 // indirect
 	github.com/crewjam/httperr v0.2.0 // indirect
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
@@ -226,7 +226,5 @@ replace github.com/alecthomas/chroma => github.com/Velocidex/chroma v0.6.8-0.202
 
 // Fix broken version issue.
 replace github.com/crewjam/saml v0.4.8 => github.com/Velocidex/saml v0.0.0-20221019055034-272f55e26c8d
-
-replace github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk/v2 => github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.0-20221025194015-99f7b60c57ef
 
 replace github.com/go-errors/errors => github.com/Velocidex/errors v0.0.0-20221019164655-9ace6bf61e26
