@@ -31,7 +31,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	splunk "github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk/v2"
+	"github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk/v2"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
