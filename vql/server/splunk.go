@@ -31,7 +31,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk/v2"
+	splunk "github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk/v2"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -43,17 +43,18 @@ import (
 )
 
 type _SplunkPluginArgs struct {
-	Query      vfilter.StoredQuery `vfilter:"required,field=query,doc=Source for rows to upload."`
-	Threads    int64               `vfilter:"optional,field=threads,doc=How many threads to use."`
-	URL        string              `vfilter:"optional,field=url,doc=The Splunk Event Collector URL."`
-	Token      string              `vfilter:"optional,field=token,doc=Splunk HEC Token."`
-	Index      string              `vfilter:"required,field=index,doc=The name of the index to upload to."`
-	Source     string              `vfilter:"optional,field=source,doc=The source field for splunk. If not specified this will be 'velociraptor'."`
-	Sourcetype string              `vfilter:"optional,field=sourcetype,doc=The sourcetype field for splunk. If not specified this will 'vql'"`
-	ChunkSize  int64               `vfilter:"optional,field=chunk_size,doc=The number of rows to send at the time."`
-	SkipVerify bool                `vfilter:"optional,field=skip_verify,doc=Skip SSL verification(default: False)."`
-	RootCerts  string              `vfilter:"optional,field=root_ca,doc=As a better alternative to skip_verify, allows root ca certs to be added here."`
-	WaitTime   int64               `vfilter:"optional,field=wait_time,doc=Batch splunk upload this long (2 sec)."`
+	Query          vfilter.StoredQuery `vfilter:"required,field=query,doc=Source for rows to upload."`
+	Threads        int64               `vfilter:"optional,field=threads,doc=How many threads to use."`
+	URL            string              `vfilter:"optional,field=url,doc=The Splunk Event Collector URL."`
+	Token          string              `vfilter:"optional,field=token,doc=Splunk HEC Token."`
+	Index          string              `vfilter:"required,field=index,doc=The name of the index to upload to."`
+	Source         string              `vfilter:"optional,field=source,doc=The source field for splunk. If not specified this will be 'velociraptor'."`
+	Sourcetype     string              `vfilter:"optional,field=sourcetype,doc=The sourcetype field for splunk. If not specified this will 'vql'"`
+	ChunkSize      int64               `vfilter:"optional,field=chunk_size,doc=The number of rows to send at the time."`
+	SkipVerify     bool                `vfilter:"optional,field=skip_verify,doc=Skip SSL verification(default: False)."`
+	RootCerts      string              `vfilter:"optional,field=root_ca,doc=As a better alternative to skip_verify, allows root ca certs to be added here."`
+	WaitTime       int64               `vfilter:"optional,field=wait_time,doc=Batch splunk upload this long (2 sec)."`
+	TimestampField string              `vfilter:"optional,field=timestamp_field,doc=Field to use as event timestamp"`
 }
 
 type _SplunkPlugin struct{}
@@ -204,15 +205,43 @@ func send_to_splunk(
 	var events []*splunk.Event
 
 	for _, event := range buf {
-		events = append(
-			events,
-			client.NewEvent(
-				event,
-				arg.Source,
-				arg.Sourcetype,
-				arg.Index,
-			),
-		)
+		if arg.TimestampField != "" {
+			dict, ok := event.(*ordereddict.Dict)
+			if !ok {
+				scope.Log("ERROR:splunk_upload: Unexpected type for row")
+				return
+			}
+			ts, ok := dict.Get(arg.TimestampField)
+			if ok {
+				timestamp, ok := ts.(time.Time)
+				if !ok {
+					scope.Log("ERROR:splunk_upload: Must use timestamp function for timestamp field")
+					return
+				}
+				events = append(
+					events,
+					client.NewEventWithTime(
+						timestamp,
+						event,
+						arg.Source,
+						arg.Sourcetype,
+						arg.Index,
+					),
+				)
+			} else {
+				scope.Log("ERROR:splunk_upload: %s not found!", arg.TimestampField)
+			}
+		} else {
+			events = append(
+				events,
+				client.NewEvent(
+					event,
+					arg.Source,
+					arg.Sourcetype,
+					arg.Index,
+				),
+			)
+		}
 	}
 
 	err := client.LogEvents(events)

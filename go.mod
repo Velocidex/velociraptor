@@ -19,7 +19,6 @@ require (
 	github.com/Velocidex/ttlcache/v2 v2.9.1-0.20211116035050-ddd93fed62f5
 	github.com/Velocidex/yaml/v2 v2.2.8
 	github.com/Velocidex/zip v0.0.0-20210101070220-e7ecefb7aad7
-	github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk/v2 v2.0.2
 	github.com/alecthomas/assert v1.0.0
 	github.com/alecthomas/chroma v0.7.3
 	github.com/alecthomas/participle v0.7.1
@@ -131,6 +130,7 @@ require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1 // indirect
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/PuerkitoBio/goquery v1.8.0 // indirect
+	github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk/v2 v2.0.2 // indirect
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
@@ -223,3 +223,5 @@ replace github.com/alecthomas/chroma => github.com/Velocidex/chroma v0.6.8-0.202
 
 // Fix broken version issue.
 replace github.com/crewjam/saml v0.4.8 => github.com/Velocidex/saml v0.0.0-20221019055034-272f55e26c8d
+
+replace github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk/v2 => github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.0-20221025194015-99f7b60c57ef
