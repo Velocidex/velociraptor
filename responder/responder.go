@@ -62,7 +62,7 @@ type Responder struct {
 	request    *crypto_proto.VeloMessage
 	logger     *logging.LogContext
 	start_time int64
-	log_id     int64
+	log_id     int32
 
 	// The name of the query we are currently running.
 	Artifact string
@@ -193,13 +193,13 @@ func (self *Responder) Log(ctx context.Context, level string,
 	self.AddResponse(ctx, &crypto_proto.VeloMessage{
 		RequestId: constants.LOG_SINK,
 		LogMessage: &crypto_proto.LogMessage{
-			Id:        atomic.LoadInt64(&self.log_id),
+			Id:        int64(atomic.LoadInt32(&self.log_id)),
 			Message:   fmt.Sprintf(format, v...),
 			Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
 			Artifact:  self.Artifact,
 			Level:     level,
 		}})
-	atomic.AddInt64(&self.log_id, 1)
+	atomic.AddInt32(&self.log_id, 1)
 }
 
 func (self *Responder) SessionId() string {
