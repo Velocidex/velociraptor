@@ -43,7 +43,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	"google.golang.org/protobuf/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -130,7 +130,7 @@ func (self *InventoryService) GetToolInfo(
 			return proto.Clone(item).(*artifacts_proto.Tool), nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Tool %v not declared in inventory.", tool))
+	return nil, fmt.Errorf("Tool %v not declared in inventory.", tool)
 }
 
 // Actually download and resolve the tool and make sure it is
@@ -152,8 +152,9 @@ func (self *InventoryService) materializeTool(
 		var err error
 		tool.Url, err = getGithubRelease(ctx, self.Client, org_config_obj, tool)
 		if err != nil {
-			return errors.Wrap(
-				err, "While resolving github release "+tool.GithubProject)
+			return fmt.Errorf(
+				"While resolving github release %v: %w ",
+				tool.GithubProject, err)
 		}
 
 		// Set the filename to something sensible so it is always valid.
@@ -221,8 +222,8 @@ func (self *InventoryService) materializeTool(
 
 	// If the download failed, we can not store this tool.
 	if res.StatusCode != 200 {
-		return errors.New(fmt.Sprintf("Unable to download file from %v: %v",
-			tool.Url, res.Status))
+		return fmt.Errorf("Unable to download file from %v: %v",
+			tool.Url, res.Status)
 	}
 	sha_sum := sha256.New()
 

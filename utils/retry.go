@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 )
 
 var (

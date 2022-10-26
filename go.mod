@@ -22,7 +22,7 @@ require (
 	github.com/alecthomas/assert v1.0.0
 	github.com/alecthomas/chroma v0.7.3
 	github.com/alecthomas/participle v0.7.1
-	github.com/alecthomas/repr v0.1.0 // indirect
+	github.com/alecthomas/repr v0.1.1 // indirect
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/aws/aws-sdk-go v1.44.118
@@ -61,9 +61,8 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.16
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/panicwrap v1.0.0
-	github.com/olekukonko/tablewriter v0.0.4
+	github.com/olekukonko/tablewriter v0.0.5
 	github.com/oschwald/maxminddb-golang v1.8.0
-	github.com/pkg/errors v0.9.1
 	github.com/pkg/sftp v1.13.1
 	github.com/prometheus/client_golang v1.12.1
 	github.com/prometheus/client_model v0.2.0
@@ -99,12 +98,12 @@ require (
 	howett.net/plist v1.0.0
 	www.velocidex.com/golang/evtx v0.2.1-0.20220404133451-1fdf8be7325e
 	www.velocidex.com/golang/go-ese v0.1.1-0.20220107095505-c38622559671
-	www.velocidex.com/golang/go-ntfs v0.1.2-0.20221016032938-a192c126681e
+	www.velocidex.com/golang/go-ntfs v0.1.2-0.20221022134455-f91169ef8a39
 	www.velocidex.com/golang/go-pe v0.1.1-0.20220506020923-9fac492a9b0d
 	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
 	www.velocidex.com/golang/oleparse v0.0.0-20220617011920-94df2342d0b7
-	www.velocidex.com/golang/regparser v0.0.0-20220803120500-8e74df808b0a
-	www.velocidex.com/golang/vfilter v0.0.0-20221009130033-4de0683e9d19
+	www.velocidex.com/golang/regparser v0.0.0-20221020153526-bbc758cbd18b
+	www.velocidex.com/golang/vfilter v0.0.0-20221020070405-7af3cd80b934
 )
 
 require (
@@ -114,9 +113,11 @@ require (
 	github.com/Velocidex/ordereddict v0.0.0-20220428153415-da46091cd216
 	github.com/coreos/go-oidc/v3 v3.4.0
 	github.com/evanphx/json-patch/v5 v5.6.0
+	github.com/glaslos/tlsh v0.2.0
+	github.com/go-errors/errors v1.4.2
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/hillu/go-archive-zip-crypto v0.0.0-20200712202847-bd5cf365dd44
-	github.com/rogpeppe/go-internal v1.8.0
+	github.com/rogpeppe/go-internal v1.9.0
 	github.com/shirou/gopsutil/v3 v3.21.11
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
@@ -162,17 +163,18 @@ require (
 	github.com/lestrrat-go/strftime v1.0.5 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/mattermost/xml-roundtrip-validator v0.1.0 // indirect
-	github.com/mattn/go-runewidth v0.0.10 // indirect
+	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/paulmach/orb v0.1.5 // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
-	github.com/rivo/uniseg v0.1.0 // indirect
+	github.com/rivo/uniseg v0.4.2 // indirect
 	github.com/russellhaering/goxmldsig v1.2.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
@@ -211,6 +213,7 @@ require (
 // replace github.com/Velocidex/etw => /home/mic/projects/etw
 // replace github.com/Velocidex/grpc-go-pool => /home/mic/projects/grpc-go-pool
 // replace www.velocidex.com/golang/oleparse => /home/matt/git/oleparse
+// replace github.com/go-errors/errors => /home/mic/projects/errors
 
 // Remove search for html end block. This allows inserting unbalanced
 // HTML tags into the markdown
@@ -225,3 +228,5 @@ replace github.com/alecthomas/chroma => github.com/Velocidex/chroma v0.6.8-0.202
 replace github.com/crewjam/saml v0.4.8 => github.com/Velocidex/saml v0.0.0-20221019055034-272f55e26c8d
 
 replace github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk/v2 => github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.0-20221025194015-99f7b60c57ef
+
+replace github.com/go-errors/errors => github.com/Velocidex/errors v0.0.0-20221019164655-9ace6bf61e26

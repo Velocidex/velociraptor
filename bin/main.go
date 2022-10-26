@@ -25,7 +25,7 @@ import (
 	"runtime/trace"
 
 	"github.com/AlecAivazis/survey/v2"
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"

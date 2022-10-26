@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/AlecAivazis/survey/v2"
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"

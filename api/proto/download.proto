@@ -18,7 +18,7 @@ message CreateDownloadRequest {
     bool csv_format = 6;
 
     // Can be "report" for html report or "" for just files.
-    string download_type = 7;
+    string download_type = 7; // DEPRECATED
 
     // If set we lock the file with this password.
     string password = 8;

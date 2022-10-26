@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -34,7 +35,7 @@ type CollectPluginArgs struct {
 	Report              string              `vfilter:"optional,field=report,doc=A path to write the report on (deprecated and ignored)."`
 	Args                vfilter.Any         `vfilter:"optional,field=args,doc=Optional parameters."`
 	Password            string              `vfilter:"optional,field=password,doc=An optional password to encrypt the collection zip."`
-	Format              string              `vfilter:"optional,field=format,doc=Output format (csv, jsonl)."`
+	Format              string              `vfilter:"optional,field=format,doc=Output format (csv, jsonl, csv_only)."`
 	ArtifactDefinitions vfilter.Any         `vfilter:"optional,field=artifact_definitions,doc=Optional additional custom artifacts."`
 	Template            string              `vfilter:"optional,field=template,doc=The name of a template artifact (i.e. one which has report of type HTML)."`
 	Level               int64               `vfilter:"optional,field=level,doc=Compression level between 0 (no compression) and 9."`
@@ -103,8 +104,13 @@ func (self CollectPlugin) configureCollection(
 	manager *collectionManager, arg *CollectPluginArgs) (
 	*flows_proto.ArtifactCollectorArgs, error) {
 
+	format, err := reporting.GetContainerFormat(arg.Format)
+	if err != nil {
+		return nil, err
+	}
+
 	// Set the output format
-	err := manager.SetFormat(arg.Format)
+	err = manager.SetFormat(format)
 	if err != nil {
 		return nil, err
 	}

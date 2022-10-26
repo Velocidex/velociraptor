@@ -2,7 +2,6 @@ package collector
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"sync"
 	"time"
@@ -57,7 +56,7 @@ type collectionManager struct {
 
 	metadata []vfilter.Row
 
-	format string
+	format reporting.ContainerFormat
 
 	scope vfilter.Scope
 }
@@ -179,17 +178,10 @@ func (self *collectionManager) SetMetadata(metadata vfilter.StoredQuery) {
 	self.metadata = types.Materialize(self.ctx, self.scope, metadata)
 }
 
-func (self *collectionManager) SetFormat(format string) error {
+func (self *collectionManager) SetFormat(
+	format reporting.ContainerFormat) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
-
-	switch format {
-	case "jsonl", "csv", "json":
-	case "":
-		format = "jsonl"
-	default:
-		return fmt.Errorf("format %v not supported", format)
-	}
 
 	self.format = format
 	return nil

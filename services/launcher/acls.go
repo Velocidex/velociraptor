@@ -3,7 +3,7 @@ package launcher
 import (
 	"fmt"
 
-	errors "github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"

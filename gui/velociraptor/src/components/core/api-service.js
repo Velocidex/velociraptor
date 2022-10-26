@@ -109,10 +109,10 @@ const handle_error = err=>{
     };
 
     if (err.response && err.response.status === 401) {
-        const redirectTemplate = window.globals.AuthRedirectTemplate || ""
+        const redirectTemplate = window.globals.AuthRedirectTemplate || "";
         if (redirectTemplate !== "") {
             const instantiatedTemplate = redirectTemplate.replaceAll('%LOCATION%', encodeURIComponent(window.location.href));
-            window.location.assign(instantiatedTemplate)
+            window.location.assign(instantiatedTemplate);
             return {data: {}, cancel: false};
         }
     }

@@ -2,17 +2,11 @@ package downloads
 
 import (
 	"context"
-	"io"
-	"io/ioutil"
-	"os"
-	"strings"
 	"sync"
 	"time"
 
-	cryptozip "www.velocidex.com/golang/velociraptor/third_party/zip"
-
 	"github.com/Velocidex/ordereddict"
-	"github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -21,12 +15,11 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
-	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
+	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -35,14 +28,18 @@ import (
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
+var (
+	Clock utils.Clock = utils.RealClock{}
+)
+
 type CreateFlowDownloadArgs struct {
 	ClientId     string `vfilter:"required,field=client_id,doc=Client ID to export."`
 	FlowId       string `vfilter:"required,field=flow_id,doc=The flow id to export."`
 	Wait         bool   `vfilter:"optional,field=wait,doc=If set we wait for the download to complete before returning."`
-	Type         string `vfilter:"optional,field=type,doc=Type of download to create (e.g. 'report') default a full zip file."`
-	Template     string `vfilter:"optional,field=template,doc=Report template to use (defaults to Reporting.Default)."`
+	Type         string `vfilter:"optional,field=type,doc=Type of download to create (deperated Ignored)."`
+	Template     string `vfilter:"optional,field=template,doc=Report template to use (deperated Ignored)."`
 	Password     string `vfilter:"optional,field=password,doc=An optional password to encrypt the collection zip."`
-	Format       string `vfilter:"optional,field=format,doc=Format to export (csv,json) defaults to both."`
+	Format       string `vfilter:"optional,field=format,doc=Format to export (csv,json,csv_only) defaults to both."`
 	ExpandSparse bool   `vfilter:"optional,field=expand_sparse,doc=If set we expand sparse files in the archive."`
 	Name         string `vfilter:"optional,field=name,doc=If specified we call the file this name otherwise we generate name based on flow id."`
 }
@@ -72,43 +69,22 @@ func (self *CreateFlowDownload) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	if arg.Template == "" {
-		arg.Template = "Reporting.Default"
+	format, err := reporting.GetContainerFormat(arg.Format)
+	if err != nil {
+		scope.Log("create_flow_download: %v", err)
+		return vfilter.Null{}
 	}
 
-	switch arg.Type {
-	case "report":
-		result, err := CreateFlowReport(
-			ctx, config_obj, scope,
-			arg.FlowId, arg.ClientId, arg.Template, arg.Wait)
-		if err != nil {
-			scope.Log("create_flow_download: %s", err)
-			return vfilter.Null{}
-		}
-		return result
-
-	case "":
-		_, write_csv, err := getFormat(arg.Format)
-		if err != nil {
-			scope.Log("create_flow_download: %v", err)
-			return vfilter.Null{}
-		}
-
-		result, err := createDownloadFile(
-			ctx, config_obj, write_csv,
-			arg.FlowId, arg.ClientId, arg.Password,
-			arg.ExpandSparse, arg.Name, arg.Wait)
-		if err != nil {
-			scope.Log("create_flow_download: %s", err)
-			return vfilter.Null{}
-		}
-		return result
-
-	default:
-		scope.Log("Unknown report type %v", arg.Type)
+	result, err := createDownloadFile(
+		ctx, config_obj, format,
+		arg.FlowId, arg.ClientId, arg.Password,
+		arg.ExpandSparse, arg.Name, arg.Wait)
+	if err != nil {
+		scope.Log("create_flow_download: %s", err)
+		return vfilter.Null{}
 	}
 
-	return vfilter.Null{}
+	return result
 }
 
 func (self CreateFlowDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
@@ -154,7 +130,7 @@ func (self *CreateHuntDownload) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	write_json, write_csv, err := getFormat(arg.Format)
+	format, err := reporting.GetContainerFormat(arg.Format)
 	if err != nil {
 		scope.Log("create_hunt_download: %v", err)
 		return vfilter.Null{}
@@ -162,7 +138,7 @@ func (self *CreateHuntDownload) Call(ctx context.Context,
 
 	result, err := createHuntDownloadFile(
 		ctx, config_obj, scope, arg.HuntId,
-		write_json, write_csv, arg.ExpandSparse,
+		format, arg.ExpandSparse,
 		arg.Wait, arg.OnlyCombined, arg.Filename, arg.Password)
 	if err != nil {
 		scope.Log("create_hunt_download: %s", err)
@@ -183,7 +159,7 @@ func (self CreateHuntDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 func createDownloadFile(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	write_csv bool,
+	format reporting.ContainerFormat,
 	flow_id, client_id, password string,
 	expand_sparse bool,
 	name string, wait bool) (api.FSPathSpec, error) {
@@ -225,29 +201,10 @@ func createDownloadFile(
 	lock_file.Write([]byte("X"))
 	lock_file.Close()
 
-	launcher, err := services.GetLauncher(config_obj)
+	// Create a new ZipContainer to write on.
+	zip_writer, err := reporting.NewContainerFromWriter(
+		config_obj, fd, password, 5, nil /* metadata */)
 	if err != nil {
-		return nil, err
-	}
-	flow_details, err := launcher.GetFlowDetails(config_obj, client_id, flow_id)
-	if err != nil {
-		return nil, err
-	}
-
-	// Do these first to ensure errors are returned if the zip file
-	// is not writable.
-	zip_writer := cryptozip.NewWriter(fd)
-	f, err := createZipMember(zip_writer, "FlowDetails", password)
-	if err != nil {
-		fd.Close()
-		return nil, err
-	}
-
-	flow_details_json, _ := json.ConvertProtoToOrderedDict(flow_details).MarshalJSON()
-	_, err = f.Write(flow_details_json)
-	if err != nil {
-		zip_writer.Close()
-		fd.Close()
 		return nil, err
 	}
 
@@ -266,8 +223,8 @@ func createDownloadFile(
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*600)
 		defer cancel()
 
-		err := downloadFlowToZip(ctx, config_obj, write_csv, password,
-			client_id, hostname, flow_id, expand_sparse, zip_writer)
+		err := downloadFlowToZip(ctx, config_obj, format,
+			client_id, "", flow_id, expand_sparse, zip_writer)
 		if err != nil {
 			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 			logger.Error("downloadFlowToZip: %v", err)
@@ -281,160 +238,198 @@ func createDownloadFile(
 	return download_file, nil
 }
 
+// Copies the collection into the zip file.
 func downloadFlowToZip(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	write_csv bool,
-	password string,
+	format reporting.ContainerFormat,
 	client_id string,
-	hostname string,
+	prefix string,
 	flow_id string,
 	expand_sparse bool,
-	zip_writer *cryptozip.Writer) error {
+	zip_writer *reporting.Container) error {
 
+	root := accessors.NewZipFilePath(prefix)
+
+	// Write the client info so it can be imported again
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
+	if err != nil {
+		return err
+	}
+
+	client_info, err := client_info_manager.Get(ctx, client_id)
+	if err == nil {
+		err = zip_writer.WriteJSON(
+			root.Append("client_info.json").String(), client_info)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Write the flow details.
 	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return err
 	}
+
 	flow_details, err := launcher.GetFlowDetails(config_obj, client_id, flow_id)
-	if err != nil {
-		return err
-	}
-	file_store_factory := file_store.GetFileStore(config_obj)
-
-	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
-
-	copier := func(upload_name api.FSPathSpec) error {
-		reader, closer, err := maybeExpandSparse(expand_sparse, file_store_factory, upload_name)
+	if err == nil {
+		err = zip_writer.WriteJSON(
+			root.Append("collection_context.json").String(), flow_details)
 		if err != nil {
 			return err
 		}
-		defer closer()
+	}
 
-		// Clean the name so it makes a reasonable zip member.
-		file_member_name := path_specs.CleanPathForZip(
-			upload_name, client_id, hostname)
-		f, err := createZipMember(zip_writer, file_member_name, password)
+	flow_requests, err := launcher.GetFlowRequests(config_obj,
+		client_id, flow_id, 0, 100)
+	if err == nil {
+		err = zip_writer.WriteJSON(
+			root.Append("requests.json").String(), flow_requests)
 		if err != nil {
 			return err
 		}
-
-		_, err = utils.Copy(ctx, f, reader)
-		if err != nil {
-			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
-			logger.WithFields(logrus.Fields{
-				"flow_id":     flow_id,
-				"client_id":   client_id,
-				"upload_name": upload_name,
-				"err":         err.Error(),
-			}).Error("Download Flow")
-		}
-		return err
 	}
 
+	// Copy the collection logs
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-
-	// Copy the flow's logs.
-	err = copier(flow_path_manager.Log())
+	err = copyResultSetIntoContainer(ctx, config_obj, zip_writer, format,
+		flow_path_manager.Log(), root.Append("logs.json"))
 	if err != nil {
 		return err
 	}
 
-	// Copy result sets
-	for _, artifact_with_results := range flow_details.Context.ArtifactsWithResults {
-		// Paths inside the zip file should be friendlier.
-		path_manager, err := artifact_paths.NewArtifactPathManager(
-			config_obj,
-			client_id, flow_details.Context.SessionId,
-			artifact_with_results)
+	// Copy artifact results
+	for _, name := range flow_details.Context.ArtifactsWithResults {
+		artifact_path_manager, err := artifacts.NewArtifactPathManager(
+			config_obj, client_id, flow_id, name)
 		if err != nil {
-			return err
-		}
-
-		rs_path, err := path_manager.GetPathForWriting()
-		if err == nil {
-			err = copier(rs_path)
-			if err != nil {
-				return err
-			}
-		}
-
-		if write_csv {
-			// Also make a csv file why not?
-			zip_file_name := path_specs.CleanPathForZip(rs_path.
-				SetType(api.PATH_TYPE_FILESTORE_CSV),
-				client_id, hostname)
-			f, err := createZipMember(zip_writer, zip_file_name, password)
-			if err != nil {
-				continue
-			}
-
-			// File uploads are stored in their own json file.
-			reader, err := result_sets.NewResultSetReader(
-				file_store_factory, path_manager.Path())
-			if err != nil {
-				return err
-			}
-			scope := vql_subsystem.MakeScope()
-			csv_writer := csv.GetCSVAppender(
-				config_obj, scope, f, true /* write_headers */)
-			for row := range reader.Rows(ctx) {
-				csv_writer.Write(row)
-			}
-			csv_writer.Close()
-		}
-	}
-
-	// This basically copies the files from the filestore into the
-	// zip. We do not need to do any processing - just give the
-	// user the files as they are. Users can do their own post
-	// processing.
-
-	// File uploads are stored in their own json file.
-	reader, err := result_sets.NewResultSetReader(
-		file_store_factory, flow_path_manager.UploadMetadata())
-	if err != nil {
-		// Failed to open the uploads result set is not an error -
-		// there may not have been any uploads.
-		return nil
-	}
-
-	for row := range reader.Rows(ctx) {
-		utils.Debug(row)
-
-		vfs_path, _ := row.GetString("vfs_path")
-
-		// Newer upload sets contain full components to the VFS path.
-		components := utils.DictGetStringSlice(row, "_Components")
-		if len(components) > 0 {
-			path_spec := path_specs.NewUnsafeFilestorePath(components...).
-				SetType(api.PATH_TYPE_FILESTORE_ANY)
-			if strings.HasSuffix(vfs_path, ".idx") {
-				// If we are expanding sparse files we do not need to
-				// export the idx file.
-				if expand_sparse {
-					continue
-				}
-
-				path_spec = path_spec.SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX)
-			}
-
-			err = copier(path_spec)
-			if err != nil {
-				logger.Error("downloadFlowToZip: While export FlowId %v: %v",
-					flow_id, err)
-			}
 			continue
 		}
 
-		path_spec := paths.FSPathSpecFromClientPath(vfs_path)
-		err = copier(path_spec)
+		err = copyResultSetIntoContainer(ctx, config_obj, zip_writer, format,
+			artifact_path_manager.Path(), root.Append("results", name+".json"))
 		if err != nil {
-			logger.Error("downloadFlowToZip: While export FlowId %v: %v",
-				flow_id, err)
+			return err
 		}
 	}
 
+	// Copy uploads
+	err = copyUploadFiles(ctx, config_obj, zip_writer, prefix,
+		format, flow_path_manager)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func copyUploadFiles(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	container *reporting.Container,
+	prefix string,
+	format reporting.ContainerFormat,
+	flow_path_manager *paths.FlowPathManager) error {
+
+	err := copyResultSetIntoContainer(ctx, config_obj, container, format,
+		flow_path_manager.UploadMetadata(),
+		accessors.NewZipFilePath(prefix).Append("uploads.json"))
+	if err != nil {
+		return err
+	}
+
+	// Read all the upload metadata
+	file_store_factory := file_store.GetFileStore(config_obj)
+	reader, err := result_sets.NewResultSetReader(file_store_factory,
+		flow_path_manager.UploadMetadata())
+	if err != nil {
+		return err
+	}
+	defer reader.Close()
+
+	for row := range reader.Rows(ctx) {
+		components, pres := row.GetStrings("_Components")
+		if !pres || len(components) < 1 {
+			continue
+		}
+
+		var src api.FSPathSpec
+		dest := accessors.NewZipFilePath(prefix).Append("uploads")
+		if len(components) > 6 && components[0] == "clients" {
+			src = path_specs.NewUnsafeFilestorePath(components...).
+				SetType(api.PATH_TYPE_FILESTORE_ANY)
+			dest = dest.Append(components[6:]...)
+		} else {
+			src = flow_path_manager.UploadContainer().AddChild(components[1:]...).
+				SetType(api.PATH_TYPE_FILESTORE_ANY)
+			dest = dest.Append(components...)
+		}
+
+		// Copy from the file store at these locations.
+		err := copyFile(ctx, config_obj, container, src, dest)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func copyFile(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	container *reporting.Container,
+	src api.FSPathSpec,
+	dest *accessors.OSPath) (err error) {
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+	fd, err := file_store_factory.ReadFile(src)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+
+	out_fd, err := container.Create(dest.String(), Clock.Now())
+	if err != nil {
+		return err
+	}
+	defer out_fd.Close()
+
+	_, err = utils.Copy(ctx, out_fd, fd)
+	return err
+}
+
+func copyResultSetIntoContainer(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	container *reporting.Container,
+	format reporting.ContainerFormat,
+	src api.FSPathSpec,
+	dest *accessors.OSPath) (err error) {
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+	reader, err := result_sets.NewResultSetReader(file_store_factory, src)
+	if err != nil {
+		return err
+	}
+
+	output_chan := make(chan vfilter.Row)
+	go func() {
+		defer reader.Close()
+		defer close(output_chan)
+
+		for row := range reader.Rows(ctx) {
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- row:
+			}
+		}
+	}()
+
+	scope := vql_subsystem.MakeScope()
+	_, err = container.WriteResultSet(ctx, config_obj, scope, format,
+		dest.String(), output_chan)
 	return err
 }
 
@@ -443,7 +438,7 @@ func createHuntDownloadFile(
 	config_obj *config_proto.Config,
 	scope vfilter.Scope,
 	hunt_id string,
-	write_json, write_csv bool,
+	format reporting.ContainerFormat,
 	expand_sparse bool,
 	wait, only_combined bool,
 	base_filename, password string) (api.FSPathSpec, error) {
@@ -498,20 +493,9 @@ func createHuntDownloadFile(
 
 	// Do these first to ensure errors are returned if the zip file
 	// is not writable.
-	zip_writer := cryptozip.NewWriter(fd)
-	f, err := createZipMember(zip_writer, "HuntDetails", password)
+	zip_writer, err := reporting.NewContainerFromWriter(
+		config_obj, fd, password, 5, nil /* metadata */)
 	if err != nil {
-		zip_writer.Close()
-		fd.Close()
-		return nil, err
-	}
-
-	hunt_details_json, _ := json.ConvertProtoToOrderedDict(hunt_details).MarshalJSON()
-
-	_, err = f.Write(hunt_details_json)
-	if err != nil {
-		zip_writer.Close()
-		fd.Close()
 		return nil, err
 	}
 
@@ -548,87 +532,17 @@ func createHuntDownloadFile(
 				Set("Source", source))
 			defer subscope.Close()
 
-			report_err := func(err error) {
-				logging.GetLogger(config_obj, &logging.GUIComponent).
-					WithFields(logrus.Fields{
-						"artifact": artifact,
-						"error":    err.Error(),
-					}).Error("ExportHuntArtifact")
+			request := &actions_proto.VQLRequest{
+				VQL: "SELECT * FROM hunt_results(" +
+					"hunt_id=HuntId, artifact=Artifact, " +
+					"source=Source)",
+				Name: "All " + artifact,
 			}
 
-			query := "SELECT * FROM hunt_results(" +
-				"hunt_id=HuntId, artifact=Artifact, " +
-				"source=Source)"
-
-			// Write all results to a tmpfile then just
-			// copy the tmpfile into the zip.
-			json_tmpfile, err := ioutil.TempFile("", "tmp*.json")
+			_, err := zip_writer.StoreArtifact(
+				config_obj, sub_ctx, subscope, request, format)
 			if err != nil {
-				report_err(err)
-				continue
-			}
-			defer os.Remove(json_tmpfile.Name())
-
-			csv_tmpfile, err := ioutil.TempFile("", "tmp*.csv")
-			if err != nil {
-				report_err(err)
-				continue
-			}
-			defer os.Remove(csv_tmpfile.Name())
-
-			err = StoreVQLAsCSVAndJsonFile(sub_ctx, config_obj,
-				subscope, query, write_csv, write_json,
-				csv_tmpfile, json_tmpfile)
-			if err != nil {
-				report_err(err)
-				continue
-			}
-
-			// Make sure the files are closed so we can
-			// open them for reading next.
-			csv_tmpfile.Close()
-			json_tmpfile.Close()
-
-			copier := func(name string, output_name api.FSPathSpec) error {
-				reader, err := os.Open(name)
-				if err != nil {
-					return err
-				}
-				defer reader.Close()
-
-				// Clean the name so it makes a reasonable zip member.
-				f, err := createZipMember(zip_writer,
-					path_specs.CleanPathForZip(output_name, "", ""), password)
-				if err != nil {
-					return err
-				}
-
-				_, err = utils.Copy(sub_ctx, f, reader)
-				return err
-			}
-
-			output_path := path_specs.NewSafeFilestorePath(
-				"All " + artifact).
-				SetType(api.PATH_TYPE_FILESTORE_CSV)
-			if source != "" {
-				output_path = output_path.AddChild(source)
-			}
-
-			if write_csv {
-				err = copier(csv_tmpfile.Name(), output_path)
-				if err != nil {
-					report_err(err)
-					continue
-				}
-			}
-
-			if write_json {
-				output_path = output_path.
-					SetType(api.PATH_TYPE_FILESTORE_JSON)
-				err = copier(json_tmpfile.Name(), output_path)
-				if err != nil {
-					report_err(err)
-				}
+				return
 			}
 		}
 
@@ -657,9 +571,9 @@ func createHuntDownloadFile(
 				continue
 			}
 
-			hostname := services.GetHostname(ctx, config_obj, client_id)
+			hostname := services.GetHostname(sub_ctx, config_obj, client_id)
 			err := downloadFlowToZip(
-				sub_ctx, config_obj, write_csv, password, client_id, hostname,
+				sub_ctx, config_obj, format, client_id, hostname,
 				flow_id, expand_sparse, zip_writer)
 			if err != nil {
 				logging.GetLogger(config_obj, &logging.FrontendComponent).
@@ -680,135 +594,7 @@ func createHuntDownloadFile(
 	return download_file, nil
 }
 
-func StoreVQLAsCSVAndJsonFile(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	scope vfilter.Scope,
-	query string,
-	write_csv bool,
-	write_json bool,
-	csv_fd io.Writer,
-	json_fd io.Writer) error {
-
-	query_log := actions.QueryLog.AddQuery(query)
-	defer query_log.Close()
-	vql, err := vfilter.Parse(query)
-	if err != nil {
-		return err
-	}
-
-	csv_writer := csv.GetCSVAppender(
-		config_obj, scope, csv_fd, true /* write_headers */)
-	defer csv_writer.Close()
-
-	sub_ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
-
-	for row := range vql.Eval(sub_ctx, scope) {
-		if write_csv {
-			csv_writer.Write(row)
-		}
-
-		if write_json {
-			serialized, err := json.Marshal(row)
-			if err != nil {
-				continue
-			}
-			_, err = json_fd.Write(serialized)
-			if err != nil {
-				return errors.WithStack(err)
-			}
-			_, err = json_fd.Write([]byte("\n"))
-			if err != nil {
-				return errors.WithStack(err)
-			}
-		}
-	}
-
-	return nil
-}
-
-func createZipMember(zip_writer *cryptozip.Writer, file_member_name, password string) (
-	io.Writer, error) {
-	if password == "" {
-		return zip_writer.Create(file_member_name)
-	} else {
-		return zip_writer.Encrypt(file_member_name, password, cryptozip.AES256Encryption)
-	}
-}
-
 func init() {
 	vql_subsystem.RegisterFunction(&CreateHuntDownload{})
 	vql_subsystem.RegisterFunction(&CreateFlowDownload{})
-}
-
-func getFormat(format string) (write_json, write_csv bool, err error) {
-	switch format {
-	case "json":
-		write_json = true
-
-	case "csv":
-		write_csv = true
-
-	case "":
-		write_json = true
-		write_csv = true
-
-	default:
-		err = errors.New("Unknown format parameter either 'json', 'cvs' or empty for both.")
-	}
-
-	return
-}
-
-func maybeExpandSparse(
-	expand_sparse bool,
-	file_store_factory api.FileStore,
-	upload_name api.FSPathSpec) (accessors.ReadSeekCloser, func() error, error) {
-
-	reader, err := file_store_factory.ReadFile(upload_name)
-	if err != nil {
-		return nil, nil, err
-	}
-	if !expand_sparse {
-		return reader, reader.Close, nil
-	}
-
-	index, err := getIndex(file_store_factory, upload_name)
-	if err != nil || len(index.Ranges) == 0 {
-		// No index exists
-		return reader, reader.Close, nil
-	}
-
-	reader_at := &utils.RangedReader{
-		ReaderAt: utils.MakeReaderAtter(reader),
-		Index:    index,
-	}
-
-	return utils.NewReadSeekReaderAdapter(reader_at), reader.Close, nil
-}
-
-func getIndex(
-	file_store_factory api.FileStore,
-	vfs_path api.FSPathSpec) (*actions_proto.Index, error) {
-	index := &actions_proto.Index{}
-
-	fd, err := file_store_factory.ReadFile(
-		vfs_path.SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX))
-	if err != nil {
-		return nil, err
-	}
-	defer fd.Close()
-
-	data, err := ioutil.ReadAll(fd)
-	if err != nil {
-		return nil, err
-	}
-
-	err = json.Unmarshal(data, &index)
-	if err != nil {
-		return nil, err
-	}
-
-	return index, nil
 }

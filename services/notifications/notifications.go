@@ -243,6 +243,10 @@ func (self *Notifier) ListenForNotification(client_id string) (chan bool, func()
 	return notification_pool.Listen(client_id)
 }
 
+func (self *Notifier) CountConnectedClients() uint64 {
+	return self.notification_pool.Count()
+}
+
 func (self *Notifier) NotifyListener(config_obj *config_proto.Config,
 	id, tag string) error {
 	journal, err := services.GetJournal(config_obj)

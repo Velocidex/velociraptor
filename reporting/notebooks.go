@@ -14,7 +14,7 @@ import (
 
 	"github.com/Velocidex/yaml/v2"
 	"github.com/alexmullins/zip"
-	"github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"

@@ -23,12 +23,12 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"crypto/x509"
+	"errors"
 	"fmt"
 	"os"
 	"regexp"
 	"sync"
 
-	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"

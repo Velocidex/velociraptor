@@ -22,7 +22,7 @@ import (
 	"sort"
 	"time"
 
-	errors "github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"

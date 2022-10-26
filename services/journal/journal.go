@@ -11,10 +11,10 @@ package journal
 
 import (
 	"context"
+	"errors"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/pkg/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"

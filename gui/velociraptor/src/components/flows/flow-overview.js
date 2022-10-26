@@ -57,21 +57,20 @@ export default class FlowOverview extends React.Component {
         }
     }
 
-    prepareDownload = (download_type) => {
-        let lock_password = "";
+    prepareDownload = (opts) => {
+        let options = opts || {};
         if (this.state.lock) {
-            lock_password = this.context.traits &&
+            options.password = this.context.traits &&
                 this.context.traits.default_password;
         }
-        api.post("v1/CreateDownload", {
-            flow_id: this.props.flow.session_id,
-            client_id: this.props.flow.client_id,
-            download_type: download_type || "",
-            password: lock_password,
-            expand_sparse: this.state.expand_sparse,
-        }, this.source.token).then((response) => {
-            this.getDetailedFlow();
-        });
+        options.flow_id = this.props.flow.session_id;
+        options.client_id = this.props.flow.client_id;
+        options.expand_sparse = this.state.expand_sparse;
+
+        api.post("v1/CreateDownload", options,
+                 this.source.token).then((response) => {
+                     this.getDetailedFlow();
+                 });
     };
 
     getDetailedFlow = () => {
@@ -309,12 +308,23 @@ export default class FlowOverview extends React.Component {
                           </Dropdown.Toggle>
                           <Dropdown.Menu>
                             <Dropdown.Item
-                              onClick={()=>this.prepareDownload()}>
+                              onClick={()=>this.prepareDownload({
+                                  json_format: true,
+                              })}>
                               {T("Prepare Download")}
                             </Dropdown.Item>
                             <Dropdown.Item
-                              onClick={()=>this.prepareDownload('report')}>
-                              {T("Prepare Collection Report")}
+                              onClick={()=>this.prepareDownload({
+                                  csv_format: true,
+                              })}>
+                              {T("Prepare CSV Download")}
+                            </Dropdown.Item>
+                            <Dropdown.Item
+                              onClick={()=>this.prepareDownload({
+                                  json_format: true,
+                                  csv_format: true,
+                              })}>
+                              {T("Prepare CSV And JSON Download")}
                             </Dropdown.Item>
                           </Dropdown.Menu>
                         </Dropdown>

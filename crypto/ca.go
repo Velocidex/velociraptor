@@ -28,7 +28,7 @@ import (
 	"net"
 	"time"
 
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto/utils"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
@@ -84,7 +84,7 @@ func GenerateCACert(rsaBits int) (*CertBundle, error) {
 		priv)
 
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	return &CertBundle{
@@ -170,7 +170,7 @@ func GenerateServerCert(config_obj *config_proto.Config, name string) (*CertBund
 		ca_private_key)
 
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	return &CertBundle{
@@ -248,7 +248,7 @@ func ReissueServerCert(config_obj *config_proto.Config,
 		ca_private_key)
 
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	return &CertBundle{

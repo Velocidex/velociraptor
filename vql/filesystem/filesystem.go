@@ -24,7 +24,8 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/pkg/errors"
+	"github.com/go-errors/errors"
+
 	"github.com/shirou/gopsutil/v3/disk"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -226,8 +227,8 @@ func (self ReadFilePlugin) processFile(
 	for {
 		n, err := io.ReadAtLeast(fd, buf, arg.Chunk)
 		if err != nil &&
-			errors.Cause(err) != io.ErrUnexpectedEOF &&
-			errors.Cause(err) != io.EOF {
+			!errors.Is(err, io.ErrUnexpectedEOF) &&
+			!errors.Is(err, io.EOF) {
 			scope.Log("read_file: %v", err)
 			return
 		}
@@ -362,8 +363,8 @@ func (self *ReadFileFunction) Call(ctx context.Context,
 
 	n, err := io.ReadAtLeast(fd, buf, len(buf))
 	if err != nil &&
-		errors.Cause(err) != io.ErrUnexpectedEOF &&
-		errors.Cause(err) != io.EOF {
+		!errors.Is(err, io.ErrUnexpectedEOF) &&
+		!errors.Is(err, io.EOF) {
 		scope.Log("read_file: %v", err)
 		return ""
 	}

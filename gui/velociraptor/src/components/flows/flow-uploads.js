@@ -127,6 +127,7 @@ export default class FlowUploads extends React.Component {
                                }}>
                                <Button as="a"
                                        className="flow-file-download-button"
+                                       target="_blank"
                                        href={api.href("/api/v1/DownloadVFSFile", {
                                            client_id: this.props.flow.client_id,
                                            fs_components: normalizeComponentList(
@@ -149,6 +150,7 @@ export default class FlowUploads extends React.Component {
                          }}>
                          <Button as="a"
                                  className="flow-file-download-button"
+                                 target="_blank"
                                  href={api.href("/api/v1/DownloadVFSFile", {
                                      client_id: this.props.flow.client_id,
                                      fs_components: normalizeComponentList(

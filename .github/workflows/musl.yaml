@@ -34,10 +34,10 @@ jobs:
         sudo make install
         cd ..
 
-    - name: Use Node.js v12
+    - name: Use Node.js v16
       uses: actions/setup-node@v1
       with:
-        node-version: 12
+        node-version: 16
 
     - name: npm install gui
       run: |

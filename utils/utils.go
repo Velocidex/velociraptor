@@ -18,16 +18,16 @@
 package utils
 
 import (
-	"encoding/json"
 	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
@@ -127,6 +127,7 @@ func Stringify(value interface{}, scope vfilter.Scope, min_width int) string {
 	//  If we have a custom marshaller we use it.
 	case json.Marshaler:
 		return json_marshall(value)
+
 	default:
 		// For normal structs json is a pretty good encoder.
 		if reflect.TypeOf(value).Kind() == reflect.Struct {

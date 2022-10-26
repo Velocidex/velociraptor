@@ -25,6 +25,7 @@ import { getHuntColumns } from '../hunts/hunt-list.js';
 import VeloTimestamp from "../utils/time.js";
 import { AddTimelineDialog, AddVQLCellToTimeline } from "./timelines.js";
 import T from '../i8n/i8n.js';
+import ViewCellLogs from "./logs.js";
 
 import axios from 'axios';
 import api from '../core/api-service.js';
@@ -170,6 +171,7 @@ export default class NotebookCellRenderer extends React.Component {
         showCreateArtifactFromCell: false,
 
         showSuggestionSubmenu: false,
+        showMoreLogs: false,
     }
 
     componentDidMount() {
@@ -657,6 +659,13 @@ export default class NotebookCellRenderer extends React.Component {
                   notebook_metadata={this.props.notebook_metadata}
                   closeDialog={()=>this.setState({showAddCellToTimeline: false})} />
               }
+              { this.state.showMoreLogs &&
+                <ViewCellLogs
+                  cell={this.state.cell}
+                  notebook_metadata={this.props.notebook_metadata}
+                  closeDialog={()=>this.setState({showMoreLogs: false})}
+                />
+              }
 
               <div className={classNames({selected: selected, "notebook-cell": true})} >
                 <div className='notebook-input'>
@@ -702,6 +711,13 @@ export default class NotebookCellRenderer extends React.Component {
                         {msg}
                         </div>;
                     })}
+                  { selected && this.state.cell.more_messages &&
+                    <Button
+                      variant="secondary"
+                      onClick={()=>this.setState({showMoreLogs: true})}>
+                      {T("Logs")}
+                    </Button>
+                  }
                 </div>
               </div>
             </>

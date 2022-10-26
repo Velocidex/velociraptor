@@ -2,11 +2,11 @@ package hunt_manager_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/proto"

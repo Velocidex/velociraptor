@@ -156,39 +156,40 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		}
 	}
 
-	// Now copy any uploads
+	// Now copy any uploads - first get the metadata.
 	err = self.copyResultSet(ctx, config_obj, scope,
 		accessor, root.Append("uploads.json"),
 		flow_path_manager.UploadMetadata())
-	if err != nil {
-		scope.Log("import_collection: %v", err)
-	}
+	if err == nil {
+		// It is not an error if there is no uploads metadata - it
+		// just means that there were no uploads.
 
-	// Open the upload metadata and try to find the actual files in
-	// the container.
-	file_store_factory := file_store.GetFileStore(config_obj)
-	reader, err := result_sets.NewResultSetReader(file_store_factory,
-		flow_path_manager.UploadMetadata())
-	if err != nil {
-		scope.Log("import_collection: %v", err)
-		return vfilter.Null{}
-	}
-	defer reader.Close()
-
-	for row := range reader.Rows(ctx) {
-		components, pres := row.GetStrings("_Components")
-		if !pres || len(components) < 1 {
-			continue
-		}
-
-		// Copy from the archive to the file store at these locations.
-		src := root.Append(components...)
-		dest := flow_path_manager.UploadContainer().AddChild(components[1:]...)
-
-		err := self.copyFileWithIndex(ctx, config_obj, scope,
-			accessor, src, dest)
+		// Open the upload metadata and try to find the actual files in
+		// the container.
+		file_store_factory := file_store.GetFileStore(config_obj)
+		reader, err := result_sets.NewResultSetReader(file_store_factory,
+			flow_path_manager.UploadMetadata())
 		if err != nil {
 			scope.Log("import_collection: %v", err)
+			return vfilter.Null{}
+		}
+		defer reader.Close()
+
+		for row := range reader.Rows(ctx) {
+			components, pres := row.GetStrings("_Components")
+			if !pres || len(components) < 1 {
+				continue
+			}
+
+			// Copy from the archive to the file store at these locations.
+			src := root.Append(components...)
+			dest := flow_path_manager.UploadContainer().AddChild(components[1:]...)
+
+			err := self.copyFileWithIndex(ctx, config_obj, scope,
+				accessor, src, dest)
+			if err != nil {
+				scope.Log("import_collection: %v", err)
+			}
 		}
 	}
 

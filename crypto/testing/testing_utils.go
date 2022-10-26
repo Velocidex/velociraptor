@@ -1,7 +1,7 @@
 package testing
 
 import (
-	errors "github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
@@ -33,12 +33,12 @@ func (self *NullCryptoManager) EncryptMessageList(
 	nonce, destination string) ([]byte, error) {
 	plain_text, err := proto.Marshal(message_list)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	compressed, err := utils.Compress(plain_text)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	cipher_text, err := self.Encrypt(
@@ -59,7 +59,7 @@ func (self *NullCryptoManager) Encrypt(
 
 	serialized_packed_message_list, err := proto.Marshal(packed_message_list)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	return serialized_packed_message_list, nil
@@ -71,7 +71,7 @@ func (self *NullCryptoManager) Decrypt(cipher_text []byte) (
 	packed_message_list := &crypto_proto.PackedMessageList{}
 	err := proto.Unmarshal(cipher_text, packed_message_list)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	return &crypto.MessageInfo{

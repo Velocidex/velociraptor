@@ -4,7 +4,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 
-	"github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/logging"

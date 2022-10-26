@@ -18,11 +18,11 @@ SELECT Name,Size,Hash FROM Artifact.Generic.Detection.HashHunter(TargetGlob=srcD
   }
  },
  {
-  "Name": "CSShellcode.bin",
-  "Size": 888,
+  "Name": "lines.txt",
+  "Size": 75,
   "Hash": {
    "MD5": "",
-   "SHA1": "75082bb8c6c3529a298b5e3432a2769362efe451",
+   "SHA1": "d4601077f1005bf0e23533e0ded7d2bc54945d7b",
    "SHA256": ""
   }
  }
@@ -47,12 +47,12 @@ SELECT Name,Size,Hash FROM Artifact.Generic.Detection.HashHunter(TargetGlob=srcD
   }
  },
  {
-  "Name": "CSShellcode.bin",
-  "Size": 888,
+  "Name": "lines.txt",
+  "Size": 75,
   "Hash": {
    "MD5": "",
    "SHA1": "",
-   "SHA256": "771e8bef3711e8327b5ddb9c6109bd23e494488cccd31097e91033a427e413ef"
+   "SHA256": "1241d3651cba501b3b2151dafcf6f8481a12a74781afb95103f848255fd2ee2f"
   }
  }
 ]

@@ -42,7 +42,7 @@ func (self *ApiServer) GetClientMetadata(
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	user_name := user_record.Name
@@ -60,7 +60,7 @@ func (self *ApiServer) GetClientMetadata(
 	client_path_manager := paths.NewClientPathManager(in.ClientId)
 	db, err := datastore.GetDB(org_config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	result := &api_proto.ClientMetadata{}
@@ -79,7 +79,7 @@ func (self *ApiServer) SetClientMetadata(
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	user_name := user_record.Name
@@ -93,7 +93,7 @@ func (self *ApiServer) SetClientMetadata(
 	client_path_manager := paths.NewClientPathManager(in.ClientId)
 	db, err := datastore.GetDB(org_config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	err = db.SetSubject(org_config_obj, client_path_manager.Metadata(), in)
@@ -107,7 +107,7 @@ func (self *ApiServer) GetClient(
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	user_name := user_record.Name
@@ -120,14 +120,14 @@ func (self *ApiServer) GetClient(
 
 	indexer, err := services.GetIndexer(org_config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	// Update the user's MRU
 	if in.UpdateMru {
 		err = indexer.UpdateMRU(org_config_obj, user_name, in.ClientId)
 		if err != nil {
-			return nil, err
+			return nil, Status(self.verbose, err)
 		}
 	}
 
@@ -141,7 +141,7 @@ func (self *ApiServer) GetClient(
 			// Wait up to 2 seconds to find out if clients are connected.
 			notifier, err := services.GetNotifier(org_config_obj)
 			if err != nil {
-				return nil, err
+				return nil, Status(self.verbose, err)
 			}
 			if notifier.IsClientConnected(ctx,
 				org_config_obj, in.ClientId, 2) {
@@ -160,7 +160,7 @@ func (self *ApiServer) GetClientFlows(
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	user_name := user_record.Name
@@ -178,7 +178,7 @@ func (self *ApiServer) GetClientFlows(
 	if in.Artifact != "" {
 		regex, err := regexp.Compile(in.Artifact)
 		if err != nil {
-			return nil, err
+			return nil, Status(self.verbose, err)
 		}
 
 		filter = func(flow *flows_proto.ArtifactCollectorContext) bool {
@@ -197,7 +197,7 @@ func (self *ApiServer) GetClientFlows(
 
 	launcher, err := services.GetLauncher(org_config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	return launcher.GetFlows(org_config_obj, in.ClientId,

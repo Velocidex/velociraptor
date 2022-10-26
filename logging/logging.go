@@ -30,8 +30,9 @@ import (
 	"time"
 
 	rotatelogs "github.com/Velocidex/file-rotatelogs"
+	"github.com/go-errors/errors"
 	"github.com/mattn/go-isatty"
-	"github.com/pkg/errors"
+
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -421,14 +422,12 @@ func GetLogger(config_obj *config_proto.Config, component *string) *LogContext {
 }
 
 type stackTracer interface {
-	StackTrace() errors.StackTrace
+	Stack() []byte
 }
 
 func GetStackTrace(err error) string {
-	if err, ok := err.(stackTracer); ok {
-		for _, f := range err.StackTrace() {
-			return fmt.Sprintf("%+s:%d\n", f, f)
-		}
+	if serr, ok := err.(stackTracer); ok {
+		return string(serr.Stack())
 	}
 	return ""
 }

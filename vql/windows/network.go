@@ -30,7 +30,6 @@ import (
 	"unsafe"
 
 	"github.com/Velocidex/ordereddict"
-	errors "github.com/pkg/errors"
 	"golang.org/x/sys/windows"
 	"www.velocidex.com/golang/velociraptor/acls"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -357,7 +356,7 @@ func getNetTable(fn uintptr, family int, class int) ([]byte, error) {
 			ptr = make([]byte, size)
 			addr = uintptr(unsafe.Pointer(&ptr[0]))
 		} else {
-			return nil, errors.Wrap(syscall.GetLastError(), "getNetTable")
+			return nil, fmt.Errorf("getNetTable: %w", syscall.GetLastError())
 		}
 	}
 }

@@ -380,6 +380,10 @@ const (
 	STATUS_GRAPHICS_DDCCI_VCP_NOT_SUPPORTED = 0xC01E0584
 	// The data received from the monitor is invalid.
 	STATUS_GRAPHICS_DDCCI_INVALID_DATA = 0xC01E0585
+
+	STATUS_NO_TOKEN = 0xC000007C
+
+	STATUS_ACCESS_DENIED = 0xC0000022
 )
 
 func NTStatus_String(status uint32) string {

@@ -11,7 +11,7 @@ import (
 	"runtime"
 
 	"github.com/Velocidex/yaml/v2"
-	errors "github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -283,7 +283,7 @@ func (self *Loader) WithEnvLiteralLoader(env_var string) *Loader {
 			result := &config_proto.Config{}
 			err := yaml.UnmarshalStrict([]byte(env_config), result)
 			if err != nil {
-				return nil, errors.WithStack(err)
+				return nil, errors.Wrap(err, 0)
 			}
 			return result, nil
 		}
@@ -357,6 +357,9 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 
 	logging.Reset()
 	logging.SuppressLogging = !self.verbose
+
+	// Mark the config as verbose.
+	config_obj.Verbose = self.verbose
 
 	// Apply any configuration mutators
 	for _, mutator := range self.config_mutators {
@@ -476,12 +479,12 @@ func read_config_from_file(filename string) (*config_proto.Config, error) {
 
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	err = yaml.UnmarshalStrict(data, result)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 	return result, nil
 }
@@ -491,12 +494,12 @@ func read_api_config_from_file(filename string) (*config_proto.Config, error) {
 
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	err = yaml.UnmarshalStrict(data, result.ApiConfig)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 	return result, nil
 }

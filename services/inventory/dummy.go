@@ -15,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	"google.golang.org/protobuf/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -144,15 +144,15 @@ func (self *Dummy) materializeTool(
 		var err error
 		tool.Url, err = getGithubRelease(ctx, self.Client, config_obj, tool)
 		if err != nil {
-			return errors.Wrap(
-				err, "While resolving github release "+tool.GithubProject)
+			return fmt.Errorf("While resolving github release %v: %w",
+				tool.GithubProject, err)
 		}
 	}
 
 	// We have no idea where the file is.
 	if tool.Url == "" {
-		return errors.New(fmt.Sprintf(
-			"Tool %v has no url defined - upload it manually.", tool.Name))
+		return fmt.Errorf(
+			"Tool %v has no url defined - upload it manually.", tool.Name)
 	}
 
 	fd, err := self.getTempFile(config_obj, tool.Filename, tool.Url)
@@ -180,8 +180,8 @@ func (self *Dummy) materializeTool(
 
 	// If the download failed, we can not store this tool.
 	if res.StatusCode != 200 {
-		return errors.New(fmt.Sprintf("Unable to download file from %v: %v",
-			tool.Url, res.Status))
+		return fmt.Errorf("Unable to download file from %v: %v",
+			tool.Url, res.Status)
 	}
 	sha_sum := sha256.New()
 
@@ -216,20 +216,20 @@ func getGithubRelease(ctx context.Context, Client HTTPClient,
 	defer res.Body.Close()
 
 	if res.StatusCode != 200 {
-		return "", errors.New(fmt.Sprintf("Error: %v", res.Status))
+		return "", fmt.Errorf("Error: %v", res.Status)
 	}
 
 	response, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return "", errors.Wrap(err,
-			"While make Github API call to "+url)
+		return "", fmt.Errorf(
+			"While make Github API call to %v: %w ", url, err)
 	}
 
 	api_obj := &githubReleasesAPI{}
 	err = json.Unmarshal(response, &api_obj)
 	if err != nil {
-		return "", errors.Wrap(err,
-			"While make Github API call to "+url)
+		return "", fmt.Errorf(
+			"While make Github API call to  %v: %w ", url, err)
 	}
 
 	release_re, err := regexp.Compile(tool.GithubAssetRegex)

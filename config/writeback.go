@@ -9,7 +9,7 @@ import (
 	"io/ioutil"
 
 	"github.com/Velocidex/yaml/v2"
-	errors "github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
@@ -65,7 +65,7 @@ func UpdateWriteback(
 
 	bytes, err := yaml.Marshal(writeback)
 	if err != nil {
-		return errors.WithStack(err)
+		return errors.Wrap(err, 0)
 	}
 
 	// Make sure the new file is only readable by root.

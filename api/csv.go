@@ -21,7 +21,7 @@ import (
 	"regexp"
 	"time"
 
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 	context "golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
@@ -195,11 +195,16 @@ func getPathSpec(
 		case "uploads":
 			return flow_path_manager.UploadMetadata(), nil
 		}
+
 	} else if in.HuntId != "" && in.Type == "clients" {
 		return paths.NewHuntPathManager(in.HuntId).Clients(), nil
 
 	} else if in.HuntId != "" && in.Type == "hunt_status" {
 		return paths.NewHuntPathManager(in.HuntId).ClientErrors(), nil
+
+	} else if in.NotebookId != "" && in.CellId != "" && in.Type == "logs" {
+		return paths.NewNotebookPathManager(in.NotebookId).Cell(
+			in.CellId).Logs(), nil
 
 	} else if in.NotebookId != "" && in.CellId != "" {
 		return paths.NewNotebookPathManager(in.NotebookId).Cell(

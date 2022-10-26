@@ -2,10 +2,10 @@ package sanity
 
 import (
 	"context"
+	"errors"
 	"os"
 	"time"
 
-	"github.com/pkg/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"

@@ -3,7 +3,7 @@ package accessors
 import (
 	"net/url"
 
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/json"
 )
 

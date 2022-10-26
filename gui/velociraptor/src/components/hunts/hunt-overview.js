@@ -86,6 +86,8 @@ export default class HuntOverview extends React.Component {
 
         case 'summary':
             params.only_combined_hunt = true;
+            params.json_format = true;
+            params.csv_format = true;
             break;
 
         case 'summary-json':

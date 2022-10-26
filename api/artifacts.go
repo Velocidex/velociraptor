@@ -19,7 +19,6 @@ package api
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"regexp"
@@ -116,7 +115,7 @@ func setArtifactFile(config_obj *config_proto.Config, principal string,
 
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(config_obj.Verbose, err)
 	}
 
 	switch in.Op {
@@ -127,11 +126,11 @@ func setArtifactFile(config_obj *config_proto.Config, principal string,
 		artifact_definition, err := tmp_repository.LoadYaml(
 			in.Artifact, true /* validate */, false /* built_in */)
 		if err != nil {
-			return nil, err
+			return nil, Status(config_obj.Verbose, err)
 		}
 
 		if !strings.HasPrefix(artifact_definition.Name, required_prefix) {
-			return nil, errors.New(
+			return nil, InvalidStatus(
 				"Modified or custom artifact names must start with '" +
 					required_prefix + "'")
 		}
@@ -144,7 +143,7 @@ func setArtifactFile(config_obj *config_proto.Config, principal string,
 			config_obj, principal, in.Artifact, required_prefix)
 	}
 
-	return nil, errors.New("Unknown op")
+	return nil, InvalidStatus("Unknown op")
 }
 
 func getReportArtifacts(
@@ -160,17 +159,17 @@ func getReportArtifacts(
 
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(config_obj.Verbose, err)
 	}
 	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(config_obj.Verbose, err)
 	}
 
 	result := &artifacts_proto.ArtifactDescriptors{}
 	names, err := repository.List(ctx, config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(config_obj.Verbose, err)
 	}
 	for _, name := range names {
 		artifact, pres := repository.Get(config_obj, name)
@@ -200,7 +199,7 @@ func searchArtifact(
 	*artifacts_proto.ArtifactDescriptors, error) {
 
 	if config_obj.GUI == nil {
-		return nil, errors.New("GUI not configured")
+		return nil, InvalidStatus("GUI not configured")
 	}
 
 	name_filter_regexp := config_obj.GUI.ArtifactSearchFilter
@@ -243,16 +242,16 @@ func searchArtifact(
 
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(config_obj.Verbose, err)
 	}
 	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(config_obj.Verbose, err)
 	}
 
 	names, err := repository.List(ctx, config_obj)
 	if err != nil {
-		return nil, err
+		return nil, Status(config_obj.Verbose, err)
 	}
 
 	for _, name := range names {
@@ -309,7 +308,7 @@ func (self *ApiServer) LoadArtifactPack(
 	users_manager := services.GetUserManager()
 	user_record, org_config_obj, err := users_manager.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	user_name := user_record.Name
@@ -326,7 +325,7 @@ func (self *ApiServer) LoadArtifactPack(
 	buffer := bytes.NewReader(in.Data)
 	zip_reader, err := zip.NewReader(buffer, int64(len(in.Data)))
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	for _, file := range zip_reader.File {

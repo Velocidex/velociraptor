@@ -16,6 +16,7 @@ import EstimateHunt from './estimate.js';
 import LabelForm from '../utils/labels.js';
 import api from '../core/api-service.js';
 import NewCollectionConfigParameters from '../flows/new-collections-parameters.js';
+import OrgSelector from './orgs.js';
 
 import {
     NewCollectionSelectArtifacts,
@@ -25,6 +26,7 @@ import {
     PaginationBuilder
 } from '../flows/new-collection.js';
 
+import UserConfig from '../core/user.js';
 
 // The hunt wizard is built upon the new collection wizard with some extra steps.
 class HuntPaginator extends PaginationBuilder {
@@ -34,6 +36,8 @@ class HuntPaginator extends PaginationBuilder {
 }
 
 class NewHuntConfigureHunt extends React.Component {
+    static contextType = UserConfig;
+
     static propTypes = {
         parameters: PropTypes.object,
         paginator: PropTypes.object,
@@ -46,6 +50,10 @@ class NewHuntConfigureHunt extends React.Component {
     }
 
     render() {
+        let is_admin = this.context.traits &&
+            this.context.traits.Permissions &&
+            this.context.traits.Permissions.server_admin;
+
         return (
             <>
               <Modal.Header closeButton>
@@ -144,6 +152,23 @@ class NewHuntConfigureHunt extends React.Component {
                     </Form.Group>
                   }
 
+                  <OrgSelector
+                    value={this.props.parameters.org_ids}
+                    onChange={(value) => this.setParam("org_ids", value)} />
+
+                  { is_admin &&
+                    <Form.Group as={Row}>
+                      <Form.Label column sm="3">{T("Hunt State")}</Form.Label>
+                      <Col sm="8">
+                        <Form.Check
+                          value={this.props.parameters.force_start}
+                          label={T("Start Hunt Immediately")}
+                          onChange={e=>this.setParam(
+                              "force_start", !this.props.parameters.force_start)}
+                        />
+                      </Col>
+                    </Form.Group>
+                  }
                   <EstimateHunt
                     params={this.props.parameters}/>
 
@@ -260,6 +285,7 @@ export default class NewHuntWizard extends React.Component {
             }
             state.hunt_parameters.description = hunt.hunt_description;
             state.hunt_parameters.expires = expiry;
+            state.hunt_parameters.org_ids = hunt.org_ids || [];
 
             // Resolve the artifacts from the request into a list of descriptors.
             api.post("v1/GetArtifacts", {
@@ -377,6 +403,14 @@ export default class NewHuntWizard extends React.Component {
 
         if (hunt_parameters.description) {
             result.hunt_description = hunt_parameters.description;
+        }
+
+        if (hunt_parameters.org_ids) {
+            result.org_ids = hunt_parameters.org_ids;
+        }
+
+        if (hunt_parameters.force_start) {
+            result.state = 2;
         }
 
         return result;

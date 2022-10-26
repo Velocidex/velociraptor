@@ -32,7 +32,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
-	errors "github.com/pkg/errors"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/shirou/gopsutil/v3/process"
 	"www.velocidex.com/golang/velociraptor/actions"
@@ -72,6 +71,13 @@ var (
 		"Normally golden tests run with the readonly datastore so as not to "+
 			"change the fixture. This flag allows updates to the fixtures.").
 		Bool()
+
+	// If the logs emit messages matching these then the test is
+	// considered failed. This helps us catch VQL errors.
+	fatalLogMessagesRegex = []string{
+		"(?i)Symbol .+ not found",
+		"(?i)Field .+ Expecting a .+ arg type, not",
+	}
 )
 
 type testFixture struct {
@@ -235,13 +241,11 @@ func runTest(fixture *testFixture, sm *services.Service,
 		}
 	}
 
-	res, err := log_writer.Matches("Symbol .+ not found")
-	if err != nil {
-		return result, err
-	}
-
-	if res {
-		return result, errors.New("Symbol not found error!")
+	for _, msg := range fatalLogMessagesRegex {
+		matches, err := log_writer.Matches(msg)
+		if matches || err != nil {
+			return "", fmt.Errorf("Log out matches %q", msg)
+		}
 	}
 
 	return result, nil

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )

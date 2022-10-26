@@ -101,6 +101,10 @@ message NotebookCell {
     string cell_id = 4;
     repeated string messages = 5;
 
+    // True if there are more messages than are included in the
+    // messages field above.
+    bool more_messages = 12;
+
     int64 timestamp = 6;
     int64 duration = 10;
 

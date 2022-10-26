@@ -32,7 +32,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/pkg/errors"
+	"github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/accessors/file_store_file_info"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -145,7 +145,7 @@ func (self *DirectoryFileStore) ReadFile(
 
 	file, err := os.Open(file_path)
 	if err != nil {
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 	return &api.FileAdapter{
 		File:      file,
@@ -192,7 +192,7 @@ func (self *DirectoryFileStore) WriteFileWithCompletion(
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.Error("Unable to open file %v: %v", file_path, err)
 
-		return nil, errors.WithStack(err)
+		return nil, errors.Wrap(err, 0)
 	}
 
 	return &DirectoryFileWriter{

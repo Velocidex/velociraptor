@@ -1,7 +1,6 @@
 package api
 
 import (
-	errors "github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -22,13 +21,13 @@ func (self *ApiServer) SetPassword(
 
 	// Enforce a minimum length password
 	if len(in.Password) < 4 {
-		return nil, errors.New("Password is not set or too short")
+		return nil, InvalidStatus("Password is not set or too short")
 	}
 
 	users_manager := services.GetUserManager()
 	user_record, _, err := users_manager.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	// Set the password on the record.
@@ -36,12 +35,12 @@ func (self *ApiServer) SetPassword(
 
 	org_manager, err := services.GetOrgManager()
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	org_config_obj, err := org_manager.GetOrgConfig(services.ROOT_ORG_ID)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	logger := logging.GetLogger(org_config_obj, &logging.Audit)
@@ -61,7 +60,7 @@ func (self *ApiServer) GetUsers(
 	users_manager := services.GetUserManager()
 	user_record, org_config_obj, err := users_manager.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	permissions := acls.READ_RESULTS
@@ -75,7 +74,7 @@ func (self *ApiServer) GetUsers(
 
 	users, err := users_manager.ListUsers(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	result.Users = users
@@ -91,7 +90,7 @@ func (self *ApiServer) GetUserFavorites(
 	users_manager := services.GetUserManager()
 	user_record, org_config_obj, err := users_manager.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 	user_name := user_record.Name
 	return users_manager.GetFavorites(ctx, org_config_obj, user_name, in.Type)

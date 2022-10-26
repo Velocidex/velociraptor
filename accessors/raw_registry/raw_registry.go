@@ -30,13 +30,14 @@ package raw_registry
 
 import (
 	"bytes"
+	"errors"
 	"os"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	errors "github.com/pkg/errors"
+
 	"www.velocidex.com/golang/regparser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -177,17 +178,51 @@ func NewRawValueBuffer(buf string, stat *RawRegValueInfo) *RawValueBuffer {
 	}
 }
 
-type RawRegFileSystemAccessor struct {
+type rawHiveCache struct {
 	mu sync.Mutex
 
 	// Maintain a cache of already parsed hives
 	hive_cache map[string]*regparser.Registry
-	scope      vfilter.Scope
-
-	root *accessors.OSPath
 }
 
-func (self *RawRegFileSystemAccessor) getRegHive(
+func (self *rawHiveCache) Get(name string) (*regparser.Registry, bool) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	res, ok := self.hive_cache[name]
+	return res, ok
+}
+
+func (self *rawHiveCache) Set(name string, reg *regparser.Registry) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.hive_cache[name] = reg
+}
+
+type RawRegFileSystemAccessor struct {
+	scope vfilter.Scope
+	root  *accessors.OSPath
+}
+
+func getRegHiveCache(scope vfilter.Scope) *rawHiveCache {
+	result_any := vql_subsystem.CacheGet(scope, RawRegFileSystemTag)
+	if result_any != nil {
+		cached, ok := result_any.(*rawHiveCache)
+		if ok {
+			return cached
+		}
+	}
+
+	result := &rawHiveCache{
+		hive_cache: make(map[string]*regparser.Registry),
+	}
+	vql_subsystem.CacheSet(scope, RawRegFileSystemTag, result)
+
+	return result
+}
+
+func getRegHive(scope vfilter.Scope,
 	file_path *accessors.OSPath) (*regparser.Registry, error) {
 
 	// Cache the parsed hive under the underlying file.
@@ -198,42 +233,43 @@ func (self *RawRegFileSystemAccessor) getRegHive(
 	}
 	cache_key := base_pathspec.String()
 
-	self.mu.Lock()
-	defer self.mu.Unlock()
+	hive_cache := getRegHiveCache(scope)
+	reg, pres := hive_cache.Get(cache_key)
+	if pres {
+		return reg, nil
+	}
 
 	lru_size := vql_subsystem.GetIntFromRow(
-		self.scope, self.scope, constants.RAW_REG_CACHE_SIZE)
-	hive, pres := self.hive_cache[cache_key]
-	if !pres {
-		delegate, err := file_path.Delegate(self.scope)
-		if err != nil {
-			return nil, err
-		}
+		scope, scope, constants.RAW_REG_CACHE_SIZE)
 
-		paged_reader, err := readers.NewPagedReader(
-			self.scope, pathspec.DelegateAccessor, delegate, int(lru_size))
-		if err != nil {
-			self.scope.Log("%v: did you provide a URL or Pathspec?", err)
-			return nil, err
-		}
-
-		// Make sure we can read the header so we can propagate errors
-		// properly.
-		header := make([]byte, 4)
-		_, err = paged_reader.ReadAt(header, 0)
-		if err != nil {
-			paged_reader.Close()
-			return nil, err
-		}
-
-		hive, err = regparser.NewRegistry(paged_reader)
-		if err != nil {
-			paged_reader.Close()
-			return nil, err
-		}
-
-		self.hive_cache[cache_key] = hive
+	delegate, err := file_path.Delegate(scope)
+	if err != nil {
+		return nil, err
 	}
+
+	paged_reader, err := readers.NewPagedReader(
+		scope, pathspec.DelegateAccessor, delegate, int(lru_size))
+	if err != nil {
+		scope.Log("%v: did you provide a URL or Pathspec?", err)
+		return nil, err
+	}
+
+	// Make sure we can read the header so we can propagate errors
+	// properly.
+	header := make([]byte, 4)
+	_, err = paged_reader.ReadAt(header, 0)
+	if err != nil {
+		paged_reader.Close()
+		return nil, err
+	}
+
+	hive, err := regparser.NewRegistry(paged_reader)
+	if err != nil {
+		paged_reader.Close()
+		return nil, err
+	}
+
+	hive_cache.Set(cache_key, hive)
 
 	return hive, nil
 }
@@ -243,29 +279,9 @@ const RawRegFileSystemTag = "_RawReg"
 func (self *RawRegFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 
-	result_any := vql_subsystem.CacheGet(scope, RawRegFileSystemTag)
-	if result_any == nil {
-		result := &RawRegFileSystemAccessor{
-			hive_cache: make(map[string]*regparser.Registry),
-			scope:      scope,
-			root:       self.root,
-		}
-		vql_subsystem.CacheSet(scope, RawRegFileSystemTag, result)
-		return result, nil
-	}
-
-	cached, ok := result_any.(*RawRegFileSystemAccessor)
-	if !ok {
-		return nil, errors.New("Cached RawRegFileSystemAccessor invalid")
-	}
-
-	cached.mu.Lock()
-	defer cached.mu.Unlock()
-
 	return &RawRegFileSystemAccessor{
-		hive_cache: cached.hive_cache,
-		scope:      scope,
-		root:       cached.root,
+		scope: scope,
+		root:  self.root,
 	}, nil
 }
 
@@ -294,7 +310,7 @@ func (self *RawRegFileSystemAccessor) ReadDirWithOSPath(
 	[]accessors.FileInfo, error) {
 
 	var result []accessors.FileInfo
-	hive, err := self.getRegHive(full_path)
+	hive, err := getRegHive(self.scope, full_path)
 	if err != nil {
 		return nil, err
 	}

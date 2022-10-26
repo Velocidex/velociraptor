@@ -6,12 +6,12 @@
 package file
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
 	"sync"
 
-	errors "github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -83,8 +83,8 @@ func (self *FileReaderWrapper) Read(buf []byte) (int, error) {
 
 	n, err := self.ReadSeekCloser.Read(buf)
 	if err != nil &&
-		errors.Cause(err) != io.ErrUnexpectedEOF &&
-		errors.Cause(err) != io.EOF &&
+		!errors.Is(err, io.ErrUnexpectedEOF) &&
+		!errors.Is(err, io.EOF) &&
 		!self.switched_to_ntfs {
 
 		// Reopen as an ntfs parsed file.

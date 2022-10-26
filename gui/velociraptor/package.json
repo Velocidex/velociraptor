@@ -49,7 +49,7 @@
         "react-hotkeys": "^2.0.0",
         "react-json-view": "^1.19.1",
         "react-overlays": "5.2.1",
-        "react-router-dom": "^5.3.3",
+        "react-router-dom": "^5.3.4",
         "react-scripts": "^5.0.1",
         "react-select": "^3.2.0",
         "react-simple-snackbar": "^1.1.11",
@@ -58,7 +58,7 @@
         "react-step-wizard": "^5.3.11",
         "react-treebeard": "^3.2.4",
         "recharts": "^2.1.14",
-        "styled-components": "^5.3.5",
+        "styled-components": "^5.3.6",
         "svgo": "2.8.0",
         "url-parse": "^1.5.10",
         "y18n": "^4.0.3"

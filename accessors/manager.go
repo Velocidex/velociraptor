@@ -4,7 +4,8 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
+
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"

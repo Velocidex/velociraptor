@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
 	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"

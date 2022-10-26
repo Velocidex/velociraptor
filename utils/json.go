@@ -8,7 +8,8 @@ import (
 
 	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
-	errors "github.com/pkg/errors"
+	errors "github.com/go-errors/errors"
+
 	vjson "www.velocidex.com/golang/velociraptor/json"
 )
 
@@ -22,7 +23,7 @@ func ParseJsonToDicts(serialized []byte) ([]*ordereddict.Dict, error) {
 		var raw_objects []json.RawMessage
 		err := json.Unmarshal(serialized, &raw_objects)
 		if err != nil {
-			return nil, errors.WithStack(err)
+			return nil, errors.Wrap(err, 0)
 		}
 
 		result := make([]*ordereddict.Dict, 0, len(raw_objects))

@@ -22,6 +22,12 @@ func (self *RoleACLManager) CheckAccess(
 	return true, nil
 }
 
+// We have the same roles in all orgs
+func (self *RoleACLManager) CheckAccessInOrg(
+	org_id string, permission ...acls.ACL_PERMISSION) (bool, error) {
+	return self.CheckAccess(permission...)
+}
+
 func (self *RoleACLManager) CheckAccessWithArgs(
 	permission acls.ACL_PERMISSION, args ...string) (bool, error) {
 
