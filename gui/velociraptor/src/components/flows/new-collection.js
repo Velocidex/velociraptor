@@ -790,6 +790,7 @@ class NewCollectionWizard extends React.Component {
             cpu_limit: request.cpu_limit,
             iops_limit: request.iops_limit,
             timeout: request.timeout,
+            progress_timeout: request.progress_timeout,
             max_rows: request.max_rows,
             max_mbytes: Math.round(
                 request.max_upload_bytes / 1024 / 1024 * 100) / 100  || undefined,
@@ -874,6 +875,10 @@ class NewCollectionWizard extends React.Component {
 
         if (this.state.resources.cpu_limit) {
             result.cpu_limit = this.state.resources.cpu_limit;
+        }
+
+        if (this.state.resources.progress_timeout) {
+            result.progress_timeout = this.state.resources.progress_timeout;
         }
 
         if (this.state.resources.iops_limit) {

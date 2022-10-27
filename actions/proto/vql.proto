@@ -74,6 +74,7 @@ message VQLCollectorArgs {
 
     float cpu_limit = 30;
     float iops_limit = 31;
+    float progress_timeout = 36;
 
     repeated Artifact artifacts = 5 [(sem_type) = {
             description: "Artifacts sent from the server to help with this query."

@@ -54,6 +54,9 @@ func (self *ProgressThrottler) Start(
 }
 
 func (self *ProgressThrottler) exitWithError(scope vfilter.Scope) {
+	scope.Log("ERROR:No progress made in %v seconds! aborting.",
+		self.progress_timeout)
+
 	buf := bytes.Buffer{}
 	p := pprof.Lookup("goroutine")
 	if p != nil {
