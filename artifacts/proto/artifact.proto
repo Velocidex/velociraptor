@@ -89,6 +89,7 @@ message ArtifactSource {
 }
 
 
+// Deprecated - Reports have been replaced by notebooks.
 message Report {
     option (semantic) = {
         description: "A report is generated from the output of the artifact collected. "
@@ -122,6 +123,9 @@ message Artifact {
             "contain dots. A useful scheme is to break categories with dot e.g. "
             "Linux.Browsers.ChromeHistory";
         }];
+
+    // Aliases are other names by which the same artifact is known
+    repeated string aliases = 21;
 
     string description = 2 [(sem_type) = {
             description: "What the artifact is trying to collect."
@@ -197,6 +201,7 @@ message Artifact {
 
     // The artifact is built into the Velociraptor binary.
     bool built_in = 20;
+    bool is_alias = 22;
 }
 
 message ArtifactDescriptors {

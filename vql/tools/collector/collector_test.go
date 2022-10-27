@@ -12,6 +12,7 @@ import (
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
@@ -31,9 +32,9 @@ import (
 
 var (
 	simpleCollectorArgs = &CollectPluginArgs{
-		Artifacts: []string{"Demo.Plugins.GUI"},
+		Artifacts: []string{"CollectionWithTypes"},
 		Args: ordereddict.NewDict().
-			Set("Demo.Plugins.GUI", ordereddict.NewDict().
+			Set("CollectionWithTypes", ordereddict.NewDict().
 
 				// Bools will be converted to a "Y"
 				Set("OffFlag", true).
@@ -99,8 +100,48 @@ reports:
   template: |
      This is a template.
      {{ Query "SELECT * FROM source()" | Table }}
-
 `
+	customCollectionWithTypes = `
+name: CollectionWithTypes
+parameters:
+- name: OffFlag
+  type: bool
+- name: ChoiceSelector
+  type: choices
+  default: First Choice
+  choices:
+      - First Choice
+      - Second Choice
+      - Third Choice
+
+- name: Flag
+  type: bool
+  default: Y
+
+- name: Flag2
+  type: bool
+  default: Y
+
+- name: StartDate
+  type: timestamp
+- name: StartDate2
+  type: timestamp
+- name: StartDate3
+  type: timestamp
+- name: CSVData
+  type: csv
+- name: JSONData
+  type: json_array
+  default: "[]"
+
+sources:
+- query: |
+      SELECT ChoiceSelector, Flag, Flag2,
+             OffFlag, StartDate, StartDate2, StartDate3,
+             CSVData, JSONData
+      FROM scope()
+`
+
 	uploadArtifactCollectorArgs = ordereddict.NewDict().
 					Set("artifacts", []string{"Custom.TestArtifactUpload"}).
 					Set("artifact_definitions", `
@@ -116,7 +157,11 @@ type TestSuite struct {
 }
 
 func (self *TestSuite) SetupTest() {
+	self.ConfigObj = self.LoadConfig()
+	self.LoadArtifacts([]string{customCollectionWithTypes})
+
 	self.TestSuite.SetupTest()
+
 	self.LoadArtifactFiles(
 		"../../../artifacts/definitions/Demo/Plugins/GUI.yaml",
 		"../../../artifacts/definitions/Reporting/Default.yaml",
@@ -167,11 +212,8 @@ func (self *TestSuite) TestCollectionWithArtifacts() {
 	zip_contents, err := openZipFile(output_file.Name())
 	assert.NoError(self.T(), err)
 
-	serialized, err := json.MarshalIndent(ordereddict.NewDict().
-		Set("zip_contents", zip_contents))
-	assert.NoError(self.T(), err)
-
-	goldie.Assert(self.T(), "TestCollectionWithArtifacts", serialized)
+	goldie.Assert(self.T(), "TestCollectionWithArtifacts",
+		json.MustMarshalIndent(transformZipContent(self.T(), zip_contents)))
 }
 
 func (self *TestSuite) TestCollectionWithTypes() {
@@ -195,7 +237,7 @@ func (self *TestSuite) TestCollectionWithTypes() {
 
 	results := []vfilter.Row{}
 	args := ordereddict.NewDict().
-		Set("artifacts", []string{"Demo.Plugins.GUI"}).
+		Set("artifacts", simpleCollectorArgs.Artifacts).
 		Set("output", output_file.Name()).
 		Set("args", simpleCollectorArgs.Args)
 
@@ -207,11 +249,8 @@ func (self *TestSuite) TestCollectionWithTypes() {
 	zip_contents, err := openZipFile(output_file.Name())
 	assert.NoError(self.T(), err)
 
-	serialized, err := json.MarshalIndent(ordereddict.NewDict().
-		Set("zip_contents", zip_contents))
-	assert.NoError(self.T(), err)
-
-	goldie.Assert(self.T(), "TestCollectionWithTypes", serialized)
+	goldie.Assert(self.T(), "TestCollectionWithTypes",
+		json.MustMarshalIndent(transformZipContent(self.T(), zip_contents)))
 }
 
 func (self *TestSuite) TestCollectionWithUpload() {
@@ -284,4 +323,14 @@ func openZipFile(name string) (*ordereddict.Dict, error) {
 
 func TestCollectorPlugin(t *testing.T) {
 	suite.Run(t, &TestSuite{})
+}
+
+func transformZipContent(t *testing.T,
+	zip_contents *ordereddict.Dict) *ordereddict.Dict {
+	collection_context := &flows_proto.ArtifactCollectorContext{}
+	serialized, _ := zip_contents.GetString("collection_context.json")
+	err := json.Unmarshal([]byte(serialized), collection_context)
+	assert.NoError(t, err)
+	zip_contents.Set("collection_context.json", collection_context)
+	return zip_contents
 }

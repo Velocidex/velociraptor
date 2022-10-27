@@ -2,12 +2,16 @@ name: Linux.Sys.Pslist
 description: |
   List processes and their running binaries.
 
+aliases:
+  - MacOS.Sys.Pslist
+
 parameters:
   - name: processRegex
     default: .
     type: regex
 
-precondition: SELECT OS From info() where OS = 'linux'
+precondition: |
+  SELECT OS From info() where OS =~ 'linux|darwin'
 
 sources:
   - query: |
