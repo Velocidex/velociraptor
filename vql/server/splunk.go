@@ -215,7 +215,7 @@ func send_to_splunk(
 		if arg.HostnameField != "" {
 			v, ok := dict.Get(arg.HostnameField)
 			if !ok {
-				scope.Log("ERROR:splunk_upload: %s not found!", arg.TimestampField)
+				scope.Log("ERROR:splunk_upload: %s not found!", arg.HostnameField)
 				return
 			}
 			if hostname, ok = v.(string); !ok {
