@@ -35,6 +35,11 @@ func OrgIdFromClientId(client_id string) string {
 	return ""
 }
 
+func ClientIdFromSource(client_id string) string {
+	parts := strings.Split(client_id, "-")
+	return parts[0]
+}
+
 func IsRootOrg(org_id string) bool {
 	return org_id == "" || org_id == "root"
 }

@@ -60,19 +60,9 @@ func getTable(
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
-	options := result_sets.ResultSetOptions{}
-	if in.SortColumn != "" {
-		options.SortColumn = in.SortColumn
-		options.SortAsc = in.SortDirection
-	}
-
-	if in.FilterColumn != "" &&
-		in.FilterRegex != "" {
-		options.FilterColumn = in.FilterColumn
-		options.FilterRegex, err = regexp.Compile("(?i)" + in.FilterRegex)
-		if err != nil {
-			return nil, err
-		}
+	options, err := getTableOptions(in)
+	if err != nil {
+		return result, err
 	}
 
 	rs_reader, err := result_sets.NewResultSetReaderWithOptions(
@@ -344,4 +334,23 @@ func getTimeline(
 	}
 
 	return result, nil
+}
+
+func getTableOptions(in *api_proto.GetTableRequest) (
+	options result_sets.ResultSetOptions, err error) {
+	if in.SortColumn != "" {
+		options.SortColumn = in.SortColumn
+		options.SortAsc = in.SortDirection
+	}
+
+	if in.FilterColumn != "" &&
+		in.FilterRegex != "" {
+		options.FilterColumn = in.FilterColumn
+		options.FilterRegex, err = regexp.Compile("(?i)" + in.FilterRegex)
+		if err != nil {
+			return options, err
+		}
+	}
+
+	return options, nil
 }
