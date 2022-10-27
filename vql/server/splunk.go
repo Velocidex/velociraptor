@@ -37,6 +37,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -54,8 +55,9 @@ type _SplunkPluginArgs struct {
 	SkipVerify     bool                `vfilter:"optional,field=skip_verify,doc=Skip SSL verification(default: False)."`
 	RootCerts      string              `vfilter:"optional,field=root_ca,doc=As a better alternative to skip_verify, allows root ca certs to be added here."`
 	WaitTime       int64               `vfilter:"optional,field=wait_time,doc=Batch splunk upload this long (2 sec)."`
-	TimestampField string              `vfilter:"optional,field=timestamp_field,doc=Field to use as event timestamp"`
-	Hostname       string              `vfilter:"optional,field=hostname,doc=Hostname for Splunk Events. Defaults to server hostname"`
+	Hostname       string              `vfilter:"optional,field=hostname,doc=Hostname for Splunk Events. Defaults to server hostname."`
+	TimestampField string              `vfilter:"optional,field=timestamp_field,doc=Field to use as event timestamp."`
+	HostnameField  string              `vfilter:"optional,field=hostname_field,doc=Field to use as event hostname. Overrides hostname param."`
 }
 
 type _SplunkPlugin struct{}
@@ -207,27 +209,40 @@ func send_to_splunk(
 	var events []*splunk.Event
 
 	for _, event := range buf {
-		if arg.TimestampField != "" {
-			dict, ok := event.(*ordereddict.Dict)
+		// Extract hostname_field if exists
+		hostname := ""
+		dict := vfilter.RowToDict(ctx, scope, event)
+		if arg.HostnameField != "" {
+			v, ok := dict.Get(arg.HostnameField)
 			if !ok {
-				scope.Log("ERROR:splunk_upload: Unexpected type for row")
+				scope.Log("ERROR:splunk_upload: %s not found!", arg.TimestampField)
 				return
 			}
+			if hostname, ok = v.(string); !ok {
+				scope.Log("ERROR:splunk_upload: Hostname field must be of type string!")
+				return
+			}
+		}
+
+		// Extract timestamp_field if exists
+		if arg.TimestampField != "" {
+			dict := vfilter.RowToDict(ctx, scope, event)
 			ts, ok := dict.Get(arg.TimestampField)
 			if ok {
-				timestamp, ok := ts.(time.Time)
-				if !ok {
-					scope.Log("ERROR:splunk_upload: Must use timestamp function for timestamp field")
-					return
+				timestamp, ok := functions.TimeFromAny(scope, ts)
+				if ok != nil {
+					// Default to start of Epoch if parse error
+					timestamp = time.Date(1970, time.Month(1), 1, 0, 0, 0, 0, time.UTC)
 				}
 				events = append(
 					events,
 					client.NewEventWithTime(
 						timestamp,
-						event,
+						dict,
 						arg.Source,
 						arg.Sourcetype,
 						arg.Index,
+						hostname,
 					),
 				)
 			} else {
@@ -237,10 +252,11 @@ func send_to_splunk(
 			events = append(
 				events,
 				client.NewEvent(
-					event,
+					dict,
 					arg.Source,
 					arg.Sourcetype,
 					arg.Index,
+					hostname,
 				),
 			)
 		}

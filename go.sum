@@ -191,6 +191,8 @@ github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5P
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
 github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.1-0.20221026122553-3bc8157da558 h1:klgKo3ovLkX+yi+8FqyHneUkmM/2DWVtUdp0xAVIsps=
 github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.1-0.20221026122553-3bc8157da558/go.mod h1:HxsMAwjIrYG2Afz/JB+a4HcALVNM0zTLTO5RZnf+OS8=
+github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.1-0.20221027171526-76a36be4fa02 h1:GpaHYwMLoDarNxagi3vGGzPsIMhO7LHGlMn9eHVXWK4=
+github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.1-0.20221027171526-76a36be4fa02/go.mod h1:HxsMAwjIrYG2Afz/JB+a4HcALVNM0zTLTO5RZnf+OS8=
 github.com/clbanning/mxj v1.8.4 h1:HuhwZtbyvyOw+3Z1AowPkU87JkJUSv751ELWaiTpj8I=
 github.com/clbanning/mxj v1.8.4/go.mod h1:BVjHeAH+rl9rs6f+QIpeRl0tfu10SXn1pUSa5PVGJng=
 github.com/client9/misspell v0.3.4/go.mod h1:qj6jICC3Q7zFZvVWo7KLAzC3yx5G7kyvSDkc90ppPyw=
