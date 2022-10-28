@@ -223,7 +223,6 @@ func send_to_splunk(
 
 		// Extract timestamp_field if exists
 		if arg.TimestampField != "" {
-			dict := vfilter.RowToDict(ctx, scope, event)
 			ts, ok := dict.Get(arg.TimestampField)
 			if ok {
 				timestamp, ok := functions.TimeFromAny(scope, ts)
