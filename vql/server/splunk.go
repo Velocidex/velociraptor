@@ -210,16 +210,13 @@ func send_to_splunk(
 
 	for _, event := range buf {
 		// Extract hostname_field if exists
-		hostname := ""
+		var hostname string
+		var ok bool
 		dict := vfilter.RowToDict(ctx, scope, event)
 		if arg.HostnameField != "" {
-			v, ok := dict.Get(arg.HostnameField)
+			hostname, ok = dict.GetString(arg.HostnameField)
 			if !ok {
-				scope.Log("ERROR:splunk_upload: %s not found!", arg.HostnameField)
-				return
-			}
-			if hostname, ok = v.(string); !ok {
-				scope.Log("ERROR:splunk_upload: Hostname field must be of type string!")
+				scope.Log("ERROR:splunk_upload: %s not found, or isn't a string!", arg.HostnameField)
 				return
 			}
 		}
