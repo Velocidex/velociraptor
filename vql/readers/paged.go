@@ -31,6 +31,7 @@ package readers
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"time"
 
@@ -98,6 +99,11 @@ type AccessorReader struct {
 	// How long to keep the file handle open
 	Lifetime time.Duration
 	lru_size int
+}
+
+func (self *AccessorReader) DebugString() string {
+	return fmt.Sprintf("AccessorReader %v: %v\n",
+		self.Accessor, self.File.String())
 }
 
 func (self *AccessorReader) SetLifetime(l time.Duration) {
