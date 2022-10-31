@@ -51,6 +51,14 @@ var (
 	mu sync.Mutex
 
 	proxyHandler = http.ProxyFromEnvironment
+
+	validHttpMethods = map[string]bool{
+		"POST":   true,
+		"GET":    true,
+		"PUT":    true,
+		"PATCH":  true,
+		"DELETE": true,
+	}
 )
 
 const (
@@ -71,7 +79,7 @@ type HttpPluginRequest struct {
 	Url     string      `vfilter:"required,field=url,doc=The URL to fetch"`
 	Params  vfilter.Any `vfilter:"optional,field=params,doc=Parameters to encode as POST or GET query strings"`
 	Headers vfilter.Any `vfilter:"optional,field=headers,doc=A dict of headers to send."`
-	Method  string      `vfilter:"optional,field=method,doc=HTTP method to use (GET, POST)"`
+	Method  string      `vfilter:"optional,field=method,doc=HTTP method to use (GET, POST, PUT, PATCH, DELETE)"`
 	Data    string      `vfilter:"optional,field=data,doc=If specified we write this raw data into a POST request instead of encoding the params above."`
 	Chunk   int         `vfilter:"optional,field=chunk_size,doc=Read input with this chunk size and send each chunk as a row"`
 
@@ -342,6 +350,14 @@ func (self *_HttpPlugin) Call(
 			return
 		}
 
+		// Validate HTTP Method
+		arg.Method = strings.ToUpper(arg.Method)
+		if _, ok := validHttpMethods[arg.Method]; !ok {
+
+			scope.Log("http_client: Invalid HTTP Method!")
+			return
+		}
+
 		// Allow a unix path to be interpreted as simply a http over
 		// unix domain socket (used by e.g. docker)
 		if strings.HasPrefix(arg.Url, "/") {
@@ -361,16 +377,15 @@ func (self *_HttpPlugin) Call(
 			return
 		}
 
-		data := arg.Data
-		if data == "" {
-			data = params.Encode()
-		}
-
 		req, err := http.NewRequestWithContext(
-			ctx, arg.Method, arg.Url, strings.NewReader(data))
+			ctx, arg.Method, arg.Url, strings.NewReader(arg.Data))
 		if err != nil {
 			scope.Log("%s: %v", self.Name(), err)
 			return
+		}
+
+		if params != nil {
+			req.URL.RawQuery = params.Encode()
 		}
 
 		scope.Log("Fetching %v\n", arg.Url)
