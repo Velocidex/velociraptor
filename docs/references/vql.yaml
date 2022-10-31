@@ -528,7 +528,7 @@
     description: An optional password to encrypt the collection zip.
   - name: format
     type: string
-    description: Output format (csv, jsonl).
+    description: Output format (csv, jsonl, csv_only).
   - name: artifact_definitions
     type: Any
     description: Optional additional custom artifacts.
@@ -817,16 +817,16 @@
     description: If set we wait for the download to complete before returning.
   - name: type
     type: string
-    description: Type of download to create (e.g. 'report') default a full zip file.
+    description: Type of download to create (deperated Ignored).
   - name: template
     type: string
-    description: Report template to use (defaults to Reporting.Default).
+    description: Report template to use (deperated Ignored).
   - name: password
     type: string
     description: An optional password to encrypt the collection zip.
   - name: format
     type: string
-    description: Format to export (csv,json) defaults to both.
+    description: Format to export (csv,json,csv_only) defaults to both.
   - name: expand_sparse
     type: bool
     description: If set we expand sparse files in the archive.
@@ -2181,6 +2181,10 @@
   - name: os
     type: string
     description: If specified target this OS
+  - name: org_id
+    type: string
+    description: If set the collection will be started in the specified orgs.
+    repeated: true
   category: server
 - name: hunt_add
   description: |
@@ -2672,11 +2676,6 @@
 - name: lookupSID
   description: Get information about the SID.
   type: Function
-  args:
-  - name: sid
-    type: string
-    description: 'A SID to lookup using LookupAccountSid '
-    required: true
   category: windows
 - name: lowcase
   type: Function
@@ -4144,7 +4143,8 @@
   args:
   - name: pid
     type: int64
-    description: A process ID to list. If not provided list all processes.
+    description: A pid to list. If this is provided we are able to operate much faster
+      by only opening a single process.
   category: plugin
 - name: query
   description: Launch a subquery and materialize it into a list of rows.
@@ -5099,6 +5099,17 @@
     type: string
     description: A format specifier as per the Golang time.Parse
   category: basic
+- name: tlsh_hash
+  description: Calculate the tlsh hash of a file.
+  type: Function
+  args:
+  - name: path
+    type: accessors.OSPath
+    description: Path to open and hash.
+    required: true
+  - name: accessor
+    type: string
+    description: The accessor to use
 - name: to_dict
   description: |
     Construct a dict from a query.

@@ -90,7 +90,7 @@ var event_notebook_regex = regexp.MustCompile(`^N\.E\.([^-]+?)-(C\..+|server)$`)
 
 func rootPathFromNotebookID(notebook_id string) api.DSPathSpec {
 	if strings.HasPrefix(notebook_id, "Dashboard") {
-		return NOTEBOOK_ROOT.AddChild("Dashboards").
+		return NOTEBOOK_ROOT.AddUnsafeChild("Dashboards").
 			SetType(api.PATH_TYPE_DATASTORE_JSON)
 	}
 
