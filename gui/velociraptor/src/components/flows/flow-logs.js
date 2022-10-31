@@ -20,12 +20,13 @@ export default class FlowLogs extends React.Component {
 
     state = {
         level_filter: "all",
+        level_column: "level",
     }
 
     makeTransform() {
         if (this.state.level_filter !== "all") {
             return {
-                filter_column: "level",
+                filter_column: this.state.level_column,
                 filter_regex: this.state.level_filter,
             };
         }

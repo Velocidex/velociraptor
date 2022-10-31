@@ -9,6 +9,11 @@ class ViewCellLogsTable extends FlowLogs {
         notebook_metadata: PropTypes.object.isRequired,
     };
 
+    state = {
+        level_filter: "all",
+        level_column: "Level",
+    }
+
     getVersion = ()=>{}
 
     getParams = ()=>{

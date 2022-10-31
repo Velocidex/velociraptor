@@ -706,17 +706,19 @@ export default class NotebookCellRenderer extends React.Component {
                     notebook_id={this.props.notebook_id}
                     cell={this.state.cell}/>
                   { selected &&
-                    _.map(this.state.cell.messages, (msg, idx) => {
-                        return <div key={idx} className="error-message">
-                        {msg}
-                        </div>;
-                    })}
-                  { selected && this.state.cell.more_messages &&
-                    <Button
-                      variant="secondary"
-                      onClick={()=>this.setState({showMoreLogs: true})}>
-                      {T("Logs")}
-                    </Button>
+                    <>
+                      {_.map(this.state.cell.messages, (msg, idx) => {
+                          return <div key={idx} className="error-message">
+                               {msg}
+                             </div>;
+                      })}
+
+                      <Button
+                        variant="secondary"
+                        onClick={()=>this.setState({showMoreLogs: true})}>
+                        {T("Logs")}
+                      </Button>
+                    </>
                   }
                 </div>
               </div>
