@@ -370,22 +370,41 @@ func (self *_HttpPlugin) Call(
 
 		config_obj, _ := artifacts.GetConfig(scope)
 
-		params := encodeParams(arg, scope)
 		client, err := GetHttpClient(config_obj, scope, arg)
 		if err != nil {
 			scope.Log("http_client: %v", err)
 			return
 		}
 
-		req, err := http.NewRequestWithContext(
-			ctx, arg.Method, arg.Url, strings.NewReader(arg.Data))
-		if err != nil {
-			scope.Log("%s: %v", self.Name(), err)
-			return
-		}
-
-		if params != nil {
-			req.URL.RawQuery = params.Encode()
+		var req *http.Request
+		params := encodeParams(arg, scope)
+		switch arg.Method {
+		case "GET":
+			{
+				req, err = http.NewRequestWithContext(
+					ctx, arg.Method, arg.Url, nil)
+				if err != nil {
+					scope.Log("%s: %v", self.Name(), err)
+					return
+				}
+				req.URL.RawQuery = params.Encode()
+			}
+		default:
+			{
+				// Set body to params if arg.Data is empty
+				if arg.Data == "" && params != nil {
+					arg.Data = params.Encode()
+				} else if arg.Data != "" && params != nil {
+					// Shouldn't set both params and data. Warn user
+					scope.Log("http_client: Both params and data set. Defaulting to data.")
+				}
+				req, err = http.NewRequestWithContext(
+					ctx, arg.Method, arg.Url, strings.NewReader(arg.Data))
+				if err != nil {
+					scope.Log("%s: %v", self.Name(), err)
+					return
+				}
+			}
 		}
 
 		scope.Log("Fetching %v\n", arg.Url)
