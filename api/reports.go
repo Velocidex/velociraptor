@@ -19,6 +19,10 @@ import (
 // Reports are used for various dashboards. They are almost like a
 // notebook (but historically predate it).
 // TODO: Think about consolidating reports and notebooks
+// Currently this is used from:
+// 1. Home screen (dashboard)
+// 2. Client's VQL Drilldown screen
+// 3. View Artifacts screen
 func getReport(ctx context.Context,
 	config_obj *config_proto.Config,
 	acl_manager vql_subsystem.ACLManager,

@@ -32,6 +32,18 @@ export default class FlowLogs extends React.Component {
         return {};
     }
 
+    getParams = ()=>{
+        return {
+            client_id: this.props.flow.client_id,
+            flow_id: this.props.flow.session_id,
+            type: "log",
+        };
+    }
+
+    getVersion = ()=>{
+        return getFlowState(this.props.flow);
+    }
+
     render() {
         let renderers = {
             client_time: (cell, row, rowIndex) => {
@@ -74,14 +86,10 @@ export default class FlowLogs extends React.Component {
             <VeloPagedTable
               className="col-12"
               renderers={renderers}
-              params={{
-                  client_id: this.props.flow.client_id,
-                  flow_id: this.props.flow.session_id,
-                  type: "log",
-              }}
+              params={this.getParams()}
               translate_column_headers={true}
               toolbar={toolbar}
-              version={getFlowState(this.props.flow)}
+              version={this.getVersion()}
               transform={this.makeTransform()}
               setTransform={x=>{
                   this.setState({level_filter: "all"});

@@ -1,9 +1,25 @@
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import axios from 'axios';
 import Modal from 'react-bootstrap/Modal';
-import VeloPagedTable from '../core/paged-table.js';
-import VeloTimestamp from "../utils/time.js";
+import FlowLogs from '../flows/flow-logs.js';
+
+class ViewCellLogsTable extends FlowLogs {
+    static propTypes = {
+        cell: PropTypes.object,
+        notebook_metadata: PropTypes.object.isRequired,
+    };
+
+    getVersion = ()=>{}
+
+    getParams = ()=>{
+        return  {
+            notebook_id: this.props.notebook_metadata &&
+                this.props.notebook_metadata.notebook_id,
+            cell_id: this.props.cell && this.props.cell.cell_id,
+            type: "logs",
+        };
+    }
+}
 
 export default class ViewCellLogs extends Component {
     static propTypes = {
@@ -12,23 +28,7 @@ export default class ViewCellLogs extends Component {
         closeDialog: PropTypes.func.isRequired,
     };
 
-    // Create an artifact template from the VQL
-    componentDidMount = () => {
-        this.source = axios.CancelToken.source();
-    }
-
-    componentWillUnmount() {
-        this.source.cancel("unmounted");
-    }
-
     render() {
-        let params = {
-            notebook_id: this.props.notebook_metadata &&
-                this.props.notebook_metadata.notebook_id,
-            cell_id: this.props.cell && this.props.cell.cell_id,
-            type: "logs",
-        };
-        console.log(this.props.cell, this.props.notebook_metadata);
         return (
             <Modal show={true}
                    className="full-height"
@@ -40,16 +40,9 @@ export default class ViewCellLogs extends Component {
                 <Modal.Title>View Cell Logs</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                <VeloPagedTable
-                  className="col-12"
-                  renderers={{
-                      Timestamp: (cell, row, rowIndex) => {
-                          return (
-                              <VeloTimestamp usec={cell / 1000}/>
-                          );
-                      }
-                  }}
-                  params={params}
+                <ViewCellLogsTable
+                  cell={this.props.cell}
+                  notebook_metadata={this.props.notebook_metadata}
                 />
               </Modal.Body>
               <Modal.Footer>
