@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 	"sync"
 	"sync/atomic"
 
@@ -239,6 +240,7 @@ func NewListener(
 		}
 
 		base_name := fmt.Sprintf("journal_%s_%s_", name, node_name)
+		base_name = strings.Replace(base_name, "/", "...", -1)
 		tmpfile, err := ioutil.TempFile("", base_name)
 		if err != nil {
 			return nil, err
