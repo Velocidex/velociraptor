@@ -382,7 +382,7 @@ func (self *_HttpPlugin) Call(
 		case "GET":
 			{
 				req, err = http.NewRequestWithContext(
-					ctx, arg.Method, arg.Url, nil)
+					ctx, arg.Method, arg.Url, strings.NewReader(arg.Data))
 				if err != nil {
 					scope.Log("%s: %v", self.Name(), err)
 					return
