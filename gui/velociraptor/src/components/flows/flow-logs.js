@@ -20,16 +20,29 @@ export default class FlowLogs extends React.Component {
 
     state = {
         level_filter: "all",
+        level_column: "level",
     }
 
     makeTransform() {
         if (this.state.level_filter !== "all") {
             return {
-                filter_column: "level",
+                filter_column: this.state.level_column,
                 filter_regex: this.state.level_filter,
             };
         }
         return {};
+    }
+
+    getParams = ()=>{
+        return {
+            client_id: this.props.flow.client_id,
+            flow_id: this.props.flow.session_id,
+            type: "log",
+        };
+    }
+
+    getVersion = ()=>{
+        return getFlowState(this.props.flow);
     }
 
     render() {
@@ -74,14 +87,10 @@ export default class FlowLogs extends React.Component {
             <VeloPagedTable
               className="col-12"
               renderers={renderers}
-              params={{
-                  client_id: this.props.flow.client_id,
-                  flow_id: this.props.flow.session_id,
-                  type: "log",
-              }}
+              params={this.getParams()}
               translate_column_headers={true}
               toolbar={toolbar}
-              version={getFlowState(this.props.flow)}
+              version={this.getVersion()}
               transform={this.makeTransform()}
               setTransform={x=>{
                   this.setState({level_filter: "all"});

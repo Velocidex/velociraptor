@@ -1,6 +1,7 @@
 package server_artifacts
 
 import (
+	"context"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -49,6 +50,7 @@ func (self *serverLogger) Write(b []byte) (int, error) {
 }
 
 func NewServerLogger(
+	ctx context.Context,
 	collection_context CollectionContextManager,
 	config_obj *config_proto.Config,
 	session_id string) (*serverLogger, error) {
@@ -62,9 +64,24 @@ func NewServerLogger(
 		return nil, err
 	}
 
-	return &serverLogger{
+	result := &serverLogger{
 		collection_context: collection_context,
 		config_obj:         config_obj,
 		writer:             writer,
-	}, nil
+	}
+
+	// Flush the logs every second to make sure the GUI shows
+	// progress.
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(time.Second):
+				writer.Flush()
+			}
+		}
+	}()
+
+	return result, nil
 }
