@@ -52,12 +52,12 @@ var (
 
 	proxyHandler = http.ProxyFromEnvironment
 
-	validHttpMethods = map[string]bool{
-		"POST":   true,
-		"GET":    true,
-		"PUT":    true,
-		"PATCH":  true,
-		"DELETE": true,
+	validHttpMethods = map[string]string{
+		"POST":   "POST",
+		"GET":    "GET",
+		"PUT":    "PUT",
+		"PATCH":  "PATCH",
+		"DELETE": "DELETE",
 	}
 )
 
@@ -350,14 +350,6 @@ func (self *_HttpPlugin) Call(
 			return
 		}
 
-		// Validate HTTP Method
-		arg.Method = strings.ToUpper(arg.Method)
-		if _, ok := validHttpMethods[arg.Method]; !ok {
-
-			scope.Log("http_client: Invalid HTTP Method!")
-			return
-		}
-
 		// Allow a unix path to be interpreted as simply a http over
 		// unix domain socket (used by e.g. docker)
 		if strings.HasPrefix(arg.Url, "/") {
@@ -378,7 +370,7 @@ func (self *_HttpPlugin) Call(
 
 		var req *http.Request
 		params := encodeParams(arg, scope)
-		switch arg.Method {
+		switch method, _ := validHttpMethods[strings.ToUpper(arg.Method)]; method {
 		case "GET":
 			{
 				req, err = http.NewRequestWithContext(
@@ -389,12 +381,17 @@ func (self *_HttpPlugin) Call(
 				}
 				req.URL.RawQuery = params.Encode()
 			}
+		case "":
+			{
+				scope.Log("http_client: Invalid HTTP Method %s", arg.Method)
+				return
+			}
 		default:
 			{
 				// Set body to params if arg.Data is empty
 				if arg.Data == "" && params != nil {
 					arg.Data = params.Encode()
-				} else if arg.Data != "" && params != nil {
+				} else if arg.Data != "" && len(*params) != 0 {
 					// Shouldn't set both params and data. Warn user
 					scope.Log("http_client: Both params and data set. Defaulting to data.")
 				}
