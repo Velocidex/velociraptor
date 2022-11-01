@@ -43,13 +43,13 @@ type ServerArtifactsRunner struct {
 	timeout          time.Duration
 	mu               sync.Mutex
 	wg               *sync.WaitGroup
-	cancellationPool map[string]func()
+	cancellationPool map[string]serverFlowContext
 }
 
 func NewServerArtifactRunner(config_obj *config_proto.Config) *ServerArtifactsRunner {
 	return &ServerArtifactsRunner{
 		config_obj:       config_obj,
-		cancellationPool: make(map[string]func()),
+		cancellationPool: make(map[string]serverFlowContext),
 		timeout:          time.Second * time.Duration(600),
 		wg:               &sync.WaitGroup{},
 	}
@@ -89,7 +89,7 @@ func (self *ServerArtifactsRunner) process(
 			if err != nil {
 				continue
 			}
-			logger, err := NewServerLogger(
+			logger, err := NewServerLogger(ctx,
 				collection_context, config_obj, session_id)
 			if err != nil {
 				continue
@@ -116,9 +116,10 @@ func (self *ServerArtifactsRunner) Cancel(flow_id string) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	cancel, pres := self.cancellationPool[flow_id]
+	flow_context, pres := self.cancellationPool[flow_id]
 	if pres {
-		cancel()
+		flow_context.cancel()
+		flow_context.logger.writer.Flush()
 		delete(self.cancellationPool, flow_id)
 	}
 }
@@ -132,23 +133,17 @@ func (self *ServerArtifactsRunner) ProcessTask(
 
 	// Cancel the current collection
 	if task.Cancel != nil {
-		journal, err := services.GetJournal(config_obj)
-		if err != nil {
-			return err
+		self.mu.Lock()
+		flow_context, pres := self.cancellationPool[task.SessionId]
+		self.mu.Unlock()
+		if pres {
+			flow_context.logger.Write([]byte("INFO:Cancelling Query"))
 		}
-
-		path_manager := paths.NewFlowPathManager("server", task.SessionId).Log()
-		err = journal.AppendToResultSet(config_obj,
-			path_manager, []*ordereddict.Dict{
-				ordereddict.NewDict().
-					Set("Timestamp", time.Now().UTC().UnixNano()/1000).
-					Set("time", time.Now().UTC().String()).
-					Set("message", "Cancelling Query")})
 
 		// This task is now done.
 		self.Cancel(task.SessionId)
 
-		return err
+		return nil
 	}
 
 	err := self.runQuery(ctx, task, collection_context, logger)
@@ -204,7 +199,10 @@ func (self *ServerArtifactsRunner) runQuery(
 	sub_ctx, cancel := context.WithCancel(ctx)
 
 	self.mu.Lock()
-	self.cancellationPool[task.SessionId] = cancel
+	self.cancellationPool[task.SessionId] = serverFlowContext{
+		cancel: cancel,
+		logger: logger,
+	}
 	self.mu.Unlock()
 
 	defer func() {
@@ -373,6 +371,11 @@ func (self *ServerArtifactsRunner) runQuery(
 	return nil
 }
 
+type serverFlowContext struct {
+	cancel func()
+	logger *serverLogger
+}
+
 func NewServerArtifactService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
@@ -382,7 +385,7 @@ func NewServerArtifactService(
 		config_obj:       config_obj,
 		timeout:          time.Second * time.Duration(600),
 		wg:               wg,
-		cancellationPool: make(map[string]func()),
+		cancellationPool: make(map[string]serverFlowContext),
 	}
 
 	logger := logging.GetLogger(
