@@ -189,8 +189,6 @@ github.com/cespare/xxhash/v2 v2.1.2/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XL
 github.com/chzyer/logex v1.1.10/go.mod h1:+Ywpsq7O8HXn0nuIou7OrIPyXbp3wmkHB+jjWRnGsAI=
 github.com/chzyer/readline v0.0.0-20180603132655-2972be24d48e/go.mod h1:nSuG5e5PlCu98SY8svDHJxuZscDgtXS6KTTbou5AhLI=
 github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMnBNeIyt5eFwwo7qiLfzFZmjNmxjkiQlU=
-github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.1-0.20221026122553-3bc8157da558 h1:klgKo3ovLkX+yi+8FqyHneUkmM/2DWVtUdp0xAVIsps=
-github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.1-0.20221026122553-3bc8157da558/go.mod h1:HxsMAwjIrYG2Afz/JB+a4HcALVNM0zTLTO5RZnf+OS8=
 github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.1-0.20221027171526-76a36be4fa02 h1:GpaHYwMLoDarNxagi3vGGzPsIMhO7LHGlMn9eHVXWK4=
 github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.1-0.20221027171526-76a36be4fa02/go.mod h1:HxsMAwjIrYG2Afz/JB+a4HcALVNM0zTLTO5RZnf+OS8=
 github.com/clbanning/mxj v1.8.4 h1:HuhwZtbyvyOw+3Z1AowPkU87JkJUSv751ELWaiTpj8I=
@@ -1185,8 +1183,8 @@ www.velocidex.com/golang/evtx v0.2.1-0.20220404133451-1fdf8be7325e h1:AhcXPgNKhJ
 www.velocidex.com/golang/evtx v0.2.1-0.20220404133451-1fdf8be7325e/go.mod h1:ykEQ7AUF9AL+mfCefDmLwmZOnU2So6wM3qKM8xdsHhU=
 www.velocidex.com/golang/go-ese v0.1.1-0.20220107095505-c38622559671 h1:pfvo7NFo0eJj6Zr7d+4vMx/Zr2JriMMPEWRHUf1YjUw=
 www.velocidex.com/golang/go-ese v0.1.1-0.20220107095505-c38622559671/go.mod h1:qnzHyB9yD2khtYO+wf3ck9FQxX3wFhXeJHFBnuUIZcc=
-www.velocidex.com/golang/go-ntfs v0.1.2-0.20221031072222-c6d76990e7c4 h1:MWHgiO4r/lEViSTZmtS0G9k31tBlew+hCVVwt49ok80=
-www.velocidex.com/golang/go-ntfs v0.1.2-0.20221031072222-c6d76990e7c4/go.mod h1:EJBeGhwlRw0Ktx9p/Mz+pWHcLzd9RR8Id6rsv95145c=
+www.velocidex.com/golang/go-ntfs v0.1.2-0.20221101075911-4e31a101eb08 h1:NJzZPvNwOEGu+AtTPkowu+F6Y4hn9EGbJyxgadE8Slg=
+www.velocidex.com/golang/go-ntfs v0.1.2-0.20221101075911-4e31a101eb08/go.mod h1:EJBeGhwlRw0Ktx9p/Mz+pWHcLzd9RR8Id6rsv95145c=
 www.velocidex.com/golang/go-pe v0.1.1-0.20220107093716-e91743c801de/go.mod h1:j9Xy8Z9wxzY2SCB8CqDkkoSzy+eUwevnOrRm/XM2q/A=
 www.velocidex.com/golang/go-pe v0.1.1-0.20220506020923-9fac492a9b0d h1:OQKwxK0O4a/8YTmfkQNzUspyrvlpRbLi318L08DC0oY=
 www.velocidex.com/golang/go-pe v0.1.1-0.20220506020923-9fac492a9b0d/go.mod h1:TPJ3phbAuZIu7XuPyNqgoP2k3P+eNHfHHGcivhcsxaA=

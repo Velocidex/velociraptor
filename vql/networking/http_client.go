@@ -370,18 +370,46 @@ func (self *_HttpPlugin) Call(
 
 		config_obj, _ := artifacts.GetConfig(scope)
 
-		params := encodeParams(arg, scope)
 		client, err := GetHttpClient(config_obj, scope, arg)
 		if err != nil {
 			scope.Log("http_client: %v", err)
 			return
 		}
 
-		req, err := http.NewRequestWithContext(
-			ctx, arg.Method, arg.Url, strings.NewReader(arg.Data))
-		if err != nil {
-			scope.Log("%s: %v", self.Name(), err)
-			return
+		var req *http.Request
+		params := encodeParams(arg, scope)
+		switch method := strings.ToUpper(arg.Method); method {
+		case "GET":
+			{
+				req, err = http.NewRequestWithContext(
+					ctx, method, arg.Url, strings.NewReader(arg.Data))
+				if err != nil {
+					scope.Log("%s: %v", self.Name(), err)
+					return
+				}
+				req.URL.RawQuery = params.Encode()
+			}
+		case "POST", "PUT", "PATCH", "DELETE":
+			{
+				// Set body to params if arg.Data is empty
+				if arg.Data == "" && len(*params) != 0 {
+					arg.Data = params.Encode()
+				} else if arg.Data != "" && len(*params) != 0 {
+					// Shouldn't set both params and data. Warn user
+					scope.Log("http_client: Both params and data set. Defaulting to data.")
+				}
+				req, err = http.NewRequestWithContext(
+					ctx, method, arg.Url, strings.NewReader(arg.Data))
+				if err != nil {
+					scope.Log("%s: %v", self.Name(), err)
+					return
+				}
+			}
+		default:
+			{
+				scope.Log("http_client: Invalid HTTP Method %s", method)
+				return
+			}
 		}
 
 		if params != nil {

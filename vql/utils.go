@@ -18,11 +18,30 @@
 package vql
 
 import (
+	"context"
 	"runtime/debug"
 	"time"
 
 	vfilter "www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
+
+func Materialize(ctx context.Context, scope vfilter.Scope,
+	in types.Any) types.Any {
+	switch t := in.(type) {
+	case types.LazyExpr:
+		return t.Reduce(ctx)
+
+	case types.StoredQuery:
+		return types.Materialize(ctx, scope, t)
+
+	case types.StoredExpression:
+		return t.Reduce(ctx, scope)
+
+	default:
+		return in
+	}
+}
 
 // GetStringFromRow gets a string value from row. If it is not there
 // or not a string return ""
@@ -30,6 +49,7 @@ func GetStringFromRow(scope vfilter.Scope,
 	row vfilter.Row, key string) string {
 	value, pres := scope.Associative(row, key)
 	if pres {
+		value = Materialize(context.Background(), scope, value)
 		value_str, ok := value.(string)
 		if ok {
 			return value_str
@@ -38,12 +58,23 @@ func GetStringFromRow(scope vfilter.Scope,
 	return ""
 }
 
+func GetBoolFromRow(scope vfilter.Scope,
+	row vfilter.Row, key string) bool {
+	value, pres := scope.Associative(row, key)
+	if pres {
+		value = Materialize(context.Background(), scope, value)
+		return scope.Bool(value)
+	}
+	return false
+}
+
 // GetIntFromRow gets a uint64 value from row. If it is not there
 // or not a string return 0. Floats etc are coerced to uint64.
 func GetIntFromRow(scope vfilter.Scope,
 	row vfilter.Row, key string) uint64 {
 	value, pres := scope.Associative(row, key)
 	if pres {
+		value = Materialize(context.Background(), scope, value)
 		switch t := value.(type) {
 		case int:
 			return uint64(t)
