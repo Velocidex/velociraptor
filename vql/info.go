@@ -63,14 +63,14 @@ func init() {
 
 				err := CheckAccess(scope, acls.MACHINE_STATE)
 				if err != nil {
-					scope.Log("info: %s", err)
+					scope.Error("info: %s", err)
 					return result
 				}
 
 				arg := &vfilter.Empty{}
 				err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 				if err != nil {
-					scope.Log("info: %s", err.Error())
+					scope.Error("info: %s", err.Error())
 					return result
 				}
 
@@ -81,7 +81,7 @@ func init() {
 				if !ok {
 					info, err = host.Info()
 					if err != nil {
-						scope.Log("info: %s", err)
+						scope.Error("info: %s", err)
 						return result
 					}
 					CacheSet(scope, "__info", info)

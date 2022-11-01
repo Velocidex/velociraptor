@@ -28,14 +28,14 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 	arg := &PathSpecArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("pathspec: %v", err)
+		scope.Error("pathspec: %v", err)
 		return false
 	}
 
 	if arg.Parse != "" {
 		os_path, err := accessors.ParsePath(arg.Parse, arg.Type)
 		if err != nil {
-			scope.Log("pathspec: %v", err)
+			scope.Error("pathspec: %v", err)
 			return false
 		}
 
@@ -69,7 +69,7 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 		if !utils.IsNil(path) {
 			serialized, err := json.Marshal(path)
 			if err != nil {
-				scope.Log("pathspec: %v", err)
+				scope.Error("pathspec: %v", err)
 				return vfilter.Null{}
 			}
 
@@ -87,7 +87,7 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 
 	result, err := accessors.ParsePath(path_str, arg.Type)
 	if err != nil {
-		scope.Log("pathspec: %v", err)
+		scope.Error("pathspec: %v", err)
 		return vfilter.Null{}
 	}
 

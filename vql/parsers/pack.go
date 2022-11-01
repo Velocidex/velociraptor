@@ -1,3 +1,4 @@
+//go:build xXXX
 // +build xXXX
 
 package parsers
@@ -34,13 +35,13 @@ func (self ParseBinaryFunction) Call(
 	arg := &ParseBinaryFunctionArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("parse_binary: %v", err)
+		scope.Error("parse_binary: %v", err)
 		return &vfilter.Null{}
 	}
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("parse_binary: %s", err)
+		scope.Error("parse_binary: %s", err)
 		return &vfilter.Null{}
 	}
 
@@ -53,7 +54,7 @@ func (self ParseBinaryFunction) Call(
 		// Parse the profile.
 		err := profile.ParseStructDefinitions(arg.Profile)
 		if err != nil {
-			scope.Log("parse_binary: %s", err)
+			scope.Error("parse_binary: %s", err)
 			return &vfilter.Null{}
 		}
 		vql_subsystem.CacheSet(scope, arg.Profile, profile)
@@ -63,13 +64,13 @@ func (self ParseBinaryFunction) Call(
 	paged_reader, err := readers.NewPagedReader(
 		scope, arg.Accessor, arg.Filename, int(lru_size))
 	if err != nil {
-		scope.Log("parse_binary: %v", err)
+		scope.Error("parse_binary: %v", err)
 		return &vfilter.Null{}
 	}
 
 	obj, err := profile.Parse(scope, arg.Struct, paged_reader, arg.Offset)
 	if err != nil {
-		scope.Log("parse_binary: %v", err)
+		scope.Error("parse_binary: %v", err)
 		return &vfilter.Null{}
 	}
 

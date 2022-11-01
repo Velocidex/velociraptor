@@ -27,7 +27,7 @@ func (self _SamplerPlugin) Call(ctx context.Context,
 		arg := &_SamplerPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("sample: %v", err)
+			scope.Error("sample: %v", err)
 			return
 		}
 

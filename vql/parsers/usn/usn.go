@@ -34,7 +34,7 @@ func (self USNPlugin) Call(
 		arg := &USNPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("parse_usn: %v", err)
+			scope.Error("parse_usn: %v", err)
 			return
 		}
 
@@ -44,7 +44,7 @@ func (self USNPlugin) Call(
 			arg.Accessor = "ntfs"
 			arg.Device, err = accessors.NewWindowsNTFSPath(arg.Device.String())
 			if err != nil {
-				scope.Log("parse_usn: %v", err)
+				scope.Error("parse_usn: %v", err)
 				return
 			}
 		}
@@ -52,13 +52,13 @@ func (self USNPlugin) Call(
 		device, accessor, err := readers.GetRawDeviceAndAccessor(
 			scope, arg.Device, arg.Accessor)
 		if err != nil {
-			scope.Log("parse_usn: %v", err)
+			scope.Error("parse_usn: %v", err)
 			return
 		}
 
 		ntfs_ctx, err := readers.GetNTFSContext(scope, device, accessor)
 		if err != nil {
-			scope.Log("parse_usn: %v", err)
+			scope.Error("parse_usn: %v", err)
 			return
 		}
 		defer ntfs_ctx.Close()
@@ -98,7 +98,7 @@ func (self WatchUSNPlugin) Call(
 		arg := &WatchUSNPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("watch_usn: %v", err)
+			scope.Error("watch_usn: %v", err)
 			return
 		}
 
@@ -115,7 +115,7 @@ func (self WatchUSNPlugin) Call(
 		// (it does not make sense to watch a static file).
 		ntfs_device, err := accessors.NewWindowsNTFSPath(arg.Device)
 		if err != nil {
-			scope.Log("watch_usn: %v", err)
+			scope.Error("watch_usn: %v", err)
 			return
 		}
 
@@ -123,7 +123,7 @@ func (self WatchUSNPlugin) Call(
 		cancel, err := GlobalEventLogService.Register(
 			ntfs_device, "ntfs", ctx, config_obj, scope, event_channel)
 		if err != nil {
-			scope.Log("watch_usn: %v", err)
+			scope.Error("watch_usn: %v", err)
 			return
 		}
 

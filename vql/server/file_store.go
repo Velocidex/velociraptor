@@ -1,3 +1,4 @@
+//go:build server_vql
 // +build server_vql
 
 /*
@@ -51,13 +52,13 @@ func (self *DeleteFileStore) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
-		scope.Log("file_store_delete: %v", err)
+		scope.Error("file_store_delete: %v", err)
 		return vfilter.Null{}
 	}
 
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("file_store_delete: %v", err)
+		scope.Error("file_store_delete: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -135,7 +136,7 @@ func (self *FileStore) Call(ctx context.Context,
 	arg := &FileStoreArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("file_store: %s", err.Error())
+		scope.Error("file_store: %s", err.Error())
 		return vfilter.Null{}
 	}
 

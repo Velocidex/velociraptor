@@ -49,7 +49,7 @@ func (self _ParseEvtxPlugin) Call(
 		arg := &_ParseEvtxPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("parse_evtx: %s", err.Error())
+			scope.Error("parse_evtx: %s", err.Error())
 			return
 		}
 
@@ -63,7 +63,7 @@ func (self _ParseEvtxPlugin) Call(
 		}
 
 		if err != nil {
-			scope.Log("parse_evtx: %s", err.Error())
+			scope.Error("parse_evtx: %s", err.Error())
 			return
 		}
 
@@ -76,18 +76,18 @@ func (self _ParseEvtxPlugin) Call(
 
 				err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 				if err != nil {
-					scope.Log("parse_evtx: %s", err)
+					scope.Error("parse_evtx: %s", err)
 					return
 				}
 
 				accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 				if err != nil {
-					scope.Log("parse_evtx: %v", err)
+					scope.Error("parse_evtx: %v", err)
 					return
 				}
 				fd, err := accessor.Open(filename)
 				if err != nil {
-					scope.Log("Unable to open file %s: %v",
+					scope.Error("Unable to open file %s: %v",
 						filename, err)
 					return
 				}
@@ -95,7 +95,7 @@ func (self _ParseEvtxPlugin) Call(
 
 				chunks, err := evtx.GetChunks(fd)
 				if err != nil {
-					scope.Log("Unable to parse file %s: %v",
+					scope.Error("Unable to parse file %s: %v",
 						filename, err)
 					return
 				}
@@ -156,13 +156,13 @@ func (self _WatchEvtxPlugin) Call(
 		arg := &_ParseEvtxPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("watch_evtx: %s", err.Error())
+			scope.Error("watch_evtx: %s", err.Error())
 			return
 		}
 
 		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
-			scope.Log("watch_evtx: %s", err)
+			scope.Error("watch_evtx: %s", err)
 			return
 		}
 

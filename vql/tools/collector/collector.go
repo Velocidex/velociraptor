@@ -62,14 +62,14 @@ func (self CollectPlugin) Call(
 		// zip), It is very privileged.
 		err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 		if err != nil {
-			scope.Log("collect: %s", err)
+			scope.Error("collect: %s", err)
 			return
 		}
 
 		arg := &CollectPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("collect: %v", err)
+			scope.Error("collect: %v", err)
 			return
 		}
 
@@ -84,13 +84,13 @@ func (self CollectPlugin) Call(
 
 		request, err := self.configureCollection(collection_manager, arg)
 		if err != nil {
-			scope.Log("collect: %v", err)
+			scope.Error("collect: %v", err)
 			return
 		}
 
 		err = collection_manager.Collect(request)
 		if err != nil {
-			scope.Log("collect: %v", err)
+			scope.Error("collect: %v", err)
 			return
 		}
 
@@ -320,7 +320,7 @@ func AddSpecProtobuf(
 				if !is_str && !utils.IsNil(value_any) {
 					value_time, err := functions.TimeFromAny(scope, value_any)
 					if err != nil {
-						scope.Log("Invalid timestamp for %v",
+						scope.Error("Invalid timestamp for %v",
 							parameter_definition.Name)
 						continue
 					}
@@ -332,7 +332,7 @@ func AddSpecProtobuf(
 					value_str, err = csv.EncodeToCSV(
 						config_obj, scope, value_any)
 					if err != nil {
-						scope.Log("Invalid CSV for %v",
+						scope.Error("Invalid CSV for %v",
 							parameter_definition.Name)
 						continue
 					}

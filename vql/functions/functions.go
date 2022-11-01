@@ -48,7 +48,7 @@ func (self _Base64Decode) Call(
 	arg := &_Base64DecodeArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("base64decode: %s", err.Error())
+		scope.Error("base64decode: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -79,7 +79,7 @@ func (self _Base64Encode) Call(
 	arg := &_Base64EncodeArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("base64encode: %s", err.Error())
+		scope.Error("base64encode: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -108,7 +108,7 @@ func (self _ToLower) Call(
 	arg := &_ToLowerArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("lowcase: %s", err.Error())
+		scope.Error("lowcase: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -131,7 +131,7 @@ func (self _ToUpper) Call(
 	arg := &_ToLowerArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("upcase: %s", err.Error())
+		scope.Error("upcase: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -158,7 +158,7 @@ func (self _ToInt) Call(
 	arg := &_ToIntArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("atoi: %s", err.Error())
+		scope.Error("atoi: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -190,7 +190,7 @@ func (self _ParseFloat) Call(
 	arg := &_ToIntArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("atoi: %s", err.Error())
+		scope.Error("atoi: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -252,7 +252,7 @@ func (self _UTF16) Call(
 	arg := &_Base64DecodeArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("utf16: %s", err.Error())
+		scope.Error("utf16: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -283,7 +283,7 @@ func (self _UTF16Encode) Call(
 	arg := &_Base64EncodeArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("utf16_encode: %s", err.Error())
+		scope.Error("utf16_encode: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -291,7 +291,7 @@ func (self _UTF16Encode) Call(
 	ints := utf16.Encode([]rune(arg.String))
 	err = binary.Write(buf, binary.LittleEndian, &ints)
 	if err != nil {
-		scope.Log("utf16_encode: %s", err.Error())
+		scope.Error("utf16_encode: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -347,7 +347,7 @@ func (self _GetFunction) Call(
 	arg := &_GetFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("get: %s", err.Error())
+		scope.Error("get: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -413,7 +413,7 @@ func (self _SetFunction) Call(
 	arg := &_SetFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("set: %s", err.Error())
+		scope.Error("set: %s", err.Error())
 		return vfilter.Null{}
 	}
 

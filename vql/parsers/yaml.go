@@ -27,25 +27,25 @@ func (self ParseYamlFunction) Call(
 	arg := &ParseYamlFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("parse_yaml: %s", err.Error())
+		scope.Error("parse_yaml: %s", err.Error())
 		return nil
 	}
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("parse_yaml: %s", err)
+		scope.Error("parse_yaml: %s", err)
 		return nil
 	}
 
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
-		scope.Log("parse_yaml: %v", err)
+		scope.Error("parse_yaml: %v", err)
 		return nil
 	}
 
 	fd, err := accessor.Open(arg.Filename)
 	if err != nil {
-		scope.Log("Unable to open file %s: %v",
+		scope.Error("Unable to open file %s: %v",
 			arg.Filename, err)
 		return nil
 	}
@@ -53,7 +53,7 @@ func (self ParseYamlFunction) Call(
 
 	data, err := ioutil.ReadAll(fd)
 	if err != nil {
-		scope.Log("parse_yaml: %v", err)
+		scope.Error("parse_yaml: %v", err)
 		return nil
 	}
 
@@ -62,7 +62,7 @@ func (self ParseYamlFunction) Call(
 	var result yaml.MapSlice
 	err = yaml.Unmarshal(data, &result)
 	if err != nil {
-		scope.Log("parse_yaml: %v", err)
+		scope.Error("parse_yaml: %v", err)
 		return nil
 	}
 	return mapSlice2OrderedDict(result)

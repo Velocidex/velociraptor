@@ -1,4 +1,5 @@
-//+build extras
+//go:build extras
+// +build extras
 
 package tools
 
@@ -34,7 +35,7 @@ func (self *GCSPubsubPublishFunction) Call(ctx context.Context,
 	arg := &GCSPubsubPublishArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("gcs_pubsub_publish: %s", err.Error())
+		scope.Error("gcs_pubsub_publish: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -67,7 +68,7 @@ func (self *GCSPubsubPublishFunction) Call(ctx context.Context,
 	}
 
 	result := t.Publish(ctx, &pubsub.Message{
-		Data: []byte(serialized),
+		Data:       []byte(serialized),
 		Attributes: attributesStringMap,
 	})
 

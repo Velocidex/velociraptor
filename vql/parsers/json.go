@@ -53,14 +53,14 @@ func (self ParseJsonFunction) Call(
 	arg := &ParseJsonFunctionArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("parse_json: %v", err)
+		scope.Error("parse_json: %v", err)
 		return &vfilter.Null{}
 	}
 
 	result := ordereddict.NewDict()
 	err = json.Unmarshal([]byte(arg.Data), result)
 	if err != nil {
-		scope.Log("parse_json: %v", err)
+		scope.Error("parse_json: %v", err)
 		return &vfilter.Null{}
 	}
 	return result
@@ -82,14 +82,14 @@ func (self ParseJsonArray) Call(
 	arg := &ParseJsonFunctionArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("parse_json_array: %v", err)
+		scope.Error("parse_json_array: %v", err)
 		return &vfilter.Null{}
 	}
 
 	result_array := []json.RawMessage{}
 	err = json.Unmarshal([]byte(arg.Data), &result_array)
 	if err != nil {
-		scope.Log("parse_json_array: %v", err)
+		scope.Error("parse_json_array: %v", err)
 		return &vfilter.Null{}
 	}
 
@@ -102,7 +102,7 @@ func (self ParseJsonArray) Call(
 			var any_value interface{}
 			err = json.Unmarshal(item, &any_value)
 			if err != nil {
-				scope.Log("parse_json_array: %v", err)
+				scope.Error("parse_json_array: %v", err)
 				return &vfilter.Null{}
 			}
 
@@ -135,25 +135,25 @@ func (self ParseJsonlPlugin) Call(
 		arg := &ParseJsonlPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("parse_jsonl: %s", err.Error())
+			scope.Error("parse_jsonl: %s", err.Error())
 			return
 		}
 
 		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
-			scope.Log("parse_jsonl: %s", err)
+			scope.Error("parse_jsonl: %s", err)
 			return
 		}
 
 		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
-			scope.Log("parse_jsonl: %v", err)
+			scope.Error("parse_jsonl: %v", err)
 			return
 		}
 
 		fd, err := accessor.Open(arg.Filename)
 		if err != nil {
-			scope.Log("Unable to open file %s: %v",
+			scope.Error("Unable to open file %s: %v",
 				arg.Filename, err)
 			return
 		}

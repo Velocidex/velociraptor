@@ -63,7 +63,7 @@ func (self DelayPlugin) Call(ctx context.Context,
 		arg := &DelayPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("delay: %v", err)
+			scope.Error("delay: %v", err)
 			return
 		}
 

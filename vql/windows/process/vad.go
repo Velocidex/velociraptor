@@ -1,3 +1,4 @@
+//go:build windows && amd64 && cgo
 // +build windows,amd64,cgo
 
 package process
@@ -48,7 +49,7 @@ func (self ModulesPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {
-			scope.Log("modules: %s", err)
+			scope.Error("modules: %s", err)
 			return
 		}
 
@@ -59,13 +60,13 @@ func (self ModulesPlugin) Call(
 
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("modules: %s", err.Error())
+			scope.Error("modules: %s", err.Error())
 			return
 		}
 
 		modules, err := GetProcessModules(uint32(arg.Pid))
 		if err != nil {
-			scope.Log("modules: %s", err.Error())
+			scope.Error("modules: %s", err.Error())
 			return
 		}
 
@@ -108,13 +109,13 @@ func (self VADPlugin) Call(
 
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("vad: %s", err.Error())
+			scope.Error("vad: %s", err.Error())
 			return
 		}
 
 		vads, handle, err := GetVads(uint32(arg.Pid))
 		if err != nil {
-			scope.Log("vad: %s", err.Error())
+			scope.Error("vad: %s", err.Error())
 			return
 		}
 		defer windows.CloseHandle(handle)

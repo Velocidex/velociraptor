@@ -63,19 +63,19 @@ func (self GlobPlugin) Call(
 		arg := &GlobPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("glob: %s", err.Error())
+			scope.Error("glob: %s", err.Error())
 			return
 		}
 
 		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
-			scope.Log("glob: %s", err.Error())
+			scope.Error("glob: %s", err.Error())
 			return
 		}
 
 		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
-			scope.Log("glob: %v", err)
+			scope.Error("glob: %v", err)
 			return
 		}
 
@@ -88,7 +88,7 @@ func (self GlobPlugin) Call(
 		root := arg.Root
 		accessor_root, err := accessor.ParsePath("")
 		if err != nil {
-			scope.Log("glob: %v", err)
+			scope.Error("glob: %v", err)
 			return
 		}
 
@@ -110,7 +110,7 @@ func (self GlobPlugin) Call(
 			// Compile the callback
 			lambda, err := vfilter.ParseLambda(arg.RecursionCallback)
 			if err != nil {
-				scope.Log("glob: while parsing recursion_callback: %v", err)
+				scope.Error("glob: while parsing recursion_callback: %v", err)
 				return
 			}
 
@@ -135,7 +135,7 @@ func (self GlobPlugin) Call(
 				// component.
 				root, err = root.Parse(item)
 				if err != nil {
-					scope.Log("glob: %v", err)
+					scope.Error("glob: %v", err)
 					return
 				}
 
@@ -159,12 +159,12 @@ func (self GlobPlugin) Call(
 
 			item_path, err := root.Parse(item)
 			if err != nil {
-				scope.Log("glob: %v", err)
+				scope.Error("glob: %v", err)
 				return
 			}
 			err = globber.Add(item_path)
 			if err != nil {
-				scope.Log("glob: %v", err)
+				scope.Error("glob: %v", err)
 				return
 			}
 		}
@@ -267,7 +267,7 @@ func (self ReadFilePlugin) Call(
 	arg := &ReadFileArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("%s: %s", self.Name(), err.Error())
+		scope.Error("%s: %s", self.Name(), err.Error())
 		close(output_chan)
 		return output_chan
 	}
@@ -281,13 +281,13 @@ func (self ReadFilePlugin) Call(
 
 		err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
-			scope.Log("read_file: %v", err)
+			scope.Error("read_file: %v", err)
 			return
 		}
 
 		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
-			scope.Log("read_file: %v", err)
+			scope.Error("read_file: %v", err)
 			return
 		}
 
@@ -328,7 +328,7 @@ func (self *ReadFileFunction) Call(ctx context.Context,
 	arg := &ReadFileFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("read_file: %s", err.Error())
+		scope.Error("read_file: %s", err.Error())
 		return ""
 	}
 
@@ -338,13 +338,13 @@ func (self *ReadFileFunction) Call(ctx context.Context,
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("read_file: %s", err)
+		scope.Error("read_file: %s", err)
 		return vfilter.Null{}
 	}
 
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
-		scope.Log("read_file: %v", err)
+		scope.Error("read_file: %v", err)
 		return ""
 	}
 
@@ -352,7 +352,7 @@ func (self *ReadFileFunction) Call(ctx context.Context,
 
 	fd, err := accessor.OpenWithOSPath(arg.Filename)
 	if err != nil {
-		scope.Log("read_file: %v: %v", arg.Filename.String(), err)
+		scope.Error("read_file: %v: %v", arg.Filename.String(), err)
 		return ""
 	}
 	defer fd.Close()
@@ -399,19 +399,19 @@ func (self *StatPlugin) Call(
 		arg := &StatArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("stat: %s", err.Error())
+			scope.Error("stat: %s", err.Error())
 			return
 		}
 
 		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
-			scope.Log("stat: %s", err.Error())
+			scope.Error("stat: %s", err.Error())
 			return
 		}
 
 		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
-			scope.Log("stat: %s", err.Error())
+			scope.Error("stat: %s", err.Error())
 			return
 		}
 

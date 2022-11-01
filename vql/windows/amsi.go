@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package windows
@@ -29,7 +30,7 @@ func (self _AMSIFunction) Call(
 	arg := &_AMSIFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("amsi: %v", err)
+		scope.Error("amsi: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -38,7 +39,7 @@ func (self _AMSIFunction) Call(
 	if session_any == nil {
 		err := amsi.Initialize()
 		if err != nil {
-			scope.Log("amsi: %v", err)
+			scope.Error("amsi: %v", err)
 			return vfilter.Null{}
 		}
 		session := amsi.OpenSession()

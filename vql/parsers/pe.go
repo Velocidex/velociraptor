@@ -51,13 +51,13 @@ func (self _PEFunction) Call(
 	arg := &_PEFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("parse_pe: %v", err)
+		scope.Error("parse_pe: %v", err)
 		return &vfilter.Null{}
 	}
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("parse_pe: %s", err)
+		scope.Error("parse_pe: %s", err)
 		return &vfilter.Null{}
 	}
 

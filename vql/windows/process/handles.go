@@ -1,3 +1,4 @@
+//go:build windows && amd64 && cgo
 // +build windows,amd64,cgo
 
 // References: https://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/ex/sysinfo/query.htm
@@ -74,7 +75,7 @@ func (self HandlesPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {
-			scope.Log("handles: %s", err)
+			scope.Error("handles: %s", err)
 			return
 		}
 
@@ -89,13 +90,13 @@ func (self HandlesPlugin) Call(
 		arg := &HandlesPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("handles: %s", err.Error())
+			scope.Error("handles: %s", err.Error())
 			return
 		}
 
 		err = TryToGrantSeDebugPrivilege()
 		if err != nil {
-			scope.Log("handles while trying to grant SeDebugPrivilege: %v", err)
+			scope.Error("handles while trying to grant SeDebugPrivilege: %v", err)
 		}
 
 		GetHandles(scope, arg, output_chan)
@@ -158,7 +159,7 @@ func GetHandles(scope vfilter.Scope, arg *HandlesPluginArgs, out chan<- vfilter.
 	// This should be large enough to fit all the handles.
 	buffer, err := SaneNtQuerySystemInformation(windows.SystemHandleInformation)
 	if err != nil {
-		scope.Log("GetHandles %v", err)
+		scope.Error("GetHandles %v", err)
 		return
 	}
 
@@ -193,7 +194,7 @@ func GetHandles(scope vfilter.Scope, arg *HandlesPluginArgs, out chan<- vfilter.
 					windows.PROCESS_DUP_HANDLE,
 					false, uint32(pid))
 				if err != nil {
-					scope.Log("OpenProcess for pid %v: %v\n", pid, err)
+					scope.Error("OpenProcess for pid %v: %v\n", pid, err)
 					return
 				}
 				process_handle = h

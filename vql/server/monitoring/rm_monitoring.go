@@ -25,14 +25,14 @@ func (self RemoveClientMonitoringFunction) Call(
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
-		scope.Log("rm_client_monitoring: %s", err)
+		scope.Error("rm_client_monitoring: %s", err)
 		return vfilter.Null{}
 	}
 
 	arg := &AddClientMonitoringFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("rm_client_monitoring: %v", err)
+		scope.Error("rm_client_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -44,7 +44,7 @@ func (self RemoveClientMonitoringFunction) Call(
 
 	client_event_manager, err := services.ClientEventManager(config_obj)
 	if err != nil {
-		scope.Log("rm_client_monitoring: %v", err)
+		scope.Error("rm_client_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 	event_config := client_event_manager.GetClientMonitoringState()
@@ -59,7 +59,7 @@ func (self RemoveClientMonitoringFunction) Call(
 	err = client_event_manager.SetClientMonitoringState(
 		ctx, config_obj, principal, event_config)
 	if err != nil {
-		scope.Log("rm_client_monitoring: %v", err)
+		scope.Error("rm_client_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -87,14 +87,14 @@ func (self RemoveServerMonitoringFunction) Call(
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
-		scope.Log("rm_server_monitoring: %s", err)
+		scope.Error("rm_server_monitoring: %s", err)
 		return vfilter.Null{}
 	}
 
 	arg := &AddServerMonitoringFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("rm_server_monitoring: %v", err)
+		scope.Error("rm_server_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -106,7 +106,7 @@ func (self RemoveServerMonitoringFunction) Call(
 
 	server_manager, err := services.GetServerEventManager(config_obj)
 	if err != nil {
-		scope.Log("rm_server_monitoring: server_manager not ready")
+		scope.Error("rm_server_monitoring: server_manager not ready")
 		return vfilter.Null{}
 	}
 
@@ -119,7 +119,7 @@ func (self RemoveServerMonitoringFunction) Call(
 	principal := vql_subsystem.GetPrincipal(scope)
 	err = server_manager.Update(config_obj, principal, event_config)
 	if err != nil {
-		scope.Log("rm_server_monitoring: %v", err)
+		scope.Error("rm_server_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 

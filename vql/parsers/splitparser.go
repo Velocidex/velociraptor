@@ -58,18 +58,18 @@ func processFile(
 
 	err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("split_records: %s", err)
+		scope.Error("split_records: %s", err)
 		return
 	}
 
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
-		scope.Log("split_records: %v", err)
+		scope.Error("split_records: %v", err)
 		return
 	}
 	fd, err := accessor.Open(file)
 	if err != nil {
-		scope.Log("split_records: %v", err)
+		scope.Error("split_records: %v", err)
 		return
 	}
 	defer fd.Close()

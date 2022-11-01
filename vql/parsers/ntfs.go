@@ -66,21 +66,21 @@ func (self NTFSFunction) Call(
 	arg := &NTFSFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("parse_ntfs: %v", err)
+		scope.Error("parse_ntfs: %v", err)
 		return &vfilter.Null{}
 	}
 
 	arg.Filename, arg.Accessor, err = getOSPathAndAccessor(arg.Device,
 		arg.Filename, arg.Accessor)
 	if err != nil {
-		scope.Log("parse_ntfs: %v", err)
+		scope.Error("parse_ntfs: %v", err)
 		return &vfilter.Null{}
 	}
 
 	if arg.Inode != "" {
 		mft_idx, _, _, err := ntfs.ParseMFTId(arg.Inode)
 		if err != nil {
-			scope.Log("parse_ntfs: %v", err)
+			scope.Error("parse_ntfs: %v", err)
 			return &vfilter.Null{}
 		}
 		arg.MFT = mft_idx
@@ -88,7 +88,7 @@ func (self NTFSFunction) Call(
 
 	ntfs_ctx, err := readers.GetNTFSContext(scope, arg.Filename, arg.Accessor)
 	if err != nil {
-		scope.Log("parse_ntfs: GetNTFSContext %v", err)
+		scope.Error("parse_ntfs: GetNTFSContext %v", err)
 		return &vfilter.Null{}
 	}
 	defer ntfs_ctx.Close()
@@ -104,13 +104,13 @@ func (self NTFSFunction) Call(
 
 	mft_entry, err := ntfs_ctx.GetMFT(arg.MFT)
 	if err != nil {
-		scope.Log("parse_ntfs: GetMFT %v", err)
+		scope.Error("parse_ntfs: GetMFT %v", err)
 		return &vfilter.Null{}
 	}
 
 	result, err := ntfs.ModelMFTEntry(ntfs_ctx, mft_entry)
 	if err != nil {
-		scope.Log("parse_ntfs: ModelMFTEntry %v", err)
+		scope.Error("parse_ntfs: ModelMFTEntry %v", err)
 		return &vfilter.Null{}
 	}
 
@@ -137,24 +137,24 @@ func (self MFTScanPlugin) Call(
 		arg := &MFTScanPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("parse_mft: %v", err)
+			scope.Error("parse_mft: %v", err)
 			return
 		}
 
 		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
-			scope.Log("parse_mft: %s", err)
+			scope.Error("parse_mft: %s", err)
 			return
 		}
 
 		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
-			scope.Log("parse_mft: %v", err)
+			scope.Error("parse_mft: %v", err)
 			return
 		}
 		fd, err := accessor.Open(arg.Filename)
 		if err != nil {
-			scope.Log("parse_mft: Unable to open file %s: %v",
+			scope.Error("parse_mft: Unable to open file %s: %v",
 				arg.Filename, err)
 			return
 		}
@@ -162,7 +162,7 @@ func (self MFTScanPlugin) Call(
 
 		st, err := accessor.Lstat(arg.Filename)
 		if err != nil {
-			scope.Log("parse_mft: Unable to open file %s: %v",
+			scope.Error("parse_mft: Unable to open file %s: %v",
 				arg.Filename, err)
 			return
 		}
@@ -205,21 +205,21 @@ func (self NTFSI30ScanPlugin) Call(
 		arg := &NTFSFunctionArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("parse_ntfs_i30: %v", err)
+			scope.Error("parse_ntfs_i30: %v", err)
 			return
 		}
 
 		arg.Filename, arg.Accessor, err = getOSPathAndAccessor(arg.Device,
 			arg.Filename, arg.Accessor)
 		if err != nil {
-			scope.Log("parse_ntfs_i30: %v", err)
+			scope.Error("parse_ntfs_i30: %v", err)
 			return
 		}
 
 		if arg.Inode != "" {
 			mft_idx, _, _, err := ntfs.ParseMFTId(arg.Inode)
 			if err != nil {
-				scope.Log("parse_ntfs_i30: %v", err)
+				scope.Error("parse_ntfs_i30: %v", err)
 				return
 			}
 			arg.MFT = mft_idx
@@ -227,7 +227,7 @@ func (self NTFSI30ScanPlugin) Call(
 
 		ntfs_ctx, err := readers.GetNTFSContext(scope, arg.Filename, arg.Accessor)
 		if err != nil {
-			scope.Log("parse_ntfs_i30: %v", err)
+			scope.Error("parse_ntfs_i30: %v", err)
 			return
 		}
 		defer ntfs_ctx.Close()
@@ -238,7 +238,7 @@ func (self NTFSI30ScanPlugin) Call(
 
 		mft_entry, err := ntfs_ctx.GetMFT(arg.MFT)
 		if err != nil {
-			scope.Log("parse_ntfs_i30: %v", err)
+			scope.Error("parse_ntfs_i30: %v", err)
 			return
 		}
 
@@ -278,14 +278,14 @@ func (self NTFSRangesPlugin) Call(
 		arg := &NTFSFunctionArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("parse_ntfs_ranges: %v", err)
+			scope.Error("parse_ntfs_ranges: %v", err)
 			return
 		}
 
 		arg.Filename, arg.Accessor, err = getOSPathAndAccessor(arg.Device,
 			arg.Filename, arg.Accessor)
 		if err != nil {
-			scope.Log("parse_ntfs_ranges: %v", err)
+			scope.Error("parse_ntfs_ranges: %v", err)
 			return
 		}
 
@@ -296,7 +296,7 @@ func (self NTFSRangesPlugin) Call(
 		if arg.Inode != "" {
 			mft_idx, attr_type, attr_id, err = ntfs.ParseMFTId(arg.Inode)
 			if err != nil {
-				scope.Log("parse_ntfs_ranges: %v", err)
+				scope.Error("parse_ntfs_ranges: %v", err)
 				return
 			}
 		} else {
@@ -305,7 +305,7 @@ func (self NTFSRangesPlugin) Call(
 
 		ntfs_ctx, err := readers.GetNTFSContext(scope, arg.Filename, arg.Accessor)
 		if err != nil {
-			scope.Log("parse_ntfs_ranges: %v", err)
+			scope.Error("parse_ntfs_ranges: %v", err)
 			return
 		}
 		defer ntfs_ctx.Close()
@@ -316,14 +316,14 @@ func (self NTFSRangesPlugin) Call(
 
 		mft_entry, err := ntfs_ctx.GetMFT(mft_idx)
 		if err != nil {
-			scope.Log("parse_ntfs_ranges: %v", err)
+			scope.Error("parse_ntfs_ranges: %v", err)
 			return
 		}
 
 		reader, err := ntfs.OpenStream(ntfs_ctx, mft_entry,
 			uint64(attr_type), uint16(attr_id))
 		if err != nil {
-			scope.Log("parse_ntfs_ranges: %v", err)
+			scope.Error("parse_ntfs_ranges: %v", err)
 			return
 		}
 

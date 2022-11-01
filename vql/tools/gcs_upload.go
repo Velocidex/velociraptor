@@ -1,4 +1,5 @@
-//+build extras
+//go:build extras
+// +build extras
 
 package tools
 
@@ -39,25 +40,25 @@ func (self *GCSUploadFunction) Call(ctx context.Context,
 	arg := &GCSUploadArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("upload_gcs: %s", err.Error())
+		scope.Error("upload_gcs: %s", err.Error())
 		return vfilter.Null{}
 	}
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("upload_gcs: %s", err)
+		scope.Error("upload_gcs: %s", err)
 		return vfilter.Null{}
 	}
 
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
-		scope.Log("upload_gcs: %v", err)
+		scope.Error("upload_gcs: %v", err)
 		return vfilter.Null{}
 	}
 
 	file, err := accessor.Open(arg.File)
 	if err != nil {
-		scope.Log("upload_gcs: Unable to open %s: %s",
+		scope.Error("upload_gcs: Unable to open %s: %s",
 			arg.File, err.Error())
 		return &vfilter.Null{}
 	}
@@ -69,7 +70,7 @@ func (self *GCSUploadFunction) Call(ctx context.Context,
 
 	stat, err := accessor.Lstat(arg.File)
 	if err != nil {
-		scope.Log("upload_gcs: Unable to stat %s: %v",
+		scope.Error("upload_gcs: Unable to stat %s: %v",
 			arg.File, err)
 	} else if !stat.IsDir() {
 		upload_response, err := upload_gcs(
@@ -77,7 +78,7 @@ func (self *GCSUploadFunction) Call(ctx context.Context,
 			arg.Bucket,
 			arg.Name, arg.Credentials)
 		if err != nil {
-			scope.Log("upload_gcs: %v", err)
+			scope.Error("upload_gcs: %v", err)
 			return vfilter.Null{}
 		}
 		return upload_response
@@ -119,7 +120,7 @@ func upload_gcs(ctx context.Context, scope vfilter.Scope,
 	defer func() {
 		err := writer.Close()
 		if err != nil {
-			scope.Log("upload_gcs: ERROR writing to object: %v", err)
+			scope.Error("upload_gcs: ERROR writing to object: %v", err)
 		} else {
 			attr := writer.Attrs()
 			serialized, _ := json.Marshal(attr)

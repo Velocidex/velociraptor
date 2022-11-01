@@ -38,7 +38,7 @@ func (self AuditdPlugin) Call(
 		reassembler, err := libaudit.NewReassembler(5, 2*time.Second,
 			&streamHandler{scope: scope, ctx: ctx, output_chan: output_chan})
 		if err != nil {
-			scope.Log("parse_auditd: %v", err)
+			scope.Error("parse_auditd: %v", err)
 			return
 		}
 		defer reassembler.Close()
@@ -126,7 +126,7 @@ func (self WatchAuditdPlugin) Call(
 		reassembler, err := libaudit.NewReassembler(5, 2*time.Second,
 			&streamHandler{scope: scope, ctx: ctx, output_chan: output_chan})
 		if err != nil {
-			scope.Log("watch_auditd: %v", err)
+			scope.Error("watch_auditd: %v", err)
 			return
 		}
 		defer reassembler.Close()

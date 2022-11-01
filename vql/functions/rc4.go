@@ -40,13 +40,13 @@ func (self *Crypto_rc4) Call(ctx context.Context,
 	arg := &Crypto_rc4Args{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("Crypto_rc4: %s", err.Error())
+		scope.Error("Crypto_rc4: %s", err.Error())
 		return false
 	}
 
 	cipher, err := rc4.NewCipher([]byte(arg.Key))
 	if err != nil {
-		scope.Log("Crypto_rc4: %s", err.Error())
+		scope.Error("Crypto_rc4: %s", err.Error())
 		return false
 	}
 

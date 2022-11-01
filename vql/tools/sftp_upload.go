@@ -1,4 +1,5 @@
-//+build extras
+//go:build extras
+// +build extras
 
 package tools
 
@@ -42,25 +43,25 @@ func (self *SFTPUploadFunction) Call(ctx context.Context,
 	arg := &SFTPUploadArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("upload_sftp: %s", err.Error())
+		scope.Error("upload_sftp: %s", err.Error())
 		return vfilter.Null{}
 	}
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("upload_SFTP: %s", err)
+		scope.Error("upload_SFTP: %s", err)
 		return vfilter.Null{}
 	}
 
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
-		scope.Log("upload_SFTP: %v", err)
+		scope.Error("upload_SFTP: %v", err)
 		return vfilter.Null{}
 	}
 
 	file, err := accessor.Open(arg.File)
 	if err != nil {
-		scope.Log("upload_SFTP: Unable to open %s: %s",
+		scope.Error("upload_SFTP: Unable to open %s: %s",
 			arg.File, err.Error())
 		return &vfilter.Null{}
 	}
@@ -72,7 +73,7 @@ func (self *SFTPUploadFunction) Call(ctx context.Context,
 
 	stat, err := accessor.Lstat(arg.File)
 	if err != nil {
-		scope.Log("upload_SFTP: Unable to stat %s: %v",
+		scope.Error("upload_SFTP: Unable to stat %s: %v",
 			arg.File, err)
 	} else if !stat.IsDir() {
 		// Abort uploading when the scope is destroyed.
@@ -88,7 +89,7 @@ func (self *SFTPUploadFunction) Call(ctx context.Context,
 			arg.Endpoint,
 			arg.HostKey)
 		if err != nil {
-			scope.Log("upload_SFTP: %v", err)
+			scope.Error("upload_SFTP: %v", err)
 			// Relay the error in the UploadResponse
 			return upload_response
 		}

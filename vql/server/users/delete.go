@@ -26,7 +26,7 @@ func (self UserDeleteFunction) Call(
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
-		scope.Log("user_delete: %s", err)
+		scope.Error("user_delete: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -39,7 +39,7 @@ func (self UserDeleteFunction) Call(
 	arg := &UserDeleteFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("user_delete: %s", err)
+		scope.Error("user_delete: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -54,7 +54,7 @@ func (self UserDeleteFunction) Call(
 
 	err = user_manager.DeleteUser(ctx, config_obj, arg.Username)
 	if err != nil {
-		scope.Log("user_delete: %s", err)
+		scope.Error("user_delete: %s", err)
 		return vfilter.Null{}
 	}
 

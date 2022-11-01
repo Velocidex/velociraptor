@@ -25,14 +25,14 @@ func (self OrgCreateFunction) Call(
 
 	err := vql_subsystem.CheckAccess(scope, acls.ORG_ADMIN)
 	if err != nil {
-		scope.Log("org_create: %s", err)
+		scope.Error("org_create: %s", err)
 		return vfilter.Null{}
 	}
 
 	arg := &OrgCreateFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("org_create: %s", err)
+		scope.Error("org_create: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -43,13 +43,13 @@ func (self OrgCreateFunction) Call(
 
 	org_manager, err := services.GetOrgManager()
 	if err != nil {
-		scope.Log("org_create: %s", err)
+		scope.Error("org_create: %s", err)
 		return vfilter.Null{}
 	}
 
 	org_record, err := org_manager.CreateNewOrg(arg.OrgName, arg.OrgId)
 	if err != nil {
-		scope.Log("org_create: %s", err)
+		scope.Error("org_create: %s", err)
 		return vfilter.Null{}
 	}
 

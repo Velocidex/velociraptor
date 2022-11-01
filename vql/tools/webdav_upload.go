@@ -1,4 +1,5 @@
-//+build extras
+//go:build extras
+// +build extras
 
 package tools
 
@@ -40,25 +41,25 @@ func (self *WebDAVUploadFunction) Call(ctx context.Context,
 	arg := &WebDAVUploadArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("upload_webdav: %s", err.Error())
+		scope.Error("upload_webdav: %s", err.Error())
 		return vfilter.Null{}
 	}
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("upload_webdav: %s", err)
+		scope.Error("upload_webdav: %s", err)
 		return vfilter.Null{}
 	}
 
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
-		scope.Log("upload_webdav: %v", err)
+		scope.Error("upload_webdav: %v", err)
 		return vfilter.Null{}
 	}
 
 	file, err := accessor.Open(arg.File)
 	if err != nil {
-		scope.Log("upload_webdav: Unable to open %s: %s",
+		scope.Error("upload_webdav: Unable to open %s: %s",
 			arg.File, err.Error())
 		return &vfilter.Null{}
 	}
@@ -70,7 +71,7 @@ func (self *WebDAVUploadFunction) Call(ctx context.Context,
 
 	stat, err := accessor.Lstat(arg.File)
 	if err != nil {
-		scope.Log("upload_webdav: Unable to stat %s: %v",
+		scope.Error("upload_webdav: Unable to stat %s: %v",
 			arg.File, err)
 	} else if !stat.IsDir() {
 		// Abort uploading when the scope is destroyed.
@@ -85,7 +86,7 @@ func (self *WebDAVUploadFunction) Call(ctx context.Context,
 			arg.BasicAuthPassword,
 			arg.NoVerifyCert)
 		if err != nil {
-			scope.Log("upload_webdav: %v", err)
+			scope.Error("upload_webdav: %v", err)
 			return vfilter.Null{}
 		}
 		return upload_response

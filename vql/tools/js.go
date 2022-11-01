@@ -28,7 +28,7 @@ func logIfPanic(scope vfilter.Scope) {
 	}
 
 	if err != nil {
-		scope.Log("PANIC %v: %v\n", err, string(debug.Stack()))
+		scope.Error("PANIC %v: %v\n", err, string(debug.Stack()))
 	}
 }
 
@@ -63,7 +63,7 @@ func (self *JSCompile) Call(ctx context.Context,
 	arg := &JSCompileArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("js: %s", err.Error())
+		scope.Error("js: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -72,7 +72,7 @@ func (self *JSCompile) Call(ctx context.Context,
 	vm := getVM(ctx, scope, arg.Key)
 	_, err = vm.Run(arg.JS)
 	if err != nil {
-		scope.Log("js: %s", err.Error())
+		scope.Error("js: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -102,7 +102,7 @@ func (self *JSCall) Call(ctx context.Context,
 	arg := &JSCallArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("js_call: %s", err.Error())
+		scope.Error("js_call: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -126,7 +126,7 @@ func (self *JSCall) Call(ctx context.Context,
 	vm := getVM(ctx, scope, arg.Key)
 	value, err := vm.Call(arg.Func, nil, call_args...)
 	if err != nil {
-		scope.Log("js_call: %s", err.Error())
+		scope.Error("js_call: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -160,7 +160,7 @@ func (self *JSSet) Call(ctx context.Context,
 	arg := &JSSetArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("js_set: %s", err.Error())
+		scope.Error("js_set: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -185,7 +185,7 @@ func (self *JSSet) Call(ctx context.Context,
 	}
 
 	if err != nil {
-		scope.Log("js_set: %s", err.Error())
+		scope.Error("js_set: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -214,7 +214,7 @@ func (self *JSGet) Call(ctx context.Context,
 	arg := &JSGetArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("js_get: %s", err.Error())
+		scope.Error("js_get: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -224,12 +224,12 @@ func (self *JSGet) Call(ctx context.Context,
 
 	otto_val, err := vm.Get(arg.Var)
 	if err != nil {
-		scope.Log("js_get: %s", err.Error())
+		scope.Error("js_get: %s", err.Error())
 		return vfilter.Null{}
 	}
 	value, err := otto_val.Export()
 	if err != nil {
-		scope.Log("js_get: %s", err.Error())
+		scope.Error("js_get: %s", err.Error())
 		return vfilter.Null{}
 	}
 

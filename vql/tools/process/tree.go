@@ -35,7 +35,7 @@ func (self getProcessTree) Call(ctx context.Context,
 	arg := &getProcessTreeArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("process_tracker_tree: %v", err)
+		scope.Error("process_tracker_tree: %v", err)
 		return vfilter.Null{}
 	}
 

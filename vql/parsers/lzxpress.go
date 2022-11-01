@@ -24,14 +24,14 @@ func (self *LZXpressFunction) Call(ctx context.Context,
 	arg := &LZXpressFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("lzxpress_decompress: %v", err)
+		scope.Error("lzxpress_decompress: %v", err)
 		return vfilter.Null{}
 	}
 
 	decompressed, err := prefetch.LZXpressHuffmanDecompressWithFallback(
 		[]byte(arg.Data), len(arg.Data))
 	if err != nil {
-		scope.Log("lzxpress_decompress: %v", err)
+		scope.Error("lzxpress_decompress: %v", err)
 		return vfilter.Null{}
 	}
 

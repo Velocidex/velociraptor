@@ -40,7 +40,7 @@ func (self *IntFunction) Call(ctx context.Context,
 	arg := &IntArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("int: %s", err.Error())
+		scope.Error("int: %s", err.Error())
 		return false
 	}
 
@@ -89,7 +89,7 @@ func (self *StrFunction) Call(ctx context.Context,
 	arg := &StrFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("str: %s", err.Error())
+		scope.Error("str: %s", err.Error())
 		return false
 	}
 

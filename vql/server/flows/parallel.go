@@ -1,3 +1,4 @@
+//go:build server_vql
 // +build server_vql
 
 package flows
@@ -67,7 +68,7 @@ func (self ParallelPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
-			scope.Log("parallel: %s", err)
+			scope.Error("parallel: %s", err)
 			return
 		}
 
@@ -80,7 +81,7 @@ func (self ParallelPlugin) Call(
 
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("parallel: %v", err)
+			scope.Error("parallel: %v", err)
 			return
 		}
 
@@ -93,7 +94,7 @@ func (self ParallelPlugin) Call(
 
 		job_chan, err := breakIntoScopes(ctx, config_obj, scope, arg)
 		if err != nil {
-			scope.Log("parallel: %v", err)
+			scope.Error("parallel: %v", err)
 			return
 		}
 

@@ -113,7 +113,7 @@ func (self *JoinFunction) Call(ctx context.Context,
 	arg := &JoinFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("join: %s", err.Error())
+		scope.Error("join: %s", err.Error())
 		return false
 	}
 
@@ -141,7 +141,7 @@ func (self *FilterFunction) Call(ctx context.Context,
 	arg := &FilterFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("filter: %s", err.Error())
+		scope.Error("filter: %s", err.Error())
 		return &vfilter.Null{}
 	}
 
@@ -149,7 +149,7 @@ func (self *FilterFunction) Call(ctx context.Context,
 	for _, re := range arg.Regex {
 		r, err := regexp.Compile("(?i)" + re)
 		if err != nil {
-			scope.Log("filter: Unable to compile regex %s", re)
+			scope.Error("filter: Unable to compile regex %s", re)
 			return false
 		}
 		res = append(res, r)
@@ -159,7 +159,7 @@ func (self *FilterFunction) Call(ctx context.Context,
 	if arg.Condition != "" {
 		lambda, err = vfilter.ParseLambda(arg.Condition)
 		if err != nil {
-			scope.Log("filter: Unable to compile lambda %s", arg.Condition)
+			scope.Error("filter: Unable to compile lambda %s", arg.Condition)
 			return false
 		}
 	}
@@ -211,7 +211,7 @@ func (self *LenFunction) Call(ctx context.Context,
 	arg := &LenFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("len: %s", err.Error())
+		scope.Error("len: %s", err.Error())
 		return &vfilter.Null{}
 	}
 
@@ -254,7 +254,7 @@ func (self *SliceFunction) Call(ctx context.Context,
 	arg := &SliceFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("len: %s", err.Error())
+		scope.Error("len: %s", err.Error())
 		return &vfilter.Null{}
 	}
 

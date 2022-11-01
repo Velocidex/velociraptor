@@ -31,14 +31,14 @@ func (self UsersPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 		if err != nil {
-			scope.Log("users: %v", err)
+			scope.Error("users: %v", err)
 			return
 		}
 
 		arg := &UsersPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("users: %v", err)
+			scope.Error("users: %v", err)
 			return
 		}
 
@@ -53,14 +53,14 @@ func (self UsersPlugin) Call(
 
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
-			scope.Log("users: %v", err)
+			scope.Error("users: %v", err)
 			return
 		}
 
 		users := services.GetUserManager()
 		user_list, err := users.ListUsers(ctx)
 		if err != nil {
-			scope.Log("users: %v", err)
+			scope.Error("users: %v", err)
 			return
 		}
 

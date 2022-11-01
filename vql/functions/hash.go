@@ -75,7 +75,7 @@ func (self *HashFunction) Call(ctx context.Context,
 	arg := &HashFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("hash: %v", err)
+		scope.Error("hash: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -86,19 +86,19 @@ func (self *HashFunction) Call(ctx context.Context,
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("hash: %s", err)
+		scope.Error("hash: %s", err)
 		return vfilter.Null{}
 	}
 
 	fs, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
-		scope.Log("hash: %v", err)
+		scope.Error("hash: %v", err)
 		return vfilter.Null{}
 	}
 
 	file, err := fs.Open(arg.Path.String())
 	if err != nil {
-		//scope.Log("hash %s: %v", arg.Path.String(), err)
+		//scope.Error("hash %s: %v", arg.Path.String(), err)
 		return vfilter.Null{}
 	}
 	defer file.Close()
@@ -157,7 +157,7 @@ func (self *HashFunction) Call(ctx context.Context,
 				}
 
 			} else if err != nil {
-				scope.Log("hash: %v", err)
+				scope.Error("hash: %v", err)
 				return vfilter.Null{}
 			}
 

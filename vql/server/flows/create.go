@@ -58,7 +58,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	arg := &ScheduleCollectionFunctionArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("collect_client: %s", err.Error())
+		scope.Error("collect_client: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -89,39 +89,39 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	if arg.OrgId == "" {
 		err = vql_subsystem.CheckAccess(scope, permission)
 		if err != nil {
-			scope.Log("collect_client: %v", err)
+			scope.Error("collect_client: %v", err)
 			return vfilter.Null{}
 		}
 
 	} else {
 		err = vql_subsystem.CheckAccessInOrg(scope, arg.OrgId, permission)
 		if err != nil {
-			scope.Log("collect_client: %v", err)
+			scope.Error("collect_client: %v", err)
 			return vfilter.Null{}
 		}
 
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
-			scope.Log("collect_client: %v", err)
+			scope.Error("collect_client: %v", err)
 			return vfilter.Null{}
 		}
 
 		// If an org is specied we use the config obj from the org.
 		config_obj, err = org_manager.GetOrgConfig(arg.OrgId)
 		if err != nil {
-			scope.Log("collect_client: %v", err)
+			scope.Error("collect_client: %v", err)
 			return vfilter.Null{}
 		}
 	}
 
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
-		scope.Log("collect_client: Command can only run on the server")
+		scope.Error("collect_client: Command can only run on the server")
 		return vfilter.Null{}
 	}
 	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
-		scope.Log("collect_client: Command can only run on the server")
+		scope.Error("collect_client: Command can only run on the server")
 		return vfilter.Null{}
 	}
 
@@ -151,7 +151,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	err = collector.AddSpecProtobuf(config_obj, repository, scope,
 		arg.Spec, request)
 	if err != nil {
-		scope.Log("collect_client: %v", err)
+		scope.Error("collect_client: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -177,7 +177,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 			}
 		})
 	if err != nil {
-		scope.Log("collect_client: %v", err)
+		scope.Error("collect_client: %v", err)
 		return vfilter.Null{}
 	}
 

@@ -56,7 +56,7 @@ func (self *LogFunction) Call(ctx context.Context,
 	arg := &LogFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("log: %s", err.Error())
+		scope.Error("log: %s", err.Error())
 		return false
 	}
 

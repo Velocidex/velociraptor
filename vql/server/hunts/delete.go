@@ -32,13 +32,13 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 
 		err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 		if err != nil {
-			scope.Log("hunt_delete: %s", err)
+			scope.Error("hunt_delete: %s", err)
 			return
 		}
 
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("hunt_delete: %s", err)
+			scope.Error("hunt_delete: %s", err)
 			return
 		}
 
@@ -50,13 +50,13 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 
 		launcher, err := services.GetLauncher(config_obj)
 		if err != nil {
-			scope.Log("hunt_delete: %s", err)
+			scope.Error("hunt_delete: %s", err)
 			return
 		}
 
 		hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
 		if err != nil {
-			scope.Log("hunt_delete: %s", err)
+			scope.Error("hunt_delete: %s", err)
 			return
 		}
 		for flow_details := range hunt_dispatcher.GetFlows(
@@ -66,7 +66,7 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 				flow_details.Context.ClientId,
 				flow_details.Context.SessionId, arg.ReallyDoIt)
 			if err != nil {
-				scope.Log("hunt_delete: %v", err)
+				scope.Error("hunt_delete: %v", err)
 				return
 			}
 
@@ -87,7 +87,7 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 			}
 			journal, err := services.GetJournal(config_obj)
 			if err != nil {
-				scope.Log("hunt_delete: %s", err)
+				scope.Error("hunt_delete: %s", err)
 				return
 			}
 

@@ -52,14 +52,14 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
 	if err != nil {
-		scope.Log("import_collection: %s", err)
+		scope.Error("import_collection: %s", err)
 		return vfilter.Null{}
 	}
 
 	arg := &ImportCollectionFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("import_collection: %v", err)
+		scope.Error("import_collection: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -71,20 +71,20 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, "collector")
 	if err != nil {
-		scope.Log("import_collection: %v", err)
+		scope.Error("import_collection: %v", err)
 		return vfilter.Null{}
 	}
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		scope.Log("import_collection: %v", err)
+		scope.Error("import_collection: %v", err)
 		return vfilter.Null{}
 	}
 
 	// Open the collection using the accessor
 	accessor, err := accessors.GetAccessor("collector", scope)
 	if err != nil {
-		scope.Log("import_collection: %v", err)
+		scope.Error("import_collection: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -106,7 +106,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		arg.ClientId, err = self.getClientId(
 			ctx, scope, config_obj, arg.Hostname)
 		if err != nil {
-			scope.Log("import_collection: %v", err)
+			scope.Error("import_collection: %v", err)
 			return vfilter.Null{}
 		}
 	}
@@ -118,7 +118,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 
 	err = db.SetSubject(config_obj, flow_path_manager.Path(), collection_context)
 	if err != nil {
-		scope.Log("import_collection: %v", err)
+		scope.Error("import_collection: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -128,7 +128,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	if err == nil {
 		err = db.SetSubject(config_obj, flow_path_manager.Task(), tasks)
 		if err != nil {
-			scope.Log("import_collection: %v", err)
+			scope.Error("import_collection: %v", err)
 			return vfilter.Null{}
 		}
 	} else {
@@ -139,7 +139,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	err = self.copyResultSet(ctx, config_obj, scope,
 		accessor, root.Append("log.json"), flow_path_manager.Log())
 	if err != nil {
-		scope.Log("import_collection: %v", err)
+		scope.Error("import_collection: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -152,7 +152,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 			accessor, root.Append("results", artifact+".json"),
 			artifact_path_manager.Path())
 		if err != nil {
-			scope.Log("import_collection: %v", err)
+			scope.Error("import_collection: %v", err)
 		}
 	}
 
@@ -170,7 +170,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		reader, err := result_sets.NewResultSetReader(file_store_factory,
 			flow_path_manager.UploadMetadata())
 		if err != nil {
-			scope.Log("import_collection: %v", err)
+			scope.Error("import_collection: %v", err)
 			return vfilter.Null{}
 		}
 		defer reader.Close()
@@ -188,7 +188,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 			err := self.copyFileWithIndex(ctx, config_obj, scope,
 				accessor, src, dest)
 			if err != nil {
-				scope.Log("import_collection: %v", err)
+				scope.Error("import_collection: %v", err)
 			}
 		}
 	}
@@ -312,7 +312,7 @@ func (self ImportCollectionFunction) copyFile(
 
 	_, err = utils.Copy(ctx, out_fd, fd)
 	if err != nil {
-		scope.Log("import_collection: Error copying %v", err)
+		scope.Error("import_collection: Error copying %v", err)
 	}
 
 	return err

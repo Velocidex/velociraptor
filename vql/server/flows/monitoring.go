@@ -1,3 +1,4 @@
+//go:build server_vql
 // +build server_vql
 
 /*
@@ -49,7 +50,7 @@ func (self MonitoringPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
-			scope.Log("monitoring: %s", err)
+			scope.Error("monitoring: %s", err)
 			return
 		}
 
@@ -61,7 +62,7 @@ func (self MonitoringPlugin) Call(
 
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("monitoring: %v", err)
+			scope.Error("monitoring: %v", err)
 			return
 		}
 
@@ -81,7 +82,7 @@ func (self MonitoringPlugin) Call(
 		path_manager, err := artifact_paths.NewArtifactPathManager(
 			config_obj, arg.ClientId, arg.FlowId, arg.Artifact)
 		if err != nil {
-			scope.Log("monitoring: %v", err)
+			scope.Error("monitoring: %v", err)
 			return
 		}
 
@@ -89,7 +90,7 @@ func (self MonitoringPlugin) Call(
 		reader, err := result_sets.NewTimedResultSetReader(
 			ctx, file_store_factory, path_manager)
 		if err != nil {
-			scope.Log("monitoring: %v", err)
+			scope.Error("monitoring: %v", err)
 			return
 		}
 
@@ -98,7 +99,7 @@ func (self MonitoringPlugin) Call(
 			if err == nil {
 				err = reader.SeekToTime(start)
 				if err != nil {
-					scope.Log("monitoring: %v", err)
+					scope.Error("monitoring: %v", err)
 					return
 				}
 			}
@@ -158,7 +159,7 @@ func (self WatchMonitoringPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
-			scope.Log("watch_monitoring: %s", err)
+			scope.Error("watch_monitoring: %s", err)
 			return
 		}
 
@@ -181,14 +182,14 @@ func (self WatchMonitoringPlugin) Call(
 		arg := &WatchMonitoringPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("watch_monitoring: %v", err)
+			scope.Error("watch_monitoring: %v", err)
 			return
 		}
 
 		mode, err := artifact_paths.GetArtifactMode(
 			config_obj, arg.Artifact)
 		if err != nil {
-			scope.Log("Artifact %s not known", arg.Artifact)
+			scope.Error("Artifact %s not known", arg.Artifact)
 			return
 		}
 

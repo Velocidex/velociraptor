@@ -52,7 +52,7 @@ func _OLEVBAPlugin_ParseFile(
 
 	err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("olevba: %s", err)
+		scope.Error("olevba: %s", err)
 		return nil, err
 	}
 
@@ -147,14 +147,14 @@ func (self _OLEVBAPlugin) Call(
 		arg := &_OLEVBAArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("olevba: %s", err.Error())
+			scope.Error("olevba: %s", err.Error())
 			return
 		}
 
 		for _, filename := range arg.Filenames {
 			macros, err := _OLEVBAPlugin_ParseFile(ctx, filename, scope, arg)
 			if err != nil {
-				scope.Log("olevba: while parsing %v:  %s", filename, err)
+				scope.Error("olevba: while parsing %v:  %s", filename, err)
 				continue
 			}
 

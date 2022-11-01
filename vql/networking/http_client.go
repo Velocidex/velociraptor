@@ -346,7 +346,7 @@ func (self *_HttpPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
 		if err != nil {
-			scope.Log("http_client: %s", err)
+			scope.Error("http_client: %s", err)
 			return
 		}
 
@@ -372,7 +372,7 @@ func (self *_HttpPlugin) Call(
 
 		client, err := GetHttpClient(config_obj, scope, arg)
 		if err != nil {
-			scope.Log("http_client: %v", err)
+			scope.Error("http_client: %v", err)
 			return
 		}
 
@@ -384,7 +384,7 @@ func (self *_HttpPlugin) Call(
 				req, err = http.NewRequestWithContext(
 					ctx, method, arg.Url, strings.NewReader(arg.Data))
 				if err != nil {
-					scope.Log("%s: %v", self.Name(), err)
+					scope.Error("%s: %v", self.Name(), err)
 					return
 				}
 				req.URL.RawQuery = params.Encode()
@@ -401,7 +401,7 @@ func (self *_HttpPlugin) Call(
 				req, err = http.NewRequestWithContext(
 					ctx, method, arg.Url, strings.NewReader(arg.Data))
 				if err != nil {
-					scope.Log("%s: %v", self.Name(), err)
+					scope.Error("%s: %v", self.Name(), err)
 					return
 				}
 			}
@@ -444,7 +444,7 @@ func (self *_HttpPlugin) Call(
 		}
 
 		if err != nil {
-			scope.Log("http_client: Error %v while fetching %v",
+			scope.Error("http_client: Error %v while fetching %v",
 				err, arg.Url)
 			select {
 			case <-ctx.Done():
@@ -466,7 +466,7 @@ func (self *_HttpPlugin) Call(
 
 			tmpfile, err := ioutil.TempFile("", "tmp*"+arg.TempfileExtension)
 			if err != nil {
-				scope.Log("http_client: %v", err)
+				scope.Error("http_client: %v", err)
 				return
 			}
 

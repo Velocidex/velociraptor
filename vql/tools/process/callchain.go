@@ -24,7 +24,7 @@ func (self getChain) Call(ctx context.Context,
 	arg := &getChainArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("process_tracker_callchain: %v", err)
+		scope.Error("process_tracker_callchain: %v", err)
 		return vfilter.Null{}
 	}
 

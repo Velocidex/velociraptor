@@ -38,7 +38,7 @@ func (self *Rot13) Call(ctx context.Context,
 	arg := &Rot13Args{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("rot13: %s", err.Error())
+		scope.Error("rot13: %s", err.Error())
 		return false
 	}
 

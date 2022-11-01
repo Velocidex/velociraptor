@@ -1,4 +1,5 @@
-//+build extras
+//go:build extras
+// +build extras
 
 package tools
 
@@ -45,26 +46,26 @@ func (self UnzipPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 		if err != nil {
-			scope.Log("unzip: %s", err)
+			scope.Error("unzip: %s", err)
 			return
 		}
 
 		arg := &UnzipPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("unzip: %s", err.Error())
+			scope.Error("unzip: %s", err.Error())
 			return
 		}
 
 		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
-			scope.Log("unzip: %s", err)
+			scope.Error("unzip: %s", err)
 			return
 		}
 
 		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
-			scope.Log("unzip: %v", err)
+			scope.Error("unzip: %v", err)
 			return
 		}
 
@@ -75,31 +76,31 @@ func (self UnzipPlugin) Call(
 
 		filter_reg, err := regexp.Compile("(?i)" + filter)
 		if err != nil {
-			scope.Log("unzip: %v", err)
+			scope.Error("unzip: %v", err)
 			return
 		}
 
 		output_directory, err := filepath.Abs(arg.OutputDirectory)
 		if err != nil {
-			scope.Log("unzip: %v", err)
+			scope.Error("unzip: %v", err)
 			return
 		}
 
 		s, err := accessor.Lstat(arg.Filename)
 		if err != nil {
-			scope.Log("unzip: %v", err)
+			scope.Error("unzip: %v", err)
 			return
 		}
 
 		fd, err := accessor.Open(arg.Filename)
 		if err != nil {
-			scope.Log("unzip: %v", err)
+			scope.Error("unzip: %v", err)
 			return
 		}
 
 		zip, err := zip.NewReader(utils.MakeReaderAtter(fd), s.Size())
 		if err != nil {
-			scope.Log("unzip: %v", err)
+			scope.Error("unzip: %v", err)
 			return
 		}
 
@@ -121,28 +122,28 @@ func (self UnzipPlugin) Call(
 			func() {
 				err = os.MkdirAll(filepath.Dir(output_path), 0700)
 				if err != nil {
-					scope.Log("unzip: %v", err)
+					scope.Error("unzip: %v", err)
 					return
 				}
 
 				out_fd, err := os.OpenFile(output_path,
 					os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0700)
 				if err != nil {
-					scope.Log("unzip: %v", err)
+					scope.Error("unzip: %v", err)
 					return
 				}
 				defer out_fd.Close()
 
 				in_fd, err := member.Open()
 				if err != nil {
-					scope.Log("unzip: %v", err)
+					scope.Error("unzip: %v", err)
 					return
 				}
 				defer in_fd.Close()
 
 				n, err := utils.Copy(ctx, out_fd, in_fd)
 				if err != nil {
-					scope.Log("unzip: %v", err)
+					scope.Error("unzip: %v", err)
 					return
 				}
 

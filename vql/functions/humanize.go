@@ -40,7 +40,7 @@ func (self *HumanizeFunction) Call(ctx context.Context,
 	arg := &HumanizeArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("Humanize: %s", err.Error())
+		scope.Error("Humanize: %s", err.Error())
 		return false
 	}
 

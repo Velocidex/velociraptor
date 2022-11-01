@@ -1,3 +1,4 @@
+//go:build server_vql
 // +build server_vql
 
 package clients
@@ -30,7 +31,7 @@ func (self *ClientMetadataFunction) Call(ctx context.Context,
 	arg := &ClientMetadataFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("client_metadata: %s", err.Error())
+		scope.Error("client_metadata: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -40,7 +41,7 @@ func (self *ClientMetadataFunction) Call(ctx context.Context,
 	}
 	err = vql_subsystem.CheckAccess(scope, permission)
 	if err != nil {
-		scope.Log("client_metadata: %s", err)
+		scope.Error("client_metadata: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -53,7 +54,7 @@ func (self *ClientMetadataFunction) Call(ctx context.Context,
 	client_path_manager := paths.NewClientPathManager(arg.ClientId)
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		scope.Log("client_metadata: %s", err.Error())
+		scope.Error("client_metadata: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -117,7 +118,7 @@ func (self *ClientSetMetadataFunction) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, permission)
 	if err != nil {
-		scope.Log("client_set_metadata: %s", err)
+		scope.Error("client_set_metadata: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -130,7 +131,7 @@ func (self *ClientSetMetadataFunction) Call(ctx context.Context,
 	client_path_manager := paths.NewClientPathManager(client_id)
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		scope.Log("client_set_metadata: %s", err.Error())
+		scope.Error("client_set_metadata: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -156,7 +157,7 @@ func (self *ClientSetMetadataFunction) Call(ctx context.Context,
 	err = db.SetSubject(config_obj,
 		client_path_manager.Metadata(), result)
 	if err != nil {
-		scope.Log("client_set_metadata: %s", err.Error())
+		scope.Error("client_set_metadata: %s", err.Error())
 		return vfilter.Null{}
 	}
 

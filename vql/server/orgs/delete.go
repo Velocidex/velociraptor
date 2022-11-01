@@ -26,7 +26,7 @@ func (self OrgDeleteFunction) Call(
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
-		scope.Log("org_delete: %s", err)
+		scope.Error("org_delete: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -39,13 +39,13 @@ func (self OrgDeleteFunction) Call(
 	arg := &OrgDeleteFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("org_delete: %s", err)
+		scope.Error("org_delete: %s", err)
 		return vfilter.Null{}
 	}
 
 	org_manager, err := services.GetOrgManager()
 	if err != nil {
-		scope.Log("org_delete: %s", err)
+		scope.Error("org_delete: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -58,7 +58,7 @@ func (self OrgDeleteFunction) Call(
 
 	err = org_manager.DeleteOrg(ctx, arg.OrgId)
 	if err != nil {
-		scope.Log("org_delete: %s", err)
+		scope.Error("org_delete: %s", err)
 		return vfilter.Null{}
 	}
 

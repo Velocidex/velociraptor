@@ -1,3 +1,4 @@
+//go:build server_vql
 // +build server_vql
 
 package flows
@@ -32,14 +33,14 @@ func (self FlowsPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
-			scope.Log("flows: %s", err)
+			scope.Error("flows: %s", err)
 			return
 		}
 
 		arg := &FlowsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("flows: %v", err)
+			scope.Error("flows: %v", err)
 			return
 		}
 
@@ -51,7 +52,7 @@ func (self FlowsPlugin) Call(
 
 		launcher, err := services.GetLauncher(config_obj)
 		if err != nil {
-			scope.Log("flows: %v", err)
+			scope.Error("flows: %v", err)
 			return
 		}
 
@@ -80,7 +81,7 @@ func (self FlowsPlugin) Call(
 			result, err := launcher.GetFlows(config_obj,
 				arg.ClientId, true, nil, offset, length)
 			if err != nil {
-				scope.Log("flows: %v", err)
+				scope.Error("flows: %v", err)
 				return
 			}
 
@@ -120,7 +121,7 @@ func (self *CancelFlowFunction) Call(ctx context.Context,
 	arg := &FlowsPluginArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("cancel_flow: %s", err.Error())
+		scope.Error("cancel_flow: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -131,7 +132,7 @@ func (self *CancelFlowFunction) Call(ctx context.Context,
 
 	err = vql_subsystem.CheckAccess(scope, permissions)
 	if err != nil {
-		scope.Log("cancel_flow: %v", err)
+		scope.Error("cancel_flow: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -143,13 +144,13 @@ func (self *CancelFlowFunction) Call(ctx context.Context,
 
 	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
-		scope.Log("cancel_flow: %v", err)
+		scope.Error("cancel_flow: %v", err)
 		return vfilter.Null{}
 	}
 	res, err := launcher.CancelFlow(ctx, config_obj,
 		arg.ClientId, arg.FlowId, "VQL query")
 	if err != nil {
-		scope.Log("cancel_flow: %v", err.Error())
+		scope.Error("cancel_flow: %v", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -177,14 +178,14 @@ func (self EnumerateFlowPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
-			scope.Log("enumerate_flow: %s", err)
+			scope.Error("enumerate_flow: %s", err)
 			return
 		}
 
 		arg := &FlowsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("enumerate_flow: %v", err)
+			scope.Error("enumerate_flow: %v", err)
 			return
 		}
 
@@ -196,14 +197,14 @@ func (self EnumerateFlowPlugin) Call(
 
 		launcher, err := services.GetLauncher(config_obj)
 		if err != nil {
-			scope.Log("delete_flow: %v", err)
+			scope.Error("delete_flow: %v", err)
 			return
 		}
 
 		responses, err := launcher.DeleteFlow(ctx, config_obj,
 			arg.ClientId, arg.FlowId, false /* really_do_it */)
 		if err != nil {
-			scope.Log("delete_flow: %v", err)
+			scope.Error("delete_flow: %v", err)
 			return
 		}
 

@@ -47,13 +47,13 @@ func (self *PatchFunction) Call(
 	arg := &PatchFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("patch: %s", err.Error())
+		scope.Error("patch: %s", err.Error())
 		return vfilter.Null{}
 	}
 
 	value_str, err := to_json(arg.Item)
 	if err != nil {
-		scope.Log("patch: %v", err)
+		scope.Error("patch: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -61,13 +61,13 @@ func (self *PatchFunction) Call(
 	if arg.Merge != nil {
 		merge, err := to_json(arg.Merge)
 		if err != nil {
-			scope.Log("patch: %v", err)
+			scope.Error("patch: %v", err)
 			return vfilter.Null{}
 		}
 
 		patched, err = jsonpatch.MergePatch(value_str, merge)
 		if err != nil {
-			scope.Log("patch: %v", err)
+			scope.Error("patch: %v", err)
 			return vfilter.Null{}
 		}
 	} else if arg.Patch != nil {
@@ -86,13 +86,13 @@ func (self *PatchFunction) Call(
 
 		patch, err := jsonpatch.DecodePatch(patch_str)
 		if err != nil {
-			scope.Log("patch: %v", err)
+			scope.Error("patch: %v", err)
 			return vfilter.Null{}
 		}
 
 		patched, err = patch.Apply([]byte(value_str))
 		if err != nil {
-			scope.Log("patch: %v", err)
+			scope.Error("patch: %v", err)
 			return vfilter.Null{}
 		}
 	} else {
@@ -103,7 +103,7 @@ func (self *PatchFunction) Call(
 	item := ordereddict.NewDict()
 	err = json.Unmarshal(patched, &item)
 	if err != nil {
-		scope.Log("patch: %v", err)
+		scope.Error("patch: %v", err)
 		return vfilter.Null{}
 	}
 

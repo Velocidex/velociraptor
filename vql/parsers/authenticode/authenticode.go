@@ -53,14 +53,14 @@ func (self *AuthenticodeFunction) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 	if err != nil {
-		scope.Log("authenticode: %s", err)
+		scope.Error("authenticode: %s", err)
 		return vfilter.Null{}
 	}
 
 	arg := &AuthenticodeArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("authenticode: %v", err)
+		scope.Error("authenticode: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -68,7 +68,7 @@ func (self *AuthenticodeFunction) Call(ctx context.Context,
 	paged_reader, err := readers.NewPagedReader(
 		scope, arg.Accessor, arg.Filename, int(lru_size))
 	if err != nil {
-		scope.Log("authenticode: %v", err)
+		scope.Error("authenticode: %v", err)
 		return vfilter.Null{}
 	}
 	defer paged_reader.Close()

@@ -1,3 +1,4 @@
+//go:build !windows
 // +build !windows
 
 /*
@@ -47,14 +48,14 @@ func init() {
 
 			err := CheckAccess(scope, acls.MACHINE_STATE)
 			if err != nil {
-				scope.Log("pslist: %s", err)
+				scope.Error("pslist: %s", err)
 				return result
 			}
 
 			arg := &PslistArgs{}
 			err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 			if err != nil {
-				scope.Log("pslist: %s", err.Error())
+				scope.Error("pslist: %s", err.Error())
 				return result
 			}
 

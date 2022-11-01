@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package linux
@@ -56,13 +57,13 @@ func (self AuditPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {
-			scope.Log("audit: %s", err)
+			scope.Error("audit: %s", err)
 			return
 		}
 
 		client, err := libaudit.NewMulticastAuditClient(nil)
 		if err != nil {
-			scope.Log("audit: %v", err)
+			scope.Error("audit: %v", err)
 			return
 		}
 		defer client.Close()
@@ -70,7 +71,7 @@ func (self AuditPlugin) Call(
 		reassembler, err := libaudit.NewReassembler(5, 2*time.Second,
 			&streamHandler{scope, output_chan})
 		if err != nil {
-			scope.Log("audit: %v", err)
+			scope.Error("audit: %v", err)
 			return
 		}
 		defer reassembler.Close()
@@ -95,7 +96,7 @@ func (self AuditPlugin) Call(
 		for {
 			rawEvent, err := client.Receive(false)
 			if err != nil {
-				scope.Log("receive failed: %s", err)
+				scope.Error("receive failed: %s", err)
 				continue
 			}
 

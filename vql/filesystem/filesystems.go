@@ -63,7 +63,7 @@ func init() {
 				arg := &PartitionsArgs{}
 				err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 				if err != nil {
-					scope.Log("%s: %s", "partitions", err.Error())
+					scope.Error("%s: %s", "partitions", err.Error())
 					return result
 				}
 

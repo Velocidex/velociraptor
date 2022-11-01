@@ -41,7 +41,7 @@ func (self *StripFunction) Call(ctx context.Context,
 	arg := &StripArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("strip: %s", err.Error())
+		scope.Error("strip: %s", err.Error())
 		return false
 	}
 	if arg.Prefix == "" && arg.Suffix == "" {
@@ -83,7 +83,7 @@ func (self *SubStrFunction) Call(ctx context.Context,
 	arg := &SubStrArgs{}
 	err := vfilter.ExtractArgs(scope, args, arg)
 	if err != nil {
-		scope.Log("substr: %s", err.Error())
+		scope.Error("substr: %s", err.Error())
 		return nil
 	}
 

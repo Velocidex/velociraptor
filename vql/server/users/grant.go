@@ -27,14 +27,14 @@ func (self GrantFunction) Call(
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
-		scope.Log("user_grant: %s", err)
+		scope.Error("user_grant: %s", err)
 		return vfilter.Null{}
 	}
 
 	arg := &GrantFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("user_grant: %s", err)
+		scope.Error("user_grant: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -47,7 +47,7 @@ func (self GrantFunction) Call(
 	users_manager := services.GetUserManager()
 	user_record, err := users_manager.GetUserWithHashes(ctx, arg.Username)
 	if err != nil {
-		scope.Log("user_grant: %s", err)
+		scope.Error("user_grant: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -59,7 +59,7 @@ func (self GrantFunction) Call(
 		// Grant the roles to the user
 		err = acls.GrantRoles(config_obj, arg.Username, arg.Roles)
 		if err != nil {
-			scope.Log("user_grant: %s", err)
+			scope.Error("user_grant: %s", err)
 			return vfilter.Null{}
 		}
 
@@ -67,21 +67,21 @@ func (self GrantFunction) Call(
 	} else {
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
-			scope.Log("user_grant: %v", err)
+			scope.Error("user_grant: %v", err)
 			return vfilter.Null{}
 		}
 
 		for _, org_id := range arg.OrgIds {
 			org_config_obj, err = org_manager.GetOrgConfig(org_id)
 			if err != nil {
-				scope.Log("user_grant: %v", err)
+				scope.Error("user_grant: %v", err)
 				return vfilter.Null{}
 			}
 
 			// Grant the roles to the user
 			err = acls.GrantRoles(org_config_obj, arg.Username, arg.Roles)
 			if err != nil {
-				scope.Log("user_grant: %s", err)
+				scope.Error("user_grant: %s", err)
 				return vfilter.Null{}
 			}
 		}

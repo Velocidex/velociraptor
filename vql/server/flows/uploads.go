@@ -35,7 +35,7 @@ func (self UploadsPlugins) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
-			scope.Log("uploads: %s", err)
+			scope.Error("uploads: %s", err)
 			return
 		}
 
@@ -52,7 +52,7 @@ func (self UploadsPlugins) Call(
 		// Allow the plugin args to override the environment scope.
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("uploads: %v", err)
+			scope.Error("uploads: %v", err)
 			return
 		}
 
@@ -61,7 +61,7 @@ func (self UploadsPlugins) Call(
 		reader, err := result_sets.NewResultSetReader(
 			file_store_factory, flow_path_manager.UploadMetadata())
 		if err != nil {
-			scope.Log("uploads: %v", err)
+			scope.Error("uploads: %v", err)
 			return
 		}
 		defer reader.Close()

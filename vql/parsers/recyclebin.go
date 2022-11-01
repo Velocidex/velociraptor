@@ -55,13 +55,13 @@ func (self _RecycleBinPlugin) Call(
 		arg := &_RecycleBinPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("parse_recyclebin: %s", err.Error())
+			scope.Error("parse_recyclebin: %s", err.Error())
 			return
 		}
 
 		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
-			scope.Log("parse_recyclebin: %s", err)
+			scope.Error("parse_recyclebin: %s", err)
 			return
 		}
 
@@ -71,12 +71,12 @@ func (self _RecycleBinPlugin) Call(
 
 				accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 				if err != nil {
-					scope.Log("parse_recyclebin: %v", err)
+					scope.Error("parse_recyclebin: %v", err)
 					return
 				}
 				fd, err := accessor.Open(filename)
 				if err != nil {
-					scope.Log("parse_recyclebin: Unable to open file %s: %v",
+					scope.Error("parse_recyclebin: Unable to open file %s: %v",
 						filename, err)
 					return
 				}
@@ -91,7 +91,7 @@ func (self _RecycleBinPlugin) Call(
 
 				info, err := recyclebin.ParseRecycleBin(reader)
 				if err != nil {
-					scope.Log("parse_recyclebin: Unable to parse file %s: %v",
+					scope.Error("parse_recyclebin: Unable to parse file %s: %v",
 						filename, err)
 					return
 				}

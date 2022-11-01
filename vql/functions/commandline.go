@@ -23,14 +23,14 @@ func (self *CommandlineToArgvFunction) Call(ctx context.Context,
 	arg := &CommandlineToArgvArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("commandline_split: %v", err)
+		scope.Error("commandline_split: %v", err)
 		return []string{}
 	}
 
 	if arg.BashStyle {
 		res, err := shlex.Split(arg.Command)
 		if err != nil {
-			scope.Log("commandline_split: %v", err)
+			scope.Error("commandline_split: %v", err)
 			return []string{}
 		}
 		return res

@@ -44,13 +44,13 @@ func (self *DirnameFunction) Call(ctx context.Context,
 	arg := &DirnameArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("dirname: %s", err.Error())
+		scope.Error("dirname: %s", err.Error())
 		return false
 	}
 
 	os_path, err := parsePath(ctx, scope, arg.Path, arg.Sep, arg.PathType)
 	if err != nil {
-		scope.Log("dirname: %v", err)
+		scope.Error("dirname: %v", err)
 		return false
 	}
 
@@ -73,13 +73,13 @@ func (self *BasenameFunction) Call(ctx context.Context,
 	arg := &DirnameArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("basename: %v", err)
+		scope.Error("basename: %v", err)
 		return false
 	}
 
 	os_path, err := parsePath(ctx, scope, arg.Path, arg.Sep, arg.PathType)
 	if err != nil {
-		scope.Log("basename: %v", err)
+		scope.Error("basename: %v", err)
 		return false
 	}
 
@@ -108,7 +108,7 @@ func (self *RelnameFunction) Call(ctx context.Context,
 	arg := &RelnameFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("relpath: %s", err.Error())
+		scope.Error("relpath: %s", err.Error())
 		return false
 	}
 
@@ -142,7 +142,7 @@ func (self *PathJoinFunction) Call(ctx context.Context,
 	arg := &PathJoinArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("path_join: %s", err.Error())
+		scope.Error("path_join: %s", err.Error())
 		return false
 	}
 
@@ -155,7 +155,7 @@ func (self *PathJoinFunction) Call(ctx context.Context,
 	for _, c := range arg.Components {
 		os_path, err = parsePath(ctx, scope, c, arg.Sep, arg.PathType)
 		if err != nil {
-			scope.Log("dirname: %v", err)
+			scope.Error("dirname: %v", err)
 			return false
 		}
 
@@ -165,7 +165,7 @@ func (self *PathJoinFunction) Call(ctx context.Context,
 	if os_path == nil {
 		os_path, err = parsePath(ctx, scope, "", arg.Sep, arg.PathType)
 		if err != nil {
-			scope.Log("dirname: %v", err)
+			scope.Error("dirname: %v", err)
 			return false
 		}
 	}
@@ -195,13 +195,13 @@ func (self *PathSplitFunction) Call(ctx context.Context,
 	arg := &PathSplitArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("path_split: %s", err.Error())
+		scope.Error("path_split: %s", err.Error())
 		return []string{}
 	}
 
 	os_path, err := parsePath(ctx, scope, arg.Path, "", arg.PathType)
 	if err != nil {
-		scope.Log("path_split: %v", err)
+		scope.Error("path_split: %v", err)
 		return false
 	}
 

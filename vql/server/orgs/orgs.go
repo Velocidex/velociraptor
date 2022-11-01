@@ -25,13 +25,13 @@ func (self OrgsPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.ORG_ADMIN)
 		if err != nil {
-			scope.Log("orgs: %v", err)
+			scope.Error("orgs: %v", err)
 			return
 		}
 
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
-			scope.Log("orgs: %v", err)
+			scope.Error("orgs: %v", err)
 			return
 		}
 

@@ -92,14 +92,14 @@ func (self _ElasticPlugin) Call(ctx context.Context,
 
 		err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
 		if err != nil {
-			scope.Log("elastic: %v", err)
+			scope.Error("elastic: %v", err)
 			return
 		}
 
 		arg := _ElasticPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, &arg)
 		if err != nil {
-			scope.Log("elastic: %v", err)
+			scope.Error("elastic: %v", err)
 			return
 		}
 
@@ -152,7 +152,7 @@ func upload_rows(
 	crypto.AddPublicRoots(CA_Pool)
 	err := crypto.AddDefaultCerts(config_obj, CA_Pool)
 	if err != nil {
-		scope.Log("elastic: %v", err)
+		scope.Error("elastic: %v", err)
 		return
 	}
 
@@ -181,7 +181,7 @@ func upload_rows(
 
 	client, err := elasticsearch.NewClient(cfg)
 	if err != nil {
-		scope.Log("elastic: %v", err)
+		scope.Error("elastic: %v", err)
 		return
 	}
 
@@ -209,7 +209,7 @@ func upload_rows(
 			id = id + 3
 			err := append_row_to_buffer(ctx, scope, row, id, &buf, arg, opts)
 			if err != nil {
-				scope.Log("elastic: %v", err)
+				scope.Error("elastic: %v", err)
 				continue
 			}
 

@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 /*
@@ -115,7 +116,7 @@ func runNetstat(
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 	if err != nil {
-		scope.Log("netstat: %s", err)
+		scope.Error("netstat: %s", err)
 		return result
 	}
 

@@ -46,14 +46,14 @@ func (self *TempfileFunction) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 	if err != nil {
-		scope.Log("tempfile: %s", err)
+		scope.Error("tempfile: %s", err)
 		return false
 	}
 
 	arg := &_TempfileRequest{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("tempfile: %s", err.Error())
+		scope.Error("tempfile: %s", err.Error())
 		return false
 	}
 
@@ -73,7 +73,7 @@ func (self *TempfileFunction) Call(ctx context.Context,
 
 	tmpfile, err := ioutil.TempFile("", "tmp*"+arg.Extension)
 	if err != nil {
-		scope.Log("tempfile: %v", err)
+		scope.Error("tempfile: %v", err)
 		return false
 	}
 
@@ -83,7 +83,7 @@ func (self *TempfileFunction) Call(ctx context.Context,
 	for _, content := range arg.Data {
 		_, err := tmpfile.Write([]byte(content))
 		if err != nil {
-			scope.Log("tempfile: %s", err.Error())
+			scope.Error("tempfile: %s", err.Error())
 		}
 	}
 
@@ -146,20 +146,20 @@ func (self *TempdirFunction) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 	if err != nil {
-		scope.Log("tempdir: %s", err)
+		scope.Error("tempdir: %s", err)
 		return false
 	}
 
 	arg := &_TempdirRequest{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("tempdir: %s", err.Error())
+		scope.Error("tempdir: %s", err.Error())
 		return false
 	}
 
 	dir, err := ioutil.TempDir("", "tmp")
 	if err != nil {
-		scope.Log("tempdir: %v", err)
+		scope.Error("tempdir: %v", err)
 		return false
 	}
 

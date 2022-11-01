@@ -33,14 +33,14 @@ func (self UserCreateFunction) Call(
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
-		scope.Log("user_create: %s", err)
+		scope.Error("user_create: %s", err)
 		return vfilter.Null{}
 	}
 
 	arg := &UserCreateFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("user_create: %s", err)
+		scope.Error("user_create: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -56,19 +56,19 @@ func (self UserCreateFunction) Call(
 		// OK - Lets make the user now
 		user_record, err = users.NewUserRecord(arg.Username)
 		if err != nil {
-			scope.Log("user_create: %s", err)
+			scope.Error("user_create: %s", err)
 			return vfilter.Null{}
 		}
 
 	} else if err != nil {
-		scope.Log("user_create: %s", err)
+		scope.Error("user_create: %s", err)
 		return vfilter.Null{}
 	}
 
 	// Check the password if needed
 	authenticator, err := authenticators.NewAuthenticator(config_obj)
 	if err != nil {
-		scope.Log("user_create: %s", err)
+		scope.Error("user_create: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -79,7 +79,7 @@ func (self UserCreateFunction) Call(
 		password := make([]byte, 100)
 		_, err = rand.Read(password)
 		if err != nil {
-			scope.Log("user_create: %s", err)
+			scope.Error("user_create: %s", err)
 			return vfilter.Null{}
 		}
 		users.SetPassword(user_record, string(password))
@@ -105,7 +105,7 @@ func (self UserCreateFunction) Call(
 		// Grant the roles to the user
 		err = acls.GrantRoles(config_obj, arg.Username, arg.Roles)
 		if err != nil {
-			scope.Log("user_create: %s", err)
+			scope.Error("user_create: %s", err)
 			return vfilter.Null{}
 		}
 
@@ -113,21 +113,21 @@ func (self UserCreateFunction) Call(
 	} else {
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
-			scope.Log("user_create: %v", err)
+			scope.Error("user_create: %v", err)
 			return vfilter.Null{}
 		}
 
 		for _, org_id := range arg.OrgIds {
 			org_config_obj, err = org_manager.GetOrgConfig(org_id)
 			if err != nil {
-				scope.Log("user_create: %v", err)
+				scope.Error("user_create: %v", err)
 				return vfilter.Null{}
 			}
 
 			// Grant the roles to the user
 			err = acls.GrantRoles(org_config_obj, arg.Username, arg.Roles)
 			if err != nil {
-				scope.Log("user_create: %s", err)
+				scope.Error("user_create: %s", err)
 				return vfilter.Null{}
 			}
 		}
@@ -151,7 +151,7 @@ func (self UserCreateFunction) Call(
 	// Write the user record.
 	err = users_manager.SetUser(ctx, user_record)
 	if err != nil {
-		scope.Log("user_create: %s", err)
+		scope.Error("user_create: %s", err)
 		return vfilter.Null{}
 	}
 

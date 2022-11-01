@@ -45,7 +45,7 @@ func (self *PKEncryptFunction) Call(ctx context.Context,
 	arg := &PKEncryptArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("ERROR:pk_encrypt: %s", err.Error())
+		scope.Error("ERROR:pk_encrypt: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -66,7 +66,7 @@ func (self *PKEncryptFunction) Call(ctx context.Context,
 
 			pk_entity, err := readPGPEntity(pub_key_reader)
 			if err != nil {
-				scope.Log("ERROR:pk_encrypt: %s", err.Error())
+				scope.Error("ERROR:pk_encrypt: %s", err.Error())
 				return vfilter.Null{}
 			}
 
@@ -75,7 +75,7 @@ func (self *PKEncryptFunction) Call(ctx context.Context,
 				signing_key := strings.NewReader(arg.SigningKey)
 				signing_key_entity, err = readPGPEntity(signing_key)
 				if err != nil {
-					scope.Log("ERROR:pk_encrypt: %s", err.Error())
+					scope.Error("ERROR:pk_encrypt: %s", err.Error())
 					return vfilter.Null{}
 				}
 			}
@@ -94,13 +94,13 @@ func (self *PKEncryptFunction) Call(ctx context.Context,
 		{
 			cert, err := crypto_utils.ParseX509CertFromPemStr([]byte(arg.PublicKey))
 			if err != nil {
-				scope.Log("ERROR:pk_encrypt: %s", err.Error())
+				scope.Error("ERROR:pk_encrypt: %s", err.Error())
 				return vfilter.Null{}
 			}
 
 			ciphertext, err := crypto_utils.EncryptWithX509PubKey([]byte(arg.Data), cert)
 			if err != nil {
-				scope.Log("ERROR:pk_encrypt: %s", err.Error())
+				scope.Error("ERROR:pk_encrypt: %s", err.Error())
 				return vfilter.Null{}
 			}
 			return ciphertext
@@ -155,13 +155,13 @@ func (self *PKDecryptFunction) Call(ctx context.Context,
 	arg := &PKDecryptArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("ERROR:pk_decrypt: %s", err.Error())
+		scope.Error("ERROR:pk_decrypt: %s", err.Error())
 		return vfilter.Null{}
 	}
 	if arg.PrivateKey == "" && (arg.Scheme == "" || strings.ToLower(arg.Scheme) == "rsa") {
 		err = vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 		if err != nil {
-			scope.Log("ERROR:pk_decrypt: Must be server admin to use private key")
+			scope.Error("ERROR:pk_decrypt: Must be server admin to use private key")
 			return vfilter.Null{}
 		}
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
@@ -181,7 +181,7 @@ func (self *PKDecryptFunction) Call(ctx context.Context,
 
 			pk_entity, err := readPGPEntityList(priv_key_reader)
 			if err != nil {
-				scope.Log("ERROR:pk_decrypt: %s", err.Error())
+				scope.Error("ERROR:pk_decrypt: %s", err.Error())
 				return vfilter.Null{}
 			}
 
@@ -190,7 +190,7 @@ func (self *PKDecryptFunction) Call(ctx context.Context,
 				signing_key := strings.NewReader(arg.SigningKey)
 				signing_key_entity, err = readPGPEntity(signing_key)
 				if err != nil {
-					scope.Log("ERROR:pk_decrypt: %s", err.Error())
+					scope.Error("ERROR:pk_decrypt: %s", err.Error())
 					return vfilter.Null{}
 				}
 			}
@@ -198,12 +198,12 @@ func (self *PKDecryptFunction) Call(ctx context.Context,
 			reader := strings.NewReader(arg.Data)
 			m, err := decryptPGP(pk_entity, signing_key_entity, reader)
 			if err != nil {
-				scope.Log("ERROR:pk_decrypt: %s", err.Error())
+				scope.Error("ERROR:pk_decrypt: %s", err.Error())
 				return vfilter.Null{}
 			}
 			bytes, err := ioutil.ReadAll(m.UnverifiedBody)
 			if err != nil {
-				scope.Log("ERROR:pk_decrypt: %s", err.Error())
+				scope.Error("ERROR:pk_decrypt: %s", err.Error())
 				return vfilter.Null{}
 			}
 			return bytes
@@ -212,12 +212,12 @@ func (self *PKDecryptFunction) Call(ctx context.Context,
 		{
 			key, err := crypto_utils.ParseRsaPrivateKeyFromPemStr([]byte(arg.PrivateKey))
 			if err != nil {
-				scope.Log("ERROR:pk_decrypt: %s", err.Error())
+				scope.Error("ERROR:pk_decrypt: %s", err.Error())
 				return vfilter.Null{}
 			}
 			plaintext, err := crypto_utils.DecryptRSAOAEP(key, []byte(arg.Data))
 			if err != nil {
-				scope.Log("ERROR:pk_decrypt: %s", err.Error())
+				scope.Error("ERROR:pk_decrypt: %s", err.Error())
 				return vfilter.Null{}
 			}
 			return plaintext

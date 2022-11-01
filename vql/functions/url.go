@@ -46,14 +46,14 @@ func (self UrlFunction) Call(ctx context.Context,
 	arg := &UrlArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("url: %s", err.Error())
+		scope.Error("url: %s", err.Error())
 		return false
 	}
 
 	if arg.Parse != "" {
 		result, err := url.Parse(arg.Parse)
 		if err != nil {
-			scope.Log("url: %v", err)
+			scope.Error("url: %v", err)
 			return false
 		}
 

@@ -30,7 +30,7 @@ func (self BatchPlugin) Call(
 		arg := &BatchPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("batch: %v", err)
+			scope.Error("batch: %v", err)
 			return
 		}
 
@@ -40,7 +40,7 @@ func (self BatchPlugin) Call(
 			// Compile the batch lambda.
 			lambda, err = vfilter.ParseLambda(arg.BatchFunc)
 			if err != nil {
-				scope.Log("batch: %v", err)
+				scope.Error("batch: %v", err)
 				return
 			}
 

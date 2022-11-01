@@ -34,14 +34,14 @@ func (self TimelinePlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
-			scope.Log("timeline: %v", err)
+			scope.Error("timeline: %v", err)
 			return
 		}
 
 		arg := &TimelinePluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("timeline: %v", err)
+			scope.Error("timeline: %v", err)
 			return
 		}
 
@@ -67,7 +67,7 @@ func (self TimelinePlugin) Call(
 		reader, err := timelines.NewSuperTimelineReader(config_obj,
 			super_path_manager, arg.SkipComponents)
 		if err != nil {
-			scope.Log("timeline: %v", err)
+			scope.Error("timeline: %v", err)
 			return
 		}
 		defer reader.Close()
@@ -75,7 +75,7 @@ func (self TimelinePlugin) Call(
 		if !utils.IsNil(arg.StartTime) {
 			start, err := functions.TimeFromAny(scope, arg.StartTime)
 			if err != nil {
-				scope.Log("timeline: %v", err)
+				scope.Error("timeline: %v", err)
 				return
 			}
 

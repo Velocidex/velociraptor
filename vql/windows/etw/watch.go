@@ -1,3 +1,4 @@
+//go:build windows && cgo
 // +build windows,cgo
 
 package etw
@@ -44,7 +45,7 @@ func (self WatchETWPlugin) Call(
 		arg := &WatchETWArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("watch_etw: %s", err.Error())
+			scope.Error("watch_etw: %s", err.Error())
 			return
 		}
 
@@ -61,14 +62,14 @@ func (self WatchETWPlugin) Call(
 
 		guid, err := windows.GUIDFromString(arg.Provider)
 		if err != nil {
-			scope.Log("watch_etw: %s", err.Error())
+			scope.Error("watch_etw: %s", err.Error())
 			return
 		}
 
 		for {
 			err = createSession(ctx, scope, guid, arg, output_chan)
 			if err != nil {
-				scope.Log("watch_etw: %v", err)
+				scope.Error("watch_etw: %v", err)
 			}
 
 			scope.Log("ETW session interrupted, will retry again.")
@@ -93,7 +94,7 @@ func createSession(ctx context.Context, scope types.Scope, guid windows.GUID,
 		cfg.Name = arg.Name
 	})
 	if err != nil {
-		scope.Log("watch_etw: %s", err.Error())
+		scope.Error("watch_etw: %s", err.Error())
 		return err
 	}
 
@@ -135,7 +136,7 @@ func createSession(ctx context.Context, scope types.Scope, guid windows.GUID,
 		defer cancel()
 		err := session.Process(cb)
 		if err != nil {
-			scope.Log("watch_etw: %v", err)
+			scope.Error("watch_etw: %v", err)
 		}
 	}()
 

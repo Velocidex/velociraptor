@@ -24,7 +24,7 @@ func (self *SleepFunction) Call(ctx context.Context,
 	arg := &SleepArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("sleep: %s", err.Error())
+		scope.Error("sleep: %s", err.Error())
 		return false
 	}
 
@@ -65,7 +65,7 @@ func (self *RandFunction) Call(ctx context.Context,
 	arg := &RandArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("rand: %s", err.Error())
+		scope.Error("rand: %s", err.Error())
 		return false
 	}
 

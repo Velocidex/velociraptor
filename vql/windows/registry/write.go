@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package registry
@@ -31,7 +32,7 @@ func (self *RegSetValueFunction) Call(ctx context.Context,
 	arg := &RegSetValueFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("reg_set_value: %s", err.Error())
+		scope.Error("reg_set_value: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -66,7 +67,7 @@ func (self *RegSetValueFunction) Call(ctx context.Context,
 			registry.QUERY_VALUE|registry.SET_VALUE)
 	}
 	if err != nil {
-		scope.Log("reg_set_value: %s", err.Error())
+		scope.Error("reg_set_value: %s", err.Error())
 		return vfilter.Null{}
 	}
 	defer key.Close()
@@ -105,7 +106,7 @@ func (self *RegSetValueFunction) Call(ctx context.Context,
 	}
 
 	if err != nil {
-		scope.Log("reg_set_value:  %v", err)
+		scope.Error("reg_set_value:  %v", err)
 		return vfilter.Null{}
 	}
 
@@ -132,7 +133,7 @@ func (self *RegDeleteValueFunction) Call(ctx context.Context,
 	arg := &RegDeleteValueFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("reg_rm_value: %s", err.Error())
+		scope.Error("reg_rm_value: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -158,14 +159,14 @@ func (self *RegDeleteValueFunction) Call(ctx context.Context,
 	key, err := registry.OpenKey(root_hive, subkey_path,
 		registry.QUERY_VALUE|registry.SET_VALUE)
 	if err != nil {
-		scope.Log("reg_rm_value: %s", err.Error())
+		scope.Error("reg_rm_value: %s", err.Error())
 		return vfilter.Null{}
 	}
 	defer key.Close()
 
 	err = key.DeleteValue(value_name)
 	if err != nil {
-		scope.Log("reg_rm_value:  %v", err)
+		scope.Error("reg_rm_value:  %v", err)
 		return vfilter.Null{}
 	}
 
@@ -192,7 +193,7 @@ func (self *RegDeleteKeyFunction) Call(ctx context.Context,
 	arg := &RegDeleteKeyFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("reg_rm_key: %s", err.Error())
+		scope.Error("reg_rm_key: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -216,14 +217,14 @@ func (self *RegDeleteKeyFunction) Call(ctx context.Context,
 	key, err := registry.OpenKey(root_hive, "",
 		registry.QUERY_VALUE|registry.SET_VALUE)
 	if err != nil {
-		scope.Log("reg_rm_key: %s", err.Error())
+		scope.Error("reg_rm_key: %s", err.Error())
 		return vfilter.Null{}
 	}
 	defer key.Close()
 
 	err = registry.DeleteKey(key, subkey_path)
 	if err != nil {
-		scope.Log("reg_rm_key:  %v", err)
+		scope.Error("reg_rm_key:  %v", err)
 		return vfilter.Null{}
 	}
 

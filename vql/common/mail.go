@@ -64,7 +64,7 @@ func (self MailPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 		if err != nil {
-			scope.Log("mail: %s", err)
+			scope.Error("mail: %s", err)
 			return
 		}
 
@@ -77,7 +77,7 @@ func (self MailPlugin) Call(
 		arg := &MailPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("mail: %v", err)
+			scope.Error("mail: %v", err)
 			return
 		}
 		if time.Since(last_mail) < time.Duration(arg.Period)*time.Second {
@@ -149,7 +149,7 @@ func (self MailPlugin) Call(
 		// Send the email to Bob, Cora and Dan.
 		err = d.DialAndSend(m)
 		if err != nil {
-			scope.Log("mail: %v", err)
+			scope.Error("mail: %v", err)
 			// Failed to send the mail but we should emit
 			// the row anyway so it gets logged in the
 			// artifact CSV file.

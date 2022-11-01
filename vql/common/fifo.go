@@ -142,7 +142,7 @@ func NewFIFOCache(
 		close(done)
 	})
 	if err != nil {
-		scope.Log("AddDestructor: %s", err)
+		scope.Error("AddDestructor: %s", err)
 		close(done)
 	}
 
@@ -195,7 +195,7 @@ func (self _FIFOPlugin) Call(ctx context.Context,
 		arg := &_FIFOPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("fifo: %v", err)
+			scope.Error("fifo: %v", err)
 			return
 		}
 

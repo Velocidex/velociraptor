@@ -170,7 +170,7 @@ func (self _DiffPlugin) Call(ctx context.Context,
 		arg := &_DiffPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("diff: %v", err)
+			scope.Error("diff: %v", err)
 			return
 		}
 

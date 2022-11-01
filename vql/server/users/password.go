@@ -30,7 +30,7 @@ func (self SetPasswordFunction) Call(
 	arg := &SetPasswordFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("passwd: %v", err)
+		scope.Error("passwd: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -44,7 +44,7 @@ func (self SetPasswordFunction) Call(
 		// Only an admin can set another user's password.
 		err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 		if err != nil {
-			scope.Log(
+			scope.Error(
 				"passwd: %v setting %v password:  %v",
 				principal, arg.Username, err)
 			return vfilter.Null{}
@@ -62,7 +62,7 @@ func (self SetPasswordFunction) Call(
 
 	authenticator, err := authenticators.NewAuthenticator(config_obj)
 	if err != nil {
-		scope.Log("passwd: %v", err)
+		scope.Error("passwd: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -74,7 +74,7 @@ func (self SetPasswordFunction) Call(
 	users_manager := services.GetUserManager()
 	user_record, err := users_manager.GetUserWithHashes(ctx, principal)
 	if err != nil {
-		scope.Log("passwd: %v", err)
+		scope.Error("passwd: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -90,7 +90,7 @@ func (self SetPasswordFunction) Call(
 	// Store the record
 	err = users_manager.SetUser(ctx, user_record)
 	if err != nil {
-		scope.Log("passwd: Unable to set user account: %v", err)
+		scope.Error("passwd: Unable to set user account: %v", err)
 		return vfilter.Null{}
 	}
 

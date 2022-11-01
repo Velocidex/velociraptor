@@ -81,7 +81,7 @@ func (self LRUFunction) Call(ctx context.Context, scope vfilter.Scope,
 	arg := &LRUFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("lru: %s", err.Error())
+		scope.Error("lru: %s", err.Error())
 		return vfilter.Null{}
 	}
 

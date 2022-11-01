@@ -185,7 +185,7 @@ func (self *MockFunction) Call(ctx context.Context,
 	arg := &MockerFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("mock: %s", err.Error())
+		scope.Error("mock: %s", err.Error())
 		return types.Null{}
 	}
 
@@ -290,7 +290,7 @@ func (self *MockCheckFunction) Call(ctx context.Context,
 	arg := &MockCheckArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("mock_check: %s", err.Error())
+		scope.Error("mock_check: %s", err.Error())
 		return vfilter.Null{}
 	}
 

@@ -62,7 +62,7 @@ func (self ShellPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.EXECVE)
 		if err != nil {
-			scope.Log("shell: %v", err)
+			scope.Error("shell: %v", err)
 			return
 		}
 
@@ -76,7 +76,7 @@ func (self ShellPlugin) Call(
 		arg := &ShellPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("shell: %v", err)
+			scope.Error("shell: %v", err)
 			return
 		}
 
@@ -121,19 +121,19 @@ func (self ShellPlugin) Call(
 
 		stdout_pipe, err := command.StdoutPipe()
 		if err != nil {
-			scope.Log("shell: no command to run")
+			scope.Error("shell: no command to run")
 			return
 		}
 
 		stderr_pipe, err := command.StderrPipe()
 		if err != nil {
-			scope.Log("shell: no command to run")
+			scope.Error("shell: no command to run")
 			return
 		}
 
 		err = command.Start()
 		if err != nil {
-			scope.Log("shell: %v", err)
+			scope.Error("shell: %v", err)
 			select {
 			case <-ctx.Done():
 				return

@@ -27,7 +27,7 @@ func (self AppCompatCache) Call(
 		arg := AppCompatCacheArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, &arg)
 		if err != nil {
-			scope.Log("AppCompatCache: %v", err)
+			scope.Error("AppCompatCache: %v", err)
 			return
 		}
 

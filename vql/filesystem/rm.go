@@ -23,20 +23,20 @@ func (self *_RmFunction) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 	if err != nil {
-		scope.Log("rm: %s", err)
+		scope.Error("rm: %s", err)
 		return false
 	}
 
 	arg := &_RmRequest{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("rm: %s", err.Error())
+		scope.Error("rm: %s", err.Error())
 		return false
 	}
 
 	err = os.Remove(arg.Filename)
 	if err != nil {
-		scope.Log("rm: %s", err.Error())
+		scope.Error("rm: %s", err.Error())
 		return false
 	}
 

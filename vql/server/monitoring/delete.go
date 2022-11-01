@@ -35,14 +35,14 @@ func (self DeleteEventsPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 		if err != nil {
-			scope.Log("delete_events: %v", err)
+			scope.Error("delete_events: %v", err)
 			return
 		}
 
 		arg := &DeleteEventsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("delete_events: %v", err)
+			scope.Error("delete_events: %v", err)
 			return
 		}
 
@@ -62,14 +62,14 @@ func (self DeleteEventsPlugin) Call(
 
 		launcher, err := services.GetLauncher(config_obj)
 		if err != nil {
-			scope.Log("delete_events: %v", err)
+			scope.Error("delete_events: %v", err)
 			return
 		}
 
 		responses, err := launcher.DeleteEvents(ctx, config_obj,
 			arg.Artifact, arg.ClientId, arg.StartTime, arg.EndTime, arg.ReallyDoIt)
 		if err != nil {
-			scope.Log("delete_events: %v", err)
+			scope.Error("delete_events: %v", err)
 			return
 		}
 

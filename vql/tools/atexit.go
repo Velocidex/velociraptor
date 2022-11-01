@@ -27,7 +27,7 @@ func (self AtExitFunction) Call(
 	arg := &AtExitFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("atexit: %v", err)
+		scope.Error("atexit: %v", err)
 		return vfilter.Null{}
 	}
 

@@ -39,13 +39,13 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 
 		err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 		if err != nil {
-			scope.Log("client_delete: %s", err)
+			scope.Error("client_delete: %s", err)
 			return
 		}
 
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("client_delete: %s", err)
+			scope.Error("client_delete: %s", err)
 			return
 		}
 
@@ -93,7 +93,7 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 				return nil
 			})
 		if err != nil {
-			scope.Log("client_delete: %s", err.Error())
+			scope.Error("client_delete: %s", err.Error())
 			return
 		}
 
@@ -115,14 +115,14 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 				if arg.ReallyDoIt {
 					err := file_store_factory.Delete(filename)
 					if err != nil {
-						scope.Log("client_delete: while deleting %v: %s",
+						scope.Error("client_delete: while deleting %v: %s",
 							filename, err)
 					}
 				}
 				return nil
 			})
 		if err != nil {
-			scope.Log("client_delete: %s", err)
+			scope.Error("client_delete: %s", err)
 			return
 		}
 
@@ -132,7 +132,7 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 			func(filename api.DSPathSpec) error {
 				err := db.DeleteSubject(config_obj, filename)
 				if err != nil {
-					scope.Log("client_delete: Removig directory %v: %v",
+					scope.Error("client_delete: Removig directory %v: %v",
 						filename.AsClientPath(), err)
 				}
 				return nil
@@ -142,7 +142,7 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 		if arg.ReallyDoIt {
 			err = reallyDeleteClient(ctx, config_obj, scope, db, arg)
 			if err != nil {
-				scope.Log("client_delete: %s", err)
+				scope.Error("client_delete: %s", err)
 				return
 			}
 
@@ -151,7 +151,7 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 				config_obj,
 				paths.NewClientPathManager(arg.ClientId).Path().SetDir())
 			if err != nil {
-				scope.Log("client_delete: %s", err)
+				scope.Error("client_delete: %s", err)
 			}
 		}
 
@@ -162,7 +162,7 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 			err = notifier.NotifyListener(
 				config_obj, arg.ClientId, "DeleteClient")
 			if err != nil {
-				scope.Log("client_delete: %s", err)
+				scope.Error("client_delete: %s", err)
 			}
 		}
 	}()

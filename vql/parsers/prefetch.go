@@ -50,7 +50,7 @@ func (self _PrefetchPlugin) Call(
 		arg := &_PrefetchPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("prefetch: %s", err.Error())
+			scope.Error("prefetch: %s", err.Error())
 			return
 		}
 
@@ -60,18 +60,18 @@ func (self _PrefetchPlugin) Call(
 
 				err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 				if err != nil {
-					scope.Log("prefetch: %s", err)
+					scope.Error("prefetch: %s", err)
 					return
 				}
 
 				accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 				if err != nil {
-					scope.Log("prefetch: %v", err)
+					scope.Error("prefetch: %v", err)
 					return
 				}
 				fd, err := accessor.Open(filename)
 				if err != nil {
-					scope.Log("Unable to open file %s: %v",
+					scope.Error("Unable to open file %s: %v",
 						filename, err)
 					return
 				}
@@ -86,7 +86,7 @@ func (self _PrefetchPlugin) Call(
 
 				prefetch_info, err := prefetch.LoadPrefetch(reader)
 				if err != nil {
-					scope.Log("prefetch: Unable to parse file %s: %v",
+					scope.Error("prefetch: Unable to parse file %s: %v",
 						filename, err)
 					return
 				}

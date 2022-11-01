@@ -39,7 +39,7 @@ func (self *Xor) Call(ctx context.Context,
 	arg := &XorArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("Xor: %s", err.Error())
+		scope.Error("Xor: %s", err.Error())
 		return false
 	}
 

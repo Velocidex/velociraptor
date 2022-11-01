@@ -1,3 +1,4 @@
+//go:build cgo
 // +build cgo
 
 package tools
@@ -36,7 +37,7 @@ func (self MagicFunction) Call(
 	arg := &MagicFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("magic: %v", err)
+		scope.Error("magic: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -96,14 +97,14 @@ func (self MagicFunction) Call(
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("magic: %v", err)
+		scope.Error("magic: %v", err)
 		return vfilter.Null{}
 	}
 
 	// Read a header from the file and pass to the libmagic
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
-		scope.Log("magic: %v", err)
+		scope.Error("magic: %v", err)
 		return vfilter.Null{}
 	}
 

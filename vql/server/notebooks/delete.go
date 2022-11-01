@@ -35,13 +35,13 @@ func (self *DeleteNotebookPlugin) Call(ctx context.Context,
 
 		err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 		if err != nil {
-			scope.Log("notebook_delete: %s", err)
+			scope.Error("notebook_delete: %s", err)
 			return
 		}
 
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("notebook_delete: %s", err.Error())
+			scope.Error("notebook_delete: %s", err.Error())
 			return
 		}
 
@@ -63,7 +63,7 @@ func (self *DeleteNotebookPlugin) Call(ctx context.Context,
 		if arg.ReallyDoIt {
 			err = db.DeleteSubject(config_obj, notebook_path_manager.Path())
 			if err != nil {
-				scope.Log("notebook_delete: %s", err.Error())
+				scope.Error("notebook_delete: %s", err.Error())
 				return
 			}
 		}
@@ -92,7 +92,7 @@ func (self *DeleteNotebookPlugin) Call(ctx context.Context,
 				return nil
 			})
 		if err != nil {
-			scope.Log("notebook_delete: %s", err.Error())
+			scope.Error("notebook_delete: %s", err.Error())
 			return
 		}
 
@@ -121,13 +121,13 @@ func (self *DeleteNotebookPlugin) Call(ctx context.Context,
 				if arg.ReallyDoIt {
 					err := file_store_factory.Delete(filename)
 					if err != nil {
-						scope.Log("notebook_delete: %s", err.Error())
+						scope.Error("notebook_delete: %s", err.Error())
 					}
 				}
 				return nil
 			})
 		if err != nil {
-			scope.Log("notebook_delete: %s", err.Error())
+			scope.Error("notebook_delete: %s", err.Error())
 			return
 		}
 
