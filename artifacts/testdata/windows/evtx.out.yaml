@@ -142,6 +142,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "EventTime": "2019-12-02T11:39:35Z",
   "Computer": "DESKTOP-687T2NR",
   "Channel": "Microsoft-Windows-PowerShell/Operational",
+  "Provider": "Microsoft-Windows-PowerShell",
   "EventID": 4104,
   "EventRecordID": 4092,
   "UserSID": "S-1-5-21-2201333269-445358460-1233016754-1000",
