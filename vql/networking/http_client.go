@@ -51,14 +51,6 @@ var (
 	mu sync.Mutex
 
 	proxyHandler = http.ProxyFromEnvironment
-
-	validHttpMethods = map[string]string{
-		"POST":   "POST",
-		"GET":    "GET",
-		"PUT":    "PUT",
-		"PATCH":  "PATCH",
-		"DELETE": "DELETE",
-	}
 )
 
 const (
@@ -370,23 +362,18 @@ func (self *_HttpPlugin) Call(
 
 		var req *http.Request
 		params := encodeParams(arg, scope)
-		switch method, _ := validHttpMethods[strings.ToUpper(arg.Method)]; method {
+		switch method := strings.ToUpper(arg.Method); method {
 		case "GET":
 			{
 				req, err = http.NewRequestWithContext(
-					ctx, arg.Method, arg.Url, strings.NewReader(arg.Data))
+					ctx, method, arg.Url, strings.NewReader(arg.Data))
 				if err != nil {
 					scope.Log("%s: %v", self.Name(), err)
 					return
 				}
 				req.URL.RawQuery = params.Encode()
 			}
-		case "":
-			{
-				scope.Log("http_client: Invalid HTTP Method %s", arg.Method)
-				return
-			}
-		default:
+		case "POST", "PUT", "PATCH", "DELETE":
 			{
 				// Set body to params if arg.Data is empty
 				if arg.Data == "" && len(*params) != 0 {
@@ -396,11 +383,16 @@ func (self *_HttpPlugin) Call(
 					scope.Log("http_client: Both params and data set. Defaulting to data.")
 				}
 				req, err = http.NewRequestWithContext(
-					ctx, arg.Method, arg.Url, strings.NewReader(arg.Data))
+					ctx, method, arg.Url, strings.NewReader(arg.Data))
 				if err != nil {
 					scope.Log("%s: %v", self.Name(), err)
 					return
 				}
+			}
+		default:
+			{
+				scope.Log("http_client: Invalid HTTP Method %s", method)
+				return
 			}
 		}
 
