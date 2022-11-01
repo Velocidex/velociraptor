@@ -389,7 +389,7 @@ func (self *_HttpPlugin) Call(
 		default:
 			{
 				// Set body to params if arg.Data is empty
-				if arg.Data == "" && params != nil {
+				if arg.Data == "" && len(*params) != 0 {
 					arg.Data = params.Encode()
 				} else if arg.Data != "" && len(*params) != 0 {
 					// Shouldn't set both params and data. Warn user
