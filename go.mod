@@ -111,6 +111,7 @@ require (
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11
 	github.com/Velocidex/ordereddict v0.0.0-20220428153415-da46091cd216
+	github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.1-0.20221027171526-76a36be4fa02
 	github.com/coreos/go-oidc/v3 v3.4.0
 	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/glaslos/tlsh v0.2.0
@@ -140,7 +141,6 @@ require (
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cavaliergopher/cpio v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
-	github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.1-0.20221027171526-76a36be4fa02 // indirect
 	github.com/crewjam/httperr v0.2.0 // indirect
 	github.com/danwakefield/fnmatch v0.0.0-20160403171240-cbb64ac3d964 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect

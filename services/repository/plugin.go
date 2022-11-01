@@ -174,7 +174,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 					_, pres := env.Get(k)
 					if !pres {
-						scope.Log(fmt.Sprintf(
+						child_scope.Log(fmt.Sprintf(
 							"Unknown parameter %s provided to artifact %v",
 							k, strings.Join(self.prefix, ".")))
 						return
@@ -192,14 +192,14 @@ func (self *ArtifactRepositoryPlugin) Call(
 				// Add the scope args
 				child_scope.AppendVars(env)
 
-				ok, err := actions.CheckPreconditions(ctx, scope, request)
+				ok, err := actions.CheckPreconditions(ctx, child_scope, request)
 				if err != nil {
-					scope.Log("While evaluating preconditions: %v", err)
+					child_scope.Log("While evaluating preconditions: %v", err)
 					return
 				}
 
 				if !ok {
-					scope.Log("Skipping query due to preconditions")
+					child_scope.Log("Skipping query due to preconditions")
 					return
 				}
 
@@ -207,7 +207,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 					query_log := actions.QueryLog.AddQuery(query.VQL)
 					vql, err := vfilter.Parse(query.VQL)
 					if err != nil {
-						scope.Log("Artifact %s invalid: %s",
+						child_scope.Log("Artifact %s invalid: %s",
 							strings.Join(self.prefix, "."),
 							err.Error())
 						query_log.Close()
