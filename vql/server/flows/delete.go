@@ -30,14 +30,14 @@ func (self DeleteFlowPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
-			scope.Log("delete_flow: %s", err)
+			scope.Error("delete_flow: %s", err)
 			return
 		}
 
 		arg := &DeleteFlowPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("delete_flow: %v", err)
+			scope.Error("delete_flow: %v", err)
 			return
 		}
 
@@ -49,14 +49,14 @@ func (self DeleteFlowPlugin) Call(
 
 		launcher, err := services.GetLauncher(config_obj)
 		if err != nil {
-			scope.Log("delete_flow: %v", err)
+			scope.Error("delete_flow: %v", err)
 			return
 		}
 
 		responses, err := launcher.DeleteFlow(ctx, config_obj,
 			arg.ClientId, arg.FlowId, arg.ReallyDoIt)
 		if err != nil {
-			scope.Log("delete_flow: %v", err)
+			scope.Error("delete_flow: %v", err)
 			return
 		}
 

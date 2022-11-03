@@ -41,13 +41,13 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 	arg := &InventoryAddFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("inventory_add: %s", err.Error())
+		scope.Error("inventory_add: %s", err.Error())
 		return vfilter.Null{}
 	}
 
 	err = vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
-		scope.Log("inventory_add: %s", err)
+		scope.Error("inventory_add: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -68,13 +68,13 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 	if arg.File != "" {
 		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
-			scope.Log("inventory_add: %s", err)
+			scope.Error("inventory_add: %s", err)
 			return vfilter.Null{}
 		}
 
 		reader, err := accessor.Open(arg.File)
 		if err != nil {
-			scope.Log("inventory_add: %s", err)
+			scope.Error("inventory_add: %s", err)
 			return vfilter.Null{}
 		}
 
@@ -82,7 +82,7 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		file_store_factory := file_store.GetFileStore(config_obj)
 		writer, err := file_store_factory.WriteFile(path_manager.Path())
 		if err != nil {
-			scope.Log("inventory_add: %s", err)
+			scope.Error("inventory_add: %s", err)
 			return vfilter.Null{}
 		}
 		defer writer.Close()
@@ -93,7 +93,7 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 
 		_, err = utils.Copy(ctx, writer, io.TeeReader(reader, sha_sum))
 		if err != nil {
-			scope.Log("inventory_add: %s", err)
+			scope.Error("inventory_add: %s", err)
 			return vfilter.Null{}
 		}
 
@@ -107,7 +107,7 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 
 	inventory, err := services.GetInventory(config_obj)
 	if err != nil {
-		scope.Log("inventory_add: %s", err.Error())
+		scope.Error("inventory_add: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -116,7 +116,7 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 			AdminOverride: true,
 		})
 	if err != nil {
-		scope.Log("inventory_add: %s", err.Error())
+		scope.Error("inventory_add: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -149,13 +149,13 @@ func (self *InventoryGetFunction) Call(ctx context.Context,
 	arg := &InventoryGetFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("inventory_get: %s", err.Error())
+		scope.Error("inventory_get: %s", err.Error())
 		return vfilter.Null{}
 	}
 
 	err = vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
-		scope.Log("inventory_get: %s", err)
+		scope.Error("inventory_get: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -167,13 +167,13 @@ func (self *InventoryGetFunction) Call(ctx context.Context,
 
 	inventory, err := services.GetInventory(config_obj)
 	if err != nil {
-		scope.Log("inventory_get: %s", err.Error())
+		scope.Error("inventory_get: %s", err.Error())
 		return vfilter.Null{}
 	}
 
 	tool, err := inventory.GetToolInfo(ctx, config_obj, arg.Tool)
 	if err != nil {
-		scope.Log("inventory_get: %s", err.Error())
+		scope.Error("inventory_get: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -218,7 +218,7 @@ func (self InventoryPlugin) Call(
 
 		inventory, err := services.GetInventory(config_obj)
 		if err != nil {
-			scope.Log("inventory: %s", err.Error())
+			scope.Error("inventory: %s", err.Error())
 			return
 		}
 

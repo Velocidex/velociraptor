@@ -46,13 +46,13 @@ func (self *EnvFunction) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 	if err != nil {
-		scope.Log("environ: %s", err)
+		scope.Error("environ: %s", err)
 		return false
 	}
 
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("environ: %s", err.Error())
+		scope.Error("environ: %s", err.Error())
 		return false
 	}
 
@@ -80,14 +80,14 @@ func init() {
 
 				err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 				if err != nil {
-					scope.Log("environ: %s", err)
+					scope.Error("environ: %s", err)
 					return result
 				}
 
 				arg := &EnvPluginArgs{}
 				err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 				if err != nil {
-					scope.Log("%s: %s", "environ", err.Error())
+					scope.Error("%s: %s", "environ", err.Error())
 					return result
 				}
 

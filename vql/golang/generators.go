@@ -35,7 +35,7 @@ func (self Generator) Eval(ctx context.Context, scope types.Scope) <-chan types.
 
 		b, err := services.GetBroadcastService(config_obj)
 		if err != nil {
-			scope.Log("generate: %v", err)
+			scope.Error("generate: %v", err)
 			return
 		}
 
@@ -43,7 +43,7 @@ func (self Generator) Eval(ctx context.Context, scope types.Scope) <-chan types.
 			DisableFileBuffering: self.disable_file_buffering,
 		})
 		if err != nil {
-			scope.Log("generate: %v", err)
+			scope.Error("generate: %v", err)
 			return
 		}
 
@@ -78,7 +78,7 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 	arg := &GeneratorArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("generate: %s", err.Error())
+		scope.Error("generate: %s", err.Error())
 		return false
 	}
 
@@ -94,7 +94,7 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 
 	b, err := services.GetBroadcastService(config_obj)
 	if err != nil {
-		scope.Log("generate: %v", err)
+		scope.Error("generate: %v", err)
 		return types.Null{}
 	}
 

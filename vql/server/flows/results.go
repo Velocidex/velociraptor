@@ -1,3 +1,4 @@
+//go:build server_vql
 // +build server_vql
 
 /*
@@ -94,7 +95,7 @@ func (self SourcePlugin) Call(
 
 	err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 	if err != nil {
-		scope.Log("uploads: %s", err)
+		scope.Error("uploads: %s", err)
 		close(output_chan)
 		return output_chan
 	}
@@ -116,7 +117,7 @@ func (self SourcePlugin) Call(
 	// Allow the plugin args to override the environment scope.
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("source: %v", err)
+		scope.Error("source: %v", err)
 		close(output_chan)
 		return output_chan
 	}
@@ -150,14 +151,14 @@ func (self SourcePlugin) Call(
 		// different places.
 		result_set_reader, err := getResultSetReader(ctx, config_obj, arg)
 		if err != nil {
-			scope.Log("source: %v", err)
+			scope.Error("source: %v", err)
 			return
 		}
 
 		if arg.StartRow > 0 {
 			err = result_set_reader.SeekToRow(arg.StartRow)
 			if err != nil {
-				scope.Log("source: %v", err)
+				scope.Error("source: %v", err)
 				return
 			}
 		}
@@ -364,14 +365,14 @@ func (self FlowResultsPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
-			scope.Log("flow_results: %s", err)
+			scope.Error("flow_results: %s", err)
 			return
 		}
 
 		arg := &FlowResultsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("flow_results: %v", err)
+			scope.Error("flow_results: %v", err)
 			return
 		}
 
@@ -386,13 +387,13 @@ func (self FlowResultsPlugin) Call(
 		if arg.Artifact == "" {
 			launcher, err := services.GetLauncher(config_obj)
 			if err != nil {
-				scope.Log("flow_results: %v", err)
+				scope.Error("flow_results: %v", err)
 				return
 			}
 			flow, err := launcher.GetFlowDetails(
 				config_obj, arg.ClientId, arg.FlowId)
 			if err != nil {
-				scope.Log("flow_results: %v", err)
+				scope.Error("flow_results: %v", err)
 				return
 			}
 
@@ -414,7 +415,7 @@ func (self FlowResultsPlugin) Call(
 		path_manager, err := artifact_paths.NewArtifactPathManager(
 			config_obj, arg.ClientId, arg.FlowId, arg.Artifact)
 		if err != nil {
-			scope.Log("source: %v", err)
+			scope.Error("source: %v", err)
 			return
 		}
 
@@ -422,7 +423,7 @@ func (self FlowResultsPlugin) Call(
 		rs_reader, err := result_sets.NewResultSetReader(
 			file_store_factory, path_manager.Path())
 		if err != nil {
-			scope.Log("source: %v", err)
+			scope.Error("source: %v", err)
 			return
 		}
 

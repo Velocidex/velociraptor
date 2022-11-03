@@ -30,14 +30,14 @@ func (self FlowLogsPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
-			scope.Log("flow_logs: %s", err)
+			scope.Error("flow_logs: %s", err)
 			return
 		}
 
 		arg := &FlowLogsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("flow_logs: %v", err)
+			scope.Error("flow_logs: %v", err)
 			return
 		}
 
@@ -52,7 +52,7 @@ func (self FlowLogsPlugin) Call(
 		rs_reader, err := result_sets.NewResultSetReader(
 			file_store_factory, path_manager.Log())
 		if err != nil {
-			scope.Log("flow_logs: %v", err)
+			scope.Error("flow_logs: %v", err)
 			return
 		}
 

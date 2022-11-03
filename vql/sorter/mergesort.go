@@ -305,19 +305,19 @@ func newDataFile(scope types.Scope, items []types.Row, key string) *dataFile {
 
 	tmpfile, err := ioutil.TempFile("", "vql")
 	if err != nil {
-		scope.Log("Unable to create tempfile: %v", err)
+		scope.Error("Unable to create tempfile: %v", err)
 		return result
 	}
 
 	// Serialize all the rows into the file.
 	serialized, err := json.MarshalJsonl(items)
 	if err != nil {
-		scope.Log("Unable to serialize: %v", err)
+		scope.Error("Unable to serialize: %v", err)
 		return result
 	}
 	_, err = tmpfile.Write(serialized)
 	if err != nil {
-		scope.Log("Unable to serialize: %v", err)
+		scope.Error("Unable to serialize: %v", err)
 		return result
 	}
 	tmpfile.Close()
@@ -325,7 +325,7 @@ func newDataFile(scope types.Scope, items []types.Row, key string) *dataFile {
 	// Reopen the file for reading.
 	fd, err := os.Open(tmpfile.Name())
 	if err != nil {
-		scope.Log("Unable to open file: %v", err)
+		scope.Error("Unable to open file: %v", err)
 		return result
 	}
 

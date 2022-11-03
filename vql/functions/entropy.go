@@ -39,7 +39,7 @@ func (self *Entropy) Call(ctx context.Context,
 	arg := &entropy_args{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("entropy: %s", err.Error())
+		scope.Error("entropy: %s", err.Error())
 		return false
 	}
 	return float64(shannon(arg.String))

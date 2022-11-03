@@ -31,14 +31,14 @@ func (self *RekeyFunction) Call(ctx context.Context,
 	arg := &RekeyFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("rekey: %v", err)
+		scope.Error("rekey: %v", err)
 		return vfilter.Null{}
 	}
 
 	// This is a privileged operation
 	err = vql_subsystem.CheckAccess(scope, acls.EXECVE)
 	if err != nil {
-		scope.Log("rekey: %v", err)
+		scope.Error("rekey: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -51,19 +51,19 @@ func (self *RekeyFunction) Call(ctx context.Context,
 
 	writeback, err := config.GetWriteback(config_obj)
 	if err != nil {
-		scope.Log("rekey: %v", err)
+		scope.Error("rekey: %v", err)
 		return vfilter.Null{}
 	}
 
 	pem, err := crypto_utils.GeneratePrivateKey()
 	if err != nil {
-		scope.Log("rekey: %v", err)
+		scope.Error("rekey: %v", err)
 		return vfilter.Null{}
 	}
 
 	private_key, err := crypto_utils.ParseRsaPrivateKeyFromPemStr(pem)
 	if err != nil {
-		scope.Log("rekey: %v", err)
+		scope.Error("rekey: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -71,7 +71,7 @@ func (self *RekeyFunction) Call(ctx context.Context,
 	writeback.PrivateKey = string(pem)
 	err = config.UpdateWriteback(config_obj, writeback)
 	if err != nil {
-		scope.Log("rekey: %v", err)
+		scope.Error("rekey: %v", err)
 		return vfilter.Null{}
 	}
 

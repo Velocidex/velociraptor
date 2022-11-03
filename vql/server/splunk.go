@@ -137,7 +137,7 @@ func _upload_rows(
 	if config_obj != nil {
 		err := crypto.AddDefaultCerts(config_obj, CA_Pool)
 		if err != nil {
-			scope.Log("splunk_upload: %v", err)
+			scope.Error("splunk_upload: %v", err)
 			return
 		}
 	}

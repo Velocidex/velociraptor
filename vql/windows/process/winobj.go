@@ -1,3 +1,4 @@
+//go:build windows && amd64
 // +build windows,amd64
 
 // References
@@ -43,7 +44,7 @@ func (self WinObjPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {
-			scope.Log("proc_dump: %s", err)
+			scope.Error("proc_dump: %s", err)
 			return
 		}
 
@@ -58,7 +59,7 @@ func (self WinObjPlugin) Call(
 		arg := &WinObjPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("winobj: %s", err.Error())
+			scope.Error("winobj: %s", err.Error())
 			return
 		}
 

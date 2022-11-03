@@ -206,20 +206,20 @@ func runWMIQuery(
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 	if err != nil {
-		scope.Log("wmi: %v", err)
+		scope.Error("wmi: %v", err)
 		return result
 	}
 
 	arg := &WMIQueryArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("wmi: %v", err)
+		scope.Error("wmi: %v", err)
 		return result
 	}
 
 	query_result, err := Query(arg.Query, arg.Namespace)
 	if err != nil {
-		scope.Log("wmi: %v", err)
+		scope.Error("wmi: %v", err)
 		return result
 	}
 	for _, item := range query_result {

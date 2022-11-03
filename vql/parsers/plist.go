@@ -49,25 +49,25 @@ func (self *PlistFunction) Call(ctx context.Context,
 	arg := &_PlistFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("plist: %s", err.Error())
+		scope.Error("plist: %s", err.Error())
 		return vfilter.Null{}
 	}
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("plist: %s", err)
+		scope.Error("plist: %s", err)
 		return
 	}
 
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
-		scope.Log("plist: %v", err)
+		scope.Error("plist: %v", err)
 		return vfilter.Null{}
 	}
 
 	file, err := accessor.Open(arg.Filename)
 	if err != nil {
-		scope.Log("plist: %v", err)
+		scope.Error("plist: %v", err)
 		return vfilter.Null{}
 	}
 	defer file.Close()
@@ -76,14 +76,14 @@ func (self *PlistFunction) Call(ctx context.Context,
 	dec := plist.NewDecoder(file)
 	err = dec.Decode(&val)
 	if err != nil {
-		scope.Log("plist: %v", err)
+		scope.Error("plist: %v", err)
 		return vfilter.Null{}
 	}
 
 	// Force the results into dicts
 	serialized, err := json.Marshal(val)
 	if err != nil {
-		scope.Log("plist: %v", err)
+		scope.Error("plist: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -129,13 +129,13 @@ func (self _PlistPlugin) Call(
 		arg := &_PlistPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("plist: %s", err.Error())
+			scope.Error("plist: %s", err.Error())
 			return
 		}
 
 		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
-			scope.Log("plist: %s", err)
+			scope.Error("plist: %s", err)
 			return
 		}
 
@@ -145,13 +145,13 @@ func (self _PlistPlugin) Call(
 
 				accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 				if err != nil {
-					scope.Log("plist: %v", err)
+					scope.Error("plist: %v", err)
 					return
 				}
 
 				file, err := accessor.Open(filename)
 				if err != nil {
-					scope.Log("Unable to open file %s: %v",
+					scope.Error("Unable to open file %s: %v",
 						filename, err)
 					return
 				}
@@ -162,7 +162,7 @@ func (self _PlistPlugin) Call(
 				dec := plist.NewDecoder(file)
 				err = dec.Decode(&val)
 				if err != nil {
-					scope.Log("plist: Unable to parse file %s: %v",
+					scope.Error("plist: Unable to parse file %s: %v",
 						filename, err)
 				}
 

@@ -36,13 +36,13 @@ func (self *NetcatPlugin) Call(
 		arg := &NetcatPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("netcat: %s", err)
+			scope.Error("netcat: %s", err)
 			return
 		}
 
 		err = vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
 		if err != nil {
-			scope.Log("netcat: %s", err)
+			scope.Error("netcat: %s", err)
 			return
 		}
 
@@ -75,7 +75,7 @@ func (self NetcatPlugin) connectOnce(
 	var d net.Dialer
 	conn, err := d.DialContext(ctx, socket_type, arg.Address)
 	if err != nil {
-		scope.Log("netcat: %s", err)
+		scope.Error("netcat: %s", err)
 		return
 	}
 	defer conn.Close()
@@ -84,7 +84,7 @@ func (self NetcatPlugin) connectOnce(
 		go func() {
 			_, err := conn.Write([]byte(arg.Send))
 			if err != nil {
-				scope.Log("netcat: %s", err)
+				scope.Error("netcat: %s", err)
 			}
 		}()
 	}

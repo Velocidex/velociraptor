@@ -1,3 +1,4 @@
+//go:build server_vql
 // +build server_vql
 
 /*
@@ -45,13 +46,13 @@ func (self *AddLabels) Call(ctx context.Context,
 	arg := &AddLabelsArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("label: %s", err.Error())
+		scope.Error("label: %s", err.Error())
 		return vfilter.Null{}
 	}
 
 	err = vql_subsystem.CheckAccess(scope, acls.LABEL_CLIENT)
 	if err != nil {
-		scope.Log("label: %s", err)
+		scope.Error("label: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -80,7 +81,7 @@ func (self *AddLabels) Call(ctx context.Context,
 			}
 		}
 		if err != nil {
-			scope.Log("label: %s", err.Error())
+			scope.Error("label: %s", err.Error())
 			return vfilter.Null{}
 		}
 	}

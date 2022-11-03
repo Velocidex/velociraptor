@@ -1,3 +1,4 @@
+//go:build windows && cgo
 // +build windows,cgo
 
 /*
@@ -55,7 +56,7 @@ func (self ProcDumpPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {
-			scope.Log("proc_dump: %s", err)
+			scope.Error("proc_dump: %s", err)
 			return
 		}
 
@@ -64,13 +65,13 @@ func (self ProcDumpPlugin) Call(
 
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("proc_dump: %s", err.Error())
+			scope.Error("proc_dump: %s", err.Error())
 			return
 		}
 
 		tmpfile, err := ioutil.TempFile(os.TempDir(), "dmp")
 		if err != nil {
-			scope.Log("proc_dump: %s", err.Error())
+			scope.Error("proc_dump: %s", err.Error())
 			return
 		}
 

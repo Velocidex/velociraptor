@@ -53,13 +53,13 @@ func (self *CreateFlowDownload) Call(ctx context.Context,
 	arg := &CreateFlowDownloadArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("create_flow_download: %s", err.Error())
+		scope.Error("create_flow_download: %s", err.Error())
 		return vfilter.Null{}
 	}
 
 	err = vql_subsystem.CheckAccess(scope, acls.PREPARE_RESULTS)
 	if err != nil {
-		scope.Log("create_flow_download: %s", err)
+		scope.Error("create_flow_download: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -71,7 +71,7 @@ func (self *CreateFlowDownload) Call(ctx context.Context,
 
 	format, err := reporting.GetContainerFormat(arg.Format)
 	if err != nil {
-		scope.Log("create_flow_download: %v", err)
+		scope.Error("create_flow_download: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -80,7 +80,7 @@ func (self *CreateFlowDownload) Call(ctx context.Context,
 		arg.FlowId, arg.ClientId, arg.Password,
 		arg.ExpandSparse, arg.Name, arg.Wait)
 	if err != nil {
-		scope.Log("create_flow_download: %s", err)
+		scope.Error("create_flow_download: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -114,13 +114,13 @@ func (self *CreateHuntDownload) Call(ctx context.Context,
 	arg := &CreateHuntDownloadArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("create_hunt_download: %s", err.Error())
+		scope.Error("create_hunt_download: %s", err.Error())
 		return vfilter.Null{}
 	}
 
 	err = vql_subsystem.CheckAccess(scope, acls.PREPARE_RESULTS)
 	if err != nil {
-		scope.Log("create_hunt_download: %s", err)
+		scope.Error("create_hunt_download: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -132,7 +132,7 @@ func (self *CreateHuntDownload) Call(ctx context.Context,
 
 	format, err := reporting.GetContainerFormat(arg.Format)
 	if err != nil {
-		scope.Log("create_hunt_download: %v", err)
+		scope.Error("create_hunt_download: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -141,7 +141,7 @@ func (self *CreateHuntDownload) Call(ctx context.Context,
 		format, arg.ExpandSparse,
 		arg.Wait, arg.OnlyCombined, arg.Filename, arg.Password)
 	if err != nil {
-		scope.Log("create_hunt_download: %s", err)
+		scope.Error("create_hunt_download: %s", err)
 		return vfilter.Null{}
 	}
 

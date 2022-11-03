@@ -102,7 +102,7 @@ func (self *EventLogWatcherService) StartMonitoring(
 	resolver, _ := evtx.GetNativeResolver()
 	accessor, err := accessors.GetAccessor(accessor_name, scope)
 	if err != nil {
-		scope.Log("Registering watcher error: %v", err)
+		scope.Error("Registering watcher error: %v", err)
 		return
 	}
 
@@ -133,14 +133,14 @@ func (self *EventLogWatcherService) findLastEvent(
 
 	fd, err := accessor.Open(filename)
 	if err != nil {
-		scope.Log("findLastEvent Open error: %v", err)
+		scope.Error("findLastEvent Open error: %v", err)
 		return 0
 	}
 	defer fd.Close()
 
 	chunks, err := evtx.GetChunks(fd)
 	if err != nil {
-		scope.Log("findLastEvent GetChunks error: %v", err)
+		scope.Error("findLastEvent GetChunks error: %v", err)
 		return 0
 	}
 

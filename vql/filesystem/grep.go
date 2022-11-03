@@ -1,3 +1,4 @@
+//go:build deprecated
 // +build deprecated
 
 /*
@@ -57,7 +58,7 @@ func (self *GrepFunction) Call(ctx context.Context,
 	arg := &GrepFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("grep: %s", err.Error())
+		scope.Error("grep: %s", err.Error())
 		return false
 	}
 
@@ -81,19 +82,19 @@ func (self *GrepFunction) Call(ctx context.Context,
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("grep: %s", err.Error())
+		scope.Error("grep: %s", err.Error())
 		return false
 	}
 
 	fs, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
-		scope.Log(err.Error())
+		scope.Error(err.Error())
 		return false
 	}
 
 	file, err := fs.Open(arg.Path)
 	if err != nil {
-		scope.Log(err.Error())
+		scope.Error(err.Error())
 		return false
 	}
 	defer file.Close()
@@ -111,7 +112,7 @@ func (self *GrepFunction) Call(ctx context.Context,
 				return hits
 
 			} else if err != nil {
-				scope.Log(err.Error())
+				scope.Error(err.Error())
 				return false
 			}
 

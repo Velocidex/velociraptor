@@ -90,7 +90,7 @@ func (self SQLPlugin) Call(
 		arg := &SQLPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("sql: %v", err)
+			scope.Error("sql: %v", err)
 			return
 		}
 
@@ -108,20 +108,20 @@ func (self SQLPlugin) Call(
 		case "sqlite":
 			err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 			if err != nil {
-				scope.Log("sql: %s", err)
+				scope.Error("sql: %s", err)
 				return
 			}
 
 			handle, err = GetHandleSqlite(ctx, arg, scope)
 			if err != nil {
-				scope.Log("sql: %s", err)
+				scope.Error("sql: %s", err)
 				return
 			}
 
 		case "mysql", "postgres":
 			handle, err = self.GetHandleOther(scope, arg.ConnString, arg.Driver)
 			if err != nil {
-				scope.Log("sql: %s", err)
+				scope.Error("sql: %s", err)
 				return
 			}
 		}
@@ -145,19 +145,19 @@ func (self SQLPlugin) Call(
 		}
 		rows, err := handle.Queryx(query, query_parameters...)
 		if err != nil {
-			scope.Log("sql: %v", err)
+			scope.Error("sql: %v", err)
 			return
 		}
 		defer rows.Close()
 		columns, err := rows.Columns()
 		if err != nil {
-			scope.Log("sql: %s", err)
+			scope.Error("sql: %s", err)
 		}
 		for rows.Next() {
 			row := ordereddict.NewDict()
 			values, err := rows.SliceScan()
 			if err != nil {
-				scope.Log("sql: %v", err)
+				scope.Error("sql: %v", err)
 				return
 			}
 

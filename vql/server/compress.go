@@ -44,20 +44,20 @@ func (self *Compress) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 	if err != nil {
-		scope.Log("compress: %v", err)
+		scope.Error("compress: %v", err)
 		return vfilter.Null{}
 	}
 
 	arg := &CompressArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("compress: %s", err.Error())
+		scope.Error("compress: %s", err.Error())
 		return vfilter.Null{}
 	}
 
 	fd, err := os.Open(arg.Path)
 	if err != nil {
-		scope.Log("compress: %v", err)
+		scope.Error("compress: %v", err)
 		return vfilter.Null{}
 	}
 	defer fd.Close()
@@ -65,7 +65,7 @@ func (self *Compress) Call(ctx context.Context,
 	out_fd, err := os.OpenFile(arg.Output,
 		os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0660)
 	if err != nil {
-		scope.Log("compress: %v", err)
+		scope.Error("compress: %v", err)
 		return vfilter.Null{}
 	}
 	defer out_fd.Close()
@@ -77,7 +77,7 @@ func (self *Compress) Call(ctx context.Context,
 
 	_, err = utils.Copy(ctx, zw, fd)
 	if err != nil {
-		scope.Log("compress: %v", err)
+		scope.Error("compress: %v", err)
 		err2 := os.Remove(arg.Output)
 		if err2 != nil {
 			scope.Log("compress: cleaning up %v (%v)", err2, err)

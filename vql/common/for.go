@@ -29,7 +29,7 @@ func (self ForPlugin) Call(
 		arg := &ForPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("for: %v", err)
+			scope.Error("for: %v", err)
 			return
 		}
 

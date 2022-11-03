@@ -25,7 +25,7 @@ func (self *RmFavorite) Call(ctx context.Context,
 	arg := &RmFavoriteArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("favorites_delete: %v", err)
+		scope.Error("favorites_delete: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -39,7 +39,7 @@ func (self *RmFavorite) Call(ctx context.Context,
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		scope.Log("favorites_delete: %s", err)
+		scope.Error("favorites_delete: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -53,7 +53,7 @@ func (self *RmFavorite) Call(ctx context.Context,
 	err = db.DeleteSubject(config_obj,
 		path_manager.Favorites(arg.Name, arg.Type))
 	if err != nil {
-		scope.Log("favorites_delete: %s", err)
+		scope.Error("favorites_delete: %s", err)
 		return vfilter.Null{}
 	}
 	return vfilter.Null{}

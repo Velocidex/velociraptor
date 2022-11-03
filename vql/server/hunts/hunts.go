@@ -1,3 +1,4 @@
+//go:build server_vql
 // +build server_vql
 
 /*
@@ -57,14 +58,14 @@ func (self HuntsPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
-			scope.Log("hunts: %s", err)
+			scope.Error("hunts: %s", err)
 			return
 		}
 
 		arg := &HuntsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("hunts: %v", err)
+			scope.Error("hunts: %v", err)
 			return
 		}
 
@@ -81,7 +82,7 @@ func (self HuntsPlugin) Call(
 
 		hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
 		if err != nil {
-			scope.Log("hunts: %v", err)
+			scope.Error("hunts: %v", err)
 			return
 		}
 
@@ -105,7 +106,7 @@ func (self HuntsPlugin) Call(
 				Offset: arg.Offset,
 			})
 		if err != nil {
-			scope.Log("hunts: %v", err)
+			scope.Error("hunts: %v", err)
 			return
 		}
 
@@ -149,14 +150,14 @@ func (self HuntResultsPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
-			scope.Log("hunt_results: %s", err)
+			scope.Error("hunt_results: %s", err)
 			return
 		}
 
 		arg := &HuntResultsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("hunt_results: %v", err)
+			scope.Error("hunt_results: %v", err)
 			return
 		}
 
@@ -171,7 +172,7 @@ func (self HuntResultsPlugin) Call(
 		if arg.Artifact == "" {
 			hunt_dispatcher_service, err := services.GetHuntDispatcher(config_obj)
 			if err != nil {
-				scope.Log("hunt_results: %v", err)
+				scope.Error("hunt_results: %v", err)
 				return
 			}
 
@@ -197,7 +198,7 @@ func (self HuntResultsPlugin) Call(
 			if arg.Source == "" {
 				manager, err := services.GetRepositoryManager(config_obj)
 				if err != nil {
-					scope.Log("hunt_results: %v", err)
+					scope.Error("hunt_results: %v", err)
 					return
 				}
 				repo, err := manager.GetGlobalRepository(config_obj)
@@ -234,7 +235,7 @@ func (self HuntResultsPlugin) Call(
 			api_client, err := indexer.FastGetApiClient(ctx,
 				config_obj, flow_details.Context.ClientId)
 			if err != nil {
-				scope.Log("hunt_results: %v", err)
+				scope.Error("hunt_results: %v", err)
 				continue
 			}
 
@@ -304,14 +305,14 @@ func (self HuntFlowsPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
-			scope.Log("hunt_flows: %s", err)
+			scope.Error("hunt_flows: %s", err)
 			return
 		}
 
 		arg := &HuntFlowsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("hunt_flows: %v", err)
+			scope.Error("hunt_flows: %v", err)
 			return
 		}
 
@@ -323,7 +324,7 @@ func (self HuntFlowsPlugin) Call(
 
 		hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
 		if err != nil {
-			scope.Log("hunt_flows: %v", err)
+			scope.Error("hunt_flows: %v", err)
 			return
 		}
 

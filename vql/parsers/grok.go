@@ -34,7 +34,7 @@ func (self GrokParseFunction) Call(
 	arg := &GrokParseFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("grok: %v", err)
+		scope.Error("grok: %v", err)
 		return &vfilter.Null{}
 	}
 
@@ -46,7 +46,7 @@ func (self GrokParseFunction) Call(
 			NamedCapturesOnly: !arg.AllCaptures,
 		})
 		if err != nil {
-			scope.Log("grok: %v", err)
+			scope.Error("grok: %v", err)
 			return &vfilter.Null{}
 		}
 
@@ -57,7 +57,7 @@ func (self GrokParseFunction) Call(
 				if ok {
 					err = grok_parser.AddPattern(k, pattern)
 					if err != nil {
-						scope.Log("grok: %v", err)
+						scope.Error("grok: %v", err)
 						return &vfilter.Null{}
 					}
 				}

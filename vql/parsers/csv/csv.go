@@ -55,13 +55,13 @@ func (self ParseCSVPlugin) Call(
 		arg := &ParseCSVPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("parse_csv: %s", err.Error())
+			scope.Error("parse_csv: %s", err.Error())
 			return
 		}
 
 		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
-			scope.Log("parse_csv: %s", err)
+			scope.Error("parse_csv: %s", err)
 			return
 		}
 
@@ -69,12 +69,12 @@ func (self ParseCSVPlugin) Call(
 			func() {
 				accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 				if err != nil {
-					scope.Log("parse_csv: %v", err)
+					scope.Error("parse_csv: %v", err)
 					return
 				}
 				fd, err := accessor.Open(filename)
 				if err != nil {
-					scope.Log("Unable to open file %s: %v",
+					scope.Error("Unable to open file %s: %v",
 						filename, err)
 					return
 				}
@@ -176,13 +176,13 @@ func (self _WatchCSVPlugin) Call(
 		arg := &ParseCSVPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("watch_csv: %s", err.Error())
+			scope.Error("watch_csv: %s", err.Error())
 			return
 		}
 
 		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
-			scope.Log("watch_csv: %s", err)
+			scope.Error("watch_csv: %s", err)
 			return
 		}
 
@@ -239,7 +239,7 @@ func (self WriteCSVPlugin) Call(
 		arg := &WriteCSVPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("write_csv: %s", err.Error())
+			scope.Error("write_csv: %s", err.Error())
 			return
 		}
 
@@ -249,14 +249,14 @@ func (self WriteCSVPlugin) Call(
 		case "", "auto", "file":
 			err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 			if err != nil {
-				scope.Log("write_csv: %s", err)
+				scope.Error("write_csv: %s", err)
 				return
 			}
 
 			file, err := os.OpenFile(arg.Filename,
 				os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
 			if err != nil {
-				scope.Log("write_csv: Unable to open file %s: %s",
+				scope.Error("write_csv: Unable to open file %s: %s",
 					arg.Filename, err.Error())
 				return
 			}

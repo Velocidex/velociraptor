@@ -33,14 +33,14 @@ func (self *KillClientFunction) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 	if err != nil {
-		scope.Log("killkillkill: %s", err)
+		scope.Error("killkillkill: %s", err)
 		return vfilter.Null{}
 	}
 
 	arg := &KillClientFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("killkillkill: %s", err.Error())
+		scope.Error("killkillkill: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -54,7 +54,7 @@ func (self *KillClientFunction) Call(ctx context.Context,
 	// id.
 	client_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
-		scope.Log("killkillkill: %s", err.Error())
+		scope.Error("killkillkill: %s", err.Error())
 		return vfilter.Null{}
 	}
 	err = client_manager.QueueMessageForClient(ctx, arg.ClientId,
@@ -63,7 +63,7 @@ func (self *KillClientFunction) Call(ctx context.Context,
 			SessionId:    constants.MONITORING_WELL_KNOWN_FLOW,
 		}, true, nil)
 	if err != nil {
-		scope.Log("killkillkill: %s", err.Error())
+		scope.Error("killkillkill: %s", err.Error())
 		return vfilter.Null{}
 	}
 

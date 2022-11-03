@@ -1,3 +1,4 @@
+//go:build windows && amd64
 // +build windows,amd64
 
 package process
@@ -28,21 +29,21 @@ func (self TokenFunction) Call(
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 	if err != nil {
-		scope.Log("token: %s", err)
+		scope.Error("token: %s", err)
 		return vfilter.Null{}
 	}
 
 	arg := &TokenArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("token: %s", err.Error())
+		scope.Error("token: %s", err.Error())
 		return vfilter.Null{}
 	}
 	handle, err := windows.OpenProcess(
 		syscall.PROCESS_QUERY_INFORMATION, false, uint32(arg.Pid))
 
 	if err != nil {
-		scope.Log("token: %s", err.Error())
+		scope.Error("token: %s", err.Error())
 		return vfilter.Null{}
 	}
 	defer windows.CloseHandle(handle)
@@ -52,7 +53,7 @@ func (self TokenFunction) Call(
 	// Find process token via win32
 	err = windows.OpenProcessToken(handle, syscall.TOKEN_QUERY, &token)
 	if err != nil {
-		scope.Log("token: %s", err.Error())
+		scope.Error("token: %s", err.Error())
 		return vfilter.Null{}
 	}
 	defer token.Close()
@@ -60,7 +61,7 @@ func (self TokenFunction) Call(
 	// Find the token user
 	tokenUser, err := token.GetTokenUser()
 	if err != nil {
-		scope.Log("token: %s", err.Error())
+		scope.Error("token: %s", err.Error())
 		return vfilter.Null{}
 	}
 

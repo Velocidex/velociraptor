@@ -68,13 +68,13 @@ func (self _SRUMLookupId) Call(
 	arg := &_SRUMLookupIdArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("srum_lookup_id: %v", err)
+		scope.Error("srum_lookup_id: %v", err)
 		return &vfilter.Null{}
 	}
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("srum_lookup_id: %s", err)
+		scope.Error("srum_lookup_id: %s", err)
 		return &vfilter.Null{}
 	}
 
@@ -86,12 +86,12 @@ func (self _SRUMLookupId) Call(
 
 		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
-			scope.Log("srum_lookup_id: %v", err)
+			scope.Error("srum_lookup_id: %v", err)
 			return &vfilter.Null{}
 		}
 		fd, err := accessor.Open(arg.Filename)
 		if err != nil {
-			scope.Log("parse_ese: Unable to open file %s: %v",
+			scope.Error("parse_ese: Unable to open file %s: %v",
 				arg.Filename, err)
 			return &vfilter.Null{}
 		}
@@ -100,21 +100,21 @@ func (self _SRUMLookupId) Call(
 		reader, err := ntfs.NewPagedReader(
 			utils.MakeReaderAtter(fd), 1024, 10000)
 		if err != nil {
-			scope.Log("parse_ese: Unable to open file %s: %v",
+			scope.Error("parse_ese: Unable to open file %s: %v",
 				arg.Filename, err)
 			return &vfilter.Null{}
 		}
 
 		ese_ctx, err := parser.NewESEContext(reader)
 		if err != nil {
-			scope.Log("parse_ese: Unable to open file %s: %v",
+			scope.Error("parse_ese: Unable to open file %s: %v",
 				arg.Filename, err)
 			return &vfilter.Null{}
 		}
 
 		catalog, err := parser.ReadCatalog(ese_ctx)
 		if err != nil {
-			scope.Log("parse_ese: Unable to open file %s: %v",
+			scope.Error("parse_ese: Unable to open file %s: %v",
 				arg.Filename, err)
 			return &vfilter.Null{}
 		}
@@ -138,7 +138,7 @@ func (self _SRUMLookupId) Call(
 			return nil
 		})
 		if err != nil {
-			scope.Log("parse_ese: Unable to open file %s: %v",
+			scope.Error("parse_ese: Unable to open file %s: %v",
 				arg.Filename, err)
 			return &vfilter.Null{}
 		}
@@ -197,7 +197,7 @@ func (self _ESEPlugin) Call(
 		arg := &_ESEArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("parse_ese: %v", err)
+			scope.Error("parse_ese: %v", err)
 			return
 		}
 
@@ -207,18 +207,18 @@ func (self _ESEPlugin) Call(
 
 		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
-			scope.Log("parse_ese: %s", err)
+			scope.Error("parse_ese: %s", err)
 			return
 		}
 
 		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
-			scope.Log("parse_ese: %v", err)
+			scope.Error("parse_ese: %v", err)
 			return
 		}
 		fd, err := accessor.Open(arg.Filename)
 		if err != nil {
-			scope.Log("parse_ese: Unable to open file %s: %v",
+			scope.Error("parse_ese: Unable to open file %s: %v",
 				arg.Filename, err)
 			return
 		}
@@ -227,21 +227,21 @@ func (self _ESEPlugin) Call(
 		reader, err := ntfs.NewPagedReader(
 			utils.MakeReaderAtter(fd), 1024, 10000)
 		if err != nil {
-			scope.Log("parse_ese: Unable to open file %s: %v",
+			scope.Error("parse_ese: Unable to open file %s: %v",
 				arg.Filename, err)
 			return
 		}
 
 		ese_ctx, err := parser.NewESEContext(reader)
 		if err != nil {
-			scope.Log("parse_ese: Unable to open file %s: %v",
+			scope.Error("parse_ese: Unable to open file %s: %v",
 				arg.Filename, err)
 			return
 		}
 
 		catalog, err := parser.ReadCatalog(ese_ctx)
 		if err != nil {
-			scope.Log("parse_ese: Unable to open file %s: %v",
+			scope.Error("parse_ese: Unable to open file %s: %v",
 				arg.Filename, err)
 			return
 		}
@@ -259,7 +259,7 @@ func (self _ESEPlugin) Call(
 		}
 
 		if err != nil {
-			scope.Log("parse_ese: Unable to dump file %s: %v",
+			scope.Error("parse_ese: Unable to dump file %s: %v",
 				arg.Filename, err)
 			return
 		}
@@ -295,7 +295,7 @@ func (self _ESECatalogPlugin) Call(
 		arg := &_ESECatalogArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("parse_ese_catalog: %v", err)
+			scope.Error("parse_ese_catalog: %v", err)
 			return
 		}
 
@@ -305,18 +305,18 @@ func (self _ESECatalogPlugin) Call(
 
 		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
-			scope.Log("parse_ese_catalog: %s", err)
+			scope.Error("parse_ese_catalog: %s", err)
 			return
 		}
 
 		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
-			scope.Log("parse_ese_catalog: %v", err)
+			scope.Error("parse_ese_catalog: %v", err)
 			return
 		}
 		fd, err := accessor.Open(arg.Filename)
 		if err != nil {
-			scope.Log("parse_ese_catalog: Unable to open file %s: %v",
+			scope.Error("parse_ese_catalog: Unable to open file %s: %v",
 				arg.Filename, err)
 			return
 		}
@@ -325,21 +325,21 @@ func (self _ESECatalogPlugin) Call(
 		reader, err := ntfs.NewPagedReader(
 			utils.MakeReaderAtter(fd), 1024, 10000)
 		if err != nil {
-			scope.Log("parse_ese_catalog: Unable to open file %s: %v",
+			scope.Error("parse_ese_catalog: Unable to open file %s: %v",
 				arg.Filename, err)
 			return
 		}
 
 		ese_ctx, err := parser.NewESEContext(reader)
 		if err != nil {
-			scope.Log("parse_ese_catalog: Unable to open file %s: %v",
+			scope.Error("parse_ese_catalog: Unable to open file %s: %v",
 				arg.Filename, err)
 			return
 		}
 
 		catalog, err := parser.ReadCatalog(ese_ctx)
 		if err != nil {
-			scope.Log("parse_ese_catalog: Unable to open file %s: %v",
+			scope.Error("parse_ese_catalog: Unable to open file %s: %v",
 				arg.Filename, err)
 			return
 		}

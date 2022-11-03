@@ -27,14 +27,14 @@ func (self RemappingFunc) Call(ctx context.Context,
 	arg := &RemappingArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("remap: %s", err.Error())
+		scope.Error("remap: %s", err.Error())
 		return false
 	}
 
 	config_obj := &config_proto.Config{}
 	err = yaml.UnmarshalStrict([]byte(arg.Configuration), config_obj)
 	if err != nil {
-		scope.Log("remap: %v", err)
+		scope.Error("remap: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -51,7 +51,7 @@ func (self RemappingFunc) Call(ctx context.Context,
 	for _, cp := range arg.Copy {
 		accessor, err := global_device_manager.GetAccessor(cp, scope)
 		if err != nil {
-			scope.Log("remap: %v", err)
+			scope.Error("remap: %v", err)
 			return vfilter.Null{}
 		}
 
@@ -67,7 +67,7 @@ func (self RemappingFunc) Call(ctx context.Context,
 	err = ApplyRemappingOnScope(ctx, config_obj, pristine_scope, scope, manager,
 		ordereddict.NewDict(), remapping_config)
 	if err != nil {
-		scope.Log("remap: %v", err)
+		scope.Error("remap: %v", err)
 		return vfilter.Null{}
 	}
 

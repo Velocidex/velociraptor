@@ -30,7 +30,7 @@ func (self *AddFavorite) Call(ctx context.Context,
 	arg := &AddFavoriteArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("favorites_save: %s", err.Error())
+		scope.Error("favorites_save: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -46,13 +46,13 @@ func (self *AddFavorite) Call(ctx context.Context,
 	value := arg.Specs.Reduce(ctx)
 	specs, err := validateSpec(ctx, scope, value)
 	if err != nil {
-		scope.Log("favorites_save: %s", err)
+		scope.Error("favorites_save: %s", err)
 		return vfilter.Null{}
 	}
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		scope.Log("favorites_save: %s", err)
+		scope.Error("favorites_save: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -72,7 +72,7 @@ func (self *AddFavorite) Call(ctx context.Context,
 	err = db.SetSubject(config_obj,
 		path_manager.Favorites(arg.Name, arg.Type), fav)
 	if err != nil {
-		scope.Log("favorites_save: %s", err)
+		scope.Error("favorites_save: %s", err)
 		return vfilter.Null{}
 	}
 	return vfilter.Null{}

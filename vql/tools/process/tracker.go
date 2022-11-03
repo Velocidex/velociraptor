@@ -263,7 +263,7 @@ func (self *ProcessTracker) doUpdateQuery(
 				vfilter.RowToDict(ctx, scope, row),
 				update)
 			if err != nil {
-				scope.Log("tracker update query error: %v\n", err)
+				scope.Error("tracker update query error: %v\n", err)
 				continue
 			}
 			switch update.UpdateType {
@@ -427,7 +427,7 @@ func (self _InstallProcessTracker) Call(ctx context.Context,
 
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("process_tracker: %v", err)
+		scope.Error("process_tracker: %v", err)
 		return false
 	}
 
@@ -446,7 +446,7 @@ func (self _InstallProcessTracker) Call(ctx context.Context,
 	for _, enrichment := range arg.Enrichments {
 		lambda, err := vfilter.ParseLambda(enrichment)
 		if err != nil {
-			scope.Log("process_tracker: while parsing enrichment %v: %v",
+			scope.Error("process_tracker: while parsing enrichment %v: %v",
 				enrichment, err)
 			return false
 		}
@@ -460,7 +460,7 @@ func (self _InstallProcessTracker) Call(ctx context.Context,
 		// Do the first sync inline so we are all ready when we return.
 		err = tracker.doFullSync(ctx, scope, sync_duration, arg.SyncQuery)
 		if err != nil {
-			scope.Log("process_tracker: %v", err)
+			scope.Error("process_tracker: %v", err)
 			return false
 		}
 

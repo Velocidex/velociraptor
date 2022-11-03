@@ -25,7 +25,7 @@ func (self *TLSHashFunction) Call(ctx context.Context,
 	arg := &HashFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("tlsh_hash: %v", err)
+		scope.Error("tlsh_hash: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -34,13 +34,13 @@ func (self *TLSHashFunction) Call(ctx context.Context,
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("tlsh_hash: %s", err)
+		scope.Error("tlsh_hash: %s", err)
 		return vfilter.Null{}
 	}
 
 	fs, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
-		scope.Log("tlsh_hash: %v", err)
+		scope.Error("tlsh_hash: %v", err)
 		return vfilter.Null{}
 	}
 

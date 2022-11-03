@@ -112,7 +112,7 @@ func GetHandleSqlite(ctx context.Context,
 				parts := strings.Split(filename, "?")
 				filename, err = _MakeTempfile(ctx, arg, parts[0], scope)
 				if err != nil {
-					scope.Log("Unable to create temp file: %v", err)
+					scope.Error("Unable to create temp file: %v", err)
 					return nil, err
 				}
 				scope.Log("Using local copy %v", filename)

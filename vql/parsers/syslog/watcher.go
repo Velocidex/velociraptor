@@ -98,7 +98,7 @@ func (self *SyslogWatcherService) StartMonitoring(
 
 	accessor, err := accessors.GetAccessor(accessor_name, scope)
 	if err != nil {
-		//scope.Log("Registering watcher error: %v", err)
+		//scope.Error("Registering watcher error: %v", err)
 		return
 	}
 

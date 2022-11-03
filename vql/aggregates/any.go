@@ -56,7 +56,7 @@ func (self _AnyFunction) Call(
 	arg := &_AllFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("any: %v", err)
+		scope.Error("any: %v", err)
 		return vfilter.Null{}
 	}
 

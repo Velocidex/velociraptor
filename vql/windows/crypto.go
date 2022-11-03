@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 /*
@@ -158,7 +159,7 @@ func runCertificates(
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 	if err != nil {
-		scope.Log("certificates: %s", err)
+		scope.Error("certificates: %s", err)
 		return result
 	}
 

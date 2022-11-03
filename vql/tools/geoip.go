@@ -30,7 +30,7 @@ func (self GeoIPFunction) Call(
 	arg := &GeoIPFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("geoip: %v", err)
+		scope.Error("geoip: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -47,7 +47,7 @@ func (self GeoIPFunction) Call(
 	case nil:
 		db, err = maxminddb.Open(arg.Database)
 		if err != nil {
-			scope.Log("geoip: %v", err)
+			scope.Error("geoip: %v", err)
 			// Cache failures for next lookup.
 			vql_subsystem.CacheSet(scope, key, err)
 			return vfilter.Null{}
@@ -75,7 +75,7 @@ func (self GeoIPFunction) Call(
 	var record interface{}
 	err = db.Lookup(ip, &record)
 	if err != nil {
-		scope.Log("geoip: %v", err)
+		scope.Error("geoip: %v", err)
 		return vfilter.Null{}
 	}
 	return record

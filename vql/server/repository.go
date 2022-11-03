@@ -28,7 +28,7 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 	arg := &ArtifactSetFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("artifact_set: %v", err)
+		scope.Error("artifact_set: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -73,7 +73,7 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 
 	err = vql_subsystem.CheckAccess(scope, permission)
 	if err != nil {
-		scope.Log("artifact_set: %s", err)
+		scope.Error("artifact_set: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -82,7 +82,7 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 	definition, err = manager.SetArtifactFile(
 		config_obj, principal, arg.Definition, arg.Prefix)
 	if err != nil {
-		scope.Log("artifact_set: %s", err)
+		scope.Error("artifact_set: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -111,7 +111,7 @@ func (self *ArtifactDeleteFunction) Call(ctx context.Context,
 	arg := &ArtifactDeleteFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("artifact_delete: %v", err)
+		scope.Error("artifact_delete: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -129,7 +129,7 @@ func (self *ArtifactDeleteFunction) Call(ctx context.Context,
 
 	global_repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
-		scope.Log("artifact_delete: %v", err)
+		scope.Error("artifact_delete: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -156,14 +156,14 @@ func (self *ArtifactDeleteFunction) Call(ctx context.Context,
 
 	err = vql_subsystem.CheckAccess(scope, permission)
 	if err != nil {
-		scope.Log("artifact_set: %s", err)
+		scope.Error("artifact_set: %s", err)
 		return vfilter.Null{}
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
 	err = manager.DeleteArtifactFile(config_obj, principal, arg.Name)
 	if err != nil {
-		scope.Log("artifact_delete: %s", err)
+		scope.Error("artifact_delete: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -197,14 +197,14 @@ func (self ArtifactsPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
-			scope.Log("artifact_definitions: %v", err)
+			scope.Error("artifact_definitions: %v", err)
 			return
 		}
 
 		arg := &ArtifactsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("artifact_definitions: %v", err)
+			scope.Error("artifact_definitions: %v", err)
 			return
 		}
 
@@ -216,12 +216,12 @@ func (self ArtifactsPlugin) Call(
 
 		manager, err := services.GetRepositoryManager(config_obj)
 		if err != nil {
-			scope.Log("artifact_definitions: %v", err)
+			scope.Error("artifact_definitions: %v", err)
 			return
 		}
 		repository, err := manager.GetGlobalRepository(config_obj)
 		if err != nil {
-			scope.Log("artifact_definitions: %v", err)
+			scope.Error("artifact_definitions: %v", err)
 			return
 		}
 
@@ -229,7 +229,7 @@ func (self ArtifactsPlugin) Call(
 		if len(arg.Names) == 0 {
 			names, err := repository.List(ctx, config_obj)
 			if err != nil {
-				scope.Log("artifact_definitions: %v", err)
+				scope.Error("artifact_definitions: %v", err)
 				return
 			}
 			for _, name := range names {
@@ -255,14 +255,14 @@ func (self ArtifactsPlugin) Call(
 
 		launcher, err := services.GetLauncher(config_obj)
 		if err != nil {
-			scope.Log("artifact_definitions: Command can only run on the server %v", err)
+			scope.Error("artifact_definitions: Command can only run on the server %v", err)
 			return
 		}
 
 		deps, err := launcher.GetDependentArtifacts(
 			config_obj, repository, arg.Names)
 		if err != nil {
-			scope.Log("artifact_definitions: %v", err)
+			scope.Error("artifact_definitions: %v", err)
 			return
 		}
 

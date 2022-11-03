@@ -55,7 +55,7 @@ func writeMetrics(
 	ctx context.Context, scope vfilter.Scope, output_chan chan vfilter.Row) {
 	gathering, err := prometheus.DefaultGatherer.Gather()
 	if err != nil {
-		scope.Log("profile: while gathering metrics: %v", err)
+		scope.Error("profile: while gathering metrics: %v", err)
 		return
 	}
 
@@ -126,7 +126,7 @@ func writeProfile(
 	output_chan chan vfilter.Row, name string, debug int64) {
 	tmpfile, err := ioutil.TempFile("", "tmp*.tmp")
 	if err != nil {
-		scope.Log("profile: %s", err)
+		scope.Error("profile: %s", err)
 		return
 	}
 	defer tmpfile.Close()
@@ -147,7 +147,7 @@ func writeProfile(
 
 	err = p.WriteTo(tmpfile, int(debug))
 	if err != nil {
-		scope.Log("profile: %s", err)
+		scope.Error("profile: %s", err)
 		return
 	}
 
@@ -167,20 +167,20 @@ func writeCPUProfile(
 	output_chan chan vfilter.Row, duration int64) {
 	tmpfile, err := tempfile.TempFile("", "tmp", ".tmp")
 	if err != nil {
-		scope.Log("profile: %s", err)
+		scope.Error("profile: %s", err)
 		return
 	}
 	defer tmpfile.Close()
 
 	err = scope.AddDestructor(func() { remove(scope, tmpfile.Name()) })
 	if err != nil {
-		scope.Log("profile: %s", err)
+		scope.Error("profile: %s", err)
 		return
 	}
 
 	err = pprof.StartCPUProfile(tmpfile)
 	if err != nil {
-		scope.Log("profile: %s", err)
+		scope.Error("profile: %s", err)
 		return
 	}
 
@@ -206,7 +206,7 @@ func writeTraceProfile(
 	output_chan chan vfilter.Row, duration int64) {
 	tmpfile, err := tempfile.TempFile("", "tmp", ".tmp")
 	if err != nil {
-		scope.Log("profile: %s", err)
+		scope.Error("profile: %s", err)
 		return
 	}
 	defer tmpfile.Close()
@@ -215,7 +215,7 @@ func writeTraceProfile(
 
 	err = trace.Start(tmpfile)
 	if err != nil {
-		scope.Log("profile: %s", err)
+		scope.Error("profile: %s", err)
 		return
 	}
 
@@ -247,14 +247,14 @@ func (self *ProfilePlugin) Call(ctx context.Context,
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {
-			scope.Log("profile: %s", err)
+			scope.Error("profile: %s", err)
 			return
 		}
 
 		arg := &ProfilePluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("profile: %s", err.Error())
+			scope.Error("profile: %s", err.Error())
 			return
 		}
 

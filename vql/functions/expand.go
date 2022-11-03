@@ -29,14 +29,14 @@ func (self ExpandPath) Call(
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 	if err != nil {
-		scope.Log("expand: %s", err)
+		scope.Error("expand: %s", err)
 		return vfilter.Null{}
 	}
 
 	arg := &ExpandPathArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("expand: %s", err.Error())
+		scope.Error("expand: %s", err.Error())
 		return vfilter.Null{}
 	}
 

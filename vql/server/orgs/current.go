@@ -23,13 +23,13 @@ func (self *CurrentOrgFunction) Call(ctx context.Context,
 
 	org_manager, err := services.GetOrgManager()
 	if err != nil {
-		scope.Log("org: %v", err)
+		scope.Error("org: %v", err)
 		return vfilter.Null{}
 	}
 
 	org_record, err := org_manager.GetOrg(config_obj.OrgId)
 	if err != nil {
-		scope.Log("org: %v", err)
+		scope.Error("org: %v", err)
 		return vfilter.Null{}
 	}
 

@@ -1,4 +1,5 @@
-//+build extras
+//go:build extras
+// +build extras
 
 package tools
 
@@ -42,25 +43,25 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 	arg := &S3UploadArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("upload_S3: %s", err.Error())
+		scope.Error("upload_S3: %s", err.Error())
 		return vfilter.Null{}
 	}
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("upload_S3: %s", err)
+		scope.Error("upload_S3: %s", err)
 		return vfilter.Null{}
 	}
 
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
-		scope.Log("upload_S3: %v", err)
+		scope.Error("upload_S3: %v", err)
 		return vfilter.Null{}
 	}
 
 	file, err := accessor.Open(arg.File)
 	if err != nil {
-		scope.Log("upload_S3: Unable to open %s: %s",
+		scope.Error("upload_S3: Unable to open %s: %s",
 			arg.File, err.Error())
 		return &vfilter.Null{}
 	}
@@ -72,7 +73,7 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 
 	stat, err := accessor.Lstat(arg.File)
 	if err != nil {
-		scope.Log("upload_S3: Unable to stat %s: %v",
+		scope.Error("upload_S3: Unable to stat %s: %v",
 			arg.File, err)
 	} else if !stat.IsDir() {
 		// Abort uploading when the scope is destroyed.
@@ -91,7 +92,7 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 			arg.NoVerifyCert,
 			uint64(stat.Size()))
 		if err != nil {
-			scope.Log("upload_S3: %v", err)
+			scope.Error("upload_S3: %v", err)
 			// Relay the error in the UploadResponse
 			return upload_response
 		}

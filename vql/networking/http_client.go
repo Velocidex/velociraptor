@@ -51,6 +51,14 @@ var (
 	mu sync.Mutex
 
 	proxyHandler = http.ProxyFromEnvironment
+
+	validHttpMethods = map[string]bool{
+		"POST":   true,
+		"GET":    true,
+		"PUT":    true,
+		"PATCH":  true,
+		"DELETE": true,
+	}
 )
 
 const (
@@ -338,7 +346,15 @@ func (self *_HttpPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
 		if err != nil {
-			scope.Log("http_client: %s", err)
+			scope.Error("http_client: %s", err)
+			return
+		}
+
+		// Validate HTTP Method
+		arg.Method = strings.ToUpper(arg.Method)
+		if _, ok := validHttpMethods[arg.Method]; !ok {
+
+			scope.Log("http_client: Invalid HTTP Method!")
 			return
 		}
 
@@ -356,7 +372,7 @@ func (self *_HttpPlugin) Call(
 
 		client, err := GetHttpClient(config_obj, scope, arg)
 		if err != nil {
-			scope.Log("http_client: %v", err)
+			scope.Error("http_client: %v", err)
 			return
 		}
 
@@ -368,7 +384,7 @@ func (self *_HttpPlugin) Call(
 				req, err = http.NewRequestWithContext(
 					ctx, method, arg.Url, strings.NewReader(arg.Data))
 				if err != nil {
-					scope.Log("%s: %v", self.Name(), err)
+					scope.Error("%s: %v", self.Name(), err)
 					return
 				}
 				req.URL.RawQuery = params.Encode()
@@ -385,7 +401,7 @@ func (self *_HttpPlugin) Call(
 				req, err = http.NewRequestWithContext(
 					ctx, method, arg.Url, strings.NewReader(arg.Data))
 				if err != nil {
-					scope.Log("%s: %v", self.Name(), err)
+					scope.Error("%s: %v", self.Name(), err)
 					return
 				}
 			}
@@ -394,6 +410,10 @@ func (self *_HttpPlugin) Call(
 				scope.Log("http_client: Invalid HTTP Method %s", method)
 				return
 			}
+		}
+
+		if params != nil {
+			req.URL.RawQuery = params.Encode()
 		}
 
 		scope.Log("Fetching %v\n", arg.Url)
@@ -424,7 +444,7 @@ func (self *_HttpPlugin) Call(
 		}
 
 		if err != nil {
-			scope.Log("http_client: Error %v while fetching %v",
+			scope.Error("http_client: Error %v while fetching %v",
 				err, arg.Url)
 			select {
 			case <-ctx.Done():
@@ -446,7 +466,7 @@ func (self *_HttpPlugin) Call(
 
 			tmpfile, err := ioutil.TempFile("", "tmp*"+arg.TempfileExtension)
 			if err != nil {
-				scope.Log("http_client: %v", err)
+				scope.Error("http_client: %v", err)
 				return
 			}
 

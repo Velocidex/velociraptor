@@ -49,7 +49,7 @@ func (self ClockPlugin) Call(
 		arg := &ClockPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("clock: %v", err)
+			scope.Error("clock: %v", err)
 			return
 		}
 
@@ -63,7 +63,7 @@ func (self ClockPlugin) Call(
 		if !utils.IsNil(arg.StartTime) {
 			start, err := functions.TimeFromAny(scope, arg.StartTime)
 			if err != nil {
-				scope.Log("clock: %v", err)
+				scope.Error("clock: %v", err)
 				return
 			}
 

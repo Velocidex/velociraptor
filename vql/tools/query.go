@@ -43,7 +43,7 @@ func (self QueryPlugin) Call(
 		arg := &QueryPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("query: %v", err)
+			scope.Error("query: %v", err)
 			return
 		}
 
@@ -51,7 +51,7 @@ func (self QueryPlugin) Call(
 		// root config from the org manager.
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
-			scope.Log("query: %v", err)
+			scope.Error("query: %v", err)
 			return
 		}
 
@@ -59,7 +59,7 @@ func (self QueryPlugin) Call(
 		if !ok {
 			config_obj, err = org_manager.GetOrgConfig("")
 			if err != nil {
-				scope.Log("query: %v", err)
+				scope.Error("query: %v", err)
 				return
 			}
 		}
@@ -74,7 +74,7 @@ func (self QueryPlugin) Call(
 		if arg.OrgId != "" {
 			org_config_obj, err = org_manager.GetOrgConfig(arg.OrgId)
 			if err != nil {
-				scope.Log("query: %v", err)
+				scope.Error("query: %v", err)
 				return
 			}
 
@@ -86,7 +86,7 @@ func (self QueryPlugin) Call(
 			// Impersonation is only allowed for administrator users.
 			err := vql_subsystem.CheckAccess(scope, acls.IMPERSONATION)
 			if err != nil {
-				scope.Log("ERROR:query: Permission required for runas: %v", err)
+				scope.Error("ERROR:query: Permission required for runas: %v", err)
 				return
 			}
 
@@ -98,7 +98,7 @@ func (self QueryPlugin) Call(
 		// Make a new scope for each artifact.
 		manager, err := services.GetRepositoryManager(org_config_obj)
 		if err != nil {
-			scope.Log("ERROR:query: %v", err)
+			scope.Error("ERROR:query: %v", err)
 			return
 		}
 
@@ -186,7 +186,7 @@ func runStringQuery(
 	scope.Log("query: running query %v", query_string)
 	statements, err := vfilter.MultiParse(query_string)
 	if err != nil {
-		scope.Log("ERROR:query: %v", err)
+		scope.Error("ERROR:query: %v", err)
 		return
 	}
 

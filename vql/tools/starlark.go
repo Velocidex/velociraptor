@@ -426,7 +426,7 @@ func (self StarlarkCompileFunction) Call(ctx context.Context,
 	arg := StarlarkCompileArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, &arg)
 	if err != nil {
-		scope.Log("starl: %s", err.Error())
+		scope.Error("starl: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -435,7 +435,7 @@ func (self StarlarkCompileFunction) Call(ctx context.Context,
 	// grab compiled code
 	compiled_args, err := compileStarlark(ctx, scope, arg.Code, arg.Globals)
 	if err != nil {
-		scope.Log("starl: %v", err)
+		scope.Error("starl: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -475,19 +475,19 @@ func (self starlarkFuncWrapper) Call(ctx context.Context,
 
 	kwargs, err := makeKwargsTuple(ctx, scope, args)
 	if err != nil {
-		scope.Log("starl: %v", err)
+		scope.Error("starl: %v", err)
 		return vfilter.Null{}
 	}
 
 	value, err := starlark.Call(sthread, self.delegate, starlark.Tuple{}, kwargs)
 	if err != nil {
-		scope.Log("starl: %v", err)
+		scope.Error("starl: %v", err)
 		return vfilter.Null{}
 	}
 
 	result, err := starlarkValueAsInterface(value)
 	if err != nil {
-		scope.Log("starl: %v", err)
+		scope.Error("starl: %v", err)
 		return vfilter.Null{}
 	}
 	return result

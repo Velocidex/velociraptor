@@ -1,3 +1,4 @@
+//go:build server_vql
 // +build server_vql
 
 /*
@@ -53,14 +54,14 @@ func (self ClientsPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 		if err != nil {
-			scope.Log("clients: %v", err)
+			scope.Error("clients: %v", err)
 			return
 		}
 
 		arg := &ClientsPluginArgs{}
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("clients: %v", err)
+			scope.Error("clients: %v", err)
 			return
 		}
 
@@ -74,7 +75,7 @@ func (self ClientsPlugin) Call(
 		if arg.ClientId != "" {
 			indexer, err := services.GetIndexer(config_obj)
 			if err != nil {
-				scope.Log("clients: %v", err)
+				scope.Error("clients: %v", err)
 				return
 			}
 
@@ -102,14 +103,14 @@ func (self ClientsPlugin) Call(
 
 		indexer, err := services.GetIndexer(config_obj)
 		if err != nil {
-			scope.Log("client_info: %s", err.Error())
+			scope.Error("client_info: %s", err.Error())
 			return
 		}
 
 		search_chan, err := indexer.SearchClientsChan(ctx, scope,
 			config_obj, search_term, vql_subsystem.GetPrincipal(scope))
 		if err != nil {
-			scope.Log("clients: %v", err)
+			scope.Error("clients: %v", err)
 			return
 		}
 
@@ -145,14 +146,14 @@ func (self *ClientInfoFunction) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 	if err != nil {
-		scope.Log("client_info: %s", err)
+		scope.Error("client_info: %s", err)
 		return vfilter.Null{}
 	}
 
 	arg := &ClientInfoFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("client_info: %s", err.Error())
+		scope.Error("client_info: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -164,14 +165,14 @@ func (self *ClientInfoFunction) Call(ctx context.Context,
 
 	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
-		scope.Log("client_info: %s", err.Error())
+		scope.Error("client_info: %s", err.Error())
 		return vfilter.Null{}
 	}
 
 	api_client, err := indexer.FastGetApiClient(ctx,
 		config_obj, arg.ClientId)
 	if err != nil {
-		scope.Log("client_info: %s", err.Error())
+		scope.Error("client_info: %s", err.Error())
 		return vfilter.Null{}
 	}
 	return json.ConvertProtoToOrderedDict(api_client)

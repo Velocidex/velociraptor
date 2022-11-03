@@ -51,19 +51,19 @@ func _ParseFile(
 
 	err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("parse_records_with_regex: %s", err)
+		scope.Error("parse_records_with_regex: %s", err)
 		return
 	}
 
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
-		scope.Log("error: %v", err)
+		scope.Error("error: %v", err)
 		return
 	}
 
 	file, err := accessor.Open(filename)
 	if err != nil {
-		scope.Log("Unable to open file %s", filename)
+		scope.Error("Unable to open file %s", filename)
 		return
 	}
 	defer file.Close()
@@ -126,7 +126,7 @@ func (self _ParseFileWithRegex) Call(
 	arg := &_ParseFileWithRegexArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("parse_records_with_regex: %s", err.Error())
+		scope.Error("parse_records_with_regex: %s", err.Error())
 		close(output_chan)
 		return output_chan
 	}
@@ -134,7 +134,7 @@ func (self _ParseFileWithRegex) Call(
 	for _, regex := range arg.Regex {
 		r, err := regexp.Compile("(?i)" + regex)
 		if err != nil {
-			scope.Log("Unable to compile regex %s", regex)
+			scope.Error("Unable to compile regex %s", regex)
 			close(output_chan)
 			return output_chan
 		}
@@ -182,7 +182,7 @@ func (self *_ParseStringWithRegexFunction) Call(ctx context.Context,
 	arg := &_ParseStringWithRegexFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("parse_string_with_regex: %s", err.Error())
+		scope.Error("parse_string_with_regex: %s", err.Error())
 		return vfilter.Null{}
 	}
 	row := ordereddict.NewDict()
@@ -190,7 +190,7 @@ func (self *_ParseStringWithRegexFunction) Call(ctx context.Context,
 	for _, regex := range arg.Regex {
 		r, err := regexp.Compile("(?i)" + regex)
 		if err != nil {
-			scope.Log("Unable to compile regex %s", regex)
+			scope.Error("Unable to compile regex %s", regex)
 			return vfilter.Null{}
 		}
 
@@ -253,12 +253,12 @@ func (self _RegexReplace) Call(
 	arg := &_RegexReplaceArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("regex_replace: %v", err)
+		scope.Error("regex_replace: %v", err)
 		return vfilter.Null{}
 	}
 	re, err := regexp.Compile("(?i)" + arg.Re)
 	if err != nil {
-		scope.Log("Unable to compile regex %s", arg.Re)
+		scope.Error("Unable to compile regex %s", arg.Re)
 		return vfilter.Null{}
 	}
 
@@ -274,7 +274,7 @@ func (self _RegexReplace) Call(
 		if lambda == nil {
 			lambda, err = vfilter.ParseLambda(arg.ReplaceLambda)
 			if err != nil {
-				scope.Log("regex_replace: Unable to compile lambda %s",
+				scope.Error("regex_replace: Unable to compile lambda %s",
 					arg.ReplaceLambda)
 				return vfilter.Null{}
 			}
@@ -320,7 +320,7 @@ func (self _RegexMap) Call(
 	arg := &_RegexMapArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("regex_transform: %s", err.Error())
+		scope.Error("regex_transform: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -339,7 +339,7 @@ func (self _RegexMap) Call(
 
 			re, err := regexp.Compile("(?i)" + search)
 			if err != nil {
-				scope.Log("regex_transform: Unable to compile regex %s: %v", search, err)
+				scope.Error("regex_transform: Unable to compile regex %s: %v", search, err)
 				return vfilter.Null{}
 			}
 

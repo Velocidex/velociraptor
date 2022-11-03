@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 /*
@@ -121,7 +122,7 @@ func (self WmiEventPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {
-			scope.Log("wmi_events: %s", err)
+			scope.Error("wmi_events: %s", err)
 			return
 		}
 
@@ -130,7 +131,7 @@ func (self WmiEventPlugin) Call(
 
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("wmi_events: %s", err.Error())
+			scope.Error("wmi_events: %s", err.Error())
 			return
 		}
 

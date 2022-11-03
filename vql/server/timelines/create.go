@@ -34,14 +34,14 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 	if err != nil {
-		scope.Log("timeline_add: %v", err)
+		scope.Error("timeline_add: %v", err)
 		return vfilter.Null{}
 	}
 
 	arg := &AddTimelineFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("timeline_add: %v", err)
+		scope.Error("timeline_add: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -65,7 +65,7 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 	super, err := timelines.NewSuperTimelineWriter(
 		config_obj, notebook_path_manager.SuperTimeline(arg.Timeline))
 	if err != nil {
-		scope.Log("timeline_add: %v", err)
+		scope.Error("timeline_add: %v", err)
 		return vfilter.Null{}
 	}
 	defer super.Close()
@@ -73,7 +73,7 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 	// make a new timeline to store in the super timeline.
 	writer, err := super.AddChild(arg.Name)
 	if err != nil {
-		scope.Log("timeline_add: %v", err)
+		scope.Error("timeline_add: %v", err)
 		return vfilter.Null{}
 	}
 	defer writer.Close()
@@ -108,14 +108,14 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 	// Now record the new timeline in the notebook if needed.
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		scope.Log("timeline_add: can only be used on the server: %v", err)
+		scope.Error("timeline_add: can only be used on the server: %v", err)
 		return vfilter.Null{}
 	}
 
 	notebook_metadata := &api_proto.NotebookMetadata{}
 	err = db.GetSubject(config_obj, notebook_path_manager.Path(), notebook_metadata)
 	if err != nil {
-		scope.Log("timeline_add: %v", err)
+		scope.Error("timeline_add: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -128,7 +128,7 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 	notebook_metadata.Timelines = append(notebook_metadata.Timelines, arg.Timeline)
 	err = db.SetSubject(config_obj, notebook_path_manager.Path(), notebook_metadata)
 	if err != nil {
-		scope.Log("timeline_add: %v", err)
+		scope.Error("timeline_add: %v", err)
 		return vfilter.Null{}
 	}
 

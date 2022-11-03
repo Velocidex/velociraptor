@@ -1,3 +1,4 @@
+//go:build server_vql
 // +build server_vql
 
 /*
@@ -67,14 +68,14 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
 	if err != nil {
-		scope.Log("hunt: %v", err)
+		scope.Error("hunt: %v", err)
 		return vfilter.Null{}
 	}
 
 	arg := &ScheduleHuntFunctionArg{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("hunt: %v", err)
+		scope.Error("hunt: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -82,7 +83,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	if !utils.IsNil(arg.Expires) {
 		expiry_time, err := functions.TimeFromAny(scope, arg.Expires.Reduce(ctx))
 		if err != nil {
-			scope.Log("hunt: expiry time invalid: %v", err)
+			scope.Error("hunt: expiry time invalid: %v", err)
 			return vfilter.Null{}
 		}
 
@@ -105,7 +106,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	if len(arg.OrgIds) > 0 {
 		err := vql_subsystem.CheckAccess(scope, acls.ORG_ADMIN)
 		if err != nil {
-			scope.Log("hunt: %v", err)
+			scope.Error("hunt: %v", err)
 			return vfilter.Null{}
 		}
 
@@ -116,12 +117,12 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
-		scope.Log("hunt: %v", err)
+		scope.Error("hunt: %v", err)
 		return vfilter.Null{}
 	}
 	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
-		scope.Log("hunt: %v", err)
+		scope.Error("hunt: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -140,7 +141,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	err = collector.AddSpecProtobuf(config_obj, repository, scope,
 		arg.Spec, request)
 	if err != nil {
-		scope.Log("hunt: %v", err)
+		scope.Error("hunt: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -213,7 +214,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 
 	org_manager, err := services.GetOrgManager()
 	if err != nil {
-		scope.Log("hunt: %v", err)
+		scope.Error("hunt: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -223,14 +224,14 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	for _, org_id := range arg.OrgIds {
 		org_config_obj, err := org_manager.GetOrgConfig(org_id)
 		if err != nil {
-			scope.Log("hunt: %v", err)
+			scope.Error("hunt: %v", err)
 			continue
 		}
 
 		// Make sure the user is allowed to collect in that org
 		err = vql_subsystem.CheckAccessInOrg(scope, org_id, acls.COLLECT_CLIENT)
 		if err != nil {
-			scope.Log("hunt: %v", err)
+			scope.Error("hunt: %v", err)
 			continue
 		}
 
@@ -240,14 +241,14 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 
 		hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
 		if err != nil {
-			scope.Log("hunt: %v", err)
+			scope.Error("hunt: %v", err)
 			continue
 		}
 
 		hunt_id, err := hunt_dispatcher.CreateHunt(
 			ctx, org_config_obj, acl_manager, hunt_request)
 		if err != nil {
-			scope.Log("hunt: %v", err)
+			scope.Error("hunt: %v", err)
 			continue
 		}
 
@@ -291,14 +292,14 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
 	if err != nil {
-		scope.Log("hunt_add: %v", err)
+		scope.Error("hunt_add: %v", err)
 		return vfilter.Null{}
 	}
 
 	arg := &AddToHuntFunctionArg{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("hunt_add: %v", err)
+		scope.Error("hunt_add: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -336,7 +337,7 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 	}
 
 	if err != nil {
-		scope.Log("hunt_add: %v", err)
+		scope.Error("hunt_add: %v", err)
 		return vfilter.Null{}
 	}
 

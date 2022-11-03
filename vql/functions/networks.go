@@ -40,7 +40,7 @@ func (self *IpFunction) Call(ctx context.Context,
 	arg := &IpArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("ip: %s", err.Error())
+		scope.Error("ip: %s", err.Error())
 		return false
 	}
 

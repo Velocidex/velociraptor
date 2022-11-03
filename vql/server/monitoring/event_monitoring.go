@@ -26,14 +26,14 @@ func (self GetClientMonitoring) Call(
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
-		scope.Log("get_client_monitoring: %s", err)
+		scope.Error("get_client_monitoring: %s", err)
 		return vfilter.Null{}
 	}
 
 	arg := &GetClientMonitoringArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("get_client_monitoring: %v", err)
+		scope.Error("get_client_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -45,7 +45,7 @@ func (self GetClientMonitoring) Call(
 
 	client_event_manager, err := services.ClientEventManager(config_obj)
 	if err != nil {
-		scope.Log("get_client_monitoring: %v", err)
+		scope.Error("get_client_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -73,14 +73,14 @@ func (self SetClientMonitoring) Call(
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
-		scope.Log("set_client_monitoring: %s", err)
+		scope.Error("set_client_monitoring: %s", err)
 		return vfilter.Null{}
 	}
 
 	arg := &SetClientMonitoringArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("set_client_monitoring: %v", err)
+		scope.Error("set_client_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -99,7 +99,7 @@ func (self SetClientMonitoring) Call(
 		opts := vql_subsystem.EncOptsFromScope(scope)
 		serialized, err := json.MarshalWithOptions(arg.Data, opts)
 		if err != nil {
-			scope.Log("set_client_monitoring: %v", err)
+			scope.Error("set_client_monitoring: %v", err)
 			return vfilter.Null{}
 		}
 		value_json = string(serialized)
@@ -109,21 +109,21 @@ func (self SetClientMonitoring) Call(
 	value := &flows_proto.ClientEventTable{}
 	err = json.Unmarshal([]byte(value_json), value)
 	if err != nil {
-		scope.Log("set_client_monitoring: %v", err)
+		scope.Error("set_client_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
 	client_event_manager, err := services.ClientEventManager(config_obj)
 	if err != nil {
-		scope.Log("set_client_monitoring: %v", err)
+		scope.Error("set_client_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
 	err = client_event_manager.SetClientMonitoringState(
 		ctx, config_obj, principal, value)
 	if err != nil {
-		scope.Log("set_client_monitoring: %s", err.Error())
+		scope.Error("set_client_monitoring: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -149,14 +149,14 @@ func (self GetServerMonitoring) Call(
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
-		scope.Log("get_server_monitoring: %s", err)
+		scope.Error("get_server_monitoring: %s", err)
 		return vfilter.Null{}
 	}
 
 	arg := &GetServerMonitoringArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("get_server_monitoring: %v", err)
+		scope.Error("get_server_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -168,7 +168,7 @@ func (self GetServerMonitoring) Call(
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		scope.Log("get_server_monitoring: %v", err)
+		scope.Error("get_server_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -178,7 +178,7 @@ func (self GetServerMonitoring) Call(
 		result)
 
 	if err != nil {
-		scope.Log("get_server_monitoring: %v", err)
+		scope.Error("get_server_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -206,14 +206,14 @@ func (self SetServerMonitoring) Call(
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
-		scope.Log("set_server_monitoring: %s", err)
+		scope.Error("set_server_monitoring: %s", err)
 		return vfilter.Null{}
 	}
 
 	arg := &SetServerMonitoringArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("set_server_monitoring: %v", err)
+		scope.Error("set_server_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -232,7 +232,7 @@ func (self SetServerMonitoring) Call(
 		opts := vql_subsystem.EncOptsFromScope(scope)
 		serialized, err := json.MarshalWithOptions(arg.Data, opts)
 		if err != nil {
-			scope.Log("set_server_monitoring: %v", err)
+			scope.Error("set_server_monitoring: %v", err)
 			return vfilter.Null{}
 		}
 		value_json = string(serialized)
@@ -242,20 +242,20 @@ func (self SetServerMonitoring) Call(
 	value := &flows_proto.ArtifactCollectorArgs{}
 	err = json.Unmarshal([]byte(value_json), value)
 	if err != nil {
-		scope.Log("set_server_monitoring: %v", err)
+		scope.Error("set_server_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
 	server_manager, err := services.GetServerEventManager(config_obj)
 	if err != nil {
-		scope.Log("set_server_monitoring: server_manager not ready")
+		scope.Error("set_server_monitoring: server_manager not ready")
 		return vfilter.Null{}
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
 	err = server_manager.Update(config_obj, principal, value)
 	if err != nil {
-		scope.Log("set_server_monitoring: %s", err.Error())
+		scope.Error("set_server_monitoring: %s", err.Error())
 		return vfilter.Null{}
 	}
 

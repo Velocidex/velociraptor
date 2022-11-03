@@ -24,7 +24,7 @@ func (self *SendEventFunction) Call(ctx context.Context,
 	arg := &SendEventArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("send_event: %v", err)
+		scope.Error("send_event: %v", err)
 		return &vfilter.Null{}
 	}
 
@@ -36,7 +36,7 @@ func (self *SendEventFunction) Call(ctx context.Context,
 		err = vql_subsystem.CheckAccessWithArgs(
 			scope, acls.PUBLISH, arg.Artifact)
 		if err != nil {
-			scope.Log("send_event: %v", err)
+			scope.Error("send_event: %v", err)
 			return &vfilter.Null{}
 		}
 	}
@@ -57,7 +57,7 @@ func (self *SendEventFunction) Call(ctx context.Context,
 	err = journal.PushRowsToArtifact(config_obj,
 		[]*ordereddict.Dict{arg.Row}, arg.Artifact, "server", "")
 	if err != nil {
-		scope.Log("send_event: %v", err)
+		scope.Error("send_event: %v", err)
 		return &vfilter.Null{}
 	}
 

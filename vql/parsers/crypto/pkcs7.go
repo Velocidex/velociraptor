@@ -32,13 +32,13 @@ func (self ParsePKCS7Function) Call(
 	arg := &ParsePKCS7FunctionArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("parse_pkcs7: %v", err)
+		scope.Error("parse_pkcs7: %v", err)
 		return &vfilter.Null{}
 	}
 
 	pkcs7_obj, err := pkcs7.Parse([]byte(arg.Data))
 	if err != nil {
-		scope.Log("parse_pkcs7: %v", err)
+		scope.Error("parse_pkcs7: %v", err)
 		return &vfilter.Null{}
 	}
 
@@ -64,13 +64,13 @@ func (self ParseX509Function) Call(
 	arg := &ParseX509FunctionArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("parse_x509: %v", err)
+		scope.Error("parse_x509: %v", err)
 		return &vfilter.Null{}
 	}
 
 	x509_obj, err := x509.ParseCertificates([]byte(arg.Data))
 	if err != nil {
-		scope.Log("parse_x509: %v", err)
+		scope.Error("parse_x509: %v", err)
 		return &vfilter.Null{}
 	}
 

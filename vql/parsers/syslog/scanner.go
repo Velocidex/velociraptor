@@ -43,13 +43,13 @@ func (self ScannerPlugin) Call(
 		arg := &ScannerPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("parse_lines: %v", err)
+			scope.Error("parse_lines: %v", err)
 			return
 		}
 
 		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
-			scope.Log("parse_lines: %s", err)
+			scope.Error("parse_lines: %s", err)
 			return
 		}
 
@@ -57,7 +57,7 @@ func (self ScannerPlugin) Call(
 			func() {
 				fd, err := maybeOpenGzip(scope, arg.Accessor, filename)
 				if err != nil {
-					scope.Log("parse_lines: %v", err)
+					scope.Error("parse_lines: %v", err)
 					return
 				}
 				defer fd.Close()
@@ -81,7 +81,7 @@ func (self ScannerPlugin) Call(
 				}
 				err = scanner.Err()
 				if err != nil {
-					scope.Log("parse_lines: %v", err)
+					scope.Error("parse_lines: %v", err)
 					return
 				}
 			}()
@@ -105,13 +105,13 @@ func (self _WatchSyslogPlugin) Call(
 		arg := &ScannerPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("watch_syslog: %v", err)
+			scope.Error("watch_syslog: %v", err)
 			return
 		}
 
 		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
-			scope.Log("watch_syslog: %v", err)
+			scope.Error("watch_syslog: %v", err)
 			return
 		}
 

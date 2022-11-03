@@ -41,24 +41,24 @@ func (self _ParseXMLFunction) Call(
 	arg := &_ParseXMLFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("parse_xml: %s", err.Error())
+		scope.Error("parse_xml: %s", err.Error())
 		return vfilter.Null{}
 	}
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 	if err != nil {
-		scope.Log("parse_xml: %s", err)
+		scope.Error("parse_xml: %s", err)
 		return vfilter.Null{}
 	}
 
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
-		scope.Log("parse_xml: %v", err)
+		scope.Error("parse_xml: %v", err)
 		return vfilter.Null{}
 	}
 	file, err := accessor.Open(arg.File)
 	if err != nil {
-		scope.Log("Unable to open file %s", arg.File)
+		scope.Error("Unable to open file %s", arg.File)
 		return vfilter.Null{}
 	}
 	defer file.Close()
@@ -66,7 +66,7 @@ func (self _ParseXMLFunction) Call(
 	mxj.SetAttrPrefix("Attr")
 	result, err := mxj.NewMapXmlReader(file)
 	if err != nil {
-		scope.Log("NewMapXmlReader: %v", err)
+		scope.Error("NewMapXmlReader: %v", err)
 		return vfilter.Null{}
 	}
 

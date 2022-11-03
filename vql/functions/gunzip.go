@@ -41,7 +41,7 @@ func (self *Gunzip) Call(ctx context.Context,
 	arg := &GunzipArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("Gunzip: %s", err.Error())
+		scope.Error("Gunzip: %s", err.Error())
 		return false
 	}
 
@@ -50,7 +50,7 @@ func (self *Gunzip) Call(ctx context.Context,
 	r, err = gzip.NewReader(b)
 
 	if err != nil {
-		scope.Log("Gunzip: %s", err.Error())
+		scope.Error("Gunzip: %s", err.Error())
 		return false
 	}
 
@@ -58,7 +58,7 @@ func (self *Gunzip) Call(ctx context.Context,
 	_, err = resB.ReadFrom(r)
 
 	if err != nil {
-		scope.Log("Gunzip: %s", err.Error())
+		scope.Error("Gunzip: %s", err.Error())
 		return false
 	}
 

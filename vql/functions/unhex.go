@@ -23,7 +23,7 @@ func (self *UnhexFunction) Call(ctx context.Context,
 	arg := &UnhexFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("unhex: %s", err.Error())
+		scope.Error("unhex: %s", err.Error())
 		return false
 	}
 

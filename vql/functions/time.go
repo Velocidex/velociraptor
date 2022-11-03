@@ -154,7 +154,7 @@ func (self _Timestamp) Call(ctx context.Context, scope vfilter.Scope,
 	arg := &_TimestampArg{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("timestamp: %s", err.Error())
+		scope.Error("timestamp: %s", err.Error())
 		return vfilter.Null{}
 	}
 

@@ -24,7 +24,7 @@ func (self _CIDRContains) Call(
 	arg := &_CIDRContainsArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("cidr_contains: %s", err.Error())
+		scope.Error("cidr_contains: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -36,7 +36,7 @@ func (self _CIDRContains) Call(
 	for _, rng := range arg.Ranges {
 		_, ipNet, err := net.ParseCIDR(rng)
 		if err != nil {
-			scope.Log("cidr_contains: %v", err)
+			scope.Error("cidr_contains: %v", err)
 			return false
 		}
 

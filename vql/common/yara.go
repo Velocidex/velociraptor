@@ -1,3 +1,4 @@
+//go:build cgo && yara
 // +build cgo,yara
 
 /*
@@ -85,7 +86,7 @@ func (self YaraScanPlugin) Call(
 		arg := &YaraScanPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("yarascan: %v", err)
+			scope.Error("yarascan: %v", err)
 			return
 		}
 
@@ -99,7 +100,7 @@ func (self YaraScanPlugin) Call(
 
 		err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
 		if err != nil {
-			scope.Log("yara: %s", err.Error())
+			scope.Error("yara: %s", err.Error())
 			return
 		}
 
@@ -127,7 +128,7 @@ func (self YaraScanPlugin) Call(
 
 		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
-			scope.Log("yara: %v", err)
+			scope.Error("yara: %v", err)
 			return
 		}
 
@@ -135,7 +136,7 @@ func (self YaraScanPlugin) Call(
 			filename, err := accessors.ParseOSPath(
 				ctx, scope, accessor, filename_any)
 			if err != nil {
-				scope.Log("yara: %v", err)
+				scope.Error("yara: %v", err)
 				return
 			}
 			matcher.filename = filename
@@ -212,14 +213,14 @@ func (self *scanReporter) scanFileByAccessor(
 
 	accessor, err := accessors.GetAccessor(accessor_name, self.scope)
 	if err != nil {
-		self.scope.Log("yara: %v", err)
+		self.scope.Error("yara: %v", err)
 		return
 	}
 
 	// Open the file with the accessor
 	f, err := accessor.OpenWithOSPath(self.filename)
 	if err != nil {
-		self.scope.Log("yara: Failed to open %v with accessor %v: %v",
+		self.scope.Error("yara: Failed to open %v with accessor %v: %v",
 			self.filename, accessor_name, err)
 		return
 	}
@@ -494,7 +495,7 @@ func (self YaraProcPlugin) Call(
 		arg := &YaraProcPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("proc_yara: %v", err)
+			scope.Error("proc_yara: %v", err)
 			return
 		}
 
@@ -509,7 +510,7 @@ func (self YaraProcPlugin) Call(
 			generated_rules := RuleGenerator(scope, arg.Rules)
 			rules, err = yara.Compile(generated_rules, variables)
 			if err != nil {
-				scope.Log("Failed to initialize YARA compiler: %v", err)
+				scope.Error("Failed to initialize YARA compiler: %v", err)
 				return
 			}
 
@@ -520,7 +521,7 @@ func (self YaraProcPlugin) Call(
 			arg.Pid, yara.ScanFlagsProcessMemory,
 			300*time.Second)
 		if err != nil {
-			scope.Log("proc_yara: pid %v: %v", arg.Pid, err)
+			scope.Error("proc_yara: pid %v: %v", arg.Pid, err)
 			return
 		}
 

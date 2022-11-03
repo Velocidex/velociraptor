@@ -28,14 +28,14 @@ func (self AddClientMonitoringFunction) Call(
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
-		scope.Log("add_client_monitoring: %s", err)
+		scope.Error("add_client_monitoring: %s", err)
 		return vfilter.Null{}
 	}
 
 	arg := &AddClientMonitoringFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("add_client_monitoring: %v", err)
+		scope.Error("add_client_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -48,13 +48,13 @@ func (self AddClientMonitoringFunction) Call(
 	// Now verify the artifact actually exists
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
-		scope.Log("add_client_monitoring: %v", err)
+		scope.Error("add_client_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
 	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
-		scope.Log("add_client_monitoring: %v", err)
+		scope.Error("add_client_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -73,7 +73,7 @@ func (self AddClientMonitoringFunction) Call(
 
 	client_event_manager, err := services.ClientEventManager(config_obj)
 	if err != nil {
-		scope.Log("add_client_monitoring: %v", err)
+		scope.Error("add_client_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -122,7 +122,7 @@ func (self AddClientMonitoringFunction) Call(
 	err = client_event_manager.SetClientMonitoringState(
 		ctx, config_obj, principal, event_config)
 	if err != nil {
-		scope.Log("add_client_monitoring: %v", err)
+		scope.Error("add_client_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -191,14 +191,14 @@ func (self AddServerMonitoringFunction) Call(
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
-		scope.Log("add_server_monitoring: %s", err)
+		scope.Error("add_server_monitoring: %s", err)
 		return vfilter.Null{}
 	}
 
 	arg := &AddServerMonitoringFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("add_server_monitoring: %v", err)
+		scope.Error("add_server_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -211,13 +211,13 @@ func (self AddServerMonitoringFunction) Call(
 	// Now verify the artifact actually exists
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
-		scope.Log("add_server_monitoring: %v", err)
+		scope.Error("add_server_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
 	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
-		scope.Log("add_server_monitoring: %v", err)
+		scope.Error("add_server_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -236,7 +236,7 @@ func (self AddServerMonitoringFunction) Call(
 
 	server_event_manager, err := services.GetServerEventManager(config_obj)
 	if err != nil {
-		scope.Log("add_server_monitoring: %v", err)
+		scope.Error("add_server_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -282,7 +282,7 @@ func (self AddServerMonitoringFunction) Call(
 	principal := vql_subsystem.GetPrincipal(scope)
 	err = server_event_manager.Update(config_obj, principal, event_config)
 	if err != nil {
-		scope.Log("add_server_monitoring: %v", err)
+		scope.Error("add_server_monitoring: %v", err)
 		return vfilter.Null{}
 	}
 

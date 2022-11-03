@@ -39,7 +39,7 @@ func init() {
 
 				err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 				if err != nil {
-					scope.Log("interfaces: %s", err)
+					scope.Error("interfaces: %s", err)
 					return result
 				}
 

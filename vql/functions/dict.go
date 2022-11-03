@@ -31,7 +31,7 @@ func (self _ToDictFunc) Call(ctx context.Context, scope vfilter.Scope,
 	arg := &_ToDictFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("to_dict: %s", err.Error())
+		scope.Error("to_dict: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -75,7 +75,7 @@ func (self _ItemsFunc) Call(ctx context.Context, scope vfilter.Scope,
 	arg := &_ToDictFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("items: %s", err.Error())
+		scope.Error("items: %s", err.Error())
 		return vfilter.Null{}
 	}
 

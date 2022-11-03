@@ -140,7 +140,7 @@ func (self _CacheFunc) Call(ctx context.Context, scope vfilter.Scope,
 	arg := &_CacheFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("cache: %s", err.Error())
+		scope.Error("cache: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -193,7 +193,7 @@ func (self _MemoizeFunction) Call(ctx context.Context, scope vfilter.Scope,
 	arg := &_MemoizeFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("memoize: %s", err.Error())
+		scope.Error("memoize: %s", err.Error())
 		return vfilter.Null{}
 	}
 

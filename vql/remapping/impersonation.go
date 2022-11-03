@@ -36,7 +36,7 @@ func (self ImpersonatedExpand) Call(
 	arg := &ExpandPathArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("expand: %s", err.Error())
+		scope.Error("expand: %s", err.Error())
 		return vfilter.Null{}
 	}
 

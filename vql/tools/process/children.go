@@ -18,7 +18,7 @@ func (self getChildren) Call(ctx context.Context,
 	arg := &getChainArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("process_tracker_children: %v", err)
+		scope.Error("process_tracker_children: %v", err)
 		return vfilter.Null{}
 	}
 

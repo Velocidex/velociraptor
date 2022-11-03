@@ -30,7 +30,7 @@ func (self ColumnFilter) Call(
 		arg := &ColumnFilterArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("column_filter: %v", err)
+			scope.Error("column_filter: %v", err)
 			return
 		}
 
@@ -43,7 +43,7 @@ func (self ColumnFilter) Call(
 		for _, include := range arg.Include {
 			c, err := regexp.Compile(include)
 			if err != nil {
-				scope.Log("column_filter: %v", err)
+				scope.Error("column_filter: %v", err)
 				return
 			}
 			includes = append(includes, c)
@@ -54,7 +54,7 @@ func (self ColumnFilter) Call(
 		for _, exclude := range arg.Exclude {
 			c, err := regexp.Compile(exclude)
 			if err != nil {
-				scope.Log("column_filter: %v", err)
+				scope.Error("column_filter: %v", err)
 				return
 			}
 			excludes = append(excludes, c)

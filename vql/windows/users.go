@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 /*
@@ -154,20 +155,20 @@ func (self *LookupSidFunction) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 	if err != nil {
-		scope.Log("LookupSID: %s", err)
+		scope.Error("LookupSID: %s", err)
 		return false
 	}
 
 	arg := &LookupSidFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("LookupSID: %s", err.Error())
+		scope.Error("LookupSID: %s", err.Error())
 		return false
 	}
 
 	sid, err := syscall.StringToSid(arg.Sid)
 	if err != nil {
-		scope.Log("LookupSID: %s", err.Error())
+		scope.Error("LookupSID: %s", err.Error())
 		return vfilter.Null{}
 	}
 
@@ -180,7 +181,7 @@ func (self *LookupSidFunction) Call(ctx context.Context,
 	err = syscall.LookupAccountSid(&system_name[0], sid, &name[0], &namelen,
 		&domain[0], &domain_len, &sid_name_use)
 	if err != nil {
-		scope.Log("LookupSID: %s", err.Error())
+		scope.Error("LookupSID: %s", err.Error())
 		return vfilter.Null{}
 	}
 

@@ -33,7 +33,7 @@ func (self ReadKeyValues) Call(
 		arg := &ReadKeyValuesArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("read_reg_key: %s", err.Error())
+			scope.Error("read_reg_key: %s", err.Error())
 			return
 		}
 
@@ -45,7 +45,7 @@ func (self ReadKeyValues) Call(
 
 		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
-			scope.Log("read_reg_key: %v", err)
+			scope.Error("read_reg_key: %v", err)
 			return
 		}
 
@@ -85,7 +85,7 @@ func (self ReadKeyValues) Call(
 		if arg.Root != nil && arg.Globs == nil {
 			file_info, err := accessor.LstatWithOSPath(arg.Root)
 			if err != nil {
-				scope.Log("read_reg_key: %v: %v", arg.Root, err)
+				scope.Error("read_reg_key: %v: %v", arg.Root, err)
 				return
 			}
 			emit_dict(file_info)

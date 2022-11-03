@@ -35,7 +35,7 @@ func (self *GetPidFunction) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 	if err != nil {
-		scope.Log("environ: %s", err)
+		scope.Error("environ: %s", err)
 		return 0
 	}
 

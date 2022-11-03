@@ -28,7 +28,7 @@ func (self ItemsPlugin) Call(
 		arg := &ItemsPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("items: %v", err)
+			scope.Error("items: %v", err)
 			return
 		}
 

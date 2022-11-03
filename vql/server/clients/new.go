@@ -34,13 +34,13 @@ func (self NewClientFunction) Call(ctx context.Context,
 
 	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 	if err != nil {
-		scope.Log("client_create: %s", err)
+		scope.Error("client_create: %s", err)
 		return &vfilter.Null{}
 	}
 
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("client_create: %s", err)
+		scope.Error("client_create: %s", err)
 		return &vfilter.Null{}
 	}
 
@@ -52,7 +52,7 @@ func (self NewClientFunction) Call(ctx context.Context,
 
 	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
-		scope.Log("client_create: %s", err)
+		scope.Error("client_create: %s", err)
 		return &vfilter.Null{}
 	}
 
@@ -78,13 +78,13 @@ func (self NewClientFunction) Call(ctx context.Context,
 
 	err = client_info_manager.Set(ctx, &services.ClientInfo{record})
 	if err != nil {
-		scope.Log("client_create: %s", err)
+		scope.Error("client_create: %s", err)
 		return &vfilter.Null{}
 	}
 
 	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
-		scope.Log("client_create: %s", err)
+		scope.Error("client_create: %s", err)
 		return &vfilter.Null{}
 	}
 
@@ -97,7 +97,7 @@ func (self NewClientFunction) Call(ctx context.Context,
 	} {
 		err = indexer.SetIndex(arg.ClientId, term)
 		if err != nil {
-			scope.Log("client_create: %s", err)
+			scope.Error("client_create: %s", err)
 			return &vfilter.Null{}
 		}
 	}

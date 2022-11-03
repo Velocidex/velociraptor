@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 /*
@@ -194,7 +195,7 @@ func (self PslistPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {
-			scope.Log("pslist: %s", err)
+			scope.Error("pslist: %s", err)
 			return
 		}
 
@@ -205,7 +206,7 @@ func (self PslistPlugin) Call(
 
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("pslist: %s", err.Error())
+			scope.Error("pslist: %s", err.Error())
 			return
 		}
 
@@ -214,7 +215,7 @@ func (self PslistPlugin) Call(
 		handle, err := windows.CreateToolhelp32Snapshot(
 			TH32CS_SNAPPROCESS, uint32(arg.Pid))
 		if err != nil {
-			scope.Log("CreateToolhelp32Snapshot: %v ", err)
+			scope.Error("CreateToolhelp32Snapshot: %v ", err)
 			return
 		}
 		defer windows.Close(handle)
@@ -224,7 +225,7 @@ func (self PslistPlugin) Call(
 
 		err = windows.Process32First(handle, &entry)
 		if err != nil {
-			scope.Log("Process32First: %v ", err)
+			scope.Error("Process32First: %v ", err)
 			return
 		}
 
@@ -261,7 +262,7 @@ func (self PslistPlugin) Call(
 			if err == syscall.ERROR_NO_MORE_FILES {
 				return
 			} else if err != nil {
-				scope.Log("Process32Next: %v ", err)
+				scope.Error("Process32Next: %v ", err)
 				return
 			}
 		}
