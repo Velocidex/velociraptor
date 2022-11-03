@@ -900,6 +900,14 @@ message Defaults {
     // operation. Once this is exceeded we switch to disk mode which
     // is a lot slower. Default 30000
     uint64 max_in_memory_group_by = 9;
+
+    // If these are set we enforce VQL to only have the specified
+    // allowed VQL plugins and functions. This is a way to harden the
+    // server by removing potentially sensitive functionality to allow
+    // only approved VQL plugins to run.
+    repeated string allowed_plugins = 10;
+    repeated string allowed_functions = 11;
+    repeated string allowed_accessors = 12;
 }
 
 // Configures crypto preferences
