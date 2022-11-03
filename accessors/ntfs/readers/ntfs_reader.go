@@ -74,7 +74,6 @@ func (self *NTFSCachedContext) Start(
 	ctx context.Context, scope vfilter.Scope) (err error) {
 
 	cache_life := vql_constants.GetNTFSCacheTime(ctx, scope)
-	done := self.done
 
 	lru_size := vql_subsystem.GetIntFromRow(
 		self.scope, self.scope, constants.NTFS_CACHE_SIZE)
@@ -100,7 +99,10 @@ func (self *NTFSCachedContext) Start(
 	go func() {
 		for {
 			select {
-			case <-done:
+			case <-self.done:
+				self.mu.Lock()
+				self.done = nil
+				self.mu.Unlock()
 				return
 
 			case <-time.After(cache_life):
@@ -172,6 +174,7 @@ func GetNTFSCache(scope vfilter.Scope,
 			accessor: accessor,
 			device:   device,
 			scope:    scope,
+			done:     make(chan bool),
 		}
 		err := cache_ctx.Start(context.Background(), scope)
 		if err != nil {
