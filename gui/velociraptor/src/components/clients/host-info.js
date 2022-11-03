@@ -106,7 +106,7 @@ class QuarantineDialog extends Component {
             }, this.source.token).then((response) => {
                 runArtifact(
                     client_id,
-                    "Windows.Remediation.Quarantine",
+                    this.state.quarantine_artifact,
                     {MessageBox: this.state.message},
                     ()=>{
                         this.props.onClose();
@@ -316,6 +316,8 @@ class VeloHostInfo extends Component {
                 loading: true,
             });
 
+	    let quarantine_artifact = quarantine_artifacts[this.props.client.os_info.system];
+
             // Add the quarantine label to this host.
             api.post("v1/LabelClients", {
                 client_ids: [client_id],
@@ -323,7 +325,7 @@ class VeloHostInfo extends Component {
                 labels: ["Quarantine"],
             }, this.source.token).then((response) => {runArtifact(
                 client_id,
-                "Windows.Remediation.Quarantine",
+                quarantine_artifact,
                 {RemovePolicy: "Y"},
                 ()=>{
                     this.updateClientInfo();
