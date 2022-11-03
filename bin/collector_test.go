@@ -81,7 +81,7 @@ func (self *CollectorTestSuite) findAndPrepareBinary() {
 
 	// Copy the binary into the tmpdir
 	dest_file := filepath.Join(self.tmpdir, filepath.Base(self.binary))
-	err = utils.CopyFile(context.Background(), self.binary, dest_file, 0644)
+	err = utils.CopyFile(context.Background(), self.binary, dest_file, 0755)
 	assert.NoError(t, err)
 
 	self.binary = dest_file
