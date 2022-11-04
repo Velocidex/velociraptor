@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Velocidex/ttlcache/v2"
 	"github.com/go-errors/errors"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -39,6 +40,12 @@ type CryptoManager struct {
 	// and therefore the same RSA keys.
 	cipher_lru *CipherLRU
 
+	// A cache of unauthenticated cipher objects. They will expire
+	// from the cache within a few minutes but this avoids us having
+	// to decrypt them during enrollment when all messages are
+	// unauthenticated.
+	unauthenticated_lru *ttlcache.Cache
+
 	caPool *x509.CertPool
 
 	logger *logging.LogContext
@@ -48,6 +55,7 @@ type CryptoManager struct {
 func (self *CryptoManager) Clear() {
 	self.cipher_lru.Clear()
 	self.Resolver.Clear()
+	self.unauthenticated_lru.Purge()
 }
 
 func (self *CryptoManager) ClientId() string {
@@ -83,14 +91,18 @@ func NewCryptoManager(config_obj *config_proto.Config,
 		return nil, err
 	}
 
-	return &CryptoManager{
-		config:      config_obj,
-		private_key: private_key,
-		client_id:   client_id,
-		Resolver:    public_key_resolver,
-		cipher_lru:  NewCipherLRU(config_obj.Frontend.Resources.ExpectedClients),
-		logger:      logging.GetLogger(config_obj, &logging.ClientComponent),
-	}, nil
+	result := &CryptoManager{
+		config:              config_obj,
+		private_key:         private_key,
+		client_id:           client_id,
+		Resolver:            public_key_resolver,
+		cipher_lru:          NewCipherLRU(config_obj.Frontend.Resources.ExpectedClients),
+		unauthenticated_lru: ttlcache.NewCache(),
+		logger:              logging.GetLogger(config_obj, &logging.ClientComponent),
+	}
+
+	result.unauthenticated_lru.SetTTL(time.Second * 60)
+	return result, nil
 }
 
 /* Verify the HMAC protecting the cipher properties blob.
@@ -210,6 +222,22 @@ func (self *CryptoManager) getAuthState(
 	return true, nil
 }
 
+func (self *CryptoManager) getCachedCipher(encrypted_cipher []byte) (*_Cipher, bool) {
+	cipher, ok := self.cipher_lru.GetByInboundCipher(encrypted_cipher)
+	if ok {
+		return cipher, ok
+	}
+
+	cipher_any, err := self.unauthenticated_lru.Get(string(encrypted_cipher))
+	if err == nil {
+		cipher, ok := cipher_any.(*_Cipher)
+		if ok {
+			return cipher, true
+		}
+	}
+	return nil, false
+}
+
 /* Decrypts an encrypted parcel and produces a MessageInfo. */
 func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, error) {
 	var err error
@@ -226,7 +254,7 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, er
 		return &vcrypto.MessageInfo{}, nil
 	}
 
-	cipher, ok := self.cipher_lru.GetByInboundCipher(communications.EncryptedCipher)
+	cipher, ok := self.getCachedCipher(communications.EncryptedCipher)
 	if ok {
 		// Check HMAC to save checking the RSA signature for
 		// malformed packets.
@@ -243,7 +271,7 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, er
 		}
 
 		// Cipher was cached so we trust it
-		msg_info.Authenticated = true
+		msg_info.Authenticated = cipher.authenticated
 		msg_info.Source = cipher.cipher_metadata.Source
 
 		return msg_info, nil
@@ -312,14 +340,23 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, er
 				cipher_metadata:   cipher_metadata,
 				encrypted_cipher:  communications.EncryptedCipher,
 				cipher_properties: cipher_properties,
+				authenticated:     msg_info.Authenticated,
 			},
 			nil, /* outbound_cipher */
 		)
 
-		msg_info.Authenticated = true
 		msg_info.Source = cipher_metadata.Source
 		return msg_info, nil
 	}
+
+	self.unauthenticated_lru.Set(
+		msg_info.Source,
+		&_Cipher{
+			cipher_metadata:   cipher_metadata,
+			encrypted_cipher:  communications.EncryptedCipher,
+			cipher_properties: cipher_properties,
+			authenticated:     false,
+		})
 
 	// Make sure the message source is set from the cipher_metadata
 	// overriding the internal Source. The source is cryptographically

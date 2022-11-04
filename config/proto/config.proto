@@ -908,6 +908,14 @@ message Defaults {
     repeated string allowed_plugins = 10;
     repeated string allowed_functions = 11;
     repeated string allowed_accessors = 12;
+
+    // How long to cache ACL policies (default 60 sec)
+    uint64 acl_lru_timeout_sec = 13;
+
+    // Ignore messages from unauthenticated clients for this long -
+    // gives them a chance to enrol first (default 10 sec).
+    int64 unauthenticated_lru_timeout_sec = 14;
+
 }
 
 // Configures crypto preferences

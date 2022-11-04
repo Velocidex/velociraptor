@@ -37,6 +37,7 @@ import (
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -461,6 +462,10 @@ func NewVelociraptorServerService(name string) (
 					"Unable to load config: %v", err))
 				time.Sleep(10 * time.Second)
 				continue
+			}
+
+			if config_obj.Frontend.ServerServices == nil {
+				config_obj.Frontend.ServerServices = services.AllServerServicesSpec()
 			}
 
 			ctx, cancel := install_sig_handler()

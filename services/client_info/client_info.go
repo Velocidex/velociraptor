@@ -296,7 +296,13 @@ func (self *ClientInfoManager) Start(
 				time.Millisecond
 		}
 
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
+
+			// When we teardown write the data to storage if needed.
+			defer self.lru.Purge()
+
 			for {
 				select {
 				case <-ctx.Done():
@@ -562,6 +568,10 @@ func (self *ClientInfoManager) Get(
 
 func (self *ClientInfoManager) Set(
 	ctx context.Context, client_info *services.ClientInfo) error {
+
+	// Force next read to come from storage.
+	self.Remove(ctx, client_info.ClientId)
+
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
@@ -613,11 +623,13 @@ func (self *ClientInfoManager) GetCacheInfoFromStorage(
 	// Read the main client record
 	err = db.GetSubject(self.config_obj, client_path_manager.Path(),
 		&client_info.ClientInfo)
-	// Special case the server - it is a special client that does not
-	// need to enrol. It actually does have a client record becuase it
-	// needs to schedule tasks for itself.
-	if err != nil && client_id != "server" {
-		return nil, err
+	if err != nil {
+		// If we can not read the client_info from disk, we cache a
+		// fake client_info. This can happen during enrollment when a
+		// proper client_info is not written yet but hunts are still
+		// outstanding. Eventually the real client info will be
+		// properly updated.
+		client_info.ClientId = client_id
 	}
 
 	cache_info := &CachedInfo{
@@ -663,9 +675,6 @@ func NewClientInfoManager(config_obj *config_proto.Config) *ClientInfoManager {
 
 		mutation_manager: NewMutationManager(),
 	}
-
-	// When we teardown write the data to storage if needed.
-	defer service.lru.Purge()
 
 	service.lru.SetCacheSizeLimit(int(expected_clients))
 

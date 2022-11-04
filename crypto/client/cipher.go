@@ -43,6 +43,7 @@ type _Cipher struct {
 	cipher_metadata           *crypto_proto.CipherMetadata
 	encrypted_cipher          []byte
 	encrypted_cipher_metadata []byte
+	authenticated             bool
 }
 
 func (self *_Cipher) Size() int {

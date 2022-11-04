@@ -108,12 +108,12 @@ func (self *EnrollmentService) ProcessEnrollment(
 	if err != nil {
 		return err
 	}
-	_, err = client_info_manager.Get(ctx, client_id)
+	client_info, err := client_info_manager.Get(ctx, client_id)
 
 	// If we have a valid client record we do not need to
 	// interrogate. Interrogation happens automatically only once
 	// - the first time a client appears.
-	if err == nil {
+	if err == nil && client_info.LastInterrogateFlowId != "" {
 		return nil
 	}
 
@@ -168,7 +168,6 @@ func (self *EnrollmentService) ProcessEnrollment(
 	// flight. We are here because the client_info_manager does not
 	// have the record in cache, so next Get() will just read it from
 	// disk on all minions.
-
 	err = client_info_manager.Set(ctx, &services.ClientInfo{
 		actions_proto.ClientInfo{
 			ClientId:                    client_id,
@@ -327,6 +326,8 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	// Update the client indexes for the GUI. Add any keywords we
 	// wish to be searchable in the UI here.
 	for _, term := range []string{
+		"all",
+		client_id,
 		"host:" + client_info.Fqdn,
 		"host:" + client_info.Hostname} {
 		err := indexer.SetIndex(client_id, term)

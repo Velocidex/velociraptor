@@ -343,6 +343,8 @@ func StartUserManager(
 	}
 	services.RegisterUserManager(service)
 
+	acls.SetACLManager(acls.NewACLManager(config_obj))
+
 	return nil
 }
 

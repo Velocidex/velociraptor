@@ -9,7 +9,7 @@ import (
 
 var (
 	mu          sync.Mutex
-	gACLManager IACLManager = &ACLManager{}
+	gACLManager IACLManager = NewACLManager(&config_proto.Config{})
 )
 
 func SetACLManager(manager IACLManager) {

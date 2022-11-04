@@ -50,7 +50,9 @@ Tips:
 import (
 	"fmt"
 	"strings"
+	"time"
 
+	"github.com/Velocidex/ttlcache/v2"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -219,9 +221,30 @@ func GetPermission(name string) ACL_PERMISSION {
 	return NO_PERMISSIONS
 }
 
-type ACLManager struct{}
+type ACLManager struct {
+	// Cache the effective policy for each principal for 60 sec.
+	lru *ttlcache.Cache
+}
 
-func (self ACLManager) GetPolicy(
+func NewACLManager(config_obj *config_proto.Config) *ACLManager {
+	result := &ACLManager{
+		lru: ttlcache.NewCache(),
+	}
+
+	timeout := time.Duration(60 * time.Second)
+	if config_obj.Defaults != nil &&
+		config_obj.Defaults.AclLruTimeoutSec > 0 {
+		timeout = time.Duration(
+			config_obj.Defaults.AclLruTimeoutSec) * time.Second
+	}
+
+	// ACLs do not typically change that quickly, cache for 60 sec.
+	result.lru.SetTTL(timeout)
+
+	return result
+}
+
+func (self *ACLManager) GetPolicy(
 	config_obj *config_proto.Config,
 	principal string) (*acl_proto.ApiClientACL, error) {
 
@@ -245,6 +268,14 @@ func (self ACLManager) GetPolicy(
 func (self ACLManager) GetEffectivePolicy(
 	config_obj *config_proto.Config,
 	principal string) (*acl_proto.ApiClientACL, error) {
+
+	acl_obj_any, err := self.lru.Get(principal)
+	if err == nil {
+		acl_obj, ok := acl_obj_any.(*acl_proto.ApiClientACL)
+		if ok {
+			return acl_obj, nil
+		}
+	}
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -272,6 +303,9 @@ func (self ACLManager) GetEffectivePolicy(
 
 	// Reserved for the server itself - can not be set by normal means.
 	acl_obj.SuperUser = false
+
+	self.lru.Set(principal, acl_obj)
+
 	return acl_obj, nil
 }
 
