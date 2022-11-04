@@ -45,17 +45,23 @@ if ! command -v protoc-gen-grpc-gateway > /dev/null; then
     go install github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway
 fi
 
-for i in $CWD/proto/ $CWD/crypto/proto/ \
+PROTO_DIRECTORIES="$CWD/proto/ $CWD/crypto/proto/ \
                      $CWD/artifacts/proto/ \
                      $CWD/actions/proto/ \
                      $CWD/services/frontend/proto/ \
                      $CWD/config/proto/ \
                      $CWD/timelines/proto/ \
                      $CWD/acls/proto/ \
-                     $CWD/flows/proto/ ; do
+                     $CWD/flows/proto/"
+
+for i in  $PROTO_DIRECTORIES ; do
     debug Building protos in $i
     debug $PROTOC -I$i -I$GOPATH/src/ -I/usr/include/ -I/usr/local/include/ -I$GOOGLEAPIS_PATH -I$CWD --go_out=paths=source_relative:$i $i/*.proto
     $PROTOC -I$i -I$GOPATH/src/ -I/usr/include/ -I/usr/local/include/ -I$GOOGLEAPIS_PATH -I$CWD --go_out=paths=source_relative:$i $i/*.proto
+
+    # Clean up extra version information the proto compiler adds to
+    # the files.
+    sed -i -e '1h;2,$H;$!d;g' -re 's|// versions.+// source:|// source:|' $i/*.pb.go
 done
 
 # Build GRPC servers.
@@ -77,4 +83,7 @@ for i in  $CWD/api/proto/ ; do
            -I$GOOGLEAPIS_PATH -I/usr/include/ \
            --grpc-gateway_out=paths=source_relative,logtostderr=true:$i $i/*.proto
 
+    # Clean up extra version information the proto compiler adds to
+    # the files.
+    sed -i -e '1h;2,$H;$!d;g' -re 's|// versions.+// source|// source|' $i/*.pb.go
 done

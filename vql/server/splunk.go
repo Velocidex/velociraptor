@@ -31,29 +31,33 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/ZachtimusPrime/Go-Splunk-HTTP/splunk/v2"
+	"github.com/clayscode/Go-Splunk-HTTP/splunk/v2"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type _SplunkPluginArgs struct {
-	Query      vfilter.StoredQuery `vfilter:"required,field=query,doc=Source for rows to upload."`
-	Threads    int64               `vfilter:"optional,field=threads,doc=How many threads to use."`
-	URL        string              `vfilter:"optional,field=url,doc=The Splunk Event Collector URL."`
-	Token      string              `vfilter:"optional,field=token,doc=Splunk HEC Token."`
-	Index      string              `vfilter:"required,field=index,doc=The name of the index to upload to."`
-	Source     string              `vfilter:"optional,field=source,doc=The source field for splunk. If not specified this will be 'velociraptor'."`
-	Sourcetype string              `vfilter:"optional,field=sourcetype,doc=The sourcetype field for splunk. If not specified this will 'vql'"`
-	ChunkSize  int64               `vfilter:"optional,field=chunk_size,doc=The number of rows to send at the time."`
-	SkipVerify bool                `vfilter:"optional,field=skip_verify,doc=Skip SSL verification(default: False)."`
-	RootCerts  string              `vfilter:"optional,field=root_ca,doc=As a better alternative to skip_verify, allows root ca certs to be added here."`
-	WaitTime   int64               `vfilter:"optional,field=wait_time,doc=Batch splunk upload this long (2 sec)."`
+	Query          vfilter.StoredQuery `vfilter:"required,field=query,doc=Source for rows to upload."`
+	Threads        int64               `vfilter:"optional,field=threads,doc=How many threads to use."`
+	URL            string              `vfilter:"optional,field=url,doc=The Splunk Event Collector URL."`
+	Token          string              `vfilter:"optional,field=token,doc=Splunk HEC Token."`
+	Index          string              `vfilter:"required,field=index,doc=The name of the index to upload to."`
+	Source         string              `vfilter:"optional,field=source,doc=The source field for splunk. If not specified this will be 'velociraptor'."`
+	Sourcetype     string              `vfilter:"optional,field=sourcetype,doc=The sourcetype field for splunk. If not specified this will 'vql'"`
+	ChunkSize      int64               `vfilter:"optional,field=chunk_size,doc=The number of rows to send at the time."`
+	SkipVerify     bool                `vfilter:"optional,field=skip_verify,doc=Skip SSL verification(default: False)."`
+	RootCerts      string              `vfilter:"optional,field=root_ca,doc=As a better alternative to skip_verify, allows root ca certs to be added here."`
+	WaitTime       int64               `vfilter:"optional,field=wait_time,doc=Batch splunk upload this long (2 sec)."`
+	Hostname       string              `vfilter:"optional,field=hostname,doc=Hostname for Splunk Events. Defaults to server hostname."`
+	TimestampField string              `vfilter:"optional,field=timestamp_field,doc=Field to use as event timestamp."`
+	HostnameField  string              `vfilter:"optional,field=hostname_field,doc=Field to use as event hostname. Overrides hostname param."`
 }
 
 type _SplunkPlugin struct{}
@@ -160,6 +164,7 @@ func _upload_rows(
 		arg.Source,
 		arg.Sourcetype,
 		arg.Index,
+		arg.Hostname,
 	)
 
 	wait_time := time.Duration(arg.WaitTime) * time.Second
@@ -204,15 +209,53 @@ func send_to_splunk(
 	var events []*splunk.Event
 
 	for _, event := range buf {
-		events = append(
-			events,
-			client.NewEvent(
-				event,
-				arg.Source,
-				arg.Sourcetype,
-				arg.Index,
-			),
-		)
+		// Extract hostname_field if exists
+		var hostname string
+		var ok bool
+		dict := vfilter.RowToDict(ctx, scope, event)
+		if arg.HostnameField != "" {
+			hostname, ok = dict.GetString(arg.HostnameField)
+			if !ok {
+				scope.Log("ERROR:splunk_upload: %s not found, or isn't a string!", arg.HostnameField)
+				return
+			}
+		}
+
+		// Extract timestamp_field if exists
+		if arg.TimestampField != "" {
+			ts, ok := dict.Get(arg.TimestampField)
+			if ok {
+				timestamp, ok := functions.TimeFromAny(scope, ts)
+				if ok != nil {
+					// Default to start of Epoch if parse error
+					timestamp = time.Date(1970, time.Month(1), 1, 0, 0, 0, 0, time.UTC)
+				}
+				events = append(
+					events,
+					client.NewEventWithTime(
+						timestamp,
+						dict,
+						arg.Source,
+						arg.Sourcetype,
+						arg.Index,
+						hostname,
+					),
+				)
+			} else {
+				scope.Log("ERROR:splunk_upload: %s not found!", arg.TimestampField)
+			}
+		} else {
+			events = append(
+				events,
+				client.NewEvent(
+					dict,
+					arg.Source,
+					arg.Sourcetype,
+					arg.Index,
+					hostname,
+				),
+			)
+		}
 	}
 
 	err := client.LogEvents(events)

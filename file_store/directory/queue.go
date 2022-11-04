@@ -34,6 +34,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -71,6 +72,9 @@ func (self *QueuePool) Register(
 	subctx, cancel := context.WithCancel(ctx)
 	new_registration, err := NewListener(self.config_obj, subctx, vfs_path, options)
 	if err != nil {
+		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		logger.Warn("Failed to register QueuePool for %s: %v", vfs_path, err)
+
 		cancel()
 		output_chan := make(chan *ordereddict.Dict)
 		close(output_chan)

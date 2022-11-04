@@ -167,8 +167,9 @@ func (self MFTScanPlugin) Call(
 			return
 		}
 
-		for item := range ntfs.ParseMFTFile(
-			ctx, utils.MakeReaderAtter(fd), st.Size(), 0x1000, 0x400) {
+		for item := range ntfs.ParseMFTFileWithOptions(
+			ctx, utils.MakeReaderAtter(fd), st.Size(),
+			0x1000, 0x400, readers.GetScopeOptions(scope)) {
 			select {
 			case <-ctx.Done():
 				return

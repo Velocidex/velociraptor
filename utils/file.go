@@ -27,9 +27,9 @@ import (
 
 // https://stackoverflow.com/questions/21060945/simple-way-to-copy-a-file-in-golang
 
-// CopyFile copies a file from src to dst. If src and dst files exist, and are
-// the same, then return success. Otherise, attempt to create a hard link
-// between the two files. If that fail, copy the file contents from src to dst.
+// CopyFile copies a file from src to dst. If src and dst files exist,
+// and are the same, then return success. Otherise, copy the file
+// contents from src to dst.
 func CopyFile(ctx context.Context,
 	src, dst string, mode os.FileMode) (err error) {
 	sfi, err := os.Stat(src)
@@ -41,6 +41,7 @@ func CopyFile(ctx context.Context,
 		// symlinks, devices, etc.)
 		return fmt.Errorf("CopyFile: non-regular source file %s (%q)", sfi.Name(), sfi.Mode().String())
 	}
+
 	dfi, err := os.Stat(dst)
 	if err != nil {
 		// File may not exist yet so this is not an error.
@@ -48,11 +49,13 @@ func CopyFile(ctx context.Context,
 			return errors.Wrap(err, 0)
 		}
 	} else {
+
 		if !(dfi.Mode().IsRegular()) {
 			return fmt.Errorf(
 				"CopyFile: non-regular destination file %s (%q)",
 				dfi.Name(), dfi.Mode().String())
 		}
+
 		// Files are the same - it is not an error but there
 		// is nothing else to do.
 		if os.SameFile(sfi, dfi) {
@@ -60,15 +63,9 @@ func CopyFile(ctx context.Context,
 		}
 	}
 
-	// Try to use Link for more efficient copying.
-	if err = os.Link(src, dst); err == nil {
-		return errors.Wrap(err, 0)
-	}
-
 	// This may not work if the files are on different filesystems
 	// or the filesystem does not support it.
 	return copyFileContents(ctx, src, dst, mode)
-
 }
 
 // copyFileContents copies the contents of the file named src to the file named

@@ -64,6 +64,9 @@ parameters:
   - name: AllDrives
     type: bool
     description: "Select MFT search on all attached ntfs drives."
+  - name: NTFS_INCLUDE_SHORT_NAMES
+    description: See all names referencing the file including short names.
+    type: bool
 
 sources:
   - query: |

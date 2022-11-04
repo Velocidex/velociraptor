@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	VERSION                    = "0.6.7-rc2"
+	VERSION                    = "0.6.7-rc3"
 	ENROLLMENT_WELL_KNOWN_FLOW = "E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW = FLOW_PREFIX + "Monitoring"
 
@@ -74,6 +74,8 @@ const (
 	// Number of clusters to cache in memory (default 100).
 	NTFS_CACHE_SIZE          = "NTFS_CACHE_SIZE"
 	NTFS_MAX_DIRECTORY_DEPTH = "NTFS_MAX_DIRECTORY_DEPTH"
+	NTFS_MAX_LINKS           = "NTFS_MAX_LINKS"
+	NTFS_INCLUDE_SHORT_NAMES = "NTFS_INCLUDE_SHORT_NAMES"
 
 	RAW_REG_CACHE_SIZE  = "RAW_REG_CACHE_SIZE"
 	BINARY_CACHE_SIZE   = "BINARY_CACHE_SIZE"
