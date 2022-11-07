@@ -51,7 +51,7 @@ func (self *ApiServer) GetClientMetadata(
 		permissions = acls.SERVER_ADMIN
 	}
 
-	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view clients.")
@@ -84,7 +84,7 @@ func (self *ApiServer) SetClientMetadata(
 
 	user_name := user_record.Name
 	permissions := acls.LABEL_CLIENT
-	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to modify client labels.")
@@ -112,7 +112,7 @@ func (self *ApiServer) GetClient(
 
 	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view clients.")
@@ -165,7 +165,7 @@ func (self *ApiServer) GetClientFlows(
 
 	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(org_config_obj, user_name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view flows.")

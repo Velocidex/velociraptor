@@ -57,7 +57,7 @@ func (self GrantFunction) Call(
 	// No OrgIds specified - the user will be created in the root org.
 	if len(arg.OrgIds) == 0 {
 		// Grant the roles to the user
-		err = acls.GrantRoles(config_obj, arg.Username, arg.Roles)
+		err = services.GrantRoles(config_obj, arg.Username, arg.Roles)
 		if err != nil {
 			scope.Log("user_grant: %s", err)
 			return vfilter.Null{}
@@ -79,7 +79,7 @@ func (self GrantFunction) Call(
 			}
 
 			// Grant the roles to the user
-			err = acls.GrantRoles(org_config_obj, arg.Username, arg.Roles)
+			err = services.GrantRoles(org_config_obj, arg.Username, arg.Roles)
 			if err != nil {
 				scope.Log("user_grant: %s", err)
 				return vfilter.Null{}

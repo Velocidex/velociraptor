@@ -2,6 +2,8 @@ package acl_managers
 
 import "www.velocidex.com/golang/velociraptor/acls"
 
+// Satisfy the interface vql_subsystem.ACLManager
+
 // NullACLManager is an acl manager which allows everything. This is
 // currently used on the client and on the command line where there is
 // no clear principal or ACL controls.

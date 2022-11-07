@@ -96,14 +96,14 @@ func (self UsersPlugin) Call(
 					Set("org_name", org_record.Name).
 					Set("picture", user_details.Picture).
 					Set("email", user_details.VerifiedEmail)
-				policy, err := acls.GetPolicy(org_config_obj, user_details.Name)
+				policy, err := services.GetPolicy(org_config_obj, user_details.Name)
 				if err == nil {
 					details.Set("roles", policy.Roles)
 				} else {
 					details.Set("roles", &vfilter.Null{})
 				}
 
-				effective_policy, err := acls.GetEffectivePolicy(org_config_obj, user_details.Name)
+				effective_policy, err := services.GetEffectivePolicy(org_config_obj, user_details.Name)
 				if err == nil {
 					details.Set("effective_policy", ConvertPolicyToOrderedDict(effective_policy))
 				} else {

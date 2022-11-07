@@ -67,7 +67,7 @@ func doUnzip() error {
 
 	builder := services.ScopeBuilder{
 		Config:     sm.Config,
-		ACLManager: acl_managers.NewRoleACLManager("administrator"),
+		ACLManager: acl_managers.NewRoleACLManager(sm.Config, "administrator"),
 		Logger:     log.New(&LogWriter{sm.Config}, "", 0),
 		Env: ordereddict.NewDict().
 			Set("ZipPath", filename).

@@ -301,8 +301,11 @@ func writeContentToFile(config_obj *config_proto.Config,
 	}
 
 	filename := urn.AsDatastoreFilename(config_obj)
+
+	// Truncate the file immediately so we dont need to make a seocnd
+	// syscall.
 	file, err := os.OpenFile(
-		filename, os.O_RDWR|os.O_CREATE, 0660)
+		filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0660)
 
 	// Try to create intermediate directories and try again.
 	if err != nil && os.IsNotExist(err) {
@@ -310,7 +313,8 @@ func writeContentToFile(config_obj *config_proto.Config,
 		if err != nil {
 			return err
 		}
-		file, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0660)
+		file, err = os.OpenFile(
+			filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0660)
 		if err != nil {
 			return err
 		}
@@ -321,11 +325,6 @@ func writeContentToFile(config_obj *config_proto.Config,
 		return errors.Wrap(err, 0)
 	}
 	defer file.Close()
-
-	err = file.Truncate(0)
-	if err != nil {
-		return err
-	}
 
 	_, err = file.Write(data)
 	if err != nil {

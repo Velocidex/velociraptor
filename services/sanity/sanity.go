@@ -11,7 +11,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
-	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -68,7 +67,7 @@ func (self *SanityChecks) CheckRootOrg(
 	// properly created.
 	if config_obj.Client != nil && config_obj.Client.PinnedServerName != "" {
 		service_account_name := config_obj.Client.PinnedServerName
-		err := acls.GrantRoles(
+		err := services.GrantRoles(
 			config_obj, service_account_name, []string{"administrator"})
 		if err != nil {
 			return err

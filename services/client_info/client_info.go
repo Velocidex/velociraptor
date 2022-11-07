@@ -296,7 +296,13 @@ func (self *ClientInfoManager) Start(
 				time.Millisecond
 		}
 
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
+
+			// When we teardown write the data to storage if needed.
+			defer self.lru.Purge()
+
 			for {
 				select {
 				case <-ctx.Done():
@@ -562,6 +568,10 @@ func (self *ClientInfoManager) Get(
 
 func (self *ClientInfoManager) Set(
 	ctx context.Context, client_info *services.ClientInfo) error {
+
+	// Force next read to come from storage.
+	self.Remove(ctx, client_info.ClientId)
+
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
@@ -663,9 +673,6 @@ func NewClientInfoManager(config_obj *config_proto.Config) *ClientInfoManager {
 
 		mutation_manager: NewMutationManager(),
 	}
-
-	// When we teardown write the data to storage if needed.
-	defer service.lru.Purge()
 
 	service.lru.SetCacheSizeLimit(int(expected_clients))
 

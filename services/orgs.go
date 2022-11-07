@@ -41,6 +41,7 @@ func RegisterOrgManager(m OrgManager) {
 	org_manager = m
 }
 
+// hold all the services for each org
 type ServiceContainer interface {
 	FrontendManager() (FrontendManager, error)
 	Journal() (JournalService, error)
@@ -57,6 +58,7 @@ type ServiceContainer interface {
 	ClientEventManager() (ClientEventTable, error)
 	ServerEventManager() (ServerEventManager, error)
 	Notifier() (Notifier, error)
+	ACLManager() (ACLManager, error)
 }
 
 // The org manager manages multi-tenancies.

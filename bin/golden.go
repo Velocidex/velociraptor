@@ -184,7 +184,7 @@ func runTest(fixture *testFixture, sm *services.Service,
 
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
-		ACLManager: acl_managers.NewRoleACLManager("administrator", "org_admin"),
+		ACLManager: acl_managers.NewRoleACLManager(config_obj, "administrator", "org_admin"),
 		Logger:     log.New(log_writer, "Velociraptor: ", 0),
 		Uploader:   container,
 		Env: ordereddict.NewDict().
