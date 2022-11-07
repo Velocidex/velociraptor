@@ -29,12 +29,13 @@ func (self *ApiServer) GetSubject(
 	}
 
 	user_name := user_record.Name
-	token, err := acls.GetEffectivePolicy(org_config_obj, user_name)
+	token, err := services.GetEffectivePolicy(org_config_obj, user_name)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 
-	perm, err := acls.CheckAccessWithToken(token, acls.DATASTORE_ACCESS)
+	perm, err := services.CheckAccessWithToken(
+		org_config_obj, token, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to access datastore.")
@@ -81,12 +82,13 @@ func (self *ApiServer) SetSubject(
 	}
 
 	user_name := user_record.Name
-	token, err := acls.GetEffectivePolicy(org_config_obj, user_name)
+	token, err := services.GetEffectivePolicy(org_config_obj, user_name)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 
-	perm, err := acls.CheckAccessWithToken(token, acls.DATASTORE_ACCESS)
+	perm, err := services.CheckAccessWithToken(
+		org_config_obj, token, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to access datastore.")
@@ -145,12 +147,13 @@ func (self *ApiServer) ListChildren(
 	}
 
 	user_name := user_record.Name
-	token, err := acls.GetEffectivePolicy(org_config_obj, user_name)
+	token, err := services.GetEffectivePolicy(org_config_obj, user_name)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 
-	perm, err := acls.CheckAccessWithToken(token, acls.DATASTORE_ACCESS)
+	perm, err := services.CheckAccessWithToken(
+		org_config_obj, token, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to access datastore.")
@@ -204,12 +207,13 @@ func (self *ApiServer) DeleteSubject(
 	}
 
 	user_name := user_record.Name
-	token, err := acls.GetEffectivePolicy(org_config_obj, user_name)
+	token, err := services.GetEffectivePolicy(org_config_obj, user_name)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 
-	perm, err := acls.CheckAccessWithToken(token, acls.DATASTORE_ACCESS)
+	perm, err := services.CheckAccessWithToken(
+		org_config_obj, token, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to access datastore.")

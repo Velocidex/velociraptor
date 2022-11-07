@@ -313,7 +313,7 @@ func (self *ApiServer) LoadArtifactPack(
 
 	user_name := user_record.Name
 	permissions := acls.SERVER_ARTIFACT_WRITER
-	perm, err := acls.CheckAccess(org_config_obj, user_record.Name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, user_record.Name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to upload artifact packs.")

@@ -134,6 +134,7 @@ func (self *ClientInfoTestSuite) TestMasterMinion() {
 		client_info, err := master_client_info_manager.Get(
 			context.Background(), self.client_id)
 		assert.NoError(self.T(), err)
+
 		return client_info.IpAddress == "127.0.0.1"
 	})
 

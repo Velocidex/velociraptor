@@ -9,7 +9,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
 	"github.com/stretchr/testify/suite"
-	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -35,7 +34,7 @@ func (self *ServerArtifactsTestSuite) SetupTest() {
 	self.TestSuite.SetupTest()
 
 	// Create an administrator user
-	err := acls.GrantRoles(self.ConfigObj, "admin", []string{"administrator"})
+	err := services.GrantRoles(self.ConfigObj, "admin", []string{"administrator"})
 	assert.NoError(self.T(), err)
 }
 
@@ -179,7 +178,7 @@ sources:
 
 	// Create a reader user called gumby - reader role lacks the
 	// MACHINE_STATE permission.
-	err := acls.GrantRoles(self.ConfigObj, "gumby", []string{"reader"})
+	err := services.GrantRoles(self.ConfigObj, "gumby", []string{"reader"})
 	assert.NoError(self.T(), err)
 
 	details = self.ScheduleAndWait("Test", "gumby")

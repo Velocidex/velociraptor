@@ -116,7 +116,7 @@ func _build(self services.ScopeBuilder, from_scratch bool) vfilter.Scope {
 		// Reduce permissions based on the configuration.
 		if self.ACLManager != nil {
 			new_acl_manager, err := acl_managers.GetRemappingACLManager(
-				self.ACLManager, self.Config.Remappings)
+				self.Config, self.ACLManager, self.Config.Remappings)
 			if err != nil {
 				scope.Log("Applying remapping: %v", err)
 			}

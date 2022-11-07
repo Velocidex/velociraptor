@@ -11,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/acl_manager"
 	"www.velocidex.com/golang/velociraptor/services/broadcast"
 	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
@@ -53,6 +54,7 @@ type ServiceContainer struct {
 	client_event_manager services.ClientEventTable
 	server_event_manager services.ServerEventManager
 	notifier             services.Notifier
+	acl_manager          services.ACLManager
 }
 
 func (self *ServiceContainer) MockFrontendManager(svc services.FrontendManager) {
@@ -222,6 +224,16 @@ func (self *ServiceContainer) BroadcastService() (services.BroadcastService, err
 	return self.broadcast, nil
 }
 
+func (self *ServiceContainer) ACLManager() (services.ACLManager, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.acl_manager == nil {
+		return nil, errors.New("ACLManager Service not ready")
+	}
+	return self.acl_manager, nil
+}
+
 // Start all the services for the org and install it in the
 // manager. This function is used both in the client and the server to
 // start all the needed services.
@@ -332,6 +344,17 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		if err != nil {
 			return err
 		}
+	}
+
+	if spec.UserManager {
+		m, err := acl_manager.NewACLManager(ctx, wg, org_config)
+		if err != nil {
+			return err
+		}
+
+		service_container.mu.Lock()
+		service_container.acl_manager = m
+		service_container.mu.Unlock()
 	}
 
 	// Now start the services for this org. Services depend on other

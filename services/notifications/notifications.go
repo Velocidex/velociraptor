@@ -244,6 +244,9 @@ func (self *Notifier) ListenForNotification(client_id string) (chan bool, func()
 }
 
 func (self *Notifier) CountConnectedClients() uint64 {
+	if self.notification_pool == nil {
+		return 0
+	}
 	return self.notification_pool.Count()
 }
 

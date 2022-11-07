@@ -28,7 +28,7 @@ import (
 
 	"github.com/juju/ratelimit"
 	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -39,18 +39,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-var (
-	targetConcurrency = promauto.NewGauge(prometheus.GaugeOpts{
-		Name: "frontend_maximum_concurrency",
-		Help: "Maximum number of clients we serve at the same time.",
-	})
-
-	heapSize = promauto.NewGauge(prometheus.GaugeOpts{
-		Name: "frontend_current_heap_size",
-		Help: "Size of allocated heap.",
-	})
-)
-
 type Server struct {
 	manager *crypto_server.ServerCryptoManager
 	logger  *logging.LogContext
@@ -58,6 +46,7 @@ type Server struct {
 	// Limit concurrency for processing messages.
 	mu                  sync.Mutex
 	concurrency         *utils.Concurrency
+	reader_concurrency  *utils.Concurrency
 	concurrency_timeout time.Duration
 	throttler           *utils.Throttler
 
@@ -75,77 +64,11 @@ func (self *Server) Concurrency() *utils.Concurrency {
 	return self.concurrency
 }
 
-func (self *Server) adjustConcurrency(
-	max_concurrency uint64,
-	target_heap_size uint64, concurrency uint64) uint64 {
-
-	s := runtime.MemStats{}
-	runtime.ReadMemStats(&s)
-
-	// We are using up too much memory, drop concurrency.
-	if s.Alloc > target_heap_size {
-		new_concurrency := 2 * concurrency / 3
-
-		// We need some minimum concurrency (default 10% of max)
-		if new_concurrency < max_concurrency/10 {
-			new_concurrency = max_concurrency / 10
-		}
-
-		// No change in concurrency - nothing to do.
-		if new_concurrency == concurrency {
-			return concurrency
-		}
-
-		// Adjust concurrency
-		self.logger.Debug("Adjusting concurrency from %v to %v", concurrency, new_concurrency)
-		concurrency = new_concurrency
-
-		// We are using up less memory than
-		// specified, we can increase
-		// concurrency to approach the maximum level.
-	} else if s.Alloc < 2*target_heap_size/3 {
-		delta := (max_concurrency - concurrency) / 2
-
-		// No change in concurrency - nothing to do.
-		if delta == 0 {
-			return concurrency
-		}
-
-		// Adjust concurrency
-		self.logger.Debug("Adjusting concurrency from %v to %v", concurrency, concurrency+delta)
-		concurrency += delta
-
-	} else {
-		// Heap size is between max and 2/3 of max - this is
-		// good so no change is needed, check again later.
-		return concurrency
-	}
-
-	// Install the new concurrency controller.
-	targetConcurrency.Set(float64(concurrency))
-	heapSize.Set(float64(s.Alloc))
+func (self *Server) ReaderConcurrency() *utils.Concurrency {
 	self.mu.Lock()
-	self.concurrency = utils.NewConcurrencyControl(int(concurrency), self.concurrency_timeout)
-	self.mu.Unlock()
+	defer self.mu.Unlock()
 
-	return concurrency
-}
-
-func (self *Server) ManageConcurrency(max_concurrency uint64, target_heap_size uint64) {
-	concurrency := max_concurrency / 2
-
-	for {
-		new_concurrency := self.adjustConcurrency(max_concurrency, target_heap_size, concurrency)
-		concurrency = new_concurrency
-
-		// Wait for a minute and check again.
-		select {
-		case <-self.done:
-			return
-
-		case <-time.After(time.Minute):
-		}
-	}
+	return self.reader_concurrency
 }
 
 func (self *Server) Close() {
@@ -185,26 +108,20 @@ func NewServer(ctx context.Context,
 	result := Server{
 		manager:             manager,
 		logger:              logging.GetLogger(config_obj, &logging.FrontendComponent),
-		concurrency_timeout: time.Duration(concurrency) * time.Second,
+		concurrency_timeout: time.Duration(concurrency_timeout) * time.Second,
 		done:                make(chan bool),
 	}
 
 	result.concurrency = utils.NewConcurrencyControl(
 		int(concurrency), result.concurrency_timeout)
 
+	result.reader_concurrency = utils.NewConcurrencyControl(
+		int(100), result.concurrency_timeout)
+
 	if config_obj.Frontend.Resources.ConnectionsPerSecond > 0 {
 		result.logger.Info("Throttling connections to %v QPS",
 			config_obj.Frontend.Resources.ConnectionsPerSecond)
 		result.throttler = utils.NewThrottler(config_obj.Frontend.Resources.ConnectionsPerSecond)
-	}
-
-	heap_size := config_obj.Frontend.Resources.TargetHeapSize
-	if heap_size > 0 {
-		// If we are targetting a heap size then regulate concurrency
-		result.logger.Info("Targetting heap size %v, with maximum concurrency %v",
-			heap_size, concurrency)
-
-		go result.ManageConcurrency(concurrency, heap_size)
 	}
 
 	if config_obj.Frontend.Resources.GlobalUploadRate > 0 {
@@ -250,8 +167,30 @@ func (self *Server) ProcessUnauthenticatedMessages(
 		self.ProcessSingleUnauthenticatedMessage)
 }
 
+func (self *Server) DecryptForReader(ctx context.Context, request []byte) (
+	*crypto.MessageInfo, error) {
+
+	// Keep track of the average time the request spends
+	// waiting for a concurrency slot. If this time is too
+	// long it means concurrency may need to be increased.
+	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
+		concurrencyWaitHistorgram.Observe(v)
+	}))
+
+	cancel, err := self.ReaderConcurrency().StartConcurrencyControl(ctx)
+	if err != nil {
+		timeoutCounter.Inc()
+		return nil, errors.New("Timeout")
+	}
+	defer cancel()
+	timer.ObserveDuration()
+
+	return self.Decrypt(ctx, request)
+}
+
 func (self *Server) Decrypt(ctx context.Context, request []byte) (
 	*crypto.MessageInfo, error) {
+
 	message_info, err := self.manager.Decrypt(request)
 	if err != nil {
 		return nil, err
@@ -296,7 +235,21 @@ func (self *Server) Process(
 			IpAddress: message_info.RemoteAddr,
 		})
 	if err != nil {
-		return nil, 0, err
+
+		// If we can not read the client_info from disk, we cache a
+		// fake client_info. This can happen during enrollment when a
+		// proper client_info is not written yet but hunts are still
+		// outstanding. Eventually the real client info will be
+		// properly updated.
+		err = client_info_manager.Set(ctx, &services.ClientInfo{
+			actions_proto.ClientInfo{
+				ClientId:  message_info.Source,
+				Ping:      uint64(time.Now().UnixNano() / 1000),
+				IpAddress: message_info.RemoteAddr,
+			}})
+		if err != nil {
+			return nil, 0, err
+		}
 	}
 
 	message_list := &crypto_proto.MessageList{}

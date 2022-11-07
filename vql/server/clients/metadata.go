@@ -168,7 +168,7 @@ func (self ClientSetMetadataFunction) Info(
 	return &vfilter.FunctionInfo{
 		Name:    "client_set_metadata",
 		Doc:     "Sets client metadata. Client metadata is a set of free form key/value data",
-		ArgType: type_map.AddType(scope, &ClientMetadataFunctionArgs{}),
+		ArgType: type_map.AddType(scope, &ClientSetMetadataFunctionArgs{}),
 	}
 }
 
