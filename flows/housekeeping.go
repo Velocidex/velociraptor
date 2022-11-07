@@ -49,7 +49,9 @@ func CheckClientStatus(
 
 	stats, err := client_manager.GetStats(ctx, client_id)
 	if err != nil {
-		return err
+		// No client record was found yet. This is ok and can happen
+		// if the host is not properly enrolled yet.
+		return nil
 	}
 
 	// Check the client's event table for validity.

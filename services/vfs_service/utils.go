@@ -48,7 +48,7 @@ func watchForFlowCompletion(
 
 		builder := services.ScopeBuilder{
 			Config:     config_obj,
-			ACLManager: acl_managers.NewRoleACLManager("administrator"),
+			ACLManager: acl_managers.NewRoleACLManager(config_obj, "administrator"),
 			Env: ordereddict.NewDict().
 				Set("artifact_name", artifact_name),
 			Logger: logging.NewPlainLogger(config_obj,

@@ -28,6 +28,7 @@ import (
 
 	"github.com/juju/ratelimit"
 	"github.com/prometheus/client_golang/prometheus"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -234,7 +235,21 @@ func (self *Server) Process(
 			IpAddress: message_info.RemoteAddr,
 		})
 	if err != nil {
-		return nil, 0, err
+
+		// If we can not read the client_info from disk, we cache a
+		// fake client_info. This can happen during enrollment when a
+		// proper client_info is not written yet but hunts are still
+		// outstanding. Eventually the real client info will be
+		// properly updated.
+		err = client_info_manager.Set(ctx, &services.ClientInfo{
+			actions_proto.ClientInfo{
+				ClientId:  message_info.Source,
+				Ping:      uint64(time.Now().UnixNano() / 1000),
+				IpAddress: message_info.RemoteAddr,
+			}})
+		if err != nil {
+			return nil, 0, err
+		}
 	}
 
 	message_list := &crypto_proto.MessageList{}

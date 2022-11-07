@@ -182,7 +182,7 @@ func normalizeOrgList(user_record *api_proto.VelociraptorUser) error {
 			continue
 		}
 
-		ok, _ := acls.CheckAccess(org_config_obj, user_record.Name, acls.READ_RESULTS)
+		ok, _ := services.CheckAccess(org_config_obj, user_record.Name, acls.READ_RESULTS)
 		if !ok {
 			continue
 		}
@@ -342,8 +342,6 @@ func StartUserManager(
 		config_obj: config_obj,
 	}
 	services.RegisterUserManager(service)
-
-	acls.SetACLManager(acls.NewACLManager(config_obj))
 
 	return nil
 }

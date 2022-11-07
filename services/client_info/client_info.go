@@ -623,13 +623,11 @@ func (self *ClientInfoManager) GetCacheInfoFromStorage(
 	// Read the main client record
 	err = db.GetSubject(self.config_obj, client_path_manager.Path(),
 		&client_info.ClientInfo)
-	if err != nil {
-		// If we can not read the client_info from disk, we cache a
-		// fake client_info. This can happen during enrollment when a
-		// proper client_info is not written yet but hunts are still
-		// outstanding. Eventually the real client info will be
-		// properly updated.
-		client_info.ClientId = client_id
+	// Special case the server - it is a special client that does not
+	// need to enrol. It actually does have a client record becuase it
+	// needs to schedule tasks for itself.
+	if err != nil && client_id != "server" {
+		return nil, err
 	}
 
 	cache_info := &CachedInfo{

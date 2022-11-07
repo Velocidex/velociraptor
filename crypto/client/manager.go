@@ -329,6 +329,11 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, er
 	msg_info.Authenticated, err = self.getAuthState(
 		org_config_obj, cipher_metadata, serialized_cipher, cipher_properties)
 
+	// Make sure the message source is set from the cipher_metadata
+	// overriding the internal Source. The source is cryptographically
+	// verified by the encryption of the outer envelop.
+	msg_info.Source = cipher_metadata.Source
+
 	// If we could verify the authentication state and it
 	// was authenticated, we are now allowed to cache the
 	// cipher in the input cache. The next packet from
@@ -344,8 +349,6 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, er
 			},
 			nil, /* outbound_cipher */
 		)
-
-		msg_info.Source = cipher_metadata.Source
 		return msg_info, nil
 	}
 
@@ -357,11 +360,6 @@ func (self *CryptoManager) Decrypt(cipher_text []byte) (*vcrypto.MessageInfo, er
 			cipher_properties: cipher_properties,
 			authenticated:     false,
 		})
-
-	// Make sure the message source is set from the cipher_metadata
-	// overriding the internal Source. The source is cryptographically
-	// verified by the encryption of the outer envelop.
-	msg_info.Source = cipher_metadata.Source
 	return msg_info, nil
 }
 

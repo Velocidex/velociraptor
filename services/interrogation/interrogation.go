@@ -108,6 +108,7 @@ func (self *EnrollmentService) ProcessEnrollment(
 	if err != nil {
 		return err
 	}
+
 	client_info, err := client_info_manager.Get(ctx, client_id)
 
 	// If we have a valid client record we do not need to

@@ -143,9 +143,8 @@ func (self *ServicesTestSuite) TestEnrollService() {
 	// Wait here until the client is enrolled
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
 		client_info, err = client_info_manager.Get(self.Ctx, self.client_id)
-		assert.NoError(self.T(), err)
 
-		return client_info.ClientId == self.client_id &&
+		return err == nil && client_info.ClientId == self.client_id &&
 			client_info.LastInterrogateFlowId != ""
 	})
 

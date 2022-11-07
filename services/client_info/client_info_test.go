@@ -65,14 +65,11 @@ func (self *ClientInfoTestSuite) TestClientInfo() {
 
 	client_info_manager.(*client_info.ClientInfoManager).Clock = self.clock
 
-	// Get a non-existing client id - should not return an error -
-	// just an empty new record. This might happen if the client is
-	// still enrolling.
-	info, err := client_info_manager.Get(context.Background(), "C.DOESNOTEXIT")
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), info.ClientId, "C.DOESNOTEXIT")
+	// Get a non-existing client id - should return an error
+	_, err = client_info_manager.Get(context.Background(), "C.DOESNOTEXIT")
+	assert.Error(self.T(), err)
 
-	info, err = client_info_manager.Get(context.Background(), self.client_id)
+	info, err := client_info_manager.Get(context.Background(), self.client_id)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), info.ClientId, self.client_id)
 	assert.Equal(self.T(), info.Ping, uint64(0))

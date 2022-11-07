@@ -15,7 +15,6 @@ import (
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
-	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -599,7 +598,7 @@ sources:
 	assert.Contains(self.T(), err.Error(), "EXECVE")
 
 	// Lets give the user some permissions.
-	err = acls.SetPolicy(self.ConfigObj, "UserX",
+	err = services.SetPolicy(self.ConfigObj, "UserX",
 		&acl_proto.ApiClientACL{Execve: true})
 	assert.NoError(self.T(), err)
 

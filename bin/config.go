@@ -30,7 +30,6 @@ import (
 	"github.com/Velocidex/yaml/v2"
 
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -479,7 +478,7 @@ func doDumpApiClientConfig() error {
 
 	fmt.Printf("Creating API client file on %v.\n", *config_api_client_output)
 	if *config_api_add_roles != "" {
-		err = acls.GrantRoles(config_obj, *config_api_client_common_name,
+		err = services.GrantRoles(config_obj, *config_api_client_common_name,
 			strings.Split(*config_api_add_roles, ","))
 		if err != nil {
 			return fmt.Errorf("Unable to set role ACL: %w", err)

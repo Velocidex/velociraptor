@@ -26,7 +26,6 @@ package http_comms
 
 import (
 	"context"
-	"runtime/debug"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -210,13 +209,6 @@ func (self *Sender) PumpRingBufferToSendMessage(
 				// from the ring buffer.
 				self.sendMessageList(ctx, compressed_messages, !URGENT, compression)
 				self.ring_buffer.Commit()
-
-				// We need to make sure our memory footprint is as
-				// small as possible. The Velociraptor client
-				// prioritizes low memory footprint over latency. We
-				// just sent data to the server and we wont need that
-				// for a while so we can free our memory to the OS.
-				debug.FreeOSMemory()
 			}
 		}
 

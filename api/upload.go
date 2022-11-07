@@ -37,7 +37,7 @@ func toolUploadHandler() http.Handler {
 		// Check for acls
 		userinfo := GetUserInfo(r.Context(), org_config_obj)
 		permissions := acls.ARTIFACT_WRITER
-		perm, err := acls.CheckAccess(org_config_obj, userinfo.Name, permissions)
+		perm, err := services.CheckAccess(org_config_obj, userinfo.Name, permissions)
 		if !perm || err != nil {
 			returnError(w, http.StatusUnauthorized,
 				"User is not allowed to upload tools.")
@@ -171,7 +171,7 @@ func formUploadHandler() http.Handler {
 		// Check for acls
 		userinfo := GetUserInfo(r.Context(), org_config_obj)
 		permissions := acls.COLLECT_CLIENT
-		perm, err := acls.CheckAccess(org_config_obj, userinfo.Name, permissions)
+		perm, err := services.CheckAccess(org_config_obj, userinfo.Name, permissions)
 		if !perm || err != nil {
 			returnError(w, http.StatusUnauthorized,
 				"User is not allowed to upload files for forms.")

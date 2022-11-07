@@ -95,7 +95,7 @@ func doGrant() error {
 		return err
 	}
 
-	existing_policy, err := acls.GetPolicy(org_config_obj, principal)
+	existing_policy, err := services.GetPolicy(org_config_obj, principal)
 	if err != nil && err != io.EOF {
 		existing_policy = &acl_proto.ApiClientACL{}
 	}
@@ -140,7 +140,7 @@ func doGrant() error {
 		}
 	}
 
-	return acls.SetPolicy(org_config_obj, principal, new_policy)
+	return services.SetPolicy(org_config_obj, principal, new_policy)
 }
 
 func doShow() error {
@@ -160,14 +160,14 @@ func doShow() error {
 	}
 
 	principal := *show_command_principal
-	existing_policy, err := acls.GetPolicy(config_obj, principal)
+	existing_policy, err := services.GetPolicy(config_obj, principal)
 	if err != nil {
 		return fmt.Errorf("Unable to load existing policy for '%v' ",
 			principal)
 	}
 
 	if *show_command_effective {
-		existing_policy, err = acls.GetEffectivePolicy(config_obj, principal)
+		existing_policy, err = services.GetEffectivePolicy(config_obj, principal)
 		if err != nil {
 			return fmt.Errorf("Unable to load existing policy for '%v' ",
 				principal)

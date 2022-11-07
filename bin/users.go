@@ -24,7 +24,6 @@ import (
 	"strings"
 
 	"golang.org/x/crypto/ssh/terminal"
-	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -88,7 +87,7 @@ func doAddUser() error {
 		return fmt.Errorf("add user: %s", err)
 	}
 
-	err = acls.GrantRoles(config_obj, *user_add_name,
+	err = services.GrantRoles(config_obj, *user_add_name,
 		strings.Split(*user_add_roles, ","))
 	if err != nil {
 		return err

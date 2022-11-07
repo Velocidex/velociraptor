@@ -17,6 +17,7 @@ import (
 // analysis host, therefore would typically remove the MACHINE_STATE
 // permission.
 func GetRemappingACLManager(
+	config_obj *config_proto.Config,
 	existing_manager vql_subsystem.ACLManager,
 	remap_config []*config_proto.RemappingConfig) (vql_subsystem.ACLManager, error) {
 	token := &acl_proto.ApiClientACL{}
@@ -35,5 +36,8 @@ func GetRemappingACLManager(
 		}
 	}
 
-	return &RoleACLManager{Token: token}, nil
+	return &RoleACLManager{
+		Token:      token,
+		config_obj: config_obj,
+	}, nil
 }
