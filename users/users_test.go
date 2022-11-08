@@ -3,10 +3,14 @@ package users_test
 import (
 	"testing"
 
+	"github.com/Velocidex/ordereddict"
+	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/users"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
@@ -50,6 +54,43 @@ func (self *UserManagerTestSuite) makeUsers() {
 
 	self.makeUserWithRoles("AdminO2", "O2", "administrator")
 	self.makeUserWithRoles("UserO2", "O2", "reader")
+}
+
+// The rest of the tests depend on this state being correct.  Make sure it is.
+func (self *UserManagerTestSuite) TestMakeUsers() {
+	self.makeUsers()
+
+	golden := ordereddict.NewDict()
+
+	user_record, err := users.GetUser(self.Ctx, "OrgAdmin", "OrgAdmin")
+	assert.NoError(self.T(), err)
+	golden.Set("OrgAdmin OrgAdmin", user_record)
+
+	user_record, err = users.GetUser(self.Ctx, "OrgAdmin", "UserO1")
+	assert.NoError(self.T(), err)
+	golden.Set("OrgAdmin UserO1", user_record)
+
+	user_record, err = users.GetUser(self.Ctx, "AdminO1", "UserO1")
+	assert.NoError(self.T(), err)
+	golden.Set("AdminO1 UserO1", user_record)
+
+	user_record, err = users.GetUser(self.Ctx, "AdminO2", "UserO1")
+	assert.ErrorContains(self.T(), err, "PermissionDenied")
+	golden.Set("AdminO2 UserO1", err.Error())
+
+	user_record, err = users.GetUser(self.Ctx, "OrgAdmin", "UserO2")
+	assert.NoError(self.T(), err)
+	golden.Set("OrgAdmin UserO2", user_record)
+
+	user_record, err = users.GetUser(self.Ctx, "AdminO2", "UserO2")
+	assert.NoError(self.T(), err)
+	golden.Set("AdminO2 UserO2", user_record)
+
+	user_record, err = users.GetUser(self.Ctx, "AdminO1", "UserO2")
+	assert.ErrorContains(self.T(), err, "PermissionDenied")
+	golden.Set("AdminO1 UserO2", err.Error())
+
+	goldie.Assert(self.T(), "TestMakeUsers", json.MustMarshalIndent(golden))
 }
 
 func TestUserManger(t *testing.T) {
