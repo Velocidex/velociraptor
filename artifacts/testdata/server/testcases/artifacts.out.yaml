@@ -28,7 +28,7 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
 ]SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.KapeFiles.Targets', env=dict(Device ='C:', VSSAnalysis='Y', KapeTriage='Y')).request AS Flow FROM scope()[
  {
   "Flow": {
-   "creator": "",
+   "creator": "VelociraptorServer",
    "client_id": "C.11a3013ccaXXXXX",
    "urgent": false,
    "artifacts": [
@@ -69,7 +69,7 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
 ]SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.KapeFiles.Targets', spec=dict(`Windows.KapeFiles.Targets`=dict( Device ='C:', VSSAnalysis='Y', KapeTriage='Y'))).request AS Flow FROM scope()[
  {
   "Flow": {
-   "creator": "",
+   "creator": "VelociraptorServer",
    "client_id": "C.11a3013ccaXXXXX",
    "urgent": false,
    "artifacts": [
