@@ -4,7 +4,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -12,6 +14,8 @@ import (
 type RoleACLManager struct {
 	Token      *acl_proto.ApiClientACL
 	config_obj *config_proto.Config
+
+	is_admin bool
 }
 
 func (self *RoleACLManager) CheckAccess(
@@ -25,6 +29,13 @@ func (self *RoleACLManager) CheckAccess(
 	}
 
 	return true, nil
+}
+
+func (self *RoleACLManager) GetPrincipal() string {
+	if self.is_admin {
+		return constants.PinnedServerName
+	}
+	return ""
 }
 
 // We have the same roles in all orgs
@@ -51,8 +62,11 @@ func NewRoleACLManager(
 	for _, role := range roles {
 		_ = acls.GetRolePermissions(nil, []string{role}, policy)
 	}
+	policy.Roles = roles
+
 	return &RoleACLManager{
 		Token:      policy,
 		config_obj: config_obj,
+		is_admin:   utils.InString(roles, "administrator"),
 	}
 }

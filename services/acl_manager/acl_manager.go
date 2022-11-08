@@ -110,6 +110,8 @@ func (self ACLManager) SetPolicy(
 	config_obj *config_proto.Config,
 	principal string, acl_obj *acl_proto.ApiClientACL) error {
 
+	self.lru.Remove(principal)
+
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err

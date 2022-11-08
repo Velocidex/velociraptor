@@ -1,0 +1,37 @@
+{
+ "AdminO1 belongs in O1 and O2": {
+  "name": "AdminO1",
+  "orgs": [
+   {
+    "name": "O1",
+    "id": "O1"
+   },
+   {
+    "name": "O2",
+    "id": "O2"
+   }
+  ]
+ },
+ "UserO1 belongs in O1 and O2": {
+  "name": "UserO1",
+  "orgs": [
+   {
+    "name": "O1",
+    "id": "O1"
+   },
+   {
+    "name": "O2",
+    "id": "O2"
+   }
+  ]
+ },
+ "New Users NoSuchUser": {
+  "name": "NoSuchUser",
+  "orgs": [
+   {
+    "name": "O2",
+    "id": "O2"
+   }
+  ]
+ }
+}

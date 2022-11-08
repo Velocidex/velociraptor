@@ -17,6 +17,7 @@ import (
 
 func RemoveOrgFromUsers(
 	ctx context.Context, org_id string) error {
+
 	// Remove the org from all the users.
 	user_manager := services.GetUserManager()
 	users, err := user_manager.ListUsers(ctx)

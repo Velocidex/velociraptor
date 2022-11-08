@@ -90,6 +90,8 @@ const (
 
 	// Set in the scope with one or more passwords
 	ZIP_PASSWORDS = "ZIP_PASSWORDS"
+
+	PinnedServerName = "VelociraptorServer"
 )
 
 type key int

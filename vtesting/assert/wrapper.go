@@ -5,6 +5,8 @@ package assert
 
 import (
 	"fmt"
+	"strings"
+	"testing"
 
 	"github.com/alecthomas/assert"
 	"google.golang.org/protobuf/proto"
@@ -39,6 +41,29 @@ func NoError(t TestingT, err error, msgAndArgs ...interface{}) {
 
 func Error(t TestingT, err error, msgAndArgs ...interface{}) {
 	assert.Error(t, err, msgAndArgs...)
+}
+
+func ErrorContains(
+	t testing.TB, err error, errString string, msgAndArgs ...interface{}) {
+	if err == nil && errString == "" {
+		return
+	}
+	t.Helper()
+	if err == nil {
+		t.Fatal(formatMsgAndArgs("Expected an error", msgAndArgs...))
+	}
+	if !strings.Contains(err.Error(), errString) {
+		msg := formatMsgAndArgs("Error message not as expected:", msgAndArgs...)
+		t.Fatalf("%s\n%s vs %s", msg, err.Error(), errString)
+	}
+}
+
+// Variation of https://github.com/alecthomas/assert
+func formatMsgAndArgs(dflt string, msgAndArgs ...interface{}) string {
+	if len(msgAndArgs) == 0 {
+		return dflt
+	}
+	return fmt.Sprintf(msgAndArgs[0].(string), msgAndArgs[1:]...)
 }
 
 func Regexp(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) {

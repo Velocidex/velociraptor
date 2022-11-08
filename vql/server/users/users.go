@@ -4,11 +4,11 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/users"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -26,30 +26,38 @@ func (self UsersPlugin) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
+
 	go func() {
 		defer close(output_chan)
 
-		err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+		// Access checks are done by the users module.
+
+		arg := &UsersPluginArgs{}
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("users: %v", err)
 			return
 		}
 
-		arg := &UsersPluginArgs{}
-		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
-		if err != nil {
-			scope.Log("users: %v", err)
-			return
-		}
+		principal := vql_subsystem.GetPrincipal(scope)
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			scope.Log("Command can only run on the server")
+			scope.Log("users: Command can only run on the server")
 			return
 		}
 
-		// The current Org context this query is running in.
-		current_org := config_obj.OrgId
+		orgs := users.LIST_ALL_ORGS
+		if !arg.AllOrgs {
+			// Only list the current org.
+			orgs = []string{config_obj.OrgId}
+		}
+
+		user_list, err := users.ListUsers(ctx, principal, orgs)
+		if err != nil {
+			scope.Log("users: %v", err)
+			return
+		}
 
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
@@ -57,34 +65,9 @@ func (self UsersPlugin) Call(
 			return
 		}
 
-		users := services.GetUserManager()
-		user_list, err := users.ListUsers(ctx)
-		if err != nil {
-			scope.Log("users: %v", err)
-			return
-		}
-
 		for _, user_details := range user_list {
-			// If not specific org, the user belongs to the root org.
-			if len(user_details.Orgs) == 0 {
-				user_details.Orgs = append(user_details.Orgs, &api_proto.Org{
-					Id:   "root",
-					Name: "<root>",
-				})
-			}
-
-			// Does the user have access to read other orgs?
-			err := vql_subsystem.CheckAccess(scope, acls.ORG_ADMIN)
-			if err != nil {
-				arg.AllOrgs = false
-			}
-
+			utils.Debug(user_details)
 			for _, org_record := range user_details.Orgs {
-				// Only display users that belong to the current org
-				if !arg.AllOrgs && !utils.CompareOrgIds(org_record.Id, current_org) {
-					continue
-				}
-
 				org_config_obj, err := org_manager.GetOrgConfig(org_record.Id)
 				if err != nil {
 					continue
@@ -147,6 +130,7 @@ func ConvertPolicyToOrderedDict(
 			if !t {
 				continue
 			}
+
 		case string:
 			if t == "" {
 				continue

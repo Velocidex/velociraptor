@@ -128,6 +128,7 @@ func (self UserManager) SetUser(
 	if user_record.Name == "" {
 		return errors.New("Must set a username")
 	}
+
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
@@ -182,7 +183,8 @@ func normalizeOrgList(user_record *api_proto.VelociraptorUser) error {
 			continue
 		}
 
-		ok, _ := services.CheckAccess(org_config_obj, user_record.Name, acls.READ_RESULTS)
+		ok, _ := services.CheckAccess(org_config_obj,
+			user_record.Name, acls.READ_RESULTS)
 		if !ok {
 			continue
 		}

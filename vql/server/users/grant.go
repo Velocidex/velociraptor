@@ -4,9 +4,8 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/acls"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/services"
+	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
+	"www.velocidex.com/golang/velociraptor/users"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -25,82 +24,35 @@ func (self GrantFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
-	if err != nil {
-		scope.Log("user_grant: %s", err)
-		return vfilter.Null{}
-	}
-
+	// ACLs are checked by the users module
 	arg := &GrantFunctionArgs{}
-	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("user_grant: %s", err)
 		return vfilter.Null{}
 	}
 
-	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	org_config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
-		scope.Log("Command can only run on the server")
+		scope.Log("user_grant: Command can only run on the server")
 		return vfilter.Null{}
 	}
 
-	users_manager := services.GetUserManager()
-	user_record, err := users_manager.GetUserWithHashes(ctx, arg.Username)
+	orgs := users.LIST_ALL_ORGS
+	if len(arg.OrgIds) == 0 {
+		orgs = []string{org_config_obj.OrgId}
+	}
+
+	policy := &acl_proto.ApiClientACL{
+		Roles: arg.Roles,
+	}
+
+	principal := vql_subsystem.GetPrincipal(scope)
+	err = users.AddUserToOrg(ctx, users.UseExistingUser,
+		principal, arg.Username, orgs, policy)
 	if err != nil {
 		scope.Log("user_grant: %s", err)
 		return vfilter.Null{}
-	}
-
-	// Grat the user the roles in all orgs.
-	org_config_obj := config_obj
-
-	// No OrgIds specified - the user will be created in the root org.
-	if len(arg.OrgIds) == 0 {
-		// Grant the roles to the user
-		err = services.GrantRoles(config_obj, arg.Username, arg.Roles)
-		if err != nil {
-			scope.Log("user_grant: %s", err)
-			return vfilter.Null{}
-		}
-
-		// OrgIds specified, grant the user an ACL in each org specified.
-	} else {
-		org_manager, err := services.GetOrgManager()
-		if err != nil {
-			scope.Log("user_grant: %v", err)
-			return vfilter.Null{}
-		}
-
-		for _, org_id := range arg.OrgIds {
-			org_config_obj, err = org_manager.GetOrgConfig(org_id)
-			if err != nil {
-				scope.Log("user_grant: %v", err)
-				return vfilter.Null{}
-			}
-
-			// Grant the roles to the user
-			err = services.GrantRoles(org_config_obj, arg.Username, arg.Roles)
-			if err != nil {
-				scope.Log("user_grant: %s", err)
-				return vfilter.Null{}
-			}
-		}
-
-		org_exists := func(org_id string) bool {
-			for _, org := range user_record.Orgs {
-				if org.Id == org_id {
-					return true
-				}
-			}
-			return false
-		}
-
-		for _, org_id := range arg.OrgIds {
-			if !org_exists(org_id) {
-				user_record.Orgs = append(user_record.Orgs,
-					&api_proto.Org{Id: org_id})
-			}
-		}
 	}
 
 	return arg.Username
