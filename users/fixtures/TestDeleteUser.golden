@@ -1,0 +1,33 @@
+{
+ "UserO1 delete UserO1": {
+  "name": "UserO1",
+  "orgs": [
+   {
+    "name": "O1",
+    "id": "O1"
+   }
+  ]
+ },
+ "UserO2 is in O1 and O2": {
+  "name": "UserO2",
+  "orgs": [
+   {
+    "name": "O1",
+    "id": "O1"
+   },
+   {
+    "name": "O2",
+    "id": "O2"
+   }
+  ]
+ },
+ "UserO2 removed from O2": {
+  "name": "UserO2",
+  "orgs": [
+   {
+    "name": "O1",
+    "id": "O1"
+   }
+  ]
+ }
+}

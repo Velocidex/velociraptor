@@ -1,0 +1,54 @@
+{
+ "UserO1 GetUser UserO1": {
+  "name": "UserO1",
+  "orgs": [
+   {
+    "name": "O1",
+    "id": "O1"
+   }
+  ]
+ },
+ "UserO1 GetUser AdminO1": {
+  "name": "AdminO1"
+ },
+ "AdminO1 GetUser UserO1": {
+  "name": "UserO1",
+  "orgs": [
+   {
+    "name": "O1",
+    "id": "O1"
+   }
+  ]
+ },
+ "OrgAdmin GetUser UserO1": {
+  "name": "UserO1",
+  "orgs": [
+   {
+    "name": "O1",
+    "id": "O1"
+   }
+  ]
+ },
+ "AdminO2 GetUser UserO1 - filtered Org list": {
+  "name": "UserO1",
+  "orgs": [
+   {
+    "name": "O2",
+    "id": "O2"
+   }
+  ]
+ },
+ "AdminO1 GetUser UserO1 - can see full Org list": {
+  "name": "UserO1",
+  "orgs": [
+   {
+    "name": "O1",
+    "id": "O1"
+   },
+   {
+    "name": "O2",
+    "id": "O2"
+   }
+  ]
+ }
+}

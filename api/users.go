@@ -3,14 +3,11 @@ package api
 import (
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/users"
+	"www.velocidex.com/golang/velociraptor/users"
 )
 
 // This is only used to set the user's own password which is always
@@ -24,14 +21,17 @@ func (self *ApiServer) SetPassword(
 		return nil, InvalidStatus("Password is not set or too short")
 	}
 
-	users_manager := services.GetUserManager()
-	user_record, _, err := users_manager.GetUserFromContext(ctx)
+	user_manager := services.GetUserManager()
+	user_record, _, err := user_manager.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 
-	// Set the password on the record.
-	users.SetPassword(user_record, in.Password)
+	principal := user_record.Name
+	err = users.SetUserPassword(ctx, principal, principal, in.Password, "")
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
 
 	org_manager, err := services.GetOrgManager()
 	if err != nil {
@@ -49,30 +49,24 @@ func (self *ApiServer) SetPassword(
 		"Principal": user_record.Name,
 	}).Info("passwd: Updating password for user via API")
 
-	// Store the record
-	return &emptypb.Empty{}, users_manager.SetUser(ctx, user_record)
+	return &emptypb.Empty{}, nil
 }
 
 func (self *ApiServer) GetUsers(
 	ctx context.Context,
 	in *emptypb.Empty) (*api_proto.Users, error) {
 
-	users_manager := services.GetUserManager()
-	user_record, org_config_obj, err := users_manager.GetUserFromContext(ctx)
+	user_manager := services.GetUserManager()
+	user_record, org_config_obj, err := user_manager.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 
-	permissions := acls.READ_RESULTS
-	perm, err := services.CheckAccess(org_config_obj, user_record.Name, permissions)
-	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
-			"User is not allowed to enumerate users.")
-	}
-
+	principal := user_record.Name
 	result := &api_proto.Users{}
 
-	users, err := users_manager.ListUsers(ctx)
+	// Only show users in the current org
+	users, err := users.ListUsers(ctx, principal, []string{org_config_obj.OrgId})
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -92,6 +86,6 @@ func (self *ApiServer) GetUserFavorites(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
-	user_name := user_record.Name
-	return users_manager.GetFavorites(ctx, org_config_obj, user_name, in.Type)
+	principal := user_record.Name
+	return users_manager.GetFavorites(ctx, org_config_obj, principal, in.Type)
 }

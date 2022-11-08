@@ -1,8 +1,12 @@
-SELECT * FROM gui_users() WHERE name =~ "TestUser"[]SELECT user_create( user="TestUser", password="hunter2", roles=["reader", "investigator"]) FROM scope()[
+SELECT whoami() FROM scope()[
+ {
+  "whoami()": "VelociraptorServer"
+ }
+]SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUser"[]SELECT user_create( user="TestUser", password="hunter2", roles=["reader", "investigator"]) FROM scope()[
  {
   "user_create(user=\"TestUser\", password=\"hunter2\", roles= [\"reader\", \"investigator\"])": "TestUser"
  }
-]SELECT name, roles FROM gui_users() WHERE name =~ "TestUser"[
+]SELECT name, roles FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUser"[
  {
   "name": "TestUser",
   "roles": [
@@ -10,7 +14,7 @@ SELECT * FROM gui_users() WHERE name =~ "TestUser"[]SELECT user_create( user="Te
    "investigator"
   ]
  }
-]LET _ <= user_grant(user="TestUser", roles="reader")[]SELECT name, roles FROM gui_users() WHERE name =~ "TestUser"[
+]LET _ <= user_grant(user="TestUser", roles="reader")[]SELECT name, roles FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUser"[
  {
   "name": "TestUser",
   "roles": [
@@ -21,7 +25,7 @@ SELECT * FROM gui_users() WHERE name =~ "TestUser"[]SELECT user_create( user="Te
  {
   "user_delete(user=\"TestUser\")": "TestUser"
  }
-]SELECT * FROM gui_users() WHERE name =~ "TestUser"[]SELECT user_grant(user="TestUserNotThere", roles="reader") FROM scope()[
+]SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUser"[]SELECT user_grant(user="TestUserNotThere", roles="reader") FROM scope()[
  {
   "user_grant(user=\"TestUserNotThere\", roles=\"reader\")": null
  }
@@ -29,4 +33,4 @@ SELECT * FROM gui_users() WHERE name =~ "TestUser"[]SELECT user_create( user="Te
  {
   "Log": "Velociraptor: user_grant: User not found\n"
  }
-]SELECT * FROM gui_users() WHERE name =~ "TestUserNotThere"[]
+]SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUserNotThere"[]

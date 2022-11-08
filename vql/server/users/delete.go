@@ -5,16 +5,16 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/sirupsen/logrus"
-	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/users"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type UserDeleteFunctionArgs struct {
-	Username string `vfilter:"required,field=user,doc=The user to delete."`
+	Username string   `vfilter:"required,field=user,doc=The user to delete."`
+	OrgIds   []string `vfilter:"optional,field=orgs,doc=If set we only delete from these orgs, otherwise all the orgs the principal has SERVER_ADMIN on."`
 }
 
 type UserDeleteFunction struct{}
@@ -24,26 +24,24 @@ func (self UserDeleteFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
-	if err != nil {
-		scope.Log("user_delete: %s", err)
-		return vfilter.Null{}
-	}
-
+	// ACLs are checked by the users module
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
-		scope.Log("Command can only run on the server")
+		scope.Log("user_delete, Command can only run on the server")
 		return vfilter.Null{}
 	}
 
 	arg := &UserDeleteFunctionArgs{}
-	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("user_delete: %s", err)
 		return vfilter.Null{}
 	}
 
-	user_manager := services.GetUserManager()
+	orgs := users.LIST_ALL_ORGS
+	if len(arg.OrgIds) == 0 {
+		orgs = []string{config_obj.OrgId}
+	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
 	logger := logging.GetLogger(config_obj, &logging.Audit)
@@ -52,7 +50,7 @@ func (self UserDeleteFunction) Call(
 		"Principal": principal,
 	}).Info("user_delete")
 
-	err = user_manager.DeleteUser(ctx, config_obj, arg.Username)
+	err = users.DeleteUser(ctx, principal, arg.Username, orgs)
 	if err != nil {
 		scope.Log("user_delete: %s", err)
 		return vfilter.Null{}

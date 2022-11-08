@@ -184,14 +184,10 @@ func (self *OrgManager) makeNewConfigObj(
 	}
 
 	if result.Datastore != nil && record.OrgId != "" {
-		if result.Datastore.Location != "" {
-			result.Datastore.Location = filepath.Join(
-				result.Datastore.Location, "orgs", record.OrgId)
-		}
-		if result.Datastore.FilestoreDirectory != "" {
-			result.Datastore.FilestoreDirectory = filepath.Join(
-				result.Datastore.FilestoreDirectory, "orgs", record.OrgId)
-		}
+		result.Datastore.Location = filepath.Join(
+			result.Datastore.Location, "orgs", record.OrgId)
+		result.Datastore.FilestoreDirectory = filepath.Join(
+			result.Datastore.FilestoreDirectory, "orgs", record.OrgId)
 	}
 
 	return result
