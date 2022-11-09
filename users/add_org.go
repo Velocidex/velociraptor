@@ -65,7 +65,7 @@ func AddUserToOrg(
 	user_manager := services.GetUserManager()
 
 	// Hold on to the error until after ACL check
-	user_record, err := user_manager.GetUser(ctx, username)
+	user_record, err := user_manager.GetUserWithHashes(ctx, username)
 	if err != nil {
 		if err == services.UserNotFoundError &&
 			options == UseExistingUser {
