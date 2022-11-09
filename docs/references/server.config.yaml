@@ -10,16 +10,31 @@
 ## this field will be updated so for example `velociraptor config
 ## show` will update this to the present version.
 version:
+  # Name of the agent - always "velociraptor"
   name: velociraptor
+
+  # The release version on GitHub.
   version: 0.6.4-rc4
+
+  # The commit at which this binary was built. This is more accurate
+  # than the version for reporting issues etc.
   commit: f3264824
+
+  # The time the binary was built.
   build_time: "2022-04-13T02:24:43+10:00"
+
+  # The URL to the Github Action CI job that built this binary.
+  ci_build_url: https://github.com/Velocidex/velociraptor/actions/runs/3391188003
+
+  # The version of the Go compiler that built this binary
+  compiler: go1.19.2
 
 ## The Client block will be copied into the client.config.yaml and it
 ## is expected to be used by clients. It contains no secrets and can
 ## be embedded into clients. The server must also have this block as
 ## it needs to refer to client specific information sometimes.
 Client:
+
   ## The Crypto options specifies cryptographic options.
   Crypto:
     ## These are the root CA certs the client will trust. This is
@@ -36,10 +51,19 @@ Client:
 
   ## A list of one or more URLs the clients will try to connect
   ## to. When all connections fail the client will back off for a
-  ## while.
+  ## while. Clients will choose one of these at random so it is a good
+  ## way of acheiving fault tolerance and load balancing.
   server_urls:
   - https://192.168.1.1:8000/
   - https://192.168.1.2:8000/
+
+  ## A URL to a proxy that will be used to connect to the server. Some
+  ## environments have egress filtering requiring Velociraptor to use
+  ## a proxy to be able to reach the server. NOTE: We do not support
+  ## PAC based proxy configurations or Windows domain authentication -
+  ## you might need to add an allow rule to the proxy config to allow
+  ## the Velociraptor server URL without authentication.
+  proxy: https://proxy:3128/
 
   ## The Internal Velociraptor CA certificate used to verify the
   ## server certificates. Do not change this! This will be generated
@@ -60,8 +84,9 @@ Client:
   ## file is used to keep client state (See Writeback section). In the
   ## default configuration, writeback files persist across
   ## uninstall/reinstall cycles to keep the client id consistent. If
-  ## you don't want this you can change the location inside the Tools
-  ## directory on Windows (it will be removed on uninstall).
+  ## you don't want this you can change the location of the writeback
+  ## to be inside the inside the tempdir_windows directory (it will be
+  ## removed on uninstall).
   writeback_darwin: /etc/velociraptor.writeback.yaml
   writeback_linux: /tmp/velociraptor.writeback.yaml
   writeback_windows: $ProgramFiles\Velociraptor\velociraptor.writeback.yaml
@@ -70,13 +95,44 @@ Client:
   ## files. If not specified or not writable, Velociraptor will use
   ## the $TMP or $TEMP env variable.
   tempdir_windows: $ProgramFiles\Velociraptor\Tools
+  tempdir_linux:   /tmp/
+  tempdir_darwin:  /tmp/
 
   ## Number of seconds to wait before polling. Typically Velociraptor
   ## connections are persistent but will force a re-connection every
   ## max_poll seconds to refresh the connection. NOTE that typically
   ## Velociraptor reuses TCP connections so this only applies to the
-  ## HTTP transactions,
+  ## HTTP transactions, i.e. The TCP connections are always up.
   max_poll: 60
+
+  ## Standard deviation between polls adds randomness to the poll
+  ## period. This ensures that clients are not synchronized to even up
+  ## the load on the server.
+  max_poll_std: 30
+
+  # If this is set, the nanny will exit if we are not able to send
+  # messages to the server within this many seconds. NOTE - even a
+  # failed connection will reset the counter, the nanny will only fire
+  # if the client has failed in some way - e.g. the communicator is
+  # stopped for some reason
+  nanny_max_connection_delay: 0
+
+  # If this is set, prevent arbitrary code execution on clients. NOTE:
+  # This will vastly reduce the capabilities of the client.
+  prevent_execve: false
+
+  # The default max time to wait before we send partial VQL
+  # results. This setting is used to ensure we dont send too many
+  # small requests by batching the rows into time batches.
+  default_max_wait: 60
+
+  # Maximum number of concurrent queries the client will allow
+  # (default 2). This ensures we do not overwhelm the client by
+  # scheduling too many concurrent queries. NOTE: Queries marked as
+  # URGENT will skip this control and run anyway.
+  concurrency: 2
+
+
 
   ## These settings are used by the `velociraptor service install`
   ## command. We typically do not use this as we prefer to distribute
@@ -105,6 +161,23 @@ Client:
   ## server. Some proxy servers limit the size of POST messages.
   max_upload_size: 5242880
 
+  # Maximum timeout for connection retry - the length of time we
+  # try a connection before restarting it (default 5 min).
+  connection_timeout: 300
+
+  # Disable client/server compression. Typically no need to change
+  # this.
+  disable_compression: false
+
+  ## It is possible to pre-label clients using the configuration
+  ## file. The server will add these labels to the clients
+  ## automatically upon enrollment. This allows different client
+  ## packages to be distributed in the real world and have them
+  ## automatically identified.
+  labels:
+    - Label1
+    - Label1
+
   ## Velociraptor keeps a local buffer file to store query results
   ## while they are being shipped across the network. There are two
   ## types of buffers - an in memory buffer and a local file based
@@ -113,22 +186,27 @@ Client:
   ## file to prevent queries taking too long (and possibly timing
   ## out).
   local_buffer:
+
+    # Maximum size of the in-memory buffer. When this size is
+    # exhausted the query is paused until the data is sent over the
+    # network.
     memory_size: 52428800
 
     ## If the disk size of the local buffer is set to 0, no disk file
     ## will be used, only a memory buffer will be used.
     disk_size: 1073741824
 
-    ## Where to store the files on the local disk for various
+    ## Where to store the files on the local disk for the various
     ## operating systems.
     filename_linux: /var/tmp/Velociraptor_Buffer.bin
     filename_windows: $TEMP/Velociraptor_Buffer.bin
     filename_darwin: /var/tmp/Velociraptor_Buffer.bin
 
-## This section configured the API service. The API server accepts
+## This section configures the API service. The API server accepts
 ## connections from the GUI gRPC gateway, as well as connections from
-## the gRPC API clients (e.g. pyvelociraptor).
+## the gRPC API clients (e.g. with pyvelociraptor).
 API:
+
   ## This is the hostname used to connect to - it is used here to copy
   ## into new api client configuration files to assist gRPC API
   ## connections (e.g. pyvelociraptor).
@@ -152,10 +230,25 @@ API:
 
 ## Configure the GUI admin web application.
 GUI:
+  # Allows the GUI to start with no encryption - **WARNING** This only
+  # makes sense if you have TLS proxy in front. In fact the GUI **will
+  # not work** without a TLS proxy because the CSRF cookie is still
+  # set to secure only.
+  use_plain_http: false
+
+  # You can serve Velociraptor at a sub path of the server. All URLs
+  # will then be formed below the base path.
+  base_path: /
+
+  # The public URL of this server. Change this if you are proxying the
+  # GUI using a different URL.
+  public_url: http://velo.example.com
+
   ## Allows additional links to be defined for site customization.
   links:
-    ## The text of the link (visible in the GUI)
-    - text: Google Search
+    -
+      ## The text of the link (visible in the GUI)
+      text: Google Search
 
       ## Where the link points to.
       url: https://www.google.com
@@ -171,13 +264,25 @@ GUI:
       ## The icon before the link. This can be a data URL or a link to a png
       icon_url: data:image/svg+xml;base64,....
 
+      # For context menu the value in the cell can be relayed to the
+      # target URL. This setting controls the encoding of the value
+      # and the parameter to attach it to.
+      encode: "plain"
+      parameter: "q"
+
+      # Can be GET (default) or POST
+      method: "GET"
+
+      # If set we ignore this entry completely
+      disabled: false
+
   ## Bind the GUI to this port. By default: For self signed SSL the
   ## GUI will be bound to the localhost only!  For Let's Encrypt
   ## deployments the GUI will be bound on 0.0.0.0 making it accessible
   ## from anywhere.
   bind_address: 127.0.0.1
 
-  ## Bind pot for the GUI. When using Let's Encrypt the GUI is bound
+  ## Bind port for the GUI. When using Let's Encrypt the GUI is bound
   ## to port 443 and this setting is ignored because Let's Encrypt
   ## only supports port 443.
   bind_port: 8889
@@ -196,9 +301,11 @@ GUI:
   ## Velociraptor supports a reverse proxy allowing you to place other
   ## applications behind the Velociraptor Oauth2/TLS server.
   reverse_proxy:
+  -
+
     ## Any paths below this route will be forwarded to the given URL
     ## (and the path copied into the target)
-  - route: /CyberChef/
+    route: /CyberChef/
 
     ## The URL to forward to. This can be a file:// URL which allows
     ## you to host static files at this location.
@@ -212,10 +319,11 @@ GUI:
   ## server can create the following initial user with admin level
   ## access. This is designed to automate deployment and allow users
   ## to sign in immediately to the GUI. You can remove these accounts
-  ## or change their API later.
+  ## or change their ACLs/Roles later.
   initial_users:
+  -
     ## Username to create
-  - name: mic
+    name: mic
 
     ## Password hashes - this is only useful for Basic Authenticator
     ## which uses passwords. They can be left empty for Oauth based
@@ -223,8 +331,19 @@ GUI:
     password_hash: aa3a779e09062dea3a46811e0c0624ba7999cf15a2d12dce7489aca339c3deff
     password_salt: f8707a7a9c876a4e6210d4f5bbdee4846adff7465d50efc43a305175aab8f146
 
+  ## When Velociraptor starts the first time these orgs will be created.
+  initial_orgs:
+     -
+       org_id: O1234
+       name: My Company
+
+       # If this is empty we use the org id. The nonce is a shared
+       # secret in the client configuration which binds clients to
+       # this Org. See Client.nonce.
+       nonce: O1234
+
   ## How to authenticate users to the server. Velociraptor comes with
-  ## a large number of authenticators. The configures the
+  ## a large number of authenticators. This section configures the
   ## authenticator to use.
   authenticator:
     ## The type of authenticator to use. Currently:
@@ -242,9 +361,40 @@ GUI:
     saml_root_url: https://localhost:8889
     saml_user_attribute: email
 
+    # URL to OIDC Configuration Document. The configuration should be
+    # available in the 'oidc_issuer + /.well-known/openid-configuration' endpoint.
+    oidc_issuer: ""
+
+    # Name of this authenticator to show in the GUI (e.g company
+    # name). Note that you can provide many OIDC authenticators as
+    # part of the multi authenticator so having a name here helps keep
+    # them recognizable.
+    oidc_name: "Company Name"
+    avatar: http://www.example.com/icon.png
+
+    # These are required for the oauth flow - get from the OIDC provider.
+    oauth_client_id: C123445
+    oauth_client_secret: X23456
+
+    # This is specifically required by the Azure authenticator only.
+    tenant: O...
+
+    # URL to redirect to on Unauthorized API call. If blank we just
+    # cycle to the logon screen again.
+    auth_redirect_template: http://www.google.com
+
+    # How long to keep the session alive between auth flows - default 24 hours
+    default_session_expiry_min: 8000
+
+    # Used by the multi authenticator to provide multiple
+    # authenticators. NOTE: Sub authenticators must be oauth based
+    # (i.e. not basic auth).
+    sub_authenticators:
+      - type: Google
+
 ## This is the internal Velociraptor CA configuration. It is needed to
 ## sign new API keys. Secure deployments can remove this part of the
-## config offline.
+## config and safely store it offline.
 CA:
   ## CA private key - the public certificate is in
   ## Client.ca_certificate
@@ -253,8 +403,23 @@ CA:
     -----END RSA PRIVATE KEY-----
 
 ## Configuration of the frontend. The Frontend is the service that
-## directory talks with clients.
+## directly talks with clients.
 Frontend:
+  # Serve the Frontend from this base path instead of "/"
+  base_path: "/"
+
+  # This allows the frontends to listen on plain HTTP - It is useful
+  # if you have SSL offloading (e.g. ngix). This is not configured by
+  # the wizard - you will need to manually configure it. You better
+  # know what you are doing here!
+  use_plain_http: false
+
+  # A proxy setting to use - Velociraptor needs to connect to download
+  # tools. This setting will force it to go out over this proxy. NOTE-
+  # If you dont want to allow outbound connections, just set this to
+  # an non existent setting (e.g. 127.0.0.1:3128).
+  proxy: ""
+
   ## Velociraptor can attempt to obfuscate artifact names when
   ## compiling them into raw VQL. If this is set this obfuscation is
   ## removed.
@@ -268,8 +433,12 @@ Frontend:
   bind_address: 0.0.0.0
   bind_port: 8000
 
-  ## The internal frontend certificate. In self signed mode this will
-  ## also be used for TLS certificate.
+  # These are used to secure the client/server communications - Even
+  # when using external TLS certificates! This certificate must be
+  # signed by the Velociraptor root CA in all cases
+  # (tls_certificate_filename for that). If using an external TLS
+  # configuration this layer of encryption happens **in addition** to
+  # the external TLS certificates.
   certificate: |
     -----BEGIN CERTIFICATE-----
     -----END CERTIFICATE-----
@@ -277,14 +446,65 @@ Frontend:
     -----BEGIN RSA PRIVATE KEY-----
     -----END RSA PRIVATE KEY-----
 
+  # If you want to use your own certificates for TLS as an alternative
+  # to Autocert, then you can set those here. These certificates will
+  # be used for TLS on both the frontend and GUI. NOTE: We expect
+  # these to be proper certificates - i.e. NOT self signed. If you
+  # want to use certificates issued by another CA you will also need
+  # to add that CA cert to the Frontend.Crypto.root_certs and
+  # Client.Crypto.root_certs field.
+  #
+  # Be sure to set Client.use_self_signed_ssl=false when you set this.
+  tls_certificate_filename: "/etc/cert.pem"
+  tls_private_key_filename: "/etc/cert.key"
+
   ## If configured, Velociraptor will attempt to update the dynamic
-  ## DNS server with its public IP address.
-  dyn_dns: {}
+  ## DNS server with its public IP address. Currently we only support
+  ## Google Domains although other providers may also work.
+  dyn_dns:
+    # The hostname to update
+    hostname: www.velo.com
+    ddns_username: 1234233452
+    ddns_password: 2313e2324
+
+    # If empty we use Google Domains.
+    update_url: http://dyndns.provider.com/
+
+    # How often to check for IP assigned
+    frequency: 60
+
+    # The url we will use to check the ip. Should return a plain IP
+    # address (default is Google Domains)
+    checkip_url: http://dyndns.provider.com/checkip
+
+    # DNS server we query for our own hostname/ip mapping (default
+    # 8.8.8.8:53)
+    dns_server: "8.8.8.8:53"
+
+  # Header defined by the proxy containing the remote address. If this
+  # is not set we use the remote IP address from the TCP
+  # connection. This setting is needed if you have a reverse proxy in
+  # front of the server.
+  proxy_header: "X-Forwarded-For"
+
+  # We have the Server.Monitor.Health enabled always but these are
+  # any additional artifacts that should be installed by default.
+  default_server_monitoring_artifacts:
+    - Server.Monitor.Health
 
   ## When creating the initial client monitoring artifact table, these
   ## artifacts will be assigned to all clients.
   default_client_monitoring_artifacts:
-  - Generic.Client.Stats
+    - Generic.Client.Stats
+
+  # The user that the frontend should run as. If set we refuse to run
+  # as a different user. This is normally set by the ubuntu deb
+  # package as it is running as a low priv user called
+  # "velociraptor". This setting is important as it stops users from
+  # running velociraptor as root with sudo - doing this will break the
+  # velociraptor datastore when it creates files only readable by
+  # root.
+  run_as_user: velociraptor
 
   ## When the server is created initially, these server artifacts will
   ## be collected. You can use this to fire custom initialization
@@ -297,38 +517,97 @@ Frontend:
   GRPC_pool_max_size: 100
   GRPC_pool_max_wait: 60
 
-  ## Sets resource limitations on the server.
-  resources:
-    connections_per_second: 300
-    notifications_per_second: 1000
-    enrollments_per_second: 100
-    concurrency: 20
-    max_upload_size: 10485760
-    expected_clients: 10000
-    index_snapshot_frequency: 10
+  # Load artifacts from this directory at startup
+  artifact_definitions_directory: "/tmp/"
 
-## Define additional frontend servers (e.g. Minions).
-ExtraFrontends:
-- hostname: 192.168.1.11
-  bind_address: 0.0.0.0
-  bind_port: 8100
+  # A regular expression that if matches any log messages from the
+  # client's query represent a failure of the collection. Marking the
+  # collection as failed can highlight potential problems with the VQL
+  # so this regex tries to detect common issues (e.g. Symbol not
+  # found) to draw attention to failures.
+  collection_error_regex: "ERROR:"
+
+  ## Sets resource limitations on the server. These parameters
+  ## represent the set of tunable parameters you can use to optimize
+  ## performance on loaded servers.
   resources:
+    # Load shed connections faster than this to preserve stability.
     connections_per_second: 300
+
+    # The rate at which we notify clients of new work (e.g. a new hunt
+    # is started). Slower notification rate helps to slow dows the
+    # swarm effect and reduced load on the server.
     notifications_per_second: 1000
+
+    # How quickly do we enroll clients (default 100/s, -1 to disable
+    # enrollments)
     enrollments_per_second: 100
+
+    # The maximum number of concurrent client connections we can
+    # process. Concurrency limits helps to ensure the server is not
+    # overloaded serving too many clients at the same time.
+    # Concurrency refers to the actual serving time of a client
+    # (i.e. time taken to read the response and write to the
+    # datastore), not the total number of clients served by
+    # server. Default is number of cores * 2.
     concurrency: 20
+
+    # The maximum time a client will be waiting for a concurrency slot
+    # before timing out. A small value will result in many
+    # reconnections under load and may degrade performance.
+    concurrency_timeout: 600
+
+    # Increasing this allows the frontend to receive larger POST
+    # messages lowering crypto overheads but this comes at the
+    # expense of more memory use.
     max_upload_size: 10485760
+
+    # This setting controls the size of various LRU caches in the
+    # frontend (e.g. the session key cache, client info cache). This
+    # number should be larger than the number of actual clients or
+    # else the system will see high CPU load from cache misses.
     expected_clients: 10000
-- hostname: 192.168.1.11
-  bind_address: 0.0.0.0
-  bind_port: 8200
-  resources:
-    connections_per_second: 300
-    notifications_per_second: 1000
-    enrollments_per_second: 100
-    concurrency: 20
-    max_upload_size: 10485760
-    expected_clients: 10000
+
+
+    # Bandwidth control: Per client and global rates in
+    # bytes/sec. This is useful for low bandwidth deployments where we
+    # want to ensure Velociraptor does not saturate slow links. The
+    # bandwidth limitation caps the total bandwidth used by the server
+    # per client and globally.
+    per_client_upload_rate: 0
+    global_upload_rate: 0
+
+    # Wait time for collecting events from clients - smaller means
+    # less latency to respond to client events but also means more
+    # TLS handshake and network overheads due to frequent POST.
+    client_event_max_wait: 100
+
+    # Minions batch updates to the master so as to minimize RPC as
+    # much as possible, this controls how often these batches are
+    # flushed to the master (default 10 sec).
+    minion_batch_wait_time_ms: 10
+
+    # Number of seconds before expiring client info cache
+    # entries. Default (0) means do not expire at all. Expiring
+    # client info from cache too frequently can result in a lot more
+    # IO. Default size of this cache is the expected_clients above.
+    client_info_lru_ttl: 0
+
+    # How often to sync client info records (ms) between minion and
+    # master.
+    client_info_sync_time: 0
+    client_info_write_time: 0
+
+    # The journal files are used to queue messages between event
+    # generators and event consumers when the consumer is unable to
+    # drain these quickly enough. The setting specifies the maximum
+    # size of the file - when it is exceeded, the file will be
+    # truncated and events will be lost. Default is 1gb
+    max_journal_buffer_size: 1000000000
+
+    # How often to save an index snapshot to storage (default 600
+    # sec). Index files are typically 150kb / 1000 clients.
+    index_snapshot_frequency: 10
 
 ## Velociraptor has a datastore abstraction and can use a number of
 ## possible data storage engines. This section configures the data
@@ -347,16 +626,8 @@ Datastore:
   ## options away from smaller and faster data.
   filestore_directory: /mnt/data
 
-  ## The MemcacheFileDataStore separates writers into a writing
-  ## pool. These set the number of writer threads in that pool.
-  memcache_write_mutation_writers: 100
-
   ## How long before a write is forced from the pool for delayed writes
   memcache_write_mutation_max_age: 1
-
-  ## MemcacheFileDataStore will cache small files in memory to improve
-  ## efficiency. This is the mac size of the cache.
-  memcache_datastore_max_size: 10000
 
   ## When using a master/minion setup it is necessary to have the
   ## Master and Minion nodes use different filesystem
@@ -365,28 +636,48 @@ Datastore:
   minion_implementation: RemoteFileDataStore
   master_implementation: MemcacheFileDataStore
 
-## The Writeback part of the configuration - This is read from the
-## writeback file, overriding any configuration here.
-Writeback:
-  private_key: |
-    -----BEGIN RSA PRIVATE KEY-----
-    Generated by client
-    -----END RSA PRIVATE KEY-----
-  client_id: C.1352adc54e292a23
-  hunt_last_timestamp: 1234
-  last_server_serial_number: 1
-  event_queries:
-    event:
-    - query_id: 1
-      total_queries: 2
-      precondition: SELECT OS From info() where OS = 'windows'
-      env:
-        - key: Frequency
-          value: "10"
-      version: 123
+  # Cap directories to this size after reporting error - this should
+  # not happen normally but may happen if the deployment has been very
+  # active or due to a bug!
+  max_dir_size: 50000
 
-## Configure the mail server (deprecated!) Do not use.
-Mail: {}
+  # The following apply to the MemcacheFileDataStore
+
+  # How long to expire the memcache (default 10 min)
+  memcache_expiration_sec: 6000
+
+  # How many mutations to queue up ahead of busy writers. By
+  # default 0 means writes will be blocked until they are handed
+  # off to a writer thread. Set to -1 to disable asynchronous
+  # writes.
+  memcache_write_mutation_buffer: 100
+
+  ## The MemcacheFileDataStore separates writers into a writing
+  ## pool. These set the number of writer threads in that pool.
+  # Number of writing threads - increase for high latency
+  # filesystems (default 100).
+  memcache_write_mutation_writers: 100
+
+  # How long to delay writes so they can be combined. This applies for
+  # writing result sets - we keep the writes in memory for min_age
+  # seconds in order to combine further writes. If another write
+  # occurs to the same result sets the TTL is extended and writes are
+  # delayed. However, once we reach max_age, a write is forced. The aim
+  # is to keep combining separate writes as much as possible into larger
+  # writes but at the same time prevent frequently written files from
+  # never flushing to disk.
+  memcache_write_mutation_min_age: 1000 # Default 1000 msec
+  int64 memcache_write_mutation_max_age: 5000  # Default 5000 msec
+
+  ## MemcacheFileDataStore will cache small files in memory to improve
+  ## efficiency. This is the maximum size of the cache.
+  # Maximum size of memcache lru (default 10000)
+  memcache_datastore_max_size: 10000
+
+  # Do not cache large objects in memory - falls back to
+  # FileBaseDataStore
+  memcache_datastore_max_item_size: 1000
+  memcache_datastore_max_dir_size: 50000
 
 ## Configure logging behavior
 Logging:
@@ -400,7 +691,25 @@ Logging:
 
   ## Specific configuration for each log level. If a log level is not
   ## configured here it is logged as normal.
-  debug: {}
+  debug:
+    # How often to rotate the files in seconds.
+    rotation_time: 8000
+
+    # Maximum age of each file (File will be deleted after this time (1 year).
+    max_age: 31536000
+
+    # If this is true this log source is disabled.
+    disabled: true
+
+  info:
+    rotation_time: 8000
+    max_age: 31536000
+    disabled: true
+
+  error:
+    rotation_time: 8000
+    max_age: 31536000
+    disabled: true
 
 ## This controls the Monitoring server (i.e. Prometheus) If you have a
 ## monitoring service like Grafana or Data Dog then change this server
@@ -409,23 +718,29 @@ Monitoring:
   bind_address: 127.0.0.1
   bind_port: 8003
 
-## Configures any API client configuration (e.g. pyvelociraptor
-## connections over the API).
-api_config: {}
-
 ## Run these automatically when the binary starts.
 autoexec:
-  ## Load these artifact definitions into the binary at startup. NOTE:
-  ## These definitions are considered "built-in" which will ensure
-  ## they can not be modified at runtime.
-  artifact_definitions:
-    # The format of these fields is an artifact definition - so the
-    # following description also covers artifact definitions more
-    # generally.
+  # When starting without any command line parameters, this argv array
+  # will be used as if it was typed on the command line. This is a way
+  # to get Velociraptor to automatically execute a function as
+  # startup when used without parameters.
+  argv:
+    - artifacts
+    - collect
+    - Generic.Client.Info
 
+  # Load these artifact definitions into the binary at startup. NOTE:
+  # These definitions are considered "built-in" which will ensure they
+  # can not be modified at runtime.
+  #
+  # The format of these fields is an artifact definition - so the
+  # following description also covers artifact definitions more
+  # generally.
+  artifact_definitions:
+  -
     # The name of the artifact. Artifacts are referred to by name
     # within the system.
-  - name: Generic.Client.InfoXXX
+    name: Generic.Client.InfoXXX
 
     # A Human readable description of the artifact. This should have a
     # single summary paragraph
@@ -446,8 +761,9 @@ autoexec:
     ## this artifact. Velociraptor will push the tool to the endpoint
     ## so the artifact may use it.
     tools:
-      # The name of the tool
-      - name: MyTool
+      -
+        # The name of the tool
+        name: MyTool
 
         # The URL to fetch the tool from when we upload it the first
         # time, or when we update.
@@ -526,9 +842,10 @@ autoexec:
     # Parameters are provided to the artifact by the user. They can
     # change the way the VQL is evaluated.
     parameters:
+      -
         # The name of the parameter. This name will appear in the
         # scope during query execution.
-      - name: Foo
+        name: Foo
 
         ## A human friendly name for the parameter (if not specified
         ## we show the name).
@@ -562,8 +879,9 @@ autoexec:
 
     # A list of queries to gather data from.
     sources:
+    -
       # An optional name for the query
-    - name: MySource
+      name: MySource
       description: A description for the source
       query: SELECT * FROM info()
 
@@ -596,6 +914,9 @@ server_type: linux
 ## in a sensitive way.
 obfuscation_nonce: zKJDb3KcWh8=
 
+# Path to store autocert certificates.
+autocert_cert_cache: /tmp/
+
 ## Various defaults used by various things.
 defaults:
   ## Normally notebook queries timeout in 10 minutes (can not be
@@ -612,3 +933,49 @@ defaults:
   ## By default hunts expire in 7 days but you can change this using
   ## this setting.
   hunt_expiry_hours: 168
+
+  ## Default value of max_wait and relevant jitter for new event
+  ## queries the GUI creates.
+  event_max_wait: 100
+  event_max_wait_jitter: 30
+
+  # If set we actively notify all clients as soon as event table is
+  # changed. This causes a lot of load on large deployments so it is
+  # off by default. It means that you will need to wait for the client
+  # to reconnect before it receives updates to its event table
+  # (usually about 5 min). When running `velociraptor gui` we set this
+  # to true in order to get a responsive GUI.
+  event_change_notify_all_clients: false
+
+  # When viewing the VFS on a client we create objects in the data
+  # store to facilitate the GUI navigation. If the directory is too
+  # large the GUI performance suffers so we truncate the directory at
+  # this size (default 1000 files).
+  max_vfs_directory_size: 1000
+
+  # Additional directories to load artifacts from on start up.
+  artifact_definitions_directories:
+    - /etc/artifacts/
+
+  # The number of rows to keep in memory during a group by
+  # operation. Once this is exceeded we switch to disk mode which
+  # is a lot slower but has no memory limitations. Default 30000
+  max_in_memory_group_by: 30000
+
+  # If these are set we enforce VQL to only have the specified allowed
+  # VQL plugins and functions. This is a way to harden the server by
+  # removing potentially sensitive functionality to allow only
+  # approved VQL plugins to run.
+  allowed_plugins:
+    - glob
+  allowed_functions:
+    - dict
+  allowed_accessors:
+    - auto
+
+  # How long to cache ACL policies (default 60 sec)
+  acl_lru_timeout_sec: 60
+
+  # Ignore messages from unauthenticated clients for this long - gives
+  # them a chance to enrol first (default 10 sec).
+  unauthenticated_lru_timeout_sec: 10
