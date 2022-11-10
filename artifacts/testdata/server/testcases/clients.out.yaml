@@ -39,15 +39,28 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
   ],
   "Flow": "F.BSJMEJIPT6P9I"
  }
-]SELECT client_set_metadata(client_id='C.4f5e52adf0a337a9', Foo='Bar', Bar='Baz', Invalid=5) FROM scope()[
+]SELECT client_set_metadata(client_id='C.4f5e52adf0a337a9', Foo='Bar', Bar='Baz', IntConvertedToString=5) FROM scope()[
  {
-  "client_set_metadata(client_id='C.4f5e52adf0a337a9', Foo='Bar', Bar='Baz', Invalid=5)": true
+  "client_set_metadata(client_id='C.4f5e52adf0a337a9', Foo='Bar', Bar='Baz', IntConvertedToString=5)": true
  }
 ]SELECT client_metadata(client_id='C.4f5e52adf0a337a9') FROM scope()[
  {
   "client_metadata(client_id='C.4f5e52adf0a337a9')": {
    "Foo": "Bar",
-   "Bar": "Baz"
+   "Bar": "Baz",
+   "IntConvertedToString": "5"
+  }
+ }
+]SELECT client_set_metadata(client_id='C.4f5e52adf0a337a9', AnotherItem="Hello", Bar=NULL) FROM scope()[
+ {
+  "client_set_metadata(client_id='C.4f5e52adf0a337a9', AnotherItem=\"Hello\", Bar=NULL)": true
+ }
+]SELECT client_metadata(client_id='C.4f5e52adf0a337a9') FROM scope()[
+ {
+  "client_metadata(client_id='C.4f5e52adf0a337a9')": {
+   "Foo": "Bar",
+   "IntConvertedToString": "5",
+   "AnotherItem": "Hello"
   }
  }
 ]

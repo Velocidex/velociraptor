@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 
+	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -101,6 +102,11 @@ type ClientInfoManager interface {
 	// Remove client id from the cache - this is needed when the
 	// record chages and we need to force a read from storage.
 	Flush(ctx context.Context, client_id string)
+
+	GetMetadata(ctx context.Context,
+		client_id string) (*ordereddict.Dict, error)
+	SetMetadata(ctx context.Context,
+		client_id string, metadata *ordereddict.Dict) error
 }
 
 func GetHostname(

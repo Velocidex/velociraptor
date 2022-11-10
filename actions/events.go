@@ -40,14 +40,17 @@ import (
 )
 
 var (
-	GlobalEventTable = &EventTable{}
-	mu               sync.Mutex
+	GlobalEventTable = &EventTable{
+		ctx: context.Background(),
+	}
+	mu sync.Mutex
 )
 
 type EventTable struct {
 	Events  []*actions_proto.VQLCollectorArgs
 	version uint64
 
+	ctx        context.Context
 	config_obj *config_proto.Config
 
 	// This will be closed to signal that we need to abort the
@@ -157,20 +160,6 @@ func update(
 	return GlobalEventTable, nil, true /* changed */
 }
 
-func NewEventTable(
-	config_obj *config_proto.Config,
-	responder *responder.Responder,
-	table *actions_proto.VQLEventTable) *EventTable {
-	result := &EventTable{
-		Events:     table.Event,
-		version:    table.Version,
-		Done:       make(chan bool),
-		config_obj: config_obj,
-	}
-
-	return result
-}
-
 type UpdateEventTable struct{}
 
 func (self UpdateEventTable) Run(
@@ -202,8 +191,9 @@ func (self UpdateEventTable) Run(
 
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
-	// Make a context for the VQL query.
-	new_ctx, cancel := context.WithCancel(context.Background())
+	// Make a context for the VQL query. It will be destroyed on shut
+	// down when the global event table is done.
+	new_ctx, cancel := context.WithCancel(GlobalEventTable.ctx)
 
 	// Cancel the context when the cancel channel is closed.
 	go func() {
@@ -286,6 +276,7 @@ func InitializeEventTable(ctx context.Context, service_wg *sync.WaitGroup) {
 	mu.Lock()
 	GlobalEventTable = &EventTable{
 		service_wg: service_wg,
+		ctx:        ctx,
 	}
 	mu.Unlock()
 
