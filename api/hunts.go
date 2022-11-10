@@ -14,6 +14,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/json"
+	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
@@ -72,11 +73,12 @@ func (self *ApiServer) GetHuntFlows(
 			flow.Context.ClientId,
 			services.GetHostname(ctx, org_config_obj, flow.Context.ClientId),
 			flow.Context.SessionId,
-			csv.AnyToString(flow.Context.StartTime / 1000),
+			csv.AnyToString(flow.Context.StartTime/1000, vjson.NoEncOpts),
 			flow.Context.State.String(),
-			csv.AnyToString(flow.Context.ExecutionDuration / 1000000000),
-			csv.AnyToString(flow.Context.TotalUploadedBytes),
-			csv.AnyToString(flow.Context.TotalCollectedRows)}
+			csv.AnyToString(flow.Context.ExecutionDuration/1000000000,
+				vjson.NoEncOpts),
+			csv.AnyToString(flow.Context.TotalUploadedBytes, vjson.NoEncOpts),
+			csv.AnyToString(flow.Context.TotalCollectedRows, vjson.NoEncOpts)}
 
 		result.Rows = append(result.Rows, &api_proto.Row{Cell: row_data})
 

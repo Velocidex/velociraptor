@@ -127,7 +127,7 @@ func outputCSV(ctx context.Context,
 		10, *max_wait)
 
 	csv_writer := csv.GetCSVAppender(config_obj,
-		scope, &StdoutWrapper{out}, true /* write_headers */)
+		scope, &StdoutWrapper{out}, csv.WriteHeaders, json.NoEncOpts)
 	defer csv_writer.Close()
 
 	for result := range result_chan {
@@ -241,7 +241,8 @@ func doRemoteQuery(
 			scope := vql_subsystem.MakeScope()
 
 			csv_writer := csv.GetCSVAppender(config_obj,
-				scope, &StdoutWrapper{os.Stdout}, true /* write_headers */)
+				scope, &StdoutWrapper{os.Stdout},
+				csv.WriteHeaders, json.NoEncOpts)
 			defer csv_writer.Close()
 
 			for _, row := range rows {

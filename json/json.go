@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	NoEncOpts *json.EncOpts = nil
+	NoEncOpts *json.EncOpts = &json.EncOpts{}
 )
 
 type EncOpts = json.EncOpts

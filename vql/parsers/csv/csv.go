@@ -27,6 +27,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -263,7 +264,8 @@ func (self WriteCSVPlugin) Call(
 			defer file.Close()
 
 			config_obj, _ := vql_subsystem.GetServerConfig(scope)
-			writer = csv.GetCSVAppender(config_obj, scope, file, true)
+			writer = csv.GetCSVAppender(
+				config_obj, scope, file, true, json.NoEncOpts)
 			defer writer.Close()
 
 		default:
