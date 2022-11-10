@@ -1251,7 +1251,7 @@ type GUIConfig struct {
 	// available in the GUI to a small subset (e.g. only certain
 	// packs).
 	ArtifactSearchFilter string `protobuf:"bytes,18,opt,name=artifact_search_filter,json=artifactSearchFilter,proto3" json:"artifact_search_filter,omitempty"`
-	// SAML info deprecated - will be moved to a sample authenticator.
+	// SAML info deprecated - will be moved to a saml authenticator.
 	SamlCertificate    string `protobuf:"bytes,12,opt,name=saml_certificate,json=samlCertificate,proto3" json:"saml_certificate,omitempty"`
 	SamlPrivateKey     string `protobuf:"bytes,13,opt,name=saml_private_key,json=samlPrivateKey,proto3" json:"saml_private_key,omitempty"`
 	SamlIdpMetadataUrl string `protobuf:"bytes,14,opt,name=saml_idp_metadata_url,json=samlIdpMetadataUrl,proto3" json:"saml_idp_metadata_url,omitempty"`
@@ -1739,13 +1739,12 @@ type FrontendResourceControl struct {
 	// How quickly do we enroll clients (default 100/s, -1 to disable enrollments)
 	EnrollmentsPerSecond int64 `protobuf:"varint,3,opt,name=enrollments_per_second,json=enrollmentsPerSecond,proto3" json:"enrollments_per_second,omitempty"`
 	// The maximum number of concurrent client connections we can
-	// process. The actual concurrency level can be dynamically
-	// adjusted to try to control the target_heap_size below. As the
-	// heap size increases, the frontend will reduce the concurrency
-	// level in order to reduce memory pressure. Low concurrency
-	// levels increase average latency and in the worse case cause
-	// clients to time out. When clients timeout, they will back off
-	// and try to send data later.
+	// process. Concurrency limits helps to ensure the server is not
+	// overloaded serving too many clients at the same time.
+	// Concurrency refers to the actual serving time of a client
+	// (i.e. time taken to read the response and write to the
+	// datastore), not the total number of clients served by
+	// server. Default is number of cores * 2.
 	Concurrency uint64 `protobuf:"varint,9,opt,name=concurrency,proto3" json:"concurrency,omitempty"`
 	// Aim for this heap size (default 2Gb). If actual memory usage
 	// approaches this maximum, the frontend will begin to limit
@@ -3524,7 +3523,7 @@ type Config struct {
 	Defaults *Defaults `protobuf:"bytes,33,opt,name=defaults,proto3" json:"defaults,omitempty"`
 	// The Operating System of the analysis target. Only useful in conjunction
 	// with the `device' parameter in case the host's operating system differs
-	// from the operating system used on the device.
+	// from the operating system used on the device. DEPRECATED!
 	AnalysisTarget string `protobuf:"bytes,34,opt,name=analysis_target,json=analysisTarget,proto3" json:"analysis_target,omitempty"`
 	// The list of data sources which Velociraptor should map instead of the
 	// host's own file system.

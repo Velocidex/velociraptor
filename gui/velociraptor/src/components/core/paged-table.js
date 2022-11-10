@@ -27,6 +27,7 @@ import ClientLink from '../clients/client-link.js';
 import HexView from '../utils/hex.js';
 import TableTransformDialog from './table-transform-dialog.js';
 import T from '../i8n/i8n.js';
+import UserConfig from '../core/user.js';
 
 import {
     InspectRawJson, ColumnToggleList,
@@ -85,6 +86,8 @@ const pageListRenderer = ({
 
 
 class VeloPagedTable extends Component {
+    static contextType = UserConfig;
+
     static propTypes = {
         // Params to the GetTable API call.
         params: PropTypes.object,
@@ -315,6 +318,9 @@ class VeloPagedTable extends Component {
     );
 
     render() {
+        let timezone = (this.context.traits &&
+                        this.context.traits.timezone) || "UTC";
+
         if (_.isEmpty(this.state.columns) && this.state.loading) {
             return <>
                      <Spinner loading={this.state.loading} />
@@ -462,6 +468,7 @@ class VeloPagedTable extends Component {
                                   title={T("Download JSON")}
                                   href={api.href("/api/v1/DownloadTable",
                                                  Object.assign(downloads, {
+                                                     timezone: timezone,
                                                      download_format: "json",
                                                  }))}>
                             <FontAwesomeIcon icon="download"/>
@@ -471,6 +478,7 @@ class VeloPagedTable extends Component {
                                   title={T("Download CSV")}
                                   href={api.href("/api/v1/DownloadTable",
                                                  Object.assign(downloads, {
+                                                     timezone: timezone,
                                                      download_format: "csv",
                                                  }))}>
                             <FontAwesomeIcon icon="file-csv"/>

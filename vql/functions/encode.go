@@ -100,7 +100,8 @@ func (self *EncodeFunction) Call(ctx context.Context,
 		buff := bytes.NewBuffer([]byte{})
 		csv_writer := csv.GetCSVAppender(config_obj,
 			scope, buff,
-			true /* write_headers */)
+			true, /* write_headers */
+			json.NoEncOpts)
 
 		result_rows_value := reflect.ValueOf(result)
 		for i := 0; i < result_rows_value.Len(); i++ {
