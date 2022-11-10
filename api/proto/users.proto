@@ -5,14 +5,11 @@ import "acls/proto/acl.proto";
 import "config/proto/config.proto";
 import "flows/proto/artifact_collector.proto";
 
+import "orgs.proto";
+
 package proto;
 
 option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
-
-message Org {
-    string name = 1;
-    string id = 2;
-}
 
 message VelociraptorUser {
     string name = 1 [(sem_type) = {
@@ -39,7 +36,7 @@ message VelociraptorUser {
     ApiClientACL Permissions = 9;
 
     // A list of org id's the user belongs to.
-    repeated Org orgs = 11;
+    repeated OrgRecord orgs = 11;
 
     // Only used by the GUI/API to determine the currently selected
     // org the user wants to see.
@@ -103,7 +100,7 @@ message ApiUser {
     }
     UserType user_type = 4;
 
-    repeated Org orgs = 11;
+    repeated OrgRecord orgs = 11;
 }
 
 

@@ -260,8 +260,8 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 	}()
 
 	self.mu.Lock()
-	self.orgs[org_record.OrgId] = org_ctx
-	self.org_id_by_nonce[org_record.Nonce] = org_record.OrgId
+	self.orgs[org_record.Id] = org_ctx
+	self.org_id_by_nonce[org_record.Nonce] = org_record.Id
 	self.mu.Unlock()
 
 	return self.startOrgFromContext(org_ctx)
@@ -315,7 +315,7 @@ func (self *OrgManager) startRootOrgServices(
 }
 
 func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
-	org_id := org_ctx.record.OrgId
+	org_id := org_ctx.record.Id
 	org_config := org_ctx.config_obj
 	ctx := org_ctx.sm.Ctx
 	wg := org_ctx.sm.Wg
