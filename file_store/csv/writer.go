@@ -54,7 +54,7 @@ func NewWriter(w io.Writer) *Writer {
 	}
 }
 
-func AnyToString(item vfilter.Any) string {
+func AnyToString(item vfilter.Any, opts *json.EncOpts) string {
 	value := ""
 
 	switch t := item.(type) {
@@ -65,7 +65,14 @@ func AnyToString(item vfilter.Any) string {
 		value = strconv.FormatFloat(t, 'f', -1, 64)
 
 	case time.Time:
-		value = t.Format(time.RFC3339Nano)
+		// Use the encoding options to control how to serialize the
+		// time into the correct timezone.
+		serialized, err := json.MarshalIndentWithOptions(t, opts)
+		if err != nil || len(serialized) < 10 {
+			return ""
+		}
+		// Strip the quote marks so it is a bare string value.
+		return string(serialized[1 : len(serialized)-1])
 
 	case int, int16, int32, int64, uint16, uint32, uint64, bool:
 		value = fmt.Sprintf("%v", item)
@@ -87,7 +94,7 @@ func AnyToString(item vfilter.Any) string {
 		}
 
 	default:
-		serialized, err := json.MarshalIndent(item)
+		serialized, err := json.MarshalIndentWithOptions(item, opts)
 		if err != nil {
 			return ""
 		}
@@ -101,11 +108,11 @@ func AnyToString(item vfilter.Any) string {
 	return value
 }
 
-func (w *Writer) WriteAny(record []interface{}) error {
+func (w *Writer) WriteAny(record []interface{}, opts *json.EncOpts) error {
 	row := []string{}
 
 	for _, item := range record {
-		row = append(row, AnyToString(item))
+		row = append(row, AnyToString(item, opts))
 	}
 
 	return w.Write(row)

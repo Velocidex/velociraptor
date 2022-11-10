@@ -93,6 +93,8 @@ func getTable(
 		return nil, err
 	}
 
+	opts := getJsonOptsForTimezone(in.Timezone)
+
 	// Unpack the rows into the output protobuf
 	for row := range rs_reader.Rows(ctx) {
 		if result.Columns == nil {
@@ -102,7 +104,7 @@ func getTable(
 		row_data := make([]string, 0, len(result.Columns))
 		for _, key := range result.Columns {
 			value, _ := row.Get(key)
-			row_data = append(row_data, csv.AnyToString(value))
+			row_data = append(row_data, csv.AnyToString(value, opts))
 		}
 		result.Rows = append(result.Rows, &api_proto.Row{
 			Cell: row_data,
@@ -262,6 +264,8 @@ func getEventTableWithPathManager(
 		rs_reader.SetMaxTime(time.Unix(int64(in.EndTime), 0))
 	}
 
+	opts := getJsonOptsForTimezone(in.Timezone)
+
 	// Unpack the rows into the output protobuf
 	for row := range rs_reader.Rows(ctx) {
 		if result.Columns == nil {
@@ -271,7 +275,7 @@ func getEventTableWithPathManager(
 		row_data := make([]string, 0, len(result.Columns))
 		for _, key := range result.Columns {
 			value, _ := row.Get(key)
-			row_data = append(row_data, csv.AnyToString(value))
+			row_data = append(row_data, csv.AnyToString(value, opts))
 		}
 		result.Rows = append(result.Rows, &api_proto.Row{
 			Cell: row_data,
@@ -315,6 +319,7 @@ func getTimeline(
 	}
 
 	rows := uint64(0)
+	opts := getJsonOptsForTimezone(in.Timezone)
 	for item := range reader.Read(ctx) {
 		if result.StartTime == 0 {
 			result.StartTime = item.Time.UnixNano()
@@ -323,8 +328,8 @@ func getTimeline(
 		result.Rows = append(result.Rows, &api_proto.Row{
 			Cell: []string{
 				item.Source,
-				csv.AnyToString(item.Time),
-				csv.AnyToString(item.Row)},
+				csv.AnyToString(item.Time, opts),
+				csv.AnyToString(item.Row, opts)},
 		})
 
 		rows += 1

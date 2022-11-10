@@ -110,7 +110,7 @@ require (
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11
-	github.com/Velocidex/ordereddict v0.0.0-20220428153415-da46091cd216
+	github.com/Velocidex/ordereddict v0.0.0-20221110130714-6a7cb85851cd
 	github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.1-0.20221027171526-76a36be4fa02
 	github.com/coreos/go-oidc/v3 v3.4.0
 	github.com/evanphx/json-patch/v5 v5.6.0
@@ -186,7 +186,6 @@ require (
 	go.uber.org/goleak v1.2.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
 	golang.org/x/term v0.0.0-20221017184919-83659145692c // indirect
-	golang.org/x/tools v0.1.12 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
