@@ -115,6 +115,14 @@ What OS will the server be deployed on?
 	google_domains_password = &survey.Input{
 		Message: "Google Domains DynDNS Password",
 	}
+
+	add_allow_list_question = &survey.Confirm{
+		Message: `Do you want to restrict VQL functionality on the server?
+
+This is useful for a shared server where users are not fully trusted.
+It removes potentially dangerous plugins like execve(),filesyste access etc.
+`,
+	}
 )
 
 func regexValidator(re string) survey.Validator {
@@ -261,6 +269,11 @@ func doGenerateConfigInteractive() error {
 	// you are trying to debug something.
 	config_obj.Logging.Debug = &config_proto.LoggingRetentionConfig{
 		Disabled: true,
+	}
+
+	err = addAllowList(config_obj)
+	if err != nil {
+		return err
 	}
 
 	storeServerConfig(config_obj)
@@ -532,4 +545,22 @@ func addUser(config_obj *config_proto.Config) error {
 				PasswordSalt: hex.EncodeToString(user_record.PasswordSalt),
 			})
 	}
+}
+
+func addAllowList(config_obj *config_proto.Config) error {
+	add_allow_list := false
+	err := survey.AskOne(add_allow_list_question, &add_allow_list, nil)
+	if err != nil {
+		return err
+	}
+
+	if !add_allow_list {
+		return nil
+	}
+
+	config_obj.Defaults.AllowedPlugins = allowed_plugins
+	config_obj.Defaults.AllowedFunctions = allowed_functions
+	config_obj.Defaults.AllowedAccessors = allowed_accessors
+
+	return nil
 }
