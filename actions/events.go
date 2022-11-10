@@ -35,6 +35,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 )
@@ -272,12 +273,34 @@ func update_writeback(
 	return config.UpdateWriteback(config_obj.Client, writeback)
 }
 
-func InitializeEventTable(ctx context.Context, service_wg *sync.WaitGroup) {
-	mu.Lock()
-	GlobalEventTable = &EventTable{
-		service_wg: service_wg,
+func NewEventTable(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	responder *responder.Responder,
+	table *actions_proto.VQLEventTable) *EventTable {
+	result := &EventTable{
+		Events:     table.Event,
+		version:    table.Version,
+		Done:       make(chan bool),
+		config_obj: config_obj,
 		ctx:        ctx,
 	}
+
+	return result
+}
+
+func InitializeEventTable(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	output_chan chan *crypto_proto.VeloMessage,
+	service_wg *sync.WaitGroup) {
+	mu.Lock()
+	GlobalEventTable = NewEventTable(
+		ctx, config_obj,
+		responder.NewResponder(
+			config_obj, &crypto_proto.VeloMessage{}, output_chan),
+		&actions_proto.VQLEventTable{})
+	GlobalEventTable.service_wg = service_wg
 	mu.Unlock()
 
 	// When the context is finished, tear down the event table.

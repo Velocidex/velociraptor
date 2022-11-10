@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -73,6 +74,7 @@ func (self *EventsTestSuite) SetupTest() {
 	self.responder = responder.TestResponder()
 
 	actions.GlobalEventTable = actions.NewEventTable(
+		context.Background(),
 		self.ConfigObj, self.responder,
 		&actions_proto.VQLEventTable{})
 }
@@ -108,7 +110,8 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 
 	// Wait until the entire event table is cleaned up.
 	wg := &sync.WaitGroup{}
-	actions.InitializeEventTable(ctx, wg)
+	output_chan := make(chan *crypto_proto.VeloMessage)
+	actions.InitializeEventTable(ctx, self.ConfigObj, output_chan, wg)
 	defer wg.Wait()
 
 	require.NoError(self.T(), client_manager.SetClientMonitoringState(
