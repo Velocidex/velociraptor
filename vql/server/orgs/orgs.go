@@ -5,9 +5,9 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
-	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/users"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -23,20 +23,16 @@ func (self OrgsPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		err := vql_subsystem.CheckAccess(scope, acls.ORG_ADMIN)
-		if err != nil {
-			scope.Log("orgs: %v", err)
-			return
-		}
-
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
 			scope.Log("orgs: %v", err)
 			return
 		}
 
-		for _, org_record := range org_manager.ListOrgs() {
-			org_config_obj, err := org_manager.GetOrgConfig(org_record.OrgId)
+		// ACLs are checked by the users module
+		principal := vql_subsystem.GetPrincipal(scope)
+		for _, org_record := range users.GetOrgs(ctx, principal) {
+			org_config_obj, err := org_manager.GetOrgConfig(org_record.Id)
 			if err != nil {
 				continue
 			}
@@ -53,8 +49,11 @@ func (self OrgsPlugin) Call(
 
 			row := ordereddict.NewDict().
 				Set("Name", org_record.Name).
-				Set("OrgId", org_record.OrgId).
-				Set("_client_config", string(serialized))
+				Set("OrgId", org_record.Id)
+
+			if org_record.Nonce != "" {
+				row.Set("_client_config", string(serialized))
+			}
 
 			select {
 			case <-ctx.Done():

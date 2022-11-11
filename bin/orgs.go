@@ -98,7 +98,7 @@ func doOrgUserAdd() error {
 		return err
 	}
 
-	record.Orgs = append(record.Orgs, &api_proto.Org{
+	record.Orgs = append(record.Orgs, &api_proto.OrgRecord{
 		Name: org_record.OrgName,
 		Id:   org_record.OrgId,
 	})

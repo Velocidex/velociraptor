@@ -45,7 +45,7 @@ func DeleteUser(
 		return acls.PermissionDenied
 	}
 
-	remaining_orgs := []*api_proto.Org{}
+	remaining_orgs := []*api_proto.OrgRecord{}
 	// Empty policy - no permissions.
 	policy := &acl_proto.ApiClientACL{}
 

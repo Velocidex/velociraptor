@@ -192,7 +192,8 @@ func (self *MergeSortGrouper) Group(
 		// Append this row to a bin based on a unique value of the
 		// group by column.
 		for {
-			transformed_row, _, bin_idx, new_scope, err := actor.GetNextRow(ctx, scope)
+			transformed_row, _, bin_idx, new_scope, err := actor.GetNextRow(
+				ctx, scope)
 			if err != nil {
 				break
 			}

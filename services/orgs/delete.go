@@ -28,7 +28,7 @@ func RemoveOrgFromUsers(
 	for _, u := range users {
 		record, err := user_manager.GetUserWithHashes(ctx, u.Name)
 		if err == nil {
-			new_orgs := []*api_proto.Org{}
+			new_orgs := []*api_proto.OrgRecord{}
 			for _, org := range record.Orgs {
 				if org.Id != org_id {
 					new_orgs = append(new_orgs, org)

@@ -76,7 +76,7 @@ func createInitialUsers(
 					return err
 				}
 
-				org_record := &api_proto.Org{
+				org_record := &api_proto.OrgRecord{
 					Name: org_config_obj.OrgName,
 					Id:   org_config_obj.OrgId,
 				}

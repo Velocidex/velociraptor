@@ -81,7 +81,7 @@ func AddUserToOrg(
 
 	for _, org := range orgs {
 		if !inUserOrgs(org, user_record) {
-			user_record.Orgs = append(user_record.Orgs, &api_proto.Org{
+			user_record.Orgs = append(user_record.Orgs, &api_proto.OrgRecord{
 				Id: org,
 			})
 		}

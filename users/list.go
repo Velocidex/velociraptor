@@ -54,7 +54,7 @@ func ListUsers(
 		}
 
 		allowed_full := false
-		returned_orgs := []*api_proto.Org{}
+		returned_orgs := []*api_proto.OrgRecord{}
 
 		for _, user_org := range user.Orgs {
 			info, pres := seen[user_org.Id]
