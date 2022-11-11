@@ -4,14 +4,10 @@ package clients
 
 import (
 	"context"
-	"errors"
-	"os"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -50,24 +46,16 @@ func (self *ClientMetadataFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	client_path_manager := paths.NewClientPathManager(arg.ClientId)
-	db, err := datastore.GetDB(config_obj)
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
-		scope.Log("client_metadata: %s", err.Error())
+		scope.Log("client_metadata: %s", err)
 		return vfilter.Null{}
 	}
 
-	result := &api_proto.ClientMetadata{}
-	err = db.GetSubject(config_obj,
-		client_path_manager.Metadata(), result)
-	if err != nil && !errors.Is(err, os.ErrNotExist) {
-		scope.Log("client_metadata: %s", err.Error())
+	result_dict, err := client_info_manager.GetMetadata(ctx, arg.ClientId)
+	if err != nil {
+		scope.Log("client_metadata: %s", err)
 		return vfilter.Null{}
-	}
-
-	result_dict := ordereddict.NewDict()
-	for _, item := range result.Items {
-		result_dict.Set(item.Key, item.Value)
 	}
 
 	return result_dict
@@ -110,7 +98,8 @@ func (self *ClientSetMetadataFunction) Call(ctx context.Context,
 		}
 	}
 
-	permission := acls.READ_RESULTS
+	// User needs high permissions to modify the client's metadata.
+	permission := acls.COLLECT_SERVER
 	if client_id == "server" {
 		permission = acls.SERVER_ADMIN
 	}
@@ -123,40 +112,19 @@ func (self *ClientSetMetadataFunction) Call(ctx context.Context,
 
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
-		scope.Log("Command can only run on the server")
+		scope.Log("client_set_metadata: Command can only run on the server")
 		return vfilter.Null{}
 	}
 
-	client_path_manager := paths.NewClientPathManager(client_id)
-	db, err := datastore.GetDB(config_obj)
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
-		scope.Log("client_set_metadata: %s", err.Error())
+		scope.Log("client_set_metadata: %s", err)
 		return vfilter.Null{}
 	}
 
-	result := &api_proto.ClientMetadata{ClientId: client_id}
-
-	for _, key := range expanded_args.Keys() {
-		if key == "client_id" || key == "metadata" {
-			continue
-		}
-
-		value, pres := expanded_args.GetString(key)
-		if !pres {
-			value_any, _ := expanded_args.Get(key)
-			scope.Log("client_set_metadata: metadata key %v should be a string (not type %T)",
-				key, value_any)
-			continue
-		}
-
-		result.Items = append(result.Items, &api_proto.ClientMetadataItem{
-			Key: key, Value: value})
-	}
-
-	err = db.SetSubject(config_obj,
-		client_path_manager.Metadata(), result)
+	err = client_info_manager.SetMetadata(ctx, client_id, expanded_args)
 	if err != nil {
-		scope.Log("client_set_metadata: %s", err.Error())
+		scope.Log("client_set_metadata: %s", err)
 		return vfilter.Null{}
 	}
 
