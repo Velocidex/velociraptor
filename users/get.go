@@ -65,7 +65,7 @@ func getUserWithHashes(
 	}
 
 	allowed_full := false
-	returned_orgs := []*api_proto.Org{}
+	returned_orgs := []*api_proto.OrgRecord{}
 
 	for _, user_org := range user.Orgs {
 		org_config_obj, err := org_manager.GetOrgConfig(user_org.Id)

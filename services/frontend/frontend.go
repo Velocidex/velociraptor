@@ -131,7 +131,7 @@ func calculateOrgConnectionClients(metric *FrontendMetrics) error {
 		return err
 	}
 	for _, org := range org_manager.ListOrgs() {
-		org_config_obj, err := org_manager.GetOrgConfig(org.OrgId)
+		org_config_obj, err := org_manager.GetOrgConfig(org.Id)
 		if err != nil {
 			continue
 		}
@@ -142,7 +142,7 @@ func calculateOrgConnectionClients(metric *FrontendMetrics) error {
 			continue
 		}
 
-		metric.ClientCommsCurrentConnections[org.OrgId] = notifier.CountConnectedClients()
+		metric.ClientCommsCurrentConnections[org.Id] = notifier.CountConnectedClients()
 	}
 
 	return nil
@@ -250,12 +250,12 @@ func (self *MasterFrontendManager) prepareOrgStats() (
 
 		for _, v := range self.stats {
 			if now.Sub(v.Timestamp) < 60*time.Second {
-				count, _ := v.ClientCommsCurrentConnections[org.OrgId]
+				count, _ := v.ClientCommsCurrentConnections[org.Id]
 				total += count
 			}
 		}
 
-		result[org.OrgId] = ordereddict.NewDict().
+		result[org.Id] = ordereddict.NewDict().
 			Set("TotalFrontends", active_frontends).
 			Set("CPUPercent", total_CpuLoadPercent).
 			Set("MemoryUse", total_ProcessResidentMemoryBytes).

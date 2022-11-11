@@ -191,22 +191,24 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
    "read_results": true
   }
  }
-]SELECT * FROM query(query={ SELECT * FROM orgs() ORDER BY OrgId }, runas="ReaderUser")[]SELECT * FROM test_read_logs() WHERE Log =~ "Permission denied.+ORG_ADMIN" AND NOT Log =~ "SELECT"[
+]SELECT * FROM query(query={ SELECT * FROM orgs() ORDER BY OrgId }, runas="ReaderUser")[
  {
-  "Log": "Velociraptor: orgs: Permission denied: [ORG_ADMIN]\n"
- }
-]SELECT * FROM query(query={ SELECT OrgId FROM orgs() ORDER BY OrgId }, runas="OrgAdmin", org_id="root")[
- {
+  "Name": "MyOrg",
   "OrgId": "ORGID"
  },
  {
+  "Name": "\u003croot\u003e",
   "OrgId": "root"
  }
-]SELECT * FROM query(query={ SELECT OrgId FROM orgs() ORDER BY OrgId }, runas="OrgUser", org_id="ORGID")[]SELECT * FROM test_read_logs() WHERE Log =~ "Permission denied.+ORG_ADMIN" AND NOT Log =~ "SELECT"[
+]SELECT * FROM test_read_logs() WHERE Log =~ "Permission denied.+ORG_ADMIN" AND NOT Log =~ "SELECT"[]SELECT * FROM query(query={ SELECT OrgId FROM orgs() ORDER BY OrgId }, runas="OrgAdmin", org_id="root")[
  {
-  "Log": "Velociraptor: orgs: Permission denied: [ORG_ADMIN]\n"
+  "OrgId": "root"
  }
-]LET _ <= org_create(name="MySecondOrg", org_id="ORGID2")[]LET _ <= user_create(user="OrgUser", roles="reader", password="X", orgs=["ORGID2"])[]SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "OrgUser" ORDER BY name[
+]SELECT * FROM query(query={ SELECT OrgId FROM orgs() ORDER BY OrgId }, runas="OrgUser", org_id="ORGID")[
+ {
+  "OrgId": "ORGID"
+ }
+]SELECT * FROM test_read_logs() WHERE Log =~ "Permission denied.+ORG_ADMIN" AND NOT Log =~ "SELECT"[]LET _ <= org_create(name="MySecondOrg", org_id="ORGID2")[]LET _ <= user_create(user="OrgUser", roles="reader", password="X", orgs=["ORGID2"])[]SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "OrgUser" ORDER BY name[
  {
   "name": "OrgUser",
   "org_id": "ORGID",

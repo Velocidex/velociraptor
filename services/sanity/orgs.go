@@ -29,7 +29,7 @@ func createInitialOrgs(config_obj *config_proto.Config) error {
 
 		// Receive the newly created orgid and update the config file
 		// with it
-		org.OrgId = org_record.OrgId
+		org.OrgId = org_record.Id
 	}
 
 	return nil

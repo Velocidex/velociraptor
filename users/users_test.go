@@ -28,7 +28,7 @@ func (self *UserManagerTestSuite) makeUserWithRoles(username, org_id, role strin
 	err = user_manager.SetUser(self.Sm.Ctx,
 		&api_proto.VelociraptorUser{
 			Name: username,
-			Orgs: []*api_proto.Org{
+			Orgs: []*api_proto.OrgRecord{
 				{Id: org_id},
 			},
 		})

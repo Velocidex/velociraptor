@@ -24,9 +24,9 @@
   ]
  },
  "O01/org": {
+  "id": "O01",
   "name": "Org1",
-  "nonce": "Nonce Of O01",
-  "org_id": "O01"
+  "nonce": "Nonce Of O01"
  },
  "OT02/acl/User1.json": {
   "roles": [
@@ -34,9 +34,9 @@
   ]
  },
  "OT02/org": {
+  "id": "OT02",
   "name": "Org2",
-  "nonce": "Nonce Of OT02",
-  "org_id": "OT02"
+  "nonce": "Nonce Of OT02"
  },
  "root/acl/User1.json": {
   "roles": [
@@ -44,8 +44,8 @@
   ]
  },
  "root/org": {
+  "id": "root",
   "name": "\u003croot\u003e",
-  "nonce": "Nonce Of root",
-  "org_id": "root"
+  "nonce": "Nonce Of root"
  }
 }

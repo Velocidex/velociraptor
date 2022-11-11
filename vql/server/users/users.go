@@ -153,7 +153,7 @@ func ConvertPolicyToOrderedDict(
 	return result
 }
 
-func containsOrgId(orgs []*api_proto.Org, org_id string) bool {
+func containsOrgId(orgs []*api_proto.OrgRecord, org_id string) bool {
 	for _, o := range orgs {
 		if o.Id == org_id {
 			return true

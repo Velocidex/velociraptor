@@ -178,7 +178,7 @@ func normalizeOrgList(user_record *api_proto.VelociraptorUser) error {
 
 	// Fill in the org names if needed
 	for _, org_record := range org_manager.ListOrgs() {
-		org_config_obj, err := org_manager.GetOrgConfig(org_record.OrgId)
+		org_config_obj, err := org_manager.GetOrgConfig(org_record.Id)
 		if err != nil {
 			continue
 		}
@@ -189,8 +189,8 @@ func normalizeOrgList(user_record *api_proto.VelociraptorUser) error {
 			continue
 		}
 
-		user_record.Orgs = append(user_record.Orgs, &api_proto.Org{
-			Id:   org_record.OrgId,
+		user_record.Orgs = append(user_record.Orgs, &api_proto.OrgRecord{
+			Id:   org_record.Id,
 			Name: org_record.Name,
 		})
 	}
