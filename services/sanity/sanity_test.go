@@ -165,9 +165,9 @@ func (self *ServicesTestSuite) TestCreateUserInOrgs() {
 			// The nonce will be random each time so we eliminate it from
 			// the golden image.
 			assert.True(self.T(), org_record.Nonce != "")
-			org_record.Nonce = "Nonce Of " + org_record.OrgId
+			org_record.Nonce = "Nonce Of " + org_record.Id
 
-			org_id := org_record.OrgId
+			org_id := org_record.Id
 			org_config_obj, err := org_manager.GetOrgConfig(org_id)
 			assert.NoError(self.T(), err)
 

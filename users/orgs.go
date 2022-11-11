@@ -27,12 +27,21 @@ func GetOrgs(
 		}
 
 		allowed, _ := services.CheckAccess(org_config_obj,
-			principal, acls.READ_RESULTS)
-		if !allowed {
+			principal, acls.SERVER_ADMIN)
+		if allowed {
+			result = append(result, org)
 			continue
 		}
 
-		result = append(result, org)
+		allowed, _ = services.CheckAccess(org_config_obj,
+			principal, acls.READ_RESULTS)
+		if allowed {
+			result = append(result, &api_proto.OrgRecord{
+				Id:   org.Id,
+				Name: org.Name,
+			})
+			continue
+		}
 	}
 
 	return result

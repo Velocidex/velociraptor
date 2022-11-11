@@ -49,8 +49,11 @@ func (self OrgsPlugin) Call(
 
 			row := ordereddict.NewDict().
 				Set("Name", org_record.Name).
-				Set("OrgId", org_record.Id).
-				Set("_client_config", string(serialized))
+				Set("OrgId", org_record.Id)
+
+			if org_record.Nonce != "" {
+				row.Set("_client_config", string(serialized))
+			}
 
 			select {
 			case <-ctx.Done():
