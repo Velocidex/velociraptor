@@ -184,6 +184,8 @@ message ClientInfo {
     string client_version = 12;
     string client_name = 13;
     uint64 first_seen_at = 20;
+    string build_time = 24;
+    string build_url = 25;
 
     repeated string labels = 15;
     repeated string mac_addresses = 22;

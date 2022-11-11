@@ -193,6 +193,7 @@ func (self MFTScanPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 		Name:    "parse_mft",
 		Doc:     "Scan the $MFT from an NTFS volume.",
 		ArgType: type_map.AddType(scope, &MFTScanPluginArgs{}),
+		Version: 2,
 	}
 }
 

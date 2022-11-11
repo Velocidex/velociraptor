@@ -235,9 +235,18 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 			Architecture:                getter("Architecture"),
 			Fqdn:                        getter("Fqdn"),
 			ClientName:                  getter("Name"),
-			ClientVersion:               getter("BuildTime"),
+			ClientVersion:               getter("Version"),
+			BuildUrl:                    getter("build_url"),
 			LastInterrogateFlowId:       flow_id,
 			LastInterrogateArtifactName: artifact,
+		}
+
+		build_time, pres := row.Get("BuildTime")
+		if pres {
+			t, ok := build_time.(time.Time)
+			if ok {
+				client_info.BuildTime = t.UTC().Format(time.RFC3339)
+			}
 		}
 
 		label_array, ok := row.GetStrings("Labels")
