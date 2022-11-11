@@ -13,8 +13,9 @@ import (
 )
 
 type UserDeleteFunctionArgs struct {
-	Username string   `vfilter:"required,field=user,doc=The user to delete."`
-	OrgIds   []string `vfilter:"optional,field=orgs,doc=If set we only delete from these orgs, otherwise all the orgs the principal has SERVER_ADMIN on."`
+	Username   string   `vfilter:"required,field=user,doc=The user to delete."`
+	OrgIds     []string `vfilter:"optional,field=orgs,doc=If set we only delete from these orgs, otherwise we delete from the current org."`
+	ReallyDoIt bool     `vfilter:"optional,field=really_do_it,doc=If not specified, just show what user will be removed"`
 }
 
 type UserDeleteFunction struct{}
@@ -38,9 +39,9 @@ func (self UserDeleteFunction) Call(
 		return vfilter.Null{}
 	}
 
-	orgs := users.LIST_ALL_ORGS
-	if len(arg.OrgIds) == 0 {
-		orgs = []string{config_obj.OrgId}
+	orgs := []string{config_obj.OrgId}
+	if len(arg.OrgIds) != 0 {
+		orgs = arg.OrgIds
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
@@ -50,10 +51,14 @@ func (self UserDeleteFunction) Call(
 		"Principal": principal,
 	}).Info("user_delete")
 
-	err = users.DeleteUser(ctx, principal, arg.Username, orgs)
-	if err != nil {
-		scope.Log("user_delete: %s", err)
-		return vfilter.Null{}
+	if arg.ReallyDoIt {
+		err = users.DeleteUser(ctx, principal, arg.Username, orgs)
+		if err != nil {
+			scope.Log("user_delete: %s", err)
+			return vfilter.Null{}
+		}
+	} else {
+		scope.Log("user_delete: Will remove %v from orgs %v", arg.Username, orgs)
 	}
 
 	return arg.Username

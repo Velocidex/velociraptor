@@ -449,6 +449,9 @@
   - name: client_id
     type: string
     required: true
+  - name: metadata
+    type: ordereddict.Dict
+    description: A dict containing metadata. If not specified we use kwargs.
   category: server
 - name: clients
   description: Retrieve the list of clients.
@@ -2068,7 +2071,7 @@
     description: A dict of headers to send.
   - name: method
     type: string
-    description: HTTP method to use (GET, POST)
+    description: HTTP method to use (GET, POST, PUT, PATCH, DELETE)
   - name: data
     type: string
     description: If specified we write this raw data into a POST request instead of
@@ -3454,6 +3457,9 @@
   - name: accessor
     type: string
     description: The accessor to use.
+  - name: prefix
+    type: accessors.OSPath
+    description: If specified we prefix all paths with this path.
   category: parsers
 - name: parse_ntfs
   description: |
@@ -4796,6 +4802,15 @@
   - name: wait_time
     type: int64
     description: Batch splunk upload this long (2 sec).
+  - name: hostname
+    type: string
+    description: Hostname for Splunk Events. Defaults to server hostname.
+  - name: timestamp_field
+    type: string
+    description: Field to use as event timestamp.
+  - name: hostname_field
+    type: string
+    description: Field to use as event hostname. Overrides hostname param.
   category: server
 - name: sql
   description: Run queries against sqlite, mysql, and postgres databases
@@ -4922,6 +4937,9 @@
   - name: prefix
     type: string
     description: The prefix to strip
+  - name: suffix
+    type: string
+    description: The suffix to strip
   category: basic
 - name: substr
   description: Create a substring from a string
@@ -5476,6 +5494,17 @@
     type: string
     description: A url to parse
   category: basic
+- name: user
+  description: Retrieves information about the Velociraptor user.
+  type: Function
+  args:
+  - name: user
+    type: string
+    description: The user to create or update.
+    required: true
+  - name: org
+    type: string
+    description: The org under which we query the user's ACL.
 - name: user_create
   description: Creates a new user from the server, or updates their permissions or
     reset their password.
@@ -5495,7 +5524,8 @@
     description: A password to set for the user (If not using SSO this might be needed).
   - name: orgs
     type: string
-    description: One or more org IDs to grant access to.
+    description: One or more org IDs to grant access to. If empty we use the current
+      org.
     repeated: true
   category: server
 - name: user_delete
@@ -5506,6 +5536,14 @@
     type: string
     description: The user to delete.
     required: true
+  - name: orgs
+    type: string
+    description: If set we only delete from these orgs, otherwise we delete from the
+      current org.
+    repeated: true
+  - name: really_do_it
+    type: bool
+    description: If not specified, just show what user will be removed
   category: server
 - name: user_grant
   description: Grants the user the specified roles.
@@ -5519,11 +5557,15 @@
     type: string
     description: List of roles to give the user.
     repeated: true
-    required: true
   - name: orgs
     type: string
-    description: One or more org IDs to grant access to.
+    description: One or more org IDs to grant access to. If not specified we use current
+      org
     repeated: true
+  - name: policy
+    type: ordereddict.Dict
+    description: A dict of permissions to set (e.g. as obtained from the gui_users()
+      function).
 - name: users
   description: Display information about workstation local users. This is obtained
     through the NetUserEnum() API.
