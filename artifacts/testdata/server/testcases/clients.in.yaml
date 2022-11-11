@@ -19,7 +19,12 @@ Queries:
     FROM flows(client_id='C.4f5e52adf0a337a9')
     WHERE Artifacts =~ "Netstat"
 
-  # Test metadata setting and getting - only string metadata is acceptable.
+  # Test metadata setting and getting - metadata is additive.
   - SELECT client_set_metadata(client_id='C.4f5e52adf0a337a9',
-      Foo='Bar', Bar='Baz', Invalid=5) FROM scope()
+      Foo='Bar', Bar='Baz', IntConvertedToString=5) FROM scope()
+  - SELECT client_metadata(client_id='C.4f5e52adf0a337a9') FROM scope()
+
+  # Metadata is additive - NULL removes
+  - SELECT client_set_metadata(client_id='C.4f5e52adf0a337a9',
+         AnotherItem="Hello", Bar=NULL) FROM scope()
   - SELECT client_metadata(client_id='C.4f5e52adf0a337a9') FROM scope()

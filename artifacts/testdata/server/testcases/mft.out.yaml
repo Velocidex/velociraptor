@@ -5,7 +5,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "ParentEntryNumber": 5,
   "OSPath": "C:\\just_a_file.txt",
   "_Links": [
-   "just_a_file.txt"
+   "C:\\just_a_file.txt"
   ],
   "FileName": "just_a_file.txt",
   "FileSize": 12,
@@ -36,7 +36,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "ParentEntryNumber": 45,
   "OSPath": "C:\\Folder A\\Folder B\\Hello world text document.txt",
   "_Links": [
-   "Folder A\\Folder B\\Hello world text document.txt"
+   "C:\\Folder A\\Folder B\\Hello world text document.txt"
   ],
   "FileName": "Hello world text document.txt",
   "FileSize": 12,
@@ -66,7 +66,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "ParentEntryNumber": 45,
   "OSPath": "C:\\Folder A\\Folder B\\Hello world text document.txt:goodbye.txt",
   "_Links": [
-   "Folder A\\Folder B\\Hello world text document.txt"
+   "C:\\Folder A\\Folder B\\Hello world text document.txt"
   ],
   "FileName": "Hello world text document.txt:goodbye.txt",
   "FileSize": 64,
@@ -97,7 +97,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "ParentEntryNumber": 5,
   "OSPath": "C:\\another_file.txt",
   "_Links": [
-   "another_file.txt"
+   "C:\\another_file.txt"
   ],
   "FileName": "another_file.txt",
   "FileSize": 14,
@@ -127,7 +127,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "ParentEntryNumber": 5,
   "OSPath": "C:\\just_a_file.txt",
   "_Links": [
-   "just_a_file.txt"
+   "C:\\just_a_file.txt"
   ],
   "FileName": "just_a_file.txt",
   "FileSize": 12,
@@ -158,7 +158,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "ParentEntryNumber": 5,
   "OSPath": "C:\\just_a_file.txt",
   "_Links": [
-   "just_a_file.txt"
+   "C:\\just_a_file.txt"
   ],
   "FileName": "just_a_file.txt",
   "FileSize": 12,

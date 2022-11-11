@@ -63,6 +63,10 @@ func (self USNPlugin) Call(
 		}
 		defer ntfs_ctx.Close()
 
+		options := readers.GetScopeOptions(scope)
+		options.PrefixComponents = arg.Device.Components
+		ntfs_ctx.SetOptions(options)
+
 		for item := range ntfs.ParseUSN(ctx, ntfs_ctx, arg.StartUSN) {
 			output_chan <- makeUSNRecord(item)
 		}

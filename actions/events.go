@@ -35,19 +35,23 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config "www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 )
 
 var (
-	GlobalEventTable = &EventTable{}
-	mu               sync.Mutex
+	GlobalEventTable = &EventTable{
+		ctx: context.Background(),
+	}
+	mu sync.Mutex
 )
 
 type EventTable struct {
 	Events  []*actions_proto.VQLCollectorArgs
 	version uint64
 
+	ctx        context.Context
 	config_obj *config_proto.Config
 
 	// This will be closed to signal that we need to abort the
@@ -157,20 +161,6 @@ func update(
 	return GlobalEventTable, nil, true /* changed */
 }
 
-func NewEventTable(
-	config_obj *config_proto.Config,
-	responder *responder.Responder,
-	table *actions_proto.VQLEventTable) *EventTable {
-	result := &EventTable{
-		Events:     table.Event,
-		version:    table.Version,
-		Done:       make(chan bool),
-		config_obj: config_obj,
-	}
-
-	return result
-}
-
 type UpdateEventTable struct{}
 
 func (self UpdateEventTable) Run(
@@ -202,8 +192,9 @@ func (self UpdateEventTable) Run(
 
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
-	// Make a context for the VQL query.
-	new_ctx, cancel := context.WithCancel(context.Background())
+	// Make a context for the VQL query. It will be destroyed on shut
+	// down when the global event table is done.
+	new_ctx, cancel := context.WithCancel(GlobalEventTable.ctx)
 
 	// Cancel the context when the cancel channel is closed.
 	go func() {
@@ -282,11 +273,34 @@ func update_writeback(
 	return config.UpdateWriteback(config_obj.Client, writeback)
 }
 
-func InitializeEventTable(ctx context.Context, service_wg *sync.WaitGroup) {
-	mu.Lock()
-	GlobalEventTable = &EventTable{
-		service_wg: service_wg,
+func NewEventTable(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	responder *responder.Responder,
+	table *actions_proto.VQLEventTable) *EventTable {
+	result := &EventTable{
+		Events:     table.Event,
+		version:    table.Version,
+		Done:       make(chan bool),
+		config_obj: config_obj,
+		ctx:        ctx,
 	}
+
+	return result
+}
+
+func InitializeEventTable(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	output_chan chan *crypto_proto.VeloMessage,
+	service_wg *sync.WaitGroup) {
+	mu.Lock()
+	GlobalEventTable = NewEventTable(
+		ctx, config_obj,
+		responder.NewResponder(
+			config_obj, &crypto_proto.VeloMessage{}, output_chan),
+		&actions_proto.VQLEventTable{})
+	GlobalEventTable.service_wg = service_wg
 	mu.Unlock()
 
 	// When the context is finished, tear down the event table.

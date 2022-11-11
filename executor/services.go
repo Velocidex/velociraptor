@@ -28,7 +28,7 @@ func StartEventTableService(
 			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
 		}, output_chan)
 
-	actions.InitializeEventTable(ctx, wg)
+	actions.InitializeEventTable(ctx, config_obj, output_chan, wg)
 
 	writeback, _ := config.GetWriteback(config_obj.Client)
 	if writeback != nil && writeback.EventQueries != nil {
