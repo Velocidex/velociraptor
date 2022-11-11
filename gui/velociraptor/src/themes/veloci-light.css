@@ -11,9 +11,9 @@
 @font-face {
   font-family: "iosevka";
   font-style: normal;
-  font-weight: 500;
+  font-weight: 400;
   src: local(""),
-    url("../fonts/iosevka-term-extendedmedium-subset.woff2") format("woff2");
+    url("../fonts/iosevka-term-extended-subset.woff2") format("woff2");
     unicode-range: U+0000-00FF, U+0100-017F;
   font-display: block;
 }
@@ -90,7 +90,7 @@
   --color-table-row-selected-text: var(--color-foreground);
   --color-table-row-hover: rgba(var(--color-accent), 0.1);
   --color-table-heading-background: var(--color-btn-default-background);
-  
+
   --color-code: #990000;
 
   --background-calendar-tile-active: #5cd00a80;
