@@ -14,16 +14,145 @@ SELECT whoami() FROM scope()[
    "investigator"
   ]
  }
-]LET _ <= user_grant(user="TestUser", roles="reader")[]SELECT name, roles FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUser"[
+]LET _ <= user_grant(user="TestUser", roles="reader")[]SELECT user(user="TestUser") FROM scope()[
+ {
+  "user(user=\"TestUser\")": {
+   "name": "TestUser",
+   "org_id": "",
+   "org_name": "",
+   "picture": "",
+   "email": false,
+   "roles": [
+    "reader"
+   ],
+   "_policy": {
+    "roles": [
+     "reader"
+    ]
+   },
+   "effective_policy": {
+    "read_results": true
+   }
+  }
+ }
+]LET _ <= user_grant(user="TestUser", roles="reader", policy=dict(label_clients=TRUE))[]SELECT user(user="TestUser") FROM scope()[
+ {
+  "user(user=\"TestUser\")": {
+   "name": "TestUser",
+   "org_id": "",
+   "org_name": "",
+   "picture": "",
+   "email": false,
+   "roles": [
+    "reader"
+   ],
+   "_policy": {
+    "label_clients": true,
+    "roles": [
+     "reader"
+    ]
+   },
+   "effective_policy": {
+    "read_results": true,
+    "label_clients": true
+   }
+  }
+ }
+]LET _ <= org_create(name="MySecondOrg", org_id="ORGID2")[]LET _ <= user_grant(user="TestUser", roles="administrator", orgs="ORGID2")[]SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUser"[
  {
   "name": "TestUser",
+  "org_id": "root",
+  "org_name": "\u003croot\u003e",
+  "picture": "",
+  "email": false,
   "roles": [
    "reader"
-  ]
- }
-]SELECT user_delete(user="TestUser") FROM scope()[
+  ],
+  "_policy": {
+   "label_clients": true,
+   "roles": [
+    "reader"
+   ]
+  },
+  "effective_policy": {
+   "read_results": true,
+   "label_clients": true
+  }
+ },
  {
-  "user_delete(user=\"TestUser\")": "TestUser"
+  "name": "TestUser",
+  "org_id": "ORGID2",
+  "org_name": "MySecondOrg",
+  "picture": "",
+  "email": false,
+  "roles": [
+   "administrator"
+  ],
+  "_policy": {
+   "roles": [
+    "administrator"
+   ]
+  },
+  "effective_policy": {
+   "all_query": true,
+   "any_query": true,
+   "read_results": true,
+   "label_clients": true,
+   "collect_client": true,
+   "collect_server": true,
+   "artifact_writer": true,
+   "server_artifact_writer": true,
+   "execve": true,
+   "notebook_editor": true,
+   "impersonation": true,
+   "server_admin": true,
+   "filesystem_read": true,
+   "filesystem_write": true,
+   "machine_state": true,
+   "prepare_results": true
+  }
+ }
+]SELECT user_delete(user="TestUser", really_do_it=TRUE) FROM scope()[
+ {
+  "user_delete(user=\"TestUser\", really_do_it=TRUE)": "TestUser"
+ }
+]SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUser"[
+ {
+  "name": "TestUser",
+  "org_id": "ORGID2",
+  "org_name": "MySecondOrg",
+  "picture": "",
+  "email": false,
+  "roles": [
+   "administrator"
+  ],
+  "_policy": {
+   "roles": [
+    "administrator"
+   ]
+  },
+  "effective_policy": {
+   "all_query": true,
+   "any_query": true,
+   "read_results": true,
+   "label_clients": true,
+   "collect_client": true,
+   "collect_server": true,
+   "artifact_writer": true,
+   "server_artifact_writer": true,
+   "execve": true,
+   "notebook_editor": true,
+   "impersonation": true,
+   "server_admin": true,
+   "filesystem_read": true,
+   "filesystem_write": true,
+   "machine_state": true,
+   "prepare_results": true
+  }
+ }
+]SELECT user_delete(user="TestUser", really_do_it=TRUE, orgs="ORGID2") FROM scope()[
+ {
+  "user_delete(user=\"TestUser\", really_do_it=TRUE, orgs=\"ORGID2\")": "TestUser"
  }
 ]SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUser"[]SELECT user_grant(user="TestUserNotThere", roles="reader") FROM scope()[
  {

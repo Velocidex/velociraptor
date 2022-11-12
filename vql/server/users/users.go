@@ -9,10 +9,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/users"
-	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 type UsersPluginArgs struct {
@@ -59,40 +59,14 @@ func (self UsersPlugin) Call(
 			return
 		}
 
-		org_manager, err := services.GetOrgManager()
-		if err != nil {
-			scope.Log("users: %v", err)
-			return
-		}
-
 		for _, user_details := range user_list {
-			utils.Debug(user_details)
 			for _, org_record := range user_details.Orgs {
-				org_config_obj, err := org_manager.GetOrgConfig(org_record.Id)
+				details, err := getUserRecord(ctx, scope,
+					org_record.Id, org_record.Name, user_details)
 				if err != nil {
+					scope.Log("users: %v", err)
 					continue
 				}
-
-				details := ordereddict.NewDict().
-					Set("name", user_details.Name).
-					Set("org_id", org_record.Id).
-					Set("org_name", org_record.Name).
-					Set("picture", user_details.Picture).
-					Set("email", user_details.VerifiedEmail)
-				policy, err := services.GetPolicy(org_config_obj, user_details.Name)
-				if err == nil {
-					details.Set("roles", policy.Roles)
-				} else {
-					details.Set("roles", &vfilter.Null{})
-				}
-
-				effective_policy, err := services.GetEffectivePolicy(org_config_obj, user_details.Name)
-				if err == nil {
-					details.Set("effective_policy", ConvertPolicyToOrderedDict(effective_policy))
-				} else {
-					details.Set("effective_policy", &vfilter.Null{})
-				}
-
 				select {
 				case <-ctx.Done():
 					return
@@ -160,4 +134,55 @@ func containsOrgId(orgs []*api_proto.OrgRecord, org_id string) bool {
 		}
 	}
 	return false
+}
+
+func getUserRecord(
+	ctx context.Context,
+	scope vfilter.Scope,
+	org_id, org_name string,
+	user_details *api_proto.VelociraptorUser) (*ordereddict.Dict, error) {
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return nil, err
+	}
+
+	org_config_obj, err := org_manager.GetOrgConfig(org_id)
+	if err != nil {
+		return nil, err
+	}
+
+	details := ordereddict.NewDict().
+		Set("name", user_details.Name).
+		Set("org_id", org_id).
+		Set("org_name", org_name).
+		Set("picture", user_details.Picture).
+		Set("email", user_details.VerifiedEmail)
+	policy, err := services.GetPolicy(org_config_obj, user_details.Name)
+	if err == nil {
+		details.Set("roles", policy.Roles)
+	} else {
+		details.Set("roles", &vfilter.Null{})
+	}
+	details.Set("_policy", cleanupDict(scope, vfilter.RowToDict(ctx, scope, policy)))
+
+	effective_policy, err := services.GetEffectivePolicy(org_config_obj, user_details.Name)
+	if err == nil {
+		details.Set("effective_policy", ConvertPolicyToOrderedDict(effective_policy))
+	} else {
+		details.Set("effective_policy", &vfilter.Null{})
+	}
+	return details, nil
+}
+
+func cleanupDict(scope types.Scope, in *ordereddict.Dict) *ordereddict.Dict {
+	result := ordereddict.NewDict()
+	for _, k := range in.Keys() {
+		v, ok := in.Get(k)
+		if ok {
+			if scope.Bool(v) {
+				result.Set(k, v)
+			}
+		}
+	}
+	return result
 }
