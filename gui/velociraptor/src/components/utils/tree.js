@@ -114,6 +114,14 @@ export const getTheme = (theme)=> {
     let result = theme_template();
 
     switch (theme) {
+    case "veloci-light":
+        result.tree.node.activeLink.background = '#d5efde';
+        return result;
+
+    case "pink-light":
+        result.tree.node.activeLink.background = '#ffeffd';
+        return result;
+
     case "github-dimmed-dark":
     case "veloci-dark":
     case "coolgray-dark":
