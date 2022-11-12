@@ -32,6 +32,11 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "administrator"
   ],
+  "_policy": {
+   "roles": [
+    "administrator"
+   ]
+  },
   "effective_policy": {
    "all_query": true,
    "any_query": true,
@@ -61,6 +66,11 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "administrator"
   ],
+  "_policy": {
+   "roles": [
+    "administrator"
+   ]
+  },
   "effective_policy": {
    "all_query": true,
    "any_query": true,
@@ -89,6 +99,11 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "reader"
   ],
+  "_policy": {
+   "roles": [
+    "reader"
+   ]
+  },
   "effective_policy": {
    "read_results": true
   }
@@ -102,6 +117,11 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "reader"
   ],
+  "_policy": {
+   "roles": [
+    "reader"
+   ]
+  },
   "effective_policy": {
    "read_results": true
   }
@@ -116,6 +136,11 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "administrator"
   ],
+  "_policy": {
+   "roles": [
+    "administrator"
+   ]
+  },
   "effective_policy": {
    "all_query": true,
    "any_query": true,
@@ -145,6 +170,11 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "reader"
   ],
+  "_policy": {
+   "roles": [
+    "reader"
+   ]
+  },
   "effective_policy": {
    "read_results": true
   }
@@ -159,6 +189,11 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "administrator"
   ],
+  "_policy": {
+   "roles": [
+    "administrator"
+   ]
+  },
   "effective_policy": {
    "all_query": true,
    "any_query": true,
@@ -187,6 +222,11 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "reader"
   ],
+  "_policy": {
+   "roles": [
+    "reader"
+   ]
+  },
   "effective_policy": {
    "read_results": true
   }
@@ -218,6 +258,11 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "administrator"
   ],
+  "_policy": {
+   "roles": [
+    "administrator"
+   ]
+  },
   "effective_policy": {
    "all_query": true,
    "any_query": true,
@@ -246,6 +291,11 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "reader"
   ],
+  "_policy": {
+   "roles": [
+    "reader"
+   ]
+  },
   "effective_policy": {
    "read_results": true
   }
