@@ -1,19 +1,30 @@
 @font-face {
-  font-family: "roboto-mono";
+  font-family: "atkinson";
   font-style: normal;
   font-weight: 400;
   src: local(""),
-    url("../fonts/roboto-mono-v13-latin-ext_latin-regular.woff2")
-      format("woff2");
+    url("../fonts/atkinson-hyperlegible-regular-102a.woff2") format("woff2");
+  size-adjust: 110%;
   font-display: block;
 }
 
 @font-face {
-  font-family: "roboto";
+  font-family: "iosevka";
   font-style: normal;
-  font-weight: 400;
+  font-weight: 500;
   src: local(""),
-    url("../fonts/roboto-v29-latin-ext_latin-regular.woff2") format("woff2");
+    url("../fonts/iosevka-term-extendedmedium-subset.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0100-017F;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "iosevka";
+  font-style: bold;
+  font-weight: 700;
+  src: local(""),
+    url("../fonts/iosevka-term-extendedbold-subset.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0100-017F;
   font-display: block;
 }
 
@@ -21,12 +32,14 @@
   --font-size-large: 17px;
   --font-size-base: 15px;
   --font-size-small: 13px;
-  --font-family-sans-serif: roboto, -apple-system, BlinkMacSystemFont,
+  --font-family-sans-serif: iosevka, -apple-system, BlinkMacSystemFont,
     "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --font-family-monospace: roboto-mono, SFMono-Regular, Menlo, Monaco,
+  --font-family-monospace: iosevka, SFMono-Regular, Menlo, Monaco,
     "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-family-paragraph: atkinson, -apple-system, BlinkMacSystemFont, iosevka, "Segoe UI",
+    "Helvetica Neue", Arial, sans-serif;
 
-  --color-foreground: #222222;
+  --color-foreground: #121212;
   --color-foreground-inverse: #eeeeee;
   --color-foreground-dimmed: #4f4f4f;
 
@@ -61,7 +74,7 @@
 
   --color-resizer: #f8bbd050;
   --color-resizer-hover: #f06292;
-  --color-scrollbar-track: var(--color-sidebar-disabled-foreground);
+  --color-scrollbar-track: var(--color-canvas-background);
   --color-scrollbar-thumb: var(--color-btn-default-background);
   --color-scrollbar-thumb-hover: var(--color-btn-default-background-hover);
 
@@ -86,7 +99,7 @@
   --color-code: #990000;
   --color-proto-error: #f06292;
 
-  --color-page-link-active-background: var(--color-tab);
+  --color-page-link-active-background: var(--color-btn-default-background-hover);
   --color-page-link-background: var(--color-btn-default-background);
   --color-pagination-disabled: #888;
 
@@ -113,10 +126,13 @@ body.pink-light {
 
 .pink-light code {
   font-family: var(--font-family-monospace);
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-base);
 }
 
-.pink-light p,
+.pink-light p {
+  font-family: var(--font-family-paragraph);
+}
+
 .pink-light dl,
 .pink-light ol,
 .pink-light ul {
@@ -288,7 +304,6 @@ body.pink-light {
 .pink-light .btn.btn-link {
   border-color: transparent;
   width: 100%;
-  text-align: left;
   background: none;
   color: var(--color-foreground);
 }
@@ -348,16 +363,41 @@ body.pink-light {
 
 .pink-light .table-hover tbody tr:hover {
   background: var(--color-table-row-hover);
+  color: unset;
 }
 
-.pink-light .artifact-search-table td:hover {
+.pink-light .table tbody tr.row-selected,
+.pink-light .table tbody tr.row_selected td {
+  background: var(--color-table-row-selected);
+  color: var(--color-foreground);
+}
+
+.pink-light .artifact-search-table a {
+  color: var(--color-foreground);
+}
+
+.pink-light .artifact-search-table.selectable.container tbody tr:hover {
   background: var(--color-table-row-hover);
 }
 
-.pink-light table tr.row-selected,
-.pink-light table tr.row_selected td {
-  background: var(--color-table-row-selected);
-  color: var(--color-foreground);
+.pink-light .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td > button.btn.btn-link {
+  background: transparent;
+  text-decoration: none;
+  color: white;
+  font-weight: 700;
+}
+
+.pink-light .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td {
+  background: var(--color-accent-75);
+  border: 1px solid var(--color-btn-default-border);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.pink-light .new-artifact-search-table .btn-link:hover,
+.pink-light .new-artifact-search-table .btn-link:focus,
+.pink-light .new-artifact-search-table .btn-link.focus {
+  text-decoration: none;
 }
 
 /* Column search screen */
@@ -407,7 +447,7 @@ body.pink-light {
 
 .pink-light .card-header {
   background: var(--color-card-heading-background);
-  font-size: var(--font-size-large);
+  font-size: var(--font-size-base);
 }
 
 .pink-light .card-body {
@@ -423,6 +463,7 @@ body.pink-light {
 
 /* Json container */
 .pink-light div.pretty-json-container {
+  font-family: var(--font-family-monospace);
   filter: invert(0);
 }
 
@@ -499,6 +540,7 @@ body.pink-light {
 }
 
 /* Pagination */
+
 .pink-light .page-item .page-link {
   background: var(--color-page-link-background);
   border-color: var(--color-btn-default-border);
@@ -543,28 +585,22 @@ body.pink-light {
   font-size: var(--font-size-base);
 }
 
-.pink-light .artifact-search-table a {
-  color: var(--color-foreground);
-}
-
 .pink-light .report-viewer {
   color: var(--color-foreground);
 }
 
-.pink-light .artifact-search-table.selectable.container tbody tr:hover {
-  background: var(--color-table-row-hover);
-}
-
-.pink-light .artifact-search-table.selectable.container tr.row-selected,
-.pink-light .artifact-search-table.selectable.container tr.row_selected > td {
-  background: var(--color-table-row-selected);
-  color: var(--color-foreground);
-}
-
 /* modal dialogs */
+
 .pink-light .modal-content {
-  background: var(--color-page-link-active-background);
+  background: var(--color-tab);
   color: var(--color-foreground);
+}
+
+.pink-light .modal-header .close {
+  color: var(--color-foreground);
+  opacity: 1;
+  text-shadow: none;
+  outline: none;
 }
 
 /* notebooks */

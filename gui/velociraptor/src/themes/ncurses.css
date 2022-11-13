@@ -445,6 +445,7 @@ body.ncurses {
   color: black;
   text-shadow: none;
   border-radius: 0;
+  text-decoration: none;
 }
 
 .ncurses .btn.active.btn-default {
@@ -530,7 +531,6 @@ body.ncurses {
 .ncurses .btn.btn-link {
   border-color: transparent;
   width: 100%;
-  text-align: left;
   background: none;
   color: var(--color-foreground);
   border-radius: 0;
@@ -735,7 +735,8 @@ body.ncurses {
   border-bottom: 1px solid darkgrey;
 }
 
-.ncurses .pretty-json-container.object-container {
+/* Json container */
+.ncurses div.pretty-json-container {
   font-size: var(--font-size-base);
   font-family: var(--font-family-sans-serif);
 }
@@ -883,9 +884,16 @@ body.ncurses {
 
 .ncurses .table-hover tbody tr:hover {
   background: var(--color-table-row-hover);
+  color: unset;
 }
 
-.ncurses .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td > button {
+.ncurses .table tbody tr.row-selected,
+.ncurses .table tbody tr.row_selected td {
+  background: var(--color-table-row-selected);
+  color: var(--color-foreground);
+}
+
+.ncurses .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td {
   background: var(--color-accent-100);
 }
 
@@ -913,10 +921,10 @@ body.ncurses {
   max-height: calc(100vh - 138px);
 }
 
-.ncurses .artifact-search-table td:hover {
+/* .ncurses .artifact-search-table td:hover {
   background: var(--color-table-row-hover);
   color: unset;
-}
+} */
 
 .ncurses .event-report-viewer {
   background: lightgrey;
