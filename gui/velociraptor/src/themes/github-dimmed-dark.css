@@ -3,26 +3,36 @@
   font-style: normal;
   font-weight: 400;
   src: local(""),
-    url("../fonts/titillium-web-v10-latin-regular.woff2") format("woff2");
+    url("../fonts/titillium-web-v15-latin-ext_latin-regular.woff2") format("woff2");
   font-display: block;
 }
 
 @font-face {
   font-family: "titillium-web";
-  font-style: normal;
-  font-weight: 900;
+  font-style: bold;
+  font-weight: 600;
   src: local(""),
-    url("../fonts/titillium-web-v15-latin-900.woff2") format("woff2");
+    url("../fonts/titillium-web-v15-latin-ext_latin-600.woff2") format("woff2");
   font-display: block;
 }
 
 @font-face {
-  font-family: "roboto-mono";
+  font-family: "iosevka";
   font-style: normal;
-  font-weight: 400;
+  font-weight: 500;
   src: local(""),
-    url("../fonts/roboto-mono-v13-latin-ext_latin-regular.woff2")
-      format("woff2");
+    url("../fonts/iosevka-term-extendedmedium-subset.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0100-017F;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "iosevka";
+  font-style: bold;
+  font-weight: 700;
+  src: local(""),
+    url("../fonts/iosevka-term-extendedbold-subset.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0100-017F;
   font-display: block;
 }
 
@@ -31,8 +41,8 @@
   --font-size-base: 15px;
   --font-size-small: 13px;
   --font-family-sans-serif: titillium-web, -apple-system, BlinkMacSystemFont,
-    Roboto, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --font-family-monospace: roboto-mono, SFMono-Regular, Menlo, Monaco,
+    "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-family-monospace: iosevka, SFMono-Regular, Menlo, Monaco,
     "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
 
   --accent-color: #539bf5; /* https://github.com/w3c/csswg-drafts/issues/5187 */
@@ -75,8 +85,8 @@
   --color-cell-toolbar-background: #222222;
   --color-monospace-color: var(--color-foreground);
 
-  --color-table-row-selected: rgba(83, 155, 245, 0.25);
-  --color-table-row-hover: rgba(83, 155, 245, 0.1);
+  --color-table-row-selected: rgba(83, 155, 245, 0.5);
+  --color-table-row-hover: var(--color-accent-25);
 
   --color-form-background: #fceff4;
   --color-page-link-active-background: var(--color-btn-border);
@@ -118,7 +128,10 @@ body.github-dimmed-dark {
   letter-spacing: 0.6px;
 }
 
-.github-dimmed-dark p,
+.github-dimmed-dark p {
+  font-family: var(--font-family-sans-serif);
+  letter-spacing: 0.6px;
+}
 .github-dimmed-dark dl,
 .github-dimmed-dark ol,
 .github-dimmed-dark ul {
@@ -254,6 +267,7 @@ body.github-dimmed-dark {
   box-shadow: none;
   color: var(--color-foreground);
   text-shadow: none;
+  text-decoration: none;
 }
 
 .github-dimmed-dark .btn.active.btn-default {
@@ -320,7 +334,6 @@ body.github-dimmed-dark {
 .github-dimmed-dark .btn.btn-link {
   border-color: transparent;
   width: 100%;
-  text-align: left;
   background: none;
   color: var(--color-foreground);
 }
@@ -414,12 +427,12 @@ body.github-dimmed-dark {
 }
 
 .github-dimmed-dark .table tbody tr:nth-of-type(2n) {
-  background: var(--color-table-row-hover);
+  background: rgba(83, 155, 245, 0.1);
   border: none;
 }
 
 .github-dimmed-dark .table tbody tr:nth-of-type(odd) {
-  background: unset;
+  background: rgba(83, 155, 245, 0.05);
   border: none;
 }
 
@@ -428,13 +441,20 @@ body.github-dimmed-dark {
   color: unset;
 }
 
-.github-dimmed-dark .artifact-search-table td:hover {
-  background: var(--color-table-row-hover);
-  color: unset;
+.github-dimmed-dark .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td > button {
+  background: var(--color-accent-75);
+  text-decoration: none;
+  font-weight: bold;
 }
 
-.github-dimmed-dark table tr.row-selected,
-.github-dimmed-dark table tr.row_selected td {
+.github-dimmed-dark .new-artifact-search-table .btn-link:hover,
+.github-dimmed-dark .new-artifact-search-table .btn-link:focus,
+.github-dimmed-dark .new-artifact-search-table .btn-link.focus {
+  text-decoration: none;
+}
+
+.github-dimmed-dark .table tbody tr.row-selected,
+.github-dimmed-dark .table tbody tr.row_selected td {
   background: var(--color-table-row-selected);
   color: var(--color-foreground);
 }
@@ -496,12 +516,13 @@ body.github-dimmed-dark {
 
 .github-dimmed-dark .card-body dt,
 .github-dimmed-dark .card-body label {
-  font-weight: 400;
+  font-weight: 600;
   color: var(--color-accent-100);
 }
 
 /* Json container */
 .github-dimmed-dark div.pretty-json-container {
+  font-family: var(--font-family-monospace);
   filter: invert(0);
 }
 

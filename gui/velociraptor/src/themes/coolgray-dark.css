@@ -1,40 +1,32 @@
 @font-face {
-  font-family: "roboto-mono";
+  font-family: "iosevka";
   font-style: normal;
-  font-weight: 400;
+  font-weight: 500;
   src: local(""),
-    url("../fonts/roboto-mono-v13-latin-ext_latin-regular.woff2")
-      format("woff2");
+    url("../fonts/iosevka-term-extendedmedium-subset.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0100-017F;
   font-display: block;
 }
 
 @font-face {
-  font-family: "roboto-mono";
-  font-style: normal;
+  font-family: "iosevka";
+  font-style: bold;
   font-weight: 700;
   src: local(""),
-    url("../fonts/roboto-bold.woff2") format("woff2");
-  font-display: block;
-}
-
-@font-face {
-  font-family: "roboto";
-  font-style: normal;
-  font-weight: 400;
-  src: local(""),
-    url("../fonts/roboto-v29-latin-ext_latin-regular.woff2") format("woff2");
+    url("../fonts/iosevka-term-extendedbold-subset.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0100-017F;
   font-display: block;
 }
 
 .coolgray-dark {
-  --font-size-large: 17px;
-  --font-size-base: 15px;
+  --font-size-large: 16px;
+  --font-size-base: 14px;
   --font-size-small: 13px;
-  --font-family-sans-serif: roboto-mono, SFMono-Regular, Menlo, Monaco,
+  --font-family-sans-serif: iosevka, SFMono-Regular, Menlo, Monaco,
     "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
-  --font-family-monospace: roboto-mono, SFMono-Regular, Menlo, Monaco,
+  --font-family-monospace: iosevka, SFMono-Regular, Menlo, Monaco,
     "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
-  --font-family-paragraph: -apple-system, BlinkMacSystemFont, roboto, "Segoe UI",
+  --font-family-paragraph: -apple-system, BlinkMacSystemFont, iosevka, "Segoe UI",
     "Helvetica Neue", Arial, sans-serif;
 
   --color-foreground: rgb(240, 242, 244);
@@ -121,7 +113,7 @@
 body.coolgray-dark {
   background: var(--color-canvas-background);
   font-family: var(--font-family-sans-serif);
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-base);
   letter-spacing: 0.4px;
 }
 
@@ -138,11 +130,17 @@ body.coolgray-dark {
 
 .coolgray-dark dl {
   font-family: var(--font-family-sans-serif);
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-base);
+  font-weight: 400;
   letter-spacing: 0.4px;
 }
 
-.coolgray-dark p,
+.coolgray-dark p {
+  font-family: var(--font-family-paragraph);
+  font-size: var(--font-size-base);
+  letter-spacing: 0.4px;
+}
+
 .coolgray-dark ol,
 .coolgray-dark ul {
   font-family: var(--font-family-paragraph);
@@ -153,13 +151,13 @@ body.coolgray-dark {
 .coolgray-dark code {
   font-family: var(--font-family-monospace);
   color: var(--color-accent-100);
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-base);
   letter-spacing: 0.4px;
 }
 
 .coolgray-dark pre {
   font-family: var(--font-family-monospace);
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-base);
   background: #d5cbc3;
   border: 1px solid #9c9184;
   filter: invert(1);
@@ -227,7 +225,7 @@ body.coolgray-dark {
   padding: 6px 10px 8px 10px;
   border-radius: 0;
   margin: 5px;
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-base);
   border-color: var(--color-btn-default-border);
 }
 
@@ -287,7 +285,7 @@ body.coolgray-dark {
   width: 18px;
   margin-right: 10px;
   display: inline-block;
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-base);
 }
 
 .coolgray-dark .nav-link {
@@ -325,6 +323,7 @@ body.coolgray-dark {
   color: var(--color-foreground);
   text-shadow: none;
   border-radius: 0;
+  text-decoration: none;
 }
 
 .coolgray-dark .btn.active.btn-default {
@@ -470,7 +469,7 @@ body.coolgray-dark {
   color: var(--color-foreground);
   vertical-align: middle;
   font-weight: 400;
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-base);
   text-shadow: none;
   box-shadow: none;
 }
@@ -508,18 +507,26 @@ body.coolgray-dark {
   color: unset;
 }
 
-.coolgray-dark table tr.row-selected,
-.coolgray-dark table tr.row_selected td {
+.coolgray-dark .table tbody tr.row-selected,
+.coolgray-dark .table tbody tr.row_selected td {
   background: var(--color-table-row-selected);
   color: var(--color-foreground);
 }
+
+.coolgray-dark .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td {
+  background: var(--color-accent-75);
+  border: 1px solid var(--color-btn-default-border);
+  text-decoration: none;
+  font-weight: 700;
+}
+
 
 /* Column search screen */
 .coolgray-dark th.sortable input {
   background: rgba(0,0,0,.3);
   color: var(--color-foreground);
   border-color: var(--color-btn-border);
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-base);
   font-weight: 600;
 }
 
@@ -573,7 +580,7 @@ body.coolgray-dark {
 
 .coolgray-dark .card-body dt,
 .coolgray-dark .card-body label {
-  font-weight: 600;
+  font-weight: 400;
   color: var(--color-accent-100);
 }
 
@@ -591,6 +598,7 @@ body.coolgray-dark {
 
 /* Json container */
 .coolgray-dark div.pretty-json-container {
+  font-family: var(--font-family-monospace);
   filter: invert(0);
 }
 
@@ -637,7 +645,7 @@ body.coolgray-dark {
 .coolgray-dark .form-control,
 .coolgray-dark .velo__control,
 .coolgray-dark .velo__menu {
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-base);
   color: var(--color-foreground) !important;
   border-radius: 0;
   border-color: var(--color-btn-default-border);
@@ -647,7 +655,7 @@ body.coolgray-dark {
 
 .coolgray-dark .form-control:focus,
 .coolgray-dark .velo__control:focus {
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-base);
   color: var(--color-foreground);
   box-shadow: none;
   border-radius: 0;
@@ -658,7 +666,7 @@ body.coolgray-dark {
 .coolgray-dark .form-control:hover,
 .coolgray-dark .velo__control:hover {
   border-radius: 0;
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-base);
   box-shadow: none;
   border-color: var(--color-btn-default-border) !important;
 }
@@ -693,14 +701,14 @@ body.coolgray-dark {
   color: var(--color-foreground);
   text-shadow: none;
   border: 1px solid var(--color-btn-default-border);
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-base);
 }
 
 .coolgray-dark .input-group .custom-file-label {
   background: var(--color-canvas-background);
   color: var(--color-accent-100);
   border: 1px solid var(--color-btn-default-border);
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-base);
 }
 
 .coolgray-dark .input-group .custom-file-label:after {
@@ -756,11 +764,6 @@ body.coolgray-dark {
 
 /* artifact search */
 
-.coolgray-dark .artifact-search-table td:hover {
-  background: var(--color-table-row-hover);
-  color: unset;
-}
-
 .coolgray-dark .artifact-search-table a {
   color: var(--color-foreground);
 }
@@ -774,10 +777,7 @@ body.coolgray-dark {
 }
 
 .coolgray-dark .artifact-search-table.selectable.container tr.row-selected,
-.coolgray-dark
-  .artifact-search-table.selectable.container
-  tr.row_selected
-  > td {
+.coolgray-dark .artifact-search-table.selectable.container tr.row_selected > td {
   background: var(--color-table-row-selected);
   color: var(--color-foreground);
 }

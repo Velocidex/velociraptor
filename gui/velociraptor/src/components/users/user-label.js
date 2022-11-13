@@ -351,25 +351,25 @@ export default class UserLabel extends React.Component {
             ace_options.fontFamily = "monospace";
         } else if (options.theme === "veloci-dark") {
             ace_options.theme = "ace/theme/vibrant_ink";
-            ace_options.fontFamily = "monospace";
+            ace_options.fontFamily = "iosevka";
         } else if(options.theme === "veloci-light") {
             ace_options.theme = "ace/theme/xcode";
-            ace_options.fontFamily = "monospace";
+            ace_options.fontFamily = "iosevka";
         } else if(options.theme === "pink-light") {
             ace_options.theme = "ace/theme/xcode";
-            ace_options.fontFamily = "monospace";
+            ace_options.fontFamily = "iosevka";
         } else if(options.theme === "ncurses") {
             ace_options.theme = "ace/theme/sqlserver";
             ace_options.fontFamily = "fixedsys";
         } else if(options.theme === "github-dimmed-dark") {
-          ace_options.theme = "ace/theme/vibrant_ink";
-          ace_options.fontFamily = "monospace";
+          ace_options.theme = "ace/theme/dracula";
+          ace_options.fontFamily = "iosevka";
         } else if(options.theme === "github-dimmed-light") {
           ace_options.theme = "ace/theme/sqlserver";
-          ace_options.fontFamily = "monospace";
+          ace_options.fontFamily = "iosevka";
         } else if(options.theme === "coolgray-dark") {
           ace_options.theme = "ace/theme/nord_dark";
-          ace_options.fontFamily = "monospace";
+          ace_options.fontFamily = "iosevka";
         }
         options.options = JSON.stringify(ace_options);
 
