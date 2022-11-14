@@ -217,16 +217,29 @@ func doVQLExport() error {
 	for _, item := range info.Plugins {
 		seen_plugins[item.Name] = true
 
+		// We maintain the following fields from old plugins:
+		// - Description
+		// - Category
+		// And update these fields from the current plugins
+		// - Args
+		// - Version
+		//
+		// This means that it is possible to edit the old vql.yaml
+		// file to include more detailed description and it wil not be
+		// over-ridden by the new plugins. But any new arg
+		// descriptions are always copied from the running code.
 		new_item := getOldItem(item.Name, "Plugin", old_data)
 		if new_item == nil {
 			new_item = &api_proto.Completion{
 				Name:        item.Name,
 				Description: item.Doc,
+				Version:     uint64(item.Version),
 				Type:        "Plugin",
 			}
 		} else {
-			// Override the args
+			// Override the args and update the version
 			new_item.Args = nil
+			new_item.Version = uint64(item.Version)
 		}
 
 		arg_desc, pres := type_map.Get(scope, item.ArgType)
@@ -267,11 +280,13 @@ func doVQLExport() error {
 			new_item = &api_proto.Completion{
 				Name:        item.Name,
 				Description: item.Doc,
+				Version:     uint64(item.Version),
 				Type:        "Function",
 			}
 		} else {
 			// Override the args
 			new_item.Args = nil
+			new_item.Version = uint64(item.Version)
 		}
 
 		arg_desc, pres := type_map.Get(scope, item.ArgType)

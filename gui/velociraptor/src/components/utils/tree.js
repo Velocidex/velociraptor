@@ -116,11 +116,17 @@ export const getTheme = (theme)=> {
     switch (theme) {
     case "github-dimmed-dark":
     case "veloci-dark":
-    case "ncurses":
     case "coolgray-dark":
         result.tree.base.backgroundColor = '#030303';
         result.tree.base.color = '#010101';
-        result.tree.node.activeLink.background = '#202020';
+        result.tree.node.activeLink.background = background_color;
+        result.tree.node.header.base.color = '#020202';
+        return result;
+
+    case "ncurses":
+        result.tree.base.backgroundColor = '#030303';
+        result.tree.base.color = '#010101';
+        result.tree.node.activeLink.background = "#7584c2";
         result.tree.node.header.base.color = '#020202';
         return result;
 

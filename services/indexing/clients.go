@@ -62,8 +62,9 @@ func GetApiClient(
 	result.LastInterrogateFlowId = client_info.LastInterrogateFlowId
 	result.LastInterrogateArtifactName = client_info.LastInterrogateArtifactName
 	result.AgentInformation = &api_proto.AgentInformation{
-		Version: client_info.ClientVersion,
-		Name:    client_info.ClientName,
+		Version:   client_info.ClientVersion,
+		BuildTime: client_info.BuildTime,
+		Name:      client_info.ClientName,
 	}
 
 	result.OsInfo = &api_proto.Uname{
@@ -123,8 +124,10 @@ func (self *Indexer) FastGetApiClient(
 		ClientId: client_id,
 		Labels:   labeler.GetClientLabels(ctx, config_obj, client_id),
 		AgentInformation: &api_proto.AgentInformation{
-			Version: client_info.ClientVersion,
-			Name:    client_info.ClientName,
+			Version:   client_info.ClientVersion,
+			BuildTime: client_info.BuildTime,
+			BuildUrl:  client_info.BuildUrl,
+			Name:      client_info.ClientName,
 		},
 		OsInfo: &api_proto.Uname{
 			System:       client_info.System,

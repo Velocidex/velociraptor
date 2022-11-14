@@ -349,11 +349,14 @@ class VeloHostInfo extends Component {
 
                         <dt className="col-sm-3">{T("Agent Version")}</dt>
                         <dd className="col-sm-9">
-                          { info.agent_information.version } </dd>
+                          { info.agent_information && info.agent_information.version } </dd>
 
-                        <dt className="col-sm-3">{T("Agent Name")}</dt>
+                        <dt className="col-sm-3">{T("Agent Build Time")}</dt>
                         <dd className="col-sm-9">
-                          { info.agent_information.name } </dd>
+                          <VeloTimestamp usec={
+                              info.agent_information && info.agent_information.build_time
+                          } />
+                        </dd>
 
                         <dt className="col-sm-3">{T("First Seen At")}</dt>
                         <dd className="col-sm-9">

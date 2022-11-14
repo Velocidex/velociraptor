@@ -138,6 +138,7 @@
     })
     ```
   type: Function
+  version: 1
   args:
   - name: query
     type: Any
@@ -1694,6 +1695,7 @@
     must be locally accessible so this probably only makes sense on
     the server.
   type: Function
+  version: 1
   args:
   - name: ip
     type: string
@@ -1853,6 +1855,7 @@
         recursion_callback="x=>NOT x.Name =~ '^/(proc|sys|snap)'")
     ```
   type: Plugin
+  version: 3
   args:
   - name: globs
     type: string
@@ -1961,6 +1964,7 @@
 
     This function calculates the MD5, SHA1 and SHA256 hashes of the file.
   type: Function
+  version: 2
   args:
   - name: path
     type: accessors.OSPath
@@ -2767,6 +2771,7 @@
     many files (e.g. in a glob) may result in substantial load on the
     endpoint.
   type: Function
+  version: 1
   args:
   - name: path
     type: string
@@ -3852,6 +3857,7 @@
 - name: pathspec
   description: Create a structured path spec to pass to certain accessors.
   type: Function
+  version: 1
   args:
   - name: DelegateAccessor
     type: string
@@ -4908,6 +4914,7 @@
 - name: stat
   description: Get file information. Unlike glob() this does not support wildcards.
   type: Plugin
+  version: 2
   args:
   - name: filename
     type: accessors.OSPath
