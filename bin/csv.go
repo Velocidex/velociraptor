@@ -44,7 +44,7 @@ func doCSV() error {
 		Logger:     log.New(&LogWriter{config_obj}, "", 0),
 		Env: ordereddict.NewDict().
 			Set(vql_subsystem.ACL_MANAGER_VAR,
-				acl_managers.NewRoleACLManager("administrator")).
+				acl_managers.NewRoleACLManager(config_obj, "administrator")).
 			Set("Files", *csv_cmd_files),
 	}
 

@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	VERSION                    = "0.6.7-rc3"
+	VERSION                    = "0.6.7"
 	ENROLLMENT_WELL_KNOWN_FLOW = "E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW = FLOW_PREFIX + "Monitoring"
 
@@ -90,6 +90,8 @@ const (
 
 	// Set in the scope with one or more passwords
 	ZIP_PASSWORDS = "ZIP_PASSWORDS"
+
+	PinnedServerName = "VelociraptorServer"
 )
 
 type key int

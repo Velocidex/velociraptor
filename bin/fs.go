@@ -153,7 +153,7 @@ func doLS(path, accessor string) error {
 		Logger:     log.New(&LogWriter{config_obj}, "", 0),
 		Env: ordereddict.NewDict().
 			Set(vql_subsystem.ACL_MANAGER_VAR,
-				acl_managers.NewRoleACLManager("administrator")).
+				acl_managers.NewRoleACLManager(config_obj, "administrator")).
 			Set("accessor", accessor).
 			Set("path", path),
 	}
@@ -213,7 +213,7 @@ func doRM(path, accessor string) error {
 
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
-		ACLManager: acl_managers.NewRoleACLManager("administrator"),
+		ACLManager: acl_managers.NewRoleACLManager(config_obj, "administrator"),
 		Logger:     log.New(&LogWriter{config_obj}, "", 0),
 		Env: ordereddict.NewDict().
 			Set("accessor", accessor).
@@ -281,7 +281,7 @@ func doCp(path, accessor string, dump_dir string) error {
 		Env: ordereddict.NewDict().
 			Set("accessor", accessor).
 			Set("path", path),
-		ACLManager: acl_managers.NewRoleACLManager("administrator"),
+		ACLManager: acl_managers.NewRoleACLManager(config_obj, "administrator"),
 	}
 
 	switch output_accessor {

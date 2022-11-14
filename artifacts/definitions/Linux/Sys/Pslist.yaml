@@ -15,7 +15,7 @@ precondition: |
 
 sources:
   - query: |
-        SELECT Pid, Ppid, Name, Cmdline AS CommandLine, Exe,
+        SELECT Pid, Ppid, Name, CommandLine, Exe,
                hash(path=Exe) as Hash,
                Username, timestamp(epoch=CreateTime/1000) AS CreatedTime,
                MemoryInfo.RSS AS RSS,

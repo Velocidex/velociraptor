@@ -56,3 +56,12 @@ func CompareOrgIds(a, b string) bool {
 	}
 	return a == b
 }
+
+func OrgIdInList(org_id string, list []string) bool {
+	for _, i := range list {
+		if CompareOrgIds(org_id, i) {
+			return true
+		}
+	}
+	return false
+}

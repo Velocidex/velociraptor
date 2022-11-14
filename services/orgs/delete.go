@@ -17,6 +17,7 @@ import (
 
 func RemoveOrgFromUsers(
 	ctx context.Context, org_id string) error {
+
 	// Remove the org from all the users.
 	user_manager := services.GetUserManager()
 	users, err := user_manager.ListUsers(ctx)
@@ -27,7 +28,7 @@ func RemoveOrgFromUsers(
 	for _, u := range users {
 		record, err := user_manager.GetUserWithHashes(ctx, u.Name)
 		if err == nil {
-			new_orgs := []*api_proto.Org{}
+			new_orgs := []*api_proto.OrgRecord{}
 			for _, org := range record.Orgs {
 				if org.Id != org_id {
 					new_orgs = append(new_orgs, org)

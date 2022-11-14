@@ -7,5 +7,8 @@ option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 message OrgRecord {
     string name = 1;
     string nonce = 2;
-    string org_id = 3;
+    string id = 3;
+
+    // Deprecated do not use
+    string org_id = 4;
 }

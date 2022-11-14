@@ -25,13 +25,14 @@ func (self *ApiServer) PushEvents(
 	}
 
 	user_name := user_record.Name
-	token, err := acls.GetEffectivePolicy(org_config_obj, user_name)
+	token, err := services.GetEffectivePolicy(org_config_obj, user_name)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 
 	// Check that the principal is allowed to push to the queue.
-	ok, err := acls.CheckAccessWithToken(token, acls.PUBLISH, in.Artifact)
+	ok, err := services.CheckAccessWithToken(
+		org_config_obj, token, acls.PUBLISH, in.Artifact)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -87,13 +88,14 @@ func (self *ApiServer) WriteEvent(
 	}
 
 	user_name := user_record.Name
-	token, err := acls.GetEffectivePolicy(config_obj, user_name)
+	token, err := services.GetEffectivePolicy(config_obj, user_name)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 
 	// Check that the principal is allowed to push to the queue.
-	ok, err := acls.CheckAccessWithToken(token, acls.MACHINE_STATE, in.Query.Name)
+	ok, err := services.CheckAccessWithToken(
+		config_obj, token, acls.MACHINE_STATE, in.Query.Name)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -144,7 +146,7 @@ func (self *ApiServer) ListAvailableEventResults(
 	}
 
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(org_config_obj, user_record.Name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, user_record.Name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view results.")

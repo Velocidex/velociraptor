@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"strings"
 
-	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -77,7 +76,7 @@ func createInitialUsers(
 					return err
 				}
 
-				org_record := &api_proto.Org{
+				org_record := &api_proto.OrgRecord{
 					Name: org_config_obj.OrgName,
 					Id:   org_config_obj.OrgId,
 				}
@@ -89,7 +88,7 @@ func createInitialUsers(
 				new_user.Orgs = append(new_user.Orgs, org_record)
 
 				// Give them the administrator role in the respective org
-				err = acls.GrantRoles(
+				err = services.GrantRoles(
 					org_config_obj, user.Name, []string{"administrator"})
 				if err != nil {
 					return err

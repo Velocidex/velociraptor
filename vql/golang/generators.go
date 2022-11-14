@@ -89,7 +89,7 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 	}
 
 	if arg.Name == "" {
-		arg.Name = types.ToString(arg.Query, scope)
+		arg.Name = types.ToString(ctx, scope, arg.Query)
 	}
 
 	b, err := services.GetBroadcastService(config_obj)
@@ -112,7 +112,7 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 	}
 
 	scope.Log("generate: registered new query for %v: %v",
-		arg.Name, types.ToString(arg.Query, scope))
+		arg.Name, types.ToString(ctx, scope, arg.Query))
 
 	sub_ctx, cancel := context.WithCancel(ctx)
 

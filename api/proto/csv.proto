@@ -62,6 +62,9 @@ message GetTableRequest {
     // The org id may be specified in the query string - The protobuf
     // is normally parsed from the query string directly.
     string org_id = 23;
+
+    // The required timezone to export in.
+    string timezone = 24;
 }
 
 message Row {

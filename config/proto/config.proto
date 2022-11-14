@@ -425,7 +425,7 @@ message GUIConfig {
     // packs).
     string artifact_search_filter = 18;
 
-    // SAML info deprecated - will be moved to a sample authenticator.
+    // SAML info deprecated - will be moved to a saml authenticator.
     string saml_certificate = 12;
     string saml_private_key = 13;
     string saml_idp_metadata_url = 14;
@@ -488,13 +488,12 @@ message FrontendResourceControl {
     int64 enrollments_per_second = 3;
 
     // The maximum number of concurrent client connections we can
-    // process. The actual concurrency level can be dynamically
-    // adjusted to try to control the target_heap_size below. As the
-    // heap size increases, the frontend will reduce the concurrency
-    // level in order to reduce memory pressure. Low concurrency
-    // levels increase average latency and in the worse case cause
-    // clients to time out. When clients timeout, they will back off
-    // and try to send data later.
+    // process. Concurrency limits helps to ensure the server is not
+    // overloaded serving too many clients at the same time.
+    // Concurrency refers to the actual serving time of a client
+    // (i.e. time taken to read the response and write to the
+    // datastore), not the total number of clients served by
+    // server. Default is number of cores * 2.
     uint64 concurrency = 9;
 
     // Aim for this heap size (default 2Gb). If actual memory usage
@@ -908,6 +907,14 @@ message Defaults {
     repeated string allowed_plugins = 10;
     repeated string allowed_functions = 11;
     repeated string allowed_accessors = 12;
+
+    // How long to cache ACL policies (default 60 sec)
+    uint64 acl_lru_timeout_sec = 13;
+
+    // Ignore messages from unauthenticated clients for this long -
+    // gives them a chance to enrol first (default 10 sec).
+    int64 unauthenticated_lru_timeout_sec = 14;
+
 }
 
 // Configures crypto preferences
@@ -1022,7 +1029,7 @@ message Config {
 
     // The Operating System of the analysis target. Only useful in conjunction
     // with the `device' parameter in case the host's operating system differs
-    // from the operating system used on the device.
+    // from the operating system used on the device. DEPRECATED!
     string analysis_target = 34;
 
     // The list of data sources which Velociraptor should map instead of the

@@ -112,7 +112,7 @@ func (self *ApiServer) WatchEvent(
 
 	// Check that the principal is allowed to issue queries.
 	permissions := acls.ANY_QUERY
-	ok, err := acls.CheckAccess(config_obj, peer_name, permissions)
+	ok, err := services.CheckAccess(config_obj, peer_name, permissions)
 	if err != nil {
 		return status.Error(codes.PermissionDenied,
 			fmt.Sprintf("User %v is not allowed to run queries.",

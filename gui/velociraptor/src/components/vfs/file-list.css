@@ -30,13 +30,13 @@
     margin-bottom: 5px;
 }
 
-table  tr.row_selected td,
-table  tr.row-selected {
-    background-color: var(--color-table-row-selected) !important;
-    color: var(--color-table-row-selected-text) !important;
+.table tbody tr.row_selected td,
+.table tbody tr.row-selected {
+    background-color: var(--color-table-row-selected);
+    color: var(--color-table-row-selected-text);
   }
 
-table  tr.highlighted td {
+.table tbody tr.highlighted td {
     background-color: var(--color-table-row-highlighted);
   }
 

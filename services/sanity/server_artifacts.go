@@ -90,7 +90,7 @@ func startInitialArtifacts(
 		}
 
 		_, err = launcher.ScheduleArtifactCollection(ctx, config_obj,
-			acl_managers.NewRoleACLManager("administrator"),
+			acl_managers.NewRoleACLManager(config_obj, "administrator"),
 			repository,
 			&flows_proto.ArtifactCollectorArgs{
 				Creator:   principal,

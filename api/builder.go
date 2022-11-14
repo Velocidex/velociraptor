@@ -226,7 +226,8 @@ func startSelfSignedFrontend(
 	config_obj *config_proto.Config,
 	server_obj *server.Server) error {
 
-	if config_obj.Frontend == nil {
+	if config_obj.Frontend == nil ||
+		config_obj.Frontend.ServerServices == nil {
 		return errors.New("Frontend not configured")
 	}
 

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/Velocidex/ttlcache/v2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -98,7 +99,9 @@ func NewServerCryptoManager(
 		return nil, err
 	}
 
-	server_manager := &ServerCryptoManager{base}
+	server_manager := &ServerCryptoManager{
+		CryptoManager: base,
+	}
 
 	err = journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"Server.Internal.ClientDelete",
@@ -119,11 +122,23 @@ func NewServerCryptoManager(
 	return server_manager, nil
 }
 
-type serverPublicKeyResolver struct{}
+type serverPublicKeyResolver struct {
+	// Cache a failure to get the key for a while so we do not get
+	// overwhelmed in the slow path for clients that are not yet
+	// enrolled.
+	negative_lru *ttlcache.Cache
+}
 
 func (self *serverPublicKeyResolver) GetPublicKey(
 	config_obj *config_proto.Config,
 	client_id string) (*rsa.PublicKey, bool) {
+
+	// Check if we failed to get this key recently - this reduces IO
+	// while clients enrol.
+	_, err := self.negative_lru.Get(client_id)
+	if err == nil {
+		return nil, false
+	}
 
 	client_path_manager := paths.NewClientPathManager(client_id)
 	db, err := datastore.GetDB(config_obj)
@@ -132,14 +147,15 @@ func (self *serverPublicKeyResolver) GetPublicKey(
 	}
 
 	pem := &crypto_proto.PublicKey{}
-	err = db.GetSubject(config_obj,
-		client_path_manager.Key(), pem)
+	err = db.GetSubject(config_obj, client_path_manager.Key(), pem)
 	if err != nil {
+		self.negative_lru.Set(client_id, true)
 		return nil, false
 	}
 
 	key, err := crypto_utils.PemToPublicKey(pem.Pem)
 	if err != nil {
+		self.negative_lru.Set(client_id, true)
 		return nil, false
 	}
 
@@ -149,6 +165,8 @@ func (self *serverPublicKeyResolver) GetPublicKey(
 func (self *serverPublicKeyResolver) SetPublicKey(
 	config_obj *config_proto.Config,
 	client_id string, key *rsa.PublicKey) error {
+
+	self.negative_lru.Remove(client_id)
 
 	client_path_manager := paths.NewClientPathManager(client_id)
 	db, err := datastore.GetDB(config_obj)
@@ -170,7 +188,25 @@ func NewServerPublicKeyResolver(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) (client.PublicKeyResolver, error) {
-	result := &serverPublicKeyResolver{}
+
+	result := &serverPublicKeyResolver{
+		// Cache missing keys for 60 seconds.
+		negative_lru: ttlcache.NewCache(),
+	}
+
+	timeout := time.Duration(10 * time.Second)
+	if config_obj.Defaults != nil {
+		if config_obj.Defaults.UnauthenticatedLruTimeoutSec < 0 {
+			return result, nil
+		}
+
+		if config_obj.Defaults.UnauthenticatedLruTimeoutSec > 0 {
+			timeout = time.Duration(
+				config_obj.Defaults.UnauthenticatedLruTimeoutSec) * time.Second
+		}
+	}
+
+	result.negative_lru.SetTTL(timeout)
 
 	return result, nil
 }

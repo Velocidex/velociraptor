@@ -27,6 +27,8 @@ import { parseCSV } from '../utils/csv.js';
 import "./host-info.css";
 import { runArtifact } from "../flows/utils.js";
 import T from '../i8n/i8n.js';
+import { serializeCSV } from '../utils/csv.js';
+
 
 const POLL_TIME = 5000;
 const INTERROGATE_POLL_TIME = 2000;
@@ -251,20 +253,16 @@ class VeloHostInfo extends Component {
                 {}, this.source.token).then(response=>{
                     if (response.cancel) return;
 
-                    let metadata = "Key,Value\n";
-                    var rows = 0;
+                    let data = [];
                     var items = response.data["items"] || [];
                     for (var i=0; i<items.length; i++) {
                         var key = items[i]["key"] || "";
                         var value = items[i]["value"] || "";
                         if (!_.isUndefined(key)) {
-                            metadata += key + "," + value + "\n";
-                            rows += 1;
+                            data.push([key, value]);
                         }
                     };
-                    if (rows === 0) {
-                        metadata = "Key,Value\n,\n";
-                    };
+                    let metadata = serializeCSV(data, ["Key", "Value"]);
                     this.setState({metadata: metadata,
                                    metadata_loading: false});
                 });
@@ -316,7 +314,7 @@ class VeloHostInfo extends Component {
                 loading: true,
             });
 
-	    let quarantine_artifact = quarantine_artifacts[this.props.client.os_info.system];
+        let quarantine_artifact = quarantine_artifacts[this.props.client.os_info.system];
 
             // Add the quarantine label to this host.
             api.post("v1/LabelClients", {
@@ -351,11 +349,14 @@ class VeloHostInfo extends Component {
 
                         <dt className="col-sm-3">{T("Agent Version")}</dt>
                         <dd className="col-sm-9">
-                          { info.agent_information.version } </dd>
+                          { info.agent_information && info.agent_information.version } </dd>
 
-                        <dt className="col-sm-3">{T("Agent Name")}</dt>
+                        <dt className="col-sm-3">{T("Agent Build Time")}</dt>
                         <dd className="col-sm-9">
-                          { info.agent_information.name } </dd>
+                          <VeloTimestamp usec={
+                              info.agent_information && info.agent_information.build_time
+                          } />
+                        </dd>
 
                         <dt className="col-sm-3">{T("First Seen At")}</dt>
                         <dd className="col-sm-9">

@@ -29,7 +29,13 @@ import (
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/vfilter"
+)
+
+const (
+	WriteHeaders     = true
+	DoNotWriteHeader = false
 )
 
 type CSVWriter struct {
@@ -89,7 +95,8 @@ func GetCSVReader(ctx context.Context, fd api.FileReader) CSVReader {
 
 func GetCSVAppender(
 	config_obj *config_proto.Config,
-	scope vfilter.Scope, fd io.Writer, write_headers bool) *CSVWriter {
+	scope vfilter.Scope, fd io.Writer,
+	write_headers bool, opts *json.EncOpts) *CSVWriter {
 	result := &CSVWriter{
 		row_chan: make(chan vfilter.Row),
 		wg:       sync.WaitGroup{},
@@ -142,7 +149,7 @@ func GetCSVAppender(
 					item, _ := scope.Associative(row, column)
 					csv_row = append(csv_row, item)
 				}
-				err := w.WriteAny(csv_row)
+				err := w.WriteAny(csv_row, opts)
 				if err != nil {
 					return
 				}
@@ -160,25 +167,27 @@ func GetCSVAppender(
 
 func GetCSVWriter(
 	config_obj *config_proto.Config,
-	scope vfilter.Scope, fd api.FileWriter) (*CSVWriter, error) {
+	scope vfilter.Scope, fd api.FileWriter,
+	opts *json.EncOpts) (*CSVWriter, error) {
 	// Seek to the end of the file.
 	length, err := fd.Size()
 	if err != nil {
 		return nil, err
 	}
-	return GetCSVAppender(config_obj, scope, fd, length == 0), nil
+	return GetCSVAppender(config_obj, scope, fd, length == 0, opts), nil
 }
 
 func EncodeToCSV(
 	config_obj *config_proto.Config,
-	scope vfilter.Scope, v interface{}) (string, error) {
+	scope vfilter.Scope, v interface{},
+	opts *json.EncOpts) (string, error) {
 	slice := reflect.ValueOf(v)
 	if slice.Type().Kind() != reflect.Slice {
 		return "", errors.New("EncodeToCSV - should be a list of rows")
 	}
 
 	buffer := &bytes.Buffer{}
-	writer := GetCSVAppender(config_obj, scope, buffer, true)
+	writer := GetCSVAppender(config_obj, scope, buffer, true, opts)
 
 	for i := 0; i < slice.Len(); i++ {
 		value := slice.Index(i).Interface()

@@ -35,7 +35,7 @@ func (self *ServerACLManager) CheckAccess(
 	}
 
 	for _, permission := range permissions {
-		ok, err := acls.CheckAccessWithToken(policy, permission)
+		ok, err := services.CheckAccessWithToken(self.config_obj, policy, permission)
 		if !ok || err != nil {
 			return ok, err
 		}
@@ -62,7 +62,7 @@ func (self *ServerACLManager) getPolicyInOrg(org_id string) (*acl_proto.ApiClien
 		return nil, err
 	}
 
-	policy, err = acls.GetEffectivePolicy(org_config_obj, self.principal)
+	policy, err = services.GetEffectivePolicy(org_config_obj, self.principal)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (self *ServerACLManager) CheckAccessInOrg(
 		return false, err
 	}
 	for _, permission := range permissions {
-		ok, err := acls.CheckAccessWithToken(policy, permission)
+		ok, err := services.CheckAccessWithToken(self.config_obj, policy, permission)
 		if !ok || err != nil {
 			return ok, err
 		}
@@ -97,7 +97,7 @@ func (self *ServerACLManager) CheckAccessWithArgs(
 		return false, err
 	}
 
-	return acls.CheckAccessWithToken(policy, permission, args...)
+	return services.CheckAccessWithToken(self.config_obj, policy, permission, args...)
 }
 
 func NewServerACLManager(

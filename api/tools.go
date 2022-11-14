@@ -20,7 +20,7 @@ func (self *ApiServer) GetToolInfo(ctx context.Context,
 	}
 
 	permissions := acls.READ_RESULTS
-	perm, err := acls.CheckAccess(org_config_obj, user_record.Name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, user_record.Name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view tools.")
@@ -50,7 +50,7 @@ func (self *ApiServer) SetToolInfo(ctx context.Context,
 	// artifacts they can already autoload tools by uploading an
 	// artifact definition.
 	permissions := acls.ARTIFACT_WRITER
-	perm, err := acls.CheckAccess(org_config_obj, user_record.Name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, user_record.Name, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to update tool definitions.")

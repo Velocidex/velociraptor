@@ -118,8 +118,9 @@ func (self NTFSFunction) Call(
 }
 
 type MFTScanPluginArgs struct {
-	Filename string `vfilter:"required,field=filename,doc=The MFT file."`
-	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Filename string            `vfilter:"required,field=filename,doc=The MFT file."`
+	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Prefix   *accessors.OSPath `vfilter:"optional,field=prefix,doc=If specified we prefix all paths with this path."`
 }
 
 type MFTScanPlugin struct{}
@@ -167,9 +168,14 @@ func (self MFTScanPlugin) Call(
 			return
 		}
 
+		options := readers.GetScopeOptions(scope)
+		if arg.Prefix != nil {
+			options.PrefixComponents = arg.Prefix.Components
+		}
+
 		for item := range ntfs.ParseMFTFileWithOptions(
 			ctx, utils.MakeReaderAtter(fd), st.Size(),
-			0x1000, 0x400, readers.GetScopeOptions(scope)) {
+			0x1000, 0x400, options) {
 			select {
 			case <-ctx.Done():
 				return
@@ -187,6 +193,7 @@ func (self MFTScanPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 		Name:    "parse_mft",
 		Doc:     "Scan the $MFT from an NTFS volume.",
 		ArgType: type_map.AddType(scope, &MFTScanPluginArgs{}),
+		Version: 2,
 	}
 }
 

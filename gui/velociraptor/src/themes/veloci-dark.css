@@ -1,28 +1,30 @@
 @font-face {
-  font-family: "roboto-mono";
+  font-family: "atkinson";
   font-style: normal;
   font-weight: 400;
   src: local(""),
-    url("../fonts/roboto-mono-v13-latin-ext_latin-regular.woff2")
-      format("woff2");
+    url("../fonts/atkinson-hyperlegible-regular-102a.woff2") format("woff2");
+  size-adjust: 110%;
   font-display: block;
 }
 
 @font-face {
-  font-family: "roboto";
+  font-family: "iosevka";
   font-style: normal;
-  font-weight: 400;
+  font-weight: 500;
   src: local(""),
-    url("../fonts/roboto-v29-latin-ext_latin-regular.woff2") format("woff2");
+    url("../fonts/iosevka-term-extendedmedium-subset.woff2") format("woff2");
+    unicode-range: U+0000-00FF, U+0100-017F;
   font-display: block;
 }
 
 @font-face {
-  font-family: "roboto";
-  font-style: normal;
+  font-family: "iosevka";
+  font-style: bold;
   font-weight: 700;
   src: local(""),
-    url("../fonts/roboto-bold.woff2") format("woff2");
+    url("../fonts/iosevka-term-extendedbold-subset.woff2") format("woff2");
+  unicode-range: U+0000-00FF, U+0100-017F;
   font-display: block;
 }
 
@@ -30,13 +32,15 @@
   --font-size-large: 17px;
   --font-size-base: 15px;
   --font-size-small: 13px;
-  --font-family-sans-serif: roboto, -apple-system, BlinkMacSystemFont,
+  --font-family-sans-serif: iosevka, -apple-system, BlinkMacSystemFont,
     "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --font-family-monospace: roboto-mono, SFMono-Regular, Menlo, Monaco,
+  --font-family-monospace: iosevka, SFMono-Regular, Menlo, Monaco,
     "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
+  --font-family-paragraph: atkinson, -apple-system, BlinkMacSystemFont, iosevka, "Segoe UI",
+    "Helvetica Neue", Arial, sans-serif;
 
-  --accent-color: #098204;
-  --color-accent: 9, 130, 4;
+  --accent-color: #50E451;
+  --color-accent: 80, 228, 81;
   --color-accent-complement: #7E0482;
   --color-accent-100: rgba(var(--color-accent), 1);
   --color-accent-75: rgba(var(--color-accent), 0.75);
@@ -52,15 +56,13 @@
   --color-foreground-inverse: #100e0c;
   --color-foreground-dimmed: rgb(210, 217, 223);
 
-  --color-foreground: #eeeeee;
-
   --color-sidebar-inactive-foreground-hover: var(--color-foreground);
   --color-sidebar-inactive-background-hover: var(--color-btn-border);
   --color-sidebar-foreground: #bfbfbf;
   --color-sidebar-disabled-foreground: #5E5E5E;
   --color-sidebar-background: #121212;
   --color-sidebar-active-foreground: var(--color-foreground);
-  --color-sidebar-active-background: var(--color-accent-100);
+  --color-sidebar-active-background: var(--color-accent-50);
 
   --color-client-link: #7aed40;
   --color-client-link-hover: var(--color-foreground-dimmed);
@@ -68,24 +70,35 @@
   --color-btn-border: #555555;
   --color-btn-default-background: #5cd00a80;
   --color-btn-default-background-hover: #0c900a80;
-  --color-btn-outline-link: #bfbfbf;
-  --color-btn-outline-background: #0c900a40;
+  --color-btn-outline-link: var(--color-accent-25);
+  --color-btn-outline-link-hover: var(--color-accent-75);
 
   --color-tab: #444444;
-  --color-tab-active: #aaaaaa;
+  --color-tab-active: var(--color-btn-default-background);
 
-  --color-resizer: #0c900a80;
-  --color-scrollbar-track: var(--color-sidebar-active-background);
+  --color-resizer: var(--color-accent-50);
+  --color-resizer-hover: var(--color-accent-100);
+  --color-scrollbar-track: var(--color-btn-border);
   --color-scrollbar-thumb: var(--color-sidebar-foreground);
   --color-scrollbar-thumb-hover: var(--color-sidebar-inactive-foreground-hover);
+
   --color-pagination-disabled: #444444;
   --color-cell-toolbar-background: #121212;
-  --color-page-link-background: #121212;
-  --color-page-link-active-background: #444444;
+  /* --color-page-link-background: #121212;
+  --color-page-link-active-background: #444444; */
   --color-form-background: #121212;
-  --color-card-heading-background: #444444;
-  --color-table-heading-background: #444444;
+  --color-card-heading-background: #303030;
   --color-monospace-color: #eeeeee;
+
+  --color-page-link-active-background: #0c900a;
+  --color-page-link-hover-background: #5cd00a80;
+  --color-pagination-disabled: #c0c0c0;
+
+  --color-table-row-stripe: rgba(255, 255, 255, 0.03);
+  --color-table-row-selected: rgba(255, 255, 255, 0.05);
+  --color-table-row-selected-text: var(--color-foreground);
+  --color-table-heading-background: #303030;
+  --color-table-row-hover: rgba(255, 255, 255, 0.01);
 
   --color-calendar-background: #121212;
   --color-calendar-tile: #121212;
@@ -117,10 +130,13 @@ body.veloci-dark {
 
 .veloci-dark code {
   font-family: var(--font-family-monospace);
-  font-size: var(--font-size-small);
+  font-size: var(--font-size-base);
 }
 
-.veloci-dark p,
+.veloci-dark p {
+  font-family: var(--font-family-paragraph);
+}
+
 .veloci-dark dl,
 .veloci-dark ol,
 .veloci-dark ul {
@@ -283,17 +299,24 @@ body.veloci-dark {
   background: none;
 }
 
-.veloci-dark .btn-outline-info,
-.veloci-dark .btn-link {
-  color: var(--color-btn-outline-link);
-  background: var(--color-btn-outline-background);
-  margin: 1px;
-  text-align: left;
-  width: 100%;
+.veloci-dark .btn.btn-outline-info,
+.veloci-dark .btn.btn-link {
+    background: var(--color-btn-outline-link);
+    color: var(--color-foreground);
+    margin: 1px;
+}
+
+.veloci-dark .btn-outline-info:hover {
+  background: var(--color-btn-outline-link-hover);
+  text-shadow: none;
+  color: var(--color-foreground);
 }
 
 .veloci-dark .btn.btn-link {
   border-color: transparent;
+  width: 100%;
+  background: none;
+  color: var(--color-foreground);
 }
 
 
@@ -307,11 +330,12 @@ body.veloci-dark {
   font-size: var(--font-size-base);
   text-shadow: none;
   box-shadow: none;
+  border: 1px solid var(--color-table-heading-background);
 }
 
 .veloci-dark .table thead th {
-  border: none;
-  background: var(--color-table-row-selected);
+  border: 1px solid var(--color-table-heading-background);
+  background: var(--color-table-heading-background);
   vertical-align: text-bottom;
 }
 
@@ -321,7 +345,7 @@ body.veloci-dark {
 }
 
 .veloci-dark .table tbody tr:nth-of-type(2n) {
-  background: var(--color-table-row-hover);
+  background: var(--color-table-row-stripe);
   border: none;
 }
 
@@ -354,13 +378,28 @@ body.veloci-dark {
   color: unset;
 }
 
-.veloci-dark .artifact-search-table td:hover {
-  background: var(--color-table-row-hover);
-  color: unset;
+.veloci-dark .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td > button.btn.btn-link {
+  background: transparent;
+  text-decoration: none;
+  color: var(--color-foreground-inverse);
+  font-weight: 700;
 }
 
-.veloci-dark table tr.row-selected,
-.veloci-dark table tr.row_selected td {
+.veloci-dark .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td {
+  background: var(--color-accent-50);
+  border: 1px solid var(--color-foreground-inverse);
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.veloci-dark .new-artifact-search-table .btn-link:hover,
+.veloci-dark .new-artifact-search-table .btn-link:focus,
+.veloci-dark .new-artifact-search-table .btn-link.focus {
+  text-decoration: none;
+}
+
+.veloci-dark .table tbody tr.row-selected,
+.veloci-dark .table tbody tr.row_selected td {
   background: var(--color-table-row-selected);
   color: var(--color-foreground);
 }
@@ -376,21 +415,21 @@ body.veloci-dark {
 .veloci-dark .Resizer.horizontal {
   border: none;
   background: var(--color-resizer);
-  height: 10px;
+  height: 3px;
 }
 
 .veloci-dark .Resizer.horizontal:hover {
-  background: var(--color-resizer);
+  background: var(--color-resizer-hover);
 }
 
 .veloci-dark .Resizer.vertical {
   border: none;
-  background: var(--color-canvas-background);
+  background: var(--color-resizer);
   width: 3px;
 }
 
 .veloci-dark .Resizer.vertical:hover {
-  background: var(--color-resizer);
+  background: var(--color-resizer-hover);
 }
 
 .veloci-dark .Resizer:hover {
@@ -420,11 +459,12 @@ body.veloci-dark {
 .veloci-dark .card-body dt,
 .veloci-dark .card-body label {
   font-weight: 400;
-  color: lightgreen;
+  color: var(--color-accent-100);
 }
 
 /* Json container */
 .veloci-dark div.pretty-json-container {
+  font-family: var(--font-family-monospace);
   filter: invert(1);
 }
 
@@ -447,7 +487,7 @@ body.veloci-dark {
 }
 
 .veloci-dark .nav-tabs > a:hover {
-  background: var(--color-sidebar-inactive-foreground-hover);
+  background: var(--color-sidebar-foreground);
   color: var(--color-canvas-background);
 }
 
@@ -591,8 +631,15 @@ body.veloci-dark {
 /* modal dialogs */
 
 .veloci-dark .modal-content {
-  background: var(--color-page-link-active-background);
+  background: var(--color-card-heading-background);
   color: var(--color-foreground);
+}
+
+.veloci-dark .modal-header .close {
+  color: var(--color-foreground);
+  opacity: 1;
+  text-shadow: none;
+  outline: none;
 }
 
 /* notebooks */

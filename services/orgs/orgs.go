@@ -58,8 +58,8 @@ func (self *OrgManager) ListOrgs() []*api_proto.OrgRecord {
 
 	for _, item := range self.orgs {
 		copy := proto.Clone(item.record).(*api_proto.OrgRecord)
-		if utils.IsRootOrg(copy.OrgId) {
-			copy.OrgId = "root"
+		if utils.IsRootOrg(copy.Id) {
+			copy.Id = "root"
 			copy.Name = "<root>"
 			if self.config_obj.Client != nil {
 				copy.Nonce = self.config_obj.Client.Nonce
@@ -138,7 +138,7 @@ func (self *OrgManager) CreateNewOrg(name, id string) (
 
 	org_record := &api_proto.OrgRecord{
 		Name:  name,
-		OrgId: id,
+		Id:    id,
 		Nonce: NewNonce(),
 	}
 
@@ -152,7 +152,7 @@ func (self *OrgManager) CreateNewOrg(name, id string) (
 	}
 
 	org_path_manager := paths.NewOrgPathManager(
-		org_record.OrgId)
+		org_record.Id)
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return nil, err
@@ -174,7 +174,7 @@ func (self *OrgManager) makeNewConfigObj(
 
 	result := proto.Clone(self.config_obj).(*config_proto.Config)
 
-	result.OrgId = record.OrgId
+	result.OrgId = record.Id
 	result.OrgName = record.Name
 
 	if result.Client != nil {
@@ -183,15 +183,11 @@ func (self *OrgManager) makeNewConfigObj(
 		result.Client.Nonce = record.Nonce
 	}
 
-	if result.Datastore != nil && record.OrgId != "" {
-		if result.Datastore.Location != "" {
-			result.Datastore.Location = filepath.Join(
-				result.Datastore.Location, "orgs", record.OrgId)
-		}
-		if result.Datastore.FilestoreDirectory != "" {
-			result.Datastore.FilestoreDirectory = filepath.Join(
-				result.Datastore.FilestoreDirectory, "orgs", record.OrgId)
-		}
+	if result.Datastore != nil && record.Id != "" {
+		result.Datastore.Location = filepath.Join(
+			result.Datastore.Location, "orgs", record.Id)
+		result.Datastore.FilestoreDirectory = filepath.Join(
+			result.Datastore.FilestoreDirectory, "orgs", record.Id)
 	}
 
 	return result
@@ -200,7 +196,7 @@ func (self *OrgManager) makeNewConfigObj(
 func (self *OrgManager) Scan() error {
 	existing := make(map[string]bool)
 	for _, o := range self.ListOrgs() {
-		existing[o.OrgId] = true
+		existing[o.Id] = true
 	}
 
 	db, err := datastore.GetDB(self.config_obj)
@@ -222,6 +218,11 @@ func (self *OrgManager) Scan() error {
 			org_path_manager.Path(), org_record)
 		if err != nil {
 			continue
+		}
+
+		// Read existing records for backwards compatibility
+		if org_record.OrgId != "" && org_record.Id == "" {
+			org_record.Id = org_record.OrgId
 		}
 
 		delete(existing, org_id)
@@ -275,7 +276,7 @@ func (self *OrgManager) Start(
 
 	// First start all services for the root org
 	err := self.startOrg(&api_proto.OrgRecord{
-		OrgId: "",
+		Id:    "",
 		Name:  "<root org>",
 		Nonce: nonce,
 	})

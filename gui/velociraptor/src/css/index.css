@@ -51,6 +51,7 @@ code {
 .btn.btn-link {
     background: none;
     color: var(--color-btn-outline-link);
+    text-align: left;
 }
 
 .report-viewer .btn-group a.btn {

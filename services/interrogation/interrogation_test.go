@@ -29,6 +29,7 @@ type ServicesTestSuite struct {
 func (self *ServicesTestSuite) SetupTest() {
 	self.ConfigObj = self.TestSuite.LoadConfig()
 	self.ConfigObj.Frontend.ServerServices.Interrogation = true
+	self.ConfigObj.Defaults.UnauthenticatedLruTimeoutSec = -1
 
 	self.LoadArtifacts([]string{`
 name: Server.Internal.Enrollment
@@ -108,13 +109,17 @@ func (self *ServicesTestSuite) TestInterrogationService() {
 func (self *ServicesTestSuite) TestEnrollService() {
 	enroll_message := ordereddict.NewDict().Set("ClientId", self.client_id)
 
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
 	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
+	// Check the client does not exist in the datastore yet
 	client_path_manager := paths.NewClientPathManager(self.client_id)
-	client_info := &actions_proto.ClientInfo{}
-	db.GetSubject(self.ConfigObj, client_path_manager.Path(), client_info)
-
+	client_info := &services.ClientInfo{}
+	err = db.GetSubject(self.ConfigObj, client_path_manager.Path(), client_info)
+	assert.Error(self.T(), err)
 	assert.Equal(self.T(), client_info.ClientId, "")
 
 	// Push many enroll_messages to the internal queue - this will
@@ -137,8 +142,10 @@ func (self *ServicesTestSuite) TestEnrollService() {
 
 	// Wait here until the client is enrolled
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		db.GetSubject(self.ConfigObj, client_path_manager.Path(), client_info)
-		return client_info.ClientId == self.client_id
+		client_info, err = client_info_manager.Get(self.Ctx, self.client_id)
+
+		return err == nil && client_info.ClientId == self.client_id &&
+			client_info.LastInterrogateFlowId != ""
 	})
 
 	// Check that a collection is scheduled.
@@ -146,6 +153,8 @@ func (self *ServicesTestSuite) TestEnrollService() {
 		client_info.LastInterrogateFlowId)
 	collection_context := &flows_proto.ArtifactCollectorContext{}
 	err = db.GetSubject(self.ConfigObj, flow_path_manager.Path(), collection_context)
+	assert.NoError(self.T(), err)
+
 	assert.Equal(self.T(), collection_context.Request.Artifacts,
 		[]string{"Generic.Client.Info"})
 
