@@ -1,19 +1,9 @@
 @font-face {
-  font-family: "atkinson";
+  font-family: "iosevka";
   font-style: normal;
   font-weight: 400;
   src: local(""),
-    url("../fonts/atkinson-hyperlegible-regular-102a.woff2") format("woff2");
-  size-adjust: 110%;
-  font-display: block;
-}
-
-@font-face {
-  font-family: "iosevka";
-  font-style: normal;
-  font-weight: 500;
-  src: local(""),
-    url("../fonts/iosevka-term-extendedmedium-subset.woff2") format("woff2");
+    url("../fonts/iosevka-term-extended-subset.woff2") format("woff2");
     unicode-range: U+0000-00FF, U+0100-017F;
   font-display: block;
 }
@@ -28,6 +18,24 @@
   font-display: block;
 }
 
+@font-face {
+  font-family: "roboto";
+  font-style: normal;
+  font-weight: 400;
+  src: local(""),
+    url("../fonts/roboto-v30-latin-ext_latin-regular.woff2") format("woff2");
+  font-display: block;
+}
+
+@font-face {
+  font-family: "roboto";
+  font-style: bold;
+  font-weight: 700;
+  src: local(""),
+    url("../fonts/roboto-v30-latin-ext_latin-700.woff2") format("woff2");
+  font-display: block;
+}
+
 .pink-light {
   --font-size-large: 17px;
   --font-size-base: 15px;
@@ -36,7 +44,7 @@
     "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --font-family-monospace: iosevka, SFMono-Regular, Menlo, Monaco,
     "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
-  --font-family-paragraph: atkinson, -apple-system, BlinkMacSystemFont, iosevka, "Segoe UI",
+  --font-family-paragraph: roboto, -apple-system, BlinkMacSystemFont, iosevka, "Segoe UI",
     "Helvetica Neue", Arial, sans-serif;
 
   --color-foreground: #121212;
