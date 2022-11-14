@@ -112,7 +112,7 @@ class UserSettings extends React.PureComponent {
     componentDidMount = () => {
         if (this.context.traits) {
             this.setState({
-                theme: this.context.traits.theme || "no-theme",
+                theme: this.context.traits.theme || "veloci-light",
                 timezone: this.context.traits.timezone || "UTC",
                 lang: this.context.traits.lang || "en",
                 org: this.context.traits.org || "root",
@@ -208,7 +208,6 @@ class UserSettings extends React.PureComponent {
                                           theme: e.currentTarget.value,
                                       });
                                   }}>
-                      <option value="no-theme">{T("Default Velociraptor")}</option>
                       <option value="veloci-light">{T("Velociraptor (light)")}</option>
                       <option value="veloci-dark">{T("Velociraptor (dark)")}</option>
                       {/* <option value="github-dimmed-light">Github dimmed (light)</option> */}
@@ -216,6 +215,7 @@ class UserSettings extends React.PureComponent {
                       <option value="ncurses">{T("Ncurses (light)")}</option>
                       <option value="coolgray-dark">{T("Cool Gray (dark)")}</option>
                       <option value="pink-light">{T("Strawberry Milkshake (light)")}</option>
+                      <option value="no-theme">{T("Velociraptor Classic (light)")}</option>
                     </Form.Control>
                   </Col>
                 </Form.Group>

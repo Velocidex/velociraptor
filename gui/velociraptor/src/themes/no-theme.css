@@ -1,3 +1,25 @@
+@font-face {
+    font-family: "roboto";
+    font-style: normal;
+    font-weight: 400;
+    src: local(""),
+      url("../fonts/roboto-v30-latin-ext_latin-regular.woff2") format("woff2");
+    font-display: block;
+  }
+
+  @font-face {
+    font-family: "roboto";
+    font-style: bold;
+    font-weight: 700;
+    src: local(""),
+      url("../fonts/roboto-v30-latin-ext_latin-700.woff2") format("woff2");
+    font-display: block;
+  }
+
+body.no-theme {
+    font-family: roboto, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Helvetica Neue", Arial, sans-serif;
+}
 
 .no-theme .btn.btn-default {
     background-image: linear-gradient(180deg,#fff 0,#e0e0e0);
