@@ -10,7 +10,8 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
   "agent_information": {
    "version": "2019-11-07T22:08:33+10:00",
    "name": "velociraptor",
-   "build_time": ""
+   "build_time": "",
+   "build_url": ""
   },
   "os_info": {
    "system": "windows",

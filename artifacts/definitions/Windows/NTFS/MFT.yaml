@@ -70,6 +70,24 @@ parameters:
 
 sources:
   - query: |
+      -- Cater for older clients which do not have the Links column.
+      LET parse_mft_version(filename, accessor, prefix) = SELECT *
+      FROM if(condition=version(plugin="parse_mft") > 1,
+              then={ SELECT *
+                     FROM parse_mft(
+                         filename=filename, accessor=accessor, prefix=prefix)
+              },
+
+              -- Older versions do not have the prefix parameter in
+              -- the plugin and need the prefix prepended to the
+              -- OSPath
+              else={ SELECT *,
+                            prefix + OSPath AS Links,
+                            prefix + OSPath AS OSPath
+                     FROM parse_mft(
+                         filename=filename, accessor=accessor)
+              })
+
       -- The path to to the drive that holds the MFT file (can be a pathspec)
       LET Drive <= pathspec(parse=MFTDrive, path_type="windows")
 
@@ -106,7 +124,7 @@ sources:
             LastAccess0x10,LastAccess0x30,
             HasADS, SI_Lt_FN, uSecZeros, Copied,
             FileNames, FileNameTypes
-        FROM parse_mft(filename=MFTPath,
+        FROM parse_mft_version(filename=MFTPath,
                        accessor=Accessor, prefix=Drive)
         WHERE FileName =~ FileRegex
           AND Links =~ PathRegex
@@ -124,7 +142,7 @@ sources:
             LastAccess0x10,LastAccess0x30,
             HasADS, SI_Lt_FN, uSecZeros, Copied,
             FileNames, FileNameTypes
-        FROM parse_mft(filename=MFTPath,
+        FROM parse_mft_version(filename=MFTPath,
                        accessor=Accessor, prefix=Drive)
         WHERE
              ( Created0x10 > DateAfter
@@ -147,7 +165,7 @@ sources:
             LastAccess0x10,LastAccess0x30,
             HasADS, SI_Lt_FN, uSecZeros, Copied,
             FileNames, FileNameTypes
-        FROM parse_mft(filename=MFTPath,
+        FROM parse_mft_version(filename=MFTPath,
                        accessor=Accessor, prefix=Drive)
         WHERE
              ( Created0x10 < DateBefore
@@ -171,7 +189,7 @@ sources:
             LastAccess0x10,LastAccess0x30,
             HasADS, SI_Lt_FN, uSecZeros, Copied,
             FileNames, FileNameTypes
-        FROM parse_mft(filename=MFTPath,
+        FROM parse_mft_version(filename=MFTPath,
                        accessor=Accessor, prefix=Drive)
         WHERE FileName =~ FileRegex
             AND Links =~ PathRegex

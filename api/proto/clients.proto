@@ -13,6 +13,7 @@ message AgentInformation {
     string version = 1;
     string name = 2;
     string build_time = 3;
+    string build_url = 4;
 }
 
 // Describe a client. We fill in some metadata about the client but

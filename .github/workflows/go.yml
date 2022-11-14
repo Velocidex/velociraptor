@@ -10,7 +10,9 @@ jobs:
   build:
     if: github.event.pull_request.merged
     name: Build
-    runs-on: ubuntu-latest
+    # We used to build on ubuntu-18.04 but that is now deprecated by
+    # GitHub. Earlier distributions will have to use the musl build.
+    runs-on: ubuntu-20.04
     steps:
 
     - name: Check out code into the Go module directory
