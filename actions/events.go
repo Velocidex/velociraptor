@@ -253,12 +253,12 @@ func (self UpdateEventTable) Run(
 
 	err = update_writeback(config_obj, arg)
 	if err != nil {
-		responder.RaiseError(ctx, fmt.Sprintf(
+		responder.RaiseError(new_ctx, fmt.Sprintf(
 			"Unable to write events to writeback: %v", err))
 		return
 	}
 
-	responder.Return(ctx)
+	responder.Return(new_ctx)
 }
 
 func update_writeback(

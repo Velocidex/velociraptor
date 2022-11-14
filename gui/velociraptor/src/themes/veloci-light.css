@@ -246,7 +246,7 @@ body.veloci-light {
 
 .veloci-light .btn-default.active {
   box-shadow: none;
-  color: var(--color-sidebar-background);
+  color: var(--color-accent-75);
 }
 
 .veloci-light .btn-default:hover {
