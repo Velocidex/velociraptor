@@ -19,20 +19,22 @@
 }
 
 @font-face {
-  font-family: "roboto";
+  font-family: "atkinson";
   font-style: normal;
   font-weight: 400;
   src: local(""),
-    url("../fonts/roboto-v30-latin-ext_latin-regular.woff2") format("woff2");
+    url("../fonts/atkinson-hyperlegible-regular-102a.woff2") format("woff2");
+  size-adjust: 110%;
   font-display: block;
 }
 
 @font-face {
-  font-family: "roboto";
+  font-family: "atkinson";
   font-style: bold;
   font-weight: 700;
   src: local(""),
-    url("../fonts/roboto-v30-latin-ext_latin-700.woff2") format("woff2");
+    url("../fonts/atkinson-hyperlegible-bold-102a.woff2") format("woff2");
+  size-adjust: 110%;
   font-display: block;
 }
 
@@ -44,7 +46,7 @@
     "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --font-family-monospace: iosevka, SFMono-Regular, Menlo, Monaco,
     "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
-  --font-family-paragraph: roboto, -apple-system, BlinkMacSystemFont, iosevka, "Segoe UI",
+  --font-family-paragraph: atkinson, -apple-system, BlinkMacSystemFont, iosevka, "Segoe UI",
     "Helvetica Neue", Arial, sans-serif;
 
   --accent-color: #098204;
@@ -91,7 +93,7 @@
   --color-btn-default-background: #dcdcdc;
   --color-btn-default-background-hover: var(--color-sidebar-inactive-background-hover);
   --color-btn-outline-link: var(--color-accent-25);
-  --color-btn-outline-link-hover: var(--color-accent-100);
+  --color-btn-outline-link-hover: var(--color-accent-75);
 
   --color-table-row-stripe: rgba(0,0,0, 0.03);
   --color-table-row-selected: rgba(var(--color-accent), 0.2);
@@ -135,13 +137,14 @@ body.veloci-light {
   color: var(--color-code);
 }
 
-.veloci-light p {
+.veloci-light .report-viewer p,
+.veloci-light .report-viewer ol,
+.veloci-light .report-viewer ul,
+.veloci-light .report-viewer li {
   font-family: var(--font-family-paragraph);
 }
 
-.veloci-light dl,
-.veloci-light ol,
-.veloci-light ul {
+.veloci-light dl {
   font-family: var(--font-family-sans-serif);
 }
 
@@ -156,13 +159,16 @@ body.veloci-light {
 }
 
 .veloci-light #client-search-bar {
+  background: var(--color-canvas-background);
+  border: 1px solid var(--color-btn-default-border);
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
+  color: var(--color-foreground);
   font-family: var(--font-family-sans-serif);
   padding-top: 5px;
   padding-bottom: 5px;
   margin-left: 5px;
-  height: 26px;
+  height: 25px;
 }
 
 .veloci-light .dropdown .dropdown-toggle.btn.btn-default {
@@ -177,7 +183,7 @@ body.veloci-light {
 }
 
 .veloci-light .client-status .client-name {
-  background: var(--color-btn-default-background);
+  background: var(--color-btn-outline-link);
   text-decoration: none !important;
   text-shadow: none;
   padding: 6px 10px 8px 10px;
@@ -188,20 +194,20 @@ body.veloci-light {
 }
 
 .veloci-light .client-status .client-name:hover {
-    color: var(--color-client-link);
-    background: var(--color-btn-default-background-hover);
+    color: var(--color-foreground-inverse);
+    background: var(--color-btn-outline-link-hover);
 }
 
-/* .veloci-light .react-autosuggest__suggestions-container--open {
+.veloci-light .react-autosuggest__suggestions-container--open {
     margin-left: 5px;
     background: var(--color-canvas-background);
     font-family: var(--font-family-sans-serif);
     color: var(--color-foreground);
-} */
+}
 
-/* .veloci-light .react-autosuggest__suggestion--highlighted {
-    background: var(--color-accent-50);
-} */
+.veloci-light .react-autosuggest__suggestion--highlighted {
+    background: var(--color-accent-25);
+}
 
 /* Sidebar navbar */
 
@@ -359,7 +365,7 @@ body.veloci-light {
 
 .veloci-light .card-body dt,
 .veloci-light .card-body label {
-  font-weight: 400;
+  font-weight: 500;
   color: var(--color-accent-75);
 }
 
@@ -390,6 +396,7 @@ body.veloci-light {
 .veloci-light .nav-tabs > a:hover {
   background: var(--color-btn-outline-link-hover);
   color: var(--color-canvas-background);
+  border-color: var(--color-btn-border);
 }
 
 .veloci-light .nav-tabs > a.active {

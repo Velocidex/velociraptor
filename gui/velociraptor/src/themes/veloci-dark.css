@@ -19,20 +19,22 @@
 }
 
 @font-face {
-  font-family: "roboto";
+  font-family: "atkinson";
   font-style: normal;
   font-weight: 400;
   src: local(""),
-    url("../fonts/roboto-v30-latin-ext_latin-regular.woff2") format("woff2");
+    url("../fonts/atkinson-hyperlegible-regular-102a.woff2") format("woff2");
+  size-adjust: 110%;
   font-display: block;
 }
 
 @font-face {
-  font-family: "roboto";
+  font-family: "atkinson";
   font-style: bold;
   font-weight: 700;
   src: local(""),
-    url("../fonts/roboto-v30-latin-ext_latin-700.woff2") format("woff2");
+    url("../fonts/atkinson-hyperlegible-bold-102a.woff2") format("woff2");
+  size-adjust: 110%;
   font-display: block;
 }
 
@@ -44,7 +46,7 @@
     "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --font-family-monospace: iosevka, SFMono-Regular, Menlo, Monaco,
     "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
-  --font-family-paragraph: roboto, -apple-system, BlinkMacSystemFont, iosevka, "Segoe UI",
+  --font-family-paragraph: atkinson, -apple-system, BlinkMacSystemFont, iosevka, "Segoe UI",
     "Helvetica Neue", Arial, sans-serif;
 
   --accent-color: #50E451;
@@ -142,13 +144,14 @@ body.veloci-dark {
   font-size: var(--font-size-base);
 }
 
-.veloci-dark p {
+.veloci-dark .report-viewer p,
+.veloci-dark .report-viewer ol,
+.veloci-dark .report-viewer ul,
+.veloci-dark .report-viewer li {
   font-family: var(--font-family-paragraph);
 }
 
-.veloci-dark dl,
-.veloci-dark ol,
-.veloci-dark ul {
+.veloci-dark dl {
   font-family: var(--font-family-sans-serif);
 }
 
@@ -181,7 +184,7 @@ body.veloci-dark {
 
 .veloci-dark #client-search-bar {
   background: var(--color-canvas-background);
-  border: 0.655385px solid #485a5f;
+  border: 1px solid var(--color-btn-border);
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
   color: var(--color-foreground);
@@ -215,8 +218,8 @@ body.veloci-dark {
 }
 
 .veloci-dark .client-status .client-name:hover {
-  color: var(--color-accent-100);
-  background: var(--color-btn-default-background-hover);
+  color: var(--color-foreground);
+  background: var(--color-btn-outline-link-hover);
 }
 
 .veloci-dark .react-autosuggest__suggestions-container--open {
@@ -244,10 +247,6 @@ body.veloci-dark {
 .veloci-dark .navigator.nav-pills.nav li:hover {
   color: var(--color-sidebar-inactive-foreground-hover);
   background: var(--color-sidebar-inactive-background-hover);
-}
-
-.veloci-dark a {
-    color: var(--color-client-link);
 }
 
 .veloci-dark a.active .navigator.nav-pills.nav li {
@@ -280,7 +279,7 @@ body.veloci-dark {
 }
 
 .veloci-dark .btn-default:hover {
-  background: var(--color-btn-default-background-hover);
+  background: var(--color-btn-outline-link-hover);
   color: var(--color-foreground);
 }
 
@@ -501,8 +500,9 @@ body.veloci-dark {
 }
 
 .veloci-dark .nav-tabs > a:hover {
-  background: var(--color-sidebar-foreground);
-  color: var(--color-canvas-background);
+  background: var(--color-btn-outline-link-hover);
+  color: var(--color-foreground);
+  border-color: var(--color-btn-border);
 }
 
 .veloci-dark .nav-tabs > a.active {
