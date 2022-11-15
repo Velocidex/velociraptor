@@ -19,20 +19,22 @@
 }
 
 @font-face {
-  font-family: "roboto";
+  font-family: "atkinson";
   font-style: normal;
   font-weight: 400;
   src: local(""),
-    url("../fonts/roboto-v30-latin-ext_latin-regular.woff2") format("woff2");
+    url("../fonts/atkinson-hyperlegible-regular-102a.woff2") format("woff2");
+  size-adjust: 110%;
   font-display: block;
 }
 
 @font-face {
-  font-family: "roboto";
+  font-family: "atkinson";
   font-style: bold;
   font-weight: 700;
   src: local(""),
-    url("../fonts/roboto-v30-latin-ext_latin-700.woff2") format("woff2");
+    url("../fonts/atkinson-hyperlegible-bold-102a.woff2") format("woff2");
+  size-adjust: 110%;
   font-display: block;
 }
 
@@ -44,7 +46,7 @@
     "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --font-family-monospace: iosevka, SFMono-Regular, Menlo, Monaco,
     "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
-  --font-family-paragraph: roboto, -apple-system, BlinkMacSystemFont, iosevka, "Segoe UI",
+  --font-family-paragraph: atkinson, -apple-system, BlinkMacSystemFont, iosevka, "Segoe UI",
     "Helvetica Neue", Arial, sans-serif;
 
   --color-foreground: #121212;
@@ -138,13 +140,14 @@ body.pink-light {
   font-size: var(--font-size-base);
 }
 
-.pink-light p {
+.pink-light .report-viewer p,
+.pink-light .report-viewer ol,
+.pink-light .report-viewer ul,
+.pink-light .report-viewer li {
   font-family: var(--font-family-paragraph);
 }
 
-.pink-light dl,
-.pink-light ol,
-.pink-light ul {
+.pink-light dl {
   font-family: var(--font-family-sans-serif);
 }
 
@@ -175,7 +178,7 @@ body.pink-light {
 
 .pink-light #client-search-bar {
   background: var(--color-canvas-background);
-  border: 0.655385px solid var(--color-sidebar-foreground);
+  border: 1px solid var(--color-sidebar-foreground);
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
   color: var(--color-foreground);
@@ -466,7 +469,7 @@ body.pink-light {
 
 .pink-light .card-body dt,
 .pink-light .card-body label {
-  font-weight: 400;
+  font-weight: 500;
   color: var(--color-sidebar-inactive-foreground-hover);
 }
 
@@ -497,6 +500,7 @@ body.pink-light {
 .pink-light .nav-tabs > a:hover {
   background: var(--color-sidebar-inactive-foreground-hover);
   color: var(--color-canvas-background);
+  border-color: var(--color-btn-border);
 }
 
 .pink-light .nav-tabs > a.active {

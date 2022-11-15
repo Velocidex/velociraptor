@@ -136,14 +136,10 @@ body.coolgray-dark {
   letter-spacing: 0.4px;
 }
 
-.coolgray-dark p {
-  font-family: var(--font-family-paragraph);
-  font-size: var(--font-size-base);
-  letter-spacing: 0.4px;
-}
-
+.coolgray-dark p,
 .coolgray-dark ol,
-.coolgray-dark ul {
+.coolgray-dark ul,
+.coolgray-dark li {
   font-family: var(--font-family-paragraph);
   font-size: var(--font-size-base);
   letter-spacing: 0.4px;
