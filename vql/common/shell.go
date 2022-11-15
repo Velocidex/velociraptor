@@ -49,7 +49,9 @@ type ShellResult struct {
 	Complete   bool
 }
 
-type ShellPlugin struct{}
+type ShellPlugin struct {
+	pipeReader pipeReaderFunc
+}
 
 func (self ShellPlugin) Call(
 	ctx context.Context,
@@ -147,71 +149,10 @@ func (self ShellPlugin) Call(
 
 		}
 
-		// We need to combine the status code with the stdout
-		// to minimize the total number of responses.  Send a
-		// copy of the response because we will continue
-		// modifying it.
+		// We need to combine the status code with the stdout to
+		// minimize the total number of responses.  Send a copy of the
+		// response because we will continue modifying it.
 		wg := &sync.WaitGroup{}
-
-		read_from_pipe := func(
-			pipe io.ReadCloser,
-			cb func(message string),
-			wg *sync.WaitGroup) {
-
-			defer wg.Done()
-
-			// Read as much as possible into the buffer
-			// filling the full length - even if we have
-			// to wait on the pipe.
-			buff := make([]byte, arg.Length)
-			offset := 0
-
-			for {
-				select {
-				case <-ctx.Done():
-					return
-
-				default:
-					n, err := pipe.Read(buff[offset:])
-					if err != nil && err != io.EOF {
-						scope.Log("shell: %v", err)
-						return
-					}
-
-					// The buffer is completely empty and
-					// the last read was an EOF.
-					if n == 0 && offset == 0 && err == io.EOF {
-						return
-					}
-
-					// Read some data into the buffer.
-					if n > 0 {
-						offset += n
-						continue
-					}
-
-					if arg.Sep != "" {
-						for _, line := range strings.Split(
-							string(buff[:offset]), arg.Sep) {
-							if len(line) > 0 {
-								cb(line)
-							}
-						}
-						offset = 0
-
-					} else if n == 0 {
-						line := string(buff[:offset])
-						if len(line) > 0 {
-							cb(line)
-						}
-
-						// Write over the same buffer with new data.
-						offset = 0
-					}
-
-				}
-			}
-		}
 
 		// Read asyncronously.
 		var mu sync.Mutex
@@ -219,68 +160,84 @@ func (self ShellPlugin) Call(
 		length := int(arg.Length)
 
 		wg.Add(1)
+		go func() {
+			err := self.pipeReader(ctx, stdout_pipe, length, arg.Sep,
+				func(line string) {
+					mu.Lock()
+					defer mu.Unlock()
+
+					if arg.Sep != "" {
+						select {
+						case <-ctx.Done():
+							return
+
+						case output_chan <- &ShellResult{Stdout: line}:
+						}
+
+					} else {
+						data := response.Stdout + line
+						for len(data) > length {
+							response.Stdout = data[:length]
+							select {
+							case <-ctx.Done():
+								return
+
+							case output_chan <- &ShellResult{
+								Stdout: response.Stdout,
+							}:
+							}
+							data = data[length:]
+						}
+						response.Stdout = data
+					}
+				}, wg)
+			if err != nil {
+				scope.Log("shell: %v", err)
+			}
+		}()
+
 		wg.Add(1)
-		go read_from_pipe(stdout_pipe, func(line string) {
-			mu.Lock()
-			defer mu.Unlock()
+		go func() {
+			err := self.pipeReader(ctx, stderr_pipe, length, arg.Sep,
+				func(line string) {
+					mu.Lock()
+					defer mu.Unlock()
 
-			if arg.Sep != "" {
-				select {
-				case <-ctx.Done():
-					return
+					if arg.Sep != "" {
+						select {
+						case <-ctx.Done():
+							return
 
-				case output_chan <- &ShellResult{Stdout: line}:
-				}
+						case output_chan <- &ShellResult{Stdout: line}:
+						}
+					} else {
+						data := response.Stderr + line
+						for len(data) > length {
+							response.Stderr = data[:length]
+							select {
+							case <-ctx.Done():
+								return
 
-			} else {
-				data := response.Stdout + line
-				for len(data) > length {
-					response.Stdout = data[:length]
-					select {
-					case <-ctx.Done():
-						return
-
-					case output_chan <- &ShellResult{
-						Stdout: response.Stdout,
-					}:
+							case output_chan <- &ShellResult{
+								Stderr: response.Stderr,
+							}:
+							}
+							data = data[length:]
+						}
+						response.Stderr = data
 					}
-					data = data[length:]
-				}
-				response.Stdout = data
+				}, wg)
+			if err != nil {
+				scope.Log("shell: %v", err)
 			}
-		}, wg)
-		go read_from_pipe(stderr_pipe, func(line string) {
-			mu.Lock()
-			defer mu.Unlock()
+		}()
 
-			if arg.Sep != "" {
-				select {
-				case <-ctx.Done():
-					return
-
-				case output_chan <- &ShellResult{Stdout: line}:
-				}
-			} else {
-				data := response.Stderr + line
-				for len(data) > length {
-					response.Stderr = data[:length]
-					select {
-					case <-ctx.Done():
-						return
-
-					case output_chan <- &ShellResult{
-						Stderr: response.Stderr,
-					}:
-					}
-					data = data[length:]
-				}
-				response.Stderr = data
-			}
-		}, wg)
-
-		// We need to wait here until the readers are done before calling command.Wait.
+		// We need to wait here until the readers are done before
+		// calling command.Wait.
 		wg.Wait()
 
+		// The command has ended and pipes are closed - we just need
+		// to get the status message to send it a row.
 		mu.Lock()
 		defer mu.Unlock()
 
@@ -321,6 +278,94 @@ func (self ShellPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 	}
 }
 
+type pipeReaderFunc func(
+	ctx context.Context,
+	pipe io.Reader, buff_length int, sep string,
+	cb func(message string), wg *sync.WaitGroup) error
+
+// Split the buffer into seperator lines and push them to the
+// callback.
+func split(sep string, buff []byte, cb func(message string)) int {
+	lines := strings.Split(string(buff), sep)
+	if len(lines) > 0 {
+		last_line := []byte(lines[len(lines)-1])
+
+		for i := 0; i < len(lines)-1; i++ {
+			line := lines[i]
+			if len(line) > 0 {
+				cb(line)
+			}
+		}
+
+		// Copy the last line back into the same buffer.
+		offset := 0
+		for i := 0; i < len(last_line); i++ {
+			buff[i] = last_line[i]
+			offset++
+		}
+		return offset
+	}
+	return 0
+}
+
+func defaultPipeReader(
+	ctx context.Context,
+	pipe io.Reader, buff_length int, sep string,
+	cb func(message string), wg *sync.WaitGroup) error {
+	defer wg.Done()
+
+	// Read as much as possible into the buffer filling the full
+	// length - even if we have to wait on the pipe.
+	buff := make([]byte, buff_length)
+
+	// The end of the valid data in the buffer.
+	offset := 0
+
+	for {
+		select {
+		case <-ctx.Done():
+			// If there is any data left, send it.
+			if offset > 0 {
+				cb(string(buff[:offset]))
+			}
+			return nil
+
+		default:
+			// Make sure the buffer has some space.
+			if offset >= len(buff) {
+				cb(string(buff[:offset]))
+				offset = 0
+			}
+
+			n, err := pipe.Read(buff[offset:])
+			if err == io.EOF {
+				// Flush the last of the buffer
+				if offset > 0 {
+					cb(string(buff[:offset]))
+				}
+				return nil
+			}
+
+			if err != nil {
+				return err
+			}
+
+			// Process the buffer
+			offset += n
+
+			// Split the buffer if needed.
+			if sep != "" {
+				offset = split(sep, buff[:offset], cb)
+				continue
+			}
+
+		}
+	}
+	return nil
+}
+
 func init() {
-	vql_subsystem.RegisterPlugin(&ShellPlugin{})
+	vql_subsystem.RegisterPlugin(&ShellPlugin{
+		pipeReader: defaultPipeReader,
+	})
 }

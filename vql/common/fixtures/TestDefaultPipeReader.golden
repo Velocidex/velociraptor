@@ -1,0 +1,20 @@
+{
+ "Buffer with line split": [
+  "a",
+  "buffer",
+  "With",
+  "Some",
+  "More",
+  "Lines"
+ ],
+ "Buffer with fixed size": [
+  "This ",
+  "is a ",
+  "long ",
+  "buffe",
+  "r wit",
+  "h ext",
+  "ra da",
+  "ta"
+ ]
+}
