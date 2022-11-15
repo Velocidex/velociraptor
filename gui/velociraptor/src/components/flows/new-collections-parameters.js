@@ -15,7 +15,6 @@ import Modal from 'react-bootstrap/Modal';
 import T from '../i8n/i8n.js';
 import BootstrapTable from 'react-bootstrap-table-next';
 
-
 class ParameterSuggestion extends React.Component {
     static propTypes = {
         parameters: PropTypes.array,
@@ -77,9 +76,9 @@ class ParameterSuggestion extends React.Component {
             value: this.state.value,
             onChange: this.onChange,
         };
-
         return (
-            <Row key="Autosuggest" name="AutoSuggest" className="param-form-autosuggest">
+            <Row key="Autosuggest"
+                 name="AutoSuggest" className="param-form-autosuggest">
               <Col sm="3">
                 <Autosuggest
                   suggestions={this.state.suggestions}
@@ -143,9 +142,8 @@ export default class NewCollectionConfigParameters extends React.Component {
             let filter = this.state.filters[artifact.name] || "";
 
             try {
-
                 if (filter && param.name.toLowerCase().search(filter) < 0 ) {
-                    return <></>;
+                    return <div key={idx}></div>;
                 }
             } catch(e) {};
 
@@ -180,7 +178,9 @@ export default class NewCollectionConfigParameters extends React.Component {
             );
         }
 
-        return results.concat(form_parameters);
+        results = results.concat(form_parameters);
+        return results;
+
     }
 
     render() {
@@ -210,6 +210,7 @@ export default class NewCollectionConfigParameters extends React.Component {
             showExpandColumn: true,
             renderer: this.artifactParameterRenderer,
         };
+
         return (
             <>
               <Modal.Header closeButton>
@@ -217,6 +218,7 @@ export default class NewCollectionConfigParameters extends React.Component {
               </Modal.Header>
 
               <Modal.Body className="new-collection-parameter-page selectable">
+
                 { !_.isEmpty(this.props.artifacts) ?
                   <BootstrapTable
                     keyField="name"
