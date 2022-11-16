@@ -29,11 +29,20 @@ export class NotebookLineChart extends React.Component {
         this.source.cancel();
     }
 
+    componentDidUpdate(prevProps) {
+        let previous = prevProps.params && prevProps.params.Version;
+        let current = this.props.params && this.props.params.Version;
+        if (previous !== current) {
+           this.fetchRows();
+        }
+    }
+
     fetchRows = () => {
         if (_.isEmpty(this.props.params)) {
             this.setState({loading: false});
             return;
         }
+
 
         let params = Object.assign({}, this.props.params);
         let url = "v1/GetTable";

@@ -24,7 +24,7 @@ reports:
     timeout: 10
     parameters:
       - name: Sample
-        default: "4"
+        default: "6"
 
     template: |
       {{ define "CPU" }}
@@ -47,7 +47,9 @@ reports:
             })
       {{ end }}
 
-      ## Server status
+      {{ $time := Query "SELECT timestamp(epoch=now()) AS Now FROM scope()" | Expand }}
+
+      ## Server status @ {{ Get $time "0.Now" }}
 
       <p>The following are total across all frontends.</p>
           <span class="container">

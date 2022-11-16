@@ -46,7 +46,7 @@ func getTable(
 
 	rows := uint64(0)
 	if in.Rows == 0 {
-		in.Rows = 500
+		in.Rows = 2000
 	}
 
 	result := &api_proto.GetTableResponse{
