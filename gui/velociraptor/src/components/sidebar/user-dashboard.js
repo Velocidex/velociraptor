@@ -13,9 +13,10 @@ import VeloReportViewer from "../artifacts/reporting.js";
 import { withRouter }  from "react-router-dom";
 
 const ranges = [
-    {desc: "Last Day", sec: 60*60*24, sample: 4},
-    {desc: "Last 2 days", sec: 60*60*24*2, sample: 8},
-    {desc: "Last Week", sec: 60*60*24*7, sample: 40},
+    {desc: "Last Hour", sec: 60*60, sample: 1, rows: 400},
+    {desc: "Last Day", sec: 60*60*24, sample: 6, rows: 2000},
+    {desc: "Last 2 days", sec: 60*60*24*2, sample: 10, rows: 2000},
+    {desc: "Last Week", sec: 60*60*24*7, sample: 40, rows: 2000},
   ];
 
 
@@ -30,8 +31,9 @@ class UserDashboard extends React.Component {
         let now = parseInt((new Date()).getTime() / 1000);
         this.state = {
             start_time: now - ranges[0].sec,
-            sample: 4,
+            sample: ranges[0].sample,
             desc: ranges[0].desc,
+            rows: ranges[0].rows,
             version: 0,
         };
     }
@@ -52,6 +54,7 @@ class UserDashboard extends React.Component {
         let now = parseInt((new Date()).getTime() / 1000);
         this.setState({start_time: now - desc.sec,
                        desc: desc.desc,
+                       rows: desc.rows,
                        version: this.state.version + 1,
                        sample: desc.sample});
     }

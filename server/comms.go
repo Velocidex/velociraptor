@@ -360,10 +360,9 @@ func control(
 			defer close(sync)
 
 			// Process the request with a different context - if the
-			// client disconnects quickly the request will be
-			// cancelled and aborted. This seems to happen sometimes
-			// on some clients so we enforce a hard timeout for
-			// processing anyway.
+			// client disconnects quickly the request context will be
+			// cancelled and aborted, but we do not want this to
+			// interrupt actually processing the message.
 			subctx, cancel := context.WithTimeout(context.Background(),
 				60*time.Second)
 			defer cancel()
@@ -373,8 +372,18 @@ func control(
 			)
 			if err != nil {
 				server_obj.Error("Error: %v", err)
-			} else {
-				sync <- response
+				return
+			}
+
+			// Wait here for the code below to read from the sync
+			// channel so they can send the results back. If the
+			// client disconnected and the code below has exited we
+			// block here for up to 3 seconds before cancelling the
+			// request anyway (and not sending reply to the client).
+			select {
+			case <-subctx.Done():
+			case sync <- response:
+			case <-time.After(3 * time.Second):
 			}
 		}()
 
@@ -514,6 +523,7 @@ func reader(server_obj *Server) http.Handler {
 			return
 		}
 
+		// Check for conflicting clients
 		if notifier.IsClientDirectlyConnected(source) {
 
 			// Send a message that there is a client conflict.
