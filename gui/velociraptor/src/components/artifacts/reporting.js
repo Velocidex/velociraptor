@@ -54,24 +54,17 @@ export default class VeloReportViewer extends React.Component {
     componentDidUpdate(prevProps) {
         let client_id = this.props.client && this.props.client.client_id;
         let artifact = this.props.artifact;
+        let previous_version = prevProps.params && prevProps.params.Version;
+        let current_version = this.props.params && this.props.params.Version;
 
         let prev_client_id = prevProps.client && prevProps.client.client_id;
 
-        if (client_id !== prev_client_id || artifact !== prevProps.artifact ||
+        if (client_id !== prev_client_id ||
+            previous_version !== current_version ||
+            artifact !== prevProps.artifact ||
             !_.isEqual(prevProps.params, this.props.params)) {
                 this.updateReport();
         }
-    }
-
-    // Reports are generally pure.
-    shouldComponentUpdate = (nextProps, nextState) => {
-        let client_id = this.props.client && this.props.client.client_id;
-        let next_client_id = nextProps.client && nextProps.client.client_id;
-
-        return !_.isEqual(this.state, nextState) ||
-            !_.isEqual(this.props.params, nextProps.params) ||
-            !_.isEqual(client_id, next_client_id) ||
-            !_.isEqual(this.props.artifact, nextProps.artifact);
     }
 
     // Notebook charts make API calls to actually get their data.
