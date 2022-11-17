@@ -74,7 +74,6 @@ func (self *EventsTestSuite) SetupTest() {
 	self.responder = responder.TestResponder()
 
 	actions.GlobalEventTable = actions.NewEventTable(
-		context.Background(),
 		self.ConfigObj, self.responder,
 		&actions_proto.VQLEventTable{})
 }

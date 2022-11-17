@@ -39,6 +39,8 @@ var (
 	// A Global stats collector is always running. When throttlers
 	// register with it they can read the data.
 	stats *statsCollector
+
+	throttle_mu sync.Mutex
 )
 
 type sample struct {
@@ -252,8 +254,8 @@ func NewThrottler(
 		return &DummyThrottler{}
 	}
 
-	mu.Lock()
-	defer mu.Unlock()
+	throttle_mu.Lock()
+	defer throttle_mu.Unlock()
 
 	if stats == nil {
 		var err error
