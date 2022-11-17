@@ -27,6 +27,7 @@ type TimelineReader struct {
 	id                string
 	current_idx       int
 	offset            int64
+	end_idx           int
 	fd                api.FileReader
 	index_fd          api.FileReader
 	buffered_index_fd io.ReadSeeker
@@ -34,6 +35,11 @@ type TimelineReader struct {
 }
 
 func (self *TimelineReader) getIndex(i int) (*IndexRecord, error) {
+	// Reading past the end of the file is an EOF error
+	if i > self.end_idx {
+		return nil, io.EOF
+	}
+
 	idx_record := &IndexRecord{}
 	_, err := self.buffered_index_fd.Seek(int64(i)*IndexRecordSize, 0)
 	if err != nil {
@@ -41,7 +47,10 @@ func (self *TimelineReader) getIndex(i int) (*IndexRecord, error) {
 	}
 
 	err = binary.Read(self.buffered_index_fd, binary.LittleEndian, idx_record)
-	return idx_record, err
+	if err != nil {
+		return nil, err
+	}
+	return idx_record, nil
 }
 
 func (self *TimelineReader) Stat() *timelines_proto.Timeline {
@@ -65,12 +74,18 @@ func (self *TimelineReader) SeekToTime(timestamp time.Time) error {
 
 	self.current_idx = sort.Search(int(number_of_points), func(i int) bool {
 		// Read the index record at offset i
-		idx_record, _ := self.getIndex(i)
+		idx_record, err := self.getIndex(i)
+		if err != nil {
+			return true
+		}
 		return idx_record.Timestamp >= timestamp_int
 	})
 	idx_record, err := self.getIndex(self.current_idx)
+	if err != nil {
+		return err
+	}
 	self.offset = idx_record.Offset
-	return err
+	return nil
 }
 
 func (self *TimelineReader) Read(ctx context.Context) <-chan TimelineItem {
@@ -162,6 +177,7 @@ func NewTimelineReader(
 		id:                path_manager.Name(),
 		fd:                fd,
 		index_fd:          index_fd,
+		end_idx:           int(stats.Size()/IndexRecordSize - 1),
 		buffered_index_fd: utils.NewReadSeekReaderAdapter(paged),
 		index_stat:        stats,
 	}, nil
