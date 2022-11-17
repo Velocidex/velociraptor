@@ -496,10 +496,9 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 			result = append(result, path)
 
 			file_store_factory := file_store.GetFileStore(self.config_obj)
-
 			rs_writer, err := result_sets.NewResultSetWriter(
 				file_store_factory, path.Path(),
-				opts, utils.BackgroundWriter,
+				opts, utils.SyncCompleter,
 				result_sets.TruncateMode)
 			if err != nil {
 				self.Error("Error: %v\n", err)

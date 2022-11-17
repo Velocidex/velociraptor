@@ -339,9 +339,18 @@ func (self *InventoryService) AddTool(config_obj *config_proto.Config,
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		return err
+		// If the datastore is not available this is not an error - we
+		// just do not write the inventory to storage. This happens
+		// when we a client starts the inventory service instead of
+		// DummyService.
+		return nil
 	}
-	return db.SetSubject(config_obj, paths.ThirdPartyInventory, self.binaries)
+	err = db.SetSubject(config_obj, paths.ThirdPartyInventory, self.binaries)
+	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Warn("Unable to store inventory - will run with an in memory one.")
+	}
+	return nil
 }
 
 func (self *InventoryService) LoadFromFile(config_obj *config_proto.Config) error {

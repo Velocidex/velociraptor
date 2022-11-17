@@ -92,21 +92,22 @@ func (self ShellPlugin) Call(
 			return
 		}
 
+		// Kill subprocess when the scope is destroyed.
+		sub_ctx, cancel := context.WithCancel(ctx)
+		err = scope.AddDestructor(cancel)
+		if err != nil {
+			// The scope is already cancelled - in that case we just
+			// abandon the query and return silently.
+			cancel()
+			return
+		}
+
 		// Report the command we ran for auditing
 		// purposes. This will be collected in the flow logs.
 		scope.Log("shell: Running external command %v", arg.Argv)
 
 		if arg.Length == 0 {
 			arg.Length = 10240
-		}
-
-		// Kill subprocess when the scope is destroyed.
-		sub_ctx, cancel := context.WithCancel(ctx)
-		err = scope.AddDestructor(cancel)
-		if err != nil {
-			cancel()
-			scope.Log("shell: %v", err)
-			return
 		}
 
 		command := exec.CommandContext(sub_ctx, arg.Argv[0], arg.Argv[1:]...)

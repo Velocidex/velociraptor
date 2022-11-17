@@ -198,6 +198,15 @@ func getPathSpec(
 		return paths.NewNotebookPathManager(in.NotebookId).Cell(
 			in.CellId).Logs(), nil
 
+		// Handle dashboards specially. Dashboards are kind of
+		// non-interactive notebook stored in a special notebook ID
+		// called "Dashboards". Cells within the dashboard correspond
+		// to different artifacts. Dashboard cells are recalculated
+		// each time they are viewed.
+	} else if in.NotebookId == "Dashboards" && in.CellId != "" {
+		return paths.NewDashboardPathManager(in.Type, in.CellId, in.ClientId).
+			QueryStorage(in.TableId).Path(), nil
+
 	} else if in.NotebookId != "" && in.CellId != "" {
 		return paths.NewNotebookPathManager(in.NotebookId).Cell(
 			in.CellId).QueryStorage(in.TableId).Path(), nil
