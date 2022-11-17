@@ -125,13 +125,20 @@ func (self *TimelineTestSuite) TestTimelineWriter() {
 	ctx := context.Background()
 
 	for _, ts := range []int64{3, 4, 7} {
-		reader.SeekToTime(time.Unix(ts, 0))
+		err := reader.SeekToTime(time.Unix(ts, 0))
+		assert.NoError(self.T(), err)
+
 		for row := range reader.Read(ctx) {
 			value, ok := row.Row.GetInt64("Item")
 			assert.True(self.T(), ok)
 			assert.True(self.T(), value >= ts)
 		}
 	}
+
+	// Ensure we get EOF when reading past the end of the
+	// timeline. Last timestamp in the file is 20 so read time 21.
+	err = reader.SeekToTime(time.Unix(21, 0))
+	assert.Error(self.T(), err, "EOF")
 }
 
 func TestTimelineWriter(t *testing.T) {
