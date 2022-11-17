@@ -29,7 +29,7 @@ func AddUserToOrg(
 	ctx context.Context,
 	options AddUserOptions,
 	principal, username string,
-	orgs []string, policy *acl_proto.ApiClientACL) error {
+	per_org_policy map[string]*acl_proto.ApiClientACL) error {
 
 	if isNameReserved(username) {
 		return NameReservedError
@@ -48,7 +48,7 @@ func AddUserToOrg(
 	ok, _ := services.CheckAccess(root_config_obj, principal, acls.ORG_ADMIN)
 	if !ok {
 		// Check that all the orgs have ServerAdmin
-		for _, org := range orgs {
+		for org, _ := range per_org_policy {
 			org_config_obj, err := org_manager.GetOrgConfig(org)
 			if err != nil {
 				return err
@@ -79,7 +79,7 @@ func AddUserToOrg(
 		}
 	}
 
-	for _, org := range orgs {
+	for org, policy := range per_org_policy {
 		if !inUserOrgs(org, user_record) {
 			user_record.Orgs = append(user_record.Orgs, &api_proto.OrgRecord{
 				Id: org,
@@ -96,7 +96,6 @@ func AddUserToOrg(
 		if err != nil {
 			return err
 		}
-
 	}
 
 	return user_manager.SetUser(ctx, user_record)
@@ -105,9 +104,9 @@ func AddUserToOrg(
 func GrantUserToOrg(
 	ctx context.Context,
 	principal, username string,
-	orgs []string, policy *acl_proto.ApiClientACL) error {
+	per_org_policy map[string]*acl_proto.ApiClientACL) error {
 	return AddUserToOrg(ctx, UseExistingUser,
-		principal, username, orgs, policy)
+		principal, username, per_org_policy)
 }
 
 // We dont expect too many orgs so O(1) is ok.

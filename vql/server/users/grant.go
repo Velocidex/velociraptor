@@ -65,8 +65,13 @@ func (self GrantFunction) Call(
 	}
 	policy.Roles = arg.Roles
 
+	per_org_policy := map[string]*acl_proto.ApiClientACL{}
+	for _, org := range orgs {
+		per_org_policy[org] = policy
+	}
+
 	principal := vql_subsystem.GetPrincipal(scope)
-	err = users.GrantUserToOrg(ctx, principal, arg.Username, orgs, policy)
+	err = users.GrantUserToOrg(ctx, principal, arg.Username, per_org_policy)
 	if err != nil {
 		scope.Log("user_grant: %s", err)
 		return vfilter.Null{}

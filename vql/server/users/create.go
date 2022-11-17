@@ -51,8 +51,13 @@ func (self UserCreateFunction) Call(
 		Roles: arg.Roles,
 	}
 
+	per_org_policy := map[string]*acl_proto.ApiClientACL{}
+	for _, org := range arg.OrgIds {
+		per_org_policy[org] = policy
+	}
+
 	err = users.AddUserToOrg(ctx, users.AddNewUser,
-		principal, arg.Username, arg.OrgIds, policy)
+		principal, arg.Username, per_org_policy)
 	if err != nil {
 		scope.Log("user_create: %s", err)
 		return vfilter.Null{}
