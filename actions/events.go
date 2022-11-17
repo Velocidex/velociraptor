@@ -41,31 +41,36 @@ import (
 )
 
 var (
-	GlobalEventTable = &EventTable{
-		ctx: context.Background(),
-	}
-	mu sync.Mutex
+	// Keep track of inflight queries for shutdown. This wait group
+	// belongs to the client's service manager. As we issue queries we
+	// increment it and when queries are done we decrement it. The
+	// service manager will wait for all inflight queries to exit
+	// before exiting allowing the client to shut down in an orderly
+	// fashion.
+	mu          sync.Mutex
+	service_wg  *sync.WaitGroup
+	service_ctx context.Context = context.Background()
+
+	GlobalEventTable *EventTable
 )
 
 type EventTable struct {
-	Events  []*actions_proto.VQLCollectorArgs
+	mu sync.Mutex
+
+	// Context for cancelling all inflight queries in this event
+	// table.
+	Ctx    context.Context
+	cancel func()
+	wg     sync.WaitGroup
+
+	// The event table currently running
+	Events []*actions_proto.VQLCollectorArgs
+
+	// The version of this event table - we only update from the
+	// server if the server's event table is newer.
 	version uint64
 
-	ctx        context.Context
 	config_obj *config_proto.Config
-
-	// This will be closed to signal that we need to abort the
-	// current event queries.
-	Done chan bool
-	wg   sync.WaitGroup
-
-	// Keep track of inflight queries for shutdown. This wait
-	// group belongs to the client's service manager. As we issue
-	// queries we increment it and when queries are done we
-	// decrement it. The service manager will wait for this before
-	// exiting allowing the client to shut down in an orderly
-	// fashion.
-	service_wg *sync.WaitGroup
 }
 
 // Determine if the current table is the same as the new set of
@@ -105,59 +110,68 @@ func (self *EventTable) equal(events []*actions_proto.VQLCollectorArgs) bool {
 
 // Teardown all the current quries. Blocks until they all shut down.
 func (self *EventTable) Close() {
-	logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
-	logger.Info("Closing EventTable\n")
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
-	close(self.Done)
+	self.close()
+}
+
+// Actually close the table without lock
+func (self *EventTable) close() {
+	if self.config_obj != nil {
+		logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
+		logger.Info("Closing EventTable\n")
+	}
+
+	self.cancel()
+
+	// Wait until the queries have completed.
 	self.wg.Wait()
 }
 
-func GlobalEventTableVersion() uint64 {
-	mu.Lock()
-	defer mu.Unlock()
+func (self *EventTable) Version() uint64 {
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
-	return GlobalEventTable.version
+	return self.version
 }
 
-func update(
+func GlobalEventTableVersion() uint64 {
+	return GlobalEventTable.Version()
+}
+
+func (self *EventTable) Update(
 	config_obj *config_proto.Config,
 	responder *responder.Responder,
 	table *actions_proto.VQLEventTable) (*EventTable, error, bool) {
 
-	mu.Lock()
-	defer mu.Unlock()
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	// Only update the event table if we need to.
-	if table.Version <= GlobalEventTable.version {
-		return GlobalEventTable, nil, false
+	if table.Version <= self.version {
+		return self, nil, false
 	}
 
 	// If the new update is identical to the old queries we wont
 	// restart. This can happen e.g. if the server changes label
 	// groups and recaculates the table version but the actual
 	// queries dont end up changing.
-	if GlobalEventTable.equal(table.Event) {
+	if self.equal(table.Event) {
 		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 		logger.Info("Client event query update %v did not "+
 			"change queries, skipping", table.Version)
 
 		// Update the version only but keep queries the same.
-		GlobalEventTable.version = table.Version
-		return GlobalEventTable, nil, false
+		self.version = table.Version
+		return self, nil, false
 	}
 
-	// Close the old table.
-	if GlobalEventTable.Done != nil {
-		GlobalEventTable.Close()
-	}
+	// Close the old table and wait for it to finish.
+	self.close()
 
-	// Reset the table.
-	GlobalEventTable.Events = table.Event
-	GlobalEventTable.version = table.Version
-	GlobalEventTable.Done = make(chan bool)
-	GlobalEventTable.config_obj = config_obj
-	GlobalEventTable.service_wg = &sync.WaitGroup{}
-
+	// Reset the table with the new queries.
+	GlobalEventTable = NewEventTable(config_obj, responder, table)
 	return GlobalEventTable, nil, true /* changed */
 }
 
@@ -169,8 +183,8 @@ func (self UpdateEventTable) Run(
 	responder *responder.Responder,
 	arg *actions_proto.VQLEventTable) {
 
-	// Make a new table.
-	table, err, changed := update(config_obj, responder, arg)
+	// Make a new table if needed.
+	table, err, changed := GlobalEventTable.Update(config_obj, responder, arg)
 	if err != nil {
 		responder.RaiseError(ctx, fmt.Sprintf(
 			"Error updating global event table: %v", err))
@@ -192,32 +206,17 @@ func (self UpdateEventTable) Run(
 
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
-	// Make a context for the VQL query. It will be destroyed on shut
-	// down when the global event table is done.
-	new_ctx, cancel := context.WithCancel(GlobalEventTable.ctx)
-
-	// Cancel the context when the cancel channel is closed.
-	go func() {
-		mu.Lock()
-		done := table.Done
-		mu.Unlock()
-
-		<-done
-		logger.Info("UpdateEventTable: Closing all contexts")
-		cancel()
-	}()
-
 	// Start a new query for each event.
 	action_obj := &VQLClientAction{}
 	table.wg.Add(len(table.Events))
-	table.service_wg.Add(len(table.Events))
+	service_wg.Add(len(table.Events))
 
 	for _, event := range table.Events {
 		query_responder := responder.Copy()
 
 		go func(event *actions_proto.VQLCollectorArgs) {
 			defer table.wg.Done()
-			defer table.service_wg.Done()
+			defer service_wg.Done()
 
 			// Name of the query we are running.
 			name := ""
@@ -243,8 +242,10 @@ func (self UpdateEventTable) Run(
 				event.Heartbeat = 300 // 5 minutes
 			}
 
+			// Start the query - if it is an event query this will
+			// never complete until it is cancelled.
 			action_obj.StartQuery(
-				config_obj, new_ctx, query_responder, event)
+				config_obj, table.Ctx, query_responder, event)
 			if name != "" {
 				logger.Info("Finished monitoring query %s", name)
 			}
@@ -253,12 +254,12 @@ func (self UpdateEventTable) Run(
 
 	err = update_writeback(config_obj, arg)
 	if err != nil {
-		responder.RaiseError(new_ctx, fmt.Sprintf(
+		responder.RaiseError(ctx, fmt.Sprintf(
 			"Unable to write events to writeback: %v", err))
 		return
 	}
 
-	responder.Return(new_ctx)
+	responder.Return(ctx)
 }
 
 func update_writeback(
@@ -274,45 +275,61 @@ func update_writeback(
 }
 
 func NewEventTable(
-	ctx context.Context,
 	config_obj *config_proto.Config,
 	responder *responder.Responder,
 	table *actions_proto.VQLEventTable) *EventTable {
+
+	sub_ctx, cancel := context.WithCancel(service_ctx)
+
 	result := &EventTable{
 		Events:     table.Event,
 		version:    table.Version,
-		Done:       make(chan bool),
+		Ctx:        sub_ctx,
+		cancel:     cancel,
 		config_obj: config_obj,
-		ctx:        ctx,
 	}
 
 	return result
 }
 
+// Called by the service manager to initialize the global event table.
 func InitializeEventTable(
+	// This is the context of the service - its lifetime represents
+	// the lifetime of the entire application.
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	output_chan chan *crypto_proto.VeloMessage,
-	service_wg *sync.WaitGroup) {
+	wg *sync.WaitGroup) {
+
 	mu.Lock()
+	service_ctx = ctx
+	service_wg = wg
+
+	// Remove any old tables if needed.
+	if GlobalEventTable != nil {
+		GlobalEventTable.Close()
+	}
+
+	// Create an empty table
 	GlobalEventTable = NewEventTable(
-		ctx, config_obj,
+		config_obj,
 		responder.NewResponder(
 			config_obj, &crypto_proto.VeloMessage{}, output_chan),
 		&actions_proto.VQLEventTable{})
-	GlobalEventTable.service_wg = service_wg
-	mu.Unlock()
 
 	// When the context is finished, tear down the event table.
-	go func() {
+	go func(table *EventTable, ctx context.Context) {
 		<-ctx.Done()
+		table.Close()
+	}(GlobalEventTable, service_ctx)
 
-		mu.Lock()
-		if GlobalEventTable.Done != nil {
-			close(GlobalEventTable.Done)
-			GlobalEventTable.Done = nil
-		}
-		mu.Unlock()
-	}()
+	mu.Unlock()
+}
 
+func init() {
+	ctx, cancel := context.WithCancel(context.Background())
+	GlobalEventTable = &EventTable{
+		Ctx:    ctx,
+		cancel: cancel,
+	}
 }

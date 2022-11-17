@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"www.velocidex.com/golang/go-ntfs/parser"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/ntfs/readers"
@@ -117,6 +118,35 @@ func (self *USNWatcherService) Register(
 	}, nil
 }
 
+// Distribute the event to all interested listeners.
+func (self *USNWatcherService) distributeEvent(
+	event *parser.USN_RECORD, key string) {
+
+	self.mu.Lock()
+	handlers, pres := self.registrations[key]
+
+	// Make a local copy to ensure the handler can be unregistered. If
+	// it does, the handler's ctx will be done so this becomes a noop.
+	handlers = handlers[:]
+	self.mu.Unlock()
+
+	if pres {
+		// Distribute to all listeners
+		enriched_event := makeUSNRecord(event)
+		for _, handler := range handlers {
+			select {
+			// This handler is done - drop the event for this handler.
+			case <-handler.ctx.Done():
+			case handler.output_chan <- enriched_event:
+
+				// Wait up to 10 seconds to send the event
+				// otherwise drop it.
+			case <-time.After(10 * time.Second):
+			}
+		}
+	}
+}
+
 // Monitor the filename for new events and emit them to all interested
 // listeners. If no listeners exist we terminate the registration.
 func (self *USNWatcherService) StartMonitoring(
@@ -157,22 +187,7 @@ func (self *USNWatcherService) StartMonitoring(
 			if !ok {
 				return
 			}
-
-			self.mu.Lock()
-
-			handlers, pres := self.registrations[key]
-			if pres {
-				// Distribute to all listeners
-				enriched_event := makeUSNRecord(event)
-				for _, handler := range handlers {
-					select {
-					// This handler is done -drop the event for this handler.
-					case <-handler.ctx.Done():
-					case handler.output_chan <- enriched_event:
-					}
-				}
-			}
-			self.mu.Unlock()
+			self.distributeEvent(event, key)
 		}
 	}
 
