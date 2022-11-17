@@ -183,7 +183,8 @@ func (self *NotebookCellPathManager) QueryStorage(id int64) *NotebookCellQuery {
 
 func (self *NotebookCellPathManager) GetUploadsFile(filename string) api.FSPathSpec {
 	return self.root.AsFilestorePath().
-		AddUnsafeChild(self.notebook_id, "uploads", filename).
+		AddUnsafeChild(self.notebook_id,
+			self.cell_id, "uploads", filename).
 		SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
