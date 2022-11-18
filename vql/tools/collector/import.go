@@ -178,6 +178,13 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		defer reader.Close()
 
 		for row := range reader.Rows(ctx) {
+			// Do not copy index files specifically - the index file
+			// will be copied as part of the file it belongs to.
+			row_type, _ := row.GetString("Type")
+			if row_type == "idx" {
+				continue
+			}
+
 			components, pres := row.GetStrings("_Components")
 			if !pres || len(components) < 1 {
 				continue
@@ -290,7 +297,9 @@ func (self ImportCollectionFunction) copyFileWithIndex(
 		accessor, src.Dirname().Append(src.Basename()+".idx"),
 		dest.SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX))
 	if err != nil {
-		return err
+		// No idx file - not an error just means this file is not
+		// sparse.
+		return nil
 	}
 	return nil
 }

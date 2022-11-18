@@ -27,7 +27,7 @@ func (self *NotebookUploader) Upload(
 	scope vfilter.Scope,
 	filename *accessors.OSPath,
 	accessor string,
-	store_as_name string,
+	store_as_name *accessors.OSPath,
 	expected_size int64,
 	mtime time.Time,
 	atime time.Time,
@@ -36,10 +36,10 @@ func (self *NotebookUploader) Upload(
 	reader io.Reader) (
 	*uploads.UploadResponse, error) {
 
-	if store_as_name == "" {
-		store_as_name = filename.String()
+	if store_as_name == nil {
+		store_as_name = filename
 	}
-	dest_path_spec := self.PathManager.GetUploadsFile(store_as_name)
+	dest_path_spec := self.PathManager.GetUploadsFile(store_as_name.String())
 
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	writer, err := file_store_factory.WriteFile(dest_path_spec)
@@ -59,7 +59,7 @@ func (self *NotebookUploader) Upload(
 	n, err := utils.Copy(ctx, writer, io.TeeReader(
 		io.TeeReader(reader, sha_sum), md5_sum))
 	return &uploads.UploadResponse{
-		Path:   store_as_name,
+		Path:   store_as_name.String(),
 		Size:   uint64(n),
 		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),
 		Md5:    hex.EncodeToString(md5_sum.Sum(nil)),

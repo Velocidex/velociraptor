@@ -253,6 +253,7 @@ func (self *Container) WriteJSON(name string, data interface{}) error {
 // Parse the path according to the accessor to return the components
 func (self *Container) getPathComponents(
 	scope vfilter.Scope, accessor string, path string) ([]string, error) {
+
 	file_store_factory, err := accessors.GetAccessor(accessor, scope)
 	if err != nil {
 		return nil, err
@@ -266,6 +267,20 @@ func (self *Container) getPathComponents(
 	return os_path.Components, nil
 }
 
+func formatFilename(filename *accessors.OSPath, accessor string) string {
+	result := filename.String()
+
+	// These paths can be very large so we elide them.
+	switch accessor {
+	case "data", "sparse":
+		if len(result) > 50 {
+			result = result[:50] + "..."
+		}
+	}
+
+	return result
+}
+
 // Upload the file into the zip file.  We treat the zip file as our
 // filestore here - this means that file paths will be very
 // conservatively escaped to ensure maximum compatibility with zip
@@ -276,7 +291,7 @@ func (self *Container) Upload(
 	scope vfilter.Scope,
 	filename *accessors.OSPath,
 	accessor string,
-	store_as_name string,
+	store_as_name *accessors.OSPath,
 	expected_size int64,
 	mtime time.Time,
 	atime time.Time,
@@ -285,7 +300,7 @@ func (self *Container) Upload(
 	reader io.Reader) (*uploads.UploadResponse, error) {
 
 	result := &uploads.UploadResponse{
-		Path: filename.String(),
+		Path: formatFilename(filename, accessor),
 		Size: uint64(expected_size),
 	}
 
@@ -297,28 +312,19 @@ func (self *Container) Upload(
 	// The filename to store the file inside the zip - due to escaping
 	// issues this may not be exactly the same as the file name we
 	// receive.
-	var store_path *accessors.OSPath
-
-	if store_as_name == "" {
-		// Write to the zip file with the generic OSPath
-		store_path = accessors.NewZipFilePath("uploads").Append(accessor).
-			Append(filename.Components...)
-	} else {
-		// Try to figure out the OSPath for the store as name
-		components, err := self.getPathComponents(scope, accessor, store_as_name)
-		if err != nil {
-			components = []string{store_as_name}
-		}
-		store_path = accessors.NewZipFilePath("uploads").Append(accessor).
-			Append(components...)
+	if store_as_name == nil {
+		store_as_name = filename
 	}
+
+	store_path := accessors.NewZipFilePath("uploads").Append(accessor).
+		Append(store_as_name.Components...)
 
 	// Where to store the file inside the Zip file.
 	result.StoredName = store_path.String()
 	result.Components = store_path.Components
 
 	scope.Log("Collecting file %s into %s (%v bytes)",
-		filename.String(), result.StoredName, expected_size)
+		formatFilename(filename, accessor), result.StoredName, expected_size)
 
 	// Try to collect sparse files if possible
 	err := self.maybeCollectSparseFile(ctx, scope, reader, result, mtime)
@@ -437,6 +443,7 @@ func (self *Container) maybeCollectSparseFile(
 			StoredName: result.StoredName + ".idx",
 			Path:       result.Path + ".idx",
 			Reference:  result.Reference,
+			Type:       "idx",
 		}
 		writer, err := self.Create(idx_upload.StoredName, time.Time{})
 		if err != nil {
@@ -497,7 +504,8 @@ func (self *Container) Close() error {
 					Set("vfs_path", record.Path).
 					Set("_Components", record.Components).
 					Set("file_size", record.Size).
-					Set("uploaded_size", record.StoredSize))
+					Set("uploaded_size", record.StoredSize).
+					Set("Type", record.Type))
 				if err != nil {
 					break
 				}
