@@ -43,7 +43,7 @@ func (self *TestSuite) TestImportCollection() {
 	context, ok := result.(*proto.ArtifactCollectorContext)
 	assert.True(self.T(), ok)
 
-	// Check the improt was successful.
+	// Check the import was successful.
 	assert.Equal(self.T(), []string{"Linux.Search.FileFinder"},
 		context.ArtifactsWithResults)
 	assert.Equal(self.T(), uint64(1), context.TotalCollectedRows)

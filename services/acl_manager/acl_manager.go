@@ -12,6 +12,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -141,93 +142,13 @@ func (self ACLManager) CheckAccess(
 	}
 
 	for _, permission := range permissions {
-		ok, err := self.CheckAccessWithToken(acl_obj, permission)
+		ok, err := services.CheckAccessWithToken(acl_obj, permission)
 		if !ok || err != nil {
 			return ok, err
 		}
 	}
 
 	return true, nil
-}
-
-func (self ACLManager) CheckAccessWithToken(
-	token *acl_proto.ApiClientACL,
-	permission acls.ACL_PERMISSION, args ...string) (bool, error) {
-
-	// The super user can do everything.
-	if token.SuperUser {
-		return true, nil
-	}
-
-	// Requested permission
-	switch permission {
-	case acls.ALL_QUERY:
-		return token.AllQuery, nil
-
-	case acls.ANY_QUERY:
-		return token.AnyQuery, nil
-
-	case acls.PUBLISH:
-		if len(args) == 1 {
-			for _, allowed_queue := range token.PublishQueues {
-				if allowed_queue == args[0] {
-					return true, nil
-				}
-
-			}
-		}
-
-	case acls.READ_RESULTS:
-		return token.ReadResults, nil
-
-	case acls.LABEL_CLIENT:
-		return token.LabelClients, nil
-
-	case acls.COLLECT_CLIENT:
-		return token.CollectClient, nil
-
-	case acls.COLLECT_SERVER:
-		return token.CollectServer, nil
-
-	case acls.ARTIFACT_WRITER:
-		return token.ArtifactWriter, nil
-
-	case acls.SERVER_ARTIFACT_WRITER:
-		return token.ServerArtifactWriter, nil
-
-	case acls.EXECVE:
-		return token.Execve, nil
-
-	case acls.NOTEBOOK_EDITOR:
-		return token.NotebookEditor, nil
-
-	case acls.SERVER_ADMIN:
-		return token.ServerAdmin, nil
-
-	case acls.ORG_ADMIN:
-		return token.OrgAdmin, nil
-
-	case acls.IMPERSONATION:
-		return token.Impersonation, nil
-
-	case acls.FILESYSTEM_READ:
-		return token.FilesystemRead, nil
-
-	case acls.FILESYSTEM_WRITE:
-		return token.FilesystemWrite, nil
-
-	case acls.MACHINE_STATE:
-		return token.MachineState, nil
-
-	case acls.PREPARE_RESULTS:
-		return token.PrepareResults, nil
-
-	case acls.DATASTORE_ACCESS:
-		return token.DatastoreAccess, nil
-
-	}
-
-	return false, nil
 }
 
 func (self ACLManager) GrantRoles(

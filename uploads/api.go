@@ -21,6 +21,9 @@ type UploadResponse struct {
 	StoredName string   `json:"StoredName,omitempty"`
 	Reference  string   `json:"Reference,omitempty"`
 	Components []string `json:"Components,omitempty"`
+
+	// The type of upload this is (Currently "idx" is an index file)
+	Type string `json:"Type,omitempty"`
 }
 
 // Provide an uploader capable of uploading any reader object.
@@ -29,7 +32,7 @@ type Uploader interface {
 		scope vfilter.Scope,
 		filename *accessors.OSPath,
 		accessor string,
-		store_as_name string,
+		store_as_name *accessors.OSPath,
 		expected_size int64,
 		mtime time.Time,
 		atime time.Time,

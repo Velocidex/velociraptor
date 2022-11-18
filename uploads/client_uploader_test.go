@@ -72,7 +72,7 @@ func TestClientUploaderSparse(t *testing.T) {
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
-		filename, "ntfs", "", 1000, nilTime, range_reader)
+		filename, "ntfs", nil, 1000, nilTime, range_reader)
 	responses := responder.GetTestResponses(resp)
 
 	// Expected size is the combined sum of all ranges with data
@@ -112,7 +112,7 @@ func TestClientUploaderSparseWithEOF(t *testing.T) {
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
-		filename, "ntfs", "", 1000, nilTime, range_reader)
+		filename, "ntfs", nil, 1000, nilTime, range_reader)
 	responses := responder.GetTestResponses(resp)
 
 	// Expected size is the combined sum of all ranges with data
@@ -148,7 +148,7 @@ func TestClientUploader(t *testing.T) {
 
 	resp, err := uploader.Upload(
 		ctx, scope, getOSPath(name),
-		"file", "", 1000,
+		"file", nil, 1000,
 		nilTime, nilTime, nilTime, nilTime, fd)
 	assert.NoError(t, err)
 	assert.Equal(t, resp.Path, name)
@@ -179,7 +179,7 @@ func TestClientUploaderCompletelySparse(t *testing.T) {
 	scope := vql_subsystem.MakeScope()
 
 	uploader.maybeUploadSparse(ctx, scope,
-		filename, "ntfs", "", 1000, nilTime, range_reader)
+		filename, "ntfs", nil, 1000, nilTime, range_reader)
 	responses := responder.GetTestResponses(resp)
 
 	// Expected size is the combined sum of all ranges with data
@@ -210,7 +210,7 @@ func TestClientUploaderSparseMultiBuffer(t *testing.T) {
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
-		filename, "ntfs", "", 1000, nilTime, range_reader)
+		filename, "ntfs", nil, 1000, nilTime, range_reader)
 	responses := responder.GetTestResponses(resp)
 	assert.Equal(t, CombineOutput("/foo", responses), "Hello hello ")
 	for _, response := range responses {
@@ -242,7 +242,7 @@ func TestClientUploaderNoIndexIfNotSparse(t *testing.T) {
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
-		filename, "ntfs", "", 1000, nilTime, range_reader)
+		filename, "ntfs", nil, 1000, nilTime, range_reader)
 	responses := responder.GetTestResponses(resp)
 	assert.Equal(t, CombineOutput("/foo", responses), "Hello hello ")
 

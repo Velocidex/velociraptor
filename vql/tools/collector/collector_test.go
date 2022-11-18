@@ -2,6 +2,7 @@ package collector
 
 import (
 	"context"
+	"io"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -11,10 +12,15 @@ import (
 	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	"www.velocidex.com/golang/velociraptor/flows/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
@@ -23,7 +29,9 @@ import (
 
 	// Load all needed plugins
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
+	_ "www.velocidex.com/golang/velociraptor/accessors/sparse"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	_ "www.velocidex.com/golang/velociraptor/vql/filesystem"
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
 	_ "www.velocidex.com/golang/velociraptor/vql/networking"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers"
@@ -148,7 +156,19 @@ sources:
 name: Custom.TestArtifactUpload
 sources:
 - query: |
-    SELECT upload(file="hello world", accessor="data", name="file.txt") AS Upload FROM scope()
+    SELECT upload(file="hello world",
+                  accessor="data",
+                  name="file.txt") AS Upload,
+           -- Test uploading sparse files
+           upload(
+             file=pathspec(
+               Path='[{"length":5,"offset":0},{"length":3,"offset":10}]',
+               DelegateAccessor="data",
+               DelegatePath="This is a bit of text"),
+             accessor="sparse",
+             name=pathspec(Path="C:/file.sparse.txt",
+                           path_type="windows")) AS SparseUpload
+    FROM scope()
 `)
 )
 
@@ -285,9 +305,54 @@ func (self *TestSuite) TestCollectionWithUpload() {
 	zip_contents, err := openZipFile(output_file.Name())
 	assert.NoError(self.T(), err)
 
-	serialized := json.MustMarshalIndent(ordereddict.NewDict().
-		Set("zip_contents", zip_contents))
-	goldie.Assert(self.T(), "TestCollectionWithUpload", serialized)
+	golden := ordereddict.NewDict().
+		Set("zip_contents", zip_contents)
+
+	import_func := ImportCollectionFunction{}
+	result := import_func.Call(self.Ctx, scope,
+		ordereddict.NewDict().
+			Set("client_id", "C.30b949dd33e1330a").
+			Set("hostname", "MyNewHost").
+			Set("filename", output_file.Name()))
+	context, ok := result.(*proto.ArtifactCollectorContext)
+	assert.True(self.T(), ok)
+
+	golden.Set("artifacts_with_results", context.ArtifactsWithResults)
+	golden.Set("total_uploaded_files", context.TotalUploadedFiles)
+
+	flow_path_manager := paths.NewFlowPathManager(
+		"C.30b949dd33e1330a", "F.1234")
+
+	data, err := readImportedFile(self.Ctx, scope, self.ConfigObj,
+		flow_path_manager.UploadMetadata())
+	assert.NoError(self.T(), err)
+
+	// Check the total uploaded files - there should be 3 rows:
+	// 1. file.txt data file
+	// 2. file.sparse.txt : sparse file with condensed data
+	// 3. file.sparse.txt : extra row for index file
+	golden.Set("Imported upload.json", data)
+	goldie.Assert(self.T(), "TestCollectionWithUpload",
+		json.MustMarshalIndent(golden))
+}
+
+func readImportedFile(ctx context.Context,
+	scope vfilter.Scope,
+	config_obj *config_proto.Config,
+	src api.FSPathSpec) (string, error) {
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+	reader, err := file_store_factory.ReadFile(src)
+	if err != nil {
+		return "", err
+	}
+
+	data, err := ioutil.ReadAll(reader)
+	if err != nil && err != io.EOF {
+		return "", err
+	}
+
+	return string(data), nil
 }
 
 func openZipFile(name string) (*ordereddict.Dict, error) {
