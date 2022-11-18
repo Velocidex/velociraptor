@@ -31,8 +31,7 @@ func (self *ApiServer) PushEvents(
 	}
 
 	// Check that the principal is allowed to push to the queue.
-	ok, err := services.CheckAccessWithToken(
-		org_config_obj, token, acls.PUBLISH, in.Artifact)
+	ok, err := services.CheckAccessWithToken(token, acls.PUBLISH, in.Artifact)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -94,8 +93,7 @@ func (self *ApiServer) WriteEvent(
 	}
 
 	// Check that the principal is allowed to push to the queue.
-	ok, err := services.CheckAccessWithToken(
-		config_obj, token, acls.MACHINE_STATE, in.Query.Name)
+	ok, err := services.CheckAccessWithToken(token, acls.MACHINE_STATE, in.Query.Name)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}

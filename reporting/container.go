@@ -432,7 +432,13 @@ func (self *Container) maybeCollectSparseFile(
 
 	// If there were any sparse runs, create an index.
 	if is_sparse {
-		writer, err := self.Create(result.StoredName+".idx", time.Time{})
+		idx_upload := &uploads.UploadResponse{
+			Components: utils.CopySlice(result.Components),
+			StoredName: result.StoredName + ".idx",
+			Path:       result.Path + ".idx",
+			Reference:  result.Reference,
+		}
+		writer, err := self.Create(idx_upload.StoredName, time.Time{})
 		if err != nil {
 			return err
 		}
@@ -447,6 +453,14 @@ func (self *Container) maybeCollectSparseFile(
 		if err != nil {
 			return err
 		}
+
+		idx_upload.Size = uint64(len(serialized))
+		idx_upload.StoredSize = uint64(len(serialized))
+
+		// Add it to the uploads list.
+		self.mu.Lock()
+		self.uploads = append(self.uploads, idx_upload)
+		self.mu.Unlock()
 	}
 
 	result.StoredSize = uint64(count)

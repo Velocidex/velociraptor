@@ -69,7 +69,9 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	err = vql_subsystem.CheckFilesystemAccess(scope, "collector")
+	// Do not expand sparse files when we import them - they can be
+	// deflated by the user later.
+	err = vql_subsystem.CheckFilesystemAccess(scope, "collector_sparse")
 	if err != nil {
 		scope.Log("import_collection: %v", err)
 		return vfilter.Null{}
@@ -278,8 +280,15 @@ func (self ImportCollectionFunction) copyFileWithIndex(
 	accessor accessors.FileSystemAccessor,
 	src *accessors.OSPath, dest api.FSPathSpec) error {
 	err := self.copyFile(
+		ctx, config_obj, scope, accessor, src, dest)
+	if err != nil {
+		return err
+	}
+
+	err = self.copyFile(
 		ctx, config_obj, scope,
-		accessor, src, dest)
+		accessor, src.Dirname().Append(src.Basename()+".idx"),
+		dest.SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX))
 	if err != nil {
 		return err
 	}

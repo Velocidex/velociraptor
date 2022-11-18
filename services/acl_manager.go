@@ -24,10 +24,6 @@ type ACLManager interface {
 		principal string,
 		permissions ...acls.ACL_PERMISSION) (bool, error)
 
-	CheckAccessWithToken(
-		token *acl_proto.ApiClientACL,
-		permission acls.ACL_PERMISSION, args ...string) (bool, error)
-
 	GrantRoles(
 		config_obj *config_proto.Config,
 		principal string,
@@ -93,15 +89,83 @@ func CheckAccess(
 }
 
 func CheckAccessWithToken(
-	config_obj *config_proto.Config,
 	token *acl_proto.ApiClientACL,
 	permission acls.ACL_PERMISSION, args ...string) (bool, error) {
-	acl_manager, err := GetACLManager(config_obj)
-	if err != nil {
-		return false, err
+
+	// The super user can do everything.
+	if token.SuperUser {
+		return true, nil
 	}
 
-	return acl_manager.CheckAccessWithToken(token, permission, args...)
+	// Requested permission
+	switch permission {
+	case acls.ALL_QUERY:
+		return token.AllQuery, nil
+
+	case acls.ANY_QUERY:
+		return token.AnyQuery, nil
+
+	case acls.PUBLISH:
+		if len(args) == 1 {
+			for _, allowed_queue := range token.PublishQueues {
+				if allowed_queue == args[0] {
+					return true, nil
+				}
+
+			}
+		}
+
+	case acls.READ_RESULTS:
+		return token.ReadResults, nil
+
+	case acls.LABEL_CLIENT:
+		return token.LabelClients, nil
+
+	case acls.COLLECT_CLIENT:
+		return token.CollectClient, nil
+
+	case acls.COLLECT_SERVER:
+		return token.CollectServer, nil
+
+	case acls.ARTIFACT_WRITER:
+		return token.ArtifactWriter, nil
+
+	case acls.SERVER_ARTIFACT_WRITER:
+		return token.ServerArtifactWriter, nil
+
+	case acls.EXECVE:
+		return token.Execve, nil
+
+	case acls.NOTEBOOK_EDITOR:
+		return token.NotebookEditor, nil
+
+	case acls.SERVER_ADMIN:
+		return token.ServerAdmin, nil
+
+	case acls.ORG_ADMIN:
+		return token.OrgAdmin, nil
+
+	case acls.IMPERSONATION:
+		return token.Impersonation, nil
+
+	case acls.FILESYSTEM_READ:
+		return token.FilesystemRead, nil
+
+	case acls.FILESYSTEM_WRITE:
+		return token.FilesystemWrite, nil
+
+	case acls.MACHINE_STATE:
+		return token.MachineState, nil
+
+	case acls.PREPARE_RESULTS:
+		return token.PrepareResults, nil
+
+	case acls.DATASTORE_ACCESS:
+		return token.DatastoreAccess, nil
+
+	}
+
+	return false, nil
 }
 
 func GrantRoles(
