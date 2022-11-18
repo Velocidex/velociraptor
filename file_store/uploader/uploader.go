@@ -26,7 +26,7 @@ func (self *FileStoreUploader) Upload(
 	scope vfilter.Scope,
 	filename *accessors.OSPath,
 	accessor string,
-	store_as_name string,
+	store_as_name *accessors.OSPath,
 	expected_size int64,
 	mtime time.Time,
 	atime time.Time,
@@ -35,21 +35,23 @@ func (self *FileStoreUploader) Upload(
 	reader io.Reader) (
 	*uploads.UploadResponse, error) {
 
-	if store_as_name == "" {
-		store_as_name = filename.String()
+	if store_as_name == nil {
+		store_as_name = filename
 	}
 
-	output_path := self.root_path.AddUnsafeChild(store_as_name)
+	output_path := self.root_path.AddUnsafeChild(store_as_name.Components...)
 	out_fd, err := self.file_store.WriteFile(output_path)
 	if err != nil {
-		scope.Log("Unable to open file %s: %v", store_as_name, err)
+		scope.Log("Unable to open file %s: %v",
+			store_as_name.String(), err)
 		return nil, err
 	}
 	defer out_fd.Close()
 
 	err = out_fd.Truncate()
 	if err != nil {
-		scope.Log("Unable to truncate file %s: %v", store_as_name, err)
+		scope.Log("Unable to truncate file %s: %v",
+			store_as_name.String(), err)
 		return nil, err
 	}
 

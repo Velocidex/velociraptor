@@ -182,7 +182,11 @@ func (self *PoolClientExecutor) ProcessRequest(
 				LogMessage:  resp.LogMessage,
 				Status:      resp.Status,
 			}
-			self.Outbound <- response
+			select {
+			case <-ctx.Done():
+				return
+			case self.Outbound <- response:
+			}
 		}
 		return
 	}
@@ -236,7 +240,7 @@ func NewPoolClientExecutor(
 	}
 
 	// Register the new executor with the global pool responder.
-	g_responder := responder.GlobalPoolEventResponder
+	g_responder := responder.GetPoolEventResponder(ctx)
 	g_responder.RegisterPoolClientResponder(id, exe.Outbound)
 
 	output := make(chan *crypto_proto.VeloMessage, 10)

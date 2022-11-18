@@ -8,6 +8,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Modal from 'react-bootstrap/Modal';
 import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
+import api from '../core/api-service.js';
+
 
 export default class URLViewer extends Component {
     static propTypes = {
@@ -41,7 +43,7 @@ export default class URLViewer extends Component {
                    className="url-link"
                    size="sm"
                    variant="outline-info"
-                   href={url} target="_blank">
+                   href={api.href(url)} target="_blank">
                    <FontAwesomeIcon icon="external-link-alt"/>
                    <span className="button-label">{desc}</span>
                </Button>;

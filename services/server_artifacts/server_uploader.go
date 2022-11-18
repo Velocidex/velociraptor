@@ -29,7 +29,7 @@ func (self *ServerUploader) Upload(
 	scope vfilter.Scope,
 	filename *accessors.OSPath,
 	accessor string,
-	store_as_name string,
+	store_as_name *accessors.OSPath,
 	expected_size int64,
 	mtime time.Time,
 	atime time.Time,
@@ -70,7 +70,7 @@ func (self *ServerUploader) Upload(
 			Set("Timestamp", timestamp).
 			Set("ClientId", "server").
 			Set("VFSPath", result.Path).
-			Set("UploadName", store_as_name).
+			Set("UploadName", store_as_name.String()).
 			Set("Accessor", "fs").
 			Set("Size", result.Size).
 			Set("UploadedSize", result.Size)

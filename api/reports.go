@@ -20,9 +20,9 @@ import (
 // notebook (but historically predate it).
 // TODO: Think about consolidating reports and notebooks
 // Currently this is used from:
-// 1. Home screen (dashboard)
-// 2. Client's VQL Drilldown screen
-// 3. View Artifacts screen
+// 1. Home screen (dashboard)  (type: "SERVER_EVENT")
+// 2. Client's VQL Drilldown screen (type: "CLIENT")
+// 3. View Artifacts screen (type: "ARTIFACT_DESCRIPTION")
 func getReport(ctx context.Context,
 	config_obj *config_proto.Config,
 	acl_manager vql_subsystem.ACLManager,
@@ -35,8 +35,8 @@ func getReport(ctx context.Context,
 	bare_artifact_name := strings.TrimPrefix(in.Artifact,
 		constants.ARTIFACT_CUSTOM_NAME_PREFIX)
 
-	notebook_cell_path_manager := paths.NewNotebookPathManager(
-		"Dashboard." + bare_artifact_name).Cell(bare_artifact_name)
+	notebook_cell_path_manager := paths.NewDashboardPathManager(
+		in.Type, bare_artifact_name, in.ClientId)
 
 	template_engine, err := reporting.NewGuiTemplateEngine(
 		config_obj, ctx, nil, /* default scope */

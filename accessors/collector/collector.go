@@ -87,6 +87,9 @@ func (self StatWrapper) OSPath() *accessors.OSPath {
 type CollectorAccessor struct {
 	*zip.ZipFileSystemAccessor
 	scope vfilter.Scope
+
+	// If set we automatically pad out sparse files.
+	expandSparse bool
 }
 
 func (self *CollectorAccessor) New(scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
@@ -319,17 +322,18 @@ func (self *CollectorAccessor) OpenWithOSPath(
 		return nil, err
 	}
 
-	index, err := self.getIndex(updated_full_path)
-	if err == nil {
-		return &rangedReader{
-			delegate: &utils.RangedReader{
-				ReaderAt: utils.MakeReaderAtter(reader),
-				Index:    index,
-			},
-			fd: reader,
-		}, nil
+	if self.expandSparse {
+		index, err := self.getIndex(updated_full_path)
+		if err == nil {
+			return &rangedReader{
+				delegate: &utils.RangedReader{
+					ReaderAt: utils.MakeReaderAtter(reader),
+					Index:    index,
+				},
+				fd: reader,
+			}, nil
+		}
 	}
-
 	return reader, nil
 }
 
@@ -394,6 +398,11 @@ func (self *CollectorAccessor) ReadDirWithOSPath(
 }
 
 func init() {
-	accessors.Register("collector", &CollectorAccessor{},
-		`Open a collector zip file as if it was a directory.`)
+	accessors.Register("collector", &CollectorAccessor{
+		expandSparse: true,
+	}, `Open a collector zip file as if it was a directory - automatically expand sparse files.`)
+
+	accessors.Register("collector_sparse", &CollectorAccessor{
+		expandSparse: false,
+	}, `Open a collector zip file as if it was a directory - does not expand sparse files.`)
 }

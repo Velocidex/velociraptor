@@ -20,9 +20,9 @@ type RoleACLManager struct {
 
 func (self *RoleACLManager) CheckAccess(
 	permissions ...acls.ACL_PERMISSION) (bool, error) {
+
 	for _, permission := range permissions {
-		ok, err := services.CheckAccessWithToken(
-			self.config_obj, self.Token, permission)
+		ok, err := services.CheckAccessWithToken(self.Token, permission)
 		if !ok || err != nil {
 			return ok, err
 		}
@@ -47,7 +47,7 @@ func (self *RoleACLManager) CheckAccessInOrg(
 func (self *RoleACLManager) CheckAccessWithArgs(
 	permission acls.ACL_PERMISSION, args ...string) (bool, error) {
 
-	return services.CheckAccessWithToken(self.config_obj, self.Token, permission, args...)
+	return services.CheckAccessWithToken(self.Token, permission, args...)
 }
 
 // NewRoleACLManager creates an ACL manager with only the assigned

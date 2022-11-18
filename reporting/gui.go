@@ -213,6 +213,7 @@ func (self *GuiTemplateEngine) Table(values ...interface{}) interface{} {
 		for _, item := range t {
 			options := item.Params()
 			options.Set("TableOptions", table_options)
+			options.Set("Version", time.Now().Unix())
 
 			result += fmt.Sprintf(
 				`<div class="panel"><grr-csv-viewer base-url="'v1/GetTable'" `+
@@ -277,6 +278,7 @@ func (self *GuiTemplateEngine) genericChart(
 		for _, item := range t {
 			params := item.Params()
 			params.MergeFrom(options)
+			params.Set("Version", time.Now().Unix())
 
 			result += fmt.Sprintf(
 				`<div class="panel"><%s base-url="'v1/GetTable'" `+
@@ -494,10 +496,9 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 			result = append(result, path)
 
 			file_store_factory := file_store.GetFileStore(self.config_obj)
-
 			rs_writer, err := result_sets.NewResultSetWriter(
 				file_store_factory, path.Path(),
-				opts, utils.BackgroundWriter,
+				opts, utils.SyncCompleter,
 				result_sets.TruncateMode)
 			if err != nil {
 				self.Error("Error: %v\n", err)

@@ -18,6 +18,7 @@ const (
 )
 
 type IndexRecord struct {
+	//  NanoSeconds
 	Timestamp int64
 
 	// Offset to the row data

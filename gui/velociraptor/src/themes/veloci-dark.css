@@ -1,14 +1,4 @@
 @font-face {
-  font-family: "atkinson";
-  font-style: normal;
-  font-weight: 400;
-  src: local(""),
-    url("../fonts/atkinson-hyperlegible-regular-102a.woff2") format("woff2");
-  size-adjust: 110%;
-  font-display: block;
-}
-
-@font-face {
   font-family: "iosevka";
   font-style: normal;
   font-weight: 500;
@@ -25,6 +15,26 @@
   src: local(""),
     url("../fonts/iosevka-term-extendedbold-subset.woff2") format("woff2");
   unicode-range: U+0000-00FF, U+0100-017F;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "atkinson";
+  font-style: normal;
+  font-weight: 400;
+  src: local(""),
+    url("../fonts/atkinson-hyperlegible-regular-102a.woff2") format("woff2");
+  size-adjust: 110%;
+  font-display: block;
+}
+
+@font-face {
+  font-family: "atkinson";
+  font-style: bold;
+  font-weight: 700;
+  src: local(""),
+    url("../fonts/atkinson-hyperlegible-bold-102a.woff2") format("woff2");
+  size-adjust: 110%;
   font-display: block;
 }
 
@@ -125,6 +135,7 @@ body.veloci-dark {
   background: var(--color-canvas-background);
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
+  font-weight: 500;
   letter-spacing: 0.4px;
 }
 
@@ -133,13 +144,14 @@ body.veloci-dark {
   font-size: var(--font-size-base);
 }
 
-.veloci-dark p {
+.veloci-dark .report-viewer p,
+.veloci-dark .report-viewer ol,
+.veloci-dark .report-viewer ul,
+.veloci-dark .report-viewer li {
   font-family: var(--font-family-paragraph);
 }
 
-.veloci-dark dl,
-.veloci-dark ol,
-.veloci-dark ul {
+.veloci-dark dl {
   font-family: var(--font-family-sans-serif);
 }
 
@@ -172,7 +184,7 @@ body.veloci-dark {
 
 .veloci-dark #client-search-bar {
   background: var(--color-canvas-background);
-  border: 0.655385px solid #485a5f;
+  border: 1px solid var(--color-btn-border);
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
   color: var(--color-foreground);
@@ -206,8 +218,8 @@ body.veloci-dark {
 }
 
 .veloci-dark .client-status .client-name:hover {
-  color: var(--color-accent-100);
-  background: var(--color-btn-default-background-hover);
+  color: var(--color-foreground);
+  background: var(--color-btn-outline-link-hover);
 }
 
 .veloci-dark .react-autosuggest__suggestions-container--open {
@@ -235,10 +247,6 @@ body.veloci-dark {
 .veloci-dark .navigator.nav-pills.nav li:hover {
   color: var(--color-sidebar-inactive-foreground-hover);
   background: var(--color-sidebar-inactive-background-hover);
-}
-
-.veloci-dark a {
-    color: var(--color-client-link);
 }
 
 .veloci-dark a.active .navigator.nav-pills.nav li {
@@ -271,7 +279,7 @@ body.veloci-dark {
 }
 
 .veloci-dark .btn-default:hover {
-  background: var(--color-btn-default-background-hover);
+  background: var(--color-btn-outline-link-hover);
   color: var(--color-foreground);
 }
 
@@ -326,7 +334,7 @@ body.veloci-dark {
   color: var(--color-foreground);
   background: var(--color-canvas-background);
   vertical-align: middle;
-  font-weight: 400;
+  font-weight: 500;
   font-size: var(--font-size-base);
   text-shadow: none;
   box-shadow: none;
@@ -357,7 +365,7 @@ body.veloci-dark {
 .veloci-dark .table-bordered thead th {
   border: 1px solid var(--color-table-heading-background);
   color: var(--color-foreground);
-  font-weight: 400;
+  font-weight: 500;
   vertical-align: middle;
   text-shadow: none;
   box-shadow: none;
@@ -372,6 +380,11 @@ body.veloci-dark {
 .veloci-dark .table-bordered td {
   border: 1px solid var(--color-btn-border);
 }
+
+/* .veloci-dark .table tr.flow-urgent {
+  font-weight: 500;
+  color: yellow !important;
+} */
 
 .veloci-dark .table-hover tbody tr:hover {
   background: var(--color-table-row-hover);
@@ -458,7 +471,7 @@ body.veloci-dark {
 
 .veloci-dark .card-body dt,
 .veloci-dark .card-body label {
-  font-weight: 400;
+  font-weight: 500;
   color: var(--color-accent-100);
 }
 
@@ -487,8 +500,9 @@ body.veloci-dark {
 }
 
 .veloci-dark .nav-tabs > a:hover {
-  background: var(--color-sidebar-foreground);
-  color: var(--color-canvas-background);
+  background: var(--color-btn-outline-link-hover);
+  color: var(--color-foreground);
+  border-color: var(--color-btn-border);
 }
 
 .veloci-dark .nav-tabs > a.active {
@@ -541,7 +555,7 @@ body.veloci-dark {
   box-shadow: none;
   color: var(--color-foreground);
   text-shadow: none;
-  font-weight: 400;
+  font-weight: 500;
 }
 
 /* Pagination */
@@ -580,17 +594,17 @@ body.veloci-dark {
 .veloci-dark .report-viewer h3 {
   margin-top: 2rem;
   color: #3b84d9;
-  font-weight: 400;
+  font-weight: 500;
 }
 
 .veloci-dark .report-viewer h4 {
   color: var(--color-accent-100);
-  font-weight: 400;
+  font-weight: 500;
 }
 
 .veloci-dark .report-viewer h5 {
   color: var(--color-accent-100);
-  font-weight: 400;
+  font-weight: 500;
   font-size: var(--font-size-base);
 }
 

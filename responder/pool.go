@@ -1,6 +1,7 @@
 package responder
 
 import (
+	"context"
 	"fmt"
 	"sync"
 
@@ -27,19 +28,33 @@ import (
 // pool client immediately.
 
 var (
-	GlobalPoolEventResponder = NewPoolEventResponder()
+	mu                       sync.Mutex
+	GlobalPoolEventResponder *PoolEventResponder
 )
 
 type PoolEventResponder struct {
 	mu sync.Mutex
 
+	ctx context.Context
+
 	client_responders map[int]chan *crypto_proto.VeloMessage
 }
 
-func NewPoolEventResponder() *PoolEventResponder {
-	return &PoolEventResponder{
+func GetPoolEventResponder(ctx context.Context) *PoolEventResponder {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if GlobalPoolEventResponder != nil {
+		return GlobalPoolEventResponder
+	}
+
+	result := &PoolEventResponder{
+		ctx:               ctx,
 		client_responders: make(map[int]chan *crypto_proto.VeloMessage),
 	}
+
+	GlobalPoolEventResponder = result
+	return result
 }
 
 func (self *PoolEventResponder) RegisterPoolClientResponder(
@@ -66,27 +81,33 @@ func (self *PoolEventResponder) NewResponder(
 
 	go func() {
 		for {
-			message, ok := <-in
-			if !ok {
+			select {
+			case <-self.ctx.Done():
 				return
-			}
+			case message, ok := <-in:
+				if !ok {
+					return
+				}
 
-			children := make([]chan *crypto_proto.VeloMessage, 0,
-				len(self.client_responders))
-			self.mu.Lock()
-			for _, c := range self.client_responders {
-				children = append(children, c)
-			}
-			self.mu.Unlock()
+				children := make([]chan *crypto_proto.VeloMessage, 0,
+					len(self.client_responders))
+				self.mu.Lock()
+				for _, c := range self.client_responders {
+					children = append(children, c)
+				}
+				self.mu.Unlock()
 
-			fmt.Printf("Pushing message to %v listeners\n", len(children))
-			json.Debug(message)
-			for _, c := range children {
-				select {
+				fmt.Printf("Pushing message to %v listeners\n", len(children))
+				json.Debug(message)
+				for _, c := range children {
+					select {
+					case <-self.ctx.Done():
+						return
 
-				// Try to push the message if possible.
-				case c <- message:
-				default:
+					// Try to push the message if possible.
+					case c <- message:
+					default:
+					}
 				}
 			}
 		}

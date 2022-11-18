@@ -3,12 +3,12 @@
 }
 
 .report-viewer h1 {
-        font-size: 32px;
+        font-size: 24px;
         margin-top: 1rem;
         margin-bottom: 1rem;
 }
 .report-viewer h2 {
-        font-size: 24px;
+        font-size: 22px;
         margin-top: 1rem;
         margin-bottom: 1rem;
 }
@@ -22,7 +22,7 @@
         margin-bottom: 1rem;
 }
 .report-viewer h5 {
-        font-size: 14px;
+        font-size: 16px;
         margin-bottom: 1rem;
 }
 
