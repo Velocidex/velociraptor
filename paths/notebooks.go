@@ -12,6 +12,7 @@ import (
 
 type NotebookPathManager struct {
 	notebook_id string
+	client_id   string
 	root        api.DSPathSpec
 	Clock       utils.Clock
 }
@@ -40,6 +41,7 @@ func (self *NotebookPathManager) Cell(cell_id string) *NotebookCellPathManager {
 	return &NotebookCellPathManager{
 		notebook_id: self.notebook_id,
 		cell_id:     cell_id,
+		client_id:   self.client_id,
 		root:        self.root,
 	}
 }
@@ -133,10 +135,11 @@ type NotebookCellPathManager struct {
 	notebook_id, cell_id string
 	table_id             int64
 	root                 api.DSPathSpec
+	client_id            string
 }
 
 func (self *NotebookCellPathManager) Path() api.DSPathSpec {
-	return self.root.AddChild(self.notebook_id, self.cell_id).
+	return self.root.AddUnsafeChild(self.notebook_id, self.cell_id).
 		SetTag("NotebookCell")
 }
 
@@ -156,6 +159,7 @@ func (self *NotebookCellPathManager) NewQueryStorage() *NotebookCellQuery {
 	self.table_id++
 	return &NotebookCellQuery{
 		notebook_id: self.notebook_id,
+		client_id:   self.client_id,
 		cell_id:     self.cell_id,
 		id:          self.table_id,
 		root:        self.root.AsFilestorePath(),
@@ -170,6 +174,7 @@ func (self *NotebookCellPathManager) Logs() api.FSPathSpec {
 func (self *NotebookCellPathManager) QueryStorage(id int64) *NotebookCellQuery {
 	return &NotebookCellQuery{
 		notebook_id: self.notebook_id,
+		client_id:   self.client_id,
 		cell_id:     self.cell_id,
 		id:          id,
 		root:        self.root.AsFilestorePath(),
@@ -178,24 +183,28 @@ func (self *NotebookCellPathManager) QueryStorage(id int64) *NotebookCellQuery {
 
 func (self *NotebookCellPathManager) GetUploadsFile(filename string) api.FSPathSpec {
 	return self.root.AsFilestorePath().
-		AddUnsafeChild(self.notebook_id, "uploads", filename).
+		AddUnsafeChild(self.notebook_id,
+			self.cell_id, "uploads", filename).
 		SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
 type NotebookCellQuery struct {
 	notebook_id, cell_id string
+	client_id            string
 	id                   int64
 	root                 api.FSPathSpec
 }
 
 func (self *NotebookCellQuery) Path() api.FSPathSpec {
-	return self.root.AddChild(self.notebook_id, self.cell_id,
+	return self.root.AddUnsafeChild(self.notebook_id, self.cell_id,
 		fmt.Sprintf("query_%d", self.id)).
 		SetTag("NotebookQuery")
 }
 
 func (self *NotebookCellQuery) Params() *ordereddict.Dict {
-	result := ordereddict.NewDict().Set("notebook_id", self.notebook_id).
+	result := ordereddict.NewDict().
+		Set("notebook_id", self.notebook_id).
+		Set("client_id", self.client_id).
 		Set("cell_id", self.cell_id).
 		Set("table_id", self.id)
 	return result

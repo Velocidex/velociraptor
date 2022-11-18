@@ -69,7 +69,7 @@ reports:
 
       {{ Query "LET ColumnTypes <= dict(ClientConfig='url') \
                 SELECT Name, OrgId, \
-                       format(format='[%s](/notebooks/Dashboards/Dashboard.%s/uploads/client.%s.config.yaml)', \
+                       format(format='[%s](/notebooks/Dashboards/%s/uploads/client.%s.config.yaml)', \
                        args=[OrgId, ArtifactName, OrgId]) AS ClientConfig, \
                        upload(accessor='data', file=_client_config, \
                               name='client.'+OrgId+'.config.yaml') AS _Upload \

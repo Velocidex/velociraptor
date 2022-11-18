@@ -127,6 +127,11 @@ func (self *EventTable) close() {
 
 	// Wait until the queries have completed.
 	self.wg.Wait()
+
+	// Clear the list of events we are tracking - we are an empty
+	// event table right now - so further updates will restart the
+	// queries again.
+	self.Events = nil
 }
 
 func (self *EventTable) Version() uint64 {
