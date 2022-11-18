@@ -915,6 +915,10 @@ message Defaults {
     // gives them a chance to enrol first (default 10 sec).
     int64 unauthenticated_lru_timeout_sec = 14;
 
+    // The Maximum size of a sparse file that can be expanded. Files
+    // larger than this will not be expanded.
+    uint64 max_sparse_expand_size = 15;
+
 }
 
 // Configures crypto preferences
