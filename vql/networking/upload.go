@@ -36,7 +36,7 @@ import (
 
 type UploadFunctionArgs struct {
 	File     *accessors.OSPath `vfilter:"required,field=file,doc=The file to upload"`
-	Name     string            `vfilter:"optional,field=name,doc=The name of the file that should be stored on the server"`
+	Name     *accessors.OSPath `vfilter:"optional,field=name,doc=The name of the file that should be stored on the server"`
 	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
 	Mtime    vfilter.Any       `vfilter:"optional,field=mtime,doc=Modified time to record"`
 	Atime    vfilter.Any       `vfilter:"optional,field=atime,doc=Access time to record"`
@@ -134,7 +134,7 @@ func (self UploadFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 
 type UploadDirectoryFunctionArgs struct {
 	File       *accessors.OSPath `vfilter:"required,field=file,doc=The file to upload"`
-	Name       string            `vfilter:"optional,field=name,doc=Filename to be stored within the output directory"`
+	Name       *accessors.OSPath `vfilter:"optional,field=name,doc=Filename to be stored within the output directory"`
 	Accessor   string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
 	OutputPath string            `vfilter:"required,field=output,doc=An output directory to store files in."`
 

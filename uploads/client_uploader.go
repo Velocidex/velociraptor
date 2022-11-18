@@ -32,7 +32,7 @@ func (self *VelociraptorUploader) Upload(
 	scope vfilter.Scope,
 	filename *accessors.OSPath,
 	accessor string,
-	store_as_name string,
+	store_as_name *accessors.OSPath,
 	expected_size int64,
 	mtime time.Time,
 	atime time.Time,
@@ -49,13 +49,13 @@ func (self *VelociraptorUploader) Upload(
 		return result, nil
 	}
 
-	if store_as_name == "" {
-		store_as_name = filename.String()
+	if store_as_name == nil {
+		store_as_name = filename
 	}
 
 	result = &UploadResponse{
 		Path:       filename.String(),
-		StoredName: store_as_name,
+		StoredName: store_as_name.String(),
 	}
 
 	offset := uint64(0)
@@ -86,7 +86,7 @@ func (self *VelociraptorUploader) Upload(
 
 		packet := &actions_proto.FileBuffer{
 			Pathspec: &actions_proto.PathSpec{
-				Path:     store_as_name,
+				Path:     store_as_name.String(),
 				Accessor: accessor,
 			},
 			Offset:     offset,
@@ -130,7 +130,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 	scope vfilter.Scope,
 	filename *accessors.OSPath,
 	accessor string,
-	store_as_name string,
+	store_as_name *accessors.OSPath,
 	ignored_expected_size int64,
 	mtime time.Time,
 	reader io.Reader) (
@@ -150,8 +150,8 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 		Path: filename.String(),
 	}
 
-	if store_as_name == "" {
-		store_as_name = filename.String()
+	if store_as_name == nil {
+		store_as_name = filename
 	}
 
 	self.Count += 1
@@ -211,7 +211,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 			RequestId: constants.TransferWellKnownFlowId,
 			FileBuffer: &actions_proto.FileBuffer{
 				Pathspec: &actions_proto.PathSpec{
-					Path:     store_as_name,
+					Path:     store_as_name.String(),
 					Accessor: accessor,
 				},
 				Size:       uint64(real_size),
@@ -279,7 +279,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 
 			packet := &actions_proto.FileBuffer{
 				Pathspec: &actions_proto.PathSpec{
-					Path:     store_as_name,
+					Path:     store_as_name.String(),
 					Accessor: accessor,
 				},
 				Offset:     uint64(write_offset),
@@ -319,7 +319,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 		RequestId: constants.TransferWellKnownFlowId,
 		FileBuffer: &actions_proto.FileBuffer{
 			Pathspec: &actions_proto.PathSpec{
-				Path:     store_as_name,
+				Path:     store_as_name.String(),
 				Accessor: accessor,
 			},
 			Size:       uint64(real_size),

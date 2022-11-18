@@ -74,7 +74,7 @@ func (self *FileBasedUploader) Upload(
 	scope vfilter.Scope,
 	filename *accessors.OSPath,
 	accessor string,
-	store_as_name string,
+	store_as_name *accessors.OSPath,
 	expected_size int64,
 	mtime time.Time,
 	atime time.Time,
@@ -88,21 +88,20 @@ func (self *FileBasedUploader) Upload(
 		return nil, errors.New("UploadDir not set")
 	}
 
-	if store_as_name == "" {
-		store_as_name = filename.String()
+	if store_as_name == nil {
+		store_as_name = filename
 	}
 
-	file_path := self.sanitize_path(store_as_name)
+	file_path := self.sanitize_path(store_as_name.String())
 	err := os.MkdirAll(filepath.Dir(file_path), 0700)
 	if err != nil {
-		scope.Log("Can not create dir: %s(%s) %s", store_as_name,
+		scope.Log("Can not create dir: %s(%s) %s", store_as_name.String(),
 			file_path, err.Error())
 		return nil, err
 	}
 
 	// Try to collect sparse files if possible
-	result, err := self.maybeCollectSparseFile(
-		ctx, reader, store_as_name, file_path)
+	result, err := self.maybeCollectSparseFile(ctx, reader, file_path)
 	if err == nil {
 		return result, nil
 	}
@@ -158,7 +157,8 @@ func (self *FileBasedUploader) Upload(
 
 func (self *FileBasedUploader) maybeCollectSparseFile(
 	ctx context.Context,
-	reader io.Reader, store_as_name, sanitized_name string) (
+	reader io.Reader,
+	sanitized_name string) (
 	*UploadResponse, error) {
 
 	// Can the reader produce ranges?
