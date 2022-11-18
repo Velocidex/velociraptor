@@ -22,6 +22,6 @@ LET Download <= create_flow_download( client_id="C.4f5e52adf0a337a9", name="spar
  },
  {
   "OSPath": "{\"DelegateAccessor\":\"fs\",\"DelegatePath\":\"fs:/downloads/C.4f5e52adf0a337a9/F.BN2HJBD1R85EA/not-sparse.zip\",\"Path\":\"/uploads/X.txt\"}",
-  "Size": 10
+  "Size": 15
  }
 ]
