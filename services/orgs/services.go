@@ -620,7 +620,9 @@ func maybeFlushFilesOnClose(
 		go func() {
 			defer wg.Done()
 			<-ctx.Done()
-			flusher.Flush()
+			if flusher != nil {
+				flusher.Flush()
+			}
 		}()
 	}
 
@@ -635,7 +637,9 @@ func maybeFlushFilesOnClose(
 		go func() {
 			defer wg.Done()
 			<-ctx.Done()
-			flusher.Flush()
+			if flusher != nil {
+				flusher.Flush()
+			}
 		}()
 	}
 
