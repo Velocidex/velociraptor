@@ -456,10 +456,13 @@ func configSelfSigned(config_obj *config_proto.Config) error {
 			Prompt:   gui_port_question,
 		},
 	}, config_obj.GUI)
-
 	if err != nil {
 		return err
 	}
+
+	config_obj.GUI.PublicUrl = fmt.Sprintf(
+		"https://%s:%s/", config_obj.Frontend.Hostname,
+		config_obj.GUI.BindPort)
 
 	config_obj.Client.UseSelfSignedSsl = true
 	config_obj.Client.ServerUrls = append(
