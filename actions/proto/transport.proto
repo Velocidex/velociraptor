@@ -8,9 +8,17 @@ package proto;
 option go_package = "www.velocidex.com/golang/velociraptor/actions/proto";
 
 message Range {
+    // Range offset in the underlying file.
     int64 file_offset = 1;
+
+    // Range offset in the underlying file
     int64 original_offset = 2;
+
+    // The length of data that exists in the underlying file. May be 0
+    // if the range is sparse and has no underlying storage.
     int64 file_length = 3;
+
+    // Length of this range.
     int64 length = 4;
 }
 
