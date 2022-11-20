@@ -461,7 +461,7 @@ func configSelfSigned(config_obj *config_proto.Config) error {
 	}
 
 	config_obj.GUI.PublicUrl = fmt.Sprintf(
-		"https://%s:%s/", config_obj.Frontend.Hostname,
+		"https://%s:%d/", config_obj.Frontend.Hostname,
 		config_obj.GUI.BindPort)
 
 	config_obj.Client.UseSelfSignedSsl = true
