@@ -455,13 +455,17 @@ func maybeExpandSparseFile(
 		return reader
 	}
 
+	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+
 	// If the file is too sparse forget about it.
-	if !uploads.ShouldPadFile(index) {
+	if !uploads.ShouldPadFile(config_obj, index) {
+		logger.Debug("File %v is too sparse - unable to expand it.", src)
 		scope.Log("File %v is too sparse - unable to expand it.", src)
 		return reader
 	}
 
 	scope.Log("File %v is sparse - expanding.", src)
+	logger.Debug("File %v is sparse - expanding.", src)
 	return utils.NewReadSeekReaderAdapter(&utils.RangedReader{
 		ReaderAt: utils.MakeReaderAtter(reader),
 		Index:    index,

@@ -23,10 +23,15 @@ type Range struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	FileOffset     int64 `protobuf:"varint,1,opt,name=file_offset,json=fileOffset,proto3" json:"file_offset,omitempty"`
+	// Range offset in the underlying file.
+	FileOffset int64 `protobuf:"varint,1,opt,name=file_offset,json=fileOffset,proto3" json:"file_offset,omitempty"`
+	// Range offset in the underlying file
 	OriginalOffset int64 `protobuf:"varint,2,opt,name=original_offset,json=originalOffset,proto3" json:"original_offset,omitempty"`
-	FileLength     int64 `protobuf:"varint,3,opt,name=file_length,json=fileLength,proto3" json:"file_length,omitempty"`
-	Length         int64 `protobuf:"varint,4,opt,name=length,proto3" json:"length,omitempty"`
+	// The length of data that exists in the underlying file. May be 0
+	// if the range is sparse and has no underlying storage.
+	FileLength int64 `protobuf:"varint,3,opt,name=file_length,json=fileLength,proto3" json:"file_length,omitempty"`
+	// Length of this range.
+	Length int64 `protobuf:"varint,4,opt,name=length,proto3" json:"length,omitempty"`
 }
 
 func (x *Range) Reset() {

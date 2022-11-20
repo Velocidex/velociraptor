@@ -1,8 +1,15 @@
 package uploads
 
-import actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+import (
+	"fmt"
 
-func ShouldPadFile(index *actions_proto.Index) bool {
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+)
+
+func ShouldPadFile(
+	config_obj *config_proto.Config,
+	index *actions_proto.Index) bool {
 	if index == nil || len(index.Ranges) == 0 {
 		return false
 	}
@@ -17,8 +24,16 @@ func ShouldPadFile(index *actions_proto.Index) bool {
 		total_size += i.Length
 	}
 
+	// Default 100mb
+	max_sparse_expand_size := uint64(100 * 1024 * 1024)
+	if config_obj.Defaults != nil &&
+		config_obj.Defaults.MaxSparseExpandSize > 0 {
+		max_sparse_expand_size = config_obj.Defaults.MaxSparseExpandSize
+	}
+
+	fmt.Printf("Total_size %v - max %v\n", total_size, max_sparse_expand_size)
 	// The total size is not too large - expand it.
-	if total_size < 100*1024*1024 {
+	if uint64(total_size) < max_sparse_expand_size {
 		return true
 	}
 
