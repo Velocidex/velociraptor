@@ -173,7 +173,7 @@ func vfsFileDownloadHandler() http.Handler {
 
 		// If the file is sparse, we use the sparse reader.
 		if err == nil && request.Padding && len(index.Ranges) > 0 {
-			if !uploads.ShouldPadFile(index) {
+			if !uploads.ShouldPadFile(org_config_obj, index) {
 				returnError(w, 400, "Sparse file is too sparse - unable to pad")
 				return
 			}

@@ -2,6 +2,8 @@ package downloads
 
 import (
 	"context"
+	"io"
+	"io/ioutil"
 	"sync"
 	"time"
 
@@ -16,12 +18,14 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -76,7 +80,7 @@ func (self *CreateFlowDownload) Call(ctx context.Context,
 	}
 
 	result, err := createDownloadFile(
-		ctx, config_obj, format,
+		ctx, scope, config_obj, format,
 		arg.FlowId, arg.ClientId, arg.Password,
 		arg.ExpandSparse, arg.Name, arg.Wait)
 	if err != nil {
@@ -158,6 +162,7 @@ func (self CreateHuntDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 
 func createDownloadFile(
 	ctx context.Context,
+	scope vfilter.Scope,
 	config_obj *config_proto.Config,
 	format reporting.ContainerFormat,
 	flow_id, client_id, password string,
@@ -201,7 +206,8 @@ func createDownloadFile(
 	lock_file.Write([]byte("X"))
 	lock_file.Close()
 
-	// Create a new ZipContainer to write on.
+	// Create a new ZipContainer to write on. The container will close
+	// the underlying writer.
 	zip_writer, err := reporting.NewContainerFromWriter(
 		config_obj, fd, password, 5, nil /* metadata */)
 	if err != nil {
@@ -217,13 +223,12 @@ func createDownloadFile(
 		defer func() {
 			_ = file_store_factory.Delete(lock_file_spec)
 		}()
-		defer fd.Close()
 		defer zip_writer.Close()
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*600)
 		defer cancel()
 
-		err := downloadFlowToZip(ctx, config_obj, format,
+		err := downloadFlowToZip(ctx, scope, config_obj, format,
 			client_id, "", flow_id, expand_sparse, zip_writer)
 		if err != nil {
 			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
@@ -241,6 +246,7 @@ func createDownloadFile(
 // Copies the collection into the zip file.
 func downloadFlowToZip(
 	ctx context.Context,
+	scope vfilter.Scope,
 	config_obj *config_proto.Config,
 	format reporting.ContainerFormat,
 	client_id string,
@@ -315,8 +321,8 @@ func downloadFlowToZip(
 	}
 
 	// Copy uploads
-	err = copyUploadFiles(ctx, config_obj, zip_writer, prefix,
-		format, flow_path_manager)
+	err = copyUploadFiles(ctx, scope, config_obj, zip_writer, prefix,
+		format, flow_path_manager, expand_sparse)
 	if err != nil {
 		return err
 	}
@@ -325,11 +331,13 @@ func downloadFlowToZip(
 
 func copyUploadFiles(
 	ctx context.Context,
+	scope vfilter.Scope,
 	config_obj *config_proto.Config,
 	container *reporting.Container,
 	prefix string,
 	format reporting.ContainerFormat,
-	flow_path_manager *paths.FlowPathManager) error {
+	flow_path_manager *paths.FlowPathManager,
+	expand_sparse bool) error {
 
 	err := copyResultSetIntoContainer(ctx, config_obj, container, format,
 		flow_path_manager.UploadMetadata(),
@@ -353,6 +361,16 @@ func copyUploadFiles(
 			continue
 		}
 
+		// Ensure we store index files into the correct place.
+		file_type, _ := row.GetString("Type")
+		if file_type == "idx" {
+			// If we expand the files we dont need any indexes
+			if expand_sparse {
+				continue
+			}
+			components[len(components)-1] += ".idx"
+		}
+
 		var src api.FSPathSpec
 		dest := accessors.NewZipFilePath(prefix).Append("uploads")
 		if len(components) > 6 && components[0] == "clients" {
@@ -366,7 +384,7 @@ func copyUploadFiles(
 		}
 
 		// Copy from the file store at these locations.
-		err := copyFile(ctx, config_obj, container, src, dest)
+		err := copyFile(ctx, scope, config_obj, container, src, dest, expand_sparse)
 		if err != nil {
 			return err
 		}
@@ -377,10 +395,12 @@ func copyUploadFiles(
 
 func copyFile(
 	ctx context.Context,
+	scope vfilter.Scope,
 	config_obj *config_proto.Config,
 	container *reporting.Container,
 	src api.FSPathSpec,
-	dest *accessors.OSPath) (err error) {
+	dest *accessors.OSPath,
+	expand_sparse bool) (err error) {
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	fd, err := file_store_factory.ReadFile(src)
@@ -395,8 +415,61 @@ func copyFile(
 	}
 	defer out_fd.Close()
 
-	_, err = utils.Copy(ctx, out_fd, fd)
+	reader := fd.(io.ReadSeeker)
+
+	if expand_sparse {
+		reader = maybeExpandSparseFile(ctx, scope, config_obj, src, fd)
+	}
+
+	_, err = utils.Copy(ctx, out_fd, reader)
 	return err
+}
+
+// Check for an index file in the filestore and expand the file if we
+// find it. This can be very large!
+func maybeExpandSparseFile(
+	ctx context.Context,
+	scope vfilter.Scope,
+	config_obj *config_proto.Config,
+	src api.FSPathSpec,
+	reader io.ReadSeeker) io.ReadSeeker {
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+
+	// Try to read the index ranges
+	idx_fd, err := file_store_factory.ReadFile(src.
+		SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX))
+	if err != nil {
+		return reader
+	}
+	defer idx_fd.Close()
+
+	serialized, err := ioutil.ReadAll(idx_fd)
+	if err != nil {
+		return reader
+	}
+
+	index := &actions_proto.Index{}
+	err = json.Unmarshal(serialized, &index)
+	if err != nil {
+		return reader
+	}
+
+	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+
+	// If the file is too sparse forget about it.
+	if !uploads.ShouldPadFile(config_obj, index) {
+		logger.Debug("File %v is too sparse - unable to expand it.", src)
+		scope.Log("File %v is too sparse - unable to expand it.", src)
+		return reader
+	}
+
+	scope.Log("File %v is sparse - expanding.", src)
+	logger.Debug("File %v is sparse - expanding.", src)
+	return utils.NewReadSeekReaderAdapter(&utils.RangedReader{
+		ReaderAt: utils.MakeReaderAtter(reader),
+		Index:    index,
+	})
 }
 
 func copyResultSetIntoContainer(
@@ -573,7 +646,7 @@ func createHuntDownloadFile(
 
 			hostname := services.GetHostname(sub_ctx, config_obj, client_id)
 			err := downloadFlowToZip(
-				sub_ctx, config_obj, format, client_id, hostname,
+				sub_ctx, scope, config_obj, format, client_id, hostname,
 				flow_id, expand_sparse, zip_writer)
 			if err != nil {
 				logging.GetLogger(config_obj, &logging.FrontendComponent).

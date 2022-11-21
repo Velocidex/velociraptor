@@ -47,7 +47,6 @@ func MinionServicesSpec() *config_proto.ServerServicesConfig {
 		Launcher:            true,
 		RepositoryManager:   true,
 		FrontendServer:      true,
-		MonitoringService:   true,
 		JournalService:      true,
 		DynDns:              true,
 	}
