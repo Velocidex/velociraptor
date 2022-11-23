@@ -18,8 +18,8 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
  }
 ]SELECT user_create(user="ReaderUser", roles="reader", password="X", orgs=["root", "ORGID"]), user_create(user="OrgUser", roles="administrator", password="X", orgs=["ORGID"]), user_create(user="OrgAdmin", roles="administrator", password="X") FROM scope()[
  {
-  "user_create(user=\"ReaderUser\", roles=\"reader\", password=\"X\", orgs= [\"root\", \"ORGID\"])": "ReaderUser",
-  "user_create(user=\"OrgUser\", roles=\"administrator\", password=\"X\", orgs= [\"ORGID\"])": "OrgUser",
+  "user_create(user=\"ReaderUser\", roles=\"reader\", password=\"X\", orgs=[\"root\", \"ORGID\"])": "ReaderUser",
+  "user_create(user=\"OrgUser\", roles=\"administrator\", password=\"X\", orgs=[\"ORGID\"])": "OrgUser",
   "user_create(user=\"OrgAdmin\", roles=\"administrator\", password=\"X\")": "OrgAdmin"
  }
 ]SELECT * FROM gui_users(all_orgs=TRUE) ORDER BY name[

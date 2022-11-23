@@ -1,6 +1,6 @@
 LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"), len(list=dict(foo=1, bar=2, baz=3)), len(list=rows) FROM scope()[
  {
-  "len(list= [\"a\", \"b\"])": 2,
+  "len(list=[\"a\", \"b\"])": 2,
   "len(list=\"hello\")": 5,
   "len(list=dict(foo=1, bar=2, baz=3))": 3,
   "len(list=rows)": 1
@@ -54,7 +54,7 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
  {
   "cidr_contains(ip=\"192.168.0.132\", ranges=\"192.168.0.0/24\")": true,
   "cidr_contains(ip=\"191.168.0.132\", ranges=\"192.168.0.0/24\")": false,
-  "cidr_contains(ip=\"10.168.0.132\", ranges= [\"192.168.0.0/24\", \"10.0.0.0/8\"])": true
+  "cidr_contains(ip=\"10.168.0.132\", ranges=[\"192.168.0.0/24\", \"10.0.0.0/8\"])": true
  }
 ]SELECT commandline_split(command='''"C:\Program Files\Velociraptor\Velociraptor.exe" service run'''), commandline_split(command="/usr/bin/ls -l 'file with space.txt'", bash_style=TRUE) FROM scope()[
  {
@@ -85,21 +85,21 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
  {
   "all(items=TestArray, filter=\"x=\u003ex=~'Hello|Uni|Wo|G'\")": true,
   "all(items=TestArray, filter=\"x=\u003ex=~'Hello|Uni'\")": false,
-  "all(items= [\"Hi\", \"There\"], filter=\"x=\u003ex =~ 'Hi'\")": false,
-  "all(items= [\"Hi\", \"There\"], filter=\"x=\u003ex =~ 'Hi|There'\")": true
+  "all(items=[\"Hi\", \"There\"], filter=\"x=\u003ex =~ 'Hi'\")": false,
+  "all(items=[\"Hi\", \"There\"], filter=\"x=\u003ex =~ 'Hi|There'\")": true
  }
 ]SELECT all(items=TestArray, regex='Hello|Uni|Wo|G'), all(items=TestArray, regex='Hello|Uni'), all(items=["Hi", "There"], regex='Hi'), all(items=["Hi", "There"], regex='Hi|There') FROM scope()[
  {
   "all(items=TestArray, regex='Hello|Uni|Wo|G')": true,
   "all(items=TestArray, regex='Hello|Uni')": false,
-  "all(items= [\"Hi\", \"There\"], regex='Hi')": false,
-  "all(items= [\"Hi\", \"There\"], regex='Hi|There')": true
+  "all(items=[\"Hi\", \"There\"], regex='Hi')": false,
+  "all(items=[\"Hi\", \"There\"], regex='Hi|There')": true
  }
 ]SELECT all(items="Hi There", regex=['Hi', "Goodbye"]), all(items="Hi There", regex=['Hi', "ere"]), all(items=["Hi", "There"], regex=['H|T', 'i|r']) FROM scope()[
  {
-  "all(items=\"Hi There\", regex= ['Hi', \"Goodbye\"])": false,
-  "all(items=\"Hi There\", regex= ['Hi', \"ere\"])": true,
-  "all(items= [\"Hi\", \"There\"], regex= ['H|T', 'i|r'])": true
+  "all(items=\"Hi There\", regex=['Hi', \"Goodbye\"])": false,
+  "all(items=\"Hi There\", regex=['Hi', \"ere\"])": true,
+  "all(items=[\"Hi\", \"There\"], regex=['H|T', 'i|r'])": true
  }
 ]LET TestArray <= (dict(X=1, Y="Hello"), dict(X=2, Y="Goodbye"), dict(X=1, Y="World"))[]SELECT *, all(items=Y, filter="x=>x =~ 'Hello|World'"), all(items=Y, filter="x=>x =~ 'World'"), all(items=Y, filter="x=>x =~ 'Goodby'") FROM foreach(row=TestArray) GROUP BY X[
  {
@@ -118,7 +118,7 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
  }
 ]SELECT all(items={ SELECT * FROM foreach(row=TestArray) WHERE X = 1 }, filter="x=> x.Y =~ 'Hel|Worl'") FROM scope()[
  {
-  "all(items= { SELECT * FROM foreach(row=TestArray) WHERE X = 1}, filter=\"x=\u003e x.Y =~ 'Hel|Worl'\")": true
+  "all(items={ SELECT * FROM foreach(row=TestArray) WHERE X = 1 }, filter=\"x=\u003e x.Y =~ 'Hel|Worl'\")": true
  }
 ]SELECT any(items=TestArray, filter="x=>x.Y =~ 'Good'"), all(items=TestArray, filter="x=>x.Y =~ 'Good'") FROM scope()[
  {

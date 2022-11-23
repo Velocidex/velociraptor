@@ -1,6 +1,6 @@
 SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FROM scope()[
  {
-  "mock(plugin='info', results= [dict(OS='windows'), dict(OS='windows')])": null
+  "mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')])": null
  }
 ]SELECT LastModified, Binary, Name, Size, ProductName, Publisher, BinFileVersion FROM Artifact.Windows.System.Amcache( source="InventoryApplicationFile", amCacheGlob=srcDir+"/artifacts/testdata/files/Amcache.hve") LIMIT 5[
  {
