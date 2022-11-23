@@ -16,7 +16,7 @@
    {
     "name": "Custom.TheOneWithTheExport",
     "type": "client",
-    "export": "LET X\u003c=SELECT * FROM Artifact.DependedArtifactInExport()"
+    "export": "LET X \u003c= SELECT * FROM Artifact.DependedArtifactInExport()"
    },
    {
     "name": "Custom.TheOneWithTheImport",
