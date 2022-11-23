@@ -348,16 +348,6 @@ func (self *_HttpPlugin) Call(
 			return
 		}
 
-		// Allow a unix path to be interpreted as simply a http over
-		// unix domain socket (used by e.g. docker)
-		if strings.HasPrefix(arg.Url, "/") {
-			components := strings.Split(arg.Url, ":")
-			if len(components) == 1 {
-				components = append(components, "/")
-			}
-			arg.Url = "http://unix" + components[1]
-		}
-
 		config_obj, _ := artifacts.GetConfig(scope)
 
 		client, err := GetHttpClient(config_obj, scope, arg)
