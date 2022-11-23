@@ -45,9 +45,6 @@ message VFSRefreshDirectoryRequest {
             label: HIDDEN,
         }];
 
-    // Deprecated
-    string XXXXvfs_path = 2;
-
     repeated string vfs_components = 4;
 
     uint64 depth = 3 [(sem_type) = {
@@ -238,7 +235,7 @@ service API {
         };
     }
 
-// VFS
+    // VFS
     rpc VFSListDirectory(VFSListRequest) returns (VFSListResponse) {
         option (google.api.http) = {
             get: "/api/v1/VFSListDirectory/{client_id}",
@@ -297,9 +294,17 @@ service API {
         };
     }
 
+    // VQL assistance
     rpc GetKeywordCompletions(google.protobuf.Empty) returns (KeywordCompletions) {
         option (google.api.http) = {
             get: "/api/v1/GetKeywordCompletions",
+        };
+    }
+
+    rpc ReformatVQL(ReformatVQLMessage) returns (ReformatVQLMessage) {
+        option (google.api.http) = {
+            post: "/api/v1/ReformatVQL",
+            body: "*"
         };
     }
 
