@@ -123,17 +123,23 @@ func (self *HTTPClientCache) GetHttpClient(
 	if pres {
 		return result, nil
 	}
+	
+        // Allow a unix path to be interpreted as simply a http over
+        // unix domain socket (used by e.g. docker)
+	if strings.HasPrefix(arg.Url, "/") {
+		components := strings.Split(arg.Url, ":")
+		if len(components) == 1 {
+                	components = append(components, "/")
+		}
+		arg.Url = "http://unix" + components[1]
 
-	// A Unix domain socket.
-	if url_obj.Hostname() == "unix" {
 		result = &http.Client{
 			Timeout: time.Second * 10000,
 			Transport: &http.Transport{
-				Proxy:               proxyHandler,
 				MaxIdleConnsPerHost: 10,
 				DialContext: func(_ context.Context, _, _ string) (
 					net.Conn, error) {
-					return net.Dial("unix", url_obj.Path)
+					return net.Dial("unix", components[0])
 				},
 			},
 		}
@@ -340,16 +346,6 @@ func (self *_HttpPlugin) Call(
 		if err != nil {
 			scope.Log("http_client: %s", err)
 			return
-		}
-
-		// Allow a unix path to be interpreted as simply a http over
-		// unix domain socket (used by e.g. docker)
-		if strings.HasPrefix(arg.Url, "/") {
-			components := strings.Split(arg.Url, ":")
-			if len(components) == 1 {
-				components = append(components, "/")
-			}
-			arg.Url = "http://unix" + components[1]
 		}
 
 		config_obj, _ := artifacts.GetConfig(scope)
