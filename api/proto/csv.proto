@@ -65,6 +65,8 @@ message GetTableRequest {
 
     // The required timezone to export in.
     string timezone = 24;
+
+    uint64 version = 25;
 }
 
 message Row {
