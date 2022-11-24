@@ -28,6 +28,8 @@ description: |
   velociraptor-v0.6.7-linux-amd64 artifacts collect Windows.KapeFiles.Extract --args ContainerPath=Collection-DESKTOP-2OR51GL-2021-07-16_06_56_50_-0700_PDT.zip --args OutputDirectory=/tmp/MyOutput/
   ```
 
+type: SERVER
+
 parameters:
   - name: OutputDirectory
     description: Directory to write on (must be set).
@@ -58,7 +60,7 @@ sources:
           })
 
       LET ALLUploads = SELECT *, RootPathSpec + _Components AS FileUpload,
-                              OutputPathSpec + _Components[3:] AS Dest,
+                              OutputPathSpec + _Components[2:] AS Dest,
                               get(item=AllFileMetadata,
                                   field=vfs_path) AS Metadata
         FROM parse_jsonl(accessor="collector",
