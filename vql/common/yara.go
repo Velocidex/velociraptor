@@ -52,7 +52,7 @@ type YaraHit struct {
 
 type YaraResult struct {
 	Rule     string
-	Meta     map[string]interface{}
+	Meta     *ordereddict.Dict
 	Tags     []string
 	String   *YaraHit
 	File     accessors.FileInfo
@@ -60,15 +60,17 @@ type YaraResult struct {
 }
 
 type YaraScanPluginArgs struct {
-	Rules        string      `vfilter:"required,field=rules,doc=Yara rules in the yara DSL."`
-	Files        []types.Any `vfilter:"required,field=files,doc=The list of files to scan."`
-	Accessor     string      `vfilter:"optional,field=accessor,doc=Accessor (e.g. ntfs,file)"`
-	Context      int         `vfilter:"optional,field=context,doc=How many bytes to include around each hit"`
-	Start        uint64      `vfilter:"optional,field=start,doc=The start offset to scan"`
-	End          uint64      `vfilter:"optional,field=end,doc=End scanning at this offset (100mb)"`
-	NumberOfHits int64       `vfilter:"optional,field=number,doc=Stop after this many hits (1)."`
-	Blocksize    uint64      `vfilter:"optional,field=blocksize,doc=Blocksize for scanning (1mb)."`
-	Key          string      `vfilter:"optional,field=key,doc=If set use this key to cache the  yara rules."`
+	Rules         string            `vfilter:"required,field=rules,doc=Yara rules in the yara DSL."`
+	Files         []types.Any       `vfilter:"required,field=files,doc=The list of files to scan."`
+	Accessor      string            `vfilter:"optional,field=accessor,doc=Accessor (e.g. ntfs,file)"`
+	Context       int               `vfilter:"optional,field=context,doc=How many bytes to include around each hit"`
+	Start         uint64            `vfilter:"optional,field=start,doc=The start offset to scan"`
+	End           uint64            `vfilter:"optional,field=end,doc=End scanning at this offset (100mb)"`
+	NumberOfHits  int64             `vfilter:"optional,field=number,doc=Stop after this many hits (1)."`
+	Blocksize     uint64            `vfilter:"optional,field=blocksize,doc=Blocksize for scanning (1mb)."`
+	Key           string            `vfilter:"optional,field=key,doc=If set use this key to cache the  yara rules."`
+	Namespace     string            `vfilter:"optional,field=namespace,doc=The Yara namespece to use."`
+	YaraVariables *ordereddict.Dict `vfilter:"optional,field=vars,doc=The Yara variables to use."`
 }
 
 type YaraScanPlugin struct{}
@@ -103,8 +105,10 @@ func (self YaraScanPlugin) Call(
 			return
 		}
 
-		rules, err := getYaraRules(arg.Key, arg.Rules, scope)
+		rules, err := getYaraRules(arg.Key, arg.Namespace, arg.Rules,
+			arg.YaraVariables, scope)
 		if err != nil {
+			scope.Log("proc_yara: %v", err)
 			return
 		}
 
@@ -168,8 +172,8 @@ func (self YaraScanPlugin) Call(
 // call the yara plugin repeatadly on the same rules - we do not need
 // to recompile the rules all the time. We use the key as the cache or
 // the hash of the rules string if not provided.
-func getYaraRules(key, rules string,
-	scope vfilter.Scope) (*yara.Rules, error) {
+func getYaraRules(key, namespace, rules string,
+	vars *ordereddict.Dict, scope vfilter.Scope) (*yara.Rules, error) {
 
 	// Try to get the compiled yara expression from the
 	// scope cache.
@@ -178,22 +182,44 @@ func getYaraRules(key, rules string,
 		rule_hash := md5.Sum([]byte(rules))
 		key = string(rule_hash[:])
 	}
-	result := vql_subsystem.CacheGet(scope, key)
-	if result == nil {
-		variables := make(map[string]interface{})
+	cached_result := vql_subsystem.CacheGet(scope, key)
+	if cached_result == nil {
 		generated_rules := RuleGenerator(scope, rules)
-		result, err := yara.Compile(generated_rules, variables)
+		compiler, err := yara.NewCompiler()
+		if err != nil {
+			return nil, err
+		}
+
+		if vars != nil {
+			for _, k := range vars.Keys() {
+				v, _ := vars.Get(k)
+				err := compiler.DefineVariable(k, v)
+				if err != nil {
+					vql_subsystem.CacheSet(scope, key, err)
+					return nil, err
+				}
+			}
+		}
+
+		err = compiler.AddString(generated_rules, namespace)
 		if err != nil {
 			// Cache the compile failure so only one log is emitted.
-			scope.Log("Failed to initialize YARA compiler: %s", err)
 			vql_subsystem.CacheSet(scope, key, err)
 			return nil, err
 		}
-		vql_subsystem.CacheSet(scope, key, result)
-		return result, nil
+
+		rules, err := compiler.GetRules()
+		if err != nil {
+			vql_subsystem.CacheSet(scope, key, err)
+			return nil, err
+		}
+
+		// Cache the successful rules for further use
+		vql_subsystem.CacheSet(scope, key, rules)
+		return rules, nil
 	}
 
-	switch t := result.(type) {
+	switch t := cached_result.(type) {
 	case error:
 		return nil, t
 	case *yara.Rules:
@@ -293,8 +319,15 @@ func (self *scanReporter) scanRange(start, end uint64, f accessors.ReadSeekClose
 		// match and extract any context data.
 		self.reader = bytes.NewReader(scan_buf)
 
-		err := self.rules.ScanMemWithCallback(
-			scan_buf, self.yara_flag, 10*time.Second, self)
+		scanner, err := yara.NewScanner(self.rules)
+		if err != nil {
+			return
+		}
+
+		err = scanner.SetCallback(self).
+			SetTimeout(10 * time.Second).
+			SetFlags(self.yara_flag).
+			ScanMem(scan_buf)
 		if err != nil {
 			return
 		}
@@ -326,8 +359,15 @@ func (self *scanReporter) scanFile(
 	}
 	self.reader = fd
 
-	err = self.rules.ScanFileWithCallback(
-		self.filename.String(), self.yara_flag, 10*time.Second, self)
+	scanner, err := yara.NewScanner(self.rules)
+	if err != nil {
+		return err
+	}
+
+	err = scanner.SetCallback(self).
+		SetTimeout(10 * time.Second).
+		SetFlags(self.yara_flag).
+		ScanFile(self.filename.String())
 	if err != nil {
 		return err
 	}
@@ -362,15 +402,29 @@ type scanReporter struct {
 	yara_flag yara.ScanFlags
 }
 
-func (self *scanReporter) RuleMatching(rule *yara.Rule) (bool, error) {
-	matches := getMatchStrings(rule)
+func (self *scanReporter) getMeta(rule *yara.Rule) *ordereddict.Dict {
+	metas := rule.Metas()
+	if len(metas) > 0 {
+		result := ordereddict.NewDict()
+		for _, m := range metas {
+			result.Set(m.Identifier, m.Value)
+		}
+		return result
+	}
+	return nil
+}
+
+func (self *scanReporter) RuleMatching(
+	scan_context *yara.ScanContext, rule *yara.Rule) (bool, error) {
+	matches := getMatchStrings(scan_context, rule)
+	metas := self.getMeta(rule)
 
 	// The rule matched no strings, just emit a single row.
 	if len(matches) == 0 {
 		res := &YaraResult{
 			Rule:     rule.Identifier(),
 			Tags:     rule.Tags(),
-			Meta:     rule.Metas(),
+			Meta:     metas,
 			File:     self.file_info,
 			FileName: self.filename,
 		}
@@ -408,7 +462,7 @@ func (self *scanReporter) RuleMatching(rule *yara.Rule) (bool, error) {
 		res := &YaraResult{
 			Rule:     rule.Identifier(),
 			Tags:     rule.Tags(),
-			Meta:     rule.Metas(),
+			Meta:     metas,
 			File:     self.file_info,
 			FileName: self.filename,
 			String: &YaraHit{
@@ -439,9 +493,10 @@ func (self *scanReporter) RuleMatching(rule *yara.Rule) (bool, error) {
 	return true, nil
 }
 
-func getMatchStrings(r *yara.Rule) (matchstrings []yara.MatchString) {
+func getMatchStrings(scan_context *yara.ScanContext, r *yara.Rule) (
+	matchstrings []yara.MatchString) {
 	for _, s := range r.Strings() {
-		for _, m := range s.Matches() {
+		for _, m := range s.Matches(scan_context) {
 			matchstrings = append(matchstrings, yara.MatchString{
 				Name:   s.Identifier(),
 				Base:   uint64(m.Base()),
@@ -464,10 +519,13 @@ func (self YaraScanPlugin) Info(
 }
 
 type YaraProcPluginArgs struct {
-	Rules   string `vfilter:"required,field=rules,doc=Yara rules"`
-	Pid     int    `vfilter:"required,field=pid,doc=The pid to scan"`
-	Context int    `vfilter:"optional,field=context,doc=Return this many bytes either side of a hit"`
-	Key     string `vfilter:"optional,field=key,doc=If set use this key to cache the  yara rules."`
+	Rules         string            `vfilter:"required,field=rules,doc=Yara rules"`
+	Pid           int               `vfilter:"required,field=pid,doc=The pid to scan"`
+	Context       int               `vfilter:"optional,field=context,doc=Return this many bytes either side of a hit"`
+	Key           string            `vfilter:"optional,field=key,doc=If set use this key to cache the  yara rules."`
+	Namespace     string            `vfilter:"optional,field=namespace,doc=The Yara namespece to use."`
+	YaraVariables *ordereddict.Dict `vfilter:"optional,field=vars,doc=The Yara variables to use."`
+	NumberOfHits  int64             `vfilter:"optional,field=number,doc=Stop after this many hits (1)."`
 }
 
 type YaraProcPlugin struct{}
@@ -498,39 +556,42 @@ func (self YaraProcPlugin) Call(
 			return
 		}
 
-		if arg.Key == "" {
-			rule_hash := md5.Sum([]byte(arg.Rules))
-			arg.Key = string(rule_hash[:])
-		}
-		rules, ok := vql_subsystem.CacheGet(
-			scope, arg.Key).(*yara.Rules)
-		if !ok {
-			variables := make(map[string]interface{})
-			generated_rules := RuleGenerator(scope, arg.Rules)
-			rules, err = yara.Compile(generated_rules, variables)
-			if err != nil {
-				scope.Log("Failed to initialize YARA compiler: %v", err)
-				return
-			}
-
-			vql_subsystem.CacheSet(scope, arg.Key, rules)
-		}
-
-		matches, err := rules.ScanProc(
-			arg.Pid, yara.ScanFlagsProcessMemory,
-			300*time.Second)
+		rules, err := getYaraRules(arg.Key, arg.Namespace,
+			arg.Rules, arg.YaraVariables, scope)
 		if err != nil {
-			scope.Log("proc_yara: pid %v: %v", arg.Pid, err)
+			scope.Log("proc_yara: %v", err)
 			return
 		}
 
-		for _, match := range matches {
-			select {
-			case <-ctx.Done():
-				return
+		scanner, err := yara.NewScanner(rules)
+		if err != nil {
+			scope.Log("proc_yara: %v", err)
+			return
+		}
 
-			case output_chan <- match:
-			}
+		yara_flag := yara.ScanFlags(0)
+		if arg.NumberOfHits == 1 {
+			yara_flag = yara.ScanFlagsFastMode
+		}
+
+		matcher := &scanReporter{
+			output_chan:    output_chan,
+			number_of_hits: arg.NumberOfHits,
+			context:        arg.Context,
+			ctx:            ctx,
+
+			rules:     rules,
+			scope:     scope,
+			yara_flag: yara_flag,
+		}
+
+		err = scanner.SetCallback(matcher).
+			SetTimeout(10 * time.Second).
+			SetFlags(yara_flag).
+			ScanProc(arg.Pid)
+		if err != nil {
+			scope.Log("proc_yara: pid %v: %v", arg.Pid, err)
+			return
 		}
 
 		scope.ChargeOp()
@@ -544,7 +605,8 @@ func RuleGenerator(scope vfilter.Scope, rule string) string {
 	rule = strings.TrimSpace(rule)
 
 	// Just a normal yara rule
-	if strings.HasPrefix(rule, "rule") {
+	if strings.HasPrefix(rule, "rule") ||
+		strings.HasPrefix(rule, "import") {
 		return rule
 	}
 
@@ -563,6 +625,7 @@ func RuleGenerator(scope vfilter.Scope, rule string) string {
 		switch kw {
 		case "wide", "ascii", "nocase":
 			method += " " + kw
+
 		default:
 			scope.Log("Unknown shorthand directive %v", kw)
 			return rule
