@@ -20,10 +20,10 @@ const (
 )
 
 type MagicFunctionArgs struct {
-	Path     string `vfilter:"required,field=path,doc=Path to open and hash."`
-	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use"`
-	Type     string `vfilter:"optional,field=type,doc=Magic type (can be empty or 'mime' or 'extension')"`
-	Magic    string `vfilter:"optional,field=magic,doc=Additional magic to load"`
+	Path     *accessors.OSPath `vfilter:"required,field=path,doc=Path to open and hash."`
+	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	Type     string            `vfilter:"optional,field=type,doc=Magic type (can be empty or 'mime' or 'extension')"`
+	Magic    string            `vfilter:"optional,field=magic,doc=Additional magic to load"`
 }
 
 type MagicFunction struct{}
@@ -91,7 +91,7 @@ func (self MagicFunction) Call(
 
 	// Just let libmagic handle the path
 	if arg.Accessor == "" {
-		return handle.File(arg.Path)
+		return handle.File(arg.Path.String())
 	}
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
@@ -107,7 +107,7 @@ func (self MagicFunction) Call(
 		return vfilter.Null{}
 	}
 
-	fd, err := accessor.Open(arg.Path)
+	fd, err := accessor.OpenWithOSPath(arg.Path)
 	if err != nil {
 		return vfilter.Null{}
 	}

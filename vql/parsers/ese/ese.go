@@ -44,9 +44,9 @@ type SRUMId struct {
 }
 
 type _SRUMLookupIdArgs struct {
-	Filename string `vfilter:"required,field=file"`
-	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use."`
-	Id       int64  `vfilter:"required,field=id"`
+	Filename *accessors.OSPath `vfilter:"required,field=file"`
+	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Id       int64             `vfilter:"required,field=id"`
 }
 
 type _SRUMLookupId struct{}
@@ -78,7 +78,7 @@ func (self _SRUMLookupId) Call(
 		return &vfilter.Null{}
 	}
 
-	key := arg.Filename + arg.Accessor
+	key := arg.Filename.String() + arg.Accessor
 	lookup_map, ok := vql_subsystem.CacheGet(scope, key).(map[int64]string)
 	if !ok {
 		lookup_map = make(map[int64]string)
@@ -89,7 +89,7 @@ func (self _SRUMLookupId) Call(
 			scope.Log("srum_lookup_id: %v", err)
 			return &vfilter.Null{}
 		}
-		fd, err := accessor.Open(arg.Filename)
+		fd, err := accessor.OpenWithOSPath(arg.Filename)
 		if err != nil {
 			scope.Log("parse_ese: Unable to open file %s: %v",
 				arg.Filename, err)
@@ -178,9 +178,9 @@ func formatGUID(hexencoded string) string {
 }
 
 type _ESEArgs struct {
-	Filename string `vfilter:"required,field=file"`
-	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use."`
-	Table    string `vfilter:"required,field=table,doc=A table name to dump"`
+	Filename *accessors.OSPath `vfilter:"required,field=file"`
+	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Table    string            `vfilter:"required,field=table,doc=A table name to dump"`
 }
 
 type _ESEPlugin struct{}
@@ -216,7 +216,7 @@ func (self _ESEPlugin) Call(
 			scope.Log("parse_ese: %v", err)
 			return
 		}
-		fd, err := accessor.Open(arg.Filename)
+		fd, err := accessor.OpenWithOSPath(arg.Filename)
 		if err != nil {
 			scope.Log("parse_ese: Unable to open file %s: %v",
 				arg.Filename, err)
@@ -277,8 +277,8 @@ func (self _ESEPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfi
 }
 
 type _ESECatalogArgs struct {
-	Filename string `vfilter:"required,field=file"`
-	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Filename *accessors.OSPath `vfilter:"required,field=file"`
+	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
 }
 
 type _ESECatalogPlugin struct{}
@@ -314,7 +314,7 @@ func (self _ESECatalogPlugin) Call(
 			scope.Log("parse_ese_catalog: %v", err)
 			return
 		}
-		fd, err := accessor.Open(arg.Filename)
+		fd, err := accessor.OpenWithOSPath(arg.Filename)
 		if err != nil {
 			scope.Log("parse_ese_catalog: Unable to open file %s: %v",
 				arg.Filename, err)

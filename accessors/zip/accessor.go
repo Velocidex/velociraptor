@@ -194,6 +194,10 @@ func _GetZipFile(self *ZipFileSystemAccessor,
 	}
 
 	for _, i := range zip_file.File {
+		if strings.HasPrefix(i.Name, "{") {
+			continue
+		}
+
 		// Ignore directories which are signified by a
 		// trailing / and have no content.
 		if strings.HasSuffix(i.Name, "/") && i.UncompressedSize64 == 0 {
@@ -201,15 +205,29 @@ func _GetZipFile(self *ZipFileSystemAccessor,
 		}
 
 		// Prepare the pathspec for each zip member. In order to
-		// access the members, we need to open the currect zipfile (in
+		// access the members, we need to open the current zipfile (in
 		// full_path) and open i.Name as the path.
-		next_pathspec := full_path.PathSpec()
-		next_pathspec.Path = i.Name
 
-		next_path, err := full_path.Parse(next_pathspec.String())
+		// So if the zip has has a pathspec like:
+		// {DelegateAccessor: "auto", DelegatePath: "path/to/zip"}
+
+		// We need to parse the zip members (unescaping as needed into
+		// components), and append those components to the zip
+		// pathspec to get at the member pathspec.
+		//
+		// {DelegateAccessor: "auto", DelegatePath: "path/to/zip",
+		//  Path: "zip_escaped_component_list"}
+		next_path := full_path.Copy()
+
+		// Parse the i.Name as an encoded zip file. Some Zip accessors
+		// (e.g. the collector accessor) use a special path
+		// manipulator that allows any path to be represented in a zip
+		// file by encoding unrepresentable characters.
+		zip_path, err := full_path.Parse(i.Name)
 		if err != nil {
 			continue
 		}
+		next_path.Components = zip_path.Components
 
 		next_item := _CDLookup{
 			full_path:   next_path,

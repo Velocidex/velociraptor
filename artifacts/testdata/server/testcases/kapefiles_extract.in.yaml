@@ -1,0 +1,15 @@
+Parameters:
+  TestFile: /artifacts/testdata/files/Collection-WIN-E5K9RC5GU23-2021-11-21T18_05_56-08_00.zip
+
+Queries:
+  - LET tmpdir <= tempdir()
+  - SELECT Timestamp, vfs_path, FileUpload, Metadata, UploadedFile.sha256
+    FROM Artifact.Windows.KapeFiles.Extract(
+         OutputDirectory=tmpdir,
+         ContainerPath=srcDir + TestFile)
+
+  # Should refuse to pad out very sparse files.
+  - SELECT * FROM test_read_logs() WHERE Log =~ "is too sparse - unable to expand it" AND NOT Log =~ "SELECT"
+
+  # Make sure that timestamps are properly adjusted
+  - SELECT Name, Mtime FROM glob(globs="/**", root=tmpdir) WHERE NOT IsDir

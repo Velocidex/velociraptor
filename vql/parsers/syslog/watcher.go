@@ -53,7 +53,7 @@ func NewSyslogWatcherService(config_obj *config_proto.Config) *SyslogWatcherServ
 }
 
 func (self *SyslogWatcherService) Register(
-	filename string,
+	filename *accessors.OSPath,
 	accessor string,
 	ctx context.Context,
 	scope vfilter.Scope,
@@ -69,7 +69,7 @@ func (self *SyslogWatcherService) Register(
 		output_chan: output_chan,
 		scope:       scope}
 
-	key := filename + accessor
+	key := filename.String() + accessor
 	registration, pres := self.registrations[key]
 	if !pres {
 		registration = []*Handle{}
@@ -89,7 +89,8 @@ func (self *SyslogWatcherService) Register(
 // Monitor the filename for new events and emit them to all interested
 // listeners. If no listeners exist we terminate.
 func (self *SyslogWatcherService) StartMonitoring(
-	filename string, accessor_name string) {
+	filename *accessors.OSPath,
+	accessor_name string) {
 
 	defer utils.CheckForPanic("StartMonitoring")
 
@@ -103,7 +104,7 @@ func (self *SyslogWatcherService) StartMonitoring(
 	}
 
 	cursor := self.findLastLineOffset(filename, accessor)
-	key := filename + accessor_name
+	key := filename.String() + accessor_name
 	for {
 		self.mu.Lock()
 		registration, pres := self.registrations[key]
@@ -121,17 +122,17 @@ func (self *SyslogWatcherService) StartMonitoring(
 }
 
 func (self *SyslogWatcherService) findLastLineOffset(
-	filename string,
+	filename *accessors.OSPath,
 	accessor accessors.FileSystemAccessor) *Cursor {
 
 	cursor := &Cursor{}
 
-	stat, err := accessor.Lstat(filename)
+	stat, err := accessor.LstatWithOSPath(filename)
 	if err != nil {
 		return cursor
 	}
 
-	fd, err := accessor.Open(filename)
+	fd, err := accessor.OpenWithOSPath(filename)
 	if err != nil {
 		return cursor
 	}
@@ -166,7 +167,7 @@ func (self *SyslogWatcherService) findLastLineOffset(
 }
 
 func (self *SyslogWatcherService) monitorOnce(
-	filename string,
+	filename *accessors.OSPath,
 	accessor_name string,
 	accessor accessors.FileSystemAccessor,
 	cursor *Cursor) *Cursor {
@@ -174,7 +175,7 @@ func (self *SyslogWatcherService) monitorOnce(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	stat, err := accessor.Lstat(filename)
+	stat, err := accessor.LstatWithOSPath(filename)
 	if err != nil {
 		return cursor
 	}
@@ -195,13 +196,13 @@ func (self *SyslogWatcherService) monitorOnce(
 
 	cursor.file_size = stat.Size()
 
-	key := filename + accessor_name
+	key := filename.String() + accessor_name
 	handles, pres := self.registrations[key]
 	if !pres {
 		return cursor
 	}
 
-	fd, err := accessor.Open(filename)
+	fd, err := accessor.OpenWithOSPath(filename)
 	if err != nil {
 		return cursor
 	}
@@ -263,7 +264,9 @@ func (self *SyslogWatcherService) monitorOnce(
 
 // Send the syslog line to all listeners.
 func (self *SyslogWatcherService) distributeLine(
-	line, filename, key string,
+	line string,
+	filename *accessors.OSPath,
+	key string,
 	handles []*Handle) []*Handle {
 	event := ordereddict.NewDict().Set("Line", line)
 

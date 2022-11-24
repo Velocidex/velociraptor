@@ -103,7 +103,7 @@ sources:
         WHERE _EA_Metadata.Size > SizeMin AND _EA_Metadata.Size < SizeMax
 
       -- parse EA attribute
-      LET parse_ea = SELECT OSPath,NtfsMetadata,_EA_Metadata,
+      LET parse_ea = SELECT OSPath, NtfsMetadata, _EA_Metadata,
             parse_binary(accessor="mft",
                 filename=NtfsMetadata.Device + _EA_Metadata.Inode,
                 profile=Profile, struct="EAData").Entries AS EA
@@ -116,7 +116,7 @@ sources:
                 SELECT *
                     {
                         SELECT Name,Value,Flags,ValueLength
-                        FROM foreach(row=EA) 
+                        FROM foreach(row=EA)
                     } as EA
                 FROM parse_ea
                 WHERE EA.Name =~ EANameRegex

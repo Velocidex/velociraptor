@@ -72,7 +72,15 @@ SELECT basename(path="/foo/bar/baz", path_type='linux') FROM scope()[
    pathspec(parse="HKU/Software", path_type='registry') + "Microsoft",
 
    -- Access components from an OSPath
-   pathspec(parse="HKU/Software", path_type='registry').Components
+   pathspec(parse="HKU/Software", path_type='registry').Components,
+
+   -- Addition operation on OSPath - adding a string parses the string as
+   -- a path and joins the components..
+   (pathspec(parse="C:\\Windows", path_type='windows') + "\\foo\\bar").Components,
+
+   -- adding a list of strings joins the components without parsing each one.
+   (pathspec(parse="C:\\Windows", path_type='windows') + ("foo/bar",)).Components
+
 
 FROM scope()
 [
@@ -90,6 +98,17 @@ FROM scope()
   "pathspec(parse=\"HKU/Software\", path_type='registry').Components": [
    "HKEY_USERS",
    "Software"
+  ],
+  "(pathspec(parse=\"C:\\\\Windows\", path_type='windows') + \"\\\\foo\\\\bar\").Components": [
+   "C:",
+   "Windows",
+   "foo",
+   "bar"
+  ],
+  "(pathspec(parse=\"C:\\\\Windows\", path_type='windows') + (\"foo/bar\", )).Components": [
+   "C:",
+   "Windows",
+   "foo/bar"
   ]
  }
 ]LET shadow_path <= pathspec(parse="\\\\?\\GLOBALROOT\\Device\\HarddiskVolumeShadowCopy1\\Windows\\System32\\Notepad.exe", path_type="windows")[]SELECT shadow_path, shadow_path.Dirname, shadow_path.Dirname.Basename, shadow_path.Basename, shadow_path.Components FROM scope()[

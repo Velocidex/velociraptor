@@ -33,11 +33,11 @@ import (
 )
 
 type CopyFunctionArgs struct {
-	Filename    string `vfilter:"required,field=filename,doc=The file to copy from."`
-	Accessor    string `vfilter:"optional,field=accessor,doc=The accessor to use"`
-	Destination string `vfilter:"required,field=dest,doc=The destination file to write."`
-	Permissions string `vfilter:"optional,field=permissions,doc=Required permissions (e.g. 'x')."`
-	Append      bool   `vfilter:"optional,field=append,doc=If true we append to the target file otherwise truncate it"`
+	Filename    *accessors.OSPath `vfilter:"required,field=filename,doc=The file to copy from."`
+	Accessor    string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	Destination string            `vfilter:"required,field=dest,doc=The destination file to write."`
+	Permissions string            `vfilter:"optional,field=permissions,doc=Required permissions (e.g. 'x')."`
+	Append      bool              `vfilter:"optional,field=append,doc=If true we append to the target file otherwise truncate it"`
 }
 
 type CopyFunction struct{}
@@ -78,7 +78,7 @@ func (self *CopyFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	fd, err := accessor.Open(arg.Filename)
+	fd, err := accessor.OpenWithOSPath(arg.Filename)
 	if err != nil {
 		scope.Log("copy: Failed to open %v: %v",
 			arg.Filename, err)

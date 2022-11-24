@@ -17,9 +17,9 @@ import (
 )
 
 type ScannerPluginArgs struct {
-	Filenames  []string `vfilter:"required,field=filename,doc=A list of log files to parse."`
-	Accessor   string   `vfilter:"optional,field=accessor,doc=The accessor to use."`
-	BufferSize int      `vfilter:"optional,field=buffer_size,doc=Maximum size of line buffer."`
+	Filenames  []*accessors.OSPath `vfilter:"required,field=filename,doc=A list of log files to parse."`
+	Accessor   string              `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	BufferSize int                 `vfilter:"optional,field=buffer_size,doc=Maximum size of line buffer."`
 }
 
 type ScannerPlugin struct{}
@@ -166,13 +166,14 @@ func (self _WatchSyslogPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 }
 
 func maybeOpenGzip(scope vfilter.Scope,
-	accessor_name, filename string) (io.ReadCloser, error) {
+	accessor_name string,
+	filename *accessors.OSPath) (io.ReadCloser, error) {
 	accessor, err := accessors.GetAccessor(accessor_name, scope)
 	if err != nil {
 		return nil, err
 	}
 
-	fd, err := accessor.Open(filename)
+	fd, err := accessor.OpenWithOSPath(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +185,7 @@ func maybeOpenGzip(scope vfilter.Scope,
 
 	fd.Close()
 
-	return accessor.Open(filename)
+	return accessor.OpenWithOSPath(filename)
 }
 
 func init() {

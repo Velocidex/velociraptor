@@ -30,9 +30,9 @@ import (
 )
 
 type _ParseEvtxPluginArgs struct {
-	Filenames []string `vfilter:"required,field=filename,doc=A list of event log files to parse."`
-	Accessor  string   `vfilter:"optional,field=accessor,doc=The accessor to use."`
-	Database  string   `vfilter:"optional,field=messagedb,doc=A Message database from https://github.com/Velocidex/evtx-data."`
+	Filenames []*accessors.OSPath `vfilter:"required,field=filename,doc=A list of event log files to parse."`
+	Accessor  string              `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Database  string              `vfilter:"optional,field=messagedb,doc=A Message database from https://github.com/Velocidex/evtx-data."`
 }
 
 type _ParseEvtxPlugin struct{}
@@ -85,7 +85,7 @@ func (self _ParseEvtxPlugin) Call(
 					scope.Log("parse_evtx: %v", err)
 					return
 				}
-				fd, err := accessor.Open(filename)
+				fd, err := accessor.OpenWithOSPath(filename)
 				if err != nil {
 					scope.Log("Unable to open file %s: %v",
 						filename, err)

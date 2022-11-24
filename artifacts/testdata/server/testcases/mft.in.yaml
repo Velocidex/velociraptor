@@ -15,7 +15,6 @@ Parameters:
           prefix: '\\\\.\\C:'
           path_type: ntfs
 
-
       - type: mount
         from:
           accessor: mft
@@ -39,9 +38,17 @@ Queries:
         ]), clear=TRUE)
 
   # Test MFT output
-  - SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='just_a_file\\.txt')
+  - SELECT * FROM Artifact.Windows.NTFS.MFT(
+            MFTDrive='''\\.\C:''',
+            FileRegex='just_a_file\\.txt')
 
   # Test time contraints
-  - SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\\.txt',DateBefore='2018-12-31')
-  - SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\\.txt',DateAfter='2021-07-01')
-  - SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\\.txt',DateAfter='2021-07-01',DateBefore='2022-02-01',AllNtfs='Y')
+  - SELECT * FROM Artifact.Windows.NTFS.MFT(MFTDrive='''\\.\C:''',
+        FileRegex='\\.txt',DateBefore='2018-12-31')
+
+  - SELECT * FROM Artifact.Windows.NTFS.MFT(MFTDrive='''\\.\C:''',
+        FileRegex='\\.txt',DateAfter='2021-07-01')
+
+  - SELECT * FROM Artifact.Windows.NTFS.MFT(MFTDrive='''\\.\C:''',
+        FileRegex='\\.txt',DateAfter='2021-07-01',
+        DateBefore='2022-02-01',AllNtfs='Y')
