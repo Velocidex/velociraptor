@@ -164,7 +164,7 @@ func resolveImports(config_obj *config_proto.Config,
 		for _, q := range queries {
 			result.Query = append(result.Query,
 				&actions_proto.VQLRequest{
-					VQL: q.ToString(scope),
+					VQL: vfilter.FormatToString(scope, q),
 				})
 		}
 	}
@@ -201,7 +201,7 @@ func resolveImports(config_obj *config_proto.Config,
 			for _, q := range queries {
 				result.Query = append(result.Query,
 					&actions_proto.VQLRequest{
-						VQL: q.ToString(scope),
+						VQL: vfilter.FormatToString(scope, q),
 					})
 			}
 		}
@@ -273,13 +273,13 @@ func mergeSources(
 			if idx2 < len(queries)-1 {
 				result.Query = append(result.Query,
 					&actions_proto.VQLRequest{
-						VQL: vql.ToString(scope),
+						VQL: vfilter.FormatToString(scope, vql),
 					})
 			} else {
 				result.Query = append(result.Query,
 					&actions_proto.VQLRequest{
 						VQL: "LET " + query_name +
-							" = " + vql.ToString(scope),
+							" = " + vfilter.FormatToString(scope, vql),
 					})
 			}
 			source_result = query_name
@@ -545,7 +545,7 @@ func stripComments(query string) string {
 
 	result := []string{}
 	for _, vql := range vqls {
-		result = append(result, vql.ToString(scope))
+		result = append(result, vfilter.FormatToString(scope, vql))
 	}
 	return strings.Join(result, "\n")
 }

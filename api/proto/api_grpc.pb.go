@@ -58,7 +58,9 @@ type APIClient interface {
 	CancelFlow(ctx context.Context, in *ApiFlowRequest, opts ...grpc.CallOption) (*StartFlowResponse, error)
 	GetFlowDetails(ctx context.Context, in *ApiFlowRequest, opts ...grpc.CallOption) (*FlowDetails, error)
 	GetFlowRequests(ctx context.Context, in *ApiFlowRequest, opts ...grpc.CallOption) (*ApiFlowRequestDetails, error)
+	// VQL assistance
 	GetKeywordCompletions(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*KeywordCompletions, error)
+	ReformatVQL(ctx context.Context, in *ReformatVQLMessage, opts ...grpc.CallOption) (*ReformatVQLMessage, error)
 	// Artifacts
 	GetArtifacts(ctx context.Context, in *GetArtifactsRequest, opts ...grpc.CallOption) (*proto1.ArtifactDescriptors, error)
 	GetArtifactFile(ctx context.Context, in *GetArtifactRequest, opts ...grpc.CallOption) (*GetArtifactResponse, error)
@@ -376,6 +378,15 @@ func (c *aPIClient) GetFlowRequests(ctx context.Context, in *ApiFlowRequest, opt
 func (c *aPIClient) GetKeywordCompletions(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*KeywordCompletions, error) {
 	out := new(KeywordCompletions)
 	err := c.cc.Invoke(ctx, "/proto.API/GetKeywordCompletions", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aPIClient) ReformatVQL(ctx context.Context, in *ReformatVQLMessage, opts ...grpc.CallOption) (*ReformatVQLMessage, error) {
+	out := new(ReformatVQLMessage)
+	err := c.cc.Invoke(ctx, "/proto.API/ReformatVQL", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -756,7 +767,9 @@ type APIServer interface {
 	CancelFlow(context.Context, *ApiFlowRequest) (*StartFlowResponse, error)
 	GetFlowDetails(context.Context, *ApiFlowRequest) (*FlowDetails, error)
 	GetFlowRequests(context.Context, *ApiFlowRequest) (*ApiFlowRequestDetails, error)
+	// VQL assistance
 	GetKeywordCompletions(context.Context, *emptypb.Empty) (*KeywordCompletions, error)
+	ReformatVQL(context.Context, *ReformatVQLMessage) (*ReformatVQLMessage, error)
 	// Artifacts
 	GetArtifacts(context.Context, *GetArtifactsRequest) (*proto1.ArtifactDescriptors, error)
 	GetArtifactFile(context.Context, *GetArtifactRequest) (*GetArtifactResponse, error)
@@ -902,6 +915,9 @@ func (UnimplementedAPIServer) GetFlowRequests(context.Context, *ApiFlowRequest) 
 }
 func (UnimplementedAPIServer) GetKeywordCompletions(context.Context, *emptypb.Empty) (*KeywordCompletions, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetKeywordCompletions not implemented")
+}
+func (UnimplementedAPIServer) ReformatVQL(context.Context, *ReformatVQLMessage) (*ReformatVQLMessage, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReformatVQL not implemented")
 }
 func (UnimplementedAPIServer) GetArtifacts(context.Context, *GetArtifactsRequest) (*proto1.ArtifactDescriptors, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetArtifacts not implemented")
@@ -1530,6 +1546,24 @@ func _API_GetKeywordCompletions_Handler(srv interface{}, ctx context.Context, de
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(APIServer).GetKeywordCompletions(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _API_ReformatVQL_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReformatVQLMessage)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).ReformatVQL(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/ReformatVQL",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).ReformatVQL(ctx, req.(*ReformatVQLMessage))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2238,6 +2272,10 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetKeywordCompletions",
 			Handler:    _API_GetKeywordCompletions_Handler,
+		},
+		{
+			MethodName: "ReformatVQL",
+			Handler:    _API_ReformatVQL_Handler,
 		},
 		{
 			MethodName: "GetArtifacts",

@@ -46,7 +46,7 @@ func Obfuscate(
 		}
 
 		// TODO: Compress the AST.
-		query.VQL = ast.ToString(scope)
+		query.VQL = vfilter.FormatToString(scope, ast)
 	}
 
 	return nil
