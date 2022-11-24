@@ -30,7 +30,7 @@ func EvalQueryToTable(ctx context.Context,
 	table := tablewriter.NewWriter(out)
 
 	columns := []string{}
-	table.SetCaption(true, vql.ToString(scope))
+	table.SetCaption(true, vfilter.FormatToString(scope, vql))
 	table.SetAutoFormatHeaders(false)
 	table.SetAutoWrapText(false)
 

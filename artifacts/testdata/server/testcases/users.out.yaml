@@ -4,7 +4,7 @@ SELECT whoami() FROM scope()[
  }
 ]SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUser"[]SELECT user_create( user="TestUser", password="hunter2", roles=["reader", "investigator"]) FROM scope()[
  {
-  "user_create(user=\"TestUser\", password=\"hunter2\", roles= [\"reader\", \"investigator\"])": "TestUser"
+  "user_create(user=\"TestUser\", password=\"hunter2\", roles=[\"reader\", \"investigator\"])": "TestUser"
  }
 ]SELECT name, roles FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUser"[
  {

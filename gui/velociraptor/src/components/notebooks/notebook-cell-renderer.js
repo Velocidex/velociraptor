@@ -299,6 +299,21 @@ export default class NotebookCellRenderer extends React.Component {
 
     }
 
+    formatCell = () => {
+        api.post('v1/ReformatVQL', {
+            vql:  this.state.ace.getValue(),
+        }, this.source.token).then( (response) => {
+            if (response.cancel) {
+                return;
+            }
+
+            let reformatted = response.data && response.data.vql;
+            if (reformatted) {
+                this.state.ace.setValue(reformatted);
+            }
+        });
+    }
+
     saveCell = () => {
         let cell = this.state.cell;
         cell.input = this.state.ace.getValue();
@@ -593,11 +608,17 @@ export default class NotebookCellRenderer extends React.Component {
                   <FontAwesomeIcon icon="stop"/>
                 </Button>
 
+                <Button title={T("Format")}
+                        onClick={this.formatCell}
+                        variant="default">
+                  <FontAwesomeIcon icon="indent"/>
+                </Button>
                 <Button title={T("Save")}
                         onClick={this.saveCell}
                         variant="default">
                   <FontAwesomeIcon icon="save"/>
                 </Button>
+
               </ButtonGroup>
 
               <ButtonGroup className="float-right">

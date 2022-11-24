@@ -144,7 +144,8 @@ func streamQuery(
 			// All the queries will use the same scope. This allows one
 			// query to define functions for the next query in order.
 			for query_idx, vql := range statements {
-				logger.Info("Query: Running %v\n", vql.ToString(scope))
+				logger.Info("Query: Running %v\n",
+					vfilter.FormatToString(scope, vql))
 
 				result_chan := vfilter.GetResponseChannel(
 					vql, subctx, scope,
