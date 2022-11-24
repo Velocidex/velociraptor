@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
+	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -69,7 +70,6 @@ func (self *ApiServer) GetUsers(
 	}
 
 	principal := user_record.Name
-	result := &api_proto.Users{}
 
 	// Only show users in the current org
 	users, err := users.ListUsers(ctx, principal, []string{org_config_obj.OrgId})
@@ -78,9 +78,78 @@ func (self *ApiServer) GetUsers(
 	}
 
 	sort.Slice(users, func(i, j int) bool { return users[i].Name < users[j].Name })
-	result.Users = users
+	return &api_proto.Users{Users: users}, nil
+}
 
-	return result, nil
+func (self *ApiServer) ChangeUser(ctx context.Context,
+				  in *api_proto.UpdateUserRequest,
+				  options users.AddUserOptions) (*emptypb.Empty, error) {
+
+	users_manager := services.GetUserManager()
+	principal, org_config_obj, err := users_manager.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	per_org_policy := map[string]*acl_proto.ApiClientACL{}
+	for org, roles := range in.RolesPerOrg {
+		per_org_policy[org] = &acl_proto.ApiClientACL{
+			Roles: roles.Strings,
+		}
+	}
+
+	err = users.AddUserToOrg(ctx, options, principal.Name, in.Name, per_org_policy)
+	if err != nil {
+//		if errors.Is(err, users.ErrInvalidArgument) {
+//			return nil, status.Error(codes.InvalidArgument, err.Error())
+//		} else if errors.Is(err, users.ErrPermissionDenied) {
+//			return nil, status.Error(codes.PermissionDenied,
+//					"User is not allowed to create users.")
+//		} else if errors.Is(err, users.ErrUserNotFound) {
+//			return nil, status.Errorf(codes.NotFound, "User %s does not exist.",
+//						  in.Name)
+//		} else if errors.Is(err, users.ErrUserAlreadyExists) {
+//			return nil, status.Errorf(codes.AlreadyExists,
+//						  "Cannot create user %s.  Username already exists",
+//						  in.Name)
+//		}
+		return nil, err
+	}
+
+	if in.Password != "" {
+		logger := logging.GetLogger(org_config_obj, &logging.APICmponent)
+		logger.WithFields(logrus.Fields{
+			"Principal":  principal.Name,
+			"Username": in.Name,
+		}).Info("users: setting password")
+		err = users.SetUserPassword(ctx, principal.Name, in.Name, in.Password, "")
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	msg := "users: Created user record via API"
+	if options == users.UseExistingUser {
+		msg = "users: Updated user record via API"
+	}
+
+	logger := logging.GetLogger(org_config_obj, &logging.Audit)
+	logger.WithFields(logrus.Fields{
+		"Principal":  principal.Name,
+		"Username": in.Name,
+	}).Info(msg)
+
+	return &emptypb.Empty{}, nil
+}
+
+func (self *ApiServer) CreateUser(ctx context.Context,
+				  in *api_proto.UpdateUserRequest) (*emptypb.Empty, error) {
+	return self.ChangeUser(ctx, in, users.AddNewUser)
+}
+
+func (self *ApiServer) UpdateUser(ctx context.Context,
+				  in *api_proto.UpdateUserRequest) (*emptypb.Empty, error) {
+	return self.ChangeUser(ctx, in, users.UseExistingUser)
 }
 
 func (self *ApiServer) GetUser(

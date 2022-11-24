@@ -11,6 +11,10 @@ package proto;
 
 option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
+message Strings {
+    repeated string strings = 1;
+}
+
 message VelociraptorUser {
     string name = 1 [(sem_type) = {
             description: "The username"
@@ -41,6 +45,20 @@ message VelociraptorUser {
     // Only used by the GUI/API to determine the currently selected
     // org the user wants to see.
     string current_org = 12;
+}
+
+message UpdateUserRequest {
+	string name = 1 [(sem_type) = {
+		description: "The username"
+	}];
+
+	string password = 2 [(sem_type) = {
+		description: "The cleartext password"
+	}];
+
+	map<string, Strings> roles_per_org = 3;
+	map<string, string> string_fields = 4;
+	map<string, bool> bool_fields = 5;
 }
 
 message UserRequest {
@@ -104,8 +122,10 @@ message ApiUser {
     UserType user_type = 4;
 
     repeated OrgRecord orgs = 11;
+    bool org_admin = 12 [(sem_type) = {
+	    description: "Whether this user is an OrgAdmin"
+    }];
 }
-
 
 message UserNotificationCount {
     uint64 count = 1;

@@ -181,6 +181,26 @@ func (mr *MockAPIClientMockRecorder) CreateNotebookDownloadFile(arg0, arg1 inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNotebookDownloadFile", reflect.TypeOf((*MockAPIClient)(nil).CreateNotebookDownloadFile), varargs...)
 }
 
+// CreateUser mocks base method.
+func (m *MockAPIClient) CreateUser(arg0 context.Context, arg1 *proto0.ChangeUserRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CreateUser", varargs...)
+	ret0, _ := ret[0].(*emptypb.Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateUser indicates an expected call of CreateUser.
+func (mr *MockAPIClientMockRecorder) CreateUser(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockAPIClient)(nil).CreateUser), varargs...)
+}
+
 // DeleteSubject mocks base method.
 func (m *MockAPIClient) DeleteSubject(arg0 context.Context, arg1 *proto0.DataRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
@@ -1139,6 +1159,26 @@ func (mr *MockAPIClientMockRecorder) UpdateNotebookCell(arg0, arg1 interface{}, 
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNotebookCell", reflect.TypeOf((*MockAPIClient)(nil).UpdateNotebookCell), varargs...)
+}
+
+// UpdateUser mocks base method.
+func (m *MockAPIClient) UpdateUser(arg0 context.Context, arg1 *proto0.ChangeUserRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpdateUser", varargs...)
+	ret0, _ := ret[0].(*emptypb.Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateUser indicates an expected call of UpdateUser.
+func (mr *MockAPIClientMockRecorder) UpdateUser(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateUser", reflect.TypeOf((*MockAPIClient)(nil).UpdateUser), varargs...)
 }
 
 // UploadNotebookAttachment mocks base method.
