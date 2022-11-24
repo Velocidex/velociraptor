@@ -218,6 +218,11 @@ message Users {
     repeated VelociraptorUser users = 1;
 }
 
+message UserRoles {
+    string name = 1;
+    map<string, Strings> roles_per_org = 2;
+};
+
 message SetPasswordRequest {
     string password = 1;
 }

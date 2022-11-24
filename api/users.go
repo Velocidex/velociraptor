@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"os"
 	"sort"
 
 	"github.com/sirupsen/logrus"
@@ -235,4 +236,78 @@ func (self *ApiServer) GetUserFavorites(
 	}
 	principal := user_record.Name
 	return users_manager.GetFavorites(ctx, org_config_obj, principal, in.Type)
+}
+
+func (self *ApiServer) GetUserRoles(
+	ctx context.Context,
+	in *api_proto.UserRequest) (*api_proto.UserRoles, error) {
+
+	users_manager := services.GetUserManager()
+	user_record, _, err := users_manager.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	user, err := users.GetUser(ctx, user_record.Name, in.Name)
+	if err != nil {
+		if errors.Is(err, acls.PermissionDenied) {
+			return nil, status.Error(codes.PermissionDenied,
+                                       "User is not allowed to view requested user.")
+	       }
+		return nil, err
+	}
+
+
+	user_roles := &api_proto.UserRoles{
+		Name: in.Name,
+		RolesPerOrg: map[string]*api_proto.Strings{},
+	}
+
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	for _, user_org := range user.Orgs {
+		org_config_obj, err := org_manager.GetOrgConfig(user_org.Id)
+		if err != nil {
+			return nil, Status(self.verbose, err)
+		}
+		acl, err := services.GetPolicy(org_config_obj, in.Name)
+		if err != nil {
+			// No ACL in this org isn't an error
+			if !errors.Is(err, os.ErrNotExist) {
+				continue
+			}
+			return nil, Status(self.verbose, err)
+		}
+		user_roles.RolesPerOrg[user_org.Id] = &api_proto.Strings{Strings: acl.Roles}
+	}
+	return user_roles, nil
+}
+
+func (self *ApiServer) SetUserRoles(
+	ctx context.Context,
+	in *api_proto.UserRoles) (*emptypb.Empty, error) {
+
+	users_manager := services.GetUserManager()
+	user_record, _, err := users_manager.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	principal := user_record.Name
+
+	per_org_policy := map[string]*acl_proto.ApiClientACL{}
+
+	for org, roles := range in.RolesPerOrg {
+		per_org_policy[org] = &acl_proto.ApiClientACL{Roles: roles.Strings,}
+	}
+
+	err = users.GrantUserToOrg(ctx, principal, in.Name, per_org_policy)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	return &emptypb.Empty{}, nil
 }

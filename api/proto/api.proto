@@ -229,6 +229,19 @@ service API {
         };
     }
 
+    rpc GetUserRoles(UserRequest) returns(UserRoles) {
+	option (google.api.http) = {
+	    get: "/api/v1/GetUserRoles/{name}",
+	};
+    }
+
+    rpc SetUserRoles(UserRoles) returns(google.protobuf.Empty) {
+	option (google.api.http) = {
+	    post: "/api/v1/SetUserRoles",
+	    body: "*",
+	};
+    }
+
     rpc GetUser(UserRequest) returns(VelociraptorUser) {
         option(google.api.http) = {
             get: "/api/v1/GetUser/{name}",

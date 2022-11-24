@@ -1239,6 +1239,61 @@ func (x *Users) GetUsers() []*VelociraptorUser {
 	return nil
 }
 
+type UserRoles struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Name        string              `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	RolesPerOrg map[string]*Strings `protobuf:"bytes,2,rep,name=roles_per_org,json=rolesPerOrg,proto3" json:"roles_per_org,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+}
+
+func (x *UserRoles) Reset() {
+	*x = UserRoles{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_users_proto_msgTypes[14]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *UserRoles) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UserRoles) ProtoMessage() {}
+
+func (x *UserRoles) ProtoReflect() protoreflect.Message {
+	mi := &file_users_proto_msgTypes[14]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UserRoles.ProtoReflect.Descriptor instead.
+func (*UserRoles) Descriptor() ([]byte, []int) {
+	return file_users_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *UserRoles) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *UserRoles) GetRolesPerOrg() map[string]*Strings {
+	if x != nil {
+		return x.RolesPerOrg
+	}
+	return nil
+}
+
 type SetPasswordRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -1250,7 +1305,7 @@ type SetPasswordRequest struct {
 func (x *SetPasswordRequest) Reset() {
 	*x = SetPasswordRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_users_proto_msgTypes[14]
+		mi := &file_users_proto_msgTypes[15]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1263,7 +1318,7 @@ func (x *SetPasswordRequest) String() string {
 func (*SetPasswordRequest) ProtoMessage() {}
 
 func (x *SetPasswordRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_users_proto_msgTypes[14]
+	mi := &file_users_proto_msgTypes[15]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1276,7 +1331,7 @@ func (x *SetPasswordRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetPasswordRequest.ProtoReflect.Descriptor instead.
 func (*SetPasswordRequest) Descriptor() ([]byte, []int) {
-	return file_users_proto_rawDescGZIP(), []int{14}
+	return file_users_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *SetPasswordRequest) GetPassword() string {
@@ -1301,7 +1356,7 @@ type Favorite struct {
 func (x *Favorite) Reset() {
 	*x = Favorite{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_users_proto_msgTypes[15]
+		mi := &file_users_proto_msgTypes[16]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1314,7 +1369,7 @@ func (x *Favorite) String() string {
 func (*Favorite) ProtoMessage() {}
 
 func (x *Favorite) ProtoReflect() protoreflect.Message {
-	mi := &file_users_proto_msgTypes[15]
+	mi := &file_users_proto_msgTypes[16]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1327,7 +1382,7 @@ func (x *Favorite) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Favorite.ProtoReflect.Descriptor instead.
 func (*Favorite) Descriptor() ([]byte, []int) {
-	return file_users_proto_rawDescGZIP(), []int{15}
+	return file_users_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *Favorite) GetName() string {
@@ -1369,7 +1424,7 @@ type Favorites struct {
 func (x *Favorites) Reset() {
 	*x = Favorites{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_users_proto_msgTypes[16]
+		mi := &file_users_proto_msgTypes[17]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1382,7 +1437,7 @@ func (x *Favorites) String() string {
 func (*Favorites) ProtoMessage() {}
 
 func (x *Favorites) ProtoReflect() protoreflect.Message {
-	mi := &file_users_proto_msgTypes[16]
+	mi := &file_users_proto_msgTypes[17]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1395,7 +1450,7 @@ func (x *Favorites) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Favorites.ProtoReflect.Descriptor instead.
 func (*Favorites) Descriptor() ([]byte, []int) {
-	return file_users_proto_rawDescGZIP(), []int{16}
+	return file_users_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *Favorites) GetItems() []*Favorite {
@@ -1666,25 +1721,37 @@ var file_users_proto_rawDesc = []byte{
 	0x05, 0x6c, 0x69, 0x6e, 0x6b, 0x73, 0x22, 0x36, 0x0a, 0x05, 0x55, 0x73, 0x65, 0x72, 0x73, 0x12,
 	0x2d, 0x0a, 0x05, 0x75, 0x73, 0x65, 0x72, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x17,
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x56, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x72, 0x61, 0x70,
-	0x74, 0x6f, 0x72, 0x55, 0x73, 0x65, 0x72, 0x52, 0x05, 0x75, 0x73, 0x65, 0x72, 0x73, 0x22, 0x30,
-	0x0a, 0x12, 0x53, 0x65, 0x74, 0x50, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x52, 0x65, 0x71,
-	0x75, 0x65, 0x73, 0x74, 0x12, 0x1a, 0x0a, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64,
-	0x22, 0x7d, 0x0a, 0x08, 0x46, 0x61, 0x76, 0x6f, 0x72, 0x69, 0x74, 0x65, 0x12, 0x12, 0x0a, 0x04,
+	0x74, 0x6f, 0x72, 0x55, 0x73, 0x65, 0x72, 0x52, 0x05, 0x75, 0x73, 0x65, 0x72, 0x73, 0x22, 0xb6,
+	0x01, 0x0a, 0x09, 0x55, 0x73, 0x65, 0x72, 0x52, 0x6f, 0x6c, 0x65, 0x73, 0x12, 0x12, 0x0a, 0x04,
 	0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65,
-	0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b, 0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69,
-	0x6f, 0x6e, 0x12, 0x27, 0x0a, 0x04, 0x73, 0x70, 0x65, 0x63, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b,
-	0x32, 0x13, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x41, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63,
-	0x74, 0x53, 0x70, 0x65, 0x63, 0x52, 0x04, 0x73, 0x70, 0x65, 0x63, 0x12, 0x12, 0x0a, 0x04, 0x74,
-	0x79, 0x70, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x22,
-	0x32, 0x0a, 0x09, 0x46, 0x61, 0x76, 0x6f, 0x72, 0x69, 0x74, 0x65, 0x73, 0x12, 0x25, 0x0a, 0x05,
-	0x69, 0x74, 0x65, 0x6d, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x2e, 0x46, 0x61, 0x76, 0x6f, 0x72, 0x69, 0x74, 0x65, 0x52, 0x05, 0x69, 0x74,
-	0x65, 0x6d, 0x73, 0x42, 0x31, 0x5a, 0x2f, 0x77, 0x77, 0x77, 0x2e, 0x76, 0x65, 0x6c, 0x6f, 0x63,
-	0x69, 0x64, 0x65, 0x78, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x6f, 0x6c, 0x61, 0x6e, 0x67, 0x2f,
-	0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x72, 0x61, 0x70, 0x74, 0x6f, 0x72, 0x2f, 0x61, 0x70, 0x69,
-	0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x12, 0x45, 0x0a, 0x0d, 0x72, 0x6f, 0x6c, 0x65, 0x73, 0x5f, 0x70, 0x65, 0x72, 0x5f, 0x6f, 0x72,
+	0x67, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e,
+	0x55, 0x73, 0x65, 0x72, 0x52, 0x6f, 0x6c, 0x65, 0x73, 0x2e, 0x52, 0x6f, 0x6c, 0x65, 0x73, 0x50,
+	0x65, 0x72, 0x4f, 0x72, 0x67, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x0b, 0x72, 0x6f, 0x6c, 0x65,
+	0x73, 0x50, 0x65, 0x72, 0x4f, 0x72, 0x67, 0x1a, 0x4e, 0x0a, 0x10, 0x52, 0x6f, 0x6c, 0x65, 0x73,
+	0x50, 0x65, 0x72, 0x4f, 0x72, 0x67, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b,
+	0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x24, 0x0a,
+	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0e, 0x2e, 0x70,
+	0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x74, 0x72, 0x69, 0x6e, 0x67, 0x73, 0x52, 0x05, 0x76, 0x61,
+	0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x30, 0x0a, 0x12, 0x53, 0x65, 0x74, 0x50, 0x61,
+	0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x1a, 0x0a,
+	0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x08, 0x70, 0x61, 0x73, 0x73, 0x77, 0x6f, 0x72, 0x64, 0x22, 0x7d, 0x0a, 0x08, 0x46, 0x61, 0x76,
+	0x6f, 0x72, 0x69, 0x74, 0x65, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x01, 0x20,
+	0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x20, 0x0a, 0x0b, 0x64, 0x65, 0x73,
+	0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0b,
+	0x64, 0x65, 0x73, 0x63, 0x72, 0x69, 0x70, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x27, 0x0a, 0x04, 0x73,
+	0x70, 0x65, 0x63, 0x18, 0x03, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x2e, 0x41, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x53, 0x70, 0x65, 0x63, 0x52, 0x04,
+	0x73, 0x70, 0x65, 0x63, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x79, 0x70, 0x65, 0x18, 0x04, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x22, 0x32, 0x0a, 0x09, 0x46, 0x61, 0x76, 0x6f,
+	0x72, 0x69, 0x74, 0x65, 0x73, 0x12, 0x25, 0x0a, 0x05, 0x69, 0x74, 0x65, 0x6d, 0x73, 0x18, 0x01,
+	0x20, 0x03, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x46, 0x61, 0x76,
+	0x6f, 0x72, 0x69, 0x74, 0x65, 0x52, 0x05, 0x69, 0x74, 0x65, 0x6d, 0x73, 0x42, 0x31, 0x5a, 0x2f,
+	0x77, 0x77, 0x77, 0x2e, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x64, 0x65, 0x78, 0x2e, 0x63, 0x6f,
+	0x6d, 0x2f, 0x67, 0x6f, 0x6c, 0x61, 0x6e, 0x67, 0x2f, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x72,
+	0x61, 0x70, 0x74, 0x6f, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -1700,7 +1767,7 @@ func file_users_proto_rawDescGZIP() []byte {
 }
 
 var file_users_proto_enumTypes = make([]protoimpl.EnumInfo, 3)
-var file_users_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
+var file_users_proto_msgTypes = make([]protoimpl.MessageInfo, 22)
 var file_users_proto_goTypes = []interface{}{
 	(ApiUser_UserType)(0),                // 0: proto.ApiUser.UserType
 	(UserNotification_Type)(0),           // 1: proto.UserNotification.Type
@@ -1719,43 +1786,47 @@ var file_users_proto_goTypes = []interface{}{
 	(*GUICustomizations)(nil),            // 14: proto.GUICustomizations
 	(*SetGUIOptionsRequest)(nil),         // 15: proto.SetGUIOptionsRequest
 	(*Users)(nil),                        // 16: proto.Users
-	(*SetPasswordRequest)(nil),           // 17: proto.SetPasswordRequest
-	(*Favorite)(nil),                     // 18: proto.Favorite
-	(*Favorites)(nil),                    // 19: proto.Favorites
-	nil,                                  // 20: proto.UpdateUserRequest.RolesPerOrgEntry
-	nil,                                  // 21: proto.UpdateUserRequest.StringFieldsEntry
-	nil,                                  // 22: proto.UpdateUserRequest.BoolFieldsEntry
-	(*proto.ApiClientACL)(nil),           // 23: proto.ApiClientACL
-	(*OrgRecord)(nil),                    // 24: proto.OrgRecord
-	(*proto1.GUILink)(nil),               // 25: proto.GUILink
-	(*proto2.ArtifactSpec)(nil),          // 26: proto.ArtifactSpec
+	(*UserRoles)(nil),                    // 17: proto.UserRoles
+	(*SetPasswordRequest)(nil),           // 18: proto.SetPasswordRequest
+	(*Favorite)(nil),                     // 19: proto.Favorite
+	(*Favorites)(nil),                    // 20: proto.Favorites
+	nil,                                  // 21: proto.UpdateUserRequest.RolesPerOrgEntry
+	nil,                                  // 22: proto.UpdateUserRequest.StringFieldsEntry
+	nil,                                  // 23: proto.UpdateUserRequest.BoolFieldsEntry
+	nil,                                  // 24: proto.UserRoles.RolesPerOrgEntry
+	(*proto.ApiClientACL)(nil),           // 25: proto.ApiClientACL
+	(*OrgRecord)(nil),                    // 26: proto.OrgRecord
+	(*proto1.GUILink)(nil),               // 27: proto.GUILink
+	(*proto2.ArtifactSpec)(nil),          // 28: proto.ArtifactSpec
 }
 var file_users_proto_depIdxs = []int32{
-	23, // 0: proto.VelociraptorUser.Permissions:type_name -> proto.ApiClientACL
-	24, // 1: proto.VelociraptorUser.orgs:type_name -> proto.OrgRecord
-	20, // 2: proto.UpdateUserRequest.roles_per_org:type_name -> proto.UpdateUserRequest.RolesPerOrgEntry
-	21, // 3: proto.UpdateUserRequest.string_fields:type_name -> proto.UpdateUserRequest.StringFieldsEntry
-	22, // 4: proto.UpdateUserRequest.bool_fields:type_name -> proto.UpdateUserRequest.BoolFieldsEntry
-	23, // 5: proto.ApiUserInterfaceTraits.Permissions:type_name -> proto.ApiClientACL
+	25, // 0: proto.VelociraptorUser.Permissions:type_name -> proto.ApiClientACL
+	26, // 1: proto.VelociraptorUser.orgs:type_name -> proto.OrgRecord
+	21, // 2: proto.UpdateUserRequest.roles_per_org:type_name -> proto.UpdateUserRequest.RolesPerOrgEntry
+	22, // 3: proto.UpdateUserRequest.string_fields:type_name -> proto.UpdateUserRequest.StringFieldsEntry
+	23, // 4: proto.UpdateUserRequest.bool_fields:type_name -> proto.UpdateUserRequest.BoolFieldsEntry
+	25, // 5: proto.ApiUserInterfaceTraits.Permissions:type_name -> proto.ApiClientACL
 	14, // 6: proto.ApiUserInterfaceTraits.customizations:type_name -> proto.GUICustomizations
-	25, // 7: proto.ApiUserInterfaceTraits.links:type_name -> proto.GUILink
+	27, // 7: proto.ApiUserInterfaceTraits.links:type_name -> proto.GUILink
 	8,  // 8: proto.ApiUser.interface_traits:type_name -> proto.ApiUserInterfaceTraits
 	0,  // 9: proto.ApiUser.user_type:type_name -> proto.ApiUser.UserType
-	24, // 10: proto.ApiUser.orgs:type_name -> proto.OrgRecord
+	26, // 10: proto.ApiUser.orgs:type_name -> proto.OrgRecord
 	1,  // 11: proto.UserNotification.notification_type:type_name -> proto.UserNotification.Type
 	2,  // 12: proto.UserNotification.state:type_name -> proto.UserNotification.State
 	11, // 13: proto.GetUserNotificationsResponse.items:type_name -> proto.UserNotification
 	14, // 14: proto.SetGUIOptionsRequest.customizations:type_name -> proto.GUICustomizations
-	25, // 15: proto.SetGUIOptionsRequest.links:type_name -> proto.GUILink
+	27, // 15: proto.SetGUIOptionsRequest.links:type_name -> proto.GUILink
 	4,  // 16: proto.Users.users:type_name -> proto.VelociraptorUser
-	26, // 17: proto.Favorite.spec:type_name -> proto.ArtifactSpec
-	18, // 18: proto.Favorites.items:type_name -> proto.Favorite
-	3,  // 19: proto.UpdateUserRequest.RolesPerOrgEntry.value:type_name -> proto.Strings
-	20, // [20:20] is the sub-list for method output_type
-	20, // [20:20] is the sub-list for method input_type
-	20, // [20:20] is the sub-list for extension type_name
-	20, // [20:20] is the sub-list for extension extendee
-	0,  // [0:20] is the sub-list for field type_name
+	24, // 17: proto.UserRoles.roles_per_org:type_name -> proto.UserRoles.RolesPerOrgEntry
+	28, // 18: proto.Favorite.spec:type_name -> proto.ArtifactSpec
+	19, // 19: proto.Favorites.items:type_name -> proto.Favorite
+	3,  // 20: proto.UpdateUserRequest.RolesPerOrgEntry.value:type_name -> proto.Strings
+	3,  // 21: proto.UserRoles.RolesPerOrgEntry.value:type_name -> proto.Strings
+	22, // [22:22] is the sub-list for method output_type
+	22, // [22:22] is the sub-list for method input_type
+	22, // [22:22] is the sub-list for extension type_name
+	22, // [22:22] is the sub-list for extension extendee
+	0,  // [0:22] is the sub-list for field type_name
 }
 
 func init() { file_users_proto_init() }
@@ -1934,7 +2005,7 @@ func file_users_proto_init() {
 			}
 		}
 		file_users_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SetPasswordRequest); i {
+			switch v := v.(*UserRoles); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1946,7 +2017,7 @@ func file_users_proto_init() {
 			}
 		}
 		file_users_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*Favorite); i {
+			switch v := v.(*SetPasswordRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -1958,6 +2029,18 @@ func file_users_proto_init() {
 			}
 		}
 		file_users_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Favorite); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_users_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Favorites); i {
 			case 0:
 				return &v.state
@@ -1976,7 +2059,7 @@ func file_users_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_users_proto_rawDesc,
 			NumEnums:      3,
-			NumMessages:   20,
+			NumMessages:   22,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
