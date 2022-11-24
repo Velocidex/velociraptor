@@ -222,6 +222,13 @@ service API {
         };
     }
 
+    // List all the GUI users in orgs in which we are a member
+    rpc GetGlobalUsers(google.protobuf.Empty) returns(Users) {
+        option (google.api.http) = {
+            get: "/api/v1/GetGlobalUsers",
+        };
+    }
+
     rpc GetUser(UserRequest) returns(VelociraptorUser) {
         option(google.api.http) = {
             get: "/api/v1/GetUser/{name}",

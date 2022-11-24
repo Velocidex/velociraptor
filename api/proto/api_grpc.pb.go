@@ -45,6 +45,8 @@ type APIClient interface {
 	SetGUIOptions(ctx context.Context, in *SetGUIOptionsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// List all the GUI users known on this server.
 	GetUsers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Users, error)
+	// List all the GUI users in orgs in which we are a member
+	GetGlobalUsers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Users, error)
 	GetUser(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*VelociraptorUser, error)
 	CreateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	UpdateUser(ctx context.Context, in *UpdateUserRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
@@ -274,6 +276,15 @@ func (c *aPIClient) SetGUIOptions(ctx context.Context, in *SetGUIOptionsRequest,
 func (c *aPIClient) GetUsers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Users, error) {
 	out := new(Users)
 	err := c.cc.Invoke(ctx, "/proto.API/GetUsers", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aPIClient) GetGlobalUsers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Users, error) {
+	out := new(Users)
+	err := c.cc.Invoke(ctx, "/proto.API/GetGlobalUsers", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -794,6 +805,8 @@ type APIServer interface {
 	SetGUIOptions(context.Context, *SetGUIOptionsRequest) (*emptypb.Empty, error)
 	// List all the GUI users known on this server.
 	GetUsers(context.Context, *emptypb.Empty) (*Users, error)
+	// List all the GUI users in orgs in which we are a member
+	GetGlobalUsers(context.Context, *emptypb.Empty) (*Users, error)
 	GetUser(context.Context, *UserRequest) (*VelociraptorUser, error)
 	CreateUser(context.Context, *UpdateUserRequest) (*emptypb.Empty, error)
 	UpdateUser(context.Context, *UpdateUserRequest) (*emptypb.Empty, error)
@@ -923,6 +936,9 @@ func (UnimplementedAPIServer) SetGUIOptions(context.Context, *SetGUIOptionsReque
 }
 func (UnimplementedAPIServer) GetUsers(context.Context, *emptypb.Empty) (*Users, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUsers not implemented")
+}
+func (UnimplementedAPIServer) GetGlobalUsers(context.Context, *emptypb.Empty) (*Users, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetGlobalUsers not implemented")
 }
 func (UnimplementedAPIServer) GetUser(context.Context, *UserRequest) (*VelociraptorUser, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUser not implemented")
@@ -1386,6 +1402,24 @@ func _API_GetUsers_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(APIServer).GetUsers(ctx, req.(*emptypb.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _API_GetGlobalUsers_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(emptypb.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).GetGlobalUsers(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/GetGlobalUsers",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).GetGlobalUsers(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2352,6 +2386,10 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetUsers",
 			Handler:    _API_GetUsers_Handler,
+		},
+		{
+			MethodName: "GetGlobalUsers",
+			Handler:    _API_GetGlobalUsers_Handler,
 		},
 		{
 			MethodName: "GetUser",

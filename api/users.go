@@ -81,6 +81,28 @@ func (self *ApiServer) GetUsers(
 	return &api_proto.Users{Users: users}, nil
 }
 
+func (self *ApiServer) GetGlobalUsers(
+	ctx context.Context,
+	in *emptypb.Empty) (*api_proto.Users, error) {
+
+	user_manager := services.GetUserManager()
+	user_record, _, err := user_manager.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	principal := user_record.Name
+
+	// Show all users visible to us
+	users, err := users.ListUsers(ctx, principal, []string{})
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	sort.Slice(users, func(i, j int) bool { return users[i].Name < users[j].Name })
+	return &api_proto.Users{Users: users}, nil
+}
+
 func (self *ApiServer) ChangeUser(ctx context.Context,
 				  in *api_proto.UpdateUserRequest,
 				  options users.AddUserOptions) (*emptypb.Empty, error) {
