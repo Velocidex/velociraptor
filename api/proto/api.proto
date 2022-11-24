@@ -242,6 +242,12 @@ service API {
         };
     }
 
+    rpc DeleteUser(DeleteUserRequest) returns(google.protobuf.Empty) {
+        option (google.api.http) = {
+            delete: "/api/v1/DeleteUser/{name}",
+        };
+    }
+
     rpc GetUserFavorites(Favorite) returns(Favorites) {
         option (google.api.http) = {
             get: "/api/v1/GetUserFavorites",

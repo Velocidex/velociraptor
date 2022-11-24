@@ -152,6 +152,34 @@ func (self *ApiServer) UpdateUser(ctx context.Context,
 	return self.ChangeUser(ctx, in, users.UseExistingUser)
 }
 
+func (self *ApiServer) DeleteUser(ctx context.Context,
+				  in *api_proto.DeleteUserRequest) (*emptypb.Empty, error) {
+
+	users_manager := services.GetUserManager()
+	principal, org_config_obj, err := users_manager.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	orgs := in.Orgs
+	if len(orgs) == 0 {
+		orgs = users.LIST_ALL_ORGS
+	}
+
+	err = users.DeleteUser(ctx, principal.Name, in.Name, orgs)
+	if err != nil {
+		return nil, err
+	}
+
+	logger := logging.GetLogger(org_config_obj, &logging.Audit)
+	logger.WithFields(logrus.Fields{
+		"Username":  in.Name,
+		"Principal": principal,
+	}).Info("users: Deleted user record via API")
+
+	return &emptypb.Empty{}, nil
+}
+
 func (self *ApiServer) GetUser(
 	ctx context.Context, in *api_proto.UserRequest) (*api_proto.VelociraptorUser, error) {
 

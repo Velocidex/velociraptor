@@ -61,6 +61,16 @@ message UpdateUserRequest {
 	map<string, bool> bool_fields = 5;
 }
 
+message DeleteUserRequest {
+	string name = 1 [(sem_type) = {
+		description: "The username"
+	}];
+
+	repeated string orgs = 2 [(sem_type) = {
+		description: "The org IDs to remove this user (empty means all orgs)"
+	}];
+}
+
 message UserRequest {
     string name = 1;
 }
