@@ -222,6 +222,12 @@ service API {
         };
     }
 
+    rpc GetUser(UserRequest) returns(VelociraptorUser) {
+        option(google.api.http) = {
+            get: "/api/v1/GetUser/{name}",
+        };
+    }
+
     rpc GetUserFavorites(Favorite) returns(Favorites) {
         option (google.api.http) = {
             get: "/api/v1/GetUserFavorites",

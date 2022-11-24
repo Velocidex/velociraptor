@@ -43,6 +43,9 @@ message VelociraptorUser {
     string current_org = 12;
 }
 
+message UserRequest {
+    string name = 1;
+}
 
 // These traits are used to control the GUI App. Many of these fields
 // are constructed from the VelociraptorUser, the config file, the

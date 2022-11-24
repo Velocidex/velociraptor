@@ -1,11 +1,15 @@
 package api
 
 import (
+	"errors"
 	"sort"
 
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -77,6 +81,27 @@ func (self *ApiServer) GetUsers(
 	result.Users = users
 
 	return result, nil
+}
+
+func (self *ApiServer) GetUser(
+	ctx context.Context, in *api_proto.UserRequest) (*api_proto.VelociraptorUser, error) {
+
+	users_manager := services.GetUserManager()
+	user_record, _, err := users_manager.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := users.GetUser(ctx, user_record.Name, in.Name)
+	if err != nil {
+		if errors.Is(err, acls.PermissionDenied) {
+			return nil, status.Error(codes.PermissionDenied,
+                                       "User is not allowed to view requested user.")
+	       }
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func (self *ApiServer) GetUserFavorites(
