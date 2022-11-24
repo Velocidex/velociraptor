@@ -12,4 +12,5 @@ Queries:
   - SELECT * FROM test_read_logs() WHERE Log =~ "is too sparse - unable to expand it" AND NOT Log =~ "SELECT"
 
   # Make sure that timestamps are properly adjusted
-  - SELECT Name, Mtime FROM glob(globs="/**", root=tmpdir) WHERE NOT IsDir
+  - SELECT Name, Mtime.Unix
+    FROM glob(globs="/**", root=tmpdir) WHERE NOT IsDir

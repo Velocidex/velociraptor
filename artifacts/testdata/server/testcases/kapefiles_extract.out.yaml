@@ -31,13 +31,13 @@ LET tmpdir <= tempdir()[]SELECT Timestamp, vfs_path, FileUpload, Metadata, Uploa
  {
   "Log": "Velociraptor: Error: File /uploads/ntfs/%5C%5C.%5CC%3A/$Extend/$UsnJrnl%3A$J is too sparse - unable to expand it.\n"
  }
-]SELECT Name, Mtime FROM glob(globs="/**", root=tmpdir) WHERE NOT IsDir[
+]SELECT Name, Mtime.Unix FROM glob(globs="/**", root=tmpdir) WHERE NOT IsDir[
  {
   "Name": "$UsnJrnl%3A$J",
-  "Mtime": "2021-08-21T20:04:11Z"
+  "Mtime.Unix": 1629576251
  },
  {
   "Name": "$UsnJrnl%3A$Max",
-  "Mtime": "2021-08-21T20:04:11Z"
+  "Mtime.Unix": 1629576251
  }
 ]
