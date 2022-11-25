@@ -29,8 +29,8 @@ import (
 )
 
 type _ParseXMLFunctionArgs struct {
-	File     string `vfilter:"required,field=file,doc=XML file to open."`
-	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	File     *accessors.OSPath `vfilter:"required,field=file,doc=XML file to open."`
+	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
 }
 type _ParseXMLFunction struct{}
 
@@ -56,7 +56,7 @@ func (self _ParseXMLFunction) Call(
 		scope.Log("parse_xml: %v", err)
 		return vfilter.Null{}
 	}
-	file, err := accessor.Open(arg.File)
+	file, err := accessor.OpenWithOSPath(arg.File)
 	if err != nil {
 		scope.Log("Unable to open file %s", arg.File)
 		return vfilter.Null{}

@@ -29,8 +29,8 @@ import (
 */
 
 type _PlistFunctionArgs struct {
-	Filename string `vfilter:"required,field=file,doc=A list of files to parse."`
-	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Filename *accessors.OSPath `vfilter:"required,field=file,doc=A list of files to parse."`
+	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
 }
 
 type PlistFunction struct{}
@@ -65,7 +65,7 @@ func (self *PlistFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	file, err := accessor.Open(arg.Filename)
+	file, err := accessor.OpenWithOSPath(arg.Filename)
 	if err != nil {
 		scope.Log("plist: %v", err)
 		return vfilter.Null{}
@@ -103,8 +103,8 @@ func (self *PlistFunction) Call(ctx context.Context,
 }
 
 type _PlistPluginArgs struct {
-	Filenames []string `vfilter:"required,field=file,doc=A list of files to parse."`
-	Accessor  string   `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Filenames []*accessors.OSPath `vfilter:"required,field=file,doc=A list of files to parse."`
+	Accessor  string              `vfilter:"optional,field=accessor,doc=The accessor to use."`
 }
 
 type _PlistPlugin struct{}
@@ -149,7 +149,7 @@ func (self _PlistPlugin) Call(
 					return
 				}
 
-				file, err := accessor.Open(filename)
+				file, err := accessor.OpenWithOSPath(filename)
 				if err != nil {
 					scope.Log("Unable to open file %s: %v",
 						filename, err)

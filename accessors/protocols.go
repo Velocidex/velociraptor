@@ -2,6 +2,7 @@ package accessors
 
 import (
 	"context"
+	"reflect"
 
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -86,7 +87,12 @@ func (self _AddOSPath) Applicable(a vfilter.Any, b vfilter.Any) bool {
 	}
 
 	switch b.(type) {
-	case *OSPath, string, []vfilter.Any:
+	case *OSPath, string:
+		return true
+	}
+
+	a_value := reflect.Indirect(reflect.ValueOf(b))
+	if a_value.Type().Kind() == reflect.Slice {
 		return true
 	}
 	return false
@@ -98,23 +104,23 @@ func (self _AddOSPath) Add(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) vf
 		return false
 	}
 
-	var b_os_path *OSPath
-
 	switch t := b.(type) {
 	case *OSPath:
-		b_os_path = t
+		return a_os_path.Append(t.Components...)
 
 	case string:
 		parsed, err := ParsePath(t, "")
 		if err != nil {
 			return vfilter.Null{}
 		}
-		b_os_path = parsed
+		return a_os_path.Append(parsed.Components...)
+	}
 
-		// Support OSPath("/root") + ["foo", "bar"] -> OSPath("/root/foo/bar")
-	case []vfilter.Any:
-		components := make([]string, 0, len(t))
-		for _, item := range t {
+	a_value := reflect.Indirect(reflect.ValueOf(b))
+	if a_value.Type().Kind() == reflect.Slice {
+		components := []string{}
+		for idx := 0; idx < a_value.Len(); idx++ {
+			item := a_value.Index(int(idx)).Interface()
 			str_item, ok := item.(string)
 			if ok {
 				components = append(components, str_item)
@@ -123,7 +129,8 @@ func (self _AddOSPath) Add(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) vf
 
 		return a_os_path.Append(components...)
 	}
-	return a_os_path.Append(b_os_path.Components...)
+
+	return a_os_path
 }
 
 type _AssociativeOSPath struct{}

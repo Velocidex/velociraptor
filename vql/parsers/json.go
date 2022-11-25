@@ -117,8 +117,8 @@ func (self ParseJsonArray) Call(
 }
 
 type ParseJsonlPluginArgs struct {
-	Filename string `vfilter:"required,field=filename,doc=JSON file to open"`
-	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	Filename *accessors.OSPath `vfilter:"required,field=filename,doc=JSON file to open"`
+	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
 }
 
 type ParseJsonlPlugin struct{}
@@ -151,7 +151,7 @@ func (self ParseJsonlPlugin) Call(
 			return
 		}
 
-		fd, err := accessor.Open(arg.Filename)
+		fd, err := accessor.OpenWithOSPath(arg.Filename)
 		if err != nil {
 			scope.Log("Unable to open file %s: %v",
 				arg.Filename, err)

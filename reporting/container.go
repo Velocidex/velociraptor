@@ -316,7 +316,12 @@ func (self *Container) Upload(
 		store_as_name = filename
 	}
 
-	store_path := accessors.NewZipFilePath("uploads").Append(accessor).
+	store_path, err := accessors.NewZipFilePath("uploads")
+	if err != nil {
+		return nil, err
+	}
+
+	store_path = store_path.Append(accessor).
 		Append(store_as_name.Components...)
 
 	// Where to store the file inside the Zip file.
@@ -327,7 +332,7 @@ func (self *Container) Upload(
 		formatFilename(filename, accessor), result.StoredName, expected_size)
 
 	// Try to collect sparse files if possible
-	err := self.maybeCollectSparseFile(ctx, scope, reader, result, mtime)
+	err = self.maybeCollectSparseFile(ctx, scope, reader, result, mtime)
 	if err == nil {
 		self.mu.Lock()
 		self.uploads = append(self.uploads, result)

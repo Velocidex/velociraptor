@@ -54,8 +54,6 @@ func (self *_CacheObj) Materialize() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.scope.Log("Materializing memoized query")
-
 	self.cache = make(map[string]vfilter.Any)
 	stored_query := arg_parser.ToStoredQuery(self.ctx, self.expression)
 	for row_item := range stored_query.Eval(self.ctx, self.scope) {

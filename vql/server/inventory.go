@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"io"
-	"path"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -28,8 +27,8 @@ type InventoryAddFunctionArgs struct {
 	Hash         string `vfilter:"optional,field=hash"`
 	Filename     string `vfilter:"optional,field=filename,doc=The name of the file on the endpoint"`
 
-	File     string `vfilter:"optional,field=file,doc=An optional file to upload"`
-	Accessor string `vfilter:"optional,field=accessor,doc=The accessor to use to read the file."`
+	File     *accessors.OSPath `vfilter:"optional,field=file,doc=An optional file to upload"`
+	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use to read the file."`
 }
 
 type InventoryAddFunction struct{}
@@ -65,14 +64,14 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		Hash:         arg.Hash,
 	}
 
-	if arg.File != "" {
+	if arg.File != nil {
 		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
 			scope.Log("inventory_add: %s", err)
 			return vfilter.Null{}
 		}
 
-		reader, err := accessor.Open(arg.File)
+		reader, err := accessor.OpenWithOSPath(arg.File)
 		if err != nil {
 			scope.Log("inventory_add: %s", err)
 			return vfilter.Null{}
@@ -101,7 +100,7 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		tool.ServeLocally = true
 
 		if tool.Filename == "" {
-			tool.Filename = path.Base(arg.File)
+			tool.Filename = arg.File.Basename()
 		}
 	}
 

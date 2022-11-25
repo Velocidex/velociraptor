@@ -1,0 +1,43 @@
+LET tmpdir <= tempdir()[]SELECT Timestamp, vfs_path, FileUpload, Metadata, UploadedFile.sha256 FROM Artifact.Windows.KapeFiles.Extract( OutputDirectory=tmpdir, ContainerPath=srcDir + TestFile)[
+ {
+  "Timestamp": "2022-11-22T02:06:02.3631543Z",
+  "vfs_path": "\\\\.\\C:\\$Extend\\$UsnJrnl:$Max",
+  "FileUpload": "/uploads/ntfs/%5C%5C.%5CC%3A/$Extend/$UsnJrnl%3A$Max",
+  "Metadata": {
+   "Created": "2021-08-21T20:04:11.32606Z",
+   "LastAccessed": "2021-08-21T20:04:11.32606Z",
+   "Modified": "2021-08-21T20:04:11.32606Z",
+   "Size": 32,
+   "SourceFile": "\\\\.\\C:\\$Extend\\$UsnJrnl:$Max",
+   "_Source": "Generic.Collectors.File/All Matches Metadata"
+  },
+  "UploadedFile.sha256": "40828efda6190ba2f6b511b776d98fcf707996b3caa24623983be37db6cd2462"
+ },
+ {
+  "Timestamp": "2022-11-22T02:06:02.3631543Z",
+  "vfs_path": "\\\\.\\C:\\$Extend\\$UsnJrnl:$J",
+  "FileUpload": "/uploads/ntfs/%5C%5C.%5CC%3A/$Extend/$UsnJrnl%3A$J",
+  "Metadata": {
+   "Created": "2021-08-21T20:04:11.32606Z",
+   "LastAccessed": "2021-08-21T20:04:11.32606Z",
+   "Modified": "2021-08-21T20:04:11.32606Z",
+   "Size": 13771763704,
+   "SourceFile": "\\\\.\\C:\\$Extend\\$UsnJrnl:$J",
+   "_Source": "Generic.Collectors.File/All Matches Metadata"
+  },
+  "UploadedFile.sha256": "1894a19c85ba153acbf743ac4e43fc004c891604b26f8c69e1e83ea2afc7c48f"
+ }
+]SELECT * FROM test_read_logs() WHERE Log =~ "is too sparse - unable to expand it" AND NOT Log =~ "SELECT"[
+ {
+  "Log": "Velociraptor: Error: File /uploads/ntfs/%5C%5C.%5CC%3A/$Extend/$UsnJrnl%3A$J is too sparse - unable to expand it.\n"
+ }
+]SELECT Name, Mtime.Unix FROM glob(globs="/**", root=tmpdir) WHERE NOT IsDir[
+ {
+  "Name": "$UsnJrnl%3A$J",
+  "Mtime.Unix": 1629576251
+ },
+ {
+  "Name": "$UsnJrnl%3A$Max",
+  "Mtime.Unix": 1629576251
+ }
+]

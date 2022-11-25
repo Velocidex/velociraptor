@@ -52,7 +52,15 @@ Queries:
        pathspec(parse="HKU/Software", path_type='registry') + "Microsoft",
 
        -- Access components from an OSPath
-       pathspec(parse="HKU/Software", path_type='registry').Components
+       pathspec(parse="HKU/Software", path_type='registry').Components,
+
+       -- Addition operation on OSPath - adding a string parses the string as
+       -- a path and joins the components..
+       (pathspec(parse="C:\\Windows", path_type='windows') + "\\foo\\bar").Components,
+
+       -- adding a list of strings joins the components without parsing each one.
+       (pathspec(parse="C:\\Windows", path_type='windows') + ("foo/bar",)).Components
+
 
     FROM scope()
 

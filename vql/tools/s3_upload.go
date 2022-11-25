@@ -21,16 +21,16 @@ import (
 )
 
 type S3UploadArgs struct {
-	File                 string `vfilter:"required,field=file,doc=The file to upload"`
-	Name                 string `vfilter:"optional,field=name,doc=The name of the file that should be stored on the server"`
-	Accessor             string `vfilter:"optional,field=accessor,doc=The accessor to use"`
-	Bucket               string `vfilter:"required,field=bucket,doc=The bucket to upload to"`
-	Region               string `vfilter:"required,field=region,doc=The region the bucket is in"`
-	CredentialsKey       string `vfilter:"optional,field=credentialskey,doc=The AWS key credentials to use"`
-	CredentialsSecret    string `vfilter:"optional,field=credentialssecret,doc=The AWS secret credentials to use"`
-	Endpoint             string `vfilter:"optional,field=endpoint,doc=The Endpoint to use"`
-	ServerSideEncryption string `vfilter:"optional,field=serversideencryption,doc=The server side encryption method to use"`
-	NoVerifyCert         bool   `vfilter:"optional,field=noverifycert,doc=Skip TLS Verification"`
+	File                 *accessors.OSPath `vfilter:"required,field=file,doc=The file to upload"`
+	Name                 string            `vfilter:"optional,field=name,doc=The name of the file that should be stored on the server"`
+	Accessor             string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	Bucket               string            `vfilter:"required,field=bucket,doc=The bucket to upload to"`
+	Region               string            `vfilter:"required,field=region,doc=The region the bucket is in"`
+	CredentialsKey       string            `vfilter:"optional,field=credentialskey,doc=The AWS key credentials to use"`
+	CredentialsSecret    string            `vfilter:"optional,field=credentialssecret,doc=The AWS secret credentials to use"`
+	Endpoint             string            `vfilter:"optional,field=endpoint,doc=The Endpoint to use"`
+	ServerSideEncryption string            `vfilter:"optional,field=serversideencryption,doc=The server side encryption method to use"`
+	NoVerifyCert         bool              `vfilter:"optional,field=noverifycert,doc=Skip TLS Verification"`
 }
 
 type S3UploadFunction struct{}
@@ -58,7 +58,7 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	file, err := accessor.Open(arg.File)
+	file, err := accessor.OpenWithOSPath(arg.File)
 	if err != nil {
 		scope.Log("upload_S3: Unable to open %s: %s",
 			arg.File, err.Error())
@@ -67,10 +67,10 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 	defer file.Close()
 
 	if arg.Name == "" {
-		arg.Name = arg.File
+		arg.Name = arg.File.String()
 	}
 
-	stat, err := accessor.Lstat(arg.File)
+	stat, err := accessor.LstatWithOSPath(arg.File)
 	if err != nil {
 		scope.Log("upload_S3: Unable to stat %s: %v",
 			arg.File, err)

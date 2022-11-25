@@ -118,7 +118,7 @@ func (self NTFSFunction) Call(
 }
 
 type MFTScanPluginArgs struct {
-	Filename string            `vfilter:"required,field=filename,doc=The MFT file."`
+	Filename *accessors.OSPath `vfilter:"required,field=filename,doc=The MFT file."`
 	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
 	Prefix   *accessors.OSPath `vfilter:"optional,field=prefix,doc=If specified we prefix all paths with this path."`
 }
@@ -153,7 +153,8 @@ func (self MFTScanPlugin) Call(
 			scope.Log("parse_mft: %v", err)
 			return
 		}
-		fd, err := accessor.Open(arg.Filename)
+
+		fd, err := accessor.OpenWithOSPath(arg.Filename)
 		if err != nil {
 			scope.Log("parse_mft: Unable to open file %s: %v",
 				arg.Filename, err)
@@ -161,7 +162,7 @@ func (self MFTScanPlugin) Call(
 		}
 		defer fd.Close()
 
-		st, err := accessor.Lstat(arg.Filename)
+		st, err := accessor.LstatWithOSPath(arg.Filename)
 		if err != nil {
 			scope.Log("parse_mft: Unable to open file %s: %v",
 				arg.Filename, err)

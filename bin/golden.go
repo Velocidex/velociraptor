@@ -77,6 +77,7 @@ var (
 	fatalLogMessagesRegex = []string{
 		"(?i)Symbol .+ not found",
 		"(?i)Field .+ Expecting a .+ arg type, not",
+		"(?i)Artifact .+ not found",
 	}
 )
 
@@ -352,7 +353,7 @@ func doGolden() error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("golden error: %w", err)
+		return fmt.Errorf("golden error FAIL: %w", err)
 	}
 
 	if len(failures) > 0 {

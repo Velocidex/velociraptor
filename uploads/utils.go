@@ -1,8 +1,6 @@
 package uploads
 
 import (
-	"fmt"
-
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
@@ -31,7 +29,6 @@ func ShouldPadFile(
 		max_sparse_expand_size = config_obj.Defaults.MaxSparseExpandSize
 	}
 
-	fmt.Printf("Total_size %v - max %v\n", total_size, max_sparse_expand_size)
 	// The total size is not too large - expand it.
 	if uint64(total_size) < max_sparse_expand_size {
 		return true

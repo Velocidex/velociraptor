@@ -35,7 +35,7 @@ func NewEventLogWatcherService() *EventLogWatcherService {
 }
 
 func (self *EventLogWatcherService) Register(
-	filename string,
+	filename *accessors.OSPath,
 	accessor string,
 	ctx context.Context,
 	scope vfilter.Scope,
@@ -51,7 +51,7 @@ func (self *EventLogWatcherService) Register(
 		output_chan: output_chan,
 		scope:       scope}
 
-	key := filename + accessor
+	key := filename.String() + accessor
 	registration, pres := self.registrations[key]
 	if !pres {
 		registration = []*Handle{}
@@ -85,7 +85,7 @@ func (self *EventLogWatcherService) Register(
 // listeners. If no listeners exist we terminate.
 func (self *EventLogWatcherService) StartMonitoring(
 	scope vfilter.Scope,
-	filename string,
+	filename *accessors.OSPath,
 	accessor_name string, frequency uint64) {
 	defer scope.Close()
 
@@ -107,7 +107,7 @@ func (self *EventLogWatcherService) StartMonitoring(
 	}
 
 	last_event := self.findLastEvent(scope, filename, accessor)
-	key := filename + accessor_name
+	key := filename.String() + accessor_name
 	for {
 		self.mu.Lock()
 		registration, pres := self.registrations[key]
@@ -127,11 +127,11 @@ func (self *EventLogWatcherService) StartMonitoring(
 
 func (self *EventLogWatcherService) findLastEvent(
 	scope vfilter.Scope,
-	filename string,
+	filename *accessors.OSPath,
 	accessor accessors.FileSystemAccessor) int {
 	last_event := 0
 
-	fd, err := accessor.Open(filename)
+	fd, err := accessor.OpenWithOSPath(filename)
 	if err != nil {
 		scope.Log("findLastEvent Open error: %v", err)
 		return 0
@@ -188,7 +188,7 @@ func (self *EventLogWatcherService) getActiveHandles(key string) []*Handle {
 }
 
 func (self *EventLogWatcherService) monitorOnce(
-	filename string,
+	filename *accessors.OSPath,
 	accessor_name string,
 	accessor accessors.FileSystemAccessor,
 	last_event int,
@@ -197,13 +197,13 @@ func (self *EventLogWatcherService) monitorOnce(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	key := filename + accessor_name
+	key := filename.String() + accessor_name
 	handles := self.getActiveHandles(key)
 	if len(handles) == 0 {
 		return 0
 	}
 
-	fd, err := accessor.Open(filename)
+	fd, err := accessor.OpenWithOSPath(filename)
 	if err != nil {
 		for _, handle := range handles {
 			handle.scope.Log("Unable to open file %s: %v",

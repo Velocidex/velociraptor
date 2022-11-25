@@ -84,13 +84,18 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	}
 
 	// Open the collection using the accessor
-	accessor, err := accessors.GetAccessor("collector", scope)
+	accessor, err := accessors.GetAccessor("collector_sparse", scope)
 	if err != nil {
 		scope.Log("import_collection: %v", err)
 		return vfilter.Null{}
 	}
 
-	root := accessors.NewZipFilePath("/")
+	root, err := accessors.NewZipFilePath("/")
+	if err != nil {
+		scope.Log("import_collection: %v", err)
+		return vfilter.Null{}
+	}
+
 	root.SetPathSpec(&accessors.PathSpec{
 		DelegateAccessor: "file",
 		DelegatePath:     arg.Filename,

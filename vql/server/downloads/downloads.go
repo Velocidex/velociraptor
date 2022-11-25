@@ -255,7 +255,10 @@ func downloadFlowToZip(
 	expand_sparse bool,
 	zip_writer *reporting.Container) error {
 
-	root := accessors.NewZipFilePath(prefix)
+	root, err := accessors.NewZipFilePath(prefix)
+	if err != nil {
+		return err
+	}
 
 	// Write the client info so it can be imported again
 	client_info_manager, err := services.GetClientInfoManager(config_obj)
@@ -339,9 +342,12 @@ func copyUploadFiles(
 	flow_path_manager *paths.FlowPathManager,
 	expand_sparse bool) error {
 
-	err := copyResultSetIntoContainer(ctx, config_obj, container, format,
-		flow_path_manager.UploadMetadata(),
-		accessors.NewZipFilePath(prefix).Append("uploads.json"))
+	root_path, err := accessors.NewZipFilePath(prefix)
+	if err != nil {
+		return err
+	}
+	err = copyResultSetIntoContainer(ctx, config_obj, container, format,
+		flow_path_manager.UploadMetadata(), root_path.Append("uploads.json"))
 	if err != nil {
 		return err
 	}
@@ -372,7 +378,12 @@ func copyUploadFiles(
 		}
 
 		var src api.FSPathSpec
-		dest := accessors.NewZipFilePath(prefix).Append("uploads")
+		dest_root_path, err := accessors.NewZipFilePath(prefix)
+		if err != nil {
+			return err
+		}
+
+		dest := dest_root_path.Append("uploads")
 		if len(components) > 6 && components[0] == "clients" {
 			src = path_specs.NewUnsafeFilestorePath(components...).
 				SetType(api.PATH_TYPE_FILESTORE_ANY)
@@ -384,7 +395,7 @@ func copyUploadFiles(
 		}
 
 		// Copy from the file store at these locations.
-		err := copyFile(ctx, scope, config_obj, container, src, dest, expand_sparse)
+		err = copyFile(ctx, scope, config_obj, container, src, dest, expand_sparse)
 		if err != nil {
 			return err
 		}

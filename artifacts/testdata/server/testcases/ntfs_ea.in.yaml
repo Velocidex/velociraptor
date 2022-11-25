@@ -15,7 +15,6 @@ Parameters:
           prefix: '\\\\.\\C:'
           path_type: ntfs
 
-
       - type: mount
         from:
           accessor: mft
@@ -39,5 +38,7 @@ Queries:
         ]), clear=TRUE)
 
   # EA test
-  - SELECT * FROM Artifact.Windows.NTFS.ExtendedAttributes(SizeMax=256)
-  - SELECT * FROM Artifact.Windows.NTFS.ExtendedAttributes(SizeMin=5000,SizeMax=20000)
+  - SELECT * FROM Artifact.Windows.NTFS.ExtendedAttributes(
+        MFTDrive='''\\.\C:''', SizeMax=256)
+  - SELECT * FROM Artifact.Windows.NTFS.ExtendedAttributes(
+        MFTDrive='''\\.\C:''', SizeMin=5000,SizeMax=20000)

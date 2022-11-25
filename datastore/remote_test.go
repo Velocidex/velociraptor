@@ -88,8 +88,12 @@ func (self *RemoteTestSuite) TestRemoteDataStore() {
 	assert.NoError(self.T(), err)
 }
 
-// Test retry when connecting to
+// Tgest retry when connecting to
 func (self *RemoteTestSuite) TestRemoteDataStoreMissing() {
+	if testing.Short() {
+		self.T().Skip("skipping test in short mode.")
+	}
+
 	datastore.RPC_BACKOFF = 0
 	logging.ClearMemoryLogs()
 

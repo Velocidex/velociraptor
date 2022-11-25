@@ -26,10 +26,10 @@ type UnzipResponse struct {
 }
 
 type UnzipPluginArgs struct {
-	Filename        string `vfilter:"required,field=filename,doc=File to unzip."`
-	Accessor        string `vfilter:"optional,field=accessor,doc=The accessor to use"`
-	FilenameFilter  string `vfilter:"optional,field=filename_filter,doc=Only extract members matching this filter."`
-	OutputDirectory string `vfilter:"required,field=output_directory,doc=Where to unzip to"`
+	Filename        *accessors.OSPath `vfilter:"required,field=filename,doc=File to unzip."`
+	Accessor        string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	FilenameFilter  string            `vfilter:"optional,field=filename_filter,doc=Only extract members matching this filter."`
+	OutputDirectory string            `vfilter:"required,field=output_directory,doc=Where to unzip to"`
 }
 
 type UnzipPlugin struct{}
@@ -85,13 +85,13 @@ func (self UnzipPlugin) Call(
 			return
 		}
 
-		s, err := accessor.Lstat(arg.Filename)
+		s, err := accessor.LstatWithOSPath(arg.Filename)
 		if err != nil {
 			scope.Log("unzip: %v", err)
 			return
 		}
 
-		fd, err := accessor.Open(arg.Filename)
+		fd, err := accessor.OpenWithOSPath(arg.Filename)
 		if err != nil {
 			scope.Log("unzip: %v", err)
 			return
