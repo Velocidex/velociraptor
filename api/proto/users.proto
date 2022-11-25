@@ -48,31 +48,32 @@ message VelociraptorUser {
 }
 
 message UpdateUserRequest {
-	string name = 1 [(sem_type) = {
-		description: "The username"
-	}];
+    string name = 1 [(sem_type) = {
+        description: "The username"
+    }];
 
-	string password = 2 [(sem_type) = {
-		description: "The cleartext password"
-	}];
+    string password = 2 [(sem_type) = {
+        description: "The cleartext password"
+    }];
 
-	map<string, Strings> roles_per_org = 3;
-	map<string, string> string_fields = 4;
-	map<string, bool> bool_fields = 5;
+    map<string, Strings> roles_per_org = 3;
+    map<string, string> string_fields = 4;
+    map<string, bool> bool_fields = 5;
 }
 
 message DeleteUserRequest {
-	string name = 1 [(sem_type) = {
-		description: "The username"
-	}];
+    string name = 1 [(sem_type) = {
+        description: "The username"
+    }];
 
-	repeated string orgs = 2 [(sem_type) = {
-		description: "The org IDs to remove this user (empty means all orgs)"
-	}];
+    repeated string orgs = 2 [(sem_type) = {
+        description: "The org IDs to remove this user (empty means all orgs)"
+    }];
 }
 
 message UserRequest {
     string name = 1;
+    string org = 2;
 }
 
 // These traits are used to control the GUI App. Many of these fields
@@ -133,59 +134,8 @@ message ApiUser {
 
     repeated OrgRecord orgs = 11;
     bool org_admin = 12 [(sem_type) = {
-	    description: "Whether this user is an OrgAdmin"
+        description: "Whether this user is an OrgAdmin"
     }];
-}
-
-message UserNotificationCount {
-    uint64 count = 1;
-}
-
-message UserNotification {
-    enum Type {
-        TYPE_UNSET = 0;
-        TYPE_CLIENT_INTERROGATED = 1;
-        TYPE_CLIENT_APPROVAL_REQUESTED = 2;
-        TYPE_HUNT_APPROVAL_REQUESTED = 3;
-        TYPE_CRON_JOB_APPROVAL_REQUESTED = 4;
-        TYPE_CLIENT_APPROVAL_GRANTED = 5;
-        TYPE_HUNT_APPROVAL_GRANTED = 6;
-        TYPE_CRON_JOB_APPROVAL_GRANTED = 7;
-        TYPE_VFS_FILE_COLLECTED = 8;
-        TYPE_VFS_FILE_COLLECTION_FAILED = 9;
-        TYPE_HUNT_STOPPED = 10;
-        TYPE_FILE_ARCHIVE_GENERATED = 11;
-        TYPE_FILE_ARCHIVE_GENERATION_FAILED = 12;
-        TYPE_FLOW_RUN_COMPLETED = 13;
-        TYPE_FLOW_RUN_FAILED = 14;
-        TYPE_VFS_LIST_DIRECTORY_COMPLETED = 15;
-        TYPE_VFS_RECURSIVE_LIST_DIRECTORY_COMPLETED = 16;
-    }
-
-    enum State {
-        STATE_UNSET = 0;
-        STATE_PENDING = 1;
-        STATE_NOT_PENDING = 2;
-    }
-
-    string username = 1;
-    Type notification_type = 2;
-    State state = 3;
-    uint64 timestamp = 4 [(sem_type) = {
-            type: "RDFDatetime"
-        }];
-
-    string message = 5;
-}
-
-message GetUserNotificationsResponse {
-    repeated UserNotification items = 1;
-}
-
-message GetUserNotificationsRequest {
-    bool clear_pending = 1 [(sem_type) = {
-            description: "If set, clears pending notifications."
-        }];
 }
 
 // Contol the GUI per user.
@@ -218,9 +168,21 @@ message Users {
     repeated VelociraptorUser users = 1;
 }
 
+
+// Get the roles and permissions of a user within the org.
 message UserRoles {
     string name = 1;
-    map<string, Strings> roles_per_org = 2;
+    string org = 2;
+    string org_name = 8;
+
+    repeated string permissions = 3;
+    repeated string roles = 4;
+
+    // Expanded permissions as above.
+    repeated string effective_permissions = 5;
+
+    repeated string all_roles = 6;
+    repeated string all_permissions = 7;
 };
 
 message SetPasswordRequest {

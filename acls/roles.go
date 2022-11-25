@@ -9,13 +9,98 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+var (
+	ALL_ROLES = []string{"org_admin", "administrator", "reader",
+		"analyst", "investigator",
+		"artifact_writer", "api"}
+	ALL_PERMISSIONS = []string{
+		"ALL_QUERY",
+		"ANY_QUERY",
+		"READ_RESULTS",
+		"LABEL_CLIENT",
+		"COLLECT_CLIENT",
+		"COLLECT_SERVER",
+		"ARTIFACT_WRITER",
+		"SERVER_ARTIFACT_WRITER",
+		"EXECVE",
+		"NOTEBOOK_EDITOR",
+		"SERVER_ADMIN",
+		"ORG_ADMIN",
+		"IMPERSONATION",
+		"FILESYSTEM_READ",
+		"FILESYSTEM_WRITE",
+		"MACHINE_STATE",
+		"PREPARE_RESULTS",
+		"DATASTORE_ACCESS",
+	}
+)
+
 func ValidateRole(role string) bool {
-	switch role {
-	case "org_admin", "administrator", "reader", "analyst", "investigator", "artifact_writer", "api":
-		return true
+	return utils.InString(ALL_ROLES, role)
+}
+
+func DescribePermissions(token *acl_proto.ApiClientACL) []string {
+	result := []string{}
+	if token.AllQuery {
+		result = append(result, "ALL_QUERY")
+	}
+	if token.AnyQuery {
+		result = append(result, "ANY_QUERY")
+	}
+	if token.ReadResults {
+		result = append(result, "READ_RESULTS")
+	}
+	if token.LabelClients {
+		result = append(result, "LABEL_CLIENT")
+	}
+	if token.CollectClient {
+		result = append(result, "COLLECT_CLIENT")
+	}
+	if token.CollectServer {
+		result = append(result, "COLLECT_SERVER")
+	}
+	if token.ArtifactWriter {
+		result = append(result, "ARTIFACT_WRITER")
+	}
+	if token.ServerArtifactWriter {
+		result = append(result, "SERVER_ARTIFACT_WRITER")
+	}
+	if token.Execve {
+		result = append(result, "EXECVE")
+	}
+	if token.NotebookEditor {
+		result = append(result, "NOTEBOOK_EDITOR")
+	}
+	if token.ServerAdmin {
+		result = append(result, "SERVER_ADMIN")
+	}
+	if token.OrgAdmin {
+		result = append(result, "ORG_ADMIN")
+	}
+	if token.Impersonation {
+		result = append(result, "IMPERSONATION")
+	}
+	if token.FilesystemRead {
+		result = append(result, "FILESYSTEM_READ")
 	}
 
-	return false
+	if token.FilesystemWrite {
+		result = append(result, "FILESYSTEM_WRITE")
+	}
+
+	if token.MachineState {
+		result = append(result, "MACHINE_STATE")
+	}
+
+	if token.PrepareResults {
+		result = append(result, "PREPARE_RESULTS")
+	}
+
+	if token.DatastoreAccess {
+		result = append(result, "DATASTORE_ACCESS")
+	}
+
+	return result
 }
 
 func SetTokenPermission(

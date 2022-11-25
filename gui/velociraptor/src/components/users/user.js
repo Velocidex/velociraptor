@@ -216,7 +216,8 @@ const renderToolTip = (props, value) => (
     </Tooltip>
 );
 
-export class User extends Component {
+//export class User extends Component {
+class User extends Component {
     static contextType = UserConfig;
 
     state = {
@@ -479,12 +480,12 @@ export class User extends Component {
 
     renderRoleCard(orgid) {
         let orgName = this.orgName(orgid);
-	let title;
-	if (Object.keys(this.props.orgs).length > 1) {
-	    title = T("Roles in", orgName);
-	} else {
-	    title = T("Roles");
-	}
+    let title;
+    if (Object.keys(this.props.orgs).length > 1) {
+        title = T("Roles in", orgName);
+    } else {
+        title = T("Roles");
+    }
         return (
           <Card key={"RoleCard_" + orgid}>
            <Card.Header>

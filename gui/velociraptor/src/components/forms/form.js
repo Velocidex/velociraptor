@@ -532,7 +532,10 @@ export default class VeloForm extends React.Component {
                               delay={{show: 250, hide: 400}}
                               overlay={(props)=>renderToolTip(props, this.state.multichoices[key])}>
                               <div>
-                                <Form.Switch label={key} id={key} checked={this.state.multichoices[key].enabled} onChange={this.setMulti.bind(this, key)} />
+                                <Form.Switch label={key}
+                                             id={key}
+                                             checked={this.state.multichoices[key].enabled}
+                                             onChange={this.setMulti.bind(this, key)} />
                               </div>
                             </OverlayTrigger>
                         );

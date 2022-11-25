@@ -10,3 +10,27 @@
     height: 100%;
     overflow-y: scroll;
 }
+
+
+.form-toggle {
+    display: table-row;
+}
+
+.form-toggle-control {
+    display: table-cell;
+}
+
+.form-toggle a {
+    display: block;
+    padding-right: 10px;
+    visibility: hidden;
+}
+
+.form-toggle:hover a {
+    visibility: visible;
+}
+
+.permission-viewer {
+    height: calc(100vh - 150px);
+    overflow-y: auto;
+}

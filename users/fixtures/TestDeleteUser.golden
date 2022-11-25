@@ -8,7 +8,7 @@
    }
   ]
  },
- "OrgAdmin UserO2 is in O1 and O2": {
+ "UserO2 is in O1 and O2": {
   "name": "UserO2",
   "orgs": [
    {
@@ -21,35 +21,7 @@
    }
   ]
  },
- "AdminO1 UserO2 is in O1": {
-  "name": "UserO2",
-  "orgs": [
-   {
-    "name": "O1",
-    "id": "O1"
-   }
-  ]
- },
- "AdminO2 UserO2 is in O2": {
-  "name": "UserO2",
-  "orgs": [
-   {
-    "name": "O2",
-    "id": "O2"
-   }
-  ]
- },
- "AdminO2 UserO2 removed from O2": "PermissionDenied",
- "AdminO1 UserO2 still in O1": {
-  "name": "UserO2",
-  "orgs": [
-   {
-    "name": "O1",
-    "id": "O1"
-   }
-  ]
- },
- "OrgAdmin UserO2 removed from O2": {
+ "UserO2 removed from O2": {
   "name": "UserO2",
   "orgs": [
    {

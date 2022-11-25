@@ -20,7 +20,8 @@ import Spinner from '../utils/spinner.js';
 
 import './users.css';
 
-export default class Users extends Component {
+//export default class Users extends Component {
+class Users extends Component {
     static contextType = UserConfig;
 
     state = {
@@ -255,7 +256,7 @@ export default class Users extends Component {
             return;
         }
 
-	if (this.state.orgs.length > 1) {
+    if (this.state.orgs.length > 1) {
             this.state.filteredUsers.forEach((username) => {
                 let user = this.state.allUsers[username];
                 for (let i = 0; i < user.orgs.length; i++) {

@@ -2,6 +2,7 @@ package users
 
 import (
 	"context"
+	"fmt"
 
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
@@ -29,7 +30,7 @@ func AddUserToOrg(
 	ctx context.Context,
 	options AddUserOptions,
 	principal, username string,
-	per_org_policy map[string]*acl_proto.ApiClientACL) error {
+	orgs []string, policy *acl_proto.ApiClientACL) error {
 
 	if isNameReserved(username) {
 		return NameReservedError
@@ -48,7 +49,7 @@ func AddUserToOrg(
 	ok, _ := services.CheckAccess(root_config_obj, principal, acls.ORG_ADMIN)
 	if !ok {
 		// Check that all the orgs have ServerAdmin
-		for org, _ := range per_org_policy {
+		for _, org := range orgs {
 			org_config_obj, err := org_manager.GetOrgConfig(org)
 			if err != nil {
 				return err
@@ -57,7 +58,8 @@ func AddUserToOrg(
 			ok, _ := services.CheckAccess(
 				org_config_obj, principal, acls.SERVER_ADMIN)
 			if !ok {
-				return acls.PermissionDenied
+				return fmt.Errorf("Error: %v, User %v is not admin on %v",
+					acls.PermissionDenied, principal, org_config_obj.OrgName)
 			}
 		}
 	}
@@ -79,7 +81,7 @@ func AddUserToOrg(
 		}
 	}
 
-	for org, policy := range per_org_policy {
+	for _, org := range orgs {
 		if !inUserOrgs(org, user_record) {
 			user_record.Orgs = append(user_record.Orgs, &api_proto.OrgRecord{
 				Id: org,
@@ -96,6 +98,7 @@ func AddUserToOrg(
 		if err != nil {
 			return err
 		}
+
 	}
 
 	return user_manager.SetUser(ctx, user_record)
@@ -104,9 +107,9 @@ func AddUserToOrg(
 func GrantUserToOrg(
 	ctx context.Context,
 	principal, username string,
-	per_org_policy map[string]*acl_proto.ApiClientACL) error {
+	orgs []string, policy *acl_proto.ApiClientACL) error {
 	return AddUserToOrg(ctx, UseExistingUser,
-		principal, username, per_org_policy)
+		principal, username, orgs, policy)
 }
 
 // We dont expect too many orgs so O(1) is ok.

@@ -42,20 +42,9 @@ func (self *UserManagerTestSuite) TestDeleteUser() {
 		"OrgAdmin", "UserO2", []string{"O1", "O2"}, reader_policy)
 	assert.NoError(self.T(), err)
 
-	// Lookup using ORG_ADMIN
 	user_record, err = users.GetUser(self.Ctx, "OrgAdmin", "UserO2")
 	assert.NoError(self.T(), err)
-	golden.Set("OrgAdmin UserO2 is in O1 and O2", user_record)
-
-	// Lookup using O1's SERVER_ADMIN
-	user_record, err = users.GetUser(self.Ctx, "AdminO1", "UserO2")
-	assert.NoError(self.T(), err)
-	golden.Set("AdminO1 UserO2 is in O1", user_record)
-
-	// Lookup using O2's SERVER_ADMIN
-	user_record, err = users.GetUser(self.Ctx, "AdminO2", "UserO2")
-	assert.NoError(self.T(), err)
-	golden.Set("AdminO2 UserO2 is in O2", user_record)
+	golden.Set("UserO2 is in O1 and O2", user_record)
 
 	// AdminO2 will remove the user from all orgs, but they remain in
 	// O1 because AdminO2 has no accesss to O1
@@ -63,21 +52,9 @@ func (self *UserManagerTestSuite) TestDeleteUser() {
 		self.Ctx, "AdminO2", "UserO2", users.LIST_ALL_ORGS)
 	assert.NoError(self.T(), err)
 
-	// GetUser returns PermissionDenied if the user requesting does
-	// not have OrgAdmin and does not belong to any of the same orgs
-	user_record, err = users.GetUser(self.Ctx, "AdminO2", "UserO2")
-	assert.ErrorContains(self.T(), err, "PermissionDenied")
-	golden.Set("AdminO2 UserO2 removed from O2", err.Error())
-
-	// If the user was added to O1 and removed from O2, it should
-	// still exist in O1
-	user_record, err = users.GetUser(self.Ctx, "AdminO1", "UserO2")
-	assert.NoError(self.T(), err)
-	golden.Set("AdminO1 UserO2 still in O1", user_record)
-
 	user_record, err = users.GetUser(self.Ctx, "OrgAdmin", "UserO2")
 	assert.NoError(self.T(), err)
-	golden.Set("OrgAdmin UserO2 removed from O2", user_record)
+	golden.Set("UserO2 removed from O2", user_record)
 
 	goldie.Assert(self.T(), "TestDeleteUser",
 		json.MustMarshalIndent(golden))

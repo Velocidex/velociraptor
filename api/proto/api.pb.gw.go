@@ -22,7 +22,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
-	proto_3 "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	proto_5 "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	proto_2 "www.velocidex.com/golang/velociraptor/flows/proto"
 )
 
@@ -786,25 +786,19 @@ func local_request_API_GetGlobalUsers_0(ctx context.Context, marshaler runtime.M
 
 }
 
+var (
+	filter_API_GetUserRoles_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
 func request_API_GetUserRoles_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq UserRequest
 	var metadata runtime.ServerMetadata
 
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["name"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
-	protoReq.Name, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_API_GetUserRoles_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.GetUserRoles(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -816,21 +810,11 @@ func local_request_API_GetUserRoles_0(ctx context.Context, marshaler runtime.Mar
 	var protoReq UserRequest
 	var metadata runtime.ServerMetadata
 
-	var (
-		val string
-		ok  bool
-		err error
-		_   = err
-	)
-
-	val, ok = pathParams["name"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "name")
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
-
-	protoReq.Name, err = runtime.String(val)
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_API_GetUserRoles_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := server.GetUserRoles(ctx, &protoReq)
@@ -872,6 +856,10 @@ func local_request_API_SetUserRoles_0(ctx context.Context, marshaler runtime.Mar
 
 }
 
+var (
+	filter_API_GetUser_0 = &utilities.DoubleArray{Encoding: map[string]int{"name": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+)
+
 func request_API_GetUser_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq UserRequest
 	var metadata runtime.ServerMetadata
@@ -891,6 +879,13 @@ func request_API_GetUser_0(ctx context.Context, marshaler runtime.Marshaler, cli
 	protoReq.Name, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_API_GetUser_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.GetUser(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
@@ -917,6 +912,13 @@ func local_request_API_GetUser_0(ctx context.Context, marshaler runtime.Marshale
 	protoReq.Name, err = runtime.String(val)
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "name", err)
+	}
+
+	if err := req.ParseForm(); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+	if err := runtime.PopulateQueryParameters(&protoReq, req.Form, filter_API_GetUser_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := server.GetUser(ctx, &protoReq)
@@ -1679,7 +1681,7 @@ var (
 )
 
 func request_API_GetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_3.Tool
+	var protoReq proto_5.Tool
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -1695,7 +1697,7 @@ func request_API_GetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler,
 }
 
 func local_request_API_GetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_3.Tool
+	var protoReq proto_5.Tool
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -1711,7 +1713,7 @@ func local_request_API_GetToolInfo_0(ctx context.Context, marshaler runtime.Mars
 }
 
 func request_API_SetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_3.Tool
+	var protoReq proto_5.Tool
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1728,7 +1730,7 @@ func request_API_SetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler,
 }
 
 func local_request_API_SetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_3.Tool
+	var protoReq proto_5.Tool
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -2727,7 +2729,7 @@ func RegisterAPIHandlerServer(ctx context.Context, mux *runtime.ServeMux, server
 		var stream runtime.ServerTransportStream
 		ctx = grpc.NewContextWithServerTransportStream(ctx, &stream)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/proto.API/GetUserRoles", runtime.WithHTTPPathPattern("/api/v1/GetUserRoles/{name}"))
+		rctx, err := runtime.AnnotateIncomingContext(ctx, mux, req, "/proto.API/GetUserRoles", runtime.WithHTTPPathPattern("/api/v1/GetUserRoles"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -4089,7 +4091,7 @@ func RegisterAPIHandlerClient(ctx context.Context, mux *runtime.ServeMux, client
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
-		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/proto.API/GetUserRoles", runtime.WithHTTPPathPattern("/api/v1/GetUserRoles/{name}"))
+		rctx, err := runtime.AnnotateContext(ctx, mux, req, "/proto.API/GetUserRoles", runtime.WithHTTPPathPattern("/api/v1/GetUserRoles"))
 		if err != nil {
 			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
 			return
@@ -4947,7 +4949,7 @@ var (
 
 	pattern_API_GetGlobalUsers_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "GetGlobalUsers"}, ""))
 
-	pattern_API_GetUserRoles_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"api", "v1", "GetUserRoles", "name"}, ""))
+	pattern_API_GetUserRoles_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "GetUserRoles"}, ""))
 
 	pattern_API_SetUserRoles_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"api", "v1", "SetUserRoles"}, ""))
 

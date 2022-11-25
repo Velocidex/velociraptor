@@ -2,7 +2,6 @@ package api
 
 import (
 	"errors"
-	"os"
 	"sort"
 
 	"github.com/sirupsen/logrus"
@@ -16,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // This is only used to set the user's own password which is always
@@ -105,78 +105,79 @@ func (self *ApiServer) GetGlobalUsers(
 }
 
 func (self *ApiServer) ChangeUser(ctx context.Context,
-				  in *api_proto.UpdateUserRequest,
-				  options users.AddUserOptions) (*emptypb.Empty, error) {
+	in *api_proto.UpdateUserRequest,
+	options users.AddUserOptions) (*emptypb.Empty, error) {
 
-	users_manager := services.GetUserManager()
-	principal, org_config_obj, err := users_manager.GetUserFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	per_org_policy := map[string]*acl_proto.ApiClientACL{}
-	for org, roles := range in.RolesPerOrg {
-		per_org_policy[org] = &acl_proto.ApiClientACL{
-			Roles: roles.Strings,
-		}
-	}
-
-	err = users.AddUserToOrg(ctx, options, principal.Name, in.Name, per_org_policy)
-	if err != nil {
-//		if errors.Is(err, users.ErrInvalidArgument) {
-//			return nil, status.Error(codes.InvalidArgument, err.Error())
-//		} else if errors.Is(err, users.ErrPermissionDenied) {
-//			return nil, status.Error(codes.PermissionDenied,
-//					"User is not allowed to create users.")
-//		} else if errors.Is(err, users.ErrUserNotFound) {
-//			return nil, status.Errorf(codes.NotFound, "User %s does not exist.",
-//						  in.Name)
-//		} else if errors.Is(err, users.ErrUserAlreadyExists) {
-//			return nil, status.Errorf(codes.AlreadyExists,
-//						  "Cannot create user %s.  Username already exists",
-//						  in.Name)
-//		}
-		return nil, err
-	}
-
-	if in.Password != "" {
-		logger := logging.GetLogger(org_config_obj, &logging.APICmponent)
-		logger.WithFields(logrus.Fields{
-			"Principal":  principal.Name,
-			"Username": in.Name,
-		}).Info("users: setting password")
-		err = users.SetUserPassword(ctx, principal.Name, in.Name, in.Password, "")
+	/*
+		users_manager := services.GetUserManager()
+		principal, org_config_obj, err := users_manager.GetUserFromContext(ctx)
 		if err != nil {
 			return nil, err
 		}
-	}
 
-	msg := "users: Created user record via API"
-	if options == users.UseExistingUser {
-		msg = "users: Updated user record via API"
-	}
+		per_org_policy := map[string]*acl_proto.ApiClientACL{}
+		for org, roles := range in.RolesPerOrg {
+			per_org_policy[org] = &acl_proto.ApiClientACL{
+				Roles: roles.Strings,
+			}
+		}
 
-	logger := logging.GetLogger(org_config_obj, &logging.Audit)
-	logger.WithFields(logrus.Fields{
-		"Principal":  principal.Name,
-		"Username": in.Name,
-	}).Info(msg)
+		err = users.AddUserToOrg(ctx, options, principal.Name, in.Name, per_org_policy)
+		if err != nil {
+			//		if errors.Is(err, users.ErrInvalidArgument) {
+			//			return nil, status.Error(codes.InvalidArgument, err.Error())
+			//		} else if errors.Is(err, users.ErrPermissionDenied) {
+			//			return nil, status.Error(codes.PermissionDenied,
+			//					"User is not allowed to create users.")
+			//		} else if errors.Is(err, users.ErrUserNotFound) {
+			//			return nil, status.Errorf(codes.NotFound, "User %s does not exist.",
+			//						  in.Name)
+			//		} else if errors.Is(err, users.ErrUserAlreadyExists) {
+			//			return nil, status.Errorf(codes.AlreadyExists,
+			//						  "Cannot create user %s.  Username already exists",
+			//						  in.Name)
+			//		}
+			return nil, err
+		}
 
+		if in.Password != "" {
+			logger := logging.GetLogger(org_config_obj, &logging.APICmponent)
+			logger.WithFields(logrus.Fields{
+				"Principal": principal.Name,
+				"Username":  in.Name,
+			}).Info("users: setting password")
+			err = users.SetUserPassword(ctx, principal.Name, in.Name, in.Password, "")
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		msg := "users: Created user record via API"
+		if options == users.UseExistingUser {
+			msg = "users: Updated user record via API"
+		}
+
+		logger := logging.GetLogger(org_config_obj, &logging.Audit)
+		logger.WithFields(logrus.Fields{
+			"Principal": principal.Name,
+			"Username":  in.Name,
+		}).Info(msg)
+	*/
 	return &emptypb.Empty{}, nil
 }
 
 func (self *ApiServer) CreateUser(ctx context.Context,
-				  in *api_proto.UpdateUserRequest) (*emptypb.Empty, error) {
+	in *api_proto.UpdateUserRequest) (*emptypb.Empty, error) {
 	return self.ChangeUser(ctx, in, users.AddNewUser)
 }
 
 func (self *ApiServer) UpdateUser(ctx context.Context,
-				  in *api_proto.UpdateUserRequest) (*emptypb.Empty, error) {
+	in *api_proto.UpdateUserRequest) (*emptypb.Empty, error) {
 	return self.ChangeUser(ctx, in, users.UseExistingUser)
 }
 
 func (self *ApiServer) DeleteUser(ctx context.Context,
-				  in *api_proto.DeleteUserRequest) (*emptypb.Empty, error) {
+	in *api_proto.DeleteUserRequest) (*emptypb.Empty, error) {
 
 	users_manager := services.GetUserManager()
 	principal, org_config_obj, err := users_manager.GetUserFromContext(ctx)
@@ -216,8 +217,8 @@ func (self *ApiServer) GetUser(
 	if err != nil {
 		if errors.Is(err, acls.PermissionDenied) {
 			return nil, status.Error(codes.PermissionDenied,
-                                       "User is not allowed to view requested user.")
-	       }
+				"User is not allowed to view requested user.")
+		}
 		return nil, err
 	}
 
@@ -243,46 +244,50 @@ func (self *ApiServer) GetUserRoles(
 	in *api_proto.UserRequest) (*api_proto.UserRoles, error) {
 
 	users_manager := services.GetUserManager()
-	user_record, _, err := users_manager.GetUserFromContext(ctx)
+	_, _, err := users_manager.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 
-	user, err := users.GetUser(ctx, user_record.Name, in.Name)
-	if err != nil {
-		if errors.Is(err, acls.PermissionDenied) {
-			return nil, status.Error(codes.PermissionDenied,
-                                       "User is not allowed to view requested user.")
-	       }
-		return nil, err
-	}
-
-
-	user_roles := &api_proto.UserRoles{
-		Name: in.Name,
-		RolesPerOrg: map[string]*api_proto.Strings{},
-	}
-
+	// Allow the user to ask about other orgs.
 	org_manager, err := services.GetOrgManager()
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 
-	for _, user_org := range user.Orgs {
-		org_config_obj, err := org_manager.GetOrgConfig(user_org.Id)
-		if err != nil {
-			return nil, Status(self.verbose, err)
-		}
-		acl, err := services.GetPolicy(org_config_obj, in.Name)
-		if err != nil {
-			// No ACL in this org isn't an error
-			if !errors.Is(err, os.ErrNotExist) {
-				continue
-			}
-			return nil, Status(self.verbose, err)
-		}
-		user_roles.RolesPerOrg[user_org.Id] = &api_proto.Strings{Strings: acl.Roles}
+	org_config_obj, err := org_manager.GetOrgConfig(in.Org)
+	if err != nil {
+		return nil, Status(self.verbose, err)
 	}
+
+	acl_manager, err := services.GetACLManager(org_config_obj)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	policy, err := acl_manager.GetPolicy(org_config_obj, in.Name)
+	if err != nil {
+		policy = &acl_proto.ApiClientACL{}
+	}
+
+	user_roles := &api_proto.UserRoles{
+		Name:           in.Name,
+		Org:            in.Org,
+		OrgName:        org_config_obj.OrgName,
+		Roles:          policy.Roles,
+		Permissions:    acls.DescribePermissions(policy),
+		AllRoles:       acls.ALL_ROLES,
+		AllPermissions: acls.ALL_PERMISSIONS,
+	}
+
+	// Expand the policy's permissions
+	err = acls.GetRolePermissions(org_config_obj, policy.Roles, policy)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	user_roles.EffectivePermissions = acls.DescribePermissions(policy)
+
 	return user_roles, nil
 }
 
@@ -298,16 +303,26 @@ func (self *ApiServer) SetUserRoles(
 
 	principal := user_record.Name
 
-	per_org_policy := map[string]*acl_proto.ApiClientACL{}
+	// Prepare an ACL object from the incoming request.
+	acl := &acl_proto.ApiClientACL{}
 
-	for org, roles := range in.RolesPerOrg {
-		per_org_policy[org] = &acl_proto.ApiClientACL{Roles: roles.Strings,}
+	for _, r := range in.Roles {
+		if acls.ValidateRole(r) {
+			acl.Roles = append(acl.Roles, r)
+		}
 	}
 
-	err = users.GrantUserToOrg(ctx, principal, in.Name, per_org_policy)
+	// Add any special permissions
+	err = acls.SetTokenPermission(acl, in.Permissions...)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 
-	return &emptypb.Empty{}, nil
+	utils.Debug(acl)
+
+	// Now attempt to set the ACL - permission checks are done by
+	// users.AddUserToOrg
+	err = users.AddUserToOrg(ctx, users.UseExistingUser,
+		principal, in.Name, []string{in.Org}, acl)
+	return &emptypb.Empty{}, err
 }

@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 
+	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -42,7 +43,8 @@ func DeleteUser(
 		if principal_is_org_admin {
 			return user_err
 		}
-		return acls.PermissionDenied
+		return errors.Errorf("Error %v: User %v is not org admin",
+			acls.PermissionDenied, principal)
 	}
 
 	remaining_orgs := []*api_proto.OrgRecord{}

@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"errors"
+	"fmt"
 
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -54,7 +55,8 @@ func SetUserPassword(
 	if current_org != "" {
 		// Check if the current_org is in the list of user orgs
 		if !inUserOrgs(current_org, user_record) {
-			return acls.PermissionDenied
+			return fmt.Errorf("Error %v: Org %v does not include User %v",
+				acls.PermissionDenied, current_org, user_record.Name)
 		}
 		user_record.CurrentOrg = current_org
 	}
