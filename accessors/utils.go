@@ -16,6 +16,10 @@ func ParsePath(path, path_type string) (res *OSPath, err error) {
 		res, err = NewGenericOSPath(path)
 	case "pathspec":
 		res, err = NewPathspecOSPath(path)
+
+	case "zip":
+		res, err = NewZipFilePath(path)
+
 	default:
 		err = fmt.Errorf("Unknown path type: %v (should be one of windows,linux,generic)", path_type)
 	}

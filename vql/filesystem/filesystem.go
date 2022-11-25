@@ -194,10 +194,10 @@ func (self GlobPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfi
 }
 
 type ReadFileArgs struct {
-	Chunk     int      `vfilter:"optional,field=chunk,doc=length of each chunk to read from the file."`
-	MaxLength int      `vfilter:"optional,field=max_length,doc=Max length of the file to read."`
-	Filenames []string `vfilter:"required,field=filenames,doc=One or more files to open."`
-	Accessor  string   `vfilter:"optional,field=accessor,doc=An accessor to use."`
+	Chunk     int                 `vfilter:"optional,field=chunk,doc=length of each chunk to read from the file."`
+	MaxLength int                 `vfilter:"optional,field=max_length,doc=Max length of the file to read."`
+	Filenames []*accessors.OSPath `vfilter:"required,field=filenames,doc=One or more files to open."`
+	Accessor  string              `vfilter:"optional,field=accessor,doc=An accessor to use."`
 }
 
 type ReadFileResponse struct {
@@ -213,11 +213,11 @@ func (self ReadFilePlugin) processFile(
 	scope vfilter.Scope,
 	arg *ReadFileArgs,
 	accessor accessors.FileSystemAccessor,
-	file string,
+	file *accessors.OSPath,
 	output_chan chan vfilter.Row) {
 	total_len := int64(0)
 
-	fd, err := accessor.Open(file)
+	fd, err := accessor.OpenWithOSPath(file)
 	if err != nil {
 		return
 	}
@@ -239,7 +239,7 @@ func (self ReadFilePlugin) processFile(
 		response := &ReadFileResponse{
 			Data:     string(buf[:n]),
 			Offset:   total_len,
-			Filename: file,
+			Filename: file.String(),
 		}
 
 		select {

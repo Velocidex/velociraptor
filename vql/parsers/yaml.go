@@ -13,8 +13,8 @@ import (
 )
 
 type ParseYamlFunctionArgs struct {
-	Filename string `vfilter:"required,field=filename,doc=Yaml Filename"`
-	Accessor string `vfilter:"optional,field=accessor,doc=File accessor"`
+	Filename *accessors.OSPath `vfilter:"required,field=filename,doc=Yaml Filename"`
+	Accessor string            `vfilter:"optional,field=accessor,doc=File accessor"`
 }
 
 type ParseYamlFunction struct{}
@@ -43,7 +43,7 @@ func (self ParseYamlFunction) Call(
 		return nil
 	}
 
-	fd, err := accessor.Open(arg.Filename)
+	fd, err := accessor.OpenWithOSPath(arg.Filename)
 	if err != nil {
 		scope.Log("Unable to open file %s: %v",
 			arg.Filename, err)

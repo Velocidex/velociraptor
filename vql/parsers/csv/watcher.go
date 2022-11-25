@@ -35,7 +35,7 @@ func NewCSVWatcherService() *CSVWatcherService {
 }
 
 func (self *CSVWatcherService) Register(
-	filename string,
+	filename *accessors.OSPath,
 	accessor string,
 	ctx context.Context,
 	scope vfilter.Scope,
@@ -49,7 +49,7 @@ func (self *CSVWatcherService) Register(
 		output_chan: output_chan,
 		scope:       scope}
 
-	key := filename + accessor
+	key := filename.String() + accessor
 	registration, pres := self.registrations[key]
 	if !pres {
 		registration = []*Handle{}
@@ -66,7 +66,8 @@ func (self *CSVWatcherService) Register(
 // Monitor the filename for new events and emit them to all interested
 // listeners. If no listeners exist we terminate.
 func (self *CSVWatcherService) StartMonitoring(
-	filename string, accessor_name string) {
+	filename *accessors.OSPath,
+	accessor_name string) {
 
 	scope := vql_subsystem.MakeScope()
 	defer scope.Close()
@@ -91,10 +92,10 @@ func (self *CSVWatcherService) StartMonitoring(
 }
 
 func (self *CSVWatcherService) findLastEvent(
-	filename string,
+	filename *accessors.OSPath,
 	accessor accessors.FileSystemAccessor) int {
 
-	fd, err := accessor.Open(filename)
+	fd, err := accessor.OpenWithOSPath(filename)
 	if err != nil {
 		return 0
 	}
@@ -113,7 +114,7 @@ func (self *CSVWatcherService) findLastEvent(
 }
 
 func (self *CSVWatcherService) monitorOnce(
-	filename string,
+	filename *accessors.OSPath,
 	accessor_name string,
 	accessor accessors.FileSystemAccessor,
 	last_event int) (int, bool) {
@@ -121,13 +122,13 @@ func (self *CSVWatcherService) monitorOnce(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	key := filename + accessor_name
+	key := filename.String() + accessor_name
 	handles, pres := self.registrations[key]
 	if !pres {
 		return 0, false
 	}
 
-	fd, err := accessor.Open(filename)
+	fd, err := accessor.OpenWithOSPath(filename)
 	if err != nil {
 		for _, handle := range handles {
 			handle.scope.Log("Unable to open file %s: %v",

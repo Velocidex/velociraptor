@@ -32,8 +32,8 @@ import (
 */
 
 type _PrefetchPluginArgs struct {
-	Filenames []string `vfilter:"required,field=filename,doc=A list of event log files to parse."`
-	Accessor  string   `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Filenames []*accessors.OSPath `vfilter:"required,field=filename,doc=A list of event log files to parse."`
+	Accessor  string              `vfilter:"optional,field=accessor,doc=The accessor to use."`
 }
 
 type _PrefetchPlugin struct{}
@@ -69,7 +69,7 @@ func (self _PrefetchPlugin) Call(
 					scope.Log("prefetch: %v", err)
 					return
 				}
-				fd, err := accessor.Open(filename)
+				fd, err := accessor.OpenWithOSPath(filename)
 				if err != nil {
 					scope.Log("Unable to open file %s: %v",
 						filename, err)

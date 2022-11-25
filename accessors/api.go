@@ -247,6 +247,8 @@ type FileSystemAccessor interface {
 	Open(path string) (ReadSeekCloser, error)
 	Lstat(filename string) (FileInfo, error)
 
+	// Converts from a string path to an OSPath suitable for this
+	// accessor.
 	ParsePath(filename string) (*OSPath, error)
 
 	// The new more efficient API

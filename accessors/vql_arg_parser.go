@@ -3,6 +3,7 @@ package accessors
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -134,6 +135,42 @@ func ParseOSPath(ctx context.Context,
 	}
 }
 
+func parseOSPathArray(ctx context.Context,
+	scope types.Scope, args *ordereddict.Dict,
+	value interface{}) (interface{}, error) {
+
+	result := []*OSPath{}
+
+	a_value := reflect.Indirect(reflect.ValueOf(value))
+	if a_value.Type().Kind() == reflect.Slice {
+		for idx := 0; idx < a_value.Len(); idx++ {
+			item, err := parseOSPath(ctx, scope, args,
+				a_value.Index(int(idx)).Interface())
+			if err != nil {
+				continue
+			}
+			item_os_path, ok := item.(*OSPath)
+			if ok {
+				result = append(result, item_os_path)
+			}
+		}
+		return result, nil
+	}
+
+	// If the arg is not a slice then treat it as a single ospath.
+	item, err := parseOSPath(ctx, scope, args, value)
+	if err != nil {
+		return nil, err
+	}
+
+	item_os_path, ok := item.(*OSPath)
+	if ok {
+		result = append(result, item_os_path)
+	}
+	return result, nil
+}
+
 func init() {
 	arg_parser.RegisterParser(&OSPath{}, parseOSPath)
+	arg_parser.RegisterParser([]*OSPath{}, parseOSPathArray)
 }

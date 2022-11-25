@@ -32,10 +32,10 @@ import (
 )
 
 type _ParseFileWithRegexArgs struct {
-	Filenames       []string `vfilter:"required,field=file,doc=A list of files to parse."`
-	Regex           []string `vfilter:"required,field=regex,doc=A list of regex to apply to the file data."`
-	Accessor        string   `vfilter:"optional,field=accessor,doc=The accessor to use."`
-	BufferSize      int      `vfilter:"optional,field=buffer_size,doc=Maximum size of line buffer (default 64kb)."`
+	Filenames       []*accessors.OSPath `vfilter:"required,field=file,doc=A list of files to parse."`
+	Regex           []string            `vfilter:"required,field=regex,doc=A list of regex to apply to the file data."`
+	Accessor        string              `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	BufferSize      int                 `vfilter:"optional,field=buffer_size,doc=Maximum size of line buffer (default 64kb)."`
 	compiled_regexs []*regexp.Regexp
 	capture_vars    []string
 }
@@ -44,7 +44,7 @@ type _ParseFileWithRegex struct{}
 
 func _ParseFile(
 	ctx context.Context,
-	filename string,
+	filename *accessors.OSPath,
 	scope vfilter.Scope,
 	arg *_ParseFileWithRegexArgs,
 	output_chan chan vfilter.Row) {
@@ -61,7 +61,7 @@ func _ParseFile(
 		return
 	}
 
-	file, err := accessor.Open(filename)
+	file, err := accessor.OpenWithOSPath(filename)
 	if err != nil {
 		scope.Log("Unable to open file %s", filename)
 		return
