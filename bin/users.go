@@ -82,7 +82,7 @@ func doAddUser() error {
 		return err
 	}
 
-	user_record, err := users.NewUserRecord(*user_add_name)
+	user_record, err := users.NewUserRecord(config_obj, *user_add_name)
 	if err != nil {
 		return fmt.Errorf("add user: %s", err)
 	}

@@ -13,6 +13,11 @@ func (self *UserManager) DeleteUser(
 	ctx context.Context,
 	org_config_obj *config_proto.Config, username string) error {
 
+	err := validateUsername(org_config_obj, username)
+	if err != nil {
+		return err
+	}
+
 	org_manager, err := services.GetOrgManager()
 	if err != nil {
 		return err
