@@ -21,7 +21,7 @@
 .coolgray-dark {
   --font-size-large: 16px;
   --font-size-base: 14px;
-  --font-size-small: 13px;
+  --font-size-small: 12px;
   --font-family-sans-serif: iosevka, SFMono-Regular, Menlo, Monaco,
     "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
   --font-family-monospace: iosevka, SFMono-Regular, Menlo, Monaco,
@@ -136,10 +136,10 @@ body.coolgray-dark {
   letter-spacing: 0.4px;
 }
 
-.coolgray-dark p,
-.coolgray-dark ol,
-.coolgray-dark ul,
-.coolgray-dark li {
+.coolgray-dark .report-viewer p,
+.coolgray-dark .report-viewer ol,
+.coolgray-dark .report-viewer ul,
+.coolgray-dark .report-viewer li {
   font-family: var(--font-family-paragraph);
   font-size: var(--font-size-base);
   letter-spacing: 0.4px;
@@ -229,6 +229,10 @@ body.coolgray-dark {
 .coolgray-dark .client-status .client-name:hover {
   color: whitesmoke;
   background: var(--color-client-link-hover);
+}
+
+.coolgray-dark .react-autosuggest__input {
+  font-size: var(--font-size-base);
 }
 
 .coolgray-dark .react-autosuggest__suggestions-container--open {
@@ -329,6 +333,11 @@ body.coolgray-dark {
   color: var(--color-foreground);
   text-shadow: none;
   border-radius: 0;
+}
+
+.coolgray-dark .btn[disabled] {
+  color: var(--color-foreground-dimmed);
+  background: var(--color-canvas-background);
 }
 
 .coolgray-dark .btn-primary {
@@ -510,7 +519,7 @@ body.coolgray-dark {
   color: var(--color-foreground);
 }
 
-.coolgray-dark .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td {
+.coolgray-dark .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td > button.btn.btn-link {
   background: var(--color-accent-75);
   border: 1px solid var(--color-btn-default-border);
   text-decoration: none;
@@ -524,7 +533,7 @@ body.coolgray-dark {
   color: var(--color-foreground);
   border-color: var(--color-btn-border);
   font-size: var(--font-size-base);
-  font-weight: 600;
+  font-weight: 500;
 }
 
 /* Resizer dividers */
@@ -566,7 +575,7 @@ body.coolgray-dark {
 .coolgray-dark .card-header {
   background: var(--color-card-heading-background);
   color: var(--color-foreground);
-  font-weight: 600;
+  font-weight: 500;
   border-bottom: none;
 }
 

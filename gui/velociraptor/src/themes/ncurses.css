@@ -77,7 +77,7 @@
   --color-table-heading-background: darkgrey;
 
   --color-no-content: var(--color-foreground);
-  --color-code: #990000;
+  --color-code: #0a2fc4;
   --color-proto-error: #990000;
 
   --color-page-link-active-background: var(--color-tab-active-background);
@@ -174,10 +174,10 @@ body.ncurses {
   background: var(--color-accent-100);
 }
 
-.ncurses code, pre {
+.ncurses code, .ncurses pre, .ncurses .monospace {
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-base);
-  color: var(--color-foreground);
+  color: var(--color-code);
 }
 
 .ncurses h1,

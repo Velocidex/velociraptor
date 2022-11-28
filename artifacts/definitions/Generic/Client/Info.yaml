@@ -47,7 +47,7 @@ sources:
 
       SELECT
           {
-            SELECT DNSHostName,  Name, Domain, TotalPhysicalMemory,
+            SELECT DNSHostName, Name, Domain, TotalPhysicalMemory,
                    get(item=DomainLookup,
                        field=str(str=DomainRole), default="Unknown") AS DomainRole
             FROM wmi(
