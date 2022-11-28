@@ -19,34 +19,32 @@
 }
 
 @font-face {
-  font-family: "atkinson";
+  font-family: "noto-sans";
   font-style: normal;
   font-weight: 400;
   src: local(""),
-    url("../fonts/atkinson-hyperlegible-regular-102a.woff2") format("woff2");
-  size-adjust: 110%;
+    url("../fonts/noto-sans-v27-latin-ext_latin-regular.woff2") format("woff2");
   font-display: block;
 }
 
 @font-face {
-  font-family: "atkinson";
+  font-family: "noto-sans";
   font-style: bold;
-  font-weight: 700;
+  font-weight: 600;
   src: local(""),
-    url("../fonts/atkinson-hyperlegible-bold-102a.woff2") format("woff2");
-  size-adjust: 110%;
+    url("../fonts/noto-sans-v27-latin-ext_latin-600.woff2") format("woff2");
   font-display: block;
 }
 
 .pink-light {
-  --font-size-large: 17px;
-  --font-size-base: 15px;
-  --font-size-small: 13px;
+  --font-size-large: 16px;
+  --font-size-base: 14px;
+  --font-size-small: 12px;
   --font-family-sans-serif: iosevka, -apple-system, BlinkMacSystemFont,
     "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --font-family-monospace: iosevka, SFMono-Regular, Menlo, Monaco,
     "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
-  --font-family-paragraph: atkinson, -apple-system, BlinkMacSystemFont, iosevka, "Segoe UI",
+  --font-family-paragraph: noto-sans, -apple-system, BlinkMacSystemFont, roboto, "Segoe UI",
     "Helvetica Neue", Arial, sans-serif;
 
   --color-foreground: #121212;
@@ -70,7 +68,7 @@
   --color-sidebar-inactive-foreground-hover: #f06292;
   --color-sidebar-inactive-background-hover: #fce4ec;
   --color-sidebar-foreground: #f48fb1;
-  --color-sidebar-disabled-foreground: var(--color-tab-active);
+  --color-sidebar-disabled-foreground: var(--color-accent-100);
   --color-sidebar-background: #fef4f8;
   --color-sidebar-active-foreground: white;
   --color-sidebar-active-background: var(--color-sidebar-foreground);
@@ -106,7 +104,7 @@
   --color-table-heading-background: var(--color-btn-default-background);
 
   --color-no-content: #bbbbbb;
-  --color-code: #990000;
+  --color-code: #f06292;
   --color-proto-error: #f06292;
 
   --color-page-link-active-background: var(--color-btn-default-background-hover);
@@ -132,12 +130,14 @@ body.pink-light {
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
   font-weight: 400;
-  letter-spacing: 0.4px;
 }
 
-.pink-light code {
+.pink-light code,
+.pink-light pre,
+.pink-light .monospace {
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-base);
+  color: var(--color-code);
 }
 
 .pink-light .report-viewer p,
@@ -145,6 +145,7 @@ body.pink-light {
 .pink-light .report-viewer ul,
 .pink-light .report-viewer li {
   font-family: var(--font-family-paragraph);
+  font-size: var(--font-size-large);
 }
 
 .pink-light dl {
@@ -281,6 +282,11 @@ body.pink-light {
 .pink-light .btn-default:focus {
   background: var(--color-btn-default-background);
   color: var(--color-foreground);
+}
+
+.pink-light .btn[disabled] {
+  color: var(--color-sidebar-disabled-foreground);
+  background: var(--color-btn-default-background);
 }
 
 .pink-light .btn-primary {
