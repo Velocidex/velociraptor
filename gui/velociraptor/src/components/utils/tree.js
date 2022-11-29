@@ -138,6 +138,13 @@ export const getTheme = (theme)=> {
         result.tree.node.header.base.color = '#020202';
         return result;
 
+    case "midnight":
+        result.tree.base.backgroundColor = '#0E1419';
+        result.tree.base.color = '#FF0000';
+        result.tree.node.activeLink.background = "#FFFF00";
+        result.tree.node.header.base.color = '#FF0000';
+        return result;
+
     default:
         return result;
     }

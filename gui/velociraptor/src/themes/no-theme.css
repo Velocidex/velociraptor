@@ -1,5 +1,5 @@
 @font-face {
-    font-family: "noto-sans";
+    font-family: "Noto Sans";
     font-style: normal;
     font-weight: 400;
     src: local(""),
@@ -8,7 +8,7 @@
 }
 
 @font-face {
-    font-family: "noto-sans";
+    font-family: "Noto Sans";
     font-style: bold;
     font-weight: 600;
     src: local(""),
@@ -17,8 +17,26 @@
 }
 
 body.no-theme {
-    font-family: noto-sans, roboto, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    font-family: "Noto Sans", roboto, -apple-system, BlinkMacSystemFont, "Segoe UI",
     "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    letter-spacing: 0.4px;
+}
+
+.no-theme code,
+.no-theme pre,
+.no-theme .monospace {
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-base);
+  color: var(--color-code);
+}
+
+.no-theme .report-viewer p,
+.no-theme .report-viewer ol,
+.no-theme .report-viewer ul,
+.no-theme .report-viewer li {
+  font-family: var(--font-family-paragraph);
+  font-size: 16px;
 }
 
 .no-theme .btn.btn-default {
