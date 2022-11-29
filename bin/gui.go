@@ -128,7 +128,7 @@ func doGUI() error {
 		}
 
 		// Create a user with default password
-		user_record, err := users.NewUserRecord("admin")
+		user_record, err := users.NewUserRecord(config_obj, "admin")
 		if err != nil {
 			return fmt.Errorf("Unable to create admin user: %w", err)
 		}

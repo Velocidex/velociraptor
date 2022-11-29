@@ -162,4 +162,12 @@ SELECT whoami() FROM scope()[
  {
   "Log": "Velociraptor: user_grant: User not found\n"
  }
-]SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUserNotThere"[]
+]SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUserNotThere"[]SELECT user_create( user="VelociraptorServer", password="hunter2", roles=["investigator"]) FROM scope()[
+ {
+  "user_create(user=\"VelociraptorServer\", password=\"hunter2\", roles=[\"investigator\"])": null
+ }
+]SELECT * FROM test_read_logs() WHERE Log =~ "Username is reserved" AND NOT Log =~ "SELECT"[
+ {
+  "Log": "Velociraptor: user_create: Username is reserved\n"
+ }
+]
