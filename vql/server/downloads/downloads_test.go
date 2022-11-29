@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -15,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -94,15 +96,15 @@ func (self *TestSuite) TestExportCollection() {
 	// Ensure the zip file contains the sparse file and index as well
 	// as unsparse.
 	file_content, _ := file_details.GetString(
-		"uploads/uploads/data/file.txt")
+		"uploads/data/file.txt")
 	assert.Equal(self.T(), "hello world", file_content)
 
 	file_content, _ = file_details.GetString(
-		"uploads/uploads/sparse/C%3A/file.sparse.txt")
+		"uploads/sparse/C%3A/file.sparse.txt")
 	assert.Equal(self.T(), "This bit", file_content)
 
 	// Make sure we have an index file
-	_, pres := file_details.Get("uploads/uploads/sparse/C%3A/file.sparse.txt.idx")
+	_, pres := file_details.Get("uploads/sparse/C%3A/file.sparse.txt.idx")
 	assert.True(self.T(), pres)
 
 	// Now create the download export with sparse files expanded.
@@ -126,14 +128,19 @@ func (self *TestSuite) TestExportCollection() {
 	assert.NoError(self.T(), err)
 
 	file_content, _ = file_details.GetString(
-		"uploads/uploads/sparse/C%3A/file.sparse.txt")
+		"uploads/sparse/C%3A/file.sparse.txt")
 	// File should have a zero padded region between 5 and 10 bytes
 	assert.Equal(self.T(), "This \x00\x00\x00\x00\x00bit", file_content)
 
 	// No idx file is emitted because we expanded all files.
-	_, pres = file_details.Get("uploads/uploads/sparse/C%3A/file.sparse.txt.idx")
+	_, pres = file_details.Get("uploads/sparse/C%3A/file.sparse.txt.idx")
 	assert.True(self.T(), !pres)
 
+	uploads_json, pres := file_details.Get("uploads.json")
+	assert.True(self.T(), pres)
+
+	goldie.Assert(self.T(), "TestExportCollectionUploads",
+		json.MustMarshalIndent(uploads_json))
 }
 
 func TestCollectorPlugin(t *testing.T) {
