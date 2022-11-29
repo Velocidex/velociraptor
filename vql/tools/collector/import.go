@@ -197,6 +197,9 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 
 			// Copy from the archive to the file store at these locations.
 			src := root.Append(components...)
+
+			// First directory in zip file is "upload" we skip that
+			// and append the other components to the filestore path.
 			dest := flow_path_manager.UploadContainer().AddChild(components[1:]...)
 
 			err := self.copyFileWithIndex(ctx, config_obj, scope,

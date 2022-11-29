@@ -1,0 +1,29 @@
+[
+ {
+  "Timestamp": "2020-10-07T20:43:08Z",
+  "started": "2020-10-07 20:43:08 +0000 UTC",
+  "vfs_path": "data",
+  "_Components": [
+   "uploads",
+   "data",
+   "file.txt"
+  ],
+  "file_size": 11,
+  "uploaded_size": 11,
+  "Type": ""
+ },
+ {
+  "Timestamp": "2020-10-07T20:43:08Z",
+  "started": "2020-10-07 20:43:08 +0000 UTC",
+  "vfs_path": "{\"DelegateAccessor\":\"data\",\"DelegatePath\":\"This is...",
+  "_Components": [
+   "uploads",
+   "sparse",
+   "C:",
+   "file.sparse.txt"
+  ],
+  "file_size": 21,
+  "uploaded_size": 8,
+  "Type": ""
+ }
+]
