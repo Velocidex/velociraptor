@@ -42,3 +42,10 @@ Queries:
   - SELECT user_grant(user="TestUserNotThere", roles="reader") FROM scope()
   - SELECT * FROM test_read_logs() WHERE Log =~ "User not found" AND NOT Log =~ "SELECT"
   - SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUserNotThere"
+
+  # Should refuse to add a user with a reserved name
+  - SELECT user_create(
+       user="VelociraptorServer", password="hunter2",
+       roles=["investigator"]) FROM scope()
+
+  - SELECT * FROM test_read_logs() WHERE Log =~ "Username is reserved" AND NOT Log =~ "SELECT"
