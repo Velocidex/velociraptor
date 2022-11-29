@@ -44,6 +44,7 @@ export class UserSettings extends React.Component {
             document.body.classList.remove('github-dimmed-light');
             document.body.classList.remove('ncurses');
             document.body.classList.remove('coolgray-dark');
+            document.body.classList.remove('midnight');
             document.body.classList.add(traits.theme || "veloci-light");
         });
     }

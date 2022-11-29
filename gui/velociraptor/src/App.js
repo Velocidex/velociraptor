@@ -46,6 +46,7 @@ import './themes/pink-light.css';
 import './themes/github-dimmed-dark.css';
 import './themes/ncurses.css';
 import './themes/coolgray-dark.css';
+import './themes/midnight.css';
 
 /* This is the main App page.
 
