@@ -417,7 +417,7 @@ Frontend:
   # A proxy setting to use - Velociraptor needs to connect to download
   # tools. This setting will force it to go out over this proxy. NOTE-
   # If you dont want to allow outbound connections, just set this to
-  # an non existent setting (e.g. 127.0.0.1:3128).
+  # an non existent setting (e.g. http://127.0.0.1:3128).
   proxy: ""
 
   ## Velociraptor can attempt to obfuscate artifact names when
