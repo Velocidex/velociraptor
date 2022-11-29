@@ -89,6 +89,10 @@ const (
   "enableLiveAutocompletion":true}`
 )
 
+var (
+	validUsernameRegEx = regexp.MustCompile("^[a-zA-Z0-9@.\\-_#+]+$")
+)
+
 type UserManager struct {
 	ca_pool *x509.CertPool
 
@@ -97,10 +101,33 @@ type UserManager struct {
 	config_obj *config_proto.Config
 }
 
-func NewUserRecord(name string) (*api_proto.VelociraptorUser, error) {
-	if !regexp.MustCompile("^[a-zA-Z0-9@.\\-_#+]+$").MatchString(name) {
-		return nil, errors.New(fmt.Sprintf(
-			"Unacceptable username %v", name))
+func validateUsername(config_obj *config_proto.Config, name string) error {
+	if !validUsernameRegEx.MatchString(name) {
+		return fmt.Errorf("Unacceptable username %v", name)
+	}
+
+	if config_obj.API != nil &&
+		config_obj.API.PinnedGwName == name {
+		return fmt.Errorf("Unacceptable username %v", name)
+	}
+
+	if config_obj.Client != nil &&
+		config_obj.Client.PinnedServerName == name {
+		return fmt.Errorf("Unacceptable username %v", name)
+	}
+
+	if name == "GRPC_GW" || name == "VelociraptorServer" {
+		return fmt.Errorf("Unacceptable username %v", name)
+	}
+
+	return nil
+}
+
+func NewUserRecord(config_obj *config_proto.Config,
+	name string) (*api_proto.VelociraptorUser, error) {
+	err := validateUsername(config_obj, name)
+	if err != nil {
+		return nil, err
 	}
 	return &api_proto.VelociraptorUser{Name: name}, nil
 }
@@ -127,6 +154,11 @@ func (self UserManager) SetUser(
 	user_record *api_proto.VelociraptorUser) error {
 	if user_record.Name == "" {
 		return errors.New("Must set a username")
+	}
+
+	err := validateUsername(self.config_obj, user_record.Name)
+	if err != nil {
+		return err
 	}
 
 	db, err := datastore.GetDB(self.config_obj)
@@ -229,6 +261,12 @@ func (self UserManager) GetUserWithHashes(ctx context.Context, username string) 
 	if username == "" {
 		return nil, errors.New("Must set a username")
 	}
+
+	err := validateUsername(self.config_obj, username)
+	if err != nil {
+		return nil, err
+	}
+
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return nil, err

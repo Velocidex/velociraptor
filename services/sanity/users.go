@@ -39,7 +39,7 @@ func createInitialUsers(
 		user_record, err := users_manager.GetUser(ctx, user.Name)
 		if err != nil || user_record.Name != user.Name {
 			logger.Info("Initial user %v not present, creating", user.Name)
-			new_user, err := users.NewUserRecord(user.Name)
+			new_user, err := users.NewUserRecord(config_obj, user.Name)
 			if err != nil {
 				return err
 			}
