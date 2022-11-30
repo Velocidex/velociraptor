@@ -59,6 +59,8 @@ message UpdateUserRequest {
     repeated string orgs = 3;
 
     repeated string roles = 4;
+
+    bool add_new_user = 5;
 }
 
 message DeleteUserRequest {

@@ -232,12 +232,12 @@ const English = {
     "Update User" : "Update User",
     "Roles" : "Roles",
     "Roles in": org => {
-	return "Roles in " + org;
+    return "Roles in " + org;
     },
     "Not a member of": org => {
         return "Not a member of " + org;
     },
- 
+
     "ToolRoleBasedPermissions" :
     <>
     Role-Based Permissions allow the administrator to grant sets of permissions for common activities.  A user may have multiple roles assigned.
@@ -252,6 +252,10 @@ const English = {
     </>,
     "User does not exist": (username)=><>User {username} does not exist.</>,
     "Do you want to delete?": (username)=>"Do you want to delete " + username + "?",
+    "WARN_REMOVE_USER_FROM_ORG": (user, org)=>(
+        <>
+          You are about to remove user {user} from Org {org} <br/>
+        </>),
 };
 
 export default English;

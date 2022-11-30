@@ -183,44 +183,13 @@ func (self *ApiServer) CreateUser(ctx context.Context,
 		Roles: in.Roles,
 	}
 
-	err = users.AddUserToOrg(ctx, users.UseExistingUser,
-		principal, in.Name, in.Orgs, acl)
+	mode := users.UseExistingUser
+	if in.AddNewUser {
+		mode = users.AddNewUser
+	}
+
+	err = users.AddUserToOrg(ctx, mode, principal, in.Name, in.Orgs, acl)
 	return &emptypb.Empty{}, err
-}
-
-func (self *ApiServer) UpdateUser(ctx context.Context,
-	in *api_proto.UpdateUserRequest) (
-	*emptypb.Empty, error) {
-
-	return self.ChangeUser(ctx, in, users.UseExistingUser)
-}
-
-func (self *ApiServer) DeleteUser(ctx context.Context,
-	in *api_proto.DeleteUserRequest) (*emptypb.Empty, error) {
-
-	users_manager := services.GetUserManager()
-	principal, org_config_obj, err := users_manager.GetUserFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	orgs := in.Orgs
-	if len(orgs) == 0 {
-		orgs = users.LIST_ALL_ORGS
-	}
-
-	err = users.DeleteUser(ctx, principal.Name, in.Name, orgs)
-	if err != nil {
-		return nil, err
-	}
-
-	logger := logging.GetLogger(org_config_obj, &logging.Audit)
-	logger.WithFields(logrus.Fields{
-		"Username":  in.Name,
-		"Principal": principal,
-	}).Info("users: Deleted user record via API")
-
-	return &emptypb.Empty{}, nil
 }
 
 func (self *ApiServer) GetUser(

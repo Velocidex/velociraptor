@@ -19,6 +19,7 @@ import Form from 'react-bootstrap/Form';
 import Modal from 'react-bootstrap/Modal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import AddOrgDialog from './add_orgs.js';
+import AddUserDialog from './add_user.js';
 
 import api from '../core/api-service.js';
 import axios from 'axios';
@@ -39,25 +40,40 @@ function getOrgRecordsForUser(users, name) {
 }
 
 
-class AddUserDialog extends Component {
+class ConfirmDialog extends Component {
     static propTypes = {
         onClose: PropTypes.func.isRequired,
+        onSubmit: PropTypes.func.isRequired,
+        org_name: PropTypes.string,
+        user_name: PropTypes.string,
     }
 
     render() {
-        return (
+        return(
             <Modal show={true}
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
-                <Modal.Title>{T("Add a new  User")}</Modal.Title>
+                <Modal.Title>{T("Warning")}</Modal.Title>
               </Modal.Header>
               <Modal.Body >
-                {T("You may add a new user to the system")}
+                {T("WARN_REMOVE_USER_FROM_ORG", this.props.user_name,
+                   this.props.org_name)}
               </Modal.Body>
+              <Modal.Footer>
+                <Button variant="secondary"
+                        onClick={this.props.onClose}>
+                  {T("Close")}
+                </Button>
+                <Button variant="primary"
+                        onClick={this.props.onSubmit}>
+                  {T("Do it!")}
+                </Button>
+              </Modal.Footer>
             </Modal>
         );
     }
 }
+
 
 class PermissionViewer extends Component {
     static propTypes = {
@@ -66,9 +82,11 @@ class PermissionViewer extends Component {
     }
 
     state = {
-        showDialog: false,
+        showHelpDialog: false,
+        showConfirmDeleteDialog: false,
         message: "",
-        help_topic: ""
+        help_topic: "",
+        pending_acl: {}
     }
 
     changeRole = (role, role_is_set) => {
@@ -82,6 +100,17 @@ class PermissionViewer extends Component {
         if (!role_is_set) {
             roles = _.filter(roles, x=>x !== role);
             new_acl.roles  = roles;
+
+            // We are about to remove all permissions from the
+            // user. Stop and wait for the user to confirm this is
+            // what they want because it will delete the user from the
+            // org.
+            if (_.isEmpty(new_acl.roles) &&
+                _.isEmpty(new_acl.permissions)) {
+                this.setState({pending_acl: new_acl,
+                               showConfirmDeleteDialog: true});
+                return;
+            }
             this.props.setACL(new_acl);
         }
     }
@@ -110,8 +139,8 @@ class PermissionViewer extends Component {
 
         return (
             <Container className="permission-viewer">
-              <Modal show={this.state.showDialog}
-                     onHide={() => this.setState({showDialog: false})}>
+              <Modal show={this.state.showHelpDialog}
+                     onHide={() => this.setState({showHelpDialog: false})}>
                 <Modal.Header closeButton>
                   <Modal.Title>{T(this.state.help_topic)}</Modal.Title>
                 </Modal.Header>
@@ -119,6 +148,17 @@ class PermissionViewer extends Component {
                   {T(this.state.message)}
                 </Modal.Body>
               </Modal>
+
+              {this.state.showConfirmDeleteDialog &&
+               <ConfirmDialog
+                 org_name={org_name}
+                 user_name={this.props.acls.name}
+                 onClose={()=>this.setState({showConfirmDeleteDialog: false})}
+                 onSubmit={()=>{
+                     this.props.setACL(this.state.pending_acl);
+                     this.setState({showConfirmDeleteDialog: false});
+                 }}
+               /> }
 
               <Card>
                 <Card.Header>
@@ -131,7 +171,7 @@ class PermissionViewer extends Component {
                             variant="outline-default"
                             as="a"
                             onClick={()=>this.setState({
-                                showDialog: true,
+                                showHelpDialog: true,
                                 help_topic: "Role_" + role,
                                 message: "ToolRole_" + role})}>
                             <FontAwesomeIcon icon="info"/>
@@ -162,7 +202,7 @@ class PermissionViewer extends Component {
                             variant="outline-default"
                             as="a"
                             onClick={()=>this.setState({
-                                showDialog: true,
+                                showHelpDialog: true,
                                 help_topic: "Perm_" + perm,
                                 message: "ToolPerm_" + perm})}>
                             <FontAwesomeIcon icon="info"/>
@@ -193,7 +233,7 @@ class PermissionViewer extends Component {
                           variant="outline-default"
                           as="a"
                           onClick={()=>this.setState({
-                              showDialog: true,
+                              showHelpDialog: true,
                               help_topic: "Perm_" + perm,
                               message: "ToolPerm_" + perm})}>
                           <FontAwesomeIcon icon="info"/>
@@ -297,7 +337,11 @@ class UsersOverview extends Component {
                 /> }
               { this.state.showAddUserDialog &&
                 <AddUserDialog
+                  org={this.state.org.id || "root" }
                   onClose={()=>{
+                      this.setState({showAddUserDialog: false});
+                  }}
+                  onSubmit={()=>{
                       this.setState({showAddUserDialog: false});
                       this.props.updateUsers();
                   }}
