@@ -95,7 +95,7 @@
   /* --color-page-link-background: #121212;
   --color-page-link-active-background: #444444; */
   --color-form-background: #121212;
-  --color-card-heading-background: #303030;
+  --color-card-heading-background: #2E2E2E;
   --color-monospace-color: #eeeeee;
 
   --color-page-link-active-background: #0c900a;
@@ -105,7 +105,7 @@
   --color-table-row-stripe: rgba(255, 255, 255, 0.03);
   --color-table-row-selected: rgba(255, 255, 255, 0.05);
   --color-table-row-selected-text: var(--color-foreground);
-  --color-table-heading-background: #303030;
+  --color-table-heading-background: rgba(255, 255, 255, 0.05);
   --color-table-row-hover: rgba(255, 255, 255, 0.01);
 
   --color-code: var(--color-accent-100);
@@ -147,18 +147,9 @@ body.veloci-dark {
   color: var(--color-code);
 }
 
-.veloci-dark .report-viewer p,
-.veloci-dark .report-viewer ol,
-.veloci-dark .report-viewer ul,
-.veloci-dark .report-viewer li {
-  font-family: var(--font-family-paragraph);
-  font-size: var(--font-size-large);
-}
-
 .veloci-dark dl {
   font-family: var(--font-family-sans-serif);
 }
-
 
 .veloci-dark h1,
 .veloci-dark h2,
@@ -600,6 +591,14 @@ body.veloci-dark {
 
 /* Artifact viewer screen */
 
+.veloci-dark .report-viewer .description-content {
+  font-family: var(--font-family-paragraph);
+  font-size: var(--font-size-large);
+  background: #2E2E2E;
+  border-radius: 5px;
+  padding: 12px;
+}
+
 .veloci-dark .report-viewer h3 {
   margin-top: 2rem;
   color: #3b84d9;
@@ -654,7 +653,7 @@ body.veloci-dark {
 /* modal dialogs */
 
 .veloci-dark .modal-content {
-  background: var(--color-card-heading-background);
+  background: #3D3D3D;
   color: var(--color-foreground);
 }
 

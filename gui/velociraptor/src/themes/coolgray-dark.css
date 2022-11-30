@@ -136,15 +136,6 @@ body.coolgray-dark {
   letter-spacing: 0.4px;
 }
 
-.coolgray-dark .report-viewer p,
-.coolgray-dark .report-viewer ol,
-.coolgray-dark .report-viewer ul,
-.coolgray-dark .report-viewer li {
-  font-family: var(--font-family-paragraph);
-  font-size: var(--font-size-base);
-  letter-spacing: 0.4px;
-}
-
 .coolgray-dark code {
   font-family: var(--font-family-monospace);
   color: var(--color-accent-100);
@@ -727,6 +718,14 @@ body.coolgray-dark {
 
 /* Artifact viewer screen */
 
+.coolgray-dark .report-viewer .description-content {
+  font-family: var(--font-family-paragraph);
+  font-size: var(--font-size-base);
+  letter-spacing: 0.4px;
+  background: var(--color-table-row-hover);
+  padding: 12px;
+}
+
 .coolgray-dark .report-viewer h1 {
   color: var(--color-foreground);
 }
@@ -739,11 +738,6 @@ body.coolgray-dark {
   margin-top: 2rem;
   font-size: 18px;
   color: #dead87;
-}
-
-.coolgray-dark .modal-title {
-    font-size: 1.2rem;
-    height: 50px;
 }
 
 .coolgray-dark .report-viewer h4 {

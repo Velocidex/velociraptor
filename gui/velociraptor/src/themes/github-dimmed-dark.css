@@ -129,14 +129,6 @@ body.github-dimmed-dark {
   letter-spacing: 0.4px;
 }
 
-.github-dimmed-dark .report-viewer p,
-.github-dimmed-dark .report-viewer ol,
-.github-dimmed-dark .report-viewer ul
-.github-dimmed-dark .report-viewer li {
-  font-family: var(--font-family-sans-serif);
-  font-size: var(--font-size-large);
-}
-
 .github-dimmed-dark dl {
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
@@ -620,6 +612,14 @@ body.github-dimmed-dark {
 }
 
 /* Artifact viewer screen */
+
+.github-dimmed-dark .report-viewer .description-content {
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-large);
+  border-radius: 5px;
+  border: 1px solid var(--color-btn-default-border);
+  padding: 12px;
+}
 
 .github-dimmed-dark .report-viewer h1 {
   color: var(--color-accent-100);
