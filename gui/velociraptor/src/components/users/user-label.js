@@ -29,6 +29,7 @@ import Select from 'react-select';
 
 class _PasswordChange extends React.Component {
     static propTypes = {
+        username: PropTypes.string,
         onClose: PropTypes.func.isRequired,
     }
 
@@ -42,9 +43,9 @@ class _PasswordChange extends React.Component {
 
     updatePassword = ()=>{
         api.post("v1/SetPassword", {
+            username: this.props.username,
             password: this.state.password1,
         }, this.source.token).then((response) => {
-            this.props.history.push("/welcome");
             this.props.onClose();
         });
     }
@@ -52,6 +53,42 @@ class _PasswordChange extends React.Component {
     state = {
         password1: "",
         password2: "",
+    }
+
+    render() {
+        return  (
+            <>
+              <Form.Control type="password"
+                            value={this.state.password1}
+                            onChange={e=>this.setState({
+                                password1: e.currentTarget.value})}
+                            placeholder={T("Password")} />
+              <Form.Control type="password"
+                            value={this.state.password2}
+                            onChange={e=>this.setState({
+                                password2: e.currentTarget.value})}
+                            placeholder={T("Retype Password")} />
+              { this.state.password1 && this.state.password2 &&
+                <Button variant={
+                    this.state.password1 !== this.state.password2 ? "warning" : "default"}
+                        size="sm"
+                        className="set-password-button"
+                        disabled={this.state.password1 !== this.state.password2}
+                        onClick={this.updatePassword}
+                >
+                  {this.state.password1 !== this.state.password2 ? T("Passwords do not match") : T("Submit")}
+                </Button>
+              }
+            </>);
+    }
+}
+
+export const PasswordChange = withRouter(_PasswordChange);
+
+class _PasswordChangeForm extends React.PureComponent {
+    static propTypes = {
+        username: PropTypes.string,
+        onClose: PropTypes.func.isRequired,
     }
 
     render() {
@@ -70,26 +107,14 @@ class _PasswordChange extends React.Component {
                       </span>
                     </Accordion.Toggle>
                     <Accordion.Collapse eventKey="0">
-                      <>
-                        <Form.Control type="password"
-                                      value={this.state.password1}
-                                      onChange={e=>this.setState({password1: e.currentTarget.value})}
-                                      placeholder={T("Password")} />
-                        <Form.Control type="password"
-                                      value={this.state.password2}
-                                      onChange={e=>this.setState({password2: e.currentTarget.value})}
-                                      placeholder={T("Retype Password")} />
-                        { this.state.password1 && this.state.password2 &&
-                          <Button variant={this.state.password1 !== this.state.password2 ? "warning" : "default"}
-                                  size="sm"
-                                  className="set-password-button"
-                                  disabled={this.state.password1 !== this.state.password2}
-                                  onClick={this.updatePassword}
-                          >
-                            {this.state.password1 !== this.state.password2 ? T("Passwords do not match") : T("Submit")}
-                          </Button>
-                        }
-                      </>
+                      <PasswordChange
+                        username={this.props.username}
+                        onClose={()=>{
+                            // Redirect to the homepage so as to get a
+                            // good state
+                            this.props.history.push("/welcome");
+                            this.props.onClose();
+                        }}/>
                     </Accordion.Collapse>
                   </Card>
                 </Accordion>
@@ -99,8 +124,7 @@ class _PasswordChange extends React.Component {
     }
 }
 
-const PasswordChange = withRouter(_PasswordChange);
-
+export const PasswordChangeForm = withRouter(_PasswordChangeForm);
 
 class UserSettings extends React.PureComponent {
     static contextType = UserConfig;
@@ -188,10 +212,10 @@ class UserSettings extends React.PureComponent {
                   </Form.Group>
                 }
                 { !this.context.traits.password_less &&
-                  <PasswordChange
+                  <PasswordChangeForm
                     onClose={this.props.onClose}
                     >
-                  </PasswordChange> }
+                  </PasswordChangeForm> }
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
                     {T("Theme")}

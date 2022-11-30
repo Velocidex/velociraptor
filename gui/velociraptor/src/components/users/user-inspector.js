@@ -20,6 +20,7 @@ import Modal from 'react-bootstrap/Modal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import AddOrgDialog from './add_orgs.js';
 import AddUserDialog from './add_user.js';
+import EditUserDialog from './edit-user.js';
 
 import api from '../core/api-service.js';
 import axios from 'axios';
@@ -73,6 +74,8 @@ class ConfirmDialog extends Component {
         );
     }
 }
+
+
 
 
 class PermissionViewer extends Component {
@@ -169,7 +172,7 @@ class PermissionViewer extends Component {
                         <div className="form-toggle" key={role}>
                           <Button
                             variant="outline-default"
-                            as="a"
+                            as="button"
                             onClick={()=>this.setState({
                                 showHelpDialog: true,
                                 help_topic: "Role_" + role,
@@ -200,7 +203,7 @@ class PermissionViewer extends Component {
                         <div className="form-toggle" key={perm}>
                           <Button
                             variant="outline-default"
-                            as="a"
+                            as="button"
                             onClick={()=>this.setState({
                                 showHelpDialog: true,
                                 help_topic: "Perm_" + perm,
@@ -231,7 +234,7 @@ class PermissionViewer extends Component {
                       <div className="form-toggle" key={perm}>
                         <Button
                           variant="outline-default"
-                          as="a"
+                          as="button"
                           onClick={()=>this.setState({
                               showHelpDialog: true,
                               help_topic: "Perm_" + perm,
@@ -261,6 +264,8 @@ class PermissionViewer extends Component {
 
 
 class UsersOverview extends Component {
+    static contextType = UserConfig;
+
     static propTypes = {
         users: PropTypes.array,
         updateUsers: PropTypes.func.isRequired,
@@ -273,6 +278,7 @@ class UsersOverview extends Component {
 
         showAddUserDialog: false,
         showAddOrgDialog: false,
+        showEditUserDialog: false,
     }
 
     componentDidMount = () => {
@@ -335,6 +341,7 @@ class UsersOverview extends Component {
                       this.props.updateUsers();
                   }}
                 /> }
+
               { this.state.showAddUserDialog &&
                 <AddUserDialog
                   org={this.state.org.id || "root" }
@@ -347,6 +354,19 @@ class UsersOverview extends Component {
                   }}
                 /> }
 
+              { this.state.showEditUserDialog &&
+                <EditUserDialog
+                  username={this.state.user_name }
+                  onClose={()=>{
+                      this.setState({showEditUserDialog: false});
+                  }}
+                  onSubmit={()=>{
+                      this.setState({showEditUserDialog: false});
+                      this.props.updateUsers();
+                  }}
+                /> }
+
+
               <Col sm="4">
                   <Container className="selectable">
                     <Table  bordered hover size="sm">
@@ -354,13 +374,27 @@ class UsersOverview extends Component {
                         <tr>
                           <th>
                             {T("Users")}
+                            { !this.context.traits.password_less &&
+                              <Button
+                                disabled={!this.state.user_name}
+                                data-title={T("Update User Password")}
+                                onClick={()=>this.setState({
+                                    showEditUserDialog: true
+                                })}
+                                className="btn-tooltip new-user-btn"
+                                variant="outline-default"
+                                as="button">
+                                <FontAwesomeIcon icon="edit"/>
+                              </Button>
+                            }
                             <Button
+                              data-title={T("Add a new user")}
                               onClick={()=>this.setState({
                                   showAddUserDialog: true
                               })}
-                              className="new-user-btn"
+                              className="btn-tooltip new-user-btn"
                               variant="outline-default"
-                              as="a">
+                              as="button">
                               <FontAwesomeIcon icon="plus"/>
                             </Button>
                           </th>
@@ -392,17 +426,25 @@ class UsersOverview extends Component {
                           <th>
                             {T("Orgs")}
                             <Button
+                              disabled={!this.state.user_name}
+                              data-title={T("Assign user to Orgs")}
                               onClick={()=>this.setState({
                                   showAddOrgDialog: true
                               })}
-                              className="new-user-btn"
+                              className="new-user-btn btn-tooltip"
                               variant="outline-default"
-                              as="a">
+                              as="button">
                               <FontAwesomeIcon icon="plus"/>
                             </Button>
                           </th></tr>
                       </thead>
                       <tbody>
+                        { _.isEmpty(selected_orgs) &&
+                          <tr className="no-content">
+                            <td>
+                              {T("Please Select a User")}
+                            </td>
+                          </tr> }
                         { _.map(selected_orgs, (item, idx)=>{
                             return <tr key={idx} className={
                                 this.state.org &&

@@ -76,10 +76,9 @@ export default class AddOrgDialog extends Component {
             <Modal show={true}
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
-                <Modal.Title>{T("Add User to new Org")}</Modal.Title>
+                <Modal.Title>{T("Assign user to Orgs")}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
-                {T("Assign this user to orgs.")}
                 <OrgSelector
                   onChange={orgs=>this.setState({
                       orgs: orgs,

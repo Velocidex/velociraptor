@@ -1,7 +1,7 @@
 import _ from 'lodash';
 
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import React, { Component, PureComponent } from 'react';
 import UserConfig from '../core/user.js';
 import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
@@ -9,6 +9,7 @@ import Row from 'react-bootstrap/Row';
 import Select from 'react-select';
 import T from '../i8n/i8n.js';
 import InputGroup from 'react-bootstrap/InputGroup';
+
 
 
 export default class OrgSelector extends Component {
@@ -47,43 +48,60 @@ export default class OrgSelector extends Component {
         });
 
         return (
+            <InputGroup className="mb-3">
+              <InputGroup.Prepend>
+                <InputGroup.Text
+                  as="button"
+                  className="btn btn-default"
+                  onClick={e=>{
+                      this.props.onChange(_.map(orgs, x=>x.id));
+                      e.preventDefault();
+                      return false;
+                  }}
+                >
+                  {T("All Orgs")}
+                </InputGroup.Text>
+              </InputGroup.Prepend>
+              <Select
+                className="org-selector"
+                isMulti
+                isClearable
+                classNamePrefix="velo"
+                options={options}
+                value={option_value}
+                onChange={x=>{
+                    let value=_.map(x, x=>x.value);
+                    if (value) {
+                        return this.props.onChange(value);
+                    };
+                    return  [this.context.org || "root"];
+                }}
+                placeholder={T("Select an org")}
+              />
+            </InputGroup>
+        );
+    }
+}
+
+
+
+export class OrgSelectorForm extends PureComponent {
+    static propTypes = {
+        value: PropTypes.array,
+        onChange: PropTypes.func,
+    };
+
+    render() {
+        return (
             <Form.Group as={Row}>
               <Form.Label column sm="3">{T("Orgs")}</Form.Label>
               <Col sm="8">
-                <InputGroup className="mb-3">
-                  <InputGroup.Prepend>
-                    <InputGroup.Text
-                      as="button"
-                      className="btn btn-default"
-                      onClick={e=>{
-                          this.props.onChange(_.map(orgs, x=>x.id));
-                          e.preventDefault();
-                          return false;
-                      }}
-                    >
-                      {T("All Orgs")}
-                    </InputGroup.Text>
-                  </InputGroup.Prepend>
-                  <Select
-                    className="org-selector"
-                    isMulti
-                    isClearable
-                    classNamePrefix="velo"
-                    options={options}
-                    value={option_value}
-                    onChange={x=>{
-                        let value=_.map(x, x=>x.value);
-                        if (value) {
-                            return this.props.onChange(value);
-                        };
-                        return  [this.context.org || "root"];
-                    }}
-                    placeholder={T("Select an org")}
-                  />
-                </InputGroup>
-
+                <OrgSelector
+                  onChange={this.props.onChange}
+                  value={this.props.value}/>
               </Col>
             </Form.Group>
         );
     }
+
 }

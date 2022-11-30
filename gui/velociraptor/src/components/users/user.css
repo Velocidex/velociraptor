@@ -20,13 +20,13 @@
     display: table-cell;
 }
 
-.form-toggle a {
+.form-toggle button {
     display: block;
     padding-right: 10px;
     visibility: hidden;
 }
 
-.form-toggle:hover a {
+.form-toggle:hover button {
     visibility: visible;
 }
 
@@ -38,5 +38,12 @@
 .new-user-btn {
     float: right;
     display: inline;
-    padding:  0px;
+    padding: 0px;
+    padding-left:  10px;
+}
+
+
+.user-heading {
+    padding-right: 20px;
+    display: inline;
 }

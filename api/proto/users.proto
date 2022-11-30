@@ -189,6 +189,7 @@ message UserRoles {
 
 message SetPasswordRequest {
     string password = 1;
+    string username = 2;
 }
 
 // Store favorite collections (essential preset collection specs)
