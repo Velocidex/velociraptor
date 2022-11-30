@@ -56,9 +56,9 @@ message UpdateUserRequest {
         description: "The cleartext password"
     }];
 
-    map<string, Strings> roles_per_org = 3;
-    map<string, string> string_fields = 4;
-    map<string, bool> bool_fields = 5;
+    repeated string orgs = 3;
+
+    repeated string roles = 4;
 }
 
 message DeleteUserRequest {

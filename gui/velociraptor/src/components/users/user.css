@@ -34,3 +34,9 @@
     height: calc(100vh - 150px);
     overflow-y: auto;
 }
+
+.new-user-btn {
+    float: right;
+    display: inline;
+    padding:  0px;
+}

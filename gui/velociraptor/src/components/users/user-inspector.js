@@ -18,12 +18,46 @@ import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Modal from 'react-bootstrap/Modal';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import AddOrgDialog from './add_orgs.js';
 
 import api from '../core/api-service.js';
 import axios from 'axios';
 
 const POLL_TIME = 5000;
 
+function getOrgRecordsForUser(users, name) {
+    if (_.isEmpty(users)) {
+        return [];
+    }
+
+    for (let i=0; i<users.length; i++) {
+        if (users[i].name === name) {
+            return _.map(users[i].orgs, x=>x);
+        }
+    }
+    return [];
+}
+
+
+class AddUserDialog extends Component {
+    static propTypes = {
+        onClose: PropTypes.func.isRequired,
+    }
+
+    render() {
+        return (
+            <Modal show={true}
+                   onHide={this.props.onClose}>
+              <Modal.Header closeButton>
+                <Modal.Title>{T("Add a new  User")}</Modal.Title>
+              </Modal.Header>
+              <Modal.Body >
+                {T("You may add a new user to the system")}
+              </Modal.Body>
+            </Modal>
+        );
+    }
+}
 
 class PermissionViewer extends Component {
     static propTypes = {
@@ -189,12 +223,16 @@ class PermissionViewer extends Component {
 class UsersOverview extends Component {
     static propTypes = {
         users: PropTypes.array,
+        updateUsers: PropTypes.func.isRequired,
     }
 
     state = {
-        user: "",
+        user_name: "",
         org: "",
         acl: {},
+
+        showAddUserDialog: false,
+        showAddOrgDialog: false,
     }
 
     componentDidMount = () => {
@@ -207,7 +245,6 @@ class UsersOverview extends Component {
         this.getACLsource.cancel();
     }
 
-
     setACL = (acl) => {
         this.setACLsource.cancel();
         this.setACLsource = axios.CancelToken.source();
@@ -216,17 +253,17 @@ class UsersOverview extends Component {
                  this.setACLsource.token).then(response=>{
                      if (response.cancel)
                          return;
-                     this.getACL({name: acl.name},
+                     this.getACL(acl.name,
                                  {id: acl.org, name: acl.org_name});
+                     this.props.updateUsers();
                  });
     }
 
-    getACL = (user, org) => {
+    getACL = (user_name, org) => {
         this.getACLsource.cancel();
         this.getACLsource = axios.CancelToken.source();
 
         this.setState({acl: {}});
-        let user_name = user && user.name;
         let org_id = org && org.id;
 
         if (!user_name || !org_id) {
@@ -244,26 +281,56 @@ class UsersOverview extends Component {
     }
 
     render() {
-        let selected_orgs = this.state.user && this.state.user.orgs;
+        let selected_orgs = getOrgRecordsForUser(
+            this.props.users, this.state.user_name);
 
         return (
             <Row>
+              { this.state.showAddOrgDialog &&
+                <AddOrgDialog
+                  user_name={this.state.user_name}
+                  users={this.props.users}
+                  onClose={()=>{
+                      this.setState({showAddOrgDialog: false});
+                      this.props.updateUsers();
+                  }}
+                /> }
+              { this.state.showAddUserDialog &&
+                <AddUserDialog
+                  onClose={()=>{
+                      this.setState({showAddUserDialog: false});
+                      this.props.updateUsers();
+                  }}
+                /> }
+
               <Col sm="4">
                   <Container className="selectable">
                     <Table  bordered hover size="sm">
                       <thead>
-                        <tr><th>{T("Users")}</th></tr>
+                        <tr>
+                          <th>
+                            {T("Users")}
+                            <Button
+                              onClick={()=>this.setState({
+                                  showAddUserDialog: true
+                              })}
+                              className="new-user-btn"
+                              variant="outline-default"
+                              as="a">
+                              <FontAwesomeIcon icon="plus"/>
+                            </Button>
+                          </th>
+                        </tr>
                       </thead>
                       <tbody>
                         { _.map(this.props.users, (item, idx)=>{
                             return <tr key={idx} className={
-                                this.state.user &&
-                                    this.state.user.name === item.name ?
+                                    this.state.user_name === item.name ?
                                     "row-selected" : undefined
                                 }>
                                      <td onClick={e=>{
-                                         this.setState({user: item});
-                                         this.getACL(item, this.state.org);
+                                         this.setState({user_name: item.name});
+                                         this.getACL(item.name, this.state.org);
                                      }}>
                                        {item.name}
                                      </td>
@@ -277,7 +344,19 @@ class UsersOverview extends Component {
                   <Container className="selectable">
                     <Table  bordered hover size="sm">
                       <thead>
-                        <tr><th>{T("Orgs")}</th></tr>
+                        <tr>
+                          <th>
+                            {T("Orgs")}
+                            <Button
+                              onClick={()=>this.setState({
+                                  showAddOrgDialog: true
+                              })}
+                              className="new-user-btn"
+                              variant="outline-default"
+                              as="a">
+                              <FontAwesomeIcon icon="plus"/>
+                            </Button>
+                          </th></tr>
                       </thead>
                       <tbody>
                         { _.map(selected_orgs, (item, idx)=>{
@@ -287,7 +366,7 @@ class UsersOverview extends Component {
                                     "row-selected" : undefined}>
                                      <td onClick={e=>{
                                          this.setState({org: item});
-                                         this.getACL(this.state.user, item);
+                                         this.getACL(this.state.user_name, item);
                                      }}>
                                        {item.name}
                                      </td>
@@ -298,10 +377,10 @@ class UsersOverview extends Component {
                   </Container>
               </Col>
               <Col sm="4">
-                  <PermissionViewer
-                    acls={this.state.acl}
-                    setACL={this.setACL}
-                  />
+                <PermissionViewer
+                  acls={this.state.acl}
+                  setACL={this.setACL}
+                />
               </Col>
             </Row>
         );
@@ -352,8 +431,8 @@ class OrgsOverview extends UsersOverview {
                                                   name: name,
                                               }});
                                           this.getACL(
-                                              {id: org_id_by_name[name]},
-                                              this.state.user);
+                                              this.state.user_name,
+                                              {id: org_id_by_name[name]});
                                       }}>
                         {name}
                         </td>
@@ -372,12 +451,11 @@ class OrgsOverview extends UsersOverview {
                      <tbody>
                  { _.map(selected_users, (item, idx)=>{
                      return <tr key={idx} className={
-                         this.state.user &&
-                             this.state.user.name === item.name ?
+                         this.state.user_name === item.name ?
                              "row-selected" : undefined}>
                               <td onClick={e=>{
-                                  this.setState({user: item});
-                                  this.getACL(item, this.state.org);
+                                  this.setState({user_name: item.name});
+                                  this.getACL(item.name, this.state.org);
                               }}>
                                 {item.name}
                               </td>
@@ -387,11 +465,11 @@ class OrgsOverview extends UsersOverview {
                      </Table>
              </Container>
             </Col>
-                 <Col sm="4">
-                       <PermissionViewer
-                    acls={this.state.acl}
-                    setACL={this.setACL}
-                  />
+              <Col sm="4">
+                <PermissionViewer
+                  acls={this.state.acl}
+                  setACL={this.setACL}
+                />
               </Col>
             </Row>
         );
@@ -457,11 +535,15 @@ class UserInspector extends Component {
                       onSelect={this.setDefaultTab}>
                   <Tab eventKey="users" title={T("Users")}>
                     { this.state.tab === "users" &&
-                      <UsersOverview users={this.state.users} />}
+                      <UsersOverview
+                        updateUsers={this.loadUsers}
+                        users={this.state.users} />}
                   </Tab>
                   <Tab eventKey="orgs" title={T("Orgs")}>
                     { this.state.tab === "orgs" &&
-                      <OrgsOverview users={this.state.users} /> }
+                      <OrgsOverview
+                        updateUsers={this.loadUsers}
+                        users={this.state.users} /> }
                   </Tab>
                 </Tabs>
               </div>

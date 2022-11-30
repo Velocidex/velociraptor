@@ -166,13 +166,32 @@ func (self *ApiServer) ChangeUser(ctx context.Context,
 	return &emptypb.Empty{}, nil
 }
 
+// Create a new user in the specified orgs.
 func (self *ApiServer) CreateUser(ctx context.Context,
 	in *api_proto.UpdateUserRequest) (*emptypb.Empty, error) {
-	return self.ChangeUser(ctx, in, users.AddNewUser)
+
+	users_manager := services.GetUserManager()
+	user_record, _, err := users_manager.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	principal := user_record.Name
+
+	// Prepare an ACL object from the incoming request.
+	acl := &acl_proto.ApiClientACL{
+		Roles: in.Roles,
+	}
+
+	err = users.AddUserToOrg(ctx, users.UseExistingUser,
+		principal, in.Name, in.Orgs, acl)
+	return &emptypb.Empty{}, err
 }
 
 func (self *ApiServer) UpdateUser(ctx context.Context,
-	in *api_proto.UpdateUserRequest) (*emptypb.Empty, error) {
+	in *api_proto.UpdateUserRequest) (
+	*emptypb.Empty, error) {
+
 	return self.ChangeUser(ctx, in, users.UseExistingUser)
 }
 
