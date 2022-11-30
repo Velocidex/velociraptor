@@ -137,14 +137,6 @@ body.veloci-light {
   color: var(--color-code);
 }
 
-.veloci-light .report-viewer p,
-.veloci-light .report-viewer ol,
-.veloci-light .report-viewer ul,
-.veloci-light .report-viewer li {
-  font-family: var(--font-family-paragraph);
-  font-size: var(--font-size-large);
-}
-
 .veloci-light dl {
   font-family: var(--font-family-sans-serif);
 }
@@ -568,6 +560,14 @@ body.veloci-light {
 }
 
 /* Artifact viewer screen */
+
+.veloci-light .report-viewer .description-content {
+  font-family: var(--font-family-paragraph);
+  font-size: var(--font-size-large);
+  background: #F7F7F7;
+  border-radius: 5px;
+  padding: 12px;
+}
 
 .veloci-light .report-viewer h3 {
   margin-top: 2rem;

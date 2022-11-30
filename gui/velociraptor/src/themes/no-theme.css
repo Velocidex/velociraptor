@@ -31,12 +31,12 @@ body.no-theme {
   color: var(--color-code);
 }
 
-.no-theme .report-viewer p,
-.no-theme .report-viewer ol,
-.no-theme .report-viewer ul,
-.no-theme .report-viewer li {
-  font-family: var(--font-family-paragraph);
-  font-size: 16px;
+.no-theme .report-viewer .description-content {
+    font-family: var(--font-family-paragraph);
+    font-size: 16px;
+    background: #F7F7F7;
+    border-radius: 5px;
+    padding: 12px;
 }
 
 .no-theme .btn.btn-default {
