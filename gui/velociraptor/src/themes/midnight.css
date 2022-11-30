@@ -145,16 +145,6 @@ body.midnight {
   color: darkorange;
 }
 
-.midnight .report-viewer p,
-.midnight .report-viewer ol,
-.midnight .report-viewer ul,
-.midnight .report-viewer li {
-  font-family: var(--font-family-paragraph);
-  font-size: var(--font-size-base);
-  letter-spacing: 0.4px;
-  color: darkorange;
-}
-
 .midnight code {
   font-family: var(--font-family-monospace);
   color: var(--color-accent-100);
@@ -761,6 +751,14 @@ body.midnight {
 
 /* Artifact viewer screen */
 
+.midnight .report-viewer .description-content {
+  font-family: var(--font-family-paragraph);
+  font-size: var(--font-size-base);
+  letter-spacing: 0.4px;
+  color: darkorange;
+  padding: 12px;
+}
+
 .midnight .report-viewer h1 {
   color: darkorange;
 }
@@ -773,12 +771,6 @@ body.midnight {
   margin-top: 2rem;
   font-size: 18px;
   color: var(--color-foreground);
-}
-
-.midnight .modal-title {
-    font-size: 1.2rem;
-    height: 50px;
-    color: darkorange;
 }
 
 .midnight .report-viewer h4 {
@@ -828,6 +820,8 @@ body.midnight {
   background: var(--color-canvas-background);
   color: var(--color-foreground);
   font-family: var(--font-family-sans-serif);
+  border: 1px solid var(--color-btn-default-border);
+  border-radius: 0;
 }
 
 .midnight .modal-content dt {
@@ -836,10 +830,11 @@ body.midnight {
 
 .midnight .modal-header {
   border-bottom: 2px solid var(--color-btn-default-border);
+  background: var(--color-header-background);
 }
 
 .midnight .modal-header .close {
-  color: var(--color-foreground-dimmed);
+  color: var(--color-foreground);
   opacity: 1;
   text-shadow: none;
   outline: none;
@@ -855,6 +850,7 @@ body.midnight {
 
 .midnight .modal-footer {
   border-top: 2px solid var(--color-btn-default-border);
+  background: var(--color-footer-background);
 }
 
 .midnight .modal-content pre {

@@ -930,6 +930,11 @@ body.ncurses {
   background: lightgrey;
 }
 
+.ncurses .report-viewer .description-content {
+  background: white;
+  padding: 12px;
+}
+
 .ncurses .report-viewer h1,
 .ncurses .report-viewer h2 {
   margin-top: 2rem;

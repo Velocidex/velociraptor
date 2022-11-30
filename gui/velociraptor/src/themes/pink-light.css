@@ -141,14 +141,6 @@ body.pink-light {
   color: var(--color-code);
 }
 
-.pink-light .report-viewer p,
-.pink-light .report-viewer ol,
-.pink-light .report-viewer ul,
-.pink-light .report-viewer li {
-  font-family: var(--font-family-paragraph);
-  font-size: var(--font-size-large);
-}
-
 .pink-light dl {
   font-family: var(--font-family-sans-serif);
 }
@@ -587,6 +579,14 @@ body.pink-light {
 }
 
 /* Artifact viewer screen */
+
+.pink-light .report-viewer .description-content {
+  font-family: var(--font-family-paragraph);
+  font-size: var(--font-size-large);
+  background: #F7F7F7;
+  border-radius: 5px;
+  padding: 12px;
+}
 
 .pink-light .report-viewer h3 {
   margin-top: 2rem;
