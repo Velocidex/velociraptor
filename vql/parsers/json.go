@@ -20,6 +20,7 @@ package parsers
 import (
 	"bufio"
 	"context"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -27,6 +28,8 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/json"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -474,6 +477,81 @@ func (self _IndexAssociativeProtocol) GetMembers(
 	return []string{}
 }
 
+type WriteJSONPluginArgs struct {
+	Filename string              `vfilter:"required,field=filename,doc=CSV files to open"`
+	Accessor string              `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	Query    vfilter.StoredQuery `vfilter:"required,field=query,doc=query to write into the file."`
+}
+
+type WriteJSONPlugin struct{}
+
+func (self WriteJSONPlugin) Call(
+	ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+
+		arg := &WriteJSONPluginArgs{}
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+		if err != nil {
+			scope.Log("write_jsonl: %s", err.Error())
+			return
+		}
+
+		var writer *csv.CSVWriter
+
+		switch arg.Accessor {
+		case "", "auto", "file":
+			err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
+			if err != nil {
+				scope.Log("write_csv: %s", err)
+				return
+			}
+
+			file, err := os.OpenFile(arg.Filename,
+				os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
+			if err != nil {
+				scope.Log("write_csv: Unable to open file %s: %s",
+					arg.Filename, err.Error())
+				return
+			}
+			defer file.Close()
+
+			config_obj, _ := vql_subsystem.GetServerConfig(scope)
+			writer = csv.GetCSVAppender(
+				config_obj, scope, file, true, json.NoEncOpts)
+			defer writer.Close()
+
+		default:
+			scope.Log("write_csv: Unsupported accessor for writing %v", arg.Accessor)
+			return
+		}
+
+		for row := range arg.Query.Eval(ctx, scope) {
+			writer.Write(row)
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- row:
+			}
+		}
+	}()
+
+	return output_chan
+}
+
+func (self WriteJSONPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "write_jsonl",
+		Doc:     "Write a query into a JSONL file.",
+		ArgType: type_map.AddType(scope, &WriteJSONPluginArgs{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&ParseJsonFunction{})
 	vql_subsystem.RegisterFunction(&ParseJsonArray{})
@@ -483,4 +561,5 @@ func init() {
 	vql_subsystem.RegisterProtocol(&_IndexAssociativeProtocol{})
 	vql_subsystem.RegisterPlugin(&ParseJsonArrayPlugin{})
 	vql_subsystem.RegisterPlugin(&ParseJsonlPlugin{})
+	vql_subsystem.RegisterPlugin(&WriteJSONPlugin{})
 }
