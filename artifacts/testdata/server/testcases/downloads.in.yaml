@@ -55,7 +55,7 @@ Queries:
   - LET _ <= mock_time(now=1669861615)
 
   # Clear the old files if they are there.
-  - SELECT OSPath, file_store_delete(path=OSPath) AS A
+  - LET _ <= SELECT OSPath, file_store_delete(path=OSPath) AS A
     FROM glob(globs='/downloads/notebooks/N.CE402FDSA3N7Q/*', accessor="fs")
 
   - SELECT create_notebook_download(notebook_id='N.CE402FDSA3N7Q') FROM scope()

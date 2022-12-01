@@ -66,12 +66,7 @@ LET X <= SELECT file_store_delete(path='/downloads/hunts/H.49ba8939/H.49ba8939-s
   "FullPath": "All Windows.Network.NetstatEnriched.json.index",
   "Size": 456
  }
-]LET _ <= mock_time(now=1669861615)[]SELECT OSPath, file_store_delete(path=OSPath) AS A FROM glob(globs='/downloads/notebooks/N.CE402FDSA3N7Q/*', accessor="fs")[
- {
-  "OSPath": "fs:/downloads/notebooks/N.CE402FDSA3N7Q/N.CE402FDSA3N7Q-20221201122655Z.zip",
-  "A": "fs:/downloads/notebooks/N.CE402FDSA3N7Q/N.CE402FDSA3N7Q-20221201122655Z.zip"
- }
-]SELECT create_notebook_download(notebook_id='N.CE402FDSA3N7Q') FROM scope()[
+]LET _ <= mock_time(now=1669861615)[]LET _ <= SELECT OSPath, file_store_delete(path=OSPath) AS A FROM glob(globs='/downloads/notebooks/N.CE402FDSA3N7Q/*', accessor="fs")[]SELECT create_notebook_download(notebook_id='N.CE402FDSA3N7Q') FROM scope()[
  {
   "create_notebook_download(notebook_id='N.CE402FDSA3N7Q')": "fs:/downloads/notebooks/N.CE402FDSA3N7Q/N.CE402FDSA3N7Q-20221201122655Z.zip"
  }
