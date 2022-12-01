@@ -6,10 +6,20 @@ Queries:
 
   - SELECT create_hunt_download(hunt_id='H.49ba8939', wait=TRUE) FROM scope()
 
+  # Pathspec for the full export zip
+  - LET RootPath = pathspec(
+       DelegatePath=srcDir + '/artifacts/testdata/server/downloads/hunts/H.49ba8939/H.49ba8939.zip',
+       DelegateAccessor='file')
+
+  # Pathspec for the summary zip
+  - LET SummaryRootPath = pathspec(
+       DelegatePath=srcDir + '/artifacts/testdata/server/downloads/hunts/H.49ba8939/H.49ba8939-summary.zip',
+       DelegateAccessor='file')
+
+
   # Check the created zip file contains both combined and distinct results
-  - SELECT url(parse=FullPath).Fragment AS FullPath, Size FROM glob(globs=url(
-      path= srcDir + '/artifacts/testdata/server/downloads/hunts/H.49ba8939/H.49ba8939.zip',
-      scheme='file', fragment='**').String, accessor='zip')
+  - SELECT OSPath.Basename AS FullPath, Size
+    FROM glob(globs="**", root=RootPath, accessor='zip')
     WHERE NOT IsDir AND FullPath =~ "NetstatEnriched"
     ORDER BY FullPath
 
@@ -18,9 +28,8 @@ Queries:
 
   # Check the created zip file contains both combined and distinct
   # results (NOTE the generated filename is different)
-  - SELECT url(parse=FullPath).Fragment AS FullPath, Size FROM glob(globs=url(
-      path= srcDir + '/artifacts/testdata/server/downloads/hunts/H.49ba8939/H.49ba8939-summary.zip',
-      scheme='file', fragment='**').String, accessor='zip')
+  - SELECT OSPath.Basename AS FullPath, Size
+    FROM glob(globs="**", root=RootPath, accessor='zip')
     WHERE NOT IsDir AND FullPath =~ "NetstatEnriched"
     ORDER BY FullPath
 
@@ -28,9 +37,8 @@ Queries:
   - SELECT create_hunt_download(hunt_id='H.49ba8939', format="json", base="json-",
         wait=TRUE, only_combined=TRUE) FROM scope()
 
-  - SELECT url(parse=FullPath).Fragment AS FullPath, Size FROM glob(globs=url(
-      path= srcDir + '/artifacts/testdata/server/downloads/hunts/H.49ba8939/json-H.49ba8939-summary.zip',
-      scheme='file', fragment='**').String, accessor='zip')
+  - SELECT OSPath.Basename AS FullPath, Size
+    FROM glob(globs="**", root=SummaryRootPath, accessor='zip')
     WHERE NOT IsDir AND FullPath =~ "NetstatEnriched"
     ORDER BY FullPath
 
@@ -38,8 +46,26 @@ Queries:
   - SELECT create_hunt_download(hunt_id='H.49ba8939', format="csv", base="csv-",
         wait=TRUE, only_combined=TRUE) FROM scope()
 
-  - SELECT url(parse=FullPath).Fragment AS FullPath, Size FROM glob(globs=url(
-      path= srcDir + '/artifacts/testdata/server/downloads/hunts/H.49ba8939/csv-H.49ba8939-summary.zip',
-      scheme='file', fragment='**').String, accessor='zip')
+  - SELECT OSPath.Basename AS FullPath, Size
+    FROM glob(globs="**", root=SummaryRootPath, accessor='zip')
     WHERE NOT IsDir AND FullPath =~ "NetstatEnriched"
+    ORDER BY FullPath
+
+  # Test notebook exports. Freeze time for time based notebook files.
+  - LET _ <= mock_time(now=1669861615)
+
+  # Clear the old files if they are there.
+  - SELECT OSPath, file_store_delete(path=OSPath) AS A
+    FROM glob(globs='/downloads/notebooks/N.CE402FDSA3N7Q/*', accessor="fs")
+
+  - SELECT create_notebook_download(notebook_id='N.CE402FDSA3N7Q') FROM scope()
+
+  # Check the created zip file contains both combined and distinct results
+  - LET NotebookRoot = pathspec(
+       DelegatePath=srcDir + '/artifacts/testdata/server/downloads/notebooks/N.CE402FDSA3N7Q/N.CE402FDSA3N7Q-20221201122655Z.zip',
+       DelegateAccessor='file')
+
+  - SELECT OSPath.Path AS FullPath, Size
+    FROM glob(globs="**", root=NotebookRoot, accessor='zip')
+    WHERE NOT IsDir
     ORDER BY FullPath

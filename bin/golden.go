@@ -44,6 +44,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/remapping"
@@ -255,6 +256,7 @@ func runTest(fixture *testFixture, sm *services.Service,
 func doGolden() error {
 	vql_subsystem.RegisterPlugin(&MemoryLogPlugin{})
 	vql_subsystem.RegisterFunction(&WriteFilestoreFunction{})
+	vql_subsystem.RegisterFunction(&MockTimeFunciton{})
 
 	if !*disable_alarm {
 		_, cancel := makeCtxWithTimeout(120)
@@ -497,5 +499,41 @@ func (self WriteFilestoreFunction) Info(
 		Name:    "write_filestore",
 		Doc:     "Write a file on the filestore.",
 		ArgType: type_map.AddType(scope, &WriteFilestoreFunctionArgs{}),
+	}
+}
+
+type MockTimeFuncitonArgs struct {
+	Now int64 `vfilter:"required,field=now"`
+}
+
+type MockTimeFunciton struct{}
+
+func (self MockTimeFunciton) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	arg := &MockTimeFuncitonArgs{}
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("mock_time: %s", err)
+		return &vfilter.Null{}
+	}
+
+	clock := &utils.MockClock{time.Unix(arg.Now, 0)}
+	cancel := utils.MockTime(clock)
+	err = vql_subsystem.GetRootScope(scope).AddDestructor(cancel)
+	if err != nil {
+		scope.Log("mock_time: %s", err)
+		return &vfilter.Null{}
+	}
+
+	return true
+}
+
+func (self MockTimeFunciton) Info(
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "mock_time",
+		ArgType: type_map.AddType(scope, &MockTimeFuncitonArgs{}),
 	}
 }

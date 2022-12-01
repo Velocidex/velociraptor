@@ -813,6 +813,10 @@ body.pink-light {
   background: var(--color-btn-default-background-hover);
 }
 
+.pink-light div.velo__multi-value__remove {
+    color: var(--color-foreground);
+}
+
 .pink-light hr {
   background: var(--color-foreground);
 }

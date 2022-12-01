@@ -30,6 +30,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/paths"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -87,6 +88,11 @@ func (self *DeleteFileStore) Call(ctx context.Context,
 
 	case path_specs.FSPathSpec:
 		err = file_store_factory.Delete(t)
+
+	case *accessors.OSPath:
+		path_spec := path_specs.NewSafeFilestorePath(t.Components...).
+			SetType(api.PATH_TYPE_FILESTORE_ANY)
+		err = file_store_factory.Delete(path_spec)
 
 	case string:
 		// Things that produce strings normally encode the path spec

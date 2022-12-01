@@ -5,6 +5,34 @@ import (
 	"time"
 )
 
+var (
+	mu sync.Mutex
+
+	mock_time Clock = &RealClock{}
+)
+
+func GetTime() Clock {
+	mu.Lock()
+	defer mu.Unlock()
+
+	return mock_time
+}
+
+func MockTime(clock Clock) func() {
+	mu.Lock()
+	defer mu.Unlock()
+
+	old_time := mock_time
+	mock_time = clock
+
+	return func() {
+		mu.Lock()
+		defer mu.Unlock()
+
+		mock_time = old_time
+	}
+}
+
 type Clock interface {
 	Now() time.Time
 	After(d time.Duration) <-chan time.Time

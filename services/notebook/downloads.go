@@ -80,7 +80,7 @@ func (self *NotebookStoreImpl) GetAvailableUploadFiles(notebook_id string) (
 	notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	files, err := file_store_factory.ListDirectory(
-		notebook_path_manager.UploadsDir())
+		notebook_path_manager.AttachmentDirectory())
 	if err != nil {
 		return nil, err
 	}

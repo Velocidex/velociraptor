@@ -661,7 +661,7 @@ body.coolgray-dark {
 .coolgray-dark .velo__menu {
   font-size: var(--font-size-base);
   font-weight: 500;
-  color: var(--color-foreground) !important;
+  color: var(--color-foreground);
   border-radius: 0;
   border-color: var(--color-btn-default-border);
   background: var(--color-form-control-background);
