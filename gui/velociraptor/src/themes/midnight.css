@@ -799,6 +799,16 @@ body.midnight {
   color: var(--color-foreground);
 }
 
+.midnight .report-viewer code {
+  background: black;
+  border-radius: 0;
+  border: 0.5px solid var(--color-btn-border);
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
 .midnight .report-viewer a {
   color: var(--color-accent-100);
 }

@@ -668,9 +668,20 @@ body.veloci-dark {
   filter: invert(1);
 }
 
+.veloci-dark .report-viewer code {
+  background: rgba(255,255,255,.05);
+  border-radius: 4px;
+  border: 0.5px solid rgba(255,255,255,.1);
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
 .veloci-dark .report-viewer a {
   color: var(--color-accent-100);
 }
+
 
 .veloci-dark .report-viewer pre > a {
   color: var(--color-foreground-inverse);

@@ -635,6 +635,16 @@ body.pink-light {
   color: var(--color-foreground);
 }
 
+.pink-light .report-viewer code {
+  background: var(--color-form-control-background);
+  border-radius: 4px;
+  border: 0.5px solid var(--color-sidebar-inactive-background-hover);
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
 /* modal dialogs */
 
 .pink-light .modal-content {

@@ -975,6 +975,16 @@ body.ncurses {
   color: green;
 }
 
+.ncurses .report-viewer code {
+  background: lightgrey;
+  border-radius: 0;
+  border: none;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
 /* Resizer dividers */
 .ncurses .Resizer.horizontal {
   background: darkgrey;
