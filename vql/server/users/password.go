@@ -43,7 +43,7 @@ func (self SetPasswordFunction) Call(
 		return vfilter.Null{}
 	}
 
-	err = users.SetUserPassword(ctx, principal, arg.Username,
+	err = users.SetUserPassword(ctx, config_obj, principal, arg.Username,
 		arg.Password, "")
 	if err != nil {
 		scope.Log("passwd: %v", err)

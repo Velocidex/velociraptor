@@ -1,13 +1,19 @@
 package api
 
 import (
-	"github.com/sirupsen/logrus"
+	"errors"
+	"sort"
+
 	context "golang.org/x/net/context"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"www.velocidex.com/golang/velociraptor/acls"
+	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // This is only used to set the user's own password which is always
@@ -26,12 +32,7 @@ func (self *ApiServer) SetPassword(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
-
 	principal := user_record.Name
-	err = users.SetUserPassword(ctx, principal, principal, in.Password, "")
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
 
 	org_manager, err := services.GetOrgManager()
 	if err != nil {
@@ -43,11 +44,17 @@ func (self *ApiServer) SetPassword(
 		return nil, Status(self.verbose, err)
 	}
 
-	logger := logging.GetLogger(org_config_obj, &logging.Audit)
-	logger.WithFields(logrus.Fields{
-		"Username":  user_record.Name,
-		"Principal": user_record.Name,
-	}).Info("passwd: Updating password for user via API")
+	// The user we change the password for.
+	target := in.Username
+	if target == "" {
+		target = principal
+	}
+
+	err = users.SetUserPassword(
+		ctx, org_config_obj, principal, target, in.Password, "")
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
 
 	return &emptypb.Empty{}, nil
 }
@@ -63,7 +70,6 @@ func (self *ApiServer) GetUsers(
 	}
 
 	principal := user_record.Name
-	result := &api_proto.Users{}
 
 	// Only show users in the current org
 	users, err := users.ListUsers(ctx, principal, []string{org_config_obj.OrgId})
@@ -71,9 +77,77 @@ func (self *ApiServer) GetUsers(
 		return nil, Status(self.verbose, err)
 	}
 
-	result.Users = users
+	sort.Slice(users, func(i, j int) bool { return users[i].Name < users[j].Name })
+	return &api_proto.Users{Users: users}, nil
+}
 
-	return result, nil
+func (self *ApiServer) GetGlobalUsers(
+	ctx context.Context,
+	in *emptypb.Empty) (*api_proto.Users, error) {
+
+	user_manager := services.GetUserManager()
+	user_record, _, err := user_manager.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	principal := user_record.Name
+
+	// Show all users visible to us
+	users, err := users.ListUsers(ctx, principal, []string{})
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	sort.Slice(users, func(i, j int) bool { return users[i].Name < users[j].Name })
+	return &api_proto.Users{Users: users}, nil
+}
+
+// Create a new user in the specified orgs.
+func (self *ApiServer) CreateUser(ctx context.Context,
+	in *api_proto.UpdateUserRequest) (*emptypb.Empty, error) {
+
+	users_manager := services.GetUserManager()
+	user_record, _, err := users_manager.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	principal := user_record.Name
+
+	// Prepare an ACL object from the incoming request.
+	acl := &acl_proto.ApiClientACL{
+		Roles: in.Roles,
+	}
+
+	mode := users.UseExistingUser
+	if in.AddNewUser {
+		mode = users.AddNewUser
+	}
+
+	err = users.AddUserToOrg(ctx, mode, principal, in.Name, in.Orgs, acl)
+	return &emptypb.Empty{}, err
+}
+
+func (self *ApiServer) GetUser(
+	ctx context.Context, in *api_proto.UserRequest) (*api_proto.VelociraptorUser, error) {
+
+	users_manager := services.GetUserManager()
+	user_record, _, err := users_manager.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := users.GetUser(ctx, user_record.Name, in.Name)
+	if err != nil {
+		if errors.Is(err, acls.PermissionDenied) {
+			return nil, status.Error(codes.PermissionDenied,
+				"User is not allowed to view requested user.")
+		}
+		return nil, err
+	}
+
+	return user, nil
 }
 
 func (self *ApiServer) GetUserFavorites(
@@ -88,4 +162,92 @@ func (self *ApiServer) GetUserFavorites(
 	}
 	principal := user_record.Name
 	return users_manager.GetFavorites(ctx, org_config_obj, principal, in.Type)
+}
+
+func (self *ApiServer) GetUserRoles(
+	ctx context.Context,
+	in *api_proto.UserRequest) (*api_proto.UserRoles, error) {
+
+	users_manager := services.GetUserManager()
+	_, _, err := users_manager.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	// Allow the user to ask about other orgs.
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	org_config_obj, err := org_manager.GetOrgConfig(in.Org)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	acl_manager, err := services.GetACLManager(org_config_obj)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	policy, err := acl_manager.GetPolicy(org_config_obj, in.Name)
+	if err != nil {
+		policy = &acl_proto.ApiClientACL{}
+	}
+
+	user_roles := &api_proto.UserRoles{
+		Name:           in.Name,
+		Org:            in.Org,
+		OrgName:        org_config_obj.OrgName,
+		Roles:          policy.Roles,
+		Permissions:    acls.DescribePermissions(policy),
+		AllRoles:       acls.ALL_ROLES,
+		AllPermissions: acls.ALL_PERMISSIONS,
+	}
+
+	// Expand the policy's permissions
+	err = acls.GetRolePermissions(org_config_obj, policy.Roles, policy)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	user_roles.EffectivePermissions = acls.DescribePermissions(policy)
+
+	return user_roles, nil
+}
+
+func (self *ApiServer) SetUserRoles(
+	ctx context.Context,
+	in *api_proto.UserRoles) (*emptypb.Empty, error) {
+
+	users_manager := services.GetUserManager()
+	user_record, _, err := users_manager.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	principal := user_record.Name
+
+	// Prepare an ACL object from the incoming request.
+	acl := &acl_proto.ApiClientACL{}
+
+	for _, r := range in.Roles {
+		if acls.ValidateRole(r) {
+			acl.Roles = append(acl.Roles, r)
+		}
+	}
+
+	// Add any special permissions
+	err = acls.SetTokenPermission(acl, in.Permissions...)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	utils.Debug(acl)
+
+	// Now attempt to set the ACL - permission checks are done by
+	// users.AddUserToOrg
+	err = users.AddUserToOrg(ctx, users.UseExistingUser,
+		principal, in.Name, []string{in.Org}, acl)
+	return &emptypb.Empty{}, err
 }

@@ -222,6 +222,39 @@ service API {
         };
     }
 
+    // List all the GUI users in orgs in which we are a member
+    rpc GetGlobalUsers(google.protobuf.Empty) returns(Users) {
+        option (google.api.http) = {
+            get: "/api/v1/GetGlobalUsers",
+        };
+    }
+
+    rpc GetUserRoles(UserRequest) returns(UserRoles) {
+        option (google.api.http) = {
+            get: "/api/v1/GetUserRoles",
+        };
+    }
+
+    rpc SetUserRoles(UserRoles) returns(google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/SetUserRoles",
+            body: "*",
+        };
+    }
+
+    rpc GetUser(UserRequest) returns(VelociraptorUser) {
+        option(google.api.http) = {
+            get: "/api/v1/GetUser/{name}",
+        };
+    }
+
+    rpc CreateUser(UpdateUserRequest) returns(google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/CreateUser",
+            body: "*"
+        };
+    }
+
     rpc GetUserFavorites(Favorite) returns(Favorites) {
         option (google.api.http) = {
             get: "/api/v1/GetUserFavorites",

@@ -6,10 +6,14 @@ import (
 	"crypto/sha256"
 	"crypto/subtle"
 	"errors"
+	"fmt"
 
+	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -20,11 +24,14 @@ var (
 // Update the user's password.
 // A user may update their own password.
 // A ServerAdmin in any of the orgs the user belongs to can update their password.
-// An OrgAdmin can update
+// An OrgAdmin can update everyone's password
 func SetUserPassword(
 	ctx context.Context,
+	config_obj *config_proto.Config,
 	principal, username string,
 	password, current_org string) error {
+
+	logger := logging.GetLogger(config_obj, &logging.Audit)
 
 	if isNameReserved(username) {
 		return NameReservedError
@@ -54,7 +61,8 @@ func SetUserPassword(
 	if current_org != "" {
 		// Check if the current_org is in the list of user orgs
 		if !inUserOrgs(current_org, user_record) {
-			return acls.PermissionDenied
+			return fmt.Errorf("Error %v: Org %v does not include User %v",
+				acls.PermissionDenied, current_org, user_record.Name)
 		}
 		user_record.CurrentOrg = current_org
 	}
@@ -65,6 +73,10 @@ func SetUserPassword(
 		if user_err != nil {
 			return user_err
 		}
+		logger.WithFields(logrus.Fields{
+			"operation": "Update Own Password",
+			"user":      user_record.Name,
+		}).Info("Update password")
 		return user_manager.SetUser(ctx, user_record)
 	}
 
@@ -74,6 +86,12 @@ func SetUserPassword(
 		if user_err != nil {
 			return user_err
 		}
+
+		logger.WithFields(logrus.Fields{
+			"operation": "Update Password By Admin",
+			"principal": principal,
+			"user":      user_record.Name,
+		}).Info("Update password")
 		return user_manager.SetUser(ctx, user_record)
 	}
 
@@ -89,10 +107,20 @@ func SetUserPassword(
 			if user_err != nil {
 				return user_err
 			}
+			logger.WithFields(logrus.Fields{
+				"operation": "Update Password By Admin",
+				"principal": principal,
+				"user":      user_record.Name,
+			}).Info("Update password")
 			return user_manager.SetUser(ctx, user_record)
 		}
 	}
 
+	logger.WithFields(logrus.Fields{
+		"error":     acls.PermissionDenied.Error(),
+		"principal": principal,
+		"user":      user_record.Name,
+	}).Info("Update password")
 	return acls.PermissionDenied
 }
 

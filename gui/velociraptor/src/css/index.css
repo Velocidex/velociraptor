@@ -86,3 +86,35 @@ code {
   background: var(--color-accent-50);
   color: var(--color-foreground);
 }
+
+
+/* https://stackoverflow.com/questions/52706615/styling-button-tooltip */
+.btn-tooltip {
+   position: relative;
+}
+
+.btn-tooltip::before {
+   background-color: var(--color-canvas-background);
+   border: 1px solid var(--accent-color);
+   border-radius: 8px;
+   color: var(--color-foreground);
+   content: attr(data-title);
+   display: none;
+   font-family: sans-serif;
+   font-size: 14px;
+   padding: 4px 8px;
+   position: absolute;
+   top: -20px;
+   left: 0px;
+   z-index: 1;
+   white-space: nowrap;
+   opacity: 1;
+}
+
+.btn-tooltip:hover::before {
+   display: block;
+}
+
+.btn-tooltip:disabled:hover::before {
+   display: none;
+}
