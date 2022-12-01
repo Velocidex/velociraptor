@@ -32,6 +32,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
+	errors "github.com/go-errors/errors"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/shirou/gopsutil/v3/process"
 	"www.velocidex.com/golang/velociraptor/actions"
@@ -103,8 +104,9 @@ func vqlCollectorArgsFromFixture(
 	return vql_collector_args
 }
 
-func makeCtxWithTimeout(duration int) (context.Context, func()) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+func makeCtxWithTimeout(
+	root_ctx context.Context, duration int) (context.Context, func()) {
+	ctx, cancel := context.WithCancel(root_ctx)
 
 	deadline := time.Now().Add(time.Second * time.Duration(duration))
 	fmt.Printf("Setting deadline to %v\n", deadline)
@@ -163,8 +165,10 @@ func runTest(fixture *testFixture, sm *services.Service,
 	config_obj *config_proto.Config) (string, error) {
 
 	ctx := sm.Ctx
+
+	// Limit each test for maxmimum time
 	if !*disable_alarm {
-		sub_ctx, cancel := makeCtxWithTimeout(30)
+		sub_ctx, cancel := makeCtxWithTimeout(ctx, 30)
 		defer cancel()
 
 		ctx = sub_ctx
@@ -258,11 +262,6 @@ func doGolden() error {
 	vql_subsystem.RegisterFunction(&WriteFilestoreFunction{})
 	vql_subsystem.RegisterFunction(&MockTimeFunciton{})
 
-	if !*disable_alarm {
-		_, cancel := makeCtxWithTimeout(120)
-		defer cancel()
-	}
-
 	config_obj, err := makeDefaultConfigLoader().LoadAndValidate()
 	if err != nil {
 		return err
@@ -288,6 +287,14 @@ func doGolden() error {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
+	// Global timeout for the entire test
+	if !*disable_alarm {
+		timeout_ctx, cancel := makeCtxWithTimeout(ctx, 120)
+		defer cancel()
+
+		ctx = timeout_ctx
+	}
+
 	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
 
@@ -296,6 +303,12 @@ func doGolden() error {
 	}
 
 	err = filepath.Walk(*golden_command_directory, func(file_path string, info os.FileInfo, err error) error {
+		select {
+		case <-sm.Ctx.Done():
+			return errors.New("Cancelled!")
+		default:
+		}
+
 		if *golden_command_filter != "" &&
 			!strings.HasPrefix(filepath.Base(file_path), *golden_command_filter) {
 			return nil
