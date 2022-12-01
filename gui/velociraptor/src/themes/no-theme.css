@@ -16,10 +16,17 @@
     font-display: block;
 }
 
+.no-theme {
+    --font-size-large: 16px;
+    --font-size-base: 14px;
+    --font-size-small: 12px;
+    --font-family-sans-serif: "Noto Sans", roboto, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        "Helvetica Neue", Arial, sans-serif;
+}
+
 body.no-theme {
-    font-family: "Noto Sans", roboto, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    "Helvetica Neue", Arial, sans-serif;
-    font-size: 14px;
+    font-family: var(--font-family-sans-serif);
+    font-size: var(--font-size-base);
     letter-spacing: 0.4px;
 }
 
@@ -100,9 +107,33 @@ body.no-theme {
     vertical-align: middle;
 }
 
-
 .no-theme .btn.btn-primary.flow-file-download-button {
     background: transparent;
     color: var(--color-foreground);
     text-align: left;
+}
+
+.no-theme input[type='checkbox'] {
+    transform: scale(1.2);
+    accent-color: var(--color-foreground);
+    box-shadow: none;
+}
+
+.no-theme .react-autosuggest__input {
+    background: var(--color-form-control-background);
+    border: 1px solid #ccc;
+    font-family: var(--font-family-sans-serif);
+    font-size: var(--font-size-base);
+    text-decoration: none !important;
+    text-shadow: none;
+}
+
+  .no-theme .react-autosuggest__suggestions-container--open {
+    border: 1px solid #ccc;
+    font-family: var(--font-family-sans-serif);
+    font-size: var(--font-size-base);
+}
+
+  .no-theme .react-autosuggest__suggestion--highlighted {
+    background: var(--color-accent-25);
 }
