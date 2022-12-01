@@ -124,7 +124,8 @@ func (self CollectPlugin) configureCollection(
 
 	// Set any timeout if needed.
 	if arg.Timeout > 0 {
-		manager.SetTimeout(arg.Timeout)
+		// arg.Timeout is in sec and we need ns
+		manager.SetTimeout(arg.Timeout * 1e9)
 	}
 
 	// Apply a throttler if needed.
