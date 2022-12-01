@@ -162,7 +162,7 @@ func makeCtxWithTimeout(duration int) (context.Context, func()) {
 func runTest(fixture *testFixture, sm *services.Service,
 	config_obj *config_proto.Config) (string, error) {
 
-	ctx := context.Background()
+	ctx := sm.Ctx
 	if !*disable_alarm {
 		sub_ctx, cancel := makeCtxWithTimeout(30)
 		defer cancel()

@@ -60,16 +60,15 @@ Queries:
 
   - SELECT create_notebook_download(notebook_id='N.CE402FDSA3N7Q') FROM scope()
 
-  - SELECT OSPath.Basename AS FullPath, Size
-    FROM glob(globs=srcDir + '/artifacts/testdata/server/downloads/notebooks/**')
-    ORDER BY FullPath
-
   # Check the created zip file contains both combined and distinct results
-  - LET NotebookRoot = pathspec(
-       DelegatePath=srcDir + '/artifacts/testdata/server/downloads/notebooks/N.CE402FDSA3N7Q/N.CE402FDSA3N7Q-20221201122655Z.zip',
-       DelegateAccessor='auto')
-
-  - SELECT OSPath.Path AS FullPath, Size
-    FROM glob(globs="**", root=NotebookRoot, accessor='zip')
-    WHERE NOT IsDir
-    ORDER BY FullPath
+  - SELECT * FROM foreach(row={
+      SELECT OSPath, Size
+      FROM glob(globs=srcDir + '/artifacts/testdata/server/downloads/notebooks/**/*.zip')
+    }, query={
+      SELECT OSPath.Path AS FullPath, Size
+      FROM glob(globs="**",
+                root=pathspec(DelegatePath=OSPath,
+                              DelegateAccessor="auto"), accessor='zip')
+      WHERE NOT IsDir
+      ORDER BY FullPath
+    })
