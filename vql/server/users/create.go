@@ -60,8 +60,8 @@ func (self UserCreateFunction) Call(
 
 	if arg.Password != "" {
 		// Write the user record.
-		err = users.SetUserPassword(ctx, principal, arg.Username,
-			arg.Password, "")
+		err = users.SetUserPassword(
+			ctx, org_config_obj, principal, arg.Username, arg.Password, "")
 		if err != nil {
 			scope.Log("user_create: %s", err)
 			return vfilter.Null{}

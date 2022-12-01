@@ -39,6 +39,7 @@ function dict(item) {
 function T(item, ...args) {
     let lang = (window.globals && window.globals.lang) || "en";
     let d = dict(item);
+
     if(_.isUndefined(d)) {
         if (debug && lang !== "en") {
             let x = window.globals.dict || {};
@@ -46,7 +47,11 @@ function T(item, ...args) {
             window.globals["dict"] = x;
             console.log(lang, ": No translation for ", item);
         }
-        d = item;
+
+        // If there is no specific translation in the target language
+        // we use the English one, and failing that the name of the
+        // item directly.
+        d = English[item] || item;
     }
     if (typeof d === 'function') {
         return d.call(null, ...args);

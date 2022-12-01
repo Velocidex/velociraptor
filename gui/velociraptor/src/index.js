@@ -1,6 +1,5 @@
 import './css/_variables.css';
 import 'bootstrap/dist/css/bootstrap.css';
-// import './css/bootstrap-theme.css'; // obsolete since bootstrap v4. See https://github.com/twbs/bootstrap/issues/21078
 
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -23,7 +22,7 @@ import { faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
          faCompressAlt, faBackward, faMedkit, faVirusSlash, faBookmark, faHeart,
          faFileCode, faFlag, faTrashAlt, faClock, faLock, faLockOpen, faCloud,
          faCloudDownloadAlt, faUserEdit, faFilter, faSortAlphaUp, faSortAlphaDown,
-         faInfo, faBug, faIndent,
+         faInfo, faBug, faUser, faList, faIndent
        } from '@fortawesome/free-solid-svg-icons';
 
 library.add(faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
@@ -38,7 +37,7 @@ library.add(faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
             faForward, faCalendarAlt, faCompressAlt, faBackward, faMedkit, faVirusSlash,
             faBookmark, faHeart, faFileCode, faFlag, faTrashAlt, faClock, faLock, faLockOpen,
             faCloud, faCloudDownloadAlt, faUserEdit, faFilter, faBug,
-            faSortAlphaUp, faSortAlphaDown, faInfo, faIndent
+            faSortAlphaUp, faSortAlphaDown, faInfo, faUser, faList, faIndent
            );
 
 ReactDOM.render(

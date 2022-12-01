@@ -236,6 +236,24 @@ const href = function(url, params, options) {
     return base_path + url + "?" + qs.stringify(params, options);
 };
 
+const delete_req = function(url, params, cancel_token) {
+    return axios({
+        method: 'delete',
+        url: api_handlers + url,
+        params: params,
+        cancelToken: cancel_token,
+        headers: {
+            "X-CSRF-Token": window.CsrfToken,
+        }
+    }).then(response=>{
+        // Update the csrf token.
+        let token = response.headers["x-csrf-token"];
+        if (token && token.length > 0) {
+            window.CsrfToken = token;
+        }
+        return response;
+    }).catch(handle_error);
+};
 
 var hooks = [];
 
@@ -248,4 +266,6 @@ export default {
     hooks: hooks,
     base_path: base_path,
     href: href,
+    delete_req: delete_req,
 };
+

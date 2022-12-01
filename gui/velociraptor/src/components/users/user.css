@@ -1,0 +1,49 @@
+.card.panel {
+    border-radius: 5px;
+    position: relative;
+    margin: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 5px 5px 0 rgba(0, 0, 0, 0.25);
+    border: #f0f0f0;
+    border-top-width: 2px;
+    border-top-style: solid;
+    height: 100%;
+    overflow-y: scroll;
+}
+
+
+.form-toggle {
+    display: table-row;
+}
+
+.form-toggle-control {
+    display: table-cell;
+}
+
+.form-toggle button {
+    display: block;
+    padding-right: 10px;
+    visibility: hidden;
+}
+
+.form-toggle:hover button {
+    visibility: visible;
+}
+
+.permission-viewer {
+    height: calc(100vh - 150px);
+    overflow-y: auto;
+}
+
+.new-user-btn {
+    float: right;
+    display: inline;
+    padding: 0px;
+    padding-left:  10px;
+}
+
+
+.user-heading {
+    padding-right: 20px;
+    display: inline;
+}

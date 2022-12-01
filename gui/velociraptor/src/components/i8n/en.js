@@ -166,7 +166,120 @@ const English = {
     "_ts": "Server Time",
     "TablePagination": (from, to, size)=>
     <>Showing { from } to { to } of { size }</>,
+    "Verified Email" : "Verified Email",
+    "Account Locked" : "Account Locked",
+    "Role_administrator" : "Server Administrator",
+    "Role_org_admin" : "Organization Administrator",
+    "Role_reader" : "Read-Only User",
+    "Role_analyst" : "Analyst",
+    "Role_investigator" : "Investigator",
+    "Role_artifact_writer" : "Artifact Writer",
+    "Role_api" : "Read-Only API Client",
+    "ToolRole_administrator" :
+    <>
+    Like any system, Velociraptor needs an administrator which is all powerful. This account can run arbitrary VQL on the server, reconfigure the server, etc.  The ability to add/create/edit/remove users is dependent on the organizations to which this account belongs.
+    </>,
+    "ToolRole_org_admin" :
+    <>
+    This role provides the ability to manage organizations.  It would typically be used together with another role.
+    </>,
+    "ToolRole_reader" :
+    <>
+    This role provides the ability to read previously collected results but does not allow the user to actually make any changes.  This role is useful to give unpriviledged users visibility into what information is being collected without giving them access to modify anything.
+    </>,
+    "ToolRole_analyst" :
+    <>
+    This role provides the ability to read existing collected data and also run some server side VQL in order to do post processing of this data or annotate it. Analysts typically use the notebook or download collected data offline for post processing existing hunt data. Analysts may not actually start new collections or hunts themselves.
+    </>,
+    "ToolRole_investigator" :
+    <>
+    This role provides the ability to read existing collected data and also run some server side VQL in order to do post processing of this data or annotate it. Investigators typically use the notebook or download collected data offline for post processing existing hunt data. Investigators may start new collections or hunts themselves.
+    </>,
+    "ToolRole_artifact_writer" :
+    <>
+    This role allows a user to create or modify new client side artifacts (They are not able to modify server side artifacts). This user typically has sufficient understanding and training in VQL to write flexible artifacts. Artifact writers are very powerful as they can easily write a malicious artifact and collect it on the endpoint. Therefore they are equivalent to domain admins on endpoints. You should restrict this role to very few people.
+    </>,
+    "ToolRole_api" :
+    <>
+    This role provides the ability to read previously collected results but does not allow the user to actually make any changes.
+    </>,
 
+    "Perm_ALL_QUERY" : "All Query",
+    "Perm_ANY_QUERY" : "Any Query",
+    "Perm_PUBISH" : "Publish",
+    "Perm_READ_RESULTS" : "Read results",
+    "Perm_LABEL_CLIENT" : "Label Clients",
+    "Perm_COLLECT_CLIENT" : "Collect Client",
+    "Perm_COLLECT_SERVER" : "Collect Server",
+    "Perm_ARTIFACT_WRITER" : "Artifact Writer",
+    "Perm_SERVER_ARTIFACT_WRITER" : "Server Artifact Writer",
+    "Perm_EXECVE" : "EXECVE",
+    "Perm_NOTEBOOK_EDITOR" : "Notebook Editor",
+    "Perm_SERVER_ADMIN" : "Server Admin",
+    "Perm_ORG_ADMIN" : "Org Admin",
+    "Perm_IMPERSONATION" : "Impersonation",
+    "Perm_FILESYSTEM_READ" : "Filesystem Read",
+    "Perm_FILESYSTEM_WRITE" : "Filesystem Write",
+    "Perm_MACHINE_STATE" : "Machine State",
+    "Perm_PREPARE_RESULTS" : "Prepare Results",
+    "Perm_DATASTORE_ACCESS" : "Datastore Access",
+
+
+    "ToolPerm_ALL_QUERY" : "Issue all queries without restriction",
+    "ToolPerm_ANY_QUERY" : "Issue any query at all (AllQuery implies AnyQuery)",
+    "ToolPerm_PUBISH" : "Publish events to server side queues (typically not needed)",
+    "ToolPerm_READ_RESULTS" : "Read results from already run hunts, flows, or notebooks",
+    "ToolPerm_LABEL_CLIENT" : "Can manipulate client labels and metadata",
+    "ToolPerm_COLLECT_CLIENT" : "Schedule or cancel new collections on clients",
+    "ToolPerm_COLLECT_SERVER" : "Schedule new artifact collections on Velociraptor servers",
+    "ToolPerm_ARTIFACT_WRITER" : "Add or edit custom artifacts that run on the server",
+    "ToolPerm_SERVER_ARTIFACT_WRITER" : "Add or edit custom artifacts that run on the server",
+    "ToolPerm_EXECVE" : "Allowed to execute arbitrary commands on clients",
+    "ToolPerm_NOTEBOOK_EDITOR" : "Allowed to change notebooks and cells",
+    "ToolPerm_SERVER_ADMIN" : "Allowed to manage server configuration",
+    "ToolPerm_ORG_ADMIN" : "Allowed to manage organizations",
+    "ToolPerm_IMPERSONATION" : "Allows the user to specify a different username for the query() plugin",
+    "ToolPerm_FILESYSTEM_READ" : "Allowed to read arbitrary files from the filesystem",
+    "ToolPerm_FILESYSTEM_WRITE" : "Allowed to create files on the filesystem",
+    "ToolPerm_MACHINE_STATE" : "Allowed to collect state information from machines (e.g. pslist())",
+    "ToolPerm_PREPARE_RESULTS" : "Allowed to create zip files",
+    "ToolPerm_DATASTORE_ACCESS" : " Allowed raw datastore access",
+
+
+
+
+    "ToolUsernamePasswordless" :
+    <>
+        This server is configured to authenticate users using an external authentication host.  This account must exist on the authentication system for login to be successful.
+    </>,
+    "Add User" : "Add User",
+    "Update User" : "Update User",
+    "Roles" : "Roles",
+    "Roles in": org => {
+    return "Roles in " + org;
+    },
+    "Not a member of": org => {
+        return "Not a member of " + org;
+    },
+
+    "ToolRoleBasedPermissions" :
+    <>
+    Role-Based Permissions allow the administrator to grant sets of permissions for common activities.  A user may have multiple roles assigned.
+    </>,
+    "ToolEffectivePermissions" :
+    <>
+    Roles are defined as sets of fine-grained permissions.  This is the current set of permissions defined by the roles for this user.
+    </>,
+    "ToolOrganizations" :
+    <>
+    Organizations allow multiple tenants to use this Velociraptor server.  If a user is not assigned to an organization, it is a member of the Organizational Root, which implies membership in all organizations.
+    </>,
+    "User does not exist": (username)=><>User {username} does not exist.</>,
+    "Do you want to delete?": (username)=>"Do you want to delete " + username + "?",
+    "WARN_REMOVE_USER_FROM_ORG": (user, org)=>(
+        <>
+          You are about to remove user {user} from Org {org} <br/>
+        </>),
 };
 
 export default English;
