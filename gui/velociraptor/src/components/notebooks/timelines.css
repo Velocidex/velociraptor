@@ -1,3 +1,15 @@
 .velo__control .velo__single-value {
     color: var(--color-foreground);
 }
+
+div.velo__multi-value__remove {
+    color: var(--color-form-control-background);
+}
+
+div.velo__multi-value__label {
+    color: var(--color-foreground);
+    border: solid;
+    border-width: 1px;
+    border-radius: 5px;
+    border-color: var(--color-advanced-controls-border);
+}

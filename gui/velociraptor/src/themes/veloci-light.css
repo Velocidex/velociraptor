@@ -697,3 +697,8 @@ body.veloci-light {
 .veloci-light .flow-file-download-button {
     background: var(--color-accent-25);
 }
+
+
+.veloci-light div.velo__multi-value__remove {
+    color: var(--color-foreground);
+}
