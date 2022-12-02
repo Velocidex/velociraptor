@@ -9,3 +9,10 @@ Parameters:
 Queries:
   - SELECT parse_json_array(data=JSONArrayWithDicts) FROM scope()
   - SELECT parse_json_array(data=JSONArrayWithStrings) FROM scope()
+
+  # Test writing a JSONL file
+  - LET T <= tempfile()
+  - SELECT * FROM write_jsonl(
+       filename=T,
+       query={SELECT * FROM range(end=3)})
+  - SELECT * FROM parse_jsonl(filename=T)
