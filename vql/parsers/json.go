@@ -29,12 +29,15 @@ import (
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/json"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+)
+
+const (
+	BUFF_SIZE = 10 * 1024 * 1024
 )
 
 type ParseJsonFunctionArg struct {
@@ -501,37 +504,42 @@ func (self WriteJSONPlugin) Call(
 			return
 		}
 
-		var writer *csv.CSVWriter
+		var writer *bufio.Writer
 
 		switch arg.Accessor {
 		case "", "auto", "file":
 			err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 			if err != nil {
-				scope.Log("write_csv: %s", err)
+				scope.Log("write_jsonl: %s", err)
 				return
 			}
 
 			file, err := os.OpenFile(arg.Filename,
 				os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
 			if err != nil {
-				scope.Log("write_csv: Unable to open file %s: %s",
+				scope.Log("write_jsonl: Unable to open file %s: %s",
 					arg.Filename, err.Error())
 				return
 			}
 			defer file.Close()
 
-			config_obj, _ := vql_subsystem.GetServerConfig(scope)
-			writer = csv.GetCSVAppender(
-				config_obj, scope, file, true, json.NoEncOpts)
-			defer writer.Close()
+			writer = bufio.NewWriterSize(file, BUFF_SIZE)
+			defer writer.Flush()
 
 		default:
 			scope.Log("write_csv: Unsupported accessor for writing %v", arg.Accessor)
 			return
 		}
 
+		lf := []byte("\n")
+
 		for row := range arg.Query.Eval(ctx, scope) {
-			writer.Write(row)
+			serialized, err := json.Marshal(row)
+			if err == nil {
+				writer.Write(serialized)
+				writer.Write(lf)
+			}
+
 			select {
 			case <-ctx.Done():
 				return

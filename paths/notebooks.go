@@ -56,14 +56,14 @@ func (self *NotebookPathManager) DSDirectory() api.DSPathSpec {
 func (self *NotebookPathManager) HtmlExport() api.FSPathSpec {
 	return DOWNLOADS_ROOT.AddChild("notebooks", self.notebook_id,
 		fmt.Sprintf("%s-%s", self.notebook_id,
-			self.Clock.Now().Format("20060102150405Z"))).
+			self.Clock.Now().UTC().Format("20060102150405Z"))).
 		SetType(api.PATH_TYPE_FILESTORE_DOWNLOAD_REPORT)
 }
 
 func (self *NotebookPathManager) ZipExport() api.FSPathSpec {
 	return DOWNLOADS_ROOT.AddChild("notebooks", self.notebook_id,
 		fmt.Sprintf("%s-%s", self.notebook_id,
-			self.Clock.Now().Format("20060102150405Z"))).
+			self.Clock.Now().UTC().Format("20060102150405Z"))).
 		SetType(api.PATH_TYPE_FILESTORE_DOWNLOAD_ZIP)
 }
 
