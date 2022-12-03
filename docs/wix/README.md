@@ -1,18 +1,19 @@
 # Customizing Velociraptor deployments.
 
-This directory contains the WiX XML configuration file that can be used to tailor
-your Velociraptor deployment. The configuration file can be used to
-build a Windows installer package (MSI) which automatically installs
-the service.  This directory also contains a batch file used to build
-the MSI based on the custom XML configuration file.
+This directory contains the WiX XML configuration file that can be
+used to tailor your Velociraptor deployment. The configuration file
+can be used to build a Windows installer package (MSI) which
+automatically installs the service.  This directory also contains a
+batch file used to build the MSI based on the custom XML configuration
+file.
 
 The advantage of building your own MSI is that your config file will
 be bundled inside the MSI so you do not need to push it to endpoints -
 simply assign the MSI to your endpoints via SCCM or GPO. You can also
 adjust the binary name, service name, etc.
 
-To build MSI packages you will need to download and install the WIX distribution
-from the github page (it requires .NET 3.5):
+To build MSI packages you will need to download and install the WIX
+distribution from the github page (it requires .NET 3.5):
 
 http://wixtoolset.org/releases/
 
@@ -55,6 +56,34 @@ You can now push the MSI using group policy everywhere in your domain.
 Note: When upgrading, keep the UpgradeCode the same to ensure the old
 package is uninstalled and the new one is installed.
 
+# Experimental - repacking the custom MSI
+
+An experimental feature is to repack the custom MSI with an
+deployment's client configuration without rebuilding the MSI. This is
+much easier than having to have Wix installed and can be done on any
+operating system.
+
+In order to use this, copy the provided `custom.config.yaml` which is
+a special placeholder for a config file, into the output directory as
+`client.config.yaml` and build the custom MSI as described above.
+
+If you install this custom MSI, the placeholder config file will be
+installed in place of the `client.config.yaml`. Since the placeholder
+is **not** a valid configuration file, Velociraptor will wait before
+starting and attempt to reload the file every few seconds. This
+provides you the opportunity to manually replace the file at a later
+stage.
+
+However, it is now possible to repack a new client configuration file
+into the MSI using the following command:
+
+```
+velociraptor config repack client.config.yaml --msi velociraptor.msi repacked_velociraptor.msi -v
+```
+
+Repacking replaces the placeholder inside the MSI with the real config
+file. The new MSI will then automatically install the correct
+configuration file.
 
 # Standard MSI
 

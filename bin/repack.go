@@ -28,6 +28,7 @@ import (
 	"os"
 	"regexp"
 
+	errors "github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/config"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/startup"
@@ -39,6 +40,9 @@ var (
 
 	repack_command_exe = repack_command.Flag(
 		"exe", "Use an alternative exe.").String()
+
+	repack_command_msi = repack_command.Flag(
+		"msi", "Repack a client install MSI.").String()
 
 	repack_command_config = repack_command.Arg(
 		"config_file", "The filename to write into the binary.").
@@ -53,11 +57,14 @@ var (
 		Required().String()
 
 	embedded_re = regexp.MustCompile(`#{3}<Begin Embedded Config>\r?\n`)
+
+	embedded_msi_re = regexp.MustCompile(`## Velociraptor client configuration`)
 )
 
 func doRepack() error {
 	config_obj, err := new(config.Loader).
 		WithFileLoader(*repack_command_config).
+		WithVerbose(true).
 		LoadAndValidate()
 	if err != nil {
 		return fmt.Errorf("Unable to load config file: %w", err)
@@ -83,6 +90,26 @@ func doRepack() error {
 	config_data, err := ioutil.ReadAll(config_fd)
 	if err != nil {
 		return fmt.Errorf("Unable to open config file: %w", err)
+	}
+
+	// Validate the config file.
+	os.Setenv("VELOCIRAPTOR_CONFIG", string(config_data))
+	_, err = new(config.Loader).
+		WithEnvLiteralLoader("VELOCIRAPTOR_CONFIG").
+		LoadAndValidate()
+	if err != nil {
+		return fmt.Errorf("Provided config file not valid: %w", err)
+	}
+
+	outfd, err := os.OpenFile(*repack_command_output,
+		os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
+	if err != nil {
+		return fmt.Errorf("Unable to create output file: %w", err)
+	}
+
+	if *repack_command_msi != "" {
+		return repackMSI(
+			config_data, *repack_command_msi, outfd, logger)
 	}
 
 	// Compress the string.
@@ -118,12 +145,6 @@ func doRepack() error {
 		return fmt.Errorf("Unable to open executable: %w", err)
 	}
 	defer fd.Close()
-
-	outfd, err := os.OpenFile(*repack_command_output,
-		os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
-	if err != nil {
-		return fmt.Errorf("Unable to create output file: %w", err)
-	}
 
 	data, err := ioutil.ReadAll(fd)
 	if err != nil {
@@ -185,6 +206,67 @@ func doRepack() error {
 	}
 
 	logger.Info("Write %v\n", len(data[end+len(config_data):]))
+	_, err = outfd.Write(data[end+len(config_data):])
+	if err != nil {
+		return err
+	}
+
+	err = outfd.Close()
+	if err != nil {
+		return err
+	}
+
+	return os.Chmod(outfd.Name(), 0777)
+}
+
+func repackMSI(config_data []byte,
+	msi_path string, outfd *os.File, logger *logging.LogContext) error {
+	logger.Info("Will repack MSI from %v", msi_path)
+
+	fd, err := os.Open(msi_path)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+
+	data, err := ioutil.ReadAll(fd)
+	if err != nil {
+		return err
+	}
+
+	if string(data[0:4]) != "\xD0\xCF\x11\xE0" {
+		return errors.New("File does not look like an MSI")
+	}
+
+	match := embedded_msi_re.FindIndex(data)
+	if match == nil || match[1] < 10 {
+		return fmt.Errorf("I can not seem to locate the embedded config???? To repack an MSI, be sure to build from custom.xml with the custom.config.yaml file.")
+	}
+
+	end := match[0]
+
+	// null out the checksum because we are too lazy to calculate it.
+	data[end-8] = 0
+	data[end-7] = 0
+	data[end-6] = 0
+	data[end-5] = 0
+
+	// We must keep the same length as the embedded config file
+	// unfortunately. The default embedded config file conists of a
+	// lot of padding to accomodate.
+	logger.Info("Write %v bytes of preamble \n", len(data[:end]))
+	_, err = outfd.Write(data[:end])
+	if err != nil {
+		return err
+	}
+
+	logger.Info("Write %v bytes of config_data\n", len(config_data))
+	_, err = outfd.Write(config_data)
+	if err != nil {
+		return err
+	}
+
+	logger.Info("Write %v bytes of post data\n", len(data[end+len(config_data):]))
 	_, err = outfd.Write(data[end+len(config_data):])
 	if err != nil {
 		return err
