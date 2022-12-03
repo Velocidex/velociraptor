@@ -52,7 +52,7 @@
   --color-sidebar-foreground: var(--color-accent-75);
   --color-sidebar-disabled-foreground: var(--color-accent-50);
   --color-sidebar-background: black;
-  --color-sidebar-active-foreground: #FFD500;
+  --color-sidebar-active-foreground: #E6C000;
   --color-sidebar-active-background: var(--color-canvas-background);
 
   --color-client-link: var(--color-foreground-dimmed);
@@ -75,7 +75,7 @@
   --color-btn-default-background: black;
   --color-btn-default-background-hover: #BF0000;
   --color-btn-outline-link: #400000;
-  --color-btn-outline-link-hover: red;
+  --color-btn-outline-link-hover: var(--color-accent-75);
 
   --color-card-heading-background: #400000;
   --color-cell-toolbar-background: #222222;
@@ -91,9 +91,13 @@
   --color-no-content: var(--color-foreground-dimmed);
 
   --color-form-background: #fceff4;
-  --color-page-link-active-background: var(--color-btn-border);
 
-  --color-timeline-header: #cdcdcd20;
+  --color-page-link-active-background: var(--color-accent-75);
+  --color-page-link-hover-background: var(--color-accent-25);
+  --color-page-link-background: var(--color-canvas-background);
+  --color-pagination-disabled: var(--color-btn-border);
+
+  --color-timeline-header: black;
   --color-timeline-table-shown: #dd4b3920;
   --color-timeline-1: #dff0d820;
   --color-timeline-2: #a9444220;
@@ -389,6 +393,10 @@ body.midnight {
   margin: 1px;
 }
 
+.midnight .client-link.btn.btn-outline-info {
+  width: unset;
+}
+
 .midnight .btn-outline-info:hover {
   color: #FFD500 !important;
   background: var(--color-btn-outline-link-hover) !important;
@@ -416,9 +424,10 @@ body.midnight {
 .midnight .btn.btn-link {
   border-color: transparent;
   width: 100%;
-  background: none;
+  background: #300000;
   color: var(--color-foreground);
   border-radius: 0;
+  font-weight: 500;
 }
 
 .midnight .alert-secondary {
@@ -453,15 +462,30 @@ body.midnight {
   color: var(--color-foreground);
 }
 
+.midnight .page-item.disabled span {
+  color: var(--color-pagination-disabled);
+}
+
 .midnight .page-item input {
   background: var(--color-btn-default-background-hover);
   color: var(--color-foreground);
   border: 1px solid var(--color-btn-default-border);
 }
 
+.midnight .page-item.active .page-link:hover,
 .midnight .page-item.active .page-link {
-  background: var(--color-canvas-background);
+  background: var(--color-page-link-active-background);
   border-color: var(--color-btn-default-border);
+  color: black;
+}
+
+.midnight .page-item .page-link:hover {
+  background: var(--color-page-link-hover-background);
+  border-color: var(--color-btn-default-border);
+}
+
+.midnight .page-item .page-link:focus {
+  box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.205)
 }
 
 .midnight .react-bootstrap-table-pagination-total {
@@ -544,16 +568,36 @@ body.midnight {
 }
 
 .midnight .table tbody tr.flow-urgent.row-selected {
-  color: #FFD500;
   font-weight: 700;
+  color: #FFD500;
 }
 
-.midnight .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td > button.btn.btn-link {
+.midnight .new-artifact-search-table.selectable .table.table-bordered,
+.midnight .new-artifact-search-table.selectable .table.table-bordered tbody tr,
+.midnight .new-artifact-search-table.selectable .table.table-bordered thead th {
+  background: none;
+  border: none;
+}
+
+.midnight .new-artifact-search-table.selectable .table.table-bordered tbody tr > td > button.btn.btn-link:hover {
+  background: var(--color-btn-outline-link-hover);
+  color: black;
+}
+
+.midnight .new-artifact-search-table.selectable .table.table-bordered tbody > tr.row-selected > td > button.btn.btn-link,
+.midnight .new-artifact-search-table.selectable .table.table-bordered tbody > tr.row-selected > td > button.btn.btn-link:hover {
+  background: var(--color-accent-100);
+  color: #FFD500;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* .midnight .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td > button.btn.btn-link {
   background: var(--color-accent-75);
   text-decoration: none;
   color: #FFD500;
   font-weight: 700;
-}
+} */
 
 
 /* Column search screen */
@@ -675,6 +719,10 @@ body.midnight {
 
 /* Form controls */
 
+.midnight .estimate.alert-info {
+  background-color: #200000;
+}
+
 .midnight .custom-switch .custom-control-input:disabled:checked~.custom-control-label:before {
   background-color: var(--color-accent-25);
 }
@@ -693,6 +741,14 @@ body.midnight {
   border-color: var(--color-btn-default-border);
   background: var(--color-form-control-background);
   box-shadow: none;
+}
+
+.midnight .accordion,
+.midnight .accordion > .card,
+.midnight .accordion > .card > .card-header {
+  background: var(--color-form-control-background);
+  border-color: var(--color-btn-default-border);
+  color: var(--color-foreground);
 }
 
 .midnight .form-control:focus,
@@ -735,6 +791,39 @@ body.midnight {
 
 .midnight .velo__indicator-separator {
   width: 0;
+}
+
+.midnight .velo__indicator {
+  color: var(--color-foreground);
+}
+
+.midnight .velo__placeholder {
+  color: var(--color-foreground);
+  font-weight: 500 !important;
+}
+
+.midnight .velo__multi-value {
+  border: 1px solid var(--color-accent-100);
+  border-radius: 0;
+  background-color: var(--color-canvas-background);
+}
+
+.midnight .velo__multi-value__label {
+  color: var(--color-foreground);
+  border: none;
+  border-radius: 0;
+}
+
+.midnight .velo__multi-value__remove {
+  color: var(--color-foreground-inverse);
+  background-color: var(--color-accent-100);
+  border-radius: 0;
+}
+
+.midnight .velo__multi-value__remove:hover {
+  color: black;
+  background-color: #FFD500;
+  font-weight: 700;
 }
 
 .midnight .input-group-text {
@@ -853,7 +942,7 @@ body.midnight {
 
 .midnight .modal-header {
   border-bottom: 2px solid var(--color-btn-default-border);
-  background: var(--color-header-background);
+  background: #200000;
 }
 
 .midnight .modal-header .close {
@@ -873,7 +962,7 @@ body.midnight {
 
 .midnight .modal-footer {
   border-top: 2px solid var(--color-btn-default-border);
-  background: var(--color-footer-background);
+  background: #200000;
 }
 
 .midnight .modal-content pre {
@@ -947,28 +1036,69 @@ body.midnight {
 }
 
 /* Datepicker */
+
+.midnight .react-datetime-picker__wrapper {
+  border: 1px solid var(--color-btn-border);
+  color: var(--color-foreground);
+}
+
 .midnight .react-datepicker,
+.midnight .react-datetime-picker__calendar .react-calendar,
 .midnight .react-datetime-picker {
+  font-family: var(--font-family-sans-serif);
   background: var(--color-canvas-background);
   color: var(--color-foreground);
+  border: 1px solid var(--color-btn-border);
+  z-index: 10;
 }
 
 .midnight .react-datetime-picker__inputGroup__input,
 .midnight .react-datetime-picker__button {
-  filter: invert(0.7);
+  filter: invert(10%) sepia(75%) saturate(6094%) hue-rotate(359deg) brightness(133%) contrast(118%);
+  stroke: var(--color-foreground) !important;
 }
 
-.midnight .react-datepicker-popper {
-  z-index: 10;
+.midnight .react-datetime-picker__button:enabled:hover .react-datetime-picker__button__icon,
+.midnight .react-datetime-picker__button:enabled:focus .react-datetime-picker__button__icon,
+.midnight .react-datetime-picker__button:hover {
+  stroke: #FFD500 !important;
+  filter: none;
 }
 
-.midnight .react-datepicker__day {
+.midnight .react-calendar__navigation button,
+.midnight .react-calendar__tile {
   color: var(--color-foreground);
 }
 
-.midnight .react-datepicker__day[aria-disabled="false"] {
-  background: var(--color-table-row-selected);
-  color: var(--color-foreground);
+.midnight .react-calendar__navigation button:enabled:hover {
+  background-color: var(--color-accent-25);
+  border: none;
+}
+
+.midnight .react-calendar__navigation button:disabled,
+.midnight .react-calendar__navigation button:enabled:focus {
+  background-color: unset;
+}
+
+.midnight .react-calendar__tile:enabled:hover {
+  background-color: var(--color-accent-25);
+  border: none;
+}
+
+.midnight .react-calendar .react-calendar__tile--now {
+  background-color: var(--color-accent-50);
+  color: black;
+}
+
+.midnight .react-calendar .react-calendar__tile--active,
+.midnight .react-calendar .react-calendar__tile--active:hover {
+  background-color: var(--color-accent-100);
+  font-weight: 700;
+  color: #FFD500;
+}
+
+.midnight .react-calendar__month-view__days__day--neighboringMonth {
+  color: darkorange;
 }
 
 /* Footer */
