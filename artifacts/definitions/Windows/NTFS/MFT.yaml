@@ -89,7 +89,7 @@ sources:
               })
 
       -- The path to to the drive that holds the MFT file (can be a pathspec)
-      LET Drive <= pathspec(parse=MFTDrive, path_type="windows")
+      LET Drive <= pathspec(parse=MFTDrive, path_type="ntfs")
 
       -- time testing
       LET time_test(stamp) =

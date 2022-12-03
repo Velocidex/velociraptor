@@ -56,4 +56,5 @@ Queries:
     FROM read_reg_key(root='''HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Run''')
 
   # Check for sysinternal eula - must be last because it remaps the hives.
-  - SELECT User, ProgramName FROM Artifact.Windows.Registry.Sysinternals.Eulacheck()
+  - SELECT User, ProgramName
+    FROM Artifact.Windows.Registry.Sysinternals.Eulacheck(source="RegistryAPI")
