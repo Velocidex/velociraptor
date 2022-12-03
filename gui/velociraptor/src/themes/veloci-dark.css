@@ -315,7 +315,14 @@ body.veloci-dark {
   background: none;
 }
 
-.veloci-dark .btn.btn-outline-info,
+.veloci-dark .btn.btn-outline-info{
+  background: var(--color-btn-outline-link);
+  color: var(--color-foreground);
+  border-color: transparent;
+  margin: 1px;
+  font-weight: 500;
+}
+
 .veloci-dark .btn.btn-link {
   background: var(--color-btn-outline-link);
   color: var(--color-foreground);

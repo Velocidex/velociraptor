@@ -311,7 +311,13 @@ body.veloci-light {
     height: 27px;
 }
 
-.veloci-light .btn.btn-outline-info,
+.veloci-light .btn.btn-outline-info {
+    background: var(--color-btn-outline-link);
+    color: var(--color-foreground);
+    margin: 1px;
+    border: none;
+}
+
 .veloci-light .btn.btn-link {
     background: var(--color-btn-outline-link);
     color: var(--color-foreground);
