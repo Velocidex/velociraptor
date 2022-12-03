@@ -29,8 +29,8 @@ import (
 */
 
 type _RecycleBinPluginArgs struct {
-	Filenames []string `vfilter:"required,field=filename,doc=Files to be parsed."`
-	Accessor  string   `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Filenames []*accessors.OSPath `vfilter:"required,field=filename,doc=Files to be parsed."`
+	Accessor  string              `vfilter:"optional,field=accessor,doc=The accessor to use."`
 }
 
 type _RecycleBinPlugin struct{}
@@ -74,7 +74,7 @@ func (self _RecycleBinPlugin) Call(
 					scope.Log("parse_recyclebin: %v", err)
 					return
 				}
-				fd, err := accessor.Open(filename)
+				fd, err := accessor.OpenWithOSPath(filename)
 				if err != nil {
 					scope.Log("parse_recyclebin: Unable to open file %s: %v",
 						filename, err)

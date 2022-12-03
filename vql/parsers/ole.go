@@ -35,16 +35,16 @@ import (
 )
 
 type _OLEVBAArgs struct {
-	Filenames []string `vfilter:"required,field=file,doc=A list of filenames to open as OLE files."`
-	Accessor  string   `vfilter:"optional,field=accessor,doc=The accessor to use."`
-	MaxSize   int64    `vfilter:"optional,field=max_size,doc=Maximum size of file we load into memory."`
+	Filenames []*accessors.OSPath `vfilter:"required,field=file,doc=A list of filenames to open as OLE files."`
+	Accessor  string              `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	MaxSize   int64               `vfilter:"optional,field=max_size,doc=Maximum size of file we load into memory."`
 }
 
 type _OLEVBAPlugin struct{}
 
 func _OLEVBAPlugin_ParseFile(
 	ctx context.Context,
-	filename string,
+	filename *accessors.OSPath,
 	scope vfilter.Scope,
 	arg *_OLEVBAArgs) ([]*oleparse.VBAModule, error) {
 
@@ -61,13 +61,13 @@ func _OLEVBAPlugin_ParseFile(
 		return nil, err
 	}
 
-	fd, err := accessor.Open(filename)
+	fd, err := accessor.OpenWithOSPath(filename)
 	if err != nil {
 		return nil, err
 	}
 	defer fd.Close()
 
-	stat, err := accessor.Lstat(filename)
+	stat, err := accessor.LstatWithOSPath(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func _OLEVBAPlugin_ParseFile(
 		if err != nil {
 			fd.Close()
 
-			fd, err = accessor.Open(filename)
+			fd, err = accessor.OpenWithOSPath(filename)
 			if err != nil {
 				return nil, err
 			}

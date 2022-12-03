@@ -22,13 +22,13 @@ import (
 )
 
 type WebDAVUploadArgs struct {
-	File              string `vfilter:"required,field=file,doc=The file to upload"`
-	Name              string `vfilter:"optional,field=name,doc=The name that the file should have on the server"`
-	Accessor          string `vfilter:"optional,field=accessor,doc=The accessor to use"`
-	Url               string `vfilter:"required,field=url,doc=The WebDAV url"`
-	BasicAuthUser     string `vfilter:"optional,field=basic_auth_user,doc=The username to use in HTTP basic auth"`
-	BasicAuthPassword string `vfilter:"optional,field=basic_auth_password,doc=The password to use in HTTP basic auth"`
-	NoVerifyCert      bool   `vfilter:"optional,field=noverifycert,doc=Skip TLS Verification"`
+	File              *accessors.OSPath `vfilter:"required,field=file,doc=The file to upload"`
+	Name              string            `vfilter:"optional,field=name,doc=The name that the file should have on the server"`
+	Accessor          string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	Url               string            `vfilter:"required,field=url,doc=The WebDAV url"`
+	BasicAuthUser     string            `vfilter:"optional,field=basic_auth_user,doc=The username to use in HTTP basic auth"`
+	BasicAuthPassword string            `vfilter:"optional,field=basic_auth_password,doc=The password to use in HTTP basic auth"`
+	NoVerifyCert      bool              `vfilter:"optional,field=noverifycert,doc=Skip TLS Verification"`
 }
 
 type WebDAVUploadFunction struct{}
@@ -56,7 +56,7 @@ func (self *WebDAVUploadFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	file, err := accessor.Open(arg.File)
+	file, err := accessor.OpenWithOSPath(arg.File)
 	if err != nil {
 		scope.Log("upload_webdav: Unable to open %s: %s",
 			arg.File, err.Error())
@@ -65,10 +65,10 @@ func (self *WebDAVUploadFunction) Call(ctx context.Context,
 	defer file.Close()
 
 	if arg.Name == "" {
-		arg.Name = arg.File
+		arg.Name = arg.File.String()
 	}
 
-	stat, err := accessor.Lstat(arg.File)
+	stat, err := accessor.LstatWithOSPath(arg.File)
 	if err != nil {
 		scope.Log("upload_webdav: Unable to stat %s: %v",
 			arg.File, err)

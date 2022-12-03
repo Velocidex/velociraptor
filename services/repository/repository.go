@@ -536,7 +536,7 @@ func splitQueryToQueries(query string) ([]string, error) {
 	scope := vql_subsystem.MakeScope()
 	result := []string{}
 	for _, vql := range vqls {
-		result = append(result, vql.ToString(scope))
+		result = append(result, vfilter.FormatToString(scope, vql))
 	}
 
 	return result, nil

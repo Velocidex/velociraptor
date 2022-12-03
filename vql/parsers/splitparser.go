@@ -39,9 +39,9 @@ var (
 )
 
 type _SplitRecordParserArgs struct {
-	Filenames            []string `vfilter:"required,field=filenames,doc=Files to parse."`
-	Accessor             string   `vfilter:"optional,field=accessor,doc=The accessor to use"`
-	Regex                string   `vfilter:"required,field=regex,doc=The split regular expression (e.g. a comma)"`
+	Filenames            []*accessors.OSPath `vfilter:"required,field=filenames,doc=Files to parse."`
+	Accessor             string              `vfilter:"optional,field=accessor,doc=The accessor to use"`
+	Regex                string              `vfilter:"required,field=regex,doc=The split regular expression (e.g. a comma)"`
 	compiled_regex       *regexp.Regexp
 	Columns              []string `vfilter:"optional,field=columns,doc=If the first row is not the headers, this arg must provide a list of column names for each value."`
 	First_row_is_headers bool     `vfilter:"optional,field=first_row_is_headers,doc=A bool indicating if we should get column names from the first row."`
@@ -53,7 +53,8 @@ type _SplitRecordParser struct{}
 func processFile(
 	ctx context.Context,
 	scope vfilter.Scope,
-	file string, arg *_SplitRecordParserArgs,
+	file *accessors.OSPath,
+	arg *_SplitRecordParserArgs,
 	output_chan chan vfilter.Row) {
 
 	err := vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
@@ -67,7 +68,7 @@ func processFile(
 		scope.Log("split_records: %v", err)
 		return
 	}
-	fd, err := accessor.Open(file)
+	fd, err := accessor.OpenWithOSPath(file)
 	if err != nil {
 		scope.Log("split_records: %v", err)
 		return

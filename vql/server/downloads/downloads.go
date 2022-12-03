@@ -255,7 +255,10 @@ func downloadFlowToZip(
 	expand_sparse bool,
 	zip_writer *reporting.Container) error {
 
-	root := accessors.NewZipFilePath(prefix)
+	root, err := accessors.NewZipFilePath(prefix)
+	if err != nil {
+		return err
+	}
 
 	// Write the client info so it can be imported again
 	client_info_manager, err := services.GetClientInfoManager(config_obj)
@@ -339,58 +342,117 @@ func copyUploadFiles(
 	flow_path_manager *paths.FlowPathManager,
 	expand_sparse bool) error {
 
-	err := copyResultSetIntoContainer(ctx, config_obj, container, format,
-		flow_path_manager.UploadMetadata(),
-		accessors.NewZipFilePath(prefix).Append("uploads.json"))
+	root_path, err := accessors.NewZipFilePath(prefix)
 	if err != nil {
 		return err
 	}
 
-	// Read all the upload metadata
+	// Read all the upload metadata and copy the files to the container.
 	file_store_factory := file_store.GetFileStore(config_obj)
 	reader, err := result_sets.NewResultSetReader(file_store_factory,
 		flow_path_manager.UploadMetadata())
 	if err != nil {
 		return err
 	}
-	defer reader.Close()
 
-	for row := range reader.Rows(ctx) {
-		components, pres := row.GetStrings("_Components")
-		if !pres || len(components) < 1 {
-			continue
-		}
+	output_chan := make(chan vfilter.Row)
+	go func() {
+		defer close(output_chan)
+		defer reader.Close()
 
-		// Ensure we store index files into the correct place.
-		file_type, _ := row.GetString("Type")
-		if file_type == "idx" {
-			// If we expand the files we dont need any indexes
-			if expand_sparse {
+		for row := range reader.Rows(ctx) {
+			components, pres := row.GetStrings("_Components")
+			if !pres || len(components) < 1 {
 				continue
 			}
-			components[len(components)-1] += ".idx"
-		}
 
-		var src api.FSPathSpec
-		dest := accessors.NewZipFilePath(prefix).Append("uploads")
-		if len(components) > 6 && components[0] == "clients" {
-			src = path_specs.NewUnsafeFilestorePath(components...).
-				SetType(api.PATH_TYPE_FILESTORE_ANY)
-			dest = dest.Append(components[6:]...)
-		} else {
-			src = flow_path_manager.UploadContainer().AddChild(components[1:]...).
-				SetType(api.PATH_TYPE_FILESTORE_ANY)
-			dest = dest.Append(components...)
-		}
+			// Ensure we store index files into the correct place.
+			file_type, _ := row.GetString("Type")
+			if file_type == "idx" {
+				// If we expand the files we dont need any indexes
+				if expand_sparse {
+					continue
+				}
+				components[len(components)-1] += ".idx"
+			}
 
-		// Copy from the file store at these locations.
-		err := copyFile(ctx, scope, config_obj, container, src, dest, expand_sparse)
-		if err != nil {
-			return err
-		}
-	}
+			var src api.FSPathSpec
+			dest_root_path, err := accessors.NewZipFilePath(prefix)
+			if err != nil {
+				continue
+			}
 
-	return nil
+			dest := dest_root_path.Append("uploads")
+			if len(components) > 6 && components[0] == "clients" {
+				//Remove the prefix in the file store where the files
+				//are stored. The uploads file in the file store
+				//refers to the location in the filestore where the
+				//file is actually stored, while the uploads.json in
+				//the container refers to the location in the
+				//container where the file is actually
+				//stored. Therefore we need to convert from one to the
+				//other.
+
+				// For example, in t he file store a file may be
+				// stored with these path components (root is the filestore):
+
+				//	components = [
+				//		"clients",
+				//		"C.1bfa6928675831f5-O123",
+				//		"collections",
+				//		"F.CE2PSBS6BQCSO",
+				//		"uploads",
+				//		"auto",
+				//		"C:",
+				//		"Windows",
+				//		"System32",
+				//		"winevt",
+				//		"Logs",
+				//		"System.evtx"
+				//	]
+
+				//	In the container, we store a shorter path (root at the zip root)
+				//	components = [
+				//		"uploads",
+				//		"auto",   <- accessor name
+				//		"C:",
+				//		"Windows",
+				//		"System32",
+				//		"winevt",
+				//		"Logs",
+				//		"System.evtx"
+				//	]
+
+				// Therefore we need to update the _Components field
+				// to refer to the components in the zip file.
+
+				row.Update("_Components", components[4:])
+				src = path_specs.NewUnsafeFilestorePath(components...).
+					SetType(api.PATH_TYPE_FILESTORE_ANY)
+				dest = dest_root_path.Append(components[4:]...)
+
+			} else {
+				src = flow_path_manager.UploadContainer().AddChild(components[1:]...).
+					SetType(api.PATH_TYPE_FILESTORE_ANY)
+				dest = dest_root_path.Append(components...)
+			}
+
+			// Copy from the file store at these locations.
+			err = copyFile(ctx, scope, config_obj, container, src, dest, expand_sparse)
+			if err != nil {
+				row.Set("Error", err.Error())
+			}
+
+			// Write the modified row into the uploads.json file.
+			output_chan <- row
+		}
+	}()
+
+	// Copy the modified rows into the uploads file.
+	_, err = container.WriteResultSet(ctx, config_obj, scope, format,
+		root_path.Append("uploads.json").String(), output_chan)
+
+	return err
 }
 
 func copyFile(
@@ -401,6 +463,9 @@ func copyFile(
 	src api.FSPathSpec,
 	dest *accessors.OSPath,
 	expand_sparse bool) (err error) {
+
+	scope.Log("DEBUG: downloadFlowToZip: Copy file from %v to %v\n",
+		src.AsClientPath(), dest.String())
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	fd, err := file_store_factory.ReadFile(src)

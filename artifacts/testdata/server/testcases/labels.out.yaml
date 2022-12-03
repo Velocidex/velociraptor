@@ -13,7 +13,7 @@ FROM clients(search='label:*') ORDER BY client_id
 [
  {
   "os_info.system": "windows",
-  "label(client_id=client_id, labels= ['WinBoxes'], op='set')": {
+  "label(client_id=client_id, labels=['WinBoxes'], op='set')": {
    "ClientId": "C.4f5e52adf0a337a9",
    "Labels": [
     "WinBoxes"

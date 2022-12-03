@@ -16,7 +16,7 @@ import EstimateHunt from './estimate.js';
 import LabelForm from '../utils/labels.js';
 import api from '../core/api-service.js';
 import NewCollectionConfigParameters from '../flows/new-collections-parameters.js';
-import OrgSelector from './orgs.js';
+import { OrgSelectorForm } from './orgs.js';
 
 import {
     NewCollectionSelectArtifacts,
@@ -152,7 +152,7 @@ class NewHuntConfigureHunt extends React.Component {
                     </Form.Group>
                   }
 
-                  <OrgSelector
+                  <OrgSelectorForm
                     value={this.props.parameters.org_ids}
                     onChange={(value) => this.setParam("org_ids", value)} />
 

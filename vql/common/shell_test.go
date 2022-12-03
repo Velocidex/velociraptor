@@ -30,9 +30,27 @@ func (self *ShellTestSuite) TestDefaultPipeReader() {
 
 	wg := &sync.WaitGroup{}
 
-	buffer := bytes.NewReader([]byte("a\nbuffer\nWith\nSome\nMore\nLines"))
+	buffer := bytes.NewReader([]byte("Buffer with no sep Lines"))
 	wg.Add(1)
-	err := defaultPipeReader(ctx, buffer, 10, "\n", cb, wg)
+	err := defaultPipeReader(ctx, buffer, 1000, "\n", cb, wg)
+	assert.NoError(self.T(), err)
+
+	golden.Set("Buffer with no sep lines", parts)
+
+	parts = nil
+
+	buffer = bytes.NewReader([]byte("Buffer with no sep Lines"))
+	wg.Add(1)
+	err = defaultPipeReader(ctx, buffer, 1000, "", cb, wg)
+	assert.NoError(self.T(), err)
+
+	golden.Set("Buffer with no sep lines no seps", parts)
+
+	parts = nil
+
+	buffer = bytes.NewReader([]byte("a\nbuffer\nWith\nSome\nMore\nLines"))
+	wg.Add(1)
+	err = defaultPipeReader(ctx, buffer, 10, "\n", cb, wg)
 	assert.NoError(self.T(), err)
 
 	golden.Set("Buffer with line split", parts)

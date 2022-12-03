@@ -1,52 +1,50 @@
 @font-face {
-  font-family: "iosevka";
+  font-family: "Iosevka Term";
   font-style: normal;
   font-weight: 400;
   src: local(""),
-    url("../fonts/iosevka-term-extended-subset.woff2") format("woff2");
-    unicode-range: U+0000-00FF, U+0100-017F;
+    url("../fonts/iosevka-term-regular-subset.woff2") format("woff2");
+    unicode-range: U+0020-007E, U+0080-00FF;
   font-display: block;
 }
 
 @font-face {
-  font-family: "iosevka";
+  font-family: "Iosevka Term";
   font-style: bold;
   font-weight: 700;
   src: local(""),
-    url("../fonts/iosevka-term-extendedbold-subset.woff2") format("woff2");
-  unicode-range: U+0000-00FF, U+0100-017F;
+    url("../fonts/iosevka-term-bold-subset.woff2") format("woff2");
+  unicode-range: U+0020-007E, U+0080-00FF;
   font-display: block;
 }
 
 @font-face {
-  font-family: "atkinson";
+  font-family: "Noto Sans";
   font-style: normal;
   font-weight: 400;
   src: local(""),
-    url("../fonts/atkinson-hyperlegible-regular-102a.woff2") format("woff2");
-  size-adjust: 110%;
+    url("../fonts/noto-sans-v27-latin-ext_latin-regular.woff2") format("woff2");
   font-display: block;
 }
 
 @font-face {
-  font-family: "atkinson";
+  font-family: "Noto Sans";
   font-style: bold;
-  font-weight: 700;
+  font-weight: 600;
   src: local(""),
-    url("../fonts/atkinson-hyperlegible-bold-102a.woff2") format("woff2");
-  size-adjust: 110%;
+    url("../fonts/noto-sans-v27-latin-ext_latin-600.woff2") format("woff2");
   font-display: block;
 }
 
 .veloci-light {
-  --font-size-large: 17px;
-  --font-size-base: 15px;
-  --font-size-small: 13px;
-  --font-family-sans-serif: iosevka, -apple-system, BlinkMacSystemFont,
+  --font-size-large: 16px;
+  --font-size-base: 14px;
+  --font-size-small: 12px;
+  --font-family-sans-serif: "Iosevka Term", Iosevka-Term, -apple-system, BlinkMacSystemFont,
     "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-  --font-family-monospace: iosevka, SFMono-Regular, Menlo, Monaco,
+  --font-family-monospace: "Iosevka Term", Iosevka-Term, SFMono-Regular, Menlo, Monaco,
     "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
-  --font-family-paragraph: atkinson, -apple-system, BlinkMacSystemFont, iosevka, "Segoe UI",
+  --font-family-paragraph: "Noto Sans", -apple-system, BlinkMacSystemFont, roboto, "Segoe UI",
     "Helvetica Neue", Arial, sans-serif;
 
   --accent-color: #098204;
@@ -61,6 +59,7 @@
   --color-footer-background: #eaeaea;
   --color-canvas-background: #fefefe;
   --color-canvas-background-complement: #d2ccc4;
+  --color-form-control-background: var(--color-canvas-background);
 
   --color-foreground: rgb(18, 18, 18);
   --color-foreground-inverse: #eeeeee;
@@ -73,25 +72,25 @@
   --color-sidebar-foreground: #404040;
   --color-sidebar-disabled-foreground: #B0B0B0;
   --color-sidebar-background: #ededed;
-  --color-sidebar-active-foreground: var(--color-accent-100);
+  --color-sidebar-active-foreground: var(--color-accent-75);
   --color-sidebar-active-background: var(--color-canvas-background);
 
   --color-client-link: var(--color-accent-100);
   --color-client-link-hover: var(--color-foreground-dimmed);
 
-  --color-tab: #bbbbbb;
+  --color-tab: var(--color-sidebar-background);
   --color-tab-active: var(--color-accent-25);
 
   --color-resizer: var(--color-accent-50);
   --color-resizer-hover: var(--color-accent-100);
   --color-scrollbar-track: var(--color-sidebar-background);
-  --color-scrollbar-thumb: var(--color-tab);
-  --color-scrollbar-thumb-hover: var(--color-tab-active);
+  --color-scrollbar-thumb: var(--color-accent-25);
+  --color-scrollbar-thumb-hover: var(--color-accent-50);
 
   --color-btn-border: #C4C4C4;
   --color-btn-default-border: var(--color-tab);
   --color-btn-default-background: #dcdcdc;
-  --color-btn-default-background-hover: var(--color-sidebar-inactive-background-hover);
+  --color-btn-default-background-hover: var(--color-accent-75);
   --color-btn-outline-link: var(--color-accent-25);
   --color-btn-outline-link-hover: var(--color-accent-75);
 
@@ -101,7 +100,7 @@
   --color-table-row-hover: rgba(var(--color-accent), 0.1);
   --color-table-heading-background: var(--color-btn-default-background);
 
-  --color-code: #990000;
+  --color-code: var(--color-accent-100);
 
   --background-calendar-tile-active: #5cd00a80;
 
@@ -131,17 +130,12 @@ body.veloci-light {
   letter-spacing: 0.4px;
 }
 
-.veloci-light code {
+.veloci-light code,
+.veloci-light pre,
+.veloci-light .monospace {
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-base);
   color: var(--color-code);
-}
-
-.veloci-light .report-viewer p,
-.veloci-light .report-viewer ol,
-.veloci-light .report-viewer ul,
-.veloci-light .report-viewer li {
-  font-family: var(--font-family-paragraph);
 }
 
 .veloci-light dl {
@@ -196,12 +190,24 @@ body.veloci-light {
 .veloci-light .client-status .client-name:hover {
     color: var(--color-foreground-inverse);
     background: var(--color-btn-outline-link-hover);
+    font-weight: bold;
+}
+
+.veloci-light .react-autosuggest__input {
+  background: var(--color-form-control-background);
+  border: 1px solid var(--color-btn-default-border);
+  color: var(--color-foreground);
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+  text-decoration: none !important;
+  text-shadow: none;
 }
 
 .veloci-light .react-autosuggest__suggestions-container--open {
     margin-left: 5px;
     background: var(--color-canvas-background);
     font-family: var(--font-family-sans-serif);
+    font-size: var(--font-size-base);
     color: var(--color-foreground);
 }
 
@@ -252,17 +258,23 @@ body.veloci-light {
 
 .veloci-light .btn-default.active {
   box-shadow: none;
-  color: var(--color-accent-75);
+  background: var(--color-tab-active);
+  color: var(--color-foreground);
 }
 
 .veloci-light .btn-default:hover {
   background: var(--color-btn-default-background-hover);
-  color: var(--color-foreground);
+  color: var(--color-foreground-inverse);
 }
 
 .veloci-light .btn-default:focus {
   background: var(--color-btn-default-background);
   color: var(--color-foreground);
+}
+
+.veloci-light .btn[disabled] {
+  color: var(--color-sidebar-disabled-foreground);
+  background: var(--color-btn-default-background);
 }
 
 .veloci-light .btn-primary {
@@ -309,6 +321,7 @@ body.veloci-light {
   background: var(--color-btn-outline-link-hover);
   text-shadow: none;
   color: var(--color-foreground-inverse);
+  font-weight: bold;
 }
 
 .veloci-light .btn.btn-link {
@@ -408,12 +421,16 @@ body.veloci-light {
   border-left-color: var(--color-btn-border);
 }
 
-.veloci-dark .tooltip.show {
+.veloci-light .tooltip.show {
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
 }
 
 /* Form controls */
+
+.veloci-light .custom-switch .custom-control-input:disabled:checked~.custom-control-label:before {
+  background-color: var(--color-accent-25);
+}
 
 .veloci-light .form-control,
 .veloci-light .custom-file-input {
@@ -450,6 +467,12 @@ body.veloci-light {
   color: var(--color-foreground);
   text-shadow: none;
   font-weight: 400;
+}
+
+.veloci-light input[type='checkbox'] {
+  transform: scale(1.2);
+  accent-color: var(--color-foreground);
+  box-shadow: none;
 }
 
 /* Tables */
@@ -560,6 +583,14 @@ body.veloci-light {
 
 /* Artifact viewer screen */
 
+.veloci-light .report-viewer .description-content {
+  font-family: var(--font-family-paragraph);
+  font-size: var(--font-size-large);
+  background: #F7F7F7;
+  border-radius: 5px;
+  padding: 12px;
+}
+
 .veloci-light .report-viewer h3 {
   margin-top: 2rem;
 }
@@ -587,11 +618,26 @@ body.veloci-light {
   filter: invert(0);
 }
 
+.veloci-light .report-viewer code {
+  background: rgba(0,0,0,.05);
+  border-radius: 4px;
+  border: 0.5px solid rgba(0,0,0,.1);
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.veloci-light .report-viewer a {
+  color: var(--color-accent-100);
+}
+
 .veloci-light .artifact-search-table.selectable.container tbody tr:hover {
   background: var(--color-table-row-hover);
 }
 
 .veloci-light .artifact-search-table.selectable.container tr.row-selected,
+.veloci-light .artifact-search-table.selectable.container tr.row-selected:hover,
 .veloci-light .artifact-search-table.selectable.container tr.row_selected > td {
   background: var(--color-table-row-selected);
   color: var(--color-foreground);
@@ -650,4 +696,9 @@ body.veloci-light {
 
 .veloci-light .flow-file-download-button {
     background: var(--color-accent-25);
+}
+
+
+.veloci-light div.velo__multi-value__remove {
+    color: var(--color-foreground);
 }

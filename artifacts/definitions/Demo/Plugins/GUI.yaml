@@ -130,7 +130,7 @@ sources:
 
           **Each of the below cells should have a H2 heading**
 
-          ## Check that notebok environment variables are populated
+          ## Check that notebook environment variables are populated
           {{ $x := Query "SELECT * FROM items(\
              item=dict(NotebookId=NotebookId, ClientId=ClientId,\
                        FlowId=FlowId, ArtifactName=ArtifactName))" | Expand }}

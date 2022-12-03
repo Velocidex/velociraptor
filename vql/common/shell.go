@@ -285,8 +285,19 @@ type pipeReaderFunc func(
 	cb func(message string), wg *sync.WaitGroup) error
 
 // Split the buffer into seperator lines and push them to the
-// callback.
+// callback. Leaved the last part (without the sep) in the buffer for
+// next time returning the buffer position where the next read should
+// go.
 func split(sep string, buff []byte, cb func(message string)) int {
+	if len(buff) == 0 {
+		return 0
+	}
+
+	if sep == "" {
+		cb(string(buff))
+		return len(buff)
+	}
+
 	lines := strings.Split(string(buff), sep)
 	if len(lines) > 0 {
 		last_line := []byte(lines[len(lines)-1])
@@ -325,7 +336,8 @@ func defaultPipeReader(
 	for {
 		select {
 		case <-ctx.Done():
-			// If there is any data left, send it.
+			// If there is any data left, send it. Sep can not be in
+			// buffer here.
 			if offset > 0 {
 				cb(string(buff[:offset]))
 			}
@@ -338,10 +350,17 @@ func defaultPipeReader(
 				offset = 0
 			}
 
+			// From here below it is possible for sep to enter the
+			// buffer.
 			n, err := pipe.Read(buff[offset:])
 			if err == io.EOF {
+				offset += n
+
 				// Flush the last of the buffer
 				if offset > 0 {
+					if sep != "" {
+						offset = split(sep, buff[:offset], cb)
+					}
 					cb(string(buff[:offset]))
 				}
 				return nil
@@ -354,7 +373,8 @@ func defaultPipeReader(
 			// Process the buffer
 			offset += n
 
-			// Split the buffer if needed.
+			// Split the buffer if needed. From here on it is
+			// guaranteed that sep is not present in the buffer.
 			if sep != "" {
 				offset = split(sep, buff[:offset], cb)
 				continue

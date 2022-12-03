@@ -11,7 +11,7 @@ require (
 	github.com/Velocidex/etw v0.0.0-20210723072214-4d0cffd1ff22
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-magic v0.0.0-20211018155418-c5dc48282f28
-	github.com/Velocidex/go-yara v1.1.10-0.20220406053739-d57cdcd99667
+	github.com/Velocidex/go-yara v1.1.10-0.20221202090138-c7dde4c43aa4
 	github.com/Velocidex/grpc-go-pool v1.2.2-0.20211129003310-ece3b3fe13f4
 	github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a
 	github.com/Velocidex/pkcs7 v0.0.0-20210524015001-8d1eee94a157
@@ -103,7 +103,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
 	www.velocidex.com/golang/oleparse v0.0.0-20220617011920-94df2342d0b7
 	www.velocidex.com/golang/regparser v0.0.0-20221020153526-bbc758cbd18b
-	www.velocidex.com/golang/vfilter v0.0.0-20221111065201-759cb2572787
+	www.velocidex.com/golang/vfilter v0.0.0-20221124045546-c666c341aec3
 )
 
 require (
@@ -118,6 +118,7 @@ require (
 	github.com/go-errors/errors v1.4.2
 	github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/hillu/go-archive-zip-crypto v0.0.0-20200712202847-bd5cf365dd44
+	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.9.0
 	github.com/shirou/gopsutil/v3 v3.21.11
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
@@ -169,7 +170,6 @@ require (
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/paulmach/orb v0.1.5 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/prometheus/common v0.37.0 // indirect
@@ -203,7 +203,7 @@ require (
 // replace github.com/Velocidex/yaml/v2 => /home/mic/projects/yaml
 // replace www.velocidex.com/golang/go-prefetch => /home/mic/projects/go-prefetch
 // replace github.com/Velocidex/go-magic => /home/mic/projects/go-magic
-// replace github.com/Velocidex/go-yara => /home/mic/projects/go-yara
+// replace github.com/Velocidex/go-yara => /home/mic/projects/go-yara-velocidex
 // replace github.com/Velocidex/json => /home/mic/projects/json
 // replace github.com/russross/blackfriday/v2 => /home/mic/projects/blackfriday
 // replace www.velocidex.com/golang/vtypes => /home/mic/projects/vtypes

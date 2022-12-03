@@ -33,6 +33,13 @@ export class UserSettings extends React.Component {
 
             traits.username = response.data.username;
             traits.orgs = response.data.orgs;
+	    if (traits.org === "root") {
+		traits.org_name = "Root Organization";
+	    } else {
+		traits.org_name = traits.orgs.filter((org) => {
+		    return org.id === traits.org;
+		})[0].name;
+	    }
 
             this.setState({traits: traits});
 
@@ -44,6 +51,7 @@ export class UserSettings extends React.Component {
             document.body.classList.remove('github-dimmed-light');
             document.body.classList.remove('ncurses');
             document.body.classList.remove('coolgray-dark');
+            document.body.classList.remove('midnight');
             document.body.classList.add(traits.theme || "veloci-light");
         });
     }

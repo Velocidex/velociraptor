@@ -27,14 +27,13 @@ func (self *NotebookPathManager) Attachment(name string) api.FSPathSpec {
 		AsFilestorePath().SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
-func (self *NotebookPathManager) Path() api.DSPathSpec {
-	return self.root.AddChild(self.notebook_id).SetTag("Notebook")
+func (self *NotebookPathManager) AttachmentDirectory() api.FSPathSpec {
+	return self.root.AddChild(self.notebook_id, "files").
+		AsFilestorePath().SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
-func (self *NotebookPathManager) UploadsDir() api.FSPathSpec {
-	return self.root.AsFilestorePath().
-		AddUnsafeChild(self.notebook_id, "uploads").
-		SetType(api.PATH_TYPE_FILESTORE_ANY)
+func (self *NotebookPathManager) Path() api.DSPathSpec {
+	return self.root.AddChild(self.notebook_id).SetTag("Notebook")
 }
 
 func (self *NotebookPathManager) Cell(cell_id string) *NotebookCellPathManager {
@@ -44,10 +43,6 @@ func (self *NotebookPathManager) Cell(cell_id string) *NotebookCellPathManager {
 		client_id:   self.client_id,
 		root:        self.root,
 	}
-}
-
-func (self *NotebookPathManager) CellDirectory(cell_id string) api.FSPathSpec {
-	return self.root.AddChild(self.notebook_id, cell_id).AsFilestorePath()
 }
 
 func (self *NotebookPathManager) Directory() api.FSPathSpec {
@@ -61,14 +56,14 @@ func (self *NotebookPathManager) DSDirectory() api.DSPathSpec {
 func (self *NotebookPathManager) HtmlExport() api.FSPathSpec {
 	return DOWNLOADS_ROOT.AddChild("notebooks", self.notebook_id,
 		fmt.Sprintf("%s-%s", self.notebook_id,
-			self.Clock.Now().Format("20060102150405Z"))).
+			self.Clock.Now().UTC().Format("20060102150405Z"))).
 		SetType(api.PATH_TYPE_FILESTORE_DOWNLOAD_REPORT)
 }
 
 func (self *NotebookPathManager) ZipExport() api.FSPathSpec {
 	return DOWNLOADS_ROOT.AddChild("notebooks", self.notebook_id,
 		fmt.Sprintf("%s-%s", self.notebook_id,
-			self.Clock.Now().Format("20060102150405Z"))).
+			self.Clock.Now().UTC().Format("20060102150405Z"))).
 		SetType(api.PATH_TYPE_FILESTORE_DOWNLOAD_ZIP)
 }
 
@@ -127,7 +122,7 @@ func NewNotebookPathManager(notebook_id string) *NotebookPathManager {
 	return &NotebookPathManager{
 		notebook_id: notebook_id,
 		root:        rootPathFromNotebookID(notebook_id),
-		Clock:       utils.RealClock{},
+		Clock:       utils.GetTime(),
 	}
 }
 
@@ -136,6 +131,10 @@ type NotebookCellPathManager struct {
 	table_id             int64
 	root                 api.DSPathSpec
 	client_id            string
+}
+
+func (self *NotebookCellPathManager) Directory() api.FSPathSpec {
+	return self.root.AddChild(self.notebook_id, self.cell_id).AsFilestorePath()
 }
 
 func (self *NotebookCellPathManager) Path() api.DSPathSpec {
@@ -181,6 +180,13 @@ func (self *NotebookCellPathManager) QueryStorage(id int64) *NotebookCellQuery {
 	}
 }
 
+// Uploads are stored in each cell separately.
+func (self *NotebookCellPathManager) UploadsDir() api.FSPathSpec {
+	return self.root.AsFilestorePath().
+		AddUnsafeChild(self.notebook_id, self.cell_id, "uploads").
+		SetType(api.PATH_TYPE_FILESTORE_ANY)
+}
+
 func (self *NotebookCellPathManager) GetUploadsFile(filename string) api.FSPathSpec {
 	return self.root.AsFilestorePath().
 		AddUnsafeChild(self.notebook_id,
@@ -208,34 +214,6 @@ func (self *NotebookCellQuery) Params() *ordereddict.Dict {
 		Set("cell_id", self.cell_id).
 		Set("table_id", self.id)
 	return result
-}
-
-type NotebookExportPathManager struct {
-	notebook_id string
-	root        api.DSPathSpec
-}
-
-func (self *NotebookExportPathManager) CellMetadata(cell_id string) api.DSPathSpec {
-	return self.root.AddChild(self.notebook_id, cell_id)
-}
-
-func (self *NotebookExportPathManager) UploadPath(upload string) api.FSPathSpec {
-	return self.root.
-		AsFilestorePath().
-		AddChild(self.notebook_id, "uploads").
-		AddUnsafeChild(utils.SplitComponents(upload)...).
-		SetType(api.PATH_TYPE_FILESTORE_ANY)
-}
-
-func (self *NotebookExportPathManager) CellItem(cell_id, name string) api.DSPathSpec {
-	return self.root.AddChild(self.notebook_id, cell_id, name)
-}
-
-func NewNotebookExportPathManager(notebook_id string) *NotebookExportPathManager {
-	return &NotebookExportPathManager{
-		notebook_id: notebook_id,
-		root:        NOTEBOOK_ROOT.AddChild("exports", notebook_id),
-	}
 }
 
 type ContainerPathManager struct {

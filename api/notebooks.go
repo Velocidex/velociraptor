@@ -21,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Get all the current user's notebooks and those notebooks shared
@@ -427,7 +428,9 @@ func exportZipNotebook(
 	filename := notebook_path_manager.ZipExport()
 	lock_file_name := filename.SetType(api.PATH_TYPE_FILESTORE_LOCK)
 
-	lock_file, err := file_store_factory.WriteFile(lock_file_name)
+	// Must write this synchronously so it does not race the removal.
+	lock_file, err := file_store_factory.WriteFileWithCompletion(
+		lock_file_name, utils.SyncCompleter)
 	if err != nil {
 		return err
 	}
@@ -439,7 +442,13 @@ func exportZipNotebook(
 
 	go func() {
 		defer func() {
-			_ = file_store_factory.Delete(lock_file_name)
+			err := file_store_factory.Delete(lock_file_name)
+			if err != nil {
+				logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+				logger.Error("CreateNotebookDownloadFile: Unable to remove log file %v: %v",
+					lock_file_name.AsClientPath(), err)
+
+			}
 		}()
 
 		defer cancel()

@@ -87,7 +87,8 @@ jobs:
         CGO_ENABLED: "0"
 
       run: |
-        go test -v ./... --tags server_vql -p 2
+        # Only run short tests on CI because the CI machines are slow
+        go test -short -v ./... --tags server_vql -p 2
 
     - name: Test Golden Generic
       shell: cmd

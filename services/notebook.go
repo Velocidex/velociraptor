@@ -38,6 +38,8 @@ type NotebookManager interface {
 	GetNotebookCell(ctx context.Context,
 		notebook_id, cell_id string) (*api_proto.NotebookCell, error)
 
+	ReformatVQL(ctx context.Context, vql string) (string, error)
+
 	// Update the cell and recalculate it.
 	UpdateNotebookCell(ctx context.Context,
 		notebook_metadata *api_proto.NotebookMetadata,

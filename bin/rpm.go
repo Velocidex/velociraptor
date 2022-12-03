@@ -541,7 +541,7 @@ func doClientSysVRPM() error {
 	fd.Close()
 
 	r, err := rpmpack.NewRPM(rpmpack.RPMMetaData{
-		Name:    "velociraptor",
+		Name:    "velociraptor-client",
 		Version: constants.VERSION,
 		Release: "A",
 		Arch:    "x86_64",

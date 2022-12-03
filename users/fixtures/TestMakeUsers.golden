@@ -1,0 +1,49 @@
+{
+ "OrgAdmin OrgAdmin": {
+  "name": "OrgAdmin",
+  "orgs": [
+   {
+    "name": "\u003croot\u003e",
+    "id": "root"
+   }
+  ]
+ },
+ "OrgAdmin UserO1": {
+  "name": "UserO1",
+  "orgs": [
+   {
+    "name": "O1",
+    "id": "O1"
+   }
+  ]
+ },
+ "AdminO1 UserO1": {
+  "name": "UserO1",
+  "orgs": [
+   {
+    "name": "O1",
+    "id": "O1"
+   }
+  ]
+ },
+ "AdminO2 UserO1": "PermissionDenied",
+ "OrgAdmin UserO2": {
+  "name": "UserO2",
+  "orgs": [
+   {
+    "name": "O2",
+    "id": "O2"
+   }
+  ]
+ },
+ "AdminO2 UserO2": {
+  "name": "UserO2",
+  "orgs": [
+   {
+    "name": "O2",
+    "id": "O2"
+   }
+  ]
+ },
+ "AdminO1 UserO2": "PermissionDenied"
+}

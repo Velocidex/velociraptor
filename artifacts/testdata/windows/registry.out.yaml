@@ -128,17 +128,13 @@ SELECT FullPath FROM glob(globs="/*", accessor="registry")[
   "c:\\windows\\system32\\msht.exe": "Hello",
   "Key": "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"
  }
-]SELECT User, ProgramName FROM Artifact.Windows.Registry.Sysinternals.Eulacheck()[
+]SELECT User, ProgramName FROM Artifact.Windows.Registry.Sysinternals.Eulacheck(source="RegistryAPI")[
  {
   "User": "runneradmin",
   "ProgramName": "AutoRuns"
  },
  {
   "User": "runneradmin",
-  "ProgramName": "PsExec"
- },
- {
-  "User": null,
   "ProgramName": "PsExec"
  }
 ]

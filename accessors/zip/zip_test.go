@@ -32,16 +32,16 @@ func (self *ZipTestSuite) TestReferenceCount() {
 	zip_file_pathspec := accessors.PathSpec{
 		DelegateAccessor: "file",
 		DelegatePath:     zip_file,
-		Path:             "/**",
 	}
 	snapshot := vtesting.GetMetrics(self.T(), "accessor_zip_")
 
 	rows, err := test_utils.RunQuery(self.ConfigObj, `
 SELECT pathspec(parse=FullPath).Path AS Base,
     read_file(filename=FullPath, length=10, accessor='zip') AS Data
-FROM glob(globs=Glob, accessor='zip')
+FROM glob(globs=Glob, root=Root, accessor='zip')
 WHERE NOT IsDir`, ordereddict.NewDict().
-		Set("Glob", zip_file_pathspec.String()))
+		Set("Root", zip_file_pathspec).
+		Set("Glob", "**"))
 	assert.NoError(self.T(), err)
 
 	state := vtesting.GetMetricsDifference(self.T(), "accessor_zip_", snapshot)
@@ -65,7 +65,6 @@ func (self *ZipTestSuite) TestReferenceCountNested() {
 	zip_file_pathspec := accessors.PathSpec{
 		DelegateAccessor: "file",
 		DelegatePath:     zip_file,
-		Path:             "/**",
 	}
 	snapshot := vtesting.GetMetrics(self.T(), "accessor_zip_")
 
@@ -74,15 +73,16 @@ SELECT * FROM foreach(
 row={
   SELECT pathspec(parse=FullPath).Path AS Base,
     read_file(filename=FullPath, length=10, accessor='zip') AS Data
-  FROM glob(globs=Glob, accessor='zip')
+  FROM glob(globs=Glob, root=Root, accessor='zip')
   WHERE NOT IsDir
 }, query={
   SELECT pathspec(parse=FullPath).Path AS Base,
     read_file(filename=FullPath, length=10, accessor='zip') AS Data
-  FROM glob(globs=Glob, accessor='zip')
+  FROM glob(globs=Glob, root=Root, accessor='zip')
   WHERE NOT IsDir
 })`, ordereddict.NewDict().
-		Set("Glob", zip_file_pathspec))
+		Set("Root", zip_file_pathspec).
+		Set("Glob", "**"))
 	assert.NoError(self.T(), err)
 
 	state := vtesting.GetMetricsDifference(self.T(), "accessor_zip_", snapshot)
@@ -243,8 +243,11 @@ j={ SELECT read_file(accessor="zip", filename=PathSpec10) AS Data, PathSpec10 FR
 	// open a file more than once but this is ok as long as it is not
 	// too much.
 	value, _ = state.GetInt64("accessor_zip_total_open")
-	assert.True(self.T(), int64(11) <= value)
-	assert.True(self.T(), int64(15) > value)
+	assert.True(self.T(), int64(11) <= value,
+		"accessor_zip_total_open: %v", value)
+
+	assert.True(self.T(), int64(15) > value,
+		"accessor_zip_total_open: %v", value)
 
 	// Each nested zip file was extracted to tmpfile.
 	value, _ = state.GetInt64("accessor_zip_total_tmp_conversions")

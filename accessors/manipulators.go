@@ -678,6 +678,7 @@ func (self ZipFileManipulator) PathJoin(path *OSPath) string {
 
 func (self ZipFileManipulator) PathParse(
 	path string, result *OSPath) error {
+	osPathUnserializations.Inc()
 
 	err := maybeParsePathSpec(path, result)
 	if err != nil {
@@ -696,10 +697,11 @@ func (self ZipFileManipulator) PathParse(
 	return nil
 }
 
-func NewZipFilePath(path string) *OSPath {
+func NewZipFilePath(path string) (*OSPath, error) {
 	manipulator := &ZipFileManipulator{}
-	return &OSPath{
-		Components:  []string{path},
+	result := &OSPath{
 		Manipulator: manipulator,
 	}
+	err := manipulator.PathParse(path, result)
+	return result, err
 }

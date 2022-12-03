@@ -121,7 +121,7 @@ func (self *StarlarkTestSuite) TestStarlarkFunc() {
 			}
 
 			result.Set(fmt.Sprintf("%03d/%03d %s: %s", i, idx, test_case.name,
-				vql.ToString(scope)), output)
+				vfilter.FormatToString(scope, vql)), output)
 		}
 
 	}

@@ -1,11 +1,11 @@
-LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd', ]), clear=TRUE)[]SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='just_a_file\\.txt')[
+LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd', ]), clear=TRUE)[]SELECT * FROM Artifact.Windows.NTFS.MFT( MFTDrive='''\\.\C:''', FileRegex='just_a_file\\.txt')[
  {
   "EntryNumber": 49,
   "InUse": true,
   "ParentEntryNumber": 5,
-  "OSPath": "C:\\just_a_file.txt",
+  "OSPath": "\\\\.\\C:\\just_a_file.txt",
   "_Links": [
-   "C:\\just_a_file.txt"
+   "\\\\.\\C:\\just_a_file.txt"
   ],
   "FileName": "just_a_file.txt",
   "FileSize": 12,
@@ -29,14 +29,14 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "FileNameTypes": "POSIX",
   "_Source": "Windows.NTFS.MFT"
  }
-]SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\\.txt',DateBefore='2018-12-31')[
+]SELECT * FROM Artifact.Windows.NTFS.MFT(MFTDrive='''\\.\C:''', FileRegex='\\.txt',DateBefore='2018-12-31')[
  {
   "EntryNumber": 46,
   "InUse": true,
   "ParentEntryNumber": 45,
-  "OSPath": "C:\\Folder A\\Folder B\\Hello world text document.txt",
+  "OSPath": "\\\\.\\C:\\Folder A\\Folder B\\Hello world text document.txt",
   "_Links": [
-   "C:\\Folder A\\Folder B\\Hello world text document.txt"
+   "\\\\.\\C:\\Folder A\\Folder B\\Hello world text document.txt"
   ],
   "FileName": "Hello world text document.txt",
   "FileSize": 12,
@@ -64,9 +64,9 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "EntryNumber": 46,
   "InUse": true,
   "ParentEntryNumber": 45,
-  "OSPath": "C:\\Folder A\\Folder B\\Hello world text document.txt:goodbye.txt",
+  "OSPath": "\\\\.\\C:\\Folder A\\Folder B\\Hello world text document.txt:goodbye.txt",
   "_Links": [
-   "C:\\Folder A\\Folder B\\Hello world text document.txt"
+   "\\\\.\\C:\\Folder A\\Folder B\\Hello world text document.txt"
   ],
   "FileName": "Hello world text document.txt:goodbye.txt",
   "FileSize": 64,
@@ -90,14 +90,14 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "FileNameTypes": "POSIX",
   "_Source": "Windows.NTFS.MFT"
  }
-]SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\\.txt',DateAfter='2021-07-01')[
+]SELECT * FROM Artifact.Windows.NTFS.MFT(MFTDrive='''\\.\C:''', FileRegex='\\.txt',DateAfter='2021-07-01')[
  {
   "EntryNumber": 37,
   "InUse": true,
   "ParentEntryNumber": 5,
-  "OSPath": "C:\\another_file.txt",
+  "OSPath": "\\\\.\\C:\\another_file.txt",
   "_Links": [
-   "C:\\another_file.txt"
+   "\\\\.\\C:\\another_file.txt"
   ],
   "FileName": "another_file.txt",
   "FileSize": 14,
@@ -125,9 +125,9 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "EntryNumber": 49,
   "InUse": true,
   "ParentEntryNumber": 5,
-  "OSPath": "C:\\just_a_file.txt",
+  "OSPath": "\\\\.\\C:\\just_a_file.txt",
   "_Links": [
-   "C:\\just_a_file.txt"
+   "\\\\.\\C:\\just_a_file.txt"
   ],
   "FileName": "just_a_file.txt",
   "FileSize": 12,
@@ -151,14 +151,14 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
   "FileNameTypes": "POSIX",
   "_Source": "Windows.NTFS.MFT"
  }
-]SELECT * FROM Artifact.Windows.NTFS.MFT(FileRegex='\\.txt',DateAfter='2021-07-01',DateBefore='2022-02-01',AllNtfs='Y')[
+]SELECT * FROM Artifact.Windows.NTFS.MFT(MFTDrive='''\\.\C:''', FileRegex='\\.txt',DateAfter='2021-07-01', DateBefore='2022-02-01',AllNtfs='Y')[
  {
   "EntryNumber": 49,
   "InUse": true,
   "ParentEntryNumber": 5,
-  "OSPath": "C:\\just_a_file.txt",
+  "OSPath": "\\\\.\\C:\\just_a_file.txt",
   "_Links": [
-   "C:\\just_a_file.txt"
+   "\\\\.\\C:\\just_a_file.txt"
   ],
   "FileName": "just_a_file.txt",
   "FileSize": 12,

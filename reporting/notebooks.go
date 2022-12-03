@@ -10,11 +10,11 @@ import (
 	"io/ioutil"
 	"net/url"
 	"regexp"
-	"strings"
 
 	"github.com/Velocidex/yaml/v2"
 	"github.com/alexmullins/zip"
 	"github.com/go-errors/errors"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -22,6 +22,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -215,36 +216,29 @@ func ExportNotebookToZip(
 	zip_writer := zip.NewWriter(fd)
 	defer zip_writer.Close()
 
-	exported_path_manager := paths.NewNotebookExportPathManager(
-		notebook.NotebookId)
+	exported_path_manager := NewNotebookExportPathManager(notebook.NotebookId)
 
 	cell_copier := func(cell_id string) {
-		children, err := file_store_factory.ListDirectory(
-			notebook_path_manager.CellDirectory(cell_id))
+		cell_path_manager := notebook_path_manager.Cell(cell_id)
+
+		// Copy cell contents
+		err = copyUploads(ctx, config_obj,
+			cell_path_manager.Directory(),
+			exported_path_manager.CellDirectory(cell_id),
+			zip_writer, file_store_factory)
 		if err != nil {
-			return
+			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+			logger.Info("ExportNotebookToZip Erorr: %v\n", err)
 		}
 
-		for _, child := range children {
-			out_filename := exported_path_manager.CellItem(
-				cell_id, child.Name())
-
-			// In Zip files, members should have no leading /
-			zip_out_filename := strings.TrimPrefix(
-				out_filename.AsClientPath(), "/")
-			out_fd, err := zip_writer.Create(zip_out_filename)
-			if err != nil {
-				continue
-			}
-
-			fd, err := file_store_factory.ReadFile(
-				notebook_path_manager.Cell(cell_id).Item(child.Name()))
-			if err != nil {
-				continue
-			}
-			defer fd.Close()
-
-			_, _ = utils.Copy(ctx, out_fd, fd)
+		// Now copy the uploads
+		err = copyUploads(ctx, config_obj,
+			cell_path_manager.UploadsDir(),
+			exported_path_manager.CellUploadRoot(cell_id),
+			zip_writer, file_store_factory)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+			logger.Info("ExportNotebookToZip Erorr: %v\n", err)
 		}
 	}
 
@@ -252,13 +246,15 @@ func ExportNotebookToZip(
 		cell_copier(cell.CellId)
 	}
 
-	// Copy the uploads
-	err = storeUploads(ctx, config_obj,
-		notebook_path_manager, exported_path_manager,
+	// Copy the uploads - Uploads may not exist if there are no
+	// uploads in the notebook - so this is not an error.
+	err = copyUploads(ctx, config_obj,
+		notebook_path_manager.AttachmentDirectory(),
+		exported_path_manager.UploadRoot(),
 		zip_writer, file_store_factory)
 	if err != nil {
-		fd.Close()
-		return err
+		logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+		logger.Info("ExportNotebookToZip Erorr: %v\n", err)
 	}
 
 	f, err := zip_writer.Create("Notebook.yaml")
@@ -270,27 +266,26 @@ func ExportNotebookToZip(
 	return err
 }
 
-func storeUploads(
+func copyUploads(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	notebook_path_manager *paths.NotebookPathManager,
-	export_path_manager *paths.NotebookExportPathManager,
+	src api.FSPathSpec,
+	dest *accessors.OSPath,
 	zip_writer *zip.Writer,
 	file_store_factory api.FileStore) error {
 
-	children, err := file_store_factory.ListDirectory(
-		notebook_path_manager.UploadsDir())
+	children, err := file_store_factory.ListDirectory(src)
 	if err != nil {
-		return err
+		// Not an actual error if the directory does not exist
+		return nil
 	}
 
 	for _, child := range children {
-		out_filename := export_path_manager.UploadPath(child.Name())
-		// In Zip files, members should have no leading /
-		zip_out_filename := strings.TrimPrefix(
-			out_filename.AsClientPath(), "/")
+		out_filename := dest.Append(child.Name())
 
-		out_fd, err := zip_writer.Create(zip_out_filename)
+		out_fd, err := zip_writer.Create(
+			out_filename.String() + api.GetExtensionForFilestore(
+				child.PathSpec()))
 		if err != nil {
 			continue
 		}

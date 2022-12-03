@@ -1,0 +1,33 @@
+{
+ "Match simple string": [
+  {
+   "Rule": "X",
+   "Meta": {
+    "foobar": 23,
+    "name": "hello me"
+   },
+   "Tags": null,
+   "String": {
+    "Name": "$a",
+    "Offset": 0,
+    "HexData": [
+     "00000000  48 65 6c 6c 6f                                    |Hello|",
+     ""
+    ],
+    "Data": "SGVsbG8="
+   },
+   "File": {
+    "FullPath": "Hello world",
+    "Size": 11,
+    "Mode": 420,
+    "ModeStr": "-rw-r--r--",
+    "ModTime": "0001-01-01T00:00:00Z",
+    "Data": {},
+    "Mtime": "0001-01-01T00:00:00Z",
+    "Ctime": "0001-01-01T00:00:00Z",
+    "Atime": "0001-01-01T00:00:00Z"
+   },
+   "FileName": "Hello world"
+  }
+ ]
+}

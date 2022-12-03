@@ -2,6 +2,7 @@ package users
 
 import (
 	"context"
+	"fmt"
 
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
@@ -57,7 +58,8 @@ func AddUserToOrg(
 			ok, _ := services.CheckAccess(
 				org_config_obj, principal, acls.SERVER_ADMIN)
 			if !ok {
-				return acls.PermissionDenied
+				return fmt.Errorf("Error: %v, User %v is not admin on %v",
+					acls.PermissionDenied, principal, org_config_obj.OrgName)
 			}
 		}
 	}

@@ -758,7 +758,7 @@
   type: Function
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: The file to copy from.
     required: true
   - name: accessor
@@ -2443,7 +2443,7 @@
     type: string
     description: The name of the file on the endpoint
   - name: file
-    type: string
+    type: accessors.OSPath
     description: An optional file to upload
   - name: accessor
     type: string
@@ -2774,7 +2774,7 @@
   version: 1
   args:
   - name: path
-    type: string
+    type: accessors.OSPath
     description: Path to open and hash.
     required: true
   - name: accessor
@@ -3070,7 +3070,7 @@
   type: Plugin
   args:
   - name: file
-    type: string
+    type: accessors.OSPath
     description: A list of filenames to open as OLE files.
     repeated: true
     required: true
@@ -3185,7 +3185,7 @@
   type: Plugin
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: A list of log files to parse.
     repeated: true
     required: true
@@ -3270,7 +3270,7 @@
   type: Plugin
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: CSV files to open
     repeated: true
     required: true
@@ -3296,7 +3296,7 @@
   type: Plugin
   args:
   - name: file
-    type: string
+    type: accessors.OSPath
     required: true
   - name: accessor
     type: string
@@ -3311,7 +3311,7 @@
   type: Plugin
   args:
   - name: file
-    type: string
+    type: accessors.OSPath
     required: true
   - name: accessor
     type: string
@@ -3346,7 +3346,7 @@
   type: Plugin
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: A list of event log files to parse.
     repeated: true
     required: true
@@ -3407,7 +3407,7 @@
   type: Plugin
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: JSON file to open
     required: true
   - name: accessor
@@ -3419,7 +3419,7 @@
   type: Plugin
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: A list of log files to parse.
     repeated: true
     required: true
@@ -3454,9 +3454,10 @@
          accessor="raw_ntfs")
     ```
   type: Plugin
+  version: 2
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: The MFT file.
     required: true
   - name: accessor
@@ -3660,7 +3661,7 @@
   type: Plugin
   args:
   - name: file
-    type: string
+    type: accessors.OSPath
     description: A list of files to parse.
     repeated: true
     required: true
@@ -3681,7 +3682,7 @@
   type: Plugin
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: Files to be parsed.
     repeated: true
     required: true
@@ -3734,7 +3735,7 @@
   type: Function
   args:
   - name: file
-    type: string
+    type: accessors.OSPath
     description: XML file to open.
     required: true
   - name: accessor
@@ -3746,7 +3747,7 @@
   type: Function
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: Yaml Filename
     required: true
   - name: accessor
@@ -3958,7 +3959,7 @@
   type: Function
   args:
   - name: file
-    type: string
+    type: accessors.OSPath
     description: A list of files to parse.
     required: true
   - name: accessor
@@ -3970,7 +3971,7 @@
   type: Plugin
   args:
   - name: file
-    type: string
+    type: accessors.OSPath
     description: A list of files to parse.
     repeated: true
     required: true
@@ -3983,7 +3984,7 @@
   type: Plugin
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: A list of event log files to parse.
     repeated: true
     required: true
@@ -4035,6 +4036,15 @@
   - name: key
     type: string
     description: If set use this key to cache the  yara rules.
+  - name: namespace
+    type: string
+    description: The Yara namespece to use.
+  - name: vars
+    type: ordereddict.Dict
+    description: The Yara variables to use.
+  - name: number
+    type: int64
+    description: Stop after this many hits (1).
   category: windows
 - name: process_tracker
   description: Install a global process tracker.
@@ -4278,7 +4288,7 @@
     type: int
     description: Max length of the file to read.
   - name: filenames
-    type: string
+    type: accessors.OSPath
     description: One or more files to open.
     repeated: true
     required: true
@@ -4745,7 +4755,7 @@
   type: Plugin
   args:
   - name: filenames
-    type: string
+    type: accessors.OSPath
     description: Files to parse.
     repeated: true
     required: true
@@ -4862,7 +4872,7 @@
   type: Function
   args:
   - name: file
-    type: string
+    type: accessors.OSPath
     required: true
   - name: accessor
     type: string
@@ -5211,7 +5221,7 @@
   type: Plugin
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: File to unzip.
     required: true
   - name: accessor
@@ -5247,7 +5257,7 @@
     description: The file to upload
     required: true
   - name: name
-    type: string
+    type: accessors.OSPath
     description: The name of the file that should be stored on the server
   - name: accessor
     type: string
@@ -5299,7 +5309,7 @@
     description: The file to upload
     required: true
   - name: name
-    type: string
+    type: accessors.OSPath
     description: Filename to be stored within the output directory
   - name: accessor
     type: string
@@ -5326,7 +5336,7 @@
   type: Function
   args:
   - name: file
-    type: string
+    type: accessors.OSPath
     description: The file to upload
     required: true
   - name: name
@@ -5353,7 +5363,7 @@
   type: Function
   args:
   - name: file
-    type: string
+    type: accessors.OSPath
     description: The file to upload
     required: true
   - name: name
@@ -5391,7 +5401,7 @@
   type: Function
   args:
   - name: file
-    type: string
+    type: accessors.OSPath
     description: The file to upload
     required: true
   - name: name
@@ -5425,7 +5435,7 @@
   type: Function
   args:
   - name: file
-    type: string
+    type: accessors.OSPath
     description: The file to upload
     required: true
   - name: name
@@ -5640,7 +5650,7 @@
   type: Plugin
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: A list of log files to parse.
     repeated: true
     required: true
@@ -5661,7 +5671,7 @@
   type: Plugin
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: CSV files to open
     repeated: true
     required: true
@@ -5721,7 +5731,7 @@
   type: Plugin
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: A list of event log files to parse.
     repeated: true
     required: true
@@ -5747,7 +5757,7 @@
   type: Plugin
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: A list of log files to parse.
     repeated: true
     required: true
@@ -5852,7 +5862,7 @@
     Scan files using yara rules.
 
     The `yara()` plugin applies a signature consisting of multiple rules
-    across files. You can read more about [yara rules](https://yara.readthedocs.io/en/v3.4.0/writingrules.html). The
+    across files. You can read more about [yara rules](https://yara.readthedocs.io/en/v4.2.3/writingrules.html). The
     accessor is used to open the various files which allows this plugin to
     work across raw ntfs, zip members or indeed process memory.
 
@@ -5903,6 +5913,9 @@
     yara DSL and the following combinations are supported `wide`,
     `wide ascii`, `wide nocase`, `wide nocase ascii`.
 
+    This shorthand notation is less useful because recent Velociraptor
+    versions offer a context sensivite Yara rule editor in the GUI
+    (simply press ? to bring up a rule template).
 
     {{% notice note %}}
 
@@ -5910,6 +5923,25 @@
     scanning stops after one hit is found.
 
     {{% /notice %}}
+
+    ### Compatibility with yara rules.
+
+    The YARA engine supports a number of directives that bring in
+    unreasonably sized dependencies. Velociraptor's Yara integration
+    disables directive importing dependencies such as openssl and
+    libmagic. This means that some rule conditions do not work (for
+    example `pe.number_of_signatures`). Other condition are still
+    supported (e.g. `pe.imphash()`). You can usually find equivalents
+    to the Yara plugins in VQL plugins so rules can be rewritten to
+    avoid this limitation.
+
+    If you have a large number of rules, you may use the `yara-tools`
+    repository https://github.com/Velocidex/yara-tools to clean up the
+    rules and verify that they will work with Velociraptor's yara
+    engine. The tool will automatically remove rules that are
+    incompatible with Velociraptor and reduce the size of the rules by
+    removing metadata and extra fluff.
+
   type: Plugin
   args:
   - name: rules
@@ -5942,5 +5974,10 @@
   - name: key
     type: string
     description: If set use this key to cache the  yara rules.
+  - name: namespace
+    type: string
+    description: The Yara namespece to use.
+  - name: vars
+    type: ordereddict.Dict
+    description: The Yara variables to use.
   category: plugin
-

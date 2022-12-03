@@ -2,7 +2,9 @@ package acl_manager
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"os"
 	"sync"
 	"time"
 
@@ -138,6 +140,10 @@ func (self ACLManager) CheckAccess(
 
 	acl_obj, err := self.GetEffectivePolicy(config_obj, principal)
 	if err != nil {
+		// A missing ACL means no privs
+		if errors.Is(err, os.ErrNotExist) {
+			return false, nil
+		}
 		return false, err
 	}
 

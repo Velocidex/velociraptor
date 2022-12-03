@@ -33,6 +33,10 @@ var (
 func SetupTest(t *testing.T) (string, string) {
 	t.Parallel()
 
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
+
 	mu.Lock()
 	defer mu.Unlock()
 

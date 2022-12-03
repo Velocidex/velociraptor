@@ -517,7 +517,7 @@ func addUser(config_obj *config_proto.Config) error {
 			return nil
 		}
 
-		user_record, err := users.NewUserRecord(username)
+		user_record, err := users.NewUserRecord(config_obj, username)
 		if err != nil {
 			fmt.Printf("%v", err)
 			continue

@@ -17,6 +17,7 @@ import FullScreenNotebook from './components/notebooks/full_notebook.js';
 import FullScreenHuntNotebook from './components/hunts/hunt-full-notebook.js';
 import FullScreenFlowNotebook from './components/flows/flow-full-notebook.js';
 import ArtifactInspector from './components/artifacts/artifacts.js';
+import UserInspector from './components/users/user-inspector.js';
 import VeloHunts from './components/hunts/hunts.js';
 import UserDashboard from './components/sidebar/user-dashboard.js';
 import Form from 'react-bootstrap/Form';
@@ -46,6 +47,7 @@ import './themes/pink-light.css';
 import './themes/github-dimmed-dark.css';
 import './themes/ncurses.css';
 import './themes/coolgray-dark.css';
+import './themes/midnight.css';
 
 /* This is the main App page.
 
@@ -144,6 +146,7 @@ class App extends Component {
                      <Route path="/artifacts/:artifact?">
                        <ArtifactInspector client={this.state.client}/>
                      </Route>
+                     <Route path="/users/:user?" component={UserInspector}/>
                      <Route path="/hunts/:hunt_id?/:tab?">
                        <VeloHunts/>
                      </Route>

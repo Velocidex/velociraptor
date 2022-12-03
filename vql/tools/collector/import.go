@@ -84,13 +84,18 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	}
 
 	// Open the collection using the accessor
-	accessor, err := accessors.GetAccessor("collector", scope)
+	accessor, err := accessors.GetAccessor("collector_sparse", scope)
 	if err != nil {
 		scope.Log("import_collection: %v", err)
 		return vfilter.Null{}
 	}
 
-	root := accessors.NewZipFilePath("/")
+	root, err := accessors.NewZipFilePath("/")
+	if err != nil {
+		scope.Log("import_collection: %v", err)
+		return vfilter.Null{}
+	}
+
 	root.SetPathSpec(&accessors.PathSpec{
 		DelegateAccessor: "file",
 		DelegatePath:     arg.Filename,
@@ -192,6 +197,9 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 
 			// Copy from the archive to the file store at these locations.
 			src := root.Append(components...)
+
+			// First directory in zip file is "upload" we skip that
+			// and append the other components to the filestore path.
 			dest := flow_path_manager.UploadContainer().AddChild(components[1:]...)
 
 			err := self.copyFileWithIndex(ctx, config_obj, scope,

@@ -1,4 +1,10 @@
 {
+ "Buffer with no sep lines": [
+  "Buffer with no sep Lines"
+ ],
+ "Buffer with no sep lines no seps": [
+  "Buffer with no sep Lines"
+ ],
  "Buffer with line split": [
   "a",
   "buffer",

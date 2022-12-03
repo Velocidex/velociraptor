@@ -11,8 +11,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors/zip"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
@@ -95,6 +97,7 @@ type CollectorAccessor struct {
 func (self *CollectorAccessor) New(scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
 	delegate, err := (&zip.ZipFileSystemAccessor{}).New(scope)
 	return &CollectorAccessor{
+		expandSparse:          self.expandSparse,
 		ZipFileSystemAccessor: delegate.(*zip.ZipFileSystemAccessor),
 		scope:                 scope,
 	}, err
@@ -261,6 +264,12 @@ func (self *CollectorAccessor) maybeSetZipPassword(
 	return full_path, nil
 }
 
+// Zip files typically use standard / path separators.
+func (self *CollectorAccessor) ParsePath(path string) (
+	*accessors.OSPath, error) {
+	return accessors.NewZipFilePath(path)
+}
+
 func (self *CollectorAccessor) Open(
 	filename string) (accessors.ReadSeekCloser, error) {
 
@@ -325,6 +334,16 @@ func (self *CollectorAccessor) OpenWithOSPath(
 	if self.expandSparse {
 		index, err := self.getIndex(updated_full_path)
 		if err == nil {
+			config_obj, ok := vql_subsystem.GetServerConfig(self.scope)
+			if !ok {
+				config_obj = &config_proto.Config{}
+			}
+
+			if !uploads.ShouldPadFile(config_obj, index) {
+				self.scope.Log("Error: File %v is too sparse - unable to expand it.", full_path)
+				return reader, nil
+			}
+
 			return &rangedReader{
 				delegate: &utils.RangedReader{
 					ReaderAt: utils.MakeReaderAtter(reader),

@@ -32,6 +32,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
+	errors "github.com/go-errors/errors"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"github.com/shirou/gopsutil/v3/process"
 	"www.velocidex.com/golang/velociraptor/actions"
@@ -44,6 +45,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/remapping"
@@ -77,6 +79,7 @@ var (
 	fatalLogMessagesRegex = []string{
 		"(?i)Symbol .+ not found",
 		"(?i)Field .+ Expecting a .+ arg type, not",
+		"(?i)Artifact .+ not found",
 	}
 )
 
@@ -101,8 +104,9 @@ func vqlCollectorArgsFromFixture(
 	return vql_collector_args
 }
 
-func makeCtxWithTimeout(duration int) (context.Context, func()) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+func makeCtxWithTimeout(
+	root_ctx context.Context, duration int) (context.Context, func()) {
+	ctx, cancel := context.WithCancel(root_ctx)
 
 	deadline := time.Now().Add(time.Second * time.Duration(duration))
 	fmt.Printf("Setting deadline to %v\n", deadline)
@@ -160,9 +164,11 @@ func makeCtxWithTimeout(duration int) (context.Context, func()) {
 func runTest(fixture *testFixture, sm *services.Service,
 	config_obj *config_proto.Config) (string, error) {
 
-	ctx := context.Background()
+	ctx := sm.Ctx
+
+	// Limit each test for maxmimum time
 	if !*disable_alarm {
-		sub_ctx, cancel := makeCtxWithTimeout(30)
+		sub_ctx, cancel := makeCtxWithTimeout(ctx, 30)
 		defer cancel()
 
 		ctx = sub_ctx
@@ -254,11 +260,7 @@ func runTest(fixture *testFixture, sm *services.Service,
 func doGolden() error {
 	vql_subsystem.RegisterPlugin(&MemoryLogPlugin{})
 	vql_subsystem.RegisterFunction(&WriteFilestoreFunction{})
-
-	if !*disable_alarm {
-		_, cancel := makeCtxWithTimeout(120)
-		defer cancel()
-	}
+	vql_subsystem.RegisterFunction(&MockTimeFunciton{})
 
 	config_obj, err := makeDefaultConfigLoader().LoadAndValidate()
 	if err != nil {
@@ -285,6 +287,14 @@ func doGolden() error {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
+	// Global timeout for the entire test
+	if !*disable_alarm {
+		timeout_ctx, cancel := makeCtxWithTimeout(ctx, 120)
+		defer cancel()
+
+		ctx = timeout_ctx
+	}
+
 	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
 
@@ -293,6 +303,12 @@ func doGolden() error {
 	}
 
 	err = filepath.Walk(*golden_command_directory, func(file_path string, info os.FileInfo, err error) error {
+		select {
+		case <-sm.Ctx.Done():
+			return errors.New("Cancelled!")
+		default:
+		}
+
 		if *golden_command_filter != "" &&
 			!strings.HasPrefix(filepath.Base(file_path), *golden_command_filter) {
 			return nil
@@ -352,7 +368,7 @@ func doGolden() error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("golden error: %w", err)
+		return fmt.Errorf("golden error FAIL: %w", err)
 	}
 
 	if len(failures) > 0 {
@@ -496,5 +512,41 @@ func (self WriteFilestoreFunction) Info(
 		Name:    "write_filestore",
 		Doc:     "Write a file on the filestore.",
 		ArgType: type_map.AddType(scope, &WriteFilestoreFunctionArgs{}),
+	}
+}
+
+type MockTimeFuncitonArgs struct {
+	Now int64 `vfilter:"required,field=now"`
+}
+
+type MockTimeFunciton struct{}
+
+func (self MockTimeFunciton) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	arg := &MockTimeFuncitonArgs{}
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("mock_time: %s", err)
+		return &vfilter.Null{}
+	}
+
+	clock := &utils.MockClock{time.Unix(arg.Now, 0)}
+	cancel := utils.MockTime(clock)
+	err = vql_subsystem.GetRootScope(scope).AddDestructor(cancel)
+	if err != nil {
+		scope.Log("mock_time: %s", err)
+		return &vfilter.Null{}
+	}
+
+	return true
+}
+
+func (self MockTimeFunciton) Info(
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "mock_time",
+		ArgType: type_map.AddType(scope, &MockTimeFuncitonArgs{}),
 	}
 }

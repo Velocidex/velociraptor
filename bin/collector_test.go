@@ -505,5 +505,9 @@ func (self *CollectorTestSuite) TestCollectorEncrypted() {
 }
 
 func TestCollector(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping test in short mode.")
+	}
+
 	suite.Run(t, &CollectorTestSuite{})
 }

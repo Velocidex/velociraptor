@@ -54,6 +54,12 @@ class VeloNavigator extends Component {
             vfs_path = this.props.vfs_path;
         }
 
+        // Only show the user management screen if the user is an
+        // admin in this org.
+        let user_is_admin = this.context.traits &&
+            this.context.traits.Permissions && (
+                this.context.traits.Permissions.org_admin ||
+                    this.context.traits.Permissions.server_admin);
         let customization = this.context.traits && this.context.traits.customizations;
         customization = customization || {};
 
@@ -150,6 +156,20 @@ class VeloNavigator extends Component {
                           </li>
                         </ul>
                       </NavLink>
+
+                      { user_is_admin &&
+                        <NavLink to="/users">
+                          <ul className="nav nav-pills navigator">
+                            <li className="nav-link" state="users" >
+                              <span>
+                                <i className="navicon">
+                                  <FontAwesomeIcon icon="user"/></i>
+                              </span>
+                              {T("Users")}
+                            </li>
+                          </ul>
+                        </NavLink>
+                      }
 
                       { disabled ?
                         <>

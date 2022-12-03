@@ -16,4 +16,24 @@ SELECT parse_json_array(data=JSONArrayWithDicts) FROM scope()[
    "baz"
   ]
  }
+]LET T <= tempfile()[]SELECT * FROM write_jsonl( filename=T, query={SELECT * FROM range(end=3)})[
+ {
+  "_value": 0
+ },
+ {
+  "_value": 1
+ },
+ {
+  "_value": 2
+ }
+]SELECT * FROM parse_jsonl(filename=T)[
+ {
+  "_value": 0
+ },
+ {
+  "_value": 1
+ },
+ {
+  "_value": 2
+ }
 ]
