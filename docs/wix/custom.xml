@@ -3,7 +3,7 @@
 <?define PackageDescription="Velociraptor Service Installer" ?>
 <?define Manufacturer="Velocidex" ?>
 <?define Name="Velociraptor" ?>
-<?define Version="0.59.0" ?>
+<?define Version="0.67.0" ?>
 <?define BinaryName="Velociraptor.exe" ?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
@@ -19,6 +19,10 @@
              InstallerVersion='200' Languages='1033' Compressed='yes'
              SummaryCodepage='1252' />
     <Media Id='1' Cabinet='Sample.cab' EmbedCab='yes' DiskPrompt='CD-ROM #1' />
+
+    <!-- Put the config file on an uncompressed cab file so we can repack it later -->
+    <Media Id='2' CompressionLevel="none" Cabinet='part2.cab' EmbedCab='yes' DiskPrompt='CD-ROM #2' />
+
     <Property Id='DiskPrompt' Value="Installation [1]" />
 
     <PropertyRef Id="WIX_ACCOUNT_LOCALSYSTEM" />
@@ -91,7 +95,7 @@
           </Component>
           <Component Id='Config' Guid='*'>
             <File Id='Config' Name='client.config.yaml'
-                  DiskId='1' Source='Output/client.config.yaml' KeyPath='yes'>
+                  DiskId='2' Source='Output/client.config.yaml' KeyPath='yes'>
             </File>
           </Component>
         </Directory>
