@@ -13,7 +13,9 @@ description: |
   of the entire ActiveDirectory as a list of 'local' users, however
   this does not mean that the users have logged into the DC
   locally. To check the users which have logged in, select the
-  `OnlyRemote` parameter.
+  `OnlyRemote` parameter. In this artifact we limit the number of
+  users to 1000. If you need to obtain the full list from the AD,
+  customize this artifact.
 
   By selecting the `OnlyRemote` parameter we only return a list of
   users with profiles cached in the registry (i.e. that were logged in
@@ -77,14 +79,15 @@ sources:
         FROM local_users
 
         LET combined = SELECT * from chain(
-         q1=local_users_with_mtime,
-         q2=roaming_users)
-         GROUP BY UUID, Name
+           q1=local_users_with_mtime,
+           q2=roaming_users)
+         ORDER BY Guid DESC
+
 
         SELECT * FROM if(condition=OnlyRemote,
           then=roaming_users,
           else=combined)
-
+         GROUP BY UUID, Name
 
 reports:
   - type: HUNT
