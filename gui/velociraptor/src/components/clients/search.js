@@ -108,7 +108,6 @@ class VeloClientSearch extends Component {
                         <span className="button-label">{T("Show All")}</span>
                       </Dropdown.Item>
                       <Dropdown.Item
-                        title="Recent"
                         onClick={(e) => this.setQuery(
                             "recent:" + this.context.traits.username)}
                         variant="default" type="button">

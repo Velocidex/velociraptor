@@ -304,20 +304,26 @@ class VeloFileList extends Component {
             <Navbar className="toolbar">
               <ButtonGroup>
                 { this.state.lastRefreshOperationId ?
-                  <Button title={T("Currently refreshing")}
+                  <Button data-tooltip={T("Currently refreshing")}
+                          data-position="right"
+                          className="btn-tooltip"
                           onClick={this.startVfsRefreshOperation}
                           variant="default">
                     <FontAwesomeIcon icon="spinner" spin/>
                   </Button>
                   :
-                  <Button title={T("Refresh this directory (sync its listing with the client)")}
+                  <Button data-tooltip={T("Refresh this directory (sync its listing with the client)")}
+                          data-position="right"
+                          className="btn-tooltip"
                           onClick={this.startVfsRefreshOperation}
                           variant="default">
                     <FontAwesomeIcon icon="folder-open"/>
                   </Button>
                 }
                 { this.state.lastRecursiveRefreshOperationId ?
-                  <Button title={T("Currently refreshing from the client")}
+                  <Button data-tooltip={T("Currently refreshing from the client")}
+                          data-position="right"
+                          className="btn-tooltip"
                           onClick={this.cancelRecursiveRefresh}
                           variant="default">
                     <FontAwesomeIcon icon="spinner" spin/>
@@ -326,7 +332,9 @@ class VeloFileList extends Component {
                     </span>
                     <span className="button-label"><FontAwesomeIcon icon="stop"/></span>
                   </Button> :
-                  <Button title={T("Recursively refresh this directory (sync its listing with the client)")}
+                  <Button data-tooltip={T("Recursively refresh this directory (sync its listing with the client)")}
+                          data-position="right"
+                          className="btn-tooltip"
                           onClick={this.startRecursiveVfsRefreshOperation}
                           variant="default">
                     <FontAwesomeIcon icon="folder-open"/>
@@ -335,7 +343,9 @@ class VeloFileList extends Component {
                 }
 
                 { this.state.lastRecursiveDownloadOperationId ?
-                  <Button title={T("Currently fetching files from the client")}
+                  <Button data-tooltip={T("Currently fetching files from the client")}
+                          data-position="right"
+                          className="btn-tooltip"
                           onClick={this.cancelRecursiveDownload}
                           variant="default">
                     <FontAwesomeIcon icon="spinner" spin/>
@@ -346,7 +356,9 @@ class VeloFileList extends Component {
                     </span>
                     <span className="button-label"><FontAwesomeIcon icon="stop"/></span>
                   </Button> :
-                  <Button title={T("Recursively download this directory from the client")}
+                  <Button data-tooltip={T("Recursively download this directory from the client")}
+                          data-position="right"
+                          className="btn-tooltip"
                           onClick={()=>this.setState({showDownloadAllDialog: true})}
                           disabled={_.isEmpty(this.props.node && this.props.node.path)}
                           variant="default">
@@ -358,10 +370,12 @@ class VeloFileList extends Component {
 
                 <Link to={"/collected/" +this.props.client.client_id +
                           "/" + this.props.node.flow_id + "/overview"}
-                      title={T("View Collection")}
+                      data-tooltip={T("View Collection")}
+                      data-position="right"
                       role="button"
                       className={classNames({
                           "btn": true,
+                          "btn-tooltip": true,
                           "btn-default": true,
                           "disabled":  !this.props.node.flow_id,
                       })}>

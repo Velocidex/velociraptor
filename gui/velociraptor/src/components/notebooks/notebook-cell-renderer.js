@@ -453,47 +453,61 @@ export default class NotebookCellRenderer extends React.Component {
         let non_editing_toolbar = (
             <>
             <ButtonGroup>
-              <Button title={T("Cancel")}
+              <Button data-tooltip={T("Cancel")}
+                      data-position="right"
+                      className="btn-tooltip"
                       onClick={() => {this.props.setSelectedCellId("");}}
                       variant="default">
                 <FontAwesomeIcon icon="window-close"/>
               </Button>
 
-              <Button title={T("Recalculate")}
+              <Button data-tooltip={T("Recalculate")}
+                      data-position="right"
+                      className="btn-tooltip"
                       disabled={this.state.cell.calculating}
                       onClick={this.recalculate}
                       variant="default">
                 <FontAwesomeIcon icon="sync"/>
               </Button>
 
-              <Button title={T("Stop Calculating")}
+              <Button data-tooltip={T("Stop Calculating")}
+                      data-position="right"
+                      className="btn-tooltip"
                       disabled={!this.state.cell.calculating}
                       onClick={this.stopCalculating}
                       variant="default">
                 <FontAwesomeIcon icon="stop"/>
               </Button>
               { !this.state.collapsed &&
-                <Button title={T("Collapse")}
+                <Button data-tooltip={T("Collapse")}
+                        data-position="right"
+                        className="btn-tooltip"
                         onClick={() => this.setState({collapsed: true})}
                         variant="default">
                   <FontAwesomeIcon icon="compress"/>
                 </Button>
               }
               { this.state.collapsed &&
-                <Button title={T("Expand")}
+                <Button data-tooltip={T("Expand")}
+                        data-position="right"
+                        className="btn-tooltip"
                         onClick={() => this.setState({collapsed: false})}
                         variant="default">
                   <FontAwesomeIcon icon="expand"/>
                 </Button>
               }
-              <Button title={T("Edit Cell")}
+              <Button data-tooltip={T("Edit Cell")}
+                      data-position="right"
+                      className="btn-tooltip"
                       disabled={this.state.cell.calculating}
                       onClick={() => { this.setEditing(true); }}
                       variant="default">
                 <FontAwesomeIcon icon="pencil-alt"/>
               </Button>
 
-              <Button title={T("Up Cell")}
+              <Button data-tooltip={T("Up Cell")}
+                      data-position="right"
+                      className="btn-tooltip"
                       onClick={() => {
                           this.props.upCell(this.state.cell.cell_id);
                       }}
@@ -501,7 +515,9 @@ export default class NotebookCellRenderer extends React.Component {
                 <FontAwesomeIcon icon="arrow-up"/>
               </Button>
 
-              <Button title={T("Down Cell")}
+              <Button data-tooltip={T("Down Cell")}
+                      data-position="right"
+                      className="btn-tooltip"
                       onClick={() => {
                           this.props.downCell(this.state.cell.cell_id);
                       }}
@@ -510,7 +526,9 @@ export default class NotebookCellRenderer extends React.Component {
               </Button>
 
               {this.state.cell && this.state.cell.type === "vql" &&
-               <Button title={T("Add Timeline")}
+               <Button data-tooltip={T("Add Timeline")}
+                       data-position="right"
+                       className="btn-tooltip"
                        onClick={()=>this.setState({showAddCellToTimeline: true})}
                        variant="default">
                  <FontAwesomeIcon icon="calendar-alt"/>
@@ -582,6 +600,8 @@ export default class NotebookCellRenderer extends React.Component {
             </ButtonGroup>
             <ButtonGroup className="float-right">
               <Button title={T("Rendered")} disabled
+                        data-position="right"
+                        className="btn-tooltip"
                       variant="outline-info">
                 <VeloTimestamp usec={this.state.cell.timestamp * 1000} />
                 { this.state.cell.duration &&
@@ -595,6 +615,8 @@ export default class NotebookCellRenderer extends React.Component {
             <>
               <ButtonGroup>
                 <Button title={T("Undo")}
+                        data-position="right"
+                        className="btn-tooltip"
                         onClick={() => {this.setEditing(false); }}
                         variant="default">
                   <FontAwesomeIcon icon="window-close"/>
@@ -603,17 +625,23 @@ export default class NotebookCellRenderer extends React.Component {
                 <SettingsButton ace={this.state.ace}/>
 
                 <Button title={T("Stop Calculating")}
+                        data-position="right"
+                        className="btn-tooltip"
                         onClick={this.stopCalculating}
                         variant="default">
                   <FontAwesomeIcon icon="stop"/>
                 </Button>
 
                 <Button title={T("Format")}
+                        data-position="right"
+                        className="btn-tooltip"
                         onClick={this.formatCell}
                         variant="default">
                   <FontAwesomeIcon icon="indent"/>
                 </Button>
                 <Button title={T("Save")}
+                        data-position="right"
+                        className="btn-tooltip"
                         onClick={this.saveCell}
                         variant="default">
                   <FontAwesomeIcon icon="save"/>
@@ -623,6 +651,8 @@ export default class NotebookCellRenderer extends React.Component {
 
               <ButtonGroup className="float-right">
                 <Button title={T("Delete Cell")}
+                        data-position="right"
+                        className="btn-tooltip"
                         onClick={this.deleteCell}
                         variant="default">
                   <FontAwesomeIcon icon="trash"/>

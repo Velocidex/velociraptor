@@ -320,7 +320,9 @@ class NotebooksList extends React.Component {
 
               <Navbar className="toolbar">
                 <ButtonGroup>
-                  <Button title="Full Screen"
+                  <Button data-tooltip="Full Screen"
+                          data-position="right"
+                          className="btn-tooltip"
                           disabled={!this.props.selected_notebook ||
                                     !this.props.selected_notebook.notebook_id}
                           onClick={this.setFullScreen}
@@ -328,32 +330,42 @@ class NotebooksList extends React.Component {
                     <FontAwesomeIcon icon="expand"/>
                   </Button>
 
-                  <Button title="NewNotebook"
+                  <Button data-tooltip="NewNotebook"
+                          data-position="right"
+                          className="btn-tooltip"
                           onClick={()=>this.setState({showNewNotebookDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="plus"/>
                   </Button>
 
-                  <Button title="Delete Notebook"
+                  <Button data-tooltip="Delete Notebook"
+                          data-position="right"
+                          className="btn-tooltip"
                           disabled={_.isEmpty(this.props.selected_notebook)}
                           onClick={()=>this.setState({showDeleteNotebookDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="trash"/>
                   </Button>
 
-                  <Button title="Edit Notebook"
+                  <Button data-tooltip="Edit Notebook"
+                          data-position="right"
+                          className="btn-tooltip"
                           disabled={_.isEmpty(this.props.selected_notebook)}
                           onClick={()=>this.setState({showEditNotebookDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="wrench"/>
                   </Button>
-                  <Button title="NotebookUploads"
+                  <Button data-tooltip="NotebookUploads"
+                          data-position="right"
+                          className="btn-tooltip"
                           disabled={_.isEmpty(this.props.selected_notebook)}
                           onClick={()=>this.setState({showNotebookUploadsDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="fa-file-download"/>
                   </Button>
-                  <Button title="ExportNotebook"
+                  <Button data-tooltip="ExportNotebook"
+                          data-position="right"
+                          className="btn-tooltip"
                           disabled={_.isEmpty(this.props.selected_notebook)}
                           onClick={()=>this.setState({showExportNotebookDialog: true})}
                           variant="default">

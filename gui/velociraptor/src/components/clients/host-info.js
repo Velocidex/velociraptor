@@ -515,6 +515,7 @@ class VeloHostInfo extends Component {
                 <div className="client-info">
                   <div className="btn-group float-left toolbar" data-toggle="buttons">
                     <Button variant="default"
+                            as="a"
                             onClick={this.startInterrogate}
                             disabled={this.state.interrogateOperationId}>
                       { this.state.interrogateOperationId ?
@@ -534,12 +535,16 @@ class VeloHostInfo extends Component {
                     </Link>
                     { is_quarantined ?
                       <Button variant="default"
-                              title={T("Unquarantine Host")}
+                              data-tooltip={T("Unquarantine Host")}
+                              data-position="right"
+                              className="btn-tooltip"
                               onClick={this.unquarantineHost}>
                         <FontAwesomeIcon icon="virus-slash" />
                       </Button> :
                       <Button variant="default"
-                              title={T("Quarantine Host")}
+                              data-tooltip={T("Quarantine Host")}
+                              data-position="right"
+                              className="btn-tooltip"
                               onClick={()=>this.setState({
                                   showQuarantineDialog: true,
                               })}>
@@ -556,7 +561,9 @@ class VeloHostInfo extends Component {
                             this.updateClientInfo();
                         }}/>}
                     <Button variant="default"
-                            title={T("Add Label")}
+                            data-tooltip={T("Add Label")}
+                            data-position="right"
+                            className="btn-tooltip"
                             onClick={()=>this.setState({
                                 showLabelDialog: true,
                             })}>

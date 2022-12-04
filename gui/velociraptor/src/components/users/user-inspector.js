@@ -377,7 +377,8 @@ class UsersOverview extends Component {
                             { !this.context.traits.password_less &&
                               <Button
                                 disabled={!this.state.user_name}
-                                data-title={T("Update User Password")}
+                                data-tooltip={T("Update User Password")}
+                                data-position="top"
                                 onClick={()=>this.setState({
                                     showEditUserDialog: true
                                 })}
@@ -388,7 +389,8 @@ class UsersOverview extends Component {
                               </Button>
                             }
                             <Button
-                              data-title={T("Add a new user")}
+                              data-tooltip={T("Add a new user")}
+                              data-position="top"
                               onClick={()=>this.setState({
                                   showAddUserDialog: true
                               })}
@@ -427,7 +429,8 @@ class UsersOverview extends Component {
                             {T("Orgs")}
                             <Button
                               disabled={!this.state.user_name}
-                              data-title={T("Assign user to Orgs")}
+                              data-tooltip={T("Assign user to Orgs")}
+                              data-position="top"
                               onClick={()=>this.setState({
                                   showAddOrgDialog: true
                               })}
