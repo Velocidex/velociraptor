@@ -81,13 +81,14 @@ sources:
         LET combined = SELECT * from chain(
            q1=local_users_with_mtime,
            q2=roaming_users)
-         ORDER BY Guid DESC
-
+         ORDER BY Gid DESC
 
         SELECT * FROM if(condition=OnlyRemote,
           then=roaming_users,
-          else=combined)
-         GROUP BY UUID, Name
+          else={
+            SELECT * FROM combined
+            GROUP BY UUID, Name
+          })
 
 reports:
   - type: HUNT
