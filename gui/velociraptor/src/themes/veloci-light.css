@@ -88,11 +88,11 @@
   --color-scrollbar-thumb-hover: var(--color-accent-50);
 
   --color-btn-border: #C4C4C4;
-  --color-btn-default-border: var(--color-tab);
+  --color-btn-default-border: var(--color-btn-border);
   --color-btn-default-background: #dcdcdc;
   --color-btn-default-background-hover: var(--color-accent-75);
   --color-btn-outline-link: var(--color-accent-25);
-  --color-btn-outline-link-hover: var(--color-accent-75);
+  --color-btn-outline-link-hover: var(--color-accent-50);
 
   --color-table-row-stripe: rgba(0,0,0, 0.03);
   --color-table-row-selected: rgba(var(--color-accent), 0.2);
@@ -114,8 +114,9 @@
   --color-timeline-6: #008000;
   --color-timeline-7: #471ecb;
 
-  --color-page-link-active-background: #0c900a;
-  --color-page-link-hover-background: #5cd00a80;
+  --color-page-link-active-background: var(--color-accent-50);
+  --color-page-link-hover-background: var(--color-accent-25);
+  --color-page-link-background: var(--color-canvas-background);
   --color-pagination-disabled: #c0c0c0;
 
   --color-vfs-files-timestomped: #ed5d40;
@@ -310,24 +311,28 @@ body.veloci-light {
     height: 27px;
 }
 
-.veloci-light .btn.btn-outline-info,
+.veloci-light .btn.btn-outline-info {
+    background: var(--color-btn-outline-link);
+    color: var(--color-foreground);
+    margin: 1px;
+    border: none;
+}
+
 .veloci-light .btn.btn-link {
     background: var(--color-btn-outline-link);
     color: var(--color-foreground);
     margin: 1px;
+    width: 100%;
+    border: none;
+}
+
+.veloci-light .client-link.btn.btn-outline-info {
+  width: unset;
 }
 
 .veloci-light .btn-outline-info:hover {
   background: var(--color-btn-outline-link-hover);
   text-shadow: none;
-  color: var(--color-foreground-inverse);
-  font-weight: bold;
-}
-
-.veloci-light .btn.btn-link {
-  border-color: transparent;
-  width: 100%;
-  background: none;
   color: var(--color-foreground);
 }
 
@@ -408,7 +413,6 @@ body.veloci-light {
 
 .veloci-light .nav-tabs > a:hover {
   background: var(--color-btn-outline-link-hover);
-  color: var(--color-canvas-background);
   border-color: var(--color-btn-border);
 }
 
@@ -532,18 +536,23 @@ body.veloci-light {
   color: unset;
 }
 
-.veloci-light .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td > button.btn.btn-link {
-  background: transparent;
-  text-decoration: none;
-  color: var(--color-foreground-inverse);
-  font-weight: 700;
+.veloci-light .new-artifact-search-table.selectable .table.table-bordered,
+.veloci-light .new-artifact-search-table.selectable .table.table-bordered tbody tr,
+.veloci-light .new-artifact-search-table.selectable .table.table-bordered thead th {
+  background: none;
+  border: none;
 }
 
-.veloci-light .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td {
+.veloci-light .new-artifact-search-table.selectable .table.table-bordered tbody tr > td > button.btn.btn-link:hover {
+  background: var(--color-btn-outline-link-hover);
+}
+
+.veloci-light .new-artifact-search-table.selectable .table.table-bordered tbody > tr.row-selected > td > button.btn.btn-link,
+.veloci-light .new-artifact-search-table.selectable .table.table-bordered tbody > tr.row-selected > td > button.btn.btn-link:hover {
   background: var(--color-accent-75);
-  border: 1px solid var(--color-btn-default-border);
-  text-decoration: none;
+  color: var(--color-foreground-inverse);
   font-weight: 700;
+  text-decoration: none;
 }
 
 .veloci-light .new-artifact-search-table .btn-link:hover,
@@ -658,9 +667,10 @@ body.veloci-light {
 }
 
 /* Pagination */
+
 .veloci-light .page-item .page-link {
   background: var(--color-page-link-background);
-  border-color: var(--color-btn-default-border);
+  border-color: var(--color-btn-border);
   color: var(--color-foreground);
 }
 
@@ -682,6 +692,11 @@ body.veloci-light {
 
 .veloci-light .page-item .page-link:hover {
   background: var(--color-page-link-hover-background);
+  border-color: var(--color-btn-default-border);
+}
+
+.veloci-light .page-item .page-link:focus {
+  box-shadow: 0 0 0 0.2rem rgba(9, 255, 0, 0.25)
 }
 
 .veloci-light .react-bootstrap-table-pagination-total {
@@ -698,7 +713,91 @@ body.veloci-light {
     background: var(--color-accent-25);
 }
 
+.veloci-light .velo__placeholder {
+  color: var(--color-foreground);
+}
 
-.veloci-light div.velo__multi-value__remove {
-    color: var(--color-foreground);
+.veloci-light .labels,
+.veloci-light .velo__control,
+.veloci-light .velo__menu {
+  background: var(--color-canvas-background);
+  border-color: var(--color-btn-default-border);
+  color: var(--color-foreground);
+}
+
+.veloci-light .velo__multi-value {
+  border: 1px solid var(--color-btn-border);
+  background-color: var(--color-canvas-background);
+}
+
+.veloci-light .velo__multi-value__label {
+  color: var(--color-foreground);
+  border: none;
+}
+
+.veloci-light .velo__multi-value__remove {
+  color: var(--color-foreground);
+  background-color: var(--color-btn-default-border);
+  border: none;
+}
+
+.veloci-light .velo__multi-value__remove:hover {
+  color: var(--color-foreground-inverse);
+  background-color: var(--color-accent-75);
+  font-weight: 700;
+}
+
+/* Datepicker */
+
+.veloci-light .react-datetime-picker__wrapper {
+  border: 1px solid var(--color-btn-border);
+  border-radius: 0.25rem;
+  color: var(--color-foreground);
+}
+
+.veloci-light .react-datepicker,
+.veloci-light .react-datetime-picker__calendar .react-calendar,
+.veloci-light .react-datetime-picker {
+  font-family: var(--font-family-sans-serif);
+  background: var(--color-form-control-background);
+  color: var(--color-foreground);
+  z-index: 10;
+}
+
+.veloci-light .react-datetime-picker__button:enabled:hover .react-datetime-picker__button__icon,
+.veloci-light .react-datetime-picker__button:enabled:focus .react-datetime-picker__button__icon,
+.veloci-light .react-datetime-picker__button:hover {
+  stroke: var(--color-accent-100) !important;
+  filter: none;
+}
+
+.veloci-light .react-calendar button:enabled:hover {
+  background-color: var(--color-accent-25);
+  border: none;
+}
+
+.veloci-light .react-calendar__navigation button:disabled,
+.veloci-light .react-calendar__navigation button:enabled:focus {
+  background-color: unset;
+}
+
+.veloci-light .react-calendar__tile:enabled:hover {
+  background-color: var(--color-accent-25);
+  border: none;
+}
+
+.veloci-light .react-calendar .react-calendar__tile--now {
+  background-color: var(--color-accent-50);
+  color: var(--color-foreground);
+}
+
+.veloci-light .react-calendar .react-calendar__tile--active,
+.veloci-light .react-calendar .react-calendar__tile--active:hover {
+  background-color: var(--color-accent-75);
+  font-weight: 700;
+  color: var(--color-foreground-inverse);
+}
+
+.veloci-light .react-calendar__month-view__days__day--neighboringMonth {
+  color: var(--color-btn-border);
 }

@@ -91,7 +91,11 @@
   --color-no-content: var(--color-foreground-dimmed);
 
   --color-form-background: #fceff4;
-  --color-page-link-active-background: var(--color-btn-border);
+
+  --color-page-link-active-background: var(--color-accent-75);
+  --color-page-link-hover-background: var(--color-accent-25);
+  --color-page-link-background: var(--color-canvas-background);
+  --color-pagination-disabled: var(--color-btn-border);
 
   --color-timeline-header: #cdcdcd20;
   --color-timeline-table-shown: #dd4b3920;
@@ -378,6 +382,10 @@ body.coolgray-dark {
   margin: 1px;
 }
 
+.coolgray-dark .client-link.btn.btn-outline-info {
+  width: unset;
+}
+
 .coolgray-dark .btn-outline-info:hover {
   color: whitesmoke !important;
   background: var(--color-btn-outline-link-hover) !important;
@@ -404,9 +412,10 @@ body.coolgray-dark {
 .coolgray-dark .btn.btn-link {
   border-color: transparent;
   width: 100%;
-  background: none;
+  background: var(--color-table-heading-background);
   color: var(--color-foreground);
   border-radius: 0;
+  font-weight: 500;
 }
 
 .coolgray-dark .alert-secondary {
@@ -435,10 +444,15 @@ body.coolgray-dark {
 }
 
 /* Pagination */
+
 .coolgray-dark .page-item .page-link {
-  background: var(--color-btn-default-background);
+  background: var(--color-page-link-background);
   border-color: var(--color-btn-default-border);
   color: var(--color-foreground);
+}
+
+.coolgray-dark .page-item.disabled span {
+  color: var(--color-pagination-disabled);
 }
 
 .coolgray-dark .page-item input {
@@ -447,8 +461,14 @@ body.coolgray-dark {
   border: 1px solid var(--color-btn-default-border);
 }
 
+.coolgray-dark .page-item.active .page-link:hover,
 .coolgray-dark .page-item.active .page-link {
-  background: var(--color-canvas-background);
+  background: var(--color-page-link-active-background);
+  border-color: var(--color-btn-default-border);
+}
+
+.coolgray-dark .page-item .page-link:hover {
+  background: var(--color-page-link-hover-background);
   border-color: var(--color-btn-default-border);
 }
 
@@ -507,23 +527,42 @@ body.coolgray-dark {
   border: none;
 }
 
-.coolgray-dark .table-hover tbody tr:hover {
-  background: var(--color-table-row-hover);
-  color: unset;
-}
-
 .coolgray-dark .table tbody tr.row-selected,
 .coolgray-dark .table tbody tr.row_selected td {
   background: var(--color-table-row-selected);
   color: var(--color-foreground);
 }
 
-.coolgray-dark .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td > button.btn.btn-link {
+.coolgray-dark .table-hover tbody tr:hover {
+  background: var(--color-table-row-hover);
+  color: unset;
+}
+
+.coolgray-dark .new-artifact-search-table.selectable .table.table-bordered,
+.coolgray-dark .new-artifact-search-table.selectable .table.table-bordered tbody tr,
+.coolgray-dark .new-artifact-search-table.selectable .table.table-bordered thead th {
+  background: none;
+  border: none;
+}
+
+.coolgray-dark .new-artifact-search-table.selectable .table.table-bordered tbody tr > td > button.btn.btn-link:hover {
+  background: var(--color-btn-outline-link-hover);
+}
+
+.coolgray-dark .new-artifact-search-table.selectable .table.table-bordered tbody > tr.row-selected > td > button.btn.btn-link,
+.coolgray-dark .new-artifact-search-table.selectable .table.table-bordered tbody > tr.row-selected > td > button.btn.btn-link:hover {
+  background: var(--color-accent-75);
+  color: var(--color-foreground-inverse);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* .coolgray-dark .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td > button.btn.btn-link {
   background: var(--color-accent-75);
   border: 1px solid var(--color-btn-default-border);
   text-decoration: none;
   font-weight: 700;
-}
+} */
 
 
 /* Column search screen */
@@ -647,6 +686,11 @@ body.coolgray-dark {
 
 /* Form controls */
 
+.coolgray-dark .estimate.alert-info {
+  border: none;
+  background-color: var(--color-card-heading-background);
+}
+
 .coolgray-dark .custom-switch .custom-control-input:disabled:checked~.custom-control-label:before {
   background-color: var(--color-accent-25);
 }
@@ -656,16 +700,49 @@ body.coolgray-dark {
   font-weight: 500 !important;
 }
 
+.coolgray-dark .velo__multi-value {
+  border: 1px solid var(--color-btn-default-border);
+  background-color: var(--color-canvas-background);
+  border-radius: 0;
+}
+
+.coolgray-dark .velo__multi-value__label {
+  color: var(--color-foreground);
+  border: none;
+  border-radius: 0;
+}
+
+.coolgray-dark .velo__multi-value__remove {
+  color: var(--color-foreground-inverse);
+  background-color: var(--color-btn-default-border);
+  border: none;
+  border-radius: 0;
+}
+
+.coolgray-dark .velo__multi-value__remove:hover {
+  color: var(--color-foreground-inverse);
+  background-color: var(--color-accent-100);
+  font-weight: 700;
+}
+
 .coolgray-dark .form-control,
 .coolgray-dark .velo__control,
 .coolgray-dark .velo__menu {
+  background: var(--color-form-control-background);
+  border-color: var(--color-btn-default-border);
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--color-foreground);
   font-size: var(--font-size-base);
   font-weight: 500;
-  color: var(--color-foreground);
-  border-radius: 0;
-  border-color: var(--color-btn-default-border);
+}
+
+.coolgray-dark .accordion,
+.coolgray-dark .accordion > .card,
+.coolgray-dark .accordion > .card > .card-header {
   background: var(--color-form-control-background);
-  box-shadow: none;
+  border-color: var(--color-btn-default-border);
+  color: var(--color-foreground);
 }
 
 .coolgray-dark .form-control:focus,
@@ -708,6 +785,14 @@ body.coolgray-dark {
 
 .coolgray-dark .velo__indicator-separator {
   width: 0;
+}
+
+.coolgray-dark .velo__indicator {
+  color: var(--color-foreground);
+}
+
+.coolgray-dark .velo__placeholder {
+  color: var(--color-foreground);
 }
 
 .coolgray-dark .input-group-text {
@@ -888,7 +973,6 @@ body.coolgray-dark {
   padding-left: 12px;
 }
 
-
 .coolgray-dark .tree-folder.active {
   color: var(--color-header-background);
 }
@@ -916,28 +1000,68 @@ body.coolgray-dark {
 }
 
 /* Datepicker */
-.coolgray-dark .react-datepicker,
-.coolgray-dark .react-datetime-picker {
-  background: var(--color-canvas-background);
+
+.coolgray-dark .react-datetime-picker__wrapper {
+  border: 1px solid var(--color-btn-border);
   color: var(--color-foreground);
+}
+
+.coolgray-dark .react-datepicker,
+.coolgray-dark .react-datetime-picker__calendar .react-calendar,
+.coolgray-dark .react-datetime-picker {
+  font-family: var(--font-family-sans-serif);
+  background: var(--color-form-control-background);
+  color: var(--color-foreground);
+  z-index: 10;
 }
 
 .coolgray-dark .react-datetime-picker__inputGroup__input,
 .coolgray-dark .react-datetime-picker__button {
-  filter: invert(0.7);
+  filter: invert(99%) sepia(1%) saturate(437%) hue-rotate(173deg) brightness(99%) contrast(94%);
+  stroke: var(--color-accent-100) !important;
 }
 
-.coolgray-dark .react-datepicker-popper {
-  z-index: 10;
+.coolgray-dark .react-datetime-picker__button:enabled:hover .react-datetime-picker__button__icon,
+.coolgray-dark .react-datetime-picker__button:enabled:focus .react-datetime-picker__button__icon,
+.coolgray-dark .react-datetime-picker__button:hover {
+  stroke: var(--color-accent-100) !important;
+  filter: none;
 }
 
-.coolgray-dark .react-datepicker__day {
+/* .coolgray-dark .react-calendar__navigation button,
+.coolgray-dark .react-calendar__tile {
+  color: var(--color-foreground);
+} */
+
+.coolgray-dark .react-calendar button:enabled:hover {
+  background-color: var(--color-accent-25);
+  border: none;
+}
+
+.coolgray-dark .react-calendar__navigation button:disabled,
+.coolgray-dark .react-calendar__navigation button:enabled:focus {
+  background-color: unset;
+}
+
+.coolgray-dark .react-calendar__tile:enabled:hover {
+  background-color: var(--color-accent-25);
+  border: none;
+}
+
+.coolgray-dark .react-calendar .react-calendar__tile--now {
+  background-color: var(--color-accent-50);
   color: var(--color-foreground);
 }
 
-.coolgray-dark .react-datepicker__day[aria-disabled="false"] {
-  background: var(--color-table-row-selected);
-  color: var(--color-foreground);
+.coolgray-dark .react-calendar .react-calendar__tile--active,
+.coolgray-dark .react-calendar .react-calendar__tile--active:hover {
+  background-color: var(--color-accent-75);
+  font-weight: 700;
+  color: var(--color-foreground-inverse);
+}
+
+.coolgray-dark .react-calendar__month-view__days__day--neighboringMonth {
+  color: var(--color-btn-border);
 }
 
 /* Footer */
@@ -1026,6 +1150,12 @@ body.coolgray-dark {
 .coolgray-dark .tooltip.show {
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
+}
+
+.coolgray-dark .tooltip-inner {
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+  font-weight: 700;
 }
 
 .coolgray-dark .file-hex-view td,

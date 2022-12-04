@@ -100,11 +100,11 @@ code {
    color: var(--color-foreground);
    content: attr(data-title);
    display: none;
-   font-family: sans-serif;
+   font-family: var(--font-family-sans-serif);
    font-size: 14px;
    padding: 4px 8px;
    position: absolute;
-   top: -20px;
+   top: -32px;
    left: 0px;
    z-index: 1;
    white-space: nowrap;
