@@ -223,8 +223,10 @@ class VeloPagedTable extends Component {
         if (transform.filter_column) {
             result.push(
                 <Button key="1"
-                  title={T("Transformed")}  disabled={true}
-                  variant="outline-dark">
+                        data-tooltip={T("Transformed")}  disabled={true}
+                        data-position="right"
+                        className="btn-tooltip"
+                        variant="outline-dark">
                   { transform.filter_column } ( {transform.filter_regex} )
                   <span className="transform-button">
                     <FontAwesomeIcon icon="filter"/>
@@ -236,7 +238,9 @@ class VeloPagedTable extends Component {
         if (transform.sort_column) {
             result.push(
                 <Button key="2"
-                  title={T("Transformed")}  disabled={true}
+                        data-tooltip={T("Transformed")}  disabled={true}
+                        data-position="right"
+                        className="btn-tooltip"
                   variant="outline-dark">
                   {transform.sort_column}
                   <span className="transform-button">
@@ -465,7 +469,9 @@ class VeloPagedTable extends Component {
                           <InspectRawJson rows={this.state.rows} />
                           <Button variant="default"
                                   target="_blank" rel="noopener noreferrer"
-                                  title={T("Download JSON")}
+                                  data-tooltip={T("Download JSON")}
+                                  data-position="right"
+                                  className="btn-tooltip"
                                   href={api.href("/api/v1/DownloadTable",
                                                  Object.assign(downloads, {
                                                      timezone: timezone,
@@ -475,7 +481,9 @@ class VeloPagedTable extends Component {
                           </Button>
                           <Button variant="default"
                                   target="_blank" rel="noopener noreferrer"
-                                  title={T("Download CSV")}
+                                  data-tooltip={T("Download CSV")}
+                                  data-position="right"
+                                  className="btn-tooltip"
                                   href={api.href("/api/v1/DownloadTable",
                                                  Object.assign(downloads, {
                                                      timezone: timezone,
@@ -488,7 +496,9 @@ class VeloPagedTable extends Component {
                                    onClick={()=>this.setState({
                                        show_transform_dialog: true,
                                    })}
-                                   title={T("Transform Table")}>
+                                   data-position="right"
+                                   className="btn-tooltip"
+                                   data-tooltip={T("Transform Table")}>
                              <FontAwesomeIcon icon="filter"/>
                            </Button>}
                         </ButtonGroup>

@@ -320,30 +320,40 @@ class HuntList extends React.Component {
 
               <Navbar className="hunt-toolbar">
                 <ButtonGroup>
-                  <Button title={T("New Hunt")}
+                  <Button data-tooltip={T("New Hunt")}
+                          data-position="right"
+                          className="btn-tooltip"
                           onClick={() => this.setState({showWizard: true})}
                           variant="default">
                     <FontAwesomeIcon icon="plus"/>
                   </Button>
-                  <Button title={T("Run Hunt")}
+                  <Button data-tooltip={T("Run Hunt")}
+                          data-position="right"
+                          className="btn-tooltip"
                           disabled={state !== 'PAUSED' && state !== 'STOPPED'}
                           onClick={() => this.setState({showRunHuntDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="play"/>
                   </Button>
-                  <Button title={T("Stop Hunt")}
+                  <Button data-tooltip={T("Stop Hunt")}
+                          data-position="right"
+                          className="btn-tooltip"
                           disabled={state !== 'RUNNING'}
                           onClick={this.stopHunt}
                           variant="default">
                     <FontAwesomeIcon icon="stop"/>
                   </Button>
-                  <Button title={T("Delete Hunt")}
+                  <Button data-tooltip={T("Delete Hunt")}
+                          data-position="right"
+                          className="btn-tooltip"
                           disabled={state === 'RUNNING' || !selected_hunt}
                           onClick={() => this.setState({showDeleteHuntDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="trash-alt"/>
                   </Button>
-                  <Button title={T("Copy Hunt")}
+                  <Button data-tooltip={T("Copy Hunt")}
+                          data-position="right"
+                          className="btn-tooltip"
                           disabled={!selected_hunt}
                           onClick={this.copyHunt}
                           variant="default">
@@ -352,31 +362,42 @@ class HuntList extends React.Component {
                 </ButtonGroup>
                 { tab === "notebook" &&
                   <ButtonGroup className="float-right">
-                  <Button title={T("Notebooks")}
+                    <Button data-tooltip={T("Notebooks")}
+                            data-position="right"
+                            className="btn-tooltip"
                             disabled={true}
                             variant="outline-dark">
                       <FontAwesomeIcon icon="book"/>
                     </Button>
 
-                  <Button title={T("Full Screen")}
+                    <Button data-tooltip={T("Full Screen")}
+                            data-position="left"
+                            className="btn-tooltip"
                             onClick={this.setFullScreen}
                             variant="default">
                       <FontAwesomeIcon icon="expand"/>
                     </Button>
 
-                    <Button title={T("Delete Notebook")}
+                    <Button data-tooltip={T("Delete Notebook")}
+                            data-position="left"
+                            className="btn-tooltip"
                             onClick={() => this.setState({showDeleteNotebook: true})}
                             variant="default">
                       <FontAwesomeIcon icon="trash"/>
                     </Button>
 
-                    <Button title={T("Notebook Uploads")}
+                    <Button data-tooltip={T("Notebook Uploads")}
+                            data-position="left"
+                            className="btn-tooltip"
                             onClick={() => this.setState({showNotebookUploadsDialog: true})}
                             variant="default">
                       <FontAwesomeIcon icon="fa-file-download"/>
                     </Button>
 
-                    <Button title={T("Export Notebook")}
+                    <Button data-tooltip={T("Export Notebook")}
+                            data-position="left"
+                            className="btn-tooltip"
+
                             onClick={() => this.setState({showExportNotebook: true})}
                             variant="default">
                       <FontAwesomeIcon icon="download"/>

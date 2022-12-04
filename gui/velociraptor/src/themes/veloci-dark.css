@@ -80,7 +80,7 @@
   --color-btn-default-border: #3f4754;
   --color-btn-default-background: #5cd00a80;
   --color-btn-default-background-hover: #0c900a80;
-  --color-btn-outline-link: var(--color-accent-25);
+  --color-btn-outline-link: var(--color-accent-50);
   --color-btn-outline-link-hover: var(--color-accent-75);
 
   --color-tab: var(--color-table-heading-background);

@@ -77,7 +77,9 @@ export class InspectRawJson extends Component {
         return (
             <>
               <Button variant="default"
-                      title={T("Inspect Raw JSON")}
+                      data-tooltip={T("Inspect Raw JSON")}
+                      data-position="right"
+                      className="btn-tooltip"
                       onClick={() => this.setState({show: true})} >
                 <FontAwesomeIcon icon="binoculars"/>
               </Button>
@@ -144,7 +146,9 @@ export const ColumnToggleList = (e) => {
                  eventKey={column.dataField}
                  active={!hidden}
                  onSelect={c=>onColumnToggle(c)}
-                 title={T("Show/Hide Columns")}
+                 data-position="right"
+                 className="btn-tooltip"
+                 data-tooltip={T("Show/Hide Columns")}
                >
                  { column.text }
                </Dropdown.Item>;
@@ -152,7 +156,11 @@ export const ColumnToggleList = (e) => {
 
     return (
         <>
-          <Dropdown show={open} onToggle={onToggle}>
+          <Dropdown show={open}
+                    data-position="right"
+                    data-tooltip={T("Show/Hide Columns")}
+                    className="btn-tooltip"
+                    onToggle={onToggle}>
             <Dropdown.Toggle variant="default" id="dropdown-basic">
               <FontAwesomeIcon icon="columns"/>
             </Dropdown.Toggle>

@@ -162,7 +162,10 @@ class VeloFileStats extends Component {
                           </dt>
                           <dd className="col-8">
                             <VeloTimestamp usec={ selectedRow.Download.mtime / 1000 } />
-                            <Button variant="outline-default" title={T("Download")}
+                            <Button variant="outline-default"
+                                    data-tooltip={T("Download")}
+                                    data-position="right"
+                                    className="btn-tooltip"
                                     href={api.href("/api/v1/DownloadVFSFile", {
                                         client_id: client_id,
                                         fs_components: selectedRow.Download.components,
@@ -179,7 +182,9 @@ class VeloFileStats extends Component {
                           <dt className="col-4">{T("Fetch from Client")}</dt>
                           <dd className="col-8">
                         { this.state.updateOperationFlowId ?
-                          <Button title={T("Currently refreshing from the client")}
+                          <Button data-tooltip={T("Currently refreshing from the client")}
+                                  data-position="right"
+                                  className="btn-tooltip"
                                   onClick={this.cancelDownload}
                                   variant="default">
                             <FontAwesomeIcon icon="sync" spin/>
