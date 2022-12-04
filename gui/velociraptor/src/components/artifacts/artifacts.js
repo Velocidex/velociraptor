@@ -259,13 +259,17 @@ class ArtifactInspector extends React.Component {
               }
               <Navbar className="artifact-toolbar justify-content-between">
                 <ButtonGroup>
-                  <Button title={T("Add an Artifact")}
+                  <Button data-tooltip={T("Add an Artifact")}
+                          data-position="right"
+                          className="btn-tooltip"
                           onClick={() => this.setState({showNewArtifactDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="plus"/>
                   </Button>
 
-                  <Button title={T("Edit an Artifact")}
+                  <Button data-tooltip={T("Edit an Artifact")}
+                          data-position="right"
+                          className="btn-tooltip"
                           onClick={() => {
                               this.setState({showEditedArtifactDialog: true});
                           }}
@@ -274,28 +278,36 @@ class ArtifactInspector extends React.Component {
                     <FontAwesomeIcon icon="pencil-alt"/>
                   </Button>
 
-                  <Button title={T("Delete Artifact")}
+                  <Button data-tooltip={T("Delete Artifact")}
+                          data-position="right"
+                          className="btn-tooltip"
                           onClick={() => this.setState({showDeleteArtifactDialog: true})}
                           disabled={!deletable}
                           variant="default">
                     <FontAwesomeIcon icon="trash"/>
                   </Button>
 
-                  <Button title={T("Hunt Artifact")}
+                  <Button data-tooltip={T("Hunt Artifact")}
+                          data-position="right"
+                          className="btn-tooltip"
                           onClick={this.huntArtifact}
                           disabled={!this.huntArtifactEnabled()}
                           variant="default">
                     <FontAwesomeIcon icon="crosshairs"/>
                   </Button>
 
-                  <Button title={T("Collect Artifact")}
+                  <Button data-tooltip={T("Collect Artifact")}
+                          data-position="right"
+                          className="btn-tooltip"
                           onClick={this.collectArtifact}
                           disabled={!this.collectArtifactEnabled()}
                           variant="default">
                     <FontAwesomeIcon icon="cloud-download-alt"/>
                   </Button>
 
-                  <Button title={T("Upload Artifact Pack")}
+                  <Button data-tooltip={T("Upload Artifact Pack")}
+                          data-position="right"
+                          className="btn-tooltip"
                           onClick={()=>this.setState({showArtifactsUploadDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="upload"/>

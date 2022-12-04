@@ -18,5 +18,5 @@ div.error-message {
 
 
 .notebook-output {
-    overflow-x: auto;
+    overflow-x: visible;
 }

@@ -34,7 +34,7 @@ sources:
                 then=timestamp(winfiletime=High * 4294967296 + Low))
 
         -- lookupSID() may not be available on deaddisk analysis
-        LET roaming_users <= SELECT
+        LET roaming_users = SELECT
            split(string=Key.OSPath.Basename, sep="-")[-1] as Uid,
            "" AS Gid,
            lookupSID(sid=Key.OSPath.Basename) || "" AS Name,
@@ -54,7 +54,7 @@ sources:
            ) AS Data
         FROM read_reg_key(globs=remoteRegKey, accessor="registry")
 
-        LET local_users <= select User_id as Uid,
+        LET local_users = select User_id as Uid,
            Primary_group_id as Gid, Name,
            Comment as Description, {
              SELECT *
@@ -64,6 +64,7 @@ sources:
            User_sid as UUID,
            "local" AS Type
         FROM users()
+        LIMIT 1000
 
         -- Populate the mtime from the user's home directory.
         LET local_users_with_mtime = SELECT Uid, Gid, Name, Description,
@@ -77,11 +78,8 @@ sources:
 
         LET combined = SELECT * from chain(
          q1=local_users_with_mtime,
-         q2={
-           -- Only show users not already shown in the local_users above.
-           SELECT * from roaming_users
-           WHERE NOT UUID IN local_users.UUID
-         })
+         q2=roaming_users)
+         GROUP BY UUID, Name
 
         SELECT * FROM if(condition=OnlyRemote,
           then=roaming_users,

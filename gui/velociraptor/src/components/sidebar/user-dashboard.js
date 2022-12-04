@@ -9,6 +9,7 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import VeloReportViewer from "../artifacts/reporting.js";
+import T from '../i8n/i8n.js';
 
 import { withRouter }  from "react-router-dom";
 
@@ -64,13 +65,21 @@ class UserDashboard extends React.Component {
             <>
               <Navbar className="toolbar">
                 <ButtonGroup>
-                  <Button variant="default" onClick={() => this.setState({
+                  <Button variant="default"
+                          data-position="right"
+                          className="btn-tooltip"
+                          data-tooltip={T("Redraw dashboard")}
+                          onClick={() => this.setState({
                       version: this.state.version + 1,
                   })} >
                     <FontAwesomeIcon icon="sync"/>
                   </Button>
 
-                  <Button variant="default" onClick={() => {
+                  <Button variant="default"
+                          data-position="right"
+                          className="btn-tooltip"
+                          data-tooltip={T("Edit the dashboard")}
+                          onClick={() => {
                       this.props.history.push("/artifacts/Server.Monitor.Health");
                   }} >
                     <FontAwesomeIcon icon="pencil-alt"/>

@@ -459,38 +459,50 @@ class FlowsList extends React.Component {
 
               <Navbar className="flow-toolbar">
                 <ButtonGroup>
-                  <Button title={T("New Collection")}
+                  <Button data-tooltip={T("New Collection")}
+                          data-position="right"
+                          className="btn-tooltip"
                           onClick={() => this.setState({showWizard: true})}
                           variant="default">
                     <FontAwesomeIcon icon="plus"/>
                   </Button>
 
                   { client_id !== "server" &&
-                    <Button title={T("Add to hunt")}
+                    <Button data-tooltip={T("Add to hunt")}
+                            data-position="right"
+                            className="btn-tooltip"
                             onClick={()=>this.setState({showAddToHunt: true})}
                             variant="default">
                       <FontAwesomeIcon icon="crosshairs"/>
                     </Button>
                   }
-                  <Button title={T("Delete Artifact Collection")}
+                  <Button data-tooltip={T("Delete Artifact Collection")}
+                          data-position="right"
+                          className="btn-tooltip"
                           onClick={()=>this.setState({showDeleteWizard: true}) }
                           variant="default">
                     <FontAwesomeIcon icon="trash-alt"/>
                   </Button>
 
                   { this.props.selected_flow.state !== "FINISHED" &&
-                    <Button title={T("Cancel Artifact Collection")}
+                    <Button data-tooltip={T("Cancel Artifact Collection")}
+                            data-position="right"
+                            className="btn-tooltip"
                             onClick={this.cancelButtonClicked}
                             variant="default">
                     <FontAwesomeIcon icon="stop"/>
                     </Button>
                   }
-                  <Button title={T("Copy Collection")}
+                  <Button data-tooltip={T("Copy Collection")}
+                          data-position="right"
+                          className="btn-tooltip"
                           onClick={() => this.setState({showCopyWizard: true})}
                           variant="default">
                     <FontAwesomeIcon icon="copy"/>
                   </Button>
-                  <Button title={T("Save Collection")}
+                  <Button data-tooltip={T("Save Collection")}
+                          data-position="right"
+                          className="btn-tooltip"
                           onClick={() => this.setState({
                               showSaveCollectionDialog: true
                           })}
@@ -499,7 +511,9 @@ class FlowsList extends React.Component {
                   </Button>
 
                   { isServer &&
-                    <Button title={T("Build offline collector")}
+                    <Button data-tooltip={T("Build offline collector")}
+                            data-position="right"
+                            className="btn-tooltip"
                             onClick={() => this.setState({showOfflineWizard: true})}
                             variant="default">
                       <FontAwesomeIcon icon="paper-plane"/>
@@ -509,31 +523,41 @@ class FlowsList extends React.Component {
                 </ButtonGroup>
                 { tab === "notebook" &&
                   <ButtonGroup className="float-right">
-                    <Button title={T("Notebooks")}
+                    <Button data-tooltip={T("Notebooks")}
+                            data-position="left"
+                            className="btn-tooltip"
                             disabled={true}
                             variant="outline-dark">
                       <FontAwesomeIcon icon="book"/>
                     </Button>
 
-                    <Button title={T("Full Screen")}
+                    <Button data-tooltip={T("Full Screen")}
+                            data-position="left"
+                            className="btn-tooltip"
                             onClick={this.setFullScreen}
                             variant="default">
                       <FontAwesomeIcon icon="expand"/>
                     </Button>
 
-                    <Button title={T("Delete Notebook")}
+                    <Button data-tooltip={T("Delete Notebook")}
+                            data-position="left"
+                            className="btn-tooltip"
                             onClick={() => this.setState({showDeleteNotebook: true})}
                             variant="default">
                       <FontAwesomeIcon icon="trash"/>
                     </Button>
 
-                    <Button title={T("Notebook Uploads")}
+                    <Button data-tooltip={T("Notebook Uploads")}
+                            data-position="left"
+                            className="btn-tooltip"
                             onClick={() => this.setState({showNotebookUploadsDialog: true})}
                             variant="default">
                       <FontAwesomeIcon icon="fa-file-download"/>
                     </Button>
 
-                    <Button title={T("Export Notebook")}
+                    <Button data-tooltip={T("Export Notebook")}
+                            data-position="left"
+                            className="btn-tooltip"
                             onClick={() => this.setState({showExportNotebook: true})}
                             variant="default">
                       <FontAwesomeIcon icon="download"/>

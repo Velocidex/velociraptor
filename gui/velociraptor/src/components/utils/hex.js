@@ -220,7 +220,10 @@ export default class HexView extends React.Component {
                     { more && (this.state.expanded ?
                                <tr>
                                  <td colspan="16">
-                                   <Button variant="default-outline" title="Collapse"
+                                   <Button variant="default-outline"
+                                           data-tooltip="Collapse"
+                                           data-position="right"
+                                           className="btn-tooltip"
                                            onClick={()=>this.setState({expanded: false})} >
                                      <i><FontAwesomeIcon icon="arrow-up"/></i>
                                    </Button>
@@ -228,7 +231,10 @@ export default class HexView extends React.Component {
                                </tr>
                                : <tr>
             <td colspan="16">
-              <Button variant="default-outline"  title="Expand"
+              <Button variant="default-outline"
+                      data-tooltip="Expand"
+                      data-position="right"
+                      className="btn-tooltip"
                       onClick={()=>this.setState({expanded: true})} >
                 <i><FontAwesomeIcon icon="arrow-down"/></i>
               </Button>
