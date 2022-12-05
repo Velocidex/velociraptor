@@ -142,8 +142,8 @@ func (self VADPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfil
 	}
 }
 
-func GetVads(pid uint32) ([]*VMemeInfo, error) {
-	result := []*VMemeInfo{}
+func GetVads(pid uint32) ([]*VMemInfo, error) {
+	result := []*VMemInfo{}
 
 	proc_handle, err := windows.OpenProcess(
 		windows.PROCESS_QUERY_INFORMATION|windows.PROCESS_VM_READ,
