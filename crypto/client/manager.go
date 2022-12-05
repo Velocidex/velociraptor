@@ -62,6 +62,10 @@ func (self *CryptoManager) ClientId() string {
 	return self.client_id
 }
 
+func (self *CryptoManager) Delete(client_id string) {
+	self.cipher_lru.Delete(client_id)
+}
+
 func (self *CryptoManager) GetCSR() ([]byte, error) {
 	subj := pkix.Name{
 		CommonName: crypto_utils.ClientIDFromPublicKey(&self.private_key.PublicKey),

@@ -198,8 +198,17 @@ export default class NewCollectionConfigParameters extends React.Component {
                     );
                 }
                 return (<ButtonGroup>
-                          <Button variant="outline-default"><FontAwesomeIcon icon="wrench"/></Button>
-                          <Button variant="outline-default" onClick={
+                          <Button
+                            className="btn-tooltip"
+                            data-position="right"
+                            data-tooltip={T("Configure")}
+                            variant="outline-default">
+                            <FontAwesomeIcon icon="wrench"/></Button>
+                          <Button variant="outline-default"
+                                  className="btn-tooltip"
+                                  data-position="right"
+                                  data-tooltip={T("Remove")}
+                                  onClick={
                               () => this.props.setArtifacts(remove_artifact(
                                   this.props.artifacts, rowKey))} >
                             <FontAwesomeIcon icon="trash"/>
