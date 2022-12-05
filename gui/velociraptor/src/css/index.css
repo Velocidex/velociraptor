@@ -87,32 +87,66 @@ code {
   color: var(--color-foreground);
 }
 
-
-/* https://stackoverflow.com/questions/52706615/styling-button-tooltip */
-.btn-tooltip {
-   position: relative;
+.list-group-item {
+    background-color: var(--color-canvas-background);
+    color: var(--color-foreground);
 }
 
-.btn-tooltip::before {
-   background-color: var(--color-canvas-background);
-   border: 1px solid var(--accent-color);
-   border-radius: 8px;
-   color: var(--color-foreground);
-   content: attr(data-title);
-   display: none;
-   font-family: sans-serif;
-   font-size: 14px;
-   padding: 4px 8px;
-   position: absolute;
-   top: -20px;
-   left: 0px;
-   z-index: 1;
-   white-space: nowrap;
-   opacity: 1;
+.btn-tooltip[data-tooltip] {
+  position: relative;
 }
 
-.btn-tooltip:hover::before {
-   display: block;
+.btn-tooltip[data-tooltip]:hover::before {
+  visibility: visible;
+  opacity: 1;
+}
+
+.btn-tooltip[data-tooltip]::before {
+  text-align:center;
+  content: attr(data-tooltip);
+  visibility: hidden;
+  opacity: 0;
+  min-width: 100%;
+  width: max-content;
+  height: max-content;
+  position: absolute;
+  box-sizing: border-box;
+  display: block;
+  margin: 0 auto;
+  padding: 4px 8px;
+  background-color: var(--color-canvas-background);
+  border: 1px solid var(--accent-color);
+  border-radius: 8px;
+  color: var(--color-foreground);
+  font-family: var(--font-family-sans-serif);
+  font-size: 14px;
+  padding: 4px 8px;
+  white-space: nowrap;
+  transition: opacity ease-out 150ms, bottom ease-out 150ms;
+  transition-property: opacity;
+  transition-delay: 800ms;
+  z-index: 10;
+}
+
+.btn-tooltip[data-position='top']::before {
+  bottom: 100%;
+}
+.btn-tooltip[data-position='right']::before {
+  left: 100%;
+  top: -15px;
+  bottom: 0;
+  margin: auto 0;
+}
+
+.btn-tooltip[data-position='bottom']::before {
+  top: 100%;
+}
+
+.btn-tooltip[data-position='left']::before {
+  right: 100%;
+  top: -15px;
+  bottom: 0;
+  margin: auto 0;
 }
 
 .btn-tooltip:disabled:hover::before {

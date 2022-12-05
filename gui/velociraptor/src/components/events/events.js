@@ -303,12 +303,16 @@ class EventMonitoring extends React.Component {
                 <ButtonGroup>
                   { client_id === "server" || client_id === "" ?
                     <>
-                      <Button title={T("Update server monitoring table")}
+                      <Button data-tooltip={T("Update server monitoring table")}
+                              data-position="right"
+                              className="btn-tooltip"
                               onClick={() => this.setState({showServerEventTableWizard: true})}
                               variant="default">
                         <FontAwesomeIcon icon="edit"/>
                       </Button>
-                      <Button title={T("Show server monitoring tables")}
+                      <Button data-tooltip={T("Show server monitoring tables")}
+                              data-position="right"
+                              className="btn-tooltip"
                               onClick={() => this.setState({showEventMonitoringPopup: true})}
                               variant="default">
                         <FontAwesomeIcon icon="binoculars"/>
@@ -316,12 +320,16 @@ class EventMonitoring extends React.Component {
 
                     </>:
                     <>
-                      <Button title={T("Update client monitoring table")}
+                      <Button data-tooltip={T("Update client monitoring table")}
+                              data-position="right"
+                              className="btn-tooltip"
                               onClick={() => this.setState({showEventTableWizard: true})}
                               variant="default">
                         <FontAwesomeIcon icon="edit"/>
                       </Button>
-                      <Button title={T("Show client monitoring tables")}
+                      <Button data-tooltip={T("Show client monitoring tables")}
+                              data-position="right"
+                              className="btn-tooltip"
                               onClick={() => this.setState({showEventMonitoringPopup: true})}
                               variant="default">
                         <FontAwesomeIcon icon="binoculars"/>
@@ -329,8 +337,11 @@ class EventMonitoring extends React.Component {
                     </>
                   }
                   { this.state.buttonsRenderer() }
-                  <Dropdown title={this.state.artifact.artifact ||
-                                   T("Select artifact")} variant="default">
+                  <Dropdown data-tooltip={this.state.artifact.artifact ||
+                                   T("Select artifact")}
+                            data-position="right"
+                            className="btn-tooltip"
+                            variant="default">
                     <Dropdown.Toggle variant="default">
                       <FontAwesomeIcon icon="book"/>
                       <span className="button-label">
@@ -357,7 +368,9 @@ class EventMonitoring extends React.Component {
 
                 <ButtonGroup className="float-right">
                   { this.state.mode === mode_notebook &&
-                    <Button title={T("Delete Notebook")}
+                    <Button data-tooltip={T("Delete Notebook")}
+                            data-position="right"
+                            className="btn-tooltip"
                             onClick={() => this.setState({showDeleteNotebook: true})}
                             variant="default">
                       <FontAwesomeIcon icon="trash"/>

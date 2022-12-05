@@ -56,10 +56,10 @@
   --color-accent-25: rgba(var(--color-accent), 0.25);
 
   --color-header-background: var(--color-canvas-background);
-  --color-footer-background: var(--color-tab);
+  --color-footer-background: var(--color-table-heading-background);
   --color-canvas-background: #121212;
   --color-canvas-background-complement: #3b352d;
-  --color-form-control-background: var(--color-canvas-background);
+  --color-form-control-background: #10181C;
 
   --color-foreground: rgb(240, 242, 244);
   --color-foreground-inverse: #100e0c;
@@ -76,38 +76,36 @@
   --color-client-link: #7aed40;
   --color-client-link-hover: var(--color-foreground-dimmed);
 
-  --color-btn-border: #555555;
+  --color-btn-border: #3f4754;
+  --color-btn-default-border: #3f4754;
   --color-btn-default-background: #5cd00a80;
   --color-btn-default-background-hover: #0c900a80;
-  --color-btn-outline-link: var(--color-accent-25);
+  --color-btn-outline-link: var(--color-accent-50);
   --color-btn-outline-link-hover: var(--color-accent-75);
 
-  --color-tab: #444444;
+  --color-tab: var(--color-table-heading-background);
   --color-tab-active: var(--color-btn-default-background);
 
   --color-resizer: var(--color-accent-50);
   --color-resizer-hover: var(--color-accent-100);
   --color-scrollbar-track: var(--color-btn-border);
-  --color-scrollbar-thumb: var(--color-sidebar-foreground);
-  --color-scrollbar-thumb-hover: var(--color-sidebar-inactive-foreground-hover);
+  --color-scrollbar-thumb: #555d6e;
+  --color-scrollbar-thumb-hover: #767c89;
 
-  --color-pagination-disabled: #444444;
   --color-cell-toolbar-background: #121212;
-  /* --color-page-link-background: #121212;
-  --color-page-link-active-background: #444444; */
-  --color-form-background: #121212;
-  --color-card-heading-background: #2E2E2E;
+  --color-card-heading-background: #3f4754;
   --color-monospace-color: #eeeeee;
 
-  --color-page-link-active-background: #0c900a;
-  --color-page-link-hover-background: #5cd00a80;
-  --color-pagination-disabled: #c0c0c0;
+  --color-page-link-active-background: var(--color-accent-50);
+  --color-page-link-hover-background: var(--color-accent-25);
+  --color-page-link-background: var(--color-canvas-background);
+  --color-pagination-disabled: #3f4754;
 
-  --color-table-row-stripe: rgba(255, 255, 255, 0.03);
-  --color-table-row-selected: rgba(255, 255, 255, 0.05);
+  --color-table-row-stripe: rgba(63,71,84,.2);
+  --color-table-row-selected: rgba(63,71,84,1);
   --color-table-row-selected-text: var(--color-foreground);
-  --color-table-heading-background: rgba(255, 255, 255, 0.05);
-  --color-table-row-hover: rgba(255, 255, 255, 0.01);
+  --color-table-row-hover: rgba(63,71,84,.8);
+  --color-table-heading-background: #2c343f;
 
   --color-code: var(--color-accent-100);
 
@@ -123,9 +121,6 @@
   --color-timeline-5: #bbb;
   --color-timeline-6: #008000;
   --color-timeline-7: #471ecb;
-
-  --color-table-row-selected: rgba(255, 255, 255, 0.25);
-  --color-table-row-hover: rgba(255, 255, 255, 0.1);
 
   --color-vfs-files-timestomped: #0220af;
   --color-timeline-table-shown: #5cd00a80;
@@ -320,11 +315,25 @@ body.veloci-dark {
   background: none;
 }
 
-.veloci-dark .btn.btn-outline-info,
+.veloci-dark .btn.btn-outline-info{
+  background: var(--color-btn-outline-link);
+  color: var(--color-foreground);
+  border-color: transparent;
+  margin: 1px;
+  font-weight: 500;
+}
+
 .veloci-dark .btn.btn-link {
-    background: var(--color-btn-outline-link);
-    color: var(--color-foreground);
-    margin: 1px;
+  background: var(--color-btn-outline-link);
+  color: var(--color-foreground);
+  border-color: transparent;
+  margin: 1px;
+  font-weight: 500;
+  width: 100%;
+}
+
+.veloci-dark .client-link.btn.btn-outline-info {
+  width: unset;
 }
 
 .veloci-dark .btn-outline-info:hover {
@@ -332,14 +341,6 @@ body.veloci-dark {
   text-shadow: none;
   color: var(--color-foreground);
 }
-
-.veloci-dark .btn.btn-link {
-  border-color: transparent;
-  width: 100%;
-  background: none;
-  color: var(--color-foreground);
-}
-
 
 /* Tables */
 
@@ -394,29 +395,40 @@ body.veloci-dark {
   border: 1px solid var(--color-btn-border);
 }
 
-/* .veloci-dark .table tr.flow-urgent {
-  font-weight: 500;
-  color: yellow !important;
-} */
-
 .veloci-dark .table-hover tbody tr:hover {
   background: var(--color-table-row-hover);
   color: unset;
 }
 
-.veloci-dark .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td > button.btn.btn-link {
-  background: transparent;
-  text-decoration: none;
-  color: var(--color-foreground-inverse);
-  font-weight: 700;
+.veloci-dark .new-artifact-search-table.selectable .table.table-bordered,
+.veloci-dark .new-artifact-search-table.selectable .table.table-bordered tbody tr,
+.veloci-dark .new-artifact-search-table.selectable .table.table-bordered thead th {
+  background: none;
+  border: none;
 }
 
-.veloci-dark .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td {
+.veloci-dark .new-artifact-search-table.selectable .table.table-bordered tbody tr > td > button.btn.btn-link:hover {
+  background: var(--color-btn-outline-link-hover);
+}
+
+.veloci-dark .new-artifact-search-table.selectable .table.table-bordered tbody tr > td > button.btn.btn-link {
+  background: var(--color-accent-25);
+}
+
+.veloci-dark .new-artifact-search-table.selectable .table.table-bordered tbody > tr.row-selected > td > button.btn.btn-link,
+.veloci-dark .new-artifact-search-table.selectable .table.table-bordered tbody > tr.row-selected > td > button.btn.btn-link:hover {
+  background: var(--color-accent-75);
+  color: var(--color-foreground-inverse);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+/* .veloci-dark .new-artifact-search-table.selectable > div > table > tbody > tr.row-selected > td {
   background: var(--color-accent-50);
   border: 1px solid var(--color-foreground-inverse);
-  text-decoration: none;
   font-weight: 700;
-}
+  text-decoration: none;
+} */
 
 .veloci-dark .new-artifact-search-table .btn-link:hover,
 .veloci-dark .new-artifact-search-table .btn-link:focus,
@@ -530,9 +542,21 @@ body.veloci-dark {
 .veloci-dark .tooltip.show {
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
+  background-color: #10181C;
+  opacity: 1;
+}
+
+.veloci-dark .tooltip-inner {
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+  font-weight: 700;
 }
 
 /* Form controls */
+
+.veloci-dark .estimate.alert-info {
+  border: none;
+}
 
 .veloci-dark .custom-switch .custom-control-input:disabled:checked~.custom-control-label:before {
   background-color: var(--color-accent-25);
@@ -545,7 +569,7 @@ body.veloci-dark {
 
 .veloci-dark .form-control,
 .veloci-dark .custom-file-input {
-  background: var(--color-canvas-background);
+  background: var(--color-form-control-background);
   color: var(--color-foreground);
   border-color: var(--color-btn-default-border);
   font-size: var(--font-size-base);
@@ -553,7 +577,7 @@ body.veloci-dark {
 }
 
 .veloci-dark .form-control:focus {
-  background: var(--color-canvas-background);
+  background: var(--color-form-control-background);
   box-shadow: 0 0 0 1px var(--color-foreground);
 }
 
@@ -595,6 +619,7 @@ body.veloci-dark {
 }
 
 /* Pagination */
+
 .veloci-dark .page-item .page-link {
   background: var(--color-page-link-background);
   border-color: var(--color-btn-border);
@@ -621,6 +646,10 @@ body.veloci-dark {
   background: var(--color-page-link-hover-background);
 }
 
+.veloci-dark .page-item .page-link:focus {
+  box-shadow: 0 0 0 0.2rem rgba(9, 255, 0, 0.25)
+}
+
 .veloci-dark .react-bootstrap-table-pagination-total {
   color: var(--color-foreground);
 }
@@ -630,7 +659,7 @@ body.veloci-dark {
 .veloci-dark .report-viewer .description-content {
   font-family: var(--font-family-paragraph);
   font-size: var(--font-size-large);
-  background: #2E2E2E;
+  background: #3f4754;
   border-radius: 5px;
   padding: 12px;
 }
@@ -682,7 +711,6 @@ body.veloci-dark {
   color: var(--color-accent-100);
 }
 
-
 .veloci-dark .report-viewer pre > a {
   color: var(--color-foreground-inverse);
 }
@@ -701,7 +729,7 @@ body.veloci-dark {
 /* modal dialogs */
 
 .veloci-dark .modal-content {
-  background: #3D3D3D;
+  background: var(--color-table-heading-background);
   color: var(--color-foreground);
 }
 
@@ -775,28 +803,64 @@ body.veloci-dark {
 }
 
 /* Datepicker */
-.veloci-dark .react-datepicker,
-.veloci-dark .react-datetime-picker {
-  background: var(--color-canvas-background);
+
+.veloci-dark .react-datetime-picker__wrapper {
+  border: 1px solid var(--color-btn-border);
   color: var(--color-foreground);
+  border-radius: 0.25rem;
+}
+
+.veloci-dark .react-datepicker,
+.veloci-dark .react-datetime-picker__calendar .react-calendar,
+.veloci-dark .react-datetime-picker {
+  font-family: var(--font-family-sans-serif);
+  background: var(--color-form-control-background);
+  color: var(--color-foreground);
+  z-index: 10;
 }
 
 .veloci-dark .react-datetime-picker__inputGroup__input,
 .veloci-dark .react-datetime-picker__button {
-  filter: invert(1);
+  filter: invert(91%) sepia(8%) saturate(48%) hue-rotate(171deg) brightness(106%) contrast(93%);
+  stroke: var(--color-accent-100) !important;
 }
 
-.veloci-dark .react-datepicker-popper {
-  z-index: 10;
+.veloci-dark .react-datetime-picker__button:enabled:hover .react-datetime-picker__button__icon,
+.veloci-dark .react-datetime-picker__button:enabled:focus .react-datetime-picker__button__icon,
+.veloci-dark .react-datetime-picker__button:hover {
+  stroke: var(--color-accent-100) !important;
+  filter: none;
 }
 
-.veloci-dark .react-datepicker__day {
+.veloci-dark .react-calendar button:enabled:hover {
+  background-color: var(--color-accent-25);
+  border: none;
+}
+
+.veloci-dark .react-calendar__navigation button:disabled,
+.veloci-dark .react-calendar__navigation button:enabled:focus {
+  background-color: unset;
+}
+
+.veloci-dark .react-calendar__tile:enabled:hover {
+  background-color: var(--color-accent-25);
+  border: none;
+}
+
+.veloci-dark .react-calendar .react-calendar__tile--now {
+  background-color: var(--color-accent-50);
   color: var(--color-foreground);
 }
 
-.veloci-dark .react-datepicker__day[aria-disabled="false"] {
-  background: var(--color-table-row-selected);
-  color: var(--color-foreground);
+.veloci-dark .react-calendar .react-calendar__tile--active,
+.veloci-dark .react-calendar .react-calendar__tile--active:hover {
+  background-color: var(--color-accent-100);
+  font-weight: 700;
+  color: var(--color-foreground-inverse);
+}
+
+.veloci-dark .react-calendar__month-view__days__day--neighboringMonth {
+  color: var(--color-btn-border);
 }
 
 /* Footer */
@@ -840,7 +904,20 @@ body.veloci-dark {
 .veloci-dark .labels,
 .veloci-dark .velo__control,
 .veloci-dark .velo__menu {
-  background: var(--color-canvas-background);
+  background: var(--color-form-control-background);
+  border-color: var(--color-btn-default-border);
+  color: var(--color-foreground);
+}
+
+.veloci-dark .accordion,
+.veloci-dark .accordion > .card,
+.veloci-dark .accordion > .card > .card-header {
+  background: var(--color-form-control-background);
+  border-color: var(--color-btn-default-border);
+  color: var(--color-foreground);
+}
+
+.veloci-dark .velo__placeholder {
   color: var(--color-foreground);
 }
 
@@ -853,9 +930,30 @@ body.veloci-dark {
 }
 
 .veloci-dark .velo__option:hover,
-.veloci-dark .velo__option--is-focused,
-.veloci-dark .velo__multi-value:hover {
+.veloci-dark .velo__option--is-focused {
   background: var(--color-btn-default-background-hover);
+}
+
+.veloci-dark .velo__multi-value {
+  border: 1px solid var(--color-btn-default-border);
+  background-color: var(--color-canvas-background);
+}
+
+.veloci-dark .velo__multi-value__label {
+  color: var(--color-foreground);
+  border: none;
+}
+
+.veloci-dark .velo__multi-value__remove {
+  color: var(--color-foreground-inverse);
+  background-color: var(--color-btn-default-border);
+  border: none;
+}
+
+.veloci-dark .velo__multi-value__remove:hover {
+  color: var(--color-foreground-inverse);
+  background-color: var(--color-accent-100);
+  font-weight: 700;
 }
 
 .veloci-dark hr {

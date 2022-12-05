@@ -25,10 +25,6 @@ type ServerCryptoManager struct {
 	*client.CryptoManager
 }
 
-func (self *ServerCryptoManager) Delete(client_id string) {
-
-}
-
 func (self *ServerCryptoManager) AddCertificateRequest(
 	config_obj *config_proto.Config,
 	csr_pem []byte) (string, error) {
@@ -127,6 +123,10 @@ type serverPublicKeyResolver struct {
 	// overwhelmed in the slow path for clients that are not yet
 	// enrolled.
 	negative_lru *ttlcache.Cache
+}
+
+func (self *serverPublicKeyResolver) Delete(client_id string) {
+	self.negative_lru.Remove(client_id)
 }
 
 func (self *serverPublicKeyResolver) GetPublicKey(

@@ -397,25 +397,33 @@ export default class EventTimelineViewer extends React.Component {
                    </Dropdown.Menu>
                  </Dropdown>
 
-                 <Button title="Delete"
+                 <Button data-tooltip="Delete"
+                         data-position="right"
+                         className="btn-tooltip"
                          onClick={() => this.setState({showDeleteDialog: true})}
                          variant="default">
                    <FontAwesomeIcon icon="trash"/>
                  </Button>
 
-                 <Button title="Previous"
+                 <Button data-tooltip="Previous"
+                         data-position="right"
+                         className="btn-tooltip"
                          onClick={() => this.prevPage()}
                          variant="default">
                    <FontAwesomeIcon icon="backward"/>
                  </Button>
 
-                 <Button title="Center"
+                 <Button data-tooltip="Center"
+                         data-position="right"
+                         className="btn-tooltip"
                          onClick={() => this.centerPage()}
                          variant="default">
                    <FontAwesomeIcon icon="crosshairs"/>
                  </Button>
 
-                 <Button title="Next"
+                 <Button data-tooltip="Next"
+                         data-position="right"
+                         className="btn-tooltip"
                          onClick={() => this.nextPage()}
                          variant="default">
                    <FontAwesomeIcon icon="forward"/>

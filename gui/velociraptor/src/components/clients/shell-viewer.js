@@ -129,16 +129,18 @@ class _VeloShellCell extends Component {
         // expanded. These buttons can switch between the two modes.
         if (this.state.collapsed) {
             buttons.push(
-                <button className="btn btn-default" key={1}
-                        title={T("Expand")}
+                <button className="btn-tooltip btn btn-default" key={1}
+                        data-tooltip={T("Expand")}
+                        data-position="right"
                         onClick={() => this.setState({collapsed: false})} >
                   <i><FontAwesomeIcon icon="expand"/></i>
                 </button>
             );
         } else {
             buttons.push(
-                <button className="btn btn-default" key={2}
-                        title={T("Collapse")}
+                <button className="btn-tooltip btn btn-default" key={2}
+                        data-tooltip={T("Collapse")}
+                        data-position="right"
                         onClick={() => this.setState({collapsed: true})} >
                   <i><FontAwesomeIcon icon="compress"/></i>
                 </button>
@@ -149,16 +151,18 @@ class _VeloShellCell extends Component {
         // large so we dont fetch it until the user asks)
         if (this.state.loaded) {
             buttons.push(
-                <button className="btn btn-default" key={3}
-                        title={T("Hide Output")}
+                <button className="btn-tooltip btn btn-default" key={3}
+                        data-tooltip={T("Hide Output")}
+                        data-position="right"
                         onClick={() => this.setState({"loaded": false})} >
                   <i><FontAwesomeIcon icon="eye-slash"/></i>
                 </button>
             );
         } else {
             buttons.push(
-                <button className="btn btn-default" key={4}
-                        title={T("Load Output")}
+                <button className="btn-tooltip btn btn-default" key={4}
+                        data-tooltip={T("Load Output")}
+                        data-position="right"
                         onClick={this.loadData}>
                   <i><FontAwesomeIcon icon="eye"/></i>
                 </button>
@@ -166,7 +170,7 @@ class _VeloShellCell extends Component {
         }
 
         let flow_status = [
-            <button className="btn btn-outline-info"
+            <button className="btn btn-outline-info" key="1"
               onClick={e=>{this.viewFlow("overview");}}
             >
               <i><FontAwesomeIcon icon="external-link-alt"/></i>
@@ -175,8 +179,9 @@ class _VeloShellCell extends Component {
         // If the flow is currently running we may be able to stop it.
         if (this.props.flow.state  === 'RUNNING') {
             buttons.push(
-                <button className="btn btn-default" key={5}
-                        title={T("Stop")}
+                <button className="btn-tooltip btn btn-default" key={5}
+                        data-tooltip={T("Stop")}
+                        data-position="right"
                         onClick={this.cancelFlow}>
                   <i><FontAwesomeIcon icon="stop"/></i>
                 </button>
@@ -212,8 +217,9 @@ class _VeloShellCell extends Component {
         }
 
         flow_status.push(
-            <button className="btn btn-default" key={9}
-                    title={T("Delete")}
+            <button className="btn-tooltip btn btn-default" key={9}
+                    data-tooltip={T("Delete")}
+                    data-position="right"
                     onClick={()=>this.setState({showDeleteWizard: true})}>
               <i><FontAwesomeIcon icon="trash"/></i>
             </button>
@@ -229,14 +235,14 @@ class _VeloShellCell extends Component {
             })];
 
             if (this.props.flow.state  === 'ERROR') {
-                output.push(<Button variant="danger"
-                                    onClick={e=>{this.viewFlow("logs")}}
+                output.push(<Button variant="danger" key="errors"
+                                    onClick={e=>{this.viewFlow("logs");}}
                                     size="lg" block>
                               {T('Error')}
                             </Button>);
             } else {
-                output.push(<Button variant="link"
-                                    onClick={e=>{this.viewFlow("logs")}}
+                output.push(<Button variant="link" key="logs"
+                                    onClick={e=>{this.viewFlow("logs");}}
                                     size="lg" block>
                               {T('Logs')}
                             </Button>);
@@ -355,16 +361,18 @@ class _VeloVQLCell extends Component {
         // expanded. These buttons can switch between the two modes.
         if (this.state.collapsed) {
             buttons.push(
-                <button className="btn btn-default" key={1}
-                        title={T("Expand")}
+                <button className="btn-tooltip btn btn-default" key={1}
+                        data-tooltip={T("Expand")}
+                        data-position="right"
                         onClick={() => this.setState({collapsed: false})} >
                   <i><FontAwesomeIcon icon="expand"/></i>
                 </button>
             );
         } else {
             buttons.push(
-                <button className="btn btn-default" key={2}
-                        title={T("Collapse")}
+                <button className="btn-tooltip btn btn-default" key={2}
+                        data-tooltip={T("Collapse")}
+                        data-position="right"
                         onClick={() => this.setState({collapsed: true})} >
                   <i><FontAwesomeIcon icon="compress"/></i>
                 </button>
@@ -375,16 +383,18 @@ class _VeloVQLCell extends Component {
         // large so we dont fetch it until the user asks)
         if (this.state.loaded) {
             buttons.push(
-                <button className="btn btn-default" key={3}
-                        title={T("Hide Output")}
+                <button className="btn-tooltip btn btn-default" key={3}
+                        data-tooltip={T("Hide Output")}
+                        data-position="right"
                         onClick={() => this.setState({"loaded": false})} >
                   <i><FontAwesomeIcon icon="eye-slash"/></i>
                 </button>
             );
         } else {
             buttons.push(
-                <button className="btn btn-default" key={4}
-                        title={T("Load Output")}
+                <button className="btn-tooltip btn btn-default" key={4}
+                        data-tooltip={T("Load Output")}
+                        data-position="right"
                         onClick={() => this.setState({"loaded": true})}>
                   <i><FontAwesomeIcon icon="eye"/></i>
                 </button>
@@ -401,8 +411,9 @@ class _VeloVQLCell extends Component {
         // If the flow is currently running we may be able to stop it.
         if (this.props.flow.state  === 'RUNNING') {
             buttons.push(
-                <button className="btn btn-default" key={5}
-                        title={T("Stop")}
+                <button className="btn-tooltip btn btn-default" key={5}
+                        data-tooltip={T("Stop")}
+                        data-position="right"
                         onClick={this.cancelFlow}>
                   <i><FontAwesomeIcon icon="stop"/></i>
                 </button>
@@ -438,8 +449,9 @@ class _VeloVQLCell extends Component {
         }
 
         flow_status.push(
-            <button className="btn btn-default" key={5}
-                    title={T("Delete")}
+            <button className="btn-tooltip btn btn-default" key={5}
+                    data-tooltip={T("Delete")}
+                    data-position="right"
                     onClick={()=>this.setState({showDeleteWizard: true})}>
               <i><FontAwesomeIcon icon="trash"/></i>
             </button>

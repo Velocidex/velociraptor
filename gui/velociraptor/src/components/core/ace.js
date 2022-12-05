@@ -8,6 +8,7 @@ import _ from 'lodash';
 import 'ace-builds';
 import 'ace-builds/webpack-resolver';
 import AceEditor from "react-ace";
+import T from '../i8n/i8n.js';
 
 import 'ace-builds/webpack-resolver.js';
 import 'ace-builds/src-min-noconflict/ext-beautify.js';
@@ -104,9 +105,12 @@ export class SettingsButton extends Component {
         return (
             <>
               <Button variant="default"
-                      className="float-left"
+                      className="float-left btn-tooltip"
+                      data-tooltip={T("Configure Editor")}
+                      data-position="right"
+
                       onClick={() => this.props.ace.execCommand("showSettingsMenu")} >
-                <FontAwesomeIcon icon="wrench"/>
+                <FontAwesomeIcon icon="text-height"/>
               </Button>
             </>
         );

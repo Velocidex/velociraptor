@@ -324,7 +324,7 @@ class NewCollectionSelectArtifacts extends React.Component {
 
               <Modal.Body>
                 <div className="row new-artifact-page">
-                  <div className="col-6 new-artifact-search-table selectable">
+                  <div className="col-4 new-artifact-search-table selectable">
                     { this.state.loading && <Spinner loading={this.state.loading}/> }
                     <BootstrapTable
                       hover
@@ -340,7 +340,7 @@ class NewCollectionSelectArtifacts extends React.Component {
                     />
 
                   </div>
-                  <div name="ArtifactInfo" className="col-6 new-artifact-description">
+                  <div name="ArtifactInfo" className="col-8 new-artifact-description">
                     { this.state.selectedDescriptor &&
                       <VeloReportViewer
                         artifact={this.state.selectedDescriptor.name}

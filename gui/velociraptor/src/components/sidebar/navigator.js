@@ -157,7 +157,7 @@ class VeloNavigator extends Component {
                         </ul>
                       </NavLink>
 
-                      { user_is_admin &&
+                      { user_is_admin && !customization.disable_user_management &&
                         <NavLink to="/users">
                           <ul className="nav nav-pills navigator">
                             <li className="nav-link" state="users" >

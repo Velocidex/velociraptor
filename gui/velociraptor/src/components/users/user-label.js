@@ -239,7 +239,7 @@ class UserSettings extends React.PureComponent {
                       <option value="ncurses">{T("Ncurses (light)")}</option>
                       <option value="github-dimmed-dark">{T("Github dimmed (dark)")}</option>
                       <option value="coolgray-dark">{T("Cool Gray (dark)")}</option>
-                      <option value="midnight">{T("Midnight Inferno <experimental> (dark)")}</option>
+                      <option value="midnight">{T("Midnight Inferno (very dark)")}</option>
                     </Form.Control>
                   </Col>
                 </Form.Group>

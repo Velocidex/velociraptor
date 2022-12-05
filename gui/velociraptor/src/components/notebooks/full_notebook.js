@@ -78,7 +78,9 @@ class FullScreenNotebook extends React.Component {
               <Spinner loading={this.state.loading} />
               <Navbar className="toolbar">
                 <ButtonGroup className="float-right floating-button">
-                  <Button title={T("Exit Fullscreen")}
+                  <Button data-tooltip={T("Exit Fullscreen")}
+                          data-position="left"
+                          className="btn-tooltip"
                           onClick={this.setSelectedNotebook}
                           variant="default">
                     <FontAwesomeIcon icon="compress"/>
