@@ -143,6 +143,7 @@ message ApiUser {
 // Contol the GUI per user.
 message GUICustomizations {
     bool disable_server_events = 1;
+    bool disable_user_management = 2;
 }
 
 message SetGUIOptionsRequest {

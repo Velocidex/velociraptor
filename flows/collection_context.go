@@ -106,7 +106,8 @@ func UpdateFlowStats(collection_context *CollectionContext) {
 		collection_context.ExecutionDuration += s.Duration
 
 		for _, a := range s.NamesWithResponse {
-			if !utils.InString(collection_context.ArtifactsWithResults, a) {
+			if a != "" &&
+				!utils.InString(collection_context.ArtifactsWithResults, a) {
 				collection_context.ArtifactsWithResults = append(
 					collection_context.ArtifactsWithResults, a)
 			}

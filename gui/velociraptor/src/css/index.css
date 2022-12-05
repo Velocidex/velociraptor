@@ -124,7 +124,7 @@ code {
   white-space: nowrap;
   transition: opacity ease-out 150ms, bottom ease-out 150ms;
   transition-property: opacity;
-  transition-delay: 400ms;
+  transition-delay: 800ms;
   z-index: 10;
 }
 
@@ -133,7 +133,7 @@ code {
 }
 .btn-tooltip[data-position='right']::before {
   left: 100%;
-  top: 0;
+  top: -15px;
   bottom: 0;
   margin: auto 0;
 }
@@ -144,7 +144,7 @@ code {
 
 .btn-tooltip[data-position='left']::before {
   right: 100%;
-  top: 0;
+  top: -15px;
   bottom: 0;
   margin: auto 0;
 }
