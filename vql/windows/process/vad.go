@@ -20,10 +20,14 @@ import (
 )
 
 type VMemInfo struct {
-	Address     uint64
-	Size        uint64
-	MappingName string
-	Protection  string
+	Address       uint64
+	Size          uint64
+	MappingName   string
+	State         string
+	Type          string
+	Protection    string
+	ProtectionMsg string
+	ProtectionRaw uint32
 }
 
 type ModuleInfo struct {
@@ -177,10 +181,14 @@ func GetVads(pid uint32) ([]*VMemInfo, syscall.Handle, error) {
 		// Ignore pages with no access.
 		if info.Protect != windows.PAGE_NOACCESS {
 			result = append(result, &VMemInfo{
-				Address:     info.BaseAddress,
-				Size:        info.RegionSize,
-				MappingName: filename,
-				Protection:  getProtection(info.Protect),
+				Address:       info.BaseAddress,
+				Size:          info.RegionSize,
+				MappingName:   filename,
+				State:         getState(info.State),
+				Type:          getType(info.Type),
+				Protection:    getProtection(info.Protect),
+				ProtectionMsg: getProtectionMsg(info.Protect),
+				ProtectionRaw: info.Protect,
 			})
 		}
 
@@ -228,6 +236,64 @@ func GetProcessModules(pid uint32) ([]ModuleInfo, error) {
 				fmt.Sprintf("Module32Next for pid %v: %v ", pid, err))
 		}
 	}
+}
+
+func getState(p uint32) string {
+	result := []string{}
+	if p == 0x1000 {
+		result = append(result, "MEM_COMMIT")
+	}
+	if p == 0x10000 {
+		result = append(result, "MEM_FREE")
+	}
+	if p == 0x2000 {
+		result = append(result, "MEM_RESERVE")
+	}
+	return strings.Join(result, ",")
+}
+
+func getType(p uint32) string {
+	result := []string{}
+	if p == 0x1000000 {
+		result = append(result, "MEM_IMAGE")
+	}
+	if p == 0x40000 {
+		result = append(result, "MEM_MAPPED")
+	}
+	if p == 0x20000 {
+		result = append(result, "MEM_PRIVATE")
+	}
+	return strings.Join(result, ",")
+}
+
+func getProtectionMsg(p uint32) string {
+	result := []string{}
+	if p&windows.PAGE_EXECUTE > 0 {
+		result = append(result, "PAGE_EXECUTE")
+	}
+	if p&windows.PAGE_EXECUTE_READ > 0 {
+		result = append(result, "PAGE_EXECUTE_READ")
+	}
+	if p&windows.PAGE_EXECUTE_READWRITE > 0 {
+		result = append(result, "PAGE_EXECUTE_READWRITE")
+	}
+	if p&windows.PAGE_EXECUTE_WRITECOPY > 0 {
+		result = append(result, "PAGE_EXECUTE_WRITECOPY")
+	}
+	if p&windows.PAGE_NOACCESS > 0 {
+		result = append(result, "PAGE_NOACCESS")
+	}
+	if p&windows.PAGE_READONLY > 0 {
+		result = append(result, "PAGE_READONLY")
+	}
+	if p&windows.PAGE_READWRITE > 0 {
+		result = append(result, "PAGE_READWRITE")
+	}
+	if p&windows.PAGE_WRITECOPY > 0 {
+		result = append(result, "PAGE_WRITECOPY")
+	}
+
+	return strings.Join(result, ",")
 }
 
 func getProtection(p uint32) string {
