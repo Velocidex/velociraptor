@@ -29,6 +29,10 @@ type PublicKeyResolver interface {
 		config_obj *config_proto.Config, subject string) (*rsa.PublicKey, bool)
 	SetPublicKey(
 		config_obj *config_proto.Config, subject string, key *rsa.PublicKey) error
+
+	// Clear from cache.
+	Delete(subject string)
+
 	Clear() // Flush all internal caches.
 }
 
@@ -41,6 +45,13 @@ func NewInMemoryPublicKeyResolver() PublicKeyResolver {
 	return &inMemoryPublicKeyResolver{
 		public_keys: make(map[string]*rsa.PublicKey),
 	}
+}
+
+func (self *inMemoryPublicKeyResolver) Delete(subject string) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	delete(self.public_keys, subject)
 }
 
 /*

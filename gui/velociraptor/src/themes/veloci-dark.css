@@ -411,6 +411,10 @@ body.veloci-dark {
   background: var(--color-btn-outline-link-hover);
 }
 
+.veloci-dark .new-artifact-search-table.selectable .table.table-bordered tbody tr > td > button.btn.btn-link {
+  background: var(--color-accent-25);
+}
+
 .veloci-dark .new-artifact-search-table.selectable .table.table-bordered tbody > tr.row-selected > td > button.btn.btn-link,
 .veloci-dark .new-artifact-search-table.selectable .table.table-bordered tbody > tr.row-selected > td > button.btn.btn-link:hover {
   background: var(--color-accent-75);
