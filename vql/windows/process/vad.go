@@ -239,31 +239,29 @@ func GetProcessModules(pid uint32) ([]ModuleInfo, error) {
 }
 
 func getState(p uint32) string {
-	result := []string{}
-	if p == 0x1000 {
-		result = append(result, "MEM_COMMIT")
+	switch p {
+	case 0x1000:
+		return "MEM_COMMIT"
+	case 0x10000:
+		return "MEM_FREE"
+	case 0x2000:
+		return "MEM_RESERVE"
+	default:
+		return fmt.Sprintf("Unknown %d", p)
 	}
-	if p == 0x10000 {
-		result = append(result, "MEM_FREE")
-	}
-	if p == 0x2000 {
-		result = append(result, "MEM_RESERVE")
-	}
-	return strings.Join(result, ",")
 }
 
 func getType(p uint32) string {
-	result := []string{}
-	if p == 0x1000000 {
-		result = append(result, "MEM_IMAGE")
+	switch p {
+	case 0x1000000:
+		return "MEM_IMAGE"
+	case 0x40000:
+		return "MEM_MAPPED"
+	case 0x20000:
+		return "MEM_PRIVATE"
+	default:
+		return fmt.Sprintf("Unknown %d", p)
 	}
-	if p == 0x40000 {
-		result = append(result, "MEM_MAPPED")
-	}
-	if p == 0x20000 {
-		result = append(result, "MEM_PRIVATE")
-	}
-	return strings.Join(result, ",")
 }
 
 func getProtectionMsg(p uint32) string {
