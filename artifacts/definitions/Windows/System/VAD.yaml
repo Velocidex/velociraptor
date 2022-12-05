@@ -61,7 +61,8 @@ sources:
           query={
             SELECT CreateTime as ProcessCreateTime,Pid, Name,MappingName  ,
                 format(format='%x-%x', args=[Address, Address+Size]) AS AddressRange,
-                Protection, Address as _Address,
+                Address as _Address,
+                State,Type,ProtectionMsg,Protection,
                 Size as SectionSize,
                 pathspec(
                     DelegateAccessor="process",
@@ -87,7 +88,8 @@ sources:
             query={
                 SELECT
                     ProcessCreateTime, Pid, Name,MappingName,
-                    AddressRange,Protection,SectionSize,
+                    AddressRange,State,Type,ProtectionMsg,
+                    Protection,SectionSize,
                     enumerate(items=dict(
                         Rule=Rule,
                         Meta=Meta,
