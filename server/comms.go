@@ -50,6 +50,8 @@ import (
 )
 
 var (
+	packetTooLargeError = errors.New("Packet too large!")
+
 	currentConnections = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "client_comms_current_connections",
 		Help: "Number of currently connected clients.",
@@ -224,6 +226,13 @@ func readWithLimits(
 	}
 	receiveBytesCounter.Add(float64(n))
 
+	if uint64(n) >= max_upload_size*2 {
+		server_obj.Error("Size exceeded when reading body from %v",
+			req.RemoteAddr)
+
+		return nil, packetTooLargeError
+	}
+
 	message_info, err := server_obj.Decrypt(ctx, buffer.Bytes())
 	if err != nil {
 		server_obj.Debug("Unable to decrypt body from %v: %+v "+
@@ -313,6 +322,19 @@ func control(
 		// Read the payload from the client.
 		message_info, err := readWithLimits(ctx, config_obj, server_obj, req)
 		if err != nil {
+			// Drop the packet on the floor to release it from the
+			// client's queue. If the client sends a very large packet
+			// it will be truncated by the above limit, and will not
+			// be possible to decrypt it. By dropping it on the floor
+			// we release it from the client's queue - otherwise it
+			// will just retransmit the same thing again and the
+			// packet will be stuck.
+			if err == packetTooLargeError {
+				w.WriteHeader(http.StatusOK)
+				flusher.Flush()
+				return
+			}
+
 			// Just plain reject with a 403.
 			http.Error(w, "", http.StatusForbidden)
 			return

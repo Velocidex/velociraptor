@@ -12,9 +12,12 @@ import (
 	"strconv"
 	"sync"
 	"syscall"
+	"time"
 
+	"github.com/Velocidex/ttlcache/v2"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows"
 	"www.velocidex.com/golang/velociraptor/vql/windows/process"
 	"www.velocidex.com/golang/vfilter"
@@ -101,6 +104,8 @@ func (self *ProcessReader) Read(buf []byte) (int, error) {
 		to_read = uint64(len(buf))
 	}
 
+	processAccessorTotalReadProcessMemory.Inc()
+
 	// Read memory from process at specified offset.
 	_, err := windows.ReadProcessMemory(
 		self.handle, self.offset, buf[:to_read])
@@ -173,7 +178,13 @@ func (self *ProcessReader) Seek(offset int64, whence int) (int64, error) {
 	return int64(self.offset), nil
 }
 
+// Keep the process alive in cache for a bit
 func (self ProcessReader) Close() error {
+	return nil
+}
+
+// The cache will close this process properly.
+func (self ProcessReader) closeCache() error {
 	return windows.CloseHandle(self.handle)
 }
 
@@ -181,13 +192,38 @@ func (self ProcessReader) Stat() (os.FileInfo, error) {
 	return &accessors.VirtualFileInfo{Size_: int64(self.size)}, nil
 }
 
-type ProcessAccessor struct{}
+type ProcessAccessor struct {
+	lru *ttlcache.Cache
+}
 
 const _ProcessAccessorTag = "_ProcessAccessor"
 
 func (self ProcessAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
-	return &ProcessAccessor{}, nil
+	result_any := vql_subsystem.CacheGet(scope, _ProcessAccessorTag)
+	if result_any == nil {
+		// Create a new cache in the scope.
+		result := &ProcessAccessor{
+			lru: ttlcache.NewCache(),
+		}
+		result.lru.SetTTL(time.Second)
+		result.lru.SetExpirationCallback(func(key string, value interface{}) {
+			info, ok := value.(*ProcessReader)
+			if ok {
+				info.closeCache()
+			}
+			processAccessorCurrentOpened.Dec()
+		})
+
+		vql_subsystem.CacheSet(scope, _ProcessAccessorTag, result)
+
+		vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+			result.lru.Purge()
+		})
+		return result, nil
+	}
+
+	return result_any.(*ProcessAccessor), nil
 }
 
 func (self ProcessAccessor) ParsePath(path string) (
@@ -241,10 +277,19 @@ func (self *ProcessAccessor) OpenWithOSPath(
 		return nil, errors.New("Unable to list all processes, use the pslist() plugin.")
 	}
 
-	pid, err := strconv.ParseUint(full_path.Components[0], 0, 64)
+	pid_str := full_path.Components[0]
+	pid, err := strconv.ParseUint(pid_str, 0, 64)
 	if err != nil {
 		return nil, errors.New("First directory path must be a process.")
 	}
+
+	cached_any, err := self.lru.Get(pid_str)
+	if err == nil {
+		return cached_any.(*ProcessReader), nil
+	}
+
+	processAccessorCurrentOpened.Inc()
+	processAccessorTotalOpened.Inc()
 
 	// Open the process and enumerate its ranges
 	ranges, proc_handle, err := process.GetVads(uint32(pid))
@@ -259,6 +304,9 @@ func (self *ProcessAccessor) OpenWithOSPath(
 	for _, r := range ranges {
 		result.ranges = append(result.ranges, r)
 	}
+
+	// Cache for next time.
+	self.lru.Set(pid_str, result)
 
 	return result, nil
 }
