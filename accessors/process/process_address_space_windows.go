@@ -4,6 +4,15 @@
 // Using this accessor it is possible to read directly from different processes, e.g.
 // read_file(filename="/434", accessor="process")
 
+// Ensure this does not leak handles:
+// SELECT * FROM Artifact.Windows.System.VAD(
+// SuspiciousContent='''
+// rule Hit { strings: $a = "microsoft" nocase wide ascii condition: any of them }''')
+// WHERE FALSE
+
+// Check the handles we have open in a notebook
+// SELECT * FROM handles(pid=getpid()) WHERE Type =~"process"
+
 package process
 
 import (
@@ -12,9 +21,12 @@ import (
 	"strconv"
 	"sync"
 	"syscall"
+	"time"
 
+	"github.com/Velocidex/ttlcache/v2"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows"
 	"www.velocidex.com/golang/velociraptor/vql/windows/process"
 	"www.velocidex.com/golang/vfilter"
@@ -30,6 +42,8 @@ type ProcessReader struct {
 	handle     syscall.Handle
 	ranges     []*process.VMemInfo
 	last_range *process.VMemInfo
+
+	in_use int
 }
 
 func (self *ProcessReader) getRange(offset uint64) *process.VMemInfo {
@@ -100,6 +114,8 @@ func (self *ProcessReader) Read(buf []byte) (int, error) {
 	if to_read > uint64(len(buf)) {
 		to_read = uint64(len(buf))
 	}
+
+	processAccessorTotalReadProcessMemory.Inc()
 
 	// Read memory from process at specified offset.
 	_, err := windows.ReadProcessMemory(
@@ -173,7 +189,21 @@ func (self *ProcessReader) Seek(offset int64, whence int) (int64, error) {
 	return int64(self.offset), nil
 }
 
-func (self ProcessReader) Close() error {
+// Keep the process alive in cache for a bit
+func (self *ProcessReader) Close() error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.in_use--
+	return nil
+}
+
+// The cache will close this process properly.
+func (self *ProcessReader) closeCache() error {
+	// Mark it as closed
+	self.in_use = -100
+
+	processAccessorCurrentOpened.Dec()
 	return windows.CloseHandle(self.handle)
 }
 
@@ -181,13 +211,64 @@ func (self ProcessReader) Stat() (os.FileInfo, error) {
 	return &accessors.VirtualFileInfo{Size_: int64(self.size)}, nil
 }
 
-type ProcessAccessor struct{}
+type ProcessAccessor struct {
+	mu  sync.Mutex
+	lru *ttlcache.Cache
+}
 
 const _ProcessAccessorTag = "_ProcessAccessor"
 
 func (self ProcessAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
-	return &ProcessAccessor{}, nil
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	result_any := vql_subsystem.CacheGet(scope, _ProcessAccessorTag)
+	if result_any == nil {
+		// Create a new cache in the scope.
+		result := &ProcessAccessor{
+			lru: ttlcache.NewCache(),
+		}
+		result.lru.SetTTL(time.Second)
+		result.lru.SetCheckExpirationCallback(func(key string, value interface{}) bool {
+			info, ok := value.(*ProcessReader)
+			if ok {
+				info.mu.Lock()
+				defer info.mu.Unlock()
+
+				// Reader is in use do not allow it to expire.
+				if info.in_use > 0 {
+					return false
+				}
+
+				// No one is using it, close the handle
+				if info.in_use == 0 {
+					info.closeCache()
+				}
+			}
+			return true
+		})
+
+		vql_subsystem.CacheSet(scope, _ProcessAccessorTag, result)
+
+		vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+			// Force the lru to expire even if readers are still in
+			// use! This ensures we do not leak handles.
+			for _, k := range result.lru.GetKeys() {
+				v, err := result.lru.Get(k)
+				if err == nil {
+					reader := v.(*ProcessReader)
+
+					reader.mu.Lock()
+					reader.closeCache()
+					reader.mu.Unlock()
+				}
+			}
+		})
+		return result, nil
+	}
+
+	return result_any.(*ProcessAccessor), nil
 }
 
 func (self ProcessAccessor) ParsePath(path string) (
@@ -241,9 +322,27 @@ func (self *ProcessAccessor) OpenWithOSPath(
 		return nil, errors.New("Unable to list all processes, use the pslist() plugin.")
 	}
 
-	pid, err := strconv.ParseUint(full_path.Components[0], 0, 64)
+	pid_str := full_path.Components[0]
+	pid, err := strconv.ParseUint(pid_str, 0, 64)
 	if err != nil {
 		return nil, errors.New("First directory path must be a process.")
+	}
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	cached_any, err := self.lru.Get(pid_str)
+	if err == nil {
+		info := cached_any.(*ProcessReader)
+		info.mu.Lock()
+
+		// If the handle is already closed make a new one.
+		if info.in_use >= 0 {
+			info.in_use++
+			info.mu.Unlock()
+			return info, nil
+		}
+		info.mu.Unlock()
 	}
 
 	// Open the process and enumerate its ranges
@@ -251,14 +350,22 @@ func (self *ProcessAccessor) OpenWithOSPath(
 	if err != nil {
 		return nil, err
 	}
+
+	processAccessorCurrentOpened.Inc()
+	processAccessorTotalOpened.Inc()
+
 	result := &ProcessReader{
 		pid:    pid,
 		handle: proc_handle,
+		in_use: 1, // One user as we just return it to our caller.
 	}
 
 	for _, r := range ranges {
 		result.ranges = append(result.ranges, r)
 	}
+
+	// Cache for next time.
+	self.lru.Set(pid_str, result)
 
 	return result, nil
 }

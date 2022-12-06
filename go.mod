@@ -214,6 +214,7 @@ require (
 // replace github.com/Velocidex/grpc-go-pool => /home/mic/projects/grpc-go-pool
 // replace www.velocidex.com/golang/oleparse => /home/matt/git/oleparse
 // replace github.com/go-errors/errors => /home/mic/projects/errors
+// replace github.com/Velocidex/ttlcache/v2 => /home/mic/projects/ttlcache
 
 // Remove search for html end block. This allows inserting unbalanced
 // HTML tags into the markdown
