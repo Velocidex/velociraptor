@@ -579,6 +579,7 @@ func (self *MemcacheDatastore) Close() {
 	self.dir_cache.Flush()
 }
 
+// Clear the cache and drop the data on the floor.
 func (self *MemcacheDatastore) Clear() {
 	self.data_cache.Purge()
 	self.dir_cache.Purge()

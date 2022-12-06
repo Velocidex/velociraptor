@@ -55,7 +55,7 @@ type CryptoManager struct {
 func (self *CryptoManager) Clear() {
 	self.cipher_lru.Clear()
 	self.Resolver.Clear()
-	self.unauthenticated_lru.Purge()
+	self.unauthenticated_lru.Flush()
 }
 
 func (self *CryptoManager) ClientId() string {

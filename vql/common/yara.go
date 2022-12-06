@@ -108,7 +108,7 @@ func (self YaraScanPlugin) Call(
 		rules, err := getYaraRules(arg.Key, arg.Namespace, arg.Rules,
 			arg.YaraVariables, scope)
 		if err != nil {
-			scope.Log("proc_yara: %v", err)
+			scope.Log("yara: %v", err)
 			return
 		}
 
