@@ -33,13 +33,6 @@ export class UserSettings extends React.Component {
 
             traits.username = response.data.username;
             traits.orgs = response.data.orgs;
-	    if (traits.org === "root") {
-		traits.org_name = "Root Organization";
-	    } else {
-		traits.org_name = traits.orgs.filter((org) => {
-		    return org.id === traits.org;
-		})[0].name;
-	    }
 
             this.setState({traits: traits});
 
