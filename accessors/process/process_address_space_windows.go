@@ -185,6 +185,7 @@ func (self ProcessReader) Close() error {
 
 // The cache will close this process properly.
 func (self ProcessReader) closeCache() error {
+	processAccessorCurrentOpened.Dec()
 	return windows.CloseHandle(self.handle)
 }
 
@@ -193,6 +194,7 @@ func (self ProcessReader) Stat() (os.FileInfo, error) {
 }
 
 type ProcessAccessor struct {
+	mu  sync.Mutex
 	lru *ttlcache.Cache
 }
 
@@ -200,6 +202,9 @@ const _ProcessAccessorTag = "_ProcessAccessor"
 
 func (self ProcessAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	result_any := vql_subsystem.CacheGet(scope, _ProcessAccessorTag)
 	if result_any == nil {
 		// Create a new cache in the scope.
@@ -212,13 +217,12 @@ func (self ProcessAccessor) New(scope vfilter.Scope) (
 			if ok {
 				info.closeCache()
 			}
-			processAccessorCurrentOpened.Dec()
 		})
 
 		vql_subsystem.CacheSet(scope, _ProcessAccessorTag, result)
 
 		vql_subsystem.GetRootScope(scope).AddDestructor(func() {
-			result.lru.Purge()
+			result.lru.Close()
 		})
 		return result, nil
 	}
@@ -283,19 +287,23 @@ func (self *ProcessAccessor) OpenWithOSPath(
 		return nil, errors.New("First directory path must be a process.")
 	}
 
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	cached_any, err := self.lru.Get(pid_str)
 	if err == nil {
 		return cached_any.(*ProcessReader), nil
 	}
-
-	processAccessorCurrentOpened.Inc()
-	processAccessorTotalOpened.Inc()
 
 	// Open the process and enumerate its ranges
 	ranges, proc_handle, err := process.GetVads(uint32(pid))
 	if err != nil {
 		return nil, err
 	}
+
+	processAccessorCurrentOpened.Inc()
+	processAccessorTotalOpened.Inc()
+
 	result := &ProcessReader{
 		pid:    pid,
 		handle: proc_handle,

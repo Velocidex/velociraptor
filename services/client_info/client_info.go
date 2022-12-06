@@ -301,7 +301,7 @@ func (self *ClientInfoManager) Start(
 			defer wg.Done()
 
 			// When we teardown write the data to storage if needed.
-			defer self.lru.Purge()
+			defer self.lru.Flush()
 
 			for {
 				select {
@@ -544,7 +544,7 @@ func (self *ClientInfoManager) FlushAll() {
 }
 
 func (self *ClientInfoManager) Clear() {
-	self.lru.Purge()
+	self.lru.Flush()
 }
 
 func (self *ClientInfoManager) Remove(ctx context.Context, client_id string) {
