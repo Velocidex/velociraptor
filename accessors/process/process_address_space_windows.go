@@ -4,6 +4,15 @@
 // Using this accessor it is possible to read directly from different processes, e.g.
 // read_file(filename="/434", accessor="process")
 
+// Ensure this does not leak handles:
+// SELECT * FROM Artifact.Windows.System.VAD(
+// SuspiciousContent='''
+// rule Hit { strings: $a = "microsoft" nocase wide ascii condition: any of them }''')
+// WHERE FALSE
+
+// Check the handles we have open in a notebook
+// SELECT * FROM handles(pid=getpid()) WHERE Type =~"process"
+
 package process
 
 import (
@@ -33,6 +42,8 @@ type ProcessReader struct {
 	handle     syscall.Handle
 	ranges     []*process.VMemInfo
 	last_range *process.VMemInfo
+
+	in_use int
 }
 
 func (self *ProcessReader) getRange(offset uint64) *process.VMemInfo {
@@ -179,12 +190,19 @@ func (self *ProcessReader) Seek(offset int64, whence int) (int64, error) {
 }
 
 // Keep the process alive in cache for a bit
-func (self ProcessReader) Close() error {
+func (self *ProcessReader) Close() error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.in_use--
 	return nil
 }
 
 // The cache will close this process properly.
-func (self ProcessReader) closeCache() error {
+func (self *ProcessReader) closeCache() error {
+	// Mark it as closed
+	self.in_use = -100
+
 	processAccessorCurrentOpened.Dec()
 	return windows.CloseHandle(self.handle)
 }
@@ -212,17 +230,40 @@ func (self ProcessAccessor) New(scope vfilter.Scope) (
 			lru: ttlcache.NewCache(),
 		}
 		result.lru.SetTTL(time.Second)
-		result.lru.SetExpirationCallback(func(key string, value interface{}) {
+		result.lru.SetCheckExpirationCallback(func(key string, value interface{}) bool {
 			info, ok := value.(*ProcessReader)
 			if ok {
-				info.closeCache()
+				info.mu.Lock()
+				defer info.mu.Unlock()
+
+				// Reader is in use do not allow it to expire.
+				if info.in_use > 0 {
+					return false
+				}
+
+				// No one is using it, close the handle
+				if info.in_use == 0 {
+					info.closeCache()
+				}
 			}
+			return true
 		})
 
 		vql_subsystem.CacheSet(scope, _ProcessAccessorTag, result)
 
 		vql_subsystem.GetRootScope(scope).AddDestructor(func() {
-			result.lru.Close()
+			// Force the lru to expire even if readers are still in
+			// use! This ensures we do not leak handles.
+			for _, k := range result.lru.GetKeys() {
+				v, err := result.lru.Get(k)
+				if err == nil {
+					reader := v.(*ProcessReader)
+
+					reader.mu.Lock()
+					reader.closeCache()
+					reader.mu.Unlock()
+				}
+			}
 		})
 		return result, nil
 	}
@@ -292,7 +333,16 @@ func (self *ProcessAccessor) OpenWithOSPath(
 
 	cached_any, err := self.lru.Get(pid_str)
 	if err == nil {
-		return cached_any.(*ProcessReader), nil
+		info := cached_any.(*ProcessReader)
+		info.mu.Lock()
+
+		// If the handle is already closed make a new one.
+		if info.in_use >= 0 {
+			info.in_use++
+			info.mu.Unlock()
+			return info, nil
+		}
+		info.mu.Unlock()
 	}
 
 	// Open the process and enumerate its ranges
@@ -307,6 +357,7 @@ func (self *ProcessAccessor) OpenWithOSPath(
 	result := &ProcessReader{
 		pid:    pid,
 		handle: proc_handle,
+		in_use: 1, // One user as we just return it to our caller.
 	}
 
 	for _, r := range ranges {
