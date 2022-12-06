@@ -140,8 +140,8 @@ export class SaveCollectionDialog extends React.PureComponent {
     }
 
     render() {
-        let collected_artifacts = this.props.flow.artifacts_with_results || [];
-        let artifacts = collected_artifacts.join(",");
+        let collected_artifacts = this.props.flow.request.artifacts || [];
+        let artifacts = collected_artifacts.join(", ");
         return (
             <Modal show={true} onHide={this.props.onClose}>
               <Modal.Header closeButton>

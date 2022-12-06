@@ -41,7 +41,7 @@ parameters:
     type: yara
   - name: ContextBytes
     description: Include this amount of bytes around yara hit as context.
-    default: 10000
+    default: 200
     type: int
 
 
@@ -83,17 +83,21 @@ sources:
 
       -- if suspicious yara added, search for it
       LET yara_sections = SELECT *
-        FROM foreach(row=sections,
-            query={
+        FROM foreach(row={
+                SELECT * FROM sections
+                WHERE NOT State =~ "RESERVE"
+            }, query={
                 SELECT
                     ProcessCreateTime, Pid, Name,MappingName,
-                    AddressRange,Protection,SectionSize,
-                    enumerate(items=dict(
-                        Rule=Rule,
-                        Meta=Meta,
-                      Tags=Tags,
-                      String=String))[0] as YaraHit,
-                    _PathSpec,_Address
+                    AddressRange,State,Type,ProtectionMsg,
+                    Protection,SectionSize,
+                    dict(Rule=Rule,
+                         Meta=Meta,
+                         Tags=Tags,
+                         Offset=String.Offset,
+                         Name=String.Name) as YaraHit,
+                    String.Data AS YaraContext,
+                    _PathSpec, _Address
                 FROM yara(
                             accessor='offset',
                             files=_PathSpec,
@@ -127,3 +131,7 @@ sources:
       SELECT * FROM if(condition= UploadSection,
                     then= upload_results,
                     else= results)
+
+column_types:
+  - name: YaraContext
+    type: hex
