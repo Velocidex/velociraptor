@@ -79,11 +79,27 @@ func (self *Launcher) CompileSingleArtifact(
 				VQL: fmt.Sprintf("LET %v <= int(int=%v)", escaped_name,
 					escaped_name),
 			})
+
+		case "float":
+			result.Query = append(result.Query, &actions_proto.VQLRequest{
+				VQL: fmt.Sprintf("LET %v <= parse_float(string=%v)", escaped_name,
+					escaped_name),
+			})
+
 		case "timestamp":
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
 				VQL: fmt.Sprintf("LET %v <= timestamp(epoch=%v)", escaped_name,
 					escaped_name),
 			})
+		case "starlark":
+			result.Query = append(result.Query, &actions_proto.VQLRequest{
+				VQL: fmt.Sprintf(`
+LET %v <= if(
+    condition=format(format="%%T", args=%v) =~ "string",
+    then=starl(code=%v),
+    else=%v)
+`,
+					escaped_name, escaped_name, escaped_name, escaped_name)})
 		case "csv", "artifactset":
 			// Only parse from CSV if it is a string.
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
@@ -114,6 +130,28 @@ LET %v <= if(
 LET %v <= if(
     condition=format(format="%%T", args=%v) = "string",
     then=parse_json_array(data=%v),
+    else=%v)
+`,
+					escaped_name, escaped_name, escaped_name, escaped_name),
+			})
+
+		case "xml":
+			result.Query = append(result.Query, &actions_proto.VQLRequest{
+				VQL: fmt.Sprintf(`
+LET %v <= if(
+    condition=format(format="%%T", args=%v) =~ "string",
+    then=parse_xml(file=%v, accessor="data"),
+    else=%v)
+`,
+					escaped_name, escaped_name, escaped_name, escaped_name),
+			})
+
+		case "yaml":
+			result.Query = append(result.Query, &actions_proto.VQLRequest{
+				VQL: fmt.Sprintf(`
+LET %v <= if(
+    condition=format(format="%%T", args=%v) =~ "string",
+    then=parse_yaml(filename=%v, accessor="data"),
     else=%v)
 `,
 					escaped_name, escaped_name, escaped_name, escaped_name),
