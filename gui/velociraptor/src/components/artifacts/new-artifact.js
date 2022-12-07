@@ -86,9 +86,10 @@ export default class NewArtifactDialog extends React.Component {
                    className="full-height"
                    dialogClassName="modal-90w"
                    enforceFocus={false}
-                   scrollable={true}
-                   onHide={this.props.onClose}>
-              <Modal.Header closeButton>
+                   keyboard={false}
+                   scrollable={true}>
+              <Modal.Header closeButton
+                    onHide={this.props.onClose}>
                 <Modal.Title>{ this.props.name ?
                                T("Edit Artifact", this.props.name) :
                                T("Create a new artifact")}
