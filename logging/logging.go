@@ -36,6 +36,8 @@ import (
 	"github.com/rifflock/lfshook"
 	"github.com/sirupsen/logrus"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -270,7 +272,9 @@ func getRotator(
 
 	// Make sure to write one message to confirm that we can actually
 	// write to the file.
-	_, err = result.Write([]byte("Starting...\n"))
+	now := utils.GetTime().Now().UTC()
+	_, err = result.Write([]byte(json.Format(
+		"{\"level\": \"info\", \"msg\": \"Starting...\", \"time\": %q}\n", now)))
 	return result, err
 }
 
@@ -294,6 +298,8 @@ func (self *LogManager) makeNewComponent(
 
 		base_filename := filepath.Join(base_directory, *component)
 		pathMap := lfshook.WriterMap{}
+
+		Prelog("Initializing logging for %v\n", base_filename)
 
 		rotator, err := getRotator(
 			config_obj, config_obj.Logging.Debug,
@@ -321,9 +327,9 @@ func (self *LogManager) makeNewComponent(
 
 		hook := lfshook.NewHook(
 			pathMap,
-			&logrus.JSONFormatter{
+			&JSONFormatter{&logrus.JSONFormatter{
 				DisableHTMLEscape: true,
-			},
+			}},
 		)
 		Log.Hooks.Add(hook)
 	}
@@ -364,9 +370,9 @@ func AddLogFile(filename string) error {
 
 	for _, log := range Manager.contexts {
 		log.Hooks.Add(lfshook.NewHook(
-			writer_map, &logrus.JSONFormatter{
+			writer_map, &JSONFormatter{&logrus.JSONFormatter{
 				DisableHTMLEscape: true,
-			},
+			}},
 		))
 	}
 	return nil

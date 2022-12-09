@@ -157,7 +157,7 @@ type Launcher interface {
 	CancelFlow(
 		ctx context.Context,
 		config_obj *config_proto.Config,
-		client_id, flow_id, username string) (
+		client_id, flow_id, principal string) (
 		res *api_proto.StartFlowResponse, err error)
 
 	// Get the exact requests that were sent for this collection (for

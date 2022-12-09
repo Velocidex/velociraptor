@@ -42,6 +42,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
+	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -393,11 +394,19 @@ func downloadTable() http.Handler {
 		}
 
 		// Log an audit event.
-		userinfo := GetUserInfo(r.Context(), org_config_obj)
+		user_record := GetUserInfo(r.Context(), org_config_obj)
+		principal := user_record.Name
 
 		// This should never happen!
-		if userinfo.Name == "" {
-			returnError(w, 500, "Unauthenticated access.")
+		if principal == "" {
+			returnError(w, 403, "Unauthenticated access.")
+			return
+		}
+
+		permissions := acls.READ_RESULTS
+		perm, err := services.CheckAccess(org_config_obj, principal, permissions)
+		if !perm || err != nil {
+			returnError(w, 403, "Unauthenticated access.")
 			return
 		}
 
@@ -414,12 +423,11 @@ func downloadTable() http.Handler {
 			w.Header().Set("Content-Type", "binary/octet-stream")
 			w.WriteHeader(200)
 
-			logger := logging.GetLogger(org_config_obj, &logging.Audit)
-			logger.WithFields(logrus.Fields{
-				"user":    userinfo.Name,
-				"request": request,
-				"remote":  r.RemoteAddr,
-			}).Info("DownloadTable")
+			logging.LogAudit(org_config_obj, principal, "DownloadTable",
+				logrus.Fields{
+					"request": request,
+					"remote":  r.RemoteAddr,
+				})
 
 			scope := vql_subsystem.MakeScope()
 			csv_writer := csv.GetCSVAppender(
@@ -444,12 +452,11 @@ func downloadTable() http.Handler {
 			w.Header().Set("Content-Type", "binary/octet-stream")
 			w.WriteHeader(200)
 
-			logger := logging.GetLogger(org_config_obj, &logging.Audit)
-			logger.WithFields(logrus.Fields{
-				"user":    userinfo.Name,
-				"request": request,
-				"remote":  r.RemoteAddr,
-			}).Info("DownloadTable")
+			logging.LogAudit(org_config_obj, principal, "DownloadTable",
+				logrus.Fields{
+					"request": request,
+					"remote":  r.RemoteAddr,
+				})
 
 			for row := range row_chan {
 				serialized, err := json.MarshalWithOptions(

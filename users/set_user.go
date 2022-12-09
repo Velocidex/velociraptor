@@ -31,8 +31,6 @@ func SetUserPassword(
 	principal, username string,
 	password, current_org string) error {
 
-	logger := logging.GetLogger(config_obj, &logging.Audit)
-
 	if isNameReserved(username) {
 		return NameReservedError
 	}
@@ -73,10 +71,11 @@ func SetUserPassword(
 		if user_err != nil {
 			return user_err
 		}
-		logger.WithFields(logrus.Fields{
-			"operation": "Update Own Password",
-			"user":      user_record.Name,
-		}).Info("Update password")
+		logging.LogAudit(config_obj, principal, "Update password",
+			logrus.Fields{
+				"operation": "Update Own Password",
+				"user":      user_record.Name,
+			})
 		return user_manager.SetUser(ctx, user_record)
 	}
 
@@ -87,11 +86,11 @@ func SetUserPassword(
 			return user_err
 		}
 
-		logger.WithFields(logrus.Fields{
-			"operation": "Update Password By Admin",
-			"principal": principal,
-			"user":      user_record.Name,
-		}).Info("Update password")
+		logging.LogAudit(config_obj, principal, "Update password",
+			logrus.Fields{
+				"operation": "Update Password By Admin",
+				"user":      user_record.Name,
+			})
 		return user_manager.SetUser(ctx, user_record)
 	}
 
@@ -107,20 +106,20 @@ func SetUserPassword(
 			if user_err != nil {
 				return user_err
 			}
-			logger.WithFields(logrus.Fields{
-				"operation": "Update Password By Admin",
-				"principal": principal,
-				"user":      user_record.Name,
-			}).Info("Update password")
+			logging.LogAudit(config_obj, principal, "Update password",
+				logrus.Fields{
+					"operation": "Update Password By Admin",
+					"user":      user_record.Name,
+				})
 			return user_manager.SetUser(ctx, user_record)
 		}
 	}
 
-	logger.WithFields(logrus.Fields{
-		"error":     acls.PermissionDenied.Error(),
-		"principal": principal,
-		"user":      user_record.Name,
-	}).Info("Update password")
+	logging.LogAudit(config_obj, principal, "Update password",
+		logrus.Fields{
+			"error": acls.PermissionDenied.Error(),
+			"user":  user_record.Name,
+		})
 	return acls.PermissionDenied
 }
 

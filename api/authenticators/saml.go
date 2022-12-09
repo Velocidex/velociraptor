@@ -125,13 +125,12 @@ Contact your system administrator to get an account, then try again.
 </body></html>
 `, username)
 
-			logging.GetLogger(self.config_obj, &logging.Audit).
-				WithFields(logrus.Fields{
-					"user":   username,
+			logging.LogAudit(self.config_obj, username, "User rejected by GUI",
+				logrus.Fields{
 					"remote": r.RemoteAddr,
 					"method": r.Method,
 					"error":  err.Error(),
-				}).Error("User rejected by GUI")
+				})
 
 			return
 		}

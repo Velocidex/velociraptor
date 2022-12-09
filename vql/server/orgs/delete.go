@@ -50,11 +50,10 @@ func (self OrgDeleteFunction) Call(
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
-	logger := logging.GetLogger(config_obj, &logging.Audit)
-	logger.WithFields(logrus.Fields{
-		"OrgId":     arg.OrgId,
-		"Principal": principal,
-	}).Info("org_delete")
+	logging.LogAudit(config_obj, principal, "org_delete",
+		logrus.Fields{
+			"org_id": arg.OrgId,
+		})
 
 	err = org_manager.DeleteOrg(ctx, arg.OrgId)
 	if err != nil {

@@ -4,8 +4,10 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -48,6 +50,8 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 			return
 		}
 
+		principal := vql_subsystem.GetPrincipal(scope)
+
 		launcher, err := services.GetLauncher(config_obj)
 		if err != nil {
 			scope.Log("hunt_delete: %s", err)
@@ -59,6 +63,19 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 			scope.Log("hunt_delete: %s", err)
 			return
 		}
+
+		hunt_obj, pres := hunt_dispatcher.GetHunt(arg.HuntId)
+		if !pres {
+			scope.Log("hunt_delete: not found")
+			return
+		}
+
+		logging.LogAudit(config_obj, principal, "hunt_delete",
+			logrus.Fields{
+				"hunt_id": arg.HuntId,
+				"details": hunt_obj,
+			})
+
 		for flow_details := range hunt_dispatcher.GetFlows(
 			ctx, config_obj, scope, arg.HuntId, 0) {
 

@@ -45,11 +45,8 @@ func (self UserDeleteFunction) Call(
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
-	logger := logging.GetLogger(config_obj, &logging.Audit)
-	logger.WithFields(logrus.Fields{
-		"Username":  arg.Username,
-		"Principal": principal,
-	}).Info("user_delete")
+	logging.LogAudit(config_obj, principal, "user_delete",
+		logrus.Fields{"Username": arg.Username})
 
 	if arg.ReallyDoIt {
 		err = users.DeleteUser(ctx, principal, arg.Username, orgs)

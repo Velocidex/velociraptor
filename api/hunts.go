@@ -31,10 +31,10 @@ func (self *ApiServer) GetHuntFlows(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+	principal := user_record.Name
 
-	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
-	perm, err := services.CheckAccess(org_config_obj, user_name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view hunt results.")
@@ -100,9 +100,10 @@ func (self *ApiServer) CreateHunt(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+	principal := user_record.Name
 
 	// Log this event as an Audit event.
-	in.Creator = user_record.Name
+	in.Creator = principal
 	in.HuntId = hunt_dispatcher.GetNewHuntId()
 
 	acl_manager := acl_managers.NewServerACLManager(org_config_obj, in.Creator)
@@ -176,13 +177,12 @@ func (self *ApiServer) CreateHunt(
 	result.FlowId = in.HuntId
 
 	// Audit message for GUI access
-	logging.GetLogger(org_config_obj, &logging.Audit).
-		WithFields(logrus.Fields{
-			"user":    in.Creator,
+	logging.LogAudit(org_config_obj, principal, "CreateHunt",
+		logrus.Fields{
 			"hunt_id": result.FlowId,
 			"details": json.MustMarshalString(in),
 			"orgs":    orgs_we_scheduled,
-		}).Info("CreateHunt")
+		})
 
 	return result, nil
 }
@@ -199,7 +199,9 @@ func (self *ApiServer) ModifyHunt(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
-	in.Creator = user_record.Name
+	principal := user_record.Name
+
+	in.Creator = principal
 
 	permissions := acls.COLLECT_CLIENT
 	perm, err := services.CheckAccess(org_config_obj, in.Creator, permissions)
@@ -208,12 +210,11 @@ func (self *ApiServer) ModifyHunt(
 			"User is not allowed to modify hunts.")
 	}
 
-	logging.GetLogger(org_config_obj, &logging.Audit).
-		WithFields(logrus.Fields{
-			"user":    in.Creator,
+	logging.LogAudit(org_config_obj, principal, "ModifyHunt",
+		logrus.Fields{
 			"hunt_id": in.HuntId,
 			"details": json.MustMarshalString(in),
-		}).Info("ModifyHunt")
+		})
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
 	if err != nil {
@@ -240,10 +241,10 @@ func (self *ApiServer) ListHunts(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+	principal := user_record.Name
 
-	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
-	perm, err := services.CheckAccess(org_config_obj, user_name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view hunts.")
@@ -296,10 +297,10 @@ func (self *ApiServer) GetHunt(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+	principal := user_record.Name
 
-	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
-	perm, err := services.CheckAccess(org_config_obj, user_name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view hunts.")
@@ -329,10 +330,10 @@ func (self *ApiServer) GetHuntResults(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+	principal := user_record.Name
 
-	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
-	perm, err := services.CheckAccess(org_config_obj, user_name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view results.")
@@ -345,7 +346,7 @@ func (self *ApiServer) GetHuntResults(
 	// More than 100 results are not very useful in the GUI -
 	// users should just download the json file for post
 	// processing or process in the notebook.
-	result, err := RunVQL(ctx, org_config_obj, user_name, env,
+	result, err := RunVQL(ctx, org_config_obj, principal, env,
 		"SELECT * FROM hunt_results(hunt_id=HuntID, "+
 			"artifact=ArtifactName) LIMIT 100")
 	if err != nil {
@@ -365,10 +366,10 @@ func (self *ApiServer) EstimateHunt(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+	principal := user_record.Name
 
-	user_name := user_record.Name
 	permissions := acls.READ_RESULTS
-	perm, err := services.CheckAccess(org_config_obj, user_name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to view hunt results.")

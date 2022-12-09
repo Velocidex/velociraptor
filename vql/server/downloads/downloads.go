@@ -79,6 +79,14 @@ func (self *CreateFlowDownload) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	principal := vql_subsystem.GetPrincipal(scope)
+	logging.LogAudit(config_obj, principal, "create_flow_download",
+		logrus.Fields{
+			"format":    format,
+			"client_id": arg.ClientId,
+			"flow_id":   arg.FlowId,
+		})
+
 	result, err := createDownloadFile(
 		ctx, scope, config_obj, format,
 		arg.FlowId, arg.ClientId, arg.Password,

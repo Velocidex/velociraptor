@@ -78,23 +78,22 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 		users_manager := services.GetUserManager()
 		user_record, err := users_manager.GetUserWithHashes(r.Context(), username)
 		if err != nil || user_record.Name != username {
-			logger := logging.GetLogger(self.config_obj, &logging.Audit)
-			logger.WithFields(logrus.Fields{
-				"username": username,
-				"status":   http.StatusUnauthorized,
-			}).Error("Unknown username")
+			logging.LogAudit(self.config_obj, username, "Unknown username",
+				logrus.Fields{
+					"remote": r.RemoteAddr,
+					"status": http.StatusUnauthorized,
+				})
 
 			http.Error(w, "authorization failed", http.StatusUnauthorized)
 			return
 		}
 
 		if !users.VerifyPassword(user_record, password) {
-			logger := logging.GetLogger(self.config_obj, &logging.Audit)
-			logger.WithFields(logrus.Fields{
-				"username": username,
-				"status":   http.StatusUnauthorized,
-			}).Error("Invalid password")
-
+			logging.LogAudit(self.config_obj, username, "Invalid password",
+				logrus.Fields{
+					"remote": r.RemoteAddr,
+					"status": http.StatusUnauthorized,
+				})
 			http.Error(w, "authorization failed", http.StatusUnauthorized)
 			return
 		}
@@ -102,11 +101,11 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 		// Does the user have access to the specified org?
 		err = CheckOrgAccess(r, user_record)
 		if err != nil {
-			logger := logging.GetLogger(self.config_obj, &logging.Audit)
-			logger.WithFields(logrus.Fields{
-				"username": username,
-				"status":   http.StatusUnauthorized,
-			}).Error("Unauthorized username")
+			logging.LogAudit(self.config_obj, username, "Unauthorized username",
+				logrus.Fields{
+					"remote": r.RemoteAddr,
+					"status": http.StatusUnauthorized,
+				})
 
 			http.Error(w, "authorization failed", http.StatusUnauthorized)
 			return

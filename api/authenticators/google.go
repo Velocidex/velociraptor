@@ -237,8 +237,8 @@ func installLogoff(config_obj *config_proto.Config, mux *http.ServeMux) {
 			old_username, ok := params["username"]
 			username := ""
 			if ok && len(old_username) == 1 {
-				logger := logging.GetLogger(config_obj, &logging.Audit)
-				logger.Info("Logging off %v", old_username[0])
+				logging.LogAudit(
+					config_obj, old_username[0], "LogOff", logrus.Fields{})
 				username = old_username[0]
 			}
 
@@ -319,15 +319,15 @@ func reject_with_username(
 	config_obj *config_proto.Config,
 	w http.ResponseWriter, r *http.Request,
 	err error, username, login_url, provider string) {
-	logger := logging.GetLogger(config_obj, &logging.Audit)
+
 	// Log into the audit log.
-	logger.WithFields(logrus.Fields{
-		"user":   username,
-		"remote": r.RemoteAddr,
-		"method": r.Method,
-		"url":    r.URL,
-		"err":    err.Error(),
-	}).Error("User rejected by GUI")
+	logging.LogAudit(config_obj, username, "User rejected by GUI",
+		logrus.Fields{
+			"remote": r.RemoteAddr,
+			"method": r.Method,
+			"url":    r.URL,
+			"err":    err.Error(),
+		})
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusUnauthorized)
