@@ -47,7 +47,7 @@ parameters:
 
   - name: encryption_scheme
     description: |
-      Encryption scheme to use. Currently supported are Passowrd, X509 or PGP
+      Encryption scheme to use. Currently supported are Password, X509 or PGP
 
   - name: encryption_args
     description: |
