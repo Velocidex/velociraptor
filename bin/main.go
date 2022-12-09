@@ -157,17 +157,21 @@ func main() {
 		WithTempdir(*tempdir_flag).
 		WithApiLoader(*api_config_path).
 		WithEnvApiLoader("VELOCIRAPTOR_API_CONFIG").
-		WithCustomValidator(maybe_unlock_api_config).
+		WithCustomValidator("Validator maybe_unlock_api_config",
+			maybe_unlock_api_config).
 		WithFileLoader(*config_path).
 		WithEmbedded().
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
-		WithConfigMutator(func(config_obj *config_proto.Config) error {
-			return mergeFlagConfig(config_obj, default_config)
-		}).
-		WithCustomValidator(initFilestoreAccessor).
-		WithCustomValidator(initDebugServer).
-		WithConfigMutator(applyMinionRole).
-		WithCustomValidator(applyAnalysisTarget).
+		WithConfigMutator("Mutator mergeFlagConfig",
+			func(config_obj *config_proto.Config) error {
+				return mergeFlagConfig(config_obj, default_config)
+			}).
+		WithCustomValidator("validator: initFilestoreAccessor",
+			initFilestoreAccessor).
+		WithCustomValidator("validator: initDebugServer", initDebugServer).
+		WithConfigMutator("Mutator: applyMinionRole", applyMinionRole).
+		WithCustomValidator("validator: applyAnalysisTarget",
+			applyAnalysisTarget).
 		WithOverride(*override_flag).
 		WithLogFile(*logging_flag)
 
@@ -203,15 +207,17 @@ func makeDefaultConfigLoader() *config.Loader {
 		WithFileLoader(*config_path).
 		WithEmbedded().
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
-		WithConfigMutator(func(config_obj *config_proto.Config) error {
-			return mergeFlagConfig(config_obj, default_config)
-		}).
-		WithCustomValidator(initFilestoreAccessor).
-		WithCustomValidator(initDebugServer).
+		WithConfigMutator("Mutator mergeFlagConfig",
+			func(config_obj *config_proto.Config) error {
+				return mergeFlagConfig(config_obj, default_config)
+			}).
+		WithCustomValidator("validator: initFilestoreAccessor",
+			initFilestoreAccessor).
+		WithCustomValidator("validator: initDebugServer", initDebugServer).
 		WithLogFile(*logging_flag).
 		WithOverride(*override_flag).
-		WithConfigMutator(applyMinionRole).
-		WithCustomValidator(ensureProxy).
-		WithConfigMutator(applyAnalysisTarget).
-		WithConfigMutator(maybeAddDefinitionsDirectory)
+		WithConfigMutator("Mutator applyMinionRole", applyMinionRole).
+		WithCustomValidator("validator: ensureProxy", ensureProxy).
+		WithConfigMutator("Mutator applyAnalysisTarget", applyAnalysisTarget).
+		WithConfigMutator("Mutator maybeAddDefinitionsDirectory", maybeAddDefinitionsDirectory)
 }

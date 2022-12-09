@@ -68,14 +68,12 @@ func (self UserCreateFunction) Call(
 		}
 	}
 
-	logger := logging.GetLogger(org_config_obj, &logging.Audit)
-	logger.WithFields(logrus.Fields{
-		"Username":  arg.Username,
-		"Roles":     arg.Roles,
-		"OrgIds":    arg.OrgIds,
-		"Principal": principal,
-	}).Info("user_create")
-
+	logging.LogAudit(org_config_obj, principal, "user_create",
+		logrus.Fields{
+			"Username": arg.Username,
+			"Roles":    arg.Roles,
+			"OrgIds":   arg.OrgIds,
+		})
 	return arg.Username
 }
 

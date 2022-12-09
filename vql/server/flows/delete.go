@@ -4,7 +4,9 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -51,6 +53,15 @@ func (self DeleteFlowPlugin) Call(
 		if err != nil {
 			scope.Log("delete_flow: %v", err)
 			return
+		}
+
+		principal := vql_subsystem.GetPrincipal(scope)
+		if arg.ReallyDoIt {
+			logging.LogAudit(config_obj, principal, "delete_flow",
+				logrus.Fields{
+					"client_id": arg.ClientId,
+					"flow_id":   arg.FlowId,
+				})
 		}
 
 		responses, err := launcher.DeleteFlow(ctx, config_obj,

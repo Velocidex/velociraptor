@@ -101,6 +101,7 @@ export default class AddFlowToHuntDialog extends React.Component {
 
         return (
             <Modal show={true} className="max-height"
+                   dialogClassName="modal-90w"
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
                 <Modal.Title>{T("Manually add collection to hunt")}</Modal.Title>

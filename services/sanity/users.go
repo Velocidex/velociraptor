@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -101,9 +102,9 @@ func createInitialUsers(
 				return err
 			}
 
-			logger := logging.GetLogger(config_obj, &logging.Audit)
-			logger.Info("Granting administrator role to %v because they are specified in the config's initial users",
-				user.Name)
+			logging.LogAudit(config_obj, "SanityService",
+				"Granting administrator role, because user is specified in the config's initial users",
+				logrus.Fields{"user": user.Name})
 		}
 	}
 	return nil

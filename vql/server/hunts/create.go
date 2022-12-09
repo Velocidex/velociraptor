@@ -256,13 +256,12 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		hunt_request.HuntId = hunt_id
 	}
 
-	logging.GetLogger(config_obj, &logging.Audit).
-		WithFields(logrus.Fields{
-			"user":    principal,
+	logging.LogAudit(config_obj, principal, "CreateHunt",
+		logrus.Fields{
 			"hunt_id": hunt_request.HuntId,
 			"details": json.MustMarshalString(arg),
 			"orgs":    orgs_we_scheduled,
-		}).Info("CreateHunt")
+		})
 
 	return ordereddict.NewDict().
 		Set("HuntId", hunt_request.HuntId).

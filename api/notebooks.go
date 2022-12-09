@@ -38,9 +38,10 @@ func (self *ApiServer) GetNotebooks(
 	if err != nil {
 		return nil, err
 	}
+	principal := user_record.Name
 
 	permissions := acls.READ_RESULTS
-	perm, err := services.CheckAccess(org_config_obj, user_record.Name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to read notebooks.")
@@ -71,16 +72,13 @@ func (self *ApiServer) GetNotebooks(
 		}
 
 		// Document not owned or collaborated with.
-		if !notebook_manager.CheckNotebookAccess(notebook_metadata,
-			user_record.Name) {
-			logging.GetLogger(
-				org_config_obj, &logging.Audit).WithFields(
+		if !notebook_manager.CheckNotebookAccess(notebook_metadata, principal) {
+			logging.LogAudit(org_config_obj, principal, "notebook not shared.",
 				logrus.Fields{
-					"user":     user_record.Name,
 					"action":   "Access Denied",
 					"notebook": in.NotebookId,
-				}).
-				Error("notebook not shared.", err)
+					"error":    err.Error(),
+				})
 			return nil, InvalidStatus("User has no access to this notebook")
 		}
 
@@ -89,7 +87,7 @@ func (self *ApiServer) GetNotebooks(
 	}
 
 	notebooks, err := notebook_manager.GetSharedNotebooks(ctx,
-		user_record.Name, in.Offset, in.Count)
+		principal, in.Offset, in.Count)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -109,9 +107,10 @@ func (self *ApiServer) NewNotebook(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+	principal := user_record.Name
 
 	permissions := acls.NOTEBOOK_EDITOR
-	perm, err := services.CheckAccess(org_config_obj, user_record.Name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to create notebooks.")
@@ -122,7 +121,7 @@ func (self *ApiServer) NewNotebook(
 		return nil, Status(self.verbose, err)
 	}
 
-	return notebook_manager.NewNotebook(ctx, user_record.Name, in)
+	return notebook_manager.NewNotebook(ctx, principal, in)
 }
 
 func (self *ApiServer) NewNotebookCell(
@@ -141,9 +140,10 @@ func (self *ApiServer) NewNotebookCell(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+	principal := user_record.Name
 
 	permissions := acls.NOTEBOOK_EDITOR
-	perm, err := services.CheckAccess(org_config_obj, user_record.Name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to edit notebooks.")
@@ -153,7 +153,7 @@ func (self *ApiServer) NewNotebookCell(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
-	return notebook_manager.NewNotebookCell(ctx, in, user_record.Name)
+	return notebook_manager.NewNotebookCell(ctx, in, principal)
 }
 
 func (self *ApiServer) UpdateNotebook(
@@ -171,9 +171,10 @@ func (self *ApiServer) UpdateNotebook(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+	principal := user_record.Name
 
 	permissions := acls.NOTEBOOK_EDITOR
-	perm, err := services.CheckAccess(org_config_obj, user_record.Name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to edit notebooks.")
@@ -191,7 +192,7 @@ func (self *ApiServer) UpdateNotebook(
 		return nil, Status(self.verbose, err)
 	}
 
-	if !notebook_manager.CheckNotebookAccess(old_notebook, user_record.Name) {
+	if !notebook_manager.CheckNotebookAccess(old_notebook, principal) {
 		return nil, InvalidStatus("Notebook is not shared with user.")
 	}
 
@@ -238,9 +239,10 @@ func (self *ApiServer) GetNotebookCell(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+	principal := user_record.Name
 
 	permissions := acls.READ_RESULTS
-	perm, err := services.CheckAccess(org_config_obj, user_record.Name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to read notebooks.")
@@ -256,7 +258,7 @@ func (self *ApiServer) GetNotebookCell(
 		return nil, Status(self.verbose, err)
 	}
 
-	if !notebook_manager.CheckNotebookAccess(notebook_metadata, user_record.Name) {
+	if !notebook_manager.CheckNotebookAccess(notebook_metadata, principal) {
 		return nil, InvalidStatus("Notebook is not shared with user.")
 	}
 
@@ -282,9 +284,10 @@ func (self *ApiServer) UpdateNotebookCell(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+	principal := user_record.Name
 
 	permissions := acls.NOTEBOOK_EDITOR
-	perm, err := services.CheckAccess(org_config_obj, user_record.Name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to edit notebooks.")
@@ -301,12 +304,12 @@ func (self *ApiServer) UpdateNotebookCell(
 		return nil, Status(self.verbose, err)
 	}
 
-	if !notebook_manager.CheckNotebookAccess(notebook_metadata, user_record.Name) {
+	if !notebook_manager.CheckNotebookAccess(notebook_metadata, principal) {
 		return nil, InvalidStatus("Notebook is not shared with user.")
 	}
 
 	return notebook_manager.UpdateNotebookCell(
-		ctx, notebook_metadata, user_record.Name, in)
+		ctx, notebook_metadata, principal, in)
 }
 
 func (self *ApiServer) CancelNotebookCell(
@@ -328,9 +331,10 @@ func (self *ApiServer) CancelNotebookCell(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+	principal := user_record.Name
 
 	permissions := acls.NOTEBOOK_EDITOR
-	perm, err := services.CheckAccess(org_config_obj, user_record.Name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to edit notebooks.")
@@ -356,9 +360,10 @@ func (self *ApiServer) UploadNotebookAttachment(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+	principal := user_record.Name
 
 	permissions := acls.NOTEBOOK_EDITOR
-	perm, err := services.CheckAccess(org_config_obj, user_record.Name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to edit notebooks.")
@@ -382,9 +387,10 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+	principal := user_record.Name
 
 	permissions := acls.PREPARE_RESULTS
-	perm, err := services.CheckAccess(org_config_obj, user_record.Name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to export notebooks.")
@@ -393,10 +399,10 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 	switch in.Type {
 	case "zip":
 		return &emptypb.Empty{}, exportZipNotebook(
-			org_config_obj, in.NotebookId, user_record.Name)
+			org_config_obj, in.NotebookId, principal)
 	default:
 		return &emptypb.Empty{}, exportHTMLNotebook(
-			org_config_obj, in.NotebookId, user_record.Name)
+			org_config_obj, in.NotebookId, principal)
 	}
 }
 

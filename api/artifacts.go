@@ -19,7 +19,6 @@ package api
 
 import (
 	"bytes"
-	"fmt"
 	"io/ioutil"
 	"regexp"
 	"strings"
@@ -310,10 +309,10 @@ func (self *ApiServer) LoadArtifactPack(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+	principal := user_record.Name
 
-	user_name := user_record.Name
 	permissions := acls.SERVER_ARTIFACT_WRITER
-	perm, err := services.CheckAccess(org_config_obj, user_record.Name, permissions)
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
 			"User is not allowed to upload artifact packs.")
@@ -354,15 +353,13 @@ func (self *ApiServer) LoadArtifactPack(
 			}
 
 			definition, err := setArtifactFile(
-				org_config_obj, user_name, request, prefix)
+				org_config_obj, principal, request, prefix)
 			if err == nil {
-				logging.GetLogger(org_config_obj, &logging.Audit).
-					WithFields(logrus.Fields{
-						"user":     user_name,
+				logging.LogAudit(org_config_obj, principal, "LoadArtifactPack",
+					logrus.Fields{
 						"artifact": definition.Name,
-						"details": fmt.Sprintf(
-							"%v", request.Artifact),
-					}).Info("LoadArtifactPack")
+						"details":  request.Artifact,
+					})
 
 				result.SuccessfulArtifacts = append(result.SuccessfulArtifacts,
 					definition.Name)

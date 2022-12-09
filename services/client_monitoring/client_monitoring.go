@@ -244,11 +244,11 @@ func (self *ClientEventTable) setClientMonitoringState(
 	}
 
 	if principal != "" {
-		logging.GetLogger(config_obj, &logging.Audit).
-			WithFields(logrus.Fields{
+		logging.LogAudit(config_obj, principal, "SetClientMonitoringState",
+			logrus.Fields{
 				"user":  principal,
 				"state": self.state,
-			}).Info("SetClientMonitoringState")
+			})
 	}
 
 	err = journal.PushRowsToArtifact(config_obj,

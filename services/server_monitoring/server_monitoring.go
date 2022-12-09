@@ -153,11 +153,11 @@ func (self *EventTable) Update(
 	request *flows_proto.ArtifactCollectorArgs) error {
 
 	if principal != "" {
-		logging.GetLogger(config_obj, &logging.Audit).
-			WithFields(logrus.Fields{
+		logging.LogAudit(config_obj, principal, "SetServerMonitoringState",
+			logrus.Fields{
 				"user":  principal,
 				"state": request,
-			}).Info("SetServerMonitoringState")
+			})
 	}
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)

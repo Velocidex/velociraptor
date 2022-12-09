@@ -6,12 +6,14 @@ import (
 	"os"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -227,10 +229,18 @@ func reallyDeleteClient(ctx context.Context,
 		return err
 	}
 
+	principal := vql_subsystem.GetPrincipal(scope)
+	logging.LogAudit(config_obj, principal, "client_delete",
+		logrus.Fields{
+			"client_id": arg.ClientId,
+			"org_id":    config_obj.OrgId,
+		})
+
 	return journal.PushRowsToArtifact(config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", arg.ClientId).
-			Set("Principal", vql_subsystem.GetPrincipal(scope))},
+			Set("OrgId", config_obj.OrgId).
+			Set("Principal", principal)},
 		"Server.Internal.ClientDelete", "server", "")
 }
 

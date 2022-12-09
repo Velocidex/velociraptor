@@ -33,15 +33,14 @@ func (self *MultiAuthenticator) AddLogoff(mux *http.ServeMux) error {
 
 func (self *MultiAuthenticator) reject_with_username(
 	w http.ResponseWriter, r *http.Request, err error, username string) {
-	logger := logging.GetLogger(self.config_obj, &logging.Audit)
 
 	// Log into the audit log.
-	logger.WithFields(logrus.Fields{
-		"user":   username,
-		"remote": r.RemoteAddr,
-		"method": r.Method,
-		"err":    err.Error(),
-	}).Error("User rejected by GUI")
+	logging.LogAudit(self.config_obj, username, "User rejected by GUI",
+		logrus.Fields{
+			"remote": r.RemoteAddr,
+			"method": r.Method,
+			"err":    err.Error(),
+		})
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusUnauthorized)
