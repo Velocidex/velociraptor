@@ -40,7 +40,7 @@ sources:
           SELECT File.FullPath As FullPath,
                  String.Offset AS Off,
                  String.HexData As Hex,
-                 upload(file=File.FullPath, accessor="file") AS Upload
+                 upload(file=File.FullPath, accessor="auto") AS Upload
               FROM yara(
               files=HomeDir + "\\ntuser.dat",
               rules=yaraRule, context=50)
