@@ -13,15 +13,10 @@ output: "ab0x.go"
 custom:
   # All the JS code is compiled into a bundle in the build directory already.
   - files:
-      - "gui/velociraptor/build/static/**"
-      - "gui/velociraptor/build/index.html"
-      - "gui/velociraptor/build/favicon.ico"
+      - "gui/velociraptor/build/**"
     base: "gui/velociraptor/build/"
     exclude:
       - "**/*~"
       - "**/*.map"
-  - files:
-      - "gui/velociraptor/assets/**"
-    base: "gui/velociraptor/"
 
 init: Init

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <link rel="shortcut icon" href="{{.BasePath}}/app/favicon.ico" />
+    <script type="text/javascript">
+      window.globals = {
+          'debug': false,
+          'lang': 'en',
+          'theme': "{{.UserTheme}}",
+          'base_path': "{{.BasePath}}",
+          'OrgId': "{{.OrgId}}",
+      };
+      window.CsrfToken = "{{.CsrfToken}}";
+      window.base_path = "{{.BasePath}}";
+    </script>
+    <script type="text/javascript">
+      // Used to launch the application in an error state - allows the
+      // user to interact with the react web app without being logged in.
+      window.ErrorState = {{ if .ErrState }}{{.ErrState}}{{else}}[]{{end}};
+    </script>
+
+    <title>Velociraptor Response and Monitoring</title>
+  </head>
+  <body id="body" class="{{.UserTheme}}">
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script type="module" src="./index.jsx"></script>
+  </body>
+</html>
