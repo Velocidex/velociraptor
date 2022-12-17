@@ -4,7 +4,7 @@ description: |
 author: Angry-Bender @angry-bender
 parameters:
   - name: historyGlobs
-    default: \AppData\Local\Google\Chrome\User Data\*\History
+    default: \AppData\{Local,Roaming}\{Google\Chrome\User Data,Microsoft\Edge\User Data,BraveSoftware\Brave-Browser\User Data,Vivaldi\User Data,Opera Software\Opera*Stable}\*\History
   - name: urlSQLQuery
     default: |
       SELECT U.id AS id, U.url AS url, V.visit_time as visit_time,
@@ -46,7 +46,8 @@ sources:
                    hidden,
                    from_visit AS from_url_id,
                    visit_duration,transition,
-                   timestamp(winfiletime=last_visit_time * 10) as _SourceLastModificationTimestamp
+                   timestamp(winfiletime=last_visit_time * 10) as _SourceLastModificationTimestamp,
+                   OSPath
             FROM sqlite(
               file=OSPath,
               query=urlSQLQuery)
