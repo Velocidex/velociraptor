@@ -22,14 +22,15 @@ velociraptor --config server.config.yaml frontend -v
 
 Now you can start the node server:
 ```
-npm run dev
+npm run start
 ```
 
-The development setup starts a node server listening on port 5173, and
-proxies the API requests to the Velociraptor server (which should be
-listening on port 8889).
+The development setup starts a node server listening on port 3000, and
+proxies the API requests to the Velociraptor server, which by default is
+expected to be listening on port 8889.
+
+If you want the API requests to be forwarded to a remote server or on a
+different port then edit the value of `server.proxy` in vite.config.js.
 
 The node dev server will rebuild the application and automatically refresh
 it each time a source file is edited.
-
-

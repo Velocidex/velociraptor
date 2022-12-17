@@ -18,7 +18,7 @@ reports:
     template: |
       <div class="row dashboard ">
       <div class="card col-10">
-      <img src="assets/velo.svg" height="150">
+      <img src="./velo.svg" height="150">
       <div class="card-body">
 
       # Welcome to Velociraptor!
