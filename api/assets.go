@@ -40,7 +40,7 @@ func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) 
 	dir := base + "/app/"
 	mux.Handle(dir, http.StripPrefix(dir, http.FileServer(gui_assets.HTTP)))
 	mux.Handle("/favicon.png",
-		http.RedirectHandler(base+"/static/images/favicon.ico",
+		http.RedirectHandler(base+"favicon.ico",
 			http.StatusMovedPermanently))
 }
 

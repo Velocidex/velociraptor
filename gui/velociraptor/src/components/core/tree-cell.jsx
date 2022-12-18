@@ -8,10 +8,10 @@ import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Button from 'react-bootstrap/Button';
-import {Treebeard, decorators} from 'react-treebeard';
-import {getTheme, Header} from '../utils/tree.jsx';
 import SplitPane from 'react-split-pane';
 import VeloValueRenderer from '../utils/value.jsx';
+
+import TreeView from '../utils/tree/tree.jsx';
 
 import './tree-cell.css';
 
@@ -25,11 +25,6 @@ class TreeCellDialog extends Component {
         name: PropTypes.string,
         data: PropTypes.object,
         onClose: PropTypes.func.isRequired,
-    }
-
-    getTheme = ()=> {
-        let theme = this.context.traits && this.context.traits.theme;
-        return getTheme(theme);
     }
 
     state = {
@@ -46,7 +41,7 @@ class TreeCellDialog extends Component {
         this.deactivateAll(data);
         node.active = true;
         if (node.children) {
-            node.toggled = toggled;
+            node.toggled = !node.toggled;
         }
         this.setState({cursor: node, data: Object.assign({}, data)});
     }
@@ -88,14 +83,10 @@ class TreeCellDialog extends Component {
                 <SplitPane split="vertical"
                            defaultSize="40%"
                            resizerStyle={resizerStyle}>
-                  <div className="file-tree">
-                    <Treebeard
-                      data={data}
-                      style={this.getTheme()}
-                      onToggle={this.onToggle}
-                      decorators={{...decorators, Header}}
-                    />
-                  </div>
+                  <TreeView
+                    data={data}
+                    onSelect={this.onToggle}
+                  />
                   <div className="tree-data-pane">
                     {value ?
                      <VeloValueRenderer value={value}/> :
