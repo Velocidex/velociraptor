@@ -7,8 +7,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import classNames from "classnames";
 
-import {Tree} from 'react-arborist';
-
 import TreeView from '../utils/tree/tree.jsx';
 
 import UserConfig from '../core/user.jsx';

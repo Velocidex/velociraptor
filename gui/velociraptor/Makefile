@@ -7,5 +7,6 @@ build: FORCE
 	npm run build
 	mkdir -p build/static/
 	echo > build/static/.keep
+	echo > build/.keep
 
 FORCE: ;
