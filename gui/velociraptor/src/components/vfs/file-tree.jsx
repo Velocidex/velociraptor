@@ -5,15 +5,22 @@ import PropTypes from 'prop-types';
 
 import _ from 'lodash';
 import axios from 'axios';
-import {Treebeard, decorators} from 'react-treebeard';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+import classNames from "classnames";
+
+import {Tree} from 'react-arborist';
+
+import TreeView from '../utils/tree/tree.jsx';
+
 import UserConfig from '../core/user.jsx';
 import { SplitPathComponents, Join } from '../utils/paths.jsx';
 
 import api from '../core/api-service.jsx';
 import { withRouter }  from "react-router-dom";
-import {getTheme, Header} from '../utils/tree.jsx';
 
 import { EncodePathInURL, DecodePathInURL } from '../utils/paths.jsx';
+
 
 class VeloFileTree extends Component {
     static contextType = UserConfig;
@@ -23,11 +30,6 @@ class VeloFileTree extends Component {
         version: PropTypes.string,
         updateVFSPath: PropTypes.func,
         updateCurrentNode: PropTypes.func,
-    }
-
-    getTheme = ()=> {
-        let theme = this.context.traits && this.context.traits.theme;
-        return getTheme(theme);
     }
 
     componentDidMount() {
@@ -228,17 +230,23 @@ class VeloFileTree extends Component {
         cursor: {},
     };
 
-    onToggle = (node, toggled) => {
+    onSelect = (node) => {
+
         // Deactive the current node we are on.
         const {cursor, data} = this.state;
         if (cursor) {
             cursor.active = false;
         }
 
-        node.active = !node.active;
-        node.toggled = toggled;
-
         this.setState(() => ({cursor: node, data: Object.assign({}, data)}));
+
+        node.active = true;
+        node.toggled = !node.toggled;
+
+        // Do not fetch new data when we hide the directory.
+        if (node.known && !node.toggled) {
+            return;
+        }
 
         // Update the new vfs path
         if (node.path) {
@@ -257,16 +265,10 @@ class VeloFileTree extends Component {
     }
 
     render() {
-        return (
-            <div className="file-tree">
-              <Treebeard
-                data={this.state}
-                style={this.getTheme()}
-                onToggle={this.onToggle}
-                decorators={{...decorators, Header}}
-              />
-            </div>
-        );
+        return <TreeView
+                 data={this.state}
+                 onSelect={this.onSelect}
+               />;
     }
 }
 

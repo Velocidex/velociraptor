@@ -1,0 +1,30 @@
+.file-tree .isActive {
+    background: var(--color-btn-default-background);
+    color: var(--color-foreground);
+}
+
+.file-tree .isRoot {
+    display: none;
+}
+
+.tree-folder {
+    white-space: nowrap;
+}
+
+.tree-folder svg {
+    margin-right: 5px;
+}
+
+.file-tree {
+    left: -20px;
+    top: -20px;
+    cursor: pointer;
+}
+
+.file-tree ul {
+    list-style-type: none;
+}
+
+.file-tree .tree-folder {
+    display: inline;
+}
