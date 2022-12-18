@@ -21,7 +21,7 @@ type: CLIENT
 
 parameters:
   - name: TargetGlob
-    default: "**/*exe"
+    default: /**/*.exe
   - name: VersionInfoTable
     type: csv
     default: |
@@ -68,17 +68,17 @@ parameters:
         ANY,,,UltraVNC Setup,UltraVNC_1_3_81_X64_Setup.exe
         ANY,,,File Shredder by PowTools,file_shredder_setup.exe
         ANY,,pCloud Drive.exe,pCloud Drive,pCloud_Windows_3.11.12_x64.exe
-        ANY,Plink,Plink,"Command-line SSH, Telnet, and Rlogin client",plink.exe
-        ANY,PSCP,PSCP,Command-line SCP/SFTP client,pscp.exe
-        ANY,PSFTP,PSFTP,Command-line interactive SFTP client,psftp.exe
+        plink.exe,Plink,Plink,"Command-line SSH, Telnet, and Rlogin client",plink.exe
+        pscp.exe,PSCP,PSCP,Command-line SCP/SFTP client,pscp.exe
+        psftp.exe,PSFTP,PSFTP,Command-line interactive SFTP client,psftp.exe
         ANY,,,Total Commander Installer,tcmd1000x32.exe
         ANY,BulletsPassView,BulletsPassView.exe,BulletsPassView,BulletsPassView.exe
         ANY,WinLister,WinLister.exe,WinLister,winlister.exe
         ANY,HRSword,HRSword.exe,Huorong Sword GUI Frontend,HRSword v5.0.47.bin
-        ANY,,,Email  Password-Recovery,mailpv.exe
+        ANY,,,Email Password-Recovery,mailpv.exe
         ANY,Process Hacker,ProcessHacker.exe,Process Hacker,ProcessHacker.exe
         ANY,peview,peview.exe,PE Viewer,peview.exe
-        ANY,ChromePass,  ChromePass,Chrome Password Recovery,ChromePass.exe
+        ANY,ChromePass,ChromePass,Chrome Password Recovery,ChromePass.exe
         ANY,,,Application for scanning networks,netscan.exe
         ANY,WKV,,Extracts wireless keys stored by Windows,WirelessKeyView.exe
         ANY,Remote Desktop PassView,rdpv.exe,Password Recovery for Remote Desktop,rdpv.exe
@@ -94,6 +94,13 @@ parameters:
         ANY,VNCPassView,VNCPassView.exe,VNCPassView,VNCPassView.exe
         ANY,PCHunter,PCHunter.exe,Epoolsoft Windows Information View Tools,PCHunter32.exe
         ANY,Massscan_GUI.exe,Massscan_GUI.exe,Masscan_GUI,Massscan_GUI.exe
+        ANY,ProxyLite.Windows.Console.exe,ProxyLite.Windows.Console.exe,ProxyLite Console Client,ProxyLite
+        ANY,action1_agent.exe,action1_agent.exe,Endpoint Agent,Action1 agent
+        ANY,action1_remote.exe,action1_remote.exe,Endpoint Agent,Action1 agent
+        ANY,Defender Control,Defender Control,Windows Defender Control,Windows Defender Control
+        ANY,NirCmd,NirCmd.exe,Nir Sofer,nircmd.exe
+        ANY,NSudo,NSudo.exe,NSudo for Windows,Nsudo
+        ANY,Python Application,pythonw.exe,Python,Python 3.10.0 packaged with DWAgent - possibly noisy.
 
 
 sources:
