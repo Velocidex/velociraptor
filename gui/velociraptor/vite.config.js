@@ -22,8 +22,17 @@ export default defineConfig({
         include: '**/*.{jsx,tsx}',
       }),
       viteCompression({
-        algorithm: 'brotliCompress',
-        threshold: 10000,
+          filter: x=>{
+              // Dont compress the main html page because it is used
+              // by Go template.
+              if (/html$/.test(x)) {
+                  return false;
+              }
+              return true;
+          },
+          verbose: true,
+          algorithm: 'brotliCompress',
+          deleteOriginFile: true,
       }),
     ],
     server: {

@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/gorilla/csrf"
+	"github.com/lpar/gzipped"
 	"www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/gui/velociraptor"
@@ -38,7 +39,8 @@ func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) 
 		base = config_obj.GUI.BasePath
 	}
 	dir := base + "/app/"
-	mux.Handle(dir, http.StripPrefix(dir, http.FileServer(gui_assets.HTTP)))
+	mux.Handle(dir, http.StripPrefix(
+		dir, gzipped.FileServer(NewCachedFilesystem(gui_assets.HTTP))))
 	mux.Handle("/favicon.png",
 		http.RedirectHandler(base+"favicon.ico",
 			http.StatusMovedPermanently))
