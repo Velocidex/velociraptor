@@ -37,10 +37,10 @@ func (self *PathManagerTestSuite) TestClientPathManager() {
 
 	// AsClientPath produces a path string escaped with quotes for
 	// path separators, rooted at the data store root.
-	assert.Equal(self.T(), `/clients/C.123/vfs/file/"\\.\C:"/你好世界.db`,
+	assert.Equal(self.T(), `/clients/C.123/vfs/file/"\\.\C:"/你好世界.json.db`,
 		path_spec.AsClientPath())
 
-	assert.Equal(self.T(), "/ds/clients/C.123/vfs/file/%5C%5C.%5CC%3A/%E4%BD%A0%E5%A5%BD%E4%B8%96%E7%95%8C.db",
+	assert.Equal(self.T(), "/ds/clients/C.123/vfs/file/%5C%5C.%5CC%3A/%E4%BD%A0%E5%A5%BD%E4%B8%96%E7%95%8C.json.db",
 		self.getDatastorePath(path_spec))
 
 	// For downloads we store a link file in the client's VFS pointing at the collection containing this information.
@@ -49,7 +49,7 @@ func (self *PathManagerTestSuite) TestClientPathManager() {
 		"file", "\\\\.\\C:", "你好世界", "你好/世界.db",
 	})
 
-	data_store_path := "/ds/clients/C.123/vfs_files/file/%5C%5C.%5CC%3A/%E4%BD%A0%E5%A5%BD%E4%B8%96%E7%95%8C/%E4%BD%A0%E5%A5%BD%2F%E4%B8%96%E7%95%8C.db_.db"
+	data_store_path := "/ds/clients/C.123/vfs_files/file/%5C%5C.%5CC%3A/%E4%BD%A0%E5%A5%BD%E4%B8%96%E7%95%8C/%E4%BD%A0%E5%A5%BD%2F%E4%B8%96%E7%95%8C.db_.json.db"
 	assert.Equal(self.T(), data_store_path,
 		self.getDatastorePath(path_spec))
 

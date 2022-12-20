@@ -40,7 +40,7 @@ func (self *ResultSetReaderWrapper) Rows(ctx context.Context) <-chan *ordereddic
 		for {
 			select {
 			case <-subctx.Done():
-				break
+				return
 
 			case row, ok := <-row_chan:
 				if !ok {
