@@ -9,9 +9,6 @@ import VeloFileTree from './file-tree.jsx';
 import VeloFileList from './file-list.jsx';
 import VeloFileDetails from './file-details.jsx';
 
-const resizerStyle = {
-//    width: "25px",
-};
 
 class VFSViewer extends Component {
     static propTypes = {
@@ -26,6 +23,7 @@ class VFSViewer extends Component {
         collapsed: false,
         vfs_path: [],
         current_node: {},
+        current_selected_row: {},
     }
 
     collapse = () => {
@@ -45,12 +43,15 @@ class VFSViewer extends Component {
         this.props.updateCurrentNode(node);
     }
 
+    updateCurrentSelectedRow = (row) => {
+        this.setState({current_selected_row: Object.assign({_id: 1}, row)});
+    }
+
     render() {
         return (
             <>
             <SplitPane split="vertical"
-                       defaultSize="20%"
-                       resizerStyle={resizerStyle}>
+                       defaultSize="20%">
               <VeloFileTree client={this.props.client}
                             version={this.props.node && this.props.node.version}
                             className="file-tree"
@@ -60,17 +61,18 @@ class VFSViewer extends Component {
               <SplitPane split="horizontal"
                          defaultSize="50%"
                          size={this.state.topPaneSize}
-                         onResizerDoubleClick={this.collapse}
-                         resizerStyle={resizerStyle}>
+                         onResizerDoubleClick={this.collapse}>
                 <VeloFileList
                   client={this.props.client}
                   updateCurrentNode={this.updateCurrentNode}
+                  updateCurrentSelectedRow={this.updateCurrentSelectedRow}
                   version={this.props.node && this.props.node.version}
                   node={this.state.current_node} />
                 <VeloFileDetails
                   client={this.props.client}
                   version={this.props.node && this.props.node.version}
                   updateCurrentNode={this.updateCurrentNode}
+                  selectedRow={this.state.current_selected_row}
                   node={this.state.current_node} />
               </SplitPane>
             </SplitPane>

@@ -1,6 +1,8 @@
 package services
 
 import (
+	"context"
+
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -16,7 +18,12 @@ func GetVFSService(config_obj *config_proto.Config) (VFSService, error) {
 }
 
 type VFSService interface {
-	ListDirectory(
+	// Lists all the directories in the VFS path provided. This is
+	// used by the tree widget in the GUI so it only returns
+	// directories. For both files and directories see ListFiles()
+	// below.
+	ListDirectories(
+		ctx context.Context,
 		config_obj *config_proto.Config,
 		client_id string,
 		components []string) (*api_proto.VFSListResponse, error)

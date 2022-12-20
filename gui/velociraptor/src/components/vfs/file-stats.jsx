@@ -19,7 +19,12 @@ const POLL_TIME = 2000;
 class VeloFileStats extends Component {
     static propTypes = {
         client: PropTypes.object,
+
+        // The node in the tree for the current directory.
         node: PropTypes.object,
+
+        // The current file selected in the file-list pane.
+        selectedRow: PropTypes.object,
         version: PropTypes.string,
         updateCurrentNode: PropTypes.func,
     }
@@ -51,7 +56,7 @@ class VeloFileStats extends Component {
             this.componentWillUnmount();
         }
 
-        let selectedRow = utils.getSelectedRow(this.props.node);
+        let selectedRow = this.props.selectedRow;
         if (!selectedRow || !selectedRow._FullPath || !selectedRow._Accessor) {
             return;
         }
@@ -85,24 +90,24 @@ class VeloFileStats extends Component {
                     client_id: this.props.client.client_id,
                     flow_id: flow_id,
                 }, this.source.token).then((response) => {
-                    if (response.data &&
-                        response.data.context &&
-                        response.data.context.state !== "RUNNING") {
-                        this.source.cancel("unmounted");
-                        clearInterval(this.interval);
+                    if (response.data && response.data.context) {
+                        if (response.data.context.state !== "RUNNING") {
+                            this.source.cancel("unmounted");
+                            clearInterval(this.interval);
 
-                        // Force a tree refresh since this flow is done.
-                        let node = this.props.node;
-                        node.known = false;
-                        node.version = flow_id;
-                        this.props.updateCurrentNode(this.props.node);
-                        this.setState({
-                            updateOperationFlowId: undefined,
-                            current_upload_bytes: undefined});
-                    } else {
-                        let uploaded = response.data.context.total_uploaded_bytes || 0;
-                        this.setState({
-                            current_upload_bytes: uploaded / 1024 / 1024});
+                            // Force a tree refresh since this flow is done.
+                            let node = this.props.node;
+                            node.known = false;
+                            node.version = flow_id;
+                            this.props.updateCurrentNode(this.props.node);
+                            this.setState({
+                                updateOperationFlowId: undefined,
+                                current_upload_bytes: undefined});
+                        } else {
+                            let uploaded = response.data.context.total_uploaded_bytes || 0;
+                            this.setState({
+                                current_upload_bytes: uploaded / 1024 / 1024});
+                        }
                     }
                 });
             }, POLL_TIME);
@@ -110,7 +115,7 @@ class VeloFileStats extends Component {
     }
 
     render() {
-        let selectedRow = utils.getSelectedRow(this.props.node);
+        let selectedRow = this.props.selectedRow;
 
         if (!selectedRow || !selectedRow.Name) {
             return (

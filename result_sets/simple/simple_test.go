@@ -132,7 +132,7 @@ func (self *ResultSetTestSuite) TestResultSetWriter() {
 	assert.Error(self.T(), err)
 
 	// Read the rows back out from the start
-	rows := rs_reader.(*simple.ResultSetReaderImpl).GetAllResults()
+	rows := simple.GetAllResults(rs_reader)
 	assert.Equal(self.T(), len(rows), 3)
 	value, _ := rows[0].GetInt64("Foo")
 	assert.Equal(self.T(), value, int64(1))
@@ -141,7 +141,7 @@ func (self *ResultSetTestSuite) TestResultSetWriter() {
 	err = rs_reader.SeekToRow(1)
 	assert.NoError(self.T(), err)
 
-	rows = rs_reader.(*simple.ResultSetReaderImpl).GetAllResults()
+	rows = simple.GetAllResults(rs_reader)
 	assert.Equal(self.T(), len(rows), 2)
 	value, _ = rows[0].GetInt64("Foo")
 	assert.Equal(self.T(), value, int64(2))
@@ -224,7 +224,7 @@ func (self *ResultSetTestSuite) TestResultSetWriterTruncate() {
 	err = rs_reader.SeekToRow(1)
 	assert.NoError(self.T(), err)
 
-	rows := rs_reader.(*simple.ResultSetReaderImpl).GetAllResults()
+	rows := simple.GetAllResults(rs_reader)
 	assert.Equal(self.T(), len(rows), 2+3)
 	value, _ := rows[0].GetInt64("Foo")
 	assert.Equal(self.T(), value, int64(5))
@@ -256,7 +256,7 @@ func (self *ResultSetTestSuite) TestResultSetWriterWriteJSONL() {
 
 	// Seek into the middle of the JSON blob (last row)
 	err = rs_reader.SeekToRow(2)
-	rows := rs_reader.(*simple.ResultSetReaderImpl).GetAllResults()
+	rows := simple.GetAllResults(rs_reader)
 	assert.Equal(self.T(), len(rows), 1)
 	value, _ := rows[0].GetInt64("Foo")
 	assert.Equal(self.T(), value, int64(3))

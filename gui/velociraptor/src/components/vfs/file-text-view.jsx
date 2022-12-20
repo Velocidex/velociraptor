@@ -15,6 +15,7 @@ const pagesize = 100 * 1024;
 
 export default class FileTextView extends React.Component {
     static propTypes = {
+        selectedRow: PropTypes.object,
         node: PropTypes.object,
         client: PropTypes.object,
     };
@@ -40,7 +41,7 @@ export default class FileTextView extends React.Component {
         // 2. VFS path changes (tree navigated away).
         // 3. node version changes (file was refreshed).
         // 4. page is changed
-        if (prevProps.node.selected !== this.props.node.selected ||
+        if (!_.isEqual(prevProps.selectedRow, this.props.selectedRow) ||
             !_.isEqual(prevProps.node.path, this.props.node.path) ||
             prevProps.node.version !== this.props.node.version ||
             prevState.page !== this.state.page) {
@@ -49,7 +50,7 @@ export default class FileTextView extends React.Component {
     }
 
     fetchText_ = (page) => {
-        let selectedRow = utils.getSelectedRow(this.props.node);
+        let selectedRow = this.props.selectedRow;
         let client_id = this.props.client && this.props.client.client_id;
         if (!client_id) {
             return;
@@ -102,7 +103,7 @@ export default class FileTextView extends React.Component {
 
 
     render() {
-        let selectedRow = utils.getSelectedRow(this.props.node);
+        let selectedRow = this.props.selectedRow;
         let mtime = selectedRow && selectedRow.Download && selectedRow.Download.mtime;
         if (!mtime) {
             return <h5 className="no-content">{T("File has no data, please collect file first.")}</h5>;

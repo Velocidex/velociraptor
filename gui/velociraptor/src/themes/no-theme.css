@@ -154,3 +154,7 @@ body.no-theme {
   font-size: var(--font-size-base);
   padding-left: 12px;
 }
+
+.no-theme .file-tree .isActive {
+  background: var(--color-accent-25);
+}

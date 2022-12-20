@@ -240,6 +240,11 @@ func (self *JournalService) PushRowsToArtifact(
 	return errors.New("Filestore not initialized")
 }
 
+func (self *JournalService) SetClock(clock utils.Clock) {
+	self.Clock = clock
+	self.qm.SetClock(clock)
+}
+
 func (self *JournalService) Start(config_obj *config_proto.Config) error {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Journal service for %v.",
@@ -265,8 +270,10 @@ func NewJournalService(
 		locks:      make(map[string]*sync.Mutex),
 		Clock:      utils.RealClock{},
 	}
+
 	qm, err := file_store.GetQueueManager(config_obj)
 	if err != nil || qm != nil {
+		qm.SetClock(service.Clock)
 		service.qm = qm
 	}
 

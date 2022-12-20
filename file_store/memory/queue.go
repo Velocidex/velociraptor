@@ -168,6 +168,10 @@ type MemoryQueueManager struct {
 	Clock      utils.Clock
 }
 
+func (self *MemoryQueueManager) SetClock(clock utils.Clock) {
+	self.Clock = clock
+}
+
 func (self *MemoryQueueManager) Debug() {
 	switch t := self.FileStore.(type) {
 	case tests.Debugger:

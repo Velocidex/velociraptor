@@ -14,7 +14,12 @@ import Tab from 'react-bootstrap/Tab';
 export default class VeloFileDetails extends React.Component {
     static propTypes = {
         client: PropTypes.object,
+
+        // The current node in the file tree.
         node: PropTypes.object,
+
+        // The current selected row in the file list.
+        selectedRow: PropTypes.object,
         version: PropTypes.string,
         updateCurrentNode: PropTypes.func,
     };
@@ -24,17 +29,7 @@ export default class VeloFileDetails extends React.Component {
     }
 
     render() {
-        let selected_name = this.props.node && this.props.node.selected;
-
-        if (!selected_name) {
-            return (
-                  <h5 className="no-content">
-                    {T("Please select a file or a folder to see its details here.")}
-                  </h5>
-            );
-        }
-
-        let selectedRow = utils.getSelectedRow(this.props.node);
+        let selectedRow = this.props.selectedRow;
         let has_download = selectedRow && selectedRow.Download && selectedRow.Download.mtime;
 
         return (
@@ -44,6 +39,7 @@ export default class VeloFileDetails extends React.Component {
                   <VeloFileStats
                     client={this.props.client}
                     node={this.props.node}
+                    selectedRow={this.props.selectedRow}
                     updateCurrentNode={this.props.updateCurrentNode}
                   />
                 </Tab>
@@ -52,8 +48,10 @@ export default class VeloFileDetails extends React.Component {
                      title={T("Textview")}>
                   { this.state.tab === "text" &&
                     <FileTextView
+                      node={this.props.node}
+                      selectedRow={this.props.selectedRow}
                       client={this.props.client}
-                      node={this.props.node} />}
+                    />}
                 </Tab>
                 <Tab eventKey="hex"
                      disabled={!has_download}
@@ -61,6 +59,7 @@ export default class VeloFileDetails extends React.Component {
                   { this.state.tab === "hex" &&
                     <FileHexView
                       node={this.props.node}
+                      selectedRow={this.props.selectedRow}
                       client={this.props.client}
                     />}
                 </Tab>

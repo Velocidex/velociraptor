@@ -174,10 +174,12 @@ class VeloFileTree extends Component {
                 node.loading = false;
                 let children = [];
 
-                if (response && response.data && response.data.Response) {
+                if (response && response.data) {
                     // Hold on to the raw data.
-                    node.raw_data = JSON.parse(response.data.Response) || [];
+                    node.raw_data = JSON.parse(response.data.Response || '[]');
                     node.flow_id = response.data.flow_id;
+                    node.start_idx = response.data.start_idx;
+                    node.end_idx = response.data.end_idx;
 
                     // Extract the directory children from the raw_data
                     for (var i=0; i<node.raw_data.length; i++) {

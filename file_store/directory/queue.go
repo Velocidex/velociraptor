@@ -189,6 +189,10 @@ type DirectoryQueueManager struct {
 	Clock      utils.Clock
 }
 
+func (self *DirectoryQueueManager) SetClock(clock utils.Clock) {
+	self.Clock = clock
+}
+
 func (self *DirectoryQueueManager) Debug() *ordereddict.Dict {
 	return self.queue_pool.Debug()
 }

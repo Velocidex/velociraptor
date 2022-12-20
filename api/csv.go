@@ -111,7 +111,7 @@ func getTable(
 		})
 
 		rows += 1
-		if rows > in.Rows {
+		if rows >= in.Rows {
 			break
 		}
 	}
@@ -365,6 +365,9 @@ func getTableOptions(in *api_proto.GetTableRequest) (
 			return options, err
 		}
 	}
+
+	options.StartIdx = in.StartIdx
+	options.EndIdx = in.EndIdx
 
 	return options, nil
 }

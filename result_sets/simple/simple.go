@@ -306,32 +306,30 @@ func (self *ResultSetReaderImpl) Rows(ctx context.Context) <-chan *ordereddict.D
 
 		reader := bufio.NewReader(self.fd)
 		for {
+			row_data, err := reader.ReadBytes('\n')
+			if err != nil {
+				return
+			}
+
+			// We have reached the end.
+			if len(row_data) == 0 {
+				return
+			}
+
+			item := ordereddict.NewDict()
+
+			// We failed to unmarshal one line of
+			// JSON - it may be corrupted, go to
+			// the next one.
+			err = item.UnmarshalJSON(row_data)
+			if err != nil {
+				continue
+			}
+
 			select {
 			case <-ctx.Done():
 				return
-
-			default:
-				row_data, err := reader.ReadBytes('\n')
-				if err != nil {
-					return
-				}
-
-				// We have reached the end.
-				if len(row_data) == 0 {
-					return
-				}
-
-				item := ordereddict.NewDict()
-
-				// We failed to unmarshal one line of
-				// JSON - it may be corrupted, go to
-				// the next one.
-				err = item.UnmarshalJSON(row_data)
-				if err != nil {
-					continue
-				}
-
-				output <- item
+			case output <- item:
 			}
 		}
 	}()
@@ -339,7 +337,7 @@ func (self *ResultSetReaderImpl) Rows(ctx context.Context) <-chan *ordereddict.D
 }
 
 // Only used in tests - not safe for general use.
-func (self *ResultSetReaderImpl) GetAllResults() []*ordereddict.Dict {
+func GetAllResults(self result_sets.ResultSetReader) []*ordereddict.Dict {
 	result := []*ordereddict.Dict{}
 	for row := range self.Rows(context.Background()) {
 		result = append(result, row)

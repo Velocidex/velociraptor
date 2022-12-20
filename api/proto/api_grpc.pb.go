@@ -55,6 +55,7 @@ type APIClient interface {
 	SetPassword(ctx context.Context, in *SetPasswordRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	// VFS
 	VFSListDirectory(ctx context.Context, in *VFSListRequest, opts ...grpc.CallOption) (*VFSListResponse, error)
+	VFSListDirectoryFiles(ctx context.Context, in *GetTableRequest, opts ...grpc.CallOption) (*GetTableResponse, error)
 	VFSRefreshDirectory(ctx context.Context, in *VFSRefreshDirectoryRequest, opts ...grpc.CallOption) (*proto.ArtifactCollectorResponse, error)
 	VFSStatDirectory(ctx context.Context, in *VFSListRequest, opts ...grpc.CallOption) (*VFSListResponse, error)
 	VFSStatDownload(ctx context.Context, in *VFSStatDownloadRequest, opts ...grpc.CallOption) (*proto.VFSDownloadInfo, error)
@@ -348,6 +349,15 @@ func (c *aPIClient) SetPassword(ctx context.Context, in *SetPasswordRequest, opt
 func (c *aPIClient) VFSListDirectory(ctx context.Context, in *VFSListRequest, opts ...grpc.CallOption) (*VFSListResponse, error) {
 	out := new(VFSListResponse)
 	err := c.cc.Invoke(ctx, "/proto.API/VFSListDirectory", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aPIClient) VFSListDirectoryFiles(ctx context.Context, in *GetTableRequest, opts ...grpc.CallOption) (*GetTableResponse, error) {
+	out := new(GetTableResponse)
+	err := c.cc.Invoke(ctx, "/proto.API/VFSListDirectoryFiles", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -815,6 +825,7 @@ type APIServer interface {
 	SetPassword(context.Context, *SetPasswordRequest) (*emptypb.Empty, error)
 	// VFS
 	VFSListDirectory(context.Context, *VFSListRequest) (*VFSListResponse, error)
+	VFSListDirectoryFiles(context.Context, *GetTableRequest) (*GetTableResponse, error)
 	VFSRefreshDirectory(context.Context, *VFSRefreshDirectoryRequest) (*proto.ArtifactCollectorResponse, error)
 	VFSStatDirectory(context.Context, *VFSListRequest) (*VFSListResponse, error)
 	VFSStatDownload(context.Context, *VFSStatDownloadRequest) (*proto.VFSDownloadInfo, error)
@@ -960,6 +971,9 @@ func (UnimplementedAPIServer) SetPassword(context.Context, *SetPasswordRequest) 
 }
 func (UnimplementedAPIServer) VFSListDirectory(context.Context, *VFSListRequest) (*VFSListResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VFSListDirectory not implemented")
+}
+func (UnimplementedAPIServer) VFSListDirectoryFiles(context.Context, *GetTableRequest) (*GetTableResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method VFSListDirectoryFiles not implemented")
 }
 func (UnimplementedAPIServer) VFSRefreshDirectory(context.Context, *VFSRefreshDirectoryRequest) (*proto.ArtifactCollectorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VFSRefreshDirectory not implemented")
@@ -1546,6 +1560,24 @@ func _API_VFSListDirectory_Handler(srv interface{}, ctx context.Context, dec fun
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(APIServer).VFSListDirectory(ctx, req.(*VFSListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _API_VFSListDirectoryFiles_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetTableRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).VFSListDirectoryFiles(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/VFSListDirectoryFiles",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).VFSListDirectoryFiles(ctx, req.(*GetTableRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2418,6 +2450,10 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VFSListDirectory",
 			Handler:    _API_VFSListDirectory_Handler,
+		},
+		{
+			MethodName: "VFSListDirectoryFiles",
+			Handler:    _API_VFSListDirectoryFiles_Handler,
 		},
 		{
 			MethodName: "VFSRefreshDirectory",

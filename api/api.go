@@ -472,6 +472,7 @@ func (self *ApiServer) SetGUIOptions(
 	return &emptypb.Empty{}, users.SetUserOptions(ctx, principal, in)
 }
 
+// Only list the child directories - used by the tree widget.
 func (self *ApiServer) VFSListDirectory(
 	ctx context.Context,
 	in *api_proto.VFSListRequest) (*api_proto.VFSListResponse, error) {
@@ -496,7 +497,8 @@ func (self *ApiServer) VFSListDirectory(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
-	result, err := vfs_service.ListDirectory(
+
+	result, err := vfs_service.ListDirectories(ctx,
 		org_config_obj, in.ClientId, in.VfsComponents)
 	return result, err
 }

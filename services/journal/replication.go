@@ -110,6 +110,10 @@ func (self *ReplicationService) isEventRegistered(artifact string) bool {
 	return pres && ok
 }
 
+func (self *ReplicationService) SetClock(clock utils.Clock) {
+	self.qm.SetClock(clock)
+}
+
 func (self *ReplicationService) pumpEventFromBufferFile() error {
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	frontend_manager, err := services.GetFrontendManager(self.config_obj)

@@ -8,6 +8,11 @@ option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
 // Messages to interact with the API
 
+// This message is written in the VFS datastore and contains metadata
+// about the directory listing. Each protobuf refers to the files
+// contained in a single directory. The actual file listing is stored
+// in the flow's collection and this protobuf contains the range of
+// rows within the collection that refers to this current directory.
 message VFSListResponse {
   string Response = 1;
   repeated string Columns = 2;
@@ -19,6 +24,9 @@ message VFSListResponse {
   // The actual artifact that contains the data.
   string client_id = 9;
   string flow_id = 10;
+
+  uint64 start_idx = 11;
+  uint64 end_idx = 12;
 }
 
 message VFSStatDownloadRequest {
