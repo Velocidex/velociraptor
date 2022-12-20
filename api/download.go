@@ -152,7 +152,8 @@ func vfsFileDownloadHandler() http.Handler {
 			filename = strings.Replace(path_spec.Base(), "\"", "_", -1)
 
 		} else {
-			returnError(w, 404, err.Error())
+			// Just reject the request
+			returnError(w, 404, "")
 			return
 		}
 

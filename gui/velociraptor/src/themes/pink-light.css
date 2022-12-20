@@ -712,6 +712,10 @@ body.pink-light {
   padding-left: 12px;
 }
 
+.pink-light .file-tree .isActive {
+  background: var(--color-accent-25);
+}
+
 .pink-light .tree-folder {
   color: var(--color-sidebar-foreground);
   font-family: var(--font-family-sans-serif);

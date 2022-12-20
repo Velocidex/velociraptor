@@ -72,6 +72,7 @@ func (self ClientPathManager) Flow(flow_id string) *FlowPathManager {
 func (self ClientPathManager) VFSPath(vfs_components []string) api.DSPathSpec {
 	return CLIENTS_ROOT.AddUnsafeChild(self.client_id, "vfs").
 		AddChild(vfs_components...).
+		SetType(api.PATH_TYPE_DATASTORE_JSON).
 		SetTag("VFS")
 }
 
@@ -87,6 +88,7 @@ func (self ClientPathManager) VFSDownloadInfoPath(
 	vfs_components []string) api.DSPathSpec {
 	return CLIENTS_ROOT.AddUnsafeChild(self.client_id, "vfs_files").
 		AddChild(vfs_components...).
+		SetType(api.PATH_TYPE_DATASTORE_JSON).
 		SetTag("VFSFile")
 }
 
@@ -95,6 +97,7 @@ func (self ClientPathManager) VFSDownloadInfoFromClientPath(
 	return CLIENTS_ROOT.AddUnsafeChild(self.client_id, "vfs_files").
 		AddChild(accessor).
 		AddChild(ExtractClientPathComponents(client_path)...).
+		SetType(api.PATH_TYPE_DATASTORE_JSON).
 		SetTag("VFSFile")
 }
 

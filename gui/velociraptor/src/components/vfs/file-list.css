@@ -69,3 +69,7 @@ td.download-column {
     border-left: none;
     width: 45px;
 }
+
+.vfs-toolbar {
+    padding-right: 10px;
+}

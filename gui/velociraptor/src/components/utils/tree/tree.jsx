@@ -45,8 +45,8 @@ class Node extends Component {
                    onClick={()=>this.props.onSelect(node)}>
                    <div className="tree-folder">
                      { this.getIcon() }
+                     {node.name}
                    </div>
-                   {node.name}
                   </li>
                  { node.toggled &&
                    _.map(node.children, (x, idx)=>{

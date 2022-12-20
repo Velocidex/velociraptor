@@ -1,0 +1,203 @@
+{
+ "Directory file/a/b reading 1000 rows from 0": {
+  "columns": [
+   "Download",
+   "_FullPath",
+   "Name",
+   "Mode",
+   "_Accessor"
+  ],
+  "rows": [
+   {
+    "cell": [
+     "",
+     "/a/b/A",
+     "A",
+     "-rwx-----",
+     "file"
+    ]
+   },
+   {
+    "cell": [
+     "",
+     "/a/b/B",
+     "B",
+     "-rwx-----",
+     "file"
+    ]
+   },
+   {
+    "cell": [
+     "",
+     "/a/b/C",
+     "C",
+     "-rwx-----",
+     "file"
+    ]
+   },
+   {
+    "cell": [
+     "",
+     "/a/b/D",
+     "D",
+     "-rwx-----",
+     "file"
+    ]
+   },
+   {
+    "cell": [
+     "",
+     "/a/b/E",
+     "E",
+     "-rwx-----",
+     "file"
+    ]
+   },
+   {
+    "cell": [
+     "",
+     "/a/b/c",
+     "c",
+     "drwx-----",
+     "file"
+    ]
+   }
+  ],
+  "total_rows": 6
+ },
+ "Directory file/a/b reading 1 row from 0": {
+  "columns": [
+   "Download",
+   "_FullPath",
+   "Name",
+   "Mode",
+   "_Accessor"
+  ],
+  "rows": [
+   {
+    "cell": [
+     "",
+     "/a/b/A",
+     "A",
+     "-rwx-----",
+     "file"
+    ]
+   }
+  ],
+  "total_rows": 6
+ },
+ "Directory file/a/b reading 1 row from 1": {
+  "columns": [
+   "Download",
+   "_FullPath",
+   "Name",
+   "Mode",
+   "_Accessor"
+  ],
+  "rows": [
+   {
+    "cell": [
+     "",
+     "/a/b/B",
+     "B",
+     "-rwx-----",
+     "file"
+    ]
+   }
+  ],
+  "total_rows": 6
+ },
+ "Directory file/a/b reading 100 rows from 5": {
+  "columns": [
+   "Download",
+   "_FullPath",
+   "Name",
+   "Mode",
+   "_Accessor"
+  ],
+  "rows": [
+   {
+    "cell": [
+     "",
+     "/a/b/c",
+     "c",
+     "drwx-----",
+     "file"
+    ]
+   }
+  ],
+  "total_rows": 6
+ },
+ "Directory file/a/b/c reading 100 rows from 0": {
+  "columns": [
+   "Download",
+   "_FullPath",
+   "Name",
+   "Mode",
+   "_Accessor"
+  ],
+  "rows": [
+   {
+    "cell": [
+     "",
+     "/a/b/c/CF",
+     "CF",
+     "-rwx-----",
+     "file"
+    ]
+   }
+  ],
+  "total_rows": 6
+ },
+ "Directory file/a/b/c reading 1 rows from 2": {
+  "columns": [
+   "Download",
+   "_FullPath",
+   "Name",
+   "Mode",
+   "_Accessor"
+  ],
+  "rows": [
+   {
+    "cell": [
+     "",
+     "/a/b/c/CC",
+     "CC",
+     "-rwx-----",
+     "file"
+    ]
+   }
+  ],
+  "total_rows": 6
+ },
+ "Directory file/a/b/c reading 100 rows from 4": {
+  "columns": [
+   "Download",
+   "_FullPath",
+   "Name",
+   "Mode",
+   "_Accessor"
+  ],
+  "rows": [
+   {
+    "cell": [
+     "",
+     "/a/b/c/CE",
+     "CE",
+     "-rwx-----",
+     "file"
+    ]
+   },
+   {
+    "cell": [
+     "",
+     "/a/b/c/CF",
+     "CF",
+     "-rwx-----",
+     "file"
+    ]
+   }
+  ],
+  "total_rows": 6
+ }
+}

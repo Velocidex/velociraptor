@@ -11,14 +11,12 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/go-errors/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
@@ -170,7 +168,7 @@ func (self *VFSService) handleEmptyListDirectory(
 
 	// Write an empty set to the VFS entry.
 	err := self.flush_state(config_obj, uint64(ts), client_id, flow_id,
-		vfs_components, []*ordereddict.Dict{})
+		vfs_components, 0, 0)
 	if err != nil {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Error("Unable to save directory: %v", err)
@@ -190,12 +188,6 @@ func (self *VFSService) ProcessListDirectory(
 		return
 	}
 
-	directory_limit := 10000
-	if config_obj.Defaults != nil &&
-		config_obj.Defaults.MaxVfsDirectorySize > 0 {
-		directory_limit = int(config_obj.Defaults.MaxVfsDirectorySize)
-	}
-
 	client_id, _ := row.GetString("ClientId")
 	flow_id, _ := row.GetString("FlowId")
 	ts, _ := row.GetInt64("_ts")
@@ -203,12 +195,9 @@ func (self *VFSService) ProcessListDirectory(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("VFSService: Processing System.VFS.ListDirectory from %v", client_id)
 
-	path_manager, err := artifacts.NewArtifactPathManager(config_obj,
-		client_id, flow_id, "System.VFS.ListDirectory")
-	if err != nil {
-		logger.Error("Unable to read artifact: %v", err)
-		return
-	}
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		config_obj, client_id, flow_id, "System.VFS.ListDirectory",
+		paths.MODE_CLIENT)
 
 	// Read the results from the flow and build a VFSListResponse
 	// for storing in the VFS.
@@ -221,10 +210,16 @@ func (self *VFSService) ProcessListDirectory(
 	}
 	defer reader.Close()
 
-	var rows []*ordereddict.Dict
 	var current_vfs_components []string = nil
 
+	// In the VFS we store the row range where we can find the files
+	// in this directory.
+	start_row := 0
+	count := 0
+
 	for row := range reader.Rows(ctx) {
+		count++
+
 		full_path, _ := row.GetString("_FullPath")
 		accessor, _ := row.GetString("_Accessor")
 		name, _ := row.GetString("Name")
@@ -233,6 +228,7 @@ func (self *VFSService) ProcessListDirectory(
 			continue
 		}
 
+		// Where would this file end up in the VFS?
 		file_vfs_path := path_specs.NewUnsafeFilestorePath(accessor).
 			AddChild(paths.ExtractClientPathComponents(full_path)...)
 
@@ -243,10 +239,7 @@ func (self *VFSService) ProcessListDirectory(
 
 		// This row does not belong in the current collection - flush
 		// the collection and start a new one.
-		if !utils.StringSliceEq(dir_components, current_vfs_components) ||
-
-			// Do not let our memory footprint grow without bounds.
-			len(rows) > directory_limit {
+		if !utils.StringSliceEq(dir_components, current_vfs_components) {
 
 			// current_vfs_components == nil represents
 			// the first collection before the first row
@@ -254,23 +247,24 @@ func (self *VFSService) ProcessListDirectory(
 			if current_vfs_components != nil {
 				err := self.flush_state(
 					config_obj, uint64(ts), client_id,
-					flow_id, current_vfs_components, rows)
+					flow_id, current_vfs_components, start_row, count-1)
 				if err != nil {
 					return
 				}
-				rows = nil
+				start_row = count - 1
 			}
 			current_vfs_components = dir_components
 		}
-		rows = append(rows, row)
 	}
 
 	err = self.flush_state(config_obj, uint64(ts), client_id, flow_id,
-		current_vfs_components, rows)
+		current_vfs_components, start_row, count)
 	if err != nil {
 		logger.Error("Unable to save directory: %v", err)
 		return
 	}
+
+	start_row = count
 }
 
 func findParam(name string, flow *flows_proto.ArtifactCollectorContext) string {
@@ -293,17 +287,7 @@ func findParam(name string, flow *flows_proto.ArtifactCollectorContext) string {
 // Flush the current state into the database and clear it for the next directory.
 func (self *VFSService) flush_state(
 	config_obj *config_proto.Config, timestamp uint64, client_id, flow_id string,
-	vfs_components []string, rows []*ordereddict.Dict) error {
-
-	var columns []string
-	if len(rows) > 0 {
-		columns = rows[0].Keys()
-	}
-
-	serialized, err := json.Marshal(rows)
-	if err != nil {
-		return errors.Wrap(err, 0)
-	}
+	vfs_components []string, start_idx, end_idx int) error {
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -313,12 +297,12 @@ func (self *VFSService) flush_state(
 	return db.SetSubject(config_obj,
 		client_path_manager.VFSPath(vfs_components),
 		&api_proto.VFSListResponse{
-			Columns:   columns,
 			Timestamp: timestamp,
-			Response:  string(serialized),
-			TotalRows: uint64(len(rows)),
+			TotalRows: uint64(end_idx - start_idx),
 			ClientId:  client_id,
 			FlowId:    flow_id,
+			StartIdx:  uint64(start_idx),
+			EndIdx:    uint64(end_idx),
 		})
 }
 

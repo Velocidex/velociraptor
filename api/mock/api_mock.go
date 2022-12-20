@@ -1281,6 +1281,26 @@ func (mr *MockAPIClientMockRecorder) VFSListDirectory(arg0, arg1 interface{}, ar
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VFSListDirectory", reflect.TypeOf((*MockAPIClient)(nil).VFSListDirectory), varargs...)
 }
 
+// VFSListDirectoryFiles mocks base method.
+func (m *MockAPIClient) VFSListDirectoryFiles(arg0 context.Context, arg1 *proto0.GetTableRequest, arg2 ...grpc.CallOption) (*proto0.GetTableResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "VFSListDirectoryFiles", varargs...)
+	ret0, _ := ret[0].(*proto0.GetTableResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VFSListDirectoryFiles indicates an expected call of VFSListDirectoryFiles.
+func (mr *MockAPIClientMockRecorder) VFSListDirectoryFiles(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VFSListDirectoryFiles", reflect.TypeOf((*MockAPIClient)(nil).VFSListDirectoryFiles), varargs...)
+}
+
 // VFSRefreshDirectory mocks base method.
 func (m *MockAPIClient) VFSRefreshDirectory(arg0 context.Context, arg1 *proto0.VFSRefreshDirectoryRequest, arg2 ...grpc.CallOption) (*proto2.ArtifactCollectorResponse, error) {
 	m.ctrl.T.Helper()

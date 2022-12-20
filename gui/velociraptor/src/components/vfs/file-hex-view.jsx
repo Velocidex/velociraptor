@@ -12,6 +12,7 @@ import T from '../i8n/i8n.jsx';
 export default class FileHexView extends React.Component {
     static propTypes = {
         node: PropTypes.object,
+        selectedRow: PropTypes.object,
         client: PropTypes.object,
     };
 
@@ -37,7 +38,7 @@ export default class FileHexView extends React.Component {
         // 1. Selected node changes (file list was selected).
         // 2. VFS path changes (tree navigated away).
         // 3. node version changes (file was refreshed).
-        if (prevProps.node.selected !== this.props.node.selected ||
+        if (!_.isEqual(prevProps.selectedRow, this.props.selectedRow) ||
             !_.isEqual(prevProps.node.path, this.props.node.path) ||
             prevProps.node.version !== this.props.node.version) {
             this.fetchText_(this.state.page);
@@ -45,7 +46,7 @@ export default class FileHexView extends React.Component {
     }
 
     fetchText_ = (page) => {
-        let selectedRow = utils.getSelectedRow(this.props.node);
+        let selectedRow = this.props.selectedRow;
         let client_id = this.props.client && this.props.client.client_id;
         if (!client_id) {
             return;
@@ -111,7 +112,7 @@ export default class FileHexView extends React.Component {
 
 
     render() {
-        let selectedRow = utils.getSelectedRow(this.props.node);
+        let selectedRow = this.props.selectedRow;
         let mtime = selectedRow && selectedRow.Download && selectedRow.Download.mtime;
         if (!mtime) {
             return <h5 className="no-content">{T("File has no data, please collect file first.")}</h5>;

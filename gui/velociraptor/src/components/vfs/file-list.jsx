@@ -13,6 +13,8 @@ import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Modal from 'react-bootstrap/Modal';
 
+import VeloPagedTable from '../core/paged-table.jsx';
+
 import { Join, EncodePathInURL } from '../utils/paths.jsx';
 import api from '../core/api-service.jsx';
 import axios from 'axios';
@@ -64,6 +66,7 @@ class VeloFileList extends Component {
         node: PropTypes.object,
         version: PropTypes.string,
         client: PropTypes.object,
+        updateCurrentSelectedRow: PropTypes.func,
         updateCurrentNode: PropTypes.func,
     }
 
@@ -79,6 +82,7 @@ class VeloFileList extends Component {
         showDownloadAllDialog: false,
         lastRecursiveDownloadOperationId: null,
         lastRecursiveDownloadData: {},
+        selectedFile: "",
     }
 
     componentDidMount = () => {
@@ -105,8 +109,9 @@ class VeloFileList extends Component {
         }
 
         // Store the name of the selected row.
-        node.selected = row.Name;
-        this.props.updateCurrentNode(node);
+        this.setState({ selectedFile: row._id});
+        this.props.updateCurrentSelectedRow(row);
+        this.props.updateCurrentNode(this.props.node);
 
         let path = this.props.node.path || [];
         // Update the router with the new path.
@@ -292,20 +297,17 @@ class VeloFileList extends Component {
 
     render() {
         // The node keeps track of which row is selected.
-        let selected_name = this.props.node && this.props.node.selected;
-
         const selectRow = {
             mode: "radio",
             clickToSelect: true,
             hideSelectColumn: true,
             classes: "row-selected",
             onSelect: this.updateCurrentFile,
-            selected: [selected_name],
+            selected: [this.state.selectedFile],
         };
 
         let toolbar = (
-            <Navbar className="toolbar">
-              <ButtonGroup>
+              <ButtonGroup className="float-right vfs-toolbar">
                 { this.state.lastRefreshOperationId ?
                   <Button data-tooltip={T("Currently refreshing")}
                           data-position="right"
@@ -385,31 +387,21 @@ class VeloFileList extends Component {
                   <FontAwesomeIcon icon="eye"/>
                 </Link>
               </ButtonGroup>
-            </Navbar>
         );
 
         if (!this.props.node || !this.props.node.raw_data) {
             return (
-                <>
+                <Navbar className="toolbar">
                   { toolbar }
                   <div className="fill-parent no-margins toolbar-margin">
                     <h5 className="no-content">{T("No data available. Refresh directory from client by clicking above.")}</h5>
                   </div>
-                </>
+                </Navbar>
             );
         }
 
-        if (_.isEmpty(this.props.node.raw_data)) {
-            return <>
-                     { toolbar }
-                     <div className="fill-parent no-margins toolbar-margin">
-                       <h5 className="no-content">Directory is empty.</h5>
-                     </div>
-                   </>;
-        }
-
-        let columns = formatColumns([
-            {dataField: "Download", text: "", formatter: (cell, row) => {
+        let formatters = {
+            "Download": (cell, row) => {
                 let result = [];
                 if (cell) {
                     result.push( <FontAwesomeIcon
@@ -426,15 +418,30 @@ class VeloFileList extends Component {
                 }
                 //return <FontAwesomeIcon icon="clock"/>;
                 return <span className="file-hints">{result}</span>;
-            }, sort: true, classes: "download-column"},
-            {dataField: "Name", text: T("Name"), sort: true, filtered: true},
-            {dataField: "Size", text: T("Size"), sort: true, type: "mb"},
-            {dataField: "Mode", text: T("Mode"), sort: true},
-            {dataField: "mtime", text: T("mtime"), sort: true, type: "timestamp"},
-            {dataField: "atime", text: T("atime"), sort: true, type: "timestamp"},
-            {dataField: "ctime", text: T("ctime"), sort: true, type: "timestamp"},
-            {dataField: "btime", text: T("btime"), sort: true, type: "timestamp"}
-        ]);
+            },
+            "Size": (cell, row) => {
+                let result = cell/1024/1024;
+                let value = cell;
+                let suffix = "";
+                if (_.isFinite(result) && result > 0) {
+                    suffix = "Mb";
+                    value = result.toFixed(0);
+                } else {
+                    result = (cell /1024).toFixed(0);
+                    if (_.isFinite(result) && result > 0) {
+                        suffix = "Kb";
+                        value = result.toFixed(0);
+                    } else {
+                        if (_.isFinite(cell)) {
+                            suffix = "b";
+                            value = cell.toFixed(0);
+                        }
+                    }
+                }
+
+                return value + " " + suffix;
+            },
+        };
 
         return (
             <>
@@ -445,19 +452,21 @@ class VeloFileList extends Component {
                   onCancel={()=>this.setState({showDownloadAllDialog: false})}
                   onClose={this.startRecursiveVfsDownloadOperation}
                 />}
-              { toolbar }
-              <div className="fill-parent no-margins toolbar-margin selectable">
-                <BootstrapTable
-                  hover
-                  condensed
-                  keyField="Name"
-                  bootstrap4
-                  headerClasses="alert alert-secondary"
-                  bodyClasses="fixed-table-body"
-                  data={this.props.node.raw_data}
-                  columns={columns}
-                  filter={ filterFactory() }
+              <div className="fill-parent no-margins selectable">
+                <VeloPagedTable
+                  url="v1/VFSListDirectoryFiles"
+                  renderers={formatters}
+                  version={{
+                      version: this.props.node && this.props.node.version,
+                  }}
+                  params={{
+                      client_id: this.props.client.client_id,
+                      flow_id: this.props.node.flow_id,
+                      vfs_components: this.props.node.path,
+                  }}
                   selectRow={ selectRow }
+                  toolbar={toolbar}
+                  initial_page_size={5}
                 />
               </div>
             </>

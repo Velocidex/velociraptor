@@ -122,6 +122,12 @@ class VeloPagedTable extends Component {
         // If specified we notify that a transform is set.
         transform: PropTypes.object,
         setTransform: PropTypes.func,
+
+        // A descriptor object for the selector.
+        // https://react-bootstrap-table.github.io/react-bootstrap-table2/docs/row-select-props.html
+        selectRow: PropTypes.object,
+
+        initial_page_size: PropTypes.number,
     }
 
     state = {
@@ -147,6 +153,8 @@ class VeloPagedTable extends Component {
 
     componentDidMount = () => {
         this.source = axios.CancelToken.source();
+        this.setState({page_size: this.props.initial_page_size || 10});
+
         this.fetchRows();
     }
 
@@ -225,7 +233,7 @@ class VeloPagedTable extends Component {
                 <Button key="1"
                         data-tooltip={T("Transformed")}  disabled={true}
                         data-position="right"
-                        className="btn-tooltip"
+                        className="btn-tooltip table-transformed"
                         variant="outline-dark">
                   { transform.filter_column } ( {transform.filter_regex} )
                   <span className="transform-button">
@@ -515,6 +523,7 @@ class VeloPagedTable extends Component {
                           hover
                           remote
                           condensed
+                          selectRow={ this.props.selectRow }
                           noDataIndication={T("Table is Empty")}
                           keyField="_id"
                           headerClasses="alert alert-secondary"
