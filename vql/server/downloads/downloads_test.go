@@ -239,7 +239,7 @@ func (self *TestSuite) TestExportHunt() {
 		json.MustMarshalIndent(file_details))
 }
 
-func TestCollectorPlugin(t *testing.T) {
+func TestDownloadsPlugin(t *testing.T) {
 	suite.Run(t, &TestSuite{})
 }
 
@@ -249,6 +249,11 @@ func openZipFile(
 	scope vfilter.Scope,
 	src api.FSPathSpec) (*ordereddict.Dict, error) {
 	file_store_factory := file_store.GetFileStore(config_obj)
+
+	// When we exit from here we make sure to remove this file to
+	// cleanup
+	defer file_store_factory.Delete(src)
+
 	reader, err := file_store_factory.ReadFile(src)
 	if err != nil {
 		return nil, err
