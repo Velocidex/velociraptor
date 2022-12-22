@@ -154,6 +154,10 @@ body.veloci-dark {
   color: var(--color-foreground);
 }
 
+.veloci-dark a {
+  color: var(--color-accent-100);
+}
+
 .veloci-dark .alert-secondary {
   color: var(--color-foreground);
   background: var(--color-table-heading-background);
@@ -199,6 +203,7 @@ body.veloci-dark {
 }
 
 .veloci-dark .client-status .client-name {
+  color: var(--color-foreground);
   background: var(--color-btn-default-background);
   text-decoration: none !important;
   text-shadow: none;
@@ -210,7 +215,6 @@ body.veloci-dark {
 }
 
 .veloci-dark .client-status .client-name:hover {
-  color: var(--color-foreground);
   background: var(--color-btn-outline-link-hover);
 }
 
@@ -369,7 +373,6 @@ body.veloci-dark {
 
 .veloci-dark .table tbody tr td {
   border: none;
-  vertical-align: text-bottom;
 }
 
 .veloci-dark .table tbody tr:nth-of-type(2n) {
@@ -689,10 +692,6 @@ body.veloci-dark {
 
 .veloci-dark .report-viewer {
   color: var(--color-foreground);
-}
-
-.veloci-dark .report-viewer a {
-  color: var(--color-accent-100);
 }
 
 .veloci-dark .report-viewer pre > a {

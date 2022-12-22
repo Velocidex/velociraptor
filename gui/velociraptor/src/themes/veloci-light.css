@@ -144,6 +144,10 @@ body.veloci-light {
   font-family: var(--font-family-sans-serif);
 }
 
+.veloci-light a {
+  color: var(--color-accent-100);
+}
+
 /* Top Navbar */
 .veloci-light .main-navbar {
   background: var(--color-sidebar-background);
@@ -179,6 +183,8 @@ body.veloci-light {
 }
 
 .veloci-light .client-status .client-name {
+  color: var(--color-foreground);
+  color: var(--color-foreground);
   background: var(--color-btn-outline-link);
   text-decoration: none !important;
   text-shadow: none;
@@ -190,7 +196,6 @@ body.veloci-light {
 }
 
 .veloci-light .client-status .client-name:hover {
-    color: var(--color-foreground);
     background: var(--color-btn-outline-link-hover);
 }
 
@@ -508,7 +513,6 @@ body.veloci-light {
 
 .veloci-light .table tbody tr td {
   border: none;
-  vertical-align: text-bottom;
 }
 
 .veloci-light .table tbody tr:nth-of-type(2n) {
@@ -642,10 +646,6 @@ body.veloci-light {
 .veloci-light .report-viewer dt,
 .veloci-light .report-viewer dd {
   font-family: var(--font-family-paragraph);
-}
-
-.veloci-light .report-viewer a {
-  color: var(--color-accent-100);
 }
 
 .veloci-light .artifact-search-table.selectable.container tbody tr:hover {

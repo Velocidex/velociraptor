@@ -187,8 +187,7 @@ body.ncurses {
 
 .ncurses a {
   font-family: var(--font-family-monospace);
-  text-decoration: none;
-  font-size: var(--font-size-base);
+  color: blue;
 }
 
 .ncurses p {
@@ -913,7 +912,6 @@ body.ncurses {
 
 .ncurses .table tbody tr td {
   border: 1px solid darkgrey;
-  vertical-align: text-bottom;
 }
 
 .ncurses .fixed-table-body {

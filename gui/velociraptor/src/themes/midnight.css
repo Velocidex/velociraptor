@@ -150,6 +150,10 @@ body.midnight {
   color: darkorange;
 }
 
+.midnight a {
+  color: darkorange;
+}
+
 .midnight code {
   font-family: var(--font-family-monospace);
   color: var(--color-accent-100);
@@ -218,7 +222,7 @@ body.midnight {
 }
 
 .midnight .client-status .client-name {
-  background: var(--color-btn-default-background);
+  background: var(--color-accent-25);
   text-decoration: none !important;
   text-shadow: none;
   padding: 6px 10px 8px 10px;
@@ -535,7 +539,6 @@ body.midnight {
 
 .midnight .table tbody tr td {
   border: none;
-  vertical-align: text-bottom;
 }
 
 .midnight .table tbody tr:nth-of-type(2n) {
@@ -907,10 +910,6 @@ body.midnight {
   border: none;
   padding-left: 4px;
   padding-right: 4px;
-}
-
-.midnight .report-viewer a {
-  color: var(--color-accent-100);
 }
 
 .midnight .report-viewer pre > a {

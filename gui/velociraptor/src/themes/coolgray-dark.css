@@ -141,6 +141,10 @@ body.coolgray-dark {
   letter-spacing: 0.4px;
 }
 
+.coolgray-dark a {
+  color: var(--color-accent-100);
+}
+
 .cool-dark pre {
   font-family: var(--font-family-monospace);
   font-size: var(--font-size-base);
@@ -210,6 +214,7 @@ body.coolgray-dark {
 }
 
 .coolgray-dark .client-status .client-name {
+  color: whitesmoke;
   background: var(--color-btn-default-background);
   text-decoration: none !important;
   text-shadow: none;
@@ -221,7 +226,6 @@ body.coolgray-dark {
 }
 
 .coolgray-dark .client-status .client-name:hover {
-  color: whitesmoke;
   background: var(--color-client-link-hover);
 }
 
@@ -513,7 +517,6 @@ body.coolgray-dark {
 
 .coolgray-dark .table tbody tr td {
   border: none;
-  vertical-align: text-bottom;
 }
 
 .coolgray-dark .table tbody tr:nth-of-type(2n) {
@@ -876,10 +879,6 @@ body.coolgray-dark {
   border: 0.5px solid rgba(255,255,255,.1);
   padding-left: 4px;
   padding-right: 4px;
-}
-
-.coolgray-dark .report-viewer a {
-  color: var(--color-accent-100);
 }
 
 /* artifact search */

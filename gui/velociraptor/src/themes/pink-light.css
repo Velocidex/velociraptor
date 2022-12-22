@@ -153,6 +153,10 @@ body.pink-light {
   color: var(--color-foreground);
 }
 
+.pink-light a {
+  color: var(--color-accent-complement);
+}
+
 .pink-light .alert-secondary {
   color: var(--color-foreground);
   background: var(--color-table-heading-background);
@@ -197,6 +201,7 @@ body.pink-light {
 }
 
 .pink-light .client-status .client-name {
+  color: var(--color-client-link);
     background: var(--color-btn-default-background);
     text-decoration: none !important;
     text-shadow: none;
@@ -208,7 +213,6 @@ body.pink-light {
 }
 
 .pink-light .client-status .client-name:hover {
-  color: var(--color-client-link-hover);
   background: var(--color-btn-outline-link-hover);
 }
 
@@ -364,7 +368,6 @@ body.pink-light {
 
 .pink-light .table tbody tr td {
   border-width: 0;
-  vertical-align: text-bottom;
 }
 
 .pink-light .table tbody tr:nth-of-type(2n) {
@@ -634,10 +637,6 @@ body.pink-light {
 
 /* Artifact viewer screen */
 
-.pink-light .report-viewer a {
-  color: var(--color-accent-complement);
-}
-
 .pink-light .report-viewer .description-content {
   font-family: var(--font-family-paragraph);
   font-size: var(--font-size-large);
@@ -668,7 +667,7 @@ body.pink-light {
 }
 
 .pink-light .report-viewer pre {
-  background: #F7F7F7;
+  background: #EBEBEB;
   border-radius: 4px;
   padding-top: 2px;
   padding-bottom: 2px;

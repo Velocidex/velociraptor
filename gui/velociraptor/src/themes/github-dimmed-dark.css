@@ -145,6 +145,10 @@ body.github-dimmed-dark {
   color: var(--color-foreground);
 }
 
+.github-dimmed-dark a {
+  color: var(--color-accent-complement);
+}
+
 .github-dimmed-dark code,
 .github-dimmed-dark pre,
 .github-dimmed-dark .monospace {
@@ -188,6 +192,7 @@ body.github-dimmed-dark {
 }
 
 .github-dimmed-dark .client-status .client-name {
+  color: whitesmoke;
   background: var(--color-btn-default-background);
   text-decoration: none !important;
   text-shadow: none;
@@ -199,7 +204,6 @@ body.github-dimmed-dark {
 }
 
 .github-dimmed-dark .client-status .client-name:hover {
-  color: whitesmoke;
   background: var(--color-client-link-hover);
 }
 
@@ -453,7 +457,6 @@ body.github-dimmed-dark {
 
 .github-dimmed-dark .table tbody tr td {
   border: none;
-  vertical-align: text-bottom;
 }
 
 .github-dimmed-dark .table tbody tr:nth-of-type(2n) {
@@ -738,10 +741,6 @@ body.github-dimmed-dark {
 
 .github-dimmed-dark span.chromaln {
   color: var(--color-foreground-dimmed);
-}
-
-.github-dimmed-dark .report-viewer a {
-  color: var(--color-accent-complement);
 }
 
 .github-dimmed-dark .report-viewer pre > a {
