@@ -169,6 +169,7 @@ pre {
 func ExportNotebookToZip(
 	ctx context.Context,
 	config_obj *config_proto.Config,
+	wg *sync.WaitGroup,
 	notebook_path_manager *paths.NotebookPathManager) error {
 
 	db, err := datastore.GetDB(config_obj)
@@ -206,7 +207,6 @@ func ExportNotebookToZip(
 	if err != nil {
 		return err
 	}
-	defer fd.Close()
 
 	err = fd.Truncate()
 	if err != nil {
@@ -254,7 +254,6 @@ func ExportNotebookToZip(
 		}
 	}
 
-	wg := sync.WaitGroup{}
 	wg.Add(1)
 
 	// Write the bulk of the data asyncronously.

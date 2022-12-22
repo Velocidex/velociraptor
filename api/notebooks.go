@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	errors "github.com/go-errors/errors"
@@ -441,8 +442,10 @@ func exportZipNotebook(
 	go func() {
 		defer cancel()
 
+		wg := &sync.WaitGroup{}
+
 		err := reporting.ExportNotebookToZip(
-			sub_ctx, config_obj, notebook_path_manager)
+			sub_ctx, config_obj, wg, notebook_path_manager)
 		if err != nil {
 			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 			logger.WithFields(logrus.Fields{
@@ -452,6 +455,9 @@ func exportZipNotebook(
 			}).Error("CreateNotebookDownloadFile")
 			return
 		}
+
+		// Wait for the export to finish before we return.
+		wg.Wait()
 	}()
 
 	return nil
