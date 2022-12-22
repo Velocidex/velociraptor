@@ -13,6 +13,9 @@ export default defineConfig({
       sourcemap: false,
     },
     css : {
+      // Creates inline source maps which don't work with Chrome (108)
+      // dev tools Coverage analysis. Rather use build.sourcemap:true
+      // if you need to do Coverage analysis.
       devSourcemap: false,
     },
     plugins: [

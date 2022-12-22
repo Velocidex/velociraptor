@@ -45,7 +45,7 @@
     left: 23px; top: 5px; font-weight: bold;
     font-size: 18px;
     -webkit-text-stroke: 1px #000;
-    color: #fff;
+    color: var(--color-foreground);
 }
 
 

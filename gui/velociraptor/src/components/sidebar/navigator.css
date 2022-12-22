@@ -34,14 +34,18 @@ section.navigator a {
   color: var(--color-sidebar-foreground);
 }
 
+.navigator.nav-pills.nav li {
+  border-radius: 0;
+}
+
 .navigator.nav-pills.nav li:hover {
   color: var(--color-sidebar-inactive-foreground-hover);
   background: var(--color-sidebar-inactive-background-hover);
 }
 
 .navigator.nav-pills.nav .nav-link.disabled {
-    opacity: 30%;
-    pointer-events: none;
+  opacity: 30%;
+  pointer-events: none;
 }
 
 .navigator.nav-pills.nav {

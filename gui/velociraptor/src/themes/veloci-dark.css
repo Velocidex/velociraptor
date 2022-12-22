@@ -39,7 +39,7 @@
 .veloci-dark {
   --font-size-large: 16px;
   --font-size-base: 14px;
-  --font-size-small: 12px;
+  --font-size-small: 13px;
   --font-family-sans-serif: "Iosevka Term", Iosevka-Term, -apple-system, BlinkMacSystemFont,
     "Segoe UI", "Helvetica Neue", Arial, sans-serif;
   --font-family-monospace: "Iosevka Term", Iosevka-Term, SFMono-Regular, Menlo, Monaco,
@@ -75,11 +75,12 @@
 
   --color-client-link: #7aed40;
   --color-client-link-hover: var(--color-foreground-dimmed);
+  --color-tooltip-background: #3f4754;
 
   --color-btn-border: #3f4754;
   --color-btn-default-border: #3f4754;
   --color-btn-default-background: #5cd00a80;
-  --color-btn-default-background-hover: #0c900a80;
+  --color-btn-default-background-hover: var(--color-btn-outline-link-hover);
   --color-btn-outline-link: var(--color-accent-50);
   --color-btn-outline-link-hover: var(--color-accent-75);
 
@@ -204,7 +205,7 @@ body.veloci-dark {
   padding: 6px 10px 8px 10px;
   border-radius: 3px;
   margin: 5px;
-  font-size: 15px;
+  font-size: var(--font-size-base);
   border-color: var(--color-btn-default-border);
 }
 
@@ -269,7 +270,6 @@ body.veloci-dark {
   font-family: var(--font-family-sans-serif);
   font-size: var(--font-size-base);
   color: var(--color-foreground);
-  background-image: none;
   text-shadow: none;
   box-shadow: none;
   background: var(--color-btn-default-background);
@@ -282,7 +282,7 @@ body.veloci-dark {
 }
 
 .veloci-dark .btn-default:hover {
-  background: var(--color-btn-outline-link-hover);
+  background: var(--color-btn-default-background-hover);
   color: var(--color-foreground);
 }
 
@@ -297,17 +297,23 @@ body.veloci-dark {
 }
 
 .veloci-dark .btn-primary {
-  background-image: none;
   text-shadow: none;
   box-shadow: none;
-  background: none;
+  background: var(--color-btn-default-background);
+}
+
+.veloci-dark .btn-primary:hover:not(:disabled):not(.disabled) {
+  background: var(--color-btn-default-background-hover);
 }
 
 .veloci-dark .btn-secondary {
-  background-image: none;
   text-shadow: none;
   box-shadow: none;
-  background: var(--color-canvas-background);
+  background: var(--color-btn-default-background);
+}
+
+.veloci-dark .btn-secondary:hover {
+  background: var(--color-btn-default-background-hover);
 }
 
 .veloci-dark .btn-outline-default {
@@ -477,7 +483,7 @@ body.veloci-dark {
 /* Cards */
 
 .veloci-dark .card {
-  background: var(--color-table-heading-background);
+  background: var(--color-canvas-background);
 }
 
 .veloci-dark .dashboard .card {
@@ -556,15 +562,11 @@ body.veloci-dark {
 
 .veloci-dark .estimate.alert-info {
   border: none;
+  background: #3f4754;
 }
 
 .veloci-dark .custom-switch .custom-control-input:disabled:checked~.custom-control-label:before {
   background-color: var(--color-accent-25);
-}
-
-.veloci-dark ::placeholder {
-  color: var(--color-foreground) !important;
-  font-weight: 500 !important;
 }
 
 .veloci-dark .form-control,
@@ -681,10 +683,6 @@ body.veloci-dark {
   font-size: var(--font-size-base);
 }
 
-.veloci-dark pre {
-    color: var(--color-canvas-background);
-}
-
 .veloci-dark .artifact-search-table a {
   color: var(--color-foreground);
 }
@@ -693,26 +691,37 @@ body.veloci-dark {
   color: var(--color-foreground);
 }
 
-.veloci-dark .report-viewer pre {
-  filter: invert(1);
-}
-
-.veloci-dark .report-viewer code {
-  background: rgba(255,255,255,.05);
-  border-radius: 4px;
-  border: 0.5px solid rgba(255,255,255,.1);
-  padding-top: 2px;
-  padding-bottom: 2px;
-  padding-left: 4px;
-  padding-right: 4px;
-}
-
 .veloci-dark .report-viewer a {
   color: var(--color-accent-100);
 }
 
 .veloci-dark .report-viewer pre > a {
   color: var(--color-foreground-inverse);
+}
+
+.veloci-dark .report-viewer pre {
+  filter: invert(1);
+  color: var(--color-canvas-background);
+  /* background: #FFE7C0; */
+  border-radius: 4px;
+  border: none;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.veloci-dark .report-viewer code {
+  background: rgba(255,255,255,.05);
+  border-radius: 4px;
+  border: 0.5px solid rgba(255,255,255,.1);
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.veloci-dark .report-viewer dt,
+.veloci-dark .report-viewer dd {
+  font-family: var(--font-family-paragraph);
 }
 
 .veloci-dark .artifact-search-table.selectable.container tbody tr:hover {
@@ -743,7 +752,7 @@ body.veloci-dark {
 /* notebooks */
 .veloci-dark .cell-toolbar,
 .veloci-dark .notebook-input {
-  background: var(--color-page-link-active-background);
+  background: var(--color-table-heading-background);
   color: var(--color-foreground);
 }
 
@@ -762,22 +771,9 @@ body.veloci-dark {
 }
 
 /* file tree */
-.veloci-dark .file-tree ul {
-  background: var(--color-canvas-background);
-  font-family: var(--font-family-sans-serif);
-  font-size: var(--font-size-base);
-  padding-left: 12px;
-}
 
-.veloci-dark .tree-folder.active {
-  color: var(--color-header-background);
-}
-
-.veloci-dark .tree-folder {
+.veloci-dark .file-tree .isActive {
   color: var(--color-foreground);
-  font-family: var(--font-family-sans-serif);
-  font-size: var(--font-size-base);
-  font-weight: 600;
 }
 
 /* Dropdown menus */
@@ -909,12 +905,23 @@ body.veloci-dark {
   color: var(--color-foreground);
 }
 
+.veloci-dark .velo__control--is-focused,
+.veloci-dark .velo__control:hover {
+  box-shadow: none;
+  border-color: var(--color-btn-default-border);
+}
+
 .veloci-dark .accordion,
 .veloci-dark .accordion > .card,
 .veloci-dark .accordion > .card > .card-header {
   background: var(--color-form-control-background);
   border-color: var(--color-btn-default-border);
   color: var(--color-foreground);
+}
+
+.veloci-dark ::placeholder {
+  color: var(--color-foreground) !important;
+  font-weight: 500 !important;
 }
 
 .veloci-dark .velo__placeholder {
@@ -952,12 +959,15 @@ body.veloci-dark {
 
 .veloci-dark .velo__multi-value__remove:hover {
   color: var(--color-foreground-inverse);
-  background-color: var(--color-accent-100);
+  background-color: var(--color-accent-75);
   font-weight: 700;
 }
 
 .veloci-dark hr {
-  background: var(--color-foreground);
+  background: var(--color-scrollbar-thumb);
+  height: 2px;
+  border: none;
+  margin-top: 2em;
 }
 
 .veloci-dark .flow-log-filter,
