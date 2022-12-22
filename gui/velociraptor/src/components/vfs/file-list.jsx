@@ -389,14 +389,18 @@ class VeloFileList extends Component {
               </ButtonGroup>
         );
 
-        if (!this.props.node || !this.props.node.raw_data) {
+        if (!this.props.node || !this.props.node.flow_id) {
             return (
+              <div className="fill-parent no-margins selectable col-12">
                 <Navbar className="toolbar">
                   { toolbar }
-                  <div className="fill-parent no-margins toolbar-margin">
-                    <h5 className="no-content">{T("No data available. Refresh directory from client by clicking above.")}</h5>
-                  </div>
                 </Navbar>
+                <div className="fill-parent no-margins toolbar-margin">
+                  <h5 className="no-content">
+                    {T("No data available. Refresh directory from client by clicking above.")}
+                  </h5>
+                </div>
+              </div>
             );
         }
 

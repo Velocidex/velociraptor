@@ -1,5 +1,3 @@
-// +build server_vql
-
 /*
    Velociraptor - Dig Deeper
    Copyright (C) 2019-2022 Rapid7 Inc.
@@ -42,7 +40,7 @@ import (
 )
 
 type ScheduleHuntFunctionArg struct {
-	Description   string           `vfilter:"required,field=description,doc=Description of the hunt"`
+	Description   string           `vfilter:"optional,field=description,doc=Description of the hunt"`
 	Artifacts     []string         `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
 	Expires       vfilter.LazyExpr `vfilter:"optional,field=expires,doc=A time for expiry (e.g. now() + 1800)"`
 	Spec          vfilter.Any      `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`

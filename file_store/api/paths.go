@@ -92,7 +92,6 @@ const (
 
 	// TMP files
 	PATH_TYPE_FILESTORE_TMP
-	PATH_TYPE_FILESTORE_LOCK
 	PATH_TYPE_FILESTORE_CSV
 
 	// Used for artifacts
@@ -154,6 +153,8 @@ type FSPathSpec interface {
 	Dir() FSPathSpec
 
 	SetType(t PathType) FSPathSpec
+
+	AsDatastorePath() DSPathSpec
 
 	Tag() string
 	SetTag(string) FSPathSpec

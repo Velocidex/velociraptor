@@ -15,9 +15,9 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Tooltip from 'react-bootstrap/Tooltip';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import T from '../i8n/i8n.jsx';
-import BootstrapTable from 'react-bootstrap-table-next';
 import _ from 'lodash';
 import axios from 'axios';
+import AvailableDownloads from "../notebooks/downloads.jsx";
 
 import api from '../core/api-service.jsx';
 import UserConfig from '../core/user.jsx';
@@ -332,23 +332,8 @@ export default class FlowOverview extends React.Component {
                     </dd>
                   </dl>
                   <dl>
-                    <dt>{T("Available Downloads")}</dt>
                     <dd>
-                      <BootstrapTable
-                        keyField="name"
-                        condensed
-                        bootstrap4
-                        hover
-                        headerClasses="alert alert-secondary"
-                        bodyClasses="fixed-table-body"
-                        data={this.state.available_downloads}
-                        columns={formatColumns(
-                            [{dataField: "name", text: T("Name"), sort: true,
-                              type: "download"},
-                             {dataField: "size", text: T("Size (Mb)"), sort: true, type: "mb",
-                              align: 'right'},
-                             {dataField: "date", text: T("Date")}])}
-                      />
+                      <AvailableDownloads files={this.state.available_downloads}/>
                     </dd>
                   </dl>
                 </Card.Body>

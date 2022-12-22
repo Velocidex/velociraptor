@@ -54,13 +54,15 @@ export default class NotebookUploads extends Component {
     }
 
     render() {
-        let files = this.state.notebook && this.state.notebook.available_uploads &&
+        let files = this.state.notebook &&
+            this.state.notebook.available_uploads &&
             this.state.notebook.available_uploads.files;
         files = files || [];
 
+        // TODO: build a proper upload widget
         let columns = formatColumns([
             {dataField: "name", text: T("Name"),
-             sort: true, filtered: true, type: "download"},
+             sort: true, filtered: true},
             {dataField: "size", text: T("Size")},
             {dataField: "date", text: T("Date"), type: "timestamp"},
         ]);

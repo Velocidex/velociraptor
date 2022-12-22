@@ -22,7 +22,6 @@ import (
 	context "golang.org/x/net/context"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -71,7 +70,7 @@ func RunVQL(
 				value = ""
 			}
 			new_row.Cell = append(new_row.Cell,
-				csv.AnyToString(value, json.NoEncOpts))
+				json.AnyToString(value, json.NoEncOpts))
 		}
 
 		result.Rows = append(result.Rows, new_row)

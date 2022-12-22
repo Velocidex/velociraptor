@@ -1,7 +1,10 @@
+// VQL to produce exports of flows or hunts
+
 package downloads
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"sync"
@@ -10,10 +13,9 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/go-errors/errors"
 	"github.com/sirupsen/logrus"
-	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -157,7 +159,7 @@ func (self *CreateHuntDownload) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	return result.AsClientPath()
+	return result
 }
 
 func (self CreateHuntDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
@@ -180,7 +182,8 @@ func createDownloadFile(
 		return nil, errors.New("Client Id and Flow Id should be specified.")
 	}
 
-	hostname := services.GetHostname(ctx, config_obj, client_id)
+	hostname := services.GetHostname(
+		ctx, config_obj, client_id) + "-" + client_id
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	download_file := flow_path_manager.GetDownloadsFile(hostname, password != "")
 	if name != "" {
@@ -205,22 +208,21 @@ func createDownloadFile(
 		return nil, err
 	}
 
-	lock_file_spec := download_file.SetType(api.PATH_TYPE_FILESTORE_LOCK)
-	lock_file, err := file_store_factory.WriteFileWithCompletion(
-		lock_file_spec, utils.SyncCompleter)
-	if err != nil {
-		return nil, err
-	}
-	lock_file.Write([]byte("X"))
-	lock_file.Close()
-
 	// Create a new ZipContainer to write on. The container will close
 	// the underlying writer.
 	zip_writer, err := reporting.NewContainerFromWriter(
-		config_obj, fd, password, 5, nil /* metadata */)
+		config_obj, fd, password,
+		reporting.DEFAULT_COMPRESSION, reporting.NO_METADATA)
 	if err != nil {
 		return nil, err
 	}
+
+	// zip_writer now owns fd and will close it when it closes below.
+
+	// Report the progress as we write the container.
+	progress_reporter := reporting.NewProgressReporter(config_obj,
+		flow_path_manager.GetDownloadsStats(hostname, password != ""),
+		download_file, zip_writer)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -228,16 +230,17 @@ func createDownloadFile(
 	// Write the bulk of the data asyncronously.
 	go func() {
 		defer wg.Done()
-		defer func() {
-			_ = file_store_factory.Delete(lock_file_spec)
-		}()
+		defer progress_reporter.Close()
+
+		// Will also close the underlying fd.
 		defer zip_writer.Close()
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second*600)
 		defer cancel()
 
 		err := downloadFlowToZip(ctx, scope, config_obj, format,
-			client_id, "", flow_id, expand_sparse, zip_writer)
+			client_id, path_specs.NewUnsafeFilestorePath(),
+			flow_id, expand_sparse, zip_writer)
 		if err != nil {
 			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 			logger.Error("downloadFlowToZip: %v", err)
@@ -258,15 +261,10 @@ func downloadFlowToZip(
 	config_obj *config_proto.Config,
 	format reporting.ContainerFormat,
 	client_id string,
-	prefix string,
+	prefix api.FSPathSpec,
 	flow_id string,
 	expand_sparse bool,
 	zip_writer *reporting.Container) error {
-
-	root, err := accessors.NewZipFilePath(prefix)
-	if err != nil {
-		return err
-	}
 
 	// Write the client info so it can be imported again
 	client_info_manager, err := services.GetClientInfoManager(config_obj)
@@ -277,7 +275,8 @@ func downloadFlowToZip(
 	client_info, err := client_info_manager.Get(ctx, client_id)
 	if err == nil {
 		err = zip_writer.WriteJSON(
-			root.Append("client_info.json").String(), client_info)
+			paths.ZipPathFromFSPathSpec(prefix.AddChild("client_info")),
+			client_info)
 		if err != nil {
 			return err
 		}
@@ -292,7 +291,8 @@ func downloadFlowToZip(
 	flow_details, err := launcher.GetFlowDetails(config_obj, client_id, flow_id)
 	if err == nil {
 		err = zip_writer.WriteJSON(
-			root.Append("collection_context.json").String(), flow_details)
+			paths.ZipPathFromFSPathSpec(prefix.AddChild("collection_context")),
+			flow_details)
 		if err != nil {
 			return err
 		}
@@ -302,7 +302,8 @@ func downloadFlowToZip(
 		client_id, flow_id, 0, 100)
 	if err == nil {
 		err = zip_writer.WriteJSON(
-			root.Append("requests.json").String(), flow_requests)
+			paths.ZipPathFromFSPathSpec(prefix.AddChild("requests")),
+			flow_requests)
 		if err != nil {
 			return err
 		}
@@ -311,7 +312,7 @@ func downloadFlowToZip(
 	// Copy the collection logs
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	err = copyResultSetIntoContainer(ctx, config_obj, zip_writer, format,
-		flow_path_manager.Log(), root.Append("logs.json"))
+		flow_path_manager.Log(), prefix.AddChild("logs"))
 	if err != nil {
 		return err
 	}
@@ -325,15 +326,15 @@ func downloadFlowToZip(
 		}
 
 		err = copyResultSetIntoContainer(ctx, config_obj, zip_writer, format,
-			artifact_path_manager.Path(), root.Append("results", name+".json"))
+			artifact_path_manager.Path(), prefix.AddChild("results", name))
 		if err != nil {
 			return err
 		}
 	}
 
 	// Copy uploads
-	err = copyUploadFiles(ctx, scope, config_obj, zip_writer, prefix,
-		format, flow_path_manager, expand_sparse)
+	err = copyUploadFiles(ctx, scope, config_obj, zip_writer,
+		prefix, format, flow_path_manager, expand_sparse)
 	if err != nil {
 		return err
 	}
@@ -345,15 +346,10 @@ func copyUploadFiles(
 	scope vfilter.Scope,
 	config_obj *config_proto.Config,
 	container *reporting.Container,
-	prefix string,
+	prefix api.FSPathSpec,
 	format reporting.ContainerFormat,
 	flow_path_manager *paths.FlowPathManager,
 	expand_sparse bool) error {
-
-	root_path, err := accessors.NewZipFilePath(prefix)
-	if err != nil {
-		return err
-	}
 
 	// Read all the upload metadata and copy the files to the container.
 	file_store_factory := file_store.GetFileStore(config_obj)
@@ -374,6 +370,8 @@ func copyUploadFiles(
 				continue
 			}
 
+			dest := prefix.SetType(api.PATH_TYPE_FILESTORE_ANY)
+
 			// Ensure we store index files into the correct place.
 			file_type, _ := row.GetString("Type")
 			if file_type == "idx" {
@@ -381,16 +379,11 @@ func copyUploadFiles(
 				if expand_sparse {
 					continue
 				}
-				components[len(components)-1] += ".idx"
+				dest = dest.SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX)
 			}
 
 			var src api.FSPathSpec
-			dest_root_path, err := accessors.NewZipFilePath(prefix)
-			if err != nil {
-				continue
-			}
 
-			dest := dest_root_path.Append("uploads")
 			if len(components) > 6 && components[0] == "clients" {
 				//Remove the prefix in the file store where the files
 				//are stored. The uploads file in the file store
@@ -401,7 +394,7 @@ func copyUploadFiles(
 				//stored. Therefore we need to convert from one to the
 				//other.
 
-				// For example, in t he file store a file may be
+				// For example, in the file store a file may be
 				// stored with these path components (root is the filestore):
 
 				//	components = [
@@ -437,16 +430,17 @@ func copyUploadFiles(
 				row.Update("_Components", components[4:])
 				src = path_specs.NewUnsafeFilestorePath(components...).
 					SetType(api.PATH_TYPE_FILESTORE_ANY)
-				dest = dest_root_path.Append(components[4:]...)
+				dest = dest.AddChild(components[4:]...)
 
 			} else {
 				src = flow_path_manager.UploadContainer().AddChild(components[1:]...).
 					SetType(api.PATH_TYPE_FILESTORE_ANY)
-				dest = dest_root_path.Append(components...)
+				dest = dest.AddChild(components...)
 			}
 
 			// Copy from the file store at these locations.
-			err = copyFile(ctx, scope, config_obj, container, src, dest, expand_sparse)
+			err = copyFile(ctx, scope, config_obj, container,
+				src, dest, expand_sparse)
 			if err != nil {
 				row.Set("Error", err.Error())
 			}
@@ -458,7 +452,7 @@ func copyUploadFiles(
 
 	// Copy the modified rows into the uploads file.
 	_, err = container.WriteResultSet(ctx, config_obj, scope, format,
-		root_path.Append("uploads.json").String(), output_chan)
+		paths.ZipPathFromFSPathSpec(prefix.AddChild("uploads")), output_chan)
 
 	return err
 }
@@ -469,11 +463,11 @@ func copyFile(
 	config_obj *config_proto.Config,
 	container *reporting.Container,
 	src api.FSPathSpec,
-	dest *accessors.OSPath,
+	dest api.FSPathSpec,
 	expand_sparse bool) (err error) {
 
 	scope.Log("DEBUG: downloadFlowToZip: Copy file from %v to %v\n",
-		src.AsClientPath(), dest.String())
+		src.AsClientPath(), dest.AsClientPath())
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	fd, err := file_store_factory.ReadFile(src)
@@ -482,7 +476,8 @@ func copyFile(
 	}
 	defer fd.Close()
 
-	out_fd, err := container.Create(dest.String(), Clock.Now())
+	out_fd, err := container.Create(
+		paths.ZipPathFromFSPathSpec(dest), Clock.Now())
 	if err != nil {
 		return err
 	}
@@ -551,32 +546,56 @@ func copyResultSetIntoContainer(
 	container *reporting.Container,
 	format reporting.ContainerFormat,
 	src api.FSPathSpec,
-	dest *accessors.OSPath) (err error) {
+	dest api.FSPathSpec) (err error) {
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	reader, err := result_sets.NewResultSetReader(file_store_factory, src)
 	if err != nil {
 		return err
 	}
+	defer reader.Close()
 
-	output_chan := make(chan vfilter.Row)
-	go func() {
-		defer reader.Close()
-		defer close(output_chan)
+	json_writer, csv_writer := getWriters(dest, format, container)
+	defer maybeClose(json_writer)
+	defer maybeClose(csv_writer)
 
-		for row := range reader.Rows(ctx) {
-			select {
-			case <-ctx.Done():
-				return
-			case output_chan <- row:
-			}
-		}
-	}()
+	buf_chan, err := reader.JSON(ctx)
+	if err != nil {
+		reader.Close()
+		return
+	}
 
-	scope := vql_subsystem.MakeScope()
-	_, err = container.WriteResultSet(ctx, config_obj, scope, format,
-		dest.String(), output_chan)
-	return err
+	json.ConvertJSONL(buf_chan, json_writer, csv_writer, nil)
+
+	return nil
+}
+
+func getWriters(
+	path api.FSPathSpec,
+	format reporting.ContainerFormat,
+	zip_writer *reporting.Container) (json_writer, csv_writer io.WriteCloser) {
+
+	if format&reporting.ContainerFormatJson > 0 {
+		json_writer, _ = zip_writer.Create(
+			paths.ZipPathFromFSPathSpec(
+				path.SetType(api.PATH_TYPE_FILESTORE_JSON)),
+			time.Time{})
+	}
+
+	if format&reporting.ContainerFormatCSV > 0 {
+		csv_writer, _ = zip_writer.Create(
+			paths.ZipPathFromFSPathSpec(
+				path.SetType(api.PATH_TYPE_FILESTORE_CSV)),
+			time.Time{})
+	}
+
+	return json_writer, csv_writer
+}
+
+func maybeClose(fd io.WriteCloser) {
+	if fd != nil {
+		fd.Close()
+	}
 }
 
 func createHuntDownloadFile(
@@ -592,33 +611,23 @@ func createHuntDownloadFile(
 		return nil, errors.New("Hunt Id should be specified.")
 	}
 
+	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 	hunt_path_manager := paths.NewHuntPathManager(hunt_id)
 	download_file := hunt_path_manager.GetHuntDownloadsFile(
 		only_combined, base_filename, password != "")
 
-	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 	logger.WithFields(logrus.Fields{
 		"hunt_id":       hunt_id,
 		"download_file": download_file,
 	}).Info("CreateHuntDownload")
 
-	// Wait here until the file is written - this lock file indicates
-	// writing is still in progress.
+	// Write the download file
 	file_store_factory := file_store.GetFileStore(config_obj)
-	lock_file_spec := download_file.SetType(api.PATH_TYPE_FILESTORE_LOCK)
-	lock_file, err := file_store_factory.WriteFileWithCompletion(
-		lock_file_spec, utils.SyncCompleter)
-	if err != nil {
-		return nil, err
-	}
-	lock_file.Write([]byte("X"))
-	lock_file.Close()
-
 	fd, err := file_store_factory.WriteFile(download_file)
 	if err != nil {
 		return nil, err
 	}
-	// fd is closed in a goroutine below.
+	// fd is closed by the zip container below.
 
 	err = fd.Truncate()
 	if err != nil {
@@ -628,6 +637,7 @@ func createHuntDownloadFile(
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
 	if err != nil {
+		fd.Close()
 		return nil, err
 	}
 
@@ -642,8 +652,17 @@ func createHuntDownloadFile(
 	zip_writer, err := reporting.NewContainerFromWriter(
 		config_obj, fd, password, 5, nil /* metadata */)
 	if err != nil {
+		fd.Close()
 		return nil, err
 	}
+
+	// zip_writer now owns fd and will close it when it closes below.
+
+	// Report the progress as we write the container.
+	progress_reporter := reporting.NewProgressReporter(config_obj,
+		hunt_path_manager.GetHuntDownloadsStats(only_combined,
+			base_filename, password != ""),
+		download_file, zip_writer)
 
 	wg := sync.WaitGroup{}
 	wg.Add(1)
@@ -651,45 +670,21 @@ func createHuntDownloadFile(
 	// Write the bulk of the data asyncronously.
 	go func() {
 		defer wg.Done()
-		defer func() {
-			err := file_store_factory.Delete(lock_file_spec)
-			if err != nil {
-				logger.Error("Failed to bind to remove lock file for %v: %v",
-					download_file, err)
-			}
+		defer progress_reporter.Close()
 
-		}()
-		defer fd.Close()
+		// Will also close the underlying fd.
 		defer zip_writer.Close()
 
 		// Allow one hour to write the zip
 		sub_ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 		defer cancel()
 
-		// Export aggregate CSV and JSON files for all clients.
-		for _, artifact_source := range hunt_details.ArtifactSources {
-			artifact, source := paths.SplitFullSourceName(
-				artifact_source)
-
-			subscope := scope.Copy()
-			subscope.AppendVars(ordereddict.NewDict().
-				Set("Artifact", artifact).
-				Set("HuntId", hunt_id).
-				Set("Source", source))
-			defer subscope.Close()
-
-			request := &actions_proto.VQLRequest{
-				VQL: "SELECT * FROM hunt_results(" +
-					"hunt_id=HuntId, artifact=Artifact, " +
-					"source=Source)",
-				Name: "All " + artifact,
-			}
-
-			_, err := zip_writer.StoreArtifact(
-				config_obj, sub_ctx, subscope, request, format)
-			if err != nil {
-				return
-			}
+		err = generateCombinedResults(
+			sub_ctx, config_obj, scope,
+			hunt_details, format, zip_writer)
+		if err != nil {
+			logger.Error("createHuntDownloadFile: %v", err)
+			return
 		}
 
 		// If the user only asked for combined results do not
@@ -698,28 +693,25 @@ func createHuntDownloadFile(
 			return
 		}
 
-		subscope := scope.Copy()
-		subscope.AppendVars(ordereddict.NewDict().
-			Set("HuntId", hunt_id))
-		defer subscope.Close()
+		for flow_details := range hunt_dispatcher.GetFlows(sub_ctx,
+			config_obj, scope, hunt_id, 0) {
 
-		query := "SELECT Flow.session_id AS FlowId, ClientId " +
-			"FROM hunt_flows(hunt_id=HuntId)"
-		vql, _ := vfilter.Parse(query)
+			if flow_details == nil || flow_details.Context == nil {
+				continue
+			}
 
-		query_log := actions.QueryLog.AddQuery(query)
-		defer query_log.Close()
+			flow_id := flow_details.Context.SessionId
+			client_id := flow_details.Context.ClientId
 
-		for row := range vql.Eval(sub_ctx, subscope) {
-			flow_id := vql_subsystem.GetStringFromRow(scope, row, "FlowId")
-			client_id := vql_subsystem.GetStringFromRow(scope, row, "ClientId")
 			if flow_id == "" || client_id == "" {
 				continue
 			}
 
-			hostname := services.GetHostname(sub_ctx, config_obj, client_id)
+			hostname := services.GetHostname(
+				sub_ctx, config_obj, client_id) + "-" + client_id
 			err := downloadFlowToZip(
-				sub_ctx, scope, config_obj, format, client_id, hostname,
+				sub_ctx, scope, config_obj, format, client_id,
+				path_specs.NewUnsafeFilestorePath(hostname),
 				flow_id, expand_sparse, zip_writer)
 			if err != nil {
 				logging.GetLogger(config_obj, &logging.FrontendComponent).
@@ -738,6 +730,83 @@ func createHuntDownloadFile(
 	}
 
 	return download_file, nil
+}
+
+func generateCombinedResults(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	scope vfilter.Scope,
+	hunt_details *api_proto.Hunt,
+	format reporting.ContainerFormat,
+	zip_writer *reporting.Container) error {
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+	hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		return err
+	}
+
+	indexer, err := services.GetIndexer(config_obj)
+	if err != nil {
+		return err
+	}
+
+	// Export aggregate CSV and JSON files for all clients.
+	for _, artifact_source := range hunt_details.ArtifactSources {
+		// Figure out where to write it
+		path_manager := path_specs.NewUnsafeFilestorePath(
+			"results", "All "+artifact_source)
+
+		json_writer, csv_writer := getWriters(path_manager, format, zip_writer)
+		defer maybeClose(json_writer)
+		defer maybeClose(csv_writer)
+
+		for flow_details := range hunt_dispatcher.GetFlows(ctx,
+			config_obj, scope, hunt_details.HuntId, 0) {
+
+			if flow_details == nil || flow_details.Context == nil {
+				continue
+			}
+
+			flow_id := flow_details.Context.SessionId
+			client_id := flow_details.Context.ClientId
+
+			path_manager := artifacts.NewArtifactPathManagerWithMode(
+				config_obj, client_id, flow_id, artifact_source,
+				paths.MODE_CLIENT)
+
+			reader, err := result_sets.NewResultSetReader(
+				file_store_factory, path_manager.Path())
+			if err != nil {
+				continue
+			}
+
+			buf_chan, err := reader.JSON(ctx)
+			if err != nil {
+				reader.Close()
+				continue
+			}
+
+			fqdn := ""
+			api_client, err := indexer.FastGetApiClient(
+				ctx, config_obj, client_id)
+			if err == nil && api_client != nil && api_client.OsInfo != nil {
+				fqdn = api_client.OsInfo.Fqdn
+			}
+
+			json.ConvertJSONL(buf_chan, json_writer, csv_writer,
+				ordereddict.NewDict().
+					Set("FlowId", flow_id).
+					Set("ClientId", client_id).
+					Set("Fqdn", fqdn))
+
+			reader.Close()
+		}
+
+		fmt.Printf("Exported All for Artifact %v\n", artifact_source)
+	}
+
+	return nil
 }
 
 func init() {

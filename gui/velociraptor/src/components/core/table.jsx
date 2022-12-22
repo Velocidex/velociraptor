@@ -523,20 +523,6 @@ export function formatColumns(columns) {
             x.type = null;
             break;
 
-        case "download":
-            x.formatter= (cell, row) =>{
-                if (row.complete) {
-                    return <a href={api.href(row.path)}  target="_blank" download
-                              rel="noopener noreferrer">{cell}</a>;
-                };
-                return <>
-                         <FontAwesomeIcon icon="spinner" spin/>
-                         <span className="button-label">{cell}</span>
-                       </>;
-            };
-            x.type = null;
-            break;
-
         case "flow":
             x.formatter = (cell, row) => {
                 let client_id = row["ClientId"];

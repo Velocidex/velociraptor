@@ -25,6 +25,10 @@ func (self *ResultSetReaderWrapper) TotalRows() int64 {
 	return int64(self.end_idx - self.start_idx)
 }
 
+func (self *ResultSetReaderWrapper) JSON(ctx context.Context) (<-chan []byte, error) {
+	return nil, errors.New("ResultSetReaderWrapper.JSON Not implemented")
+}
+
 func (self *ResultSetReaderWrapper) Rows(ctx context.Context) <-chan *ordereddict.Dict {
 	output := make(chan *ordereddict.Dict)
 

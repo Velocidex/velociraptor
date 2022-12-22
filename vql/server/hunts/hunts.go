@@ -1,5 +1,3 @@
-// +build server_vql
-
 /*
    Velociraptor - Dig Deeper
    Copyright (C) 2019-2022 Rapid7 Inc.

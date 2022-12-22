@@ -30,6 +30,12 @@ func (self HuntPathManager) GetHuntDownloadsFile(only_combined bool,
 		api.PATH_TYPE_FILESTORE_DOWNLOAD_ZIP)
 }
 
+func (self HuntPathManager) GetHuntDownloadsStats(only_combined bool,
+	base_filename string, locked bool) api.DSPathSpec {
+	return self.GetHuntDownloadsFile(only_combined, base_filename, locked).
+		AsDatastorePath()
+}
+
 func NewHuntPathManager(hunt_id string) *HuntPathManager {
 	return &HuntPathManager{
 		path:    HUNTS_ROOT.AddChild(hunt_id),

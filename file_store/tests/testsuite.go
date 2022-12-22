@@ -113,7 +113,6 @@ func (self *FileStoreTestSuite) TestListChildrenWithTypes() {
 
 		// TMP files
 		api.PATH_TYPE_FILESTORE_TMP,
-		api.PATH_TYPE_FILESTORE_LOCK,
 		api.PATH_TYPE_FILESTORE_CSV,
 
 		// Used for artifacts

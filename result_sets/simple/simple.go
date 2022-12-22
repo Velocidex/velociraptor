@@ -336,6 +336,36 @@ func (self *ResultSetReaderImpl) Rows(ctx context.Context) <-chan *ordereddict.D
 	return output
 }
 
+// Start generating rows from the result set.
+func (self *ResultSetReaderImpl) JSON(ctx context.Context) (<-chan []byte, error) {
+	output := make(chan []byte)
+
+	go func() {
+		defer close(output)
+
+		reader := bufio.NewReader(self.fd)
+		for {
+			row_data, err := reader.ReadBytes('\n')
+			if err != nil {
+				return
+			}
+
+			// We have reached the end.
+			if len(row_data) == 0 {
+				return
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+			case output <- row_data:
+			}
+		}
+	}()
+
+	return output, nil
+}
+
 // Only used in tests - not safe for general use.
 func GetAllResults(self result_sets.ResultSetReader) []*ordereddict.Dict {
 	result := []*ordereddict.Dict{}

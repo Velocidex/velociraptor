@@ -26,7 +26,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/csv"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -104,7 +104,7 @@ func getTable(
 		row_data := make([]string, 0, len(result.Columns))
 		for _, key := range result.Columns {
 			value, _ := row.Get(key)
-			row_data = append(row_data, csv.AnyToString(value, opts))
+			row_data = append(row_data, json.AnyToString(value, opts))
 		}
 		result.Rows = append(result.Rows, &api_proto.Row{
 			Cell: row_data,
@@ -284,7 +284,7 @@ func getEventTableWithPathManager(
 		row_data := make([]string, 0, len(result.Columns))
 		for _, key := range result.Columns {
 			value, _ := row.Get(key)
-			row_data = append(row_data, csv.AnyToString(value, opts))
+			row_data = append(row_data, json.AnyToString(value, opts))
 		}
 		result.Rows = append(result.Rows, &api_proto.Row{
 			Cell: row_data,
@@ -337,8 +337,8 @@ func getTimeline(
 		result.Rows = append(result.Rows, &api_proto.Row{
 			Cell: []string{
 				item.Source,
-				csv.AnyToString(item.Time, opts),
-				csv.AnyToString(item.Row, opts)},
+				json.AnyToString(item.Time, opts),
+				json.AnyToString(item.Row, opts)},
 		})
 
 		rows += 1

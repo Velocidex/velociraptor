@@ -42,6 +42,11 @@ func (self FSPathSpec) MarshalJSON() ([]byte, error) {
 	return []byte(strconv.Quote("fs:" + self.AsClientPath())), nil
 }
 
+func (self FSPathSpec) AsDatastorePath() api.DSPathSpec {
+	return self.DSPathSpec.
+		SetType(api.PATH_TYPE_DATASTORE_JSON)
+}
+
 // Adds an unsafe component to this path.
 func (self FSPathSpec) AddChild(child ...string) api.FSPathSpec {
 	return FSPathSpec{DSPathSpec: DSPathSpec{

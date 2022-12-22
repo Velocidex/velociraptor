@@ -272,7 +272,7 @@ func NewJournalService(
 	}
 
 	qm, err := file_store.GetQueueManager(config_obj)
-	if err != nil || qm != nil {
+	if err == nil && qm != nil {
 		qm.SetClock(service.Clock)
 		service.qm = qm
 	}

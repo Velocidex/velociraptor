@@ -1,6 +1,9 @@
 package api
 
 import (
+	"crypto/md5"
+	"crypto/sha256"
+	"encoding/hex"
 	"os"
 	"strings"
 	"time"
@@ -16,7 +19,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
@@ -430,33 +433,12 @@ func exportZipNotebook(
 		return InvalidStatus("Notebook is not shared with user.")
 	}
 
-	file_store_factory := file_store.GetFileStore(config_obj)
 	filename := notebook_path_manager.ZipExport()
-	lock_file_name := filename.SetType(api.PATH_TYPE_FILESTORE_LOCK)
-
-	// Must write this synchronously so it does not race the removal.
-	lock_file, err := file_store_factory.WriteFileWithCompletion(
-		lock_file_name, utils.SyncCompleter)
-	if err != nil {
-		return err
-	}
-	lock_file.Write([]byte("X"))
-	lock_file.Close()
 
 	// Allow 1 hour to export the notebook.
 	sub_ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 
 	go func() {
-		defer func() {
-			err := file_store_factory.Delete(lock_file_name)
-			if err != nil {
-				logger := logging.GetLogger(config_obj, &logging.GUIComponent)
-				logger.Error("CreateNotebookDownloadFile: Unable to remove log file %v: %v",
-					lock_file_name.AsClientPath(), err)
-
-			}
-		}()
-
 		defer cancel()
 
 		err := reporting.ExportNotebookToZip(
@@ -493,22 +475,31 @@ func exportHTMLNotebook(config_obj *config_proto.Config,
 	if err != nil {
 		return err
 	}
+
 	if !notebook_manager.CheckNotebookAccess(notebook, principal) {
 		return InvalidStatus("Notebook is not shared with user.")
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	filename := notebook_path_manager.HtmlExport()
-	lock_file_name := filename.SetType(api.PATH_TYPE_FILESTORE_LOCK)
 
-	lock_file, err := file_store_factory.WriteFile(lock_file_name)
+	writer, err := file_store_factory.WriteFile(filename)
 	if err != nil {
 		return err
 	}
-	lock_file.Write([]byte("X"))
-	lock_file.Close()
 
-	writer, err := file_store_factory.WriteFile(filename)
+	sha_sum := sha256.New()
+	md5_sum := md5.New()
+	tee_writer := utils.NewTee(writer, sha_sum, md5_sum)
+
+	stats := &api_proto.ContainerStats{
+		Timestamp:  uint64(time.Now().Unix()),
+		Type:       "html",
+		Components: path_specs.AsGenericComponentList(filename),
+	}
+	stats_path := notebook_path_manager.PathStats(filename)
+
+	err = db.SetSubject(config_obj, stats_path, stats)
 	if err != nil {
 		return err
 	}
@@ -517,12 +508,18 @@ func exportHTMLNotebook(config_obj *config_proto.Config,
 	sub_ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 
 	go func() {
-		defer func() { _ = file_store_factory.Delete(lock_file_name) }()
 		defer writer.Close()
 		defer cancel()
 
+		defer func() {
+			stats.Hash = hex.EncodeToString(sha_sum.Sum(nil))
+			stats.TotalDuration = uint64(time.Now().Unix()) - stats.Timestamp
+
+			db.SetSubject(config_obj, stats_path, stats)
+		}()
+
 		err := reporting.ExportNotebookToHTML(
-			sub_ctx, config_obj, notebook.NotebookId, writer)
+			sub_ctx, config_obj, notebook.NotebookId, tee_writer)
 		if err != nil {
 			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 			logger.WithFields(logrus.Fields{

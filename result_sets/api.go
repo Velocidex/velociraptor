@@ -39,6 +39,10 @@ type TimedResultSetWriter interface {
 type ResultSetReader interface {
 	SeekToRow(start int64) error
 	Rows(ctx context.Context) <-chan *ordereddict.Dict
+
+	// An alternative method to get the raw json blobs. Avoids having
+	// to parse the data from storage.
+	JSON(ctx context.Context) (<-chan []byte, error)
 	Close()
 	TotalRows() int64
 }

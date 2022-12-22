@@ -55,7 +55,7 @@ func (self FileStoreFileSystemAccessor) Lstat(filename string) (
 func (self FileStoreFileSystemAccessor) LstatWithOSPath(filename *accessors.OSPath) (
 	accessors.FileInfo, error) {
 
-	fullpath := getFSPathSpec(filename)
+	fullpath := path_specs.FromGenericComponentList(filename.Components)
 	lstat, err := self.file_store.StatFile(fullpath)
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func (self FileStoreFileSystemAccessor) ReadDirWithOSPath(
 	filename *accessors.OSPath) (
 	[]accessors.FileInfo, error) {
 
-	fullpath := getFSPathSpec(filename)
+	fullpath := path_specs.FromGenericComponentList(filename.Components)
 	files, err := self.file_store.ListDirectory(fullpath)
 	if err != nil {
 		return nil, err
@@ -129,25 +129,13 @@ func (self FileStoreFileSystemAccessor) OpenWithOSPath(filename *accessors.OSPat
 		}
 	}
 
-	fullpath := getFSPathSpec(filename)
+	fullpath := path_specs.FromGenericComponentList(filename.Components)
 	file, err := self.file_store.ReadFile(fullpath)
 	if err != nil {
 		return nil, err
 	}
 
 	return file, nil
-}
-
-func getFSPathSpec(filename *accessors.OSPath) api.FSPathSpec {
-	result := path_specs.NewUnsafeFilestorePath(filename.Components...)
-	if len(result.Components()) > 0 {
-		last := len(filename.Components) - 1
-		name_type, name := api.GetFileStorePathTypeFromExtension(
-			filename.Components[last])
-		filename.Components[last] = name
-		return result.SetType(name_type)
-	}
-	return result
 }
 
 func getDSPathSpec(filename *accessors.OSPath) api.DSPathSpec {

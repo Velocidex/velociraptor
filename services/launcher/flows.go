@@ -20,7 +20,6 @@ package launcher
 import (
 	"context"
 	"sort"
-	"time"
 
 	"github.com/go-errors/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -28,11 +27,11 @@ import (
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -159,50 +158,7 @@ func availableDownloadFiles(config_obj *config_proto.Config,
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	download_dir := flow_path_manager.GetDownloadsDirectory()
 
-	return getAvailableDownloadFiles(config_obj, download_dir)
-}
-
-func getAvailableDownloadFiles(config_obj *config_proto.Config,
-	download_dir api.FSPathSpec) (*api_proto.AvailableDownloads, error) {
-	result := &api_proto.AvailableDownloads{}
-
-	file_store_factory := file_store.GetFileStore(config_obj)
-	files, err := file_store_factory.ListDirectory(download_dir)
-	if err != nil {
-		return nil, err
-	}
-
-	is_complete := func(name string) bool {
-		for _, item := range files {
-			ps := item.PathSpec()
-			// If there is a lock file we are not done.
-			if ps.Base() == name &&
-				ps.Type() == api.PATH_TYPE_FILESTORE_LOCK {
-				return false
-			}
-		}
-		return true
-	}
-
-	for _, item := range files {
-		ps := item.PathSpec()
-
-		// Skip lock files
-		if ps.Type() == api.PATH_TYPE_FILESTORE_LOCK {
-			continue
-		}
-
-		result.Files = append(result.Files, &api_proto.AvailableDownloadFile{
-			Name:     item.Name(),
-			Type:     api.GetExtensionForFilestore(ps),
-			Path:     ps.AsClientPath(),
-			Size:     uint64(item.Size()),
-			Date:     item.ModTime().UTC().Format(time.RFC3339),
-			Complete: is_complete(ps.Base()),
-		})
-	}
-
-	return result, nil
+	return reporting.GetAvailableDownloadFiles(config_obj, download_dir)
 }
 
 // Load the collector context from storage.

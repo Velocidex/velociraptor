@@ -35,6 +35,7 @@ type Listener struct {
 
 type QueuePool struct {
 	mu sync.Mutex
+	id uint64
 
 	config_obj *config_proto.Config
 
@@ -141,8 +142,9 @@ func (self *QueuePool) BroadcastJsonl(vfs_path string, jsonl []byte) {
 }
 
 func (self *QueuePool) Broadcast(vfs_path string, row *ordereddict.Dict) {
+	registrations := self.getRegistrations(vfs_path)
 	// Ensure we do not hold the lock for very long here.
-	for _, item := range self.getRegistrations(vfs_path) {
+	for _, item := range registrations {
 		select {
 		case item.Channel <- row:
 		case <-time.After(2 * time.Second):
@@ -156,6 +158,7 @@ func (self *QueuePool) Broadcast(vfs_path string, row *ordereddict.Dict) {
 
 func NewQueuePool(config_obj *config_proto.Config) *QueuePool {
 	return &QueuePool{
+		id:            utils.GetId(),
 		config_obj:    config_obj,
 		registrations: make(map[string][]*Listener),
 	}

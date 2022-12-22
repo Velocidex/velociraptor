@@ -10,6 +10,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -20,12 +21,17 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/velociraptor/vql/server/clients"
+	"www.velocidex.com/golang/velociraptor/vql/server/hunts"
 	"www.velocidex.com/golang/velociraptor/vql/tools/collector"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/vfilter"
+
+	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
 )
 
 type TestSuite struct {
@@ -34,6 +40,16 @@ type TestSuite struct {
 
 func (self *TestSuite) SetupTest() {
 	self.ConfigObj = self.LoadConfig()
+	self.ConfigObj.Frontend.ServerServices.HuntDispatcher = true
+	self.ConfigObj.Frontend.ServerServices.HuntManager = true
+
+	self.LoadArtifacts([]string{`
+name: Custom.TestArtifactUpload
+type: CLIENT
+sources:
+- query: SELECT * FROM info()
+`})
+
 	self.TestSuite.SetupTest()
 
 	Clock = &utils.MockClock{MockNow: time.Unix(1602103388, 0)}
@@ -141,6 +157,86 @@ func (self *TestSuite) TestExportCollection() {
 
 	goldie.Assert(self.T(), "TestExportCollectionUploads",
 		json.MustMarshalIndent(uploads_json))
+}
+
+func (self *TestSuite) TestExportHunt() {
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
+
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: acl_managers.NullACLManager{},
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
+		Env:        ordereddict.NewDict(),
+	}
+
+	ctx := context.Background()
+	scope := manager.BuildScope(builder)
+
+	import_file_path, err := filepath.Abs("fixtures/export.zip")
+	assert.NoError(self.T(), err)
+
+	// Create a new client
+	result := (&clients.NewClientFunction{}).Call(ctx, scope,
+		ordereddict.NewDict().
+			Set("client_id", "C.1234").
+			Set("hostname", "TestClient"))
+
+	client_info := result.(actions_proto.ClientInfo)
+	assert.Equal(self.T(), "C.1234", client_info.ClientId)
+
+	result = collector.ImportCollectionFunction{}.Call(ctx, scope,
+		ordereddict.NewDict().
+			// Set a fixed client id to keep it predictable
+			Set("client_id", "C.1234").
+			Set("hostname", "MyNewHost").
+			Set("filename", import_file_path))
+	context, ok := result.(*flows_proto.ArtifactCollectorContext)
+	assert.True(self.T(), ok)
+	assert.Equal(self.T(), uint64(11), context.TotalUploadedBytes)
+
+	flow_id := context.SessionId
+
+	hunt_dispatcher.SetHuntIdForTests("H.123")
+
+	// Create a hunt and add the flow to it.
+	result = (&hunts.ScheduleHuntFunction{}).Call(ctx, scope,
+		ordereddict.NewDict().
+			Set("artifacts", "Custom.TestArtifactUpload").
+			Set("pause", true))
+
+	hunt_id, pres := result.(*ordereddict.Dict).GetString("HuntId")
+	assert.True(self.T(), pres && hunt_id != "")
+
+	// Now add the collection to the hunt.
+	result = (&hunts.AddToHuntFunction{}).Call(ctx, scope,
+		ordereddict.NewDict().
+			Set("client_id", "C.1234").
+			Set("hunt_id", hunt_id).
+			Set("flow_id", flow_id))
+
+	assert.Equal(self.T(), "C.1234", result.(string))
+
+	time.Sleep(time.Second)
+
+	// Now create a hunt download export.
+	result = (&CreateHuntDownload{}).Call(ctx, scope,
+		ordereddict.NewDict().
+			Set("hunt_id", hunt_id).
+			Set("base", "HuntExport").
+			// Test the CSV production
+			Set("format", "csv").
+			Set("wait", true))
+
+	download_pathspec := result.(path_specs.FSPathSpec)
+	assert.Equal(self.T(), "/downloads/hunts/H.123/HuntExportH.123.zip",
+		download_pathspec.AsClientPath())
+
+	// Now inspect the zip file
+	file_details, err := openZipFile(self.ConfigObj, scope, download_pathspec)
+	assert.NoError(self.T(), err)
+
+	goldie.Assert(self.T(), "TestExportHunt",
+		json.MustMarshalIndent(file_details))
 }
 
 func TestCollectorPlugin(t *testing.T) {
