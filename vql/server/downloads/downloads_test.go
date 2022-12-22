@@ -36,6 +36,7 @@ import (
 
 type TestSuite struct {
 	test_utils.TestSuite
+	client_id string
 }
 
 func (self *TestSuite) SetupTest() {
@@ -81,7 +82,7 @@ func (self *TestSuite) TestExportCollection() {
 	result := collector.ImportCollectionFunction{}.Call(ctx, scope,
 		ordereddict.NewDict().
 			// Set a fixed client id to keep it predictable
-			Set("client_id", "C.1234").
+			Set("client_id", self.client_id).
 			Set("hostname", "MyNewHost").
 			Set("filename", import_file_path))
 	context, ok := result.(*flows_proto.ArtifactCollectorContext)
@@ -103,7 +104,7 @@ func (self *TestSuite) TestExportCollection() {
 	assert.True(self.T(), ok)
 
 	assert.Equal(self.T(),
-		"fs:/downloads/C.1234/F.1234/Test.zip", path_spec.String())
+		"fs:/downloads/"+self.client_id+"/F.1234/Test.zip", path_spec.String())
 
 	// Now inspect the zip file
 	file_details, err := openZipFile(self.ConfigObj, scope, path_spec)
@@ -137,7 +138,7 @@ func (self *TestSuite) TestExportCollection() {
 	assert.True(self.T(), ok)
 
 	assert.Equal(self.T(),
-		"fs:/downloads/C.1234/F.1234/TestExpanded.zip", path_spec.String())
+		"fs:/downloads/"+self.client_id+"/F.1234/TestExpanded.zip", path_spec.String())
 
 	// Now inspect the zip file
 	file_details, err = openZipFile(self.ConfigObj, scope, path_spec)
@@ -160,6 +161,9 @@ func (self *TestSuite) TestExportCollection() {
 }
 
 func (self *TestSuite) TestExportHunt() {
+	// Operate on a different client
+	self.client_id = "C.1235"
+
 	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 
 	builder := services.ScopeBuilder{
@@ -178,16 +182,16 @@ func (self *TestSuite) TestExportHunt() {
 	// Create a new client
 	result := (&clients.NewClientFunction{}).Call(ctx, scope,
 		ordereddict.NewDict().
-			Set("client_id", "C.1234").
+			Set("client_id", self.client_id).
 			Set("hostname", "TestClient"))
 
 	client_info := result.(actions_proto.ClientInfo)
-	assert.Equal(self.T(), "C.1234", client_info.ClientId)
+	assert.Equal(self.T(), self.client_id, client_info.ClientId)
 
 	result = collector.ImportCollectionFunction{}.Call(ctx, scope,
 		ordereddict.NewDict().
 			// Set a fixed client id to keep it predictable
-			Set("client_id", "C.1234").
+			Set("client_id", self.client_id).
 			Set("hostname", "MyNewHost").
 			Set("filename", import_file_path))
 	context, ok := result.(*flows_proto.ArtifactCollectorContext)
@@ -210,11 +214,11 @@ func (self *TestSuite) TestExportHunt() {
 	// Now add the collection to the hunt.
 	result = (&hunts.AddToHuntFunction{}).Call(ctx, scope,
 		ordereddict.NewDict().
-			Set("client_id", "C.1234").
+			Set("client_id", self.client_id).
 			Set("hunt_id", hunt_id).
 			Set("flow_id", flow_id))
 
-	assert.Equal(self.T(), "C.1234", result.(string))
+	assert.Equal(self.T(), self.client_id, result.(string))
 
 	time.Sleep(time.Second)
 
@@ -240,7 +244,9 @@ func (self *TestSuite) TestExportHunt() {
 }
 
 func TestDownloadsPlugin(t *testing.T) {
-	suite.Run(t, &TestSuite{})
+	suite.Run(t, &TestSuite{
+		client_id: "C.1234",
+	})
 }
 
 // Read the entire zip file for inspection.

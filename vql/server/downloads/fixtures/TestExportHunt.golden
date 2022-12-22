@@ -1,5 +1,5 @@
 {
- "results/All Custom.TestArtifactUpload.csv": "Upload,SparseUpload,FlowId,ClientId,Fqdn\n\"{\"\"Path\"\":\"\"data\"\",\"\"Size\"\":11,\"\"StoredSize\"\":11,\"\"sha256\"\":\"\"b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9\"\",\"\"md5\"\":\"\"5eb63bbbe01eeed093cb22bb8f5acdc3\"\",\"\"StoredName\"\":\"\"/uploads/data/file.txt\"\",\"\"Components\"\":[\"\"uploads\"\",\"\"data\"\",\"\"file.txt\"\"]}\",\"{\"\"Path\"\":\"\"{\\\"\"DelegateAccessor\\\"\":\\\"\"data\\\"\",\\\"\"DelegatePath\\\"\":\\\"\"This is...\"\",\"\"Size\"\":21,\"\"StoredSize\"\":8,\"\"sha256\"\":\"\"d2bc3dd9279837fd268d82ea397b6980dee5ae462464493c80f495786b4025c2\"\",\"\"md5\"\":\"\"f55a5cc260e3fc562d841a2f6d2b7d22\"\",\"\"StoredName\"\":\"\"/uploads/sparse/C%3A/file.sparse.txt\"\",\"\"Components\"\":[\"\"uploads\"\",\"\"sparse\"\",\"\"C:\"\",\"\"file.sparse.txt\"\"]}\",F.1234,C.1234,TestClient\n",
+ "results/All Custom.TestArtifactUpload.csv": "Upload,SparseUpload,FlowId,ClientId,Fqdn\n\"{\"\"Path\"\":\"\"data\"\",\"\"Size\"\":11,\"\"StoredSize\"\":11,\"\"sha256\"\":\"\"b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9\"\",\"\"md5\"\":\"\"5eb63bbbe01eeed093cb22bb8f5acdc3\"\",\"\"StoredName\"\":\"\"/uploads/data/file.txt\"\",\"\"Components\"\":[\"\"uploads\"\",\"\"data\"\",\"\"file.txt\"\"]}\",\"{\"\"Path\"\":\"\"{\\\"\"DelegateAccessor\\\"\":\\\"\"data\\\"\",\\\"\"DelegatePath\\\"\":\\\"\"This is...\"\",\"\"Size\"\":21,\"\"StoredSize\"\":8,\"\"sha256\"\":\"\"d2bc3dd9279837fd268d82ea397b6980dee5ae462464493c80f495786b4025c2\"\",\"\"md5\"\":\"\"f55a5cc260e3fc562d841a2f6d2b7d22\"\",\"\"StoredName\"\":\"\"/uploads/sparse/C%3A/file.sparse.txt\"\",\"\"Components\"\":[\"\"uploads\"\",\"\"sparse\"\",\"\"C:\"\",\"\"file.sparse.txt\"\"]}\",F.1234,C.1235,TestClient\n",
  "results/All Custom.TestArtifactUpload.json": [
   {
    "Upload": {
@@ -30,15 +30,15 @@
     ]
    },
    "FlowId": "F.1234",
-   "ClientId": "C.1234",
+   "ClientId": "C.1235",
    "Fqdn": "TestClient"
   }
  ],
- "TestClient-C.1234/client_info.json": "{\n \"client_id\": \"C.1234\",\n \"hostname\": \"TestClient\",\n \"fqdn\": \"TestClient\"\n}",
- "TestClient-C.1234/collection_context.json": "{\n \"context\": {\n  \"client_id\": \"C.1234\",\n  \"session_id\": \"F.1234\",\n  \"request\": {\n   \"artifacts\": [\n    \"Custom.TestArtifactUpload\"\n   ]\n  },\n  \"create_time\": 1602103388000000000,\n  \"start_time\": 1602103388000000000,\n  \"total_uploaded_files\": 3,\n  \"total_expected_uploaded_bytes\": 11,\n  \"total_uploaded_bytes\": 11,\n  \"total_collected_rows\": 1,\n  \"total_requests\": 2,\n  \"state\": 2,\n  \"artifacts_with_results\": [\n   \"Custom.TestArtifactUpload\"\n  ],\n  \"query_stats\": [\n   {},\n   {\n    \"names_with_response\": [\n     \"Custom.TestArtifactUpload\"\n    ],\n    \"log_rows\": 3,\n    \"result_rows\": 1\n   }\n  ]\n },\n \"available_downloads\": {}\n}",
- "TestClient-C.1234/requests.json": "{\n \"items\": [\n  {\n   \"session_id\": \"F.1234\",\n   \"request_id\": 1,\n   \"VQLClientAction\": {\n    \"query_id\": 1,\n    \"total_queries\": 1,\n    \"Query\": [\n     {\n      \"VQL\": \"LET Custom_TestArtifactUpload_0_0 = SELECT upload(file=\\\"hello world\\\", accessor=\\\"data\\\", name=\\\"file.txt\\\") AS Upload, upload(file=pathspec(Path='[{\\\"length\\\":5,\\\"offset\\\":0},{\\\"length\\\":3,\\\"offset\\\":10}]', DelegateAccessor=\\\"data\\\", DelegatePath=\\\"This is a bit of text\\\"), accessor=\\\"sparse\\\", name=pathspec(Path=\\\"C:/file.sparse.txt\\\", path_type=\\\"windows\\\")) AS SparseUpload FROM scope()\"\n     },\n     {\n      \"Name\": \"Custom.TestArtifactUpload\",\n      \"VQL\": \"SELECT * FROM Custom_TestArtifactUpload_0_0\"\n     }\n    ],\n    \"max_row\": 1000\n   }\n  }\n ]\n}",
- "TestClient-C.1234/logs.csv": "_ts,client_time,level,message\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Starting collection of Custom.TestArtifactUpload\\n\"\"\"\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Collecting file hello world into /uploads/data/file.txt (11 bytes)\\n\"\"\"\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Collecting file {\\\"\"DelegateAccessor\\\"\":\\\"\"data\\\"\",\\\"\"DelegatePath\\\"\":\\\"\"This is... into /uploads/sparse/C%3A/file.sparse.txt (21 bytes)\\n\"\"\"\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Collected 1 rows for Custom.TestArtifactUpload\\n\"\"\"\n1602103388,1602103388,\"\"\"DEBUG\"\"\",\"\"\"Query Stats: {\\\"\"RowsScanned\\\"\":2,\\\"\"PluginsCalled\\\"\":1,\\\"\"FunctionsCalled\\\"\":4,\\\"\"ProtocolSearch\\\"\":0,\\\"\"ScopeCopy\\\"\":6}\\n\"\"\"\n",
- "TestClient-C.1234/logs.json": [
+ "TestClient-C.1235/client_info.json": "{\n \"client_id\": \"C.1235\",\n \"hostname\": \"TestClient\",\n \"fqdn\": \"TestClient\"\n}",
+ "TestClient-C.1235/collection_context.json": "{\n \"context\": {\n  \"client_id\": \"C.1235\",\n  \"session_id\": \"F.1234\",\n  \"request\": {\n   \"artifacts\": [\n    \"Custom.TestArtifactUpload\"\n   ]\n  },\n  \"create_time\": 1602103388000000000,\n  \"start_time\": 1602103388000000000,\n  \"total_uploaded_files\": 3,\n  \"total_expected_uploaded_bytes\": 11,\n  \"total_uploaded_bytes\": 11,\n  \"total_collected_rows\": 1,\n  \"total_requests\": 2,\n  \"state\": 2,\n  \"artifacts_with_results\": [\n   \"Custom.TestArtifactUpload\"\n  ],\n  \"query_stats\": [\n   {},\n   {\n    \"names_with_response\": [\n     \"Custom.TestArtifactUpload\"\n    ],\n    \"log_rows\": 3,\n    \"result_rows\": 1\n   }\n  ]\n },\n \"available_downloads\": {}\n}",
+ "TestClient-C.1235/requests.json": "{\n \"items\": [\n  {\n   \"session_id\": \"F.1234\",\n   \"request_id\": 1,\n   \"VQLClientAction\": {\n    \"query_id\": 1,\n    \"total_queries\": 1,\n    \"Query\": [\n     {\n      \"VQL\": \"LET Custom_TestArtifactUpload_0_0 = SELECT upload(file=\\\"hello world\\\", accessor=\\\"data\\\", name=\\\"file.txt\\\") AS Upload, upload(file=pathspec(Path='[{\\\"length\\\":5,\\\"offset\\\":0},{\\\"length\\\":3,\\\"offset\\\":10}]', DelegateAccessor=\\\"data\\\", DelegatePath=\\\"This is a bit of text\\\"), accessor=\\\"sparse\\\", name=pathspec(Path=\\\"C:/file.sparse.txt\\\", path_type=\\\"windows\\\")) AS SparseUpload FROM scope()\"\n     },\n     {\n      \"Name\": \"Custom.TestArtifactUpload\",\n      \"VQL\": \"SELECT * FROM Custom_TestArtifactUpload_0_0\"\n     }\n    ],\n    \"max_row\": 1000\n   }\n  }\n ]\n}",
+ "TestClient-C.1235/logs.csv": "_ts,client_time,level,message\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Starting collection of Custom.TestArtifactUpload\\n\"\"\"\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Collecting file hello world into /uploads/data/file.txt (11 bytes)\\n\"\"\"\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Collecting file {\\\"\"DelegateAccessor\\\"\":\\\"\"data\\\"\",\\\"\"DelegatePath\\\"\":\\\"\"This is... into /uploads/sparse/C%3A/file.sparse.txt (21 bytes)\\n\"\"\"\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Collected 1 rows for Custom.TestArtifactUpload\\n\"\"\"\n1602103388,1602103388,\"\"\"DEBUG\"\"\",\"\"\"Query Stats: {\\\"\"RowsScanned\\\"\":2,\\\"\"PluginsCalled\\\"\":1,\\\"\"FunctionsCalled\\\"\":4,\\\"\"ProtocolSearch\\\"\":0,\\\"\"ScopeCopy\\\"\":6}\\n\"\"\"\n",
+ "TestClient-C.1235/logs.json": [
   {
    "_ts": 1602103388,
    "client_time": 1602103388,
@@ -70,8 +70,8 @@
    "message": "Query Stats: {\"RowsScanned\":2,\"PluginsCalled\":1,\"FunctionsCalled\":4,\"ProtocolSearch\":0,\"ScopeCopy\":6}\n"
   }
  ],
- "TestClient-C.1234/results/Custom.TestArtifactUpload.csv": "Upload,SparseUpload\n\"{\"\"Path\"\":\"\"data\"\",\"\"Size\"\":11,\"\"StoredSize\"\":11,\"\"sha256\"\":\"\"b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9\"\",\"\"md5\"\":\"\"5eb63bbbe01eeed093cb22bb8f5acdc3\"\",\"\"StoredName\"\":\"\"/uploads/data/file.txt\"\",\"\"Components\"\":[\"\"uploads\"\",\"\"data\"\",\"\"file.txt\"\"]}\",\"{\"\"Path\"\":\"\"{\\\"\"DelegateAccessor\\\"\":\\\"\"data\\\"\",\\\"\"DelegatePath\\\"\":\\\"\"This is...\"\",\"\"Size\"\":21,\"\"StoredSize\"\":8,\"\"sha256\"\":\"\"d2bc3dd9279837fd268d82ea397b6980dee5ae462464493c80f495786b4025c2\"\",\"\"md5\"\":\"\"f55a5cc260e3fc562d841a2f6d2b7d22\"\",\"\"StoredName\"\":\"\"/uploads/sparse/C%3A/file.sparse.txt\"\",\"\"Components\"\":[\"\"uploads\"\",\"\"sparse\"\",\"\"C:\"\",\"\"file.sparse.txt\"\"]}\"\n",
- "TestClient-C.1234/results/Custom.TestArtifactUpload.json": [
+ "TestClient-C.1235/results/Custom.TestArtifactUpload.csv": "Upload,SparseUpload\n\"{\"\"Path\"\":\"\"data\"\",\"\"Size\"\":11,\"\"StoredSize\"\":11,\"\"sha256\"\":\"\"b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9\"\",\"\"md5\"\":\"\"5eb63bbbe01eeed093cb22bb8f5acdc3\"\",\"\"StoredName\"\":\"\"/uploads/data/file.txt\"\",\"\"Components\"\":[\"\"uploads\"\",\"\"data\"\",\"\"file.txt\"\"]}\",\"{\"\"Path\"\":\"\"{\\\"\"DelegateAccessor\\\"\":\\\"\"data\\\"\",\\\"\"DelegatePath\\\"\":\\\"\"This is...\"\",\"\"Size\"\":21,\"\"StoredSize\"\":8,\"\"sha256\"\":\"\"d2bc3dd9279837fd268d82ea397b6980dee5ae462464493c80f495786b4025c2\"\",\"\"md5\"\":\"\"f55a5cc260e3fc562d841a2f6d2b7d22\"\",\"\"StoredName\"\":\"\"/uploads/sparse/C%3A/file.sparse.txt\"\",\"\"Components\"\":[\"\"uploads\"\",\"\"sparse\"\",\"\"C:\"\",\"\"file.sparse.txt\"\"]}\"\n",
+ "TestClient-C.1235/results/Custom.TestArtifactUpload.json": [
   {
    "Upload": {
     "Path": "data",
@@ -102,12 +102,12 @@
    }
   }
  ],
- "TestClient-C.1234/uploads/data/file.txt": "hello world",
- "TestClient-C.1234/uploads/sparse/C%3A/file.sparse.txt.idx": "This bit",
- "TestClient-C.1234/uploads/sparse/C%3A/file.sparse.txt": "This bit",
- "TestClient-C.1234/uploads.csv": "Timestamp,started,vfs_path,_Components,file_size,uploaded_size,Type\n2020-10-07T20:43:08Z,2020-10-07 20:43:08 +0000 UTC,data,\"[\n \"\"uploads\"\",\n \"\"data\"\",\n \"\"file.txt\"\"\n]\",11,11,\n2020-10-07T20:43:08Z,2020-10-07 20:43:08 +0000 UTC,\" {\"\"DelegateAccessor\"\":\"\"data\"\",\"\"DelegatePath\"\":\"\"This is....idx\",\"[\n \"\"uploads\"\",\n \"\"sparse\"\",\n \"\"C:\"\",\n \"\"file.sparse.txt\"\"\n]\",156,156,idx\n2020-10-07T20:43:08Z,2020-10-07 20:43:08 +0000 UTC,\" {\"\"DelegateAccessor\"\":\"\"data\"\",\"\"DelegatePath\"\":\"\"This is...\",\"[\n \"\"uploads\"\",\n \"\"sparse\"\",\n \"\"C:\"\",\n \"\"file.sparse.txt\"\"\n]\",21,8,\n",
- "TestClient-C.1234/uploads.json.index": "\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0000\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0001\u0000\u0000\u0000\u0001\u0000\u0000",
- "TestClient-C.1234/uploads.json": [
+ "TestClient-C.1235/uploads/data/file.txt": "hello world",
+ "TestClient-C.1235/uploads/sparse/C%3A/file.sparse.txt.idx": "This bit",
+ "TestClient-C.1235/uploads/sparse/C%3A/file.sparse.txt": "This bit",
+ "TestClient-C.1235/uploads.csv": "Timestamp,started,vfs_path,_Components,file_size,uploaded_size,Type\n2020-10-07T20:43:08Z,2020-10-07 20:43:08 +0000 UTC,data,\"[\n \"\"uploads\"\",\n \"\"data\"\",\n \"\"file.txt\"\"\n]\",11,11,\n2020-10-07T20:43:08Z,2020-10-07 20:43:08 +0000 UTC,\" {\"\"DelegateAccessor\"\":\"\"data\"\",\"\"DelegatePath\"\":\"\"This is....idx\",\"[\n \"\"uploads\"\",\n \"\"sparse\"\",\n \"\"C:\"\",\n \"\"file.sparse.txt\"\"\n]\",156,156,idx\n2020-10-07T20:43:08Z,2020-10-07 20:43:08 +0000 UTC,\" {\"\"DelegateAccessor\"\":\"\"data\"\",\"\"DelegatePath\"\":\"\"This is...\",\"[\n \"\"uploads\"\",\n \"\"sparse\"\",\n \"\"C:\"\",\n \"\"file.sparse.txt\"\"\n]\",21,8,\n",
+ "TestClient-C.1235/uploads.json.index": "\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0000\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0001\u0000\u0000\u0000\u0001\u0000\u0000",
+ "TestClient-C.1235/uploads.json": [
   {
    "Timestamp": "2020-10-07T20:43:08Z",
    "started": "2020-10-07 20:43:08 +0000 UTC",
