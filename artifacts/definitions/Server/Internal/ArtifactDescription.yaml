@@ -25,6 +25,7 @@ reports:
       {{ $artifact.Description }}
 
       {{ if $artifact.Reference }}
+      ---
       References:
       <ul>
       {{- range $item := $artifact.Reference -}}

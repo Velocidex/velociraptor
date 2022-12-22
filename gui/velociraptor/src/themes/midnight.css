@@ -21,7 +21,7 @@
 .midnight {
   --font-size-large: 16px;
   --font-size-base: 14px;
-  --font-size-small: 12px;
+  --font-size-small: 13px;
   --font-family-sans-serif: "Iosevka Term", Iosevka-Term, SFMono-Regular, Menlo, Monaco,
     "Ubuntu Mono", Consolas, "Liberation Mono", "Courier New", monospace;
   --font-family-monospace: "Iosevka Term", Iosevka-Term, SFMono-Regular, Menlo, Monaco,
@@ -57,6 +57,7 @@
 
   --color-client-link: var(--color-foreground-dimmed);
   --color-client-link-hover: var(--color-accent-100);
+  --color-tooltip-background: var(--color-btn-outline-link);
 
   --color-tab: black;
   --color-tab-active: var(--color-tab);
@@ -274,8 +275,8 @@ body.midnight {
   font-size: var(--font-size-base);
   font-weight: 700;
   color: var(--color-sidebar-foreground);
-  padding-top: 12px;
-  padding-bottom: 12px;
+  padding-top: 1em;
+  padding-bottom: 1em;
 }
 
 .midnight .navigator.nav-pills.nav li:hover {
@@ -355,15 +356,18 @@ body.midnight {
 }
 
 .midnight .btn-primary {
-  background-image: none;
   text-shadow: none;
   box-shadow: none;
-  background: black;
+  color: black;
+  background: var(--color-table-row-selected);
   border-radius: 0;
 }
 
+.midnight .btn-primary:hover:not(:disabled):not(.disabled) {
+  background: var(--color-table-row-selected);
+}
+
 .midnight .btn-secondary {
-  background-image: none;
   text-shadow: none;
   box-shadow: none;
   background: var(--color-canvas-background);
@@ -371,7 +375,6 @@ body.midnight {
 }
 
 .midnight .btn-default {
-  background-image: none;
   text-shadow: none;
   box-shadow: none;
   background: var(--color-btn-default-background);
@@ -485,7 +488,7 @@ body.midnight {
 }
 
 .midnight .page-item .page-link:focus {
-  box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.205)
+  box-shadow: 0 0 0 0.2rem rgba(255, 0, 0, 0.2)
 }
 
 .midnight .react-bootstrap-table-pagination-total {
@@ -727,15 +730,11 @@ body.midnight {
   background-color: var(--color-accent-25);
 }
 
-.midnight ::placeholder {
-  color: var(--color-accent-75) !important;
-  font-weight: 700 !important;
-}
-
 .midnight .form-control,
 .midnight .velo__control,
 .midnight .velo__menu {
   font-size: var(--font-size-base);
+  font-weight: 500;
   color: var(--color-foreground);
   border-radius: 0;
   border-color: var(--color-btn-default-border);
@@ -797,8 +796,13 @@ body.midnight {
   color: var(--color-foreground);
 }
 
+.midnight ::placeholder {
+  color: var(--color-foreground-dimmed) !important;
+  font-weight: 500 !important;
+}
+
 .midnight .velo__placeholder {
-  color: var(--color-foreground);
+  color: var(--color-foreground-dimmed);
   font-weight: 500 !important;
 }
 
@@ -888,12 +892,19 @@ body.midnight {
   color: var(--color-foreground);
 }
 
-.midnight .report-viewer code {
-  background: black;
+.midnight .report-viewer pre {
   border-radius: 0;
   border: 0.5px solid var(--color-btn-border);
   padding-top: 2px;
   padding-bottom: 2px;
+  padding-left: 4px;
+  padding-right: 4px;
+}
+
+.midnight .report-viewer code {
+  background: #800000;
+  border-radius: 0;
+  border: none;
   padding-left: 4px;
   padding-right: 4px;
 }
@@ -973,9 +984,15 @@ body.midnight {
 }
 
 /* Notebooks */
+
+.midnight .btn-outline-info .timestamp {
+  color: var(--color-foreground);
+  font-weight: 500;
+}
+
 .midnight .cell-toolbar,
 .midnight .notebook-input {
-  background: var(--color-canvas-background);
+  background: var(--color-accent-25);
   color: var(--color-foreground);
   border-width: 0;
 }
@@ -1001,22 +1018,14 @@ body.midnight {
 }
 
 /* file tree */
-.midnight .file-tree ul {
-  background: var(--color-canvas-background);
-  font-family: var(--font-family-sans-serif);
-  font-size: var(--font-size-base);
-  padding-left: 12px;
+
+.midnight .file-tree .isActive {
+  background: var(--color-accent-50);
+  color: #FFD500;
 }
 
-
-.midnight .tree-folder.active {
-  color: var(--color-header-background);
-}
-
-.midnight .tree-folder {
-  color: var(--color-foreground);
-  font-family: var(--font-family-sans-serif);
-  font-size: var(--font-size-base);
+.midnight .file-tree > ul > ul > li {
+  color: darkorange;
 }
 
 /* Scrollbars */
@@ -1185,6 +1194,11 @@ body.midnight {
   border: 1px solid var(--color-btn-border);
 }
 
+.midnight .btn-tooltip[data-tooltip]::before {
+  border-radius: 0;
+  color: var(--color-foreground);
+}
+
 .midnight .tooltip.show {
   background: var(--color-canvas-background);
   border: 1px solid var(--color-btn-border);
@@ -1207,6 +1221,9 @@ body.midnight {
 
 .midnight hr {
   background: var(--color-foreground-dimmed);
+  height: 1px;
+  border: none;
+  margin-top: 2em;
 }
 
 .midnight .icon-small {
@@ -1243,7 +1260,6 @@ body.midnight {
 }
 
 .midnight .error-message {
-  font-size: 12pt;
   color: #daaa3f !important;
 }
 
