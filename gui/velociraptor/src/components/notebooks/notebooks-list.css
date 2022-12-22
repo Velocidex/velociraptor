@@ -10,12 +10,10 @@
     vertical-align: middle;
 }
 
-
 div.error-message {
-    font-size: 12pt;
-    color: #f11818 !important;
+    font-size: var(--font-size-small);
+    color: var(--color-level-error) !important;
 }
-
 
 .notebook-output {
     overflow-x: visible;

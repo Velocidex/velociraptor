@@ -49,11 +49,3 @@
 .Resizer.disabled:hover {
     border-color: transparent;
 }
-
-.file-tree {
-    position: absolute;
-    white-space: nowrap;
-    overflow-x: auto;
-    width: 100%;
-    height: 100%;
-}
