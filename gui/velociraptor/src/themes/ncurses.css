@@ -653,7 +653,6 @@ body.ncurses {
   border: 1px solid var(--color-btn-border);
   background: white;
   z-index: 10;
-  box-shadow: 10px 10px 0px #000000;
 }
 
 .ncurses .react-calendar button:enabled:hover {
