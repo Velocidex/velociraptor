@@ -2,6 +2,7 @@ package notebooks
 
 import (
 	"context"
+	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -42,11 +43,16 @@ func (self *CreateNotebookDownload) Call(ctx context.Context,
 	}
 
 	notebook_path_manager := paths.NewNotebookPathManager(arg.NotebookId)
-	err = reporting.ExportNotebookToZip(ctx, config_obj, notebook_path_manager)
+	wg := &sync.WaitGroup{}
+
+	err = reporting.ExportNotebookToZip(ctx, config_obj, wg, notebook_path_manager)
 	if err != nil {
 		scope.Log("create_notebook_download: %s", err)
 		return vfilter.Null{}
 	}
+
+	// Wait here until the notebook is fully exported.
+	wg.Wait()
 
 	return notebook_path_manager.ZipExport()
 }

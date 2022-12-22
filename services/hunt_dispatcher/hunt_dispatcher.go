@@ -647,7 +647,21 @@ func NewHuntDispatcher(
 		service.ProcessUpdate)
 }
 
+var (
+	NextHuntIdForTests string
+)
+
+func SetHuntIdForTests(id string) {
+	NextHuntIdForTests = id
+}
+
 func GetNewHuntId() string {
+	if NextHuntIdForTests != "" {
+		result := NextHuntIdForTests
+		NextHuntIdForTests = ""
+		return result
+	}
+
 	buf := make([]byte, 8)
 	_, _ = rand.Read(buf)
 

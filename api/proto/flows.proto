@@ -7,13 +7,46 @@ package proto;
 
 option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
+// Stats about exported containers
+message ContainerStats {
+    // Seconds since epoch
+    uint64 timestamp = 8;
+
+    uint64 total_uploaded_files = 1;
+    uint64 total_uploaded_bytes = 2;
+
+    // Total number of bytes written to the container. NOTE: Due to
+    // caching this number can increase substantially before the
+    // container size actually changes so this is a better measure of
+    // progress than the compressed size.
+    uint64 total_uncompressed_bytes = 3;
+    uint64 total_compressed_bytes = 4;
+    uint64 total_container_files = 5;
+
+    // The hash of the written container - this is only populated
+    // **after** the container is closed.
+    string hash = 6;
+
+    // Total number of seconds taken to compress.
+    uint64 total_duration = 9;
+
+    // Where the file can be downloaded from the filestore
+    repeated string components = 7;
+
+    string type = 10;
+}
+
 message AvailableDownloadFile {
     string name = 1;
-    string type = 6;
     string path = 5;
+
+    // Deprecated thiese are now stored in the stats.
+    string type = 6;
     bool complete = 2;
     uint64 size = 3;
     string date = 4;
+
+    ContainerStats stats = 8;
 }
 
 message AvailableDownloads {

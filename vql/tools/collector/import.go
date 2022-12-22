@@ -334,7 +334,7 @@ func (self ImportCollectionFunction) copyFile(
 
 	out_fd.Truncate()
 
-	scope.Log("Copying %v to %v", src.String(), dest.AsClientPath())
+	scope.Log("import_collection: Copying %v to %v", src.String(), dest.AsClientPath())
 
 	_, err = utils.Copy(ctx, out_fd, fd)
 	if err != nil {

@@ -50,9 +50,6 @@ func GetExtensionForFilestore(path_spec FSPathSpec) string {
 	case PATH_TYPE_FILESTORE_TMP:
 		return ".tmp"
 
-	case PATH_TYPE_FILESTORE_LOCK:
-		return ".lock"
-
 	case PATH_TYPE_FILESTORE_CSV:
 		return ".csv"
 
@@ -115,10 +112,6 @@ func GetFileStorePathTypeFromExtension(name string) (PathType, string) {
 
 	if strings.HasSuffix(name, ".tmp") {
 		return PATH_TYPE_FILESTORE_TMP, name[:len(name)-4]
-	}
-
-	if strings.HasSuffix(name, ".lock") {
-		return PATH_TYPE_FILESTORE_LOCK, name[:len(name)-5]
 	}
 
 	if strings.HasSuffix(name, ".csv") {

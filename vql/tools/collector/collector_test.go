@@ -210,8 +210,9 @@ func (self *TestSuite) TestCollectionWithArtifacts() {
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
 		ACLManager: acl_managers.NullACLManager{},
-		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
-		Env:        ordereddict.NewDict(),
+		Logger: logging.NewPlainLogger(
+			self.ConfigObj, &logging.FrontendComponent),
+		Env: ordereddict.NewDict(),
 	}
 
 	manager, err := services.GetRepositoryManager(self.ConfigObj)

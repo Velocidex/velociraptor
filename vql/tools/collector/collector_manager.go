@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -284,7 +285,9 @@ func (self *collectionManager) collectQuery(
 	}
 
 	total_rows, err := self.container.StoreArtifact(
-		self.config_obj, self.ctx, subscope, query, self.format)
+		self.config_obj, self.ctx, subscope, query,
+		path_specs.NewUnsafeFilestorePath("results"),
+		self.format)
 
 	status.LogRows = int64(self.logger.Count())
 	status.ResultRows = int64(total_rows)

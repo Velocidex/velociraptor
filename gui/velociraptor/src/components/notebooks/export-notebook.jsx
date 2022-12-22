@@ -61,7 +61,22 @@ export default class ExportNotebook extends React.Component {
         api.post("v1/CreateNotebookDownloadFile", {
             notebook_id: this.props.notebook.notebook_id,
             type: type,
-        }, this.source.token);
+        }, this.source.token).then(this.fetchNotebookDetails);
+    }
+
+    getDownloadLink = (cell, row) =>{
+        var stats = row.stats || {};
+        if (row.complete) {
+            return <a href={api.href("/api/v1/DownloadVFSFile", {
+                fs_components: stats.components,
+                vfs_path: row.path,
+            }, {arrayFormat: 'brackets'})}  target="_blank" download
+                      rel="noopener noreferrer">{row.name}</a>;
+        };
+        return <>
+                 <FontAwesomeIcon icon="spinner" spin/>
+                 <span className="button-label">{row.name}</span>
+                 </>;
     }
 
     render() {
@@ -71,15 +86,25 @@ export default class ExportNotebook extends React.Component {
 
         let columns = formatColumns([
             {dataField: "type", text: T("Type"), formatter: (cell, row) => {
-                if (cell === ".html") {
-                    return <FontAwesomeIcon icon="flag"/>;
-                } else if (cell === ".zip") {
-                    return <FontAwesomeIcon icon="archive"/>;
+                if (cell === "html") {
+                    return <Button className="btn-tooltip"
+                                   disabled={true}
+                                   variant="outline-info"
+                                   data-tooltip="Zip">
+                             <FontAwesomeIcon icon="flag"/>
+                           </Button>;
+                } else if (cell === "zip") {
+                    return <Button className="btn-tooltip"
+                                   disabled={true}
+                                   variant="outline-info"
+                                   data-tooltip="HTML">
+                             <FontAwesomeIcon icon="archive"/>
+                           </Button>;
                 };
                 return cell;
             }, sort: true},
             {dataField: "name", text: T("Name"),
-             sort: true, filtered: true, type: "download"},
+             sort: true, filtered: true, formatter: this.getDownloadLink},
             {dataField: "size", text: T("Size")},
             {dataField: "date", text: T("Date"), type: "timestamp"},
         ]);

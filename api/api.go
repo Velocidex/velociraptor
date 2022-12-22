@@ -619,12 +619,7 @@ func (self *ApiServer) VFSGetBuffer(
 			in.ClientId).FSItem(in.Components)
 
 	} else if len(in.Components) > 0 {
-		last_idx := len(in.Components) - 1
-		fs_type, name := api.GetFileStorePathTypeFromExtension(
-			in.Components[last_idx])
-		in.Components[last_idx] = name
-		pathspec = path_specs.NewUnsafeFilestorePath(in.Components...).
-			SetType(fs_type)
+		pathspec = path_specs.FromGenericComponentList(in.Components)
 
 	} else {
 		return nil, status.Error(codes.InvalidArgument,

@@ -32,6 +32,14 @@ func (self *NotebookPathManager) AttachmentDirectory() api.FSPathSpec {
 		AsFilestorePath().SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
+// Notebook paths are based on the time so we need to write the stats
+// next to the container and derive the path from the previous
+// filename.
+func (self *NotebookPathManager) PathStats(
+	filename api.FSPathSpec) api.DSPathSpec {
+	return filename.AsDatastorePath().SetTag("ExportStats")
+}
+
 func (self *NotebookPathManager) Path() api.DSPathSpec {
 	return self.root.AddChild(self.notebook_id).SetTag("Notebook")
 }
@@ -216,18 +224,18 @@ func (self *NotebookCellQuery) Params() *ordereddict.Dict {
 	return result
 }
 
-type ContainerPathManager struct {
-	artifact string
-}
-
-func (self *ContainerPathManager) Path() string {
-	return "results/" + utils.SanitizeString(self.artifact) + ".json"
-}
-
-func (self *ContainerPathManager) CSVPath() string {
-	return "results/" + utils.SanitizeString(self.artifact) + ".csv"
-}
-
-func NewContainerPathManager(artifact string) *ContainerPathManager {
-	return &ContainerPathManager{artifact: artifact}
+// Prepare a safe string for storage in the zip file.
+// Suitable escaping
+func ZipPathFromFSPathSpec(path api.FSPathSpec) string {
+	// Escape all components suitably for the zip file.
+	components := path.Components()
+	safe_components := make([]string, 0, len(components))
+	for _, c := range components {
+		if c == "" || c == "." || c == ".." {
+			continue
+		}
+		safe_components = append(safe_components, utils.SanitizeString(c))
+	}
+	return "/" + strings.Join(safe_components, "/") +
+		api.GetExtensionForFilestore(path)
 }

@@ -10,9 +10,10 @@ import (
 	"io/ioutil"
 	"net/url"
 	"regexp"
+	"sync"
+	"time"
 
 	"github.com/Velocidex/yaml/v2"
-	"github.com/alexmullins/zip"
 	"github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -168,6 +169,7 @@ pre {
 func ExportNotebookToZip(
 	ctx context.Context,
 	config_obj *config_proto.Config,
+	wg *sync.WaitGroup,
 	notebook_path_manager *paths.NotebookPathManager) error {
 
 	db, err := datastore.GetDB(config_obj)
@@ -200,21 +202,31 @@ func ExportNotebookToZip(
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
-	fd, err := file_store_factory.WriteFile(notebook_path_manager.ZipExport())
+	output_filename := notebook_path_manager.ZipExport()
+	fd, err := file_store_factory.WriteFile(output_filename)
 	if err != nil {
 		return err
 	}
-	defer fd.Close()
 
 	err = fd.Truncate()
 	if err != nil {
 		return err
 	}
 
-	// Do these first to ensure errors are returned if the zip file
-	// is not writable.
-	zip_writer := zip.NewWriter(fd)
-	defer zip_writer.Close()
+	// Create a new ZipContainer to write on. The container will close
+	// the underlying writer.
+	zip_writer, err := NewContainerFromWriter(
+		config_obj, fd, "", DEFAULT_COMPRESSION, NO_METADATA)
+	if err != nil {
+		return err
+	}
+
+	// zip_writer now owns fd and will close it when it closes below.
+
+	// Report the progress as we write the container.
+	progress_reporter := NewProgressReporter(config_obj,
+		notebook_path_manager.PathStats(output_filename),
+		output_filename, zip_writer)
 
 	exported_path_manager := NewNotebookExportPathManager(notebook.NotebookId)
 
@@ -242,28 +254,41 @@ func ExportNotebookToZip(
 		}
 	}
 
-	for _, cell := range notebook.CellMetadata {
-		cell_copier(cell.CellId)
-	}
+	wg.Add(1)
 
-	// Copy the uploads - Uploads may not exist if there are no
-	// uploads in the notebook - so this is not an error.
-	err = copyUploads(ctx, config_obj,
-		notebook_path_manager.AttachmentDirectory(),
-		exported_path_manager.UploadRoot(),
-		zip_writer, file_store_factory)
-	if err != nil {
-		logger := logging.GetLogger(config_obj, &logging.GUIComponent)
-		logger.Info("ExportNotebookToZip Erorr: %v\n", err)
-	}
+	// Write the bulk of the data asyncronously.
+	go func() {
+		defer wg.Done()
+		defer progress_reporter.Close()
 
-	f, err := zip_writer.Create("Notebook.yaml")
-	if err != nil {
-		fd.Close()
-		return err
-	}
-	_, err = f.Write(serialized)
-	return err
+		// Will also close the underlying fd.
+		defer zip_writer.Close()
+
+		for _, cell := range notebook.CellMetadata {
+			cell_copier(cell.CellId)
+		}
+
+		// Copy the uploads - Uploads may not exist if there are no
+		// uploads in the notebook - so this is not an error.
+		err = copyUploads(ctx, config_obj,
+			notebook_path_manager.AttachmentDirectory(),
+			exported_path_manager.UploadRoot(),
+			zip_writer, file_store_factory)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+			logger.Info("ExportNotebookToZip Erorr: %v\n", err)
+		}
+
+		f, err := zip_writer.Create("Notebook.yaml", time.Time{})
+		if err != nil {
+			return
+		}
+		defer f.Close()
+
+		_, err = f.Write(serialized)
+	}()
+
+	return nil
 }
 
 func copyUploads(
@@ -271,7 +296,7 @@ func copyUploads(
 	config_obj *config_proto.Config,
 	src api.FSPathSpec,
 	dest *accessors.OSPath,
-	zip_writer *zip.Writer,
+	zip_writer *Container,
 	file_store_factory api.FileStore) error {
 
 	children, err := file_store_factory.ListDirectory(src)
@@ -284,22 +309,21 @@ func copyUploads(
 		out_filename := dest.Append(child.Name())
 
 		out_fd, err := zip_writer.Create(
-			out_filename.String() + api.GetExtensionForFilestore(
-				child.PathSpec()))
+			out_filename.String()+api.GetExtensionForFilestore(child.PathSpec()),
+			time.Time{})
 		if err != nil {
 			continue
 		}
 
 		fd, err := file_store_factory.ReadFile(child.PathSpec())
 		if err != nil {
+			out_fd.Close()
 			continue
 		}
-		defer fd.Close()
 
 		_, err = utils.Copy(ctx, out_fd, fd)
-		if err != nil {
-			continue
-		}
+		fd.Close()
+		out_fd.Close()
 	}
 
 	return nil

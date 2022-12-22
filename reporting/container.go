@@ -16,20 +16,27 @@ import (
 
 	"github.com/alexmullins/zip"
 	"github.com/go-errors/errors"
+	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 
 	"github.com/Velocidex/ordereddict"
 	concurrent_zip "github.com/Velocidex/zip"
+)
+
+var (
+	NO_METADATA         []vfilter.Row = nil
+	DEFAULT_COMPRESSION int64         = 5
 )
 
 type ContainerFormat int
@@ -66,6 +73,13 @@ var (
 type MemberWriter struct {
 	io.WriteCloser
 	writer_wg *sync.WaitGroup
+
+	owner *Container
+}
+
+func (self *MemberWriter) Write(buff []byte) (int, error) {
+	self.owner.increaseUncompressedBytes(len(buff))
+	return self.WriteCloser.Write(buff)
 }
 
 // Keep track of all members that are closed to allow the zip to be
@@ -80,7 +94,9 @@ type Container struct {
 	config_obj *config_proto.Config
 
 	// The underlying file writer
-	fd      io.WriteCloser
+	fd io.WriteCloser
+
+	// Calculate the hash of the final container.
 	writer  *utils.TeeWriter
 	sha_sum hash.Hash
 
@@ -102,7 +118,9 @@ type Container struct {
 	// manage orderly shutdown of the container.
 	mu sync.Mutex
 
-	total_bytes_written uint64
+	// Keep stats about the container
+	stats_mu sync.Mutex
+	stats    api_proto.ContainerStats
 
 	// Keep track of all writers so we can safely close the container.
 	writer_wg sync.WaitGroup
@@ -110,6 +128,10 @@ type Container struct {
 }
 
 func (self *Container) Create(name string, mtime time.Time) (io.WriteCloser, error) {
+	self.stats_mu.Lock()
+	defer self.stats_mu.Unlock()
+	self.stats.TotalContainerFiles++
+
 	// Zip members must not be absolute
 	name = strings.TrimPrefix(name, "/")
 
@@ -132,6 +154,7 @@ func (self *Container) Create(name string, mtime time.Time) (io.WriteCloser, err
 	return &MemberWriter{
 		WriteCloser: writer,
 		writer_wg:   &self.writer_wg,
+		owner:       self,
 	}, nil
 }
 
@@ -140,6 +163,7 @@ func (self *Container) StoreArtifact(
 	ctx context.Context,
 	scope vfilter.Scope,
 	query *actions_proto.VQLRequest,
+	prefix api.FSPathSpec,
 	format ContainerFormat) (total_rows int, err error) {
 
 	subctx, cancel := context.WithCancel(ctx)
@@ -165,9 +189,9 @@ func (self *Container) StoreArtifact(
 	}
 
 	// The name to use in the zip file to store results from this artifact
-	path_manager := paths.NewContainerPathManager(artifact_name)
+	dest := prefix.AddChild(artifact_name).AsClientPath()
 	return self.WriteResultSet(subctx, config_obj, scope, format,
-		path_manager.Path(), vql.Eval(subctx, scope))
+		dest, vql.Eval(subctx, scope))
 }
 
 func (self *Container) WriteResultSet(
@@ -363,8 +387,11 @@ func (self *Container) Upload(
 
 	self.mu.Lock()
 	self.uploads = append(self.uploads, result)
-	self.total_bytes_written += result.Size
 	self.mu.Unlock()
+
+	self.stats_mu.Lock()
+	self.stats.TotalUploadedBytes += result.Size
+	self.stats_mu.Unlock()
 
 	return result, nil
 }
@@ -531,26 +558,37 @@ func (self *Container) Close() error {
 
 	// Only report the hash if we actually wrote something (few bytes
 	// are always written for the zip header).
+	hash := hex.EncodeToString(self.sha_sum.Sum(nil))
+	self.stats_mu.Lock()
+	self.stats.Hash = hash
+	self.stats_mu.Unlock()
+
 	if self.writer.Count() > 50 {
 		logger := logging.GetLogger(self.config_obj, &logging.GUIComponent)
-		logger.Info("Container hash %v", hex.EncodeToString(self.sha_sum.Sum(nil)))
+		logger.Info("Container hash %v", hash)
+
 	}
 	return self.fd.Close()
 }
 
-type Stats struct {
-	TotalUploadedFiles uint64
-	TotalUploadedBytes uint64
+func (self *Container) increaseUncompressedBytes(len int) {
+	self.stats_mu.Lock()
+	defer self.stats_mu.Unlock()
+
+	self.stats.TotalUncompressedBytes += uint64(len)
 }
 
-func (self *Container) Stats() *Stats {
-	self.mu.Lock()
-	defer self.mu.Unlock()
+func (self *Container) Stats() *api_proto.ContainerStats {
+	self.stats_mu.Lock()
+	// Take a copy
+	stats := proto.Clone(&self.stats).(*api_proto.ContainerStats)
+	self.stats_mu.Unlock()
 
-	return &Stats{
-		TotalUploadedFiles: uint64(len(self.uploads)),
-		TotalUploadedBytes: self.total_bytes_written,
-	}
+	stats.TotalUploadedFiles = uint64(len(self.uploads))
+	stats.TotalCompressedBytes = uint64(self.writer.Count())
+	stats.TotalDuration = uint64(Clock.Now().Unix()) - stats.Timestamp
+
+	return stats
 }
 
 func NewContainer(
@@ -584,6 +622,8 @@ func NewContainerFromWriter(
 		writer:     utils.NewTee(fd, sha_sum),
 		level:      int(level),
 	}
+
+	result.stats.Timestamp = uint64(Clock.Now().Unix())
 
 	// We need to build a protected container.
 	if password != "" {

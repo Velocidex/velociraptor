@@ -50,3 +50,39 @@ func DebugPathSpecList(list []api.DSPathSpec) string {
 	}
 	return strings.Join(result, ", ")
 }
+
+// Returns a file store path spec as a generic list of components,
+// adjusting the filename path extension as necessary.
+func AsGenericComponentList(path api.FSPathSpec) []string {
+	components := utils.CopySlice(path.Components())
+	if len(components) > 0 {
+		components[len(components)-1] += api.GetExtensionForFilestore(path)
+	}
+	return components
+}
+
+// Builds a filestore pathspec from a plain components list. Uses the
+// extension of the filename component to determine the path type.
+func FromGenericComponentList(components []string) api.FSPathSpec {
+	pathspec := NewUnsafeFilestorePath(components...)
+	if len(components) > 0 {
+		last_idx := len(components) - 1
+		fs_type, name := api.GetFileStorePathTypeFromExtension(
+			components[last_idx])
+		return pathspec.Dir().AddChild(name).SetType(fs_type)
+	}
+	return pathspec
+}
+
+// Builds a filestore pathspec from a plain components list. Uses the
+// extension of the filename component to determine the path type.
+func DSFromGenericComponentList(components []string) api.DSPathSpec {
+	pathspec := NewUnsafeDatastorePath(components...)
+	if len(components) > 0 {
+		last_idx := len(components) - 1
+		fs_type, name := api.GetDataStorePathTypeFromExtension(
+			components[last_idx])
+		return pathspec.Dir().AddChild(name).SetType(fs_type)
+	}
+	return pathspec
+}

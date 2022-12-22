@@ -18,3 +18,8 @@ func (self NullACLManager) CheckAccessWithArgs(
 	permission acls.ACL_PERMISSION, args ...string) (bool, error) {
 	return true, nil
 }
+
+func (self NullACLManager) CheckAccessInOrg(
+	org_id string, permission ...acls.ACL_PERMISSION) (bool, error) {
+	return true, nil
+}

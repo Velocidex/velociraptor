@@ -10,7 +10,6 @@ import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
 import Dropdown from 'react-bootstrap/Dropdown';
 import UserConfig from '../core/user.jsx';
-import BootstrapTable from 'react-bootstrap-table-next';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
@@ -22,6 +21,7 @@ import { formatColumns } from "../core/table.jsx";
 import api from '../core/api-service.jsx';
 import axios from 'axios';
 import { requestToParameters } from "../flows/utils.jsx";
+import AvailableDownloads from "../notebooks/downloads.jsx";
 
 
 export default class HuntOverview extends React.Component {
@@ -292,21 +292,9 @@ export default class HuntOverview extends React.Component {
                     </dd>
                   </dl>
                   <dl>
-                    <dt>{T("Available Downloads")}</dt>
                     <dd>
-                      <BootstrapTable
-                        keyField="name"
-                        condensed
-                        bootstrap4
-                        hover
-                        headerClasses="alert alert-secondary"
-                        bodyClasses="fixed-table-body"
-                        data={files}
-                        columns={formatColumns(
-                              [{dataField: "name", text: T("name"), sort: true,
-                                type: "download"},
-                               {dataField: "size", text: T("size"), sort: true},
-                               {dataField: "date", text: T("date")}])}
+                      <AvailableDownloads
+                        files={files}
                       />
                     </dd>
                   </dl>
