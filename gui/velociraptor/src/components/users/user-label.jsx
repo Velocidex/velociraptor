@@ -340,7 +340,7 @@ class UserSettings extends React.PureComponent {
                     this.saveSettings();
                     this.props.onClose();
                 }}>
-                  {T("Save")}
+                  {T("Close")}
                 </Button>
               </Modal.Footer>
             </Modal>

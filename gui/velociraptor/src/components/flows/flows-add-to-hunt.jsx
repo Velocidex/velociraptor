@@ -129,7 +129,7 @@ export default class AddFlowToHuntDialog extends React.Component {
                     keyField="hunt_id"
                     bootstrap4
                     headerClasses="alert alert-secondary"
-                    bodyClasses="fixed-table-body"
+                    bodyClasses="fixed-table-body selectable"
                     data={this.state.hunts}
                     selectRow={ selectRow }
                     columns={columns}

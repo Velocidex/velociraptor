@@ -115,18 +115,20 @@ code {
   display: block;
   margin: 0 auto;
   padding: 4px 8px;
-  background-color: var(--color-canvas-background);
-  border: 1px solid var(--accent-color);
-  border-radius: 8px;
+  background-color: var(--color-tooltip-background);
+  border: none;
+  border-radius: 4px;
   color: var(--color-foreground);
   font-family: var(--font-family-sans-serif);
-  font-size: 14px;
+  font-size: var(--font-size-base);
+  font-weight: normal;
   padding: 4px 8px;
   white-space: nowrap;
   transition: opacity ease-out 150ms, bottom ease-out 150ms;
   transition-property: opacity;
   transition-delay: 300ms;
   z-index: 10000;
+  box-shadow: 4px 4px 4px rgba(0,0,0,.5);
 }
 
 .btn-tooltip[data-position='top']::before {

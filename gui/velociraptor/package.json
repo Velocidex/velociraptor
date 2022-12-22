@@ -69,7 +69,6 @@
     "scripts": {
         "build": "vite build",
         "start": "vite serve",
-        "preview": "vite preview",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "watch": {
