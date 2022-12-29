@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type BroadcastService struct {
@@ -17,8 +19,13 @@ type BroadcastService struct {
 
 	mu sync.Mutex
 
-	generators       map[string]<-chan *ordereddict.Dict
-	listener_closers map[string][]func()
+	generators map[string]<-chan *ordereddict.Dict
+
+	// A list of watchers listening on a topic.
+	// When the topic broadcaster cancels, we close all watchers.
+	// When each watcher ends we remove it from the broadcast queue.
+	// The following is a map of topics, and unique IDs.
+	listener_closers map[string]map[uint64]func()
 }
 
 func (self *BroadcastService) RegisterGenerator(
@@ -63,6 +70,26 @@ func (self *BroadcastService) unregister(name string) {
 	delete(self.listener_closers, name)
 }
 
+func (self *BroadcastService) WaitForListeners(
+	ctx context.Context, name string, count int64) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case <-time.After(100 * time.Millisecond):
+			self.mu.Lock()
+			closers, _ := self.listener_closers[name]
+			listeners := int64(len(closers))
+			self.mu.Unlock()
+
+			if listeners >= count {
+				return
+			}
+		}
+	}
+}
+
 func (self *BroadcastService) Watch(
 	ctx context.Context, name string, options api.QueueOptions) (
 	output <-chan *ordereddict.Dict, cancel func(), err error) {
@@ -75,12 +102,35 @@ func (self *BroadcastService) Watch(
 	}
 
 	output_chan, cancel := self.pool.Register(ctx, name, options)
-	// If closers in nil we create a new slice.
-	closers, _ := self.listener_closers[name]
-	closers = append(closers, cancel)
+	// If closers is nil we create a new slice.
+	closers, pres := self.listener_closers[name]
+	if !pres {
+		closers = make(map[uint64]func())
+	}
+
+	id := utils.GetId()
+	closers[id] = cancel
 	self.listener_closers[name] = closers
 
-	return output_chan, cancel, nil
+	return output_chan, func() {
+		self.mu.Lock()
+		closers, pres := self.listener_closers[name]
+		if !pres {
+			self.mu.Unlock()
+			return
+		}
+
+		cancel, pres := closers[id]
+		if !pres {
+			self.mu.Unlock()
+			return
+		}
+
+		delete(closers, id)
+		self.mu.Unlock()
+
+		cancel()
+	}, nil
 }
 
 func NewBroadcastService(
@@ -88,6 +138,6 @@ func NewBroadcastService(
 	return &BroadcastService{
 		pool:             directory.NewQueuePool(config_obj),
 		generators:       make(map[string]<-chan *ordereddict.Dict),
-		listener_closers: make(map[string][]func()),
+		listener_closers: make(map[string]map[uint64]func()),
 	}
 }

@@ -16,12 +16,13 @@ Queries:
   # List directory with one level
   - SELECT Name
     FROM Artifact.System.VFS.ListDirectory(
+       source="Listing",
        Components=pathspec(Path=srcDir+"/artifacts/definitions/System").Components)
     WHERE Name =~ "VFS"
 
   # List directory with more depth
   - SELECT Name
     FROM Artifact.System.VFS.ListDirectory(
-       Depth=10,
+       Depth=10, source="Listing",
        Components=pathspec(Path=srcDir+"/artifacts/definitions/System/").Components)
     WHERE _FullPath =~ "ListDirectory.yaml$"

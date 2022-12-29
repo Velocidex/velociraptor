@@ -89,7 +89,43 @@ func (self *VFSServiceTestSuite) EmulateCollection(
 	return self.flow_id
 }
 
-func (self *VFSServiceTestSuite) TestVFSListDirectory() {
+// New clients support the vfs_ls() plugin so we write a new style
+// collection.
+func (self *VFSServiceTestSuite) EmulateCollectionWithVFSLs(
+	artifact string, rows []*ordereddict.Dict,
+	stats []*ordereddict.Dict) string {
+
+	// Emulate an artifact collection: First write the
+	// result set, then write the collection context.
+	journal, err := services.GetJournal(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	journal.PushRowsToArtifact(self.ConfigObj, rows,
+		artifact+"/Listing", self.client_id, self.flow_id)
+
+	journal.PushRowsToArtifact(self.ConfigObj, stats,
+		artifact+"/Stats", self.client_id, self.flow_id)
+
+	// Emulate a flow completion message coming from the flow processor.
+	journal.PushRowsToArtifact(self.ConfigObj,
+		[]*ordereddict.Dict{ordereddict.NewDict().
+			Set("ClientId", self.client_id).
+			Set("FlowId", self.flow_id).
+			Set("Flow", &flows_proto.ArtifactCollectorContext{
+				ClientId:  self.client_id,
+				SessionId: self.flow_id,
+				ArtifactsWithResults: []string{
+					artifact + "/Listing",
+					artifact + "/Stats",
+				},
+				TotalCollectedRows: uint64(len(rows)),
+			})},
+		"System.Flow.Completion", "server", "")
+	// test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
+	return self.flow_id
+}
+
+func (self *VFSServiceTestSuite) TestVFSListDirectoryLegacy() {
 	self.EmulateCollection(
 		"System.VFS.ListDirectory", []*ordereddict.Dict{
 			makeStat("/a/b", "c"),
@@ -104,6 +140,46 @@ func (self *VFSServiceTestSuite) TestVFSListDirectory() {
 	resp := &api_proto.VFSListResponse{}
 
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		db.GetSubject(self.ConfigObj,
+			client_path_manager.VFSPath([]string{"file", "a", "b"}),
+			resp)
+		return resp.TotalRows == 3
+	})
+
+	// The response will store a reference to the original collection
+	// spanning the rows that describe this directory. In this case
+	// all rows are about this directory.
+	assert.Equal(self.T(), resp.TotalRows, uint64(3))
+	assert.Equal(self.T(), resp.StartIdx, uint64(0))
+	assert.Equal(self.T(), resp.EndIdx, uint64(3))
+	assert.Equal(self.T(), resp.ClientId, self.client_id)
+	assert.Equal(self.T(), resp.FlowId, self.flow_id)
+}
+
+func (self *VFSServiceTestSuite) TestVFSListDirectoryNew() {
+	self.EmulateCollectionWithVFSLs(
+		"System.VFS.ListDirectory", []*ordereddict.Dict{
+			makeStat("/a/b", "c"),
+			makeStat("/a/b", "d"),
+			makeDirectoryStat("/a/b", "e"),
+		},
+		[]*ordereddict.Dict{
+			ordereddict.NewDict().
+				Set("Components", []string{"a", "b"}).
+				Set("Accessor", "file").
+				Set("Stats", &api_proto.VFSListResponse{
+					StartIdx: 0,
+					EndIdx:   3,
+				}),
+		})
+
+	db, err := datastore.GetDB(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	client_path_manager := paths.NewClientPathManager(self.client_id)
+	resp := &api_proto.VFSListResponse{}
+
+	vtesting.WaitUntil(2000*time.Second, self.T(), func() bool {
 		db.GetSubject(self.ConfigObj,
 			client_path_manager.VFSPath([]string{"file", "a", "b"}),
 			resp)
@@ -173,7 +249,7 @@ func (self *VFSServiceTestSuite) TestVFSListDirectoryEmpty() {
 	assert.Equal(self.T(), resp.FlowId, self.flow_id)
 }
 
-func (self *VFSServiceTestSuite) TestRecursiveVFSListDirectory() {
+func (self *VFSServiceTestSuite) TestRecursiveVFSListDirectoryLegacy() {
 	self.EmulateCollection(
 		"System.VFS.ListDirectory", []*ordereddict.Dict{
 			makeStat("/a/b", "A"),

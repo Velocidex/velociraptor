@@ -25,6 +25,9 @@ message VFSListResponse {
   string client_id = 9;
   string flow_id = 10;
 
+  // The artifact name that contains the actual data for this
+  // directory. If not specified it will be "System.VFS.ListDirectory"
+  string artifact = 13;
   uint64 start_idx = 11;
   uint64 end_idx = 12;
 }

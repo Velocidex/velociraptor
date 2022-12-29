@@ -8,6 +8,7 @@ package vfs_service
 
 import (
 	"context"
+	"encoding/json"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
@@ -38,8 +39,20 @@ func (self *VFSService) Start(
 	logger.Info("<green>Starting</> VFS writing service for %v.",
 		services.GetOrgName(config_obj))
 
+	// Monitor for legacy ListDirectory flows for clients that do not
+	// have specialized vfs_ls() plugins.
 	err := watchForFlowCompletion(
 		ctx, wg, config_obj, "System.VFS.ListDirectory",
+		"VFSService",
+		self.ProcessListDirectoryLegacy)
+	if err != nil {
+		return err
+	}
+
+	// Modern clients send stats directly and so do not need special
+	// processing - this is much more efficient!
+	err = watchForFlowCompletion(
+		ctx, wg, config_obj, "System.VFS.ListDirectory/Stats",
 		"VFSService",
 		self.ProcessListDirectory)
 	if err != nil {
@@ -176,7 +189,8 @@ func (self *VFSService) handleEmptyListDirectory(
 	}
 }
 
-func (self *VFSService) ProcessListDirectory(
+// Handle older clients that do not have the vfs_ls() plugin.
+func (self *VFSService) ProcessListDirectoryLegacy(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	scope vfilter.Scope, row *ordereddict.Dict,
@@ -304,6 +318,73 @@ func (self *VFSService) flush_state(
 			StartIdx:  uint64(start_idx),
 			EndIdx:    uint64(end_idx),
 		})
+}
+
+// Modern clients do the above work on the client removing load from
+// the server. This is much more scalable.
+func (self *VFSService) ProcessListDirectory(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	scope vfilter.Scope, row *ordereddict.Dict,
+	flow *flows_proto.ArtifactCollectorContext) {
+
+	client_id, _ := row.GetString("ClientId")
+	flow_id, _ := row.GetString("FlowId")
+	ts, _ := row.GetInt64("_ts")
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("VFSService: Processing System.VFS.ListDirectory/Stats from %v", client_id)
+
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		config_obj, client_id, flow_id, "System.VFS.ListDirectory/Stats",
+		paths.MODE_CLIENT)
+
+	// Read the results from the flow and build a VFSListResponse
+	// for storing in the VFS.
+	file_store_factory := file_store.GetFileStore(config_obj)
+	reader, err := result_sets.NewResultSetReader(
+		file_store_factory, path_manager.Path())
+	if err != nil {
+		logger.Error("Unable to read artifact: %v", err)
+		return
+	}
+	defer reader.Close()
+
+	json_chan, _ := reader.JSON(ctx)
+
+	for serialized := range json_chan {
+		row_obj := &VFSListRow{}
+		err = json.Unmarshal(serialized, row_obj)
+		if err != nil ||
+			row_obj.Stats == nil {
+			continue
+		}
+
+		accessor := row_obj.Accessor
+		if accessor == "" {
+			accessor = "auto"
+		}
+
+		components := append([]string{accessor}, row_obj.Components...)
+
+		// Write missing data from the stats record.
+		stats := row_obj.Stats
+		stats.Timestamp = uint64(ts)
+		stats.ClientId = flow.ClientId
+		stats.FlowId = flow.SessionId
+		stats.TotalRows = stats.EndIdx - stats.StartIdx
+		stats.Artifact = "System.VFS.ListDirectory/Listing"
+
+		db, err := datastore.GetDB(config_obj)
+		if err != nil {
+			return
+		}
+
+		// Write the record in the background
+		client_path_manager := paths.NewClientPathManager(flow.ClientId)
+		_ = db.SetSubjectWithCompletion(config_obj,
+			client_path_manager.VFSPath(components), stats, utils.BackgroundWriter)
+	}
 }
 
 func NewVFSService(
