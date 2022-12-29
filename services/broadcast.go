@@ -57,4 +57,5 @@ type BroadcastService interface {
 	RegisterGenerator(input <-chan *ordereddict.Dict, name string) error
 	Watch(ctx context.Context, name string, options api.QueueOptions) (
 		output <-chan *ordereddict.Dict, cancel func(), err error)
+	WaitForListeners(ctx context.Context, name string, count int64)
 }

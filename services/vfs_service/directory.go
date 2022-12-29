@@ -77,10 +77,17 @@ func renderDBVFS(
 		return result, nil
 	}
 
+	// The artifact that contains the actual data may vary a bit - let
+	// the metadata dictate it.
+	artifact_name := result.Artifact
+	if artifact_name == "" {
+		artifact_name = "System.VFS.ListDirectory"
+	}
+
 	// Open the original flow result set
 	path_manager := artifacts.NewArtifactPathManagerWithMode(
 		config_obj, result.ClientId, result.FlowId,
-		"System.VFS.ListDirectory", paths.MODE_CLIENT)
+		artifact_name, paths.MODE_CLIENT)
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	reader, err := result_sets.NewResultSetReader(
@@ -114,7 +121,7 @@ func renderDBVFS(
 
 		// Only return directories here for the tree widget.
 		mode, ok := row.GetString("Mode")
-		if !ok || mode[0] != 'd' {
+		if !ok || mode == "" || mode[0] != 'd' {
 			continue
 		}
 

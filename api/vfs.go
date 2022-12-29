@@ -168,7 +168,10 @@ func (self *ApiServer) VFSListDirectoryFiles(
 	}
 
 	table_request := proto.Clone(in).(*api_proto.GetTableRequest)
-	table_request.Artifact = "System.VFS.ListDirectory"
+	table_request.Artifact = stat.Artifact
+	if table_request.Artifact == "" {
+		table_request.Artifact = "System.VFS.ListDirectory"
+	}
 
 	// Transform the table into a subsection of the main table.
 	table_request.StartIdx = stat.StartIdx
