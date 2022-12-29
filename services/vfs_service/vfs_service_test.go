@@ -101,7 +101,7 @@ func (self *VFSServiceTestSuite) EmulateCollectionWithVFSLs(
 	assert.NoError(self.T(), err)
 
 	journal.PushRowsToArtifact(self.ConfigObj, rows,
-		artifact+"/List", self.client_id, self.flow_id)
+		artifact+"/Listing", self.client_id, self.flow_id)
 
 	journal.PushRowsToArtifact(self.ConfigObj, stats,
 		artifact+"/Stats", self.client_id, self.flow_id)
@@ -115,7 +115,7 @@ func (self *VFSServiceTestSuite) EmulateCollectionWithVFSLs(
 				ClientId:  self.client_id,
 				SessionId: self.flow_id,
 				ArtifactsWithResults: []string{
-					artifact + "/List",
+					artifact + "/Listing",
 					artifact + "/Stats",
 				},
 				TotalCollectedRows: uint64(len(rows)),
