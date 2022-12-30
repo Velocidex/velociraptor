@@ -35,39 +35,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/responder"
 )
 
-var (
-	Canceller = &canceller{
-		cancelled: make(map[string]bool),
-	}
-)
-
-// Keep track of cancelled flows client side. NOTE We never expire the
-// map of cancelled flows but it is expected to be very uncommon.
-type canceller struct {
-	mu        sync.Mutex
-	cancelled map[string]bool
-}
-
-func (self *canceller) Cancel(flow_id string) {
-	// Some flows are non-cancellable.
-	switch flow_id {
-	case constants.MONITORING_WELL_KNOWN_FLOW:
-		return
-	}
-
-	self.mu.Lock()
-	self.cancelled[flow_id] = true
-	self.mu.Unlock()
-}
-
-func (self *canceller) IsCancelled(flow_id string) bool {
-	self.mu.Lock()
-	_, pres := self.cancelled[flow_id]
-	self.mu.Unlock()
-
-	return pres
-}
-
 type Executor interface {
 	ClientId() string
 
@@ -88,105 +55,19 @@ type Executor interface {
 
 // A concerete implementation of a client executor.
 
-// _FlowContext keeps track of all the queries running as part of a
-// given flow. When the flow is cancelled we cancel all these queries.
-type _FlowContext struct {
-	cancel  func()
-	id      int
-	flow_id string
-}
-
 type ClientExecutor struct {
 	client_id string
 
 	Inbound  chan *crypto_proto.VeloMessage
 	Outbound chan *crypto_proto.VeloMessage
 
-	// Map all the contexts with the flow id.
-	mu         sync.Mutex
 	config_obj *config_proto.Config
-	in_flight  map[string][]*_FlowContext
-	next_id    int
 
 	concurrency *utils.Concurrency
 }
 
 func (self *ClientExecutor) ClientId() string {
 	return self.client_id
-}
-
-func (self *ClientExecutor) Cancel(
-	ctx context.Context, flow_id string, responder *responder.Responder) bool {
-	if Canceller.IsCancelled(flow_id) {
-		return false
-	}
-
-	self.mu.Lock()
-	contexts, ok := self.in_flight[flow_id]
-	if ok {
-		contexts = contexts[:]
-	}
-	self.mu.Unlock()
-
-	if ok {
-		// Cancel all existing queries.
-		Canceller.Cancel(flow_id)
-		for _, flow_ctx := range contexts {
-			flow_ctx.cancel()
-		}
-
-		return true
-	}
-
-	return ok
-}
-
-func (self *ClientExecutor) _FlowContext(flow_id string) (context.Context, *_FlowContext) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	ctx, cancel := context.WithCancel(context.Background())
-
-	result := &_FlowContext{
-		flow_id: flow_id,
-		cancel:  cancel,
-		id:      self.next_id,
-	}
-	self.next_id++
-
-	contexts, ok := self.in_flight[flow_id]
-	if ok {
-		contexts = append(contexts, result)
-	} else {
-		contexts = []*_FlowContext{result}
-	}
-	self.in_flight[flow_id] = contexts
-
-	return ctx, result
-}
-
-// _CloseContext removes the flow_context from the in_flight map.
-// Note: There are multiple queries tied to the same flow id but all
-// of them need to be cancelled when the flow is cancelled.
-func (self *ClientExecutor) _CloseContext(flow_context *_FlowContext) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	contexts, ok := self.in_flight[flow_context.flow_id]
-	if ok {
-		new_context := make([]*_FlowContext, 0, len(contexts))
-		for i := 0; i < len(contexts); i++ {
-			if contexts[i].id != flow_context.id {
-				new_context = append(new_context, contexts[i])
-			}
-		}
-
-		if len(new_context) == 0 {
-			delete(self.in_flight, flow_context.flow_id)
-		} else {
-			self.in_flight[flow_context.flow_id] = new_context
-		}
-	}
 }
 
 // Blocks until a request is received from the server. Called by the
@@ -260,26 +141,26 @@ func (self *ClientExecutor) processRequestPlugin(
 	// Handle the requests. This used to be a plugin registration
 	// process but there are very few plugins any more and so it
 	// is easier to hard code this.
-	responder := responder.NewResponder(config_obj, req, self.Outbound)
+	responder_obj := responder.NewResponder(config_obj, req, self.Outbound)
 
 	if req.VQLClientAction != nil {
 		// Control concurrency on the executor only.
 		if !req.Urgent {
 			cancel, err := self.concurrency.StartConcurrencyControl(ctx)
 			if err != nil {
-				responder.RaiseError(ctx, fmt.Sprintf("%v", err))
+				responder_obj.RaiseError(ctx, fmt.Sprintf("%v", err))
 				return
 			}
 			defer cancel()
 		}
 		actions.VQLClientAction{}.StartQuery(
-			config_obj, ctx, responder, req.VQLClientAction)
+			config_obj, ctx, responder_obj, req.VQLClientAction)
 		return
 	}
 
 	if req.UpdateEventTable != nil {
 		actions.UpdateEventTable{}.Run(
-			config_obj, ctx, responder, req.UpdateEventTable)
+			config_obj, ctx, responder_obj, req.UpdateEventTable)
 		return
 	}
 
@@ -289,8 +170,12 @@ func (self *ClientExecutor) processRequestPlugin(
 	}
 
 	if req.Cancel != nil {
+		flow_manager := responder.GetFlowManager(config_obj)
+
 		// Only log when the flow is not already cancelled.
-		if self.Cancel(ctx, req.SessionId, responder) {
+		if !flow_manager.IsCancelled(req.SessionId) {
+			flow_manager.Cancel(ctx, req.SessionId)
+
 			makeErrorResponse(self.Outbound,
 				req, fmt.Sprintf("Cancelled all inflight queries for flow %v",
 					req.SessionId))
@@ -316,9 +201,8 @@ func NewClientExecutor(
 		client_id:   client_id,
 		Inbound:     make(chan *crypto_proto.VeloMessage, 10),
 		Outbound:    make(chan *crypto_proto.VeloMessage, 10),
-		in_flight:   make(map[string][]*_FlowContext),
-		config_obj:  config_obj,
 		concurrency: utils.NewConcurrencyControl(level, time.Hour),
+		config_obj:  config_obj,
 	}
 
 	// Drain messages from server and execute them, pushing
@@ -354,18 +238,18 @@ func NewClientExecutor(
 				// Ignore unauthenticated messages - the
 				// server should never send us those.
 				if req.AuthState == crypto_proto.VeloMessage_AUTHENTICATED {
-					// Each request has its own context.
-					ctx, flow_context := result._FlowContext(
-						req.SessionId)
-					logger.Debug("Received request: %v", req)
-
 					wg.Add(1)
 					go func() {
 						defer wg.Done()
 
-						result.processRequestPlugin(
-							config_obj, ctx, req)
-						result._CloseContext(flow_context)
+						flow_manager := responder.GetFlowManager(config_obj)
+
+						// Each request has its own context.
+						ctx, closer := flow_manager.NewQueryContext(req.SessionId)
+						logger.Debug("Received request: %v", req)
+						defer closer()
+
+						result.processRequestPlugin(config_obj, ctx, req)
 					}()
 				}
 			}

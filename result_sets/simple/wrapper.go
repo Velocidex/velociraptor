@@ -37,6 +37,10 @@ func (self *ResultSetReaderWrapper) Rows(ctx context.Context) <-chan *ordereddic
 	go func() {
 		defer close(output)
 
+		if self.start_idx == self.end_idx {
+			return
+		}
+
 		subctx, cancel := context.WithCancel(ctx)
 		defer cancel()
 

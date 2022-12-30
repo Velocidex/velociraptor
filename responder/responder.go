@@ -21,11 +21,8 @@ import (
 	"context"
 	"runtime/debug"
 	"sync"
-	"sync/atomic"
 	"time"
 
-	"google.golang.org/protobuf/proto"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -61,6 +58,7 @@ type Responder struct {
 	request *crypto_proto.VeloMessage
 	logger  *logging.LogContext
 
+	// When the query started.
 	start_time int64
 	log_id     int32
 
@@ -71,18 +69,28 @@ type Responder struct {
 	names_with_response []string
 	log_rows            int64
 	result_rows         int64
+
+	// A context that is shared between all queries from the same
+	// collection.
+	flow_context *FlowContext
 }
 
-// NewResponder returns a new Responder.
+// A Responder manages responses for a single query. A collection (or
+// flow) usually contains several queries in different requests so
+// there will be several responders.
 func NewResponder(
 	config_obj *config_proto.Config,
 	request *crypto_proto.VeloMessage,
 	output chan *crypto_proto.VeloMessage) *Responder {
+
+	flow_manager := GetFlowManager(config_obj)
+
 	result := &Responder{
-		request:    request,
-		output:     output,
-		logger:     logging.GetLogger(config_obj, &logging.ClientComponent),
-		start_time: time.Now().UnixNano(),
+		request:      request,
+		output:       output,
+		logger:       logging.GetLogger(config_obj, &logging.ClientComponent),
+		start_time:   time.Now().UnixNano(),
+		flow_context: flow_manager.FlowContext(request.SessionId),
 	}
 
 	if request.VQLClientAction != nil {
@@ -189,68 +197,21 @@ func (self *Responder) Return(ctx context.Context) {
 
 // Send a log message to the server.
 func (self *Responder) Log(ctx context.Context, level string, msg string) {
+	if self.flow_context == nil {
+		self.flow_context = &FlowContext{}
+	}
+
 	self.AddResponse(ctx, &crypto_proto.VeloMessage{
 		RequestId: constants.LOG_SINK,
 		LogMessage: &crypto_proto.LogMessage{
-			Id:        int64(atomic.LoadInt32(&self.log_id)),
+			Id:        self.flow_context.NextLogId(),
 			Message:   msg,
 			Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
 			Artifact:  self.Artifact,
 			Level:     level,
 		}})
-	atomic.AddInt32(&self.log_id, 1)
 }
 
 func (self *Responder) SessionId() string {
 	return self.request.SessionId
-}
-
-// If a message was received from an old client we convert it into the
-// proper form.
-func NormalizeVeloMessageForBackwardCompatibility(msg *crypto_proto.VeloMessage) error {
-	if msg.UpdateEventTable != nil ||
-		msg.VQLClientAction != nil ||
-		msg.Cancel != nil ||
-		msg.UpdateForeman != nil ||
-		msg.Status != nil ||
-		msg.ForemanCheckin != nil ||
-		msg.FileBuffer != nil ||
-		msg.CSR != nil ||
-		msg.VQLResponse != nil ||
-		msg.LogMessage != nil {
-		return nil
-	}
-
-	switch msg.ArgsRdfName {
-	case "":
-		return nil
-
-	// Messages from client to server here.
-	case "GrrStatus":
-		msg.Status = &crypto_proto.VeloStatus{}
-		return proto.Unmarshal(msg.Args, msg.Status)
-
-	case "ForemanCheckin":
-		msg.ForemanCheckin = &actions_proto.ForemanCheckin{}
-		return proto.Unmarshal(msg.Args, msg.ForemanCheckin)
-
-	case "FileBuffer":
-		msg.FileBuffer = &actions_proto.FileBuffer{}
-		return proto.Unmarshal(msg.Args, msg.FileBuffer)
-
-	case "Certificate":
-		msg.CSR = &crypto_proto.Certificate{}
-		return proto.Unmarshal(msg.Args, msg.CSR)
-
-	case "VQLResponse":
-		msg.VQLResponse = &actions_proto.VQLResponse{}
-		return proto.Unmarshal(msg.Args, msg.VQLResponse)
-
-	case "LogMessage":
-		msg.LogMessage = &crypto_proto.LogMessage{}
-		return proto.Unmarshal(msg.Args, msg.LogMessage)
-
-	default:
-		panic("Unable to handle message " + msg.String())
-	}
 }

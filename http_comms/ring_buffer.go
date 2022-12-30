@@ -15,9 +15,9 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -228,10 +228,8 @@ func (self *FileBasedRingBuffer) IsItemBlackListed(item []byte) bool {
 		return false
 	}
 
-	if executor.Canceller != nil {
-		return executor.Canceller.IsCancelled(message.SessionId)
-	}
-	return false
+	return responder.GetFlowManager(self.config_obj).
+		IsCancelled(message.SessionId)
 }
 
 func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
@@ -570,10 +568,8 @@ func (self *RingBuffer) IsItemBlackListed(item []byte) bool {
 		return false
 	}
 
-	if executor.Canceller != nil {
-		return executor.Canceller.IsCancelled(message.SessionId)
-	}
-	return false
+	return responder.GetFlowManager(self.config_obj).
+		IsCancelled(message.SessionId)
 }
 
 // Leases a group of messages for transmission. Will not advance the
