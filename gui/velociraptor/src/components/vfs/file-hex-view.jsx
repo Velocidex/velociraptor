@@ -58,6 +58,10 @@ export default class FileHexView extends React.Component {
         }
 
         let vfs_components = selectedRow.Download && selectedRow.Download.components;
+        if (!vfs_components) {
+            return;
+        }
+
         var chunkSize = this.state.rows * this.state.columns;
         var url = 'v1/DownloadVFSFile';
 

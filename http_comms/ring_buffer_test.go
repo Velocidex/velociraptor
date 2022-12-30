@@ -11,8 +11,8 @@ import (
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/responder"
 )
 
 var (
@@ -330,7 +330,10 @@ func TestRingBufferCancellation(t *testing.T) {
 	ring_buffer.Enqueue([]byte(serialized_message_list))
 
 	// Now cancel this flow ID.
-	executor.Canceller.Cancel(message_list.Job[0].SessionId)
+	config_obj := config.GetDefaultConfig()
+	flow_manager := responder.GetFlowManager(config_obj)
+	flow_manager.Cancel(context.Background(),
+		message_list.Job[0].SessionId)
 
 	// Try to lease the message.
 	ring_buffer = openRB(t, filename)

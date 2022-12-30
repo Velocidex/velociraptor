@@ -404,6 +404,22 @@ class VeloFileList extends Component {
             );
         }
 
+        // directory is empty
+        if (this.props.node.start_idx === this.props.node.end_idx) {
+            return (
+              <div className="fill-parent no-margins selectable col-12">
+                <Navbar className="toolbar">
+                  { toolbar }
+                </Navbar>
+                <div className="fill-parent no-margins toolbar-margin">
+                  <h5 className="no-content">
+                    {T("Directory is empty.")}
+                  </h5>
+                </div>
+              </div>
+            );
+        }
+
         let formatters = {
             "Download": (cell, row) => {
                 let result = [];

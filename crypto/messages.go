@@ -7,7 +7,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -48,13 +47,6 @@ func (self *MessageInfo) IterateJobs(
 			}
 			job.Source = self.Source
 			job.OrgId = self.OrgId
-
-			// For backwards compatibility normalize old
-			// client messages to new format.
-			err = responder.NormalizeVeloMessageForBackwardCompatibility(job)
-			if err != nil {
-				return err
-			}
 
 			processor(ctx, job)
 		}

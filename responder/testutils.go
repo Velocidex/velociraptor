@@ -4,8 +4,9 @@ import crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 
 func TestResponder() *Responder {
 	return &Responder{
-		output:  make(chan *crypto_proto.VeloMessage, 100),
-		request: &crypto_proto.VeloMessage{},
+		output:       make(chan *crypto_proto.VeloMessage, 100),
+		request:      &crypto_proto.VeloMessage{},
+		flow_context: &FlowContext{},
 	}
 }
 
