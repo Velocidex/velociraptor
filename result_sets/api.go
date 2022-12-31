@@ -20,6 +20,11 @@ type ResultSetWriter interface {
 	// Write an already serialized batch of rows. This basically just
 	// appends the data to the output JSONL file so it is very cheap.
 	WriteJSONL(serialized []byte, total_rows uint64)
+
+	// Provide a hint as to the next row id we are writing. This is
+	// only useful for some implementations of result set writers.
+	SetStartRow(start_row int64)
+
 	Write(row *ordereddict.Dict)
 	Flush()
 	Close()

@@ -127,6 +127,7 @@ func (self *ArtifactTestSuite) TestStackOverflow() {
 		actions.VQLClientAction{}.StartQuery(
 			self.ConfigObj, ctx, test_responder, vql_request)
 	}
+	test_responder.Close(self.Ctx)
 
 	assert.Contains(self.T(), getLogMessages(test_responder),
 		"Stack overflow: Artifact2, Artifact1, Artifact2, Artifact1")
@@ -170,7 +171,7 @@ func getLogMessages(r *responder.Responder) string {
 	result := ""
 	for _, msg := range responder.GetTestResponses(r) {
 		if msg.LogMessage != nil {
-			result += msg.LogMessage.Message
+			result += msg.LogMessage.Jsonl
 		}
 	}
 

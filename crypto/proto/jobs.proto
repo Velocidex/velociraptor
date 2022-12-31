@@ -134,7 +134,11 @@ message Certificate {
 };
 
 // This is a status response that is sent for each complete
-// transaction. It is always the last message in the transaction.
+// query. Velociraptor collections consist of multiple queries (for
+// example collecting multiple artifacts or artifacts with multiple
+// sources). Each query request ellicits a status message when
+// finished to indicate the query's success status and send stats
+// about it.
 message VeloStatus {
     // Velociraptor only uses OK and GENERIC_ERROR right now.
     enum ReturnedStatus {
@@ -161,6 +165,9 @@ message VeloStatus {
 
     // How many log rows we generated
     int64 log_rows = 6;
+
+    // How many files were uploaded in this query.
+    int64 uploaded_files = 11;
 
     int64 result_rows = 7;
 
@@ -297,8 +304,22 @@ message ClientCommunication {
 };
 
 message LogMessage {
+    // An incremental ID of the first log message
     int64 id = 5;
 
+    // Total number of rows encoded in the jsonl field.
+    uint64 number_of_rows = 6;
+
+    // A JSONL encoded list of log messages
+    string jsonl = 7;
+
+    // If any of the messages in jsonl are at error level the first is
+    // captured in this string.
+    string error_message = 8;
+
+    // Deprecated: The fields below are used by older clients and can
+    // still be processed by the server but newer clients batch log
+    // messages in the jsonl field above.
     string message = 1 [(sem_type) = {
             description: "The message to send to the server.",
         }];

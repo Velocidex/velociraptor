@@ -235,6 +235,10 @@ message ClientConfig {
     CryptoConfig Crypto = 33;
 
     bool disable_compression = 37;
+
+    // The maximum time in seconds the client will batch log messages
+    // before forwarding them to the server (default 1 second).
+    uint64 default_log_batch_time = 38;
 }
 
 message APIConfig {

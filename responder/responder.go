@@ -60,15 +60,15 @@ type Responder struct {
 
 	// When the query started.
 	start_time int64
-	log_id     int32
 
 	// The name of the query we are currently running.
 	Artifact string
 
 	// Keep track of stats to fill into the Status message
 	names_with_response []string
-	log_rows            int64
-	result_rows         int64
+	log_rows            uint64
+	uploaded_rows       uint64
+	result_rows         uint64
 
 	// A context that is shared between all queries from the same
 	// collection.
@@ -79,6 +79,7 @@ type Responder struct {
 // flow) usually contains several queries in different requests so
 // there will be several responders.
 func NewResponder(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	request *crypto_proto.VeloMessage,
 	output chan *crypto_proto.VeloMessage) *Responder {
@@ -101,7 +102,29 @@ func NewResponder(
 		}
 	}
 
+	go func() {
+		batch_delay := uint64(1)
+		if config_obj.Client != nil &&
+			config_obj.Client.DefaultLogBatchTime > 0 {
+			batch_delay = config_obj.Client.DefaultLogBatchTime
+		}
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(time.Second * time.Duration(batch_delay)):
+				result.flushLogMessages(ctx)
+			}
+		}
+	}()
+
 	return result
+}
+
+// Flush any outstanding responses.
+func (self *Responder) Close(ctx context.Context) {
+	self.flushLogMessages(ctx)
 }
 
 func (self *Responder) Copy() *Responder {
@@ -113,15 +136,31 @@ func (self *Responder) Copy() *Responder {
 	}
 }
 
+// Ensure a valid flow context exists
+func (self *Responder) getFlowContext() *FlowContext {
+	if self.flow_context == nil {
+		self.flow_context = &FlowContext{}
+	}
+	return self.flow_context
+}
+
 func (self *Responder) updateStats(message *crypto_proto.VeloMessage) {
 	if message.LogMessage != nil {
-		self.log_rows++
+		self.log_rows += message.LogMessage.NumberOfRows
+		return
+	}
+
+	if message.FileBuffer != nil {
+		self.uploaded_rows++
+
+		// Tag the message with the next upload id
+		message.FileBuffer.UploadNumber = self.getFlowContext().NextUploadId()
 		return
 	}
 
 	if message.VQLResponse != nil {
-		self.result_rows = int64(message.VQLResponse.QueryStartRow +
-			message.VQLResponse.TotalRows)
+		self.result_rows = message.VQLResponse.QueryStartRow +
+			message.VQLResponse.TotalRows
 
 		if message.VQLResponse.Query != nil && !utils.InString(
 			self.names_with_response, message.VQLResponse.Query.Name) {
@@ -137,8 +176,9 @@ func (self *Responder) getStatus() *crypto_proto.VeloStatus {
 
 	status := &crypto_proto.VeloStatus{
 		NamesWithResponse: self.names_with_response,
-		LogRows:           self.log_rows,
-		ResultRows:        self.result_rows,
+		LogRows:           int64(self.log_rows),
+		UploadedFiles:     int64(self.uploaded_rows),
+		ResultRows:        int64(self.result_rows),
 		Duration:          time.Now().UnixNano() - self.start_time,
 		Artifact:          self.Artifact,
 	}
@@ -197,18 +237,22 @@ func (self *Responder) Return(ctx context.Context) {
 
 // Send a log message to the server.
 func (self *Responder) Log(ctx context.Context, level string, msg string) {
-	if self.flow_context == nil {
-		self.flow_context = &FlowContext{}
+	self.getFlowContext().AddLogMessage(level, msg, self.Artifact)
+}
+
+func (self *Responder) flushLogMessages(ctx context.Context) {
+	buf, id, count, error_message := self.getFlowContext().GetLogMessages()
+	if len(buf) == 0 {
+		return
 	}
 
 	self.AddResponse(ctx, &crypto_proto.VeloMessage{
 		RequestId: constants.LOG_SINK,
 		LogMessage: &crypto_proto.LogMessage{
-			Id:        self.flow_context.NextLogId(),
-			Message:   msg,
-			Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
-			Artifact:  self.Artifact,
-			Level:     level,
+			Id:           int64(id),
+			NumberOfRows: count,
+			Jsonl:        string(buf),
+			ErrorMessage: error_message,
 		}})
 }
 

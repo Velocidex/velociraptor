@@ -2,11 +2,15 @@ package flows
 
 import (
 	"regexp"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
+	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -38,6 +42,76 @@ func getLogErrorRegex(config_obj *config_proto.Config) *regexp.Regexp {
 	}
 
 	return defaultLogErrorRegex
+}
+
+// An optimized method for writing multiple log messages from the
+// collection into the result set. This method avoids the need to
+// parse the messages and reduces the total number of messages sent to
+// the server from the clients.
+func writeLogMessages(
+	config_obj *config_proto.Config,
+	collection_context *CollectionContext,
+	msg *crypto_proto.LogMessage) error {
+
+	flow_path_manager := paths.NewFlowPathManager(
+		collection_context.ClientId,
+		collection_context.SessionId).Log()
+
+	// Append logs to messages from previous packets.
+	file_store_factory := file_store.GetFileStore(config_obj)
+	rs_writer, err := result_sets.NewResultSetWriter(
+		file_store_factory, flow_path_manager,
+		json.NoEncOpts, collection_context.completer.GetCompletionFunc(),
+		false /* truncate */)
+	if err != nil {
+		return err
+	}
+	defer rs_writer.Close()
+
+	rs_writer.SetStartRow(int64(msg.Id))
+
+	// The JSON payload from the client.
+	payload := artifacts.DeobfuscateString(config_obj, msg.Jsonl)
+
+	// Append the current server time to all rows.
+	payload = string(json.AppendJsonlItem([]byte(payload), "_ts",
+		time.Now().UTC().Unix()))
+
+	collection_context.TotalLogs += uint64(msg.NumberOfRows)
+	rs_writer.WriteJSONL([]byte(payload), uint64(msg.NumberOfRows))
+
+	if collection_context.State != flows_proto.
+		ArtifactCollectorContext_ERROR {
+
+		// Client will tag the errored message if the log message was
+		// written with ERROR level.
+		error_message := msg.ErrorMessage
+
+		// One of the messages triggered an error - we need to figure
+		// out which so we parse the JSONL payload to lock in on the
+		// first errored message.
+		if error_message == "" &&
+			getLogErrorRegex(config_obj).FindStringIndex(payload) != nil {
+			for _, line := range strings.Split(payload, "\n") {
+				if getLogErrorRegex(config_obj).FindStringIndex(line) != nil {
+					msg := ordereddict.NewDict()
+					err := json.Unmarshal([]byte(line), msg)
+					if err == nil {
+						error_message, _ = msg.GetString("message")
+					}
+				}
+			}
+		}
+
+		// Does the payload contain errors? Mark the collection as failed.
+		if error_message != "" {
+			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
+			collection_context.Status = error_message
+			collection_context.Dirty = true
+		}
+	}
+
+	return nil
 }
 
 // Flush the logs to disk. During execution the flow collects the logs

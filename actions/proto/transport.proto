@@ -71,6 +71,12 @@ message FileBuffer {
 
     // Set when the actual file is stored somewhere else (e.g. S3)
     string reference = 14;
+
+    // An incrementing number of uploads across the entire
+    // collection. Velociraptor file uploads are stored per collection
+    // and not per query so this number is unique across all the
+    // queries in the collection. It amounts to the row id on the
+    // collections uploads result set.
     int64 upload_number = 15;
 }
 

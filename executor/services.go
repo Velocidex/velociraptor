@@ -23,7 +23,7 @@ func StartEventTableService(
 	logger.Info("<green>Starting</> event query service with version %v.",
 		actions.GlobalEventTableVersion())
 
-	responder := responder.NewResponder(
+	responder := responder.NewResponder(ctx,
 		config_obj, &crypto_proto.VeloMessage{
 			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
 		}, output_chan)

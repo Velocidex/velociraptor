@@ -232,8 +232,13 @@ type FileBuffer struct {
 	Ctime int64  `protobuf:"varint,12,opt,name=ctime,proto3" json:"ctime,omitempty"`
 	Btime int64  `protobuf:"varint,13,opt,name=btime,proto3" json:"btime,omitempty"`
 	// Set when the actual file is stored somewhere else (e.g. S3)
-	Reference    string `protobuf:"bytes,14,opt,name=reference,proto3" json:"reference,omitempty"`
-	UploadNumber int64  `protobuf:"varint,15,opt,name=upload_number,json=uploadNumber,proto3" json:"upload_number,omitempty"`
+	Reference string `protobuf:"bytes,14,opt,name=reference,proto3" json:"reference,omitempty"`
+	// An incrementing number of uploads across the entire
+	// collection. Velociraptor file uploads are stored per collection
+	// and not per query so this number is unique across all the
+	// queries in the collection. It amounts to the row id on the
+	// collections uploads result set.
+	UploadNumber int64 `protobuf:"varint,15,opt,name=upload_number,json=uploadNumber,proto3" json:"upload_number,omitempty"`
 }
 
 func (x *FileBuffer) Reset() {

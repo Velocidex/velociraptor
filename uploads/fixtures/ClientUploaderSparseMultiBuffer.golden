@@ -23,7 +23,8 @@
    "size": 18,
    "stored_size": 12,
    "is_sparse": true,
-   "data": "bGw="
+   "data": "bGw=",
+   "upload_number": 1
   }
  },
  {
@@ -37,7 +38,8 @@
    "size": 18,
    "stored_size": 12,
    "is_sparse": true,
-   "data": "byA="
+   "data": "byA=",
+   "upload_number": 2
   }
  },
  {
@@ -51,7 +53,8 @@
    "size": 18,
    "stored_size": 12,
    "is_sparse": true,
-   "data": "aGU="
+   "data": "aGU=",
+   "upload_number": 3
   }
  },
  {
@@ -65,7 +68,8 @@
    "size": 18,
    "stored_size": 12,
    "is_sparse": true,
-   "data": "bGw="
+   "data": "bGw=",
+   "upload_number": 4
   }
  },
  {
@@ -79,7 +83,8 @@
    "size": 18,
    "stored_size": 12,
    "is_sparse": true,
-   "data": "byA="
+   "data": "byA=",
+   "upload_number": 5
   }
  },
  {
@@ -112,7 +117,8 @@
       "length": 6
      }
     ]
-   }
+   },
+   "upload_number": 6
   }
  }
 ]

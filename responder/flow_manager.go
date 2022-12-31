@@ -4,9 +4,12 @@ import (
 	"context"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/logging"
 )
 
 var (
@@ -30,11 +33,55 @@ type FlowContext struct {
 	// A list of query contexts that make up the flow.
 	queries []*QueryContext
 
-	log_id int32
+	// A counter of uploads sent in the entire collection.
+	upload_id int32
+
+	// A JSONL buffer with log messages collected for the entire flow.
+	mu                sync.Mutex
+	log_messages      []byte
+	log_messages_id   uint64 // The ID of the first row in the log_messages buffer
+	log_message_count uint64
+	error_message     string // If an error occurs trap the error message
 }
 
-func (self *FlowContext) NextLogId() int64 {
-	return int64(atomic.AddInt32(&self.log_id, 1))
+// Drains the error message buffer for transmission
+func (self *FlowContext) GetLogMessages() (
+	buf []byte, start_id uint64, message_count uint64, error_message string) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	buf = self.log_messages
+	message_count = self.log_message_count
+	start_id = self.log_messages_id
+	error_message = self.error_message
+
+	self.log_messages = nil
+	self.log_message_count = 0
+	self.log_messages_id = start_id + message_count
+	self.error_message = ""
+
+	return buf, start_id, message_count, error_message
+}
+
+func (self *FlowContext) AddLogMessage(level string, msg, artifact string) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	// Capture the first message at error level. This allows the
+	// server to skip parsing the jsonl bundle completely.
+	if level == logging.ERROR && self.error_message == "" {
+		self.error_message = msg
+	}
+
+	self.log_message_count++
+	self.log_messages = append(self.log_messages, json.Format(
+		"{\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
+		int(time.Now().Unix()), level, msg)...)
+}
+
+func (self *FlowContext) NextUploadId() int64 {
+	new_id := int64(atomic.AddInt32(&self.upload_id, 1))
+	return new_id - 1
 }
 
 func (self *FlowContext) Queries() []*QueryContext {
