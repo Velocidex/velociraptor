@@ -616,9 +616,16 @@ func appendUploadDataToFile(
 // the message.
 func LogMessage(config_obj *config_proto.Config,
 	collection_context *CollectionContext,
-	msg *crypto_proto.LogMessage) {
+	msg *crypto_proto.LogMessage) error {
 	log_msg := artifacts.DeobfuscateString(config_obj, msg.Message)
 	artifact_name := artifacts.DeobfuscateString(config_obj, msg.Artifact)
+
+	// Newer clients send a combined log JSONL packet which we can
+	// just write at once.
+	if len(msg.Jsonl) > 0 {
+		return writeLogMessages(config_obj, collection_context, msg)
+	}
+
 	collection_context.Logs = append(
 		collection_context.Logs, &crypto_proto.LogMessage{
 			Message:   log_msg,
@@ -627,6 +634,8 @@ func LogMessage(config_obj *config_proto.Config,
 			Timestamp: msg.Timestamp,
 		})
 	collection_context.Dirty = true
+
+	return nil
 }
 
 func Log(config_obj *config_proto.Config,
@@ -739,7 +748,11 @@ func (self *FlowRunner) ProcessSingleMessage(
 	}
 
 	if job.LogMessage != nil {
-		LogMessage(self.config_obj, collection_context, job.LogMessage)
+		err := LogMessage(self.config_obj, collection_context, job.LogMessage)
+		if err != nil {
+			Log(self.config_obj, collection_context,
+				fmt.Sprintf("LogMessage: %v", err))
+		}
 		return
 	}
 

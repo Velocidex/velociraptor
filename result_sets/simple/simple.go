@@ -57,6 +57,9 @@ type ResultSetWriterImpl struct {
 	sync bool
 }
 
+// Noop for file based result set writers.
+func (self *ResultSetWriterImpl) SetStartRow(i int64) {}
+
 func (self *ResultSetWriterImpl) SetSync() {
 	self.mu.Lock()
 	defer self.mu.Unlock()

@@ -29,12 +29,14 @@ func (self *ClientVQLTestSuite) TestCPUThrottler() {
 	// Query is not limited
 	resp := responder.TestResponder()
 	actions.VQLClientAction{}.StartQuery(self.ConfigObj, self.Sm.Ctx, resp, request)
+	resp.Close(self.Ctx)
 	assert.NotContains(self.T(), getLogs(resp), "Will throttle query")
 
 	// Query will now be limited
 	resp = responder.TestResponder()
 	request.CpuLimit = 20
 	actions.VQLClientAction{}.StartQuery(self.ConfigObj, self.Sm.Ctx, resp, request)
+	resp.Close(self.Ctx)
 	assert.Contains(self.T(), getLogs(resp), "Will throttle query")
 }
 
@@ -86,7 +88,7 @@ func getLogs(resp *responder.Responder) string {
 	responses := responder.GetTestResponses(resp)
 	for _, item := range responses {
 		if item.LogMessage != nil {
-			result += item.LogMessage.Message + "\n"
+			result += item.LogMessage.Jsonl + "\n"
 		}
 	}
 

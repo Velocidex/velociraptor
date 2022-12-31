@@ -141,7 +141,8 @@ func (self *ClientExecutor) processRequestPlugin(
 	// Handle the requests. This used to be a plugin registration
 	// process but there are very few plugins any more and so it
 	// is easier to hard code this.
-	responder_obj := responder.NewResponder(config_obj, req, self.Outbound)
+	responder_obj := responder.NewResponder(ctx, config_obj, req, self.Outbound)
+	defer responder_obj.Close(ctx)
 
 	if req.VQLClientAction != nil {
 		// Control concurrency on the executor only.

@@ -318,7 +318,7 @@ func InitializeEventTable(
 	// Create an empty table
 	GlobalEventTable = NewEventTable(
 		config_obj,
-		responder.NewResponder(
+		responder.NewResponder(ctx,
 			config_obj, &crypto_proto.VeloMessage{}, output_chan),
 		&actions_proto.VQLEventTable{})
 

@@ -116,43 +116,44 @@ func (self *ExecutorTestSuite) TestLogMessages() {
 		}
 	}()
 
-	// Send two requests for the same flow in parallel.
+	// Send two requests for the same flow in parallel these should
+	// generate a bunch of log messages.
 	flow_id := fmt.Sprintf("F.XXX%d", utils.GetId())
-	for i := 0; i < 2; i++ {
-		executor.Inbound <- &crypto_proto.VeloMessage{
-			AuthState: crypto_proto.VeloMessage_AUTHENTICATED,
-			SessionId: flow_id,
-			VQLClientAction: &actions_proto.VQLCollectorArgs{
-				Query: []*actions_proto.VQLRequest{
-					{VQL: "SELECT 'a' FROM scope()"},
-				},
+	executor.Inbound <- &crypto_proto.VeloMessage{
+		AuthState: crypto_proto.VeloMessage_AUTHENTICATED,
+		SessionId: flow_id,
+		VQLClientAction: &actions_proto.VQLCollectorArgs{
+			Query: []*actions_proto.VQLRequest{
+				// Log 100 messages
+				{VQL: "SELECT log(message='log %v', args=count()) FROM range(end=10)"},
 			},
-			RequestId: 1}
-	}
+		},
+		RequestId: 1}
 
-	// collect the log messages and ensure the log id is sequential
-	// across all requests.
+	// collect the log messages and ensure they are all batched in one response.
 	log_messages := []*crypto_proto.LogMessage{}
-	log_ids := []int64{}
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
 		mu.Lock()
 		defer mu.Unlock()
 
+		var total_messages uint64
 		log_messages = nil
-		log_ids = nil
-
 		for _, msg := range received_messages {
 			if msg.LogMessage != nil {
 				log_messages = append(log_messages, msg.LogMessage)
-				log_ids = append(log_ids, msg.LogMessage.Id)
+
+				// Each log message should have its Id field the equal
+				// to the next expected row.
+				assert.Equal(self.T(), msg.LogMessage.Id, int64(total_messages))
+				total_messages += msg.LogMessage.NumberOfRows
 			}
 		}
-
-		return len(log_messages) == 6
+		return total_messages > 10
 	})
 
-	assert.Equal(self.T(), []int64{1, 2, 3, 4, 5, 6}, log_ids)
+	// Log messages should be combined into few messages.
+	assert.True(self.T(), len(log_messages) <= 2, "Too many log messages")
 }
 
 func TestExecutorTestSuite(t *testing.T) {
