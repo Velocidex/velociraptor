@@ -29,6 +29,7 @@ import (
 	"github.com/go-errors/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/time/rate"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -150,7 +151,8 @@ func testRingBuffer(
 
 	sender, err := NewSender(
 		config_obj, connector, manager, exe, rb, nil, /* enroller */
-		logger, "Sender", "control", nil, &utils.RealClock{})
+		logger, "Sender", rate.NewLimiter(rate.Inf, 0),
+		"control", nil, &utils.RealClock{})
 	assert.NoError(t, err)
 
 	sender.Start(subctx, wg)

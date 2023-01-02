@@ -37,6 +37,7 @@ import (
 
 	"github.com/go-errors/errors"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/time/rate"
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -553,13 +554,19 @@ type NotificationReader struct {
 	manager    crypto.ICryptoManager
 	executor   executor.Executor
 	enroller   *Enroller
-	handler    string
-	logger     *logging.LogContext
-	name       string
+
+	// The url of the handler on the server (see server/comms.go)
+	// Currently this is "control" for the Sender and "reader" for the
+	// NotificationReader.
+	handler string
+	logger  *logging.LogContext
+	name    string
 
 	minPoll, maxPoll      time.Duration
 	maxPollDev            uint64
 	current_poll_duration time.Duration
+
+	limiter *rate.Limiter
 
 	// Pause the PumpRingBufferToSendMessage loop - stops transmitting
 	// data to the server temporarily. New data will still be queued
@@ -583,6 +590,7 @@ func NewNotificationReader(
 	enroller *Enroller,
 	logger *logging.LogContext,
 	name string,
+	limiter *rate.Limiter,
 	handler string,
 	on_exit func(),
 	clock utils.Clock) *NotificationReader {
@@ -609,6 +617,7 @@ func NewNotificationReader(
 		minPoll:               time.Duration(minPoll) * time.Second,
 		maxPoll:               time.Duration(config_obj.Client.MaxPoll) * time.Second,
 		maxPollDev:            maxPollDev,
+		limiter:               limiter,
 		current_poll_duration: time.Second,
 		on_exit:               on_exit,
 		clock:                 clock,
@@ -693,6 +702,9 @@ func (self *NotificationReader) sendToURL(
 		return err
 	}
 
+	if !urgent {
+		self.limiter.Wait(ctx)
+	}
 	encrypted, err := self.connector.Post(ctx, self.name,
 		self.handler, cipher_text, urgent)
 
@@ -892,12 +904,51 @@ func NewHTTPCommunicator(
 		}
 	}
 
+	// The sender sends messages to the server. We want the sender to
+	// send data as quickly as possible usually.
+	poll_min := 100 * time.Millisecond
+	if config_obj.Client != nil && config_obj.Client.MinPoll > 0 {
+		poll_min = time.Second * time.Duration(config_obj.Client.MinPoll)
+	}
+
+	sender_limiter := rate.NewLimiter(
+		rate.Every(time.Duration(poll_min)), 100)
+
 	sender, err := NewSender(
 		config_obj, connector, manager, executor, rb, enroller,
-		logger, "Sender", "control", child_on_exit, clock)
+		logger, "Sender", sender_limiter,
+
+		// The handler we hit on the server to send responses.
+		"control", child_on_exit, clock)
 	if err != nil {
 		return nil, err
 	}
+
+	// The receiver receives messages from the server.
+
+	// We want the receiver to not poll too frequently to avoid extra
+	// load on the server. Normally, the client stays connected to the
+	// server so it can be tasked immediately. However sometimes if
+	// the client/server connection is interrupted the client will
+	// attempt to reconnect immediately but will then back off to
+	// ensure it does not go into a reconnect loop.
+	poll_max := 60 * time.Second
+	if config_obj.Client != nil && config_obj.Client.MinPoll > 0 {
+		poll_max = time.Second * time.Duration(config_obj.Client.MaxPoll)
+	}
+
+	// In the case of a reconnect loop we do not connect more than
+	// once every poll max but we are allowed to connect sooner at
+	// first.
+	receiver_limiter := rate.NewLimiter(
+		rate.Every(time.Duration(poll_max)), 10)
+
+	receiver := NewNotificationReader(
+		config_obj, connector, manager, executor, enroller,
+		logger, "Receiver "+executor.ClientId(), receiver_limiter,
+
+		// The handler for receiving messages from the server.
+		"reader", child_on_exit, clock)
 
 	result := &HTTPCommunicator{
 		config_obj: config_obj,
@@ -909,13 +960,10 @@ func NewHTTPCommunicator(
 			logger:     logger,
 			clock:      clock,
 		},
-		on_exit: on_exit,
-		sender:  sender,
-		receiver: NewNotificationReader(
-			config_obj, connector, manager, executor, enroller,
-			logger, "Receiver "+executor.ClientId(),
-			"reader", child_on_exit, clock),
-		Manager: manager,
+		on_exit:  on_exit,
+		sender:   sender,
+		receiver: receiver,
+		Manager:  manager,
 	}
 
 	return result, nil

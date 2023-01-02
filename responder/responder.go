@@ -253,6 +253,7 @@ func (self *Responder) flushLogMessages(ctx context.Context) {
 			NumberOfRows: count,
 			Jsonl:        string(buf),
 			ErrorMessage: error_message,
+			Artifact:     self.Artifact,
 		}})
 }
 

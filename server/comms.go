@@ -133,8 +133,17 @@ func PrepareFrontendMux(
 	base := config_obj.Frontend.BasePath
 	router.Handle(base+"/healthz", healthz(server_obj))
 	router.Handle(base+"/server.pem", server_pem(config_obj))
+
+	// DEPRECATED: These are the old handler names - not great
+	// but here for backwards compatibility.
 	router.Handle(base+"/control", RecordHTTPStats(control(config_obj, server_obj)))
 	router.Handle(base+"/reader", RecordHTTPStats(reader(server_obj)))
+
+	// Send a message to the server.
+	router.Handle(base+"/send_messages", RecordHTTPStats(control(config_obj, server_obj)))
+
+	// Receive new messages from the server.
+	router.Handle(base+"/receive_messages", RecordHTTPStats(reader(server_obj)))
 
 	// Publicly accessible part of the filestore. NOTE: this
 	// does not have to be a physical directory - it is served

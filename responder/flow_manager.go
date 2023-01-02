@@ -185,7 +185,12 @@ func (self *FlowManager) NewQueryContext(flow_id string) (
 		flow_context = &FlowContext{}
 	}
 	flow_context.AddQuery(result)
-	self.in_flight[flow_id] = flow_context
+
+	// All Monitoring queries share the same session id, so we create
+	// a different flow context cache for each query.
+	if flow_id != constants.MONITORING_WELL_KNOWN_FLOW {
+		self.in_flight[flow_id] = flow_context
+	}
 
 	return ctx, func() { self.closeContext(result) }
 }

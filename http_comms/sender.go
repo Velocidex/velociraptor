@@ -31,6 +31,7 @@ import (
 	"time"
 
 	"github.com/go-errors/errors"
+	"golang.org/x/time/rate"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
@@ -255,6 +256,7 @@ func NewSender(
 	enroller *Enroller,
 	logger *logging.LogContext,
 	name string,
+	limiter *rate.Limiter,
 	handler string,
 	on_exit func(),
 	clock utils.Clock) (*Sender, error) {
@@ -264,8 +266,10 @@ func NewSender(
 	}
 
 	result := &Sender{
-		NotificationReader: NewNotificationReader(config_obj, connector, manager,
-			executor, enroller, logger, name, handler, on_exit, clock),
+		NotificationReader: NewNotificationReader(
+			config_obj, connector, manager,
+			executor, enroller, logger, name,
+			limiter, handler, on_exit, clock),
 		ring_buffer: ring_buffer,
 
 		// Urgent buffer is an in memory ring buffer to handle

@@ -1,3 +1,10 @@
+/*
+
+Keeps an in memory log of recent queries that can be used for
+debugging the client.
+
+*/
+
 package actions
 
 import (
