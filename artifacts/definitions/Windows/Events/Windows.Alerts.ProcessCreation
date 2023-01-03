@@ -1,0 +1,56 @@
+name: Windows.Alerts.ProcessCreation
+description: |
+  This artifact logs specific process creation events to Velociraptor. It watches the Sysmon ETW provider for new events. It requires Sysmon to be installed on endpoints, you can install it by running a hunt with the artifact 'Windows.Sysinternals.SysmonInstall' (the default Sysmon config will suffice, otherwise make sure it at least logs Sysmon Event ID 1).
+
+author: Jos Clephas - @DfirJos
+
+type: CLIENT_EVENT
+
+parameters:
+  - name: ImageRegex
+    default: .
+  - name: CommandLineRegex
+    default: .
+  - name: ParentImageRegex
+    default: .
+  - name: OriginalFileNameRegex
+    default: .
+  - name: ParentUserRegex
+    default: .
+  - name: UserRegex
+    default: .
+  - name: HashesRegex
+    default: .
+  - name: ParentCommandLineRegex
+    default: .
+  - name: IntegrityLevelRegex
+    default: .
+  - name: ProductRegex
+    default: .
+  - name: CompanyRegex
+    default: .
+  - name: DescriptionRegex
+    default: .
+  - name: FileVersionRegex
+    default: .
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    query: |
+      SELECT *, { SELECT Hostname FROM info() } as Hostname FROM Artifact.Windows.Sysinternals.SysmonLogForward() 
+      WHERE ID = 1 AND 
+        EventData.Image =~ ImageRegex AND
+        EventData.CommandLine =~ CommandLineRegex AND 
+        EventData.ParentImage =~ ParentImageRegex AND
+        EventData.OriginalFileName =~ OriginalFileNameRegex AND
+        EventData.ParentUser =~ ParentUserRegex AND
+        EventData.User =~ UserRegex AND
+        EventData.Hashes =~ HashesRegex AND
+        EventData.ParentCommandLine =~ ParentCommandLineRegex AND
+        EventData.IntegrityLevel =~ IntegrityLevelRegex AND
+        EventData.Product =~ ProductRegex AND
+        EventData.Company =~ CompanyRegex AND
+        EventData.Description =~ DescriptionRegex AND
+        EventData.FileVersion =~ FileVersionRegex
