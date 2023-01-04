@@ -95,6 +95,10 @@ axiosRetry(axios, {
 });
 
 let base_path = window.base_path || "";
+if (base_path === "") {
+  let pname = window.location.pathname;
+  base_path = pname.replace(/\/app.*$/, "");
+}
 
 // In development we only support running from /
 if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
