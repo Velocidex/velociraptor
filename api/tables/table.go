@@ -15,7 +15,7 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package api
+package tables
 
 import (
 	"regexp"
@@ -38,6 +38,54 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
+func GetTable(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	in *api_proto.GetTableRequest) (
+	*api_proto.GetTableResponse, error) {
+
+	var result *api_proto.GetTableResponse
+	var err error
+
+	// We want an event table.
+	if in.Type == "TIMELINE" {
+		result, err = getTimeline(ctx, config_obj, in)
+
+	} else if in.Type == "CLIENT_EVENT_LOGS" || in.Type == "SERVER_EVENT_LOGS" {
+		result, err = getEventTableLogs(ctx, config_obj, in)
+
+	} else if in.Type == "CLIENT_EVENT" || in.Type == "SERVER_EVENT" {
+		result, err = getEventTable(ctx, config_obj, in)
+
+	} else {
+		result, err = getTable(ctx, config_obj, in)
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if in.Artifact != "" {
+		manager, err := services.GetRepositoryManager(config_obj)
+		if err != nil {
+			return nil, err
+		}
+
+		repository, err := manager.GetGlobalRepository(config_obj)
+		if err != nil {
+			return nil, err
+		}
+
+		artifact, pres := repository.Get(config_obj, in.Artifact)
+		if pres {
+			result.ColumnTypes = artifact.ColumnTypes
+		}
+	}
+
+	return result, nil
+
+}
+
 func getTable(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -53,7 +101,7 @@ func getTable(
 		ColumnTypes: getColumnTypes(config_obj, in),
 	}
 
-	path_spec, err := getPathSpec(config_obj, in)
+	path_spec, err := GetPathSpec(config_obj, in)
 	if err != nil {
 		return result, err
 	}
@@ -93,7 +141,7 @@ func getTable(
 		return nil, err
 	}
 
-	opts := getJsonOptsForTimezone(in.Timezone)
+	opts := json.GetJsonOptsForTimezone(in.Timezone)
 
 	// Unpack the rows into the output protobuf
 	for row := range rs_reader.Rows(ctx) {
@@ -164,7 +212,10 @@ func getColumnTypes(
 	return nil
 }
 
-func getPathSpec(
+// Get the relevant pathspec for the table needed. Basically a big
+// switch to figure out where the result set we want to look at is
+// stored.
+func GetPathSpec(
 	config_obj *config_proto.Config,
 	in *api_proto.GetTableRequest) (api.FSPathSpec, error) {
 
@@ -273,7 +324,7 @@ func getEventTableWithPathManager(
 		rs_reader.SetMaxTime(time.Unix(int64(in.EndTime), 0))
 	}
 
-	opts := getJsonOptsForTimezone(in.Timezone)
+	opts := json.GetJsonOptsForTimezone(in.Timezone)
 
 	// Unpack the rows into the output protobuf
 	for row := range rs_reader.Rows(ctx) {
@@ -328,7 +379,7 @@ func getTimeline(
 	}
 
 	rows := uint64(0)
-	opts := getJsonOptsForTimezone(in.Timezone)
+	opts := json.GetJsonOptsForTimezone(in.Timezone)
 	for item := range reader.Read(ctx) {
 		if result.StartTime == 0 {
 			result.StartTime = item.Time.UnixNano()

@@ -183,7 +183,7 @@ func (self *ServerMonitoringTestSuite) TestEmptyTable() {
 name: Sleep
 sources:
 - query: SELECT sleep(time=1000) FROM scope()
-`, true /* validate */, true)
+`, services.ValidateArtifact, services.ArtifactIsBuiltIn)
 	assert.NoError(self.T(), err)
 
 	// Install a table with a sleep artifact.
@@ -298,7 +298,7 @@ sources:
 - query: |
    SELECT copy(accessor='data', filename='hello', dest=Filename)
    FROM scope()
-`, true /* validate */, false /* built in */)
+`, services.ValidateArtifact, !services.ArtifactIsBuiltIn)
 	assert.NoError(self.T(), err)
 
 	// Install a table with an initial artifact

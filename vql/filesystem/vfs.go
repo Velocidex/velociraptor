@@ -6,7 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/services/vfs_service"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -113,7 +113,7 @@ func listDir(
 		case <-ctx.Done():
 			return
 
-		case output_chan <- &vfs_service.VFSListRow{
+		case output_chan <- &services.VFSListRow{
 			FullPath:   f.FullPath(),
 			Components: f.OSPath().Components,
 			Accessor:   accessor_name,
@@ -132,7 +132,7 @@ func listDir(
 	}
 
 	// Send a stats message
-	output_chan <- &vfs_service.VFSListRow{
+	output_chan <- &services.VFSListRow{
 		Components: path.Components,
 		Accessor:   accessor_name,
 		Stats: &api_proto.VFSListResponse{

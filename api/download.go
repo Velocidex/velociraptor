@@ -46,6 +46,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/api/tables"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -53,7 +54,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
-	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
@@ -265,7 +265,7 @@ func getRows(
 		return rs_reader.Rows(ctx), rs_reader.Close, log_path, err
 
 	} else {
-		log_path, err := getPathSpec(config_obj, request)
+		log_path, err := tables.GetPathSpec(config_obj, request)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -411,7 +411,7 @@ func downloadTable() http.Handler {
 			return
 		}
 
-		opts := getJsonOptsForTimezone(request.Timezone)
+		opts := json.GetJsonOptsForTimezone(request.Timezone)
 		switch request.DownloadFormat {
 		case "csv":
 			download_name = strings.TrimSuffix(download_name, ".json")
@@ -462,7 +462,7 @@ func downloadTable() http.Handler {
 			for row := range row_chan {
 				serialized, err := json.MarshalWithOptions(
 					filterColumns(request.Columns, transform(row)),
-					getJsonOptsForTimezone(request.Timezone))
+					json.GetJsonOptsForTimezone(request.Timezone))
 				if err != nil {
 					return
 				}
@@ -551,26 +551,4 @@ func filterColumns(columns []string, row *ordereddict.Dict) *ordereddict.Dict {
 		new_row.Set(column, value)
 	}
 	return new_row
-}
-
-func getJsonOptsForTimezone(timezone string) *json.EncOpts {
-	if timezone == "" {
-		return vjson.NoEncOpts
-	}
-
-	loc := time.UTC
-	if timezone != "" {
-		loc, _ = time.LoadLocation(timezone)
-	}
-
-	return vjson.NewEncOpts().
-		WithCallback(time.Time{},
-			func(v interface{}, opts *json.EncOpts) ([]byte, error) {
-				switch t := v.(type) {
-				case time.Time:
-					return t.In(loc).MarshalJSON()
-				}
-				return nil, json.EncoderCallbackSkip
-			})
-
 }

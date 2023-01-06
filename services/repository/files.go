@@ -88,9 +88,7 @@ func loadRepositoryFromDirectory(
 			}
 
 			artifact_obj, err := global_repository.LoadYaml(
-				string(data),
-				false, /* validate */
-				builtin)
+				string(data), !services.ValidateArtifact, builtin)
 			if err != nil {
 				logger.Info("Unable to load custom "+
 					"artifact %s: %v", path, err)

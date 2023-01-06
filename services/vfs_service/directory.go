@@ -4,7 +4,9 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/api/tables"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -289,5 +291,97 @@ func (self *VFSService) StatDownload(
 		return nil, err
 	}
 
+	return result, nil
+}
+
+func (self *VFSService) ListDirectoryFiles(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	in *api_proto.GetTableRequest) (*api_proto.GetTableResponse, error) {
+
+	stat, err := self.StatDirectory(config_obj, in.ClientId, in.VfsComponents)
+	if err != nil {
+		return nil, err
+	}
+
+	table_request := proto.Clone(in).(*api_proto.GetTableRequest)
+	table_request.Artifact = stat.Artifact
+	if table_request.Artifact == "" {
+		table_request.Artifact = "System.VFS.ListDirectory"
+	}
+
+	// Transform the table into a subsection of the main table.
+	table_request.StartIdx = stat.StartIdx
+	table_request.EndIdx = stat.EndIdx
+
+	// Get the table possibly applying any table transformations.
+	result, err := tables.GetTable(ctx, config_obj, table_request)
+	if err != nil {
+		return nil, err
+	}
+
+	index_of_Name := -1
+	for idx, column_name := range result.Columns {
+		if column_name == "Name" {
+			index_of_Name = idx
+			break
+		}
+	}
+
+	// Should not happen - Name is missing from results.
+	if index_of_Name < 0 {
+		return result, nil
+	}
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	// Now enrich the files with download information.
+	client_path_manager := paths.NewClientPathManager(in.ClientId)
+	download_info_path := client_path_manager.VFSDownloadInfoPath(
+		in.VfsComponents)
+	downloaded_files, _ := db.ListChildren(config_obj, download_info_path)
+
+	// Merge uploaded file info with the VFSListResponse.
+	lookup := make(map[string]bool)
+	for _, filename := range downloaded_files {
+		lookup[filename.Base()] = true
+	}
+
+	for _, row := range result.Rows {
+		if len(row.Cell) <= index_of_Name {
+			continue
+		}
+
+		// Find the Name column entry in each cell.
+		name := row.Cell[index_of_Name]
+
+		// Insert a Download columns in the begining.
+		row.Cell = append([]string{""}, row.Cell...)
+
+		_, pres := lookup[name]
+		if !pres {
+			continue
+		}
+
+		// Make a copy for each path
+		file_components := download_info_path.AddChild(name)
+		download_info := &flows_proto.VFSDownloadInfo{}
+		err := db.GetSubject(config_obj, file_components, download_info)
+		if err == nil {
+			// Support reading older
+			// VFSDownloadInfo protobufs which
+			// only contained the vfs_path and not
+			// the components.
+			if download_info.VfsPath != "" {
+				download_info.Components = utils.SplitComponents(download_info.VfsPath)
+			}
+
+			row.Cell[0] = json.MustMarshalString(download_info)
+		}
+	}
+	result.Columns = append([]string{"Download"}, result.Columns...)
 	return result, nil
 }

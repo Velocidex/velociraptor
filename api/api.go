@@ -45,6 +45,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	"www.velocidex.com/golang/velociraptor/api/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/api/tables"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -636,6 +637,7 @@ func (self *ApiServer) GetTable(
 	in *api_proto.GetTableRequest) (*api_proto.GetTableResponse, error) {
 
 	defer Instrument("GetTable")()
+
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
@@ -650,42 +652,11 @@ func (self *ApiServer) GetTable(
 			"User is not allowed to view results.")
 	}
 
-	var result *api_proto.GetTableResponse
-
-	// We want an event table.
-	if in.Type == "TIMELINE" {
-		result, err = getTimeline(ctx, org_config_obj, in)
-
-	} else if in.Type == "CLIENT_EVENT_LOGS" || in.Type == "SERVER_EVENT_LOGS" {
-		result, err = getEventTableLogs(ctx, org_config_obj, in)
-
-	} else if in.Type == "CLIENT_EVENT" || in.Type == "SERVER_EVENT" {
-		result, err = getEventTable(ctx, org_config_obj, in)
-
-	} else {
-		result, err = getTable(ctx, org_config_obj, in)
-	}
-
+	result, err := tables.GetTable(ctx, org_config_obj, in)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 
-	if in.Artifact != "" {
-		manager, err := services.GetRepositoryManager(org_config_obj)
-		if err != nil {
-			return nil, Status(self.verbose, err)
-		}
-
-		repository, err := manager.GetGlobalRepository(org_config_obj)
-		if err != nil {
-			return nil, Status(self.verbose, err)
-		}
-
-		artifact, pres := repository.Get(org_config_obj, in.Artifact)
-		if pres {
-			result.ColumnTypes = artifact.ColumnTypes
-		}
-	}
 	return result, nil
 }
 

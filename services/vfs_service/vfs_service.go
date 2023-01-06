@@ -353,7 +353,7 @@ func (self *VFSService) ProcessListDirectory(
 	json_chan, _ := reader.JSON(ctx)
 
 	for serialized := range json_chan {
-		row_obj := &VFSListRow{}
+		row_obj := &services.VFSListRow{}
 		err = json.Unmarshal(serialized, row_obj)
 		if err != nil ||
 			row_obj.Stats == nil {
