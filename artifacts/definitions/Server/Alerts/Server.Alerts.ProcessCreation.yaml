@@ -1,6 +1,6 @@
 name: Server.Alerts.ProcessCreation
 description: |
-   This artifact alerts when a process was detected with the artifact 'Windows.Alerts.ProcessCreation' (which is a client_event artifact that needs to be enabled first).
+   This artifact alerts when a process was detected with the artifact 'Windows.Detection.ProcessCreation' (which is a client_event artifact that needs to be enabled first).
 
 author: Jos Clephas - @DfirJos
 
