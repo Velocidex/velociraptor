@@ -1050,7 +1050,8 @@ sources:
 	repository := manager.NewRepository()
 
 	for _, definition := range artifact_definitions {
-		_, err := repository.LoadYaml(definition, true /* validate */, true)
+		_, err := repository.LoadYaml(definition,
+			services.ValidateArtifact, services.ArtifactIsBuiltIn)
 		assert.Error(self.T(), err, "Failed to reject "+definition)
 	}
 
@@ -1078,7 +1079,7 @@ sources:
 	repository := manager.NewRepository()
 
 	for _, definition := range artifact_definitions {
-		_, err := repository.LoadYaml(definition, true /* validate */, true)
+		_, err := repository.LoadYaml(definition, services.ValidateArtifact, services.ArtifactIsBuiltIn)
 		assert.NoError(self.T(), err)
 	}
 

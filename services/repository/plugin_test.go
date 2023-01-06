@@ -52,7 +52,7 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 
 	err = repository.LoadBuiltInArtifacts(
 		self.Ctx, self.ConfigObj, manager.(*repository.RepositoryManager),
-		true /* validate */)
+		services.ValidateArtifact)
 	assert.NoError(self.T(), err)
 
 	ConfigObj := self.ConfigObj
@@ -69,7 +69,7 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 		assert.True(self.T(), pres)
 
 		if artifact != nil && !artifact.IsAlias {
-			_, err = new_repository.LoadProto(artifact, true /* validate */)
+			_, err = new_repository.LoadProto(artifact, services.ValidateArtifact)
 			assert.NoError(self.T(), err, "Error compiling "+artifact_name)
 		}
 	}

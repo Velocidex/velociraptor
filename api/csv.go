@@ -38,7 +38,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
-func getTable(
+func GetTable(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	in *api_proto.GetTableRequest) (

@@ -663,7 +663,7 @@ func (self *ApiServer) GetTable(
 		result, err = getEventTable(ctx, org_config_obj, in)
 
 	} else {
-		result, err = getTable(ctx, org_config_obj, in)
+		result, err = GetTable(ctx, org_config_obj, in)
 	}
 
 	if err != nil {

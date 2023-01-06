@@ -427,7 +427,8 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 			// Assume the built in artifacts are OK so we dont need to
 			// validate them at runtime.
 			err = repository.LoadBuiltInArtifacts(ctx, org_config,
-				repo_manager.(*repository.RepositoryManager), false /* validate */)
+				repo_manager.(*repository.RepositoryManager),
+				!services.ValidateArtifact)
 			if err != nil {
 				return err
 			}

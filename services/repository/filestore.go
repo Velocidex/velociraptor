@@ -64,8 +64,8 @@ func InitializeGlobalRepositoryFromFilestore(
 
 			artifact_obj, err := global_repository.LoadYaml(
 				string(data),
-				false, /* validate */
-				false /* built_in */)
+				!services.ValidateArtifact,
+				!services.ArtifactIsBuiltIn)
 			if err != nil {
 				logger.Info("Unable to load custom "+
 					"artifact %s: %v",

@@ -114,8 +114,7 @@ func (self *Repository) LoadDirectory(
 					return nil
 				}
 				_, err = self.LoadYaml(string(data),
-					false, /* validate */
-					override_builtins)
+					!services.ValidateArtifact, override_builtins)
 				if err != nil {
 					logger.Error("Could not load %s: %s", info.Name(), err)
 					return nil

@@ -28,6 +28,16 @@ type VFSService interface {
 		client_id string,
 		components []string) (*api_proto.VFSListResponse, error)
 
+	// Lists the files in the directory as well. Enriches with
+	// download information for downloaed files. Used by the GUI's VFS
+	// file listing widget. Supports table transformations like
+	// filtering/sorting etc which can be provided with the
+	// GetTableRequest.
+	ListDirectoryFiles(
+		ctx context.Context,
+		config_obj *config_proto.Config,
+		in *api_proto.GetTableRequest) (*api_proto.GetTableResponse, error)
+
 	StatDirectory(
 		config_obj *config_proto.Config,
 		client_id string,
