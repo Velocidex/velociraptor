@@ -5,8 +5,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/proto"
-	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/api/tables"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -315,7 +315,7 @@ func (self *VFSService) ListDirectoryFiles(
 	table_request.EndIdx = stat.EndIdx
 
 	// Get the table possibly applying any table transformations.
-	result, err := api.GetTable(ctx, config_obj, table_request)
+	result, err := tables.GetTable(ctx, config_obj, table_request)
 	if err != nil {
 		return nil, err
 	}
