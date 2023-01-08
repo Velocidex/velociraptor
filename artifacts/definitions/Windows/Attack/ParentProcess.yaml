@@ -33,7 +33,7 @@ parameters:
        cmd.exe,explorer.exe
        powershell.exe,explorer.exe
        iexplore.exe,explorer.exe
-       firefox.exe,explorer.exe
+       firefox.exe,(firefox|explorer).exe
        chrome.exe,(chrome|explorer).exe
 
 sources:
