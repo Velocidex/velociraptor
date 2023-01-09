@@ -470,7 +470,7 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 		}
 
 		// Specifically trap the empty string.
-		if whitespace_regexp.MatchString(query) {
+		if IsEmptyQuery(query) {
 			self.Error("Please specify a query to run")
 			return nil
 		}
@@ -482,74 +482,10 @@ func (self *GuiTemplateEngine) Query(queries ...string) interface{} {
 		}
 
 		for _, vql := range multi_vql {
-			// Replace the previously calculated json file.
-			opts := vql_subsystem.EncOptsFromScope(self.Scope)
-
-			// Ignore LET queries but still run them.
-			if vql.Let != "" {
-				for range vql.Eval(self.ctx, self.Scope) {
-				}
-				continue
-			}
-
-			path := self.path_manager.NewQueryStorage()
-			result = append(result, path)
-
-			file_store_factory := file_store.GetFileStore(self.config_obj)
-			rs_writer, err := result_sets.NewResultSetWriter(
-				file_store_factory, path.Path(),
-				opts, utils.SyncCompleter,
-				result_sets.TruncateMode)
+			result, err = self.RunQuery(vql, result)
 			if err != nil {
 				self.Error("Error: %v\n", err)
 				return nil
-			}
-
-			// We must ensure results are visible immediately because
-			// the GUI will need to refresh the cell content as soon
-			// as we complete.
-			rs_writer.SetSync()
-
-			defer rs_writer.Close()
-
-			rs_writer.Flush()
-
-			row_idx := 0
-			next_progress := time.Now().Add(4 * time.Second)
-			eval_chan := vql.Eval(self.ctx, self.Scope)
-
-			if self.Progress != nil {
-				defer self.Progress.Report("Completed query")
-			}
-
-		do_query:
-			for {
-				select {
-				case <-self.ctx.Done():
-					return result
-
-				case row, ok := <-eval_chan:
-					if !ok {
-						break do_query
-					}
-					row_idx++
-					rs_writer.Write(vfilter.RowToDict(self.ctx, self.Scope, row))
-
-					if self.Progress != nil && (row_idx%100 == 0 ||
-						time.Now().After(next_progress)) {
-						rs_writer.Flush()
-						self.Progress.Report(fmt.Sprintf(
-							"Total Rows %v", row_idx))
-						next_progress = time.Now().Add(4 * time.Second)
-					}
-
-					// Report progress even if no row is emitted
-				case <-time.After(4 * time.Second):
-					rs_writer.Flush()
-					self.Progress.Report(fmt.Sprintf(
-						"Total Rows %v", row_idx))
-					next_progress = time.Now().Add(4 * time.Second)
-				}
 			}
 		}
 	}
@@ -722,4 +658,83 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 	p.AllowAttrs("class").OnElements("a")
 
 	return p
+}
+
+func (self *GuiTemplateEngine) RunQuery(vql *vfilter.VQL,
+	result []*paths.NotebookCellQuery) ([]*paths.NotebookCellQuery, error) {
+	if result == nil {
+		result = []*paths.NotebookCellQuery{}
+	}
+	opts := vql_subsystem.EncOptsFromScope(self.Scope)
+
+	// Ignore LET queries but still run them.
+	if vql.Let != "" {
+		for range vql.Eval(self.ctx, self.Scope) {
+		}
+		return result, nil
+	}
+
+	path := self.path_manager.NewQueryStorage()
+	result = append(result, path)
+
+	file_store_factory := file_store.GetFileStore(self.config_obj)
+	rs_writer, err := result_sets.NewResultSetWriter(
+		file_store_factory, path.Path(),
+		opts, utils.SyncCompleter,
+		result_sets.TruncateMode)
+	if err != nil {
+		self.Error("Error: %v\n", err)
+		return result, nil
+	}
+
+	// We must ensure results are visible immediately because
+	// the GUI will need to refresh the cell content as soon
+	// as we complete.
+	rs_writer.SetSync()
+
+	defer rs_writer.Close()
+
+	rs_writer.Flush()
+
+	row_idx := 0
+	next_progress := time.Now().Add(4 * time.Second)
+	eval_chan := vql.Eval(self.ctx, self.Scope)
+
+	if self.Progress != nil {
+		defer self.Progress.Report("Completed query")
+	}
+
+	for {
+		select {
+		case <-self.ctx.Done():
+			return result, nil
+
+		case row, ok := <-eval_chan:
+			if !ok {
+				return result, nil
+			}
+			row_idx++
+			rs_writer.Write(vfilter.RowToDict(self.ctx, self.Scope, row))
+
+			if self.Progress != nil && (row_idx%100 == 0 ||
+				time.Now().After(next_progress)) {
+				rs_writer.Flush()
+				self.Progress.Report(fmt.Sprintf(
+					"Total Rows %v", row_idx))
+				next_progress = time.Now().Add(4 * time.Second)
+			}
+
+		// Report progress even if no row is emitted
+		case <-time.After(4 * time.Second):
+			rs_writer.Flush()
+			self.Progress.Report(fmt.Sprintf(
+				"Total Rows %v", row_idx))
+			next_progress = time.Now().Add(4 * time.Second)
+
+		}
+	}
+}
+
+func IsEmptyQuery(query string) (bool) {
+    return whitespace_regexp.MatchString(query)
 }

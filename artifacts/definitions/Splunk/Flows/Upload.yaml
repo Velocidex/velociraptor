@@ -53,6 +53,14 @@ parameters:
        As a better alternative to skip_verify, allows root ca certs to
        be added here.
 
+   - name: HostnameField
+     description: Field to extract hostname from
+     default: ClientId
+
+   - name: TimestampField
+     description: Field to extract timestamp from
+     default: timestamp
+
 sources:
   - query: |
         LET completions = SELECT * FROM watch_monitoring(
@@ -83,5 +91,7 @@ sources:
         token = token,
         index = index,
         skip_verify = SkipVerify,
-        root_ca = RootCerts
+        root_ca = RootCerts,
+        hostname_field=HostnameField,
+        timestamp_field=TimestampField
         )
