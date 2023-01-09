@@ -76,7 +76,7 @@ func updateQueryStats(
 // The collection_context contains high level stats that summarise the
 // colletion. We derive this information from the specific results of
 // each query.
-func UpdateFlowStats(collection_context *CollectionContext) {
+func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
 	// Support older colletions which do not have this info
 	if len(collection_context.QueryStats) == 0 {
 		return

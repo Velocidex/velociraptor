@@ -129,7 +129,9 @@ message ArtifactCollectorContext {
     // Last time this collection was active (receiving data).
     uint64 active_time = 17;
 
-    // A total count of files uploaded by this query.
+    // A total count of files uploaded by this query.  This is now
+    // tracked on the client and synced to the server so the server
+    // does not need to keep track of it.
     uint64 total_uploaded_files = 23;
     uint64 total_expected_uploaded_bytes = 25;
     uint64 total_uploaded_bytes = 26;
@@ -143,7 +145,7 @@ message ArtifactCollectorContext {
     uint64 next_response_id = 30;
 
     // Total time the query took to run on the client (reported by the
-    // client).
+    // client's status message at the end of the query).
     int64 execution_duration = 29;
 
     enum State {
@@ -154,8 +156,6 @@ message ArtifactCollectorContext {
 
         FINISHED = 2; // Flow completed normally.
         ERROR = 3;   // Flows which raise are marked as having an error.
-        ARCHIVED = 4;  // Archived flows do not show up in the UI
-        CANCELLED = 5; // Cancelled collection were actively cancelled.
     };
 
     State state = 14;

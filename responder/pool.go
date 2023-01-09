@@ -66,6 +66,7 @@ func (self *PoolEventResponder) RegisterPoolClientResponder(
 
 // Gets a new responder which is feeding the GlobalPoolEventResponder
 func (self *PoolEventResponder) NewResponder(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	req *crypto_proto.VeloMessage) *Responder {
 	// The PoolEventResponder input
@@ -73,6 +74,7 @@ func (self *PoolEventResponder) NewResponder(
 
 	// Prepare a new responder that will feed us.
 	result := &Responder{
+		ctx:     ctx,
 		request: req,
 		output:  in,
 		logger:  logging.GetLogger(config_obj, &logging.ClientComponent),

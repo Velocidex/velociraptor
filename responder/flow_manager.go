@@ -1,15 +1,37 @@
+/*
+  Keep track of queries and flows:
+
+1. A FlowManager is a global service that runs on the client. The
+   FlowManager keeps track of currently running flows.
+
+2. FlowManager.FlowContext() creates a new flow context to manage this
+   session id, or retrieves an existing FlowContext.
+
+3. The FlowContext manages the stats of a flow on the client. A Flow
+   may contain several queries as well as Stats (total rows, total
+   files uploaded etc).
+
+4. A QueryContext is issues for each query within the flow
+   context. The QueryContext contains the cancellable context for the
+   currently running query.
+
+*/
+
 package responder
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -24,14 +46,23 @@ var (
 // at once.
 type QueryContext struct {
 	cancel  func()
-	id      int
+	id      uint64
 	flow_id string
+	req     *crypto_proto.VeloMessage
 }
 
-// Represents a single flow on the client
+// Represents a single flow on the client. Previously flows were
+// tracked on the server but now they are completely tacked on the
+// client, and simply synced to the server. This dramatically reduces
+// the amount of work done on the server.
 type FlowContext struct {
-	// A list of query contexts that make up the flow.
-	queries []*QueryContext
+	ctx    context.Context
+	cancel func()
+
+	flow_id string
+
+	// Query contexts that make up the flow.
+	queries map[uint64]*QueryContext
 
 	// A counter of uploads sent in the entire collection.
 	upload_id int32
@@ -42,6 +73,26 @@ type FlowContext struct {
 	log_messages_id   uint64 // The ID of the first row in the log_messages buffer
 	log_message_count uint64
 	error_message     string // If an error occurs trap the error message
+
+	// Keep stats of the flow.
+	Stats Stats
+}
+
+func NewFlowContext(ctx context.Context, flow_id string) *FlowContext {
+	frequency_sec := uint64(5)
+
+	sub_ctx, cancel := context.WithCancel(ctx)
+
+	return &FlowContext{
+		ctx:     sub_ctx,
+		cancel:  cancel,
+		flow_id: flow_id,
+		queries: make(map[uint64]*QueryContext),
+		Stats: Stats{
+			FlowStats:     &crypto_proto.FlowStats{},
+			frequency_sec: frequency_sec,
+		},
+	}
 }
 
 // Drains the error message buffer for transmission
@@ -84,23 +135,61 @@ func (self *FlowContext) NextUploadId() int64 {
 	return new_id - 1
 }
 
-func (self *FlowContext) Queries() []*QueryContext {
-	return self.queries
-}
+func (self *FlowContext) NewQueryContext(
+	responder *Responder, req *crypto_proto.VeloMessage) (
+	ctx context.Context, closer func()) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
-func (self *FlowContext) AddQuery(ctx *QueryContext) {
-	self.queries = append(self.queries, ctx)
-}
+	// Cancellable context for the query
+	ctx, cancel := context.WithCancel(self.ctx)
 
-func (self *FlowContext) RemoveQuery(ctx *QueryContext) {
-	new_context := make([]*QueryContext, 0, len(self.queries))
-	for _, q := range self.queries {
-		if q.id != ctx.id {
-			new_context = append(new_context, q)
-		}
+	result := &QueryContext{
+		flow_id: self.flow_id,
+		cancel:  cancel,
+		req:     req,
+		id:      utils.GetId(),
 	}
 
-	self.queries = new_context
+	self.queries[result.id] = result
+
+	return ctx, func() {
+		cancel()
+
+		self.mu.Lock()
+		delete(self.queries, result.id)
+		remaining_queries := len(self.queries)
+		self.mu.Unlock()
+
+		// When there are no more outstanding queries, send the final
+		// response.
+		if remaining_queries == 0 {
+			// Flush any waiting logs now
+			buf, id, count, error_message := self.GetLogMessages()
+			if len(buf) > 0 {
+				fmt.Printf("Sending %v log messages\n", count)
+				responder.AddResponse(&crypto_proto.VeloMessage{
+					RequestId: constants.LOG_SINK,
+					LogMessage: &crypto_proto.LogMessage{
+						Id:           int64(id),
+						NumberOfRows: count,
+						Jsonl:        string(buf),
+						ErrorMessage: error_message,
+					}})
+			}
+
+			// Send the stats one last time.
+			stats := self.Stats.GetStats()
+			stats.FlowComplete = true
+
+			if stats != nil {
+				responder.AddResponse(&crypto_proto.VeloMessage{
+					RequestId: constants.STATS_SINK,
+					FlowStats: stats,
+				})
+			}
+		}
+	}
 }
 
 // A Flow Manager runs on the client and keeps track of all flows that
@@ -110,6 +199,7 @@ func (self *FlowContext) RemoveQuery(ctx *QueryContext) {
 type FlowManager struct {
 	mu sync.Mutex
 
+	ctx        context.Context
 	config_obj *config_proto.Config
 	in_flight  map[string]*FlowContext
 	next_id    int
@@ -117,8 +207,15 @@ type FlowManager struct {
 	cancelled map[string]bool
 }
 
-func NewFlowManager(config_obj *config_proto.Config) *FlowManager {
+func NewFlowManager(
+	ctx context.Context, config_obj *config_proto.Config) *FlowManager {
+
+	if utils.IsNil(ctx) {
+		panic(ctx)
+	}
+
 	return &FlowManager{
+		ctx:        ctx,
 		config_obj: config_obj,
 		in_flight:  make(map[string]*FlowContext),
 		cancelled:  make(map[string]bool),
@@ -158,83 +255,33 @@ func (self *FlowManager) Cancel(ctx context.Context, flow_id string) {
 	delete(self.in_flight, flow_id)
 	self.mu.Unlock()
 
-	// Cancel all existing queries.
-	for _, query_ctx := range flow_context.Queries() {
-		query_ctx.cancel()
-	}
+	flow_context.cancel()
 }
 
-// Track a flow and return a new context. The context can be used to
-// start the query which can be cancelled if the flow is cancelled.
-func (self *FlowManager) NewQueryContext(flow_id string) (
-	ctx context.Context, closer func()) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
+func (self *FlowManager) FlowContext(
+	request *crypto_proto.VeloMessage) *FlowContext {
 
-	ctx, cancel := context.WithCancel(context.Background())
+	flow_id := request.SessionId
 
-	result := &QueryContext{
-		flow_id: flow_id,
-		cancel:  cancel,
-		id:      self.next_id,
-	}
-	self.next_id++
-
-	flow_context, ok := self.in_flight[flow_id]
-	if !ok {
-		flow_context = &FlowContext{}
-	}
-	flow_context.AddQuery(result)
-
-	// All Monitoring queries share the same session id, so we create
-	// a different flow context cache for each query.
-	if flow_id != constants.MONITORING_WELL_KNOWN_FLOW {
-		self.in_flight[flow_id] = flow_context
-	}
-
-	return ctx, func() { self.closeContext(result) }
-}
-
-func (self *FlowManager) FlowContext(flow_id string) *FlowContext {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	flow_context, ok := self.in_flight[flow_id]
 	if !ok {
-		flow_context = &FlowContext{}
+		flow_context = NewFlowContext(self.ctx, flow_id)
 		self.in_flight[flow_id] = flow_context
 	}
 
 	return flow_context
 }
 
-// _CloseContext removes the flow_context from the in_flight map.
-// Note: There are multiple queries tied to the same flow id but all
-// of them need to be cancelled when the flow is cancelled.
-func (self *FlowManager) closeContext(query_context *QueryContext) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	// Scan through all related query contexts (for the same flow) and
-	// remove this specific one.
-	flow_id := query_context.flow_id
-
-	flow_context, ok := self.in_flight[flow_id]
-	if ok {
-		flow_context.RemoveQuery(query_context)
-
-		if len(flow_context.Queries()) == 0 {
-			delete(self.in_flight, flow_id)
-		}
-	}
-}
-
-func GetFlowManager(config_obj *config_proto.Config) *FlowManager {
+func GetFlowManager(
+	ctx context.Context, config_obj *config_proto.Config) *FlowManager {
 	mu.Lock()
 	defer mu.Unlock()
 
 	if _FlowManagerService == nil {
-		_FlowManagerService = NewFlowManager(config_obj)
+		_FlowManagerService = NewFlowManager(ctx, config_obj)
 	}
 
 	return _FlowManagerService

@@ -28,8 +28,8 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -91,18 +91,9 @@ func (self *Launcher) GetFlows(
 			continue
 		}
 
-		collection_context := &flows_proto.ArtifactCollectorContext{}
-		err := db.GetSubject(config_obj, urn, collection_context)
-		if err != nil || collection_context.SessionId == "" {
-			logging.GetLogger(
-				config_obj, &logging.FrontendComponent).
-				Error("Unable to open collection: %v", err)
-			continue
-		}
-
-		if !include_archived &&
-			collection_context.State ==
-				flows_proto.ArtifactCollectorContext_ARCHIVED {
+		collection_context, err := LoadCollectionContext(
+			config_obj, client_id, urn.Base())
+		if err != nil {
 			continue
 		}
 
@@ -129,18 +120,6 @@ func (self *Launcher) GetFlowDetails(
 	collection_context, err := LoadCollectionContext(config_obj, client_id, flow_id)
 	if err != nil {
 		return nil, err
-	}
-
-	ping := &flows_proto.PingContext{}
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	err = db.GetSubject(config_obj, flow_path_manager.Ping(), ping)
-	if err == nil && ping.ActiveTime > collection_context.ActiveTime {
-		collection_context.ActiveTime = ping.ActiveTime
 	}
 
 	availableDownloads, _ := availableDownloadFiles(config_obj, client_id, flow_id)
@@ -182,6 +161,46 @@ func LoadCollectionContext(
 	if collection_context.SessionId == "" {
 		return nil, errors.New("Unknown flow " + client_id + " " + flow_id)
 	}
+
+	// Try to open the stats context
+	stats_context := &flows_proto.ArtifactCollectorContext{}
+	err = db.GetSubject(
+		config_obj, flow_path_manager.Stats(), stats_context)
+	if err != nil {
+		flows.UpdateFlowStats(collection_context)
+		return collection_context, nil
+	}
+
+	// Copy relevant fields into the main context
+	if stats_context.TotalUploadedFiles > 0 {
+		collection_context.TotalUploadedFiles = stats_context.TotalUploadedFiles
+	}
+
+	if stats_context.TotalExpectedUploadedBytes > 0 {
+		collection_context.TotalExpectedUploadedBytes = stats_context.TotalExpectedUploadedBytes
+	}
+
+	if stats_context.TotalUploadedBytes > 0 {
+		collection_context.TotalUploadedBytes = stats_context.TotalUploadedBytes
+	}
+
+	if stats_context.TotalCollectedRows > 0 {
+		collection_context.TotalCollectedRows = stats_context.TotalCollectedRows
+	}
+
+	if stats_context.TotalLogs > 0 {
+		collection_context.TotalLogs = stats_context.TotalLogs
+	}
+
+	if stats_context.ActiveTime > 0 {
+		collection_context.ActiveTime = stats_context.ActiveTime
+	}
+
+	if len(stats_context.QueryStats) > 0 {
+		collection_context.QueryStats = stats_context.QueryStats
+	}
+
+	flows.UpdateFlowStats(collection_context)
 
 	return collection_context, nil
 }

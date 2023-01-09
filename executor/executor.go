@@ -142,7 +142,14 @@ func (self *ClientExecutor) processRequestPlugin(
 	// process but there are very few plugins any more and so it
 	// is easier to hard code this.
 	responder_obj := responder.NewResponder(ctx, config_obj, req, self.Outbound)
-	defer responder_obj.Close(ctx)
+	defer responder_obj.Close()
+
+	flow_manager := responder.GetFlowManager(ctx, config_obj)
+
+	// Each request has its own context.
+	ctx, closer := flow_manager.FlowContext(req).NewQueryContext(
+		responder_obj, req)
+	defer closer()
 
 	if req.VQLClientAction != nil {
 		// Control concurrency on the executor only.
@@ -171,7 +178,7 @@ func (self *ClientExecutor) processRequestPlugin(
 	}
 
 	if req.Cancel != nil {
-		flow_manager := responder.GetFlowManager(config_obj)
+		flow_manager := responder.GetFlowManager(ctx, config_obj)
 
 		// Only log when the flow is not already cancelled.
 		if !flow_manager.IsCancelled(req.SessionId) {
@@ -243,13 +250,7 @@ func NewClientExecutor(
 					go func() {
 						defer wg.Done()
 
-						flow_manager := responder.GetFlowManager(config_obj)
-
-						// Each request has its own context.
-						ctx, closer := flow_manager.NewQueryContext(req.SessionId)
 						logger.Debug("Received request: %v", req)
-						defer closer()
-
 						result.processRequestPlugin(config_obj, ctx, req)
 					}()
 				}

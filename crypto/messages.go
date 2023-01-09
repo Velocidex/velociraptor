@@ -12,6 +12,11 @@ import (
 
 // Once a message is decoded the MessageInfo contains metadata about it.
 type MessageInfo struct {
+	// Communication version:
+	// 3 - All versions until 0.6.8
+	// 4 - Release 0.6.8
+	Version uint32
+
 	// The compressed MessageList protobufs sent in each POST.
 	RawCompressed [][]byte
 	Authenticated bool

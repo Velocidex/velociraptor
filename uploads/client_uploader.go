@@ -105,7 +105,7 @@ func (self *VelociraptorUploader) Upload(
 
 		default:
 			// Send the packet to the server.
-			self.Responder.AddResponse(ctx, &crypto_proto.VeloMessage{
+			self.Responder.AddResponse(&crypto_proto.VeloMessage{
 				RequestId:  constants.TransferWellKnownFlowId,
 				FileBuffer: packet})
 		}
@@ -207,7 +207,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 			index = nil
 		}
 
-		self.Responder.AddResponse(ctx, &crypto_proto.VeloMessage{
+		self.Responder.AddResponse(&crypto_proto.VeloMessage{
 			RequestId: constants.TransferWellKnownFlowId,
 			FileBuffer: &actions_proto.FileBuffer{
 				Pathspec: &actions_proto.PathSpec{
@@ -296,7 +296,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 
 			default:
 				// Send the packet to the server.
-				self.Responder.AddResponse(ctx, &crypto_proto.VeloMessage{
+				self.Responder.AddResponse(&crypto_proto.VeloMessage{
 					RequestId:  constants.TransferWellKnownFlowId,
 					FileBuffer: packet})
 			}
@@ -315,7 +315,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 	// Send an EOF as the last packet with no data. If the file
 	// was sparse, also include the index in this packet. NOTE:
 	// There should be only one EOF packet.
-	self.Responder.AddResponse(ctx, &crypto_proto.VeloMessage{
+	self.Responder.AddResponse(&crypto_proto.VeloMessage{
 		RequestId: constants.TransferWellKnownFlowId,
 		FileBuffer: &actions_proto.FileBuffer{
 			Pathspec: &actions_proto.PathSpec{

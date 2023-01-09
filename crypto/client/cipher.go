@@ -11,6 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	"google.golang.org/protobuf/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 
@@ -59,7 +60,7 @@ func (self *_Cipher) ClientCommunication() *crypto_proto.ClientCommunication {
 		EncryptedCipher:         self.encrypted_cipher,
 		EncryptedCipherMetadata: self.encrypted_cipher_metadata,
 		PacketIv:                make([]byte, self.key_size/8),
-		ApiVersion:              3,
+		ApiVersion:              constants.CLIENT_API_VERSION,
 	}
 }
 

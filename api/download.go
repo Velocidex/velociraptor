@@ -105,7 +105,7 @@ func vfsFileDownloadHandler() http.Handler {
 		decoder := schema.NewDecoder()
 		err := decoder.Decode(&request, r.URL.Query())
 		if err != nil {
-			returnError(w, 404, err.Error())
+			returnError(w, 200, "Ok")
 			return
 		}
 

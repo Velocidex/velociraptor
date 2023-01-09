@@ -127,6 +127,7 @@ message VQLResponse {
             description: "Large VQL responses are split across many parts. "
             "This carries the part of this response.",
         }];
+
     VQLRequest Query = 3 [(sem_type) = {
             description: "The query that was executed.",
         }];
@@ -139,6 +140,10 @@ message VQLResponse {
     uint64 total_rows = 7[(sem_type) = {
             description: "Total number of rows in this response part."
         }];
+
+    // If this is set, stats will be sent separately and so the server
+    // does not need to update the flows stats from this response.
+    bool stats_will_be_sent = 13;
 
     // Row count where query started.
     uint64 query_start_row = 11;

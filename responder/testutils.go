@@ -1,9 +1,14 @@
 package responder
 
-import crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+import (
+	"context"
+
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+)
 
 func TestResponder() *Responder {
 	return &Responder{
+		ctx:          context.Background(),
 		output:       make(chan *crypto_proto.VeloMessage, 100),
 		request:      &crypto_proto.VeloMessage{},
 		flow_context: &FlowContext{},

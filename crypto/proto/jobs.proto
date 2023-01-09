@@ -11,7 +11,6 @@ package proto;
 option go_package = "www.velocidex.com/golang/velociraptor/crypto/proto";
 
 // This message is sent between the client and the server.
-// Next field: 24
 message VeloMessage {
   string session_id = 1 [(sem_type) = {
       description: "The session id of the flow that this message belongs to."
@@ -36,15 +35,14 @@ message VeloMessage {
   // The source of this message. Note that clients may group together
   // many messages from the same source. The authenticity of the
   // source is cryptographically determined by the CipherMetadata but
-  // the source is also copied down to each job by the server after
-  // verification. This means that we ignore what the client actually
-  // stores in this field and override it from the
+  // the source is also copied down to each message by the server
+  // after verification. This means that we ignore what the client
+  // actually stores in this field and override it from the
   // CipherMetadata.Source field.
-  string source = 6  [(sem_type) = {
-      description: "Client name where the message came from "
-      "(Filled in by the frontend)."
-    }];
+  string source = 6;
 
+  // The Org this client belongs to - set by the frontend from
+  // information gathered by the encryption envelope
   string org_id = 40;
 
   // A Flag to indicate if the message is authenticated. Note that the client
@@ -52,16 +50,13 @@ message VeloMessage {
   // as such. The message is then passed down the chain of components carrying
   // this tag.
 
-  // This is done because signing is done on a group of messages as they arrive
-  // over the POST, but after decryption and unpacking, messages are queued
-  // individually and therefore need to retain their authenticated status.
+  // This is done because signing is done on a group of messages as
+  // they arrive over the POST transaction, but after decryption and
+  // unpacking, messages are processed individually and therefore need
+  // to retain their authenticated status.
   enum AuthorizationState {
     UNAUTHENTICATED = 0;
     AUTHENTICATED = 1;
-
-    // This indicates that clocks are out of sync and this message may be a
-    // replay.
-    DESYNCHRONIZED = 2;
   };
 
   AuthorizationState auth_state = 7;
@@ -72,6 +67,7 @@ message VeloMessage {
 
   // Generally only one of the following will be set.
   // Client to server:
+  FlowStats flow_stats = 41;
   VeloStatus status = 25;
   ForemanCheckin ForemanCheckin = 27;  // Upon initial connection.
   FileBuffer FileBuffer = 28;  // For uploads.
@@ -88,7 +84,6 @@ message VeloMessage {
 
   // Immediately kill the client and reset all buffers.
   Cancel  KillKillKill = 38;
-
 
   // DEPRECATED: The following fields were used as part of the old
   // VeloMessage communication protocol. These fields were replaced
@@ -132,6 +127,25 @@ message Certificate {
   bytes pem = 2;
   string cn = 3;
 };
+
+// A periodic message sent from the client to the server to update the
+// server about the flow progress.
+message FlowStats {
+    uint64 total_uploaded_files = 1;
+    uint64 total_expected_uploaded_bytes = 2;
+    uint64 total_uploaded_bytes = 3;
+    uint64 total_collected_rows = 4;
+    uint64 total_logs = 5;
+
+    uint64 timestamp = 6;
+
+    repeated VeloStatus query_status = 7;
+
+    // When this is true, the flow is considered complete. It is
+    // guaranteed to only fire once.
+    bool flow_complete = 8;
+}
+
 
 // This is a status response that is sent for each complete
 // query. Velociraptor collections consist of multiple queries (for
@@ -286,6 +300,9 @@ message ClientCommunication {
   };
   Status status = 5;
 
+  // Communication version:
+  // 3 - All versions before release 0.6.8
+  // 4 - Release 0.6.8
   uint32 api_version = 6;
 
   // This is the FULL_HMAC. It covers:
