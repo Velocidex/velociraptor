@@ -1,5 +1,6 @@
 [
  {
+  "session_id": "F.Test",
   "request_id": 5,
   "FileBuffer": {
    "pathspec": {
@@ -13,6 +14,7 @@
   }
  },
  {
+  "session_id": "F.Test",
   "request_id": 5,
   "FileBuffer": {
    "pathspec": {
@@ -28,6 +30,7 @@
   }
  },
  {
+  "session_id": "F.Test",
   "request_id": 5,
   "FileBuffer": {
    "pathspec": {

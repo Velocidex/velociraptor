@@ -44,6 +44,7 @@ import (
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/launcher"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -465,7 +466,7 @@ func CheckForStatus(
 	// Update our record of all the status messages from this
 	// collection.
 	updateQueryStats(config_obj, collection_context, message.Status)
-	UpdateFlowStats(&collection_context.ArtifactCollectorContext)
+	launcher.UpdateFlowStats(&collection_context.ArtifactCollectorContext)
 
 	// Update the active time for each response.
 	collection_context.ActiveTime = uint64(time.Now().UnixNano() / 1000)

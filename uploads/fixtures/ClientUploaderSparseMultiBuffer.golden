@@ -1,5 +1,6 @@
 [
  {
+  "session_id": "F.Test",
   "request_id": 5,
   "FileBuffer": {
    "pathspec": {
@@ -9,10 +10,12 @@
    "size": 18,
    "stored_size": 12,
    "is_sparse": true,
-   "data": "SGU="
+   "data": "SGU=",
+   "upload_number": 4
   }
  },
  {
+  "session_id": "F.Test",
   "request_id": 5,
   "FileBuffer": {
    "pathspec": {
@@ -24,10 +27,11 @@
    "stored_size": 12,
    "is_sparse": true,
    "data": "bGw=",
-   "upload_number": 1
+   "upload_number": 11
   }
  },
  {
+  "session_id": "F.Test",
   "request_id": 5,
   "FileBuffer": {
    "pathspec": {
@@ -39,10 +43,11 @@
    "stored_size": 12,
    "is_sparse": true,
    "data": "byA=",
-   "upload_number": 2
+   "upload_number": 12
   }
  },
  {
+  "session_id": "F.Test",
   "request_id": 5,
   "FileBuffer": {
    "pathspec": {
@@ -54,10 +59,11 @@
    "stored_size": 12,
    "is_sparse": true,
    "data": "aGU=",
-   "upload_number": 3
+   "upload_number": 13
   }
  },
  {
+  "session_id": "F.Test",
   "request_id": 5,
   "FileBuffer": {
    "pathspec": {
@@ -69,10 +75,11 @@
    "stored_size": 12,
    "is_sparse": true,
    "data": "bGw=",
-   "upload_number": 4
+   "upload_number": 14
   }
  },
  {
+  "session_id": "F.Test",
   "request_id": 5,
   "FileBuffer": {
    "pathspec": {
@@ -84,10 +91,11 @@
    "stored_size": 12,
    "is_sparse": true,
    "data": "byA=",
-   "upload_number": 5
+   "upload_number": 15
   }
  },
  {
+  "session_id": "F.Test",
   "request_id": 5,
   "FileBuffer": {
    "pathspec": {
@@ -118,7 +126,7 @@
      }
     ]
    },
-   "upload_number": 6
+   "upload_number": 16
   }
  }
 ]

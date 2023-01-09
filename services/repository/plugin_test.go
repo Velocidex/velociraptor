@@ -200,7 +200,7 @@ func (self *PluginTestSuite) TestClientPluginMultipleSources() {
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
-	test_responder := responder.TestResponder()
+	test_responder := responder.TestResponder(self.ConfigObj)
 	for _, vql_request := range compiled {
 		actions.VQLClientAction{}.StartQuery(
 			self.ConfigObj, self.Ctx, test_responder, vql_request)

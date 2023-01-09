@@ -76,10 +76,15 @@ type FlowContext struct {
 
 	// Keep stats of the flow.
 	Stats Stats
+
+	owner *FlowManager
 }
 
-func NewFlowContext(ctx context.Context, flow_id string) *FlowContext {
+func NewFlowContext(ctx context.Context,
+	flow_id string, owner *FlowManager) *FlowContext {
 	frequency_sec := uint64(5)
+
+	now := uint64(time.Now().Unix())
 
 	sub_ctx, cancel := context.WithCancel(ctx)
 
@@ -89,9 +94,12 @@ func NewFlowContext(ctx context.Context, flow_id string) *FlowContext {
 		flow_id: flow_id,
 		queries: make(map[uint64]*QueryContext),
 		Stats: Stats{
-			FlowStats:     &crypto_proto.FlowStats{},
+			FlowStats: &crypto_proto.FlowStats{
+				Timestamp: now,
+			},
 			frequency_sec: frequency_sec,
 		},
+		owner: owner,
 	}
 }
 
@@ -142,7 +150,7 @@ func (self *FlowContext) NewQueryContext(
 	defer self.mu.Unlock()
 
 	// Cancellable context for the query
-	ctx, cancel := context.WithCancel(self.ctx)
+	ctx, cancel := context.WithCancel(context.Background())
 
 	result := &QueryContext{
 		flow_id: self.flow_id,
@@ -179,15 +187,8 @@ func (self *FlowContext) NewQueryContext(
 			}
 
 			// Send the stats one last time.
-			stats := self.Stats.GetStats()
-			stats.FlowComplete = true
-
-			if stats != nil {
-				responder.AddResponse(&crypto_proto.VeloMessage{
-					RequestId: constants.STATS_SINK,
-					FlowStats: stats,
-				})
-			}
+			self.Stats.SendFinalFlowStats(responder)
+			self.owner.Remove(self.flow_id)
 		}
 	}
 }
@@ -229,6 +230,13 @@ func (self *FlowManager) IsCancelled(flow_id string) bool {
 	return ok
 }
 
+func (self *FlowManager) Remove(flow_id string) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	delete(self.in_flight, flow_id)
+}
+
 func (self *FlowManager) Cancel(ctx context.Context, flow_id string) {
 
 	// Some flows are non-cancellable.
@@ -251,8 +259,6 @@ func (self *FlowManager) Cancel(ctx context.Context, flow_id string) {
 		self.mu.Unlock()
 		return
 	}
-
-	delete(self.in_flight, flow_id)
 	self.mu.Unlock()
 
 	flow_context.cancel()
@@ -268,7 +274,7 @@ func (self *FlowManager) FlowContext(
 
 	flow_context, ok := self.in_flight[flow_id]
 	if !ok {
-		flow_context = NewFlowContext(self.ctx, flow_id)
+		flow_context = NewFlowContext(self.ctx, flow_id, self)
 		self.in_flight[flow_id] = flow_context
 	}
 

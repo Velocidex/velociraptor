@@ -30,7 +30,7 @@
  {
   "type": "CollectionContext",
   "data": {
-   "VFSPath": "ds:/clients/C.123/collections/F.1234.db"
+   "VFSPath": "ds:/clients/C.123/collections/F.1234.json.db"
   },
   "error": ""
  },

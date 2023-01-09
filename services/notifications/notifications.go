@@ -268,6 +268,8 @@ func (self *Notifier) NotifyListener(config_obj *config_proto.Config,
 }
 
 func (self *Notifier) NotifyDirectListener(client_id string) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	if self.notification_pool != nil &&
 		self.notification_pool.IsClientConnected(client_id) {

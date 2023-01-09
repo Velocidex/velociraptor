@@ -72,6 +72,9 @@ func (self *ExecutorTestSuite) TestCancellation() {
 		mu.Lock()
 		defer mu.Unlock()
 
+		utils.Debug(received_messages)
+		utils.Debug(len(received_messages))
+
 		return len(received_messages) == 2
 	})
 
@@ -139,6 +142,7 @@ func (self *ExecutorTestSuite) TestLogMessages() {
 
 		var total_messages uint64
 		log_messages = nil
+
 		for _, msg := range received_messages {
 			if msg.LogMessage != nil {
 				log_messages = append(log_messages, msg.LogMessage)
@@ -149,6 +153,7 @@ func (self *ExecutorTestSuite) TestLogMessages() {
 				total_messages += msg.LogMessage.NumberOfRows
 			}
 		}
+
 		return total_messages > 10
 	})
 

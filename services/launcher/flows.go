@@ -28,11 +28,11 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Filter will be applied on flows to remove those we dont care about.
@@ -167,7 +167,7 @@ func LoadCollectionContext(
 	err = db.GetSubject(
 		config_obj, flow_path_manager.Stats(), stats_context)
 	if err != nil {
-		flows.UpdateFlowStats(collection_context)
+		UpdateFlowStats(collection_context)
 		return collection_context, nil
 	}
 
@@ -200,7 +200,7 @@ func LoadCollectionContext(
 		collection_context.QueryStats = stats_context.QueryStats
 	}
 
-	flows.UpdateFlowStats(collection_context)
+	UpdateFlowStats(collection_context)
 
 	return collection_context, nil
 }
@@ -310,4 +310,53 @@ func (self *Launcher) GetFlowRequests(
 
 	result.Items = flow_details.Items[offset:end]
 	return result, nil
+}
+
+// The collection_context contains high level stats that summarise the
+// colletion. We derive this information from the specific results of
+// each query.
+func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
+	// Support older colletions which do not have this info
+	if len(collection_context.QueryStats) == 0 {
+		return
+	}
+
+	// Now update the overall collection statuses based on all the
+	// individual query status. The collection status is a high level
+	// overview of the entire collection.
+	collection_context.State = flows_proto.ArtifactCollectorContext_RUNNING
+	collection_context.Status = ""
+	collection_context.Backtrace = ""
+	for _, s := range collection_context.QueryStats {
+		// Get the first errored query.
+		if collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING &&
+			s.Status != crypto_proto.VeloStatus_OK {
+			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
+			collection_context.Status = s.ErrorMessage
+			collection_context.Backtrace = s.Backtrace
+			break
+		}
+	}
+
+	// Total execution duration is the sum of all the query durations
+	// (this can be faster than wall time if queries run in parallel)
+	collection_context.ExecutionDuration = 0
+	for _, s := range collection_context.QueryStats {
+		collection_context.ExecutionDuration += s.Duration
+
+		for _, a := range s.NamesWithResponse {
+			if a != "" &&
+				!utils.InString(collection_context.ArtifactsWithResults, a) {
+				collection_context.ArtifactsWithResults = append(
+					collection_context.ArtifactsWithResults, a)
+			}
+		}
+	}
+
+	collection_context.OutstandingRequests = collection_context.TotalRequests -
+		int64(len(collection_context.QueryStats))
+	if collection_context.OutstandingRequests <= 0 &&
+		collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING {
+		collection_context.State = flows_proto.ArtifactCollectorContext_FINISHED
+	}
 }

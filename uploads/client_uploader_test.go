@@ -51,7 +51,7 @@ func GetIndex(responses []*crypto_proto.VeloMessage) []*actions_proto.Range {
 }
 
 func TestClientUploaderSparse(t *testing.T) {
-	resp := responder.TestResponder()
+	resp := responder.TestResponder(nil)
 	uploader := &VelociraptorUploader{
 		Responder: resp,
 	}
@@ -90,7 +90,7 @@ func TestClientUploaderSparse(t *testing.T) {
 // Test what happens when the underlying reader is shorter than the
 // ranges.
 func TestClientUploaderSparseWithEOF(t *testing.T) {
-	resp := responder.TestResponder()
+	resp := responder.TestResponder(nil)
 	uploader := &VelociraptorUploader{
 		Responder: resp,
 	}
@@ -123,7 +123,7 @@ func TestClientUploaderSparseWithEOF(t *testing.T) {
 }
 
 func TestClientUploader(t *testing.T) {
-	responder_obj := responder.TestResponder()
+	responder_obj := responder.TestResponder(nil)
 	uploader := &VelociraptorUploader{
 		Responder: responder_obj,
 	}
@@ -160,7 +160,7 @@ func TestClientUploader(t *testing.T) {
 // Trying to upload a completely sparse file with no data but real
 // size.
 func TestClientUploaderCompletelySparse(t *testing.T) {
-	resp := responder.TestResponder()
+	resp := responder.TestResponder(nil)
 	uploader := &VelociraptorUploader{
 		Responder: resp,
 	}
@@ -189,7 +189,7 @@ func TestClientUploaderCompletelySparse(t *testing.T) {
 }
 
 func TestClientUploaderSparseMultiBuffer(t *testing.T) {
-	resp := responder.TestResponder()
+	resp := responder.TestResponder(nil)
 	uploader := &VelociraptorUploader{
 		Responder: resp,
 	}
@@ -222,7 +222,7 @@ func TestClientUploaderSparseMultiBuffer(t *testing.T) {
 }
 
 func TestClientUploaderNoIndexIfNotSparse(t *testing.T) {
-	resp := responder.TestResponder()
+	resp := responder.TestResponder(nil)
 	uploader := &VelociraptorUploader{
 		Responder: resp,
 	}

@@ -19,7 +19,6 @@ package responder
 
 import (
 	"context"
-	"fmt"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -135,6 +134,7 @@ func NewResponder(
 }
 
 func (self *Responder) Close() {
+	self.flushLogMessages(self.ctx)
 	self.cancel()
 }
 
@@ -220,14 +220,11 @@ func (self *Responder) AddResponse(message *crypto_proto.VeloMessage) {
 	}
 	message.TaskId = self.request.TaskId
 
-	if output != nil {
-		select {
-		case <-self.ctx.Done():
-			fmt.Printf("Ctx is done!\n")
-			break
+	select {
+	case <-self.ctx.Done():
+		break
 
-		case output <- message:
-		}
+	case output <- message:
 	}
 }
 
@@ -272,13 +269,12 @@ func (self *Responder) flushLogMessages(ctx context.Context) {
 
 	// Maybe send a periodic stats update
 	stats := self.getFlowContext().Stats.MaybeSendStats()
-	if stats != nil {
+	if stats != nil && !stats.FlowComplete {
 		self.AddResponse(&crypto_proto.VeloMessage{
 			RequestId: constants.STATS_SINK,
 			FlowStats: stats,
 		})
 	}
-
 }
 
 func (self *Responder) SessionId() string {

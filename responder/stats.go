@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"google.golang.org/protobuf/proto"
+	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 )
 
@@ -52,11 +53,19 @@ func (self *Stats) UpdateStats(message *crypto_proto.VeloMessage) {
 	}
 }
 
-func (self *Stats) GetStats() *crypto_proto.FlowStats {
+func (self *Stats) SendFinalFlowStats(responder *Responder) {
 	self.mu.Lock()
-	defer self.mu.Unlock()
+	flow_complete := self.FlowComplete
+	self.FlowComplete = true
+	flow_stats := proto.Clone(self.FlowStats).(*crypto_proto.FlowStats)
+	self.mu.Unlock()
 
-	return proto.Clone(self.FlowStats).(*crypto_proto.FlowStats)
+	if !flow_complete {
+		responder.AddResponse(&crypto_proto.VeloMessage{
+			RequestId: constants.STATS_SINK,
+			FlowStats: flow_stats,
+		})
+	}
 }
 
 // Returns some stats to send to the server. The stats are sent in a
@@ -66,7 +75,7 @@ func (self *Stats) MaybeSendStats() *crypto_proto.FlowStats {
 	defer self.mu.Unlock()
 
 	now := uint64(time.Now().Unix())
-	if now-self.Timestamp > self.frequency_sec {
+	if now-self.Timestamp > self.frequency_sec && !self.FlowComplete {
 		self.Timestamp = now
 		return proto.Clone(self.FlowStats).(*crypto_proto.FlowStats)
 	}

@@ -121,13 +121,13 @@ func (self *ArtifactTestSuite) TestStackOverflow() {
 	// If we fail this test make sure we take a resonable time.
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	test_responder := responder.TestResponder()
+	test_responder := responder.TestResponder(self.ConfigObj)
 
 	for _, vql_request := range vql_requests {
 		actions.VQLClientAction{}.StartQuery(
 			self.ConfigObj, ctx, test_responder, vql_request)
 	}
-	test_responder.Close(self.Ctx)
+	test_responder.Close()
 
 	assert.Contains(self.T(), getLogMessages(test_responder),
 		"Stack overflow: Artifact2, Artifact1, Artifact2, Artifact1")
@@ -150,7 +150,7 @@ func (self *ArtifactTestSuite) TestArtifactDependencies() {
 	// If we fail make sure we take a resonable time.
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	test_responder := responder.TestResponder()
+	test_responder := responder.TestResponder(self.ConfigObj)
 
 	for _, vql_request := range vql_requests {
 		actions.VQLClientAction{}.StartQuery(
