@@ -39,7 +39,7 @@ func StartClientServices(
 		return sm, err
 	}
 
-	err := sm.Start(responder.StartFlowManager)
+	err = sm.Start(responder.StartFlowManager)
 	if err != nil {
 		return sm, err
 	}
