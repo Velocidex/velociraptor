@@ -25,8 +25,7 @@
    "size": 18,
    "stored_size": 12,
    "is_sparse": true,
-   "data": "aGVsbG8g",
-   "upload_number": 1
+   "data": "aGVsbG8g"
   }
  },
  {
@@ -60,8 +59,7 @@
       "length": 6
      }
     ]
-   },
-   "upload_number": 2
+   }
   }
  }
 ]

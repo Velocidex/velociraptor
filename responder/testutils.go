@@ -21,6 +21,21 @@ func TestResponder(config_obj *config_proto.Config) *Responder {
 	return result
 }
 
+func TestResponderWithFlowId(config_obj *config_proto.Config,
+	flow_id string) *Responder {
+	ctx, cancel := context.WithCancel(context.Background())
+	flow_manager := GetFlowManager(ctx, config_obj)
+	result := &Responder{
+		ctx:     ctx,
+		cancel:  cancel,
+		output:  make(chan *crypto_proto.VeloMessage, 100),
+		request: &crypto_proto.VeloMessage{SessionId: flow_id},
+	}
+
+	result.flow_context = flow_manager.FlowContext(result.request)
+	return result
+}
+
 func GetTestResponses(self *Responder) []*crypto_proto.VeloMessage {
 	close(self.output)
 	result := []*crypto_proto.VeloMessage{}

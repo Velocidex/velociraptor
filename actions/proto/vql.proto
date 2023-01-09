@@ -141,10 +141,6 @@ message VQLResponse {
             description: "Total number of rows in this response part."
         }];
 
-    // If this is set, stats will be sent separately and so the server
-    // does not need to update the flows stats from this response.
-    bool stats_will_be_sent = 13;
-
     // Row count where query started.
     uint64 query_start_row = 11;
 

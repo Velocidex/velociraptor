@@ -7,11 +7,11 @@
 2. FlowManager.FlowContext() creates a new flow context to manage this
    session id, or retrieves an existing FlowContext.
 
-3. The FlowContext manages the stats of a flow on the client. A Flow
-   may contain several queries as well as Stats (total rows, total
-   files uploaded etc).
+3. The FlowContext manages the stats of a flow on the client. A
+   FlowContext may contain several QueryContext as well as Stats
+   (total rows, total files uploaded etc).
 
-4. A QueryContext is issues for each query within the flow
+4. A QueryContext is issued for each query within the flow
    context. The QueryContext contains the cancellable context for the
    currently running query.
 
@@ -21,10 +21,8 @@ package responder
 
 import (
 	"context"
-	"fmt"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
@@ -56,12 +54,18 @@ type QueryContext struct {
 // client, and simply synced to the server. This dramatically reduces
 // the amount of work done on the server.
 type FlowContext struct {
-	ctx    context.Context
+	ctx context.Context
+
+	// Cancelling the FlowContext will cancel all its in flight
+	// queries.
 	cancel func()
 
 	flow_id string
 
-	// Query contexts that make up the flow.
+	// Query contexts that make up the flow. When a query completes it
+	// will be removed from this map. When the map is empty all
+	// queries have finished and the FlowContext sends a final
+	// FlowStat message to sync the server.
 	queries map[uint64]*QueryContext
 
 	// A counter of uploads sent in the entire collection.
@@ -77,14 +81,25 @@ type FlowContext struct {
 	// Keep stats of the flow.
 	Stats Stats
 
+	// The flow manager that owns us - we call it to remove ourselves
+	// from the flow manager when the FlowContext is complete.
 	owner *FlowManager
 }
 
-func NewFlowContext(ctx context.Context,
+func newFlowContext(ctx context.Context,
+	config_obj *config_proto.Config,
 	flow_id string, owner *FlowManager) *FlowContext {
-	frequency_sec := uint64(5)
 
-	now := uint64(time.Now().Unix())
+	// How often do we send a FlowStat message to sync the server's
+	// flow progress stat.
+	frequency_sec := uint64(5)
+	if config_obj != nil &&
+		config_obj.Client != nil &&
+		config_obj.Client.DefaultServerFlowStatsUpdate > 0 {
+		frequency_sec = config_obj.Client.DefaultServerFlowStatsUpdate
+	}
+
+	now := uint64(utils.GetTime().Now().Unix())
 
 	sub_ctx, cancel := context.WithCancel(ctx)
 
@@ -135,7 +150,7 @@ func (self *FlowContext) AddLogMessage(level string, msg, artifact string) {
 	self.log_message_count++
 	self.log_messages = append(self.log_messages, json.Format(
 		"{\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
-		int(time.Now().Unix()), level, msg)...)
+		int(utils.GetTime().Now().Unix()), level, msg)...)
 }
 
 func (self *FlowContext) NextUploadId() int64 {
@@ -150,7 +165,7 @@ func (self *FlowContext) NewQueryContext(
 	defer self.mu.Unlock()
 
 	// Cancellable context for the query
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(self.ctx)
 
 	result := &QueryContext{
 		flow_id: self.flow_id,
@@ -161,7 +176,7 @@ func (self *FlowContext) NewQueryContext(
 
 	self.queries[result.id] = result
 
-	return ctx, func() {
+	return ctx, func() { // Called when query is closed
 		cancel()
 
 		self.mu.Lock()
@@ -175,7 +190,6 @@ func (self *FlowContext) NewQueryContext(
 			// Flush any waiting logs now
 			buf, id, count, error_message := self.GetLogMessages()
 			if len(buf) > 0 {
-				fmt.Printf("Sending %v log messages\n", count)
 				responder.AddResponse(&crypto_proto.VeloMessage{
 					RequestId: constants.LOG_SINK,
 					LogMessage: &crypto_proto.LogMessage{
@@ -208,12 +222,8 @@ type FlowManager struct {
 	cancelled map[string]bool
 }
 
-func NewFlowManager(
-	ctx context.Context, config_obj *config_proto.Config) *FlowManager {
-
-	if utils.IsNil(ctx) {
-		panic(ctx)
-	}
+func NewFlowManager(ctx context.Context,
+	config_obj *config_proto.Config) *FlowManager {
 
 	return &FlowManager{
 		ctx:        ctx,
@@ -261,6 +271,7 @@ func (self *FlowManager) Cancel(ctx context.Context, flow_id string) {
 	}
 	self.mu.Unlock()
 
+	// Cancel all existing queries
 	flow_context.cancel()
 }
 
@@ -274,7 +285,8 @@ func (self *FlowManager) FlowContext(
 
 	flow_context, ok := self.in_flight[flow_id]
 	if !ok {
-		flow_context = NewFlowContext(self.ctx, flow_id, self)
+		flow_context = newFlowContext(
+			self.ctx, self.config_obj, flow_id, self)
 		self.in_flight[flow_id] = flow_context
 	}
 
@@ -291,4 +303,17 @@ func GetFlowManager(
 	}
 
 	return _FlowManagerService
+}
+
+func StartFlowManager(ctx context.Context, wg *sync.WaitGroup,
+	config_obj *config_proto.Config) error {
+	mu.Lock()
+	defer mu.Unlock()
+
+	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+	logger.Info("<green>Starting</> client flow manager.")
+
+	_FlowManagerService = NewFlowManager(ctx, config_obj)
+
+	return nil
 }

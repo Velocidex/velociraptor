@@ -30,29 +30,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-var (
-	inc_mu     sync.Mutex
-	last_value uint64
-)
-
-// Response ID used to be incremental but now artifacts are collected
-// in parallel each collection needs to advance the response id
-// forward. We therefore remember the last id and ensure response id
-// is monotonically incremental but time based.
-func getIncValue() uint64 {
-	inc_mu.Lock()
-	defer inc_mu.Unlock()
-
-	value := uint64(time.Now().UnixNano())
-	if value <= last_value {
-		value = last_value + 1
-	}
-	last_value = value
-	return last_value
-}
-
 type Responder struct {
-	output     chan *crypto_proto.VeloMessage
+	output chan *crypto_proto.VeloMessage
+
+	// Context and cancellation point for the query that is attached
+	// to this responder.
 	ctx        context.Context
 	cancel     func()
 	config_obj *config_proto.Config
@@ -89,10 +71,6 @@ func NewResponder(
 	request *crypto_proto.VeloMessage,
 	output chan *crypto_proto.VeloMessage) *Responder {
 
-	if utils.IsNil(ctx) {
-		panic(ctx)
-	}
-
 	sub_ctx, cancel := context.WithCancel(ctx)
 
 	result := &Responder{
@@ -102,7 +80,7 @@ func NewResponder(
 		request:    request,
 		output:     output,
 		logger:     logging.GetLogger(config_obj, &logging.ClientComponent),
-		start_time: time.Now().UnixNano(),
+		start_time: utils.GetTime().Now().UnixNano(),
 	}
 
 	if request.VQLClientAction != nil {
@@ -145,12 +123,12 @@ func (self *Responder) Copy() *Responder {
 		request:    self.request,
 		output:     self.output,
 		logger:     self.logger,
-		start_time: time.Now().UnixNano(),
+		start_time: utils.GetTime().Now().UnixNano(),
 	}
 }
 
 // Ensure a valid flow context exists
-func (self *Responder) getFlowContext() *FlowContext {
+func (self *Responder) GetFlowContext() *FlowContext {
 	flow_manager := GetFlowManager(self.ctx, self.config_obj)
 	return flow_manager.FlowContext(self.request)
 }
@@ -164,7 +142,7 @@ func (self *Responder) getStatus() *crypto_proto.VeloStatus {
 		LogRows:           int64(self.log_rows),
 		UploadedFiles:     int64(self.uploaded_rows),
 		ResultRows:        int64(self.result_rows),
-		Duration:          time.Now().UnixNano() - self.start_time,
+		Duration:          utils.GetTime().Now().UnixNano() - self.start_time,
 		Artifact:          self.Artifact,
 	}
 
@@ -184,10 +162,6 @@ func (self *Responder) updateStats(message *crypto_proto.VeloMessage) {
 
 	if message.FileBuffer != nil {
 		self.uploaded_rows++
-
-		// Tag the message with the next upload id
-		message.FileBuffer.UploadNumber = self.getFlowContext().NextUploadId()
-		return
 	}
 
 	if message.VQLResponse != nil {
@@ -209,15 +183,11 @@ func (self *Responder) AddResponse(message *crypto_proto.VeloMessage) {
 	self.Unlock()
 
 	// Update the flow stats
-	self.getFlowContext().Stats.UpdateStats(message)
+	self.GetFlowContext().Stats.UpdateStats(message)
 
 	message.QueryId = self.request.QueryId
 	message.SessionId = self.request.SessionId
 	message.Urgent = self.request.Urgent
-	message.ResponseId = getIncValue()
-	if message.RequestId == 0 {
-		message.RequestId = self.request.RequestId
-	}
 	message.TaskId = self.request.TaskId
 
 	select {
@@ -236,7 +206,7 @@ func (self *Responder) RaiseError(ctx context.Context, message string) {
 	status.NamesWithResponse = self.names_with_response
 	status.Artifact = self.Artifact
 
-	self.getFlowContext().Stats.UpdateStats(
+	self.GetFlowContext().Stats.UpdateStats(
 		&crypto_proto.VeloMessage{Status: status})
 }
 
@@ -244,17 +214,17 @@ func (self *Responder) Return(ctx context.Context) {
 	status := self.getStatus()
 	status.Status = crypto_proto.VeloStatus_OK
 
-	self.getFlowContext().Stats.UpdateStats(
+	self.GetFlowContext().Stats.UpdateStats(
 		&crypto_proto.VeloMessage{Status: status})
 }
 
 // Send a log message to the server.
 func (self *Responder) Log(ctx context.Context, level string, msg string) {
-	self.getFlowContext().AddLogMessage(level, msg, self.Artifact)
+	self.GetFlowContext().AddLogMessage(level, msg, self.Artifact)
 }
 
 func (self *Responder) flushLogMessages(ctx context.Context) {
-	buf, id, count, error_message := self.getFlowContext().GetLogMessages()
+	buf, id, count, error_message := self.GetFlowContext().GetLogMessages()
 	if len(buf) > 0 {
 		self.AddResponse(&crypto_proto.VeloMessage{
 			RequestId: constants.LOG_SINK,
@@ -268,7 +238,7 @@ func (self *Responder) flushLogMessages(ctx context.Context) {
 	}
 
 	// Maybe send a periodic stats update
-	stats := self.getFlowContext().Stats.MaybeSendStats()
+	stats := self.GetFlowContext().Stats.MaybeSendStats()
 	if stats != nil && !stats.FlowComplete {
 		self.AddResponse(&crypto_proto.VeloMessage{
 			RequestId: constants.STATS_SINK,

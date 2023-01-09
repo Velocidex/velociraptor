@@ -75,7 +75,7 @@ SELECT FullPath, hash(path=FullPath, accessor="fs") FROM glob( globs='/clients/C
    "SHA256": "c337a4c3885ed775b50994f8018bdc7b3fa885f2efb81a2b766f12e81ac85394"
   },
   "Data": {
-   "VFSPath": "ds:/clients/C.4f5e52adf0a337a9/collections/F.BN2HP3OSS3LK6.db"
+   "VFSPath": "ds:/clients/C.4f5e52adf0a337a9/collections/F.BN2HP3OSS3LK6.json.db"
   }
  },
  {

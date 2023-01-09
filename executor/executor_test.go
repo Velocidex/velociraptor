@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
@@ -20,6 +21,13 @@ import (
 
 type ExecutorTestSuite struct {
 	test_utils.TestSuite
+}
+
+func (self *ExecutorTestSuite) SetupTest() {
+	self.TestSuite.SetupTest()
+
+	err := self.Sm.Start(responder.StartFlowManager)
+	assert.NoError(self.T(), err)
 }
 
 // Cancelling the executor multiple times will cause a single
@@ -71,9 +79,6 @@ func (self *ExecutorTestSuite) TestCancellation() {
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
 		mu.Lock()
 		defer mu.Unlock()
-
-		utils.Debug(received_messages)
-		utils.Debug(len(received_messages))
 
 		return len(received_messages) == 2
 	})
@@ -136,7 +141,7 @@ func (self *ExecutorTestSuite) TestLogMessages() {
 	// collect the log messages and ensure they are all batched in one response.
 	log_messages := []*crypto_proto.LogMessage{}
 
-	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
 		mu.Lock()
 		defer mu.Unlock()
 

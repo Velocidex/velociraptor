@@ -41,10 +41,12 @@ func (self *VelociraptorUploader) Upload(
 	reader io.Reader) (
 	*UploadResponse, error) {
 
+	upload_id := self.Responder.GetFlowContext().NextUploadId()
+
 	// Try to collect sparse files if possible
 	result, err := self.maybeUploadSparse(
 		ctx, scope, filename, accessor, store_as_name,
-		expected_size, mtime, reader)
+		expected_size, mtime, upload_id, reader)
 	if err == nil {
 		return result, nil
 	}
@@ -63,6 +65,8 @@ func (self *VelociraptorUploader) Upload(
 
 	md5_sum := md5.New()
 	sha_sum := sha256.New()
+
+	BUFF_SIZE = int64(1024 * 1024)
 
 	for {
 		// Ensure there is a fresh allocation for every
@@ -97,6 +101,10 @@ func (self *VelociraptorUploader) Upload(
 			Ctime:      ctime.UnixNano(),
 			Btime:      btime.UnixNano(),
 			Data:       data,
+
+			// The number of the upload within the flow.
+			UploadNumber: upload_id,
+			Eof:          read_bytes == 0,
 		}
 
 		select {
@@ -115,6 +123,7 @@ func (self *VelociraptorUploader) Upload(
 			return nil, err
 		}
 
+		// On the last packet send back the hashes into the query.
 		if read_bytes == 0 {
 			result.Size = offset
 			result.StoredSize = offset
@@ -133,6 +142,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 	store_as_name *accessors.OSPath,
 	ignored_expected_size int64,
 	mtime time.Time,
+	upload_id int64,
 	reader io.Reader) (
 	*UploadResponse, error) {
 
@@ -214,12 +224,13 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 					Path:     store_as_name.String(),
 					Accessor: accessor,
 				},
-				Size:       uint64(real_size),
-				StoredSize: 0,
-				IsSparse:   is_sparse,
-				Index:      index,
-				Mtime:      mtime.UnixNano(),
-				Eof:        true,
+				Size:         uint64(real_size),
+				StoredSize:   0,
+				IsSparse:     is_sparse,
+				Index:        index,
+				Mtime:        mtime.UnixNano(),
+				Eof:          true,
+				UploadNumber: upload_id,
 			},
 		})
 
@@ -282,12 +293,13 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 					Path:     store_as_name.String(),
 					Accessor: accessor,
 				},
-				Offset:     uint64(write_offset),
-				Size:       uint64(real_size),
-				StoredSize: uint64(expected_size),
-				IsSparse:   is_sparse,
-				Mtime:      mtime.UnixNano(),
-				Data:       data,
+				Offset:       uint64(write_offset),
+				Size:         uint64(real_size),
+				StoredSize:   uint64(expected_size),
+				IsSparse:     is_sparse,
+				Mtime:        mtime.UnixNano(),
+				Data:         data,
+				UploadNumber: upload_id,
 			}
 
 			select {
@@ -322,12 +334,13 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 				Path:     store_as_name.String(),
 				Accessor: accessor,
 			},
-			Size:       uint64(real_size),
-			StoredSize: uint64(expected_size),
-			IsSparse:   is_sparse,
-			Offset:     uint64(write_offset),
-			Index:      index,
-			Eof:        true,
+			Size:         uint64(real_size),
+			StoredSize:   uint64(expected_size),
+			IsSparse:     is_sparse,
+			Offset:       uint64(write_offset),
+			Index:        index,
+			Eof:          true,
+			UploadNumber: upload_id,
 		},
 	})
 

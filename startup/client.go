@@ -6,6 +6,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
+	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
 )
@@ -34,6 +35,11 @@ func StartClientServices(
 
 	// Start the nanny first so we are covered from here on.
 	err := sm.Start(executor.StartNannyService)
+	if err != nil {
+		return sm, err
+	}
+
+	err := sm.Start(responder.StartFlowManager)
 	if err != nil {
 		return sm, err
 	}

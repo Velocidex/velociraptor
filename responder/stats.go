@@ -2,11 +2,11 @@ package responder
 
 import (
 	"sync"
-	"time"
 
 	"google.golang.org/protobuf/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Keeps track of flow statistics to update the server on flow
@@ -68,13 +68,20 @@ func (self *Stats) SendFinalFlowStats(responder *Responder) {
 	}
 }
 
+func (self *Stats) Get() *crypto_proto.FlowStats {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return proto.Clone(self.FlowStats).(*crypto_proto.FlowStats)
+}
+
 // Returns some stats to send to the server. The stats are sent in a
 // rate limited way - not too frequently.
 func (self *Stats) MaybeSendStats() *crypto_proto.FlowStats {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	now := uint64(time.Now().Unix())
+	now := uint64(utils.GetTime().Now().Unix())
 	if now-self.Timestamp > self.frequency_sec && !self.FlowComplete {
 		self.Timestamp = now
 		return proto.Clone(self.FlowStats).(*crypto_proto.FlowStats)

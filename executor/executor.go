@@ -173,6 +173,7 @@ func (self *ClientExecutor) processRequestPlugin(
 			}
 			defer cancel()
 		}
+
 		actions.VQLClientAction{}.StartQuery(
 			config_obj, query_ctx, responder_obj, req.VQLClientAction)
 		return
