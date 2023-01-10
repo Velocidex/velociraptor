@@ -30,6 +30,8 @@ func (self *Stats) UpdateStats(message *crypto_proto.VeloMessage) {
 	}
 
 	if message.FileBuffer != nil {
+		self.TotalUploadedBytes += uint64(len(message.FileBuffer.Data))
+
 		if message.FileBuffer.Offset == 0 {
 			message.FileBuffer.UploadNumber = int64(self.TotalUploadedFiles)
 
@@ -37,7 +39,6 @@ func (self *Stats) UpdateStats(message *crypto_proto.VeloMessage) {
 			self.TotalExpectedUploadedBytes += message.FileBuffer.StoredSize
 			return
 		}
-		self.TotalUploadedBytes += uint64(len(message.FileBuffer.Data))
 		return
 	}
 
@@ -81,9 +82,11 @@ func (self *Stats) MaybeSendStats() *crypto_proto.FlowStats {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	now := uint64(utils.GetTime().Now().Unix())
-	if now-self.Timestamp > self.frequency_sec && !self.FlowComplete {
-		self.Timestamp = now
+	now := uint64(utils.GetTime().Now().UnixNano() / 1000)
+	last_timestamp := self.Timestamp
+	self.Timestamp = now
+
+	if now-last_timestamp > self.frequency_sec && !self.FlowComplete {
 		return proto.Clone(self.FlowStats).(*crypto_proto.FlowStats)
 	}
 	return nil
