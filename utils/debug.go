@@ -19,6 +19,7 @@
 package utils
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"runtime/debug"
@@ -63,5 +64,16 @@ func DebugString(v interface{}) string {
 
 	default:
 		return fmt.Sprintf("%T %v", v, v)
+	}
+}
+
+// Check if a context is still valid
+func DebugCtx(ctx context.Context, name string) {
+	select {
+	case <-ctx.Done():
+		fmt.Printf(name + ": Ctx is done!\n")
+
+	default:
+		fmt.Printf(name + ": Ctx is still valid!\n")
 	}
 }

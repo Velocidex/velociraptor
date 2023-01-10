@@ -354,6 +354,28 @@ func readContentFromFile(
 		return result, nil
 	}
 
+	// Try to read older protobuf based files for backwards
+	// compatibility.
+	if os.IsNotExist(err) &&
+		urn.Type() == api.PATH_TYPE_DATASTORE_JSON {
+
+		file, err := os.Open(urn.
+			SetType(api.PATH_TYPE_DATASTORE_PROTO).
+			AsDatastoreFilename(config_obj))
+
+		if err == nil {
+			defer file.Close()
+
+			result, err := ioutil.ReadAll(
+				io.LimitReader(file, constants.MAX_MEMORY))
+			if err != nil {
+				return nil, errors.Wrap(err, 0)
+			}
+
+			return result, nil
+		}
+	}
+
 	// Its ok if the file does not exist - no error.
 	if !must_exist && os.IsNotExist(err) {
 		return []byte{}, nil

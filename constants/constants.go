@@ -33,7 +33,8 @@ const (
 	ORG_PREFIX              = "O"
 
 	// Well known flows - Request ID:
-	LOG_SINK uint64 = 980
+	LOG_SINK   uint64 = 980
+	STATS_SINK uint64 = 981
 
 	TransferWellKnownFlowId = 5
 	ProcessVQLResponses     = 1
@@ -92,6 +93,15 @@ const (
 	ZIP_PASSWORDS = "ZIP_PASSWORDS"
 
 	PinnedServerName = "VelociraptorServer"
+
+	CLIENT_API_VERSION = uint32(4)
+
+	// The newer client communications from version 0.6.8:
+	// * Flow state is maintained on the client.
+	// * Flow state is synced to the server periodically.
+	// * Moves processing requirements from server to the client -
+	//   reducing server load.
+	CLIENT_API_VERSION_0_6_8 = uint32(4)
 )
 
 type key int

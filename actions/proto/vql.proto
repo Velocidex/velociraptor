@@ -127,6 +127,7 @@ message VQLResponse {
             description: "Large VQL responses are split across many parts. "
             "This carries the part of this response.",
         }];
+
     VQLRequest Query = 3 [(sem_type) = {
             description: "The query that was executed.",
         }];

@@ -1,0 +1,142 @@
+{
+ "responses": [
+  {
+   "request_id": 5,
+   "FileBuffer": {
+    "pathspec": {
+     "path": "file_0",
+     "accessor": "data"
+    },
+    "size": 11,
+    "stored_size": 11,
+    "data": "SGVsbG8gd29ybGQ="
+   }
+  },
+  {
+   "request_id": 5,
+   "FileBuffer": {
+    "pathspec": {
+     "path": "file_0",
+     "accessor": "data"
+    },
+    "offset": 11,
+    "size": 11,
+    "stored_size": 11,
+    "eof": true
+   }
+  },
+  {
+   "request_id": 5,
+   "FileBuffer": {
+    "pathspec": {
+     "path": "file_1",
+     "accessor": "data"
+    },
+    "size": 11,
+    "stored_size": 11,
+    "data": "SGVsbG8gd29ybGQ=",
+    "upload_number": 1
+   }
+  },
+  {
+   "request_id": 5,
+   "FileBuffer": {
+    "pathspec": {
+     "path": "file_1",
+     "accessor": "data"
+    },
+    "offset": 11,
+    "size": 11,
+    "stored_size": 11,
+    "eof": true,
+    "upload_number": 1
+   }
+  },
+  {
+   "request_id": 5,
+   "FileBuffer": {
+    "pathspec": {
+     "path": "file_2",
+     "accessor": "data"
+    },
+    "size": 11,
+    "stored_size": 11,
+    "data": "SGVsbG8gd29ybGQ=",
+    "upload_number": 2
+   }
+  },
+  {
+   "request_id": 5,
+   "FileBuffer": {
+    "pathspec": {
+     "path": "file_2",
+     "accessor": "data"
+    },
+    "offset": 11,
+    "size": 11,
+    "stored_size": 11,
+    "eof": true,
+    "upload_number": 2
+   }
+  },
+  {
+   "request_id": 5,
+   "FileBuffer": {
+    "pathspec": {
+     "path": "file_3",
+     "accessor": "data"
+    },
+    "size": 11,
+    "stored_size": 11,
+    "data": "SGVsbG8gd29ybGQ=",
+    "upload_number": 3
+   }
+  },
+  {
+   "request_id": 5,
+   "FileBuffer": {
+    "pathspec": {
+     "path": "file_3",
+     "accessor": "data"
+    },
+    "offset": 11,
+    "size": 11,
+    "stored_size": 11,
+    "eof": true,
+    "upload_number": 3
+   }
+  },
+  {
+   "request_id": 5,
+   "FileBuffer": {
+    "pathspec": {
+     "path": "file_4",
+     "accessor": "data"
+    },
+    "size": 11,
+    "stored_size": 11,
+    "data": "SGVsbG8gd29ybGQ=",
+    "upload_number": 4
+   }
+  },
+  {
+   "request_id": 5,
+   "FileBuffer": {
+    "pathspec": {
+     "path": "file_4",
+     "accessor": "data"
+    },
+    "offset": 11,
+    "size": 11,
+    "stored_size": 11,
+    "eof": true,
+    "upload_number": 4
+   }
+  }
+ ],
+ "FlowStats": {
+  "total_uploaded_files": 5,
+  "total_expected_uploaded_bytes": 55,
+  "timestamp": 10
+ }
+}

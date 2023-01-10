@@ -71,7 +71,7 @@ func (self *EventsTestSuite) SetupTest() {
 	self.client_id = "C.2232"
 	self.Clock = &utils.IncClock{}
 
-	self.responder = responder.TestResponder()
+	self.responder = responder.TestResponder(self.ConfigObj)
 
 	actions.GlobalEventTable = actions.NewEventTable(
 		self.ConfigObj, self.responder,

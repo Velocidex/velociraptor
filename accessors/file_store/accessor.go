@@ -116,10 +116,12 @@ func (self FileStoreFileSystemAccessor) OpenWithOSPath(filename *accessors.OSPat
 		return nil, errors.New("Invalid path")
 	}
 
+	var fullpath api.FSPathSpec
+
 	// It is a data store path
 	if filename.Components[0] == "ds:" {
 		ds_path := getDSPathSpec(filename)
-		fullpath := ds_path.AsFilestorePath()
+		fullpath = ds_path.AsFilestorePath()
 		switch ds_path.Type() {
 		case api.PATH_TYPE_DATASTORE_JSON:
 			fullpath = fullpath.SetType(api.PATH_TYPE_FILESTORE_DB_JSON)
@@ -127,12 +129,21 @@ func (self FileStoreFileSystemAccessor) OpenWithOSPath(filename *accessors.OSPat
 		case api.PATH_TYPE_DATASTORE_PROTO:
 			fullpath = fullpath.SetType(api.PATH_TYPE_FILESTORE_DB)
 		}
+	} else {
+		fullpath = path_specs.FromGenericComponentList(filename.Components)
 	}
 
-	fullpath := path_specs.FromGenericComponentList(filename.Components)
 	file, err := self.file_store.ReadFile(fullpath)
 	if err != nil {
-		return nil, err
+		// Try to open the old protobuf style files as a fallback.
+		if fullpath.Type() == api.PATH_TYPE_FILESTORE_DB_JSON {
+			file, err = self.file_store.ReadFile(
+				fullpath.SetType(api.PATH_TYPE_FILESTORE_DB))
+		}
+
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return file, nil

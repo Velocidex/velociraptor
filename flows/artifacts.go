@@ -44,6 +44,7 @@ import (
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/launcher"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -465,7 +466,7 @@ func CheckForStatus(
 	// Update our record of all the status messages from this
 	// collection.
 	updateQueryStats(config_obj, collection_context, message.Status)
-	UpdateFlowStats(collection_context)
+	launcher.UpdateFlowStats(&collection_context.ArtifactCollectorContext)
 
 	// Update the active time for each response.
 	collection_context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
@@ -658,7 +659,7 @@ type FlowRunner struct {
 	config_obj  *config_proto.Config
 }
 
-func NewFlowRunner(config_obj *config_proto.Config) *FlowRunner {
+func NewLegacyFlowRunner(config_obj *config_proto.Config) *FlowRunner {
 	return &FlowRunner{
 		config_obj:  config_obj,
 		context_map: make(map[string]*CollectionContext),
@@ -707,8 +708,11 @@ func (self *FlowRunner) ProcessSingleMessage(
 			return
 		}
 
+		// Should never happen because source is filled in from the
+		// crypto envelope.
 		if job.Source == "" {
-			panic(1)
+			logger.Error("Empty Source: %v", job)
+			return
 		}
 
 		collection_context, err = LoadCollectionContext(
@@ -728,6 +732,7 @@ func (self *FlowRunner) ProcessSingleMessage(
 				return
 			}
 
+			// Flow does not exist cancel the corresponding flow on the client.
 			err = client_manager.QueueMessageForClient(ctx, job.Source,
 				&crypto_proto.VeloMessage{
 					Cancel:    &crypto_proto.Cancel{},

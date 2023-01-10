@@ -408,6 +408,7 @@ func (self *CryptoManager) extractMessageInfo(
 	}
 
 	return &vcrypto.MessageInfo{
+		Version: communications.ApiVersion,
 		// Hold onto the compressed MessageList buffers.
 		RawCompressed: packed_message_list.MessageList,
 		Compression:   packed_message_list.Compression,

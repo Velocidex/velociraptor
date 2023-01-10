@@ -3,12 +3,14 @@ package uploads
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"runtime"
 	"testing"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/assert"
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -16,6 +18,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/responder"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -51,7 +54,7 @@ func GetIndex(responses []*crypto_proto.VeloMessage) []*actions_proto.Range {
 }
 
 func TestClientUploaderSparse(t *testing.T) {
-	resp := responder.TestResponder()
+	resp := responder.TestResponder(nil)
 	uploader := &VelociraptorUploader{
 		Responder: resp,
 	}
@@ -72,7 +75,9 @@ func TestClientUploaderSparse(t *testing.T) {
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
-		filename, "ntfs", nil, 1000, nilTime, range_reader)
+		filename, "ntfs", nil, 1000, nilTime,
+		resp.GetFlowContext().NextUploadId(),
+		range_reader)
 	responses := responder.GetTestResponses(resp)
 
 	// Expected size is the combined sum of all ranges with data
@@ -90,7 +95,7 @@ func TestClientUploaderSparse(t *testing.T) {
 // Test what happens when the underlying reader is shorter than the
 // ranges.
 func TestClientUploaderSparseWithEOF(t *testing.T) {
-	resp := responder.TestResponder()
+	resp := responder.TestResponder(nil)
 	uploader := &VelociraptorUploader{
 		Responder: resp,
 	}
@@ -112,7 +117,9 @@ func TestClientUploaderSparseWithEOF(t *testing.T) {
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
-		filename, "ntfs", nil, 1000, nilTime, range_reader)
+		filename, "ntfs", nil, 1000, nilTime,
+		resp.GetFlowContext().NextUploadId(),
+		range_reader)
 	responses := responder.GetTestResponses(resp)
 
 	// Expected size is the combined sum of all ranges with data
@@ -123,7 +130,7 @@ func TestClientUploaderSparseWithEOF(t *testing.T) {
 }
 
 func TestClientUploader(t *testing.T) {
-	responder_obj := responder.TestResponder()
+	responder_obj := responder.TestResponder(nil)
 	uploader := &VelociraptorUploader{
 		Responder: responder_obj,
 	}
@@ -160,7 +167,7 @@ func TestClientUploader(t *testing.T) {
 // Trying to upload a completely sparse file with no data but real
 // size.
 func TestClientUploaderCompletelySparse(t *testing.T) {
-	resp := responder.TestResponder()
+	resp := responder.TestResponder(nil)
 	uploader := &VelociraptorUploader{
 		Responder: resp,
 	}
@@ -179,7 +186,9 @@ func TestClientUploaderCompletelySparse(t *testing.T) {
 	scope := vql_subsystem.MakeScope()
 
 	uploader.maybeUploadSparse(ctx, scope,
-		filename, "ntfs", nil, 1000, nilTime, range_reader)
+		filename, "ntfs", nil, 1000, nilTime,
+		resp.GetFlowContext().NextUploadId(),
+		range_reader)
 	responses := responder.GetTestResponses(resp)
 
 	// Expected size is the combined sum of all ranges with data
@@ -189,7 +198,8 @@ func TestClientUploaderCompletelySparse(t *testing.T) {
 }
 
 func TestClientUploaderSparseMultiBuffer(t *testing.T) {
-	resp := responder.TestResponder()
+	resp := responder.TestResponderWithFlowId(
+		nil, fmt.Sprintf("Test%d", utils.GetId()))
 	uploader := &VelociraptorUploader{
 		Responder: resp,
 	}
@@ -209,20 +219,70 @@ func TestClientUploaderSparseMultiBuffer(t *testing.T) {
 	assert.Equal(t, ok, true)
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
+
 	uploader.maybeUploadSparse(ctx, scope,
-		filename, "ntfs", nil, 1000, nilTime, range_reader)
+		filename, "ntfs", nil, 1000, nilTime,
+		resp.GetFlowContext().NextUploadId(),
+		range_reader)
+
 	responses := responder.GetTestResponses(resp)
 	assert.Equal(t, CombineOutput("/foo", responses), "Hello hello ")
 	for _, response := range responses {
 		response.ResponseId = 0
+		response.SessionId = ""
 	}
 
 	goldie.Assert(t, "ClientUploaderSparseMultiBuffer",
 		json.MustMarshalIndent(responses))
 }
 
+// Upload multiple copies of the same file.
+
+// * Each copy should have 2 messages - one with the full data and one
+//   with EOF message.
+// * Each message should have an upload ID incrementing from 0 for all
+//   packets in the same file.
+func TestClientUploaderUploadId(t *testing.T) {
+	cancel := utils.MockTime(&utils.MockClock{MockNow: time.Unix(10, 10)})
+	defer cancel()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	resp := responder.TestResponderWithFlowId(
+		nil, fmt.Sprintf("Test%d", utils.GetId()))
+	uploader := &VelociraptorUploader{
+		Responder: resp,
+	}
+
+	data := "Hello world"
+
+	// Upload the file multiple times
+	for i := 0; i < 5; i++ {
+		fd := bytes.NewReader([]byte(data))
+		ospath := accessors.MustNewPathspecOSPath(fmt.Sprintf("file_%d", i))
+		scope := vql_subsystem.MakeScope()
+		_, err := uploader.Upload(ctx, scope,
+			ospath, "data", nil, int64(len(data)),
+			nilTime, nilTime, nilTime, nilTime, fd)
+		assert.NoError(t, err)
+	}
+
+	responses := responder.GetTestResponses(resp)
+	for _, response := range responses {
+		response.SessionId = ""
+	}
+
+	golden := ordereddict.NewDict().
+		Set("responses", responses).
+		Set("FlowStats", resp.GetFlowContext().Stats.Get())
+
+	goldie.Assert(t, "TestClientUploaderUploadId",
+		json.MustMarshalIndent(golden))
+}
+
 func TestClientUploaderNoIndexIfNotSparse(t *testing.T) {
-	resp := responder.TestResponder()
+	resp := responder.TestResponder(nil)
 	uploader := &VelociraptorUploader{
 		Responder: resp,
 	}
@@ -242,7 +302,10 @@ func TestClientUploaderNoIndexIfNotSparse(t *testing.T) {
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
-		filename, "ntfs", nil, 1000, nilTime, range_reader)
+		filename, "ntfs", nil, 1000, nilTime,
+		resp.GetFlowContext().NextUploadId(),
+		range_reader)
+
 	responses := responder.GetTestResponses(resp)
 	assert.Equal(t, CombineOutput("/foo", responses), "Hello hello ")
 

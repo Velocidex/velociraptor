@@ -655,7 +655,7 @@ func (self *LauncherTestSuite) TestParameterTypes() {
 	assert.NoError(self.T(), err)
 
 	// Now run the VQL and receive the rows back
-	test_responder := responder.TestResponder()
+	test_responder := responder.TestResponder(self.ConfigObj)
 	for _, vql_request := range compiled {
 		actions.VQLClientAction{}.StartQuery(
 			self.ConfigObj, ctx, test_responder, vql_request)
@@ -796,7 +796,7 @@ func (self *LauncherTestSuite) TestParameterTypesDeps() {
 	assert.NoError(self.T(), err)
 
 	// Now run the VQL and receive the rows back
-	test_responder := responder.TestResponder()
+	test_responder := responder.TestResponder(self.ConfigObj)
 	for _, vql_request := range compiled {
 		actions.VQLClientAction{}.StartQuery(
 			self.ConfigObj, ctx, test_responder, vql_request)

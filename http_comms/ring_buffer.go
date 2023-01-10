@@ -228,7 +228,7 @@ func (self *FileBasedRingBuffer) IsItemBlackListed(item []byte) bool {
 		return false
 	}
 
-	return responder.GetFlowManager(self.config_obj).
+	return responder.GetFlowManager(context.Background(), self.config_obj).
 		IsCancelled(message.SessionId)
 }
 
@@ -568,7 +568,7 @@ func (self *RingBuffer) IsItemBlackListed(item []byte) bool {
 		return false
 	}
 
-	return responder.GetFlowManager(self.config_obj).
+	return responder.GetFlowManager(context.Background(), self.config_obj).
 		IsCancelled(message.SessionId)
 }
 

@@ -27,22 +27,22 @@ func (self *ClientVQLTestSuite) TestCPUThrottler() {
 	}
 
 	// Query is not limited
-	resp := responder.TestResponder()
+	resp := responder.TestResponder(self.ConfigObj)
 	actions.VQLClientAction{}.StartQuery(self.ConfigObj, self.Sm.Ctx, resp, request)
-	resp.Close(self.Ctx)
+	resp.Close()
 	assert.NotContains(self.T(), getLogs(resp), "Will throttle query")
 
 	// Query will now be limited
-	resp = responder.TestResponder()
+	resp = responder.TestResponder(self.ConfigObj)
 	request.CpuLimit = 20
 	actions.VQLClientAction{}.StartQuery(self.ConfigObj, self.Sm.Ctx, resp, request)
-	resp.Close(self.Ctx)
+	resp.Close()
 	assert.Contains(self.T(), getLogs(resp), "Will throttle query")
 }
 
 // Make sure that dependent artifacts are properly used
 func (self *ClientVQLTestSuite) TestDependentArtifacts() {
-	resp := responder.TestResponder()
+	resp := responder.TestResponder(self.ConfigObj)
 
 	actions.VQLClientAction{}.StartQuery(self.ConfigObj, self.Sm.Ctx, resp,
 		&actions_proto.VQLCollectorArgs{

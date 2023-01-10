@@ -210,7 +210,7 @@ func (self *ApiServer) CollectArtifact(
 	result.FlowId = flow_id
 
 	// Log this event as an Audit event.
-	logging.LogAudit(org_config_obj, principal, "CancelFlow",
+	logging.LogAudit(org_config_obj, principal, "ScheduleFlow",
 		logrus.Fields{
 			"client":  in.ClientId,
 			"flow_id": flow_id,

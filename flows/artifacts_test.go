@@ -191,14 +191,14 @@ func (self *TestSuite) TestRetransmission() {
 		},
 	}
 
-	runner := NewFlowRunner(self.ConfigObj)
+	runner := NewLegacyFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(ctx, message)
 	runner.Close(context.Background())
 
 	// Retransmit the same row again - this can happen if the
 	// server is loaded and the client is re-uploading the same
 	// payload multiple times.
-	runner = NewFlowRunner(self.ConfigObj)
+	runner = NewLegacyFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(ctx, message)
 	runner.Close(context.Background())
 
@@ -266,7 +266,7 @@ func (self *TestSuite) TestResourceLimits() {
 		},
 	}
 
-	runner := NewFlowRunner(self.ConfigObj)
+	runner := NewLegacyFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(ctx, message)
 	runner.Close(context.Background())
 
@@ -282,7 +282,7 @@ func (self *TestSuite) TestResourceLimits() {
 
 	// Send another row
 	message.ResponseId++
-	runner = NewFlowRunner(self.ConfigObj)
+	runner = NewLegacyFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(ctx, message)
 	runner.Close(context.Background())
 
@@ -300,7 +300,7 @@ func (self *TestSuite) TestResourceLimits() {
 	// but terminate the flow due to resource exhaustion.
 	message.VQLResponse.TotalRows = 5
 	message.ResponseId++
-	runner = NewFlowRunner(self.ConfigObj)
+	runner = NewLegacyFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(ctx, message)
 	runner.Close(context.Background())
 
@@ -326,7 +326,7 @@ func (self *TestSuite) TestResourceLimits() {
 	// usually because the client has not received the cancel yet
 	// and is already sending the next message in the queue.
 	message.ResponseId++
-	runner = NewFlowRunner(self.ConfigObj)
+	runner = NewLegacyFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(ctx, message)
 	runner.Close(context.Background())
 
@@ -343,7 +343,7 @@ func (self *TestSuite) TestResourceLimits() {
 }
 
 func (self *TestSuite) TestClientUploaderStoreFile() {
-	resp := responder.TestResponder()
+	resp := responder.TestResponder(self.ConfigObj)
 	uploader := &uploads.VelociraptorUploader{
 		Responder: resp,
 	}
@@ -611,7 +611,7 @@ func (self *TestSuite) TestCollectionCompletionTwoSourcesIncomplete() {
 		},
 	}
 
-	runner := NewFlowRunner(self.ConfigObj)
+	runner := NewLegacyFlowRunner(self.ConfigObj)
 	runner.context_map[self.flow_id] = collection_context
 
 	wg := &sync.WaitGroup{}
@@ -679,7 +679,7 @@ func (self *TestSuite) TestCollectionCompletionTwoSourcesIncomplete() {
 		collection_context.ArtifactsWithResults[0])
 
 	// Now send the second status message as OK
-	runner = NewFlowRunner(self.ConfigObj)
+	runner = NewLegacyFlowRunner(self.ConfigObj)
 	runner.context_map[self.flow_id] = collection_context
 
 	runner.ProcessSingleMessage(self.Ctx,
@@ -751,7 +751,7 @@ func (self *TestSuite) testCollectionCompletion(
 		},
 	}
 
-	runner := NewFlowRunner(self.ConfigObj)
+	runner := NewLegacyFlowRunner(self.ConfigObj)
 	runner.context_map[self.flow_id] = collection_context
 
 	wg := &sync.WaitGroup{}
@@ -796,7 +796,7 @@ func (self *TestSuite) testCollectionCompletion(
 }
 
 func (self *TestSuite) TestClientUploaderStoreSparseFile() {
-	resp := responder.TestResponder()
+	resp := responder.TestResponder(self.ConfigObj)
 	uploader := &uploads.VelociraptorUploader{
 		Responder: resp,
 	}
@@ -943,7 +943,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 	fd, err := accessor.Open(filename)
 	assert.NoError(self.T(), err)
 
-	resp := responder.TestResponder()
+	resp := responder.TestResponder(self.ConfigObj)
 	uploader := &uploads.VelociraptorUploader{
 		Responder: resp,
 	}

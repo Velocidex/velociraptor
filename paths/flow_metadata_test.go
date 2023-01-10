@@ -8,7 +8,7 @@ import (
 func (self *PathManagerTestSuite) TestFlowPathManager() {
 	manager := paths.NewFlowPathManager("C.123", "F.1234")
 
-	assert.Equal(self.T(), "/ds/clients/C.123/collections/F.1234.db",
+	assert.Equal(self.T(), "/ds/clients/C.123/collections/F.1234.json.db",
 		self.getDatastorePath(manager.Path()))
 
 	assert.Equal(self.T(), "/fs/clients/C.123/collections/F.1234/logs.json",

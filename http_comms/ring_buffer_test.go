@@ -330,10 +330,11 @@ func TestRingBufferCancellation(t *testing.T) {
 	ring_buffer.Enqueue([]byte(serialized_message_list))
 
 	// Now cancel this flow ID.
+	ctx := context.Background()
+
 	config_obj := config.GetDefaultConfig()
-	flow_manager := responder.GetFlowManager(config_obj)
-	flow_manager.Cancel(context.Background(),
-		message_list.Job[0].SessionId)
+	flow_manager := responder.GetFlowManager(ctx, config_obj)
+	flow_manager.Cancel(ctx, message_list.Job[0].SessionId)
 
 	// Try to lease the message.
 	ring_buffer = openRB(t, filename)

@@ -25,7 +25,6 @@ import (
 	"os"
 	"runtime"
 	"runtime/debug"
-	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -257,10 +256,6 @@ func (self VQLClientAction) StartQuery(
 					query_log.Close()
 					break run_query
 				}
-				// Skip let queries since they never produce results.
-				if strings.HasPrefix(strings.ToLower(query.VQL), "let") {
-					continue
-				}
 				response := &actions_proto.VQLResponse{
 					Query:         query,
 					QueryId:       uint64(query_idx),
@@ -269,6 +264,11 @@ func (self VQLClientAction) StartQuery(
 					TotalRows:     uint64(result.TotalRows),
 					QueryStartRow: row_tracker.GetStartRow(query),
 					Timestamp:     uint64(time.Now().UTC().UnixNano() / 1000),
+				}
+
+				// Do not send empty responses
+				if result.TotalRows == 0 {
+					continue
 				}
 
 				row_tracker.AddRows(query, uint64(result.TotalRows))
@@ -287,7 +287,7 @@ func (self VQLClientAction) StartQuery(
 						))
 				}
 				response.Columns = result.Columns
-				responder.AddResponse(ctx, &crypto_proto.VeloMessage{
+				responder.AddResponse(&crypto_proto.VeloMessage{
 					VQLResponse: response})
 			}
 		}

@@ -150,7 +150,7 @@ func (self *PoolClientExecutor) maybeUpdateEventTable(
 	fmt.Printf("Installing new event table for version %v\n", req.UpdateEventTable.Version)
 
 	g_responder := responder.GlobalPoolEventResponder
-	pool_responder := g_responder.NewResponder(self.config_obj, req)
+	pool_responder := g_responder.NewResponder(ctx, self.config_obj, req)
 	actions.UpdateEventTable{}.Run(
 		self.config_obj, ctx, pool_responder, req.UpdateEventTable)
 

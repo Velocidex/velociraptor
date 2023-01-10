@@ -464,7 +464,7 @@ func (self *collectionManager) Close() error {
 		self.collection_context.StartTime = uint64(self.start_time.UnixNano())
 		self.collection_context.CreateTime = uint64(self.start_time.UnixNano())
 
-		flows.UpdateFlowStats(self.collection_context)
+		launcher.UpdateFlowStats(&self.collection_context.ArtifactCollectorContext)
 
 		// Merge in the container stats
 		container_stats := self.container.Stats()

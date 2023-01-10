@@ -239,6 +239,10 @@ message ClientConfig {
     // The maximum time in seconds the client will batch log messages
     // before forwarding them to the server (default 1 second).
     uint64 default_log_batch_time = 38;
+
+    // How often clients inform the server about flow progress
+    // (default 5 seconds).
+    uint64 default_server_flow_stats_update = 39;
 }
 
 message APIConfig {

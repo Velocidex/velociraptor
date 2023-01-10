@@ -138,41 +138,9 @@ func (self *ClientExecutor) processRequestPlugin(
 		return
 	}
 
-	// Handle the requests. This used to be a plugin registration
-	// process but there are very few plugins any more and so it
-	// is easier to hard code this.
-	responder_obj := responder.NewResponder(ctx, config_obj, req, self.Outbound)
-	defer responder_obj.Close(ctx)
-
-	if req.VQLClientAction != nil {
-		// Control concurrency on the executor only.
-		if !req.Urgent {
-			cancel, err := self.concurrency.StartConcurrencyControl(ctx)
-			if err != nil {
-				responder_obj.RaiseError(ctx, fmt.Sprintf("%v", err))
-				return
-			}
-			defer cancel()
-		}
-		actions.VQLClientAction{}.StartQuery(
-			config_obj, ctx, responder_obj, req.VQLClientAction)
-		return
-	}
-
-	if req.UpdateEventTable != nil {
-		actions.UpdateEventTable{}.Run(
-			config_obj, ctx, responder_obj, req.UpdateEventTable)
-		return
-	}
-
-	// This action is deprecated now.
-	if req.UpdateForeman != nil {
-		return
-	}
+	flow_manager := responder.GetFlowManager(ctx, config_obj)
 
 	if req.Cancel != nil {
-		flow_manager := responder.GetFlowManager(config_obj)
-
 		// Only log when the flow is not already cancelled.
 		if !flow_manager.IsCancelled(req.SessionId) {
 			flow_manager.Cancel(ctx, req.SessionId)
@@ -181,6 +149,44 @@ func (self *ClientExecutor) processRequestPlugin(
 				req, fmt.Sprintf("Cancelled all inflight queries for flow %v",
 					req.SessionId))
 		}
+		return
+	}
+
+	// Handle the requests. This used to be a plugin registration
+	// process but there are very few plugins any more and so it
+	// is easier to hard code this.
+	responder_obj := responder.NewResponder(ctx, config_obj, req, self.Outbound)
+	defer responder_obj.Close()
+
+	// Each request has its own context.
+	query_ctx, closer := flow_manager.FlowContext(req).NewQueryContext(
+		responder_obj, req)
+	defer closer()
+
+	if req.VQLClientAction != nil {
+		// Control concurrency on the executor only.
+		if !req.Urgent {
+			cancel, err := self.concurrency.StartConcurrencyControl(query_ctx)
+			if err != nil {
+				responder_obj.RaiseError(query_ctx, fmt.Sprintf("%v", err))
+				return
+			}
+			defer cancel()
+		}
+
+		actions.VQLClientAction{}.StartQuery(
+			config_obj, query_ctx, responder_obj, req.VQLClientAction)
+		return
+	}
+
+	if req.UpdateEventTable != nil {
+		actions.UpdateEventTable{}.Run(
+			config_obj, query_ctx, responder_obj, req.UpdateEventTable)
+		return
+	}
+
+	// This action is deprecated now.
+	if req.UpdateForeman != nil {
 		return
 	}
 
@@ -243,13 +249,7 @@ func NewClientExecutor(
 					go func() {
 						defer wg.Done()
 
-						flow_manager := responder.GetFlowManager(config_obj)
-
-						// Each request has its own context.
-						ctx, closer := flow_manager.NewQueryContext(req.SessionId)
 						logger.Debug("Received request: %v", req)
-						defer closer()
-
 						result.processRequestPlugin(config_obj, ctx, req)
 					}()
 				}
