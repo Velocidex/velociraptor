@@ -99,7 +99,7 @@ func newFlowContext(ctx context.Context,
 		frequency_sec = config_obj.Client.DefaultServerFlowStatsUpdate
 	}
 
-	now := uint64(utils.GetTime().Now().Unix())
+	now := uint64(utils.GetTime().Now().UnixNano() / 1000)
 
 	sub_ctx, cancel := context.WithCancel(ctx)
 
