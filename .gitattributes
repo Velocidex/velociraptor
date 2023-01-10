@@ -15,6 +15,7 @@ logs text eol=lf
 
 *.db binary
 *.json -text
+*.json.db -text
 *.csv binary
 *.zip binary
 *.index binary
