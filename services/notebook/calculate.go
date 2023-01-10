@@ -16,7 +16,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/vfilter"
 )
+
 
 func (self *NotebookManager) UpdateNotebookCell(
 	ctx context.Context,
@@ -236,38 +238,53 @@ func (self *NotebookManager) updateCellContents(
 		}
 
 	case "vql":
-		// A VQL cell gets converted to a set of VQL and
-		// markdown fragments.
-		cell_content, err := reporting.ConvertVQLCellToContent(input)
-		if err != nil {
-			// Ignore errors and just treat the whole
-			// thing as VQL - this will fail to render the
-			// comment and just ignore it - it is probably
-			// malformed.
-			cell_content = &reporting.Content{}
-			cell_content.PushVQL(input)
-		}
-
-		for _, fragment := range cell_content.Fragments {
-			if fragment.VQL != "" {
-				rows := tmpl.Query(fragment.VQL)
-				output_any, ok := tmpl.Table(rows).(string)
-				if ok {
-					output += output_any
-				}
-
-			} else if fragment.Comment != "" {
-				lines := strings.SplitN(fragment.Comment, "\n", 2)
-				if len(lines) <= 1 {
-					input = lines[0]
-				} else {
-					input = lines[1]
-				}
-				fragment_output, err := tmpl.Execute(&artifacts_proto.Report{Template: input})
+		// No query, nothing to do
+		if reporting.IsEmptyQuery(input) {
+			tmpl.Error("Please specify a query to run")
+		} else {
+			vqls, err := vfilter.MultiParseWithComments(input)
+			if err != nil {
+				// Try parsing without comments if comment parser fails
+				vqls, err = vfilter.MultiParse(input)
 				if err != nil {
 					return make_error_cell(output, err)
 				}
-				output += fragment_output
+			}
+
+			no_query := true
+			for _, vql := range vqls {
+				if vql.Comments != nil {
+					// Only extract multiline comments to render template
+					// Ignore code comments
+					comments := multiLineCommentsToString(vql)
+					if comments != "" {
+					    fragment_output, err := tmpl.Execute(&artifacts_proto.Report{Template: comments})
+					    if err != nil {
+						    return make_error_cell(output, err)
+					    }
+					    output += fragment_output
+					}
+				}
+				if vql.Let != "" || vql.Query != nil || vql.StoredQuery != nil {
+					no_query = false
+					rows, err := tmpl.RunQuery(vql, nil)
+
+					if err != nil {
+						return make_error_cell(output, err)
+					}
+
+					// VQL Let won't return rows. Ignore
+					if vql.Let == "" {
+						output_any, ok := tmpl.Table(rows).(string)
+						if ok {
+							output += output_any
+						}
+					}
+				}
+			}
+			// No VQL found, only comments
+			if no_query {
+				tmpl.Error("Please specify a query to run")
 			}
 		}
 
@@ -279,4 +296,20 @@ func (self *NotebookManager) updateCellContents(
 
 	notebook_cell := make_cell(output)
 	return notebook_cell, self.Store.SetNotebookCell(notebook_id, notebook_cell)
+}
+
+func multiLineCommentsToString(vql *vfilter.VQL) string {
+	output := ""
+
+	for _, comment := range vql.Comments {
+		if comment.MultiLine != nil {
+			output += *comment.MultiLine
+		}
+	}
+
+	if output != "" {
+		return output[2 : len(output)-2]
+	} else {
+		return output
+	}
 }
