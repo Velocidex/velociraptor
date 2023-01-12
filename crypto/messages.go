@@ -30,7 +30,8 @@ type MessageInfo struct {
 // immediately use the decompressed buffer and not hold it around.
 func (self *MessageInfo) IterateJobs(
 	ctx context.Context, config_obj *config_proto.Config,
-	processor func(ctx context.Context, msg *crypto_proto.VeloMessage)) error {
+	processor func(ctx context.Context,
+		msg *crypto_proto.VeloMessage) error) (rerr error) {
 	for _, raw := range self.RawCompressed {
 		if self.Compression == crypto_proto.PackedMessageList_ZCOMPRESSION {
 			decompressed, err := utils.Uncompress(ctx, raw)
@@ -53,9 +54,9 @@ func (self *MessageInfo) IterateJobs(
 			job.Source = self.Source
 			job.OrgId = self.OrgId
 
-			processor(ctx, job)
+			rerr = processor(ctx, job)
 		}
 	}
 
-	return nil
+	return rerr
 }

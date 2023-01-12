@@ -25,6 +25,11 @@ var (
 	})
 )
 
+type jsonBatch struct {
+	bytes.Buffer
+	row_count int
+}
+
 // Receive monitoring messages from the client.
 func MonitoringProcessMessage(
 	config_obj *config_proto.Config,
@@ -125,7 +130,7 @@ func (self *CollectionContext) batchRows(
 	artifact_name string, jsonl []byte) {
 	batch, pres := self.monitoring_batch[artifact_name]
 	if !pres {
-		batch = &bytes.Buffer{}
+		batch = &jsonBatch{}
 	}
 	batch.Write(jsonl)
 	self.monitoring_batch[artifact_name] = batch
@@ -144,7 +149,7 @@ func flushMonitoringLogs(
 	for query_name, jsonl_buff := range collection_context.monitoring_batch {
 		err := journal.PushJsonlToArtifact(
 			config_obj,
-			jsonl_buff.Bytes(),
+			jsonl_buff.Bytes(), jsonl_buff.row_count,
 			query_name,
 			collection_context.ClientId,
 			collection_context.SessionId)

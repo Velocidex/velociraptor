@@ -302,10 +302,19 @@ func (self *Launcher) CompileCollectorArgs(
 		collector_request.IopsLimit = iops_limit
 	}
 
+	batch_delay := uint64(1)
+	if options.LogBatchTime > 0 {
+		batch_delay = options.LogBatchTime
+	} else if config_obj.Frontend != nil &&
+		config_obj.Frontend.Resources.DefaultLogBatchTime > 0 {
+		batch_delay = config_obj.Frontend.Resources.DefaultLogBatchTime
+	}
+
 	// Update the total count of requests
 	for idx, item := range result {
 		item.QueryId = int64(idx + 1)
 		item.TotalQueries = int64(len(result))
+		item.LogBatchTime = batch_delay
 	}
 
 	return result, nil

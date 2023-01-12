@@ -256,6 +256,7 @@ func (self VQLClientAction) StartQuery(
 					query_log.Close()
 					break run_query
 				}
+
 				response := &actions_proto.VQLResponse{
 					Query:         query,
 					QueryId:       uint64(query_idx),

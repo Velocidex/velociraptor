@@ -38,6 +38,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -217,7 +218,10 @@ func (self UpdateEventTable) Run(
 	service_wg.Add(len(table.Events))
 
 	for _, event := range table.Events {
-		query_responder := responder.Copy()
+		query_responder := responder.Copy(table.Ctx)
+
+		utils.DebugCtx(table.Ctx, "table.Ctx")
+		utils.LogWhenCtxDone(table.Ctx, "table.Ctx")
 
 		go func(event *actions_proto.VQLCollectorArgs) {
 			defer table.wg.Done()
@@ -246,6 +250,8 @@ func (self UpdateEventTable) Run(
 			if event.Heartbeat == 0 {
 				event.Heartbeat = 300 // 5 minutes
 			}
+
+			utils.DebugCtx(table.Ctx, "StartQuery : table.Ctx")
 
 			// Start the query - if it is an event query this will
 			// never complete until it is cancelled.

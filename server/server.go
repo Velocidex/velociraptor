@@ -140,24 +140,27 @@ func NewServer(ctx context.Context,
 // authenticated.
 func (self *Server) ProcessSingleUnauthenticatedMessage(
 	ctx context.Context,
-	message *crypto_proto.VeloMessage) {
+	message *crypto_proto.VeloMessage) error {
 
 	if message.CSR != nil {
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
-			return
+			return err
 		}
 
 		config_obj, err := org_manager.GetOrgConfig(message.OrgId)
 		if err != nil {
-			return
+			return err
 		}
 
 		err = enroll(ctx, config_obj, self, message.CSR)
 		if err != nil {
 			self.logger.Error(fmt.Sprintf("Enrol Error: %s", err))
 		}
+		return err
 	}
+
+	return nil
 }
 
 func (self *Server) ProcessUnauthenticatedMessages(

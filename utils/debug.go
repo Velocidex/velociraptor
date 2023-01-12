@@ -77,3 +77,10 @@ func DebugCtx(ctx context.Context, name string) {
 		fmt.Printf(name + ": Ctx is still valid!\n")
 	}
 }
+
+func LogWhenCtxDone(ctx context.Context, name string) {
+	go func() {
+		<-ctx.Done()
+		fmt.Printf(name + ": Ctx done!\n")
+	}()
+}

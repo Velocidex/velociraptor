@@ -558,9 +558,11 @@ func (self *LauncherTestSuite) TestCompilingObfuscation() {
 
 	compiled, err := launcher.CompileCollectorArgs(
 		ctx, self.ConfigObj, acl_manager, repository,
-		services.CompilerOptions{}, request)
+		services.CompilerOptions{
+			ObfuscateNames: false,
+		}, request)
 	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), compiled[0].Query[1].Description, "")
+	assert.Equal(self.T(), compiled[0].Query[1].Name, "Test.Artifact")
 }
 
 func (self *LauncherTestSuite) TestCompilingPermissions() {

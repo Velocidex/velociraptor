@@ -350,6 +350,7 @@ class FlowsList extends React.Component {
         let client_id = this.props.client && this.props.client.client_id;
         let columns = getFlowColumns(client_id);
         let selected_flow = this.props.selected_flow && this.props.selected_flow.session_id;
+
         const selectRow = {
             mode: "radio",
             clickToSelect: true,
@@ -610,7 +611,7 @@ const stateRenderer = (cell, row) => {
 };
 
 const rowClassRenderer = (row, rowIndex) => {
-    if (row.request.urgent) {
+    if (row.request && row.request.urgent) {
         return 'flow-urgent';
     }
     return '';

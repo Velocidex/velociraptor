@@ -24,6 +24,7 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"github.com/Velocidex/ttlcache/v2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -56,6 +57,8 @@ type QueryContext struct {
 type FlowContext struct {
 	ctx context.Context
 
+	id uint64
+
 	// Cancelling the FlowContext will cancel all its in flight
 	// queries.
 	cancel func()
@@ -77,6 +80,9 @@ type FlowContext struct {
 	log_messages_id   uint64 // The ID of the first row in the log_messages buffer
 	log_message_count uint64
 	error_message     string // If an error occurs trap the error message
+
+	// The name of the artifact
+	artifact string
 
 	// Keep stats of the flow.
 	Stats Stats
@@ -105,6 +111,7 @@ func newFlowContext(ctx context.Context,
 
 	return &FlowContext{
 		ctx:     sub_ctx,
+		id:      utils.GetId(),
 		cancel:  cancel,
 		flow_id: flow_id,
 		queries: make(map[uint64]*QueryContext),
@@ -112,7 +119,7 @@ func newFlowContext(ctx context.Context,
 			FlowStats: &crypto_proto.FlowStats{
 				Timestamp: now,
 			},
-			frequency_sec: frequency_sec,
+			frequency_msec: 1000000 * frequency_sec,
 		},
 		owner: owner,
 	}
@@ -147,6 +154,7 @@ func (self *FlowContext) AddLogMessage(level string, msg, artifact string) {
 		self.error_message = msg
 	}
 
+	self.artifact = artifact
 	self.log_message_count++
 	self.log_messages = append(self.log_messages, json.Format(
 		"{\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
@@ -197,12 +205,12 @@ func (self *FlowContext) NewQueryContext(
 						NumberOfRows: count,
 						Jsonl:        string(buf),
 						ErrorMessage: error_message,
+						Artifact:     self.artifact,
 					}})
 			}
 
 			// Send the stats one last time.
 			self.Stats.SendFinalFlowStats(responder)
-			self.owner.Remove(self.flow_id)
 		}
 	}
 }
@@ -214,9 +222,11 @@ func (self *FlowContext) NewQueryContext(
 type FlowManager struct {
 	mu sync.Mutex
 
+	id uint64
+
 	ctx        context.Context
 	config_obj *config_proto.Config
-	in_flight  map[string]*FlowContext
+	in_flight  *ttlcache.Cache // map[string]*FlowContext
 	next_id    int
 
 	cancelled map[string]bool
@@ -225,12 +235,16 @@ type FlowManager struct {
 func NewFlowManager(ctx context.Context,
 	config_obj *config_proto.Config) *FlowManager {
 
-	return &FlowManager{
+	result := &FlowManager{
 		ctx:        ctx,
+		id:         utils.GetId(),
 		config_obj: config_obj,
-		in_flight:  make(map[string]*FlowContext),
+		in_flight:  ttlcache.NewCache(),
 		cancelled:  make(map[string]bool),
 	}
+
+	result.in_flight.SetCacheSizeLimit(1000)
+	return result
 }
 
 func (self *FlowManager) IsCancelled(flow_id string) bool {
@@ -238,13 +252,6 @@ func (self *FlowManager) IsCancelled(flow_id string) bool {
 	defer self.mu.Unlock()
 	ok, _ := self.cancelled[flow_id]
 	return ok
-}
-
-func (self *FlowManager) Remove(flow_id string) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	delete(self.in_flight, flow_id)
 }
 
 func (self *FlowManager) Cancel(ctx context.Context, flow_id string) {
@@ -264,15 +271,18 @@ func (self *FlowManager) Cancel(ctx context.Context, flow_id string) {
 
 	self.cancelled[flow_id] = true
 
-	flow_context, ok := self.in_flight[flow_id]
-	if !ok {
+	flow_context_any, err := self.in_flight.Get(flow_id)
+	if err != nil {
 		self.mu.Unlock()
 		return
 	}
 	self.mu.Unlock()
 
 	// Cancel all existing queries
-	flow_context.cancel()
+	flow_context, ok := flow_context_any.(*FlowContext)
+	if ok {
+		flow_context.cancel()
+	}
 }
 
 func (self *FlowManager) FlowContext(
@@ -283,13 +293,18 @@ func (self *FlowManager) FlowContext(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	flow_context, ok := self.in_flight[flow_id]
-	if !ok {
-		flow_context = newFlowContext(
-			self.ctx, self.config_obj, flow_id, self)
-		self.in_flight[flow_id] = flow_context
+	flow_context_any, err := self.in_flight.Get(flow_id)
+	if err != nil {
+		flow_context := newFlowContext(self.ctx, self.config_obj, flow_id, self)
+		self.in_flight.Set(flow_id, flow_context)
+		return flow_context
 	}
 
+	flow_context, ok := flow_context_any.(*FlowContext)
+	if !ok {
+		// Cant possibly happen.
+		panic(flow_context_any)
+	}
 	return flow_context
 }
 

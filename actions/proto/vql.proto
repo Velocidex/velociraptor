@@ -9,17 +9,11 @@ package proto;
 option go_package = "www.velocidex.com/golang/velociraptor/actions/proto";
 
 message VQLRequest {
-    // DEPRECATED: Will be populated for compatibility with older clients.
-    string Name = 2 [(sem_type) = {
-            description: "The name of this query. This should be descriptive to indicate what type of informaiton the query retrieves.",
-        }];
-    // DEPRECATED: Not used any more.
-    string Description = 3 [(sem_type) = {
-            description: "What this query is supposed to do.",
-        }];
-    string VQL = 1 [(sem_type) = {
-            description: "The VQL query to execute on the client.",
-        }];
+    // The obfuscated name of the artifact this query came from.
+    string Name = 2;
+
+    // The compiled VQL query to evaluate on the endpoint.
+    string VQL = 1;
 }
 
 message VQLEnv {
@@ -67,7 +61,7 @@ message VQLCollectorArgs {
             default: "10",
         }];
 
-    // This is deprecated.
+    // This is deprecated in favor of the below limits.
     float ops_per_second = 24 [(sem_type) = {
       description: "An Op is defined as some arbitrary unit of work. This allows work to be limited. Typically VQL plugins will count ops towards the query as appropriate."
     }];
@@ -83,6 +77,11 @@ message VQLCollectorArgs {
     uint64 timeout = 25 [(sem_type) = {
             description: "Maximum time for the query to run."
         }];
+
+    // The maximum time in seconds the client will batch log messages
+    // before forwarding them to the server. If this is 0, no updates
+    // will be sent until he very end of the query.
+    uint64 log_batch_time = 37;
 
     // How often to heart beat progress (default 30 sec)
     uint64 heartbeat = 27;

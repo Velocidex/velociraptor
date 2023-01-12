@@ -12,7 +12,8 @@
      "VQL": "SELECT * FROM Test_Artifact_Precondition_Source1_0_0"
     }
    ],
-   "max_row": 1000
+   "max_row": 1000,
+   "log_batch_time": 1
   },
   {
    "query_id": 2,
@@ -30,7 +31,8 @@
      "VQL": "SELECT * FROM if(then=Test_Artifact_Precondition_Source2_0_0, condition=precondition_Test_Artifact_Precondition_Source2_0, else={SELECT * FROM scope() WHERE log(message='Query skipped due to precondition') AND FALSE})"
     }
    ],
-   "max_row": 1000
+   "max_row": 1000,
+   "log_batch_time": 1
   }
  ],
  "WithoutPreconditions": [
@@ -46,7 +48,8 @@
      "VQL": "SELECT * FROM Test_Artifact_Precondition_Source1_0_0"
     }
    ],
-   "max_row": 1000
+   "max_row": 1000,
+   "log_batch_time": 1
   },
   {
    "query_id": 2,
@@ -60,7 +63,8 @@
      "VQL": "SELECT * FROM Test_Artifact_Precondition_Source2_0_0"
     }
    ],
-   "max_row": 1000
+   "max_row": 1000,
+   "log_batch_time": 1
   }
  ]
 }

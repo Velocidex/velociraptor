@@ -28,6 +28,7 @@ message VeloMessage {
   // queued needlessly.
   bool urgent = 36;
 
+  // DEPRECATED: not used any more.
   uint64 response_id = 3 [(sem_type) = {
       description: "Responses for each request are also numbered from 1."
     }];
