@@ -170,11 +170,8 @@ func (self *Responder) updateStats(message *crypto_proto.VeloMessage) {
 		self.result_rows = message.VQLResponse.QueryStartRow +
 			message.VQLResponse.TotalRows
 
-		if message.VQLResponse.Query != nil && !utils.InString(
-			self.names_with_response, message.VQLResponse.Query.Name) {
-			self.names_with_response = append(self.names_with_response,
-				message.VQLResponse.Query.Name)
-		}
+		addNameWithResponse(&self.names_with_response,
+			message.VQLResponse.Query.Name)
 	}
 }
 
