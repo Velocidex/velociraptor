@@ -164,11 +164,19 @@ func (self *ClientEventTable) compileArtifactCollectorArgs(
 		return nil, err
 	}
 
+	var log_delay uint64
+	if config_obj.Frontend != nil &&
+		config_obj.Frontend.Resources != nil &&
+		config_obj.Frontend.Resources.DefaultMonitoringLogBatchTime > 0 {
+		log_delay = config_obj.Frontend.Resources.DefaultMonitoringLogBatchTime
+	}
+
 	return launcher.CompileCollectorArgs(
 		ctx, config_obj, acl_managers.NullACLManager{},
 		repository, services.CompilerOptions{
 			ObfuscateNames:         true,
 			IgnoreMissingArtifacts: true,
+			LogBatchTime:           log_delay,
 		}, artifact)
 }
 

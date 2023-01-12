@@ -727,7 +727,7 @@ func (self *NotificationReader) sendToURL(
 	}
 
 	return message_info.IterateJobs(ctx, self.config_obj,
-		func(ctx context.Context, msg *crypto_proto.VeloMessage) {
+		func(ctx context.Context, msg *crypto_proto.VeloMessage) error {
 
 			// Abort the client, but leave the client
 			// running a bit to send acks. NOTE: This has
@@ -742,6 +742,7 @@ func (self *NotificationReader) sendToURL(
 			}
 
 			self.executor.ProcessRequest(ctx, msg)
+			return nil
 		})
 }
 

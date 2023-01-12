@@ -236,10 +236,6 @@ message ClientConfig {
 
     bool disable_compression = 37;
 
-    // The maximum time in seconds the client will batch log messages
-    // before forwarding them to the server (default 1 second).
-    uint64 default_log_batch_time = 38;
-
     // How often clients inform the server about flow progress
     // (default 5 seconds).
     uint64 default_server_flow_stats_update = 39;
@@ -564,6 +560,15 @@ message FrontendResourceControl {
     // size of the file - when it is exceeded, the file will be
     // truncated and events will be lost. Default is 1gb
     int64 max_journal_buffer_size = 28;
+
+    // The maximum time in seconds the client will batch log messages
+    // before forwarding them to the server (default 1 second).
+    uint64 default_log_batch_time = 31;
+
+    // The maximum time in seconds the client will batch minitoring
+    // log messages before forwarding them to the server (default 600
+    // second).
+    uint64 default_monitoring_log_batch_time = 32;
 }
 
 

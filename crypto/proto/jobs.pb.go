@@ -377,7 +377,8 @@ type VeloMessage struct {
 	RequestId uint64 `protobuf:"varint,2,opt,name=request_id,json=requestId,proto3" json:"request_id,omitempty"`
 	// If this is set then the message is urgent - it will not be
 	// queued needlessly.
-	Urgent     bool   `protobuf:"varint,36,opt,name=urgent,proto3" json:"urgent,omitempty"`
+	Urgent bool `protobuf:"varint,36,opt,name=urgent,proto3" json:"urgent,omitempty"`
+	// DEPRECATED: not used any more.
 	ResponseId uint64 `protobuf:"varint,3,opt,name=response_id,json=responseId,proto3" json:"response_id,omitempty"`
 	// The source of this message. Note that clients may group together
 	// many messages from the same source. The authenticity of the

@@ -283,7 +283,7 @@ func (self *ServerTestSuite) RequiredFilestoreContains(
 }
 
 // Receiving a response from the server to the monitoring flow will
-// write the rows into a csv file in the client's monitoring area.
+// write the rows into a jsonl file in the client's monitoring area.
 func (self *ServerTestSuite) TestMonitoring() {
 	runner := flows.NewFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(
@@ -296,6 +296,7 @@ func (self *ServerTestSuite) TestMonitoring() {
 					"ClientId", "Timestamp", "Fqdn", "HuntId"},
 				JSONLResponse: fmt.Sprintf(
 					`{"ClientId": "%s", "HuntId": "H.123"}\n`, self.client_id),
+				TotalRows: 1,
 				Query: &actions_proto.VQLRequest{
 					Name: "Generic.Client.Stats",
 				},
@@ -322,7 +323,8 @@ func (self *ServerTestSuite) TestMonitoringWithUpload() {
 			RequestId: constants.TransferWellKnownFlowId,
 			FileBuffer: &actions_proto.FileBuffer{
 				Pathspec: &actions_proto.PathSpec{
-					Path: "/etc/passwd",
+					Path:       "/etc/passwd",
+					Components: []string{"etc", "passwd"},
 				},
 				Data: []byte("Hello"),
 				Size: 10000,

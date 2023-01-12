@@ -179,7 +179,7 @@ func (self *TestSuite) TestQueueManagerJsonl() {
 		// For performance critical parts it is more efficient to
 		// build the JSONL manually
 		err = manager.PushEventJsonl(path_manager,
-			[]byte(fmt.Sprintf("{\"Foo\":%q}\n", "Bar")))
+			[]byte(fmt.Sprintf("{\"Foo\":%q}\n", "Bar")), 1)
 		assert.NoError(self.T(), err)
 	}
 

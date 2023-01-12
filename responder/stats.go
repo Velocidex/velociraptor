@@ -15,8 +15,8 @@ import (
 type Stats struct {
 	*crypto_proto.FlowStats
 
-	mu            sync.Mutex
-	frequency_sec uint64
+	mu             sync.Mutex
+	frequency_msec uint64
 }
 
 // Inspect the messages and update the flow stats based on them.
@@ -84,9 +84,8 @@ func (self *Stats) MaybeSendStats() *crypto_proto.FlowStats {
 
 	now := uint64(utils.GetTime().Now().UnixNano() / 1000)
 	last_timestamp := self.Timestamp
-	self.Timestamp = now
-
-	if now-last_timestamp > self.frequency_sec && !self.FlowComplete {
+	if now-last_timestamp > self.frequency_msec && !self.FlowComplete {
+		self.Timestamp = now
 		return proto.Clone(self.FlowStats).(*crypto_proto.FlowStats)
 	}
 	return nil

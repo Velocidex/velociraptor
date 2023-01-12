@@ -32,7 +32,9 @@ type rowContainer struct {
 }
 
 type TimedResultSetWriterImpl struct {
-	rows               []rowContainer
+	rows              []rowContainer
+	total_rows_cached int
+
 	opts               *json.EncOpts
 	file_store_factory api.FileStore
 
@@ -62,8 +64,9 @@ func (self *TimedResultSetWriterImpl) Write(row *ordereddict.Dict) {
 		count:      1,
 		ts:         self.Clock.Now(),
 	})
+	self.total_rows_cached += 1
 
-	if len(self.rows) > 10000 {
+	if self.total_rows_cached > 10000 {
 		self.Flush()
 	}
 }
@@ -74,8 +77,9 @@ func (self *TimedResultSetWriterImpl) WriteJSONL(jsonl []byte, count int) {
 		count:      count,
 		ts:         self.Clock.Now(),
 	})
+	self.total_rows_cached += count
 
-	if len(self.rows) > 10000 {
+	if self.total_rows_cached > 10000 {
 		self.Flush()
 	}
 }
@@ -84,7 +88,7 @@ func (self *TimedResultSetWriterImpl) WriteJSONL(jsonl []byte, count int) {
 // or until 10k rows are queued in memory.
 func (self *TimedResultSetWriterImpl) Flush() {
 	// Nothing to do...
-	if len(self.rows) == 0 {
+	if self.total_rows_cached == 0 {
 		return
 	}
 
@@ -97,6 +101,7 @@ func (self *TimedResultSetWriterImpl) Flush() {
 
 	// Reset the slice.
 	self.rows = self.rows[:0]
+	self.total_rows_cached = 0
 }
 
 func (self *TimedResultSetWriterImpl) getWriter(ts time.Time) (

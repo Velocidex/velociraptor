@@ -78,6 +78,8 @@ type CompilerOptions struct {
 
 	// Ignore Missing Artifacts without raising an error.
 	IgnoreMissingArtifacts bool
+
+	LogBatchTime uint64
 }
 
 type Launcher interface {

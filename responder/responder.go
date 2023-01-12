@@ -83,25 +83,27 @@ func NewResponder(
 		start_time: utils.GetTime().Now().UnixNano(),
 	}
 
+	// Default log batch delay is long to reduce traffic.
+	var batch_delay uint64 = 60
+
 	if request.VQLClientAction != nil {
 		for _, q := range request.VQLClientAction.Query {
 			if q.Name != "" {
 				result.Artifact = q.Name
 			}
 		}
+
+		if request.VQLClientAction.LogBatchTime > 0 {
+			batch_delay = request.VQLClientAction.LogBatchTime
+		}
 	}
 
 	go func() {
-		batch_delay := uint64(1)
-		if config_obj.Client != nil &&
-			config_obj.Client.DefaultLogBatchTime > 0 {
-			batch_delay = config_obj.Client.DefaultLogBatchTime
-		}
-
 		for {
 			select {
 			case <-sub_ctx.Done():
 				return
+
 			case <-time.After(time.Second * time.Duration(batch_delay)):
 				result.flushLogMessages(ctx)
 			}
@@ -116,9 +118,9 @@ func (self *Responder) Close() {
 	self.cancel()
 }
 
-func (self *Responder) Copy() *Responder {
+func (self *Responder) Copy(ctx context.Context) *Responder {
 	return &Responder{
-		ctx:        self.ctx,
+		ctx:        ctx,
 		config_obj: self.config_obj,
 		request:    self.request,
 		output:     self.output,
@@ -224,7 +226,8 @@ func (self *Responder) Log(ctx context.Context, level string, msg string) {
 }
 
 func (self *Responder) flushLogMessages(ctx context.Context) {
-	buf, id, count, error_message := self.GetFlowContext().GetLogMessages()
+	flow_context := self.GetFlowContext()
+	buf, id, count, error_message := flow_context.GetLogMessages()
 	if len(buf) > 0 {
 		self.AddResponse(&crypto_proto.VeloMessage{
 			RequestId: constants.LOG_SINK,
@@ -238,7 +241,7 @@ func (self *Responder) flushLogMessages(ctx context.Context) {
 	}
 
 	// Maybe send a periodic stats update
-	stats := self.GetFlowContext().Stats.MaybeSendStats()
+	stats := flow_context.Stats.MaybeSendStats()
 	if stats != nil && !stats.FlowComplete {
 		self.AddResponse(&crypto_proto.VeloMessage{
 			RequestId: constants.STATS_SINK,

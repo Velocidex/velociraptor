@@ -2,6 +2,7 @@ package flows
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -9,6 +10,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	constants "www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -57,54 +59,148 @@ func NewFlowRunner(config_obj *config_proto.Config) *ClientFlowRunner {
 
 func (self *ClientFlowRunner) Complete() {}
 
-func (self *ClientFlowRunner) ProcessSingleMessage(
-	ctx context.Context, msg *crypto_proto.VeloMessage) {
+func (self *ClientFlowRunner) ProcessMonitoringMessage(
+	ctx context.Context, msg *crypto_proto.VeloMessage) error {
 
 	flow_id := msg.SessionId
 	client_id := msg.Source
 
-	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-
-	// Should never happen because these are filled in from the crypto
-	// envelope.
-	if flow_id == "" || client_id == "" {
-		logger.Error("Empty SessionId: %v", msg)
-		return
+	if msg.VQLResponse != nil && msg.VQLResponse.Query != nil {
+		err := self.MonitoringVQLResponse(client_id, flow_id, msg.VQLResponse)
+		if err != nil {
+			return fmt.Errorf("MonitoringVQLResponse: %w", err)
+		}
+		return nil
 	}
 
 	if msg.LogMessage != nil {
-		err := self.LogMessage(client_id, flow_id, msg.LogMessage)
+		err := self.MonitoringLogMessage(client_id, flow_id, msg.LogMessage)
 		if err != nil {
-			logger.Error("LogMessage: %v", err)
+			return fmt.Errorf("MonitoringLogMessage: %w", err)
 		}
-		return
-	}
-
-	if msg.VQLResponse != nil {
-		err := self.VQLResponse(client_id, flow_id, msg.VQLResponse)
-		if err != nil {
-			logger.Error("VQLResponse: %v", err)
-		}
-		return
-	}
-
-	if msg.FlowStats != nil {
-		err := self.FlowStats(client_id, flow_id, msg.FlowStats)
-		if err != nil {
-			logger.Error("FlowStats: %v", err)
-		}
-		return
+		return nil
 	}
 
 	if msg.FileBuffer != nil {
 		err := self.FileBuffer(client_id, flow_id, msg.FileBuffer)
 		if err != nil {
-			logger.Error("FileBuffer: %v", err)
+			return fmt.Errorf("FileBuffer: %w", err)
 		}
-		return
-
+		return nil
 	}
 
+	return nil
+}
+
+func (self *ClientFlowRunner) MonitoringLogMessage(
+	client_id, flow_id string,
+	response *crypto_proto.LogMessage) error {
+
+	artifact_name := artifacts.DeobfuscateString(
+		self.config_obj, response.Artifact)
+	if artifact_name == "" {
+		artifact_name = "Unknown"
+	}
+
+	log_path_manager, err := artifact_paths.NewArtifactLogPathManager(
+		self.config_obj, client_id, flow_id, artifact_name)
+	if err != nil {
+		return err
+	}
+
+	// Write the logs asynchronously
+	file_store_factory := file_store.GetFileStore(self.config_obj)
+	rs_writer, err := result_sets.NewTimedResultSetWriter(
+		file_store_factory, log_path_manager, json.NoEncOpts,
+		utils.BackgroundWriter)
+	if err != nil {
+		return err
+	}
+	defer rs_writer.Close()
+
+	// The JSON payload from the client.
+	payload := artifacts.DeobfuscateString(self.config_obj, response.Jsonl)
+
+	rs_writer.WriteJSONL([]byte(payload), int(response.NumberOfRows))
+
+	return nil
+}
+
+func (self *ClientFlowRunner) MonitoringVQLResponse(
+	client_id, flow_id string,
+	response *actions_proto.VQLResponse) error {
+
+	// Ignore empty responses
+	if response == nil || response.Query == nil ||
+		response.Query.Name == "" || response.JSONLResponse == "" {
+		return nil
+	}
+
+	// Deobfuscate the response if needed.
+	_ = artifacts.Deobfuscate(self.config_obj, response)
+
+	query_name := response.Query.Name
+
+	journal, err := services.GetJournal(self.config_obj)
+	if err != nil {
+		return err
+	}
+
+	return journal.PushJsonlToArtifact(
+		self.config_obj,
+		[]byte(response.JSONLResponse), int(response.TotalRows),
+		query_name, client_id, flow_id)
+}
+
+func (self *ClientFlowRunner) ProcessSingleMessage(
+	ctx context.Context, msg *crypto_proto.VeloMessage) error {
+
+	flow_id := msg.SessionId
+	client_id := msg.Source
+
+	if flow_id == constants.MONITORING_WELL_KNOWN_FLOW {
+		return self.ProcessMonitoringMessage(ctx, msg)
+	}
+
+	// Should never happen because these are filled in from the crypto
+	// envelope.
+	if flow_id == "" || client_id == "" {
+		return fmt.Errorf("Empty SessionId: %v", msg)
+	}
+
+	if msg.LogMessage != nil {
+		err := self.LogMessage(client_id, flow_id, msg.LogMessage)
+		if err != nil {
+			return fmt.Errorf("LogMessage: %w", err)
+		}
+		return nil
+	}
+
+	if msg.VQLResponse != nil {
+		err := self.VQLResponse(client_id, flow_id, msg.VQLResponse)
+		if err != nil {
+			return fmt.Errorf("VQLResponse: %w", err)
+		}
+		return nil
+	}
+
+	if msg.FlowStats != nil {
+		err := self.FlowStats(client_id, flow_id, msg.FlowStats)
+		if err != nil {
+			return fmt.Errorf("FlowStats: %w", err)
+		}
+		return nil
+	}
+
+	if msg.FileBuffer != nil {
+		err := self.FileBuffer(client_id, flow_id, msg.FileBuffer)
+		if err != nil {
+			return fmt.Errorf("FileBuffer: %w", err)
+		}
+		return nil
+	}
+
+	return nil
 }
 
 func (self *ClientFlowRunner) FileBuffer(
@@ -296,7 +392,7 @@ func (self *ClientFlowRunner) VQLResponse(
 	client_id, flow_id string,
 	response *actions_proto.VQLResponse) error {
 
-	if response == nil || response.Query.Name == "" {
+	if response == nil || response.Query == nil || response.Query.Name == "" {
 		return nil
 	}
 
@@ -349,9 +445,6 @@ func (self *ClientFlowRunner) LogMessage(
 	// The JSON payload from the client.
 	payload := artifacts.DeobfuscateString(self.config_obj, msg.Jsonl)
 
-	// Append the current server time to all rows.
-	payload = string(json.AppendJsonlItem([]byte(payload), "_ts",
-		time.Now().UTC().Unix()))
 	rs_writer.WriteJSONL([]byte(payload), uint64(msg.NumberOfRows))
 
 	return nil

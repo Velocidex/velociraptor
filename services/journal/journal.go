@@ -123,7 +123,7 @@ func (self *JournalService) AppendToResultSet(
 func (self *JournalService) AppendJsonlToResultSet(
 	config_obj *config_proto.Config,
 	path api.FSPathSpec,
-	jsonl []byte) error {
+	jsonl []byte, row_count int) error {
 
 	// Key a lock to manage access to this file.
 	self.mu.Lock()
@@ -147,7 +147,7 @@ func (self *JournalService) AppendJsonlToResultSet(
 	if err != nil {
 		return err
 	}
-	rs_writer.WriteJSONL(jsonl, 0)
+	rs_writer.WriteJSONL(jsonl, uint64(row_count))
 	rs_writer.Close()
 
 	return nil
@@ -185,7 +185,7 @@ func (self *JournalService) Broadcast(
 }
 
 func (self *JournalService) PushJsonlToArtifact(
-	config_obj *config_proto.Config, jsonl []byte,
+	config_obj *config_proto.Config, jsonl []byte, row_count int,
 	artifact, client_id, flows_id string) error {
 
 	path_manager, err := artifacts.NewArtifactPathManager(
@@ -201,13 +201,13 @@ func (self *JournalService) PushJsonlToArtifact(
 		if err != nil {
 			return err
 		}
-		return self.AppendJsonlToResultSet(config_obj, path, jsonl)
+		return self.AppendJsonlToResultSet(config_obj, path, jsonl, row_count)
 	}
 
 	// The Queue manager will manage writing event artifacts to a
 	// timed result set, including multi frontend synchronisation.
 	if self != nil && self.qm != nil {
-		return self.qm.PushEventJsonl(path_manager, jsonl)
+		return self.qm.PushEventJsonl(path_manager, jsonl, row_count)
 	}
 	return errors.New("Filestore not initialized")
 }

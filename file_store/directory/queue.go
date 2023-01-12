@@ -228,18 +228,19 @@ func (self *DirectoryQueueManager) PushEventRows(
 }
 
 func (self *DirectoryQueueManager) PushEventJsonl(
-	path_manager api.PathManager, jsonl []byte) error {
+	path_manager api.PathManager, jsonl []byte, row_count int) error {
 
 	// Writes are asyncronous.
 	rs_writer, err := result_sets.NewTimedResultSetWriter(
-		self.FileStore, path_manager, nil, nil)
+		self.FileStore, path_manager, json.NoEncOpts,
+		utils.BackgroundWriter)
 	if err != nil {
 		return err
 	}
 	defer rs_writer.Close()
 
 	jsonl = json.AppendJsonlItem(jsonl, "_ts", int(self.Clock.Now().Unix()))
-	rs_writer.WriteJSONL(jsonl, 0)
+	rs_writer.WriteJSONL(jsonl, row_count)
 	self.queue_pool.BroadcastJsonl(path_manager.GetQueueName(), jsonl)
 
 	return nil

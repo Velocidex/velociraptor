@@ -48,6 +48,11 @@ message ArtifactCollectorArgs {
     float iops_limit = 26;
     float progress_timeout = 27;
 
+    // The maximum time in seconds the client will batch log messages
+    // before forwarding them to the server. If this is 0, no updates
+    // will be sent until he very end of the query.
+    uint64 log_batch_time = 28;
+
     // Resource limits on this collection.
     uint64 timeout = 7 [(sem_type) = {
             description: "Number of seconds to run before cancelling the query.",

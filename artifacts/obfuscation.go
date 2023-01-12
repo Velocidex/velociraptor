@@ -36,8 +36,6 @@ func Obfuscate(
 			}
 		}
 
-		query.Description = ""
-
 		// Parse and re-serialize the query into standard
 		// forms. This removes comments.
 		ast, err := vfilter.Parse(query.VQL)

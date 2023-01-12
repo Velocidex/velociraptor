@@ -87,8 +87,9 @@ func (self *MockHTTPConnector) Post(ctx context.Context,
 	require.NoError(self.t, err)
 
 	message_info.IterateJobs(context.Background(), self.config_obj,
-		func(ctx context.Context, item *crypto_proto.VeloMessage) {
+		func(ctx context.Context, item *crypto_proto.VeloMessage) error {
 			self.received = append(self.received, item.Name)
+			return nil
 		})
 
 	return &bytes.Buffer{}, nil

@@ -126,7 +126,7 @@ func (self *JournalTestSuite) TestJournalJsonlWriting() {
 	// Write 10 rows in series
 	for i := 0; i < 10; i++ {
 		err = journal.PushJsonlToArtifact(self.ConfigObj,
-			[]byte(fmt.Sprintf("{\"For\":%q,\"i\":%d}\n", "Bar", i)),
+			[]byte(fmt.Sprintf("{\"For\":%q,\"i\":%d}\n", "Bar", i)), 1,
 			"System.Flow.Completion", "C.1234", "")
 		assert.NoError(self.T(), err)
 	}
