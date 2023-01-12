@@ -96,7 +96,8 @@ func (self *ClientFlowRunner) MonitoringLogMessage(
 	client_id, flow_id string,
 	response *crypto_proto.LogMessage) error {
 
-	artifact_name := response.Artifact
+	artifact_name := artifacts.DeobfuscateString(
+		self.config_obj, response.Artifact)
 	if artifact_name == "" {
 		artifact_name = "Unknown"
 	}
