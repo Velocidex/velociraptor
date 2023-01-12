@@ -17,7 +17,7 @@ sources:
            then=SlackToken,
            else=server_metadata().SlackToken)
 
-        LET hits = SELECT * from watch_monitoring(artifact='Windows.Alerts.ProcessCreation')
+        LET hits = SELECT * from watch_monitoring(artifact='Windows.Detection.ProcessCreation')
 
         SELECT * FROM foreach(row=hits,
         query={
