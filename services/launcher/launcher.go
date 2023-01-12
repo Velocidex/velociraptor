@@ -306,6 +306,7 @@ func (self *Launcher) CompileCollectorArgs(
 	if options.LogBatchTime > 0 {
 		batch_delay = options.LogBatchTime
 	} else if config_obj.Frontend != nil &&
+		config_obj.Frontend.Resources != nil &&
 		config_obj.Frontend.Resources.DefaultLogBatchTime > 0 {
 		batch_delay = config_obj.Frontend.Resources.DefaultLogBatchTime
 	}

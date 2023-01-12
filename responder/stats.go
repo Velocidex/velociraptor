@@ -44,6 +44,10 @@ func (self *Stats) UpdateStats(message *crypto_proto.VeloMessage) {
 
 	if message.VQLResponse != nil {
 		self.TotalCollectedRows += message.VQLResponse.TotalRows
+
+		addNameWithResponse(&self.NamesWithResponse,
+			message.VQLResponse.Query.Name)
+
 		return
 	}
 
@@ -89,4 +93,11 @@ func (self *Stats) MaybeSendStats() *crypto_proto.FlowStats {
 		return proto.Clone(self.FlowStats).(*crypto_proto.FlowStats)
 	}
 	return nil
+}
+
+// This is expected to be small so a linear search is ok
+func addNameWithResponse(array *[]string, name string) {
+	if name != "" && !utils.InString(*array, name) {
+		*array = append(*array, name)
+	}
 }

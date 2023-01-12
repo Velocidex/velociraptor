@@ -196,6 +196,10 @@ func LoadCollectionContext(
 		collection_context.ActiveTime = stats_context.ActiveTime
 	}
 
+	if len(stats_context.ArtifactsWithResults) > 0 {
+		collection_context.ArtifactsWithResults = stats_context.ArtifactsWithResults
+	}
+
 	if len(stats_context.QueryStats) > 0 {
 		collection_context.QueryStats = stats_context.QueryStats
 	}

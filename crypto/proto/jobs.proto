@@ -140,6 +140,8 @@ message FlowStats {
 
     uint64 timestamp = 6;
 
+    repeated string names_with_response = 9;
+
     repeated VeloStatus query_status = 7;
 
     // When this is true, the flow is considered complete. It is

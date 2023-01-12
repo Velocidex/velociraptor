@@ -344,6 +344,8 @@ func (self *ClientFlowRunner) FlowStats(
 		TotalLogs:                  msg.TotalLogs,
 		ActiveTime:                 msg.Timestamp,
 		QueryStats:                 msg.QueryStatus,
+		ArtifactsWithResults: deobfuscateNames(
+			self.config_obj, msg.NamesWithResponse),
 	}
 
 	for _, s := range stats.QueryStats {
