@@ -79,7 +79,7 @@ func (self *Indexer) CheckSimpleIndex(
 	for _, keyword := range keywords {
 		message := &emptypb.Empty{}
 		keyword = strings.ToLower(keyword)
-		subject := index_urn.AddChild(keyword, entity)
+		subject := index_urn.AddUnsafeChild(keyword, entity)
 		return db.GetSubject(config_obj, subject, message)
 	}
 	return errors.New("Client does not have label")

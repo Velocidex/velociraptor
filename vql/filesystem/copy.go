@@ -25,6 +25,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -107,6 +108,14 @@ func (self *CopyFunction) Call(ctx context.Context,
 	if arg.Accessor != "data" {
 		scope.Log("copy: Copying file from %v into %v", arg.Filename,
 			arg.Destination)
+	}
+
+	// We are about to write on the filesystem - make sure the user
+	// has write access.
+	err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
+	if err != nil {
+		scope.Log("copy: %s", err.Error())
+		return vfilter.Null{}
 	}
 
 	flags := os.O_RDWR | os.O_CREATE | os.O_TRUNC

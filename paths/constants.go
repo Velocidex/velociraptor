@@ -27,10 +27,10 @@ var (
 	NOTEBOOK_ROOT = path_specs.NewSafeDatastorePath("notebooks").
 			SetType(api.PATH_TYPE_DATASTORE_JSON)
 
-	DOWNLOADS_ROOT = path_specs.NewSafeFilestorePath("downloads").
+	DOWNLOADS_ROOT = path_specs.NewUnsafeFilestorePath("downloads").
 			SetType(api.PATH_TYPE_FILESTORE_DOWNLOAD_ZIP)
 
-	CLIENTS_ROOT = path_specs.NewSafeDatastorePath("clients").
+	CLIENTS_ROOT = path_specs.NewUnsafeDatastorePath("clients").
 			SetType(api.PATH_TYPE_DATASTORE_PROTO)
 
 	CONFIG_ROOT = path_specs.NewSafeDatastorePath("config").
