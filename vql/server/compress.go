@@ -42,7 +42,7 @@ func (self *Compress) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
+	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE, acls.FILESYSTEM_READ)
 	if err != nil {
 		scope.Log("compress: %v", err)
 		return vfilter.Null{}
