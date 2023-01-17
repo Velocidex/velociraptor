@@ -138,6 +138,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -547,6 +548,10 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 	client_id := collector_request.ClientId
 	if client_id == "" {
 		return "", errors.New("Client id not provided.")
+	}
+
+	if !utils.ValidateClientId(client_id) {
+		return "", errors.New("Client id not valid.")
 	}
 
 	db, err := datastore.GetDB(config_obj)
