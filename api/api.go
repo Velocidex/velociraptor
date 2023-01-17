@@ -1098,12 +1098,18 @@ func startAPIServer(
 	}
 
 	// Create the TLS credentials
-	creds := credentials.NewTLS(&tls.Config{
-		// Only accept certs signed by the CA
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-		Certificates: []tls.Certificate{cert},
-		ClientCAs:    CA_Pool,
-	})
+	tls_config := &tls.Config{}
+	err = getTLSConfig(config_obj, tls_config)
+	if err != nil {
+		return err
+	}
+
+	// Only accept certs signed by the Velociraptor internal CA
+	tls_config.ClientAuth = tls.RequireAndVerifyClientCert
+	tls_config.Certificates = []tls.Certificate{cert}
+	tls_config.ClientCAs = CA_Pool
+
+	creds := credentials.NewTLS(tls_config)
 
 	grpcServer := grpc.NewServer(grpc.Creds(creds))
 	api_proto.RegisterAPIServer(
