@@ -27,7 +27,7 @@ type TestSuite struct {
 
 func (self *TestSuite) SetupTest() {
 	self.ConfigObj = self.LoadConfig()
-	self.ConfigObj.Frontend.ServerServices.IndexServer = true
+	self.ConfigObj.Services.IndexServer = true
 	self.ConfigObj.Frontend.Resources.IndexSnapshotFrequency = 100000
 
 	self.TestSuite.SetupTest()

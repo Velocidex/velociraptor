@@ -52,8 +52,8 @@ type MonitoringTestSuite struct {
 
 func (self *MonitoringTestSuite) SetupTest() {
 	self.ConfigObj = self.LoadConfig()
-	self.ConfigObj.Frontend.ServerServices.ClientMonitoring = true
-	self.ConfigObj.Frontend.ServerServices.MonitoringService = true
+	self.ConfigObj.Services.ClientMonitoring = true
+	self.ConfigObj.Services.MonitoringService = true
 
 	self.LoadArtifacts(definitions)
 	self.TestSuite.SetupTest()

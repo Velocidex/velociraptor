@@ -46,7 +46,7 @@ func TestLoadingFromFilestore(t *testing.T) {
 	defer wg.Wait()
 	defer cancel()
 
-	config_obj.Frontend.ServerServices = &config_proto.ServerServicesConfig{
+	config_obj.Services = &config_proto.ServerServicesConfig{
 		JournalService:    true,
 		RepositoryManager: true,
 	}

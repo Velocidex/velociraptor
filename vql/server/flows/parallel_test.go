@@ -40,7 +40,7 @@ type TestSuite struct {
 
 func (self *TestSuite) SetupTest() {
 	self.ConfigObj = self.LoadConfig()
-	self.ConfigObj.Frontend.ServerServices.HuntDispatcher = true
+	self.ConfigObj.Services.HuntDispatcher = true
 
 	self.TestSuite.SetupTest()
 }

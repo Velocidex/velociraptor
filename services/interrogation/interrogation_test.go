@@ -28,7 +28,7 @@ type ServicesTestSuite struct {
 
 func (self *ServicesTestSuite) SetupTest() {
 	self.ConfigObj = self.TestSuite.LoadConfig()
-	self.ConfigObj.Frontend.ServerServices.Interrogation = true
+	self.ConfigObj.Services.Interrogation = true
 	self.ConfigObj.Defaults.UnauthenticatedLruTimeoutSec = -1
 
 	self.LoadArtifacts([]string{`

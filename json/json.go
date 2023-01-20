@@ -20,14 +20,9 @@ var (
 
 // Delay instantiation until all registrations occured
 func DefaultEncOpts() *json.EncOpts {
-	mu.Lock()
-	defer mu.Unlock()
-
-	if defaultEncOpts == nil {
-		defaultEncOpts = newEncOpts()
-	}
-
-	return defaultEncOpts
+	// Need to return a fresh object each time because json.encode
+	// modifies the opts object.
+	return NewEncOpts()
 }
 
 type EncOpts = json.EncOpts

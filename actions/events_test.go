@@ -64,8 +64,8 @@ func (self *EventsTestSuite) SetupTest() {
 	self.ConfigObj.Client.WritebackLinux = self.writeback
 	self.ConfigObj.Client.WritebackWindows = self.writeback
 	self.ConfigObj.Client.WritebackDarwin = self.writeback
-	self.ConfigObj.Frontend.ServerServices.ClientMonitoring = true
-	self.ConfigObj.Frontend.ServerServices.IndexServer = true
+	self.ConfigObj.Services.ClientMonitoring = true
+	self.ConfigObj.Services.IndexServer = true
 	self.TestSuite.SetupTest()
 
 	self.client_id = "C.2232"

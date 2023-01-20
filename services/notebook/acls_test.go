@@ -19,7 +19,7 @@ type ACLTestSuite struct {
 
 func (self *ACLTestSuite) SetupTest() {
 	self.ConfigObj = self.LoadConfig()
-	self.ConfigObj.Frontend.ServerServices.NotebookService = true
+	self.ConfigObj.Services.NotebookService = true
 
 	self.TestSuite.SetupTest()
 }
