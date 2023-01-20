@@ -58,7 +58,7 @@ func NewServerLogger(
 	path_manager := paths.NewFlowPathManager("server", session_id)
 	file_store_factory := file_store.GetFileStore(config_obj)
 	writer, err := result_sets.NewResultSetWriter(file_store_factory,
-		path_manager.Log(), json.NoEncOpts,
+		path_manager.Log(), json.DefaultEncOpts(),
 		utils.BackgroundWriter, result_sets.AppendMode)
 	if err != nil {
 		return nil, err

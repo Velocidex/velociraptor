@@ -30,7 +30,7 @@ func (self *CSVUtilsTestSuite) TestCSVUtils() {
 
 	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 	writer, err := result_sets.NewResultSetWriter(file_store_factory,
-		path_manager.Path(), json.NoEncOpts,
+		path_manager.Path(), json.DefaultEncOpts(),
 		utils.SyncCompleter, result_sets.TruncateMode)
 	assert.NoError(self.T(), err)
 

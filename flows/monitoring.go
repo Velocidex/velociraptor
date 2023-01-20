@@ -105,7 +105,7 @@ func flushContextLogsMonitoring(
 
 			// Write the logs asynchronously
 			rs_writer, err = result_sets.NewTimedResultSetWriter(
-				file_store_factory, log_path_manager, json.NoEncOpts,
+				file_store_factory, log_path_manager, json.DefaultEncOpts(),
 				utils.BackgroundWriter)
 			if err != nil {
 				return err

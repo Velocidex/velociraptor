@@ -69,11 +69,8 @@ func doVacuum() error {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
-	if config_obj.Frontend == nil {
-		config_obj.Frontend = &config_proto.FrontendConfig{}
-	}
-	config_obj.Frontend.ServerServices = services.GenericToolServices()
-	config_obj.Frontend.ServerServices.IndexServer = true
+	config_obj.Services = services.GenericToolServices()
+	config_obj.Services.IndexServer = true
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
 	if err != nil {

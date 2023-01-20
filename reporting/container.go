@@ -226,7 +226,7 @@ func (self *Container) WriteResultSet(
 		csv_writer = csv.GetCSVAppender(config_obj,
 			scope, csv_fd,
 			true, /* write_headers */
-			json.NoEncOpts)
+			json.NewEncOpts())
 
 		// Preserve the error for our caller.
 		defer func() {

@@ -29,6 +29,10 @@ func NewEncOpts() *json.EncOpts {
 	mu.Lock()
 	defer mu.Unlock()
 
+	return newEncOpts()
+}
+
+func newEncOpts() *json.EncOpts {
 	opts := json.NewEncOpts()
 	for _, h := range handlers {
 		opts.WithCallback(h.sample, h.cb)

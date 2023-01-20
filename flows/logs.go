@@ -61,7 +61,7 @@ func writeLogMessages(
 	file_store_factory := file_store.GetFileStore(config_obj)
 	rs_writer, err := result_sets.NewResultSetWriter(
 		file_store_factory, flow_path_manager,
-		json.NoEncOpts, collection_context.completer.GetCompletionFunc(),
+		json.DefaultEncOpts(), collection_context.completer.GetCompletionFunc(),
 		false /* truncate */)
 	if err != nil {
 		return err
@@ -134,7 +134,7 @@ func flushContextLogs(
 	file_store_factory := file_store.GetFileStore(config_obj)
 	rs_writer, err := result_sets.NewResultSetWriter(
 		file_store_factory, flow_path_manager,
-		json.NoEncOpts, completion.GetCompletionFunc(),
+		json.DefaultEncOpts(), completion.GetCompletionFunc(),
 		false /* truncate */)
 	if err != nil {
 		return err

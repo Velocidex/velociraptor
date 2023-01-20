@@ -196,7 +196,7 @@ func (self *MemoryQueueManager) PushEventJsonl(
 
 	// Writes are asyncronous
 	rs_writer, err := result_sets.NewTimedResultSetWriter(
-		self.FileStore, path_manager, json.NoEncOpts,
+		self.FileStore, path_manager, json.DefaultEncOpts(),
 		utils.BackgroundWriter)
 	if err != nil {
 		return err

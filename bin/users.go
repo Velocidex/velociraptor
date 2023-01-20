@@ -25,7 +25,6 @@ import (
 
 	"golang.org/x/crypto/ssh/terminal"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/users"
@@ -63,10 +62,7 @@ func doAddUser() error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	if config_obj.Frontend == nil {
-		config_obj.Frontend = &config_proto.FrontendConfig{}
-	}
-	config_obj.Frontend.ServerServices = services.GenericToolServices()
+	config_obj.Services = services.GenericToolServices()
 
 	ctx, cancel := install_sig_handler()
 	defer cancel()
@@ -139,10 +135,7 @@ func doShowUser() error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	if config_obj.Frontend == nil {
-		config_obj.Frontend = &config_proto.FrontendConfig{}
-	}
-	config_obj.Frontend.ServerServices = services.GenericToolServices()
+	config_obj.Services = services.GenericToolServices()
 
 	ctx, cancel := install_sig_handler()
 	defer cancel()
@@ -185,10 +178,7 @@ func doLockUser() error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	if config_obj.Frontend == nil {
-		config_obj.Frontend = &config_proto.FrontendConfig{}
-	}
-	config_obj.Frontend.ServerServices = services.GenericToolServices()
+	config_obj.Services = services.GenericToolServices()
 
 	ctx, cancel := install_sig_handler()
 	defer cancel()

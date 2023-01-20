@@ -72,12 +72,12 @@ func (self *ApiServer) GetHuntFlows(
 			flow.Context.ClientId,
 			services.GetHostname(ctx, org_config_obj, flow.Context.ClientId),
 			flow.Context.SessionId,
-			json.AnyToString(flow.Context.StartTime/1000, vjson.NoEncOpts),
+			json.AnyToString(flow.Context.StartTime/1000, vjson.DefaultEncOpts()),
 			flow.Context.State.String(),
 			json.AnyToString(flow.Context.ExecutionDuration/1000000000,
-				vjson.NoEncOpts),
-			json.AnyToString(flow.Context.TotalUploadedBytes, vjson.NoEncOpts),
-			json.AnyToString(flow.Context.TotalCollectedRows, vjson.NoEncOpts)}
+				vjson.DefaultEncOpts()),
+			json.AnyToString(flow.Context.TotalUploadedBytes, vjson.DefaultEncOpts()),
+			json.AnyToString(flow.Context.TotalCollectedRows, vjson.DefaultEncOpts())}
 
 		result.Rows = append(result.Rows, &api_proto.Row{Cell: row_data})
 

@@ -323,9 +323,8 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 
 	// If there is no frontend defined we are running as a client.
 	spec := services.ClientServicesSpec()
-	if org_config.Frontend != nil &&
-		org_config.Frontend.ServerServices != nil {
-		spec = org_config.Frontend.ServerServices
+	if org_config.Services != nil {
+		spec = org_config.Services
 	}
 
 	if spec.FrontendServer {

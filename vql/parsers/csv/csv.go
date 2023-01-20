@@ -265,7 +265,7 @@ func (self WriteCSVPlugin) Call(
 
 			config_obj, _ := vql_subsystem.GetServerConfig(scope)
 			writer = csv.GetCSVAppender(
-				config_obj, scope, file, true, json.NoEncOpts)
+				config_obj, scope, file, true, json.DefaultEncOpts())
 			defer writer.Close()
 
 		default:

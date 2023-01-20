@@ -111,7 +111,7 @@ func (self *ClientFlowRunner) MonitoringLogMessage(
 	// Write the logs asynchronously
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	rs_writer, err := result_sets.NewTimedResultSetWriter(
-		file_store_factory, log_path_manager, json.NoEncOpts,
+		file_store_factory, log_path_manager, json.DefaultEncOpts(),
 		utils.BackgroundWriter)
 	if err != nil {
 		return err
@@ -240,7 +240,7 @@ func (self *ClientFlowRunner) FileBuffer(
 		// Write the upload to the uplod metadata
 		rs_writer, err := result_sets.NewResultSetWriter(
 			file_store_factory, flow_path_manager.UploadMetadata(),
-			json.NoEncOpts,
+			json.DefaultEncOpts(),
 			self.completer.GetCompletionFunc(),
 			result_sets.AppendMode)
 		if err != nil {
@@ -411,7 +411,7 @@ func (self *ClientFlowRunner) VQLResponse(
 
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	rs_writer, err := result_sets.NewResultSetWriter(
-		file_store_factory, path_manager.Path(), json.NoEncOpts,
+		file_store_factory, path_manager.Path(), json.DefaultEncOpts(),
 		self.completer.GetCompletionFunc(),
 		result_sets.AppendMode)
 	if err != nil {
@@ -435,7 +435,7 @@ func (self *ClientFlowRunner) LogMessage(
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	rs_writer, err := result_sets.NewResultSetWriter(
 		file_store_factory, flow_path_manager,
-		json.NoEncOpts, self.completer.GetCompletionFunc(),
+		json.DefaultEncOpts(), self.completer.GetCompletionFunc(),
 		result_sets.AppendMode)
 	if err != nil {
 		return err
