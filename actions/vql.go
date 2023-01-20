@@ -111,6 +111,8 @@ func (self VQLClientAction) StartQuery(
 		return
 	}
 
+	name := GetQueryName(arg.Query)
+
 	// Clients do not have a copy of artifacts so they need to be
 	// sent all artifacts from the server.
 	manager, err := services.GetRepositoryManager(config_obj)
@@ -163,7 +165,7 @@ func (self VQLClientAction) StartQuery(
 			"incorrect or missed results or even crashes.")
 	}
 
-	scope.Log("INFO:Starting query execution.")
+	scope.Log("INFO:Starting query execution for %v.", name)
 
 	throttler := NewThrottler(ctx, scope, float64(rate),
 		float64(cpu_limit), float64(iops_limit))
@@ -188,18 +190,19 @@ func (self VQLClientAction) StartQuery(
 			responder.RaiseError(ctx, msg)
 		}
 
-		scope.Log("INFO:Collection is done after %v", time.Since(start))
+		scope.Log("INFO:Collection %v is done after %v", name, time.Since(start))
 	}()
 
 	ok, err := CheckPreconditions(ctx, scope, arg)
 	if err != nil {
-		scope.Log("While evaluating preconditions: %v", err)
-		responder.RaiseError(ctx, fmt.Sprintf("While evaluating preconditions: %v", err))
+		scope.Log("%v: While evaluating preconditions: %v", name, err)
+		responder.RaiseError(ctx,
+			fmt.Sprintf("While evaluating preconditions: %v", err))
 		return
 	}
 
 	if !ok {
-		scope.Log("Skipping query due to preconditions")
+		scope.Log("INFO:%v: Skipping query due to preconditions", name)
 		responder.Return(ctx)
 		return
 	}
@@ -247,7 +250,7 @@ func (self VQLClientAction) StartQuery(
 
 			case <-time.After(time.Second * time.Duration(heartbeat)):
 				responder.Log(ctx, logging.DEFAULT,
-					fmt.Sprintf("Time %v: %s: Waiting for rows.",
+					fmt.Sprintf("%v: Time %v: %s: Waiting for rows.", name,
 						(uint64(time.Now().UTC().UnixNano()/1000)-
 							query_start)/1000000, query.Name))
 
@@ -279,7 +282,8 @@ func (self VQLClientAction) StartQuery(
 					responder.Log(ctx,
 						logging.DEFAULT,
 						fmt.Sprintf(
-							"Time %v: %s: Sending response part %d %s (%d rows).",
+							"%v: Time %v: %s: Sending response part %d %s (%d rows).",
+							name,
 							(response.Timestamp-query_start)/1000000,
 							query.Name,
 							result.Part,
@@ -296,7 +300,7 @@ func (self VQLClientAction) StartQuery(
 
 	if uploader.Count > 0 {
 		responder.Log(ctx, logging.DEFAULT,
-			fmt.Sprintf("Uploaded %v files.", uploader.Count))
+			fmt.Sprintf("%v: Uploaded %v files.", name, uploader.Count))
 	}
 
 	responder.Return(ctx)

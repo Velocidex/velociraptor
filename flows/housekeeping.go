@@ -28,6 +28,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -79,7 +80,8 @@ func CheckClientStatus(
 
 		clientEventUpdateCounter.Inc()
 		err := client_manager.QueueMessageForClient(
-			ctx, client_id, update_message, true, nil)
+			ctx, client_id, update_message,
+			services.NOTIFY_CLIENT, utils.BackgroundWriter)
 		if err != nil {
 			return err
 		}

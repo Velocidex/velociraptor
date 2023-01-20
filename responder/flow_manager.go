@@ -166,8 +166,7 @@ func (self *FlowContext) NextUploadId() int64 {
 	return new_id - 1
 }
 
-func (self *FlowContext) NewQueryContext(
-	responder *Responder, req *crypto_proto.VeloMessage) (
+func (self *FlowContext) NewQueryContext(responder *Responder) (
 	ctx context.Context, closer func()) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -178,7 +177,6 @@ func (self *FlowContext) NewQueryContext(
 	result := &QueryContext{
 		flow_id: self.flow_id,
 		cancel:  cancel,
-		req:     req,
 		id:      utils.GetId(),
 	}
 

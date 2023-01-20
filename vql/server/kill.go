@@ -18,6 +18,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -70,7 +71,8 @@ func (self *KillClientFunction) Call(ctx context.Context,
 		&crypto_proto.VeloMessage{
 			KillKillKill: &crypto_proto.Cancel{},
 			SessionId:    constants.MONITORING_WELL_KNOWN_FLOW,
-		}, true, nil)
+		},
+		services.NOTIFY_CLIENT, utils.BackgroundWriter)
 	if err != nil {
 		scope.Log("killkillkill: %s", err.Error())
 		return vfilter.Null{}

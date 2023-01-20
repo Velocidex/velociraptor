@@ -130,11 +130,12 @@ func (self *ExecutorTestSuite) TestLogMessages() {
 	executor.Inbound <- &crypto_proto.VeloMessage{
 		AuthState: crypto_proto.VeloMessage_AUTHENTICATED,
 		SessionId: flow_id,
-		VQLClientAction: &actions_proto.VQLCollectorArgs{
-			Query: []*actions_proto.VQLRequest{
-				// Log 100 messages
-				{VQL: "SELECT log(message='log %v', args=count()) FROM range(end=10)"},
-			},
+		FlowRequest: &crypto_proto.FlowRequest{
+			VQLClientActions: []*actions_proto.VQLCollectorArgs{{
+				Query: []*actions_proto.VQLRequest{
+					// Log 100 messages
+					{VQL: "SELECT log(message='log %v', args=count()) FROM range(end=10)"},
+				}}},
 		},
 		RequestId: 1}
 

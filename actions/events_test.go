@@ -133,8 +133,8 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// Only one query will be selected now since no label is set
 	// on the client.
 	assert.Equal(self.T(), len(message.UpdateEventTable.Event), 1)
-	assert.Equal(self.T(), getQueryName(message.UpdateEventTable.Event[0]),
-		"EventArtifact1")
+	assert.Equal(self.T(), actions.GetQueryName(
+		message.UpdateEventTable.Event[0].Query), "EventArtifact1")
 
 	// Set the new table, this will execute the new queries and
 	// start the new table.
@@ -246,15 +246,6 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// Make sure the event queries end up in the writeback file
 	assert.Contains(self.T(), string(data), "EventArtifact1")
 	assert.Contains(self.T(), string(data), "EventArtifact2")
-}
-
-func getQueryName(args *actions_proto.VQLCollectorArgs) string {
-	for _, query := range args.Query {
-		if query.Name != "" {
-			return query.Name
-		}
-	}
-	return ""
 }
 
 func TestEventsTestSuite(t *testing.T) {

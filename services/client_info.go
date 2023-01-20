@@ -11,6 +11,8 @@ import (
 )
 
 const (
+	NOTIFY_CLIENT = true
+
 	Unknown ClientOS = iota
 	Windows
 	Linux

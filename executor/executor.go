@@ -152,34 +152,30 @@ func (self *ClientExecutor) processRequestPlugin(
 		return
 	}
 
-	// Handle the requests. This used to be a plugin registration
-	// process but there are very few plugins any more and so it
-	// is easier to hard code this.
-	responder_obj := responder.NewResponder(ctx, config_obj, req, self.Outbound)
-	defer responder_obj.Close()
-
-	// Each request has its own context.
-	query_ctx, closer := flow_manager.FlowContext(req).NewQueryContext(
-		responder_obj, req)
-	defer closer()
-
+	// This is the old deprecated VQLClientAction that is sent for old
+	// client compatibility. New clients ignore this and only process
+	// a FlowRequest message.
 	if req.VQLClientAction != nil {
-		// Control concurrency on the executor only.
-		if !req.Urgent {
-			cancel, err := self.concurrency.StartConcurrencyControl(query_ctx)
-			if err != nil {
-				responder_obj.RaiseError(query_ctx, fmt.Sprintf("%v", err))
-				return
-			}
-			defer cancel()
-		}
+		return
+	}
 
-		actions.VQLClientAction{}.StartQuery(
-			config_obj, query_ctx, responder_obj, req.VQLClientAction)
+	if req.FlowRequest != nil {
+		self.ProcessFlowRequest(ctx, config_obj, req)
 		return
 	}
 
 	if req.UpdateEventTable != nil {
+		// Handle the requests. This used to be a plugin registration
+		// process but there are very few plugins any more and so it
+		// is easier to hard code this.
+		responder_obj := responder.NewResponder(ctx, config_obj, req, self.Outbound)
+		defer responder_obj.Close()
+
+		// Each request has its own context.
+		flow_context := flow_manager.FlowContext(req)
+		query_ctx, closer := flow_context.NewQueryContext(responder_obj)
+		defer closer()
+
 		actions.UpdateEventTable{}.Run(
 			config_obj, query_ctx, responder_obj, req.UpdateEventTable)
 		return

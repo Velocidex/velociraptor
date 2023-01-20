@@ -11,6 +11,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -78,5 +79,6 @@ func cancelCollection(
 		&crypto_proto.VeloMessage{
 			Cancel:    &crypto_proto.Cancel{},
 			SessionId: flow_id,
-		}, true /* notify */, nil)
+		},
+		services.NOTIFY_CLIENT, utils.BackgroundWriter)
 }
