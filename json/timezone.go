@@ -8,7 +8,7 @@ import (
 
 func GetJsonOptsForTimezone(timezone string) *json.EncOpts {
 	if timezone == "" {
-		return NoEncOpts
+		return DefaultEncOpts()
 	}
 
 	loc := time.UTC

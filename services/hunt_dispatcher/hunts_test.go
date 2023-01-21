@@ -22,7 +22,7 @@ type HuntTestSuite struct {
 
 func (self *HuntTestSuite) SetupTest() {
 	self.ConfigObj = self.TestSuite.LoadConfig()
-	self.ConfigObj.Frontend.ServerServices.HuntDispatcher = true
+	self.ConfigObj.Services.HuntDispatcher = true
 	self.TestSuite.SetupTest()
 }
 

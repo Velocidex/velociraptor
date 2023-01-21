@@ -31,8 +31,8 @@ type HuntDispatcherTestSuite struct {
 
 func (self *HuntDispatcherTestSuite) SetupTest() {
 	self.ConfigObj = self.TestSuite.LoadConfig()
-	self.ConfigObj.Frontend.ServerServices.FrontendServer = true
-	self.ConfigObj.Frontend.ServerServices.HuntDispatcher = true
+	self.ConfigObj.Services.FrontendServer = true
+	self.ConfigObj.Services.HuntDispatcher = true
 
 	self.LoadArtifacts([]string{`
 name: Server.Internal.HuntUpdate

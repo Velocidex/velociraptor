@@ -665,10 +665,6 @@ message FrontendConfig {
     int64 GRPC_pool_max_size = 17;
     int64 GRPC_pool_max_wait = 18;
 
-    // The services that will run on this frontend. If not set, all
-    // services will run on the primary frontend.
-    ServerServicesConfig server_services = 20;
-
     FrontendResourceControl resources = 27;
 
     // Used internally to tag this frontend as the master.
@@ -1059,4 +1055,10 @@ message Config {
     // does not know or use its own org id.
     string org_id = 36;
     string org_name = 37;
+
+
+    // The services that will run at initialization. Note this is not
+    // set in the config file by the user but is propagated from the
+    // startup code.
+    ServerServicesConfig services = 38;
 }

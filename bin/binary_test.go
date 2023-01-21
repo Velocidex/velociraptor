@@ -451,13 +451,16 @@ func TestShowConfigWithMergePatch(t *testing.T) {
 	// replaces the Nonce With Foo, then adds another server to the
 	// urls: Merges are done first, then patches.
 	cmd := exec.Command(
-		binary, "config", "show", "--config", config_file.Name(),
+		binary, "config", "show", "--config", config_file.Name(), "-v",
 		"--merge",
 		`{"Client": {"nonce": "Foo", "server_urls": ["https://192.168.1.11:8000/"]}}`,
 		"--patch",
 		`[{"op": "add", "path": "/Client/server_urls/0", "value": "https://SomeServer/"}]`,
 	)
 	out, err := cmd.Output()
+	if err != nil {
+		fmt.Println(string(err.(*exec.ExitError).Stderr))
+	}
 	require.NoError(t, err, string(out))
 
 	// Try to load it now.

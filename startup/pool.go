@@ -18,12 +18,8 @@ func StartPoolClientServices(
 	exe *executor.PoolClientExecutor) error {
 
 	// Create a suitable service plan.
-	if config_obj.Frontend == nil {
-		config_obj.Frontend = &config_proto.FrontendConfig{}
-	}
-
-	if config_obj.Frontend.ServerServices == nil {
-		config_obj.Frontend.ServerServices = services.ClientServicesSpec()
+	if config_obj.Services == nil {
+		config_obj.Services = services.ClientServicesSpec()
 	}
 
 	_, err := services.GetOrgManager()

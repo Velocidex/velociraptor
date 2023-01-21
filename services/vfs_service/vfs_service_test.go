@@ -42,7 +42,7 @@ type VFSServiceTestSuite struct {
 
 func (self *VFSServiceTestSuite) SetupTest() {
 	self.ConfigObj = self.TestSuite.LoadConfig()
-	self.ConfigObj.Frontend.ServerServices.VfsService = true
+	self.ConfigObj.Services.VfsService = true
 	self.LoadArtifacts(definitions)
 
 	self.TestSuite.SetupTest()

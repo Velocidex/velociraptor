@@ -29,7 +29,7 @@ type ServerArtifactsTestSuite struct {
 
 func (self *ServerArtifactsTestSuite) SetupTest() {
 	self.ConfigObj = self.TestSuite.LoadConfig()
-	self.ConfigObj.Frontend.ServerServices.ServerArtifacts = true
+	self.ConfigObj.Services.ServerArtifacts = true
 
 	self.TestSuite.SetupTest()
 

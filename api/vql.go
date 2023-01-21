@@ -70,7 +70,7 @@ func RunVQL(
 				value = ""
 			}
 			new_row.Cell = append(new_row.Cell,
-				json.AnyToString(value, json.NoEncOpts))
+				json.AnyToString(value, json.DefaultEncOpts()))
 		}
 
 		result.Rows = append(result.Rows, new_row)

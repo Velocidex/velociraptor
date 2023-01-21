@@ -106,7 +106,7 @@ func (self *JournalService) AppendToResultSet(
 
 	// Append the data to the end of the file.
 	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
-		path, json.NoEncOpts, utils.BackgroundWriter, result_sets.AppendMode)
+		path, json.DefaultEncOpts(), utils.BackgroundWriter, result_sets.AppendMode)
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func (self *JournalService) AppendJsonlToResultSet(
 
 	// Append the data to the end of the file.
 	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
-		path, json.NoEncOpts, utils.BackgroundWriter, result_sets.AppendMode)
+		path, json.DefaultEncOpts(), utils.BackgroundWriter, result_sets.AppendMode)
 	if err != nil {
 		return err
 	}

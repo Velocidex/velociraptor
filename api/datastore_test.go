@@ -39,7 +39,7 @@ func (self *DatastoreAPITest) SetupTest() {
 	assert.NoError(self.T(), err)
 
 	// Now bring up an API server.
-	self.ConfigObj.Frontend.ServerServices = &config_proto.ServerServicesConfig{}
+	self.ConfigObj.Services = &config_proto.ServerServicesConfig{}
 
 	// Wait for the server to come up.
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {

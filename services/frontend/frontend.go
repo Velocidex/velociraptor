@@ -389,8 +389,8 @@ func (self *MinionFrontendManager) Start(ctx context.Context, wg *sync.WaitGroup
 
 	// If no service specification is set, we start only some
 	// services on minion frontends.
-	if config_obj.Frontend.ServerServices == nil {
-		config_obj.Frontend.ServerServices = services.MinionServicesSpec()
+	if config_obj.Services == nil {
+		config_obj.Services = services.MinionServicesSpec()
 	}
 
 	self.name = services.GetNodeName(config_obj.Frontend)

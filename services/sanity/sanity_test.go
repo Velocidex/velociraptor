@@ -42,8 +42,8 @@ tools:
   url: https://www.example2.com/
 
 `})
-	self.ConfigObj.Frontend.ServerServices.NotebookService = true
-	self.ConfigObj.Frontend.ServerServices.UserManager = true
+	self.ConfigObj.Services.NotebookService = true
+	self.ConfigObj.Services.UserManager = true
 
 	self.TestSuite.SetupTest()
 }

@@ -36,9 +36,9 @@ type HuntTestSuite struct {
 
 func (self *HuntTestSuite) SetupTest() {
 	self.ConfigObj = self.TestSuite.LoadConfig()
-	self.ConfigObj.Frontend.ServerServices.FrontendServer = true
-	self.ConfigObj.Frontend.ServerServices.HuntDispatcher = true
-	self.ConfigObj.Frontend.ServerServices.HuntManager = true
+	self.ConfigObj.Services.FrontendServer = true
+	self.ConfigObj.Services.HuntDispatcher = true
+	self.ConfigObj.Services.HuntManager = true
 
 	self.TestSuite.SetupTest()
 

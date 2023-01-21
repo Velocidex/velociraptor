@@ -8,6 +8,17 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+var (
+	loc = time.UTC
+)
+
+func SetGlobalTimezone(timezone string) error {
+	var err error
+
+	loc, err = time.LoadLocation(timezone)
+	return err
+}
+
 func ParseTimeFromInt64(t int64) time.Time {
 	var sec, dec int64
 
@@ -47,10 +58,10 @@ func MarshalTimes(v interface{}, opts *json.EncOpts) ([]byte, error) {
 	switch t := v.(type) {
 	case time.Time:
 		// Marshal the time in the desired timezone.
-		return t.UTC().MarshalJSON()
+		return t.In(loc).MarshalJSON()
 
 	case *time.Time:
-		return t.UTC().MarshalJSON()
+		return t.In(loc).MarshalJSON()
 
 	}
 	return nil, json.EncoderCallbackSkip

@@ -194,7 +194,7 @@ func (self *Indexer) WriteSnapshot(
 	// disk. Usually it is pretty quick.
 	file_store_factory := file_store.GetFileStore(config_obj)
 	rs_writer, err := result_sets.NewResultSetWriter(
-		file_store_factory, dest, json.NoEncOpts,
+		file_store_factory, dest, json.DefaultEncOpts(),
 		utils.SyncCompleter, result_sets.TruncateMode)
 	if err != nil {
 		return err

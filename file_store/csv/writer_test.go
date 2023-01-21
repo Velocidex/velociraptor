@@ -111,7 +111,7 @@ func TestWriteAny(t *testing.T) {
 		f := NewWriter(b)
 		f.UseCRLF = tt.UseCRLF
 		for _, item := range tt.Input {
-			err := f.WriteAny(item, json.NoEncOpts)
+			err := f.WriteAny(item, json.DefaultEncOpts())
 			if err != nil {
 				t.Errorf("Unexpected error: %s\n", err)
 			}

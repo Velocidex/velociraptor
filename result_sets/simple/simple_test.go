@@ -61,7 +61,7 @@ func (self *ResultSetTestSuite) TestResultSetSimple() {
 
 	writer, err := result_sets.NewResultSetWriter(
 		self.file_store, path_manager.Path(),
-		json.NoEncOpts, utils.SyncCompleter,
+		json.DefaultEncOpts(), utils.SyncCompleter,
 		result_sets.TruncateMode)
 	assert.NoError(self.T(), err)
 

@@ -15,8 +15,15 @@ import (
 )
 
 var (
-	NoEncOpts *json.EncOpts = &json.EncOpts{}
+	defaultEncOpts *json.EncOpts
 )
+
+// Delay instantiation until all registrations occured
+func DefaultEncOpts() *json.EncOpts {
+	// Need to return a fresh object each time because json.encode
+	// modifies the opts object.
+	return NewEncOpts()
+}
 
 type EncOpts = json.EncOpts
 

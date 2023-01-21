@@ -464,8 +464,8 @@ func NewVelociraptorServerService(name string) (
 				continue
 			}
 
-			if config_obj.Frontend.ServerServices == nil {
-				config_obj.Frontend.ServerServices = services.AllServerServicesSpec()
+			if config_obj.Services == nil {
+				config_obj.Services = services.AllServerServicesSpec()
 			}
 
 			ctx, cancel := install_sig_handler()

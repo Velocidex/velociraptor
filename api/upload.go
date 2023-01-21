@@ -46,7 +46,7 @@ func toolUploadHandler() http.Handler {
 
 		// Parse our multipart form, 10 << 20 specifies a maximum
 		// upload of 10 MB files.
-		err = r.ParseMultipartForm(10 << 20)
+		err = r.ParseMultipartForm(10 << 25)
 		if err != nil {
 			returnError(w, http.StatusBadRequest, "Unsupported params")
 			return

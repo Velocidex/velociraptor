@@ -32,7 +32,8 @@ func migrate_0_4_2(config_obj *config_proto.Config) {
 		}
 	}
 
-	if config_obj.Frontend != nil {
+	if config_obj.Frontend != nil &&
+		config_obj.Frontend.Certificate != "" {
 		if config_obj.Frontend.PublicPath != "" {
 			deprecated(config_obj, "Frontend.public_path")
 			config_obj.Frontend.PublicPath = ""

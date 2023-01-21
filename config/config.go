@@ -167,6 +167,7 @@ func GetDefaultConfig() *config_proto.Config {
 			GRPCPoolMaxSize: 100,
 			GRPCPoolMaxWait: 60,
 		},
+		Services: &config_proto.ServerServicesConfig{},
 		Datastore: &config_proto.DatastoreConfig{
 			Implementation: "FileBaseDataStore",
 

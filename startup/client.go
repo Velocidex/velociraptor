@@ -21,12 +21,8 @@ func StartClientServices(
 		config_obj *config_proto.Config)) (*services.Service, error) {
 
 	// Create a suitable service plan.
-	if config_obj.Frontend == nil {
-		config_obj.Frontend = &config_proto.FrontendConfig{}
-	}
-
-	if config_obj.Frontend.ServerServices == nil {
-		config_obj.Frontend.ServerServices = services.ClientServicesSpec()
+	if config_obj.Services == nil {
+		config_obj.Services = services.ClientServicesSpec()
 	}
 
 	// Wait for all services to properly start

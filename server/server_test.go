@@ -84,9 +84,9 @@ func (self MockAPIClientFactory) GetAPIClient(
 
 func (self *ServerTestSuite) SetupTest() {
 	self.ConfigObj = self.LoadConfig()
-	self.ConfigObj.Frontend.ServerServices.HuntDispatcher = true
-	self.ConfigObj.Frontend.ServerServices.ClientMonitoring = true
-	self.ConfigObj.Frontend.ServerServices.Interrogation = true
+	self.ConfigObj.Services.HuntDispatcher = true
+	self.ConfigObj.Services.ClientMonitoring = true
+	self.ConfigObj.Services.Interrogation = true
 
 	self.LoadArtifacts(mock_definitions)
 

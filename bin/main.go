@@ -126,13 +126,16 @@ func main() {
 
 	// If no args are given check if there is an embedded config
 	// with autoexec.
-	if len(args) == 0 {
+	pre, post := splitArgs(args)
+	if len(pre) == 0 {
 		config_obj, err := new(config.Loader).WithVerbose(*verbose_flag).
 			WithEmbedded().LoadAndValidate()
 		if err == nil && config_obj.Autoexec != nil && config_obj.Autoexec.Argv != nil {
+			args = nil
 			for _, arg := range config_obj.Autoexec.Argv {
 				args = append(args, os.ExpandEnv(arg))
 			}
+			args = append(args, post...)
 			logging.Prelog("Autoexec with parameters: %v", args)
 		}
 	}
@@ -169,6 +172,7 @@ func main() {
 		WithCustomValidator("validator: initFilestoreAccessor",
 			initFilestoreAccessor).
 		WithCustomValidator("validator: initDebugServer", initDebugServer).
+		WithCustomValidator("validator: timezone", initTimezone).
 		WithConfigMutator("Mutator: applyMinionRole", applyMinionRole).
 		WithCustomValidator("validator: applyAnalysisTarget",
 			applyAnalysisTarget).
@@ -214,10 +218,30 @@ func makeDefaultConfigLoader() *config.Loader {
 		WithCustomValidator("validator: initFilestoreAccessor",
 			initFilestoreAccessor).
 		WithCustomValidator("validator: initDebugServer", initDebugServer).
+		WithCustomValidator("validator: timezone", initTimezone).
 		WithLogFile(*logging_flag).
 		WithOverride(*override_flag).
 		WithConfigMutator("Mutator applyMinionRole", applyMinionRole).
 		WithCustomValidator("validator: ensureProxy", ensureProxy).
 		WithConfigMutator("Mutator applyAnalysisTarget", applyAnalysisTarget).
 		WithConfigMutator("Mutator maybeAddDefinitionsDirectory", maybeAddDefinitionsDirectory)
+}
+
+// Split the command line into args before the -- and after the --
+func splitArgs(args []string) (pre, post []string) {
+	seen := false
+	for _, arg := range args {
+		if arg == "--" {
+			seen = true
+			continue
+		}
+
+		if seen {
+			post = append(post, arg)
+		} else {
+			pre = append(pre, arg)
+		}
+	}
+
+	return pre, post
 }

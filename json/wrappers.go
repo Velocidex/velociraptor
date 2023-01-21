@@ -40,7 +40,7 @@ func MarshalWithOptions(v interface{}, opts *json.EncOpts) ([]byte, error) {
 }
 
 func Marshal(v interface{}) ([]byte, error) {
-	opts := NewEncOpts()
+	opts := DefaultEncOpts()
 	return json.MarshalWithOptions(v, opts)
 }
 
@@ -69,7 +69,7 @@ func StringIndent(v interface{}) string {
 }
 
 func MarshalIndent(v interface{}) ([]byte, error) {
-	opts := NewEncOpts()
+	opts := DefaultEncOpts()
 	return MarshalIndentWithOptions(v, opts)
 }
 
@@ -96,7 +96,7 @@ func MarshalJsonl(v interface{}) ([]byte, error) {
 
 	a_slice := reflect.ValueOf(v)
 
-	options := NewEncOpts()
+	options := DefaultEncOpts()
 
 	out := GetBuffer()
 	defer PutBuffer(out)

@@ -60,7 +60,7 @@ type ClientMonitoringTestSuite struct {
 
 func (self *ClientMonitoringTestSuite) SetupTest() {
 	self.ConfigObj = self.TestSuite.LoadConfig()
-	self.ConfigObj.Frontend.ServerServices.ClientMonitoring = true
+	self.ConfigObj.Services.ClientMonitoring = true
 
 	self.LoadArtifacts(mock_definitions)
 

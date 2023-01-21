@@ -50,8 +50,8 @@ type ReplicationTestSuite struct {
 func (self *ReplicationTestSuite) SetupTest() {
 	self.ConfigObj = self.TestSuite.LoadConfig()
 	self.ConfigObj.Frontend.IsMinion = true
-	self.ConfigObj.Frontend.ServerServices.FrontendServer = false
-	self.ConfigObj.Frontend.ServerServices.ReplicationService = true
+	self.ConfigObj.Services.FrontendServer = false
+	self.ConfigObj.Services.ReplicationService = true
 
 	self.LoadArtifacts([]string{`
 name: Test.Artifact

@@ -108,7 +108,7 @@ func NewCSVEncoder(extra_data *ordereddict.Dict) *CSVEncoder {
 			if pres {
 				self.extra_keys = append(self.extra_keys, k)
 				self.extra_values = append(self.extra_values,
-					AnyToString(v, NoEncOpts))
+					AnyToString(v, DefaultEncOpts()))
 			}
 		}
 	}
