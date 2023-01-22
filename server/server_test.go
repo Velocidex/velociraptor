@@ -407,7 +407,10 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 
 	tasks, err := client_info_manager.PeekClientTasks(context.Background(), self.client_id)
 	assert.NoError(t, err)
-	assert.Equal(t, len(tasks), 2)
+	assert.Equal(t, len(tasks), 1)
+
+	// The request sends a single FlowRequest task with two queries
+	assert.Equal(t, len(tasks[0].FlowRequest.VQLClientActions), 2)
 
 	collection_context := &flows_proto.ArtifactCollectorContext{}
 	path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
@@ -638,7 +641,8 @@ func (self *ServerTestSuite) TestCancellation() {
 	assert.NoError(t, err)
 
 	// Generic.Client.Info has two source preconditions in parallel
-	assert.Equal(t, len(tasks), 2)
+	assert.Equal(t, len(tasks), 1)
+	assert.Equal(t, len(tasks[0].FlowRequest.VQLClientActions), 2)
 
 	// Cancelling the flow will notify the client immediately.
 	launcher, err := services.GetLauncher(self.ConfigObj)

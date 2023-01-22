@@ -568,19 +568,16 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 
 	// Compile all the requests into specific tasks to be sent to the
 	// client.
-	tasks := []*crypto_proto.VeloMessage{}
-	for id, arg := range vql_collector_args {
+	task := &crypto_proto.VeloMessage{
+		SessionId:   session_id,
+		RequestId:   constants.ProcessVQLResponses,
+		FlowRequest: &crypto_proto.FlowRequest{},
+	}
+
+	for _, arg := range vql_collector_args {
 		// If sending to the server record who actually launched this.
 		if client_id == "server" {
 			arg.Principal = collector_request.Creator
-		}
-
-		// The task we will schedule for the client.
-		task := &crypto_proto.VeloMessage{
-			QueryId:         uint64(id),
-			SessionId:       session_id,
-			RequestId:       constants.ProcessVQLResponses,
-			VQLClientAction: arg,
 		}
 
 		// Send an urgent request to the client.
@@ -588,7 +585,8 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 			task.Urgent = true
 		}
 
-		tasks = append(tasks, task)
+		task.FlowRequest.VQLClientActions = append(
+			task.FlowRequest.VQLClientActions, arg)
 	}
 
 	// Save the collection context first.
@@ -601,8 +599,8 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 		State:               flows_proto.ArtifactCollectorContext_RUNNING,
 		Request:             collector_request,
 		ClientId:            client_id,
-		TotalRequests:       int64(len(tasks)),
-		OutstandingRequests: int64(len(tasks)),
+		TotalRequests:       int64(len(vql_collector_args)),
+		OutstandingRequests: int64(len(vql_collector_args)),
 	}
 
 	// Store the collection_context first, then queue all the tasks.
@@ -612,8 +610,9 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 
 		func() {
 			// Queue and notify the client about the new tasks
-			client_manager.QueueMessagesForClient(
-				ctx, client_id, tasks, true /* notify */)
+			client_manager.QueueMessageForClient(
+				ctx, client_id, task,
+				services.NOTIFY_CLIENT, utils.BackgroundWriter)
 		})
 	if err != nil {
 		return "", err
@@ -622,7 +621,9 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 	// Record the tasks for provenance of what we actually did.
 	err = db.SetSubjectWithCompletion(config_obj,
 		flow_path_manager.Task(),
-		&api_proto.ApiFlowRequestDetails{Items: tasks}, nil)
+		&api_proto.ApiFlowRequestDetails{
+			Items: []*crypto_proto.VeloMessage{task},
+		}, nil)
 	if err != nil {
 		return "", err
 	}

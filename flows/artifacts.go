@@ -739,7 +739,7 @@ func (self *FlowRunner) ProcessSingleMessage(
 					Cancel:    &crypto_proto.Cancel{},
 					SessionId: job.SessionId,
 				},
-				true /* notify */, nil)
+				services.NOTIFY_CLIENT, utils.BackgroundWriter)
 			if err != nil {
 				return fmt.Errorf("Queueing for client %v: %w",
 					job.Source, err)

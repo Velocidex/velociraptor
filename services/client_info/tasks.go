@@ -287,6 +287,21 @@ func (self *ClientInfoManager) GetClientTasks(
 		if err != nil {
 			return nil, err
 		}
+
+		// Handle backwards compatibility with older clients by expanding
+		// FlowRequest into separate VQLClientActions. Newer clients will
+		// ignore bare VQLClientActions and older clients will ignore
+		// FlowRequest.
+		if message.FlowRequest != nil {
+			for _, request := range message.FlowRequest.VQLClientActions {
+				result = append(result, &crypto_proto.VeloMessage{
+					SessionId:       message.SessionId,
+					RequestId:       message.RequestId,
+					VQLClientAction: request,
+				})
+			}
+		}
+
 		result = append(result, message)
 	}
 

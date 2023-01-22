@@ -10,6 +10,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_info"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
@@ -21,7 +22,8 @@ func (self *ClientInfoTestSuite) TestQueueMessages() {
 	message1 := &crypto_proto.VeloMessage{Source: "Server", SessionId: "1"}
 	err = client_info_manager.QueueMessageForClient(
 		context.Background(),
-		self.client_id, message1, true, nil)
+		self.client_id, message1,
+		services.NOTIFY_CLIENT, utils.BackgroundWriter)
 	assert.NoError(self.T(), err)
 
 	manager := client_info_manager.(*client_info.ClientInfoManager)
@@ -54,7 +56,8 @@ func (self *ClientInfoTestSuite) TestFastQueueMessages() {
 		message := &crypto_proto.VeloMessage{Source: "Server", SessionId: fmt.Sprintf("%d", i)}
 		err := client_info_manager.QueueMessageForClient(
 			context.Background(),
-			self.client_id, message, true, nil)
+			self.client_id, message,
+			services.NOTIFY_CLIENT, utils.BackgroundWriter)
 		assert.NoError(self.T(), err)
 
 		written = append(written, message)
@@ -113,7 +116,8 @@ func (self *ClientInfoTestSuite) TestGetClientTasksIsCached() {
 	// Schedule a new task for the client.
 	err = client_info_manager.QueueMessageForClient(
 		context.Background(), self.client_id,
-		&crypto_proto.VeloMessage{}, true, nil)
+		&crypto_proto.VeloMessage{},
+		services.NOTIFY_CLIENT, utils.BackgroundWriter)
 	assert.NoError(self.T(), err)
 
 	// Wait until we can see the new task

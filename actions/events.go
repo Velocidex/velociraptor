@@ -224,13 +224,7 @@ func (self UpdateEventTable) Run(
 			defer service_wg.Done()
 
 			// Name of the query we are running.
-			name := ""
-			for _, q := range event.Query {
-				if q.Name != "" {
-					name = q.Name
-				}
-			}
-
+			name := GetQueryName(event.Query)
 			if name != "" {
 				logger.Info("<green>Starting</> monitoring query %s", name)
 			}

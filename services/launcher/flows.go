@@ -270,7 +270,7 @@ func (self *Launcher) CancelFlow(
 		&crypto_proto.VeloMessage{
 			Cancel:    &crypto_proto.Cancel{},
 			SessionId: flow_id,
-		}, true /* notify */, nil)
+		}, services.NOTIFY_CLIENT, utils.BackgroundWriter)
 	if err != nil {
 		return nil, err
 	}
