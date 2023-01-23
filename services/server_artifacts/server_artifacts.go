@@ -21,6 +21,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/actions"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -65,7 +66,7 @@ func (self *ServerArtifactsRunner) process(
 		return err
 	}
 
-	tasks, err := client_info_manager.GetClientTasks(ctx, "server")
+	messages, err := client_info_manager.GetClientTasks(ctx, "server")
 	if err != nil {
 		return err
 	}
@@ -74,38 +75,19 @@ func (self *ServerArtifactsRunner) process(
 	defer func() {
 		defer wg.Done()
 
-		// Group tasks by session id so we only create one context
-		// per session id
-		group := make(map[string][]*crypto_proto.VeloMessage)
-		for _, task := range tasks {
-			existing, _ := group[task.SessionId]
-			existing = append(existing, task)
-			group[task.SessionId] = existing
-		}
+		for _, req := range messages {
+			session_id := req.SessionId
 
-		for session_id, tasks := range group {
-			collection_context, err := NewCollectionContextManager(
-				ctx, self.config_obj, "server", session_id)
-			if err != nil {
-				continue
-			}
-			logger, err := NewServerLogger(ctx,
-				collection_context, config_obj, session_id)
-			if err != nil {
-				continue
+			if req.Cancel != nil {
+				// This task is now done.
+				self.Cancel(session_id)
+				return
 			}
 
-			for _, task := range tasks {
-				err = self.ProcessTask(
-					ctx, config_obj, task, collection_context, logger)
-				if err != nil {
-					logger.Write([]byte(
-						fmt.Sprintf("ServerArtifactsRunner: %v", err)))
-				}
+			if req.FlowRequest != nil {
+				self.ProcessTask(ctx, config_obj, req.SessionId, req.FlowRequest)
+				return
 			}
-
-			collection_context.Close()
-			logger.Close()
 		}
 	}()
 
@@ -119,6 +101,7 @@ func (self *ServerArtifactsRunner) Cancel(flow_id string) {
 	flow_context, pres := self.cancellationPool[flow_id]
 	if pres {
 		flow_context.cancel()
+		flow_context.logger.Write([]byte("INFO:Cancelling Query"))
 		flow_context.logger.writer.Flush()
 		delete(self.cancellationPool, flow_id)
 	}
@@ -127,28 +110,31 @@ func (self *ServerArtifactsRunner) Cancel(flow_id string) {
 func (self *ServerArtifactsRunner) ProcessTask(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	task *crypto_proto.VeloMessage,
-	collection_context CollectionContextManager,
-	logger *serverLogger) error {
+	session_id string,
+	req *crypto_proto.FlowRequest) error {
 
-	// Cancel the current collection
-	if task.Cancel != nil {
-		self.mu.Lock()
-		flow_context, pres := self.cancellationPool[task.SessionId]
-		self.mu.Unlock()
-		if pres {
-			flow_context.logger.Write([]byte("INFO:Cancelling Query"))
-		}
-
-		// This task is now done.
-		self.Cancel(task.SessionId)
-
-		return nil
-	}
-
-	err := self.runQuery(ctx, task, collection_context, logger)
+	collection_context, err := NewCollectionContextManager(
+		ctx, self.config_obj, "server", session_id)
 	if err != nil {
 		return err
+	}
+	defer collection_context.Close()
+
+	logger, err := NewServerLogger(ctx,
+		collection_context, config_obj, session_id)
+	if err != nil {
+		return err
+	}
+	defer logger.Close()
+
+	for _, task := range req.VQLClientActions {
+		err := self.runQuery(
+			ctx, session_id, task, collection_context, logger)
+		if err != nil {
+			logger.Write([]byte(
+				fmt.Sprintf("ServerArtifactsRunner: %v", err)))
+			return err
+		}
 	}
 
 	collection_context.Modify(func(context *flows_proto.ArtifactCollectorContext) {
@@ -162,24 +148,19 @@ func (self *ServerArtifactsRunner) ProcessTask(
 	})
 
 	_ = collection_context.Save()
-
 	return nil
 }
 
 func (self *ServerArtifactsRunner) runQuery(
 	ctx context.Context,
-	task *crypto_proto.VeloMessage,
+	session_id string,
+	arg *actions_proto.VQLCollectorArgs,
 	collection_context CollectionContextManager,
 	logger *serverLogger) (err error) {
 
 	// Set up the logger for writing query logs. Note this must be
 	// destroyed last since we need to be able to receive logs
 	// from scope destructors.
-	arg := task.VQLClientAction
-	if arg == nil {
-		return errors.New("VQLClientAction should be specified.")
-	}
-
 	if arg.Query == nil {
 		return errors.New("Query should be specified")
 	}
@@ -199,14 +180,14 @@ func (self *ServerArtifactsRunner) runQuery(
 	sub_ctx, cancel := context.WithCancel(ctx)
 
 	self.mu.Lock()
-	self.cancellationPool[task.SessionId] = serverFlowContext{
+	self.cancellationPool[session_id] = serverFlowContext{
 		cancel: cancel,
 		logger: logger,
 	}
 	self.mu.Unlock()
 
 	defer func() {
-		self.Cancel(task.SessionId)
+		self.Cancel(session_id)
 
 		// Send a completion event when the query is finished..
 		flow_context := collection_context.GetContext()
@@ -227,7 +208,7 @@ func (self *ServerArtifactsRunner) runQuery(
 	}()
 
 	// Where to write the logs.
-	path_manager := paths.NewFlowPathManager("server", task.SessionId)
+	path_manager := paths.NewFlowPathManager("server", session_id)
 
 	// Server artifacts run with full access. In order to collect
 	// them in the first place we need COLLECT_SERVER permissions.
@@ -295,7 +276,7 @@ func (self *ServerArtifactsRunner) runQuery(
 
 			opts := vql_subsystem.EncOptsFromScope(scope)
 			path_manager, err := artifact_paths.NewArtifactPathManager(
-				self.config_obj, "server", task.SessionId, name)
+				self.config_obj, "server", session_id, name)
 			if err != nil {
 				return err
 			}
