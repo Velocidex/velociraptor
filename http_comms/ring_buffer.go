@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/binary"
 	"io"
-	"io/ioutil"
 	"os"
+	"path/filepath"
 	"runtime"
 	"sync"
 
@@ -384,7 +384,7 @@ func NewFileBasedRingBuffer(
 	// (`C:\Program Files\Velociraptor\Tools`) so symlink attacks are
 	// mitigated but in case Velociraptor is misconfigured we are
 	// extra careful.
-	fd, err := ioutil.TempFile(".", "")
+	fd, err := os.CreateTemp(filepath.Dir(filename), "")
 	if err != nil {
 		return nil, err
 	}
