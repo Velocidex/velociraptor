@@ -1,9 +1,20 @@
-name: Windows.Forensics.ProcessInfo
+name: Windows.Memory.ProcessInfo
 description: |
-   Extract information about processes.
+   This artifact returns process information obtained by parsing the PEB directly.
+
+   Renamed Windows.Forensics.ProcessInfo
 
 parameters:
   - name: ProcessNameRegex
+    default: .
+    type: regex
+  - name: PidRegex
+    default: .
+    type: regex
+  - name: ImagePathRegex
+    default: .
+    type: regex
+  - name: CommandLineRegex
     default: .
     type: regex
 
@@ -75,8 +86,11 @@ sources:
         FROM ParsePeb(PID=PID)
 
         SELECT * FROM foreach(row={
-           SELECT Pid FROM pslist()
-           WHERE Name =~ ProcessNameRegex
+            SELECT Pid FROM pslist()
+            WHERE Name =~ ProcessNameRegex
+              AND str(str=Pid) =~ PidRegex
+              AND str(str=ImagePathName) =~ ImagePathRegex
+              AND str(str=CommandLine) =~ CommandLineRegex
         }, query={
-           SELECT * FROM Calculate(PID=Pid)
+            SELECT * FROM Calculate(PID=Pid)
         })

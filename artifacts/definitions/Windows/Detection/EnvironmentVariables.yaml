@@ -6,15 +6,15 @@ parameters:
    - name: ProcessNameRegex
      default: .
      type: regex
-
+   - name: PidRegex
+     default: .
+     type: regex
    - name: EnvironmentVariableRegex
      default: COMSPEC|COR_PROFILER
      type: regex
-
    - name: FilterValueRegex
      default: .
      type: regex
-
    - name: WhitelistValueRegex
      description: Ignore these values
      default: ^C:\\Windows\\.+cmd.exe$
@@ -27,11 +27,11 @@ sources:
     query: |
       SELECT * FROM foreach(
       row={
-          SELECT * FROM Artifact.Windows.Forensics.ProcessInfo(
-             ProcessNameRegex=ProcessNameRegex)
+          SELECT * FROM Artifact.Windows.Memory.ProcessInfo(
+             ProcessNameRegex=ProcessNameRegex, PidRegex=PidRegex)
       },
       query={
-          SELECT Name, ImagePathName, CommandLine,
+          SELECT Pid, Name, ImagePathName, CommandLine,
              _key AS Var, _value AS Value
           FROM items(item=Env)
       })
@@ -62,7 +62,7 @@ sources:
           {{ end }}
 
           {{ $unusual = Query "SELECT * FROM source() WHERE \
-              Var =~ 'COMSPEC' AND NOT CommandLine =~ 'cmd.exe$'" | Expand }}
+              Var =~ 'COMSPEC' AND NOT Value =~ 'cmd.exe$'" | Expand }}
           {{ if $unusual }}
 
           ## Unusual COMSPEC setting.
