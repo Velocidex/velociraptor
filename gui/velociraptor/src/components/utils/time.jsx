@@ -18,6 +18,10 @@ const renderToolTip = (props, ts) => {
 };
 
 const digitsRegex = /^[0-9.]+$/;
+//
+// The log contains timestamps like: '2022-08-19 23:34:53.165297306 +0000 UTC'
+// Date() can only handle '2022-08-19 23:34:53.165+00:00'
+const timestampWithNanoRegex = /(\d{4}-\d{2}-\d{2} \d{1,2}:\d{2}:\d{2}\.\d{3})\d+ ([-+]\d{2})(\d{2})/;
 
 // Try hard to convert the value into a proper timestamp.
 export const ToStandardTime = value => {
@@ -27,7 +31,6 @@ export const ToStandardTime = value => {
         // (can happen with 64 bit ints which JSON does not support).
         if (digitsRegex.test(value)) {
             value = parseFloat(value);
-
         } else {
             // Maybe an iso string
             let parsed = new Date(value);
@@ -36,6 +39,16 @@ export const ToStandardTime = value => {
                 // Ok this is fine.
                 return parsed;
             };
+
+	    const m = value.match(timestampWithNanoRegex);
+	    if (m) {
+		let newDate = m[1] + m[2] + ":" + m[3];
+
+		parsed = new Date(newDate);
+		if (!_.isNaN(parsed.getTime())) {
+		    return parsed;
+		}
+	    }
         }
     }
 
