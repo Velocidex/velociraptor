@@ -225,8 +225,62 @@ func (self EnumerateFlowPlugin) Info(scope vfilter.Scope, type_map *vfilter.Type
 	}
 }
 
+type GetFlowFunction struct{}
+
+func (self *GetFlowFunction) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	arg := &FlowsPluginArgs{}
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("get_flow: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	permissions := acls.COLLECT_CLIENT
+	if arg.ClientId == "server" {
+		permissions = acls.COLLECT_SERVER
+	}
+
+	err = vql_subsystem.CheckAccess(scope, permissions)
+	if err != nil {
+		scope.Log("get_flow: %v", err)
+		return vfilter.Null{}
+	}
+
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		scope.Log("get_flow: Command can only run on the server")
+		return vfilter.Null{}
+	}
+
+	launcher, err := services.GetLauncher(config_obj)
+	if err != nil {
+		scope.Log("get_flow: %v", err)
+		return vfilter.Null{}
+	}
+	res, err := launcher.GetFlowDetails(config_obj, arg.ClientId, arg.FlowId)
+	if err != nil {
+		scope.Log("get_flow: %v", err)
+		return vfilter.Null{}
+	}
+
+	return json.ConvertProtoToOrderedDict(res.Context).
+		Set("AvailableDownloads", res.AvailableDownloads)
+}
+
+func (self GetFlowFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "get_flow",
+		Doc:     "Gets flow details.",
+		ArgType: type_map.AddType(scope, &FlowsPluginArgs{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterPlugin(&EnumerateFlowPlugin{})
 	vql_subsystem.RegisterFunction(&CancelFlowFunction{})
+	vql_subsystem.RegisterFunction(&GetFlowFunction{})
 	vql_subsystem.RegisterPlugin(&FlowsPlugin{})
 }
