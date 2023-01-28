@@ -697,6 +697,7 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("Timestamp", time.Now().UTC().Unix()).
 			Set("Flow", flow_obj).
+			Set("FlowId", flow_obj.SessionId).
 			Set("ClientId", self.client_id),
 		}, "System.Flow.Completion", self.client_id, ""))
 
@@ -775,6 +776,7 @@ func (self *HuntTestSuite) TestHuntManagerErrors() {
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("Timestamp", time.Now().UTC().Unix()).
 			Set("Flow", flow_obj).
+			Set("FlowId", flow_obj.SessionId).
 			Set("ClientId", self.client_id),
 		}, "System.Flow.Completion", self.client_id, ""))
 

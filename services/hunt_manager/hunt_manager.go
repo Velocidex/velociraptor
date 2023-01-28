@@ -337,19 +337,9 @@ func (self *HuntManager) ProcessFlowCompletion(
 	config_obj *config_proto.Config,
 	row *ordereddict.Dict) error {
 
-	flow := &flows_proto.ArtifactCollectorContext{}
-	flow_any, pres := row.Get("Flow")
-	if !pres {
-		return errors.New("Flow not found")
-	}
-
-	err := utils.ParseIntoProtobuf(flow_any, flow)
+	flow, err := journal.GetFlowFromQueue(config_obj, row)
 	if err != nil {
 		return err
-	}
-
-	if flow.Request == nil {
-		return nil
 	}
 
 	// We only care about flows that were launched by hunts here. The

@@ -31,6 +31,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
@@ -572,7 +573,8 @@ func (self *ServerTestSuite) TestCompletions() {
 	// Emulate a response from this flow.
 	runner := flows.NewFlowRunner(self.ConfigObj)
 
-	// Generic.Client.Info sends two requests, lets complete them both.
+	// Generic.Client.Info sends two requests, send status for one
+	// message is complete but the other is still running.
 	runner.ProcessSingleMessage(
 		context.Background(),
 		&crypto_proto.VeloMessage{
@@ -582,19 +584,22 @@ func (self *ServerTestSuite) TestCompletions() {
 			FlowStats: &crypto_proto.FlowStats{
 				QueryStatus: []*crypto_proto.VeloStatus{
 					{Status: crypto_proto.VeloStatus_OK, QueryId: 1},
+					{Status: crypto_proto.VeloStatus_PROGRESS, QueryId: 2},
 				},
 			},
 		})
-	runner.Close(context.Background())
+	defer runner.Close(context.Background())
 
-	details, err := launcher.GetFlowDetails(
-		self.ConfigObj, self.client_id, flow_id)
-	require.NoError(t, err)
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		details, err := launcher.GetFlowDetails(
+			self.ConfigObj, self.client_id, flow_id)
+		require.NoError(t, err)
+		// Flow not complete yet - still an outstanding request.
+		return flows_proto.ArtifactCollectorContext_RUNNING ==
+			details.Context.State
+	})
 
-	// Flow not complete yet - still an outstanding request.
-	require.Equal(self.T(), flows_proto.ArtifactCollectorContext_RUNNING,
-		details.Context.State)
-
+	// Now complete both queries
 	runner.ProcessSingleMessage(
 		context.Background(),
 		&crypto_proto.VeloMessage{
@@ -608,15 +613,17 @@ func (self *ServerTestSuite) TestCompletions() {
 				},
 			},
 		})
-	runner.Close(context.Background())
+	defer runner.Close(context.Background())
 
-	// Flow should be complete now that second response arrived.
-	details, err = launcher.GetFlowDetails(
-		self.ConfigObj, self.client_id, flow_id)
-	require.NoError(t, err)
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		// Flow should be complete now that second response arrived.
+		details, err := launcher.GetFlowDetails(
+			self.ConfigObj, self.client_id, flow_id)
+		require.NoError(t, err)
 
-	require.Equal(self.T(), flows_proto.ArtifactCollectorContext_FINISHED,
-		details.Context.State)
+		return flows_proto.ArtifactCollectorContext_FINISHED ==
+			details.Context.State
+	})
 }
 
 // Test flow cancellation

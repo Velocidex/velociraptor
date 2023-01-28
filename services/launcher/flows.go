@@ -403,9 +403,11 @@ func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
 	}
 
 	// How many queries are outstanding still?
+	collection_context.TotalRequests = int64(len(collection_context.QueryStats))
 	collection_context.OutstandingRequests = collection_context.TotalRequests -
 		int64(completed_count)
 
+	// All queries are accounted for.
 	if collection_context.OutstandingRequests <= 0 &&
 		collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING {
 		collection_context.State = flows_proto.ArtifactCollectorContext_FINISHED

@@ -557,7 +557,7 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 	session_id := NewFlowId(client_id)
 
 	// How long to batch log messages for on the client.
-	batch_delay := uint64(100)
+	batch_delay := uint64(2000)
 	if collector_request.LogBatchTime > 0 {
 		batch_delay = collector_request.LogBatchTime
 	} else if config_obj.Frontend != nil &&

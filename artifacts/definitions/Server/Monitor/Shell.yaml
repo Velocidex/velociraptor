@@ -31,7 +31,8 @@ sources:
              client_info(client_id=Flow.client_id).os_info.fqdn AS Hostname,
              timestamp(epoch=Flow.create_time / 1000000) AS Created,
              timestamp(epoch=Flow.active_time / 1000000) AS LastActive,
-             Flow.request.parameters.env[0].value AS Command,
+             get_flow(flow_id=FlowId,
+                      client_id=ClientId).request.parameters.env[0].value AS Command,
              Stdout, Stderr FROM source(
                  client_id=Flow.client_id,
                  flow_id=Flow.session_id,
