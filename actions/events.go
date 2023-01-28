@@ -132,6 +132,7 @@ func (self *EventTable) close() {
 	// event table right now - so further updates will restart the
 	// queries again.
 	self.Events = nil
+	self.version = 0
 }
 
 func (self *EventTable) Version() uint64 {
@@ -147,7 +148,7 @@ func GlobalEventTableVersion() uint64 {
 
 func (self *EventTable) Update(
 	config_obj *config_proto.Config,
-	responder *responder.Responder,
+	output_chan chan *crypto_proto.VeloMessage,
 	table *actions_proto.VQLEventTable) (*EventTable, error, bool) {
 
 	self.mu.Lock()
@@ -176,7 +177,7 @@ func (self *EventTable) Update(
 	self.close()
 
 	// Reset the table with the new queries.
-	GlobalEventTable = NewEventTable(config_obj, responder, table)
+	GlobalEventTable = NewEventTable(config_obj, table)
 	return GlobalEventTable, nil, true /* changed */
 }
 
@@ -185,26 +186,26 @@ type UpdateEventTable struct{}
 func (self UpdateEventTable) Run(
 	config_obj *config_proto.Config,
 	ctx context.Context,
-	responder *responder.Responder,
-	arg *actions_proto.VQLEventTable) {
+	output_chan chan *crypto_proto.VeloMessage,
+	update_table *actions_proto.VQLEventTable) {
 
 	// Make a new table if needed.
-	table, err, changed := GlobalEventTable.Update(config_obj, responder, arg)
+	table, err, changed := GlobalEventTable.Update(
+		config_obj, output_chan, update_table)
 	if err != nil {
-		responder.RaiseError(ctx, fmt.Sprintf(
-			"Error updating global event table: %v", err))
+		responder.MakeErrorResponse(
+			output_chan, "F.Monitoring", fmt.Sprintf(
+				"Error updating global event table: %v", err))
 		return
 	}
 
 	// No change required, skip it.
 	if !changed {
 		// We still need to write the new version
-		err = update_writeback(config_obj, arg)
+		err = update_writeback(config_obj, update_table)
 		if err != nil {
-			responder.RaiseError(ctx, fmt.Sprintf(
-				"Unable to write events to writeback: %v", err))
-		} else {
-			responder.Return(ctx)
+			responder.MakeErrorResponse(output_chan, "F.Monitoring",
+				fmt.Sprintf("Unable to write events to writeback: %v", err))
 		}
 		return
 	}
@@ -213,22 +214,21 @@ func (self UpdateEventTable) Run(
 
 	// Start a new query for each event.
 	action_obj := &VQLClientAction{}
-	table.wg.Add(len(table.Events))
-	service_wg.Add(len(table.Events))
-
 	for _, event := range table.Events {
-		query_responder := responder.Copy(table.Ctx)
+		// Name of the query we are running.
+		artifact_name := GetQueryName(event.Query)
+		if artifact_name != "" {
+			logger.Info("<green>Starting</> monitoring query %s", artifact_name)
+		}
 
+		query_responder := responder.NewMonitoringResponder(
+			ctx, config_obj, output_chan, artifact_name)
+
+		table.wg.Add(1)
+		service_wg.Add(1)
 		go func(event *actions_proto.VQLCollectorArgs) {
 			defer table.wg.Done()
 			defer service_wg.Done()
-
-			// Name of the query we are running.
-			name := GetQueryName(event.Query)
-			if name != "" {
-				logger.Info("<green>Starting</> monitoring query %s", name)
-			}
-			query_responder.Artifact = name
 
 			// Event tables never time out
 			if event.Timeout == 0 {
@@ -245,20 +245,18 @@ func (self UpdateEventTable) Run(
 			// never complete until it is cancelled.
 			action_obj.StartQuery(
 				config_obj, table.Ctx, query_responder, event)
-			if name != "" {
-				logger.Info("Finished monitoring query %s", name)
+			if artifact_name != "" {
+				logger.Info("Finished monitoring query %s", artifact_name)
 			}
 		}(proto.Clone(event).(*actions_proto.VQLCollectorArgs))
 	}
 
-	err = update_writeback(config_obj, arg)
+	err = update_writeback(config_obj, update_table)
 	if err != nil {
-		responder.RaiseError(ctx, fmt.Sprintf(
-			"Unable to write events to writeback: %v", err))
+		responder.MakeErrorResponse(output_chan, "F.Monitoring",
+			fmt.Sprintf("Unable to write events to writeback: %v", err))
 		return
 	}
-
-	responder.Return(ctx)
 }
 
 func update_writeback(
@@ -275,7 +273,6 @@ func update_writeback(
 
 func NewEventTable(
 	config_obj *config_proto.Config,
-	responder *responder.Responder,
 	table *actions_proto.VQLEventTable) *EventTable {
 
 	sub_ctx, cancel := context.WithCancel(service_ctx)
@@ -311,10 +308,7 @@ func InitializeEventTable(
 
 	// Create an empty table
 	GlobalEventTable = NewEventTable(
-		config_obj,
-		responder.NewResponder(ctx,
-			config_obj, &crypto_proto.VeloMessage{}, output_chan),
-		&actions_proto.VQLEventTable{})
+		config_obj, &actions_proto.VQLEventTable{})
 
 	// When the context is finished, tear down the event table.
 	go func(table *EventTable, ctx context.Context) {

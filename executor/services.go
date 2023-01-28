@@ -7,10 +7,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/responder"
 )
 
 func StartEventTableService(
@@ -23,17 +21,12 @@ func StartEventTableService(
 	logger.Info("<green>Starting</> event query service with version %v.",
 		actions.GlobalEventTableVersion())
 
-	responder := responder.NewResponder(ctx,
-		config_obj, &crypto_proto.VeloMessage{
-			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
-		}, output_chan)
-
 	actions.InitializeEventTable(ctx, config_obj, output_chan, wg)
 
 	writeback, _ := config.GetWriteback(config_obj.Client)
 	if writeback != nil && writeback.EventQueries != nil {
 		actions.UpdateEventTable{}.Run(config_obj, ctx,
-			responder, writeback.EventQueries)
+			output_chan, writeback.EventQueries)
 	}
 
 	logger.Info("<green>Starting</> event query service with version %v.",

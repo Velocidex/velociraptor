@@ -2,46 +2,102 @@ package responder
 
 import (
 	"context"
+	"sync"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-func TestResponder(config_obj *config_proto.Config) *Responder {
+type TestResponderType struct {
+	*FlowResponder
+	Drain *messageDrain
+}
+
+func (self *TestResponderType) Close() {
+	self.FlowResponder.Close()
+	self.flow_context.Close()
+}
+
+func TestResponderWithFlowId(
+	config_obj *config_proto.Config, flow_id string) *TestResponderType {
 	ctx, cancel := context.WithCancel(context.Background())
+
+	output_chan, drain := NewMessageDrain(ctx)
+
 	flow_manager := GetFlowManager(ctx, config_obj)
-	result := &Responder{
-		ctx:     ctx,
-		cancel:  cancel,
-		output:  make(chan *crypto_proto.VeloMessage, 100),
-		request: &crypto_proto.VeloMessage{SessionId: "F.Test"},
+	result := &TestResponderType{
+		FlowResponder: &FlowResponder{
+			ctx:    ctx,
+			cancel: cancel,
+			wg:     &sync.WaitGroup{},
+			output: output_chan,
+		},
+		Drain: drain,
 	}
 
-	result.flow_context = flow_manager.FlowContext(result.request)
+	result.status.Status = crypto_proto.VeloStatus_PROGRESS
+	result.wg.Add(1)
+	flow_context := flow_manager.FlowContext(result.output, flow_id)
+	result.flow_context = flow_context
+	result.flow_context.responders = append(
+		result.flow_context.responders, result.FlowResponder)
+
 	return result
 }
 
-func TestResponderWithFlowId(config_obj *config_proto.Config,
-	flow_id string) *Responder {
-	ctx, cancel := context.WithCancel(context.Background())
-	flow_manager := GetFlowManager(ctx, config_obj)
-	result := &Responder{
-		ctx:     ctx,
-		cancel:  cancel,
-		output:  make(chan *crypto_proto.VeloMessage, 100),
-		request: &crypto_proto.VeloMessage{SessionId: flow_id},
+type messageDrain struct {
+	mu       sync.Mutex
+	cancel   func()
+	wg       *sync.WaitGroup
+	messages []*crypto_proto.VeloMessage
+
+	Id uint64
+}
+
+func (self *messageDrain) Messages() []*crypto_proto.VeloMessage {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	result := make([]*crypto_proto.VeloMessage, 0, len(self.messages))
+	for _, i := range self.messages {
+		result = append(result, i)
 	}
 
-	result.flow_context = flow_manager.FlowContext(result.request)
 	return result
 }
 
-func GetTestResponses(self *Responder) []*crypto_proto.VeloMessage {
-	close(self.output)
-	result := []*crypto_proto.VeloMessage{}
-	for item := range self.output {
-		result = append(result, item)
+func NewMessageDrain(ctx context.Context) (
+	chan *crypto_proto.VeloMessage, *messageDrain) {
+	output_chan := make(chan *crypto_proto.VeloMessage, 100)
+
+	sub_ctx, cancel := context.WithCancel(ctx)
+
+	self := &messageDrain{
+		cancel: cancel,
+		wg:     &sync.WaitGroup{},
+		Id:     utils.GetId(),
 	}
 
-	return result
+	self.wg.Add(1)
+	go func() {
+		defer self.wg.Done()
+
+		for {
+			select {
+			case <-sub_ctx.Done():
+				return
+
+			case row, ok := <-output_chan:
+				if !ok {
+					return
+				}
+				self.mu.Lock()
+				self.messages = append(self.messages, row)
+				self.mu.Unlock()
+			}
+		}
+	}()
+
+	return output_chan, self
 }

@@ -595,7 +595,7 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 	// Generate a new collection context for this flow.
 	collection_context := &flows_proto.ArtifactCollectorContext{
 		SessionId:           session_id,
-		CreateTime:          uint64(time.Now().UnixNano() / 1000),
+		CreateTime:          uint64(utils.GetTime().Now().UnixNano() / 1000),
 		State:               flows_proto.ArtifactCollectorContext_RUNNING,
 		Request:             collector_request,
 		ClientId:            client_id,

@@ -2,22 +2,30 @@ package server_artifacts_test
 
 import (
 	"context"
+	"sort"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/alecthomas/assert"
+	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
+
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
+	_ "www.velocidex.com/golang/velociraptor/accessors/data"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
@@ -77,6 +85,8 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 
 	acl_manager := acl_managers.NewServerACLManager(self.ConfigObj, user)
 
+	launcher.SetFlowIdForTests("F.1234")
+
 	// Schedule a job for the server runner.
 	flow_id, err := launcher.ScheduleArtifactCollection(
 		self.Sm.Ctx, self.ConfigObj, acl_manager,
@@ -96,11 +106,11 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 
 	// Wait for the collection to complete
 	var details *api_proto.FlowDetails
-	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
+	vtesting.WaitUntil(time.Second*50, self.T(), func() bool {
 		details, err = launcher.GetFlowDetails(self.ConfigObj, "server", flow_id)
 		assert.NoError(self.T(), err)
 
-		return details.Context.State == flows_proto.ArtifactCollectorContext_FINISHED
+		return details.Context.State != flows_proto.ArtifactCollectorContext_RUNNING
 	})
 
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
@@ -127,6 +137,92 @@ sources:
 	// How long we took to run - should be immediate
 	run_time := (details.Context.ActiveTime - details.Context.StartTime) / 1000000
 	assert.True(self.T(), run_time < 2)
+}
+
+func (self *ServerArtifactsTestSuite) TestServerArtifactWithUpload() {
+	self.LoadArtifacts(`
+name: TestUpload
+type: SERVER
+sources:
+- query: |
+     SELECT upload(accessor="data",
+                   file="Hello world",
+                   name="test.txt")
+     FROM scope()
+`)
+	details := self.ScheduleAndWait("TestUpload", "admin")
+
+	// One row is collected
+	assert.Equal(self.T(), uint64(1), details.Context.TotalCollectedRows)
+	assert.Equal(self.T(), uint64(1), details.Context.TotalUploadedFiles)
+	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_FINISHED, details.Context.State)
+
+	// How long we took to run - should be immediate
+	run_time := (details.Context.ActiveTime - details.Context.StartTime) / 1000000
+	assert.True(self.T(), run_time < 2)
+
+	flow_path_manager := paths.NewFlowPathManager(
+		"server", details.Context.SessionId)
+	log_data := test_utils.FileReadAll(self.T(), self.ConfigObj,
+		flow_path_manager.Log())
+	assert.Contains(self.T(), log_data,
+		"Uploaded /clients/server/collections/F.1234/uploads/test.txt")
+
+	// Make sure the upload data is stored in the upload file.
+	uploads_data := test_utils.FileReadAll(self.T(), self.ConfigObj,
+		flow_path_manager.UploadMetadata())
+	assert.Contains(self.T(), uploads_data,
+		`"_Components":["clients","server","collections","F.1234","uploads","test.txt"]`)
+
+	// Now read the uploaded file.
+	data := test_utils.FileReadAll(self.T(), self.ConfigObj,
+		path_specs.NewUnsafeFilestorePath(
+			"clients", "server", "collections", "F.1234", "uploads", "test.txt").
+			SetType(api.PATH_TYPE_FILESTORE_ANY))
+	assert.Equal(self.T(), "Hello world", string(data))
+}
+
+// An artifact with two sources - one will produce an error. The
+// entire collection should fail but will have 2 rows returned.
+func (self *ServerArtifactsTestSuite) TestServerArtifactsMultiSource() {
+	closer := utils.MockTime(&utils.MockClock{MockNow: time.Unix(10, 10)})
+	defer closer()
+
+	self.LoadArtifacts(`
+name: TestMultiSource
+type: SERVER
+sources:
+- name: Source1
+  precondition: SELECT 1 FROM scope()
+  query: |
+    SELECT "Foo", log(message="Oops", level="ERROR") AS Error
+    FROM scope()
+
+- name: Source2
+  precondition: SELECT 1 FROM scope()
+  query: SELECT "Foo" FROM scope()
+`)
+	details := self.ScheduleAndWait("TestMultiSource", "admin")
+
+	// Two rows are collected
+	assert.Equal(self.T(), uint64(2), details.Context.TotalCollectedRows)
+
+	// The collection is marked as an error because one of the queries
+	// is an error.
+	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_ERROR,
+		details.Context.State)
+
+	// Two QueryStats are provided
+	assert.Equal(self.T(), 2, len(details.Context.QueryStats))
+
+	// Sort those for golden comparison
+	sort.Slice(details.Context.QueryStats, func(i, j int) bool {
+		return details.Context.QueryStats[i].Artifact <
+			details.Context.QueryStats[j].Artifact
+	})
+
+	goldie.Assert(self.T(), "TestMultiSource",
+		json.MustMarshalIndent(details.Context))
 }
 
 // Collect a long lived artifact with specified timeout.

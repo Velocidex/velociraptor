@@ -43,7 +43,7 @@ sources:
              Ctime as ctime,
              Btime as btime
       FROM VFSGenerator
-      WHERE NOT Stats.end_idx
+      WHERE Stats = NULL
 
   - precondition: SELECT * FROM info() WHERE version(plugin="vfs_ls") = 1
     name: Stats
@@ -55,7 +55,7 @@ sources:
              Accessor,
              Stats
       FROM VFSGenerator
-      WHERE Stats.end_idx > 0
+      WHERE Stats != NULL
 
   - precondition: SELECT * FROM info() WHERE NOT version(plugin="vfs_ls")
     query: |

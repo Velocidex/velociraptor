@@ -20,6 +20,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 var (
@@ -54,7 +55,7 @@ func GetIndex(responses []*crypto_proto.VeloMessage) []*actions_proto.Range {
 }
 
 func TestClientUploaderSparse(t *testing.T) {
-	resp := responder.TestResponder(nil)
+	resp := responder.TestResponderWithFlowId(nil, "TestClientUploaderSparse")
 	uploader := &VelociraptorUploader{
 		Responder: resp,
 	}
@@ -76,9 +77,14 @@ func TestClientUploaderSparse(t *testing.T) {
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
 		filename, "ntfs", nil, 1000, nilTime,
-		resp.GetFlowContext().NextUploadId(),
+		resp.NextUploadId(),
 		range_reader)
-	responses := responder.GetTestResponses(resp)
+
+	var responses []*crypto_proto.VeloMessage
+	vtesting.WaitUntil(time.Second*5, t, func() bool {
+		responses = resp.Drain.Messages()
+		return len(responses) > 0
+	})
 
 	// Expected size is the combined sum of all ranges with data
 	// in them
@@ -95,7 +101,8 @@ func TestClientUploaderSparse(t *testing.T) {
 // Test what happens when the underlying reader is shorter than the
 // ranges.
 func TestClientUploaderSparseWithEOF(t *testing.T) {
-	resp := responder.TestResponder(nil)
+	resp := responder.TestResponderWithFlowId(
+		nil, "TestClientUploaderSparseWithEOF")
 	uploader := &VelociraptorUploader{
 		Responder: resp,
 	}
@@ -118,9 +125,14 @@ func TestClientUploaderSparseWithEOF(t *testing.T) {
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
 		filename, "ntfs", nil, 1000, nilTime,
-		resp.GetFlowContext().NextUploadId(),
+		resp.NextUploadId(),
 		range_reader)
-	responses := responder.GetTestResponses(resp)
+
+	var responses []*crypto_proto.VeloMessage
+	vtesting.WaitUntil(time.Second*5, t, func() bool {
+		responses = resp.Drain.Messages()
+		return len(responses) > 0
+	})
 
 	// Expected size is the combined sum of all ranges with data
 	// in them
@@ -130,7 +142,8 @@ func TestClientUploaderSparseWithEOF(t *testing.T) {
 }
 
 func TestClientUploader(t *testing.T) {
-	responder_obj := responder.TestResponder(nil)
+	responder_obj := responder.TestResponderWithFlowId(
+		nil, "TestClientUploader")
 	uploader := &VelociraptorUploader{
 		Responder: responder_obj,
 	}
@@ -167,7 +180,8 @@ func TestClientUploader(t *testing.T) {
 // Trying to upload a completely sparse file with no data but real
 // size.
 func TestClientUploaderCompletelySparse(t *testing.T) {
-	resp := responder.TestResponder(nil)
+	resp := responder.TestResponderWithFlowId(
+		nil, "TestClientUploaderCompletelySparse")
 	uploader := &VelociraptorUploader{
 		Responder: resp,
 	}
@@ -187,9 +201,14 @@ func TestClientUploaderCompletelySparse(t *testing.T) {
 
 	uploader.maybeUploadSparse(ctx, scope,
 		filename, "ntfs", nil, 1000, nilTime,
-		resp.GetFlowContext().NextUploadId(),
+		resp.NextUploadId(),
 		range_reader)
-	responses := responder.GetTestResponses(resp)
+
+	var responses []*crypto_proto.VeloMessage
+	vtesting.WaitUntil(time.Second*5, t, func() bool {
+		responses = resp.Drain.Messages()
+		return len(responses) > 0
+	})
 
 	// Expected size is the combined sum of all ranges with data
 	// in them.
@@ -222,10 +241,15 @@ func TestClientUploaderSparseMultiBuffer(t *testing.T) {
 
 	uploader.maybeUploadSparse(ctx, scope,
 		filename, "ntfs", nil, 1000, nilTime,
-		resp.GetFlowContext().NextUploadId(),
+		resp.NextUploadId(),
 		range_reader)
 
-	responses := responder.GetTestResponses(resp)
+	var responses []*crypto_proto.VeloMessage
+	vtesting.WaitUntil(time.Second*5, t, func() bool {
+		responses = resp.Drain.Messages()
+		return CombineOutput("/foo", responses) == "Hello hello "
+	})
+
 	assert.Equal(t, CombineOutput("/foo", responses), "Hello hello ")
 	for _, response := range responses {
 		response.ResponseId = 0
@@ -249,8 +273,7 @@ func TestClientUploaderUploadId(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	resp := responder.TestResponderWithFlowId(
-		nil, fmt.Sprintf("Test%d", utils.GetId()))
+	resp := responder.TestResponderWithFlowId(nil, fmt.Sprintf("Test22"))
 	uploader := &VelociraptorUploader{
 		Responder: resp,
 	}
@@ -267,22 +290,26 @@ func TestClientUploaderUploadId(t *testing.T) {
 			nilTime, nilTime, nilTime, nilTime, fd)
 		assert.NoError(t, err)
 	}
+	// Collection Succeeded
+	resp.Return(ctx)
+	resp.Close()
 
-	responses := responder.GetTestResponses(resp)
-	for _, response := range responses {
-		response.SessionId = ""
-	}
+	var responses []*crypto_proto.VeloMessage
+	vtesting.WaitUntil(time.Second*5, t, func() bool {
+		responses = resp.Drain.Messages()
+		return len(responses) > 0
+	})
 
 	golden := ordereddict.NewDict().
-		Set("responses", responses).
-		Set("FlowStats", resp.GetFlowContext().Stats.Get())
+		Set("responses", responses)
 
 	goldie.Assert(t, "TestClientUploaderUploadId",
 		json.MustMarshalIndent(golden))
 }
 
 func TestClientUploaderNoIndexIfNotSparse(t *testing.T) {
-	resp := responder.TestResponder(nil)
+	resp := responder.TestResponderWithFlowId(
+		nil, "TestClientUploaderNoIndexIfNotSparse")
 	uploader := &VelociraptorUploader{
 		Responder: resp,
 	}
@@ -303,10 +330,14 @@ func TestClientUploaderNoIndexIfNotSparse(t *testing.T) {
 	scope := vql_subsystem.MakeScope()
 	uploader.maybeUploadSparse(ctx, scope,
 		filename, "ntfs", nil, 1000, nilTime,
-		resp.GetFlowContext().NextUploadId(),
+		resp.NextUploadId(),
 		range_reader)
 
-	responses := responder.GetTestResponses(resp)
+	var responses []*crypto_proto.VeloMessage
+	vtesting.WaitUntil(time.Second*5, t, func() bool {
+		responses = resp.Drain.Messages()
+		return len(responses) > 0
+	})
 	assert.Equal(t, CombineOutput("/foo", responses), "Hello hello ")
 
 	// No idx written when there are no sparse ranges.

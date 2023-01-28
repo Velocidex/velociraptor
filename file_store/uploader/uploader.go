@@ -87,10 +87,12 @@ loop:
 
 	scope.Log("Uploaded %v (%v bytes)", output_path.AsClientPath(), offset)
 	return &uploads.UploadResponse{
-		Path:   output_path.AsClientPath(),
-		Size:   uint64(offset),
-		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),
-		Md5:    hex.EncodeToString(md5_sum.Sum(nil)),
+		Path:       output_path.AsClientPath(),
+		Size:       uint64(offset),
+		StoredSize: uint64(offset),
+		Sha256:     hex.EncodeToString(sha_sum.Sum(nil)),
+		Md5:        hex.EncodeToString(md5_sum.Sum(nil)),
+		Components: output_path.Components(),
 	}, nil
 }
 

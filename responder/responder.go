@@ -21,173 +21,126 @@ import (
 	"context"
 	"runtime/debug"
 	"sync"
-	"time"
 
+	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-type Responder struct {
+// The Responder tracks a single query with the flow.
+type FlowResponder struct {
 	output chan *crypto_proto.VeloMessage
 
 	// Context and cancellation point for the query that is attached
 	// to this responder.
 	ctx        context.Context
 	cancel     func()
+	wg         *sync.WaitGroup
 	config_obj *config_proto.Config
 
-	sync.Mutex
-	request *crypto_proto.VeloMessage
-	logger  *logging.LogContext
+	mu     sync.Mutex
+	logger *logging.LogContext
 
-	// When the query started.
-	start_time int64
+	// The status contains information about the execution of the
+	// query.
+	status crypto_proto.VeloStatus
 
-	// The name of the query we are currently running.
-	Artifact string
-
-	// Keep track of stats to fill into the Status message. NOTE:
-	// These stats track the specific query, while the flow stats
-	// track the complete flow which may contain multiple queries.
-	names_with_response []string
-	log_rows            uint64
-	uploaded_rows       uint64
-	result_rows         uint64
-
-	// A context that is shared between all queries from the same
-	// collection.
+	// Our parent context that is shared between all queries from the
+	// same collection.
 	flow_context *FlowContext
 }
 
 // A Responder manages responses for a single query. A collection (or
 // flow) usually contains several queries in different requests so
 // there will be several responders.
-func NewResponder(
+func newFlowResponder(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	request *crypto_proto.VeloMessage,
-	output chan *crypto_proto.VeloMessage) *Responder {
+	wg *sync.WaitGroup,
+	output chan *crypto_proto.VeloMessage,
+	owner *FlowContext) *FlowResponder {
 
 	sub_ctx, cancel := context.WithCancel(ctx)
-
-	result := &Responder{
-		ctx:        sub_ctx,
-		cancel:     cancel,
-		config_obj: config_obj,
-		request:    request,
-		output:     output,
-		logger:     logging.GetLogger(config_obj, &logging.ClientComponent),
-		start_time: utils.GetTime().Now().UnixNano(),
+	result := &FlowResponder{
+		ctx:          sub_ctx,
+		cancel:       cancel,
+		wg:           wg,
+		config_obj:   config_obj,
+		flow_context: owner,
+		output:       output,
+		status: crypto_proto.VeloStatus{
+			Status: crypto_proto.VeloStatus_PROGRESS,
+		},
 	}
-
-	// Default log batch delay is long to reduce traffic.
-	var batch_delay uint64 = 60
-
-	if request.VQLClientAction != nil {
-		for _, q := range request.VQLClientAction.Query {
-			if q.Name != "" {
-				result.Artifact = q.Name
-			}
-		}
-
-		if request.VQLClientAction.LogBatchTime > 0 {
-			batch_delay = request.VQLClientAction.LogBatchTime
-		}
-	}
-
-	go func() {
-		for {
-			select {
-			case <-sub_ctx.Done():
-				return
-
-			case <-time.After(time.Second * time.Duration(batch_delay)):
-				result.flushLogMessages(ctx)
-			}
-		}
-	}()
-
 	return result
 }
 
-func (self *Responder) Close() {
-	self.flushLogMessages(self.ctx)
+func (self *FlowResponder) Close() {
 	self.cancel()
-}
-
-func (self *Responder) Copy(ctx context.Context) *Responder {
-	return &Responder{
-		ctx:        ctx,
-		config_obj: self.config_obj,
-		request:    self.request,
-		output:     self.output,
-		logger:     self.logger,
-		start_time: utils.GetTime().Now().UnixNano(),
-	}
+	self.wg.Done()
 }
 
 // Ensure a valid flow context exists
-func (self *Responder) GetFlowContext() *FlowContext {
-	flow_manager := GetFlowManager(self.ctx, self.config_obj)
-	return flow_manager.FlowContext(self.request)
+func (self *FlowResponder) GetFlowContext() *FlowContext {
+	return self.flow_context
 }
 
-func (self *Responder) getStatus() *crypto_proto.VeloStatus {
-	self.Lock()
-	defer self.Unlock()
+func (self *FlowResponder) NextUploadId() int64 {
+	return self.flow_context.NextUploadId()
+}
 
-	status := &crypto_proto.VeloStatus{
-		NamesWithResponse: self.names_with_response,
-		LogRows:           int64(self.log_rows),
-		UploadedFiles:     int64(self.uploaded_rows),
-		ResultRows:        int64(self.result_rows),
-		Duration:          utils.GetTime().Now().UnixNano() - self.start_time,
-		Artifact:          self.Artifact,
-	}
+func (self *FlowResponder) IsComplete() bool {
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
-	if self.request.VQLClientAction != nil {
-		status.QueryId = self.request.VQLClientAction.QueryId
-		status.TotalQueries = self.request.VQLClientAction.TotalQueries
-	}
+	return self.status.Status != crypto_proto.VeloStatus_PROGRESS
+}
+
+func (self *FlowResponder) GetStatus() *crypto_proto.VeloStatus {
+	self.mu.Lock()
+	status := proto.Clone(&self.status).(*crypto_proto.VeloStatus)
+	self.mu.Unlock()
+
+	status.LastActive = uint64(utils.GetTime().Now().UnixNano())
+	status.Duration = int64(self.status.LastActive - self.status.FirstActive)
 
 	return status
 }
 
-func (self *Responder) updateStats(message *crypto_proto.VeloMessage) {
+// Gets called on each response to update the query status
+func (self *FlowResponder) updateStats(message *crypto_proto.VeloMessage) {
 	if message.LogMessage != nil {
-		self.log_rows += message.LogMessage.NumberOfRows
+		self.status.LogRows += int64(message.LogMessage.NumberOfRows)
 		return
 	}
 
 	if message.FileBuffer != nil {
-		self.uploaded_rows++
+		self.status.UploadedBytes += int64(len(message.FileBuffer.Data))
+		if message.FileBuffer.Offset == 0 {
+			self.status.UploadedFiles++
+			self.status.ExpectedUploadedBytes += int64(message.FileBuffer.StoredSize)
+		}
 	}
 
 	if message.VQLResponse != nil {
-		self.result_rows = message.VQLResponse.QueryStartRow +
-			message.VQLResponse.TotalRows
+		self.status.ResultRows = int64(
+			message.VQLResponse.QueryStartRow + message.VQLResponse.TotalRows)
 
-		addNameWithResponse(&self.names_with_response,
+		addNameWithResponse(&self.status.NamesWithResponse,
 			message.VQLResponse.Query.Name)
 	}
 }
 
-func (self *Responder) AddResponse(message *crypto_proto.VeloMessage) {
-	self.Lock()
+// Called from VQL to send a response back to the server.
+func (self *FlowResponder) AddResponse(message *crypto_proto.VeloMessage) {
+	self.mu.Lock()
 	output := self.output
 	self.updateStats(message)
-	self.Unlock()
+	self.mu.Unlock()
 
-	// Update the flow stats
-	self.GetFlowContext().Stats.UpdateStats(message)
-
-	message.QueryId = self.request.QueryId
-	message.SessionId = self.request.SessionId
-	message.Urgent = self.request.Urgent
-	message.TaskId = self.request.TaskId
+	message.SessionId = self.flow_context.SessionId()
 
 	select {
 	case <-self.ctx.Done():
@@ -197,56 +150,42 @@ func (self *Responder) AddResponse(message *crypto_proto.VeloMessage) {
 	}
 }
 
-func (self *Responder) RaiseError(ctx context.Context, message string) {
-	status := self.getStatus()
-	status.Backtrace = string(debug.Stack())
-	status.ErrorMessage = message
-	status.Status = crypto_proto.VeloStatus_GENERIC_ERROR
-	status.NamesWithResponse = self.names_with_response
-	status.Artifact = self.Artifact
+func (self *FlowResponder) RaiseError(ctx context.Context, message string) {
+	// Mark the query as having an error.
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
-	self.GetFlowContext().Stats.UpdateStats(
-		&crypto_proto.VeloMessage{Status: status})
-}
-
-func (self *Responder) Return(ctx context.Context) {
-	status := self.getStatus()
-	status.Status = crypto_proto.VeloStatus_OK
-
-	self.GetFlowContext().Stats.UpdateStats(
-		&crypto_proto.VeloMessage{Status: status})
-}
-
-// Send a log message to the server.
-func (self *Responder) Log(ctx context.Context, level string, msg string) {
-	self.GetFlowContext().AddLogMessage(level, msg, self.Artifact)
-}
-
-func (self *Responder) flushLogMessages(ctx context.Context) {
-	flow_context := self.GetFlowContext()
-	buf, id, count, error_message := flow_context.GetLogMessages()
-	if len(buf) > 0 {
-		self.AddResponse(&crypto_proto.VeloMessage{
-			RequestId: constants.LOG_SINK,
-			LogMessage: &crypto_proto.LogMessage{
-				Id:           int64(id),
-				NumberOfRows: count,
-				Jsonl:        string(buf),
-				ErrorMessage: error_message,
-				Artifact:     self.Artifact,
-			}})
-	}
-
-	// Maybe send a periodic stats update
-	stats := flow_context.Stats.MaybeSendStats()
-	if stats != nil && !stats.FlowComplete {
-		self.AddResponse(&crypto_proto.VeloMessage{
-			RequestId: constants.STATS_SINK,
-			FlowStats: stats,
-		})
+	if self.status.Status == crypto_proto.VeloStatus_PROGRESS {
+		self.status.Status = crypto_proto.VeloStatus_GENERIC_ERROR
+		self.status.ErrorMessage = message
+		self.status.Backtrace = string(debug.Stack())
 	}
 }
 
-func (self *Responder) SessionId() string {
-	return self.request.SessionId
+func (self *FlowResponder) Return(ctx context.Context) {
+	// Mark the query as being successful
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.status.Status == crypto_proto.VeloStatus_PROGRESS {
+		self.status.Status = crypto_proto.VeloStatus_OK
+	}
+}
+
+// Send a log message to the server. We do not actually send the log
+// right away, but queue it locally and combine with other log
+// messages for self.flushLogMessages() to send.
+func (self *FlowResponder) Log(ctx context.Context, level string, msg string) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.flow_context.AddLogMessage(level, msg, self.status.Artifact)
+	self.status.LogRows++
+}
+
+// This is expected to be small so a linear search is ok
+func addNameWithResponse(array *[]string, name string) {
+	if name != "" && !utils.InString(*array, name) {
+		*array = append(*array, name)
+	}
 }

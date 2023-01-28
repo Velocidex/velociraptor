@@ -1,6 +1,7 @@
 {
  "responses": [
   {
+   "session_id": "Test22",
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
@@ -13,6 +14,7 @@
    }
   },
   {
+   "session_id": "Test22",
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
@@ -26,6 +28,7 @@
    }
   },
   {
+   "session_id": "Test22",
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
@@ -39,6 +42,7 @@
    }
   },
   {
+   "session_id": "Test22",
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
@@ -53,6 +57,7 @@
    }
   },
   {
+   "session_id": "Test22",
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
@@ -66,6 +71,7 @@
    }
   },
   {
+   "session_id": "Test22",
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
@@ -80,6 +86,7 @@
    }
   },
   {
+   "session_id": "Test22",
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
@@ -93,6 +100,7 @@
    }
   },
   {
+   "session_id": "Test22",
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
@@ -107,6 +115,7 @@
    }
   },
   {
+   "session_id": "Test22",
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
@@ -120,6 +129,7 @@
    }
   },
   {
+   "session_id": "Test22",
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
@@ -133,11 +143,5 @@
     "upload_number": 4
    }
   }
- ],
- "FlowStats": {
-  "total_uploaded_files": 5,
-  "total_expected_uploaded_bytes": 55,
-  "total_uploaded_bytes": 55,
-  "timestamp": 10000000
- }
+ ]
 }

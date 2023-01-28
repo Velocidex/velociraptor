@@ -133,9 +133,9 @@ func (self *TestSuite) SetupTest() {
 	require.NoError(self.T(), err)
 
 	// Wait here until the indexer is all ready.
-	indexer, err := services.GetIndexer(self.ConfigObj)
-	assert.NoError(self.T(), err)
-	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
+		indexer, err := services.GetIndexer(self.ConfigObj)
+		assert.NoError(self.T(), err)
 		return indexer.(*indexing.Indexer).IsReady()
 	})
 }

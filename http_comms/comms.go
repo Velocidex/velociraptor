@@ -39,7 +39,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
 	"google.golang.org/protobuf/proto"
-	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -817,9 +816,10 @@ func (self *NotificationReader) Start(
 func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
 	return &crypto_proto.MessageList{
 		Job: []*crypto_proto.VeloMessage{{
-			SessionId: constants.FOREMAN_WELL_KNOWN_FLOW,
+			SessionId:      constants.FOREMAN_WELL_KNOWN_FLOW,
 			ForemanCheckin: &actions_proto.ForemanCheckin{
-				LastEventTableVersion: actions.GlobalEventTableVersion(),
+				// TODO
+				//LastEventTableVersion: actions.GlobalEventTableVersion(),
 			}},
 		},
 	}

@@ -249,8 +249,8 @@ func (self *ClientFlowRunner) FileBuffer(
 		defer rs_writer.Close()
 
 		rs_writer.Write(ordereddict.NewDict().
-			Set("Timestamp", time.Now().UTC().Unix()).
-			Set("started", time.Now().UTC().String()).
+			Set("Timestamp", utils.GetTime().Now().UTC().Unix()).
+			Set("started", utils.GetTime().Now().UTC().String()).
 			Set("vfs_path", file_path_manager.VisibleVFSPath()).
 			Set("_Components", file_path_manager.Path().Components()).
 			Set("file_size", file_buffer.Size).
@@ -322,7 +322,6 @@ func (self *ClientFlowRunner) FileBuffer(
 	}
 
 	return nil
-
 }
 
 func (self *ClientFlowRunner) Close(ctx context.Context) {
@@ -344,18 +343,21 @@ func (self *ClientFlowRunner) FlowStats(
 		TotalLogs:                  msg.TotalLogs,
 		ActiveTime:                 msg.Timestamp,
 		QueryStats:                 msg.QueryStatus,
-		ArtifactsWithResults: deobfuscateNames(
-			self.config_obj, msg.NamesWithResponse),
 	}
 
+	// Deobfuscate artifact names
 	for _, s := range stats.QueryStats {
 		if len(s.NamesWithResponse) > 0 {
-			s.NamesWithResponse = deobfuscateNames(self.config_obj, s.NamesWithResponse)
+			s.NamesWithResponse = deobfuscateNames(
+				self.config_obj, s.NamesWithResponse)
 		}
 	}
 
-	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
+	// Recompose the flow context from the QueryStats
+	launcher.UpdateFlowStats(stats)
 
+	// Store the updated flow object in the datastore
+	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
@@ -368,12 +370,9 @@ func (self *ClientFlowRunner) FlowStats(
 		return err
 	}
 
-	// If this is the final response (i.e. the flow is not running)
-	// and we have not yet sent an update, then we will notify a flow
+	// If this is the final response, then we will notify a flow
 	// completion.
 	if msg.FlowComplete {
-		launcher.UpdateFlowStats(stats)
-
 		row := ordereddict.NewDict().
 			Set("Timestamp", time.Now().UTC().Unix()).
 			Set("Flow", stats).

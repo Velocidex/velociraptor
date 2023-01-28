@@ -56,11 +56,28 @@ func (self *Launcher) GetFlows(
 		return nil, err
 	}
 
+	seen := make(map[string]api.DSPathSpec)
+
 	// We only care about the flow contexts
 	for _, urn := range all_flow_urns {
-		if !urn.IsDir() {
-			flow_urns = append(flow_urns, urn)
+		// We really prefer the more modern JSON datastore objects but
+		// we do support older protobuf based objects if they are
+		// there.
+		if urn.Type() == api.PATH_TYPE_DATASTORE_JSON {
+			seen[urn.Base()] = urn
+			continue
 		}
+
+		if urn.Type() == api.PATH_TYPE_DATASTORE_PROTO {
+			_, pres := seen[urn.Base()]
+			if !pres {
+				seen[urn.Base()] = urn
+			}
+		}
+	}
+
+	for _, v := range seen {
+		flow_urns = append(flow_urns, v)
 	}
 
 	// No flows were returned.
@@ -331,23 +348,51 @@ func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
 	collection_context.State = flows_proto.ArtifactCollectorContext_RUNNING
 	collection_context.Status = ""
 	collection_context.Backtrace = ""
-	for _, s := range collection_context.QueryStats {
-		// Get the first errored query.
-		if collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING &&
-			s.Status != crypto_proto.VeloStatus_OK {
-			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
-			collection_context.Status = s.ErrorMessage
-			collection_context.Backtrace = s.Backtrace
-			break
-		}
-	}
 
 	// Total execution duration is the sum of all the query durations
 	// (this can be faster than wall time if queries run in parallel)
 	collection_context.ExecutionDuration = 0
+	collection_context.TotalUploadedBytes = 0
+	collection_context.TotalExpectedUploadedBytes = 0
+	collection_context.TotalUploadedFiles = 0
+	collection_context.TotalCollectedRows = 0
+	collection_context.ActiveTime = 0
+	collection_context.StartTime = 0
+
+	// Number of queries completed.
+	completed_count := 0
+
 	for _, s := range collection_context.QueryStats {
 		collection_context.ExecutionDuration += s.Duration
+		collection_context.TotalUploadedBytes += uint64(s.UploadedBytes)
+		collection_context.TotalExpectedUploadedBytes += uint64(s.ExpectedUploadedBytes)
+		collection_context.TotalUploadedFiles += uint64(s.UploadedFiles)
+		collection_context.TotalCollectedRows += uint64(s.ResultRows)
 
+		if s.LastActive > collection_context.ActiveTime {
+			collection_context.ActiveTime = s.LastActive
+		}
+
+		if collection_context.StartTime == 0 ||
+			collection_context.StartTime > s.FirstActive {
+			collection_context.StartTime = s.FirstActive
+		}
+
+		// Get the first errored query and mark the entire collection_context with it.
+		if collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING &&
+			s.Status == crypto_proto.VeloStatus_GENERIC_ERROR {
+			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
+			collection_context.Status = s.ErrorMessage
+			collection_context.Backtrace = s.Backtrace
+		}
+
+		// Query is considered complete if it is in the ERROR or OK state
+		if s.Status == crypto_proto.VeloStatus_OK ||
+			s.Status == crypto_proto.VeloStatus_GENERIC_ERROR {
+			completed_count++
+		}
+
+		// Merge the NamesWithResponse for all the queries.
 		for _, a := range s.NamesWithResponse {
 			if a != "" &&
 				!utils.InString(collection_context.ArtifactsWithResults, a) {
@@ -357,8 +402,10 @@ func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
 		}
 	}
 
+	// How many queries are outstanding still?
 	collection_context.OutstandingRequests = collection_context.TotalRequests -
-		int64(len(collection_context.QueryStats))
+		int64(completed_count)
+
 	if collection_context.OutstandingRequests <= 0 &&
 		collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING {
 		collection_context.State = flows_proto.ArtifactCollectorContext_FINISHED

@@ -210,6 +210,9 @@ Frontend:
     notifications_per_second: 10
     max_upload_size: 10485760
     expected_clients: 10000
+    default_log_batch_time: 100
+    default_monitoring_log_batch_time: 100
+
 Datastore:
   implementation: Test
 Writeback:
