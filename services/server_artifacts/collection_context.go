@@ -79,6 +79,11 @@ func (self *contextManager) GetQueryContext(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	// Get the base name of the artifact
+	artifact_name := artifacts.DeobfuscateString(
+		self.config_obj, actions.GetQueryName(query.Query))
+	base, _ := paths.SplitFullSourceName(artifact_name)
+
 	// Will be done when query is closed.
 	self.wg.Add(1)
 	result := &queryContext{
@@ -90,9 +95,8 @@ func (self *contextManager) GetQueryContext(
 		status: crypto_proto.VeloStatus{
 			// Initial state for all running queries - will be changed
 			// to either OK or GENERIC_ERROR when the query is done.
-			Status: crypto_proto.VeloStatus_PROGRESS,
-			Artifact: artifacts.DeobfuscateString(
-				self.config_obj, actions.GetQueryName(query.Query)),
+			Status:      crypto_proto.VeloStatus_PROGRESS,
+			Artifact:    base,
 			FirstActive: uint64(utils.GetTime().Now().UnixNano() / 1000),
 		},
 	}

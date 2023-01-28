@@ -201,6 +201,8 @@ func (self *ServerArtifactsRunner) runQuery(
 	// Send a completion event when the query is finished...
 	defer self.maybeSendCompletionMessage(session_id, collection_context)
 
+	names_with_response := make(map[string]bool)
+
 	query_context := collection_context.GetQueryContext(arg)
 	defer query_context.Close()
 
@@ -351,6 +353,11 @@ func (self *ServerArtifactsRunner) runQuery(
 				rs_writer.Write(vfilter.RowToDict(sub_ctx, scope, row))
 				query_context.UpdateStatus(func(s *crypto_proto.VeloStatus) {
 					s.ResultRows++
+					_, pres := names_with_response[name]
+					if !pres {
+						s.NamesWithResponse = append(s.NamesWithResponse, name)
+						names_with_response[name] = true
+					}
 				})
 			}
 		}

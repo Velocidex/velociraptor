@@ -225,6 +225,40 @@ sources:
 		json.MustMarshalIndent(details.Context))
 }
 
+// Multiple sources in the same precondition run serially
+func (self *ServerArtifactsTestSuite) TestServerArtifactsMultiSourceSerial() {
+	closer := utils.MockTime(&utils.MockClock{MockNow: time.Unix(10, 10)})
+	defer closer()
+
+	self.LoadArtifacts(`
+name: TestMultiSourceSerial
+type: SERVER
+sources:
+- name: Source1
+  query: |
+    SELECT "Foo", log(message="Oops", level="ERROR") AS Error
+    FROM scope()
+
+- name: Source2
+  query: SELECT "Foo" FROM scope()
+`)
+	details := self.ScheduleAndWait("TestMultiSourceSerial", "admin")
+
+	// Two rows are collected
+	assert.Equal(self.T(), uint64(2), details.Context.TotalCollectedRows)
+
+	// The collection is marked as an error because one of the queries
+	// is an error.
+	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_ERROR,
+		details.Context.State)
+
+	// One QueryStats because there is only one query
+	assert.Equal(self.T(), 1, len(details.Context.QueryStats))
+
+	goldie.Assert(self.T(), "TestMultiSourceSerial",
+		json.MustMarshalIndent(details.Context))
+}
+
 // Collect a long lived artifact with specified timeout.
 func (self *ServerArtifactsTestSuite) TestServerArtifactsTimeout() {
 	self.LoadArtifacts(`
