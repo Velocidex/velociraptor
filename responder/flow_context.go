@@ -68,7 +68,9 @@ type FlowContext struct {
 func newFlowContext(ctx context.Context,
 	config_obj *config_proto.Config,
 	output chan *crypto_proto.VeloMessage,
-	flow_id string, owner *FlowManager) *FlowContext {
+	req *crypto_proto.VeloMessage, owner *FlowManager) *FlowContext {
+
+	flow_id := req.SessionId
 
 	// How often do we send a FlowStat message to sync the server's
 	// flow progress stat.
@@ -78,13 +80,22 @@ func newFlowContext(ctx context.Context,
 		config_obj.Client.DefaultServerFlowStatsUpdate > 0 {
 		frequency_msec = config_obj.Client.DefaultServerFlowStatsUpdate
 	}
+	if req.FlowRequest != nil &&
+		req.FlowRequest.FlowUpdateTime > 0 {
+		frequency_msec = req.FlowRequest.FlowUpdateTime
+	}
 
+	// Default is set by config file
 	batch_delay := uint64(5000)
 	if config_obj != nil &&
 		config_obj.Frontend != nil &&
 		config_obj.Frontend.Resources != nil &&
 		config_obj.Frontend.Resources.DefaultLogBatchTime > 0 {
 		batch_delay = config_obj.Frontend.Resources.DefaultLogBatchTime
+	}
+	if req.FlowRequest != nil &&
+		req.FlowRequest.LogBatchTime > 0 {
+		batch_delay = req.FlowRequest.LogBatchTime
 	}
 
 	// Allow the flow to be cancelled.

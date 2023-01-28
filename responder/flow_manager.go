@@ -111,7 +111,10 @@ func (self *FlowManager) Cancel(ctx context.Context, flow_id string) {
 }
 
 func (self *FlowManager) FlowContext(
-	output chan *crypto_proto.VeloMessage, flow_id string) *FlowContext {
+	output chan *crypto_proto.VeloMessage,
+	req *crypto_proto.VeloMessage) *FlowContext {
+
+	flow_id := req.SessionId
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -119,7 +122,7 @@ func (self *FlowManager) FlowContext(
 	flow_context, pres := self.in_flight[flow_id]
 	if !pres {
 		flow_context := newFlowContext(
-			self.ctx, self.config_obj, output, flow_id, self)
+			self.ctx, self.config_obj, output, req, self)
 
 		self.in_flight[flow_id] = flow_context
 		return flow_context

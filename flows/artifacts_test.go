@@ -384,13 +384,7 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 		},
 	}
 
-	var responses []*crypto_proto.VeloMessage
-	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
-		responses = resp.Drain.Messages()
-		return len(responses) > 0
-	})
-
-	for _, response := range responses {
+	for _, response := range resp.Drain.WaitForStatsMessage(self.T()) {
 		response.Source = self.client_id
 		err := ArtifactCollectorProcessOneMessage(
 			self.ConfigObj, collection_context, response)
@@ -673,21 +667,16 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 		Request:             &flows_proto.ArtifactCollectorArgs{},
 	}
 
-	var responses []*crypto_proto.VeloMessage
-	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
-		responses = resp.Drain.Messages()
-		return len(responses) > 0
-	})
-
-	for _, resp := range responses {
-		resp.Source = self.client_id
-
-		// The uploader should be telling us the overall stats.
-		assert.Equal(self.T(), resp.FileBuffer.Size, uint64(18))
-		assert.Equal(self.T(), resp.FileBuffer.StoredSize, uint64(12))
+	for _, msg := range resp.Drain.WaitForStatsMessage(self.T()) {
+		msg.Source = self.client_id
+		if msg.FileBuffer != nil {
+			// The uploader should be telling us the overall stats.
+			assert.Equal(self.T(), msg.FileBuffer.Size, uint64(18))
+			assert.Equal(self.T(), msg.FileBuffer.StoredSize, uint64(12))
+		}
 
 		ArtifactCollectorProcessOneMessage(self.ConfigObj,
-			collection_context, resp)
+			collection_context, msg)
 	}
 
 	// Close the context should force uploaded files to be
@@ -812,13 +801,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 	}
 
 	// Process it.
-	var responses []*crypto_proto.VeloMessage
-	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
-		responses = resp.Drain.Messages()
-		return len(responses) > 0
-	})
-
-	for _, resp := range responses {
+	for _, resp := range resp.Drain.WaitForStatsMessage(self.T()) {
 		resp.Source = self.client_id
 		ArtifactCollectorProcessOneMessage(self.ConfigObj,
 			collection_context, resp)

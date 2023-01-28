@@ -16,7 +16,7 @@ func (self *ClientExecutor) ProcessFlowRequest(
 	config_obj *config_proto.Config, req *crypto_proto.VeloMessage) {
 
 	flow_manager := responder.GetFlowManager(ctx, config_obj)
-	flow_context := flow_manager.FlowContext(self.Outbound, req.SessionId)
+	flow_context := flow_manager.FlowContext(self.Outbound, req)
 	defer flow_context.Close()
 
 	// Control concurrency for the entire collection at once. If a

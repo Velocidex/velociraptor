@@ -99,8 +99,12 @@ func (self *ClientVQLTestSuite) TestDependentArtifacts() {
 			},
 		})
 
-	assert.Equal(self.T(), "{\"X\":1,\"_Source\":\"Custom.Foo.Bar.Baz.A\"}\n",
-		getVQLResponse(resp.Drain.Messages()))
+	var responses []*crypto_proto.VeloMessage
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		responses = resp.Drain.Messages()
+		return "{\"X\":1,\"_Source\":\"Custom.Foo.Bar.Baz.A\"}\n" ==
+			getVQLResponse(responses)
+	})
 }
 
 func getLogs(responses []*crypto_proto.VeloMessage) string {

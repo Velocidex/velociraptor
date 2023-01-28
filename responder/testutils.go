@@ -3,10 +3,13 @@ package responder
 import (
 	"context"
 	"sync"
+	"testing"
+	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 type TestResponderType struct {
@@ -38,7 +41,8 @@ func TestResponderWithFlowId(
 
 	result.status.Status = crypto_proto.VeloStatus_PROGRESS
 	result.wg.Add(1)
-	flow_context := flow_manager.FlowContext(result.output, flow_id)
+	flow_context := flow_manager.FlowContext(
+		result.output, &crypto_proto.VeloMessage{SessionId: flow_id})
 	result.flow_context = flow_context
 	result.flow_context.responders = append(
 		result.flow_context.responders, result.FlowResponder)
@@ -100,4 +104,29 @@ func NewMessageDrain(ctx context.Context) (
 	}()
 
 	return output_chan, self
+}
+
+func (self *messageDrain) WaitForStatsMessage(t *testing.T) []*crypto_proto.VeloMessage {
+	var responses []*crypto_proto.VeloMessage
+	vtesting.WaitUntil(time.Second*5, t, func() bool {
+		responses = self.Messages()
+		for _, r := range responses {
+			if r.FlowStats != nil &&
+				len(r.FlowStats.QueryStatus) > 0 &&
+				r.FlowStats.QueryStatus[0].UploadedFiles == 1 {
+				return true
+			}
+		}
+		return false
+	})
+	return responses
+}
+
+func (self *messageDrain) WaitForMessage(t *testing.T, count int) []*crypto_proto.VeloMessage {
+	var responses []*crypto_proto.VeloMessage
+	vtesting.WaitUntil(time.Second*5, t, func() bool {
+		responses = self.Messages()
+		return len(responses) >= count
+	})
+	return responses
 }

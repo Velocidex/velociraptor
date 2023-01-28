@@ -80,11 +80,7 @@ func TestClientUploaderSparse(t *testing.T) {
 		resp.NextUploadId(),
 		range_reader)
 
-	var responses []*crypto_proto.VeloMessage
-	vtesting.WaitUntil(time.Second*5, t, func() bool {
-		responses = resp.Drain.Messages()
-		return len(responses) > 0
-	})
+	responses := resp.Drain.WaitForMessage(t, 3)
 
 	// Expected size is the combined sum of all ranges with data
 	// in them
@@ -131,7 +127,7 @@ func TestClientUploaderSparseWithEOF(t *testing.T) {
 	var responses []*crypto_proto.VeloMessage
 	vtesting.WaitUntil(time.Second*5, t, func() bool {
 		responses = resp.Drain.Messages()
-		return len(responses) > 0
+		return CombineOutput("/foo", responses) == "Hello hi"
 	})
 
 	// Expected size is the combined sum of all ranges with data
@@ -204,11 +200,7 @@ func TestClientUploaderCompletelySparse(t *testing.T) {
 		resp.NextUploadId(),
 		range_reader)
 
-	var responses []*crypto_proto.VeloMessage
-	vtesting.WaitUntil(time.Second*5, t, func() bool {
-		responses = resp.Drain.Messages()
-		return len(responses) > 0
-	})
+	responses := resp.Drain.WaitForMessage(t, 1)
 
 	// Expected size is the combined sum of all ranges with data
 	// in them.
@@ -294,12 +286,7 @@ func TestClientUploaderUploadId(t *testing.T) {
 	resp.Return(ctx)
 	resp.Close()
 
-	var responses []*crypto_proto.VeloMessage
-	vtesting.WaitUntil(time.Second*5, t, func() bool {
-		responses = resp.Drain.Messages()
-		return len(responses) > 0
-	})
-
+	responses := resp.Drain.WaitForMessage(t, 9)
 	golden := ordereddict.NewDict().
 		Set("responses", responses)
 
@@ -333,11 +320,7 @@ func TestClientUploaderNoIndexIfNotSparse(t *testing.T) {
 		resp.NextUploadId(),
 		range_reader)
 
-	var responses []*crypto_proto.VeloMessage
-	vtesting.WaitUntil(time.Second*5, t, func() bool {
-		responses = resp.Drain.Messages()
-		return len(responses) > 0
-	})
+	responses := resp.Drain.WaitForMessage(t, 2)
 	assert.Equal(t, CombineOutput("/foo", responses), "Hello hello ")
 
 	// No idx written when there are no sparse ranges.
