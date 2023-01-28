@@ -266,6 +266,8 @@ func TestClientUploaderUploadId(t *testing.T) {
 	defer cancel()
 
 	resp := responder.TestResponderWithFlowId(nil, fmt.Sprintf("Test22"))
+	defer resp.Close()
+
 	uploader := &VelociraptorUploader{
 		Responder: resp,
 	}
@@ -282,11 +284,8 @@ func TestClientUploaderUploadId(t *testing.T) {
 			nilTime, nilTime, nilTime, nilTime, fd)
 		assert.NoError(t, err)
 	}
-	// Collection Succeeded
-	resp.Return(ctx)
-	resp.Close()
 
-	responses := resp.Drain.WaitForMessage(t, 9)
+	responses := resp.Drain.WaitForMessage(t, 10)
 	golden := ordereddict.NewDict().
 		Set("responses", responses)
 
