@@ -2,13 +2,14 @@ package server_artifacts
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -16,10 +17,40 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+// A reference counter around ResultSetWriter to ensure it is only
+// closed when no more references are found.
+type counterWriter struct {
+	result_sets.ResultSetWriter
+
+	mu    sync.Mutex
+	count int
+}
+
+func (self *counterWriter) Copy() *counterWriter {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self.count++
+	return self
+}
+
+func (self *counterWriter) Close() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self.count--
+
+	if self.count == 0 {
+		self.ResultSetWriter.Close()
+	}
+
+	if self.count < 0 {
+		panic("Negative counterWriter!")
+	}
+}
+
 type serverLogger struct {
-	collection_context CollectionContextManager
-	config_obj         *config_proto.Config
-	writer             result_sets.ResultSetWriter
+	config_obj    *config_proto.Config
+	writer        result_sets.ResultSetWriter
+	query_context QueryContext
 }
 
 func (self *serverLogger) Close() {
@@ -31,43 +62,40 @@ func (self *serverLogger) Write(b []byte) (int, error) {
 	msg = artifacts.DeobfuscateString(self.config_obj, msg)
 
 	self.writer.Write(ordereddict.NewDict().
-		Set("Timestamp", time.Now().UTC().UnixNano()/1000).
+		Set("Timestamp", utils.GetTime().Now().UTC().UnixNano()/1000).
 		Set("Level", level).
 		Set("message", msg))
 
 	// Increment the log count.
-	self.collection_context.Modify(func(context *flows_proto.ArtifactCollectorContext) {
-		context.TotalLogs++
+	if self.query_context != nil {
+		self.query_context.UpdateStatus(func(s *crypto_proto.VeloStatus) {
+			s.LogRows++
+		})
 
 		// If an error occured mark the collection failed.
 		if level == "ERROR" {
-			context.State = flows_proto.ArtifactCollectorContext_ERROR
-			context.Status = msg
+			self.query_context.UpdateStatus(func(s *crypto_proto.VeloStatus) {
+				s.Status = crypto_proto.VeloStatus_GENERIC_ERROR
+				s.ErrorMessage = msg
+			})
 		}
-	})
+	}
 
 	return len(b), nil
 }
 
-func NewServerLogger(
+func NewServerLogWriter(
 	ctx context.Context,
-	collection_context CollectionContextManager,
 	config_obj *config_proto.Config,
-	session_id string) (*serverLogger, error) {
+	session_id string) (result_sets.ResultSetWriter, error) {
 
 	path_manager := paths.NewFlowPathManager("server", session_id)
 	file_store_factory := file_store.GetFileStore(config_obj)
-	writer, err := result_sets.NewResultSetWriter(file_store_factory,
+	log_writer, err := result_sets.NewResultSetWriter(file_store_factory,
 		path_manager.Log(), json.DefaultEncOpts(),
 		utils.BackgroundWriter, result_sets.AppendMode)
 	if err != nil {
 		return nil, err
-	}
-
-	result := &serverLogger{
-		collection_context: collection_context,
-		config_obj:         config_obj,
-		writer:             writer,
 	}
 
 	// Flush the logs every second to make sure the GUI shows
@@ -78,10 +106,10 @@ func NewServerLogger(
 			case <-ctx.Done():
 				return
 			case <-time.After(time.Second):
-				writer.Flush()
+				log_writer.Flush()
 			}
 		}
 	}()
 
-	return result, nil
+	return log_writer, nil
 }

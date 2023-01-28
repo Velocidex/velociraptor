@@ -19,12 +19,14 @@ package repository_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/sebdah/goldie/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/actions"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -32,6 +34,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/repository"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/vfilter"
 
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
@@ -200,18 +203,27 @@ func (self *PluginTestSuite) TestClientPluginMultipleSources() {
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 
-	test_responder := responder.TestResponder(self.ConfigObj)
+	test_responder := responder.TestResponderWithFlowId(
+		self.ConfigObj, "F.TestClientPluginMultipleSources")
 	for _, vql_request := range compiled {
 		actions.VQLClientAction{}.StartQuery(
 			self.ConfigObj, self.Ctx, test_responder, vql_request)
 	}
+	defer test_responder.Close()
+
+	messages := []*crypto_proto.VeloMessage{}
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		messages = test_responder.Drain.Messages()
+		return len(messages) >= 2
+	})
 
 	results := ""
-	for _, msg := range responder.GetTestResponses(test_responder) {
+	for _, msg := range messages {
 		if msg.VQLResponse != nil {
 			results += msg.VQLResponse.JSONLResponse
 		}
 	}
+
 	g := goldie.New(self.T())
 	g.Assert(self.T(), "TestClientPluginMultipleSources", []byte(results))
 }

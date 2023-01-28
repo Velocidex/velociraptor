@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/actions"
-	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -91,29 +91,6 @@ func (self *ClientExecutor) ReadResponse() <-chan *crypto_proto.VeloMessage {
 	return self.Outbound
 }
 
-func makeErrorResponse(output chan *crypto_proto.VeloMessage,
-	req *crypto_proto.VeloMessage, message string) {
-	output <- &crypto_proto.VeloMessage{
-		SessionId: req.SessionId,
-		RequestId: constants.LOG_SINK,
-		LogMessage: &crypto_proto.LogMessage{
-			Message:   message,
-			Level:     logging.ERROR,
-			Timestamp: uint64(time.Now().UTC().UnixNano() / 1000),
-		},
-	}
-
-	output <- &crypto_proto.VeloMessage{
-		SessionId:  req.SessionId,
-		RequestId:  req.RequestId,
-		ResponseId: 1,
-		Status: &crypto_proto.VeloStatus{
-			Status:       crypto_proto.VeloStatus_GENERIC_ERROR,
-			ErrorMessage: message,
-		},
-	}
-}
-
 func (self *ClientExecutor) processRequestPlugin(
 	config_obj *config_proto.Config,
 	ctx context.Context,
@@ -133,22 +110,17 @@ func (self *ClientExecutor) processRequestPlugin(
 	// Never serve unauthenticated requests.
 	if req.AuthState != crypto_proto.VeloMessage_AUTHENTICATED {
 		log.Printf("Unauthenticated")
-		makeErrorResponse(self.Outbound,
-			req, fmt.Sprintf("Unauthenticated message received: %v.", req))
+		responder.MakeErrorResponse(self.Outbound,
+			req.SessionId,
+			fmt.Sprintf("Unauthenticated message received: %v.", req))
 		return
 	}
 
 	flow_manager := responder.GetFlowManager(ctx, config_obj)
 
 	if req.Cancel != nil {
-		// Only log when the flow is not already cancelled.
-		if !flow_manager.IsCancelled(req.SessionId) {
-			flow_manager.Cancel(ctx, req.SessionId)
-
-			makeErrorResponse(self.Outbound,
-				req, fmt.Sprintf("Cancelled all inflight queries for flow %v",
-					req.SessionId))
-		}
+		// Try to cancel the flow and send a message if it worked
+		flow_manager.Cancel(ctx, req.SessionId)
 		return
 	}
 
@@ -159,35 +131,25 @@ func (self *ClientExecutor) processRequestPlugin(
 		return
 	}
 
+	// This action is deprecated now.
+	if req.UpdateForeman != nil {
+		return
+	}
+
 	if req.FlowRequest != nil {
 		self.ProcessFlowRequest(ctx, config_obj, req)
 		return
 	}
 
 	if req.UpdateEventTable != nil {
-		// Handle the requests. This used to be a plugin registration
-		// process but there are very few plugins any more and so it
-		// is easier to hard code this.
-		responder_obj := responder.NewResponder(ctx, config_obj, req, self.Outbound)
-		defer responder_obj.Close()
-
-		// Each request has its own context.
-		flow_context := flow_manager.FlowContext(req)
-		query_ctx, closer := flow_context.NewQueryContext(responder_obj)
-		defer closer()
-
 		actions.UpdateEventTable{}.Run(
-			config_obj, query_ctx, responder_obj, req.UpdateEventTable)
+			config_obj, ctx, self.Outbound, req.UpdateEventTable)
 		return
 	}
 
-	// This action is deprecated now.
-	if req.UpdateForeman != nil {
-		return
-	}
-
-	makeErrorResponse(self.Outbound,
-		req, fmt.Sprintf("Unsupported payload for message: %v", req))
+	responder.MakeErrorResponse(self.Outbound,
+		req.SessionId, fmt.Sprintf(
+			"Unsupported payload for message: %v", json.MustMarshalString(req)))
 }
 
 func NewClientExecutor(

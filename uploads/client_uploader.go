@@ -23,7 +23,7 @@ var (
 
 // An uploader delivering files from client to server.
 type VelociraptorUploader struct {
-	Responder *responder.Responder
+	Responder responder.Responder
 	Count     int
 }
 
@@ -41,7 +41,7 @@ func (self *VelociraptorUploader) Upload(
 	reader io.Reader) (
 	*UploadResponse, error) {
 
-	upload_id := self.Responder.GetFlowContext().NextUploadId()
+	upload_id := self.Responder.NextUploadId()
 
 	// Try to collect sparse files if possible
 	result, err := self.maybeUploadSparse(

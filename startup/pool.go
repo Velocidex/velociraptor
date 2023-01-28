@@ -1,3 +1,5 @@
+// +build XXXX
+
 package startup
 
 import (

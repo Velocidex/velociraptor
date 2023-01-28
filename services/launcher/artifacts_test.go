@@ -2,6 +2,7 @@ package launcher_test
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -9,12 +10,14 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/actions"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 var (
@@ -121,16 +124,20 @@ func (self *ArtifactTestSuite) TestStackOverflow() {
 	// If we fail this test make sure we take a resonable time.
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	test_responder := responder.TestResponder(self.ConfigObj)
 
+	test_responder := responder.TestResponderWithFlowId(
+		self.ConfigObj, "F.TestStackOverflow")
 	for _, vql_request := range vql_requests {
 		actions.VQLClientAction{}.StartQuery(
 			self.ConfigObj, ctx, test_responder, vql_request)
 	}
-	test_responder.Close()
+	defer test_responder.Close()
 
-	assert.Contains(self.T(), getLogMessages(test_responder),
-		"Stack overflow: Artifact2, Artifact1, Artifact2, Artifact1")
+	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
+		messages := test_responder.Drain.Messages()
+		return strings.Contains(getLogMessages(messages),
+			"Stack overflow: Artifact2, Artifact1, Artifact2, Artifact1")
+	})
 }
 
 func (self *ArtifactTestSuite) TestArtifactDependencies() {
@@ -150,26 +157,31 @@ func (self *ArtifactTestSuite) TestArtifactDependencies() {
 	// If we fail make sure we take a resonable time.
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	test_responder := responder.TestResponder(self.ConfigObj)
+	test_responder := responder.TestResponderWithFlowId(
+		self.ConfigObj, "F.TestArtifactDependencies")
 
 	for _, vql_request := range vql_requests {
 		actions.VQLClientAction{}.StartQuery(
 			self.ConfigObj, ctx, test_responder, vql_request)
 	}
 
-	results := getResponses(test_responder)
+	var messages []*ordereddict.Dict
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		messages = getResponses(test_responder.Drain.Messages())
+		return len(messages) == 2
+	})
 
 	// Return both rows, one from Artifact4 and one from Artifact3
-	assert.Equal(self.T(), len(results), 2)
-	a, _ := results[0].Get("A")
+	assert.Equal(self.T(), len(messages), 2)
+	a, _ := messages[0].Get("A")
 	assert.Equal(self.T(), a, "Foobar")
-	a, _ = results[1].Get("A")
+	a, _ = messages[1].Get("A")
 	assert.Equal(self.T(), a, "Foobar")
 }
 
-func getLogMessages(r *responder.Responder) string {
+func getLogMessages(messages []*crypto_proto.VeloMessage) string {
 	result := ""
-	for _, msg := range responder.GetTestResponses(r) {
+	for _, msg := range messages {
 		if msg.LogMessage != nil {
 			result += msg.LogMessage.Jsonl
 		}
@@ -178,10 +190,10 @@ func getLogMessages(r *responder.Responder) string {
 	return result
 }
 
-func getResponses(r *responder.Responder) []*ordereddict.Dict {
+func getResponses(messages []*crypto_proto.VeloMessage) []*ordereddict.Dict {
 	result := []*ordereddict.Dict{}
 
-	for _, msg := range responder.GetTestResponses(r) {
+	for _, msg := range messages {
 		if msg.VQLResponse != nil {
 			payload, err := utils.ParseJsonToDicts(
 				[]byte(msg.VQLResponse.JSONLResponse))

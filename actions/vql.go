@@ -44,7 +44,7 @@ import (
 
 type LogWriter struct {
 	config_obj *config_proto.Config
-	responder  *responder.Responder
+	responder  responder.Responder
 	ctx        context.Context
 }
 
@@ -62,7 +62,7 @@ type VQLClientAction struct{}
 func (self VQLClientAction) StartQuery(
 	config_obj *config_proto.Config,
 	ctx context.Context,
-	responder *responder.Responder,
+	responder responder.Responder,
 	arg *actions_proto.VQLCollectorArgs) {
 
 	// Just ignore requests that are too old.

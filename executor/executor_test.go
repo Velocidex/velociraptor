@@ -9,6 +9,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -28,6 +29,9 @@ func (self *ExecutorTestSuite) SetupTest() {
 
 	err := self.Sm.Start(responder.StartFlowManager)
 	assert.NoError(self.T(), err)
+
+	flow_manager := responder.GetFlowManager(self.Ctx, self.ConfigObj)
+	flow_manager.ResetForTests()
 }
 
 // Cancelling the executor multiple times will cause a single
@@ -36,12 +40,16 @@ func (self *ExecutorTestSuite) TestCancellation() {
 	t := self.T()
 
 	// Max time for deadlock detection.
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Second)
 	defer cancel()
 
 	config_obj := config.GetDefaultConfig()
 	executor, err := NewClientExecutor(ctx, "", config_obj)
 	require.NoError(t, err)
+
+	flow_id := fmt.Sprintf("F.XXX%d", utils.GetId())
+
+	actions.QueryLog.Clear()
 
 	var mu sync.Mutex
 	var received_messages []*crypto_proto.VeloMessage
@@ -63,32 +71,78 @@ func (self *ExecutorTestSuite) TestCancellation() {
 		}
 	}()
 
+	// Send the executor a flow request
+	executor.Inbound <- &crypto_proto.VeloMessage{
+		AuthState: crypto_proto.VeloMessage_AUTHENTICATED,
+		SessionId: flow_id,
+		FlowRequest: &crypto_proto.FlowRequest{
+			VQLClientActions: []*actions_proto.VQLCollectorArgs{{
+				Query: []*actions_proto.VQLRequest{
+					{
+						Name: "Query",
+						VQL:  "SELECT sleep(time=1000) FROM scope()",
+					},
+				},
+			}},
+		},
+	}
+
+	// Wait until the query starts running.
+	vtesting.WaitUntil(time.Second*50, self.T(), func() bool {
+		return len(actions.QueryLog.Get()) > 0
+	})
+
+	cancel_message := &crypto_proto.VeloMessage{
+		AuthState: crypto_proto.VeloMessage_AUTHENTICATED,
+		SessionId: flow_id,
+		Cancel:    &crypto_proto.Cancel{},
+		RequestId: 1}
+
 	// Send many cancel messages
-	flow_id := fmt.Sprintf("F.XXX%d", utils.GetId())
 	for i := 0; i < 10; i++ {
-		executor.Inbound <- &crypto_proto.VeloMessage{
-			AuthState: crypto_proto.VeloMessage_AUTHENTICATED,
-			SessionId: flow_id,
-			Cancel:    &crypto_proto.Cancel{},
-			RequestId: 1}
+		executor.Inbound <- cancel_message
 	}
 
 	// The cancel message should generate 1 log + a status
 	// message. This should only be done once, no matter how many
 	// cancellations are sent.
-	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
 		mu.Lock()
 		defer mu.Unlock()
 
-		return len(received_messages) == 2
+		// Should be at least one stat message and several log messages
+		return len(received_messages) >= 3 &&
+			getFlowStat(received_messages) != nil
 	})
 
 	mu.Lock()
 	defer mu.Unlock()
 
-	require.Equal(t, len(received_messages), 2)
-	require.NotNil(t, received_messages[0].LogMessage)
-	require.NotNil(t, received_messages[1].Status)
+	// An error status
+	stats := getFlowStat(received_messages)
+	assert.Equal(self.T(), crypto_proto.VeloStatus_GENERIC_ERROR,
+		stats.FlowStats.QueryStatus[0].Status)
+	assert.Contains(self.T(), getLogMessages(received_messages),
+		"Cancelled all inflight queries")
+}
+
+func getFlowStat(messages []*crypto_proto.VeloMessage) *crypto_proto.VeloMessage {
+	for _, m := range messages {
+		if m.FlowStats != nil {
+			return m
+		}
+	}
+	return nil
+}
+
+func getLogMessages(messages []*crypto_proto.VeloMessage) string {
+	res := ""
+	for _, m := range messages {
+		if m.LogMessage != nil {
+			res += m.LogMessage.Jsonl
+		}
+	}
+	return res
 }
 
 // Cancelling the executor multiple times will cause a single
@@ -133,8 +187,11 @@ func (self *ExecutorTestSuite) TestLogMessages() {
 		FlowRequest: &crypto_proto.FlowRequest{
 			VQLClientActions: []*actions_proto.VQLCollectorArgs{{
 				Query: []*actions_proto.VQLRequest{
-					// Log 100 messages
-					{VQL: "SELECT log(message='log %v', args=count()) FROM range(end=10)"},
+					// Log 10 messages
+					{
+						Name: "LoggingArtifact",
+						VQL:  "SELECT log(message='log %v', args=count()) FROM range(end=10)",
+					},
 				}}},
 		},
 		RequestId: 1}

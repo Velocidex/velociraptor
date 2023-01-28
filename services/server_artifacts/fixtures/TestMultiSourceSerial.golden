@@ -1,0 +1,37 @@
+{
+ "client_id": "server",
+ "session_id": "F.1234",
+ "request": {
+  "creator": "admin",
+  "client_id": "server",
+  "artifacts": [
+   "TestMultiSourceSerial"
+  ]
+ },
+ "create_time": 10000000,
+ "start_time": 10000000,
+ "active_time": 10000000,
+ "total_collected_rows": 2,
+ "total_requests": 1,
+ "state": 3,
+ "status": "Oops\n",
+ "artifacts_with_results": [
+  "TestMultiSourceSerial/Source1",
+  "TestMultiSourceSerial/Source2"
+ ],
+ "query_stats": [
+  {
+   "status": 10,
+   "error_message": "Oops\n",
+   "last_active": 10000000,
+   "first_active": 10000000,
+   "names_with_response": [
+    "TestMultiSourceSerial/Source1",
+    "TestMultiSourceSerial/Source2"
+   ],
+   "Artifact": "TestMultiSourceSerial",
+   "log_rows": 4,
+   "result_rows": 2
+  }
+ ]
+}

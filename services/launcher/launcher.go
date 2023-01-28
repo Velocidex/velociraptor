@@ -303,20 +303,10 @@ func (self *Launcher) CompileCollectorArgs(
 		collector_request.IopsLimit = iops_limit
 	}
 
-	batch_delay := uint64(1)
-	if options.LogBatchTime > 0 {
-		batch_delay = options.LogBatchTime
-	} else if config_obj.Frontend != nil &&
-		config_obj.Frontend.Resources != nil &&
-		config_obj.Frontend.Resources.DefaultLogBatchTime > 0 {
-		batch_delay = config_obj.Frontend.Resources.DefaultLogBatchTime
-	}
-
 	// Update the total count of requests
 	for idx, item := range result {
 		item.QueryId = int64(idx + 1)
 		item.TotalQueries = int64(len(result))
-		item.LogBatchTime = batch_delay
 	}
 
 	return result, nil
@@ -566,12 +556,24 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 
 	session_id := NewFlowId(client_id)
 
+	// How long to batch log messages for on the client.
+	batch_delay := uint64(100)
+	if collector_request.LogBatchTime > 0 {
+		batch_delay = collector_request.LogBatchTime
+	} else if config_obj.Frontend != nil &&
+		config_obj.Frontend.Resources != nil &&
+		config_obj.Frontend.Resources.DefaultLogBatchTime > 0 {
+		batch_delay = config_obj.Frontend.Resources.DefaultLogBatchTime
+	}
+
 	// Compile all the requests into specific tasks to be sent to the
 	// client.
 	task := &crypto_proto.VeloMessage{
-		SessionId:   session_id,
-		RequestId:   constants.ProcessVQLResponses,
-		FlowRequest: &crypto_proto.FlowRequest{},
+		SessionId: session_id,
+		RequestId: constants.ProcessVQLResponses,
+		FlowRequest: &crypto_proto.FlowRequest{
+			LogBatchTime: batch_delay,
+		},
 	}
 
 	for _, arg := range vql_collector_args {
@@ -595,7 +597,7 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 	// Generate a new collection context for this flow.
 	collection_context := &flows_proto.ArtifactCollectorContext{
 		SessionId:           session_id,
-		CreateTime:          uint64(time.Now().UnixNano() / 1000),
+		CreateTime:          uint64(utils.GetTime().Now().UnixNano() / 1000),
 		State:               flows_proto.ArtifactCollectorContext_RUNNING,
 		Request:             collector_request,
 		ClientId:            client_id,

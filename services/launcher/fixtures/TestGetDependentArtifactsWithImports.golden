@@ -36,7 +36,6 @@
     "name": "DependedArtifactInExport",
     "type": "client"
    }
-  ],
-  "log_batch_time": 1
+  ]
  }
 ]

@@ -69,6 +69,15 @@ func formatMsgAndArgs(dflt string, msgAndArgs ...interface{}) string {
 func Regexp(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) {
 	assert.Regexp(t, expected, actual, msgAndArgs...)
 }
+
+func Contains(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) {
+	assert.Contains(t, expected, actual, msgAndArgs...)
+}
+
+func NotContains(t TestingT, expected, actual interface{}, msgAndArgs ...interface{}) {
+	assert.NotContains(t, expected, actual, msgAndArgs...)
+}
+
 func True(t TestingT, expected bool, msgAndArgs ...interface{}) {
 	assert.True(t, expected, msgAndArgs...)
 }

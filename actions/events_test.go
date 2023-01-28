@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -44,7 +43,7 @@ sources:
 type EventsTestSuite struct {
 	test_utils.TestSuite
 	client_id string
-	responder *responder.Responder
+	responder *responder.TestResponderType
 	writeback string
 
 	Clock utils.Clock
@@ -71,11 +70,10 @@ func (self *EventsTestSuite) SetupTest() {
 	self.client_id = "C.2232"
 	self.Clock = &utils.IncClock{}
 
-	self.responder = responder.TestResponder(self.ConfigObj)
-
+	self.responder = responder.TestResponderWithFlowId(
+		self.ConfigObj, "EventsTestSuite")
 	actions.GlobalEventTable = actions.NewEventTable(
-		self.ConfigObj, self.responder,
-		&actions_proto.VQLEventTable{})
+		self.ConfigObj, &actions_proto.VQLEventTable{})
 }
 
 func (self *EventsTestSuite) TearDownTest() {
@@ -109,7 +107,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 
 	// Wait until the entire event table is cleaned up.
 	wg := &sync.WaitGroup{}
-	output_chan := make(chan *crypto_proto.VeloMessage)
+	output_chan, _ := responder.NewMessageDrain(ctx)
 	actions.InitializeEventTable(ctx, self.ConfigObj, output_chan, wg)
 	defer wg.Wait()
 
@@ -139,7 +137,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// Set the new table, this will execute the new queries and
 	// start the new table.
 	actions.QueryLog.Clear()
-	actions.UpdateEventTable{}.Run(self.ConfigObj, ctx, self.responder,
+	actions.UpdateEventTable{}.Run(self.ConfigObj, ctx, output_chan,
 		message.UpdateEventTable)
 
 	// Table version was upgraded
@@ -192,7 +190,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 
 	// Now check that no updates are performed.
 	actions.QueryLog.Clear()
-	actions.UpdateEventTable{}.Run(self.ConfigObj, ctx, self.responder,
+	actions.UpdateEventTable{}.Run(self.ConfigObj, ctx, output_chan,
 		new_message.UpdateEventTable)
 
 	// Wait for the event table version to change
@@ -227,7 +225,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// and one for Label1 label.
 	assert.Equal(self.T(), len(new_message.UpdateEventTable.Event), 2)
 
-	actions.UpdateEventTable{}.Run(self.ConfigObj, ctx, self.responder,
+	actions.UpdateEventTable{}.Run(self.ConfigObj, ctx, output_chan,
 		new_message.UpdateEventTable)
 
 	// Wait for the event table to be swapped.

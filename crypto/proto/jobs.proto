@@ -13,6 +13,21 @@ option go_package = "www.velocidex.com/golang/velociraptor/crypto/proto";
 // Represents a complete collection.
 message FlowRequest {
     repeated VQLCollectorArgs VQLClientActions = 1;
+
+    // The maximum time in milliseconds the client will batch log
+    // messages before forwarding them to the server. If this is 0, no
+    // updates will be sent until he very end of the query. You can
+    // specify the default in
+    // Frontend.resources.default_log_batch_time
+    uint64 log_batch_time = 2;
+
+    // The maximum time in milliseconds the client will wait before
+    // sending progress updates on the running flows. This is useful
+    // to monitor how the client is progress but if it done too often
+    // increases load on the server. Default is 5000 (5sec) and you
+    // can updatet the default in
+    // Client.default_server_flow_stats_update
+    uint64 flow_update_time = 3;
 }
 
 
@@ -173,7 +188,12 @@ message FlowStats {
 message VeloStatus {
     // Velociraptor only uses OK and GENERIC_ERROR right now.
     enum ReturnedStatus {
+        // Query completed successfully
         OK = 0;
+
+        // A progress report of the query but does not mean it is
+        // completed.
+        PROGRESS = 4;
         GENERIC_ERROR = 10;
     };
 
@@ -185,6 +205,8 @@ message VeloStatus {
 
     // Total duration the query took to run on the client.
     int64 duration = 4;
+    uint64 last_active = 14;
+    uint64 first_active = 15;
 
     // Return statistics about the request
 
@@ -199,6 +221,8 @@ message VeloStatus {
 
     // How many files were uploaded in this query.
     int64 uploaded_files = 11;
+    int64 uploaded_bytes = 12;
+    int64 expected_uploaded_bytes = 13;
 
     int64 result_rows = 7;
 

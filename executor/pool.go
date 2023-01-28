@@ -1,3 +1,5 @@
+// +build XXXX
+
 /*
    The pool client pretends to be a large number of clients in order
    to exert a large load on the server.  In reality each client is

@@ -1,3 +1,5 @@
+// +build XXXX
+
 package responder
 
 import (
@@ -74,10 +76,9 @@ func (self *PoolEventResponder) NewResponder(
 
 	// Prepare a new responder that will feed us.
 	result := &Responder{
-		ctx:     ctx,
-		request: req,
-		output:  in,
-		logger:  logging.GetLogger(config_obj, &logging.ClientComponent),
+		ctx:    ctx,
+		output: in,
+		logger: logging.GetLogger(config_obj, &logging.ClientComponent),
 	}
 
 	go func() {
