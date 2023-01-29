@@ -71,7 +71,8 @@ func newFlowResponder(
 		flow_context: owner,
 		output:       output,
 		status: crypto_proto.VeloStatus{
-			Status: crypto_proto.VeloStatus_PROGRESS,
+			Status:      crypto_proto.VeloStatus_PROGRESS,
+			FirstActive: uint64(utils.GetTime().Now().UnixNano() / 1000),
 		},
 	}
 	return result
@@ -102,8 +103,10 @@ func (self *FlowResponder) GetStatus() *crypto_proto.VeloStatus {
 	status := proto.Clone(&self.status).(*crypto_proto.VeloStatus)
 	self.mu.Unlock()
 
-	status.LastActive = uint64(utils.GetTime().Now().UnixNano())
-	status.Duration = int64(self.status.LastActive - self.status.FirstActive)
+	status.LastActive = uint64(utils.GetTime().Now().UnixNano() / 1000)
+
+	// Duration is in milli seconds
+	status.Duration = int64(status.LastActive-status.FirstActive) * 1000
 
 	return status
 }
