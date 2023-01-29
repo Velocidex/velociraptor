@@ -82,7 +82,6 @@ func (self *FlowResponder) Close() {
 	self.wg.Done()
 }
 
-// Ensure a valid flow context exists
 func (self *FlowResponder) GetFlowContext() *FlowContext {
 	return self.flow_context
 }
@@ -140,6 +139,14 @@ func (self *FlowResponder) AddResponse(message *crypto_proto.VeloMessage) {
 	self.updateStats(message)
 	self.mu.Unlock()
 
+	// Check flow limits. Must be done without a lock on the responder.
+	if message.FileBuffer != nil {
+		self.flow_context.ChargeBytes(uint64(len(message.FileBuffer.Data)))
+	}
+	if message.VQLResponse != nil {
+		self.flow_context.ChargeRows(message.VQLResponse.TotalRows)
+	}
+
 	message.SessionId = self.flow_context.SessionId()
 
 	select {
@@ -179,7 +186,7 @@ func (self *FlowResponder) Log(ctx context.Context, level string, msg string) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.flow_context.AddLogMessage(level, msg, self.status.Artifact)
+	self.flow_context.AddLogMessage(level, msg)
 	self.status.LogRows++
 }
 

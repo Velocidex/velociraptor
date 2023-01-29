@@ -413,3 +413,19 @@ func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
 		collection_context.State = flows_proto.ArtifactCollectorContext_FINISHED
 	}
 }
+
+func (self *Launcher) WriteFlow(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	flow *flows_proto.ArtifactCollectorContext) error {
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+
+	flow_path_manager := paths.NewFlowPathManager(flow.ClientId, flow.SessionId)
+	return db.SetSubjectWithCompletion(
+		config_obj, flow_path_manager.Path(),
+		flow, utils.BackgroundWriter)
+}

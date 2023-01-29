@@ -12,7 +12,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -180,15 +179,13 @@ func (self *contextManager) Save() error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	db, err := datastore.GetDB(self.config_obj)
+	launcher, err := services.GetLauncher(self.config_obj)
 	if err != nil {
 		return err
 	}
 
-	flow_path_manager := paths.NewFlowPathManager("server", self.session_id)
-	return db.SetSubjectWithCompletion(
-		self.config_obj, flow_path_manager.Path(),
-		context, utils.BackgroundWriter)
+	return launcher.WriteFlow(
+		self.ctx, self.config_obj, context)
 }
 
 func (self *contextManager) Cancel() {

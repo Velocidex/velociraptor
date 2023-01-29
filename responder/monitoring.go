@@ -109,11 +109,8 @@ func (self *MonitoringContext) AddLogMessage(level string, msg string) {
 		int(utils.GetTime().Now().Unix()), level, msg)...)
 }
 
-func (self *MonitoringContext) GetLogMessages() (
+func (self *MonitoringContext) getLogMessages() (
 	buf []byte, start_id uint64, message_count uint64) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	buf = self.log_messages
 	message_count = self.log_message_count
 	start_id = self.log_messages_id
@@ -126,7 +123,7 @@ func (self *MonitoringContext) GetLogMessages() (
 }
 
 func (self *MonitoringContext) flushLogMessages(ctx context.Context) {
-	buf, id, count := self.GetLogMessages()
+	buf, id, count := self.getLogMessages()
 	if len(buf) > 0 {
 		message := &crypto_proto.VeloMessage{
 			SessionId: "F.Monitoring",

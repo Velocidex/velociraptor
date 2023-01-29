@@ -9,6 +9,7 @@ import (
 	"github.com/sirupsen/logrus/hooks/test"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -307,9 +308,32 @@ func TestRingBufferCancellation(t *testing.T) {
 
 	// Make SessionId unique for each test run
 	message_list := &crypto_proto.MessageList{
-		Job: []*crypto_proto.VeloMessage{{
-			SessionId: "F.1234" + filename,
-		}},
+		// Add some messages. We filter out large messages for
+		// cancelled flows to preserve bandwidth to the server, but
+		// FlowStats messgaes should still be allowed.
+		Job: []*crypto_proto.VeloMessage{
+			{
+				SessionId: "F.1234" + filename,
+				FileBuffer: &actions_proto.FileBuffer{
+					Data: []byte("FileBuffer"),
+				},
+			},
+			{
+				SessionId: "F.1234" + filename,
+				VQLResponse: &actions_proto.VQLResponse{
+					JSONLResponse: "VQLResponse",
+				},
+			},
+			{
+				SessionId: "F.1234" + filename,
+				FlowStats: &crypto_proto.FlowStats{
+					QueryStatus: []*crypto_proto.VeloStatus{{
+						Status:            crypto_proto.VeloStatus_GENERIC_ERROR,
+						NamesWithResponse: []string{"FlowStats"},
+					}},
+				},
+			},
+		},
 	}
 
 	serialized_message_list, err := proto.Marshal(message_list)
@@ -323,7 +347,9 @@ func TestRingBufferCancellation(t *testing.T) {
 	ring_buffer = openRB(t, filename)
 	lease := ring_buffer.Lease(1)
 	assert.NotNil(t, lease)
+	ring_buffer.Commit()
 
+	// Make sure all messages are delivered
 	assert.Equal(t, serialized_message_list, lease)
 
 	// Queue the message
@@ -338,9 +364,30 @@ func TestRingBufferCancellation(t *testing.T) {
 
 	// Try to lease the message.
 	ring_buffer = openRB(t, filename)
-	lease = ring_buffer.Lease(1)
+	lease = ring_buffer.Lease(10)
 	assert.NotNil(t, lease)
+	ring_buffer.Commit()
 
-	// Should not lease the message any more since it is cancelled.
-	assert.Equal(t, lease, []byte{})
+	// Should deliver only the FlowStats messages
+	assert.Contains(t, string(lease), "FlowStats")
+	assert.NotContains(t, string(lease), "FileBuffer")
+	assert.NotContains(t, string(lease), "VQLResponse")
+
+	// Queue more messages for a different flow
+	for _, m := range message_list.Job {
+		m.SessionId += "X"
+	}
+	serialized_message_list, err = proto.Marshal(message_list)
+	assert.NoError(t, err)
+
+	// Queue more messages
+	ring_buffer.Enqueue([]byte(serialized_message_list))
+
+	// Read the new messages back out
+	lease = ring_buffer.Lease(10)
+	assert.NotNil(t, lease)
+	ring_buffer.Commit()
+
+	// Make sure all messages are delivered
+	assert.Equal(t, serialized_message_list, lease)
 }

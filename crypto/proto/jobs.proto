@@ -28,6 +28,14 @@ message FlowRequest {
     // can updatet the default in
     // Client.default_server_flow_stats_update
     uint64 flow_update_time = 3;
+
+    // A limit on total number of rows returned from the
+    // collection. Does not count log messages.
+    uint64 max_rows = 4;
+
+    // If the client exceeds this, the client will abort the
+    // collection.
+    uint64 max_upload_bytes = 5;
 }
 
 
