@@ -124,6 +124,17 @@ func (self *ClientExecutor) processRequestPlugin(
 		return
 	}
 
+	if req.FlowRequest != nil {
+		self.ProcessFlowRequest(ctx, config_obj, req)
+		return
+	}
+
+	if req.UpdateEventTable != nil {
+		actions.UpdateEventTable{}.Run(
+			config_obj, ctx, self.Outbound, req.UpdateEventTable)
+		return
+	}
+
 	// This is the old deprecated VQLClientAction that is sent for old
 	// client compatibility. New clients ignore this and only process
 	// a FlowRequest message.
@@ -133,17 +144,6 @@ func (self *ClientExecutor) processRequestPlugin(
 
 	// This action is deprecated now.
 	if req.UpdateForeman != nil {
-		return
-	}
-
-	if req.FlowRequest != nil {
-		self.ProcessFlowRequest(ctx, config_obj, req)
-		return
-	}
-
-	if req.UpdateEventTable != nil {
-		actions.UpdateEventTable{}.Run(
-			config_obj, ctx, self.Outbound, req.UpdateEventTable)
 		return
 	}
 
