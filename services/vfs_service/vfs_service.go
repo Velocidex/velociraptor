@@ -201,7 +201,6 @@ func (self *VFSService) ProcessListDirectoryLegacy(
 	if err != nil {
 		return
 	}
-	json.Dump(flow)
 
 	// An empty result set needs special handling.
 	if flow.TotalCollectedRows == 0 {
