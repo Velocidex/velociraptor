@@ -71,7 +71,8 @@ func newFlowResponder(
 		flow_context: owner,
 		output:       output,
 		status: crypto_proto.VeloStatus{
-			Status: crypto_proto.VeloStatus_PROGRESS,
+			Status:      crypto_proto.VeloStatus_PROGRESS,
+			FirstActive: uint64(utils.GetTime().Now().UnixNano() / 1000),
 		},
 	}
 	return result
@@ -82,7 +83,6 @@ func (self *FlowResponder) Close() {
 	self.wg.Done()
 }
 
-// Ensure a valid flow context exists
 func (self *FlowResponder) GetFlowContext() *FlowContext {
 	return self.flow_context
 }
@@ -103,8 +103,10 @@ func (self *FlowResponder) GetStatus() *crypto_proto.VeloStatus {
 	status := proto.Clone(&self.status).(*crypto_proto.VeloStatus)
 	self.mu.Unlock()
 
-	status.LastActive = uint64(utils.GetTime().Now().UnixNano())
-	status.Duration = int64(self.status.LastActive - self.status.FirstActive)
+	status.LastActive = uint64(utils.GetTime().Now().UnixNano() / 1000)
+
+	// Duration is in milli seconds
+	status.Duration = int64(status.LastActive-status.FirstActive) * 1000
 
 	return status
 }
@@ -139,6 +141,14 @@ func (self *FlowResponder) AddResponse(message *crypto_proto.VeloMessage) {
 	output := self.output
 	self.updateStats(message)
 	self.mu.Unlock()
+
+	// Check flow limits. Must be done without a lock on the responder.
+	if message.FileBuffer != nil {
+		self.flow_context.ChargeBytes(uint64(len(message.FileBuffer.Data)))
+	}
+	if message.VQLResponse != nil {
+		self.flow_context.ChargeRows(message.VQLResponse.TotalRows)
+	}
 
 	message.SessionId = self.flow_context.SessionId()
 
@@ -179,7 +189,7 @@ func (self *FlowResponder) Log(ctx context.Context, level string, msg string) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.flow_context.AddLogMessage(level, msg, self.status.Artifact)
+	self.flow_context.AddLogMessage(level, msg)
 	self.status.LogRows++
 }
 

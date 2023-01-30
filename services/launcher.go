@@ -169,6 +169,11 @@ type Launcher interface {
 		client_id string, flow_id string,
 		offset uint64, count uint64) (*api_proto.ApiFlowRequestDetails, error)
 
+	WriteFlow(
+		ctx context.Context,
+		config_obj *config_proto.Config,
+		flow *flows_proto.ArtifactCollectorContext) error
+
 	DeleteFlow(
 		ctx context.Context,
 		config_obj *config_proto.Config,

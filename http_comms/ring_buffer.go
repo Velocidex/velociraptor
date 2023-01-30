@@ -210,28 +210,6 @@ func LeaseAndCompress(self IRingBuffer, size uint64,
 	return result
 }
 
-// Determine if the item is blacklisted. Items are blacklisted when
-// their corresponding flow is cancelled.
-func (self *FileBasedRingBuffer) IsItemBlackListed(item []byte) bool {
-	message_list := crypto_proto.MessageList{}
-	err := proto.Unmarshal(item, &message_list)
-	if err != nil || len(message_list.Job) == 0 {
-		return false
-	}
-
-	message := message_list.Job[0]
-
-	// Always allow log messages through - even after a flow has
-	// been cancelled. This allows us to register the cancellation
-	// message in the flow logs.
-	if message.LogMessage != nil {
-		return false
-	}
-
-	return responder.GetFlowManager(context.Background(), self.config_obj).
-		IsCancelled(message.SessionId)
-}
-
 func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -258,10 +236,14 @@ func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
 				self._Truncate()
 				return nil
 			}
-			if !self.IsItemBlackListed(item) {
-				result = append(result, item...)
-			}
 
+			// Filter the item from any blacklisted flow ids
+			filtered_item := FilterBlackListedItems(
+				context.Background(), self.config_obj, item)
+			result = append(result, filtered_item...)
+
+			// Skip the full length of the unfiltered item to maintain
+			// alignment.
 			self.leased_pointer += 8 + int64(n)
 			self.header.LeasedBytes += int64(n)
 			self.header.AvailableBytes -= int64(n)
@@ -552,24 +534,51 @@ func (self *RingBuffer) AvailableBytes() uint64 {
 
 // Determine if the item is blacklisted. Items are blacklisted when
 // their corresponding flow is cancelled.
-func (self *RingBuffer) IsItemBlackListed(item []byte) bool {
-	message_list := crypto_proto.MessageList{}
-	err := proto.Unmarshal(item, &message_list)
+func FilterBlackListedItems(
+	ctx context.Context,
+	config_obj *config_proto.Config, item []byte) []byte {
+
+	message_list := &crypto_proto.MessageList{}
+	err := proto.Unmarshal(item, message_list)
 	if err != nil || len(message_list.Job) == 0 {
-		return false
+		return item
 	}
 
-	message := message_list.Job[0]
+	modified := false
+	flow_manager := responder.GetFlowManager(ctx, config_obj)
+	result := &crypto_proto.MessageList{}
+	for _, message := range message_list.Job {
+		if message.FlowStats != nil {
+			json.Dump(message)
+		}
 
-	// Always allow log messages through - even after a flow has
-	// been cancelled. This allows us to register the cancellation
-	// message in the flow logs.
-	if message.LogMessage != nil {
-		return false
+		// Always allow log messages through - even after a flow has
+		// been cancelled. This allows us to register the cancellation
+		// message in the flow logs.
+		if message.LogMessage != nil ||
+
+			// Always allow FlowStat to be sent
+			message.FlowStats != nil ||
+
+			// Remove blacklisted collections (because they were
+			// cancelled).
+			!flow_manager.IsCancelled(message.SessionId) {
+
+			result.Job = append(result.Job, message)
+		} else {
+			modified = true
+		}
 	}
 
-	return responder.GetFlowManager(context.Background(), self.config_obj).
-		IsCancelled(message.SessionId)
+	if !modified {
+		return item
+	}
+
+	serialized, err := proto.Marshal(result)
+	if err != nil {
+		return item
+	}
+	return serialized
 }
 
 // Leases a group of messages for transmission. Will not advance the
@@ -589,9 +598,13 @@ func (self *RingBuffer) Lease(size uint64) []byte {
 	leased := make([]byte, 0)
 
 	for _, item := range self.messages[self.leased_idx:] {
-		if !self.IsItemBlackListed(item) {
-			leased = append(leased, item...)
-		}
+		filtered := FilterBlackListedItems(
+			context.Background(), self.config_obj, item)
+
+		leased = append(leased, filtered...)
+
+		// Skip the full length of the unfiltered message - the
+		// filtered message may be shorter.
 		self.leased_length += uint64(len(item))
 		self.leased_idx += 1
 		if uint64(len(leased)) > size {

@@ -572,7 +572,9 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 		SessionId: session_id,
 		RequestId: constants.ProcessVQLResponses,
 		FlowRequest: &crypto_proto.FlowRequest{
-			LogBatchTime: batch_delay,
+			LogBatchTime:   batch_delay,
+			MaxRows:        collector_request.MaxRows,
+			MaxUploadBytes: collector_request.MaxUploadBytes,
 		},
 	}
 

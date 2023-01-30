@@ -78,7 +78,7 @@ func DebugCtx(ctx context.Context, name string) {
 	}
 }
 
-func LogWhenCtxDone(ctx context.Context, name string) {
+func DebugLogWhenCtxDone(ctx context.Context, name string) {
 	go func() {
 		<-ctx.Done()
 		fmt.Printf(name + ": Ctx done!\n")

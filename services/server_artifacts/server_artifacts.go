@@ -371,8 +371,6 @@ func NewServerArtifactService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
-	utils.LogWhenCtxDone(ctx, "NewServerArtifactService")
-
 	self := NewServerArtifactRunner(ctx, config_obj, wg)
 
 	logger := logging.GetLogger(

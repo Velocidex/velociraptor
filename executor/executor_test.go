@@ -18,6 +18,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
+
+	_ "www.velocidex.com/golang/velociraptor/accessors/data"
 )
 
 type ExecutorTestSuite struct {
@@ -34,7 +36,7 @@ func (self *ExecutorTestSuite) SetupTest() {
 	flow_manager.ResetForTests()
 }
 
-// Cancelling the executor multiple times will cause a single
+// Cancelling the flow multiple times will cause a single
 // cancellation state and then ignore the rest.
 func (self *ExecutorTestSuite) TestCancellation() {
 	t := self.T()
@@ -122,6 +124,184 @@ func (self *ExecutorTestSuite) TestCancellation() {
 	stats := getFlowStat(received_messages)
 	assert.Equal(self.T(), crypto_proto.VeloStatus_GENERIC_ERROR,
 		stats.FlowStats.QueryStatus[0].Status)
+	assert.Contains(self.T(), getLogMessages(received_messages),
+		"Cancelled all inflight queries")
+}
+
+// Exceeding flow upload limit will cancel the flow
+func (self *ExecutorTestSuite) TestUploadCancellation() {
+	t := self.T()
+
+	// Max time for deadlock detection.
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Second)
+	defer cancel()
+
+	config_obj := config.GetDefaultConfig()
+	executor, err := NewClientExecutor(ctx, "", config_obj)
+	require.NoError(t, err)
+
+	flow_id := "F.TestUploadCancellation"
+
+	actions.QueryLog.Clear()
+
+	var mu sync.Mutex
+	var received_messages []*crypto_proto.VeloMessage
+
+	// Collect outbound messages
+	go func() {
+		for {
+			select {
+			// Wait here until the executor is fully cancelled.
+			case <-ctx.Done():
+				return
+
+			case message := <-executor.Outbound:
+				mu.Lock()
+				received_messages = append(
+					received_messages, message)
+				mu.Unlock()
+			}
+		}
+	}()
+
+	// Send the executor a flow request
+	executor.Inbound <- &crypto_proto.VeloMessage{
+		AuthState: crypto_proto.VeloMessage_AUTHENTICATED,
+		SessionId: flow_id,
+		FlowRequest: &crypto_proto.FlowRequest{
+			// Only 10 bytes are allowed.
+			MaxUploadBytes: 10,
+			VQLClientActions: []*actions_proto.VQLCollectorArgs{{
+				Query: []*actions_proto.VQLRequest{
+					{
+						Name: "Query",
+						VQL: `
+        SELECT upload(accessor="data",
+                      file="This is a long test with many letters",
+                      name=format(format="File%v.txt", args=_value)) AS Upload
+        FROM range(end=10)`,
+					},
+				},
+			}},
+		},
+	}
+
+	// Wait until the query starts running.
+	vtesting.WaitUntil(time.Second*50, self.T(), func() bool {
+		return len(actions.QueryLog.Get()) > 0
+	})
+
+	// The cancel message should generate 1 log + a status
+	// message. This should only be done once, no matter how many
+	// cancellations are sent.
+	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+
+		// Should be at least one stat message and several log messages
+		return len(received_messages) >= 3 &&
+			getFlowStat(received_messages) != nil
+	})
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	// An error status
+	stats := getFlowStat(received_messages)
+	assert.Equal(self.T(), crypto_proto.VeloStatus_GENERIC_ERROR,
+
+		stats.FlowStats.QueryStatus[0].Status)
+	assert.Contains(self.T(), stats.FlowStats.QueryStatus[0].ErrorMessage,
+		"Upload bytes 37 exceeded limit 10 for flow")
+
+	assert.Contains(self.T(), getLogMessages(received_messages),
+		"Cancelled all inflight queries")
+}
+
+// Exceeding row limit will cancel flow
+func (self *ExecutorTestSuite) TestRowLimitCancellation() {
+	t := self.T()
+
+	// Max time for deadlock detection.
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Second)
+	defer cancel()
+
+	config_obj := config.GetDefaultConfig()
+	executor, err := NewClientExecutor(ctx, "", config_obj)
+	require.NoError(t, err)
+
+	flow_id := "F.TestRowLimitCancellation"
+
+	actions.QueryLog.Clear()
+
+	var mu sync.Mutex
+	var received_messages []*crypto_proto.VeloMessage
+
+	// Collect outbound messages
+	go func() {
+		for {
+			select {
+			// Wait here until the executor is fully cancelled.
+			case <-ctx.Done():
+				return
+
+			case message := <-executor.Outbound:
+				mu.Lock()
+				received_messages = append(
+					received_messages, message)
+				mu.Unlock()
+			}
+		}
+	}()
+
+	// Send the executor a flow request
+	executor.Inbound <- &crypto_proto.VeloMessage{
+		AuthState: crypto_proto.VeloMessage_AUTHENTICATED,
+		SessionId: flow_id,
+		FlowRequest: &crypto_proto.FlowRequest{
+			// Only 10 bytes are allowed.
+			MaxRows: 10,
+			VQLClientActions: []*actions_proto.VQLCollectorArgs{{
+				// Do not batch rows before sending them. The
+				// FlowContext only does limit checks on completed row
+				// batches (normally 1000 rows at a time).
+				MaxRow: 1,
+				Query: []*actions_proto.VQLRequest{
+					{
+						Name: "Query",
+						VQL:  `SELECT _value FROM range(end=100)`,
+					},
+				},
+			}},
+		},
+	}
+
+	// Wait until the query starts running.
+	vtesting.WaitUntil(time.Second*50, self.T(), func() bool {
+		return len(actions.QueryLog.Get()) > 0
+	})
+
+	// The cancel message should generate 1 log + a status
+	// message. This should only be done once, no matter how many
+	// cancellations are sent.
+	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+
+		// Should be at least one stat message and several log messages
+		return len(received_messages) >= 3 &&
+			getFlowStat(received_messages) != nil
+	})
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	// An error status
+	stats := getFlowStat(received_messages)
+	assert.Equal(self.T(), crypto_proto.VeloStatus_GENERIC_ERROR,
+		stats.FlowStats.QueryStatus[0].Status)
+	assert.Contains(self.T(), stats.FlowStats.QueryStatus[0].ErrorMessage,
+		"Rows 11 exceeded limit 10 for flow")
 	assert.Contains(self.T(), getLogMessages(received_messages),
 		"Cancelled all inflight queries")
 }

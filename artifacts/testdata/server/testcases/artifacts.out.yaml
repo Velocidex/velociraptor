@@ -55,16 +55,16 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
      }
     }
    ],
-   "ops_per_second": 0,
    "cpu_limit": 0,
    "iops_limit": 0,
    "progress_timeout": 0,
-   "log_batch_time": 0,
    "timeout": 0,
    "max_rows": 0,
    "max_upload_bytes": 0,
    "allow_custom_overrides": false,
-   "compiled_collector_args": []
+   "log_batch_time": 0,
+   "compiled_collector_args": [],
+   "ops_per_second": 0
   }
  }
 ]SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.KapeFiles.Targets', spec=dict(`Windows.KapeFiles.Targets`=dict( Device ='C:', VSSAnalysis='Y', KapeTriage='Y'))).request AS Flow FROM scope()[
@@ -97,16 +97,16 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
      }
     }
    ],
-   "ops_per_second": 0,
    "cpu_limit": 0,
    "iops_limit": 0,
    "progress_timeout": 0,
-   "log_batch_time": 0,
    "timeout": 0,
    "max_rows": 0,
    "max_upload_bytes": 0,
    "allow_custom_overrides": false,
-   "compiled_collector_args": []
+   "log_batch_time": 0,
+   "compiled_collector_args": [],
+   "ops_per_second": 0
   }
  }
 ]SELECT name FROM artifact_definitions(names='Windows.KapeFiles.Targets') ORDER BY name[

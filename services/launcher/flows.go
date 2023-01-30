@@ -345,9 +345,9 @@ func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
 	// Now update the overall collection statuses based on all the
 	// individual query status. The collection status is a high level
 	// overview of the entire collection.
-	collection_context.State = flows_proto.ArtifactCollectorContext_RUNNING
-	collection_context.Status = ""
-	collection_context.Backtrace = ""
+	if collection_context.State == flows_proto.ArtifactCollectorContext_UNSET {
+		collection_context.State = flows_proto.ArtifactCollectorContext_RUNNING
+	}
 
 	// Total execution duration is the sum of all the query durations
 	// (this can be faster than wall time if queries run in parallel)
@@ -412,4 +412,20 @@ func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
 		collection_context.State == flows_proto.ArtifactCollectorContext_RUNNING {
 		collection_context.State = flows_proto.ArtifactCollectorContext_FINISHED
 	}
+}
+
+func (self *Launcher) WriteFlow(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	flow *flows_proto.ArtifactCollectorContext) error {
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+
+	flow_path_manager := paths.NewFlowPathManager(flow.ClientId, flow.SessionId)
+	return db.SetSubjectWithCompletion(
+		config_obj, flow_path_manager.Path(),
+		flow, utils.BackgroundWriter)
 }

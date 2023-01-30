@@ -38,20 +38,10 @@ message ArtifactCollectorArgs {
     // New way of specifying artifacts.
     repeated ArtifactSpec specs = 24;
 
-    float ops_per_second = 6 [(sem_type) = {
-            description: "Operations per second (Throttling).",
-            friendly_name: "Ops Per Second",
-            default: "1000000",
-        }];
-
+    // Artifact collection limits.
     float cpu_limit = 25;
     float iops_limit = 26;
     float progress_timeout = 27;
-
-    // The maximum time in seconds the client will batch log messages
-    // before forwarding them to the server. If this is 0, no updates
-    // will be sent until he very end of the query.
-    uint64 log_batch_time = 28;
 
     // Resource limits on this collection.
     uint64 timeout = 7 [(sem_type) = {
@@ -60,25 +50,37 @@ message ArtifactCollectorArgs {
             default: "600",
         }];
 
-    // Total number of rows we allow to collect.
+    // Total number of rows we allow to collect. Client will abort the
+    // flow if this is exceeded.
     uint64 max_rows = 22;
 
-    // Total bytes allowed to upload
+    // Total bytes allowed to upload. Client will abort the collection
+    // when exceeded. This might result is a partial file upload. It
+    // is possible to exceed the limit a bit.
     uint64 max_upload_bytes = 23;
 
     bool allow_custom_overrides = 8 [(sem_type) = {
             description: "If true we will use a custom artifact if present instead of the named artifact.",
         }];
 
+    // The maximum time in seconds the client will batch log messages
+    // before forwarding them to the server. If this is 0, no updates
+    // will be sent until he very end of the query.
+    uint64 log_batch_time = 28;
 
     // A place to cache the compiled request. If this is provided we
-    // do not compile the artifacts at all, we just use it as is.
-
-    // Note: Event artifacts may produce several VQLCollectorArgs, one
-    // for each artifact/source because Event Artifacts are
-    // asyncronous and blocking and need to run each query in
-    // parallel.
+    // do not compile the artifacts at all, we just use it as is. This
+    // is used by hunts which repeat the same collection multiple
+    // times, so we can avoid the compiler overheads at scale.
     repeated VQLCollectorArgs compiled_collector_args = 20;
+
+
+    // DEPRECATED:
+    float ops_per_second = 6 [(sem_type) = {
+            description: "Operations per second (Throttling).",
+            friendly_name: "Ops Per Second",
+            default: "1000000",
+        }];
 }
 
 message ArtifactCollectorResponse {
@@ -169,11 +171,6 @@ message ArtifactCollectorContext {
             description: "Contents of an error status sent by the client."
         }];
 
-    // This is used to keep track of any System.Flow.Completion events
-    // we already sent. We only send exactly one such message when the
-    // flow is completed.
-    bool user_notified = 16;
-
     // Some of the collected artifacts may not have results.
     repeated string artifacts_with_results = 22 [(sem_type) = {
             description: "The full path to the artifacts with their results. "
@@ -189,13 +186,20 @@ message ArtifactCollectorContext {
     // never serialized - it is just a place holder during processing.
     repeated ArtifactUploadedFileInfo uploaded_files = 24;
 
+
+    // The below fields are deprecated and only used in compatible
+    // code for older clients (<0.6.8)
+
+    // DEPRECATED: Not considered any more as clients report the end
+    // of the flow in FlowStats.flow_complete field.
+    bool user_notified = 16;
+
     // Logs are stored in their own CSV file. This is just a
     // placeholder during processing.
     repeated LogMessage logs = 20;
 
     bool dirty = 2;
 
-    // Total number of times the flow was loaded from the data store.
     uint64 total_loads = 33;
 }
 
