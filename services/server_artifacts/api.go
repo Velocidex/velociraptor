@@ -32,9 +32,15 @@ type CollectionContextManager interface {
 	// A Query context track a single query in the collection.
 	GetQueryContext(query *actions_proto.VQLCollectorArgs) QueryContext
 
+	RunQuery(arg *actions_proto.VQLCollectorArgs) error
+
 	Save() error
 
 	// Cancel all the queries in this collection immediately and wait
 	// for them to complete
-	Cancel()
+	Cancel(princiapl string)
+
+	Close()
+
+	ChargeBytes(bytes int64)
 }

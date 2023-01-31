@@ -105,6 +105,7 @@ func NewServerLogWriter(
 			select {
 			case <-ctx.Done():
 				return
+
 			case <-time.After(time.Second):
 				log_writer.Flush()
 			}
