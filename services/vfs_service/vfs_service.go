@@ -23,6 +23,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -194,7 +195,12 @@ func (self *VFSService) ProcessListDirectoryLegacy(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	scope vfilter.Scope, row *ordereddict.Dict,
-	flow *flows_proto.ArtifactCollectorContext) {
+	basic_flow *flows_proto.ArtifactCollectorContext) {
+
+	flow, err := journal.GetFlowFromQueue(config_obj, row)
+	if err != nil {
+		return
+	}
 
 	// An empty result set needs special handling.
 	if flow.TotalCollectedRows == 0 {
@@ -303,21 +309,24 @@ func (self *VFSService) flush_state(
 	config_obj *config_proto.Config, timestamp uint64, client_id, flow_id string,
 	vfs_components []string, start_idx, end_idx int) error {
 
+	record := &api_proto.VFSListResponse{
+		Timestamp: timestamp,
+		TotalRows: uint64(end_idx - start_idx),
+		ClientId:  client_id,
+		FlowId:    flow_id,
+		StartIdx:  uint64(start_idx),
+		EndIdx:    uint64(end_idx),
+	}
+
+	client_path_manager := paths.NewClientPathManager(client_id)
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return err
 	}
-	client_path_manager := paths.NewClientPathManager(client_id)
-	return db.SetSubject(config_obj,
+
+	return db.SetSubjectWithCompletion(config_obj,
 		client_path_manager.VFSPath(vfs_components),
-		&api_proto.VFSListResponse{
-			Timestamp: timestamp,
-			TotalRows: uint64(end_idx - start_idx),
-			ClientId:  client_id,
-			FlowId:    flow_id,
-			StartIdx:  uint64(start_idx),
-			EndIdx:    uint64(end_idx),
-		})
+		record, utils.SyncCompleter)
 }
 
 // Modern clients do the above work on the client removing load from

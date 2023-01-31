@@ -47,7 +47,6 @@ import (
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -471,7 +470,6 @@ func CheckForStatus(
 	// Update our record of all the status messages from this
 	// collection.
 	updateQueryStats(config_obj, collection_context, message.Status)
-	launcher.UpdateFlowStats(&collection_context.ArtifactCollectorContext)
 
 	// Update the active time for each response.
 	collection_context.ActiveTime = uint64(time.Now().UnixNano() / 1000)
@@ -664,6 +662,10 @@ type FlowRunner struct {
 	config_obj  *config_proto.Config
 }
 
+// A flow runner compatible with old clients. This runner manages flow
+// state on the server which is less efficient. Modern clients
+// (>0.6.7) will manage flows client side and so we will use
+// the more efficient ClientFlowRunner instead.
 func NewLegacyFlowRunner(config_obj *config_proto.Config) *FlowRunner {
 	return &FlowRunner{
 		config_obj:  config_obj,
@@ -691,7 +693,7 @@ func (self *FlowRunner) ProcessSingleMessage(
 
 	// Only process real flows.
 	if !strings.HasPrefix(job.SessionId, "F.") {
-		return invalidSessionId
+		return nil
 	}
 
 	// json.TraceMessage(job.Source+"_job", job)

@@ -251,13 +251,14 @@ func (self *TestSuite) TestResourceLimits() {
 	// The Generic.Client.Info has two source conditions so it
 	// contains two queries. To maintain backwards compatibility with
 	// older clients, GetClientTasks should have two old style
-	// VQLClientAction request and a new FlowRequest. Old clients will
-	// ignore the old requests and new clients will ignore the old
-	// style requests.
-	assert.Equal(self.T(), len(messages), 3)
+	// VQLClientAction request with the first request incorporating
+	// the FlowRequest message. Old clients will ignore the old
+	// requests and new clients will ignore the old style requests.
+	assert.Equal(self.T(), len(messages), 2)
 	assert.True(self.T(), messages[0].VQLClientAction != nil)
+	assert.True(self.T(), messages[1].FlowRequest != nil)
 	assert.True(self.T(), messages[1].VQLClientAction != nil)
-	assert.Equal(self.T(), len(messages[2].FlowRequest.VQLClientActions), 2)
+	assert.Equal(self.T(), len(messages[1].FlowRequest.VQLClientActions), 2)
 
 	// Send one row.
 	message := &crypto_proto.VeloMessage{
