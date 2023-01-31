@@ -196,7 +196,7 @@ resources:
 
 	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_ERROR,
 		details.Context.State)
-	assert.Equal(self.T(), "Byte limit exceeded", details.Context.Status)
+	assert.Equal(self.T(), "Row limit exceeded", details.Context.Status)
 	assert.True(self.T(), details.Context.TotalCollectedRows < 20)
 	assert.True(self.T(), details.Context.TotalCollectedRows >= 10)
 

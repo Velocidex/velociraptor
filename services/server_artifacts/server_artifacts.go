@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -138,14 +139,13 @@ func (self *ServerArtifactsRunner) ProcessTask(
 	}()
 
 	wg := &sync.WaitGroup{}
-
 	for _, task := range req.VQLClientActions {
 		// We expect each source to be run in parallel.
 		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		go func(task *actions_proto.VQLCollectorArgs) {
 			collection_context.RunQuery(task)
-		}()
+			wg.Done()
+		}(task)
 	}
 
 	wg.Wait()

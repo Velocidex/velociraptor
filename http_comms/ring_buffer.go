@@ -548,10 +548,6 @@ func FilterBlackListedItems(
 	flow_manager := responder.GetFlowManager(ctx, config_obj)
 	result := &crypto_proto.MessageList{}
 	for _, message := range message_list.Job {
-		if message.FlowStats != nil {
-			json.Dump(message)
-		}
-
 		// Always allow log messages through - even after a flow has
 		// been cancelled. This allows us to register the cancellation
 		// message in the flow logs.

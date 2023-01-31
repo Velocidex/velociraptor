@@ -243,6 +243,10 @@ func (self *Launcher) CancelFlow(
 				"Can only cancel running flows.")
 		}
 
+		collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
+		collection_context.Status = "Cancelled by " + username
+		collection_context.Backtrace = ""
+
 		flow_path_manager := paths.NewFlowPathManager(
 			collection_context.ClientId, collection_context.SessionId)
 
