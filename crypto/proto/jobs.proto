@@ -151,7 +151,9 @@ message VeloMessage {
   Type type = 8;
 };
 
-message Cancel {};
+message Cancel {
+    string principal = 1;
+};
 
 // Certificates are exchanged with this.
 message Certificate {

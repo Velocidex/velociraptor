@@ -285,7 +285,9 @@ func (self *Launcher) CancelFlow(
 	// id.
 	err = client_manager.QueueMessageForClient(ctx, client_id,
 		&crypto_proto.VeloMessage{
-			Cancel:    &crypto_proto.Cancel{},
+			Cancel: &crypto_proto.Cancel{
+				Principal: username,
+			},
 			SessionId: flow_id,
 		}, services.NOTIFY_CLIENT, utils.BackgroundWriter)
 	if err != nil {
