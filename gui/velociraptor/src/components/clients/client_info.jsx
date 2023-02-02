@@ -36,6 +36,7 @@ class ClientSetterFromRoute extends Component {
 
         if (!this.props.client || client_id !== this.props.client.client_id) {
             if (client_id === "server") {
+                window.globals.client = {client_id: "server"};
                 this.props.setClient({client_id: "server"});
                 return;
             }
@@ -45,6 +46,7 @@ class ClientSetterFromRoute extends Component {
             // happen if the client is not in the index for some
             // reason so SearchClients can not find it, but it really
             // does exist.
+            window.globals.client = {client_id: client_id};
             this.props.setClient({
                 client_id: client_id,
             });
@@ -53,6 +55,7 @@ class ClientSetterFromRoute extends Component {
                 query: client_id,
             }, this.source.token).then(resp => {
                 if (resp.data && resp.data.items) {
+                    window.globals.client = resp.data.items[0];
                     this.props.setClient(resp.data.items[0]);
                 }
             });

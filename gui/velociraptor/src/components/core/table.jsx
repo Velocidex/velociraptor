@@ -32,11 +32,13 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import T from '../i8n/i8n.jsx';
 import TreeCell from './tree-cell.jsx';
 import ContextMenu from '../utils/context.jsx';
+import PreviewUpload from '../widgets/preview_uploads.jsx';
 
 // Shows the InspectRawJson modal dialog UI.
 export class InspectRawJson extends Component {
     static propTypes = {
         rows: PropTypes.array,
+        env: PropTypes.object,
     }
 
     state = {
@@ -411,7 +413,7 @@ export function sortCaret(order, column) {
     return null;
 }
 
-export function formatColumns(columns) {
+export function formatColumns(columns, env) {
     _.each(columns, (x) => {
         x.headerFormatter=headerFormatter;
         if (x.sort) {
@@ -534,6 +536,17 @@ export function formatColumns(columns) {
                          id={cell}
                          to={"/collected/" + client_id + "/" + cell}>{cell}
                        </NavLink>;
+            };
+            x.type = null;
+            break;
+
+        case "preview_upload":
+            x.formatter = (cell, row) => {
+                let client_id = row["ClientId"];
+
+                return <PreviewUpload
+                         env={env}
+                         upload={cell}/>;
             };
             x.type = null;
             break;

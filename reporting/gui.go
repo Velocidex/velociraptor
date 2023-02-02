@@ -634,6 +634,8 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 	p := bluemonday.UGCPolicy()
 
 	p.AllowStandardURLs()
+	// DATA urls are useful for markdown cells
+	p.AllowURLSchemes("http", "https", "data")
 
 	// Directives for the GUI.
 	p.AllowAttrs("value", "params").OnElements("grr-csv-viewer")
@@ -735,6 +737,6 @@ func (self *GuiTemplateEngine) RunQuery(vql *vfilter.VQL,
 	}
 }
 
-func IsEmptyQuery(query string) (bool) {
-    return whitespace_regexp.MatchString(query)
+func IsEmptyQuery(query string) bool {
+	return whitespace_regexp.MatchString(query)
 }

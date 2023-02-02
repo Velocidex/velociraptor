@@ -12,6 +12,10 @@ export default defineConfig({
       copyPublicDir: true,
       sourcemap: false,
     },
+    define: {
+        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+        'process.env.MY_ENV': JSON.stringify(process.env.MY_ENV),
+    },
     css : {
       // Creates inline source maps which don't work with Chrome (108)
       // dev tools Coverage analysis. Rather use build.sourcemap:true

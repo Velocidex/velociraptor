@@ -86,6 +86,10 @@ export default class FlowResults extends React.Component {
                 })}
               </FormControl>
               <VeloPagedTable
+                env={{
+                    client_id: this.props.flow.client_id,
+                    flow_id: this.props.flow.session_id,
+                }}
                 className="col-12"
                 params={this.state.params}
                 version={getFlowState(this.props.flow)}

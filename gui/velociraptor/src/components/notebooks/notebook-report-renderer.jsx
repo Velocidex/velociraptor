@@ -19,6 +19,7 @@ const parse_param = domNode=>JSON.parse(decodeURIComponent(
 
 export default class NotebookReportRenderer extends React.Component {
     static propTypes = {
+        env: PropTypes.object,
         refresh: PropTypes.func,
         cell: PropTypes.object,
         notebook_id: PropTypes.string,
@@ -92,6 +93,7 @@ export default class NotebookReportRenderer extends React.Component {
                         let rows = JSON.parse(response.Response);
                         return (
                             <VeloTable
+                              env={this.props.env}
                               rows={rows}
                               columns={response.Columns}
                             />
@@ -116,6 +118,7 @@ export default class NotebookReportRenderer extends React.Component {
                     try {
                         return (
                             <NotebookTableRenderer
+                              env={this.props.env}
                               refresh={this.props.refresh}
                               params={parse_param(domNode)}
                             />

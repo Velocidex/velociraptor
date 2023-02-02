@@ -104,6 +104,8 @@ class VeloPagedTable extends Component {
         // "v1/GetTable".
         url: PropTypes.string,
 
+        // An environment that will be passed to the column renderers
+        env: PropTypes.object,
 
         // When called will cause the table to be recalculated.
         refresh: PropTypes.func,
@@ -417,7 +419,7 @@ class VeloPagedTable extends Component {
             rows[j]["_id"] = j;
         }
 
-        columns = formatColumns(columns);
+        columns = formatColumns(columns, this.props.env);
 
         let total_size = this.state.total_size || 0;
         if (total_size < 0 && !_.isEmpty(this.state.rows)) {
