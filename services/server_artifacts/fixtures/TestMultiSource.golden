@@ -16,8 +16,8 @@
  "state": 3,
  "status": "Oops\n",
  "artifacts_with_results": [
-  "TestMultiSource/Source2",
-  "TestMultiSource/Source1"
+  "TestMultiSource/Source1",
+  "TestMultiSource/Source2"
  ],
  "query_stats": [
   {

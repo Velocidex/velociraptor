@@ -3,6 +3,7 @@ package server_artifacts_test
 import (
 	"context"
 	"sort"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -248,6 +249,47 @@ sources:
 	assert.Equal(self.T(), "Hello world", string(data))
 }
 
+func (self *ServerArtifactsTestSuite) TestServerArtifactWithUploadDeduplication() {
+	self.LoadArtifacts(`
+name: TestUploadMany
+type: SERVER
+sources:
+- query: |
+     SELECT upload(accessor="data",
+                   file="Hello world",
+                   name="test_many.txt")
+     FROM range(end=10)
+`)
+	details := self.ScheduleAndWait("TestUploadMany", "admin", "F.1234")
+
+	// 10 rows are collected
+	assert.Equal(self.T(), uint64(10), details.Context.TotalCollectedRows)
+
+	// But only one upload is actually made
+	assert.Equal(self.T(), uint64(1), details.Context.TotalUploadedFiles)
+	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_FINISHED, details.Context.State)
+
+	// Make sure the upload data is stored in the upload file.
+	flow_path_manager := paths.NewFlowPathManager(
+		"server", details.Context.SessionId)
+	uploads_data := test_utils.FileReadAll(self.T(), self.ConfigObj,
+		flow_path_manager.UploadMetadata())
+
+	assert.Contains(self.T(), uploads_data,
+		`"_Components":["clients","server","collections","F.1234","uploads","test_many.txt"]`)
+
+	// There is only one uploaded file in the uploads file
+	assert.Equal(self.T(), 1, len(strings.Split("\n", uploads_data)))
+
+	// Now read the uploaded file.
+	data := test_utils.FileReadAll(self.T(), self.ConfigObj,
+		path_specs.NewUnsafeFilestorePath(
+			"clients", "server", "collections", "F.1234",
+			"uploads", "test_many.txt").
+			SetType(api.PATH_TYPE_FILESTORE_ANY))
+	assert.Equal(self.T(), "Hello world", string(data))
+}
+
 // An artifact with two sources - one will produce an error. The
 // entire collection should fail but will have 2 rows returned.
 func (self *ServerArtifactsTestSuite) TestServerArtifactsMultiSource() {
@@ -286,6 +328,7 @@ sources:
 		return details.Context.QueryStats[i].ErrorMessage <
 			details.Context.QueryStats[j].ErrorMessage
 	})
+	sort.Strings(details.Context.ArtifactsWithResults)
 
 	goldie.Assert(self.T(), "TestMultiSource",
 		json.MustMarshalIndent(details.Context))
@@ -331,7 +374,10 @@ name: Test1
 type: SERVER
 sources:
 - query: |
-    SELECT upload(accessor="data", file="Hello world")
+    -- Need to store to different files or the upload will be deduplicated.
+    SELECT upload(accessor="data",
+                  file="Hello world",
+                  name=format(format="test%d.txt", args=_value)) AS Upload
     FROM range(end=100)
 resources:
   max_upload_bytes: 20

@@ -92,6 +92,11 @@ func (self *FileBasedUploader) Upload(
 		store_as_name = filename
 	}
 
+	cached, pres := DeduplicateUploads(scope, store_as_name)
+	if pres {
+		return cached, nil
+	}
+
 	file_path := self.sanitize_path(store_as_name.String())
 	err := os.MkdirAll(filepath.Dir(file_path), 0700)
 	if err != nil {
@@ -101,8 +106,10 @@ func (self *FileBasedUploader) Upload(
 	}
 
 	// Try to collect sparse files if possible
-	result, err := self.maybeCollectSparseFile(ctx, reader, file_path)
+	result, err := self.maybeCollectSparseFile(
+		ctx, reader, store_as_name, file_path)
 	if err == nil {
+		CacheUploadResult(scope, store_as_name, result)
 		return result, nil
 	}
 
@@ -147,17 +154,22 @@ func (self *FileBasedUploader) Upload(
 	_ = setFileTimestamps(file_path, mtime, atime, ctime)
 
 	scope.Log("Uploaded %v (%v bytes)", file_path, offset)
-	return &UploadResponse{
-		Path:   file_path,
-		Size:   uint64(offset),
-		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),
-		Md5:    hex.EncodeToString(md5_sum.Sum(nil)),
-	}, nil
+	result = &UploadResponse{
+		Path:       file_path,
+		Components: store_as_name.Components,
+		Size:       uint64(offset),
+		Sha256:     hex.EncodeToString(sha_sum.Sum(nil)),
+		Md5:        hex.EncodeToString(md5_sum.Sum(nil)),
+	}
+
+	CacheUploadResult(scope, store_as_name, result)
+	return result, nil
 }
 
 func (self *FileBasedUploader) maybeCollectSparseFile(
 	ctx context.Context,
 	reader io.Reader,
+	store_as_name *accessors.OSPath,
 	sanitized_name string) (
 	*UploadResponse, error) {
 
@@ -167,7 +179,8 @@ func (self *FileBasedUploader) maybeCollectSparseFile(
 		return nil, errors.New("Not supported")
 	}
 
-	writer, err := os.OpenFile(sanitized_name, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
+	writer, err := os.OpenFile(sanitized_name,
+		os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
 	if err != nil {
 		return nil, err
 	}
@@ -238,9 +251,10 @@ func (self *FileBasedUploader) maybeCollectSparseFile(
 	}
 
 	return &UploadResponse{
-		Path:   sanitized_name,
-		Size:   uint64(count),
-		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),
-		Md5:    hex.EncodeToString(md5_sum.Sum(nil)),
+		Path:       sanitized_name,
+		Components: store_as_name.Components,
+		Size:       uint64(count),
+		Sha256:     hex.EncodeToString(sha_sum.Sum(nil)),
+		Md5:        hex.EncodeToString(md5_sum.Sum(nil)),
 	}, nil
 }

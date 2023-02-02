@@ -21,6 +21,7 @@ package vql
 import (
 	"sync"
 
+	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -44,7 +45,11 @@ func (self *ScopeCache) Set(key string, value interface{}) {
 }
 
 func CacheGet(scope vfilter.Scope, key string) interface{} {
-	any_obj, _ := scope.Resolve(CACHE_VAR)
+	any_obj, pres := scope.Resolve(CACHE_VAR)
+	if !pres {
+		scope.AppendVars(ordereddict.NewDict().
+			Set(CACHE_VAR, NewScopeCache()))
+	}
 	cache, ok := any_obj.(*ScopeCache)
 	if ok {
 		cache.mu.Lock()
@@ -56,7 +61,12 @@ func CacheGet(scope vfilter.Scope, key string) interface{} {
 }
 
 func CacheSet(scope vfilter.Scope, key string, value interface{}) {
-	any_obj, _ := scope.Resolve(CACHE_VAR)
+	any_obj, pres := scope.Resolve(CACHE_VAR)
+	if !pres {
+		scope.AppendVars(ordereddict.NewDict().
+			Set(CACHE_VAR, NewScopeCache()))
+	}
+
 	cache, ok := any_obj.(*ScopeCache)
 	if ok {
 		cache.mu.Lock()

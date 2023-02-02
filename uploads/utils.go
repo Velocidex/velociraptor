@@ -1,8 +1,13 @@
 package uploads
 
 import (
+	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/vfilter"
 )
 
 func ShouldPadFile(
@@ -41,4 +46,44 @@ func ShouldPadFile(
 	}
 
 	return false
+}
+
+// Manage the uploader cache - this is used to deduplicate files that
+// are uploaded multiple time so they only upload one file.
+func DeduplicateUploads(scope vfilter.Scope,
+	store_as_name *accessors.OSPath) (*UploadResponse, bool) {
+	cache_any := vql_subsystem.CacheGet(scope, UPLOAD_CTX)
+	if utils.IsNil(cache_any) {
+		cache_any = ordereddict.NewDict()
+		vql_subsystem.CacheSet(scope, UPLOAD_CTX, cache_any)
+	}
+
+	cache, ok := cache_any.(*ordereddict.Dict)
+	if ok {
+		key := store_as_name.String()
+		result_any, pres := cache.Get(key)
+		if pres {
+			result, ok := result_any.(*UploadResponse)
+			if ok {
+				return result, true
+			}
+		}
+	}
+	return nil, false
+}
+
+func CacheUploadResult(scope vfilter.Scope,
+	store_as_name *accessors.OSPath,
+	result *UploadResponse) {
+	cache_any := vql_subsystem.CacheGet(scope, UPLOAD_CTX)
+	if utils.IsNil(cache_any) {
+		cache_any = ordereddict.NewDict()
+		vql_subsystem.CacheSet(scope, UPLOAD_CTX, cache_any)
+	}
+
+	cache, ok := cache_any.(*ordereddict.Dict)
+	if ok {
+		key := store_as_name.String()
+		cache.Set(key, result)
+	}
 }
