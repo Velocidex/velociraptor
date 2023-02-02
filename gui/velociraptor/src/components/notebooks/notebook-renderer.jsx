@@ -11,6 +11,7 @@ import axios from 'axios';
 
 export default class NotebookRenderer extends React.Component {
     static propTypes = {
+        env: PropTypes.object,
         notebook: PropTypes.object,
         fetchNotebooks: PropTypes.func,
     };
@@ -171,6 +172,7 @@ export default class NotebookRenderer extends React.Component {
               <Spinner loading={this.state.loading || this.props.notebook.loading} />
               { _.map(this.props.notebook.cell_metadata, (cell_md, idx) => {
                   return <NotebookCellRenderer
+                           env={this.props.env}
                            selected_cell_id={this.state.selected_cell_id}
                            setSelectedCellId={this.setSelectedCellId}
                            notebook_id={this.props.notebook.notebook_id}

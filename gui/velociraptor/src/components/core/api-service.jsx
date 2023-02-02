@@ -185,7 +185,9 @@ const get_blob = function(url, params, cancel_token) {
         return arrayPromise;
     }).catch(err=>{
         let data = err.response && err.response.data;
-        data.text().then((message)=>_.each(hooks, h=>h("Error: " + message)));
+        if(data) {
+            data.text().then((message)=>_.each(hooks, h=>h("Error: " + message)));
+        }
         return "";
     });
 };
@@ -272,4 +274,3 @@ export default {
     href: href,
     delete_req: delete_req,
 };
-

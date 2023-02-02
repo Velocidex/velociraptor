@@ -7,9 +7,10 @@ import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Modal from 'react-bootstrap/Modal';
 
-class HexViewDialog extends React.PureComponent {
+export class HexViewDialog extends React.PureComponent {
     static propTypes = {
         data: PropTypes.string,
+        byte_array: PropTypes.any,
         onClose: PropTypes.func.isRequired,
     }
 
@@ -26,7 +27,9 @@ class HexViewDialog extends React.PureComponent {
               </Modal.Header>
               <Modal.Body>
                 <div className="hex-dialog-body">
-                  <HexView data={this.props.data}  height={50}/>
+                  <HexView
+                    byte_array={this.props.byte_array}
+                    data={this.props.data}  height={50}/>
                 </div>
               </Modal.Body>
               <Modal.Footer>
@@ -39,12 +42,10 @@ class HexViewDialog extends React.PureComponent {
     }
 }
 
-
-
-
 export class HexViewPopup extends React.Component {
     static propTypes = {
         data: PropTypes.string,
+        byte_array: PropTypes.any,
     };
 
     state = {
@@ -52,6 +53,10 @@ export class HexViewPopup extends React.Component {
     }
 
     render() {
+        if (!this.props.data  && !this.props.byte_array) {
+            return <></>;
+        }
+
         let string_data = _.toString(this.props.data);
         if (string_data.length > 10) {
             string_data = string_data.substring(0, 10) + "...";
@@ -61,6 +66,7 @@ export class HexViewPopup extends React.Component {
             <>
               { this.state.showDialog &&
                 <HexViewDialog data={this.props.data}
+                               byte_array={this.props.byte_array}
                                onClose={()=>this.setState({showDialog: false})}
                 /> }
               <Button className="hex-popup client-link"
@@ -80,6 +86,7 @@ export class HexViewPopup extends React.Component {
 // A hex viewer suitable for small amountfs of text - No paging.
 export default class HexView extends React.Component {
     static propTypes = {
+        byte_array: PropTypes.any,
         data: PropTypes.string,
         height: PropTypes.number,
         max_height: PropTypes.number,
@@ -88,18 +95,65 @@ export default class HexView extends React.Component {
 
     state = {
         hexDataRows: [],
-        parsed_data: "",
+        rows: 25,
+        columns: 0x10,
+        page: 0,
         expanded: false,
     }
 
     componentDidMount = () => {
-        this.parseFileContentToHexRepresentation_(this.props.data);
-        this.setState({parsed_data: this.props.data});
+        this.updateRepresentation();
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
-        return this.props.data !== this.state.parsed_data;
+        if (!_.isEqual(prevProps.data, this.props.data) ||
+            !_.isEqual(prevProps.byte_array, this.props.byte_array)) {
+            this.updateRepresentation();
+        }
     }
+
+    updateRepresentation = () => {
+        if (this.props.byte_array) {
+            this.parseintArrayToHexRepresentation_(this.props.byte_array);
+        } else {
+            this.parseFileContentToHexRepresentation_(this.props.data);
+        }
+    }
+
+    parseintArrayToHexRepresentation_ = (intArray) => {
+        if (!intArray) {
+            intArray = "";
+        }
+
+        let hexDataRows = [];
+        var chunkSize = this.state.rows * this.state.columns;
+
+        for(var i = 0; i < this.state.rows; i++){
+            let offset = this.state.page * chunkSize;
+            var rowOffset = offset + (i * this.state.columns);
+            var data = intArray.slice(i * this.state.columns, (i+1)*this.state.columns);
+            var data_row = [];
+            var safe_data = "";
+            for (var j = 0; j < data.length; j++) {
+                var char = data[j].toString(16);
+                if (data[j] > 0x20 && data[j] < 0x7f) {
+                    safe_data += String.fromCharCode(data[j]);
+                } else {
+                    safe_data += ".";
+                };
+                data_row.push(('0' + char).substr(-2)); // add leading zero if necessary
+            };
+
+            hexDataRows.push({
+                offset: rowOffset,
+                data_row: data_row,
+                data: data,
+                safe_data: safe_data,
+            });
+        }
+
+        this.setState({hexDataRows: hexDataRows, loading: false});
+    };
 
     parseFileContentToHexRepresentation_ = (fileContent) => {
         if (!fileContent) {

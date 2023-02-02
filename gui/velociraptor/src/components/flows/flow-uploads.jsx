@@ -12,6 +12,7 @@ import Card from 'react-bootstrap/Card';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
+import PreviewUpload from '../widgets/preview_uploads.jsx';
 
 import api from '../core/api-service.jsx';
 const MAX_ROWS_PER_TABLE = 500;
@@ -75,6 +76,7 @@ export default class FlowUploads extends React.Component {
             if (response.cancel) return;
 
             let prepared_data = PrepareData(response.data);
+            prepared_data.columns.push("Preview");
             // Translate the columns
             let headers = {};
             _.each(prepared_data.columns, x=>{
@@ -110,6 +112,19 @@ export default class FlowUploads extends React.Component {
         }
 
         let renderers = {
+            Preview: (cell, row, rowIndex) => {
+                let client_id = this.props.flow && this.props.flow.client_id;
+                let flow_id = this.props.flow && this.props.flow.session_id;
+                let components = normalizeComponentList(
+                    row._Components, client_id, flow_id);
+                return <PreviewUpload
+                         env={{client_id: client_id, flow_id: flow_id}}
+                         upload={{Path: row.vfs_path,
+                                  Timestamp: row.started,
+                                  Size: row.uploaded_size || row.file_size,
+                                  Components: components}} />;
+            },
+
             // Let users directly download the file without having to
             // make a zip file.
             vfs_path: (cell, row, rowIndex) => {

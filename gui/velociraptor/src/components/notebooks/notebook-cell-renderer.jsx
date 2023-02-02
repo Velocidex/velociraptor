@@ -134,6 +134,7 @@ class AddCellFromHunt extends React.PureComponent {
 
 export default class NotebookCellRenderer extends React.Component {
     static propTypes = {
+        env: PropTypes.object,
         cell_metadata: PropTypes.object,
         notebook_id: PropTypes.string,
         notebook_metadata: PropTypes.object.isRequired,
@@ -758,6 +759,7 @@ export default class NotebookCellRenderer extends React.Component {
                      onClick={() => {this.props.setSelectedCellId(this.state.cell.cell_id);}}
                 >
                   <NotebookReportRenderer
+                    env={this.props.env}
                     refresh={this.recalculate}
                     notebook_id={this.props.notebook_id}
                     cell={this.state.cell}/>

@@ -105,9 +105,16 @@ export default class FlowNotebook extends React.Component {
     }
 
     render() {
+        let client_id = this.props.flow && this.props.flow.client_id;
+        let flow_id = this.props.flow && this.props.flow.session_id;
+
         return (
             <> {!_.isEmpty(this.state.notebook) &&
                 <NotebookRenderer
+                  env={{
+                      client_id: client_id,
+                      flow_id: flow_id,
+                  }}
                   notebook={this.state.notebook}
                   fetchNotebooks={this.fetchNotebooks}
                 />

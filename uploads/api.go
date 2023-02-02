@@ -21,6 +21,7 @@ type UploadResponse struct {
 	StoredName string   `json:"StoredName,omitempty"`
 	Reference  string   `json:"Reference,omitempty"`
 	Components []string `json:"Components,omitempty"`
+	Accessor   string   `json:"Accessor,omitempty"`
 
 	// The type of upload this is (Currently "idx" is an index file)
 	Type string `json:"Type,omitempty"`

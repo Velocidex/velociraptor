@@ -283,8 +283,8 @@ sources:
 
 	// Sort those for golden comparison
 	sort.Slice(details.Context.QueryStats, func(i, j int) bool {
-		return details.Context.QueryStats[i].Artifact <
-			details.Context.QueryStats[j].Artifact
+		return details.Context.QueryStats[i].ErrorMessage <
+			details.Context.QueryStats[j].ErrorMessage
 	})
 
 	goldie.Assert(self.T(), "TestMultiSource",

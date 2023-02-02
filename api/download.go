@@ -26,6 +26,7 @@
 package api
 
 import (
+	"bytes"
 	"html"
 	"io"
 	"io/ioutil"
@@ -64,10 +65,12 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
+const BUFSIZE = 1 * 1024 * 1024
+
 var (
 	pool = sync.Pool{
 		New: func() interface{} {
-			return make([]byte, 1*1024*1024)
+			return make([]byte, BUFSIZE)
 		},
 	}
 )
@@ -91,6 +94,10 @@ type vfsFileDownloadRequest struct {
 	Length       int      `schema:"length"`
 	OrgId        string   `schema:"org_id"`
 
+	// The caller can specify we detect the mime type. Only a few
+	// types are supported.
+	DetectMime bool `schema:"detect_mime"`
+
 	// If set we pad the file out.
 	Padding bool `schema:"padding"`
 }
@@ -105,7 +112,7 @@ func vfsFileDownloadHandler() http.Handler {
 		decoder := schema.NewDecoder()
 		err := decoder.Decode(&request, r.URL.Query())
 		if err != nil {
-			returnError(w, 200, "Ok")
+			returnError(w, 403, "Error "+err.Error())
 			return
 		}
 
@@ -192,8 +199,15 @@ func vfsFileDownloadHandler() http.Handler {
 		length_sent := 0
 		headers_sent := false
 
-		buf := pool.Get().([]byte)
-		defer pool.Put(buf)
+		// Only allow limited size buffers to be requested by the user.
+		var buf []byte
+		if request.Length == 0 || request.Length >= BUFSIZE {
+			buf = pool.Get().([]byte)
+			defer pool.Put(buf)
+
+		} else {
+			buf = make([]byte, request.Length)
+		}
 
 		for {
 			n, err := reader_at.ReadAt(buf, offset)
@@ -221,7 +235,8 @@ func vfsFileDownloadHandler() http.Handler {
 			if !headers_sent {
 				w.Header().Set("Content-Disposition", "attachment; filename="+
 					url.PathEscape(filename))
-				w.Header().Set("Content-Type", "binary/octet-stream")
+				w.Header().Set("Content-Type",
+					detectMime(buf[:n], request.DetectMime))
 				w.WriteHeader(200)
 				headers_sent = true
 			}
@@ -235,6 +250,16 @@ func vfsFileDownloadHandler() http.Handler {
 			offset += int64(n)
 		}
 	})
+}
+
+func detectMime(buffer []byte, detect_mime bool) string {
+	if detect_mime && len(buffer) > 8 {
+		if 0 == bytes.Compare(
+			[]byte("\x89\x50\x4E\x47\x0D\x0A\x1A\x0A"), buffer[:8]) {
+			return "image/png"
+		}
+	}
+	return "binary/octet-stream"
 }
 
 func getRows(

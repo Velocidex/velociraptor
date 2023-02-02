@@ -58,6 +58,8 @@ func (self *VelociraptorUploader) Upload(
 	result = &UploadResponse{
 		Path:       filename.String(),
 		StoredName: store_as_name.String(),
+		Accessor:   accessor,
+		Components: store_as_name.Components,
 	}
 
 	offset := uint64(0)
@@ -154,14 +156,17 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 
 	index := &actions_proto.Index{}
 
+	if store_as_name == nil {
+		store_as_name = filename
+	}
+
 	// This is the response that will be passed into the VQL
 	// engine.
 	result := &UploadResponse{
-		Path: filename.String(),
-	}
-
-	if store_as_name == nil {
-		store_as_name = filename
+		Path:       filename.String(),
+		StoredName: store_as_name.String(),
+		Components: store_as_name.Components,
+		Accessor:   accessor,
 	}
 
 	self.Count += 1
