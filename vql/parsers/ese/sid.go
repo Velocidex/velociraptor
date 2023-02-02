@@ -7,9 +7,12 @@ import (
 	"math/bits"
 )
 
+// https://devblogs.microsoft.com/oldnewthing/20040315-00/?p=40253
+
 func (self *SID) String() string {
-	result := fmt.Sprintf("S-%d", uint64(bits.ReverseBytes16(self.Authority()))<<32+
-		uint64(bits.ReverseBytes32(self.Authority2())))
+	result := fmt.Sprintf("S-%d-%d", self.Revision(),
+		uint64(bits.ReverseBytes16(self.Authority()))<<32+
+			uint64(bits.ReverseBytes32(self.Authority2())))
 
 	sub_authorities := self.Subauthority()
 	for i := 0; i < int(self.SubAuthCount()); i++ {

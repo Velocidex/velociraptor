@@ -554,7 +554,8 @@ func compileArtifact(
 			// removing any comments.
 			queries, err := splitQueryToQueries(source.Query)
 			if err != nil {
-				return err
+				return fmt.Errorf("While compiling %v/%v: %w",
+					artifact.Name, source.Name, err)
 			}
 			source.Queries = queries
 		}
