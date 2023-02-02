@@ -1,4 +1,4 @@
-name: Custom.Windows.System.Pslist
+name: Windows.System.Pslist
 description: |
   List processes and their running binaries.
 
