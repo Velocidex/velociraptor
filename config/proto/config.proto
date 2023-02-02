@@ -239,6 +239,12 @@ message ClientConfig {
     // How often clients inform the server about flow progress
     // (default 5 seconds).
     uint64 default_server_flow_stats_update = 39;
+
+    // Clients will send a Server.Internal.ClientInfo message to the
+    // server every this many seconds.This helps to keep the server
+    // info up to date about each client. This should not be sent too
+    // frequently. The default is 1 day (86400 seconds).
+    uint64 client_info_update_time = 40;
 }
 
 message APIConfig {

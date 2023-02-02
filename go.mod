@@ -22,7 +22,7 @@ require (
 	github.com/alecthomas/assert v1.0.0
 	github.com/alecthomas/chroma v0.7.3
 	github.com/alecthomas/participle v0.7.1
-	github.com/alecthomas/repr v0.1.1 // indirect
+	github.com/alecthomas/repr v0.2.0 // indirect
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/aws/aws-sdk-go v1.44.118
@@ -84,7 +84,7 @@ require (
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4
 	golang.org/x/net v0.0.0-20221019024206-cb67ada4b0ad
 	golang.org/x/sys v0.1.0
-	golang.org/x/text v0.4.0 // indirect
+	golang.org/x/text v0.6.0 // indirect
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858
 	google.golang.org/api v0.96.0
 	google.golang.org/genproto v0.0.0-20221018160656-63c7b68cfc55
@@ -103,7 +103,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
 	www.velocidex.com/golang/oleparse v0.0.0-20220617011920-94df2342d0b7
 	www.velocidex.com/golang/regparser v0.0.0-20221020153526-bbc758cbd18b
-	www.velocidex.com/golang/vfilter v0.0.0-20221124045546-c666c341aec3
+	www.velocidex.com/golang/vfilter v0.0.0-20230202001811-809fc5dabb97
 )
 
 require (
@@ -123,6 +123,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.9.0
 	github.com/shirou/gopsutil/v3 v3.21.11
+	github.com/valyala/fastjson v1.6.3
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
 	www.velocidex.com/golang/vtypes v0.0.0-20220816192452-6a27ae078f12
@@ -184,7 +185,6 @@ require (
 	github.com/tklauser/go-sysconf v0.3.9 // indirect
 	github.com/tklauser/numcpus v0.3.0 // indirect
 	github.com/ulikunitz/xz v0.5.10 // indirect
-	github.com/valyala/fastjson v1.6.3 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/goleak v1.2.0 // indirect

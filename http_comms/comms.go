@@ -39,12 +39,14 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
 	"google.golang.org/protobuf/proto"
+	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/executor"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -579,6 +581,14 @@ type NotificationReader struct {
 	on_exit func()
 
 	clock utils.Clock
+
+	// Send the server Server.Internal.ClientInfo messages
+	// periodically. This is sent outside the executor queues to avoid
+	// having the message accumulate in the ring buffer file, but it
+	// looks just like a regular montoring event query result.
+	mu                 sync.Mutex
+	last_update_time   time.Time
+	last_update_period time.Duration
 }
 
 func NewNotificationReader(
@@ -604,6 +614,12 @@ func NewNotificationReader(
 		minPoll = 1
 	}
 
+	last_update_period := 86400 * time.Second
+	if config_obj.Client.ClientInfoUpdateTime > 0 {
+		last_update_period = time.Duration(
+			config_obj.Client.ClientInfoUpdateTime) * time.Second
+	}
+
 	return &NotificationReader{
 		config_obj:            config_obj,
 		connector:             connector,
@@ -620,6 +636,7 @@ func NewNotificationReader(
 		current_poll_duration: time.Second,
 		on_exit:               on_exit,
 		clock:                 clock,
+		last_update_period:    last_update_period,
 	}
 }
 
@@ -814,15 +831,38 @@ func (self *NotificationReader) Start(
 // server's last hunt timestamp). It is therefore ok to send a foreman
 // message in every reader message to improve hunt latency.
 func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
-	return &crypto_proto.MessageList{
-		Job: []*crypto_proto.VeloMessage{{
-			SessionId:      constants.FOREMAN_WELL_KNOWN_FLOW,
-			ForemanCheckin: &actions_proto.ForemanCheckin{
-				// TODO
-				//LastEventTableVersion: actions.GlobalEventTableVersion(),
-			}},
-		},
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	result := &crypto_proto.MessageList{}
+
+	// Attach the Server.Internal.ClientInfo message
+	now := utils.GetTime().Now()
+	if now.Add(-self.last_update_period).After(self.last_update_time) {
+		self.last_update_time = now
+
+		client_info := actions.GetClientInfo(self.config_obj)
+		client_info_data, err := json.Marshal(client_info)
+		if err == nil {
+
+			logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
+			logger.Debug("Sending client info update %v", client_info)
+
+			client_info_data = append(client_info_data, '\n')
+			result.Job = append(result.Job, &crypto_proto.VeloMessage{
+				SessionId: "F.Monitoring",
+				VQLResponse: &actions_proto.VQLResponse{
+					JSONLResponse: string(client_info_data),
+					Query: &actions_proto.VQLRequest{
+						Name: "Server.Internal.ClientInfo",
+					},
+					TotalRows: 1,
+				},
+			})
+		}
 	}
+
+	return result
 }
 
 type HTTPCommunicator struct {

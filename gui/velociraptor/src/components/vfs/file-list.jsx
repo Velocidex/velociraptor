@@ -319,6 +319,7 @@ class VeloFileList extends Component {
                   :
                   <Button data-tooltip={T("Refresh this directory (sync its listing with the client)")}
                           data-position="right"
+                          disabled={!this.props.node.path}
                           className="btn-tooltip"
                           onClick={this.startVfsRefreshOperation}
                           variant="default">
@@ -340,6 +341,7 @@ class VeloFileList extends Component {
                   <Button data-tooltip={T("Recursively refresh this directory (sync its listing with the client)")}
                           data-position="right"
                           className="btn-tooltip"
+                          disabled={!this.props.node.path}
                           onClick={this.startRecursiveVfsRefreshOperation}
                           variant="default">
                     <FontAwesomeIcon icon="folder-open"/>
