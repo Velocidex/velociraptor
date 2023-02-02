@@ -1,5 +1,5 @@
 name: Server.Internal.ClientInfo
-type: CLIENT_EVENT
+type: INTERNAL
 description: |
   An internal artifact collecting client information. This is used to
   update the client info indexes. Client send this automatically at
