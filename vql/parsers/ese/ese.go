@@ -174,7 +174,8 @@ func formatGUID(hexencoded string) string {
 	}
 
 	profile := NewMiscProfile()
-	return profile.SID(&utils.BufferReaderAt{Buffer: buffer}, 0).String()
+	result := profile.SID(&utils.BufferReaderAt{Buffer: buffer}, 0)
+	return result.String()
 }
 
 type _ESEArgs struct {
