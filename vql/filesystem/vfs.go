@@ -5,7 +5,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -64,7 +63,7 @@ func (self VFSListDirectoryPlugin) Call(
 			arg.Path = arg.Path.Append(arg.Components...)
 		}
 
-		stats := &api_proto.VFSListResponse{}
+		stats := &services.VFSPartition{}
 		listDir(ctx, scope, stats, output_chan, arg.Path,
 			arg.Accessor, arg.Depth, 0)
 	}()
@@ -75,7 +74,7 @@ func (self VFSListDirectoryPlugin) Call(
 func listDir(
 	ctx context.Context,
 	scope vfilter.Scope,
-	stats *api_proto.VFSListResponse,
+	stats *services.VFSPartition,
 	output_chan chan<- vfilter.Row,
 	path *accessors.OSPath,
 	accessor_name string,
@@ -135,7 +134,7 @@ func listDir(
 	output_chan <- &services.VFSListRow{
 		Components: path.Components,
 		Accessor:   accessor_name,
-		Stats: &api_proto.VFSListResponse{
+		Stats: &services.VFSPartition{
 			StartIdx: stats.StartIdx,
 			EndIdx:   stats.EndIdx,
 		}}

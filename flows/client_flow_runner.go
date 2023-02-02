@@ -70,7 +70,7 @@ func (self *ClientFlowRunner) ProcessMonitoringMessage(
 		if err != nil {
 			return fmt.Errorf("MonitoringVQLResponse: %w", err)
 		}
-		return nil
+		return self.maybeProcessClientInfo(ctx, client_id, msg.VQLResponse)
 	}
 
 	if msg.LogMessage != nil {

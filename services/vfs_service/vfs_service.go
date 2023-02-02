@@ -377,12 +377,15 @@ func (self *VFSService) ProcessListDirectory(
 		components := append([]string{accessor}, row_obj.Components...)
 
 		// Write missing data from the stats record.
-		stats := row_obj.Stats
-		stats.Timestamp = uint64(ts)
-		stats.ClientId = flow.ClientId
-		stats.FlowId = flow.SessionId
-		stats.TotalRows = stats.EndIdx - stats.StartIdx
-		stats.Artifact = "System.VFS.ListDirectory/Listing"
+		stats := &api_proto.VFSListResponse{
+			Timestamp: uint64(ts),
+			ClientId:  flow.ClientId,
+			FlowId:    flow.SessionId,
+			TotalRows: row_obj.Stats.EndIdx - row_obj.Stats.StartIdx,
+			Artifact:  "System.VFS.ListDirectory/Listing",
+			StartIdx:  row_obj.Stats.StartIdx,
+			EndIdx:    row_obj.Stats.EndIdx,
+		}
 
 		db, err := datastore.GetDB(config_obj)
 		if err != nil {
