@@ -834,9 +834,17 @@ func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	result := &crypto_proto.MessageList{}
+	// Send this every message
+	result := &crypto_proto.MessageList{
+		Job: []*crypto_proto.VeloMessage{{
+			SessionId: constants.FOREMAN_WELL_KNOWN_FLOW,
+			ForemanCheckin: &actions_proto.ForemanCheckin{
+				LastEventTableVersion: actions.GlobalEventTableVersion(),
+			},
+		}}}
 
-	// Attach the Server.Internal.ClientInfo message
+	// Attach the Server.Internal.ClientInfo message very
+	// infrequently.
 	now := utils.GetTime().Now()
 	if now.Add(-self.last_update_period).After(self.last_update_time) {
 		self.last_update_time = now

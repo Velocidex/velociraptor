@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 func (self *TestSuite) TestListener() {
@@ -72,9 +73,11 @@ func (self *TestSuite) TestListenerPreserveTypes() {
 		Set("B", uint64(9223372036854775808))
 	listener.Send(event_source)
 
-	// Make sure we wrote to the buffer file.
-	size, _ := listener.Debug().GetInt64("Size")
-	assert.True(self.T(), size > directory.FirstRecordOffset)
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		// Make sure we wrote to the buffer file.
+		size, _ := listener.Debug().GetInt64("Size")
+		return size > directory.FirstRecordOffset
+	})
 
 	events := []*ordereddict.Dict{}
 	wg := &sync.WaitGroup{}
