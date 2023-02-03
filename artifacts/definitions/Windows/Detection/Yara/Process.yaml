@@ -75,14 +75,9 @@ parameters:
     description: Include this amount of bytes around hit as context.
     default: 0
     type: int
-  - name: PathWhitelist
-    description: |
-        Process paths to exclude. Default is common AntiVirus we have seen cause
-        false positives with signitures in memory.
-    type: csv
-    default: |
-      Path
-      C:\Program Files\Folder to Exclude\binary.exe
+  - name: ExePathWhitelist
+    description: Regex of ProcessPaths to exclude
+    type: regex
 
 
 sources:
@@ -106,7 +101,8 @@ sources:
             Name =~ ProcessRegex
             AND format(format="%d", args=Pid) =~ PidRegex
             AND NOT Pid in me.Pid
-            AND NOT upcase(string=Exe) in whitelist.Path
+            AND NOT if(condition=ExePathWhitelist,
+                    then= Exe=~ExePathWhitelist)
 
       -- scan processes in scope with our rule, limit 1 hit
       LET hits = SELECT * FROM foreach(
