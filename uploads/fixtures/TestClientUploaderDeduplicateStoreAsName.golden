@@ -1,0 +1,31 @@
+{
+ "responses": [
+  {
+   "session_id": "Test23",
+   "request_id": 5,
+   "FileBuffer": {
+    "pathspec": {
+     "path": "TestFile.txt",
+     "accessor": "data"
+    },
+    "size": 11,
+    "stored_size": 11,
+    "data": "SGVsbG8gd29ybGQ="
+   }
+  },
+  {
+   "session_id": "Test23",
+   "request_id": 5,
+   "FileBuffer": {
+    "pathspec": {
+     "path": "TestFile.txt",
+     "accessor": "data"
+    },
+    "offset": 11,
+    "size": 11,
+    "stored_size": 11,
+    "eof": true
+   }
+  }
+ ]
+}

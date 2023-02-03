@@ -340,6 +340,11 @@ func (self *Container) Upload(
 		store_as_name = filename
 	}
 
+	cached, pres := uploads.DeduplicateUploads(scope, store_as_name)
+	if pres {
+		return cached, nil
+	}
+
 	store_path, err := accessors.NewZipFilePath("uploads")
 	if err != nil {
 		return nil, err
@@ -362,6 +367,7 @@ func (self *Container) Upload(
 		self.uploads = append(self.uploads, result)
 		self.mu.Unlock()
 
+		uploads.CacheUploadResult(scope, store_as_name, result)
 		return result, nil
 	}
 
@@ -393,6 +399,7 @@ func (self *Container) Upload(
 	self.stats.TotalUploadedBytes += result.Size
 	self.stats_mu.Unlock()
 
+	uploads.CacheUploadResult(scope, store_as_name, result)
 	return result, nil
 }
 

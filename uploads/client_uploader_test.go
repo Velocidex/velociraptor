@@ -252,9 +252,9 @@ func TestClientUploaderSparseMultiBuffer(t *testing.T) {
 		json.MustMarshalIndent(responses))
 }
 
-// Upload multiple copies of the same file.
+// Upload multiple files.
 
-// * Each copy should have 2 messages - one with the full data and one
+// * Each file should have 2 messages - one with the full data and one
 //   with EOF message.
 // * Each message should have an upload ID incrementing from 0 for all
 //   packets in the same file.
@@ -293,6 +293,53 @@ func TestClientUploaderUploadId(t *testing.T) {
 		json.MustMarshalIndent(golden))
 }
 
+// Upload multiple copies of the same file.  The client should
+// deduplicate the files based on store_as_name so only actually
+// upload a single file.
+func TestClientUploaderDeduplicateStoreAsName(t *testing.T) {
+	cancel := utils.MockTime(&utils.MockClock{MockNow: time.Unix(10, 10)})
+	defer cancel()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Second)
+	defer cancel()
+
+	resp := responder.TestResponderWithFlowId(nil, fmt.Sprintf("Test23"))
+	defer resp.Close()
+
+	uploader := &VelociraptorUploader{
+		Responder: resp,
+	}
+
+	data := "Hello world"
+
+	// All uploads use the same output filename.
+	store_as_name := accessors.MustNewPathspecOSPath("TestFile.txt")
+	scope := vql_subsystem.MakeScope()
+
+	// Upload the file multiple times
+	for i := 0; i < 5; i++ {
+		fd := bytes.NewReader([]byte(data))
+
+		// Only deduplicate on store_as_name - input files may be
+		// different each time.
+		ospath := accessors.MustNewPathspecOSPath(fmt.Sprintf("file_%d", i))
+		_, err := uploader.Upload(ctx, scope,
+			ospath, "data", store_as_name, int64(len(data)),
+			nilTime, nilTime, nilTime, nilTime, fd)
+		assert.NoError(t, err)
+	}
+
+	responses := resp.Drain.WaitForMessage(t, 2)
+	// Only two responses corresponding to one actual upload.
+	assert.Equal(t, 2, len(responses))
+
+	golden := ordereddict.NewDict().
+		Set("responses", responses)
+
+	goldie.Assert(t, "TestClientUploaderDeduplicateStoreAsName",
+		json.MustMarshalIndent(golden))
+}
+
 func TestClientUploaderNoIndexIfNotSparse(t *testing.T) {
 	resp := responder.TestResponderWithFlowId(
 		nil, "TestClientUploaderNoIndexIfNotSparse")
@@ -319,7 +366,7 @@ func TestClientUploaderNoIndexIfNotSparse(t *testing.T) {
 		resp.NextUploadId(),
 		range_reader)
 
-	responses := resp.Drain.WaitForMessage(t, 2)
+	responses := resp.Drain.WaitForMessage(t, 7)
 	assert.Equal(t, CombineOutput("/foo", responses), "Hello hello ")
 
 	// No idx written when there are no sparse ranges.

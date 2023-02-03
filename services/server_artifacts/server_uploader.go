@@ -49,6 +49,11 @@ func (self *ServerUploader) Upload(
 		store_as_name = filename
 	}
 
+	cached, pres := uploads.DeduplicateUploads(scope, store_as_name)
+	if pres {
+		return cached, nil
+	}
+
 	result, err := self.FileStoreUploader.Upload(ctx, scope, filename,
 		accessor, store_as_name, expected_size,
 		mtime, atime, ctime, btime, reader)
@@ -99,6 +104,8 @@ func (self *ServerUploader) Upload(
 		"System.Upload.Completion",
 		"server", self.session_id,
 	)
+
+	uploads.CacheUploadResult(scope, store_as_name, result)
 	return result, err
 }
 
