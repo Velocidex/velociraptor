@@ -1,5 +1,3 @@
-// +build XXXX
-
 /*
    Velociraptor - Dig Deeper
    Copyright (C) 2019-2022 Rapid7 Inc.
@@ -114,8 +112,14 @@ func doPoolClient() error {
 			client_config.Client.WritebackWindows = client_config.Client.WritebackLinux
 			if client_config.Client.LocalBuffer != nil {
 				client_config.Client.LocalBuffer.DiskSize = 0
+
+				// Limit the total size of the ring buffer.
+				client_config.Client.LocalBuffer.MemorySize = 100000
 			}
 			client_config.Client.Concurrency = uint64(*pool_client_concurrency)
+
+			// Disable client info updates in pool clients
+			client_config.Client.ClientInfoUpdateTime = -1
 
 			// Make sure the config is ok.
 			err = crypto_utils.VerifyConfig(client_config)

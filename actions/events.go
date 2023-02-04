@@ -215,11 +215,15 @@ func (self UpdateEventTable) Run(
 	// Start a new query for each event.
 	action_obj := &VQLClientAction{}
 	for _, event := range table.Events {
-		// Name of the query we are running.
+
+		// Name of the query we are running. There must be at least
+		// one query with a name.
 		artifact_name := GetQueryName(event.Query)
-		if artifact_name != "" {
-			logger.Info("<green>Starting</> monitoring query %s", artifact_name)
+		if artifact_name == "" {
+			continue
 		}
+
+		logger.Info("<green>Starting</> monitoring query %s", artifact_name)
 
 		query_responder := responder.NewMonitoringResponder(
 			ctx, config_obj, output_chan, artifact_name)
@@ -311,9 +315,13 @@ func InitializeEventTable(
 		config_obj, &actions_proto.VQLEventTable{})
 
 	// When the context is finished, tear down the event table.
-	go func(table *EventTable, ctx context.Context) {
-		<-ctx.Done()
-		table.Close()
+	go func(table *EventTable, service_ctx context.Context) {
+		select {
+		case <-service_ctx.Done():
+			table.Close()
+
+		case <-table.Ctx.Done():
+		}
 	}(GlobalEventTable, service_ctx)
 
 	mu.Unlock()

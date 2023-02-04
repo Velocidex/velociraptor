@@ -461,9 +461,9 @@ func (self *HuntDispatcher) Refresh(config_obj *config_proto.Config) error {
 			atomic.StoreUint64(&self.last_timestamp, hunt_obj.StartTime)
 			dispatcherCurrentTimestamp.Set(float64(last_timestamp))
 		}
-
 		self.hunts[hunt_id] = &HuntRecord{Hunt: hunt_obj}
 	}
+
 	return nil
 }
 

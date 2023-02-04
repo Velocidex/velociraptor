@@ -78,6 +78,7 @@ type _ElasticPluginArgs struct {
 	PipeLine           string              `vfilter:"optional,field=pipeline,doc=Pipeline for uploads"`
 	DisableSSLSecurity bool                `vfilter:"optional,field=disable_ssl_security,doc=Disable ssl certificate verifications."`
 	RootCerts          string              `vfilter:"optional,field=root_ca,doc=As a better alternative to disable_ssl_security, allows root ca certs to be added here."`
+	MaxMemoryBuffer    uint64              `vfilter:"optional,field=max_memory_buffer,doc=How large we allow the memory buffer to grow to while we are trying to contact the Elastic server (default 100mb)."`
 }
 
 type _ElasticPlugin struct{}
@@ -189,6 +190,14 @@ func upload_rows(
 	next_send_id := id + arg.ChunkSize
 	next_send_time := time.After(wait_time)
 
+	// If the buffer is too large we need to drop the data on the
+	// floor. This might happen if the elastic server is not reachable
+	// for example.
+	max_buffer_size := uint64(100 * 1024 * 1024)
+	if arg.MaxMemoryBuffer > 0 {
+		max_buffer_size = arg.MaxMemoryBuffer
+	}
+
 	// Flush any remaining rows
 	defer send_to_elastic(ctx, scope, output_chan, client, &buf)
 
@@ -213,7 +222,8 @@ func upload_rows(
 				continue
 			}
 
-			if id > next_send_id {
+			if id > next_send_id ||
+				buf.Len() > int(max_buffer_size) {
 				send_to_elastic(ctx, scope, output_chan,
 					client, &buf)
 				next_send_id = id + arg.ChunkSize
@@ -298,6 +308,7 @@ func send_to_elastic(
 	select {
 	case <-ctx.Done():
 		return
+
 	case output_chan <- ordereddict.NewDict().
 		Set("StatusCode", res.StatusCode).
 		Set("Response", response):

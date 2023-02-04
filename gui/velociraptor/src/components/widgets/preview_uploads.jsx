@@ -8,7 +8,6 @@ import axios from 'axios';
 import api from '../core/api-service.jsx';
 import { HexViewDialog } from '../utils/hex.jsx';
 import Button from 'react-bootstrap/Button';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import qs from 'qs';
 import Modal from 'react-bootstrap/Modal';
 import HexView from '../utils/hex.jsx';
@@ -306,7 +305,6 @@ export default class PreviewUpload extends Component {
                       size="sm"
                       onClick={()=>this.setState({showDialog: true})}
                       variant="outline-info">
-                <FontAwesomeIcon icon="external-link-alt"/>
                 {string_data}
               </Button>
             </>

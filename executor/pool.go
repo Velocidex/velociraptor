@@ -1,9 +1,7 @@
-// +build XXXX
-
 /*
    The pool client pretends to be a large number of clients in order
    to exert a large load on the server.  In reality each client is
-   running in an go routine in parallel.
+   running in a go routine in parallel.
 
    Therefore when we do a hunt, each pool client goroutine will
    receive the same VQL query and run the same code. This reduces the
@@ -12,7 +10,7 @@
 
    This pool executor memoizes the results from each query in memory
    so each query is run only once but the results are returned from
-   each goroutine fake client as it was unique. This increases the
+   each goroutine fake client as if it was unique. This increases the
    total number of pool clients we can support since most of the work
    is pushed out to the comms.
 */
@@ -23,7 +21,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
@@ -37,12 +34,12 @@ import (
 
 var (
 	pool_mu sync.Mutex
-	// Get transactions by session id
-	session_id_cache = make(map[string]*transaction)
 
-	// Get transactions by query name
-	query_cache = make(map[string]*transaction)
-	ts          = time.Now().UnixNano()
+	// Get transactions by session id
+	transaction_by_session_id = make(map[string]*transaction)
+
+	// Get transactions by a unique key for the FlowRequest message.
+	transaction_by_flow_key = make(map[string]*transaction)
 )
 
 type transaction struct {
@@ -53,14 +50,6 @@ type transaction struct {
 	// threads wait until it is done.
 	IsDone chan bool
 	Done   bool
-}
-
-func getInc() int64 {
-	pool_mu.Lock()
-	defer pool_mu.Unlock()
-
-	ts++
-	return ts
 }
 
 // A wrapper around the standard client executor for use of pool
@@ -79,38 +68,40 @@ func (self *PoolClientExecutor) ReadResponse() <-chan *crypto_proto.VeloMessage 
 	return self.Outbound
 }
 
-// Inspect the request and decide if we will cache it under a query.
-func getQueryName(message *crypto_proto.VeloMessage) string {
-	query_name := ""
-	if message.VQLClientAction != nil {
-		for _, query := range message.VQLClientAction.Query {
-			if query.Name != "" {
-				query_name = query.Name
-			}
+// Inspect the request and derive a unique session key for it
+func getRequestKey(req *crypto_proto.FlowRequest) string {
+	key := ""
+
+	for _, action := range req.VQLClientActions {
+		for _, query := range action.Query {
+			key += query.Name
 		}
-		// Cache it under the query name and the serialized parameters
-		serialized, _ := json.Marshal(message.VQLClientAction.Env)
-		return fmt.Sprintf("%v: %v", query_name, string(serialized))
 
+		// Cache it under the query name and the serialized
+		// parameters. This way when any of the parameters change we
+		// recalculate the query.
+		key += json.MustMarshalString(action.Env)
 	}
-	return ""
+	return key
 }
 
-func getSessionKey(message *crypto_proto.VeloMessage) string {
-	return fmt.Sprintf("%s/%d", message.SessionId, message.QueryId)
-}
-
+// Gets the transaction for this request or create a new transaction.
 func getCompletedTransaction(message *crypto_proto.VeloMessage) *transaction {
 	pool_mu.Lock()
 	defer pool_mu.Unlock()
 
-	query_name := getQueryName(message)
-	// Do not cache empty queries.
-	if query_name == "" {
+	// We only cache FlowRequest messages.
+	if message.FlowRequest == nil {
 		return nil
 	}
 
-	result, pres := query_cache[query_name]
+	key := getRequestKey(message.FlowRequest)
+	// Do not cache empty queries.
+	if key == "" {
+		return nil
+	}
+
+	result, pres := transaction_by_flow_key[key]
 
 	// Transaction fully cached and completed.
 	if pres {
@@ -123,11 +114,14 @@ func getCompletedTransaction(message *crypto_proto.VeloMessage) *transaction {
 		Request: message,
 		IsDone:  make(chan bool),
 	}
-	session_id_cache_key := getSessionKey(message)
-	query_cache[query_name] = trans
-	session_id_cache[session_id_cache_key] = trans
 
-	fmt.Printf("Starting transaction for %v\n", session_id_cache_key)
+	// Cache it for the next
+	transaction_by_flow_key[key] = trans
+	transaction_by_session_id[message.SessionId] = trans
+
+	fmt.Printf("Starting transaction for %v\n", message.SessionId)
+
+	// Return nil for the next caller to start executing this transaction.
 	return nil
 }
 
@@ -151,10 +145,10 @@ func (self *PoolClientExecutor) maybeUpdateEventTable(
 
 	fmt.Printf("Installing new event table for version %v\n", req.UpdateEventTable.Version)
 
-	g_responder := responder.GlobalPoolEventResponder
-	pool_responder := g_responder.NewResponder(ctx, self.config_obj, req)
+	g_responder := responder.GetPoolEventResponder(ctx)
 	actions.UpdateEventTable{}.Run(
-		self.config_obj, ctx, pool_responder, req.UpdateEventTable)
+		self.config_obj, ctx, g_responder.EventTableInput,
+		req.UpdateEventTable)
 
 }
 
@@ -174,15 +168,15 @@ func (self *PoolClientExecutor) ProcessRequest(
 		<-tran.IsDone
 
 		fmt.Printf("Getting %v responses from cache\n", len(tran.Responses))
+
+		// Replay the transaction into the output channel.
 		for _, resp := range tran.Responses {
 			response := &crypto_proto.VeloMessage{
 				SessionId:   message.SessionId,
 				RequestId:   message.RequestId,
-				ResponseId:  uint64(getInc()),
-				TaskId:      message.TaskId,
 				VQLResponse: self.maybeTransformResponse(resp.VQLResponse),
 				LogMessage:  resp.LogMessage,
-				Status:      resp.Status,
+				FlowStats:   resp.FlowStats,
 			}
 			select {
 			case <-ctx.Done():
@@ -193,9 +187,14 @@ func (self *PoolClientExecutor) ProcessRequest(
 		return
 	}
 
+	// If we get here there is no cached transaction - just forward to
+	// the normal executor.
 	self.ClientExecutor.ProcessRequest(ctx, message)
 }
 
+// Inspect the response and transform it if needed. Currently we only
+// need to replace the Hostname with the pool client's ID so it
+// appears to be a different client.
 func (self *PoolClientExecutor) maybeTransformResponse(
 	response *actions_proto.VQLResponse) *actions_proto.VQLResponse {
 
@@ -232,6 +231,12 @@ func (self *PoolClientExecutor) maybeTransformResponse(
 	return response
 }
 
+// A Pool Client is a virtualized client running in a goroutine which
+// emulates a full blown client. Flow Requests are cached globally in
+// a transaction so they can be replayed back for all clients. This
+// allows us to calculate any query once but return all the results at
+// once from other clients immediately therefore increasing the load
+// on the server.
 func NewPoolClientExecutor(
 	ctx context.Context,
 	client_id string,
@@ -270,18 +275,24 @@ func NewPoolClientExecutor(
 	}, nil
 }
 
+// Compare messages from the real client executor against the cached
+// transactions and add them to the transactions. If we detect the
+// flow is complete we mark the transactions as done and other clients
+// may replay it.
 func maybeCacheResult(response *crypto_proto.VeloMessage) {
 	pool_mu.Lock()
 	defer pool_mu.Unlock()
 
-	session_id := getSessionKey(response)
+	session_id := response.SessionId
 
 	// Check if the transaction is tracked
-	tran, pres := session_id_cache[session_id]
+	tran, pres := transaction_by_session_id[session_id]
 	if pres {
 		fmt.Printf("%v\n", response)
 		tran.Responses = append(tran.Responses, response)
-		if response.Status != nil && !tran.Done {
+
+		// Determine if the flow is completed by looking at the FlowStat
+		if !tran.Done && isFlowComplete(response) {
 			fmt.Printf("Completing transaction for session_id %v\n",
 				session_id)
 			// The transaction is now done.
@@ -289,5 +300,21 @@ func maybeCacheResult(response *crypto_proto.VeloMessage) {
 			tran.Done = true
 		}
 	}
+}
 
+// Detect if this is a FlowStats message which represents the flow is
+// compelte.
+func isFlowComplete(message *crypto_proto.VeloMessage) bool {
+	if message.FlowStats == nil {
+		return false
+	}
+
+	for _, s := range message.FlowStats.QueryStatus {
+		// Flow is not completed as one of the queries is still
+		// running.
+		if s.Status == crypto_proto.VeloStatus_PROGRESS {
+			return false
+		}
+	}
+	return true
 }

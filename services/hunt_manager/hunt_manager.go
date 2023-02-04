@@ -59,8 +59,8 @@ import (
 	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -331,23 +331,47 @@ func (self *HuntManager) ProcessInterrogation(
 }
 
 // Watch for all flows created by a hunt and maintain the list of hunt
-// completions.
+// completions.  TODO: This is inefficient because we are forced to
+// open the flow object from disk to get at the request. We need to
+// denote flows created by hunts by their own unique flow id.
 func (self *HuntManager) ProcessFlowCompletion(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	row *ordereddict.Dict) error {
 
-	flow, err := journal.GetFlowFromQueue(config_obj, row)
-	if err != nil {
-		return err
-	}
-
-	// We only care about flows that were launched by hunts here. The
-	// flow creator is the hunt id.
-	hunt_id := flow.Request.Creator
-	if !strings.HasPrefix(hunt_id, constants.HUNT_PREFIX) {
+	flow_any, pres := row.Get("Flow")
+	if !pres {
 		return nil
 	}
+
+	flow, ok := flow_any.(*flows_proto.ArtifactCollectorContext)
+	if !ok || flow == nil {
+		serialized, err := json.Marshal(flow_any)
+		if err != nil {
+			return err
+		}
+		flow = &flows_proto.ArtifactCollectorContext{}
+		err = json.Unmarshal(serialized, flow)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Sessions IDs that come from a hunt have a special format with
+	// the hunt id and flow id joined. This allows us to quickly
+	// identify the flow that belongs to a hunt without needing to
+	// read the original request from the datastore.
+	flow_id, pres := row.GetString("FlowId")
+	if !pres {
+		return errors.New("FlowId not found")
+	}
+
+	parts := strings.Split(flow_id, ".H.")
+	if len(parts) != 2 {
+		return nil
+	}
+
+	hunt_id := "H." + parts[1]
 
 	// Flow is complete so add it to the hunt stats. We send a
 	// mutation to the hunt dispatcher to mediate internal hunt state
@@ -369,7 +393,7 @@ func (self *HuntManager) ProcessFlowCompletion(
 	// status, so we dont bother broadcasting a mutation for them. We
 	// only need to update the local hunt dispatcher on the master
 	// node which will flush to disk eventually.
-	err = self.processMutation(config_obj, mutation)
+	err := self.processMutation(config_obj, mutation)
 	if err != nil {
 		return err
 	}
@@ -384,7 +408,7 @@ func (self *HuntManager) ProcessFlowCompletion(
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", flow.ClientId).
 			Set("FlowId", flow.SessionId).
-			Set("StartTime", time.Unix(0, int64(flow.CreateTime*1000))).
+			Set("StartTime", time.Unix(0, int64(flow.StartTime*1000))).
 			Set("EndTime", time.Unix(0, int64(flow.ActiveTime*1000))).
 			Set("Status", flow.State.String()).
 			Set("Error", flow.Status)})
@@ -537,10 +561,11 @@ func (self *HuntManager) ProcessParticipation(
 				Stats:  &api_proto.HuntStats{Stopped: true}})
 	}
 
-	// Use hunt information to launch the flow against this
-	// client.
+	// Control rate of hunt recruitment to balance server load.
 	self.limiter.Wait(ctx)
 
+	// Use hunt information to launch the flow against this
+	// client.
 	return scheduleHuntOnClient(ctx,
 		config_obj, hunt_obj, participation_row.ClientId)
 }
