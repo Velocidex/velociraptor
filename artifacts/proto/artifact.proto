@@ -139,6 +139,10 @@ message Artifact {
             description: "A reference for this artifact."
         }];
 
+    repeated string references = 23 [(sem_type) = {
+            description: "A reference for this artifact."
+        }];
+
     repeated string required_permissions = 13 [(sem_type) = {
             description: "A list of required permissions to collect this artifact."
         }];

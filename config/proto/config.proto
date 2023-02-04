@@ -244,7 +244,7 @@ message ClientConfig {
     // server every this many seconds.This helps to keep the server
     // info up to date about each client. This should not be sent too
     // frequently. The default is 1 day (86400 seconds).
-    uint64 client_info_update_time = 40;
+    int64 client_info_update_time = 40;
 }
 
 message APIConfig {

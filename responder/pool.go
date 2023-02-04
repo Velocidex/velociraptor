@@ -1,5 +1,3 @@
-// +build XXXX
-
 package responder
 
 import (
@@ -7,10 +5,8 @@ import (
 	"fmt"
 	"sync"
 
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/logging"
 )
 
 // The pool event responder is a singleton which distributes any
@@ -38,6 +34,10 @@ type PoolEventResponder struct {
 
 	ctx context.Context
 
+	// Event table will push messages to this channel and we will
+	// distribute them to all the other clients.
+	EventTableInput chan *crypto_proto.VeloMessage
+
 	client_responders map[int]chan *crypto_proto.VeloMessage
 }
 
@@ -51,8 +51,11 @@ func GetPoolEventResponder(ctx context.Context) *PoolEventResponder {
 
 	result := &PoolEventResponder{
 		ctx:               ctx,
+		EventTableInput:   make(chan *crypto_proto.VeloMessage),
 		client_responders: make(map[int]chan *crypto_proto.VeloMessage),
 	}
+
+	result.Start()
 
 	GlobalPoolEventResponder = result
 	return result
@@ -67,26 +70,15 @@ func (self *PoolEventResponder) RegisterPoolClientResponder(
 }
 
 // Gets a new responder which is feeding the GlobalPoolEventResponder
-func (self *PoolEventResponder) NewResponder(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	req *crypto_proto.VeloMessage) *Responder {
-	// The PoolEventResponder input
-	in := make(chan *crypto_proto.VeloMessage)
-
-	// Prepare a new responder that will feed us.
-	result := &Responder{
-		ctx:    ctx,
-		output: in,
-		logger: logging.GetLogger(config_obj, &logging.ClientComponent),
-	}
+func (self *PoolEventResponder) Start() {
 
 	go func() {
 		for {
 			select {
 			case <-self.ctx.Done():
 				return
-			case message, ok := <-in:
+
+			case message, ok := <-self.EventTableInput:
 				if !ok {
 					return
 				}
@@ -114,6 +106,4 @@ func (self *PoolEventResponder) NewResponder(
 			}
 		}
 	}()
-
-	return result
 }

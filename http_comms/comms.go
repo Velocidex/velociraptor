@@ -618,6 +618,10 @@ func NewNotificationReader(
 	if config_obj.Client.ClientInfoUpdateTime > 0 {
 		last_update_period = time.Duration(
 			config_obj.Client.ClientInfoUpdateTime) * time.Second
+
+		// Set to a negative number to disable Server.Internal.ClientInfo
+	} else if config_obj.Client.ClientInfoUpdateTime == -1 {
+		last_update_period = 0
 	}
 
 	return &NotificationReader{
