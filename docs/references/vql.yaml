@@ -1150,6 +1150,10 @@
     type: string
     description: As a better alternative to disable_ssl_security, allows root ca certs
       to be added here.
+  - name: max_memory_buffer
+    type: uint64
+    description: How large we allow the memory buffer to grow to while we are trying
+      to contact the Elastic server (default 100mb).
   category: server
 - name: encode
   description: Encodes a string as as different type. Currently supported types include
@@ -1767,6 +1771,15 @@
     the data structure to add additional event queries.
   type: Function
   category: server
+- name: get_flow
+  description: Gets flow details.
+  type: Function
+  args:
+  - name: client_id
+    type: string
+    required: true
+  - name: flow_id
+    type: string
 - name: get_server_monitoring
   description: |
     Retrieve the current server monitoring state.
@@ -2670,7 +2683,7 @@
   args:
   - name: list
     type: Any
-    description: A list of items too filter
+    description: A list of items to filter
     required: true
   category: basic
 - name: log
@@ -5662,7 +5675,6 @@
 
     This plugin is probably only useful as part of the
     System.VFS.ListDirectory artifact.
-
   type: Plugin
   version: 1
   args:
@@ -5884,11 +5896,11 @@
   args:
   - name: filename
     type: string
-    description: Output JSON files to open
+    description: CSV files to open
     required: true
   - name: accessor
     type: string
-    description: The accessor to use. Currently only supports "auto", "file" or "".
+    description: The accessor to use
   - name: query
     type: StoredQuery
     description: query to write into the file.
@@ -6029,3 +6041,4 @@
     type: ordereddict.Dict
     description: The Yara variables to use.
   category: plugin
+

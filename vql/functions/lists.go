@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -201,7 +202,7 @@ func (self FilterFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 }
 
 type LenFunctionArgs struct {
-	List vfilter.Any `vfilter:"required,field=list,doc=A list of items too filter"`
+	List vfilter.Any `vfilter:"required,field=list,doc=A list of items to filter"`
 }
 type LenFunction struct{}
 
@@ -213,6 +214,16 @@ func (self *LenFunction) Call(ctx context.Context,
 	if err != nil {
 		scope.Log("len: %s", err.Error())
 		return &vfilter.Null{}
+	}
+
+	utils.Debug(arg.List)
+
+	switch t := arg.List.(type) {
+	case types.LazyExpr:
+		arg.List = t.Reduce(ctx)
+
+	case types.Materializer:
+		arg.List = t.Materialize(ctx, scope)
 	}
 
 	slice := reflect.ValueOf(arg.List)

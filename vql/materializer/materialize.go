@@ -11,6 +11,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/filesystem"
 	"www.velocidex.com/golang/velociraptor/vql/parsers"
@@ -36,7 +37,9 @@ func NewTempFileMatrializer(
 	ctx context.Context, scope types.Scope,
 	name string, rows []types.Row) (*TempFileMatrializer, error) {
 
-	tmpfile, err := ioutil.TempFile("", "VQL_"+name)
+	// name is a VQL identifier so should be safe.
+	tmpfile, err := ioutil.TempFile(
+		"", "VQL_"+utils.SanitizeString(name)+"_.jsonl")
 	if err != nil {
 		return nil, err
 	}
