@@ -84,6 +84,15 @@ const (
 	USN_FREQUENCY       = "USN_FREQUENCY"
 	ZIP_FILE_CACHE_SIZE = "ZIP_FILE_CACHE_SIZE"
 
+	// VQL tries to balance memory/cpu tradeoffs and also place limits
+	// on memory use. These parameters control this behavior. You can
+	// set them in the VQL environment to influence how the engine
+	// optimizes the queries.
+
+	// Holds this many rows in memory (default 1000) before switching
+	// to disk backing to limit memory use.
+	VQL_MATERIALIZE_ROW_LIMIT = "VQL_MATERIALIZE_ROW_LIMIT"
+
 	// Certain VQL errors represent a failure in artifact
 	// collection. We use this RegExp to determine if log messages
 	// represent failure.
