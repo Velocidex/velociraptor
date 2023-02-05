@@ -1,0 +1,26 @@
+Queries:
+- LET VQL_MATERIALIZE_ROW_LIMIT <= 2
+
+# This materialized query will contain 1 row and will be memory
+# resident.
+- LET Y <= SELECT "Hello" FROM scope()
+- SELECT * FROM Y
+
+# This should overflow and be disk resident. We can still select from
+# it normally.
+- LET X <= SELECT * FROM range(end=100)
+- SELECT * FROM X LIMIT 5
+
+# The following are not really supported for file backed materializers
+# because they may overflow the result JSON.
+- SELECT X, X[0] FROM scope()
+
+# Same thing is OK for in memory materializers because these should be
+# small.
+- SELECT Y, Y[0] FROM scope()
+
+# Check that log messages are emitted by VQL when switching to file
+# based
+- |
+  SELECT Log[:100] FROM test_read_logs()
+  WHERE Log =~ "Materialize of LET X: Expand larger than 2 rows, VQL will switch to tempf" AND NOT Log =~ "SELECT"

@@ -92,33 +92,20 @@ func (self *TempfileFunction) Call(ctx context.Context,
 		return &vfilter.Null{}
 	}
 
-	// Make sure the file is removed when the query is done.
-	removal := func() {
-		scope.Log("tempfile: removing tempfile %v", tmpfile.Name())
-
-		// On windows especially we can not remove files that
-		// are opened by something else, so we keep trying for
-		// a while.
-		for i := 0; i < 100; i++ {
-			err := os.Remove(tmpfile.Name())
-			if err == nil {
-				break
-			}
-			time.Sleep(time.Second)
-		}
-	}
-
 	if arg.RemoveLast {
 		scope.Log("Adding global destructor for %v", tmpfile.Name())
-		err := vql_subsystem.GetRootScope(scope).AddDestructor(removal)
+		err := vql_subsystem.GetRootScope(scope).
+			AddDestructor(func() { RemoveFile(scope, tmpfile.Name()) })
 		if err != nil {
-			removal()
+			RemoveFile(scope, tmpfile.Name())
 			scope.Log("tempfile: %v", err)
 		}
 	} else {
-		err := scope.AddDestructor(removal)
+		err := scope.AddDestructor(func() {
+			RemoveFile(scope, tmpfile.Name())
+		})
 		if err != nil {
-			removal()
+			RemoveFile(scope, tmpfile.Name())
 			scope.Log("tempfile: %v", err)
 		}
 	}
@@ -204,6 +191,21 @@ func (self TempdirFunction) Info(scope vfilter.Scope,
 		Name:    "tempdir",
 		Doc:     "Create a temporary directory. The directory will be removed when the query ends.",
 		ArgType: type_map.AddType(scope, &_TempdirRequest{}),
+	}
+}
+
+func RemoveFile(scope vfilter.Scope, filename string) {
+	scope.Log("tempfile: removing tempfile %v", filename)
+
+	// On windows especially we can not remove files that
+	// are opened by something else, so we keep trying for
+	// a while.
+	for i := 0; i < 100; i++ {
+		err := os.Remove(filename)
+		if err == nil {
+			break
+		}
+		time.Sleep(time.Second)
 	}
 }
 

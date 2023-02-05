@@ -13,6 +13,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/grouper"
+	"www.velocidex.com/golang/velociraptor/vql/materializer"
 	"www.velocidex.com/golang/velociraptor/vql/remapping"
 	"www.velocidex.com/golang/velociraptor/vql/sorter"
 	"www.velocidex.com/golang/vfilter"
@@ -80,6 +81,7 @@ func _build(self services.ScopeBuilder, from_scratch bool) vfilter.Scope {
 	// Use our own sorter
 	scope.SetSorter(sorter.MergeSorter{ChunkSize: 10000})
 	scope.SetGrouper(grouper.NewMergeSortGrouperFactory(self.Config, 10000))
+	scope.SetMaterializer(materializer.NewMaterializer())
 
 	artifact_plugin := NewArtifactRepositoryPlugin(self.Repository, self.Config)
 	env.Set("Artifact", artifact_plugin)
