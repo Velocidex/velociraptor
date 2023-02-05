@@ -562,8 +562,8 @@ func (self *TestSuite) TestCollectionCompletionMultiQueryOkStatus() {
 	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_FINISHED,
 		flow.State)
 
-	// The flow represents the total from all queries.
-	assert.Equal(self.T(), int64(225), flow.ExecutionDuration)
+	// The duration represents the longest duration of all queries.
+	assert.Equal(self.T(), int64(125), flow.ExecutionDuration)
 	assert.Equal(self.T(), uint64(6), flow.TotalCollectedRows)
 	assert.Equal(self.T(), []string{
 		"Generic.Client.Info/BasicInformation",

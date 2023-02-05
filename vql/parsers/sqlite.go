@@ -40,16 +40,16 @@ import (
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
-type _SQLiteArgs struct {
+type SQLiteArgs struct {
 	Filename string      `vfilter:"required,field=file"`
 	Accessor string      `vfilter:"optional,field=accessor,doc=The accessor to use."`
 	Query    string      `vfilter:"required,field=query"`
 	Args     vfilter.Any `vfilter:"optional,field=args"`
 }
 
-type _SQLitePlugin struct{}
+type SQLitePlugin struct{}
 
-func (self _SQLitePlugin) Call(
+func (self SQLitePlugin) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
@@ -214,14 +214,14 @@ func _MakeTempfile(ctx context.Context,
 	return tmpfile.Name(), nil
 }
 
-func (self _SQLitePlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self SQLitePlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "sqlite",
 		Doc:     "Opens an SQLite file and run a query against it (This is an alias to the sql() plugin which supports more database types).",
-		ArgType: type_map.AddType(scope, &_SQLiteArgs{}),
+		ArgType: type_map.AddType(scope, &SQLiteArgs{}),
 	}
 }
 
 func init() {
-	vql_subsystem.RegisterPlugin(&_SQLitePlugin{})
+	vql_subsystem.RegisterPlugin(&SQLitePlugin{})
 }

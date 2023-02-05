@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/tink-ab/tempfile"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/actions"
@@ -53,70 +52,20 @@ func remove(scope vfilter.Scope, name string) {
 
 func writeMetrics(
 	ctx context.Context, scope vfilter.Scope, output_chan chan vfilter.Row) {
-	gathering, err := prometheus.DefaultGatherer.Gather()
+	metrics, err := getMetrics()
 	if err != nil {
 		scope.Log("profile: while gathering metrics: %v", err)
 		return
 	}
 
-	for _, metric := range gathering {
-		for _, m := range metric.Metric {
-			var value interface{}
-			if m.Gauge != nil {
-				value = int64(*m.Gauge.Value)
-			} else if m.Counter != nil {
-				value = int64(*m.Counter.Value)
-			} else if m.Histogram != nil {
-				// Histograms are buckets so we send a dict.
-				result := ordereddict.NewDict()
-				value = result
-
-				label := "_"
-				for _, l := range m.Label {
-					label += *l.Value + "_"
-				}
-
-				for idx, b := range m.Histogram.Bucket {
-					name := fmt.Sprintf("%v%v_%0.2f", *metric.Name,
-						label, *b.UpperBound)
-					if idx == len(m.Histogram.Bucket)-1 {
-						name = fmt.Sprintf("%v%v_inf", *metric.Name,
-							label)
-					}
-					result.Set(name, int64(*b.CumulativeCount))
-				}
-
-			} else if m.Summary != nil {
-				result := ordereddict.NewDict().
-					Set(fmt.Sprintf("%v_sample_count", *metric.Name),
-						m.Summary.SampleCount)
-				value = result
-
-				for _, b := range m.Summary.Quantile {
-					name := fmt.Sprintf("%v_%v", *metric.Name, *b.Quantile)
-					result.Set(name, int64(*b.Value))
-				}
-
-			} else if m.Untyped != nil {
-				value = int64(*m.Untyped.Value)
-
-			} else {
-				// Unknown type just send the raw metric
-				value = m
-			}
-
-			select {
-			case <-ctx.Done():
-				return
-			case output_chan <- ordereddict.NewDict().
-				Set("Type", "metrics").
-				Set("Line", ordereddict.NewDict().
-					Set("name", *metric.Name).
-					Set("help", *metric.Help).
-					Set("value", value)).
-				Set("FullPath", "").
-				Set("_RawMetric", m):
-			}
+	for _, metric := range metrics {
+		select {
+		case <-ctx.Done():
+			return
+		case output_chan <- ordereddict.NewDict().
+			Set("Type", "metrics").
+			Set("Line", metric).
+			Set("FullPath", ""):
 		}
 	}
 }

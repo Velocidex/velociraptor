@@ -1,6 +1,6 @@
 //+build cgo
 
-package parsers
+package parsers_test
 
 import (
 	"context"
@@ -21,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/velociraptor/vql/parsers"
 	vfilter "www.velocidex.com/golang/vfilter"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
@@ -81,7 +82,7 @@ func (self *TestSuite) TestSQLite() {
 	assert.NoError(self.T(), err)
 
 	result := ordereddict.NewDict()
-	plugin := _SQLitePlugin{}
+	plugin := parsers.SQLitePlugin{}
 
 	test_query := func(name, query string, args []interface{}) {
 		rows := []vfilter.Row{}

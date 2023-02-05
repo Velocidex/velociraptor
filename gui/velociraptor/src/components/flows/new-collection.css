@@ -62,3 +62,7 @@ table.param-form-table {
 .param-form-autosuggest div.react-autosuggest__suggestions-container--open {
     margin-left: 0px;
 }
+
+.trace-selector {
+    width: 100%;
+}

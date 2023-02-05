@@ -1,4 +1,4 @@
-package parsers
+package parsers_test
 
 import (
 	"context"
@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/parsers"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
 )
@@ -49,7 +50,7 @@ func (self *ParserTestSuite) TestYamlParser() {
 	defer scope.Close()
 
 	for idx, item := range yamlTestCases {
-		value := ParseYamlFunction{}.Call(ctx, scope, ordereddict.NewDict().
+		value := parsers.ParseYamlFunction{}.Call(ctx, scope, ordereddict.NewDict().
 			Set("filename", item).
 			Set("accessor", "data"))
 		result.Set(fmt.Sprintf("Case %v", idx), value)

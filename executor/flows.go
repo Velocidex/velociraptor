@@ -2,8 +2,10 @@ package executor
 
 import (
 	"context"
+	"sync"
 
 	"www.velocidex.com/golang/velociraptor/actions"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -31,14 +33,49 @@ func (self *ClientExecutor) ProcessFlowRequest(
 		defer cancel()
 	}
 
-	for _, arg := range req.FlowRequest.VQLClientActions {
-		// A responder is used to track each specific query within the
-		// entire flow. There can be multiple queries run in parallel
-		// within the same flow.
-		sub_ctx, responder_obj := flow_context.NewResponder(arg)
-		defer responder_obj.Close()
+	// Wait for the trace to finish recording all its data.
+	trace_wg := &sync.WaitGroup{}
+	defer trace_wg.Wait()
 
-		actions.VQLClientAction{}.StartQuery(
-			config_obj, sub_ctx, responder_obj, arg)
+	// Cancel traces when the entire collection exist.
+	trace_ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// Run trace queries now but do not wait for them to exit before
+	// cancelling them.
+	for _, arg := range req.FlowRequest.Trace {
+		trace_wg.Add(1)
+		go func(arg *actions_proto.VQLCollectorArgs) {
+			defer trace_wg.Done()
+
+			_, responder_obj := flow_context.NewResponder(arg)
+			defer responder_obj.Close()
+
+			actions.VQLClientAction{}.StartQuery(
+				config_obj, trace_ctx, responder_obj, arg)
+		}(arg)
+
+	}
+
+	// Wait for all subqueries before closing the collection.
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
+
+	for _, arg := range req.FlowRequest.VQLClientActions {
+		wg.Add(1)
+
+		// Run each VQLClientActions in another goroutine.
+		go func(arg *actions_proto.VQLCollectorArgs) {
+			defer wg.Done()
+
+			// A responder is used to track each specific query within the
+			// entire flow. There can be multiple queries run in parallel
+			// within the same flow.
+			sub_ctx, responder_obj := flow_context.NewResponder(arg)
+			defer responder_obj.Close()
+
+			actions.VQLClientAction{}.StartQuery(
+				config_obj, sub_ctx, responder_obj, arg)
+		}(arg)
 	}
 }
