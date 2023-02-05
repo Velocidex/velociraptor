@@ -91,11 +91,8 @@ sources:
       -- find velociraptor process
       LET me = SELECT Pid FROM pslist(pid=getpid())
 
-      -- allow whitelist case sensitive
-      LET whitelist <= SELECT upcase(string=Path) AS Path FROM PathWhitelist
-
       -- find all processes and add filters
-      LET processes = SELECT Name as ProcessName, CommandLine, Pid
+      LET processes = SELECT Name as ProcessName, Exe as ExePath, CommandLine, Pid
         FROM pslist()
         WHERE
             Name =~ ProcessRegex
@@ -110,6 +107,7 @@ sources:
         query={
             SELECT
                 ProcessName,
+                ExePath,
                 CommandLine,
                 Pid,
                 Namespace,
@@ -133,6 +131,7 @@ sources:
         query={
             SELECT
                 ProcessName,
+                ExePath,
                 CommandLine,
                 Pid,
                 Namespace,
