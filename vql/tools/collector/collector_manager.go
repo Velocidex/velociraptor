@@ -310,6 +310,9 @@ func (self *collectionManager) Collect(request *flows_proto.ArtifactCollectorArg
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
+
 	self.start_time = Clock.Now()
 	self.collection_context.Request = request
 
@@ -363,25 +366,32 @@ func (self *collectionManager) Collect(request *flows_proto.ArtifactCollectorArg
 			return err
 		}
 
-		// Create a new environment for each request.
-		env := ordereddict.NewDict()
-		for _, env_spec := range vql_request.Env {
-			env.Set(env_spec.Key, env_spec.Value)
-		}
+		// Collect requests in parallel
+		wg.Add(1)
+		go func(vql_request *actions_proto.VQLCollectorArgs) {
+			defer wg.Done()
 
-		subscope := manager.BuildScope(builder)
-		subscope.AppendVars(env)
-		defer subscope.Close()
-
-		self.collection_context.TotalRequests = int64(len(vql_request.Query))
-
-		// Run each query and store the results in the container
-		for _, query := range vql_request.Query {
-			err := self.collectQuery(subscope, query)
-			if err != nil {
-				return err
+			// Create a new environment for each request.
+			env := ordereddict.NewDict()
+			for _, env_spec := range vql_request.Env {
+				env.Set(env_spec.Key, env_spec.Value)
 			}
-		}
+
+			subscope := manager.BuildScope(builder)
+			subscope.AppendVars(env)
+			defer subscope.Close()
+
+			self.collection_context.TotalRequests = int64(len(vql_request.Query))
+
+			// Run each query and store the results in the container
+			for _, query := range vql_request.Query {
+				err := self.collectQuery(subscope, query)
+				if err != nil {
+					subscope.Log("collect: %s", err)
+					return
+				}
+			}
+		}(vql_request)
 	}
 
 	return nil

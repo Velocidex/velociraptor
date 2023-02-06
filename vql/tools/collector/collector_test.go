@@ -158,7 +158,7 @@ sources:
 - query: |
     SELECT upload(file="hello world",
                   accessor="data",
-                  name="file.txt") AS Upload,
+                  name="file.db") AS Upload,
            -- Test uploading sparse files
            upload(
              file=pathspec(
