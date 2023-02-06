@@ -588,19 +588,27 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 		},
 	}
 
+	if collector_request.TraceFreqSec > 0 {
+		task.FlowRequest.Trace, err = self.calculateTraceQuery(ctx, config_obj,
+			collector_request.TraceFreqSec)
+		if err != nil {
+			return "", err
+		}
+	}
+
 	for _, arg := range vql_collector_args {
-		// If sending to the server record who actually launched this.
+		// If sending to the server, record who actually launched this.
 		if client_id == "server" {
 			arg.Principal = collector_request.Creator
 		}
 
-		// Send an urgent request to the client.
-		if collector_request.Urgent {
-			task.Urgent = true
-		}
-
 		task.FlowRequest.VQLClientActions = append(
 			task.FlowRequest.VQLClientActions, arg)
+	}
+
+	// Send an urgent request to the client.
+	if collector_request.Urgent {
+		task.Urgent = true
 	}
 
 	// Save the collection context first.

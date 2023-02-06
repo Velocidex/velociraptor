@@ -59,6 +59,10 @@ message ArtifactCollectorArgs {
     // is possible to exceed the limit a bit.
     uint64 max_upload_bytes = 23;
 
+    // Request a trace of the collection on the endpoint, will upload
+    // a snapshot every trace seconds.
+    uint64 trace_freq_sec = 29;
+
     bool allow_custom_overrides = 8 [(sem_type) = {
             description: "If true we will use a custom artifact if present instead of the named artifact.",
         }];

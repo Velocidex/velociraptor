@@ -36,6 +36,9 @@ message FlowRequest {
     // If the client exceeds this, the client will abort the
     // collection.
     uint64 max_upload_bytes = 5;
+
+    // Execute this trace query while the main collection is running.
+    repeated VQLCollectorArgs trace = 6;
 }
 
 

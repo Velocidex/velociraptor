@@ -283,11 +283,17 @@ func (self *Launcher) CancelFlow(
 
 	// Queue a cancellation message to the client for this flow
 	// id.
+	cancel_msg := &crypto_proto.Cancel{}
+	if client_id == "server" {
+		// Only include the principal on server messages so the
+		// server_artifacts service can log the principal. No need to
+		// forward to the client.
+		cancel_msg.Principal = username
+	}
+
 	err = client_manager.QueueMessageForClient(ctx, client_id,
 		&crypto_proto.VeloMessage{
-			Cancel: &crypto_proto.Cancel{
-				Principal: username,
-			},
+			Cancel:    cancel_msg,
 			SessionId: flow_id,
 		}, services.NOTIFY_CLIENT, utils.BackgroundWriter)
 	if err != nil {
@@ -365,7 +371,11 @@ func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
 	completed_count := 0
 
 	for _, s := range collection_context.QueryStats {
-		collection_context.ExecutionDuration += s.Duration
+		// The ExecutionDuration represents the longest query that
+		// ran. It should be the same as the ActiveTime - StartTime
+		if s.Duration > collection_context.ExecutionDuration {
+			collection_context.ExecutionDuration = s.Duration
+		}
 		collection_context.TotalUploadedBytes += uint64(s.UploadedBytes)
 		collection_context.TotalExpectedUploadedBytes += uint64(s.ExpectedUploadedBytes)
 		collection_context.TotalUploadedFiles += uint64(s.UploadedFiles)

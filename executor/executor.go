@@ -58,6 +58,7 @@ type Executor interface {
 type ClientExecutor struct {
 	client_id string
 
+	wg       *sync.WaitGroup
 	Inbound  chan *crypto_proto.VeloMessage
 	Outbound chan *crypto_proto.VeloMessage
 
@@ -162,11 +163,12 @@ func NewClientExecutor(
 		level = 2
 	}
 
-	result := &ClientExecutor{
+	self := &ClientExecutor{
 		client_id:   client_id,
 		Inbound:     make(chan *crypto_proto.VeloMessage, 10),
 		Outbound:    make(chan *crypto_proto.VeloMessage, 10),
 		concurrency: utils.NewConcurrencyControl(level, time.Hour),
+		wg:          &sync.WaitGroup{},
 		config_obj:  config_obj,
 	}
 
@@ -177,11 +179,8 @@ func NewClientExecutor(
 		// channels. The executed queries should finish by
 		// themselves when the context is done.
 
-		// defer close(result.Outbound)
-
 		// Do not exit until all goroutines have finished.
-		wg := &sync.WaitGroup{}
-		defer wg.Wait()
+		defer self.wg.Wait()
 
 		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 
@@ -195,7 +194,7 @@ func NewClientExecutor(
 
 			// Pump messages from input channel and
 			// process each request.
-			case req, ok := <-result.Inbound:
+			case req, ok := <-self.Inbound:
 				if !ok {
 					return
 				}
@@ -203,17 +202,17 @@ func NewClientExecutor(
 				// Ignore unauthenticated messages - the
 				// server should never send us those.
 				if req.AuthState == crypto_proto.VeloMessage_AUTHENTICATED {
-					wg.Add(1)
+					self.wg.Add(1)
 					go func() {
-						defer wg.Done()
+						defer self.wg.Done()
 
 						logger.Debug("Received request: %v", req)
-						result.processRequestPlugin(config_obj, ctx, req)
+						self.processRequestPlugin(config_obj, ctx, req)
 					}()
 				}
 			}
 		}
 	}()
 
-	return result, nil
+	return self, nil
 }

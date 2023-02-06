@@ -16,7 +16,7 @@ import VeloReportViewer from "../artifacts/reporting.jsx";
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Select from 'react-select';
 import NewCollectionConfigParameters from './new-collections-parameters.jsx';
-
+import Dropdown from 'react-bootstrap/Dropdown';
 import Spinner from '../utils/spinner.jsx';
 import Col from 'react-bootstrap/Col';
 
@@ -575,6 +575,46 @@ class NewCollectionResources extends React.Component {
                   </Form.Group>
 
                   <Form.Group as={Row}>
+                    <Form.Label column sm="3">{T("Trace Frequency Seconds")}</Form.Label>
+                    <Col sm="8">
+                      <Dropdown>
+                        <Dropdown.Toggle
+                          variant="default"
+                          className="trace-selector">
+                          {this.state.trace ||
+                           T("To enable tracing, specify trace update frequency in seconds ")}
+                        </Dropdown.Toggle>
+                        <Dropdown.Menu>
+                          <Dropdown.Item onClick={()=>{
+                              this.props.setResources({trace_freq_sec: 0});
+                              this.setState({trace: ""});
+                            }} >
+                            {T("Disable tracing")}
+                          </Dropdown.Item>
+                          <Dropdown.Item onClick={()=>{
+                              this.props.setResources({trace_freq_sec: 10});
+                              this.setState({trace: T("Every 10 Seconds")});
+                            }} >
+                            {T("Every 10 Seconds")}
+                          </Dropdown.Item>
+                          <Dropdown.Item onClick={()=>{
+                              this.props.setResources({trace_freq_sec: 30});
+                              this.setState({trace: T("Every 30 Seconds")});
+                            }} >
+                            {T("Every 30 Seconds")}
+                          </Dropdown.Item>
+                          <Dropdown.Item onClick={()=>{
+                              this.props.setResources({trace_freq_sec: 60});
+                              this.setState({trace: T("Every 60 Seconds")});
+                            }} >
+                            {T("Every 60 Seconds")}
+                          </Dropdown.Item>
+                        </Dropdown.Menu>
+                      </Dropdown>
+                    </Col>
+                  </Form.Group>
+
+                  <Form.Group as={Row}>
                     <Form.Label column sm="3">
                       {T("Urgent")}
                     </Form.Label>
@@ -792,6 +832,7 @@ class NewCollectionWizard extends React.Component {
             timeout: request.timeout,
             progress_timeout: request.progress_timeout,
             max_rows: request.max_rows,
+            trace_freq_sec: request.trace_freq_sec,
             max_mbytes: Math.round(
                 request.max_upload_bytes / 1024 / 1024 * 100) / 100  || undefined,
         };
@@ -891,6 +932,10 @@ class NewCollectionWizard extends React.Component {
 
         if (this.state.resources.max_rows) {
             result.max_rows = this.state.resources.max_rows;
+        }
+
+        if (this.state.resources.trace_freq_sec) {
+            result.trace_freq_sec = this.state.resources.trace_freq_sec;
         }
 
         if (this.state.resources.max_mbytes) {
