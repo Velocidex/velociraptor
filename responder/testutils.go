@@ -44,8 +44,10 @@ func TestResponderWithFlowId(
 	flow_context := flow_manager.FlowContext(
 		result.output, &crypto_proto.VeloMessage{SessionId: flow_id})
 	result.flow_context = flow_context
+	result.flow_context.mu.Lock()
 	result.flow_context.responders = append(
 		result.flow_context.responders, result.FlowResponder)
+	result.flow_context.mu.Unlock()
 
 	return result
 }

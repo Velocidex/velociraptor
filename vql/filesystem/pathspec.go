@@ -18,6 +18,7 @@ type PathSpecArgs struct {
 	Path             vfilter.Any `vfilter:"optional,field=Path,doc=A path to open."`
 	Parse            string      `vfilter:"optional,field=parse,doc=Alternatively parse the pathspec from this string."`
 	Type             string      `vfilter:"optional,field=path_type,doc=Type of path this is (windows,linux,registry,ntfs)."`
+	Accessor         string      `vfilter:"optional,field=accessor,doc=The accessor to use to parse the path with"`
 }
 
 type PathSpecFunction struct{}
@@ -81,6 +82,18 @@ func (self *PathSpecFunction) Call(ctx context.Context,
 			}
 
 			result := accessors.MustNewPathspecOSPath(p.String())
+			return result
+		}
+	}
+
+	if arg.Accessor != "" {
+		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
+		if err != nil {
+			scope.Log("pathspec: %v", err)
+			return false
+		}
+		result, err := accessor.ParsePath(path_str)
+		if err == nil {
 			return result
 		}
 	}

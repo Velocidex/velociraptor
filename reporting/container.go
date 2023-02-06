@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/alexmullins/zip"
+	"github.com/dustin/go-humanize"
 	"github.com/go-errors/errors"
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -37,6 +38,8 @@ import (
 var (
 	NO_METADATA         []vfilter.Row = nil
 	DEFAULT_COMPRESSION int64         = 5
+
+	ZipRootPath = accessors.MustNewZipFilePath("/")
 )
 
 type ContainerFormat int
@@ -189,9 +192,10 @@ func (self *Container) StoreArtifact(
 	}
 
 	// The name to use in the zip file to store results from this artifact
-	dest := prefix.AddChild(artifact_name).AsClientPath()
+	dest := ZipRootPath.Append(prefix.Components()...).Append(
+		artifact_name + ".json")
 	return self.WriteResultSet(subctx, config_obj, scope, format,
-		dest, vql.Eval(subctx, scope))
+		dest.String(), vql.Eval(subctx, scope))
 }
 
 func (self *Container) WriteResultSet(
@@ -380,7 +384,18 @@ func (self *Container) Upload(
 	sha_sum := sha256.New()
 	md5_sum := md5.New()
 
-	count, err := utils.Copy(ctx, utils.NewTee(writer, sha_sum, md5_sum), reader)
+	// For very large files we need to emit some progress reporting.
+	tee_writer, cancel := utils.NewDurationProgressWriter(
+		ctx, func(byte_count int, duration time.Duration) {
+			scope.Log("Wrote %v/%v into %v in %v\n",
+				humanize.Bytes(uint64(byte_count)),
+				humanize.Bytes(uint64(expected_size)),
+				result.StoredName, duration)
+		}, utils.NewTee(writer, sha_sum, md5_sum),
+		time.Duration(10*time.Second))
+	defer cancel()
+
+	count, err := utils.Copy(ctx, tee_writer, reader)
 	if err != nil {
 		result.StoredSize = uint64(count)
 		result.Error = err.Error()
@@ -421,6 +436,15 @@ func (self *Container) maybeCollectSparseFile(
 	}
 	defer writer.Close()
 
+	// For very large files we need to emit some progress reporting.
+	tee_writer, cancel := utils.NewDurationProgressWriter(
+		ctx, func(byte_count int, duration time.Duration) {
+			scope.Log("Wrote %v into %v in %v\n",
+				humanize.Bytes(uint64(byte_count)),
+				result.StoredName, duration)
+		}, writer, time.Duration(10*time.Second))
+	defer cancel()
+
 	sha_sum := sha256.New()
 	md5_sum := md5.New()
 
@@ -455,7 +479,7 @@ func (self *Container) maybeCollectSparseFile(
 			return err
 		}
 
-		run_writer := utils.NewTee(writer, sha_sum, md5_sum)
+		run_writer := utils.NewTee(tee_writer, sha_sum, md5_sum)
 		n, err := utils.CopyN(ctx, run_writer, range_reader, rng.Length)
 		if err != nil {
 			return err

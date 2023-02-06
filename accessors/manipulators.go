@@ -672,8 +672,11 @@ func (self ZipFileManipulator) AsPathSpec(path *OSPath) *PathSpec {
 }
 
 func (self ZipFileManipulator) PathJoin(path *OSPath) string {
-	result := self.AsPathSpec(path)
-	return result.Path
+	components := []string{}
+	for _, c := range path.Components {
+		components = append(components, utils.SanitizeStringForZip(c))
+	}
+	return "/" + strings.Join(components, "/")
 }
 
 func (self ZipFileManipulator) PathParse(
@@ -692,7 +695,8 @@ func (self ZipFileManipulator) PathParse(
 		if c == "" || c == "." || c == ".." {
 			continue
 		}
-		result.Components = append(result.Components, utils.UnsanitizeComponent(c))
+		result.Components = append(result.Components,
+			utils.UnsanitizeComponentForZip(c))
 	}
 	return nil
 }
@@ -704,4 +708,12 @@ func NewZipFilePath(path string) (*OSPath, error) {
 	}
 	err := manipulator.PathParse(path, result)
 	return result, err
+}
+
+func MustNewZipFilePath(path string) *OSPath {
+	res, err := NewZipFilePath(path)
+	if err != nil {
+		panic(err)
+	}
+	return res
 }

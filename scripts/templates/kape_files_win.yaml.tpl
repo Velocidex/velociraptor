@@ -84,7 +84,7 @@ sources:
       LET all_results <= SELECT * FROM if(
            condition=VSSAnalysis,
            then={
-             SELECT * FROM chain(
+             SELECT * FROM chain(async=TRUE,
                a={
                    -- For VSS we always need to parse NTFS
                    SELECT * FROM Artifact.Windows.Collectors.VSS(
@@ -98,7 +98,7 @@ sources:
                       collectionSpec=rule_specs_lazy_ntfs)
                })
            }, else={
-             SELECT * FROM chain(
+             SELECT * FROM chain(async=TRUE,
                a={
 
                    -- Special files we access with the ntfs parser.

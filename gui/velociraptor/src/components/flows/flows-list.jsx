@@ -485,15 +485,16 @@ class FlowsList extends React.Component {
                     <FontAwesomeIcon icon="trash-alt"/>
                   </Button>
 
-                  { this.props.selected_flow.state !== "FINISHED" &&
-                    <Button data-tooltip={T("Cancel Artifact Collection")}
-                            data-position="right"
-                            className="btn-tooltip"
-                            onClick={this.cancelButtonClicked}
-                            variant="default">
+                  <Button data-tooltip={T("Cancel Artifact Collection")}
+                          data-position="right"
+                          disabled={this.props.selected_flow.state === "FINISHED" ||
+                                    this.props.selected_flow.state === "ERROR"}
+                          className="btn-tooltip"
+                          onClick={this.cancelButtonClicked}
+                          variant="default">
                     <FontAwesomeIcon icon="stop"/>
-                    </Button>
-                  }
+                  </Button>
+
                   <Button data-tooltip={T("Copy Collection")}
                           data-position="right"
                           className="btn-tooltip"

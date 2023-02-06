@@ -20,7 +20,6 @@ type Generator struct {
 
 // Give Generator the vfilter.StoredQuery interface so it can return
 // events.
-
 func (self Generator) Eval(ctx context.Context, scope types.Scope) <-chan types.Row {
 	result := make(chan vfilter.Row)
 
@@ -117,7 +116,7 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 	sub_ctx, cancel := context.WithCancel(ctx)
 
 	// Remove the generator when the scope destroys.
-	scope.AddDestructor(func() {
+	vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 		scope.Log("generate: Removing generator %v", arg.Name)
 		cancel()
 	})
@@ -139,10 +138,11 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 		}
 
 		for item := range arg.Query.Eval(sub_ctx, scope) {
+			materialized := vfilter.MaterializedLazyRow(ctx, item, scope)
 			select {
 			case <-sub_ctx.Done():
 				return
-			case generator_chan <- vfilter.MaterializedLazyRow(ctx, item, scope):
+			case generator_chan <- materialized:
 			}
 		}
 	}()

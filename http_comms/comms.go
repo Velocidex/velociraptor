@@ -172,8 +172,15 @@ func NewHTTPConnector(
 		maxPollDev = 30
 	}
 
-	CA_Pool := x509.NewCertPool()
-	err := crypto.AddDefaultCerts(config_obj.Client, CA_Pool)
+	// Try to get the OS cert pool, failing that use a new one. We
+	// already contain a list of valid root certs but using the OS
+	// cert store allows us to support MITM proxies already on the
+	// system. https://github.com/Velocidex/velociraptor/issues/2330
+	CA_Pool, err := x509.SystemCertPool()
+	if err != nil {
+		CA_Pool = x509.NewCertPool()
+	}
+	err = crypto.AddDefaultCerts(config_obj.Client, CA_Pool)
 	if err != nil {
 		return nil, err
 	}

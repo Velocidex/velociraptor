@@ -32,6 +32,9 @@ func parseOSPath(ctx context.Context,
 	case types.LazyExpr:
 		return parseOSPath(ctx, scope, args, t.ReduceWithScope(ctx, scope))
 
+	case types.Materializer:
+		return parseOSPath(ctx, scope, args, t.Materialize(ctx, scope))
+
 	case *OSPath:
 		return t, nil
 
