@@ -1,0 +1,28 @@
+name: Test.MultiColumnsTest
+description: |
+  Test that the GUI can handle tables with different columns in each
+  row. Also test JSON exports.
+
+sources:
+  - query: |
+      SELECT *
+      FROM chain(a={
+             SELECT "A" AS A,
+                    "B" AS B
+             FROM scope()
+           },
+           b={
+             SELECT "B" AS A,
+                    "A" AS B
+             FROM scope()
+           },
+           c={
+             SELECT "A" AS A,
+                    "C" AS C
+             FROM scope()
+           },
+           d={
+             SELECT "C" AS C,
+                    "D" AS D
+             FROM scope()
+           })

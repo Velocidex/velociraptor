@@ -1,0 +1,13 @@
+name: Test.Upload.Limits
+description: |
+  Used to test upload limits cancel the collection once they are
+  exceeded.
+sources:
+  - query: |
+      SELECT upload(accessor="data",
+           file="This is a long test with many letters",
+           name=format(format="File%v.txt", args=_value)) AS Upload
+      FROM range(end=10)
+
+resources:
+  max_upload_bytes: 50

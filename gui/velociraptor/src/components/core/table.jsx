@@ -363,11 +363,13 @@ export function PrepareData(value) {
         var row = value_rows[i].cell;
         var new_row = {};
         for (var j=0; j<columns.length; j++) {
-            var cell = j > row.length ? "" : row[j];
+            var cell = j >= row.length ? null : row[j];
             var column = columns[j];
 
             // A bit of a hack for now, this represents an object.
-            if (cell[0] === "{" || cell[0] === "[") {
+            if (cell === null || cell === "null")  {
+                cell = null
+            } else if (cell[0] === "{" || cell[0] === "[") {
                 cell = JSON.parse(cell);
             } else if(cell.match(int_regex)) {
                 cell = parseInt(cell);

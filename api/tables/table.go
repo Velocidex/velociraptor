@@ -143,27 +143,45 @@ func getTable(
 
 	opts := json.GetJsonOptsForTimezone(in.Timezone)
 
-	// Unpack the rows into the output protobuf
+	column_known := make(map[string]bool)
+
+	// Unpack the rows into the output protobuf. Although not ideal,
+	// each row can have a different set of columns that the previous
+	// row. We keep track of all columns seen in this table page and
+	// their relative order.
 	for row := range rs_reader.Rows(ctx) {
-		if result.Columns == nil {
-			result.Columns = row.Keys()
+		data := make(map[string]string)
+		for _, key := range row.Keys() {
+			// Do we already know about this column?
+			_, pres := column_known[key]
+			if !pres {
+				result.Columns = append(result.Columns, key)
+				column_known[key] = true
+			}
+
+			value, pres := row.Get(key)
+			if pres {
+				data[key] = json.AnyToString(value, opts)
+			} else {
+				data[key] = "null"
+			}
 		}
 
-		row_data := make([]string, 0, len(result.Columns))
-		for _, key := range result.Columns {
-			value, _ := row.Get(key)
-			row_data = append(row_data, json.AnyToString(value, opts))
+		row_proto := &api_proto.Row{}
+		for _, k := range result.Columns {
+			value, pres := data[k]
+			if !pres {
+				value = "null"
+			}
+			row_proto.Cell = append(row_proto.Cell, value)
 		}
-		result.Rows = append(result.Rows, &api_proto.Row{
-			Cell: row_data,
-		})
+		result.Rows = append(result.Rows, row_proto)
 
 		rows += 1
 		if rows >= in.Rows {
 			break
 		}
 	}
-
 	return result, nil
 }
 
