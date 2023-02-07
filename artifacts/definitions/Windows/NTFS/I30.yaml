@@ -38,8 +38,9 @@ sources:
                   _value.Size AS Size,
                   _value.Name AS Name,
                   _value.FullPath AS FullPath,
-                  upload(accessor="mft", file=MFTInfo.Device + _value.Inode,
-                         name=_value.FullPath + "/" + _value.Inode) AS IndexUpload
+                  upload(accessor="mft",
+                         file=MFTInfo.Device + _value.Inode,
+                         name=pathspec(Path=_value.FullPath + "/" + _value.Inode)) AS IndexUpload
            FROM scope()
            WHERE Type =~ "INDEX_"
        })

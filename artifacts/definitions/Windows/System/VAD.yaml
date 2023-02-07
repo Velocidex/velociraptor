@@ -118,14 +118,15 @@ sources:
 
       -- upload sections if selected
       LET upload_results = SELECT *,
-                                upload(accessor='sparse',
-                                file=pathspec(
-                                DelegateAccessor="process",
-                                DelegatePath=Pid,
-                                Path=[dict(Offset=_Address, Length=SectionSize),]),
-                                name=format(format='%v-%v_%v.bin',
-                                            args= [ Name, Pid, AddressRange ])
-                            ) as SectionDump
+        upload(accessor='sparse',
+               file=pathspec(
+                    DelegateAccessor="process",
+                    DelegatePath=Pid,
+                    Path=[dict(Offset=_Address, Length=SectionSize),]),
+                name=pathspec(
+                    Path=format(
+                        format='%v-%v_%v.bin',
+                        args= [ Name, Pid, AddressRange ]))) as SectionDump
             FROM results
 
       -- output rows

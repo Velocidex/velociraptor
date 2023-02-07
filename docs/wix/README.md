@@ -3,14 +3,12 @@
 This directory contains the WiX XML configuration file that can be
 used to tailor your Velociraptor deployment. The configuration file
 can be used to build a Windows installer package (MSI) which
-automatically installs the service.  This directory also contains a
-batch file used to build the MSI based on the custom XML configuration
-file.
+automatically installs the service.
 
-The advantage of building your own MSI is that your config file will
-be bundled inside the MSI so you do not need to push it to endpoints -
-simply assign the MSI to your endpoints via SCCM or GPO. You can also
-adjust the binary name, service name, etc.
+The advantage of building your own MSI is that you can customize
+aspect of the installtion like service names, binary names etc. If you
+are happy with the default settings it is easier to just use the
+official distributed MSI packages.
 
 To build MSI packages you will need to download and install the WIX
 distribution from the github page (it requires .NET 3.5):
@@ -19,83 +17,89 @@ http://wixtoolset.org/releases/
 
 Next, follow these steps:
 
-1. Edit the custom XML file (`custom.xml` or `custom_x86.xml`). Near the top,
-   make sure the version variable of the MSI matches the version of
-   Velociraptor you are packaging. The version is found in the Product
-   XML tag (e.g. 0.42.0 corresponds to 0.4.2).
+1. Edit the XML file (`velociraptor_amd64.xml` or
+   `velociraptor_x86.xml`). Near the top, make sure the version
+   variable of the MSI matches the version of Velociraptor you are
+   packaging. The version is found in the Product XML tag (e.g. 0.68.0
+   corresponds to 0.6.8). NOTE: MSI will refuse to upgrade a version
+   which is not higher than an installed version, so you need to
+   increment that version number for each newly deployed package - you
+   can just increment the last number for each new deployed MSI
+   revision.
 
 2. Optional: Generate valid GUIDs to replace all GUIDs in the config
    file. You can use the linux uuidgen program to make new GUIDs.
 
 3. Optional: You can customize the description, comments, service name
    etc. If you decided to rename the binary you can adjust the name in
-   the file.
+   the file. NOTE: Make sure your naming is consistent with the actual
+   names using inside the config file.
 
 4. Optional: Modify the directory name where the binary will be
    installed.
 
-5. Save the custom XML file in a new directory for this new MSI build
-   (e.g. `C:\temp\msi-build`).
+5. Save the customized XML file in a new directory for this new MSI
+   build (e.g. `C:\temp\msi-build`).
 
 6. Place your Velociraptor client configuration file in a subdirectory
    called `output/client.config.yaml`. WiX will package this file into
-   the MSI.
+   the MSI. You can package the placeholder configuration file instead
+   which will allow you later to repack the MSI with the real
+   configuration file without rebuilding it with WIX.
 
-7. Add the relevant binaries into the output subdirectory
-   (`output/velociraptor.exe` or `output/velociraptor_x86.exe`)
+7. Add the relevant binary into the output subdirectory as
+   `output/velociraptor.exe`. This should be the 32 bit version for
+   x86 MSI and the 64 bit version for amd64 packages.
 
-8. Place the appropriate build batch file into your custom build directory
-   (`build_custom.bat` or `build_x86_custom.bat`). Execute the batch file to
-   generate the custom MSI. This should produce a new `custom.msi` in your
-   build directory.
+8. Place the appropriate build batch file into your custom build
+   directory (`build_amd64.bat` or `build_x86.bat`). Execute the batch
+   file to generate the custom MSI. This should produce a new
+   `velociraptor_XXX.msi` in your build directory.
 
-Test the MSI file by installing and removing it. A simple test is to run
-`msiexec /i custom.msi` to install it.  Uninstall with `msiexec /x custom.msi`.
-You can now push the MSI using group policy everywhere in your domain.
+Test the MSI file by installing and removing it. A simple test is to
+run `msiexec /i velociraptor_XXX.msi` to install it.  Uninstall with
+`msiexec /x velociraptor_XXX.msi`.  You can now push the MSI using
+group policy everywhere in your domain. Test that the MSI can be
+properly repacked (see below)
 
-Note: When upgrading, keep the UpgradeCode the same to ensure the old
-package is uninstalled and the new one is installed.
+Note: When upgrading, keep the `UpgradeCode` the same to ensure the
+old package is uninstalled and the new one is installed.
 
-# Experimental - repacking the custom MSI
+# Repacking the custom MSI
 
-An experimental feature is to repack the custom MSI with an
-deployment's client configuration without rebuilding the MSI. This is
-much easier than having to have Wix installed and can be done on any
-operating system.
+A new feature is to be able to repack the MSI with an deployment's
+client configuration without having to rebuild the MSI (and therefore
+without needing to install WIX). This is much easier than having to
+have Wix installed and can be done on any operating system.
 
-In order to use this, copy the provided `custom.config.yaml` which is
-a special placeholder for a config file, into the output directory as
-`client.config.yaml` and build the custom MSI as described above.
-
-If you install this custom MSI, the placeholder config file will be
+If you install the official MSI, the placeholder config file will be
 installed in place of the `client.config.yaml`. Since the placeholder
 is **not** a valid configuration file, Velociraptor will wait before
 starting and attempt to reload the file every few seconds. This
 provides you the opportunity to manually replace the file at a later
-stage.
+stage with a correctly formatted file specific for your deployment.
 
-However, it is now possible to repack a new client configuration file
-into the MSI using the following command:
+However, it is possible to repack a new client configuration file into
+the MSI using the following command (i.e. replace the file within the
+MSI):
 
 ```
-velociraptor config repack client.config.yaml --msi velociraptor.msi repacked_velociraptor.msi -v
+velociraptor config repack --msi velociraptor.msi client.config.yaml repacked_velociraptor.msi -v
 ```
 
-Repacking replaces the placeholder inside the MSI with the real config
-file. The new MSI will then automatically install the correct
-configuration file.
+In the above, `velociraptor.msi` is the official (or customized)
+velociraptor MSI for the correct architecture. The
+`client.config.yaml` file is the client configuration as produced by
+the configuration wizard.
 
-# Standard MSI
+Repacking replaces the placeholder inside the MSI with the real
+configuration file. The new MSI will then automatically install the
+correct configuration file.
+
+# Official Velociraptor MSI
 
 The standard MSI which is distributed in the Velociraptor releases
-does not have any configuration file. This standard package
-("velociraptor.xml") will install a service with the name
-"Velociraptor Service" into the location "c:\Program
+contains the placeholder configuration file and so can be repacked
+using the above procedure. The standard package will install a service
+with the name "Velociraptor Service" into the location "c:\Program
 Files\Velociraptor\Velociraptor.exe".
-
-Since the standard MSI does not have any configuration included with
-it, the Velociraptor service will start and simply watch its
-installation directory for the configuration file. You should copy the
-file there by some other means (e.g. using Group Policy Scheduled
-Tasks). The configuration file must be placed in
-"C:\Program Files\Velociraptor\Velociraptor.config.yaml"

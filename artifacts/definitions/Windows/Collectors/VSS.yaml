@@ -96,7 +96,9 @@ sources:
         workers=30,
         query={
             SELECT Created, LastAccessed, Modified, MFT, SourceFile, Size,
-               upload(file=Device+MFT, name=SourceFile, accessor="mft") AS Upload
+               upload(file=Device+MFT,
+                      name=pathspec(Path=SourceFile),
+                      accessor="mft") AS Upload
             FROM scope()
         })
 

@@ -3,7 +3,7 @@
 <?define PackageDescription="Velociraptor Service Installer" ?>
 <?define Manufacturer="Velocidex" ?>
 <?define Name="Velociraptor" ?>
-<?define Version="0.59.0" ?>
+<?define Version="0.67.4" ?>
 <?define BinaryName="Velociraptor.exe" ?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
@@ -19,18 +19,43 @@
              InstallerVersion='200' Languages='1033' Compressed='yes'
              SummaryCodepage='1252' />
     <Media Id='1' Cabinet='Sample.cab' EmbedCab='yes' DiskPrompt='CD-ROM #1' />
+
+    <!-- Put the config file on an uncompressed cab file so we can repack it later -->
+    <Media Id='2' CompressionLevel="none" Cabinet='part2.cab' EmbedCab='yes' DiskPrompt='CD-ROM #2' />
+
     <Property Id='DiskPrompt' Value="Installation [1]" />
 
+    <PropertyRef Id="WIX_ACCOUNT_LOCALSYSTEM" />
+    <PropertyRef Id="WIX_ACCOUNT_USERS" />
+    <PropertyRef Id="WIX_ACCOUNT_ADMINISTRATORS" />
+
     <Directory Id='TARGETDIR' Name='SourceDir'>
-      <Directory Id='ProgramFiles64Folder' Name='PFiles'>
+      <Directory Id='ProgramFilesFolder' Name='PFiles'>
         <Directory Id='INSTALLDIR' Name='$(var.Name)'>
-                  <Directory Id="CACHEDIR" Name="Tools">
-                    <Component Id="Tools" Guid="97dc953a-8a2f-494f-9585-56ae526d0b48">
-                          <CreateFolder />
-                        </Component>
-                  </Directory>
-          <Component Id='MainExecutable'
-                     Guid='*'>
+          <Component Id='Install' Guid='9f3cfed0-b89d-43d4-8fcf-242824e84fd8'>
+            <CreateFolder>
+              <Permission User="[WIX_ACCOUNT_USERS]" GenericRead="no" Read="no"
+                          ChangePermission="yes"/>
+              <Permission User="[WIX_ACCOUNT_ADMINISTRATORS]" GenericAll="yes"
+                          ChangePermission="yes"/>
+              <Permission User="[WIX_ACCOUNT_LOCALSYSTEM]" GenericAll="yes"
+                          ChangePermission="yes"/>
+            </CreateFolder>
+          </Component>
+          <Directory Id="CACHEDIR" Name="Tools">
+            <Component Id="Tools" Guid="97dc953a-8a2f-494f-9585-56ae526d0b48">
+              <CreateFolder>
+                <Permission User="[WIX_ACCOUNT_USERS]" GenericRead="no" Read="no"
+                            ChangePermission="yes"/>
+                <Permission User="[WIX_ACCOUNT_ADMINISTRATORS]" GenericAll="yes"
+                            ChangePermission="yes"/>
+                <Permission User="[WIX_ACCOUNT_LOCALSYSTEM]" GenericAll="yes"
+                            ChangePermission="yes"/>
+              </CreateFolder>
+            </Component>
+          </Directory>
+          <Component Id='MainExecutable' Guid='*'>
+
             <File Id='ServiceEXE' Name='$(var.BinaryName)'
                   DiskId='1'
                   Source='Output/Velociraptor.exe' KeyPath='yes'>
@@ -44,7 +69,7 @@
                 Description="$(var.Name) Service"
                 Start="auto"
                 Account="LocalSystem"
-                Arguments='service run '
+                Arguments=' --config "[INSTALLDIR]/client.config.yaml" service run '
                 ErrorControl="normal"
                 Interactive="no">
               <util:ServiceConfig
@@ -68,15 +93,22 @@
                 Start="install"
                 Remove="uninstall" Wait="yes" />
           </Component>
+          <Component Id='Config' Guid='*'>
+            <File Id='Config' Name='client.config.yaml'
+                  DiskId='2' Source='Output/client.config.yaml' KeyPath='yes'>
+            </File>
+          </Component>
         </Directory>
-          </Directory>
+      </Directory>
     </Directory>
 
     <Feature Id='Complete' Level='1'>
+      <ComponentRef Id='Install' />
       <ComponentRef Id='MainExecutable' />
-          <ComponentRef Id='Tools' />
+      <ComponentRef Id='Config' />
+      <ComponentRef Id='Tools' />
       <ComponentRef Id='CleanupCache' />
-        </Feature>
+    </Feature>
     <MajorUpgrade DowngradeErrorMessage="Downgrades are not allowed."
                   Schedule="afterInstallValidate" />
     <Property Id="ALLUSERS" Value="1" />

@@ -13,7 +13,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/users"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // This is only used to set the user's own password which is always
@@ -242,8 +241,6 @@ func (self *ApiServer) SetUserRoles(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
-
-	utils.Debug(acl)
 
 	// Now attempt to set the ACL - permission checks are done by
 	// users.AddUserToOrg

@@ -1,5 +1,7 @@
 Queries:
-  # Only show a few accounts. Omit the UUID in case the system changes.
-  - Select Name, Uid, Gid, Directory, Type  from Artifact.Windows.Sys.Users()
+  # Only show a few accounts. Omit the UUID in case the system
+  # changes. Note that Guest never logged into the system so should
+  # not show in output of Windows.Sys.Users.
+  - Select Name, Uid, Gid, Directory FROM Artifact.Windows.Sys.Users()
     WHERE Name in ("Guest", "runneradmin")
     ORDER BY Name

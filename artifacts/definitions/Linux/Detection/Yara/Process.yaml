@@ -102,8 +102,8 @@ sources:
           upload(
             accessor="process",
             file=format(format="/%v", args=Pid),
-            name=format(format='%v-%v.dmp',
-            args= [ ProcessName, Pid ])) as ProcessDump
+            name=pathspec(Path=format(format='%v-%v.dmp',
+                          args= [ ProcessName, Pid ]))) as ProcessDump
       FROM hits
       WHERE log(message=format(format='Will upload %v: %v', args=[Pid, ProcessName]))
 
