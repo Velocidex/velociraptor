@@ -1,0 +1,16 @@
+name: Test.Work
+description: |
+  Used to test CPU rate limiting works.
+
+sources:
+  - query: |
+      SELECT * FROM foreach(query={
+         SELECT * FROM range(end=10000)
+         WHERE FALSE
+      }, row={
+         SELECT * FROM range(end=1000)
+      }, workers=20)
+      LIMIT 10
+
+resources:
+  cpu_limit: 20

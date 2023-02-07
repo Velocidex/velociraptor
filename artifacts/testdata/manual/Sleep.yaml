@@ -1,0 +1,10 @@
+name: Test.Sleep
+description: |
+  Used to test cancellation and artifact timeout on client
+  collections.
+
+type: CLIENT
+
+sources:
+  - query: |
+      SELECT sleep(time=60) FROM scope()

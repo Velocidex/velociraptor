@@ -317,6 +317,7 @@ class VeloPagedTable extends Component {
             this.setState({loading: false,
                            total_size: parseInt(response.data.total_rows || 0),
                            rows: pageData.rows,
+                           all_columns: pageData.columns,
                            toggles: toggles,
                            column_types: response.data.column_types,
                            columns: columns });
@@ -429,7 +430,11 @@ class VeloPagedTable extends Component {
             }
         }
         let transformed = this.getTransformed();
-        let downloads = Object.assign({columns: column_names}, this.props.params);
+        // let downloads = Object.assign({columns: column_names}, this.props.params);
+        let downloads = Object.assign({}, this.props.params);
+        if (!_.isEqual(this.state.all_columns, column_names)) {
+            downloads.columns = column_names;
+        }
         return (
             <div className="velo-table full-height"> <Spinner loading={this.state.loading} />
               { this.state.show_transform_dialog &&

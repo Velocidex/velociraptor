@@ -1,0 +1,10 @@
+name: Test.Server.Sleep
+description: |
+  Used to test cancellation and artifact timeout on server artifact
+  collector.
+
+type: SERVER
+
+sources:
+  - query: |
+      SELECT sleep(time=60) FROM scope()

@@ -1,0 +1,14 @@
+name: Test.Error
+description: |
+  Test errors are flagged by the server artifact runner. Should raise
+  an error and fail collection.
+
+type: SERVER
+sources:
+- name: First
+  query: |
+      SELECT "Hello" FROM scope()
+
+- name: Second
+  query: |
+    SELECT log(message="Oops", level="ERROR") FROM scope()
