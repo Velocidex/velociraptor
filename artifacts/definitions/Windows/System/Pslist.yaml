@@ -45,6 +45,7 @@ sources:
             Username, Memory.WorkingSetSize AS WorkingSetSize
         FROM ProcList
         WHERE Name =~ ProcessRegex
+            AND Pid =~ PidRegex
             AND Exe =~ ExePathRegex
             AND CommandLine =~ CommandLineRegex
             AND Username =~ UsernameRegex

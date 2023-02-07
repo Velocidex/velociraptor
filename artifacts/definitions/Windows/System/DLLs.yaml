@@ -4,11 +4,20 @@ description: |
   and certificate information.
 
 parameters:
-  - name: processRegex
+  - name: ProcessRegex
     description: A regex applied to process names.
     default: .
     type: regex
-  - name: dllRegex
+  - name: PidRegex
+    default: .
+    type: regex
+  - name: ExePathRegex
+    default: .
+    type: regex
+  - name: CommandLineRegex
+    default: .
+    type: regex
+  - name: DllRegex
     description: A regex applied to the full dll path (e.g. whitelist all system dlls)
     default: .
     type: regex
@@ -21,22 +30,42 @@ parameters:
 
 sources:
   - query: |
-      LET processes = SELECT Pid, Name
+  
+      -- first find processes in scope
+      LET processes = SELECT Pid, Name,Exe,CommandLine
         FROM pslist()
-        WHERE Name =~ processRegex
+        WHERE Name =~ ProcessRegex
+            AND Pid =~ PidRegex
+            AND Exe =~ ExePathRegex
+            AND CommandLine =~ CommandLineRegex
 
-      SELECT * FROM foreach(
+      -- find modules
+      LET results = SELECT * FROM foreach(
           row=processes,
           query={
-            SELECT Pid, Name,
+            SELECT Pid, Name,Exe as _Exe,CommandLine as _CommandLine ,
                 format(format='%x-%x', args=[ModuleBaseAddress,
                      ModuleBaseAddress+ModuleBaseSize]) AS Range,
-                ModuleName, ExePath,
-                if(condition=Calculate_Hash,
-                  then=hash(path=expand(path=ExePath),
-                            accessor=file)) AS Hash,
-                if(condition=CertificateInfo,
-                  then=authenticode(filename=ExePath)) AS Certinfo
+                ModuleName, ExePath as ModulePath
             FROM modules(pid=Pid)
-            WHERE ExePath =~ dllRegex
+            WHERE ModulePath =~ DllRegex
           })
+      
+      -- add additional enrichment usecases
+      LET cert_hash = SELECT *,
+                hash(path=expand(path=ModulePath)) AS Hash,
+                authenticode(filename=ModulePath) AS Certinfo
+            FROM results
+      LET cert_nohash = SELECT *, authenticode(filename=ModulePath) AS Certinfo
+            FROM results
+      LET nocert_hash = SELECT *, hash(path=expand(path=ModulePath)) AS Hash
+            FROM results
+      
+      -- output rows
+      SELECT * FROM if(condition= Calculate_Hash AND CertificateInfo,
+                        then= cert_hash,
+                        else= if(condition= Calculate_Hash,
+                                    then= nocert_hash,
+                                    else= if(condition= CertificateInfo,
+                                        then= cert_nohash,
+                                        else= results )))
