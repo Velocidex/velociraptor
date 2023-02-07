@@ -149,7 +149,6 @@ func (self *ClientInfoTestSuite) TestMasterMinion() {
 		ping_info := &services.ClientInfo{}
 		db.GetSubject(self.ConfigObj, client_path_manager.Ping(),
 			ping_info)
-		utils.Debug(ping_info)
 		return ping_info.IpAddress == "127.0.0.1"
 	})
 }

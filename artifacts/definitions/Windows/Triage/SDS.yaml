@@ -18,6 +18,8 @@ sources:
     query: |
       LET Device <= pathspec(parse=Drive)
 
-      SELECT *, upload(accessor="mft", file=Device + Inode, name=Name) AS Upload
+      SELECT *, upload(accessor="mft",
+                       file=Device + Inode,
+                       name=pathspec(Path=Name)) AS Upload
       FROM foreach(row=parse_ntfs(device=Device, mft=9).Attributes, column="_value")
       WHERE Name =~ "\\$S" AND TypeId IN (128, 160)
