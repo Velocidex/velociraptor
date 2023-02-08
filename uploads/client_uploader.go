@@ -66,7 +66,7 @@ func (self *VelociraptorUploader) Upload(
 		Path:       filename.String(),
 		StoredName: store_as_name.String(),
 		Accessor:   accessor,
-		Components: store_as_name.Components,
+		Components: store_as_name.Components[:],
 	}
 
 	offset := uint64(0)

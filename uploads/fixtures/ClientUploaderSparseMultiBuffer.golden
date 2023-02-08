@@ -4,6 +4,9 @@
   "FileBuffer": {
    "pathspec": {
     "path": "/foo",
+    "components": [
+     "foo"
+    ],
     "accessor": "ntfs"
    },
    "size": 18,
@@ -17,6 +20,9 @@
   "FileBuffer": {
    "pathspec": {
     "path": "/foo",
+    "components": [
+     "foo"
+    ],
     "accessor": "ntfs"
    },
    "offset": 2,
@@ -31,6 +37,9 @@
   "FileBuffer": {
    "pathspec": {
     "path": "/foo",
+    "components": [
+     "foo"
+    ],
     "accessor": "ntfs"
    },
    "offset": 4,
@@ -45,6 +54,9 @@
   "FileBuffer": {
    "pathspec": {
     "path": "/foo",
+    "components": [
+     "foo"
+    ],
     "accessor": "ntfs"
    },
    "offset": 6,
@@ -59,6 +71,9 @@
   "FileBuffer": {
    "pathspec": {
     "path": "/foo",
+    "components": [
+     "foo"
+    ],
     "accessor": "ntfs"
    },
    "offset": 8,
@@ -73,6 +88,9 @@
   "FileBuffer": {
    "pathspec": {
     "path": "/foo",
+    "components": [
+     "foo"
+    ],
     "accessor": "ntfs"
    },
    "offset": 10,
@@ -87,6 +105,9 @@
   "FileBuffer": {
    "pathspec": {
     "path": "/foo",
+    "components": [
+     "foo"
+    ],
     "accessor": "ntfs"
    },
    "offset": 12,

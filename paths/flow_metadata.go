@@ -160,7 +160,7 @@ func (self FlowPathManager) GetUploadsFile(
 	return &UploadFile{
 		client_path: client_path,
 		path: base_path.AddUnsafeChild(accessor).
-			AddChild(components...),
+			AddUnsafeChild(components...),
 	}
 }
 

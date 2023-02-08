@@ -5,7 +5,10 @@
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
-     "path": "file_0",
+     "path": "/file_0",
+     "components": [
+      "file_0"
+     ],
      "accessor": "data"
     },
     "size": 11,
@@ -18,7 +21,10 @@
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
-     "path": "file_0",
+     "path": "/file_0",
+     "components": [
+      "file_0"
+     ],
      "accessor": "data"
     },
     "offset": 11,
@@ -32,7 +38,10 @@
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
-     "path": "file_1",
+     "path": "/file_1",
+     "components": [
+      "file_1"
+     ],
      "accessor": "data"
     },
     "size": 11,
@@ -46,7 +55,10 @@
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
-     "path": "file_1",
+     "path": "/file_1",
+     "components": [
+      "file_1"
+     ],
      "accessor": "data"
     },
     "offset": 11,
@@ -61,7 +73,10 @@
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
-     "path": "file_2",
+     "path": "/file_2",
+     "components": [
+      "file_2"
+     ],
      "accessor": "data"
     },
     "size": 11,
@@ -75,7 +90,10 @@
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
-     "path": "file_2",
+     "path": "/file_2",
+     "components": [
+      "file_2"
+     ],
      "accessor": "data"
     },
     "offset": 11,
@@ -90,7 +108,10 @@
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
-     "path": "file_3",
+     "path": "/file_3",
+     "components": [
+      "file_3"
+     ],
      "accessor": "data"
     },
     "size": 11,
@@ -104,7 +125,10 @@
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
-     "path": "file_3",
+     "path": "/file_3",
+     "components": [
+      "file_3"
+     ],
      "accessor": "data"
     },
     "offset": 11,
@@ -119,7 +143,10 @@
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
-     "path": "file_4",
+     "path": "/file_4",
+     "components": [
+      "file_4"
+     ],
      "accessor": "data"
     },
     "size": 11,
@@ -133,7 +160,10 @@
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
-     "path": "file_4",
+     "path": "/file_4",
+     "components": [
+      "file_4"
+     ],
      "accessor": "data"
     },
     "offset": 11,

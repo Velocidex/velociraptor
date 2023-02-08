@@ -5,7 +5,10 @@
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
-     "path": "TestFile.txt",
+     "path": "/TestFile.txt",
+     "components": [
+      "TestFile.txt"
+     ],
      "accessor": "data"
     },
     "size": 11,
@@ -18,7 +21,10 @@
    "request_id": 5,
    "FileBuffer": {
     "pathspec": {
-     "path": "TestFile.txt",
+     "path": "/TestFile.txt",
+     "components": [
+      "TestFile.txt"
+     ],
      "accessor": "data"
     },
     "offset": 11,

@@ -83,11 +83,16 @@ func (self *RegexParserTestSuite) TestSplitRecordParser() {
 	plugin := SplitRecordParser{}
 
 	for idx, test_case := range splitTestCases {
+		regex := ""
+		if len(test_case.Regex) > 0 {
+			regex = test_case.Regex[0]
+		}
+
 		rows := []types.Row{}
 		args := ordereddict.NewDict().
 			Set("filenames", test_case.data).
 			Set("accessor", "data").
-			Set("regex", test_case.Regex).
+			Set("regex", regex).
 			Set("record_regex", test_case.RecordRegex).
 			Set("buffer_size", test_case.BufferSize).
 			Set("first_row_is_headers", test_case.First_row_is_headers)

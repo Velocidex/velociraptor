@@ -437,7 +437,8 @@ func (self *VFSServiceTestSuite) TestVFSDownload() {
 
 	// Simulate an upload that was received by our System.VFS.DownloadFile collection.
 	file_store := test_utils.GetMemoryFileStore(self.T(), self.ConfigObj)
-	fd, err := file_store.WriteFile(flow_path_manager.GetUploadsFile("file", "/a/b/B").Path())
+	fd, err := file_store.WriteFile(flow_path_manager.GetUploadsFile(
+		"file", "/a/b/B", []string{"a", "b", "B"}).Path())
 	assert.NoError(self.T(), err)
 	fd.Write([]byte("Data"))
 	fd.Close()
@@ -466,8 +467,8 @@ func (self *VFSServiceTestSuite) TestVFSDownload() {
 	})
 
 	assert.Equal(self.T(), resp.Components,
-		flow_path_manager.GetUploadsFile("file", "/a/b/B").
-			Path().Components())
+		flow_path_manager.GetUploadsFile(
+			"file", "/a/b/B", []string{"a", "b", "B"}).Path().Components())
 }
 
 // Create a record for a file

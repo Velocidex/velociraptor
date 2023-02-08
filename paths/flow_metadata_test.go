@@ -26,8 +26,9 @@ func (self *PathManagerTestSuite) TestFlowPathManager() {
 	assert.Equal(self.T(), "/fs/downloads/C.123/F.1234/Report HostnameX-C.123-F.1234.html",
 		self.getFilestorePath(manager.GetReportsFile("HostnameX")))
 
-	assert.Equal(self.T(), "/fs/clients/C.123/collections/F.1234/uploads/ntfs/c%3A/Windows/System32/%E4%BD%A0%E5%A5%BD%E4%B8%96%E7%95%8C.txt",
+	assert.Equal(self.T(), "/fs/clients/C.123/collections/F.1234/uploads/ntfs/%5C%5Cc%3A%5C/Windows/System32/%E4%BD%A0%E5%A5%BD%E4%B8%96%E7%95%8C.txt",
 		self.getFilestorePath(manager.GetUploadsFile(
-			"ntfs", `\\c:\Windows\System32\你好世界.txt`).Path()))
+			"ntfs", `\\c:\Windows\System32\你好世界.txt`,
+			[]string{`\\c:\`, "Windows", "System32", "你好世界.txt"}).Path()))
 
 }
