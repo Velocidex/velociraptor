@@ -22,6 +22,9 @@ export default defineConfig({
       // if you need to do Coverage analysis.
       devSourcemap: false,
     },
+    resolve: {
+        preserveSymlinks: true,
+    },
     plugins: [
       // …
       react({

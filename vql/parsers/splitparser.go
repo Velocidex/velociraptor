@@ -21,7 +21,6 @@
 package parsers
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"regexp"
@@ -41,19 +40,35 @@ var (
 type _SplitRecordParserArgs struct {
 	Filenames            []*accessors.OSPath `vfilter:"required,field=filenames,doc=Files to parse."`
 	Accessor             string              `vfilter:"optional,field=accessor,doc=The accessor to use"`
-	Regex                string              `vfilter:"required,field=regex,doc=The split regular expression (e.g. a comma)"`
-	compiled_regex       *regexp.Regexp
-	Columns              []string `vfilter:"optional,field=columns,doc=If the first row is not the headers, this arg must provide a list of column names for each value."`
-	First_row_is_headers bool     `vfilter:"optional,field=first_row_is_headers,doc=A bool indicating if we should get column names from the first row."`
-	Count                int      `vfilter:"optional,field=count,doc=Only split into this many columns if possible."`
+	Regex                string              `vfilter:"optional,field=regex,doc=The split regular expression (e.g. a comma, default whitespace)"`
+	Columns              []string            `vfilter:"optional,field=columns,doc=If the first row is not the headers, this arg must provide a list of column names for each value."`
+	First_row_is_headers bool                `vfilter:"optional,field=first_row_is_headers,doc=A bool indicating if we should get column names from the first row."`
+	Count                int                 `vfilter:"optional,field=count,doc=Only split into this many columns if possible."`
+	RecordRegex          string              `vfilter:"optional,field=record_regex,doc=A regex to split data into records (default \n)"`
+	BufferSize           int                 `vfilter:"optional,field=buffer_size,doc=Maximum size of line buffer (default 64kb)."`
 }
 
-type _SplitRecordParser struct{}
+type SplitRecordParser struct{}
+
+// Prepare for the next buffer - slide the buffer after the
+// end of the match.
+func slideBuffer(buffer []byte, start, end int) int {
+	i := 0
+	j := start
+	for j < end {
+		buffer[i] = buffer[j]
+		i++
+		j++
+	}
+	return i
+}
 
 func processFile(
 	ctx context.Context,
 	scope vfilter.Scope,
 	file *accessors.OSPath,
+	compiled_regex *regexp.Regexp,
+	line_regex *regexp.Regexp,
 	arg *_SplitRecordParserArgs,
 	output_chan chan vfilter.Row) {
 
@@ -68,6 +83,7 @@ func processFile(
 		scope.Log("split_records: %v", err)
 		return
 	}
+
 	fd, err := accessor.OpenWithOSPath(file)
 	if err != nil {
 		scope.Log("split_records: %v", err)
@@ -75,88 +91,114 @@ func processFile(
 	}
 	defer fd.Close()
 
-	reader := bufio.NewReader(fd)
+	if arg.BufferSize == 0 {
+		arg.BufferSize = 64 * 1024
+	}
+
+	buffer := make([]byte, arg.BufferSize)
+	offset := 0
 	for {
+		n, _ := fd.Read(buffer[offset:])
+		if offset == 0 && n == 0 {
+			return
+		}
+
+		end := n + offset
+		// Find the next line
+		match := line_regex.FindIndex(buffer[:end])
+		var line string
+		if match == nil {
+			// Separator is not found in the buffer, assume the whole
+			// thing matches.
+			match = []int{end, end}
+		}
+
+		// The line goes to the start of the line match
+		line = string(buffer[:match[0]])
+
+		if arg.Count == 0 {
+			arg.Count = -1
+		}
+
+		items := compiled_regex.Split(line, arg.Count)
+		// Need to make new columns.
+		if len(arg.Columns) == 0 {
+			if arg.First_row_is_headers {
+				count := 1
+				for _, item := range items {
+					if utils.InString(arg.Columns, item) {
+						item = fmt.Sprintf("%s%d",
+							item, count)
+						count += 1
+					}
+
+					item := sanitize_re.ReplaceAllLiteralString(item, "_")
+					arg.Columns = append(arg.Columns, item)
+				}
+				offset = slideBuffer(buffer, match[1], end)
+				continue
+			}
+
+			for idx := range items {
+				arg.Columns = append(
+					arg.Columns,
+					fmt.Sprintf("Column%d", idx))
+			}
+		}
+		result := ordereddict.NewDict()
+		for idx, column := range arg.Columns {
+			if idx < len(items) {
+				result.Set(column, items[idx])
+			} else {
+				result.Set(column, vfilter.Null{})
+			}
+		}
 		select {
 		case <-ctx.Done():
 			return
 
-		default:
-			line, err := reader.ReadString('\n')
-			if err != nil {
-				return
-			}
-
-			if arg.Count == 0 {
-				arg.Count = -1
-			}
-			items := arg.compiled_regex.Split(line, arg.Count)
-			// Need to make new columns.
-			if len(arg.Columns) == 0 {
-				if arg.First_row_is_headers {
-					count := 1
-					for _, item := range items {
-						if utils.InString(arg.Columns, item) {
-							item = fmt.Sprintf("%s%d",
-								item, count)
-							count += 1
-						}
-
-						item := sanitize_re.ReplaceAllLiteralString(item, "_")
-						arg.Columns = append(arg.Columns, item)
-					}
-					continue
-				}
-
-				for idx := range items {
-					arg.Columns = append(
-						arg.Columns,
-						fmt.Sprintf("Column%d", idx))
-				}
-			}
-			result := ordereddict.NewDict()
-			for idx, column := range arg.Columns {
-				if idx < len(items) {
-					result.Set(column, items[idx])
-				} else {
-					result.Set(column, vfilter.Null{})
-				}
-			}
-			select {
-			case <-ctx.Done():
-				return
-
-			case output_chan <- result:
-			}
+		case output_chan <- result:
 		}
+
+		offset = slideBuffer(buffer, match[1], end)
 	}
 }
 
-func (self _SplitRecordParser) Call(
+func (self SplitRecordParser) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
-	var compiled_regex *regexp.Regexp
-
-	arg := _SplitRecordParserArgs{}
-	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, &arg)
-	if err != nil {
-		goto error
-	}
-
-	if arg.Regex == "" {
-		arg.Regex = "\\s+"
-	}
-
-	compiled_regex, err = regexp.Compile(arg.Regex)
-	if err != nil {
-		goto error
-	}
-	arg.compiled_regex = compiled_regex
 
 	go func() {
 		defer close(output_chan)
+
+		arg := _SplitRecordParserArgs{}
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, &arg)
+		if err != nil {
+			scope.Log("%s: %v", self.Name(), err)
+			return
+		}
+
+		if arg.Regex == "" {
+			arg.Regex = `\s+`
+		}
+
+		if arg.RecordRegex == "" {
+			arg.RecordRegex = `\n`
+		}
+
+		compiled_regex, err := regexp.Compile(arg.Regex)
+		if err != nil {
+			scope.Log("%s: %v", self.Name(), err)
+			return
+		}
+
+		line_regex, err := regexp.Compile(arg.RecordRegex)
+		if err != nil {
+			scope.Log("%s: %v", self.Name(), err)
+			return
+		}
 
 		for _, file := range arg.Filenames {
 			select {
@@ -164,25 +206,20 @@ func (self _SplitRecordParser) Call(
 				return
 
 			default:
-				processFile(ctx, scope, file, &arg, output_chan)
+				processFile(ctx, scope, file, compiled_regex,
+					line_regex, &arg, output_chan)
 			}
 		}
 	}()
 
 	return output_chan
-
-error:
-	scope.Log("%s: %s", self.Name(), err.Error())
-	close(output_chan)
-	return output_chan
-
 }
 
-func (self _SplitRecordParser) Name() string {
+func (self SplitRecordParser) Name() string {
 	return "split_records"
 }
 
-func (self _SplitRecordParser) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self SplitRecordParser) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    "split_records",
 		Doc:     "Parses files by splitting lines into records.",
@@ -191,6 +228,6 @@ func (self _SplitRecordParser) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 }
 
 func init() {
-	vql_subsystem.RegisterPlugin(&_SplitRecordParser{})
+	vql_subsystem.RegisterPlugin(&SplitRecordParser{})
 
 }

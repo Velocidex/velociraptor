@@ -5,11 +5,13 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -19,6 +21,7 @@ import (
 type UploadsPluginsArgs struct {
 	ClientId string `vfilter:"optional,field=client_id,doc=The client id to extract"`
 	FlowId   string `vfilter:"optional,field=flow_id,doc=A flow ID (client or server artifacts)"`
+	HuntId   string `vfilter:"optional,field=hunt_id,doc=A hunt ID"`
 }
 
 type UploadsPlugins struct{}
@@ -30,7 +33,6 @@ func (self UploadsPlugins) Call(
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
-
 		defer close(output_chan)
 
 		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
@@ -56,55 +58,102 @@ func (self UploadsPlugins) Call(
 			return
 		}
 
-		flow_path_manager := paths.NewFlowPathManager(arg.ClientId, arg.FlowId)
-		file_store_factory := file_store.GetFileStore(config_obj)
-		reader, err := result_sets.NewResultSetReader(
-			file_store_factory, flow_path_manager.UploadMetadata())
+		if arg.HuntId == "" {
+			readFlowUploads(ctx, config_obj, scope, output_chan,
+				arg.ClientId, arg.FlowId)
+			return
+		}
+
+		// Handle hunts
+		hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
 		if err != nil {
 			scope.Log("uploads: %v", err)
 			return
 		}
-		defer reader.Close()
 
-		for row := range reader.Rows(ctx) {
-			vfs_path, pres := row.GetString("vfs_path")
-			if !pres {
-				continue
-			}
+		for flow_details := range hunt_dispatcher.GetFlows(
+			ctx, config_obj, scope, arg.HuntId, 0) {
+			client_id := flow_details.Context.ClientId
+			flow_id := flow_details.Context.SessionId
 
-			var components []string
-			var pathspec api.FSPathSpec
+			tmp_chan := make(chan vfilter.Row)
 
-			// The we have the components we get the file store path
-			// from there.
-			components_any, ok := row.Get("_Components")
-			if ok {
-				components = utils.ConvertToStringSlice(components_any)
-			}
+			go readFlowUploads(ctx, config_obj, scope, tmp_chan,
+				client_id, flow_id)
 
-			if len(components) > 0 {
-				pathspec = path_specs.NewUnsafeFilestorePath(components...).
-					SetType(api.PATH_TYPE_FILESTORE_ANY)
+			for row := range tmp_chan {
+				row_dict, ok := row.(*ordereddict.Dict)
+				if !ok {
+					continue
+				}
 
-				row.Set("client_path", vfs_path)
-			} else {
-				// Each row is the full filestore path of the upload.
-				pathspec = path_specs.NewUnsafeFilestorePath(
-					utils.SplitComponents(vfs_path)...).
-					SetType(api.PATH_TYPE_FILESTORE_ANY)
-			}
+				row_dict.Set("ClientId", client_id).
+					Set("FlowId", flow_id)
 
-			row.Update("vfs_path", pathspec)
-
-			select {
-			case <-ctx.Done():
-				return
-			case output_chan <- row:
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- row_dict:
+				}
 			}
 		}
 	}()
 
 	return output_chan
+}
+
+func readFlowUploads(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	scope vfilter.Scope,
+	output_chan chan vfilter.Row,
+	client_id, flow_id string) {
+	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
+	file_store_factory := file_store.GetFileStore(config_obj)
+	reader, err := result_sets.NewResultSetReader(
+		file_store_factory, flow_path_manager.UploadMetadata())
+	if err != nil {
+		scope.Log("uploads: %v", err)
+		return
+	}
+	defer reader.Close()
+
+	for row := range reader.Rows(ctx) {
+		vfs_path, pres := row.GetString("vfs_path")
+		if !pres {
+			continue
+		}
+
+		var components []string
+		var pathspec api.FSPathSpec
+
+		// The we have the components we get the file store path
+		// from there.
+		components_any, ok := row.Get("_Components")
+		if ok {
+			components = utils.ConvertToStringSlice(components_any)
+		}
+
+		if len(components) > 0 {
+			pathspec = path_specs.NewUnsafeFilestorePath(components...).
+				SetType(api.PATH_TYPE_FILESTORE_ANY)
+
+			row.Set("client_path", vfs_path)
+		} else {
+			// Each row is the full filestore path of the upload.
+			pathspec = path_specs.NewUnsafeFilestorePath(
+				utils.SplitComponents(vfs_path)...).
+				SetType(api.PATH_TYPE_FILESTORE_ANY)
+		}
+
+		row.Update("vfs_path", pathspec)
+
+		select {
+		case <-ctx.Done():
+			return
+		case output_chan <- row:
+		}
+	}
 }
 
 func (self UploadsPlugins) Info(
@@ -125,6 +174,11 @@ func ParseUploadArgsFromScope(arg *UploadsPluginsArgs, scope vfilter.Scope) {
 	flow_id, pres := scope.Resolve("FlowId")
 	if pres {
 		arg.FlowId, _ = flow_id.(string)
+	}
+
+	hunt_id, pres := scope.Resolve("HuntId")
+	if pres {
+		arg.HuntId, _ = hunt_id.(string)
 	}
 }
 

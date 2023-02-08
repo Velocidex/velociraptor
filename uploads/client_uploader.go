@@ -99,8 +99,9 @@ func (self *VelociraptorUploader) Upload(
 
 		packet := &actions_proto.FileBuffer{
 			Pathspec: &actions_proto.PathSpec{
-				Path:     store_as_name.String(),
-				Accessor: accessor,
+				Path:       store_as_name.String(),
+				Components: store_as_name.Components,
+				Accessor:   accessor,
 			},
 			Offset:     offset,
 			Size:       uint64(expected_size),
@@ -235,8 +236,9 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 			RequestId: constants.TransferWellKnownFlowId,
 			FileBuffer: &actions_proto.FileBuffer{
 				Pathspec: &actions_proto.PathSpec{
-					Path:     store_as_name.String(),
-					Accessor: accessor,
+					Path:       store_as_name.String(),
+					Components: store_as_name.Components,
+					Accessor:   accessor,
 				},
 				Size:         uint64(real_size),
 				StoredSize:   0,
@@ -304,8 +306,9 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 
 			packet := &actions_proto.FileBuffer{
 				Pathspec: &actions_proto.PathSpec{
-					Path:     store_as_name.String(),
-					Accessor: accessor,
+					Path:       store_as_name.String(),
+					Components: store_as_name.Components,
+					Accessor:   accessor,
 				},
 				Offset:       uint64(write_offset),
 				Size:         uint64(real_size),
@@ -345,8 +348,9 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 		RequestId: constants.TransferWellKnownFlowId,
 		FileBuffer: &actions_proto.FileBuffer{
 			Pathspec: &actions_proto.PathSpec{
-				Path:     store_as_name.String(),
-				Accessor: accessor,
+				Path:       store_as_name.String(),
+				Components: store_as_name.Components,
+				Accessor:   accessor,
 			},
 			Size:         uint64(real_size),
 			StoredSize:   uint64(expected_size),

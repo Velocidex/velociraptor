@@ -501,7 +501,8 @@ func appendUploadDataToFile(
 	// Figure out where to store the file.
 	file_path_manager := flow_path_manager.GetUploadsFile(
 		file_buffer.Pathspec.Accessor,
-		file_buffer.Pathspec.Path)
+		file_buffer.Pathspec.Path,
+		file_buffer.Pathspec.Components)
 
 	fd, err := file_store_factory.WriteFile(file_path_manager.Path())
 	if err != nil {

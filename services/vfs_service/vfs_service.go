@@ -108,13 +108,13 @@ func (self *VFSService) ProcessDownloadFile(
 	for row := range reader.Rows(ctx) {
 		Accessor, _ := row.GetString("Accessor")
 		Path, _ := row.GetString("Path")
-
+		Components, _ := row.GetStrings("Components")
 		MD5, _ := row.GetString("Md5")
 		SHA256, _ := row.GetString("Sha256")
 
 		// Figure out where the file was uploaded to.
 		uploaded_file_manager := flow_path_manager.GetUploadsFile(
-			Accessor, Path)
+			Accessor, Path, Components)
 
 		// Check to make sure the file actually exists.
 		file_store_factory := file_store.GetFileStore(config_obj)
