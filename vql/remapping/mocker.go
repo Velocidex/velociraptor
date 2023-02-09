@@ -51,6 +51,8 @@ func (self MockingScopeContext) GetFunction(name string) *MockerFunction {
 func (self *MockingScopeContext) Reset() {
 	for _, pl := range self.plugins {
 		pl.ctx.call_count = 0
+		pl.ctx.recordings = nil
+		pl.ctx.results = nil
 	}
 
 	for _, pl := range self.functions {
@@ -59,8 +61,9 @@ func (self *MockingScopeContext) Reset() {
 }
 
 type _MockerCtx struct {
-	mu      sync.Mutex
-	results []types.Any
+	mu         sync.Mutex
+	results    []types.Any
+	recordings []*ordereddict.Dict
 
 	call_count int
 }
@@ -95,6 +98,7 @@ func (self MockerPlugin) Call(ctx context.Context,
 		}
 		result := self.ctx.results[self.ctx.call_count%len(self.ctx.results)]
 		self.ctx.call_count += 1
+		self.ctx.recordings = append(self.ctx.recordings, args)
 		self.ctx.mu.Unlock()
 
 		a_value := reflect.Indirect(reflect.ValueOf(result))
@@ -356,7 +360,83 @@ func GetMockContext(scope vfilter.Scope) (*MockingScopeContext, bool) {
 	return mocker, ok
 }
 
+type MockReplayFunction struct{}
+
+func (self *MockReplayFunction) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	arg := &MockCheckArgs{}
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("mock_check: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	scope_context, ok := GetMockContext(scope)
+	if !ok {
+		scope.Log("mock_check: Not running in test.")
+		return vfilter.Null{}
+	}
+
+	if arg.Plugin != "" {
+		mock_plugin := scope_context.GetPlugin(arg.Plugin)
+		if mock_plugin == nil {
+			scope.Log("mock_check: %s does not appear to be mocked", arg.Plugin)
+			return vfilter.Null{}
+		}
+
+		return mock_plugin.ctx.recordings
+	}
+
+	if arg.Function != "" {
+		mock_plugin := scope_context.GetFunction(arg.Function)
+		if mock_plugin == nil {
+			scope.Log("mock_check: %s does not appear to be mocked", arg.Function)
+			return vfilter.Null{}
+		}
+
+		return mock_plugin.ctx.recordings
+	}
+
+	return vfilter.Null{}
+}
+
+func (self MockReplayFunction) Info(
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "mock_replay",
+		Doc:     "Replay recorded calls on a mock.",
+		ArgType: type_map.AddType(scope, &MockCheckArgs{}),
+	}
+}
+
+type MockClearFunction struct{}
+
+func (self *MockClearFunction) Call(ctx context.Context,
+	scope vfilter.Scope, args *ordereddict.Dict) vfilter.Any {
+
+	scope_context, ok := GetMockContext(scope)
+	if !ok {
+		scope.Log("mock_clear: Not running in test.")
+		return vfilter.Null{}
+	}
+
+	scope_context.Reset()
+	return vfilter.Null{}
+}
+
+func (self MockClearFunction) Info(
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name: "mock_clear",
+		Doc:  "Resets all mocks.",
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&MockFunction{})
 	vql_subsystem.RegisterFunction(&MockCheckFunction{})
+	vql_subsystem.RegisterFunction(&MockClearFunction{})
+	vql_subsystem.RegisterFunction(&MockReplayFunction{})
 }

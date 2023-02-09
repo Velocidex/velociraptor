@@ -43,8 +43,14 @@ var pathComponentsTestFixture = []pathComponentsTestFixtureType{
 	{"foo", []_PathFilterer{
 		_LiteralComponent{"foo"},
 	}},
-	{"foo**5", []_PathFilterer{
-		_RecursiveComponent{`foo.*\z(?ms)`, 5},
+	// A ** has to start at the begining of the component, otherwise
+	// it is not considered a recursive component and just interpreted
+	// as a normal wild card.
+	{"foo**", []_PathFilterer{
+		&_RegexComponent{regexp: `foo.*.*\z(?ms)`},
+	}},
+	{"**5", []_PathFilterer{
+		_RecursiveComponent{`.*\z(?ms)`, 5},
 	}},
 	{"*.exe", []_PathFilterer{
 		&_RegexComponent{regexp: `.*\.exe\z(?ms)`},

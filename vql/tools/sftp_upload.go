@@ -200,6 +200,7 @@ func upload_SFTP(ctx context.Context, scope vfilter.Scope,
 		}, err
 	}
 	if _, err := file.ReadFrom(reader); err != nil {
+		scope.Log("upload_SFTP: while reading file: %v", err)
 		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err

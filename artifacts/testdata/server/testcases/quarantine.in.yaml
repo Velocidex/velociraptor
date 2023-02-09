@@ -1,0 +1,47 @@
+# Test the Linux.Remediation.Quarantine artifact
+Queries:
+# Check that nothing happens when nftables is not installed
+- LET _ <= SELECT mock(plugin='execve', results=[
+      dict(Stderr="command not found", Stdout="", ReturnCode=1)])
+  FROM scope()
+
+- SELECT Result
+  FROM Artifact.Linux.Remediation.Quarantine()
+
+- SELECT *, mock_replay(plugin='execve')
+  FROM test_read_logs()
+  WHERE Log =~ "ERROR:nftables is not installed" AND NOT Log =~ "SELECT"
+
+- LET _ <= mock_clear()
+
+# Now simulate failure to connect to the server. This should go
+# through the process then uninstall the table due to connectivity
+# check errors.
+- LET _ <= SELECT mock(plugin='execve', results=[
+      dict(Stdout="nftables ran OK", Stderr="", ReturnCode=0)]),
+   mock(plugin="http_client", results=[
+     dict(Response=500, Url="http://.../")
+   ])
+  FROM scope()
+
+- SELECT Result
+  FROM Artifact.Linux.Remediation.Quarantine()
+
+- SELECT mock_replay(plugin='execve'), mock_replay(plugin='http_client')
+  FROM scope()
+
+- LET _ <= mock_clear()
+
+# Now we go through with the process. Success!
+- LET _ <= SELECT mock(plugin='execve', results=[
+      dict(Stdout="nftables ran OK", Stderr="", ReturnCode=0)]),
+   mock(plugin="http_client", results=[
+     dict(Response=200, Url="http://.../")
+   ])
+  FROM scope()
+
+- SELECT Result
+  FROM Artifact.Linux.Remediation.Quarantine()
+
+- SELECT mock_replay(plugin='execve'), mock_replay(plugin='http_client')
+  FROM scope()
