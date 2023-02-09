@@ -411,7 +411,7 @@ var (
 	// This is ok: /{/bin/ls,/bin/rm}
 	// This is not ok: {/bin/ls,/bin/rm}
 	_GROUPING_PATTERN = regexp.MustCompile("^(.+)[{]([^{}]+)[}](.*)$")
-	_RECURSION_REGEX  = regexp.MustCompile(`\*\*(\d*)`)
+	_RECURSION_REGEX  = regexp.MustCompile(`^\*\*(\d*)`)
 
 	// A regex indicating if there are shell globs in this path.
 	_GLOB_MAGIC_CHECK = regexp.MustCompile("[*?[]")

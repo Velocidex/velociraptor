@@ -39,20 +39,23 @@ parameters:
 
 sources:
   - query: |
+     LET run_command(Cmd, Message) = SELECT timestamp(epoch=now()) as Time,
+       format(format="Running %v: %v, Returned %v %v",
+              args=[Cmd, Stdout || Stderr,
+                    ReturnCode, Message || ""]) AS Result
+     FROM  execve(argv=Cmd, length=10000)
+
      // If a MessageBox configured truncate to 256 character limit
      LET MessageBox <= parse_string_with_regex(
                regex='^(?P<Message>.{0,255}).*',
                string=MessageBox).Message
 
      // Parse a URL to get domain name.
-     LET get_domain(URL) = parse_string_with_regex(
-          string=URL, regex='^https?://(?P<Domain>[^:/]+)').Domain
-
-     // Parse a URL to get the port
-     LET get_port(URL) = if(condition= URL=~"https://[^:]+/", then="443",
-           else=if(condition= URL=~"http://[^:]+/", then="80",
-           else=parse_string_with_regex(string=URL,
-               regex='^https?://[^:/]+(:(?P<Port>[0-9]*))?/').Port))
+     LET get_domain(URL) = split(string=url(parse=URL).Host, sep=":")[0]
+     LET get_port(URL) = if(condition=url(parse=URL).Host =~ ":",
+         then=split(string=url(parse=URL).Host, sep=":")[1],
+         else=if(condition=url(parse=URL).Scheme = "https",
+                 then="443", else="80"))
 
      // extract Velociraptor config for policy
      LET extracted_config <= SELECT * FROM foreach(
@@ -112,110 +115,51 @@ sources:
           TableName + ' table removed.' AS Result
        FROM execve(argv=delete_table_cmd, length=10000)
 
-     // add quarantine table
-     LET add_quarantine_table = SELECT
-          timestamp(epoch=now()) as Time,
-          combine_results(Stdout=Stdout, Stderr=Stderr,
-          ReturnCode=ReturnCode,
-          Message=TableName + ' added.') AS Result
-       FROM execve(argv=add_table_cmd, length=10000)
-
-     // add inbound chain
-     LET add_inbound_chain = SELECT
-          timestamp(epoch=now()) as Time,
-          combine_results(Stdout=Stdout, Stderr=Stderr,
-          ReturnCode=ReturnCode,
-          Message='Added inbound_chain to ' + TableName + ' table.') AS Result
-       FROM execve(argv=add_inbound_chain_cmd, length=10000)
-
      // add tcp rule to inbound_chain to allow connections from Velociraptor
      // FIXME(gye): may need to add IPv6 rules if DstAddr is an IPv6 address
      LET add_velociraptor_rule_to_inbound_chain = SELECT * FROM foreach(
           row={
-              SELECT DstAddr, DstPort from extracted_config
+              SELECT DstAddr, DstPort, (
+                  pathToNFT, 'add', 'rule', 'inet', TableName, 'inbound_chain',
+
+                  'ip', 'saddr', DstAddr, 'tcp', 'sport', '{', DstPort, '}',
+                  'ct', 'state', 'established',
+                  'accept') AS add_velociraptor_rule_to_inbound_chain_cmd
+              FROM extracted_config
           },
           query={
-              SELECT
-                  timestamp(epoch=now()) as Time,
-                  combine_results(Stdout=Stdout, Stderr=Stderr,
-                  ReturnCode=ReturnCode,
-                  Message='Added tcp rule to inbound_chain in ' + TableName + ' table.') AS Result
-              FROM execve(argv=(
-                  pathToNFT, 'add', 'rule', 'inet', TableName, 'inbound_chain',
-                  'ip', 'saddr', DstAddr, 'tcp', 'sport', '{', DstPort, '}',
-                  'ct', 'state', 'established', 'accept'), length=10000)
-          })
-
-     // add udp rule to inbound_chain to allow DNS lookups
-     LET add_udp_rule_to_inbound_chain = SELECT
-          timestamp(epoch=now()) as Time,
-          combine_results(Stdout=Stdout, Stderr=Stderr,
-          ReturnCode=ReturnCode,
-          Message='Added udp rule to inbound_chain in ' + TableName + ' table.') AS Result
-       FROM execve(argv=add_udp_rule_to_inbound_chain_cmd, length=10000)
-
-     // add inbound chain
-     LET add_outbound_chain = SELECT
-          timestamp(epoch=now()) as Time,
-          combine_results(Stdout=Stdout, Stderr=Stderr,
-          ReturnCode=ReturnCode,
-          Message='Added outbound_chain to ' + TableName + ' table.') AS Result
-       FROM execve(argv=add_outbound_chain_cmd, length=10000)
+            SELECT * FROM run_command(Cmd=add_velociraptor_rule_to_inbound_chain_cmd,
+                Message='Added tcp rule to inbound_chain in ' +  TableName + ' table.')
+        })
 
      // add tcp rule to inbound_chain to allow connections from Velociraptor
      // FIXME(gye): may need to add IPv6 rules if DstAddr is an IPv6 address
      LET add_velociraptor_rule_to_outbound_chain = SELECT * FROM foreach(
           row={
-              SELECT DstAddr, DstPort from extracted_config
-          },
-          query={
-              SELECT
-                  timestamp(epoch=now()) as Time,
-                  combine_results(Stdout=Stdout, Stderr=Stderr,
-                  ReturnCode=ReturnCode,
-                  Message='Added tcp rule to inbound_chain in ' + TableName + ' table.') AS Result
-              FROM execve(argv=(
+              SELECT DstAddr, DstPort, (
                   pathToNFT, 'add', 'rule', 'inet', TableName, 'outbound_chain',
                   'ip', 'daddr', DstAddr, 'tcp', 'dport', '{', DstPort, '}',
-                  'ct', 'state', 'established,new', 'accept'), length=10000)
+                  'ct', 'state', 'established,new',
+                  'accept') AS add_velociraptor_rule_to_outbound_chain_cmd
+              FROM extracted_config
+          },
+          query={
+              SELECT * FROM run_command(
+                 Cmd=add_velociraptor_rule_to_outbound_chain_cmd,
+                 Message='Added tcp rule to inbound_chain in ' +
+                    TableName + ' table.')
           })
-
-     // add tcp rule to outbound_chain to allow DNS traffics
-     LET add_tcp_rule_to_outbound_chain = SELECT
-          timestamp(epoch=now()) as Time,
-          combine_results(Stdout=Stdout, Stderr=Stderr,
-          ReturnCode=ReturnCode,
-          Message='Added tcp rule to outbound_chain in ' + TableName + ' table.') AS Result
-       FROM execve(argv=add_tcp_rule_to_outbound_chain_cmd, length=10000)
-
-     // add udp rule to outbound_chain to allow DNS and DHCP traffics
-     LET add_udp_rule_to_outbound_chain = SELECT
-          timestamp(epoch=now()) as Time,
-          combine_results(Stdout=Stdout, Stderr=Stderr,
-          ReturnCode=ReturnCode,
-          Message='Added udp rule to outbound_chain in ' + TableName + ' table.') AS Result
-       FROM execve(argv=add_udp_rule_to_outbound_chain_cmd, length=10000)
-
-     // add forward chain
-     LET add_forward_chain = SELECT
-          timestamp(epoch=now()) as Time,
-          combine_results(Stdout=Stdout, Stderr=Stderr,
-          ReturnCode=ReturnCode,
-          Message='Added forward_chain to ' + TableName + ' table.') AS Result
-       FROM execve(argv=add_forward_chain_cmd, length=10000)
 
      // test connection to a frontend server
      LET test_connection = SELECT * FROM foreach(
          row={
-             SELECT DstAddr, DstPort from extracted_config
+             SELECT DstAddr, DstPort, URL + 'server.pem' AS pem_url
+             FROM extracted_config
+             WHERE log(message="Will check connectivity with " + pem_url)
          },
          query={
-             SELECT *
-                 Url,
-                 response
-             FROM
-                 http_client(url='https://' + DstAddr + ':' + DstPort + '/server.pem',
-                     disable_ssl_security='TRUE')
+             SELECT format(format="Testing connectivity with %v: %v", args=[Url, Response]) AS Result
+             FROM http_client(url=pem_url, disable_ssl_security='TRUE')
              WHERE Response = 200
              LIMIT 1
          })
@@ -233,35 +177,55 @@ sources:
                        ) AS Result
                     FROM if(condition=MessageBox,
                         then= {
-                            SELECT * FROM execve(argv=['wall',MessageBox])
+                            SELECT * FROM execve(argv=['wall', MessageBox])
                         },
                         else={
                             SELECT * FROM scope()
                         })
                },
-               else={
-                   SELECT
-                       timestamp(epoch=now()) as Time,
-                       TableName + ' failed connection test. Removing quarantine table.' AS Result
-                   FROM delete_quarantine_table
-               })
+               else=run_command(
+                      Cmd=delete_table_cmd,
+                      Message= TableName + ' failed connection test. Removing quarantine table.'))
 
+     LET check_nft_cmd = (pathToNFT, "--version")
 
      // Execute content
-     SELECT * FROM if(condition=RemovePolicy,
+     LET doit = SELECT * FROM if(condition=RemovePolicy,
                then=delete_quarantine_table,
                else={
                    SELECT * FROM chain(
                        a=delete_quarantine_table,
-                       b=add_quarantine_table,
-                       c=add_inbound_chain,
+                       b=run_command(Cmd=add_table_cmd, Message=TableName + ' added.'),
+                       c=run_command(Cmd=add_inbound_chain_cmd,
+                           Message='Added inbound_chain to ' +
+                                    TableName + ' table.'),
                        d=add_velociraptor_rule_to_inbound_chain,
-                       e=add_udp_rule_to_inbound_chain,
-                       f=add_outbound_chain,
+                       e=run_command(Cmd=add_udp_rule_to_inbound_chain_cmd,
+                           Message='Added udp rule to inbound_chain in ' +
+                                     TableName + ' table.'),
+                       f=run_command(Cmd=add_outbound_chain_cmd,
+                           Message='Added outbound_chain to ' +
+                                     TableName + ' table.'),
                        g=add_velociraptor_rule_to_outbound_chain,
-                       h=add_tcp_rule_to_outbound_chain,
-                       i=add_udp_rule_to_outbound_chain,
-                       j=add_forward_chain,
+                       h=run_command(Cmd=add_tcp_rule_to_outbound_chain_cmd,
+                           Message='Added tcp rule to outbound_chain in ' +
+                                     TableName + ' table.'),
+                       i=run_command(Cmd=add_udp_rule_to_outbound_chain_cmd,
+                           Message='Added udp rule to outbound_chain in ' +
+                                     TableName + ' table.'),
+                       j=run_command(Cmd=add_forward_chain_cmd,
+                           Message='Added forward_chain to ' +
+                                     TableName + ' table.'),
                        k=final_check)
                })
 
+     SELECT * FROM if(condition={
+        SELECT * FROM run_command(
+           Cmd=check_nft_cmd, Message='Check for ' + pathToNFT)
+        WHERE Result =~ "nftables"
+     }, then=doit,
+     else={
+       SELECT * FROM scope() WHERE log(level="ERROR",
+            message="nftables is not installed - quarantine not supported")
+            AND FALSE
+       })

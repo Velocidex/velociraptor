@@ -1,0 +1,502 @@
+LET _ <= SELECT mock(plugin='execve', results=[ dict(Stderr="command not found", Stdout="", ReturnCode=1)]) FROM scope()[]SELECT Result FROM Artifact.Linux.Remediation.Quarantine()[]SELECT *, mock_replay(plugin='execve') FROM test_read_logs() WHERE Log =~ "ERROR:nftables is not installed" AND NOT Log =~ "SELECT"[
+ {
+  "Log": "Velociraptor: ERROR:nftables is not installed - quarantine not supported\n",
+  "mock_replay(plugin='execve')": [
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "--version"
+    ],
+    "length": 10000
+   }
+  ]
+ }
+]LET _ <= mock_clear()[]LET _ <= SELECT mock(plugin='execve', results=[ dict(Stdout="nftables ran OK", Stderr="", ReturnCode=0)]), mock(plugin="http_client", results=[ dict(Response=500, Url="http://.../") ]) FROM scope()[]SELECT Result FROM Artifact.Linux.Remediation.Quarantine()[
+ {
+  "Result": "vrr_quarantine_table table removed."
+ },
+ {
+  "Result": "Running [/usr/sbin/nft add table inet vrr_quarantine_table]: nftables ran OK, Returned 0 vrr_quarantine_table added."
+ },
+ {
+  "Result": "Running [/usr/sbin/nft add chain inet vrr_quarantine_table inbound_chain { type filter hook input priority 0; policy drop; }]: nftables ran OK, Returned 0 Added inbound_chain to vrr_quarantine_table table."
+ },
+ {
+  "Result": "Running [/usr/sbin/nft add rule inet vrr_quarantine_table inbound_chain ip saddr 127.0.0.1 tcp sport { 8000 } ct state established accept]: nftables ran OK, Returned 0 Added tcp rule to inbound_chain in vrr_quarantine_table table."
+ },
+ {
+  "Result": "Running [/usr/sbin/nft add rule inet vrr_quarantine_table inbound_chain udp sport domain ct state established accept]: nftables ran OK, Returned 0 Added udp rule to inbound_chain in vrr_quarantine_table table."
+ },
+ {
+  "Result": "Running [/usr/sbin/nft add chain inet vrr_quarantine_table outbound_chain { type filter hook output priority 0; policy drop; }]: nftables ran OK, Returned 0 Added outbound_chain to vrr_quarantine_table table."
+ },
+ {
+  "Result": "Running [/usr/sbin/nft add rule inet vrr_quarantine_table outbound_chain ip daddr 127.0.0.1 tcp dport { 8000 } ct state established,new accept]: nftables ran OK, Returned 0 Added tcp rule to inbound_chain in vrr_quarantine_table table."
+ },
+ {
+  "Result": "Running [/usr/sbin/nft add rule inet vrr_quarantine_table outbound_chain tcp dport { 53 } ct state new,established accept]: nftables ran OK, Returned 0 Added tcp rule to outbound_chain in vrr_quarantine_table table."
+ },
+ {
+  "Result": "Running [/usr/sbin/nft add rule inet vrr_quarantine_table outbound_chain udp dport { 53,67,68 } ct state new,established accept]: nftables ran OK, Returned 0 Added udp rule to outbound_chain in vrr_quarantine_table table."
+ },
+ {
+  "Result": "Running [/usr/sbin/nft add chain inet vrr_quarantine_table forward_chain { type filter hook forward priority 0; policy drop; }]: nftables ran OK, Returned 0 Added forward_chain to vrr_quarantine_table table."
+ },
+ {
+  "Result": "Running [/usr/sbin/nft delete table inet vrr_quarantine_table]: nftables ran OK, Returned 0 vrr_quarantine_table failed connection test. Removing quarantine table."
+ }
+]SELECT mock_replay(plugin='execve'), mock_replay(plugin='http_client') FROM scope()[
+ {
+  "mock_replay(plugin='execve')": [
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "--version"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "delete",
+     "table",
+     "inet",
+     "vrr_quarantine_table"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "add",
+     "table",
+     "inet",
+     "vrr_quarantine_table"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "add",
+     "chain",
+     "inet",
+     "vrr_quarantine_table",
+     "inbound_chain",
+     "{",
+     "type",
+     "filter",
+     "hook",
+     "input",
+     "priority",
+     "0;",
+     "policy",
+     "drop;",
+     "}"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "add",
+     "rule",
+     "inet",
+     "vrr_quarantine_table",
+     "inbound_chain",
+     "ip",
+     "saddr",
+     "127.0.0.1",
+     "tcp",
+     "sport",
+     "{",
+     "8000",
+     "}",
+     "ct",
+     "state",
+     "established",
+     "accept"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "add",
+     "rule",
+     "inet",
+     "vrr_quarantine_table",
+     "inbound_chain",
+     "udp",
+     "sport",
+     "domain",
+     "ct",
+     "state",
+     "established",
+     "accept"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "add",
+     "chain",
+     "inet",
+     "vrr_quarantine_table",
+     "outbound_chain",
+     "{",
+     "type",
+     "filter",
+     "hook",
+     "output",
+     "priority",
+     "0;",
+     "policy",
+     "drop;",
+     "}"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "add",
+     "rule",
+     "inet",
+     "vrr_quarantine_table",
+     "outbound_chain",
+     "ip",
+     "daddr",
+     "127.0.0.1",
+     "tcp",
+     "dport",
+     "{",
+     "8000",
+     "}",
+     "ct",
+     "state",
+     "established,new",
+     "accept"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "add",
+     "rule",
+     "inet",
+     "vrr_quarantine_table",
+     "outbound_chain",
+     "tcp",
+     "dport",
+     "{",
+     "53",
+     "}",
+     "ct",
+     "state",
+     "new,established",
+     "accept"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "add",
+     "rule",
+     "inet",
+     "vrr_quarantine_table",
+     "outbound_chain",
+     "udp",
+     "dport",
+     "{",
+     "53,67,68",
+     "}",
+     "ct",
+     "state",
+     "new,established",
+     "accept"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "add",
+     "chain",
+     "inet",
+     "vrr_quarantine_table",
+     "forward_chain",
+     "{",
+     "type",
+     "filter",
+     "hook",
+     "forward",
+     "priority",
+     "0;",
+     "policy",
+     "drop;",
+     "}"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "delete",
+     "table",
+     "inet",
+     "vrr_quarantine_table"
+    ],
+    "length": 10000
+   }
+  ],
+  "mock_replay(plugin='http_client')": [
+   {
+    "url": "https://127.0.0.1:8000/server.pem",
+    "disable_ssl_security": "TRUE"
+   }
+  ]
+ }
+]LET _ <= mock_clear()[]LET _ <= SELECT mock(plugin='execve', results=[ dict(Stdout="nftables ran OK", Stderr="", ReturnCode=0)]), mock(plugin="http_client", results=[ dict(Response=200, Url="http://.../") ]) FROM scope()[]SELECT Result FROM Artifact.Linux.Remediation.Quarantine()[
+ {
+  "Result": "vrr_quarantine_table table removed."
+ },
+ {
+  "Result": "Running [/usr/sbin/nft add table inet vrr_quarantine_table]: nftables ran OK, Returned 0 vrr_quarantine_table added."
+ },
+ {
+  "Result": "Running [/usr/sbin/nft add chain inet vrr_quarantine_table inbound_chain { type filter hook input priority 0; policy drop; }]: nftables ran OK, Returned 0 Added inbound_chain to vrr_quarantine_table table."
+ },
+ {
+  "Result": "Running [/usr/sbin/nft add rule inet vrr_quarantine_table inbound_chain ip saddr 127.0.0.1 tcp sport { 8000 } ct state established accept]: nftables ran OK, Returned 0 Added tcp rule to inbound_chain in vrr_quarantine_table table."
+ },
+ {
+  "Result": "Running [/usr/sbin/nft add rule inet vrr_quarantine_table inbound_chain udp sport domain ct state established accept]: nftables ran OK, Returned 0 Added udp rule to inbound_chain in vrr_quarantine_table table."
+ },
+ {
+  "Result": "Running [/usr/sbin/nft add chain inet vrr_quarantine_table outbound_chain { type filter hook output priority 0; policy drop; }]: nftables ran OK, Returned 0 Added outbound_chain to vrr_quarantine_table table."
+ },
+ {
+  "Result": "Running [/usr/sbin/nft add rule inet vrr_quarantine_table outbound_chain ip daddr 127.0.0.1 tcp dport { 8000 } ct state established,new accept]: nftables ran OK, Returned 0 Added tcp rule to inbound_chain in vrr_quarantine_table table."
+ },
+ {
+  "Result": "Running [/usr/sbin/nft add rule inet vrr_quarantine_table outbound_chain tcp dport { 53 } ct state new,established accept]: nftables ran OK, Returned 0 Added tcp rule to outbound_chain in vrr_quarantine_table table."
+ },
+ {
+  "Result": "Running [/usr/sbin/nft add rule inet vrr_quarantine_table outbound_chain udp dport { 53,67,68 } ct state new,established accept]: nftables ran OK, Returned 0 Added udp rule to outbound_chain in vrr_quarantine_table table."
+ },
+ {
+  "Result": "Running [/usr/sbin/nft add chain inet vrr_quarantine_table forward_chain { type filter hook forward priority 0; policy drop; }]: nftables ran OK, Returned 0 Added forward_chain to vrr_quarantine_table table."
+ },
+ {
+  "Result": "vrr_quarantine_table connection test successful."
+ }
+]SELECT mock_replay(plugin='execve'), mock_replay(plugin='http_client') FROM scope()[
+ {
+  "mock_replay(plugin='execve')": [
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "--version"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "delete",
+     "table",
+     "inet",
+     "vrr_quarantine_table"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "add",
+     "table",
+     "inet",
+     "vrr_quarantine_table"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "add",
+     "chain",
+     "inet",
+     "vrr_quarantine_table",
+     "inbound_chain",
+     "{",
+     "type",
+     "filter",
+     "hook",
+     "input",
+     "priority",
+     "0;",
+     "policy",
+     "drop;",
+     "}"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "add",
+     "rule",
+     "inet",
+     "vrr_quarantine_table",
+     "inbound_chain",
+     "ip",
+     "saddr",
+     "127.0.0.1",
+     "tcp",
+     "sport",
+     "{",
+     "8000",
+     "}",
+     "ct",
+     "state",
+     "established",
+     "accept"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "add",
+     "rule",
+     "inet",
+     "vrr_quarantine_table",
+     "inbound_chain",
+     "udp",
+     "sport",
+     "domain",
+     "ct",
+     "state",
+     "established",
+     "accept"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "add",
+     "chain",
+     "inet",
+     "vrr_quarantine_table",
+     "outbound_chain",
+     "{",
+     "type",
+     "filter",
+     "hook",
+     "output",
+     "priority",
+     "0;",
+     "policy",
+     "drop;",
+     "}"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "add",
+     "rule",
+     "inet",
+     "vrr_quarantine_table",
+     "outbound_chain",
+     "ip",
+     "daddr",
+     "127.0.0.1",
+     "tcp",
+     "dport",
+     "{",
+     "8000",
+     "}",
+     "ct",
+     "state",
+     "established,new",
+     "accept"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "add",
+     "rule",
+     "inet",
+     "vrr_quarantine_table",
+     "outbound_chain",
+     "tcp",
+     "dport",
+     "{",
+     "53",
+     "}",
+     "ct",
+     "state",
+     "new,established",
+     "accept"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "add",
+     "rule",
+     "inet",
+     "vrr_quarantine_table",
+     "outbound_chain",
+     "udp",
+     "dport",
+     "{",
+     "53,67,68",
+     "}",
+     "ct",
+     "state",
+     "new,established",
+     "accept"
+    ],
+    "length": 10000
+   },
+   {
+    "argv": [
+     "/usr/sbin/nft",
+     "add",
+     "chain",
+     "inet",
+     "vrr_quarantine_table",
+     "forward_chain",
+     "{",
+     "type",
+     "filter",
+     "hook",
+     "forward",
+     "priority",
+     "0;",
+     "policy",
+     "drop;",
+     "}"
+    ],
+    "length": 10000
+   }
+  ],
+  "mock_replay(plugin='http_client')": [
+   {
+    "url": "https://127.0.0.1:8000/server.pem",
+    "disable_ssl_security": "TRUE"
+   }
+  ]
+ }
+]
