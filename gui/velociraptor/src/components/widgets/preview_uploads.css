@@ -3,3 +3,12 @@ img.preview-thumbnail {
     max-width: 140px;
     max-height: 80px;
 }
+
+.panel.hexdump {
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+
+.btn.activate-button {
+    width: 100%;
+}

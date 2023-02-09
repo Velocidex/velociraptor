@@ -72,48 +72,66 @@ func _ParseFile(
 		arg.BufferSize = 64 * 1024
 	}
 
+	offset := 0
 	buffer := make([]byte, arg.BufferSize)
 
+next:
 	for {
-		n, _ := file.Read(buffer)
-		if n == 0 {
+		n, _ := file.Read(buffer[offset:])
+		if n == 0 && offset == 0 {
 			return
 		}
 
+		end := n + offset
+
 		for _, r := range arg.compiled_regexs {
-			match := r.FindAllSubmatch(buffer[:n], -1)
-			if match != nil {
-				names := r.SubexpNames()
-				for _, hit := range match {
-					row := ordereddict.NewDict().Set(
-						"FullPath", filename)
-					for _, name := range arg.capture_vars {
-						if name != "" {
-							row.Set(name, "")
-						}
-					}
-					for idx, submatch := range hit {
-						if idx == 0 {
-							continue
-						}
+			hits := r.FindSubmatchIndex(buffer[:end])
 
-						key := fmt.Sprintf("g%d", idx)
-						if names[idx] != "" {
-							key = names[idx]
-						}
+			// No matches in this buffer, try the next regex
+			if len(hits) < 2 {
+				continue
+			}
 
-						row.Set(key, string(submatch))
-					}
-					select {
-					case <-ctx.Done():
-						return
-
-					case output_chan <- row:
-					}
+			names := r.SubexpNames()
+			row := ordereddict.NewDict().Set("FullPath", filename)
+			for _, name := range arg.capture_vars {
+				if name != "" {
+					row.Set(name, "")
 				}
+			}
+
+			// Get all capture variables
+			if len(hits) >= 2 && len(hits)%2 == 0 {
+				for i := 2; i < len(hits); i += 2 {
+					start := hits[i]
+					end := hits[i+1]
+					if start < 0 || end < 0 {
+						continue
+					}
+
+					idx := i / 2
+					key := fmt.Sprintf("g%d", idx)
+					if names[idx] != "" {
+						key = names[idx]
+					}
+					row.Set(key, string(buffer[start:end]))
+				}
+			}
+
+			select {
+			case <-ctx.Done():
+				return
+
+			case output_chan <- row:
+				// Slide the buffer for the next match
+				offset = slideBuffer(buffer, hits[1], end)
+				continue next
 			}
 		}
 
+		// If we get here none of the regex matched the buffer, wipe
+		// the buffer and start again
+		offset = 0
 	}
 
 }

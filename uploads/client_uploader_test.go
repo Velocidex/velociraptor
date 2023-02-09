@@ -277,7 +277,7 @@ func TestClientUploaderUploadId(t *testing.T) {
 	// Upload the file multiple times
 	for i := 0; i < 5; i++ {
 		fd := bytes.NewReader([]byte(data))
-		ospath := accessors.MustNewPathspecOSPath(fmt.Sprintf("file_%d", i))
+		ospath := accessors.MustNewLinuxOSPath(fmt.Sprintf("file_%d", i))
 		scope := vql_subsystem.MakeScope()
 		_, err := uploader.Upload(ctx, scope,
 			ospath, "data", nil, int64(len(data)),
@@ -313,7 +313,7 @@ func TestClientUploaderDeduplicateStoreAsName(t *testing.T) {
 	data := "Hello world"
 
 	// All uploads use the same output filename.
-	store_as_name := accessors.MustNewPathspecOSPath("TestFile.txt")
+	store_as_name := accessors.MustNewLinuxOSPath("TestFile.txt")
 	scope := vql_subsystem.MakeScope()
 
 	// Upload the file multiple times
@@ -322,7 +322,7 @@ func TestClientUploaderDeduplicateStoreAsName(t *testing.T) {
 
 		// Only deduplicate on store_as_name - input files may be
 		// different each time.
-		ospath := accessors.MustNewPathspecOSPath(fmt.Sprintf("file_%d", i))
+		ospath := accessors.MustNewLinuxOSPath(fmt.Sprintf("file_%d", i))
 		_, err := uploader.Upload(ctx, scope,
 			ospath, "data", store_as_name, int64(len(data)),
 			nilTime, nilTime, nilTime, nilTime, fd)

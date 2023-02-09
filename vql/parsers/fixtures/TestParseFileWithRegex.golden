@@ -1,0 +1,14 @@
+{
+ "2: Different types of records mixed in": [
+  {
+   "FullPath": "Record 1 ... Delimiter Special Delimiter Record 2 ... Delimiter Some padding that should be ignored",
+   "SpecialRecord": "",
+   "Record": "Record 1 ... "
+  },
+  {
+   "FullPath": "Record 1 ... Delimiter Special Delimiter Record 2 ... Delimiter Some padding that should be ignored",
+   "Record": "",
+   "SpecialRecord": " Record 2 ... "
+  }
+ ]
+}

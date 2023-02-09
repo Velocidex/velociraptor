@@ -334,7 +334,8 @@ func (self *ServerTestSuite) TestMonitoringWithUpload() {
 	runner.Close(context.Background())
 
 	path_manager := paths.NewFlowPathManager(
-		self.client_id, "F.Monitoring").GetUploadsFile("file", "/etc/passwd")
+		self.client_id, "F.Monitoring").GetUploadsFile(
+		"file", "/etc/passwd", []string{"etc", "passwd"})
 	self.RequiredFilestoreContains(path_manager.Path(), "Hello")
 }
 
@@ -476,7 +477,8 @@ func (self *ServerTestSuite) TestUploadBuffer() {
 
 	flow_path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
 	self.RequiredFilestoreContains(
-		flow_path_manager.GetUploadsFile("file", "/tmp/foobar").Path(),
+		flow_path_manager.GetUploadsFile(
+			"file", "/tmp/foobar", []string{"tmp", "foobar"}).Path(),
 		"hello world")
 
 	self.RequiredFilestoreContains(

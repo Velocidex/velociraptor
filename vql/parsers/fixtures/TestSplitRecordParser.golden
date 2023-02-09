@@ -1,0 +1,67 @@
+{
+ "0: CSV Like split cases": [
+  {
+   "ColA": "1",
+   "ColB": "2",
+   "ColC": "3"
+  },
+  {
+   "ColA": "Foo",
+   "ColB": "Bar",
+   "ColC": "Baz"
+  }
+ ],
+ "1: CSV Like split cases with small buffer (at least size of line)": [
+  {
+   "ColA": "1",
+   "ColB": "2",
+   "ColC": "3"
+  },
+  {
+   "ColA": "Foo",
+   "ColB": "Bar",
+   "ColC": "Baz"
+  }
+ ],
+ "2: Empty lines": [
+  {
+   "Column0": ""
+  },
+  {
+   "Column0": "A"
+  },
+  {
+   "Column0": "B"
+  },
+  {
+   "Column0": ""
+  },
+  {
+   "Column0": "C"
+  }
+ ],
+ "3: Empty lines with two columns": [
+  {
+   "Col1": "b",
+   "Col2": "d"
+  },
+  {
+   "Col1": "",
+   "Col2": null
+  },
+  {
+   "Col1": "c",
+   "Col2": "s"
+  }
+ ],
+ "4: Record Separators": [
+  {
+   "Col1": "b",
+   "Col2": "d"
+  },
+  {
+   "Col1": "c",
+   "Col2": "s"
+  }
+ ]
+}

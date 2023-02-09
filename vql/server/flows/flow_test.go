@@ -84,7 +84,8 @@ func (self *FilestoreTestSuite) TestEnumerateFlow() {
 
 	// Write some filestore files
 	fd, _ := file_store_factory.WriteFile(flow_pm.GetUploadsFile(
-		"ntfs", `\\.\C:\Windows\notepad.exe`).Path())
+		"ntfs", `\\.\C:\Windows\notepad.exe`,
+		[]string{`\\.\C:`, "Windows", "notepad.exe"}).Path())
 	fd.Close()
 
 	manager, _ := services.GetRepositoryManager(self.ConfigObj)

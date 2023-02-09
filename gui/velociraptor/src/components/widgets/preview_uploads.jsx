@@ -17,6 +17,9 @@ import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 import T from '../i8n/i8n.jsx';
 import VeloValueRenderer from '../utils/value.jsx';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 // https://en.wikipedia.org/wiki/List_of_file_signatures
 const patterns = [
@@ -82,19 +85,49 @@ class HexViewTab  extends React.PureComponent {
         columns: 0x10,
         view: undefined,
         loading: true,
+        textview_only: false,
     }
 
     fetchPage_ = () => {
         let params = Object.assign({}, this.props.params);
-        params.length = this.state.rows * this.state.columns;
-        params.offset = this.state.page * params.length;
+
+        this.source.cancel();
+        this.source = axios.CancelToken.source();
+
+        // read a bit more than we need to so the text view looks a
+        // bit more full.
+        params.length = this.state.rows * this.state.columns * 2;
+        params.offset = this.state.page * this.state.rows * this.state.columns;
 
         api.get_blob(this.props.url, params, this.source.token).then(buffer=>{
             const view = new Uint8Array(buffer);
-            this.setState({view: view, loading: false});
+            this.setState({
+                view: view,
+                rawdata: this.parseFileContentToTextRepresentation_(view),
+                loading: false});
         });
         this.setState({loading: true});
     }
+
+    parseFileContentToTextRepresentation_ = intArray=>{
+        let rawdata = "";
+        for (var i = 0; i < intArray.length; i++) {
+            let c = intArray[i];
+            // Skip nulls to compress utf16
+            if (c == 0) {
+                continue;
+            }
+
+            if(c >= 0x20 && c<0x7f ||
+               c === 10 || c === 13 || c === 9) {
+                rawdata += String.fromCharCode(intArray[i]);
+            } else {
+                rawdata += ".";
+            }
+        };
+        return rawdata;
+    };
+
 
     render() {
         var chunkSize = this.state.rows * this.state.columns;
@@ -118,17 +151,51 @@ class HexViewTab  extends React.PureComponent {
         };
 
         return (
-                <div className="file-hex-view">
-                  <Spinner loading={this.state.loading}/>
-                  { <Pagination {...paginationConfig}/> }
+            <div className="file-hex-view">
+              <Spinner loading={this.state.loading}/>
+              { <Pagination {...paginationConfig}/> }
+              <Row>
+                { this.state.textview_only ?
+                  <Col sm="12">
+                    <Button variant="secondary"
+                            className="activate-button"
+                            onClick={()=>this.setState({
+                                textview_only: false
+                            })}>
+                      <FontAwesomeIcon icon="compress"/>
+                    </Button>
+                    <div className="panel textdump">
+                      <pre>{this.state.rawdata}</pre>
+                    </div>
+                  </Col>
+                  :
+                  <>
+                    <Col sm="8">
+                      <div className="panel hexdump">
+                        <HexView
+                          height={this.state.rows}
+                          rows={this.state.rows}
+                          columns={this.state.columns}
+                          byte_array={this.state.view} />
+                      </div>
+                    </Col>
 
-                  <div className="panel hexdump">
-                    <HexView
-                      height={this.state.rows}
-                      columns={this.state.columns}
-                      byte_array={this.state.view} />
-                  </div>
-                </div>
+                    <Col sm="4">
+                      <Button variant="secondary"
+                              className="activate-button"
+                              onClick={()=>this.setState({
+                                  textview_only: true
+                              })}>
+                        <FontAwesomeIcon icon="expand"/>
+                      </Button>
+                      <div className="panel textdump">
+                        <pre>{this.state.rawdata}</pre>
+                      </div>
+                    </Col>
+                  </>
+                }
+              </Row>
+            </div>
         );
     }
 }
