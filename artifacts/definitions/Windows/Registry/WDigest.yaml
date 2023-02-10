@@ -1,14 +1,18 @@
 name: Windows.Registry.WDigest
+author: Eduardo Mattos - @eduardfir, Matt Green - @mgreen27
 description: |
-    Find WDigest registry values on the filesystem.
+    Find WDigest registry values on the filesystem. The artifact will also use 
+    GROUP BY to limit all ControlSet output to a single row.
 
-    In order to prevent the “clear-text” password from being placed in
+    In order to prevent a clear-text password from being placed in
     LSASS, the following registry key needs to be set to “0” (Digest
     Disabled):
 
-     - HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest “UseLogonCredential”(DWORD)
+     - HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest 
+        “UseLogonCredential”(DWORD)
+        “Negotiate”(DWORD)
 
-    This registry key is worth monitoring in an environment as an
+    These registry keys are worth monitoring in an environment as an
     attacker may wish to set it to 1 to enable Digest password support
     which forces “clear-text” passwords to be placed in LSASS on any
     version of Windows from Windows 7 / 2008R2 up to Windows 10 /
@@ -18,29 +22,40 @@ description: |
 
     * ATT&CK tactic: Defense Evasion, Credential Access
     * ATT&CK technique: T1112, T1003.001
+    
+reference:
+    - https://medium.com/blue-team/preventing-mimikatz-attacks-ed283e7ebdd5
 
 type: CLIENT
-
-author: Eduardo Mattos - @eduardfir
-
 precondition:
   SELECT * FROM info() where OS = 'windows'
 
 parameters:
-  - name: SearchRegistryGlob
-    default: HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest\**
+  - name: WDigestGlob
+    default: HKEY_LOCAL_MACHINE\SYSTEM\*ControlSet*\Control\SecurityProviders\WDigest**
     description: Use a glob to define the files that will be searched.
-
+  - name: ShowAllValues
+    type: bool
+    description: Show all key values. It may be suspicious if these keys exist.
+    
+    
 sources:
   - query: |
-        SELECT  Name,
-                FullPath,
-                Data,
-                Sys,
-                ModTime as Modified
-        FROM glob(globs=SearchRegistryGlob, accessor='registry')
-        WHERE Name =~ "LogonCredential"
-
+        SELECT  
+            ModTime as LastModified,
+            FullPath as KeyPath,
+            Name as KeyName,
+            Data.type as KeyType,
+            Data.value as KeyValue
+        FROM glob(globs=WDigestGlob, accessor="registry")
+        WHERE KeyType = "DWORD"
+            AND KeyName =~ "UseLogonCredential|Negotiate"
+            AND NOT if(condition= ShowAllValues,
+                        then= False,
+                        else= KeyValue = 0)
+        GROUP BY LastModified, KeyName, KeyType, KeyValue,
+            regex_replace(source=FullPath,re='[^\\]+ControlSet[^\\]+',replace='CurrentControlSet')
+          
 column_types:
-  - name: Modified
+  - name: LastModified
     type: timestamp
