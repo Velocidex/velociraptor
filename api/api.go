@@ -891,7 +891,9 @@ func (self *ApiServer) SetServerMonitoringState(
 	}
 	principal := user_record.Name
 
-	permissions := acls.SERVER_ADMIN
+	// Monitoring queries needs same permissions as regular artifact
+	// collections.
+	permissions := acls.COLLECT_SERVER
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
@@ -915,7 +917,7 @@ func (self *ApiServer) GetClientMonitoringState(
 	}
 	principal := user_record.Name
 
-	permissions := acls.SERVER_ADMIN
+	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
@@ -950,7 +952,7 @@ func (self *ApiServer) SetClientMonitoringState(
 		return nil, Status(self.verbose, err)
 	}
 	principal := user_record.Name
-	permissions := acls.SERVER_ADMIN
+	permissions := acls.COLLECT_CLIENT
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(

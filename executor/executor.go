@@ -20,15 +20,17 @@ package executor
 import (
 	"context"
 	"fmt"
-	"log"
 	"runtime/debug"
 	"sync"
 	"time"
 
+	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
+	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -51,6 +53,9 @@ type Executor interface {
 
 	// Read a single response from the executor to be sent to the server.
 	ReadResponse() <-chan *crypto_proto.VeloMessage
+
+	FlowManager() *responder.FlowManager
+	EventManager() *actions.EventTable
 }
 
 // A concerete implementation of a client executor.
@@ -58,6 +63,7 @@ type Executor interface {
 type ClientExecutor struct {
 	client_id string
 
+	ctx      context.Context
 	wg       *sync.WaitGroup
 	Inbound  chan *crypto_proto.VeloMessage
 	Outbound chan *crypto_proto.VeloMessage
@@ -65,6 +71,17 @@ type ClientExecutor struct {
 	config_obj *config_proto.Config
 
 	concurrency *utils.Concurrency
+
+	flow_manager  *responder.FlowManager
+	event_manager *actions.EventTable
+}
+
+func (self *ClientExecutor) FlowManager() *responder.FlowManager {
+	return self.flow_manager
+}
+
+func (self *ClientExecutor) EventManager() *actions.EventTable {
+	return self.event_manager
 }
 
 func (self *ClientExecutor) ClientId() string {
@@ -110,18 +127,15 @@ func (self *ClientExecutor) processRequestPlugin(
 
 	// Never serve unauthenticated requests.
 	if req.AuthState != crypto_proto.VeloMessage_AUTHENTICATED {
-		log.Printf("Unauthenticated")
 		responder.MakeErrorResponse(self.Outbound,
 			req.SessionId,
 			fmt.Sprintf("Unauthenticated message received: %v.", req))
 		return
 	}
 
-	flow_manager := responder.GetFlowManager(ctx, config_obj)
-
 	if req.Cancel != nil {
 		// Try to cancel the flow and send a message if it worked
-		flow_manager.Cancel(ctx, req.SessionId)
+		self.flow_manager.Cancel(ctx, req.SessionId)
 		return
 	}
 
@@ -131,8 +145,9 @@ func (self *ClientExecutor) processRequestPlugin(
 	}
 
 	if req.UpdateEventTable != nil {
-		actions.UpdateEventTable{}.Run(
-			config_obj, ctx, self.Outbound, req.UpdateEventTable)
+		self.event_manager.UpdateEventTable(
+			self.ctx, self.wg, config_obj,
+			self.Outbound, req.UpdateEventTable)
 		return
 	}
 
@@ -163,14 +178,28 @@ func NewClientExecutor(
 		level = 2
 	}
 
-	self := &ClientExecutor{
-		client_id:   client_id,
-		Inbound:     make(chan *crypto_proto.VeloMessage, 10),
-		Outbound:    make(chan *crypto_proto.VeloMessage, 10),
-		concurrency: utils.NewConcurrencyControl(level, time.Hour),
-		wg:          &sync.WaitGroup{},
-		config_obj:  config_obj,
+	// Get the event table from the writeback if possible.
+	event_table := &actions_proto.VQLEventTable{}
+	writeback, err := config.GetWriteback(config_obj.Client)
+	if err == nil && writeback.EventQueries != nil {
+		event_table = writeback.EventQueries
 	}
+
+	wg := &sync.WaitGroup{}
+	self := &ClientExecutor{
+		ctx:          ctx,
+		client_id:    client_id,
+		Inbound:      make(chan *crypto_proto.VeloMessage, 10),
+		Outbound:     make(chan *crypto_proto.VeloMessage, 10),
+		concurrency:  utils.NewConcurrencyControl(level, time.Hour),
+		wg:           wg,
+		config_obj:   config_obj,
+		flow_manager: responder.NewFlowManager(ctx, config_obj),
+	}
+
+	// Install and initialize the event manager
+	self.event_manager = actions.NewEventTable(
+		ctx, wg, config_obj, self.Outbound, event_table)
 
 	// Drain messages from server and execute them, pushing
 	// results to the output channel.
@@ -192,11 +221,22 @@ func NewClientExecutor(
 			case <-ctx.Done():
 				return
 
-			// Pump messages from input channel and
-			// process each request.
+			// Pump messages from input channel and process each
+			// request.
 			case req, ok := <-self.Inbound:
 				if !ok {
 					return
+				}
+
+				// The server sets both VQLClientAction and
+				// FlowRequest members on some messages for backwards
+				// compatibility. We strip the old VQLClientAction
+				// because we dont use it.
+
+				// This message has VQLClientAction and no FlowRequest
+				// - we can not use it - it is for the old clients.
+				if req.VQLClientAction != nil && req.FlowRequest == nil {
+					continue
 				}
 
 				// Ignore unauthenticated messages - the
@@ -206,7 +246,7 @@ func NewClientExecutor(
 					go func() {
 						defer self.wg.Done()
 
-						logger.Debug("Received request: %v", req)
+						DebugMessage(req, logger)
 						self.processRequestPlugin(config_obj, ctx, req)
 					}()
 				}
@@ -215,4 +255,12 @@ func NewClientExecutor(
 	}()
 
 	return self, nil
+}
+
+func DebugMessage(req *crypto_proto.VeloMessage, logger *logging.LogContext) {
+	if logger.IsEnabled(logging.DEBUG) {
+		req_copy := proto.Clone(req).(*crypto_proto.VeloMessage)
+		req_copy.VQLClientAction = nil
+		logger.Debug("Received request: %v", req_copy)
+	}
 }

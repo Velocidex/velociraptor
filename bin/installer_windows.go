@@ -526,6 +526,9 @@ func runOnce(ctx context.Context,
 		return
 	}
 
+	sm, err := startup.StartClientServices(ctx, config_obj, on_error)
+	defer sm.Close()
+
 	exe, err := executor.NewClientExecutor(
 		ctx, writeback.ClientId, config_obj)
 	if err != nil {
@@ -535,8 +538,14 @@ func runOnce(ctx context.Context,
 		return
 	}
 
-	sm, err := startup.StartClientServices(ctx, config_obj, exe, on_error)
-	defer sm.Close()
+	_, err = http_comms.StartHttpCommunicatorService(
+		ctx, sm.Wg, config_obj, exe, on_error)
+	if err != nil {
+		elog.Error(1, fmt.Sprintf(
+			"Can not create client: %v", err))
+		time.Sleep(10 * time.Second)
+		return
+	}
 
 	<-ctx.Done()
 }

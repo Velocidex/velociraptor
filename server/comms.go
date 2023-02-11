@@ -136,14 +136,18 @@ func PrepareFrontendMux(
 
 	// DEPRECATED: These are the old handler names - not great
 	// but here for backwards compatibility.
-	router.Handle(base+"/control", RecordHTTPStats(control(config_obj, server_obj)))
-	router.Handle(base+"/reader", RecordHTTPStats(reader(server_obj)))
+	router.Handle(base+"/control",
+		RecordHTTPStats(receive_client_messages(config_obj, server_obj)))
+	router.Handle(base+"/reader",
+		RecordHTTPStats(send_client_messages(server_obj)))
 
 	// Send a message to the server.
-	router.Handle(base+"/send_messages", RecordHTTPStats(control(config_obj, server_obj)))
+	router.Handle(base+"/send_messages",
+		RecordHTTPStats(receive_client_messages(config_obj, server_obj)))
 
 	// Receive new messages from the server.
-	router.Handle(base+"/receive_messages", RecordHTTPStats(reader(server_obj)))
+	router.Handle(base+"/receive_messages",
+		RecordHTTPStats(send_client_messages(server_obj)))
 
 	// Publicly accessible part of the filestore. NOTE: this
 	// does not have to be a physical directory - it is served
@@ -260,7 +264,7 @@ func readWithLimits(
 // This handler is used to receive messages from the client to the
 // server. These connections are short lived - the client will just
 // post its message and then disconnect.
-func control(
+func receive_client_messages(
 	config_obj *config_proto.Config, server_obj *Server) http.Handler {
 	pad := &crypto_proto.ClientCommunication{}
 	pad.Padding = append(pad.Padding, 0)
@@ -452,7 +456,7 @@ func control(
 // connection will persist up to Client.MaxPoll so we always have a
 // channel to the client. This allows us to send the client jobs
 // immediately with low latency.
-func reader(server_obj *Server) http.Handler {
+func send_client_messages(server_obj *Server) http.Handler {
 	pad := &crypto_proto.ClientCommunication{}
 	pad.Padding = append(pad.Padding, 0)
 	serialized_pad, _ := proto.Marshal(pad)

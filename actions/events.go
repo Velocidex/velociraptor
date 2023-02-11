@@ -40,20 +40,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/responder"
 )
 
-var (
-	// Keep track of inflight queries for shutdown. This wait group
-	// belongs to the client's service manager. As we issue queries we
-	// increment it and when queries are done we decrement it. The
-	// service manager will wait for all inflight queries to exit
-	// before exiting allowing the client to shut down in an orderly
-	// fashion.
-	mu          sync.Mutex
-	service_wg  *sync.WaitGroup
-	service_ctx context.Context = context.Background()
-
-	GlobalEventTable *EventTable
-)
-
 type EventTable struct {
 	mu sync.Mutex
 
@@ -61,7 +47,7 @@ type EventTable struct {
 	// table.
 	Ctx    context.Context
 	cancel func()
-	wg     sync.WaitGroup
+	wg     *sync.WaitGroup
 
 	// The event table currently running
 	Events []*actions_proto.VQLCollectorArgs
@@ -71,6 +57,8 @@ type EventTable struct {
 	version uint64
 
 	config_obj *config_proto.Config
+
+	monitoring_manager *responder.MonitoringManager
 }
 
 // Determine if the current table is the same as the new set of
@@ -142,21 +130,19 @@ func (self *EventTable) Version() uint64 {
 	return self.version
 }
 
-func GlobalEventTableVersion() uint64 {
-	return GlobalEventTable.Version()
-}
-
 func (self *EventTable) Update(
+	ctx context.Context,
+	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
 	output_chan chan *crypto_proto.VeloMessage,
-	table *actions_proto.VQLEventTable) (*EventTable, error, bool) {
+	table *actions_proto.VQLEventTable) (error, bool) {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	// Only update the event table if we need to.
 	if table.Version <= self.version {
-		return self, nil, false
+		return nil, false
 	}
 
 	// If the new update is identical to the old queries we wont
@@ -170,28 +156,83 @@ func (self *EventTable) Update(
 
 		// Update the version only but keep queries the same.
 		self.version = table.Version
-		return self, nil, false
+		return nil, false
 	}
 
 	// Close the old table and wait for it to finish.
 	self.close()
 
-	// Reset the table with the new queries.
-	GlobalEventTable = NewEventTable(config_obj, table)
-	return GlobalEventTable, nil, true /* changed */
+	// Reset the event table and start from scratch
+	self.Events = table.Event
+	self.version = table.Version
+	self.wg = &sync.WaitGroup{}
+	self.Ctx, self.cancel = context.WithCancel(ctx)
+
+	return nil, true /* changed */
 }
 
-type UpdateEventTable struct{}
-
-func (self UpdateEventTable) Run(
-	config_obj *config_proto.Config,
+func (self *EventTable) StartQueries(
 	ctx context.Context,
+	config_obj *config_proto.Config,
+	output_chan chan *crypto_proto.VeloMessage) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+
+	// Start a new query for each event.
+	action_obj := &VQLClientAction{}
+	for _, event := range self.Events {
+
+		// Name of the query we are running. There must be at least
+		// one query with a name.
+		artifact_name := GetQueryName(event.Query)
+		if artifact_name == "" {
+			continue
+		}
+
+		logger.Info("<green>Starting</> monitoring query %s", artifact_name)
+		query_responder := responder.NewMonitoringResponder(
+			ctx, config_obj, self.monitoring_manager,
+			output_chan, artifact_name)
+
+		self.wg.Add(1)
+		go func(event *actions_proto.VQLCollectorArgs) {
+			defer self.wg.Done()
+
+			// Event tables never time out
+			if event.Timeout == 0 {
+				event.Timeout = 99999999
+			}
+
+			// Dont heartbeat too often for event queries
+			// - the log generates un-neccesary traffic.
+			if event.Heartbeat == 0 {
+				event.Heartbeat = 300 // 5 minutes
+			}
+
+			// Start the query - if it is an event query this will
+			// never complete until it is cancelled.
+			action_obj.StartQuery(
+				config_obj, self.Ctx, query_responder, event)
+			if artifact_name != "" {
+				logger.Info("Finished monitoring query %s", artifact_name)
+			}
+		}(proto.Clone(event).(*actions_proto.VQLCollectorArgs))
+	}
+}
+
+func (self *EventTable) UpdateEventTable(
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config,
 	output_chan chan *crypto_proto.VeloMessage,
 	update_table *actions_proto.VQLEventTable) {
 
 	// Make a new table if needed.
-	table, err, changed := GlobalEventTable.Update(
-		config_obj, output_chan, update_table)
+	err, changed := self.Update(
+		ctx, wg, config_obj, output_chan, update_table)
 	if err != nil {
 		responder.MakeErrorResponse(
 			output_chan, "F.Monitoring", fmt.Sprintf(
@@ -210,50 +251,8 @@ func (self UpdateEventTable) Run(
 		return
 	}
 
-	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-
-	// Start a new query for each event.
-	action_obj := &VQLClientAction{}
-	for _, event := range table.Events {
-
-		// Name of the query we are running. There must be at least
-		// one query with a name.
-		artifact_name := GetQueryName(event.Query)
-		if artifact_name == "" {
-			continue
-		}
-
-		logger.Info("<green>Starting</> monitoring query %s", artifact_name)
-
-		query_responder := responder.NewMonitoringResponder(
-			ctx, config_obj, output_chan, artifact_name)
-
-		table.wg.Add(1)
-		service_wg.Add(1)
-		go func(event *actions_proto.VQLCollectorArgs) {
-			defer table.wg.Done()
-			defer service_wg.Done()
-
-			// Event tables never time out
-			if event.Timeout == 0 {
-				event.Timeout = 99999999
-			}
-
-			// Dont heartbeat too often for event queries
-			// - the log generates un-neccesary traffic.
-			if event.Heartbeat == 0 {
-				event.Heartbeat = 300 // 5 minutes
-			}
-
-			// Start the query - if it is an event query this will
-			// never complete until it is cancelled.
-			action_obj.StartQuery(
-				config_obj, table.Ctx, query_responder, event)
-			if artifact_name != "" {
-				logger.Info("Finished monitoring query %s", artifact_name)
-			}
-		}(proto.Clone(event).(*actions_proto.VQLCollectorArgs))
-	}
+	// Kick off the queries
+	self.StartQueries(ctx, config_obj, output_chan)
 
 	err = update_writeback(config_obj, update_table)
 	if err != nil {
@@ -276,61 +275,38 @@ func update_writeback(
 }
 
 func NewEventTable(
-	config_obj *config_proto.Config,
-	table *actions_proto.VQLEventTable) *EventTable {
-
-	sub_ctx, cancel := context.WithCancel(service_ctx)
-
-	result := &EventTable{
-		Events:     table.Event,
-		version:    table.Version,
-		Ctx:        sub_ctx,
-		cancel:     cancel,
-		config_obj: config_obj,
-	}
-
-	return result
-}
-
-// Called by the service manager to initialize the global event table.
-func InitializeEventTable(
-	// This is the context of the service - its lifetime represents
-	// the lifetime of the entire application.
 	ctx context.Context,
+	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
 	output_chan chan *crypto_proto.VeloMessage,
-	wg *sync.WaitGroup) {
+	table *actions_proto.VQLEventTable) *EventTable {
 
-	mu.Lock()
-	service_ctx = ctx
-	service_wg = wg
+	sub_ctx, cancel := context.WithCancel(ctx)
 
-	// Remove any old tables if needed.
-	if GlobalEventTable != nil {
-		GlobalEventTable.Close()
+	self := &EventTable{
+		Events:  table.Event,
+		version: table.Version,
+		Ctx:     sub_ctx,
+		cancel:  cancel,
+
+		// Used to wait for close()
+		wg:                 &sync.WaitGroup{},
+		config_obj:         config_obj,
+		monitoring_manager: responder.NewMonitoringManager(ctx),
 	}
 
-	// Create an empty table
-	GlobalEventTable = NewEventTable(
-		config_obj, &actions_proto.VQLEventTable{})
+	// When service closes we close the last event table.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
 
-	// When the context is finished, tear down the event table.
-	go func(table *EventTable, service_ctx context.Context) {
-		select {
-		case <-service_ctx.Done():
-			table.Close()
+		// Kick off the initial set of queries.
+		self.StartQueries(ctx, config_obj, output_chan)
 
-		case <-table.Ctx.Done():
-		}
-	}(GlobalEventTable, service_ctx)
+		// Wait here until our parent context is cancelled.
+		<-ctx.Done()
+		self.Close()
+	}()
 
-	mu.Unlock()
-}
-
-func init() {
-	ctx, cancel := context.WithCancel(context.Background())
-	GlobalEventTable = &EventTable{
-		Ctx:    ctx,
-		cancel: cancel,
-	}
+	return self
 }

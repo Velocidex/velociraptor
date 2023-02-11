@@ -1,6 +1,7 @@
 package notifications
 
 import (
+	"fmt"
 	"strings"
 	"sync"
 
@@ -60,6 +61,16 @@ func (self *NotificationPool) IsClientConnected(client_id string) bool {
 	self.mu.Unlock()
 
 	return pres
+}
+
+func (self *NotificationPool) DebugPrint() {
+	self.mu.Lock()
+	fmt.Printf("Clients connected: ")
+	for k := range self.clients {
+		fmt.Printf("%v ", k)
+	}
+	fmt.Printf("\n")
+	self.mu.Unlock()
 }
 
 func (self *NotificationPool) Listen(client_id string) (chan bool, func()) {

@@ -24,7 +24,7 @@ func (self GetClientMonitoring) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+	err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 	if err != nil {
 		scope.Log("get_client_monitoring: %s", err)
 		return vfilter.Null{}
@@ -71,7 +71,7 @@ func (self SetClientMonitoring) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
 	if err != nil {
 		scope.Log("set_client_monitoring: %s", err)
 		return vfilter.Null{}
@@ -147,7 +147,7 @@ func (self GetServerMonitoring) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+	err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 	if err != nil {
 		scope.Log("get_server_monitoring: %s", err)
 		return vfilter.Null{}
@@ -204,7 +204,7 @@ func (self SetServerMonitoring) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
 	if err != nil {
 		scope.Log("set_server_monitoring: %s", err)
 		return vfilter.Null{}

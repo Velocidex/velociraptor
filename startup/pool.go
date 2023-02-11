@@ -37,8 +37,10 @@ func StartPoolClientServices(
 		return err
 	}
 
-	err = executor.StartEventTableService(
-		sm.Ctx, sm.Wg, config_obj, exe.Outbound)
+	/*
+		err = executor.StartEventTableService(
+			sm.Ctx, sm.Wg, config_obj, exe.Outbound)
+	*/
 
 	return nil
 }

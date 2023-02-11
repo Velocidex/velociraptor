@@ -22,13 +22,17 @@ func (self *TestResponderType) Close() {
 	self.flow_context.Close()
 }
 
+func (self *TestResponderType) Output() chan *crypto_proto.VeloMessage {
+	return self.output
+}
+
 func TestResponderWithFlowId(
 	config_obj *config_proto.Config, flow_id string) *TestResponderType {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	output_chan, drain := NewMessageDrain(ctx)
 
-	flow_manager := GetFlowManager(ctx, config_obj)
+	flow_manager := NewFlowManager(ctx, config_obj)
 	result := &TestResponderType{
 		FlowResponder: &FlowResponder{
 			ctx:    ctx,

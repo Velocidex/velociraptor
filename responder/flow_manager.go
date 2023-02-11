@@ -26,13 +26,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
-)
-
-var (
-	mu                  sync.Mutex
-	_FlowManagerService *FlowManager
 )
 
 // A Flow Manager runs on the client and keeps track of all flows that
@@ -65,13 +59,6 @@ func NewFlowManager(ctx context.Context,
 		cancelled:  make(map[string]bool),
 	}
 	return result
-}
-
-func (self *FlowManager) ResetForTests() {
-	mu.Lock()
-	defer mu.Unlock()
-
-	_FlowManagerService.in_flight = make(map[string]*FlowContext)
 }
 
 func (self *FlowManager) removeFlowContext(flow_id string) {
@@ -128,30 +115,4 @@ func (self *FlowManager) FlowContext(
 		return flow_context
 	}
 	return flow_context
-}
-
-func GetFlowManager(
-	ctx context.Context, config_obj *config_proto.Config) *FlowManager {
-	mu.Lock()
-	defer mu.Unlock()
-
-	if _FlowManagerService == nil {
-		_FlowManagerService = NewFlowManager(ctx, config_obj)
-	}
-
-	return _FlowManagerService
-}
-
-// Initialize the flow manager service.
-func StartFlowManager(ctx context.Context, wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
-	mu.Lock()
-	defer mu.Unlock()
-
-	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-	logger.Info("<green>Starting</> client flow manager.")
-
-	_FlowManagerService = NewFlowManager(ctx, config_obj)
-
-	return nil
 }

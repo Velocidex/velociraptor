@@ -14,7 +14,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
-	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
@@ -24,16 +23,6 @@ import (
 
 type ExecutorTestSuite struct {
 	test_utils.TestSuite
-}
-
-func (self *ExecutorTestSuite) SetupTest() {
-	self.TestSuite.SetupTest()
-
-	err := self.Sm.Start(responder.StartFlowManager)
-	assert.NoError(self.T(), err)
-
-	flow_manager := responder.GetFlowManager(self.Ctx, self.ConfigObj)
-	flow_manager.ResetForTests()
 }
 
 // Cancelling the flow multiple times will cause a single

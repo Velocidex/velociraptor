@@ -250,7 +250,7 @@ func (self *Sender) Start(
 func NewSender(
 	config_obj *config_proto.Config,
 	connector IConnector,
-	manager crypto.ICryptoManager,
+	crypto_manager crypto.ICryptoManager,
 	executor executor.Executor,
 	ring_buffer IRingBuffer,
 	enroller *Enroller,
@@ -267,7 +267,7 @@ func NewSender(
 
 	result := &Sender{
 		NotificationReader: NewNotificationReader(
-			config_obj, connector, manager,
+			config_obj, connector, crypto_manager,
 			executor, enroller, logger, name,
 			limiter, handler, on_exit, clock),
 		ring_buffer: ring_buffer,
@@ -275,9 +275,10 @@ func NewSender(
 		// Urgent buffer is an in memory ring buffer to handle
 		// urgent queries. This ensures urgent queries can
 		// skip the buffer ahead of normal queries.
-		urgent_buffer: NewRingBuffer(config_obj, 2*config_obj.Client.MaxUploadSize),
-		release:       make(chan bool),
-		clock:         clock,
+		urgent_buffer: NewRingBuffer(config_obj, executor.FlowManager(),
+			2*config_obj.Client.MaxUploadSize),
+		release: make(chan bool),
+		clock:   clock,
 	}
 
 	return result, nil

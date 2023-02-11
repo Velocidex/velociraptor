@@ -84,6 +84,7 @@ func doGUI() error {
 		// Frontend only suitable for local client
 		config_obj.Frontend.BindAddress = "127.0.0.1"
 		config_obj.Frontend.BindPort = 8000
+		config_obj.Frontend.DoNotCompressArtifacts = true
 
 		// Client configuration.
 		config_obj.Client.ServerUrls = []string{"https://localhost:8000/"}

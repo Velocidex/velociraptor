@@ -4,7 +4,6 @@ package downloads
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"sync"
@@ -802,8 +801,6 @@ func generateCombinedResults(
 
 			reader.Close()
 		}
-
-		fmt.Printf("Exported All for Artifact %v\n", artifact_source)
 	}
 
 	return nil

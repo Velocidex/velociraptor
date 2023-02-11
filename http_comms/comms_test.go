@@ -186,10 +186,7 @@ func (self *CommsTestSuite) TestAbort() {
 	urls := []string{self.frontend1.URL}
 
 	// Not a real executor but we can emulate closing channels.
-	exec := &executor.ClientExecutor{
-		Outbound: make(chan *crypto_proto.VeloMessage),
-		Inbound:  make(chan *crypto_proto.VeloMessage),
-	}
+	exec := executor.NewClientExecutorForTests()
 
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
@@ -236,7 +233,7 @@ func (self *CommsTestSuite) TestEnrollment() {
 
 	crypto_manager := &crypto_test.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(ctx, self.config_obj, crypto_manager,
-		&executor.TestExecutor{}, urls, nil, clock)
+		executor.NewTestExecutor(), urls, nil, clock)
 	assert.NoError(self.T(), err)
 
 	self.frontend1.responses = []*Response{
@@ -273,7 +270,7 @@ func (self *CommsTestSuite) TestServerError() {
 
 	crypto_manager := &crypto_test.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(ctx, self.config_obj, crypto_manager,
-		&executor.TestExecutor{}, urls, nil, clock)
+		executor.NewTestExecutor(), urls, nil, clock)
 	assert.NoError(self.T(), err)
 
 	self.frontend1.responses = []*Response{
@@ -321,7 +318,7 @@ func (self *CommsTestSuite) TestMultiFrontends() {
 
 	crypto_manager := &crypto_test.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(ctx, self.config_obj, crypto_manager,
-		&executor.TestExecutor{}, urls, nil, clock)
+		executor.NewTestExecutor(), urls, nil, clock)
 	assert.NoError(self.T(), err)
 
 	// Frontend1 will return 500 all the time.
@@ -382,7 +379,7 @@ func (self *CommsTestSuite) TestMultiFrontendsAllIsBorked() {
 
 	crypto_manager := &crypto_test.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(ctx, self.config_obj, crypto_manager,
-		&executor.TestExecutor{}, urls, nil, clock)
+		executor.NewTestExecutor(), urls, nil, clock)
 	assert.NoError(self.T(), err)
 
 	// Frontend1 will return 500 all the time.
@@ -456,7 +453,7 @@ func (self *CommsTestSuite) TestMultiFrontendsIntermittantFailure() {
 
 	crypto_manager := &crypto_test.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(ctx, self.config_obj, crypto_manager,
-		&executor.TestExecutor{}, urls, nil, clock)
+		executor.NewTestExecutor(), urls, nil, clock)
 	assert.NoError(self.T(), err)
 
 	// FE1 is not completely off just loaded - so initial
@@ -516,7 +513,7 @@ func (self *CommsTestSuite) TestMultiFrontendsHeavyFailure() {
 
 	crypto_manager := &crypto_test.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(ctx, self.config_obj, crypto_manager,
-		&executor.TestExecutor{}, urls, nil, clock)
+		executor.NewTestExecutor(), urls, nil, clock)
 	assert.NoError(self.T(), err)
 
 	// FE1 is not completely off just loaded - so initial
@@ -590,7 +587,7 @@ func (self *CommsTestSuite) TestMultiFrontendRedirect() {
 
 	crypto_manager := &crypto_test.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(ctx, self.config_obj, crypto_manager,
-		&executor.TestExecutor{}, urls, nil, clock)
+		executor.NewTestExecutor(), urls, nil, clock)
 	assert.NoError(self.T(), err)
 
 	// FE1 is not completely off just loaded - so initial
@@ -657,7 +654,7 @@ func (self *CommsTestSuite) TestMultiFrontendRedirectWithErrors() {
 
 	crypto_manager := &crypto_test.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(ctx, self.config_obj, crypto_manager,
-		&executor.TestExecutor{}, urls, nil, clock)
+		executor.NewTestExecutor(), urls, nil, clock)
 	assert.NoError(self.T(), err)
 
 	self.frontend1.responses = []*Response{
@@ -751,7 +748,7 @@ func (self *CommsTestSuite) TestMultiRedirects() {
 
 	crypto_manager := &crypto_test.NullCryptoManager{}
 	communicator, err := NewHTTPCommunicator(ctx, self.config_obj, crypto_manager,
-		&executor.TestExecutor{}, urls, nil, clock)
+		executor.NewTestExecutor(), urls, nil, clock)
 	assert.NoError(self.T(), err)
 
 	self.frontend1.responses = []*Response{

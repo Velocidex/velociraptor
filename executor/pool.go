@@ -23,7 +23,6 @@ import (
 	"sync"
 
 	"google.golang.org/protobuf/proto"
-	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -131,7 +130,7 @@ func (self *PoolClientExecutor) maybeUpdateEventTable(
 	defer pool_mu.Unlock()
 
 	// Only update newer tables.
-	if req.UpdateEventTable.Version <= actions.GlobalEventTableVersion() {
+	if req.UpdateEventTable.Version <= self.event_manager.Version() {
 		return
 	}
 
@@ -143,12 +142,11 @@ func (self *PoolClientExecutor) maybeUpdateEventTable(
 	// table without a restart.
 	req.UpdateEventTable.Version += 6000 * 1000000000
 
-	fmt.Printf("Installing new event table for version %v\n", req.UpdateEventTable.Version)
-
 	g_responder := responder.GetPoolEventResponder(ctx)
-	actions.UpdateEventTable{}.Run(
-		self.config_obj, ctx, g_responder.EventTableInput,
-		req.UpdateEventTable)
+	self.event_manager.UpdateEventTable(
+		self.ctx, self.wg,
+		self.config_obj,
+		g_responder.EventTableInput, req.UpdateEventTable)
 
 }
 

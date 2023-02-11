@@ -26,7 +26,7 @@ func (self AddClientMonitoringFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
 	if err != nil {
 		scope.Log("add_client_monitoring: %s", err)
 		return vfilter.Null{}
@@ -189,7 +189,7 @@ func (self AddServerMonitoringFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_SERVER)
 	if err != nil {
 		scope.Log("add_server_monitoring: %s", err)
 		return vfilter.Null{}
