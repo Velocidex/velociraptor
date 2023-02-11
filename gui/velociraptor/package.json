@@ -14,7 +14,7 @@
         "@popperjs/core": "^2.11.6",
         "ace-builds": "1.14.0",
         "axios": ">=1.2.3",
-        "axios-retry": "3.3.1",
+        "axios-retry": "3.4.0",
         "bootstrap": "^4.6.2",
         "classnames": "^2.3.2",
         "csv-parse": "4.16.3",
