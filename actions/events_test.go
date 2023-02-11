@@ -159,6 +159,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		return len(actions.QueryLog.Get()) > 0
 	})
+	actions.QueryLog.Clear()
 
 	// We no longer need to update the event table - it is up to date.
 	assert.False(self.T(),
@@ -173,8 +174,6 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// advanced.
 	label_manager := services.GetLabeler(self.ConfigObj)
 	label_manager.(*labels.Labeler).Clock = self.Clock
-
-	actions.QueryLog.Clear()
 
 	require.NoError(self.T(),
 		label_manager.SetClientLabel(
@@ -195,11 +194,6 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 
 	// The new table has 1 queries still since it has not really changed.
 	assert.Equal(self.T(), len(new_message.UpdateEventTable.Event), 1)
-
-	// Wait until all the queries are done.
-	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		return len(actions.QueryLog.Get()) > 0
-	})
 
 	// Now check that no updates are performed.
 	actions.QueryLog.Clear()
