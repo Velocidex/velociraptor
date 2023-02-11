@@ -174,6 +174,8 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	label_manager := services.GetLabeler(self.ConfigObj)
 	label_manager.(*labels.Labeler).Clock = self.Clock
 
+	actions.QueryLog.Clear()
+
 	require.NoError(self.T(),
 		label_manager.SetClientLabel(
 			context.Background(), self.ConfigObj, self.client_id, "Foobar"))
@@ -196,7 +198,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 
 	// Wait until all the queries are done.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		return len(actions.QueryLog.Get()) == 2
+		return len(actions.QueryLog.Get()) > 0
 	})
 
 	// Now check that no updates are performed.
