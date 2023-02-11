@@ -179,6 +179,10 @@ tools:
 	tool, err := inventory_service.GetToolInfo(ctx, self.ConfigObj, tool_name)
 	assert.NoError(self.T(), err)
 
+	// Make sure the tool contains the version block
+	assert.Equal(self.T(), 1, len(tool.Versions))
+	assert.Equal(self.T(), "TestArtifact", tool.Versions[0].Artifact)
+
 	// Make sure the tool is served directly from upstream.
 	assert.Equal(self.T(), response[0].Env[2].Key, "Tool_SampleTool_URL")
 	assert.Equal(self.T(), response[0].Env[2].Value, "htttp://www.example.com/file.exe")
