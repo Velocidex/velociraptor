@@ -27,6 +27,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/executor"
+	"www.velocidex.com/golang/velociraptor/http_comms"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
@@ -127,14 +128,20 @@ func runClientOnce(
 		return err
 	}
 
+	sm, err := startup.StartClientServices(ctx, config_obj, on_error)
+	defer sm.Close()
+	if err != nil {
+		return err
+	}
+
 	exe, err := executor.NewClientExecutor(
 		ctx, writeback.ClientId, config_obj)
 	if err != nil {
 		return fmt.Errorf("Can not create executor: %w", err)
 	}
 
-	sm, err := startup.StartClientServices(ctx, config_obj, exe, on_error)
-	defer sm.Close()
+	_, err = http_comms.StartHttpCommunicatorService(
+		ctx, sm.Wg, config_obj, exe, on_error)
 	if err != nil {
 		return err
 	}

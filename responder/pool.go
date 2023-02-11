@@ -26,6 +26,7 @@ import (
 // pool client immediately.
 
 var (
+	mu                       sync.Mutex
 	GlobalPoolEventResponder *PoolEventResponder
 )
 

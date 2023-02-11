@@ -271,11 +271,14 @@ func (self *ClientEventTable) setClientMonitoringState(
 		return err
 	}
 
-	notifier, err := services.GetNotifier(config_obj)
-	if err != nil {
-		return err
-	}
+	// This does not happen usually - on when running in GUI mode
+	// because we need low latency there.
 	if config_obj.Defaults.EventChangeNotifyAllClients {
+		notifier, err := services.GetNotifier(config_obj)
+		if err != nil {
+			return err
+		}
+
 		for _, c := range notifier.ListClients() {
 			notifier.NotifyDirectListener(c)
 		}

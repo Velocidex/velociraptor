@@ -29,39 +29,42 @@ func getTempFile(t *testing.T) string {
 	return fd.Name()
 }
 
-func createRB(t *testing.T, filename string) *FileBasedRingBuffer {
+func createRB(t *testing.T, filename string) (*FileBasedRingBuffer, *responder.FlowManager) {
 	config_obj := config.GetDefaultConfig()
 	config_obj.Client.LocalBuffer.FilenameLinux = filename
 	config_obj.Client.LocalBuffer.FilenameWindows = filename
 	config_obj.Client.LocalBuffer.FilenameDarwin = filename
 
 	null_logger, new_hook := test.NewNullLogger()
-	logger := &logging.LogContext{null_logger}
+	logger := &logging.LogContext{Logger: null_logger}
 	hook = new_hook
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ring_buffer, err := NewFileBasedRingBuffer(ctx, config_obj, logger)
+	flow_manager := responder.NewFlowManager(ctx, config_obj)
+
+	ring_buffer, err := NewFileBasedRingBuffer(ctx, config_obj, flow_manager, logger)
 	assert.NoError(t, err)
 
-	return ring_buffer
+	return ring_buffer, flow_manager
 }
 
-func openRB(t *testing.T, filename string) *FileBasedRingBuffer {
+func openRB(t *testing.T, filename string,
+	flow_manager *responder.FlowManager) *FileBasedRingBuffer {
 	config_obj := config.GetDefaultConfig()
 	config_obj.Client.LocalBuffer.FilenameLinux = filename
 	config_obj.Client.LocalBuffer.FilenameWindows = filename
 	config_obj.Client.LocalBuffer.FilenameDarwin = filename
 
 	null_logger, new_hook := test.NewNullLogger()
-	logger := &logging.LogContext{null_logger}
+	logger := &logging.LogContext{Logger: null_logger}
 	hook = new_hook
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	ring_buffer, err := OpenFileBasedRingBuffer(ctx, config_obj, logger)
+	ring_buffer, err := OpenFileBasedRingBuffer(ctx, config_obj, flow_manager, logger)
 	assert.NoError(t, err)
 
 	return ring_buffer
@@ -74,7 +77,7 @@ func TestRingBuffer(t *testing.T) {
 
 	defer os.Remove(filename)
 
-	ring_buffer := createRB(t, filename)
+	ring_buffer, flow_manager := createRB(t, filename)
 	ring_buffer.Enqueue([]byte(test_string))
 
 	st, err := os.Stat(filename)
@@ -88,7 +91,7 @@ func TestRingBuffer(t *testing.T) {
 		st.Size())
 
 	// Open and enqueue another message
-	ring_buffer = openRB(t, filename)
+	ring_buffer = openRB(t, filename, flow_manager)
 
 	// First message available.
 	assert.Equal(t, ring_buffer.header.AvailableBytes,
@@ -109,7 +112,7 @@ func TestRingBuffer(t *testing.T) {
 		st.Size())
 
 	// Lease one message from the buffer.
-	ring_buffer = openRB(t, filename)
+	ring_buffer = openRB(t, filename, flow_manager)
 
 	// Two messages available.
 	assert.Equal(t, ring_buffer.header.AvailableBytes,
@@ -130,7 +133,7 @@ func TestRingBuffer(t *testing.T) {
 
 	// Since we did not commit the last message - opening again
 	// will replay that same one.
-	ring_buffer = openRB(t, filename)
+	ring_buffer = openRB(t, filename, flow_manager)
 
 	// Two messages available.
 	assert.Equal(t, ring_buffer.header.AvailableBytes,
@@ -143,7 +146,7 @@ func TestRingBuffer(t *testing.T) {
 	// Commit the message this time and close the file.
 	ring_buffer.Commit()
 
-	ring_buffer = openRB(t, filename)
+	ring_buffer = openRB(t, filename, flow_manager)
 
 	// Now only the second message is available.
 	assert.Equal(t, ring_buffer.header.AvailableBytes,
@@ -160,7 +163,7 @@ func TestRingBuffer(t *testing.T) {
 			int64(len(test_string2)),
 		st.Size())
 
-	ring_buffer = openRB(t, filename)
+	ring_buffer = openRB(t, filename, flow_manager)
 
 	// Leasing the second message now
 	lease = ring_buffer.Lease(1)
@@ -209,7 +212,7 @@ func TestRingBufferCorruption(t *testing.T) {
 
 	defer os.Remove(filename)
 
-	ring_buffer := createRB(t, filename)
+	ring_buffer, flow_manager := createRB(t, filename)
 	ring_buffer.Enqueue([]byte(test_string))
 
 	// Corrupt the file.
@@ -222,7 +225,7 @@ func TestRingBufferCorruption(t *testing.T) {
 	assert.Equal(t, n, 8)
 	fd.Close()
 
-	ring_buffer = openRB(t, filename)
+	ring_buffer = openRB(t, filename, flow_manager)
 
 	// Possible corruption detected - expected item of length 20 received 5.
 	lease := ring_buffer.Lease(1)
@@ -245,7 +248,7 @@ func TestRingBufferCorruption(t *testing.T) {
 	assert.Equal(t, n, 8)
 	fd.Close()
 
-	ring_buffer = openRB(t, filename)
+	ring_buffer = openRB(t, filename, flow_manager)
 
 	assert.Equal(t, true, checkLogMessage(hook,
 		"Possible corruption detected: file too short."))
@@ -261,7 +264,7 @@ func TestRingBufferCorruption(t *testing.T) {
 	assert.Equal(t, n, 8)
 	fd.Close()
 
-	ring_buffer = openRB(t, filename)
+	ring_buffer = openRB(t, filename, flow_manager)
 
 	assert.Equal(t, checkLogMessage(hook,
 		"Possible corruption detected: Invalid header length."), true)
@@ -278,7 +281,7 @@ func TestRingBufferCorruption(t *testing.T) {
 	assert.Equal(t, n, 8)
 	fd.Close()
 
-	ring_buffer = openRB(t, filename)
+	ring_buffer = openRB(t, filename, flow_manager)
 
 	// Leasing the second message now
 	lease = ring_buffer.Lease(1)
@@ -340,11 +343,11 @@ func TestRingBufferCancellation(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Queue the message
-	ring_buffer := createRB(t, filename)
+	ring_buffer, flow_manager := createRB(t, filename)
 	ring_buffer.Enqueue([]byte(serialized_message_list))
 
 	// Try to lease the message.
-	ring_buffer = openRB(t, filename)
+	ring_buffer = openRB(t, filename, flow_manager)
 	lease := ring_buffer.Lease(1)
 	assert.NotNil(t, lease)
 	ring_buffer.Commit()
@@ -357,13 +360,10 @@ func TestRingBufferCancellation(t *testing.T) {
 
 	// Now cancel this flow ID.
 	ctx := context.Background()
-
-	config_obj := config.GetDefaultConfig()
-	flow_manager := responder.GetFlowManager(ctx, config_obj)
 	flow_manager.Cancel(ctx, message_list.Job[0].SessionId)
 
 	// Try to lease the message.
-	ring_buffer = openRB(t, filename)
+	ring_buffer = openRB(t, filename, flow_manager)
 	lease = ring_buffer.Lease(10)
 	assert.NotNil(t, lease)
 	ring_buffer.Commit()

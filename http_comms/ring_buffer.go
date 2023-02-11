@@ -111,6 +111,8 @@ type FileBasedRingBuffer struct {
 	leased_pointer int64
 
 	log_ctx *logging.LogContext
+
+	flow_manager *responder.FlowManager
 }
 
 func (self *FileBasedRingBuffer) Enqueue(item []byte) {
@@ -239,7 +241,7 @@ func (self *FileBasedRingBuffer) Lease(size uint64) []byte {
 
 			// Filter the item from any blacklisted flow ids
 			filtered_item := FilterBlackListedItems(
-				context.Background(), self.config_obj, item)
+				context.Background(), self.flow_manager, self.config_obj, item)
 			result = append(result, filtered_item...)
 
 			// Skip the full length of the unfiltered item to maintain
@@ -326,6 +328,7 @@ func (self *FileBasedRingBuffer) Commit() {
 func OpenFileBasedRingBuffer(
 	ctx context.Context,
 	config_obj *config_proto.Config,
+	flow_manager *responder.FlowManager,
 	log_ctx *logging.LogContext) (*FileBasedRingBuffer, error) {
 
 	filename := getLocalBufferName(config_obj)
@@ -338,12 +341,13 @@ func OpenFileBasedRingBuffer(
 		return nil, err
 	}
 
-	return newFileBasedRingBuffer(fd, config_obj, log_ctx)
+	return newFileBasedRingBuffer(fd, config_obj, flow_manager, log_ctx)
 }
 
 func NewFileBasedRingBuffer(
 	ctx context.Context,
 	config_obj *config_proto.Config,
+	flow_manager *responder.FlowManager,
 	log_ctx *logging.LogContext) (*FileBasedRingBuffer, error) {
 
 	if config_obj.Client == nil || config_obj.Client.LocalBuffer == nil {
@@ -384,12 +388,13 @@ func NewFileBasedRingBuffer(
 		}
 	}
 
-	return newFileBasedRingBuffer(fd, config_obj, log_ctx)
+	return newFileBasedRingBuffer(fd, config_obj, flow_manager, log_ctx)
 }
 
 func newFileBasedRingBuffer(
 	fd *os.File,
 	config_obj *config_proto.Config,
+	flow_manager *responder.FlowManager,
 	log_ctx *logging.LogContext) (*FileBasedRingBuffer, error) {
 
 	header := &Header{
@@ -440,6 +445,7 @@ func newFileBasedRingBuffer(
 		write_buf:      make([]byte, 8),
 		leased_pointer: header.ReadPointer,
 		log_ctx:        log_ctx,
+		flow_manager:   flow_manager,
 	}
 
 	result.c = sync.NewCond(&result.mu)
@@ -476,6 +482,8 @@ type RingBuffer struct {
 
 	// The maximum size of the ring buffer
 	Size uint64
+
+	flow_manager *responder.FlowManager
 }
 
 func (self *RingBuffer) Reset() {
@@ -536,6 +544,7 @@ func (self *RingBuffer) AvailableBytes() uint64 {
 // their corresponding flow is cancelled.
 func FilterBlackListedItems(
 	ctx context.Context,
+	flow_manager *responder.FlowManager,
 	config_obj *config_proto.Config, item []byte) []byte {
 
 	message_list := &crypto_proto.MessageList{}
@@ -545,7 +554,6 @@ func FilterBlackListedItems(
 	}
 
 	modified := false
-	flow_manager := responder.GetFlowManager(ctx, config_obj)
 	result := &crypto_proto.MessageList{}
 	for _, message := range message_list.Job {
 		// Always allow log messages through - even after a flow has
@@ -595,7 +603,7 @@ func (self *RingBuffer) Lease(size uint64) []byte {
 
 	for _, item := range self.messages[self.leased_idx:] {
 		filtered := FilterBlackListedItems(
-			context.Background(), self.config_obj, item)
+			context.Background(), self.flow_manager, self.config_obj, item)
 
 		leased = append(leased, filtered...)
 
@@ -668,11 +676,13 @@ func (self *RingBuffer) Commit() {
 	self.c.Broadcast()
 }
 
-func NewRingBuffer(config_obj *config_proto.Config, size uint64) *RingBuffer {
+func NewRingBuffer(config_obj *config_proto.Config,
+	flow_manager *responder.FlowManager, size uint64) *RingBuffer {
 	result := &RingBuffer{
-		messages:   make([][]byte, 0),
-		Size:       size,
-		config_obj: config_obj,
+		messages:     make([][]byte, 0),
+		Size:         size,
+		config_obj:   config_obj,
+		flow_manager: flow_manager,
 	}
 	result.c = sync.NewCond(&result.mu)
 
@@ -694,16 +704,18 @@ func getLocalBufferName(config_obj *config_proto.Config) string {
 
 func NewLocalBuffer(
 	ctx context.Context,
+	flow_manager *responder.FlowManager,
 	config_obj *config_proto.Config) IRingBuffer {
 	if config_obj.Client.LocalBuffer.DiskSize > 0 &&
 		getLocalBufferName(config_obj) != "" {
 
 		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-		rb, err := NewFileBasedRingBuffer(ctx, config_obj, logger)
+		rb, err := NewFileBasedRingBuffer(ctx, config_obj, flow_manager, logger)
 		if err == nil {
 			return rb
 		}
 		logger.Error("Unable to create a file based ring buffer - using in memory only.")
 	}
-	return NewRingBuffer(config_obj, config_obj.Client.LocalBuffer.MemorySize)
+	return NewRingBuffer(config_obj, flow_manager,
+		config_obj.Client.LocalBuffer.MemorySize)
 }

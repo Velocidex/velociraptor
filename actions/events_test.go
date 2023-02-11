@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
@@ -47,6 +48,8 @@ type EventsTestSuite struct {
 	writeback string
 
 	Clock utils.Clock
+
+	event_table *actions.EventTable
 }
 
 func (self *EventsTestSuite) SetupTest() {
@@ -72,8 +75,15 @@ func (self *EventsTestSuite) SetupTest() {
 
 	self.responder = responder.TestResponderWithFlowId(
 		self.ConfigObj, "EventsTestSuite")
-	actions.GlobalEventTable = actions.NewEventTable(
-		self.ConfigObj, &actions_proto.VQLEventTable{})
+	self.event_table = actions.NewEventTable(
+		self.Ctx, self.Wg, self.ConfigObj, self.responder.Output(),
+		&actions_proto.VQLEventTable{})
+}
+
+func (self *EventsTestSuite) InitializeEventTable(ctx context.Context,
+	wg *sync.WaitGroup, output_chan chan *crypto_proto.VeloMessage) *actions.EventTable {
+	return actions.NewEventTable(ctx, wg, self.ConfigObj, output_chan,
+		&actions_proto.VQLEventTable{})
 }
 
 func (self *EventsTestSuite) TearDownTest() {
@@ -102,20 +112,21 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	client_manager, err := services.ClientEventManager(self.ConfigObj)
 	client_manager.(*client_monitoring.ClientEventTable).Clock = self.Clock
 
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
 
 	// Wait until the entire event table is cleaned up.
-	wg := &sync.WaitGroup{}
 	output_chan, _ := responder.NewMessageDrain(ctx)
-	actions.InitializeEventTable(ctx, self.ConfigObj, output_chan, wg)
-	defer wg.Wait()
+	table := self.InitializeEventTable(ctx, wg, output_chan)
 
 	require.NoError(self.T(), client_manager.SetClientMonitoringState(
 		ctx, self.ConfigObj, "", server_state))
 
 	// Check the version of the initial Event table it should be 0
-	version := actions.GlobalEventTableVersion()
+	version := table.Version()
 	assert.Equal(self.T(), uint64(0), version)
 
 	// We definitely need to update the table on this client.
@@ -137,11 +148,11 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// Set the new table, this will execute the new queries and
 	// start the new table.
 	actions.QueryLog.Clear()
-	actions.UpdateEventTable{}.Run(self.ConfigObj, ctx, output_chan,
+	table.UpdateEventTable(ctx, wg, self.ConfigObj, output_chan,
 		message.UpdateEventTable)
 
 	// Table version was upgraded
-	version = actions.GlobalEventTableVersion()
+	version = table.Version()
 	assert.NotEqual(self.T(), version, 0)
 
 	// And we ran some queries.
@@ -153,7 +164,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	assert.False(self.T(),
 		client_manager.CheckClientEventsVersion(
 			context.Background(), self.ConfigObj, self.client_id,
-			actions.GlobalEventTableVersion()))
+			table.Version()))
 
 	// Now we set a label on the client. This should cause the
 	// event table to be recalculated but since the label does not
@@ -172,7 +183,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	assert.True(self.T(),
 		client_manager.CheckClientEventsVersion(
 			context.Background(), self.ConfigObj, self.client_id,
-			actions.GlobalEventTableVersion()))
+			table.Version()))
 
 	new_message := client_manager.GetClientUpdateEventTableMessage(
 		context.Background(), self.ConfigObj, self.client_id)
@@ -190,12 +201,12 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 
 	// Now check that no updates are performed.
 	actions.QueryLog.Clear()
-	actions.UpdateEventTable{}.Run(self.ConfigObj, ctx, output_chan,
+	table.UpdateEventTable(ctx, wg, self.ConfigObj, output_chan,
 		new_message.UpdateEventTable)
 
 	// Wait for the event table version to change
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		return version != actions.GlobalEventTableVersion()
+		return version != table.Version()
 	})
 
 	// But the tables have not really changed, so the query will
@@ -208,14 +219,15 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// Now lets set the label to Label1
 	require.NoError(self.T(),
 		label_manager.SetClientLabel(
-			context.Background(), self.ConfigObj, self.client_id, "Label1"))
+			context.Background(), self.ConfigObj,
+			self.client_id, "Label1"))
 
 	// We need to update the table again (takes a while for the
 	// client manager to notice the label change).
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		return client_manager.CheckClientEventsVersion(
 			context.Background(), self.ConfigObj, self.client_id,
-			actions.GlobalEventTableVersion())
+			table.Version())
 	})
 
 	new_message = client_manager.GetClientUpdateEventTableMessage(
@@ -225,7 +237,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// and one for Label1 label.
 	assert.Equal(self.T(), len(new_message.UpdateEventTable.Event), 2)
 
-	actions.UpdateEventTable{}.Run(self.ConfigObj, ctx, output_chan,
+	table.UpdateEventTable(ctx, wg, self.ConfigObj, output_chan,
 		new_message.UpdateEventTable)
 
 	// Wait for the event table to be swapped.

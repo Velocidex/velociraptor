@@ -2985,6 +2985,25 @@
     type: bool
     description: This call will clear previous mocks for this plugin
   category: utils
+- name: mock_clear
+  description: Resets all mocks.
+  type: Function
+- name: mock_replay
+  description: Replay recorded calls on a mock.
+  type: Function
+  args:
+  - name: plugin
+    type: string
+    description: The plugin to mock
+  - name: function
+    type: string
+    description: The function to mock
+  - name: expected_calls
+    type: int
+    description: How many times plugin should be called
+  - name: clear
+    type: bool
+    description: This call will clear previous mocks for this plugin
 - name: modules
   description: Enumerate Loaded DLLs.
   type: Plugin
@@ -3899,6 +3918,9 @@
   - name: path_type
     type: string
     description: Type of path this is (windows,linux,registry,ntfs).
+  - name: accessor
+    type: string
+    description: The accessor to use to parse the path with
   category: plugin
 - name: pipe
   description: |
@@ -4788,8 +4810,7 @@
     description: The accessor to use
   - name: regex
     type: string
-    description: The split regular expression (e.g. a comma)
-    required: true
+    description: The split regular expression (e.g. a comma, default whitespace)
   - name: columns
     type: string
     description: If the first row is not the headers, this arg must provide a list
@@ -4801,6 +4822,12 @@
   - name: count
     type: int
     description: Only split into this many columns if possible.
+  - name: record_regex
+    type: string
+    description: 'A regex to split data into records (default '
+  - name: buffer_size
+    type: int
+    description: Maximum size of line buffer (default 64kb).
   category: parsers
 - name: splunk_upload
   description: Upload rows to splunk.
@@ -5219,6 +5246,10 @@
     description: The PID to get the token for.
     required: true
   category: windows
+- name: trace
+  description: Upload a trace file.
+  type: Function
+  version: 1
 - name: unhex
   description: |
     Apply hex decoding to the string.
@@ -5492,6 +5523,9 @@
   - name: flow_id
     type: string
     description: A flow ID (client or server artifacts)
+  - name: hunt_id
+    type: string
+    description: A hunt ID
   category: server
 - name: url
   description: |

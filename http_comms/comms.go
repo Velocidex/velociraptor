@@ -300,6 +300,7 @@ func (self *HTTPConnector) Post(
 		req.Header.Set("X-Priority", "urgent")
 	}
 
+	now := utils.GetTime().Now()
 	resp, err := self.client.Do(req)
 	if err != nil && err != io.EOF {
 		self.logger.Info("Post to %v returned %v - advancing to next server\n",
@@ -312,8 +313,8 @@ func (self *HTTPConnector) Post(
 	// Must make sure to close the body or we leak sockets.
 	defer resp.Body.Close()
 
-	self.logger.Info("%s: sent %d bytes, response with status: %v",
-		name, len(data), resp.Status)
+	self.logger.Info("%s: sent %d bytes, response with status: %v after %v, waiting for server messages",
+		name, len(data), resp.Status, utils.GetTime().Now().Sub(now))
 
 	// Handle redirect. Frontends may redirect us to other
 	// frontends.
@@ -388,7 +389,8 @@ func (self *HTTPConnector) Post(
 			return nil, errors.Wrap(err, 0)
 		}
 
-		self.logger.Info("%s: received %d bytes", name, n)
+		self.logger.Info("%s: received %d bytes in %v",
+			name, n, utils.GetTime().Now().Sub(now))
 
 		// Remember the last successful index.
 		self.mu.Lock()
@@ -716,9 +718,6 @@ func (self *NotificationReader) sendToURL(
 		self.connector.ReKeyNextServer(ctx)
 	}
 
-	self.logger.Info("%s: Connected to %s", self.name,
-		self.connector.GetCurrentUrl(self.handler))
-
 	// Clients always compress messages to the server.
 	cipher_text, err := self.manager.Encrypt(
 		message_list,
@@ -729,9 +728,16 @@ func (self *NotificationReader) sendToURL(
 		return err
 	}
 
+	now := utils.GetTime().Now()
 	if !urgent {
 		self.limiter.Wait(ctx)
 	}
+
+	self.logger.Info(
+		"%s: Connected to %s after waiting for limiter for %v",
+		self.name, self.connector.GetCurrentUrl(self.handler),
+		utils.GetTime().Now().Sub(now))
+
 	encrypted, err := self.connector.Post(ctx, self.name,
 		self.handler, cipher_text, urgent)
 
@@ -850,7 +856,7 @@ func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
 		Job: []*crypto_proto.VeloMessage{{
 			SessionId: constants.FOREMAN_WELL_KNOWN_FLOW,
 			ForemanCheckin: &actions_proto.ForemanCheckin{
-				LastEventTableVersion: actions.GlobalEventTableVersion(),
+				LastEventTableVersion: self.executor.EventManager().Version(),
 			},
 		}}}
 
@@ -928,7 +934,7 @@ func (self *HTTPCommunicator) Run(
 func NewHTTPCommunicator(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	manager crypto.IClientCryptoManager,
+	crypto_manager crypto.IClientCryptoManager,
 	executor executor.Executor,
 	urls []string,
 	on_exit func(),
@@ -937,17 +943,17 @@ func NewHTTPCommunicator(
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 	enroller := &Enroller{
 		config_obj: config_obj,
-		manager:    manager,
+		manager:    crypto_manager,
 		executor:   executor,
 		logger:     logger,
 		clock:      clock,
 	}
-	connector, err := NewHTTPConnector(config_obj, manager, logger, urls, clock)
+	connector, err := NewHTTPConnector(config_obj, crypto_manager, logger, urls, clock)
 	if err != nil {
 		return nil, err
 	}
 
-	rb := NewLocalBuffer(ctx, config_obj)
+	rb := NewLocalBuffer(ctx, executor.FlowManager(), config_obj)
 
 	// Truncate the file to ensure we always start with a clean
 	// slate. This avoids a situation where the client fills up
@@ -965,7 +971,9 @@ func NewHTTPCommunicator(
 	}
 
 	// The sender sends messages to the server. We want the sender to
-	// send data as quickly as possible usually.
+	// send data as quickly as possible usually. NOTE: The sender only
+	// sends data when there is something to send so we are not too
+	// worried about spin loops.
 	poll_min := 100 * time.Millisecond
 	if config_obj.Client != nil && config_obj.Client.MinPoll > 0 {
 		poll_min = time.Second * time.Duration(config_obj.Client.MinPoll)
@@ -975,7 +983,8 @@ func NewHTTPCommunicator(
 		rate.Every(time.Duration(poll_min)), 100)
 
 	sender, err := NewSender(
-		config_obj, connector, manager, executor, rb, enroller,
+		config_obj, connector,
+		crypto_manager, executor, rb, enroller,
 		logger, "Sender", sender_limiter,
 
 		// The handler we hit on the server to send responses.
@@ -991,20 +1000,27 @@ func NewHTTPCommunicator(
 	// server so it can be tasked immediately. However sometimes if
 	// the client/server connection is interrupted the client will
 	// attempt to reconnect immediately but will then back off to
-	// ensure it does not go into a reconnect loop.
+	// ensure it does not go into a reconnect loop. Since receiver
+	// connects happen all the time we are at risk of a reeive loop -
+	// where the client reconnects very frequently. This limiter
+	// avoids this condition by rate limiting the frequency of reader
+	// connections.
 	poll_max := 60 * time.Second
-	if config_obj.Client != nil && config_obj.Client.MinPoll > 0 {
+	if config_obj.Client != nil && config_obj.Client.MaxPoll > 0 {
 		poll_max = time.Second * time.Duration(config_obj.Client.MaxPoll)
 	}
 
 	// In the case of a reconnect loop we do not connect more than
-	// once every poll max but we are allowed to connect sooner at
-	// first.
+	// twice every poll max but we are allowed to connect sooner at
+	// first. Note: We set the limit to half the max poll rate because
+	// the client connects at least as frequently as the max poll
+	// rate. We need to set the limit lower to allow the limiter to
+	// gain tokens during normal operation.
 	receiver_limiter := rate.NewLimiter(
-		rate.Every(time.Duration(poll_max)), 10)
+		rate.Every(time.Duration(poll_max/2)), 10)
 
 	receiver := NewNotificationReader(
-		config_obj, connector, manager, executor, enroller,
+		config_obj, connector, crypto_manager, executor, enroller,
 		logger, "Receiver "+executor.ClientId(), receiver_limiter,
 
 		// The handler for receiving messages from the server.
@@ -1015,7 +1031,7 @@ func NewHTTPCommunicator(
 		logger:     logger,
 		enroller: &Enroller{
 			config_obj: config_obj,
-			manager:    manager,
+			manager:    crypto_manager,
 			executor:   executor,
 			logger:     logger,
 			clock:      clock,
@@ -1023,7 +1039,7 @@ func NewHTTPCommunicator(
 		on_exit:  on_exit,
 		sender:   sender,
 		receiver: receiver,
-		Manager:  manager,
+		Manager:  crypto_manager,
 	}
 
 	return result, nil

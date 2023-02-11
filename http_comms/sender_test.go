@@ -36,6 +36,7 @@ import (
 	crypto_test "www.velocidex.com/golang/velociraptor/crypto/testing"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
@@ -216,7 +217,8 @@ func TestSender(t *testing.T) {
 
 	// Make the ring buffer 10 bytes - this is enough for one
 	// message but no more.
-	rb := NewRingBuffer(config_obj, 10)
+	flow_manager := responder.NewFlowManager(ctx, config_obj)
+	rb := NewRingBuffer(config_obj, flow_manager, 10)
 	testRingBuffer(ctx, rb, config_obj, "0123456789", t)
 }
 
@@ -242,7 +244,8 @@ func TestSenderWithFileBuffer(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	rb, err := NewFileBasedRingBuffer(ctx, config_obj, logger)
+	flow_manager := responder.NewFlowManager(ctx, config_obj)
+	rb, err := NewFileBasedRingBuffer(ctx, config_obj, flow_manager, logger)
 	require.NoError(t, err)
 
 	testRingBuffer(ctx, rb, config_obj, "0123456789", t)

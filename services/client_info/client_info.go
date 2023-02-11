@@ -558,8 +558,22 @@ func (self *ClientInfoManager) Get(
 		return nil, err
 	}
 
+	// If the client is presently connected, then update the current
+	// last_seen time because it is more accurate than the ping
+	// messages written.
+	ping := uint64(0)
+	notifier, err := services.GetNotifier(self.config_obj)
+	if err == nil {
+		if notifier.IsClientDirectlyConnected(client_id) {
+			ping = uint64(utils.GetTime().Now().UnixNano() / 1000)
+		}
+	}
+
 	// Return a copy so it can be read safely.
 	cached_info.mu.Lock()
+	if ping > 0 {
+		cached_info.record.Ping = ping
+	}
 	res := cached_info.record.Copy()
 	cached_info.mu.Unlock()
 

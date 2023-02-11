@@ -13,10 +13,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-var (
-	_MonitoringManagerService *MonitoringManager
-)
-
 type MonitoringManager struct {
 	mu sync.Mutex
 
@@ -156,20 +152,22 @@ type MonitoringResponder struct {
 	artifact string
 
 	monitoring_context *MonitoringContext
+	config_obj         *config_proto.Config
 }
 
 func NewMonitoringResponder(
 	ctx context.Context,
 	config_obj *config_proto.Config,
+	monitoring_manager *MonitoringManager,
 	output chan *crypto_proto.VeloMessage,
 	artifact string) *MonitoringResponder {
 
-	monitoring_manager := GetMonitoringManager(ctx, config_obj)
 	return &MonitoringResponder{
 		ctx:                ctx,
 		output:             output,
 		artifact:           artifact,
 		monitoring_context: monitoring_manager.Context(output, artifact),
+		config_obj:         config_obj,
 	}
 }
 
@@ -185,8 +183,12 @@ func (self *MonitoringResponder) AddResponse(message *crypto_proto.VeloMessage) 
 }
 
 // Monitoring queries dont have a status - the logs will be of type error.
-func (self *MonitoringResponder) RaiseError(ctx context.Context, message string) {}
-func (self *MonitoringResponder) Return(ctx context.Context)                     {}
+func (self *MonitoringResponder) RaiseError(ctx context.Context, message string) {
+	logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
+	logger.Error("MonitoringResponder: %v", message)
+}
+
+func (self *MonitoringResponder) Return(ctx context.Context) {}
 
 // Logs will be batched.
 func (self *MonitoringResponder) Log(ctx context.Context, level string, msg string) {
@@ -198,29 +200,3 @@ func (self *MonitoringResponder) NextUploadId() int64 {
 }
 
 func (self *MonitoringResponder) Close() {}
-
-func GetMonitoringManager(
-	ctx context.Context, config_obj *config_proto.Config) *MonitoringManager {
-	mu.Lock()
-	defer mu.Unlock()
-
-	if _MonitoringManagerService == nil {
-		_MonitoringManagerService = NewMonitoringManager(ctx)
-	}
-
-	return _MonitoringManagerService
-}
-
-// Initialize the flow manager service.
-func StartMonitoringManager(ctx context.Context, wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
-	mu.Lock()
-	defer mu.Unlock()
-
-	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-	logger.Info("<green>Starting</> client monitoring manager.")
-
-	_MonitoringManagerService = NewMonitoringManager(ctx)
-
-	return nil
-}
