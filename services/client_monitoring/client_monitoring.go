@@ -259,7 +259,7 @@ func (self *ClientEventTable) setClientMonitoringState(
 			})
 	}
 
-	err = journal.PushRowsToArtifact(config_obj,
+	err = journal.PushRowsToArtifact(ctx, config_obj,
 		[]*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("setter", self.id).

@@ -290,7 +290,7 @@ func (self *ApiServer) NotifyClients(
 
 	if in.ClientId != "" {
 		self.server_obj.Info("sending notification to %s", in.ClientId)
-		err = notifier.NotifyListener(org_config_obj, in.ClientId,
+		err = notifier.NotifyListener(ctx, org_config_obj, in.ClientId,
 			"API.NotifyClients")
 	} else {
 		return nil, status.Error(codes.InvalidArgument,
@@ -694,7 +694,7 @@ func (self *ApiServer) GetArtifacts(
 		}
 
 		for _, name := range in.Names {
-			artifact, pres := repository.Get(org_config_obj, name)
+			artifact, pres := repository.Get(ctx, org_config_obj, name)
 			if pres {
 				result.Items = append(result.Items, artifact)
 			}
@@ -734,7 +734,7 @@ func (self *ApiServer) GetArtifactFile(
 			"User is not allowed to view custom artifacts.")
 	}
 
-	artifact, err := getArtifactFile(org_config_obj, in.Name)
+	artifact, err := getArtifactFile(ctx, org_config_obj, in.Name)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -787,7 +787,7 @@ func (self *ApiServer) SetArtifactFile(
 			"User is not allowed to modify artifacts (%v).", permissions))
 	}
 
-	definition, err := setArtifactFile(org_config_obj, principal, in, "")
+	definition, err := setArtifactFile(ctx, org_config_obj, principal, in, "")
 	if err != nil {
 		message := &api_proto.APIResponse{
 			Error:        true,

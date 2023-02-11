@@ -52,11 +52,12 @@ func (self *ServicesTestSuite) EmulateCollection(
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	journal.PushRowsToArtifact(self.ConfigObj,
+	ctx := context.Background()
+	journal.PushRowsToArtifact(ctx, self.ConfigObj,
 		rows, artifact, self.client_id, self.flow_id)
 
 	// Emulate a flow completion message coming from the flow processor.
-	journal.PushRowsToArtifact(self.ConfigObj,
+	journal.PushRowsToArtifact(ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", self.client_id).
 			Set("FlowId", self.flow_id).
@@ -132,7 +133,8 @@ func (self *ServicesTestSuite) TestEnrollService() {
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	err = journal.PushRowsToArtifact(self.ConfigObj,
+	ctx := self.Ctx
+	err = journal.PushRowsToArtifact(ctx, self.ConfigObj,
 		[]*ordereddict.Dict{
 			enroll_message, enroll_message, enroll_message, enroll_message,
 		},

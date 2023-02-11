@@ -538,7 +538,7 @@ func send_client_messages(server_obj *Server) http.Handler {
 			}
 
 			// This should trigger an enrollment flow.
-			err = journal.PushRowsToArtifact(org_config_obj,
+			err = journal.PushRowsToArtifact(ctx, org_config_obj,
 				[]*ordereddict.Dict{
 					ordereddict.NewDict().
 						Set("ClientId", source)},
@@ -564,7 +564,7 @@ func send_client_messages(server_obj *Server) http.Handler {
 			// Send a message that there is a client conflict.
 			journal, err := services.GetJournal(org_config_obj)
 			if err == nil {
-				journal.PushRowsToArtifactAsync(org_config_obj,
+				journal.PushRowsToArtifactAsync(ctx, org_config_obj,
 					ordereddict.NewDict().Set("ClientId", source),
 					"Server.Internal.ClientConflict")
 			}

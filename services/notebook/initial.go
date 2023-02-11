@@ -155,7 +155,7 @@ func getCellsForEvents(ctx context.Context,
 		return nil
 	}
 
-	result := getCustomCells(config_obj, repository,
+	result := getCustomCells(ctx, config_obj, repository,
 		artifact_name, notebook_metadata)
 
 	// If there are no custom cells, add the default cell.
@@ -199,6 +199,7 @@ LIMIT 50
 }
 
 func getCustomCells(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	repository services.Repository,
 	source string,
@@ -206,7 +207,7 @@ func getCustomCells(
 	var result []*api_proto.NotebookCellRequest
 
 	// Check if the artifact has custom notebook cells defined.
-	artifact_source, pres := repository.GetSource(config_obj, source)
+	artifact_source, pres := repository.GetSource(ctx, config_obj, source)
 	if !pres {
 		return nil
 	}
@@ -324,7 +325,7 @@ WHERE FlowState =~ 'Finished'
 LIMIT 1000
 `})
 
-	return getDefaultCellsForSources(config_obj, sources, notebook_metadata)
+	return getDefaultCellsForSources(ctx, config_obj, sources, notebook_metadata)
 }
 
 func getCellsForFlow(ctx context.Context,
@@ -362,10 +363,12 @@ SELECT * FROM flow_logs(client_id=ClientId, flow_id=FlowId)
 `,
 		})
 
-	return getDefaultCellsForSources(config_obj, sources, notebook_metadata)
+	return getDefaultCellsForSources(
+		ctx, config_obj, sources, notebook_metadata)
 }
 
 func getDefaultCellsForSources(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	sources []string,
 	notebook_metadata *api_proto.NotebookMetadata) []*api_proto.NotebookCellRequest {
@@ -383,13 +386,13 @@ func getDefaultCellsForSources(
 	var result []*api_proto.NotebookCellRequest
 
 	for _, source := range sources {
-		artifact, pres := repository.Get(config_obj, source)
+		artifact, pres := repository.Get(ctx, config_obj, source)
 		if pres {
 			notebook_metadata.ColumnTypes = append(notebook_metadata.ColumnTypes,
 				artifact.ColumnTypes...)
 		}
 
-		new_cells := getCustomCells(config_obj, repository,
+		new_cells := getCustomCells(ctx, config_obj, repository,
 			source, notebook_metadata)
 		result = append(result, new_cells...)
 

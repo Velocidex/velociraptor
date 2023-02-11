@@ -72,8 +72,9 @@ func (self *JournalTestSuite) TestJournalWriting() {
 	snapshot := vtesting.GetMetrics(self.T(), ".")
 
 	// Write 10 rows in series
+	ctx := self.Ctx
 	for i := 0; i < 10; i++ {
-		err = journal.PushRowsToArtifact(self.ConfigObj,
+		err = journal.PushRowsToArtifact(ctx, self.ConfigObj,
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("Foo", "Bar").
 				Set("i", i),
@@ -125,7 +126,7 @@ func (self *JournalTestSuite) TestJournalJsonlWriting() {
 
 	// Write 10 rows in series
 	for i := 0; i < 10; i++ {
-		err = journal.PushJsonlToArtifact(self.ConfigObj,
+		err = journal.PushJsonlToArtifact(self.Ctx, self.ConfigObj,
 			[]byte(fmt.Sprintf("{\"For\":%q,\"i\":%d}\n", "Bar", i)), 1,
 			"System.Flow.Completion", "C.1234", "")
 		assert.NoError(self.T(), err)

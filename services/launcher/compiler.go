@@ -34,7 +34,7 @@ func maybeEscape(name string) string {
 }
 
 func (self *Launcher) CompileSingleArtifact(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	options services.CompilerOptions,
 	artifact *artifacts_proto.Artifact,
 	result *actions_proto.VQLCollectorArgs) error {
@@ -175,7 +175,7 @@ LET %v <= if(
 		result.IopsLimit = artifact.Resources.IopsLimit
 	}
 
-	err := resolveImports(config_obj, artifact, result)
+	err := resolveImports(ctx, config_obj, artifact, result)
 	if err != nil {
 		return err
 	}
@@ -183,7 +183,8 @@ LET %v <= if(
 	return mergeSources(config_obj, options, artifact, result)
 }
 
-func resolveImports(config_obj *config_proto.Config,
+func resolveImports(
+	ctx context.Context, config_obj *config_proto.Config,
 	artifact *artifacts_proto.Artifact,
 	result *actions_proto.VQLCollectorArgs) error {
 	// Resolve imports if needed. First check if the artifact
@@ -224,7 +225,7 @@ func resolveImports(config_obj *config_proto.Config,
 	for _, imported := range artifact.Imports {
 		scope := vql_subsystem.MakeScope()
 
-		dependent_artifact, pres := global_repo.Get(config_obj, imported)
+		dependent_artifact, pres := global_repo.Get(ctx, config_obj, imported)
 		if !pres {
 			return fmt.Errorf("Artifact %v imports %v which is not known.",
 				artifact.Name, imported)
@@ -346,7 +347,7 @@ func mergeSources(
 // artifacts are found, then recursivly determine their dependencies
 // etc.
 func GetQueryDependencies(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	repository services.Repository,
 	query string,
 	depth int,
@@ -357,7 +358,7 @@ func GetQueryDependencies(
 	for _, hit := range artifact_in_query_regex.
 		FindAllStringSubmatch(query, -1) {
 		artifact_name := hit[1]
-		dep, pres := repository.Get(config_obj, artifact_name)
+		dep, pres := repository.Get(ctx, config_obj, artifact_name)
 		if !pres {
 			return errors.New(
 				fmt.Sprintf("Unknown artifact reference %s",
@@ -379,7 +380,7 @@ func GetQueryDependencies(
 			}
 
 			dependency[imp] = depth
-			imported_artifact, pres := repository.Get(config_obj, imp)
+			imported_artifact, pres := repository.Get(ctx, config_obj, imp)
 			if !pres {
 				return fmt.Errorf(
 					"Imported Artifact %v not found (needed by %v)",
@@ -388,7 +389,7 @@ func GetQueryDependencies(
 
 			// If the exported section depends on other artifacts,
 			// then add them too.
-			err := GetQueryDependencies(config_obj, repository,
+			err := GetQueryDependencies(ctx, config_obj, repository,
 				imported_artifact.Export, 0, dependency)
 			if err != nil {
 				return err
@@ -397,20 +398,20 @@ func GetQueryDependencies(
 
 		// Now search the referred to artifact's query for its
 		// own dependencies.
-		err := GetQueryDependencies(
+		err := GetQueryDependencies(ctx,
 			config_obj, repository, dep.Precondition, depth+1, dependency)
 		if err != nil {
 			return err
 		}
 
 		for _, source := range dep.Sources {
-			err := GetQueryDependencies(config_obj, repository,
+			err := GetQueryDependencies(ctx, config_obj, repository,
 				source.Precondition, depth+1, dependency)
 			if err != nil {
 				return err
 			}
 
-			err = GetQueryDependencies(config_obj, repository,
+			err = GetQueryDependencies(ctx, config_obj, repository,
 				source.Query, depth+1, dependency)
 			if err != nil {
 				return err
@@ -430,7 +431,7 @@ func PopulateArtifactsVQLCollectorArgs(
 	request *actions_proto.VQLCollectorArgs) error {
 	dependencies := make(map[string]int)
 	for _, query := range request.Query {
-		err := GetQueryDependencies(config_obj, repository,
+		err := GetQueryDependencies(ctx, config_obj, repository,
 			query.VQL, 0, dependencies)
 		if err != nil {
 			return err
@@ -445,7 +446,7 @@ func PopulateArtifactsVQLCollectorArgs(
 	sort.Strings(dep_names)
 
 	for _, k := range dep_names {
-		artifact, pres := repository.Get(config_obj, k)
+		artifact, pres := repository.Get(ctx, config_obj, k)
 		if pres {
 			// Filter the artifact to contain only
 			// essential data.
@@ -532,9 +533,8 @@ func PopulateArtifactsVQLCollectorArgs(
 // request. This function is used to fill in a copy of the dependent
 // artifacts in the client request.
 func (self *Launcher) GetDependentArtifacts(
-	config_obj *config_proto.Config,
-	repository services.Repository,
-	names []string) ([]string, error) {
+	ctx context.Context, config_obj *config_proto.Config,
+	repository services.Repository, names []string) ([]string, error) {
 
 	dependency := make(map[string]int)
 
@@ -548,13 +548,13 @@ func (self *Launcher) GetDependentArtifacts(
 			continue
 		}
 
-		_, pres = repository.Get(config_obj, name)
+		_, pres = repository.Get(ctx, config_obj, name)
 		if !pres {
 			return nil, fmt.Errorf(
 				"GetDependentArtifacts: Artifact %v not found", name)
 		}
 
-		err := GetQueryDependencies(config_obj, repository,
+		err := GetQueryDependencies(ctx, config_obj, repository,
 			fmt.Sprintf("SELECT * FROM Artifact.%s()", name), 0, dependency)
 		if err != nil {
 			return nil, err

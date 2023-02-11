@@ -125,7 +125,8 @@ func toolUploadHandler() http.Handler {
 			return
 		}
 
-		err = inventory.AddTool(org_config_obj, tool,
+		ctx := r.Context()
+		err = inventory.AddTool(ctx, org_config_obj, tool,
 			services.ToolOptions{
 				AdminOverride: true,
 			})

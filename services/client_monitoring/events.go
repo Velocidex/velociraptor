@@ -21,7 +21,7 @@ func (self *ClientEventTable) ListAvailableEventResults(
 	*api_proto.ListAvailableEventResultsResponse, error) {
 
 	if in.Artifact == "" {
-		return listAvailableEventArtifacts(self.config_obj, in)
+		return listAvailableEventArtifacts(ctx, self.config_obj, in)
 	}
 	return listAvailableEventTimestamps(ctx, self.config_obj, in)
 }
@@ -32,7 +32,7 @@ func listAvailableEventTimestamps(
 	in *api_proto.ListAvailableEventResultsRequest) (
 	*api_proto.ListAvailableEventResultsResponse, error) {
 
-	path_manager, err := artifacts.NewArtifactPathManager(
+	path_manager, err := artifacts.NewArtifactPathManager(ctx,
 		config_obj, in.ClientId, "", in.Artifact)
 	if err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ func listAvailableEventTimestampFiles(
 }
 
 func listAvailableEventArtifacts(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	in *api_proto.ListAvailableEventResultsRequest) (
 	*api_proto.ListAvailableEventResultsResponse, error) {
 
@@ -87,7 +87,7 @@ func listAvailableEventArtifacts(
 		exemplar = "Server.Monitor.Health"
 	}
 
-	path_manager, err := artifacts.NewArtifactPathManager(
+	path_manager, err := artifacts.NewArtifactPathManager(ctx,
 		config_obj, in.ClientId, "", exemplar)
 	if err != nil {
 		return nil, err
@@ -96,12 +96,13 @@ func listAvailableEventArtifacts(
 	// getAllArtifacts analyses the path name from disk and adds
 	// to the events list.
 	seen := make(map[string]*api_proto.AvailableEvent)
-	err = getAllArtifacts(config_obj, path_manager.GetRootPath(), seen)
+	err = getAllArtifacts(ctx, config_obj, path_manager.GetRootPath(), seen)
 	if err != nil {
 		return nil, err
 	}
 
-	err = getAllArtifacts(config_obj, path_manager.Logs().GetRootPath(), seen)
+	err = getAllArtifacts(ctx, config_obj,
+		path_manager.Logs().GetRootPath(), seen)
 	if err != nil {
 		return nil, err
 	}
@@ -119,6 +120,7 @@ func listAvailableEventArtifacts(
 }
 
 func getAllArtifacts(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	log_path api.FSPathSpec,
 	seen map[string]*api_proto.AvailableEvent) error {
@@ -154,7 +156,7 @@ func getAllArtifacts(
 
 				// Check if this is a valid artifact.
 				artifact_base_name := relative_path[0]
-				_, pres := repository.Get(config_obj, artifact_base_name)
+				_, pres := repository.Get(ctx, config_obj, artifact_base_name)
 				if !pres {
 					return nil
 				}

@@ -12,14 +12,65 @@ import CardDeck from 'react-bootstrap/CardDeck';
 import Form from 'react-bootstrap/Form';
 import InputGroup from 'react-bootstrap/InputGroup';
 import T from '../i8n/i8n.jsx';
+import Select from 'react-select';
+import VeloValueRenderer from '../utils/value.jsx';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import classNames from "classnames";
 
+class ResetToolDialog extends React.Component {
+    static propTypes = {
+        tool: PropTypes.object,
+        onClose: PropTypes.func.isRequired,
+    };
+
+    componentDidMount = () => {
+        this.source = axios.CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+    }
+
+    setToolInfo = (tool) => {
+        api.post("v1/SetToolInfo", tool,
+                 this.source.token).then((response) => {
+            this.setState({tool: response.data});
+        }).finally(() => {
+            this.props.onClose();
+        });
+    };
+
+    render() {
+        return <Modal show={true}
+                      enforceFocus={true}
+                      scrollable={false}
+                      onHide={this.props.onClose}>
+                 <Modal.Header closeButton>
+                   <Modal.Title>{T("Tool")} {
+                       this.props.tool && this.props.tool.name}</Modal.Title>
+                 </Modal.Header>
+                 <Modal.Body className="tool-viewer">
+                   <h1>{T("Confirm tool definition reset")}</h1>
+                   {T("This will reset the tool to its original definition")}
+                   <VeloValueRenderer value={this.props.tool}/>
+                   <Button
+                     onClick={x=>this.setToolInfo(this.props.tool)}
+                     variant="outline-info">
+                     {this.props.tool && this.props.tool.artifact}
+                   </Button>
+                 </Modal.Body>
+                 <Modal.Footer>
+                 </Modal.Footer>
+               </Modal>;
+    }
+}
+
 export default class ToolViewer extends React.Component {
     static propTypes = {
         name: PropTypes.string,
+        version: PropTypes.number,
     };
 
     componentDidMount = () => {
@@ -32,17 +83,18 @@ export default class ToolViewer extends React.Component {
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
-        if (this.props.name !== prevProps.name) {
+        if (this.props.name !== prevProps.name ||
+            this.props.version !== prevProps.version) {
             this.fetchToolInfo();
         }
     }
 
-    fetchToolInfo = () => {
+    fetchToolInfo = (onclose) => {
         api.get("v1/GetToolInfo",
                 {name: this.props.name},
                this.source.token).then((response) => {
             this.setState({tool: response.data});
-        });
+        }).then(onclose);
     }
 
     state = {
@@ -276,8 +328,21 @@ export default class ToolViewer extends React.Component {
             );
         }
 
+        let tool_version_options = _.map(tool.versions, x=>{
+             return {value: x.artifact,
+                     tool: x,
+                     label: x.artifact,
+                     isFixed: true};
+        });
         return (
             <>
+              { this.state.showUpdateDialog &&
+                <ResetToolDialog
+                  tool={this.state.showUpdateDialog}
+                  onClose={x=>this.fetchToolInfo(
+                      x=>this.setState({showUpdateDialog: false}))}>
+                </ResetToolDialog>
+              }
               <Modal show={this.state.showDialog}
                      className="full-height"
                      dialogClassName="modal-90w"
@@ -289,6 +354,26 @@ export default class ToolViewer extends React.Component {
                 </Modal.Header>
                 <Modal.Body className="tool-viewer">
                   <dl className="row">
+                    { tool.versions &&
+                      <>
+                        <dt  className="col-4">{T("Other Definitions")}</dt>
+                        <dd className="col-8">
+                          <Select
+                            className="tool-selector"
+                            classNamePrefix="velo"
+                            placeholder={T("Select other definition to reset inventory")}
+                            options={tool_version_options}
+                            onChange={e=>{
+                                e.tool && this.setState({showUpdateDialog: e.tool});
+                            }}
+                          />
+                        </dd>
+                      </>}
+                    { tool.artifact &&
+                      <>
+                        <dt className="col-4">{T("Artifact Definition")}</dt>
+                        <dd className="col-8">{tool.artifact}</dd></>}
+
                     { tool.name &&
                       <>
                         <dt className="col-4">{T("Tool Name")}</dt>

@@ -34,7 +34,7 @@ func (self *ApiServer) GetToolInfo(ctx context.Context,
 		return inventory.GetToolInfo(ctx, org_config_obj, in.Name)
 	}
 
-	return inventory.ProbeToolInfo(in.Name)
+	return inventory.ProbeToolInfo(ctx, org_config_obj, in.Name)
 }
 
 func (self *ApiServer) SetToolInfo(ctx context.Context,
@@ -64,7 +64,7 @@ func (self *ApiServer) SetToolInfo(ctx context.Context,
 		return nil, Status(self.verbose, err)
 	}
 
-	err = inventory.AddTool(org_config_obj, in,
+	err = inventory.AddTool(ctx, org_config_obj, in,
 		services.ToolOptions{
 			AdminOverride: true,
 		})

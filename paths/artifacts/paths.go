@@ -49,12 +49,12 @@ func NewArtifactPathManagerWithMode(
 }
 
 func NewArtifactPathManager(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	client_id, flow_id, full_artifact_name string) (
 	*ArtifactPathManager, error) {
 	artifact_name, artifact_source := paths.SplitFullSourceName(full_artifact_name)
 
-	mode, err := GetArtifactMode(config_obj, artifact_name)
+	mode, err := GetArtifactMode(ctx, config_obj, artifact_name)
 	if err != nil {
 		return nil, err
 	}
@@ -304,7 +304,9 @@ func DayNameToTimestamp(name string) time.Time {
 	return time.Time{}
 }
 
-func GetArtifactMode(config_obj *config_proto.Config, artifact_name string) (int, error) {
+func GetArtifactMode(
+	ctx context.Context, config_obj *config_proto.Config,
+	artifact_name string) (int, error) {
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return 0, err
@@ -315,7 +317,8 @@ func GetArtifactMode(config_obj *config_proto.Config, artifact_name string) (int
 		return 0, err
 	}
 
-	artifact_type, err := repository.GetArtifactType(config_obj, artifact_name)
+	artifact_type, err := repository.GetArtifactType(
+		ctx, config_obj, artifact_name)
 	if err != nil {
 		return 0, err
 	}

@@ -99,7 +99,7 @@ func (self *ServerUploader) Upload(
 		Set("Size", result.Size).
 		Set("UploadedSize", result.Size)
 
-	err = journal.PushRowsToArtifact(self.config_obj,
+	err = journal.PushRowsToArtifact(ctx, self.config_obj,
 		[]*ordereddict.Dict{row},
 		"System.Upload.Completion",
 		"server", self.session_id,

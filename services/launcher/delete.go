@@ -70,7 +70,7 @@ func (self *Launcher) DeleteFlow(
 
 	// Remove all result sets from artifacts.
 	for _, artifact_name := range collection_context.ArtifactsWithResults {
-		path_manager, err := artifact_paths.NewArtifactPathManager(
+		path_manager, err := artifact_paths.NewArtifactPathManager(ctx,
 			config_obj, client_id, flow_id, artifact_name)
 		if err != nil {
 			continue
@@ -197,7 +197,7 @@ func (self *Launcher) DeleteEvents(
 	start_time, end_time time.Time,
 	really_do_it bool) ([]*services.DeleteFlowResponse, error) {
 
-	path_manager, err := artifacts.NewArtifactPathManager(
+	path_manager, err := artifacts.NewArtifactPathManager(ctx,
 		config_obj, client_id, "", artifact)
 	if err != nil {
 		return nil, err
@@ -240,7 +240,7 @@ func (self *Launcher) DeleteEvents(
 		}
 	}
 
-	log_path_manager, err := artifacts.NewArtifactLogPathManager(
+	log_path_manager, err := artifacts.NewArtifactLogPathManager(ctx,
 		config_obj, client_id, "", artifact)
 	if err != nil {
 		return nil, err

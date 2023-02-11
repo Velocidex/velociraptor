@@ -70,33 +70,6 @@ func parseOSPath(ctx context.Context,
 		// Initializer can be a list of components. In this case we
 		// take the base pathspec (which is accessor determined) and
 		// add the components to it.
-	case []types.Any:
-		components := make([]string, 0, len(t))
-		for _, i := range t {
-			i_str, ok := i.(string)
-			if ok {
-				components = append(components, i_str)
-			}
-		}
-
-		// Build a pathspec from the accessor and the components.
-		base, err := accessor.ParsePath("")
-		if err != nil {
-			return nil, err
-		}
-
-		base.Components = append(base.Components, components...)
-		return base, nil
-
-	case []string:
-		// Build a pathspec from the accessor and the components.
-		base, err := accessor.ParsePath("")
-		if err != nil {
-			return nil, err
-		}
-
-		base.Components = append(base.Components, t...)
-		return base, nil
 
 	case string:
 		return accessor.ParsePath(t)
@@ -105,6 +78,28 @@ func parseOSPath(ctx context.Context,
 		return accessor.ParsePath(string(t))
 
 	default:
+		result, _ := accessor.ParsePath("")
+
+		// Is it an array? Generic code to handle arrays - just append
+		// each element together to form a single path. This allows
+		// joining components directly:
+		//     ["bin", "ls"] or ["/usr/bin", "ls"]
+		a_value := reflect.Indirect(reflect.ValueOf(value))
+		if a_value.Type().Kind() == reflect.Slice {
+			for idx := 0; idx < a_value.Len(); idx++ {
+				item, err := parseOSPath(ctx, scope, args,
+					a_value.Index(int(idx)).Interface())
+				if err != nil {
+					continue
+				}
+				item_os_path, ok := item.(*OSPath)
+				if ok {
+					result = result.Append(item_os_path.Components...)
+				}
+			}
+			return result, nil
+		}
+
 		// This is a fatal error on the client.
 		return nil, fmt.Errorf("Expecting a path arg type, not %T", t)
 	}

@@ -173,7 +173,7 @@ func (self *ReplicationTestSuite) TestSendingEvents() {
 		Set("Events", []interface{}{"Test.Artifact"}))
 
 	events = nil
-	err = journal_service.PushRowsToArtifact(self.ConfigObj,
+	err = journal_service.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		my_event, "Test.Artifact", "C.1234", "F.123")
 	assert.NoError(self.T(), err)
 
@@ -199,7 +199,7 @@ func (self *ReplicationTestSuite) TestSendingEvents() {
 	// is often on the critical path. We just dump 1000 messages
 	// into the queue - this should overflow into the file.
 	for i := 0; i < 1000; i++ {
-		err = journal_service.PushRowsToArtifact(self.ConfigObj,
+		err = journal_service.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 			my_event, "Test.Artifact", "C.1234", "F.123")
 		assert.NoError(self.T(), err)
 	}

@@ -118,7 +118,9 @@ func (self *ClientMonitoringTestSuite) TestUpdatingArtifacts() {
 	repository_manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	_, err = repository_manager.SetArtifactFile(self.ConfigObj, "", `
+	ctx := self.Ctx
+	_, err = repository_manager.SetArtifactFile(ctx,
+		self.ConfigObj, "", `
 name: TestArtifact
 sources:
 - query:
@@ -147,7 +149,8 @@ sources:
 	table_version = new_table_message.UpdateEventTable.Version
 
 	// Now delete the artifact completely
-	repository_manager.DeleteArtifactFile(self.ConfigObj, "", "TestArtifact")
+	repository_manager.DeleteArtifactFile(
+		ctx, self.ConfigObj, "", "TestArtifact")
 
 	// The table should magically be updated!
 	table_json := ""
@@ -173,7 +176,7 @@ func (self *ClientMonitoringTestSuite) TestUpdatingClientTable() {
 	current_clock := &utils.IncClock{NowTime: 10}
 
 	repository_manager, _ := services.GetRepositoryManager(self.ConfigObj)
-	repository_manager.SetArtifactFile(self.ConfigObj, "", `
+	repository_manager.SetArtifactFile(self.Ctx, self.ConfigObj, "", `
 name: TestArtifact
 sources:
 - query:
@@ -222,7 +225,7 @@ func (self *ClientMonitoringTestSuite) TestUpdatingClientTableMultiFrontend() {
 	current_clock := &utils.IncClock{NowTime: 10}
 
 	repository_manager, _ := services.GetRepositoryManager(self.ConfigObj)
-	repository_manager.SetArtifactFile(self.ConfigObj, "", `
+	repository_manager.SetArtifactFile(self.Ctx, self.ConfigObj, "", `
 name: TestArtifact
 sources:
 - query:

@@ -1,6 +1,7 @@
 package reporting
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"strings"
@@ -152,6 +153,7 @@ func GenerateMonitoringDailyReport(template_engine TemplateEngine,
 }
 
 func GenerateArtifactDescriptionReport(
+	ctx context.Context,
 	template_engine TemplateEngine,
 	config_obj *config_proto.Config) (
 	string, error) {
@@ -167,7 +169,7 @@ func GenerateArtifactDescriptionReport(
 		return "", err
 	}
 
-	template_artifact, pres := repository.Get(
+	template_artifact, pres := repository.Get(ctx,
 		config_obj, "Server.Internal.ArtifactDescription")
 	if pres {
 		template_engine.SetEnv("artifact", artifact)
@@ -319,6 +321,7 @@ func GenerateHuntReport(template_engine TemplateEngine,
 }
 
 func newBaseTemplateEngine(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	scope vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
@@ -327,7 +330,7 @@ func newBaseTemplateEngine(
 	artifact_name string) (
 	*BaseTemplateEngine, error) {
 
-	artifact, pres := repository.Get(config_obj, artifact_name)
+	artifact, pres := repository.Get(ctx, config_obj, artifact_name)
 	if !pres {
 		return nil, fmt.Errorf(
 			"Artifact %v not known.", artifact_name)

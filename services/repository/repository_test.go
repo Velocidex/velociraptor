@@ -59,7 +59,7 @@ func TestLoadingFromFilestore(t *testing.T) {
 	repository, err := manager.GetGlobalRepository(config_obj)
 	assert.NoError(t, err)
 
-	artifact, pres := repository.Get(config_obj, "Custom.TestArtifact")
+	artifact, pres := repository.Get(ctx, config_obj, "Custom.TestArtifact")
 	assert.True(t, pres)
 
 	assert.Equal(t, artifact.Name, "Custom.TestArtifact")

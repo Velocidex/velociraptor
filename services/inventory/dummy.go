@@ -87,7 +87,9 @@ func (self *Dummy) Get() *artifacts_proto.ThirdParty {
 	return proto.Clone(self.binaries).(*artifacts_proto.ThirdParty)
 }
 
-func (self *Dummy) ProbeToolInfo(name string) (*artifacts_proto.Tool, error) {
+func (self *Dummy) ProbeToolInfo(
+	ctx context.Context, config_obj *config_proto.Config,
+	name string) (*artifacts_proto.Tool, error) {
 	for _, tool := range self.Get().Tools {
 		if tool.Name == name {
 			return tool, nil
@@ -248,11 +250,13 @@ func getGithubRelease(ctx context.Context, Client HTTPClient,
 	return "", errors.New("Release not found from github API " + url)
 }
 
-func (self *Dummy) AddTool(config_obj *config_proto.Config,
+func (self *Dummy) AddTool(
+	ctx context.Context, config_obj *config_proto.Config,
 	tool_request *artifacts_proto.Tool,
 	opts services.ToolOptions) error {
 	if opts.Upgrade {
-		existing_tool, err := self.ProbeToolInfo(tool_request.Name)
+		existing_tool, err := self.ProbeToolInfo(
+			ctx, config_obj, tool_request.Name)
 		if err == nil {
 			// Ignore the request if the existing
 			// definition is better than the new one.

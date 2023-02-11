@@ -425,7 +425,7 @@ func newCollectionManager(
 		ctx:                subctx,
 		cancel:             cancel,
 		config_obj:         config_obj,
-		collection_context: flows.NewCollectionContext(config_obj),
+		collection_context: flows.NewCollectionContext(ctx, config_obj),
 		output_chan:        output_chan,
 		scope:              scope,
 	}

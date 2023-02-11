@@ -305,7 +305,7 @@ func (self *ServerTestSuite) TestMonitoring() {
 		})
 	runner.Close(context.Background())
 
-	path_manager, err := artifacts.NewArtifactPathManager(self.ConfigObj,
+	path_manager, err := artifacts.NewArtifactPathManager(self.Ctx, self.ConfigObj,
 		self.client_id, constants.MONITORING_WELL_KNOWN_FLOW,
 		"Generic.Client.Stats")
 	assert.NoError(self.T(), err)
@@ -512,7 +512,8 @@ func (self *ServerTestSuite) TestVQLResponse() {
 		})
 	runner.Close(context.Background())
 
-	flow_path_manager, err := artifacts.NewArtifactPathManager(self.ConfigObj,
+	flow_path_manager, err := artifacts.NewArtifactPathManager(
+		self.Ctx, self.ConfigObj,
 		self.client_id, flow_id, "Generic.Client.Info")
 	assert.NoError(self.T(), err)
 

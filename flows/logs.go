@@ -5,6 +5,7 @@
 package flows
 
 import (
+	"context"
 	"regexp"
 	"strings"
 	"sync"
@@ -121,13 +122,13 @@ func writeLogMessages(
 // Flush the logs to disk. During execution the flow collects the logs
 // in memory and then flushes it all when done.
 func flushContextLogs(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	collection_context *CollectionContext,
 	completion *utils.Completer) error {
 
 	// Handle monitoring flow specially.
 	if collection_context.SessionId == constants.MONITORING_WELL_KNOWN_FLOW {
-		return flushContextLogsMonitoring(config_obj, collection_context)
+		return flushContextLogsMonitoring(ctx, config_obj, collection_context)
 	}
 
 	flow_path_manager := paths.NewFlowPathManager(

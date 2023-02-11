@@ -76,7 +76,7 @@ func GetTable(
 			return nil, err
 		}
 
-		artifact, pres := repository.Get(config_obj, in.Artifact)
+		artifact, pres := repository.Get(ctx, config_obj, in.Artifact)
 		if pres {
 			result.ColumnTypes = artifact.ColumnTypes
 		}
@@ -98,10 +98,10 @@ func getTable(
 	}
 
 	result := &api_proto.GetTableResponse{
-		ColumnTypes: getColumnTypes(config_obj, in),
+		ColumnTypes: getColumnTypes(ctx, config_obj, in),
 	}
 
-	path_spec, err := GetPathSpec(config_obj, in)
+	path_spec, err := GetPathSpec(ctx, config_obj, in)
 	if err != nil {
 		return result, err
 	}
@@ -188,7 +188,7 @@ func getTable(
 // The GUI is requesting table data. This function tries to figure out
 // the column types.
 func getColumnTypes(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	in *api_proto.GetTableRequest) []*artifacts_proto.ColumnType {
 
 	// For artifacts column types are specified in the `column_types`
@@ -204,7 +204,7 @@ func getColumnTypes(
 			return nil
 		}
 
-		artifact, pres := repository.Get(config_obj, in.Artifact)
+		artifact, pres := repository.Get(ctx, config_obj, in.Artifact)
 		if pres {
 			return artifact.ColumnTypes
 		}
@@ -234,11 +234,11 @@ func getColumnTypes(
 // switch to figure out where the result set we want to look at is
 // stored.
 func GetPathSpec(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	in *api_proto.GetTableRequest) (api.FSPathSpec, error) {
 
 	if in.FlowId != "" && in.Artifact != "" {
-		path_manager, err := artifacts.NewArtifactPathManager(
+		path_manager, err := artifacts.NewArtifactPathManager(ctx,
 			config_obj, in.ClientId, in.FlowId, in.Artifact)
 		if err != nil {
 			return nil, err
@@ -289,7 +289,7 @@ func getEventTable(
 	config_obj *config_proto.Config,
 	in *api_proto.GetTableRequest) (
 	*api_proto.GetTableResponse, error) {
-	path_manager, err := artifacts.NewArtifactPathManager(
+	path_manager, err := artifacts.NewArtifactPathManager(ctx,
 		config_obj, in.ClientId, in.FlowId, in.Artifact)
 	if err != nil {
 		return nil, err
@@ -303,7 +303,7 @@ func getEventTableLogs(
 	config_obj *config_proto.Config,
 	in *api_proto.GetTableRequest) (
 	*api_proto.GetTableResponse, error) {
-	path_manager, err := artifacts.NewArtifactLogPathManager(
+	path_manager, err := artifacts.NewArtifactLogPathManager(ctx,
 		config_obj, in.ClientId, "", in.Artifact)
 	if err != nil {
 		return nil, err

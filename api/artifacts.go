@@ -67,7 +67,7 @@ sources:
 )
 
 func getArtifactFile(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	name string) (string, error) {
 
 	manager, err := services.GetRepositoryManager(config_obj)
@@ -80,7 +80,7 @@ func getArtifactFile(
 		return "", err
 	}
 
-	artifact, pres := repository.Get(config_obj, name)
+	artifact, pres := repository.Get(ctx, config_obj, name)
 	if !pres {
 		return default_artifact, nil
 	}
@@ -107,9 +107,9 @@ func ensureArtifactPrefix(definition, prefix string) string {
 		})
 }
 
-func setArtifactFile(config_obj *config_proto.Config, principal string,
-	in *api_proto.SetArtifactRequest,
-	required_prefix string) (
+func setArtifactFile(
+	ctx context.Context, config_obj *config_proto.Config, principal string,
+	in *api_proto.SetArtifactRequest, required_prefix string) (
 	*artifacts_proto.Artifact, error) {
 
 	manager, err := services.GetRepositoryManager(config_obj)
@@ -134,11 +134,11 @@ func setArtifactFile(config_obj *config_proto.Config, principal string,
 					required_prefix + "'")
 		}
 
-		return artifact_definition, manager.DeleteArtifactFile(config_obj,
+		return artifact_definition, manager.DeleteArtifactFile(ctx, config_obj,
 			principal, artifact_definition.Name)
 
 	case api_proto.SetArtifactRequest_SET:
-		return manager.SetArtifactFile(
+		return manager.SetArtifactFile(ctx,
 			config_obj, principal, in.Artifact, required_prefix)
 	}
 
@@ -171,7 +171,7 @@ func getReportArtifacts(
 		return nil, Status(config_obj.Verbose, err)
 	}
 	for _, name := range names {
-		artifact, pres := repository.Get(config_obj, name)
+		artifact, pres := repository.Get(ctx, config_obj, name)
 		if pres {
 			for _, report := range artifact.Reports {
 				if report.Type == report_type {
@@ -258,7 +258,7 @@ func searchArtifact(
 			continue
 		}
 
-		artifact, pres := repository.Get(config_obj, name)
+		artifact, pres := repository.Get(ctx, config_obj, name)
 		if pres {
 			// Skip non matching types
 			if artifact_type != "" &&
@@ -352,7 +352,7 @@ func (self *ApiServer) LoadArtifactPack(
 				Artifact: artifact_definition,
 			}
 
-			definition, err := setArtifactFile(
+			definition, err := setArtifactFile(ctx,
 				org_config_obj, principal, request, prefix)
 			if err == nil {
 				logging.LogAudit(org_config_obj, principal, "LoadArtifactPack",

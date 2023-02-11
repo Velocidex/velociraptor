@@ -327,7 +327,9 @@ sources:
 
 	// Now we update the artifact definition and the monitoring table
 	// should magically be updated and the new artifact run instead.
-	_, err = manager.SetArtifactFile(self.ConfigObj, "user", `
+	ctx := self.Ctx
+	_, err = manager.SetArtifactFile(
+		ctx, self.ConfigObj, "user", `
 name: TestArtifact
 type: SERVER_EVENT
 parameters:

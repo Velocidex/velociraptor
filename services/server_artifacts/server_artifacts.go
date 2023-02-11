@@ -76,7 +76,7 @@ func (self *ServerArtifactsRunner) process(
 
 		if req.Cancel != nil {
 			// This collection is now done, cancel it.
-			self.Cancel(session_id, req.Cancel.Principal)
+			self.Cancel(ctx, session_id, req.Cancel.Principal)
 			return nil
 		}
 
@@ -94,7 +94,7 @@ func (self *ServerArtifactsRunner) process(
 				defer cancel()
 				defer collection_context.Save()
 
-				self.ProcessTask(config_obj,
+				self.ProcessTask(sub_ctx, config_obj,
 					req.SessionId, collection_context, req.FlowRequest)
 			}()
 		}
@@ -103,13 +103,14 @@ func (self *ServerArtifactsRunner) process(
 	return nil
 }
 
-func (self *ServerArtifactsRunner) Cancel(flow_id, principal string) {
+func (self *ServerArtifactsRunner) Cancel(
+	ctx context.Context, flow_id, principal string) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	context_manager, pres := self.in_flight_collections[flow_id]
 	if pres {
-		context_manager.Cancel(principal)
+		context_manager.Cancel(ctx, principal)
 		delete(self.in_flight_collections, flow_id)
 	}
 }
@@ -119,7 +120,7 @@ func (self *ServerArtifactsRunner) Cancel(flow_id, principal string) {
 // compiler will decide how to structure the artifact into multiple
 // VQLClientActions (e.g. by considering precondition clauses).
 func (self *ServerArtifactsRunner) ProcessTask(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	session_id string,
 	collection_context CollectionContextManager,
 	req *crypto_proto.FlowRequest) error {
@@ -131,7 +132,7 @@ func (self *ServerArtifactsRunner) ProcessTask(
 	// Wait here for all the queries to exit then remove them from the
 	// in_flight_collections map.
 	defer func() {
-		collection_context.Close()
+		collection_context.Close(ctx)
 
 		self.mu.Lock()
 		delete(self.in_flight_collections, session_id)

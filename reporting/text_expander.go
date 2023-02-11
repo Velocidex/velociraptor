@@ -120,12 +120,13 @@ func (self *TextTemplateEngine) Table(values ...interface{}) string {
 }
 
 func NewTextTemplateEngine(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	scope vfilter.Scope,
 	acl_manager vql_subsystem.ACLManager,
 	repository services.Repository,
 	artifact_name string) (*TextTemplateEngine, error) {
-	base_engine, err := newBaseTemplateEngine(
+	base_engine, err := newBaseTemplateEngine(ctx,
 		config_obj, scope, acl_manager, nil, repository, artifact_name)
 	if err != nil {
 		return nil, err

@@ -58,7 +58,7 @@ func (self AddClientMonitoringFunction) Call(
 		return vfilter.Null{}
 	}
 
-	artifact, pres := repository.Get(config_obj, arg.Artifact)
+	artifact, pres := repository.Get(ctx, config_obj, arg.Artifact)
 	if !pres {
 		scope.Log("add_client_monitoring: artifact %v not found", arg.Artifact)
 		return vfilter.Null{}
@@ -221,7 +221,7 @@ func (self AddServerMonitoringFunction) Call(
 		return vfilter.Null{}
 	}
 
-	artifact, pres := repository.Get(config_obj, arg.Artifact)
+	artifact, pres := repository.Get(ctx, config_obj, arg.Artifact)
 	if !pres {
 		scope.Log("add_server_monitoring: artifact %v not found", arg.Artifact)
 		return vfilter.Null{}

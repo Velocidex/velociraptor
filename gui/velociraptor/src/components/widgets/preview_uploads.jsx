@@ -312,7 +312,7 @@ export default class PreviewUpload extends Component {
             fs_components: normalizeComponentList(
                 components, client_id, flow_id, accessor),
             client_id: client_id,
-            org_id: window.globals.org_id || "root",
+            org_id: window.globals.OrgId || "root",
         };
         let url = 'v1/DownloadVFSFile';
 

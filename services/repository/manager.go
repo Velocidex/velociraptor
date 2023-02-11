@@ -134,7 +134,8 @@ func (self *RepositoryManager) SetGlobalRepositoryForTests(
 }
 
 func (self *RepositoryManager) SetArtifactFile(
-	config_obj *config_proto.Config, principal, definition, required_prefix string) (
+	ctx context.Context, config_obj *config_proto.Config,
+	principal, definition, required_prefix string) (
 	*artifacts_proto.Artifact, error) {
 
 	// Use regexes to force the artifact into the correct prefix.
@@ -201,7 +202,7 @@ func (self *RepositoryManager) SetArtifactFile(
 		return nil, err
 	}
 
-	err = journal.PushRowsToArtifact(config_obj,
+	err = journal.PushRowsToArtifact(ctx, config_obj,
 		[]*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("setter", principal).
@@ -220,14 +221,15 @@ func (self *RepositoryManager) SetParent(
 }
 
 func (self *RepositoryManager) DeleteArtifactFile(
-	config_obj *config_proto.Config, principal, name string) error {
+	ctx context.Context, config_obj *config_proto.Config,
+	principal, name string) error {
 	global_repository, err := self.GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
 	}
 
 	// If not there nothing to do...
-	_, pres := global_repository.Get(config_obj, name)
+	_, pres := global_repository.Get(ctx, config_obj, name)
 	if !pres {
 		return nil
 	}
@@ -241,7 +243,7 @@ func (self *RepositoryManager) DeleteArtifactFile(
 		return err
 	}
 
-	err = journal.PushRowsToArtifact(config_obj,
+	err = journal.PushRowsToArtifact(ctx, config_obj,
 		[]*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("setter", principal).
@@ -402,7 +404,7 @@ func LoadBuiltInArtifacts(ctx context.Context,
 				return
 
 			default:
-				_, pres := grepository.Get(config_obj, name)
+				_, pres := grepository.Get(ctx, config_obj, name)
 				if !pres {
 					grepository.Del(name)
 				}

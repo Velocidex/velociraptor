@@ -89,7 +89,7 @@ func (self *VFSService) ProcessDownloadFile(
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	client_path_manager := paths.NewClientPathManager(client_id)
 
-	artifact_path_manager, err := artifacts.NewArtifactPathManager(config_obj,
+	artifact_path_manager, err := artifacts.NewArtifactPathManager(ctx, config_obj,
 		client_id, flow_id, "System.VFS.DownloadFile")
 	if err != nil {
 		logger.Error("Unable to read artifact: %v", err)

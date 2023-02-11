@@ -57,7 +57,7 @@ func (self *TestSuite) TestArtifactSource() {
 
 	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 
-	path_manager, err := artifacts.NewArtifactPathManager(
+	path_manager, err := artifacts.NewArtifactPathManager(self.Ctx,
 		self.ConfigObj, self.client_id, self.flow_id,
 		"Test.Artifact")
 	assert.NoError(self.T(), err)
@@ -174,7 +174,7 @@ func (self *TestSuite) TestHuntsSource() {
 			Set("_ts", 0).
 			Set("Timestamp", 0))
 
-		path_manager, err := artifacts.NewArtifactPathManager(
+		path_manager, err := artifacts.NewArtifactPathManager(self.Ctx,
 			self.ConfigObj, client_id, flow_id, "Test.Artifact")
 		assert.NoError(self.T(), err)
 

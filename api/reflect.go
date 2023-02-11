@@ -123,7 +123,7 @@ func (self *ApiServer) GetKeywordCompletions(
 	}
 
 	for _, name := range names {
-		artifact, pres := repository.Get(org_config_obj, name)
+		artifact, pres := repository.Get(ctx, org_config_obj, name)
 		if !pres {
 			continue
 		}

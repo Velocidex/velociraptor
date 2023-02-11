@@ -82,7 +82,7 @@ func (self CollectPlugin) Call(
 			output_chan, scope)
 		defer collection_manager.Close()
 
-		request, err := self.configureCollection(collection_manager, arg)
+		request, err := self.configureCollection(ctx, collection_manager, arg)
 		if err != nil {
 			scope.Log("collect: %v", err)
 			return
@@ -101,7 +101,7 @@ func (self CollectPlugin) Call(
 
 // Configures the collection manager with the provided args.
 func (self CollectPlugin) configureCollection(
-	manager *collectionManager, arg *CollectPluginArgs) (
+	ctx context.Context, manager *collectionManager, arg *CollectPluginArgs) (
 	*flows_proto.ArtifactCollectorArgs, error) {
 
 	format, err := reporting.GetContainerFormat(arg.Format)
@@ -150,7 +150,7 @@ func (self CollectPlugin) configureCollection(
 
 	// Compile the request into vql requests protobuf ready for
 	// acquisition.
-	return getArtifactCollectorArgs(
+	return getArtifactCollectorArgs(ctx,
 		manager.config_obj, manager.repository, manager.scope, arg)
 }
 
@@ -166,7 +166,7 @@ func (self CollectPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 // Parse the plugin arg into an artifact collector arg that can be
 // compiled into VQL requests
 func getArtifactCollectorArgs(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	repository services.Repository,
 	scope vfilter.Scope,
 	arg *CollectPluginArgs) (*flows_proto.ArtifactCollectorArgs, error) {
@@ -175,7 +175,8 @@ func getArtifactCollectorArgs(
 		Artifacts: arg.Artifacts,
 	}
 
-	err := AddSpecProtobuf(config_obj, repository, scope, arg.Args, request)
+	err := AddSpecProtobuf(ctx, config_obj,
+		repository, scope, arg.Args, request)
 	if err != nil {
 		return nil, err
 	}
@@ -216,7 +217,7 @@ func convertToArtifactSpecs(spec vfilter.Any) (*ordereddict.Dict, error) {
 // artifact parameters are always strings, encoded according to the
 // parameter type.
 func AddSpecProtobuf(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	repository services.Repository,
 	scope vfilter.Scope, spec vfilter.Any,
 	request *flows_proto.ArtifactCollectorArgs) error {
@@ -232,7 +233,7 @@ func AddSpecProtobuf(
 	}
 
 	for _, name := range scope.GetMembers(spec) {
-		artifact_definitions, pres := repository.Get(config_obj, name)
+		artifact_definitions, pres := repository.Get(ctx, config_obj, name)
 		if !pres {
 			// Artifact not known
 			return fmt.Errorf(`Parameter 'args' refers to an unknown artifact (%v). The 'args' parameter should be of the form {"Custom.Artifact.Name":{"arg":"value"}}`, name)

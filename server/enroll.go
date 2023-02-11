@@ -49,7 +49,7 @@ func enroll(
 		return err
 	}
 
-	return journal.PushRowsToArtifact(config_obj,
+	return journal.PushRowsToArtifact(ctx, config_obj,
 		[]*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("ClientId", client_id)},

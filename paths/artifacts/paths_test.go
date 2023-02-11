@@ -97,7 +97,7 @@ func (self *PathManageTestSuite) TestPathManager() {
 
 	for _, testcase := range path_tests {
 		path_manager, err := artifacts.NewArtifactPathManager(
-			self.ConfigObj,
+			self.Ctx, self.ConfigObj,
 			testcase.client_id,
 			testcase.flow_id,
 			testcase.full_artifact_name)

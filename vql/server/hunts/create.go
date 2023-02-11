@@ -135,7 +135,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
-	err = collector.AddSpecProtobuf(config_obj, repository, scope,
+	err = collector.AddSpecProtobuf(ctx, config_obj, repository, scope,
 		arg.Spec, request)
 	if err != nil {
 		scope.Log("hunt: %v", err)
@@ -312,7 +312,7 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 
 	// Send this
 	if arg.FlowId != "" {
-		err = journal.PushRowsToArtifact(config_obj,
+		err = journal.PushRowsToArtifact(ctx, config_obj,
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("HuntId", arg.HuntId).
 				Set("mutation", &api_proto.HuntMutation{
@@ -324,7 +324,7 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 				})},
 			"Server.Internal.HuntModification", arg.ClientId, "")
 	} else {
-		err = journal.PushRowsToArtifact(config_obj,
+		err = journal.PushRowsToArtifact(ctx, config_obj,
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("HuntId", arg.HuntId).
 				Set("ClientId", arg.ClientId).

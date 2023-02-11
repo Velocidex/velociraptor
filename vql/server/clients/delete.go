@@ -161,7 +161,7 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 		// it is already up.
 		notifier, err := services.GetNotifier(config_obj)
 		if err == nil {
-			err = notifier.NotifyListener(
+			err = notifier.NotifyListener(ctx,
 				config_obj, arg.ClientId, "DeleteClient")
 			if err != nil {
 				scope.Log("client_delete: %s", err)
@@ -236,7 +236,7 @@ func reallyDeleteClient(ctx context.Context,
 			"org_id":    config_obj.OrgId,
 		})
 
-	return journal.PushRowsToArtifact(config_obj,
+	return journal.PushRowsToArtifact(ctx, config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", arg.ClientId).
 			Set("OrgId", config_obj.OrgId).

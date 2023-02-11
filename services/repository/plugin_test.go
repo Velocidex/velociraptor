@@ -68,7 +68,7 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 	assert.NoError(self.T(), err)
 
 	for _, artifact_name := range names {
-		artifact, pres := repository.Get(ConfigObj, artifact_name)
+		artifact, pres := repository.Get(self.Ctx, ConfigObj, artifact_name)
 		assert.True(self.T(), pres)
 
 		if artifact != nil && !artifact.IsAlias {

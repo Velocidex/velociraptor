@@ -122,11 +122,11 @@ func (self *ArtifactLogPathManager) GetAvailableFiles(
 }
 
 func NewArtifactLogPathManager(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	client_id, flow_id, full_artifact_name string) (
 	*ArtifactLogPathManager, error) {
 
-	path_manager, err := NewArtifactPathManager(config_obj,
+	path_manager, err := NewArtifactPathManager(ctx, config_obj,
 		client_id, flow_id, full_artifact_name)
 	if err != nil {
 		return nil, err

@@ -20,7 +20,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetMigration() {
 
 	// Start off by writing some events on a queue.
 	path_manager, err := artifacts.NewArtifactPathManager(
-		self.ConfigObj,
+		self.Ctx, self.ConfigObj,
 		self.client_id,
 		self.flow_id,
 		"Windows.Events.ProcessCreation")

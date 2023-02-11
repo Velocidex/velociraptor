@@ -95,7 +95,7 @@ type Launcher interface {
 
 	// Calculates the dependent artifacts
 	GetDependentArtifacts(
-		config_obj *config_proto.Config,
+		ctx context.Context, config_obj *config_proto.Config,
 		repository Repository,
 		names []string) ([]string, error)
 

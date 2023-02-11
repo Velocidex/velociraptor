@@ -204,7 +204,7 @@ func (self *TestSuite) TestRetransmission() {
 	runner.Close(context.Background())
 
 	// Load the collection context and see what happened.
-	collection_context, err := LoadCollectionContext(self.ConfigObj,
+	collection_context, err := LoadCollectionContext(self.Ctx, self.ConfigObj,
 		self.client_id, flow_id)
 	assert.NoError(self.T(), err)
 
@@ -216,8 +216,7 @@ func (self *TestSuite) TestRetransmission() {
 func (self *TestSuite) TestResourceLimits() {
 	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
-	repository, err := manager.GetGlobalRepository(
-		self.ConfigObj)
+	repository, err := manager.GetGlobalRepository(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	request := &flows_proto.ArtifactCollectorArgs{
@@ -280,7 +279,7 @@ func (self *TestSuite) TestResourceLimits() {
 	runner.Close(context.Background())
 
 	// Load the collection context and see what happened.
-	collection_context, err := LoadCollectionContext(self.ConfigObj,
+	collection_context, err := LoadCollectionContext(self.Ctx, self.ConfigObj,
 		self.client_id, flow_id)
 	assert.NoError(self.T(), err)
 
@@ -296,7 +295,7 @@ func (self *TestSuite) TestResourceLimits() {
 	runner.Close(context.Background())
 
 	// Load the collection context and see what happened.
-	collection_context, err = LoadCollectionContext(self.ConfigObj,
+	collection_context, err = LoadCollectionContext(self.Ctx, self.ConfigObj,
 		self.client_id, flow_id)
 	assert.NoError(self.T(), err)
 
@@ -314,7 +313,7 @@ func (self *TestSuite) TestResourceLimits() {
 	runner.Close(context.Background())
 
 	// Load the collection context and see what happened.
-	collection_context, err = LoadCollectionContext(self.ConfigObj,
+	collection_context, err = LoadCollectionContext(self.Ctx, self.ConfigObj,
 		self.client_id, flow_id)
 	assert.NoError(self.T(), err)
 
@@ -342,7 +341,7 @@ func (self *TestSuite) TestResourceLimits() {
 	// We still collect these rows but the flow is still in the
 	// error state. We do this so we dont lose the last few
 	// messages which are still in flight.
-	collection_context, err = LoadCollectionContext(self.ConfigObj,
+	collection_context, err = LoadCollectionContext(self.Ctx, self.ConfigObj,
 		self.client_id, flow_id)
 	assert.NoError(self.T(), err)
 
@@ -375,7 +374,7 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 		nilTime, nilTime, nilTime, nilTime, reader)
 
 	// Get a new collection context.
-	collection_context := NewCollectionContext(self.ConfigObj)
+	collection_context := NewCollectionContext(self.Ctx, self.ConfigObj)
 	collection_context.ArtifactCollectorContext = flows_proto.ArtifactCollectorContext{
 		SessionId:           self.flow_id,
 		ClientId:            self.client_id,
@@ -387,7 +386,7 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 
 	for _, response := range resp.Drain.WaitForStatsMessage(self.T()) {
 		response.Source = self.client_id
-		err := ArtifactCollectorProcessOneMessage(
+		err := ArtifactCollectorProcessOneMessage(self.Ctx,
 			self.ConfigObj, collection_context, response)
 		assert.NoError(self.T(), err)
 	}
@@ -437,7 +436,7 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 
 	// Check the System.Upload.Completion event.
 	artifact_path_manager, err := artifacts.NewArtifactPathManager(
-		self.ConfigObj, self.client_id, self.flow_id,
+		self.Ctx, self.ConfigObj, self.client_id, self.flow_id,
 		"System.Upload.Completion")
 	assert.NoError(self.T(), err)
 
@@ -580,7 +579,7 @@ func (self *TestSuite) testCollectionCompletion(
 	outstanding_requests int64,
 	requests []*crypto_proto.VeloMessage) *flows_proto.ArtifactCollectorContext {
 	// Get a new collection context.
-	collection_context := NewCollectionContext(self.ConfigObj)
+	collection_context := NewCollectionContext(self.Ctx, self.ConfigObj)
 	collection_context.ArtifactCollectorContext = flows_proto.ArtifactCollectorContext{
 		SessionId:           self.flow_id,
 		ClientId:            self.client_id,
@@ -661,7 +660,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 		nilTime, nilTime, nilTime, nilTime, reader)
 
 	// Get a new collection context.
-	collection_context := NewCollectionContext(self.ConfigObj)
+	collection_context := NewCollectionContext(self.Ctx, self.ConfigObj)
 	collection_context.ArtifactCollectorContext = flows_proto.ArtifactCollectorContext{
 		SessionId:           self.flow_id,
 		ClientId:            self.client_id,
@@ -677,7 +676,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 			assert.Equal(self.T(), msg.FileBuffer.StoredSize, uint64(12))
 		}
 
-		ArtifactCollectorProcessOneMessage(self.ConfigObj,
+		ArtifactCollectorProcessOneMessage(self.Ctx, self.ConfigObj,
 			collection_context, msg)
 	}
 
@@ -737,7 +736,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 
 	// Check the System.Upload.Completion event.
 	artifact_path_manager, err := artifacts.NewArtifactPathManager(
-		self.ConfigObj, self.client_id, self.flow_id,
+		self.Ctx, self.ConfigObj, self.client_id, self.flow_id,
 		"System.Upload.Completion")
 	assert.NoError(self.T(), err)
 
@@ -796,7 +795,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 		nilTime, nilTime, nilTime, nilTime, fd)
 
 	// Get a new collection context.
-	collection_context := NewCollectionContext(self.ConfigObj)
+	collection_context := NewCollectionContext(self.Ctx, self.ConfigObj)
 	collection_context.ArtifactCollectorContext = flows_proto.ArtifactCollectorContext{
 		SessionId: self.flow_id,
 		ClientId:  self.client_id,
@@ -806,7 +805,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 	// Process it.
 	for _, resp := range resp.Drain.WaitForStatsMessage(self.T()) {
 		resp.Source = self.client_id
-		ArtifactCollectorProcessOneMessage(self.ConfigObj,
+		ArtifactCollectorProcessOneMessage(self.Ctx, self.ConfigObj,
 			collection_context, resp)
 	}
 
@@ -866,7 +865,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 
 	// Check the System.Upload.Completion event.
 	artifact_path_manager, err := artifacts.NewArtifactPathManager(
-		self.ConfigObj, self.client_id, self.flow_id,
+		self.Ctx, self.ConfigObj, self.client_id, self.flow_id,
 		"System.Upload.Completion")
 	assert.NoError(self.T(), err)
 

@@ -72,6 +72,8 @@ class ArtifactInspector extends React.Component {
         showDeleteArtifactDialog: false,
         showArtifactsUploadDialog: false,
         current_filter: "",
+
+        version: 0,
     }
 
     componentDidMount = () => {
@@ -142,13 +144,20 @@ class ArtifactInspector extends React.Component {
         e.preventDefault();
         e.stopPropagation();
 
+        return this.getArtifactDescription(row.name);
+   }
+
+    getArtifactDescription = (name) => {
         // Fetch the full description
         api.post("v1/GetArtifacts", {
-            names: [row.name],
+            names: [name],
         }, this.source.token).then(response=>{
             let items = response.data.items;
             if (items.length > 0) {
-                this.setState({fullSelectedDescriptor: items[0]});
+                this.setState({
+                    fullSelectedDescriptor: items[0],
+                    version: this.state.version+1,
+                });
             };
         });
         return false;
@@ -235,6 +244,7 @@ class ArtifactInspector extends React.Component {
                       // Re-apply the search in case the user updated
                       // an artifact that should show up.
                       this.fetchRows(this.state.current_filter);
+                      this.getArtifactDescription(selected);
                       this.setState({showEditedArtifactDialog: false});
                   }}
                 />
@@ -341,6 +351,7 @@ class ArtifactInspector extends React.Component {
                     { this.state.selectedDescriptor ?
                       <VeloReportViewer
                         artifact={this.state.selectedDescriptor.name}
+                        params={{version: this.state.version}}
                         type="ARTIFACT_DESCRIPTION"
                         client={{client_id: this.state.selectedDescriptor.name}}
                       /> :

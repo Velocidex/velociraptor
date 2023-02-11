@@ -136,7 +136,7 @@ func (self *HuntDispatcher) participateAllConnectedClients(
 		}
 
 		// Notify the hunt manager about the new client
-		journal.PushRowsToArtifactAsync(config_obj,
+		journal.PushRowsToArtifactAsync(ctx, config_obj,
 			ordereddict.NewDict().
 				Set("HuntId", hunt_id).
 				Set("ClientId", c),
@@ -268,14 +268,14 @@ func (self *HuntDispatcher) GetHunt(hunt_id string) (*api_proto.Hunt, bool) {
 // Therefore, writers may write mutations and expect they take an
 // unspecified time to appear in the hunt details.
 func (self *HuntDispatcher) MutateHunt(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	mutation *api_proto.HuntMutation) error {
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
 
-	journal.PushRowsToArtifactAsync(config_obj,
+	journal.PushRowsToArtifactAsync(ctx, config_obj,
 		ordereddict.NewDict().
 			Set("hunt_id", mutation.HuntId).
 			Set("mutation", mutation),
@@ -287,7 +287,7 @@ func (self *HuntDispatcher) MutateHunt(
 // Modify the hunt object under lock and also inform all other
 // dispatchers about the new state.
 func (self *HuntDispatcher) ModifyHuntObject(
-	hunt_id string,
+	ctx context.Context, hunt_id string,
 	cb func(hunt *api_proto.Hunt) services.HuntModificationAction) services.HuntModificationAction {
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
@@ -326,7 +326,7 @@ func (self *HuntDispatcher) ModifyHuntObject(
 		if err == nil {
 			// Make sure these are pushed out ASAP to the other
 			// dispatchers.
-			journal.PushRowsToArtifact(self.config_obj,
+			journal.PushRowsToArtifact(ctx, self.config_obj,
 				[]*ordereddict.Dict{
 					ordereddict.NewDict().
 						Set("HuntId", hunt_id).
@@ -348,7 +348,7 @@ func (self *HuntDispatcher) ModifyHuntObject(
 		if err == nil {
 			// Make sure these are pushed out ASAP to the other
 			// dispatchers.
-			journal.PushRowsToArtifact(self.config_obj,
+			journal.PushRowsToArtifact(ctx, self.config_obj,
 				[]*ordereddict.Dict{
 					ordereddict.NewDict().
 						Set("HuntId", hunt_id).
@@ -508,8 +508,7 @@ func (self *HuntDispatcher) CreateHunt(
 	hunt.Artifacts = hunt.StartRequest.Artifacts
 	hunt.ArtifactSources = []string{}
 	for _, artifact := range hunt.StartRequest.Artifacts {
-		for _, source := range GetArtifactSources(
-			config_obj, artifact) {
+		for _, source := range GetArtifactSources(ctx, config_obj, artifact) {
 			hunt.ArtifactSources = append(
 				hunt.ArtifactSources, path.Join(artifact, source))
 		}
@@ -568,7 +567,7 @@ func (self *HuntDispatcher) CreateHunt(
 		return "", err
 	}
 
-	err = journal.PushRowsToArtifact(config_obj,
+	err = journal.PushRowsToArtifact(ctx, config_obj,
 		[]*ordereddict.Dict{row}, "System.Hunt.Creation",
 		"server", hunt.HuntId)
 	if err != nil {

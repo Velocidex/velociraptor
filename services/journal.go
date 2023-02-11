@@ -51,24 +51,25 @@ type JournalService interface {
 	AppendToResultSet(config_obj *config_proto.Config,
 		path api.FSPathSpec, rows []*ordereddict.Dict) error
 
-	Broadcast(config_obj *config_proto.Config,
+	Broadcast(ctx context.Context, config_obj *config_proto.Config,
 		rows []*ordereddict.Dict, name, client_id, flows_id string) error
 
 	// Push the rows to the event artifact queue
-	PushRowsToArtifact(config_obj *config_proto.Config,
+	PushRowsToArtifact(ctx context.Context, config_obj *config_proto.Config,
 		rows []*ordereddict.Dict, name, client_id, flows_id string) error
 
 	// An optimization around PushRowsToArtifact where rows are
 	// already serialized in JSONL
 	PushJsonlToArtifact(
-		config_obj *config_proto.Config,
+		ctx context.Context, config_obj *config_proto.Config,
 		jsonl []byte, row_count int,
 		name, client_id, flows_id string) error
 
 	// Push the rows to the event artifact queue with a potential
 	// unspecified delay. Internally these rows will be batched until
 	// a convenient time to send them.
-	PushRowsToArtifactAsync(config_obj *config_proto.Config,
+	PushRowsToArtifactAsync(
+		ctx context.Context, config_obj *config_proto.Config,
 		row *ordereddict.Dict, name string)
 
 	// Sets the clock for tests

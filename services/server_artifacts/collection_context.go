@@ -253,7 +253,7 @@ func (self *contextManager) Save() error {
 		self.ctx, self.config_obj, context)
 }
 
-func (self *contextManager) Cancel(principal string) {
+func (self *contextManager) Cancel(ctx context.Context, principal string) {
 	self.mu.Lock()
 	for _, query_ctx := range self.query_contexts {
 		query_ctx.UpdateStatus(func(s *crypto_proto.VeloStatus) {
@@ -266,17 +266,17 @@ func (self *contextManager) Cancel(principal string) {
 	self.cancel()
 
 	self.wg.Wait()
-	self.maybeSendCompletionMessage()
+	self.maybeSendCompletionMessage(ctx)
 }
 
-func (self *contextManager) Close() {
+func (self *contextManager) Close(ctx context.Context) {
 	self.wg.Wait()
-	self.maybeSendCompletionMessage()
+	self.maybeSendCompletionMessage(ctx)
 }
 
 // Called when each query is completed. Will send the message once for
 // the entire flow completion.
-func (self *contextManager) maybeSendCompletionMessage() {
+func (self *contextManager) maybeSendCompletionMessage(ctx context.Context) {
 	flow_context := self.GetContext()
 	if flow_context.State == flows_proto.ArtifactCollectorContext_RUNNING {
 		return
@@ -292,7 +292,7 @@ func (self *contextManager) maybeSendCompletionMessage() {
 	if err != nil {
 		return
 	}
-	journal.PushRowsToArtifact(self.config_obj,
+	journal.PushRowsToArtifact(ctx, self.config_obj,
 		[]*ordereddict.Dict{row},
 		"System.Flow.Completion", "server", self.session_id,
 	)

@@ -135,7 +135,7 @@ func (self *EnrollmentService) ProcessEnrollment(
 
 	// Allow the user to override the basic interrogation
 	// functionality.  Check for any customized versions
-	definition, pres := repository.Get(config_obj, "Custom.Generic.Client.Info")
+	definition, pres := repository.Get(ctx, config_obj, "Custom.Generic.Client.Info")
 	if pres {
 		interrogation_artifact = definition.Name
 	}
@@ -157,7 +157,7 @@ func (self *EnrollmentService) ProcessEnrollment(
 			// Notify the client
 			notifier, err := services.GetNotifier(config_obj)
 			if err == nil {
-				notifier.NotifyListener(
+				notifier.NotifyListener(ctx,
 					config_obj, client_id, "Interrogate")
 			}
 		})
@@ -205,7 +205,7 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	client_id, flow_id, artifact string) error {
 
 	file_store_factory := file_store.GetFileStore(config_obj)
-	path_manager, err := artifacts.NewArtifactPathManager(config_obj,
+	path_manager, err := artifacts.NewArtifactPathManager(ctx, config_obj,
 		client_id, flow_id, artifact)
 	if err != nil {
 		return err
@@ -299,7 +299,7 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 		func() {
 			client_info_manager.Flush(ctx, client_id)
 
-			journal.PushRowsToArtifactAsync(config_obj,
+			journal.PushRowsToArtifactAsync(ctx, config_obj,
 				ordereddict.NewDict().
 					Set("ClientId", client_id),
 				"Server.Internal.Interrogation")

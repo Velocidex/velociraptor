@@ -133,7 +133,7 @@ func (self *NotebookManager) CancelNotebookCell(
 	if err != nil {
 		return err
 	}
-	return notifier.NotifyListener(self.config_obj, cell_id,
+	return notifier.NotifyListener(ctx, self.config_obj, cell_id,
 		"CancelNotebookCell")
 }
 

@@ -9,6 +9,7 @@
     "url": "https://www.company.com"
    },
    {
+    "artifact": "TestArtifact",
     "filename": "www.example2.com",
     "filestore_path": "9a0dbc5804c7e06fc2e371a936bbe1d90b206aa9b8fbad7601f4a7f70fb596e1",
     "name": "Tool2",

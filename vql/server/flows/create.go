@@ -148,7 +148,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		arg.Spec = spec
 	}
 
-	err = collector.AddSpecProtobuf(config_obj, repository, scope,
+	err = collector.AddSpecProtobuf(ctx, config_obj, repository, scope,
 		arg.Spec, request)
 	if err != nil {
 		scope.Log("collect_client: %v", err)
@@ -172,7 +172,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 			// Notify the client about it.
 			notifier, err := services.GetNotifier(config_obj)
 			if err == nil {
-				notifier.NotifyListener(
+				notifier.NotifyListener(ctx,
 					config_obj, arg.ClientId, "collect_client")
 			}
 		})

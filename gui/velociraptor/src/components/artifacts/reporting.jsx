@@ -40,6 +40,7 @@ export default class VeloReportViewer extends React.Component {
         data: {},
         messages: [],
         loading: true,
+        version: 0,
     }
 
     componentDidMount() {
@@ -110,8 +111,8 @@ export default class VeloReportViewer extends React.Component {
                 messages: response.data.messages || [],
                 data: JSON.parse(response.data.data),
                 loading: false,
+                version: this.state.version += 1,
             };
-
             for (var i=0; i<new_state.messages.length; i++) {
                 console.log("While generating report: " + new_state.messages[i]);
             }
@@ -192,7 +193,7 @@ export default class VeloReportViewer extends React.Component {
                 if (domNode.name === "grr-tool-viewer") {
                     let name = decodeURIComponent(domNode.attribs.name ||"");
                     return (
-                        <ToolViewer name={name}/>
+                        <ToolViewer name={name} version={this.state.version}/>
                     );
                 };
 
