@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"www.velocidex.com/golang/velociraptor/actions"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/responder"
 )
@@ -19,12 +21,17 @@ func NewTestExecutor() *_TestExecutor {
 	}
 }
 
-func NewClientExecutorForTests() *ClientExecutor {
+func NewClientExecutorForTests(config_obj *config_proto.Config) *ClientExecutor {
 	return &ClientExecutor{
 		Outbound:      make(chan *crypto_proto.VeloMessage),
 		Inbound:       make(chan *crypto_proto.VeloMessage),
 		event_manager: &actions.EventTable{},
+		config_obj:    config_obj,
 	}
+}
+
+func (self *_TestExecutor) GetClientInfo() *actions_proto.ClientInfo {
+	return &actions_proto.ClientInfo{}
 }
 
 func (self *_TestExecutor) FlowManager() *responder.FlowManager {

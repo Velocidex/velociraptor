@@ -186,7 +186,7 @@ func (self *CommsTestSuite) TestAbort() {
 	urls := []string{self.frontend1.URL}
 
 	// Not a real executor but we can emulate closing channels.
-	exec := executor.NewClientExecutorForTests()
+	exec := executor.NewClientExecutorForTests(self.config_obj)
 
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()

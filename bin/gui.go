@@ -224,7 +224,7 @@ func doGUI() error {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("Running client from %v", client_config_path)
 
-		// Include the writeback in the client's configuratio.
+		// Include the writeback in the client's configuration.
 		config_obj, err := makeDefaultConfigLoader().
 			WithRequiredClient().
 			WithRequiredLogging().
@@ -250,7 +250,8 @@ func doGUI() error {
 		org_config_obj, err := org_manager.GetOrgConfig("O123")
 		if err == nil {
 			org_client_config := &config_proto.Config{
-				Client: proto.Clone(org_config_obj.Client).(*config_proto.ClientConfig),
+				Version: proto.Clone(org_config_obj.Version).(*config_proto.Version),
+				Client:  proto.Clone(org_config_obj.Client).(*config_proto.ClientConfig),
 			}
 
 			write_back := filepath.Join(datastore_directory, "Velociraptor.Acme.writeback.yaml")

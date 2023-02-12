@@ -39,7 +39,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
 	"google.golang.org/protobuf/proto"
-	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -417,7 +416,6 @@ func (self *HTTPConnector) Post(
 // wait once per loop.
 func (self *HTTPConnector) advanceToNextServer(ctx context.Context) {
 	self.mu.Lock()
-	defer self.mu.Unlock()
 
 	// Advance the current URL to the next one in
 	// line. Reset the server name (will be fetched from
@@ -443,6 +441,9 @@ func (self *HTTPConnector) advanceToNextServer(ctx context.Context) {
 			executor.Nanny.UpdateReadFromServer()
 		}
 
+		// Release the lock while we wait.
+		self.mu.Unlock()
+
 		// Add random wait between polls to avoid
 		// synchronization of endpoints.
 		select {
@@ -450,6 +451,9 @@ func (self *HTTPConnector) advanceToNextServer(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		}
+
+	} else {
+		self.mu.Unlock()
 	}
 }
 
@@ -866,10 +870,9 @@ func (self *NotificationReader) GetMessageList() *crypto_proto.MessageList {
 	if now.Add(-self.last_update_period).After(self.last_update_time) {
 		self.last_update_time = now
 
-		client_info := actions.GetClientInfo(self.config_obj)
+		client_info := self.executor.GetClientInfo()
 		client_info_data, err := json.Marshal(client_info)
 		if err == nil {
-
 			logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
 			logger.Debug("Sending client info update %v", client_info)
 

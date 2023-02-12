@@ -56,6 +56,8 @@ type Executor interface {
 
 	FlowManager() *responder.FlowManager
 	EventManager() *actions.EventTable
+
+	GetClientInfo() *actions_proto.ClientInfo
 }
 
 // A concerete implementation of a client executor.
@@ -74,6 +76,10 @@ type ClientExecutor struct {
 
 	flow_manager  *responder.FlowManager
 	event_manager *actions.EventTable
+}
+
+func (self *ClientExecutor) GetClientInfo() *actions_proto.ClientInfo {
+	return actions.GetClientInfo(self.config_obj)
 }
 
 func (self *ClientExecutor) FlowManager() *responder.FlowManager {

@@ -29,6 +29,10 @@
     <PropertyRef Id="WIX_ACCOUNT_USERS" />
     <PropertyRef Id="WIX_ACCOUNT_ADMINISTRATORS" />
 
+    <!-- Add icon to add/remove programs -->
+    <Icon Id="icon.ico" SourceFile="icon.ico"/>
+    <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+
     <Directory Id='TARGETDIR' Name='SourceDir'>
       <Directory Id='ProgramFiles64Folder' Name='PFiles'>
         <Directory Id='INSTALLDIR' Name='$(var.Name)'>

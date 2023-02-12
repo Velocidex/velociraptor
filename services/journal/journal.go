@@ -20,6 +20,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -47,10 +48,10 @@ func (self *JournalService) GetWatchers() []string {
 }
 
 func (self *JournalService) publishWatchers(ctx context.Context) {
-	self.PushRowsToArtifact(ctx, self.config_obj,
+	self.PushRowsToInternalEventArtifact(ctx, self.config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("Events", self.GetWatchers())},
-		"Server.Internal.MasterRegistrations", "server", "")
+		"Server.Internal.MasterRegistrations")
 }
 
 func (self *JournalService) Watch(
@@ -238,6 +239,18 @@ func (self *JournalService) PushRowsToArtifact(
 		return self.qm.PushEventRows(path_manager, rows)
 	}
 	return errors.New("Filestore not initialized")
+}
+
+func (self *JournalService) PushRowsToInternalEventArtifact(
+	ctx context.Context, config_obj *config_proto.Config,
+	rows []*ordereddict.Dict, artifact string) error {
+
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		config_obj, "server", "F.Monitoring", artifact, paths.INTERNAL)
+	if self != nil && self.qm != nil {
+		return self.qm.PushEventRows(path_manager, rows)
+	}
+	return nil
 }
 
 func (self *JournalService) SetClock(clock utils.Clock) {
