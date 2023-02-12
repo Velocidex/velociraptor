@@ -154,7 +154,7 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 	inventory_service, err := services.GetInventory(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	err = inventory_service.AddTool(
+	err = inventory_service.AddTool(ctx,
 		self.ConfigObj, &artifacts_proto.Tool{
 			Name: "Tool1",
 			// This will force Velociraptor to generate a stable
@@ -214,7 +214,7 @@ func (self *LauncherTestSuite) TestGetDependentArtifacts() {
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	res, err := launcher.GetDependentArtifacts(self.ConfigObj,
+	res, err := launcher.GetDependentArtifacts(self.Ctx, self.ConfigObj,
 		repository, []string{"Test.Artifact.Deps2"})
 	assert.NoError(self.T(), err)
 
@@ -253,7 +253,7 @@ func (self *LauncherTestSuite) TestGetDependentArtifactsWithImports() {
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	res, err := launcher.GetDependentArtifacts(self.ConfigObj,
+	res, err := launcher.GetDependentArtifacts(self.Ctx, self.ConfigObj,
 		repository, []string{"Custom.CallArtifactWithImports"})
 	assert.NoError(self.T(), err)
 

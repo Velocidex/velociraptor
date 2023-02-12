@@ -318,7 +318,7 @@ func downloadFlowToZip(
 
 	// Copy artifact results
 	for _, name := range flow_details.Context.ArtifactsWithResults {
-		artifact_path_manager, err := artifacts.NewArtifactPathManager(
+		artifact_path_manager, err := artifacts.NewArtifactPathManager(ctx,
 			config_obj, client_id, flow_id, name)
 		if err != nil {
 			continue

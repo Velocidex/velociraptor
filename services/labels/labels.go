@@ -177,7 +177,7 @@ func (self *Labeler) IsLabelSet(
 }
 
 func (self *Labeler) notifyClient(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	client_id, new_label, operation string) error {
 	// Notify other frontends about this change.
 	journal, err := services.GetJournal(config_obj)
@@ -185,7 +185,7 @@ func (self *Labeler) notifyClient(
 		return err
 	}
 
-	journal.PushRowsToArtifactAsync(config_obj,
+	journal.PushRowsToArtifactAsync(ctx, config_obj,
 		ordereddict.NewDict().
 			Set("client_id", client_id).
 			Set("Operation", operation).
@@ -231,7 +231,7 @@ func (self *Labeler) SetClientLabel(
 	// Cache the new record.
 	self.lru.Set(client_id, cached)
 
-	err = self.notifyClient(config_obj, client_id, new_label, "Add")
+	err = self.notifyClient(ctx, config_obj, client_id, new_label, "Add")
 	if err != nil {
 		return err
 	}
@@ -286,7 +286,7 @@ func (self *Labeler) RemoveClientLabel(
 	// Cache the new record.
 	self.lru.Set(client_id, cached)
 
-	err = self.notifyClient(config_obj, client_id, new_label, "Remove")
+	err = self.notifyClient(ctx, config_obj, client_id, new_label, "Remove")
 	if err != nil {
 		return err
 	}

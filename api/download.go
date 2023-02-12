@@ -272,7 +272,7 @@ func getRows(
 
 	// We want an event table.
 	if request.Type == "CLIENT_EVENT" || request.Type == "SERVER_EVENT" {
-		path_manager, err := artifacts.NewArtifactPathManager(
+		path_manager, err := artifacts.NewArtifactPathManager(ctx,
 			config_obj, request.ClientId, request.FlowId,
 			request.Artifact)
 		if err != nil {
@@ -290,7 +290,7 @@ func getRows(
 		return rs_reader.Rows(ctx), rs_reader.Close, log_path, err
 
 	} else {
-		log_path, err := tables.GetPathSpec(config_obj, request)
+		log_path, err := tables.GetPathSpec(ctx, config_obj, request)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -314,9 +314,10 @@ func getTransformer(
 			client_id := utils.GetString(row, "ClientId")
 			flow_id := utils.GetString(row, "FlowId")
 
-			flow, err := flows.LoadCollectionContext(config_obj, client_id, flow_id)
+			flow, err := flows.LoadCollectionContext(
+				ctx, config_obj, client_id, flow_id)
 			if err != nil {
-				flow = flows.NewCollectionContext(config_obj)
+				flow = flows.NewCollectionContext(ctx, config_obj)
 			}
 
 			return ordereddict.NewDict().

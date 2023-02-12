@@ -271,6 +271,13 @@ message Tool {
 
     // If set on a request we refresh the hash.
     bool materialize = 11;
+
+    // The artifact this definition came from.
+    string artifact = 13;
+
+    // Additional versions of this tool.
+    repeated Tool versions = 14;
+
 }
 
 // Keep track of all the third party tools we know about.

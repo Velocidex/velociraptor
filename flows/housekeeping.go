@@ -143,7 +143,7 @@ func CheckClientStatus(
 	latest_timestamp := uint64(0)
 	for _, hunt := range hunts {
 		// Notify the hunt manager that we need to hunt this client.
-		journal.PushRowsToArtifactAsync(config_obj,
+		journal.PushRowsToArtifactAsync(ctx, config_obj,
 			ordereddict.NewDict().
 				Set("HuntId", hunt.HuntId).
 				Set("ClientId", client_id),

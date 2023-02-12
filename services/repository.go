@@ -86,14 +86,15 @@ type Repository interface {
 		*artifacts_proto.Artifact, error)
 
 	// Get an artifact by name.
-	Get(config_obj *config_proto.Config,
+	Get(ctx context.Context, config_obj *config_proto.Config,
 		name string) (*artifacts_proto.Artifact, bool)
 
-	GetSource(config_obj *config_proto.Config,
+	GetSource(ctx context.Context, config_obj *config_proto.Config,
 		name string) (*artifacts_proto.ArtifactSource, bool)
 
 	// An optimization that avoids copying the entire artifact definition
-	GetArtifactType(config_obj *config_proto.Config, artifact_name string) (string, error)
+	GetArtifactType(ctx context.Context, config_obj *config_proto.Config,
+		artifact_name string) (string, error)
 
 	// Remove a named artifact from the repository.
 	Del(name string)
@@ -134,12 +135,13 @@ type RepositoryManager interface {
 	BuildScopeFromScratch(builder ScopeBuilder) vfilter.Scope
 
 	// Store the file to the repository. It will be stored in the datastore as well.
-	SetArtifactFile(config_obj *config_proto.Config, principal string,
+	SetArtifactFile(
+		ctx context.Context, config_obj *config_proto.Config, principal string,
 		data, required_prefix string) (*artifacts_proto.Artifact, error)
 
 	// Delete the file from the global repository and the data store.
-	DeleteArtifactFile(config_obj *config_proto.Config,
-		principal, name string) error
+	DeleteArtifactFile(ctx context.Context,
+		config_obj *config_proto.Config, principal, name string) error
 }
 
 type MockablePlugin interface {

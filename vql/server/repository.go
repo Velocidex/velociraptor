@@ -79,7 +79,7 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 
 	principal := vql_subsystem.GetPrincipal(scope)
 
-	definition, err = manager.SetArtifactFile(
+	definition, err = manager.SetArtifactFile(ctx,
 		config_obj, principal, arg.Definition, arg.Prefix)
 	if err != nil {
 		scope.Log("artifact_set: %s", err)
@@ -133,7 +133,7 @@ func (self *ArtifactDeleteFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	definition, pres := global_repository.Get(config_obj, arg.Name)
+	definition, pres := global_repository.Get(ctx, config_obj, arg.Name)
 	if !pres {
 		scope.Log("artifact_delete: Artifact '%v' not found", arg.Name)
 		return vfilter.Null{}
@@ -161,7 +161,7 @@ func (self *ArtifactDeleteFunction) Call(ctx context.Context,
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
-	err = manager.DeleteArtifactFile(config_obj, principal, arg.Name)
+	err = manager.DeleteArtifactFile(ctx, config_obj, principal, arg.Name)
 	if err != nil {
 		scope.Log("artifact_delete: %s", err)
 		return vfilter.Null{}
@@ -233,7 +233,7 @@ func (self ArtifactsPlugin) Call(
 				return
 			}
 			for _, name := range names {
-				artifact, pres := repository.Get(config_obj, name)
+				artifact, pres := repository.Get(ctx, config_obj, name)
 				if pres {
 					select {
 					case <-ctx.Done():
@@ -247,7 +247,7 @@ func (self ArtifactsPlugin) Call(
 
 		seen := make(map[string]*artifacts_proto.Artifact)
 		for _, name := range arg.Names {
-			artifact, pres := repository.Get(config_obj, name)
+			artifact, pres := repository.Get(ctx, config_obj, name)
 			if pres {
 				seen[artifact.Name] = artifact
 			}
@@ -259,7 +259,7 @@ func (self ArtifactsPlugin) Call(
 			return
 		}
 
-		deps, err := launcher.GetDependentArtifacts(
+		deps, err := launcher.GetDependentArtifacts(ctx,
 			config_obj, repository, arg.Names)
 		if err != nil {
 			scope.Log("artifact_definitions: %v", err)
@@ -270,7 +270,7 @@ func (self ArtifactsPlugin) Call(
 			if name == "" {
 				continue
 			}
-			artifact, pres := repository.Get(config_obj, name)
+			artifact, pres := repository.Get(ctx, config_obj, name)
 			if !pres {
 				scope.Log("artifact_definitions: artifact %v not known", name)
 				continue

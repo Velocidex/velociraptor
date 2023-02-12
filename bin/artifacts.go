@@ -302,7 +302,7 @@ func doArtifactShow() error {
 		return err
 	}
 
-	artifact, pres := repository.Get(config_obj, *artifact_command_show_name)
+	artifact, pres := repository.Get(ctx, config_obj, *artifact_command_show_name)
 	if !pres {
 		return fmt.Errorf("Artifact %s not found",
 			*artifact_command_show_name)
@@ -365,7 +365,7 @@ func doArtifactList() error {
 			continue
 		}
 
-		artifact, pres := repository.Get(config_obj, name)
+		artifact, pres := repository.Get(ctx, config_obj, name)
 		if !pres {
 			return fmt.Errorf("Artifact %s not found", name)
 		}

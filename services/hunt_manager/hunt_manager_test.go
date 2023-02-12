@@ -90,7 +90,7 @@ func (self *HuntTestSuite) TestHuntManager() {
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(t, err)
 
-	journal.PushRowsToArtifact(self.ConfigObj,
+	journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id),
@@ -152,7 +152,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(t, err)
 
-	journal.PushRowsToArtifact(self.ConfigObj,
+	journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -228,7 +228,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(t, err)
 
-	journal.PushRowsToArtifact(self.ConfigObj,
+	journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -284,7 +284,7 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(t, err)
 
-	journal.PushRowsToArtifact(self.ConfigObj,
+	journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -354,7 +354,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(t, err)
 
-	journal.PushRowsToArtifact(self.ConfigObj,
+	journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -433,7 +433,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(t, err)
 
-	journal.PushRowsToArtifact(self.ConfigObj,
+	journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id).
@@ -501,7 +501,7 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(t, err)
 
-	journal.PushRowsToArtifact(self.ConfigObj,
+	journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("HuntId", self.hunt_id).
@@ -593,7 +593,7 @@ func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	assert.NoError(self.T(), journal.PushRowsToArtifact(self.ConfigObj,
+	assert.NoError(self.T(), journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", self.client_id),
 		}, "Server.Internal.Interrogation", self.client_id, ""))
@@ -638,7 +638,8 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	assert.NoError(self.T(), journal.PushRowsToArtifact(self.ConfigObj,
+	assert.NoError(self.T(), journal.PushRowsToArtifact(
+		self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", hunt_obj.HuntId).
 			Set("ClientId", self.client_id),
@@ -665,7 +666,8 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 		State:                flows_proto.ArtifactCollectorContext_FINISHED,
 	}
 
-	assert.NoError(self.T(), journal.PushRowsToArtifact(self.ConfigObj,
+	assert.NoError(self.T(), journal.PushRowsToArtifact(
+		self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("Timestamp", time.Now().UTC().Unix()).
 			Set("Flow", flow_obj).
@@ -680,7 +682,7 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 
 	// To stop the hunt, we send a hunt mutation that sets the
 	// state of the hunt to stopped.
-	assert.NoError(self.T(), journal.PushRowsToArtifact(self.ConfigObj,
+	assert.NoError(self.T(), journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", hunt_obj.HuntId).
 			Set("mutation", &api_proto.HuntMutation{
@@ -725,7 +727,7 @@ func (self *HuntTestSuite) TestHuntManagerErrors() {
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	assert.NoError(self.T(), journal.PushRowsToArtifact(self.ConfigObj,
+	assert.NoError(self.T(), journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", hunt_obj.HuntId).
 			Set("ClientId", self.client_id),
@@ -744,7 +746,7 @@ func (self *HuntTestSuite) TestHuntManagerErrors() {
 		State:                flows_proto.ArtifactCollectorContext_ERROR,
 	}
 
-	assert.NoError(self.T(), journal.PushRowsToArtifact(self.ConfigObj,
+	assert.NoError(self.T(), journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("Timestamp", time.Now().UTC().Unix()).
 			Set("Flow", flow_obj).

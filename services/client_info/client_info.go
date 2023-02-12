@@ -389,7 +389,7 @@ func (self *ClientInfoManager) MutationSync(
 				// Update the ping info to the latest
 				//self.UpdateMostRecentPing()
 
-				journal.PushRowsToArtifactAsync(config_obj,
+				journal.PushRowsToArtifactAsync(ctx, config_obj,
 					ordereddict.NewDict().
 						Set("Mutation", self.mutation_manager.GetMutation()).
 						Set("From", self.uuid),

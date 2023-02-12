@@ -69,7 +69,7 @@ func (self *ApiServer) PushEvents(
 	// only broadcast the events for local listeners. Minions
 	// write the events themselves, so we just need to broadcast
 	// for any server event artifacts that occur.
-	journal.Broadcast(org_config_obj,
+	journal.Broadcast(ctx, org_config_obj,
 		rows, in.Artifact, in.ClientId, in.FlowId)
 	return &emptypb.Empty{}, err
 }
@@ -127,7 +127,7 @@ func (self *ApiServer) WriteEvent(
 		return nil, Status(self.verbose, err)
 	}
 
-	err = journal.PushRowsToArtifact(org_config_obj,
+	err = journal.PushRowsToArtifact(ctx, org_config_obj,
 		rows, in.Query.Name, user_name, "")
 	return &emptypb.Empty{}, err
 }

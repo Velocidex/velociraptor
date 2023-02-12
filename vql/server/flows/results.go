@@ -134,7 +134,7 @@ func (self SourcePlugin) Call(
 
 	// Event artifacts just proxy for the monitoring plugin.
 	if arg.NotebookCellId == "" && arg.Artifact != "" {
-		ok, _ := isArtifactEvent(config_obj, arg)
+		ok, _ := isArtifactEvent(ctx, config_obj, arg)
 		if ok {
 			// Just delegate directly to the monitoring plugin.
 			return MonitoringPlugin{}.Call(ctx, scope, args)
@@ -189,7 +189,7 @@ func (self SourcePlugin) Info(
 // Figure out if the artifact is an event artifact based on its
 // definition.
 func isArtifactEvent(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	arg *SourcePluginArgs) (bool, error) {
 
 	manager, err := services.GetRepositoryManager(config_obj)
@@ -202,7 +202,7 @@ func isArtifactEvent(
 		return false, err
 	}
 
-	artifact_definition, pres := repository.Get(config_obj, arg.Artifact)
+	artifact_definition, pres := repository.Get(ctx, config_obj, arg.Artifact)
 	if !pres {
 		return false, fmt.Errorf("Artifact %v not known", arg.Artifact)
 	}
@@ -251,7 +251,7 @@ func getResultSetReader(
 			arg.Source = ""
 		}
 
-		is_event, err := isArtifactEvent(config_obj, arg)
+		is_event, err := isArtifactEvent(ctx, config_obj, arg)
 		if err != nil {
 			return nil, err
 		}
@@ -268,7 +268,7 @@ func getResultSetReader(
 				"be specified for non event artifacts.")
 		}
 
-		path_manager, err := artifact_paths.NewArtifactPathManager(
+		path_manager, err := artifact_paths.NewArtifactPathManager(ctx,
 			config_obj, arg.ClientId, arg.FlowId, arg.Artifact)
 		if err != nil {
 			return nil, err
@@ -409,7 +409,7 @@ func (self FlowResultsPlugin) Call(
 			arg.Source = ""
 		}
 
-		path_manager, err := artifact_paths.NewArtifactPathManager(
+		path_manager, err := artifact_paths.NewArtifactPathManager(ctx,
 			config_obj, arg.ClientId, arg.FlowId, arg.Artifact)
 		if err != nil {
 			scope.Log("source: %v", err)

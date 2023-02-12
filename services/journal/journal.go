@@ -46,8 +46,8 @@ func (self *JournalService) GetWatchers() []string {
 	return self.qm.GetWatchers()
 }
 
-func (self *JournalService) publishWatchers() {
-	self.PushRowsToArtifact(self.config_obj,
+func (self *JournalService) publishWatchers(ctx context.Context) {
+	self.PushRowsToArtifact(ctx, self.config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("Events", self.GetWatchers())},
 		"Server.Internal.MasterRegistrations", "server", "")
@@ -69,13 +69,13 @@ func (self *JournalService) Watch(
 	})
 
 	// Advertise new watchers
-	self.publishWatchers()
+	self.publishWatchers(ctx)
 
 	return res, func() {
 		cancel()
 
 		// Advertise that a watcher was removed.
-		self.publishWatchers()
+		self.publishWatchers(ctx)
 	}
 }
 
@@ -154,11 +154,11 @@ func (self *JournalService) AppendJsonlToResultSet(
 }
 
 func (self *JournalService) PushRowsToArtifactAsync(
-	config_obj *config_proto.Config, row *ordereddict.Dict,
+	ctx context.Context, config_obj *config_proto.Config, row *ordereddict.Dict,
 	artifact string) {
 
 	go func() {
-		err := self.PushRowsToArtifact(config_obj, []*ordereddict.Dict{row},
+		err := self.PushRowsToArtifact(ctx, config_obj, []*ordereddict.Dict{row},
 			artifact, "server", "")
 		if err != nil {
 			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
@@ -168,13 +168,13 @@ func (self *JournalService) PushRowsToArtifactAsync(
 }
 
 func (self *JournalService) Broadcast(
-	config_obj *config_proto.Config, rows []*ordereddict.Dict,
-	artifact, client_id, flows_id string) error {
+	ctx context.Context, config_obj *config_proto.Config,
+	rows []*ordereddict.Dict, artifact, client_id, flows_id string) error {
 	if self == nil || self.qm == nil {
 		return notInitializedError
 	}
 
-	path_manager, err := artifacts.NewArtifactPathManager(
+	path_manager, err := artifacts.NewArtifactPathManager(ctx,
 		config_obj, client_id, flows_id, artifact)
 	if err != nil {
 		return err
@@ -185,10 +185,10 @@ func (self *JournalService) Broadcast(
 }
 
 func (self *JournalService) PushJsonlToArtifact(
-	config_obj *config_proto.Config, jsonl []byte, row_count int,
-	artifact, client_id, flows_id string) error {
+	ctx context.Context, config_obj *config_proto.Config,
+	jsonl []byte, row_count int, artifact, client_id, flows_id string) error {
 
-	path_manager, err := artifacts.NewArtifactPathManager(
+	path_manager, err := artifacts.NewArtifactPathManager(ctx,
 		config_obj, client_id, flows_id, artifact)
 	if err != nil {
 		return err
@@ -213,10 +213,10 @@ func (self *JournalService) PushJsonlToArtifact(
 }
 
 func (self *JournalService) PushRowsToArtifact(
-	config_obj *config_proto.Config, rows []*ordereddict.Dict,
-	artifact, client_id, flows_id string) error {
+	ctx context.Context, config_obj *config_proto.Config,
+	rows []*ordereddict.Dict, artifact, client_id, flows_id string) error {
 
-	path_manager, err := artifacts.NewArtifactPathManager(
+	path_manager, err := artifacts.NewArtifactPathManager(ctx,
 		config_obj, client_id, flows_id, artifact)
 	if err != nil {
 		return err

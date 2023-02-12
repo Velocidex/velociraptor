@@ -16,29 +16,13 @@ jobs:
     steps:
 
     - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
-    - uses: actions/setup-go@v2
+    - uses: actions/setup-go@v3
       with:
         go-version: '^1.19'
 
     - run: go version
-
-#    - uses: actions/cache@v2
-#      with:
-#        # In order:
-#        # * Module download cache
-#        # * Build cache (Linux)
-#        # * Build cache (Mac)
-#        # * Build cache (Windows)
-#        path: |
-#          ~/go/pkg/mod
-#          ~/.cache/go-build
-#          ~/Library/Caches/go-build
-#          %LocalAppData%\go-build
-#        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-#        restore-keys: |
-#          ${{ runner.os }}-go-
 
     - name: Get dependencies
       run: |
@@ -46,12 +30,12 @@ jobs:
         sudo apt-get install mingw-w64-x86-64-dev gcc-mingw-w64-x86-64 gcc-mingw-w64
 
     - name: Use Node.js v16
-      uses: actions/setup-node@v1
+      uses: actions/setup-node@v3
       with:
         node-version: 16
 
     - name: Cache node-modules
-      uses: actions/cache@v2
+      uses: actions/cache@v3
       env:
         cache-name: cache-node-modules
       with:
@@ -82,7 +66,7 @@ jobs:
         go run make.go -v DarwinBase
 
     - name: StoreBinaries
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
         name: Binaries
         path: output

@@ -199,7 +199,7 @@ func (self *ReplicationService) startAsyncLoop(
 				for k, v := range todo {
 					// Ignore errors since there is no way to report
 					// to the caller.
-					self.PushJsonlToArtifact(
+					self.PushJsonlToArtifact(ctx,
 						config_obj, v.Bytes(), v.row_count, k,
 						"server", "")
 				}
@@ -431,15 +431,15 @@ func (self *ReplicationService) AppendToResultSet(
 }
 
 func (self *ReplicationService) Broadcast(
-	config_obj *config_proto.Config, rows []*ordereddict.Dict,
-	artifact, client_id, flows_id string) error {
+	ctx context.Context, config_obj *config_proto.Config,
+	rows []*ordereddict.Dict, artifact, client_id, flows_id string) error {
 
 	return notInitializedError
 }
 
 func (self *ReplicationService) PushRowsToArtifactAsync(
-	config_obj *config_proto.Config, row *ordereddict.Dict,
-	artifact string) {
+	ctx context.Context, config_obj *config_proto.Config,
+	row *ordereddict.Dict, artifact string) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -457,10 +457,10 @@ func (self *ReplicationService) PushRowsToArtifactAsync(
 }
 
 func (self *ReplicationService) pushRowsToLocalQueueManager(
-	config_obj *config_proto.Config, rows []*ordereddict.Dict,
-	artifact, client_id, flows_id string) error {
+	ctx context.Context, config_obj *config_proto.Config,
+	rows []*ordereddict.Dict, artifact, client_id, flows_id string) error {
 
-	path_manager, err := artifacts.NewArtifactPathManager(
+	path_manager, err := artifacts.NewArtifactPathManager(ctx,
 		config_obj, client_id, flows_id, artifact)
 	if err != nil {
 		return err
@@ -485,10 +485,10 @@ func (self *ReplicationService) pushRowsToLocalQueueManager(
 }
 
 func (self *ReplicationService) pushJsonlToLocalQueueManager(
-	config_obj *config_proto.Config, jsonl []byte, row_count int,
-	artifact, client_id, flows_id string) error {
+	ctx context.Context, config_obj *config_proto.Config,
+	jsonl []byte, row_count int, artifact, client_id, flows_id string) error {
 
-	path_manager, err := artifacts.NewArtifactPathManager(
+	path_manager, err := artifacts.NewArtifactPathManager(ctx,
 		config_obj, client_id, flows_id, artifact)
 	if err != nil {
 		return err
@@ -513,10 +513,11 @@ func (self *ReplicationService) pushJsonlToLocalQueueManager(
 }
 
 func (self *ReplicationService) PushJsonlToArtifact(
-	config_obj *config_proto.Config, jsonl []byte, row_count int,
+	ctx context.Context, config_obj *config_proto.Config,
+	jsonl []byte, row_count int,
 	artifact, client_id, flow_id string) error {
 
-	err := self.pushJsonlToLocalQueueManager(
+	err := self.pushJsonlToLocalQueueManager(ctx,
 		config_obj, jsonl, row_count, artifact,
 		client_id, flow_id)
 	if err != nil {
@@ -555,7 +556,7 @@ func (self *ReplicationService) PushJsonlToArtifact(
 }
 
 func (self *ReplicationService) PushRowsToArtifact(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	rows []*ordereddict.Dict, artifact, client_id, flow_id string) error {
 
 	serialized, err := json.MarshalJsonl(rows)
@@ -564,7 +565,7 @@ func (self *ReplicationService) PushRowsToArtifact(
 	}
 	replicationItemSize.Observe(float64(len(serialized)))
 
-	err = self.pushRowsToLocalQueueManager(
+	err = self.pushRowsToLocalQueueManager(ctx,
 		config_obj, rows, artifact, client_id, flow_id)
 	if err != nil {
 		return err

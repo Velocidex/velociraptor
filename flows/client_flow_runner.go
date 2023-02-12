@@ -67,7 +67,7 @@ func (self *ClientFlowRunner) ProcessMonitoringMessage(
 	client_id := msg.Source
 
 	if msg.VQLResponse != nil && msg.VQLResponse.Query != nil {
-		err := self.MonitoringVQLResponse(client_id, flow_id, msg.VQLResponse)
+		err := self.MonitoringVQLResponse(ctx, client_id, flow_id, msg.VQLResponse)
 		if err != nil {
 			return fmt.Errorf("MonitoringVQLResponse: %w", err)
 		}
@@ -75,7 +75,7 @@ func (self *ClientFlowRunner) ProcessMonitoringMessage(
 	}
 
 	if msg.LogMessage != nil {
-		err := self.MonitoringLogMessage(client_id, flow_id, msg.LogMessage)
+		err := self.MonitoringLogMessage(ctx, client_id, flow_id, msg.LogMessage)
 		if err != nil {
 			return fmt.Errorf("MonitoringLogMessage: %w", err)
 		}
@@ -83,7 +83,7 @@ func (self *ClientFlowRunner) ProcessMonitoringMessage(
 	}
 
 	if msg.FileBuffer != nil {
-		err := self.FileBuffer(client_id, flow_id, msg.FileBuffer)
+		err := self.FileBuffer(ctx, client_id, flow_id, msg.FileBuffer)
 		if err != nil {
 			return fmt.Errorf("FileBuffer: %w", err)
 		}
@@ -94,7 +94,7 @@ func (self *ClientFlowRunner) ProcessMonitoringMessage(
 }
 
 func (self *ClientFlowRunner) MonitoringLogMessage(
-	client_id, flow_id string,
+	ctx context.Context, client_id, flow_id string,
 	response *crypto_proto.LogMessage) error {
 
 	artifact_name := artifacts.DeobfuscateString(
@@ -108,7 +108,7 @@ func (self *ClientFlowRunner) MonitoringLogMessage(
 		return nil
 	}
 
-	log_path_manager, err := artifact_paths.NewArtifactLogPathManager(
+	log_path_manager, err := artifact_paths.NewArtifactLogPathManager(ctx,
 		self.config_obj, client_id, flow_id, artifact_name)
 	if err != nil {
 		return err
@@ -133,7 +133,7 @@ func (self *ClientFlowRunner) MonitoringLogMessage(
 }
 
 func (self *ClientFlowRunner) MonitoringVQLResponse(
-	client_id, flow_id string,
+	ctx context.Context, client_id, flow_id string,
 	response *actions_proto.VQLResponse) error {
 
 	// Ignore empty responses
@@ -158,7 +158,7 @@ func (self *ClientFlowRunner) MonitoringVQLResponse(
 		return err
 	}
 
-	return journal.PushJsonlToArtifact(
+	return journal.PushJsonlToArtifact(ctx,
 		self.config_obj,
 		[]byte(response.JSONLResponse), int(response.TotalRows),
 		query_name, client_id, flow_id)
@@ -189,7 +189,7 @@ func (self *ClientFlowRunner) ProcessSingleMessage(
 	}
 
 	if msg.VQLResponse != nil {
-		err := self.VQLResponse(client_id, flow_id, msg.VQLResponse)
+		err := self.VQLResponse(ctx, client_id, flow_id, msg.VQLResponse)
 		if err != nil {
 			return fmt.Errorf("VQLResponse: %w", err)
 		}
@@ -197,7 +197,7 @@ func (self *ClientFlowRunner) ProcessSingleMessage(
 	}
 
 	if msg.FlowStats != nil {
-		err := self.FlowStats(client_id, flow_id, msg.FlowStats)
+		err := self.FlowStats(ctx, client_id, flow_id, msg.FlowStats)
 		if err != nil {
 			return fmt.Errorf("FlowStats: %w", err)
 		}
@@ -205,7 +205,7 @@ func (self *ClientFlowRunner) ProcessSingleMessage(
 	}
 
 	if msg.FileBuffer != nil {
-		err := self.FileBuffer(client_id, flow_id, msg.FileBuffer)
+		err := self.FileBuffer(ctx, client_id, flow_id, msg.FileBuffer)
 		if err != nil {
 			return fmt.Errorf("FileBuffer: %w", err)
 		}
@@ -216,7 +216,7 @@ func (self *ClientFlowRunner) ProcessSingleMessage(
 }
 
 func (self *ClientFlowRunner) FileBuffer(
-	client_id, flow_id string,
+	ctx context.Context, client_id, flow_id string,
 	file_buffer *actions_proto.FileBuffer) error {
 
 	if file_buffer == nil || file_buffer.Pathspec == nil {
@@ -328,7 +328,7 @@ func (self *ClientFlowRunner) FileBuffer(
 			return err
 		}
 
-		return journal.PushRowsToArtifact(self.config_obj,
+		return journal.PushRowsToArtifact(ctx, self.config_obj,
 			[]*ordereddict.Dict{row},
 			"System.Upload.Completion",
 			client_id, flow_id)
@@ -341,7 +341,7 @@ func (self *ClientFlowRunner) Close(ctx context.Context) {
 }
 
 func (self *ClientFlowRunner) FlowStats(
-	client_id, flow_id string,
+	ctx context.Context, client_id, flow_id string,
 	msg *crypto_proto.FlowStats) error {
 
 	// Write a partial ArtifactCollectorContext protobuf containing
@@ -394,7 +394,7 @@ func (self *ClientFlowRunner) FlowStats(
 
 		journal, err := services.GetJournal(self.config_obj)
 		if err == nil {
-			journal.PushRowsToArtifactAsync(
+			journal.PushRowsToArtifactAsync(ctx,
 				self.config_obj, row, "System.Flow.Completion")
 		}
 	}
@@ -403,7 +403,7 @@ func (self *ClientFlowRunner) FlowStats(
 }
 
 func (self *ClientFlowRunner) VQLResponse(
-	client_id, flow_id string,
+	ctx context.Context, client_id, flow_id string,
 	response *actions_proto.VQLResponse) error {
 
 	if response == nil || response.Query == nil || response.Query.Name == "" {
@@ -420,7 +420,7 @@ func (self *ClientFlowRunner) VQLResponse(
 		return nil
 	}
 
-	path_manager, err := artifact_paths.NewArtifactPathManager(
+	path_manager, err := artifact_paths.NewArtifactPathManager(ctx,
 		self.config_obj, client_id, flow_id, response.Query.Name)
 	if err != nil {
 		return err

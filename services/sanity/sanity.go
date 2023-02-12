@@ -247,7 +247,7 @@ func checkForServerUpgrade(
 		}
 
 		for _, name := range names {
-			artifact, pres := repository.Get(config_obj, name)
+			artifact, pres := repository.Get(ctx, config_obj, name)
 			if !pres {
 				continue
 			}
@@ -265,7 +265,8 @@ func checkForServerUpgrade(
 
 					// If the existing tool definition was overridden
 					// by the admin do not alter it.
-					tool, err := inventory.ProbeToolInfo(tool_definition.Name)
+					tool, err := inventory.ProbeToolInfo(
+						ctx, config_obj, tool_definition.Name)
 					if err == nil && tool.AdminOverride {
 						logger.Info("<red>Skipping update</> of tool <green>%v</> because an admin manually overrode its definition.",
 							tool_definition.Name)
@@ -284,7 +285,7 @@ func checkForServerUpgrade(
 					// when the tool is used next.
 					tool_definition.Hash = ""
 
-					err = inventory.AddTool(
+					err = inventory.AddTool(ctx,
 						config_obj, tool_definition,
 						services.ToolOptions{
 							Upgrade: true,

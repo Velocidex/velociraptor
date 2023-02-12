@@ -62,7 +62,7 @@ func (self *ServicesTestSuite) TestGihubTools() {
 	inventory, err := services.GetInventory(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	err = inventory.AddTool(
+	err = inventory.AddTool(ctx,
 		self.ConfigObj, &artifacts_proto.Tool{
 			Name:             tool_name,
 			GithubProject:    "Velocidex/velociraptor",
@@ -179,6 +179,10 @@ tools:
 	tool, err := inventory_service.GetToolInfo(ctx, self.ConfigObj, tool_name)
 	assert.NoError(self.T(), err)
 
+	// Make sure the tool contains the version block
+	assert.Equal(self.T(), 1, len(tool.Versions))
+	assert.Equal(self.T(), "TestArtifact", tool.Versions[0].Artifact)
+
 	// Make sure the tool is served directly from upstream.
 	assert.Equal(self.T(), response[0].Env[2].Key, "Tool_SampleTool_URL")
 	assert.Equal(self.T(), response[0].Env[2].Value, "htttp://www.example.com/file.exe")
@@ -210,7 +214,8 @@ func (self *ServicesTestSuite) TestUpgrade() {
 	inventory_service, err := services.GetInventory(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	err = inventory_service.AddTool(self.ConfigObj, tool_definition, services.ToolOptions{})
+	err = inventory_service.AddTool(ctx, self.ConfigObj,
+		tool_definition, services.ToolOptions{})
 	assert.NoError(self.T(), err)
 
 	tool, err := inventory_service.GetToolInfo(ctx, self.ConfigObj, tool_name)
@@ -223,7 +228,8 @@ func (self *ServicesTestSuite) TestUpgrade() {
 	// Now force the tool to update by re-adding it but this time it is a new version.
 	self.installGitHubMockVersion2()
 
-	err = inventory_service.AddTool(self.ConfigObj, tool_definition, services.ToolOptions{})
+	err = inventory_service.AddTool(ctx, self.ConfigObj, tool_definition,
+		services.ToolOptions{})
 	assert.NoError(self.T(), err)
 
 	// Check the tool information.
@@ -308,19 +314,20 @@ tools:
 	_, err = repository.LoadYaml(test_artifact, services.ValidateArtifact, services.ArtifactIsBuiltIn)
 	assert.NoError(self.T(), err)
 
-	_, pres := repository.Get(self.ConfigObj, "TestArtifact")
+	ctx := self.Ctx
+	_, pres := repository.Get(ctx, self.ConfigObj, "TestArtifact")
 	assert.True(self.T(), pres)
 
 	_, err = repository.LoadYaml(test_artifact2, services.ValidateArtifact, services.ArtifactIsBuiltIn)
 	assert.NoError(self.T(), err)
 
-	_, pres = repository.Get(self.ConfigObj, "TestArtifact2")
+	_, pres = repository.Get(ctx, self.ConfigObj, "TestArtifact2")
 	assert.True(self.T(), pres)
 
 	inventory_service, err := services.GetInventory(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	tool, err := inventory_service.ProbeToolInfo("SampleTool")
+	tool, err := inventory_service.ProbeToolInfo(ctx, self.ConfigObj, "SampleTool")
 	assert.NoError(self.T(), err)
 
 	// The tool definition retains the original URL
@@ -343,7 +350,7 @@ tools:
 	inventory_service, err := services.GetInventory(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	err = inventory_service.AddTool(self.ConfigObj,
+	err = inventory_service.AddTool(self.Ctx, self.ConfigObj,
 		&artifacts_proto.Tool{
 			Name: "SampleTool",
 			Hash: "XXXXX",
@@ -359,10 +366,10 @@ tools:
 	_, err = repository.LoadYaml(test_artifact, services.ValidateArtifact, services.ArtifactIsBuiltIn)
 	assert.NoError(self.T(), err)
 
-	_, pres := repository.Get(self.ConfigObj, "TestArtifact")
+	_, pres := repository.Get(self.Ctx, self.ConfigObj, "TestArtifact")
 	assert.True(self.T(), pres)
 
-	tool, err := inventory_service.ProbeToolInfo("SampleTool")
+	tool, err := inventory_service.ProbeToolInfo(self.Ctx, self.ConfigObj, "SampleTool")
 	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), tool.Url, "")
@@ -389,7 +396,7 @@ tools:
 	_, err = repository.LoadYaml(test_artifact, services.ValidateArtifact, services.ArtifactIsBuiltIn)
 	assert.NoError(self.T(), err)
 
-	_, pres := repository.Get(self.ConfigObj, "TestArtifact")
+	_, pres := repository.Get(self.Ctx, self.ConfigObj, "TestArtifact")
 	assert.True(self.T(), pres)
 
 	// The admin sets a very minimal tool definition which would
@@ -398,14 +405,15 @@ tools:
 	inventory_service, err := services.GetInventory(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	err = inventory_service.AddTool(self.ConfigObj,
+	err = inventory_service.AddTool(self.Ctx, self.ConfigObj,
 		&artifacts_proto.Tool{
 			Name: "SampleTool",
 			Hash: "XXXXX",
 		}, services.ToolOptions{AdminOverride: true})
 	assert.NoError(self.T(), err)
 
-	tool, err := inventory_service.ProbeToolInfo("SampleTool")
+	tool, err := inventory_service.ProbeToolInfo(
+		self.Ctx, self.ConfigObj, "SampleTool")
 	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), tool.Url, "")
@@ -418,21 +426,22 @@ func (self *ServicesTestSuite) TestAdminOverrideAdminSet() {
 	inventory_service, err := services.GetInventory(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	err = inventory_service.AddTool(self.ConfigObj,
+	err = inventory_service.AddTool(self.Ctx, self.ConfigObj,
 		&artifacts_proto.Tool{
 			Name: "SampleTool",
 			Hash: "XXXXX",
 		}, services.ToolOptions{AdminOverride: true})
 	assert.NoError(self.T(), err)
 
-	err = inventory_service.AddTool(self.ConfigObj,
+	err = inventory_service.AddTool(self.Ctx, self.ConfigObj,
 		&artifacts_proto.Tool{
 			Name: "SampleTool",
 			Hash: "YYYYY",
 		}, services.ToolOptions{AdminOverride: true})
 	assert.NoError(self.T(), err)
 
-	tool, err := inventory_service.ProbeToolInfo("SampleTool")
+	tool, err := inventory_service.ProbeToolInfo(
+		self.Ctx, self.ConfigObj, "SampleTool")
 	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), tool.Url, "")

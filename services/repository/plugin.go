@@ -92,7 +92,7 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 			artifact_name_with_source := artifact_name + "/" + source
 
-			artifact, pres = self.repository.Get(
+			artifact, pres = self.repository.Get(ctx,
 				self.config_obj, artifact_name_with_source)
 			if !pres {
 				scope.Log("Source %v not found in artifact %v",
@@ -104,7 +104,8 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 		} else {
 
-			artifact, pres = self.repository.Get(self.config_obj, artifact_name)
+			artifact, pres = self.repository.Get(
+				ctx, self.config_obj, artifact_name)
 			if !pres {
 				scope.Log("Artifact %v not found", artifact_name)
 				return

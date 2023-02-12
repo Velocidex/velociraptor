@@ -53,7 +53,7 @@ func (self *ResultSetTestSuite) SetupTest() {
 
 func (self *ResultSetTestSuite) TestResultSetSimple() {
 	path_manager, err := artifacts.NewArtifactPathManager(
-		self.ConfigObj,
+		self.Ctx, self.ConfigObj,
 		self.client_id,
 		self.flow_id,
 		"Generic.Client.Info/BasicInformation")

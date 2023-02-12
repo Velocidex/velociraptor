@@ -68,7 +68,7 @@ func PushMetrics(ctx context.Context, wg *sync.WaitGroup,
 				rows[0] = ordereddict.NewDict().
 					Set("Node", node_name).
 					Set("Metrics", metrics.ToDict())
-				err = journal.PushRowsToArtifact(config_obj,
+				err = journal.PushRowsToArtifact(ctx, config_obj,
 					rows, "Server.Internal.FrontendMetrics",
 					"server", "")
 			}
@@ -300,7 +300,7 @@ func (self *MasterFrontendManager) UpdateStats(ctx context.Context) {
 				continue
 			}
 
-			_ = journal.PushRowsToArtifact(org_config_obj,
+			_ = journal.PushRowsToArtifact(ctx, org_config_obj,
 				[]*ordereddict.Dict{v},
 				"Server.Monitor.Health/Prometheus", "server", "")
 		}

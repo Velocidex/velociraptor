@@ -110,7 +110,7 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	err = inventory.AddTool(
+	err = inventory.AddTool(ctx,
 		config_obj, tool, services.ToolOptions{
 			AdminOverride: true,
 		})

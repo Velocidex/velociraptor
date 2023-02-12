@@ -70,11 +70,11 @@ func (self *VFSServiceTestSuite) EmulateCollection(
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	journal.PushRowsToArtifact(self.ConfigObj, rows,
+	journal.PushRowsToArtifact(self.Ctx, self.ConfigObj, rows,
 		artifact, self.client_id, self.flow_id)
 
 	// Emulate a flow completion message coming from the flow processor.
-	journal.PushRowsToArtifact(self.ConfigObj,
+	journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", self.client_id).
 			Set("FlowId", self.flow_id).
@@ -100,14 +100,14 @@ func (self *VFSServiceTestSuite) EmulateCollectionWithVFSLs(
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	journal.PushRowsToArtifact(self.ConfigObj, rows,
+	journal.PushRowsToArtifact(self.Ctx, self.ConfigObj, rows,
 		artifact+"/Listing", self.client_id, self.flow_id)
 
-	journal.PushRowsToArtifact(self.ConfigObj, stats,
+	journal.PushRowsToArtifact(self.Ctx, self.ConfigObj, stats,
 		artifact+"/Stats", self.client_id, self.flow_id)
 
 	// Emulate a flow completion message coming from the flow processor.
-	journal.PushRowsToArtifact(self.ConfigObj,
+	journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", self.client_id).
 			Set("FlowId", self.flow_id).
@@ -202,7 +202,7 @@ func (self *VFSServiceTestSuite) TestVFSListDirectoryEmpty() {
 
 	// Emulate a flow completion message coming from the flow processor.
 	artifact := "System.VFS.ListDirectory"
-	journal.PushRowsToArtifact(self.ConfigObj,
+	journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", self.client_id).
 			Set("FlowId", self.flow_id).

@@ -164,11 +164,11 @@ func (self *HuntManager) ProcessMutation(
 		return err
 	}
 
-	return self.processMutation(config_obj, mutation)
+	return self.processMutation(ctx, config_obj, mutation)
 }
 
 func (self *HuntManager) processMutation(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	mutation *api_proto.HuntMutation) error {
 
 	dispatcher, err := services.GetHuntDispatcher(config_obj)
@@ -176,7 +176,7 @@ func (self *HuntManager) processMutation(
 		return err
 	}
 
-	dispatcher.ModifyHuntObject(mutation.HuntId,
+	dispatcher.ModifyHuntObject(ctx, mutation.HuntId,
 		func(hunt_obj *api_proto.Hunt) services.HuntModificationAction {
 			modification := services.HuntUnmodified
 
@@ -393,7 +393,7 @@ func (self *HuntManager) ProcessFlowCompletion(
 	// status, so we dont bother broadcasting a mutation for them. We
 	// only need to update the local hunt dispatcher on the master
 	// node which will flush to disk eventually.
-	err := self.processMutation(config_obj, mutation)
+	err := self.processMutation(ctx, config_obj, mutation)
 	if err != nil {
 		return err
 	}
@@ -461,7 +461,7 @@ func (self *HuntManager) participateInAllHunts(ctx context.Context,
 			return nil
 		}
 
-		journal.PushRowsToArtifactAsync(config_obj,
+		journal.PushRowsToArtifactAsync(ctx, config_obj,
 			ordereddict.NewDict().
 				Set("HuntId", hunt.HuntId).
 				Set("ClientId", client_id), "System.Hunt.Participation")
@@ -555,7 +555,7 @@ func (self *HuntManager) ProcessParticipation(
 		now > hunt_obj.Expires {
 
 		// Hunt is expired, stop the hunt.
-		return dispatcher.MutateHunt(config_obj,
+		return dispatcher.MutateHunt(ctx, config_obj,
 			&api_proto.HuntMutation{
 				HuntId: participation_row.HuntId,
 				Stats:  &api_proto.HuntStats{Stopped: true}})
@@ -774,7 +774,7 @@ func scheduleHuntOnClient(
 		return err
 	}
 
-	err = dispatcher.MutateHunt(config_obj,
+	err = dispatcher.MutateHunt(ctx, config_obj,
 		&api_proto.HuntMutation{
 			HuntId: hunt_id,
 			Stats: &api_proto.HuntStats{

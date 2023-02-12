@@ -72,6 +72,7 @@ type githubAssets struct {
 type InventoryService struct {
 	mu       sync.Mutex
 	binaries *artifacts_proto.ThirdParty
+	versions map[string][]*artifacts_proto.Tool
 	Client   HTTPClient
 	Clock    utils.Clock
 }
@@ -92,13 +93,40 @@ func (self *InventoryService) ClearForTests() {
 	self.binaries = &artifacts_proto.ThirdParty{}
 }
 
-func (self *InventoryService) ProbeToolInfo(name string) (*artifacts_proto.Tool, error) {
+func (self *InventoryService) ProbeToolInfo(
+	ctx context.Context, config_obj *config_proto.Config,
+	name string) (*artifacts_proto.Tool, error) {
 	for _, tool := range self.Get().Tools {
 		if tool.Name == name {
-			return tool, nil
+			return self.AddAllVersions(ctx, config_obj, tool), nil
 		}
 	}
+
 	return nil, errors.New("Not Found")
+}
+
+// Enrich the tool definition with all known versions of this tool.
+func (self *InventoryService) AddAllVersions(
+	ctx context.Context, config_obj *config_proto.Config,
+	tool *artifacts_proto.Tool) *artifacts_proto.Tool {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.addAllVersions(ctx, config_obj, tool)
+}
+
+func (self *InventoryService) addAllVersions(
+	ctx context.Context, config_obj *config_proto.Config,
+	tool *artifacts_proto.Tool) *artifacts_proto.Tool {
+	result := proto.Clone(tool).(*artifacts_proto.Tool)
+
+	versions, _ := self.versions[tool.Name]
+	result.Versions = nil
+	for _, v := range versions {
+		result.Versions = append(result.Versions, v)
+	}
+
+	return result
 }
 
 // Gets the tool information from the inventory. If the tool is not
@@ -127,7 +155,9 @@ func (self *InventoryService) GetToolInfo(
 					return nil, err
 				}
 			}
-			return proto.Clone(item).(*artifacts_proto.Tool), nil
+			// Already holding the mutex here - call the lock free
+			// version.
+			return self.addAllVersions(ctx, config_obj, item), nil
 		}
 	}
 	return nil, fmt.Errorf("Tool %v not declared in inventory.", tool)
@@ -274,10 +304,47 @@ func (self *InventoryService) RemoveTool(
 	return db.SetSubject(config_obj, paths.ThirdPartyInventory, self.binaries)
 }
 
-func (self *InventoryService) AddTool(config_obj *config_proto.Config,
+func (self *InventoryService) UpdateVersion(tool_request *artifacts_proto.Tool) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	// Update the list of version for this tool, replacing existing
+	// definitions.
+	versions, _ := self.versions[tool_request.Name]
+	version_known := false
+	for idx, v := range versions {
+		if v.Artifact == tool_request.Artifact {
+			versions[idx] = tool_request
+			version_known = true
+			break
+		}
+	}
+
+	if !version_known {
+		versions = append(versions, tool_request)
+	}
+	self.versions[tool_request.Name] = versions
+}
+
+// This gets called by the repository for each artifact loaded to
+// inform us about any tools it contains. The InventoryService looks
+// at its current definition for the tool in the inventory to see if
+// it needs to upgrade the definition or add a new entry to the
+// inventory automatically.
+func (self *InventoryService) AddTool(
+	ctx context.Context, config_obj *config_proto.Config,
 	tool_request *artifacts_proto.Tool, opts services.ToolOptions) error {
+
+	tool_request.Versions = nil
+
+	// Keep a reference to all known versions of this tool. We keep
+	// the clean definitions from the artifact together, so we can
+	// always reset back to them.
+	self.UpdateVersion(tool_request)
+
 	if opts.Upgrade {
-		existing_tool, err := self.ProbeToolInfo(tool_request.Name)
+		existing_tool, err := self.ProbeToolInfo(
+			ctx, config_obj, tool_request.Name)
 		if err == nil {
 			// Ignore the request if the existing
 			// definition is better than the new one.
@@ -391,6 +458,7 @@ func NewInventoryService(
 	inventory_service := &InventoryService{
 		Clock:    utils.RealClock{},
 		binaries: &artifacts_proto.ThirdParty{},
+		versions: make(map[string][]*artifacts_proto.Tool),
 		// Use the VQL http client so it can accept the same certs.
 		Client: default_client,
 	}

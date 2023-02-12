@@ -223,7 +223,7 @@ func (self *Notifier) ProcessPing(ctx context.Context,
 		is_client_connected = self.notification_pool.IsClientConnected(client_id)
 	}
 
-	return journal.PushRowsToArtifact(config_obj,
+	return journal.PushRowsToArtifact(ctx, config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", client_id).
 			Set("NotifyTarget", notify_target).
@@ -250,7 +250,8 @@ func (self *Notifier) CountConnectedClients() uint64 {
 	return self.notification_pool.Count()
 }
 
-func (self *Notifier) NotifyListener(config_obj *config_proto.Config,
+func (self *Notifier) NotifyListener(
+	ctx context.Context, config_obj *config_proto.Config,
 	id, tag string) error {
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
@@ -259,7 +260,7 @@ func (self *Notifier) NotifyListener(config_obj *config_proto.Config,
 
 	// We need to send this ASAP so we do not use an async send.
 	notificationsSentCounter.Inc()
-	return journal.PushRowsToArtifact(config_obj,
+	return journal.PushRowsToArtifact(ctx, config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("Tag", tag).
 			Set("Target", id)},
@@ -277,15 +278,15 @@ func (self *Notifier) NotifyDirectListener(client_id string) {
 	}
 }
 
-func (self *Notifier) NotifyListenerAsync(config_obj *config_proto.Config,
-	id, tag string) {
+func (self *Notifier) NotifyListenerAsync(
+	ctx context.Context, config_obj *config_proto.Config, id, tag string) {
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return
 	}
 
 	notificationsSentCounter.Inc()
-	journal.PushRowsToArtifactAsync(config_obj,
+	journal.PushRowsToArtifactAsync(ctx, config_obj,
 		ordereddict.NewDict().
 			Set("Tag", tag).
 			Set("Target", id),
@@ -371,7 +372,7 @@ func (self *Notifier) IsClientConnected(
 	self.mu.Unlock()
 
 	// Push request immediately for low latency.
-	err = journal.PushRowsToArtifact(config_obj,
+	err = journal.PushRowsToArtifact(ctx, config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", client_id).
 			Set("NotifyTarget", id)},

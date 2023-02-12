@@ -202,11 +202,11 @@ func (self *Launcher) CompileCollectorArgs(
 		var artifact *artifacts_proto.Artifact = nil
 
 		if collector_request.AllowCustomOverrides {
-			artifact, _ = repository.Get(config_obj, "Custom."+spec.Artifact)
+			artifact, _ = repository.Get(ctx, config_obj, "Custom."+spec.Artifact)
 		}
 
 		if artifact == nil {
-			artifact, _ = repository.Get(config_obj, spec.Artifact)
+			artifact, _ = repository.Get(ctx, config_obj, spec.Artifact)
 		}
 
 		if artifact == nil {
@@ -373,7 +373,8 @@ func (self *Launcher) GetVQLCollectorArgs(
 	options services.CompilerOptions) (*actions_proto.VQLCollectorArgs, error) {
 
 	vql_collector_args := &actions_proto.VQLCollectorArgs{}
-	err := self.CompileSingleArtifact(config_obj, options, artifact, vql_collector_args)
+	err := self.CompileSingleArtifact(ctx, config_obj,
+		options, artifact, vql_collector_args)
 	if err != nil {
 		return nil, err
 	}
@@ -432,7 +433,7 @@ func (self *Launcher) EnsureToolsDeclared(
 			// itself.
 			logger.Info("Adding tool %v from artifact %v",
 				tool.Name, artifact.Name)
-			err = inventory.AddTool(
+			err = inventory.AddTool(ctx,
 				config_obj, tool,
 				services.ToolOptions{
 					Upgrade: true,

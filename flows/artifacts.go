@@ -96,7 +96,8 @@ type CollectionContext struct {
 	send_update bool
 }
 
-func NewCollectionContext(config_obj *config_proto.Config) *CollectionContext {
+func NewCollectionContext(
+	ctx context.Context, config_obj *config_proto.Config) *CollectionContext {
 	self := &CollectionContext{
 		ArtifactCollectorContext: flows_proto.ArtifactCollectorContext{},
 		monitoring_batch:         make(map[string]*jsonBatch),
@@ -129,7 +130,7 @@ func NewCollectionContext(config_obj *config_proto.Config) *CollectionContext {
 
 		journal, err := services.GetJournal(config_obj)
 		if err == nil {
-			journal.PushRowsToArtifactAsync(
+			journal.PushRowsToArtifactAsync(ctx,
 				config_obj, row, "System.Flow.Completion")
 		}
 	})
@@ -226,7 +227,7 @@ func closeContext(
 	}
 
 	if len(collection_context.Logs) > 0 {
-		err := flushContextLogs(
+		err := flushContextLogs(ctx,
 			config_obj, collection_context, collection_context.completer)
 		if err != nil {
 			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
@@ -246,7 +247,7 @@ func closeContext(
 	}
 
 	if len(collection_context.monitoring_batch) > 0 {
-		err = flushMonitoringLogs(config_obj, collection_context)
+		err = flushMonitoringLogs(ctx, config_obj, collection_context)
 		if err != nil {
 			collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
 			collection_context.Status = err.Error()
@@ -309,11 +310,11 @@ func flushContextUploadedFiles(
 
 // Load the collector context from storage.
 func LoadCollectionContext(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	client_id, flow_id string) (*CollectionContext, error) {
 
 	if flow_id == constants.MONITORING_WELL_KNOWN_FLOW {
-		result := NewCollectionContext(config_obj)
+		result := NewCollectionContext(ctx, config_obj)
 		result.SessionId = flow_id
 		result.ClientId = client_id
 
@@ -321,7 +322,7 @@ func LoadCollectionContext(
 	}
 
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	collection_context := NewCollectionContext(config_obj)
+	collection_context := NewCollectionContext(ctx, config_obj)
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return nil, err
@@ -344,7 +345,7 @@ func LoadCollectionContext(
 
 // Process an incoming message from the client.
 func ArtifactCollectorProcessOneMessage(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	collection_context *CollectionContext,
 	message *crypto_proto.VeloMessage) error {
 
@@ -366,7 +367,7 @@ func ArtifactCollectorProcessOneMessage(
 	// Handle the response depending on the RequestId
 	switch message.RequestId {
 	case constants.TransferWellKnownFlowId:
-		return appendUploadDataToFile(
+		return appendUploadDataToFile(ctx,
 			config_obj, collection_context, message)
 
 	case constants.ProcessVQLResponses:
@@ -387,7 +388,7 @@ func ArtifactCollectorProcessOneMessage(
 		rows_written := uint64(0)
 		if response.Query.Name != "" {
 			path_manager, err := artifact_paths.NewArtifactPathManager(
-				config_obj,
+				ctx, config_obj,
 				collection_context.Request.ClientId,
 				collection_context.SessionId,
 				response.Query.Name)
@@ -484,7 +485,7 @@ func CheckForStatus(
 }
 
 func appendUploadDataToFile(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	collection_context *CollectionContext,
 	message *crypto_proto.VeloMessage) error {
 
@@ -607,7 +608,7 @@ func appendUploadDataToFile(
 			return err
 		}
 
-		return journal.PushRowsToArtifact(config_obj,
+		return journal.PushRowsToArtifact(ctx, config_obj,
 			[]*ordereddict.Dict{row},
 			"System.Upload.Completion",
 			message.Source, collection_context.SessionId,
@@ -723,7 +724,7 @@ func (self *FlowRunner) ProcessSingleMessage(
 			return invalidClientId
 		}
 
-		collection_context, err = LoadCollectionContext(
+		collection_context, err = LoadCollectionContext(ctx,
 			self.config_obj, job.Source, job.SessionId)
 		if err != nil {
 			// Ignore logs and status messages from the
@@ -770,7 +771,8 @@ func (self *FlowRunner) ProcessSingleMessage(
 	}
 
 	if job.SessionId == constants.MONITORING_WELL_KNOWN_FLOW {
-		err := MonitoringProcessMessage(self.config_obj, collection_context, job)
+		err := MonitoringProcessMessage(
+			ctx, self.config_obj, collection_context, job)
 		if err != nil {
 			Log(self.config_obj, collection_context,
 				fmt.Sprintf("MonitoringProcessMessage: %v", err))
@@ -778,7 +780,7 @@ func (self *FlowRunner) ProcessSingleMessage(
 		return err
 	}
 
-	err := ArtifactCollectorProcessOneMessage(
+	err := ArtifactCollectorProcessOneMessage(ctx,
 		self.config_obj, collection_context, job)
 	if err != nil {
 		Log(self.config_obj, collection_context,

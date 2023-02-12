@@ -108,7 +108,7 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 				return
 			}
 
-			journal.PushRowsToArtifactAsync(config_obj,
+			journal.PushRowsToArtifactAsync(ctx, config_obj,
 				ordereddict.NewDict().
 					Set("hunt_id", arg.HuntId).
 					Set("mutation", mutation),

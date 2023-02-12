@@ -312,7 +312,7 @@ func (self *EventTable) RunQuery(
 	}
 
 	artifact_name := getArtifactName(vql_request)
-	path_manager, err := artifacts.NewArtifactPathManager(
+	path_manager, err := artifacts.NewArtifactPathManager(ctx,
 		config_obj, "", "", artifact_name)
 	if err != nil {
 		return err
@@ -321,7 +321,7 @@ func (self *EventTable) RunQuery(
 	path_manager.Clock = self.clock
 
 	// We write the logs to special files.
-	log_path_manager, err := artifacts.NewArtifactLogPathManager(
+	log_path_manager, err := artifacts.NewArtifactLogPathManager(ctx,
 		config_obj, "server", "", artifact_name)
 	if err != nil {
 		return err

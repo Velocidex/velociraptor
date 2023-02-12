@@ -114,7 +114,7 @@ func (self *ClientInfoManager) QueueMessagesForClient(
 	// When the completer is done send a message to all the minions
 	// that the tasks are ready to be read.
 	completer := utils.NewCompleter(func() {
-		journal.PushRowsToArtifactAsync(self.config_obj,
+		journal.PushRowsToArtifactAsync(ctx, self.config_obj,
 			ordereddict.NewDict().
 				Set("ClientId", client_id).
 				Set("Notify", notify),
@@ -171,7 +171,7 @@ func (self *ClientInfoManager) QueueMessageForClient(
 				completion()
 			}
 
-			journal.PushRowsToArtifactAsync(self.config_obj,
+			journal.PushRowsToArtifactAsync(ctx, self.config_obj,
 				ordereddict.NewDict().
 					Set("ClientId", client_id).
 					Set("Notify", notify),

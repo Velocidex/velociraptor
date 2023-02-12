@@ -47,7 +47,7 @@ func (self *ManagerTestSuite) TestSetArtifact() {
 	assert.NoError(self.T(), err)
 
 	// Coerce artifact into a prefix.
-	artifact, err := manager.SetArtifactFile(self.ConfigObj, "User", `
+	artifact, err := manager.SetArtifactFile(self.Ctx, self.ConfigObj, "User", `
 name: TestArtifact
 `, "Custom." /* required_prefix */)
 
@@ -63,7 +63,7 @@ name: TestArtifact
 	assert.Contains(self.T(), string(data), "Custom.TestArtifact")
 
 	// Make sure a creation event was written
-	path_manager, err := artifacts.NewArtifactPathManager(
+	path_manager, err := artifacts.NewArtifactPathManager(self.Ctx,
 		self.ConfigObj, "", "", "Server.Internal.ArtifactModification")
 	assert.NoError(self.T(), err)
 	path_manager.Clock = clock
@@ -113,7 +113,8 @@ func (self *ManagerTestSuite) TestSetArtifactDetectedByMinion() {
 		fmt.Sprintf("%p", master_manager))
 
 	// Coerce artifact into a prefix.
-	artifact, err := master_manager.SetArtifactFile(self.ConfigObj, "User", `
+	artifact, err := master_manager.SetArtifactFile(
+		self.Ctx, self.ConfigObj, "User", `
 name: TestArtifact
 `, "")
 
@@ -125,17 +126,17 @@ name: TestArtifact
 
 	// Wait until the minion knows about the new artifact.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		_, ok := minion_repository.Get(minion_config, artifact.Name)
+		_, ok := minion_repository.Get(self.Ctx, minion_config, artifact.Name)
 		return ok
 	})
 
 	// Now delete the artifact.
-	err = master_manager.DeleteArtifactFile(self.ConfigObj, "User", "TestArtifact")
+	err = master_manager.DeleteArtifactFile(self.Ctx, self.ConfigObj, "User", "TestArtifact")
 	assert.NoError(self.T(), err)
 
 	// Wait until the minion removes it from its repository.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		_, found := minion_repository.Get(minion_config, artifact.Name)
+		_, found := minion_repository.Get(self.Ctx, minion_config, artifact.Name)
 		return !found
 	})
 }
@@ -147,7 +148,7 @@ func (self *ManagerTestSuite) TestSetArtifactWithExistingPrefix() {
 	assert.NoError(self.T(), err)
 
 	// Coerce artifact into a prefix.
-	artifact, err := manager.SetArtifactFile(self.ConfigObj, "User", `
+	artifact, err := manager.SetArtifactFile(self.Ctx, self.ConfigObj, "User", `
 name: Custom.TestArtifact
 `, "Custom." /* required_prefix */)
 
@@ -168,7 +169,7 @@ func (self *ManagerTestSuite) TestSetArtifactWithInvalidArtifact() {
 	assert.NoError(self.T(), err)
 
 	// Invalid YAML
-	_, err = manager.SetArtifactFile(self.ConfigObj, "User", `
+	_, err = manager.SetArtifactFile(self.Ctx, self.ConfigObj, "User", `
 nameXXXXX: Custom.TestArtifact
 `, "Custom." /* required_prefix */)
 
@@ -176,7 +177,7 @@ nameXXXXX: Custom.TestArtifact
 	assert.Contains(self.T(), err.Error(), "field nameXXXXX not found in type")
 
 	// Valid YAML but invalid VQL
-	_, err = manager.SetArtifactFile(self.ConfigObj, "User", `
+	_, err = manager.SetArtifactFile(self.Ctx, self.ConfigObj, "User", `
 name: Custom.TestArtifact
 sources:
 - query: "SELECT 1"
@@ -191,34 +192,34 @@ func (self *ManagerTestSuite) TestSetArtifactOverrideBuiltIn() {
 	assert.NoError(self.T(), err)
 
 	// Try to override an existing artifact
-	_, err = manager.SetArtifactFile(self.ConfigObj, "User", `
+	_, err = manager.SetArtifactFile(self.Ctx, self.ConfigObj, "User", `
 name: Generic.Client.Info
 `, "" /* required_prefix */)
 	assert.Error(self.T(), err)
 	assert.Contains(self.T(), err.Error(), "Unable to override built in artifact")
 
 	// Set Custom artifact
-	_, err = manager.SetArtifactFile(self.ConfigObj, "User", `
+	_, err = manager.SetArtifactFile(self.Ctx, self.ConfigObj, "User", `
 name: Custom.Generic.Client.Info
 `, "" /* required_prefix */)
 	assert.NoError(self.T(), err)
 
 	// Override it again
-	_, err = manager.SetArtifactFile(self.ConfigObj, "User", `
+	_, err = manager.SetArtifactFile(self.Ctx, self.ConfigObj, "User", `
 name: Custom.Generic.Client.Info
 `, "" /* required_prefix */)
 	assert.NoError(self.T(), err)
 
 	// Set Custom artifact with built_in in definition (this is a
 	// private field which should be ignored).
-	_, err = manager.SetArtifactFile(self.ConfigObj, "User", `
+	_, err = manager.SetArtifactFile(self.Ctx, self.ConfigObj, "User", `
 name: Custom.Generic.Client.Info
 built_in: true
 `, "" /* required_prefix */)
 	assert.NoError(self.T(), err)
 
 	// Override it again
-	_, err = manager.SetArtifactFile(self.ConfigObj, "User", `
+	_, err = manager.SetArtifactFile(self.Ctx, self.ConfigObj, "User", `
 name: Custom.Generic.Client.Info
 built_in: true
 `, "" /* required_prefix */)

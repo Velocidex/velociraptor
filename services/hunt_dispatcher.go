@@ -70,7 +70,7 @@ type IHuntDispatcher interface {
 
 	// Modify a hunt under lock. The hunt will be synchronized to
 	// all frontends. Return true to indicate the hunt was modified.
-	ModifyHuntObject(hunt_id string,
+	ModifyHuntObject(ctx context.Context, hunt_id string,
 		cb func(hunt *api_proto.Hunt) HuntModificationAction,
 	) HuntModificationAction
 
@@ -83,9 +83,7 @@ type IHuntDispatcher interface {
 	// Gets read only access to the hunt object.
 	GetHunt(hunt_id string) (*api_proto.Hunt, bool)
 
-	GetFlows(
-		ctx context.Context,
-		config_obj *config_proto.Config,
+	GetFlows(ctx context.Context, config_obj *config_proto.Config,
 		scope vfilter.Scope,
 		hunt_id string, start int) chan *api_proto.FlowDetails
 
@@ -99,7 +97,8 @@ type IHuntDispatcher interface {
 		in *api_proto.ListHuntsRequest) (*api_proto.ListHuntsResponse, error)
 
 	// Send a mutation to a hunt object.
-	MutateHunt(config_obj *config_proto.Config,
+	MutateHunt(ctx context.Context,
+		config_obj *config_proto.Config,
 		mutation *api_proto.HuntMutation) error
 
 	// Re-read the hunts from the data store. This happens

@@ -54,7 +54,7 @@ func (self *SendEventFunction) Call(ctx context.Context,
 
 	// We only allow to publish server events - client events come
 	// from the client only and not from VQL.
-	err = journal.PushRowsToArtifact(config_obj,
+	err = journal.PushRowsToArtifact(ctx, config_obj,
 		[]*ordereddict.Dict{arg.Row}, arg.Artifact, "server", "")
 	if err != nil {
 		scope.Log("send_event: %v", err)

@@ -166,7 +166,7 @@ func (self *GuiTemplateEngine) Expand(values ...interface{}) interface{} {
 }
 
 func (self *GuiTemplateEngine) Import(artifact, name string) interface{} {
-	definition, pres := self.BaseTemplateEngine.Repository.Get(
+	definition, pres := self.BaseTemplateEngine.Repository.Get(self.ctx,
 		self.config_obj, artifact)
 	if !pres {
 		self.Error("Unknown artifact %v", artifact)
@@ -591,7 +591,8 @@ func NewGuiTemplateEngine(
 	}
 
 	base_engine, err := newBaseTemplateEngine(
-		config_obj, scope, acl_manager, uploader, repository, artifact_name)
+		ctx, config_obj, scope, acl_manager,
+		uploader, repository, artifact_name)
 	if err != nil {
 		return nil, err
 	}

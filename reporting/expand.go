@@ -64,6 +64,7 @@ type Expansions struct {
 
 // Support a number of expansions in description strings.
 func FormatDescription(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	description string,
 	rows []vfilter.Row) string {
@@ -92,7 +93,8 @@ func FormatDescription(
 	return buffer.String()
 }
 
-func (self *Expansions) DocFrom(artifact string) string {
+func (self *Expansions) DocFrom(
+	ctx context.Context, artifact string) string {
 	manager, err := services.GetRepositoryManager(self.config_obj)
 	if err != nil {
 		return ""
@@ -103,7 +105,7 @@ func (self *Expansions) DocFrom(artifact string) string {
 		return ""
 	}
 
-	artifact_definition, pres := repository.Get(self.config_obj, artifact)
+	artifact_definition, pres := repository.Get(ctx, self.config_obj, artifact)
 	if !pres {
 		return ""
 	}

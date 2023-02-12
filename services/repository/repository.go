@@ -59,6 +59,8 @@ type Repository struct {
 	parent_config_obj *config_proto.Config
 }
 
+// A Parent repository is another repository we can delegate to if we
+// dont have the artifact definition we require.
 func (self *Repository) SetParent(
 	parent services.Repository, parent_config_obj *config_proto.Config) {
 	self.mu.Lock()
@@ -361,8 +363,9 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 }
 
 func (self *Repository) GetArtifactType(
-	config_obj *config_proto.Config, artifact_name string) (string, error) {
-	artifact, pres := self.Get(config_obj, artifact_name)
+	ctx context.Context, config_obj *config_proto.Config,
+	artifact_name string) (string, error) {
+	artifact, pres := self.Get(ctx, config_obj, artifact_name)
 	if !pres {
 		return "", fmt.Errorf("Artifact %s not known", artifact_name)
 	}
@@ -371,9 +374,10 @@ func (self *Repository) GetArtifactType(
 }
 
 func (self *Repository) GetSource(
-	config_obj *config_proto.Config, name string) (*artifacts_proto.ArtifactSource, bool) {
+	ctx context.Context, config_obj *config_proto.Config,
+	name string) (*artifacts_proto.ArtifactSource, bool) {
 	artifact_name, source_name := paths.SplitFullSourceName(name)
-	artifact, pres := self.Get(config_obj, artifact_name)
+	artifact, pres := self.Get(ctx, config_obj, artifact_name)
 	if !pres {
 		return nil, false
 	}
@@ -387,7 +391,8 @@ func (self *Repository) GetSource(
 }
 
 func (self *Repository) Get(
-	config_obj *config_proto.Config, name string) (*artifacts_proto.Artifact, bool) {
+	ctx context.Context, config_obj *config_proto.Config,
+	name string) (*artifacts_proto.Artifact, bool) {
 	self.mu.Lock()
 	cached_artifact, pres := self.get(name)
 	if !pres {
@@ -395,7 +400,7 @@ func (self *Repository) Get(
 
 		// If we have a parent repository just get it from there.
 		if self.parent != nil {
-			return self.parent.Get(self.parent_config_obj, name)
+			return self.parent.Get(ctx, self.parent_config_obj, name)
 		}
 		return nil, false
 	}
@@ -410,7 +415,7 @@ func (self *Repository) Get(
 
 	// Delay processing until we need it. This means loading
 	// artifacts is faster.
-	err := compileArtifact(config_obj, result)
+	err := compileArtifact(ctx, config_obj, result)
 	if err != nil {
 		logger := logging.GetLogger(config_obj, &logging.GenericComponent)
 		logger.Error("While compiling artifact %v: %v", name, err)
@@ -542,8 +547,9 @@ func splitQueryToQueries(query string) ([]string, error) {
 }
 
 func compileArtifact(
-	config_obj *config_proto.Config,
+	ctx context.Context, config_obj *config_proto.Config,
 	artifact *artifacts_proto.Artifact) error {
+
 	if artifact.Compiled {
 		return nil
 	}
@@ -560,7 +566,14 @@ func compileArtifact(
 			source.Queries = queries
 		}
 	}
+	artifact.Compiled = true
 
+	return updateTools(ctx, config_obj, artifact)
+}
+
+func updateTools(
+	ctx context.Context, config_obj *config_proto.Config,
+	artifact *artifacts_proto.Artifact) error {
 	// Make sure tools are all defined.
 	inventory, err := services.GetInventory(config_obj)
 	if err != nil {
@@ -568,15 +581,13 @@ func compileArtifact(
 	}
 
 	for _, tool := range artifact.Tools {
-		err := inventory.AddTool(
-			config_obj, tool,
+		tool_request := proto.Clone(tool).(*artifacts_proto.Tool)
+		tool_request.Artifact = artifact.Name
+		err := inventory.AddTool(ctx, config_obj, tool_request,
 			services.ToolOptions{Upgrade: true})
 		if err != nil {
 			return err
 		}
 	}
-
-	artifact.Compiled = true
-
 	return nil
 }

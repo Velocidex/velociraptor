@@ -59,6 +59,7 @@ func (self *ServerArtifactsTestSuite) LoadArtifacts(definition string) services.
 
 func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 	name, user, flow_id string) *api_proto.FlowDetails {
+	ctx := self.Ctx
 
 	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
@@ -100,7 +101,7 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 			notifier, err := services.GetNotifier(self.ConfigObj)
 			assert.NoError(self.T(), err)
 
-			err = notifier.NotifyListener(self.ConfigObj, "server", "")
+			err = notifier.NotifyListener(ctx, self.ConfigObj, "server", "")
 			assert.NoError(self.T(), err)
 		})
 	assert.NoError(self.T(), err)

@@ -16,16 +16,24 @@ parameters:
     default: |
        Glob
        Users\*\NTUser.dat
+
   - name: Root
     description: |
       On Windows, this is the device to apply all the glob on
       (e.g. `C:`). On *NIX, this should be a path to a subdirectory or
       /.
     default: "C:"
+
   - name: Accessor
     default: auto
     description: |
       On Windows, this can be changed to `ntfs`.
+
+  - name: NTFS_CACHE_TIME
+    type: int
+    description: How often to flush the NTFS cache. (Default is never).
+    default: "1000000"
+
 
 sources:
    - name: All Matches Metadata

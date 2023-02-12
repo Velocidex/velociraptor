@@ -83,7 +83,8 @@ func doThirdPartyShow() error {
 		}
 		fmt.Println(string(serialized))
 	} else {
-		tool, err := inventory_manager.ProbeToolInfo(*third_party_show_file)
+		tool, err := inventory_manager.ProbeToolInfo(
+			ctx, config_obj, *third_party_show_file)
 		if err != nil {
 			return fmt.Errorf("Tool not found: %w", err)
 		}
@@ -197,7 +198,7 @@ func doThirdPartyUpload() error {
 		return err
 	}
 
-	err = inventory_manager.AddTool(
+	err = inventory_manager.AddTool(ctx,
 		config_obj, tool, services.ToolOptions{
 			AdminOverride: true,
 		})

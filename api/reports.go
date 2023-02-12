@@ -61,9 +61,10 @@ func getReport(ctx context.Context,
 	var template_data string
 
 	if in.Type == "" {
-		definition, pres := repository.Get(config_obj, "Custom."+in.Artifact)
+		definition, pres := repository.Get(
+			ctx, config_obj, "Custom."+in.Artifact)
 		if !pres {
-			definition, pres = repository.Get(config_obj, in.Artifact)
+			definition, pres = repository.Get(ctx, config_obj, in.Artifact)
 		}
 		if pres {
 			for _, report := range definition.Reports {
@@ -105,7 +106,7 @@ func getReport(ctx context.Context,
 			template_engine, in.ClientId, in.StartTime, in.EndTime)
 
 	case "ARTIFACT_DESCRIPTION":
-		template_data, err = reporting.GenerateArtifactDescriptionReport(
+		template_data, err = reporting.GenerateArtifactDescriptionReport(ctx,
 			template_engine, config_obj)
 	}
 

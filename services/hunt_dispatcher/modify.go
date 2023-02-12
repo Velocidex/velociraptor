@@ -48,7 +48,7 @@ func (self *HuntDispatcher) ModifyHunt(
 			return err
 		}
 
-		err = journal.PushRowsToArtifact(config_obj,
+		err = journal.PushRowsToArtifact(ctx, config_obj,
 			[]*ordereddict.Dict{row}, "System.Hunt.Archive",
 			"server", hunt_modification.HuntId)
 		if err != nil {
@@ -76,5 +76,5 @@ func (self *HuntDispatcher) ModifyHunt(
 		mutation.State = api_proto.Hunt_STOPPED
 	}
 
-	return self.MutateHunt(config_obj, mutation)
+	return self.MutateHunt(ctx, config_obj, mutation)
 }

@@ -1,6 +1,7 @@
 package server_artifacts
 
 import (
+	"context"
 	"io"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -38,9 +39,9 @@ type CollectionContextManager interface {
 
 	// Cancel all the queries in this collection immediately and wait
 	// for them to complete
-	Cancel(princiapl string)
+	Cancel(ctx context.Context, princiapl string)
 
-	Close()
+	Close(ctx context.Context)
 
 	ChargeBytes(bytes int64)
 }
