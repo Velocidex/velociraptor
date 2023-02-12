@@ -19,19 +19,21 @@ func GetClientInfo(
 	result := &actions_proto.ClientInfo{}
 
 	info, err := host.Info()
-	if err == nil && config_obj.Version != nil {
+	if err == nil {
 		result = &actions_proto.ClientInfo{
-			Hostname:      info.Hostname,
-			System:        info.OS,
-			Release:       info.Platform,
-			Architecture:  runtime.GOARCH,
-			Fqdn:          fqdn.Get(),
-			ClientName:    config_obj.Version.Name,
-			ClientVersion: config_obj.Version.Version,
-			BuildUrl:      config_obj.Version.CiBuildUrl,
-			BuildTime:     config_obj.Version.BuildTime,
+			Hostname:     info.Hostname,
+			System:       info.OS,
+			Release:      info.Platform,
+			Architecture: runtime.GOARCH,
+			Fqdn:         fqdn.Get(),
 		}
 	}
 
+	if config_obj.Version != nil {
+		result.ClientName = config_obj.Version.Name
+		result.ClientVersion = config_obj.Version.Version
+		result.BuildUrl = config_obj.Version.CiBuildUrl
+		result.BuildTime = config_obj.Version.BuildTime
+	}
 	return result
 }

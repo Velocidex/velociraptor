@@ -18,6 +18,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"path"
 	"sync"
@@ -26,6 +27,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/executor"
+	"www.velocidex.com/golang/velociraptor/http_comms"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -85,6 +87,11 @@ func doPoolClient() error {
 
 	server.IncreaseLimits(client_config)
 
+	err = startup.StartPoolClientServices(sm, client_config)
+	if err != nil {
+		return err
+	}
+
 	// Make a copy of all the configs for each client.
 	configs := make([]*config_proto.Config, 0, number_of_clients)
 	serialized, _ := json.Marshal(client_config)
@@ -138,7 +145,9 @@ func doPoolClient() error {
 				return fmt.Errorf("Can not create executor: %w", err)
 			}
 
-			err = startup.StartPoolClientServices(sm, client_config, exe)
+			_, err = http_comms.StartHttpCommunicatorService(
+				sm.Ctx, sm.Wg, client_config, exe,
+				func(ctx context.Context, config_obj *config_proto.Config) {})
 			if err != nil {
 				return err
 			}

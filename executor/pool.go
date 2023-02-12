@@ -63,6 +63,14 @@ type PoolClientExecutor struct {
 	id       int
 }
 
+func (self *PoolClientExecutor) GetClientInfo() *actions_proto.ClientInfo {
+	result := self.ClientExecutor.GetClientInfo()
+	result.Hostname = fmt.Sprintf("%v-%d", result.Hostname, self.id)
+	result.Fqdn = fmt.Sprintf("%v-%d", result.Fqdn, self.id)
+
+	return result
+}
+
 func (self *PoolClientExecutor) ReadResponse() <-chan *crypto_proto.VeloMessage {
 	return self.Outbound
 }
@@ -198,8 +206,9 @@ func (self *PoolClientExecutor) maybeTransformResponse(
 
 	if response != nil {
 
-		// We need to make the Hostname unique so if the response contains
-		// a Hostname we need to transform it.
+		// We need to make the Hostname unique so if the response
+		// contains a Hostname we need to transform it. This
+		// specifically targets Generic.Client.Info interrogation.
 		if utils.InString(response.Columns, "Hostname") {
 			rows, err := utils.ParseJsonToDicts([]byte(response.JSONLResponse))
 			if err != nil || len(rows) == 0 {
