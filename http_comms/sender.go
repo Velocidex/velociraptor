@@ -62,9 +62,7 @@ type Sender struct {
 	clock utils.Clock
 }
 
-func (self *Sender) CleanOnExit(ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
-
+func (self *Sender) CleanOnExit(ctx context.Context) {
 	<-ctx.Done()
 	self.urgent_buffer.Close()
 	self.ring_buffer.Close()
@@ -72,9 +70,7 @@ func (self *Sender) CleanOnExit(ctx context.Context, wg *sync.WaitGroup) {
 
 // Persistent loop to pump messages from the executor to the ring
 // buffer. This function should never exit in a real client.
-func (self *Sender) PumpExecutorToRingBuffer(
-	ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
+func (self *Sender) PumpExecutorToRingBuffer(ctx context.Context) {
 
 	// We should never exit from this.
 	defer self.maybeCallOnExit()
@@ -176,9 +172,7 @@ func (self *Sender) PumpExecutorToRingBuffer(
 // to send. This also manages timing and retransmissions - blocks if
 // the server is not available. This function should never exit in a
 // real client.
-func (self *Sender) PumpRingBufferToSendMessage(
-	ctx context.Context, wg *sync.WaitGroup) {
-	defer wg.Done()
+func (self *Sender) PumpRingBufferToSendMessage(ctx context.Context) {
 
 	// We should never exit from this.
 	defer self.maybeCallOnExit()
@@ -213,6 +207,10 @@ func (self *Sender) PumpRingBufferToSendMessage(
 			}
 		}
 
+		self.mu.Lock()
+		release := self.release
+		self.mu.Unlock()
+
 		// Wait a minimum time before sending the next one to
 		// give the executor a chance to fill the queue.
 		select {
@@ -221,7 +219,7 @@ func (self *Sender) PumpRingBufferToSendMessage(
 
 			// If the queue is too large we need to flush
 			// it out immediately so skip the wait below.
-		case <-self.release:
+		case <-release:
 			continue
 
 			// Wait a minimum amount of time to allow for
@@ -238,13 +236,23 @@ func (self *Sender) Start(
 	ctx context.Context, wg *sync.WaitGroup) {
 
 	wg.Add(1)
-	go self.PumpExecutorToRingBuffer(ctx, wg)
+	go func() {
+		defer wg.Done()
+		self.PumpExecutorToRingBuffer(ctx)
+
+	}()
 
 	wg.Add(1)
-	go self.PumpRingBufferToSendMessage(ctx, wg)
+	go func() {
+		defer wg.Done()
+		self.PumpRingBufferToSendMessage(ctx)
+	}()
 
 	wg.Add(1)
-	go self.CleanOnExit(ctx, wg)
+	go func() {
+		defer wg.Done()
+		self.CleanOnExit(ctx)
+	}()
 }
 
 func NewSender(

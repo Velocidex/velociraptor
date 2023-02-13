@@ -108,7 +108,6 @@ func GetCSVAppender(
 	}
 
 	result.wg.Add(1)
-
 	go func() {
 		defer result.wg.Done()
 

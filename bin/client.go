@@ -134,8 +134,7 @@ func runClientOnce(
 		return err
 	}
 
-	exe, err := executor.NewClientExecutor(
-		ctx, writeback.ClientId, config_obj)
+	exe, err := executor.NewClientExecutor(ctx, writeback.ClientId, config_obj)
 	if err != nil {
 		return fmt.Errorf("Can not create executor: %w", err)
 	}

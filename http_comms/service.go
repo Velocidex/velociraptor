@@ -50,7 +50,11 @@ func StartHttpCommunicatorService(
 	}
 
 	wg.Add(1)
-	go comm.Run(ctx, wg)
+	go func() {
+		defer wg.Done()
+
+		comm.Run(ctx, wg)
+	}()
 
 	return comm, nil
 }

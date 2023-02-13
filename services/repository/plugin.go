@@ -150,8 +150,8 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 		for _, request := range requests {
 			eval_request := func(
-				request *actions_proto.VQLCollectorArgs, scope types.Scope) {
-				defer wg.Done()
+				request *actions_proto.VQLCollectorArgs,
+				scope types.Scope) {
 
 				// We create a child scope for evaluating the artifact.
 				child_scope, err := self.copyScope(scope, artifact_name)
@@ -234,9 +234,13 @@ func (self *ArtifactRepositoryPlugin) Call(
 
 			if isEventArtifact(artifact) {
 				wg.Add(1)
-				go eval_request(request, scope)
+				go func(request *actions_proto.VQLCollectorArgs,
+					scope types.Scope) {
+					defer wg.Done()
+
+					eval_request(request, scope)
+				}(request, scope)
 			} else {
-				wg.Add(1)
 				eval_request(request, scope)
 			}
 		}

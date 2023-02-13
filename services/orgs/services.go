@@ -254,9 +254,10 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 	// not exit the org manager until they all shut down properly.
 	self.parent_wg.Add(1)
 	go func() {
+		defer self.parent_wg.Done()
+
 		<-org_ctx.sm.Ctx.Done()
 		org_ctx.sm.Wg.Wait()
-		self.parent_wg.Done()
 	}()
 
 	self.mu.Lock()

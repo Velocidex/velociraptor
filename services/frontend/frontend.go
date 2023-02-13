@@ -42,6 +42,7 @@ func PushMetrics(ctx context.Context, wg *sync.WaitGroup,
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+
 		metrics := &FrontendMetrics{
 			NodeName: node_name,
 		}

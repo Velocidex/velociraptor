@@ -76,14 +76,20 @@ func (self *EventsTestSuite) SetupTest() {
 	self.responder = responder.TestResponderWithFlowId(
 		self.ConfigObj, "EventsTestSuite")
 	self.event_table = actions.NewEventTable(
-		self.Ctx, self.Wg, self.ConfigObj, self.responder.Output(),
+		self.Ctx, self.Wg, self.ConfigObj)
+	self.event_table.UpdateEventTable(
+		self.Ctx, self.Wg, self.ConfigObj,
+		self.responder.Output(),
 		&actions_proto.VQLEventTable{})
 }
 
 func (self *EventsTestSuite) InitializeEventTable(ctx context.Context,
 	wg *sync.WaitGroup, output_chan chan *crypto_proto.VeloMessage) *actions.EventTable {
-	return actions.NewEventTable(ctx, wg, self.ConfigObj, output_chan,
-		&actions_proto.VQLEventTable{})
+	result := actions.NewEventTable(ctx, wg, self.ConfigObj)
+	result.UpdateEventTable(ctx, wg, self.ConfigObj,
+		output_chan, &actions_proto.VQLEventTable{})
+
+	return result
 }
 
 func (self *EventsTestSuite) TearDownTest() {

@@ -26,7 +26,6 @@ import (
 
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
-	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 
@@ -41,7 +40,6 @@ type Executor interface {
 	ClientId() string
 
 	// These are called by the executor code.
-	ReadFromServer() *crypto_proto.VeloMessage
 	SendToServer(message *crypto_proto.VeloMessage)
 
 	// These two are called by the comms module.
@@ -184,13 +182,6 @@ func NewClientExecutor(
 		level = 2
 	}
 
-	// Get the event table from the writeback if possible.
-	event_table := &actions_proto.VQLEventTable{}
-	writeback, err := config.GetWriteback(config_obj.Client)
-	if err == nil && writeback.EventQueries != nil {
-		event_table = writeback.EventQueries
-	}
-
 	wg := &sync.WaitGroup{}
 	self := &ClientExecutor{
 		ctx:          ctx,
@@ -204,8 +195,8 @@ func NewClientExecutor(
 	}
 
 	// Install and initialize the event manager
-	self.event_manager = actions.NewEventTable(
-		ctx, wg, config_obj, self.Outbound, event_table)
+	self.event_manager = actions.NewEventTable(ctx, wg, config_obj)
+	self.event_manager.StartFromWriteback(ctx, wg, config_obj, self.Outbound)
 
 	// Drain messages from server and execute them, pushing
 	// results to the output channel.

@@ -926,7 +926,6 @@ func (self *HTTPCommunicator) SetPause(is_paused bool) {
 func (self *HTTPCommunicator) Run(
 	ctx context.Context, wg *sync.WaitGroup) {
 	self.logger.Info("Starting HTTPCommunicator: %v", self.receiver.connector)
-	defer wg.Done()
 
 	self.receiver.Start(ctx, wg)
 	self.sender.Start(ctx, wg)

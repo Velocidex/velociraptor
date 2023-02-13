@@ -282,7 +282,11 @@ func (self *ClientInfoManager) Start(
 
 	// Start syncing the mutation_manager
 	wg.Add(1)
-	go self.MutationSync(ctx, wg, config_obj)
+	go func() {
+		defer wg.Done()
+
+		self.MutationSync(ctx, config_obj)
+	}()
 
 	// Only the master node writes to storage - there is no need to
 	// flush to disk that frequently because the master keeps a hot
@@ -350,8 +354,7 @@ func (self *ClientInfoManager) Start(
 }
 
 func (self *ClientInfoManager) MutationSync(
-	ctx context.Context, wg *sync.WaitGroup, config_obj *config_proto.Config) {
-	defer wg.Done()
+	ctx context.Context, config_obj *config_proto.Config) {
 
 	sync_time := time.Duration(10) * time.Second
 	if config_obj.Frontend != nil && config_obj.Frontend.Resources != nil &&
@@ -582,6 +585,10 @@ func (self *ClientInfoManager) Get(
 
 func (self *ClientInfoManager) Set(
 	ctx context.Context, client_info *services.ClientInfo) error {
+
+	if client_info.ClientId == "" {
+		return invalidError
+	}
 
 	// Force next read to come from storage.
 	self.Remove(ctx, client_info.ClientId)

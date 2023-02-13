@@ -392,6 +392,7 @@ func LoadBuiltInArtifacts(ctx context.Context,
 	self.wg.Add(1)
 	go func() {
 		defer self.wg.Done()
+
 		names, err := grepository.List(ctx, config_obj)
 		if err != nil {
 			logger.Error("Error: %v", err)

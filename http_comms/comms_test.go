@@ -201,7 +201,11 @@ func (self *CommsTestSuite) TestAbort() {
 
 	// Start a communicator feeding data to the executor.
 	wg.Add(1)
-	go communicator.Run(ctx, wg)
+	go func() {
+		defer wg.Done()
+
+		communicator.Run(ctx, wg)
+	}()
 
 	// Emulate the case of the executor exiting early - this
 	// should never happen in practice but might happen due to a
