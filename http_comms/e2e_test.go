@@ -129,7 +129,11 @@ func (self *TestSuite) makeClient(
 	assert.NoError(self.T(), err)
 
 	client_wg.Add(1)
-	go comm.Run(client_ctx, client_wg)
+	go func() {
+		defer client_wg.Done()
+
+		comm.Run(client_ctx, client_wg)
+	}()
 
 	return comm
 }

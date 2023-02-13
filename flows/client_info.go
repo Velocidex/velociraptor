@@ -44,6 +44,7 @@ func (self *ClientFlowRunner) maybeProcessClientInfo(
 	}
 
 	// Now merge the new record with the old
+	old_client_info.ClientId = client_id
 	update(&old_client_info.Hostname, &client_info.Hostname)
 	update(&old_client_info.System, &client_info.System)
 	update(&old_client_info.Release, &client_info.Release)

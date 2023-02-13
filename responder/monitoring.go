@@ -119,24 +119,31 @@ func (self *MonitoringContext) getLogMessages() (
 }
 
 func (self *MonitoringContext) flushLogMessages(ctx context.Context) {
+	self.mu.Lock()
 	buf, id, count := self.getLogMessages()
-	if len(buf) > 0 {
-		message := &crypto_proto.VeloMessage{
-			SessionId: "F.Monitoring",
-			RequestId: constants.LOG_SINK,
-			LogMessage: &crypto_proto.LogMessage{
-				Id:           int64(id),
-				NumberOfRows: count,
-				Jsonl:        string(buf),
-				Artifact:     self.artifact,
-			}}
+	if len(buf) == 0 {
+		self.mu.Unlock()
+		return
+	}
 
-		select {
-		case <-ctx.Done():
-			return
+	// Do not block with lock held
+	self.mu.Unlock()
 
-		case self.output <- message:
-		}
+	message := &crypto_proto.VeloMessage{
+		SessionId: "F.Monitoring",
+		RequestId: constants.LOG_SINK,
+		LogMessage: &crypto_proto.LogMessage{
+			Id:           int64(id),
+			NumberOfRows: count,
+			Jsonl:        string(buf),
+			Artifact:     self.artifact,
+		}}
+
+	select {
+	case <-ctx.Done():
+		return
+
+	case self.output <- message:
 	}
 }
 

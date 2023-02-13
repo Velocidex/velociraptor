@@ -144,8 +144,9 @@ func (self *ServerArtifactsRunner) ProcessTask(
 		// We expect each source to be run in parallel.
 		wg.Add(1)
 		go func(task *actions_proto.VQLCollectorArgs) {
+			defer wg.Done()
+
 			collection_context.RunQuery(task)
-			wg.Done()
 		}(task)
 	}
 

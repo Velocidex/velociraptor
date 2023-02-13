@@ -223,6 +223,21 @@ func (self *EventTable) StartQueries(
 	}
 }
 
+func (self *EventTable) StartFromWriteback(
+	ctx context.Context, wg *sync.WaitGroup,
+	config_obj *config_proto.Config,
+	output_chan chan *crypto_proto.VeloMessage) {
+
+	// Get the event table from the writeback if possible.
+	event_table := &actions_proto.VQLEventTable{}
+
+	writeback, err := config.GetWriteback(config_obj.Client)
+	if err == nil && writeback.EventQueries != nil {
+		event_table = writeback.EventQueries
+		self.UpdateEventTable(ctx, wg, config_obj, output_chan, event_table)
+	}
+}
+
 func (self *EventTable) UpdateEventTable(
 	ctx context.Context,
 	wg *sync.WaitGroup,
@@ -277,36 +292,18 @@ func update_writeback(
 func NewEventTable(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config,
-	output_chan chan *crypto_proto.VeloMessage,
-	table *actions_proto.VQLEventTable) *EventTable {
+	config_obj *config_proto.Config) *EventTable {
 
 	sub_ctx, cancel := context.WithCancel(ctx)
-
 	self := &EventTable{
-		Events:  table.Event,
-		version: table.Version,
-		Ctx:     sub_ctx,
-		cancel:  cancel,
+		Ctx:    sub_ctx,
+		cancel: cancel,
 
 		// Used to wait for close()
 		wg:                 &sync.WaitGroup{},
 		config_obj:         config_obj,
 		monitoring_manager: responder.NewMonitoringManager(ctx),
 	}
-
-	// When service closes we close the last event table.
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
-		// Kick off the initial set of queries.
-		self.StartQueries(ctx, config_obj, output_chan)
-
-		// Wait here until our parent context is cancelled.
-		<-ctx.Done()
-		self.Close()
-	}()
 
 	return self
 }

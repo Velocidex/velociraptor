@@ -93,23 +93,17 @@ func doPoolClient() error {
 	}
 
 	// Make a copy of all the configs for each client.
-	configs := make([]*config_proto.Config, 0, number_of_clients)
 	serialized, _ := json.Marshal(client_config)
-
-	for i := 0; i < number_of_clients; i++ {
-		client_config := &config_proto.Config{}
-		err := json.Unmarshal(serialized, &client_config)
-		if err != nil {
-			return fmt.Errorf("Copying configs: %w", err)
-		}
-		configs = append(configs, client_config)
-	}
 
 	c := counter{}
 
 	for i := 0; i < number_of_clients; i++ {
 		go func(i int) error {
-			client_config := configs[i]
+			client_config := &config_proto.Config{}
+			err := json.Unmarshal(serialized, &client_config)
+			if err != nil {
+				return fmt.Errorf("Copying configs: %w", err)
+			}
 			filename := fmt.Sprintf("pool_client.yaml.%d", i)
 			client_config.Client.WritebackLinux = path.Join(
 				*pool_client_writeback_dir, filename)

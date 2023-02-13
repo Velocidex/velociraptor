@@ -78,16 +78,11 @@ func (self *DynDNSService) updateIP(config_obj *config_proto.Config) {
 }
 
 func (self *DynDNSService) Start(
-	ctx context.Context,
-	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) {
+	ctx context.Context, config_obj *config_proto.Config) {
 
 	if config_obj.Frontend == nil || config_obj.Frontend.DynDns == nil {
 		return
 	}
-
-	// Start is called in a go routine.
-	defer wg.Done()
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> the DynDNS service: Updating hostname %v with checkip URL %v",
@@ -144,7 +139,11 @@ func StartDynDNSService(
 	}
 
 	wg.Add(1)
-	go result.Start(ctx, wg, config_obj)
+	go func() {
+		defer wg.Done()
+
+		result.Start(ctx, config_obj)
+	}()
 
 	return nil
 }

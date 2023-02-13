@@ -223,10 +223,14 @@ func (self *HuntDispatcher) ApplyFuncOnHunts(
 	cb func(hunt *api_proto.Hunt) error) error {
 
 	// Take a snapshot of the hunts list.
+	var hunts []*api_proto.Hunt
 	self.mu.Lock()
-	hunts := self.getHunts()
+	for _, h := range self.getHunts() {
+		hunts = append(hunts, proto.Clone(h).(*api_proto.Hunt))
+	}
 	self.mu.Unlock()
 
+	// Read only copy for callback
 	for _, hunt := range hunts {
 		err := cb(hunt)
 		if err != nil {
