@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -41,6 +42,8 @@ import (
 // quick.
 
 type TimedResultSetReader struct {
+	mu sync.Mutex
+
 	files              []*api.ResultSetFileProperties
 	current_files_idx  int
 	current_reader     *timelines.TimelineReader
@@ -51,10 +54,16 @@ type TimedResultSetReader struct {
 
 func (self *TimedResultSetReader) GetAvailableFiles(
 	ctx context.Context) []*api.ResultSetFileProperties {
-	return self.files
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return append([]*api.ResultSetFileProperties{}, self.files...)
 }
 
 func (self *TimedResultSetReader) Debug() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	fmt.Printf("Current idx %v\n", self.current_files_idx)
 	for _, file := range self.files {
 		fmt.Printf("%v %v-%v\n", file.Path, file.StartTime, file.EndTime)
@@ -62,7 +71,10 @@ func (self *TimedResultSetReader) Debug() {
 }
 
 func (self *TimedResultSetReader) SeekToTime(offset time.Time) error {
-	self.Close()
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self._Close()
 
 	self.start = offset
 	for idx, file := range self.files {
@@ -84,6 +96,7 @@ func (self *TimedResultSetReader) SeekToTime(offset time.Time) error {
 			if err != nil {
 				return err
 			}
+
 			err = reader.SeekToTime(offset)
 			if err == io.EOF {
 				return nil
@@ -103,10 +116,24 @@ func (self *TimedResultSetReader) SetMaxTime(end time.Time) {
 }
 
 func (self *TimedResultSetReader) Close() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self._Close()
+}
+
+func (self *TimedResultSetReader) _Close() {
 	if self.current_reader != nil {
 		self.current_reader.Close()
 		self.current_reader = nil
 	}
+}
+
+func (self *TimedResultSetReader) GetReader() (*timelines.TimelineReader, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.getReader()
 }
 
 func (self *TimedResultSetReader) getReader() (*timelines.TimelineReader, error) {
@@ -196,7 +223,7 @@ func (self *TimedResultSetReader) Rows(
 		defer close(output_chan)
 
 		for {
-			reader, err := self.getReader()
+			reader, err := self.GetReader()
 			if err != nil {
 				return
 			}
@@ -217,9 +244,12 @@ func (self *TimedResultSetReader) Rows(
 			}
 
 			// When the reader is exhausted reset it so
-			// next getReader() can pick the next reader.
+			// next GetReader() can pick the next reader.
 			self.Close()
+
+			self.mu.Lock()
 			self.current_files_idx++
+			self.mu.Unlock()
 		}
 	}()
 
