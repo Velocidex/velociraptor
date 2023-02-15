@@ -22,7 +22,9 @@ parameters:
     default: 0
 
 export: |
-      LET VFSGenerator = generate(name="vfs", query={
+      -- Make the generator unique with the session id - so it can
+      -- only be shared by the two sources in this collection.
+      LET VFSGenerator = generate(name="vfs-" + _SessionId, query={
          SELECT * FROM vfs_ls(
             path="/", components=Components,
             accessor=Accessor, depth=Depth)
@@ -41,7 +43,8 @@ sources:
              Mtime as mtime,
              Atime as atime,
              Ctime as ctime,
-             Btime as btime
+             Btime as btime,
+             Idx AS _Idx
       FROM VFSGenerator
       WHERE Stats = NULL
 

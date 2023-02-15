@@ -31,6 +31,7 @@ type VFSListRow struct {
 	Atime      time.Time         `json:"atime"`
 	Ctime      time.Time         `json:"ctime"`
 	Btime      time.Time         `json:"btime"`
+	Idx        uint64            `json:"idx"`
 }
 
 func GetVFSService(config_obj *config_proto.Config) (VFSService, error) {
