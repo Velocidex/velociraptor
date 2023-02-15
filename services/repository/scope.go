@@ -24,6 +24,10 @@ func _build(self services.ScopeBuilder, from_scratch bool) vfilter.Scope {
 	if self.Env != nil {
 		env.MergeFrom(self.Env)
 	}
+	_, pres := env.Get("_SessionId")
+	if !pres {
+		env.Set("_SessionId", "")
+	}
 
 	if self.Repository == nil {
 		manager, _ := services.GetRepositoryManager(self.Config)

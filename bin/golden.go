@@ -195,6 +195,7 @@ func runTest(fixture *testFixture, sm *services.Service,
 		Uploader:   container,
 		Env: ordereddict.NewDict().
 			Set("GoldenOutput", tmpfile.Name()).
+			Set("_SessionId", "F.Golden").
 			Set(constants.SCOPE_MOCK, &remapping.MockingScopeContext{}),
 	}
 
