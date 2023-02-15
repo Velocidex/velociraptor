@@ -34,5 +34,6 @@ type Responder interface {
 	Return(ctx context.Context)
 	Log(ctx context.Context, level string, msg string)
 	NextUploadId() int64
+	FlowContext() *FlowContext
 	Close()
 }

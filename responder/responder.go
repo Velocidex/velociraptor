@@ -83,7 +83,10 @@ func (self *FlowResponder) Close() {
 	self.wg.Done()
 }
 
-func (self *FlowResponder) GetFlowContext() *FlowContext {
+func (self *FlowResponder) FlowContext() *FlowContext {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	return self.flow_context
 }
 
