@@ -799,6 +799,8 @@ message MailConfig {
     string auth_password = 5 [(sem_type) = {
             description: "password to authenticate with.",
         }];
+
+    bool skip_verify = 6;
 }
 
 message LoggingRetentionConfig {
