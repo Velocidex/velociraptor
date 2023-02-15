@@ -11,8 +11,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -75,7 +75,7 @@ func (self *SyslogWatcherService) Register(
 		registration = []*Handle{}
 		self.registrations[key] = registration
 
-		go self.StartMonitoring(filename, accessor)
+		go self.StartMonitoring(scope, filename, accessor)
 	}
 
 	registration = append(registration, handle)
@@ -89,17 +89,26 @@ func (self *SyslogWatcherService) Register(
 // Monitor the filename for new events and emit them to all interested
 // listeners. If no listeners exist we terminate.
 func (self *SyslogWatcherService) StartMonitoring(
-	filename *accessors.OSPath,
+	base_scope vfilter.Scope, filename *accessors.OSPath,
 	accessor_name string) {
 
 	defer utils.CheckForPanic("StartMonitoring")
 
-	scope := vql_subsystem.MakeScope()
+	manager, err := services.GetRepositoryManager(self.config_obj)
+	if err != nil {
+		return
+	}
+
+	// Build a new scope with totally different lifetime than the
+	// watching scope so we can outlast them. We still want things
+	// like ACL managers etc though.
+	builder := services.ScopeBuilderFromScope(base_scope)
+	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
 	accessor, err := accessors.GetAccessor(accessor_name, scope)
 	if err != nil {
-		//scope.Log("Registering watcher error: %v", err)
+		scope.Log("Registering watcher error: %v", err)
 		return
 	}
 

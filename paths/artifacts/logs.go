@@ -134,3 +134,12 @@ func NewArtifactLogPathManager(
 
 	return &ArtifactLogPathManager{path_manager}, nil
 }
+
+func NewArtifactLogPathManagerWithMode(
+	config_obj *config_proto.Config,
+	client_id, flow_id, full_artifact_name string,
+	mode int) *ArtifactLogPathManager {
+	path_manager := NewArtifactPathManagerWithMode(config_obj,
+		client_id, flow_id, full_artifact_name, mode)
+	return &ArtifactLogPathManager{path_manager}
+}

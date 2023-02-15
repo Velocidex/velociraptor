@@ -7,8 +7,9 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -17,7 +18,8 @@ const (
 )
 
 var (
-	GlobalCSVService = NewCSVWatcherService()
+	mu               sync.Mutex
+	GlobalCSVService *CSVWatcherService
 )
 
 // This service watches one or more many event logs files and
@@ -25,13 +27,22 @@ var (
 type CSVWatcherService struct {
 	mu sync.Mutex
 
+	config_obj    *config_proto.Config
 	registrations map[string][]*Handle
 }
 
-func NewCSVWatcherService() *CSVWatcherService {
-	return &CSVWatcherService{
-		registrations: make(map[string][]*Handle),
+func NewCSVWatcherService(config_obj *config_proto.Config) *CSVWatcherService {
+	mu.Lock()
+	defer mu.Lock()
+
+	if GlobalCSVService == nil {
+		GlobalCSVService = &CSVWatcherService{
+			config_obj:    config_obj,
+			registrations: make(map[string][]*Handle),
+		}
 	}
+
+	return GlobalCSVService
 }
 
 func (self *CSVWatcherService) Register(
@@ -54,7 +65,7 @@ func (self *CSVWatcherService) Register(
 	if !pres {
 		registration = []*Handle{}
 		self.registrations[key] = registration
-		go self.StartMonitoring(filename, accessor)
+		go self.StartMonitoring(scope, filename, accessor)
 	}
 
 	registration = append(registration, handle)
@@ -66,10 +77,16 @@ func (self *CSVWatcherService) Register(
 // Monitor the filename for new events and emit them to all interested
 // listeners. If no listeners exist we terminate.
 func (self *CSVWatcherService) StartMonitoring(
-	filename *accessors.OSPath,
+	base_scope vfilter.Scope, filename *accessors.OSPath,
 	accessor_name string) {
 
-	scope := vql_subsystem.MakeScope()
+	manager, err := services.GetRepositoryManager(self.config_obj)
+	if err != nil {
+		return
+	}
+
+	builder := services.ScopeBuilderFromScope(base_scope)
+	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
 	accessor, err := accessors.GetAccessor(accessor_name, scope)
