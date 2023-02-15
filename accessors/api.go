@@ -234,8 +234,6 @@ type FileInfo interface {
 type ReadSeekCloser interface {
 	io.ReadSeeker
 	io.Closer
-
-	//	Stat() (FileInfo, error)
 }
 
 // Interface for accessing the filesystem.

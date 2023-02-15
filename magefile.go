@@ -282,6 +282,11 @@ func PPCLinux() error {
 	}.Run()
 }
 
+func Version() error {
+	fmt.Println(constants.VERSION)
+	return nil
+}
+
 func Arm() error {
 	return Builder{
 		extra_tags:  " release yara ",
