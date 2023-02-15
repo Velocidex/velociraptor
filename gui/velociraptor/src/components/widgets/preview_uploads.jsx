@@ -348,6 +348,7 @@ export default class PreviewUpload extends Component {
         if (checkMime(this.state.view)) {
             let params = {
                 client_id: this.props.env.client_id,
+                org_id: window.globals.OrgId || "root",
 
                 // Only view first 1mb
                 length: 1000000,

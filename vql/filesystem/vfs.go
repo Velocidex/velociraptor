@@ -114,7 +114,7 @@ func listDir(
 
 		case output_chan <- &services.VFSListRow{
 			FullPath:   f.FullPath(),
-			Components: f.OSPath().Components,
+			Components: append([]string{}, f.OSPath().Components...),
 			Accessor:   accessor_name,
 			Data:       f.Data(),
 			Stats:      nil,
@@ -132,7 +132,7 @@ func listDir(
 
 	// Send a stats message
 	output_chan <- &services.VFSListRow{
-		Components: path.Components,
+		Components: append([]string{}, path.Components...),
 		Accessor:   accessor_name,
 		Stats: &services.VFSPartition{
 			StartIdx: stats.StartIdx,
