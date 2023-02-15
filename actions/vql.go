@@ -145,7 +145,9 @@ func (self VQLClientAction) StartQuery(
 		ClientConfig: config_obj.Client,
 		// Disable ACLs on the client.
 		ACLManager: acl_managers.NullACLManager{},
-		Env:        ordereddict.NewDict(),
+		Env: ordereddict.NewDict().
+			// Make the session id available in the query.
+			Set("_SessionId", responder.FlowContext().SessionId()),
 		Uploader:   uploader,
 		Repository: repository,
 		Logger:     log.New(&LogWriter{config_obj, responder, ctx}, "", 0),

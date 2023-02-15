@@ -178,6 +178,12 @@ func NewMonitoringResponder(
 	}
 }
 
+func (self *MonitoringResponder) FlowContext() *FlowContext {
+	return &FlowContext{
+		flow_id: "F.Monitoring",
+	}
+}
+
 func (self *MonitoringResponder) AddResponse(message *crypto_proto.VeloMessage) {
 	message.SessionId = "F.Monitoring"
 

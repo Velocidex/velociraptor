@@ -47,12 +47,20 @@ func ConvertJSONL(
 	arena := &fastjson.Arena{}
 
 	for serialized := range json_in {
+		if len(serialized) == 0 {
+			continue
+		}
+
+		// Line feed if needed.
+		if serialized[len(serialized)-1] != '\n' {
+			serialized = append(serialized, '\n')
+		}
+
 		// In the special case where we do not need to modify the json
 		// or convert it to csv then we can skip parsing it
 		// alltogether.
 		if extra_data == nil && jsonl_out != nil && csv_out == nil {
 			jsonl_out.Write(serialized)
-			jsonl_out.Write([]byte{'\n'})
 			continue
 		}
 
@@ -71,7 +79,6 @@ func ConvertJSONL(
 			// original JSONL without needing to encode it.
 			if extra_data == nil {
 				jsonl_out.Write(serialized)
-				jsonl_out.Write([]byte{'\n'})
 			} else {
 				jsonl_out.Write(
 					writeJsonObject(arena, obj, extra_keys, extra_value))
