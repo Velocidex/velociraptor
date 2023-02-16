@@ -383,7 +383,62 @@ func copyUploadFiles(
 
 			var src api.FSPathSpec
 
-			if len(components) > 6 && components[0] == "clients" {
+			// We need to figure out where to store the file inside
+			// the zip container. This depends on the the file's
+			// original path on the endpoint. Since the client's
+			// original path may have characters that need escaping we
+			// need to build a `dest` pathspec that will be expanded
+			// into the zip.
+
+			// In recent versions, the client uploads the client's
+			// list of components in the FileBuffer message
+			// already. We use this to write the upload metadata table
+			// for each upload. That table contains:
+
+			// _Components : these are the Velociraptor filestore
+			// components that specify where to write the file in the
+			// filestore. These include the client's prefix,
+			// collection id etc.
+
+			// _client_components: These are the original components
+			// inside the endpoint's filesystem.
+
+			// _accessor: The original accessor used to retrieve the
+			// file on the client.
+
+			// The next code derives two pathspecs:
+
+			// src: where to read the file from the velociraptor filestore.
+			// dest: Where to write the file into the zip container.
+
+			// Try to get the client's components from the uploads
+			// metadata file. If it is already provided by the client,
+			// we are good to go with minimal work - newer collections
+			// already store this.
+			client_components, pres := row.GetStrings("_client_components")
+			if pres {
+
+				// This is the easy case - the destination path is
+				// just uploads/<accessor>/<escaped_client_path>
+				accessor, pres := row.GetString("_accessor")
+				if !pres {
+					accessor = "auto"
+				}
+
+				// Where to store in the container.
+				container_components := append([]string{"uploads", accessor},
+					client_components...)
+				row.Update("_Components", container_components)
+
+				// Where to read the file from.
+				src = path_specs.NewUnsafeFilestorePath(components...).
+					SetType(api.PATH_TYPE_FILESTORE_ANY)
+				dest = dest.AddChild(container_components...)
+
+				// Otherwise we need to look at the filestore
+				// components and derive the client's components from
+				// there.
+			} else if len(components) > 6 && components[0] == "clients" {
 				//Remove the prefix in the file store where the files
 				//are stored. The uploads file in the file store
 				//refers to the location in the filestore where the
