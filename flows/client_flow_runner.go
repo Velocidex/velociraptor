@@ -267,6 +267,11 @@ func (self *ClientFlowRunner) FileBuffer(
 			Set("vfs_path", file_path_manager.VisibleVFSPath()).
 			Set("_Components", file_path_manager.Path().Components()).
 			Set("file_size", file_buffer.Size).
+
+			// The client's components and accessor that were used to
+			// upload the file.
+			Set("_accessor", file_buffer.Pathspec.Accessor).
+			Set("_client_components", file_buffer.Pathspec.Components).
 			Set("uploaded_size", file_buffer.StoredSize))
 
 		// Additional row for sparse files
@@ -276,6 +281,8 @@ func (self *ClientFlowRunner) FileBuffer(
 				Set("started", time.Now().UTC().String()).
 				Set("vfs_path", file_path_manager.VisibleVFSPath()+".idx").
 				Set("_Components", file_path_manager.Path().Components()).
+				Set("_accessor", file_buffer.Pathspec.Accessor).
+				Set("_client_components", file_buffer.Pathspec.Components).
 				Set("file_size", file_buffer.Size).
 				Set("uploaded_size", file_buffer.StoredSize))
 		}
