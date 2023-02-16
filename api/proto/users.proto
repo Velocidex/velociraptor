@@ -167,6 +167,15 @@ message SetGUIOptionsRequest {
     repeated GUILink links = 9;
 }
 
+message SetGUIOptionsResponse {
+    // If this is specifed the GUI will redirect to the specified
+    // URL. This helps when there are multiple servers that can handle
+    // the user and a better one is needed. Normally this is really
+    // set by any middleware (e.g. custom authenticators).
+    string redirect_url = 1;
+}
+
+
 message Users {
     repeated VelociraptorUser users = 1;
 }
