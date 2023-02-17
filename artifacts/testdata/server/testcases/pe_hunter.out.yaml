@@ -13,6 +13,36 @@ SELECT File.Name, File.Size, Hash.SHA1, PE FROM Artifact.Windows.Detection.Binar
    },
    "GUIDAge": "826CCB588B6F8694BD32758FEDBC98451",
    "PDB": "kbdth0.pdb",
+   "Directories": {
+    "Base_Relocation_Directory": {
+     "Timestamp": "1970-01-01T00:00:00Z",
+     "TimestampRaw": 0,
+     "Size": 180,
+     "FileAddress": 16384,
+     "SectionName": ""
+    },
+    "Debug_Directory": {
+     "Timestamp": "1970-01-01T00:00:00Z",
+     "TimestampRaw": 0,
+     "Size": 84,
+     "FileAddress": 11792,
+     "SectionName": ""
+    },
+    "Export_Directory": {
+     "Timestamp": "1970-01-01T00:00:00Z",
+     "TimestampRaw": 0,
+     "Size": 1787,
+     "FileAddress": 20480,
+     "SectionName": ""
+    },
+    "Resource_Directory": {
+     "Timestamp": "1970-01-01T00:00:00Z",
+     "TimestampRaw": 0,
+     "Size": 1040,
+     "FileAddress": 12288,
+     "SectionName": ""
+    }
+   },
    "Sections": [
     {
      "Perm": "xr-",

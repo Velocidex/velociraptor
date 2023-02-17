@@ -24,6 +24,7 @@ import (
 	pe "www.velocidex.com/golang/go-pe"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/constants"
+	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/readers"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -48,6 +49,9 @@ func (self _PEFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 func (self _PEFunction) Call(
 	ctx context.Context, scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	defer utils.RecoverVQL(scope)
+
 	arg := &_PEFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -81,6 +85,9 @@ func (self _PEFunction) Call(
 		Set("FileHeader", pe_file.FileHeader).
 		Set("GUIDAge", pe_file.GUIDAge).
 		Set("PDB", pe_file.PDB).
+		Set("Directories", func() vfilter.Any {
+			return pe_file.GetDirectories()
+		}).
 		Set("Sections", pe_file.Sections).
 		Set("Resources", pe_file.Resources()).
 		Set("VersionInformation", func() vfilter.Any {

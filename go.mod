@@ -84,7 +84,7 @@ require (
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4
 	golang.org/x/net v0.5.0
 	golang.org/x/sys v0.4.0
-	golang.org/x/text v0.6.0 // indirect
+	golang.org/x/text v0.7.0 // indirect
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858
 	google.golang.org/api v0.96.0
 	google.golang.org/genproto v0.0.0-20221018160656-63c7b68cfc55
@@ -99,9 +99,9 @@ require (
 	www.velocidex.com/golang/evtx v0.2.1-0.20220404133451-1fdf8be7325e
 	www.velocidex.com/golang/go-ese v0.1.1-0.20220107095505-c38622559671
 	www.velocidex.com/golang/go-ntfs v0.1.2-0.20230203145252-d0e4bdc73bc3
-	www.velocidex.com/golang/go-pe v0.1.1-0.20220506020923-9fac492a9b0d
+	www.velocidex.com/golang/go-pe v0.1.1-0.20230217085506-ab5ff06f3211
 	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
-	www.velocidex.com/golang/oleparse v0.0.0-20220617011920-94df2342d0b7
+	www.velocidex.com/golang/oleparse v0.0.0-20230217092320-383a0121aafe
 	www.velocidex.com/golang/regparser v0.0.0-20221020153526-bbc758cbd18b
 	www.velocidex.com/golang/vfilter v0.0.0-20230205055939-24cd6452d8bd
 )
