@@ -1,9 +1,13 @@
-name: Windows.Network.InterfaceAddresses
-description: Network interfaces and relevant metadata.
+name: Generic.Network.InterfaceAddresses
+description: |
+  Network interfaces and relevant metadata. This artifact works on all
+  supported OSs.
+
+aliases:
+  - Windows.Network.InterfaceAddresses
+
 sources:
-  - precondition:
-      SELECT OS From info() where OS = 'windows'
-    query: |
+  - query: |
         LET interface_address =
            SELECT Index, MTU, Name, HardwareAddr, Flags, Addrs
            from interfaces()
