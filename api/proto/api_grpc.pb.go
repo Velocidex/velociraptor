@@ -42,7 +42,7 @@ type APIClient interface {
 	GetClientFlows(ctx context.Context, in *ApiFlowRequest, opts ...grpc.CallOption) (*ApiFlowResponse, error)
 	// Users
 	GetUserUITraits(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ApiUser, error)
-	SetGUIOptions(ctx context.Context, in *SetGUIOptionsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SetGUIOptions(ctx context.Context, in *SetGUIOptionsRequest, opts ...grpc.CallOption) (*SetGUIOptionsResponse, error)
 	// List all the GUI users known on this server.
 	GetUsers(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*Users, error)
 	// List all the GUI users in orgs in which we are a member
@@ -265,8 +265,8 @@ func (c *aPIClient) GetUserUITraits(ctx context.Context, in *emptypb.Empty, opts
 	return out, nil
 }
 
-func (c *aPIClient) SetGUIOptions(ctx context.Context, in *SetGUIOptionsRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
-	out := new(emptypb.Empty)
+func (c *aPIClient) SetGUIOptions(ctx context.Context, in *SetGUIOptionsRequest, opts ...grpc.CallOption) (*SetGUIOptionsResponse, error) {
+	out := new(SetGUIOptionsResponse)
 	err := c.cc.Invoke(ctx, "/proto.API/SetGUIOptions", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -812,7 +812,7 @@ type APIServer interface {
 	GetClientFlows(context.Context, *ApiFlowRequest) (*ApiFlowResponse, error)
 	// Users
 	GetUserUITraits(context.Context, *emptypb.Empty) (*ApiUser, error)
-	SetGUIOptions(context.Context, *SetGUIOptionsRequest) (*emptypb.Empty, error)
+	SetGUIOptions(context.Context, *SetGUIOptionsRequest) (*SetGUIOptionsResponse, error)
 	// List all the GUI users known on this server.
 	GetUsers(context.Context, *emptypb.Empty) (*Users, error)
 	// List all the GUI users in orgs in which we are a member
@@ -942,7 +942,7 @@ func (UnimplementedAPIServer) GetClientFlows(context.Context, *ApiFlowRequest) (
 func (UnimplementedAPIServer) GetUserUITraits(context.Context, *emptypb.Empty) (*ApiUser, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserUITraits not implemented")
 }
-func (UnimplementedAPIServer) SetGUIOptions(context.Context, *SetGUIOptionsRequest) (*emptypb.Empty, error) {
+func (UnimplementedAPIServer) SetGUIOptions(context.Context, *SetGUIOptionsRequest) (*SetGUIOptionsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetGUIOptions not implemented")
 }
 func (UnimplementedAPIServer) GetUsers(context.Context, *emptypb.Empty) (*Users, error) {

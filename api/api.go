@@ -460,7 +460,7 @@ func (self *ApiServer) GetUserUITraits(
 
 func (self *ApiServer) SetGUIOptions(
 	ctx context.Context,
-	in *api_proto.SetGUIOptionsRequest) (*emptypb.Empty, error) {
+	in *api_proto.SetGUIOptionsRequest) (*api_proto.SetGUIOptionsResponse, error) {
 
 	users := services.GetUserManager()
 	user_record, _, err := users.GetUserFromContext(ctx)
@@ -470,7 +470,8 @@ func (self *ApiServer) SetGUIOptions(
 	principal := user_record.Name
 
 	defer Instrument("SetGUIOptions")()
-	return &emptypb.Empty{}, users.SetUserOptions(ctx, principal, in)
+	return &api_proto.SetGUIOptionsResponse{},
+		users.SetUserOptions(ctx, principal, in)
 }
 
 // Only list the child directories - used by the tree widget.
