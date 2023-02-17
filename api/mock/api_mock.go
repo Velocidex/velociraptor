@@ -1062,14 +1062,14 @@ func (mr *MockAPIClientMockRecorder) SetClientMonitoringState(arg0, arg1 interfa
 }
 
 // SetGUIOptions mocks base method.
-func (m *MockAPIClient) SetGUIOptions(arg0 context.Context, arg1 *proto0.SetGUIOptionsRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
+func (m *MockAPIClient) SetGUIOptions(arg0 context.Context, arg1 *proto0.SetGUIOptionsRequest, arg2 ...grpc.CallOption) (*proto0.SetGUIOptionsResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "SetGUIOptions", varargs...)
-	ret0, _ := ret[0].(*emptypb.Empty)
+	ret0, _ := ret[0].(*proto0.SetGUIOptionsResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

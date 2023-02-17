@@ -208,7 +208,7 @@ service API {
         };
     }
 
-    rpc SetGUIOptions(SetGUIOptionsRequest) returns (google.protobuf.Empty) {
+    rpc SetGUIOptions(SetGUIOptionsRequest) returns (SetGUIOptionsResponse) {
         option (google.api.http) = {
            post: "/api/v1/SetGUIOptions",
            body: "*"

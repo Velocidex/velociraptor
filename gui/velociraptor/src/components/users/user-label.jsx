@@ -402,7 +402,16 @@ export default class UserLabel extends React.Component {
         options.options = JSON.stringify(ace_options);
 
         api.post("v1/SetGUIOptions", options, this.source.token).then((response) => {
+          if (response.status === 200) {
+              // Check for redirect from the server - this is normally
+              // set by the authenticator to redirect to a better server.
+              if (response.data && response.data.redirect_url &&
+                  response.data.redirect_url !== "") {
+                  window.location.assign(response.data.redirect_url);
+              }
+          } else {
             this.context.updateTraits();
+          }
         });
     }
 
