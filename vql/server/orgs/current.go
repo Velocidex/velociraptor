@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -33,7 +34,17 @@ func (self *CurrentOrgFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	return org_record
+	org_config_obj, _ := org_manager.GetOrgConfig(config_obj.OrgId)
+	client_config := &config_proto.Config{
+		Version: org_config_obj.Version,
+		Client:  org_config_obj.Client,
+	}
+
+	return ordereddict.NewDict().
+		Set("name", org_record.Name).
+		Set("nonce", org_record.Nonce).
+		Set("id", config_obj.OrgId).
+		Set("_client_config", client_config)
 }
 
 func (self CurrentOrgFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

@@ -584,7 +584,10 @@ func updateTools(
 		tool_request := proto.Clone(tool).(*artifacts_proto.Tool)
 		tool_request.Artifact = artifact.Name
 		err := inventory.AddTool(ctx, config_obj, tool_request,
-			services.ToolOptions{Upgrade: true})
+			services.ToolOptions{
+				Upgrade:            true,
+				ArtifactDefinition: true,
+			})
 		if err != nil {
 			return err
 		}

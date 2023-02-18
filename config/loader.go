@@ -290,6 +290,25 @@ func (self *Loader) WithFileLoader(filename string) *Loader {
 	return self
 }
 
+func (self *Loader) WithLiteralLoader(serialized []byte) *Loader {
+	if len(serialized) > 0 {
+		self = self.Copy()
+		self.loaders = append(self.loaders, loaderFunction{
+			name: "WithLiteralLoader",
+			loader_func: func(self *Loader) (*config_proto.Config, error) {
+				self.Log("Loading constant config")
+				result := &config_proto.Config{}
+				err := yaml.UnmarshalStrict(serialized, result)
+				if err != nil {
+					return nil, errors.Wrap(err, 0)
+				}
+				return result, nil
+			}})
+	}
+
+	return self
+}
+
 func (self *Loader) WithEnvLoader(env_var string) *Loader {
 	self = self.Copy()
 	self.loaders = append(self.loaders, loaderFunction{
@@ -491,12 +510,21 @@ func (self *Loader) LoadAndValidate() (*config_proto.Config, error) {
 }
 
 func read_embedded_config() (*config_proto.Config, error) {
+	// Get the first line which is never disturbed
 	idx := bytes.IndexByte(FileConfigDefaultYaml, '\n')
+
+	// If the following line still starts with # then the file is not
+	// repacked - the repacker will replace all further data with the
+	// compressed string.
 	if FileConfigDefaultYaml[idx+1] == '#' {
 		return nil, errors.New(
 			"No embedded config - you can pack one with the `config repack` command")
 	}
 
+	// Decompress the rest of the data - note that zlib will ignore
+	// any padding anyway because the zlib header already contains the
+	// length of the compressed data so it is safe to just feed it the
+	// whole string here.
 	r, err := zlib.NewReader(bytes.NewReader(FileConfigDefaultYaml[idx+1:]))
 	if err != nil {
 		return nil, err

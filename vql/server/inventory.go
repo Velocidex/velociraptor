@@ -184,7 +184,8 @@ func (self *InventoryGetFunction) Call(ctx context.Context,
 	result := ordereddict.NewDict().
 		Set("Tool_"+arg.Tool+"_HASH", tool.Hash).
 		Set("Tool_"+arg.Tool+"_FILENAME", tool.Filename).
-		Set("Tool_"+arg.Tool+"_URL", url)
+		Set("Tool_"+arg.Tool+"_URL", url).
+		Set("Definition", tool)
 	return result
 }
 

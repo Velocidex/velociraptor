@@ -436,7 +436,8 @@ func (self *Launcher) EnsureToolsDeclared(
 			err = inventory.AddTool(ctx,
 				config_obj, tool,
 				services.ToolOptions{
-					Upgrade: true,
+					Upgrade:            true,
+					ArtifactDefinition: true,
 				})
 			if err != nil {
 				return err
