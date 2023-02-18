@@ -105,7 +105,8 @@ func SanitizeStringForZip(component string) string {
 
 	// Windows can not have a trailing "." instead swallowing it
 	// completely.
-	if component[length-1] == '.' {
+	if component[length-1] == '.' ||
+		component[length-1] == ' ' {
 		return component[:length-1] + "%2E"
 	}
 
