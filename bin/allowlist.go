@@ -148,6 +148,7 @@ var (
 		"rate",
 		"read_file",
 		"relpath",
+		"repack",
 		"remap",
 		"rm_client_monitoring",
 		"rot13",

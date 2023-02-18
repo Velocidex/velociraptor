@@ -24,13 +24,12 @@ import (
 )
 
 var (
-	/*
-		msi_src          = ""
-		binary_src       = ""
-		repacked_msi_dst = ""
-		repacked_dst     = ""
-	*/
+	msi_src          = ""
+	binary_src       = ""
+	repacked_msi_dst = ""
+	repacked_dst     = ""
 
+/*
 	// Set these to capture the repacked file for manual inspection.
 	repacked_msi_dst = "/tmp/m_repacked.msi"
 	repacked_dst     = "/tmp/m_repacked.exe"
@@ -39,6 +38,7 @@ var (
 	// inspect the produced data
 	binary_src = "../../output/velociraptor.exe"
 	msi_src    = "/tmp/velociraptor-v0.6.8-rc1-windows-amd64.msi"
+*/
 )
 
 type RepackTestSuite struct {

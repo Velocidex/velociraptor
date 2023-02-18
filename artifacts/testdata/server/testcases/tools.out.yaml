@@ -22,7 +22,23 @@ SELECT inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/g
   "inventory_get(tool='Autorun_amd64')": {
    "Tool_Autorun_amd64_HASH": "083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153",
    "Tool_Autorun_amd64_FILENAME": "autorunsc_x64.exe",
-   "Tool_Autorun_amd64_URL": "https://storage.googleapis.com/go.velocidex.com/autorunsc.exe"
+   "Tool_Autorun_amd64_URL": "https://storage.googleapis.com/go.velocidex.com/autorunsc.exe",
+   "Definition": {
+    "name": "Autorun_amd64",
+    "url": "https://storage.googleapis.com/go.velocidex.com/autorunsc.exe",
+    "admin_override": true,
+    "filestore_path": "affbb298885d99a7569ef9ec463bbfbf9db112a11cec65cf78ec8657ab78950a",
+    "filename": "autorunsc_x64.exe",
+    "hash": "083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153",
+    "versions": [
+     {
+      "name": "Autorun_amd64",
+      "url": "https://live.sysinternals.com/tools/autorunsc64.exe",
+      "serve_locally": true,
+      "artifact": "Windows.Sysinternals.Autoruns"
+     }
+    ]
+   }
   }
  }
 ]SELECT inventory_add(tool='Autorun_amd64', serve_locally=TRUE, url='https://storage.googleapis.com/go.velocidex.com/autorunsc.exe', hash='083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153', filename='autorunsc_x64.exe') FROM scope()[
@@ -49,7 +65,25 @@ SELECT inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/g
   "inventory_get(tool='Autorun_amd64')": {
    "Tool_Autorun_amd64_HASH": "083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153",
    "Tool_Autorun_amd64_FILENAME": "autorunsc_x64.exe",
-   "Tool_Autorun_amd64_URL": "https://127.0.0.1:8/public/affbb298885d99a7569ef9ec463bbfbf9db112a11cec65cf78ec8657ab78950a"
+   "Tool_Autorun_amd64_URL": "https://127.0.0.1:8/public/affbb298885d99a7569ef9ec463bbfbf9db112a11cec65cf78ec8657ab78950a",
+   "Definition": {
+    "name": "Autorun_amd64",
+    "url": "https://storage.googleapis.com/go.velocidex.com/autorunsc.exe",
+    "serve_locally": true,
+    "admin_override": true,
+    "serve_url": "https://127.0.0.1:8/public/affbb298885d99a7569ef9ec463bbfbf9db112a11cec65cf78ec8657ab78950a",
+    "filestore_path": "affbb298885d99a7569ef9ec463bbfbf9db112a11cec65cf78ec8657ab78950a",
+    "filename": "autorunsc_x64.exe",
+    "hash": "083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153",
+    "versions": [
+     {
+      "name": "Autorun_amd64",
+      "url": "https://live.sysinternals.com/tools/autorunsc64.exe",
+      "serve_locally": true,
+      "artifact": "Windows.Sysinternals.Autoruns"
+     }
+    ]
+   }
   }
  }
 ]SELECT inventory_add(tool="FooBar", file=srcDir+"/artifacts/testdata/files/yara_test.txt") FROM scope()[
@@ -76,7 +110,16 @@ SELECT inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/g
   "inventory_get(tool=\"FooBar\")": {
    "Tool_FooBar_HASH": "f03278c10a41adcc97f24a612a680e7aa43efb461b337fef3d2a3d47b51e77bb",
    "Tool_FooBar_FILENAME": "yara_test.txt",
-   "Tool_FooBar_URL": "https://127.0.0.1:8/public/1c21ee4d8609f81482dc0a78c641e4586488a9fd562ee28eec25e448a9d0b2e1"
+   "Tool_FooBar_URL": "https://127.0.0.1:8/public/1c21ee4d8609f81482dc0a78c641e4586488a9fd562ee28eec25e448a9d0b2e1",
+   "Definition": {
+    "name": "FooBar",
+    "serve_locally": true,
+    "admin_override": true,
+    "serve_url": "https://127.0.0.1:8/public/1c21ee4d8609f81482dc0a78c641e4586488a9fd562ee28eec25e448a9d0b2e1",
+    "filestore_path": "1c21ee4d8609f81482dc0a78c641e4586488a9fd562ee28eec25e448a9d0b2e1",
+    "filename": "yara_test.txt",
+    "hash": "f03278c10a41adcc97f24a612a680e7aa43efb461b337fef3d2a3d47b51e77bb"
+   }
   }
  }
 ]
