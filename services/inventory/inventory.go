@@ -75,6 +75,11 @@ type InventoryService struct {
 	versions map[string][]*artifacts_proto.Tool
 	Client   HTTPClient
 	Clock    utils.Clock
+
+	// The parent is the inventory service of the root org. The root
+	// org maintain the parent's repository and takes the default
+	// settings.
+	parent services.Inventory
 }
 
 func (self *InventoryService) Close() {}
@@ -99,6 +104,19 @@ func (self *InventoryService) ProbeToolInfo(
 	for _, tool := range self.Get().Tools {
 		if tool.Name == name {
 			return self.AddAllVersions(ctx, config_obj, tool), nil
+		}
+	}
+
+	if self.parent != nil {
+		tool, err := self.parent.ProbeToolInfo(ctx, config_obj, name)
+		if err == nil {
+			for _, v := range tool.Versions {
+				self.AddTool(ctx, config_obj, v, services.ToolOptions{
+					ArtifactDefinition: true,
+				})
+			}
+			// Try again with the new data
+			return self.ProbeToolInfo(ctx, config_obj, name)
 		}
 	}
 
@@ -160,6 +178,7 @@ func (self *InventoryService) GetToolInfo(
 			return self.addAllVersions(ctx, config_obj, item), nil
 		}
 	}
+
 	return nil, fmt.Errorf("Tool %v not declared in inventory.", tool)
 }
 
@@ -321,7 +340,7 @@ func (self *InventoryService) UpdateVersion(tool_request *artifacts_proto.Tool) 
 	}
 
 	if !version_known {
-		versions = append(versions, tool_request)
+		versions = append(versions, proto.Clone(tool_request).(*artifacts_proto.Tool))
 	}
 	self.versions[tool_request.Name] = versions
 }
@@ -340,7 +359,9 @@ func (self *InventoryService) AddTool(
 	// Keep a reference to all known versions of this tool. We keep
 	// the clean definitions from the artifact together, so we can
 	// always reset back to them.
-	self.UpdateVersion(tool_request)
+	if opts.ArtifactDefinition {
+		self.UpdateVersion(tool_request)
+	}
 
 	if opts.Upgrade {
 		existing_tool, err := self.ProbeToolInfo(
@@ -463,6 +484,27 @@ func NewInventoryService(
 		Client: default_client,
 	}
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+
+	// If we are not the root inventory we need to delegate any
+	// unknown tools to the root inventory.
+	if !utils.IsRootOrg(config_obj.OrgId) {
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return nil, err
+		}
+
+		root_org_config, err := org_manager.GetOrgConfig(services.ROOT_ORG_ID)
+		if err != nil {
+			return nil, err
+		}
+
+		root_inventory_service, err := services.GetInventory(root_org_config)
+		if err != nil {
+			return nil, err
+		}
+
+		inventory_service.parent = root_inventory_service
+	}
 
 	notifier, err := services.GetNotifier(config_obj)
 	if err != nil {

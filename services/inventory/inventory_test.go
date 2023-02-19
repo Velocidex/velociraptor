@@ -67,7 +67,9 @@ func (self *ServicesTestSuite) TestGihubTools() {
 			Name:             tool_name,
 			GithubProject:    "Velocidex/velociraptor",
 			GithubAssetRegex: "windows-amd64.exe",
-		}, services.ToolOptions{})
+		}, services.ToolOptions{
+			ArtifactDefinition: true,
+		})
 	assert.NoError(self.T(), err)
 
 	// Adding the tool simply fetches the github url but not the

@@ -288,7 +288,8 @@ func checkForServerUpgrade(
 					err = inventory.AddTool(ctx,
 						config_obj, tool_definition,
 						services.ToolOptions{
-							Upgrade: true,
+							Upgrade:            true,
+							ArtifactDefinition: true,
 						})
 					if err != nil {
 						// Errors are not fatal during upgrade.

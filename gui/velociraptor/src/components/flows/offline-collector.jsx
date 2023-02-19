@@ -28,6 +28,13 @@ class OfflinePaginator extends PaginationBuilder {
                        "Review", "Launch"];
 }
 
+const tool_name_lookup = {
+    Windows: "VelociraptorWindows",
+    Windows_x86: "VelociraptorWindows_x86",
+    Linux: "VelociraptorLinux",
+    MacOS: "VelociraptorDarwin",
+}
+
 
 class OfflineCollectorParameters  extends React.Component {
     static propTypes = {
@@ -350,14 +357,7 @@ class OfflineCollectorParameters  extends React.Component {
                   <Form.Group as={Row}>
                     <Form.Label column sm="3">{T("Velociraptor Binary")}</Form.Label>
                     <Col sm="8">
-                      {this.props.parameters.target_os === "Windows" &&
-                       <ToolViewer name="VelociraptorWindows"/>}
-                      {this.props.parameters.target_os === "Windows_x86" &&
-                       <ToolViewer name="VelociraptorWindows_x86"/>}
-                      {this.props.parameters.target_os === "Linux" &&
-                       <ToolViewer name="VelociraptorLinux"/>}
-                      {this.props.parameters.target_os === "MacOS" &&
-                       <ToolViewer name="VelociraptorDarwin"/>}
+                       <ToolViewer name={tool_name_lookup[this.props.parameters.target_os]}/>
                     </Col>
                   </Form.Group>
                   <Form.Group as={Row}>
@@ -672,12 +672,11 @@ export default class OfflineCollectorWizard extends React.Component {
             PREV_STEP: this.gotoPrevStep(),
         };
 
-        let extra_tools = [
-            "VelociraptorWindows",
-            "VelociraptorLinux",
-            "VelociraptorWindows_x86",
-            "VelociraptorDarwin",
-        ];
+        let extra_tools = [ ];
+        if ( this.state.collector_parameters &&
+             this.state.collector_parameters.target_os) {
+            extra_tools.push(tool_name_lookup[this.state.collector_parameters.target_os]);
+        }
 
         return (
             <Modal show={true}
