@@ -114,6 +114,8 @@ func TestAutoexec(t *testing.T) {
 	out, err := cmd.CombinedOutput()
 	require.NoError(t, err, string(out))
 
+	os.Chmod(exe.Name(), 0755)
+
 	// Run the repacked binary with no args - it should run the
 	// `artifacts list` command.
 	cmd = exec.Command(exe.Name())
@@ -380,6 +382,8 @@ func TestGenerateConfigWithMerge(t *testing.T) {
 	cmd = exec.Command(binary, "config", "repack", config_file.Name(), exe.Name())
 	out, err = cmd.CombinedOutput()
 	require.NoError(t, err)
+
+	os.Chmod(exe.Name(), 0755)
 
 	// Run the repacked binary with invalid environ - config
 	// should come from embedded.

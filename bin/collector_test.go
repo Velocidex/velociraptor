@@ -244,7 +244,7 @@ func (self *CollectorTestSuite) TearDownSuite() {
 	self.test_server.Close()
 }
 
-func (self *CollectorTestSuite) TestCollector() {
+func (self *CollectorTestSuite) TestCollectorPlain() {
 	t := self.T()
 
 	// Change into the tmpdir
@@ -306,7 +306,7 @@ func (self *CollectorTestSuite) TestCollector() {
 	for _, f := range r.File {
 		fmt.Printf("Contents of collector:  %s (%v bytes)\n",
 			f.Name, f.UncompressedSize)
-		if strings.HasPrefix(f.Name, "uploads/file/Collector") {
+		if strings.HasPrefix(f.Name, "uploads/scope/Collector") {
 			fmt.Printf("Extracting %v to %v\n", f.Name, output_executable)
 
 			rc, err := f.Open()
@@ -432,7 +432,7 @@ func (self *CollectorTestSuite) TestCollectorEncrypted() {
 	for _, f := range r.File {
 		fmt.Printf("Contents of collector:  %s (%v bytes)\n",
 			f.Name, f.UncompressedSize)
-		if strings.HasPrefix(f.Name, "uploads/file/Collector") {
+		if strings.HasPrefix(f.Name, "uploads/scope/Collector") {
 			fmt.Printf("Extracting %v to %v\n", f.Name, output_executable)
 
 			rc, err := f.Open()

@@ -23,12 +23,18 @@ func GetInventory(config_obj *config_proto.Config) (Inventory, error) {
 	return org_manager.Services(config_obj.OrgId).Inventory()
 }
 
+// Options to the AddTool() API
 type ToolOptions struct {
 	// Tool is being upgraded.
 	Upgrade bool
 
 	// Admin is overriding tool in inventory.
 	AdminOverride bool
+
+	// Tool definition is from an artifact definition. Hold onto this
+	// as one of the prestine versions so the user can reset it back
+	// if needed.
+	ArtifactDefinition bool
 }
 
 type Inventory interface {
