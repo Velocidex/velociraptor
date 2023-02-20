@@ -98,8 +98,8 @@ require (
 	howett.net/plist v1.0.0
 	www.velocidex.com/golang/evtx v0.2.1-0.20220404133451-1fdf8be7325e
 	www.velocidex.com/golang/go-ese v0.1.1-0.20220107095505-c38622559671
-	www.velocidex.com/golang/go-ntfs v0.1.2-0.20230203145252-d0e4bdc73bc3
-	www.velocidex.com/golang/go-pe v0.1.1-0.20230220112442-a54de4632113
+	www.velocidex.com/golang/go-ntfs v0.1.2-0.20230221030709-f91b68ac3222
+	www.velocidex.com/golang/go-pe v0.1.1-0.20230221012148-9abf830a16b4
 	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
 	www.velocidex.com/golang/oleparse v0.0.0-20230217092320-383a0121aafe
 	www.velocidex.com/golang/regparser v0.0.0-20221020153526-bbc758cbd18b
@@ -199,8 +199,8 @@ require (
 
 // replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter
 // replace www.velocidex.com/golang/regparser => /home/mic/projects/regparser
-replace www.velocidex.com/golang/go-ntfs => /home/mic/projects/go-ntfs
-replace www.velocidex.com/golang/go-pe => /home/mic/projects/go-pe
+// replace www.velocidex.com/golang/go-ntfs => /home/mic/projects/go-ntfs
+// replace www.velocidex.com/golang/go-pe => /home/mic/projects/go-pe
 // replace www.velocidex.com/golang/evtx => /home/mic/projects/evtx
 // replace www.velocidex.com/golang/go-ese => /home/mic/projects/go-ese
 // replace github.com/Velocidex/ordereddict => /home/mic/projects/ordereddict

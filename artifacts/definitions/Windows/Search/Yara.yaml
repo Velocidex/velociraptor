@@ -2,9 +2,6 @@ name: Windows.Search.Yara
 description: |
   Searches for a specific malicious file or set of files by a Yara rule.
 
-tools:
-  - name: YaraRules
-
 parameters:
     - name: nameRegex
       description: Only file names that match this regular expression will be scanned.
@@ -13,26 +10,47 @@ parameters:
     - name: AlsoUpload
       type: bool
       description: Also upload matching files.
+    - name: yaraRule
+      type: yara
+      description: The Yara Rule to search for.
+      default: |
+        rule Hit {
+            strings:
+              $a = "Keyword" nocase wide ascii
+            condition:
+              any of them
+        }
+
+    - name: NTFS_CACHE_TIME
+      type: int
+      description: How often to flush the NTFS cache. (Default is never).
+      default: "1000000"
 
 precondition:
-  SELECT * FROM info() WHERE OS =~ "windows"
+    SELECT * FROM info() WHERE OS =~ "windows"
 
 sources:
   - query: |
-        LET yara_rules <= SELECT read_file(filename=FullPath) AS Rule,
-           basename(path=FullPath) AS ToolName
-        FROM Artifact.Generic.Utils.FetchBinary(
-             ToolName="YaraRules", IsExecutable=FALSE)
+        LET Root = pathspec(parse="C:", path_type="ntfs")
 
-        LET fileList = SELECT FullPath
-        FROM parse_mft(
-            accessor="ntfs",
-            filename="C:\\$MFT")
-        WHERE InUse
-          AND FileName =~ nameRegex
-          AND NOT FileName = yara_rules[0].ToolName
-          AND NOT FullPath =~ "WinSXS"
+        -- Progress logging for newer clients
+        LET fileList = SELECT * FROM if(condition=version(function="log") > 1,
+        then={
+          SELECT Root + OSPath AS OSPath
+          FROM parse_mft(accessor="ntfs",filename=Root+"$MFT")
+          WHERE InUse
+            AND log(message="Processing entry %v", args=EntryNumber, dedup=5)
+            AND FileName =~ nameRegex
+            AND NOT OSPath =~ "WinSXS"
+            AND log(message="Scanning file %v", args=OSPath, dedup=5)
 
+        }, else={
+          SELECT Root + OSPath AS OSPath
+          FROM parse_mft(accessor="ntfs",filename=Root+"$MFT")
+          WHERE InUse
+            AND FileName =~ nameRegex
+            AND NOT OSPath =~ "WinSXS"
+        })
 
         -- These files are typically short - only report a single hit.
         LET search = SELECT Rule, String.Offset AS HitOffset,
@@ -41,13 +59,9 @@ sources:
              File.Size AS Size,
              File.ModTime AS ModTime
         FROM yara(
-            rules=yara_rules[0].Rule, key="A",
-            files="C:/" + FullPath)
+            rules=yaraRule, key="A",
+            files= OSPath)
         LIMIT 1
 
-        -- Only do something when yara rules are available.
-        SELECT * FROM if(condition=yara_rules,
-        then={
-          SELECT *, if(condition=AlsoUpload, then=upload(file=FileName)) AS Upload
-          FROM foreach(row=fileList, query=search)
-        })
+        SELECT *, if(condition=AlsoUpload, then=upload(file=FileName)) AS Upload
+        FROM foreach(row=fileList, query=search)

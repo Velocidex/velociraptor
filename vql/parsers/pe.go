@@ -73,7 +73,7 @@ func (self _PEFunction) Call(
 	}
 	defer paged_reader.Close()
 
-	pe_file, err := pe.NewPEFile(paged_reader)
+	pe_file, err := pe.NewPEFileWithSize(paged_reader, paged_reader.MaxSize())
 	if err != nil {
 		// Suppress logging for invalid PE files.
 		// scope.Log("parse_pe: %v for %v", err, arg.Filename)
