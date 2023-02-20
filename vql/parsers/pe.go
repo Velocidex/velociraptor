@@ -106,6 +106,8 @@ func (self _PEFunction) Call(
 			return pe_file.ImpHash()
 		}).
 		Set("Authenticode", func() vfilter.Any {
+			defer utils.RecoverVQL(scope)
+
 			info, err := pe.ParseAuthenticode(pe_file)
 			if err != nil {
 				return vfilter.Null{}

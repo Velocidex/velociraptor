@@ -2,6 +2,7 @@ package utils
 
 import (
 	"strings"
+	"unicode/utf8"
 )
 
 // These functions are used to sanitize a path component for storage
@@ -89,52 +90,70 @@ func SanitizeString(component string) string {
 	return string(result[:result_idx])
 }
 
-// A less rigorous escaper which is suitable for zip paths.
+// This assumes c is an ascii rune!
+func escapeChar(c rune) []rune {
+	return []rune{'%', rune(hexTable[c>>4]), rune(hexTable[c&15])}
+}
+
+// A less rigorous escaper which is suitable for zip paths. We assume
+// Zip paths may contain UTF8 unicode but can not contain the
+// following characters (https://en.wikipedia.org/wiki/Filename):
+// 1. The following will always be escaped: /\*?:|<>%
+// 2. Non printables
+// 3. A "." or " " at the end or the start of the file.
+//
+// Characters that do not fit into these rules will be escaped using URL encoding.
 func SanitizeStringForZip(component string) string {
-	length := len(component)
-	if length == 0 {
-		return ""
+	result := make([]rune, 0, len(component))
+
+	escape := func(char rune) {
+		result = append(result, escapeChar(char)...)
 	}
 
-	// Escape components that start with . - these are illegal on
-	// windows and can be used for directory traversal. The . byte
-	// may appear anywhere else though.
-	if component[0] == '.' {
-		return "%2E" + SanitizeString(component[1:])
-	}
-
-	// Windows can not have a trailing "." instead swallowing it
-	// completely.
-	if component[length-1] == '.' ||
-		component[length-1] == ' ' {
-		return component[:length-1] + "%2E"
-	}
-
-	// The length of a single component
-	if length > 1024 {
-		length = 1024
-	}
-
-	result := make([]byte, length*4)
-	result_idx := 0
-
-	for _, c := range []byte(component) {
-		if !shouldEscape(c) {
-			result[result_idx] = c
-			result_idx += 1
-		} else {
-			result[result_idx] = '%'
-			result[result_idx+1] = hexTable[c>>4]
-			result[result_idx+2] = hexTable[c&15]
-			result_idx += 3
+	for pos, char := range component {
+		if pos == 0 && (char == '.' || char == ' ') {
+			escape(char)
+			continue
 		}
 
-		if result_idx > len(result)-1 {
+		// This is just some binary data that is not UTF8 - escape it
+		// so it can be preserved
+		if char == utf8.RuneError {
+			if pos < len(component) {
+				c := component[pos]
+				escape(rune(c))
+			}
+			continue
+		}
+
+		switch char {
+		case '?', '*', ':', '|', '<', '>', '%', '/', '\\':
+			escape(char)
+
+		default:
+			result = append(result, char)
+		}
+
+		// Maximum length on one component.
+		if pos > 1024 {
 			break
 		}
 	}
 
-	return string(result[:result_idx])
+	length := len(result)
+	if length == 0 {
+		return ""
+	}
+
+	// Windows can not have a trailing "." instead swallowing it
+	// completely.
+	suffix := result[length-1]
+	if suffix == '.' || suffix == ' ' {
+		result = result[:length-1]
+		escape(suffix)
+	}
+
+	return string(result)
 }
 
 func unhex(c byte) byte {
