@@ -72,7 +72,7 @@ func (self _AddDict) Add(scope types.Scope, a types.Any, b types.Any) types.Any 
 
 	for _, k := range b_dict.Keys() {
 		v, _ := b_dict.Get(k)
-		res.Set(k, v)
+		res.Update(k, v)
 	}
 
 	return res
