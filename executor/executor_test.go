@@ -359,7 +359,7 @@ func (self *ExecutorTestSuite) TestLogMessages() {
 					// Log 10 messages
 					{
 						Name: "LoggingArtifact",
-						VQL:  "SELECT log(message='log %v', args=count()) FROM range(end=10)",
+						VQL:  "SELECT log(message='log %v', args=count(), dedup= -1) FROM range(end=10)",
 					},
 				}}},
 		},

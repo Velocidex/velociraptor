@@ -82,7 +82,8 @@ type AccessorReader struct {
 	File     *accessors.OSPath
 	Scope    vfilter.Scope
 
-	key string
+	key      string
+	max_size int64
 
 	reader       accessors.ReadSeekCloser
 	paged_reader *ntfs.PagedReader
@@ -122,6 +123,10 @@ func (self *AccessorReader) GetLifetime() time.Duration {
 
 func (self *AccessorReader) Size() int {
 	return 1
+}
+
+func (self *AccessorReader) MaxSize() int64 {
+	return self.max_size
 }
 
 func (self *AccessorReader) Key() string {
@@ -282,10 +287,23 @@ func NewPagedReader(scope vfilter.Scope,
 		return value.(*AccessorReader), nil
 	}
 
+	accessor_obj, err := accessors.GetAccessor(accessor, scope)
+	if err != nil {
+		return nil, err
+	}
+
+	// If we can figure out the size of the file we might do this now.
+	var max_size int64
+	stat, err := accessor_obj.LstatWithOSPath(filename)
+	if err == nil {
+		max_size = stat.Size()
+	}
+
 	result := &AccessorReader{
 		Accessor:    accessor,
 		File:        filename,
 		key:         key,
+		max_size:    max_size,
 		Scope:       scope,
 		pool:        pool,
 		created:     time.Now(),

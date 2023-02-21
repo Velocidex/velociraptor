@@ -66,7 +66,7 @@ sources:
 name: WaitForCancel
 type: SERVER_EVENT
 sources:
-- query: SELECT * FROM register_run_count() WHERE log(message="Finished!")
+- query: SELECT * FROM register_run_count() WHERE log(message="Finished!", dedup=-1)
 `}
 )
 

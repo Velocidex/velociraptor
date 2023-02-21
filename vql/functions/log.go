@@ -22,9 +22,9 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/Velocidex/ttlcache/v2"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -36,9 +36,12 @@ const (
 	LOG_TAG = "last_log"
 )
 
+type logCacheEntry struct {
+	last_time int64
+}
+
 type logCache struct {
-	message string
-	time    int64
+	lru *ttlcache.Cache // map[string]logCacheEntry
 }
 
 type LogFunctionArgs struct {
@@ -64,7 +67,47 @@ func (self *LogFunction) Call(ctx context.Context,
 		arg.DedupTime = 60
 	}
 
-	now := time.Now().Unix()
+	// Get the log cache and check if the message was emitted recently.
+	var log_cache *logCache
+
+	log_cache_any := vql_subsystem.CacheGet(scope, LOG_TAG)
+	if utils.IsNil(log_cache_any) {
+		log_cache = &logCache{
+			lru: ttlcache.NewCache(),
+		}
+		log_cache.lru.SetCacheSizeLimit(100)
+
+	} else {
+		log_cache, _ = log_cache_any.(*logCache)
+		if log_cache == nil {
+			// Cant really happen
+			return false
+		}
+	}
+
+	now := utils.GetTime().Now().Unix()
+
+	// Was this message emitted recently?
+	log_cache_entry_any, err := log_cache.lru.Get(arg.Message)
+	if err == nil {
+		log_cache_entry, ok := log_cache_entry_any.(*logCacheEntry)
+
+		// Message is identical to last and within the dedup time.
+		if ok && arg.DedupTime > 0 &&
+			log_cache_entry.last_time+arg.DedupTime > now {
+			return true
+		}
+	}
+
+	// Store the message in the cache for next time
+	log_cache.lru.Set(arg.Message, &logCacheEntry{
+		last_time: now,
+	})
+
+	vql_subsystem.CacheSet(scope, LOG_TAG, log_cache)
+
+	// Go ahead and format the message now
+
 	level := strings.ToUpper(arg.Level)
 	switch level {
 	case logging.DEFAULT, logging.ERROR, logging.INFO,
@@ -90,35 +133,7 @@ func (self *LogFunction) Call(ctx context.Context,
 		}
 		message = fmt.Sprintf(message, format_args...)
 	}
-
-	last_log_any := vql_subsystem.CacheGet(scope, LOG_TAG)
-
-	// No previous message was set - log it and save it.
-	if utils.IsNil(last_log_any) {
-		last_log := &logCache{
-			message: message,
-			time:    now,
-		}
-		scope.Log("%v", message)
-		vql_subsystem.CacheSet(scope, LOG_TAG, last_log)
-		return true
-	}
-
-	last_log, ok := last_log_any.(*logCache)
-	// Message is identical to last and within the dedup time.
-	if ok && last_log.message == message &&
-		arg.DedupTime > 0 && // User can set dedup time negative to disable.
-		now < last_log.time+arg.DedupTime {
-		return true
-	}
-
-	// Log it and store for next time.
 	scope.Log("%v", message)
-	vql_subsystem.CacheSet(scope, LOG_TAG, &logCache{
-		message: message,
-		time:    now,
-	})
-
 	return true
 }
 
@@ -127,6 +142,7 @@ func (self LogFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Name:    "log",
 		Doc:     "Log the message.",
 		ArgType: type_map.AddType(scope, &LogFunctionArgs{}),
+		Version: 2,
 	}
 }
 
