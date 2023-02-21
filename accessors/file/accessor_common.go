@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -28,6 +29,8 @@ var (
 		Name: "accessor_file_current_open",
 		Help: "Number of currently opened files with the file accessor.",
 	})
+
+	ErrNotFound = errors.New("file not found")
 )
 
 type _inode struct {
@@ -170,6 +173,7 @@ type OSFileSystemAccessor struct {
 	context *AccessorContext
 
 	allow_raw_access bool
+	nocase           bool
 
 	root *accessors.OSPath
 }
@@ -193,7 +197,48 @@ func (self OSFileSystemAccessor) New(scope vfilter.Scope) (
 		},
 		allow_raw_access: self.allow_raw_access,
 		root:             self.root,
+		nocase:           self.nocase,
 	}, nil
+}
+
+// Get the closest matching filename from the directory
+func getNoCase(filename *accessors.OSPath) (*accessors.OSPath, error) {
+	if len(filename.Components) == 0 {
+		return nil, ErrNotFound
+	}
+
+	parent := filename.Dirname()
+	dirname := parent.PathSpec().Path
+	basename := filename.Basename()
+
+	names, err := utils.ReadDirNames(dirname)
+	if err != nil {
+		// If we are unable to open the current directory, it may be
+		// that the parent directory casing is not
+		// correct. Recursively get the correct parent's casing and
+		// try again.
+		nocase_parent, err1 := getNoCase(parent)
+		if err1 != nil {
+			return nil, err
+		}
+
+		dirname := nocase_parent.PathSpec().Path
+		names, err1 = utils.ReadDirNames(dirname)
+		if err1 != nil {
+			return nil, err
+		}
+
+		// Found the correct parent, keep going.
+		parent = nocase_parent
+	}
+
+	for _, name := range names {
+		if strings.EqualFold(name, basename) {
+			return parent.Append(name), nil
+		}
+	}
+
+	return nil, ErrNotFound
 }
 
 func (self OSFileSystemAccessor) Lstat(filename string) (accessors.FileInfo, error) {
@@ -212,7 +257,24 @@ func (self OSFileSystemAccessor) LstatWithOSPath(
 
 	lstat, err := os.Lstat(filename)
 	if err != nil {
-		return nil, err
+		if !self.nocase {
+			return nil, err
+		}
+
+		// Try to get a case insensitive match
+		nocase_name, err1 := getNoCase(full_path)
+		if err1 != nil {
+			return nil, err
+		}
+
+		// Try again with the nocase filename
+		filename = nocase_name.PathSpec().Path
+		lstat, err1 = os.Lstat(filename)
+		if err1 != nil {
+			return nil, err
+		}
+
+		// From here on the filename is correct.
 	}
 
 	return &OSFileInfo{
@@ -237,7 +299,22 @@ func (self OSFileSystemAccessor) ReadDirWithOSPath(
 
 	lstat, err := os.Lstat(dir)
 	if err != nil {
-		return nil, err
+		if !self.nocase {
+			return nil, err
+		}
+
+		// Try to get a case insensitive match
+		nocase_name, err1 := getNoCase(full_path)
+		if err1 != nil {
+			return nil, err
+		}
+		dir = nocase_name.PathSpec().Path
+		lstat, err1 = os.Lstat(dir)
+		if err1 != nil {
+			return nil, err
+		}
+
+		// From here below dir is the correct path casing.
 	}
 
 	// Support symlinks and directories.
@@ -313,10 +390,29 @@ func (self OSFileSystemAccessor) OpenWithOSPath(
 	path := full_path.PathSpec().Path
 
 	// Eval any symlinks directly
-	path, err = filepath.EvalSymlinks(path)
+	symlink_path, err := filepath.EvalSymlinks(path)
 	if err != nil {
-		return nil, err
+		if !self.nocase {
+			return nil, err
+		}
+
+		// Try to get a case insensitive match
+		nocase_name, err1 := getNoCase(full_path)
+		if err1 != nil {
+			return nil, err
+		}
+
+		// Try again with the nocase filename
+		path = nocase_name.PathSpec().Path
+		symlink_path, err1 = filepath.EvalSymlinks(path)
+		if err1 != nil {
+			return nil, err
+		}
+
+		// From here on path is correct.
 	}
+
+	path = symlink_path
 
 	// Usually we dont allow direct access to devices otherwise a
 	// recursive yara scan can get into /proc/ and crash the
@@ -349,6 +445,11 @@ func init() {
 	accessors.Register("file", &OSFileSystemAccessor{
 		root: root_path,
 	}, `Access files using the operating system's API. Does not allow access to raw devices.`)
+
+	accessors.Register("file_nocase", &OSFileSystemAccessor{
+		root:   root_path,
+		nocase: true,
+	}, `Access files using the operating system's API. This is case insensitive - even on Unix Operating systems.`)
 
 	// On Linux the auto accessor is the same as file.
 	accessors.Register("auto", &OSFileSystemAccessor{
