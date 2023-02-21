@@ -12,8 +12,8 @@
         "@fortawesome/free-solid-svg-icons": "^6.2.1",
         "@fortawesome/react-fontawesome": "0.2.0",
         "@popperjs/core": "^2.11.6",
-        "axios": ">=1.2.6",
         "ace-builds": "1.15.0",
+        "axios": ">=1.2.6",
         "axios-retry": "3.4.0",
         "bootstrap": "^4.6.2",
         "classnames": "^2.3.2",
@@ -96,11 +96,13 @@
     },
     "devDependencies": {
         "@babel/eslint-parser": "^7.19.1",
+        "@fullhuman/postcss-purgecss": "^5.0.0",
         "@testing-library/react": "12",
         "@vitejs/plugin-react": "^3.0.0",
         "eslint": "^8.29.0",
         "eslint-config-react-app": "^7.0.1",
         "eslint-plugin-flowtype": "^8.0.3",
+        "postcss": "^8.4.21",
         "vite": "^4.0.1",
         "vite-plugin-compression": "^0.5.1"
     }
