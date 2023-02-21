@@ -31,7 +31,9 @@ export const ToStandardTime = value => {
         // (can happen with 64 bit ints which JSON does not support).
         if (digitsRegex.test(value)) {
             value = parseFloat(value);
+
         } else {
+
             // Maybe an iso string
             let parsed = new Date(value);
             if (!_.isNaN(parsed.getTime())) {
@@ -40,15 +42,16 @@ export const ToStandardTime = value => {
                 return parsed;
             };
 
-	    const m = value.match(timestampWithNanoRegex);
-	    if (m) {
-		let newDate = m[1] + m[2] + ":" + m[3];
+            const m = value.match(timestampWithNanoRegex);
+            if (m) {
+                debugger;
+                let newDate = m[1] + m[2] + ":" + m[3];
 
-		parsed = new Date(newDate);
-		if (!_.isNaN(parsed.getTime())) {
-		    return parsed;
-		}
-	    }
+                parsed = new Date(newDate);
+                if (!_.isNaN(parsed.getTime())) {
+                    return parsed;
+                }
+            }
         }
     }
 

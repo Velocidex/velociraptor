@@ -6,7 +6,8 @@ import UserConfig from '../core/user.jsx';
 import VeloTimestamp from "./time.jsx";
 import ContextMenu from './context.jsx';
 
-const timestamp_regex = new RegExp('^\\d\\d\\d\\d-\\d\\d-\\d\\dT\\d\\d:\\d\\d:\\d\\d.+$');
+// Try to detect something that looks like a timestamp.
+const timestamp_regex = /(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d(?:\.\d+)?(?:[+-][0-2]\d:?[0-5]\d|Z))/;
 
 const defaultTheme = {
     scheme: 'rjv-default',
@@ -78,10 +79,13 @@ export default class VeloValueRenderer extends React.Component {
     // If the cell contains something that looks like a timestamp,
     // format it as such.
     maybeFormatTime = x => {
-        if (timestamp_regex.test(x)) {
-            return <VeloTimestamp iso={x} />;
-        }
-        return x;
+        let parts = x.split(timestamp_regex);
+        return _.map(parts, x=>{
+            if (timestamp_regex.test(x)) {
+                return <VeloTimestamp iso={x} />;
+            }
+            return x;
+        });
     }
 
     render() {
