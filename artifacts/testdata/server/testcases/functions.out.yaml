@@ -14,8 +14,8 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
 ]SELECT dict(A=1, B=2) + dict(A=3, X=1) FROM scope()[
  {
   "dict(A=1, B=2) + dict(A=3, X=1)": {
-   "B": 2,
    "A": 3,
+   "B": 2,
    "X": 1
   }
  }

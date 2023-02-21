@@ -14,7 +14,7 @@ require (
 	github.com/Velocidex/go-yara v1.1.10-0.20221202090138-c7dde4c43aa4
 	github.com/Velocidex/grpc-go-pool v1.2.2-0.20211129003310-ece3b3fe13f4
 	github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a
-	github.com/Velocidex/pkcs7 v0.0.0-20210524015001-8d1eee94a157
+	github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a
 	github.com/Velocidex/sflags v0.3.1-0.20210402155316-b09f53df5162
 	github.com/Velocidex/ttlcache/v2 v2.9.1-0.20211116035050-ddd93fed62f5
 	github.com/Velocidex/yaml/v2 v2.2.8
@@ -98,8 +98,8 @@ require (
 	howett.net/plist v1.0.0
 	www.velocidex.com/golang/evtx v0.2.1-0.20220404133451-1fdf8be7325e
 	www.velocidex.com/golang/go-ese v0.1.1-0.20220107095505-c38622559671
-	www.velocidex.com/golang/go-ntfs v0.1.2-0.20230203145252-d0e4bdc73bc3
-	www.velocidex.com/golang/go-pe v0.1.1-0.20230217085506-ab5ff06f3211
+	www.velocidex.com/golang/go-ntfs v0.1.2-0.20230221030709-f91b68ac3222
+	www.velocidex.com/golang/go-pe v0.1.1-0.20230221012148-9abf830a16b4
 	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
 	www.velocidex.com/golang/oleparse v0.0.0-20230217092320-383a0121aafe
 	www.velocidex.com/golang/regparser v0.0.0-20221020153526-bbc758cbd18b

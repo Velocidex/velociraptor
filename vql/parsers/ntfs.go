@@ -118,9 +118,10 @@ func (self NTFSFunction) Call(
 }
 
 type MFTScanPluginArgs struct {
-	Filename *accessors.OSPath `vfilter:"required,field=filename,doc=The MFT file."`
-	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
-	Prefix   *accessors.OSPath `vfilter:"optional,field=prefix,doc=If specified we prefix all paths with this path."`
+	Filename   *accessors.OSPath `vfilter:"required,field=filename,doc=The MFT file."`
+	Accessor   string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Prefix     *accessors.OSPath `vfilter:"optional,field=prefix,doc=If specified we prefix all paths with this path."`
+	StartEntry int64             `vfilter:"optional,field=start,doc=The first entry to scan."`
 }
 
 type MFTScanPlugin struct{}
@@ -176,7 +177,7 @@ func (self MFTScanPlugin) Call(
 
 		for item := range ntfs.ParseMFTFileWithOptions(
 			ctx, utils.MakeReaderAtter(fd), st.Size(),
-			0x1000, 0x400, options) {
+			0x1000, 0x400, arg.StartEntry, options) {
 			select {
 			case <-ctx.Done():
 				return
