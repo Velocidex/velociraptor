@@ -313,6 +313,11 @@ func init() {
 	accessors.Register("file", &OSFileSystemAccessor{},
 		`Access the filesystem using the OS API.`)
 
+	// Windows filesystem is already case insensitive so we provide an
+	// alias so artifacts can work with either.
+	accessors.Register("file_nocase", &OSFileSystemAccessor{},
+		`Access the filesystem using the OS API.`)
+
 	// Register a variant which allows following links - be
 	// careful with it - it can get stuck on loops.
 	accessors.Register("file_links", &OSFileSystemAccessor{
