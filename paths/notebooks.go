@@ -231,11 +231,12 @@ func ZipPathFromFSPathSpec(path api.FSPathSpec) string {
 	components := path.Components()
 	safe_components := make([]string, 0, len(components))
 	for _, c := range components {
+		c = utils.SanitizeStringForZip(c)
 		if c == "" || c == "." || c == ".." {
 			continue
 		}
-		safe_components = append(safe_components, utils.SanitizeString(c))
+		safe_components = append(safe_components, c)
 	}
-	return "/" + strings.Join(safe_components, "/") +
-		api.GetExtensionForFilestore(path)
+	// Zip paths must not have a leading /
+	return strings.Join(safe_components, "/") + api.GetExtensionForFilestore(path)
 }
