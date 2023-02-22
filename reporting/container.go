@@ -335,6 +335,8 @@ func (self *Container) Upload(
 	// Avoid sending huge strings inside the JSON
 	if accessor == "data" {
 		result.Path = "data"
+	} else if accessor == "" {
+		accessor = "auto"
 	}
 
 	// The filename to store the file inside the zip - due to escaping
