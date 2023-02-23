@@ -737,10 +737,6 @@ func scheduleHuntOnClient(
 	// Direct the request against our client and schedule it.
 	request.ClientId = client_id
 
-	// Make sure the flow is created by the hunt - this is how we
-	// track it.
-	request.Creator = hunt_id
-
 	flow_id, err := launcher.ScheduleArtifactCollection(
 		ctx, config_obj, acl_managers.NullACLManager{},
 		repository, request, nil)
