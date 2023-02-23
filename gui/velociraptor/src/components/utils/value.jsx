@@ -80,9 +80,9 @@ export default class VeloValueRenderer extends React.Component {
     // format it as such.
     maybeFormatTime = x => {
         let parts = x.split(timestamp_regex);
-        return _.map(parts, x=>{
+        return _.map(parts, (x, idx)=>{
             if (timestamp_regex.test(x)) {
-                return <VeloTimestamp iso={x} />;
+                return <VeloTimestamp key={idx} iso={x} />;
             }
             return x;
         });

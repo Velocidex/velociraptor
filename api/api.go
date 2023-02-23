@@ -453,6 +453,8 @@ func (self *ApiServer) GetUserUITraits(
 		result.InterfaceTraits.DefaultDownloadsLock = user_options.DefaultDownloadsLock
 		result.InterfaceTraits.Customizations = user_options.Customizations
 		result.InterfaceTraits.Links = user_options.Links
+		result.InterfaceTraits.DisableServerEvents = user_options.DisableServerEvents
+		result.InterfaceTraits.DisableQuarantineButton = user_options.DisableQuarantineButton
 	}
 
 	return result, nil
