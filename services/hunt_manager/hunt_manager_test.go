@@ -20,6 +20,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
@@ -44,7 +45,7 @@ func (self *HuntTestSuite) SetupTest() {
 
 	self.hunt_id += "A"
 	self.expected.Creator = self.hunt_id
-	self.expected.FlowId = "F.Hunt." + self.hunt_id
+	self.expected.FlowId = utils.CreateFlowIdFromHuntId(self.hunt_id)
 
 	// Write a client record.
 	client_info_obj := &actions_proto.ClientInfo{

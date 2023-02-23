@@ -50,7 +50,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -366,12 +365,10 @@ func (self *HuntManager) ProcessFlowCompletion(
 		return errors.New("FlowId not found")
 	}
 
-	parts := strings.Split(flow_id, ".H.")
-	if len(parts) != 2 {
+	hunt_id, ok := utils.ExtractHuntId(flow_id)
+	if !ok {
 		return nil
 	}
-
-	hunt_id := "H." + parts[1]
 
 	// Flow is complete so add it to the hunt stats. We send a
 	// mutation to the hunt dispatcher to mediate internal hunt state
