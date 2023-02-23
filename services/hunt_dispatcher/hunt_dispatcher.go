@@ -551,7 +551,7 @@ func (self *HuntDispatcher) CreateHunt(
 
 	// Set the collection ID already on the hunt request - all flows
 	// from this hunt will have the same flow id.
-	hunt.StartRequest.FlowId = "F.Hunt." + hunt.HuntId
+	hunt.StartRequest.FlowId = utils.CreateFlowIdFromHuntId(hunt.HuntId)
 	hunt.StartRequest.CompiledCollectorArgs = append(
 		hunt.StartRequest.CompiledCollectorArgs, compiled...)
 	hunt.StartRequest.Creator = hunt.Creator

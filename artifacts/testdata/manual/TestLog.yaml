@@ -1,0 +1,9 @@
+name: Test.TestLog
+description: |
+  Stream logs slowly - test that GUI updates logs
+
+sources:
+  - query: |
+      SELECT sleep(time=1),
+         log(message="Message %v", args=_value, dedup=-1) AS Log
+      FROM range(end=100)
