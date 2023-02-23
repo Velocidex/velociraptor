@@ -110,9 +110,10 @@ message ApiUserInterfaceTraits {
     // Current selected Org.
     string org = 24;
 
+    // Optional features of the UI to disable.
     bool disable_server_events = 26;
-
     string auth_redirect_template = 27;
+    bool disable_quarantine_button = 28;
 };
 
 // Describe the user to the GUI.
@@ -165,6 +166,11 @@ message SetGUIOptionsRequest {
     GUICustomizations customizations = 8;
 
     repeated GUILink links = 9;
+
+    // Optional features of the UI to disable.
+    bool disable_server_events = 26;
+    string auth_redirect_template = 27;
+    bool disable_quarantine_button = 28;
 }
 
 message SetGUIOptionsResponse {

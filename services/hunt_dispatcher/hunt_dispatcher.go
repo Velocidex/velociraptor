@@ -548,8 +548,13 @@ func (self *HuntDispatcher) CreateHunt(
 	if err != nil {
 		return "", err
 	}
+
+	// Set the collection ID already on the hunt request - all flows
+	// from this hunt will have the same flow id.
+	hunt.StartRequest.FlowId = "F.Hunt." + hunt.HuntId
 	hunt.StartRequest.CompiledCollectorArgs = append(
 		hunt.StartRequest.CompiledCollectorArgs, compiled...)
+	hunt.StartRequest.Creator = hunt.Creator
 
 	// We allow our caller to determine if hunts are created in
 	// the running state or the paused state.

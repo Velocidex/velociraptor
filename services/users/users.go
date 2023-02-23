@@ -361,6 +361,14 @@ func (self UserManager) GetUserOptions(ctx context.Context, username string) (
 	// not override the configured link from the default and it will
 	// be ignored.
 
+	defaults := &config_proto.Defaults{}
+	if self.config_obj.Defaults != nil {
+		defaults = self.config_obj.Defaults
+	}
+
+	options.DisableServerEvents = defaults.DisableServerEvents
+	options.DisableQuarantineButton = defaults.DisableQuarantineButton
+
 	return options, nil
 }
 

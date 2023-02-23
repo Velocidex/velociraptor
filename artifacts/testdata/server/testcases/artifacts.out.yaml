@@ -29,7 +29,9 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
  {
   "Flow": {
    "creator": "VelociraptorServer",
+   "user_data": "",
    "client_id": "C.11a3013ccaXXXXX",
+   "flow_id": "",
    "urgent": false,
    "artifacts": [
     "Windows.KapeFiles.Targets"
@@ -72,7 +74,9 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
  {
   "Flow": {
    "creator": "VelociraptorServer",
+   "user_data": "",
    "client_id": "C.11a3013ccaXXXXX",
+   "flow_id": "",
    "urgent": false,
    "artifacts": [
     "Windows.KapeFiles.Targets"
