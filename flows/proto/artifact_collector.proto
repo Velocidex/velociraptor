@@ -22,7 +22,13 @@ message ArtifactSpec {
 
 message ArtifactCollectorArgs {
     string creator = 1;
+
+    // This is an arbitrary object attached to the request that
+    // provides context by the creator. For example it may be used to
+    // store a signature of the request by the creator's key.
+    string user_data = 30;
     string client_id = 3;
+    string flow_id = 31;
 
     // If set we send an urgent request to the client.
     bool urgent = 21;

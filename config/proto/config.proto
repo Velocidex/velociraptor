@@ -936,6 +936,10 @@ message Defaults {
     // larger than this will not be expanded.
     uint64 max_sparse_expand_size = 15;
 
+    // Control GUI features
+    bool disable_server_events = 26;
+    string auth_redirect_template = 27;
+    bool disable_quarantine_button = 28;
 }
 
 // Configures crypto preferences

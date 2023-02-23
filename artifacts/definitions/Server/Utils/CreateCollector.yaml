@@ -420,11 +420,9 @@ sources:
       )
 
       // Do the actual repacking.
-      LET repack_step = repack(
+      SELECT repack(
            upload_name=CollectorName,
            target=tool_name[0].Type,
            binaries=Binaries.Binary,
            config=serialize(format='json', item=autoexec))
-
-      // Only actually run stuff if everything looks right.
-      SELECT repack_step FROM scope()
+      FROM scope()

@@ -83,7 +83,7 @@ export class LabelClients extends Component {
                  return <VeloClientStatusIcon client={row}/>;
              }},
             {dataField: "client_id", text: T("Client ID")},
-            {dataField: "os_info.fqdn", text: T("Hostname"), sort: true},
+            {dataField: "os_info.fqdn", text: T("Hostname"), sort: false},
         ]);
 
         return (
@@ -208,7 +208,7 @@ class DeleteClients extends Component {
                  return <VeloClientStatusIcon client={row}/>;
              }},
             {dataField: "client_id", text: T("Client ID")},
-            {dataField: "os_info.fqdn", text: T("Hostname"), sort: true},
+            {dataField: "os_info.fqdn", text: T("Hostname"), sort: false},
         ]);
 
         return (
@@ -599,7 +599,7 @@ export function getClientColumns() {
          }},
         {dataField: "client_id", text: T("Client ID"), type: "client"},
         {dataField: "os_info.hostname", text: T("Hostname"), sort: true},
-        {dataField: "os_info.fqdn", text: T("FQDN"), sort: true},
+        {dataField: "os_info.fqdn", text: T("FQDN"), sort: false},
         {dataField: "os_info.release", text: T("OS Version")},
     ]);
 }

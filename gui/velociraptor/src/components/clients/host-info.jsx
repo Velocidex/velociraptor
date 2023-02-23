@@ -19,6 +19,7 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import Spinner from '../utils/spinner.jsx';
 import Form from 'react-bootstrap/Form';
+import UserConfig from '../core/user.jsx';
 
 import { Link } from  "react-router-dom";
 import api from '../core/api-service.jsx';
@@ -180,6 +181,8 @@ class QuarantineDialog extends Component {
 }
 
 class VeloHostInfo extends Component {
+    static contextType = UserConfig;
+
     static propTypes = {
         // We must be viewing an actual client.
         client: PropTypes.object,
@@ -498,10 +501,36 @@ class VeloHostInfo extends Component {
         });
     }
 
-    render() {
-        let client_id = this.props.client && this.props.client.client_id;
+    renderQuarantine = ()=>{
+        if(this.context.traits &&
+           this.context.traits.disable_quarantine_button) {
+            return;
+        }
         let info = this.getClientInfo();
         let is_quarantined = info.labels.includes("Quarantine");
+
+        if (is_quarantined) {
+            return <Button variant="default"
+                           data-tooltip={T("Unquarantine Host")}
+                           data-position="right"
+                           className="btn-tooltip"
+                           onClick={this.unquarantineHost}>
+                     <FontAwesomeIcon icon="virus-slash" />
+                   </Button>;
+        }
+        return <Button variant="default"
+                       data-tooltip={T("Quarantine Host")}
+                       data-position="right"
+                       className="btn-tooltip"
+                       onClick={()=>this.setState({
+                           showQuarantineDialog: true,
+                       })}>
+                 <FontAwesomeIcon icon="medkit" />
+               </Button>;
+    }
+
+    render() {
+        let client_id = this.props.client && this.props.client.client_id;
 
         return (
             <>
@@ -533,24 +562,7 @@ class VeloHostInfo extends Component {
                       <i><FontAwesomeIcon icon="history"/></i>
                       <span className="button-label">{T("Collected")}</span>
                     </Link>
-                    { is_quarantined ?
-                      <Button variant="default"
-                              data-tooltip={T("Unquarantine Host")}
-                              data-position="right"
-                              className="btn-tooltip"
-                              onClick={this.unquarantineHost}>
-                        <FontAwesomeIcon icon="virus-slash" />
-                      </Button> :
-                      <Button variant="default"
-                              data-tooltip={T("Quarantine Host")}
-                              data-position="right"
-                              className="btn-tooltip"
-                              onClick={()=>this.setState({
-                                  showQuarantineDialog: true,
-                              })}>
-                        <FontAwesomeIcon icon="medkit" />
-                    </Button>
-                    }
+                    { this.renderQuarantine() }
                     { this.state.showLabelDialog &&
                       <LabelClients
                         affectedClients={[{

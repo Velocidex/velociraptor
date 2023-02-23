@@ -364,6 +364,7 @@ func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
 	collection_context.TotalExpectedUploadedBytes = 0
 	collection_context.TotalUploadedFiles = 0
 	collection_context.TotalCollectedRows = 0
+	collection_context.TotalLogs = 0
 	collection_context.ActiveTime = 0
 	collection_context.StartTime = 0
 
@@ -380,6 +381,7 @@ func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
 		collection_context.TotalExpectedUploadedBytes += uint64(s.ExpectedUploadedBytes)
 		collection_context.TotalUploadedFiles += uint64(s.UploadedFiles)
 		collection_context.TotalCollectedRows += uint64(s.ResultRows)
+		collection_context.TotalLogs += uint64(s.LogRows)
 
 		if s.LastActive > collection_context.ActiveTime {
 			collection_context.ActiveTime = s.LastActive

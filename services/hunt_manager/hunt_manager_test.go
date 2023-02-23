@@ -31,7 +31,6 @@ type HuntTestSuite struct {
 
 	client_id string
 	hunt_id   string
-	flow_id   string
 	expected  *flows_proto.ArtifactCollectorArgs
 }
 
@@ -45,12 +44,7 @@ func (self *HuntTestSuite) SetupTest() {
 
 	self.hunt_id += "A"
 	self.expected.Creator = self.hunt_id
-
-	launcher, err := services.GetLauncher(self.ConfigObj)
-	assert.NoError(self.T(), err)
-
-	launcher.SetFlowIdForTests("F.1234")
-	self.flow_id = "F.1234." + self.hunt_id
+	self.expected.FlowId = "F.Hunt." + self.hunt_id
 
 	// Write a client record.
 	client_info_obj := &actions_proto.ClientInfo{
@@ -58,7 +52,7 @@ func (self *HuntTestSuite) SetupTest() {
 	}
 	client_path_manager := paths.NewClientPathManager(self.client_id)
 	db, _ := datastore.GetDB(self.ConfigObj)
-	err = db.SetSubject(self.ConfigObj,
+	err := db.SetSubject(self.ConfigObj,
 		client_path_manager.Path(), client_info_obj)
 	assert.NoError(self.T(), err)
 }
@@ -100,6 +94,7 @@ func (self *HuntTestSuite) TestHuntManager() {
 	indexer, err := services.GetIndexer(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
+	flow_id := hunt_obj.StartRequest.FlowId
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated.
 		err = indexer.CheckSimpleIndex(self.ConfigObj, paths.HUNT_INDEX,
@@ -107,14 +102,13 @@ func (self *HuntTestSuite) TestHuntManager() {
 		if err != nil {
 			return false
 		}
-		_, err = LoadCollectionContext(self.ConfigObj,
-			self.client_id, self.flow_id)
+		_, err = LoadCollectionContext(self.ConfigObj, self.client_id, flow_id)
 		return err == nil
 	})
 
 	// Check that a flow was launched.
 	collection_context, err := LoadCollectionContext(self.ConfigObj,
-		self.client_id, self.flow_id)
+		self.client_id, flow_id)
 	assert.NoError(t, err)
 	assert.Equal(t, collection_context.Request.Artifacts, self.expected.Artifacts)
 }
@@ -163,7 +157,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	time.Sleep(time.Second)
 
 	// No flow should be launched.
-	_, err = LoadCollectionContext(self.ConfigObj, self.client_id, self.flow_id)
+	flow_id := hunt_obj.StartRequest.FlowId
+	_, err = LoadCollectionContext(self.ConfigObj, self.client_id, flow_id)
 	assert.Error(t, err)
 
 	// Now add the label to the client. The hunt will now be
@@ -184,7 +179,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	})
 
 	// The flow is now created.
-	_, err = LoadCollectionContext(self.ConfigObj, self.client_id, self.flow_id)
+	_, err = LoadCollectionContext(self.ConfigObj, self.client_id, flow_id)
 	assert.NoError(t, err)
 }
 
@@ -228,6 +223,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(t, err)
 
+	flow_id := hunt_obj.StartRequest.FlowId
+
 	journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).
@@ -248,12 +245,12 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 			return false
 		}
 		_, err := LoadCollectionContext(
-			self.ConfigObj, self.client_id, self.flow_id)
+			self.ConfigObj, self.client_id, flow_id)
 		return err == nil
 	})
 
 	collection_context, err := LoadCollectionContext(self.ConfigObj,
-		self.client_id, self.flow_id)
+		self.client_id, flow_id)
 	assert.Equal(t, collection_context.Request.Artifacts, self.expected.Artifacts)
 }
 
@@ -295,6 +292,8 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 	indexer, err := services.GetIndexer(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
+	flow_id := hunt_obj.StartRequest.FlowId
+
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
 		// already (even if we decided not to launch on it).
@@ -305,12 +304,12 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 		}
 
 		_, err := LoadCollectionContext(
-			self.ConfigObj, self.client_id, self.flow_id)
+			self.ConfigObj, self.client_id, flow_id)
 		return err == nil
 	})
 
 	collection_context, err := LoadCollectionContext(self.ConfigObj,
-		self.client_id, self.flow_id)
+		self.client_id, flow_id)
 	assert.NoError(t, err)
 	assert.Equal(t, collection_context.Request.Artifacts, self.expected.Artifacts)
 }
@@ -365,6 +364,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	indexer, err := services.GetIndexer(self.ConfigObj)
 	assert.NoError(t, err)
 
+	flow_id := hunt_obj.StartRequest.FlowId
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// The hunt index is updated since we have seen this client
 		// already (even if we decided not to launch on it).
@@ -375,12 +375,12 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 		}
 
 		_, err := LoadCollectionContext(
-			self.ConfigObj, self.client_id, self.flow_id)
+			self.ConfigObj, self.client_id, flow_id)
 		return err == nil
 	})
 
 	collection_context, err := LoadCollectionContext(self.ConfigObj,
-		self.client_id, self.flow_id)
+		self.client_id, flow_id)
 	assert.NoError(t, err)
 	assert.Equal(t, collection_context.Request.Artifacts, self.expected.Artifacts)
 }
@@ -407,6 +407,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 			},
 		},
 	}
+
+	flow_id := hunt_obj.StartRequest.FlowId
 
 	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(t, err)
@@ -444,8 +446,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 	time.Sleep(time.Second)
 
 	// No flow should be launched.
-	_, err = LoadCollectionContext(
-		self.ConfigObj, self.client_id, self.flow_id)
+	_, err = LoadCollectionContext(self.ConfigObj, self.client_id, flow_id)
 	assert.Error(t, err)
 }
 
@@ -467,6 +468,7 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 			},
 		},
 	}
+	flow_id := hunt_obj.StartRequest.FlowId
 
 	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(t, err)
@@ -516,12 +518,12 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// Flow should be launched on client id because it is a Windows client.
-		_, err = LoadCollectionContext(self.ConfigObj, client_id_1, self.flow_id)
+		_, err = LoadCollectionContext(self.ConfigObj, client_id_1, flow_id)
 		return err == nil
 	})
 
 	// No flow should be launched on client_id_2 because it is a Linux client.
-	_, err = LoadCollectionContext(self.ConfigObj, client_id_2, self.flow_id)
+	_, err = LoadCollectionContext(self.ConfigObj, client_id_2, flow_id)
 	assert.Error(t, err)
 }
 
@@ -602,9 +604,10 @@ func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
 
 	// Ensure the hunt is collected on the client.
 	mdb := test_utils.GetMemoryDataStore(self.T(), self.ConfigObj)
+	flow_id := hunt_obj.StartRequest.FlowId
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
 		task := &crypto_proto.VeloMessage{}
-		path_manager := paths.NewFlowPathManager(self.client_id, self.flow_id)
+		path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
 		err := mdb.GetSubject(self.ConfigObj,
 			path_manager.Task(), task)
 		return err != nil
@@ -666,12 +669,13 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 		State:                flows_proto.ArtifactCollectorContext_FINISHED,
 	}
 
+	flow_id := hunt_obj.StartRequest.FlowId
 	assert.NoError(self.T(), journal.PushRowsToArtifact(
 		self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("Timestamp", time.Now().UTC().Unix()).
 			Set("Flow", flow_obj).
-			Set("FlowId", self.flow_id).
+			Set("FlowId", flow_id).
 			Set("ClientId", self.client_id),
 		}, "System.Flow.Completion", self.client_id, ""))
 
@@ -746,11 +750,12 @@ func (self *HuntTestSuite) TestHuntManagerErrors() {
 		State:                flows_proto.ArtifactCollectorContext_ERROR,
 	}
 
+	flow_id := hunt_obj.StartRequest.FlowId
 	assert.NoError(self.T(), journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("Timestamp", time.Now().UTC().Unix()).
 			Set("Flow", flow_obj).
-			Set("FlowId", self.flow_id).
+			Set("FlowId", flow_id).
 			Set("ClientId", self.client_id),
 		}, "System.Flow.Completion", self.client_id, ""))
 

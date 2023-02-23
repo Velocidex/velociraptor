@@ -121,7 +121,6 @@ import (
 	"encoding/base32"
 	"encoding/binary"
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -557,15 +556,9 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 		return "", err
 	}
 
-	session_id := NewFlowId(client_id)
-
-	// If the flow was created by a hunt, we encode the hunt id in the
-	// session id. The session id will be returned by the client, and
-	// the ingestor will be able to tie the session to the hunt
-	// without consulting the datastore. The ID will look something
-	// like F.1233.H.1234
-	if strings.HasPrefix(collector_request.Creator, "H.") {
-		session_id += "." + collector_request.Creator
+	session_id := collector_request.FlowId
+	if session_id == "" {
+		session_id = NewFlowId(client_id)
 	}
 
 	// How long to batch log messages for on the client.
