@@ -96,6 +96,7 @@ const French = {
     },
     "Create a new artifact": "Créer un nouvel artefact",
     "Save": "Enregistrer",
+    "Search": "Recherche",
 
     // Navigation au clavier.
     "Global hotkeys": "Raccourcis globaux",

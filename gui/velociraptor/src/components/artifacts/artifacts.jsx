@@ -275,6 +275,7 @@ class ArtifactInspector extends React.Component {
                           onClick={() => this.setState({showNewArtifactDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="plus"/>
+		    <span className="sr-only">{T("Add an Artifact")}</span>
                   </Button>
 
                   <Button data-tooltip={T("Edit an Artifact")}
@@ -286,6 +287,7 @@ class ArtifactInspector extends React.Component {
                           disabled={!selected}
                           variant="default">
                     <FontAwesomeIcon icon="pencil-alt"/>
+		    <span className="sr-only">{T("Edit an Artifact")}</span>
                   </Button>
 
                   <Button data-tooltip={T("Delete Artifact")}
@@ -295,6 +297,7 @@ class ArtifactInspector extends React.Component {
                           disabled={!deletable}
                           variant="default">
                     <FontAwesomeIcon icon="trash"/>
+		    <span className="sr-only">{T("Delete Artifact")}</span>
                   </Button>
 
                   <Button data-tooltip={T("Hunt Artifact")}
@@ -304,6 +307,7 @@ class ArtifactInspector extends React.Component {
                           disabled={!this.huntArtifactEnabled()}
                           variant="default">
                     <FontAwesomeIcon icon="crosshairs"/>
+		    <span className="sr-only">{T("Hunt Artifact")}</span>
                   </Button>
 
                   <Button data-tooltip={T("Collect Artifact")}
@@ -313,6 +317,7 @@ class ArtifactInspector extends React.Component {
                           disabled={!this.collectArtifactEnabled()}
                           variant="default">
                     <FontAwesomeIcon icon="cloud-download-alt"/>
+		    <span className="sr-only">{T("Collect Artifact")}</span>
                   </Button>
 
                   <Button data-tooltip={T("Upload Artifact Pack")}
@@ -321,6 +326,7 @@ class ArtifactInspector extends React.Component {
                           onClick={()=>this.setState({showArtifactsUploadDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="upload"/>
+		    <span className="sr-only">{T("Upload Artifact Pack")}</span>
                   </Button>
                 </ButtonGroup>
                 <Form inline className="">

@@ -309,6 +309,7 @@ class EventMonitoring extends React.Component {
                               onClick={() => this.setState({showServerEventTableWizard: true})}
                               variant="default">
                         <FontAwesomeIcon icon="edit"/>
+		        <span className="sr-only">{T("Update server monitoring tables")}</span>
                       </Button>
                       <Button data-tooltip={T("Show server monitoring tables")}
                               data-position="right"
@@ -316,6 +317,7 @@ class EventMonitoring extends React.Component {
                               onClick={() => this.setState({showEventMonitoringPopup: true})}
                               variant="default">
                         <FontAwesomeIcon icon="binoculars"/>
+		        <span className="sr-only">{T("Show server monitoring tables")}</span>
                       </Button>
 
                     </>:
@@ -326,6 +328,7 @@ class EventMonitoring extends React.Component {
                               onClick={() => this.setState({showEventTableWizard: true})}
                               variant="default">
                         <FontAwesomeIcon icon="edit"/>
+		        <span className="sr-only">{T("Update client monitoring table")}</span>
                       </Button>
                       <Button data-tooltip={T("Show client monitoring tables")}
                               data-position="right"
@@ -333,6 +336,7 @@ class EventMonitoring extends React.Component {
                               onClick={() => this.setState({showEventMonitoringPopup: true})}
                               variant="default">
                         <FontAwesomeIcon icon="binoculars"/>
+		        <span className="sr-only">{T("Show client monitoring tables")}</span>
                       </Button>
                     </>
                   }
@@ -374,6 +378,7 @@ class EventMonitoring extends React.Component {
                             onClick={() => this.setState({showDeleteNotebook: true})}
                             variant="default">
                       <FontAwesomeIcon icon="trash"/>
+		      <span className="sr-only">{T("Delete Notebook")}</span>
                     </Button>
                   }
                   <Dropdown title="mode" variant="default">
