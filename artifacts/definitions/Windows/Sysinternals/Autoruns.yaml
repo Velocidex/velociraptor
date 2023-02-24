@@ -5,7 +5,7 @@ description: |
   Note this requires syncing the sysinternals binary from the host.
 
 tools:
-  - name: Autorun_x86
+  - name: Autorun_386
     url: https://live.sysinternals.com/tools/autorunsc.exe
     serve_locally: true
 
