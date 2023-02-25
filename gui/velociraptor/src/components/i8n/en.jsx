@@ -44,6 +44,7 @@ const English = {
     "VQL Drilldown": "VQL Drilldown",
     "Shell": "Shell",
     "Close": "Close",
+    "Search": "Search",
     "Connected": "Connected",
     "time_ago": (value, unit) => {
         return value + ' ' + unit + ' ago';

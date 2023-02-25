@@ -95,6 +95,7 @@ class VeloClientSearch extends Component {
                           onClick={() => this.setQuery(this.state.query)}
                           variant="default" type="submit">
                     <FontAwesomeIcon icon="search"/>
+		    <span className="sr-only">{T("Search")}</span>
                   </Button>
                   <Dropdown>
                     <Dropdown.Toggle variant="default">

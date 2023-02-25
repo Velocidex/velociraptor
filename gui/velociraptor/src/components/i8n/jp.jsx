@@ -93,6 +93,7 @@ const Japanese = {
     },
     "Create a new artifact": "新規アーティファクトを作成する",
     "Save": "保存",
+    "Search": "検索",
 
     // Keyboard navigation.
     "Global hotkeys": "グローバルホットキー",

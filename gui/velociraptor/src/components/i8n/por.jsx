@@ -96,6 +96,7 @@ const Portuguese = {
     },
     "Create a new artifact": "Criar um novo artefato",
     "Save": "Salvar",
+    "Search": "Procurar",
 
     // Navegação do teclado.
     "Global hotkeys": "Teclas de atalho globais",
