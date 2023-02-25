@@ -94,6 +94,7 @@ const Deutsch = {
     },
     "Create a new artifact": "Erstellen eines neuen Artefakt",
     "Save": "Speichern",
+    "Search": "Suchen",
 
     // Keyboard navigation.
     "Global hotkeys": "Globale Hotkeys",

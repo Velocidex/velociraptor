@@ -466,6 +466,7 @@ class FlowsList extends React.Component {
                           onClick={() => this.setState({showWizard: true})}
                           variant="default">
                     <FontAwesomeIcon icon="plus"/>
+		    <span className="sr-only">{T("New Collection")}</span>
                   </Button>
 
                   { client_id !== "server" &&
@@ -475,6 +476,7 @@ class FlowsList extends React.Component {
                             onClick={()=>this.setState({showAddToHunt: true})}
                             variant="default">
                       <FontAwesomeIcon icon="crosshairs"/>
+		    <span className="sr-only">{T("Add to hunt")}</span>
                     </Button>
                   }
                   <Button data-tooltip={T("Delete Artifact Collection")}
@@ -483,6 +485,7 @@ class FlowsList extends React.Component {
                           onClick={()=>this.setState({showDeleteWizard: true}) }
                           variant="default">
                     <FontAwesomeIcon icon="trash-alt"/>
+		    <span className="sr-only">{T("Delete Artifact Collection")}</span>
                   </Button>
 
                   <Button data-tooltip={T("Cancel Artifact Collection")}
@@ -493,6 +496,7 @@ class FlowsList extends React.Component {
                           onClick={this.cancelButtonClicked}
                           variant="default">
                     <FontAwesomeIcon icon="stop"/>
+		    <span className="sr-only">{T("Cancel Artifact Collection")}</span>
                   </Button>
 
                   <Button data-tooltip={T("Copy Collection")}
@@ -501,6 +505,7 @@ class FlowsList extends React.Component {
                           onClick={() => this.setState({showCopyWizard: true})}
                           variant="default">
                     <FontAwesomeIcon icon="copy"/>
+		    <span className="sr-only">{T("Copy Collection")}</span>
                   </Button>
                   <Button data-tooltip={T("Save Collection")}
                           data-position="right"
@@ -510,6 +515,7 @@ class FlowsList extends React.Component {
                           })}
                           variant="default">
                     <FontAwesomeIcon icon="save"/>
+		    <span className="sr-only">{T("Save Collection")}</span>
                   </Button>
 
                   { isServer &&
@@ -519,6 +525,7 @@ class FlowsList extends React.Component {
                             onClick={() => this.setState({showOfflineWizard: true})}
                             variant="default">
                       <FontAwesomeIcon icon="paper-plane"/>
+		      <span className="sr-only">{T("Build offline collector")}</span>
                     </Button>
                   }
 
@@ -531,6 +538,7 @@ class FlowsList extends React.Component {
                             disabled={true}
                             variant="outline-dark">
                       <FontAwesomeIcon icon="book"/>
+		      <span className="sr-only">{T("Notebooks")}</span>
                     </Button>
 
                     <Button data-tooltip={T("Full Screen")}
@@ -539,6 +547,7 @@ class FlowsList extends React.Component {
                             onClick={this.setFullScreen}
                             variant="default">
                       <FontAwesomeIcon icon="expand"/>
+		      <span className="sr-only">{T("Full Screen")}</span>
                     </Button>
 
                     <Button data-tooltip={T("Delete Notebook")}
@@ -547,6 +556,7 @@ class FlowsList extends React.Component {
                             onClick={() => this.setState({showDeleteNotebook: true})}
                             variant="default">
                       <FontAwesomeIcon icon="trash"/>
+		      <span className="sr-only">{T("Delete Notebook")}</span>
                     </Button>
 
                     <Button data-tooltip={T("Notebook Uploads")}
@@ -555,6 +565,7 @@ class FlowsList extends React.Component {
                             onClick={() => this.setState({showNotebookUploadsDialog: true})}
                             variant="default">
                       <FontAwesomeIcon icon="fa-file-download"/>
+		      <span className="sr-only">{T("Notebook Uploads")}</span>
                     </Button>
 
                     <Button data-tooltip={T("Export Notebook")}
@@ -563,6 +574,7 @@ class FlowsList extends React.Component {
                             onClick={() => this.setState({showExportNotebook: true})}
                             variant="default">
                       <FontAwesomeIcon icon="download"/>
+		      <span className="sr-only">{T("Export Notebook")}</span>
                     </Button>
 
                   </ButtonGroup>
