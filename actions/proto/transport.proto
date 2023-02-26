@@ -58,6 +58,13 @@ message FileBuffer {
     bool is_sparse = 9;
 
     bytes data = 3;
+
+    // For uploaders that do not transfer the bulk data inside the
+    // data field, we need a way to specify how much data was
+    // transferred in thie buffer. In the usual uploader this will be
+    // the len(data).
+    uint64 data_length = 16;
+
     string flow_id = 4;
     bool eof = 5;
 

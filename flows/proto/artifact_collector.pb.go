@@ -69,7 +69,7 @@ func (x ArtifactCollectorContext_State) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ArtifactCollectorContext_State.Descriptor instead.
 func (ArtifactCollectorContext_State) EnumDescriptor() ([]byte, []int) {
-	return file_artifact_collector_proto_rawDescGZIP(), []int{7, 0}
+	return file_artifact_collector_proto_rawDescGZIP(), []int{6, 0}
 }
 
 type ArtifactParameters struct {
@@ -578,80 +578,6 @@ func (x *PingContext) GetActiveTime() uint64 {
 	return 0
 }
 
-// Keep track of each individual query and its status - a collection
-// can contain multiple queries and artifacts some may fail and others
-// may succeed. We keep track of the total here.
-type QueryStats struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	QueryId           uint64 `protobuf:"varint,1,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
-	ExecutionDuration uint64 `protobuf:"varint,2,opt,name=execution_duration,json=executionDuration,proto3" json:"execution_duration,omitempty"`
-	Status            string `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
-	QueryName         string `protobuf:"bytes,4,opt,name=query_name,json=queryName,proto3" json:"query_name,omitempty"`
-}
-
-func (x *QueryStats) Reset() {
-	*x = QueryStats{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_artifact_collector_proto_msgTypes[6]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *QueryStats) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*QueryStats) ProtoMessage() {}
-
-func (x *QueryStats) ProtoReflect() protoreflect.Message {
-	mi := &file_artifact_collector_proto_msgTypes[6]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use QueryStats.ProtoReflect.Descriptor instead.
-func (*QueryStats) Descriptor() ([]byte, []int) {
-	return file_artifact_collector_proto_rawDescGZIP(), []int{6}
-}
-
-func (x *QueryStats) GetQueryId() uint64 {
-	if x != nil {
-		return x.QueryId
-	}
-	return 0
-}
-
-func (x *QueryStats) GetExecutionDuration() uint64 {
-	if x != nil {
-		return x.ExecutionDuration
-	}
-	return 0
-}
-
-func (x *QueryStats) GetStatus() string {
-	if x != nil {
-		return x.Status
-	}
-	return ""
-}
-
-func (x *QueryStats) GetQueryName() string {
-	if x != nil {
-		return x.QueryName
-	}
-	return ""
-}
-
 // This context is serialized into the data store. We keep track of
 // all aspects of a collection.
 type ArtifactCollectorContext struct {
@@ -706,7 +632,7 @@ type ArtifactCollectorContext struct {
 func (x *ArtifactCollectorContext) Reset() {
 	*x = ArtifactCollectorContext{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_artifact_collector_proto_msgTypes[7]
+		mi := &file_artifact_collector_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -719,7 +645,7 @@ func (x *ArtifactCollectorContext) String() string {
 func (*ArtifactCollectorContext) ProtoMessage() {}
 
 func (x *ArtifactCollectorContext) ProtoReflect() protoreflect.Message {
-	mi := &file_artifact_collector_proto_msgTypes[7]
+	mi := &file_artifact_collector_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -732,7 +658,7 @@ func (x *ArtifactCollectorContext) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ArtifactCollectorContext.ProtoReflect.Descriptor instead.
 func (*ArtifactCollectorContext) Descriptor() ([]byte, []int) {
-	return file_artifact_collector_proto_rawDescGZIP(), []int{7}
+	return file_artifact_collector_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *ArtifactCollectorContext) GetClientId() string {
@@ -923,7 +849,7 @@ type LabelEvents struct {
 func (x *LabelEvents) Reset() {
 	*x = LabelEvents{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_artifact_collector_proto_msgTypes[8]
+		mi := &file_artifact_collector_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -936,7 +862,7 @@ func (x *LabelEvents) String() string {
 func (*LabelEvents) ProtoMessage() {}
 
 func (x *LabelEvents) ProtoReflect() protoreflect.Message {
-	mi := &file_artifact_collector_proto_msgTypes[8]
+	mi := &file_artifact_collector_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -949,7 +875,7 @@ func (x *LabelEvents) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LabelEvents.ProtoReflect.Descriptor instead.
 func (*LabelEvents) Descriptor() ([]byte, []int) {
-	return file_artifact_collector_proto_rawDescGZIP(), []int{8}
+	return file_artifact_collector_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *LabelEvents) GetLabel() string {
@@ -979,7 +905,7 @@ type GetClientMonitoringStateRequest struct {
 func (x *GetClientMonitoringStateRequest) Reset() {
 	*x = GetClientMonitoringStateRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_artifact_collector_proto_msgTypes[9]
+		mi := &file_artifact_collector_proto_msgTypes[8]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -992,7 +918,7 @@ func (x *GetClientMonitoringStateRequest) String() string {
 func (*GetClientMonitoringStateRequest) ProtoMessage() {}
 
 func (x *GetClientMonitoringStateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_artifact_collector_proto_msgTypes[9]
+	mi := &file_artifact_collector_proto_msgTypes[8]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1005,7 +931,7 @@ func (x *GetClientMonitoringStateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetClientMonitoringStateRequest.ProtoReflect.Descriptor instead.
 func (*GetClientMonitoringStateRequest) Descriptor() ([]byte, []int) {
-	return file_artifact_collector_proto_rawDescGZIP(), []int{9}
+	return file_artifact_collector_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *GetClientMonitoringStateRequest) GetClientId() string {
@@ -1032,7 +958,7 @@ type ClientEventTable struct {
 func (x *ClientEventTable) Reset() {
 	*x = ClientEventTable{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_artifact_collector_proto_msgTypes[10]
+		mi := &file_artifact_collector_proto_msgTypes[9]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1045,7 +971,7 @@ func (x *ClientEventTable) String() string {
 func (*ClientEventTable) ProtoMessage() {}
 
 func (x *ClientEventTable) ProtoReflect() protoreflect.Message {
-	mi := &file_artifact_collector_proto_msgTypes[10]
+	mi := &file_artifact_collector_proto_msgTypes[9]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1058,7 +984,7 @@ func (x *ClientEventTable) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ClientEventTable.ProtoReflect.Descriptor instead.
 func (*ClientEventTable) Descriptor() ([]byte, []int) {
-	return file_artifact_collector_proto_rawDescGZIP(), []int{10}
+	return file_artifact_collector_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *ClientEventTable) GetVersion() uint64 {
@@ -1102,7 +1028,7 @@ type UploadedFileInfo struct {
 func (x *UploadedFileInfo) Reset() {
 	*x = UploadedFileInfo{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_artifact_collector_proto_msgTypes[11]
+		mi := &file_artifact_collector_proto_msgTypes[10]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -1115,7 +1041,7 @@ func (x *UploadedFileInfo) String() string {
 func (*UploadedFileInfo) ProtoMessage() {}
 
 func (x *UploadedFileInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_artifact_collector_proto_msgTypes[11]
+	mi := &file_artifact_collector_proto_msgTypes[10]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1128,7 +1054,7 @@ func (x *UploadedFileInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UploadedFileInfo.ProtoReflect.Descriptor instead.
 func (*UploadedFileInfo) Descriptor() ([]byte, []int) {
-	return file_artifact_collector_proto_rawDescGZIP(), []int{11}
+	return file_artifact_collector_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *UploadedFileInfo) GetName() string {
@@ -1256,16 +1182,7 @@ var file_artifact_collector_proto_rawDesc = []byte{
 	0x65, 0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65, 0x22, 0x2e, 0x0a,
 	0x0b, 0x50, 0x69, 0x6e, 0x67, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x78, 0x74, 0x12, 0x1f, 0x0a, 0x0b,
 	0x61, 0x63, 0x74, 0x69, 0x76, 0x65, 0x5f, 0x74, 0x69, 0x6d, 0x65, 0x18, 0x01, 0x20, 0x01, 0x28,
-	0x04, 0x52, 0x0a, 0x61, 0x63, 0x74, 0x69, 0x76, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x22, 0x8d, 0x01,
-	0x0a, 0x0a, 0x51, 0x75, 0x65, 0x72, 0x79, 0x53, 0x74, 0x61, 0x74, 0x73, 0x12, 0x19, 0x0a, 0x08,
-	0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x52, 0x07,
-	0x71, 0x75, 0x65, 0x72, 0x79, 0x49, 0x64, 0x12, 0x2d, 0x0a, 0x12, 0x65, 0x78, 0x65, 0x63, 0x75,
-	0x74, 0x69, 0x6f, 0x6e, 0x5f, 0x64, 0x75, 0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x04, 0x52, 0x11, 0x65, 0x78, 0x65, 0x63, 0x75, 0x74, 0x69, 0x6f, 0x6e, 0x44, 0x75,
-	0x72, 0x61, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73,
-	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x1d,
-	0x0a, 0x0a, 0x71, 0x75, 0x65, 0x72, 0x79, 0x5f, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x04, 0x20, 0x01,
-	0x28, 0x09, 0x52, 0x09, 0x71, 0x75, 0x65, 0x72, 0x79, 0x4e, 0x61, 0x6d, 0x65, 0x22, 0xa1, 0x0a,
+	0x04, 0x52, 0x0a, 0x61, 0x63, 0x74, 0x69, 0x76, 0x65, 0x54, 0x69, 0x6d, 0x65, 0x22, 0xa1, 0x0a,
 	0x0a, 0x18, 0x41, 0x72, 0x74, 0x69, 0x66, 0x61, 0x63, 0x74, 0x43, 0x6f, 0x6c, 0x6c, 0x65, 0x63,
 	0x74, 0x6f, 0x72, 0x43, 0x6f, 0x6e, 0x74, 0x65, 0x78, 0x74, 0x12, 0x1b, 0x0a, 0x09, 0x63, 0x6c,
 	0x69, 0x65, 0x6e, 0x74, 0x5f, 0x69, 0x64, 0x18, 0x1b, 0x20, 0x01, 0x28, 0x09, 0x52, 0x08, 0x63,
@@ -1397,7 +1314,7 @@ func file_artifact_collector_proto_rawDescGZIP() []byte {
 }
 
 var file_artifact_collector_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_artifact_collector_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_artifact_collector_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_artifact_collector_proto_goTypes = []interface{}{
 	(ArtifactCollectorContext_State)(0),     // 0: proto.ArtifactCollectorContext.State
 	(*ArtifactParameters)(nil),              // 1: proto.ArtifactParameters
@@ -1406,33 +1323,32 @@ var file_artifact_collector_proto_goTypes = []interface{}{
 	(*ArtifactCollectorResponse)(nil),       // 4: proto.ArtifactCollectorResponse
 	(*ArtifactUploadedFileInfo)(nil),        // 5: proto.ArtifactUploadedFileInfo
 	(*PingContext)(nil),                     // 6: proto.PingContext
-	(*QueryStats)(nil),                      // 7: proto.QueryStats
-	(*ArtifactCollectorContext)(nil),        // 8: proto.ArtifactCollectorContext
-	(*LabelEvents)(nil),                     // 9: proto.LabelEvents
-	(*GetClientMonitoringStateRequest)(nil), // 10: proto.GetClientMonitoringStateRequest
-	(*ClientEventTable)(nil),                // 11: proto.ClientEventTable
-	(*UploadedFileInfo)(nil),                // 12: proto.UploadedFileInfo
-	(*proto.VQLEnv)(nil),                    // 13: proto.VQLEnv
-	(*proto.VQLCollectorArgs)(nil),          // 14: proto.VQLCollectorArgs
-	(*proto1.VeloStatus)(nil),               // 15: proto.VeloStatus
-	(*proto1.LogMessage)(nil),               // 16: proto.LogMessage
-	(*proto1.VeloMessage)(nil),              // 17: proto.VeloMessage
+	(*ArtifactCollectorContext)(nil),        // 7: proto.ArtifactCollectorContext
+	(*LabelEvents)(nil),                     // 8: proto.LabelEvents
+	(*GetClientMonitoringStateRequest)(nil), // 9: proto.GetClientMonitoringStateRequest
+	(*ClientEventTable)(nil),                // 10: proto.ClientEventTable
+	(*UploadedFileInfo)(nil),                // 11: proto.UploadedFileInfo
+	(*proto.VQLEnv)(nil),                    // 12: proto.VQLEnv
+	(*proto.VQLCollectorArgs)(nil),          // 13: proto.VQLCollectorArgs
+	(*proto1.VeloStatus)(nil),               // 14: proto.VeloStatus
+	(*proto1.LogMessage)(nil),               // 15: proto.LogMessage
+	(*proto1.VeloMessage)(nil),              // 16: proto.VeloMessage
 }
 var file_artifact_collector_proto_depIdxs = []int32{
-	13, // 0: proto.ArtifactParameters.env:type_name -> proto.VQLEnv
+	12, // 0: proto.ArtifactParameters.env:type_name -> proto.VQLEnv
 	1,  // 1: proto.ArtifactSpec.parameters:type_name -> proto.ArtifactParameters
 	2,  // 2: proto.ArtifactCollectorArgs.specs:type_name -> proto.ArtifactSpec
-	14, // 3: proto.ArtifactCollectorArgs.compiled_collector_args:type_name -> proto.VQLCollectorArgs
+	13, // 3: proto.ArtifactCollectorArgs.compiled_collector_args:type_name -> proto.VQLCollectorArgs
 	3,  // 4: proto.ArtifactCollectorResponse.request:type_name -> proto.ArtifactCollectorArgs
 	3,  // 5: proto.ArtifactCollectorContext.request:type_name -> proto.ArtifactCollectorArgs
 	0,  // 6: proto.ArtifactCollectorContext.state:type_name -> proto.ArtifactCollectorContext.State
-	15, // 7: proto.ArtifactCollectorContext.query_stats:type_name -> proto.VeloStatus
+	14, // 7: proto.ArtifactCollectorContext.query_stats:type_name -> proto.VeloStatus
 	5,  // 8: proto.ArtifactCollectorContext.uploaded_files:type_name -> proto.ArtifactUploadedFileInfo
-	16, // 9: proto.ArtifactCollectorContext.logs:type_name -> proto.LogMessage
+	15, // 9: proto.ArtifactCollectorContext.logs:type_name -> proto.LogMessage
 	3,  // 10: proto.LabelEvents.artifacts:type_name -> proto.ArtifactCollectorArgs
 	3,  // 11: proto.ClientEventTable.artifacts:type_name -> proto.ArtifactCollectorArgs
-	9,  // 12: proto.ClientEventTable.label_events:type_name -> proto.LabelEvents
-	17, // 13: proto.ClientEventTable.client_message:type_name -> proto.VeloMessage
+	8,  // 12: proto.ClientEventTable.label_events:type_name -> proto.LabelEvents
+	16, // 13: proto.ClientEventTable.client_message:type_name -> proto.VeloMessage
 	14, // [14:14] is the sub-list for method output_type
 	14, // [14:14] is the sub-list for method input_type
 	14, // [14:14] is the sub-list for extension type_name
@@ -1519,18 +1435,6 @@ func file_artifact_collector_proto_init() {
 			}
 		}
 		file_artifact_collector_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*QueryStats); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_artifact_collector_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ArtifactCollectorContext); i {
 			case 0:
 				return &v.state
@@ -1542,7 +1446,7 @@ func file_artifact_collector_proto_init() {
 				return nil
 			}
 		}
-		file_artifact_collector_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+		file_artifact_collector_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*LabelEvents); i {
 			case 0:
 				return &v.state
@@ -1554,7 +1458,7 @@ func file_artifact_collector_proto_init() {
 				return nil
 			}
 		}
-		file_artifact_collector_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+		file_artifact_collector_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*GetClientMonitoringStateRequest); i {
 			case 0:
 				return &v.state
@@ -1566,7 +1470,7 @@ func file_artifact_collector_proto_init() {
 				return nil
 			}
 		}
-		file_artifact_collector_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+		file_artifact_collector_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*ClientEventTable); i {
 			case 0:
 				return &v.state
@@ -1578,7 +1482,7 @@ func file_artifact_collector_proto_init() {
 				return nil
 			}
 		}
-		file_artifact_collector_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+		file_artifact_collector_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*UploadedFileInfo); i {
 			case 0:
 				return &v.state
@@ -1597,7 +1501,7 @@ func file_artifact_collector_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_artifact_collector_proto_rawDesc,
 			NumEnums:      1,
-			NumMessages:   12,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

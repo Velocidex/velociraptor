@@ -160,6 +160,10 @@ func (self VQLClientAction) StartQuery(
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
+	// Allow VQL to gain access to the flow responder for low level
+	// functionality.
+	scope.SetContext("_Responder", responder)
+
 	if runtime.GOARCH == "386" &&
 		os.Getenv("PROCESSOR_ARCHITEW6432") == "AMD64" {
 		scope.Log("You are running a 32 bit built binary on Windows x64. " +
