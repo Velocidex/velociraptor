@@ -13,7 +13,8 @@
     },
     "size": 11,
     "stored_size": 11,
-    "data": "SGVsbG8gd29ybGQ="
+    "data": "SGVsbG8gd29ybGQ=",
+    "data_length": 11
    }
   },
   {
@@ -47,6 +48,7 @@
     "size": 11,
     "stored_size": 11,
     "data": "SGVsbG8gd29ybGQ=",
+    "data_length": 11,
     "upload_number": 1
    }
   },
@@ -82,6 +84,7 @@
     "size": 11,
     "stored_size": 11,
     "data": "SGVsbG8gd29ybGQ=",
+    "data_length": 11,
     "upload_number": 2
    }
   },
@@ -117,6 +120,7 @@
     "size": 11,
     "stored_size": 11,
     "data": "SGVsbG8gd29ybGQ=",
+    "data_length": 11,
     "upload_number": 3
    }
   },
@@ -152,6 +156,7 @@
     "size": 11,
     "stored_size": 11,
     "data": "SGVsbG8gd29ybGQ=",
+    "data_length": 11,
     "upload_number": 4
    }
   },

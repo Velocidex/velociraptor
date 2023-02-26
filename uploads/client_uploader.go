@@ -111,6 +111,7 @@ func (self *VelociraptorUploader) Upload(
 			Ctime:      ctime.UnixNano(),
 			Btime:      btime.UnixNano(),
 			Data:       data,
+			DataLength: uint64(len(data)),
 
 			// The number of the upload within the flow.
 			UploadNumber: upload_id,

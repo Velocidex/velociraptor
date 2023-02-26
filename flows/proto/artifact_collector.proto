@@ -119,16 +119,6 @@ message PingContext {
     uint64 active_time = 1;
 }
 
-// Keep track of each individual query and its status - a collection
-// can contain multiple queries and artifacts some may fail and others
-// may succeed. We keep track of the total here.
-message QueryStats {
-    uint64 query_id = 1;
-    uint64 execution_duration = 2;
-    string status = 3;
-    string query_name = 4;
-}
-
 // This context is serialized into the data store. We keep track of
 // all aspects of a collection.
 message ArtifactCollectorContext {
