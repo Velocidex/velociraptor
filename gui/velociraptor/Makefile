@@ -9,4 +9,7 @@ build: FORCE
 	echo > build/static/.keep
 	echo > build/.keep
 
+lint:
+	npm run lint
+
 FORCE: ;

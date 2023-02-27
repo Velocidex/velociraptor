@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { withRouter }  from "react-router-dom";
+import { withRouter, Link }  from "react-router-dom";
 import VeloTimestamp from "../utils/time.jsx";
 import ShellViewer from "./shell-viewer.jsx";
 import VeloReportViewer from "../artifacts/reporting.jsx";
@@ -21,14 +21,12 @@ import Spinner from '../utils/spinner.jsx';
 import Form from 'react-bootstrap/Form';
 import UserConfig from '../core/user.jsx';
 
-import { Link } from  "react-router-dom";
 import api from '../core/api-service.jsx';
 import axios from 'axios';
-import { parseCSV } from '../utils/csv.jsx';
+import { parseCSV, serializeCSV } from '../utils/csv.jsx';
 import "./host-info.css";
 import { runArtifact } from "../flows/utils.jsx";
 import T from '../i8n/i8n.jsx';
-import { serializeCSV } from '../utils/csv.jsx';
 
 
 const POLL_TIME = 5000;

@@ -10,7 +10,6 @@ import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
 import api from '../core/api-service.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import utils from './utils.jsx';
 import axios from 'axios';
 import T from '../i8n/i8n.jsx';
 
