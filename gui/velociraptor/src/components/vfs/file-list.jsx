@@ -3,10 +3,8 @@ import _ from 'lodash';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import classNames from "classnames";
-import BootstrapTable from 'react-bootstrap-table-next';
 
-import filterFactory from 'react-bootstrap-table2-filter';
-import { Link } from  "react-router-dom";
+import { Link, withRouter } from  "react-router-dom";
 
 import Navbar from 'react-bootstrap/Navbar';
 import Button from 'react-bootstrap/Button';
@@ -19,12 +17,9 @@ import { Join, EncodePathInURL } from '../utils/paths.jsx';
 import api from '../core/api-service.jsx';
 import axios from 'axios';
 
-import { withRouter }  from "react-router-dom";
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import T from '../i8n/i8n.jsx';
-import { formatColumns } from "../core/table.jsx";
 
 const POLL_TIME = 2000;
 

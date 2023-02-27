@@ -7,7 +7,6 @@ import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
 import Dropdown from 'react-bootstrap/Dropdown';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { formatColumns } from "../core/table.jsx";
 import { requestToParameters } from "./utils.jsx";
 import Spinner from '../utils/spinner.jsx';
 import Button from 'react-bootstrap/Button';

@@ -3,20 +3,14 @@ import PropTypes from 'prop-types';
 
 import _ from 'lodash';
 import axios from 'axios';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-
-import classNames from "classnames";
 
 import TreeView from '../utils/tree/tree.jsx';
 
 import UserConfig from '../core/user.jsx';
-import { SplitPathComponents, Join } from '../utils/paths.jsx';
+import { EncodePathInURL, DecodePathInURL, SplitPathComponents, Join } from '../utils/paths.jsx';
 
 import api from '../core/api-service.jsx';
 import { withRouter }  from "react-router-dom";
-
-import { EncodePathInURL, DecodePathInURL } from '../utils/paths.jsx';
-
 
 class VeloFileTree extends Component {
     static contextType = UserConfig;

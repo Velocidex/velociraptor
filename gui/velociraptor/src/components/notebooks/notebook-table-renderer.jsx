@@ -18,4 +18,4 @@ export default class NotebookTableRenderer extends React.Component {
                  params={this.props.params}
                />;
     }
-};
+}

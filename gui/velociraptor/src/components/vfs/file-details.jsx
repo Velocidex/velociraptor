@@ -7,7 +7,6 @@ import T from '../i8n/i8n.jsx';
 import VeloFileStats from './file-stats.jsx';
 import FileHexView from './file-hex-view.jsx';
 import FileTextView from './file-text-view.jsx';
-import utils from './utils.jsx';
 import Tabs from 'react-bootstrap/Tabs';
 import Tab from 'react-bootstrap/Tab';
 
@@ -67,4 +66,4 @@ export default class VeloFileDetails extends React.Component {
             </div>
         );
     }
-};
+}

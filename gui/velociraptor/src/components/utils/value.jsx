@@ -118,4 +118,4 @@ export default class VeloValueRenderer extends React.Component {
             </ContextMenu>
         );
     }
-};
+}
