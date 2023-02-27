@@ -369,6 +369,11 @@ func (self UserManager) GetUserOptions(ctx context.Context, username string) (
 	options.DisableServerEvents = defaults.DisableServerEvents
 	options.DisableQuarantineButton = defaults.DisableQuarantineButton
 
+	// Specify a default theme if specified in the config file.
+	if options.Theme == "" {
+		options.Theme = defaults.DefaultTheme
+	}
+
 	return options, nil
 }
 

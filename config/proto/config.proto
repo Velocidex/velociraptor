@@ -940,6 +940,7 @@ message Defaults {
     bool disable_server_events = 26;
     string auth_redirect_template = 27;
     bool disable_quarantine_button = 28;
+    string default_theme = 29;
 }
 
 // Configures crypto preferences
