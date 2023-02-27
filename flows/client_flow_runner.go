@@ -245,6 +245,8 @@ func (self *ClientFlowRunner) FileBuffer(
 
 	// Keep track of all the files we uploaded.
 	if file_buffer.Offset == 0 {
+
+		// Truncate the file on first buffer received.
 		err = fd.Truncate()
 		if err != nil {
 			return err
@@ -259,8 +261,6 @@ func (self *ClientFlowRunner) FileBuffer(
 		if err != nil {
 			return err
 		}
-		defer rs_writer.Close()
-
 		rs_writer.Write(ordereddict.NewDict().
 			Set("Timestamp", utils.GetTime().Now().UTC().Unix()).
 			Set("started", utils.GetTime().Now().UTC().String()).
@@ -274,18 +274,31 @@ func (self *ClientFlowRunner) FileBuffer(
 			Set("_client_components", file_buffer.Pathspec.Components).
 			Set("uploaded_size", file_buffer.StoredSize))
 
-		// Additional row for sparse files
-		if file_buffer.Index != nil {
-			rs_writer.Write(ordereddict.NewDict().
-				Set("Timestamp", time.Now().UTC().Unix()).
-				Set("started", time.Now().UTC().String()).
-				Set("vfs_path", file_path_manager.VisibleVFSPath()+".idx").
-				Set("_Components", file_path_manager.Path().Components()).
-				Set("_accessor", file_buffer.Pathspec.Accessor).
-				Set("_client_components", file_buffer.Pathspec.Components).
-				Set("file_size", file_buffer.Size).
-				Set("uploaded_size", file_buffer.StoredSize))
+		rs_writer.Close()
+	}
+
+	// Additional row for sparse files
+	if file_buffer.Index != nil {
+		rs_writer, err := result_sets.NewResultSetWriter(
+			file_store_factory, flow_path_manager.UploadMetadata(),
+			json.DefaultEncOpts(),
+			self.completer.GetCompletionFunc(),
+			result_sets.AppendMode)
+		if err != nil {
+			return err
 		}
+
+		rs_writer.Write(ordereddict.NewDict().
+			Set("Timestamp", time.Now().UTC().Unix()).
+			Set("started", time.Now().UTC().String()).
+			Set("vfs_path", file_path_manager.VisibleVFSPath()+".idx").
+			Set("_Components", file_path_manager.Path().Components()).
+			Set("_accessor", file_buffer.Pathspec.Accessor).
+			Set("_client_components", file_buffer.Pathspec.Components).
+			Set("file_size", file_buffer.Size).
+			Set("uploaded_size", file_buffer.StoredSize))
+
+		rs_writer.Close()
 	}
 
 	_, err = fd.Write(file_buffer.Data)

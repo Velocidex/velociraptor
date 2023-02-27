@@ -317,6 +317,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 				IsSparse:     is_sparse,
 				Mtime:        mtime.UnixNano(),
 				Data:         data,
+				DataLength:   uint64(len(data)),
 				UploadNumber: upload_id,
 			}
 
