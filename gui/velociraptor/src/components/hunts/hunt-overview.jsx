@@ -17,7 +17,6 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import T from '../i8n/i8n.jsx';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { formatColumns } from "../core/table.jsx";
 import api from '../core/api-service.jsx';
 import axios from 'axios';
 import { requestToParameters } from "../flows/utils.jsx";

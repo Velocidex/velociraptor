@@ -10,7 +10,7 @@ import { withRouter }  from "react-router-dom";
 import T from '../i8n/i8n.jsx';
 import api from '../core/api-service.jsx';
 import VeloClientStatusIcon from "./client-status.jsx";
-import { formatColumns } from "../core/table.jsx";
+import { formatColumns, sizePerPageRenderer } from "../core/table.jsx";
 import filterFactory from 'react-bootstrap-table2-filter';
 import BootstrapTable from 'react-bootstrap-table-next';
 import Spinner from '../utils/spinner.jsx';
@@ -26,7 +26,6 @@ import Pagination from 'react-bootstrap/Pagination';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import Alert from 'react-bootstrap/Alert';
 
-import { sizePerPageRenderer } from '../core/table.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 

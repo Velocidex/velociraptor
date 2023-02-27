@@ -6,9 +6,8 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 
 import classNames from "classnames";
-import VeloAce from '../core/ace.jsx';
+import VeloAce, { SettingsButton } from '../core/ace.jsx';
 import NotebookReportRenderer from './notebook-report-renderer.jsx';
-import { SettingsButton } from '../core/ace.jsx';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import Dropdown from 'react-bootstrap/Dropdown';

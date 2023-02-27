@@ -15,12 +15,10 @@ import { EventTableWizard, ServerEventTableWizard } from './event-table.jsx';
 import Container from  'react-bootstrap/Container';
 import VeloReportViewer from "../artifacts/reporting.jsx";
 import Modal from 'react-bootstrap/Modal';
-import VeloAce from '../core/ace.jsx';
-import { SettingsButton } from '../core/ace.jsx';
+import VeloAce, { SettingsButton } from '../core/ace.jsx';
 import VeloTimestamp from "../utils/time.jsx";
 import EventTimelineViewer from "./timeline-viewer.jsx";
-import EventNotebook from "./event-notebook.jsx";
-import { get_notebook_id} from "./event-notebook.jsx";
+import EventNotebook, { get_notebook_id } from "./event-notebook.jsx";
 import DeleteNotebookDialog from '../notebooks/notebook-delete.jsx';
 import T from '../i8n/i8n.jsx';
 

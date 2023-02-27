@@ -69,6 +69,7 @@
     "scripts": {
         "build": "vite build",
         "start": "vite serve",
+	"lint": "eslint . --ext .js,.jsx",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "watch": {
@@ -95,13 +96,15 @@
         ]
     },
     "devDependencies": {
-        "@babel/eslint-parser": "^7.19.1",
-        "@testing-library/react": "12",
-        "@vitejs/plugin-react": "^3.0.0",
-        "eslint": "^8.29.0",
-        "eslint-config-react-app": "^7.0.1",
-        "eslint-plugin-flowtype": "^8.0.3",
-        "vite": "^4.0.1",
-        "vite-plugin-compression": "^0.5.1"
+	"@babel/eslint-parser": "^7.19.1",
+	"@babel/preset-react": "^7.18.6",
+	"@testing-library/react": "12",
+	"@vitejs/plugin-react": "^3.0.0",
+	"eslint": "^8.35.0",
+	"eslint-plugin-import": "^2.27.5",
+	"eslint-plugin-jsx-a11y": "^6.7.1",
+	"eslint-plugin-react": "^7.32.2",
+	"vite": "^4.0.1",
+	"vite-plugin-compression": "^0.5.1"
     }
 }

@@ -78,7 +78,7 @@ class VFSViewer extends Component {
             </SplitPane>
             </>
         );
-    };
+    }
 }
 
 export default VFSViewer;

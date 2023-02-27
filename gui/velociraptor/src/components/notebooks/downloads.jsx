@@ -23,7 +23,7 @@ export default class AvailableDownloads extends Component {
                 vfs_path: row.path,
             }, {arrayFormat: 'brackets'})}  target="_blank" download
                       rel="noopener noreferrer">{row.name}</a>;
-        };
+        }
         return <>
                  <FontAwesomeIcon icon="spinner" spin/>
                  <span className="button-label">{row.name}</span>

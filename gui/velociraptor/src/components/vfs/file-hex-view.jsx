@@ -4,7 +4,6 @@ import _ from 'lodash';
 import api from '../core/api-service.jsx';
 import Pagination from '../bootstrap/pagination/index.jsx';
 import Spinner from '../utils/spinner.jsx';
-import utils from './utils.jsx';
 import axios from 'axios';
 import "./file-hex-view.css";
 import T from '../i8n/i8n.jsx';

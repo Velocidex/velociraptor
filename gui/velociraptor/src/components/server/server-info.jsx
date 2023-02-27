@@ -3,7 +3,7 @@ import React, { Component } from 'react';
 import _ from 'lodash';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { withRouter }  from "react-router-dom";
+import { withRouter, Link }  from "react-router-dom";
 import ShellViewer from "../clients/shell-viewer.jsx";
 import VeloForm from '../forms/form.jsx';
 
@@ -12,7 +12,6 @@ import ToggleButton from 'react-bootstrap/ToggleButton';
 import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
 
-import { Link } from  "react-router-dom";
 import api from '../core/api-service.jsx';
 import axios from 'axios';
 import { parseCSV } from '../utils/csv.jsx';
