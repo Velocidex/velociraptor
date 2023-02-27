@@ -308,6 +308,7 @@ export default class PreviewUpload extends Component {
         let params = {
             offset: 0,
             length: 100,
+            padding: this.props.upload.Padding,
             fs_components: normalizeComponentList(
                 components, client_id, flow_id, accessor),
             client_id: client_id,

@@ -51,14 +51,13 @@ class ClientSetterFromRoute extends Component {
                 client_id: client_id,
             });
 
-            api.get('/v1/SearchClients', {
-                query: client_id,
-            }, this.source.token).then(resp => {
-                if (resp.data && resp.data.items) {
-                    window.globals.client = resp.data.items[0];
-                    this.props.setClient(resp.data.items[0]);
-                }
-            });
+            api.get('v1/GetClient/' + client_id, {},
+                    this.source.token).then(resp => {
+                        if (resp.data && resp.data.items) {
+                            window.globals.client = resp.data;
+                            this.props.setClient(resp.data);
+                        }
+                    });
         }
     }
 

@@ -117,10 +117,12 @@ export default class FlowUploads extends React.Component {
                 let flow_id = this.props.flow && this.props.flow.session_id;
                 let components = normalizeComponentList(
                     row._Components, client_id, flow_id);
+                let padding = row.vfs_path && row.vfs_path.endsWith(".idx");
                 return <PreviewUpload
                          env={{client_id: client_id, flow_id: flow_id}}
                          upload={{Path: row.vfs_path,
                                   Timestamp: row.started,
+                                  Padding: padding,
                                   Size: row.uploaded_size || row.file_size,
                                   Components: components}} />;
             },

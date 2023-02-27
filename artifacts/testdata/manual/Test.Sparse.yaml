@@ -1,0 +1,13 @@
+name: Test.Sparse
+description: Test that sparse uploads are properly stored and processed.
+sources:
+  - query: |
+      -- Create a sparse file in memory.
+      LET FileName = pathspec(
+         DelegateAccessor="data",
+         DelegatePath="The quick red fox jumped oved the lazy",
+         Path=[dict(Offset=0,Length=5), dict(Offset=10,Length=5)])
+
+      -- Upload to the server
+      SELECT upload(accessor="sparse", file=FileName, name="X.txt")
+      FROM scope()
