@@ -34,6 +34,9 @@ message Version {
             description: "When the client was built."
         }];
 
+    // Populated by reading the writeback file.
+    uint64 install_time = 8;
+
     string ci_build_url = 6;
 
     string compiler = 7;
@@ -41,6 +44,10 @@ message Version {
 
 // The client's state which are persisted in the writeback file.
 message Writeback {
+    // When the client was installed (basically the timestamp of the
+    // writeback file).
+    uint64 install_time = 16;
+
     string private_key = 7 [(sem_type) = {
             description: "The client's private key in PEM encoding."
         }];

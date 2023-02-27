@@ -27,6 +27,7 @@ sources:
                config.Version.BuildTime as BuildTime,
                config.Version.Version as Version,
                config.Version.ci_build_url AS build_url,
+               config.Version.install_time as install_time,
                config.Labels AS Labels,
                Hostname, OS, Architecture,
                Platform, PlatformVersion, KernelVersion, Fqdn,
