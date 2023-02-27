@@ -44,6 +44,8 @@ import (
 	"time"
 
 	"github.com/go-errors/errors"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"google.golang.org/protobuf/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -54,6 +56,13 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
+)
+
+var (
+	inventoryTotalLoad = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "inventory_service_total_file_load",
+		Help: "Total number of times we synced from the filestore.",
+	})
 )
 
 type HTTPClient interface {
@@ -445,6 +454,11 @@ func (self *InventoryService) LoadFromFile(config_obj *config_proto.Config) erro
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	inventoryTotalLoad.Inc()
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("InventoryService: Reloading inventory from file")
+
 	inventory := &artifacts_proto.ThirdParty{}
 
 	db, err := datastore.GetDB(config_obj)
@@ -523,15 +537,18 @@ func NewInventoryService(
 
 			select {
 			case <-ctx.Done():
+				cancel()
 				return
 
 			case <-notification:
+				cancel()
 				err := inventory_service.LoadFromFile(config_obj)
 				if err != nil {
 					logger.Error("StartInventoryService: %v", err)
 				}
 
 			case <-time.After(600 * time.Second):
+				cancel()
 				err := inventory_service.LoadFromFile(config_obj)
 				if err != nil {
 					logger.Error("StartInventoryService: %v", err)

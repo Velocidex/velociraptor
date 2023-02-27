@@ -145,6 +145,7 @@ message ApiUser {
 message GUICustomizations {
     bool disable_server_events = 1;
     bool disable_user_management = 2;
+    bool disable_quarantine_button = 3;
 }
 
 message SetGUIOptionsRequest {
@@ -167,7 +168,8 @@ message SetGUIOptionsRequest {
 
     repeated GUILink links = 9;
 
-    // Optional features of the UI to disable.
+    // Optional features of the UI to disable:
+    // TODO: Move to GUICustomizations.
     bool disable_server_events = 26;
     string auth_redirect_template = 27;
     bool disable_quarantine_button = 28;
