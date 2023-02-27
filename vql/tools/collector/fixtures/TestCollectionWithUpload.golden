@@ -41,7 +41,7 @@
     },
     "SparseUpload": {
      "Path": "{\"DelegateAccessor\":\"data\",\"DelegatePath\":\"This is...",
-     "Size": 21,
+     "Size": 13,
      "StoredSize": 8,
      "sha256": "d2bc3dd9279837fd268d82ea397b6980dee5ae462464493c80f495786b4025c2",
      "md5": "f55a5cc260e3fc562d841a2f6d2b7d22",
@@ -73,7 +73,7 @@
     "_ts": 1602103388,
     "client_time": 1602103388,
     "level": "DEFAULT",
-    "message": "Collecting file {\"DelegateAccessor\":\"data\",\"DelegatePath\":\"This is... into /uploads/sparse/C%3A/file.sparse.txt (21 bytes)\n"
+    "message": "Collecting file {\"DelegateAccessor\":\"data\",\"DelegatePath\":\"This is... into /uploads/sparse/C%3A/file.sparse.txt (13 bytes)\n"
    },
    {
     "_ts": 1602103388,
@@ -129,7 +129,7 @@
      "C:",
      "file.sparse.txt"
     ],
-    "file_size": 21,
+    "file_size": 13,
     "uploaded_size": 8,
     "Type": ""
    }
@@ -139,5 +139,5 @@
   "Custom.TestArtifactUpload"
  ],
  "total_uploaded_files": 3,
- "Imported upload.json": "{\"Timestamp\":\"2020-10-07T20:43:08Z\",\"started\":\"2020-10-07 20:43:08 +0000 UTC\",\"vfs_path\":\"data\",\"_Components\":[\"uploads\",\"data\",\"file.db\"],\"file_size\":11,\"uploaded_size\":11,\"Type\":\"\"}\n{\"Timestamp\":\"2020-10-07T20:43:08Z\",\"started\":\"2020-10-07 20:43:08 +0000 UTC\",\"vfs_path\":\"{\\\"DelegateAccessor\\\":\\\"data\\\",\\\"DelegatePath\\\":\\\"This is....idx\",\"_Components\":[\"uploads\",\"sparse\",\"C:\",\"file.sparse.txt\"],\"file_size\":156,\"uploaded_size\":156,\"Type\":\"idx\"}\n{\"Timestamp\":\"2020-10-07T20:43:08Z\",\"started\":\"2020-10-07 20:43:08 +0000 UTC\",\"vfs_path\":\"{\\\"DelegateAccessor\\\":\\\"data\\\",\\\"DelegatePath\\\":\\\"This is...\",\"_Components\":[\"uploads\",\"sparse\",\"C:\",\"file.sparse.txt\"],\"file_size\":21,\"uploaded_size\":8,\"Type\":\"\"}\n"
+ "Imported upload.json": "{\"Timestamp\":\"2020-10-07T20:43:08Z\",\"started\":\"2020-10-07 20:43:08 +0000 UTC\",\"vfs_path\":\"data\",\"_Components\":[\"uploads\",\"data\",\"file.db\"],\"file_size\":11,\"uploaded_size\":11,\"Type\":\"\"}\n{\"Timestamp\":\"2020-10-07T20:43:08Z\",\"started\":\"2020-10-07 20:43:08 +0000 UTC\",\"vfs_path\":\"{\\\"DelegateAccessor\\\":\\\"data\\\",\\\"DelegatePath\\\":\\\"This is....idx\",\"_Components\":[\"uploads\",\"sparse\",\"C:\",\"file.sparse.txt\"],\"file_size\":156,\"uploaded_size\":156,\"Type\":\"idx\"}\n{\"Timestamp\":\"2020-10-07T20:43:08Z\",\"started\":\"2020-10-07 20:43:08 +0000 UTC\",\"vfs_path\":\"{\\\"DelegateAccessor\\\":\\\"data\\\",\\\"DelegatePath\\\":\\\"This is...\",\"_Components\":[\"uploads\",\"sparse\",\"C:\",\"file.sparse.txt\"],\"file_size\":13,\"uploaded_size\":8,\"Type\":\"\"}\n"
 }
