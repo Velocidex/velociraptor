@@ -235,6 +235,9 @@ class VeloHostInfo extends Component {
         if (client_id) {
             api.get("v1/GetClient/" + client_id, params, this.source.token).then(
                 response=>{
+                    if (!response.data || response.data.client_id !== client_id) {
+                        return false;
+                    }
                     this.setState({loading: false});
                     return this.props.setClient(response.data);
                 }, this.source);
