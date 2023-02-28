@@ -26,6 +26,7 @@ import (
 	"github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Embed build time constants into here for reporting client version.
@@ -205,6 +206,7 @@ func GetDefaultConfig() *config_proto.Config {
 	// server's version.
 	result.Client.Version = GetVersion()
 	result.Version = result.Client.Version
+	result.Client.Version.InstallTime = uint64(utils.GetTime().Now().Unix())
 
 	// On windows we need slightly different defaults.
 	if runtime.GOOS == "windows" {

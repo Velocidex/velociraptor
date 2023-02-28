@@ -62,6 +62,11 @@ func ValidateClientConfig(config_obj *config_proto.Config) error {
 	config_obj.Version = GetVersion()
 	config_obj.Client.Version = config_obj.Version
 
+	writeback, err := GetWriteback(config_obj.Client)
+	if err == nil {
+		config_obj.Client.Version.InstallTime = writeback.InstallTime
+	}
+
 	for _, url := range config_obj.Client.ServerUrls {
 		if !strings.HasSuffix(url, "/") {
 			return errors.New(
