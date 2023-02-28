@@ -29,6 +29,16 @@ export default class VeloClientSummary extends Component {
         clearInterval(this.interval);
     }
 
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
+        let old_client_id = prevProps.client && prevProps.client.client_id;
+        let new_client_id = this.props.client && this.props.client.client_id;
+        if (old_client_id !== new_client_id) {
+            clearInterval(this.interval);
+            this.interval = setInterval(this.getClientInfo, POLL_TIME);
+            this.getClientInfo();
+        }
+    }
+
     getClientInfo = () => {
         this.source.cancel();
         this.source = axios.CancelToken.source();

@@ -57,7 +57,7 @@ type _SplunkPluginArgs struct {
 	WaitTime       int64               `vfilter:"optional,field=wait_time,doc=Batch splunk upload this long (2 sec)."`
 	Hostname       string              `vfilter:"optional,field=hostname,doc=Hostname for Splunk Events. Defaults to server hostname."`
 	TimestampField string              `vfilter:"optional,field=timestamp_field,doc=Field to use as event timestamp."`
-	HostnameField  string              `vfilter:"optional,field=hostname_field,doc=Field to use as event hostname. Overrides hostname param."`
+	HostnameField  string              `vfilter:"optional,field=hostname_field,doc=Field to use as event hostname. Overrides hostname parameter."`
 }
 
 type _SplunkPlugin struct{}

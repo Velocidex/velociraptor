@@ -17,7 +17,7 @@ type allState struct {
 }
 
 type _AllFunctionArgs struct {
-	Items  vfilter.Any     `vfilter:"required,field=items,doc=The items to consider. Can be an array, subquery or stored query. Will only be lazily evaluted!"`
+	Items  vfilter.Any     `vfilter:"required,field=items,doc=The items to consider. Can be an array, subquery or stored query. Will only be lazily evaluated!"`
 	Filter *vfilter.Lambda `vfilter:"optional,field=filter,doc=A callback to consider each item"`
 	Regex  []string        `vfilter:"optional,field=regex,doc=Optionally one or more regex can be provided for convenience"`
 }
