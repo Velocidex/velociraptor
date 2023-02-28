@@ -41,8 +41,8 @@ type CreateFlowDownloadArgs struct {
 	ClientId     string `vfilter:"required,field=client_id,doc=Client ID to export."`
 	FlowId       string `vfilter:"required,field=flow_id,doc=The flow id to export."`
 	Wait         bool   `vfilter:"optional,field=wait,doc=If set we wait for the download to complete before returning."`
-	Type         string `vfilter:"optional,field=type,doc=Type of download to create (deperated Ignored)."`
-	Template     string `vfilter:"optional,field=template,doc=Report template to use (deperated Ignored)."`
+	Type         string `vfilter:"optional,field=type,doc=Type of download to create (deprecated Ignored)."`
+	Template     string `vfilter:"optional,field=template,doc=Report template to use (deprecated Ignored)."`
 	Password     string `vfilter:"optional,field=password,doc=An optional password to encrypt the collection zip."`
 	Format       string `vfilter:"optional,field=format,doc=Format to export (csv,json,csv_only) defaults to both."`
 	ExpandSparse bool   `vfilter:"optional,field=expand_sparse,doc=If set we expand sparse files in the archive."`

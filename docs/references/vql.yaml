@@ -33,7 +33,7 @@
   - name: items
     type: Any
     description: The items to consider. Can be an array, subquery or stored query.
-      Will only be lazily evaluted!
+      Will only be lazily evaluated!
     required: true
   - name: filter
     type: vfilter.Lambda
@@ -61,7 +61,7 @@
   - name: items
     type: Any
     description: The items to consider. Can be an array, subquery or stored query.
-      Will only be lazily evaluted!
+      Will only be lazily evaluated!
     required: true
   - name: filter
     type: vfilter.Lambda
@@ -821,10 +821,10 @@
     description: If set we wait for the download to complete before returning.
   - name: type
     type: string
-    description: Type of download to create (deperated Ignored).
+    description: Type of download to create (deprecated Ignored).
   - name: template
     type: string
-    description: Report template to use (deperated Ignored).
+    description: Report template to use (deprecated Ignored).
   - name: password
     type: string
     description: An optional password to encrypt the collection zip.
@@ -1959,8 +1959,8 @@
   args:
   - name: all_orgs
     type: bool
-    description: If set we enumberate permission for all orgs, otherwise just for
-      this org.
+    description: If set we enumerate permission for all orgs, otherwise just for this
+      org.
   category: server
 - name: gunzip
   description: Apply Gunzip to the data.
@@ -2687,8 +2687,48 @@
     required: true
   category: basic
 - name: log
-  description: Log the message.
+  description: |
+    Log the message and return TRUE.
+
+    The message will be logged into the query log stream (Viewable in
+    the Logs tab). The `message` parameter represents a format string
+    that will be expanded using the `args` parameter list if needed.
+
+    Since `log()` always returns TRUE it is easy to use in a WHERE
+    clause as a form of debugging (It is basically equivalent to the
+    print statement of other languages).
+
+    ```sql
+    SELECT * FROM glob(...)
+    WHERE log(message="Value of OSPath is %v", args=OSPath)
+    ```
+
+    ## Deduplication
+
+    Log messages will be deduped according to the `dedup`
+    parameter - each distinct format string will not be emitted more
+    frequently than the `dedup` parameter (by default 60 seconds).
+
+    This makes it safe to use `log()` frequently without overflowing
+    the logs stream.
+
+    ```vql
+    SELECT * FROM range(end=_value)
+    WHERE log(message="Value is %v", args=_value)
+    ```
+
+    Will only emit a single message due to the format string being
+    deduped.
+
+    This property makes it useful to add progress logging to long
+    running artifacts. The logs will be emitted every minute.
+
+    ```vql
+    SELECT * FROM glob(...)
+    WHERE log(message="Processing file %v", args=OSPath)
+    ```
   type: Function
+  version: 2
   args:
   - name: message
     type: string
@@ -3561,6 +3601,9 @@
   - name: prefix
     type: accessors.OSPath
     description: If specified we prefix all paths with this path.
+  - name: start
+    type: int64
+    description: The first entry to scan.
   category: parsers
 - name: parse_ntfs
   description: |
@@ -4955,7 +4998,7 @@
     description: Field to use as event timestamp.
   - name: hostname_field
     type: string
-    description: Field to use as event hostname. Overrides hostname param.
+    description: Field to use as event hostname. Overrides hostname parameter.
   category: server
 - name: sql
   description: Run queries against sqlite, mysql, and postgres databases
@@ -6087,7 +6130,7 @@
     `wide ascii`, `wide nocase`, `wide nocase ascii`.
 
     This shorthand notation is less useful because recent Velociraptor
-    versions offer a context sensivite Yara rule editor in the GUI
+    versions offer a context sensitive Yara rule editor in the GUI
     (simply press ? to bring up a rule template).
 
     {{% notice note %}}
