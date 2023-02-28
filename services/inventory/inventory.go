@@ -520,42 +520,42 @@ func NewInventoryService(
 		inventory_service.parent = root_inventory_service
 	}
 
-	notifier, err := services.GetNotifier(config_obj)
+	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return nil, err
 	}
+
+	// Reload the inventory_service when another server wakes us up.
+	row_chan, cancel := journal.Watch(ctx,
+		"Server.Internal.Inventory", "InventoryService")
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		defer inventory_service.Close()
+		defer cancel()
 
 		for {
-			// Watch for notifications that the inventory is changed.
-			notification, cancel := notifier.ListenForNotification(
-				"Server.Internal.Inventory")
-
 			select {
 			case <-ctx.Done():
-				cancel()
 				return
 
-			case <-notification:
-				cancel()
+			case _, ok := <-row_chan:
+				if !ok {
+					return
+				}
+
 				err := inventory_service.LoadFromFile(config_obj)
 				if err != nil {
 					logger.Error("StartInventoryService: %v", err)
 				}
 
 			case <-time.After(600 * time.Second):
-				cancel()
 				err := inventory_service.LoadFromFile(config_obj)
 				if err != nil {
 					logger.Error("StartInventoryService: %v", err)
 				}
 			}
-
-			cancel()
 		}
 	}()
 
