@@ -118,7 +118,6 @@ github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a/go.mod h1:ukJBuruT9
 github.com/Velocidex/ordereddict v0.0.0-20200723153557-9460a6764ab8/go.mod h1:pxJpvN5ISMtDwrdIdqnJ3ZrjIngCw+WT6gfNil6Zjvo=
 github.com/Velocidex/ordereddict v0.0.0-20211223082514-572009c595d0/go.mod h1:USioSRAHYrnbOEZvFUX5Puw3BBWl42kVg8D9xuZOEwA=
 github.com/Velocidex/ordereddict v0.0.0-20220107075049-3dbe58412844/go.mod h1:Y5Tfx5SKGOzkulpqfonrdILSPIuNg+GqKE/DhVJgnpg=
-github.com/Velocidex/ordereddict v0.0.0-20220428153415-da46091cd216/go.mod h1:XJDUbaGh2U9e0z78L5O2OXf1hE1wSxnJ7nSlQmA+bIs=
 github.com/Velocidex/ordereddict v0.0.0-20221110130714-6a7cb85851cd h1:GA/Aogkc2wf0RCvjiSXIILg2WqGoSb5OsozwX3gvZFY=
 github.com/Velocidex/ordereddict v0.0.0-20221110130714-6a7cb85851cd/go.mod h1:+MqO5UMBemyFSm+yRXslbpFTwPUDhFHUf7HPV92twg4=
 github.com/Velocidex/pkcs7 v0.0.0-20210524015001-8d1eee94a157/go.mod h1:/fy/Eg4TQz9KkJduvZfGCnbWTQ/LKaknS2wYB52cU6c=
@@ -1236,8 +1235,8 @@ www.velocidex.com/golang/go-ese v0.1.1-0.20220107095505-c38622559671/go.mod h1:q
 www.velocidex.com/golang/go-ntfs v0.1.2-0.20230221030709-f91b68ac3222 h1:HcMVGo7mIEfms1XMruzsqJSAOPdQRGHz6ip+cXjIeXg=
 www.velocidex.com/golang/go-ntfs v0.1.2-0.20230221030709-f91b68ac3222/go.mod h1:itvbHQcnLdTVIDY6fI3lR0zeBwXwBYBdUFtswE0x1vc=
 www.velocidex.com/golang/go-pe v0.1.1-0.20220107093716-e91743c801de/go.mod h1:j9Xy8Z9wxzY2SCB8CqDkkoSzy+eUwevnOrRm/XM2q/A=
-www.velocidex.com/golang/go-pe v0.1.1-0.20230221012148-9abf830a16b4 h1:Ev2mJ922a3R+ym2sZRca7ANb/t4KCLoIUsNgSsAPjl4=
-www.velocidex.com/golang/go-pe v0.1.1-0.20230221012148-9abf830a16b4/go.mod h1:2vFZELMrzs1ZcgR8yEtqJ4q12QR/xtFgB0bEw3J2xvM=
+www.velocidex.com/golang/go-pe v0.1.1-0.20230228112150-ef2eadf34bc3 h1:W394TEIFuHFxHY8mzTJPHI5v+M+NLKEHmHn7KY/VpEM=
+www.velocidex.com/golang/go-pe v0.1.1-0.20230228112150-ef2eadf34bc3/go.mod h1:agYwYzeeytVtdwkRrvxZAjgIA8SCeM/Tg7Ym2/jBwmA=
 www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a h1:iXYitl3w8pDTH8ltwra5Za9weXN5p8UAi87JoGf8SvU=
 www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a/go.mod h1:UNIUmQhflpSTt7TH4o/6O/GiMCjSzIALXe9/zzTKFCw=
 www.velocidex.com/golang/oleparse v0.0.0-20230217092320-383a0121aafe h1:o9jQWSwKTLhBeavfOk054/HK5yNi6Ni9VHQ6rxYZEi4=
