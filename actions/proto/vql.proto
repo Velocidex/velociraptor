@@ -181,6 +181,7 @@ message ClientInfo {
     uint64 first_seen_at = 20;
     string build_time = 24;
     string build_url = 25;
+    uint64 install_time = 26;
 
     repeated string labels = 15;
     repeated string mac_addresses = 22;

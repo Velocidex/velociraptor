@@ -34,6 +34,7 @@ func GetClientInfo(
 		result.ClientVersion = config_obj.Version.Version
 		result.BuildUrl = config_obj.Version.CiBuildUrl
 		result.BuildTime = config_obj.Version.BuildTime
+		result.InstallTime = config_obj.Version.InstallTime
 	}
 	return result
 }
