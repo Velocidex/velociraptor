@@ -356,7 +356,7 @@ export default class PreviewUpload extends Component {
             params["fs_components[]"] = this.state.params.fs_components;
             let url = api.base_path + "/api/" + this.state.url + "?" +
                  qs.stringify(params, {indices: false});
-            string_data = <img className="preview-thumbnail" src={url}/>;
+            string_data = <img className="preview-thumbnail" src={url} alt="preview upload" />;
         }
 
         return (
