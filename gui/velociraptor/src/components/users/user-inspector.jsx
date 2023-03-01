@@ -386,6 +386,7 @@ class UsersOverview extends Component {
                                 variant="outline-default"
                                 as="button">
                                 <FontAwesomeIcon icon="edit"/>
+				<span className="sr-only">{T("Update User Password")}</span>
                               </Button>
                             }
                             <Button
@@ -398,6 +399,7 @@ class UsersOverview extends Component {
                               variant="outline-default"
                               as="button">
                               <FontAwesomeIcon icon="plus"/>
+			      <span className="sr-only">{T("Add a new user")}</span>
                             </Button>
                           </th>
                         </tr>
@@ -438,6 +440,7 @@ class UsersOverview extends Component {
                               variant="outline-default"
                               as="button">
                               <FontAwesomeIcon icon="plus"/>
+			      <span className="sr-only">{T("Assign user to Orgs")}</span>
                             </Button>
                           </th></tr>
                       </thead>

@@ -167,12 +167,12 @@ class VeloPagedTable extends Component {
     componentDidUpdate(prevProps, prevState, snapshot) {
         if (!_.isEqual(prevProps.version, this.props.version)) {
             this.fetchRows();
-        };
+        }
 
         if (this.props.transform &&
             !_.isEqual(prevProps.transform, this.props.transform)) {
             this.setState({transform: this.props.transform});
-        };
+        }
 
         if (!_.isEqual(prevProps.params, this.props.params)) {
             this.setState({
@@ -181,7 +181,7 @@ class VeloPagedTable extends Component {
                 toggles: {},
                 columns: [],
             });
-        };
+        }
 
         if (!_.isEqual(prevProps.params, this.props.params) ||
             prevState.start_row !== this.state.start_row ||
@@ -209,7 +209,7 @@ class VeloPagedTable extends Component {
                         let decoded = cell.slice(0,1000);
                         try {
                             decoded = atob(cell);
-                        } catch(e) {};
+                        } catch(e) {}
 
                         return <HexView data={decoded} height="2"/>;
                     };
@@ -493,6 +493,7 @@ class VeloPagedTable extends Component {
                                                      download_format: "json",
                                                  }))}>
                             <FontAwesomeIcon icon="download"/>
+			    <span className="sr-only">{T("Download JSON")}</span>
                           </Button>
                           <Button variant="default"
                                   target="_blank" rel="noopener noreferrer"
@@ -505,6 +506,7 @@ class VeloPagedTable extends Component {
                                                      download_format: "csv",
                                                  }))}>
                             <FontAwesomeIcon icon="file-csv"/>
+			    <span className="sr-only">{T("Download CSV")}</span>
                           </Button>
                           {!this.props.no_transformations &&
                            <Button variant="default"
@@ -515,6 +517,7 @@ class VeloPagedTable extends Component {
                                    className="btn-tooltip"
                                    data-tooltip={T("Transform Table")}>
                              <FontAwesomeIcon icon="filter"/>
+			     <span className="sr-only">{T("Transform Table")}</span>
                            </Button>}
                         </ButtonGroup>
                         { transformed.length > 0 &&
@@ -566,6 +569,6 @@ class VeloPagedTable extends Component {
             </div>
         );
     }
-};
+}
 
 export default VeloPagedTable;

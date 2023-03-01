@@ -110,11 +110,12 @@ export class SettingsButton extends Component {
 
                       onClick={() => this.props.ace.execCommand("showSettingsMenu")} >
                 <FontAwesomeIcon icon="text-height"/>
+		<span className="sr-only">{T("Configure Editor")}</span>
               </Button>
             </>
         );
     }
-};
+}
 
 export default class VeloAce extends Component {
     static contextType = UserConfig;
@@ -154,7 +155,7 @@ export default class VeloAce extends Component {
                 break;
             default:
                 break;
-            };
+            }
 
             if (!v) {
                 delete options[k];
@@ -213,7 +214,7 @@ export default class VeloAce extends Component {
             } else if(this.props.mode === "yara") {
                 this.refs.ace.editor.getSession().setMode(new YaraMode());
             }
-        };
+        }
     }
 
     render() {
