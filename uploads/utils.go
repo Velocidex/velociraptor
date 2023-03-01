@@ -52,10 +52,12 @@ func ShouldPadFile(
 // are uploaded multiple time so they only upload one file.
 func DeduplicateUploads(scope vfilter.Scope,
 	store_as_name *accessors.OSPath) (*UploadResponse, bool) {
-	cache_any := vql_subsystem.CacheGet(scope, UPLOAD_CTX)
+
+	root_scope := vql_subsystem.GetRootScope(scope)
+	cache_any := vql_subsystem.CacheGet(root_scope, UPLOAD_CTX)
 	if utils.IsNil(cache_any) {
 		cache_any = ordereddict.NewDict()
-		vql_subsystem.CacheSet(scope, UPLOAD_CTX, cache_any)
+		vql_subsystem.CacheSet(root_scope, UPLOAD_CTX, cache_any)
 	}
 
 	cache, ok := cache_any.(*ordereddict.Dict)
@@ -75,10 +77,11 @@ func DeduplicateUploads(scope vfilter.Scope,
 func CacheUploadResult(scope vfilter.Scope,
 	store_as_name *accessors.OSPath,
 	result *UploadResponse) {
-	cache_any := vql_subsystem.CacheGet(scope, UPLOAD_CTX)
+	root_scope := vql_subsystem.GetRootScope(scope)
+	cache_any := vql_subsystem.CacheGet(root_scope, UPLOAD_CTX)
 	if utils.IsNil(cache_any) {
 		cache_any = ordereddict.NewDict()
-		vql_subsystem.CacheSet(scope, UPLOAD_CTX, cache_any)
+		vql_subsystem.CacheSet(root_scope, UPLOAD_CTX, cache_any)
 	}
 
 	cache, ok := cache_any.(*ordereddict.Dict)

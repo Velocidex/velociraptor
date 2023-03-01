@@ -584,19 +584,20 @@ class ShellViewer extends Component {
             return;
         }
 
-        api.get('v1/GetClientFlows/'+ this.props.client.client_id, {
+        let client_id = this.props.client.client_id;
+        api.get('v1/GetClientFlows/'+ client_id, {
             count: 100, offset: 0,
             artifact: "(Windows.System.PowerShell|Windows.System.CmdShell|Linux.Sys.BashShell|Generic.Client.VQL)"
         },
                 this.source.token // CancelToken
                ).then(function(response) {
                    if (response.cancel) return;
+                    if (!response.data || response.data.client_id !== client_id) {
+                        return;
+                    }
+
                    let new_state  = Object.assign({}, this.state);
                    new_state.flows = [];
-                   if (!response.data) {
-                       return;
-                   }
-
                    let items = response.data.items || [];
 
                    for(var i=0; i<items.length; i++) {

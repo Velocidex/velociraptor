@@ -56,10 +56,11 @@ func NewCollectionContextManager(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
-	msg *crypto_proto.VeloMessage) (CollectionContextManager, error) {
+	msg *crypto_proto.VeloMessage,
+	collection_context *flows_proto.ArtifactCollectorContext) (
+	CollectionContextManager, error) {
 
-	client_id := "server"
-	flow_id := msg.SessionId
+	flow_id := collection_context.SessionId
 	if msg.FlowRequest == nil {
 		return nil, errors.New("Invalid request")
 	}
@@ -82,24 +83,17 @@ func NewCollectionContextManager(
 
 	self := &contextManager{
 		config_obj: config_obj,
-		context: &flows_proto.ArtifactCollectorContext{
-			ClientId:  client_id,
-			SessionId: flow_id,
-		},
+		context:    collection_context,
 		ctx:        sub_ctx,
 		cancel:     cancel,
 		wg:         &sync.WaitGroup{},
-		session_id: flow_id,
+		session_id: collection_context.SessionId,
 		log_writer: &counterWriter{ResultSetWriter: log_writer},
 		row_limit:  row_limit,
 		byte_limit: byte_limit,
 	}
 
-	// Write the collection context periodically to disk so the GUI
-	// can track progress.
-	self.StartRefresh(wg)
-
-	return self, self.Load(self.context)
+	return self, nil
 }
 
 func (self *contextManager) ChargeRow() {
@@ -213,8 +207,7 @@ func (self *contextManager) StartRefresh(wg *sync.WaitGroup) {
 	}()
 }
 
-func (self *contextManager) Load(
-	context *flows_proto.ArtifactCollectorContext) error {
+func (self *contextManager) Load() error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -224,7 +217,7 @@ func (self *contextManager) Load(
 	}
 
 	details, err := launcher.GetFlowDetails(
-		self.config_obj, context.ClientId, context.SessionId)
+		self.config_obj, self.context.ClientId, self.context.SessionId)
 	if err != nil {
 		return err
 	}
