@@ -53,7 +53,8 @@ class ClientSetterFromRoute extends Component {
 
             api.get('v1/GetClient/' + client_id, {},
                     this.source.token).then(resp => {
-                        if (resp.data && resp.data.items) {
+                        if (resp.cancel) return;
+                        if (resp.data && resp.data.client_id === client_id) {
                             window.globals.client = resp.data;
                             this.props.setClient(resp.data);
                         }

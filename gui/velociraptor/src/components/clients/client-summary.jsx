@@ -49,6 +49,10 @@ export default class VeloClientSummary extends Component {
             api.get("v1/GetClient/" + client_id, params,
                     this.source.token).then(
                 response=>{
+                    if (response.cancel) return;
+                    if (!response.data || response.data.client_id !== client_id) {
+                        return;
+                    }
                     this.props.setClient(response.data);
                 }).catch(err=>{
                     // The client is not valid - navigate away from

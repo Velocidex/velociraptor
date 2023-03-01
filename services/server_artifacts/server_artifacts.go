@@ -18,6 +18,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 
 	"www.velocidex.com/golang/velociraptor/services"
@@ -83,10 +84,20 @@ func (self *ServerArtifactsRunner) process(
 		if req.FlowRequest != nil {
 			sub_ctx, cancel := context.WithCancel(ctx)
 			collection_context, err := NewCollectionContextManager(
-				sub_ctx, wg, self.config_obj, req)
+				sub_ctx, wg, self.config_obj, req,
+				&flows_proto.ArtifactCollectorContext{
+					SessionId: session_id,
+					ClientId:  "server",
+				})
 			if err != nil {
 				return err
 			}
+
+			err = collection_context.Load()
+			if err != nil {
+				return err
+			}
+			collection_context.StartRefresh(wg)
 
 			wg.Add(1)
 			go func() {
