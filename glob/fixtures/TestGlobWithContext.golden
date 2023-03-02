@@ -62,5 +62,8 @@
  "011 Match masked by two matches /usr/bin , /usr/*/diff": [
   "/usr/bin",
   "/usr/bin/diff"
+ ],
+ "012 Multiple globs matching same file /bin/bash , /bin/ba*": [
+  "/bin/bash"
  ]
 }

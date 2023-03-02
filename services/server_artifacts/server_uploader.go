@@ -49,7 +49,8 @@ func (self *ServerUploader) Upload(
 		store_as_name = filename
 	}
 
-	cached, pres := uploads.DeduplicateUploads(scope, store_as_name)
+	cached, pres, closer := uploads.DeduplicateUploads(scope, store_as_name)
+	defer closer()
 	if pres {
 		return cached, nil
 	}
