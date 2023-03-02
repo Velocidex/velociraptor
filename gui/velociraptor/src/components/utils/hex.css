@@ -35,3 +35,7 @@ th.offset {
 .hex-dialog-body table.offset-area {
     margin-left: 30px;
 }
+
+td.hex-container {
+    display: inline-block;
+}

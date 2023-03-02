@@ -58,6 +58,16 @@ export class HexViewPopup extends React.Component {
         }
 
         let string_data = _.toString(this.props.data);
+        if (!string_data && this.props.byte_array) {
+            for(let i=0;i<10 && i<this.props.byte_array.length;i++) {
+                let c = this.props.byte_array[i];
+                if (c>0x20 && c<0x7e) {
+                    string_data += String.fromCharCode(c);
+                } else {
+                    string_data += ".";
+                }
+            }
+        }
         if (string_data.length > 10) {
             string_data = string_data.substring(0, 10) + "...";
         }
@@ -143,6 +153,13 @@ export default class HexView extends React.Component {
                 };
                 data_row.push(('0' + char).substr(-2)); // add leading zero if necessary
             };
+
+            // Pad with extra spaces to maintain alignment
+            let pad = this.state.rows - data.length % this.state.columns;
+            for (var j = 0; j < pad; j++) {
+                safe_data += " ";
+                data_row.push("   ");
+            }
 
             hexDataRows.push({
                 offset: rowOffset,
@@ -249,7 +266,7 @@ export default class HexView extends React.Component {
                   </thead>
                   <tbody>
                     <tr>
-                      <td>
+                      <td >
                         <table className="offset-area">
                           <tbody>
                             { _.map(this.state.hexDataRows, (row, idx)=>{
@@ -264,10 +281,10 @@ export default class HexView extends React.Component {
                           </tbody>
                         </table>
                       </td>
-                      <td>
+                      <td className="hex-container">
                         { hexArea }
                       </td>
-                      <td>
+                      <td className="hex-container">
                         { contextArea }
                       </td>
                     </tr>
