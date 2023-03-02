@@ -97,7 +97,7 @@ sources:
                          Tags=Tags,
                          Offset=String.Offset,
                          Name=String.Name) as YaraHit,
-                    String.Data AS YaraContext,
+                    base64encode(string=String.Data) AS YaraContext,
                     _PathSpec, _Address
                 FROM yara(
                             accessor='offset',
@@ -136,4 +136,4 @@ sources:
 
 column_types:
   - name: YaraContext
-    type: hex
+    type: base64hex

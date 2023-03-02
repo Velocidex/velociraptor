@@ -561,7 +561,18 @@ export function formatColumns(columns, env) {
 
         case "hex":
             x.formatter = (cell, row) => {
-                return <HexViewPopup data={cell}/>;
+                let bytearray = [];
+                for (let c = 0; c < cell.length; c += 2) {
+                    let term = cell.substr(c, 2);
+                    if (term.match(/[0-9a-fA-F]{2}/)) {
+                        bytearray.push(parseInt(term, 16));
+                    } else {
+                        c--;
+                    }
+                }
+                return <ContextMenu value={cell}>
+                         <HexViewPopup byte_array={bytearray}/>
+                       </ContextMenu>;
             };
             x.type = null;
             break;
@@ -570,11 +581,18 @@ export function formatColumns(columns, env) {
         case "base64":
             x.formatter = (cell, row) => {
                 try {
-                    cell = atob(cell);
-                } catch(e) {};
-                return <ContextMenu value={cell}>
-                         <HexViewPopup data={cell}/>
-                       </ContextMenu>;
+                    let binary_string = atob(cell);
+                    var len = binary_string.length;
+                    var bytes = new Uint8Array(len);
+                    for (var i = 0; i < len; i++) {
+                        bytes[i] = binary_string.charCodeAt(i);
+                    }
+                    return <ContextMenu value={cell}>
+                             <HexViewPopup byte_array={bytes}/>
+                           </ContextMenu>;
+                } catch(e) {
+                    return <></>;
+                };
             };
             x.type = null;
             break;
