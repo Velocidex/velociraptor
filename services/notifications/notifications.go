@@ -294,6 +294,9 @@ func (self *Notifier) NotifyListenerAsync(
 }
 
 func (self *Notifier) IsClientDirectlyConnected(client_id string) bool {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	if self.notification_pool == nil {
 		return false
 	}

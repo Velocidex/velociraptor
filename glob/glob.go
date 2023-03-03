@@ -268,6 +268,8 @@ func (self *Globber) ExpandWithContext(
 		// For each file that matched, we check which component
 		// would match it.
 		for _, f := range files {
+			basename := f.Name()
+
 			for filterer, next := range self.filters {
 				if !filterer.Match(f) {
 					continue
@@ -282,13 +284,12 @@ func (self *Globber) ExpandWithContext(
 
 				// Only recurse into directories.
 				if self.is_dir_or_link(f, accessor, 0) {
-					name := f.Name()
 					item := []*Globber{next}
-					prev_item, pres := children[name]
+					prev_item, pres := children[basename]
 					if pres {
 						item = append(prev_item, next)
 					}
-					children[name] = item
+					children[basename] = item
 				}
 			}
 		}
@@ -299,12 +300,19 @@ func (self *Globber) ExpandWithContext(
 				result[i].OSPath().Basename(),
 				result[j].OSPath().Basename())
 		})
+		var last string
 		for _, f := range result {
+			basename := f.OSPath().Basename()
+			if last == basename {
+				continue
+			}
+
 			select {
 			case <-ctx.Done():
 				return
 
 			case output_chan <- f:
+				last = basename
 			}
 		}
 

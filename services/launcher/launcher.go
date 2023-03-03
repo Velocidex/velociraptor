@@ -620,6 +620,36 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 		OutstandingRequests: int64(len(vql_collector_args)),
 	}
 
+	// Record the tasks for provenance of what we actually did.
+	err = db.SetSubjectWithCompletion(config_obj,
+		flow_path_manager.Task(),
+		&api_proto.ApiFlowRequestDetails{
+			Items: []*crypto_proto.VeloMessage{task},
+		}, nil)
+	if err != nil {
+		return "", err
+	}
+
+	// Run server artifacts inline.
+	if client_id == "server" {
+		server_artifacts_service, err := services.GetServerArtifactRunner(
+			config_obj)
+		if err != nil {
+			return "", err
+		}
+
+		err = db.SetSubjectWithCompletion(config_obj,
+			flow_path_manager.Path(),
+			collection_context, func() {})
+		if err != nil {
+			return "", err
+		}
+
+		err = server_artifacts_service.LaunchServerArtifact(
+			config_obj, session_id, task.FlowRequest, collection_context)
+		return collection_context.SessionId, err
+	}
+
 	// Store the collection_context first, then queue all the tasks.
 	err = db.SetSubjectWithCompletion(config_obj,
 		flow_path_manager.Path(),
@@ -631,16 +661,6 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 				ctx, client_id, task,
 				services.NOTIFY_CLIENT, utils.BackgroundWriter)
 		})
-	if err != nil {
-		return "", err
-	}
-
-	// Record the tasks for provenance of what we actually did.
-	err = db.SetSubjectWithCompletion(config_obj,
-		flow_path_manager.Task(),
-		&api_proto.ApiFlowRequestDetails{
-			Items: []*crypto_proto.VeloMessage{task},
-		}, nil)
 	if err != nil {
 		return "", err
 	}

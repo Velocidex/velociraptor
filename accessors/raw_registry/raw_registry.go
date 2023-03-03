@@ -121,6 +121,12 @@ type RawRegValueInfo struct {
 	// Containing key
 	*RawRegKeyInfo
 	value *regparser.CM_KEY_VALUE
+
+	// The windows registry can store a value inside a reg key. This
+	// makes the key act both as a directory and as a file
+	// (i.e. ReadDir() will list the key) but Open() will read the
+	// value.
+	is_default_value bool
 }
 
 func (self *RawRegValueInfo) Name() string {
@@ -128,11 +134,15 @@ func (self *RawRegValueInfo) Name() string {
 }
 
 func (self *RawRegValueInfo) IsDir() bool {
-	return false
+	// We are also a key so act as a directory.
+	return self.is_default_value
 }
 
 func (self *RawRegValueInfo) Mode() os.FileMode {
-	return 0755
+	if self.is_default_value {
+		return 0755
+	}
+	return 0644
 }
 
 func (self *RawRegValueInfo) Size() int64 {
@@ -141,8 +151,12 @@ func (self *RawRegValueInfo) Size() int64 {
 
 func (self *RawRegValueInfo) Data() *ordereddict.Dict {
 	value_data := self.value.ValueData()
+	value_type := self.value.TypeString()
+	if self.is_default_value {
+		value_type += "/Key"
+	}
 	result := ordereddict.NewDict().
-		Set("type", self.value.TypeString()).
+		Set("type", value_type).
 		Set("data_len", len(value_data.Data))
 
 	switch value_data.Type {
@@ -320,22 +334,36 @@ func (self *RawRegFileSystemAccessor) ReadDirWithOSPath(
 		return nil, errors.New("Key not found")
 	}
 
-	for _, subkey := range key.Subkeys() {
-		result = append(result,
-			&RawRegKeyInfo{
-				key:        subkey,
-				_full_path: full_path.Append(subkey.Name()),
-			})
+	seen := make(map[string]int)
+	for idx, subkey := range key.Subkeys() {
+		basename := subkey.Name()
+		subkey := &RawRegKeyInfo{
+			key:        subkey,
+			_full_path: full_path.Append(basename),
+		}
+		seen[basename] = idx
+		result = append(result, subkey)
 	}
 
 	for _, value := range key.Values() {
-		result = append(result,
-			&RawRegValueInfo{
-				&RawRegKeyInfo{
-					key:        key,
-					_full_path: full_path.Append(value.ValueName()),
-				}, value,
-			})
+		basename := value.ValueName()
+		value_obj := &RawRegValueInfo{
+			RawRegKeyInfo: &RawRegKeyInfo{
+				key:        key,
+				_full_path: full_path.Append(basename),
+			},
+			value: value,
+		}
+
+		// Does this value have the same name as one of the keys?
+		idx, pres := seen[basename]
+		if pres {
+			// Replace the old object with the value object
+			value_obj.is_default_value = true
+			result[idx] = value_obj
+		} else {
+			result = append(result, value_obj)
+		}
 	}
 
 	return result, nil

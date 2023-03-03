@@ -46,7 +46,8 @@ func (self *VelociraptorUploader) Upload(
 		store_as_name = filename
 	}
 
-	cached, pres := DeduplicateUploads(scope, store_as_name)
+	cached, pres, closer := DeduplicateUploads(scope, store_as_name)
+	defer closer()
 	if pres {
 		return cached, nil
 	}

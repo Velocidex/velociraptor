@@ -1,10 +1,12 @@
 name: Test.Sleep
 description: |
   Used to test cancellation and artifact timeout on client
-  collections.
+  collections. Change to SERVER to test server cancellation.
 
 type: CLIENT
 
 sources:
   - query: |
-      SELECT sleep(time=60) FROM scope()
+      SELECT sleep(time=10)
+      FROM range(end=100)
+      WHERE log(message=format(format="Sent data %v", args=now()))
