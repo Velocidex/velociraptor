@@ -29,9 +29,15 @@ img.velo-logo {
 
 /* Sidebar navbar */
 
-section.navigator a {
+nav.navigator a {
+  display: block;
+  padding: 0.5rem 1rem;
   text-decoration: none;
   color: var(--color-sidebar-foreground);
+}
+
+nav.navigator li.nav-link {
+  padding: 0;
 }
 
 .navigator.nav-pills.nav li {
@@ -43,7 +49,7 @@ section.navigator a {
   background: var(--color-sidebar-inactive-background-hover);
 }
 
-.navigator.nav-pills.nav .nav-link.disabled {
+nav.navigator ul.navigator.nav-pills.nav .nav-link.disabled {
   opacity: 30%;
   pointer-events: none;
 }
@@ -53,7 +59,7 @@ section.navigator a {
   width: 260px;
 }
 
-a.active .nav.nav-pills.navigator .nav-link {
+.nav.nav-pills.navigator .nav-link:has(a.active) {
   background-color: var(--color-sidebar-active-background);
   color: var(--color-sidebar-active-foreground);
 }
@@ -66,10 +72,6 @@ a.active .nav.nav-pills.navigator .nav-link {
 button a.nav-link {
   padding: 0px;
   color: black;
-}
-
-.nav-link {
-  padding: 0.5rem 1rem;
 }
 
 .navicon {
@@ -109,10 +111,12 @@ div#navigator.collapsed {
   width: 260px;
 }
 
-span.hamburger {
+button.hamburger {
   float: left;
   font-size: 30px;
   cursor: pointer;
+  border: none;
+  background-color: var(--color-header-background);
 }
 
 a.disabled {

@@ -83,6 +83,22 @@ body.no-theme {
     border-color: #e5e5e5;
 }
 
+/*
+ Main menu navigation
+ */
+.no-theme .navigator.nav-pills.nav li:hover > a:not(.active) {
+    color: var(--color-sidebar-inactive-foreground-hover);
+    background: var(--color-sidebar-inactive-background-hover);
+}
+
+.no-theme .navigator.nav-pills.nav li:has(a.active) {
+    background: var(--color-sidebar-active-background);
+}
+
+.no-theme .navigator.nav-pills.nav li a.active {
+    color: var(--color-sidebar-active-foreground);
+}
+
 .no-theme .btn-outline-info {
     border-color: #17a2b8;
     color: #17a2b8;

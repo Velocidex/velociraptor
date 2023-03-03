@@ -172,7 +172,8 @@ body.pink-light {
   border-color: whitesmoke;
 }
 
-.pink-light .hamburger {
+.pink-light button.hamburger {
+  background-color: #fff0f5;
   color: var(--color-sidebar-foreground);
 }
 
@@ -254,9 +255,18 @@ body.pink-light {
   background: var(--color-sidebar-inactive-background-hover);
 }
 
-.pink-light a.active .navigator.nav-pills.nav li {
-  color: var(--color-sidebar-active-foreground);
+.pink-light .navigator.nav-pills.nav li:has(a.active) {
   background: var(--color-sidebar-active-background);
+}
+
+.pink-light .navigator.nav-pills.nav li a.active {
+  color: var(--color-sidebar-active-foreground);
+}
+
+.pink-light .navigator.nav-pills.nav .nav-link.disabled {
+  color: var(--color-sidebar-disabled-foreground);
+  background: var(--color-sidebar-background);
+  pointer-events: none;
 }
 
 .pink-light .navigator.nav-pills.nav .nav-link.disabled {

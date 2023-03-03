@@ -46,6 +46,9 @@ const English = {
     "Shell": "Shell",
     "Close": "Close",
     "Search": "Search",
+    "Main Menu": "Main Menu",
+    "Toggle Main Menu": "Toggle Main Menu",
+    "Welcome": "Welcome",
     "Connected": "Connected",
     "time_ago": (value, unit) => {
         return value + ' ' + unit + ' ago';
