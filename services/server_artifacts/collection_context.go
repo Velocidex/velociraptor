@@ -37,7 +37,12 @@ type contextManager struct {
 
 	mu sync.Mutex
 
-	ctx        context.Context
+	// This is our parent context - it needs to remain alive after
+	// Cancel() so we can write the collection results
+	ctx context.Context
+
+	// The sub context will be cancelled by Cancel()
+	sub_ctx    context.Context
 	cancel     func()
 	wg         *sync.WaitGroup
 	session_id string
@@ -62,7 +67,7 @@ func NewCollectionContextManager(
 
 	flow_id := collection_context.SessionId
 	sub_ctx, cancel := context.WithCancel(ctx)
-	log_writer, err := NewServerLogWriter(sub_ctx, config_obj, flow_id)
+	log_writer, err := NewServerLogWriter(ctx, config_obj, flow_id)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +85,8 @@ func NewCollectionContextManager(
 	self := &contextManager{
 		config_obj: config_obj,
 		context:    collection_context,
-		ctx:        sub_ctx,
+		ctx:        ctx,
+		sub_ctx:    sub_ctx,
 		cancel:     cancel,
 		wg:         &sync.WaitGroup{},
 		session_id: collection_context.SessionId,
@@ -192,7 +198,7 @@ func (self *contextManager) StartRefresh(wg *sync.WaitGroup) {
 
 		for {
 			select {
-			case <-self.ctx.Done():
+			case <-self.sub_ctx.Done():
 				self.Save()
 				return
 
@@ -239,7 +245,8 @@ func (self *contextManager) Save() error {
 	}
 
 	return launcher.WriteFlow(
-		self.ctx, self.config_obj, context)
+		self.ctx, // Write with parent context as query may have cancelled.
+		self.config_obj, context)
 }
 
 func (self *contextManager) Cancel(ctx context.Context, principal string) {
@@ -295,7 +302,7 @@ func (self *contextManager) RunQuery(
 	query_context := self.GetQueryContext(arg)
 	defer query_context.Close()
 
-	sub_ctx, cancel := context.WithCancel(self.ctx)
+	sub_ctx, cancel := context.WithCancel(self.sub_ctx)
 	defer cancel()
 
 	// Set up the logger for writing query logs. Note this must be

@@ -150,7 +150,7 @@ func (self *FlowResponder) AddResponse(message *crypto_proto.VeloMessage) {
 
 	// Check flow limits. Must be done without a lock on the responder.
 	if message.FileBuffer != nil {
-		self.flow_context.ChargeBytes(uint64(len(message.FileBuffer.Data)))
+		self.flow_context.ChargeBytes(uint64(message.FileBuffer.DataLength))
 	}
 	if message.VQLResponse != nil {
 		self.flow_context.ChargeRows(message.VQLResponse.TotalRows)
