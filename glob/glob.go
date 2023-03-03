@@ -265,8 +265,6 @@ func (self *Globber) ExpandWithContext(
 
 		result := []accessors.FileInfo{}
 
-		seen := make(map[string]bool)
-
 		// For each file that matched, we check which component
 		// would match it.
 		for _, f := range files {
@@ -281,11 +279,7 @@ func (self *Globber) ExpandWithContext(
 				}
 				_, next_has_sentinal := next.filters[sentinal_filter]
 				if next_has_sentinal {
-					_, pres := seen[basename]
-					if !pres {
-						result = append(result, f)
-						seen[basename] = true
-					}
+					result = append(result, f)
 				}
 
 				// Only recurse into directories.
@@ -306,12 +300,19 @@ func (self *Globber) ExpandWithContext(
 				result[i].OSPath().Basename(),
 				result[j].OSPath().Basename())
 		})
+		var last string
 		for _, f := range result {
+			basename := f.OSPath().Basename()
+			if last == basename {
+				continue
+			}
+
 			select {
 			case <-ctx.Done():
 				return
 
 			case output_chan <- f:
+				last = basename
 			}
 		}
 

@@ -56,15 +56,11 @@ func NewCollectionContextManager(
 	ctx context.Context,
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
-	msg *crypto_proto.VeloMessage,
+	req *crypto_proto.FlowRequest,
 	collection_context *flows_proto.ArtifactCollectorContext) (
 	CollectionContextManager, error) {
 
 	flow_id := collection_context.SessionId
-	if msg.FlowRequest == nil {
-		return nil, errors.New("Invalid request")
-	}
-
 	sub_ctx, cancel := context.WithCancel(ctx)
 	log_writer, err := NewServerLogWriter(sub_ctx, config_obj, flow_id)
 	if err != nil {
@@ -72,13 +68,13 @@ func NewCollectionContextManager(
 	}
 
 	row_limit := int64(1000000)
-	if msg.FlowRequest.MaxRows > 0 {
-		row_limit = int64(msg.FlowRequest.MaxRows)
+	if req.MaxRows > 0 {
+		row_limit = int64(req.MaxRows)
 	}
 
 	byte_limit := int64(1000000000)
-	if msg.FlowRequest.MaxUploadBytes > 0 {
-		byte_limit = int64(msg.FlowRequest.MaxUploadBytes)
+	if req.MaxUploadBytes > 0 {
+		byte_limit = int64(req.MaxUploadBytes)
 	}
 
 	self := &contextManager{
