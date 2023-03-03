@@ -119,6 +119,7 @@ var _GlobFixture = []struct {
 	{"Recursive matches zero or more", []string{"/usr/bin/X11/**/diff"}},
 	{"Recursive matches none at end", []string{"/bin/bash/**"}},
 	{"Match masked by two matches", []string{"/usr/bin", "/usr/*/diff"}},
+	{"Multiple globs matching same file", []string{"/bin/bash", "/bin/ba*"}},
 }
 
 func GetMockFileSystemAccessor() accessors.FileSystemAccessor {

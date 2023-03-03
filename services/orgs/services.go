@@ -39,22 +39,23 @@ import (
 type ServiceContainer struct {
 	mu sync.Mutex
 
-	frontend             services.FrontendManager
-	journal              services.JournalService
-	client_info_manager  services.ClientInfoManager
-	indexer              services.Indexer
-	broadcast            services.BroadcastService
-	inventory            services.Inventory
-	vfs_service          services.VFSService
-	labeler              services.Labeler
-	repository           services.RepositoryManager
-	hunt_dispatcher      services.IHuntDispatcher
-	launcher             services.Launcher
-	notebook_manager     services.NotebookManager
-	client_event_manager services.ClientEventTable
-	server_event_manager services.ServerEventManager
-	notifier             services.Notifier
-	acl_manager          services.ACLManager
+	frontend                services.FrontendManager
+	journal                 services.JournalService
+	client_info_manager     services.ClientInfoManager
+	indexer                 services.Indexer
+	broadcast               services.BroadcastService
+	inventory               services.Inventory
+	vfs_service             services.VFSService
+	labeler                 services.Labeler
+	repository              services.RepositoryManager
+	hunt_dispatcher         services.IHuntDispatcher
+	launcher                services.Launcher
+	notebook_manager        services.NotebookManager
+	client_event_manager    services.ClientEventTable
+	server_event_manager    services.ServerEventManager
+	server_artifact_manager services.ServerArtifactRunner
+	notifier                services.Notifier
+	acl_manager             services.ACLManager
 }
 
 func (self *ServiceContainer) MockFrontendManager(svc services.FrontendManager) {
@@ -94,6 +95,17 @@ func (self *ServiceContainer) ServerEventManager() (services.ServerEventManager,
 	}
 
 	return self.server_event_manager, nil
+}
+
+func (self *ServiceContainer) ServerArtifactRunner() (services.ServerArtifactRunner, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.server_artifact_manager == nil {
+		return nil, errors.New("Server Artifact Runner service not initialized")
+	}
+
+	return self.server_artifact_manager, nil
 }
 
 func (self *ServiceContainer) ClientEventManager() (services.ClientEventTable, error) {
@@ -560,10 +572,13 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 	}
 
 	if spec.ServerArtifacts {
-		err = server_artifacts.NewServerArtifactService(ctx, wg, org_config)
+		sm, err := server_artifacts.NewServerArtifactService(ctx, wg, org_config)
 		if err != nil {
 			return err
 		}
+		service_container.mu.Lock()
+		service_container.server_artifact_manager = sm
+		service_container.mu.Unlock()
 	}
 
 	if spec.ClientMonitoring {
@@ -585,6 +600,17 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 
 		service_container.mu.Lock()
 		service_container.server_event_manager = server_event_manager
+		service_container.mu.Unlock()
+	}
+
+	if spec.ServerArtifacts {
+		server_artifact_manager, err := server_artifacts.NewServerArtifactService(ctx, wg, org_config)
+		if err != nil {
+			return err
+		}
+
+		service_container.mu.Lock()
+		service_container.server_artifact_manager = server_artifact_manager
 		service_container.mu.Unlock()
 	}
 

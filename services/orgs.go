@@ -57,6 +57,7 @@ type ServiceContainer interface {
 	NotebookManager() (NotebookManager, error)
 	ClientEventManager() (ClientEventTable, error)
 	ServerEventManager() (ServerEventManager, error)
+	ServerArtifactRunner() (ServerArtifactRunner, error)
 	Notifier() (Notifier, error)
 	ACLManager() (ACLManager, error)
 }
