@@ -74,6 +74,18 @@ func (self *Launcher) CompileSingleArtifact(
 					escaped_name, maybeEscape(name+"_")),
 			})
 
+		case "server_metadata":
+			client_info_manager, err := services.GetClientInfoManager(config_obj)
+			if err == nil {
+				md, err := client_info_manager.GetMetadata(ctx, "server")
+				if err == nil {
+					value, pres := md.GetString(name)
+					if pres {
+						result.Env[len(result.Env)-1].Value = value
+					}
+				}
+			}
+
 		case "int", "int64", "integer":
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
 				VQL: fmt.Sprintf("LET %v <= int(int=%v)", escaped_name,
