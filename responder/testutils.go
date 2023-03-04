@@ -28,15 +28,17 @@ func (self *TestResponderType) Output() chan *crypto_proto.VeloMessage {
 
 func TestResponderWithFlowId(
 	config_obj *config_proto.Config, flow_id string) *TestResponderType {
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx := context.Background()
 
 	output_chan, drain := NewMessageDrain(ctx)
+
+	sub_ctx, sub_cancel := context.WithCancel(ctx)
 
 	flow_manager := NewFlowManager(ctx, config_obj)
 	result := &TestResponderType{
 		FlowResponder: &FlowResponder{
-			ctx:    ctx,
-			cancel: cancel,
+			ctx:    sub_ctx,
+			cancel: sub_cancel,
 			wg:     &sync.WaitGroup{},
 			output: output_chan,
 		},

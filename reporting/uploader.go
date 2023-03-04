@@ -39,6 +39,13 @@ func (self *NotebookUploader) Upload(
 	if store_as_name == nil {
 		store_as_name = filename
 	}
+
+	cached, pres, closer := uploads.DeduplicateUploads(scope, store_as_name)
+	defer closer()
+	if pres {
+		return cached, nil
+	}
+
 	dest_path_spec := self.PathManager.GetUploadsFile(store_as_name.String())
 
 	file_store_factory := file_store.GetFileStore(self.config_obj)
@@ -58,10 +65,20 @@ func (self *NotebookUploader) Upload(
 
 	n, err := utils.Copy(ctx, writer, io.TeeReader(
 		io.TeeReader(reader, sha_sum), md5_sum))
-	return &uploads.UploadResponse{
-		Path:   store_as_name.String(),
-		Size:   uint64(n),
-		Sha256: hex.EncodeToString(sha_sum.Sum(nil)),
-		Md5:    hex.EncodeToString(md5_sum.Sum(nil)),
-	}, err
+	if err != nil {
+		return nil, err
+	}
+
+	result := &uploads.UploadResponse{
+		Path:       store_as_name.String(),
+		StoredName: store_as_name.String(),
+		Accessor:   accessor,
+		Components: dest_path_spec.Components(),
+		Size:       uint64(n),
+		Sha256:     hex.EncodeToString(sha_sum.Sum(nil)),
+		Md5:        hex.EncodeToString(md5_sum.Sum(nil)),
+	}
+
+	uploads.CacheUploadResult(scope, store_as_name, result)
+	return result, nil
 }
