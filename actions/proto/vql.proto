@@ -55,6 +55,13 @@ message VQLCollectorArgs {
             default: "1000",
         }];
 
+    // If the row buffer size gets above this size we send the payload
+    // anyway. This is a fairer measure than max_rows of how large the
+    // payload is likely to be before compression because rows come in
+    // all different sizes. Default value is 5mb to match the typical
+    // max_upload_bytes
+    uint64 max_row_buffer_size = 37;
+
     uint64 max_wait = 6 [(sem_type) = {
             friendly_name: "Batch requests that take this long.",
             description: "For long queries we return partial results after this long. This is required for event listeners which never really complete.",

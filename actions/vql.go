@@ -86,6 +86,11 @@ func (self VQLClientAction) StartQuery(
 		max_row = 10000
 	}
 
+	max_row_buffer_size := arg.MaxRowBufferSize
+	if max_row_buffer_size == 0 {
+		max_row_buffer_size = 5 * 1024 * 1024
+	}
+
 	rate := arg.OpsPerSecond
 	cpu_limit := arg.CpuLimit
 	iops_limit := arg.IopsLimit
@@ -230,8 +235,7 @@ func (self VQLClientAction) StartQuery(
 
 		result_chan := EncodeIntoResponsePackets(
 			vql, sub_ctx, scope,
-			int(max_row),
-			int(max_wait))
+			int(max_row), int(max_wait), int(max_row_buffer_size))
 	run_query:
 		for {
 			select {
@@ -341,7 +345,9 @@ func EncodeIntoResponsePackets(
 	scope types.Scope,
 	maxrows int,
 	// Max time to wait before returning some results.
-	max_wait int) <-chan *vfilter.VFilterJsonResult {
+	max_wait int,
+	// How large do we allow the payload to get
+	max_row_buffer_size int) <-chan *vfilter.VFilterJsonResult {
 	result_chan := make(chan *vfilter.VFilterJsonResult)
 
 	encoder := vql_subsystem.MarshalJsonl(scope)
@@ -374,9 +380,8 @@ func EncodeIntoResponsePackets(
 		}
 		// Send the last payload outstanding.
 		defer ship_payload()
-		deadline := time.After(time.Duration(max_wait) * time.Second)
-
 		for {
+			deadline := time.After(time.Duration(max_wait) * time.Second)
 
 			select {
 			case <-ctx.Done():
@@ -416,7 +421,8 @@ func EncodeIntoResponsePackets(
 				buffer.Write(s)
 
 				// Send the payload if it is too full.
-				if total_rows >= maxrows {
+				if total_rows >= maxrows ||
+					buffer.Len() > max_row_buffer_size {
 					ship_payload()
 					deadline = time.After(time.Duration(max_wait) *
 						time.Second)
