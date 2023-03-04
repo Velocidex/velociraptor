@@ -84,6 +84,12 @@ export class ContextMenuPopup extends Component {
             return;
         }
 
+        // Check if the cell has a subselection inside it.
+        let selection = document.getSelection();
+        if (selection && selection.type === "Range") {
+            value = selection.toString();
+        }
+
         if (!_.isString(value)) {
             value = JSON.stringify(value);
         }
