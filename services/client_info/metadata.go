@@ -61,7 +61,7 @@ func (self ClientInfoManager) SetMetadata(ctx context.Context,
 
 		value, ok := value_any.(string)
 		if !ok {
-			return errors.New("metadata values should be strings or null")
+			value = utils.ToString(value_any)
 		}
 
 		existing_value, pres := existing_metadata.GetString(key)

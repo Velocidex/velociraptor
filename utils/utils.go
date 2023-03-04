@@ -157,8 +157,13 @@ func ToString(x interface{}) string {
 	switch t := x.(type) {
 	case string:
 		return t
+
 	case []byte:
 		return string(t)
+
+	case fmt.Stringer:
+		return t.String()
+
 	default:
 		return fmt.Sprintf("%v", x)
 	}
