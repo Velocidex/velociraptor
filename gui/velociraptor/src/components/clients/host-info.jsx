@@ -20,7 +20,7 @@ import Modal from 'react-bootstrap/Modal';
 import Spinner from '../utils/spinner.jsx';
 import Form from 'react-bootstrap/Form';
 import UserConfig from '../core/user.jsx';
-
+import MetadataEditor from "./metadata.jsx";
 import api from '../core/api-service.jsx';
 import axios from 'axios';
 import { parseCSV, serializeCSV } from '../utils/csv.jsx';
@@ -193,25 +193,17 @@ class VeloHostInfo extends Component {
 
         // The mode of the host info tab set.
         mode: this.props.match.params.action || 'brief',
-
-        metadata: "Key,Value\n,\n",
-
         loading: false,
-        metadata_loading: false,
-
         showQuarantineDialog: false,
     }
 
     componentDidMount = () => {
         this.source = axios.CancelToken.source();
-        this.interval = setInterval(this.fetchMetadata, POLL_TIME);
         this.updateClientInfo();
-        this.fetchMetadata();
     }
 
     componentWillUnmount() {
         this.source.cancel();
-        clearInterval(this.interval);
         if (this.interrogate_interval) {
             clearInterval(this.interrogate_interval);
         }
@@ -242,46 +234,6 @@ class VeloHostInfo extends Component {
                     return this.props.setClient(response.data);
                 }, this.source);
         };
-    }
-
-    fetchMetadata = () => {
-        if (_.isEmpty(this.props.client.client_id)) {
-            return;
-        }
-        this.setState({metadata_loading: true});
-
-        this.source.cancel();
-        this.source = axios.CancelToken.source();
-
-        api.get("v1/GetClientMetadata/" + this.props.client.client_id,
-                {}, this.source.token).then(response=>{
-                    if (response.cancel) return;
-
-                    let data = [];
-                    var items = response.data["items"] || [];
-                    for (var i=0; i<items.length; i++) {
-                        var key = items[i]["key"] || "";
-                        var value = items[i]["value"] || "";
-                        if (!_.isUndefined(key)) {
-                            data.push([key, value]);
-                        }
-                    };
-                    let metadata = serializeCSV(data, ["Key", "Value"]);
-                    this.setState({metadata: metadata,
-                                   metadata_loading: false});
-                });
-    }
-
-    setMetadata = (value) => {
-        var data = parseCSV(value);
-        let items = _.map(data.data, (x) => {
-            return {key: x.Key, value: x.Value};
-        });
-
-        var params = {client_id: this.props.client.client_id, items: items};
-        api.post("v1/SetClientMetadata", params, this.source.token).then(() => {
-            this.fetchMetadata();
-        });
     }
 
     setMode = (mode) => {
@@ -339,6 +291,7 @@ class VeloHostInfo extends Component {
 
     renderContent = () => {
         let info = this.getClientInfo();
+        let client_id = this.props.client && this.props.client.client_id;
         if (this.state.mode === 'brief') {
             return (
                 <CardDeck className="dashboard">
@@ -419,11 +372,8 @@ class VeloHostInfo extends Component {
                         </dd>
                       </dl>
                       <hr />
-                      <VeloForm
-                        param={{type: "csv", name: T("Client Metadata")}}
-                        value={this.state.metadata}
-                        setValue={this.setMetadata}
-                      />
+                      <Card.Header>{T("Client Metadata")}</Card.Header>
+                      <MetadataEditor client_id={client_id} />
                     </Card.Body>
                   </Card>
                 </CardDeck>
@@ -505,7 +455,7 @@ class VeloHostInfo extends Component {
     renderQuarantine = ()=>{
         if(this.context.traits &&
            this.context.traits.disable_quarantine_button) {
-            return;
+            return <></>;
         }
         let info = this.getClientInfo();
         let is_quarantined = info.labels.includes("Quarantine");
