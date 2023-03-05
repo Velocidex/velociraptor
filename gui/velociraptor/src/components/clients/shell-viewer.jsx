@@ -402,7 +402,7 @@ class _VeloVQLCell extends Component {
         }
 
         let flow_status = [
-            <button className="btn btn-outline-info"
+            <button className="btn btn-outline-info" key={0}
               onClick={e=>{this.viewFlow("overview");}}
             >
               <i><FontAwesomeIcon icon="external-link-alt"/></i>
@@ -449,7 +449,7 @@ class _VeloVQLCell extends Component {
         }
 
         flow_status.push(
-            <button className="btn-tooltip btn btn-default" key={5}
+            <button className="btn-tooltip btn btn-default" key={50}
                     data-tooltip={T("Delete")}
                     data-position="right"
                     onClick={()=>this.setState({showDeleteWizard: true})}>
@@ -466,16 +466,16 @@ class _VeloVQLCell extends Component {
                 client_id: this.props.flow.client_id,
                 flow_id: this.props.flow.session_id,
             };
-            output = [<VeloPagedTable params={params} />];
+            output = [<VeloPagedTable params={params} key={0} />];
 
             if (this.props.flow.state  === 'ERROR') {
-                output.push(<Button variant="danger"
+                output.push(<Button variant="danger" key="ERROR"
                                     onClick={e=>{this.viewFlow("logs");}}
                                     size="lg" block>
                               {T('Error')}
                             </Button>);
             } else {
-                output.push(<Button variant="link"
+                output.push(<Button variant="link" key="Logs"
                                     onClick={e=>{this.viewFlow("logs");}}
                                     size="lg" block>
                               {T('Logs')}
@@ -526,7 +526,7 @@ const VeloVQLCell = withRouter(_VeloVQLCell);
 class ShellViewer extends Component {
     static propTypes = {
         client: PropTypes.object,
-        default_shell: PropTypes.object,
+        default_shell: PropTypes.string,
     }
 
     constructor(props) {
@@ -537,7 +537,8 @@ class ShellViewer extends Component {
             command: "",
         };
 
-        this.state.client_os = props.client.os_info.system;
+        this.state.client_os = props.client && props.client.os_info &&
+            props.client.os_info.system;
 
         // Powershell can exist on Linux/MacOS but Bash is a more reasonable default
         if (this.state.client_os && this.state.client_os !== "windows") {
@@ -592,7 +593,7 @@ class ShellViewer extends Component {
                 this.source.token // CancelToken
                ).then(function(response) {
                    if (response.cancel) return;
-                    if (!response.data || response.data.client_id !== client_id) {
+                    if (!response.data) {
                         return;
                     }
 
@@ -658,13 +659,13 @@ class ShellViewer extends Component {
             let artifact = flow && flow.request &&  flow.request.artifacts &&
                 flow.request.artifacts[0];
             if (artifact === "Generic.Client.VQL") {
-                return <VeloVQLCell key={flow.session_id}
+                return <VeloVQLCell key={index}
                                     fetchLastShellCollections={this.fetchLastShellCollections}
                                     flow={flow} client={this.props.client} />;
             };
 
             return (
-                <VeloShellCell key={flow.session_id}
+                <VeloShellCell key={index}
                                fetchLastShellCollections={this.fetchLastShellCollections}
                                flow={flow} client={this.props.client} />
             );

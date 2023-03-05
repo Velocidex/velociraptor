@@ -84,6 +84,12 @@ export class ContextMenuPopup extends Component {
             return;
         }
 
+        // Check if the cell has a subselection inside it.
+        let selection = document.getSelection();
+        if (selection && selection.type === "Range") {
+            value = selection.toString();
+        }
+
         if (!_.isString(value)) {
             value = JSON.stringify(value);
         }
@@ -110,6 +116,21 @@ export class ContextMenuPopup extends Component {
         this.post(url, params, method);
     };
 
+    copyToClipboard = (cell)=>{
+        if (!cell) return;
+
+        // Check if the cell has a subselection inside it.
+        let selection = document.getSelection();
+        if (selection && selection.type === "Range") {
+            navigator.clipboard.writeText(selection.toString());
+            return;
+        }
+
+        // If not the whole cell is highlighted then copy the entire
+        // cell.
+        navigator.clipboard.writeText(cell);
+    }
+
     render() {
         let context_links = _.filter(
             this.context.traits ? this.context.traits.links : [],
@@ -117,9 +138,10 @@ export class ContextMenuPopup extends Component {
 
         return <Menu id={MENU_ID}>
                  <Item
-                   onClick={e=>{ e.props &&
-                                 navigator.clipboard.writeText(
-                                     e.props && e.props.value);}}>
+                   onClick={e=>{
+                       if (e.props) {
+                           this.copyToClipboard(e.props.value);
+                       }}}>
                    <FontAwesomeIcon className="context-icon" icon="copy"/>
                    {T("Clipboard")}
                  </Item>

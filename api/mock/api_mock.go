@@ -1022,7 +1022,7 @@ func (mr *MockAPIClientMockRecorder) SetArtifactFile(arg0, arg1 interface{}, arg
 }
 
 // SetClientMetadata mocks base method.
-func (m *MockAPIClient) SetClientMetadata(arg0 context.Context, arg1 *proto0.ClientMetadata, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
+func (m *MockAPIClient) SetClientMetadata(arg0 context.Context, arg1 *proto0.SetClientMetadataRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {

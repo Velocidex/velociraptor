@@ -182,7 +182,7 @@ service API {
         };
     }
 
-    rpc SetClientMetadata(ClientMetadata) returns (google.protobuf.Empty) {
+    rpc SetClientMetadata(SetClientMetadataRequest) returns (google.protobuf.Empty) {
         option (google.api.http) = {
             post: "/api/v1/SetClientMetadata",
             body: "*"
