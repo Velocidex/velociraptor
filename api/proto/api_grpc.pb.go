@@ -38,7 +38,7 @@ type APIClient interface {
 	ListClients(ctx context.Context, in *SearchClientsRequest, opts ...grpc.CallOption) (*SearchClientsResponse, error)
 	GetClient(ctx context.Context, in *GetClientRequest, opts ...grpc.CallOption) (*ApiClient, error)
 	GetClientMetadata(ctx context.Context, in *GetClientRequest, opts ...grpc.CallOption) (*ClientMetadata, error)
-	SetClientMetadata(ctx context.Context, in *ClientMetadata, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	SetClientMetadata(ctx context.Context, in *SetClientMetadataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	GetClientFlows(ctx context.Context, in *ApiFlowRequest, opts ...grpc.CallOption) (*ApiFlowResponse, error)
 	// Users
 	GetUserUITraits(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*ApiUser, error)
@@ -238,7 +238,7 @@ func (c *aPIClient) GetClientMetadata(ctx context.Context, in *GetClientRequest,
 	return out, nil
 }
 
-func (c *aPIClient) SetClientMetadata(ctx context.Context, in *ClientMetadata, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+func (c *aPIClient) SetClientMetadata(ctx context.Context, in *SetClientMetadataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
 	out := new(emptypb.Empty)
 	err := c.cc.Invoke(ctx, "/proto.API/SetClientMetadata", in, out, opts...)
 	if err != nil {
@@ -808,7 +808,7 @@ type APIServer interface {
 	ListClients(context.Context, *SearchClientsRequest) (*SearchClientsResponse, error)
 	GetClient(context.Context, *GetClientRequest) (*ApiClient, error)
 	GetClientMetadata(context.Context, *GetClientRequest) (*ClientMetadata, error)
-	SetClientMetadata(context.Context, *ClientMetadata) (*emptypb.Empty, error)
+	SetClientMetadata(context.Context, *SetClientMetadataRequest) (*emptypb.Empty, error)
 	GetClientFlows(context.Context, *ApiFlowRequest) (*ApiFlowResponse, error)
 	// Users
 	GetUserUITraits(context.Context, *emptypb.Empty) (*ApiUser, error)
@@ -933,7 +933,7 @@ func (UnimplementedAPIServer) GetClient(context.Context, *GetClientRequest) (*Ap
 func (UnimplementedAPIServer) GetClientMetadata(context.Context, *GetClientRequest) (*ClientMetadata, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetClientMetadata not implemented")
 }
-func (UnimplementedAPIServer) SetClientMetadata(context.Context, *ClientMetadata) (*emptypb.Empty, error) {
+func (UnimplementedAPIServer) SetClientMetadata(context.Context, *SetClientMetadataRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetClientMetadata not implemented")
 }
 func (UnimplementedAPIServer) GetClientFlows(context.Context, *ApiFlowRequest) (*ApiFlowResponse, error) {
@@ -1331,7 +1331,7 @@ func _API_GetClientMetadata_Handler(srv interface{}, ctx context.Context, dec fu
 }
 
 func _API_SetClientMetadata_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ClientMetadata)
+	in := new(SetClientMetadataRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1343,7 +1343,7 @@ func _API_SetClientMetadata_Handler(srv interface{}, ctx context.Context, dec fu
 		FullMethod: "/proto.API/SetClientMetadata",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(APIServer).SetClientMetadata(ctx, req.(*ClientMetadata))
+		return srv.(APIServer).SetClientMetadata(ctx, req.(*SetClientMetadataRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

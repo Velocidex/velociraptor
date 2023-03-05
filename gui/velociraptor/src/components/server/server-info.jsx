@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { withRouter, Link }  from "react-router-dom";
 import ShellViewer from "../clients/shell-viewer.jsx";
 import VeloForm from '../forms/form.jsx';
+import MetadataEditor from "../clients/metadata.jsx";
 
 import ToggleButtonGroup from 'react-bootstrap/ToggleButtonGroup';
 import ToggleButton from 'react-bootstrap/ToggleButton';
@@ -19,7 +20,6 @@ import "../clients/host-info.css";
 
 const POLL_TIME = 5000;
 
-
 class ServerInfo extends Component {
     static propTypes = {}
 
@@ -27,66 +27,18 @@ class ServerInfo extends Component {
         // The mode of the host info tab set.
         mode: this.props.match.params.action || 'brief',
 
-        metadata: "Key,Value\n,\n",
-
         loading: false,
     }
 
     componentDidMount = () => {
         this.source = axios.CancelToken.source();
-        this.interval = setInterval(this.fetchMetadata, POLL_TIME);
-        this.fetchMetadata();
     }
 
     componentWillUnmount() {
         this.source.cancel();
-        clearInterval(this.interval);
         if (this.interrogate_interval) {
             clearInterval(this.interrogate_interval);
         }
-    }
-
-    fetchMetadata = () => {
-        this.setState({loading: true});
-
-        this.source.cancel();
-        this.source = axios.CancelToken.source();
-
-        api.get("v1/GetClientMetadata/server",
-                {}, this.source.token).then(response=>{
-                    if (response.cancel) return;
-
-                    let metadata = "Key,Value\n";
-                    var rows = 0;
-                    var items = response.data["items"] || [];
-                    for (var i=0; i<items.length; i++) {
-                        var key = items[i]["key"] || "";
-                        var value = items[i]["value"] || "";
-                        if (!_.isUndefined(key)) {
-                            metadata += key + "," + value + "\n";
-                            rows += 1;
-                        }
-                    };
-                    if (rows === 0) {
-                        metadata = "Key,Value\n,\n";
-                    };
-                    this.setState({metadata: metadata, loading: false});
-                });
-    }
-
-    setMetadata = (value) => {
-        var data = parseCSV(value);
-        let items = _.map(data.data, (x) => {
-            return {key: x.Key, value: x.Value};
-        });
-
-        var params = {
-            client_id: "server",
-            items: items,
-        };
-        api.post("v1/SetClientMetadata", params).then(() => {
-            this.fetchMetadata();
-        }, this.source.token);
     }
 
     setMode = (mode) => {
@@ -106,11 +58,7 @@ class ServerInfo extends Component {
                   <Card>
                     <Card.Header>Server configuration</Card.Header>
                     <Card.Body>
-                      <VeloForm
-                        param={{type: "csv", name: "Server Metadata"}}
-                        value={this.state.metadata}
-                        setValue={this.setMetadata}
-                      />
+                      <MetadataEditor client_id="server" />
                     </Card.Body>
                   </Card>
                 </CardDeck>
@@ -120,7 +68,8 @@ class ServerInfo extends Component {
         if (this.state.mode === 'shell') {
             return (
                 <div className="client-details shell">
-                  <ShellViewer client={{client_id: "server"}}
+                  <ShellViewer
+                    client={{client_id: "server"}}
                     default_shell="Bash"
                   />
                 </div>

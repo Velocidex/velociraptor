@@ -125,6 +125,14 @@ message ClientMetadata {
     string client_id = 2;
 }
 
+message SetClientMetadataRequest {
+    repeated ClientMetadataItem add = 1;
+
+    // A list of keys to remove
+    repeated string remove = 2;
+    string client_id = 3;
+}
+
 
 
 // Message to carry uname information.

@@ -24,6 +24,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
@@ -74,7 +75,7 @@ func (self *ApiServer) GetClientMetadata(
 
 func (self *ApiServer) SetClientMetadata(
 	ctx context.Context,
-	in *api_proto.ClientMetadata) (*emptypb.Empty, error) {
+	in *api_proto.SetClientMetadataRequest) (*emptypb.Empty, error) {
 
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
@@ -90,14 +91,25 @@ func (self *ApiServer) SetClientMetadata(
 			"User is not allowed to modify client labels.")
 	}
 
-	client_path_manager := paths.NewClientPathManager(in.ClientId)
-	db, err := datastore.GetDB(org_config_obj)
+	client_info_manager, err := services.GetClientInfoManager(org_config_obj)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 
-	err = db.SetSubject(org_config_obj, client_path_manager.Metadata(), in)
-	return &emptypb.Empty{}, err
+	metadata := ordereddict.NewDict()
+	for _, env := range in.Add {
+		metadata.Set(env.Key, env.Value)
+	}
+
+	for _, key := range in.Remove {
+		_, pres := metadata.Get(key)
+		if !pres {
+			metadata.Set(key, nil)
+		}
+	}
+
+	err = client_info_manager.SetMetadata(ctx, in.ClientId, metadata, user_name)
+	return &emptypb.Empty{}, Status(self.verbose, err)
 }
 
 func (self *ApiServer) GetClient(

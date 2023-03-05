@@ -63,8 +63,9 @@ type EventTable struct {
 
 // Determine if the current table is the same as the new set of
 // queries. Returns true if the queries are the same and no change is
-// needed.
-func (self *EventTable) equal(events []*actions_proto.VQLCollectorArgs) bool {
+// needed. NOTE: Assumes the order of queries and Env variables is
+// deterministic and consistent.
+func (self *EventTable) Equal(events []*actions_proto.VQLCollectorArgs) bool {
 	if len(events) != len(self.Events) {
 		return false
 	}
@@ -149,7 +150,7 @@ func (self *EventTable) Update(
 	// restart. This can happen e.g. if the server changes label
 	// groups and recaculates the table version but the actual
 	// queries dont end up changing.
-	if self.equal(table.Event) {
+	if self.Equal(table.Event) {
 		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
 		logger.Info("Client event query update %v did not "+
 			"change queries, skipping", table.Version)
@@ -162,8 +163,15 @@ func (self *EventTable) Update(
 	// Close the old table and wait for it to finish.
 	self.close()
 
-	// Reset the event table and start from scratch
-	self.Events = table.Event
+	// Reset the event table and start from scratch.
+	self.Events = nil
+
+	// Make a copy of the events so we can own them.
+	for _, e := range table.Event {
+		self.Events = append(self.Events,
+			proto.Clone(e).(*actions_proto.VQLCollectorArgs))
+	}
+
 	self.version = table.Version
 	self.wg = &sync.WaitGroup{}
 	self.Ctx, self.cancel = context.WithCancel(ctx)

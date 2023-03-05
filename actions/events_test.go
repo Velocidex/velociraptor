@@ -116,6 +116,7 @@ var server_state = &flows_proto.ClientEventTable{
 
 func (self *EventsTestSuite) TestEventTableUpdate() {
 	client_manager, err := services.ClientEventManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
 	client_manager.(*client_monitoring.ClientEventTable).Clock = self.Clock
 
 	wg := &sync.WaitGroup{}
@@ -258,6 +259,88 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// Make sure the event queries end up in the writeback file
 	assert.Contains(self.T(), string(data), "EventArtifact1")
 	assert.Contains(self.T(), string(data), "EventArtifact2")
+}
+
+// What do we consider a change in the event table. The server may
+// send updated event tables frequently but we do not want to
+// interrupt the event tables if the queries do not really
+// change. This checks we skip the table update if it is the same as
+// before.
+func (self *EventsTestSuite) TestEventEqual() {
+	client_manager, err := services.ClientEventManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+	client_manager.(*client_monitoring.ClientEventTable).Clock = self.Clock
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	defer cancel()
+
+	// Wait until the entire event table is cleaned up.
+	wg := &sync.WaitGroup{}
+	output_chan, _ := responder.NewMessageDrain(ctx)
+	table := self.InitializeEventTable(ctx, wg, output_chan)
+	_ = table
+
+	require.NoError(self.T(), client_manager.SetClientMonitoringState(
+		ctx, self.ConfigObj, "", server_state))
+
+	message := client_manager.GetClientUpdateEventTableMessage(
+		context.Background(), self.ConfigObj, self.client_id)
+
+	// Update the table for the base message.
+	err, ok := table.Update(ctx, wg, self.ConfigObj, output_chan,
+		message.UpdateEventTable)
+	assert.NoError(self.T(), err)
+	assert.True(self.T(), ok)
+
+	// Now we try check if the table will update under certain conditions.
+
+	// Increase the version but no difference in content at all
+	message.UpdateEventTable.Version += 100
+	err, ok = table.Update(ctx, wg, self.ConfigObj, output_chan,
+		message.UpdateEventTable)
+	assert.NoError(self.T(), err)
+	assert.False(self.T(), ok)
+
+	// A query was added to the table
+	message.UpdateEventTable.Version += 100
+	message.UpdateEventTable.Event[0].Query = append(
+		message.UpdateEventTable.Event[0].Query,
+		&actions_proto.VQLRequest{
+			VQL: "SELECT * FROM info()",
+		})
+
+	err, ok = table.Update(ctx, wg, self.ConfigObj, output_chan,
+		message.UpdateEventTable)
+	assert.NoError(self.T(), err)
+
+	// Yes this is a new query!
+	assert.True(self.T(), ok)
+
+	// Now add a new parameter - this is also an update
+	message.UpdateEventTable.Version += 100
+	message.UpdateEventTable.Event[0].Env = append(
+		message.UpdateEventTable.Event[0].Env, &actions_proto.VQLEnv{
+			Key:   "Foo",
+			Value: "Bar",
+		})
+
+	err, ok = table.Update(ctx, wg, self.ConfigObj, output_chan,
+		message.UpdateEventTable)
+	assert.NoError(self.T(), err)
+
+	// Yes this is a new query!
+	assert.True(self.T(), ok)
+
+	// Change the parameter
+	message.UpdateEventTable.Version += 100
+	message.UpdateEventTable.Event[0].Env[0].Value = "Baz"
+
+	err, ok = table.Update(ctx, wg, self.ConfigObj, output_chan,
+		message.UpdateEventTable)
+	assert.NoError(self.T(), err)
+
+	// Yes this is a new query!
+	assert.True(self.T(), ok)
 }
 
 func TestEventsTestSuite(t *testing.T) {

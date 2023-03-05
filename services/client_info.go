@@ -105,10 +105,12 @@ type ClientInfoManager interface {
 	// record chages and we need to force a read from storage.
 	Flush(ctx context.Context, client_id string)
 
+	// Be able to manipulate the client and server metadata.
 	GetMetadata(ctx context.Context,
 		client_id string) (*ordereddict.Dict, error)
+
 	SetMetadata(ctx context.Context,
-		client_id string, metadata *ordereddict.Dict) error
+		client_id string, metadata *ordereddict.Dict, principal string) error
 }
 
 func GetHostname(
