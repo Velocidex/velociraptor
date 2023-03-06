@@ -76,8 +76,6 @@ func (self *VelociraptorUploader) Upload(
 	md5_sum := md5.New()
 	sha_sum := sha256.New()
 
-	BUFF_SIZE = int64(1024 * 1024)
-
 	for {
 		// Ensure there is a fresh allocation for every
 		// iteration to prevent overwriting in flight buffers.
@@ -106,7 +104,7 @@ func (self *VelociraptorUploader) Upload(
 			},
 			Offset:     offset,
 			Size:       uint64(expected_size),
-			StoredSize: uint64(expected_size),
+			StoredSize: offset + uint64(len(data)),
 			Mtime:      mtime.UnixNano(),
 			Atime:      atime.UnixNano(),
 			Ctime:      ctime.UnixNano(),
@@ -243,7 +241,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 					Accessor:   accessor,
 				},
 				Size:         uint64(real_size),
-				StoredSize:   0,
+				StoredSize:   uint64(expected_size),
 				IsSparse:     is_sparse,
 				Index:        index,
 				Mtime:        mtime.UnixNano(),
@@ -356,7 +354,7 @@ func (self *VelociraptorUploader) maybeUploadSparse(
 				Accessor:   accessor,
 			},
 			Size:         uint64(real_size),
-			StoredSize:   uint64(expected_size),
+			StoredSize:   uint64(write_offset),
 			IsSparse:     is_sparse,
 			Offset:       uint64(write_offset),
 			Index:        index,
