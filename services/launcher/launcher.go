@@ -266,7 +266,7 @@ func (self *Launcher) CompileCollectorArgs(
 				vql_collector_args.Timeout = collector_request.Timeout
 			}
 
-			if config_obj.Defaults != nil {
+			if config_obj != nil && config_obj.Defaults != nil {
 				vql_collector_args.MaxRow = config_obj.Defaults.MaxRows
 				vql_collector_args.MaxRowBufferSize = config_obj.Defaults.MaxRowBufferSize
 			}

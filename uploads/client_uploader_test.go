@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io/ioutil"
-	"os"
 	"runtime"
 	"testing"
 	"time"
@@ -42,7 +40,8 @@ func CombineOutput(name string, responses []*crypto_proto.VeloMessage) string {
 	result := []byte{}
 
 	for _, item := range responses {
-		if item.FileBuffer.Pathspec.Path == name {
+		if item.FileBuffer != nil &&
+			item.FileBuffer.Pathspec.Path == name {
 			result = append(result, item.FileBuffer.Data...)
 		}
 	}
@@ -137,7 +136,10 @@ func TestClientUploaderSparseWithEOF(t *testing.T) {
 	assert.Equal(t, CombineOutput("/foo", responses), "Hello hi")
 }
 
-func TestClientUploader(t *testing.T) {
+func TestClientUploaderMultipleBuffers(t *testing.T) {
+	cancel := utils.MockTime(&utils.MockClock{MockNow: time.Unix(10, 10)})
+	defer cancel()
+
 	responder_obj := responder.TestResponderWithFlowId(
 		nil, "TestClientUploader")
 	uploader := &VelociraptorUploader{
@@ -146,31 +148,86 @@ func TestClientUploader(t *testing.T) {
 
 	BUFF_SIZE = 10
 
-	tmpfile, err := ioutil.TempFile("", "tmp*")
-	assert.NoError(t, err)
-	defer os.Remove(tmpfile.Name())
-
-	_, err = tmpfile.Write([]byte("Hello world"))
-	assert.NoError(t, err)
-
-	name := tmpfile.Name()
-	tmpfile.Close()
-
-	fd, err := os.Open(name)
-	assert.NoError(t, err)
-
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 
 	resp, err := uploader.Upload(
-		ctx, scope, getOSPath(name),
-		"file", nil, 1000,
-		nilTime, nilTime, nilTime, nilTime, fd)
+		ctx, scope, accessors.MustNewLinuxOSPath("test.txt"),
+		"file", nil,
+
+		// Expected_size
+		1000, nilTime, nilTime, nilTime, nilTime,
+		bytes.NewBufferString("Hello world Hello world"))
 	assert.NoError(t, err)
-	assert.Equal(t, resp.Path, name)
-	assert.Equal(t, resp.Size, uint64(11))
-	assert.Equal(t, resp.StoredSize, uint64(11))
-	assert.Equal(t, resp.Error, "")
+
+	responder_obj.Close()
+
+	var messages []*crypto_proto.VeloMessage
+	vtesting.WaitUntil(time.Second*5, t, func() bool {
+		messages = responder_obj.Drain.Messages()
+		for _, r := range messages {
+			if r.FlowStats != nil {
+				return true
+			}
+		}
+		return false
+	})
+
+	golden := ordereddict.NewDict().
+		Set("VQLResponse", resp).
+		Set("Messages", messages)
+	goldie.Assert(t, "TestClientUploaderMultipleBuffers",
+		json.MustMarshalIndent(golden))
+}
+
+func TestClientUploaderMultipleUploads(t *testing.T) {
+	cancel := utils.MockTime(&utils.MockClock{MockNow: time.Unix(10, 10)})
+	defer cancel()
+
+	responder_obj := responder.TestResponderWithFlowId(
+		nil, "TestClientUploader")
+	uploader := &VelociraptorUploader{
+		Responder: responder_obj,
+	}
+
+	BUFF_SIZE = 1000
+
+	ctx := context.Background()
+	scope := vql_subsystem.MakeScope()
+
+	var resp interface{}
+	var err error
+
+	for i := 0; i < 2; i++ {
+		resp, err = uploader.Upload(
+			ctx, scope, accessors.MustNewLinuxOSPath(
+				fmt.Sprintf("test23%v.txt", i)),
+			"file", nil,
+
+			// Expected_size
+			1000, nilTime, nilTime, nilTime, nilTime,
+			bytes.NewBufferString("Hello world"))
+		assert.NoError(t, err)
+	}
+
+	responder_obj.Close()
+
+	var messages []*crypto_proto.VeloMessage
+	vtesting.WaitUntil(time.Second*5, t, func() bool {
+		messages = responder_obj.Drain.Messages()
+		for _, r := range messages {
+			if r.FlowStats != nil {
+				return true
+			}
+		}
+		return false
+	})
+
+	golden := ordereddict.NewDict().
+		Set("VQLResponse", resp).
+		Set("Messages", messages)
+	goldie.Assert(t, "TestClientUploaderMultipleUploads",
+		json.MustMarshalIndent(golden))
 }
 
 // Trying to upload a completely sparse file with no data but real
@@ -209,6 +266,9 @@ func TestClientUploaderCompletelySparse(t *testing.T) {
 }
 
 func TestClientUploaderSparseMultiBuffer(t *testing.T) {
+	cancel := utils.MockTime(&utils.MockClock{MockNow: time.Unix(10, 10)})
+	defer cancel()
+
 	resp := responder.TestResponderWithFlowId(
 		nil, fmt.Sprintf("Test%d", utils.GetId()))
 	uploader := &VelociraptorUploader{
@@ -217,6 +277,10 @@ func TestClientUploaderSparseMultiBuffer(t *testing.T) {
 
 	// 2 bytes per message
 	BUFF_SIZE = 2
+	defer func() {
+		BUFF_SIZE = 1000
+	}()
+
 	reader := &TestRangeReader{
 		Reader: bytes.NewReader([]byte(
 			"Hello world hello world")),
@@ -231,15 +295,19 @@ func TestClientUploaderSparseMultiBuffer(t *testing.T) {
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
 
-	uploader.maybeUploadSparse(ctx, scope,
+	upload_resp, err := uploader.maybeUploadSparse(ctx, scope,
 		filename, "ntfs", nil, 1000, nilTime,
 		resp.NextUploadId(),
 		range_reader)
+	assert.NoError(t, err)
 
+	resp.Close()
+
+	// Wait for the status message
 	var responses []*crypto_proto.VeloMessage
 	vtesting.WaitUntil(time.Second*5, t, func() bool {
 		responses = resp.Drain.Messages()
-		return CombineOutput("/foo", responses) == "Hello hello "
+		return len(responses) > 0 && responses[len(responses)-1].FlowStats != nil
 	})
 
 	assert.Equal(t, CombineOutput("/foo", responses), "Hello hello ")
@@ -248,8 +316,12 @@ func TestClientUploaderSparseMultiBuffer(t *testing.T) {
 		response.SessionId = ""
 	}
 
+	golden := ordereddict.NewDict().
+		Set("VQLResponse", upload_resp).
+		Set("Messages", responses)
+
 	goldie.Assert(t, "ClientUploaderSparseMultiBuffer",
-		json.MustMarshalIndent(responses))
+		json.MustMarshalIndent(golden))
 }
 
 // Upload multiple files.
@@ -349,6 +421,10 @@ func TestClientUploaderNoIndexIfNotSparse(t *testing.T) {
 
 	// 2 bytes per message
 	BUFF_SIZE = 2
+	defer func() {
+		BUFF_SIZE = 1000
+	}()
+
 	reader := &TestRangeReader{
 		Reader: bytes.NewReader([]byte(
 			"Hello world hello world")),
