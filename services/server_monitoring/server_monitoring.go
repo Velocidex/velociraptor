@@ -147,6 +147,25 @@ func (self *EventTable) ProcessArtifactModificationEvent(
 
 }
 
+func (self *EventTable) ProcessServerMetadataModificationEvent(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	event *ordereddict.Dict) {
+
+	client_id, pres := event.GetString("client_id")
+	if !pres || client_id != "server" {
+		return
+	}
+
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	logger.Info("server_monitoring: Reloading table because server metadata was updated")
+
+	request := self.Get()
+
+	// Restart the queries
+	self.StartQueries(config_obj, request)
+}
+
 func (self *EventTable) Update(
 	config_obj *config_proto.Config,
 	principal string,
@@ -161,7 +180,7 @@ func (self *EventTable) Update(
 	}
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Info("server_monitoring: Updating monitoring table")
+	logger.Info("<green>server_monitoring</>: Updating monitoring table")
 
 	// Now store the monitoring table on disk.
 	db, err := datastore.GetDB(config_obj)
@@ -467,14 +486,20 @@ func NewServerMonitoringService(
 	if err != nil {
 		return nil, err
 	}
+
 	events, cancel := journal.Watch(
 		ctx, "Server.Internal.ArtifactModification",
+		"server_monitoring_service")
+
+	metadata_mod_event, metadata_mod_event_cancel := journal.Watch(
+		ctx, "Server.Internal.MetadataModifications",
 		"server_monitoring_service")
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		defer cancel()
+		defer metadata_mod_event_cancel()
 
 		// Shut down all server queries in an orderly fasion
 		defer manager.Close()
@@ -483,6 +508,13 @@ func NewServerMonitoringService(
 			select {
 			case <-ctx.Done():
 				return
+
+			case event, ok := <-metadata_mod_event:
+				if !ok {
+					return
+				}
+				manager.ProcessServerMetadataModificationEvent(
+					ctx, config_obj, event)
 
 			case event, ok := <-events:
 				if !ok {

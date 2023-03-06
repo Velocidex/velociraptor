@@ -57,12 +57,13 @@ func (self *ServerArtifactRunner) LaunchServerArtifact(
 	req *crypto_proto.FlowRequest,
 	collection_context *flows_proto.ArtifactCollectorContext) error {
 
-	sub_ctx, cancel := context.WithCancel(self.ctx)
 	collection_context_manager, err := NewCollectionContextManager(
-		sub_ctx, self.wg, config_obj, req, collection_context)
+		self.ctx, self.wg, config_obj, req, collection_context)
 	if err != nil {
 		return err
 	}
+
+	sub_ctx, cancel := context.WithCancel(self.ctx)
 
 	collection_context_manager.StartRefresh(self.wg)
 
@@ -70,7 +71,8 @@ func (self *ServerArtifactRunner) LaunchServerArtifact(
 	go func() {
 		defer self.wg.Done()
 		defer cancel()
-		defer collection_context_manager.Save()
+		defer collection_context_manager.Close(self.ctx)
+
 		self.ProcessTask(sub_ctx, config_obj,
 			session_id, collection_context_manager, req)
 	}()
@@ -99,6 +101,8 @@ func (self *ServerArtifactRunner) ProcessTask(
 	session_id string,
 	collection_context CollectionContextManager,
 	req *crypto_proto.FlowRequest) error {
+
+	defer collection_context.Close(ctx)
 
 	self.mu.Lock()
 	self.in_flight_collections[session_id] = collection_context
