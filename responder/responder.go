@@ -128,7 +128,7 @@ func (self *FlowResponder) updateStats(message *crypto_proto.VeloMessage) {
 		// number of files uploaded and set the expected length.
 		if message.FileBuffer.Offset == 0 {
 			self.status.UploadedFiles++
-			self.status.ExpectedUploadedBytes += int64(message.FileBuffer.StoredSize)
+			self.status.ExpectedUploadedBytes += int64(message.FileBuffer.Size)
 		}
 	}
 

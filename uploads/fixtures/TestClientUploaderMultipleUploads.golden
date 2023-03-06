@@ -1,0 +1,102 @@
+{
+ "VQLResponse": {
+  "Path": "/test231.txt",
+  "Size": 11,
+  "StoredSize": 11,
+  "sha256": "64ec88ca00b268e5ba1a35678a1b5316d212f4f366b2477232534a8aeca37f3c",
+  "md5": "3e25960a79dbc69b674cd4ec67a72c62",
+  "StoredName": "/test231.txt",
+  "Components": [
+   "test231.txt"
+  ],
+  "Accessor": "file"
+ },
+ "Messages": [
+  {
+   "session_id": "TestClientUploader",
+   "request_id": 5,
+   "FileBuffer": {
+    "pathspec": {
+     "path": "/test230.txt",
+     "components": [
+      "test230.txt"
+     ],
+     "accessor": "file"
+    },
+    "size": 1000,
+    "stored_size": 11,
+    "data": "SGVsbG8gd29ybGQ=",
+    "data_length": 11
+   }
+  },
+  {
+   "session_id": "TestClientUploader",
+   "request_id": 5,
+   "FileBuffer": {
+    "pathspec": {
+     "path": "/test230.txt",
+     "components": [
+      "test230.txt"
+     ],
+     "accessor": "file"
+    },
+    "offset": 11,
+    "size": 1000,
+    "stored_size": 11,
+    "eof": true
+   }
+  },
+  {
+   "session_id": "TestClientUploader",
+   "request_id": 5,
+   "FileBuffer": {
+    "pathspec": {
+     "path": "/test231.txt",
+     "components": [
+      "test231.txt"
+     ],
+     "accessor": "file"
+    },
+    "size": 1000,
+    "stored_size": 11,
+    "data": "SGVsbG8gd29ybGQ=",
+    "data_length": 11,
+    "upload_number": 1
+   }
+  },
+  {
+   "session_id": "TestClientUploader",
+   "request_id": 5,
+   "FileBuffer": {
+    "pathspec": {
+     "path": "/test231.txt",
+     "components": [
+      "test231.txt"
+     ],
+     "accessor": "file"
+    },
+    "offset": 11,
+    "size": 1000,
+    "stored_size": 11,
+    "eof": true,
+    "upload_number": 1
+   }
+  },
+  {
+   "session_id": "TestClientUploader",
+   "request_id": 981,
+   "flow_stats": {
+    "query_status": [
+     {
+      "status": 4,
+      "duration": 10000000000,
+      "last_active": 10000000,
+      "uploaded_files": 2,
+      "uploaded_bytes": 22,
+      "expected_uploaded_bytes": 2000
+     }
+    ]
+   }
+  }
+ ]
+}
