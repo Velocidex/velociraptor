@@ -331,12 +331,16 @@ sources:
           These apply to notebooks automatically without needing to
           define them again.
 
-          Hash column should right click to VT
+          * Hash column should right click to VT
+          * upload preview should show the uploaded file.
 
           */
 
-          LET ColumnTypes = dict(`StartDate`='timestamp', Hex='hex')
+          LET ColumnTypes = dict(`StartDate`='timestamp',
+                                 Hex='hex', Upload='preview_upload')
           LET Hex = "B0 EC 48 5F 18 77"
 
-          SELECT Hex, StartDate, hash(accessor="data", path="Hello") AS Hash
+          SELECT Hex, StartDate, hash(accessor="data", path="Hello") AS Hash,
+                 upload(accessor="data", file="Hello world",
+                        name="test.txt") AS Upload
           FROM source()
