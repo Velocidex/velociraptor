@@ -940,7 +940,9 @@ message Defaults {
     int64 unauthenticated_lru_timeout_sec = 14;
 
     // The Maximum size of a sparse file that can be expanded. Files
-    // larger than this will not be expanded.
+    // larger than this will not be expanded. This protects the server
+    // from expanding potentially Tb worth of sparse files when
+    // requested.
     uint64 max_sparse_expand_size = 15;
 
     // Control GUI features
@@ -948,6 +950,12 @@ message Defaults {
     string auth_redirect_template = 27;
     bool disable_quarantine_button = 28;
     string default_theme = 29;
+
+    // Defaults for client communication limits. Decrease those if
+    // your clients are behind a proxy that only accepts very small
+    // POST messages. If not set we use client defaults.
+    uint64 max_rows = 30;
+    uint64 max_row_buffer_size = 31;
 }
 
 // Configures crypto preferences

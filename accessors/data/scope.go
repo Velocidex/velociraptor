@@ -1,6 +1,7 @@
 package data
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -8,6 +9,7 @@ import (
 	"github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 type ScopeFilesystemAccessor struct {
@@ -20,12 +22,21 @@ func (self ScopeFilesystemAccessor) New(scope vfilter.Scope) (
 }
 
 func (self ScopeFilesystemAccessor) getData(variable string) (string, error) {
-	variable_data, pres := self.scope.Resolve(variable)
-	if !pres {
-		return "", os.ErrNotExist
+	var result vfilter.Any = self.scope
+	var pres bool
+
+	for _, member := range strings.Split(variable, ".") {
+		switch t := result.(type) {
+		case types.LazyExpr:
+			result = t.Reduce(context.Background())
+		}
+		result, pres = self.scope.Associative(result, member)
+		if !pres {
+			return "", os.ErrNotExist
+		}
 	}
 
-	switch t := variable_data.(type) {
+	switch t := result.(type) {
 	case string:
 		return t, nil
 
@@ -33,13 +44,13 @@ func (self ScopeFilesystemAccessor) getData(variable string) (string, error) {
 		return string(t), nil
 
 	default:
-		return fmt.Sprintf("%v", variable_data), nil
+		return fmt.Sprintf("%v", result), nil
 	}
 }
 
 func (self ScopeFilesystemAccessor) ParsePath(path string) (
 	*accessors.OSPath, error) {
-	return accessors.NewLinuxOSPath(path)
+	return accessors.MustNewPathspecOSPath("").Clear().Append(path), nil
 }
 
 func (self ScopeFilesystemAccessor) LstatWithOSPath(path *accessors.OSPath) (

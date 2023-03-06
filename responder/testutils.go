@@ -19,7 +19,7 @@ type TestResponderType struct {
 
 func (self *TestResponderType) Close() {
 	self.FlowResponder.Close()
-	self.flow_context.Close()
+	self.FlowResponder.flow_context.Close()
 }
 
 func (self *TestResponderType) Output() chan *crypto_proto.VeloMessage {
@@ -47,10 +47,10 @@ func TestResponderWithFlowId(
 	result.wg.Add(1)
 	flow_context := flow_manager.FlowContext(
 		result.output, &crypto_proto.VeloMessage{SessionId: flow_id})
-	result.flow_context = flow_context
-	result.flow_context.mu.Lock()
-	result.flow_context.responders = append(
-		result.flow_context.responders, result.FlowResponder)
+	result.FlowResponder.flow_context = flow_context
+	result.FlowResponder.flow_context.mu.Lock()
+	result.FlowResponder.flow_context.responders = append(
+		result.FlowResponder.flow_context.responders, result.FlowResponder)
 	result.flow_context.mu.Unlock()
 
 	return result
