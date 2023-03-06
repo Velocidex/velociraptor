@@ -350,6 +350,31 @@ func (self *ClientEventTable) GetClientUpdateEventTableMessage(
 	}
 }
 
+func (self *ClientEventTable) ProcessServerMetadataModificationEvent(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	event *ordereddict.Dict) {
+
+	// Only trigger on server metadata changes
+	client_id, pres := event.GetString("client_id")
+	if !pres || client_id != "server" {
+		return
+	}
+
+	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+	logger.Info("<green>client_monitoring</>: Reloading table because server metadata was updated")
+
+	err := self.load_from_file(ctx, config_obj)
+	if err != nil {
+		logger := logging.GetLogger(
+			config_obj, &logging.FrontendComponent)
+		logger.Error("self.setClientMonitoringState: %v", err)
+	}
+
+	// Update version to reflect the new time.
+	self.state.Version = uint64(self.Clock.Now().UnixNano())
+}
+
 func (self *ClientEventTable) ProcessArtifactModificationEvent(
 	ctx context.Context,
 	config_obj *config_proto.Config, event *ordereddict.Dict) {
@@ -488,15 +513,27 @@ func NewClientMonitoringService(
 		ctx, "Server.Internal.ArtifactModification",
 		"client_monitoring_service")
 
+	metadata_mod_event, metadata_mod_event_cancel := journal.Watch(
+		ctx, "Server.Internal.MetadataModifications",
+		"client_monitoring_service")
+
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
 		defer cancel()
+		defer metadata_mod_event_cancel()
 
 		for {
 			select {
 			case <-ctx.Done():
 				return
+
+			case event, ok := <-metadata_mod_event:
+				if !ok {
+					return
+				}
+				event_table.ProcessServerMetadataModificationEvent(
+					ctx, config_obj, event)
 
 			case event, ok := <-events:
 				if !ok {

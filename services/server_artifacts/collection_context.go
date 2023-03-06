@@ -67,7 +67,7 @@ func NewCollectionContextManager(
 
 	flow_id := collection_context.SessionId
 	sub_ctx, cancel := context.WithCancel(ctx)
-	log_writer, err := NewServerLogWriter(ctx, config_obj, flow_id)
+	log_writer, err := NewServerLogWriter(sub_ctx, config_obj, flow_id)
 	if err != nil {
 		return nil, err
 	}
@@ -259,15 +259,15 @@ func (self *contextManager) Cancel(ctx context.Context, principal string) {
 	}
 	self.mu.Unlock()
 
-	self.cancel()
-
-	self.wg.Wait()
 	self.maybeSendCompletionMessage(ctx)
+	self.cancel()
+	self.wg.Wait()
 }
 
 func (self *contextManager) Close(ctx context.Context) {
-	self.wg.Wait()
 	self.maybeSendCompletionMessage(ctx)
+	self.cancel()
+	self.wg.Wait()
 }
 
 // Called when each query is completed. Will send the message once for
