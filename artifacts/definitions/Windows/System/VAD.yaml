@@ -42,7 +42,7 @@ parameters:
   - name: ContextBytes
     description: Include this amount of bytes around yara hit as context.
     default: 200
-    type: int64
+    type: int
 
 
 sources:

@@ -70,7 +70,7 @@ parameters:
   - name: NumberOfHits
     description: THis artifact will stop by default at one hit. This setting allows additional hits
     default: 1
-    type: int64
+    type: int
   - name: ContextBytes
     description: Include this amount of bytes around hit as context.
     default: 0

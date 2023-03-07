@@ -73,7 +73,7 @@ parameters:
   - name: ContextBytes
     description: Include this amount of bytes around hit as context.
     default: 0
-    type: int64
+    type: int
 
 sources:
   - query: |
