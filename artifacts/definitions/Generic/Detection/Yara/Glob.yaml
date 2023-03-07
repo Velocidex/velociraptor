@@ -27,8 +27,8 @@ description: |
 
   NOTE: this artifact runs the glob plugin with the nosymlink switch turned on.
   This will NOT follow any symlinks and may cause unexpected results if
-  unknowingly targeting a folder with symlinks.    
-  If upload is selected NumberOfHits is redundant and not advised as hits are 
+  unknowingly targeting a folder with symlinks.
+  If upload is selected NumberOfHits is redundant and not advised as hits are
   grouped by path to ensure files only downloaded once.
 
 
@@ -73,7 +73,7 @@ parameters:
   - name: ContextBytes
     description: Include this amount of bytes around hit as context.
     default: 0
-    type: int
+    type: int64
 
 sources:
   - query: |
@@ -110,27 +110,40 @@ sources:
             OR time_test(stamp=Ctime)
             OR time_test(stamp=Btime))
 
-      -- scan files and only report a single hit.
+      -- scan files and prepare hit metadata
       LET hits = SELECT * FROM foreach(row=files,
             query={
                 SELECT
                     OSPath,
-                    File.Size AS Size,
+                    File.Size as Size,
                     Mtime, Atime, Ctime, Btime,
                     Rule, Tags, Meta,
-                    str(str=String.Data) AS HitContext,
-                    String.Offset AS HitOffset
-                FROM yara(rules=yara_rules,files=OSPath, 
+                    String.Name as YaraString,
+                    String.Offset as HitOffset,
+                    upload( accessor='scope',
+                            file='String.Data',
+                            name=format(format="%v-%v-%v",
+                            args=[
+                                OSPath,
+                                if(condition= String.Offset - ContextBytes < 0,
+                                    then= 0,
+                                    else= String.Offset - ContextBytes),
+                                if(condition= String.Offset + ContextBytes > Size,
+                                    then= Size,
+                                    else= String.Offset + ContextBytes) ]
+                            )) as HitContext
+                FROM yara(rules=yara_rules,files=OSPath,
                   context=ContextBytes,number=NumberOfHits)
             })
 
-      -- upload files that have hit
-      LET upload_hits=SELECT *,
-            upload(file=OSPath) AS Upload
-        FROM hits
-        GROUP BY OSPath
+      -- upload files if selected
+      LET upload_hits = SELECT *, upload(file=OSPath,name=OSPath) as Upload FROM hits
 
       -- return rows
-      SELECT * FROM if(condition=UploadHits,
-        then=upload_hits,
-        else=hits)
+      SELECT * FROM if(condition= UploadHits,
+                        then= upload_hits,
+                        else= hits )
+
+column_types:
+  - name: HitContext
+    type: preview_upload

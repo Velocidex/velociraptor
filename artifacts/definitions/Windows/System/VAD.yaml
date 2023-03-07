@@ -42,7 +42,7 @@ parameters:
   - name: ContextBytes
     description: Include this amount of bytes around yara hit as context.
     default: 200
-    type: int
+    type: int64
 
 
 sources:
@@ -97,7 +97,18 @@ sources:
                          Tags=Tags,
                          Offset=String.Offset,
                          Name=String.Name) as YaraHit,
-                    base64encode(string=String.Data) AS YaraContext,
+                    upload( accessor='scope',
+                            file='String.Data',
+                            name=format(format="%v-%v_%v.bin-%v-%v",
+                            args=[
+                                Name, Pid, AddressRange,
+                                if(condition= String.Offset - ContextBytes < 0,
+                                    then= 0,
+                                    else= String.Offset - ContextBytes),
+                                if(condition= String.Offset + ContextBytes > SectionSize,
+                                    then= SectionSize,
+                                    else= String.Offset + ContextBytes ) ])
+                            ) as HitContext,
                     _PathSpec, _Address
                 FROM yara(
                             accessor='offset',
@@ -135,5 +146,5 @@ sources:
                     else= results)
 
 column_types:
-  - name: YaraContext
-    type: base64hex
+  - name: HitContext
+    type: preview_upload
