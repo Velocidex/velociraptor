@@ -61,7 +61,19 @@ FROM scope()
   "TestPath": "artifacts/testdata/files/wkscli.dll",
   "Size": 9728,
   "Rule": "X",
-  "HitContext": "MZ",
+  "HitContext": {
+   "Path": "String.Data",
+   "Size": 2,
+   "StoredSize": 2,
+   "sha256": "9b8db510ef42b8ed54a3712636fda55a4f8cfcd5493e20b74ab00cd4f3979f2d",
+   "md5": "ac6ad5d9b99757c3a878f2d275ace198",
+   "StoredName": "/uploads/scope/X%3A%2Fartifacts%2Ftestdata%2Ffiles%2Fwkscli.dll-0-0",
+   "Components": [
+    "uploads",
+    "scope",
+    "X:/artifacts/testdata/files/wkscli.dll-0-0"
+   ]
+  },
   "HitOffset": 0
  }
 ]SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath, Size, Rule, HitContext, HitOffset FROM Artifact.Windows.Detection.Yara.NTFS( DriveLetter=srcDir, PathRegex='wkscli.dll', ContextBytes=10, YaraRule=MZRule)[
@@ -69,7 +81,19 @@ FROM scope()
   "TestPath": "artifacts/testdata/files/wkscli.dll",
   "Size": 9728,
   "Rule": "X",
-  "HitContext": "MZ\ufffd\u0000\u0003\u0000\u0000\u0000\u0004\u0000\u0000\u0000",
+  "HitContext": {
+   "Path": "String.Data",
+   "Size": 12,
+   "StoredSize": 12,
+   "sha256": "d930a77b4e5a6df96f8be687f754be90fa6da7939406d214814a80393847ce1b",
+   "md5": "7341d9e7b06513d23b1e38848f039c7b",
+   "StoredName": "/uploads/scope/X%3A%2Fartifacts%2Ftestdata%2Ffiles%2Fwkscli.dll-0-10",
+   "Components": [
+    "uploads",
+    "scope",
+    "X:/artifacts/testdata/files/wkscli.dll-0-10"
+   ]
+  },
   "HitOffset": 0
  }
 ]SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath, Size, Rule, HitContext, HitOffset FROM Artifact.Windows.Detection.Yara.NTFS( DriveLetter=srcDir, PathRegex='wkscli.dll', YaraRule=IsPE)[
@@ -77,7 +101,19 @@ FROM scope()
   "TestPath": "artifacts/testdata/files/wkscli.dll",
   "Size": 9728,
   "Rule": "IsPE",
-  "HitContext": "Null",
+  "HitContext": {
+   "Path": "String.Data",
+   "Size": 4,
+   "StoredSize": 4,
+   "sha256": "fa1d2db62d4d952e2031452e1bc1ddcad0b192c2e29a706f11ce426ae5acddea",
+   "md5": "bbb93ef26e3c101ff11cdd21cab08a94",
+   "StoredName": "/uploads/scope/X%3A%2Fartifacts%2Ftestdata%2Ffiles%2Fwkscli.dll-Null-Null",
+   "Components": [
+    "uploads",
+    "scope",
+    "X:/artifacts/testdata/files/wkscli.dll-Null-Null"
+   ]
+  },
   "HitOffset": null
  }
 ]SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath,Size, Rule,Mtime,Atime,Ctime,Btime FROM Artifact.Generic.Detection.Yara.Glob(YaraRule=IsPE)[
@@ -121,7 +157,19 @@ FROM scope()
 ]SELECT relpath(path=OSPath, base=srcDir, sep="/") as TestPath,HitContext,Size,Rule,Mtime,Atime,Ctime,Btime FROM Artifact.Generic.Detection.Yara.Glob(DateBefore='2021-04-01',ContextBytes=10,YaraRule=MZRule)[
  {
   "TestPath": "artifacts/testdata/files/notnbt.exe",
-  "HitContext": "MZ\ufffd\u0000\u0003\u0000\u0000\u0000\u0004\u0000\u0000\u0000",
+  "HitContext": {
+   "Path": "String.Data",
+   "Size": 12,
+   "StoredSize": 12,
+   "sha256": "d930a77b4e5a6df96f8be687f754be90fa6da7939406d214814a80393847ce1b",
+   "md5": "7341d9e7b06513d23b1e38848f039c7b",
+   "StoredName": "/uploads/scope/X%3A%2Fartifacts%2Ftestdata%2Ffiles%2Fnotnbt.exe-0-10",
+   "Components": [
+    "uploads",
+    "scope",
+    "X:/artifacts/testdata/files/notnbt.exe-0-10"
+   ]
+  },
   "Size": 17920,
   "Rule": "X",
   "Mtime": "2021-01-01T05:57:50.184145696Z",
