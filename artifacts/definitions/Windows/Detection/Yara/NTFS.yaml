@@ -98,18 +98,19 @@ sources:
             FileRegex=FileNameRegex,PathRegex=PathRegex, 
             SizeMax=SizeMax, SizeMin=SizeMin)
         WHERE NOT IsDir
-          AND if(condition=EarliestSILastChanged,
-            then= LastRecordChange0x10 > EarliestSILastChanged,
-            else= True)
-          AND if(condition=LatestSILastChanged,
-            then= LastRecordChange0x10 < LatestSILastChanged,
-            else= True)
-          AND if(condition=EarliestFNCreated,
-            then= Created0x30 > EarliestFNCreation,
-            else= True)
-          AND if(condition=LatestFNCreated,
-            then= Created0x30 < LatestFNCreation,
-            else= True)
+            AND NOT OSPath =~ '''\\\\.\\.:\\<Err>\\'''
+            AND if(condition=EarliestSILastChanged,
+                then= LastRecordChange0x10 > EarliestSILastChanged,
+                else= True)
+            AND if(condition=LatestSILastChanged,
+                then= LastRecordChange0x10 < LatestSILastChanged,
+                else= True)
+            AND if(condition=EarliestFNCreated,
+                then= Created0x30 > EarliestFNCreation,
+                else= True)
+            AND if(condition=LatestFNCreated,
+                then= Created0x30 < LatestFNCreation,
+                else= True)
 
       -- scan files and only report a single hit.
       LET hits = SELECT * FROM foreach(row=files,
@@ -119,8 +120,20 @@ sources:
                     File.Size AS Size,
                     File.ModTime AS ModTime,
                     Rule, Tags, Meta,
-                    str(str=String.Data) AS HitContext,
-                    String.Offset AS HitOffset
+                    String.Name as YaraString,
+                    String.Offset as HitOffset,
+                    upload( accessor='scope', 
+                            file='String.Data', 
+                            name=format(format="%v-%v-%v", 
+                            args=[
+                                OSPath,
+                                if(condition= String.Offset - ContextBytes < 0,
+                                    then= 0,
+                                    else= String.Offset - ContextBytes),
+                                if(condition= String.Offset + ContextBytes > File.Size,
+                                    then= File.Size,
+                                    else= String.Offset + ContextBytes) ]
+                            )) as HitContext
                 FROM yara(rules=yara_rules, files=OSPath, context=ContextBytes,number=NumberOfHits)
             })
 
@@ -134,3 +147,7 @@ sources:
       SELECT * FROM if(condition=UploadHits,
         then={ SELECT * FROM upload_hits},
         else={ SELECT * FROM hits})
+
+column_types:
+  - name: HitContext
+    type: preview_upload
