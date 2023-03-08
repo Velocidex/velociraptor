@@ -3,10 +3,11 @@ author: Matt Green - @mgreen27
 description: |
   This artifact enables running Yara over processes in memory.
 
-  There are 3 kinds of Yara rules that can be deployed:
-   &nbsp;1. Url link to a yara rule.
-   &nbsp;2. Shorthand yara in the format "wide nocase ascii:string1,string2,string3".
-   &nbsp;3. or a Standard Yara rule attached as a parameter.
+  There are 2 kinds of Yara rules that can be deployed:
+   
+  1. Url link to a yara rule.
+  3. or a Standard Yara rule attached as a parameter.
+  
   Only one method of Yara will be applied and search order is as above. The
   default is Cobalt Strike opcodes.
 
@@ -17,6 +18,7 @@ description: |
   show one string in returned rows.
   If upload is selected NumberOfHits is redundant and not advised as hits are
   grouped by path to ensure files only downloaded once.
+  
 
 type: CLIENT
 parameters:
