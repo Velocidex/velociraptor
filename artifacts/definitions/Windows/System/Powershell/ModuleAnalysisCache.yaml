@@ -5,7 +5,7 @@ reference:
 
 parameters:
   - name: GlobLookup
-    default: C:\Windows\System32\config\systemprofile\AppData\Local\Microsoft\Windows\PowerShell\ModuleAnalysisCache
+    default: C:\{Users\*,Windows\System32\config\systemprofile}\AppData\Local\Microsoft\Windows\PowerShell\ModuleAnalysisCache
 
 sources:
   - query: |
