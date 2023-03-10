@@ -366,9 +366,12 @@ body.ncurses {
   background: var(--color-sidebar-inactive-background-hover);
 }
 
-.ncurses a.active .navigator.nav-pills.nav li {
-  color: var(--color-sidebar-active-foreground);
+.ncurses .navigator.nav-pills.nav li:has(a.active) {
   background: var(--color-sidebar-active-background);
+}
+
+.ncurses .navigator.nav-pills.nav li a.active {
+  color: var(--color-sidebar-active-foreground);
 }
 
 .ncurses .navigator.nav-pills.nav .nav-link.disabled {

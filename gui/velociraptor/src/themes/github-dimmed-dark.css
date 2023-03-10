@@ -246,9 +246,12 @@ body.github-dimmed-dark {
   background: var(--color-sidebar-inactive-background-hover);
 }
 
-.github-dimmed-dark a.active .navigator.nav-pills.nav li {
-  color: var(--color-sidebar-active-foreground);
+.github-dimmed-dark .navigator.nav-pills.nav li:has(a.active) {
   background: var(--color-sidebar-active-background);
+}
+
+.github-dimmed-dark .navigator.nav-pills.nav li a.active {
+  color: var(--color-sidebar-active-foreground);
 }
 
 .github-dimmed-dark .navigator.nav-pills.nav .nav-link.disabled {

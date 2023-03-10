@@ -98,6 +98,9 @@ const French = {
     "Create a new artifact": "Créer un nouvel artefact",
     "Save": "Enregistrer",
     "Search": "Recherche",
+    "Toggle Main Menu": "Basculer le menu principal",
+    "Main Menu": "Menu principal",
+    "Welcome": "Bienvenu",
 
     // Navigation au clavier.
     "Global hotkeys": "Raccourcis globaux",

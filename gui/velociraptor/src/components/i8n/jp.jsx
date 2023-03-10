@@ -95,6 +95,9 @@ const Japanese = {
     "Create a new artifact": "新規アーティファクトを作成する",
     "Save": "保存",
     "Search": "検索",
+    "Toggle Main Menu": "メインメニューの切り替え",
+    "Main Menu": "メインメニュー",
+    "Welcome": "いらっしゃいませ",
 
     // Keyboard navigation.
     "Global hotkeys": "グローバルホットキー",

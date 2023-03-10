@@ -97,6 +97,9 @@ const Spanish = {
     "Create a new artifact": "Crear un nuevo artefacto",
     "Save": "Guardar",
     "Search": "Buscar",
+    "Toggle Main Menu": "Alternar menú principal",
+    "Main Menu": "Menú principal",
+    "Welcome": "Bienvenido",
 
     // Keyboard navigation.
     "Global hotkeys": "Teclas de acceso directo globales",
