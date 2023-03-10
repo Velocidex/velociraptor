@@ -31,12 +31,10 @@ sources:
       SELECT 
         Mtime,
         Username,
-        OSPath.Basename as KeyName,
-        Data.value as KeyValue,
-        path_join(components=[
-            "HKEY_USERS", UUID, OSPath.Dirname.Path
-                ], path_type="registry") as Key,
-        OSPath.DelegatePath as SourcePath
+        OSPath.Basename AS KeyName,
+        Data.value AS KeyValue,
+        HKEY_USERS + UUID + OSPath.Dirname AS Key,
+        OSPath.DelegatePath AS SourcePath
       FROM Artifact.Windows.Registry.NTUser(KeyGlob=KeyGlob,userRegex=TargetUser)
       WHERE KeyName =~ TargetKeyName
         AND KeyValue =~ TargetKeyValue
