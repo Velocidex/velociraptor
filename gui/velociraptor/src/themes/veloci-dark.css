@@ -257,9 +257,12 @@ body.veloci-dark {
   background: var(--color-sidebar-inactive-background-hover);
 }
 
-.veloci-dark a.active .navigator.nav-pills.nav li {
-  color: var(--color-sidebar-active-foreground);
+.veloci-dark .navigator.nav-pills.nav li:has(a.active) {
   background: var(--color-sidebar-active-background);
+}
+
+.veloci-dark .navigator.nav-pills.nav li a.active {
+  color: var(--color-sidebar-active-foreground);
 }
 
 .veloci-dark .navigator.nav-pills.nav .nav-link.disabled {

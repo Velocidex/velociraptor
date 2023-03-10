@@ -272,14 +272,21 @@ body.coolgray-dark {
   padding-bottom: 1em;
 }
 
-.coolgray-dark .navigator.nav-pills.nav li:hover {
+.coolgray-dark nav.navigator .nav-pills .nav-link {
+  padding: 0;
+}
+
+.coolgray-dark .navigator.nav-pills.nav li:hover > a:not(.active) {
   color: var(--color-sidebar-inactive-foreground-hover);
   background: var(--color-sidebar-inactive-background-hover);
 }
 
-.coolgray-dark a.active .navigator.nav-pills.nav li {
-  color: var(--color-sidebar-active-foreground);
+.coolgray-dark .navigator.nav-pills.nav li:has(a.active) {
   background: var(--color-sidebar-active-background);
+}
+
+.coolgray-dark .navigator.nav-pills.nav li a.active {
+  color: var(--color-sidebar-active-foreground);
 }
 
 .coolgray-dark .navigator.nav-pills.nav .nav-link.disabled {

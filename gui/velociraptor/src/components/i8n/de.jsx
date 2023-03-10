@@ -96,6 +96,9 @@ const Deutsch = {
     "Create a new artifact": "Erstellen eines neuen Artefakt",
     "Save": "Speichern",
     "Search": "Suchen",
+    "Toggle Main Menu": "Hauptmenü umschalten",
+    "Main Menu": "Hauptmenü",
+    "Welcome": "Willkommen",
 
     // Keyboard navigation.
     "Global hotkeys": "Globale Hotkeys",

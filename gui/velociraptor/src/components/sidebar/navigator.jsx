@@ -71,248 +71,237 @@ class VeloNavigator extends Component {
         return (
             <>
               <div className="float-left navigator">
-                <span className="hamburger toolbar-buttons"
-                      onClick={this.toggle}>&#9776;</span>
-                <a href="#welcome">
-                  <img src={logo} className="velo-logo" alt="velo logo"/>
-                </a>
-                <div className={classNames({
-                    'collapsed': this.state.collapsed,
-                    'uncollapsed': !this.state.collapsed})}
-                     id="navigator"
-                     onClick={this.collapse}>
-                  <div>
-                    <section className="navigator">
-                      <NavLink exact={true} to="/dashboard">
-                        <ul className="nav nav-pills navigator">
-                          <li className="nav-link" state="userDashboard">
-                            <span>
-                              <i className="navicon">
-                                <FontAwesomeIcon icon="home"/></i>
-                            </span>
-                            {T("Home")}
-                          </li>
-                        </ul>
-                      </NavLink>
-
-                      <NavLink to="/hunts">
-                        <ul className="nav nav-pills navigator">
-                          <li className="nav-link" state="hunts" >
-                            <span>
-                              <i className="navicon">
-                                <FontAwesomeIcon icon="crosshairs"/></i>
-                            </span>
-                            {T("Hunt Manager")}
-                          </li>
-                        </ul>
-                      </NavLink>
-
-                      <NavLink to="/artifacts">
-                        <ul className="nav nav-pills navigator">
-                          <li className="nav-link" state="view_artifacts" >
-                            <span>
-                              <i className="navicon">
-                                <FontAwesomeIcon icon="wrench"/></i>
-                            </span>
-                            {T("View Artifacts")}
-                          </li>
-                        </ul>
-                      </NavLink>
-
-                      { !customization.disable_server_events &&
-                        <NavLink to="/events/server">
-                          <ul className="nav nav-pills  navigator">
-                            <li className="nav-link" state="server_events" >
-                              <span>
-                                <i className="navicon">
-                                  <FontAwesomeIcon icon="eye"/></i>
-                              </span>
-                              {T("Server Events")}
-                            </li>
-                          </ul>
+                <button
+                  className="hamburger toolbar-buttons"
+                  onClick={this.toggle}
+                  aria-expanded={!this.state.collapsed}
+                >
+                  <span aria-hidden="true">&#9776;</span>
+                  <span className="sr-only">{T("Toggle Main Menu")}</span>
+              </button>
+              <a href="#welcome">
+                <img src={logo} className="velo-logo" alt={T("Welcome")} />
+              </a>
+              <div
+                className={classNames({
+                  collapsed: this.state.collapsed,
+                  uncollapsed: !this.state.collapsed,
+                })}
+                id="navigator"
+                onClick={this.collapse}
+              >
+                <div>
+                  <nav className="navigator" aria-labelledby="mainmenu">
+                    <h2 id="mainmenu" className="sr-only">
+                      {T("Main Menu")}
+                    </h2>
+                    <ul className="nav nav-pills navigator">
+                      <li className="nav-link" state="userDashboard">
+                        <NavLink exact={true} to="/dashboard">
+                          <span>
+                            <i className="navicon">
+                              <FontAwesomeIcon icon="home" />
+                            </i>
+                          </span>
+                          {T("Home")}
                         </NavLink>
-                      }
+                      </li>
 
-                      <NavLink to="/collected/server">
-                        <ul className="nav nav-pills  navigator">
-                          <li className="nav-link" state="server_artifacts" >
-                            <span>
-                              <i className="navicon">
-                                <FontAwesomeIcon icon="server"/></i>
-                            </span>
-                            {T("Server Artifacts")}
-                          </li>
-                        </ul>
-                      </NavLink>
-
-                      <NavLink to="/notebooks">
-                        <ul className="nav nav-pills navigator">
-                          <li className="nav-link" state="notebook" >
-                            <span>
-                              <i className="navicon">
-                                <FontAwesomeIcon icon="book"/></i>
-                            </span>
-                            {T("Notebooks")}
-                          </li>
-                        </ul>
-                      </NavLink>
-
-                      { user_is_admin && !customization.disable_user_management &&
-                        <NavLink to="/users">
-                          <ul className="nav nav-pills navigator">
-                            <li className="nav-link" state="users" >
-                              <span>
-                                <i className="navicon">
-                                  <FontAwesomeIcon icon="user"/></i>
-                              </span>
-                              {T("Users")}
-                            </li>
-                          </ul>
+                      <li className="nav-link" state="hunts">
+                        <NavLink to="/hunts">
+                          <span>
+                            <i className="navicon">
+                              <FontAwesomeIcon icon="crosshairs" />
+                            </i>
+                          </span>
+                          {T("Hunt Manager")}
                         </NavLink>
-                      }
+                      </li>
 
-                      { disabled ?
-                        <>
-                          <ul className="nav nav-pills navigator">
-                            <li className={classNames({
-                                "nav-link": true,
-                                disabled: disabled})}>
-                              <span>
-                                <i className="navicon">
-                                  <FontAwesomeIcon icon="laptop"/> </i>
-                              </span>
-                              {T("Host Information")}
-                            </li>
-                          </ul>
+                      <li className="nav-link" state="view_artifacts">
+                        <NavLink to="/artifacts">
+                          <span>
+                            <i className="navicon">
+                              <FontAwesomeIcon icon="wrench" />
+                            </i>
+                          </span>
+                          {T("View Artifacts")}
+                        </NavLink>
+                      </li>
 
-                          <ul className="nav nav-pills navigator">
-                            <li className={classNames({
-                                "nav-link": true,
-                                disabled: disabled})}>
-                              <span>
-                                <i className="navicon">
-                                  <FontAwesomeIcon icon="folder-open"/> </i>
-                              </span>
-                              {T("Virtual Filesystem")}
-                            </li>
-                          </ul>
-                          <ul className="nav nav-pills navigator">
-                            <li className={classNames({
-                                "nav-link": true,
-                                disabled: disabled})}>
-                              <span>
-                                <i className="navicon">
-                                  <FontAwesomeIcon icon="history"/></i>
-                              </span>
-                              {T("Collected Artifacts")}
-                            </li>
-                          </ul>
-                          <ul className="nav nav-pills navigator">
-                            <li className={classNames({
-                                "nav-link": true,
-                                disabled: disabled})}>
-                              <span>
-                                <i className="navicon">
-                                  <FontAwesomeIcon icon="binoculars"/></i>
-                              </span>
-                              {T("Client Events")}
-                            </li>
-                          </ul>
-                        </>
-                        :
-                        <>
-                          <NavLink className={disabled}
-                                   to={"/host/" + this.props.client.client_id}>
-                            <ul className="nav nav-pills navigator">
-                              <li className={classNames({
-                                  "nav-link": true,
-                                  disabled: disabled})}>
-                                <span>
-                                  <i className="navicon">
-                                    <FontAwesomeIcon icon="laptop"/> </i>
-                                </span>
-                                {T("Host Information")}
-                              </li>
-                            </ul>
+                      {!customization.disable_server_events && (
+                        <li className="nav-link" state="server_events">
+                          <NavLink to="/events/server">
+                            <span>
+                              <i className="navicon">
+                                <FontAwesomeIcon icon="eye" />
+                              </i>
+                            </span>
+                            {T("Server Events")}
                           </NavLink>
+                        </li>
+                      )}
 
-                          <NavLink className={disabled}
-                                   disabled={disabled}
-                                   to={"/vfs/" + this.props.client.client_id + EncodePathInURL(vfs_path) }>
-                            <ul className="nav nav-pills navigator">
-                              <li className={classNames({
-                                  "nav-link": true,
-                                  disabled: disabled})}>
-                                <span>
-                                  <i className="navicon">
-                                    <FontAwesomeIcon icon="folder-open"/> </i>
-                                </span>
-                                {T("Virtual Filesystem")}
-                              </li>
-                            </ul>
+                      <li className="nav-link" state="server_artifacts">
+                        <NavLink to="/collected/server">
+                          <span>
+                            <i className="navicon">
+                              <FontAwesomeIcon icon="server" />
+                            </i>
+                          </span>
+                          {T("Server Artifacts")}
+                        </NavLink>
+                      </li>
+
+                      <li className="nav-link" state="notebook">
+                        <NavLink to="/notebooks">
+                          <span>
+                            <i className="navicon">
+                              <FontAwesomeIcon icon="book" />
+                            </i>
+                          </span>
+                          {T("Notebooks")}
+                        </NavLink>
+                      </li>
+
+                      {user_is_admin && !customization.disable_user_management && (
+                        <li className="nav-link" state="users">
+                          <NavLink to="/users">
+                            <span>
+                              <i className="navicon">
+                                <FontAwesomeIcon icon="user" />
+                              </i>
+                            </span>
+                            {T("Users")}
                           </NavLink>
+                        </li>
+                      )}
 
-                          <NavLink className={disabled}
-                                   disabled={disabled}
-                                   to={"/collected/" + this.props.client.client_id}>
-                            <ul className="nav nav-pills navigator">
-                              <li className={classNames({
-                                  "nav-link": true,
-                                  disabled: disabled})}>
-                                <span>
-                                  <i className="navicon">
-                                    <FontAwesomeIcon icon="history"/></i>
-                                </span>
-                                {T("Collected Artifacts")}
-                              </li>
-                            </ul>
-                          </NavLink>
+                      <li
+                        className={classNames({
+                          "nav-link": true,
+                          disabled: disabled,
+                        })}
+                      >
+                        <NavLink
+                          className={disabled}
+                          disabled={disabled}
+                          aria-hidden={disabled ? "true" : "false"}
+                          tabIndex={disabled ? "-1" : "0"}
+                          to={"/host/" + this.props.client.client_id}
+                        >
+                          <span>
+                            <i className="navicon">
+                              <FontAwesomeIcon icon="laptop" />{" "}
+                            </i>
+                          </span>
+                          {T("Host Information")}
+                        </NavLink>
+                      </li>
 
-                          <NavLink className={disabled}
-                                   disabled={disabled}
-                                   to={"/events/" + this.props.client.client_id}>
-                            <ul className="nav nav-pills navigator">
-                              <li className={classNames({
-                                  "nav-link": true,
-                                  disabled: disabled})}>
-                                <span>
-                                  <i className="navicon">
-                                    <FontAwesomeIcon icon="binoculars"/></i>
-                                </span>
-                                {T("Client Events")}
-                              </li>
-                            </ul>
-                          </NavLink>
-                        </>
-                      }
+                      <li
+                        className={classNames({
+                          "nav-link": true,
+                          disabled: disabled,
+                        })}
+                      >
+                        <NavLink
+                          className={disabled}
+                          disabled={disabled}
+                          aria-hidden={disabled !== null ? "true" : "false"}
+                          tabIndex={disabled !== null ? "-1" : "0"}
+                          to={
+                            "/vfs/" +
+                            this.props.client.client_id +
+                            EncodePathInURL(vfs_path)
+                          }
+                        >
+                          <span>
+                            <i className="navicon">
+                              <FontAwesomeIcon icon="folder-open" />{" "}
+                            </i>
+                          </span>
+                          {T("Virtual Filesystem")}
+                        </NavLink>
+                      </li>
 
-                      { _.map(sidebar_links, x=>{
-                          return  (
-                           <ul key={x.text}
-                               className="nav nav-pills navigator">
-                             <li className={classNames({
-                                 "nav-link": true})}>
-                               <a href={x.url} rel="noreferrer"
-                                  target={x.new_tab ? "_blank" : ""}>
-                                 <span>
-                                   <img className="sidebar-icon"
-                                        alt={x.text}
-                                        src={x.icon_url}/>
-                                 </span>
-                                 {T(x.text)}
-                               </a>
-                              </li>
-                            </ul>
-                          );
-                          })
-                      }
-                    </section>
-                  </div>
+                      <li
+                        className={classNames({
+                          "nav-link": true,
+                          disabled: disabled,
+                        })}
+                      >
+                        <NavLink
+                          className={disabled}
+                          disabled={disabled}
+                          aria-hidden={disabled !== null ? "true" : "false"}
+                          tabIndex={disabled !== null ? "-1" : "0"}
+                          to={"/collected/" + this.props.client.client_id}
+                        >
+                          <span>
+                            <i className="navicon">
+                              <FontAwesomeIcon icon="history" />
+                            </i>
+                          </span>
+                          {T("Collected Artifacts")}
+                        </NavLink>
+                      </li>
+
+                      <li
+                        className={classNames({
+                          "nav-link": true,
+                          disabled: disabled,
+                        })}
+                      >
+                        <NavLink
+                          className={disabled}
+                          disabled={disabled}
+                          aria-hidden={disabled !== null ? "true" : "false"}
+                          tabIndex={disabled !== null ? "-1" : "0"}
+                          to={"/events/" + this.props.client.client_id}
+                        >
+                          <span>
+                            <i className="navicon">
+                              <FontAwesomeIcon icon="binoculars" />
+                            </i>
+                          </span>
+                          {T("Client Events")}
+                        </NavLink>
+                      </li>
+
+                      {_.map(sidebar_links, (x) => {
+                        return (
+                          <li
+                            key={x.text}
+                            className={classNames({
+                              "nav-link": true,
+                            })}
+                          >
+                            <a
+                              href={x.url}
+                              rel="noreferrer"
+                              target={x.new_tab ? "_blank" : ""}
+                            >
+                              <span>
+                                <img
+                                  className="sidebar-icon"
+                                  alt=""
+                                  src={x.icon_url}
+                                />
+                              </span>
+                              {T(x.text)}
+                            </a>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </nav>
                 </div>
               </div>
-            </>
-        );
-    }
+            </div>
+          </>
+      );
+  }
 }
 
 export default VeloNavigator;
