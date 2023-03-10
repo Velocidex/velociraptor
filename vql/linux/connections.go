@@ -19,6 +19,8 @@ package linux
 
 import (
 	"context"
+	"fmt"
+	"syscall"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/shirou/gopsutil/v3/net"
@@ -26,6 +28,49 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
+
+func makeDict(in net.ConnectionStat) *ordereddict.Dict {
+	var family, conn_type string
+
+	switch in.Family {
+	case syscall.AF_INET:
+		family = "AF_INET"
+
+	case syscall.AF_INET6:
+		family = "AF_INET6"
+
+	case syscall.AF_UNIX:
+		family = "AF_UNIX"
+
+	default:
+		family = fmt.Sprintf("%d", in.Family)
+	}
+
+	switch in.Type {
+	case syscall.SOCK_STREAM:
+		conn_type = "TCP"
+
+	case syscall.SOCK_DGRAM:
+		conn_type = "UCP"
+
+	default:
+		conn_type = fmt.Sprintf("%v", in.Type)
+	}
+
+	return ordereddict.NewDict().SetCaseInsensitive().
+		Set("FD", in.Fd).
+		Set("Family", family).
+		Set("Type", conn_type).
+		Set("Laddr", ordereddict.NewDict().SetCaseInsensitive().
+			Set("ip", in.Laddr.IP).
+			Set("port", in.Laddr.Port)).
+		Set("Raddr", ordereddict.NewDict().SetCaseInsensitive().
+			Set("ip", in.Raddr.IP).
+			Set("port", in.Raddr.Port)).
+		Set("Status", in.Status).
+		Set("Pid", in.Pid).
+		Set("Uids", in.Uids)
+}
 
 func init() {
 	vql_subsystem.RegisterPlugin(
@@ -45,7 +90,7 @@ func init() {
 
 				if cons, err := net.Connections("all"); err == nil {
 					for _, item := range cons {
-						result = append(result, item)
+						result = append(result, makeDict(item))
 					}
 				}
 				return result
