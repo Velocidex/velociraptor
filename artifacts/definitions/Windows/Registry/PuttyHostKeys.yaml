@@ -1,0 +1,43 @@
+name: Windows.Registry.PuttyHostKeys
+author: Matt Green - @mgreen27
+description: |
+   This artifact extracts PuTTY SSH host keys.
+   
+   As a security messure PuTTY and its companion utilities PSCP, PSFTP, and Plink 
+   records the host key for each server connected to, in the Windows Registry.
+   
+   - Output KeyName: ssh-ed12345@22:27.27.27.27
+   - To search for a specific IP: TargetKeyName =~ ':\<IP\>$'
+   - To search for a specific PORT: TargetKeyName =~ '@\<PORT\>:.+$'
+   
+   
+type: CLIENT
+
+parameters:
+   - name: KeyGlob
+     default: Software\SimonTatham\Putty\SshHostKeys\**
+   - name: TargetUser
+     default: .
+   - name: TargetKeyValue
+     default: .
+   - name: TargetKeyValue
+     default: .
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows' 
+
+    query: |
+      SELECT 
+        Mtime,
+        Username,
+        OSPath.Basename as KeyName,
+        Data.value as KeyValue,
+        path_join(components=[
+            "HKEY_USERS", UUID, OSPath.Dirname.Path
+                ], path_type="registry") as Key,
+        OSPath.DelegatePath as SourcePath
+      FROM Artifact.Windows.Registry.NTUser(KeyGlob=KeyGlob,userRegex=TargetUser)
+      WHERE KeyName =~ TargetKeyName
+        AND KeyValue =~ TargetKeyValue
+
