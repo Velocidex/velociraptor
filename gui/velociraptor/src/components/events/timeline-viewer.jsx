@@ -513,6 +513,8 @@ export default class EventTimelineViewer extends React.Component {
         let visible_start_time = this.state.visibleTimeStart;
         let visible_end_time = this.state.visibleTimeEnd;
 
+        // Disable buffer to prevent horizontal scroll. This seems to
+        // interact badly with MacOS trackpads.
         return <>
                  {this.state.showDeleteDialog &&
                   <DeleteTimelineRanges
@@ -535,6 +537,7 @@ export default class EventTimelineViewer extends React.Component {
                    defaultTimeEnd={moment().add(1, "day")}
                    itemTouchSendsClick={true}
                    minZoom={5*60*1000}
+                   buffer="1"
                    dragSnap={1000}
                    onCanvasClick={(groupId, time, e) => {
                        this.setState({start_time: time});

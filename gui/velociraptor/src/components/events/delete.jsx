@@ -53,9 +53,10 @@ export default class DeleteTimelineRanges extends Component {
 
                   {T("Are you sure you want to delete all logs within the time range?")}
 
-                  <VeloTimestamp iso={this.props.start_time}/> -
-                  <VeloTimestamp iso={this.props.end_time}/>
-
+                  <div>
+                    <VeloTimestamp iso={this.props.start_time}/> -
+                    <VeloTimestamp iso={this.props.end_time}/>
+                  </div>
                 </Modal.Body>
 
                 <Modal.Footer>
