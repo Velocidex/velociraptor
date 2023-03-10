@@ -28,6 +28,8 @@ sources:
       SELECT OS From info() where OS = 'windows' 
 
     query: |
+      LET HKEY_USERS <= pathspec(path_type="registry", Path="HKEY_USERS")
+
       SELECT 
         Mtime,
         Username,
