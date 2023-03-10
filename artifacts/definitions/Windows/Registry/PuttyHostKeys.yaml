@@ -3,7 +3,7 @@ author: Matt Green - @mgreen27
 description: |
    This artifact extracts PuTTY SSH host keys.
    
-   As a security meassure PuTTY and its companion utilities PSCP, PSFTP, and Plink 
+   As a security measure PuTTY and its companion utilities PSCP, PSFTP, and Plink 
    records the host key for each server connected to, in the Windows Registry.
    
    - Output KeyName: ssh-ed12345@22:27.27.27.27
