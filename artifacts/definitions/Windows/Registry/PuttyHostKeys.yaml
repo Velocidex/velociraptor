@@ -18,7 +18,7 @@ parameters:
      default: Software\SimonTatham\Putty\SshHostKeys\**
    - name: TargetUser
      default: .
-   - name: TargetKeyValue
+   - name: TargetKeyName
      default: .
    - name: TargetKeyValue
      default: .
