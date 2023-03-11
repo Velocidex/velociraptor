@@ -485,7 +485,8 @@ func NewInventoryService(
 		return NewInventoryDummyService(ctx, wg, config_obj)
 	}
 
-	default_client, err := networking.GetDefaultHTTPClient(config_obj.Client, "")
+	default_client, err := networking.GetDefaultHTTPClient(
+		config_obj.Client, "", networking.EmptyCookieJar)
 	if err != nil {
 		return nil, err
 	}

@@ -50,11 +50,13 @@ import (
 var (
 	mu sync.Mutex
 
-	proxyHandler = http.ProxyFromEnvironment
+	proxyHandler                     = http.ProxyFromEnvironment
+	EmptyCookieJar *ordereddict.Dict = nil
 )
 
 const (
-	HTTP_TAG = "$http_client_cache"
+	HTTP_TAG       = "$http_client_cache"
+	COOKIE_JAR_TAG = "$http_client_cookie_jar"
 )
 
 // Cache http clients in the scope to allow reuse.
@@ -76,10 +78,11 @@ type HttpPluginRequest struct {
 	Chunk   int         `vfilter:"optional,field=chunk_size,doc=Read input with this chunk size and send each chunk as a row"`
 
 	// Sometimes it is useful to be able to query misconfigured hosts.
-	DisableSSLSecurity bool   `vfilter:"optional,field=disable_ssl_security,doc=Disable ssl certificate verifications."`
-	TempfileExtension  string `vfilter:"optional,field=tempfile_extension,doc=If specified we write to a tempfile. The content field will contain the full path to the tempfile."`
-	RemoveLast         bool   `vfilter:"optional,field=remove_last,doc=If set we delay removal as much as possible."`
-	RootCerts          string `vfilter:"optional,field=root_ca,doc=As a better alternative to disable_ssl_security, allows root ca certs to be added here."`
+	DisableSSLSecurity bool              `vfilter:"optional,field=disable_ssl_security,doc=Disable ssl certificate verifications."`
+	TempfileExtension  string            `vfilter:"optional,field=tempfile_extension,doc=If specified we write to a tempfile. The content field will contain the full path to the tempfile."`
+	RemoveLast         bool              `vfilter:"optional,field=remove_last,doc=If set we delay removal as much as possible."`
+	RootCerts          string            `vfilter:"optional,field=root_ca,doc=As a better alternative to disable_ssl_security, allows root ca certs to be added here."`
+	CookieJar          *ordereddict.Dict `vfilter:"optional,field=cookie_jar,doc=A cookie jar to use if provided. This is a dict of cookie structures."`
 }
 
 type _HttpPluginResponse struct {
@@ -123,13 +126,13 @@ func (self *HTTPClientCache) GetHttpClient(
 	if pres {
 		return result, nil
 	}
-	
-        // Allow a unix path to be interpreted as simply a http over
-        // unix domain socket (used by e.g. docker)
+
+	// Allow a unix path to be interpreted as simply a http over
+	// unix domain socket (used by e.g. docker)
 	if strings.HasPrefix(arg.Url, "/") {
 		components := strings.Split(arg.Url, ":")
 		if len(components) == 1 {
-                	components = append(components, "/")
+			components = append(components, "/")
 		}
 		arg.Url = "http://unix" + components[1]
 
@@ -153,6 +156,7 @@ func (self *HTTPClientCache) GetHttpClient(
 	if arg.DisableSSLSecurity {
 		result = &http.Client{
 			Timeout: time.Second * 10000,
+			Jar:     NewDictJar(arg.CookieJar),
 			Transport: &http.Transport{
 				Proxy:        proxyHandler,
 				MaxIdleConns: 10,
@@ -165,7 +169,8 @@ func (self *HTTPClientCache) GetHttpClient(
 		return result, nil
 	}
 
-	result, err = GetDefaultHTTPClient(config_obj, arg.RootCerts)
+	result, err = GetDefaultHTTPClient(
+		config_obj, arg.RootCerts, arg.CookieJar)
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +254,8 @@ func customVerifyConnection(
 
 func GetDefaultHTTPClient(
 	config_obj *config_proto.ClientConfig,
-	extra_roots string) (*http.Client, error) {
+	extra_roots string,
+	cookie_jar *ordereddict.Dict) (*http.Client, error) {
 
 	CA_Pool := x509.NewCertPool()
 	if config_obj != nil {
@@ -270,6 +276,7 @@ func GetDefaultHTTPClient(
 
 	return &http.Client{
 		Timeout: time.Second * 10000,
+		Jar:     NewDictJar(cookie_jar),
 		Transport: &http.Transport{
 			Proxy: proxyHandler,
 			Dial: (&net.Dialer{
@@ -348,8 +355,20 @@ func (self *_HttpPlugin) Call(
 			return
 		}
 
-		config_obj, _ := artifacts.GetConfig(scope)
+		// If the user did not provide a cookie jar we use one for the
+		// session.
+		var ok bool
 
+		if utils.IsNil(arg.CookieJar) {
+			arg.CookieJar, ok = vql_subsystem.CacheGet(
+				scope, COOKIE_JAR_TAG).(*ordereddict.Dict)
+			if !ok {
+				arg.CookieJar = ordereddict.NewDict()
+				vql_subsystem.CacheSet(scope, COOKIE_JAR_TAG, arg.CookieJar)
+			}
+		}
+
+		config_obj, _ := artifacts.GetConfig(scope)
 		client, err := GetHttpClient(config_obj, scope, arg)
 		if err != nil {
 			scope.Log("http_client: %v", err)
@@ -527,6 +546,7 @@ func (self _HttpPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Name:    self.Name(),
 		Doc:     "Make a http request.",
 		ArgType: type_map.AddType(scope, &HttpPluginRequest{}),
+		Version: 2,
 	}
 }
 
