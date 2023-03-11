@@ -257,8 +257,9 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	logging.LogAudit(config_obj, principal, "CreateHunt",
 		logrus.Fields{
 			"hunt_id": hunt_request.HuntId,
-			"details": json.MustMarshalString(arg),
-			"orgs":    orgs_we_scheduled,
+			"details": json.MustMarshalString(
+				vfilter.RowToDict(ctx, scope, arg)),
+			"orgs": orgs_we_scheduled,
 		})
 
 	return ordereddict.NewDict().

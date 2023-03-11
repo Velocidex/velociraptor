@@ -117,6 +117,8 @@ button.hamburger {
   cursor: pointer;
   border: none;
   background-color: var(--color-header-background);
+  padding-left: 12px;
+  padding-top: 5px;
 }
 
 a.disabled {

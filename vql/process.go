@@ -63,7 +63,7 @@ func init() {
 			if arg.Pid != 0 {
 				process_obj, err := process.NewProcess(int32(arg.Pid))
 				if err == nil {
-					result = append(result, process_obj)
+					result = append(result, getProcessData(process_obj))
 				}
 				return result
 			}

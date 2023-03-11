@@ -387,7 +387,7 @@ func (self *ClientEventTable) ProcessArtifactModificationEvent(
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("Updating Client Event Table because %v was updated", modified_name)
+	logger.Info("<green>Updating Client Event Table</> because %v was updated", modified_name)
 
 	setter, _ := event.GetString("setter")
 

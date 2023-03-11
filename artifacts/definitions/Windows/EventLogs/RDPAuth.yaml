@@ -38,10 +38,10 @@ parameters:
     description: "search for events before this date. YYYY-MM-DDTmm:hh:ss Z"
     type: timestamp
   - name: SourceIPRegex
-    default: .
+    default: ".+"
     type: regex
   - name: UserNameRegex
-    default: .
+    default: ".+"
     type: regex
   - name: UserNameWhitelist
     default: '\$$'
