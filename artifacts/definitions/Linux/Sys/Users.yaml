@@ -9,8 +9,7 @@ sources:
       SELECT OS From info() where OS = 'linux'
     query: |
       SELECT User, Description, Uid, Gid, Homedir, Shell
-      FROM parse_records_with_regex(
-            file=PasswordFile,
-            regex='(?m)^(?P<User>[^:]+):([^:]+):' +
-                  '(?P<Uid>[^:]+):(?P<Gid>[^:]+):(?P<Description>[^:]*):' +
-                  '(?P<Homedir>[^:]+):(?P<Shell>[^:\\s]+)')
+      FROM split_records(
+            filenames=PasswordFile,
+            regex=":", record_regex="\n",
+            columns=["User", "X", "Uid", "Gid", "Description", "Homedir", "Shell"])

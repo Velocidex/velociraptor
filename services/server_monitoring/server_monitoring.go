@@ -158,7 +158,7 @@ func (self *EventTable) ProcessServerMetadataModificationEvent(
 	}
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Info("server_monitoring: Reloading table because server metadata was updated")
+	logger.Info("<green>server_monitoring</>: Reloading table because server metadata was updated")
 
 	request := self.Get()
 

@@ -76,7 +76,9 @@ class VeloNavigator extends Component {
                   onClick={this.toggle}
                   aria-expanded={!this.state.collapsed}
                 >
-                  <span aria-hidden="true">&#9776;</span>
+                  <span aria-hidden="true">
+                     <FontAwesomeIcon icon="bars"/>
+                  </span>
                   <span className="sr-only">{T("Toggle Main Menu")}</span>
               </button>
               <a href="#welcome">

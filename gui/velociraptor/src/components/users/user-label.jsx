@@ -409,9 +409,9 @@ export default class UserLabel extends React.Component {
                   response.data.redirect_url !== "") {
                   window.location.assign(response.data.redirect_url);
               }
-          } else {
-            this.context.updateTraits();
           }
+
+          this.context.updateTraits();
         });
     }
 
