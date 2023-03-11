@@ -22,8 +22,11 @@ import (
 	"regexp"
 )
 
+var (
+	VERSION = "0.6.8"
+)
+
 const (
-	VERSION                    = "0.6.8-rc1"
 	ENROLLMENT_WELL_KNOWN_FLOW = "E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW = FLOW_PREFIX + "Monitoring"
 

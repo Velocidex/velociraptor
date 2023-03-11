@@ -84,7 +84,8 @@ func init() {
 // Only get a few fields from the process object otherwise we will
 // spend too much time calling into virtual methods.
 func getProcessData(process *process.Process) *ordereddict.Dict {
-	result := ordereddict.NewDict().Set("Pid", process.Pid)
+	result := ordereddict.NewDict().SetCaseInsensitive().
+		Set("Pid", process.Pid)
 
 	name, _ := process.Name()
 	result.Set("Name", name)
@@ -98,6 +99,9 @@ func getProcessData(process *process.Process) *ordereddict.Dict {
 
 	create_time, _ := process.CreateTime()
 	result.Set("CreateTime", create_time)
+
+	times, _ := process.Times()
+	result.Set("Times", times)
 
 	exe, _ := process.Exe()
 	result.Set("Exe", exe)
