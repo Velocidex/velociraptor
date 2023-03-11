@@ -188,7 +188,7 @@ func (self MailFunction) Call(ctx context.Context,
 	} else if config_obj.Client != nil {
 		// Try to use our standard methods for getting TLS config up
 		http_client, err := GetDefaultHTTPClient(
-			config_obj.Client, arg.RootCerts)
+			config_obj.Client, arg.RootCerts, EmptyCookieJar)
 		if err == nil {
 			d.TLSConfig = http_client.Transport.(*http.Transport).TLSClientConfig
 		}
