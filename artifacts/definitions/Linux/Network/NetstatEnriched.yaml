@@ -25,8 +25,8 @@ parameters:
     default: "."
     type: regex
   - name: ConnectionStatusRegex
-    description: "regex search over source process name"
-    default: "LISTENING|ESTABLISHED"
+    description: "regex search over connection status"
+    default: "LISTEN|ESTABLISHED"
     type: regex
   - name: ProcessPathRegex
     description: "regex search over source process path"
@@ -49,6 +49,7 @@ sources:
              Raddr.IP AS Raddr,
              Raddr.Port AS Rport,
              Pid,
+             Status,
              process_tracker_get(id=Pid).Data AS ProcInfo,
              join(array=process_tracker_callchain(id=Pid).Data.Name, sep=" -> ") AS CallChain,
              process_tracker_tree(id=Pid) AS ChildrenTree
