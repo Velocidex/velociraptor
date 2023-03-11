@@ -2087,6 +2087,7 @@
     how dict keys with special characters in them can be constructed
     using the backtick quoting.
   type: Plugin
+  version: 2
   args:
   - name: url
     type: string
@@ -2122,6 +2123,9 @@
     type: string
     description: As a better alternative to disable_ssl_security, allows root ca certs
       to be added here.
+  - name: cookie_jar
+    type: ordereddict.Dict
+    description: A cookie jar to use if provided. This is a dict of cookie structures.
   category: plugin
 - name: humanize
   description: |
@@ -2747,6 +2751,11 @@
 - name: lookupSID
   description: Get information about the SID.
   type: Function
+  args:
+  - name: sid
+    type: string
+    description: 'A SID to lookup using LookupAccountSid '
+    required: true
   category: windows
 - name: lowcase
   type: Function
@@ -4294,6 +4303,9 @@
     type: int64
     description: Duration of samples (default 30 sec)
   category: plugin
+- name: pskill
+  description: Kill the specified process.
+  type: Function
 - name: pslist
   description: |
     Enumerate running processes.
@@ -4306,8 +4318,7 @@
   args:
   - name: pid
     type: int64
-    description: A pid to list. If this is provided we are able to operate much faster
-      by only opening a single process.
+    description: A process ID to list. If not provided list all processes.
   category: plugin
 - name: query
   description: Launch a subquery and materialize it into a list of rows.
