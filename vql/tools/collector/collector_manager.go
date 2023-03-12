@@ -237,21 +237,9 @@ func (self *collectionManager) storeCollectionMetadata() error {
 }
 
 func (self *collectionManager) collectQuery(
-	subscope vfilter.Scope, query *actions_proto.VQLRequest) (err error) {
-
-	query_start_time := Clock.Now()
-
-	status := &crypto_proto.VeloStatus{
-		Status: crypto_proto.VeloStatus_OK,
-	}
-
-	defer func() {
-		status.Duration = Clock.Now().UnixNano() - query_start_time.UnixNano()
-
-		self.collection_context.QueryStats = append(
-			self.collection_context.QueryStats, status)
-		self.collection_context.TotalCollectedRows += uint64(status.ResultRows)
-	}()
+	subscope vfilter.Scope,
+	query *actions_proto.VQLRequest,
+	status *crypto_proto.VeloStatus) (err error) {
 
 	// Useful to know what is going on with the collection.
 	if query.Name != "" {
@@ -381,11 +369,25 @@ func (self *collectionManager) Collect(request *flows_proto.ArtifactCollectorArg
 			subscope.AppendVars(env)
 			defer subscope.Close()
 
-			self.collection_context.TotalRequests = int64(len(vql_request.Query))
+			status := &crypto_proto.VeloStatus{
+				Status: crypto_proto.VeloStatus_OK,
+			}
+
+			query_start_time := Clock.Now()
+
+			defer func() {
+				// self.collection_context is already locked with
+				// self.mu because this goroutine does not run outside
+				// our Collect() function
+				status.Duration = Clock.Now().UnixNano() - query_start_time.UnixNano()
+				self.collection_context.QueryStats = append(
+					self.collection_context.QueryStats, status)
+				self.collection_context.TotalCollectedRows += uint64(status.ResultRows)
+			}()
 
 			// Run each query and store the results in the container
 			for _, query := range vql_request.Query {
-				err := self.collectQuery(subscope, query)
+				err := self.collectQuery(subscope, query, status)
 				if err != nil {
 					subscope.Log("collect: %s", err)
 					return
