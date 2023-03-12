@@ -82,7 +82,7 @@ export class LabelClients extends Component {
                  return <VeloClientStatusIcon client={row}/>;
              }},
             {dataField: "client_id", text: T("Client ID")},
-            {dataField: "os_info.fqdn", text: T("Hostname"), sort: false},
+            {dataField: "os_info.hostname", text: T("Hostname"), sort: false},
         ]);
 
         return (
@@ -207,7 +207,7 @@ class DeleteClients extends Component {
                  return <VeloClientStatusIcon client={row}/>;
              }},
             {dataField: "client_id", text: T("Client ID")},
-            {dataField: "os_info.fqdn", text: T("Hostname"), sort: false},
+            {dataField: "os_info.hostname", text: T("Hostname"), sort: false},
         ]);
 
         return (
@@ -473,7 +473,6 @@ class VeloClientList extends Component {
         };
 
         columns[2].onSort = (field, order) => {
-            this.props.setSearch("host:*");
             if (order === "asc") {
                 this.setState({sort: SORT_UP});
             } else if (order === "desc") {

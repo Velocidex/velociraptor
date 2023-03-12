@@ -145,7 +145,7 @@ func (self *CipherLRU) Set(source string, inbound_cipher, output_cipher *_Cipher
 }
 
 // Delete cached keys to the source
-func (self *CipherLRU) Delete(source string) {
+func (self *CipherLRU) DeleteCipher(source string) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
