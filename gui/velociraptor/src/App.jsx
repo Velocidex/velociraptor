@@ -114,7 +114,7 @@ class App extends Component {
 
         return <div>
                  <Navbar fixed="top" className="main-navbar justify-content-between">
-                   <Form inline>
+                   <div className="navigator-left-side form-inline">
                      <VeloNavigator
                        vfs_path={vfs_path}
                        client={this.state.client} />
@@ -122,7 +122,7 @@ class App extends Component {
                      <VeloClientSearch
                        setSearch={this.setClientSearch}
                      />
-                   </Form>
+                   </div>
                    <VeloClientSummary
                      setClient={this.setClient}
                      client={this.state.client}/>

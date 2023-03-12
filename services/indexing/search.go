@@ -151,6 +151,41 @@ func (self *Indexer) searchClientIndex(
 		return nil, errors.New("Indexer not ready")
 	}
 
+	// If asked to sort, we need to retrieve a large number of clients
+	// and sort the results. This is much slower.
+	if !in.NameOnly &&
+		in.Sort != api_proto.SearchClientsRequest_UNSORTED {
+		hits, err := self.searchClientIndex(ctx, config_obj,
+			&api_proto.SearchClientsRequest{
+				Limit:  1000,
+				Query:  in.Query,
+				Filter: in.Filter,
+			}, 1000)
+		if err != nil {
+			return nil, err
+		}
+
+		switch in.Sort {
+		case api_proto.SearchClientsRequest_SORT_UP:
+			sort.Slice(hits.Items, func(x, y int) bool {
+				return hits.Items[x].OsInfo.Hostname <
+					hits.Items[y].OsInfo.Hostname
+			})
+		case api_proto.SearchClientsRequest_SORT_DOWN:
+			sort.Slice(hits.Items, func(x, y int) bool {
+				return hits.Items[x].OsInfo.Hostname >
+					hits.Items[y].OsInfo.Hostname
+			})
+		}
+
+		limit := in.Limit
+		if limit > uint64(len(hits.Items)) {
+			limit = uint64(len(hits.Items))
+		}
+		hits.Items = hits.Items[:limit]
+		return hits, nil
+	}
+
 	// Microseconds
 	now := uint64(time.Now().UnixNano() / 1000)
 

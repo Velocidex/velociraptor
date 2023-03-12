@@ -110,7 +110,7 @@ func NewServerCryptoManager(
 			logger.Info("Removing client key from cache because client was deleted  %v\n", row)
 			client_id, pres := row.GetString("ClientId")
 			if pres {
-				server_manager.Delete(client_id)
+				server_manager.DeleteSubject(client_id)
 			}
 			return nil
 		})
@@ -125,7 +125,7 @@ type serverPublicKeyResolver struct {
 	negative_lru *ttlcache.Cache
 }
 
-func (self *serverPublicKeyResolver) Delete(client_id string) {
+func (self *serverPublicKeyResolver) DeleteSubject(client_id string) {
 	self.negative_lru.Remove(client_id)
 }
 

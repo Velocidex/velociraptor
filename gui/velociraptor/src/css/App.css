@@ -105,3 +105,9 @@ button a.nav-link {
     overflow-y: scroll;
     scrollbar-color: var(--color-scrollbar-track) var(--color-scrollbar-thumb);
 }
+
+.navigator-left-side {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+}

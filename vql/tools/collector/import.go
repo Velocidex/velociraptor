@@ -5,6 +5,7 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -217,20 +218,25 @@ func (self ImportCollectionFunction) getClientId(
 	ctx context.Context, scope types.Scope,
 	config_obj *config_proto.Config, hostname string) (string, error) {
 
-	indexer, err := services.GetIndexer(config_obj)
-	if err != nil {
-		return "", err
-	}
+	if hostname != "" {
+		indexer, err := services.GetIndexer(config_obj)
+		if err != nil {
+			return "", err
+		}
 
-	scope.Log("Searching for a client id with name '%v'", hostname)
+		scope.Log("Searching for a client id with hostname '%v'", hostname)
 
-	// Search for an existing client with the same hostname
-	search_resp, err := indexer.SearchClients(ctx, config_obj,
-		&api_proto.SearchClientsRequest{Query: "host:" + hostname}, "")
-	if err == nil && len(search_resp.Items) > 0 {
-		client_id := search_resp.Items[0].ClientId
-		scope.Log("client id found '%v'", client_id)
-		return client_id, nil
+		// Search for an existing client with the same hostname
+		search_resp, err := indexer.SearchClients(ctx, config_obj,
+			&api_proto.SearchClientsRequest{Query: "host:" + hostname}, "")
+		if err == nil {
+			for _, resp := range search_resp.Items {
+				if strings.EqualFold(resp.OsInfo.Hostname, hostname) {
+					scope.Log("client id found '%v'", resp.ClientId)
+					return resp.ClientId, nil
+				}
+			}
+		}
 	}
 
 	// Create a new client
@@ -243,12 +249,15 @@ func (self ImportCollectionFunction) getClientId(
 		if pres {
 			client_id, ok := client_id_any.(string)
 			if ok {
+				scope.Log("Creating a new client with id '%v'", client_id)
 				return client_id, nil
 			}
 		}
 	}
 
-	return clients.NewClientId(), nil
+	client_id := clients.NewClientId()
+	scope.Log("Creating a new client id '%v'", client_id)
+	return client_id, nil
 }
 
 func (self ImportCollectionFunction) copyResultSet(

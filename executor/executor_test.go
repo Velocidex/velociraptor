@@ -198,8 +198,8 @@ func (self *ExecutorTestSuite) TestUploadCancellation() {
 	// An error status
 	stats := getFlowStat(received_messages)
 	assert.Equal(self.T(), crypto_proto.VeloStatus_GENERIC_ERROR,
-
 		stats.FlowStats.QueryStatus[0].Status)
+
 	assert.Contains(self.T(), stats.FlowStats.QueryStatus[0].ErrorMessage,
 		"Upload bytes 37 exceeded limit 10 for flow")
 
@@ -287,6 +287,7 @@ func (self *ExecutorTestSuite) TestRowLimitCancellation() {
 
 	// An error status
 	stats := getFlowStat(received_messages)
+
 	assert.Equal(self.T(), crypto_proto.VeloStatus_GENERIC_ERROR,
 		stats.FlowStats.QueryStatus[0].Status)
 	assert.Contains(self.T(), stats.FlowStats.QueryStatus[0].ErrorMessage,

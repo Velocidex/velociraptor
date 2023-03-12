@@ -7,6 +7,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import FormGroup from 'react-bootstrap/FormGroup';
+import Form from 'react-bootstrap/Form';
 import { withRouter }  from "react-router-dom";
 import Autosuggest from 'react-autosuggest';
 import Dropdown from 'react-bootstrap/Dropdown';
@@ -71,13 +72,19 @@ class VeloClientSearch extends Component {
 
     render() {
         return (
+            <Form onSubmit={e=>{
+                e.preventDefault();
+                return false;
+            }}>
               <FormGroup>
                 <ButtonGroup>
                   <Autosuggest
                     suggestions={this.state.options}
                     onSuggestionsFetchRequested={(x) => this.showSuggestions(x.value)}
                     onSuggestionsClearRequested={() => this.setState({options: []})}
-                    onSuggestionSelected={(e, x) => this.setQuery(x.suggestionValue)}
+                    onSuggestionSelected={(e, x) => {
+                        this.setQuery(x.suggestionValue);
+                    }}
                     getSuggestionValue={x=>x}
                     renderSuggestion={(x) => <div className="search-suggestions">{x}</div>}
                     inputProps={{
@@ -85,8 +92,10 @@ class VeloClientSearch extends Component {
                         spellCheck: "false",
                         id: this.props.id || "client-search-bar",
                         value: this.state.query,
-                        onChange: (e) => {
-                            this.setState({query: e.currentTarget.value});
+                        onChange: (e, {newValue, method}) => {
+                            this.setState({query: newValue});
+                            e.preventDefault();
+                            return false;
                         },
                     }}
 
@@ -95,7 +104,7 @@ class VeloClientSearch extends Component {
                           onClick={() => this.setQuery(this.state.query)}
                           variant="default" type="submit">
                     <FontAwesomeIcon icon="search"/>
-		    <span className="sr-only">{T("Search")}</span>
+                    <span className="sr-only">{T("Search")}</span>
                   </Button>
                   <Dropdown>
                     <Dropdown.Toggle variant="default">
@@ -119,6 +128,7 @@ class VeloClientSearch extends Component {
                   </Dropdown>
                 </ButtonGroup>
               </FormGroup>
+            </Form>
         );
     }
 };
