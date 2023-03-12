@@ -62,8 +62,10 @@ func (self *CryptoManager) ClientId() string {
 	return self.client_id
 }
 
-func (self *CryptoManager) Delete(client_id string) {
-	self.cipher_lru.Delete(client_id)
+// Delete all caches related to the subject name (client id).
+func (self *CryptoManager) DeleteSubject(client_id string) {
+	self.cipher_lru.DeleteCipher(client_id)
+	self.Resolver.DeleteSubject(client_id)
 }
 
 func (self *CryptoManager) GetCSR() ([]byte, error) {

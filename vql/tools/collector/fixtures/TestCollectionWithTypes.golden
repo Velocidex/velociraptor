@@ -106,21 +106,12 @@
   "create_time": 1602103388000000000,
   "total_collected_rows": 1,
   "total_logs": 1,
-  "total_requests": 10,
+  "total_requests": 1,
   "state": 2,
   "artifacts_with_results": [
    "CollectionWithTypes"
   ],
   "query_stats": [
-   {},
-   {},
-   {},
-   {},
-   {},
-   {},
-   {},
-   {},
-   {},
    {
     "names_with_response": [
      "CollectionWithTypes"

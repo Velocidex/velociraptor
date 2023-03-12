@@ -150,10 +150,22 @@ func (self *FlowResponder) AddResponse(message *crypto_proto.VeloMessage) {
 
 	// Check flow limits. Must be done without a lock on the responder.
 	if message.FileBuffer != nil {
-		self.flow_context.ChargeBytes(uint64(message.FileBuffer.DataLength))
+		err := self.flow_context.ChargeBytes(
+			uint64(message.FileBuffer.DataLength))
+		if err != nil {
+			// If we exceeded the limits cancel the entire
+			// collection.
+			self.RaiseError(self.ctx, err.Error())
+			self.flow_context.Cancel()
+		}
 	}
+
 	if message.VQLResponse != nil {
-		self.flow_context.ChargeRows(message.VQLResponse.TotalRows)
+		err := self.flow_context.ChargeRows(message.VQLResponse.TotalRows)
+		if err != nil {
+			self.RaiseError(self.ctx, err.Error())
+			self.flow_context.Cancel()
+		}
 	}
 
 	message.SessionId = self.flow_context.SessionId()
@@ -192,11 +204,19 @@ func (self *FlowResponder) Return(ctx context.Context) {
 // right away, but queue it locally and combine with other log
 // messages for self.flushLogMessages() to send.
 func (self *FlowResponder) Log(ctx context.Context, level string, msg string) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
+	// We dont need to hold the lock because we are just delegating to
+	// the flow context.
 	self.flow_context.AddLogMessage(level, msg)
+
+	// Capture the first message at error level.
+	// FIXME: Support server provided error regex patterns
+	if level == logging.ERROR {
+		self.RaiseError(ctx, msg)
+	}
+
+	self.mu.Lock()
 	self.status.LogRows++
+	self.mu.Unlock()
 }
 
 // This is expected to be small so a linear search is ok

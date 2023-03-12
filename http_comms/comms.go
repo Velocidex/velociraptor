@@ -81,10 +81,12 @@ type Enroller struct {
 // makes sense to delay this. Velociraptor's enrollments are very
 // cheap so perhaps we dont need to worry about it here?
 func (self *Enroller) MaybeEnrol() {
+	next_enrollment := self.last_enrollment_time.Add(1 * time.Minute)
+	now := self.clock.Now()
+
 	// Only send an enrolment request at most every minute so as
 	// not to overwhelm the server if it can not keep up.
-	if self.clock.Now().After(
-		self.last_enrollment_time.Add(1 * time.Minute)) {
+	if now.After(next_enrollment) {
 		csr_pem, err := self.manager.GetCSR()
 		if err != nil {
 			return
@@ -103,6 +105,9 @@ func (self *Enroller) MaybeEnrol() {
 			// immediately and not queued client side.
 			Urgent: true,
 		})
+	} else {
+		self.logger.Debug("Waiting for enrollment for %v",
+			now.Sub(next_enrollment))
 	}
 }
 

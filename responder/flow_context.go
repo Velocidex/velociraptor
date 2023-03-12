@@ -2,6 +2,7 @@ package responder
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"sync/atomic"
@@ -12,7 +13,6 @@ import (
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -160,7 +160,7 @@ func (self *FlowContext) isFlowComplete() bool {
 	return true
 }
 
-func (self *FlowContext) ChargeRows(rows uint64) {
+func (self *FlowContext) ChargeRows(rows uint64) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -168,16 +168,12 @@ func (self *FlowContext) ChargeRows(rows uint64) {
 	if self.req.MaxRows > 0 && self.total_rows > self.req.MaxRows {
 		msg := fmt.Sprintf("Rows %v exceeded limit %v for flow %v. Cancelling.",
 			self.total_rows, self.req.MaxRows, self.flow_id)
-
-		self.addLogMessage("ERROR", msg)
-		if len(self.responders) > 0 {
-			self.responders[0].RaiseError(self.ctx, msg)
-		}
-		self._Cancel()
+		return errors.New(msg)
 	}
+	return nil
 }
 
-func (self *FlowContext) ChargeBytes(bytes uint64) {
+func (self *FlowContext) ChargeBytes(bytes uint64) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -186,12 +182,9 @@ func (self *FlowContext) ChargeBytes(bytes uint64) {
 		self.total_uploaded_bytes > self.req.MaxUploadBytes {
 		msg := fmt.Sprintf("Upload bytes %v exceeded limit %v for flow %v. Cancelling.",
 			self.total_uploaded_bytes, self.req.MaxUploadBytes, self.flow_id)
-		self.addLogMessage("ERROR", msg)
-		if len(self.responders) > 0 {
-			self.responders[0].RaiseError(self.ctx, msg)
-		}
-		self._Cancel()
+		return errors.New(msg)
 	}
+	return nil
 }
 
 // Cancel all the responders and wait for them to complete. This may
@@ -289,14 +282,6 @@ func (self *FlowContext) AddLogMessage(level string, msg string) {
 }
 
 func (self *FlowContext) addLogMessage(level string, msg string) {
-
-	// Capture the first message at error level. This allows the
-	// server to skip parsing the jsonl bundle completely.
-	// FIXME: Support server provided error regex patterns
-	if level == logging.ERROR && self.error_message == "" {
-		self.error_message = msg
-	}
-
 	self.log_message_count++
 	self.log_messages = append(self.log_messages, json.Format(
 		"{\"client_time\":%d,\"level\":%q,\"message\":%q}\n",

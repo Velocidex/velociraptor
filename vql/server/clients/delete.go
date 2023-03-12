@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -223,7 +224,6 @@ func reallyDeleteClient(ctx context.Context,
 		}
 	}
 
-	// Send an event that the client was deleted.
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
@@ -236,7 +236,40 @@ func reallyDeleteClient(ctx context.Context,
 			"org_id":    config_obj.OrgId,
 		})
 
-	return journal.PushRowsToArtifact(ctx, config_obj,
+	err = journal.PushRowsToArtifact(ctx, config_obj,
+		[]*ordereddict.Dict{ordereddict.NewDict().
+			Set("ClientId", arg.ClientId).
+			Set("OrgId", config_obj.OrgId).
+			Set("Principal", principal)},
+		"Server.Internal.ClientDelete", "server", "")
+
+	if err != nil {
+		return err
+	}
+
+	// Send an event that the client was deleted to the root org as
+	// well. The Frontend is not org aware and needs to be informed to
+	// client deletion events.
+	if utils.IsRootOrg(config_obj.OrgId) {
+		return nil
+	}
+
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return err
+	}
+
+	root_config_obj, err := org_manager.GetOrgConfig("root")
+	if err != nil {
+		return err
+	}
+
+	journal, err = services.GetJournal(root_config_obj)
+	if err != nil {
+		return err
+	}
+
+	return journal.PushRowsToArtifact(ctx, root_config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", arg.ClientId).
 			Set("OrgId", config_obj.OrgId).

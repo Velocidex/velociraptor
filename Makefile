@@ -74,7 +74,7 @@ debug_minion:
 	dlv debug --wd=. --build-flags="-tags 'server_vql extras'" ./bin/ -- frontend --disable-panic-guard -v --debug --minion --node ${NODE}
 
 debug_client:
-	dlv debug --build-flags="-tags 'server_vql extras'" ./bin/ -- client -v
+	dlv debug --build-flags="-tags 'server_vql extras'" ./bin/ -- client -v --debug --debug_port 6061
 
 debug_golden:
 	dlv debug --build-flags="-tags 'server_vql extras'" ./bin/ -- --config artifacts/testdata/windows/test.config.yaml golden artifacts/testdata/server/testcases/ --env srcDir=`pwd` --disable_alarm -v --filter=${GOLDEN}
