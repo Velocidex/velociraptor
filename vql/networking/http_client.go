@@ -89,6 +89,7 @@ type _HttpPluginResponse struct {
 	Url      string
 	Content  string
 	Response int
+	Headers vfilter.Any
 }
 
 type _HttpPlugin struct{}
@@ -455,6 +456,7 @@ func (self *_HttpPlugin) Call(
 		response := &_HttpPluginResponse{
 			Url:      arg.Url,
 			Response: http_resp.StatusCode,
+			Headers: http_resp.Header,
 		}
 
 		if arg.TempfileExtension != "" {
