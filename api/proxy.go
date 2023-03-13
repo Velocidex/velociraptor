@@ -23,6 +23,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strings"
 
 	errors "github.com/go-errors/errors"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -133,7 +134,7 @@ func PrepareGUIMux(
 		return nil, err
 	}
 
-	base := config_obj.GUI.BasePath
+	base := strings.TrimSuffix(config_obj.GUI.BasePath, "/")
 
 	mux.Handle(base+"/api/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(h)))

@@ -82,7 +82,7 @@ class VeloNavigator extends Component {
                   <span className="sr-only">{T("Toggle Main Menu")}</span>
               </button>
               <a href="#welcome">
-                <img src={logo} className="velo-logo" alt={T("Welcome")} />
+                <img src={window.base_path + logo} className="velo-logo" alt={T("Welcome")} />
               </a>
               <div
                 className={classNames({
