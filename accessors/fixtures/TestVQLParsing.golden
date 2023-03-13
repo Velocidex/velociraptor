@@ -1,0 +1,117 @@
+{
+ "Simple Path": {
+  "Components": [
+   "Hello",
+   "World"
+  ],
+  "PathSpec": {
+   "Path": "/Hello/World"
+  }
+ },
+ "Path With {": {
+  "Components": [
+   "Hello",
+   "{this is a test}"
+  ],
+  "PathSpec": {
+   "Path": "/Hello/{this is a test}"
+  }
+ },
+ "FSPathSpec": {
+  "Components": [
+   "Hello",
+   "World.json"
+  ],
+  "PathSpec": {
+   "DelegateAccessor": "fs",
+   "DelegatePath": "fs:",
+   "Path": "Hello/World.json"
+  }
+ },
+ "FSPathSpec With type": {
+  "Components": [
+   "Hello",
+   "World.zip"
+  ],
+  "PathSpec": {
+   "DelegateAccessor": "fs",
+   "DelegatePath": "fs:",
+   "Path": "Hello/World.zip"
+  }
+ },
+ "DSPathSpec": {
+  "Components": [
+   "Hello",
+   "World.json.db"
+  ],
+  "PathSpec": {
+   "DelegateAccessor": "fs",
+   "DelegatePath": "ds:",
+   "Path": "Hello/World.json.db"
+  }
+ },
+ "DSPathSpec With Type": {
+  "Components": [
+   "Hello",
+   "World.db"
+  ],
+  "PathSpec": {
+   "DelegateAccessor": "fs",
+   "DelegatePath": "ds:",
+   "Path": "Hello/World.db"
+  }
+ },
+ "OSPath": {
+  "Components": [
+   "foo",
+   "bar"
+  ],
+  "PathSpec": {
+   "Path": "/foo/bar"
+  }
+ },
+ "PathSpec": {
+  "Components": [
+   "foo",
+   "bar"
+  ],
+  "PathSpec": {
+   "Path": "/foo/bar"
+  }
+ },
+ "Serialized PathSpec": {
+  "Components": [
+   "foo",
+   "bar.txt"
+  ],
+  "PathSpec": {
+   "DelegateAccessor": "file",
+   "DelegatePath": "/tmp/file.zip",
+   "Path": "/foo/bar.txt"
+  }
+ },
+ "Multiple parts of mixed type": {
+  "Components": [
+   "root",
+   "home",
+   "foo",
+   "bar",
+   "Hello.txt"
+  ],
+  "PathSpec": {
+   "Path": "/root/home/foo/bar/Hello.txt"
+  }
+ },
+ "Multiple parts of mixed type 2": {
+  "Components": [
+   "root",
+   "home",
+   "a",
+   "b",
+   "Hello.txt"
+  ],
+  "PathSpec": {
+   "Path": "/root/home/a/b/Hello.txt"
+  }
+ }
+}

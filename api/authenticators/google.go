@@ -325,12 +325,12 @@ func reject_with_username(
 		logrus.Fields{
 			"remote": r.RemoteAddr,
 			"method": r.Method,
-			"url":    r.URL,
+			"url":    r.URL.String(),
 			"err":    err.Error(),
 		})
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	w.WriteHeader(http.StatusUnauthorized)
+	w.WriteHeader(http.StatusOK)
 
 	renderRejectionMessage(config_obj,
 		w, username, []velociraptor.AuthenticatorInfo{
