@@ -210,6 +210,13 @@ export default class NotebookCellRenderer extends React.Component {
         }
     };
 
+    getEnv = ()=>{
+        let env = Object.assign({},this.props.env || {});
+        return Object.assign(env, {
+            notebook_id: this.props.notebook_id,
+            notebook_cell_id: this.props.cell_metadata && this.props.cell_metadata.cell_id});
+    }
+
     fetchCellContents = () => {
         // Cancel any in flight calls.
         this.source.cancel();
@@ -758,7 +765,7 @@ export default class NotebookCellRenderer extends React.Component {
                      onClick={() => {this.props.setSelectedCellId(this.state.cell.cell_id);}}
                 >
                   <NotebookReportRenderer
-                    env={this.props.env}
+                    env={this.getEnv()}
                     refresh={this.recalculate}
                     notebook_id={this.props.notebook_id}
                     cell={this.state.cell}/>

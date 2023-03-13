@@ -1,0 +1,42 @@
+LET _ <= mock_time(now=1669861615)[]LET _ <= SELECT OSPath, file_store_delete(path=OSPath) AS A FROM glob(globs='/downloads/notebooks/'+NOTEBOOK_ID+'/*', accessor="fs")[]SELECT create_notebook_download(notebook_id=NOTEBOOK_ID) FROM scope()[
+ {
+  "create_notebook_download(notebook_id=NOTEBOOK_ID)": "fs:/downloads/notebooks/N.CG74N2JSSV75S/N.CG74N2JSSV75S-20221201022655Z.zip"
+ }
+]SELECT * FROM foreach(row={ SELECT OSPath, Size FROM glob(globs=srcDir + '/artifacts/testdata/server/downloads/notebooks/**/*.zip') }, query={ SELECT OSPath.Path AS FullPath, Size FROM glob(globs="**", root=pathspec(DelegatePath=OSPath, DelegateAccessor="auto"), accessor='zip') WHERE NOT IsDir ORDER BY FullPath })[
+ {
+  "FullPath": "/N.CG74N2JSSV75S/NC.CG74N2HMAK01C/logs.json",
+  "Size": 173
+ },
+ {
+  "FullPath": "/N.CG74N2JSSV75S/NC.CG74N2HMAK01C/logs.json.index",
+  "Size": 8
+ },
+ {
+  "FullPath": "/N.CG74N2JSSV75S/NC.CG74N5GVJAA2E/logs.json",
+  "Size": 173
+ },
+ {
+  "FullPath": "/N.CG74N2JSSV75S/NC.CG74N5GVJAA2E/logs.json.index",
+  "Size": 8
+ },
+ {
+  "FullPath": "/N.CG74N2JSSV75S/NC.CG74N5GVJAA2E/query_1.json",
+  "Size": 285
+ },
+ {
+  "FullPath": "/N.CG74N2JSSV75S/NC.CG74N5GVJAA2E/query_1.json.index",
+  "Size": 8
+ },
+ {
+  "FullPath": "/N.CG74N2JSSV75S/NC.CG74N5GVJAA2E/uploads/test.txt",
+  "Size": 11
+ },
+ {
+  "FullPath": "/N.CG74N2JSSV75S/files/NA.CG75NPHSURTDQimage.png",
+  "Size": 9295
+ },
+ {
+  "FullPath": "/Notebook.yaml",
+  "Size": 1670
+ }
+]
