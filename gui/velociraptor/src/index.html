@@ -13,7 +13,7 @@
       window.CsrfToken = "{{.CsrfToken}}";
       window.base_path = "{{.BasePath}}";
       /// Support development
-      if (window.base_path.substring(0,2) === "{{") {
+      if (window.base_path.substring(0,2) === "\{\{") {
           window.base_path = "";
       }
 
