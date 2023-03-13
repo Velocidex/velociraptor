@@ -28,8 +28,8 @@ LET _ <= mock_time(now=1669861615)[]LET _ <= SELECT OSPath, file_store_delete(pa
   "Size": 8
  },
  {
-  "FullPath": "/N.CG74N2JSSV75S/NC.CG74N5GVJAA2E/uploads/test.txt",
-  "Size": 11
+  "FullPath": "/N.CG74N2JSSV75S/NC.CG74N5GVJAA2E/uploads",
+  "Size": 0
  },
  {
   "FullPath": "/N.CG74N2JSSV75S/files/NA.CG75NPHSURTDQimage.png",
