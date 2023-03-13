@@ -87,9 +87,13 @@ func parseOSPath(ctx context.Context,
 		a_value := reflect.Indirect(reflect.ValueOf(value))
 		if a_value.Type().Kind() == reflect.Slice {
 			for idx := 0; idx < a_value.Len(); idx++ {
-				item, err := parseOSPath(ctx, scope, args,
-					a_value.Index(int(idx)).Interface())
+				slice_item := a_value.Index(int(idx)).Interface()
+				item, err := parseOSPath(ctx, scope, args, slice_item)
 				if err != nil {
+					string_item, ok := slice_item.(string)
+					if ok {
+						result = result.Append(string_item)
+					}
 					continue
 				}
 				item_os_path, ok := item.(*OSPath)

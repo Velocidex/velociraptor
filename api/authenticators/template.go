@@ -30,6 +30,7 @@ func renderRejectionMessage(
 	}
 
 	err = tmpl.Execute(w, velociraptor.HTMLtemplateArgs{
+		BasePath: getBasePath(config_obj),
 		ErrState: json.MustMarshalString(velociraptor.ErrState{
 			Type:           "Login",
 			Username:       username,
@@ -61,6 +62,7 @@ func renderLogoffMessage(
 	}
 
 	err = tmpl.Execute(w, velociraptor.HTMLtemplateArgs{
+		BasePath: getBasePath(config_obj),
 		ErrState: json.MustMarshalString(velociraptor.ErrState{
 			Type:           "Logoff",
 			Username:       username,

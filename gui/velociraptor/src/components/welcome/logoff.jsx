@@ -45,7 +45,7 @@ export default class LogoffPage extends Component {
                         <a href={base_path}>
                           <Row>
                             <Col sm="1">
-                              <img src={logo}
+                              <img src={window.base_path + -logo}
                                    className="velo-logo" alt="velo logo"/>
                             </Col>
                             <Col sm="9" className="provider">

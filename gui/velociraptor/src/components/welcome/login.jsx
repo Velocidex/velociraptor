@@ -20,24 +20,25 @@ class Authenticator extends Component {
     }
 
     getIcon = ()=>{
+        let base_path = window.base_path || "";
         let provider_name = this.props.param.ProviderName;
         switch(provider_name) {
         case "Google":
             return <img className="logo" alt='google logo'
-                        src={google_logo}/>;
+                        src={base_path + google_logo}/>;
         case "Github":
             return <img className="logo" alt='github logo'
-                        src={github_logo}/>;
+                        src={base_path + github_logo}/>;
         case "Microsoft":
             return <img className="logo" alt='microsoft logo'
-                        src={azure_logo}/>;
+                        src={base_path + azure_logo}/>;
         default:
             if (this.props.param.ProviderAvatar) {
                 return <img className="logo" alt='oidc logo'
                             src={this.props.param.ProviderAvatar}/>;
             }
             return <img className="logo" alt='oidc logo'
-                        src={openid_logo}/>;
+                        src={base_path + openid_logo}/>;
         }
     }
 
