@@ -43,10 +43,6 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-var (
-	artifactNameRegex = regexp.MustCompile("^[a-zA-Z0-9_.]+$")
-)
-
 // Holds multiple artifact definitions.
 type Repository struct {
 	mu          sync.Mutex
@@ -185,9 +181,9 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 	// Make a copy of the artifact to store in the repository.
 	artifact = proto.Clone(artifact).(*artifacts_proto.Artifact)
 
-	if !artifactNameRegex.MatchString(artifact.Name) {
-		return nil, errors.New(
-			"Invalid artifact name. Can only contain characted in this set 'a-zA-Z0-9_.'")
+	err := validateArtifactName(artifact.Name)
+	if err != nil {
+		return nil, err
 	}
 
 	// Validate the artifact.
@@ -592,5 +588,26 @@ func updateTools(
 			return err
 		}
 	}
+	return nil
+}
+
+var (
+	artifactNameRegex      = regexp.MustCompile("^[a-zA-Z0-9_.]+$")
+	artifactComponentRegex = regexp.MustCompile("^[0-9]")
+)
+
+func validateArtifactName(name string) error {
+	if !artifactNameRegex.MatchString(name) {
+		return errors.New(
+			"Invalid artifact name. Can only contain characted in this set 'a-zA-Z0-9_.'")
+	}
+
+	for _, part := range strings.Split(name, ".") {
+		if artifactComponentRegex.MatchString(part) {
+			return errors.New(
+				"Invalid artifact name. Name parts can not start with a number'")
+		}
+	}
+
 	return nil
 }
