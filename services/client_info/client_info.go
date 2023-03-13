@@ -538,8 +538,8 @@ func (self *ClientInfoManager) FlushAll() {
 	}
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-	logger.Debug("ClientInfoManager: Writing %v records to storage",
-		len(to_flush))
+	logger.Debug("ClientInfoManager: Writing %v records to storage for org %v",
+		len(to_flush), self.config_obj.OrgId)
 	// Flush items outside the lock so we do block during IO.
 	for _, item := range to_flush {
 		item.Flush()

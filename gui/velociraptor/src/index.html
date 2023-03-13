@@ -12,6 +12,11 @@
       };
       window.CsrfToken = "{{.CsrfToken}}";
       window.base_path = "{{.BasePath}}";
+      /// Support development
+      if (window.base_path.substring(0,2) === "{{") {
+          window.base_path = "";
+      }
+
     </script>
     <script type="text/javascript">
       // Used to launch the application in an error state - allows the
