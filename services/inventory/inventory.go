@@ -457,7 +457,8 @@ func (self *InventoryService) LoadFromFile(config_obj *config_proto.Config) erro
 	inventoryTotalLoad.Inc()
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("InventoryService: Reloading inventory from file")
+	logger.Info("InventoryService: Reloading inventory from file for org %v",
+		config_obj.OrgId)
 
 	inventory := &artifacts_proto.ThirdParty{}
 

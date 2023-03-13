@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	VERSION = "0.6.8"
+	VERSION = "0.6.8-rc2"
 )
 
 const (
