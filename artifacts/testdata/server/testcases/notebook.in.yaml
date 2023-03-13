@@ -1,0 +1,25 @@
+Parameters:
+  NOTEBOOK_ID: "N.CG74N2JSSV75S"
+
+Queries:
+  # Test notebook exports. Freeze time for time based notebook files.
+  - LET _ <= mock_time(now=1669861615)
+
+  # Clear the old files if they are there.
+  - LET _ <= SELECT OSPath, file_store_delete(path=OSPath) AS A
+    FROM glob(globs='/downloads/notebooks/'+NOTEBOOK_ID+'/*', accessor="fs")
+
+  - SELECT create_notebook_download(notebook_id=NOTEBOOK_ID) FROM scope()
+
+  # Check the created zip file contains both combined and distinct results
+  - SELECT * FROM foreach(row={
+      SELECT OSPath, Size
+      FROM glob(globs=srcDir + '/artifacts/testdata/server/downloads/notebooks/**/*.zip')
+    }, query={
+      SELECT OSPath.Path AS FullPath, Size
+      FROM glob(globs="**",
+                root=pathspec(DelegatePath=OSPath,
+                              DelegateAccessor="auto"), accessor='zip')
+      WHERE NOT IsDir
+      ORDER BY FullPath
+    })

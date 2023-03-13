@@ -277,6 +277,16 @@ export default class PreviewUpload extends Component {
         if (!_.isEqual(prevProps.upload, this.props.upload)) {
             this.fetchPreview_();
         };
+
+        return _.isEqual(this.state.view, prevState.view);
+    }
+
+    isValidEnv = env=>{
+        if(env.hunt_id) return true;
+        if(env.notebook_cell_id) return true;
+        if(env.client_id && env.flow_id) return true;
+
+        return false;
     }
 
     fetchPreview_ = () => {
@@ -291,10 +301,11 @@ export default class PreviewUpload extends Component {
                 components = path.split("/");
             }
         }
+
         let env = this.props.env || {};
         let client_id = env.client_id;
         let flow_id = env.flow_id;
-        if(!client_id || !flow_id) {
+        if (!this.isValidEnv(env)) {
             return;
         };
 
@@ -385,14 +396,17 @@ const normalizeComponentList = (components, client_id, flow_id, accessor)=>{
         return [accessor];
     }
 
-    // It is a filestore path already
-    if (components[0] === "clients") {
+    switch (components[0]) {
+    case "clients":
+    case "notebooks":
+    case "hunts":
+        // It is a filestore path already
         return components;
-    }
 
-    if (components[0] === "uploads") {
-    return ["clients", client_id,
-            "collections", flow_id].concat(components);
+    case "uploads":
+        // It is given relative to the client's flow.
+        return ["clients", client_id,
+                "collections", flow_id].concat(components);
     }
 
     return ["clients", client_id, "collections", flow_id,

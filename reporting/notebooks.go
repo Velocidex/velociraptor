@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/url"
+	"os"
 	"regexp"
 	"sync"
 	"time"
@@ -268,8 +269,10 @@ func ExportNotebookToZip(
 			cell_copier(cell.CellId)
 		}
 
-		// Copy the uploads - Uploads may not exist if there are no
-		// uploads in the notebook - so this is not an error.
+		// Copy the attachments - Attachmentrs may not exist if there
+		// are none in the notebook - so this is not an error.
+		// Attachments are added to the notebook when the user pastes
+		// them into it (e.g. an image)
 		err = copyUploads(ctx, config_obj,
 			notebook_path_manager.AttachmentDirectory(),
 			exported_path_manager.UploadRoot(),
@@ -299,34 +302,33 @@ func copyUploads(
 	zip_writer *Container,
 	file_store_factory api.FileStore) error {
 
-	children, err := file_store_factory.ListDirectory(src)
-	if err != nil {
-		// Not an actual error if the directory does not exist
-		return nil
-	}
+	return api.Walk(file_store_factory, src,
+		func(filename api.FSPathSpec, info os.FileInfo) error {
+			src_depth := len(src.Components())
+			if len(filename.Components()) <= src_depth {
+				return nil
+			}
 
-	for _, child := range children {
-		out_filename := dest.Append(child.Name())
+			out_filename := dest.Append(filename.Components()[src_depth:]...)
 
-		out_fd, err := zip_writer.Create(
-			out_filename.String()+api.GetExtensionForFilestore(child.PathSpec()),
-			time.Time{})
-		if err != nil {
-			continue
-		}
+			out_fd, err := zip_writer.Create(
+				out_filename.String()+
+					api.GetExtensionForFilestore(filename),
+				time.Time{})
+			if err != nil {
+				return nil
+			}
+			defer out_fd.Close()
 
-		fd, err := file_store_factory.ReadFile(child.PathSpec())
-		if err != nil {
-			out_fd.Close()
-			continue
-		}
+			fd, err := file_store_factory.ReadFile(filename)
+			if err != nil {
+				return nil
+			}
+			defer fd.Close()
 
-		_, err = utils.Copy(ctx, out_fd, fd)
-		fd.Close()
-		out_fd.Close()
-	}
-
-	return nil
+			_, err = utils.Copy(ctx, out_fd, fd)
+			return err
+		})
 }
 
 func ExportNotebookToHTML(

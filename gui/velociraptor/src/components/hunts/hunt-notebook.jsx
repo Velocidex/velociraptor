@@ -88,9 +88,14 @@ export default class HuntNotebook extends React.Component {
     }
 
     render() {
+        let hunt_id = this.props.hunt && this.props.hunt.hunt_id;
+
         return (
             <> {!_.isEmpty(this.state.notebook) &&
                 <NotebookRenderer
+                  env={{
+                      hunt_id: hunt_id,
+                  }}
                   notebook={this.state.notebook}
                   fetchNotebooks={this.fetchNotebooks}
                 />

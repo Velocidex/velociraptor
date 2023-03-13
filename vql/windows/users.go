@@ -167,7 +167,6 @@ func (self *LookupSidFunction) Call(ctx context.Context,
 
 	sid, err := syscall.StringToSid(arg.Sid)
 	if err != nil {
-		scope.Log("LookupSID: %s", err.Error())
 		return vfilter.Null{}
 	}
 
