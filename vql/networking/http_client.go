@@ -89,7 +89,7 @@ type _HttpPluginResponse struct {
 	Url      string
 	Content  string
 	Response int
-	Headers vfilter.Any
+	Headers  vfilter.Any
 }
 
 type _HttpPlugin struct{}
@@ -145,6 +145,8 @@ func (self *HTTPClientCache) GetHttpClient(
 					net.Conn, error) {
 					return net.Dial("unix", components[0])
 				},
+				TLSNextProto: make(map[string]func(
+					authority string, c *tls.Conn) http.RoundTripper),
 			},
 		}
 		self.cache[key] = result
@@ -164,6 +166,8 @@ func (self *HTTPClientCache) GetHttpClient(
 				TLSClientConfig: &tls.Config{
 					InsecureSkipVerify: true,
 				},
+				TLSNextProto: make(map[string]func(
+					authority string, c *tls.Conn) http.RoundTripper),
 			},
 		}
 		self.cache[key] = result
@@ -295,6 +299,8 @@ func GetDefaultHTTPClient(
 				InsecureSkipVerify: true,
 				VerifyConnection:   customVerifyConnection(CA_Pool, config_obj),
 			},
+			TLSNextProto: make(map[string]func(
+				authority string, c *tls.Conn) http.RoundTripper),
 		},
 	}, nil
 }
@@ -456,7 +462,7 @@ func (self *_HttpPlugin) Call(
 		response := &_HttpPluginResponse{
 			Url:      arg.Url,
 			Response: http_resp.StatusCode,
-			Headers: http_resp.Header,
+			Headers:  http_resp.Header,
 		}
 
 		if arg.TempfileExtension != "" {
