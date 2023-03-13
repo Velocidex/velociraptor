@@ -541,9 +541,8 @@ export function formatColumns(columns, env) {
             break;
 
         case "preview_upload":
+        case "upload_preview":
             x.formatter = (cell, row) => {
-                let client_id = row["ClientId"];
-
                 return <PreviewUpload
                          env={env}
                          upload={cell}/>;
