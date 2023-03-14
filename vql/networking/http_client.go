@@ -157,18 +157,17 @@ func (self *HTTPClientCache) GetHttpClient(
 	// needed to access self signed servers. Ideally we should
 	// add extra ca certs in arg.RootCerts.
 	if arg.DisableSSLSecurity {
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		transport.Proxy = proxyHandler
+		transport.MaxIdleConns = 10
+		transport.TLSClientConfig = &tls.Config{
+			InsecureSkipVerify: true,
+		}
+
 		result = &http.Client{
-			Timeout: time.Second * 10000,
-			Jar:     NewDictJar(arg.CookieJar),
-			Transport: &http.Transport{
-				Proxy:        proxyHandler,
-				MaxIdleConns: 10,
-				TLSClientConfig: &tls.Config{
-					InsecureSkipVerify: true,
-				},
-				TLSNextProto: make(map[string]func(
-					authority string, c *tls.Conn) http.RoundTripper),
-			},
+			Timeout:   time.Second * 10000,
+			Jar:       NewDictJar(arg.CookieJar),
+			Transport: transport,
 		}
 		self.cache[key] = result
 		return result, nil
@@ -279,30 +278,32 @@ func GetDefaultHTTPClient(
 		}
 	}
 
-	return &http.Client{
-		Timeout: time.Second * 10000,
-		Jar:     NewDictJar(cookie_jar),
-		Transport: &http.Transport{
-			Proxy: proxyHandler,
-			Dial: (&net.Dialer{
-				KeepAlive: 600 * time.Second,
-			}).Dial,
-			MaxIdleConnsPerHost: 10,
-			MaxIdleConns:        10,
-			TLSClientConfig: &tls.Config{
-				MinVersion:         tls.VersionTLS12,
-				ClientSessionCache: tls.NewLRUClientSessionCache(100),
-				RootCAs:            CA_Pool,
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.TLSClientConfig = &tls.Config{
+		MinVersion:         tls.VersionTLS12,
+		ClientSessionCache: tls.NewLRUClientSessionCache(100),
+		RootCAs:            CA_Pool,
 
-				// Not actually skipping, we check the
-				// cert in VerifyPeerCertificate
-				InsecureSkipVerify: true,
-				VerifyConnection:   customVerifyConnection(CA_Pool, config_obj),
-			},
-			TLSNextProto: make(map[string]func(
-				authority string, c *tls.Conn) http.RoundTripper),
-		},
-	}, nil
+		// Not actually skipping, we check the
+		// cert in VerifyPeerCertificate
+		InsecureSkipVerify: true,
+		NextProtos:         []string{"http/1.1"},
+		VerifyConnection:   customVerifyConnection(CA_Pool, config_obj),
+	}
+	transport.Proxy = proxyHandler
+	transport.Dial = (&net.Dialer{
+		KeepAlive: 600 * time.Second,
+	}).Dial
+	transport.MaxIdleConnsPerHost = 10
+	transport.MaxIdleConns = 10
+
+	result := &http.Client{
+		Timeout:   time.Second * 10000,
+		Jar:       NewDictJar(cookie_jar),
+		Transport: transport,
+	}
+
+	return result, nil
 }
 
 func encodeParams(arg *HttpPluginRequest, scope vfilter.Scope) *url.Values {

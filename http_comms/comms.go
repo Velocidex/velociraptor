@@ -217,6 +217,20 @@ func NewHTTPConnector(
 		timeout = 300 // 5 Min default
 	}
 
+	transport := http.DefaultTransport.(*http.Transport).Clone()
+	transport.TLSClientConfig = tls_config
+	transport.DialContext = (&net.Dialer{
+		Timeout:   time.Duration(timeout) * time.Second,
+		KeepAlive: time.Duration(timeout) * time.Second,
+		DualStack: true,
+	}).DialContext
+	transport.Proxy = proxyHandler
+	transport.MaxIdleConns = 100
+	transport.IdleConnTimeout = time.Duration(timeout) * time.Second
+	transport.TLSHandshakeTimeout = time.Duration(timeout) * time.Second
+	transport.ExpectContinueTimeout = time.Duration(timeout) * time.Second
+	transport.ResponseHeaderTimeout = time.Duration(timeout) * time.Second
+
 	self := &HTTPConnector{
 		config_obj: config_obj,
 		manager:    manager,
@@ -239,22 +253,7 @@ func NewHTTPConnector(
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
 			},
-			Transport: &http.Transport{
-				DialContext: (&net.Dialer{
-					Timeout:   time.Duration(timeout) * time.Second,
-					KeepAlive: time.Duration(timeout) * time.Second,
-					DualStack: true,
-				}).DialContext,
-				Proxy:                 proxyHandler,
-				MaxIdleConns:          100,
-				IdleConnTimeout:       time.Duration(timeout) * time.Second,
-				TLSHandshakeTimeout:   time.Duration(timeout) * time.Second,
-				ExpectContinueTimeout: time.Duration(timeout) * time.Second,
-				ResponseHeaderTimeout: time.Duration(timeout) * time.Second,
-				TLSClientConfig:       tls_config,
-				TLSNextProto: make(map[string]func(
-					authority string, c *tls.Conn) http.RoundTripper),
-			},
+			Transport: transport,
 		},
 	}
 
