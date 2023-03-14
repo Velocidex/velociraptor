@@ -236,6 +236,8 @@ func (self *scanReporter) scanFileByAccessor(
 	start, end uint64,
 	output_chan chan vfilter.Row) {
 
+	defer utils.CheckForPanic("Panic in scanFileByAccessor")
+
 	accessor, err := accessors.GetAccessor(accessor_name, self.scope)
 	if err != nil {
 		self.scope.Log("yara: %v", err)

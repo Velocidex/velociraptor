@@ -20,13 +20,13 @@
 package main
 
 import (
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
 
 	"github.com/Velocidex/ordereddict"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/uploads"
@@ -72,7 +72,7 @@ func doRepack() error {
 		WithFileLoader(*config_path).
 		LoadAndValidate()
 	if err != nil {
-		return fmt.Errorf("Unable to load config file: %w", err)
+		config_obj = &config_proto.Config{}
 	}
 
 	ctx, cancel := install_sig_handler()
