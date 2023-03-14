@@ -135,6 +135,8 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 			tr := &http.Transport{
 				Proxy:           networking.GetProxy(),
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				TLSNextProto: make(map[string]func(
+					authority string, c *tls.Conn) http.RoundTripper),
 			}
 
 			client := &http.Client{Transport: tr}
