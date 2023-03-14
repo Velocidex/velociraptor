@@ -252,6 +252,8 @@ func NewHTTPConnector(
 				ExpectContinueTimeout: time.Duration(timeout) * time.Second,
 				ResponseHeaderTimeout: time.Duration(timeout) * time.Second,
 				TLSClientConfig:       tls_config,
+				TLSNextProto: make(map[string]func(
+					authority string, c *tls.Conn) http.RoundTripper),
 			},
 		},
 	}

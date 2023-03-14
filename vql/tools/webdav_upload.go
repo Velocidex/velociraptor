@@ -125,6 +125,8 @@ func upload_webdav(ctx context.Context, scope vfilter.Scope,
 		}).DialContext,
 		TLSHandshakeTimeout: 30 * time.Second,
 		TLSClientConfig:     tlsConfig,
+		TLSNextProto: make(map[string]func(
+			authority string, c *tls.Conn) http.RoundTripper),
 	}
 	client := &http.Client{
 		Transport: netTransport,
