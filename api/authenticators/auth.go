@@ -148,12 +148,16 @@ func init() {
 
 // Ensure base path start and ends with /
 func getBasePath(config_obj *config_proto.Config) string {
+	if config_obj.GUI == nil {
+		return ""
+	}
+
 	bare := strings.TrimSuffix(config_obj.GUI.BasePath, "/")
 	bare = strings.TrimPrefix(bare, "/")
 	if bare == "" {
-		return "/"
+		return ""
 	}
-	return "/" + bare + "/"
+	return "/" + bare
 }
 
 // Ensure public URL start and ends with /
