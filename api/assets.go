@@ -34,10 +34,7 @@ import (
 )
 
 func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) {
-	base := ""
-	if config_obj.GUI != nil {
-		base = config_obj.GUI.BasePath
-	}
+	base := getBasePath(config_obj)
 	dir := base + "/app/"
 	mux.Handle(dir, http.StripPrefix(
 		dir, gzipped.FileServer(NewCachedFilesystem(gui_assets.HTTP))))
@@ -67,8 +64,6 @@ func GetTemplateHandler(
 		return nil, err
 	}
 
-	base := config_obj.GUI.BasePath
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		userinfo := GetUserInfo(r.Context(), config_obj)
 
@@ -88,7 +83,7 @@ func GetTemplateHandler(
 		args := velociraptor.HTMLtemplateArgs{
 			Timestamp: time.Now().UTC().UnixNano() / 1000,
 			CsrfToken: csrf.Token(r),
-			BasePath:  base,
+			BasePath:  getBasePath(config_obj),
 			Heading:   "Heading",
 			UserTheme: user_options.Theme,
 			OrgId:     user_options.Org,
