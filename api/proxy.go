@@ -134,8 +134,7 @@ func PrepareGUIMux(
 		return nil, err
 	}
 
-	base := strings.TrimSuffix(config_obj.GUI.BasePath, "/")
-
+	base := getBasePath(config_obj)
 	mux.Handle(base+"/api/", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(h)))
 
@@ -191,6 +190,7 @@ func PrepareGUIMux(
 	mux.Handle(base+"/app/index.html", csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(h)))
 
+	// Redirect everything else to the app
 	mux.Handle(base+"/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, base+"/app/index.html", 302)
 	}))
@@ -284,11 +284,24 @@ func GetAPIHandler(
 		return nil, err
 	}
 
-	base := config_obj.GUI.BasePath
-
+	base := getBasePath(config_obj)
 	reverse_proxy_mux := http.NewServeMux()
 	reverse_proxy_mux.Handle(base+"/api/v1/",
 		http.StripPrefix(base, grpc_proxy_mux))
 
 	return reverse_proxy_mux, nil
+}
+
+// Ensure base path start and does not end with /
+func getBasePath(config_obj *config_proto.Config) string {
+	if config_obj.GUI == nil {
+		return ""
+	}
+
+	bare := strings.TrimSuffix(config_obj.GUI.BasePath, "/")
+	bare = strings.TrimPrefix(bare, "/")
+	if bare == "" {
+		return ""
+	}
+	return "/" + bare
 }
