@@ -449,7 +449,7 @@ export default class UserLabel extends React.Component {
                   { this.context.traits.picture &&
                     <img className="toolbar-buttons img-thumbnail"
                          alt="avatar"
-                         src={ this.context.traits.picture}
+                         src={this.context.traits.picture}
                     />
                   }
                   { this.orgName() }

@@ -6,6 +6,8 @@ import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
 import logo from  "../sidebar/velo.svg";
 import "./login.css";
+import api from '../core/api-service.jsx';
+
 
 export default class LogoffPage extends Component {
     render() {
@@ -45,7 +47,7 @@ export default class LogoffPage extends Component {
                         <a href={base_path}>
                           <Row>
                             <Col sm="1">
-                              <img src={window.base_path + -logo}
+                              <img src={api.src_of(logo)}
                                    className="velo-logo" alt="velo logo"/>
                             </Col>
                             <Col sm="9" className="provider">

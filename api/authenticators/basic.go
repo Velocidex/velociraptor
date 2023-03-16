@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -27,8 +28,7 @@ func (self *BasicAuthenticator) AddHandlers(mux *http.ServeMux) error {
 }
 
 func (self *BasicAuthenticator) AddLogoff(mux *http.ServeMux) error {
-	homepage := self.base + "app/index.html"
-	mux.Handle(self.base+"app/logoff.html",
+	mux.Handle(utils.Join(self.base, "/app/logoff.html"),
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			username, _, ok := r.BasicAuth()
 			if !ok {
@@ -42,7 +42,8 @@ func (self *BasicAuthenticator) AddLogoff(mux *http.ServeMux) error {
 			old_username, ok := params["username"]
 			if ok && len(old_username) == 1 && old_username[0] != username {
 				// Authenticated as someone else.
-				http.Redirect(w, r, homepage, http.StatusTemporaryRedirect)
+				http.Redirect(w, r, utils.Homepage(self.config_obj),
+					http.StatusTemporaryRedirect)
 				return
 			}
 

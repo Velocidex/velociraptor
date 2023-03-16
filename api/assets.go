@@ -27,6 +27,7 @@ import (
 	"github.com/gorilla/csrf"
 	"github.com/lpar/gzipped"
 	"www.velocidex.com/golang/velociraptor/api/proto"
+	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	gui_assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
@@ -34,12 +35,12 @@ import (
 )
 
 func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) {
-	base := getBasePath(config_obj)
-	dir := base + "/app/"
+	base := utils.GetBasePath(config_obj)
+	dir := utils.Join(base, "/app/")
 	mux.Handle(dir, http.StripPrefix(
 		dir, gzipped.FileServer(NewCachedFilesystem(gui_assets.HTTP))))
 	mux.Handle("/favicon.png",
-		http.RedirectHandler(base+"favicon.ico",
+		http.RedirectHandler(utils.Join(base, "/favicon.ico"),
 			http.StatusMovedPermanently))
 }
 
@@ -83,7 +84,7 @@ func GetTemplateHandler(
 		args := velociraptor.HTMLtemplateArgs{
 			Timestamp: time.Now().UTC().UnixNano() / 1000,
 			CsrfToken: csrf.Token(r),
-			BasePath:  getBasePath(config_obj),
+			BasePath:  utils.GetBasePath(config_obj),
 			Heading:   "Heading",
 			UserTheme: user_options.Theme,
 			OrgId:     user_options.Org,
