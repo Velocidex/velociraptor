@@ -1,0 +1,9 @@
+Queries:
+  # Make sure we can read the raw device with a yara scan. This has to
+  # have at least one hit fairly quickly.
+  - |
+      SELECT Rule, File.FullPath, String.Name FROM yara(files='C:', accessor='file', rules='rule X { strings: $a=\"FILE\" condition: any of them}') LIMIT 1
+
+  # Support reading raw devices with file and ntfs accessors
+  - |
+      SELECT Rule, File.FullPath, String.Name FROM yara(files='C:', accessor='ntfs', rules='rule X { strings: $a=\"FILE\" condition: any of them}') LIMIT 1

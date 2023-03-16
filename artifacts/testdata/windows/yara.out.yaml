@@ -1,0 +1,15 @@
+SELECT Rule, File.FullPath, String.Name FROM yara(files='C:', accessor='file', rules='rule X { strings: $a=\"FILE\" condition: any of them}') LIMIT 1
+[
+ {
+  "Rule": "X",
+  "File.FullPath": "C:",
+  "String.Name": "$a"
+ }
+]SELECT Rule, File.FullPath, String.Name FROM yara(files='C:', accessor='ntfs', rules='rule X { strings: $a=\"FILE\" condition: any of them}') LIMIT 1
+[
+ {
+  "Rule": "X",
+  "File.FullPath": "\\\\.\\C:",
+  "String.Name": "$a"
+ }
+]
