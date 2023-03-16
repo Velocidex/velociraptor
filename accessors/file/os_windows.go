@@ -160,7 +160,7 @@ func discoverDriveLetters() ([]accessors.FileInfo, error) {
 		"ROOT\\CIMV2")
 	if err == nil {
 		for _, row := range shadow_volumes {
-			size, _ := row.GetInt64("Size")
+			size := utils.GetInt64(row, "Size")
 			device_name, pres := row.GetString("DeviceID")
 			if pres {
 				device_path, err := accessors.NewWindowsOSPath(device_name)
@@ -300,6 +300,23 @@ func (self *OSFileSystemAccessor) Lstat(path string) (accessors.FileInfo, error)
 
 func (self *OSFileSystemAccessor) LstatWithOSPath(full_path *accessors.OSPath) (
 	accessors.FileInfo, error) {
+
+	// An Lstat of a device
+	if len(full_path.Components) == 1 &&
+		strings.HasPrefix(full_path.Components[0], "\\\\") {
+		devices, err := discoverDriveLetters()
+		if err != nil {
+			return nil, err
+		}
+
+		// Find the right device information
+		for _, d := range devices {
+			if full_path.Components[0] == d.Name() {
+				return d, nil
+			}
+		}
+		return nil, errors.New("Not found")
+	}
 
 	stat, err := os.Lstat(full_path.String())
 	return &OSFileInfo{

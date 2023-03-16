@@ -27,7 +27,7 @@ require (
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/aws/aws-sdk-go v1.44.118
 	github.com/clbanning/mxj v1.8.4
-	github.com/crewjam/saml v0.4.8
+	github.com/crewjam/saml v0.4.12
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/dimchansky/utfbom v1.1.1
 	github.com/dustin/go-humanize v1.0.0
@@ -80,10 +80,10 @@ require (
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v1.0.0
 	go.starlark.net v0.0.0-20221010140840-6bf6f0955179
-	golang.org/x/crypto v0.0.0-20221012134737-56aed061732a
+	golang.org/x/crypto v0.7.0
 	golang.org/x/mod v0.8.0
-	golang.org/x/net v0.7.0
-	golang.org/x/sys v0.5.0
+	golang.org/x/net v0.8.0
+	golang.org/x/sys v0.6.0
 	golang.org/x/text v0.8.0 // indirect
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858
 	google.golang.org/api v0.96.0
@@ -117,7 +117,7 @@ require (
 	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/glaslos/tlsh v0.2.0
 	github.com/go-errors/errors v1.4.2
-	github.com/golang-jwt/jwt/v4 v4.4.2
+	github.com/golang-jwt/jwt/v4 v4.4.3
 	github.com/hillu/go-archive-zip-crypto v0.0.0-20200712202847-bd5cf365dd44
 	github.com/lpar/gzipped v1.1.0
 	github.com/pkg/errors v0.9.1
@@ -179,7 +179,7 @@ require (
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/rivo/uniseg v0.4.2 // indirect
-	github.com/russellhaering/goxmldsig v1.2.0 // indirect
+	github.com/russellhaering/goxmldsig v1.3.0 // indirect
 	github.com/shopspring/decimal v1.2.0 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.9 // indirect
@@ -189,7 +189,7 @@ require (
 	go.opencensus.io v0.23.0 // indirect
 	go.uber.org/goleak v1.2.0 // indirect
 	golang.org/x/sync v0.1.0 // indirect
-	golang.org/x/term v0.5.0 // indirect
+	golang.org/x/term v0.6.0 // indirect
 	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -228,8 +228,5 @@ go 1.18
 
 // Needed for syntax highlighting VQL. Removes extra fat.
 replace github.com/alecthomas/chroma => github.com/Velocidex/chroma v0.6.8-0.20200418131129-82edc291369c
-
-// Fix broken version issue.
-replace github.com/crewjam/saml v0.4.8 => github.com/Velocidex/saml v0.0.0-20221019055034-272f55e26c8d
 
 replace github.com/go-errors/errors => github.com/Velocidex/errors v0.0.0-20221019164655-9ace6bf61e26
