@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/constants"
 	"www.velocidex.com/golang/velociraptor/vql/windows/wmi"
@@ -20,6 +21,48 @@ const (
 type WindowsNTFSFileSystemAccessor struct {
 	*accessors.MountFileSystemAccessor
 	age time.Time
+}
+
+func (self *WindowsNTFSFileSystemAccessor) Lstat(path string) (accessors.FileInfo, error) {
+	// Parse the path into an OSPath
+	os_path, err := self.ParsePath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return self.LstatWithOSPath(os_path)
+}
+
+func (self *WindowsNTFSFileSystemAccessor) LstatWithOSPath(os_path *accessors.OSPath) (accessors.FileInfo, error) {
+
+	// Calling an LStat on the device shall return file info about the
+	// device itself (including size). e.g. Lstat("\\C:\") -> info about the volume.
+	if len(os_path.Components) == 1 {
+		// Try to match the device to the component required. This can
+		// be either a VSS volume or a Logical disk volume.
+		devices, err := discoverVSS()
+		if err != nil {
+			return nil, err
+		}
+
+		for _, d := range devices {
+			if d.Name() == os_path.Components[0] {
+				return d, nil
+			}
+		}
+		devices, err = discoverLogicalDisks()
+		if err != nil {
+			return nil, err
+		}
+
+		for _, d := range devices {
+			if d.Name() == os_path.Components[0] {
+				return d, nil
+			}
+		}
+	}
+
+	return self.MountFileSystemAccessor.LstatWithOSPath(os_path)
 }
 
 func discoverVSS() ([]*accessors.VirtualFileInfo, error) {
@@ -42,6 +85,7 @@ func discoverVSS() ([]*accessors.VirtualFileInfo, error) {
 			virtual_directory := &accessors.VirtualFileInfo{
 				IsDir_: true,
 				Path:   device_path,
+				Size_:  0, // WMI does not give the original volume size
 				Data_:  row,
 			}
 			result = append(result, virtual_directory)
@@ -71,6 +115,7 @@ func discoverLogicalDisks() ([]*accessors.VirtualFileInfo, error) {
 			}
 			virtual_directory := &accessors.VirtualFileInfo{
 				IsDir_: true,
+				Size_:  utils.GetInt64(row, "Size"),
 				Path:   device_path,
 				Data_:  row,
 			}

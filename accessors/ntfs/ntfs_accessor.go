@@ -460,6 +460,16 @@ func (self *NTFSFileSystemAccessor) LstatWithOSPath(
 		accessor = fullpath.DelegateAccessor()
 	}
 
+	// Attempting to stat the top level mean that we want to stat the
+	// device itself.
+	if len(fullpath.Components) == 0 {
+		accessor_obj, err := accessors.GetAccessor(accessor, self.scope)
+		if err != nil {
+			return nil, err
+		}
+		return accessor_obj.LstatWithOSPath(self.device)
+	}
+
 	ntfs_ctx, err := readers.GetNTFSContext(self.scope, device, accessor)
 	if err != nil {
 		return nil, err
