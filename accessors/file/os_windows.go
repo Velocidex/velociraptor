@@ -276,7 +276,10 @@ func (self OSFileSystemAccessor) OpenWithOSPath(full_path *accessors.OSPath) (
 	// Opening the drive letter directly produces a reader over the
 	// raw disk.
 	if len(full_path.Components) == 1 {
-		device_name := "\\\\.\\" + full_path.Components[0]
+		device_name := full_path.Components[0]
+		if !strings.HasPrefix(device_name, "\\\\") {
+			device_name = "\\\\.\\" + device_name
+		}
 		file, err := os.Open(device_name)
 		if err != nil {
 			return nil, err
