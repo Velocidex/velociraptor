@@ -2,7 +2,7 @@ import "./navigator.css";
 import _ from 'lodash';
 import logo from  "./velo.svg";
 import UserConfig from '../core/user.jsx';
-
+import api from '../core/api-service.jsx';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -82,7 +82,7 @@ class VeloNavigator extends Component {
                   <span className="sr-only">{T("Toggle Main Menu")}</span>
               </button>
               <a href="#welcome">
-                <img src={window.base_path + logo} className="velo-logo" alt={T("Welcome")} />
+                <img src={api.src_of(logo)} className="velo-logo" alt={T("Welcome")} />
               </a>
               <div
                 className={classNames({
@@ -288,7 +288,7 @@ class VeloNavigator extends Component {
                                 <img
                                   className="sidebar-icon"
                                   alt=""
-                                  src={x.icon_url}
+                                  src={api.src_of(x.icon_url)}
                                 />
                               </span>
                               {T(x.text)}
