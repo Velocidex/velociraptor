@@ -55,7 +55,13 @@ func GetString(dict *ordereddict.Dict, key string) string {
 
 func GetInt64(dict *ordereddict.Dict, key string) int64 {
 	subdict, last := _get(dict, key)
-	res, _ := subdict.GetInt64(last)
+	res, pres := subdict.GetInt64(last)
+	if !pres {
+		res_str, pres := subdict.GetString(last)
+		if pres {
+			res, _ = strconv.ParseInt(res_str, 0, 64)
+		}
+	}
 	return res
 }
 
