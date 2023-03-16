@@ -253,7 +253,12 @@ func (self *scanReporter) scanFileByAccessor(
 	}
 	defer f.Close()
 
-	self.file_info, _ = accessor.LstatWithOSPath(self.filename)
+	self.file_info, err = accessor.LstatWithOSPath(self.filename)
+	if err != nil {
+		self.scope.Log("yara: Failed to open %v with accessor %v: %v",
+			self.filename, accessor_name, err)
+		return
+	}
 	self.reader = utils.MakeReaderAtter(f)
 
 	// Support sparse file scanning
