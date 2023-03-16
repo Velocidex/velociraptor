@@ -6,7 +6,7 @@ import Button from 'react-bootstrap/Button';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Card from 'react-bootstrap/Card';
-
+import api from '../core/api-service.jsx';
 import "./login.css";
 import github_logo from "./Github-octocat-icon-vector-01.svg";
 import google_logo from "./Google-icon-vector-04.svg";
@@ -25,20 +25,20 @@ class Authenticator extends Component {
         switch(provider_name) {
         case "Google":
             return <img className="logo" alt='google logo'
-                        src={base_path + google_logo}/>;
+                        src={api.src_of(google_logo)}/>;
         case "Github":
             return <img className="logo" alt='github logo'
-                        src={base_path + github_logo}/>;
+                        src={api.src_of(github_logo)}/>;
         case "Microsoft":
             return <img className="logo" alt='microsoft logo'
-                        src={base_path + azure_logo}/>;
+                        src={api.src_of(azure_logo)}/>;
         default:
             if (this.props.param.ProviderAvatar) {
                 return <img className="logo" alt='oidc logo'
                             src={this.props.param.ProviderAvatar}/>;
             }
             return <img className="logo" alt='oidc logo'
-                        src={base_path + openid_logo}/>;
+                        src={api.src_of(openid_logo)}/>;
         }
     }
 

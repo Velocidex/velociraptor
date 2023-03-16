@@ -22,12 +22,12 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"strings"
 
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/github"
+	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -47,7 +47,7 @@ type GitHubAuthenticator struct {
 
 // The URL that will be used to log in.
 func (self *GitHubAuthenticator) LoginURL() string {
-	return self.base + "auth/github/login"
+	return utils.Join(self.base, "/auth/github/login")
 }
 
 func (self *GitHubAuthenticator) IsPasswordLess() bool {
@@ -59,8 +59,10 @@ func (self *GitHubAuthenticator) AuthRedirectTemplate() string {
 }
 
 func (self *GitHubAuthenticator) AddHandlers(mux *http.ServeMux) error {
-	mux.Handle(self.base+"auth/github/login", self.oauthGithubLogin())
-	mux.Handle(self.base+"auth/github/callback", self.oauthGithubCallback())
+	mux.Handle(utils.Join(self.base, "/auth/github/login"),
+		self.oauthGithubLogin())
+	mux.Handle(utils.Join(self.base, "/auth/github/callback"),
+		self.oauthGithubCallback())
 	return nil
 }
 
@@ -77,7 +79,7 @@ func (self *GitHubAuthenticator) AuthenticateUserHandler(
 		self.config_obj,
 		func(w http.ResponseWriter, r *http.Request, err error, username string) {
 			reject_with_username(self.config_obj, w, r, err, username,
-				self.base+"auth/github/login", "Github")
+				utils.Join(self.base, "/auth/github/login"), "Github")
 		},
 		parent)
 }
@@ -85,8 +87,8 @@ func (self *GitHubAuthenticator) AuthenticateUserHandler(
 func (self *GitHubAuthenticator) oauthGithubLogin() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var githubOauthConfig = &oauth2.Config{
-			RedirectURL: self.public_url +
-				strings.TrimPrefix(self.base, "/") + "auth/github/callback",
+			RedirectURL: utils.Join(self.public_url, self.base,
+				"/auth/github/callback"),
 			ClientID:     self.authenticator.OauthClientId,
 			ClientSecret: self.authenticator.OauthClientSecret,
 			Scopes:       []string{"user:email"},
@@ -96,7 +98,7 @@ func (self *GitHubAuthenticator) oauthGithubLogin() http.Handler {
 		// Create oauthState cookie
 		oauthState, err := r.Cookie("oauthstate")
 		if err != nil {
-			oauthState = generateStateOauthCookie(w)
+			oauthState = generateStateOauthCookie(self.config_obj, w)
 		}
 
 		u := githubOauthConfig.AuthCodeURL(oauthState.Value, oauth2.ApprovalForce)
@@ -113,7 +115,8 @@ func (self *GitHubAuthenticator) oauthGithubCallback() http.Handler {
 		if oauthState == nil || r.FormValue("state") != oauthState.Value {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("invalid oauth github state")
-			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
+			http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.StatusTemporaryRedirect)
 			return
 		}
 
@@ -127,7 +130,8 @@ func (self *GitHubAuthenticator) oauthGithubCallback() http.Handler {
 				WithFields(logrus.Fields{
 					"err": formError,
 				}).Error("getUserDataFromGithub")
-			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
+			http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.StatusTemporaryRedirect)
 			return
 		}
 
@@ -137,7 +141,8 @@ func (self *GitHubAuthenticator) oauthGithubCallback() http.Handler {
 				WithFields(logrus.Fields{
 					"err": err.Error(),
 				}).Error("getUserDataFromGithub")
-			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
+			http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.StatusTemporaryRedirect)
 			return
 		}
 
@@ -148,7 +153,8 @@ func (self *GitHubAuthenticator) oauthGithubCallback() http.Handler {
 				WithFields(logrus.Fields{
 					"err": err.Error(),
 				}).Error("getUserDataFromGithub")
-			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
+			http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.StatusTemporaryRedirect)
 			return
 		}
 
@@ -163,12 +169,14 @@ func (self *GitHubAuthenticator) oauthGithubCallback() http.Handler {
 				WithFields(logrus.Fields{
 					"err": err.Error(),
 				}).Error("getUserDataFromGithub")
-			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
+			http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.StatusTemporaryRedirect)
 			return
 		}
 
 		http.SetCookie(w, cookie)
-		http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
+		http.Redirect(w, r, utils.Homepage(self.config_obj),
+			http.StatusTemporaryRedirect)
 	})
 }
 
@@ -177,8 +185,8 @@ func (self *GitHubAuthenticator) getUserDataFromGithub(
 
 	// Use code to get token and get user info from GitHub.
 	var githubOauthConfig = &oauth2.Config{
-		RedirectURL: self.public_url +
-			strings.TrimPrefix(self.base, "/") + "auth/github/callback",
+		RedirectURL: utils.Join(self.public_url, self.base,
+			"/auth/github/callback"),
 		ClientID:     self.authenticator.OauthClientId,
 		ClientSecret: self.authenticator.OauthClientSecret,
 		Scopes:       []string{},

@@ -263,6 +263,13 @@ const delete_req = function(url, params, cancel_token) {
 
 var hooks = [];
 
+const src_of = function (url) {
+    if (url.match(/^data/)) {
+        return url;
+    }
+    return window.base_path + url;
+}
+
 /* eslint import/no-anonymous-default-export: [2, {"allowObject": true}] */
 export default {
     get: get,
@@ -273,4 +280,5 @@ export default {
     base_path: base_path,
     href: href,
     delete_req: delete_req,
+    src_of: src_of,
 };

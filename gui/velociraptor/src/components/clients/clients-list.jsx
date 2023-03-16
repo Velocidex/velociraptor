@@ -464,8 +464,8 @@ class VeloClientList extends Component {
                   >
                   <span className="button-label">
                     { this.state.filter === ONLINE ?
-                      <img className="icon-small" src={online} alt="online" />  :
-                      <img className="icon-small" src={any} alt="any state" />
+                      <img className="icon-small" src={api.src_of(online)} alt="online" />  :
+                      <img className="icon-small" src={api.src_of(any)} alt="any state" />
                     }
                   </span>
                 </Button>
