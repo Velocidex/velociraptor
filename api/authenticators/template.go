@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"text/template"
 
+	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/gui/velociraptor"
 	gui_assets "www.velocidex.com/golang/velociraptor/gui/velociraptor"
@@ -30,12 +31,12 @@ func renderRejectionMessage(
 	}
 
 	err = tmpl.Execute(w, velociraptor.HTMLtemplateArgs{
-		BasePath: getBasePath(config_obj),
+		BasePath: utils.GetBasePath(config_obj),
 		ErrState: json.MustMarshalString(velociraptor.ErrState{
 			Type:           "Login",
 			Username:       username,
 			Authenticators: authenticators,
-			BasePath:       getBasePath(config_obj),
+			BasePath:       utils.GetBasePath(config_obj),
 		}),
 	})
 	if err != nil {
@@ -62,11 +63,11 @@ func renderLogoffMessage(
 	}
 
 	err = tmpl.Execute(w, velociraptor.HTMLtemplateArgs{
-		BasePath: getBasePath(config_obj),
+		BasePath: utils.GetBasePath(config_obj),
 		ErrState: json.MustMarshalString(velociraptor.ErrState{
 			Type:           "Logoff",
 			Username:       username,
-			BasePath:       getBasePath(config_obj),
+			BasePath:       utils.Join(utils.GetBasePath(config_obj), "/"),
 			Authenticators: []velociraptor.AuthenticatorInfo{},
 		}),
 	})

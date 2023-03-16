@@ -6,6 +6,7 @@ import (
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v4"
+	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
@@ -57,12 +58,10 @@ func getSignedJWTTokenCookie(
 
 	// Sets the cookie on the browser so it is only valid from the
 	// base down.
-	base := getBasePath(config_obj)
-
 	return &http.Cookie{
 		Name:     "VelociraptorAuth",
 		Value:    tokenString,
-		Path:     base,
+		Path:     utils.GetBaseDirectory(config_obj),
 		Secure:   true,
 		HttpOnly: true,
 		Expires:  expiry,

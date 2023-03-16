@@ -22,12 +22,12 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"strings"
 
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/microsoft"
+	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -48,7 +48,7 @@ type AzureAuthenticator struct {
 
 // The URL that will be used to log in.
 func (self *AzureAuthenticator) LoginURL() string {
-	return self.base + "auth/azure/login"
+	return utils.Join(self.base, "/auth/azure/login")
 }
 
 func (self *AzureAuthenticator) IsPasswordLess() bool {
@@ -60,9 +60,12 @@ func (self *AzureAuthenticator) AuthRedirectTemplate() string {
 }
 
 func (self *AzureAuthenticator) AddHandlers(mux *http.ServeMux) error {
-	mux.Handle(self.base+"auth/azure/login", self.oauthAzureLogin())
-	mux.Handle(self.base+"auth/azure/callback", self.oauthAzureCallback())
-	mux.Handle(self.base+"auth/azure/picture", self.oauthAzurePicture())
+	mux.Handle(utils.Join(self.base, "/auth/azure/login"),
+		self.oauthAzureLogin())
+	mux.Handle(utils.Join(self.base, "/auth/azure/callback"),
+		self.oauthAzureCallback())
+	mux.Handle(utils.Join(self.base, "/auth/azure/picture"),
+		self.oauthAzurePicture())
 	return nil
 }
 
@@ -79,7 +82,8 @@ func (self *AzureAuthenticator) AuthenticateUserHandler(
 		self.config_obj,
 		func(w http.ResponseWriter, r *http.Request, err error, username string) {
 			reject_with_username(self.config_obj, w, r, err, username,
-				self.base+"auth/azure/login", "Microsoft O365/Azure AD")
+				utils.Join(self.base, "/auth/azure/login"),
+				"Microsoft O365/Azure AD")
 		},
 		parent)
 }
@@ -87,8 +91,8 @@ func (self *AzureAuthenticator) AuthenticateUserHandler(
 func (self *AzureAuthenticator) oauthAzureLogin() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var azureOauthConfig = &oauth2.Config{
-			RedirectURL: self.public_url +
-				strings.TrimPrefix(self.base, "/") + "auth/azure/callback",
+			RedirectURL: utils.Join(self.public_url, self.base,
+				"/auth/azure/callback"),
 			ClientID:     self.authenticator.OauthClientId,
 			ClientSecret: self.authenticator.OauthClientSecret,
 			Scopes:       []string{"User.Read"},
@@ -98,7 +102,7 @@ func (self *AzureAuthenticator) oauthAzureLogin() http.Handler {
 		// Create oauthState cookie
 		oauthState, err := r.Cookie("oauthstate")
 		if err != nil {
-			oauthState = generateStateOauthCookie(w)
+			oauthState = generateStateOauthCookie(self.config_obj, w)
 		}
 
 		u := azureOauthConfig.AuthCodeURL(oauthState.Value)
@@ -114,7 +118,8 @@ func (self *AzureAuthenticator) oauthAzureCallback() http.Handler {
 		if oauthState == nil || r.FormValue("state") != oauthState.Value {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("invalid oauth azure state")
-			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
+			http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.StatusTemporaryRedirect)
 			return
 		}
 
@@ -125,7 +130,8 @@ func (self *AzureAuthenticator) oauthAzureCallback() http.Handler {
 				WithFields(logrus.Fields{
 					"err": err.Error(),
 				}).Error("getUserDataFromAzure")
-			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
+			http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.StatusTemporaryRedirect)
 			return
 		}
 
@@ -135,7 +141,7 @@ func (self *AzureAuthenticator) oauthAzureCallback() http.Handler {
 			self.config_obj, self.authenticator,
 			&Claims{
 				Username: user_info.Mail,
-				Picture:  self.base + "auth/azure/picture",
+				Picture:  utils.Join(self.base, "/auth/azure/picture"),
 				Token:    user_info.Token,
 			})
 		if err != nil {
@@ -143,19 +149,21 @@ func (self *AzureAuthenticator) oauthAzureCallback() http.Handler {
 				WithFields(logrus.Fields{
 					"err": err.Error(),
 				}).Error("getUserDataFromAzure")
-			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
+			http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.StatusTemporaryRedirect)
 			return
 		}
 
 		http.SetCookie(w, cookie)
-		http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
+		http.Redirect(w, r, utils.Homepage(self.config_obj),
+			http.StatusTemporaryRedirect)
 	})
 }
 
 func (self *AzureAuthenticator) getAzureOauthConfig() *oauth2.Config {
 	return &oauth2.Config{
-		RedirectURL: self.public_url +
-			strings.TrimPrefix(self.base, "/") + "auth/azure/callback",
+		RedirectURL: utils.Join(self.public_url, self.base,
+			"/auth/azure/callback"),
 		ClientID:     self.authenticator.OauthClientId,
 		ClientSecret: self.authenticator.OauthClientSecret,
 		Scopes:       []string{"User.Read"},

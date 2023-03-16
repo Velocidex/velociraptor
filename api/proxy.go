@@ -23,7 +23,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-	"strings"
 
 	errors "github.com/go-errors/errors"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
@@ -35,6 +34,7 @@ import (
 	"google.golang.org/protobuf/encoding/protojson"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
@@ -134,45 +134,53 @@ func PrepareGUIMux(
 		return nil, err
 	}
 
-	base := getBasePath(config_obj)
-	mux.Handle(base+"/api/", csrfProtect(config_obj,
+	base := utils.GetBasePath(config_obj)
+	mux.Handle(utils.Join(base, "/api/"), csrfProtect(config_obj,
 		auther.AuthenticateUserHandler(h)))
 
-	mux.Handle(base+"/api/v1/DownloadTable", csrfProtect(config_obj,
-		auther.AuthenticateUserHandler(downloadTable())))
+	mux.Handle(utils.Join(base, "/api/v1/DownloadTable"),
+		csrfProtect(config_obj,
+			auther.AuthenticateUserHandler(downloadTable())))
 
-	mux.Handle(base+"/api/v1/DownloadVFSFile", csrfProtect(config_obj,
-		auther.AuthenticateUserHandler(vfsFileDownloadHandler())))
+	mux.Handle(utils.Join(base, "/api/v1/DownloadVFSFile"),
+		csrfProtect(config_obj,
+			auther.AuthenticateUserHandler(vfsFileDownloadHandler())))
 
-	mux.Handle(base+"/api/v1/UploadTool", csrfProtect(config_obj,
-		auther.AuthenticateUserHandler(toolUploadHandler())))
+	mux.Handle(utils.Join(base, "/api/v1/UploadTool"),
+		csrfProtect(config_obj,
+			auther.AuthenticateUserHandler(toolUploadHandler())))
 
-	mux.Handle(base+"/api/v1/UploadFormFile", csrfProtect(config_obj,
-		auther.AuthenticateUserHandler(formUploadHandler())))
+	mux.Handle(utils.Join(base, "/api/v1/UploadFormFile"),
+		csrfProtect(config_obj,
+			auther.AuthenticateUserHandler(formUploadHandler())))
 
 	// Serve prepared zip files.
-	mux.Handle(base+"/downloads/", csrfProtect(config_obj,
-		auther.AuthenticateUserHandler(
-			http.StripPrefix(base,
-				downloadFileStore([]string{"downloads"})))))
+	mux.Handle(utils.Join(base, "/downloads/"),
+		csrfProtect(config_obj,
+			auther.AuthenticateUserHandler(
+				http.StripPrefix(base,
+					downloadFileStore([]string{"downloads"})))))
 
 	// Serve notebook items
-	mux.Handle(base+"/notebooks/", csrfProtect(config_obj,
-		auther.AuthenticateUserHandler(
-			http.StripPrefix(base,
-				downloadFileStore([]string{"notebooks"})))))
+	mux.Handle(utils.Join(base, "/notebooks/"),
+		csrfProtect(config_obj,
+			auther.AuthenticateUserHandler(
+				http.StripPrefix(base,
+					downloadFileStore([]string{"notebooks"})))))
 
 	// Serve files from hunt notebooks
-	mux.Handle(base+"/hunts/", csrfProtect(config_obj,
-		auther.AuthenticateUserHandler(
-			http.StripPrefix(base,
-				downloadFileStore([]string{"hunts"})))))
+	mux.Handle(utils.Join(base, "/hunts/"),
+		csrfProtect(config_obj,
+			auther.AuthenticateUserHandler(
+				http.StripPrefix(base,
+					downloadFileStore([]string{"hunts"})))))
 
 	// Serve files from client notebooks
-	mux.Handle(base+"/clients/", csrfProtect(config_obj,
-		auther.AuthenticateUserHandler(
-			http.StripPrefix(base,
-				downloadFileStore([]string{"clients"})))))
+	mux.Handle(utils.Join(base, "/clients/"),
+		csrfProtect(config_obj,
+			auther.AuthenticateUserHandler(
+				http.StripPrefix(base,
+					downloadFileStore([]string{"clients"})))))
 
 	// Assets etc do not need auth.
 	install_static_assets(config_obj, mux)
@@ -187,13 +195,14 @@ func PrepareGUIMux(
 	if err != nil {
 		return nil, err
 	}
-	mux.Handle(base+"/app/index.html", csrfProtect(config_obj,
-		auther.AuthenticateUserHandler(h)))
+	mux.Handle(utils.Join(base, "/app/index.html"),
+		csrfProtect(config_obj, auther.AuthenticateUserHandler(h)))
 
 	// Redirect everything else to the app
-	mux.Handle(base+"/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, base+"/app/index.html", 302)
-	}))
+	mux.Handle(utils.GetBaseDirectory(config_obj),
+		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, utils.Join(base, "/app/index.html"), 302)
+		}))
 
 	return mux, nil
 }
@@ -284,24 +293,10 @@ func GetAPIHandler(
 		return nil, err
 	}
 
-	base := getBasePath(config_obj)
+	base := utils.GetBasePath(config_obj)
 	reverse_proxy_mux := http.NewServeMux()
-	reverse_proxy_mux.Handle(base+"/api/v1/",
+	reverse_proxy_mux.Handle(utils.Join(base, "/api/v1/"),
 		http.StripPrefix(base, grpc_proxy_mux))
 
 	return reverse_proxy_mux, nil
-}
-
-// Ensure base path start and does not end with /
-func getBasePath(config_obj *config_proto.Config) string {
-	if config_obj.GUI == nil {
-		return ""
-	}
-
-	bare := strings.TrimSuffix(config_obj.GUI.BasePath, "/")
-	bare = strings.TrimPrefix(bare, "/")
-	if bare == "" {
-		return ""
-	}
-	return "/" + bare
 }

@@ -12,6 +12,7 @@ import (
 	oidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
+	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -48,7 +49,8 @@ func (self *OidcAuthenticatorCognito) oauthOidcCallback(
 		if oauthState == nil || r.FormValue("state") != oauthState.Value {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("invalid oauth state of OIDC")
-			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
+			http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.StatusTemporaryRedirect)
 			return
 		}
 
@@ -58,7 +60,8 @@ func (self *OidcAuthenticatorCognito) oauthOidcCallback(
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("can not get oauthToken from OIDC provider: %v", err)
-			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
+			http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.StatusTemporaryRedirect)
 			return
 		}
 		userInfo, err := getUserInfo(
@@ -66,7 +69,8 @@ func (self *OidcAuthenticatorCognito) oauthOidcCallback(
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("can not get UserInfo from OIDC provider: %v", err)
-			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
+			http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.StatusTemporaryRedirect)
 			return
 		}
 
@@ -80,12 +84,14 @@ func (self *OidcAuthenticatorCognito) oauthOidcCallback(
 				WithFields(logrus.Fields{
 					"err": err.Error(),
 				}).Error("can not get a signed tokenString")
-			http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
+			http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.StatusTemporaryRedirect)
 			return
 		}
 
 		http.SetCookie(w, cookie)
-		http.Redirect(w, r, self.base, http.StatusTemporaryRedirect)
+		http.Redirect(w, r, utils.Homepage(self.config_obj),
+			http.StatusTemporaryRedirect)
 	})
 }
 
@@ -95,8 +101,8 @@ func init() {
 		return &OidcAuthenticatorCognito{OidcAuthenticator{
 			config_obj:    config_obj,
 			authenticator: auth_config,
-			base:          getBasePath(config_obj),
-			public_url:    getPublicURL(config_obj),
+			base:          utils.GetBasePath(config_obj),
+			public_url:    utils.GetPublicURL(config_obj),
 		}}, nil
 	})
 }
