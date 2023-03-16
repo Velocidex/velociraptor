@@ -99,7 +99,7 @@ func (self *PipeFunction) Call(ctx context.Context,
 	}
 
 	if arg.Name == "" {
-		arg.Name = types.ToString(ctx, scope, arg.Query)
+		arg.Name = vfilter.FormatToString(scope, arg.Query)
 	}
 
 	key := "pipe:" + arg.Name
