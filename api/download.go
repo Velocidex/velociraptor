@@ -110,6 +110,8 @@ func vfsFileDownloadHandler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		request := vfsFileDownloadRequest{}
 		decoder := schema.NewDecoder()
+		decoder.IgnoreUnknownKeys(true)
+
 		err := decoder.Decode(&request, r.URL.Query())
 		if err != nil {
 			returnError(w, 403, "Error "+err.Error())
@@ -386,6 +388,8 @@ func downloadTable() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		request := &api_proto.GetTableRequest{}
 		decoder := schema.NewDecoder()
+		decoder.IgnoreUnknownKeys(true)
+
 		decoder.SetAliasTag("json")
 		err := decoder.Decode(request, r.URL.Query())
 		if err != nil {
