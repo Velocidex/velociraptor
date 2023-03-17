@@ -89,7 +89,7 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 	}
 
 	if arg.Name == "" {
-		arg.Name = types.ToString(ctx, scope, arg.Query)
+		arg.Name = vfilter.FormatToString(scope, arg.Query)
 	}
 
 	b, err := services.GetBroadcastService(config_obj)

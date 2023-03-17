@@ -1,0 +1,10 @@
+Queries:
+- LET X = SELECT * FROM fifo(query={SELECT * FROM range(end=10)}, max_rows=2)
+# Start the fifo query
+- SELECT * FROM X
+
+# Wait a bit for events to start flowing into the fifo.
+- LET _ <= sleep(ms=100)
+
+# Should return the last 2 events.
+- SELECT * FROM X
