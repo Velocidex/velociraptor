@@ -1,0 +1,8 @@
+LET X = SELECT * FROM fifo(query={SELECT * FROM range(end=10)}, max_rows=2)[]SELECT * FROM X[]LET _ <= sleep(ms=100)[]SELECT * FROM X[
+ {
+  "_value": 8
+ },
+ {
+  "_value": 9
+ }
+]
