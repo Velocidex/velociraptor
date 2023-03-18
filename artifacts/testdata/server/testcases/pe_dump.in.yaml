@@ -1,4 +1,14 @@
 Parameters:
+  # Test data is a process memory dump obtained by (This uploads a sparse file with .idx):
+  # SELECT upload(accessor="process", file="/9604") AS upload FROM scope()
+
+  # To limit the size of the test data we slice the original memory
+  # dump using dd to only contain the regions of interest
+  # dd if=9604_full of=9604 bs=1000 count=240 skip=30480
+
+  # Therefore the remapping has two sparse ranges:
+  # 1. Remap the reduced file into the full filesize
+  # 2. Remap this using the idx file to simulate the full process address space
   RemappingTemplate: |
     remappings:
       - type: shadow
@@ -9,17 +19,23 @@ Parameters:
       - type: mount
         from:
           accessor: ranged
-          prefix: '{"Path": %q, "DelegatePath": %q}'
+          prefix: |
+            {"Path": %q,
+             "DelegateAccessor": "ranged",
+             "DelegatePath": %q}
           path_type: pathspec
         on:
           accessor: process
           prefix: /9604
 
 Queries:
-  - LET _ <= remap(config=format(format=RemappingTemplate,
+  - LET X <= format(format=RemappingTemplate,
        args=[
           dict(jsonl=read_file(filename='/shared/tmp/9604.idx')),
-          '/tmp/9604']), clear=TRUE)
+          pathspec(path_type="pathspec", DelegatePath='/tmp/9604', DelegateAccessor="file",
+                   Path=dict(jsonl='{"file_offset":0,"original_offset":30480000,"file_length":240000,"length":240000}\n'))])
+
+  - LET _ <= remap(config=X, clear=TRUE)
 
   # Only show some fields to verify it works.
   # Parse the PE from memory.

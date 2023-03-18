@@ -58,18 +58,21 @@ func (self _PEDumpFunction) Call(
 		lru_size = 100
 	}
 
-	pathspec := accessors.MustNewPathspecOSPath("").Append(
-		fmt.Sprintf("%d", arg.Pid))
-
 	accessor, err := accessors.GetAccessor("process", scope)
 	if err != nil {
-		scope.Log("parse_pe: %s", err)
+		scope.Log("pe_dump: %s", err)
+		return &vfilter.Null{}
+	}
+
+	pathspec, err := accessor.ParsePath(fmt.Sprintf("/%d", arg.Pid))
+	if err != nil {
+		scope.Log("pe_dump: %s", err)
 		return &vfilter.Null{}
 	}
 
 	fd, err := accessor.OpenWithOSPath(pathspec)
 	if err != nil {
-		scope.Log("parse_pe: %s", err)
+		scope.Log("pe_dump: %s", err)
 		return &vfilter.Null{}
 	}
 	defer fd.Close()
@@ -77,7 +80,7 @@ func (self _PEDumpFunction) Call(
 	paged_reader, err := ntfs.NewPagedReader(
 		utils.MakeReaderAtter(fd), 1024*4, int(lru_size))
 	if err != nil {
-		scope.Log("parse_pe: %s", err)
+		scope.Log("pe_dump: %s", err)
 		return &vfilter.Null{}
 	}
 
@@ -86,8 +89,6 @@ func (self _PEDumpFunction) Call(
 
 	pe_file, err := pe.NewPEFileWithSize(reader, reader_size)
 	if err != nil {
-		// Suppress logging for invalid PE files.
-		// scope.Log("parse_pe: %v for %v", err, arg.Filename)
 		return &vfilter.Null{}
 	}
 

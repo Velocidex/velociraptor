@@ -1,0 +1,45 @@
+name: Windows.Forensics.PEDump
+description: |
+  This artifact dumps a PE file from memory and uploads the file to
+  the server.
+
+  NOTE: The output is not exactly the same as the original binary:
+  1. Relocations are not fixed
+  2. Due to ASLR the base address of the binary will not be the same as the original.
+
+  The result is usully much better than the binaries dumped from a
+  physical memory image (using e.g. Volatility) because reading
+  process memory will page in any mmaped pages as we copy them
+  out. Therefore we do not expect to have holes in the produced binary
+  as is often the case in memory analysis.
+
+parameters:
+  - name: Pid
+    type: int
+    description: The pid to dump
+  - name: BaseOffset
+    type: int
+    description: |
+      The base offset to dump from memory. If not provided, we dump
+      all pe files from the PID.
+  - name: FilenameRegex
+    default: .+exe$
+    description: Applies to the PE mapping filename to upload
+
+sources:
+  - query: |
+     LET GetFilename(MappingName, BaseOffset) = if(
+         condition=MappingName,
+         then=format(format="dump_%#x_%s", args=[BaseOffset, basename(path=MappingName)]),
+         else=format(format="dump_%#x", args=BaseOffset))
+
+     SELECT format(format="%#x", args=Address) AS Address, Size, MappingName,
+            State, Type, Protection, ProtectionMsg, read_file(
+              accessor="process",
+              filename=format(format="/%d", args=Pid),
+              offset=Address,
+              length=10) AS Header,
+            upload(file=pe_dump(pid=Pid, base_offset=Address),
+                   name=GetFilename(MappingName=MappingName, BaseOffset=Address)) AS Upload
+     FROM vad(pid=9604)
+     WHERE Header =~ "^MZ" AND MappingName =~ FilenameRegex
