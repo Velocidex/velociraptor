@@ -144,6 +144,7 @@ type Launcher interface {
 
 	// Get a list of collections summary from a client.
 	GetFlows(
+		ctx context.Context,
 		config_obj *config_proto.Config,
 		client_id string, include_archived bool,
 		flow_filter func(flow *flows_proto.ArtifactCollectorContext) bool,

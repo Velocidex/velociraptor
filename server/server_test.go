@@ -129,8 +129,7 @@ func (self *ServerTestSuite) TestEnrollment() {
 	services.GetPublishedEvents(
 		self.ConfigObj, "Server.Internal.Enrollment", wg, 1, &messages)
 
-	self.server.ProcessSingleUnauthenticatedMessage(
-		context.Background(),
+	self.server.ProcessSingleUnauthenticatedMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			CSR: &crypto_proto.Certificate{Pem: csr_message}})
 
@@ -163,15 +162,15 @@ func (self *ServerTestSuite) TestClientEventTable() {
 	ctrl := gomock.NewController(self.T())
 	defer ctrl.Finish()
 
-	runner := flows.NewFlowRunner(self.ConfigObj)
-	defer runner.Close(context.Background())
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	defer runner.Close(self.Ctx)
 
 	// Set a new event monitoring table
 	client_event_manager, err := services.ClientEventManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	err = client_event_manager.SetClientMonitoringState(
-		context.Background(), self.ConfigObj, "",
+	err = client_event_manager.SetClientMonitoringState(self.Ctx,
+		self.ConfigObj, "",
 		&flows_proto.ClientEventTable{
 			Artifacts: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"Generic.Client.Stats"},
@@ -186,14 +185,14 @@ func (self *ServerTestSuite) TestClientEventTable() {
 	time.Sleep(time.Second)
 
 	// Send a message from client to trigger check
-	runner.ProcessMessages(context.Background(), &crypto.MessageInfo{
+	runner.ProcessMessages(self.Ctx, &crypto.MessageInfo{
 		Source: self.client_id,
 	})
 
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	tasks, err := client_info_manager.PeekClientTasks(context.Background(), self.client_id)
+	tasks, err := client_info_manager.PeekClientTasks(self.Ctx, self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
 
@@ -210,8 +209,8 @@ func (self *ServerTestSuite) TestClientEventTable() {
 // LastHuntTimestamp = 0 and will receive the UpdateForeman message.
 func (self *ServerTestSuite) TestForeman() {
 	t := self.T()
-	runner := flows.NewFlowRunner(self.ConfigObj)
-	defer runner.Close(context.Background())
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	defer runner.Close(self.Ctx)
 
 	db, err := datastore.GetDB(self.ConfigObj)
 	require.NoError(self.T(), err)
@@ -224,7 +223,7 @@ func (self *ServerTestSuite) TestForeman() {
 	assert.NoError(self.T(), err)
 
 	hunt_id, err := hunt_dispatcher.CreateHunt(
-		context.Background(), self.ConfigObj,
+		self.Ctx, self.ConfigObj,
 		acl_managers.NullACLManager{},
 		&api_proto.Hunt{
 			State:        api_proto.Hunt_RUNNING,
@@ -246,7 +245,7 @@ func (self *ServerTestSuite) TestForeman() {
 	assert.Equal(t, hunt.StartRequest, expected)
 
 	// Send a message from client to trigger check
-	runner.ProcessMessages(context.Background(), &crypto.MessageInfo{
+	runner.ProcessMessages(self.Ctx, &crypto.MessageInfo{
 		Source: self.client_id,
 	})
 
@@ -254,7 +253,7 @@ func (self *ServerTestSuite) TestForeman() {
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(t, err)
 
-	tasks, err := client_info_manager.PeekClientTasks(context.Background(), self.client_id)
+	tasks, err := client_info_manager.PeekClientTasks(self.Ctx, self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
 
@@ -263,7 +262,7 @@ func (self *ServerTestSuite) TestForeman() {
 	require.NotNil(t, tasks[0].UpdateEventTable)
 
 	// The client_info_manager will remember the last hunt timestamp
-	stats, err := client_info_manager.GetStats(context.Background(), self.client_id)
+	stats, err := client_info_manager.GetStats(self.Ctx, self.client_id)
 	assert.NoError(t, err)
 
 	assert.Equal(t, stats.LastHuntTimestamp, hunt.StartTime)
@@ -286,9 +285,8 @@ func (self *ServerTestSuite) RequiredFilestoreContains(
 // Receiving a response from the server to the monitoring flow will
 // write the rows into a jsonl file in the client's monitoring area.
 func (self *ServerTestSuite) TestMonitoring() {
-	runner := flows.NewFlowRunner(self.ConfigObj)
-	runner.ProcessSingleMessage(
-		context.Background(),
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
@@ -303,7 +301,7 @@ func (self *ServerTestSuite) TestMonitoring() {
 				},
 			},
 		})
-	runner.Close(context.Background())
+	runner.Close(self.Ctx)
 
 	path_manager, err := artifacts.NewArtifactPathManager(self.Ctx, self.ConfigObj,
 		self.client_id, constants.MONITORING_WELL_KNOWN_FLOW,
@@ -315,9 +313,8 @@ func (self *ServerTestSuite) TestMonitoring() {
 
 // Monitoring queries which upload data.
 func (self *ServerTestSuite) TestMonitoringWithUpload() {
-	runner := flows.NewFlowRunner(self.ConfigObj)
-	runner.ProcessSingleMessage(
-		context.Background(),
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
@@ -331,7 +328,7 @@ func (self *ServerTestSuite) TestMonitoringWithUpload() {
 				Size: 10000,
 			},
 		})
-	runner.Close(context.Background())
+	runner.Close(self.Ctx)
 
 	path_manager := paths.NewFlowPathManager(
 		self.client_id, "F.Monitoring").GetUploadsFile(
@@ -349,9 +346,8 @@ func (self *ServerTestSuite) TestLog() {
 
 	// Emulate log messages from client to flow delivered in
 	// separate POST.
-	runner := flows.NewFlowRunner(self.ConfigObj)
-	runner.ProcessSingleMessage(
-		context.Background(),
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
@@ -359,10 +355,9 @@ func (self *ServerTestSuite) TestLog() {
 				Jsonl: "{\"message\":\"Foobar\"}\n",
 			},
 		})
-	runner.Close(context.Background())
+	runner.Close(self.Ctx)
 
-	runner.ProcessSingleMessage(
-		context.Background(),
+	runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
@@ -370,7 +365,7 @@ func (self *ServerTestSuite) TestLog() {
 				Jsonl: "{\"message\":\"ZooBar\"}\n",
 			},
 		})
-	runner.Close(context.Background())
+	runner.Close(self.Ctx)
 
 	path_spec := paths.NewFlowPathManager(self.client_id, flow_id).Log()
 	self.RequiredFilestoreContains(path_spec, "Foobar")
@@ -393,8 +388,7 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	flow_id, err := launcher.ScheduleArtifactCollection(
-		context.Background(),
+	flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx,
 		self.ConfigObj,
 		acl_managers.NullACLManager{},
 		repository,
@@ -407,7 +401,7 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	tasks, err := client_info_manager.PeekClientTasks(context.Background(), self.client_id)
+	tasks, err := client_info_manager.PeekClientTasks(self.Ctx, self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
 
@@ -434,8 +428,7 @@ func (self *ServerTestSuite) createArtifactCollection() (string, error) {
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	flow_id, err := launcher.ScheduleArtifactCollection(
-		context.Background(),
+	flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx,
 		self.ConfigObj,
 		acl_managers.NullACLManager{},
 		repository,
@@ -456,9 +449,8 @@ func (self *ServerTestSuite) TestUploadBuffer() {
 	require.NoError(t, err)
 
 	// Emulate a response from this flow.
-	runner := flows.NewFlowRunner(self.ConfigObj)
-	runner.ProcessSingleMessage(
-		context.Background(),
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
@@ -473,7 +465,7 @@ func (self *ServerTestSuite) TestUploadBuffer() {
 				Size:   11,
 			},
 		})
-	runner.Close(context.Background())
+	runner.Close(self.Ctx)
 
 	flow_path_manager := paths.NewFlowPathManager(self.client_id, flow_id)
 	self.RequiredFilestoreContains(
@@ -494,9 +486,8 @@ func (self *ServerTestSuite) TestVQLResponse() {
 	require.NoError(t, err)
 
 	// Emulate a response from this flow.
-	runner := flows.NewFlowRunner(self.ConfigObj)
-	runner.ProcessSingleMessage(
-		context.Background(),
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
@@ -510,7 +501,7 @@ func (self *ServerTestSuite) TestVQLResponse() {
 				},
 			},
 		})
-	runner.Close(context.Background())
+	runner.Close(self.Ctx)
 
 	flow_path_manager, err := artifacts.NewArtifactPathManager(
 		self.Ctx, self.ConfigObj,
@@ -529,9 +520,8 @@ func (self *ServerTestSuite) TestErrorMessage() {
 	require.NoError(t, err)
 
 	// Emulate a response from this flow.
-	runner := flows.NewFlowRunner(self.ConfigObj)
-	runner.ProcessSingleMessage(
-		context.Background(),
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
@@ -546,7 +536,7 @@ func (self *ServerTestSuite) TestErrorMessage() {
 				},
 			},
 		})
-	runner.Close(context.Background())
+	runner.Close(self.Ctx)
 
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -574,12 +564,11 @@ func (self *ServerTestSuite) TestCompletions() {
 	assert.NoError(self.T(), err)
 
 	// Emulate a response from this flow.
-	runner := flows.NewFlowRunner(self.ConfigObj)
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
 
 	// Generic.Client.Info sends two requests, send status for one
 	// message is complete but the other is still running.
-	runner.ProcessSingleMessage(
-		context.Background(),
+	runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
@@ -591,7 +580,7 @@ func (self *ServerTestSuite) TestCompletions() {
 				},
 			},
 		})
-	defer runner.Close(context.Background())
+	defer runner.Close(self.Ctx)
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		details, err := launcher.GetFlowDetails(
@@ -603,8 +592,7 @@ func (self *ServerTestSuite) TestCompletions() {
 	})
 
 	// Now complete both queries
-	runner.ProcessSingleMessage(
-		context.Background(),
+	runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,
@@ -616,7 +604,7 @@ func (self *ServerTestSuite) TestCompletions() {
 				},
 			},
 		})
-	defer runner.Close(context.Background())
+	defer runner.Close(self.Ctx)
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// Flow should be complete now that second response arrived.
@@ -647,7 +635,7 @@ func (self *ServerTestSuite) TestCancellation() {
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	tasks, err := client_info_manager.PeekClientTasks(context.Background(), self.client_id)
+	tasks, err := client_info_manager.PeekClientTasks(self.Ctx, self.client_id)
 	assert.NoError(t, err)
 
 	// Generic.Client.Info has two source preconditions in parallel
@@ -658,15 +646,14 @@ func (self *ServerTestSuite) TestCancellation() {
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(t, err)
 
-	response, err := launcher.CancelFlow(
-		context.Background(),
+	response, err := launcher.CancelFlow(self.Ctx,
 		self.ConfigObj, self.client_id, flow_id, "username")
 	require.NoError(t, err)
 	require.Equal(t, response.FlowId, flow_id)
 
 	// Cancelling a flow simply schedules a cancel message for the
 	// client and removes all pending tasks.
-	tasks, err = client_info_manager.PeekClientTasks(context.Background(), self.client_id)
+	tasks, err = client_info_manager.PeekClientTasks(self.Ctx, self.client_id)
 	assert.NoError(t, err)
 	assert.Equal(t, len(tasks), 1)
 
@@ -696,13 +683,13 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 	db, err := datastore.GetDB(self.ConfigObj)
 	require.NoError(t, err)
 
-	runner := flows.NewFlowRunner(self.ConfigObj)
-	defer runner.Close(context.Background())
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	defer runner.Close(self.Ctx)
 
 	// Send a message to a random non-existant flow from client.
 	flow_id := "F.NONEXISTENT"
 	runner.ProcessSingleMessage(
-		context.Background(),
+		self.Ctx,
 		&crypto_proto.VeloMessage{
 			Source:    self.client_id,
 			SessionId: flow_id,

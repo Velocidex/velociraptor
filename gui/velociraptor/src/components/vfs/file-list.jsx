@@ -130,6 +130,9 @@ class VeloFileList extends Component {
         }, this.source.token).then((response) => {
             // Hold onto the flow id.
             this.setState({lastRecursiveRefreshOperationId: response.data.flow_id});
+            if (!this.state.lastRecursiveRefreshOperationId) {
+                return;
+            }
 
             // Start polling for flow completion.
             this.recursive_interval = setInterval(() => {
@@ -138,6 +141,8 @@ class VeloFileList extends Component {
                     flow_id: this.state.lastRecursiveRefreshOperationId,
                 }, this.source.token).then((response) => {
                     if (!response.data || !response.data.context) {
+                        clearInterval(this.recursive_interval);
+                        this.recursive_interval = undefined;
                         return;
                     }
                     let context = response.data.context;
@@ -207,6 +212,10 @@ class VeloFileList extends Component {
                 showDownloadAllDialog: false,
                 lastRecursiveDownloadOperationId: response.data.flow_id});
 
+            if (!this.state.lastRecursiveDownloadOperationId) {
+                return;
+            }
+
             // Start polling for flow completion.
             this.recursive_download_interval = setInterval(() => {
                 api.get("v1/GetFlowDetails", {
@@ -219,7 +228,8 @@ class VeloFileList extends Component {
                         return;
                     }
 
-                    // The node is refreshed with the correct flow id, we can stop polling.
+                    // The node is refreshed with the correct flow id,
+                    // we can stop polling.
                     clearInterval(this.recursive_download_interval);
                     this.recursive_download_interval = undefined;
 

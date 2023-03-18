@@ -75,7 +75,7 @@ func (self FlowsPlugin) Call(
 		offset := uint64(0)
 
 		for {
-			result, err := launcher.GetFlows(config_obj,
+			result, err := launcher.GetFlows(ctx, config_obj,
 				arg.ClientId, true, nil, offset, length)
 			if err != nil {
 				scope.Log("flows: %v", err)

@@ -109,6 +109,8 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 	// Wait for the collection to complete
 	var details *api_proto.FlowDetails
 	vtesting.WaitUntil(time.Second*50, self.T(), func() bool {
+		mu.Lock()
+		defer mu.Unlock()
 		details, err = launcher.GetFlowDetails(self.ConfigObj, "server", flow_id)
 		assert.NoError(self.T(), err)
 
@@ -152,14 +154,14 @@ sources:
 - query: SELECT sleep(time=10000) FROM scope()
 `)
 
-	mu := &sync.Mutex{}
+	cancel_mu := &sync.Mutex{}
 	var details *api_proto.FlowDetails
 
 	go func() {
 		flow_details := self.ScheduleAndWait("Test1", "admin", "F.1234")
-		mu.Lock()
+		cancel_mu.Lock()
 		details = flow_details
-		mu.Unlock()
+		cancel_mu.Unlock()
 	}()
 
 	// Wait for the flow to be created
@@ -175,8 +177,8 @@ sources:
 	assert.Equal(self.T(), resp.FlowId, "F.1234")
 
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
-		mu.Lock()
-		defer mu.Unlock()
+		cancel_mu.Lock()
+		defer cancel_mu.Unlock()
 
 		return details != nil
 	})
