@@ -212,6 +212,6 @@ func (self *ApiServer) GetClientFlows(
 		return nil, Status(self.verbose, err)
 	}
 
-	return launcher.GetFlows(org_config_obj, in.ClientId,
+	return launcher.GetFlows(ctx, org_config_obj, in.ClientId,
 		in.IncludeArchived, filter, in.Offset, in.Count)
 }

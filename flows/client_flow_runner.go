@@ -38,6 +38,7 @@ import (
 */
 
 type ClientFlowRunner struct {
+	ctx        context.Context
 	config_obj *config_proto.Config
 
 	// The completer keeps track of all asynchronous filesystem
@@ -47,10 +48,19 @@ type ClientFlowRunner struct {
 	// System.Flow.Completion to attempt to open the collection before
 	// everything is written.
 	completer *utils.Completer
+
+	// If the flow is complete we send a completion message to the
+	// master.
+	flow_completion_messages []*ordereddict.Dict
+
+	upload_completion_messages []*ordereddict.Dict
 }
 
-func NewFlowRunner(config_obj *config_proto.Config) *ClientFlowRunner {
+func NewFlowRunner(
+	ctx context.Context,
+	config_obj *config_proto.Config) *ClientFlowRunner {
 	result := &ClientFlowRunner{
+		ctx:        ctx,
 		config_obj: config_obj,
 	}
 
@@ -58,7 +68,33 @@ func NewFlowRunner(config_obj *config_proto.Config) *ClientFlowRunner {
 	return result
 }
 
-func (self *ClientFlowRunner) Complete() {}
+// Delay sending events to the master node until all commits are
+// complete and data becomes visible.
+func (self *ClientFlowRunner) Complete() {
+	if len(self.flow_completion_messages) > 0 {
+		journal, err := services.GetJournal(self.config_obj)
+		if err != nil {
+			return
+		}
+
+		for _, row := range self.flow_completion_messages {
+			journal.PushRowsToArtifactAsync(self.ctx,
+				self.config_obj, row, "System.Flow.Completion")
+		}
+	}
+
+	if len(self.upload_completion_messages) > 0 {
+		journal, err := services.GetJournal(self.config_obj)
+		if err != nil {
+			return
+		}
+
+		for _, row := range self.upload_completion_messages {
+			journal.PushRowsToArtifactAsync(self.ctx, self.config_obj,
+				row, "System.Upload.Completion")
+		}
+	}
+}
 
 func (self *ClientFlowRunner) ProcessMonitoringMessage(
 	ctx context.Context, msg *crypto_proto.VeloMessage) error {
@@ -334,24 +370,15 @@ func (self *ClientFlowRunner) FileBuffer(
 		uploadCounter.Inc()
 		uploadBytes.Add(float64(file_buffer.StoredSize))
 
-		row := ordereddict.NewDict().
-			Set("Timestamp", time.Now().UTC().Unix()).
-			Set("ClientId", client_id).
-			Set("VFSPath", file_path_manager.Path().AsClientPath()).
-			Set("UploadName", file_buffer.Pathspec.Path).
-			Set("Accessor", file_buffer.Pathspec.Accessor).
-			Set("Size", file_buffer.Size).
-			Set("UploadedSize", file_buffer.StoredSize)
-
-		journal, err := services.GetJournal(self.config_obj)
-		if err != nil {
-			return err
-		}
-
-		return journal.PushRowsToArtifact(ctx, self.config_obj,
-			[]*ordereddict.Dict{row},
-			"System.Upload.Completion",
-			client_id, flow_id)
+		self.upload_completion_messages = append(self.upload_completion_messages,
+			ordereddict.NewDict().
+				Set("Timestamp", time.Now().UTC().Unix()).
+				Set("ClientId", client_id).
+				Set("VFSPath", file_path_manager.Path().AsClientPath()).
+				Set("UploadName", file_buffer.Pathspec.Path).
+				Set("Accessor", file_buffer.Pathspec.Accessor).
+				Set("Size", file_buffer.Size).
+				Set("UploadedSize", file_buffer.StoredSize))
 	}
 
 	return nil
@@ -406,17 +433,12 @@ func (self *ClientFlowRunner) FlowStats(
 	// If this is the final response, then we will notify a flow
 	// completion.
 	if msg.FlowComplete {
-		row := ordereddict.NewDict().
-			Set("Timestamp", time.Now().UTC().Unix()).
-			Set("Flow", stats).
-			Set("FlowId", flow_id).
-			Set("ClientId", client_id)
-
-		journal, err := services.GetJournal(self.config_obj)
-		if err == nil {
-			journal.PushRowsToArtifactAsync(ctx,
-				self.config_obj, row, "System.Flow.Completion")
-		}
+		self.flow_completion_messages = append(self.flow_completion_messages,
+			ordereddict.NewDict().
+				Set("Timestamp", time.Now().UTC().Unix()).
+				Set("Flow", stats).
+				Set("FlowId", flow_id).
+				Set("ClientId", client_id))
 	}
 
 	return nil
