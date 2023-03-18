@@ -37,6 +37,7 @@ import (
 
 // Filter will be applied on flows to remove those we dont care about.
 func (self *Launcher) GetFlows(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string, include_archived bool,
 	flow_filter func(flow *flows_proto.ArtifactCollectorContext) bool,
@@ -60,6 +61,11 @@ func (self *Launcher) GetFlows(
 
 	// We only care about the flow contexts
 	for _, urn := range all_flow_urns {
+		// Hide the monitoring flow since it is not a real flow.
+		if urn.Base() == constants.MONITORING_WELL_KNOWN_FLOW {
+			continue
+		}
+
 		// We really prefer the more modern JSON datastore objects but
 		// we do support older protobuf based objects if they are
 		// there.
@@ -98,28 +104,31 @@ func (self *Launcher) GetFlows(
 	}
 	flow_urns = flow_urns[offset:end]
 
-	// Collect the items that match from this backend read
-	// into an array
+	flow_reader := NewFlowReader(ctx, config_obj, client_id)
+	go func() {
+		defer flow_reader.Close()
+
+		for _, urn := range flow_urns {
+			flow_reader.In <- urn.Base()
+		}
+	}()
+
+	// Collect the items that match from this backend read into an
+	// array
 	items := []*flows_proto.ArtifactCollectorContext{}
 
-	for _, urn := range flow_urns {
-		// Hide the monitoring flow since it is not a real flow.
-		if urn.Base() == constants.MONITORING_WELL_KNOWN_FLOW {
-			continue
-		}
-
-		collection_context, err := LoadCollectionContext(
-			config_obj, client_id, urn.Base())
-		if err != nil {
-			continue
-		}
-
+	for collection_context := range flow_reader.Out {
 		if flow_filter != nil && !flow_filter(collection_context) {
 			continue
 		}
-
 		items = append(items, collection_context)
 	}
+
+	// Flow IDs represent timestamp so they are sortable. The UI
+	// relies on more recent flows being at the top.
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].SessionId >= items[j].SessionId
+	})
 
 	result.Items = items
 	return result, nil

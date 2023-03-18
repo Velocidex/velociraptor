@@ -309,13 +309,6 @@ func (self *Indexer) LoadSnapshot(
 	self.ready = true
 	self.dirty = false
 
-	go func() {
-		for c := range clients {
-			// Get the full record to warm up all client attributes.
-			_, _ = self.FastGetApiClient(ctx, config_obj, c)
-		}
-	}()
-
 	return nil
 }
 

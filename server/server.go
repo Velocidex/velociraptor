@@ -231,7 +231,9 @@ func (self *Server) Process(
 
 		// Newer clients maintain flow state on the client so need a
 		// much cheaper flow runner.
-		runner := flows.NewFlowRunner(config_obj)
+		runner := flows.NewFlowRunner(ctx, config_obj)
+		defer runner.Close(ctx)
+
 		err = runner.ProcessMessages(ctx, message_info)
 	}
 

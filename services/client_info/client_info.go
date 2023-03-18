@@ -677,7 +677,7 @@ func (self *ClientInfoManager) GetCacheInfoFromStorage(
 }
 
 func NewClientInfoManager(config_obj *config_proto.Config) *ClientInfoManager {
-	expected_clients := int64(100)
+	expected_clients := int64(10000)
 	if config_obj.Frontend != nil &&
 		config_obj.Frontend.Resources != nil &&
 		config_obj.Frontend.Resources.ExpectedClients > 0 {
@@ -695,7 +695,9 @@ func NewClientInfoManager(config_obj *config_proto.Config) *ClientInfoManager {
 		mutation_manager: NewMutationManager(),
 	}
 
-	service.lru.SetCacheSizeLimit(int(expected_clients))
+	// The LRU should be large enough to hold all the clients. each
+	// client has several records (client id, hostname, labels etc).
+	service.lru.SetCacheSizeLimit(int(expected_clients) * 10)
 
 	if config_obj.Frontend != nil &&
 		config_obj.Frontend.Resources != nil &&

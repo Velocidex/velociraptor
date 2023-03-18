@@ -238,12 +238,13 @@ func GetPathSpec(
 	in *api_proto.GetTableRequest) (api.FSPathSpec, error) {
 
 	if in.FlowId != "" && in.Artifact != "" {
-		path_manager, err := artifacts.NewArtifactPathManager(ctx,
-			config_obj, in.ClientId, in.FlowId, in.Artifact)
-		if err != nil {
-			return nil, err
+		mode := paths.MODE_CLIENT
+		if in.ClientId == "server" {
+			mode = paths.MODE_SERVER
 		}
-		return path_manager.Path(), nil
+		return artifacts.NewArtifactPathManagerWithMode(
+			config_obj, in.ClientId, in.FlowId, in.Artifact,
+			mode).Path(), nil
 
 	} else if in.FlowId != "" && in.Type != "" {
 		flow_path_manager := paths.NewFlowPathManager(

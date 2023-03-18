@@ -16,7 +16,7 @@ tools:
 
   - name: VelociraptorLinux
     github_project: Velocidex/velociraptor
-    github_asset_regex: linux-amd64
+    github_asset_regex: linux-amd64-musl
     serve_locally: true
 
   - name: VelociraptorDarwin
