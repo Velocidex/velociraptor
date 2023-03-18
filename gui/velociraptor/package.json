@@ -29,7 +29,7 @@
         "is-svg": "^4.4.0",
         "lodash": "^4.17.21",
         "moment": "^2.29.4",
-        "moment-timezone": "0.5.40",
+        "moment-timezone": "0.5.41",
         "npm-watch": "^0.11.0",
         "prop-types": "^15.8.1",
         "qs": "^6.11.0",
