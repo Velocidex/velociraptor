@@ -128,7 +128,7 @@ func (self *TestSuite) TestGetFlow() {
 
 	// Get all the responses - ask for 100 results if available
 	// but only 40 are there.
-	api_response, err := launcher.GetFlows(self.ConfigObj,
+	api_response, err := launcher.GetFlows(self.Ctx, self.ConfigObj,
 		self.client_id, true,
 		func(flow *flows_proto.ArtifactCollectorContext) bool {
 			return true
@@ -139,7 +139,7 @@ func (self *TestSuite) TestGetFlow() {
 	assert.Equal(self.T(), 40, len(api_response.Items))
 
 	// Now only get Generic.Client.Info flows by applying a filter.
-	api_response, err = launcher.GetFlows(self.ConfigObj,
+	api_response, err = launcher.GetFlows(self.Ctx, self.ConfigObj,
 		self.client_id, true,
 		func(flow *flows_proto.ArtifactCollectorContext) bool {
 			return flow.Request.Artifacts[0] == "Generic.Client.Info"
@@ -590,8 +590,7 @@ func (self *TestSuite) testCollectionCompletion(
 		},
 	}
 
-	runner := NewFlowRunner(self.ConfigObj)
-	defer runner.Close(self.Ctx)
+	runner := NewFlowRunner(self.Ctx, self.ConfigObj)
 
 	wg := &sync.WaitGroup{}
 	mu := &sync.Mutex{}
@@ -613,6 +612,7 @@ func (self *TestSuite) testCollectionCompletion(
 	for _, request := range requests {
 		runner.ProcessSingleMessage(self.Ctx, request)
 	}
+	runner.Close(self.Ctx)
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
 		mu.Lock()

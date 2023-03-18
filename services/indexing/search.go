@@ -13,6 +13,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -67,27 +68,34 @@ func (self *Indexer) searchRecents(
 		return nil, err
 	}
 
-	// Sort the children in reverse order - most recent first.
-	total_count := 0
+	resolver := NewClientResolver(ctx, config_obj, self)
+	defer resolver.Cancel()
 
-	metadata := make([]api_proto.ApiClient, len(children))
+	go func() {
+		defer resolver.Close()
+		for _, child := range children {
+			client_id := child.Base()
 
-	for i, child := range children {
-		// Read the MRU ages
-		db.GetSubject(config_obj, child, &metadata[i])
-	}
+			// Filter out the clients that do not belong in this
+			// org. The users' MRU is currently global and stored in
+			// the root org - it contains all clients the user has
+			// visited from all orgs.
+			if !utils.CompareOrgIds(
+				utils.OrgIdFromClientId(client_id), config_obj.OrgId) {
+				continue
+			}
 
-	sort.Slice(metadata, func(i, j int) bool {
-		return metadata[i].FirstSeenAt > metadata[j].FirstSeenAt
-	})
-
-	for _, md := range metadata {
-		client_id := md.ClientId
-		api_client, err := self.FastGetApiClient(ctx, config_obj, client_id)
-		if err != nil {
-			continue
+			select {
+			case <-ctx.Done():
+				return
+			case resolver.In <- client_id:
+			}
 		}
+	}()
 
+	// Return all the valid records
+	total_count := 0
+	for api_client := range resolver.Out {
 		total_count++
 		if uint64(total_count) < in.Offset {
 			continue
@@ -101,11 +109,15 @@ func (self *Indexer) searchRecents(
 		}
 
 		result.Items = append(result.Items, api_client)
-
 		if uint64(len(result.Items)) > limit {
-			break
+			return result, nil
 		}
 	}
+
+	// Sort the children in reverse order - most recent first.
+	sort.Slice(result.Items, func(i, j int) bool {
+		return result.Items[i].FirstSeenAt > result.Items[j].FirstSeenAt
+	})
 
 	return result, nil
 }
@@ -147,14 +159,13 @@ func (self *Indexer) searchClientIndex(
 	in *api_proto.SearchClientsRequest,
 	limit uint64) (*api_proto.SearchClientsResponse, error) {
 
-	if !self.Ready() {
-		return nil, errors.New("Indexer not ready")
+	if in.NameOnly {
+		return self.searchClientIndexNameOnly(ctx, config_obj, in, limit)
 	}
 
 	// If asked to sort, we need to retrieve a large number of clients
 	// and sort the results. This is much slower.
-	if !in.NameOnly &&
-		in.Sort != api_proto.SearchClientsRequest_UNSORTED {
+	if in.Sort != api_proto.SearchClientsRequest_UNSORTED {
 		hits, err := self.searchClientIndex(ctx, config_obj,
 			&api_proto.SearchClientsRequest{
 				Limit:  1000,
@@ -188,16 +199,82 @@ func (self *Indexer) searchClientIndex(
 
 	// Microseconds
 	now := uint64(time.Now().UnixNano() / 1000)
-
 	seen := make(map[string]bool)
 	result := &api_proto.SearchClientsResponse{}
 	total_count := 0
-	options := OPTION_CLIENT_RECORDS
-	if in.NameOnly {
-		options = OPTION_NAME_ONLY
+
+	resolver := NewClientResolver(ctx, config_obj, self)
+	defer resolver.Cancel()
+
+	// Feed the hits to the resolver. This will look up the records in
+	// a worker pool.
+	go func() {
+		defer resolver.Close()
+
+		scope := vql_subsystem.MakeScope()
+		prefix, filter := splitSearchTermIntoPrefixAndFilter(scope, in.Query)
+		for hit := range self.SearchIndexWithPrefix(ctx, config_obj, prefix) {
+			if hit == nil {
+				continue
+			}
+
+			if filter != nil && !filter.MatchString(hit.Term) {
+				continue
+			}
+			client_id := hit.Entity
+
+			// Uniquify the client ID
+			_, pres := seen[client_id]
+			if pres {
+				continue
+			}
+			seen[client_id] = true
+			select {
+			case <-ctx.Done():
+				return
+			case resolver.In <- client_id:
+			}
+		}
+	}()
+
+	// Return all the valid records
+	for api_client := range resolver.Out {
+		total_count++
+		if uint64(total_count) < in.Offset {
+			continue
+		}
+
+		// Skip clients that are offline
+		if in.Filter == api_proto.SearchClientsRequest_ONLINE &&
+			now > api_client.LastSeenAt &&
+			now-api_client.LastSeenAt > 1000000*60*15 {
+			continue
+		}
+
+		result.Items = append(result.Items, api_client)
+		if uint64(len(result.Items)) > limit {
+			return result, nil
+		}
 	}
 
+	return result, nil
+}
+
+// Name only searches are used for the suggestion box completions.
+func (self *Indexer) searchClientIndexNameOnly(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	in *api_proto.SearchClientsRequest,
+	limit uint64) (*api_proto.SearchClientsResponse, error) {
+
+	if !self.Ready() {
+		return nil, errors.New("Indexer not ready")
+	}
+
+	result := &api_proto.SearchClientsResponse{}
+	total_count := 0
 	scope := vql_subsystem.MakeScope()
+
 	prefix, filter := splitSearchTermIntoPrefixAndFilter(scope, in.Query)
 	for hit := range self.SearchIndexWithPrefix(ctx, config_obj, prefix) {
 		if hit == nil {
@@ -209,49 +286,15 @@ func (self *Indexer) searchClientIndex(
 		}
 
 		// This is the client ID for the matching client.
-		key := hit.Entity
-		if options == OPTION_NAME_ONLY {
-			key = hit.Term
-		}
-
-		// Uniquify the client ID
-		_, pres := seen[key]
-		if pres {
-			continue
-		}
-		seen[key] = true
-
 		total_count++
 		if uint64(total_count) < in.Offset {
 			continue
 		}
 
-		switch options {
-		case OPTION_CLIENT_RECORDS:
-			api_client, err := self.FastGetApiClient(ctx, config_obj, hit.Entity)
-			if err != nil {
-				continue
-			}
-
-			// Skip clients that are offline
-			if in.Filter == api_proto.SearchClientsRequest_ONLINE &&
-				now > api_client.LastSeenAt &&
-				now-api_client.LastSeenAt > 1000000*60*15 {
-				continue
-			}
-
-			result.Items = append(result.Items, api_client)
-			if uint64(len(result.Items)) > limit {
-				return result, nil
-			}
-
-		case OPTION_NAME_ONLY:
-			result.Names = append(result.Names, hit.Term)
-			if uint64(len(result.Names)) > limit {
-				return result, nil
-			}
+		result.Names = append(result.Names, hit.Term)
+		if uint64(len(result.Names)) > limit {
+			return result, nil
 		}
-
 	}
 
 	return result, nil

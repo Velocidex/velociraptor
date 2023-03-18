@@ -52,7 +52,11 @@ class VeloFileStats extends Component {
 
     updateFile = () => {
         if (this.state.updateOperationFlowId) {
-            this.componentWillUnmount();
+            this.source.cancel("unmounted");
+            this.source = axios.CancelToken.source();
+            if (this.interval) {
+                clearInterval(this.interval);
+            }
         }
 
         let selectedRow = this.props.selectedRow;
@@ -82,6 +86,10 @@ class VeloFileStats extends Component {
             let flow_id = response.data.flow_id;
             this.setState({updateOperationFlowId: flow_id});
 
+            if(!flow_id) {
+                return;
+            }
+
             // Keep polling until the mtime changes.
             this.source = axios.CancelToken.source();
             this.interval = setInterval(() => {
@@ -92,6 +100,7 @@ class VeloFileStats extends Component {
                     if (response.data && response.data.context) {
                         if (response.data.context.state !== "RUNNING") {
                             this.source.cancel("unmounted");
+                            this.source = axios.CancelToken.source();
                             clearInterval(this.interval);
 
                             // Force a tree refresh since this flow is done.
