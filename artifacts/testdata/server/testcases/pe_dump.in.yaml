@@ -31,8 +31,10 @@ Parameters:
 Queries:
   - LET X <= format(format=RemappingTemplate,
        args=[
-          dict(jsonl=read_file(filename='/shared/tmp/9604.idx')),
-          pathspec(path_type="pathspec", DelegatePath='/tmp/9604', DelegateAccessor="file",
+          dict(jsonl=read_file(filename= srcDir + '/artifacts/testdata/files/memory/9604.idx')),
+          pathspec(path_type="pathspec",
+                   DelegatePath= srcDir + '/artifacts/testdata/files/memory/9604',
+                   DelegateAccessor="file",
                    Path=dict(jsonl='{"file_offset":0,"original_offset":30480000,"file_length":240000,"length":240000}\n'))])
 
   - LET _ <= remap(config=X, clear=TRUE)
