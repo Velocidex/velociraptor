@@ -48,6 +48,7 @@ type ClientFlowRunner struct {
 	// System.Flow.Completion to attempt to open the collection before
 	// everything is written.
 	completer *utils.Completer
+	closer    func()
 
 	// If the flow is complete we send a completion message to the
 	// master.
@@ -64,7 +65,9 @@ func NewFlowRunner(
 		config_obj: config_obj,
 	}
 
+	// Wait for completion until Close() is called.
 	result.completer = utils.NewCompleter(result.Complete)
+	result.closer = result.completer.GetCompletionFunc()
 	return result
 }
 
@@ -385,6 +388,7 @@ func (self *ClientFlowRunner) FileBuffer(
 }
 
 func (self *ClientFlowRunner) Close(ctx context.Context) {
+	self.closer()
 }
 
 func (self *ClientFlowRunner) FlowStats(
