@@ -1,0 +1,34 @@
+Parameters:
+  RemappingTemplate: |
+    remappings:
+      - type: shadow
+        from:
+          accessor: file
+        on:
+          accessor: file
+      - type: mount
+        from:
+          accessor: ranged
+          prefix: '{"Path": %q, "DelegatePath": %q}'
+          path_type: pathspec
+        on:
+          accessor: process
+          prefix: /9604
+
+Queries:
+  - LET _ <= remap(config=format(format=RemappingTemplate,
+       args=[
+          dict(jsonl=read_file(filename='/shared/tmp/9604.idx')),
+          '/tmp/9604']), clear=TRUE)
+
+  # Only show some fields to verify it works.
+  # Parse the PE from memory.
+  - SELECT * FROM items(item=parse_pe(file="/9604",
+       accessor='process', base_offset=140702188961792))
+    WHERE _key =~ "Sections|FileHeader"
+
+  # Dump the PE from memory and parse it again from disk.
+  - SELECT * FROM items(
+      item=parse_pe(file=pe_dump(pid=9604,
+           base_offset=140702188961792), accessor="file"))
+      WHERE _key =~ "Sections|FileHeader"

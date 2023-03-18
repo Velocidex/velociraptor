@@ -19,6 +19,7 @@ package parsers
 
 import (
 	"context"
+	"io"
 
 	"github.com/Velocidex/ordereddict"
 	pe "www.velocidex.com/golang/go-pe"
@@ -32,8 +33,9 @@ import (
 )
 
 type _PEFunctionArgs struct {
-	Filename *accessors.OSPath `vfilter:"required,field=file,doc=The PE file to open."`
-	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Filename   *accessors.OSPath `vfilter:"required,field=file,doc=The PE file to open."`
+	Accessor   string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	BaseOffset int64             `vfilter:"optional,field=base_offset,doc=The offset in the file for the base address."`
 }
 
 type _PEFunction struct{}
@@ -73,7 +75,15 @@ func (self _PEFunction) Call(
 	}
 	defer paged_reader.Close()
 
-	pe_file, err := pe.NewPEFileWithSize(paged_reader, paged_reader.MaxSize())
+	var reader io.ReaderAt = paged_reader
+	var reader_size int64 = paged_reader.MaxSize()
+
+	if arg.BaseOffset > 0 {
+		reader = utils.NewOffsetReader(reader, arg.BaseOffset,
+			arg.BaseOffset+reader_size)
+	}
+
+	pe_file, err := pe.NewPEFileWithSize(reader, reader_size)
 	if err != nil {
 		// Suppress logging for invalid PE files.
 		// scope.Log("parse_pe: %v for %v", err, arg.Filename)
