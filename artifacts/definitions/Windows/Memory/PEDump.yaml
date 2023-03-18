@@ -1,4 +1,4 @@
-name: Windows.Forensics.PEDump
+name: Windows.Memory.PEDump
 description: |
   This artifact dumps a PE file from memory and uploads the file to
   the server.

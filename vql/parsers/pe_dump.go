@@ -97,6 +97,7 @@ func (self _PEDumpFunction) Call(
 		scope.Log("pe_dump: %v", err)
 		return false
 	}
+	defer tmpfile.Close()
 
 	_ = vql_subsystem.GetRootScope(scope).
 		AddDestructor(func() {
