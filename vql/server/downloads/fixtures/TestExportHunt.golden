@@ -103,7 +103,27 @@
   }
  ],
  "TestClient-C.1235/uploads/data/file.txt": "hello world",
- "TestClient-C.1235/uploads/sparse/C%3A/file.sparse.txt.idx": "This bit",
+ "TestClient-C.1235/uploads/sparse/C%3A/file.sparse.txt.idx": [
+  {
+   "ranges": [
+    {
+     "file_length": 5,
+     "length": 5
+    },
+    {
+     "file_offset": 5,
+     "original_offset": 5,
+     "length": 5
+    },
+    {
+     "file_offset": 5,
+     "original_offset": 10,
+     "file_length": 3,
+     "length": 3
+    }
+   ]
+  }
+ ],
  "TestClient-C.1235/uploads/sparse/C%3A/file.sparse.txt": "This bit",
  "TestClient-C.1235/uploads.csv": "Timestamp,started,vfs_path,_Components,file_size,uploaded_size,Type\n2020-10-07T20:43:08Z,2020-10-07 20:43:08 +0000 UTC,data,\"[\n \"\"uploads\"\",\n \"\"data\"\",\n \"\"file.txt\"\"\n]\",11,11,\n2020-10-07T20:43:08Z,2020-10-07 20:43:08 +0000 UTC,\" {\"\"DelegateAccessor\"\":\"\"data\"\",\"\"DelegatePath\"\":\"\"This is....idx\",\"[\n \"\"uploads\"\",\n \"\"sparse\"\",\n \"\"C:\"\",\n \"\"file.sparse.txt\"\"\n]\",156,156,idx\n2020-10-07T20:43:08Z,2020-10-07 20:43:08 +0000 UTC,\" {\"\"DelegateAccessor\"\":\"\"data\"\",\"\"DelegatePath\"\":\"\"This is...\",\"[\n \"\"uploads\"\",\n \"\"sparse\"\",\n \"\"C:\"\",\n \"\"file.sparse.txt\"\"\n]\",21,8,\n",
  "TestClient-C.1235/uploads.json.index": "\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0000\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0001\u0000\u0000\u0000\u0001\u0000\u0000",

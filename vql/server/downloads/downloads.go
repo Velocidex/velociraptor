@@ -378,7 +378,6 @@ func copyUploadFiles(
 				if expand_sparse {
 					continue
 				}
-				dest = dest.SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX)
 			}
 
 			var src api.FSPathSpec
@@ -490,6 +489,12 @@ func copyUploadFiles(
 				src = flow_path_manager.UploadContainer().AddChild(components[1:]...).
 					SetType(api.PATH_TYPE_FILESTORE_ANY)
 				dest = dest.AddChild(components...)
+			}
+
+			// This is an index row, copy the index file to the zip.
+			if file_type == "idx" {
+				src = src.SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX)
+				dest = dest.SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX)
 			}
 
 			// Copy from the file store at these locations.

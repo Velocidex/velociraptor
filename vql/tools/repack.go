@@ -110,6 +110,9 @@ func (self RepackFunction) Call(ctx context.Context,
 			exe_bytes, []byte(arg.Config))
 	}
 
+	scope.Log("client_repack: Will Repack the Velociraptor binary with %v bytes of config",
+		len(arg.Config))
+
 	// Compress the string.
 	var b bytes.Buffer
 	w := zlib.NewWriter(&b)
@@ -241,7 +244,8 @@ func RepackMSI(
 	ctx context.Context,
 	scope vfilter.Scope, upload_name string,
 	data []byte, config_data []byte) vfilter.Any {
-	scope.Log("client_repack: Will Repack an MSI file with %v bytes", len(config_data))
+	scope.Log("client_repack: Will Repack an MSI file with %v bytes of config",
+		len(config_data))
 
 	// Make sure the config_data is at least big enough so we get to
 	// the comment section of the placeholder.
@@ -312,6 +316,8 @@ func AppendBinaries(
 		if err != nil {
 			return nil, err
 		}
+
+		scope.Log("Adding binary %v", tool.Name)
 
 		// Try to open the tool directly from the filestore
 		path_manager := paths.NewInventoryPathManager(config_obj, tool)

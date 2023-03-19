@@ -304,6 +304,7 @@ func (self *ClientFlowRunner) FileBuffer(
 			Set("Timestamp", utils.GetTime().Now().UTC().Unix()).
 			Set("started", utils.GetTime().Now().UTC().String()).
 			Set("vfs_path", file_path_manager.VisibleVFSPath()).
+			Set("Type", "").
 			Set("_Components", file_path_manager.Path().Components()).
 			Set("file_size", file_buffer.Size).
 
@@ -331,6 +332,7 @@ func (self *ClientFlowRunner) FileBuffer(
 			Set("Timestamp", time.Now().UTC().Unix()).
 			Set("started", time.Now().UTC().String()).
 			Set("vfs_path", file_path_manager.VisibleVFSPath()+".idx").
+			Set("Type", "idx").
 			Set("_Components", file_path_manager.Path().Components()).
 			Set("_accessor", file_buffer.Pathspec.Accessor).
 			Set("_client_components", file_buffer.Pathspec.Components).

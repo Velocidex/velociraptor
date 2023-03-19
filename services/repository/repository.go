@@ -168,6 +168,7 @@ func (self *Repository) LoadYaml(data string, validate, built_in bool) (
 	artifact.Raw = data
 	artifact.BuiltIn = built_in
 	artifact.Compiled = false
+
 	return self.LoadProto(artifact, validate)
 }
 

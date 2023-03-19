@@ -1,2 +1,2 @@
-{"Timestamp":1664618674,"started":"2022-10-01 10:04:34.132068067 +0000 UTC","vfs_path":"X.txt","_Components":["clients","C.4f5e52adf0a337a9","collections","F.BN2HJBD1R85EA","uploads","sparse","X.txt"],"file_size":15,"uploaded_size":10}
-{"Timestamp":1664618674,"started":"2022-10-01 10:04:34.13217806 +0000 UTC","vfs_path":"X.txt.idx","_Components":["clients","C.4f5e52adf0a337a9","collections","F.BN2HJBD1R85EA","uploads","sparse","X.txt"],"file_size":225,"uploaded_size":225}
+{"Timestamp":1664618674,"started":"2022-10-01 10:04:34.132068067 +0000 UTC","vfs_path":"X.txt","Type":"","_Components":["clients","C.4f5e52adf0a337a9","collections","F.BN2HJBD1R85EA","uploads","sparse","X.txt"],"file_size":15,"uploaded_size":10}
+{"Timestamp":1664618674,"started":"2022-10-01 10:04:34.13217806 +0000 UTC","vfs_path":"X.txt.idx","Type":"idx","_Components":["clients","C.4f5e52adf0a337a9","collections","F.BN2HJBD1R85EA","uploads","sparse","X.txt"],"file_size":225,"uploaded_size":225}

@@ -1,7 +1,7 @@
 LET Download <= create_flow_download( client_id="C.4f5e52adf0a337a9", name="sparse", flow_id="F.BN2HJBD1R85EA", wait=TRUE, expand_sparse=FALSE)[]SELECT OSPath, Size FROM glob(globs="**", accessor="zip", root=pathspec(DelegateAccessor="fs", DelegatePath=Download)) WHERE OSPath =~ "uploads" AND NOT IsDir[
  {
   "OSPath": "{\"DelegateAccessor\":\"fs\",\"DelegatePath\":\"fs:/downloads/C.4f5e52adf0a337a9/F.BN2HJBD1R85EA/sparse.zip\",\"Path\":\"/uploads.json\"}",
-  "Size": 351
+  "Size": 374
  },
  {
   "OSPath": "{\"DelegateAccessor\":\"fs\",\"DelegatePath\":\"fs:/downloads/C.4f5e52adf0a337a9/F.BN2HJBD1R85EA/sparse.zip\",\"Path\":\"/uploads.json.index\"}",
@@ -10,15 +10,19 @@ LET Download <= create_flow_download( client_id="C.4f5e52adf0a337a9", name="spar
  {
   "OSPath": "{\"DelegateAccessor\":\"fs\",\"DelegatePath\":\"fs:/downloads/C.4f5e52adf0a337a9/F.BN2HJBD1R85EA/sparse.zip\",\"Path\":\"/uploads/sparse/X.txt\"}",
   "Size": 10
+ },
+ {
+  "OSPath": "{\"DelegateAccessor\":\"fs\",\"DelegatePath\":\"fs:/downloads/C.4f5e52adf0a337a9/F.BN2HJBD1R85EA/sparse.zip\",\"Path\":\"/uploads/sparse/X.txt.idx\"}",
+  "Size": 225
  }
 ]LET Download <= create_flow_download( client_id="C.4f5e52adf0a337a9", name="not-sparse", flow_id="F.BN2HJBD1R85EA", wait=TRUE, expand_sparse=TRUE)[]SELECT OSPath, Size FROM glob(globs="**", accessor="zip", root=pathspec(DelegateAccessor="fs", DelegatePath=Download)) WHERE OSPath =~ "uploads" AND NOT IsDir[
  {
   "OSPath": "{\"DelegateAccessor\":\"fs\",\"DelegatePath\":\"fs:/downloads/C.4f5e52adf0a337a9/F.BN2HJBD1R85EA/not-sparse.zip\",\"Path\":\"/uploads.json\"}",
-  "Size": 351
+  "Size": 183
  },
  {
   "OSPath": "{\"DelegateAccessor\":\"fs\",\"DelegatePath\":\"fs:/downloads/C.4f5e52adf0a337a9/F.BN2HJBD1R85EA/not-sparse.zip\",\"Path\":\"/uploads.json.index\"}",
-  "Size": 16
+  "Size": 8
  },
  {
   "OSPath": "{\"DelegateAccessor\":\"fs\",\"DelegatePath\":\"fs:/downloads/C.4f5e52adf0a337a9/F.BN2HJBD1R85EA/not-sparse.zip\",\"Path\":\"/uploads/sparse/X.txt\"}",

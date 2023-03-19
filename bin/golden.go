@@ -80,6 +80,7 @@ var (
 		"(?i)Symbol .+ not found",
 		"(?i)Field .+ Expecting a .+ arg type, not",
 		"(?i)Artifact .+ not found",
+		"PANIC runtime error:",
 	}
 )
 

@@ -462,7 +462,7 @@ func (self *NTFSFileSystemAccessor) LstatWithOSPath(
 
 	// Attempting to stat the top level mean that we want to stat the
 	// device itself.
-	if len(fullpath.Components) == 0 {
+	if self.device != nil && len(fullpath.Components) == 0 {
 		accessor_obj, err := accessors.GetAccessor(accessor, self.scope)
 		if err != nil {
 			return nil, err
