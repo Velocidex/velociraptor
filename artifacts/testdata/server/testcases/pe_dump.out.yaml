@@ -1,0 +1,145 @@
+LET X <= format(format=RemappingTemplate, args=[ dict(jsonl=read_file(filename= srcDir + '/artifacts/testdata/files/memory/9604.idx')), pathspec(path_type="pathspec", DelegatePath= srcDir + '/artifacts/testdata/files/memory/9604', DelegateAccessor="file", Path=dict(jsonl='{"file_offset":0,"original_offset":30480000,"file_length":240000,"length":240000}\n'))])[]LET _ <= remap(config=X, clear=TRUE)[]SELECT * FROM items(item=parse_pe(file="/9604", accessor='process', base_offset=140702188961792)) WHERE _key =~ "Sections|FileHeader"[
+ {
+  "_key": "FileHeader",
+  "_value": {
+   "Machine": "IMAGE_FILE_MACHINE_AMD64",
+   "TimeDateStamp": "2092-07-10T20:21:08Z",
+   "TimeDateStampRaw": 3866559668,
+   "Characteristics": 34,
+   "ImageBase": 140702188961792
+  }
+ },
+ {
+  "_key": "Sections",
+  "_value": [
+   {
+    "Perm": "xr-",
+    "Name": ".text",
+    "FileOffset": 4096,
+    "VMA": 140702188965888,
+    "RVA": 4096,
+    "Size": 155648
+   },
+   {
+    "Perm": "-r-",
+    "Name": ".rdata",
+    "FileOffset": 159744,
+    "VMA": 140702189121536,
+    "RVA": 159744,
+    "Size": 40960
+   },
+   {
+    "Perm": "-rw",
+    "Name": ".data",
+    "FileOffset": 200704,
+    "VMA": 140702189162496,
+    "RVA": 200704,
+    "Size": 4096
+   },
+   {
+    "Perm": "-r-",
+    "Name": ".pdata",
+    "FileOffset": 204800,
+    "VMA": 140702189174784,
+    "RVA": 212992,
+    "Size": 8192
+   },
+   {
+    "Perm": "-rw",
+    "Name": ".didat",
+    "FileOffset": 212992,
+    "VMA": 140702189182976,
+    "RVA": 221184,
+    "Size": 4096
+   },
+   {
+    "Perm": "-r-",
+    "Name": ".rsrc",
+    "FileOffset": 217088,
+    "VMA": 140702189187072,
+    "RVA": 225280,
+    "Size": 4096
+   },
+   {
+    "Perm": "-r-",
+    "Name": ".reloc",
+    "FileOffset": 221184,
+    "VMA": 140702189191168,
+    "RVA": 229376,
+    "Size": 4096
+   }
+  ]
+ }
+]SELECT * FROM items( item=parse_pe(file=pe_dump(pid=9604, base_offset=140702188961792), accessor="file")) WHERE _key =~ "Sections|FileHeader"[
+ {
+  "_key": "FileHeader",
+  "_value": {
+   "Machine": "IMAGE_FILE_MACHINE_AMD64",
+   "TimeDateStamp": "2092-07-10T20:21:08Z",
+   "TimeDateStampRaw": 3866559668,
+   "Characteristics": 34,
+   "ImageBase": 140702188961792
+  }
+ },
+ {
+  "_key": "Sections",
+  "_value": [
+   {
+    "Perm": "xr-",
+    "Name": ".text",
+    "FileOffset": 4096,
+    "VMA": 140702188965888,
+    "RVA": 4096,
+    "Size": 155648
+   },
+   {
+    "Perm": "-r-",
+    "Name": ".rdata",
+    "FileOffset": 159744,
+    "VMA": 140702189121536,
+    "RVA": 159744,
+    "Size": 40960
+   },
+   {
+    "Perm": "-rw",
+    "Name": ".data",
+    "FileOffset": 200704,
+    "VMA": 140702189162496,
+    "RVA": 200704,
+    "Size": 4096
+   },
+   {
+    "Perm": "-r-",
+    "Name": ".pdata",
+    "FileOffset": 204800,
+    "VMA": 140702189174784,
+    "RVA": 212992,
+    "Size": 8192
+   },
+   {
+    "Perm": "-rw",
+    "Name": ".didat",
+    "FileOffset": 212992,
+    "VMA": 140702189182976,
+    "RVA": 221184,
+    "Size": 4096
+   },
+   {
+    "Perm": "-r-",
+    "Name": ".rsrc",
+    "FileOffset": 217088,
+    "VMA": 140702189187072,
+    "RVA": 225280,
+    "Size": 4096
+   },
+   {
+    "Perm": "-r-",
+    "Name": ".reloc",
+    "FileOffset": 221184,
+    "VMA": 140702189191168,
+    "RVA": 229376,
+    "Size": 4096
+   }
+  ]
+ }
+]
