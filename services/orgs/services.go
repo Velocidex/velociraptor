@@ -450,6 +450,18 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 			if err != nil {
 				return err
 			}
+
+			global_repository, err := repo_manager.GetGlobalRepository(org_config)
+			if err != nil {
+				return err
+			}
+
+			_, err = repository.InitializeGlobalRepositoryFromFilestore(
+				ctx, org_config, global_repository)
+			if err != nil {
+				return err
+			}
+
 		} else {
 			root_org_config, _ := self.GetOrgConfig("")
 			root_repo_manager, _ := self.Services("").RepositoryManager()

@@ -41,9 +41,6 @@ var (
 	repack_command_exe = repack_command.Flag(
 		"exe", "Use an alternative exe.").String()
 
-	repack_command_msi = repack_command.Flag(
-		"msi", "Repack a client install MSI.").String()
-
 	repack_command_config = repack_command.Arg(
 		"config_file", "The filename to write into the binary.").
 		Required().File()
@@ -68,13 +65,7 @@ func doRepack() error {
 		return err
 	}
 
-	config_obj, err := makeDefaultConfigLoader().
-		WithFileLoader(*config_path).
-		LoadAndValidate()
-	if err != nil {
-		config_obj = &config_proto.Config{}
-	}
-
+	config_obj := &config_proto.Config{}
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
@@ -95,7 +86,7 @@ func doRepack() error {
 		Uploader: &uploads.FileBasedUploader{
 			UploadDir: filepath.Dir(output_path),
 		},
-		Logger: log.New(&LogWriter{sm.Config}, "", 0),
+		Logger: log.New(&StdoutLogWriter{}, "", 0),
 		Env: ordereddict.NewDict().
 			Set("ConfigData", config_data).
 			Set("Exe", *repack_command_exe).
@@ -107,7 +98,6 @@ func doRepack() error {
           config=ConfigData, upload_name=UploadName) AS RepackInfo
        FROM scope()
 `
-
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
