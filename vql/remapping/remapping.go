@@ -8,6 +8,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -39,7 +40,11 @@ func (self RemappingFunc) Call(ctx context.Context,
 	}
 
 	remapping_config := config_obj.Remappings
-	scope.Log("Applying remapping %v", remapping_config)
+	elided := json.MustMarshalString(remapping_config)
+	if len(elided) > 100 {
+		elided = elided[:100] + " ..."
+	}
+	scope.Log("Applying remapping %v", elided)
 
 	manager := accessors.GetManager(scope)
 	if arg.Clear {
