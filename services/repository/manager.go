@@ -379,14 +379,6 @@ func LoadBuiltInArtifacts(ctx context.Context,
 		return err
 	}
 
-	if config_obj.Datastore != nil {
-		grepository, err = InitializeGlobalRepositoryFromFilestore(
-			ctx, config_obj, self.global_repository)
-		if err != nil {
-			return err
-		}
-	}
-
 	// Compile the artifacts in the background so they are ready
 	// to go when the GUI searches for them.
 	self.wg.Add(1)

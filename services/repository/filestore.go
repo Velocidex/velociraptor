@@ -6,6 +6,8 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"sync/atomic"
+	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -33,6 +35,10 @@ func InitializeGlobalRepositoryFromFilestore(
 		return nil, errors.New("Invalid file store")
 
 	}
+
+	start := time.Now()
+	var count uint64
+
 	err := api.Walk(file_store_factory, paths.ARTIFACT_DEFINITION_PREFIX,
 		func(path api.FSPathSpec, info os.FileInfo) error {
 			if path.Type() != api.PATH_TYPE_FILESTORE_YAML {
@@ -73,13 +79,18 @@ func InitializeGlobalRepositoryFromFilestore(
 				return nil
 			}
 			artifact_obj.Raw = string(data)
-			logger.Info("Loaded %s", path.AsClientPath())
+			logger.Info("Loaded custom artifact %s", path.AsClientPath())
+
+			atomic.AddUint64(&count, uint64(1))
 
 			return nil
 		})
 	if err != nil {
 		return nil, err
 	}
+
+	logger.Info("Loaded %d custom artifacts in %v",
+		atomic.AddUint64(&count, 0), time.Now().Sub(start))
 
 	return global_repository, nil
 }

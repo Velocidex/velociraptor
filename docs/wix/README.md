@@ -84,7 +84,7 @@ the MSI using the following command (i.e. replace the file within the
 MSI):
 
 ```
-velociraptor config repack --msi velociraptor.msi client.config.yaml repacked_velociraptor.msi -v
+velociraptor config repack --exe velociraptor.msi client.config.yaml repacked_velociraptor.msi -v
 ```
 
 In the above, `velociraptor.msi` is the official (or customized)
