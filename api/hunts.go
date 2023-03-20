@@ -107,7 +107,17 @@ func (self *ApiServer) CreateHunt(
 
 	acl_manager := acl_managers.NewServerACLManager(org_config_obj, in.Creator)
 
+	// It is possible to start a paused hunt with the COLLECT_CLIENT
+	// permission.
 	permissions := acls.COLLECT_CLIENT
+
+	// To actually start the hunt we need the START_HUNT
+	// permission. This allows for division of responsibility between
+	// hunt proposers and hunt starters.
+	if in.State == api_proto.Hunt_RUNNING {
+		permissions = acls.START_HUNT
+	}
+
 	perm, err := services.CheckAccess(org_config_obj, in.Creator, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
@@ -144,8 +154,8 @@ func (self *ApiServer) CreateHunt(
 		}
 
 		// Make sure the user is allowed to collect in that org
-		perm, err := services.CheckAccess(org_config_obj, in.Creator,
-			acls.COLLECT_CLIENT)
+		perm, err := services.CheckAccess(
+			org_config_obj, in.Creator, permissions)
 		if !perm || err != nil {
 			logger.Error("CreateHunt: User is not allowed to launch hunts in "+
 				"org %v.", org_id)
@@ -203,6 +213,10 @@ func (self *ApiServer) ModifyHunt(
 	in.Creator = principal
 
 	permissions := acls.COLLECT_CLIENT
+	if in.State == api_proto.Hunt_RUNNING {
+		permissions = acls.START_HUNT
+	}
+
 	perm, err := services.CheckAccess(org_config_obj, in.Creator, permissions)
 	if !perm || err != nil {
 		return nil, status.Error(codes.PermissionDenied,
