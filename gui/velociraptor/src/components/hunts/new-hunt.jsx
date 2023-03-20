@@ -54,6 +54,10 @@ class NewHuntConfigureHunt extends React.Component {
             this.context.traits.Permissions &&
             this.context.traits.Permissions.server_admin;
 
+        let is_start_hunt = this.context.traits &&
+            this.context.traits.Permissions &&
+            this.context.traits.Permissions.start_hunt;
+
         return (
             <>
               <Modal.Header closeButton>
@@ -152,22 +156,23 @@ class NewHuntConfigureHunt extends React.Component {
                     </Form.Group>
                   }
 
-                  <OrgSelectorForm
-                    value={this.props.parameters.org_ids}
-                    onChange={(value) => this.setParam("org_ids", value)} />
-
                   { is_admin &&
-                    <Form.Group as={Row}>
-                      <Form.Label column sm="3">{T("Hunt State")}</Form.Label>
-                      <Col sm="8">
-                        <Form.Check
-                          value={this.props.parameters.force_start}
-                          label={T("Start Hunt Immediately")}
-                          onChange={e=>this.setParam(
-                              "force_start", !this.props.parameters.force_start)}
-                        />
-                      </Col>
-                    </Form.Group>
+                      <OrgSelectorForm
+                        value={this.props.parameters.org_ids}
+                        onChange={(value) => this.setParam("org_ids", value)} />
+                  }
+                  { is_start_hunt &&
+                      <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("Hunt State")}</Form.Label>
+                        <Col sm="8">
+                          <Form.Check
+                            value={this.props.parameters.force_start}
+                            label={T("Start Hunt Immediately")}
+                            onChange={e=>this.setParam(
+                                "force_start", !this.props.parameters.force_start)}
+                          />
+                        </Col>
+                      </Form.Group>
                   }
                   <EstimateHunt
                     params={this.props.parameters}/>

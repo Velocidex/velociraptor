@@ -124,6 +124,9 @@ func CheckAccessWithToken(
 	case acls.COLLECT_CLIENT:
 		return token.CollectClient, nil
 
+	case acls.START_HUNT:
+		return token.StartHunt, nil
+
 	case acls.COLLECT_SERVER:
 		return token.CollectServer, nil
 

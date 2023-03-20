@@ -26,6 +26,7 @@ message ApiClientACL {
     bool label_clients = 11;
 
     bool collect_client = 4;
+    bool start_hunt = 22;
     bool collect_server = 5;
     bool artifact_writer = 6;
     bool server_artifact_writer = 15;

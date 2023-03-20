@@ -63,7 +63,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
+	err := vql_subsystem.CheckAccess(scope, acls.START_HUNT)
 	if err != nil {
 		scope.Log("hunt: %v", err)
 		return vfilter.Null{}
@@ -226,7 +226,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		}
 
 		// Make sure the user is allowed to collect in that org
-		err = vql_subsystem.CheckAccessInOrg(scope, org_id, acls.COLLECT_CLIENT)
+		err = vql_subsystem.CheckAccessInOrg(scope, org_id, acls.START_HUNT)
 		if err != nil {
 			scope.Log("hunt: %v", err)
 			continue
@@ -287,7 +287,7 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	err := vql_subsystem.CheckAccess(scope, acls.COLLECT_CLIENT)
+	err := vql_subsystem.CheckAccess(scope, acls.START_HUNT)
 	if err != nil {
 		scope.Log("hunt_add: %v", err)
 		return vfilter.Null{}
