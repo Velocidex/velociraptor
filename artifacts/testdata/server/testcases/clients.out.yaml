@@ -1,4 +1,8 @@
-LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_id FROM clients(search='label:*') ORDER BY client_id[]SELECT os_info.fqdn as Hostname, client_id, last_seen_at / 1000000  as LastSeen FROM clients() order by Hostname[
+SELECT sleep(ms=500) FROM scope()[
+ {
+  "sleep(ms=500)": true
+ }
+]LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_id FROM clients(search='label:*') ORDER BY client_id[]SELECT os_info.fqdn as Hostname, client_id, last_seen_at / 1000000  as LastSeen FROM clients() order by Hostname[
  {
   "Hostname": "DESKTOP-BP4S7TF",
   "client_id": "C.4f5e52adf0a337a9",

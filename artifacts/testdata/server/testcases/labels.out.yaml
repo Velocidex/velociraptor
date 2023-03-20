@@ -1,4 +1,8 @@
-LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_id
+SELECT sleep(ms=500) FROM scope()[
+ {
+  "sleep(ms=500)": true
+ }
+]LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_id
 FROM clients(search='label:*') ORDER BY client_id
 []SELECT client_id, labels FROM clients(search='label:*')[]SELECT * FROM foreach(
   row={
