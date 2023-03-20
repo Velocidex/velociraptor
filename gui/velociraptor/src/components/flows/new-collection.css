@@ -65,4 +65,5 @@ table.param-form-table {
 
 .trace-selector {
     width: 100%;
+    white-space: break-spaces;
 }
