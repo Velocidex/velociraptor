@@ -101,6 +101,10 @@ div#navigator.collapsed {
   width: var(--sidebar-collapsed-width);
 }
 
+div#navigator li a {
+    white-space: nowrap;
+}
+
 .nav-link span {
   width: 18px;
   margin-right: 12px;

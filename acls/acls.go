@@ -75,6 +75,9 @@ const (
 	// Schedule or cancel new collections on clients.
 	COLLECT_CLIENT
 
+	// Allows the user to start a hunt
+	START_HUNT
+
 	// Schedule new artifact collections on velociraptor servers.
 	COLLECT_SERVER
 
@@ -134,6 +137,8 @@ func (self ACL_PERMISSION) String() string {
 		return "LABEL_CLIENT"
 	case COLLECT_CLIENT:
 		return "COLLECT_CLIENT"
+	case START_HUNT:
+		return "START_HUNT"
 	case COLLECT_SERVER:
 		return "COLLECT_SERVER"
 	case ARTIFACT_WRITER:
@@ -182,6 +187,8 @@ func GetPermission(name string) ACL_PERMISSION {
 		return LABEL_CLIENT
 	case "COLLECT_CLIENT":
 		return COLLECT_CLIENT
+	case "START_HUNT":
+		return START_HUNT
 	case "COLLECT_SERVER":
 		return COLLECT_SERVER
 	case "ARTIFACT_WRITER":
