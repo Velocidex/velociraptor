@@ -1,6 +1,10 @@
+import _ from 'lodash';
+import hex2a from "./utils";
 import React from 'react';
 import Alert from 'react-bootstrap/Alert';
 import humanizeDuration from "humanize-duration";
+
+import automated from "./de.json";
 
 const Deutsch = {
     SEARCH_CLIENTS: "Clients suchen",
@@ -617,5 +621,9 @@ const Deutsch = {
     "Urgent": "Dringend",
     "Skip queues and run query urgently": "Warteschlangen überspringen und Abfrage dringend ausführen",
 };
+
+_.each(automated, (v, k)=>{
+    Deutsch[hex2a(k)] = v;
+});
 
 export default Deutsch;

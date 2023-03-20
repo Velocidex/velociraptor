@@ -1,6 +1,11 @@
+import _ from 'lodash';
+import hex2a from "./utils";
+
 import React from 'react';
 import Alert from 'react-bootstrap/Alert';
 import humanizeDuration from "humanize-duration";
+
+import automated from "./jp.json";
 
 const Japanese = {
     SEARCH_CLIENTS: "クライアント検索",
@@ -594,5 +599,9 @@ const Japanese = {
     "Urgent": "急",
     "Skip queues and run query urgently": "キューをスキップしてクエリを緊急に実行する",
 };
+
+_.each(automated, (v, k)=>{
+    Japanese[hex2a(k)] = v;
+});
 
 export default Japanese;
