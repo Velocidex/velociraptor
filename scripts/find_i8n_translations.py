@@ -28,6 +28,12 @@ def DiscoverTranslations(path):
                         result[m.group(1)] = True
     return result
 
+def Encode(k):
+    return binascii.hexlify(k.encode()).decode()
+
+def Decode(k):
+    return binascii.unhexlify(k.encode()).decode()
+
 def ProcessFile(filename):
     translations = dict()
 
@@ -39,16 +45,22 @@ def ProcessFile(filename):
 
     discovered = DiscoverTranslations('./gui/velociraptor/src/components/')
 
+    with open(os.path.splitext(filename)[0] + ".json") as fd:
+        encoded_existing = json.loads(fd.read())
+        existing = dict()
+        for k in encoded_existing:
+            existing[Decode(k)] = True
+
     # The automated translations
     automated = dict()
     for k in discovered:
-        if not k in translations:
-            automated[base64.b64encode(k.encode()).decode()] = k
+        if not k in translations and not k in existing:
+            automated[Encode(k)] = k
 
-    outfile = os.path.splitext(filename)[0] + ".json"
+    outfile = os.path.splitext(filename)[0] + "_new.json"
     with open(outfile, "w") as outfd:
         outfd.write(json.dumps(automated, sort_keys=True, indent=4))
-        print("Wrote json file %s" % outfile)
+        print("Wrote json file %s with %d entries" % (outfile, len(automated)))
 
 if __name__ == "__main__":
     argument_parser = argparse.ArgumentParser()
