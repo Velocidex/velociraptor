@@ -16,6 +16,9 @@ test_light:
 golden:
 	./output/velociraptor -v --config artifacts/testdata/windows/test.config.yaml golden artifacts/testdata/server/testcases/ --env srcDir=`pwd` --filter=${GOLDEN}
 
+debug_golden:
+	dlv debug --build-flags="-tags 'server_vql extras'" ./bin/ -- --config artifacts/testdata/windows/test.config.yaml golden artifacts/testdata/server/testcases/ --env srcDir=`pwd` --disable_alarm -v --filter=${GOLDEN}
+
 references:
 	./output/velociraptor vql export docs/references/vql.yaml > docs/references/vql.yaml.tmp
 	mv docs/references/vql.yaml.tmp docs/references/vql.yaml
@@ -75,9 +78,6 @@ debug_minion:
 
 debug_client:
 	dlv debug --build-flags="-tags 'server_vql extras'" ./bin/ -- client -v --debug --debug_port 6061
-
-debug_golden:
-	dlv debug --build-flags="-tags 'server_vql extras'" ./bin/ -- --config artifacts/testdata/windows/test.config.yaml golden artifacts/testdata/server/testcases/ --env srcDir=`pwd` --disable_alarm -v --filter=${GOLDEN}
 
 lint:
 	golangci-lint run

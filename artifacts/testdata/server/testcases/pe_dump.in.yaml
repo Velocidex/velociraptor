@@ -26,7 +26,7 @@ Parameters:
           path_type: pathspec
         on:
           accessor: process
-          prefix: /9604
+          prefix: %q
 
 Queries:
   - LET X <= format(format=RemappingTemplate,
@@ -35,7 +35,8 @@ Queries:
           pathspec(path_type="pathspec",
                    DelegatePath= srcDir + '/artifacts/testdata/files/memory/9604',
                    DelegateAccessor="file",
-                   Path=dict(jsonl='{"file_offset":0,"original_offset":30480000,"file_length":240000,"length":240000}\n'))])
+                   Path=dict(jsonl='{"file_offset":0,"original_offset":30480000,"file_length":240000,"length":240000}\n')),
+          "/9604"])
 
   - LET _ <= remap(config=X, clear=TRUE)
 

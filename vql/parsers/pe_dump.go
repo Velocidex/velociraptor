@@ -104,15 +104,17 @@ func (self _PEDumpFunction) Call(
 			filesystem.RemoveFile(scope, tmpfile.Name())
 		})
 
+	vm_offset := arg.BaseOffset - int64(pe_file.FileHeader.ImageBase)
+
 	// Copy the PE header to the output
 	tmpfile.Seek(0, os.SEEK_SET)
-	fd.Seek(int64(pe_file.FileHeader.ImageBase), os.SEEK_SET)
+	fd.Seek(int64(vm_offset+int64(pe_file.FileHeader.ImageBase)), os.SEEK_SET)
 	_, err = utils.CopyN(ctx, tmpfile, fd, 0x2000)
 
 	// Copy all the regions to the output
 	for _, section := range pe_file.Sections {
 		tmpfile.Seek(section.FileOffset, os.SEEK_SET)
-		fd.Seek(int64(section.VMA), os.SEEK_SET)
+		fd.Seek(vm_offset+int64(section.VMA), os.SEEK_SET)
 		// TODO: Restrict the size to be reasonable.
 		_, err = utils.CopyN(ctx, tmpfile, fd, section.Size)
 		if err != nil {
