@@ -622,5 +622,4 @@ _.each(automated, (v, k)=>{
     Spanish[hex2a(k)] = v;
 });
 
-
 export default Spanish;
