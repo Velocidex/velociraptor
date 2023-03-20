@@ -140,13 +140,16 @@ func doGrant() error {
 }
 
 func doShow() error {
-	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().LoadAndValidate()
+	config_obj, err := makeDefaultConfigLoader().
+		WithRequiredFrontend().LoadAndValidate()
 	if err != nil {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
 	ctx, cancel := install_sig_handler()
 	defer cancel()
+
+	config_obj.Services = services.GenericToolServices()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
