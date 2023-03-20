@@ -18,6 +18,7 @@ import (
 
 type RangedReaderPath struct {
 	JsonlRanges string `json:"jsonl"`
+	Index       string `json:"index"`
 }
 
 func parseIndexRanges(serialized []byte) (*actions_proto.Index, error) {
@@ -42,6 +43,14 @@ func parseIndexRanges(serialized []byte) (*actions_proto.Index, error) {
 			if err == nil {
 				index.Ranges = append(index.Ranges, item)
 			}
+		}
+	}
+
+	if arg.Index != "" {
+		result := &actions_proto.Index{}
+		err = json.Unmarshal([]byte(arg.Index), result)
+		if err == nil {
+			index.Ranges = append(index.Ranges, result.Ranges...)
 		}
 	}
 

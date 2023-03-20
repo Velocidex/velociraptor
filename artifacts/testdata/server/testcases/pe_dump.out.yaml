@@ -1,4 +1,4 @@
-LET X <= format(format=RemappingTemplate, args=[ dict(jsonl=read_file(filename= srcDir + '/artifacts/testdata/files/memory/9604.idx')), pathspec(path_type="pathspec", DelegatePath= srcDir + '/artifacts/testdata/files/memory/9604', DelegateAccessor="file", Path=dict(jsonl='{"file_offset":0,"original_offset":30480000,"file_length":240000,"length":240000}\n'))])[]LET _ <= remap(config=X, clear=TRUE)[]SELECT * FROM items(item=parse_pe(file="/9604", accessor='process', base_offset=140702188961792)) WHERE _key =~ "Sections|FileHeader"[
+LET X <= format(format=RemappingTemplate, args=[ dict(jsonl=read_file(filename= srcDir + '/artifacts/testdata/files/memory/9604.idx')), pathspec(path_type="pathspec", DelegatePath= srcDir + '/artifacts/testdata/files/memory/9604', DelegateAccessor="file", Path=dict(jsonl='{"file_offset":0,"original_offset":30480000,"file_length":240000,"length":240000}\n')), "/9604"])[]LET _ <= remap(config=X, clear=TRUE)[]SELECT * FROM items(item=parse_pe(file="/9604", accessor='process', base_offset=140702188961792)) WHERE _key =~ "Sections|FileHeader"[
  {
   "_key": "FileHeader",
   "_value": {
