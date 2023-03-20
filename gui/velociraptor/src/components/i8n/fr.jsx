@@ -1,6 +1,10 @@
+import _ from 'lodash';
+import hex2a from "./utils";
 import React from 'react';
 import Alert from 'react-bootstrap/Alert';
 import humanizeDuration from "humanize-duration";
+
+import automated from "./fr.json";
 
 const French = {
     SEARCH_CLIENTS: "Rechercher des clients",
@@ -616,5 +620,9 @@ const French = {
     "Urgent": "Urgent",
     "Skip queues and run query urgently": "Ignorer les files d'attente et exécuter la requête de toute urgence",
 };
+
+_.each(automated, (v, k)=>{
+    French[hex2a(k)] = v;
+});
 
 export default French;

@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import hex2a from "./utils";
 import React from 'react';
 import Alert from 'react-bootstrap/Alert';
 import humanizeDuration from "humanize-duration";
@@ -622,7 +623,7 @@ const Deutsch = {
 };
 
 _.each(automated, (v, k)=>{
-    Deutsch[atob(k)] = v;
+    Deutsch[hex2a(k)] = v;
 });
 
 export default Deutsch;
