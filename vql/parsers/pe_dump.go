@@ -3,6 +3,7 @@ package parsers
 import (
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 
@@ -21,6 +22,7 @@ import (
 type _PEDumpFunctionArgs struct {
 	Pid        uint64 `vfilter:"required,field=pid,doc=The pid to dump."`
 	BaseOffset int64  `vfilter:"required,field=base_offset,doc=The offset in the file for the base address."`
+	InMemory   uint64 `vfilter:"optional,field=in_memory,doc=By default we store to a tempfile and return the path. If this option is larger than 0, we prepare the file in a memory buffer at the specified limit, to avoid AV alerts on disk access."`
 }
 
 type _PEDumpFunction struct{}
@@ -92,36 +94,61 @@ func (self _PEDumpFunction) Call(
 		return &vfilter.Null{}
 	}
 
-	tmpfile, err := ioutil.TempFile("", "tmp*exe")
-	if err != nil {
-		scope.Log("pe_dump: %v", err)
-		return false
-	}
-	defer tmpfile.Close()
+	var writer io.WriteSeeker
+	var tmpfile *os.File
+	var memory_buffer *utils.MemoryBuffer
 
-	_ = vql_subsystem.GetRootScope(scope).
-		AddDestructor(func() {
-			filesystem.RemoveFile(scope, tmpfile.Name())
-		})
+	if arg.InMemory == 0 {
+		tmpfile, err = ioutil.TempFile("", "tmp*exe")
+		if err != nil {
+			scope.Log("pe_dump: %v", err)
+			return false
+		}
+		defer tmpfile.Close()
+		_ = vql_subsystem.GetRootScope(scope).
+			AddDestructor(func() {
+				filesystem.RemoveFile(scope, tmpfile.Name())
+			})
+
+		writer = tmpfile
+
+	} else {
+		memory_buffer = &utils.MemoryBuffer{MaxSize: int(arg.InMemory)}
+		writer = memory_buffer
+	}
+
+	vm_offset := arg.BaseOffset - int64(pe_file.FileHeader.ImageBase)
 
 	// Copy the PE header to the output
-	tmpfile.Seek(0, os.SEEK_SET)
-	fd.Seek(int64(pe_file.FileHeader.ImageBase), os.SEEK_SET)
-	_, err = utils.CopyN(ctx, tmpfile, fd, 0x2000)
+	writer.Seek(0, os.SEEK_SET)
+	fd.Seek(int64(vm_offset+int64(pe_file.FileHeader.ImageBase)), os.SEEK_SET)
+	_, err = utils.CopyN(ctx, writer, fd, 0x2000)
 
 	// Copy all the regions to the output
 	for _, section := range pe_file.Sections {
-		tmpfile.Seek(section.FileOffset, os.SEEK_SET)
-		fd.Seek(int64(section.VMA), os.SEEK_SET)
+		// Validate the section sizes
+		if section.Size > 100*1024 {
+			section.Size = 100 * 1024
+		}
+
+		if section.Size <= 0 {
+			continue
+		}
+
+		writer.Seek(section.FileOffset, os.SEEK_SET)
+		fd.Seek(vm_offset+int64(section.VMA), os.SEEK_SET)
+
 		// TODO: Restrict the size to be reasonable.
-		_, err = utils.CopyN(ctx, tmpfile, fd, section.Size)
+		_, err = utils.CopyN(ctx, writer, fd, section.Size)
 		if err != nil {
 			scope.Log("pe_dump: %v", err)
 		}
-
 	}
 
-	return tmpfile.Name()
+	if arg.InMemory == 0 {
+		return tmpfile.Name()
+	}
+	return memory_buffer.Bytes()
 }
 
 func init() {
