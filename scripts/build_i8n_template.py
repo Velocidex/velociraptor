@@ -2,7 +2,9 @@
 
 """Build a template that can be safely copied to Google translate.
 
-Google translate just indiscriminately translates everything in the document but we need to maintain a dict with keys in English and values in the target language.
+Google translate just indiscriminately translates everything in the
+document but we need to maintain a dict with keys in English and
+values in the target language.
 
 This very simple program protects the keys by encoding them in hex
 then we can feed the document to Google translate and have it
@@ -24,6 +26,7 @@ $ build_i8n_template.py de.js > test.js
 $ build_i8n_template.py --decode translated.js > lang.js
 
 Now check the file for various corruption issues.
+
 """
 
 import argparse
