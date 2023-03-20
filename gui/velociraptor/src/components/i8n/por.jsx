@@ -1,6 +1,11 @@
+import _ from 'lodash';
+import hex2a from "./utils";
 import React from 'react';
 import Alert from 'react-bootstrap/Alert';
 import humanizeDuration from "humanize-duration";
+
+import automated from "./por.json";
+
 
 const Portuguese = {
     SEARCH_CLIENTS: "Pesquisar clientes",
@@ -614,5 +619,9 @@ const Portuguese = {
     "Urgent": "Urgente",
     "Skip queues and run query urgently": "Pule filas e execute a consulta com urgência",
 };
+
+_.each(automated, (v, k)=>{
+    Portuguese[hex2a(k)] = v;
+});
 
 export default Portuguese;
