@@ -197,9 +197,13 @@ func (self *ClientFlowRunner) MonitoringVQLResponse(
 		return err
 	}
 
+	// Append the client id to the data so we can see where it came
+	// from.
+	data := json.AppendJsonlItem(
+		[]byte(response.JSONLResponse), "ClientId", client_id)
+
 	return journal.PushJsonlToArtifact(ctx,
-		self.config_obj,
-		[]byte(response.JSONLResponse), int(response.TotalRows),
+		self.config_obj, data, int(response.TotalRows),
 		query_name, client_id, flow_id)
 }
 
