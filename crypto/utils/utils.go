@@ -45,6 +45,9 @@ func GetPrivateKeyFromScope(scope vfilter.Scope) (*rsa.PrivateKey, error) {
 		return nil, errors.New("Must be running on server!")
 	}
 
+	if config_obj.Frontend == nil {
+		return nil, errors.New("No frontend configuration given")
+	}
 	private_key := config_obj.Frontend.PrivateKey
 
 	key, err := ParseRsaPrivateKeyFromPemStr([]byte(private_key))

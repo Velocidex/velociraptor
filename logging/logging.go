@@ -55,9 +55,10 @@ var (
 	Audit = "VelociraptorAudit"
 
 	// Lock for log manager.
-	mu        sync.Mutex
-	Manager   *LogManager
-	node_name = ""
+	mu                   sync.Mutex
+	Manager              *LogManager
+	disable_log_to_files bool
+	node_name            = ""
 
 	// Lock for memory logs and prelogs.
 	memory_log_mu sync.Mutex
@@ -73,6 +74,15 @@ func SetNodeName(name string) {
 	defer mu.Unlock()
 
 	node_name = name
+}
+
+// Turn off logging to files from now on. This is needed for commands
+// that manipulate the config file and we dont want to attempt to
+// write to random log files.
+func DisableLogging() {
+	mu.Lock()
+	disable_log_to_files = true
+	mu.Unlock()
 }
 
 func InitLogging(config_obj *config_proto.Config) error {
@@ -299,7 +309,9 @@ func (self *LogManager) makeNewComponent(
 	Log.Out = inMemoryLogWriter{}
 	Log.Level = logrus.DebugLevel
 
-	if config_obj != nil && config_obj.Logging != nil &&
+	if !disable_log_to_files &&
+		config_obj != nil &&
+		config_obj.Logging != nil &&
 		config_obj.Logging.OutputDirectory != "" {
 
 		base_directory := filepath.Join(

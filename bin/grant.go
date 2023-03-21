@@ -9,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -52,6 +53,8 @@ var (
 )
 
 func doGrant() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().
 		WithRequiredUser().
@@ -140,7 +143,10 @@ func doGrant() error {
 }
 
 func doShow() error {
-	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().LoadAndValidate()
+	logging.DisableLogging()
+
+	config_obj, err := makeDefaultConfigLoader().
+		WithRequiredFrontend().LoadAndValidate()
 	if err != nil {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}

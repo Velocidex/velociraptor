@@ -260,6 +260,8 @@ func runTest(fixture *testFixture, sm *services.Service,
 }
 
 func doGolden() error {
+	logging.DisableLogging()
+
 	vql_subsystem.RegisterPlugin(&MemoryLogPlugin{})
 	vql_subsystem.RegisterFunction(&WriteFilestoreFunction{})
 	vql_subsystem.RegisterFunction(&MockTimeFunciton{})
