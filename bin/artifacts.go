@@ -146,6 +146,8 @@ func getRepository(config_obj *config_proto.Config) (services.Repository, error)
 }
 
 func doArtifactCollect() error {
+	logging.DisableLogging()
+
 	if *artificat_command_collect_admin_flag {
 		err := checkAdmin()
 		if err != nil {
@@ -276,6 +278,8 @@ func getFilterRegEx(pattern string) (*regexp.Regexp, error) {
 }
 
 func doArtifactShow() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().
 		WithNullLoader().LoadAndValidate()
 	if err != nil {
@@ -313,6 +317,8 @@ func doArtifactShow() error {
 }
 
 func doArtifactList() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().
 		WithNullLoader().LoadAndValidate()
 	if err != nil {

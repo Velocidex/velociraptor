@@ -10,9 +10,9 @@ import (
 
 	"github.com/Velocidex/yaml/v2"
 	"github.com/google/rpmpack"
-	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
 )
@@ -210,7 +210,7 @@ exit $RETVAL
 func doClientRPM() error {
 	// Disable logging when creating a deb - we may not create the
 	// deb on the same system where the logs should go.
-	_ = config.ValidateClientConfig(&config_proto.Config{})
+	logging.DisableLogging()
 
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredClient().LoadAndValidate()
@@ -335,7 +335,7 @@ func doClientRPM() error {
 func doServerRPM() error {
 	// Disable logging when creating a deb - we may not create the
 	// deb on the same system where the logs should go.
-	_ = config.ValidateClientConfig(&config_proto.Config{})
+	logging.DisableLogging()
 
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().LoadAndValidate()
@@ -479,7 +479,7 @@ func doSingleServerRPM(
 func doClientSysVRPM() error {
 	// Disable logging when creating a deb - we may not create the
 	// deb on the same system where the logs should go.
-	_ = config.ValidateClientConfig(&config_proto.Config{})
+	logging.DisableLogging()
 
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredClient().LoadAndValidate()

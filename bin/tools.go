@@ -12,6 +12,7 @@ import (
 	"github.com/Velocidex/yaml/v2"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
@@ -53,6 +54,8 @@ var (
 )
 
 func doThirdPartyShow() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().
 		LoadAndValidate()
 	if err != nil {
@@ -99,6 +102,8 @@ func doThirdPartyShow() error {
 }
 
 func doThirdPartyRm() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().
 		LoadAndValidate()
 	if err != nil {
@@ -124,6 +129,8 @@ func doThirdPartyRm() error {
 }
 
 func doThirdPartyUpload() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().
 		LoadAndValidate()
 	if err != nil {

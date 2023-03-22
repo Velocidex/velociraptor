@@ -12,6 +12,7 @@ import (
 	"github.com/Velocidex/yaml/v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -233,6 +234,8 @@ FROM Artifact.Windows.Forensics.PartitionTable(ImagePath=ImagePath)
 }
 
 func doDeadDisk() error {
+	logging.DisableLogging()
+
 	full_config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	if err != nil {
 		return fmt.Errorf("Unable to load config file: %w", err)

@@ -27,6 +27,7 @@ import (
 	"github.com/Velocidex/yaml/v2"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -151,6 +152,8 @@ func formatFunctions(
 }
 
 func doVQLList() error {
+	logging.DisableLogging()
+
 	scope := vql_subsystem.MakeScope()
 	defer scope.Close()
 
@@ -193,6 +196,8 @@ func getOldItem(name, item_type string, old_data []*api_proto.Completion) *api_p
 }
 
 func doVQLExport() error {
+	logging.DisableLogging()
+
 	scope := vql_subsystem.MakeScope()
 	defer scope.Close()
 

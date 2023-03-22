@@ -27,6 +27,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/uploads"
@@ -55,6 +56,8 @@ var (
 )
 
 func doRepack() error {
+	logging.DisableLogging()
+
 	if *repack_command_exe == "" {
 		*repack_command_exe, _ = os.Executable()
 	}

@@ -54,6 +54,8 @@ var (
 )
 
 func doVacuum() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().
 		WithRequiredUser().
@@ -255,6 +257,7 @@ func processTask(task_chan <-chan api.DSPathSpec, wg *sync.WaitGroup,
 // On very slow filesystems we need to go low level to get any kind
 // of performance.
 func doVacuumHarder(config_obj *config_proto.Config) error {
+	logging.DisableLogging()
 
 	ctx, cancel := install_sig_handler()
 	defer cancel()

@@ -156,6 +156,8 @@ func doRemoteQuery(
 	config_obj *config_proto.Config, format string,
 	queries []string, env *ordereddict.Dict) error {
 
+	logging.DisableLogging()
+
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
@@ -254,6 +256,8 @@ func doRemoteQuery(
 }
 
 func doQuery() error {
+	logging.DisableLogging()
+
 	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	if err != nil {
 		return err

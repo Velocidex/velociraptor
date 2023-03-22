@@ -68,6 +68,8 @@ var (
 )
 
 func doInstallServerService(config_obj *config_proto.Config) (err error) {
+	logging.DisableLogging()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -297,6 +299,8 @@ func removeServiceServerService(name string) error {
 }
 
 func doRemoveServerService() {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().LoadAndValidate()
 	kingpin.FatalIfError(err, "Unable to load config file")
 

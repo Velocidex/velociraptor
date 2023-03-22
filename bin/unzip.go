@@ -8,6 +8,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
@@ -36,8 +37,10 @@ var (
 )
 
 func doUnzip() error {
+	logging.DisableLogging()
 
-	server_config_obj, err := makeDefaultConfigLoader().WithNullLoader().LoadAndValidate()
+	server_config_obj, err := makeDefaultConfigLoader().
+		WithNullLoader().LoadAndValidate()
 	if err != nil {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
