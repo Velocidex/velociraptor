@@ -47,9 +47,9 @@ import (
 
 	"github.com/Velocidex/yaml/v2"
 	"github.com/xor-gate/debpkg"
-	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -162,7 +162,7 @@ WantedBy=multi-user.target
 func doServerDeb() error {
 	// Disable logging when creating a deb - we may not create the
 	// deb on the same system where the logs should go.
-	_ = config.ValidateClientConfig(&config_proto.Config{})
+	logging.DisableLogging()
 
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().LoadAndValidate()
@@ -304,7 +304,7 @@ func doSingleServerDeb(
 func doClientDeb() error {
 	// Disable logging when creating a deb - we may not create the
 	// deb on the same system where the logs should go.
-	_ = config.ValidateClientConfig(&config_proto.Config{})
+	logging.DisableLogging()
 
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredClient().LoadAndValidate()

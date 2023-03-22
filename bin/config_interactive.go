@@ -218,6 +218,8 @@ func configureDeploymentType(config_obj *config_proto.Config) error {
 }
 
 func doGenerateConfigInteractive() error {
+	logging.DisableLogging()
+
 	config_obj := config.GetDefaultConfig()
 
 	// Figure out which type of server we have.

@@ -78,6 +78,8 @@ var (
 )
 
 func doInstall(config_obj *config_proto.Config) (err error) {
+	logging.DisableLogging()
+
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -321,6 +323,8 @@ func removeService(name string) error {
 }
 
 func doRemove() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().LoadAndValidate()
 	if err != nil {
 		return fmt.Errorf("Unable to load config file: %w", err)

@@ -44,6 +44,8 @@ var (
 )
 
 func doRemove() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().WithRequiredClient().
 		WithWriteback().LoadAndValidate()
 	if err != nil {
@@ -65,6 +67,8 @@ func doRemove() error {
 }
 
 func doInstall() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().WithRequiredClient().
 		WithWriteback().LoadAndValidate()
 	if err != nil {
