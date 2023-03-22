@@ -121,6 +121,8 @@ func eval_local_query(
 }
 
 func doLS(path, accessor string) error {
+	logging.DisableLogging()
+
 	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	if err != nil {
 		return fmt.Errorf("Unable to load config file: %w", err)
@@ -181,6 +183,8 @@ func doLS(path, accessor string) error {
 }
 
 func doRM(path, accessor string) error {
+	logging.DisableLogging()
+
 	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
 	if err != nil {
 		return fmt.Errorf("Unable to load config file: %w", err)
@@ -235,6 +239,8 @@ func doRM(path, accessor string) error {
 }
 
 func doCp(path, accessor string, dump_dir string) error {
+	logging.DisableLogging()
+
 	config_obj, err := APIConfigLoader.
 		WithNullLoader().LoadAndValidate()
 	if err != nil {
@@ -325,6 +331,8 @@ SELECT * from foreach(
 }
 
 func doCat(path, accessor_name string) error {
+	logging.DisableLogging()
+
 	_, err := APIConfigLoader.
 		WithNullLoader().LoadAndValidate()
 	if err != nil {

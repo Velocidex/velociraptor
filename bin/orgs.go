@@ -30,6 +30,8 @@ var (
 )
 
 func doOrgLs() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().
 		WithRequiredUser().
@@ -62,6 +64,8 @@ func doOrgLs() error {
 }
 
 func doOrgUserAdd() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().
 		WithRequiredUser().
@@ -107,6 +111,8 @@ func doOrgUserAdd() error {
 }
 
 func doOrgCreate() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().
 		WithRequiredUser().
@@ -143,6 +149,8 @@ func doOrgCreate() error {
 }
 
 func doOrgDelete() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().
 		WithRequiredUser().

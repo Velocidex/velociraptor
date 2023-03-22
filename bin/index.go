@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/datastore"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services/indexing"
 	"www.velocidex.com/golang/velociraptor/startup"
@@ -19,6 +20,8 @@ var (
 )
 
 func doRebuildIndex() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredUser().
 		WithRequiredFrontend().

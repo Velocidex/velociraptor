@@ -126,6 +126,8 @@ func maybeGetOrgConfig(
 }
 
 func doShowConfig() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().
 		LoadAndValidate()
 	if err != nil {
@@ -227,6 +229,8 @@ func generateNewKeys(config_obj *config_proto.Config) error {
 }
 
 func doGenerateConfigNonInteractive() error {
+	logging.DisableLogging()
+
 	// We have to suppress writing to stdout so users can redirect
 	// output to a file.
 	logging.SuppressLogging = true
@@ -257,6 +261,8 @@ func doGenerateConfigNonInteractive() error {
 }
 
 func doRotateKeyConfig() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().LoadAndValidate()
 	if err != nil {
@@ -293,6 +299,8 @@ func doRotateKeyConfig() error {
 }
 
 func doReissueServerKeys() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().LoadAndValidate()
 	if err != nil {
@@ -344,6 +352,8 @@ func getClientConfig(config_obj *config_proto.Config) *config_proto.Config {
 }
 
 func doDumpClientConfig() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredClient().LoadAndValidate()
 	if err != nil {
@@ -375,6 +385,8 @@ func doDumpClientConfig() error {
 }
 
 func doDumpApiClientConfig() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredCA().
 		WithRequiredUser().

@@ -26,6 +26,7 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	"www.velocidex.com/golang/velociraptor/json"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/users"
 	"www.velocidex.com/golang/velociraptor/startup"
@@ -55,6 +56,8 @@ var (
 )
 
 func doAddUser() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().
 		WithRequiredUser().LoadAndValidate()
@@ -129,6 +132,8 @@ func doAddUser() error {
 }
 
 func doShowUser() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().LoadAndValidate()
 	if err != nil {
@@ -172,6 +177,8 @@ func doShowUser() error {
 }
 
 func doLockUser() error {
+	logging.DisableLogging()
+
 	config_obj, err := makeDefaultConfigLoader().
 		WithRequiredFrontend().LoadAndValidate()
 	if err != nil {
