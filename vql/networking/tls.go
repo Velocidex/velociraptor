@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/hex"
-	"fmt"
 	"time"
 
 	"github.com/go-errors/errors"
@@ -84,12 +83,9 @@ func customVerifyConnection(
 						return err
 					}
 
-					fmt.Println("XXX --- " + certSha256)
-
 					for _, hash := range config_obj.GetCertificateHashes() {
 						if hash == certSha256 {
 							// we found a matching cert, connection can continue
-							fmt.Printf("found match got %v expected %v", certSha256, hash)
 							return nil
 						}
 					}
