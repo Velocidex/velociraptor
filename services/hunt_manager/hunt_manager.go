@@ -467,7 +467,7 @@ func (self *HuntManager) participateInAllHunts(ctx context.Context,
 	})
 }
 
-// When a client is found to be missing a hunt, the format sends the
+// When a client is found to be missing a hunt, the foreman sends the
 // participation message. We can examine this message and decide if
 // the hunt really applies to this client.
 func (self *HuntManager) ProcessParticipation(
@@ -504,6 +504,7 @@ func (self *HuntManager) ProcessParticipation(
 		participation_row.HuntId)
 	if err != nil {
 		return nil
+
 		return fmt.Errorf("hunt_manager: %v already ran on client %v",
 			participation_row.HuntId, participation_row.ClientId)
 	}
@@ -529,10 +530,12 @@ func (self *HuntManager) ProcessParticipation(
 	if hunt_obj.Stats.Stopped ||
 		hunt_obj.State != api_proto.Hunt_RUNNING {
 		// Hunt is stopped.
+		return nil
 		return fmt.Errorf("Hunt %v is stopped", participation_row.HuntId)
 
 	} else if !huntMatchesOS(hunt_obj, client_info) {
 		// Hunt does not match OS condition
+		return nil
 		return fmt.Errorf("Hunt %v: %v does not match OS condition",
 			participation_row.HuntId, participation_row.ClientId)
 
@@ -541,6 +544,7 @@ func (self *HuntManager) ProcessParticipation(
 
 	} else if !huntHasLabel(ctx, config_obj, hunt_obj,
 		participation_row.ClientId) {
+		return nil
 		return fmt.Errorf("Hunt %v: hunt label does not match with %v",
 			participation_row.HuntId, participation_row.ClientId)
 	}

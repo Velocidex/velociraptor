@@ -363,6 +363,7 @@ func doDumpClientConfig() error {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
+	config_obj.Services = services.GenericToolServices()
 	sm, err := startup.StartToolServices(ctx, config_obj)
 	if err != nil {
 		return fmt.Errorf("Starting services: %w", err)
