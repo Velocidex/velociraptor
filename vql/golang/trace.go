@@ -81,12 +81,12 @@ func (self *TraceFunction) Call(ctx context.Context,
 
 	subscope := scope.Copy()
 	subscope.AppendVars(ordereddict.NewDict().
-		Set("ZipFile.zip", buf.Bytes()))
+		Set("ZipFile", buf.Bytes()))
 
 	return (&networking.UploadFunction{}).Call(
 		ctx, subscope, ordereddict.NewDict().
 			Set("accessor", "scope").
-			Set("file", "ZipFile.zip").
+			Set("file", "ZipFile").
 			Set("name", fmt.Sprintf("Trace%d.zip",
 				utils.GetTime().Now().Unix())))
 }

@@ -13,6 +13,7 @@ import (
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -340,6 +341,12 @@ func (self *FlowContext) MaybeSendStats() *crypto_proto.VeloMessage {
 func (self *FlowContext) sendStats() {
 	if !self.final_stats_sent {
 		stats := self.getStats()
+		if self.final_stats_sent {
+			logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
+			logger.Debug("Sending final message for %v: %v",
+				self.flow_id, json.MustMarshalString(stats))
+		}
+
 		select {
 		case <-self.ctx.Done():
 		case self.output <- stats:
