@@ -51,6 +51,7 @@ func doUnzip() error {
 	config_obj := &config_proto.Config{}
 	config_obj.Frontend = server_config_obj.Frontend
 
+	config_obj.Services = services.GenericToolServices()
 	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
 

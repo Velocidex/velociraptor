@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 
 	"github.com/Velocidex/ordereddict"
+	errors "github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -41,6 +42,9 @@ var (
 
 	repack_command_exe = repack_command.Flag(
 		"exe", "Use an alternative exe.").String()
+
+	repack_command_msi = repack_command.Flag(
+		"msi", "Use an msi to repack (synonym to --exe).").String()
 
 	repack_command_config = repack_command.Arg(
 		"config_file", "The filename to write into the binary.").
@@ -58,9 +62,27 @@ var (
 func doRepack() error {
 	logging.DisableLogging()
 
-	if *repack_command_exe == "" {
-		*repack_command_exe, _ = os.Executable()
+	executable := *repack_command_exe
+	if executable == "" {
+		executable = *repack_command_msi
 	}
+
+	if executable == "" {
+		executable, _ = os.Executable()
+	}
+
+	// Make sure the executable path is an absolute file and we can
+	// read it.
+	if executable == "" {
+		return errors.New("Unable to find executable to repack")
+	}
+
+	abs_executable, err := filepath.Abs(executable)
+	if err != nil {
+		return err
+	}
+
+	executable = abs_executable
 
 	// Read the config file
 	config_data, err := ioutil.ReadAll(*repack_command_config)
@@ -72,6 +94,7 @@ func doRepack() error {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
+	config_obj.Services = services.GenericToolServices()
 	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
 
@@ -92,7 +115,7 @@ func doRepack() error {
 		Logger: log.New(&StdoutLogWriter{}, "", 0),
 		Env: ordereddict.NewDict().
 			Set("ConfigData", config_data).
-			Set("Exe", *repack_command_exe).
+			Set("Exe", executable).
 			Set("UploadName", filepath.Base(output_path)),
 	}
 

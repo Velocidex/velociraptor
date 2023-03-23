@@ -67,7 +67,6 @@ func doGrant() error {
 	defer cancel()
 
 	config_obj.Services = services.GenericToolServices()
-
 	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
 
@@ -154,6 +153,7 @@ func doShow() error {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
+	config_obj.Services = services.GenericToolServices()
 	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
 
@@ -162,10 +162,11 @@ func doShow() error {
 	}
 
 	principal := *show_command_principal
+
 	existing_policy, err := services.GetPolicy(config_obj, principal)
 	if err != nil {
-		return fmt.Errorf("Unable to load existing policy for '%v' ",
-			principal)
+		return fmt.Errorf("Unable to load existing policy for '%v': %v ",
+			principal, err)
 	}
 
 	if *show_command_effective {

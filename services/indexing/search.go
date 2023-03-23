@@ -275,6 +275,8 @@ func (self *Indexer) searchClientIndexNameOnly(
 	total_count := 0
 	scope := vql_subsystem.MakeScope()
 
+	seen := make(map[string]bool)
+
 	prefix, filter := splitSearchTermIntoPrefixAndFilter(scope, in.Query)
 	for hit := range self.SearchIndexWithPrefix(ctx, config_obj, prefix) {
 		if hit == nil {
@@ -290,6 +292,13 @@ func (self *Indexer) searchClientIndexNameOnly(
 		if uint64(total_count) < in.Offset {
 			continue
 		}
+
+		// Uniquify the labels
+		_, pres := seen[hit.Term]
+		if pres {
+			continue
+		}
+		seen[hit.Term] = true
 
 		result.Names = append(result.Names, hit.Term)
 		if uint64(len(result.Names)) > limit {
