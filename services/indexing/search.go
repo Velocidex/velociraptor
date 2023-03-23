@@ -306,6 +306,8 @@ func (self *Indexer) searchClientIndexNameOnly(
 		}
 	}
 
+	sort.Strings(result.Names)
+
 	return result, nil
 }
 

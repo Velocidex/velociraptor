@@ -5,12 +5,23 @@ package authenticode
 import (
 	"fmt"
 	"runtime"
+	"sync"
 	"unsafe"
 
 	windows "www.velocidex.com/golang/velociraptor/vql/windows"
 )
 
+var (
+	mu sync.Mutex
+)
+
 func VerifyFileSignature(normalized_path string) string {
+	// This API function can not run on multiple threads
+	// safely. Restrict to running on a single thread at the time. See
+	// #2574
+	mu.Lock()
+	defer mu.Unlock()
+
 	// Try to lock to OS thread to ensure safer API call
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
