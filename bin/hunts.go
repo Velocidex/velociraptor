@@ -40,7 +40,6 @@ func doHuntReconstruct() error {
 	defer cancel()
 
 	config_obj.Services = services.GenericToolServices()
-
 	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
 

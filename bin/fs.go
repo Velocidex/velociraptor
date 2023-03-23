@@ -131,6 +131,7 @@ func doLS(path, accessor string) error {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
+	config_obj.Services = services.GenericToolServices()
 	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
 

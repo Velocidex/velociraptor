@@ -467,10 +467,22 @@ func (self *HuntManager) participateInAllHunts(ctx context.Context,
 	})
 }
 
-// When a client is found to be missing a hunt, the format sends the
+// When a client is found to be missing a hunt, the foreman sends the
 // participation message. We can examine this message and decide if
 // the hunt really applies to this client.
 func (self *HuntManager) ProcessParticipation(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	row *ordereddict.Dict) error {
+
+	// Ignore errors from the callback since they are not really
+	// errors just reasons why the cliet should be ignored. There is
+	// no need to log them.
+	_ = self.ProcessParticipationWithError(ctx, config_obj, row)
+	return nil
+}
+
+func (self *HuntManager) ProcessParticipationWithError(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	row *ordereddict.Dict) error {
@@ -503,7 +515,6 @@ func (self *HuntManager) ProcessParticipation(
 	err = checkHuntRanOnClient(config_obj, participation_row.ClientId,
 		participation_row.HuntId)
 	if err != nil {
-		return nil
 		return fmt.Errorf("hunt_manager: %v already ran on client %v",
 			participation_row.HuntId, participation_row.ClientId)
 	}
