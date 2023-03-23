@@ -1,26 +1,25 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2022 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2022 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package networking
 
 import (
 	"context"
 	"crypto/tls"
-	"crypto/x509"
 	"errors"
 	"fmt"
 	"io"
@@ -39,7 +38,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -183,127 +181,27 @@ func (self *HTTPClientCache) GetHttpClient(
 	return result, nil
 }
 
-// If we deployed Velociraptor using self signed certificates we want
-// to be able to trust our own server. Our own server is signed by our
-// own CA and also may have a different common name (not related to
-// DNS). For example, in self signed mode, the server certificate is
-// signed for VelociraptorServer but may be served over
-// "localhost". Using the default TLS configuration this connection
-// will be rejected.
-
-// Therefore in the special case where the server cert is signed by
-// our own CA, and the Subject name is the pinned server name
-// (VelociraptorServer), we do not need to compare the server's common
-// name with the url.
-
-// This function is based on
-// https://go.dev/src/crypto/tls/handshake_client.go::verifyServerCertificate
-func customVerifyConnection(
-	CA_Pool *x509.CertPool,
-	config_obj *config_proto.ClientConfig) func(conn tls.ConnectionState) error {
-
-	// Check if the cert was signed by the Velociraptor CA
-	private_opts := x509.VerifyOptions{
-		CurrentTime:   time.Now(),
-		Intermediates: x509.NewCertPool(),
-		Roots:         x509.NewCertPool(),
-	}
-	if config_obj != nil {
-		private_opts.Roots.AppendCertsFromPEM([]byte(config_obj.CaCertificate))
-	}
-
-	return func(conn tls.ConnectionState) error {
-		// Used to verify certs using public roots
-		public_opts := x509.VerifyOptions{
-			CurrentTime:   time.Now(),
-			Intermediates: x509.NewCertPool(),
-			DNSName:       conn.ServerName,
-			Roots:         CA_Pool,
-		}
-
-		// First parse all the server certs so we can verify them. The
-		// server presents its main cert first, then any following
-		// intermediates.
-		var server_cert *x509.Certificate
-
-		for i, cert := range conn.PeerCertificates {
-			// First cert is server cert.
-			if i == 0 {
-				server_cert = cert
-
-				// Velociraptor does not allow intermediates so this
-				// should be sufficient to verify that the
-				// Velociraptor CA signed it.
-				_, err := server_cert.Verify(private_opts)
-				if err == nil {
-					// The Velociraptor CA signed it - we disregard
-					// the DNS name and allow it.
-					return nil
-				}
-
-			} else {
-				public_opts.Intermediates.AddCert(cert)
-			}
-		}
-
-		if server_cert == nil {
-			return errors.New("Unknown server cert")
-		}
-
-		// Perform normal verification.
-		_, err := server_cert.Verify(public_opts)
-		return err
-	}
-}
-
 func GetDefaultHTTPClient(
 	config_obj *config_proto.ClientConfig,
 	extra_roots string,
 	cookie_jar *ordereddict.Dict) (*http.Client, error) {
 
-	CA_Pool := x509.NewCertPool()
-	if config_obj != nil {
-		err := crypto.AddDefaultCerts(config_obj, CA_Pool)
-		if err != nil {
-			return nil, err
-		}
+	transport, err := GetHttpTransport(config_obj)
+	if err != nil {
+		return nil, err
 	}
 
-	// Allow access to public servers.
-	crypto.AddPublicRoots(CA_Pool)
-
 	if extra_roots != "" {
-		if !CA_Pool.AppendCertsFromPEM([]byte(extra_roots)) {
+		if !transport.TLSClientConfig.RootCAs.AppendCertsFromPEM([]byte(extra_roots)) {
 			return nil, errors.New("Unable to parse root CA")
 		}
 	}
 
-	transport := http.DefaultTransport.(*http.Transport).Clone()
-	transport.TLSClientConfig = &tls.Config{
-		MinVersion:         tls.VersionTLS12,
-		ClientSessionCache: tls.NewLRUClientSessionCache(100),
-		RootCAs:            CA_Pool,
-
-		// Not actually skipping, we check the
-		// cert in VerifyPeerCertificate
-		InsecureSkipVerify: true,
-		NextProtos:         []string{"http/1.1"},
-		VerifyConnection:   customVerifyConnection(CA_Pool, config_obj),
-	}
-	transport.Proxy = proxyHandler
-	transport.Dial = (&net.Dialer{
-		KeepAlive: 600 * time.Second,
-	}).Dial
-	transport.MaxIdleConnsPerHost = 10
-	transport.MaxIdleConns = 10
-
-	result := &http.Client{
+	return &http.Client{
 		Timeout:   time.Second * 10000,
 		Jar:       NewDictJar(cookie_jar),
 		Transport: transport,
-	}
-
-	return result, nil
+	}, nil
 }
 
 func encodeParams(arg *HttpPluginRequest, scope vfilter.Scope) *url.Values {
