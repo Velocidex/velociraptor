@@ -475,6 +475,18 @@ func (self *HuntManager) ProcessParticipation(
 	config_obj *config_proto.Config,
 	row *ordereddict.Dict) error {
 
+	// Ignore errors from the callback since they are not really
+	// errors just reasons why the cliet should be ignored. There is
+	// no need to log them.
+	_ = self.ProcessParticipationWithError(ctx, config_obj, row)
+	return nil
+}
+
+func (self *HuntManager) ProcessParticipationWithError(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	row *ordereddict.Dict) error {
+
 	participation_row := &ParticipationRecord{}
 	err := vfilter.ExtractArgs(self.scope, row, participation_row)
 	if err != nil {
@@ -503,8 +515,6 @@ func (self *HuntManager) ProcessParticipation(
 	err = checkHuntRanOnClient(config_obj, participation_row.ClientId,
 		participation_row.HuntId)
 	if err != nil {
-		return nil
-
 		return fmt.Errorf("hunt_manager: %v already ran on client %v",
 			participation_row.HuntId, participation_row.ClientId)
 	}
@@ -530,12 +540,10 @@ func (self *HuntManager) ProcessParticipation(
 	if hunt_obj.Stats.Stopped ||
 		hunt_obj.State != api_proto.Hunt_RUNNING {
 		// Hunt is stopped.
-		return nil
 		return fmt.Errorf("Hunt %v is stopped", participation_row.HuntId)
 
 	} else if !huntMatchesOS(hunt_obj, client_info) {
 		// Hunt does not match OS condition
-		return nil
 		return fmt.Errorf("Hunt %v: %v does not match OS condition",
 			participation_row.HuntId, participation_row.ClientId)
 
@@ -544,7 +552,6 @@ func (self *HuntManager) ProcessParticipation(
 
 	} else if !huntHasLabel(ctx, config_obj, hunt_obj,
 		participation_row.ClientId) {
-		return nil
 		return fmt.Errorf("Hunt %v: hunt label does not match with %v",
 			participation_row.HuntId, participation_row.ClientId)
 	}
