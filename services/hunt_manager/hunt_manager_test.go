@@ -573,7 +573,7 @@ func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
 	assert.NoError(t, err)
 
 	// Force the hunt manager to process a participation row
-	err = hunt_manager.HuntManagerForTests.ProcessParticipation(
+	err = hunt_manager.HuntManagerForTests.ProcessParticipationWithError(
 		self.Ctx, self.ConfigObj,
 		ordereddict.NewDict().
 			Set("HuntId", self.hunt_id).

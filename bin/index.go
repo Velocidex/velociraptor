@@ -7,6 +7,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/datastore"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/indexing"
 	"www.velocidex.com/golang/velociraptor/startup"
 )
@@ -33,6 +34,7 @@ func doRebuildIndex() error {
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
+	config_obj.Services = services.GenericToolServices()
 	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
 

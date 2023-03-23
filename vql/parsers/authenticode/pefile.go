@@ -4,12 +4,17 @@ package authenticode
 
 import (
 	"fmt"
+	"runtime"
 	"unsafe"
 
 	windows "www.velocidex.com/golang/velociraptor/vql/windows"
 )
 
 func VerifyFileSignature(normalized_path string) string {
+	// Try to lock to OS thread to ensure safer API call
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+
 	err := windows.HasWintrustDll()
 	if err != nil {
 		return fmt.Sprintf("untrusted (%v)", err)
