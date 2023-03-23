@@ -152,6 +152,12 @@ func (self *FlowContext) IsFlowComplete() bool {
 }
 
 func (self *FlowContext) isFlowComplete() bool {
+	// If we have no responders then we have not started executing
+	// anything yet.
+	if len(self.responders) == 0 {
+		return false
+	}
+
 	for _, r := range self.responders {
 		if !r.IsComplete() {
 			return false
@@ -333,9 +339,10 @@ func (self *FlowContext) MaybeSendStats() *crypto_proto.VeloMessage {
 // send the stats immediately.
 func (self *FlowContext) sendStats() {
 	if !self.final_stats_sent {
+		stats := self.getStats()
 		select {
 		case <-self.ctx.Done():
-		case self.output <- self.getStats():
+		case self.output <- stats:
 		}
 	}
 }
