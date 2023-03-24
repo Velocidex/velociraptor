@@ -104,7 +104,7 @@ func (self *AuthenticodeFunction) Call(ctx context.Context,
 			Update("MoreInfoLink", utils.GetString(signer, "Signer.AuthenticatedAttributes.MoreInfo")).
 			Update("Timestamp", utils.GetAny(signer, "Signer.AuthenticatedAttributes.SigningTime")).
 			Update("Trusted", func() vfilter.Any {
-				return VerifyFileSignature(normalized_path)
+				return VerifyFileSignature(scope, normalized_path)
 			})
 
 		if arg.Verbose {

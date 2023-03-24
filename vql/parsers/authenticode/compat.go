@@ -7,12 +7,15 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/vfilter"
 )
 
 // Placeholder for non windows system. This will mostly work except
 // verification wont be available.
 
-func VerifyFileSignature(normalized_path string) string {
+func VerifyFileSignature(
+	scope vfilter.Scope,
+	normalized_path string) string {
 	return "Unknown (No API access)"
 }
 

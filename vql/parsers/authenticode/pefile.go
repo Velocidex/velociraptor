@@ -8,14 +8,25 @@ import (
 	"sync"
 	"unsafe"
 
+	"www.velocidex.com/golang/velociraptor/constants"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	windows "www.velocidex.com/golang/velociraptor/vql/windows"
+	"www.velocidex.com/golang/vfilter"
 )
 
 var (
 	mu sync.Mutex
 )
 
-func VerifyFileSignature(normalized_path string) string {
+func VerifyFileSignature(
+	scope vfilter.Scope,
+	normalized_path string) string {
+
+	if vql_subsystem.GetBoolFromRow(scope, scope,
+		constants.DISABLE_DANGEROUS_API_CALLS) {
+		return "Unknown"
+	}
+
 	// This API function can not run on multiple threads
 	// safely. Restrict to running on a single thread at the time. See
 	// #2574
