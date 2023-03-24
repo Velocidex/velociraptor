@@ -574,12 +574,13 @@ type ClientConfig struct {
 	//
 	// Example (yaml):
 	//
-	// 	Client:
-	//		FallbackAddresses:
-	//	    	"google.com:443": "localhost:8443"
+	//	Client:
+	//	  fallback_addresses:
+	//	    "my-velociraptor-server.com:443": "123.123.123.123:443"
 	//
-	// This makes that if https://google.com is not reachable, localhost:8443 will be
-	// used instead.
+	// This makes that if https://my-velociraptor-server.com is not reachable (for example
+	// if DNS is not available due to a network isolation because of an ongoing incident),
+	// 123.123.123.123:443 will be used as a fallback.
 	FallbackAddresses map[string]string `protobuf:"bytes,42,rep,name=fallback_addresses,json=fallbackAddresses,proto3" json:"fallback_addresses,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
 }
 

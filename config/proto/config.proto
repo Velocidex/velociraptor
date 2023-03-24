@@ -274,13 +274,13 @@ message ClientConfig {
     // the addresses include the port after a colon (see net.Dial).
     //
     // Example (yaml):
-    //  Config:
-    //      Client:
-    //          FallbackAddresses:
-    //              "google.com:443": "localhost:8443"
+    //  Client:
+    //    fallback_addresses:
+    //      "my-velociraptor-server.com:443": "123.123.123.123:443"
     //
-    // This makes that if https://google.com is not reachable, localhost:8443 will be
-    // used instead.
+    // This makes that if https://my-velociraptor-server.com is not reachable (for example
+    // if DNS is not available due to a network isolation because of an ongoing incident),
+    // 123.123.123.123:443 will be used as a fallback.
     map<string, string> fallback_addresses = 42 [(sem_type) = {
             description: "This mapping provides fallback addresses for network targets so that a connection may still be established."
         }];
