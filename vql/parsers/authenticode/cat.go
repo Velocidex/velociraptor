@@ -191,7 +191,7 @@ func WinVerifyTrustErrors(ret uint32) string {
 	case TRUST_E_SUBJECT_FORM_UNKNOWN:
 		return "TRUST_E_SUBJECT_FORM_UNKNOWN"
 	default:
-		return "TRUST_E_ACTION_UNKNOWN"
+		return fmt.Sprintf("TRUST_E_ACTION_UNKNOWN %#x", ret)
 	}
 
 }
