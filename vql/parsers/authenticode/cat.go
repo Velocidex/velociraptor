@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"runtime"
 	"syscall"
 	"unsafe"
 
@@ -14,9 +15,11 @@ import (
 	"github.com/Velocidex/pkcs7"
 	"www.velocidex.com/golang/go-pe"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	windows "www.velocidex.com/golang/velociraptor/vql/windows"
+	"www.velocidex.com/golang/vfilter"
 )
 
 const (
@@ -36,8 +39,26 @@ var (
 
 func VerifyCatalogSignature(
 	config_obj *config_proto.Config,
+	scope vfilter.Scope,
 	fd *os.File, normalized_path string,
 	output *ordereddict.Dict) (string, error) {
+
+	if vql_subsystem.GetBoolFromRow(scope, scope,
+		constants.DISABLE_DANGEROUS_API_CALLS) {
+		output.Update("Trusted", "Unknown")
+		return "", nil
+	}
+
+	// This API function can not run on multiple threads
+	// safely. Restrict to running on a single thread at the time. See
+	// #2574
+	mu.Lock()
+	defer mu.Unlock()
+
+	// Try to lock to OS thread to ensure safer API call
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+
 	err := windows.HasWintrustDll()
 	if err != nil {
 		return "", err
@@ -55,8 +76,6 @@ func VerifyCatalogSignature(
 	var CatAdminHandle syscall.Handle
 	err = windows.CryptCATAdminAcquireContext2(&CatAdminHandle, nil, nil, nil, 0)
 	if err != nil {
-		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-		logger.Error("CryptCATAdminAcquireContext2 %v\n", err)
 		return "", err
 	}
 	defer windows.CryptCATAdminReleaseContext(CatAdminHandle, 0)
@@ -67,8 +86,6 @@ func VerifyCatalogSignature(
 	err = windows.CryptCATAdminCalcHashFromFileHandle2(CatAdminHandle, fd.Fd(),
 		&hash_length, (*byte)(unsafe.Pointer(&hash[0])), 0)
 	if err != nil {
-		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-		logger.Error("CryptCATAdminCalcHashFromFileHandle2 %v\n", err)
 		return "", err
 	}
 
@@ -133,15 +150,15 @@ func VerifyCatalogSignature(
 	trustData.DwStateAction = windows.WTD_STATEACTION_VERIFY
 	trustData.DwProvFlags = windows.WTD_SAFER_FLAG
 
-	ret, _ := windows.WinVerifyTrust(windows.INVALID_HANDLE_VALUE, &DRIVER_ACTION_VERIFY,
-		trustData)
+	ret, _ := windows.WinVerifyTrust(windows.INVALID_HANDLE_VALUE,
+		&WINTRUST_ACTION_GENERIC_VERIFY_V2, trustData)
 	output.Update("Trusted", WinVerifyTrustErrors(ret))
 
 	// Any hWVTStateData must be released by a call with close.
 	trustData.DwStateAction = windows.WTD_STATEACTION_CLOSE
 
 	windows.WinVerifyTrust(windows.INVALID_HANDLE_VALUE,
-		&DRIVER_ACTION_VERIFY, trustData)
+		&WINTRUST_ACTION_GENERIC_VERIFY_V2, trustData)
 
 	return cat_file, nil
 }
