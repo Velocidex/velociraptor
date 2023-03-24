@@ -114,6 +114,8 @@ const (
 	// * Moves processing requirements from server to the client -
 	//   reducing server load.
 	CLIENT_API_VERSION_0_6_8 = uint32(4)
+
+	DISABLE_DANGEROUS_API_CALLS = "DISABLE_DANGEROUS_API_CALLS"
 )
 
 type key int
