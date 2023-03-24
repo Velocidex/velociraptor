@@ -68,15 +68,17 @@ func VerifyFileSignature(
 		windows.INVALID_HANDLE_VALUE,
 		&WINTRUST_ACTION_GENERIC_VERIFY_V2,
 		trustData)
-	if err != nil {
-		return fmt.Sprintf("untrusted (%v)", err)
-	}
 
 	// Any hWVTStateData must be released by a call with close.
+	// Close the handle regardless of err above.
 	trustData.DwStateAction = windows.WTD_STATEACTION_CLOSE
 
 	windows.WinVerifyTrust(windows.INVALID_HANDLE_VALUE,
-		&DRIVER_ACTION_VERIFY, trustData)
+		&WINTRUST_ACTION_GENERIC_VERIFY_V2, trustData)
+
+	if err != nil {
+		return fmt.Sprintf("untrusted (%v)", err)
+	}
 
 	return WinVerifyTrustErrors(ret)
 }
