@@ -21,6 +21,7 @@ func VerifyFileSignature(
 
 func VerifyCatalogSignature(
 	config_obj *config_proto.Config,
+	scope vfilter.Scope,
 	fd *os.File, normalized_path string,
 	output *ordereddict.Dict) (string, error) {
 	return "Unknown (No API access)", nil
