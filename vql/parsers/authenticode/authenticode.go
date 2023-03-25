@@ -127,7 +127,7 @@ func (self *AuthenticodeFunction) Call(ctx context.Context,
 		}
 
 		cat_file, err := VerifyCatalogSignature(
-			config_obj, fd, normalized_path, output)
+			config_obj, scope, fd, normalized_path, output)
 		if err == nil {
 			_ = ParseCatFile(cat_file, output, arg.Verbose)
 		}
