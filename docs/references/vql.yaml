@@ -2261,6 +2261,9 @@
     type: string
     description: If a flow id is specified we do not create a new flow, but instead
       add this flow_id to the hunt.
+  - name: relaunch
+    type: bool
+    description: If specified we relaunch the hunt on this client again.
   category: server
 - name: hunt_delete
   description: 'Delete a hunt. '
@@ -2318,6 +2321,23 @@
     type: bool
     description: If set we return less columns.
   category: server
+- name: hunt_update
+  description: Update a hunt.
+  type: Function
+  args:
+  - name: hunt_id
+    type: string
+    description: The hunt to update
+    required: true
+  - name: stop
+    type: bool
+    description: Stop the hunt
+  - name: start
+    type: bool
+    description: Start the hunt
+  - name: description
+    type: string
+    description: Update hunt description
 - name: hunts
   description: |
     Retrieve the list of hunts.
@@ -2751,11 +2771,6 @@
 - name: lookupSID
   description: Get information about the SID.
   type: Function
-  args:
-  - name: sid
-    type: string
-    description: 'A SID to lookup using LookupAccountSid '
-    required: true
   category: windows
 - name: lowcase
   type: Function
@@ -3723,6 +3738,9 @@
   - name: accessor
     type: string
     description: The accessor to use.
+  - name: base_offset
+    type: int64
+    description: The offset in the file for the base address.
   category: parsers
 - name: parse_pkcs7
   description: Parse a DER encoded pkcs7 string into an object.
@@ -4026,6 +4044,23 @@
     type: string
     description: The accessor to use to parse the path with
   category: plugin
+- name: pe_dump
+  description: Dump a PE file from process memory.
+  type: Function
+  args:
+  - name: pid
+    type: uint64
+    description: The pid to dump.
+    required: true
+  - name: base_offset
+    type: int64
+    description: The offset in the file for the base address.
+    required: true
+  - name: in_memory
+    type: uint64
+    description: By default we store to a tempfile and return the path. If this option
+      is larger than 0, we prepare the file in a memory buffer at the specified limit,
+      to avoid AV alerts on disk access.
 - name: pipe
   description: |
     A pipe allows plugins that use files to read data from a vql
@@ -4318,7 +4353,8 @@
   args:
   - name: pid
     type: int64
-    description: A process ID to list. If not provided list all processes.
+    description: A pid to list. If this is provided we are able to operate much faster
+      by only opening a single process.
   category: plugin
 - name: query
   description: Launch a subquery and materialize it into a list of rows.
