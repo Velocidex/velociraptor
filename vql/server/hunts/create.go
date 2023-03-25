@@ -23,6 +23,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -279,6 +280,7 @@ type AddToHuntFunctionArg struct {
 	ClientId string `vfilter:"required,field=client_id"`
 	HuntId   string `vfilter:"required,field=hunt_id"`
 	FlowId   string `vfilter:"optional,field=flow_id,doc=If a flow id is specified we do not create a new flow, but instead add this flow_id to the hunt."`
+	Relaunch bool   `vfilter:"optional,field=relaunch,doc=If specified we relaunch the hunt on this client again."`
 }
 
 type AddToHuntFunction struct{}
@@ -309,6 +311,65 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 	journal, _ := services.GetJournal(config_obj)
 	if journal == nil {
 		return vfilter.Null{}
+	}
+
+	// Relaunch the collection.
+	if arg.Relaunch {
+		hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
+		if err != nil {
+			return vfilter.Null{}
+		}
+
+		hunt_obj, pres := hunt_dispatcher.GetHunt(arg.HuntId)
+		if !pres || hunt_obj == nil ||
+			hunt_obj.StartRequest == nil ||
+			hunt_obj.StartRequest.CompiledCollectorArgs == nil {
+			scope.Log("hunt_add: Hunt id not found %v", arg.HuntId)
+			return vfilter.Null{}
+		}
+
+		launcher, err := services.GetLauncher(config_obj)
+		if err != nil {
+			return vfilter.Null{}
+		}
+
+		// Launch the collection against a client. We assume it is
+		// already compiled because hunts always pre-compile their
+		// artifacts.
+		request := proto.Clone(hunt_obj.StartRequest).(*flows_proto.ArtifactCollectorArgs)
+		request.ClientId = arg.ClientId
+
+		// Generate a new flow id for each request
+		request.FlowId = ""
+
+		arg.FlowId, err = launcher.ScheduleArtifactCollectionFromCollectorArgs(
+			ctx, config_obj, request, hunt_obj.StartRequest.CompiledCollectorArgs,
+			func() {
+				// Notify the client about it.
+				notifier, err := services.GetNotifier(config_obj)
+				if err == nil {
+					notifier.NotifyListener(ctx,
+						config_obj, arg.ClientId, "collect_client")
+				}
+			})
+		if err != nil {
+			scope.Log("hunt_add: %v", err)
+			return vfilter.Null{}
+		}
+
+		err = hunt_dispatcher.MutateHunt(ctx, config_obj,
+			&api_proto.HuntMutation{
+				HuntId: arg.HuntId,
+				Assignment: &api_proto.FlowAssignment{
+					ClientId: arg.ClientId,
+					FlowId:   arg.FlowId,
+				}})
+		if err != nil {
+			scope.Log("hunt_add: %v", err)
+			return vfilter.Null{}
+		}
+
+		return arg.FlowId
 	}
 
 	// Send this
