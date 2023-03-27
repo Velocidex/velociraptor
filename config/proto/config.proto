@@ -981,25 +981,36 @@ message CryptoConfig {
     string root_certs = 1;
 
     // Clients may connect to servers which use a self-signed certificate.
-    // This list allows to specify a set of certificate fingerprints (SHA256)
-    // which are used to validate TLS server certificates. If there's no match,
-    // certificate validation will fallback to checking the certificate against the
-    // client's CA file and, eventually, use public CA lists to verify the cert.
-    // Important: to enforce certificate pinning, set `ForceCertificatePinning' to true.
+    // This list allows to specify a set of certificate thumbprints (SHA256)
+    // which are used to validate TLS server certificates.
     //
     // Fingerprints can be generated with the OpenSSL command line utility:
     //   openssl s_client -connect www.google.com:443 < /dev/null | openssl x509 -fingerprint -sha256 -noout
     //
-    // Certificate hashes may or may not include colon characters. Capitalization
-    // of the hex digits is ignored by Velociraptor.
-    repeated string certificate_hashes = 2 [(sem_type) = {
-            description: "SHA256 hashes of certificates that the client will trust. Has precedence over ca_certificate because fingerprints are more specific."
+    // Certificate thumbprints may or may not include colon characters. Capitalization
+    // of the hex digits is ignored by Velociraptor. A thumbprint of any of the
+    // following forms (or combinations thereof) is fine:
+    //   E6:E2:8B:35:CE:C5:BA:C4:53:C5:AF:BF:2B:76:34:62:40:5C:D0:60:80:E1:30:1A:A7:A5:A9:DA:0C:8B:11:E1
+    //   E6E28B35CEC5BAC453C5AFBF2B763462405CD06080E1301AA7A5A9DA0C8B11E1
+    //   e6e28b35cec5bac453c5afbf2b763462405cd06080e1301aa7a5a9da0c8b11e1
+    repeated string certificate_thumbprints = 2 [(sem_type) = {
+            description: "SHA256 thumbprints of certificates that the client will trust."
         }];
 
-    // Forces TLS certificate pinning and aborts TLS sessions if none of the certificates
-    // of the cert chain has a known fingerprint.
-    bool force_certificate_pinning = 3 [(sem_type) = {
-            description: "Forces the validation of certificates against the CertificateHashes list. Only certificates which have a known fingerprint will be accepted."
+    // Velociraptor supports several ways of verifying TLS certificates. The
+    // certificate_verification_mode specifies which of the three modes is applied.
+    // Currently, three modes are available:
+    //   - PKI (the default): verify TLS certs against public CA lists, the list
+    //                        of additional root_certs, and the built-in CA cert
+    //   - PKI_OR_THUMBPRINT: the same as PKI with the addition that certificates
+    //                        which have a thumbprint that is present in
+    //                        certificate_thumbprints will be accepted as well
+    //   - THUMBPRINT_ONLY: Velociraptor only accepts certificates which have a
+    //                      matching thumbprint in certificate_thumbprints. All
+    //                      other certificates will be rejected. This mode is
+    //                      also known as certificate pinning.
+    string certificate_verification_mode = 3 [(sem_type) = {
+            description: "Selects the way in which Velociraptor verifies TLS certificates. Allowed values: PKI (the default), PKI_OR_THUMBPRINT, THUMBPRINT_ONLY"
         }];
 }
 

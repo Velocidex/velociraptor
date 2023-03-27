@@ -5,10 +5,10 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/hex"
+	"errors"
 	"strings"
 	"time"
 
-	"github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 )
@@ -26,6 +26,30 @@ func hashCertificate(cert *x509.Certificate) (string, error) {
 
 	checksum := h.Sum(nil)
 	return hex.EncodeToString(checksum), nil
+}
+
+type VerificationMode int
+
+const (
+	UnknownMode VerificationMode = iota
+	PkiOnly
+	PkiOrThumbprint
+	ThumbprintOnly
+)
+
+func convertVerificationMode(s string) VerificationMode {
+	switch strings.ToUpper(s) {
+	case "", "PKI":
+		return PkiOnly
+
+	case "PKI_OR_THUMBPRINT":
+		return PkiOrThumbprint
+
+	case "THUMBPRINT_ONLY":
+		return ThumbprintOnly
+	}
+
+	return UnknownMode
 }
 
 // If we deployed Velociraptor using self signed certificates we want
@@ -59,14 +83,16 @@ func customVerifyConnection(
 
 	// this shouldn't be done for each connection attempt but currently
 	// there does not seem to be a way to store the modified hash list
-	origHashes := config_obj.GetCrypto().GetCertificateHashes()
-	hashList := make([]string, 0, len(origHashes))
+	origThumbprints := config_obj.GetCrypto().GetCertificateThumbprints()
+	thumbprintList := make([]string, 0, len(origThumbprints))
 
-	for _, hash := range origHashes {
-		hash = strings.ReplaceAll(hash, ":", "") // ignore colons
-		hash = strings.ToLower(hash)             // only use lowercase hash strings
-		hashList = append(hashList, hash)
+	for _, thumbprint := range origThumbprints {
+		thumbprint = strings.ReplaceAll(thumbprint, ":", "") // ignore colons
+		thumbprint = strings.ToLower(thumbprint)             // only use lowercase hash strings
+		thumbprintList = append(thumbprintList, thumbprint)
 	}
+
+	verificationMode := convertVerificationMode(config_obj.GetCrypto().GetCertificateVerificationMode())
 
 	return func(conn tls.ConnectionState) error {
 		// Used to verify certs using public roots
@@ -87,25 +113,27 @@ func customVerifyConnection(
 			if i == 0 {
 				server_cert = cert
 
-				// Check the fingerprint of the certificate first. If there
-				// is no match, fall back to testing against our CA cert.
-				if len(hashList) > 0 {
+				// If we're to verify thumbprints, we do that first so that
+				// we can skip the rest of the certificate validation when
+				// we found a known thumbprint
+				if verificationMode > PkiOnly {
 					certSha256, err := hashCertificate(cert)
 					if err != nil {
 						return err
 					}
 
-					for _, hash := range hashList {
+					for _, hash := range thumbprintList {
 						if hash == certSha256 {
-							// we found a matching cert, connection can continue
+							// we found a matching thumbprint, connection can continue
 							return nil
 						}
 					}
 
 					// if certificate pinning is enforced, we need to abort the
-					// connection when there was no match
-					if config_obj.GetCrypto().ForceCertificatePinning {
-						return errors.New("no certificate in the chain had a known fingerprint")
+					// connection when there was no match regardless of the fact
+					// that a certificate may still be cryptographically valid
+					if verificationMode >= ThumbprintOnly {
+						return errors.New("no certificate in the chain had a known thumbprint")
 					}
 				}
 
