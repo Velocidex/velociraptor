@@ -50,13 +50,13 @@
 }
 
 .user-list {
-    max-height: calc(100vh - 160px);
+    max-height: calc(100vh - 180px);
     overflow-y: auto;
     overflow-x: hidden;
 }
 
 .org-list {
-    max-height: calc(100vh - 145px);
+    max-height: calc(100vh - 180px);
     overflow-y: auto;
     overflow-x: hidden;
 }
