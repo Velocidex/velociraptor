@@ -4,6 +4,8 @@ description: |
 
 type: CLIENT
 export: |
+    -- GUIDs are taken from
+    -- https://github.com/chipsec/chipsec/blob/main/chipsec/hal/uefi_common.py
     LET PROFILE = '''[
       ["EfiSignatures", 0, [
         ["__tmp", 0, "uint32"],
@@ -64,8 +66,12 @@ export: |
         }]
       ]]
     ]'''
-  
-    LET GetSignatures(Namespace, Name) = Select Name as Name, parse_binary(accessor="data", filename=Value, profile=PROFILE, struct="EfiSignatures").Signatures as Signatures from efivariables(namespace=Namespace, name=Name, value=True)
+
+    LET GetSignatures(Namespace, Name) = Select Name as Name,
+       parse_binary(accessor="data", filename=Value,
+                    profile=PROFILE, struct="EfiSignatures").Signatures as Signatures
+    FROM efivariables(namespace=Namespace, name=Name, value=True)
+
 sources:
   - name: Certificates
     query: |
@@ -87,7 +93,8 @@ sources:
                       Select Name, Owner, Cert as Certificate From Payload
                   })
           })
-      Select * from chain(
+
+       Select * from chain(
           a={ Select * From PK },
           b={ Select * From DB })
 
