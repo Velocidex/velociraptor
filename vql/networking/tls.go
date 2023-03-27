@@ -77,13 +77,13 @@ func customVerifyConnection(
 
 				// Check the fingerprint of the certificate first. If there
 				// is no match, fall back to testing against our CA cert.
-				if len(config_obj.GetCertificateHashes()) > 0 {
+				if hashList := config_obj.GetCrypto().GetCertificateHashes(); len(hashList) > 0 {
 					certSha256, err := hashCertificate(cert)
 					if err != nil {
 						return err
 					}
 
-					for _, hash := range config_obj.GetCertificateHashes() {
+					for _, hash := range hashList {
 						if hash == certSha256 {
 							// we found a matching cert, connection can continue
 							return nil
@@ -92,7 +92,7 @@ func customVerifyConnection(
 
 					// if certificate pinning is enforced, we need to abort the
 					// connection when there was no match
-					if config_obj.ForceCertificatePinning {
+					if config_obj.GetCrypto().ForceCertificatePinning {
 						return errors.New("no certificate in the chain had a known fingerprint")
 					}
 				}

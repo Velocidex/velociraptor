@@ -253,22 +253,6 @@ message ClientConfig {
     // frequently. The default is 1 day (86400 seconds).
     int64 client_info_update_time = 40;
 
-    // Clients may connect to servers which use a self-signed certificate.
-    // This list allows to specify a set of certificate fingerprints (SHA256)
-    // which are used to validate TLS server certificates. If there's no match,
-    // certificate validation will fallback to checking the certificate against the
-    // client's CA file and, eventually, use public CA lists to verify the cert.
-    // Important: to enforce certificate pinning, set `ForceCertificatePinning' to true.
-    repeated string certificate_hashes = 41 [(sem_type) = {
-            description: "SHA256 hashes of certificates that the client will trust. Has precedence over ca_certificate because fingerprints are more specific."
-        }];
-
-    // Forces TLS certificate pinning and aborts TLS sessions if none of the certificates
-    // of the cert chain has a known fingerprint.
-    bool force_certificate_pinning = 43 [(sem_type) = {
-            description: "Forces the validation of certificates against the CertificateHashes list. Only certificates which have a known fingerprint will be accepted."
-        }];
-
     // Clients may not be able to reach a given host in the internet. For that case,
     // this mapping contains alternatives which may be used instead. It's crucial that
     // the addresses include the port after a colon (see net.Dial).
@@ -281,7 +265,7 @@ message ClientConfig {
     // This makes that if https://my-velociraptor-server.com is not reachable (for example
     // if DNS is not available due to a network isolation because of an ongoing incident),
     // 123.123.123.123:443 will be used as a fallback.
-    map<string, string> fallback_addresses = 42 [(sem_type) = {
+    map<string, string> fallback_addresses = 41 [(sem_type) = {
             description: "This mapping provides fallback addresses for network targets so that a connection may still be established."
         }];
 }
@@ -995,6 +979,22 @@ message CryptoConfig {
     // Include these root CA's to verify certificates (in addition to
     // built in CA's). Certs should be concatenated in PEM format.
     string root_certs = 1;
+
+    // Clients may connect to servers which use a self-signed certificate.
+    // This list allows to specify a set of certificate fingerprints (SHA256)
+    // which are used to validate TLS server certificates. If there's no match,
+    // certificate validation will fallback to checking the certificate against the
+    // client's CA file and, eventually, use public CA lists to verify the cert.
+    // Important: to enforce certificate pinning, set `ForceCertificatePinning' to true.
+    repeated string certificate_hashes = 2 [(sem_type) = {
+            description: "SHA256 hashes of certificates that the client will trust. Has precedence over ca_certificate because fingerprints are more specific."
+        }];
+
+    // Forces TLS certificate pinning and aborts TLS sessions if none of the certificates
+    // of the cert chain has a known fingerprint.
+    bool force_certificate_pinning = 3 [(sem_type) = {
+            description: "Forces the validation of certificates against the CertificateHashes list. Only certificates which have a known fingerprint will be accepted."
+        }];
 }
 
 message MountPoint {
