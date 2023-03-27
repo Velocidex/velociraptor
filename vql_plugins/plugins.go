@@ -24,6 +24,7 @@ package plugins
 import (
 	_ "www.velocidex.com/golang/velociraptor/vql/aggregates"
 	_ "www.velocidex.com/golang/velociraptor/vql/common"
+	_ "www.velocidex.com/golang/velociraptor/vql/efi"
 	_ "www.velocidex.com/golang/velociraptor/vql/filesystem"
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
 	_ "www.velocidex.com/golang/velociraptor/vql/golang"

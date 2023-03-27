@@ -1,6 +1,6 @@
 //go:build linux
 
-package vql
+package efi
 
 import (
 	"fmt"

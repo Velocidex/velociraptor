@@ -1,6 +1,6 @@
 //go:build windows
 
-package vql
+package efi
 
 import (
 	"bytes"

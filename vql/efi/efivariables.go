@@ -1,9 +1,10 @@
-package vql
+package efi
 
 import (
 	"context"
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -24,7 +25,7 @@ func runEfiVariables(
 	ctx context.Context, scope vfilter.Scope, args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
 
-	err := CheckAccess(scope, acls.MACHINE_STATE)
+	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 	if err != nil {
 		scope.Error("efivariables: %v", err)
 		return result
@@ -55,7 +56,7 @@ func runEfiVariables(
 }
 
 func init() {
-	RegisterPlugin(&vfilter.GenericListPlugin{
+	vql_subsystem.RegisterPlugin(&vfilter.GenericListPlugin{
 		PluginName: "efivariables",
 		Doc:        "Enumerate efi variables.",
 		Function:   runEfiVariables,
