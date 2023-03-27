@@ -42,6 +42,13 @@
   "error": ""
  },
  {
+  "type": "Stats",
+  "data": {
+   "VFSPath": "ds:/clients/C.123/collections/F.1234/stats.json.db"
+  },
+  "error": ""
+ },
+ {
   "type": "Notebook",
   "data": {
    "VFSPath": "ds:/clients/C.123/collections/F.1234/notebook/N.F.1234-C.123.json.db"

@@ -29,6 +29,8 @@ class VeloHunts extends React.Component {
         hunts: [],
 
         loading: true,
+
+        filter: "",
     }
 
     componentDidMount = () => {
@@ -76,7 +78,13 @@ class VeloHunts extends React.Component {
         });
     }
 
-    fetchHunts = () => {
+    fetchHunts = (filter) => {
+        if (!_.isUndefined(filter) && filter !== this.state.filter) {
+            this.setState({filter: filter});
+        } else {
+            filter = this.state.filter;
+        }
+
         let selected_hunt_id = this.props.match && this.props.match.params &&
             this.props.match.params.hunt_id;
 
@@ -89,6 +97,7 @@ class VeloHunts extends React.Component {
             count: 2000,
             offset: 0,
             summary: true,
+            user_filter: filter,
         }, this.list_hunts_source.token).then((response) => {
             if (response.cancel) return;
 
