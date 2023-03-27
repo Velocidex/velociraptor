@@ -48,3 +48,15 @@
     padding-right: 20px;
     display: inline;
 }
+
+.user-list {
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.org-list {
+    max-height: calc(100vh - 180px);
+    overflow-y: auto;
+    overflow-x: hidden;
+}

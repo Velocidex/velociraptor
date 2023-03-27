@@ -50,6 +50,14 @@ func (self *Launcher) DeleteFlow(
 		file_store_factory, flow_path_manager.UploadMetadata())
 	if err == nil {
 		for row := range reader.Rows(ctx) {
+			components, pres := row.GetStrings("_Components")
+			if pres {
+				pathspec := path_specs.NewUnsafeFilestorePath(
+					components...).SetType(api.PATH_TYPE_FILESTORE_ANY)
+				r.emit_fs("Upload", pathspec)
+				continue
+			}
+
 			upload, pres := row.GetString("vfs_path")
 			if pres {
 				// Each row is the full filestore path of the upload.
@@ -60,6 +68,7 @@ func (self *Launcher) DeleteFlow(
 				r.emit_fs("Upload", pathspec)
 			}
 		}
+		reader.Close()
 	}
 
 	// Order results to facilitate deletion - container deletion
@@ -91,6 +100,7 @@ func (self *Launcher) DeleteFlow(
 		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
 	r.emit_ds("CollectionContext", flow_path_manager.Path())
 	r.emit_ds("Task", flow_path_manager.Task())
+	r.emit_ds("Stats", flow_path_manager.Stats())
 
 	// Walk the flow's datastore and filestore
 	db, err := datastore.GetDB(config_obj)
