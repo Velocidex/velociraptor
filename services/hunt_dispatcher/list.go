@@ -61,6 +61,11 @@ func (self *HuntDispatcher) ListHunts(
 	items := make([]*api_proto.Hunt, 0, end)
 	err = dispatcher.ApplyFuncOnHunts(
 		func(hunt *api_proto.Hunt) error {
+			if in.UserFilter != "" &&
+				in.UserFilter != hunt.Creator {
+				return nil
+			}
+
 			// Only show non-archived hunts.
 			if in.IncludeArchived ||
 				hunt.State != api_proto.Hunt_ARCHIVED {

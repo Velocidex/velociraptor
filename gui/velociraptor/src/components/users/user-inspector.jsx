@@ -368,7 +368,7 @@ class UsersOverview extends Component {
 
 
               <Col sm="4">
-                  <Container className="selectable">
+                  <Container className="selectable user-list">
                     <Table  bordered hover size="sm">
                       <thead>
                         <tr>
@@ -386,7 +386,7 @@ class UsersOverview extends Component {
                                 variant="outline-default"
                                 as="button">
                                 <FontAwesomeIcon icon="edit"/>
-				<span className="sr-only">{T("Update User Password")}</span>
+                <span className="sr-only">{T("Update User Password")}</span>
                               </Button>
                             }
                             <Button
@@ -399,7 +399,7 @@ class UsersOverview extends Component {
                               variant="outline-default"
                               as="button">
                               <FontAwesomeIcon icon="plus"/>
-			      <span className="sr-only">{T("Add a new user")}</span>
+                  <span className="sr-only">{T("Add a new user")}</span>
                             </Button>
                           </th>
                         </tr>
@@ -423,7 +423,7 @@ class UsersOverview extends Component {
                   </Container>
               </Col>
               <Col sm="4">
-                  <Container className="selectable">
+                  <Container className="selectable org-list">
                     <Table  bordered hover size="sm">
                       <thead>
                         <tr>
@@ -440,7 +440,7 @@ class UsersOverview extends Component {
                               variant="outline-default"
                               as="button">
                               <FontAwesomeIcon icon="plus"/>
-			      <span className="sr-only">{T("Assign user to Orgs")}</span>
+                  <span className="sr-only">{T("Assign user to Orgs")}</span>
                             </Button>
                           </th></tr>
                       </thead>
@@ -504,7 +504,7 @@ class OrgsOverview extends UsersOverview {
         return (
             <Row>
                  <Col sm="4">
-                   <Container className="selectable">
+                   <Container className="selectable org-list">
                     <Table  bordered hover size="sm">
                      <thead>
                        <tr><th>{T("Orgs")}</th></tr>
@@ -535,7 +535,7 @@ class OrgsOverview extends UsersOverview {
                     </Container>
                    </Col>
                  <Col sm="4">
-            <Container className="selectable">
+            <Container className="selectable user-list">
              <Table  bordered hover size="sm">
                      <thead>
                        <tr><th>{T("Users")}</th></tr>
