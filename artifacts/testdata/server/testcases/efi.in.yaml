@@ -1,0 +1,19 @@
+Queries:
+  - LET _ <= SELECT mock(plugin='efivariables', results=[
+      dict(Namespace='{d719b2cb-3d3a-4596-a3bc-dad00e67656f}',
+           Name="db",
+           Value=read_file(filename=srcDir + "/artifacts/testdata/files/efi/db.bin"))
+      ])
+      FROM scope()
+  - SELECT * FROM Artifact.Generic.System.EfiSignatures(source="Certificates")
+    LIMIT 5
+
+  - LET _ <= SELECT mock(plugin='efivariables', results=[
+      dict(Namespace='{d719b2cb-3d3a-4596-a3bc-dad00e67656f}',
+           Name="dbx",
+           Value=read_file(filename=srcDir + "/artifacts/testdata/files/efi/dbx.bin"))
+      ])
+      FROM scope()
+
+  - LET _ <= SELECT * FROM efivariables()
+  - SELECT * FROM Artifact.Generic.System.EfiSignatures(source="Hashes") LIMIT 5

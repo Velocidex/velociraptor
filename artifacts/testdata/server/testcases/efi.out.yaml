@@ -1,0 +1,206 @@
+LET _ <= SELECT mock(plugin='efivariables', results=[ dict(Namespace='{d719b2cb-3d3a-4596-a3bc-dad00e67656f}', Name="db", Value=read_file(filename=srcDir + "/artifacts/testdata/files/efi/db.bin")) ]) FROM scope()[]SELECT * FROM Artifact.Generic.System.EfiSignatures(source="Certificates") LIMIT 5[
+ {
+  "Name": "db",
+  "Owner": "{a3d5e95b-0a8f-4753-8735-445afb708f62}",
+  "Certificate": {
+   "SerialNumber": "e9d9ff69e6f3e7e4",
+   "SignatureAlgorithm": "SHA256-RSA",
+   "Subject": "C=US, ST=California, L=Palo Alto, O=VMware, Inc.",
+   "Issuer": "C=US, ST=California, L=Palo Alto, O=VMware, Inc.",
+   "NotBefore": "2008-10-16T17:16:05Z",
+   "NotAfter": "2019-12-31T17:16:05Z",
+   "PublicKey": "RSA\n                Public-Key: (2048 bit)\n                Modulus:\n                    c5:65:a7:45:cf:67:7f:f3:15:2e:79:0e:7f:53:bb:\n                    cc:76:27:96:b7:6a:fa:08:93:b2:ac:84:74:59:dc:\n                    3f:17:57:6d:e5:05:4d:fe:e5:b9:bc:1d:0f:ab:80:\n                    81:0b:a4:bf:fc:64:c8:fe:54:46:4b:5d:93:ff:ef:\n                    30:88:bf:3c:6c:25:0a:ef:12:6f:46:b6:dc:2e:e6:\n                    a3:da:71:f0:80:e5:a3:21:22:fa:48:35:8b:5f:66:\n                    29:cf:b9:1b:73:a2:8a:fe:29:52:cd:a5:e1:d4:d7:\n                    f6:f0:b6:17:84:19:43:8f:8c:96:3a:f4:4d:67:4b:\n                    48:b4:31:13:9c:c6:4c:8f:e4:83:44:a2:50:0a:a4:\n                    75:b3:9f:c9:b0:b9:0c:9f:eb:bc:c7:c7:8b:34:2d:\n                    9a:25:e9:81:98:a2:3c:da:2a:a5:8f:d1:7f:f6:e5:\n                    11:14:3f:06:89:14:1f:04:8a:1c:ed:05:7f:3d:b9:\n                    e7:dd:11:84:05:b0:3b:90:b8:9f:d4:18:05:0c:5e:\n                    54:51:b4:de:4e:a5:ad:04:f4:3b:8b:0b:85:46:88:\n                    5d:a1:94:12:86:d4:f1:53:1c:ab:c9:e4:df:a2:6d:\n                    af:e0:9c:95:3c:75:c6:21:18:79:f6:2c:b0:f6:ba:\n                    dc:a8:b3:5d:b8:b4:7a:40:7f:e6:c4:02:b0:5a:13:\n                    7f\n                Exponent: 3 (0x3)\n",
+   "Extensions": {
+    "SubjectKeyId": {
+     "Critical": false,
+     "Value": "4A:D8:BA:04:72:07:3D:28:12:77:06:DD:C6:CC:B9:05:04:41:BB:C7"
+    },
+    "AuthorityKeyIdentifier": {
+     "Critical": false,
+     "KeyId": ""
+    },
+    "BasicConstraints": {
+     "Critical": false,
+     "IsCA": true,
+     "MaxPathLen": -1
+    }
+   }
+  },
+  "_Source": "Generic.System.EfiSignatures/Certificates"
+ },
+ {
+  "Name": "db",
+  "Owner": "{a3d5e95b-0a8f-4753-8735-445afb708f62}",
+  "Certificate": {
+   "SerialNumber": "e34ca75a0a615853",
+   "SignatureAlgorithm": "SHA256-RSA",
+   "Subject": "C=US, ST=California, L=Palo Alto, O=VMware, Inc., CN=VMware Secure Boot Signing",
+   "Issuer": "C=US, ST=California, L=Palo Alto, O=VMware, Inc., CN=VMware Secure Boot Signing",
+   "NotBefore": "2017-10-24T06:47:59Z",
+   "NotAfter": "2037-10-19T06:47:59Z",
+   "PublicKey": "RSA\n                Public-Key: (2048 bit)\n                Modulus:\n                    e3:71:a4:56:72:10:92:97:49:79:52:5f:91:6f:71:\n                    40:9d:19:f9:fb:78:04:29:bb:ab:e3:c0:af:86:5d:\n                    16:a1:49:d5:ae:eb:f1:dc:6b:07:8e:de:d6:b9:98:\n                    22:6e:bb:01:8f:80:5d:7c:f5:27:ef:ef:7b:9e:4c:\n                    24:80:6a:6a:cb:0e:d4:fe:74:62:1f:67:34:af:8a:\n                    25:22:61:f9:53:dc:03:04:ed:99:08:a0:be:78:b6:\n                    a8:86:e9:f3:02:eb:8e:9e:c6:6a:15:43:92:e2:a1:\n                    da:ea:ed:46:10:d3:c8:30:c0:a9:2d:6f:41:5a:77:\n                    75:f8:4b:3d:6a:67:73:dc:e7:19:0e:46:8b:af:fa:\n                    b1:ec:b6:4f:3d:99:ad:9e:59:e8:da:39:06:26:13:\n                    82:72:bb:d7:16:58:45:da:c0:3b:78:d4:5d:f4:04:\n                    46:30:91:fe:71:0d:fb:d3:b7:83:88:4f:81:02:ce:\n                    5c:b5:0b:bd:cc:e9:e9:01:12:1b:f1:68:81:37:60:\n                    14:ed:5b:6b:58:59:a0:22:87:33:86:49:65:56:9e:\n                    da:cd:16:45:1f:9a:34:d9:05:00:42:04:17:5a:c2:\n                    27:fa:10:6f:72:65:0b:0c:71:7e:75:5e:6c:90:10:\n                    04:73:ec:e0:a5:2b:6c:c6:1c:c2:cf:19:36:86:c1:\n                    1f\n                Exponent: 65537 (0x10001)\n",
+   "Extensions": {
+    "SubjectKeyId": {
+     "Critical": false,
+     "Value": "04:59:7F:3E:1F:FB:24:0B:BA:0F:F0:F0:5D:5E:B0:5F:3E:15:F6:D7"
+    },
+    "AuthorityKeyIdentifier": {
+     "Critical": false,
+     "KeyId": ""
+    },
+    "BasicConstraints": {
+     "Critical": false,
+     "IsCA": true,
+     "MaxPathLen": -1
+    }
+   }
+  },
+  "_Source": "Generic.System.EfiSignatures/Certificates"
+ },
+ {
+  "Name": "db",
+  "Owner": "{77fa9abd-0359-4d32-bd60-28f4e78f784b}",
+  "Certificate": {
+   "SerialNumber": "6108d3c4000000000004",
+   "SignatureAlgorithm": "SHA256-RSA",
+   "Subject": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Corporation UEFI CA 2011",
+   "Issuer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Corporation Third Party Marketplace Root",
+   "NotBefore": "2011-06-27T21:22:45Z",
+   "NotAfter": "2026-06-27T21:32:45Z",
+   "PublicKey": "RSA\n                Public-Key: (2048 bit)\n                Modulus:\n                    a5:08:6c:4c:c7:45:09:6a:4b:0c:a4:c0:87:7f:06:\n                    75:0c:43:01:54:64:e0:16:7f:07:ed:92:7d:0b:b2:\n                    73:bf:0c:0a:c6:4a:45:61:a0:c5:16:2d:96:d3:f5:\n                    2b:a0:fb:4d:49:9b:41:80:90:3c:b9:54:fd:e6:bc:\n                    d1:9d:c4:a4:18:8a:7f:41:8a:5c:59:83:68:32:bb:\n                    8c:47:c9:ee:71:bc:21:4f:9a:8a:7c:ff:44:3f:8d:\n                    8f:32:b2:26:48:ae:75:b5:ee:c9:4c:1e:4a:19:7e:\n                    e4:82:9a:1d:78:77:4d:0c:b0:bd:f6:0f:d3:16:d3:\n                    bc:fa:2b:a5:51:38:5d:f5:fb:ba:db:78:02:db:ff:\n                    ec:0a:1b:96:d5:83:b8:19:13:e9:b6:c0:7b:40:7b:\n                    e1:1f:28:27:c9:fa:ef:56:5e:1c:e6:7e:94:7e:c0:\n                    f0:44:b2:79:39:e5:da:b2:62:8b:4d:bf:38:70:e2:\n                    68:24:14:c9:33:a4:08:37:d5:58:69:5e:d3:7c:ed:\n                    c1:04:53:08:e7:4e:b0:2a:87:63:08:61:6f:63:15:\n                    59:ea:b2:2b:79:d7:0c:61:67:8a:5b:fd:5e:ad:87:\n                    7f:ba:86:67:4f:71:58:12:22:04:22:22:ce:8b:ef:\n                    54:71:00:ce:50:35:58:76:95:08:ee:6a:b1:a2:01:\n                    d5\n                Exponent: 65537 (0x10001)\n",
+   "Extensions": {
+    "SubjectKeyId": {
+     "Critical": false,
+     "Value": "13:AD:BF:43:09:BD:82:70:9C:8C:D5:4F:31:6E:D5:22:98:8A:1B:D4"
+    },
+    "KeyUsage": {
+     "Critical": false,
+     "KeyUsage": [
+      "Digital Signature",
+      "Certificate Sign",
+      "CRL Sign"
+     ]
+    },
+    "BasicConstraints": {
+     "Critical": true,
+     "IsCA": true,
+     "MaxPathLen": -1
+    },
+    "AuthorityKeyIdentifier": {
+     "Critical": false,
+     "KeyId": ""
+    },
+    "CRLDistributionPoints": {
+     "Critical": false,
+     "URI": [
+      "http://crl.microsoft.com/pki/crl/products/MicCorThiParMarRoo_2010-10-05.crl"
+     ]
+    }
+   }
+  },
+  "_Source": "Generic.System.EfiSignatures/Certificates"
+ },
+ {
+  "Name": "db",
+  "Owner": "{77fa9abd-0359-4d32-bd60-28f4e78f784b}",
+  "Certificate": {
+   "SerialNumber": "61077656000000000008",
+   "SignatureAlgorithm": "SHA256-RSA",
+   "Subject": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows Production PCA 2011",
+   "Issuer": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Root Certificate Authority 2010",
+   "NotBefore": "2011-10-19T18:41:42Z",
+   "NotAfter": "2026-10-19T18:51:42Z",
+   "PublicKey": "RSA\n                Public-Key: (2048 bit)\n                Modulus:\n                    dd:0c:bb:a2:e4:2e:09:e3:e7:c5:f7:96:69:bc:00:\n                    21:bd:69:33:33:ef:ad:04:cb:54:80:ee:06:83:bb:\n                    c5:20:84:d9:f7:d2:8b:f3:38:b0:ab:a4:ad:2d:7c:\n                    62:79:05:ff:e3:4a:3f:04:35:20:70:e3:c4:e7:6b:\n                    e0:9c:c0:36:75:e9:8a:31:dd:8d:70:e5:dc:37:b5:\n                    74:46:96:28:5b:87:60:23:2c:bf:dc:47:a5:67:f7:\n                    51:27:9e:72:eb:07:a6:c9:b9:1e:3b:53:35:7c:e5:\n                    d3:ec:27:b9:87:1c:fe:b9:c9:23:09:6f:a8:46:91:\n                    c1:6e:96:3c:41:d3:cb:a3:3f:5d:02:6a:4d:ec:69:\n                    1f:25:28:5c:36:ff:fd:43:15:0a:94:e0:19:b4:cf:\n                    df:c2:12:e2:c2:5b:27:ee:27:78:30:8b:5b:2a:09:\n                    6b:22:89:53:60:16:2c:c0:68:1d:53:ba:ec:49:f3:\n                    9d:61:8c:85:68:09:73:44:5d:7d:a2:54:2b:dd:79:\n                    f7:15:cf:35:5d:6c:1c:2b:5c:ce:bc:9c:23:8b:6f:\n                    6e:b5:26:d9:36:13:c3:4f:d6:27:ae:b9:32:3b:41:\n                    92:2c:e1:c7:cd:77:e8:aa:54:4e:f7:5c:0b:04:87:\n                    65:b4:43:18:a8:b2:e0:6d:19:77:ec:5a:24:fa:48:\n                    03\n                Exponent: 65537 (0x10001)\n",
+   "Extensions": {
+    "SubjectKeyId": {
+     "Critical": false,
+     "Value": "A9:29:02:39:8E:16:C4:97:78:CD:90:F9:9E:4F:9A:E1:7C:55:AF:53"
+    },
+    "KeyUsage": {
+     "Critical": false,
+     "KeyUsage": [
+      "Digital Signature",
+      "Certificate Sign",
+      "CRL Sign"
+     ]
+    },
+    "BasicConstraints": {
+     "Critical": true,
+     "IsCA": true,
+     "MaxPathLen": -1
+    },
+    "AuthorityKeyIdentifier": {
+     "Critical": false,
+     "KeyId": ""
+    },
+    "CRLDistributionPoints": {
+     "Critical": false,
+     "URI": [
+      "http://crl.microsoft.com/pki/crl/products/MicRooCerAut_2010-06-23.crl"
+     ]
+    }
+   }
+  },
+  "_Source": "Generic.System.EfiSignatures/Certificates"
+ },
+ {
+  "Name": "db",
+  "Owner": "{a3d5e95b-0a8f-4753-8735-445afb708f62}",
+  "Certificate": {
+   "SerialNumber": "e9d9ff69e6f3e7e4",
+   "SignatureAlgorithm": "SHA256-RSA",
+   "Subject": "C=US, ST=California, L=Palo Alto, O=VMware, Inc.",
+   "Issuer": "C=US, ST=California, L=Palo Alto, O=VMware, Inc.",
+   "NotBefore": "2008-10-16T17:16:05Z",
+   "NotAfter": "2019-12-31T17:16:05Z",
+   "PublicKey": "RSA\n                Public-Key: (2048 bit)\n                Modulus:\n                    c5:65:a7:45:cf:67:7f:f3:15:2e:79:0e:7f:53:bb:\n                    cc:76:27:96:b7:6a:fa:08:93:b2:ac:84:74:59:dc:\n                    3f:17:57:6d:e5:05:4d:fe:e5:b9:bc:1d:0f:ab:80:\n                    81:0b:a4:bf:fc:64:c8:fe:54:46:4b:5d:93:ff:ef:\n                    30:88:bf:3c:6c:25:0a:ef:12:6f:46:b6:dc:2e:e6:\n                    a3:da:71:f0:80:e5:a3:21:22:fa:48:35:8b:5f:66:\n                    29:cf:b9:1b:73:a2:8a:fe:29:52:cd:a5:e1:d4:d7:\n                    f6:f0:b6:17:84:19:43:8f:8c:96:3a:f4:4d:67:4b:\n                    48:b4:31:13:9c:c6:4c:8f:e4:83:44:a2:50:0a:a4:\n                    75:b3:9f:c9:b0:b9:0c:9f:eb:bc:c7:c7:8b:34:2d:\n                    9a:25:e9:81:98:a2:3c:da:2a:a5:8f:d1:7f:f6:e5:\n                    11:14:3f:06:89:14:1f:04:8a:1c:ed:05:7f:3d:b9:\n                    e7:dd:11:84:05:b0:3b:90:b8:9f:d4:18:05:0c:5e:\n                    54:51:b4:de:4e:a5:ad:04:f4:3b:8b:0b:85:46:88:\n                    5d:a1:94:12:86:d4:f1:53:1c:ab:c9:e4:df:a2:6d:\n                    af:e0:9c:95:3c:75:c6:21:18:79:f6:2c:b0:f6:ba:\n                    dc:a8:b3:5d:b8:b4:7a:40:7f:e6:c4:02:b0:5a:13:\n                    7f\n                Exponent: 3 (0x3)\n",
+   "Extensions": {
+    "SubjectKeyId": {
+     "Critical": false,
+     "Value": "4A:D8:BA:04:72:07:3D:28:12:77:06:DD:C6:CC:B9:05:04:41:BB:C7"
+    },
+    "AuthorityKeyIdentifier": {
+     "Critical": false,
+     "KeyId": ""
+    },
+    "BasicConstraints": {
+     "Critical": false,
+     "IsCA": true,
+     "MaxPathLen": -1
+    }
+   }
+  },
+  "_Source": "Generic.System.EfiSignatures/Certificates"
+ }
+]LET _ <= SELECT mock(plugin='efivariables', results=[ dict(Namespace='{d719b2cb-3d3a-4596-a3bc-dad00e67656f}', Name="dbx", Value=read_file(filename=srcDir + "/artifacts/testdata/files/efi/dbx.bin")) ]) FROM scope()[]LET _ <= SELECT * FROM efivariables()[]SELECT * FROM Artifact.Generic.System.EfiSignatures(source="Hashes") LIMIT 5[
+ {
+  "Name": "dbx",
+  "Owner": "{77fa9abd-0359-4d32-bd60-28f4e78f784b}",
+  "Hash": "80b4d96931bf0d02fd91a61e19d14f1da452e66db2408ca8604d411f92659f0a",
+  "_Source": "Generic.System.EfiSignatures/Hashes"
+ },
+ {
+  "Name": "dbx",
+  "Owner": "{77fa9abd-0359-4d32-bd60-28f4e78f784b}",
+  "Hash": "f52f83a3fa9cfbd6920f722824dbe4034534d25b8507246b3b957dac6e1bce7a",
+  "_Source": "Generic.System.EfiSignatures/Hashes"
+ },
+ {
+  "Name": "dbx",
+  "Owner": "{77fa9abd-0359-4d32-bd60-28f4e78f784b}",
+  "Hash": "c5d9d8a186e2c82d09afaa2a6f7f2e73870d3e64f72c4e08ef67796a840f0fbd",
+  "_Source": "Generic.System.EfiSignatures/Hashes"
+ },
+ {
+  "Name": "dbx",
+  "Owner": "{77fa9abd-0359-4d32-bd60-28f4e78f784b}",
+  "Hash": "363384d14d1f2e0b7815626484c459ad57a318ef4396266048d058c5a19bbf76",
+  "_Source": "Generic.System.EfiSignatures/Hashes"
+ },
+ {
+  "Name": "dbx",
+  "Owner": "{77fa9abd-0359-4d32-bd60-28f4e78f784b}",
+  "Hash": "1aec84b84b6c65a51220a9be7181965230210d62d6d33c48999c6b295a2b0a06",
+  "_Source": "Generic.System.EfiSignatures/Hashes"
+ }
+]
