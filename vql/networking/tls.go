@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"encoding/hex"
+	"strings"
 	"time"
 
 	"github.com/go-errors/errors"
@@ -56,6 +57,17 @@ func customVerifyConnection(
 		private_opts.Roots.AppendCertsFromPEM([]byte(config_obj.CaCertificate))
 	}
 
+	// this shouldn't be done for each connection attempt but currently
+	// there does not seem to be a way to store the modified hash list
+	origHashes := config_obj.GetCrypto().GetCertificateHashes()
+	hashList := make([]string, 0, len(origHashes))
+
+	for _, hash := range origHashes {
+		hash = strings.ReplaceAll(hash, ":", "") // ignore colons
+		hash = strings.ToLower(hash)             // only use lowercase hash strings
+		hashList = append(hashList, hash)
+	}
+
 	return func(conn tls.ConnectionState) error {
 		// Used to verify certs using public roots
 		public_opts := x509.VerifyOptions{
@@ -77,7 +89,7 @@ func customVerifyConnection(
 
 				// Check the fingerprint of the certificate first. If there
 				// is no match, fall back to testing against our CA cert.
-				if hashList := config_obj.GetCrypto().GetCertificateHashes(); len(hashList) > 0 {
+				if len(hashList) > 0 {
 					certSha256, err := hashCertificate(cert)
 					if err != nil {
 						return err

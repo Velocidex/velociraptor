@@ -3404,6 +3404,13 @@ type CryptoConfig struct {
 	// certificate validation will fallback to checking the certificate against the
 	// client's CA file and, eventually, use public CA lists to verify the cert.
 	// Important: to enforce certificate pinning, set `ForceCertificatePinning' to true.
+	//
+	// Fingerprints can be generated with the OpenSSL command line utility:
+	//
+	//	openssl s_client -connect www.google.com:443 < /dev/null | openssl x509 -fingerprint -sha256 -noout
+	//
+	// Certificate hashes may or may not include colon characters. Capitalization
+	// of the hex digits is ignored by Velociraptor.
 	CertificateHashes []string `protobuf:"bytes,2,rep,name=certificate_hashes,json=certificateHashes,proto3" json:"certificate_hashes,omitempty"`
 	// Forces TLS certificate pinning and aborts TLS sessions if none of the certificates
 	// of the cert chain has a known fingerprint.
