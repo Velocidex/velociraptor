@@ -159,6 +159,8 @@ message ListHuntsRequest {
     // If specified we return a partial structure.
     bool summary = 4;
     bool include_archived = 3;
+
+    string user_filter = 5;
 }
 
 message ListHuntsResponse {
