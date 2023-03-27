@@ -11,21 +11,20 @@ import (
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
+	"www.velocidex.com/golang/velociraptor/utils"
+)
+
+var (
+	rejectedThumbnailError = errors.New("Server certificate had no known thumbprint")
 )
 
 // hashCertificate takes a tls.Certificate and return the sha256
 // fingerprint of said certificate. The return value is the hex
 // representation of the byte sequence returned by the hashing
 // function.
-func hashCertificate(cert *x509.Certificate) (string, error) {
-	h := sha256.New()
-
-	if _, err := h.Write(cert.Raw); err != nil {
-		return "", err
-	}
-
-	checksum := h.Sum(nil)
-	return hex.EncodeToString(checksum), nil
+func hashCertificate(cert *x509.Certificate) string {
+	h := sha256.Sum256(cert.Raw)
+	return hex.EncodeToString(h[:])
 }
 
 type VerificationMode int
@@ -50,6 +49,17 @@ func convertVerificationMode(s string) VerificationMode {
 	}
 
 	return UnknownMode
+}
+
+func normalizeThumbPrints(thumbprints []string) []string {
+	thumbprintList := make([]string, 0, len(thumbprints))
+
+	for _, thumbprint := range thumbprints {
+		thumbprint = strings.ReplaceAll(thumbprint, ":", "") // ignore colons
+		thumbprint = strings.ToLower(thumbprint)             // only use lowercase hash strings
+		thumbprintList = append(thumbprintList, thumbprint)
+	}
+	return thumbprintList
 }
 
 // If we deployed Velociraptor using self signed certificates we want
@@ -83,15 +93,7 @@ func customVerifyConnection(
 
 	// this shouldn't be done for each connection attempt but currently
 	// there does not seem to be a way to store the modified hash list
-	origThumbprints := config_obj.GetCrypto().GetCertificateThumbprints()
-	thumbprintList := make([]string, 0, len(origThumbprints))
-
-	for _, thumbprint := range origThumbprints {
-		thumbprint = strings.ReplaceAll(thumbprint, ":", "") // ignore colons
-		thumbprint = strings.ToLower(thumbprint)             // only use lowercase hash strings
-		thumbprintList = append(thumbprintList, thumbprint)
-	}
-
+	thumbprintList := normalizeThumbPrints(config_obj.GetCrypto().GetCertificateThumbprints())
 	verificationMode := convertVerificationMode(config_obj.GetCrypto().GetCertificateVerificationMode())
 
 	return func(conn tls.ConnectionState) error {
@@ -113,40 +115,48 @@ func customVerifyConnection(
 			if i == 0 {
 				server_cert = cert
 
-				// If we're to verify thumbprints, we do that first so that
-				// we can skip the rest of the certificate validation when
-				// we found a known thumbprint
-				if verificationMode > PkiOnly {
-					certSha256, err := hashCertificate(cert)
-					if err != nil {
-						return err
+				switch verificationMode {
+				// Strict enforcement - Only allow certificates
+				// with this thumbprint exactly.
+				case ThumbprintOnly:
+					if utils.InString(thumbprintList, hashCertificate(cert)) {
+						return nil
 					}
+					return rejectedThumbnailError
 
-					for _, hash := range thumbprintList {
-						if hash == certSha256 {
-							// we found a matching thumbprint, connection can continue
-							return nil
-						}
+					// Thumbnail enforcement is optional - if the
+					// thumbnail matches we allow the connection in
+					// any case.
+				case PkiOrThumbprint:
+					// Short circuit if the thumbprint matches
+					// immediately
+					if utils.InString(thumbprintList, hashCertificate(cert)) {
+						return nil
 					}
+					// No thumbnail match here, verify as in PkiOnly
+					fallthrough
 
-					// if certificate pinning is enforced, we need to abort the
-					// connection when there was no match regardless of the fact
-					// that a certificate may still be cryptographically valid
-					if verificationMode >= ThumbprintOnly {
-						return errors.New("no certificate in the chain had a known thumbprint")
+				case PkiOnly:
+					// If the server certificate is signed by the
+					// Velociraptor CA (self signed mode) then we
+					// allow it regardless of any other checks
+					// (e.g. DNS check).
+
+					// Velociraptor does not allow intermediates so
+					// this should be sufficient to verify that the
+					// Velociraptor CA signed it.
+					_, err := server_cert.Verify(private_opts)
+					if err == nil {
+						// The Velociraptor CA signed it - we
+						// disregard the DNS name and allow it anyway
+						// - This allows us to connect to the
+						// Velociraptor server by IP address.
+						return nil
 					}
 				}
 
-				// Velociraptor does not allow intermediates so this
-				// should be sufficient to verify that the
-				// Velociraptor CA signed it.
-				_, err := server_cert.Verify(private_opts)
-				if err == nil {
-					// The Velociraptor CA signed it - we disregard
-					// the DNS name and allow it.
-					return nil
-				}
-
+				// Continue to build an intermediate chain and proceed
+				// to normal PKI verification.
 			} else {
 				public_opts.Intermediates.AddCert(cert)
 			}
