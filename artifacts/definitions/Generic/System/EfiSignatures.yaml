@@ -64,16 +64,18 @@ export: |
         }]
       ]]
     ]'''
+  
+    LET GetSignatures(Namespace, Name) = Select Name as Name, parse_binary(accessor="data", filename=Value, profile=PROFILE, struct="EfiSignatures").Signatures as Signatures from efivariables(namespace=Namespace, name=Name, value=True)
 sources:
-  - query: |
-      LET GetSignatures(Namespace, Name) = Select Name as Name, parse_binary(accessor="data", filename=Value, profile=PROFILE, struct="EfiSignatures").Signatures as Signatures from efivariables(namespace=Namespace, name=Name, value=True)
+  - name: Certificates
+    query: |
       LET PK = Select * FROM foreach(
           row=GetSignatures(Namespace="{8be4df61-93ca-11d2-aa0d-00e098032b8c}", Name="PK"),
           query={
               Select * From foreach(
                   row=Signatures,
                   query={
-                      Select Name, Owner, Cert as Signature From Payload
+                      Select Name, Owner, Cert as Certificate From Payload
                   })
           })
       LET DB = Select * FROM foreach(
@@ -82,10 +84,16 @@ sources:
               Select * From foreach(
                   row=Signatures,
                   query={
-                      Select Name, Owner, Cert as Signature From Payload
+                      Select Name, Owner, Cert as Certificate From Payload
                   })
           })
-      LET DBX = Select * FROM foreach(
+      Select * from chain(
+          a={ Select * From PK },
+          b={ Select * From DB })
+
+  - name: Hashes
+    query: |
+      Select * FROM foreach(
           row=GetSignatures(Namespace="{d719b2cb-3d3a-4596-a3bc-dad00e67656f}", Name="dbx"),
           query={
               Select * From foreach(
@@ -94,11 +102,7 @@ sources:
                       Select * FROM foreach(
                           row=Payload.Hashes,
                           query={
-                              Select Name, Owner, Hash as Signature From scope()
+                              Select Name, Owner, Hash From scope()
                           })
                   })
           })
-      Select * from chain(
-          a={ Select * From PK },
-          b={ Select * From DB },
-          c={ Select * From DBX })
