@@ -488,6 +488,22 @@ func GetProxy() func(*http.Request) (*url.URL, error) {
 	return proxyHandler
 }
 
+// If the TLS Verification policy allows it, enable SkipVerify to
+// allow connections to invalid TLS servers.
+func EnableSkipVerify(client *http.Client, config_obj *config_proto.ClientConfig) {
+	if config_obj.Crypto != nil &&
+		strings.ToUpper(config_obj.Crypto.CertificateVerificationMode) == "THUMBPRINT_ONLY" {
+		return
+	}
+
+	if client.Transport != nil {
+		t, ok := client.Transport.(*http.Transport)
+		if ok && t.TLSClientConfig != nil {
+			t.TLSClientConfig.InsecureSkipVerify = true
+		}
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterPlugin(&_HttpPlugin{})
 }

@@ -110,4 +110,21 @@ func TestTLSVerification(t *testing.T) {
 	data, err = testHTTPConnection(config_obj, "https://www.google.com")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "Server certificate had no known thumbprint")
+
+	// Test fallback addresses - when DNS fails, we substitute
+	// connection to the IP address and pin the certificate.
+	config_obj = &config_proto.ClientConfig{
+		Crypto: &config_proto.CryptoConfig{
+			CertificateVerificationMode: "THUMBPRINT_ONLY",
+			CertificateThumbprints: []string{
+				"AB601914436E58BABB17B9166155CAF97BD7E5F8DEB9B659BCDB66C58B49F323",
+			},
+		},
+		FallbackAddresses: map[string]string{
+			"nosuch-site.example.com:443": strings.TrimPrefix(ts.URL, "https://"),
+		},
+	}
+	data, err = testHTTPConnection(config_obj, "https://nosuch-site.example.com")
+	assert.NoError(t, err)
+	assert.Contains(t, string(data), "Hello, client")
 }

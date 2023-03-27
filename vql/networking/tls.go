@@ -27,30 +27,6 @@ func hashCertificate(cert *x509.Certificate) string {
 	return hex.EncodeToString(h[:])
 }
 
-type VerificationMode int
-
-const (
-	UnknownMode VerificationMode = iota
-	PkiOnly
-	PkiOrThumbprint
-	ThumbprintOnly
-)
-
-func convertVerificationMode(s string) VerificationMode {
-	switch strings.ToUpper(s) {
-	case "", "PKI":
-		return PkiOnly
-
-	case "PKI_OR_THUMBPRINT":
-		return PkiOrThumbprint
-
-	case "THUMBPRINT_ONLY":
-		return ThumbprintOnly
-	}
-
-	return UnknownMode
-}
-
 func normalizeThumbPrints(thumbprints []string) []string {
 	thumbprintList := make([]string, 0, len(thumbprints))
 
@@ -94,7 +70,7 @@ func customVerifyConnection(
 	// this shouldn't be done for each connection attempt but currently
 	// there does not seem to be a way to store the modified hash list
 	thumbprintList := normalizeThumbPrints(config_obj.GetCrypto().GetCertificateThumbprints())
-	verificationMode := convertVerificationMode(config_obj.GetCrypto().GetCertificateVerificationMode())
+	verificationMode := strings.ToUpper(config_obj.GetCrypto().GetCertificateVerificationMode())
 
 	return func(conn tls.ConnectionState) error {
 		// Used to verify certs using public roots
@@ -118,7 +94,7 @@ func customVerifyConnection(
 				switch verificationMode {
 				// Strict enforcement - Only allow certificates
 				// with this thumbprint exactly.
-				case ThumbprintOnly:
+				case "THUMBPRINT_ONLY":
 					if utils.InString(thumbprintList, hashCertificate(cert)) {
 						return nil
 					}
@@ -127,7 +103,7 @@ func customVerifyConnection(
 					// Thumbnail enforcement is optional - if the
 					// thumbnail matches we allow the connection in
 					// any case.
-				case PkiOrThumbprint:
+				case "PKI_OR_THUMBPRINT":
 					// Short circuit if the thumbprint matches
 					// immediately
 					if utils.InString(thumbprintList, hashCertificate(cert)) {
@@ -136,7 +112,7 @@ func customVerifyConnection(
 					// No thumbnail match here, verify as in PkiOnly
 					fallthrough
 
-				case PkiOnly:
+				case "", "PKI":
 					// If the server certificate is signed by the
 					// Velociraptor CA (self signed mode) then we
 					// allow it regardless of any other checks
