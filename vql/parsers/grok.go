@@ -4,8 +4,8 @@ import (
 	"context"
 	"sort"
 
+	"github.com/Velocidex/grok"
 	"github.com/Velocidex/ordereddict"
-	"github.com/vjeantet/grok"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"

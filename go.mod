@@ -136,6 +136,7 @@ require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1 // indirect
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/PuerkitoBio/goquery v1.8.0 // indirect
+	github.com/Velocidex/grok v0.0.1 // indirect
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
@@ -197,6 +198,7 @@ require (
 	www.velocidex.com/golang/binparsergen v0.1.1-0.20220107080050-ae6122c5ed14 // indirect
 )
 
+// replace github.com/Velocidex/grok => /home/mic/projects/grok
 // replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter
 // replace www.velocidex.com/golang/regparser => /home/mic/projects/regparser
 // replace www.velocidex.com/golang/go-ntfs => /home/mic/projects/go-ntfs
