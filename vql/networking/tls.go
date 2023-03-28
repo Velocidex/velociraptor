@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	errRejectedThumbnail = errors.New("Server certificate had no known thumbprint")
+	errRejectedThumbprint = errors.New("Server certificate had no known thumbprint")
 )
 
 // hashCertificate takes a tls.Certificate and return the sha256
@@ -98,10 +98,10 @@ func customVerifyConnection(
 					if utils.InString(thumbprintList, hashCertificate(cert)) {
 						return nil
 					}
-					return errRejectedThumbnail
+					return errRejectedThumbprint
 
-					// Thumbnail enforcement is optional - if the
-					// thumbnail matches we allow the connection in
+					// Thumbprint enforcement is optional - if the
+					// thumbprint matches we allow the connection in
 					// any case.
 				case "PKI_OR_THUMBPRINT":
 					// Short circuit if the thumbprint matches
@@ -109,7 +109,7 @@ func customVerifyConnection(
 					if utils.InString(thumbprintList, hashCertificate(cert)) {
 						return nil
 					}
-					// No thumbnail match here, verify as in PkiOnly
+					// No thumbprint match here, verify as in PkiOnly
 					fallthrough
 
 				case "", "PKI":
