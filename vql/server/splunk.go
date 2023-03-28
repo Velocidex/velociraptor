@@ -16,16 +16,13 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-/* Plugin Splunk.
-
-
- */
+/*
+Plugin Splunk.
+*/
 package server
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"net/http"
 	"sync"
 	"time"
@@ -35,7 +32,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/crypto"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
@@ -132,31 +128,25 @@ func _upload_rows(
 	// var buf []*ordereddict.Dict
 	var buf = make([]vfilter.Row, 0, arg.ChunkSize)
 
-	CA_Pool := x509.NewCertPool()
-	crypto.AddPublicRoots(CA_Pool)
-	if config_obj != nil {
-		err := crypto.AddDefaultCerts(config_obj, CA_Pool)
-		if err != nil {
-			scope.Log("splunk_upload: %v", err)
+	tlsConfig, err := networking.GetTlsConfig(config_obj, arg.RootCerts)
+	if err != nil {
+		scope.Log("splunk: cannot get TLS config: %s", err)
+		return
+	}
+
+	if arg.SkipVerify {
+		if err = networking.EnableSkipVerify(tlsConfig, config_obj); err != nil {
+			scope.Log("splunk: cannot disable SSL security: %s", err)
 			return
 		}
-	}
-	if arg.RootCerts != "" &&
-		!CA_Pool.AppendCertsFromPEM([]byte(arg.RootCerts)) {
-		scope.Log("splunk_upload: Unable to add root certs")
-		return
 	}
 
 	client := splunk.NewClient(
 		&http.Client{
 			Timeout: time.Second * 20,
 			Transport: &http.Transport{
-				Proxy: networking.GetProxy(),
-				TLSClientConfig: &tls.Config{
-					ClientSessionCache: tls.NewLRUClientSessionCache(100),
-					RootCAs:            CA_Pool,
-					InsecureSkipVerify: arg.SkipVerify,
-				},
+				Proxy:           networking.GetProxy(),
+				TLSClientConfig: tlsConfig,
 			},
 		}, // Optional HTTP Client objects
 		arg.URL,

@@ -10,19 +10,19 @@ import (
 	"www.velocidex.com/golang/velociraptor/config/proto"
 )
 
-func GetHttpTransport(config_obj *proto.ClientConfig) (*http.Transport, error) {
+func GetHttpTransport(config_obj *proto.ClientConfig, extra_roots string) (*http.Transport, error) {
 	timeout := config_obj.ConnectionTimeout
 	if timeout == 0 {
 		timeout = 300 // 5 Min default
 	}
 
-	tls_config, err := GetTlsConfig(config_obj)
+	tlsConfig, err := GetTlsConfig(config_obj, extra_roots)
 	if err != nil {
 		return nil, err
 	}
 
 	transport := http.DefaultTransport.(*http.Transport).Clone()
-	transport.TLSClientConfig = tls_config
+	transport.TLSClientConfig = tlsConfig
 	transport.DialContext = func(ctx context.Context, network, addr string) (net.Conn, error) {
 		d := net.Dialer{
 			Timeout:   time.Duration(timeout) * time.Second,

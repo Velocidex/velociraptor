@@ -23,7 +23,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -50,6 +49,8 @@ var (
 
 	proxyHandler                     = http.ProxyFromEnvironment
 	EmptyCookieJar *ordereddict.Dict = nil
+
+	errSkipVerifyDenied = errors.New("SkipVerify not allowed due to TLS certificate verification policy")
 )
 
 const (
@@ -76,7 +77,8 @@ type HttpPluginRequest struct {
 	Chunk   int         `vfilter:"optional,field=chunk_size,doc=Read input with this chunk size and send each chunk as a row"`
 
 	// Sometimes it is useful to be able to query misconfigured hosts.
-	DisableSSLSecurity bool              `vfilter:"optional,field=disable_ssl_security,doc=Disable ssl certificate verifications."`
+	DisableSSLSecurity bool              `vfilter:"optional,field=disable_ssl_security,doc=Disable ssl certificate verifications (deprecated in favor of SkipVerify)."`
+	SkipVerify         bool              `vfilter:"optional,field=skip_verify,doc=Disable ssl certificate verifications."`
 	TempfileExtension  string            `vfilter:"optional,field=tempfile_extension,doc=If specified we write to a tempfile. The content field will contain the full path to the tempfile."`
 	RemoveLast         bool              `vfilter:"optional,field=remove_last,doc=If set we delay removal as much as possible."`
 	RootCerts          string            `vfilter:"optional,field=root_ca,doc=As a better alternative to disable_ssl_security, allows root ca certs to be added here."`
@@ -104,12 +106,13 @@ func GetHttpClient(
 	}
 	defer vql_subsystem.CacheSet(scope, HTTP_TAG, cache)
 
-	return cache.GetHttpClient(config_obj, arg)
+	return cache.GetHttpClient(config_obj, arg, scope)
 }
 
 func (self *HTTPClientCache) GetHttpClient(
 	config_obj *config_proto.ClientConfig,
-	arg *HttpPluginRequest) (*http.Client, error) {
+	arg *HttpPluginRequest,
+	scope vfilter.Scope) (*http.Client, error) {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -154,12 +157,18 @@ func (self *HTTPClientCache) GetHttpClient(
 	// Create a http client without TLS security - this is sometimes
 	// needed to access self signed servers. Ideally we should
 	// add extra ca certs in arg.RootCerts.
-	if arg.DisableSSLSecurity {
-		transport := http.DefaultTransport.(*http.Transport).Clone()
-		transport.Proxy = proxyHandler
-		transport.MaxIdleConns = 10
-		transport.TLSClientConfig = &tls.Config{
-			InsecureSkipVerify: true,
+	if arg.DisableSSLSecurity || arg.SkipVerify {
+		if arg.DisableSSLSecurity {
+			scope.Log("http_client: DisableSSLSecurity is deprecated, please use SkipVerify instead")
+		}
+
+		transport, err := GetHttpTransport(config_obj, "")
+		if err != nil {
+			return nil, err
+		}
+
+		if err = EnableSkipVerify(transport.TLSClientConfig, config_obj); err != nil {
+			return nil, err
 		}
 
 		result = &http.Client{
@@ -186,15 +195,9 @@ func GetDefaultHTTPClient(
 	extra_roots string,
 	cookie_jar *ordereddict.Dict) (*http.Client, error) {
 
-	transport, err := GetHttpTransport(config_obj)
+	transport, err := GetHttpTransport(config_obj, extra_roots)
 	if err != nil {
 		return nil, err
-	}
-
-	if extra_roots != "" {
-		if !transport.TLSClientConfig.RootCAs.AppendCertsFromPEM([]byte(extra_roots)) {
-			return nil, errors.New("Unable to parse root CA")
-		}
 	}
 
 	return &http.Client{
@@ -365,8 +368,7 @@ func (self *_HttpPlugin) Call(
 		}
 
 		if arg.TempfileExtension != "" {
-
-			tmpfile, err := ioutil.TempFile("", "tmp*"+arg.TempfileExtension)
+			tmpfile, err := os.CreateTemp("", "tmp*"+arg.TempfileExtension)
 			if err != nil {
 				scope.Log("http_client: %v", err)
 				return
@@ -490,18 +492,17 @@ func GetProxy() func(*http.Request) (*url.URL, error) {
 
 // If the TLS Verification policy allows it, enable SkipVerify to
 // allow connections to invalid TLS servers.
-func EnableSkipVerify(client *http.Client, config_obj *config_proto.ClientConfig) {
-	if config_obj.Crypto != nil &&
-		strings.ToUpper(config_obj.Crypto.CertificateVerificationMode) == "THUMBPRINT_ONLY" {
-		return
+func EnableSkipVerifyHttp(client *http.Client, config_obj *config_proto.ClientConfig) error {
+	if client == nil || client.Transport == nil {
+		return nil
 	}
 
-	if client.Transport != nil {
-		t, ok := client.Transport.(*http.Transport)
-		if ok && t.TLSClientConfig != nil {
-			t.TLSClientConfig.InsecureSkipVerify = true
-		}
+	t, ok := client.Transport.(*http.Transport)
+	if !ok {
+		return errors.New("http client does not have a compatible transport")
 	}
+
+	return EnableSkipVerify(t.TLSClientConfig, config_obj)
 }
 
 func init() {

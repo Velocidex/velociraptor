@@ -30,17 +30,14 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-/* Plugin Elastic.
-
-
- */
+/*
+Plugin Elastic.
+*/
 package server
 
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -56,9 +53,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/networking"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -76,7 +73,8 @@ type _ElasticPluginArgs struct {
 	APIKey             string              `vfilter:"optional,field=api_key,doc=Base64-encoded token for authorization; if set, overrides username and password."`
 	WaitTime           int64               `vfilter:"optional,field=wait_time,doc=Batch elastic upload this long (2 sec)."`
 	PipeLine           string              `vfilter:"optional,field=pipeline,doc=Pipeline for uploads"`
-	DisableSSLSecurity bool                `vfilter:"optional,field=disable_ssl_security,doc=Disable ssl certificate verifications."`
+	DisableSSLSecurity bool                `vfilter:"optional,field=disable_ssl_security,doc=Disable ssl certificate verifications (deprecated in favor of SkipVerify)."`
+	SkipVerify         bool                `vfilter:"optional,field=skip_verify,doc=Disable ssl certificate verifications."`
 	RootCerts          string              `vfilter:"optional,field=root_ca,doc=As a better alternative to disable_ssl_security, allows root ca certs to be added here."`
 	MaxMemoryBuffer    uint64              `vfilter:"optional,field=max_memory_buffer,doc=How large we allow the memory buffer to grow to while we are trying to contact the Elastic server (default 100mb)."`
 }
@@ -149,18 +147,21 @@ func upload_rows(
 
 	var buf bytes.Buffer
 
-	CA_Pool := x509.NewCertPool()
-	crypto.AddPublicRoots(CA_Pool)
-	err := crypto.AddDefaultCerts(config_obj, CA_Pool)
+	tlsConfig, err := networking.GetTlsConfig(config_obj, arg.RootCerts)
 	if err != nil {
-		scope.Log("elastic: %v", err)
+		scope.Log("elastic: cannot get TLS config: %s", err)
 		return
 	}
 
-	if arg.RootCerts != "" &&
-		!CA_Pool.AppendCertsFromPEM([]byte(arg.RootCerts)) {
-		scope.Log("elastic: Unable to add root certs")
-		return
+	if arg.DisableSSLSecurity || arg.SkipVerify {
+		if arg.DisableSSLSecurity {
+			scope.Log("elastic: DisableSSLSecurity is deprecated, please use SkipVerify instead")
+		}
+
+		if err = networking.EnableSkipVerify(tlsConfig, config_obj); err != nil {
+			scope.Log("elastic: cannot disable SSL security: %s", err)
+			return
+		}
 	}
 
 	cfg := elasticsearch.Config{
@@ -172,11 +173,7 @@ func upload_rows(
 		Transport: &http.Transport{
 			MaxIdleConnsPerHost:   10,
 			ResponseHeaderTimeout: 100 * time.Second,
-			TLSClientConfig: &tls.Config{
-				ClientSessionCache: tls.NewLRUClientSessionCache(100),
-				RootCAs:            CA_Pool,
-				InsecureSkipVerify: arg.DisableSSLSecurity,
-			},
+			TLSClientConfig:       tlsConfig,
 		},
 	}
 

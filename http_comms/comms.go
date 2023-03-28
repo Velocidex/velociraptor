@@ -174,7 +174,7 @@ func NewHTTPConnector(
 		maxPollDev = 30
 	}
 
-	transport, err := networking.GetHttpTransport(config_obj.Client)
+	transport, err := networking.GetHttpTransport(config_obj.Client, "")
 	if err != nil {
 		return nil, err
 	}

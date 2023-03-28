@@ -148,7 +148,7 @@ func customVerifyConnection(
 	}
 }
 
-func GetTlsConfig(config_obj *config_proto.ClientConfig) (*tls.Config, error) {
+func GetTlsConfig(config_obj *config_proto.ClientConfig, extra_roots string) (*tls.Config, error) {
 	// Try to get the OS cert pool, failing that use a new one. We
 	// already contain a list of valid root certs but using the OS
 	// cert store allows us to support MITM proxies already on the
@@ -157,9 +157,16 @@ func GetTlsConfig(config_obj *config_proto.ClientConfig) (*tls.Config, error) {
 	if err != nil {
 		CA_Pool = x509.NewCertPool()
 	}
+
 	err = crypto.AddDefaultCerts(config_obj, CA_Pool)
 	if err != nil {
 		return nil, err
+	}
+
+	if extra_roots != "" {
+		if !CA_Pool.AppendCertsFromPEM([]byte(extra_roots)) {
+			return nil, errors.New("Unable to parse root CA")
+		}
 	}
 
 	return &tls.Config{
@@ -173,4 +180,34 @@ func GetTlsConfig(config_obj *config_proto.ClientConfig) (*tls.Config, error) {
 		NextProtos:         []string{"http/1.1"},
 		VerifyConnection:   customVerifyConnection(CA_Pool, config_obj),
 	}, nil
+}
+
+// GetSkipVerifyTlsConfig returns a config object where TLS verification is
+// disabled if the client configuration allows it.
+func GetSkipVerifyTlsConfig(config_obj *config_proto.ClientConfig) (*tls.Config, error) {
+	c, err := GetTlsConfig(config_obj, "")
+	if err != nil {
+		return nil, err
+	}
+
+	if err = EnableSkipVerify(c, config_obj); err != nil {
+		return nil, err
+	}
+
+	return c, nil
+}
+
+// If the TLS Verification policy allows it, enable SkipVerify to
+// allow connections to invalid TLS servers.
+func EnableSkipVerify(tlsConfig *tls.Config, config_obj *config_proto.ClientConfig) error {
+	if tlsConfig == nil {
+		return nil
+	}
+
+	if strings.ToUpper(config_obj.GetCrypto().GetCertificateVerificationMode()) == "THUMBPRINT_ONLY" {
+		return errSkipVerifyDenied
+	}
+
+	tlsConfig.InsecureSkipVerify = true
+	return nil
 }
