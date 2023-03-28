@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	rejectedThumbnailError = errors.New("Server certificate had no known thumbprint")
+	errRejectedThumbnail = errors.New("Server certificate had no known thumbprint")
 )
 
 // hashCertificate takes a tls.Certificate and return the sha256
@@ -98,7 +98,7 @@ func customVerifyConnection(
 					if utils.InString(thumbprintList, hashCertificate(cert)) {
 						return nil
 					}
-					return rejectedThumbnailError
+					return errRejectedThumbnail
 
 					// Thumbnail enforcement is optional - if the
 					// thumbnail matches we allow the connection in
