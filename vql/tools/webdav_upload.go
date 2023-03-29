@@ -1,19 +1,19 @@
-//+build extras
+//go:build extras
+// +build extras
 
 package tools
 
 import (
 	"context"
-	"crypto/tls"
+	"errors"
 	"io"
-	"net"
 	"net/http"
 	"net/url"
 	"path"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
@@ -28,7 +28,8 @@ type WebDAVUploadArgs struct {
 	Url               string            `vfilter:"required,field=url,doc=The WebDAV url"`
 	BasicAuthUser     string            `vfilter:"optional,field=basic_auth_user,doc=The username to use in HTTP basic auth"`
 	BasicAuthPassword string            `vfilter:"optional,field=basic_auth_password,doc=The password to use in HTTP basic auth"`
-	NoVerifyCert      bool              `vfilter:"optional,field=noverifycert,doc=Skip TLS Verification"`
+	NoVerifyCert      bool              `vfilter:"optional,field=noverifycert,doc=Skip TLS Verification (deprecated in favor of SkipVerify)"`
+	SkipVerify        bool              `vfilter:"optional,field=skip_verify,doc=Skip TLS Verification"`
 }
 
 type WebDAVUploadFunction struct{}
@@ -42,6 +43,10 @@ func (self *WebDAVUploadFunction) Call(ctx context.Context,
 	if err != nil {
 		scope.Log("upload_webdav: %s", err.Error())
 		return vfilter.Null{}
+	}
+
+	if arg.NoVerifyCert {
+		scope.Log("upload_webdav: NoVerifyCert is deprecated, please use SkipVerify instead")
 	}
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
@@ -83,7 +88,7 @@ func (self *WebDAVUploadFunction) Call(ctx context.Context,
 			arg.Url,
 			arg.BasicAuthUser,
 			arg.BasicAuthPassword,
-			arg.NoVerifyCert)
+			arg.NoVerifyCert || arg.SkipVerify)
 		if err != nil {
 			scope.Log("upload_webdav: %v", err)
 			return vfilter.Null{}
@@ -101,7 +106,7 @@ func upload_webdav(ctx context.Context, scope vfilter.Scope,
 	webdavUrl string,
 	basicAuthUser string,
 	basicAuthPassword string,
-	NoVerifyCert bool) (
+	skipVerify bool) (
 	*uploads.UploadResponse, error) {
 
 	scope.Log("upload_webdav: Uploading %v to %v", name, webdavUrl)
@@ -114,22 +119,20 @@ func upload_webdav(ctx context.Context, scope vfilter.Scope,
 	}
 	parsedUrl.Path = path.Join(parsedUrl.Path, name)
 
-	tlsConfig := &tls.Config{}
-	if NoVerifyCert {
-		tlsConfig.InsecureSkipVerify = true
+	config_obj, ok := artifacts.GetConfig(scope)
+	if !ok {
+		return nil, errors.New("unable to get client config")
 	}
-	var netTransport = &http.Transport{
-		Proxy: networking.GetProxy(),
-		DialContext: (&net.Dialer{
-			Timeout: 30 * time.Second, // TCP connect timeout
-		}).DialContext,
-		TLSHandshakeTimeout: 30 * time.Second,
-		TLSClientConfig:     tlsConfig,
-		TLSNextProto: make(map[string]func(
-			authority string, c *tls.Conn) http.RoundTripper),
+
+	client, err := networking.GetDefaultHTTPClient(config_obj, "", nil)
+	if err != nil {
+		return nil, err
 	}
-	client := &http.Client{
-		Transport: netTransport,
+
+	if skipVerify {
+		if err := networking.EnableSkipVerifyHttp(client, config_obj); err != nil {
+			return nil, err
+		}
 	}
 
 	req, err := http.NewRequest(http.MethodPut, parsedUrl.String(), reader)

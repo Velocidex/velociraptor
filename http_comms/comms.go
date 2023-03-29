@@ -1,32 +1,29 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2022 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2022 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package http_comms
 
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"math/rand"
-	"net"
 	"net/http"
 	"net/http/httptrace"
 	"net/url"
@@ -48,6 +45,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/networking"
 )
 
 var (
@@ -176,27 +174,11 @@ func NewHTTPConnector(
 		maxPollDev = 30
 	}
 
-	// Try to get the OS cert pool, failing that use a new one. We
-	// already contain a list of valid root certs but using the OS
-	// cert store allows us to support MITM proxies already on the
-	// system. https://github.com/Velocidex/velociraptor/issues/2330
-	CA_Pool, err := x509.SystemCertPool()
-	if err != nil {
-		CA_Pool = x509.NewCertPool()
-	}
-	err = crypto.AddDefaultCerts(config_obj.Client, CA_Pool)
+	transport, err := networking.GetHttpTransport(config_obj.Client, "")
 	if err != nil {
 		return nil, err
 	}
 
-	tls_config := &tls.Config{
-		MinVersion:         tls.VersionTLS12,
-		ClientSessionCache: tls.NewLRUClientSessionCache(100),
-		RootCAs:            CA_Pool,
-	}
-
-	// For self signed certificates we must ignore the server name
-	// and only trust certs issued by our server.
 	if config_obj.Client.UseSelfSignedSsl {
 		logger.Info("Expecting self signed certificate for server.")
 
@@ -205,31 +187,11 @@ func NewHTTPConnector(
 		// server. This setting also allows the server to be accessed
 		// by e.g. localhost despite the certificate being issued to
 		// VelociraptorServer.
-		tls_config.ServerName = config_obj.Client.PinnedServerName
+		transport.TLSClientConfig.ServerName = config_obj.Client.PinnedServerName
 	} else {
-
 		// Not self signed - add the public roots for verifications.
-		crypto.AddPublicRoots(tls_config.RootCAs)
+		crypto.AddPublicRoots(transport.TLSClientConfig.RootCAs)
 	}
-
-	timeout := config_obj.Client.ConnectionTimeout
-	if timeout == 0 {
-		timeout = 300 // 5 Min default
-	}
-
-	transport := http.DefaultTransport.(*http.Transport).Clone()
-	transport.TLSClientConfig = tls_config
-	transport.DialContext = (&net.Dialer{
-		Timeout:   time.Duration(timeout) * time.Second,
-		KeepAlive: time.Duration(timeout) * time.Second,
-		DualStack: true,
-	}).DialContext
-	transport.Proxy = proxyHandler
-	transport.MaxIdleConns = 100
-	transport.IdleConnTimeout = time.Duration(timeout) * time.Second
-	transport.TLSHandshakeTimeout = time.Duration(timeout) * time.Second
-	transport.ExpectContinueTimeout = time.Duration(timeout) * time.Second
-	transport.ResponseHeaderTimeout = time.Duration(timeout) * time.Second
 
 	self := &HTTPConnector{
 		config_obj: config_obj,
@@ -796,14 +758,14 @@ func (self *NotificationReader) maybeCallOnExit() {
 }
 
 // The Receiver channel is used to receive commands from the server:
-// 1. We send an empty MessageList{} with a POST
-//    (but this allows us to authenticate to the server).
-// 2. Block on reading the body of the POST until the server completes
-//    the request.  The server will trickle feed the connection with
-//    data to keep it alive for any intermediate proxies.
-// 3. Any received messages will be processed automatically by
-//    self.sendMessageList()
-// 4. If there are errors, we back off and wait for self.maxPoll.
+//  1. We send an empty MessageList{} with a POST
+//     (but this allows us to authenticate to the server).
+//  2. Block on reading the body of the POST until the server completes
+//     the request.  The server will trickle feed the connection with
+//     data to keep it alive for any intermediate proxies.
+//  3. Any received messages will be processed automatically by
+//     self.sendMessageList()
+//  4. If there are errors, we back off and wait for self.maxPoll.
 func (self *NotificationReader) Start(
 	ctx context.Context, wg *sync.WaitGroup) {
 
