@@ -11,6 +11,10 @@
     width: 100%;
 }
 
+.paged-table-header td {
+    vertical-align: middle;
+}
+
 .paged-table-header .sort-element {
     float: right;
     display: none;
