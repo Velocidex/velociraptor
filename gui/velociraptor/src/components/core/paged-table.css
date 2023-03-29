@@ -6,3 +6,21 @@
 .sort-button {
     width: 100%;
 }
+
+.paged-table-header {
+    width: 100%;
+}
+
+.paged-table-header .sort-element {
+    float: right;
+    display: none;
+}
+
+.paged-table-header:hover .sort-element {
+    float: right;
+    display: block;
+}
+
+.paged-table-header .sort-element.visible {
+    display: block;
+}
