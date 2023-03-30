@@ -42,6 +42,7 @@ func GetHttpTransport(config_obj *proto.ClientConfig, extra_roots string) (*http
 		}
 		return d.DialContext(ctx, network, fallback)
 	}
+
 	transport.Proxy = proxyHandler
 	transport.MaxIdleConns = 100
 	transport.MaxIdleConnsPerHost = 10

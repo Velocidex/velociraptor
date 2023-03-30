@@ -32,6 +32,7 @@ import (
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/json"
 )
 
 var (
@@ -126,7 +127,7 @@ func (self *Builder) Env() map[string]string {
 	if self.cc != "" {
 		env["CC"] = self.cc
 	}
-
+	fmt.Printf("Build Environment: %v\n", json.MustMarshalString(env))
 	return env
 }
 

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
+	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/acls"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -234,6 +235,9 @@ func (self ArtifactsPlugin) Call(
 			}
 			for _, name := range names {
 				artifact, pres := repository.Get(ctx, config_obj, name)
+
+				// Clean up the artifact by removing internal fields.
+				artifact = proto.Clone(artifact).(*artifacts_proto.Artifact)
 				for _, source := range artifact.Sources {
 					if source.Query != "" && len(source.Queries) > 0 {
 						source.Queries = nil

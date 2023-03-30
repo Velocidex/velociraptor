@@ -269,6 +269,10 @@ func (self *HTTPConnector) Post(
 
 	now := utils.GetTime().Now()
 	resp, err := self.client.Do(req)
+	if resp != nil {
+		defer resp.Body.Close()
+	}
+
 	if err != nil && err != io.EOF {
 		self.logger.Info("Post to %v returned %v - advancing to next server\n",
 			self.GetCurrentUrl(handler), err)
@@ -277,8 +281,6 @@ func (self *HTTPConnector) Post(
 		self.advanceToNextServer(ctx)
 		return nil, errors.Wrap(err, 0)
 	}
-	// Must make sure to close the body or we leak sockets.
-	defer resp.Body.Close()
 
 	self.logger.Info("%s: sent %d bytes, response with status: %v after %v, waiting for server messages",
 		name, len(data), resp.Status, utils.GetTime().Now().Sub(now))
@@ -482,6 +484,10 @@ func (self *HTTPConnector) rekeyNextServer(ctx context.Context) error {
 	req.Header.Set("Content-Type", "application/binary")
 
 	resp, err := self.client.Do(req)
+	if resp != nil {
+		defer resp.Body.Close()
+	}
+
 	if err != nil {
 		self.logger.Info("While getting %v: %v", url, err)
 		if strings.Contains(err.Error(), "cannot validate certificate") {
@@ -494,7 +500,6 @@ func (self *HTTPConnector) rekeyNextServer(ctx context.Context) error {
 		self.server_name = ""
 		return err
 	}
-	defer resp.Body.Close()
 
 	if resp.StatusCode != 200 {
 		return errors.New("Invalid status while downloading PEM")
