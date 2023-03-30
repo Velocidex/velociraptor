@@ -25,7 +25,7 @@ import api from '../core/api-service.jsx';
 import VeloTimestamp from "../utils/time.jsx";
 import ClientLink from '../clients/client-link.jsx';
 import HexView from '../utils/hex.jsx';
-import TableTransformDialog from './table-transform-dialog.jsx';
+
 import T from '../i8n/i8n.jsx';
 import UserConfig from '../core/user.jsx';
 
@@ -150,7 +150,8 @@ class VeloPagedTable extends Component {
         // A transform applied on the basic table.
         transform: {},
 
-        show_transform_dialog: false,
+        edit_filter_column: "",
+        edit_filter: "",
     }
 
     componentDidMount = () => {
@@ -312,7 +313,6 @@ class VeloPagedTable extends Component {
                 if (hidden === columns.length) {
                     toggles = {};
                 }
-
             }
             this.setState({loading: false,
                            total_size: parseInt(response.data.total_rows || 0),
@@ -332,6 +332,108 @@ class VeloPagedTable extends Component {
         </span>
     );
 
+    headerFormatter = (column, colIndex) => {
+        let icon = "sort";
+        let next_dir = "Ascending";
+        let tooltip = "Sort Up";
+        let classname = "sort-element";
+        let sort_column = this.state.transform && this.state.transform.sort_column;
+        let sort_dir = this.state.transform && this.state.transform.sort_direction;
+        let filter =  this.state.transform && this.state.transform.filter_regex;
+        let filter_column = this.state.transform &&
+            this.state.transform.filter_column;
+        let edit_filter_visible = this.state.edit_filter_column &&
+            this.state.edit_filter_column === column.text;
+
+        if (sort_column === column.text) {
+            if (sort_dir === "Ascending") {
+                icon = "arrow-up-a-z";
+                next_dir = "Descending";
+                tooltip = "Sort Down";
+            } else {
+                icon = "arrow-down-a-z";
+            }
+            classname = "visible sort-element";
+        } else if (filter_column == column.text || edit_filter_visible) {
+            classname = "visible sort-element";
+        }
+
+        return (
+            <table className="paged-table-header">
+              <tbody>
+                <tr>
+                  <td>{ column.text }</td>
+                  <td className={classname}>
+                    <ButtonGroup>
+                      <Button
+                        size="sm"
+                        variant="outline-dark"
+                        onClick={()=>{
+                            let transform = Object.assign({}, this.state.transform);
+                            transform.sort_column = column.text;
+                            transform.sort_direction = next_dir;
+                            this.setState({
+                                transform: transform,
+                            });
+                            if(this.props.setTransform) {
+                                this.props.setTransform(transform);
+                            }
+                        }}
+                      >
+                        <FontAwesomeIcon icon={icon}/>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline-dark"
+                        onClick={()=>{
+                            if (!edit_filter_visible) {
+                                this.setState({
+                                    edit_filter_column: column.text,
+                                    edit_filter: filter || "",
+                                });
+                                return;
+                            }
+
+                            let edit_filter = this.state.edit_filter;
+                            let transform = Object.assign({}, this.state.transform);
+                            if(edit_filter) {
+                                transform.filter_column = column.text;
+                                transform.filter_regex = this.state.edit_filter;
+                            } else {
+                                transform.filter_column = null;
+                                transform.filter_regex = null;
+                            }
+                            this.setState({
+                                edit_filter_column: null,
+                                transform: transform,
+                            });
+                            if(this.props.setTransform) {
+                                this.props.setTransform(transform);
+                            }
+                        }}
+                      >
+                        <FontAwesomeIcon icon="filter"/>
+                        { filter_column == column.text && filter }
+                      </Button>
+                      { edit_filter_visible &&
+                        <Form.Control
+                          as="input"
+                          className="pagination-form"
+                          placeholder={T("Regex")}
+                          spellCheck="false"
+                          value={this.state.edit_filter}
+                          onChange={e=> {
+                              this.setState({edit_filter: e.currentTarget.value});
+                          }}/> }
+                    </ButtonGroup>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+        );
+    }
+
+
     render() {
         let timezone = (this.context.traits &&
                         this.context.traits.timezone) || "UTC";
@@ -347,6 +449,10 @@ class VeloPagedTable extends Component {
 
         if (_.isEmpty(this.state.columns)) {
             if (this.props.refresh) {
+                let transformed = this.state.transform &&
+                    (this.state.transform.filter_column ||
+                     this.state.transform.filter_column);
+
                 return <>
                          <div className="col-12">
                            <Navbar className="toolbar">
@@ -357,6 +463,13 @@ class VeloPagedTable extends Component {
                              <Button variant="default" onClick={this.props.refresh}>
                                {T("Recalculate")} <FontAwesomeIcon icon="sync"/>
                              </Button>
+                             { transformed &&
+                               <Button variant="default"
+                                       onClick={()=>this.setState({transform: {}})}>
+                                 {T("Clear")}
+                                 <FontAwesomeIcon icon="filter"/>
+                               </Button>
+                             }
                            </div>
                          </div>
                        </>;
@@ -420,7 +533,11 @@ class VeloPagedTable extends Component {
             rows[j]["_id"] = j;
         }
 
-        columns = formatColumns(columns, this.props.env);
+        if (this.props.no_transformations) {
+            columns = formatColumns(columns, this.props.env);
+        } else {
+            columns = formatColumns(columns, this.props.env, this.headerFormatter);
+        }
 
         let total_size = this.state.total_size || 0;
         if (total_size < 0 && !_.isEmpty(this.state.rows)) {
@@ -437,23 +554,6 @@ class VeloPagedTable extends Component {
         }
         return (
             <div className="velo-table full-height"> <Spinner loading={this.state.loading} />
-              { this.state.show_transform_dialog &&
-                <TableTransformDialog
-                  columns={this.state.columns}
-                  transform={this.state.transform}
-                  setTransform={x=>{
-                      this.setState({
-                          transform: x,
-                          start_row: 0,
-                      });
-
-                      if(this.props.setTransform) {
-                          this.props.setTransform(x);
-                      }
-                  }}
-                  onClose={()=>this.setState({show_transform_dialog: false})}
-                />
-              }
               <ToolkitProvider
                 bootstrap4
                 keyField="_id"
@@ -493,7 +593,7 @@ class VeloPagedTable extends Component {
                                                      download_format: "json",
                                                  }))}>
                             <FontAwesomeIcon icon="download"/>
-			    <span className="sr-only">{T("Download JSON")}</span>
+                <span className="sr-only">{T("Download JSON")}</span>
                           </Button>
                           <Button variant="default"
                                   target="_blank" rel="noopener noreferrer"
@@ -506,19 +606,8 @@ class VeloPagedTable extends Component {
                                                      download_format: "csv",
                                                  }))}>
                             <FontAwesomeIcon icon="file-csv"/>
-			    <span className="sr-only">{T("Download CSV")}</span>
+                            <span className="sr-only">{T("Download CSV")}</span>
                           </Button>
-                          {!this.props.no_transformations &&
-                           <Button variant="default"
-                                   onClick={()=>this.setState({
-                                       show_transform_dialog: true,
-                                   })}
-                                   data-position="right"
-                                   className="btn-tooltip"
-                                   data-tooltip={T("Transform Table")}>
-                             <FontAwesomeIcon icon="filter"/>
-			     <span className="sr-only">{T("Transform Table")}</span>
-                           </Button>}
                         </ButtonGroup>
                         { transformed.length > 0 &&
                           <ButtonGroup className="float-right">
