@@ -20,13 +20,19 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-func (self *Launcher) DeleteFlow(
+func (self *FlowStorageManager) DeleteFlow(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string, flow_id string,
 	really_do_it bool) ([]*services.DeleteFlowResponse, error) {
 
-	collection_details, err := self.GetFlowDetails(config_obj, client_id, flow_id)
+	launcher, err := services.GetLauncher(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	collection_details, err := launcher.GetFlowDetails(
+		ctx, config_obj, client_id, flow_id)
 	if err != nil {
 		return nil, err
 	}

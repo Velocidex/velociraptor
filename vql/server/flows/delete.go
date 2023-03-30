@@ -64,7 +64,7 @@ func (self DeleteFlowPlugin) Call(
 				})
 		}
 
-		responses, err := launcher.DeleteFlow(ctx, config_obj,
+		responses, err := launcher.Storage().DeleteFlow(ctx, config_obj,
 			arg.ClientId, arg.FlowId, arg.ReallyDoIt)
 		if err != nil {
 			scope.Log("delete_flow: %v", err)

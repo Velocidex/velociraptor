@@ -31,7 +31,7 @@ func WatchForCollectionWithCB(ctx context.Context,
 			row *ordereddict.Dict) error {
 
 			// Extract the flow description from the event.
-			flow, err := GetFlowFromQueue(config_obj, row)
+			flow, err := GetFlowFromQueue(ctx, config_obj, row)
 			if err != nil {
 				return err
 			}
@@ -108,6 +108,7 @@ func WatchQueueWithCB(ctx context.Context,
 // disk. This allows faster processing on the server but it means we
 // dont have the full object available.
 func GetFlowFromQueue(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	row *ordereddict.Dict) (*flows_proto.ArtifactCollectorContext, error) {
 
@@ -126,7 +127,8 @@ func GetFlowFromQueue(
 		return nil, err
 	}
 
-	flow_details, err := launcher.GetFlowDetails(config_obj, client_id, flow_id)
+	flow_details, err := launcher.GetFlowDetails(
+		ctx, config_obj, client_id, flow_id)
 	if err != nil ||
 		flow_details == nil ||
 		flow_details.Context == nil {

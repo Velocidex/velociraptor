@@ -2,7 +2,6 @@ package networking
 
 import (
 	"context"
-	"crypto/tls"
 	"net"
 	"net/http"
 	"time"
@@ -50,10 +49,6 @@ func GetHttpTransport(config_obj *proto.ClientConfig, extra_roots string) (*http
 	transport.TLSHandshakeTimeout = time.Duration(timeout) * time.Second
 	transport.ExpectContinueTimeout = time.Duration(timeout) * time.Second
 	transport.ResponseHeaderTimeout = time.Duration(timeout) * time.Second
-
-	// disable HTTP/2, apparently it's bugged in recent Go versions
-	transport.TLSNextProto = make(map[string]func(
-		authority string, c *tls.Conn) http.RoundTripper)
 
 	return transport, nil
 }

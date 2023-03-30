@@ -287,7 +287,8 @@ func downloadFlowToZip(
 		return err
 	}
 
-	flow_details, err := launcher.GetFlowDetails(config_obj, client_id, flow_id)
+	flow_details, err := launcher.GetFlowDetails(
+		ctx, config_obj, client_id, flow_id)
 	if err == nil {
 		err = zip_writer.WriteJSON(
 			paths.ZipPathFromFSPathSpec(prefix.AddChild("collection_context")),
@@ -297,8 +298,8 @@ func downloadFlowToZip(
 		}
 	}
 
-	flow_requests, err := launcher.GetFlowRequests(config_obj,
-		client_id, flow_id, 0, 100)
+	flow_requests, err := launcher.Storage().GetFlowRequests(
+		ctx, config_obj, client_id, flow_id, 0, 100)
 	if err == nil {
 		err = zip_writer.WriteJSON(
 			paths.ZipPathFromFSPathSpec(prefix.AddChild("requests")),

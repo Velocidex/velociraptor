@@ -158,7 +158,7 @@ func (self *HuntManager) ProcessMutation(
 		return err
 	}
 
-	err = self.maybeDirectlyAssignFlow(config_obj, mutation)
+	err = self.maybeDirectlyAssignFlow(ctx, config_obj, mutation)
 	if err != nil {
 		return err
 	}
@@ -257,6 +257,7 @@ func (self *HuntManager) processMutation(
 
 // Check if the mutation requests a flow to be added to the hunt.
 func (self *HuntManager) maybeDirectlyAssignFlow(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	mutation *api_proto.HuntMutation) error {
 	assignment := mutation.Assignment
@@ -269,7 +270,7 @@ func (self *HuntManager) maybeDirectlyAssignFlow(
 	if err != nil {
 		return err
 	}
-	_, err = launcher.GetFlowDetails(config_obj, assignment.ClientId,
+	_, err = launcher.GetFlowDetails(ctx, config_obj, assignment.ClientId,
 		assignment.FlowId)
 	if err != nil {
 		return err

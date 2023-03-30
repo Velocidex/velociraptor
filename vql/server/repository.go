@@ -234,6 +234,12 @@ func (self ArtifactsPlugin) Call(
 			}
 			for _, name := range names {
 				artifact, pres := repository.Get(ctx, config_obj, name)
+				for _, source := range artifact.Sources {
+					if source.Query != "" && len(source.Queries) > 0 {
+						source.Queries = nil
+					}
+				}
+
 				if pres {
 					select {
 					case <-ctx.Done():
@@ -248,9 +254,11 @@ func (self ArtifactsPlugin) Call(
 		seen := make(map[string]*artifacts_proto.Artifact)
 		for _, name := range arg.Names {
 			artifact, pres := repository.Get(ctx, config_obj, name)
-			if pres {
-				seen[artifact.Name] = artifact
+			if !pres {
+				scope.Log("artifact_definitions: artifact %v not known", name)
+				continue
 			}
+			seen[artifact.Name] = artifact
 		}
 
 		launcher, err := services.GetLauncher(config_obj)
@@ -259,23 +267,26 @@ func (self ArtifactsPlugin) Call(
 			return
 		}
 
-		deps, err := launcher.GetDependentArtifacts(ctx,
-			config_obj, repository, arg.Names)
-		if err != nil {
-			scope.Log("artifact_definitions: %v", err)
-			return
+		if arg.IncludeDependencies {
+			deps, err := launcher.GetDependentArtifacts(ctx,
+				config_obj, repository, arg.Names)
+			if err != nil {
+				scope.Log("artifact_definitions: %v", err)
+				return
+			}
+
+			for _, name := range deps {
+				if name == "" {
+					continue
+				}
+				artifact, pres := repository.Get(ctx, config_obj, name)
+				if pres {
+					seen[artifact.Name] = artifact
+				}
+			}
 		}
 
-		for _, name := range deps {
-			if name == "" {
-				continue
-			}
-			artifact, pres := repository.Get(ctx, config_obj, name)
-			if !pres {
-				scope.Log("artifact_definitions: artifact %v not known", name)
-				continue
-			}
-
+		for _, artifact := range seen {
 			select {
 			case <-ctx.Done():
 				return

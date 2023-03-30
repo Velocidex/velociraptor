@@ -351,7 +351,7 @@ func getCellsForFlow(ctx context.Context,
 	}
 
 	flow_details, err := launcher.GetFlowDetails(
-		config_obj, client_id, flow_id)
+		ctx, config_obj, client_id, flow_id)
 	if err != nil {
 		return nil
 	}

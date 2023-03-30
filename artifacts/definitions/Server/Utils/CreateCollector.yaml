@@ -296,7 +296,7 @@ sources:
   - query: |
       LET Binaries <= SELECT * FROM foreach(
           row={
-             SELECT tools FROM artifact_definitions(names=artifacts)
+             SELECT tools FROM artifact_definitions(deps=TRUE, names=artifacts)
           }, query={
              SELECT * FROM foreach(row=tools,
              query={
@@ -355,7 +355,7 @@ sources:
       -- Add custom definition if needed. Built in definitions are not added
       LET definitions <= SELECT * FROM chain(
       a = { SELECT name, description, tools, parameters, sources
-            FROM artifact_definitions(names=artifacts)
+            FROM artifact_definitions(deps=TRUE, names=artifacts)
             WHERE NOT built_in AND
               log(message="Adding artifact_definition for " + name) },
 
