@@ -32,7 +32,7 @@ parameters:
     default: "%SYSTEMROOT%/appcompat/Programs/Amcache.hve"
     description: AMCache hive path
   - name: KeyPathGlob
-    default: /Root/{Inventory, File}**
+    default: /Root/{Inventory, File}*/**
     type: hidden
     description: Registry key path glob
   - name: SHA1Regex
