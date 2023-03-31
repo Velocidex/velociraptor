@@ -127,16 +127,13 @@ import (
 	"github.com/go-errors/errors"
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -176,7 +173,9 @@ func getCollectorSpecs(
 	return result
 }
 
-type Launcher struct{}
+type Launcher struct {
+	Storage_ services.FlowStorer
+}
 
 func (self *Launcher) CompileCollectorArgs(
 	ctx context.Context,
@@ -553,11 +552,6 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 		return "", errors.New("Client id not valid.")
 	}
 
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return "", err
-	}
-
 	client_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return "", err
@@ -613,9 +607,6 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 		task.Urgent = true
 	}
 
-	// Save the collection context first.
-	flow_path_manager := paths.NewFlowPathManager(client_id, session_id)
-
 	// Generate a new collection context for this flow.
 	collection_context := &flows_proto.ArtifactCollectorContext{
 		SessionId:           session_id,
@@ -628,11 +619,7 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 	}
 
 	// Record the tasks for provenance of what we actually did.
-	err = db.SetSubjectWithCompletion(config_obj,
-		flow_path_manager.Task(),
-		&api_proto.ApiFlowRequestDetails{
-			Items: []*crypto_proto.VeloMessage{task},
-		}, nil)
+	err = self.Storage().WriteTask(ctx, config_obj, client_id, task)
 	if err != nil {
 		return "", err
 	}
@@ -645,9 +632,10 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 			return "", err
 		}
 
-		err = db.SetSubjectWithCompletion(config_obj,
-			flow_path_manager.Path(),
-			collection_context, func() {})
+		// Write the collection object so the GUI can start tracking
+		// it.
+		err = self.Storage().WriteFlow(
+			ctx, config_obj, collection_context, utils.BackgroundWriter)
 		if err != nil {
 			return "", err
 		}
@@ -658,9 +646,7 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 	}
 
 	// Store the collection_context first, then queue all the tasks.
-	err = db.SetSubjectWithCompletion(config_obj,
-		flow_path_manager.Path(),
-		collection_context,
+	err = self.Storage().WriteFlow(ctx, config_obj, collection_context,
 
 		func() {
 			// Queue and notify the client about the new tasks
@@ -741,5 +727,7 @@ func NewLauncherService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) (services.Launcher, error) {
 
-	return &Launcher{}, nil
+	return &Launcher{
+		Storage_: &FlowStorageManager{},
+	}, nil
 }

@@ -21,7 +21,7 @@ Queries:
 
 
   # Check that artifact_definitions work
-  - SELECT name FROM artifact_definitions(names='Windows.KapeFiles.Targets') ORDER BY name
+  - SELECT name FROM artifact_definitions(deps=TRUE, names='Windows.KapeFiles.Targets') ORDER BY name
 
   # Make sure we can return all names
   - SELECT name FROM artifact_definitions() WHERE name =~ 'Windows.KapeFiles.Targets'

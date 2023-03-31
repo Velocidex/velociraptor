@@ -6,6 +6,7 @@ import (
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 const (
@@ -48,8 +49,10 @@ func (self *FlowReader) Cancel() {
 	self.cancel()
 }
 
-func NewFlowReader(ctx context.Context,
+func NewFlowReader(
+	ctx context.Context,
 	config_obj *config_proto.Config,
+	storage_manager services.FlowStorer,
 	client_id string) *FlowReader {
 
 	in := make(chan string)
@@ -76,8 +79,8 @@ func NewFlowReader(ctx context.Context,
 			defer wg.Done()
 
 			for session_id := range in {
-				collection_context, err := LoadCollectionContext(
-					config_obj, client_id, session_id)
+				collection_context, err := storage_manager.
+					LoadCollectionContext(ctx, config_obj, client_id, session_id)
 				if err == nil {
 					select {
 					case <-ctx.Done():

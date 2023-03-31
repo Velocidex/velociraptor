@@ -146,6 +146,10 @@ func upload_webdav(ctx context.Context, scope vfilter.Scope,
 	req.SetBasicAuth(basicAuthUser, basicAuthPassword)
 
 	resp, err := client.Do(req)
+	if resp != nil {
+		defer resp.Body.Close()
+	}
+
 	if err != nil {
 		return &uploads.UploadResponse{
 			Error: err.Error(),

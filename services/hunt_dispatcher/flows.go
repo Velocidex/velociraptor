@@ -55,7 +55,7 @@ func (self *HuntDispatcher) GetFlows(
 			}
 
 			collection_context, err := launcher.GetFlowDetails(
-				config_obj, participation_row.ClientId,
+				ctx, config_obj, participation_row.ClientId,
 				participation_row.FlowId)
 			if err != nil {
 				continue
