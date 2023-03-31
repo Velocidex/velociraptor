@@ -543,16 +543,13 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 	vql_collector_args []*actions_proto.VQLCollectorArgs,
 	completion func()) (string, error) {
 
-	client_id := collector_request.ClientId
-	if client_id == "" {
-		return "", errors.New("Client id not provided.")
-	}
-
-	if !utils.ValidateClientId(client_id) {
-		return "", errors.New("Client id not valid.")
-	}
-
 	client_manager, err := services.GetClientInfoManager(config_obj)
+	if err != nil {
+		return "", err
+	}
+
+	client_id := collector_request.ClientId
+	err = client_manager.ValidateClientId(client_id)
 	if err != nil {
 		return "", err
 	}
