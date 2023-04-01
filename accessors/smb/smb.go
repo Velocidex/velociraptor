@@ -3,7 +3,6 @@ package smb
 import (
 	"fmt"
 	"io/fs"
-	"os"
 	"strings"
 
 	errors "github.com/go-errors/errors"
@@ -224,7 +223,7 @@ func makeFileInfo(finfo fs.FileInfo,
 
 // Wrap the os.File object to keep track of open file handles.
 type SMBFileWrapper struct {
-	*os.File
+	*smb2.File
 	closed bool
 }
 
@@ -262,7 +261,8 @@ func (self *SMBFileSystemAccessor) OpenWithOSPath(
 		return nil, err
 	}
 
-	return file_obj, nil
+	smbAccessorCurrentOpened.Inc()
+	return &SMBFileWrapper{File: file_obj}, nil
 }
 
 func init() {

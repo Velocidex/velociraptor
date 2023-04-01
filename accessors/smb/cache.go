@@ -19,12 +19,17 @@ import (
 
 var (
 	smbAccessorCurrentOpened = promauto.NewGauge(prometheus.GaugeOpts{
-		Name: "accessor_smb_current_open_mounts",
+		Name: "accessor_smb_current_open_files",
 		Help: "Number of currently opened files with the smb accessor.",
 	})
 
-	smbAccessorRemoteMounts = promauto.NewCounter(prometheus.CounterOpts{
+	smbAccessorTotalRemoteMounts = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "accessor_smb_total_mounts",
+		Help: "Total Number of times the SMB accessor mounted a remote share",
+	})
+
+	smbAccessorCurrentRemoteMounts = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "accessor_smb_current_mounts",
 		Help: "Total Number of times the SMB accessor mounted a remote share",
 	})
 )
@@ -90,19 +95,17 @@ func (self *SMBConnectionContext) Mount(name string) (*smb2.Share, error) {
 	}
 	self.mount[name] = fs
 
-	smbAccessorCurrentOpened.Inc()
-	smbAccessorRemoteMounts.Inc()
+	smbAccessorTotalRemoteMounts.Inc()
+	smbAccessorCurrentRemoteMounts.Inc()
 	return fs, nil
 }
 
 func (self *SMBConnectionContext) Close() {
-	if self.mount == nil {
-		self.session.Logoff()
-	}
+	self.session.Logoff()
 	if self.conn != nil {
 		self.conn.Close()
 	}
-	smbAccessorCurrentOpened.Sub(float64(len(self.mount)))
+	smbAccessorCurrentRemoteMounts.Sub(float64(len(self.mount)))
 }
 
 type SMBMountCache struct {
@@ -155,17 +158,16 @@ func NewSMBMountCache(scope vfilter.Scope) *SMBMountCache {
 		lru:   ttlcache.NewCache(),
 	}
 	result.lru.SetTTL(time.Hour)
-	result.lru.SetCheckExpirationCallback(
-		func(key string, value interface{}) bool {
+	result.lru.SetExpirationCallback(
+		func(key string, value interface{}) {
 			ctx, ok := value.(*SMBConnectionContext)
 			if ok {
 				ctx.Close()
 			}
-			return true
 		})
 
 	vql_subsystem.GetRootScope(scope).AddDestructor(func() {
-		result.lru.Close()
+		result.lru.Flush()
 		cancel()
 	})
 	return result
