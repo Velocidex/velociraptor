@@ -616,7 +616,8 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 	}
 
 	// Record the tasks for provenance of what we actually did.
-	err = self.Storage().WriteTask(ctx, config_obj, client_id, task)
+	err = self.Storage().WriteTask(
+		ctx, config_obj, client_id, redactTask(task))
 	if err != nil {
 		return "", err
 	}
@@ -632,7 +633,8 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 		// Write the collection object so the GUI can start tracking
 		// it.
 		err = self.Storage().WriteFlow(
-			ctx, config_obj, collection_context, utils.BackgroundWriter)
+			ctx, config_obj, redactCollectContext(collection_context),
+			utils.BackgroundWriter)
 		if err != nil {
 			return "", err
 		}
@@ -643,7 +645,8 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 	}
 
 	// Store the collection_context first, then queue all the tasks.
-	err = self.Storage().WriteFlow(ctx, config_obj, collection_context,
+	err = self.Storage().WriteFlow(ctx, config_obj,
+		redactCollectContext(collection_context),
 
 		func() {
 			// Queue and notify the client about the new tasks
@@ -689,6 +692,7 @@ func addOrReplaceParameter(
 	for _, item := range result {
 		if item.Key == param.Key {
 			item.Value = param.Value
+			param.Comment = item.Comment
 			return result
 		}
 	}
