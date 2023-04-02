@@ -96,7 +96,7 @@ func (self *HashFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	file, err := fs.Open(arg.Path.String())
+	file, err := fs.OpenWithOSPath(arg.Path)
 	if err != nil {
 		//scope.Log("hash %s: %v", arg.Path.String(), err)
 		return vfilter.Null{}

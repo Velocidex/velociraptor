@@ -195,7 +195,7 @@ export default class EventTimelineViewer extends React.Component {
             if (av_t && av_t.length > 0) {
                 let ts = av_t[av_t.length-1]*1000;
                 this.setState({
-                    start_time: ts,
+                    start_time: ts || 0,
                     table_start: ts,
                     end_time: ts + 60*60*24*1000,
                 });
@@ -312,7 +312,7 @@ export default class EventTimelineViewer extends React.Component {
     // Jump to the previous page.
     prevPage = ()=>{
         this.setState({
-            start_time: this.state.start_time - 60*60*24*1000,
+            start_time: (this.state.start_time - 60*60*24*1000) || 0,
         });
         this.fetchRows();
     }
@@ -321,7 +321,7 @@ export default class EventTimelineViewer extends React.Component {
         if (this.state.table_end > 0) {
             let page_size = this.state.visibleTimeEnd - this.state.visibleTimeStart;
             this.setState({
-                start_time: this.state.table_end + 1000,
+                start_time: (this.state.table_end + 1000) || 0,
             });
 
             // Only scroll the timeline once we go past the view port.
@@ -489,6 +489,7 @@ export default class EventTimelineViewer extends React.Component {
 
 
         let adder = (ts, group_id)=>{
+            ts = ts || 0;
             items.push({
                 id: items.length, group: group_id,
                 ts: ts,
@@ -510,8 +511,8 @@ export default class EventTimelineViewer extends React.Component {
         _.each(this.state.available_timestamps, x=>adder(x, 1));
         _.each(this.state.available_log_timestamps, x=>adder(x, 2));
 
-        let visible_start_time = this.state.visibleTimeStart;
-        let visible_end_time = this.state.visibleTimeEnd;
+        let visible_start_time = this.state.visibleTimeStart || 0;
+        let visible_end_time = this.state.visibleTimeEnd || 200000000;
 
         // Disable buffer to prevent horizontal scroll. This seems to
         // interact badly with MacOS trackpads.
@@ -537,17 +538,23 @@ export default class EventTimelineViewer extends React.Component {
                    defaultTimeEnd={moment().add(1, "day")}
                    itemTouchSendsClick={true}
                    minZoom={5*60*1000}
-                   buffer="1"
+                   buffer={1}
                    dragSnap={1000}
                    onCanvasClick={(groupId, time, e) => {
-                       this.setState({start_time: time});
+                       if(time) {
+                           this.setState({start_time: time});
+                       }
                    }}
                    onItemSelect={(itemId, e, time) => {
-                       this.setState({start_time: time});
+                       if(time) {
+                           this.setState({start_time: time});
+                       }
                        return false;
                    }}
                    onItemClick={(itemId, e, time) => {
-                       this.setState({start_time: time});
+                       if(time) {
+                           this.setState({start_time: time});
+                       }
                        return false;
                    }}
                    visibleTimeStart={this.state.visibleTimeStart}

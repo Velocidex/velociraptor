@@ -12,3 +12,7 @@ img.preview-thumbnail {
 .btn.activate-button {
     width: 100%;
 }
+
+.textdump {
+    overflow-wrap: break-word;
+}

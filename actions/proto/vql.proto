@@ -19,6 +19,7 @@ message VQLRequest {
 message VQLEnv {
     string key = 1;
     string value = 2;
+    string comment = 3;
 }
 
 // This is the most common type of message - it specifies a query to
