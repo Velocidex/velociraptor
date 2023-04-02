@@ -165,12 +165,12 @@ type Launcher interface {
 
 	// Take the compiled requests from above and schedule them on the
 	// client.
-	ScheduleArtifactCollectionFromCollectorArgs(
+	WriteArtifactCollectionRecord(
 		ctx context.Context,
 		config_obj *config_proto.Config,
 		collector_request *flows_proto.ArtifactCollectorArgs,
 		vql_collector_args []*actions_proto.VQLCollectorArgs,
-		completion func()) (string, error)
+		completion func(task *crypto_proto.VeloMessage)) (string, error)
 
 	// Main entry point to launch an artifact collection.
 	ScheduleArtifactCollection(

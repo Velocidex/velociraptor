@@ -560,6 +560,7 @@ export function formatColumns(columns, env, column_formatter) {
 
         case "hex":
             x.formatter = (cell, row) => {
+                if (!cell.substr) return <></>;
                 let bytearray = [];
                 for (let c = 0; c < cell.length; c += 2) {
                     let term = cell.substr(c, 2);
