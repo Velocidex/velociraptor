@@ -163,9 +163,6 @@ func (self *MergeSorterCtx) Merge(ctx context.Context, output_chan chan types.Ro
 	// Wait for all the chunks to be ready.
 	self.wg.Wait()
 
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	// Sort the last in-memory chunk and add it as a provider.
 	if len(self.memory_sorter.Items) > 0 {
 		sort.Sort(self.memory_sorter)
