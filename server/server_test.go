@@ -463,6 +463,7 @@ func (self *ServerTestSuite) TestUploadBuffer() {
 				Offset: 0,
 				Data:   []byte("hello world"),
 				Size:   11,
+				Eof:    true,
 			},
 		})
 	runner.Close(self.Ctx)
