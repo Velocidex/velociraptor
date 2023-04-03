@@ -215,6 +215,8 @@ func (self *MergeSortGrouper) Group(
 			// Bins are too large we switch to the slower sort method
 			// which is memory constrained.
 			if self.bins.Len() > int(max_in_memory_group_by) {
+				scope.Log("GROUP BY: %v bins exceeded, Switching to slower file based",
+					self.bins.Len())
 				self.groupWithSorting(ctx, scope, output_chan, actor)
 				return
 			}

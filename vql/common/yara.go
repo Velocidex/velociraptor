@@ -341,6 +341,7 @@ func (self *scanReporter) scanRange(start, end uint64, f accessors.ReadSeekClose
 
 		// Advance the read pointer
 		self.base_offset += uint64(n)
+		self.reader = nil
 
 		// We count an op as one MB scanned.
 		self.scope.ChargeOp()
@@ -402,6 +403,9 @@ type scanReporter struct {
 	end            uint64
 	reader         io.ReaderAt
 	ctx            context.Context
+
+	// For accessor scanning
+	buf []byte
 
 	// Internal scan state
 	scope     vfilter.Scope

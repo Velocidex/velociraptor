@@ -153,7 +153,7 @@ func (self *MergeSorterCtx) Merge(ctx context.Context, output_chan chan types.Ro
 	// Close all the files when we are done.
 	defer func() {
 		self.mu.Lock()
-		self.mu.Unlock()
+		defer self.mu.Unlock()
 
 		for _, provider := range self.merge_files {
 			provider.Close()
@@ -162,9 +162,6 @@ func (self *MergeSorterCtx) Merge(ctx context.Context, output_chan chan types.Ro
 
 	// Wait for all the chunks to be ready.
 	self.wg.Wait()
-
-	self.mu.Lock()
-	self.mu.Unlock()
 
 	// Sort the last in-memory chunk and add it as a provider.
 	if len(self.memory_sorter.Items) > 0 {

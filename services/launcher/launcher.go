@@ -532,16 +532,27 @@ func (self *Launcher) ScheduleArtifactCollection(
 		args = append(args, compiled...)
 	}
 
-	return self.ScheduleArtifactCollectionFromCollectorArgs(
-		ctx, config_obj, collector_request, args, completion)
+	return self.WriteArtifactCollectionRecord(
+		ctx, config_obj, collector_request, args,
+		func(task *crypto_proto.VeloMessage) {
+			client_manager, err := services.GetClientInfoManager(config_obj)
+			if err != nil {
+				return
+			}
+
+			// Queue and notify the client about the new tasks
+			client_manager.QueueMessageForClient(
+				ctx, collector_request.ClientId, task,
+				services.NOTIFY_CLIENT, completion)
+		})
 }
 
-func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
+func (self *Launcher) WriteArtifactCollectionRecord(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	collector_request *flows_proto.ArtifactCollectorArgs,
 	vql_collector_args []*actions_proto.VQLCollectorArgs,
-	completion func()) (string, error) {
+	completion func(task *crypto_proto.VeloMessage)) (string, error) {
 
 	client_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
@@ -649,10 +660,7 @@ func (self *Launcher) ScheduleArtifactCollectionFromCollectorArgs(
 		redactCollectContext(collection_context),
 
 		func() {
-			// Queue and notify the client about the new tasks
-			client_manager.QueueMessageForClient(
-				ctx, client_id, task,
-				services.NOTIFY_CLIENT, utils.BackgroundWriter)
+			completion(task)
 		})
 	if err != nil {
 		return "", err
