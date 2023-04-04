@@ -11,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -85,13 +86,18 @@ loop:
 		}
 	}
 
-	scope.Log("Uploaded %v (%v bytes)", output_path.AsClientPath(), offset)
+	// Return paths relative to the storage root.
+	relative_path := path_specs.NewUnsafeFilestorePath(store_as_name.Components...).
+		SetType(api.PATH_TYPE_FILESTORE_ANY)
+
+	scope.Log("Uploaded %v (%v bytes)", relative_path.AsClientPath(), offset)
 	return &uploads.UploadResponse{
-		Path:       output_path.AsClientPath(),
+		Path:       relative_path.AsClientPath(),
 		Size:       uint64(offset),
 		StoredSize: uint64(offset),
 		Sha256:     hex.EncodeToString(sha_sum.Sum(nil)),
 		Md5:        hex.EncodeToString(md5_sum.Sum(nil)),
+		// Full components to the file in Components
 		Components: output_path.Components(),
 	}, nil
 }

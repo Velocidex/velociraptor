@@ -1,0 +1,59 @@
+{
+ "client_info.json": [
+  {}
+ ],
+ "logs.json": [
+  {
+   "Timestamp": 1680585571852796,
+   "Level": "DEFAULT",
+   "message": "Running query on behalf of user mic\n"
+  },
+  {
+   "Timestamp": 1680585571852838,
+   "Level": "DEFAULT",
+   "message": "\u003cgreen\u003eStarting\u003c/\u003e query execution.\n"
+  },
+  {
+   "Timestamp": 1680585571855305,
+   "Level": "DEFAULT",
+   "message": "Uploaded /File0.txt.json (37 bytes)\n"
+  },
+  {
+   "Timestamp": 1680585571856397,
+   "Level": "DEFAULT",
+   "message": "Uploaded /File1.txt.json (37 bytes)\n"
+  },
+  {
+   "Timestamp": 1680585571857412,
+   "Level": "DEBUG",
+   "message": "Query Stats: {\"RowsScanned\":2,\"PluginsCalled\":1,\"FunctionsCalled\":4,\"ProtocolSearch\":0,\"ScopeCopy\":6}\n"
+  }
+ ],
+ "uploads/File0.txt": "This is a long test with many letters",
+ "uploads/File1.txt": "This is a long test with many letters",
+ "uploads.json.index": "\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0000\u0000\u0000\u0000\u0001\u0000\u0000",
+ "uploads.json": [
+  {
+   "Timestamp": 1680585571,
+   "started": "2023-04-04 05:19:31.855375283 +0000 UTC",
+   "vfs_path": "/File0.txt.json",
+   "_Components": [
+    "uploads",
+    "File0.txt"
+   ],
+   "file_size": 37,
+   "uploaded_size": 37
+  },
+  {
+   "Timestamp": 1680585571,
+   "started": "2023-04-04 05:19:31.856444777 +0000 UTC",
+   "vfs_path": "/File1.txt.json",
+   "_Components": [
+    "uploads",
+    "File1.txt"
+   ],
+   "file_size": 37,
+   "uploaded_size": 37
+  }
+ ]
+}
