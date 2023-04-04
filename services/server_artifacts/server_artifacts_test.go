@@ -238,7 +238,7 @@ sources:
 	log_data := test_utils.FileReadAll(self.T(), self.ConfigObj,
 		flow_path_manager.Log())
 	assert.Contains(self.T(), log_data,
-		"Uploaded /clients/server/collections/F.1234/uploads/test.txt")
+		"Uploaded /test.txt")
 
 	// Make sure the upload data is stored in the upload file.
 	uploads_data := test_utils.FileReadAll(self.T(), self.ConfigObj,
