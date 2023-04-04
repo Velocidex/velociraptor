@@ -197,7 +197,7 @@ func (self *VFSService) ProcessListDirectoryLegacy(
 	scope vfilter.Scope, row *ordereddict.Dict,
 	basic_flow *flows_proto.ArtifactCollectorContext) {
 
-	flow, err := journal.GetFlowFromQueue(config_obj, row)
+	flow, err := journal.GetFlowFromQueue(ctx, config_obj, row)
 	if err != nil {
 		return
 	}

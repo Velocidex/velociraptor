@@ -8,13 +8,13 @@ import (
 	"encoding/json"
 	"io"
 	"io/ioutil"
+	"os"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/filesystem"
-	"www.velocidex.com/golang/velociraptor/vql/parsers"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/materializer"
 	"www.velocidex.com/golang/vfilter/types"
@@ -90,10 +90,46 @@ func (self *TempFileMatrializer) WriteRow(row types.Row) error {
 // Support StoredQuery protocol.
 func (self TempFileMatrializer) Eval(
 	ctx context.Context, scope types.Scope) <-chan types.Row {
-	return parsers.ParseJsonlPlugin{}.Call(ctx, scope,
-		ordereddict.NewDict().
-			Set("filename", self.filename).
-			Set("accessor", "file"))
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+
+		fd, err := os.Open(self.filename)
+		if err != nil {
+			scope.Log("Unable to open file %s: %v", self.filename, err)
+			return
+		}
+		defer fd.Close()
+
+		reader := bufio.NewReader(fd)
+		for {
+			select {
+			case <-ctx.Done():
+				return
+
+			default:
+				row_data, err := reader.ReadBytes('\n')
+				if err != nil {
+					return
+				}
+				item := ordereddict.NewDict()
+				err = item.UnmarshalJSON(row_data)
+				if err != nil {
+					return
+				}
+
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- item:
+				}
+			}
+		}
+	}()
+
+	return output_chan
 }
 
 // Support Associative protocol

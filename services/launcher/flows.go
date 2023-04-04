@@ -24,10 +24,7 @@ import (
 	"github.com/go-errors/errors"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
@@ -44,72 +41,30 @@ func (self *Launcher) GetFlows(
 	offset uint64, length uint64) (*api_proto.ApiFlowResponse, error) {
 
 	result := &api_proto.ApiFlowResponse{}
-	db, err := datastore.GetDB(config_obj)
+	flow_ids, err := self.Storage().ListFlows(ctx, config_obj, client_id)
 	if err != nil {
 		return nil, err
-	}
-
-	flow_path_manager := paths.NewFlowPathManager(client_id, "")
-	var flow_urns []api.DSPathSpec
-	all_flow_urns, err := db.ListChildren(
-		config_obj, flow_path_manager.ContainerPath())
-	if err != nil {
-		return nil, err
-	}
-
-	seen := make(map[string]api.DSPathSpec)
-
-	// We only care about the flow contexts
-	for _, urn := range all_flow_urns {
-		// Hide the monitoring flow since it is not a real flow.
-		if urn.Base() == constants.MONITORING_WELL_KNOWN_FLOW {
-			continue
-		}
-
-		// We really prefer the more modern JSON datastore objects but
-		// we do support older protobuf based objects if they are
-		// there.
-		if urn.Type() == api.PATH_TYPE_DATASTORE_JSON {
-			seen[urn.Base()] = urn
-			continue
-		}
-
-		if urn.Type() == api.PATH_TYPE_DATASTORE_PROTO {
-			_, pres := seen[urn.Base()]
-			if !pres {
-				seen[urn.Base()] = urn
-			}
-		}
-	}
-
-	for _, v := range seen {
-		flow_urns = append(flow_urns, v)
 	}
 
 	// No flows were returned.
-	if len(flow_urns) == 0 {
+	if len(flow_ids) == 0 {
 		return result, nil
 	}
 
-	// Flow IDs represent timestamp so they are sortable. The UI
-	// relies on more recent flows being at the top.
-	sort.Slice(flow_urns, func(i, j int) bool {
-		return flow_urns[i].Base() >= flow_urns[j].Base()
-	})
-
 	// Page the flow urns
 	end := offset + length
-	if end > uint64(len(flow_urns)) {
-		end = uint64(len(flow_urns))
+	if end > uint64(len(flow_ids)) {
+		end = uint64(len(flow_ids))
 	}
-	flow_urns = flow_urns[offset:end]
+	flow_ids = flow_ids[offset:end]
 
-	flow_reader := NewFlowReader(ctx, config_obj, client_id)
+	flow_reader := NewFlowReader(
+		ctx, config_obj, self.Storage(), client_id)
 	go func() {
 		defer flow_reader.Close()
 
-		for _, urn := range flow_urns {
-			flow_reader.In <- urn.Base()
+		for _, flow_id := range flow_ids {
+			flow_reader.In <- flow_id
 		}
 	}()
 
@@ -137,13 +92,15 @@ func (self *Launcher) GetFlows(
 // Gets more detailed information about the flow context - fills in
 // availableDownloads etc.
 func (self *Launcher) GetFlowDetails(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string, flow_id string) (*api_proto.FlowDetails, error) {
 	if flow_id == "" || client_id == "" {
 		return &api_proto.FlowDetails{}, nil
 	}
 
-	collection_context, err := LoadCollectionContext(config_obj, client_id, flow_id)
+	collection_context, err := self.Storage().LoadCollectionContext(
+		ctx, config_obj, client_id, flow_id)
 	if err != nil {
 		return nil, err
 	}
@@ -164,75 +121,6 @@ func availableDownloadFiles(config_obj *config_proto.Config,
 	download_dir := flow_path_manager.GetDownloadsDirectory()
 
 	return reporting.GetAvailableDownloadFiles(config_obj, download_dir)
-}
-
-// Load the collector context from storage.
-func LoadCollectionContext(
-	config_obj *config_proto.Config,
-	client_id, flow_id string) (*flows_proto.ArtifactCollectorContext, error) {
-
-	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	collection_context := &flows_proto.ArtifactCollectorContext{}
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.GetSubject(
-		config_obj, flow_path_manager.Path(), collection_context)
-	if err != nil {
-		return nil, err
-	}
-
-	if collection_context.SessionId == "" {
-		return nil, errors.New("Unknown flow " + client_id + " " + flow_id)
-	}
-
-	// Try to open the stats context
-	stats_context := &flows_proto.ArtifactCollectorContext{}
-	err = db.GetSubject(
-		config_obj, flow_path_manager.Stats(), stats_context)
-	if err != nil {
-		UpdateFlowStats(collection_context)
-		return collection_context, nil
-	}
-
-	// Copy relevant fields into the main context
-	if stats_context.TotalUploadedFiles > 0 {
-		collection_context.TotalUploadedFiles = stats_context.TotalUploadedFiles
-	}
-
-	if stats_context.TotalExpectedUploadedBytes > 0 {
-		collection_context.TotalExpectedUploadedBytes = stats_context.TotalExpectedUploadedBytes
-	}
-
-	if stats_context.TotalUploadedBytes > 0 {
-		collection_context.TotalUploadedBytes = stats_context.TotalUploadedBytes
-	}
-
-	if stats_context.TotalCollectedRows > 0 {
-		collection_context.TotalCollectedRows = stats_context.TotalCollectedRows
-	}
-
-	if stats_context.TotalLogs > 0 {
-		collection_context.TotalLogs = stats_context.TotalLogs
-	}
-
-	if stats_context.ActiveTime > 0 {
-		collection_context.ActiveTime = stats_context.ActiveTime
-	}
-
-	if len(stats_context.ArtifactsWithResults) > 0 {
-		collection_context.ArtifactsWithResults = stats_context.ArtifactsWithResults
-	}
-
-	if len(stats_context.QueryStats) > 0 {
-		collection_context.QueryStats = stats_context.QueryStats
-	}
-
-	UpdateFlowStats(collection_context)
-
-	return collection_context, nil
 }
 
 func (self *Launcher) CancelFlow(
@@ -259,8 +147,8 @@ func (self *Launcher) CancelFlow(
 		}, nil
 	}
 
-	collection_context, err := LoadCollectionContext(
-		config_obj, client_id, flow_id)
+	collection_context, err := self.Storage().LoadCollectionContext(
+		ctx, config_obj, client_id, flow_id)
 	if err == nil {
 		if collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING {
 			return nil, errors.New("Flow is not in the running state. " +
@@ -271,15 +159,8 @@ func (self *Launcher) CancelFlow(
 		collection_context.Status = "Cancelled by " + username
 		collection_context.Backtrace = ""
 
-		flow_path_manager := paths.NewFlowPathManager(
-			collection_context.ClientId, collection_context.SessionId)
-
-		db, err := datastore.GetDB(config_obj)
-		if err == nil {
-			db.SetSubjectWithCompletion(
-				config_obj, flow_path_manager.Path(),
-				collection_context, nil)
-		}
+		self.Storage().WriteFlow(
+			ctx, config_obj, collection_context, utils.BackgroundWriter)
 	}
 
 	// Get all queued tasks for the client and delete only those in this flow.
@@ -327,42 +208,6 @@ func (self *Launcher) CancelFlow(
 	return &api_proto.StartFlowResponse{
 		FlowId: flow_id,
 	}, nil
-}
-
-func (self *Launcher) GetFlowRequests(
-	config_obj *config_proto.Config,
-	client_id string, flow_id string,
-	offset uint64, count uint64) (*api_proto.ApiFlowRequestDetails, error) {
-	if count == 0 {
-		count = 50
-	}
-
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	result := &api_proto.ApiFlowRequestDetails{}
-
-	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	flow_details := &api_proto.ApiFlowRequestDetails{}
-	err = db.GetSubject(
-		config_obj, flow_path_manager.Task(), flow_details)
-	if err != nil {
-		return nil, err
-	}
-
-	if offset > uint64(len(flow_details.Items)) {
-		return result, nil
-	}
-
-	end := offset + count
-	if end > uint64(len(flow_details.Items)) {
-		end = uint64(len(flow_details.Items))
-	}
-
-	result.Items = flow_details.Items[offset:end]
-	return result, nil
 }
 
 // The collection_context contains high level stats that summarise the
@@ -452,18 +297,6 @@ func UpdateFlowStats(collection_context *flows_proto.ArtifactCollectorContext) {
 	}
 }
 
-func (self *Launcher) WriteFlow(
-	ctx context.Context,
-	config_obj *config_proto.Config,
-	flow *flows_proto.ArtifactCollectorContext) error {
-
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	flow_path_manager := paths.NewFlowPathManager(flow.ClientId, flow.SessionId)
-	return db.SetSubjectWithCompletion(
-		config_obj, flow_path_manager.Path(),
-		flow, utils.BackgroundWriter)
+func (self *Launcher) Storage() services.FlowStorer {
+	return self.Storage_
 }

@@ -47,7 +47,7 @@ func (self ResultSetFactory) getFilteredReader(
 			fmt.Sprintf("Range %d-%d", options.StartIdx, options.EndIdx))
 	}
 	transformed_path = transformed_path.AddUnsafeChild(
-		"filter", options.FilterRegex.String())
+		"filter", options.FilterColumn, options.FilterRegex.String())
 
 	// Try to open the transformed result set if it is already cached.
 	base_stat, err := file_store_factory.StatFile(log_path)

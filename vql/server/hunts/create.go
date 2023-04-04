@@ -26,6 +26,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -342,15 +343,18 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 		// Generate a new flow id for each request
 		request.FlowId = ""
 
-		arg.FlowId, err = launcher.ScheduleArtifactCollectionFromCollectorArgs(
+		arg.FlowId, err = launcher.WriteArtifactCollectionRecord(
 			ctx, config_obj, request, hunt_obj.StartRequest.CompiledCollectorArgs,
-			func() {
-				// Notify the client about it.
-				notifier, err := services.GetNotifier(config_obj)
-				if err == nil {
-					notifier.NotifyListener(ctx,
-						config_obj, arg.ClientId, "collect_client")
+			func(task *crypto_proto.VeloMessage) {
+				client_manager, err := services.GetClientInfoManager(config_obj)
+				if err != nil {
+					return
 				}
+
+				// Queue and notify the client about the new tasks
+				client_manager.QueueMessageForClient(
+					ctx, arg.ClientId, task,
+					services.NOTIFY_CLIENT, utils.BackgroundWriter)
 			})
 		if err != nil {
 			scope.Log("hunt_add: %v", err)

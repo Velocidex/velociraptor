@@ -413,9 +413,9 @@ export function sortCaret(order, column) {
     return null;
 }
 
-export function formatColumns(columns, env) {
+export function formatColumns(columns, env, column_formatter) {
     _.each(columns, (x) => {
-        x.headerFormatter=headerFormatter;
+        x.headerFormatter = column_formatter || headerFormatter;
         if (x.sort) {
             x.sortCaret = sortCaret;
         }
@@ -560,6 +560,7 @@ export function formatColumns(columns, env) {
 
         case "hex":
             x.formatter = (cell, row) => {
+                if (!cell.substr) return <></>;
                 let bytearray = [];
                 for (let c = 0; c < cell.length; c += 2) {
                     let term = cell.substr(c, 2);

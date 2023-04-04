@@ -79,7 +79,7 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 		for flow_details := range hunt_dispatcher.GetFlows(
 			ctx, config_obj, scope, arg.HuntId, 0) {
 
-			results, err := launcher.DeleteFlow(ctx, config_obj,
+			results, err := launcher.Storage().DeleteFlow(ctx, config_obj,
 				flow_details.Context.ClientId,
 				flow_details.Context.SessionId, arg.ReallyDoIt)
 			if err != nil {

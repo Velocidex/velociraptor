@@ -73,7 +73,7 @@ parameters:
 
 sources:
 - query: |
-    LET file_search = SELECT FullPath,
+    LET file_search = SELECT OSPath,
                Sys.mft as Inode,
                Mode.String AS Mode, Size,
                Mtime AS MTime,
@@ -109,11 +109,11 @@ sources:
                WHERE Mode.IsRegular
             },
             query={
-               SELECT FullPath, Inode, Mode,
-                      Size, Modified, ATime, MTime, CTime,
+               SELECT OSPath, Inode, Mode,
+                      Size, ATime, MTime, CTime,
                       str(str=String.Data) As Keywords
 
-               FROM yara(files=FullPath,
+               FROM yara(files=OSPath,
                          key="A",
                          rules=YaraRule,
                          accessor="file")
@@ -121,19 +121,17 @@ sources:
         },
         else={SELECT * FROM modified_before})
 
-    SELECT FullPath, Inode, Mode, Size, Modified, ATime,
+    SELECT OSPath, Inode, Mode, Size, ATime,
              MTime, CTime, get(field='Keywords') AS Keywords,
                if(condition=Upload_File and Mode.IsRegular,
-                  then=upload(file=FullPath,
+                  then=upload(file=OSPath,
                               accessor="file")) AS Upload,
                if(condition=Calculate_Hash and Mode.IsRegular,
-                  then=hash(path=FullPath,
+                  then=hash(path=OSPath,
                             accessor="file")) AS Hash
     FROM keyword_search
 
 column_types:
-  - name: Modified
-    type: timestamp
   - name: ATime
     type: timestamp
   - name: MTime

@@ -76,7 +76,7 @@ func watchForFlowCompletion(
 				}
 
 				// Extract the flow description from the event.
-				flow, err := vjournal.GetFlowFromQueue(config_obj, event)
+				flow, err := vjournal.GetFlowFromQueue(ctx, config_obj, event)
 				if err != nil {
 					continue
 				}

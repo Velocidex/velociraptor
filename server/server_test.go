@@ -463,6 +463,7 @@ func (self *ServerTestSuite) TestUploadBuffer() {
 				Offset: 0,
 				Data:   []byte("hello world"),
 				Size:   11,
+				Eof:    true,
 			},
 		})
 	runner.Close(self.Ctx)
@@ -542,7 +543,7 @@ func (self *ServerTestSuite) TestErrorMessage() {
 	assert.NoError(self.T(), err)
 
 	details, err := launcher.GetFlowDetails(
-		self.ConfigObj, self.client_id, flow_id)
+		self.Ctx, self.ConfigObj, self.client_id, flow_id)
 	require.NoError(t, err)
 
 	require.Regexp(self.T(), regexp.MustCompile("Error generated"),
@@ -584,7 +585,7 @@ func (self *ServerTestSuite) TestCompletions() {
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		details, err := launcher.GetFlowDetails(
-			self.ConfigObj, self.client_id, flow_id)
+			self.Ctx, self.ConfigObj, self.client_id, flow_id)
 		require.NoError(t, err)
 		// Flow not complete yet - still an outstanding request.
 		return flows_proto.ArtifactCollectorContext_RUNNING ==
@@ -609,7 +610,7 @@ func (self *ServerTestSuite) TestCompletions() {
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// Flow should be complete now that second response arrived.
 		details, err := launcher.GetFlowDetails(
-			self.ConfigObj, self.client_id, flow_id)
+			self.Ctx, self.ConfigObj, self.client_id, flow_id)
 		require.NoError(t, err)
 
 		return flows_proto.ArtifactCollectorContext_FINISHED ==

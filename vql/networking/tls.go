@@ -9,13 +9,24 @@ import (
 	"strings"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
+	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
 	errRejectedThumbprint = errors.New("Server certificate had no known thumbprint")
+
+	// To understand if caching client sessions will be useful we add
+	// this count.
+	metricClientSessionCacheMiss = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "tls_client_session_cache_miss",
+			Help: "Count of how many client session cache misses we had",
+		})
 )
 
 // hashCertificate takes a tls.Certificate and return the sha256
@@ -148,6 +159,26 @@ func customVerifyConnection(
 	}
 }
 
+type ClientSessionCache struct {
+	lru *cache.LRUCache
+}
+
+func (self *ClientSessionCache) Size() int {
+	return 1
+}
+
+func (self *ClientSessionCache) Put(sessionKey string, cs *tls.ClientSessionState) {
+	self.lru.Set(sessionKey, self)
+}
+
+func (self *ClientSessionCache) Get(sessionKey string) (*tls.ClientSessionState, bool) {
+	_, ok := self.lru.Get(sessionKey)
+	if !ok {
+		metricClientSessionCacheMiss.Inc()
+	}
+	return nil, false
+}
+
 func GetTlsConfig(config_obj *config_proto.ClientConfig, extra_roots string) (*tls.Config, error) {
 	// Try to get the OS cert pool, failing that use a new one. We
 	// already contain a list of valid root certs but using the OS
@@ -170,14 +201,18 @@ func GetTlsConfig(config_obj *config_proto.ClientConfig, extra_roots string) (*t
 	}
 
 	return &tls.Config{
-		MinVersion:         tls.VersionTLS12,
-		ClientSessionCache: tls.NewLRUClientSessionCache(100),
-		RootCAs:            CA_Pool,
+		MinVersion: tls.VersionTLS12,
+		// This seems incompatible with multiple connections and
+		// results in TLS errors. We need to consider if it is worth
+		// it by using these metrics.
+		ClientSessionCache: &ClientSessionCache{
+			lru: cache.NewLRUCache(100),
+		},
+		RootCAs: CA_Pool,
 
 		// Not actually skipping, we check the
-		// cert in VerifyPeerCertificate
+		// cert in VerifyConnection
 		InsecureSkipVerify: true,
-		NextProtos:         []string{"http/1.1"},
 		VerifyConnection:   customVerifyConnection(CA_Pool, config_obj),
 	}, nil
 }

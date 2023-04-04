@@ -2,7 +2,6 @@ package hunt_manager_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
@@ -12,7 +11,6 @@ import (
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -20,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_manager"
+	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vtesting"
@@ -30,9 +29,10 @@ import (
 type HuntTestSuite struct {
 	test_utils.TestSuite
 
-	client_id string
-	hunt_id   string
-	expected  *flows_proto.ArtifactCollectorArgs
+	client_id       string
+	hunt_id         string
+	expected        *flows_proto.ArtifactCollectorArgs
+	storage_manager launcher.FlowStorageManager
 }
 
 func (self *HuntTestSuite) SetupTest() {
@@ -103,13 +103,14 @@ func (self *HuntTestSuite) TestHuntManager() {
 		if err != nil {
 			return false
 		}
-		_, err = LoadCollectionContext(self.ConfigObj, self.client_id, flow_id)
+		_, err = self.storage_manager.LoadCollectionContext(self.Ctx,
+			self.ConfigObj, self.client_id, flow_id)
 		return err == nil
 	})
 
 	// Check that a flow was launched.
-	collection_context, err := LoadCollectionContext(self.ConfigObj,
-		self.client_id, flow_id)
+	collection_context, err := self.storage_manager.LoadCollectionContext(
+		self.Ctx, self.ConfigObj, self.client_id, flow_id)
 	assert.NoError(t, err)
 	assert.Equal(t, collection_context.Request.Artifacts, self.expected.Artifacts)
 }
@@ -159,7 +160,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 
 	// No flow should be launched.
 	flow_id := hunt_obj.StartRequest.FlowId
-	_, err = LoadCollectionContext(self.ConfigObj, self.client_id, flow_id)
+	_, err = self.storage_manager.LoadCollectionContext(self.Ctx,
+		self.ConfigObj, self.client_id, flow_id)
 	assert.Error(t, err)
 
 	// Now add the label to the client. The hunt will now be
@@ -180,7 +182,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	})
 
 	// The flow is now created.
-	_, err = LoadCollectionContext(self.ConfigObj, self.client_id, flow_id)
+	_, err = self.storage_manager.LoadCollectionContext(self.Ctx,
+		self.ConfigObj, self.client_id, flow_id)
 	assert.NoError(t, err)
 }
 
@@ -245,13 +248,13 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 		if err != nil {
 			return false
 		}
-		_, err := LoadCollectionContext(
+		_, err := self.storage_manager.LoadCollectionContext(self.Ctx,
 			self.ConfigObj, self.client_id, flow_id)
 		return err == nil
 	})
 
-	collection_context, err := LoadCollectionContext(self.ConfigObj,
-		self.client_id, flow_id)
+	collection_context, err := self.storage_manager.LoadCollectionContext(
+		self.Ctx, self.ConfigObj, self.client_id, flow_id)
 	assert.Equal(t, collection_context.Request.Artifacts, self.expected.Artifacts)
 }
 
@@ -304,13 +307,13 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 			return false
 		}
 
-		_, err := LoadCollectionContext(
+		_, err := self.storage_manager.LoadCollectionContext(self.Ctx,
 			self.ConfigObj, self.client_id, flow_id)
 		return err == nil
 	})
 
-	collection_context, err := LoadCollectionContext(self.ConfigObj,
-		self.client_id, flow_id)
+	collection_context, err := self.storage_manager.LoadCollectionContext(
+		self.Ctx, self.ConfigObj, self.client_id, flow_id)
 	assert.NoError(t, err)
 	assert.Equal(t, collection_context.Request.Artifacts, self.expected.Artifacts)
 }
@@ -375,13 +378,13 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 			return false
 		}
 
-		_, err := LoadCollectionContext(
-			self.ConfigObj, self.client_id, flow_id)
+		_, err := self.storage_manager.LoadCollectionContext(
+			self.Ctx, self.ConfigObj, self.client_id, flow_id)
 		return err == nil
 	})
 
-	collection_context, err := LoadCollectionContext(self.ConfigObj,
-		self.client_id, flow_id)
+	collection_context, err := self.storage_manager.LoadCollectionContext(
+		self.Ctx, self.ConfigObj, self.client_id, flow_id)
 	assert.NoError(t, err)
 	assert.Equal(t, collection_context.Request.Artifacts, self.expected.Artifacts)
 }
@@ -447,7 +450,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 	time.Sleep(time.Second)
 
 	// No flow should be launched.
-	_, err = LoadCollectionContext(self.ConfigObj, self.client_id, flow_id)
+	_, err = self.storage_manager.LoadCollectionContext(
+		self.Ctx, self.ConfigObj, self.client_id, flow_id)
 	assert.Error(t, err)
 }
 
@@ -519,12 +523,14 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// Flow should be launched on client id because it is a Windows client.
-		_, err = LoadCollectionContext(self.ConfigObj, client_id_1, flow_id)
+		_, err = self.storage_manager.LoadCollectionContext(
+			self.Ctx, self.ConfigObj, client_id_1, flow_id)
 		return err == nil
 	})
 
 	// No flow should be launched on client_id_2 because it is a Linux client.
-	_, err = LoadCollectionContext(self.ConfigObj, client_id_2, flow_id)
+	_, err = self.storage_manager.LoadCollectionContext(
+		self.Ctx, self.ConfigObj, client_id_2, flow_id)
 	assert.Error(t, err)
 }
 
@@ -779,28 +785,4 @@ func TestHuntTestSuite(t *testing.T) {
 			Artifacts: []string{"Generic.Client.Info"},
 		},
 	})
-}
-
-func LoadCollectionContext(
-	ConfigObj *config_proto.Config,
-	client_id, flow_id string) (*flows_proto.ArtifactCollectorContext, error) {
-
-	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	collection_context := &flows_proto.ArtifactCollectorContext{}
-	db, err := datastore.GetDB(ConfigObj)
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.GetSubject(ConfigObj, flow_path_manager.Path(),
-		collection_context)
-	if err != nil {
-		return nil, err
-	}
-
-	if collection_context.SessionId != flow_id {
-		return nil, errors.New("Not found")
-	}
-
-	return collection_context, nil
 }

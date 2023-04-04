@@ -373,7 +373,8 @@ func (self *ApiServer) GetFlowDetails(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
-	result, err := launcher.GetFlowDetails(org_config_obj, in.ClientId, in.FlowId)
+	result, err := launcher.GetFlowDetails(
+		ctx, org_config_obj, in.ClientId, in.FlowId)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -404,8 +405,8 @@ func (self *ApiServer) GetFlowRequests(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
-	result, err := launcher.GetFlowRequests(org_config_obj, in.ClientId, in.FlowId,
-		in.Offset, in.Count)
+	result, err := launcher.Storage().GetFlowRequests(
+		ctx, org_config_obj, in.ClientId, in.FlowId, in.Offset, in.Count)
 	return result, Status(self.verbose, err)
 }
 

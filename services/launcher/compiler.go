@@ -43,10 +43,10 @@ func (self *Launcher) CompileSingleArtifact(
 		value := parameter.Default
 		name := parameter.Name
 
-		result.Env = append(result.Env, &actions_proto.VQLEnv{
+		env := &actions_proto.VQLEnv{
 			Key:   name,
 			Value: value,
-		})
+		}
 
 		// If the parameter has a type, convert it
 		// appropriately. Note that parameters are always
@@ -61,6 +61,9 @@ func (self *Launcher) CompileSingleArtifact(
 		switch parameter.Type {
 		case "", "string", "regex", "yara":
 			// Nothing to do with these types.
+
+		case "redacted":
+			env.Comment = "redacted"
 
 		case "upload":
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
@@ -81,7 +84,7 @@ func (self *Launcher) CompileSingleArtifact(
 				if err == nil {
 					value, pres := md.GetString(name)
 					if pres {
-						result.Env[len(result.Env)-1].Value = value
+						env.Value = value
 					}
 				}
 			}
@@ -177,6 +180,7 @@ LET %v <= if(
 
 		}
 
+		result.Env = append(result.Env, env)
 	}
 
 	// Apply artifact default resource controls.
@@ -507,11 +511,11 @@ func PopulateArtifactsVQLCollectorArgs(
 			}
 
 			for _, env := range tmp.Env {
-				filtered_parameters = append(filtered_parameters,
-					&artifacts_proto.ArtifactParameter{
-						Name:    env.Key,
-						Default: env.Value,
-					})
+				parameter := &artifacts_proto.ArtifactParameter{
+					Name:    env.Key,
+					Default: env.Value,
+				}
+				filtered_parameters = append(filtered_parameters, parameter)
 			}
 
 			request.Artifacts = append(request.Artifacts,

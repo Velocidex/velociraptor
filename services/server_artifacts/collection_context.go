@@ -219,7 +219,7 @@ func (self *contextManager) Load() error {
 	}
 
 	details, err := launcher.GetFlowDetails(
-		self.config_obj, self.context.ClientId, self.context.SessionId)
+		self.ctx, self.config_obj, self.context.ClientId, self.context.SessionId)
 	if err != nil {
 		return err
 	}
@@ -244,9 +244,9 @@ func (self *contextManager) Save() error {
 		return err
 	}
 
-	return launcher.WriteFlow(
+	return launcher.Storage().WriteFlow(
 		self.ctx, // Write with parent context as query may have cancelled.
-		self.config_obj, context)
+		self.config_obj, context, utils.BackgroundWriter)
 }
 
 func (self *contextManager) Cancel(ctx context.Context, principal string) {

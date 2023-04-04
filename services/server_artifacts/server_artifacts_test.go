@@ -111,7 +111,8 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 	vtesting.WaitUntil(time.Second*50, self.T(), func() bool {
 		mu.Lock()
 		defer mu.Unlock()
-		details, err = launcher.GetFlowDetails(self.ConfigObj, "server", flow_id)
+		details, err = launcher.GetFlowDetails(
+			self.Ctx, self.ConfigObj, "server", flow_id)
 		assert.NoError(self.T(), err)
 
 		return details.Context.State != flows_proto.ArtifactCollectorContext_RUNNING
@@ -166,7 +167,8 @@ sources:
 
 	// Wait for the flow to be created
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
-		_, err := launcher.GetFlowDetails(self.ConfigObj, "server", "F.1234")
+		_, err := launcher.GetFlowDetails(
+			self.Ctx, self.ConfigObj, "server", "F.1234")
 		return err == nil
 	})
 
@@ -236,7 +238,7 @@ sources:
 	log_data := test_utils.FileReadAll(self.T(), self.ConfigObj,
 		flow_path_manager.Log())
 	assert.Contains(self.T(), log_data,
-		"Uploaded /clients/server/collections/F.1234/uploads/test.txt")
+		"Uploaded /test.txt")
 
 	// Make sure the upload data is stored in the upload file.
 	uploads_data := test_utils.FileReadAll(self.T(), self.ConfigObj,

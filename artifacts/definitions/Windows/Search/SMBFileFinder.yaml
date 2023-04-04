@@ -1,0 +1,143 @@
+name: Windows.Search.SMBFileFinder
+description: |
+  Find files on a remote filesystem using the filename or content.
+
+  ## Security Note
+
+  In order to access a remote share we require the credentials of a
+  domain user. Currently only username/password are supported (i.e. no
+  Kerberose). You should use Group Policy to create a user with read
+  only access to the remote share.
+
+  ## Performance Note
+
+  This artifact can be quite expensive slow and generate a lot of
+  network data, especially if we search file content. It will require
+  opening each file and reading its entire content. To minimize the
+  impact on the endpoint we recommend this artifact is collected with
+  a rate limited way (about 20-50 ops per second).
+
+parameters:
+  - name: ServerName
+    default: 127.0.0.1:445
+    description: |
+      The name of the server to contact. If a port is not specified we
+      use port 445
+
+  - name: Username
+    default: Guest
+    type: redacted
+    description: The name of a network user to access the remote share with.
+
+  - name: Password
+    default: password
+    type: redacted
+    description: The password to use for accessing the remote share.
+
+  - name: SearchFilesGlob
+    default: C$\Users\*
+    description: |
+      Use a glob to define the files that will be searched. The glob
+      must contain the share name as the first component.
+
+  - name: SearchFilesGlobTable
+    type: csv
+    default: |
+      Glob
+      C$/Users/SomeUser/*
+    description: Alternative specify multiple globs in a table
+
+  - name: YaraRule
+    type: yara
+    default:
+    description: A yara rule to search for matching files.
+
+  - name: Upload_File
+    default: N
+    type: bool
+
+  - name: Calculate_Hash
+    default: N
+    type: bool
+
+  - name: MoreRecentThan
+    default: ""
+    type: timestamp
+
+  - name: ModifiedBefore
+    default: ""
+    type: timestamp
+
+
+sources:
+  - query: |
+      LET SMB_CREDENTIALS <= set(item=dict(), field=ServerName,
+         value=format(format="%s:%s", args=[Username, Password]))
+
+      LET file_search = SELECT OSPath,
+               get(item=Data, field="mft") as Inode,
+               Mode.String AS Mode, Size,
+               Mtime AS MTime,
+               Atime AS ATime,
+               Btime AS BTime,
+               Ctime AS CTime, "" AS Keywords,
+               IsDir, Data
+        FROM glob(globs=SearchFilesGlobTable.Glob + SearchFilesGlob,
+                  root=ServerName,
+                  accessor="smb")
+
+      LET more_recent = SELECT * FROM if(
+        condition=MoreRecentThan,
+        then={
+          SELECT * FROM file_search
+          WHERE MTime > MoreRecentThan
+        }, else=file_search)
+
+      LET modified_before = SELECT * FROM if(
+        condition=ModifiedBefore,
+        then={
+          SELECT * FROM more_recent
+          WHERE MTime < ModifiedBefore
+           AND  MTime > MoreRecentThan
+        }, else=more_recent)
+
+      LET keyword_search = SELECT * FROM if(
+        condition=YaraRule,
+        then={
+          SELECT * FROM foreach(
+            row={
+               SELECT * FROM modified_before
+               WHERE NOT IsDir
+            },
+            query={
+               SELECT OSPath, Inode, Mode,
+                      Size, MTime, ATime, CTime, BTime,
+                      str(str=String.Data) As Keywords, IsDir, Data
+
+               FROM yara(files=OSPath,
+                         key="A",
+                         rules=YaraRule,
+                         accessor="smb")
+            })
+        }, else=modified_before)
+
+      SELECT OSPath, Inode, Mode, Size, MTime, ATime,
+             CTime, BTime, Keywords, IsDir,
+               if(condition=Upload_File and NOT IsDir,
+                  then=upload(file=OSPath, accessor="smb")) AS Upload,
+               if(condition=Calculate_Hash and NOT IsDir,
+                  then=hash(path=OSPath, accessor="smb")) AS Hash,
+            Data
+      FROM keyword_search
+
+column_types:
+  - name: Modified
+    type: timestamp
+  - name: ATime
+    type: timestamp
+  - name: MTime
+    type: timestamp
+  - name: CTime
+    type: timestamp
+  - name: Upload
+    type: preview_upload

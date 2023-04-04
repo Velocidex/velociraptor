@@ -60,6 +60,47 @@ sources:
 	launcher.SetFlowIdForTests("F.1234")
 }
 
+func (self *TestSuite) TestExportCollectionServerArtifact() {
+	import_file_path, err := filepath.Abs("fixtures/export_server_artifact.zip")
+	assert.NoError(self.T(), err)
+
+	test_utils.UnzipToFilestore(self.ConfigObj,
+		path_specs.NewUnsafeFilestorePath("clients", "server", "collections"),
+		import_file_path)
+
+	// test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: acl_managers.NullACLManager{},
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
+		Env:        ordereddict.NewDict(),
+	}
+
+	ctx := self.Ctx
+	scope := manager.BuildScope(builder)
+
+	// Now create the download export. The plugin returns a filestore
+	// pathspec to the created download file.
+	result := (&CreateFlowDownload{}).Call(ctx, scope,
+		ordereddict.NewDict().
+			Set("client_id", "server").
+			Set("flow_id", "F.CGLR6OS84DP00").
+			Set("wait", true).
+			Set("expand_sparse", false).
+			Set("name", "Test"))
+
+	// A zip file was created
+	path_spec, ok := result.(path_specs.FSPathSpec)
+	assert.True(self.T(), ok)
+
+	file_details, err := openZipFile(self.ConfigObj, scope, path_spec)
+	assert.NoError(self.T(), err)
+
+	goldie.Assert(self.T(), "TestExportCollectionServerArtifact",
+		json.MustMarshalIndent(file_details))
+}
+
 // First import a collection from a zip file to create a
 // collection. Then we export the collection back into zip files to
 // test the export functionality.
@@ -73,7 +114,7 @@ func (self *TestSuite) TestExportCollection() {
 		Env:        ordereddict.NewDict(),
 	}
 
-	ctx := context.Background()
+	ctx := self.Ctx
 	scope := manager.BuildScope(builder)
 
 	import_file_path, err := filepath.Abs("fixtures/export.zip")

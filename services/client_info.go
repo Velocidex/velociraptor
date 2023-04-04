@@ -111,6 +111,8 @@ type ClientInfoManager interface {
 
 	SetMetadata(ctx context.Context,
 		client_id string, metadata *ordereddict.Dict, principal string) error
+
+	ValidateClientId(client_id string) error
 }
 
 func GetHostname(

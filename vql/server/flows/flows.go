@@ -56,7 +56,7 @@ func (self FlowsPlugin) Call(
 		// The user only cares about one flow
 		if arg.FlowId != "" {
 			flow_details, err := launcher.GetFlowDetails(
-				config_obj, arg.ClientId, arg.FlowId)
+				ctx, config_obj, arg.ClientId, arg.FlowId)
 			if err == nil {
 				item := json.ConvertProtoToOrderedDict(
 					flow_details.Context)
@@ -198,7 +198,7 @@ func (self EnumerateFlowPlugin) Call(
 			return
 		}
 
-		responses, err := launcher.DeleteFlow(ctx, config_obj,
+		responses, err := launcher.Storage().DeleteFlow(ctx, config_obj,
 			arg.ClientId, arg.FlowId, false /* really_do_it */)
 		if err != nil {
 			scope.Log("delete_flow: %v", err)
@@ -260,7 +260,8 @@ func (self *GetFlowFunction) Call(ctx context.Context,
 		scope.Log("get_flow: %v", err)
 		return vfilter.Null{}
 	}
-	res, err := launcher.GetFlowDetails(config_obj, arg.ClientId, arg.FlowId)
+	res, err := launcher.GetFlowDetails(
+		ctx, config_obj, arg.ClientId, arg.FlowId)
 	if err != nil {
 		scope.Log("get_flow: %v", err)
 		return vfilter.Null{}

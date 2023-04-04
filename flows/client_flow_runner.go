@@ -294,6 +294,32 @@ func (self *ClientFlowRunner) FileBuffer(
 		if err != nil {
 			return err
 		}
+	}
+
+	// Write the actual data to the file.
+	_, err = fd.Write(file_buffer.Data)
+	if err != nil {
+		logger.Error("While writing to %v: %v",
+			file_path_manager.Path().AsClientPath(), err)
+		return nil
+	}
+
+	// The EOF status represents the file is complete - do some housework
+	if file_buffer.Eof {
+		uploadCounter.Inc()
+		uploadBytes.Add(float64(file_buffer.StoredSize))
+
+		// When the upload completes, we emit an event.
+		self.upload_completion_messages = append(
+			self.upload_completion_messages,
+			ordereddict.NewDict().
+				Set("Timestamp", time.Now().UTC().Unix()).
+				Set("ClientId", client_id).
+				Set("VFSPath", file_path_manager.Path().AsClientPath()).
+				Set("UploadName", file_buffer.Pathspec.Path).
+				Set("Accessor", file_buffer.Pathspec.Accessor).
+				Set("Size", file_buffer.Size).
+				Set("UploadedSize", file_buffer.StoredSize))
 
 		// Write the upload to the uplod metadata
 		rs_writer, err := result_sets.NewResultSetWriter(
@@ -304,6 +330,9 @@ func (self *ClientFlowRunner) FileBuffer(
 		if err != nil {
 			return err
 		}
+
+		defer rs_writer.Close()
+
 		rs_writer.Write(ordereddict.NewDict().
 			Set("Timestamp", utils.GetTime().Now().UTC().Unix()).
 			Set("started", utils.GetTime().Now().UTC().String()).
@@ -318,76 +347,39 @@ func (self *ClientFlowRunner) FileBuffer(
 			Set("_client_components", file_buffer.Pathspec.Components).
 			Set("uploaded_size", file_buffer.StoredSize))
 
-		rs_writer.Close()
-	}
-
-	// Additional row for sparse files
-	if file_buffer.Index != nil {
-		rs_writer, err := result_sets.NewResultSetWriter(
-			file_store_factory, flow_path_manager.UploadMetadata(),
-			json.DefaultEncOpts(),
-			self.completer.GetCompletionFunc(),
-			result_sets.AppendMode)
-		if err != nil {
-			return err
-		}
-
-		rs_writer.Write(ordereddict.NewDict().
-			Set("Timestamp", time.Now().UTC().Unix()).
-			Set("started", time.Now().UTC().String()).
-			Set("vfs_path", file_path_manager.VisibleVFSPath()+".idx").
-			Set("Type", "idx").
-			Set("_Components", file_path_manager.Path().Components()).
-			Set("_accessor", file_buffer.Pathspec.Accessor).
-			Set("_client_components", file_buffer.Pathspec.Components).
-			Set("file_size", file_buffer.Size).
-			Set("uploaded_size", file_buffer.StoredSize))
-
-		rs_writer.Close()
-	}
-
-	_, err = fd.Write(file_buffer.Data)
-	if err != nil {
-		logger.Error("While writing to %v: %v",
-			file_path_manager.Path().AsClientPath(), err)
-		return nil
-	}
-
-	// Does this packet have an index? It could be sparse.
-	if file_buffer.Index != nil {
-		fd, err := file_store_factory.WriteFile(
-			file_path_manager.IndexPath())
-		if err != nil {
-			return err
-		}
-		defer fd.Close()
-
-		err = fd.Truncate()
-		if err != nil {
-			return err
-		}
-
-		data := json.MustMarshalIndent(file_buffer.Index)
-		_, err = fd.Write(data)
-		if err != nil {
-			return err
-		}
-	}
-
-	// When the upload completes, we emit an event.
-	if file_buffer.Eof {
-		uploadCounter.Inc()
-		uploadBytes.Add(float64(file_buffer.StoredSize))
-
-		self.upload_completion_messages = append(self.upload_completion_messages,
-			ordereddict.NewDict().
+		// Additional row for sparse files
+		if file_buffer.Index != nil {
+			rs_writer.Write(ordereddict.NewDict().
 				Set("Timestamp", time.Now().UTC().Unix()).
-				Set("ClientId", client_id).
-				Set("VFSPath", file_path_manager.Path().AsClientPath()).
-				Set("UploadName", file_buffer.Pathspec.Path).
-				Set("Accessor", file_buffer.Pathspec.Accessor).
-				Set("Size", file_buffer.Size).
-				Set("UploadedSize", file_buffer.StoredSize))
+				Set("started", time.Now().UTC().String()).
+				Set("vfs_path", file_path_manager.VisibleVFSPath()+".idx").
+				Set("Type", "idx").
+				Set("_Components", file_path_manager.Path().Components()).
+				Set("_accessor", file_buffer.Pathspec.Accessor).
+				Set("_client_components", file_buffer.Pathspec.Components).
+				Set("file_size", file_buffer.Size).
+				Set("uploaded_size", file_buffer.StoredSize))
+
+			// Write the index file (NOTE: the FileBuffer.Index only
+			// appears at the list Eof Packet.
+			fd, err := file_store_factory.WriteFile(
+				file_path_manager.IndexPath())
+			if err != nil {
+				return err
+			}
+			defer fd.Close()
+
+			err = fd.Truncate()
+			if err != nil {
+				return err
+			}
+
+			data := json.MustMarshalIndent(file_buffer.Index)
+			_, err = fd.Write(data)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
