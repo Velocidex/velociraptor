@@ -94,13 +94,7 @@ func (self *Indexer) searchRecents(
 	}()
 
 	// Return all the valid records
-	total_count := 0
 	for api_client := range resolver.Out {
-		total_count++
-		if uint64(total_count) < in.Offset {
-			continue
-		}
-
 		// Skip clients that are offline
 		if in.Filter == api_proto.SearchClientsRequest_ONLINE &&
 			now > api_client.LastSeenAt &&
@@ -109,15 +103,25 @@ func (self *Indexer) searchRecents(
 		}
 
 		result.Items = append(result.Items, api_client)
-		if uint64(len(result.Items)) > limit {
-			return result, nil
-		}
 	}
 
-	// Sort the children in reverse order - most recent first.
+	// Sort the results in reverse order - most recent first.
 	sort.Slice(result.Items, func(i, j int) bool {
 		return result.Items[i].FirstSeenAt > result.Items[j].FirstSeenAt
 	})
+
+	// Page the result properly
+	start := int(in.Offset)
+	if start > len(result.Items) {
+		result.Items = nil
+		return result, nil
+	}
+
+	end := int(in.Offset + limit)
+	if end > len(result.Items) {
+		end = len(result.Items) - 1
+	}
+	result.Items = result.Items[start:end]
 
 	return result, nil
 }
