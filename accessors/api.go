@@ -1,6 +1,7 @@
 package accessors
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -49,6 +50,33 @@ type OSPath struct {
 	pathspec    *PathSpec
 	serialized  *string
 	Manipulator PathManipulator
+}
+
+func (self *OSPath) DescribeType() string {
+	subtype := ""
+	switch self.Manipulator.(type) {
+	case LinuxPathManipulator:
+		subtype = "LinuxPath"
+	case GenericPathManipulator:
+		subtype = "Generic"
+	case WindowsPathManipulator:
+		subtype = "WindowsPath"
+	case WindowsNTFSManipulator:
+		subtype = "NTFSPath"
+	case WindowsRegistryPathManipulator:
+		subtype = "RegistryPath"
+	case PathSpecPathManipulator:
+		subtype = "PathSpec"
+	case FileStorePathManipulator:
+		subtype = "FileStorePath"
+	case RawFileManipulator:
+		subtype = "RawPath"
+	case ZipFileManipulator:
+		subtype = "ZipPathspec"
+	default:
+		subtype = fmt.Sprintf("%T", self.Manipulator)
+	}
+	return fmt.Sprintf("OSPath(%s)", subtype)
 }
 
 // Make a copy of the OSPath

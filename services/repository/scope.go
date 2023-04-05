@@ -17,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/remapping"
 	"www.velocidex.com/golang/velociraptor/vql/sorter"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/explain"
 )
 
 func _build(self services.ScopeBuilder, from_scratch bool) vfilter.Scope {
@@ -86,6 +87,9 @@ func _build(self services.ScopeBuilder, from_scratch bool) vfilter.Scope {
 	scope.SetSorter(sorter.MergeSorter{ChunkSize: 10000})
 	scope.SetGrouper(grouper.NewMergeSortGrouperFactory(self.Config, 10000))
 	scope.SetMaterializer(materializer.NewMaterializer())
+
+	// For now explain messages will go to the log stream.
+	scope.SetExplainer(explain.NewLoggingExplainer(scope))
 
 	artifact_plugin := NewArtifactRepositoryPlugin(self.Repository, self.Config)
 	env.Set("Artifact", artifact_plugin)

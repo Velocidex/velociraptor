@@ -93,6 +93,7 @@ func (self *ApiServer) GetKeywordCompletions(
 
 	result := &api_proto.KeywordCompletions{
 		Items: []*api_proto.Completion{
+			{Name: "EXPLAIN", Type: "Keyword"},
 			{Name: "SELECT", Type: "Keyword"},
 			{Name: "FROM", Type: "Keyword"},
 			{Name: "LET", Type: "Keyword"},

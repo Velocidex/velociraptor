@@ -8,7 +8,7 @@ export class VqlHighlightRules extends window.ace.acequire("ace/mode/sql_highlig
         super();
 
         var keywords = (
-            "select|from|where|and|or|group|by|order|limit|as|null|let"
+            "explain|select|from|where|and|or|group|by|order|limit|as|null|let"
         );
 
         var builtinConstants = (
