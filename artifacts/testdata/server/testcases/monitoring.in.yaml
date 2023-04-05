@@ -1,0 +1,18 @@
+Queries:
+  - SELECT * FROM monitoring_logs(
+     client_id="C.4f5e52adf0a337a9", artifact="Generic.Client.Stats") LIMIT 5
+
+  # Make sure time ranges work.
+  - SELECT * FROM monitoring_logs(
+     start_time=1638919349247, end_time=1638919354000,
+     client_id="C.4f5e52adf0a337a9", artifact="Generic.Client.Stats") LIMIT 5
+
+  # This should be reading the main result set but we just copy the
+  # same data as the logs.
+  - SELECT * FROM monitoring(
+     client_id="C.4f5e52adf0a337a9", artifact="Generic.Client.Stats") LIMIT 5
+
+  # Make sure time ranges work.
+  - SELECT * FROM monitoring(
+     start_time=1638919349247, end_time=1638919354000,
+     client_id="C.4f5e52adf0a337a9", artifact="Generic.Client.Stats") LIMIT 5

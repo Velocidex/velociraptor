@@ -17,19 +17,21 @@
 */
 
 package monitoring
+
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/paths"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
-	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -65,7 +67,7 @@ func (self MonitoringLogsPlugin) Call(
 
 	err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
 	if err != nil {
-		scope.Log("uploads: %s", err)
+		scope.Log("monitoring_logs: %s", err)
 		close(output_chan)
 		return output_chan
 	}
@@ -73,7 +75,7 @@ func (self MonitoringLogsPlugin) Call(
 	arg := &MonitoringLogsPluginArgs{}
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
-		scope.Log("Command can only run on the server")
+		scope.Log("monitoring_logs: Command can only run on the server")
 		close(output_chan)
 		return output_chan
 	}
@@ -87,7 +89,7 @@ func (self MonitoringLogsPlugin) Call(
 	// Allow the plugin args to override the environment scope.
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("source: %v", err)
+		scope.Log("monitoring_logs: %v", err)
 		close(output_chan)
 		return output_chan
 	}
@@ -98,19 +100,34 @@ func (self MonitoringLogsPlugin) Call(
 		// Depending on the parameters, we need to read from
 		// different places.
 		result_set_reader, err := getResultSetReader(ctx, config_obj, arg)
-
 		if err != nil {
-			scope.Log("source: %v", err)
+			scope.Log("monitoring_logs: %v", err)
 			return
 		}
 
-		count := int64(0)
+		if !utils.IsNil(arg.StartTime) {
+			start_time, err := functions.TimeFromAny(scope, arg.StartTime)
+			if err == nil {
+				err = result_set_reader.SeekToTime(start_time)
+				if err != nil {
+					scope.Log("monitoring_logs: %v", err)
+					return
+				}
+			}
+		}
+
+		if !utils.IsNil(arg.EndTime) {
+			end, err := functions.TimeFromAny(scope, arg.EndTime)
+			if err == nil {
+				result_set_reader.SetMaxTime(end)
+			}
+		}
+
 		for row := range result_set_reader.Rows(ctx) {
 			select {
 			case <-ctx.Done():
 				return
 			case output_chan <- row:
-				count++
 			}
 		}
 	}()
@@ -127,42 +144,6 @@ func (self MonitoringLogsPlugin) Info(
 	}
 }
 
-// Figure out if the artifact is an event artifact based on its
-// definition.
-func isArtifactEvent(
-	ctx context.Context, config_obj *config_proto.Config,
-	arg *MonitoringLogsPluginArgs) (bool, error) {
-
-	manager, err := services.GetRepositoryManager(config_obj)
-	if err != nil {
-		return false, err
-	}
-
-	repository, err := manager.GetGlobalRepository(config_obj)
-	if err != nil {
-		return false, err
-	}
-
-	artifact_definition, pres := repository.Get(ctx, config_obj, arg.Artifact)
-	if !pres {
-		return false, fmt.Errorf("Artifact %v not known", arg.Artifact)
-	}
-
-	//in the original source plugin code, we needed to verify that the client_id was
-	//provided for client_event sources.  Since in this plugin client_id is a required arg,
-	//does this still need to be a switch?
-	switch artifact_definition.Type {
-	case "client_event":
-		return true, nil
-
-	case "server_event":
-		return true, nil
-
-	default:
-		return false, nil
-	}
-}
-
 func getResultSetReader(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -176,20 +157,15 @@ func getResultSetReader(
 			arg.Source = ""
 		}
 
-		is_event, err := isArtifactEvent(ctx, config_obj, arg)
-		if err != nil {
-			return nil, err
+		mode := paths.MODE_CLIENT_EVENT
+		if arg.ClientId == "server" {
+			mode = paths.MODE_SERVER_EVENT
 		}
 
-		//opposite of the source plugin, this needs to be an event type artifact
-		if !is_event {
-			return nil, errors.New("eventquerylogs plugin can only be used for client monitoring logs.")
-		}
-		path_manager, err := artifact_paths.NewArtifactLogPathManager(ctx, config_obj, arg.ClientId, "", arg.Artifact)
-		if err != nil {
-				return nil, err
-			}
-			return result_sets.NewTimedResultSetReader(ctx, file_store_factory, path_manager)
+		path_manager := artifact_paths.NewArtifactLogPathManagerWithMode(
+			config_obj, arg.ClientId, "", arg.Artifact, mode)
+		return result_sets.NewTimedResultSetReader(
+			ctx, file_store_factory, path_manager)
 	}
 
 	return nil, errors.New(
@@ -210,6 +186,7 @@ func ParseSourceArgsFromScope(arg *MonitoringLogsPluginArgs, scope vfilter.Scope
 			arg.Artifact = artifact
 		}
 	}
+
 	start_time, pres := scope.Resolve("StartTime")
 	if pres {
 		arg.StartTime = start_time
@@ -219,7 +196,6 @@ func ParseSourceArgsFromScope(arg *MonitoringLogsPluginArgs, scope vfilter.Scope
 	if pres {
 		arg.EndTime = end_time
 	}
-
 }
 
 func init() {
