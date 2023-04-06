@@ -1,0 +1,5 @@
+{"_ts":1638919340,"client_time":1638946235,"level":0,"message":"vql: Starting query execution.\n"}
+{"_ts":1638919341,"client_time":1638946235,"level":0,"message":"vql: Starting query execution.\n"}
+{"_ts":1638919342,"client_time":1638946239,"level":0,"message":"vql: Skipping query due to preconditions\n"}
+{"_ts":1638919343,"client_time":1638946242,"level":0,"message":"vql: Collection is done after 3.6617604s\n"}
+{"_ts":1638919344,"client_time":1638946246,"level":0,"message":"vql: Query Stats: {\"RowsScanned\":1,\"PluginsCalled\":1,\"FunctionsCalled\":0,\"ProtocolSearch\":0,\"ScopeCopy\":5}\n"}
