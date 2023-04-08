@@ -1,5 +1,4 @@
 //go:build extras
-// +build extras
 
 package tools
 

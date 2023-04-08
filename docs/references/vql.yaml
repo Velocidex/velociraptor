@@ -5715,6 +5715,33 @@
     type: string
     description: Host key to verify. Blank to disable
   category: basic
+- name: upload_smb
+  description: Upload files using the SMB file share protocol.
+  type: Function
+  args:
+  - name: file
+    type: accessors.OSPath
+    description: The file to upload
+    required: true
+  - name: name
+    type: accessors.OSPath
+    description: The name of the file that should be stored on the server
+  - name: accessor
+    type: string
+    description: The accessor to use
+  - name: username
+    type: string
+    description: The SMB username to login as
+    required: true
+  - name: password
+    type: string
+    description: The SMB password to login as
+    required: true
+  - name: server_address
+    type: string
+    description: The SMB server address and optionally port followed by the share
+      name (e.g. \\192.168.1.1:445\ShareName)
+    required: true
 - name: upload_webdav
   description: Upload files to a WebDAV server.
   type: Function

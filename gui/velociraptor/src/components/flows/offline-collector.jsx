@@ -133,6 +133,7 @@ class OfflineCollectorParameters  extends React.Component {
                         <option value="GCS">{T("Google Cloud Bucket")}</option>
                         <option value="S3">{T("AWS Bucket")}</option>
                         <option value="Azure">{T("Azure SAS URL")}</option>
+                        <option value="SMBShare">{T("SMB Share")}</option>
                         <option value="SFTP">{T("SFTP Upload")}</option>
                       </Form.Control>
                     </Col>
@@ -170,8 +171,54 @@ class OfflineCollectorParameters  extends React.Component {
                     </Form.Group> </>
 
                   }
+                  { this.props.parameters.target === "SMBShare" &&
+                    <>
+                      <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("Username")}</Form.Label>
+                        <Col sm="8">
+                          <Form.Control as="textarea" rows={3}
+                                        placeholder={T("SMB Share login username")}
+                                        spellCheck="false"
+                                        value={this.props.parameters.target_args.username}
+                                        onChange={e => {
+                                            this.props.parameters.target_args.username = e.target.value;
+                                            this.props.setParameters(this.props.parameters);
+                                        }}
+                          />
+                        </Col>
+                      </Form.Group>
+                      <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("Password")}</Form.Label>
+                        <Col sm="8">
+                          <Form.Control as="textarea" rows={3}
+                                        placeholder={T("SMB Share login password")}
+                                        spellCheck="false"
+                                        value={this.props.parameters.target_args.password}
+                                        onChange={e => {
+                                            this.props.parameters.target_args.password = e.target.value;
+                                            this.props.setParameters(this.props.parameters);
+                                        }}
+                          />
+                        </Col>
+                      </Form.Group>
+                      <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("Server Address")}</Form.Label>
+                        <Col sm="8">
+                          <Form.Control as="textarea" rows={3}
+                                        placeholder={T("SMB Share address (e.g. \\\\192.168.1.1:445\\Sharename)")}
+                                        spellCheck="false"
+                                        value={this.props.parameters.target_args.server_address}
+                                        onChange={e => {
+                                            this.props.parameters.target_args.server_address = e.target.value;
+                                            this.props.setParameters(this.props.parameters);
+                                        }}
+                          />
+                        </Col>
+                      </Form.Group>
+                    </>
+                  }
                   { this.props.parameters.target === "Azure" && <>
-                    <Form.Group as={Row}>
+                          <Form.Group as={Row}>
                       <Form.Label column sm="3">{T("Azure SAS URL")}</Form.Label>
                       <Col sm="8">
                         <Form.Control as="textarea" rows={3}
