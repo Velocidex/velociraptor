@@ -132,6 +132,7 @@ class OfflineCollectorParameters  extends React.Component {
                         <option value="ZIP">{T("Zip Archive")}</option>
                         <option value="GCS">{T("Google Cloud Bucket")}</option>
                         <option value="S3">{T("AWS Bucket")}</option>
+                        <option value="Azure">{T("Azure SAS URL")}</option>
                         <option value="SFTP">{T("SFTP Upload")}</option>
                       </Form.Control>
                     </Col>
@@ -168,6 +169,22 @@ class OfflineCollectorParameters  extends React.Component {
                       </Col>
                     </Form.Group> </>
 
+                  }
+                  { this.props.parameters.target === "Azure" && <>
+                    <Form.Group as={Row}>
+                      <Form.Label column sm="3">{T("Azure SAS URL")}</Form.Label>
+                      <Col sm="8">
+                        <Form.Control as="textarea" rows={3}
+                                      placeholder={T("SAS URL as generated from the Azure console")}
+                                      spellCheck="false"
+                                      value={this.props.parameters.target_args.sas_url}
+                                      onChange={e => {
+                                          this.props.parameters.target_args.sas_url = e.target.value;
+                                          this.props.setParameters(this.props.parameters);
+                                      }}
+                        />
+                      </Col>
+                    </Form.Group></>
                   }
                   { this.props.parameters.target === "S3" && <>
                     <Form.Group as={Row}>
@@ -572,6 +589,9 @@ export default class OfflineCollectorWizard extends React.Component {
                 region: "",
                 endpoint: "",
                 serverSideEncryption: "",
+
+                // For Azure
+                sas_url: "",
             },
             password: "",
             pubkey: "",
