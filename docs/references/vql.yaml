@@ -1090,6 +1090,19 @@
     plugin (see Windows.Events.DNSQueries)
   type: Plugin
   category: windows
+- name: efivariables
+  description: Enumerate efi variables.
+  type: Plugin
+  args:
+  - name: namespace
+    type: string
+    description: Variable namespace.
+  - name: name
+    type: string
+    description: Variable name
+  - name: value
+    type: bool
+    description: Read variable value
 - name: elastic_upload
   description: |
     Upload rows to elastic.
@@ -1144,6 +1157,9 @@
     type: string
     description: Pipeline for uploads
   - name: disable_ssl_security
+    type: bool
+    description: Disable ssl certificate verifications (deprecated in favor of SkipVerify).
+  - name: skip_verify
     type: bool
     description: Disable ssl certificate verifications.
   - name: root_ca
@@ -2110,6 +2126,9 @@
     type: int
     description: Read input with this chunk size and send each chunk as a row
   - name: disable_ssl_security
+    type: bool
+    description: Disable ssl certificate verifications (deprecated in favor of SkipVerify).
+  - name: skip_verify
     type: bool
     description: Disable ssl certificate verifications.
   - name: tempfile_extension
@@ -3171,6 +3190,28 @@
     type: int64
     description: Maximum number of clients to fetch (default unlimited)'
   category: server
+- name: monitoring_logs
+  description: Retrieve log messages from client event monitoring for the specified
+    client id and artifact
+  type: Plugin
+  args:
+  - name: client_id
+    type: string
+    description: The client id to extract
+    required: true
+  - name: artifact
+    type: string
+    description: The name of the artifact collection to fetch
+    required: true
+  - name: source
+    type: string
+    description: An optional named source within the artifact
+  - name: start_time
+    type: Any
+    description: Start return events from this date (for event sources)
+  - name: end_time
+    type: Any
+    description: Stop end events reach this time (event sources).
 - name: netcat
   description: Make a tcp connection and read data from a socket.
   type: Plugin
@@ -5522,6 +5563,24 @@
     type: Any
     description: Modified time to record
   category: plugin
+- name: upload_azure
+  description: Upload files to Azure Blob Storage Service.
+  type: Function
+  args:
+  - name: file
+    type: accessors.OSPath
+    description: The file to upload
+    required: true
+  - name: name
+    type: string
+    description: The name of the file that should be stored on the server
+  - name: accessor
+    type: string
+    description: The accessor to use
+  - name: sas_url
+    type: string
+    description: A SAS URL to use for upload to the container.
+    required: true
 - name: upload_directory
   description: Upload a file to an upload directory. The final filename will be the
     output directory path followed by the filename path.
@@ -5617,6 +5676,9 @@
     description: The server side encryption method to use
   - name: noverifycert
     type: bool
+    description: Skip TLS Verification (deprecated in favor of SkipVerify)
+  - name: skip_verify
+    type: bool
     description: Skip TLS Verification
   category: plugin
 - name: upload_sftp
@@ -5678,6 +5740,9 @@
     type: string
     description: The password to use in HTTP basic auth
   - name: noverifycert
+    type: bool
+    description: Skip TLS Verification (deprecated in favor of SkipVerify)
+  - name: skip_verify
     type: bool
     description: Skip TLS Verification
   category: basic
