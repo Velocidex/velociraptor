@@ -1,3 +1,5 @@
+//go:build extras
+
 // References
 // https://learn.microsoft.com/en-us/azure/storage/common/storage-sas-overview
 // In order to create a suitable SAS URL:

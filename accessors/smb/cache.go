@@ -101,7 +101,9 @@ func (self *SMBConnectionContext) Mount(name string) (*smb2.Share, error) {
 }
 
 func (self *SMBConnectionContext) Close() {
-	self.session.Logoff()
+	if self.session != nil {
+		self.session.Logoff()
+	}
 	if self.conn != nil {
 		self.conn.Close()
 	}
