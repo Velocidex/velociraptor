@@ -130,7 +130,7 @@ func (self ACLManager) SetPolicy(
 
 func (self ACLManager) handleLockdown(
 	permissions []acls.ACL_PERMISSION) (bool, error) {
-	if acls.LockdownToken == nil {
+	if acls.LockdownToken() == nil {
 		return false, nil
 	}
 
