@@ -32,7 +32,7 @@ func (self *ServerACLManager) GetPrincipal() string {
 
 func (self *ServerACLManager) handleLockdown(
 	permissions []acls.ACL_PERMISSION) (bool, error) {
-	if acls.LockdownToken == nil {
+	if acls.LockdownToken() == nil {
 		return false, nil
 	}
 
