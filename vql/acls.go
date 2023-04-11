@@ -45,8 +45,11 @@ func CheckAccess(scope vfilter.Scope, permissions ...acls.ACL_PERMISSION) error 
 	}
 
 	perm, err := manager.CheckAccess(permissions...)
-	if !perm || err != nil {
-		return fmt.Errorf("Permission denied: %v", permissions)
+	if !perm {
+		if err == nil {
+			return fmt.Errorf("Permission denied: %v", permissions)
+		}
+		return fmt.Errorf("%v: %v", err, permissions)
 	}
 
 	return nil
@@ -69,7 +72,10 @@ func CheckAccessInOrg(scope vfilter.Scope, org_id string, permissions ...acls.AC
 	}
 
 	perm, err := manager.CheckAccessInOrg(org_id, permissions...)
-	if !perm || err != nil {
+	if !perm {
+		if err != nil {
+			return fmt.Errorf("%v: %v", err, permissions)
+		}
 		return fmt.Errorf("Permission denied: %v", permissions)
 	}
 
@@ -89,7 +95,10 @@ func CheckAccessWithArgs(scope vfilter.Scope, permissions acls.ACL_PERMISSION,
 	}
 
 	perm, err := manager.CheckAccessWithArgs(permissions, args...)
-	if !perm || err != nil {
+	if !perm {
+		if err != nil {
+			return fmt.Errorf("%v: %v", err, permissions)
+		}
 		return fmt.Errorf("Permission denied: %v", permissions)
 	}
 

@@ -36,7 +36,7 @@ func (self *ApiServer) GetSubject(
 
 	perm, err := services.CheckAccessWithToken(token, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to access datastore.")
 	}
 
@@ -88,7 +88,7 @@ func (self *ApiServer) SetSubject(
 
 	perm, err := services.CheckAccessWithToken(token, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to access datastore.")
 	}
 
@@ -152,7 +152,7 @@ func (self *ApiServer) ListChildren(
 
 	perm, err := services.CheckAccessWithToken(token, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to access datastore.")
 	}
 
@@ -211,7 +211,7 @@ func (self *ApiServer) DeleteSubject(
 
 	perm, err := services.CheckAccessWithToken(token, acls.DATASTORE_ACCESS)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to access datastore.")
 	}
 

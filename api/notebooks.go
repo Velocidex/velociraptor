@@ -12,8 +12,6 @@ import (
 	errors "github.com/go-errors/errors"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -47,8 +45,7 @@ func (self *ApiServer) GetNotebooks(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
-			"User is not allowed to read notebooks.")
+		return nil, PermissionDenied(err, "User is not allowed to read notebooks.")
 	}
 
 	result := &api_proto.Notebooks{}
@@ -116,7 +113,7 @@ func (self *ApiServer) NewNotebook(
 	permissions := acls.NOTEBOOK_EDITOR
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to create notebooks.")
 	}
 
@@ -149,7 +146,7 @@ func (self *ApiServer) NewNotebookCell(
 	permissions := acls.NOTEBOOK_EDITOR
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to edit notebooks.")
 	}
 
@@ -180,7 +177,7 @@ func (self *ApiServer) UpdateNotebook(
 	permissions := acls.NOTEBOOK_EDITOR
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to edit notebooks.")
 	}
 
@@ -248,7 +245,7 @@ func (self *ApiServer) GetNotebookCell(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to read notebooks.")
 	}
 
@@ -293,7 +290,7 @@ func (self *ApiServer) UpdateNotebookCell(
 	permissions := acls.NOTEBOOK_EDITOR
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to edit notebooks.")
 	}
 
@@ -340,7 +337,7 @@ func (self *ApiServer) CancelNotebookCell(
 	permissions := acls.NOTEBOOK_EDITOR
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to edit notebooks.")
 	}
 
@@ -369,7 +366,7 @@ func (self *ApiServer) UploadNotebookAttachment(
 	permissions := acls.NOTEBOOK_EDITOR
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to edit notebooks.")
 	}
 
@@ -396,7 +393,7 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 	permissions := acls.PREPARE_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to export notebooks.")
 	}
 

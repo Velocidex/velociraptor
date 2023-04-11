@@ -29,6 +29,9 @@ version:
   # The version of the Go compiler that built this binary
   compiler: go1.19.2
 
+  # The time the client was installed (as written in the writeback file).
+  install_time: 1680267359
+
 ## The Client block will be copied into the client.config.yaml and it
 ## is expected to be used by clients. It contains no secrets and can
 ## be embedded into clients. The server must also have this block as
@@ -451,7 +454,7 @@ Frontend:
   # tools. This setting will force it to go out over this proxy. NOTE-
   # If you dont want to allow outbound connections, just set this to
   # an non existent setting (e.g. http://127.0.0.1:3128).
-  proxy: ""
+  proxy: "http://127.0.0.1:3128"
 
   ## Velociraptor can attempt to obfuscate artifact names when
   ## compiling them into raw VQL. If this is set this obfuscation is

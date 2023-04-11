@@ -3,7 +3,6 @@ package launcher
 import (
 	"fmt"
 
-	"github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -23,10 +22,15 @@ func CheckAccess(
 	for _, perm := range artifact.RequiredPermissions {
 		permission := acls.GetPermission(perm)
 		perm, err := acl_manager.CheckAccess(permission)
-		if !perm || err != nil {
-			return errors.New(fmt.Sprintf(
+		if !perm {
+			if err != nil {
+				return fmt.Errorf(
+					"While collecting artifact (%s) permission denied %v: %v",
+					artifact.Name, permission, err)
+			}
+			return fmt.Errorf(
 				"While collecting artifact (%s) permission denied %v",
-				artifact.Name, permission))
+				artifact.Name, permission)
 		}
 	}
 

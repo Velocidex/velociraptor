@@ -4,9 +4,9 @@
 package proto
 
 import (
+	descriptor "github.com/golang/protobuf/protoc-gen-go/descriptor"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	descriptorpb "google.golang.org/protobuf/types/descriptorpb"
 	reflect "reflect"
 	sync "sync"
 )
@@ -67,7 +67,7 @@ func (x *FlowMetaData) GetCategory() string {
 
 var file_flow_metadata_proto_extTypes = []protoimpl.ExtensionInfo{
 	{
-		ExtendedType:  (*descriptorpb.MessageOptions)(nil),
+		ExtendedType:  (*descriptor.MessageOptions)(nil),
 		ExtensionType: (*FlowMetaData)(nil),
 		Field:         65661,
 		Name:          "proto.flow_metadata",
@@ -76,7 +76,7 @@ var file_flow_metadata_proto_extTypes = []protoimpl.ExtensionInfo{
 	},
 }
 
-// Extension fields to descriptorpb.MessageOptions.
+// Extension fields to descriptor.MessageOptions.
 var (
 	// optional proto.FlowMetaData flow_metadata = 65661;
 	E_FlowMetadata = &file_flow_metadata_proto_extTypes[0]
@@ -117,8 +117,8 @@ func file_flow_metadata_proto_rawDescGZIP() []byte {
 
 var file_flow_metadata_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_flow_metadata_proto_goTypes = []interface{}{
-	(*FlowMetaData)(nil),                // 0: proto.FlowMetaData
-	(*descriptorpb.MessageOptions)(nil), // 1: google.protobuf.MessageOptions
+	(*FlowMetaData)(nil),              // 0: proto.FlowMetaData
+	(*descriptor.MessageOptions)(nil), // 1: google.protobuf.MessageOptions
 }
 var file_flow_metadata_proto_depIdxs = []int32{
 	1, // 0: proto.flow_metadata:extendee -> google.protobuf.MessageOptions

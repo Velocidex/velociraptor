@@ -972,6 +972,18 @@ message Defaults {
     // POST messages. If not set we use client defaults.
     uint64 max_rows = 30;
     uint64 max_row_buffer_size = 31;
+
+    // When the server is in lockdown mode the following permissions
+    // will be denied (Even for administrators).
+    // The default list is:
+    // - ARTIFACT_WRITER
+    // - SERVER_ARTIFACT_WRITER
+    // - EXECVE
+    // - SERVER_ADMIN
+    // - FILESYSTEM_WRITE
+    // - FILESYSTEM_READ
+    // - MACHINE_STATE
+    repeated string lockdown_denied_permissions = 32;
 }
 
 // Configures crypto preferences
@@ -1138,4 +1150,12 @@ message Config {
     // set in the config file by the user but is propagated from the
     // startup code.
     ServerServicesConfig services = 38;
+
+    // The Velociraptor server may be placed into "lockdown"
+    // mode. While in lockdown mode certain permissions are denied -
+    // even for administrators. This additional protection mode helps
+    // to mitigate the case when a Velociraptor administrator's
+    // account is compromised. The server can be taken out of lockdown
+    // mode by setting lockdown to false and restarting the server.
+    bool lockdown = 39;
 }

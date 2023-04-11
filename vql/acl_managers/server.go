@@ -1,6 +1,7 @@
 package acl_managers
 
 import (
+	"errors"
 	"sync"
 
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -8,6 +9,10 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+)
+
+var (
+	notLockedDownError = errors.New("PERMISSION_DENIED: Server locked down")
 )
 
 // ServerACLManager is used when running server side VQL to control
@@ -25,9 +30,30 @@ func (self *ServerACLManager) GetPrincipal() string {
 	return self.principal
 }
 
+func (self *ServerACLManager) handleLockdown(
+	permissions []acls.ACL_PERMISSION) (bool, error) {
+	if acls.LockdownToken() == nil {
+		return false, nil
+	}
+
+	for _, perm := range permissions {
+		ok, err := services.CheckAccessWithToken(acls.LockdownToken(), perm)
+		if err == nil && ok {
+			return false, notLockedDownError
+		}
+	}
+	return false, nil
+}
+
 // Token must have *ALL* the specified permissions.
 func (self *ServerACLManager) CheckAccess(
 	permissions ...acls.ACL_PERMISSION) (bool, error) {
+
+	// If we are in lockdown, immediately reject permission
+	ok, err := self.handleLockdown(permissions)
+	if err != nil {
+		return ok, err
+	}
 
 	policy, err := self.getPolicyInOrg(self.config_obj.OrgId)
 	if err != nil {

@@ -92,7 +92,7 @@ func (self *ApiServer) CancelFlow(
 
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to cancel flows.")
 	}
 
@@ -132,7 +132,7 @@ func (self *ApiServer) GetReport(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to view reports.")
 	}
 
@@ -182,7 +182,7 @@ func (self *ApiServer) CollectArtifact(
 
 		perm, err := acl_manager.CheckAccess(permissions)
 		if !perm || err != nil {
-			return nil, status.Error(codes.PermissionDenied,
+			return nil, PermissionDenied(err,
 				"User is not allowed to launch flows.")
 		}
 	}
@@ -236,7 +236,7 @@ func (self *ApiServer) ListClients(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to view clients.")
 	}
 
@@ -279,7 +279,7 @@ func (self *ApiServer) NotifyClients(
 	permissions := acls.COLLECT_CLIENT
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to launch flows.")
 	}
 
@@ -365,7 +365,7 @@ func (self *ApiServer) GetFlowDetails(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to launch flows.")
 	}
 
@@ -397,7 +397,7 @@ func (self *ApiServer) GetFlowRequests(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to view flows.")
 	}
 
@@ -494,7 +494,7 @@ func (self *ApiServer) VFSListDirectory(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to view the VFS.")
 	}
 
@@ -524,7 +524,7 @@ func (self *ApiServer) VFSStatDirectory(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to launch flows.")
 	}
 
@@ -554,7 +554,7 @@ func (self *ApiServer) VFSStatDownload(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to view the VFS.")
 	}
 
@@ -585,7 +585,7 @@ func (self *ApiServer) VFSRefreshDirectory(
 	permissions := acls.COLLECT_CLIENT
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to launch flows.")
 	}
 
@@ -611,7 +611,7 @@ func (self *ApiServer) VFSGetBuffer(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to view the VFS.")
 	}
 
@@ -652,7 +652,7 @@ func (self *ApiServer) GetTable(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to view results.")
 	}
 
@@ -681,7 +681,7 @@ func (self *ApiServer) GetArtifacts(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to view custom artifacts.")
 	}
 
@@ -734,7 +734,7 @@ func (self *ApiServer) GetArtifactFile(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to view custom artifacts.")
 	}
 
@@ -787,8 +787,8 @@ func (self *ApiServer) SetArtifactFile(
 
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
-			"User is not allowed to modify artifacts (%v).", permissions))
+		return nil, PermissionDenied(err,
+			fmt.Sprintf("User is not allowed to modify artifacts (%v).", permissions))
 	}
 
 	definition, err := setArtifactFile(ctx, org_config_obj, principal, in, "")
@@ -873,8 +873,8 @@ func (self *ApiServer) GetServerMonitoringState(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
-			"User is not allowed to read results (%v).", permissions))
+		return nil, PermissionDenied(err,
+			fmt.Sprintf("User is not allowed to read results (%v).", permissions))
 	}
 
 	result, err := getServerMonitoringState(org_config_obj)
@@ -900,8 +900,8 @@ func (self *ApiServer) SetServerMonitoringState(
 	permissions := acls.COLLECT_SERVER
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
-			"User is not allowed to modify artifacts (%v).", permissions))
+		return nil, PermissionDenied(err,
+			fmt.Sprintf("User is not allowed to modify artifacts (%v).", permissions))
 	}
 
 	err = setServerMonitoringState(org_config_obj, principal, in)
@@ -924,8 +924,8 @@ func (self *ApiServer) GetClientMonitoringState(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
-			"User is not allowed to read monitoring artifacts (%v).", permissions))
+		return nil, PermissionDenied(err,
+			fmt.Sprintf("User is not allowed to read monitoring artifacts (%v).", permissions))
 	}
 
 	manager, err := services.ClientEventManager(org_config_obj)
@@ -959,8 +959,8 @@ func (self *ApiServer) SetClientMonitoringState(
 	permissions := acls.COLLECT_CLIENT
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
-			"User is not allowed to modify monitoring artifacts (%v).", permissions))
+		return nil, PermissionDenied(err,
+			fmt.Sprintf("User is not allowed to modify monitoring artifacts (%v).", permissions))
 	}
 
 	manager, err := services.ClientEventManager(org_config_obj)
@@ -991,8 +991,8 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 	permissions := acls.PREPARE_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied, fmt.Sprintf(
-			"User is not allowed to create downloads (%v).", permissions))
+		return nil, PermissionDenied(err,
+			fmt.Sprintf("User is not allowed to create downloads (%v).", permissions))
 	}
 
 	// Log an audit event.

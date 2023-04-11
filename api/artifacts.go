@@ -25,8 +25,6 @@ import (
 
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -314,7 +312,7 @@ func (self *ApiServer) LoadArtifactPack(
 	permissions := acls.SERVER_ARTIFACT_WRITER
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to upload artifact packs.")
 	}
 

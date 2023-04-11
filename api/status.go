@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"os"
 
 	errors "github.com/go-errors/errors"
@@ -39,4 +40,12 @@ func Status(verbose bool, err error) error {
 
 func InvalidStatus(msg string) error {
 	return status.Error(codes.InvalidArgument, msg)
+}
+
+func PermissionDenied(err error, message string) error {
+	if err != nil {
+		return status.Error(codes.PermissionDenied,
+			fmt.Sprintf("%v: %v", err, message))
+	}
+	return status.Error(codes.PermissionDenied, message)
 }

@@ -35,7 +35,7 @@ func (self *ApiServer) GetHuntFlows(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to view hunt results.")
 	}
 
@@ -120,7 +120,7 @@ func (self *ApiServer) CreateHunt(
 
 	perm, err := services.CheckAccess(org_config_obj, in.Creator, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to launch hunts.")
 	}
 
@@ -131,7 +131,7 @@ func (self *ApiServer) CreateHunt(
 		permissions := acls.ORG_ADMIN
 		perm, err := services.CheckAccess(org_config_obj, in.Creator, permissions)
 		if !perm || err != nil {
-			return nil, status.Error(codes.PermissionDenied,
+			return nil, PermissionDenied(err,
 				"User is not allowed to launch hunts in other orgs.")
 		}
 	} else {
@@ -156,7 +156,11 @@ func (self *ApiServer) CreateHunt(
 		// Make sure the user is allowed to collect in that org
 		perm, err := services.CheckAccess(
 			org_config_obj, in.Creator, permissions)
-		if !perm || err != nil {
+		if !perm {
+			if err != nil {
+				logger.Error("%v: CreateHunt: User is not allowed to launch hunts in "+
+					"org %v.", err, org_id)
+			}
 			logger.Error("CreateHunt: User is not allowed to launch hunts in "+
 				"org %v.", org_id)
 			continue
@@ -219,7 +223,7 @@ func (self *ApiServer) ModifyHunt(
 
 	perm, err := services.CheckAccess(org_config_obj, in.Creator, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to modify hunts.")
 	}
 
@@ -259,7 +263,7 @@ func (self *ApiServer) ListHunts(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to view hunts.")
 	}
 
@@ -315,7 +319,7 @@ func (self *ApiServer) GetHunt(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to view hunts.")
 	}
 
@@ -348,7 +352,7 @@ func (self *ApiServer) GetHuntResults(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to view results.")
 	}
 
@@ -384,7 +388,7 @@ func (self *ApiServer) EstimateHunt(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to view hunt results.")
 	}
 
