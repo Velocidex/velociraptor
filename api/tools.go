@@ -2,8 +2,6 @@ package api
 
 import (
 	context "golang.org/x/net/context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 
 	"www.velocidex.com/golang/velociraptor/acls"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -22,7 +20,7 @@ func (self *ApiServer) GetToolInfo(ctx context.Context,
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, user_record.Name, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to view tools.")
 	}
 
@@ -52,7 +50,7 @@ func (self *ApiServer) SetToolInfo(ctx context.Context,
 	permissions := acls.ARTIFACT_WRITER
 	perm, err := services.CheckAccess(org_config_obj, user_record.Name, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to update tool definitions.")
 	}
 

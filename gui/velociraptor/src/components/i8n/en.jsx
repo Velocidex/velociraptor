@@ -179,7 +179,7 @@ const English = {
     "Role_analyst" : "Analyst",
     "Role_investigator" : "Investigator",
     "Role_artifact_writer" : "Artifact Writer",
-    "Role_api" : "Read-Only API Client",
+    "Role_api" : "API Client",
     "ToolRole_administrator" :
     <>
     Like any system, Velociraptor needs an administrator which is all powerful. This account can run arbitrary VQL on the server, reconfigure the server, etc.  The ability to add/create/edit/remove users is dependent on the organizations to which this account belongs.
@@ -206,7 +206,7 @@ const English = {
     </>,
     "ToolRole_api" :
     <>
-    This role provides the ability to read previously collected results but does not allow the user to actually make any changes.
+    This role is required to provide the ability for the user to connect over the API port.
     </>,
 
     "Perm_ALL_QUERY" : "All Query",

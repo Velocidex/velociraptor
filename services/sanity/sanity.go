@@ -63,6 +63,11 @@ func (self *SanityChecks) CheckRootOrg(
 		}
 	}
 
+	err := self.CheckForLockdown(ctx, config_obj)
+	if err != nil {
+		return err
+	}
+
 	// Make sure our internal VelociraptorServer service account is
 	// properly created.
 	if config_obj.Client != nil && config_obj.Client.PinnedServerName != "" {

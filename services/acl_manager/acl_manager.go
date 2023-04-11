@@ -18,6 +18,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+var (
+	notLockedDownError = errors.New("PERMISSION_DENIED: Server locked down")
+)
+
 type ACLManager struct {
 	// Cache the effective policy for each principal for 60 sec.
 	lru *ttlcache.Cache
@@ -124,10 +128,31 @@ func (self ACLManager) SetPolicy(
 	return db.SetSubject(config_obj, user_path_manager.ACL(), acl_obj)
 }
 
+func (self ACLManager) handleLockdown(
+	permissions []acls.ACL_PERMISSION) (bool, error) {
+	if acls.LockdownToken == nil {
+		return false, nil
+	}
+
+	for _, perm := range permissions {
+		ok, err := services.CheckAccessWithToken(acls.LockdownToken(), perm)
+		if err == nil && ok {
+			return false, notLockedDownError
+		}
+	}
+	return false, nil
+}
+
 func (self ACLManager) CheckAccess(
 	config_obj *config_proto.Config,
 	principal string,
 	permissions ...acls.ACL_PERMISSION) (bool, error) {
+
+	// If we are in lockdown, immediately reject permission
+	ok, err := self.handleLockdown(permissions)
+	if err != nil {
+		return ok, err
+	}
 
 	// Internal calls from the server are allowed to do anything.
 	if config_obj.Client != nil && principal == config_obj.Client.PinnedServerName {

@@ -25,8 +25,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -54,7 +52,7 @@ func (self *ApiServer) GetClientMetadata(
 
 	perm, err := services.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to view clients.")
 	}
 
@@ -87,7 +85,7 @@ func (self *ApiServer) SetClientMetadata(
 	permissions := acls.LABEL_CLIENT
 	perm, err := services.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to modify client labels.")
 	}
 
@@ -126,7 +124,7 @@ func (self *ApiServer) GetClient(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to view clients.")
 	}
 
@@ -179,7 +177,7 @@ func (self *ApiServer) GetClientFlows(
 	permissions := acls.READ_RESULTS
 	perm, err := services.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
-		return nil, status.Error(codes.PermissionDenied,
+		return nil, PermissionDenied(err,
 			"User is not allowed to view flows.")
 	}
 

@@ -4,10 +4,10 @@
 package proto
 
 import (
+	empty "github.com/golang/protobuf/ptypes/empty"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 	proto2 "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -1120,7 +1120,7 @@ var file_api_proto_goTypes = []interface{}{
 	(*GetClientRequest)(nil),                      // 17: proto.GetClientRequest
 	(*SetClientMetadataRequest)(nil),              // 18: proto.SetClientMetadataRequest
 	(*ApiFlowRequest)(nil),                        // 19: proto.ApiFlowRequest
-	(*emptypb.Empty)(nil),                         // 20: google.protobuf.Empty
+	(*empty.Empty)(nil),                           // 20: google.protobuf.Empty
 	(*SetGUIOptionsRequest)(nil),                  // 21: proto.SetGUIOptionsRequest
 	(*UserRequest)(nil),                           // 22: proto.UserRequest
 	(*UserRoles)(nil),                             // 23: proto.UserRoles
