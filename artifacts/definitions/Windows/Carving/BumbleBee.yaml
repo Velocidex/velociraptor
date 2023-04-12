@@ -1,0 +1,77 @@
+name: Windows.Carving.BumbleBee
+author: "Angelo Violetti (SEC Consult - SEC Defence)"
+type: CLIENT
+description: |
+        This artficat will detect running BumbleBee processes and subsequently extract the command and control servers with the destination port 443.
+reference: sec-consult.com/blog/detail/bumblebee-hunting-with-a-velociraptor/
+parameters:
+  - name: TargetFileGlob
+    default:
+  - name: PidRegex
+    default: .
+  - name: ProcessRegex
+    default: .
+  - name: DetectionYara
+    default: |
+        rule BumbleBee_Unpacked{
+            meta:
+                author = "Angelo Violetti @ SEC Defence"
+                date = "2023-02-23"
+            
+            strings:
+                $s1 = {?? 83 ?? 18 10 72 03 ?? 8B ?? 44 8B ?? 48 8B ?? 48 8D 4C 24 30 E8 ?? ?? FF FF 90}
+                $s2 = {48 8D 4C 24 30 E8 ?? ?? FF FF 90}
+                $s3 = {48 8d 4c 24 30 e8 ?? ?? FF FF}
+            
+            condition:
+                all of ($s*)
+        }
+        
+  - name: ExtractIPsYara
+    default: |
+        rule BumbleBee_IPs{
+            meta:
+                author = "Angelo Violetti @ SEC Defence"
+                date = "2023-02-23"
+                description = "Extracts the IP addresses with the destination port equal to 443 from BumbleBee processes"
+            
+            strings:
+            $IP = {?? ?? ?? 2e ?? ?? ?? 2e ?? ?? ?? 2e ?? ?? ?? 00 (?? | ?? ??) 00 00 00 00 00 00 00 0f 00 00 00 00 00 00 00 34 34 33 00 00 00 00 00 00 00 00 00 00 00 00 00 03 00 00 00 00 00 00 00 0F 00 00 00 00 00 00 00}
+          condition:
+            $IP
+        }
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    query: |
+        -- Find velociraptor process
+        LET me = SELECT Pid
+                  FROM pslist(pid=getpid())
+
+        -- Find all processes and add filters
+        LET processes = SELECT Name AS ProcessName, CommandLine, Pid
+                        FROM pslist()
+                        WHERE Name =~ ProcessRegex
+                            AND format(format="%d", args=Pid) =~ PidRegex
+                            AND NOT Pid in me.Pid
+
+        -- Scan processes in scope with our DetectionYara
+        LET processDetections = SELECT * FROM foreach(row=processes,
+                                query={
+                                    SELECT * FROM if(condition=TargetFileGlob="",
+                                        then={
+                                            SELECT *, ProcessName, CommandLine, Pid, Rule AS YaraRule
+                                            FROM proc_yara(pid=Pid, rules=DetectionYara)
+                                        })
+                                })
+                                
+        -- Scan the process for the IP addresses
+        LET ipaddressDetections = SELECT ProcessName, CommandLine, Pid, Strings.Data AS IPAddresses FROM foreach(row=processDetections, query={SELECT *, ProcessName, CommandLine, Pid FROM proc_yara(pid=Pid, rules=ExtractIPsYara)})
+        
+        -- Extract the command and control servers
+        LET CommandandControlServers = SELECT * FROM foreach(row=ipaddressDetections, query={SELECT ProcessName, CommandLine, Pid, g1 FROM parse_records_with_regex(accessor="data", file=IPAddresses, regex='''(\d+\.\d+\.\d+\.\d+)''')})
+
+        -- Output the command and control servers
+        SELECT ProcessName, CommandLine, Pid, str(str=g1) AS BumbleBeeC2 FROM CommandandControlServers
