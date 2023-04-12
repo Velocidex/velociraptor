@@ -28,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -142,9 +143,10 @@ func (self *CopyFunction) Call(ctx context.Context,
 
 func (self CopyFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "copy",
-		Doc:     "Copy a file.",
-		ArgType: type_map.AddType(scope, &CopyFunctionArgs{}),
+		Name:     "copy",
+		Doc:      "Copy a file.",
+		ArgType:  type_map.AddType(scope, &CopyFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE, acls.FILESYSTEM_READ).Build(),
 	}
 }
 

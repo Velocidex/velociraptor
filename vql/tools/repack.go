@@ -34,6 +34,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
@@ -393,9 +394,10 @@ func appendPayload(exe_bytes []byte, payload []byte) []byte {
 
 func (self RepackFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "repack",
-		Doc:     "Repack and upload a repacked binary or MSI to the server.",
-		ArgType: type_map.AddType(scope, &RepackFunctionArgs{}),
+		Name:     "repack",
+		Doc:      "Repack and upload a repacked binary or MSI to the server.",
+		ArgType:  type_map.AddType(scope, &RepackFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER).Build(),
 	}
 }
 

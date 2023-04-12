@@ -10,6 +10,8 @@ import (
 	"github.com/Velocidex/go-magic/magic_files"
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -123,10 +125,11 @@ func (self MagicFunction) Call(
 
 func (self MagicFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "magic",
-		Doc:     "Identify a file using magic rules.",
-		ArgType: type_map.AddType(scope, &MagicFunctionArgs{}),
-		Version: 1,
+		Name:     "magic",
+		Doc:      "Identify a file using magic rules.",
+		ArgType:  type_map.AddType(scope, &MagicFunctionArgs{}),
+		Version:  1,
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

@@ -25,6 +25,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
@@ -128,7 +129,8 @@ func (self UploadFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 		Doc: "Upload a file to the upload service. For a Velociraptor " +
 			"client this will upload the file into the flow and store " +
 			"it in the server's file store.",
-		ArgType: type_map.AddType(scope, &UploadFunctionArgs{}),
+		ArgType:  type_map.AddType(scope, &UploadFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 
@@ -235,9 +237,10 @@ func (self *UploadDirectoryFunction) Call(ctx context.Context,
 
 func (self UploadDirectoryFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "upload_directory",
-		Doc:     "Upload a file to an upload directory. The final filename will be the output directory path followed by the filename path.",
-		ArgType: type_map.AddType(scope, &UploadDirectoryFunctionArgs{}),
+		Name:     "upload_directory",
+		Doc:      "Upload a file to an upload directory. The final filename will be the output directory path followed by the filename path.",
+		ArgType:  type_map.AddType(scope, &UploadDirectoryFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
 	}
 }
 

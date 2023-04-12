@@ -27,6 +27,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/tools/collector"
@@ -190,6 +191,8 @@ func (self ScheduleCollectionFunction) Info(scope vfilter.Scope, type_map *vfilt
 		Name:    "collect_client",
 		Doc:     "Launch an artifact collection against a client.",
 		ArgType: type_map.AddType(scope, &ScheduleCollectionFunctionArg{}),
+		Metadata: vql.VQLMetadata().Permissions(
+			acls.COLLECT_CLIENT, acls.COLLECT_SERVER).Build(),
 	}
 }
 

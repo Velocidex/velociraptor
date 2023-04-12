@@ -15,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -129,9 +130,10 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 func (self *InventoryAddFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "inventory_add",
-		Doc:     "Add tool to ThirdParty inventory.",
-		ArgType: type_map.AddType(scope, &InventoryAddFunctionArgs{}),
+		Name:     "inventory_add",
+		Doc:      "Add tool to ThirdParty inventory.",
+		ArgType:  type_map.AddType(scope, &InventoryAddFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 
@@ -192,9 +194,10 @@ func (self *InventoryGetFunction) Call(ctx context.Context,
 func (self *InventoryGetFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "inventory_get",
-		Doc:     "Get tool info from inventory service.",
-		ArgType: type_map.AddType(scope, &InventoryGetFunctionArgs{}),
+		Name:     "inventory_get",
+		Doc:      "Get tool info from inventory service.",
+		ArgType:  type_map.AddType(scope, &InventoryGetFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 

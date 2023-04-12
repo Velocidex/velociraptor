@@ -5,7 +5,9 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -149,10 +151,11 @@ func listDir(
 
 func (self VFSListDirectoryPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "vfs_ls",
-		Doc:     "List directory and build a VFS object",
-		ArgType: type_map.AddType(scope, &VFSListDirectoryPluginArgs{}),
-		Version: 1,
+		Name:     "vfs_ls",
+		Doc:      "List directory and build a VFS object",
+		ArgType:  type_map.AddType(scope, &VFSListDirectoryPluginArgs{}),
+		Version:  1,
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

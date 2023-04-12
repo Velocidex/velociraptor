@@ -39,6 +39,7 @@ import (
 	"github.com/mattn/go-pointer"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -188,5 +189,6 @@ func init() {
 		PluginName: "certificates",
 		Doc:        "Collect certificate from the system trust store.",
 		Function:   runCertificates,
+		Metadata:   vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	})
 }

@@ -61,20 +61,38 @@ func IntrospectDescription() []*api_proto.Completion {
 	info := scope.Describe(type_map)
 
 	for _, item := range info.Functions {
+		var metadata map[string]string
+		if item.Metadata != nil {
+			metadata = make(map[string]string)
+			for _, k := range item.Metadata.Keys() {
+				v, _ := item.Metadata.GetString(k)
+				metadata[k] = v
+			}
+		}
 		result = append(result, &api_proto.Completion{
 			Name:        item.Name,
 			Description: item.Doc,
 			Type:        "Function",
 			Args:        getArgDescriptors(item.ArgType, type_map, scope),
+			Metadata:    metadata,
 		})
 	}
 
 	for _, item := range info.Plugins {
+		var metadata map[string]string
+		if item.Metadata != nil {
+			metadata = make(map[string]string)
+			for _, k := range item.Metadata.Keys() {
+				v, _ := item.Metadata.GetString(k)
+				metadata[k] = v
+			}
+		}
 		result = append(result, &api_proto.Completion{
 			Name:        item.Name,
 			Description: item.Doc,
 			Type:        "Plugin",
 			Args:        getArgDescriptors(item.ArgType, type_map, scope),
+			Metadata:    metadata,
 		})
 	}
 

@@ -31,6 +31,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -273,9 +274,10 @@ func (self PslistPlugin) Call(
 
 func (self PslistPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "pslist",
-		Doc:     "Enumerate running processes.",
-		ArgType: type_map.AddType(scope, &PslistArgs{}),
+		Name:     "pslist",
+		Doc:      "Enumerate running processes.",
+		ArgType:  type_map.AddType(scope, &PslistArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 

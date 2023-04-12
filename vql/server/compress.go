@@ -26,6 +26,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -90,9 +91,10 @@ func (self *Compress) Call(ctx context.Context,
 
 func (self Compress) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "compress",
-		Doc:     "Compress a file in the server's FileStore. ",
-		ArgType: type_map.AddType(scope, &CompressArgs{}),
+		Name:     "compress",
+		Doc:      "Compress a file in the server's FileStore. ",
+		ArgType:  type_map.AddType(scope, &CompressArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE, acls.FILESYSTEM_READ).Build(),
 	}
 }
 

@@ -23,7 +23,9 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/evtx"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -134,9 +136,10 @@ func (self _ParseEvtxPlugin) Call(
 
 func (self _ParseEvtxPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "parse_evtx",
-		Doc:     "Parses events from an EVTX file.",
-		ArgType: type_map.AddType(scope, &_ParseEvtxPluginArgs{}),
+		Name:     "parse_evtx",
+		Doc:      "Parses events from an EVTX file.",
+		ArgType:  type_map.AddType(scope, &_ParseEvtxPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 
@@ -199,9 +202,10 @@ func (self _WatchEvtxPlugin) Call(
 
 func (self _WatchEvtxPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "watch_evtx",
-		Doc:     "Watch an EVTX file and stream events from it. ",
-		ArgType: type_map.AddType(scope, &_ParseEvtxPluginArgs{}),
+		Name:     "watch_evtx",
+		Doc:      "Watch an EVTX file and stream events from it. ",
+		ArgType:  type_map.AddType(scope, &_ParseEvtxPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

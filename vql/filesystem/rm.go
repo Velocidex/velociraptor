@@ -6,6 +6,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -46,9 +47,10 @@ func (self *_RmFunction) Call(ctx context.Context,
 func (self _RmFunction) Info(scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "rm",
-		Doc:     "Remove a file from the filesystem using the API.",
-		ArgType: type_map.AddType(scope, &_RmRequest{}),
+		Name:     "rm",
+		Doc:      "Remove a file from the filesystem using the API.",
+		ArgType:  type_map.AddType(scope, &_RmRequest{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
 	}
 }
 

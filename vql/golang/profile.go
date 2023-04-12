@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/tools/process"
 	"www.velocidex.com/golang/vfilter"
@@ -287,9 +288,10 @@ func (self *ProfilePlugin) Call(ctx context.Context,
 func (self ProfilePlugin) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "profile",
-		Doc:     "Returns a profile dump from the running process.",
-		ArgType: type_map.AddType(scope, &ProfilePluginArgs{}),
+		Name:     "profile",
+		Doc:      "Returns a profile dump from the running process.",
+		ArgType:  type_map.AddType(scope, &ProfilePluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 

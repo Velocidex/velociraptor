@@ -40,6 +40,7 @@ import (
 	ole "github.com/go-ole/go-ole"
 	pointer "github.com/mattn/go-pointer"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	wmi_parse "www.velocidex.com/golang/velociraptor/vql/windows/wmi/parse"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -183,9 +184,10 @@ func (self WmiEventPlugin) Call(
 
 func (self WmiEventPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "wmi_events",
-		Doc:     "Executes an evented WMI queries asynchronously.",
-		ArgType: type_map.AddType(scope, &WmiEventPluginArgs{}),
+		Name:     "wmi_events",
+		Doc:      "Executes an evented WMI queries asynchronously.",
+		ArgType:  type_map.AddType(scope, &WmiEventPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 

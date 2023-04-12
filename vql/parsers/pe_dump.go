@@ -11,8 +11,10 @@ import (
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	pe "www.velocidex.com/golang/go-pe"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/constants"
 	utils "www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/filesystem"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -29,9 +31,10 @@ type _PEDumpFunction struct{}
 
 func (self _PEDumpFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "pe_dump",
-		Doc:     "Dump a PE file from process memory.",
-		ArgType: type_map.AddType(scope, &_PEDumpFunctionArgs{}),
+		Name:     "pe_dump",
+		Doc:      "Dump a PE file from process memory.",
+		ArgType:  type_map.AddType(scope, &_PEDumpFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 

@@ -18,6 +18,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	gowin "golang.org/x/sys/windows"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows"
 	"www.velocidex.com/golang/vfilter"
@@ -106,9 +107,10 @@ func (self HandlesPlugin) Call(
 
 func (self HandlesPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "handles",
-		Doc:     "Enumerate process handles.",
-		ArgType: type_map.AddType(scope, &HandlesPluginArgs{}),
+		Name:     "handles",
+		Doc:      "Enumerate process handles.",
+		ArgType:  type_map.AddType(scope, &HandlesPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 

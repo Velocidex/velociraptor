@@ -25,6 +25,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/shirou/gopsutil/v3/net"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -76,6 +77,7 @@ func init() {
 	vql_subsystem.RegisterPlugin(
 		&vfilter.GenericListPlugin{
 			PluginName: "connections",
+			Metadata:   vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 			Function: func(
 				ctx context.Context,
 				scope vfilter.Scope,

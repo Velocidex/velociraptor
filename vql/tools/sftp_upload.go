@@ -16,7 +16,9 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -230,9 +232,10 @@ func upload_SFTP(ctx context.Context, scope vfilter.Scope,
 func (self SFTPUploadFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "upload_sftp",
-		Doc:     "Upload files to SFTP.",
-		ArgType: type_map.AddType(scope, &SFTPUploadArgs{}),
+		Name:     "upload_sftp",
+		Doc:      "Upload files to SFTP.",
+		ArgType:  type_map.AddType(scope, &SFTPUploadArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

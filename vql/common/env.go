@@ -24,6 +24,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -61,9 +62,10 @@ func (self *EnvFunction) Call(ctx context.Context,
 
 func (self *EnvFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "environ",
-		Doc:     "Get an environment variable.",
-		ArgType: type_map.AddType(scope, &EnvFunctionArgs{}),
+		Name:     "environ",
+		Doc:      "Get an environment variable.",
+		ArgType:  type_map.AddType(scope, &EnvFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 

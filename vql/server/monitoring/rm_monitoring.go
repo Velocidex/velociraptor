@@ -6,6 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -68,9 +69,10 @@ func (self RemoveClientMonitoringFunction) Call(
 
 func (self RemoveClientMonitoringFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "rm_client_monitoring",
-		Doc:     "Remove an artifact from the client monitoring table.",
-		ArgType: type_map.AddType(scope, &AddClientMonitoringFunctionArgs{}),
+		Name:     "rm_client_monitoring",
+		Doc:      "Remove an artifact from the client monitoring table.",
+		ArgType:  type_map.AddType(scope, &AddClientMonitoringFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_CLIENT).Build(),
 	}
 }
 
@@ -128,9 +130,10 @@ func (self RemoveServerMonitoringFunction) Call(
 
 func (self RemoveServerMonitoringFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "rm_server_monitoring",
-		Doc:     "Remove an artifact from the server monitoring table.",
-		ArgType: type_map.AddType(scope, &AddServerMonitoringFunctionArgs{}),
+		Name:     "rm_server_monitoring",
+		Doc:      "Remove an artifact from the server monitoring table.",
+		ArgType:  type_map.AddType(scope, &AddServerMonitoringFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER).Build(),
 	}
 }
 

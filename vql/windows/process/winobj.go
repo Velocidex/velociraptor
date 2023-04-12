@@ -14,6 +14,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/hillu/go-ntdll"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows"
 	"www.velocidex.com/golang/vfilter"
@@ -71,9 +72,10 @@ func (self WinObjPlugin) Call(
 
 func (self WinObjPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "winobj",
-		Doc:     "Enumerate The Windows Object Manager namespace.",
-		ArgType: type_map.AddType(scope, &WinObjPluginArgs{}),
+		Name:     "winobj",
+		Doc:      "Enumerate The Windows Object Manager namespace.",
+		ArgType:  type_map.AddType(scope, &WinObjPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 

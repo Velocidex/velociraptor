@@ -22,8 +22,10 @@ import (
 	"golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/smb"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -214,9 +216,10 @@ func (self *SMBUploadFunction) upload_smb(ctx context.Context, scope vfilter.Sco
 func (self SMBUploadFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "upload_smb",
-		Doc:     "Upload files using the SMB file share protocol.",
-		ArgType: type_map.AddType(scope, &SMBUploadArgs{}),
+		Name:     "upload_smb",
+		Doc:      "Upload files using the SMB file share protocol.",
+		ArgType:  type_map.AddType(scope, &SMBUploadArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

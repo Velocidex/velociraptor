@@ -27,7 +27,9 @@ import (
 	"www.velocidex.com/golang/go-ese/parser"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	utils "www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -271,9 +273,10 @@ func (self _ESEPlugin) Call(
 
 func (self _ESEPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "parse_ese",
-		Doc:     "Opens an ESE file and dump a table.",
-		ArgType: type_map.AddType(scope, &_ESEArgs{}),
+		Name:     "parse_ese",
+		Doc:      "Opens an ESE file and dump a table.",
+		ArgType:  type_map.AddType(scope, &_ESEArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 
@@ -367,9 +370,10 @@ func (self _ESECatalogPlugin) Call(
 
 func (self _ESECatalogPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "parse_ese_catalog",
-		Doc:     "Opens an ESE file and dump the schema.",
-		ArgType: type_map.AddType(scope, &_ESECatalogArgs{}),
+		Name:     "parse_ese_catalog",
+		Doc:      "Opens an ESE file and dump the schema.",
+		ArgType:  type_map.AddType(scope, &_ESECatalogArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

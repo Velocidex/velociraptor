@@ -9,8 +9,10 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/dimchansky/utfbom"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -26,9 +28,10 @@ type ScannerPlugin struct{}
 
 func (self ScannerPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "parse_lines",
-		Doc:     "Parse a file separated into lines.",
-		ArgType: type_map.AddType(scope, &ScannerPluginArgs{}),
+		Name:     "parse_lines",
+		Doc:      "Parse a file separated into lines.",
+		ArgType:  type_map.AddType(scope, &ScannerPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 
@@ -159,9 +162,10 @@ func (self _WatchSyslogPlugin) Call(
 
 func (self _WatchSyslogPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "watch_syslog",
-		Doc:     "Watch a syslog file and stream events from it. ",
-		ArgType: type_map.AddType(scope, &ScannerPluginArgs{}),
+		Name:     "watch_syslog",
+		Doc:      "Watch a syslog file and stream events from it. ",
+		ArgType:  type_map.AddType(scope, &ScannerPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

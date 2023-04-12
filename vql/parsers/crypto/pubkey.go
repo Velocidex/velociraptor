@@ -15,6 +15,7 @@ import (
 	"golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/acls"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -244,9 +245,10 @@ func decryptPGP(recip openpgp.EntityList,
 func (self PKEncryptFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "pk_encrypt",
-		Doc:     "Encrypt files using pubkey encryption",
-		ArgType: type_map.AddType(scope, &PKEncryptArgs{}),
+		Name:     "pk_encrypt",
+		Doc:      "Encrypt files using pubkey encryption",
+		ArgType:  type_map.AddType(scope, &PKEncryptArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 

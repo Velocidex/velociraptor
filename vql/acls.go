@@ -117,6 +117,9 @@ func CheckFilesystemAccess(scope vfilter.Scope, accessor string) error {
 	case "filestore", "fs":
 		return CheckAccess(scope, acls.SERVER_ADMIN)
 
+	case "process":
+		return CheckAccess(scope, acls.MACHINE_STATE)
+
 	default:
 		return CheckAccess(scope, acls.FILESYSTEM_READ)
 	}

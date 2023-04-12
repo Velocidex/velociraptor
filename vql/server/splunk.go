@@ -32,6 +32,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
@@ -271,9 +272,10 @@ func (self _SplunkPlugin) Info(
 	scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "splunk_upload",
-		Doc:     "Upload rows to splunk.",
-		ArgType: type_map.AddType(scope, &_SplunkPluginArgs{}),
+		Name:     "splunk_upload",
+		Doc:      "Upload rows to splunk.",
+		ArgType:  type_map.AddType(scope, &_SplunkPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER).Build(),
 	}
 }
 

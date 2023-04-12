@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -159,9 +160,10 @@ func readFlowUploads(
 func (self UploadsPlugins) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "uploads",
-		Doc:     "Retrieve information about a flow's uploads.",
-		ArgType: type_map.AddType(scope, &UploadsPluginsArgs{}),
+		Name:     "uploads",
+		Doc:      "Retrieve information about a flow's uploads.",
+		ArgType:  type_map.AddType(scope, &UploadsPluginsArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

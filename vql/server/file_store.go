@@ -35,6 +35,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -131,9 +132,10 @@ func (self *DeleteFileStore) Call(ctx context.Context,
 
 func (self DeleteFileStore) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "file_store_delete",
-		Doc:     "Delete file store paths into full filesystem paths. ",
-		ArgType: type_map.AddType(scope, &DeleteFileStoreArgs{}),
+		Name:     "file_store_delete",
+		Doc:      "Delete file store paths into full filesystem paths. ",
+		ArgType:  type_map.AddType(scope, &DeleteFileStoreArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 

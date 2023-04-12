@@ -10,6 +10,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -102,9 +103,10 @@ func (self TokenFunction) Call(
 
 func (self TokenFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "token",
-		Doc:     "Extract process token.",
-		ArgType: type_map.AddType(scope, &TokenArgs{}),
+		Name:     "token",
+		Doc:      "Extract process token.",
+		ArgType:  type_map.AddType(scope, &TokenArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 

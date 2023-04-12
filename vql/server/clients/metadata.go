@@ -8,6 +8,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -66,9 +67,10 @@ func (self *ClientMetadataFunction) Call(ctx context.Context,
 func (self ClientMetadataFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "client_metadata",
-		Doc:     "Returns client metadata from the datastore. Client metadata is a set of free form key/value data",
-		ArgType: type_map.AddType(scope, &ClientMetadataFunctionArgs{}),
+		Name:     "client_metadata",
+		Doc:      "Returns client metadata from the datastore. Client metadata is a set of free form key/value data",
+		ArgType:  type_map.AddType(scope, &ClientMetadataFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS, acls.SERVER_ADMIN).Build(),
 	}
 }
 
@@ -103,7 +105,7 @@ func (self *ClientSetMetadataFunction) Call(ctx context.Context,
 	}
 
 	// User needs high permissions to modify the client's metadata.
-	permission := acls.COLLECT_SERVER
+	permission := acls.COLLECT_CLIENT
 	if client_id == "server" {
 		permission = acls.SERVER_ADMIN
 	}
@@ -139,9 +141,10 @@ func (self *ClientSetMetadataFunction) Call(ctx context.Context,
 func (self ClientSetMetadataFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "client_set_metadata",
-		Doc:     "Sets client metadata. Client metadata is a set of free form key/value data",
-		ArgType: type_map.AddType(scope, &ClientSetMetadataFunctionArgs{}),
+		Name:     "client_set_metadata",
+		Doc:      "Sets client metadata. Client metadata is a set of free form key/value data",
+		ArgType:  type_map.AddType(scope, &ClientSetMetadataFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_CLIENT, acls.SERVER_ADMIN).Build(),
 	}
 }
 

@@ -35,8 +35,10 @@ import (
 	yara "github.com/Velocidex/go-yara"
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -523,9 +525,10 @@ func (self YaraScanPlugin) Info(
 	scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "yara",
-		Doc:     "Scan files using yara rules.",
-		ArgType: type_map.AddType(scope, &YaraScanPluginArgs{}),
+		Name:     "yara",
+		Doc:      "Scan files using yara rules.",
+		ArgType:  type_map.AddType(scope, &YaraScanPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 
@@ -545,9 +548,10 @@ func (self YaraProcPlugin) Info(
 	scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "proc_yara",
-		Doc:     "Scan processes using yara rules.",
-		ArgType: type_map.AddType(scope, &YaraProcPluginArgs{}),
+		Name:     "proc_yara",
+		Doc:      "Scan processes using yara rules.",
+		ArgType:  type_map.AddType(scope, &YaraProcPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 
@@ -562,6 +566,12 @@ func (self YaraProcPlugin) Call(
 
 		arg := &YaraProcPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+		if err != nil {
+			scope.Log("proc_yara: %v", err)
+			return
+		}
+
+		err = vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {
 			scope.Log("proc_yara: %v", err)
 			return

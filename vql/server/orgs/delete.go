@@ -8,6 +8,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -24,7 +25,7 @@ func (self OrgDeleteFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+	err := vql_subsystem.CheckAccess(scope, acls.ORG_ADMIN)
 	if err != nil {
 		scope.Log("org_delete: %s", err)
 		return vfilter.Null{}
@@ -66,9 +67,10 @@ func (self OrgDeleteFunction) Call(
 
 func (self OrgDeleteFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "org_delete",
-		Doc:     "Deletes an Org from the server.",
-		ArgType: type_map.AddType(scope, &OrgDeleteFunctionArgs{}),
+		Name:     "org_delete",
+		Doc:      "Deletes an Org from the server.",
+		ArgType:  type_map.AddType(scope, &OrgDeleteFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.ORG_ADMIN).Build(),
 	}
 }
 

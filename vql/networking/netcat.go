@@ -8,6 +8,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -141,9 +142,10 @@ func (self NetcatPlugin) connectOnce(
 
 func (self NetcatPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "netcat",
-		Doc:     "Make a tcp connection and read data from a socket.",
-		ArgType: type_map.AddType(scope, &NetcatPluginArgs{}),
+		Name:     "netcat",
+		Doc:      "Make a tcp connection and read data from a socket.",
+		ArgType:  type_map.AddType(scope, &NetcatPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER).Build(),
 	}
 }
 

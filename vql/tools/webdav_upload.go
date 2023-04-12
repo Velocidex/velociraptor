@@ -13,8 +13,10 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
@@ -167,9 +169,10 @@ func upload_webdav(ctx context.Context, scope vfilter.Scope,
 func (self WebDAVUploadFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "upload_webdav",
-		Doc:     "Upload files to a WebDAV server.",
-		ArgType: type_map.AddType(scope, &WebDAVUploadArgs{}),
+		Name:     "upload_webdav",
+		Doc:      "Upload files to a WebDAV server.",
+		ArgType:  type_map.AddType(scope, &WebDAVUploadArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

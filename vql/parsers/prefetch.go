@@ -7,7 +7,9 @@ import (
 	"github.com/Velocidex/ordereddict"
 	prefetch "www.velocidex.com/golang/go-prefetch"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	utils "www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -106,9 +108,10 @@ func (self _PrefetchPlugin) Call(
 
 func (self _PrefetchPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "prefetch",
-		Doc:     "Parses a prefetch file.",
-		ArgType: type_map.AddType(scope, &_PrefetchPluginArgs{}),
+		Name:     "prefetch",
+		Doc:      "Parses a prefetch file.",
+		ArgType:  type_map.AddType(scope, &_PrefetchPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

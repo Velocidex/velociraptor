@@ -31,6 +31,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/json"
 	utils "www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -197,9 +198,10 @@ func (self ParseJsonlPlugin) Call(
 
 func (self ParseJsonlPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "parse_jsonl",
-		Doc:     "Parses a line oriented json file.",
-		ArgType: type_map.AddType(scope, &ParseJsonlPluginArgs{}),
+		Name:     "parse_jsonl",
+		Doc:      "Parses a line oriented json file.",
+		ArgType:  type_map.AddType(scope, &ParseJsonlPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 
@@ -554,9 +556,10 @@ func (self WriteJSONPlugin) Call(
 
 func (self WriteJSONPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "write_jsonl",
-		Doc:     "Write a query into a JSONL file.",
-		ArgType: type_map.AddType(scope, &WriteJSONPluginArgs{}),
+		Name:     "write_jsonl",
+		Doc:      "Write a query into a JSONL file.",
+		ArgType:  type_map.AddType(scope, &WriteJSONPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
 	}
 }
 

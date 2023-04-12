@@ -8,6 +8,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -59,9 +60,10 @@ func (self *CreateNotebookDownload) Call(ctx context.Context,
 
 func (self CreateNotebookDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "create_notebook_download",
-		Doc:     "Creates a notebook export zip file.",
-		ArgType: type_map.AddType(scope, &CreateNotebookDownloadArgs{}),
+		Name:     "create_notebook_download",
+		Doc:      "Creates a notebook export zip file.",
+		ArgType:  type_map.AddType(scope, &CreateNotebookDownloadArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.PREPARE_RESULTS).Build(),
 	}
 }
 

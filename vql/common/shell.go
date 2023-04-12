@@ -29,6 +29,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -273,9 +274,10 @@ func (self ShellPlugin) Call(
 
 func (self ShellPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "execve",
-		Doc:     "Execute the commands given by argv.",
-		ArgType: type_map.AddType(scope, &ShellPluginArgs{}),
+		Name:     "execve",
+		Doc:      "Execute the commands given by argv.",
+		ArgType:  type_map.AddType(scope, &ShellPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.EXECVE).Build(),
 	}
 }
 

@@ -7,6 +7,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -87,9 +88,10 @@ func (self DeleteEventsPlugin) Call(
 
 func (self DeleteEventsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "delete_events",
-		Doc:     "Delete all the files that make up a flow.",
-		ArgType: type_map.AddType(scope, &DeleteEventsPluginArgs{}),
+		Name:     "delete_events",
+		Doc:      "Delete all the files that make up a flow.",
+		ArgType:  type_map.AddType(scope, &DeleteEventsPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 

@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -139,9 +140,10 @@ func (self *DeleteNotebookPlugin) Call(ctx context.Context,
 func (self DeleteNotebookPlugin) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "notebook_delete",
-		Doc:     "Delete a notebook with all its cells. ",
-		ArgType: type_map.AddType(scope, &DeleteNotebookArgs{}),
+		Name:     "notebook_delete",
+		Doc:      "Delete a notebook with all its cells. ",
+		ArgType:  type_map.AddType(scope, &DeleteNotebookArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 

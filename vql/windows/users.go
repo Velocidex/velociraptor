@@ -27,6 +27,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -188,9 +189,10 @@ func (self *LookupSidFunction) Call(ctx context.Context,
 
 func (self *LookupSidFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "lookupSID",
-		Doc:     "Get information about the SID.",
-		ArgType: type_map.AddType(scope, &LookupSidFunctionArgs{}),
+		Name:     "lookupSID",
+		Doc:      "Get information about the SID.",
+		ArgType:  type_map.AddType(scope, &LookupSidFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 

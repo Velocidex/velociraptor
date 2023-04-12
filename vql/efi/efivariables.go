@@ -2,8 +2,10 @@ package efi
 
 import (
 	"context"
+
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -61,5 +63,6 @@ func init() {
 		Doc:        "Enumerate efi variables.",
 		Function:   runEfiVariables,
 		ArgType:    &EfiVariablesArgs{},
+		Metadata:   vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	})
 }

@@ -13,6 +13,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/windows"
 	"www.velocidex.com/golang/vfilter"
@@ -88,9 +89,10 @@ func (self ModulesPlugin) Call(
 
 func (self ModulesPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "modules",
-		Doc:     "Enumerate Loaded DLLs.",
-		ArgType: type_map.AddType(scope, &PidArgs{}),
+		Name:     "modules",
+		Doc:      "Enumerate Loaded DLLs.",
+		ArgType:  type_map.AddType(scope, &PidArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 

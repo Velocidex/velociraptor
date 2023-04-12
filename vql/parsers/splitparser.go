@@ -27,7 +27,9 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	utils "www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -221,9 +223,10 @@ func (self SplitRecordParser) Name() string {
 
 func (self SplitRecordParser) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "split_records",
-		Doc:     "Parses files by splitting lines into records.",
-		ArgType: type_map.AddType(scope, &_SplitRecordParserArgs{}),
+		Name:     "split_records",
+		Doc:      "Parses files by splitting lines into records.",
+		ArgType:  type_map.AddType(scope, &_SplitRecordParserArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

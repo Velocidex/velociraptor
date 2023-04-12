@@ -17,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -280,9 +281,10 @@ func reallyDeleteClient(ctx context.Context,
 func (self DeleteClientPlugin) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "client_delete",
-		Doc:     "Delete all information related to a client. ",
-		ArgType: type_map.AddType(scope, &DeleteClientArgs{}),
+		Name:     "client_delete",
+		Doc:      "Delete all information related to a client. ",
+		ArgType:  type_map.AddType(scope, &DeleteClientArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 

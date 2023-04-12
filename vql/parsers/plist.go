@@ -6,8 +6,10 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"howett.net/plist"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/json"
 	utils "www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -37,9 +39,10 @@ type PlistFunction struct{}
 
 func (self PlistFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "plist",
-		Doc:     "Parse plist file",
-		ArgType: type_map.AddType(scope, &_PlistFunctionArgs{}),
+		Name:     "plist",
+		Doc:      "Parse plist file",
+		ArgType:  type_map.AddType(scope, &_PlistFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 
@@ -111,9 +114,10 @@ type _PlistPlugin struct{}
 
 func (self _PlistPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "plist",
-		Doc:     "Parses a plist file.",
-		ArgType: type_map.AddType(scope, &_PlistPluginArgs{}),
+		Name:     "plist",
+		Doc:      "Parses a plist file.",
+		ArgType:  type_map.AddType(scope, &_PlistPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 
