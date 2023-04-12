@@ -26,7 +26,9 @@ import (
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/ntfs/readers"
+	"www.velocidex.com/golang/velociraptor/acls"
 	utils "www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -192,10 +194,11 @@ func (self MFTScanPlugin) Call(
 
 func (self MFTScanPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "parse_mft",
-		Doc:     "Scan the $MFT from an NTFS volume.",
-		ArgType: type_map.AddType(scope, &MFTScanPluginArgs{}),
-		Version: 2,
+		Name:     "parse_mft",
+		Doc:      "Scan the $MFT from an NTFS volume.",
+		ArgType:  type_map.AddType(scope, &MFTScanPluginArgs{}),
+		Version:  2,
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

@@ -25,6 +25,7 @@ import (
 	gomail "gopkg.in/gomail.v2"
 	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -211,9 +212,10 @@ func (self MailFunction) Call(ctx context.Context,
 
 func (self MailFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "mail",
-		Doc:     "Send Email to a remote server.",
-		ArgType: type_map.AddType(scope, &MailPluginArgs{}),
+		Name:     "mail",
+		Doc:      "Send Email to a remote server.",
+		ArgType:  type_map.AddType(scope, &MailPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 

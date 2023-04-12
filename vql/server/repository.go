@@ -10,6 +10,7 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -96,6 +97,8 @@ func (self ArtifactSetFunction) Info(
 		Name:    "artifact_set",
 		Doc:     "Sets an artifact into the global repository.",
 		ArgType: type_map.AddType(scope, &ArtifactSetFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(
+			acls.ARTIFACT_WRITER, acls.SERVER_ARTIFACT_WRITER).Build(),
 	}
 }
 
@@ -177,6 +180,8 @@ func (self ArtifactDeleteFunction) Info(
 		Name:    "artifact_delete",
 		Doc:     "Deletes an artifact from the global repository.",
 		ArgType: type_map.AddType(scope, &ArtifactDeleteFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(
+			acls.ARTIFACT_WRITER, acls.SERVER_ARTIFACT_WRITER).Build(),
 	}
 }
 
@@ -304,9 +309,10 @@ func (self ArtifactsPlugin) Call(
 
 func (self ArtifactsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "artifact_definitions",
-		Doc:     "Dump artifact definitions.",
-		ArgType: type_map.AddType(scope, &ArtifactsPluginArgs{}),
+		Name:     "artifact_definitions",
+		Doc:      "Dump artifact definitions.",
+		ArgType:  type_map.AddType(scope, &ArtifactsPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

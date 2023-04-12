@@ -9,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/config"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -93,9 +94,10 @@ func (self *RekeyFunction) Call(ctx context.Context,
 
 func (self RekeyFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "rekey",
-		Doc:     "Causes the client to rekey and regenerate a new client ID. DANGEROUS! This will change the client's identity and it will appear as a new client in the GUI.",
-		ArgType: type_map.AddType(scope, &RekeyFunctionArgs{}),
+		Name:     "rekey",
+		Doc:      "Causes the client to rekey and regenerate a new client ID. DANGEROUS! This will change the client's identity and it will appear as a new client in the GUI.",
+		ArgType:  type_map.AddType(scope, &RekeyFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.EXECVE).Build(),
 	}
 }
 

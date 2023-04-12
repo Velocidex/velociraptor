@@ -7,6 +7,8 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -91,9 +93,10 @@ func mapSlice2OrderedDict(a yaml.MapSlice) *ordereddict.Dict {
 
 func (self ParseYamlFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "parse_yaml",
-		Doc:     "Parse yaml into an object.",
-		ArgType: type_map.AddType(scope, &ParseYamlFunctionArgs{}),
+		Name:     "parse_yaml",
+		Doc:      "Parse yaml into an object.",
+		ArgType:  type_map.AddType(scope, &ParseYamlFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

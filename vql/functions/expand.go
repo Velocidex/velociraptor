@@ -7,6 +7,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -59,9 +60,10 @@ func getenv(v string) string {
 
 func (self ExpandPath) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "expand",
-		Doc:     "Expand the path using the environment.",
-		ArgType: type_map.AddType(scope, &ExpandPathArgs{}),
+		Name:     "expand",
+		Doc:      "Expand the path using the environment.",
+		ArgType:  type_map.AddType(scope, &ExpandPathArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 

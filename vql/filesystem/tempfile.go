@@ -26,6 +26,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -115,9 +116,10 @@ func (self *TempfileFunction) Call(ctx context.Context,
 func (self TempfileFunction) Info(scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "tempfile",
-		Doc:     "Create a temporary file and write some data into it.",
-		ArgType: type_map.AddType(scope, &_TempfileRequest{}),
+		Name:     "tempfile",
+		Doc:      "Create a temporary file and write some data into it.",
+		ArgType:  type_map.AddType(scope, &_TempfileRequest{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
 	}
 }
 
@@ -188,9 +190,10 @@ func (self *TempdirFunction) Call(ctx context.Context,
 func (self TempdirFunction) Info(scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "tempdir",
-		Doc:     "Create a temporary directory. The directory will be removed when the query ends.",
-		ArgType: type_map.AddType(scope, &_TempdirRequest{}),
+		Name:     "tempdir",
+		Doc:      "Create a temporary directory. The directory will be removed when the query ends.",
+		ArgType:  type_map.AddType(scope, &_TempdirRequest{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
 	}
 }
 

@@ -17,7 +17,9 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -121,9 +123,10 @@ func upload_azure(ctx context.Context, scope vfilter.Scope,
 func (self AzureUploadFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "upload_azure",
-		Doc:     "Upload files to Azure Blob Storage Service.",
-		ArgType: type_map.AddType(scope, &AzureUploadArgs{}),
+		Name:     "upload_azure",
+		Doc:      "Upload files to Azure Blob Storage Service.",
+		ArgType:  type_map.AddType(scope, &AzureUploadArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

@@ -38,6 +38,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -452,10 +453,11 @@ func (self _HttpPlugin) Name() string {
 
 func (self _HttpPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    self.Name(),
-		Doc:     "Make a http request.",
-		ArgType: type_map.AddType(scope, &HttpPluginRequest{}),
-		Version: 2,
+		Name:     self.Name(),
+		Doc:      "Make a http request.",
+		ArgType:  type_map.AddType(scope, &HttpPluginRequest{}),
+		Version:  2,
+		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER).Build(),
 	}
 }
 

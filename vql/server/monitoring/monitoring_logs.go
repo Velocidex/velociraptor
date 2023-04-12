@@ -30,6 +30,7 @@ import (
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
@@ -138,9 +139,10 @@ func (self MonitoringLogsPlugin) Call(
 func (self MonitoringLogsPlugin) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "monitoring_logs",
-		Doc:     "Retrieve log messages from client event monitoring for the specified client id and artifact",
-		ArgType: type_map.AddType(scope, &MonitoringLogsPluginArgs{}),
+		Name:     "monitoring_logs",
+		Doc:      "Retrieve log messages from client event monitoring for the specified client id and artifact",
+		ArgType:  type_map.AddType(scope, &MonitoringLogsPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

@@ -23,6 +23,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/shirou/gopsutil/v3/process"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -64,8 +65,9 @@ func (self *PsKillFunction) Call(ctx context.Context,
 
 func (self PsKillFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name: "pskill",
-		Doc:  "Kill the specified process.",
+		Name:     "pskill",
+		Doc:      "Kill the specified process.",
+		Metadata: vql.VQLMetadata().Permissions(acls.EXECVE).Build(),
 	}
 }
 

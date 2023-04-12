@@ -35,6 +35,7 @@ import (
 	ole "github.com/go-ole/go-ole"
 	"github.com/go-ole/go-ole/oleutil"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -235,5 +236,6 @@ func init() {
 		Doc:        "Execute simple WMI queries synchronously.",
 		Function:   runWMIQuery,
 		ArgType:    &WMIQueryArgs{},
+		Metadata:   vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	})
 }

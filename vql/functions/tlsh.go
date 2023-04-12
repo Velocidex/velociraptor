@@ -7,6 +7,8 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/glaslos/tlsh"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -60,9 +62,10 @@ func (self *TLSHashFunction) Call(ctx context.Context,
 
 func (self TLSHashFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "tlsh_hash",
-		Doc:     "Calculate the tlsh hash of a file.",
-		ArgType: type_map.AddType(scope, &TLSHashFunctionArgs{}),
+		Name:     "tlsh_hash",
+		Doc:      "Calculate the tlsh hash of a file.",
+		ArgType:  type_map.AddType(scope, &TLSHashFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

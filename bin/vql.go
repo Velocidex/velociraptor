@@ -234,17 +234,28 @@ func doVQLExport() error {
 		// over-ridden by the new plugins. But any new arg
 		// descriptions are always copied from the running code.
 		new_item := getOldItem(item.Name, "Plugin", old_data)
+		var metadata map[string]string
+		if item.Metadata != nil {
+			metadata = make(map[string]string)
+			for _, k := range item.Metadata.Keys() {
+				v, _ := item.Metadata.GetString(k)
+				metadata[k] = v
+			}
+		}
+
 		if new_item == nil {
 			new_item = &api_proto.Completion{
 				Name:        item.Name,
 				Description: item.Doc,
 				Version:     uint64(item.Version),
 				Type:        "Plugin",
+				Metadata:    metadata,
 			}
 		} else {
 			// Override the args and update the version
 			new_item.Args = nil
 			new_item.Version = uint64(item.Version)
+			new_item.Metadata = metadata
 		}
 
 		arg_desc, pres := type_map.Get(scope, item.ArgType)
@@ -281,17 +292,28 @@ func doVQLExport() error {
 		seen_functions[item.Name] = true
 
 		new_item := getOldItem(item.Name, "Function", old_data)
+		var metadata map[string]string
+		if item.Metadata != nil {
+			metadata = make(map[string]string)
+			for _, k := range item.Metadata.Keys() {
+				v, _ := item.Metadata.GetString(k)
+				metadata[k] = v
+			}
+		}
+
 		if new_item == nil {
 			new_item = &api_proto.Completion{
 				Name:        item.Name,
 				Description: item.Doc,
 				Version:     uint64(item.Version),
 				Type:        "Function",
+				Metadata:    metadata,
 			}
 		} else {
 			// Override the args
 			new_item.Args = nil
 			new_item.Version = uint64(item.Version)
+			new_item.Metadata = metadata
 		}
 
 		arg_desc, pres := type_map.Get(scope, item.ArgType)

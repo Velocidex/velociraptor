@@ -25,6 +25,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -92,7 +93,8 @@ func (self AddLabels) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfil
 		Name: "label",
 		Doc: "Add the labels to the client. " +
 			"If op is 'remove' then remove these labels.",
-		ArgType: type_map.AddType(scope, &AddLabelsArgs{}),
+		ArgType:  type_map.AddType(scope, &AddLabelsArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.LABEL_CLIENT).Build(),
 	}
 }
 

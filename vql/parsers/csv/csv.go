@@ -28,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -157,9 +158,10 @@ func (self ParseCSVPlugin) Call(
 
 func (self ParseCSVPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "parse_csv",
-		Doc:     "Parses events from a CSV file.",
-		ArgType: type_map.AddType(scope, &ParseCSVPluginArgs{}),
+		Name:     "parse_csv",
+		Doc:      "Parses events from a CSV file.",
+		ArgType:  type_map.AddType(scope, &ParseCSVPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 
@@ -216,7 +218,8 @@ func (self _WatchCSVPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 		Name: "watch_csv",
 		Doc: "Watch a CSV file and stream events from it. " +
 			"Note: This is an event plugin which does not complete.",
-		ArgType: type_map.AddType(scope, &ParseCSVPluginArgs{}),
+		ArgType:  type_map.AddType(scope, &ParseCSVPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 
@@ -289,9 +292,10 @@ func (self WriteCSVPlugin) Call(
 
 func (self WriteCSVPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "write_csv",
-		Doc:     "Write a query into a CSV file.",
-		ArgType: type_map.AddType(scope, &WriteCSVPluginArgs{}),
+		Name:     "write_csv",
+		Doc:      "Write a query into a CSV file.",
+		ArgType:  type_map.AddType(scope, &WriteCSVPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE).Build(),
 	}
 }
 

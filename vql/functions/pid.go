@@ -23,6 +23,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -44,8 +45,9 @@ func (self *GetPidFunction) Call(ctx context.Context,
 
 func (self GetPidFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name: "getpid",
-		Doc:  "Returns the current pid of the process.",
+		Name:     "getpid",
+		Doc:      "Returns the current pid of the process.",
+		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 

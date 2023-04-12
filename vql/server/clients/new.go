@@ -12,6 +12,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -117,9 +118,10 @@ func (self NewClientFunction) Call(ctx context.Context,
 func (self NewClientFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "client_create",
-		Doc:     "Create a new client in the data store.",
-		ArgType: type_map.AddType(scope, &NewClientArgs{}),
+		Name:     "client_create",
+		Doc:      "Create a new client in the data store.",
+		ArgType:  type_map.AddType(scope, &NewClientArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 

@@ -8,6 +8,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -30,7 +31,7 @@ func (self DeleteFlowPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
+		err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
 		if err != nil {
 			scope.Log("delete_flow: %s", err)
 			return
@@ -85,9 +86,10 @@ func (self DeleteFlowPlugin) Call(
 
 func (self DeleteFlowPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "delete_flow",
-		Doc:     "Delete all the files that make up a flow.",
-		ArgType: type_map.AddType(scope, &FlowsPluginArgs{}),
+		Name:     "delete_flow",
+		Doc:      "Delete all the files that make up a flow.",
+		ArgType:  type_map.AddType(scope, &FlowsPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 

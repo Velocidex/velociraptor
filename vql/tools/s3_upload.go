@@ -13,8 +13,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
@@ -204,9 +206,10 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 func (self S3UploadFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "upload_s3",
-		Doc:     "Upload files to S3.",
-		ArgType: type_map.AddType(scope, &S3UploadArgs{}),
+		Name:     "upload_s3",
+		Doc:      "Upload files to S3.",
+		ArgType:  type_map.AddType(scope, &S3UploadArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

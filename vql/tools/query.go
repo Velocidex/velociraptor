@@ -8,6 +8,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
@@ -211,9 +212,10 @@ func runStringQuery(
 
 func (self QueryPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "query",
-		Doc:     "Evaluate a VQL query.",
-		ArgType: type_map.AddType(scope, &QueryPluginArgs{}),
+		Name:     "query",
+		Doc:      "Evaluate a VQL query.",
+		ArgType:  type_map.AddType(scope, &QueryPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.IMPERSONATION).Build(),
 	}
 }
 

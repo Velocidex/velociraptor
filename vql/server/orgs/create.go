@@ -6,6 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -58,9 +59,10 @@ func (self OrgCreateFunction) Call(
 
 func (self OrgCreateFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "org_create",
-		Doc:     "Creates a new organization.",
-		ArgType: type_map.AddType(scope, &OrgCreateFunctionArgs{}),
+		Name:     "org_create",
+		Doc:      "Creates a new organization.",
+		ArgType:  type_map.AddType(scope, &OrgCreateFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.ORG_ADMIN).Build(),
 	}
 }
 

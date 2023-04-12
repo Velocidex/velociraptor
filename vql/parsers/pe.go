@@ -24,8 +24,10 @@ import (
 	"github.com/Velocidex/ordereddict"
 	pe "www.velocidex.com/golang/go-pe"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/constants"
 	utils "www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/readers"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -42,9 +44,10 @@ type _PEFunction struct{}
 
 func (self _PEFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "parse_pe",
-		Doc:     "Parse a PE file.",
-		ArgType: type_map.AddType(scope, &_PEFunctionArgs{}),
+		Name:     "parse_pe",
+		Doc:      "Parse a PE file.",
+		ArgType:  type_map.AddType(scope, &_PEFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

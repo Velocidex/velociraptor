@@ -6,6 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -66,9 +67,10 @@ func (self *SendEventFunction) Call(ctx context.Context,
 
 func (self SendEventFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "send_event",
-		Doc:     "Sends an event to a server event monitoring queue.",
-		ArgType: type_map.AddType(scope, &SendEventArgs{}),
+		Name:     "send_event",
+		Doc:      "Sends an event to a server event monitoring queue.",
+		ArgType:  type_map.AddType(scope, &SendEventArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN, acls.PUBLISH).Build(),
 	}
 }
 

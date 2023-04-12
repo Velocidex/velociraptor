@@ -121,6 +121,14 @@ const (
 	// GetRolePermissions and acl.proto
 )
 
+func (self ACL_PERMISSION) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf("\"%s\"", self.String())), nil
+}
+
+func (self ACL_PERMISSION) MarshalYAML() (interface{}, error) {
+	return self.String(), nil
+}
+
 func (self ACL_PERMISSION) String() string {
 	switch self {
 	case NO_PERMISSIONS:

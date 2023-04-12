@@ -32,6 +32,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -121,9 +122,10 @@ func (self HuntsPlugin) Call(
 
 func (self HuntsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "hunts",
-		Doc:     "Retrieve the list of hunts.",
-		ArgType: type_map.AddType(scope, &HuntsPluginArgs{}),
+		Name:     "hunts",
+		Doc:      "Retrieve the list of hunts.",
+		ArgType:  type_map.AddType(scope, &HuntsPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 
@@ -278,9 +280,10 @@ func (self HuntResultsPlugin) Call(
 
 func (self HuntResultsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "hunt_results",
-		Doc:     "Retrieve the results of a hunt.",
-		ArgType: type_map.AddType(scope, &HuntResultsPluginArgs{}),
+		Name:     "hunt_results",
+		Doc:      "Retrieve the results of a hunt.",
+		ArgType:  type_map.AddType(scope, &HuntResultsPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 
@@ -355,9 +358,10 @@ func (self HuntFlowsPlugin) Call(
 
 func (self HuntFlowsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "hunt_flows",
-		Doc:     "Retrieve the flows launched by a hunt.",
-		ArgType: type_map.AddType(scope, &HuntFlowsPluginArgs{}),
+		Name:     "hunt_flows",
+		Doc:      "Retrieve the flows launched by a hunt.",
+		ArgType:  type_map.AddType(scope, &HuntFlowsPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

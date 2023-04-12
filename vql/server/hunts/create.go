@@ -32,6 +32,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
@@ -271,9 +272,10 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 
 func (self ScheduleHuntFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "hunt",
-		Doc:     "Launch an artifact collection against a client.",
-		ArgType: type_map.AddType(scope, &ScheduleHuntFunctionArg{}),
+		Name:     "hunt",
+		Doc:      "Launch an artifact collection against a client.",
+		ArgType:  type_map.AddType(scope, &ScheduleHuntFunctionArg{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.START_HUNT, acls.ORG_ADMIN).Build(),
 	}
 }
 
@@ -409,9 +411,10 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 func (self AddToHuntFunction) Info(scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "hunt_add",
-		Doc:     "Assign a client to a hunt.",
-		ArgType: type_map.AddType(scope, &AddToHuntFunctionArg{}),
+		Name:     "hunt_add",
+		Doc:      "Assign a client to a hunt.",
+		ArgType:  type_map.AddType(scope, &AddToHuntFunctionArg{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.START_HUNT).Build(),
 	}
 }
 

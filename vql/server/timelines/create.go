@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/timelines"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/velociraptor/vql/sorter"
@@ -138,9 +139,10 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 func (self AddTimelineFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "timeline_add",
-		Doc:     "Add a new query to a timeline.",
-		ArgType: type_map.AddType(scope, &AddTimelineFunctionArgs{}),
+		Name:     "timeline_add",
+		Doc:      "Add a new query to a timeline.",
+		ArgType:  type_map.AddType(scope, &AddTimelineFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

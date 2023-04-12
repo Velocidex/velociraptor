@@ -28,8 +28,10 @@ import (
 
 	"github.com/shirou/gopsutil/v3/disk"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -186,10 +188,11 @@ func (self GlobPlugin) Call(
 
 func (self GlobPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "glob",
-		Doc:     "Retrieve files based on a list of glob expressions",
-		ArgType: type_map.AddType(scope, &GlobPluginArgs{}),
-		Version: 3,
+		Name:     "glob",
+		Doc:      "Retrieve files based on a list of glob expressions",
+		ArgType:  type_map.AddType(scope, &GlobPluginArgs{}),
+		Version:  3,
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 
@@ -307,9 +310,10 @@ func (self ReadFilePlugin) Name() string {
 
 func (self ReadFilePlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "read_file",
-		Doc:     "Read files in chunks.",
-		ArgType: type_map.AddType(scope, &ReadFileArgs{}),
+		Name:     "read_file",
+		Doc:      "Read files in chunks.",
+		ArgType:  type_map.AddType(scope, &ReadFileArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 
@@ -374,9 +378,10 @@ func (self *ReadFileFunction) Call(ctx context.Context,
 
 func (self ReadFileFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "read_file",
-		Doc:     "Read a file into a string.",
-		ArgType: type_map.AddType(scope, &ReadFileFunctionArgs{}),
+		Name:     "read_file",
+		Doc:      "Read a file into a string.",
+		ArgType:  type_map.AddType(scope, &ReadFileFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 
@@ -435,10 +440,11 @@ func (self StatPlugin) Name() string {
 
 func (self StatPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "stat",
-		Doc:     "Get file information. Unlike glob() this does not support wildcards.",
-		ArgType: type_map.AddType(scope, &StatArgs{}),
-		Version: 2,
+		Name:     "stat",
+		Doc:      "Get file information. Unlike glob() this does not support wildcards.",
+		ArgType:  type_map.AddType(scope, &StatArgs{}),
+		Version:  2,
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

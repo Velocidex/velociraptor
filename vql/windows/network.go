@@ -32,6 +32,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -367,5 +368,6 @@ func init() {
 		Doc:        "Collect network information.",
 		Function:   runNetstat,
 		ArgType:    &NetstatArgs{},
+		Metadata:   vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	})
 }

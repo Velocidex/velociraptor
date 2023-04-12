@@ -24,7 +24,9 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	utils "www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -181,9 +183,10 @@ func (self _ParseFileWithRegex) Call(
 
 func (self _ParseFileWithRegex) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "parse_records_with_regex",
-		Doc:     "Parses a file with a set of regexp and yields matches as records.",
-		ArgType: type_map.AddType(scope, &_ParseFileWithRegexArgs{}),
+		Name:     "parse_records_with_regex",
+		Doc:      "Parses a file with a set of regexp and yields matches as records.",
+		ArgType:  type_map.AddType(scope, &_ParseFileWithRegexArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

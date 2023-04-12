@@ -7,6 +7,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -84,9 +85,10 @@ func (self *UpdateHuntFunction) Call(ctx context.Context,
 
 func (self UpdateHuntFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "hunt_update",
-		Doc:     "Update a hunt.",
-		ArgType: type_map.AddType(scope, &UpdateHuntFunctionArg{}),
+		Name:     "hunt_update",
+		Doc:      "Update a hunt.",
+		ArgType:  type_map.AddType(scope, &UpdateHuntFunctionArg{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.START_HUNT).Build(),
 	}
 }
 

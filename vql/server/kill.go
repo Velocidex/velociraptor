@@ -19,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -84,9 +85,10 @@ func (self *KillClientFunction) Call(ctx context.Context,
 func (self KillClientFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "killkillkill",
-		Doc:     "Kills the client and forces a restart - this is very aggresive!",
-		ArgType: type_map.AddType(scope, &KillClientFunctionArgs{}),
+		Name:     "killkillkill",
+		Doc:      "Kills the client and forces a restart - this is very aggresive!",
+		ArgType:  type_map.AddType(scope, &KillClientFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 

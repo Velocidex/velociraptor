@@ -13,9 +13,11 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/api/option"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -158,9 +160,10 @@ func upload_gcs(ctx context.Context, scope vfilter.Scope,
 func (self GCSUploadFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "upload_gcs",
-		Doc:     "Upload files to GCS.",
-		ArgType: type_map.AddType(scope, &GCSUploadArgs{}),
+		Name:     "upload_gcs",
+		Doc:      "Upload files to GCS.",
+		ArgType:  type_map.AddType(scope, &GCSUploadArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

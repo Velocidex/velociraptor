@@ -9,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -124,9 +125,10 @@ func (self ParallelPlugin) Call(
 func (self ParallelPlugin) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "parallelize",
-		Doc:     "Runs query on result batches in parallel.",
-		ArgType: type_map.AddType(scope, &ParallelPluginArgs{}),
+		Name:     "parallelize",
+		Doc:      "Runs query on result batches in parallel.",
+		ArgType:  type_map.AddType(scope, &ParallelPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

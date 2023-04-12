@@ -39,6 +39,7 @@ type PslistArgs struct {
 func init() {
 	RegisterPlugin(vfilter.GenericListPlugin{
 		PluginName: "pslist",
+		Metadata:   VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 		Function: func(
 			ctx context.Context,
 			scope vfilter.Scope,

@@ -7,6 +7,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -103,9 +104,10 @@ func (self FlowsPlugin) Call(
 
 func (self FlowsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "flows",
-		Doc:     "Retrieve the flows launched on each client.",
-		ArgType: type_map.AddType(scope, &FlowsPluginArgs{}),
+		Name:     "flows",
+		Doc:      "Retrieve the flows launched on each client.",
+		ArgType:  type_map.AddType(scope, &FlowsPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 
@@ -156,9 +158,10 @@ func (self *CancelFlowFunction) Call(ctx context.Context,
 
 func (self CancelFlowFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "cancel_flow",
-		Doc:     "Cancels the flow.",
-		ArgType: type_map.AddType(scope, &FlowsPluginArgs{}),
+		Name:     "cancel_flow",
+		Doc:      "Cancels the flow.",
+		ArgType:  type_map.AddType(scope, &FlowsPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER, acls.COLLECT_CLIENT).Build(),
 	}
 }
 
@@ -219,9 +222,10 @@ func (self EnumerateFlowPlugin) Call(
 
 func (self EnumerateFlowPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:    "enumerate_flow",
-		Doc:     "Enumerate all the files that make up a flow.",
-		ArgType: type_map.AddType(scope, &FlowsPluginArgs{}),
+		Name:     "enumerate_flow",
+		Doc:      "Enumerate all the files that make up a flow.",
+		ArgType:  type_map.AddType(scope, &FlowsPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 
@@ -273,9 +277,10 @@ func (self *GetFlowFunction) Call(ctx context.Context,
 
 func (self GetFlowFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "get_flow",
-		Doc:     "Gets flow details.",
-		ArgType: type_map.AddType(scope, &FlowsPluginArgs{}),
+		Name:     "get_flow",
+		Doc:      "Gets flow details.",
+		ArgType:  type_map.AddType(scope, &FlowsPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_CLIENT, acls.COLLECT_SERVER).Build(),
 	}
 }
 

@@ -102,11 +102,12 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
 	www.velocidex.com/golang/oleparse v0.0.0-20230217092320-383a0121aafe
 	www.velocidex.com/golang/regparser v0.0.0-20221020153526-bbc758cbd18b
-	www.velocidex.com/golang/vfilter v0.0.0-20230408044117-40be965cf178
+	www.velocidex.com/golang/vfilter v0.0.0-20230412022049-bb951c2b4602
 )
 
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.6
+	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.0.0
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11
 	github.com/Velocidex/grok v0.0.1
@@ -118,6 +119,7 @@ require (
 	github.com/glaslos/tlsh v0.2.0
 	github.com/go-errors/errors v1.4.2
 	github.com/golang-jwt/jwt/v4 v4.4.3
+	github.com/golang/protobuf v1.5.2
 	github.com/hillu/go-archive-zip-crypto v0.0.0-20200712202847-bd5cf365dd44
 	github.com/hirochachacha/go-smb2 v1.1.0
 	github.com/lpar/gzipped v1.1.0
@@ -135,10 +137,8 @@ require (
 	cloud.google.com/go/compute v1.10.0 // indirect
 	cloud.google.com/go/iam v0.4.0 // indirect
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1 // indirect
-	github.com/Azure/azure-sdk-for-go v68.0.0+incompatible // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.3.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.1.1 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.0.0 // indirect
 	github.com/Masterminds/semver/v3 v3.1.1 // indirect
 	github.com/PuerkitoBio/goquery v1.8.0 // indirect
 	github.com/alecthomas/colour v0.1.0 // indirect
@@ -157,7 +157,6 @@ require (
 	github.com/geoffgarside/ber v1.1.0 // indirect
 	github.com/golang/gddo v0.0.0-20210115222349-20d68f94ee1f // indirect
 	github.com/golang/glog v1.0.0 // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
 	github.com/google/martian/v3 v3.3.2 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.0 // indirect

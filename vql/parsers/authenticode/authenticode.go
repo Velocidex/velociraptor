@@ -33,6 +33,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/readers"
 	"www.velocidex.com/golang/vfilter"
@@ -142,7 +143,8 @@ func (self AuthenticodeFunction) Info(
 		Name: "authenticode",
 		Doc: "This plugin uses the Windows API to extract authenticode " +
 			"signature details from PE files.",
-		ArgType: type_map.AddType(scope, &AuthenticodeArgs{}),
+		ArgType:  type_map.AddType(scope, &AuthenticodeArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 

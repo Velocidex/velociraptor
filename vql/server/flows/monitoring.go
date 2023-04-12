@@ -28,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
@@ -133,7 +134,8 @@ func (self MonitoringPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 		Name: "monitoring",
 		Doc: "Extract monitoring log from a client. If client_id is not specified " +
 			"we watch the global journal which contains event logs from all clients.",
-		ArgType: type_map.AddType(scope, &SourcePluginArgs{}),
+		ArgType:  type_map.AddType(scope, &SourcePluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 
@@ -227,7 +229,8 @@ func (self WatchMonitoringPlugin) Info(scope vfilter.Scope,
 		Doc: "Watch clients' monitoring log. This is an event plugin. If " +
 			"client_id is not provided we watch the global journal which contains " +
 			"events from all clients.",
-		ArgType: type_map.AddType(scope, &WatchMonitoringPluginArgs{}),
+		ArgType:  type_map.AddType(scope, &WatchMonitoringPluginArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

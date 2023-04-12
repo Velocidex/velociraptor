@@ -24,6 +24,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/server/clients"
 	"www.velocidex.com/golang/vfilter"
@@ -355,9 +356,10 @@ func (self ImportCollectionFunction) copyFile(
 
 func (self ImportCollectionFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "import_collection",
-		Doc:     "Imports an offline collection zip file (experimental).",
-		ArgType: type_map.AddType(scope, &ImportCollectionFunctionArgs{}),
+		Name:     "import_collection",
+		Doc:      "Imports an offline collection zip file (experimental).",
+		ArgType:  type_map.AddType(scope, &ImportCollectionFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER, acls.FILESYSTEM_READ).Build(),
 	}
 }
 
