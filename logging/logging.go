@@ -91,8 +91,8 @@ func InitLogging(config_obj *config_proto.Config) error {
 		contexts: make(map[*string]*LogContext),
 	}
 
-	for _, component := range []*string{&GenericComponent,
-		&FrontendComponent, &ClientComponent,
+	for _, component := range []*string{
+		&GenericComponent, &FrontendComponent, &ClientComponent,
 		&GUIComponent, &ToolComponent, &APICmponent, &Audit} {
 
 		logger, err := Manager.makeNewComponent(config_obj, component)
@@ -102,7 +102,13 @@ func InitLogging(config_obj *config_proto.Config) error {
 		}
 		Manager.contexts[component] = logger
 	}
+
+	err := maybeAddRemoteSyslog(config_obj, Manager)
 	mu.Unlock()
+
+	if err != nil {
+		return err
+	}
 
 	FlushPrelogs(config_obj)
 

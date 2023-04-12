@@ -23,7 +23,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/google/uuid"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -252,11 +251,11 @@ func (self *ClientEventTable) setClientMonitoringState(
 	}
 
 	if principal != "" {
-		logging.LogAudit(config_obj, principal, "SetClientMonitoringState",
-			logrus.Fields{
-				"user":  principal,
-				"state": self.state,
-			})
+		services.LogAudit(ctx,
+			config_obj, principal, "SetClientMonitoringState",
+			ordereddict.NewDict().
+				Set("user", principal).
+				Set("state", self.state))
 	}
 
 	err = journal.PushRowsToArtifact(ctx, config_obj,

@@ -42,7 +42,6 @@ import (
 	errors "github.com/go-errors/errors"
 	"github.com/gorilla/schema"
 
-	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -56,7 +55,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/flows"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -468,11 +466,11 @@ func downloadTable() http.Handler {
 			w.Header().Set("Content-Type", "binary/octet-stream")
 			w.WriteHeader(200)
 
-			logging.LogAudit(org_config_obj, principal, "DownloadTable",
-				logrus.Fields{
-					"request": request,
-					"remote":  r.RemoteAddr,
-				})
+			services.LogAudit(r.Context(),
+				org_config_obj, principal, "DownloadTable",
+				ordereddict.NewDict().
+					Set("request", request).
+					Set("remote", r.RemoteAddr))
 
 			scope := vql_subsystem.MakeScope()
 			csv_writer := csv.GetCSVAppender(
@@ -497,11 +495,11 @@ func downloadTable() http.Handler {
 			w.Header().Set("Content-Type", "binary/octet-stream")
 			w.WriteHeader(200)
 
-			logging.LogAudit(org_config_obj, principal, "DownloadTable",
-				logrus.Fields{
-					"request": request,
-					"remote":  r.RemoteAddr,
-				})
+			services.LogAudit(r.Context(),
+				org_config_obj, principal, "DownloadTable",
+				ordereddict.NewDict().
+					Set("request", request).
+					Set("remote", r.RemoteAddr))
 
 			for row := range row_chan {
 				serialized, err := json.MarshalWithOptions(

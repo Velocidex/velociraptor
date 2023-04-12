@@ -7,10 +7,8 @@ import (
 	"os"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -110,11 +108,11 @@ func (self ClientInfoManager) SetMetadata(ctx context.Context,
 		return err
 	}
 
-	logging.LogAudit(self.config_obj, principal, "SetMetadata",
-		logrus.Fields{
-			"updated_keys": updated_keys,
-			"client_id":    client_id,
-		})
+	services.LogAudit(ctx,
+		self.config_obj, principal, "SetMetadata",
+		ordereddict.NewDict().
+			Set("updated_keys", updated_keys).
+			Set("client_id", client_id))
 
 	// Notify the changes and log them.
 	journal, err := services.GetJournal(self.config_obj)

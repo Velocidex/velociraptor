@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
@@ -74,12 +75,13 @@ func (self *ApiServer) GetNotebooks(
 
 		// Document not owned or collaborated with.
 		if !notebook_manager.CheckNotebookAccess(notebook_metadata, principal) {
-			logging.LogAudit(org_config_obj, principal, "notebook not shared.",
-				logrus.Fields{
-					"action":   "Access Denied",
-					"notebook": in.NotebookId,
-					"error":    err.Error(),
-				})
+			services.LogAudit(ctx,
+				org_config_obj, principal, "notebook not shared.",
+				ordereddict.NewDict().
+					Set("action", "Access Denied").
+					Set("notebook", in.NotebookId).
+					Set("error", err.Error()))
+
 			return nil, InvalidStatus("User has no access to this notebook")
 		}
 

@@ -22,14 +22,11 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
@@ -257,13 +254,12 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		hunt_request.HuntId = hunt_id
 	}
 
-	logging.LogAudit(config_obj, principal, "CreateHunt",
-		logrus.Fields{
-			"hunt_id": hunt_request.HuntId,
-			"details": json.MustMarshalString(
-				vfilter.RowToDict(ctx, scope, arg)),
-			"orgs": orgs_we_scheduled,
-		})
+	services.LogAudit(ctx,
+		config_obj, principal, "CreateHunt",
+		ordereddict.NewDict().
+			Set("hunt_id", hunt_request.HuntId).
+			Set("details", vfilter.RowToDict(ctx, scope, arg)).
+			Set("orgs", orgs_we_scheduled))
 
 	return ordereddict.NewDict().
 		Set("HuntId", hunt_request.HuntId).

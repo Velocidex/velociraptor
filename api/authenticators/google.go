@@ -27,6 +27,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/gorilla/csrf"
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
@@ -243,8 +244,8 @@ func installLogoff(config_obj *config_proto.Config, mux *http.ServeMux) {
 			old_username, ok := params["username"]
 			username := ""
 			if ok && len(old_username) == 1 {
-				logging.LogAudit(
-					config_obj, old_username[0], "LogOff", logrus.Fields{})
+				services.LogAudit(r.Context(),
+					config_obj, old_username[0], "LogOff", ordereddict.NewDict())
 				username = old_username[0]
 			}
 
@@ -327,13 +328,13 @@ func reject_with_username(
 	err error, username, login_url, provider string) {
 
 	// Log into the audit log.
-	logging.LogAudit(config_obj, username, "User rejected by GUI",
-		logrus.Fields{
-			"remote": r.RemoteAddr,
-			"method": r.Method,
-			"url":    r.URL.String(),
-			"err":    err.Error(),
-		})
+	services.LogAudit(r.Context(),
+		config_obj, username, "User rejected by GUI",
+		ordereddict.NewDict().
+			Set("remote", r.RemoteAddr).
+			Set("method", r.Method).
+			Set("url", r.URL.String()).
+			Set("err", err.Error()))
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)

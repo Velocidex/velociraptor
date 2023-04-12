@@ -5,7 +5,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 
-	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -190,12 +189,12 @@ func (self *ApiServer) CreateHunt(
 	result.FlowId = in.HuntId
 
 	// Audit message for GUI access
-	logging.LogAudit(org_config_obj, principal, "CreateHunt",
-		logrus.Fields{
-			"hunt_id": result.FlowId,
-			"details": json.MustMarshalString(in),
-			"orgs":    orgs_we_scheduled,
-		})
+	services.LogAudit(ctx,
+		org_config_obj, principal, "CreateHunt",
+		ordereddict.NewDict().
+			Set("hunt_id", result.FlowId).
+			Set("details", in).
+			Set("orgs", orgs_we_scheduled))
 
 	return result, nil
 }
@@ -227,11 +226,11 @@ func (self *ApiServer) ModifyHunt(
 			"User is not allowed to modify hunts.")
 	}
 
-	logging.LogAudit(org_config_obj, principal, "ModifyHunt",
-		logrus.Fields{
-			"hunt_id": in.HuntId,
-			"details": json.MustMarshalString(in),
-		})
+	services.LogAudit(ctx,
+		org_config_obj, principal, "ModifyHunt",
+		ordereddict.NewDict().
+			Set("hunt_id", in.HuntId).
+			Set("details", in))
 
 	hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
 	if err != nil {

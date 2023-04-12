@@ -4,9 +4,8 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sirupsen/logrus"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
-	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/users"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -68,12 +67,13 @@ func (self UserCreateFunction) Call(
 		}
 	}
 
-	logging.LogAudit(org_config_obj, principal, "user_create",
-		logrus.Fields{
-			"Username": arg.Username,
-			"Roles":    arg.Roles,
-			"OrgIds":   arg.OrgIds,
-		})
+	services.LogAudit(ctx,
+		org_config_obj, principal, "user_create",
+		ordereddict.NewDict().
+			Set("Username", arg.Username).
+			Set("Roles", arg.Roles).
+			Set("OrgIds", arg.OrgIds))
+
 	return arg.Username
 }
 

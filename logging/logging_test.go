@@ -10,7 +10,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/sebdah/goldie"
-	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -39,17 +38,16 @@ func TestAuditLog(t *testing.T) {
 	assert.NoError(t, err)
 
 	logging.LogAudit(config_obj, "Principal", "SomeOperation",
-		logrus.Fields{
-			"SomeField": 1,
-			"NestedField": ordereddict.NewDict().
-				Set("Field1", 1).
-				Set("Field2", 3),
-			"StructField": &TestStruct{
+		ordereddict.NewDict().
+			Set("SomeField", 1).
+			Set("NestedField", ordereddict.NewDict()).
+			Set("Field1", 1).
+			Set("Field2", 3).
+			Set("StructField", &TestStruct{
 				Int1:    54,
 				Message: "Hello",
-			},
-			"err": http.StatusUnauthorized,
-		})
+			}).
+			Set("err", http.StatusUnauthorized))
 
 	utils.DlvBreak()
 

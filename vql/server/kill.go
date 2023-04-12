@@ -12,11 +12,9 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
@@ -63,10 +61,9 @@ func (self *KillClientFunction) Call(ctx context.Context,
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
-	logging.LogAudit(config_obj, principal, "killkillkill",
-		logrus.Fields{
-			"client_id": arg.ClientId,
-		})
+	services.LogAudit(ctx,
+		config_obj, principal, "killkillkill",
+		ordereddict.NewDict().Set("client_id", arg.ClientId))
 
 	err = client_manager.QueueMessageForClient(ctx, arg.ClientId,
 		&crypto_proto.VeloMessage{

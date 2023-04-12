@@ -82,12 +82,12 @@ func (self *CreateFlowDownload) Call(ctx context.Context,
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
-	logging.LogAudit(config_obj, principal, "create_flow_download",
-		logrus.Fields{
-			"format":    format,
-			"client_id": arg.ClientId,
-			"flow_id":   arg.FlowId,
-		})
+	services.LogAudit(ctx,
+		config_obj, principal, "create_flow_download",
+		ordereddict.NewDict().
+			Set("format", format).
+			Set("client_id", arg.ClientId).
+			Set("flow_id", arg.FlowId))
 
 	result, err := createDownloadFile(
 		ctx, scope, config_obj, format,

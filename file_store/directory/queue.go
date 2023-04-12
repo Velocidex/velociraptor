@@ -212,7 +212,8 @@ func (self *DirectoryQueueManager) PushEventRows(
 
 	// Writes are asyncronous.
 	rs_writer, err := result_sets.NewTimedResultSetWriter(
-		self.FileStore, path_manager, nil, nil)
+		self.FileStore, path_manager, json.DefaultEncOpts(),
+		utils.BackgroundWriter)
 	if err != nil {
 		return err
 	}
