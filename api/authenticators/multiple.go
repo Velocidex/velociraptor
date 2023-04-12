@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/sirupsen/logrus"
+	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/gui/velociraptor"
-	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 type MultiAuthenticator struct {
@@ -35,12 +35,12 @@ func (self *MultiAuthenticator) reject_with_username(
 	w http.ResponseWriter, r *http.Request, err error, username string) {
 
 	// Log into the audit log.
-	logging.LogAudit(self.config_obj, username, "User rejected by GUI",
-		logrus.Fields{
-			"remote": r.RemoteAddr,
-			"method": r.Method,
-			"err":    err.Error(),
-		})
+	services.LogAudit(r.Context(),
+		self.config_obj, username, "User rejected by GUI",
+		ordereddict.NewDict().
+			Set("remote", r.RemoteAddr).
+			Set("method", r.Method).
+			Set("err", err.Error()))
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusUnauthorized)

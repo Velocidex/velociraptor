@@ -6,6 +6,8 @@ package services
 // server.
 
 import (
+	"context"
+
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 )
@@ -21,7 +23,8 @@ func GetServerEventManager(config_obj *config_proto.Config) (ServerEventManager,
 
 type ServerEventManager interface {
 	// Update the server's event table.
-	Update(config_obj *config_proto.Config,
+	Update(ctx context.Context,
+		config_obj *config_proto.Config,
 		principal string,
 		arg *flows_proto.ArtifactCollectorArgs) error
 

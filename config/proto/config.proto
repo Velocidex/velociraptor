@@ -860,6 +860,10 @@ message LoggingConfig {
     LoggingRetentionConfig debug = 5;
     LoggingRetentionConfig info = 6;
     LoggingRetentionConfig error = 7;
+
+    string remote_syslog_server = 8;
+    string remote_syslog_protocol = 9;
+    repeated string remote_syslog_components = 10;
 }
 
 message MonitoringConfig {

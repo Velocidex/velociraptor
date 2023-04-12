@@ -1,6 +1,7 @@
 package api
 
 import (
+	context "golang.org/x/net/context"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -26,6 +27,7 @@ func getServerMonitoringState(config_obj *config_proto.Config) (
 }
 
 func setServerMonitoringState(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	principal string,
 	args *flows_proto.ArtifactCollectorArgs) error {
@@ -39,7 +41,7 @@ func setServerMonitoringState(
 		return err
 	}
 
-	err = server_manager.Update(config_obj, principal, args)
+	err = server_manager.Update(ctx, config_obj, principal, args)
 	if err != nil {
 		return err
 	}

@@ -98,7 +98,7 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 	assert.Equal(self.T(), "Server.Monitor.Health", configuration.Artifacts[0])
 
 	// Install the two event artifacts.
-	err = event_table.Update(
+	err = event_table.Update(self.Ctx,
 		self.ConfigObj, "",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"Server.Clock", "Server.Clock2"},
@@ -187,7 +187,7 @@ sources:
 	assert.NoError(self.T(), err)
 
 	// Install a table with a sleep artifact.
-	err = event_table.Update(
+	err = event_table.Update(self.Ctx,
 		self.ConfigObj, "",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"Sleep"},
@@ -201,7 +201,7 @@ sources:
 	})
 
 	// Now install an empty table - all queries should quit.
-	err = event_table.Update(
+	err = event_table.Update(self.Ctx,
 		self.ConfigObj, "",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{},
@@ -245,7 +245,7 @@ func (self *ServerMonitoringTestSuite) TestQueriesAreCancelled() {
 	event_table, err := services.GetServerEventManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	err = event_table.Update(
+	err = event_table.Update(self.Ctx,
 		self.ConfigObj, "",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"WaitForCancel"},
@@ -259,7 +259,7 @@ func (self *ServerMonitoringTestSuite) TestQueriesAreCancelled() {
 	})
 
 	// Now install an empty table - all queries should quit.
-	err = event_table.Update(
+	err = event_table.Update(self.Ctx,
 		self.ConfigObj, "",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{},
@@ -303,7 +303,7 @@ sources:
 
 	// Install a table with an initial artifact
 	filename := filepath.Join(tempdir, "testfile1.txt")
-	err = event_table.Update(
+	err = event_table.Update(self.Ctx,
 		self.ConfigObj, "VelociraptorServer",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},

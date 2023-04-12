@@ -23,7 +23,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/sirupsen/logrus"
+	"github.com/Velocidex/ordereddict"
 	context "golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -32,7 +32,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -353,11 +352,11 @@ func (self *ApiServer) LoadArtifactPack(
 			definition, err := setArtifactFile(ctx,
 				org_config_obj, principal, request, prefix)
 			if err == nil {
-				logging.LogAudit(org_config_obj, principal, "LoadArtifactPack",
-					logrus.Fields{
-						"artifact": definition.Name,
-						"details":  request.Artifact,
-					})
+				services.LogAudit(ctx,
+					org_config_obj, principal, "LoadArtifactPack",
+					ordereddict.NewDict().
+						Set("artifact", definition.Name).
+						Set("details", request.Artifact))
 
 				result.SuccessfulArtifacts = append(result.SuccessfulArtifacts,
 					definition.Name)

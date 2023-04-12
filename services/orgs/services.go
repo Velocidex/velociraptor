@@ -12,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/acl_manager"
+	"www.velocidex.com/golang/velociraptor/services/audit_manager"
 	"www.velocidex.com/golang/velociraptor/services/broadcast"
 	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
@@ -128,6 +129,10 @@ func (self *ServiceContainer) NotebookManager() (services.NotebookManager, error
 	}
 
 	return self.notebook_manager, nil
+}
+
+func (self *ServiceContainer) AuditManager() (services.AuditManager, error) {
+	return &audit_manager.AuditManager{}, nil
 }
 
 func (self *ServiceContainer) Launcher() (services.Launcher, error) {

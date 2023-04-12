@@ -10,7 +10,12 @@ import (
 func MarshalHuntProtobuf(v interface{}, opts *EncOpts) ([]byte, error) {
 	message, ok := v.(proto.Message)
 	if ok {
-		return protojson.Marshal(message)
+		options := protojson.MarshalOptions{
+			UseProtoNames:   true,
+			UseEnumNumbers:  false,
+			EmitUnpopulated: false,
+		}
+		return options.Marshal(message)
 	}
 	return nil, json.EncoderCallbackSkip
 }

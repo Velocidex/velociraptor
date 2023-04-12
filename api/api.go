@@ -32,7 +32,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -52,7 +51,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/server"
@@ -107,12 +105,12 @@ func (self *ApiServer) CancelFlow(
 	}
 
 	// Log this event as and Audit event.
-	logging.LogAudit(org_config_obj, principal, "CancelFlow",
-		logrus.Fields{
-			"client":  in.ClientId,
-			"flow_id": in.FlowId,
-			"details": json.MustMarshalString(in),
-		})
+	services.LogAudit(ctx,
+		org_config_obj, principal, "CancelFlow",
+		ordereddict.NewDict().
+			Set("client", in.ClientId).
+			Set("flow_id", in.FlowId).
+			Set("details", in))
 
 	return result, nil
 }
@@ -210,12 +208,12 @@ func (self *ApiServer) CollectArtifact(
 	result.FlowId = flow_id
 
 	// Log this event as an Audit event.
-	logging.LogAudit(org_config_obj, principal, "ScheduleFlow",
-		logrus.Fields{
-			"client":  in.ClientId,
-			"flow_id": flow_id,
-			"details": json.MustMarshalString(in),
-		})
+	services.LogAudit(ctx,
+		org_config_obj, principal, "ScheduleFlow",
+		ordereddict.NewDict().
+			Set("client", in.ClientId).
+			Set("flow_id", flow_id).
+			Set("details", in))
 
 	return result, nil
 }
@@ -800,11 +798,11 @@ func (self *ApiServer) SetArtifactFile(
 		return message, errors.New(message.ErrorMessage)
 	}
 
-	logging.LogAudit(org_config_obj, principal, "SetArtifactFile",
-		logrus.Fields{
-			"artifact": definition.Name,
-			"details":  fmt.Sprintf("%v", in.Artifact),
-		})
+	services.LogAudit(ctx,
+		org_config_obj, principal, "SetArtifactFile",
+		ordereddict.NewDict().
+			Set("artifact", definition.Name).
+			Set("details", in.Artifact))
 
 	return &api_proto.APIResponse{}, nil
 }
@@ -904,7 +902,7 @@ func (self *ApiServer) SetServerMonitoringState(
 			fmt.Sprintf("User is not allowed to modify artifacts (%v).", permissions))
 	}
 
-	err = setServerMonitoringState(org_config_obj, principal, in)
+	err = setServerMonitoringState(ctx, org_config_obj, principal, in)
 	return in, Status(self.verbose, err)
 }
 
@@ -996,8 +994,9 @@ func (self *ApiServer) CreateDownloadFile(ctx context.Context,
 	}
 
 	// Log an audit event.
-	logging.LogAudit(org_config_obj, principal, "CreateDownloadRequest",
-		logrus.Fields{"request": in})
+	services.LogAudit(ctx,
+		org_config_obj, principal, "CreateDownloadRequest",
+		ordereddict.NewDict().Set("request", in))
 
 	format := ""
 	if in.JsonFormat && !in.CsvFormat {

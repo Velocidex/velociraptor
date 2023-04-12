@@ -7,10 +7,8 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sirupsen/logrus"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -106,11 +104,11 @@ func (self NewClientFunction) Call(ctx context.Context,
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
-	logging.LogAudit(config_obj, principal, "client_create",
-		logrus.Fields{
-			"client_id": record.ClientId,
-			"details":   record,
-		})
+	services.LogAudit(ctx,
+		config_obj, principal, "client_create",
+		ordereddict.NewDict().
+			Set("client_id", record.ClientId).
+			Set("details", record))
 
 	return record
 }

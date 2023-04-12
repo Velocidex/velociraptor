@@ -4,14 +4,13 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/gorilla/csrf"
-	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/users"
 )
@@ -79,22 +78,23 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 		users_manager := services.GetUserManager()
 		user_record, err := users_manager.GetUserWithHashes(r.Context(), username)
 		if err != nil || user_record.Name != username {
-			logging.LogAudit(self.config_obj, username, "Unknown username",
-				logrus.Fields{
-					"remote": r.RemoteAddr,
-					"status": http.StatusUnauthorized,
-				})
+			services.LogAudit(r.Context(),
+				self.config_obj, username, "Unknown username",
+				ordereddict.NewDict().
+					Set("remote", r.RemoteAddr).
+					Set("status", http.StatusUnauthorized))
 
 			http.Error(w, "authorization failed", http.StatusUnauthorized)
 			return
 		}
 
 		if !users.VerifyPassword(user_record, password) {
-			logging.LogAudit(self.config_obj, username, "Invalid password",
-				logrus.Fields{
-					"remote": r.RemoteAddr,
-					"status": http.StatusUnauthorized,
-				})
+			services.LogAudit(r.Context(),
+				self.config_obj, username, "Invalid password",
+				ordereddict.NewDict().
+					Set("remote", r.RemoteAddr).
+					Set("status", http.StatusUnauthorized))
+
 			http.Error(w, "authorization failed", http.StatusUnauthorized)
 			return
 		}
@@ -102,11 +102,11 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 		// Does the user have access to the specified org?
 		err = CheckOrgAccess(r, user_record)
 		if err != nil {
-			logging.LogAudit(self.config_obj, username, "Unauthorized username",
-				logrus.Fields{
-					"remote": r.RemoteAddr,
-					"status": http.StatusUnauthorized,
-				})
+			services.LogAudit(r.Context(),
+				self.config_obj, username, "Unauthorized username",
+				ordereddict.NewDict().
+					Set("remote", r.RemoteAddr).
+					Set("status", http.StatusUnauthorized))
 
 			http.Error(w, "authorization failed", http.StatusUnauthorized)
 			return

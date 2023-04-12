@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 	"strings"
 
-	"github.com/sirupsen/logrus"
+	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -102,9 +102,10 @@ func createInitialUsers(
 				return err
 			}
 
-			logging.LogAudit(config_obj, "SanityService",
+			services.LogAudit(ctx,
+				config_obj, "SanityService",
 				"Granting administrator role, because user is specified in the config's initial users",
-				logrus.Fields{"user": user.Name})
+				ordereddict.NewDict().Set("user", user.Name))
 		}
 	}
 	return nil

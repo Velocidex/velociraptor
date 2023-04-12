@@ -1,6 +1,7 @@
 package logging_test
 
 import (
+	"context"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -10,9 +11,11 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/sebdah/goldie"
-	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
@@ -22,7 +25,13 @@ type TestStruct struct {
 	Message string
 }
 
-func TestAuditLog(t *testing.T) {
+type LoggingTestSuite struct {
+	test_utils.TestSuite
+}
+
+func (self *LoggingTestSuite) TestAuditLog() {
+	t := self.T()
+
 	dir, err := ioutil.TempDir("", "file_store_test")
 	assert.NoError(t, err)
 	defer os.RemoveAll(dir)
@@ -38,18 +47,18 @@ func TestAuditLog(t *testing.T) {
 	err = logging.InitLogging(config_obj)
 	assert.NoError(t, err)
 
-	logging.LogAudit(config_obj, "Principal", "SomeOperation",
-		logrus.Fields{
-			"SomeField": 1,
-			"NestedField": ordereddict.NewDict().
+	services.LogAudit(context.Background(),
+		config_obj, "Principal", "SomeOperation",
+		ordereddict.NewDict().
+			Set("SomeField", 1).
+			Set("NestedField", ordereddict.NewDict().
 				Set("Field1", 1).
-				Set("Field2", 3),
-			"StructField": &TestStruct{
+				Set("Field2", 3)).
+			Set("StructField", &TestStruct{
 				Int1:    54,
 				Message: "Hello",
-			},
-			"err": http.StatusUnauthorized,
-		})
+			}).
+			Set("err", http.StatusUnauthorized))
 
 	utils.DlvBreak()
 
@@ -61,4 +70,8 @@ func TestAuditLog(t *testing.T) {
 	assert.NoError(t, err)
 
 	goldie.Assert(t, "TestAuditLog", data)
+}
+
+func TestLogging(t *testing.T) {
+	suite.Run(t, &LoggingTestSuite{})
 }

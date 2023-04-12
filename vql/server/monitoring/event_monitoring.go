@@ -257,7 +257,7 @@ func (self SetServerMonitoring) Call(
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
-	err = server_manager.Update(config_obj, principal, value)
+	err = server_manager.Update(ctx, config_obj, principal, value)
 	if err != nil {
 		scope.Log("set_server_monitoring: %s", err.Error())
 		return vfilter.Null{}

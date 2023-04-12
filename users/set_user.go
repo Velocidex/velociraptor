@@ -8,12 +8,11 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/sirupsen/logrus"
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -71,11 +70,12 @@ func SetUserPassword(
 		if user_err != nil {
 			return user_err
 		}
-		logging.LogAudit(config_obj, principal, "Update password",
-			logrus.Fields{
-				"operation": "Update Own Password",
-				"user":      user_record.Name,
-			})
+		services.LogAudit(ctx,
+			config_obj, principal, "Update password",
+			ordereddict.NewDict().
+				Set("operation", "Update Own Password").
+				Set("user", user_record.Name))
+
 		return user_manager.SetUser(ctx, user_record)
 	}
 
@@ -86,11 +86,12 @@ func SetUserPassword(
 			return user_err
 		}
 
-		logging.LogAudit(config_obj, principal, "Update password",
-			logrus.Fields{
-				"operation": "Update Password By Admin",
-				"user":      user_record.Name,
-			})
+		services.LogAudit(ctx,
+			config_obj, principal, "Update password",
+			ordereddict.NewDict().
+				Set("operation", "Update Password By Admin").
+				Set("user", user_record.Name))
+
 		return user_manager.SetUser(ctx, user_record)
 	}
 
@@ -106,20 +107,22 @@ func SetUserPassword(
 			if user_err != nil {
 				return user_err
 			}
-			logging.LogAudit(config_obj, principal, "Update password",
-				logrus.Fields{
-					"operation": "Update Password By Admin",
-					"user":      user_record.Name,
-				})
+			services.LogAudit(ctx,
+				config_obj, principal, "Update password",
+				ordereddict.NewDict().
+					Set("operation", "Update Password By Admin").
+					Set("user", user_record.Name))
+
 			return user_manager.SetUser(ctx, user_record)
 		}
 	}
 
-	logging.LogAudit(config_obj, principal, "Update password",
-		logrus.Fields{
-			"error": acls.PermissionDenied.Error(),
-			"user":  user_record.Name,
-		})
+	services.LogAudit(ctx,
+		config_obj, principal, "Update password",
+		ordereddict.NewDict().
+			Set("error", acls.PermissionDenied.Error()).
+			Set("user", user_record.Name))
+
 	return acls.PermissionDenied
 }
 

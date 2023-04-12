@@ -119,7 +119,7 @@ func (self RemoveServerMonitoringFunction) Call(
 
 	// Actually set the table
 	principal := vql_subsystem.GetPrincipal(scope)
-	err = server_manager.Update(config_obj, principal, event_config)
+	err = server_manager.Update(ctx, config_obj, principal, event_config)
 	if err != nil {
 		scope.Log("rm_server_monitoring: %v", err)
 		return vfilter.Null{}

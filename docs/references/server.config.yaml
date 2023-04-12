@@ -725,6 +725,17 @@ Logging:
   ## to find the source of the log messages
   separate_logs_per_component: true
 
+  # If you want to forward events to a remote syslog server, fill this
+  # server addresss or hostname. If a port is omitted we use port 514.
+  remote_syslog_server: "localhost:514"
+
+  # The protocol to use for remote syslog (default udp).
+  remote_syslog_protocol: "udp"
+
+  # The logging components to forward. If not specified we only send
+  # Audit events.
+  remote_syslog_components: "VelociraptorAudit"
+
   ## Specific configuration for each log level. If a log level is not
   ## configured here it is logged as normal.
   debug:

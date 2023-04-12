@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/sirupsen/logrus"
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -167,16 +166,17 @@ func (self *EventTable) ProcessServerMetadataModificationEvent(
 }
 
 func (self *EventTable) Update(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	principal string,
 	request *flows_proto.ArtifactCollectorArgs) error {
 
 	if principal != "" {
-		logging.LogAudit(config_obj, principal, "SetServerMonitoringState",
-			logrus.Fields{
-				"user":  principal,
-				"state": request,
-			})
+		services.LogAudit(ctx,
+			config_obj, principal, "SetServerMonitoringState",
+			ordereddict.NewDict().
+				Set("user", principal).
+				Set("state", request))
 	}
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
@@ -526,5 +526,5 @@ func NewServerMonitoringService(
 		}
 	}()
 
-	return manager, manager.Update(config_obj, "", artifacts)
+	return manager, manager.Update(ctx, config_obj, "", artifacts)
 }
