@@ -18,9 +18,13 @@ func (self *AuditManager) LogAudit(
 	principal, operation string,
 	details *ordereddict.Dict) error {
 
-	details.Update("principal", principal)
+	record := ordereddict.NewDict().
+		Set("operation", operation).
+		Set("principal", principal).
+		Set("details", details)
+
 	logger := logging.GetLogger(config_obj, &logging.Audit)
-	logger.WithFields(logrus.Fields(*details.ToDict())).Info(operation)
+	logger.WithFields(logrus.Fields(*record.ToDict())).Info(operation)
 
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
@@ -28,6 +32,6 @@ func (self *AuditManager) LogAudit(
 	}
 
 	journal.PushRowsToArtifactAsync(
-		ctx, config_obj, details, "Server.Audit.Logs")
+		ctx, config_obj, record, "Server.Audit.Logs")
 	return nil
 }

@@ -90,8 +90,9 @@ func (self *collectionManager) GetRepository(extra_artifacts vfilter.Any) (err e
 		}
 
 		artifact, err := self.repository.LoadYaml(
-			string(serialized), services.ValidateArtifact,
-			!services.ArtifactIsBuiltIn)
+			string(serialized), services.ArtifactOptions{
+				ValidateArtifact:  true,
+				ArtifactIsBuiltIn: false})
 		if err != nil {
 			return err
 		}
@@ -125,7 +126,7 @@ func (self *collectionManager) GetRepository(extra_artifacts vfilter.Any) (err e
 	case []string:
 		for _, item := range t {
 			artifact, err := self.repository.LoadYaml(item,
-				services.ValidateArtifact, !services.ArtifactIsBuiltIn)
+				services.ArtifactOptions{ValidateArtifact: true})
 			if err != nil {
 				return err
 			}
@@ -138,7 +139,7 @@ func (self *collectionManager) GetRepository(extra_artifacts vfilter.Any) (err e
 
 	case string:
 		artifact, err := self.repository.LoadYaml(t,
-			services.ValidateArtifact, !services.ArtifactIsBuiltIn)
+			services.ArtifactOptions{ValidateArtifact: true})
 		if err != nil {
 			return err
 		}

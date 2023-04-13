@@ -52,7 +52,11 @@ func (self *TestSuite) TestArtifactSource() {
 	repository, err := manager.GetGlobalRepository(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	_, err = repository.LoadYaml(testArtifact, true, true)
+	_, err = repository.LoadYaml(testArtifact,
+		services.ArtifactOptions{
+			ValidateArtifact:  true,
+			ArtifactIsBuiltIn: true})
+
 	assert.NoError(self.T(), err)
 
 	file_store_factory := file_store.GetFileStore(self.ConfigObj)
@@ -129,7 +133,10 @@ func (self *TestSuite) TestHuntsSource() {
 	repository, err := manager.GetGlobalRepository(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	_, err = repository.LoadYaml(testArtifact, true, true)
+	_, err = repository.LoadYaml(testArtifact, services.ArtifactOptions{
+		ValidateArtifact:  true,
+		ArtifactIsBuiltIn: true})
+
 	assert.NoError(self.T(), err)
 	ctx := context.Background()
 

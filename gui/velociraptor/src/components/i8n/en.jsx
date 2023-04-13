@@ -168,7 +168,7 @@ const English = {
       event artifacts targetting that group.
     </>,
     "Deutsch": "German",
-    "_ts": "Server Time",
+    "_ts": "ServerTime",
     "TablePagination": (from, to, size)=>
     <>Showing { from } to { to } of { size }</>,
     "Verified Email" : "Verified Email",

@@ -51,7 +51,11 @@ func (self *ServerArtifactsTestSuite) LoadArtifacts(definition string) services.
 	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
 
-	_, err := repository.LoadYaml(definition, false, true)
+	_, err := repository.LoadYaml(definition,
+		services.ArtifactOptions{
+			ValidateArtifact:  false,
+			ArtifactIsBuiltIn: true})
+
 	assert.NoError(self.T(), err)
 
 	return repository

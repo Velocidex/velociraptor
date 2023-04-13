@@ -29,6 +29,15 @@ type LoggingTestSuite struct {
 	test_utils.TestSuite
 }
 
+func (self *LoggingTestSuite) SetupTest() {
+	self.TestSuite.SetupTest()
+
+	self.LoadArtifacts([]string{
+		`name: Server.Audit.Logs
+type: SERVER_EVENT
+`})
+}
+
 func (self *LoggingTestSuite) TestAuditLog() {
 	t := self.T()
 
@@ -59,8 +68,6 @@ func (self *LoggingTestSuite) TestAuditLog() {
 				Message: "Hello",
 			}).
 			Set("err", http.StatusUnauthorized))
-
-	utils.DlvBreak()
 
 	// Read the audit log
 	fd, err := os.Open(filepath.Join(dir, "VelociraptorAudit_info.log"))

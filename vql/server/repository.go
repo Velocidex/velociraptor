@@ -47,8 +47,11 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 	}
 
 	tmp_repository := manager.NewRepository()
-	definition, err := tmp_repository.LoadYaml(
-		arg.Definition, true /* validate */, false /* built_in */)
+	definition, err := tmp_repository.LoadYaml(arg.Definition,
+		services.ArtifactOptions{
+			ValidateArtifact:  true,
+			ArtifactIsBuiltIn: false,
+		})
 	if err != nil {
 		definition := arg.Definition
 		if len(arg.Definition) > 100 {

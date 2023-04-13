@@ -1,2 +1,2 @@
 {"level": "info", "msg": "Starting...", "time": "2020-10-07T20:43:08Z"}
-{"NestedField":{"Field1":1,"Field2":3},"SomeField":1,"StructField":{"Int1":54,"Message":"Hello"},"err":401,"level":"info","msg":"SomeOperation","principal":"Principal","time":"2020-10-07T20:43:08Z"}
+{"details":{"SomeField":1,"NestedField":{"Field1":1,"Field2":3},"StructField":{"Int1":54,"Message":"Hello"},"err":401},"level":"info","msg":"SomeOperation","operation":"SomeOperation","principal":"Principal","time":"2020-10-07T20:43:08Z"}

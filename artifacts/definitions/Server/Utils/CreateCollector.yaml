@@ -386,7 +386,7 @@ sources:
       LET definitions <= SELECT * FROM chain(
       a = { SELECT name, description, tools, parameters, sources
             FROM artifact_definitions(deps=TRUE, names=artifacts)
-            WHERE NOT built_in AND
+            WHERE NOT compiled_in AND
               log(message="Adding artifact_definition for " + name) },
 
       // Create the definition of the Collector artifact.

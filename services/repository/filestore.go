@@ -27,6 +27,13 @@ func InitializeGlobalRepositoryFromFilestore(
 		return global_repository, nil
 	}
 
+	// We consider these artifacts to be correct so there is no need
+	// to validate them again.
+	options := services.ArtifactOptions{
+		ValidateArtifact:  false,
+		ArtifactIsBuiltIn: false,
+	}
+
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 	// Load artifacts from the custom file store.
@@ -69,9 +76,7 @@ func InitializeGlobalRepositoryFromFilestore(
 			}
 
 			artifact_obj, err := global_repository.LoadYaml(
-				string(data),
-				!services.ValidateArtifact,
-				!services.ArtifactIsBuiltIn)
+				string(data), options)
 			if err != nil {
 				logger.Info("Unable to load custom "+
 					"artifact %s: %v",

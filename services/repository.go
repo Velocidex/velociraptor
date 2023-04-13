@@ -38,10 +38,16 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-const (
-	ValidateArtifact  = true
-	ArtifactIsBuiltIn = true
-)
+type ArtifactOptions struct {
+	// Protects the artifact from being overwritten.
+	ArtifactIsBuiltIn bool
+
+	// Artifact is actually built into the binary
+	ArtifactIsCompiledIn bool
+
+	// Validate the artifact compiles
+	ValidateArtifact bool
+}
 
 func GetRepositoryManager(config_obj *config_proto.Config) (RepositoryManager, error) {
 	org_manager, err := GetOrgManager()
@@ -70,19 +76,15 @@ type ScopeBuilder struct {
 
 // An artifact repository holds definitions for artifacts.
 type Repository interface {
-	// Load an entire directory recursively.
-	LoadDirectory(config_obj *config_proto.Config,
-		dirname string, override_builtins bool) (int, error)
-
 	// Make a copy of this repository.
 	Copy() Repository
 
 	// Load definition in yaml
-	LoadYaml(data string, validate, built_in bool) (
+	LoadYaml(data string, options ArtifactOptions) (
 		*artifacts_proto.Artifact, error)
 
 	// Load an artifact protobuf.
-	LoadProto(artifact *artifacts_proto.Artifact, validate bool) (
+	LoadProto(artifact *artifacts_proto.Artifact, options ArtifactOptions) (
 		*artifacts_proto.Artifact, error)
 
 	// Get an artifact by name.

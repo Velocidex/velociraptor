@@ -87,7 +87,7 @@ class EventTableRenderer  extends Component {
             var name = this.props.columns[i];
             let definition ={ dataField: name, text: T(name)};
             if (name === "_ts") {
-                definition.text = "Server Time";
+                definition.text = "ServerTime";
             }
             if (this.props.renderers && this.props.renderers[name]) {
                 definition.formatter = this.props.renderers[name];

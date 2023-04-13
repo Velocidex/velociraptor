@@ -78,7 +78,9 @@ name: TestArtifact
 sources:
 - query:
     SELECT * FROM info()
-`, true, false)
+`, services.ArtifactOptions{
+		ValidateArtifact:  true,
+		ArtifactIsBuiltIn: false})
 
 	assert.NoError(self.T(), err)
 	_, err = repository.LoadYaml(`
@@ -86,7 +88,10 @@ name: SomethingElse
 sources:
 - query:
     SELECT * FROM info()
-`, true, false)
+`, services.ArtifactOptions{
+		ValidateArtifact:  true,
+		ArtifactIsBuiltIn: false})
+
 	assert.NoError(self.T(), err)
 
 }

@@ -11,7 +11,6 @@ message ArtifactEnv {
     string value = 2;
 }
 
-
 message ColumnType {
     string name = 1;
     string type = 2;
@@ -203,8 +202,11 @@ message Artifact {
     // Artifact was already compiled.
     bool compiled = 14;
 
-    // The artifact is built into the Velociraptor binary.
+    // The artifact is considered built and and can not be overriden by the GUI
     bool built_in = 20;
+
+    // The artifact is built into the Velociraptor binary.
+    bool compiled_in = 24;
     bool is_alias = 22;
 }
 

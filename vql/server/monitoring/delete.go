@@ -67,8 +67,15 @@ func (self DeleteEventsPlugin) Call(
 			return
 		}
 
+		principal := vql_subsystem.GetPrincipal(scope)
+		if principal == "" {
+			scope.Log("delete_events: Username not specified")
+			return
+		}
+
 		responses, err := launcher.DeleteEvents(ctx, config_obj,
-			arg.Artifact, arg.ClientId, arg.StartTime, arg.EndTime, arg.ReallyDoIt)
+			principal, arg.Artifact, arg.ClientId,
+			arg.StartTime, arg.EndTime, arg.ReallyDoIt)
 		if err != nil {
 			scope.Log("delete_events: %v", err)
 			return

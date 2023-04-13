@@ -258,7 +258,8 @@ func doRemoteQuery(
 func doQuery() error {
 	logging.DisableLogging()
 
-	config_obj, err := APIConfigLoader.WithNullLoader().LoadAndValidate()
+	config_obj, err := APIConfigLoader.WithNullLoader().
+		LoadAndValidate()
 	if err != nil {
 		return err
 	}
