@@ -988,6 +988,9 @@ message Defaults {
     // - FILESYSTEM_READ
     // - MACHINE_STATE
     repeated string lockdown_denied_permissions = 32;
+
+    // Default expiry of certificant issuances (default 365 days)
+    int64 certificate_validity_days = 33;
 }
 
 // Configures crypto preferences

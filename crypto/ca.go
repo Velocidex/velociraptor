@@ -112,8 +112,14 @@ func GenerateServerCert(config_obj *config_proto.Config, name string) (*CertBund
 		return nil, err
 	}
 
+	days_valid := int64(365)
+	if config_obj.Defaults != nil &&
+		config_obj.Defaults.CertificateValidityDays > 0 {
+		days_valid = config_obj.Defaults.CertificateValidityDays
+	}
+
 	start_time := time.Now()
-	end_time := start_time.Add(365 * 24 * time.Hour)
+	end_time := start_time.Add(time.Duration(days_valid) * 24 * time.Hour)
 
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
@@ -208,8 +214,15 @@ func ReissueServerCert(config_obj *config_proto.Config,
 		return nil, err
 	}
 
+	days_valid := int64(365)
+	if config_obj.Defaults != nil &&
+		config_obj.Defaults.CertificateValidityDays > 0 {
+		days_valid = config_obj.Defaults.CertificateValidityDays
+	}
+
 	template.NotBefore = time.Now()
-	template.NotAfter = template.NotBefore.Add(365 * 24 * time.Hour)
+	template.NotAfter = template.NotBefore.Add(
+		time.Duration(days_valid) * 24 * time.Hour)
 
 	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
 	template.SerialNumber, err = rand.Int(rand.Reader, serialNumberLimit)
