@@ -434,24 +434,11 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 			return err
 		}
 
-		err = repository.LoadArtifactsFromConfig(repo_manager, org_config)
-		if err != nil {
-			return err
-		}
-
 		// The Root org will contain all the built in artifacts
-		if org_id == "" {
-			// Assume the built in artifacts are OK so we dont need to
-			// validate them at runtime.
+		if utils.IsRootOrg(org_id) {
+			// These artifacts are compiled in.
 			err = repository.LoadBuiltInArtifacts(ctx, org_config,
-				repo_manager.(*repository.RepositoryManager),
-				!services.ValidateArtifact)
-			if err != nil {
-				return err
-			}
-
-			err = repository.LoadArtifactsFromConfig(
-				repo_manager.(*repository.RepositoryManager), org_config)
+				repo_manager.(*repository.RepositoryManager))
 			if err != nil {
 				return err
 			}
@@ -482,6 +469,13 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 			if err != nil {
 				return err
 			}
+		}
+
+		// Load config artifacts last so they can override all the
+		// other artifacts.
+		err = repository.LoadArtifactsFromConfig(repo_manager, org_config)
+		if err != nil {
+			return err
 		}
 
 		service_container.mu.Lock()

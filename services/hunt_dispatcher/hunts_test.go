@@ -42,11 +42,15 @@ parameters:
 sources:
 - query:
     SELECT * FROM info()
-`, true, true)
+`, services.ArtifactOptions{
+		ValidateArtifact:  true,
+		ArtifactIsBuiltIn: true})
 
 	repository.LoadYaml(`
 name: System.Hunt.Creation
-type: SERVER_EVENT`, true, true)
+type: SERVER_EVENT`, services.ArtifactOptions{
+		ValidateArtifact:  true,
+		ArtifactIsBuiltIn: true})
 
 	repository.LoadYaml(`
 name: AnotherTestArtifact
@@ -57,7 +61,10 @@ parameters:
 sources:
 - query:
     SELECT * FROM scope()
-`, true, true)
+`, services.ArtifactOptions{
+		ValidateArtifact:  true,
+		ArtifactIsBuiltIn: true})
+
 	request := &api_proto.Hunt{
 		HuntDescription: "My hunt",
 		StartRequest: &flows_proto.ArtifactCollectorArgs{

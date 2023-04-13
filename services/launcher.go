@@ -208,7 +208,7 @@ type Launcher interface {
 	DeleteEvents(
 		ctx context.Context,
 		config_obj *config_proto.Config,
-		artifact, client_id string,
+		principal, artifact, client_id string,
 		start_time, end_time time.Time,
 		really_do_it bool) ([]*DeleteFlowResponse, error)
 }

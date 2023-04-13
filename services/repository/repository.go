@@ -22,8 +22,6 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
-	"os"
-	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -38,7 +36,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
-	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -81,51 +78,6 @@ func (self *Repository) Copy() services.Repository {
 	return result
 }
 
-// FIXME: Deprecate this method.
-func (self *Repository) LoadDirectory(
-	config_obj *config_proto.Config, dirname string,
-	override_builtins bool) (int, error) {
-	self.mu.Lock()
-
-	count := 0
-	if utils.InString(self.loaded_dirs, dirname) {
-		self.mu.Unlock()
-		return count, nil
-	}
-	dirname = filepath.Clean(dirname)
-	self.loaded_dirs = append(self.loaded_dirs, dirname)
-
-	self.mu.Unlock()
-
-	logger := logging.GetLogger(config_obj, &logging.GenericComponent)
-	err := filepath.Walk(dirname,
-		func(file_path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return errors.Wrap(err, 0)
-			}
-
-			if !info.IsDir() && (strings.HasSuffix(info.Name(), ".yaml") ||
-				strings.HasSuffix(info.Name(), ".yml")) {
-				data, err := ioutil.ReadFile(file_path)
-				if err != nil {
-					logger.Error("Could not load %s: %s", info.Name(), err)
-					return nil
-				}
-				_, err = self.LoadYaml(string(data),
-					!services.ValidateArtifact, override_builtins)
-				if err != nil {
-					logger.Error("Could not load %s: %s", info.Name(), err)
-					return nil
-				}
-				logger.Info("Loaded %s", file_path)
-				count += 1
-			}
-			return nil
-		})
-
-	return count, err
-}
-
 var query_regexp = regexp.MustCompile(`(?im)^[\s-]*(precondition|query):\s*$`)
 var queries_regexp = regexp.MustCompile(`(?im)(^ +- +)(SELECT|LET|//)`)
 
@@ -157,8 +109,9 @@ func sanitize_artifact_yaml(data string) string {
 	return result
 }
 
-func (self *Repository) LoadYaml(data string, validate, built_in bool) (
-	*artifacts_proto.Artifact, error) {
+func (self *Repository) LoadYaml(
+	data string,
+	options services.ArtifactOptions) (*artifacts_proto.Artifact, error) {
 	artifact := &artifacts_proto.Artifact{}
 	err := yaml.UnmarshalStrict([]byte(sanitize_artifact_yaml(data)), artifact)
 	if err != nil {
@@ -166,14 +119,14 @@ func (self *Repository) LoadYaml(data string, validate, built_in bool) (
 	}
 
 	artifact.Raw = data
-	artifact.BuiltIn = built_in
 	artifact.Compiled = false
 
-	return self.LoadProto(artifact, validate)
+	return self.LoadProto(artifact, options)
 }
 
-func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate bool) (
-	*artifacts_proto.Artifact, error) {
+func (self *Repository) LoadProto(
+	artifact *artifacts_proto.Artifact,
+	options services.ArtifactOptions) (*artifacts_proto.Artifact, error) {
 
 	if artifact == nil {
 		return nil, errors.New("Invalid artifact")
@@ -181,6 +134,8 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 
 	// Make a copy of the artifact to store in the repository.
 	artifact = proto.Clone(artifact).(*artifacts_proto.Artifact)
+	artifact.BuiltIn = options.ArtifactIsBuiltIn
+	artifact.CompiledIn = options.ArtifactIsCompiledIn
 
 	err := validateArtifactName(artifact.Name)
 	if err != nil {
@@ -242,7 +197,7 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 	// Validate the artifact contains syntactically correct
 	// VQL. We do not need to validate embedded artifacts since we
 	// assume they are ok if they passed CI.
-	if validate {
+	if options.ValidateArtifact {
 		// Check RequiredPermissions
 		for _, perm := range artifact.RequiredPermissions {
 			if acls.GetPermission(perm) == acls.NO_PERMISSIONS {
@@ -330,12 +285,8 @@ func (self *Repository) LoadProto(artifact *artifacts_proto.Artifact, validate b
 		}
 	}
 
-	if artifact.Name == "" {
-		return nil, errors.New("No artifact name")
-	}
-
-	// Prevent artifact from being overridden.
-	if !artifact.BuiltIn {
+	// Prevent built in artifacts from being overridden.
+	if !options.ArtifactIsBuiltIn {
 		self.mu.Lock()
 		existing_artifact, pres := self.Data[artifact.Name]
 		self.mu.Unlock()

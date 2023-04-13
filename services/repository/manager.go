@@ -98,9 +98,10 @@ func (self *RepositoryManager) StartWatchingForUpdates(
 						continue
 					}
 
-					artifact, err := global_repository.LoadYaml(definition,
-						!services.ValidateArtifact,
-						!services.ArtifactIsBuiltIn)
+					artifact, err := global_repository.LoadYaml(
+						definition, services.ArtifactOptions{
+							ValidateArtifact:  false,
+							ArtifactIsBuiltIn: false})
 
 					if err == nil {
 						logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
@@ -146,7 +147,9 @@ func (self *RepositoryManager) SetArtifactFile(
 	// Ensure that the artifact is correct by parsing it.
 	tmp_repository := self.NewRepository()
 	artifact_definition, err := tmp_repository.LoadYaml(
-		definition, services.ValidateArtifact, !services.ArtifactIsBuiltIn)
+		definition, services.ArtifactOptions{
+			ValidateArtifact:  true,
+			ArtifactIsBuiltIn: false})
 	if err != nil {
 		return nil, err
 	}
@@ -167,7 +170,9 @@ func (self *RepositoryManager) SetArtifactFile(
 
 	// Load the artifact into the currently running repository.
 	artifact, err := global_repository.LoadYaml(
-		definition, services.ValidateArtifact, !services.ArtifactIsBuiltIn)
+		definition, services.ArtifactOptions{
+			ValidateArtifact:  true,
+			ArtifactIsBuiltIn: false})
 	if err != nil {
 		return nil, err
 	}
@@ -272,7 +277,11 @@ func NewRepositoryManagerForTest(
 	// Load some artifacts via the autoexec mechanism.
 	if config_obj.Autoexec != nil {
 		for _, def := range config_obj.Autoexec.ArtifactDefinitions {
-			_, err := self.global_repository.LoadProto(def, true)
+			_, err := self.global_repository.LoadProto(
+				def, services.ArtifactOptions{
+					ValidateArtifact:  true,
+					ArtifactIsBuiltIn: true,
+				})
 			if err != nil {
 				return nil, err
 			}
@@ -307,6 +316,9 @@ func NewRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 	return self, self.StartWatchingForUpdates(ctx, wg, config_obj)
 }
 
+// Loads artifacts that are defined directly in th Autoexec config
+// section. These are considered built in (so they can not be
+// modified) but are not actually compiled in.
 func LoadArtifactsFromConfig(
 	repo_manager services.RepositoryManager,
 	config_obj *config_proto.Config) error {
@@ -315,13 +327,18 @@ func LoadArtifactsFromConfig(
 		return err
 	}
 
+	options := services.ArtifactOptions{
+		ValidateArtifact:     true,
+		ArtifactIsBuiltIn:    true,
+		ArtifactIsCompiledIn: false,
+	}
+
 	// Load some artifacts via the autoexec mechanism.
 	if config_obj.Autoexec != nil {
 		for _, def := range config_obj.Autoexec.ArtifactDefinitions {
 
 			// Artifacts loaded from the config file are considered built in.
-			def.BuiltIn = true
-			_, err := global_repository.LoadProto(def, true)
+			_, err := global_repository.LoadProto(def, options)
 			if err != nil {
 				return err
 			}
@@ -330,9 +347,18 @@ func LoadArtifactsFromConfig(
 	return nil
 }
 
+// Load artifacts that are compiled into the binary.
 func LoadBuiltInArtifacts(ctx context.Context,
 	config_obj *config_proto.Config,
-	self *RepositoryManager, validate bool) error {
+	self *RepositoryManager) error {
+
+	// Load the built in artifacts as built in. NOTE: Built in
+	// artifacts can not be overwritten!
+	options := services.ArtifactOptions{
+		ValidateArtifact:     false,
+		ArtifactIsBuiltIn:    true,
+		ArtifactIsCompiledIn: true,
+	}
 
 	now := time.Now()
 
@@ -351,19 +377,16 @@ func LoadBuiltInArtifacts(ctx context.Context,
 			data, err := assets.ReadFile(file)
 			if err != nil {
 				logger.Info("Cant read asset %s: %v", file, err)
-				if validate {
+				if options.ValidateArtifact {
 					return err
 				}
 				continue
 			}
 
-			// Load the built in artifacts as built in. NOTE: Built in
-			// artifacts can not be overwritten!
-			_, err = self.global_repository.LoadYaml(
-				string(data), validate, services.ArtifactIsBuiltIn)
+			_, err = self.global_repository.LoadYaml(string(data), options)
 			if err != nil {
 				logger.Info("Cant parse asset %s: %s", file, err)
-				if validate {
+				if options.ValidateArtifact {
 					return err
 				}
 				continue

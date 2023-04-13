@@ -209,7 +209,7 @@ func (self *reporter) emit_fs(
 func (self *Launcher) DeleteEvents(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	artifact, client_id string,
+	principal, artifact, client_id string,
 	start_time, end_time time.Time,
 	really_do_it bool) ([]*services.DeleteFlowResponse, error) {
 
@@ -290,6 +290,16 @@ func (self *Launcher) DeleteEvents(
 				Error: error_message,
 			})
 		}
+	}
+
+	// Log into the audit log
+	if really_do_it {
+		return result, services.LogAudit(ctx, config_obj, principal, "DeleteEvents",
+			ordereddict.NewDict().
+				Set("artifact", artifact).
+				Set("client_id", client_id).
+				Set("start_time", start_time).
+				Set("end_time", end_time))
 	}
 
 	return result, nil

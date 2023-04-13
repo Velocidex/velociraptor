@@ -86,7 +86,11 @@ func (self *ArtifactTestSuite) SetupTest() {
 
 	self.repository = manager.NewRepository()
 	for _, definition := range test_artifact_definitions {
-		self.repository.LoadYaml(definition, false, true)
+		self.repository.LoadYaml(definition,
+			services.ArtifactOptions{
+				ValidateArtifact:  false,
+				ArtifactIsBuiltIn: true})
+
 	}
 }
 

@@ -153,7 +153,10 @@ tools:
 	assert.NoError(self.T(), err)
 
 	repository := manager.NewRepository()
-	_, err = repository.LoadYaml(test_artifact, services.ValidateArtifact, services.ArtifactIsBuiltIn)
+	_, err = repository.LoadYaml(test_artifact,
+		services.ArtifactOptions{
+			ValidateArtifact:  true,
+			ArtifactIsBuiltIn: true})
 	assert.NoError(self.T(), err)
 
 	self.installGitHubMock()
@@ -260,7 +263,10 @@ tools:
 	assert.NoError(self.T(), err)
 
 	repository := manager.NewRepository()
-	_, err = repository.LoadYaml(test_artifact, services.ValidateArtifact, services.ArtifactIsBuiltIn)
+	_, err = repository.LoadYaml(test_artifact,
+		services.ArtifactOptions{
+			ValidateArtifact:  true,
+			ArtifactIsBuiltIn: true})
 	assert.NoError(self.T(), err)
 
 	self.installGitHubMock()
@@ -313,14 +319,21 @@ tools:
 	assert.NoError(self.T(), err)
 
 	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
-	_, err = repository.LoadYaml(test_artifact, services.ValidateArtifact, services.ArtifactIsBuiltIn)
+	_, err = repository.LoadYaml(test_artifact,
+		services.ArtifactOptions{
+			ValidateArtifact:  true,
+			ArtifactIsBuiltIn: true})
 	assert.NoError(self.T(), err)
 
 	ctx := self.Ctx
 	_, pres := repository.Get(ctx, self.ConfigObj, "TestArtifact")
 	assert.True(self.T(), pres)
 
-	_, err = repository.LoadYaml(test_artifact2, services.ValidateArtifact, services.ArtifactIsBuiltIn)
+	_, err = repository.LoadYaml(test_artifact2,
+		services.ArtifactOptions{
+			ValidateArtifact:  true,
+			ArtifactIsBuiltIn: true})
+
 	assert.NoError(self.T(), err)
 
 	_, pres = repository.Get(ctx, self.ConfigObj, "TestArtifact2")
@@ -365,7 +378,11 @@ tools:
 	assert.NoError(self.T(), err)
 
 	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
-	_, err = repository.LoadYaml(test_artifact, services.ValidateArtifact, services.ArtifactIsBuiltIn)
+	_, err = repository.LoadYaml(test_artifact,
+		services.ArtifactOptions{
+			ValidateArtifact:  true,
+			ArtifactIsBuiltIn: true})
+
 	assert.NoError(self.T(), err)
 
 	_, pres := repository.Get(self.Ctx, self.ConfigObj, "TestArtifact")
@@ -395,7 +412,10 @@ tools:
 	assert.NoError(self.T(), err)
 
 	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
-	_, err = repository.LoadYaml(test_artifact, services.ValidateArtifact, services.ArtifactIsBuiltIn)
+	_, err = repository.LoadYaml(test_artifact, services.ArtifactOptions{
+		ValidateArtifact:  true,
+		ArtifactIsBuiltIn: true})
+
 	assert.NoError(self.T(), err)
 
 	_, pres := repository.Get(self.Ctx, self.ConfigObj, "TestArtifact")

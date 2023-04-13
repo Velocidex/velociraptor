@@ -120,7 +120,9 @@ func setArtifactFile(
 		// First ensure that the artifact is correct.
 		tmp_repository := manager.NewRepository()
 		artifact_definition, err := tmp_repository.LoadYaml(
-			in.Artifact, true /* validate */, false /* built_in */)
+			in.Artifact, services.ArtifactOptions{
+				ValidateArtifact: true,
+			})
 		if err != nil {
 			return nil, Status(config_obj.Verbose, err)
 		}

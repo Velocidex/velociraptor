@@ -23,7 +23,7 @@ func GetClientInfo(
 		result = &actions_proto.ClientInfo{
 			Hostname:     info.Hostname,
 			System:       info.OS,
-			Release:      info.Platform,
+			Release:      info.Platform + info.PlatformVersion,
 			Architecture: runtime.GOARCH,
 			Fqdn:         fqdn.Get(),
 		}

@@ -188,7 +188,7 @@ func getCellsForEvents(ctx context.Context,
 LET StartTime <= "%s"
 LET EndTime <= "%s"
 
-SELECT *, timestamp(epoch=_ts) AS ServerTime
+SELECT timestamp(epoch=_ts) AS ServerTime, *
  FROM source(start_time=StartTime, end_time=EndTime)
 LIMIT 50
 `, artifact_name, start_time, end_time),

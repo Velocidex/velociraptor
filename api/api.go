@@ -771,7 +771,9 @@ func (self *ApiServer) SetArtifactFile(
 
 	tmp_repository := manager.NewRepository()
 	artifact_definition, err := tmp_repository.LoadYaml(
-		in.Artifact, true /* validate */, false /* built_in */)
+		in.Artifact, services.ArtifactOptions{
+			ValidateArtifact: true,
+		})
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}

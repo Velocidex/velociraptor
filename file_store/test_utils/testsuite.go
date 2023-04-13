@@ -181,7 +181,10 @@ func (self *TestSuite) LoadArtifactFiles(paths ...string) {
 		def, err := ioutil.ReadAll(fd)
 		assert.NoError(self.T(), err)
 
-		_, err = global_repo.LoadYaml(string(def), true, true)
+		_, err = global_repo.LoadYaml(string(def),
+			services.ArtifactOptions{
+				ValidateArtifact:  true,
+				ArtifactIsBuiltIn: true})
 		assert.NoError(self.T(), err)
 	}
 }

@@ -129,7 +129,10 @@ func (self VQLClientAction) StartQuery(
 	repository := manager.NewRepository()
 	for _, artifact := range arg.Artifacts {
 		artifact.BuiltIn = false
-		_, err := repository.LoadProto(artifact, true /* validate */)
+		_, err := repository.LoadProto(artifact,
+			services.ArtifactOptions{
+				ValidateArtifact: true,
+			})
 		if err != nil {
 			responder.RaiseError(ctx, fmt.Sprintf(
 				"Failed to compile artifact %v.", artifact.Name))

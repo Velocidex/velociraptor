@@ -177,7 +177,8 @@ func main() {
 		WithCustomValidator("validator: applyAnalysisTarget",
 			applyAnalysisTarget).
 		WithOverride(*override_flag).
-		WithLogFile(*logging_flag)
+		WithLogFile(*logging_flag).
+		WithConfigMutator("Mutator maybeAddDefinitionsDirectory", maybeAddDefinitionsDirectory)
 
 	if *trace_flag != "" {
 		f, err := os.Create(*trace_flag)

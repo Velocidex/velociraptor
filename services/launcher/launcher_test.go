@@ -50,7 +50,10 @@ func (self *LauncherTestSuite) LoadArtifacts(artifact_definitions []string) serv
 	repository := manager.NewRepository()
 
 	for _, definition := range artifact_definitions {
-		_, err := repository.LoadYaml(definition, true, true)
+		_, err := repository.LoadYaml(definition, services.ArtifactOptions{
+			ValidateArtifact:  true,
+			ArtifactIsBuiltIn: true})
+
 		assert.NoError(self.T(), err)
 	}
 
@@ -1069,7 +1072,10 @@ sources:
 
 	for _, definition := range artifact_definitions {
 		_, err := repository.LoadYaml(definition,
-			services.ValidateArtifact, services.ArtifactIsBuiltIn)
+			services.ArtifactOptions{
+				ValidateArtifact:  true,
+				ArtifactIsBuiltIn: true})
+
 		assert.Error(self.T(), err, "Failed to reject "+definition)
 	}
 
@@ -1097,7 +1103,11 @@ sources:
 	repository := manager.NewRepository()
 
 	for _, definition := range artifact_definitions {
-		_, err := repository.LoadYaml(definition, services.ValidateArtifact, services.ArtifactIsBuiltIn)
+		_, err := repository.LoadYaml(definition,
+			services.ArtifactOptions{
+				ValidateArtifact:  true,
+				ArtifactIsBuiltIn: true})
+
 		assert.NoError(self.T(), err)
 	}
 

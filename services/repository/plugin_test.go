@@ -54,8 +54,7 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 	assert.NoError(self.T(), err)
 
 	err = repository.LoadBuiltInArtifacts(
-		self.Ctx, self.ConfigObj, manager.(*repository.RepositoryManager),
-		services.ValidateArtifact)
+		self.Ctx, self.ConfigObj, manager.(*repository.RepositoryManager))
 	assert.NoError(self.T(), err)
 
 	ConfigObj := self.ConfigObj
@@ -72,7 +71,8 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 		assert.True(self.T(), pres)
 
 		if artifact != nil && !artifact.IsAlias {
-			_, err = new_repository.LoadProto(artifact, services.ValidateArtifact)
+			_, err = new_repository.LoadProto(artifact,
+				services.ArtifactOptions{ValidateArtifact: true})
 			assert.NoError(self.T(), err, "Error compiling "+artifact_name)
 		}
 	}
@@ -83,7 +83,11 @@ func (self *PluginTestSuite) LoadArtifacts(artifact_definitions []string) servic
 	repository := manager.NewRepository()
 
 	for _, definition := range artifact_definitions {
-		_, err := repository.LoadYaml(definition, false, true)
+		_, err := repository.LoadYaml(definition,
+			services.ArtifactOptions{
+				ValidateArtifact:  false,
+				ArtifactIsBuiltIn: true})
+
 		assert.NoError(self.T(), err)
 	}
 
