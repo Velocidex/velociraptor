@@ -103,9 +103,17 @@ var (
 		"rotate_key",
 		"Generate a new config file with a rotates server key.")
 
+	config_rotate_server_key_valitidy = config_rotate_server_key.Flag(
+		"validity",
+		"How long should the cert be valid from in days (default 365).").Int64()
+
 	config_reissue_server_key = config_command.Command(
 		"reissue_key",
 		"Reissue all certificates with the same keys.")
+
+	config_reissue_server_key_valitidy = config_reissue_server_key.Flag(
+		"validity",
+		"How long should the cert be valid from in days (default 365).").Int64()
 )
 
 func maybeGetOrgConfig(
@@ -269,6 +277,13 @@ func doRotateKeyConfig() error {
 		return err
 	}
 
+	if *config_rotate_server_key_valitidy > 0 {
+		if config_obj.Defaults == nil {
+			config_obj.Defaults = &config_proto.Defaults{}
+		}
+		config_obj.Defaults.CertificateValidityDays = *config_rotate_server_key_valitidy
+	}
+
 	// Frontends must have a well known common name.
 	frontend_cert, err := crypto.GenerateServerCert(
 		config_obj, config_obj.Client.PinnedServerName)
@@ -307,9 +322,15 @@ func doReissueServerKeys() error {
 		return err
 	}
 
+	if *config_reissue_server_key_valitidy > 0 {
+		if config_obj.Defaults == nil {
+			config_obj.Defaults = &config_proto.Defaults{}
+		}
+		config_obj.Defaults.CertificateValidityDays = *config_reissue_server_key_valitidy
+	}
+
 	logger := logging.GetLogger(config_obj, &logging.ToolComponent)
 
-	// Frontends must have a well known common name.
 	frontend_cert, err := crypto.ReissueServerCert(
 		config_obj, config_obj.Frontend.Certificate,
 		config_obj.Frontend.PrivateKey)
