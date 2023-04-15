@@ -32,10 +32,9 @@ type LoggingTestSuite struct {
 func (self *LoggingTestSuite) SetupTest() {
 	self.TestSuite.SetupTest()
 
-	self.LoadArtifacts([]string{
-		`name: Server.Audit.Logs
+	self.LoadArtifacts(`name: Server.Audit.Logs
 type: SERVER_EVENT
-`})
+`)
 }
 
 func (self *LoggingTestSuite) TestAuditLog() {

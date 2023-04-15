@@ -391,12 +391,10 @@ func (self *InventoryService) AddTool(
 	ctx context.Context, config_obj *config_proto.Config,
 	tool_request *artifacts_proto.Tool, opts services.ToolOptions) error {
 
-	// Clear out the system managed fields
+	// Clear out the system managed fields.
 	tool_request.Versions = nil
 	tool_request.ServeUrl = ""
-	tool_request.ServePath = ""
 	tool_request.FilestorePath = ""
-	tool_request.Filename = ""
 	tool_request.InvalidHash = ""
 
 	// Keep a reference to all known versions of this tool. We keep

@@ -82,8 +82,8 @@ func (self *LauncherTestSuite) TestCompilingWithTools() {
 
 	// Update the tool to be downloaded from our test http instance.
 	tool_url := ts.URL + "/mytool.exe"
-	repository := self.LoadArtifacts([]string{
-		fmt.Sprintf(testArtifactWithTools, tool_url)})
+	repository := self.LoadArtifacts(
+		fmt.Sprintf(testArtifactWithTools, tool_url))
 
 	// The artifact compiler converts artifacts into a VQL request
 	// to be run by the clients.
@@ -195,7 +195,7 @@ sources:
 }
 
 func (self *LauncherTestSuite) TestGetDependentArtifacts() {
-	repository := self.LoadArtifacts(DependentArtifacts)
+	repository := self.LoadArtifacts(DependentArtifacts...)
 
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -234,7 +234,7 @@ sources:
 `}
 
 func (self *LauncherTestSuite) TestGetDependentArtifactsWithImports() {
-	repository := self.LoadArtifacts(DependentArtifactsWithImports)
+	repository := self.LoadArtifacts(DependentArtifactsWithImports...)
 
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -280,13 +280,13 @@ func (self *LauncherTestSuite) TestGetDependentArtifactsWithTool() {
 	defer ts.Close()
 
 	tool_url := ts.URL + "/mytool.exe"
-	repository := self.LoadArtifacts([]string{`
+	repository := self.LoadArtifacts(`
 name: Test.Artifact.DepsWithTool
 description: This is a test artifact dependency
 sources:
 - query: |
     SELECT * FROM Artifact.Test.Artifact.Tools()
-`, fmt.Sprintf(testArtifactWithTools, tool_url)})
+`, fmt.Sprintf(testArtifactWithTools, tool_url))
 
 	// The artifact compiler converts artifacts into a VQL request
 	// to be run by the clients.
@@ -345,7 +345,7 @@ func getParameterValue(params []*artifacts_proto.ArtifactParameter, key string) 
 }
 
 func (self *LauncherTestSuite) TestCompiling() {
-	repository := self.LoadArtifacts(DependentArtifacts)
+	repository := self.LoadArtifacts(DependentArtifacts...)
 
 	// The artifact compiler converts artifacts into a VQL request
 	// to be run by the clients.
@@ -419,7 +419,7 @@ sources:
 `}
 
 func (self *LauncherTestSuite) TestCompilingMultipleArtifacts() {
-	repository := self.LoadArtifacts(CompilingMultipleArtifacts)
+	repository := self.LoadArtifacts(CompilingMultipleArtifacts...)
 
 	// The artifact compiler converts artifacts into a VQL request
 	// to be run by the clients.
@@ -490,7 +490,7 @@ sources:
      SELECT Bar FROM info()
 `}
 
-	repository := self.LoadArtifacts(definitions)
+	repository := self.LoadArtifacts(definitions...)
 
 	// The artifact compiler converts artifacts into a VQL request
 	// to be run by the clients.
@@ -528,7 +528,7 @@ sources:
 }
 
 func (self *LauncherTestSuite) TestCompilingObfuscation() {
-	repository := self.LoadArtifacts(CompilingMultipleArtifacts)
+	repository := self.LoadArtifacts(CompilingMultipleArtifacts...)
 	self.ConfigObj.Frontend.DoNotCompressArtifacts = true
 
 	// The artifact compiler converts artifacts into a VQL request
@@ -554,7 +554,7 @@ func (self *LauncherTestSuite) TestCompilingObfuscation() {
 }
 
 func (self *LauncherTestSuite) TestCompilingPermissions() {
-	repository := self.LoadArtifacts([]string{`
+	repository := self.LoadArtifacts(`
 name: Test.Artifact.Permissions
 required_permissions:
 - EXECVE
@@ -562,7 +562,7 @@ required_permissions:
 sources:
 - query:  |
     SELECT * FROM info()
-`})
+`)
 
 	// The artifact compiler converts artifacts into a VQL request
 	// to be run by the clients.
@@ -602,7 +602,7 @@ sources:
 }
 
 func (self *LauncherTestSuite) TestParameterTypes() {
-	repository := self.LoadArtifacts(testArtifactWithTypes)
+	repository := self.LoadArtifacts(testArtifactWithTypes...)
 
 	// The artifact compiler converts artifacts into a VQL request
 	// to be run by the clients.
@@ -754,7 +754,7 @@ sources:
 // Parsing of parameters only occurs at the launching artifact -
 // dependent artifacts receive proper typed objects.
 func (self *LauncherTestSuite) TestParameterTypesDeps() {
-	repository := self.LoadArtifacts(testArtifactWithTypes)
+	repository := self.LoadArtifacts(testArtifactWithTypes...)
 
 	// The artifact compiler converts artifacts into a VQL request
 	// to be run by the clients.
@@ -811,7 +811,7 @@ func (self *LauncherTestSuite) TestParameterTypesDeps() {
 }
 
 func (self *LauncherTestSuite) TestParameterTypesDepsQuery() {
-	repository := self.LoadArtifacts(testArtifactWithTypes)
+	repository := self.LoadArtifacts(testArtifactWithTypes...)
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -861,7 +861,7 @@ func (self *LauncherTestSuite) TestParameterTypesDepsQuery() {
    request with multiple sources in the same request: Serial Mode
 */
 func (self *LauncherTestSuite) TestPreconditionTopLevel() {
-	repository := self.LoadArtifacts([]string{`
+	repository := self.LoadArtifacts(`
 name: Test.Artifact.Precondition
 precondition: |
    SELECT * FROM info() WHERE FALSE
@@ -872,7 +872,7 @@ sources:
 - name: Source2
   query: |
     SELECT 2 AS A FROM scope()
-`})
+`)
 	// The artifact compiler converts artifacts into a VQL request
 	// to be run by the clients.
 	request := &flows_proto.ArtifactCollectorArgs{
@@ -912,7 +912,7 @@ sources:
    in parallel mode.
 */
 func (self *LauncherTestSuite) TestPreconditionSourceLevel() {
-	repository := self.LoadArtifacts([]string{`
+	repository := self.LoadArtifacts(`
 name: Test.Artifact.Precondition
 sources:
 - name: Source1
@@ -923,7 +923,7 @@ sources:
      SELECT * FROM info() WHERE FALSE
   query: |
     SELECT 2 AS A FROM scope()
-`})
+`)
 	// The artifact compiler converts artifacts into a VQL request
 	// to be run by the clients.
 	request := &flows_proto.ArtifactCollectorArgs{
@@ -959,7 +959,7 @@ sources:
 
 // Preconditions called recursively
 func (self *LauncherTestSuite) TestPreconditionRecursive() {
-	repository := self.LoadArtifacts([]string{`
+	repository := self.LoadArtifacts(`
 name: Test.Artifact.Precondition
 sources:
 - query: |
@@ -976,7 +976,7 @@ sources:
      SELECT * FROM info() WHERE TRUE
   query: |
     SELECT "B" AS Col FROM scope()
-`})
+`)
 
 	// The artifact compiler converts artifacts into a VQL request
 	// to be run by the clients.

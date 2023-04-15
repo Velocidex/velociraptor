@@ -105,6 +105,15 @@ export default class ToolViewer extends React.Component {
         remote_url: "",
     }
 
+    acceptUpstreamHash = ()=>{
+        // Accepts the upstream hash by updating the expected hash to it.
+        let tool = Object.assign({}, this.state.tool);
+        tool.expected_hash = tool.invalid_hash;
+        tool.materialize = true;
+        tool.invalid_hash = "";
+        this.setToolInfo(tool);
+    }
+
     uploadFile = () => {
         if (!this.state.tool_file) {
             return;
@@ -133,7 +142,7 @@ export default class ToolViewer extends React.Component {
                  this.source.token).then((response) => {
             this.setState({tool: response.data});
         }).finally(() => {
-            this.setState({inflight: false});
+            this.fetchToolInfo(()=> this.setState({inflight: false}));
         });
     };
 
@@ -390,6 +399,18 @@ export default class ToolViewer extends React.Component {
                         <dt className="col-4">{T("Expected Hash")}</dt>
                         <dd className="col-8">
                           {tool.expected_hash}
+                        </dd></>}
+
+                    { tool.invalid_hash &&
+                      <>
+                        <dt className="col-4">{T("Upstream Hash")}</dt>
+                        <dd className="col-8">
+                          {tool.invalid_hash}
+                          <Button
+                             onClick={x=>this.acceptUpstreamHash()}
+                            variant="outline-info">
+                            {T("Click to accept")}
+                          </Button>
                         </dd></>}
 
                     { tool.url &&

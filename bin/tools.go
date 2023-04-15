@@ -29,6 +29,8 @@ var (
 	third_party_upload           = third_party.Command("upload", "Upload a third party binary")
 	third_party_upload_tool_name = third_party_upload.Flag("name", "Name of the tool").
 					Required().String()
+	third_party_upload_tool_version = third_party_upload.Flag("tool_version", "The version of the tool").String()
+
 	third_party_upload_filename = third_party_upload.
 					Flag("filename", "Name of the tool executable on the endpoint").
 					String()
@@ -157,6 +159,7 @@ func doThirdPartyUpload() error {
 
 	tool := &artifacts_proto.Tool{
 		Name:         *third_party_upload_tool_name,
+		Version:      *third_party_upload_tool_version,
 		Filename:     filename,
 		ServeLocally: !*third_party_upload_serve_remote,
 	}
@@ -216,6 +219,7 @@ func doThirdPartyUpload() error {
 		return fmt.Errorf("Adding tool %s: %w", tool.Name, err)
 	}
 
+	// Materialize the tool if required
 	if *third_party_upload_download {
 		_, err = inventory_manager.GetToolInfo(
 			ctx, config_obj, tool.Name, tool.Version)

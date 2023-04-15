@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
@@ -117,6 +118,24 @@ autoexec:
 		utils.CopyFile(ctx, upload_response.Path, repacked_dst, 0644)
 		scope.Log("Stored repacked binary in %v for manual inspection", repacked_dst)
 	}
+
+	// Check the content of the packed binaries.
+	fd, err := os.Open(upload_response.Path)
+	assert.NoError(self.T(), err)
+	s, err := fd.Stat()
+	assert.NoError(self.T(), err)
+
+	zip, err := zip.NewReader(fd, s.Size())
+	assert.NoError(self.T(), err)
+
+	files := []string{}
+	for _, f := range zip.File {
+		files = append(files, f.Name)
+	}
+	assert.Equal(self.T(), []string{
+		"uploads/binary.exe",
+		"uploads/inventory.csv",
+	}, files)
 }
 
 func (self *RepackTestSuite) TestRepackMSI() {
