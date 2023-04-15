@@ -43,23 +43,6 @@ type LauncherTestSuite struct {
 	test_utils.TestSuite
 }
 
-func (self *LauncherTestSuite) LoadArtifacts(artifact_definitions []string) services.Repository {
-	manager, err := services.GetRepositoryManager(self.ConfigObj)
-	assert.NoError(self.T(), err)
-
-	repository := manager.NewRepository()
-
-	for _, definition := range artifact_definitions {
-		_, err := repository.LoadYaml(definition, services.ArtifactOptions{
-			ValidateArtifact:  true,
-			ArtifactIsBuiltIn: true})
-
-		assert.NoError(self.T(), err)
-	}
-
-	return repository
-}
-
 // Tools allow Velociraptor to automatically manage external bundles
 // (such as external executables) and push those to the clients. The
 // Artifact definition simply specifies the name of the tool and where

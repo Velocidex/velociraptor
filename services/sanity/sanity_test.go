@@ -32,7 +32,7 @@ type ServicesTestSuite struct {
 
 func (self *ServicesTestSuite) SetupTest() {
 	self.ConfigObj = self.TestSuite.LoadConfig()
-	self.LoadArtifacts([]string{`
+	self.LoadArtifactsIntoConfig([]string{`
 name: TestArtifact
 tools:
 - name: Tool1

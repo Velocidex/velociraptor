@@ -78,22 +78,6 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 	}
 }
 
-func (self *PluginTestSuite) LoadArtifacts(artifact_definitions []string) services.Repository {
-	manager, _ := services.GetRepositoryManager(self.ConfigObj)
-	repository := manager.NewRepository()
-
-	for _, definition := range artifact_definitions {
-		_, err := repository.LoadYaml(definition,
-			services.ArtifactOptions{
-				ValidateArtifact:  false,
-				ArtifactIsBuiltIn: true})
-
-		assert.NoError(self.T(), err)
-	}
-
-	return repository
-}
-
 var (
 	artifact_definitions = []string{`
 name: Test1

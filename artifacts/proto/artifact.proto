@@ -244,6 +244,23 @@ message Tool {
     // server versions.
     bool admin_override = 7;
 
+    // Hex encoded sha256 hash of the expected hash of the file. When
+    // the server downloads the file it will check against the
+    // expected hash and refuse to download an incorrect hash.  This
+    // is a way to pin the dependency into the artifact definition to
+    // protect against supply side attacks.
+    string expected_hash = 15;
+
+    // Specify a version for the tool. This allows multiple versions
+    // of the same tool to be used at the same time.
+    string version = 16;
+
+    // If set on a request we refresh the hash by downloading the file again.
+    bool materialize = 11;
+
+    // The artifact this definition came from.
+    string artifact = 13;
+
 
     // Once the tool is added with the above fields, the following
     // fields are used to keep state on it.
@@ -267,15 +284,15 @@ message Tool {
     string filename = 5;
 
     // Hex encoded sha256 hash of the file. Endpoints will check this
-    // hash against their fetch file to ensure it was correctly
+    // hash against their fetched file to ensure it was correctly
     // transferred.
     string hash = 6;
 
-    // If set on a request we refresh the hash.
-    bool materialize = 11;
-
-    // The artifact this definition came from.
-    string artifact = 13;
+    // When we attempted to download the file, and the hash did not
+    // match the expected hash, we record the actual hash here. The
+    // user can then opt for trusting this hash in the GUI which will
+    // copy it into the expected hash and clear this hash.
+    string invalid_hash = 17;
 
     // Additional versions of this tool.
     repeated Tool versions = 14;

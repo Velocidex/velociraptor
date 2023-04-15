@@ -27,7 +27,7 @@ type ManagerTestSuite struct {
 
 func (self *ManagerTestSuite) SetupTest() {
 	self.ConfigObj = self.LoadConfig()
-	self.LoadArtifacts([]string{`
+	self.LoadArtifactsIntoConfig([]string{`
 name: Generic.Client.Info
 type: CLIENT
 `})

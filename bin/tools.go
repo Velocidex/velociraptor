@@ -88,7 +88,7 @@ func doThirdPartyShow() error {
 		fmt.Println(string(serialized))
 	} else {
 		tool, err := inventory_manager.ProbeToolInfo(
-			ctx, config_obj, *third_party_show_file)
+			ctx, config_obj, *third_party_show_file, "")
 		if err != nil {
 			return fmt.Errorf("Tool not found: %w", err)
 		}
@@ -217,7 +217,8 @@ func doThirdPartyUpload() error {
 	}
 
 	if *third_party_upload_download {
-		_, err = inventory_manager.GetToolInfo(ctx, config_obj, tool.Name)
+		_, err = inventory_manager.GetToolInfo(
+			ctx, config_obj, tool.Name, tool.Version)
 		return err
 	}
 

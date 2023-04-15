@@ -402,7 +402,8 @@ func (self *Launcher) GetVQLCollectorArgs(
 	}
 
 	for _, tool := range artifact.Tools {
-		err = AddToolDependency(ctx, config_obj, tool.Name, vql_collector_args)
+		err = AddToolDependency(ctx, config_obj, tool.Name,
+			tool.Version, vql_collector_args)
 		if err != nil {
 			return nil, err
 		}
@@ -430,7 +431,8 @@ func (self *Launcher) EnsureToolsDeclared(
 			return err
 		}
 
-		_, err = inventory.GetToolInfo(ctx, config_obj, tool.Name)
+		_, err = inventory.GetToolInfo(
+			ctx, config_obj, tool.Name, tool.Version)
 		if err != nil {
 			// Add tool info if it is not known but do not
 			// override existing tool. This allows the
@@ -455,13 +457,13 @@ func (self *Launcher) EnsureToolsDeclared(
 func AddToolDependency(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	tool string, vql_collector_args *actions_proto.VQLCollectorArgs) error {
+	tool, version string, vql_collector_args *actions_proto.VQLCollectorArgs) error {
 	inventory, err := services.GetInventory(config_obj)
 	if err != nil {
 		return err
 	}
 
-	tool_info, err := inventory.GetToolInfo(ctx, config_obj, tool)
+	tool_info, err := inventory.GetToolInfo(ctx, config_obj, tool, version)
 	if err != nil {
 		return err
 	}

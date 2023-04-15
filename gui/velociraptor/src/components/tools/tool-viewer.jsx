@@ -14,7 +14,6 @@ import InputGroup from 'react-bootstrap/InputGroup';
 import T from '../i8n/i8n.jsx';
 import Select from 'react-select';
 import VeloValueRenderer from '../utils/value.jsx';
-
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import classNames from "classnames";
@@ -46,6 +45,8 @@ class ResetToolDialog extends React.Component {
         return <Modal show={true}
                       enforceFocus={true}
                       scrollable={false}
+                      size="lg"
+                      dialogClassName="modal-90w"
                       onHide={this.props.onClose}>
                  <Modal.Header closeButton>
                    <Modal.Title>{T("Tool")} {
@@ -378,6 +379,18 @@ export default class ToolViewer extends React.Component {
                       <>
                         <dt className="col-4">{T("Tool Name")}</dt>
                         <dd className="col-8">{tool.name}</dd></>}
+
+                    { tool.version &&
+                      <>
+                        <dt className="col-4">{T("Tool Version")}</dt>
+                        <dd className="col-8">{tool.version}</dd></>}
+
+                    { tool.expected_hash &&
+                      <>
+                        <dt className="col-4">{T("Expected Hash")}</dt>
+                        <dd className="col-8">
+                          {tool.expected_hash}
+                        </dd></>}
 
                     { tool.url &&
                       <>
