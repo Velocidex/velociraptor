@@ -394,8 +394,17 @@ func (self *InventoryService) AddTool(
 	// Clear out the system managed fields.
 	tool_request.Versions = nil
 	tool_request.ServeUrl = ""
-	tool_request.FilestorePath = ""
 	tool_request.InvalidHash = ""
+
+	// FilestorePath may be set by the GUI to point at a just manually
+	// uploaded tool but it needs to be inside th public directory.
+	if tool_request.FilestorePath != "" {
+		components := utils.SplitComponents(tool_request.FilestorePath)
+		if len(components) == 0 ||
+			components[0] != paths.PUBLIC_ROOT.Components()[0] {
+			tool_request.FilestorePath = ""
+		}
+	}
 
 	// Keep a reference to all known versions of this tool. We keep
 	// the clean definitions from the artifact together, so we can
