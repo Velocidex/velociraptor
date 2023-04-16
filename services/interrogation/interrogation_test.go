@@ -31,7 +31,7 @@ func (self *ServicesTestSuite) SetupTest() {
 	self.ConfigObj.Services.Interrogation = true
 	self.ConfigObj.Defaults.UnauthenticatedLruTimeoutSec = -1
 
-	self.LoadArtifacts([]string{`
+	self.LoadArtifactsIntoConfig([]string{`
 name: Server.Internal.Enrollment
 type: INTERNAL
 `,

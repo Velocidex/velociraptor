@@ -29,10 +29,10 @@ func (self *ApiServer) GetToolInfo(ctx context.Context,
 		return nil, Status(self.verbose, err)
 	}
 	if in.Materialize {
-		return inventory.GetToolInfo(ctx, org_config_obj, in.Name)
+		return inventory.GetToolInfo(ctx, org_config_obj, in.Name, in.Version)
 	}
 
-	return inventory.ProbeToolInfo(ctx, org_config_obj, in.Name)
+	return inventory.ProbeToolInfo(ctx, org_config_obj, in.Name, in.Version)
 }
 
 func (self *ApiServer) SetToolInfo(ctx context.Context,
@@ -62,6 +62,12 @@ func (self *ApiServer) SetToolInfo(ctx context.Context,
 		return nil, Status(self.verbose, err)
 	}
 
+	// Clear internally managed tools the user should not be allowed
+	// to set.
+	in.Versions = nil
+	in.ServeUrl = ""
+	in.InvalidHash = ""
+
 	err = inventory.AddTool(ctx, org_config_obj, in,
 		services.ToolOptions{
 			AdminOverride: true,
@@ -73,7 +79,7 @@ func (self *ApiServer) SetToolInfo(ctx context.Context,
 	// If materialized we re-fetch the tool and send back the full
 	// record.
 	if materialize {
-		return inventory.GetToolInfo(ctx, org_config_obj, in.Name)
+		return inventory.GetToolInfo(ctx, org_config_obj, in.Name, in.Version)
 	}
 
 	return in, nil

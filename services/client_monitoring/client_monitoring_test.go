@@ -62,7 +62,7 @@ func (self *ClientMonitoringTestSuite) SetupTest() {
 	self.ConfigObj = self.TestSuite.LoadConfig()
 	self.ConfigObj.Services.ClientMonitoring = true
 
-	self.LoadArtifacts(mock_definitions)
+	self.LoadArtifactsIntoConfig(mock_definitions)
 
 	self.TestSuite.SetupTest()
 	self.client_id = "C.12312"

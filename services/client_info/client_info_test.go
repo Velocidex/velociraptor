@@ -33,7 +33,7 @@ func (self *ClientInfoTestSuite) SetupTest() {
 	self.ConfigObj.Frontend.Resources.ClientInfoSyncTime = 1
 	self.ConfigObj.Frontend.Resources.ClientInfoWriteTime = 1
 
-	self.LoadArtifacts([]string{`
+	self.LoadArtifactsIntoConfig([]string{`
 name: Server.Internal.ClientPing
 type: INTERNAL
 `})

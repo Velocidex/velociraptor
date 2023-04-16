@@ -55,7 +55,7 @@ func (self *MonitoringTestSuite) SetupTest() {
 	self.ConfigObj.Services.ClientMonitoring = true
 	self.ConfigObj.Services.MonitoringService = true
 
-	self.LoadArtifacts(definitions)
+	self.LoadArtifactsIntoConfig(definitions)
 	self.TestSuite.SetupTest()
 }
 

@@ -44,7 +44,7 @@ func (self *TestSuite) SetupTest() {
 	self.ConfigObj.Services.HuntDispatcher = true
 	self.ConfigObj.Services.HuntManager = true
 
-	self.LoadArtifacts([]string{`
+	self.LoadArtifactsIntoConfig([]string{`
 name: Custom.TestArtifactUpload
 type: CLIENT
 sources:

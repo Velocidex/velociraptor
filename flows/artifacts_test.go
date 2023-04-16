@@ -62,7 +62,7 @@ type TestSuite struct {
 
 func (self *TestSuite) SetupTest() {
 	self.TestSuite.SetupTest()
-	self.LoadArtifacts([]string{`
+	self.LoadArtifactsIntoConfig([]string{`
 name: System.Upload.Completion
 type: CLIENT_EVENT
 `, `

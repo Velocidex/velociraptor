@@ -130,6 +130,8 @@ func (self LinuxPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 	if result == nil {
 		result = &PathSpec{}
 		path.pathspec = result
+	} else {
+		result = result.Copy()
 	}
 	result.Path = "/" + strings.Join(path.Components, "/")
 	return result
@@ -296,6 +298,8 @@ func (self WindowsNTFSManipulator) AsPathSpec(path *OSPath) *PathSpec {
 	if result == nil {
 		result = &PathSpec{}
 		path.pathspec = result
+	} else {
+		result = result.Copy()
 	}
 
 	// The first component is usually the drive letter or device and
@@ -463,6 +467,8 @@ func (self PathSpecPathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 	if result == nil {
 		result = &PathSpec{}
 		path.pathspec = result
+	} else {
+		result = result.Copy()
 	}
 	return result
 }
@@ -542,6 +548,8 @@ func (self FileStorePathManipulator) AsPathSpec(path *OSPath) *PathSpec {
 	if result == nil {
 		result = &PathSpec{}
 		path.pathspec = result
+	} else {
+		result = result.Copy()
 	}
 
 	// The first component is usually the drive letter or device and

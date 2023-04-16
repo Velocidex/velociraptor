@@ -89,7 +89,7 @@ func (self *ServerTestSuite) SetupTest() {
 	self.ConfigObj.Services.ClientMonitoring = true
 	self.ConfigObj.Services.Interrogation = true
 
-	self.LoadArtifacts(mock_definitions)
+	self.LoadArtifactsIntoConfig(mock_definitions)
 
 	var err error
 	self.TestSuite.SetupTest()

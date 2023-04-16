@@ -41,7 +41,7 @@ func (self *JournalTestSuite) SetupTest() {
 	self.ConfigObj.Datastore.FilestoreDirectory = dir
 	self.ConfigObj.Datastore.Location = dir
 
-	self.LoadArtifacts([]string{`
+	self.LoadArtifactsIntoConfig([]string{`
 name: System.Flow.Completion
 type: CLIENT_EVENT
 `, `

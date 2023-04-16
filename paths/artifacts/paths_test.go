@@ -65,7 +65,7 @@ func (self *PathManageTestSuite) SetupTest() {
 	self.ConfigObj.Datastore.FilestoreDirectory = self.dirname
 	self.ConfigObj.Datastore.Location = self.dirname
 
-	self.LoadArtifacts([]string{`
+	self.LoadArtifactsIntoConfig([]string{`
 name: Windows.Sys.Users
 type: CLIENT
 `, `
