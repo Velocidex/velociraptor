@@ -7,4 +7,8 @@ const (
 	INFO    = "INFO"
 	WARNING = "WARN"
 	DEBUG   = "DEBUG"
+
+	// An alert is a special type of log message which is routed by
+	// the server into the alert queue.
+	ALERT = "ALERT"
 )

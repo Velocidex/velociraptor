@@ -351,6 +351,8 @@ func (self *EventTable) RunQuery(
 		config_obj:   self.config_obj,
 		path_manager: log_path_manager,
 		Clock:        self.clock,
+		ctx:          ctx,
+		artifact:     artifact_name,
 	}
 
 	builder := services.ScopeBuilder{
