@@ -281,7 +281,38 @@ func (self *FlowContext) flushLogMessages(ctx context.Context) {
 	}
 }
 
-func (self *FlowContext) AddLogMessage(level string, msg string) {
+// Alert messages are sent in their own packet because the server will
+// redirect them into the alert queue.
+func (self *FlowContext) sendAlertMessage(
+	ctx context.Context, level string,
+	// msg containes serialized services.AlertMessage
+	msg string) {
+
+	self.mu.Lock()
+	id := self.log_messages_id
+	self.log_messages_id++
+	self.mu.Unlock()
+
+	self.output <- &crypto_proto.VeloMessage{
+		SessionId: self.flow_id,
+		RequestId: constants.LOG_SINK,
+		LogMessage: &crypto_proto.LogMessage{
+			Id:           int64(id),
+			NumberOfRows: 1,
+			Jsonl: json.Format(
+				"{\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
+				int(utils.GetTime().Now().Unix()), level, msg),
+			Level: logging.ALERT,
+		}}
+}
+
+func (self *FlowContext) AddLogMessage(
+	ctx context.Context, level string, msg string) {
+	if level == logging.ALERT {
+		self.sendAlertMessage(ctx, level, msg)
+		return
+	}
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
 

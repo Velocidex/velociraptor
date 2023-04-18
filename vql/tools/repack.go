@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"regexp"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -53,6 +54,7 @@ const (
 
 type RepackFunctionArgs struct {
 	Target     string            `vfilter:"optional,field=target,doc=The name of the target OS to repack (VelociraptorWindows, VelociraptorLinux, VelociraptorDarwin)"`
+	Version    string            `vfilter:"optional,field=version,doc=Velociraptor Version to repack"`
 	Exe        *accessors.OSPath `vfilter:"optional,field=exe,doc=Alternative a path to the executable to repack"`
 	Accessor   string            `vfilter:"optional,field=accessor,doc=The accessor to use to read the file."`
 	Binaries   []string          `vfilter:"optional,field=binaries,doc=List of tool names that will be repacked into the target"`
@@ -99,7 +101,7 @@ func (self RepackFunction) Call(ctx context.Context,
 	}
 
 	exe_bytes, err := readExeFile(ctx, config_obj, scope,
-		arg.Exe, arg.Accessor, arg.Target)
+		arg.Exe, arg.Accessor, arg.Target, arg.Version)
 	if err != nil {
 		scope.Log("ERROR:client_repack: %v", err)
 		return vfilter.Null{}
@@ -174,7 +176,7 @@ func readExeFile(
 	scope vfilter.Scope,
 	exe *accessors.OSPath,
 	accessor_name string,
-	target_tool string) ([]byte, error) {
+	target_tool, version string) ([]byte, error) {
 
 	if exe != nil {
 		accessor, err := accessors.GetAccessor(accessor_name, scope)
@@ -197,7 +199,8 @@ func readExeFile(
 		return nil, err
 	}
 
-	tool, err := inventory.GetToolInfo(ctx, config_obj, target_tool)
+	tool, err := inventory.GetToolInfo(
+		ctx, config_obj, target_tool, version)
 	if err != nil {
 		return nil, err
 	}
@@ -313,7 +316,14 @@ func AppendBinaries(
 
 	file_store_factory := file_store.GetFileStore(root_config_obj)
 	for _, name := range binaries {
-		tool, err := inventory.GetToolInfo(ctx, config_obj, name)
+		parts := strings.SplitN(name, ":", 2)
+		version := ""
+		if len(parts) > 1 {
+			name = parts[0]
+			version = parts[1]
+		}
+
+		tool, err := inventory.GetToolInfo(ctx, config_obj, name, version)
 		if err != nil {
 			return nil, err
 		}

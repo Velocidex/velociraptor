@@ -138,7 +138,7 @@ func toolUploadHandler() http.Handler {
 
 		// Now materialize the tool
 		tool, err = inventory.GetToolInfo(
-			r.Context(), org_config_obj, tool.Name)
+			r.Context(), org_config_obj, tool.Name, tool.Version)
 		if err != nil {
 			returnError(w, http.StatusInternalServerError,
 				fmt.Sprintf("Error: %v", err))

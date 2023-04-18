@@ -138,7 +138,8 @@ func (self *InventoryAddFunction) Info(
 }
 
 type InventoryGetFunctionArgs struct {
-	Tool string `vfilter:"required,field=tool"`
+	Tool    string `vfilter:"required,field=tool"`
+	Version string `vfilter:"optional,field=version"`
 }
 
 type InventoryGetFunction struct{}
@@ -172,7 +173,7 @@ func (self *InventoryGetFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	tool, err := inventory.GetToolInfo(ctx, config_obj, arg.Tool)
+	tool, err := inventory.GetToolInfo(ctx, config_obj, arg.Tool, arg.Version)
 	if err != nil {
 		scope.Log("inventory_get: %s", err.Error())
 		return vfilter.Null{}

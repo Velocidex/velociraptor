@@ -504,7 +504,7 @@ func PopulateArtifactsVQLCollectorArgs(
 			// independently.
 			tmp := &actions_proto.VQLCollectorArgs{}
 			for _, tool := range artifact.Tools {
-				err := AddToolDependency(ctx, config_obj, tool.Name, tmp)
+				err := AddToolDependency(ctx, config_obj, tool.Name, tool.Version, tmp)
 				if err != nil {
 					return err
 				}

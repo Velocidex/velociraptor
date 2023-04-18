@@ -111,7 +111,7 @@ func (self *LogFunction) Call(ctx context.Context,
 	level := strings.ToUpper(arg.Level)
 	switch level {
 	case logging.DEFAULT, logging.ERROR, logging.INFO,
-		logging.WARNING, logging.DEBUG:
+		logging.WARNING, logging.DEBUG, logging.ALERT:
 
 	default:
 		level = logging.DEFAULT

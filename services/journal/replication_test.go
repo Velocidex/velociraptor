@@ -53,7 +53,7 @@ func (self *ReplicationTestSuite) SetupTest() {
 	self.ConfigObj.Services.FrontendServer = false
 	self.ConfigObj.Services.ReplicationService = true
 
-	self.LoadArtifacts([]string{`
+	self.LoadArtifactsIntoConfig([]string{`
 name: Test.Artifact
 type: CLIENT_EVENT
 `})

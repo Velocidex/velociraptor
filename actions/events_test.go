@@ -54,7 +54,7 @@ type EventsTestSuite struct {
 
 func (self *EventsTestSuite) SetupTest() {
 	self.ConfigObj = self.LoadConfig()
-	self.LoadArtifacts(artifact_definitions)
+	self.LoadArtifactsIntoConfig(artifact_definitions)
 
 	// Set a tempfile for the writeback we need to check that the
 	// new event query is written there.

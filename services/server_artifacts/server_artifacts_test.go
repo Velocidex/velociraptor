@@ -47,20 +47,6 @@ func (self *ServerArtifactsTestSuite) SetupTest() {
 	assert.NoError(self.T(), err)
 }
 
-func (self *ServerArtifactsTestSuite) LoadArtifacts(definition string) services.Repository {
-	manager, _ := services.GetRepositoryManager(self.ConfigObj)
-	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
-
-	_, err := repository.LoadYaml(definition,
-		services.ArtifactOptions{
-			ValidateArtifact:  false,
-			ArtifactIsBuiltIn: true})
-
-	assert.NoError(self.T(), err)
-
-	return repository
-}
-
 func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 	name, user, flow_id string) *api_proto.FlowDetails {
 	ctx := self.Ctx

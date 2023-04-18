@@ -55,6 +55,13 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
+const (
+	// When the principal is set to this below we avoid audit logging
+	// the call.
+	NoAuditLogging = ""
+	DryRunOnly     = false
+)
+
 type DeleteFlowResponse struct {
 	Type  string            `json:"type"`
 	Data  *ordereddict.Dict `json:"data"`
@@ -99,7 +106,7 @@ type FlowStorer interface {
 	DeleteFlow(
 		ctx context.Context,
 		config_obj *config_proto.Config,
-		client_id string, flow_id string,
+		client_id string, flow_id string, principal string,
 		really_do_it bool) ([]*DeleteFlowResponse, error)
 
 	LoadCollectionContext(

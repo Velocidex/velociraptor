@@ -78,22 +78,6 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 	}
 }
 
-func (self *PluginTestSuite) LoadArtifacts(artifact_definitions []string) services.Repository {
-	manager, _ := services.GetRepositoryManager(self.ConfigObj)
-	repository := manager.NewRepository()
-
-	for _, definition := range artifact_definitions {
-		_, err := repository.LoadYaml(definition,
-			services.ArtifactOptions{
-				ValidateArtifact:  false,
-				ArtifactIsBuiltIn: true})
-
-		assert.NoError(self.T(), err)
-	}
-
-	return repository
-}
-
 var (
 	artifact_definitions = []string{`
 name: Test1
@@ -132,7 +116,7 @@ sources:
 )
 
 func (self *PluginTestSuite) TestArtifactPluginWithPrecondition() {
-	repository := self.LoadArtifacts(artifact_definitions_precondition)
+	repository := self.LoadArtifacts(artifact_definitions_precondition...)
 
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
@@ -192,7 +176,7 @@ sources:
 // Test that calling a client artifact with multiple sources results
 // in all rows.
 func (self *PluginTestSuite) TestClientPluginMultipleSources() {
-	repository := self.LoadArtifacts(source_definitions)
+	repository := self.LoadArtifacts(source_definitions...)
 	request := &flows_proto.ArtifactCollectorArgs{
 		ClientId:  "C.1234",
 		Artifacts: []string{"Call"},
@@ -249,7 +233,7 @@ sources:
 // Test that calling a client artifact with multiple sources results
 // in all rows.
 func (self *PluginTestSuite) TestClientPluginMultipleSourcesAndPrecondtions() {
-	repository := self.LoadArtifacts(precondition_source_definitions)
+	repository := self.LoadArtifacts(precondition_source_definitions...)
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
 		ACLManager: acl_managers.NullACLManager{},
@@ -309,7 +293,7 @@ sources:
 // Test that calling a client artifact with multiple sources results
 // in all rows.
 func (self *PluginTestSuite) TestClientPluginMultipleSourcesAndPrecondtionsEvents() {
-	repository := self.LoadArtifacts(precondition_source_events_definitions)
+	repository := self.LoadArtifacts(precondition_source_events_definitions...)
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
 		ACLManager: acl_managers.NullACLManager{},

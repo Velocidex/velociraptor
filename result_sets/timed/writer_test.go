@@ -62,7 +62,7 @@ type TimedResultSetTestSuite struct {
 func (self *TimedResultSetTestSuite) SetupTest() {
 	self.ConfigObj = self.LoadConfig()
 
-	self.LoadArtifacts([]string{`
+	self.LoadArtifactsIntoConfig([]string{`
 name: Windows.Events.ProcessCreation
 type: CLIENT_EVENT
 `})

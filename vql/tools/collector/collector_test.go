@@ -178,7 +178,7 @@ type TestSuite struct {
 
 func (self *TestSuite) SetupTest() {
 	self.ConfigObj = self.LoadConfig()
-	self.LoadArtifacts([]string{customCollectionWithTypes})
+	self.LoadArtifactsIntoConfig([]string{customCollectionWithTypes})
 
 	self.TestSuite.SetupTest()
 

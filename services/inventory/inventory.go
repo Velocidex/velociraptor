@@ -109,23 +109,33 @@ func (self *InventoryService) ClearForTests() {
 
 func (self *InventoryService) ProbeToolInfo(
 	ctx context.Context, config_obj *config_proto.Config,
-	name string) (*artifacts_proto.Tool, error) {
+	name, version string) (*artifacts_proto.Tool, error) {
 	for _, tool := range self.Get().Tools {
+		// If version is specified we look for the exact tool version
+		if version != "" {
+			if tool.Name == name && tool.Version == version {
+				return self.AddAllVersions(ctx, config_obj, tool), nil
+			}
+			continue
+		}
+
+		// Otherwise any version of the tool will do
 		if tool.Name == name {
 			return self.AddAllVersions(ctx, config_obj, tool), nil
 		}
 	}
 
 	if self.parent != nil {
-		tool, err := self.parent.ProbeToolInfo(ctx, config_obj, name)
+		tool, err := self.parent.ProbeToolInfo(ctx, config_obj, name, version)
 		if err == nil {
+			// Add all the parent's versions into our own repository.
 			for _, v := range tool.Versions {
 				self.AddTool(ctx, config_obj, v, services.ToolOptions{
 					ArtifactDefinition: true,
 				})
 			}
 			// Try again with the new data
-			return self.ProbeToolInfo(ctx, config_obj, name)
+			return self.ProbeToolInfo(ctx, config_obj, name, version)
 		}
 	}
 
@@ -161,7 +171,7 @@ func (self *InventoryService) addAllVersions(
 func (self *InventoryService) GetToolInfo(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	tool string) (*artifacts_proto.Tool, error) {
+	tool, version string) (*artifacts_proto.Tool, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -170,22 +180,28 @@ func (self *InventoryService) GetToolInfo(
 	}
 
 	for _, item := range self.binaries.Tools {
-		if item.Name == tool {
-			// Currently we require to know all tool's
-			// hashes. If the hash is missing then the
-			// tool is not tracked. We have to materialize
-			// it in order to track it.
-			if item.Hash == "" {
-				// Try to download the item.
-				err := self.materializeTool(ctx, config_obj, item)
-				if err != nil {
-					return nil, err
-				}
-			}
-			// Already holding the mutex here - call the lock free
-			// version.
-			return self.addAllVersions(ctx, config_obj, item), nil
+		if item.Name != tool {
+			continue
 		}
+
+		if version != "" && version != item.Version {
+			continue
+		}
+
+		// Currently we require to know all tool's hashes. If the hash
+		// is missing then the tool is not tracked. We have to
+		// materialize it in order to track it.
+		if item.Hash == "" {
+			// Try to download the item.
+			err := self.materializeTool(ctx, config_obj, item)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		// Already holding the mutex here - call the lock free
+		// version.
+		return self.addAllVersions(ctx, config_obj, item), nil
 	}
 
 	return nil, fmt.Errorf("Tool %v not declared in inventory.", tool)
@@ -290,6 +306,18 @@ func (self *InventoryService) materializeTool(
 		tool.Hash = hex.EncodeToString(sha_sum.Sum(nil))
 	}
 
+	if tool.ExpectedHash != "" && tool.ExpectedHash != tool.Hash {
+		err := fmt.Errorf(
+			"Downloaded tool hash of %v does not match the expected hash of %v\n",
+			tool.Hash, tool.ExpectedHash)
+
+		// Record the invalid hash so the user can opt to trust it.
+		tool.InvalidHash = tool.Hash
+		tool.Hash = ""
+		return err
+	}
+	tool.InvalidHash = ""
+
 	if tool.ServeLocally {
 		if org_config_obj.Client == nil || len(org_config_obj.Client.ServerUrls) == 0 {
 			return errors.New("No server URLs configured!")
@@ -363,7 +391,10 @@ func (self *InventoryService) AddTool(
 	ctx context.Context, config_obj *config_proto.Config,
 	tool_request *artifacts_proto.Tool, opts services.ToolOptions) error {
 
+	// Clear out the system managed fields.
 	tool_request.Versions = nil
+	tool_request.ServeUrl = ""
+	tool_request.InvalidHash = ""
 
 	// Keep a reference to all known versions of this tool. We keep
 	// the clean definitions from the artifact together, so we can
@@ -374,7 +405,7 @@ func (self *InventoryService) AddTool(
 
 	if opts.Upgrade {
 		existing_tool, err := self.ProbeToolInfo(
-			ctx, config_obj, tool_request.Name)
+			ctx, config_obj, tool_request.Name, tool_request.Version)
 		if err == nil {
 			// Ignore the request if the existing
 			// definition is better than the new one.
@@ -421,7 +452,8 @@ func (self *InventoryService) AddTool(
 	// Replace the tool in the inventory.
 	found := false
 	for i, item := range self.binaries.Tools {
-		if item.Name == tool.Name {
+		if item.Name == tool.Name &&
+			item.Version == tool.Version {
 			found = true
 			self.binaries.Tools[i] = tool
 			break

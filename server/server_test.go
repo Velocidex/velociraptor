@@ -5,12 +5,14 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/golang/mock/gomock"
+	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -26,10 +28,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
@@ -63,6 +67,9 @@ sources:
 - name: Users
   precondition: SELECT OS From info() where OS = 'windows'
   query: SELECT * FROM info()
+`, `
+name: Server.Internal.Alerts
+type: SERVER_EVENT
 `}
 )
 
@@ -89,7 +96,7 @@ func (self *ServerTestSuite) SetupTest() {
 	self.ConfigObj.Services.ClientMonitoring = true
 	self.ConfigObj.Services.Interrogation = true
 
-	self.LoadArtifacts(mock_definitions)
+	self.LoadArtifactsIntoConfig(mock_definitions)
 
 	var err error
 	self.TestSuite.SetupTest()
@@ -309,6 +316,49 @@ func (self *ServerTestSuite) TestMonitoring() {
 	assert.NoError(self.T(), err)
 
 	self.RequiredFilestoreContains(path_manager.Path(), self.client_id)
+}
+
+// Receiving a response from the server to the monitoring flow will
+// write the rows into a jsonl file in the client's monitoring area.
+func (self *ServerTestSuite) TestMonitoringAlerts() {
+	mock_clock := &utils.MockClock{
+		MockNow: time.Unix(1602103388, 0),
+	}
+
+	closer := utils.MockTime(mock_clock)
+	defer closer()
+
+	journal, err := services.GetJournal(self.ConfigObj)
+	assert.NoError(self.T(), err)
+	journal.SetClock(mock_clock)
+
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	runner.ProcessSingleMessage(self.Ctx,
+		&crypto_proto.VeloMessage{
+			Source:    self.client_id,
+			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
+			LogMessage: &crypto_proto.LogMessage{
+				Id:           1,
+				NumberOfRows: 1,
+				Jsonl:        `{"client_time": 10, "level":"ALERT","message": "{\"field1\": \"test\"}"}`,
+				Artifact:     "Generic.Client.Stats",
+				Level:        logging.ALERT,
+			},
+		})
+	runner.Close(self.Ctx)
+
+	golden := ordereddict.NewDict()
+	fs := test_utils.GetMemoryFileStore(self.T(), self.ConfigObj)
+	for _, path := range []string{
+		"/server_artifacts/Server.Internal.Alerts/2020-10-07.json",
+		"/server_artifacts/EventTest.Alert/2020-10-07.json",
+	} {
+		value, pres := fs.Get(path)
+		if pres {
+			golden.Set(path, strings.Split(string(value), "\n"))
+		}
+	}
+	goldie.AssertJson(self.T(), "TestMonitoringAlerts", golden)
 }
 
 // Monitoring queries which upload data.
