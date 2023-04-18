@@ -152,6 +152,7 @@ func (self *ClientFlowRunner) MonitoringLogMessage(
 	if err != nil {
 		return err
 	}
+	log_path_manager.Clock = utils.GetTime()
 
 	// Write the logs asynchronously
 	file_store_factory := file_store.GetFileStore(self.config_obj)
@@ -168,7 +169,45 @@ func (self *ClientFlowRunner) MonitoringLogMessage(
 
 	rs_writer.WriteJSONL([]byte(payload), int(response.NumberOfRows))
 
+	if response.Level == logging.ALERT {
+		return self.processMonitoringAlert(ctx, client_id, artifact_name, response)
+	}
+
 	return nil
+}
+
+func (self *ClientFlowRunner) processMonitoringAlert(
+	ctx context.Context, client_id, artifact string,
+	msg *crypto_proto.LogMessage) error {
+
+	tmp := &log_message{}
+	err := json.Unmarshal([]byte(msg.Jsonl), tmp)
+	if err != nil {
+		return err
+	}
+
+	alert := &services.AlertMessage{}
+	err = json.Unmarshal([]byte(tmp.Message), alert)
+	if err != nil {
+		return err
+	}
+
+	alert.ClientId = client_id
+	alert.Artifact = artifact
+	alert.ArtifactType = "CLIENT_EVENT"
+
+	serialized, err := json.Marshal(alert)
+	if err != nil {
+		return err
+	}
+	serialized = append(serialized, '\n')
+
+	journal, err := services.GetJournal(self.config_obj)
+	if err != nil {
+		return err
+	}
+	return journal.PushJsonlToArtifact(ctx, self.config_obj,
+		serialized, 1, "Server.Internal.Alerts", "server", "")
 }
 
 func (self *ClientFlowRunner) MonitoringVQLResponse(
@@ -224,7 +263,7 @@ func (self *ClientFlowRunner) ProcessSingleMessage(
 	}
 
 	if msg.LogMessage != nil {
-		err := self.LogMessage(client_id, flow_id, msg.LogMessage)
+		err := self.LogMessage(ctx, client_id, flow_id, msg.LogMessage)
 		if err != nil {
 			return fmt.Errorf("LogMessage: %w", err)
 		}
@@ -469,6 +508,7 @@ func (self *ClientFlowRunner) VQLResponse(
 	if err != nil {
 		return err
 	}
+	path_manager.Clock = utils.GetTime()
 
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	rs_writer, err := result_sets.NewResultSetWriter(
@@ -486,8 +526,45 @@ func (self *ClientFlowRunner) VQLResponse(
 	return nil
 }
 
+type log_message struct {
+	Message string `json:"message"`
+}
+
+func (self *ClientFlowRunner) processAlert(
+	ctx context.Context, client_id, flow_id string,
+	msg *crypto_proto.LogMessage) error {
+
+	tmp := &log_message{}
+	err := json.Unmarshal([]byte(msg.Jsonl), tmp)
+	if err != nil {
+		return err
+	}
+
+	alert := &services.AlertMessage{}
+	err = json.Unmarshal([]byte(tmp.Message), alert)
+	if err != nil {
+		return err
+	}
+
+	alert.ClientId = client_id
+	alert.FlowId = flow_id
+
+	serialized, err := json.Marshal(alert)
+	if err != nil {
+		return err
+	}
+	serialized = append(serialized, '\n')
+
+	journal, err := services.GetJournal(self.config_obj)
+	if err != nil {
+		return err
+	}
+	return journal.PushJsonlToArtifact(ctx, self.config_obj,
+		serialized, 1, "Server.Internal.Alerts", "server", "")
+}
+
 func (self *ClientFlowRunner) LogMessage(
-	client_id, flow_id string,
+	ctx context.Context, client_id, flow_id string,
 	msg *crypto_proto.LogMessage) error {
 
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id).Log()
@@ -509,6 +586,10 @@ func (self *ClientFlowRunner) LogMessage(
 	payload := artifacts.DeobfuscateString(self.config_obj, msg.Jsonl)
 
 	rs_writer.WriteJSONL([]byte(payload), uint64(msg.NumberOfRows))
+
+	if msg.Level == logging.ALERT {
+		return self.processAlert(ctx, client_id, flow_id, msg)
+	}
 
 	return nil
 }

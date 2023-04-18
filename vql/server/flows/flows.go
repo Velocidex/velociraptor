@@ -202,7 +202,8 @@ func (self EnumerateFlowPlugin) Call(
 		}
 
 		responses, err := launcher.Storage().DeleteFlow(ctx, config_obj,
-			arg.ClientId, arg.FlowId, false /* really_do_it */)
+			arg.ClientId, arg.FlowId,
+			services.NoAuditLogging, services.DryRunOnly)
 		if err != nil {
 			scope.Log("delete_flow: %v", err)
 			return

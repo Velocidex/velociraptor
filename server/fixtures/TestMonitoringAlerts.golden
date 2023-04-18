@@ -1,0 +1,6 @@
+{
+  "/server_artifacts/Server.Internal.Alerts/2020-10-07.json": [
+    "{\"client_id\":\"C.5170dd5921551ec7\",\"name\":\"\",\"timestamp\":\"0001-01-01T00:00:00Z\",\"event_data\":{},\"artifact\":\"Generic.Client.Stats\",\"artifact_type\":\"CLIENT_EVENT\",\"_ts\":1602103388}",
+    ""
+  ]
+}

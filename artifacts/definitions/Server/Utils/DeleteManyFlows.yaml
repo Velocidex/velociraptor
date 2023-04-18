@@ -20,7 +20,7 @@ parameters:
      description: If specified only target these hosts
      type: regex
    - name: DateBefore
-     default: "2022-01-01"
+     description: Only select flows created before this date. If not set we choose all flows.
      type: timestamp
    - name: CreatorRegex
      default: "H\\..+"
@@ -33,6 +33,7 @@ parameters:
 
 sources:
   - query: |
+        LET DateBefore <= DateBefore || now()
         LET hits = SELECT * FROM foreach(row={
             SELECT client_id,
                    os_info.hostname AS hostname
@@ -55,11 +56,9 @@ sources:
             SELECT * FROM foreach(row=hits,
             query={
                 SELECT client_id, hostname, creator,
-                       session_id, artifacts, created, Type, deleted
-                FROM Artifact.Server.Utils.DeleteFlow(
-                   ClientId=client_id,
-                   FlowId=session_id,
-                   ReallyDoIt=ReallyDoIt)
+                       session_id, artifacts, created, Type, Data, Error
+                FROM delete_flow(client_id=client_id,
+                        flow_id=session_id, really_do_it=ReallyDoIt)
                 WHERE log(message=format(format="Deleting flow %v from %v",
                    args=[session_id, hostname]))
             }, workers=10)

@@ -55,16 +55,8 @@ func (self DeleteFlowPlugin) Call(
 		}
 
 		principal := vql_subsystem.GetPrincipal(scope)
-		if arg.ReallyDoIt {
-			services.LogAudit(ctx,
-				config_obj, principal, "delete_flow",
-				ordereddict.NewDict().
-					Set("client_id", arg.ClientId).
-					Set("flow_id", arg.FlowId))
-		}
-
 		responses, err := launcher.Storage().DeleteFlow(ctx, config_obj,
-			arg.ClientId, arg.FlowId, arg.ReallyDoIt)
+			arg.ClientId, arg.FlowId, principal, arg.ReallyDoIt)
 		if err != nil {
 			scope.Log("delete_flow: %v", err)
 			return

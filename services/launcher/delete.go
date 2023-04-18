@@ -23,7 +23,7 @@ import (
 func (self *FlowStorageManager) DeleteFlow(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	client_id string, flow_id string,
+	client_id string, flow_id string, principal string,
 	really_do_it bool) ([]*services.DeleteFlowResponse, error) {
 
 	launcher, err := services.GetLauncher(config_obj)
@@ -40,6 +40,15 @@ func (self *FlowStorageManager) DeleteFlow(
 	collection_context := collection_details.Context
 	if collection_context == nil {
 		return nil, nil
+	}
+
+	if really_do_it && principal != "" {
+		services.LogAudit(ctx,
+			config_obj, principal, "delete_flow",
+			ordereddict.NewDict().
+				Set("client_id", client_id).
+				Set("flow_id", flow_id).
+				Set("flow", collection_context))
 	}
 
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)

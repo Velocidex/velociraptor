@@ -420,7 +420,7 @@ func SplitIntoLevelAndLog(b []byte) (level, message string) {
 	if len(parts) == 2 {
 		level := strings.ToUpper(parts[0])
 		switch level {
-		case DEFAULT, ERROR, INFO, WARNING, DEBUG:
+		case DEFAULT, ERROR, INFO, WARNING, DEBUG, ALERT:
 			return level, parts[1]
 		}
 	}

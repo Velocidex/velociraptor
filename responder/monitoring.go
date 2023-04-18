@@ -95,7 +95,40 @@ func (self *MonitoringContext) NextUploadId() int64 {
 	return result
 }
 
-func (self *MonitoringContext) AddLogMessage(level string, msg string) {
+// Alert messages are sent in their own packet because the server will
+// redirect them into the alert queue.
+func (self *MonitoringContext) sendAlertMessage(
+	ctx context.Context, level string,
+
+	// msg containes serialized services.AlertMessage
+	msg string) {
+
+	self.mu.Lock()
+	id := self.log_messages_id
+	self.log_messages_id++
+	self.mu.Unlock()
+
+	self.output <- &crypto_proto.VeloMessage{
+		SessionId: "F.Monitoring",
+		RequestId: constants.LOG_SINK,
+		LogMessage: &crypto_proto.LogMessage{
+			Id:           int64(id),
+			NumberOfRows: 1,
+			Jsonl: json.Format(
+				"{\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
+				int(utils.GetTime().Now().Unix()), level, msg),
+			Level:    logging.ALERT,
+			Artifact: self.artifact,
+		}}
+}
+
+func (self *MonitoringContext) AddLogMessage(
+	ctx context.Context, level string, msg string) {
+	if level == logging.ALERT {
+		self.sendAlertMessage(ctx, level, msg)
+		return
+	}
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -103,6 +136,7 @@ func (self *MonitoringContext) AddLogMessage(level string, msg string) {
 	self.log_messages = append(self.log_messages, json.Format(
 		"{\"client_time\":%d,\"level\":%q,\"message\":%q}\n",
 		int(utils.GetTime().Now().Unix()), level, msg)...)
+
 }
 
 func (self *MonitoringContext) getLogMessages() (
@@ -205,7 +239,7 @@ func (self *MonitoringResponder) Return(ctx context.Context) {}
 
 // Logs will be batched.
 func (self *MonitoringResponder) Log(ctx context.Context, level string, msg string) {
-	self.monitoring_context.AddLogMessage(level, msg)
+	self.monitoring_context.AddLogMessage(ctx, level, msg)
 }
 
 func (self *MonitoringResponder) NextUploadId() int64 {

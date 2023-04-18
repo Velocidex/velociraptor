@@ -80,7 +80,8 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 
 			results, err := launcher.Storage().DeleteFlow(ctx, config_obj,
 				flow_details.Context.ClientId,
-				flow_details.Context.SessionId, arg.ReallyDoIt)
+				flow_details.Context.SessionId,
+				services.NoAuditLogging, arg.ReallyDoIt)
 			if err != nil {
 				scope.Log("hunt_delete: %v", err)
 				return
