@@ -322,7 +322,7 @@ func doGolden() error {
 
 	// Run the test cases in a predictable way
 	sort.Strings(file_paths)
-	logger.Print("<green>Testing %v test cases</>", len(file_paths))
+	logger.Info("<green>Testing %v test cases</>", len(file_paths))
 
 	for _, file_path := range file_paths {
 		select {
