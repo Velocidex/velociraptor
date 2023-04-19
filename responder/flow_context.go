@@ -153,7 +153,8 @@ func makeCheckpoint(
 	config_obj *config_proto.Config,
 	flow_id string) string {
 
-	if config_obj.Client == nil ||
+	if config_obj == nil ||
+		config_obj.Client == nil ||
 		config_obj.Client.DisableCheckpoints {
 		return ""
 	}
