@@ -108,6 +108,8 @@ func doPoolClient() error {
 				return fmt.Errorf("Copying configs: %w", err)
 			}
 			filename := fmt.Sprintf("pool_client.yaml.%d", i)
+
+			client_config.Client.DisableCheckpoints = true
 			client_config.Client.WritebackLinux = path.Join(
 				*pool_client_writeback_dir, filename)
 

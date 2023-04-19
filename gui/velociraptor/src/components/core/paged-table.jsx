@@ -130,6 +130,10 @@ class VeloPagedTable extends Component {
         selectRow: PropTypes.object,
 
         initial_page_size: PropTypes.number,
+
+        // Additional columns to add (should be formatted with a
+        // custom renderer).
+        extra_columns: PropTypes.array,
     }
 
     state = {
@@ -295,6 +299,9 @@ class VeloPagedTable extends Component {
             let pageData = PrepareData(response.data);
             let toggles = Object.assign({}, this.state.toggles);
             let columns = pageData.columns;
+            if (this.props.extra_columns) {
+                columns = columns.concat(this.props.extra_columns);
+            };
             if (_.isEmpty(this.state.toggles) && !_.isUndefined(columns)) {
                 let hidden = 0;
 

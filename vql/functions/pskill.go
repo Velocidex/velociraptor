@@ -67,6 +67,7 @@ func (self PsKillFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 	return &vfilter.FunctionInfo{
 		Name:     "pskill",
 		Doc:      "Kill the specified process.",
+		ArgType:  type_map.AddType(scope, &PsKillFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.EXECVE).Build(),
 	}
 }
