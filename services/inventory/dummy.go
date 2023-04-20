@@ -23,12 +23,13 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/networking"
 )
 
 type Dummy struct {
 	mu        sync.Mutex
 	binaries  *artifacts_proto.ThirdParty
-	Client    HTTPClient
+	Client    networking.HTTPClient
 	Clock     utils.Clock
 	filenames []string
 }
@@ -210,7 +211,7 @@ func (self *Dummy) materializeTool(
 	return nil
 }
 
-func getGithubRelease(ctx context.Context, Client HTTPClient,
+func getGithubRelease(ctx context.Context, Client networking.HTTPClient,
 	config_obj *config_proto.Config,
 	tool *artifacts_proto.Tool) (string, error) {
 
