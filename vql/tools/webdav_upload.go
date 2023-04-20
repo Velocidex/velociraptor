@@ -126,7 +126,8 @@ func upload_webdav(ctx context.Context, scope vfilter.Scope,
 		return nil, errors.New("unable to get client config")
 	}
 
-	client, err := networking.GetDefaultHTTPClient(config_obj, "", nil)
+	client, err := networking.GetDefaultHTTPClient(
+		ctx, config_obj, scope, "", nil)
 	if err != nil {
 		return nil, err
 	}

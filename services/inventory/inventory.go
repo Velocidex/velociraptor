@@ -55,6 +55,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 )
 
@@ -64,10 +65,6 @@ var (
 		Help: "Total number of times we synced from the filestore.",
 	})
 )
-
-type HTTPClient interface {
-	Do(req *http.Request) (*http.Response, error)
-}
 
 type githubReleasesAPI struct {
 	Assets []githubAssets `json:"assets"`
@@ -82,7 +79,7 @@ type InventoryService struct {
 	mu       sync.Mutex
 	binaries *artifacts_proto.ThirdParty
 	versions map[string][]*artifacts_proto.Tool
-	Client   HTTPClient
+	Client   networking.HTTPClient
 	Clock    utils.Clock
 
 	// The parent is the inventory service of the root org. The root
@@ -518,8 +515,9 @@ func NewInventoryService(
 		return NewInventoryDummyService(ctx, wg, config_obj)
 	}
 
+	scope := vql_subsystem.MakeScope()
 	default_client, err := networking.GetDefaultHTTPClient(
-		config_obj.Client, "", networking.EmptyCookieJar)
+		ctx, config_obj.Client, scope, "", networking.EmptyCookieJar)
 	if err != nil {
 		return nil, err
 	}

@@ -62,7 +62,7 @@ const (
 // Cache http clients in the scope to allow reuse.
 type HTTPClientCache struct {
 	mu    sync.Mutex
-	cache map[string]*http.Client
+	cache map[string]HTTPClient
 }
 
 func (self *HTTPClientCache) getCacheKey(url *url.URL) string {
@@ -97,23 +97,25 @@ type _HttpPlugin struct{}
 
 // Get a potentially cached http client.
 func GetHttpClient(
+	ctx context.Context,
 	config_obj *config_proto.ClientConfig,
 	scope vfilter.Scope,
-	arg *HttpPluginRequest) (*http.Client, error) {
+	arg *HttpPluginRequest) (HTTPClient, error) {
 
 	cache, pres := vql_subsystem.CacheGet(scope, HTTP_TAG).(*HTTPClientCache)
 	if !pres {
-		cache = &HTTPClientCache{cache: make(map[string]*http.Client)}
+		cache = &HTTPClientCache{cache: make(map[string]HTTPClient)}
 	}
 	defer vql_subsystem.CacheSet(scope, HTTP_TAG, cache)
 
-	return cache.GetHttpClient(config_obj, arg, scope)
+	return cache.GetHttpClient(ctx, config_obj, arg, scope)
 }
 
 func (self *HTTPClientCache) GetHttpClient(
+	ctx context.Context,
 	config_obj *config_proto.ClientConfig,
 	arg *HttpPluginRequest,
-	scope vfilter.Scope) (*http.Client, error) {
+	scope vfilter.Scope) (HTTPClient, error) {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -139,17 +141,21 @@ func (self *HTTPClientCache) GetHttpClient(
 		}
 		arg.Url = "http://unix" + components[1]
 
-		result = &http.Client{
-			Timeout: time.Second * 10000,
-			Transport: &http.Transport{
-				MaxIdleConnsPerHost: 10,
-				DialContext: func(_ context.Context, _, _ string) (
-					net.Conn, error) {
-					return net.Dial("unix", components[0])
+		result = &httpClientWrapper{
+			Client: http.Client{
+				Timeout: time.Second * 10000,
+				Transport: &http.Transport{
+					MaxIdleConnsPerHost: 10,
+					DialContext: func(_ context.Context, _, _ string) (
+						net.Conn, error) {
+						return net.Dial("unix", components[0])
+					},
+					TLSNextProto: make(map[string]func(
+						authority string, c *tls.Conn) http.RoundTripper),
 				},
-				TLSNextProto: make(map[string]func(
-					authority string, c *tls.Conn) http.RoundTripper),
 			},
+			ctx:   ctx,
+			scope: scope,
 		}
 		self.cache[key] = result
 		return result, nil
@@ -172,17 +178,21 @@ func (self *HTTPClientCache) GetHttpClient(
 			return nil, err
 		}
 
-		result = &http.Client{
-			Timeout:   time.Second * 10000,
-			Jar:       NewDictJar(arg.CookieJar),
-			Transport: transport,
+		result = &httpClientWrapper{
+			Client: http.Client{
+				Timeout:   time.Second * 10000,
+				Jar:       NewDictJar(arg.CookieJar),
+				Transport: transport,
+			},
+			ctx:   ctx,
+			scope: scope,
 		}
 		self.cache[key] = result
 		return result, nil
 	}
 
-	result, err = GetDefaultHTTPClient(
-		config_obj, arg.RootCerts, arg.CookieJar)
+	result, err = GetDefaultHTTPClient(ctx,
+		config_obj, scope, arg.RootCerts, arg.CookieJar)
 	if err != nil {
 		return nil, err
 	}
@@ -192,19 +202,25 @@ func (self *HTTPClientCache) GetHttpClient(
 }
 
 func GetDefaultHTTPClient(
+	ctx context.Context,
 	config_obj *config_proto.ClientConfig,
+	scope vfilter.Scope,
 	extra_roots string,
-	cookie_jar *ordereddict.Dict) (*http.Client, error) {
+	cookie_jar *ordereddict.Dict) (HTTPClient, error) {
 
 	transport, err := GetHttpTransport(config_obj, extra_roots)
 	if err != nil {
 		return nil, err
 	}
 
-	return &http.Client{
-		Timeout:   time.Second * 10000,
-		Jar:       NewDictJar(cookie_jar),
-		Transport: transport,
+	return &httpClientWrapper{
+		Client: http.Client{
+			Timeout:   time.Second * 10000,
+			Jar:       NewDictJar(cookie_jar),
+			Transport: transport,
+		},
+		ctx:   ctx,
+		scope: scope,
 	}, nil
 }
 
@@ -279,7 +295,7 @@ func (self *_HttpPlugin) Call(
 		}
 
 		config_obj, _ := artifacts.GetConfig(scope)
-		client, err := GetHttpClient(config_obj, scope, arg)
+		client, err := GetHttpClient(ctx, config_obj, scope, arg)
 		if err != nil {
 			scope.Log("http_client: %v", err)
 			return
@@ -494,12 +510,14 @@ func GetProxy() func(*http.Request) (*url.URL, error) {
 
 // If the TLS Verification policy allows it, enable SkipVerify to
 // allow connections to invalid TLS servers.
-func EnableSkipVerifyHttp(client *http.Client, config_obj *config_proto.ClientConfig) error {
-	if client == nil || client.Transport == nil {
+func EnableSkipVerifyHttp(client HTTPClient, config_obj *config_proto.ClientConfig) error {
+	http_client := client.(*httpClientWrapper)
+
+	if http_client == nil || http_client.Transport == nil {
 		return nil
 	}
 
-	t, ok := client.Transport.(*http.Transport)
+	t, ok := http_client.Transport.(*http.Transport)
 	if !ok {
 		return errors.New("http client does not have a compatible transport")
 	}

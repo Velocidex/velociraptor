@@ -33,5 +33,5 @@ Queries:
     GROUP BY EventID
 
   # Add test for event log clearing and move from VSS test for improved speed
-  - SELECT ClearedLog, Message =~ "The audit log was cleared."
+  - SELECT ClearedLog, Message, Message =~ "The audit log was cleared."
     FROM Artifact.Windows.EventLogs.Cleared()
