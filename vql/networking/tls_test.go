@@ -17,8 +17,10 @@ import (
 
 func testHTTPConnection(
 	config_obj *config_proto.ClientConfig, url string) ([]byte, error) {
+
+	ctx := context.Background()
 	scope := vql_subsystem.MakeScope()
-	client, err := GetHttpClient(config_obj, scope, &HttpPluginRequest{
+	client, err := GetHttpClient(ctx, config_obj, scope, &HttpPluginRequest{
 		Url:    url,
 		Method: "GET",
 	})
