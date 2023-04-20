@@ -7,6 +7,7 @@ package config
 import (
 	"fmt"
 	"io/ioutil"
+	"sync"
 
 	"github.com/Velocidex/yaml/v2"
 	"github.com/go-errors/errors"
@@ -31,6 +32,38 @@ func (self *Loader) loadWriteback(config_obj *config_proto.Config) error {
 	}
 
 	return nil
+}
+
+var (
+	mu       sync.Mutex
+	NoUpdate = errors.New("No update")
+)
+
+func MutateWriteback(
+	config_obj *config_proto.ClientConfig,
+	cb func(wb *config_proto.Writeback) error) error {
+
+	if config_obj == nil {
+		return nil
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	wb, err := GetWriteback(config_obj)
+	if err != nil {
+		return err
+	}
+
+	err = cb(wb)
+	if err == NoUpdate {
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+	return UpdateWriteback(config_obj, wb)
 }
 
 func GetWriteback(config_obj *config_proto.ClientConfig) (

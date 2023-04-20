@@ -551,6 +551,14 @@ func runOnce(ctx context.Context,
 		return
 	}
 
+	// Check for crashes
+	err = executor.CheckForCrashes(ctx, config_obj, sm.Wg, exe)
+	if err != nil {
+		// Not a fatal error, just move on
+		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+		logger.Error("<red>CheckForCrashes Error:</> %v", err)
+	}
+
 	<-ctx.Done()
 }
 

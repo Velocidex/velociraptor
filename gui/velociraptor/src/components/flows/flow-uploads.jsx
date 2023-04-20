@@ -4,7 +4,8 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import Button from 'react-bootstrap/Button';
 import axios from 'axios';
-import VeloTable, { PrepareData } from '../core/table.jsx';
+import { PrepareData } from '../core/table.jsx';
+import VeloPagedTable from '../core/paged-table.jsx';
 import T from '../i8n/i8n.jsx';
 import Spinner from '../utils/spinner.jsx';
 import CardDeck from 'react-bootstrap/CardDeck';
@@ -13,9 +14,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
 import PreviewUpload from '../widgets/preview_uploads.jsx';
-
 import api from '../core/api-service.jsx';
-const MAX_ROWS_PER_TABLE = 500;
 
 // Older collections had the upload includes the full filestore path
 // to the file, but this is un necessary because the file must reside
@@ -38,79 +37,7 @@ export default class FlowUploads extends React.Component {
         flow: PropTypes.object,
     };
 
-    componentDidMount = () => {
-        this.source = axios.CancelToken.source();
-        this.fetchRows();
-    }
-
-    componentWillUnmount() {
-        this.source.cancel();
-    }
-
-    componentDidUpdate(prevProps, prevState, snapshot) {
-        let prev_flow_id = prevProps.flow && prevProps.flow.session_id;
-        if (this.props.flow.session_id !== prev_flow_id) {
-            this.fetchRows();
-        }
-    }
-
-    state = {
-        loading: false,
-        pageData: {},
-    }
-
-    fetchRows = () => {
-        let params = {
-            client_id: this.props.flow.client_id,
-            flow_id: this.props.flow.session_id,
-            type: "uploads",
-            start_row: 0,
-            rows: MAX_ROWS_PER_TABLE,
-        };
-
-        this.source.cancel();
-        this.source = axios.CancelToken.source();
-
-        this.setState({loading: true});
-        api.get("v1/GetTable", params, this.source.token).then((response) => {
-            if (response.cancel) return;
-
-            let prepared_data = PrepareData(response.data);
-            prepared_data.columns.push("Preview");
-            // Translate the columns
-            let headers = {};
-            _.each(prepared_data.columns, x=>{
-                headers[x] = T(x);
-            });
-
-            this.setState({loading: false,
-                           headers: headers,
-                           pageData: prepared_data});
-        }).catch(() => {
-            this.setState({loading: false, pageData: {}});
-        });
-    }
-
-    downloadFile = (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-    }
-
     render() {
-        if (!this.state.pageData || !this.state.pageData.columns) {
-            return (
-                <CardDeck>
-                  <Card>
-                    <Card.Header>{T("Uploaded Files")}</Card.Header>
-                    <Card.Body>
-                      <Spinner loading={this.state.loading}/>
-                      <div className="no-content">{T("Collection did not upload files")}</div>
-                    </Card.Body>
-                  </Card>
-                </CardDeck>
-            );
-        }
-
         let renderers = {
             Preview: (cell, row, rowIndex) => {
                 let client_id = this.props.flow && this.props.flow.client_id;
@@ -182,12 +109,16 @@ export default class FlowUploads extends React.Component {
         };
 
         return (
-            <VeloTable
+            <VeloPagedTable
               className="col-12"
               renderers={renderers}
-              rows={this.state.pageData.rows}
-              headers={this.state.headers}
-              columns={this.state.pageData.columns} />
+              extra_columns={["Preview"]}
+              params={{
+                  client_id: this.props.flow.client_id,
+                  flow_id: this.props.flow.session_id,
+                  type: "uploads",
+              }}
+            />
         );
     }
 };

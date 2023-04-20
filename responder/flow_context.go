@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -35,6 +38,9 @@ type FlowContext struct {
 
 	// Send the messages to this channel
 	output chan *crypto_proto.VeloMessage
+
+	// The path to the checkpoint file.
+	checkpoint string
 
 	// Cancelling the FlowContext will cancel all its in flight
 	// queries.
@@ -117,6 +123,7 @@ func newFlowContext(ctx context.Context,
 		config_obj:     config_obj,
 		flow_id:        flow_id,
 		owner:          owner,
+		checkpoint:     makeCheckpoint(config_obj, flow_id),
 	}
 
 	go func() {
@@ -140,7 +147,43 @@ func newFlowContext(ctx context.Context,
 	}()
 
 	return self
+}
 
+func makeCheckpoint(
+	config_obj *config_proto.Config,
+	flow_id string) string {
+
+	if config_obj == nil ||
+		config_obj.Client == nil ||
+		config_obj.Client.DisableCheckpoints {
+		return ""
+	}
+
+	checkpoint, err := ioutil.TempFile("",
+		fmt.Sprintf("checkpoint_*.%s", flow_id))
+	if err != nil {
+		return ""
+	}
+	// Start off with something sensible.
+	checkpoint.Write([]byte(
+		json.Format(`{"session_id": %q, "flow_stats": {}}`, flow_id)))
+	// We just need the name
+	checkpoint.Close()
+
+	config.MutateWriteback(config_obj.Client,
+		func(wb *config_proto.Writeback) error {
+			wb.Checkpoints = append(wb.Checkpoints,
+				&config_proto.FlowCheckPoint{
+					FlowId: flow_id,
+					Path:   checkpoint.Name(),
+				})
+			return nil
+		})
+
+	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+	logger.Info("Creating a flow checkpoint at <green>%v</>", checkpoint.Name())
+
+	return checkpoint.Name()
 }
 
 // Is the flow complete? A flow is complete when all its queries are
@@ -229,6 +272,25 @@ func (self *FlowContext) _Close() {
 	if self.owner != nil {
 		self.owner.removeFlowContext(self.flow_id)
 	}
+	if self.checkpoint != "" {
+		os.Remove(self.checkpoint)
+		config.MutateWriteback(self.config_obj.Client,
+			func(wb *config_proto.Writeback) error {
+				new_list := make([]*config_proto.FlowCheckPoint, 0, len(wb.Checkpoints))
+				for _, cp := range wb.Checkpoints {
+					if cp.Path != self.checkpoint {
+						new_list = append(new_list, cp)
+					}
+				}
+
+				wb.Checkpoints = new_list
+				return nil
+			})
+
+		// Do not write a checkpoint any more.
+		self.checkpoint = ""
+	}
+
 	self.flushLogMessages(self.ctx)
 	self.sendStats()
 	self.cancel()
@@ -403,6 +465,19 @@ func (self *FlowContext) getStats() *crypto_proto.VeloMessage {
 		// Let the server know this is the final message in the flow.
 		result.FlowStats.FlowComplete = true
 		self.final_stats_sent = true
+	}
+
+	// Write the checkpoint file
+	if self.checkpoint != "" {
+		serialized, err := json.Marshal(result)
+		if err == nil {
+			fd, err := os.OpenFile(self.checkpoint,
+				os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0660)
+			if err == nil {
+				fd.Write(serialized)
+			}
+			fd.Close()
+		}
 	}
 
 	return result

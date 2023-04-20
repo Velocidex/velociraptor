@@ -9,14 +9,14 @@ SELECT inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/g
    "admin_override": true,
    "expected_hash": "",
    "version": "",
+   "materialize": false,
+   "artifact": "",
+   "filestore_path": "",
    "serve_url": "",
    "serve_path": "",
-   "filestore_path": "",
    "filename": "autorunsc_x64.exe",
    "hash": "5f4cdd5cbc5aea49e007e35550eaac89a68efc409683730c722f6dd378ba81e9",
    "invalid_hash": "",
-   "materialize": false,
-   "artifact": "",
    "versions": []
   },
   "inventory_add(tool='Autorun_x86', url='https://storage.googleapis.com/go.velocidex.com/autorunsc.exe', hash='5f4cdd5cbc5aea49e007e35550eaac89a68efc409683730c722f6dd378ba81e9', filename='autorunsc_x86.exe')": {
@@ -28,14 +28,14 @@ SELECT inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/g
    "admin_override": true,
    "expected_hash": "",
    "version": "",
+   "materialize": false,
+   "artifact": "",
+   "filestore_path": "",
    "serve_url": "",
    "serve_path": "",
-   "filestore_path": "",
    "filename": "autorunsc_x86.exe",
    "hash": "5f4cdd5cbc5aea49e007e35550eaac89a68efc409683730c722f6dd378ba81e9",
    "invalid_hash": "",
-   "materialize": false,
-   "artifact": "",
    "versions": []
   }
  }

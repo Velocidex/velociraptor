@@ -1,0 +1,8 @@
+name: Test.Crash
+description: |
+  Kill the client and test that a crash message is sent when the
+  client resumes.
+
+sources:
+- query: |
+    SELECT pskill(pid=getpid()) FROM scope()
