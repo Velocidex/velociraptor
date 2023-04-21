@@ -140,3 +140,24 @@ sources:
         FROM parse_ese(file=SRUMFiles.FullPath,
                        accessor=accessor, table=NetworkUsageGUID)
         WHERE App =~ ExecutableRegex
+
+    notebook:
+        - type: vql_suggestion
+          name: SRUM Network Usage summary
+          template: |
+              /*
+              # SRUM Network Usage summary
+              */
+              SELECT Fqdn,
+                  count() as TotalEntries,
+                  min(item=TimeStamp) as Earliest,
+                  max(item=TimeStamp) as Latest,
+                  App,
+                  User,UserId,
+                  sum(item=BytesSent) as TotalSent, 
+                  sum(item=BytesRecvd) as TotalRecvd,
+                  InterfaceLuid
+              FROM source(artifact="Windows.Forensics.SRUM/Network Usage")
+              GROUP BY App, User,InterfaceLuid
+              ORDER BY TotalSent DESC
+    
