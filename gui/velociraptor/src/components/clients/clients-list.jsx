@@ -1,7 +1,5 @@
 import "./clients-list.css";
 
-import online from './img/online.png';
-import any from './img/any.png';
 import axios from 'axios';
 import _ from 'lodash';
 import React, { Component } from 'react';
@@ -464,8 +462,8 @@ class VeloClientList extends Component {
                   >
                   <span className="button-label">
                     { this.state.filter === ONLINE ?
-                      <img className="icon-small" src={api.src_of(online)} alt="online" />  :
-                      <img className="icon-small" src={api.src_of(any)} alt="any state" />
+                      <span className="online-btn" alt="online" />  :
+                      <span className="any-btn" alt="any state" />
                     }
                   </span>
                 </Button>

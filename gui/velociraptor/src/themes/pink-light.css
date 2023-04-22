@@ -887,11 +887,6 @@ body.pink-light {
   color: var(--color-foreground);
 }
 
-.pink-light .velo__option:hover,
-.pink-light .velo__option--is-focused {
-  background: var(--color-btn-default-background-hover);
-}
-
 .pink-light ::placeholder {
   color: var(--color-sidebar-foreground) !important;
 }

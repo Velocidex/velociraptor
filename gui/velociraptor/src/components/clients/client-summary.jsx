@@ -116,7 +116,7 @@ export default class VeloClientSummary extends Component {
                 to={"/host/"+this.props.client.client_id}>
                 { fqdn }
               </Link>
-              <span className="centered">
+              <span className="centered client-status">
                 <VeloClientStatusIcon client={this.props.client}/>
               </span>
               { this.timeDifference(this.props.client.last_seen_at) }
