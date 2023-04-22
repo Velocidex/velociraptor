@@ -709,9 +709,9 @@ func (self *ApiServer) GetArtifacts(
 			ctx, org_config_obj, in.ReportType, in.NumberOfResults)
 	}
 
-	terms := strings.Split(in.SearchTerm, " ")
 	result, err := searchArtifact(
-		ctx, org_config_obj, terms, in.Type, in.NumberOfResults, in.Fields)
+		ctx, org_config_obj, in.SearchTerm,
+		in.Type, in.NumberOfResults, in.Fields)
 	return result, Status(self.verbose, err)
 }
 

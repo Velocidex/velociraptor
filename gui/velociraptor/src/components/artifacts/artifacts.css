@@ -58,3 +58,19 @@ pre {
 span.user-edit {
     padding-right: 1ex;
 }
+
+.artifact-filter {
+    width: 250px;
+}
+
+.artifact-search {
+    z-index: 1000;
+}
+
+.artifact-search-input {
+    height: 38px;
+}
+
+.form-inline .artifact-search-input.form-control {
+    width: 300px;
+}

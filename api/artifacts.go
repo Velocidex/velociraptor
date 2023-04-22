@@ -188,10 +188,184 @@ func getReportArtifacts(
 	return result, nil
 }
 
+type matchPlan struct {
+	// These must match against the artifact name
+	name_regex []*regexp.Regexp
+
+	// These must match against the artifact preconditions
+	precondition_regex []*regexp.Regexp
+
+	tool_regex []*regexp.Regexp
+
+	// Acceptable types
+	types []string
+
+	builtin *bool
+}
+
+func (self *matchPlan) matchDescOrName(artifact *artifacts_proto.Artifact) bool {
+	// If no name regexp are specified we do not reject based on name.
+	if len(self.name_regex) == 0 {
+		return true
+	}
+
+	// All regex must match the same artifact - either in the name or
+	// description.
+	matches := 0
+	for _, re := range self.name_regex {
+		if re.MatchString(artifact.Name) {
+			matches++
+		} else if re.MatchString(artifact.Description) {
+			matches++
+		}
+	}
+	return matches == len(self.name_regex)
+}
+
+func (self *matchPlan) matchTool(artifact *artifacts_proto.Artifact) bool {
+	if len(self.tool_regex) == 0 {
+		return true
+	}
+
+	if len(artifact.Tools) == 0 {
+		return false
+	}
+
+	for _, re := range self.tool_regex {
+		for _, t := range artifact.Tools {
+			if re.MatchString(t.Name) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// Preconditions can exist at the artifact level or at each source.
+func (self *matchPlan) matchPreconditions(artifact *artifacts_proto.Artifact) bool {
+	if len(self.precondition_regex) == 0 {
+		return true
+	}
+
+	for _, re := range self.precondition_regex {
+		if artifact.Precondition != "" &&
+			re.MatchString(artifact.Precondition) {
+			return true
+		}
+		for _, s := range artifact.Sources {
+			if s.Precondition != "" &&
+				re.MatchString(s.Precondition) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (self *matchPlan) matchBuiltin(artifact *artifacts_proto.Artifact) bool {
+	if self.builtin == nil {
+		return true
+	}
+
+	if *self.builtin {
+		return artifact.BuiltIn
+	}
+	return !artifact.BuiltIn
+}
+
+func (self *matchPlan) matchType(artifact *artifacts_proto.Artifact) bool {
+	if len(self.types) > 0 {
+		for _, t := range self.types {
+			if strings.ToLower(artifact.Type) == t {
+				return true
+			}
+		}
+		return false
+	}
+	return true
+}
+
+// All conditions must match
+func (self *matchPlan) matchArtifact(artifact *artifacts_proto.Artifact) bool {
+	if !self.matchType(artifact) {
+		return false
+	}
+
+	if !self.matchDescOrName(artifact) {
+		return false
+	}
+
+	if !self.matchPreconditions(artifact) {
+		return false
+	}
+
+	if !self.matchBuiltin(artifact) {
+		return false
+	}
+
+	if !self.matchTool(artifact) {
+		return false
+	}
+
+	return true
+}
+
+func prepareMatchPlan(search string) *matchPlan {
+	result := &matchPlan{}
+	// Tokenise the search expression into search terms:
+	for _, token := range strings.Split(search, " ") {
+		if token == "" {
+			continue
+		}
+
+		parts := strings.SplitN(token, ":", 2)
+		if len(parts) == 2 {
+			verb := parts[0]
+			term := parts[1]
+			switch verb {
+			case "type":
+				result.types = append(result.types,
+					strings.ToLower(term))
+				continue
+
+			case "precondition":
+				re, err := regexp.Compile("(?i)" + term)
+				if err == nil {
+					result.precondition_regex = append(
+						result.precondition_regex, re)
+				}
+				continue
+
+			case "tool":
+				re, err := regexp.Compile("(?i)" + term)
+				if err == nil {
+					result.tool_regex = append(
+						result.tool_regex, re)
+				}
+				continue
+
+			case "builtin":
+				value := false
+				if term == "yes" {
+					value = true
+				}
+				result.builtin = &value
+				continue
+			}
+		}
+		re, err := regexp.Compile("(?i)" + token)
+		if err == nil {
+			result.name_regex = append(
+				result.name_regex, re)
+		}
+	}
+	return result
+}
+
 func searchArtifact(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	terms []string,
+	search_term string,
 	artifact_type string,
 	number_of_results uint64, fields *api_proto.FieldSelector) (
 	*artifacts_proto.ArtifactDescriptors, error) {
@@ -200,44 +374,16 @@ func searchArtifact(
 		return nil, InvalidStatus("GUI not configured")
 	}
 
-	name_filter_regexp := config_obj.GUI.ArtifactSearchFilter
-	if name_filter_regexp == "" {
-		name_filter_regexp = "."
+	matcher := prepareMatchPlan(search_term)
+	if artifact_type != "" {
+		matcher.types = append(matcher.types, strings.ToLower(artifact_type))
 	}
-	name_filter := regexp.MustCompile(name_filter_regexp)
-
-	artifact_type = strings.ToLower(artifact_type)
 
 	if number_of_results == 0 {
 		number_of_results = 1000
 	}
 
 	result := &artifacts_proto.ArtifactDescriptors{}
-	regexes := []*regexp.Regexp{}
-	for _, term := range terms {
-		if len(term) <= 2 {
-			continue
-		}
-
-		re, err := regexp.Compile("(?i)" + term)
-		if err == nil {
-			regexes = append(regexes, re)
-		}
-	}
-
-	if len(regexes) == 0 {
-		return result, nil
-	}
-
-	matcher := func(text string, regexes []*regexp.Regexp) bool {
-		for _, re := range regexes {
-			if re.FindString(text) == "" {
-				return false
-			}
-		}
-		return true
-	}
-
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil, Status(config_obj.Verbose, err)
@@ -253,40 +399,31 @@ func searchArtifact(
 	}
 
 	for _, name := range names {
-		if name_filter.FindString(name) == "" {
+		artifact, pres := repository.Get(ctx, config_obj, name)
+		if !pres {
 			continue
 		}
 
-		artifact, pres := repository.Get(ctx, config_obj, name)
-		if pres {
-			// Skip non matching types
-			if artifact_type != "" &&
-				artifact.Type != artifact_type {
-				continue
-			}
-
-			if matcher(artifact.Description, regexes) ||
-				matcher(artifact.Name, regexes) {
-				if fields == nil {
-					result.Items = append(result.Items, artifact)
-				} else {
-					// Send back minimal information about the
-					// artifacts
-					new_item := &artifacts_proto.Artifact{}
-					if fields.Name {
-						new_item.Name = artifact.Name
-						new_item.BuiltIn = artifact.BuiltIn
-					}
-
-					if fields.Description {
-						new_item.Description = artifact.Description
-					}
-					if fields.Type {
-						new_item.Type = artifact.Type
-					}
-
-					result.Items = append(result.Items, new_item)
+		if matcher.matchArtifact(artifact) {
+			if fields == nil {
+				result.Items = append(result.Items, artifact)
+			} else {
+				// Send back minimal information about the
+				// artifacts
+				new_item := &artifacts_proto.Artifact{}
+				if fields.Name {
+					new_item.Name = artifact.Name
+					new_item.BuiltIn = artifact.BuiltIn
 				}
+
+				if fields.Description {
+					new_item.Description = artifact.Description
+				}
+				if fields.Type {
+					new_item.Type = artifact.Type
+				}
+
+				result.Items = append(result.Items, new_item)
 			}
 		}
 

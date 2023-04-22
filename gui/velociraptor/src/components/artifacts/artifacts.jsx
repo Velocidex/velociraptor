@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import api from '../core/api-service.jsx';
 import classNames from "classnames";
 import VeloReportViewer from "../artifacts/reporting.jsx";
+import Select from 'react-select';
 
 import _ from 'lodash';
 import axios from 'axios';
@@ -23,6 +24,23 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { withRouter }  from "react-router-dom";
 
 import SplitPane from 'react-split-pane';
+
+const presetFilters = [
+    {value: "type:CLIENT", label: T("Client Artifacts")},
+    {value: "", label: T("All Artifacts")},
+    {value: "precondition:WINDOWS", label: T("Windows Only")},
+    {value: "precondition:LINUX", label: T("Linux Only")},
+    {value: "precondition:DARWIN", label: T("OSX Only")},
+    {value: "type:CLIENT_EVENT", label: T("Client Monitoring")},
+    {value: "type:SERVER_EVENT", label: T("Servr Monitoring")},
+    {value: "type:SERVER", label: T("Server Artifacts")},
+    {value: "tool:.+", label: T("Using Tools")},
+    {value: "^exchange.+", label: T("Exchange")},
+    {value: "^custom.+", label: T("Custom")},
+    {value: "builtin:yes", label: T("BuiltIn Only")},
+    {value: "builtin:no", label: T("Custom Only")},
+];
+
 
 class DeleteOKDialog extends React.Component {
     static propTypes = {
@@ -74,6 +92,8 @@ class ArtifactInspector extends React.Component {
         current_filter: "",
 
         version: 0,
+
+        filter_name: T("Client Artifacts"),
     }
 
     componentDidMount = () => {
@@ -219,6 +239,26 @@ class ArtifactInspector extends React.Component {
         });
     }
 
+    renderFilter = ()=>{
+        let option_value = _.filter(presetFilters, x=>{
+            return x.label === this.state.filter_name;
+        });
+        return <Select
+                 className="org-selector artifact-filter"
+                 classNamePrefix="velo"
+                 options={presetFilters}
+                 value={option_value}
+                 onChange={x=>{
+                     this.setState({
+                         current_filter: x.value,
+                         filter_name: x.label,
+                     });
+                     this.fetchRows(x.value);
+                 }}
+                 placeholder={T("Filter artifact")}
+               />;
+    }
+
     render() {
         let selected = this.state.selectedDescriptor && this.state.selectedDescriptor.name;
         let deletable = this.state.selectedDescriptor &&
@@ -275,7 +315,7 @@ class ArtifactInspector extends React.Component {
                           onClick={() => this.setState({showNewArtifactDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="plus"/>
-		    <span className="sr-only">{T("Add an Artifact")}</span>
+            <span className="sr-only">{T("Add an Artifact")}</span>
                   </Button>
 
                   <Button data-tooltip={T("Edit an Artifact")}
@@ -287,7 +327,7 @@ class ArtifactInspector extends React.Component {
                           disabled={!selected}
                           variant="default">
                     <FontAwesomeIcon icon="pencil-alt"/>
-		    <span className="sr-only">{T("Edit an Artifact")}</span>
+            <span className="sr-only">{T("Edit an Artifact")}</span>
                   </Button>
 
                   <Button data-tooltip={T("Delete Artifact")}
@@ -297,7 +337,7 @@ class ArtifactInspector extends React.Component {
                           disabled={!deletable}
                           variant="default">
                     <FontAwesomeIcon icon="trash"/>
-		    <span className="sr-only">{T("Delete Artifact")}</span>
+            <span className="sr-only">{T("Delete Artifact")}</span>
                   </Button>
 
                   <Button data-tooltip={T("Hunt Artifact")}
@@ -307,7 +347,7 @@ class ArtifactInspector extends React.Component {
                           disabled={!this.huntArtifactEnabled()}
                           variant="default">
                     <FontAwesomeIcon icon="crosshairs"/>
-		    <span className="sr-only">{T("Hunt Artifact")}</span>
+            <span className="sr-only">{T("Hunt Artifact")}</span>
                   </Button>
 
                   <Button data-tooltip={T("Collect Artifact")}
@@ -317,7 +357,7 @@ class ArtifactInspector extends React.Component {
                           disabled={!this.collectArtifactEnabled()}
                           variant="default">
                     <FontAwesomeIcon icon="cloud-download-alt"/>
-		    <span className="sr-only">{T("Collect Artifact")}</span>
+            <span className="sr-only">{T("Collect Artifact")}</span>
                   </Button>
 
                   <Button data-tooltip={T("Upload Artifact Pack")}
@@ -326,26 +366,21 @@ class ArtifactInspector extends React.Component {
                           onClick={()=>this.setState({showArtifactsUploadDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="upload"/>
-		    <span className="sr-only">{T("Upload Artifact Pack")}</span>
+            <span className="sr-only">{T("Upload Artifact Pack")}</span>
                   </Button>
                 </ButtonGroup>
-                <Form inline className="">
+                <Form inline className="artifact-search">
                   <InputGroup >
                     <InputGroup.Prepend>
-                      <Button variant="outline-default"
-                              onClick={() => this.updateSearch("")}
-                              size="sm">
-                        { this.state.loading ? <FontAwesomeIcon icon="spinner" spin/> :
-                          <FontAwesomeIcon icon="broom"/>}
-                      </Button>
+                        { this.renderFilter() }
+                      <FormControl className="artifact-search-input"
+                                   ref={(input) => { this.searchInput = input; }}
+                                   value={this.state.current_filter}
+                                   onChange={(e) => this.updateSearch(e.currentTarget.value)}
+                                   placeholder={T("Search for artifact")}
+                                   spellCheck="false"
+                      />
                     </InputGroup.Prepend>
-                    <FormControl size="sm"
-                                 ref={(input) => { this.searchInput = input; }}
-                                 value={this.state.current_filter}
-                                 onChange={(e) => this.updateSearch(e.currentTarget.value)}
-                                 placeholder={T("Search for artifact")}
-                                 spellCheck="false"
-                    />
                   </InputGroup>
                 </Form>
               </Navbar>

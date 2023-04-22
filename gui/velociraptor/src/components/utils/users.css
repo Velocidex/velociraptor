@@ -2,3 +2,12 @@
     color: var(--color-foreground);
     background: var(--color-canvas-background);
 }
+
+.velo__option.velo__option--is-focused {
+    background: var(--color-accent-25);
+}
+
+.velo__option.velo__option--is-selected {
+    background: var(--accent-color);
+    color: var(--color-canvas-background);
+}
