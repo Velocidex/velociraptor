@@ -28,7 +28,7 @@ func (self *UnhexFunction) Call(ctx context.Context,
 	}
 
 	// Strip all spaces
-	str := strings.Replace(" ", arg.String, "", -1)
+	str := strings.Replace(arg.String, " ", "", -1)
 	res, _ := hex.DecodeString(strings.TrimPrefix(str, "0x"))
 	return string(res)
 }
