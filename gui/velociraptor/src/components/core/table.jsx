@@ -518,6 +518,18 @@ export function formatColumns(columns, env, column_formatter) {
             x.type = null;
             break;
 
+        case "url_internal":
+            x.formatter = (cell, row) => {
+                if(_.isObject(cell)) {
+                    return <URLViewer internal={true}
+                                      url={cell.url} desc={cell.desc}/>;
+                }
+                return <URLViewer url={cell}/>;
+            };
+            x.type = null;
+            break;
+
+
         case "safe_url":
             x.formatter = (cell, row) => {
                 return <URLViewer url={cell} safe={true}/>;

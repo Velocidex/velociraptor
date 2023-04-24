@@ -18,6 +18,10 @@ export default class URLViewer extends Component {
         url: PropTypes.string,
         desc: PropTypes.string,
         safe: PropTypes.bool,
+
+        // If specified this is an intenral link - so we add org id
+        // etc.
+        internal: PropTypes.bool,
     }
 
     state = {
@@ -43,7 +47,9 @@ export default class URLViewer extends Component {
                    className="url-link"
                    size="sm"
                    variant="outline-info"
-                   href={api.href(url)} target="_blank">
+                   href={api.href(url, {
+                       internal: this.props.internal,
+                   })} target="_blank">
                    <FontAwesomeIcon icon="external-link-alt"/>
                    <span className="button-label">{desc}</span>
                </Button>;

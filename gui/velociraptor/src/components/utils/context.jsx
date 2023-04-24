@@ -36,11 +36,11 @@ export default function ContextMenu({children, value}) {
   });
 
   return (
-    <div>
-      <div onContextMenu={show}>
+      <div
+        className="context-menu-available"
+        onContextMenu={show}>
         {children}
       </div>
-    </div>
   );
 }
 

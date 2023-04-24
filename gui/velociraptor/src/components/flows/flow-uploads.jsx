@@ -78,7 +78,9 @@ export default class FlowUploads extends React.Component {
                                                row._Components, this.props.flow.client_id,
                                                this.props.flow.session_id),
                                            padding: true,
-                                           vfs_path: filename}, {arrayFormat: 'brackets'})}>
+                                           vfs_path: filename}, {
+                                               internal: true,
+                                               arrayFormat: 'brackets'})}>
                                  {filename} &nbsp;&nbsp; <FontAwesomeIcon icon="expand"/>
                                </Button>
                              </OverlayTrigger>
@@ -101,7 +103,9 @@ export default class FlowUploads extends React.Component {
                                          row._Components, this.props.flow.client_id,
                                          this.props.flow.session_id),
                                      padding: false,
-                                     vfs_path: filename}, {arrayFormat: 'brackets'})}>
+                                     vfs_path: filename}, {
+                                         internal: true,
+                                         arrayFormat: 'brackets'})}>
                            {filename}
                          </Button>
                        </OverlayTrigger>;

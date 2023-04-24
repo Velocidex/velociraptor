@@ -12,3 +12,7 @@ div.react-contexify {
 div.react-contexify .react-contexify__item__content {
     color: var(--color-foreground);
 }
+
+.context-menu-available {
+    cursor: context-menu;
+}

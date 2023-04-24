@@ -397,6 +397,154 @@ func (x *VFSDownloadFileRequest) GetVfsComponents() []string {
 	return nil
 }
 
+type SearchFileRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	VfsComponents []string `protobuf:"bytes,2,rep,name=vfs_components,json=vfsComponents,proto3" json:"vfs_components,omitempty"`
+	// If true pad sparse files.
+	Padding bool `protobuf:"varint,7,opt,name=padding,proto3" json:"padding,omitempty"`
+	// The term to search for
+	Term string `protobuf:"bytes,3,opt,name=term,proto3" json:"term,omitempty"`
+	// The type of search term - default "string", "regex"
+	Type string `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitempty"`
+	// Where to begin the search
+	Offset uint64 `protobuf:"varint,5,opt,name=offset,proto3" json:"offset,omitempty"`
+	// If true we search forward otherwise we search backwards from
+	// the offset
+	Forward bool `protobuf:"varint,6,opt,name=forward,proto3" json:"forward,omitempty"`
+}
+
+func (x *SearchFileRequest) Reset() {
+	*x = SearchFileRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_vfs_api_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SearchFileRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SearchFileRequest) ProtoMessage() {}
+
+func (x *SearchFileRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_vfs_api_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SearchFileRequest.ProtoReflect.Descriptor instead.
+func (*SearchFileRequest) Descriptor() ([]byte, []int) {
+	return file_vfs_api_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *SearchFileRequest) GetVfsComponents() []string {
+	if x != nil {
+		return x.VfsComponents
+	}
+	return nil
+}
+
+func (x *SearchFileRequest) GetPadding() bool {
+	if x != nil {
+		return x.Padding
+	}
+	return false
+}
+
+func (x *SearchFileRequest) GetTerm() string {
+	if x != nil {
+		return x.Term
+	}
+	return ""
+}
+
+func (x *SearchFileRequest) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *SearchFileRequest) GetOffset() uint64 {
+	if x != nil {
+		return x.Offset
+	}
+	return 0
+}
+
+func (x *SearchFileRequest) GetForward() bool {
+	if x != nil {
+		return x.Forward
+	}
+	return false
+}
+
+type SearchFileResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	VfsComponents []string `protobuf:"bytes,2,rep,name=vfs_components,json=vfsComponents,proto3" json:"vfs_components,omitempty"`
+	Hit           uint64   `protobuf:"varint,3,opt,name=hit,proto3" json:"hit,omitempty"`
+}
+
+func (x *SearchFileResponse) Reset() {
+	*x = SearchFileResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_vfs_api_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SearchFileResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SearchFileResponse) ProtoMessage() {}
+
+func (x *SearchFileResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_vfs_api_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SearchFileResponse.ProtoReflect.Descriptor instead.
+func (*SearchFileResponse) Descriptor() ([]byte, []int) {
+	return file_vfs_api_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *SearchFileResponse) GetVfsComponents() []string {
+	if x != nil {
+		return x.VfsComponents
+	}
+	return nil
+}
+
+func (x *SearchFileResponse) GetHit() uint64 {
+	if x != nil {
+		return x.Hit
+	}
+	return 0
+}
+
 var File_vfs_api_proto protoreflect.FileDescriptor
 
 var file_vfs_api_proto_rawDesc = []byte{
@@ -454,7 +602,23 @@ var file_vfs_api_proto_rawDesc = []byte{
 	0x52, 0x08, 0x63, 0x6c, 0x69, 0x65, 0x6e, 0x74, 0x49, 0x64, 0x12, 0x25, 0x0a, 0x0e, 0x76, 0x66,
 	0x73, 0x5f, 0x63, 0x6f, 0x6d, 0x70, 0x6f, 0x6e, 0x65, 0x6e, 0x74, 0x73, 0x18, 0x02, 0x20, 0x03,
 	0x28, 0x09, 0x52, 0x0d, 0x76, 0x66, 0x73, 0x43, 0x6f, 0x6d, 0x70, 0x6f, 0x6e, 0x65, 0x6e, 0x74,
-	0x73, 0x42, 0x31, 0x5a, 0x2f, 0x77, 0x77, 0x77, 0x2e, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x64,
+	0x73, 0x22, 0xae, 0x01, 0x0a, 0x11, 0x53, 0x65, 0x61, 0x72, 0x63, 0x68, 0x46, 0x69, 0x6c, 0x65,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x25, 0x0a, 0x0e, 0x76, 0x66, 0x73, 0x5f, 0x63,
+	0x6f, 0x6d, 0x70, 0x6f, 0x6e, 0x65, 0x6e, 0x74, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x09, 0x52,
+	0x0d, 0x76, 0x66, 0x73, 0x43, 0x6f, 0x6d, 0x70, 0x6f, 0x6e, 0x65, 0x6e, 0x74, 0x73, 0x12, 0x18,
+	0x0a, 0x07, 0x70, 0x61, 0x64, 0x64, 0x69, 0x6e, 0x67, 0x18, 0x07, 0x20, 0x01, 0x28, 0x08, 0x52,
+	0x07, 0x70, 0x61, 0x64, 0x64, 0x69, 0x6e, 0x67, 0x12, 0x12, 0x0a, 0x04, 0x74, 0x65, 0x72, 0x6d,
+	0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x65, 0x72, 0x6d, 0x12, 0x12, 0x0a, 0x04,
+	0x74, 0x79, 0x70, 0x65, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x74, 0x79, 0x70, 0x65,
+	0x12, 0x16, 0x0a, 0x06, 0x6f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x18, 0x05, 0x20, 0x01, 0x28, 0x04,
+	0x52, 0x06, 0x6f, 0x66, 0x66, 0x73, 0x65, 0x74, 0x12, 0x18, 0x0a, 0x07, 0x66, 0x6f, 0x72, 0x77,
+	0x61, 0x72, 0x64, 0x18, 0x06, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x66, 0x6f, 0x72, 0x77, 0x61,
+	0x72, 0x64, 0x22, 0x4d, 0x0a, 0x12, 0x53, 0x65, 0x61, 0x72, 0x63, 0x68, 0x46, 0x69, 0x6c, 0x65,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x25, 0x0a, 0x0e, 0x76, 0x66, 0x73, 0x5f,
+	0x63, 0x6f, 0x6d, 0x70, 0x6f, 0x6e, 0x65, 0x6e, 0x74, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x09,
+	0x52, 0x0d, 0x76, 0x66, 0x73, 0x43, 0x6f, 0x6d, 0x70, 0x6f, 0x6e, 0x65, 0x6e, 0x74, 0x73, 0x12,
+	0x10, 0x0a, 0x03, 0x68, 0x69, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x04, 0x52, 0x03, 0x68, 0x69,
+	0x74, 0x42, 0x31, 0x5a, 0x2f, 0x77, 0x77, 0x77, 0x2e, 0x76, 0x65, 0x6c, 0x6f, 0x63, 0x69, 0x64,
 	0x65, 0x78, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x67, 0x6f, 0x6c, 0x61, 0x6e, 0x67, 0x2f, 0x76, 0x65,
 	0x6c, 0x6f, 0x63, 0x69, 0x72, 0x61, 0x70, 0x74, 0x6f, 0x72, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x70,
 	0x72, 0x6f, 0x74, 0x6f, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
@@ -472,21 +636,23 @@ func file_vfs_api_proto_rawDescGZIP() []byte {
 	return file_vfs_api_proto_rawDescData
 }
 
-var file_vfs_api_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_vfs_api_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_vfs_api_proto_goTypes = []interface{}{
 	(*VFSListResponse)(nil),        // 0: proto.VFSListResponse
 	(*VFSStatDownloadRequest)(nil), // 1: proto.VFSStatDownloadRequest
 	(*VFSListRequest)(nil),         // 2: proto.VFSListRequest
 	(*VFSListRequestState)(nil),    // 3: proto.VFSListRequestState
 	(*VFSDownloadFileRequest)(nil), // 4: proto.VFSDownloadFileRequest
-	(*proto.VQLRequest)(nil),       // 5: proto.VQLRequest
-	(*proto.VQLTypeMap)(nil),       // 6: proto.VQLTypeMap
-	(*proto.VQLResponse)(nil),      // 7: proto.VQLResponse
+	(*SearchFileRequest)(nil),      // 5: proto.SearchFileRequest
+	(*SearchFileResponse)(nil),     // 6: proto.SearchFileResponse
+	(*proto.VQLRequest)(nil),       // 7: proto.VQLRequest
+	(*proto.VQLTypeMap)(nil),       // 8: proto.VQLTypeMap
+	(*proto.VQLResponse)(nil),      // 9: proto.VQLResponse
 }
 var file_vfs_api_proto_depIdxs = []int32{
-	5, // 0: proto.VFSListResponse.Query:type_name -> proto.VQLRequest
-	6, // 1: proto.VFSListResponse.types:type_name -> proto.VQLTypeMap
-	7, // 2: proto.VFSListRequestState.current:type_name -> proto.VQLResponse
+	7, // 0: proto.VFSListResponse.Query:type_name -> proto.VQLRequest
+	8, // 1: proto.VFSListResponse.types:type_name -> proto.VQLTypeMap
+	9, // 2: proto.VFSListRequestState.current:type_name -> proto.VQLResponse
 	3, // [3:3] is the sub-list for method output_type
 	3, // [3:3] is the sub-list for method input_type
 	3, // [3:3] is the sub-list for extension type_name
@@ -560,6 +726,30 @@ func file_vfs_api_proto_init() {
 				return nil
 			}
 		}
+		file_vfs_api_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SearchFileRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_vfs_api_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SearchFileResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -567,7 +757,7 @@ func file_vfs_api_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_vfs_api_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

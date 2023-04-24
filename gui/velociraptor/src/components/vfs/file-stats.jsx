@@ -12,6 +12,7 @@ import api from '../core/api-service.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import T from '../i8n/i8n.jsx';
+import PreviewUpload from '../widgets/preview_uploads.jsx';
 
 const POLL_TIME = 2000;
 
@@ -185,7 +186,9 @@ class VeloFileStats extends Component {
                                         client_id: client_id,
                                         fs_components: selectedRow.Download.components,
                                         vfs_path: selectedRow.Name,
-                                    }, {arrayFormat: 'brackets'})}>
+                                    }, {
+                                        internal: true,
+                                        arrayFormat: 'brackets'})}>
                               <FontAwesomeIcon icon="download"/>
                             </Button>
                           </dd>
@@ -245,6 +248,19 @@ class VeloFileStats extends Component {
                     <div className="row">
                       <dt className="col-4">MD5</dt>
                       <dd className="col-8">{selectedRow.Download.MD5}</dd>
+                    </div>}
+                  { !_.isEmpty(selectedRow.Download.components) &&
+                    <div className="row">
+                      <dt className="col-4">{T("Preview")}</dt>
+                      <dd className="col-8">
+                        <PreviewUpload
+                          env={{client_id: this.props.client.client_id,
+                                vfs_components: selectedRow.Download.components}}
+                          upload={{Components: selectedRow.Download.components,
+                                   Path: selectedRow._FullPath,
+                                   Accessor: this.props.node.path[0],
+                                   Size: selectedRow.Size}} />
+                      </dd>
                     </div>}
                 </Card.Body>
               </Card>

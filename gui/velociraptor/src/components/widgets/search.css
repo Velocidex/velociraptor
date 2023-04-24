@@ -1,0 +1,12 @@
+.search-term-error {
+    position: absolute;
+    display: block;
+    top: -2em;
+    left: 2em;
+    z-index: 100;
+    color: var(--color-level-error);
+}
+
+.hexview-search-input {
+    max-width: 20em;
+}

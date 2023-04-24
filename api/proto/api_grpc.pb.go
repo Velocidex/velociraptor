@@ -60,6 +60,8 @@ type APIClient interface {
 	VFSStatDirectory(ctx context.Context, in *VFSListRequest, opts ...grpc.CallOption) (*VFSListResponse, error)
 	VFSStatDownload(ctx context.Context, in *VFSStatDownloadRequest, opts ...grpc.CallOption) (*proto.VFSDownloadInfo, error)
 	GetTable(ctx context.Context, in *GetTableRequest, opts ...grpc.CallOption) (*GetTableResponse, error)
+	// Facilitate the HexEditor search API
+	SearchFile(ctx context.Context, in *SearchFileRequest, opts ...grpc.CallOption) (*SearchFileResponse, error)
 	// Flows
 	CollectArtifact(ctx context.Context, in *proto.ArtifactCollectorArgs, opts ...grpc.CallOption) (*proto.ArtifactCollectorResponse, error)
 	CancelFlow(ctx context.Context, in *ApiFlowRequest, opts ...grpc.CallOption) (*StartFlowResponse, error)
@@ -394,6 +396,15 @@ func (c *aPIClient) VFSStatDownload(ctx context.Context, in *VFSStatDownloadRequ
 func (c *aPIClient) GetTable(ctx context.Context, in *GetTableRequest, opts ...grpc.CallOption) (*GetTableResponse, error) {
 	out := new(GetTableResponse)
 	err := c.cc.Invoke(ctx, "/proto.API/GetTable", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aPIClient) SearchFile(ctx context.Context, in *SearchFileRequest, opts ...grpc.CallOption) (*SearchFileResponse, error) {
+	out := new(SearchFileResponse)
+	err := c.cc.Invoke(ctx, "/proto.API/SearchFile", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -830,6 +841,8 @@ type APIServer interface {
 	VFSStatDirectory(context.Context, *VFSListRequest) (*VFSListResponse, error)
 	VFSStatDownload(context.Context, *VFSStatDownloadRequest) (*proto.VFSDownloadInfo, error)
 	GetTable(context.Context, *GetTableRequest) (*GetTableResponse, error)
+	// Facilitate the HexEditor search API
+	SearchFile(context.Context, *SearchFileRequest) (*SearchFileResponse, error)
 	// Flows
 	CollectArtifact(context.Context, *proto.ArtifactCollectorArgs) (*proto.ArtifactCollectorResponse, error)
 	CancelFlow(context.Context, *ApiFlowRequest) (*StartFlowResponse, error)
@@ -986,6 +999,9 @@ func (UnimplementedAPIServer) VFSStatDownload(context.Context, *VFSStatDownloadR
 }
 func (UnimplementedAPIServer) GetTable(context.Context, *GetTableRequest) (*GetTableResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetTable not implemented")
+}
+func (UnimplementedAPIServer) SearchFile(context.Context, *SearchFileRequest) (*SearchFileResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SearchFile not implemented")
 }
 func (UnimplementedAPIServer) CollectArtifact(context.Context, *proto.ArtifactCollectorArgs) (*proto.ArtifactCollectorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CollectArtifact not implemented")
@@ -1650,6 +1666,24 @@ func _API_GetTable_Handler(srv interface{}, ctx context.Context, dec func(interf
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(APIServer).GetTable(ctx, req.(*GetTableRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _API_SearchFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SearchFileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).SearchFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/SearchFile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).SearchFile(ctx, req.(*SearchFileRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -2470,6 +2504,10 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetTable",
 			Handler:    _API_GetTable_Handler,
+		},
+		{
+			MethodName: "SearchFile",
+			Handler:    _API_SearchFile_Handler,
 		},
 		{
 			MethodName: "CollectArtifact",

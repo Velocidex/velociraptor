@@ -454,6 +454,11 @@ export default class UserLabel extends React.Component {
                   }
                   { this.orgName() }
                 </Button>
+                <Button variant="default"
+                  onClick={()=>this.setState({showUserSettings: true})}
+                >
+                  <FontAwesomeIcon icon="wrench" />
+                </Button>
               </ButtonGroup>
             </>
         );

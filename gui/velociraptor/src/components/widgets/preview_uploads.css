@@ -1,3 +1,9 @@
+.file-hex-view {
+    margin-left: 0px;
+    margin-right: 0px;
+    max-width: 3000px;
+    width: 100%;
+}
 
 img.preview-thumbnail {
     max-width: 140px;
@@ -15,4 +21,26 @@ img.preview-thumbnail {
 
 .textdump {
     overflow-wrap: break-word;
+}
+
+.hex-goto {
+    margin-top: 26px;
+    margin-left: 0px;
+    margin-right: 0px;
+}
+
+.hexview-search-type-selector {
+    max-width: 7em;
+}
+
+input.goto-invalid.form-control,
+input.goto-invalid.form-control:focus {
+    background-color: #f8d7da;
+    background-image: linear-gradient(to bottom, #f2dede 0%, #e7c3c3 100%);
+    background-repeat: repeat-x;
+    border-color: #dca7a7;
+}
+
+.preview-json {
+    margin-top: 45px;
 }
