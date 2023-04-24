@@ -122,6 +122,9 @@
 
   --color-vfs-files-timestomped: #ed5d40;
   --color-level-error: #990000;
+
+  --hex-highlight-background: var(--accent-color);
+  --hex-highlight-foreground: var(--color-canvas-background);
 }
 
 body.veloci-light {

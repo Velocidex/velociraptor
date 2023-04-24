@@ -56,3 +56,30 @@ message VFSDownloadFileRequest {
 
     repeated string vfs_components = 2;
 }
+
+
+message SearchFileRequest {
+    repeated string vfs_components = 2;
+
+    // If true pad sparse files.
+    bool padding = 7;
+
+    // The term to search for
+    string term = 3;
+
+    // The type of search term - default "string", "regex"
+    string type = 4;
+
+    // Where to begin the search
+    uint64 offset = 5;
+
+    // If true we search forward otherwise we search backwards from
+    // the offset
+    bool forward = 6;
+}
+
+message SearchFileResponse {
+    repeated string vfs_components = 2;
+
+    uint64 hit = 3;
+}

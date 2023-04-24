@@ -67,7 +67,7 @@ reports:
 
       ## Current Orgs
 
-      {{ Query "LET ColumnTypes <= dict(ClientConfig='url') \
+      {{ Query "LET ColumnTypes <= dict(ClientConfig='url_internal') \
                 SELECT Name, OrgId, \
                        format(format='[%s](/notebooks/Dashboards/%s/uploads/client.%s.config.yaml)', \
                        args=[OrgId, ArtifactName, OrgId]) AS ClientConfig, \

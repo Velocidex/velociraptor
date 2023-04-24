@@ -36,7 +36,6 @@ import {
 } from './table.jsx';
 
 
-
 const pageListRenderer = ({
     pages,
     currentPage,
@@ -55,7 +54,9 @@ const pageListRenderer = ({
     }
     return (
         <Pagination>
-          <Pagination.First onClick={()=>onPageChange(0)}/>
+          <Pagination.First
+            disabled={currentPage===0}
+            onClick={()=>onPageChange(0)}/>
           {
               pageWithoutIndication.map((p, idx)=>(
                 <Pagination.Item
@@ -66,7 +67,9 @@ const pageListRenderer = ({
                 </Pagination.Item>
             ))
           }
-          <Pagination.Last onClick={()=>onPageChange(totalPages)}/>
+          <Pagination.Last
+            disabled={currentPage===totalPages}
+            onClick={()=>onPageChange(totalPages)}/>
           <Form.Control
             as="input"
             className="pagination-form"
@@ -83,7 +86,6 @@ const pageListRenderer = ({
         </Pagination>
     );
 };
-
 
 class VeloPagedTable extends Component {
     static contextType = UserConfig;
@@ -281,7 +283,10 @@ class VeloPagedTable extends Component {
 
         let params = Object.assign({}, this.props.params);
         Object.assign(params, this.state.transform);
-        params.start_row = this.state.start_row;
+        params.start_row = this.state.start_row || 0;
+        if (params.start_row < 0) {
+            params.start_row = 0;
+        }
         params.rows = this.state.page_size;
         params.sort_direction = params.sort_direction === "Ascending";
 
@@ -598,7 +603,7 @@ class VeloPagedTable extends Component {
                                                  Object.assign(downloads, {
                                                      timezone: timezone,
                                                      download_format: "json",
-                                                 }))}>
+                                                 }), {internal: true})}>
                             <FontAwesomeIcon icon="download"/>
                 <span className="sr-only">{T("Download JSON")}</span>
                           </Button>
@@ -611,7 +616,7 @@ class VeloPagedTable extends Component {
                                                  Object.assign(downloads, {
                                                      timezone: timezone,
                                                      download_format: "csv",
-                                                 }))}>
+                                                 }), {internal: true})}>
                             <FontAwesomeIcon icon="file-csv"/>
                             <span className="sr-only">{T("Download CSV")}</span>
                           </Button>

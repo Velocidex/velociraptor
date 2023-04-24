@@ -234,7 +234,10 @@ const upload = function(url, files, params) {
 // Prepare a suitable href link for <a>
 const href = function(url, params, options) {
     params = params || {};
-    Object.assign(params, {org_id: window.globals.OrgId || "root"});
+    // Relative URLs are always internal.
+    if(url.startsWith("/") || (options && options.internal)) {
+        Object.assign(params, {org_id: window.globals.OrgId || "root"});
+    }
 
     options = options || {};
     Object.assign(options, {indices: false});
@@ -268,7 +271,12 @@ const src_of = function (url) {
         return url;
     }
     return window.base_path + url;
-}
+};
+
+
+const error = function(msg) {
+    _.each(hooks, h=>h(msg));
+};
 
 /* eslint import/no-anonymous-default-export: [2, {"allowObject": true}] */
 export default {
@@ -279,6 +287,7 @@ export default {
     hooks: hooks,
     base_path: base_path,
     href: href,
+    error: error,
     delete_req: delete_req,
     src_of: src_of,
 };

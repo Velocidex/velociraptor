@@ -22,7 +22,7 @@ export function parseCSV(data) {
         }
 
     } catch(e) {
-        _.each(api.hooks, h=>h("Error: " + e));
+        api.error("Error: " + e);
         return {columns: ["Column1"], data: []};
     }
 

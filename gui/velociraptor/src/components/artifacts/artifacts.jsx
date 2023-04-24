@@ -27,13 +27,13 @@ import SplitPane from 'react-split-pane';
 
 const presetFilters = [
     {value: "type:CLIENT", label: T("Client Artifacts")},
+    {value: "type:SERVER", label: T("Server Artifacts")},
     {value: "", label: T("All Artifacts")},
     {value: "precondition:WINDOWS", label: T("Windows Only")},
     {value: "precondition:LINUX", label: T("Linux Only")},
     {value: "precondition:DARWIN", label: T("OSX Only")},
     {value: "type:CLIENT_EVENT", label: T("Client Monitoring")},
     {value: "type:SERVER_EVENT", label: T("Servr Monitoring")},
-    {value: "type:SERVER", label: T("Server Artifacts")},
     {value: "tool:.+", label: T("Using Tools")},
     {value: "^exchange.+", label: T("Exchange")},
     {value: "^custom.+", label: T("Custom")},
@@ -89,7 +89,7 @@ class ArtifactInspector extends React.Component {
         showEditedArtifactDialog: false,
         showDeleteArtifactDialog: false,
         showArtifactsUploadDialog: false,
-        current_filter: "",
+        current_filter: "type:CLIENT",
 
         version: 0,
 
@@ -103,7 +103,7 @@ class ArtifactInspector extends React.Component {
             this.props.match.params.artifact;
 
         if (!artifact_name) {
-            this.fetchRows("...");
+            this.fetchRows("type:CLIENT");
             return;
         }
         this.setState({selectedDescriptor: {name: artifact_name},

@@ -307,6 +307,14 @@ service API {
         };
     }
 
+    // Facilitate the HexEditor search API
+    rpc SearchFile(SearchFileRequest) returns (SearchFileResponse) {
+        option (google.api.http) = {
+            post: "/api/v1/SearchFile",
+            body: "*",
+        };
+    }
+
     // Flows
     rpc CollectArtifact(ArtifactCollectorArgs) returns (ArtifactCollectorResponse) {
         option (google.api.http) = {
