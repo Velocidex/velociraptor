@@ -137,7 +137,8 @@ export default class SearchHex extends React.Component {
 
     updateHighlightsForString = search_term=>{
         let hits = [];
-        let utf8_buffer = new TextDecoder().decode(this.props.byte_array);
+        let utf8_buffer = new TextDecoder('latin1').decode(
+            this.props.byte_array);
         let start = -1;
         for(;;) {
             let idx = utf8_buffer.indexOf(search_term, start+1);
