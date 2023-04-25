@@ -82,6 +82,7 @@ span.user-edit {
 
 .link-button {
   background-color: transparent;
+  color: var(--color-foreground);
   border: none;
   cursor: pointer;
   display: inline;

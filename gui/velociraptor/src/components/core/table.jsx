@@ -555,6 +555,12 @@ export function formatColumns(columns, env, column_formatter) {
         case "preview_upload":
         case "upload_preview":
             x.formatter = (cell, row) => {
+                if(!env.client_id && row.ClientId) {
+                    env.client_id = row.ClientId;
+                }
+                if(!env.flow_id && row.FlowId) {
+                    env.flow_id = row.FlowId;
+                }
                 return <PreviewUpload
                          env={env}
                          upload={cell}/>;

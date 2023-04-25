@@ -137,6 +137,14 @@ class NewCollectionSelectArtifacts extends React.Component {
         this.source.cancel();
     }
 
+    // Trigger a selection of the first artifacts when the list is
+    // added. This will render the artifact description view.
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
+        if(_.isEmpty(prevProps.artifacts) && !_.isEmpty(this.props.artifacts)) {
+            this.onSelect(this.props.artifacts[0], true);
+        }
+    }
+
     onSelect = (row, isSelect) => {
         // The row contains only the name so we need to make another
         // request to fetch the full definition.
@@ -791,8 +799,7 @@ class NewCollectionLaunch extends React.Component {
     }
 }
 
-class
-NewCollectionWizard extends React.Component {
+class NewCollectionWizard extends React.Component {
     static propTypes = {
         baseFlow: PropTypes.object,
         onResolve: PropTypes.func,

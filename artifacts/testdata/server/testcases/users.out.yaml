@@ -110,7 +110,8 @@ SELECT whoami() FROM scope()[
    "filesystem_read": true,
    "filesystem_write": true,
    "machine_state": true,
-   "prepare_results": true
+   "prepare_results": true,
+   "delete_results": true
   }
  }
 ]SELECT user_delete(user="TestUser", really_do_it=TRUE) FROM scope()[
@@ -149,7 +150,8 @@ SELECT whoami() FROM scope()[
    "filesystem_read": true,
    "filesystem_write": true,
    "machine_state": true,
-   "prepare_results": true
+   "prepare_results": true,
+   "delete_results": true
   }
  }
 ]SELECT user_delete(user="TestUser", really_do_it=TRUE, orgs="ORGID2") FROM scope()[
