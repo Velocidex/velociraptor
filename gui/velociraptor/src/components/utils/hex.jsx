@@ -7,7 +7,6 @@ import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Modal from 'react-bootstrap/Modal';
 import T from '../i8n/i8n.jsx';
-import { UnstyledBaseHexEditor } from 'react-hex-editor';
 import Form from 'react-bootstrap/Form';
 
 export class HexViewDialog extends React.PureComponent {
@@ -199,7 +198,7 @@ export default class HexView extends React.Component {
             // Pad with extra spaces to maintain alignment
             if(data_row.length < columns) {
                 let pad = columns - data_row.length % columns;
-                for (var j = 0; j < pad; j++) {
+                for (let j = 0; j < pad; j++) {
                     data_row.push({v:" ", p:true, safe:" "});
                 }
             }
@@ -344,7 +343,7 @@ export default class HexView extends React.Component {
                     </tr>
                     { more && (this.state.expanded ?
                                <tr>
-                                 <td colspan="16">
+                                 <td colSpan="16">
                                    <Button variant="default-outline"
                                            data-tooltip={T("Collapse")}
                                            data-position="right"
@@ -355,7 +354,7 @@ export default class HexView extends React.Component {
                                  </td>
                                </tr>
                                : <tr>
-                                   <td colspan="16">
+                                   <td colSpan="16">
                                      <Button variant="default-outline"
                                              data-tooltip="Expand"
                                              data-position="right"

@@ -1201,7 +1201,7 @@ body.coolgray-dark {
   text-align: center;
   margin-top: 50px;
   font-size: 1.2em;
-  color: var(--color-foreground-dimmed);
+  color: var(--color-no-content);
 }
 
 .coolgray-dark .velo-ace-editor {

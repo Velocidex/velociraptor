@@ -5,7 +5,7 @@ import PropTypes from 'prop-types';
 import Alert from 'react-bootstrap/Alert';
 import Form from 'react-bootstrap/Form';
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import './estimate.css';
@@ -17,7 +17,7 @@ export default class EstimateHunt extends Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.fetchEstimate();
     }
 

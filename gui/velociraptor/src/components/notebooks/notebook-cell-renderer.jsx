@@ -26,7 +26,7 @@ import { AddTimelineDialog, AddVQLCellToTimeline } from "./timelines.jsx";
 import T from '../i8n/i8n.jsx';
 import ViewCellLogs from "./logs.jsx";
 
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
 
 const cell_types = ["Markdown", "VQL"];
@@ -58,7 +58,7 @@ class AddCellFromHunt extends React.PureComponent {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         api.get("v1/ListHunts", {
             count: 100,
             offset: 0,
@@ -175,7 +175,7 @@ export default class NotebookCellRenderer extends React.Component {
     }
 
     componentDidMount() {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.fetchCellContents();
     }
 
@@ -220,7 +220,7 @@ export default class NotebookCellRenderer extends React.Component {
     fetchCellContents = () => {
         // Cancel any in flight calls.
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         api.get("v1/GetNotebookCell", {
             notebook_id: this.props.notebook_id,
@@ -760,9 +760,16 @@ export default class NotebookCellRenderer extends React.Component {
                   }
                 </div>
 
-                <div className={classNames({collapsed: this.state.collapsed,
-                                            "notebook-output": true})}
-                     onClick={() => {this.props.setSelectedCellId(this.state.cell.cell_id);}}
+                <div className={classNames({
+                    collapsed: this.state.collapsed,
+                    "notebook-output": true,
+                })}
+                     type="button"
+                     tabIndex={0}
+                     onKeyPress={()=>this.props.setSelectedCellId(
+                         this.state.cell.cell_id)}
+                     onClick={()=>this.props.setSelectedCellId(
+                         this.state.cell.cell_id)}
                 >
                   <NotebookReportRenderer
                     env={this.getEnv()}

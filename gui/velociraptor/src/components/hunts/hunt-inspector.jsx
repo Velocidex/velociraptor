@@ -16,6 +16,10 @@ class HuntInspector extends React.Component {
     static propTypes = {
         hunt: PropTypes.object,
         fetch_hunts: PropTypes.func,
+
+        // React router props.
+        match: PropTypes.object,
+        history: PropTypes.object,
     };
 
     state = {

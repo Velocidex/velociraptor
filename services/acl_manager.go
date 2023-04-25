@@ -163,9 +163,11 @@ func CheckAccessWithToken(
 	case acls.PREPARE_RESULTS:
 		return token.PrepareResults, nil
 
+	case acls.DELETE_RESULTS:
+		return token.DeleteResults, nil
+
 	case acls.DATASTORE_ACCESS:
 		return token.DatastoreAccess, nil
-
 	}
 
 	return false, nil

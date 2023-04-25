@@ -21,7 +21,7 @@ import Alert from 'react-bootstrap/Alert';
 
 import UserForm from '../utils/users.jsx';
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 
 import { formatColumns } from "../core/table.jsx";
 import { withRouter }  from "react-router-dom";
@@ -36,7 +36,7 @@ class NewNotebook extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         if(!_.isEmpty(this.props.notebook)) {
             this.setState({
                 name: this.props.notebook.name,
@@ -165,7 +165,7 @@ class DeleteNotebook extends React.Component {
     }
 
     componentDidMount() {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
     }
 
     componentWillUnmount() {
@@ -217,6 +217,9 @@ class NotebooksList extends React.Component {
         selected_notebook: PropTypes.object,
         setSelectedNotebook: PropTypes.func.isRequired,
         fetchNotebooks: PropTypes.func.isRequired,
+
+        // React router props.
+        history: PropTypes.object,
     };
 
     state = {
@@ -328,7 +331,7 @@ class NotebooksList extends React.Component {
                           onClick={this.setFullScreen}
                           variant="default">
                     <FontAwesomeIcon icon="expand"/>
-		    <span className="sr-only">{T("Full Screen")}</span>
+                    <span className="sr-only">{T("Full Screen")}</span>
                   </Button>
 
                   <Button data-tooltip="NewNotebook"
@@ -337,7 +340,7 @@ class NotebooksList extends React.Component {
                           onClick={()=>this.setState({showNewNotebookDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="plus"/>
-		    <span className="sr-only">{T("New Notebook")}</span>
+                    <span className="sr-only">{T("New Notebook")}</span>
                   </Button>
 
                   <Button data-tooltip="Delete Notebook"
@@ -347,7 +350,7 @@ class NotebooksList extends React.Component {
                           onClick={()=>this.setState({showDeleteNotebookDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="trash"/>
-		    <span className="sr-only">{T("Delete Notebook")}</span>
+                    <span className="sr-only">{T("Delete Notebook")}</span>
                   </Button>
 
                   <Button data-tooltip="Edit Notebook"
@@ -357,7 +360,7 @@ class NotebooksList extends React.Component {
                           onClick={()=>this.setState({showEditNotebookDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="wrench"/>
-		    <span className="sr-only">{T("Edit Notebook")}</span>
+                    <span className="sr-only">{T("Edit Notebook")}</span>
                   </Button>
                   <Button data-tooltip="NotebookUploads"
                           data-position="right"
@@ -366,7 +369,7 @@ class NotebooksList extends React.Component {
                           onClick={()=>this.setState({showNotebookUploadsDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="fa-file-download"/>
-		    <span className="sr-only">{T("Notebook Uploads")}</span>
+                    <span className="sr-only">{T("Notebook Uploads")}</span>
                   </Button>
                   <Button data-tooltip="ExportNotebook"
                           data-position="right"
@@ -375,7 +378,7 @@ class NotebooksList extends React.Component {
                           onClick={()=>this.setState({showExportNotebookDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="download"/>
-		    <span className="sr-only">{T("Export Notebook")}</span>
+                    <span className="sr-only">{T("Export Notebook")}</span>
                   </Button>
                 </ButtonGroup>
               </Navbar>

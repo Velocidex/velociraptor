@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import api from '../core/api-service.jsx';
 import _ from 'lodash';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import DateTimePicker from 'react-datetime-picker';
 import Form from 'react-bootstrap/Form';
 import Row from 'react-bootstrap/Row';
@@ -82,7 +82,7 @@ export default class VeloForm extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.maybeFetchArtifacts(this.props.param.artifact_type);
     }
 
@@ -107,7 +107,7 @@ export default class VeloForm extends React.Component {
 
         // Cancel any in flight calls.
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         // Load all artifacts, but only keep the ones that match the
         // specified type
@@ -249,7 +249,7 @@ export default class VeloForm extends React.Component {
         case "hidden":
             return <></>;
 
-        case "csv":
+        case "csv": {
             let data = parseCSV(this.props.value);
             let columns = [{
                 dataField: "_id",
@@ -346,6 +346,7 @@ export default class VeloForm extends React.Component {
                   </Col>
                 </Form.Group>
             );
+        }
 
         case "regex":
             return (
@@ -410,7 +411,7 @@ export default class VeloForm extends React.Component {
                 </Form.Group>
             );
 
-        case "timestamp":
+        case "timestamp": {
             // value prop is always a string in ISO format in UTC timezone.
             let date = convertToDate(this.props.value);
 
@@ -470,6 +471,7 @@ export default class VeloForm extends React.Component {
                   </Col>
                 </Form.Group>
             );
+        }
 
         case "choices":
             return (

@@ -2,13 +2,8 @@ import _ from 'lodash';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
-import Form from 'react-bootstrap/Form';
-import Row from 'react-bootstrap/Row';
-import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
-import Tooltip from 'react-bootstrap/Tooltip';
-import Col from 'react-bootstrap/Col';
 import BootstrapTable from 'react-bootstrap-table-next';
 import cellEditFactory, { Type } from 'react-bootstrap-table2-editor';
 import filterFactory from 'react-bootstrap-table2-filter';
@@ -20,12 +15,6 @@ import { formatColumns } from "../core/table.jsx";
 
 
 const POLL_TIME = 5000;
-
-const renderToolTip = (props, params) => (
-    <Tooltip show={params.description} {...props}>
-       {params.description}
-     </Tooltip>
-);
 
 
 export default class MetadataEditor extends Component {
@@ -39,7 +28,7 @@ export default class MetadataEditor extends Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.interval = setInterval(this.fetchMetadata, POLL_TIME);
         this.fetchMetadata();
     }
@@ -58,7 +47,7 @@ export default class MetadataEditor extends Component {
         this.setState({metadata_loading: true});
 
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         api.get("v1/GetClientMetadata/" + this.props.client_id,
                 {}, this.source.token).then(response=>{

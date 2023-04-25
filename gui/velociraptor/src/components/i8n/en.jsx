@@ -228,6 +228,7 @@ const English = {
     "Perm_FILESYSTEM_WRITE" : "Filesystem Write",
     "Perm_MACHINE_STATE" : "Machine State",
     "Perm_PREPARE_RESULTS" : "Prepare Results",
+    "Perm_DELETE_RESULTS" : "Delete Results",
     "Perm_DATASTORE_ACCESS" : "Datastore Access",
 
 
@@ -250,10 +251,8 @@ const English = {
     "ToolPerm_FILESYSTEM_WRITE" : "Allowed to create files on the filesystem",
     "ToolPerm_MACHINE_STATE" : "Allowed to collect state information from machines (e.g. pslist())",
     "ToolPerm_PREPARE_RESULTS" : "Allowed to create zip files",
+    "ToolPerm_DELETE_RESULTS" : "Allowed to delete clients, flows and other data",
     "ToolPerm_DATASTORE_ACCESS" : " Allowed raw datastore access",
-
-
-
 
     "ToolUsernamePasswordless" :
     <>

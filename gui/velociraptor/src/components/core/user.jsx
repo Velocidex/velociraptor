@@ -1,7 +1,8 @@
 import _ from 'lodash';
 import React from 'react';
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
+import PropTypes from 'prop-types';
 
 const UserConfig = React.createContext({
     traits: {},
@@ -12,6 +13,10 @@ const POLL_TIME = 5000;
 
 // A component which maintains the user settings
 export class UserSettings extends React.Component {
+    static propTypes = {
+        children: PropTypes.node,
+    }
+
     updateTraits = () => {
         api.get("v1/GetUserUITraits", {}, this.source.token).then((response) => {
             let traits = response.data.interface_traits;
@@ -55,7 +60,7 @@ export class UserSettings extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.interval = setInterval(this.updateTraits, POLL_TIME);
         this.updateTraits();
     }

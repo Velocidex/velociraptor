@@ -1,4 +1,5 @@
 import "./user-dashboard.css";
+import PropTypes from 'prop-types';
 
 import React from 'react';
 
@@ -23,7 +24,8 @@ const ranges = [
 
 class UserDashboard extends React.Component {
     static propTypes = {
-
+        // React router props.
+        history: PropTypes.object,
     };
 
     constructor(props) {

@@ -74,3 +74,21 @@ span.user-edit {
 .form-inline .artifact-search-input.form-control {
     width: 300px;
 }
+
+.artifact-search-table td {
+    padding: 0px;
+    margin: 0px;
+}
+
+.link-button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  display: inline;
+  margin: 0;
+  padding: 0;
+}
+
+.built-in-icon {
+    padding-right: 5px;
+}

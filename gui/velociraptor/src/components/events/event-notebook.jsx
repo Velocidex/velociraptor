@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
 import NotebookRenderer from '../notebooks/notebook-renderer.jsx';
 import _ from 'lodash';
@@ -26,7 +26,7 @@ export default class EventNotebook extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.interval = setInterval(this.fetchNotebooks, POLL_TIME);
         this.fetchNotebooks();
     }

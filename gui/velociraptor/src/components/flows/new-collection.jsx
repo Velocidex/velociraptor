@@ -30,7 +30,7 @@ import { HotKeys, ObserveKeys } from "react-hotkeys";
 import { requestToParameters, runArtifact } from "./utils.jsx";
 
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 
 class PaginationBuilder {
     PaginationSteps = ["Select Artifacts", "Configure Parameters",
@@ -129,7 +129,7 @@ class NewCollectionSelectArtifacts extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.doSearch("...");
     }
 
@@ -681,7 +681,7 @@ class NewCollectionLaunch extends React.Component {
     }
 
     componentDidMount() {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
     }
 
     componentWillUnmount() {
@@ -791,15 +791,17 @@ class NewCollectionLaunch extends React.Component {
     }
 }
 
-class NewCollectionWizard extends React.Component {
+class
+NewCollectionWizard extends React.Component {
     static propTypes = {
         baseFlow: PropTypes.object,
         onResolve: PropTypes.func,
         onCancel: PropTypes.func,
+        client: PropTypes.object,
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.initializeFromBaseFlow();
 
         // A bit hacky but whatevs...

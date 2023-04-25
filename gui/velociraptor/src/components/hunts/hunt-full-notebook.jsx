@@ -1,4 +1,6 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+
 import HuntNotebook from './hunt-notebook.jsx';
 import { withRouter }  from "react-router-dom";
 
@@ -9,7 +11,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import T from '../i8n/i8n.jsx';
 
 class FullScreenHuntNotebook extends React.Component {
-    static propTypes = {};
+    static propTypes = {
+        // React router props.
+        match: PropTypes.object,
+        history: PropTypes.object,
+    };
 
     state = {};
 

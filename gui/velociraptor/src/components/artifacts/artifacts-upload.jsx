@@ -9,7 +9,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import classNames from "classnames";
 import api from '../core/api-service.jsx';
 import BootstrapTable from 'react-bootstrap-table-next';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import filterFactory from 'react-bootstrap-table2-filter';
 import { formatColumns } from "../core/table.jsx";
 import T from '../i8n/i8n.jsx';
@@ -26,7 +26,7 @@ export default class ArtifactsUpload extends React.Component {
     }
 
     componentDidMount() {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
     }
 
     componentWillUnmount() {

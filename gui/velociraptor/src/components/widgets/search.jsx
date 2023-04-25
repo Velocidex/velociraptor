@@ -1,12 +1,11 @@
 import "./search.css";
 
 import _ from 'lodash';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import React from 'react';
 import Pagination from 'react-bootstrap/Pagination';
-import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import T from '../i8n/i8n.jsx';
 
@@ -33,7 +32,7 @@ export default class SearchHex extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
     }
 
     componentWillUnmount() {
@@ -65,7 +64,7 @@ export default class SearchHex extends React.Component {
     searchNext = ()=>{
         // Cancel any in flight calls.
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         if (!this.props.vfs_components) {
             return;
@@ -86,7 +85,7 @@ export default class SearchHex extends React.Component {
     searchPrev = ()=>{
         // Cancel any in flight calls.
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         if (!this.props.vfs_components) {
             return;
@@ -139,7 +138,6 @@ export default class SearchHex extends React.Component {
     updateHighlightsForString = search_term=>{
         let hits = [];
         let utf8_buffer = new TextDecoder().decode(this.props.byte_array);
-        let term_length = search_term.length;
         let start = -1;
         for(;;) {
             let idx = utf8_buffer.indexOf(search_term, start+1);
@@ -160,7 +158,7 @@ export default class SearchHex extends React.Component {
         let utf8_buffer = new TextDecoder('latin1').decode(this.props.byte_array);
         let re = undefined;
         try {
-            re = new RegExp(search_term, "gi");
+            re = new RegExp(search_term, "smgi");
             this.setState({search_term_error: ""});
 
         } catch(e) {

@@ -9,7 +9,7 @@ import { formatColumns } from "../core/table.jsx";
 import filterFactory from 'react-bootstrap-table2-filter';
 
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 
 import T from '../i8n/i8n.jsx';
 const POLL_TIME = 5000;
@@ -25,7 +25,7 @@ export default class NotebookUploads extends Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.interval = setInterval(this.fetchNotebookDetails, POLL_TIME);
 
         // Set the abbreviated notebook in the meantime while we fetch the

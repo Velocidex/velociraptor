@@ -282,7 +282,7 @@ func (self DeleteClientPlugin) Info(
 		Name:     "client_delete",
 		Doc:      "Delete all information related to a client. ",
 		ArgType:  type_map.AddType(scope, &DeleteClientArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Metadata: vql.VQLMetadata().Permissions(acls.DELETE_RESULTS).Build(),
 	}
 }
 

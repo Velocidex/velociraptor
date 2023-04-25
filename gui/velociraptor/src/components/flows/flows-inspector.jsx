@@ -14,13 +14,17 @@ import { withRouter }  from "react-router-dom";
 // Typically subclassable by actual components.
 import api from '../core/api-service.jsx';
 
-import axios from 'axios';
+import {CancelToken} from 'axios';
 
 const POLL_TIME = 5000;
 
 class FlowInspector extends React.Component {
     static propTypes = {
         flow: PropTypes.object,
+
+        // React router props.
+        match: PropTypes.object,
+        history: PropTypes.object,
     };
 
     state = {
@@ -29,7 +33,7 @@ class FlowInspector extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.interval = setInterval(this.fetchDetailedFlow, POLL_TIME);
 
         // Set the abbreviated flow in the meantime while we fetch the
@@ -68,7 +72,7 @@ class FlowInspector extends React.Component {
 
         // Cancel any in flight requests.
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.setState({loading: true});
 
         api.get("v1/GetFlowDetails", {

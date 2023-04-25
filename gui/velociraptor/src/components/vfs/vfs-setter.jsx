@@ -10,6 +10,9 @@ class VFSSetterFromRoute extends Component {
     static propTypes = {
         vfs_path: PropTypes.array,
         updateVFSPath: PropTypes.func.isRequired,
+
+        // React router props.
+        match: PropTypes.object,
     }
 
     componentDidUpdate() {

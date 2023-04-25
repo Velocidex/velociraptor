@@ -9,7 +9,7 @@ import FlowInspector from "./flows-inspector.jsx";
 import { withRouter }  from "react-router-dom";
 
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import Spinner from '../utils/spinner.jsx';
 
 const POLL_TIME = 5000;
@@ -17,6 +17,10 @@ const POLL_TIME = 5000;
 class ClientFlowsView extends React.Component {
     static propTypes = {
         client: PropTypes.object,
+
+        // React router props.
+        match: PropTypes.object,
+        history: PropTypes.object,
     };
 
     state = {
@@ -28,7 +32,7 @@ class ClientFlowsView extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.interval = setInterval(this.fetchFlows, POLL_TIME);
         this.fetchFlows();
     }
@@ -55,7 +59,7 @@ class ClientFlowsView extends React.Component {
 
         // Cancel any in flight calls.
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         api.get("v1/GetClientFlows/" + client_id, {
             count: 1000,

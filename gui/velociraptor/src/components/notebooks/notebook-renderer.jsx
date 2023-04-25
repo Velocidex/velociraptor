@@ -7,7 +7,7 @@ import _ from 'lodash';
 import T from '../i8n/i8n.jsx';
 
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import  {CancelToken} from 'axios';
 
 export default class NotebookRenderer extends React.Component {
     static propTypes = {
@@ -27,7 +27,7 @@ export default class NotebookRenderer extends React.Component {
 
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
     }
 
     componentWillUnmount() {

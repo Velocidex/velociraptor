@@ -40,6 +40,7 @@ class OfflineCollectorParameters  extends React.Component {
     static propTypes = {
         parameters: PropTypes.object,
         setParameters: PropTypes.func.isRequired,
+        paginator: PropTypes.object,
     }
 
     render() {

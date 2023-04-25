@@ -92,7 +92,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import UserConfig from './user.jsx';
 
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 
 
 export class SettingsButton extends Component {
@@ -110,7 +110,7 @@ export class SettingsButton extends Component {
 
                       onClick={() => this.props.ace.execCommand("showSettingsMenu")} >
                 <FontAwesomeIcon icon="text-height"/>
-		<span className="sr-only">{T("Configure Editor")}</span>
+        <span className="sr-only">{T("Configure Editor")}</span>
               </Button>
             </>
         );
@@ -125,6 +125,7 @@ export default class VeloAce extends Component {
         focus: PropTypes.bool,
         onChange: PropTypes.func,
         options: PropTypes.object,
+        placeholder: PropTypes.string,
 
         // Extra toolbar buttons to go in the editor toolbar.
         toolbar: PropTypes.any,
@@ -192,7 +193,7 @@ export default class VeloAce extends Component {
     }
 
     componentDidMount() {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
     }
 
     componentWillUnmount() {

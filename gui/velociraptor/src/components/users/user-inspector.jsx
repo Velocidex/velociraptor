@@ -23,7 +23,7 @@ import AddUserDialog from './add_user.jsx';
 import EditUserDialog from './edit-user.jsx';
 
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 
 const POLL_TIME = 5000;
 
@@ -297,8 +297,8 @@ class UsersOverview extends Component {
     }
 
     componentDidMount = () => {
-        this.setACLsource = axios.CancelToken.source();
-        this.getACLsource = axios.CancelToken.source();
+        this.setACLsource = CancelToken.source();
+        this.getACLsource = CancelToken.source();
     }
 
     componentWillUnmount() {
@@ -308,7 +308,7 @@ class UsersOverview extends Component {
 
     setACL = (acl) => {
         this.setACLsource.cancel();
-        this.setACLsource = axios.CancelToken.source();
+        this.setACLsource = CancelToken.source();
 
         api.post("v1/SetUserRoles", acl,
                  this.setACLsource.token).then(response=>{
@@ -322,7 +322,7 @@ class UsersOverview extends Component {
 
     getACL = (user_name, org) => {
         this.getACLsource.cancel();
-        this.getACLsource = axios.CancelToken.source();
+        this.getACLsource = CancelToken.source();
 
         this.setState({acl: {}});
         let org_id = org && org.id;
@@ -598,6 +598,10 @@ class OrgsOverview extends UsersOverview {
 class UserInspector extends Component {
     static contextType = UserConfig;
 
+    static propTypes = {
+        history: PropTypes.object,
+    }
+
     state = {
         tab: "users",
         users_initialized: false,
@@ -605,7 +609,7 @@ class UserInspector extends Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.interval = setInterval(this.loadUsers, POLL_TIME);
         this.loadUsers();
     }
@@ -628,7 +632,7 @@ class UserInspector extends Component {
 
     loadUsers = () => {
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         this.setState({loading: true});
 

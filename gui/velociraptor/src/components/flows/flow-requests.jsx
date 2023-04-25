@@ -4,7 +4,7 @@ import T from '../i8n/i8n.jsx';
 import VeloAce from '../core/ace.jsx';
 import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
 
 export default class FlowRequests extends React.Component {
@@ -17,7 +17,7 @@ export default class FlowRequests extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.fetchRequests();
     }
 

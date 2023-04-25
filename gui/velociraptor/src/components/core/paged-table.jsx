@@ -7,7 +7,7 @@ import './paged-table.css';
 import 'react-bootstrap-table2-paginator/dist/react-bootstrap-table2-paginator.min.css';
 import ToolkitProvider from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit.min';
 
-import axios from 'axios';
+import {CancelToken} from 'axios';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -161,7 +161,7 @@ class VeloPagedTable extends Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.setState({page_size: this.props.initial_page_size || 10});
 
         this.fetchRows();
@@ -293,7 +293,7 @@ class VeloPagedTable extends Component {
         let url = this.props.url || "v1/GetTable";
 
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         this.setState({loading: true});
         api.get(url, params, this.source.token).then((response) => {
@@ -347,7 +347,6 @@ class VeloPagedTable extends Component {
     headerFormatter = (column, colIndex) => {
         let icon = "sort";
         let next_dir = "Ascending";
-        let tooltip = "Sort Up";
         let classname = "sort-element";
         let sort_column = this.state.transform && this.state.transform.sort_column;
         let sort_dir = this.state.transform && this.state.transform.sort_direction;
@@ -361,7 +360,6 @@ class VeloPagedTable extends Component {
             if (sort_dir === "Ascending") {
                 icon = "arrow-up-a-z";
                 next_dir = "Descending";
-                tooltip = "Sort Down";
             } else {
                 icon = "arrow-down-a-z";
             }

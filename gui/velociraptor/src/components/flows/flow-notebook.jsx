@@ -1,6 +1,6 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
 import NotebookRenderer from '../notebooks/notebook-renderer.jsx';
 import _ from 'lodash';
@@ -19,7 +19,7 @@ export default class FlowNotebook extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.interval = setInterval(this.fetchNotebooks, POLL_TIME);
         this.fetchNotebooks();
     }
@@ -59,7 +59,7 @@ export default class FlowNotebook extends React.Component {
         let notebook_id = "N." + flow_id + "-" + client_id;
 
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         this.setState({loading: true});
         api.get("v1/GetNotebooks", {
