@@ -5,7 +5,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import Select from 'react-select';
 import T from '../i8n/i8n.jsx';
 
@@ -19,7 +19,7 @@ export default class UserForm extends React.Component {
     };
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.loadUsers();
     }
 

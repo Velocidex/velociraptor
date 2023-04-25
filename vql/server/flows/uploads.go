@@ -79,8 +79,12 @@ func (self UploadsPlugins) Call(
 
 			tmp_chan := make(chan vfilter.Row)
 
-			go readFlowUploads(ctx, config_obj, scope, tmp_chan,
-				client_id, flow_id)
+			go func() {
+				defer close(tmp_chan)
+
+				readFlowUploads(ctx, config_obj, scope, tmp_chan,
+					client_id, flow_id)
+			}()
 
 			for row := range tmp_chan {
 				row_dict, ok := row.(*ordereddict.Dict)
@@ -109,6 +113,7 @@ func readFlowUploads(
 	scope vfilter.Scope,
 	output_chan chan vfilter.Row,
 	client_id, flow_id string) {
+
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	file_store_factory := file_store.GetFileStore(config_obj)
 	reader, err := result_sets.NewResultSetReader(

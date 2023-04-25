@@ -9,7 +9,7 @@ import BootstrapTable from 'react-bootstrap-table-next';
 import { formatColumns } from "../core/table.jsx";
 import ArtifactLink from '../artifacts/artifacts-link.jsx';
 
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
 import { runArtifact } from "./utils.jsx";
 
@@ -27,7 +27,7 @@ export default class AddFlowToHuntDialog extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.fetchCompatibleHunts();
     }
 

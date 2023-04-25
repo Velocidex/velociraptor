@@ -98,7 +98,7 @@ class VeloNavigator extends Component {
                       {T("Main Menu")}
                     </h2>
                     <ul className="nav nav-pills navigator">
-                      <li className="nav-link" state="userDashboard">
+                      <li className="nav-link">
                         <NavLink exact={true} to="/dashboard">
                           <span>
                             <i className="navicon">
@@ -109,7 +109,7 @@ class VeloNavigator extends Component {
                         </NavLink>
                       </li>
 
-                      <li className="nav-link" state="hunts">
+                      <li className="nav-link">
                         <NavLink to="/hunts">
                           <span>
                             <i className="navicon">
@@ -120,7 +120,7 @@ class VeloNavigator extends Component {
                         </NavLink>
                       </li>
 
-                      <li className="nav-link" state="view_artifacts">
+                      <li className="nav-link">
                         <NavLink to="/artifacts">
                           <span>
                             <i className="navicon">
@@ -132,7 +132,7 @@ class VeloNavigator extends Component {
                       </li>
 
                       {!customization.disable_server_events && (
-                        <li className="nav-link" state="server_events">
+                        <li className="nav-link">
                           <NavLink to="/events/server">
                             <span>
                               <i className="navicon">
@@ -144,7 +144,7 @@ class VeloNavigator extends Component {
                         </li>
                       )}
 
-                      <li className="nav-link" state="server_artifacts">
+                      <li className="nav-link">
                         <NavLink to="/collected/server">
                           <span>
                             <i className="navicon">
@@ -155,7 +155,7 @@ class VeloNavigator extends Component {
                         </NavLink>
                       </li>
 
-                      <li className="nav-link" state="notebook">
+                      <li className="nav-link">
                         <NavLink to="/notebooks">
                           <span>
                             <i className="navicon">
@@ -167,7 +167,7 @@ class VeloNavigator extends Component {
                       </li>
 
                       {user_is_admin && !customization.disable_user_management && (
-                        <li className="nav-link" state="users">
+                        <li className="nav-link">
                           <NavLink to="/users">
                             <span>
                               <i className="navicon">

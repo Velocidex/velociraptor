@@ -25,6 +25,7 @@ class CustomTooltip extends React.Component {
       payload: PropTypes.array,
       columns: PropTypes.array,
       data: PropTypes.array,
+      active: PropTypes.any,
   }
 
   render() {

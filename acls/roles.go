@@ -33,6 +33,7 @@ var (
 		"FILESYSTEM_WRITE",
 		"MACHINE_STATE",
 		"PREPARE_RESULTS",
+		"DELETE_RESULTS",
 		"DATASTORE_ACCESS",
 	}
 )
@@ -101,6 +102,10 @@ func DescribePermissions(token *acl_proto.ApiClientACL) []string {
 		result = append(result, "PREPARE_RESULTS")
 	}
 
+	if token.DeleteResults {
+		result = append(result, "DELETE_RESULTS")
+	}
+
 	if token.DatastoreAccess {
 		result = append(result, "DATASTORE_ACCESS")
 	}
@@ -148,6 +153,8 @@ func SetTokenPermission(
 			token.MachineState = true
 		case "PREPARE_RESULTS":
 			token.PrepareResults = true
+		case "DELETE_RESULTS":
+			token.DeleteResults = true
 		case "DATASTORE_ACCESS":
 			token.DatastoreAccess = true
 
@@ -188,6 +195,7 @@ func GetRolePermissions(
 			result.FilesystemWrite = true
 			result.MachineState = true
 			result.PrepareResults = true
+			result.DeleteResults = true
 
 			// An administrator for the root org is allowed to
 			// manipulate orgs.

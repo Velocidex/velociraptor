@@ -1,11 +1,9 @@
 import React, { Component } from 'react';
-
-import _ from 'lodash';
+import PropTypes from 'prop-types';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { withRouter, Link }  from "react-router-dom";
 import ShellViewer from "../clients/shell-viewer.jsx";
-import VeloForm from '../forms/form.jsx';
 import MetadataEditor from "../clients/metadata.jsx";
 
 import ToggleButtonGroup from 'react-bootstrap/ToggleButtonGroup';
@@ -13,15 +11,15 @@ import ToggleButton from 'react-bootstrap/ToggleButton';
 import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
 
-import api from '../core/api-service.jsx';
-import axios from 'axios';
-import { parseCSV } from '../utils/csv.jsx';
+import {CancelToken} from 'axios';
 import "../clients/host-info.css";
 
-const POLL_TIME = 5000;
-
 class ServerInfo extends Component {
-    static propTypes = {}
+    static propTypes = {
+        // React router props.
+        match: PropTypes.object,
+        history: PropTypes.object,
+    }
 
     state = {
         // The mode of the host info tab set.
@@ -31,7 +29,7 @@ class ServerInfo extends Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
     }
 
     componentWillUnmount() {

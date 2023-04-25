@@ -7,7 +7,7 @@ import VeloReportViewer from "../artifacts/reporting.jsx";
 import Select from 'react-select';
 
 import _ from 'lodash';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
@@ -72,6 +72,10 @@ class DeleteOKDialog extends React.Component {
 class ArtifactInspector extends React.Component {
     static propTypes = {
         client: PropTypes.object,
+
+        // React router props.
+        match: PropTypes.object,
+        history: PropTypes.object,
     };
 
     state = {
@@ -97,7 +101,7 @@ class ArtifactInspector extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.searchInput.focus();
         let artifact_name = this.props.match && this.props.match.params &&
             this.props.match.params.artifact;
@@ -125,7 +129,7 @@ class ArtifactInspector extends React.Component {
 
         // Cancel any in flight calls.
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         api.post("v1/GetArtifacts",
                 {
@@ -234,6 +238,8 @@ class ArtifactInspector extends React.Component {
             artifact: "name: "+selected,
             op: "DELETE",
         }, this.source.token).then(resp => {
+            if (resp.cancel) return;
+
             this.fetchRows(this.state.current_filter);
             this.setState({showDeleteArtifactDialog: false});
         });
@@ -408,17 +414,20 @@ class ArtifactInspector extends React.Component {
                                     item.name === this.state.selectedDescriptor.name ?
                                     "row-selected" : undefined
                             }>
-                                     <td onClick={(e) => this.onSelect(item, e)}>
-                                       {/* eslint jsx-a11y/anchor-is-valid: "off" */}
-                                       <a href="#"
-                                          onClick={(e) => this.onSelect(item, e)}>
+                                     <td>
+                                       <button type="button"
+                                               href="#"
+                                               className="link-button"
+                                               onClick={e=>this.onSelect(item, e)}>
                                          {item.name}
-                                       </a>
-                                       <span className="user-edit">
-                                         <FontAwesomeIcon
-                                           className={classNames({"invisible": item.built_in})}
-                                           icon="user-edit" />
-                                       </span>
+                                         <span className={classNames({
+                                             "built-in-icon": true,
+                                             "invisible": item.built_in,
+                                         })}>
+                                           <FontAwesomeIcon icon="user-edit" />
+                                         </span>
+                                       </button>
+
                                      </td>
                                    </tr>;
                         })}

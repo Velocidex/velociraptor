@@ -4,7 +4,7 @@ import _ from 'lodash';
 
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
 import Button from 'react-bootstrap/Button';
 import qs from 'qs';
@@ -21,9 +21,6 @@ import VeloValueRenderer from '../utils/value.jsx';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import Form from 'react-bootstrap/Form';
-import Nav from 'react-bootstrap/Nav';
-import InputGroup from 'react-bootstrap/InputGroup';
 
 // https://en.wikipedia.org/wiki/List_of_file_signatures
 const patterns = [
@@ -68,7 +65,7 @@ class HexViewTab  extends React.PureComponent {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.fetchPage_(0);
     }
 
@@ -102,7 +99,7 @@ class HexViewTab  extends React.PureComponent {
         let params = Object.assign({}, this.props.params);
 
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         // read a bit more than we need to so the text view looks a
         // bit more full.
@@ -212,7 +209,7 @@ class HexViewTab  extends React.PureComponent {
                 { this.state.textview_only ?
                   <Col sm="12">
                     <div className="panel textdump">
-                      <pre>{this.state.rawdata}</pre>
+                      {this.state.rawdata}
                     </div>
                   </Col>
                   :
@@ -310,7 +307,7 @@ export default class PreviewUpload extends Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.fetchPreview_();
     }
 

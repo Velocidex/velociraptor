@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 
 import _ from 'lodash';
 import Modal from 'react-bootstrap/Modal';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import StepWizard from 'react-step-wizard';
 import T from '../i8n/i8n.jsx';
 
@@ -218,7 +218,7 @@ export default class NewHuntWizard extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         let state = this.setStateFromBase(this.props.baseHunt || {});
         this.setState(state);
 

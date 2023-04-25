@@ -18,6 +18,7 @@ export default class DeleteTimelineRanges extends Component {
         start_time: PropTypes.number,
         end_time: PropTypes.number,
         onClose: PropTypes.func.isRequired,
+        artifact: PropTypes.string,
     }
 
     deleteData = () => {

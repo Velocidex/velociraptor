@@ -1,15 +1,7 @@
-import _ from 'lodash';
-
 import React from 'react';
 import PropTypes from 'prop-types';
 import Button from 'react-bootstrap/Button';
-import axios from 'axios';
-import { PrepareData } from '../core/table.jsx';
 import VeloPagedTable from '../core/paged-table.jsx';
-import T from '../i8n/i8n.jsx';
-import Spinner from '../utils/spinner.jsx';
-import CardDeck from 'react-bootstrap/CardDeck';
-import Card from 'react-bootstrap/Card';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';

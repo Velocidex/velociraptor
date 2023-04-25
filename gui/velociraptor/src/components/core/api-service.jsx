@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, {isCancel} from 'axios';
 
 import _ from 'lodash';
 import qs from 'qs';
@@ -108,7 +108,7 @@ if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
 let api_handlers = base_path + "/api/";
 
 const handle_error = err=>{
-    if (axios.isCancel(err)) {
+    if (isCancel(err)) {
         return {data: {}, cancel: true};
     };
 

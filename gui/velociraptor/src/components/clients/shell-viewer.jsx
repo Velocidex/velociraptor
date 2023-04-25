@@ -11,7 +11,7 @@ import T from '../i8n/i8n.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { requestToParameters } from "../flows/utils.jsx";
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import VeloTimestamp from "../utils/time.jsx";
 import VeloPagedTable from "../core/paged-table.jsx";
 import VeloAce from '../core/ace.jsx';
@@ -28,6 +28,9 @@ class _VeloShellCell extends Component {
         flow: PropTypes.object,
         client: PropTypes.object,
         fetchLastShellCollections: PropTypes.func.isRequired,
+
+        // React router props.
+        history: PropTypes.object,
     }
 
     state = {
@@ -38,7 +41,7 @@ class _VeloShellCell extends Component {
     }
 
     componentDidMount() {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
     }
 
     componentWillUnmount() {
@@ -293,6 +296,9 @@ class _VeloVQLCell extends Component {
         flow: PropTypes.object,
         client: PropTypes.object,
         fetchLastShellCollections: PropTypes.func.isRequired,
+
+        // React router props.
+        history: PropTypes.object,
     }
 
     state = {
@@ -547,7 +553,7 @@ class ShellViewer extends Component {
     }
 
     componentDidMount() {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.interval = setInterval(this.fetchLastShellCollections, SHELL_POLL_TIME);
         this.fetchLastShellCollections();
     }
@@ -704,9 +710,9 @@ class ShellViewer extends Component {
                                     id="bg-nested-dropdown">
                       <Dropdown.Item eventKey="Powershell">Powershell</Dropdown.Item>
                       { (!this.state.client_os || this.state.client_os === "windows") &&
-                           <Dropdown.Item eventKey="Cmd">Cmd</Dropdown.Item> }
+                        <Dropdown.Item eventKey="Cmd">Cmd</Dropdown.Item> }
                       { (!this.state.client_os || this.state.client_os !== "windows") &&
-                           <Dropdown.Item eventKey="Bash">Bash</Dropdown.Item> }
+                        <Dropdown.Item eventKey="Bash">Bash</Dropdown.Item> }
                       <Dropdown.Item eventKey="VQL">VQL</Dropdown.Item>
                     </DropdownButton>
                   </InputGroup.Prepend>

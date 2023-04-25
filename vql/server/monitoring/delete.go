@@ -34,7 +34,7 @@ func (self DeleteEventsPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+		err := vql_subsystem.CheckAccess(scope, acls.DELETE_RESULTS)
 		if err != nil {
 			scope.Log("delete_events: %v", err)
 			return
@@ -98,7 +98,7 @@ func (self DeleteEventsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 		Name:     "delete_events",
 		Doc:      "Delete all the files that make up a flow.",
 		ArgType:  type_map.AddType(scope, &DeleteEventsPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Metadata: vql.VQLMetadata().Permissions(acls.DELETE_RESULTS).Build(),
 	}
 }
 

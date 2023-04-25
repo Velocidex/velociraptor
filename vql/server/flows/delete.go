@@ -29,7 +29,7 @@ func (self DeleteFlowPlugin) Call(
 	go func() {
 		defer close(output_chan)
 
-		err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+		err := vql_subsystem.CheckAccess(scope, acls.DELETE_RESULTS)
 		if err != nil {
 			scope.Log("delete_flow: %s", err)
 			return
@@ -79,7 +79,7 @@ func (self DeleteFlowPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 		Name:     "delete_flow",
 		Doc:      "Delete all the files that make up a flow.",
 		ArgType:  type_map.AddType(scope, &FlowsPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Metadata: vql.VQLMetadata().Permissions(acls.DELETE_RESULTS).Build(),
 	}
 }
 

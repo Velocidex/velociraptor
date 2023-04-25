@@ -18,7 +18,7 @@ import T from '../i8n/i8n.jsx';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import { requestToParameters } from "../flows/utils.jsx";
 import AvailableDownloads from "../notebooks/downloads.jsx";
 
@@ -37,7 +37,7 @@ export default class HuntOverview extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         // Default state of the lock is set by the user's preferences.
         let lock_password = this.context.traits &&

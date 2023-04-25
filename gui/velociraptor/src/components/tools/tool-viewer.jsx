@@ -3,7 +3,7 @@ import './tool-viewer.css';
 import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import api from '../core/api-service.jsx';
@@ -25,7 +25,7 @@ class ResetToolDialog extends React.Component {
     };
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
     }
 
     componentWillUnmount() {
@@ -75,7 +75,7 @@ export default class ToolViewer extends React.Component {
     };
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.fetchToolInfo();
     }
 

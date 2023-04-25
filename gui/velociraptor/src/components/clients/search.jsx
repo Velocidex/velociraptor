@@ -14,18 +14,23 @@ import Dropdown from 'react-bootstrap/Dropdown';
 import UserConfig from '../core/user.jsx';
 
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import T from '../i8n/i8n.jsx';
+
 
 class VeloClientSearch extends Component {
     static contextType = UserConfig;
     static propTypes = {
         // Update the applications's search parameter.
         setSearch: PropTypes.func.isRequired,
+
+        // React router props.
+        match: PropTypes.object,
+        history: PropTypes.object,
     };
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         let query = this.props.match && this.props.match.params &&
             this.props.match.params.query;
         if (query && query !== this.state.query) {
@@ -90,7 +95,6 @@ class VeloClientSearch extends Component {
                     inputProps={{
                         placeholder: T("SEARCH_CLIENTS"),
                         spellCheck: "false",
-                        id: this.props.id || "client-search-bar",
                         value: this.state.query,
                         onChange: (e, {newValue, method}) => {
                             this.setState({query: newValue});

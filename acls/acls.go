@@ -114,6 +114,9 @@ const (
 	// Allowed to create zip files.
 	PREPARE_RESULTS
 
+	// Allowed to delete results from the server
+	DELETE_RESULTS
+
 	// Allowed raw datastore access
 	DATASTORE_ACCESS
 
@@ -171,6 +174,8 @@ func (self ACL_PERMISSION) String() string {
 		return "MACHINE_STATE"
 	case PREPARE_RESULTS:
 		return "PREPARE_RESULTS"
+	case DELETE_RESULTS:
+		return "DELETE_RESULTS"
 	case DATASTORE_ACCESS:
 		return "DATASTORE_ACCESS"
 
@@ -221,6 +226,8 @@ func GetPermission(name string) ACL_PERMISSION {
 		return MACHINE_STATE
 	case "PREPARE_RESULTS":
 		return PREPARE_RESULTS
+	case "DELETE_RESULTS":
+		return DELETE_RESULTS
 	case "DATASTORE_ACCESS":
 		return DATASTORE_ACCESS
 

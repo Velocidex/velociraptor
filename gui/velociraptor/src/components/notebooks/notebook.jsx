@@ -1,11 +1,12 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import NotebooksList from './notebooks-list.jsx';
 import NotebookRenderer from './notebook-renderer.jsx';
 
 import SplitPane from 'react-split-pane';
 
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
 import Spinner from '../utils/spinner.jsx';
 import { withRouter }  from "react-router-dom";
@@ -16,6 +17,12 @@ const PAGE_SIZE = 100;
 
 
 class Notebooks extends React.Component {
+    static propTypes = {
+        // React router props.
+        match: PropTypes.object,
+        history: PropTypes.object,
+    };
+
     state = {
         notebooks: [],
         selected_notebook: {},
@@ -26,7 +33,7 @@ class Notebooks extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.interval = setInterval(this.fetchNotebooks, POLL_TIME);
         this.fetchNotebooks();
     }
@@ -39,7 +46,7 @@ class Notebooks extends React.Component {
     fetchNotebooks = () => {
         // Cancel any in flight calls.
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         api.get("v1/GetNotebooks", {
             count: PAGE_SIZE,

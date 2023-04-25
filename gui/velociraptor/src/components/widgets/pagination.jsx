@@ -1,7 +1,5 @@
-import _ from 'lodash';
-
 import PropTypes from 'prop-types';
-import React, { Component } from 'react';
+import React from 'react';
 import Pagination from 'react-bootstrap/Pagination';
 import Form from 'react-bootstrap/Form';
 import T from '../i8n/i8n.jsx';

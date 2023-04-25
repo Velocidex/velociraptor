@@ -13,7 +13,7 @@ import FlowOverview from './flow-overview.jsx';
 import FlowUploads from './flow-uploads.jsx';
 import FlowResults from './flow-results.jsx';
 import FlowLogs from './flow-logs.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 
 class FlowPopupInspector extends React.Component {
     static propTypes = {
@@ -71,7 +71,7 @@ export default class FlowLink extends React.Component {
     }
 
     componentDidMount() {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
     }
 
     componentWillUnmount() {

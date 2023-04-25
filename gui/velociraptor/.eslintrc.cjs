@@ -1,5 +1,9 @@
 module.exports = {
-    env: { browser: true, node: true },
+    env: {
+        browser: true,
+        node: true,
+        es6: true,
+     },
     parser: "@babel/eslint-parser",
     parserOptions: {
         requireConfigFile: false,
@@ -31,5 +35,9 @@ module.exports = {
     rules: {
         // allows characters like <'`&^"
         "react/no-unescaped-entities": 0,
+        "no-extra-semi": 0,
+        "react/display-name": 0,
+        "no-empty": 0,
+        "no-unused-vars": ["error", { "args": "none" }],
     },
 };

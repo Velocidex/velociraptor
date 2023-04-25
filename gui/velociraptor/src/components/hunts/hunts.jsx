@@ -1,11 +1,13 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+
 import SplitPane from 'react-split-pane';
 import HuntList from './hunt-list.jsx';
 import HuntInspector from './hunt-inspector.jsx';
 import _ from 'lodash';
 import api from '../core/api-service.jsx';
 
-import axios from 'axios';
+import  {CancelToken} from 'axios';
 import Spinner from '../utils/spinner.jsx';
 
 import { withRouter }  from "react-router-dom";
@@ -14,7 +16,9 @@ const POLL_TIME = 5000;
 
 class VeloHunts extends React.Component {
     static propTypes = {
-
+        // React router props.
+        match: PropTypes.object,
+        history: PropTypes.object,
     };
 
     state = {
@@ -34,8 +38,8 @@ class VeloHunts extends React.Component {
     }
 
     componentDidMount = () => {
-        this.get_hunts_source = axios.CancelToken.source();
-        this.list_hunts_source = axios.CancelToken.source();
+        this.get_hunts_source = CancelToken.source();
+        this.list_hunts_source = CancelToken.source();
         this.interval = setInterval(this.fetchHunts, POLL_TIME);
         this.fetchHunts();
     }
@@ -62,7 +66,7 @@ class VeloHunts extends React.Component {
     loadFullHunt = (hunt) => {
         this.setState({selected_hunt: hunt});
         this.get_hunts_source.cancel();
-        this.get_hunts_source = axios.CancelToken.source();
+        this.get_hunts_source = CancelToken.source();
         this.setState({full_selected_hunt: {loading: true}});
 
         api.get("v1/GetHunt", {
@@ -89,7 +93,7 @@ class VeloHunts extends React.Component {
             this.props.match.params.hunt_id;
 
         this.list_hunts_source.cancel();
-        this.list_hunts_source = axios.CancelToken.source();
+        this.list_hunts_source = CancelToken.source();
 
         // Some users have a lot of hunts and listing that many might
         // be prohibitively expensive.
@@ -134,7 +138,7 @@ class VeloHunts extends React.Component {
         // hunt stats are updated.
         if (selected_hunt_id && selected_hunt_id[0] === "H") {
             this.get_hunts_source.cancel();
-            this.get_hunts_source = axios.CancelToken.source();
+            this.get_hunts_source = CancelToken.source();
 
             api.get("v1/GetHunt", {
                 hunt_id: selected_hunt_id,

@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
@@ -46,7 +46,7 @@ export default class CreateArtifactFromCell extends React.Component {
 
     // Create an artifact template from the VQL
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         let lines = _.map(this.props.vql.match(/[^\r\n]+/g), line=>"      "+line);
         this.setState({text: artifact_template + lines.join("\n")});
     }

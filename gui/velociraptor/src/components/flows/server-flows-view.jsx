@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import SplitPane from 'react-split-pane';
 import _ from 'lodash';
@@ -7,12 +8,15 @@ import FlowInspector from "./flows-inspector.jsx";
 import { withRouter }  from "react-router-dom";
 
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 
 const POLL_TIME = 5000;
 
 class ServerFlowsView extends React.Component {
     static propTypes = {
+        // React router props.
+        match: PropTypes.object,
+        history: PropTypes.object,
     };
 
     state = {
@@ -21,7 +25,7 @@ class ServerFlowsView extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.interval = setInterval(this.fetchFlows, POLL_TIME);
         this.fetchFlows();
     }
@@ -37,7 +41,7 @@ class ServerFlowsView extends React.Component {
 
         // Cancel any in flight calls.
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         api.get("v1/GetClientFlows/server", {
             count: 100,

@@ -8,6 +8,9 @@ import { withRouter }  from "react-router-dom";
 class SidebarKeyNavigator extends React.Component {
     static propTypes = {
         client: PropTypes.object,
+
+        // React router props.
+        history: PropTypes.object,
     }
 
     render() {

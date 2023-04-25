@@ -7,6 +7,15 @@
   white-space: nowrap;
 }
 
+.textdump {
+  font-family: var(--font-monospace);
+  font-size: 13px;
+  color: var(--color-monospace-color);
+  padding: 0;
+  margin: 0;
+  white-space: pre;
+}
+
 .hexdump {
     margin: 0px;
 }

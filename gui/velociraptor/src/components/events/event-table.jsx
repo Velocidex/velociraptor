@@ -14,7 +14,7 @@ import Table  from 'react-bootstrap/Table';
 import utils from './utils.jsx';
 import { HotKeys, ObserveKeys } from "react-hotkeys";
 import { Typeahead, Token } from 'react-bootstrap-typeahead';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 
 import "react-bootstrap-typeahead/css/Typeahead.css";
 
@@ -47,7 +47,7 @@ class EventTableLabelGroup extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.loadLabels();
     }
 
@@ -113,7 +113,7 @@ class EventTableLabelGroup extends React.Component {
     }
 
     render() {
-        let current_label = this.props.label;
+        let current_label = this.props.current_label;
         let current_artifacts = this.props.tables &&
             this.props.tables[current_label.label] &&
             this.props.tables[current_label.label].artifacts;
@@ -133,7 +133,6 @@ class EventTableLabelGroup extends React.Component {
                     <Col sm="8">
                       <Typeahead
                         id="label-selector"
-                        autoFocus={true}
                         clearButton={true}
                         placeholder={T("Select label to edit its event monitoring table")}
                         renderToken={(option, { onRemove }, index) => (
@@ -185,7 +184,7 @@ class EventTableLabelGroup extends React.Component {
                 { this.props.paginator.makePaginator({
                     props: this.props,
                     step_name: "Offline Collector",
-                    isFocused: _.isEmpty(this.props.label),
+                    isFocused: _.isEmpty(this.props.current_label),
                 }) }
               </Modal.Footer>
             </>
@@ -215,7 +214,7 @@ export class EventTableWizard extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.fetchEventTable();
     }
 
@@ -340,7 +339,7 @@ export class EventTableWizard extends React.Component {
               <HotKeys keyMap={keymap} handlers={handlers}><ObserveKeys>
               <StepWizard ref={n=>this.step=n}>
                 <EventTableLabelGroup
-                  label={this.state.current_label}
+                  current_label={this.state.current_label}
                   setLabel={this.setLabel}
                   tables={this.state.tables}
                   paginator={new EventTablePaginator(
@@ -414,7 +413,7 @@ export class ServerEventTableWizard extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.fetchEventTable();
     }
 

@@ -200,7 +200,7 @@ func newMatcher(term, search_type string) (matcher, error) {
 		return &literal_matcher{[]byte(term)}, nil
 
 	case "regex":
-		re, err := regexp.Compile("(?i)" + term)
+		re, err := regexp.Compile("(?ism)" + term)
 		if err != nil {
 			return nil, err
 		}

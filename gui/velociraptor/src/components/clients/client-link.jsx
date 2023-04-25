@@ -10,6 +10,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 class ClientLink extends React.Component {
     static propTypes = {
         client_id: PropTypes.string,
+
+        // React router props.
+        history: PropTypes.object,
     };
 
     link = () => {

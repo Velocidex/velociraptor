@@ -2,7 +2,6 @@ import "./client-status.css";
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
-import api from '../core/api-service.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 export default class VeloClientStatusIcon extends Component {

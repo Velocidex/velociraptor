@@ -2,7 +2,7 @@ import './events.css';
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import _ from 'lodash';
 import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
@@ -40,7 +40,7 @@ class InspectRawJson extends React.PureComponent {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.fetchEventTable();
     }
 
@@ -59,7 +59,7 @@ class InspectRawJson extends React.PureComponent {
     fetchEventTable = () => {
         // Cancel any in flight calls.
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         // The same file is used by both server and client event
         // tables - only difference is that the server's client id is
@@ -163,10 +163,14 @@ const getLogArtifact = function (logs, router_artifact) {
 class EventMonitoring extends React.Component {
     static propTypes = {
         client: PropTypes.object,
+
+        // React router props.
+        match: PropTypes.object,
+        history: PropTypes.object,
     };
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.fetchEventResults();
     }
 
@@ -221,7 +225,7 @@ class EventMonitoring extends React.Component {
     fetchEventResults = () => {
         // Cancel any in flight calls.
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         let client_id = this.props.client.client_id || "server";
 
         api.post("v1/ListAvailableEventResults", {
@@ -307,7 +311,7 @@ class EventMonitoring extends React.Component {
                               onClick={() => this.setState({showServerEventTableWizard: true})}
                               variant="default">
                         <FontAwesomeIcon icon="edit"/>
-		        <span className="sr-only">{T("Update server monitoring tables")}</span>
+                <span className="sr-only">{T("Update server monitoring tables")}</span>
                       </Button>
                       <Button data-tooltip={T("Show server monitoring tables")}
                               data-position="right"
@@ -315,7 +319,7 @@ class EventMonitoring extends React.Component {
                               onClick={() => this.setState({showEventMonitoringPopup: true})}
                               variant="default">
                         <FontAwesomeIcon icon="binoculars"/>
-		        <span className="sr-only">{T("Show server monitoring tables")}</span>
+                <span className="sr-only">{T("Show server monitoring tables")}</span>
                       </Button>
 
                     </>:
@@ -326,7 +330,7 @@ class EventMonitoring extends React.Component {
                               onClick={() => this.setState({showEventTableWizard: true})}
                               variant="default">
                         <FontAwesomeIcon icon="edit"/>
-		        <span className="sr-only">{T("Update client monitoring table")}</span>
+                <span className="sr-only">{T("Update client monitoring table")}</span>
                       </Button>
                       <Button data-tooltip={T("Show client monitoring tables")}
                               data-position="right"
@@ -334,7 +338,7 @@ class EventMonitoring extends React.Component {
                               onClick={() => this.setState({showEventMonitoringPopup: true})}
                               variant="default">
                         <FontAwesomeIcon icon="binoculars"/>
-		        <span className="sr-only">{T("Show client monitoring tables")}</span>
+                <span className="sr-only">{T("Show client monitoring tables")}</span>
                       </Button>
                     </>
                   }
@@ -376,7 +380,7 @@ class EventMonitoring extends React.Component {
                             onClick={() => this.setState({showDeleteNotebook: true})}
                             variant="default">
                       <FontAwesomeIcon icon="trash"/>
-		      <span className="sr-only">{T("Delete Notebook")}</span>
+              <span className="sr-only">{T("Delete Notebook")}</span>
                     </Button>
                   }
                   <Dropdown title="mode" variant="default">

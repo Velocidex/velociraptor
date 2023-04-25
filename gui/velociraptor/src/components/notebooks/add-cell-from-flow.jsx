@@ -11,7 +11,7 @@ import T from '../i8n/i8n.jsx';
 
 import { getClientColumns } from '../clients/clients-list.jsx';
 import { getFlowColumns } from '../flows/flows-list.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 
 
 export default class AddCellFromFlowDialog extends React.Component {
@@ -21,7 +21,7 @@ export default class AddCellFromFlowDialog extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.setSearch("all");
     }
 
