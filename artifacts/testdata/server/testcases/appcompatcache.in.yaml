@@ -1,0 +1,24 @@
+Parameters:
+  RemappingTemplate: |
+    remappings:
+      - type: shadow
+        from:
+          accessor: data
+        on:
+          accessor: data
+      - type: mount
+        from:
+          accessor: file
+          prefix: %q
+        on:
+          accessor: registry
+          prefix: HKEY_LOCAL_MACHINE/System/ControlSet01/Control/Session Manager/AppCompatCache/
+
+Queries:
+  # This test ensures that all the file versions are parsed
+  # correctly. We currently only support Win10 and Win8
+  - LET _ <= remap(config=format(format=RemappingTemplate,
+        args=srcDir + '/artifacts/testdata/files/AppCompatCache/'), clear=TRUE)
+
+  - SELECT * FROM Artifact.Windows.Registry.AppCompatCache(
+     AppCompatCacheKey="HKEY_LOCAL_MACHINE/System/ControlSet*/Control/Session Manager/AppCompatCache/*")

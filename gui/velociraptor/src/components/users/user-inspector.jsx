@@ -75,9 +75,6 @@ class ConfirmDialog extends Component {
     }
 }
 
-
-
-
 class PermissionViewer extends Component {
     static propTypes = {
         username: PropTypes.string,
@@ -288,7 +285,7 @@ class UsersOverview extends Component {
 
     state = {
         user_name: "",
-        org: "",
+        org: {},
         acl: {},
 
         showAddUserDialog: false,
