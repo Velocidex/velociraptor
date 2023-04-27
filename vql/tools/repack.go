@@ -37,7 +37,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -163,7 +162,12 @@ func (self RepackFunction) Call(ctx context.Context,
 	sub_scope.AppendVars(
 		ordereddict.NewDict().Set("PACKED_Binary", exe_bytes))
 
-	return (&networking.UploadFunction{}).Call(
+	upload_func, ok := scope.GetFunction("upload")
+	if !ok {
+		return vfilter.Null{}
+	}
+
+	return upload_func.Call(
 		ctx, sub_scope, ordereddict.NewDict().
 			Set("file", "PACKED_Binary").
 			Set("name", arg.UploadName).
@@ -281,7 +285,12 @@ func RepackMSI(
 	sub_scope.AppendVars(
 		ordereddict.NewDict().Set("PACKED_MSI", data))
 
-	return (&networking.UploadFunction{}).Call(
+	upload_func, ok := scope.GetFunction("upload")
+	if !ok {
+		return vfilter.Null{}
+	}
+
+	return upload_func.Call(
 		ctx, sub_scope, ordereddict.NewDict().
 			Set("file", "PACKED_MSI").
 			Set("name", upload_name).
