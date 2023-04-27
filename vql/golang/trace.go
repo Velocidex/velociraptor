@@ -21,7 +21,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -83,7 +82,13 @@ func (self *TraceFunction) Call(ctx context.Context,
 	subscope.AppendVars(ordereddict.NewDict().
 		Set("ZipFile", buf.Bytes()))
 
-	return (&networking.UploadFunction{}).Call(
+	// Allow the uploader to be overriden.
+	upload_func, ok := scope.GetFunction("upload")
+	if !ok {
+		return &vfilter.Null{}
+	}
+
+	return upload_func.Call(
 		ctx, subscope, ordereddict.NewDict().
 			Set("accessor", "scope").
 			Set("file", "ZipFile").

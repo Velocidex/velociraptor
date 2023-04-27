@@ -37,10 +37,12 @@ precondition:
 parameters:
   - name: Command
     default: "dir C:/"
+  - name: PowerShellExe
+    default: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
 
 sources:
   - query: |
-      SELECT * FROM execve(argv=["powershell",
+      SELECT * FROM execve(argv=[PowerShellExe,
         "-ExecutionPolicy", "Unrestricted", "-encodedCommand",
         base64encode(string=utf16_encode(string=Command))
       ])
