@@ -260,6 +260,135 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "_Source": "Windows.EventLogs.ScheduledTasks"
  },
  {
+  "EventTime": "2021-01-27T11:40:36Z",
+  "Computer": "RE-Dev",
+  "Channel": "Microsoft-Windows-TaskScheduler/Operational",
+  "EventID": 106,
+  "EventRecordID": 2601,
+  "UserName": "RE-DEV\\yolo",
+  "TaskName": "\\T1053_005_powershell",
+  "Message": "User \"RE-DEV\\yolo\"  registered Task Scheduler task \"\\T1053_005_powershell\"\r\n",
+  "TaskAction": "N/A",
+  "EventData": {
+   "TaskName": "\\T1053_005_powershell",
+   "UserContext": "RE-DEV\\yolo"
+  },
+  "FullPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
+  "_Source": "Windows.EventLogs.ScheduledTasks"
+ },
+ {
+  "EventTime": "2021-01-27T11:42:05Z",
+  "Computer": "RE-Dev",
+  "Channel": "Microsoft-Windows-TaskScheduler/Operational",
+  "EventID": 129,
+  "EventRecordID": 2609,
+  "UserName": "N/A",
+  "TaskName": "\\T1053_005_powershell",
+  "Message": "Task Scheduler launch task \"\\T1053_005_powershell\" , instance \"calc.exe\"  with process ID 6632.\r\n",
+  "TaskAction": "calc.exe",
+  "EventData": {
+   "TaskName": "\\T1053_005_powershell",
+   "Path": "calc.exe",
+   "ProcessID": 6632,
+   "Priority": 16384
+  },
+  "FullPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
+  "_Source": "Windows.EventLogs.ScheduledTasks"
+ },
+ {
+  "EventTime": "2021-01-27T11:42:05Z",
+  "Computer": "RE-Dev",
+  "Channel": "Microsoft-Windows-TaskScheduler/Operational",
+  "EventID": 100,
+  "EventRecordID": 2610,
+  "UserName": "RE-DEV\\yolo",
+  "TaskName": "\\T1053_005_powershell",
+  "Message": "Task Scheduler started \"C3B3FB39-EE3C-4784-B325-D4B5A8787155\" instance of the \"\\T1053_005_powershell\" task for user \"RE-DEV\\yolo\".\r\n",
+  "TaskAction": "N/A",
+  "EventData": {
+   "TaskName": "\\T1053_005_powershell",
+   "UserContext": "RE-DEV\\yolo",
+   "InstanceId": "C3B3FB39-EE3C-4784-B325-D4B5A8787155"
+  },
+  "FullPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
+  "_Source": "Windows.EventLogs.ScheduledTasks"
+ },
+ {
+  "EventTime": "2021-01-27T11:42:05Z",
+  "Computer": "RE-Dev",
+  "Channel": "Microsoft-Windows-TaskScheduler/Operational",
+  "EventID": 200,
+  "EventRecordID": 2611,
+  "UserName": "N/A",
+  "TaskName": "\\T1053_005_powershell",
+  "Message": "Task Scheduler launched action \"calc.exe\" in instance \"C3B3FB39-EE3C-4784-B325-D4B5A8787155\" of task \"\\T1053_005_powershell\".\r\n",
+  "TaskAction": "calc.exe",
+  "EventData": {
+   "TaskName": "\\T1053_005_powershell",
+   "ActionName": "calc.exe",
+   "TaskInstanceId": "C3B3FB39-EE3C-4784-B325-D4B5A8787155",
+   "EnginePID": 6632
+  },
+  "FullPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
+  "_Source": "Windows.EventLogs.ScheduledTasks"
+ },
+ {
+  "EventTime": "2021-01-27T11:42:05Z",
+  "Computer": "RE-Dev",
+  "Channel": "Microsoft-Windows-TaskScheduler/Operational",
+  "EventID": 110,
+  "EventRecordID": 2612,
+  "UserName": "Administrators",
+  "TaskName": "\\T1053_005_powershell",
+  "Message": "Task Scheduler launched \"5598D79C-1A6E-4922-ADF6-304C33D70505\"  instance of task \"\\T1053_005_powershell\"  for user \"Administrators\" .\r\n",
+  "TaskAction": "N/A",
+  "EventData": {
+   "TaskName": "\\T1053_005_powershell",
+   "InstanceId": "5598D79C-1A6E-4922-ADF6-304C33D70505",
+   "UserContext": "Administrators"
+  },
+  "FullPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
+  "_Source": "Windows.EventLogs.ScheduledTasks"
+ },
+ {
+  "EventTime": "2021-01-27T11:42:06Z",
+  "Computer": "RE-Dev",
+  "Channel": "Microsoft-Windows-TaskScheduler/Operational",
+  "EventID": 201,
+  "EventRecordID": 2613,
+  "UserName": "N/A",
+  "TaskName": "\\T1053_005_powershell",
+  "Message": "Task Scheduler successfully completed task \"\\T1053_005_powershell\" , instance \"C3B3FB39-EE3C-4784-B325-D4B5A8787155\" , action \"calc.exe\" with return code 0.\r\n",
+  "TaskAction": "calc.exe",
+  "EventData": {
+   "TaskName": "\\T1053_005_powershell",
+   "TaskInstanceId": "C3B3FB39-EE3C-4784-B325-D4B5A8787155",
+   "ActionName": "calc.exe",
+   "ResultCode": 0,
+   "EnginePID": 6632
+  },
+  "FullPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
+  "_Source": "Windows.EventLogs.ScheduledTasks"
+ },
+ {
+  "EventTime": "2021-01-27T11:42:06Z",
+  "Computer": "RE-Dev",
+  "Channel": "Microsoft-Windows-TaskScheduler/Operational",
+  "EventID": 102,
+  "EventRecordID": 2614,
+  "UserName": "RE-DEV\\yolo",
+  "TaskName": "\\T1053_005_powershell",
+  "Message": "Task Scheduler successfully finished \"C3B3FB39-EE3C-4784-B325-D4B5A8787155\" instance of the \"\\T1053_005_powershell\" task for user \"RE-DEV\\yolo\".\r\n",
+  "TaskAction": "N/A",
+  "EventData": {
+   "TaskName": "\\T1053_005_powershell",
+   "UserContext": "RE-DEV\\yolo",
+   "InstanceId": "C3B3FB39-EE3C-4784-B325-D4B5A8787155"
+  },
+  "FullPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
+  "_Source": "Windows.EventLogs.ScheduledTasks"
+ },
+ {
   "EventTime": "2021-01-27T11:42:13Z",
   "Computer": "RE-Dev",
   "Channel": "Microsoft-Windows-TaskScheduler/Operational",
