@@ -30,7 +30,7 @@ import { HotKeys, ObserveKeys } from "react-hotkeys";
 import { requestToParameters, runArtifact } from "./utils.jsx";
 
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 
 class PaginationBuilder {
     PaginationSteps = ["Select Artifacts", "Configure Parameters",
@@ -129,12 +129,20 @@ class NewCollectionSelectArtifacts extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.doSearch("...");
     }
 
     componentWillUnmount() {
         this.source.cancel();
+    }
+
+    // Trigger a selection of the first artifacts when the list is
+    // added. This will render the artifact description view.
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
+        if(_.isEmpty(prevProps.artifacts) && !_.isEmpty(this.props.artifacts)) {
+            this.onSelect(this.props.artifacts[0], true);
+        }
     }
 
     onSelect = (row, isSelect) => {
@@ -681,7 +689,7 @@ class NewCollectionLaunch extends React.Component {
     }
 
     componentDidMount() {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
     }
 
     componentWillUnmount() {
@@ -796,10 +804,11 @@ class NewCollectionWizard extends React.Component {
         baseFlow: PropTypes.object,
         onResolve: PropTypes.func,
         onCancel: PropTypes.func,
+        client: PropTypes.object,
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.initializeFromBaseFlow();
 
         // A bit hacky but whatevs...

@@ -4,14 +4,16 @@ import _ from 'lodash';
 
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
 import Button from 'react-bootstrap/Button';
 import qs from 'qs';
 import Modal from 'react-bootstrap/Modal';
+import Container from  'react-bootstrap/Container';
 import HexView from '../utils/hex.jsx';
+import SearchHex from './search.jsx';
 import Spinner from '../utils/spinner.jsx';
-import Pagination from '../bootstrap/pagination/index.jsx';
+import HexPaginationControl from './pagination.jsx';
 import Tab from 'react-bootstrap/Tab';
 import Tabs from 'react-bootstrap/Tabs';
 import T from '../i8n/i8n.jsx';
@@ -63,8 +65,8 @@ class HexViewTab  extends React.PureComponent {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
-        this.fetchPage_();
+        this.source = CancelToken.source();
+        this.fetchPage_(0);
     }
 
     componentWillUnmount() {
@@ -73,37 +75,46 @@ class HexViewTab  extends React.PureComponent {
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
         if (!_.isEqual(prevProps.params, this.props.params) ||
-            !_.isEqual(prevState.page, this.state.page)) {
-            this.fetchPage_();
+            !_.isEqual(prevState.page, this.state.page) ||
+            !_.isEqual(prevState.columns, this.state.columns)) {
+            this.fetchPage_(this.state.page);
         };
     }
 
     state = {
+        // The offset in the file where this screen views
+        base_offset: 0,
         page: 0,
         rows: 25,
         columns: 0x10,
         view: undefined,
         loading: true,
         textview_only: false,
+        highlights: {},
+        highlight_version: 0,
+        version: 0,
     }
 
-    fetchPage_ = () => {
+    fetchPage_ = (page, ondone) => {
         let params = Object.assign({}, this.props.params);
 
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         // read a bit more than we need to so the text view looks a
         // bit more full.
         params.length = this.state.rows * this.state.columns * 2;
-        params.offset = this.state.page * this.state.rows * this.state.columns;
+        params.offset = page * this.state.rows * this.state.columns;
 
         api.get_blob(this.props.url, params, this.source.token).then(buffer=>{
             const view = new Uint8Array(buffer);
             this.setState({
+                base_offset: params.offset,
                 view: view,
+                version: this.state.version+1,
                 rawdata: this.parseFileContentToTextRepresentation_(view),
                 loading: false});
+            if(ondone) {ondone();};
         });
         this.setState({loading: true});
     }
@@ -127,74 +138,103 @@ class HexViewTab  extends React.PureComponent {
         return rawdata;
     };
 
-
     render() {
         var chunkSize = this.state.rows * this.state.columns;
         let total_size = this.props.size || 0;
         let pageCount = Math.ceil(total_size / chunkSize);
-        let paginationConfig = {
-            totalPages: pageCount,
-            currentPage: this.state.page + 1,
-            showMax: 5,
-            size: "sm",
-            threeDots: true,
-            center: true,
-            prevNext: true,
-            shadow: true,
-            onClick: (page, e) => {
-                this.setState({page: page - 1});
-                this.fetchPage_(page - 1);
-                e.preventDefault();
-                e.stopPropagation();
-            },
-        };
 
         return (
-            <div className="file-hex-view">
+            <Container className="file-hex-view">
               <Spinner loading={this.state.loading}/>
-              { <Pagination {...paginationConfig}/> }
+              <Row>
+                <Col sm="1">
+                  <Button variant="secondary"
+                          className="page-link hex-goto"
+                          onClick={()=>this.setState({
+                              textview_only: !this.state.textview_only,
+                          })}>
+                    <FontAwesomeIcon icon="text-height"/>
+                  </Button>
+                </Col>
+                <Col sm="3">
+                  <HexPaginationControl
+                    page_size={chunkSize}
+                    total_size={total_size}
+                    total_pages={pageCount}
+                    current_page={this.state.page}
+                    set_highlights={(name, hits)=>{
+                        let h = this.state.highlights;
+                        h[name] = hits;
+                        this.setState({
+                            highlights: h,
+                            highlight_version: this.state.highlight_version+1});
+                    }}
+                    onPageChange={page=>{
+                        this.fetchPage_(page, ()=>{
+                            this.setState({
+                                base_offset: page * chunkSize,
+                                page: page,
+                            });
+                        });
+                    }}
+                  />
+                </Col>
+                <Col sm="8" className="hex-goto">
+                  <SearchHex
+                    base_offset={this.state.base_offset}
+                    vfs_components={this.props.params &&
+                                    this.props.params.fs_components}
+                    page_size={chunkSize}
+                    current_page={this.state.page}
+                    byte_array={this.state.view}
+                    version={this.state.version}
+                    onPageChange={page=>{
+                        this.fetchPage_(page, ()=>{
+                            this.setState({
+                                base_offset: page * chunkSize,
+                                page: page,
+                            });
+                        });
+                    }}
+                    set_highlights={(name, hits)=>{
+                        let h = this.state.highlights;
+                        h[name] = hits;
+                        this.setState({
+                            highlights: h,
+                            highlight_version: this.state.highlight_version+1});
+                    }}/>
+                </Col>
+              </Row>
               <Row>
                 { this.state.textview_only ?
                   <Col sm="12">
-                    <Button variant="secondary"
-                            className="activate-button"
-                            onClick={()=>this.setState({
-                                textview_only: false
-                            })}>
-                      <FontAwesomeIcon icon="compress"/>
-                    </Button>
                     <div className="panel textdump">
-                      <pre>{this.state.rawdata}</pre>
+                      {this.state.rawdata}
                     </div>
                   </Col>
                   :
                   <>
-                    <Col sm="8">
+                    <Col sm="12" className="hexdump-pane">
                       <div className="panel hexdump">
                         <HexView
+                          // Highlights on top of the data.
+                          highlights={this.state.highlights}
+                          highlight_version={this.state.highlight_version}
+                          base_offset={this.state.base_offset}
                           height={this.state.rows}
                           rows={this.state.rows}
+                          setColumns={v=>this.setState({columns: v})}
                           columns={this.state.columns}
-                          byte_array={this.state.view} />
-                      </div>
-                    </Col>
 
-                    <Col sm="4">
-                      <Button variant="secondary"
-                              className="activate-button"
-                              onClick={()=>this.setState({
-                                  textview_only: true
-                              })}>
-                        <FontAwesomeIcon icon="expand"/>
-                      </Button>
-                      <div className="panel textdump">
-                        <pre>{this.state.rawdata}</pre>
+                          // The data that will be rendered
+                          byte_array={this.state.view}
+                          version={this.state.version} />
                       </div>
                     </Col>
                   </>
                 }
               </Row>
-            </div>
+            </Container>
         );
     }
 }
@@ -235,7 +275,9 @@ class InspectDialog extends React.PureComponent {
                   </Tab>
                   <Tab eventKey="details" title={T("Details")}>
                     { this.state.tab === "details" &&
-                      <VeloValueRenderer value={this.props.upload}/>}
+                      <div className="preview-json">
+                        <VeloValueRenderer value={this.props.upload}/>
+                      </div>}
                   </Tab>
                 </Tabs>
               </Modal.Body>
@@ -265,7 +307,7 @@ export default class PreviewUpload extends Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.fetchPreview_();
     }
 
@@ -285,7 +327,7 @@ export default class PreviewUpload extends Component {
         if(env.hunt_id) return true;
         if(env.notebook_cell_id) return true;
         if(env.client_id && env.flow_id) return true;
-
+        if(env.client_id && env.vfs_components) return true;
         return false;
     }
 

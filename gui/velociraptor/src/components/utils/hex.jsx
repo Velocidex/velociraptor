@@ -6,6 +6,8 @@ import _ from 'lodash';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Modal from 'react-bootstrap/Modal';
+import T from '../i8n/i8n.jsx';
+import Form from 'react-bootstrap/Form';
 
 export class HexViewDialog extends React.PureComponent {
     static propTypes = {
@@ -96,19 +98,27 @@ export class HexViewPopup extends React.Component {
 // A hex viewer suitable for small amountfs of text - No paging.
 export default class HexView extends React.Component {
     static propTypes = {
+        highlights: PropTypes.object,
+        // Version of the highlights array to manage highligh updates
+        highlight_version: PropTypes.number,
+        base_offset: PropTypes.number,
         byte_array: PropTypes.any,
+        // Version of the byte_array to manage updates of the data.
+        version: PropTypes.any,
         data: PropTypes.string,
         height: PropTypes.number,
         max_height: PropTypes.number,
+        setColumns: PropTypes.func,
         columns: PropTypes.number,
     };
 
     state = {
         hexDataRows: [],
         rows: 25,
-        columns: 0x10,
         page: 0,
         expanded: false,
+        hex_offset: false,
+        highlights: {},
     }
 
     componentDidMount = () => {
@@ -117,7 +127,11 @@ export default class HexView extends React.Component {
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
         if (!_.isEqual(prevProps.data, this.props.data) ||
-            !_.isEqual(prevProps.byte_array, this.props.byte_array)) {
+            !_.isEqual(prevProps.version, this.props.version) ||
+            !_.isEqual(prevProps.highlight_version, this.props.highlight_version) ||
+            !_.isEqual(prevProps.base_offset, this.props.base_offset) ||
+            !_.isEqual(prevProps.byte_array, this.props.byte_array) ||
+            !_.isEqual(prevProps.highlights, this.props.highlights)) {
             this.updateRepresentation();
         }
     }
@@ -126,104 +140,103 @@ export default class HexView extends React.Component {
         if (this.props.byte_array) {
             this.parseintArrayToHexRepresentation_(this.props.byte_array);
         } else {
-            this.parseFileContentToHexRepresentation_(this.props.data);
+            let utf8_encode = new TextEncoder().encode(this.props.data);
+            this.parseintArrayToHexRepresentation_(utf8_encode);
         }
     }
 
+    shouldHighlight = (offset)=>{
+        if(_.isUndefined(this.props.highlights)) {
+            return false;
+        };
+
+        // highlights is a map of key->name and value->a list of specs.
+        for(const highlight of Object.values(this.props.highlights)) {
+            for(const spec of highlight) {
+                if (offset >= spec.start && offset < spec.end) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // Populate the hex viewer from the byte_array prop
     parseintArrayToHexRepresentation_ = (intArray) => {
         if (!intArray) {
             intArray = "";
         }
 
         let hexDataRows = [];
-        var chunkSize = this.state.rows * this.state.columns;
+        let columns = this.props.columns || 16;
+        var chunkSize = this.state.rows * columns;
+        let base_offset = this.props.base_offset || 0;
+        let offset = this.state.page * chunkSize;
 
         for(var i = 0; i < this.state.rows; i++){
-            let offset = this.state.page * chunkSize;
-            var rowOffset = offset + (i * this.state.columns);
-            var data = intArray.slice(i * this.state.columns, (i+1)*this.state.columns);
+            var rowOffset = offset + (i * columns);
+            var data = intArray.slice(i * columns, (i+1)*columns);
             var data_row = [];
-            var safe_data = "";
             for (var j = 0; j < data.length; j++) {
-                var char = data[j].toString(16);
+                let char = data[j].toString(16);
+                // add leading zero if necessary
+                let text = ('0' + char).substr(-2);
+
+                // Add a printable char for the text.
+                let safe = ".";
                 if (data[j] > 0x20 && data[j] < 0x7f) {
-                    safe_data += String.fromCharCode(data[j]);
-                } else {
-                    safe_data += ".";
+                    safe = String.fromCharCode(data[j]);
                 };
-                data_row.push(('0' + char).substr(-2)); // add leading zero if necessary
+
+                if (this.shouldHighlight(base_offset + rowOffset + j)) {
+                    data_row.push({v: text, h: true, safe: safe});
+                } else {
+                    data_row.push({v: text, safe: safe});
+                };
             };
 
             // Pad with extra spaces to maintain alignment
-            let pad = this.state.rows - data.length % this.state.columns;
-            for (var j = 0; j < pad; j++) {
-                safe_data += " ";
-                data_row.push("   ");
+            if(data_row.length < columns) {
+                let pad = columns - data_row.length % columns;
+                for (let j = 0; j < pad; j++) {
+                    data_row.push({v:" ", p:true, safe:" "});
+                }
             }
 
             hexDataRows.push({
-                offset: rowOffset,
+                offset: base_offset + rowOffset,
                 data_row: data_row,
                 data: data,
-                safe_data: safe_data,
             });
         }
 
         this.setState({hexDataRows: hexDataRows, loading: false});
     };
-
-    parseFileContentToHexRepresentation_ = (fileContent) => {
-        if (!fileContent) {
-            fileContent = "";
-        }
-
-        // The absolute maximum height we will render.
-        let max_height = this.props.max_height || 1000;
-        let columns = this.props.columns || 16;
-        let hexDataRows = [];
-        for(var i = 0; i < max_height; i++){
-            let offset = 0;
-            var rowOffset = offset + (i * columns);
-            var data = fileContent.substr(i * columns, columns);
-            var data_row = [];
-            for (var j = 0; j < data.length; j++) {
-                var char = data.charCodeAt(j).toString(16);
-                data_row.push(('0' + char).substr(-2)); // add leading zero if necessary
-            };
-
-            if (data_row.length === 0) {
-                break;
-            };
-
-            let safe_data = data.replace(/[^\x20-\x7f]/g, '.');
-            safe_data = safe_data.split(" ");
-            hexDataRows.push({
-                offset: rowOffset,
-                data_row: data_row,
-                data: data,
-                safe_data: safe_data,
-            });
-
-        }
-
-        this.setState({hexDataRows: hexDataRows, loading: false});
-    };
-
 
     render() {
         let height = this.props.height || 5;
+        let columns = this.props.columns || 16;
         let more = this.state.hexDataRows.length > height;
         let hexArea =
             <table className="hex-area">
               <tbody>
                 { _.map(this.state.hexDataRows, (row, idx)=>{
                     if (idx >= height && !this.state.expanded) {
-                        return <></>;
+                        return <span key={"a"+ idx}></span>;
                     }
-                    return <tr key={idx}>
+                    return <tr key={"a" + idx}>
                              <td>
                                { _.map(row.data_row, (x, idx)=>{
-                                   return <span key={idx}>{ x }&nbsp;</span>;
+                                   let cname = "hex-char";
+                                   if(x.h) {
+                                       cname += " hex-highlight";
+                                   } else if(x.p) {
+                                        cname = "hex-padding";
+                                   }
+                                   return <span key={"aa"+ idx}
+                                                className={cname}>
+                                            { x.v }
+                                          </span>;
                                })}
                              </td>
                            </tr>; })
@@ -236,12 +249,19 @@ export default class HexView extends React.Component {
               <tbody>
                 { _.map(this.state.hexDataRows, (row, idx)=>{
                     if (idx >= height && !this.state.expanded) {
-                        return <></>;
+                        return <span key={"b" + idx}></span>;
                     }
                     return <tr key={idx}>
                              <td className="data">
-                               { _.map(row.safe_data, (x, idx)=>{
-                                   return <span key={idx}>{ x }&nbsp;</span>;
+                               { _.map(row.data_row, (x, idx)=>{
+                                   let cname = "text-char";
+                                   if(x.h) {
+                                       cname += " hex-highlight";
+                                   }
+                                   return <span key={"bb"+ idx}
+                                                className={cname}>
+                                            { x.safe }
+                                          </span>;
                                })}
                              </td>
                            </tr>;
@@ -251,17 +271,46 @@ export default class HexView extends React.Component {
 
         return (
             <div className="panel hexdump">
-              <div className="monospace">
+              <div className="monospace hex-viewer">
                 <table>
                   <thead>
                     <tr>
                       <th className="offset-area">
-                        Offset
+                        <Button
+                          variant="default-outline"
+                          data-tooltip={T("Hex Offset")}
+                          data-position="right"
+                          className="btn-tooltip"
+                          onClick={()=>this.setState({
+                              hex_offset: !this.state.hex_offset
+                          })}
+                        >{T("Offset")}</Button>
                       </th>
                       <th className="padding-area">
-                        00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f
+                        {_.map(_.range(0, columns), (x, idx)=>{
+                            let x_str = x.toString(16);
+                            x_str = ('0' + x_str).substr(-2);
+                            return <span key={"d"+idx}
+                                         className="hex-char">{x_str}</span>;
+                        })}
                       </th>
-                      <th></th>
+                      <th>
+                        { this.props.setColumns &&
+                          <Form.Control as="select"
+                                        style={{width: (1.22* this.props.columns) + "ex"}}
+                                        className="hex-width-selector"
+                                        placeholder={T("Width")}
+                                        value={this.props.columns}
+                                        onChange={e=>{
+                                            this.props.setColumns(
+                                                parseInt(e.target.value));
+                                        }}
+                          >
+                            <option value="16">16</option>
+                            <option value="24">24</option>
+                            <option value="32">32</option>
+                          </Form.Control>}
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -271,11 +320,15 @@ export default class HexView extends React.Component {
                           <tbody>
                             { _.map(this.state.hexDataRows, (row, idx)=>{
                                 if (idx >= height && !this.state.expanded) {
-                                    return <></>;
+                                    return <div key={"c" + idx}></div>;
                                 }
-                                return <tr key={idx}>
+                                let offset = row.offset;
+                                if (this.state.hex_offset) {
+                                    offset = "0x" + offset.toString(16);
+                                }
+                                return <tr key={"c" + idx}>
                                          <td className="offset">
-                                           { row.offset }
+                                           { offset }
                                          </td>
                                        </tr>; })}
                           </tbody>
@@ -284,15 +337,15 @@ export default class HexView extends React.Component {
                       <td className="hex-container">
                         { hexArea }
                       </td>
-                      <td className="hex-container">
+                      <td className="context-container">
                         { contextArea }
                       </td>
                     </tr>
                     { more && (this.state.expanded ?
                                <tr>
-                                 <td colspan="16">
+                                 <td colSpan="16">
                                    <Button variant="default-outline"
-                                           data-tooltip="Collapse"
+                                           data-tooltip={T("Collapse")}
                                            data-position="right"
                                            className="btn-tooltip"
                                            onClick={()=>this.setState({expanded: false})} >
@@ -301,16 +354,16 @@ export default class HexView extends React.Component {
                                  </td>
                                </tr>
                                : <tr>
-            <td colspan="16">
-              <Button variant="default-outline"
-                      data-tooltip="Expand"
-                      data-position="right"
-                      className="btn-tooltip"
-                      onClick={()=>this.setState({expanded: true})} >
-                <i><FontAwesomeIcon icon="arrow-down"/></i>
-              </Button>
-            </td>
-                                     </tr>) }
+                                   <td colSpan="16">
+                                     <Button variant="default-outline"
+                                             data-tooltip="Expand"
+                                             data-position="right"
+                                             className="btn-tooltip"
+                                             onClick={()=>this.setState({expanded: true})} >
+                                       <i><FontAwesomeIcon icon="arrow-down"/></i>
+                                     </Button>
+                                   </td>
+                                 </tr>) }
                   </tbody>
                 </table>
               </div>

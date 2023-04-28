@@ -19,7 +19,7 @@ import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import VeloForm from '../forms/form.jsx';
 import T from '../i8n/i8n.jsx';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
@@ -35,7 +35,7 @@ class _PasswordChange extends React.Component {
     }
 
     componentDidMount() {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
     }
 
     componentWillUnmount() {
@@ -90,6 +90,9 @@ class _PasswordChangeForm extends React.PureComponent {
     static propTypes = {
         username: PropTypes.string,
         onClose: PropTypes.func.isRequired,
+
+        // React router props.
+        history: PropTypes.object,
     }
 
     render() {
@@ -361,7 +364,7 @@ export default class UserLabel extends React.Component {
     }
 
     componentDidMount() {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
     }
 
     componentWillUnmount() {
@@ -453,6 +456,11 @@ export default class UserLabel extends React.Component {
                     />
                   }
                   { this.orgName() }
+                </Button>
+                <Button variant="default"
+                  onClick={()=>this.setState({showUserSettings: true})}
+                >
+                  <FontAwesomeIcon icon="wrench" />
                 </Button>
               </ButtonGroup>
             </>

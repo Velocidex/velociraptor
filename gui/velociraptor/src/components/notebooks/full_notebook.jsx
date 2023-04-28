@@ -1,10 +1,12 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+
 import NotebookRenderer from './notebook-renderer.jsx';
 import Navbar from 'react-bootstrap/Navbar';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Button from 'react-bootstrap/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
 import Spinner from '../utils/spinner.jsx';
 import { withRouter }  from "react-router-dom";
@@ -15,6 +17,12 @@ const POLL_TIME = 5000;
 const PAGE_SIZE = 100;
 
 class FullScreenNotebook extends React.Component {
+    static propTypes = {
+        // React router props.
+        match: PropTypes.object,
+        history: PropTypes.object,
+    }
+
     state = {
         notebooks: [],
         selected_notebook: {},
@@ -25,7 +33,7 @@ class FullScreenNotebook extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.interval = setInterval(this.fetchNotebooks, POLL_TIME);
         this.fetchNotebooks();
     }
@@ -38,7 +46,7 @@ class FullScreenNotebook extends React.Component {
     fetchNotebooks = () => {
         // Cancel any in flight calls.
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         api.get("v1/GetNotebooks", {
             count: PAGE_SIZE,

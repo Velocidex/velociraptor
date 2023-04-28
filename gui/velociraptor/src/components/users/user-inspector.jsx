@@ -23,7 +23,7 @@ import AddUserDialog from './add_user.jsx';
 import EditUserDialog from './edit-user.jsx';
 
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 
 const POLL_TIME = 5000;
 
@@ -75,11 +75,10 @@ class ConfirmDialog extends Component {
     }
 }
 
-
-
-
 class PermissionViewer extends Component {
     static propTypes = {
+        username: PropTypes.string,
+        org: PropTypes.object,
         acls: PropTypes.object,
         setACL: PropTypes.func.isRequired,
     }
@@ -134,12 +133,25 @@ class PermissionViewer extends Component {
     }
 
     render() {
-        if (_.size(this.props.acls) === 0) {
-           return <></>;
+        if (!this.props.username) {
+            return <></>;
+        }
+
+        if (_.isEmpty(this.props.org)) {
+            return <div className="no-content">
+                     <FontAwesomeIcon icon="angles-left"
+                                      className="fa-fade"/>
+                     {T("Please Select an Org")}
+                   </div>;
+        }
+
+        if (_.isEmpty(this.props.acls)) {
+            return <div className="no-content">
+                       {T("Loading ACLs")}
+                       </div> ;
         }
 
         let org_name = this.props.acls.org_name || "root";
-
         return (
             <Container className="permission-viewer">
               <Modal show={this.state.showHelpDialog}
@@ -273,7 +285,7 @@ class UsersOverview extends Component {
 
     state = {
         user_name: "",
-        org: "",
+        org: {},
         acl: {},
 
         showAddUserDialog: false,
@@ -282,8 +294,8 @@ class UsersOverview extends Component {
     }
 
     componentDidMount = () => {
-        this.setACLsource = axios.CancelToken.source();
-        this.getACLsource = axios.CancelToken.source();
+        this.setACLsource = CancelToken.source();
+        this.getACLsource = CancelToken.source();
     }
 
     componentWillUnmount() {
@@ -293,7 +305,7 @@ class UsersOverview extends Component {
 
     setACL = (acl) => {
         this.setACLsource.cancel();
-        this.setACLsource = axios.CancelToken.source();
+        this.setACLsource = CancelToken.source();
 
         api.post("v1/SetUserRoles", acl,
                  this.setACLsource.token).then(response=>{
@@ -307,7 +319,7 @@ class UsersOverview extends Component {
 
     getACL = (user_name, org) => {
         this.getACLsource.cancel();
-        this.getACLsource = axios.CancelToken.source();
+        this.getACLsource = CancelToken.source();
 
         this.setState({acl: {}});
         let org_id = org && org.id;
@@ -386,7 +398,9 @@ class UsersOverview extends Component {
                                 variant="outline-default"
                                 as="button">
                                 <FontAwesomeIcon icon="edit"/>
-                <span className="sr-only">{T("Update User Password")}</span>
+                                <span className="sr-only">
+                                  {T("Update User Password")}
+                                </span>
                               </Button>
                             }
                             <Button
@@ -399,7 +413,9 @@ class UsersOverview extends Component {
                               variant="outline-default"
                               as="button">
                               <FontAwesomeIcon icon="plus"/>
-                  <span className="sr-only">{T("Add a new user")}</span>
+                              <span className="sr-only">
+                                {T("Add a new user")}
+                              </span>
                             </Button>
                           </th>
                         </tr>
@@ -440,7 +456,9 @@ class UsersOverview extends Component {
                               variant="outline-default"
                               as="button">
                               <FontAwesomeIcon icon="plus"/>
-                  <span className="sr-only">{T("Assign user to Orgs")}</span>
+                              <span className="sr-only">
+                                {T("Assign user to Orgs")}
+                              </span>
                             </Button>
                           </th></tr>
                       </thead>
@@ -448,6 +466,8 @@ class UsersOverview extends Component {
                         { _.isEmpty(selected_orgs) &&
                           <tr className="no-content">
                             <td>
+                              <FontAwesomeIcon icon="angles-left"
+                                               className="fa-fade"/>
                               {T("Please Select a User")}
                             </td>
                           </tr> }
@@ -470,6 +490,8 @@ class UsersOverview extends Component {
               </Col>
               <Col sm="4">
                 <PermissionViewer
+                  username={this.state.user_name}
+                  org={this.state.org}
                   acls={this.state.acl}
                   setACL={this.setACL}
                 />
@@ -559,6 +581,8 @@ class OrgsOverview extends UsersOverview {
             </Col>
               <Col sm="4">
                 <PermissionViewer
+                  username={this.state.user_name}
+                  org={this.state.org}
                   acls={this.state.acl}
                   setACL={this.setACL}
                 />
@@ -571,6 +595,10 @@ class OrgsOverview extends UsersOverview {
 class UserInspector extends Component {
     static contextType = UserConfig;
 
+    static propTypes = {
+        history: PropTypes.object,
+    }
+
     state = {
         tab: "users",
         users_initialized: false,
@@ -578,7 +606,7 @@ class UserInspector extends Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.interval = setInterval(this.loadUsers, POLL_TIME);
         this.loadUsers();
     }
@@ -601,7 +629,7 @@ class UserInspector extends Component {
 
     loadUsers = () => {
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         this.setState({loading: true});
 

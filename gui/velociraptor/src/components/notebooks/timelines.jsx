@@ -3,7 +3,7 @@ import "./timelines.css";
 import React from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
 
 import parse from 'html-react-parser';
@@ -102,7 +102,7 @@ export class AddVQLCellToTimeline extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.getTables();
     }
 

@@ -7,7 +7,7 @@ import Form from 'react-bootstrap/Form';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 
 export default class AddUserDialog extends Component {
     static propTypes = {
@@ -21,7 +21,7 @@ export default class AddUserDialog extends Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
     }
 
     componentWillUnmount() {
@@ -31,7 +31,7 @@ export default class AddUserDialog extends Component {
 
     addUser = ()=>{
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         api.post("v1/CreateUser", {
             name: this.state.username,
@@ -61,7 +61,7 @@ export default class AddUserDialog extends Component {
                                   rows={1}
                                   onChange={e=>this.setState({
                                           username: e.currentTarget.value})}
-                                  value={this.props.value} />
+                                  value={this.state.username} />
                   </Col>
                 </Form.Group>
 

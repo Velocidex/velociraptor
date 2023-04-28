@@ -8,7 +8,6 @@ import { withRouter, Link }  from "react-router-dom";
 import VeloTimestamp from "../utils/time.jsx";
 import ShellViewer from "./shell-viewer.jsx";
 import VeloReportViewer from "../artifacts/reporting.jsx";
-import VeloForm from '../forms/form.jsx';
 import { LabelClients } from './clients-list.jsx';
 
 import ToggleButtonGroup from 'react-bootstrap/ToggleButtonGroup';
@@ -22,14 +21,11 @@ import Form from 'react-bootstrap/Form';
 import UserConfig from '../core/user.jsx';
 import MetadataEditor from "./metadata.jsx";
 import api from '../core/api-service.jsx';
-import axios from 'axios';
-import { parseCSV, serializeCSV } from '../utils/csv.jsx';
+import {CancelToken} from 'axios';
 import "./host-info.css";
 import { runArtifact } from "../flows/utils.jsx";
 import T from '../i8n/i8n.jsx';
 
-
-const POLL_TIME = 5000;
 const INTERROGATE_POLL_TIME = 2000;
 
 var quarantine_artifacts = {
@@ -55,7 +51,7 @@ class QuarantineDialog extends Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.checkQuarantineAvailability();
     }
 
@@ -185,6 +181,10 @@ class VeloHostInfo extends Component {
         // We must be viewing an actual client.
         client: PropTypes.object,
         setClient: PropTypes.func.isRequired,
+
+        // React router props.
+        match: PropTypes.object,
+        history: PropTypes.object,
     }
 
     state = {
@@ -198,7 +198,7 @@ class VeloHostInfo extends Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.updateClientInfo();
     }
 

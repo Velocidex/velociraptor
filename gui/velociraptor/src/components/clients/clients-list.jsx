@@ -1,8 +1,6 @@
 import "./clients-list.css";
 
-import online from './img/online.png';
-import any from './img/any.png';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import _ from 'lodash';
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -43,7 +41,7 @@ export class LabelClients extends Component {
     }
 
     componentDidMount() {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
     }
 
     componentWillUnmount() {
@@ -154,7 +152,7 @@ class DeleteClients extends Component {
     }
 
     componentDidMount() {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
     }
 
     componentWillUnmount() {
@@ -315,6 +313,10 @@ class VeloClientList extends Component {
         version: PropTypes.any,
         setClient: PropTypes.func.isRequired,
         setSearch: PropTypes.func.isRequired,
+
+        // React router props.
+        match: PropTypes.object,
+        history: PropTypes.object,
     }
 
     state = {
@@ -332,7 +334,7 @@ class VeloClientList extends Component {
     };
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         let query = this.props.match && this.props.match.params &&
             this.props.match.params.query;
         if (query && query !== this.state.query) {
@@ -364,7 +366,7 @@ class VeloClientList extends Component {
 
         // Cancel any in flight calls.
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         this.setState({loading: true});
         api.get('/v1/SearchClients', {
@@ -464,8 +466,8 @@ class VeloClientList extends Component {
                   >
                   <span className="button-label">
                     { this.state.filter === ONLINE ?
-                      <img className="icon-small" src={api.src_of(online)} alt="online" />  :
-                      <img className="icon-small" src={api.src_of(any)} alt="any state" />
+                      <span className="online-btn" alt="online" />  :
+                      <span className="any-btn" alt="any state" />
                     }
                   </span>
                 </Button>

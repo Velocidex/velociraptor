@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 
 import { VeloLineChart, VeloTimeChart,
          VeloScatterChart, VeloBarChart } from '../artifacts/line-charts.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
 import { PrepareData } from '../core/table.jsx';
 
@@ -21,7 +21,7 @@ export class NotebookLineChart extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.fetchRows();
     }
 
@@ -48,7 +48,7 @@ export class NotebookLineChart extends React.Component {
         let url = "v1/GetTable";
 
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         api.get(url, params, this.source.token).then((response) => {
             if (response.cancel) {

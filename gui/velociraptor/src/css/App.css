@@ -46,7 +46,7 @@ h5 {
     text-align: center;
     margin-top: 50px;
     font-size: 1.5em;
-    color: #bcbbbb;
+    color: var(--color-no-content);
 }
 
 .app-footer.fixed-bottom {

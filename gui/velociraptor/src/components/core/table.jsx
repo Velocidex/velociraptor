@@ -518,6 +518,18 @@ export function formatColumns(columns, env, column_formatter) {
             x.type = null;
             break;
 
+        case "url_internal":
+            x.formatter = (cell, row) => {
+                if(_.isObject(cell)) {
+                    return <URLViewer internal={true}
+                                      url={cell.url} desc={cell.desc}/>;
+                }
+                return <URLViewer url={cell}/>;
+            };
+            x.type = null;
+            break;
+
+
         case "safe_url":
             x.formatter = (cell, row) => {
                 return <URLViewer url={cell} safe={true}/>;
@@ -543,6 +555,12 @@ export function formatColumns(columns, env, column_formatter) {
         case "preview_upload":
         case "upload_preview":
             x.formatter = (cell, row) => {
+                if(!env.client_id && row.ClientId) {
+                    env.client_id = row.ClientId;
+                }
+                if(!env.flow_id && row.FlowId) {
+                    env.flow_id = row.FlowId;
+                }
                 return <PreviewUpload
                          env={env}
                          upload={cell}/>;

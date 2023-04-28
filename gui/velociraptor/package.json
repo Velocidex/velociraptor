@@ -4,15 +4,15 @@
     "private": true,
     "type": "module",
     "dependencies": {
-        "@babel/core": "^7.21.3",
-        "@babel/plugin-syntax-flow": "^7.18.6",
+        "@babel/core": "^7.21.4",
+        "@babel/plugin-syntax-flow": "^7.21.4",
         "@babel/plugin-transform-react-jsx": "^7.20.13",
         "@babel/runtime": "^7.20.13",
         "@fortawesome/fontawesome-svg-core": "^6.4.0",
         "@fortawesome/free-solid-svg-icons": "^6.4.0",
         "@fortawesome/react-fontawesome": "0.2.0",
         "@popperjs/core": "^2.11.7",
-        "axios": ">=1.2.6",
+        "axios": ">=1.3.5",
         "ace-builds": "1.16.0",
         "axios-retry": "3.4.0",
         "bootstrap": "^4.6.2",
@@ -29,7 +29,7 @@
         "is-svg": "^4.4.0",
         "lodash": "^4.17.21",
         "moment": "^2.29.4",
-        "moment-timezone": "0.5.42",
+        "moment-timezone": "0.5.43",
         "npm-watch": "^0.11.0",
         "prop-types": "^15.8.1",
         "qs": "^6.11.1",
@@ -48,7 +48,7 @@
         "react-calendar-timeline": "^0.28.0",
         "react-contexify": "5.0.0",
         "react-datepicker": "^3.8.0",
-        "react-datetime-picker": "^4.2.0",
+        "react-datetime-picker": "^4.2.1",
         "react-dom": "^16.14.0",
         "react-hotkeys": "^2.0.0",
         "react-json-view": "^1.19.1",
@@ -69,7 +69,7 @@
     "scripts": {
         "build": "vite build",
         "start": "vite serve",
-	"lint": "eslint . --ext .js,.jsx",
+    "lint": "eslint ./src --ext .js,.jsx",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "watch": {
@@ -96,15 +96,15 @@
         ]
     },
     "devDependencies": {
-	"@babel/eslint-parser": "^7.19.1",
-	"@babel/preset-react": "^7.18.6",
-	"@testing-library/react": "12",
-	"@vitejs/plugin-react": "^3.0.0",
-	"eslint": "^8.35.0",
-	"eslint-plugin-import": "^2.27.5",
-	"eslint-plugin-jsx-a11y": "^6.7.1",
-	"eslint-plugin-react": "^7.32.2",
-	"vite": "^4.0.1",
-	"vite-plugin-compression": "^0.5.1"
+    "@babel/eslint-parser": "^7.19.1",
+    "@babel/preset-react": "^7.18.6",
+    "@testing-library/react": "12",
+    "@vitejs/plugin-react": "^3.0.0",
+    "eslint": "^8.35.0",
+    "eslint-plugin-import": "^2.27.5",
+    "eslint-plugin-jsx-a11y": "^6.7.1",
+    "eslint-plugin-react": "^7.32.2",
+    "vite": "^4.0.1",
+    "vite-plugin-compression": "^0.5.1"
     }
 }

@@ -7,7 +7,7 @@ import './paged-table.css';
 import 'react-bootstrap-table2-paginator/dist/react-bootstrap-table2-paginator.min.css';
 import ToolkitProvider from 'react-bootstrap-table2-toolkit/dist/react-bootstrap-table2-toolkit.min';
 
-import axios from 'axios';
+import {CancelToken} from 'axios';
 
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
@@ -36,7 +36,6 @@ import {
 } from './table.jsx';
 
 
-
 const pageListRenderer = ({
     pages,
     currentPage,
@@ -55,7 +54,9 @@ const pageListRenderer = ({
     }
     return (
         <Pagination>
-          <Pagination.First onClick={()=>onPageChange(0)}/>
+          <Pagination.First
+            disabled={currentPage===0}
+            onClick={()=>onPageChange(0)}/>
           {
               pageWithoutIndication.map((p, idx)=>(
                 <Pagination.Item
@@ -66,7 +67,9 @@ const pageListRenderer = ({
                 </Pagination.Item>
             ))
           }
-          <Pagination.Last onClick={()=>onPageChange(totalPages)}/>
+          <Pagination.Last
+            disabled={currentPage===totalPages}
+            onClick={()=>onPageChange(totalPages)}/>
           <Form.Control
             as="input"
             className="pagination-form"
@@ -83,7 +86,6 @@ const pageListRenderer = ({
         </Pagination>
     );
 };
-
 
 class VeloPagedTable extends Component {
     static contextType = UserConfig;
@@ -159,7 +161,7 @@ class VeloPagedTable extends Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.setState({page_size: this.props.initial_page_size || 10});
 
         this.fetchRows();
@@ -281,14 +283,17 @@ class VeloPagedTable extends Component {
 
         let params = Object.assign({}, this.props.params);
         Object.assign(params, this.state.transform);
-        params.start_row = this.state.start_row;
+        params.start_row = this.state.start_row || 0;
+        if (params.start_row < 0) {
+            params.start_row = 0;
+        }
         params.rows = this.state.page_size;
         params.sort_direction = params.sort_direction === "Ascending";
 
         let url = this.props.url || "v1/GetTable";
 
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         this.setState({loading: true});
         api.get(url, params, this.source.token).then((response) => {
@@ -342,7 +347,6 @@ class VeloPagedTable extends Component {
     headerFormatter = (column, colIndex) => {
         let icon = "sort";
         let next_dir = "Ascending";
-        let tooltip = "Sort Up";
         let classname = "sort-element";
         let sort_column = this.state.transform && this.state.transform.sort_column;
         let sort_dir = this.state.transform && this.state.transform.sort_direction;
@@ -356,7 +360,6 @@ class VeloPagedTable extends Component {
             if (sort_dir === "Ascending") {
                 icon = "arrow-up-a-z";
                 next_dir = "Descending";
-                tooltip = "Sort Down";
             } else {
                 icon = "arrow-down-a-z";
             }
@@ -598,7 +601,7 @@ class VeloPagedTable extends Component {
                                                  Object.assign(downloads, {
                                                      timezone: timezone,
                                                      download_format: "json",
-                                                 }))}>
+                                                 }), {internal: true})}>
                             <FontAwesomeIcon icon="download"/>
                 <span className="sr-only">{T("Download JSON")}</span>
                           </Button>
@@ -611,7 +614,7 @@ class VeloPagedTable extends Component {
                                                  Object.assign(downloads, {
                                                      timezone: timezone,
                                                      download_format: "csv",
-                                                 }))}>
+                                                 }), {internal: true})}>
                             <FontAwesomeIcon icon="file-csv"/>
                             <span className="sr-only">{T("Download CSV")}</span>
                           </Button>

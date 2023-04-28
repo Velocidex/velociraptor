@@ -7,7 +7,7 @@ import SplitPane from 'react-split-pane';
 
 import VeloFileTree from './file-tree.jsx';
 import VeloFileList from './file-list.jsx';
-import VeloFileDetails from './file-details.jsx';
+import VeloFileStats from './file-stats.jsx';
 
 
 class VFSViewer extends Component {
@@ -68,9 +68,8 @@ class VFSViewer extends Component {
                   updateCurrentSelectedRow={this.updateCurrentSelectedRow}
                   version={this.props.node && this.props.node.version}
                   node={this.state.current_node} />
-                <VeloFileDetails
+                <VeloFileStats
                   client={this.props.client}
-                  version={this.props.node && this.props.node.version}
                   updateCurrentNode={this.updateCurrentNode}
                   selectedRow={this.state.current_selected_row}
                   node={this.state.current_node} />

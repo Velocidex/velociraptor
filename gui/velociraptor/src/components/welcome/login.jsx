@@ -20,7 +20,6 @@ class Authenticator extends Component {
     }
 
     getIcon = ()=>{
-        let base_path = window.base_path || "";
         let provider_name = this.props.param.ProviderName;
         switch(provider_name) {
         case "Google":

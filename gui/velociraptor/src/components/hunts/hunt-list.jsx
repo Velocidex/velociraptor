@@ -22,7 +22,7 @@ import T from '../i8n/i8n.jsx';
 import UserConfig from '../core/user.jsx';
 
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 
 
 class HuntList extends React.Component {
@@ -36,10 +36,14 @@ class HuntList extends React.Component {
         hunts: PropTypes.array,
         setSelectedHunt: PropTypes.func,
         updateHunts: PropTypes.func,
+
+        // React router props.
+        match: PropTypes.object,
+        history: PropTypes.object,
     };
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         let action = this.props.match && this.props.match.params &&
             this.props.match.params.hunt_id;
@@ -480,8 +484,9 @@ class HuntList extends React.Component {
                         })}
                     />
                     {_.isEmpty(this.props.hunts) &&
-                        <div className="no-conte
-nt">{T("No hunts exist in the system. You can start a new hunt by clicking the New Hunt button above.")}</div>}
+                        <div className="no-content">
+                          {T("No hunts exist in the system. You can start a new hunt by clicking the New Hunt button above.")}
+                        </div>}
                 </div>
             </>
         );

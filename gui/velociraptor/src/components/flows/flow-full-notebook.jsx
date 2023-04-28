@@ -1,4 +1,6 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+
 import T from '../i8n/i8n.jsx';
 import FlowNotebook from './flow-notebook.jsx';
 import { withRouter }  from "react-router-dom";
@@ -10,7 +12,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 
 class FullScreenFlowNotebook extends React.Component {
-    static propTypes = {};
+    static propTypes = {
+        // React router props.
+        match: PropTypes.object,
+        history: PropTypes.object,
+    };
 
     state = {};
 

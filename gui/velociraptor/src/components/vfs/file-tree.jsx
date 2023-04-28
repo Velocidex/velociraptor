@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 
 import _ from 'lodash';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 
 import TreeView from '../utils/tree/tree.jsx';
 
@@ -20,10 +20,14 @@ class VeloFileTree extends Component {
         version: PropTypes.string,
         updateVFSPath: PropTypes.func,
         updateCurrentNode: PropTypes.func,
+
+        // React router props.
+        match: PropTypes.object,
+        history: PropTypes.object,
     }
 
     componentDidMount() {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.updateTree(this.props.vfs_path);
     }
 
@@ -158,7 +162,7 @@ class VeloFileTree extends Component {
 
             // Cancel any in flight calls.
             this.source.cancel();
-            this.source = axios.CancelToken.source();
+            this.source = CancelToken.source();
 
             api.get("v1/VFSListDirectory/" + client_id, {
                 vfs_components: prev_components,

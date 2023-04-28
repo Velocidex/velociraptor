@@ -725,6 +725,7 @@ body.github-dimmed-dark {
 }
 
 .github-dimmed-dark .report-viewer pre {
+    filter: invert(1);
   background: rgba(255,255,255,.05);
   border-radius: 4px;
   border: none;

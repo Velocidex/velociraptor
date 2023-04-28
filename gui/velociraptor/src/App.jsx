@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import './css/App.css';
 
+import PropTypes from 'prop-types';
 import VeloNavigator from './components/sidebar/navigator.jsx';
 import VeloClientSearch from './components/clients/search.jsx';
 import VeloClientList from './components/clients/clients-list.jsx';
@@ -20,7 +21,6 @@ import ArtifactInspector from './components/artifacts/artifacts.jsx';
 import UserInspector from './components/users/user-inspector.jsx';
 import VeloHunts from './components/hunts/hunts.jsx';
 import UserDashboard from './components/sidebar/user-dashboard.jsx';
-import Form from 'react-bootstrap/Form';
 import UserLabel from './components/users/user-label.jsx';
 import EventMonitoring from './components/events/events.jsx';
 import SnackbarProvider from 'react-simple-snackbar';
@@ -31,9 +31,8 @@ import LogoffPage from './components/welcome/logoff.jsx';
 import KeyboardHelp from './components/core/keyboard-help.jsx';
 import { UserSettings } from './components/core/user.jsx';
 import { ContextMenuPopup } from './components/utils/context.jsx';
-import { Switch, Route } from "react-router-dom";
+import { Switch, Route, withRouter } from "react-router-dom";
 import { Join } from './components/utils/paths.jsx';
-import { withRouter }  from "react-router-dom";
 
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
@@ -67,6 +66,10 @@ import './themes/midnight.css';
 */
 
 class App extends Component {
+    static propTypes = {
+        history: PropTypes.any,
+    }
+
     state = {
         client: {},
 

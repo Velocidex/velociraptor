@@ -14,8 +14,34 @@
     color: var(--color-client-link-hover);
 }
 
-client-status-icons > div {
-    text-align: left;
-    display: inline;
+.client-summary .client-status {
+    padding-right: 8px;
 }
 
+.online-btn {
+    transform-style: preserve-3d;
+    background: radial-gradient(circle at 50% 25%,
+          white, rgba(0,255,0));
+    border-radius: 100%;
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+
+    border-color: gray;
+    border-width: 1px;
+    border-style: solid;
+}
+
+.any-btn {
+    transform-style: preserve-3d;
+    background: radial-gradient(circle at 50% 25%,
+          white, rgba(100,100,100));
+    border-radius: 100%;
+    width: 16px;
+    height: 16px;
+    display: inline-flex;
+
+    border-color: gray;
+    border-width: 1px;
+    border-style: solid;
+}

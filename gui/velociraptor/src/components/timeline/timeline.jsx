@@ -8,7 +8,7 @@ import Timeline, {
     CustomMarker,
 } from 'react-calendar-timeline';
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import { PrepareData } from '../core/table.jsx';
 import VeloTimestamp from "../utils/time.jsx";
 import VeloValueRenderer from '../utils/value.jsx';
@@ -137,7 +137,7 @@ export default class TimelineRenderer extends React.Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.fetchRows();
     }
 
@@ -205,10 +205,10 @@ export default class TimelineRenderer extends React.Component {
             notebook_id: this.props.notebook_id,
         };
 
-        let url = this.props.url || "v1/GetTable";
+        let url = "v1/GetTable";
 
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         this.setState({loading: true});
 

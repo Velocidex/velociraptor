@@ -9,7 +9,7 @@ import Timeline, {
 } from 'react-calendar-timeline';
 import moment from 'moment';
 import 'moment-timezone';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import { PrepareData } from '../core/table.jsx';
 import api from '../core/api-service.jsx';
 import BootstrapTable from 'react-bootstrap-table-next';
@@ -137,8 +137,8 @@ export default class EventTimelineViewer extends React.Component {
     };
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
-        this.ts_source = axios.CancelToken.source();
+        this.source = CancelToken.source();
+        this.ts_source = CancelToken.source();
         this.fetchAvailableTimes();
     }
 
@@ -177,7 +177,7 @@ export default class EventTimelineViewer extends React.Component {
 
     fetchAvailableTimes = () => {
         this.ts_source.cancel();
-        this.ts_source = axios.CancelToken.source();
+        this.ts_source = CancelToken.source();
 
         let client_id = this.props.client_id || "server";
 
@@ -211,10 +211,10 @@ export default class EventTimelineViewer extends React.Component {
     }
 
     fetchRows = () => {
-        let url = this.props.url || "v1/GetTable";
+        let url = "v1/GetTable";
 
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         this.setState({loading: true});
 
@@ -374,7 +374,8 @@ export default class EventTimelineViewer extends React.Component {
                    </Dropdown.Toggle>
                    <Dropdown.Menu>
                      <Dropdown.Item as="a"
-                       href={api.href("/api/v1/DownloadTable", downloads_csv)}
+                       href={api.href("/api/v1/DownloadTable", downloads_csv,
+                                      {internal: true})}
                        variant="default" type="button">
                        <FontAwesomeIcon icon="file-csv"/>
                        <span className="button-label">
@@ -385,7 +386,8 @@ export default class EventTimelineViewer extends React.Component {
                        </span>
                      </Dropdown.Item>
                      <Dropdown.Item as="a"
-                       href={api.href("/api/v1/DownloadTable", downloads_json)}
+                       href={api.href("/api/v1/DownloadTable",
+                                      downloads_json, {internal: true})}
                        variant="default" type="button">
                        <FontAwesomeIcon icon="file-code"/>
                        <span className="button-label">

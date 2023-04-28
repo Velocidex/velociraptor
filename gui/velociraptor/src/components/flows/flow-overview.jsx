@@ -15,7 +15,7 @@ import Tooltip from 'react-bootstrap/Tooltip';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import T from '../i8n/i8n.jsx';
 import _ from 'lodash';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import AvailableDownloads from "../notebooks/downloads.jsx";
 
 import api from '../core/api-service.jsx';
@@ -31,7 +31,7 @@ export default class FlowOverview extends React.Component {
     };
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.interval = setInterval(this.getDetailedFlow, POLL_TIME);
         this.getDetailedFlow();
 

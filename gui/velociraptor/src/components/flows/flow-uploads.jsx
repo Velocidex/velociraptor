@@ -1,15 +1,7 @@
-import _ from 'lodash';
-
 import React from 'react';
 import PropTypes from 'prop-types';
 import Button from 'react-bootstrap/Button';
-import axios from 'axios';
-import { PrepareData } from '../core/table.jsx';
 import VeloPagedTable from '../core/paged-table.jsx';
-import T from '../i8n/i8n.jsx';
-import Spinner from '../utils/spinner.jsx';
-import CardDeck from 'react-bootstrap/CardDeck';
-import Card from 'react-bootstrap/Card';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
@@ -78,7 +70,9 @@ export default class FlowUploads extends React.Component {
                                                row._Components, this.props.flow.client_id,
                                                this.props.flow.session_id),
                                            padding: true,
-                                           vfs_path: filename}, {arrayFormat: 'brackets'})}>
+                                           vfs_path: filename}, {
+                                               internal: true,
+                                               arrayFormat: 'brackets'})}>
                                  {filename} &nbsp;&nbsp; <FontAwesomeIcon icon="expand"/>
                                </Button>
                              </OverlayTrigger>
@@ -101,7 +95,9 @@ export default class FlowUploads extends React.Component {
                                          row._Components, this.props.flow.client_id,
                                          this.props.flow.session_id),
                                      padding: false,
-                                     vfs_path: filename}, {arrayFormat: 'brackets'})}>
+                                     vfs_path: filename}, {
+                                         internal: true,
+                                         arrayFormat: 'brackets'})}>
                            {filename}
                          </Button>
                        </OverlayTrigger>;

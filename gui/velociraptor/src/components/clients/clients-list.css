@@ -12,3 +12,11 @@ button.btn.online-status {
   overflow-y: auto;
   max-height: 400px;
 }
+
+.selection-cell input {
+    vertical-align: text-bottom;
+}
+
+.online-status {
+
+}

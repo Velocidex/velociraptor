@@ -4,7 +4,7 @@ import { runArtifact } from "../flows/utils.jsx";
 import Modal from 'react-bootstrap/Modal';
 import Spinner from '../utils/spinner.jsx';
 import Button from 'react-bootstrap/Button';
-import axios from 'axios';
+import  {CancelToken} from 'axios';
 
 import T from '../i8n/i8n.jsx';
 
@@ -19,7 +19,7 @@ export default class DeleteNotebookDialog extends React.PureComponent {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
     }
 
     componentWillUnmount() {

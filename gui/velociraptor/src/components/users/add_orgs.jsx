@@ -7,7 +7,7 @@ import T from '../i8n/i8n.jsx';
 import UserConfig from '../core/user.jsx';
 import OrgSelector from '../hunts/orgs.jsx';
 import Button from 'react-bootstrap/Button';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
 
 
@@ -42,7 +42,7 @@ export default class AddOrgDialog extends Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
     }
 
     componentWillUnmount() {
@@ -51,7 +51,7 @@ export default class AddOrgDialog extends Component {
 
     addUserToOrg = () => {
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         let name = this.props.user_name;
         if(!name) return;

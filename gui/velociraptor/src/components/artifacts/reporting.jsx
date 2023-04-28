@@ -3,7 +3,7 @@ import _ from 'lodash';
 
 import React from 'react';
 import PropTypes from 'prop-types';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 import parse from 'html-react-parser';
 
 import api from '../core/api-service.jsx';
@@ -33,6 +33,7 @@ export default class VeloReportViewer extends React.Component {
         params: PropTypes.object,
         client: PropTypes.object,
         flow_id: PropTypes.string,
+        refresh: PropTypes.func,
     }
 
     state = {
@@ -44,7 +45,7 @@ export default class VeloReportViewer extends React.Component {
     }
 
     componentDidMount() {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
         this.updateReport();
     }
 
@@ -101,7 +102,7 @@ export default class VeloReportViewer extends React.Component {
 
         // Cancel any in flight calls.
         this.source.cancel();
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
 
         api.post("v1/GetReport", params, this.source.token).then((response) => {
             if (response.cancel) return;
@@ -111,7 +112,7 @@ export default class VeloReportViewer extends React.Component {
                 messages: response.data.messages || [],
                 data: JSON.parse(response.data.data),
                 loading: false,
-                version: this.state.version += 1,
+                version: this.state.version + 1,
             };
             for (var i=0; i<new_state.messages.length; i++) {
                 console.log("While generating report: " + new_state.messages[i]);
@@ -159,9 +160,7 @@ export default class VeloReportViewer extends React.Component {
                               columns={response.Columns}
                             />
                         );
-                    } catch(e) {
-
-                    };
+                    } catch(e) {};
                 }
 
                 if (domNode.name === "grr-csv-viewer") {

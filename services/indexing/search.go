@@ -118,8 +118,13 @@ func (self *Indexer) searchRecents(
 	}
 
 	end := int(in.Offset + limit)
+	if end <= 0 {
+		result.Items = nil
+		return result, nil
+	}
+
 	if end > len(result.Items) {
-		end = len(result.Items) - 1
+		end = len(result.Items)
 	}
 	result.Items = result.Items[start:end]
 

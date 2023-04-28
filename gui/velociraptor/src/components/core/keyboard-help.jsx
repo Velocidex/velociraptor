@@ -81,18 +81,18 @@ export default class KeyboardHelp extends React.PureComponent {
                        let desc = spec[1];
 
                        return (<React.Fragment key={v}>
-                                <tr><td></td>
-                                  <td className="heading">
-                                    {T(title)}
-                                  </td></tr>
-                                { _.map(desc, (x, i)=>{
-                                    return <tr key={i}>
-                                             <td className="key">
-                                                {this.renderKey(x[0])}  :
-                                              </td>
-                                              <td className="desc">{x[1]}</td>
-                                            </tr>;
-                                })}
+                                 <tr><td></td>
+                                   <td className="heading">
+                                     {T(title)}
+                                   </td></tr>
+                                 { _.map(desc, (x, i)=>{
+                                     return <tr key={i}>
+                                        <td className="key">
+                                          {this.renderKey(x[0])}  :
+                                        </td>
+                                        <td className="desc">{x[1]}</td>
+                                      </tr>;
+                                 })}
                                </React.Fragment>);
                    })}
                  </tbody>
@@ -111,34 +111,36 @@ export default class KeyboardHelp extends React.PureComponent {
                              }} />
               { this.state.showHelp &&
                 <>
-                <GlobalHotKeys keyMap={{ESCAPE: "esc"}}
-                         handlers={{
-                             ESCAPE: ()=>this.setState({showHelp: false}),
-                         }} />
-                <div className="keyboard-help"
-                     onClick={()=>this.setState({showHelp: false})}>
-                  <div className="keyboard-help-content">
-                    <table className="page-heading">
-                      <tbody>
-                        <tr><td>{T("Keyboard shortcuts")}</td>
-                          <td><Button size="lg"
-                                className="float-right"
-                                variant="link">
-                                <FontAwesomeIcon icon="window-close"/>
-                              </Button></td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    <div className="help-content">
-                      <table cellPadding="0">
+                  <GlobalHotKeys keyMap={{ESCAPE: "esc"}}
+                                 handlers={{
+                                     ESCAPE: ()=>this.setState({showHelp: false}),
+                                 }} />
+                  <div className="keyboard-help"
+                       role="button" tabIndex={0}
+                       onKeyPress={()=>this.setState({showHelp: false})}
+                       onClick={()=>this.setState({showHelp: false})}>
+                    <div className="keyboard-help-content">
+                      <table className="page-heading">
                         <tbody>
-                          <tr>
-                            <td className="column">
-                              { this.makeColumn(helpTextCol1)}
-                            </td>
-                            <td className="column">
-                              { this.makeColumn(helpTextCol2)}
-                            </td>
+                          <tr><td>{T("Keyboard shortcuts")}</td>
+                            <td><Button size="lg"
+                                        className="float-right"
+                                        variant="link">
+                                  <FontAwesomeIcon icon="window-close"/>
+                                </Button></td>
+                          </tr>
+                        </tbody>
+                      </table>
+                      <div className="help-content">
+                        <table cellPadding="0">
+                          <tbody>
+                            <tr>
+                              <td className="column">
+                                { this.makeColumn(helpTextCol1)}
+                              </td>
+                              <td className="column">
+                                { this.makeColumn(helpTextCol2)}
+                              </td>
                           </tr>
                         </tbody>
                       </table>

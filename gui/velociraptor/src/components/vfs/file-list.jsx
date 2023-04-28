@@ -15,7 +15,7 @@ import VeloPagedTable from '../core/paged-table.jsx';
 
 import { Join, EncodePathInURL } from '../utils/paths.jsx';
 import api from '../core/api-service.jsx';
-import axios from 'axios';
+import {CancelToken} from 'axios';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -29,6 +29,10 @@ class DownloadAllDialog extends Component {
         node: PropTypes.object,
         onCancel: PropTypes.func.isRequired,
         onClose: PropTypes.func.isRequired,
+
+        // React router props.
+        match: PropTypes.object,
+        history: PropTypes.object,
     }
 
     render() {
@@ -63,6 +67,9 @@ class VeloFileList extends Component {
         client: PropTypes.object,
         updateCurrentSelectedRow: PropTypes.func,
         updateCurrentNode: PropTypes.func,
+
+        // React router props.
+        history: PropTypes.object,
     }
 
     state = {
@@ -81,7 +88,7 @@ class VeloFileList extends Component {
     }
 
     componentDidMount = () => {
-        this.source = axios.CancelToken.source();
+        this.source = CancelToken.source();
     }
 
     componentWillUnmount() {
@@ -272,7 +279,7 @@ class VeloFileList extends Component {
             this.setState({lastRefreshOperationId: response.data.flow_id});
 
             // Start polling for flow completion.
-            this.source = axios.CancelToken.source();
+            this.source = CancelToken.source();
             this.interval = setInterval(() => {
                 // If it not enough here to just wait for the flow to
                 // finish, we need to wait for the vfs service to
@@ -447,26 +454,26 @@ class VeloFileList extends Component {
                 return <span className="file-hints">{result}</span>;
             },
             "Size": (cell, row) => {
-                let result = cell/1024/1024;
+                let result = parseInt(cell/1024/1024);
                 let value = cell;
                 let suffix = "";
                 if (_.isFinite(result) && result > 0) {
                     suffix = "Mb";
                     value = result.toFixed(0);
                 } else {
-                    result = (cell /1024).toFixed(0);
+                    result = parseInt(cell /1024);
                     if (_.isFinite(result) && result > 0) {
                         suffix = "Kb";
                         value = result.toFixed(0);
                     } else {
                         if (_.isFinite(cell)) {
-                            suffix = "b";
+                            suffix = "";
                             value = cell.toFixed(0);
                         }
                     }
                 }
 
-                return value + " " + suffix;
+                return <div className="number">{value + suffix}</div>;
             },
         };
 

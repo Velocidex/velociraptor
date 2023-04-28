@@ -120,7 +120,7 @@ What OS will the server be deployed on?
 		Message: `Do you want to restrict VQL functionality on the server?
 
 This is useful for a shared server where users are not fully trusted.
-It removes potentially dangerous plugins like execve(),filesyste access etc.
+It removes potentially dangerous plugins like execve(),filesystem access etc.
 `,
 	}
 )

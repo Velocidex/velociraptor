@@ -58,3 +58,38 @@ pre {
 span.user-edit {
     padding-right: 1ex;
 }
+
+.artifact-filter {
+    width: 250px;
+}
+
+.artifact-search {
+    z-index: 1000;
+}
+
+.artifact-search-input {
+    height: 38px;
+}
+
+.form-inline .artifact-search-input.form-control {
+    width: 300px;
+}
+
+.artifact-search-table td {
+    padding: 0px;
+    margin: 0px;
+}
+
+.link-button {
+  background-color: transparent;
+  color: var(--color-foreground);
+  border: none;
+  cursor: pointer;
+  display: inline;
+  margin: 0;
+  padding: 0;
+}
+
+.built-in-icon {
+    padding-right: 5px;
+}
