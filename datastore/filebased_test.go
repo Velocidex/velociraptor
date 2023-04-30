@@ -1,4 +1,4 @@
-package datastore
+package datastore_test
 
 import (
 	"fmt"
@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/datastore"
 )
 
 type FilebasedTestSuite struct {
@@ -55,7 +56,7 @@ func (self FilebasedTestSuite) TearDownTest() {
 func TestFilebasedDatabase(t *testing.T) {
 	suite.Run(t, &FilebasedTestSuite{
 		BaseTestSuite: BaseTestSuite{
-			datastore: &FileBaseDataStore{},
+			datastore: &datastore.FileBaseDataStore{},
 		},
 	})
 }

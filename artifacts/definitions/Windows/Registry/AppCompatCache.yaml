@@ -70,7 +70,7 @@ export: |
 
       # The last byte of the Data block is 1 for execution
       ["Execution", "x=>x.PathSize + 14 + 8 + 4 + x.DataSize - 4", "uint32"]
-    ]]
+    ]],
 
     # This is the Win7 parser but we dont use it right now.
     ["HeaderWin7x64", 128, [

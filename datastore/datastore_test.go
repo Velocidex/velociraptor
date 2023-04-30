@@ -1,4 +1,4 @@
-package datastore
+package datastore_test
 
 import (
 	"errors"
@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -39,7 +40,7 @@ type BaseTestSuite struct {
 	suite.Suite
 
 	config_obj *config_proto.Config
-	datastore  DataStore
+	datastore  datastore.DataStore
 }
 
 func (self BaseTestSuite) TestSetGetJSON() {
@@ -191,9 +192,9 @@ func (self BaseTestSuite) TestListChildren() {
 		"/a/b/c/3"}, asStrings(children))
 
 	visited := []api.DSPathSpec{}
-	Walk(self.config_obj, self.datastore,
+	datastore.Walk(self.config_obj, self.datastore,
 		path_specs.NewSafeDatastorePath("a", "b"),
-		WalkWithoutDirectories,
+		datastore.WalkWithoutDirectories,
 		func(path_name api.DSPathSpec) error {
 			visited = append(visited, path_name)
 			return nil
@@ -233,9 +234,9 @@ func (self BaseTestSuite) TestListChildrenTypes() {
 		"/a/b/c/3:dir"}, asStringsWithTypes(children))
 
 	visited := []api.DSPathSpec{}
-	Walk(self.config_obj, self.datastore,
+	datastore.Walk(self.config_obj, self.datastore,
 		path_specs.NewSafeDatastorePath("a", "b"),
-		WalkWithoutDirectories,
+		datastore.WalkWithoutDirectories,
 		func(path_name api.DSPathSpec) error {
 			visited = append(visited, path_name)
 			return nil
@@ -281,9 +282,9 @@ func (self BaseTestSuite) TestUnsafeListChildren() {
 		"/a/b:b/c:b/3"}, asStrings(children))
 
 	visited := []api.DSPathSpec{}
-	Walk(self.config_obj, self.datastore,
+	datastore.Walk(self.config_obj, self.datastore,
 		root,
-		WalkWithoutDirectories,
+		datastore.WalkWithoutDirectories,
 		func(path_name api.DSPathSpec) error {
 			visited = append(visited, path_name)
 			return nil
@@ -328,7 +329,7 @@ func (self BaseTestSuite) TestListChildrenSubdirs() {
 }
 
 func benchmarkSearchClient(b *testing.B,
-	data_store DataStore,
+	data_store datastore.DataStore,
 	config_obj *config_proto.Config) {
 
 }
