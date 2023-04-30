@@ -28,7 +28,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -209,21 +208,15 @@ func readExeFile(
 		return nil, err
 	}
 
-	// Find the actual tool from the filestore. NOTE: Tools are stored
-	// in a central location in the root org that gets served to all
-	// orgs.
-	org_manager, err := services.GetOrgManager()
+	// The path is determined by the org specific inventory manager,
+	// but must be opened using the root orgs filestore.
+	path_manager := paths.NewInventoryPathManager(config_obj, tool)
+	pathspec, file_store_factory, err := path_manager.Path()
 	if err != nil {
 		return nil, err
 	}
 
-	// The path is determined by the org specific inventory manager,
-	// but must be opened using the root orgs filestore.
-	path_manager := paths.NewInventoryPathManager(config_obj, tool)
-
-	root_config_obj, _ := org_manager.GetOrgConfig("root")
-	root_file_store_factory := file_store.GetFileStore(root_config_obj)
-	fd, err := root_file_store_factory.ReadFile(path_manager.Path())
+	fd, err := file_store_factory.ReadFile(pathspec)
 	if err != nil {
 		return nil, err
 	}
@@ -303,13 +296,6 @@ func AppendBinaries(
 	scope vfilter.Scope,
 	exe_bytes []byte, binaries []string) ([]byte, error) {
 
-	org_manager, err := services.GetOrgManager()
-	if err != nil {
-		return nil, err
-	}
-
-	root_config_obj, _ := org_manager.GetOrgConfig("root")
-
 	// Build the zip file that contains all the binaries.
 	csv_file := &bytes.Buffer{}
 	csv_writer := csv.GetCSVAppender(
@@ -323,7 +309,6 @@ func AppendBinaries(
 		return nil, err
 	}
 
-	file_store_factory := file_store.GetFileStore(root_config_obj)
 	for _, name := range binaries {
 		parts := strings.SplitN(name, ":", 2)
 		version := ""
@@ -341,7 +326,12 @@ func AppendBinaries(
 
 		// Try to open the tool directly from the filestore
 		path_manager := paths.NewInventoryPathManager(config_obj, tool)
-		fd, err := file_store_factory.ReadFile(path_manager.Path())
+		pathspec, file_store_factory, err := path_manager.Path()
+		if err != nil {
+			return nil, err
+		}
+
+		fd, err := file_store_factory.ReadFile(pathspec)
 		if err != nil {
 			return nil, err
 		}

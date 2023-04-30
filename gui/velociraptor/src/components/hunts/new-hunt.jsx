@@ -66,7 +66,7 @@ class NewHuntConfigureHunt extends React.Component {
               <Modal.Body>
                 <Form>
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">Description</Form.Label>
+                    <Form.Label column sm="3">{T("Description")}</Form.Label>
                     <Col sm="8">
                       <Form.Control as="textarea" rows={3}
                                     id="hunt-description-text"

@@ -50,7 +50,6 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -244,22 +243,6 @@ func (self *InventoryService) materializeTool(
 			tool.Name)
 	}
 
-	// All tools are stored at the global public directory which is
-	// mapped to a http static handler. The downloaded URL is
-	// regardless of org - however each org has a different download
-	// name. We need to write the tool on the root org's public
-	// directory.
-	org_manager, err := services.GetOrgManager()
-	root_org_config, err := org_manager.GetOrgConfig(services.ROOT_ORG_ID)
-	if err != nil {
-		return err
-	}
-
-	file_store_factory := file_store.GetFileStore(root_org_config)
-	if file_store_factory == nil {
-		return errors.New("No filestore configured")
-	}
-
 	// All tools are written to the root org's public directory since
 	// this is the only one mapped for external access. File names
 	// should never clash because the names are derived from a hash
@@ -267,7 +250,12 @@ func (self *InventoryService) materializeTool(
 	// org. Therefore we use the root orgs file store but get a path
 	// manager specific to each org.
 	path_manager := paths.NewInventoryPathManager(org_config_obj, tool)
-	fd, err := file_store_factory.WriteFile(path_manager.Path())
+	pathspec, file_store_factory, err := path_manager.Path()
+	if err != nil {
+		return err
+	}
+
+	fd, err := file_store_factory.WriteFile(pathspec)
 	if err != nil {
 		return err
 	}

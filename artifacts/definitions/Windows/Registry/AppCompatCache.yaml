@@ -71,6 +71,26 @@ export: |
       # The last byte of the Data block is 1 for execution
       ["Execution", "x=>x.PathSize + 14 + 8 + 4 + x.DataSize - 4", "uint32"]
     ]]
+
+    # This is the Win7 parser but we dont use it right now.
+    ["HeaderWin7x64", 128, [
+      ["Signature", 0, "uint32"],
+      ["Entries", 128, "Array", {
+          count: 10000,
+          sentinel: "x=>x.PathSize = 0",
+          type: EntryWin7x64,
+      }]
+    ]],
+    ["EntryWin7x64", 48, [
+      ["PathSize", 0, "uint16"],
+      ["PathOffset", 8, "uint32"],
+      ["Path", "x=>x.PathOffset - x.StartOf", "String", {
+          encoding: "utf16",
+          length: "x=>x.PathSize",
+      }],
+      ["LastMod", 16, "WinFileTime"]
+    ]]
+
     ]'''
 
     LET AppCompatCacheWin10(Blob) = parse_binary(

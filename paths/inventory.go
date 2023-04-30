@@ -3,10 +3,13 @@ package paths
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 func ObfuscateName(
@@ -25,11 +28,36 @@ func ObfuscateName(
 }
 
 type InventoryPathManager struct {
-	root api.FSPathSpec
+	org_config_obj *config_proto.Config
+	root           api.FSPathSpec
 }
 
-func (self InventoryPathManager) Path() api.FSPathSpec {
-	return self.root
+// NOTE: The InventoryPathManager must be used with the root org's
+// filestore, even though it is instantiated with the org's
+// config. This is because inventory files are **always** written to
+// the root's public/ directory so they can be exported through the
+// web server.
+
+// In order to enforce this, the prototype of this function is
+// different than usual and returns the root filestore as well.
+func (self InventoryPathManager) Path() (api.FSPathSpec, api.FileStore, error) {
+	// All tools are stored at the global public directory which is
+	// mapped to a http static handler. The downloaded URL is
+	// regardless of org - however each org has a different download
+	// name. We need to write the tool on the root org's public
+	// directory.
+	org_manager, err := services.GetOrgManager()
+	root_org_config, err := org_manager.GetOrgConfig(services.ROOT_ORG_ID)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	file_store_factory := file_store.GetFileStore(root_org_config)
+	if file_store_factory == nil {
+		return nil, nil, errors.New("No filestore configured")
+	}
+
+	return self.root, file_store_factory, nil
 }
 
 func NewInventoryPathManager(config_obj *config_proto.Config,
@@ -39,6 +67,7 @@ func NewInventoryPathManager(config_obj *config_proto.Config,
 	}
 
 	return &InventoryPathManager{
-		root: PUBLIC_ROOT.AddChild(tool.FilestorePath),
+		org_config_obj: config_obj,
+		root:           PUBLIC_ROOT.AddChild(tool.FilestorePath),
 	}
 }

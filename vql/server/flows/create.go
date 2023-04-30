@@ -19,7 +19,6 @@ package flows
 
 import (
 	"context"
-	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -74,12 +73,18 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
+	if err != nil {
+		scope.Log("collect_client: %v", err)
+		return vfilter.Null{}
+	}
+
 	// Scheduling artifacts on the server requires higher
 	// permissions.
 	var permission acls.ACL_PERMISSION
 	if arg.ClientId == "server" {
 		permission = acls.SERVER_ADMIN
-	} else if strings.HasPrefix(arg.ClientId, "C.") {
+	} else if client_info_manager.ValidateClientId(arg.ClientId) == nil {
 		permission = acls.COLLECT_CLIENT
 	} else {
 		scope.Log("collect_client: unsupported client id")

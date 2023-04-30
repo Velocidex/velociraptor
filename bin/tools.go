@@ -11,7 +11,6 @@ import (
 
 	"github.com/Velocidex/yaml/v2"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -177,8 +176,12 @@ func doThirdPartyUpload() error {
 	} else {
 		// Figure out where we need to store the tool.
 		path_manager := paths.NewInventoryPathManager(config_obj, tool)
-		file_store_factory := file_store.GetFileStore(config_obj)
-		writer, err := file_store_factory.WriteFile(path_manager.Path())
+		pathspec, file_store_factory, err := path_manager.Path()
+		if err != nil {
+			return err
+		}
+
+		writer, err := file_store_factory.WriteFile(pathspec)
 		if err != nil {
 			return fmt.Errorf("Unable to write to filestore: %w ", err)
 		}

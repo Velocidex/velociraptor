@@ -74,7 +74,7 @@ type APIClient interface {
 	GetArtifacts(ctx context.Context, in *GetArtifactsRequest, opts ...grpc.CallOption) (*proto1.ArtifactDescriptors, error)
 	GetArtifactFile(ctx context.Context, in *GetArtifactRequest, opts ...grpc.CallOption) (*GetArtifactResponse, error)
 	SetArtifactFile(ctx context.Context, in *SetArtifactRequest, opts ...grpc.CallOption) (*APIResponse, error)
-	LoadArtifactPack(ctx context.Context, in *VFSFileBuffer, opts ...grpc.CallOption) (*LoadArtifactPackResponse, error)
+	LoadArtifactPack(ctx context.Context, in *LoadArtifactPackRequest, opts ...grpc.CallOption) (*LoadArtifactPackResponse, error)
 	// Tools
 	GetToolInfo(ctx context.Context, in *proto1.Tool, opts ...grpc.CallOption) (*proto1.Tool, error)
 	SetToolInfo(ctx context.Context, in *proto1.Tool, opts ...grpc.CallOption) (*proto1.Tool, error)
@@ -492,7 +492,7 @@ func (c *aPIClient) SetArtifactFile(ctx context.Context, in *SetArtifactRequest,
 	return out, nil
 }
 
-func (c *aPIClient) LoadArtifactPack(ctx context.Context, in *VFSFileBuffer, opts ...grpc.CallOption) (*LoadArtifactPackResponse, error) {
+func (c *aPIClient) LoadArtifactPack(ctx context.Context, in *LoadArtifactPackRequest, opts ...grpc.CallOption) (*LoadArtifactPackResponse, error) {
 	out := new(LoadArtifactPackResponse)
 	err := c.cc.Invoke(ctx, "/proto.API/LoadArtifactPack", in, out, opts...)
 	if err != nil {
@@ -855,7 +855,7 @@ type APIServer interface {
 	GetArtifacts(context.Context, *GetArtifactsRequest) (*proto1.ArtifactDescriptors, error)
 	GetArtifactFile(context.Context, *GetArtifactRequest) (*GetArtifactResponse, error)
 	SetArtifactFile(context.Context, *SetArtifactRequest) (*APIResponse, error)
-	LoadArtifactPack(context.Context, *VFSFileBuffer) (*LoadArtifactPackResponse, error)
+	LoadArtifactPack(context.Context, *LoadArtifactPackRequest) (*LoadArtifactPackResponse, error)
 	// Tools
 	GetToolInfo(context.Context, *proto1.Tool) (*proto1.Tool, error)
 	SetToolInfo(context.Context, *proto1.Tool) (*proto1.Tool, error)
@@ -1030,7 +1030,7 @@ func (UnimplementedAPIServer) GetArtifactFile(context.Context, *GetArtifactReque
 func (UnimplementedAPIServer) SetArtifactFile(context.Context, *SetArtifactRequest) (*APIResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetArtifactFile not implemented")
 }
-func (UnimplementedAPIServer) LoadArtifactPack(context.Context, *VFSFileBuffer) (*LoadArtifactPackResponse, error) {
+func (UnimplementedAPIServer) LoadArtifactPack(context.Context, *LoadArtifactPackRequest) (*LoadArtifactPackResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LoadArtifactPack not implemented")
 }
 func (UnimplementedAPIServer) GetToolInfo(context.Context, *proto1.Tool) (*proto1.Tool, error) {
@@ -1851,7 +1851,7 @@ func _API_SetArtifactFile_Handler(srv interface{}, ctx context.Context, dec func
 }
 
 func _API_LoadArtifactPack_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(VFSFileBuffer)
+	in := new(LoadArtifactPackRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -1863,7 +1863,7 @@ func _API_LoadArtifactPack_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/proto.API/LoadArtifactPack",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(APIServer).LoadArtifactPack(ctx, req.(*VFSFileBuffer))
+		return srv.(APIServer).LoadArtifactPack(ctx, req.(*LoadArtifactPackRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

@@ -377,7 +377,7 @@ service API {
         };
     }
 
-    rpc LoadArtifactPack(VFSFileBuffer) returns (LoadArtifactPackResponse) {
+    rpc LoadArtifactPack(LoadArtifactPackRequest) returns (LoadArtifactPackResponse) {
         option (google.api.http) = {
             post: "/api/v1/LoadArtifactPack",
             body: "*",

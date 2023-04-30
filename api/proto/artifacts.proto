@@ -63,6 +63,7 @@ message SetArtifactRequest {
     enum Operation {
         SET = 0;
         DELETE = 1;
+        CHECK = 2;
     }
 
     Operation op = 3 [(sem_type) = {
@@ -75,9 +76,28 @@ message LoadArtifactError {
     string error = 2;
 }
 
+message LoadArtifactPackRequest {
+    string prefix = 1;
+    string filter = 2;
+
+    // The API can specify the archive two ways:
+
+    // 1. The raw data is attached in the data field. The server will
+    //    store the data locally and return its VFS path components.
+    // 2. The caller can specify these components in subsequent calls
+    //    to operate on the already uploaded file.
+
+    // NOTE: the vfs path must be in the VFS temp directory.
+    bytes data = 3;
+    repeated string vfs_path = 5;
+
+    bool really_do_it = 4;
+}
+
+
 message LoadArtifactPackResponse {
     repeated string successful_artifacts = 1;
-
+    repeated string vfs_path = 3;
     repeated LoadArtifactError errors = 2;
 }
 

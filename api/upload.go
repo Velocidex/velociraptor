@@ -12,7 +12,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -79,20 +78,13 @@ func toolUploadHandler() http.Handler {
 		tool.Filename = path.Base(handler.Filename)
 		tool.ServeLocally = true
 
-		// All tools are stored at the global public directory which is
-		// mapped to a http static handler. The downloaded URL is
-		// regardless of org - however each org has a different download
-		// name. We need to write the tool on the root org's public
-		// directory.
-		root_org_config, err := org_manager.GetOrgConfig(services.ROOT_ORG_ID)
+		path_manager := paths.NewInventoryPathManager(org_config_obj, tool)
+		pathspec, file_store_factory, err := path_manager.Path()
 		if err != nil {
 			returnError(w, 404, err.Error())
 		}
 
-		file_store_factory := file_store.GetFileStore(root_org_config)
-		path_manager := paths.NewInventoryPathManager(org_config_obj, tool)
-
-		writer, err := file_store_factory.WriteFile(path_manager.Path())
+		writer, err := file_store_factory.WriteFile(pathspec)
 		if err != nil {
 			returnError(w, http.StatusInternalServerError,
 				fmt.Sprintf("Error: %v", err))
@@ -213,13 +205,16 @@ func formUploadHandler() http.Handler {
 
 		form_desc.Filename = path.Base(handler.Filename)
 
-		file_store_factory := file_store.GetFileStore(org_config_obj)
 		path_manager := paths.NewFormUploadPathManager(
 			org_config_obj, form_desc.Filename)
 
+		pathspec, file_store_factory, err := path_manager.Path()
+		returnError(w, 403, fmt.Sprintf("Error: %v", err))
+		return
+
 		form_desc.Url = path_manager.URL()
 
-		writer, err := file_store_factory.WriteFile(path_manager.Path())
+		writer, err := file_store_factory.WriteFile(pathspec)
 		if err != nil {
 			returnError(w, http.StatusInternalServerError,
 				fmt.Sprintf("Error: %v", err))
