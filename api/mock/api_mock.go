@@ -842,7 +842,7 @@ func (mr *MockAPIClientMockRecorder) ListHunts(arg0, arg1 interface{}, arg2 ...i
 }
 
 // LoadArtifactPack mocks base method.
-func (m *MockAPIClient) LoadArtifactPack(arg0 context.Context, arg1 *proto0.VFSFileBuffer, arg2 ...grpc.CallOption) (*proto0.LoadArtifactPackResponse, error) {
+func (m *MockAPIClient) LoadArtifactPack(arg0 context.Context, arg1 *proto0.LoadArtifactPackRequest, arg2 ...grpc.CallOption) (*proto0.LoadArtifactPackResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {

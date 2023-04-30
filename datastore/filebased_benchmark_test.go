@@ -1,4 +1,4 @@
-package datastore
+package datastore_test
 
 import (
 	"io/ioutil"
@@ -7,6 +7,7 @@ import (
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
 )
 
@@ -18,7 +19,7 @@ func BenchmarkSetSubject(b *testing.B) {
 	config_obj.Datastore.FilestoreDirectory = dir
 	config_obj.Datastore.Location = dir
 
-	db, _ := GetDB(config_obj)
+	db, _ := datastore.GetDB(config_obj)
 
 	client_id := "C.1234"
 	client_path_manager := paths.NewClientPathManager(client_id)

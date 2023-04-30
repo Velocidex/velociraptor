@@ -53,6 +53,9 @@ var (
 	PUBLIC_ROOT = path_specs.NewUnsafeFilestorePath("public").
 			SetType(api.PATH_TYPE_FILESTORE_ANY)
 
+	TEMP_ROOT = path_specs.NewUnsafeFilestorePath("temp").
+			SetType(api.PATH_TYPE_FILESTORE_ANY)
+
 	// Timelines
 	TIMELINE_URN = path_specs.NewSafeDatastorePath("timelines").
 			SetType(api.PATH_TYPE_DATASTORE_JSON)

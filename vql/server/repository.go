@@ -243,6 +243,9 @@ func (self ArtifactsPlugin) Call(
 			}
 			for _, name := range names {
 				artifact, pres := repository.Get(ctx, config_obj, name)
+				if !pres {
+					continue
+				}
 
 				// Clean up the artifact by removing internal fields.
 				artifact = proto.Clone(artifact).(*artifacts_proto.Artifact)

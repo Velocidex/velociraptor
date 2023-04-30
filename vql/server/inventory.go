@@ -10,7 +10,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -79,8 +78,13 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		}
 
 		path_manager := paths.NewInventoryPathManager(config_obj, tool)
-		file_store_factory := file_store.GetFileStore(config_obj)
-		writer, err := file_store_factory.WriteFile(path_manager.Path())
+		pathspec, file_store_factory, err := path_manager.Path()
+		if err != nil {
+			scope.Log("inventory_add: %s", err)
+			return vfilter.Null{}
+		}
+
+		writer, err := file_store_factory.WriteFile(pathspec)
 		if err != nil {
 			scope.Log("inventory_add: %s", err)
 			return vfilter.Null{}

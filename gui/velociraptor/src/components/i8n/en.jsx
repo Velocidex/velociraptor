@@ -59,6 +59,7 @@ const English = {
         return "Edit Artifact " + name;
     },
     "Notebook for Collection": name=>"Notebook for Collection "+name,
+    "Import Artifacts": length=><>Import {length} Artifacts</>,
     "ArtifactDeletionDialog": (session_id, artifacts, total_bytes, total_rows)=>
     <>
       You are about to permanently delete the artifact collection

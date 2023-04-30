@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
+	errors "github.com/go-errors/errors"
 	context "golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -31,7 +32,11 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -135,6 +140,13 @@ func setArtifactFile(
 
 		return artifact_definition, manager.DeleteArtifactFile(ctx, config_obj,
 			principal, artifact_definition.Name)
+
+	case api_proto.SetArtifactRequest_CHECK:
+		tmp_repository := manager.NewRepository()
+		return tmp_repository.LoadYaml(
+			in.Artifact, services.ArtifactOptions{
+				ValidateArtifact: true,
+			})
 
 	case api_proto.SetArtifactRequest_SET:
 		return manager.SetArtifactFile(ctx,
@@ -437,7 +449,7 @@ func searchArtifact(
 
 func (self *ApiServer) LoadArtifactPack(
 	ctx context.Context,
-	in *api_proto.VFSFileBuffer) (
+	in *api_proto.LoadArtifactPackRequest) (
 	*api_proto.LoadArtifactPackResponse, error) {
 
 	users_manager := services.GetUserManager()
@@ -454,15 +466,24 @@ func (self *ApiServer) LoadArtifactPack(
 			"User is not allowed to upload artifact packs.")
 	}
 
-	prefix := constants.ARTIFACT_PACK_NAME_PREFIX
+	prefix := in.Prefix
+	var filter_re *regexp.Regexp
+	if in.Filter != "" {
+		filter_re, err = regexp.Compile("(?i)" + in.Filter)
+		if err != nil {
+			return nil, Status(self.verbose, err)
+		}
+	}
 
-	result := &api_proto.LoadArtifactPackResponse{}
-	buffer := bytes.NewReader(in.Data)
-	zip_reader, err := zip.NewReader(buffer, int64(len(in.Data)))
+	zip_reader, closer, err := getZipReader(ctx, org_config_obj, in)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+	defer closer()
 
+	result := &api_proto.LoadArtifactPackResponse{
+		VfsPath: in.VfsPath,
+	}
 	for _, file := range zip_reader.File {
 		if strings.HasSuffix(file.Name, ".yaml") {
 			fd, err := file.Open()
@@ -477,18 +498,36 @@ func (self *ApiServer) LoadArtifactPack(
 				continue
 			}
 
-			// Make sure the artifact is written into the
-			// Packs part to prevent clashes with built in
-			// names.
+			// Update the definition to include the prefix on the
+			// artifact name.
 			artifact_definition := ensureArtifactPrefix(
-				string(data), prefix)
+				string(data), in.Prefix)
 
 			request := &api_proto.SetArtifactRequest{
-				Op:       api_proto.SetArtifactRequest_SET,
+				Op:       api_proto.SetArtifactRequest_CHECK,
 				Artifact: artifact_definition,
 			}
 
 			definition, err := setArtifactFile(ctx,
+				org_config_obj, principal, request, prefix)
+			if err != nil {
+				continue
+			}
+
+			if filter_re != nil && !filter_re.MatchString(definition.Name) {
+				continue
+			}
+
+			if !in.ReallyDoIt {
+				result.SuccessfulArtifacts = append(result.SuccessfulArtifacts,
+					definition.Name)
+				continue
+			}
+
+			request.Op = api_proto.SetArtifactRequest_SET
+
+			// Set the artifact for real.
+			definition, err = setArtifactFile(ctx,
 				org_config_obj, principal, request, prefix)
 			if err == nil {
 				services.LogAudit(ctx,
@@ -509,6 +548,65 @@ func (self *ApiServer) LoadArtifactPack(
 	}
 
 	return result, nil
+}
+
+func getZipReader(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	in *api_proto.LoadArtifactPackRequest) (*zip.Reader, func() error, error) {
+
+	// Create a temp file and store the data in it.
+	if len(in.Data) > 0 {
+		// Check the file is a valid zip file first, before we cache
+		// it locally.
+		buffer := bytes.NewReader(in.Data)
+		zipfd, err := zip.NewReader(buffer, int64(len(in.Data)))
+		if err != nil {
+			return nil, nil, err
+		}
+
+		path_manager := paths.NewTempPathManager("")
+		file_store_factory := file_store.GetFileStore(config_obj)
+		fd, err := file_store_factory.WriteFile(path_manager.Path())
+		if err != nil {
+			return nil, nil, err
+		}
+		defer fd.Close()
+
+		_, err = utils.Copy(ctx, fd, bytes.NewReader(in.Data))
+		if err != nil {
+			return nil, nil, err
+		}
+		in.VfsPath = path_manager.Path().Components()
+		return zipfd, func() error { return nil }, nil
+	}
+
+	// Otherwise open the filestore path
+	if len(in.VfsPath) < 2 {
+		return nil, nil, errors.New("vfs_path should be specified")
+	}
+
+	if in.VfsPath[0] != paths.TEMP_ROOT.Components()[0] {
+		return nil, nil, errors.New("vfs_path should be a temp path")
+	}
+
+	pathspec := path_specs.NewUnsafeFilestorePath(in.VfsPath...).
+		SetType(api.PATH_TYPE_FILESTORE_ANY)
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+	fd, err := file_store_factory.ReadFile(pathspec)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	stat, err := fd.Stat()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	zip_reader, err := zip.NewReader(
+		utils.MakeReaderAtter(fd), stat.Size())
+	return zip_reader, fd.Close, err
 }
 
 // MakeCollectorRequest is a convenience function for creating

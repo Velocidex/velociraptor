@@ -93,7 +93,12 @@ class ArtifactInspector extends React.Component {
         showEditedArtifactDialog: false,
         showDeleteArtifactDialog: false,
         showArtifactsUploadDialog: false,
-        current_filter: "type:CLIENT",
+
+        // The current filter string in the search box.
+        current_filter: "",
+
+        // The currently selected preset filter.
+        preset_filter: "type:CLIENT",
 
         version: 0,
 
@@ -107,10 +112,14 @@ class ArtifactInspector extends React.Component {
             this.props.match.params.artifact;
 
         if (!artifact_name) {
-            this.fetchRows("type:CLIENT");
+            this.fetchRows("...", this.state.preset_filter);
             return;
         }
+        // If we get here the url contains the artifact name, we
+        // therefore have to allow all types of artifacts because we
+        // dont know which type the artifact is
         this.setState({selectedDescriptor: {name: artifact_name},
+                       preset_filter: "",
                        current_filter: artifact_name});
         this.updateSearch(artifact_name);
     }
@@ -121,10 +130,10 @@ class ArtifactInspector extends React.Component {
 
     updateSearch = (value) => {
         this.setState({current_filter: value});
-        this.fetchRows(value);
+        this.fetchRows(value, this.state.preset_filter);
     }
 
-    fetchRows = (search_term) => {
+    fetchRows = (search_term, preset_filter) => {
         this.setState({loading: true});
 
         // Cancel any in flight calls.
@@ -133,7 +142,8 @@ class ArtifactInspector extends React.Component {
 
         api.post("v1/GetArtifacts",
                 {
-                    search_term: search_term || "...",
+                    search_term: _.trim(preset_filter) + " " +
+                        _.trim(search_term|| "..."),
                     // This might be too many to fetch at once but we
                     // are still fast enough for now.
                     fields: {
@@ -240,7 +250,7 @@ class ArtifactInspector extends React.Component {
         }, this.source.token).then(resp => {
             if (resp.cancel) return;
 
-            this.fetchRows(this.state.current_filter);
+            this.fetchRows(this.state.current_filter, this.state.preset_filter);
             this.setState({showDeleteArtifactDialog: false});
         });
     }
@@ -256,10 +266,10 @@ class ArtifactInspector extends React.Component {
                  value={option_value}
                  onChange={x=>{
                      this.setState({
-                         current_filter: x.value,
+                         preset_filter: x.value,
                          filter_name: x.label,
                      });
-                     this.fetchRows(x.value);
+                     this.fetchRows(this.state.current_filter, x.value);
                  }}
                  placeholder={T("Filter artifact")}
                />;
@@ -277,7 +287,8 @@ class ArtifactInspector extends React.Component {
                   onClose={() => {
                       // Re-apply the search in case the user updated
                       // an artifact that should show up.
-                      this.fetchRows(this.state.current_filter);
+                      this.fetchRows(this.state.current_filter,
+                                     this.state.preset_filter);
                       this.setState({showNewArtifactDialog: false});
                   }}
                 />
@@ -289,7 +300,8 @@ class ArtifactInspector extends React.Component {
                   onClose={() => {
                       // Re-apply the search in case the user updated
                       // an artifact that should show up.
-                      this.fetchRows(this.state.current_filter);
+                      this.fetchRows(this.state.current_filter,
+                                     this.state.preset_filter);
                       this.getArtifactDescription(selected);
                       this.setState({showEditedArtifactDialog: false});
                   }}
@@ -308,7 +320,8 @@ class ArtifactInspector extends React.Component {
                   onClose={() => {
                       // Re-apply the search in case the user updated
                       // an artifact that should show up.
-                      this.fetchRows(this.state.current_filter);
+                      this.fetchRows(this.state.current_filter,
+                                     this.state.preset_filter);
                       this.setState({showArtifactsUploadDialog: false});
                   }}
                 />
@@ -321,7 +334,7 @@ class ArtifactInspector extends React.Component {
                           onClick={() => this.setState({showNewArtifactDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="plus"/>
-            <span className="sr-only">{T("Add an Artifact")}</span>
+                    <span className="sr-only">{T("Add an Artifact")}</span>
                   </Button>
 
                   <Button data-tooltip={T("Edit an Artifact")}
@@ -333,7 +346,7 @@ class ArtifactInspector extends React.Component {
                           disabled={!selected}
                           variant="default">
                     <FontAwesomeIcon icon="pencil-alt"/>
-            <span className="sr-only">{T("Edit an Artifact")}</span>
+                    <span className="sr-only">{T("Edit an Artifact")}</span>
                   </Button>
 
                   <Button data-tooltip={T("Delete Artifact")}
@@ -343,7 +356,7 @@ class ArtifactInspector extends React.Component {
                           disabled={!deletable}
                           variant="default">
                     <FontAwesomeIcon icon="trash"/>
-            <span className="sr-only">{T("Delete Artifact")}</span>
+                    <span className="sr-only">{T("Delete Artifact")}</span>
                   </Button>
 
                   <Button data-tooltip={T("Hunt Artifact")}
@@ -353,7 +366,7 @@ class ArtifactInspector extends React.Component {
                           disabled={!this.huntArtifactEnabled()}
                           variant="default">
                     <FontAwesomeIcon icon="crosshairs"/>
-            <span className="sr-only">{T("Hunt Artifact")}</span>
+                    <span className="sr-only">{T("Hunt Artifact")}</span>
                   </Button>
 
                   <Button data-tooltip={T("Collect Artifact")}
@@ -363,7 +376,7 @@ class ArtifactInspector extends React.Component {
                           disabled={!this.collectArtifactEnabled()}
                           variant="default">
                     <FontAwesomeIcon icon="cloud-download-alt"/>
-            <span className="sr-only">{T("Collect Artifact")}</span>
+                    <span className="sr-only">{T("Collect Artifact")}</span>
                   </Button>
 
                   <Button data-tooltip={T("Upload Artifact Pack")}
@@ -372,7 +385,7 @@ class ArtifactInspector extends React.Component {
                           onClick={()=>this.setState({showArtifactsUploadDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="upload"/>
-            <span className="sr-only">{T("Upload Artifact Pack")}</span>
+                    <span className="sr-only">{T("Upload Artifact Pack")}</span>
                   </Button>
                 </ButtonGroup>
                 <Form inline className="artifact-search">
@@ -382,7 +395,8 @@ class ArtifactInspector extends React.Component {
                       <FormControl className="artifact-search-input"
                                    ref={(input) => { this.searchInput = input; }}
                                    value={this.state.current_filter}
-                                   onChange={(e) => this.updateSearch(e.currentTarget.value)}
+                                   onChange={(e) => this.updateSearch(
+                                       e.currentTarget.value)}
                                    placeholder={T("Search for artifact")}
                                    spellCheck="false"
                       />

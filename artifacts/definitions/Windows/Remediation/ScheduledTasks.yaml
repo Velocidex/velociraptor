@@ -21,6 +21,8 @@ parameters:
  - name: CommandRegEx
    default: ThisIsAUniqueName
    type: regex
+ - name: PowerShellExe
+   default: "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
  - name: ReallyDoIt
    type: bool
    default: N
@@ -57,7 +59,7 @@ sources:
           SELECT * FROM if(condition= ReallyDoIt='Y',
             then={
               SELECT FullPath, Name, Command, Arguments, ComHandler, UserId, _XML
-              FROM execve(argv=["powershell",
+              FROM execve(argv=[PowerShellExe,
                  "-ExecutionPolicy", "Unrestricted", "-encodedCommand",
                     base64encode(string=utf16_encode(
                     string=format(format=script, args=[Name])))
