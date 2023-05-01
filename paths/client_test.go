@@ -57,7 +57,7 @@ func (self *PathManagerTestSuite) TestClientPathManager() {
 	// the client (e.g. from a glob() output). Components that
 	// contain a path separator within them are extra quoted
 	path_spec = manager.VFSDownloadInfoFromClientPath(
-		"file", `\\.\C:\你好世界\"你好/世界.db"`)
+		"file", []string{`\\.\C:`, `你好世界`, `你好/世界.db`})
 
 	assert.Equal(self.T(), data_store_path,
 		self.getDatastorePath(path_spec))
