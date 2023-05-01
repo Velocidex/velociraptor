@@ -194,13 +194,15 @@ func (self *ApiServer) CollectArtifact(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
+
 	launcher, err := services.GetLauncher(org_config_obj)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 
 	flow_id, err := launcher.ScheduleArtifactCollection(
-		ctx, org_config_obj, acl_manager, repository, in, nil)
+		ctx, org_config_obj, acl_manager, repository, in,
+		utils.BackgroundWriter)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}

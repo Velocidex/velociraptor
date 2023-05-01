@@ -74,4 +74,12 @@ type VFSService interface {
 		client_id string,
 		accessor string,
 		path_components []string) (*flows_proto.VFSDownloadInfo, error)
+
+	WriteDownloadInfo(
+		ctx context.Context,
+		config_obj *config_proto.Config,
+		client_id string,
+		accessor string,
+		client_components []string,
+		record *flows_proto.VFSDownloadInfo) error
 }
