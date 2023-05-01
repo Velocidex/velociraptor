@@ -30,6 +30,10 @@ message VFSListResponse {
   string artifact = 13;
   uint64 start_idx = 11;
   uint64 end_idx = 12;
+
+  // The version number that tracks the total download mutations in
+  // this directory.
+  uint64 download_version = 14;
 }
 
 message VFSStatDownloadRequest {

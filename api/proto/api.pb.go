@@ -662,7 +662,7 @@ var file_api_proto_rawDesc = []byte{
 	0x6f, 0x6e, 0x6c, 0x18, 0x04, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x6a, 0x73, 0x6f, 0x6e, 0x6c,
 	0x12, 0x12, 0x0a, 0x04, 0x72, 0x6f, 0x77, 0x73, 0x18, 0x05, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04,
 	0x72, 0x6f, 0x77, 0x73, 0x12, 0x15, 0x0a, 0x06, 0x6f, 0x72, 0x67, 0x5f, 0x69, 0x64, 0x18, 0x06,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x72, 0x67, 0x49, 0x64, 0x32, 0x81, 0x35, 0x0a, 0x03,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x05, 0x6f, 0x72, 0x67, 0x49, 0x64, 0x32, 0xf1, 0x35, 0x0a, 0x03,
 	0x41, 0x50, 0x49, 0x12, 0x52, 0x0a, 0x0a, 0x43, 0x72, 0x65, 0x61, 0x74, 0x65, 0x48, 0x75, 0x6e,
 	0x74, 0x12, 0x0b, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x48, 0x75, 0x6e, 0x74, 0x1a, 0x18,
 	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x74, 0x61, 0x72, 0x74, 0x46, 0x6c, 0x6f, 0x77,
@@ -843,7 +843,14 @@ var file_api_proto_rawDesc = []byte{
 	0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x56, 0x46, 0x53, 0x44,
 	0x6f, 0x77, 0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x49, 0x6e, 0x66, 0x6f, 0x22, 0x1f, 0x82, 0xd3, 0xe4,
 	0x93, 0x02, 0x19, 0x12, 0x17, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x56, 0x46, 0x53,
-	0x53, 0x74, 0x61, 0x74, 0x44, 0x6f, 0x77, 0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x12, 0x55, 0x0a, 0x08,
+	0x53, 0x74, 0x61, 0x74, 0x44, 0x6f, 0x77, 0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x12, 0x6e, 0x0a, 0x0f,
+	0x56, 0x46, 0x53, 0x44, 0x6f, 0x77, 0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x46, 0x69, 0x6c, 0x65, 0x12,
+	0x1d, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x56, 0x46, 0x53, 0x53, 0x74, 0x61, 0x74, 0x44,
+	0x6f, 0x77, 0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x18,
+	0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x53, 0x74, 0x61, 0x72, 0x74, 0x46, 0x6c, 0x6f, 0x77,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x22, 0x82, 0xd3, 0xe4, 0x93, 0x02, 0x1c,
+	0x22, 0x17, 0x2f, 0x61, 0x70, 0x69, 0x2f, 0x76, 0x31, 0x2f, 0x56, 0x46, 0x53, 0x44, 0x6f, 0x77,
+	0x6e, 0x6c, 0x6f, 0x61, 0x64, 0x46, 0x69, 0x6c, 0x65, 0x3a, 0x01, 0x2a, 0x12, 0x55, 0x0a, 0x08,
 	0x47, 0x65, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x12, 0x16, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f,
 	0x2e, 0x47, 0x65, 0x74, 0x54, 0x61, 0x62, 0x6c, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
 	0x1a, 0x17, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2e, 0x47, 0x65, 0x74, 0x54, 0x61, 0x62, 0x6c,
@@ -1221,117 +1228,119 @@ var file_api_proto_depIdxs = []int32{
 	3,  // 27: proto.API.VFSRefreshDirectory:input_type -> proto.VFSRefreshDirectoryRequest
 	27, // 28: proto.API.VFSStatDirectory:input_type -> proto.VFSListRequest
 	28, // 29: proto.API.VFSStatDownload:input_type -> proto.VFSStatDownloadRequest
-	13, // 30: proto.API.GetTable:input_type -> proto.GetTableRequest
-	29, // 31: proto.API.SearchFile:input_type -> proto.SearchFileRequest
-	30, // 32: proto.API.CollectArtifact:input_type -> proto.ArtifactCollectorArgs
-	19, // 33: proto.API.CancelFlow:input_type -> proto.ApiFlowRequest
-	19, // 34: proto.API.GetFlowDetails:input_type -> proto.ApiFlowRequest
-	19, // 35: proto.API.GetFlowRequests:input_type -> proto.ApiFlowRequest
-	20, // 36: proto.API.GetKeywordCompletions:input_type -> google.protobuf.Empty
-	31, // 37: proto.API.ReformatVQL:input_type -> proto.ReformatVQLMessage
-	32, // 38: proto.API.GetArtifacts:input_type -> proto.GetArtifactsRequest
-	33, // 39: proto.API.GetArtifactFile:input_type -> proto.GetArtifactRequest
-	34, // 40: proto.API.SetArtifactFile:input_type -> proto.SetArtifactRequest
-	35, // 41: proto.API.LoadArtifactPack:input_type -> proto.LoadArtifactPackRequest
-	36, // 42: proto.API.GetToolInfo:input_type -> proto.Tool
-	36, // 43: proto.API.SetToolInfo:input_type -> proto.Tool
-	37, // 44: proto.API.GetReport:input_type -> proto.GetReportRequest
-	20, // 45: proto.API.GetServerMonitoringState:input_type -> google.protobuf.Empty
-	30, // 46: proto.API.SetServerMonitoringState:input_type -> proto.ArtifactCollectorArgs
-	38, // 47: proto.API.GetClientMonitoringState:input_type -> proto.GetClientMonitoringStateRequest
-	39, // 48: proto.API.SetClientMonitoringState:input_type -> proto.ClientEventTable
-	40, // 49: proto.API.ListAvailableEventResults:input_type -> proto.ListAvailableEventResultsRequest
-	41, // 50: proto.API.CreateDownloadFile:input_type -> proto.CreateDownloadRequest
-	42, // 51: proto.API.GetNotebooks:input_type -> proto.NotebookCellRequest
-	43, // 52: proto.API.NewNotebook:input_type -> proto.NotebookMetadata
-	43, // 53: proto.API.UpdateNotebook:input_type -> proto.NotebookMetadata
-	42, // 54: proto.API.NewNotebookCell:input_type -> proto.NotebookCellRequest
-	42, // 55: proto.API.GetNotebookCell:input_type -> proto.NotebookCellRequest
-	42, // 56: proto.API.UpdateNotebookCell:input_type -> proto.NotebookCellRequest
-	42, // 57: proto.API.CancelNotebookCell:input_type -> proto.NotebookCellRequest
-	44, // 58: proto.API.CreateNotebookDownloadFile:input_type -> proto.NotebookExportRequest
-	45, // 59: proto.API.UploadNotebookAttachment:input_type -> proto.NotebookFileUploadRequest
-	4,  // 60: proto.API.VFSGetBuffer:input_type -> proto.VFSFileBuffer
-	46, // 61: proto.API.Query:input_type -> proto.VQLCollectorArgs
-	6,  // 62: proto.API.WatchEvent:input_type -> proto.EventRequest
-	8,  // 63: proto.API.PushEvents:input_type -> proto.PushEventRequest
-	47, // 64: proto.API.WriteEvent:input_type -> proto.VQLResponse
-	48, // 65: proto.API.GetSubject:input_type -> proto.DataRequest
-	48, // 66: proto.API.SetSubject:input_type -> proto.DataRequest
-	48, // 67: proto.API.DeleteSubject:input_type -> proto.DataRequest
-	48, // 68: proto.API.ListChildren:input_type -> proto.DataRequest
-	49, // 69: proto.API.Check:input_type -> proto.HealthCheckRequest
-	0,  // 70: proto.API.CreateHunt:output_type -> proto.StartFlowResponse
-	50, // 71: proto.API.EstimateHunt:output_type -> proto.HuntStats
-	51, // 72: proto.API.ListHunts:output_type -> proto.ListHuntsResponse
-	9,  // 73: proto.API.GetHunt:output_type -> proto.Hunt
-	20, // 74: proto.API.ModifyHunt:output_type -> google.protobuf.Empty
-	52, // 75: proto.API.GetHuntFlows:output_type -> proto.GetTableResponse
-	52, // 76: proto.API.GetHuntResults:output_type -> proto.GetTableResponse
-	20, // 77: proto.API.NotifyClients:output_type -> google.protobuf.Empty
-	53, // 78: proto.API.LabelClients:output_type -> proto.APIResponse
-	54, // 79: proto.API.ListClients:output_type -> proto.SearchClientsResponse
-	55, // 80: proto.API.GetClient:output_type -> proto.ApiClient
-	56, // 81: proto.API.GetClientMetadata:output_type -> proto.ClientMetadata
-	20, // 82: proto.API.SetClientMetadata:output_type -> google.protobuf.Empty
-	57, // 83: proto.API.GetClientFlows:output_type -> proto.ApiFlowResponse
-	58, // 84: proto.API.GetUserUITraits:output_type -> proto.ApiUser
-	59, // 85: proto.API.SetGUIOptions:output_type -> proto.SetGUIOptionsResponse
-	60, // 86: proto.API.GetUsers:output_type -> proto.Users
-	60, // 87: proto.API.GetGlobalUsers:output_type -> proto.Users
-	23, // 88: proto.API.GetUserRoles:output_type -> proto.UserRoles
-	20, // 89: proto.API.SetUserRoles:output_type -> google.protobuf.Empty
-	61, // 90: proto.API.GetUser:output_type -> proto.VelociraptorUser
-	20, // 91: proto.API.CreateUser:output_type -> google.protobuf.Empty
-	62, // 92: proto.API.GetUserFavorites:output_type -> proto.Favorites
-	20, // 93: proto.API.SetPassword:output_type -> google.protobuf.Empty
-	63, // 94: proto.API.VFSListDirectory:output_type -> proto.VFSListResponse
-	52, // 95: proto.API.VFSListDirectoryFiles:output_type -> proto.GetTableResponse
-	64, // 96: proto.API.VFSRefreshDirectory:output_type -> proto.ArtifactCollectorResponse
-	63, // 97: proto.API.VFSStatDirectory:output_type -> proto.VFSListResponse
-	65, // 98: proto.API.VFSStatDownload:output_type -> proto.VFSDownloadInfo
-	52, // 99: proto.API.GetTable:output_type -> proto.GetTableResponse
-	66, // 100: proto.API.SearchFile:output_type -> proto.SearchFileResponse
-	64, // 101: proto.API.CollectArtifact:output_type -> proto.ArtifactCollectorResponse
-	0,  // 102: proto.API.CancelFlow:output_type -> proto.StartFlowResponse
-	67, // 103: proto.API.GetFlowDetails:output_type -> proto.FlowDetails
-	68, // 104: proto.API.GetFlowRequests:output_type -> proto.ApiFlowRequestDetails
-	69, // 105: proto.API.GetKeywordCompletions:output_type -> proto.KeywordCompletions
-	31, // 106: proto.API.ReformatVQL:output_type -> proto.ReformatVQLMessage
-	70, // 107: proto.API.GetArtifacts:output_type -> proto.ArtifactDescriptors
-	71, // 108: proto.API.GetArtifactFile:output_type -> proto.GetArtifactResponse
-	53, // 109: proto.API.SetArtifactFile:output_type -> proto.APIResponse
-	72, // 110: proto.API.LoadArtifactPack:output_type -> proto.LoadArtifactPackResponse
-	36, // 111: proto.API.GetToolInfo:output_type -> proto.Tool
-	36, // 112: proto.API.SetToolInfo:output_type -> proto.Tool
-	73, // 113: proto.API.GetReport:output_type -> proto.GetReportResponse
-	30, // 114: proto.API.GetServerMonitoringState:output_type -> proto.ArtifactCollectorArgs
-	30, // 115: proto.API.SetServerMonitoringState:output_type -> proto.ArtifactCollectorArgs
-	39, // 116: proto.API.GetClientMonitoringState:output_type -> proto.ClientEventTable
-	20, // 117: proto.API.SetClientMonitoringState:output_type -> google.protobuf.Empty
-	74, // 118: proto.API.ListAvailableEventResults:output_type -> proto.ListAvailableEventResultsResponse
-	75, // 119: proto.API.CreateDownloadFile:output_type -> proto.CreateDownloadResponse
-	76, // 120: proto.API.GetNotebooks:output_type -> proto.Notebooks
-	43, // 121: proto.API.NewNotebook:output_type -> proto.NotebookMetadata
-	43, // 122: proto.API.UpdateNotebook:output_type -> proto.NotebookMetadata
-	43, // 123: proto.API.NewNotebookCell:output_type -> proto.NotebookMetadata
-	77, // 124: proto.API.GetNotebookCell:output_type -> proto.NotebookCell
-	77, // 125: proto.API.UpdateNotebookCell:output_type -> proto.NotebookCell
-	20, // 126: proto.API.CancelNotebookCell:output_type -> google.protobuf.Empty
-	20, // 127: proto.API.CreateNotebookDownloadFile:output_type -> google.protobuf.Empty
-	78, // 128: proto.API.UploadNotebookAttachment:output_type -> proto.NotebookFileUploadResponse
-	4,  // 129: proto.API.VFSGetBuffer:output_type -> proto.VFSFileBuffer
-	47, // 130: proto.API.Query:output_type -> proto.VQLResponse
-	7,  // 131: proto.API.WatchEvent:output_type -> proto.EventResponse
-	20, // 132: proto.API.PushEvents:output_type -> google.protobuf.Empty
-	20, // 133: proto.API.WriteEvent:output_type -> google.protobuf.Empty
-	79, // 134: proto.API.GetSubject:output_type -> proto.DataResponse
-	79, // 135: proto.API.SetSubject:output_type -> proto.DataResponse
-	20, // 136: proto.API.DeleteSubject:output_type -> google.protobuf.Empty
-	80, // 137: proto.API.ListChildren:output_type -> proto.ListChildrenResponse
-	81, // 138: proto.API.Check:output_type -> proto.HealthCheckResponse
-	70, // [70:139] is the sub-list for method output_type
-	1,  // [1:70] is the sub-list for method input_type
+	28, // 30: proto.API.VFSDownloadFile:input_type -> proto.VFSStatDownloadRequest
+	13, // 31: proto.API.GetTable:input_type -> proto.GetTableRequest
+	29, // 32: proto.API.SearchFile:input_type -> proto.SearchFileRequest
+	30, // 33: proto.API.CollectArtifact:input_type -> proto.ArtifactCollectorArgs
+	19, // 34: proto.API.CancelFlow:input_type -> proto.ApiFlowRequest
+	19, // 35: proto.API.GetFlowDetails:input_type -> proto.ApiFlowRequest
+	19, // 36: proto.API.GetFlowRequests:input_type -> proto.ApiFlowRequest
+	20, // 37: proto.API.GetKeywordCompletions:input_type -> google.protobuf.Empty
+	31, // 38: proto.API.ReformatVQL:input_type -> proto.ReformatVQLMessage
+	32, // 39: proto.API.GetArtifacts:input_type -> proto.GetArtifactsRequest
+	33, // 40: proto.API.GetArtifactFile:input_type -> proto.GetArtifactRequest
+	34, // 41: proto.API.SetArtifactFile:input_type -> proto.SetArtifactRequest
+	35, // 42: proto.API.LoadArtifactPack:input_type -> proto.LoadArtifactPackRequest
+	36, // 43: proto.API.GetToolInfo:input_type -> proto.Tool
+	36, // 44: proto.API.SetToolInfo:input_type -> proto.Tool
+	37, // 45: proto.API.GetReport:input_type -> proto.GetReportRequest
+	20, // 46: proto.API.GetServerMonitoringState:input_type -> google.protobuf.Empty
+	30, // 47: proto.API.SetServerMonitoringState:input_type -> proto.ArtifactCollectorArgs
+	38, // 48: proto.API.GetClientMonitoringState:input_type -> proto.GetClientMonitoringStateRequest
+	39, // 49: proto.API.SetClientMonitoringState:input_type -> proto.ClientEventTable
+	40, // 50: proto.API.ListAvailableEventResults:input_type -> proto.ListAvailableEventResultsRequest
+	41, // 51: proto.API.CreateDownloadFile:input_type -> proto.CreateDownloadRequest
+	42, // 52: proto.API.GetNotebooks:input_type -> proto.NotebookCellRequest
+	43, // 53: proto.API.NewNotebook:input_type -> proto.NotebookMetadata
+	43, // 54: proto.API.UpdateNotebook:input_type -> proto.NotebookMetadata
+	42, // 55: proto.API.NewNotebookCell:input_type -> proto.NotebookCellRequest
+	42, // 56: proto.API.GetNotebookCell:input_type -> proto.NotebookCellRequest
+	42, // 57: proto.API.UpdateNotebookCell:input_type -> proto.NotebookCellRequest
+	42, // 58: proto.API.CancelNotebookCell:input_type -> proto.NotebookCellRequest
+	44, // 59: proto.API.CreateNotebookDownloadFile:input_type -> proto.NotebookExportRequest
+	45, // 60: proto.API.UploadNotebookAttachment:input_type -> proto.NotebookFileUploadRequest
+	4,  // 61: proto.API.VFSGetBuffer:input_type -> proto.VFSFileBuffer
+	46, // 62: proto.API.Query:input_type -> proto.VQLCollectorArgs
+	6,  // 63: proto.API.WatchEvent:input_type -> proto.EventRequest
+	8,  // 64: proto.API.PushEvents:input_type -> proto.PushEventRequest
+	47, // 65: proto.API.WriteEvent:input_type -> proto.VQLResponse
+	48, // 66: proto.API.GetSubject:input_type -> proto.DataRequest
+	48, // 67: proto.API.SetSubject:input_type -> proto.DataRequest
+	48, // 68: proto.API.DeleteSubject:input_type -> proto.DataRequest
+	48, // 69: proto.API.ListChildren:input_type -> proto.DataRequest
+	49, // 70: proto.API.Check:input_type -> proto.HealthCheckRequest
+	0,  // 71: proto.API.CreateHunt:output_type -> proto.StartFlowResponse
+	50, // 72: proto.API.EstimateHunt:output_type -> proto.HuntStats
+	51, // 73: proto.API.ListHunts:output_type -> proto.ListHuntsResponse
+	9,  // 74: proto.API.GetHunt:output_type -> proto.Hunt
+	20, // 75: proto.API.ModifyHunt:output_type -> google.protobuf.Empty
+	52, // 76: proto.API.GetHuntFlows:output_type -> proto.GetTableResponse
+	52, // 77: proto.API.GetHuntResults:output_type -> proto.GetTableResponse
+	20, // 78: proto.API.NotifyClients:output_type -> google.protobuf.Empty
+	53, // 79: proto.API.LabelClients:output_type -> proto.APIResponse
+	54, // 80: proto.API.ListClients:output_type -> proto.SearchClientsResponse
+	55, // 81: proto.API.GetClient:output_type -> proto.ApiClient
+	56, // 82: proto.API.GetClientMetadata:output_type -> proto.ClientMetadata
+	20, // 83: proto.API.SetClientMetadata:output_type -> google.protobuf.Empty
+	57, // 84: proto.API.GetClientFlows:output_type -> proto.ApiFlowResponse
+	58, // 85: proto.API.GetUserUITraits:output_type -> proto.ApiUser
+	59, // 86: proto.API.SetGUIOptions:output_type -> proto.SetGUIOptionsResponse
+	60, // 87: proto.API.GetUsers:output_type -> proto.Users
+	60, // 88: proto.API.GetGlobalUsers:output_type -> proto.Users
+	23, // 89: proto.API.GetUserRoles:output_type -> proto.UserRoles
+	20, // 90: proto.API.SetUserRoles:output_type -> google.protobuf.Empty
+	61, // 91: proto.API.GetUser:output_type -> proto.VelociraptorUser
+	20, // 92: proto.API.CreateUser:output_type -> google.protobuf.Empty
+	62, // 93: proto.API.GetUserFavorites:output_type -> proto.Favorites
+	20, // 94: proto.API.SetPassword:output_type -> google.protobuf.Empty
+	63, // 95: proto.API.VFSListDirectory:output_type -> proto.VFSListResponse
+	52, // 96: proto.API.VFSListDirectoryFiles:output_type -> proto.GetTableResponse
+	64, // 97: proto.API.VFSRefreshDirectory:output_type -> proto.ArtifactCollectorResponse
+	63, // 98: proto.API.VFSStatDirectory:output_type -> proto.VFSListResponse
+	65, // 99: proto.API.VFSStatDownload:output_type -> proto.VFSDownloadInfo
+	0,  // 100: proto.API.VFSDownloadFile:output_type -> proto.StartFlowResponse
+	52, // 101: proto.API.GetTable:output_type -> proto.GetTableResponse
+	66, // 102: proto.API.SearchFile:output_type -> proto.SearchFileResponse
+	64, // 103: proto.API.CollectArtifact:output_type -> proto.ArtifactCollectorResponse
+	0,  // 104: proto.API.CancelFlow:output_type -> proto.StartFlowResponse
+	67, // 105: proto.API.GetFlowDetails:output_type -> proto.FlowDetails
+	68, // 106: proto.API.GetFlowRequests:output_type -> proto.ApiFlowRequestDetails
+	69, // 107: proto.API.GetKeywordCompletions:output_type -> proto.KeywordCompletions
+	31, // 108: proto.API.ReformatVQL:output_type -> proto.ReformatVQLMessage
+	70, // 109: proto.API.GetArtifacts:output_type -> proto.ArtifactDescriptors
+	71, // 110: proto.API.GetArtifactFile:output_type -> proto.GetArtifactResponse
+	53, // 111: proto.API.SetArtifactFile:output_type -> proto.APIResponse
+	72, // 112: proto.API.LoadArtifactPack:output_type -> proto.LoadArtifactPackResponse
+	36, // 113: proto.API.GetToolInfo:output_type -> proto.Tool
+	36, // 114: proto.API.SetToolInfo:output_type -> proto.Tool
+	73, // 115: proto.API.GetReport:output_type -> proto.GetReportResponse
+	30, // 116: proto.API.GetServerMonitoringState:output_type -> proto.ArtifactCollectorArgs
+	30, // 117: proto.API.SetServerMonitoringState:output_type -> proto.ArtifactCollectorArgs
+	39, // 118: proto.API.GetClientMonitoringState:output_type -> proto.ClientEventTable
+	20, // 119: proto.API.SetClientMonitoringState:output_type -> google.protobuf.Empty
+	74, // 120: proto.API.ListAvailableEventResults:output_type -> proto.ListAvailableEventResultsResponse
+	75, // 121: proto.API.CreateDownloadFile:output_type -> proto.CreateDownloadResponse
+	76, // 122: proto.API.GetNotebooks:output_type -> proto.Notebooks
+	43, // 123: proto.API.NewNotebook:output_type -> proto.NotebookMetadata
+	43, // 124: proto.API.UpdateNotebook:output_type -> proto.NotebookMetadata
+	43, // 125: proto.API.NewNotebookCell:output_type -> proto.NotebookMetadata
+	77, // 126: proto.API.GetNotebookCell:output_type -> proto.NotebookCell
+	77, // 127: proto.API.UpdateNotebookCell:output_type -> proto.NotebookCell
+	20, // 128: proto.API.CancelNotebookCell:output_type -> google.protobuf.Empty
+	20, // 129: proto.API.CreateNotebookDownloadFile:output_type -> google.protobuf.Empty
+	78, // 130: proto.API.UploadNotebookAttachment:output_type -> proto.NotebookFileUploadResponse
+	4,  // 131: proto.API.VFSGetBuffer:output_type -> proto.VFSFileBuffer
+	47, // 132: proto.API.Query:output_type -> proto.VQLResponse
+	7,  // 133: proto.API.WatchEvent:output_type -> proto.EventResponse
+	20, // 134: proto.API.PushEvents:output_type -> google.protobuf.Empty
+	20, // 135: proto.API.WriteEvent:output_type -> google.protobuf.Empty
+	79, // 136: proto.API.GetSubject:output_type -> proto.DataResponse
+	79, // 137: proto.API.SetSubject:output_type -> proto.DataResponse
+	20, // 138: proto.API.DeleteSubject:output_type -> google.protobuf.Empty
+	80, // 139: proto.API.ListChildren:output_type -> proto.ListChildrenResponse
+	81, // 140: proto.API.Check:output_type -> proto.HealthCheckResponse
+	71, // [71:141] is the sub-list for method output_type
+	1,  // [1:71] is the sub-list for method input_type
 	1,  // [1:1] is the sub-list for extension type_name
 	1,  // [1:1] is the sub-list for extension extendee
 	0,  // [0:1] is the sub-list for field type_name

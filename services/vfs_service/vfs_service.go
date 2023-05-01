@@ -87,8 +87,6 @@ func (self *VFSService) ProcessDownloadFile(
 	logger.Info("VFSService: Processing System.VFS.DownloadFile from %v", client_id)
 
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
-	client_path_manager := paths.NewClientPathManager(client_id)
-
 	artifact_path_manager, err := artifacts.NewArtifactPathManager(ctx, config_obj,
 		client_id, flow_id, "System.VFS.DownloadFile")
 	if err != nil {
@@ -108,9 +106,10 @@ func (self *VFSService) ProcessDownloadFile(
 	for row := range reader.Rows(ctx) {
 		Accessor, _ := row.GetString("Accessor")
 		Path, _ := row.GetString("Path")
-		Components, _ := row.GetStrings("Components")
+		Components, _ := row.GetStrings("_Components")
 		MD5, _ := row.GetString("Md5")
 		SHA256, _ := row.GetString("Sha256")
+		Error, _ := row.GetString("Error")
 
 		// Figure out where the file was uploaded to.
 		uploaded_file_manager := flow_path_manager.GetUploadsFile(
@@ -120,8 +119,17 @@ func (self *VFSService) ProcessDownloadFile(
 		file_store_factory := file_store.GetFileStore(config_obj)
 		_, err := file_store_factory.StatFile(uploaded_file_manager.Path())
 		if err != nil {
-			logger.Error(
-				"Unable to save flow %v: %v", Path, err)
+			if Error == "" {
+				Error = err.Error()
+			}
+			// Record an error in the download info.
+			self.WriteDownloadInfo(ctx, config_obj, client_id, Accessor,
+				Components, &flows_proto.VFSDownloadInfo{
+					Mtime:    uint64(ts) * 1000000,
+					FlowId:   flow_id,
+					InFlight: false,
+					Error:    Error,
+				})
 			continue
 		}
 
@@ -130,28 +138,19 @@ func (self *VFSService) ProcessDownloadFile(
 			uploaded_file_manager.IndexPath())
 		has_index_file := err == nil
 
-		// We store a place holder in the VFS pointing at the
-		// read vfs_path of the download.
-		db, err := datastore.GetDB(config_obj)
-		if err != nil {
-			return
-		}
-
-		err = db.SetSubject(config_obj,
-			client_path_manager.VFSDownloadInfoFromClientPath(
-				Accessor, Path),
-			&flows_proto.VFSDownloadInfo{
+		// Now record the file has completed upload.
+		self.WriteDownloadInfo(ctx, config_obj, client_id, Accessor,
+			Components, &flows_proto.VFSDownloadInfo{
 				Components: uploaded_file_manager.
 					Path().Components(),
-				Mtime:  uint64(ts) * 1000000,
-				Sparse: has_index_file, // If index file exists we have an index.
-				Size:   vql_subsystem.GetIntFromRow(scope, row, "Size"),
-				MD5:    MD5,
-				SHA256: SHA256,
+				Mtime:    uint64(ts) * 1000000,
+				Sparse:   has_index_file, // If index file exists we have an index.
+				Size:     vql_subsystem.GetIntFromRow(scope, row, "Size"),
+				MD5:      MD5,
+				SHA256:   SHA256,
+				FlowId:   flow_id,
+				InFlight: false,
 			})
-		if err != nil {
-			logger.Error("Unable to save flow %v: %v", Path, err)
-		}
 	}
 }
 

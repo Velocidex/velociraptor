@@ -58,8 +58,6 @@ class DownloadAllDialog extends Component {
     }
 }
 
-
-
 class VeloFileList extends Component {
     static propTypes = {
         node: PropTypes.object,
@@ -85,10 +83,13 @@ class VeloFileList extends Component {
         lastRecursiveDownloadOperationId: null,
         lastRecursiveDownloadData: {},
         selectedFile: "",
+
+        version: 1,
     }
 
     componentDidMount = () => {
         this.source = CancelToken.source();
+        this.interval = setInterval(this.statDirectory, POLL_TIME);
     }
 
     componentWillUnmount() {
@@ -99,6 +100,36 @@ class VeloFileList extends Component {
         if (this.recrusive_interval) {
             clearInterval(this.recrusive_interval);
         }
+    }
+
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
+        if(!_.isEqual(prevProps.version, this.props.version)) {
+            this.statDirectory();
+            return true;
+        }
+        return false;
+    }
+
+    bumpVersion =  ()=>{
+        // Force a tree refresh since this flow is done.
+        let node = this.props.node;
+        node.version = this.state.version + " " + 1;
+        this.props.updateCurrentNode(this.props.node);
+    }
+
+    statDirectory = ()=>{
+        let path = this.props.node.path || [];
+        api.get("v1/VFSStatDirectory", {
+            client_id: this.props.client.client_id,
+            vfs_components: path,
+        }, this.source.token).then((response) => {
+            if (response.data.cancel) {
+                return;
+            }
+            let ts = response.data.timestamp || 0;
+            let download_version = response.data.download_version || 0;
+            this.setState({version: download_version + ts});
+        });
     }
 
     updateCurrentFile = (row) => {
@@ -162,11 +193,7 @@ class VeloFileList extends Component {
                     // we can stop polling.
                     clearInterval(this.recursive_interval);
                     this.recursive_interval = undefined;
-
-                    // Force a tree refresh since this flow is done.
-                    let node = this.props.node;
-                    node.version = this.state.lastRecursiveRefreshOperationId;
-                    this.props.updateCurrentNode(this.props.node);
+                    this.bumpVersion();
                     this.setState({
                         lastRecursiveRefreshData: {},
                         lastRecursiveRefreshOperationId: null});
@@ -241,8 +268,7 @@ class VeloFileList extends Component {
                     this.recursive_download_interval = undefined;
 
                     // Force a tree refresh since this flow is done.
-                    node.version = this.state.lastRecursiveDownloadOperationId;
-                    this.props.updateCurrentNode(this.props.node);
+                    this.bumpVersion();
                     this.setState({
                         lastRecursiveDownloadData: {},
                         lastRecursiveDownloadOperationId: null});
@@ -271,6 +297,14 @@ class VeloFileList extends Component {
             vfs_components: path,
             depth: 0
         }, this.source.token).then((response) => {
+            if (!response.data || response.data.cancel ||
+                !response.data.flow_id) {
+                return;
+            }
+
+            // Force a tree refresh since this flow is done.
+            this.bumpVersion();
+
             // Here we need to wait for the completion of the flow
             // *AND* the directory to be processed by the vfs
             // service. So it is not enough to just watch the flow
@@ -296,9 +330,7 @@ class VeloFileList extends Component {
                         this.interval = undefined;
 
                         // Force a tree refresh since this flow is done.
-                        let node = this.props.node;
-                        node.version = this.state.lastRefreshOperationId;
-                        this.props.updateCurrentNode(this.props.node);
+                        this.bumpVersion();
                         this.setState({lastRefreshOperationId: null});
                     }
                 });
@@ -438,10 +470,21 @@ class VeloFileList extends Component {
             "Download": (cell, row) => {
                 let result = [];
                 if (cell) {
-                    result.push( <FontAwesomeIcon
+                        if (cell.in_flight) {
+                            result.push( <FontAwesomeIcon
+                                   className="hint-icon fa-spin"
+                                   key="1" icon="spinner"/>);
+                        } else if (cell.error) {
+                            result.push( <FontAwesomeIcon
+                                   className="hint-icon"
+                                   key="1" icon="exclamation"/>);
+                        } else if (!_.isEmpty(cell.components)) {
+                            result.push( <FontAwesomeIcon
                                    className="hint-icon"
                                    key="1" icon="save"/>);
+                        }
                 }
+
                 let fn_btime = row["_Data"] && row._Data["fn_btime"];
                 let btime = row["btime"];
                 if (btime < fn_btime) {
@@ -450,7 +493,6 @@ class VeloFileList extends Component {
                                    className="file-stomped hint-icon"
                                    icon="clock"/>);
                 }
-                //return <FontAwesomeIcon icon="clock"/>;
                 return <span className="file-hints">{result}</span>;
             },
             "Size": (cell, row) => {
@@ -491,7 +533,7 @@ class VeloFileList extends Component {
                   url="v1/VFSListDirectoryFiles"
                   renderers={formatters}
                   version={{
-                      version: this.props.node && this.props.node.version,
+                      version: this.state.version,
                   }}
                   params={{
                       client_id: this.props.client.client_id,

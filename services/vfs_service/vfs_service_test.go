@@ -14,7 +14,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
-	"www.velocidex.com/golang/velociraptor/flows/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -427,7 +426,6 @@ func (self *VFSServiceTestSuite) TestRecursiveVFSListDirectoryApiAccess() {
 
 func (self *VFSServiceTestSuite) TestVFSDownload() {
 	flow_path_manager := paths.NewFlowPathManager(self.client_id, self.flow_id)
-	client_path_manager := paths.NewClientPathManager(self.client_id)
 
 	self.EmulateCollection(
 		"System.VFS.ListDirectory", []*ordereddict.Dict{
@@ -435,7 +433,8 @@ func (self *VFSServiceTestSuite) TestVFSDownload() {
 			makeStat("/a/b", "B"),
 		})
 
-	// Simulate an upload that was received by our System.VFS.DownloadFile collection.
+	// Simulate an upload that was received by our
+	// System.VFS.DownloadFile collection.
 	file_store := test_utils.GetMemoryFileStore(self.T(), self.ConfigObj)
 	fd, err := file_store.WriteFile(flow_path_manager.GetUploadsFile(
 		"file", "/a/b/B", []string{"a", "b", "B"}).Path())
@@ -447,28 +446,18 @@ func (self *VFSServiceTestSuite) TestVFSDownload() {
 		"System.VFS.DownloadFile", []*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("Path", "/a/b/B").
+				Set("_Components", []string{"a", "b", "B"}).
 				Set("Accessor", "file").
 				Set("Size", 10),
 		})
 
-	db, err := datastore.GetDB(self.ConfigObj)
-	assert.NoError(self.T(), err)
-
-	// The VFS service stores a file in the VFS area of the
-	// client's namespace pointing to the real data. The real data
-	// is stored in the collection's space.
-	resp := &proto.VFSDownloadInfo{}
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		db.GetSubject(self.ConfigObj,
-			client_path_manager.VFSDownloadInfoFromClientPath(
-				"file", "/a/b/B"),
-			resp)
-		return resp.Size == 10
+		value, pres := file_store.Data.GetString(
+			"/clients/C.12312/vfs_files/file/a/b.json")
+		return pres &&
+			`{"name":"B","size":10,"mtime":1000000000,"components":["clients","C.12312","collections","F.1232","uploads","file","a","b","B"],"flow_id":"F.1232"}
+` == value
 	})
-
-	assert.Equal(self.T(), resp.Components,
-		flow_path_manager.GetUploadsFile(
-			"file", "/a/b/B", []string{"a", "b", "B"}).Path().Components())
 }
 
 // Create a record for a file

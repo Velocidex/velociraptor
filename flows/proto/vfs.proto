@@ -13,6 +13,9 @@ message VFSDownloadInfo {
     // downloaded within the filestore.
     string vfs_path = 1;
 
+    // The filename for this download within its directory.
+    string name = 11;
+
     uint64 size = 2;
     uint64 mtime = 3;
     bool sparse = 4;
@@ -21,6 +24,15 @@ message VFSDownloadInfo {
 
     // The VFS path is now expressed as a list of components
     repeated string components = 7;
+
+    // The flow that fetched this file.
+    string flow_id = 8;
+
+    // If set this flow is currently in flight.
+    bool in_flight = 9;
+
+    // If the collection resulted in an error, show this here.
+    string error = 10;
 }
 
 message ClientMonitoringState {

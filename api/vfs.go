@@ -67,11 +67,13 @@ import (
 
 	context "golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/acls"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
 // Split the vfs path into a client path and an accessor. We only
@@ -162,4 +164,82 @@ func (self *ApiServer) VFSListDirectoryFiles(
 	}
 
 	return result, nil
+}
+
+func (self *ApiServer) VFSDownloadFile(
+	ctx context.Context,
+	in *api_proto.VFSStatDownloadRequest) (*api_proto.StartFlowResponse, error) {
+
+	defer Instrument("VFSDownloadFile")()
+
+	users := services.GetUserManager()
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+	principal := user_record.Name
+
+	permissions := acls.COLLECT_CLIENT
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
+	if !perm || err != nil {
+		return nil, PermissionDenied(err,
+			"User is not allowed to collect files from the VFS.")
+	}
+
+	launcher, err := services.GetLauncher(org_config_obj)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	request := &flows_proto.ArtifactCollectorArgs{
+		ClientId:  in.ClientId,
+		Urgent:    true,
+		Artifacts: []string{"System.VFS.DownloadFile"},
+		Specs: []*flows_proto.ArtifactSpec{{
+			Artifact: "System.VFS.DownloadFile",
+			Parameters: &flows_proto.ArtifactParameters{
+				Env: []*actions_proto.VQLEnv{{
+					Key:   "Components",
+					Value: json.MustMarshalString(in.Components),
+				}, {
+					Key:   "Accessor",
+					Value: in.Accessor,
+				}},
+			},
+		}},
+	}
+
+	manager, err := services.GetRepositoryManager(org_config_obj)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	repository, err := manager.GetGlobalRepository(org_config_obj)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	acl_manager := acl_managers.NullACLManager{}
+	flow_id, err := launcher.ScheduleArtifactCollection(
+		ctx, org_config_obj, acl_manager, repository, request,
+		utils.BackgroundWriter)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	vfs_service, err := services.GetVFSService(org_config_obj)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	vfs_service.WriteDownloadInfo(ctx, org_config_obj, in.ClientId,
+		in.Accessor, in.Components, &flows_proto.VFSDownloadInfo{
+			FlowId:   flow_id,
+			Mtime:    uint64(utils.GetTime().Now().UnixNano() / 1000),
+			InFlight: true,
+		})
+
+	return &api_proto.StartFlowResponse{
+		FlowId: flow_id,
+	}, err
 }

@@ -92,11 +92,22 @@ func (self ClientPathManager) VFSDownloadInfoPath(
 		SetTag("VFSFile")
 }
 
+// We now write all download mutations into the same result set in the
+// vfs_files directory. The server will scan all updates in order and
+// keep the last one to get the current status of each file within the
+// directory.
+func (self ClientPathManager) VFSDownloadInfoResultSet(
+	directory_vfs_components []string) api.FSPathSpec {
+	return CLIENTS_ROOT.AddUnsafeChild(self.client_id, "vfs_files").
+		AddChild(directory_vfs_components...).AsFilestorePath().
+		SetTag("VFSDownloadInfoResultSet")
+}
+
 func (self ClientPathManager) VFSDownloadInfoFromClientPath(
-	accessor, client_path string) api.DSPathSpec {
+	accessor string, components []string) api.DSPathSpec {
 	return CLIENTS_ROOT.AddUnsafeChild(self.client_id, "vfs_files").
 		AddChild(accessor).
-		AddChild(ExtractClientPathComponents(client_path)...).
+		AddChild(components...).
 		SetType(api.PATH_TYPE_DATASTORE_JSON).
 		SetTag("VFSFile")
 }

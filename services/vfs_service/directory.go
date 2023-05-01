@@ -16,7 +16,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type FileInfoRow struct {
@@ -67,11 +66,6 @@ func renderDBVFS(
 	// If file does not exist, we have an empty response otherwise
 	// read the response from the db.
 	_ = db.GetSubject(config_obj, vfs_path, result)
-
-	// Support deprecated VFS listings protobufs
-	if result.Response != "" {
-		return renderLegacyDBVFS(config_obj, result, client_id, components)
-	}
 
 	// Empty responses mean the directory is empty - no need to
 	// worry about downloads.
@@ -151,79 +145,6 @@ func renderDBVFS(
 	return result, nil
 }
 
-// Older versions stored the entire directory listing in the same
-// datastore protobuf which makes it very inefficient for large
-// directories.
-func renderLegacyDBVFS(config_obj *config_proto.Config,
-	result *api_proto.VFSListResponse,
-	client_id string, components []string) (*api_proto.VFSListResponse, error) {
-
-	client_path_manager := paths.NewClientPathManager(client_id)
-
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	// Figure out where the download info files are.
-	download_info_path := client_path_manager.VFSDownloadInfoPath(components)
-	downloaded_files, _ := db.ListChildren(config_obj, download_info_path)
-
-	if len(downloaded_files) == 0 {
-		return result, nil
-	}
-
-	// Merge uploaded file info with the VFSListResponse.
-	lookup := make(map[string]bool)
-	for _, filename := range downloaded_files {
-		lookup[filename.Base()] = true
-	}
-
-	var rows []map[string]interface{}
-	err = json.Unmarshal([]byte(result.Response), &rows)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, row := range rows {
-		name, ok := row["Name"].(string)
-		if !ok {
-			continue
-		}
-
-		_, pres := lookup[name]
-		if !pres {
-			continue
-		}
-
-		// Make a copy for each path
-		file_components := download_info_path.AddChild(name)
-		download_info := &flows_proto.VFSDownloadInfo{}
-		err := db.GetSubject(
-			config_obj, file_components, download_info)
-		if err == nil {
-			// Support reading older
-			// VFSDownloadInfo protobufs which
-			// only contained the vfs_path and not
-			// the components.
-			if download_info.VfsPath != "" {
-				download_info.Components = utils.SplitComponents(download_info.VfsPath)
-			}
-
-			row["Download"] = download_info
-		}
-	}
-
-	encoded_rows, err := json.MarshalIndent(rows)
-	if err != nil {
-		return nil, err
-	}
-
-	result.Response = string(encoded_rows)
-	result.Columns = append([]string{"Download"}, result.Columns...)
-	return result, nil
-}
-
 func (self *VFSService) ListDirectories(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -263,6 +184,15 @@ func (self *VFSService) StatDirectory(
 	// Remove the actual response which might be large.
 	result.Response = ""
 
+	// Now get the download version
+	file_store_factory := file_store.GetFileStore(config_obj)
+	reader, err := result_sets.NewResultSetReader(file_store_factory,
+		path_manager.VFSDownloadInfoResultSet(vfs_components))
+	if err == nil {
+		defer reader.Close()
+
+		result.DownloadVersion = uint64(reader.TotalRows())
+	}
 	return result, nil
 }
 
@@ -333,23 +263,10 @@ func (self *VFSService) ListDirectoryFiles(
 		return result, nil
 	}
 
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
-	// Now enrich the files with download information.
-	client_path_manager := paths.NewClientPathManager(in.ClientId)
-	download_info_path := client_path_manager.VFSDownloadInfoPath(
-		in.VfsComponents)
-	downloaded_files, _ := db.ListChildren(config_obj, download_info_path)
-
-	// Merge uploaded file info with the VFSListResponse.
-	lookup := make(map[string]bool)
-	for _, filename := range downloaded_files {
-		lookup[filename.Base()] = true
-	}
-
+	// Find all the downloads in this directory, so we can enrich the
+	// result with the data.
+	lookup := getDirectoryDownloadInfo(
+		ctx, config_obj, in.ClientId, in.VfsComponents)
 	for _, row := range result.Rows {
 		if len(row.Cell) <= index_of_Name {
 			continue
@@ -361,27 +278,51 @@ func (self *VFSService) ListDirectoryFiles(
 		// Insert a Download columns in the begining.
 		row.Cell = append([]string{""}, row.Cell...)
 
-		_, pres := lookup[name]
+		download_info, pres := lookup[name]
 		if !pres {
 			continue
 		}
 
-		// Make a copy for each path
-		file_components := download_info_path.AddChild(name)
-		download_info := &flows_proto.VFSDownloadInfo{}
-		err := db.GetSubject(config_obj, file_components, download_info)
-		if err == nil {
-			// Support reading older
-			// VFSDownloadInfo protobufs which
-			// only contained the vfs_path and not
-			// the components.
-			if download_info.VfsPath != "" {
-				download_info.Components = utils.SplitComponents(download_info.VfsPath)
-			}
-
-			row.Cell[0] = json.MustMarshalString(download_info)
-		}
+		row.Cell[0] = json.MustMarshalString(download_info)
 	}
 	result.Columns = append([]string{"Download"}, result.Columns...)
 	return result, nil
+}
+
+func getDirectoryDownloadInfo(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	client_id string,
+	vfs_components []string) map[string]*flows_proto.VFSDownloadInfo {
+	result := make(map[string]*flows_proto.VFSDownloadInfo)
+
+	path_manager := paths.NewClientPathManager(client_id)
+	file_store_factory := file_store.GetFileStore(config_obj)
+	reader, err := result_sets.NewResultSetReader(file_store_factory,
+		path_manager.VFSDownloadInfoResultSet(vfs_components))
+	if err != nil {
+		return result
+	}
+	defer reader.Close()
+
+	for row := range reader.Rows(ctx) {
+		serialized, err := row.MarshalJSON()
+		if err != nil {
+			continue
+		}
+
+		item := &flows_proto.VFSDownloadInfo{}
+		err = json.Unmarshal(serialized, item)
+		if err != nil {
+			continue
+		}
+
+		if item.Name == "" {
+			continue
+		}
+
+		result[item.Name] = item
+	}
+
+	return result
 }
