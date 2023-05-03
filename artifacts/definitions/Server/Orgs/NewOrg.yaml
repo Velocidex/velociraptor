@@ -23,5 +23,6 @@ sources:
 
     SELECT org_record.name as Name, org_record.id AS OrgId,
            user_create(orgs=org_record.id,
-                       roles="administrator", user=whoami()) AS AdminUser
+                       roles=["administrator", "org_admin"],
+                       user=whoami()) AS AdminUser
     FROM scope()

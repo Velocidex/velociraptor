@@ -191,7 +191,13 @@ func (self *VFSService) StatDirectory(
 	if err == nil {
 		defer reader.Close()
 
-		result.DownloadVersion = uint64(reader.TotalRows())
+		// If the result set does not exist, then total rows will be
+		// -1.
+		total_rows := reader.TotalRows()
+		result.DownloadVersion = 0
+		if total_rows > 0 {
+			result.DownloadVersion = uint64(total_rows)
+		}
 	}
 	return result, nil
 }

@@ -837,11 +837,6 @@ body.pink-light {
   border-top: none;
 }
 
-/* Spinner */
-.pink-light .overlay .fa-spinner {
-  filter: invert(0);
-}
-
 /* Shell output */
 .pink-light .notebook-output pre {
   border-color: var(--color-btn-border);

@@ -53,3 +53,7 @@ td .number {
 button.table-transformed.btn[disabled] {
     color: var(--color-foreground);
 }
+
+.no-break {
+    white-space: pre;
+}

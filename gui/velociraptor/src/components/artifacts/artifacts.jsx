@@ -5,6 +5,7 @@ import api from '../core/api-service.jsx';
 import classNames from "classnames";
 import VeloReportViewer from "../artifacts/reporting.jsx";
 import Select from 'react-select';
+import Spinner from '../utils/spinner.jsx';
 
 import _ from 'lodash';
 import {CancelToken} from 'axios';
@@ -281,7 +282,7 @@ class ArtifactInspector extends React.Component {
             !this.state.selectedDescriptor.built_in;
 
         return (
-            <div className="full-width-height">
+            <div className="full-width-height"><Spinner loading={this.state.loading}/>
               { this.state.showNewArtifactDialog &&
                 <NewArtifactDialog
                   onClose={() => {
@@ -400,6 +401,14 @@ class ArtifactInspector extends React.Component {
                                    placeholder={T("Search for artifact")}
                                    spellCheck="false"
                       />
+                      <Button data-tooltip={T("Clear")}
+                              data-position="right"
+                              className="btn-tooltip"
+                              onClick={()=>this.updateSearch("")}
+                              variant="light">
+                        <FontAwesomeIcon icon="broom"/>
+                        <span className="sr-only">{T("Clear")}</span>
+                      </Button>
                     </InputGroup.Prepend>
                   </InputGroup>
                 </Form>

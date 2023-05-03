@@ -869,16 +869,6 @@ body.veloci-dark {
   border-top: 1px solid var(--color-btn-border);
 }
 
-/* Spinner */
-.veloci-dark .overlay .fa-spinner {
-  filter: invert(1);
-}
-
-/* Shell output */
-.veloci-dark .notebook-output pre {
-  filter: invert(1);
-}
-
 /* ACE things */
 .veloci-dark .ace_tooltip {
   background: var(--color-canvas-background);

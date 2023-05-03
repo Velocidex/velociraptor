@@ -494,6 +494,13 @@ export function formatColumns(columns, env, column_formatter) {
             x.type = null;
             break;
 
+        case "nobreak":
+            x.formatter= (cell, row) => {
+                return <div className="no-break">{cell}</div>;
+            };
+            x.type = null;
+            break;
+
         case "tree":
             x.formatter= (cell, row) => {
                 if (_.isObject(cell)) {

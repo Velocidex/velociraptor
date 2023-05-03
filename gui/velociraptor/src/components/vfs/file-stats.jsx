@@ -22,6 +22,7 @@ class VeloFileStats extends Component {
 
         // The node in the tree for the current directory.
         node: PropTypes.object,
+        bumpVersion: PropTypes.func,
 
         // The current file selected in the file-list pane.
         selectedRow: PropTypes.object,
@@ -49,13 +50,6 @@ class VeloFileStats extends Component {
             client_id: this.props.client.client_id,
             flow_id: this.state.updateOperationFlowId,
         }, this.source.token);
-    }
-
-    bumpVersion =  ()=>{
-        // Force a tree refresh since this flow is done.
-        let node = this.props.node;
-        node.version = this.state.version + " " + 1;
-        this.props.updateCurrentNode(this.props.node);
     }
 
     updateFile = () => {
@@ -86,7 +80,7 @@ class VeloFileStats extends Component {
             if(!flow_id) {
                 return;
             }
-            this.bumpVersion();
+            this.props.bumpVersion();
         });
     }
 
@@ -107,7 +101,7 @@ class VeloFileStats extends Component {
 
         let client_id = this.props.client && this.props.client.client_id;
         return (
-            <CardDeck>
+            <CardDeck className="file-stats">
               <Card>
                 <Card.Header>{selectedRow._FullPath || selectedRow.Name}</Card.Header>
                 <Card.Body>
