@@ -1073,10 +1073,6 @@ body.coolgray-dark {
   border-top: 1px solid var(--color-btn-border);
 }
 
-/* Spinner */
-.coolgray-dark .overlay .fa-spinner {
-  filter: invert(1);
-}
 
 /* Shell input */
 .coolgray-dark .shell-command .input-group .form-control {

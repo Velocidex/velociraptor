@@ -127,7 +127,7 @@ code {
   transition: opacity ease-out 150ms, bottom ease-out 150ms;
   transition-property: opacity;
   transition-delay: 300ms;
-  z-index: 10000;
+  z-index: 100000;
   box-shadow: 4px 4px 4px rgba(0,0,0,.5);
 }
 

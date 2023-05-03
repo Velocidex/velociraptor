@@ -921,11 +921,6 @@ body.github-dimmed-dark {
   border-top: 1px solid var(--color-btn-border);
 }
 
-/* Spinner */
-.github-dimmed-dark .overlay .fa-spinner {
-  filter: invert(1);
-}
-
 /* Shell input */
 .github-dimmed-dark .shell-command .input-group .form-control {
   font-family: var(--font-family-monospace);

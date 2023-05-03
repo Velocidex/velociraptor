@@ -603,7 +603,7 @@ class VeloPagedTable extends Component {
                                                      download_format: "json",
                                                  }), {internal: true})}>
                             <FontAwesomeIcon icon="download"/>
-                <span className="sr-only">{T("Download JSON")}</span>
+                            <span className="sr-only">{T("Download JSON")}</span>
                           </Button>
                           <Button variant="default"
                                   target="_blank" rel="noopener noreferrer"

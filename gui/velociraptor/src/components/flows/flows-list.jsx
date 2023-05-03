@@ -431,7 +431,7 @@ class FlowsList extends React.Component {
 
               { this.state.showNewFromRouterWizard &&
                 <NewCollectionWizard
-                  client={this.state.client_id}
+                  client={{client_id: this.state.client_id}}
                   baseFlow={this.state.initial_flow}
                   onCancel={(e) => this.setState({showNewFromRouterWizard: false})}
                   onResolve={this.setCollectionRequest} />

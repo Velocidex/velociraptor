@@ -28,3 +28,7 @@
 .nav-tabs .nav-item.active {
     background-color: var(--color-tab-active-background);
 }
+
+.file-stats {
+    padding: 20px;
+}
