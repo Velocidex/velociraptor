@@ -296,6 +296,84 @@ func (self *ExecutorTestSuite) TestRowLimitCancellation() {
 		"Cancelled all inflight queries")
 }
 
+// Test the total result row count is accurate
+func (self *ExecutorTestSuite) TestTotalRowCount() {
+	t := self.T()
+
+	// Max time for deadlock detection.
+	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Second)
+	defer cancel()
+
+	config_obj := config.GetDefaultConfig()
+	executor, err := NewClientExecutor(ctx, "", config_obj)
+	require.NoError(t, err)
+
+	flow_id := "F.TestRowCount"
+
+	actions.QueryLog.Clear()
+
+	var mu sync.Mutex
+	var received_messages []*crypto_proto.VeloMessage
+
+	// Collect outbound messages
+	go func() {
+		for {
+			select {
+			// Wait here until the executor is fully cancelled.
+			case <-ctx.Done():
+				return
+
+			case message := <-executor.Outbound:
+				mu.Lock()
+				received_messages = append(
+					received_messages, message)
+				mu.Unlock()
+			}
+		}
+	}()
+
+	// Send the executor a flow request with two SELECT statements
+	// (for two sources)
+	executor.Inbound <- &crypto_proto.VeloMessage{
+		AuthState: crypto_proto.VeloMessage_AUTHENTICATED,
+		SessionId: flow_id,
+		FlowRequest: &crypto_proto.FlowRequest{
+			// Only 10 bytes are allowed.
+			MaxRows: 10,
+			VQLClientActions: []*actions_proto.VQLCollectorArgs{{
+				Query: []*actions_proto.VQLRequest{{
+					Name: "Query",
+					VQL:  `SELECT 1 FROM scope()`,
+				}, {
+					Name: "Query2",
+					VQL:  `SELECT 2 FROM scope()`,
+				}},
+			}},
+		},
+	}
+
+	// The cancel message should generate 1 log + a status
+	// message. This should only be done once, no matter how many
+	// cancellations are sent.
+	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
+		mu.Lock()
+		defer mu.Unlock()
+
+		return getFlowStat(received_messages) != nil
+	})
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	// An error status
+	stats := getFlowStat(received_messages)
+
+	assert.Equal(self.T(), crypto_proto.VeloStatus_OK,
+		stats.FlowStats.QueryStatus[0].Status)
+	assert.Equal(self.T(), int64(2),
+		stats.FlowStats.QueryStatus[0].ResultRows)
+}
+
 func getFlowStat(messages []*crypto_proto.VeloMessage) *crypto_proto.VeloMessage {
 	for _, m := range messages {
 		if m.FlowStats != nil {
