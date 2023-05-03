@@ -9,16 +9,22 @@
     direction: rtl;
 }
 
-.artifact-search-table a {
-    color: black;
+.artifact-search-table button {
+    cursor: pointer;
 }
 
-.artifact-search-table a:hover {
-    text-decoration: none;
+.artifact-search-table button:hover {
+    color: var(--color-foreground);
+    cursor: pointer;
 }
 
 .artifact-search-table thead {
     display: none;
+}
+
+.artifact-search-table tr td {
+    padding-left: 7px;
+    line-height: 2;
 }
 
 .artifact-search-report {

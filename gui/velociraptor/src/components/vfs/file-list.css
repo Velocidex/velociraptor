@@ -55,6 +55,9 @@
 
 .file-hints {
     position: absolute;
+    min-height: 24px;
+    min-width: 32px;
+    cursor: context-menu;
 }
 
 .file-hints .hint-icon {
@@ -72,4 +75,8 @@ td.download-column {
 
 .vfs-toolbar {
     padding-right: 10px;
+}
+
+.min-width {
+    min-width: 10em;
 }

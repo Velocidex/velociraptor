@@ -136,6 +136,9 @@ class VeloPagedTable extends Component {
         // Additional columns to add (should be formatted with a
         // custom renderer).
         extra_columns: PropTypes.array,
+
+        // A callback that will be called for each row fetched.
+        row_filter: PropTypes.func,
     }
 
     state = {
@@ -326,6 +329,10 @@ class VeloPagedTable extends Component {
                     toggles = {};
                 }
             }
+            if (this.props.row_filter) {
+                pageData.rows = _.map(pageData.rows, this.props.row_filter);
+            }
+
             this.setState({loading: false,
                            total_size: parseInt(response.data.total_rows || 0),
                            rows: pageData.rows,

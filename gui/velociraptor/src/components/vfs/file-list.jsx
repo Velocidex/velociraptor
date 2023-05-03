@@ -11,7 +11,6 @@ import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Modal from 'react-bootstrap/Modal';
 import VeloTimestamp from "../utils/time.jsx";
-
 import VeloPagedTable from '../core/paged-table.jsx';
 
 import { Join, EncodePathInURL } from '../utils/paths.jsx';
@@ -21,6 +20,13 @@ import {CancelToken} from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import T from '../i8n/i8n.jsx';
+
+import {
+  Menu,
+  Item,
+  useContextMenu,
+} from "react-contexify";
+
 
 const POLL_TIME = 2000;
 
@@ -58,6 +64,20 @@ class DownloadAllDialog extends Component {
         );
     }
 }
+
+function DownloadContextMenu({children, value}) {
+    const { show } = useContextMenu({
+        id: "download-menu-id",
+        props: {
+            value: value,
+        }
+    });
+    return (
+        <div onContextMenu={show}>{children}</div>
+    );
+}
+
+
 
 class VeloFileList extends Component {
     static propTypes = {
@@ -273,6 +293,27 @@ class VeloFileList extends Component {
             _.isEqual(this.state.recursive_sync_dir_version, this.props.version);
     }
 
+    downloadFile = path=>{
+        // Make a copy
+        let new_path = [...path];
+
+        // The accessor is the first top level.
+        let accessor = new_path.shift();
+
+        api.post("v1/VFSDownloadFile", {
+            client_id: this.props.client.client_id,
+            accessor: accessor,
+            components: new_path,
+        }, this.source.token).then(response => {
+            let flow_id = response.data.flow_id;
+            if(!flow_id) {
+                return;
+            }
+            this.props.bumpVersion();
+        });
+
+    }
+
     startVfsRefreshOperation = () => {
         this.setState({current_path: this.props.node.path,
                        sync_dir_version: this.props.version});
@@ -291,6 +332,18 @@ class VeloFileList extends Component {
                 return;
             }
         });
+    }
+
+    renderContextMenu() {
+        return <Menu id="download-menu-id">
+                  <Item onClick={e=>{
+                      this.downloadFile(e.props.value);
+                  }}>
+                    <FontAwesomeIcon className="context-icon"
+                                     icon="download"/>
+                    {T("Download from client")}
+                  </Item>
+               </Menu>;
     }
 
     render() {
@@ -439,17 +492,23 @@ class VeloFileList extends Component {
                        </div>;
         };
 
+        let row_filter = row=>{
+            if(row._Idx === this.state.selectedTableIdx) {
+                this.props.updateCurrentSelectedRow(row);
+            };
+            return row;
+        };
+
         let renderers = {
             "mtime": timestamp_renderer,
             "atime": timestamp_renderer,
             "ctime": timestamp_renderer,
             "btime": timestamp_renderer,
             "Mode": nobreak_renderer,
+            "Name": (cell, row) => {
+                return <div className="min-width">{cell}</div>;
+            },
             "Download": (cell, row) => {
-                if(row._Idx === this.state.selectedTableIdx) {
-                    this.props.updateCurrentSelectedRow(row);
-                };
-
                 let result = [];
                 if (cell) {
                         if (cell.in_flight) {
@@ -475,7 +534,14 @@ class VeloFileList extends Component {
                                    className="file-stomped hint-icon"
                                    icon="clock"/>);
                 }
-                return <span className="file-hints">{result}</span>;
+                let new_path = [...this.props.node.path];
+                new_path.push(row.Name);
+
+                return <DownloadContextMenu value={new_path}>
+                         <div className="file-hints">
+                           {result}
+                         </div>
+                       </DownloadContextMenu>;
             },
             "Size": (cell, row) => {
                 let result = parseInt(cell/1024/1024);
@@ -503,6 +569,7 @@ class VeloFileList extends Component {
 
         return (
             <>
+              { this.renderContextMenu() }
               { this.state.showDownloadAllDialog &&
                 <DownloadAllDialog
                   node={this.props.node}
@@ -525,6 +592,7 @@ class VeloFileList extends Component {
                   selectRow={ selectRow }
                   toolbar={toolbar}
                   initial_page_size={5}
+                  row_filter={row_filter}
                 />
               </div>
             </>
