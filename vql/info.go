@@ -21,6 +21,7 @@ import (
 	"context"
 	"os"
 	"runtime"
+	"time"
 
 	fqdn "github.com/Showmax/go-fqdn"
 	"github.com/Velocidex/ordereddict"
@@ -29,6 +30,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+)
+
+var (
+	start_time = time.Now()
 )
 
 func GetInfo(host *host.InfoStat) *ordereddict.Dict {
@@ -48,7 +53,8 @@ func GetInfo(host *host.InfoStat) *ordereddict.Dict {
 		Set("CompilerVersion", runtime.Version()).
 		Set("HostID", host.HostID).
 		Set("Exe", me).
-		Set("IsAdmin", IsAdmin())
+		Set("IsAdmin", IsAdmin()).
+		Set("ClientStart", start_time)
 }
 
 func init() {

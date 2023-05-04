@@ -36,8 +36,11 @@ import (
 	config "www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
+	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
 type EventTable struct {
@@ -179,19 +182,68 @@ func (self *EventTable) Update(
 	return nil, true /* changed */
 }
 
+// Make a copy of the event table and appand any config enforced
+// additional event queries.
+func (self *EventTable) GetEventQueries(
+	ctx context.Context,
+	config_obj *config_proto.Config) ([]*actions_proto.VQLCollectorArgs, error) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	result := make([]*actions_proto.VQLCollectorArgs, 0, len(self.Events))
+	result = append(result, self.Events...)
+
+	if config_obj.Client == nil ||
+		len(config_obj.Client.AdditionalEventArtifacts) == 0 {
+		return result, nil
+	}
+
+	launcher, err := services.GetLauncher(config_obj)
+	if err != nil {
+		return result, err
+	}
+
+	manager, err := services.GetRepositoryManager(config_obj)
+	if err != nil {
+		return result, err
+	}
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return result, err
+	}
+
+	// Compile the built in artifacts
+	queries, err := launcher.CompileCollectorArgs(ctx, config_obj,
+		acl_managers.NullACLManager{}, repository,
+		services.CompilerOptions{}, &flows_proto.ArtifactCollectorArgs{
+			Artifacts: config_obj.Client.AdditionalEventArtifacts,
+		})
+
+	if err != nil {
+		return result, err
+	}
+
+	result = append(result, queries...)
+	return result, nil
+}
+
 func (self *EventTable) StartQueries(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	output_chan chan *crypto_proto.VeloMessage) {
 
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+
+	events, err := self.GetEventQueries(ctx, config_obj)
+	if err != nil {
+		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+		logger.Error("While appending initial event artifacts: %v", err)
+	}
 
 	// Start a new query for each event.
 	action_obj := &VQLClientAction{}
-	for _, event := range self.Events {
+	for _, event := range events {
 
 		// Name of the query we are running. There must be at least
 		// one query with a name.
