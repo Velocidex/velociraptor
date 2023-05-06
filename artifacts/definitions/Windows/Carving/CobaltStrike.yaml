@@ -456,7 +456,7 @@ sources:
       LET ByteConfiguration = SELECT Rule,
                 len(list=TargetBytes) as Size,
                 hash(path=TargetBytes,accessor='data') as Hash,
-                format(format="%v_%v.bin", args=[Rule,`String.Offset`]) as _DecodedDataName,
+                format(format="%v_%v.bin", args=[Rule,String.Offset]) as _DecodedDataName,
                 Xor,_Data,
                 Rule  as _Group
             FROM switch( -- switchcase will find beacon as priority, then search for shellcode
@@ -533,7 +533,7 @@ sources:
                     hash(path=FullPath) as Hash,
                     Xor,_Data,
                     Rule + '|' + FullPath.String as _Group,
-                    format(format="%v_%v_%v.bin", args=[Rule,FullPath,`String.Offset`]) as _DecodedDataName
+                    format(format="%v_%v_%v.bin", args=[Rule,FullPath,String.Offset]) as _DecodedDataName
                 FROM switch( -- switchcase will find beacon as priority, then search for shellcode
                     beacon = {
                         SELECT *,
