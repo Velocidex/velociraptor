@@ -11,6 +11,8 @@
 
 .artifact-search-table button {
     cursor: pointer;
+    width: 100%;
+    text-align: left;
 }
 
 .artifact-search-table button:hover {
