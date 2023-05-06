@@ -10,7 +10,7 @@ required_permissions:
 
 parameters:
    - name: ExchangeURL
-     default: https://github.com/Velocidex/velociraptor-docs/raw/gh-pages/exchange/artifact_exchange.zip
+     default: https://github.com/Velocidex/velociraptor-docs/raw/gh-pages/exchange/artifact_exchange_v2.zip
    - name: Prefix
      description: Add artifacts with this prefix
      default: Exchange.

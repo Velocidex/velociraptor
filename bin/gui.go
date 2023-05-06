@@ -38,7 +38,12 @@ func doGUI() error {
 
 	datastore_directory := *gui_command_datastore
 	if datastore_directory == "" {
-		datastore_directory = os.TempDir()
+		datastore_directory = filepath.Join(os.TempDir(), "gui_datastore")
+		// Ensure the directory exists
+		err := os.MkdirAll(datastore_directory, 0o777)
+		if err != nil {
+			return fmt.Errorf("Unable to create datastore directory: %w", err)
+		}
 	}
 
 	datastore_directory, err := filepath.Abs(datastore_directory)

@@ -26,6 +26,7 @@ type InventoryAddFunctionArgs struct {
 	URL          string `vfilter:"optional,field=url"`
 	Hash         string `vfilter:"optional,field=hash"`
 	Filename     string `vfilter:"optional,field=filename,doc=The name of the file on the endpoint"`
+	Version      string `vfilter:"optional,field=version"`
 
 	File     *accessors.OSPath `vfilter:"optional,field=file,doc=An optional file to upload"`
 	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use to read the file."`
@@ -62,6 +63,7 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		Url:          arg.URL,
 		Filename:     arg.Filename,
 		Hash:         arg.Hash,
+		Version:      arg.Version,
 	}
 
 	if arg.File != nil {

@@ -280,9 +280,14 @@ message ClientConfig {
         }];
 
     // If set we disable client checkpoints and so we can not report
-    // to the server when the client crashes while collecting and
+    // to the server when the client crashes while collecting an
     // artifact.
     bool disable_checkpoints = 42;
+
+    // Here you can specify a list of event artifacts to automatically
+    // collect in addition to the list sent by the server. This is
+    // most useful to initialize the client.
+    repeated string additional_event_artifacts = 43;
 }
 
 message APIConfig {
