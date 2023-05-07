@@ -19,6 +19,9 @@ func (self SanityChecks) CheckForLockdown(
 	lockdown_token := &acl_proto.ApiClientACL{
 		ArtifactWriter:       true,
 		ServerArtifactWriter: true,
+		CollectClient:        true,
+		CollectServer:        true,
+		StartHunt:            true,
 		Execve:               true,
 		ServerAdmin:          true,
 		FilesystemWrite:      true,
