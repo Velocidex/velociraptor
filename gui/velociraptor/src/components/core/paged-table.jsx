@@ -430,7 +430,7 @@ class VeloPagedTable extends Component {
                         }}
                       >
                         <FontAwesomeIcon icon="filter"/>
-                        { filter_column == column.text && filter }
+                        { filter_column == column.text && !edit_filter_visible && filter }
                       </Button>
                       { edit_filter_visible &&
                         <Form.Control

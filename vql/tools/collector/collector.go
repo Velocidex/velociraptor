@@ -237,7 +237,7 @@ func AddSpecProtobuf(
 		artifact_definitions, pres := repository.Get(ctx, config_obj, name)
 		if !pres {
 			// Artifact not known
-			return fmt.Errorf(`Parameter 'args' refers to an unknown artifact (%v). The 'args' parameter should be of the form {"Custom.Artifact.Name":{"arg":"value"}}`, name)
+			return fmt.Errorf(`Parameter refers to an unknown artifact (%v). The parameter should be of the form {"Custom.Artifact.Name":{"arg":"value"}}`, name)
 		}
 
 		// Check that we are allowed to collect this artifact
