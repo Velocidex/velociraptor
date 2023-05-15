@@ -52,8 +52,10 @@ def ProcessFile(filename):
     with open(os.path.splitext(filename)[0] + ".json") as fd:
         encoded_existing = json.loads(fd.read())
         existing = dict()
-        for k in encoded_existing:
+        existing_translations = dict()
+        for k, v in encoded_existing.items():
             existing[Decode(k)] = True
+            existing_translations[Decode(k)] = v
 
     # The automated translations
     automated = dict()
@@ -68,8 +70,8 @@ def ProcessFile(filename):
 
     outfile = os.path.splitext(filename)[0] + "_automated.json"
     with open(outfile, "w") as outfd:
-        outfd.write(json.dumps(existing, sort_keys=True, indent=4))
-        print("Wrote automated json file %s with %d entries" % (outfile, len(existing)))
+        outfd.write(json.dumps(existing_translations, sort_keys=True, indent=4))
+        print("Wrote automated json file %s with %d entries" % (outfile, len(existing_translations)))
 
 
 if __name__ == "__main__":
