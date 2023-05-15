@@ -130,8 +130,21 @@ func (self *InventoryService) ProbeToolInfo(
 					ArtifactDefinition: true,
 				})
 			}
-			// Try again with the new data
-			return self.ProbeToolInfo(ctx, config_obj, name, version)
+
+			// Return the first version that matched
+			for _, tool := range tool.Versions {
+				// If version is specified we look for the exact tool version
+				if version != "" {
+					if tool.Name == name && tool.Version == version {
+						return self.AddAllVersions(ctx, config_obj, tool), nil
+					}
+					continue
+				}
+
+				if tool.Name == name {
+					return self.AddAllVersions(ctx, config_obj, tool), nil
+				}
+			}
 		}
 	}
 
