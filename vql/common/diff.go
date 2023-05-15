@@ -145,7 +145,7 @@ func NewDiffCache(
 	})
 	if err != nil {
 		close(result.done)
-		scope.Log("AddDestructor: %s", err)
+		scope.Log("NewDiffCache AddDestructor: %s", err)
 	}
 
 	return result

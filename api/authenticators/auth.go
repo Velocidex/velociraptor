@@ -1,6 +1,7 @@
 package authenticators
 
 import (
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"net/http"
@@ -26,6 +27,7 @@ type Authenticator interface {
 	AuthenticateUserHandler(parent http.Handler) http.Handler
 
 	IsPasswordLess() bool
+	RequireClientCerts() bool
 	AuthRedirectTemplate() string
 }
 
@@ -125,6 +127,27 @@ func init() {
 			base:       utils.GetBasePath(config_obj),
 			public_url: utils.GetPublicURL(config_obj),
 		}, nil
+	})
+
+	RegisterAuthenticator("certs", func(config_obj *config_proto.Config,
+		auth_config *config_proto.Authenticator) (Authenticator, error) {
+		if config_obj.GUI == nil || config_obj.GUI.UsePlainHttp {
+			return nil, errors.New("'Certs' authenticator must use TLS!")
+		}
+
+		result := &CertAuthenticator{
+			config_obj:    config_obj,
+			base:          utils.GetBasePath(config_obj),
+			public_url:    utils.GetPublicURL(config_obj),
+			x509_roots:    x509.NewCertPool(),
+			default_roles: auth_config.DefaultRolesForUnknownUser,
+		}
+		if config_obj.Client != nil {
+			result.x509_roots.AppendCertsFromPEM([]byte(
+				config_obj.Client.CaCertificate))
+		}
+
+		return result, nil
 	})
 
 	RegisterAuthenticator("oidc", func(config_obj *config_proto.Config,

@@ -200,7 +200,7 @@ func GetTlsConfig(config_obj *config_proto.ClientConfig, extra_roots string) (*t
 		}
 	}
 
-	return &tls.Config{
+	result := &tls.Config{
 		MinVersion: tls.VersionTLS12,
 		// This seems incompatible with multiple connections and
 		// results in TLS errors. We need to consider if it is worth
@@ -214,7 +214,9 @@ func GetTlsConfig(config_obj *config_proto.ClientConfig, extra_roots string) (*t
 		// cert in VerifyConnection
 		InsecureSkipVerify: true,
 		VerifyConnection:   customVerifyConnection(CA_Pool, config_obj),
-	}, nil
+	}
+
+	return result, nil
 }
 
 // GetSkipVerifyTlsConfig returns a config object where TLS verification is

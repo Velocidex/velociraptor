@@ -6,6 +6,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/api"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
@@ -16,6 +17,9 @@ import (
 func StartFrontendServices(
 	ctx context.Context,
 	config_obj *config_proto.Config) (*services.Service, error) {
+
+	// Set the temp directory if needed
+	executor.SetTempfile(config_obj)
 
 	sm := services.NewServiceManager(ctx, config_obj)
 	_, err := orgs.NewOrgManager(sm.Ctx, sm.Wg, config_obj)

@@ -57,6 +57,10 @@ func (self *BasicAuthenticator) IsPasswordLess() bool {
 	return false
 }
 
+func (self *BasicAuthenticator) RequireClientCerts() bool {
+	return false
+}
+
 func (self *BasicAuthenticator) AuthRedirectTemplate() string {
 	return ""
 }
