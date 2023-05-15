@@ -376,7 +376,7 @@ func (self *Labeler) Start(ctx context.Context,
 				}
 				err := self.ProcessRow(ctx, event)
 				if err != nil {
-					logger.Error("Enrollment Service: %v", err)
+					logger.Error("Label Service: %v", err)
 				}
 			}
 		}
