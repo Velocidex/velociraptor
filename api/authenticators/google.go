@@ -88,6 +88,10 @@ func (self *GoogleAuthenticator) IsPasswordLess() bool {
 	return true
 }
 
+func (self *GoogleAuthenticator) RequireClientCerts() bool {
+	return false
+}
+
 func (self *GoogleAuthenticator) AuthRedirectTemplate() string {
 	return self.authenticator.AuthRedirectTemplate
 }

@@ -23,6 +23,10 @@ func (self *OidcAuthenticator) IsPasswordLess() bool {
 	return true
 }
 
+func (self *OidcAuthenticator) RequireClientCerts() bool {
+	return false
+}
+
 func (self *OidcAuthenticator) AuthRedirectTemplate() string {
 	return self.authenticator.AuthRedirectTemplate
 }

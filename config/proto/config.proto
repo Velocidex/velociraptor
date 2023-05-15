@@ -407,6 +407,11 @@ message Authenticator {
             description: "URL to redirect to on Unauthorized API call",
         }];
 
+    // Certs authenticator: If a user presents a certificate but does
+    // not exist in the system, the user will receive a default
+    // role. If this is not set the user will be rejected.
+    repeated string default_roles_for_unknown_user = 22;
+
     // Defaults - no need to change these generally.
 
     // How long to keep the session alive between auth flows - default

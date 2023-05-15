@@ -30,6 +30,10 @@ func (self *SamlAuthenticator) IsPasswordLess() bool {
 	return true
 }
 
+func (self *SamlAuthenticator) RequireClientCerts() bool {
+	return false
+}
+
 func (self *SamlAuthenticator) AuthRedirectTemplate() string {
 	return self.authenticator.AuthRedirectTemplate
 }

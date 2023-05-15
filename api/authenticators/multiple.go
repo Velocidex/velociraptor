@@ -63,6 +63,10 @@ func (self *MultiAuthenticator) IsPasswordLess() bool {
 	return true
 }
 
+func (self *MultiAuthenticator) RequireClientCerts() bool {
+	return false
+}
+
 func (self *MultiAuthenticator) AuthRedirectTemplate() string {
 	return ""
 }
