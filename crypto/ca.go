@@ -37,6 +37,9 @@ import (
 type CertBundle struct {
 	Cert       string
 	PrivateKey string
+
+	PrivateKeyObj interface{}
+	Certificate   *x509.Certificate
 }
 
 func GenerateCACert(rsaBits int) (*CertBundle, error) {
@@ -82,12 +85,18 @@ func GenerateCACert(rsaBits int) (*CertBundle, error) {
 		rand.Reader, &template, &template,
 		&priv.PublicKey,
 		priv)
+	if err != nil {
+		return nil, errors.Wrap(err, 0)
+	}
 
+	x509_cert, err := x509.ParseCertificate(derBytes)
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
 	}
 
 	return &CertBundle{
+		PrivateKeyObj: priv,
+		Certificate:   x509_cert,
 		PrivateKey: string(pem.EncodeToMemory(
 			&pem.Block{
 				Type:  "RSA PRIVATE KEY",
@@ -174,12 +183,18 @@ func GenerateServerCert(config_obj *config_proto.Config, name string) (*CertBund
 		rand.Reader, &template, ca_cert,
 		&priv.PublicKey,
 		ca_private_key)
+	if err != nil {
+		return nil, errors.Wrap(err, 0)
+	}
 
+	x509_cert, err := x509.ParseCertificate(derBytes)
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
 	}
 
 	return &CertBundle{
+		PrivateKeyObj: priv,
+		Certificate:   x509_cert,
 		PrivateKey: string(pem.EncodeToMemory(
 			&pem.Block{
 				Type:  "RSA PRIVATE KEY",

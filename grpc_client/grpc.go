@@ -34,6 +34,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 )
 
 var (
@@ -79,7 +80,7 @@ func getCreds(config_obj *config_proto.Config) (credentials.TransportCredentials
 			ca_certificate = config_obj.ApiConfig.CaCertificate
 			server_name = config_obj.ApiConfig.PinnedServerName
 			if server_name == "" {
-				server_name = "VelociraptorServer"
+				server_name = constants.PinnedServerName
 			}
 		}
 

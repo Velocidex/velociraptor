@@ -55,6 +55,10 @@ func (self *AzureAuthenticator) IsPasswordLess() bool {
 	return true
 }
 
+func (self *AzureAuthenticator) RequireClientCerts() bool {
+	return false
+}
+
 func (self *AzureAuthenticator) AuthRedirectTemplate() string {
 	return self.authenticator.AuthRedirectTemplate
 }

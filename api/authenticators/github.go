@@ -54,6 +54,10 @@ func (self *GitHubAuthenticator) IsPasswordLess() bool {
 	return true
 }
 
+func (self *GitHubAuthenticator) RequireClientCerts() bool {
+	return false
+}
+
 func (self *GitHubAuthenticator) AuthRedirectTemplate() string {
 	return self.authenticator.AuthRedirectTemplate
 }
