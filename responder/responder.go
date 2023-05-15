@@ -133,8 +133,7 @@ func (self *FlowResponder) updateStats(message *crypto_proto.VeloMessage) {
 	}
 
 	if message.VQLResponse != nil {
-		self.status.ResultRows += int64(
-			message.VQLResponse.QueryStartRow + message.VQLResponse.TotalRows)
+		self.status.ResultRows += int64(message.VQLResponse.TotalRows)
 
 		addNameWithResponse(&self.status.NamesWithResponse,
 			message.VQLResponse.Query.Name)
