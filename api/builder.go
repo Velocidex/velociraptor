@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 	"time"
 
 	"golang.org/x/crypto/acme/autocert"
+	"www.velocidex.com/golang/velociraptor/api/authenticators"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
@@ -54,7 +56,8 @@ func (self *Builder) StartServer(ctx context.Context, wg *sync.WaitGroup) error 
 		return err
 	}
 
-	// Start in autocert mode, only put the GUI behind autocert if the GUI port is 443.
+	// Start in autocert mode, only put the GUI behind autocert if the
+	// GUI port is 443.
 	if self.AutocertCertCache != "" && self.config_obj.GUI != nil &&
 		self.config_obj.GUI.BindPort == 443 {
 		return self.WithAutocertGUI(ctx, wg)
@@ -62,7 +65,8 @@ func (self *Builder) StartServer(ctx context.Context, wg *sync.WaitGroup) error 
 
 	// Start in autocert mode, but only sign the frontend.
 	if self.AutocertCertCache != "" {
-		return self.withAutoCertFrontendSelfSignedGUI(ctx, wg, self.config_obj, self.server_obj)
+		return self.withAutoCertFrontendSelfSignedGUI(
+			ctx, wg, self.config_obj, self.server_obj)
 	}
 
 	// All services are sharing the same port.
@@ -458,6 +462,7 @@ func StartFrontendWithAutocert(
 			return err
 		}
 	}
+
 	certManager := autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		HostPolicy: autocert.HostWhitelist(config_obj.Frontend.Hostname),
@@ -468,6 +473,17 @@ func StartFrontendWithAutocert(
 	err := getTLSConfig(config_obj, tls_config)
 	if err != nil {
 		return err
+	}
+
+	err = maybeAddClientCerts(config_obj, tls_config)
+	if err != nil {
+		return err
+	}
+
+	// The frontend can not work with client certs required, so if we are in
+	if tls_config.ClientAuth == tls.RequireAndVerifyClientCert {
+		return errors.New(
+			"The Frontend can not work with client Certificate authenticators. Make sure the GUI is listening on a different port to the Frontend!")
 	}
 
 	// Autocert selects its own certificates by itself
@@ -623,6 +639,13 @@ func StartSelfSignedGUI(
 		return err
 	}
 
+	// If we are using an authenticator that requires client side
+	// certs, add the required TLS config here.
+	err = maybeAddClientCerts(config_obj, tls_config)
+	if err != nil {
+		return err
+	}
+
 	listenAddr := fmt.Sprintf("%s:%d",
 		config_obj.GUI.BindAddress,
 		config_obj.GUI.BindPort)
@@ -680,6 +703,30 @@ func get_hostname(fe_hostname, bind_addr string) string {
 	return bind_addr
 }
 
+func maybeAddClientCerts(config_obj *config_proto.Config, in *tls.Config) error {
+	auther, err := authenticators.NewAuthenticator(config_obj)
+	if err != nil {
+		return err
+	}
+
+	if !auther.RequireClientCerts() {
+		return nil
+	}
+
+	// Require the browser to use client certificates
+	client_ca := x509.NewCertPool()
+	if config_obj.Client != nil {
+		client_ca.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
+	}
+
+	in.ClientAuth = tls.RequireAndVerifyClientCert
+	in.ClientCAs = client_ca
+
+	in.BuildNameToCertificate()
+
+	return nil
+}
+
 // Prepare a TLS config with correct cipher choices.
 func getTLSConfig(config_obj *config_proto.Config, in *tls.Config) error {
 	certs, err := getCertificates(config_obj)
@@ -687,7 +734,7 @@ func getTLSConfig(config_obj *config_proto.Config, in *tls.Config) error {
 		return err
 	}
 
-	expected_clients := int64(10000)
+	expected_clients := int64(20000)
 	if config_obj.Frontend != nil &&
 		config_obj.Frontend.Resources != nil &&
 		config_obj.Frontend.Resources.ExpectedClients > 0 {
@@ -708,5 +755,6 @@ func getTLSConfig(config_obj *config_proto.Config, in *tls.Config) error {
 		tls.TLS_RSA_WITH_AES_256_CBC_SHA,
 		tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
 	}
+
 	return nil
 }

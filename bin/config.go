@@ -28,12 +28,14 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/Velocidex/yaml/v2"
+	errors "github.com/go-errors/errors"
+	"software.sslmate.com/src/go-pkcs12"
 
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
+	"www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -74,6 +76,9 @@ var (
 	config_api_client_output = config_api_client_command.Arg(
 		"output", "The filename to write the config file on.").
 		Required().String()
+
+	config_api_client_pkcs12_output = config_api_client_command.Flag(
+		"pkcs12", "A filename to write the pkcs12 certificate file").String()
 
 	config_generate_command = config_command.Command(
 		"generate",
@@ -418,8 +423,12 @@ func doDumpApiClientConfig() error {
 	}
 
 	if *config_api_client_common_name == config_obj.Client.PinnedServerName {
-		kingpin.Fatalf("Name reserved! You may not name your " +
+		return errors.New("Name reserved! You may not name your " +
 			"api keys with this name.")
+	}
+
+	if config_obj.Client == nil {
+		return errors.New("Config does not have a client config!")
 	}
 
 	config_obj.Services = services.GenericToolServices()
@@ -439,8 +448,8 @@ func doDumpApiClientConfig() error {
 		return fmt.Errorf("Unable to generate certificate: %w", err)
 	}
 
+	password := ""
 	if *config_api_client_password_protect {
-		password := ""
 		err = survey.AskOne(
 			&survey.Password{Message: "Password:"},
 			&password,
@@ -462,7 +471,34 @@ func doDumpApiClientConfig() error {
 		}
 
 		bundle.PrivateKey = string(pem.EncodeToMemory(block))
-		return nil
+	}
+
+	// Possibly dump out the pkcs12 key
+	if *config_api_client_pkcs12_output != "" {
+		ca_cert, err := utils.ParseX509CertFromPemStr([]byte(
+			config_obj.Client.CaCertificate))
+		if err != nil {
+			return err
+		}
+
+		data, err := pkcs12.Encode(rand.Reader, bundle.PrivateKeyObj,
+			bundle.Certificate, []*x509.Certificate{ca_cert}, password)
+		if err != nil {
+			return err
+		}
+
+		fd, err := os.OpenFile(*config_api_client_pkcs12_output,
+			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		if err != nil {
+			return err
+		}
+		_, err = fd.Write(data)
+		if err != nil {
+			return err
+		}
+		fd.Close()
+
+		fmt.Printf("Wrote PKCS12 file on %v.\n", *config_api_client_pkcs12_output)
 	}
 
 	api_client_config := &config_proto.ApiClientConfig{
