@@ -72,10 +72,10 @@ class VFSViewer extends Component {
     }
 
     collapse = () => {
-        if (this.state.collapsed) {
-            this.setState({topPaneSize: "100%", collapsed: false});
+        if (!this.state.collapsed) {
+            this.setState({topPaneSize: "100%", collapsed: true});
         } else {
-            this.setState({topPaneSize: "50%", collapsed: true});
+            this.setState({topPaneSize: "50%", collapsed: false});
         }
     }
 
