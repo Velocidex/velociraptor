@@ -285,6 +285,7 @@ class UserSettings extends React.PureComponent {
                       <option value="por">{T("Portuguese")}</option>
                       <option value="fr">{T("French")}</option>
                       <option value="jp">{T("Japanese")}</option>
+                      <option value="vi">{T("Vietnamese")}</option>
                     </Form.Control>
                   </Col>
                 </Form.Group>
