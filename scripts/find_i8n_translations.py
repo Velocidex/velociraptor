@@ -32,7 +32,11 @@ def Encode(k):
     return binascii.hexlify(k.encode()).decode()
 
 def Decode(k):
-    return binascii.unhexlify(k.encode()).decode()
+    try:
+        return binascii.unhexlify(k.encode()).decode()
+    except Exception as e:
+        print("While decoding %s" % k)
+        raise e
 
 def ProcessFile(filename):
     translations = dict()
@@ -48,8 +52,10 @@ def ProcessFile(filename):
     with open(os.path.splitext(filename)[0] + ".json") as fd:
         encoded_existing = json.loads(fd.read())
         existing = dict()
-        for k in encoded_existing:
+        existing_translations = dict()
+        for k, v in encoded_existing.items():
             existing[Decode(k)] = True
+            existing_translations[Decode(k)] = v
 
     # The automated translations
     automated = dict()
@@ -61,6 +67,12 @@ def ProcessFile(filename):
     with open(outfile, "w") as outfd:
         outfd.write(json.dumps(automated, sort_keys=True, indent=4))
         print("Wrote json file %s with %d entries" % (outfile, len(automated)))
+
+    outfile = os.path.splitext(filename)[0] + "_automated.json"
+    with open(outfile, "w") as outfd:
+        outfd.write(json.dumps(existing_translations, sort_keys=True, indent=4))
+        print("Wrote automated json file %s with %d entries" % (outfile, len(existing_translations)))
+
 
 if __name__ == "__main__":
     argument_parser = argparse.ArgumentParser()
