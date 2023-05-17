@@ -271,6 +271,7 @@ func (self *ArtifactRepositoryPlugin) copyScope(
 		constants.SCOPE_SERVER_CONFIG,
 		constants.SCOPE_THROTTLE,
 		constants.SCOPE_ROOT,
+		constants.SCOPE_RESPONDER,
 		constants.SCOPE_UPLOADER} {
 		value, pres := scope.Resolve(field)
 		if pres {
@@ -299,6 +300,16 @@ func (self *ArtifactRepositoryPlugin) copyScope(
 	result := scope.Copy()
 	result.ClearContext()
 	result.AppendVars(env)
+
+	// Copy critical context variables
+	for _, field := range []string{
+		constants.SCOPE_RESPONDER_CONTEXT,
+	} {
+		value, pres := scope.GetContext(field)
+		if pres {
+			result.SetContext(field, value)
+		}
+	}
 
 	return result, nil
 }
