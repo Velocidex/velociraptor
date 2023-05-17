@@ -308,6 +308,21 @@ class OfflineCollectorParameters  extends React.Component {
                       </Col>
                     </Form.Group>
                     <Form.Group as={Row}>
+                      <Form.Label column sm="3">File Name Prefix</Form.Label>
+                      <Col sm="8">
+                        <Form.Control as="textarea" rows={3}
+                                        placeholder={T("Prefix for files being uploaded. end in / for folders (blank if not used)")}
+                                        spellCheck="false"
+                                        value={this.props.parameters.target_args.s3UploadRoot}
+                                        onChange={(e) => {
+                                            this.props.parameters.target_args.s3UploadRoot = e.target.value;
+                                            this.props.setParameters(this.props.parameters);
+                                        }}
+                        >
+                        </Form.Control>
+                      </Col>
+                    </Form.Group>
+                    <Form.Group as={Row}>
                       <Form.Label column sm="3">{T("Server Side Encryption")}</Form.Label>
                       <Col sm="8">
                         <Form.Control as="select"
@@ -320,6 +335,21 @@ class OfflineCollectorParameters  extends React.Component {
                             <option value="">None</option>
                             <option value="aws:kms">aws:kms</option>
                             <option value="AES256">AES256</option>
+                        </Form.Control>
+                      </Col>
+                    </Form.Group>
+                    <Form.Group as={Row}>
+                      <Form.Label column sm="3">KMS Encryption Key</Form.Label>
+                      <Col sm="8">
+                        <Form.Control as="textarea" rows={3}
+                                        placeholder={T("KMS Encryption Key ARN (blank if KMS not used)")}
+                                        spellCheck="false"
+                                        value={this.props.parameters.target_args.kmsEncryptionKey}
+                                        onChange={(e) => {
+                                            this.props.parameters.target_args.kmsEncryptionKey = e.target.value;
+                                            this.props.setParameters(this.props.parameters);
+                                        }}
+                        >
                         </Form.Control>
                       </Col>
                     </Form.Group>
@@ -637,6 +667,8 @@ export default class OfflineCollectorWizard extends React.Component {
                 region: "",
                 endpoint: "",
                 serverSideEncryption: "",
+                kmsEncryptionKey: "",
+                s3UploadRoot: "",
 
                 // For Azure
                 sas_url: "",
