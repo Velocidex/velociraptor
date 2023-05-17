@@ -33,6 +33,7 @@ type S3UploadArgs struct {
 	CredentialsSecret    string            `vfilter:"optional,field=credentialssecret,doc=The AWS secret credentials to use"`
 	Endpoint             string            `vfilter:"optional,field=endpoint,doc=The Endpoint to use"`
 	ServerSideEncryption string            `vfilter:"optional,field=serversideencryption,doc=The server side encryption method to use"`
+	KmsEncryptionKey     string            `vfilter:"optional,field=kmsencryptionkey,doc=The server side KMS key to use"`
 	NoVerifyCert         bool              `vfilter:"optional,field=noverifycert,doc=Skip TLS Verification (deprecated in favor of SkipVerify)"`
 	SkipVerify           bool              `vfilter:"optional,field=skip_verify,doc=Skip TLS Verification"`
 }
@@ -96,6 +97,7 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 			arg.Region,
 			arg.Endpoint,
 			arg.ServerSideEncryption,
+			arg.KmsEncryptionKey,
 			arg.NoVerifyCert || arg.SkipVerify,
 			uint64(stat.Size()))
 		if err != nil {
@@ -117,6 +119,7 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 	region string,
 	endpoint string,
 	serverSideEncryption string,
+	kmsEncryptionKey string,
 	NoVerifyCert bool,
 	size uint64) (
 	*uploads.UploadResponse, error) {
@@ -173,13 +176,26 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 	uploader := s3manager.NewUploader(sess)
 	var result *s3manager.UploadOutput
 	if serverSideEncryption != "" {
-		result, err = uploader.UploadWithContext(
-			ctx, &s3manager.UploadInput{
-				Bucket:               aws.String(bucket),
-				Key:                  aws.String(name),
-				ServerSideEncryption: aws.String(serverSideEncryption),
-				Body:                 reader,
-			})
+		if serverSideEncryption == "AES256" {
+			result, err = uploader.UploadWithContext(
+				ctx, &s3manager.UploadInput{
+					Bucket:               aws.String(bucket),
+					Key:                  aws.String(name),
+					ServerSideEncryption: aws.String(serverSideEncryption),
+					Body:                 reader,
+				})
+		}
+		// TODO This need to handle no key being provided
+		if serverSideEncryption == "aws:kms" {
+			result, err = uploader.UploadWithContext(
+				ctx, &s3manager.UploadInput{
+					Bucket:               aws.String(bucket),
+					Key:                  aws.String(name),
+					ServerSideEncryption: aws.String(serverSideEncryption),
+					SSEKMSKeyId:          aws.String(kmsEncryptionKey),
+					Body:                 reader,
+				})
+		}
 	} else {
 		result, err = uploader.UploadWithContext(
 			ctx, &s3manager.UploadInput{

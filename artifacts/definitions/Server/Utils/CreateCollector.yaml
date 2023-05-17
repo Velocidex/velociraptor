@@ -146,6 +146,7 @@ parameters:
           region=TargetArgs.region,
           endpoint=TargetArgs.endpoint,
           serversideencryption=TargetArgs.serverSideEncryption,
+          kmsencryptionkey=TargetArgs.kmsEncryptionKey,
           noverifycert=TargetArgs.noverifycert)
 
   - name: GCSCollection
