@@ -146,6 +146,8 @@ parameters:
           region=TargetArgs.region,
           endpoint=TargetArgs.endpoint,
           serversideencryption=TargetArgs.serverSideEncryption,
+          kmsencryptionkey=TargetArgs.kmsEncryptionKey,
+          s3uploadroot=TargetArgs.s3UploadRoot,
           noverifycert=TargetArgs.noverifycert)
 
   - name: GCSCollection

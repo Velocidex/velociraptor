@@ -33,6 +33,8 @@ type S3UploadArgs struct {
 	CredentialsSecret    string            `vfilter:"optional,field=credentialssecret,doc=The AWS secret credentials to use"`
 	Endpoint             string            `vfilter:"optional,field=endpoint,doc=The Endpoint to use"`
 	ServerSideEncryption string            `vfilter:"optional,field=serversideencryption,doc=The server side encryption method to use"`
+	KmsEncryptionKey     string            `vfilter:"optional,field=kmsencryptionkey,doc=The server side KMS key to use"`
+	S3UploadRoot         string            `vfilter:"optional,field=s3uploadroot,doc=Prefix for the S3 object"`
 	NoVerifyCert         bool              `vfilter:"optional,field=noverifycert,doc=Skip TLS Verification (deprecated in favor of SkipVerify)"`
 	SkipVerify           bool              `vfilter:"optional,field=skip_verify,doc=Skip TLS Verification"`
 }
@@ -96,6 +98,8 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 			arg.Region,
 			arg.Endpoint,
 			arg.ServerSideEncryption,
+			arg.KmsEncryptionKey,
+			arg.S3UploadRoot,
 			arg.NoVerifyCert || arg.SkipVerify,
 			uint64(stat.Size()))
 		if err != nil {
@@ -117,10 +121,15 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 	region string,
 	endpoint string,
 	serverSideEncryption string,
+	kmsEncryptionKey string,
+	s3UploadRoot string,
 	NoVerifyCert bool,
 	size uint64) (
 	*uploads.UploadResponse, error) {
 
+	if s3UploadRoot != "" {
+		name = s3UploadRoot + name
+	}
 	scope.Log("upload_S3: Uploading %v to %v", name, bucket)
 
 	conf := aws.NewConfig().WithRegion(region)
@@ -172,22 +181,23 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 
 	uploader := s3manager.NewUploader(sess)
 	var result *s3manager.UploadOutput
-	if serverSideEncryption != "" {
-		result, err = uploader.UploadWithContext(
-			ctx, &s3manager.UploadInput{
-				Bucket:               aws.String(bucket),
-				Key:                  aws.String(name),
-				ServerSideEncryption: aws.String(serverSideEncryption),
-				Body:                 reader,
-			})
-	} else {
-		result, err = uploader.UploadWithContext(
-			ctx, &s3manager.UploadInput{
-				Bucket: aws.String(bucket),
-				Key:    aws.String(name),
-				Body:   reader,
-			})
+
+	s3_params := &s3manager.UploadInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(name),
+		Body:   reader,
 	}
+	if serverSideEncryption != "" {
+		s3_params.ServerSideEncryption = aws.String(serverSideEncryption)
+	}
+
+	if kmsEncryptionKey != "" {
+		s3_params.SSEKMSKeyId = aws.String(kmsEncryptionKey)
+	}
+
+	result, err = uploader.UploadWithContext(
+		ctx, s3_params)
+
 	if err != nil {
 		return &uploads.UploadResponse{
 			Error: err.Error(),

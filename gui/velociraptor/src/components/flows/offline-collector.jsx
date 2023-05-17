@@ -1,24 +1,23 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import _ from 'lodash';
-import Modal from 'react-bootstrap/Modal';
-import StepWizard from 'react-step-wizard';
-import Form from 'react-bootstrap/Form';
-import Row from 'react-bootstrap/Row';
-import Col from 'react-bootstrap/Col';
-import ToolViewer from "../tools/tool-viewer.jsx";
 import { HotKeys, ObserveKeys } from "react-hotkeys";
-import ValidatedInteger from '../forms/validated_int.jsx';
-import T from '../i8n/i8n.jsx';
-import NewCollectionConfigParameters from './new-collections-parameters.jsx';
-
 import {
-    NewCollectionSelectArtifacts,
-    NewCollectionRequest,
     NewCollectionLaunch,
+    NewCollectionRequest,
+    NewCollectionSelectArtifacts,
     PaginationBuilder
 } from './new-collection.jsx';
 
+import Col from 'react-bootstrap/Col';
+import Form from 'react-bootstrap/Form';
+import Modal from 'react-bootstrap/Modal';
+import NewCollectionConfigParameters from './new-collections-parameters.jsx';
+import PropTypes from 'prop-types';
+import React from 'react';
+import Row from 'react-bootstrap/Row';
+import StepWizard from 'react-step-wizard';
+import T from '../i8n/i8n.jsx';
+import ToolViewer from "../tools/tool-viewer.jsx";
+import ValidatedInteger from '../forms/validated_int.jsx';
+import _ from 'lodash';
 
 // The offline collection wizard is built upon the new collection
 // wizard with some extra steps.
@@ -325,6 +324,21 @@ class OfflineCollectorParameters  extends React.Component {
                         </Col>
                       </Form.Group>
                       <Form.Group as={Row}>
+                      <Form.Label column sm="3">File Name Prefix</Form.Label>
+                      <Col sm="8">
+                        <Form.Control as="textarea" rows={3}
+                                        placeholder={T("Prefix for files being uploaded. end in / for folders (blank if not used)")}
+                                        spellCheck="false"
+                                        value={this.props.parameters.target_args.s3UploadRoot}
+                                        onChange={(e) => {
+                                            this.props.parameters.target_args.s3UploadRoot = e.target.value;
+                                            this.props.setParameters(this.props.parameters);
+                                        }}
+                        >
+                        </Form.Control>
+                      </Col>
+                    </Form.Group>
+                    <Form.Group as={Row}>
                         <Form.Label column sm="3">{T("Server Side Encryption")}</Form.Label>
                         <Col sm="8">
                           <Form.Control
@@ -342,6 +356,21 @@ class OfflineCollectorParameters  extends React.Component {
                         </Col>
                       </Form.Group>
                       <Form.Group as={Row}>
+                      <Form.Label column sm="3">KMS Encryption Key</Form.Label>
+                      <Col sm="8">
+                        <Form.Control as="textarea" rows={3}
+                                        placeholder={T("KMS Encryption Key ARN (blank if KMS not used)")}
+                                        spellCheck="false"
+                                        value={this.props.parameters.target_args.kmsEncryptionKey}
+                                        onChange={(e) => {
+                                            this.props.parameters.target_args.kmsEncryptionKey = e.target.value;
+                                            this.props.setParameters(this.props.parameters);
+                                        }}
+                        >
+                        </Form.Control>
+                      </Col>
+                    </Form.Group>
+                    <Form.Group as={Row}>
                         <Form.Label column sm="3">{T("Skip Cert Verification")}</Form.Label>
                         <Col sm="8">
                           <Form.Control
@@ -683,6 +712,8 @@ export default class OfflineCollectorWizard extends React.Component {
                 region: "",
                 endpoint: "",
                 serverSideEncryption: "",
+                kmsEncryptionKey: "",
+                s3UploadRoot: "",
 
                 // For Azure
                 sas_url: "",
