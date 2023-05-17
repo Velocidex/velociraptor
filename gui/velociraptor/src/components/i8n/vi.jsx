@@ -7,7 +7,7 @@ import humanizeDuration from "humanize-duration";
 import automated from "./vi.json";
 
 const Vietnamese = {
-    SEARCH_CLIENTS: "Tìm máy trạm",
+    "SEARCH_CLIENTS": "Tìm máy trạm",
     "Mô tả cách ly": (
         <>
           <p>Bạn đang chuẩn bị cách ly host này.</p>
@@ -75,7 +75,7 @@ const Vietnamese = {
     </>,
     "ServedFromGithub": (github_project, github_asset_regex)=>
     <>
-    Công cụ sẽ được tải xuống từ GitHub dưới dạng release mới nhất từ 
+    Công cụ sẽ được tải xuống từ GitHub dưới dạng release mới nhất từ
     <b>{github_project}</b>, phù hợp với <b>{github_asset_regex}</b>
     </>,
     "PlaceHolder":
@@ -174,6 +174,15 @@ const Vietnamese = {
      "ToolPerm_MACHINE_STATE": "Được phép thu thập thông tin trạng thái từ các máy (ví dụ: pslist())",
      "ToolPerm_PREPARE_RESULTS": "Được phép tạo tệp zip",
      "ToolPerm_DATASTORE_ACCESS": "Được phép truy cập dữ liệu raw",
+
+    "FINISHED": "HOÀN THÀNH",
+    "RUNNING": "ĐANG CHẠY",
+    "STOPPED": "NGỪNG",
+    "PAUSED": "TẠM DỪNG",
+    "ERROR": "LỖI",
+    "INFO": "THÔNG TIN",
+    "DEBUG": "GỠ LỖI",
+    "CANCELLED": "HỦY BỎ",
 
      // From vi.json
      "New Key": " Khóa mới",
@@ -539,7 +548,6 @@ const Vietnamese = {
      "Running": "Đang chạy",
      "S3 Bucket": "S3 Bucket",
      "SAS URL as generated from the Azure console": "URL SAS được tạo từ Azure console",
-     "SEARCH_CLIENTS": "SEARCH_CLIENTS",
      "SFTP Upload": "Tải lên SFTP",
      "SHA256 Hash": "SHA256 Hash",
      "SMB Share": "Chia sẻ SMB",

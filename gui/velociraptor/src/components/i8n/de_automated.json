@@ -117,7 +117,6 @@
     "Running": "Wird ausgef\u00fchrt",
     "S3 Bucket": "S3-Bucket",
     "SAS URL as generated from the Azure console": "SAS-URL wie von der Azure-Konsole generiert",
-    "SEARCH_CLIENTS": "SEARCH_CLIENTS",
     "SHA256 Hash": "SHA256-Hash",
     "SMB Share": "SMB-Freigabe",
     "SMB Share address (e.g. \\\\\\\\192.168.1.1:445\\\\Sharename)": "SMB-Freigabeadresse (z. B . \\\\\\\\192.168.1.1:445\\\\Freigabename)",
