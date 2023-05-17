@@ -708,7 +708,9 @@ const Vietnamese = {
      "seconds": "giây",
      "size": "kích thước",
      "Vietnamese": "Tiếng Việt"
-
+     " New Key": " Khóa mới",
+     " Running...": " Đang chạy...",
+     "Quarantine description": "Mô tả cách ly"
 };
 
 _.each(automated, (v, k)=>{
