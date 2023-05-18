@@ -120,7 +120,6 @@
     "Running": "Executando",
     "S3 Bucket": "Balde S3",
     "SAS URL as generated from the Azure console": "URL SAS gerado a partir do console do Azure",
-    "SEARCH_CLIENTS": "SEARCH_CLIENTS",
     "SHA256 Hash": "Sha256 Hash",
     "SMB Share": "Compartilhamento SMB",
     "SMB Share address (e.g. \\\\\\\\192.168.1.1:445\\\\Sharename)": "Endere\u00e7o de compartilhamento SMB (por exemplo . \\\\\\\\192.168.1.1:445\\\\Sharename)",

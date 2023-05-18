@@ -8,7 +8,7 @@ import automated from "./por.json";
 
 
 const Portuguese = {
-    SEARCH_CLIENTS: "Pesquisar clientes",
+    "SEARCH_CLIENTS": "Pesquisar clientes",
     "Quarantine description": (
         <>
           <p>Você está prestes a colocar este host em quarentena.</p>

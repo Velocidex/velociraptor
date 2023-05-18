@@ -121,7 +121,6 @@
     "Running": "En cours d'ex\u00e9cution",
     "S3 Bucket": "Seau S3",
     "SAS URL as generated from the Azure console": "URL SAS g\u00e9n\u00e9r\u00e9e \u00e0 partir de la console Azure",
-    "SEARCH_CLIENTS": "SEARCH_CLIENTS",
     "SHA256 Hash": "Hachage SHA256",
     "SMB Share": "Partage PME",
     "SMB Share address (e.g. \\\\\\\\192.168.1.1:445\\\\Sharename)": "Adresse de partage SMB (par ex. \\\\\\\\192.168.1.1:445\\\\nom de partage)",

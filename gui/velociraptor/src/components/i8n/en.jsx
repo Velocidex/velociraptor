@@ -3,7 +3,7 @@ import Alert from 'react-bootstrap/Alert';
 import humanizeDuration from "humanize-duration";
 
 const English = {
-    SEARCH_CLIENTS: "Search clients",
+    "SEARCH_CLIENTS": "Search clients",
     "Quarantine description": <>
           <p>You are about to quarantine this host.</p>
           <p>

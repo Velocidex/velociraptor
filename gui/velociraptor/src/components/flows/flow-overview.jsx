@@ -189,7 +189,7 @@ export default class FlowOverview extends React.Component {
                     <br />
                   </dl>
 
-                  <h5> Parameters </h5>
+                  <h5> {T("Parameters")} </h5>
                   <dl className="row">
                     {_.map(artifacts, function(name, idx) {
                         return <React.Fragment key={idx}>
