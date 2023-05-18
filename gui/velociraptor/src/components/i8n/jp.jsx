@@ -8,7 +8,7 @@ import humanizeDuration from "humanize-duration";
 import automated from "./jp.json";
 
 const Japanese = {
-    SEARCH_CLIENTS: "クライアント検索",
+    "SEARCH_CLIENTS": "クライアント検索",
     "Quarantine description": (<>
           <p>このホストを隔離しようとしています。</p>
           <p>

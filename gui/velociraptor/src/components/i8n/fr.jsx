@@ -7,7 +7,7 @@ import humanizeDuration from "humanize-duration";
 import automated from "./fr.json";
 
 const French = {
-    SEARCH_CLIENTS: "Rechercher des clients",
+    "SEARCH_CLIENTS": "Rechercher des clients",
     "Quarantine description": (
         <>
           <p>Vous êtes sur le point de mettre cet hôte en quarantaine.</p>

@@ -120,7 +120,6 @@
     "Running": "\u5b9f\u884c\u4e2d",
     "S3 Bucket": "S3\u30d0\u30b1\u30c3\u30c8",
     "SAS URL as generated from the Azure console": "Azure \u30b3\u30f3\u30bd\u30fc\u30eb\u304b\u3089\u751f\u6210\u3055\u308c\u305f SAS URL",
-    "SEARCH_CLIENTS": "SEARCH_CLIENTS",
     "SHA256 Hash": "SHA256 \u30cf\u30c3\u30b7\u30e5",
     "SMB Share": "SMB \u5171\u6709",
     "SMB Share address (e.g. \\\\\\\\192.168.1.1:445\\\\Sharename)": "SMB \u5171\u6709\u30a2\u30c9\u30ec\u30b9 (\u4f8b: . \\\\\\\\192.168.1.1:445\\\\\u5171\u6709\u540d)",
