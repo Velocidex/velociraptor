@@ -30,6 +30,22 @@
   category: server
   metadata:
     permissions: COLLECT_SERVER
+- name: alert
+  description: Generate an alert message.
+  type: Function
+  version: 2
+  args:
+  - name: name
+    type: string
+    description: Name of the alert.
+    required: true
+  - name: dedup
+    type: int64
+    description: Suppress same message in this many seconds (default 7200 sec or 2
+      hours).
+  - name: condition
+    type: Any
+    description: If specified we ignore the alert unless the condition is true
 - name: all
   description: Returns TRUE if all items are true.
   type: Function
@@ -419,7 +435,7 @@
     type: bool
   category: server
   metadata:
-    permissions: SERVER_ADMIN
+    permissions: DELETE_RESULTS
 - name: client_info
   description: |
     Returns client info (like the fqdn) from the datastore.
@@ -977,7 +993,7 @@
     type: bool
     description: If not specified, just show what files will be removed
   metadata:
-    permissions: SERVER_ADMIN
+    permissions: DELETE_RESULTS
 - name: delete_flow
   description: Delete all the files that make up a flow.
   type: Plugin
@@ -988,7 +1004,7 @@
   - name: flow_id
     type: string
   metadata:
-    permissions: SERVER_ADMIN
+    permissions: DELETE_RESULTS
 - name: dict
   description: |
     Construct a dict from arbitrary keyword args.
@@ -2611,6 +2627,8 @@
   - name: filename
     type: string
     description: The name of the file on the endpoint
+  - name: version
+    type: string
   - name: file
     type: accessors.OSPath
     description: An optional file to upload
@@ -2627,6 +2645,8 @@
   - name: tool
     type: string
     required: true
+  - name: version
+    type: string
   category: server
   metadata:
     permissions: SERVER_ADMIN
@@ -4552,6 +4572,11 @@
 - name: pskill
   description: Kill the specified process.
   type: Function
+  args:
+  - name: pid
+    type: int64
+    description: A pid to kill.
+    required: true
   metadata:
     permissions: EXECVE
 - name: pslist
@@ -4860,6 +4885,9 @@
     type: string
     description: The name of the target OS to repack (VelociraptorWindows, VelociraptorLinux,
       VelociraptorDarwin)
+  - name: version
+    type: string
+    description: Velociraptor Version to repack
   - name: exe
     type: accessors.OSPath
     description: Alternative a path to the executable to repack
@@ -5699,7 +5727,16 @@
     description: Hex string to decode
   category: basic
 - name: unzip
-  description: Unzips a file into a directory
+  description: |
+    Unzips a file into a directory.
+
+    This plugin supports a number of compression formats:
+    1. Zip files
+    2. Tar gz files.
+
+    The type of the file will be detected by the file extension, or
+    else you can force a type using the `type` parameter (`tgz` or
+    `zip`).
   type: Plugin
   args:
   - name: filename
@@ -5711,11 +5748,15 @@
     description: The accessor to use
   - name: filename_filter
     type: string
-    description: Only extract members matching this filter.
+    description: Only extract members matching this regex filter.
   - name: output_directory
     type: string
     description: Where to unzip to
     required: true
+  - name: type
+    type: string
+    description: The type of file (default autodetected from file extension - zip
+      or tgz or tar.gz).
   category: basic
   metadata:
     permissions: FILESYSTEM_WRITE,FILESYSTEM_READ

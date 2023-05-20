@@ -69,6 +69,12 @@ Queries:
     FROM unzip(filename=srcDir + '/artifacts/testdata/files/test.zip',
        output_directory=tmpdir)
 
+  # Test the unzip() plugin on tar gz files
+  - LET tmpdir_tgz <= tempdir()
+  - SELECT OriginalPath, relpath(path=NewPath, base=tmpdir_tgz, sep="/"), Size
+    FROM unzip(filename=srcDir + '/artifacts/testdata/files/tar_test.tgz',
+       output_directory=tmpdir_tgz)
+
   # Test that unzip works on virtual files.
   - SELECT OriginalPath, relpath(path=NewPath, base=tmpdir, sep="/"), Size
     FROM unzip(

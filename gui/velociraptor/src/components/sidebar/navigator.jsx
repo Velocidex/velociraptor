@@ -72,7 +72,9 @@ class VeloNavigator extends Component {
             <>
               <div className="float-left navigator">
                 <button
-                  className="hamburger toolbar-buttons"
+                  data-tooltip={T("Expand sidebar")}
+                  data-position="right"
+                  className="hamburger toolbar-buttons btn-tooltip"
                   onClick={this.toggle}
                   aria-expanded={!this.state.collapsed}
                 >
