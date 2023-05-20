@@ -248,6 +248,17 @@ func LinuxMusl() error {
 		arch:          "amd64"}.Run()
 }
 
+func LinuxMusl386() error {
+	return Builder{
+		extra_tags:    " release yara disable_gui ",
+		goos:          "linux",
+		cc:            "musl-gcc",
+		extra_name:    "-musl",
+		disable_cgo:   true,
+		extra_ldflags: "-linkmode external -extldflags \"-static\"",
+		arch:          "386"}.Run()
+}
+
 // A Linux binary without the GUI
 func LinuxBare() error {
 	return Builder{

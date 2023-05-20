@@ -27,6 +27,10 @@ parameters:
     type: int
     description: How many seconds before rechecking the USN journal.
     default: "30"
+  - name: NTFS_CACHE_TIME
+    type: int
+    description: How often to flush the NTFS cache.
+    default: "30"
 
 precondition: SELECT OS from info() where OS = "windows"
 
