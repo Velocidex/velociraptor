@@ -246,5 +246,9 @@ func EnableSkipVerify(tlsConfig *tls.Config, config_obj *config_proto.ClientConf
 	}
 
 	tlsConfig.InsecureSkipVerify = true
+	// Remove the custom verification - there will be no verification
+	// because InsecureSkipVerify is true.
+	tlsConfig.VerifyConnection = nil
+
 	return nil
 }
