@@ -47,19 +47,20 @@ class OfflineCollectorParameters  extends React.Component {
         return (
             <>
               <Modal.Header closeButton>
-            <Modal.Title>{T("Create Offline collector:  Configure Collector")}</Modal.Title>
+                <Modal.Title>{T("Create Offline collector:  Configure Collector")}</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <Form>
                   <Form.Group as={Row}>
                     <Form.Label column sm="3">{T("Target Operating System")}</Form.Label>
                     <Col sm="8">
-                      <Form.Control as="select"
-                                    value={this.props.parameters.target_os}
-                                    onChange={(e) => {
-                                        this.props.parameters.target_os = e.currentTarget.value;
-                                        this.props.setParameters(this.props.parameters);
-                                    }}
+                      <Form.Control
+                        as="select"
+                        value={this.props.parameters.target_os}
+                        onChange={(e) => {
+                            this.props.parameters.target_os = e.currentTarget.value;
+                            this.props.setParameters(this.props.parameters);
+                        }}
                       >
                         <option value="Windows">Windows</option>
                         <option value="Windows_x86">Windows_x86</option>
@@ -69,17 +70,16 @@ class OfflineCollectorParameters  extends React.Component {
                     </Col>
                   </Form.Group>
 
-
-
                   <Form.Group as={Row}>
                     <Form.Label column sm="3">{T("Encryption Scheme")}</Form.Label>
                     <Col sm="8">
-                      <Form.Control as="select"
-                                    value={this.props.parameters.encryption_scheme}
-                                    onChange={(e) => {
-                                        this.props.parameters.encryption_scheme = e.currentTarget.value;
-                                        this.props.setParameters(this.props.parameters);
-                                    }}
+                      <Form.Control
+                        as="select"
+                        value={this.props.parameters.encryption_scheme}
+                        onChange={(e) => {
+                            this.props.parameters.encryption_scheme = e.currentTarget.value;
+                            this.props.setParameters(this.props.parameters);
+                        }}
                       >
                         <option value="None">{T("None")}</option>
                         <option value="X509">{T("X509 Certificate/Frontend Cert")}</option>
@@ -93,14 +93,15 @@ class OfflineCollectorParameters  extends React.Component {
                    <Form.Group as={Row} >
                      <Form.Label column sm="3">{T("Public Key/Cert")}</Form.Label>
                      <Col sm="8">
-                       <Form.Control as="textarea"
-                                     placeholder={T("Public Key/Certificate To Encrypt With. If X509, Defaults To Frontend Cert")}
-                                     spellCheck="false"
-                                     value={this.props.parameters.encryption_args.public_key}
-                                     onChange={e => {
-                                         this.props.parameters.encryption_args.public_key = e.target.value;
-                                         this.props.setParameters(this.props.parameters);
-                                     }} />
+                       <Form.Control
+                         as="textarea"
+                         placeholder={T("Public Key/Certificate To Encrypt With. If X509, Defaults To Frontend Cert")}
+                         spellCheck="false"
+                         value={this.props.parameters.encryption_args.public_key}
+                         onChange={e => {
+                             this.props.parameters.encryption_args.public_key = e.target.value;
+                             this.props.setParameters(this.props.parameters);
+                         }} />
                      </Col>
                    </Form.Group>
                   }
@@ -108,14 +109,15 @@ class OfflineCollectorParameters  extends React.Component {
                     <Form.Group as={Row} >
                       <Form.Label column sm="3">{T("Password")}</Form.Label>
                       <Col sm="8">
-                        <Form.Control as="input"
-                                      placeholder={T("Password")}
-                                      spellCheck="false"
-                                      value={this.props.parameters.encryption_args.password}
-                                      onChange={e => {
-                                          this.props.parameters.encryption_args.password = e.target.value;
-                                          this.props.setParameters(this.props.parameters);
-                                      }} />
+                        <Form.Control
+                          as="input"
+                          placeholder={T("Password")}
+                          spellCheck="false"
+                          value={this.props.parameters.encryption_args.password}
+                          onChange={e => {
+                              this.props.parameters.encryption_args.password = e.target.value;
+                              this.props.setParameters(this.props.parameters);
+                          }} />
                       </Col>
                     </Form.Group>
                   }
@@ -123,12 +125,13 @@ class OfflineCollectorParameters  extends React.Component {
                   <Form.Group as={Row}>
                     <Form.Label column sm="3">{T("Collection Type")}</Form.Label>
                     <Col sm="8">
-                      <Form.Control as="select"
-                                    value={this.props.parameters.target}
-                                    onChange={(e) => {
-                                        this.props.parameters.target = e.currentTarget.value;
-                                        this.props.setParameters(this.props.parameters);
-                                    }}
+                      <Form.Control
+                        as="select"
+                        value={this.props.parameters.target}
+                        onChange={(e) => {
+                            this.props.parameters.target = e.currentTarget.value;
+                            this.props.setParameters(this.props.parameters);
+                        }}
                       >
                         <option value="ZIP">{T("Zip Archive")}</option>
                         <option value="GCS">{T("Google Cloud Bucket")}</option>
@@ -140,36 +143,39 @@ class OfflineCollectorParameters  extends React.Component {
                     </Col>
                   </Form.Group>
 
-                  { this.props.parameters.target === "GCS" && <>
-                    <Form.Group as={Row}>
-                      <Form.Label column sm="3">{T("GCS Bucket")}</Form.Label>
-                      <Col sm="8">
-                        <Form.Control as="textarea" rows={3}
-                                      placeholder={T("Bucket name")}
-                                      spellCheck="false"
-                                      value={this.props.parameters.target_args.bucket}
-                                      onChange={e => {
-                                          this.props.parameters.target_args.bucket = e.target.value;
-                                          this.props.setParameters(this.props.parameters);
-                                      }}
-                        />
-                      </Col>
-                    </Form.Group>
+                  { this.props.parameters.target === "GCS" &&
+                    <>
+                      <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("GCS Bucket")}</Form.Label>
+                        <Col sm="8">
+                          <Form.Control
+                            as="textarea" rows={3}
+                            placeholder={T("Bucket name")}
+                            spellCheck="false"
+                            value={this.props.parameters.target_args.bucket}
+                            onChange={e => {
+                                this.props.parameters.target_args.bucket = e.target.value;
+                                this.props.setParameters(this.props.parameters);
+                            }}
+                          />
+                        </Col>
+                      </Form.Group>
 
-                    <Form.Group as={Row}>
-                      <Form.Label column sm="3">{T("GCS Key Blob")}</Form.Label>
-                      <Col sm="8">
-                        <Form.Control as="textarea" rows={3}
-                                      placeholder={T("GCS Blob")}
-                                      spellCheck="false"
-                                      value={this.props.parameters.target_args.GCSKey}
-                                      onChange={e => {
-                                          this.props.parameters.target_args.GCSKey = e.target.value;
-                                          this.props.setParameters(this.props.parameters);
-                                      }}
-                        />
-                      </Col>
-                    </Form.Group> </>
+                      <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("GCS Key Blob")}</Form.Label>
+                        <Col sm="8">
+                          <Form.Control
+                            as="textarea" rows={3}
+                            placeholder={T("GCS Blob")}
+                            spellCheck="false"
+                            value={this.props.parameters.target_args.GCSKey}
+                            onChange={e => {
+                                this.props.parameters.target_args.GCSKey = e.target.value;
+                                this.props.setParameters(this.props.parameters);
+                            }}
+                          />
+                        </Col>
+                      </Form.Group> </>
 
                   }
                   { this.props.parameters.target === "SMBShare" &&
@@ -177,265 +183,285 @@ class OfflineCollectorParameters  extends React.Component {
                       <Form.Group as={Row}>
                         <Form.Label column sm="3">{T("Username")}</Form.Label>
                         <Col sm="8">
-                          <Form.Control as="textarea" rows={3}
-                                        placeholder={T("SMB Share login username")}
-                                        spellCheck="false"
-                                        value={this.props.parameters.target_args.username}
-                                        onChange={e => {
-                                            this.props.parameters.target_args.username = e.target.value;
-                                            this.props.setParameters(this.props.parameters);
-                                        }}
+                          <Form.Control
+                            as="textarea" rows={3}
+                            placeholder={T("SMB Share login username")}
+                            spellCheck="false"
+                            value={this.props.parameters.target_args.username}
+                            onChange={e => {
+                                this.props.parameters.target_args.username = e.target.value;
+                                this.props.setParameters(this.props.parameters);
+                            }}
                           />
                         </Col>
                       </Form.Group>
                       <Form.Group as={Row}>
                         <Form.Label column sm="3">{T("Password")}</Form.Label>
                         <Col sm="8">
-                          <Form.Control as="textarea" rows={3}
-                                        placeholder={T("SMB Share login password")}
-                                        spellCheck="false"
-                                        value={this.props.parameters.target_args.password}
-                                        onChange={e => {
-                                            this.props.parameters.target_args.password = e.target.value;
-                                            this.props.setParameters(this.props.parameters);
-                                        }}
+                          <Form.Control
+                            as="textarea" rows={3}
+                            placeholder={T("SMB Share login password")}
+                            spellCheck="false"
+                            value={this.props.parameters.target_args.password}
+                            onChange={e => {
+                                this.props.parameters.target_args.password = e.target.value;
+                                this.props.setParameters(this.props.parameters);
+                            }}
                           />
                         </Col>
                       </Form.Group>
                       <Form.Group as={Row}>
                         <Form.Label column sm="3">{T("Server Address")}</Form.Label>
                         <Col sm="8">
-                          <Form.Control as="textarea" rows={3}
-                                        placeholder={T("SMB Share address (e.g. \\\\192.168.1.1:445\\Sharename)")}
-                                        spellCheck="false"
-                                        value={this.props.parameters.target_args.server_address}
-                                        onChange={e => {
-                                            this.props.parameters.target_args.server_address = e.target.value;
-                                            this.props.setParameters(this.props.parameters);
-                                        }}
+                          <Form.Control
+                            as="textarea" rows={3}
+                            placeholder={T("SMB Share address (e.g. \\\\192.168.1.1:445\\Sharename)")}
+                            spellCheck="false"
+                            value={this.props.parameters.target_args.server_address}
+                            onChange={e => {
+                                this.props.parameters.target_args.server_address = e.target.value;
+                                this.props.setParameters(this.props.parameters);
+                            }}
                           />
                         </Col>
                       </Form.Group>
                     </>
                   }
-                  { this.props.parameters.target === "Azure" && <>
-                          <Form.Group as={Row}>
-                      <Form.Label column sm="3">{T("Azure SAS URL")}</Form.Label>
-                      <Col sm="8">
-                        <Form.Control as="textarea" rows={3}
-                                      placeholder={T("SAS URL as generated from the Azure console")}
-                                      spellCheck="false"
-                                      value={this.props.parameters.target_args.sas_url}
-                                      onChange={e => {
-                                          this.props.parameters.target_args.sas_url = e.target.value;
-                                          this.props.setParameters(this.props.parameters);
-                                      }}
-                        />
-                      </Col>
-                    </Form.Group></>
+                  { this.props.parameters.target === "Azure" &&
+                    <>
+                      <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("Azure SAS URL")}</Form.Label>
+                        <Col sm="8">
+                          <Form.Control
+                            as="textarea" rows={3}
+                            placeholder={T("SAS URL as generated from the Azure console")}
+                            spellCheck="false"
+                            value={this.props.parameters.target_args.sas_url}
+                            onChange={e => {
+                                this.props.parameters.target_args.sas_url = e.target.value;
+                                this.props.setParameters(this.props.parameters);
+                            }}
+                          />
+                        </Col>
+                      </Form.Group></>
                   }
-                  { this.props.parameters.target === "S3" && <>
-                    <Form.Group as={Row}>
-                      <Form.Label column sm="3">{T("S3 Bucket")}</Form.Label>
-                      <Col sm="8">
-                        <Form.Control as="textarea" rows={3}
-                                      placeholder={T("Bucket name")}
-                                      spellCheck="false"
-                                      value={this.props.parameters.target_args.bucket}
-                                      onChange={e => {
-                                          this.props.parameters.target_args.bucket = e.target.value;
-                                          this.props.setParameters(this.props.parameters);
-                                      }}
-                        />
-                      </Col>
-                    </Form.Group>
+                  { this.props.parameters.target === "S3" &&
+                    <>
+                      <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("S3 Bucket")}</Form.Label>
+                        <Col sm="8">
+                          <Form.Control
+                            as="textarea" rows={3}
+                            placeholder={T("Bucket name")}
+                            spellCheck="false"
+                            value={this.props.parameters.target_args.bucket}
+                            onChange={e => {
+                                this.props.parameters.target_args.bucket = e.target.value;
+                                this.props.setParameters(this.props.parameters);
+                            }}
+                          />
+                        </Col>
+                      </Form.Group>
 
-                    <Form.Group as={Row}>
-                      <Form.Label column sm="3">{T("Credentials Key")}</Form.Label>
-                      <Col sm="8">
-                        <Form.Control as="textarea" rows={3}
-                                      placeholder={T("Credentials Key")}
-                                      spellCheck="false"
-                                      value={this.props.parameters.target_args.credentialsKey}
-                                      onChange={e => {
-                                          this.props.parameters.target_args.credentialsKey = e.target.value;
-                                          this.props.setParameters(this.props.parameters);
-                                      }}
-                        />
-                      </Col>
-                    </Form.Group>
+                      <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("Credentials Key")}</Form.Label>
+                        <Col sm="8">
+                          <Form.Control
+                            as="textarea" rows={3}
+                            placeholder={T("Credentials Key")}
+                            spellCheck="false"
+                            value={this.props.parameters.target_args.credentialsKey}
+                            onChange={e => {
+                                this.props.parameters.target_args.credentialsKey = e.target.value;
+                                this.props.setParameters(this.props.parameters);
+                            }}
+                          />
+                        </Col>
+                      </Form.Group>
 
-                    <Form.Group as={Row}>
-                      <Form.Label column sm="3">{T("Credentials Secret")}</Form.Label>
-                      <Col sm="8">
-                        <Form.Control as="textarea" rows={3}
-                                      placeholder={T("Credentials Secret")}
-                                      spellCheck="false"
-                                      value={this.props.parameters.target_args.credentialsSecret}
-                                      onChange={e => {
-                                          this.props.parameters.target_args.credentialsSecret = e.target.value;
-                                          this.props.setParameters(this.props.parameters);
-                                      }}
-                        />
-                      </Col>
-                    </Form.Group>
-                    <Form.Group as={Row}>
-                      <Form.Label column sm="3">{T("Region")}</Form.Label>
-                      <Col sm="8">
-                        <Form.Control as="textarea" rows={3}
-                                      placeholder={T("Region")}
-                                      spellCheck="false"
-                                      value={this.props.parameters.target_args.region}
-                                      onChange={e => {
-                                          this.props.parameters.target_args.region = e.target.value;
-                                          this.props.setParameters(this.props.parameters);
-                                      }}
-                        />
-                      </Col>
-                    </Form.Group>
-                    <Form.Group as={Row}>
-                      <Form.Label column sm="3">{T("Endpoint")}</Form.Label>
-                      <Col sm="8">
-                        <Form.Control as="textarea" rows={3}
-                                      placeholder={T("Endpoint (blank for AWS)")}
-                                      spellCheck="false"
-                                      value={this.props.parameters.target_args.endpoint}
-                                      onChange={e => {
-                                          this.props.parameters.target_args.endpoint = e.target.value;
-                                          this.props.setParameters(this.props.parameters);
-                                      }}
-                        />
-                      </Col>
-                    </Form.Group>
-                    <Form.Group as={Row}>
-                      <Form.Label column sm="3">{T("Server Side Encryption")}</Form.Label>
-                      <Col sm="8">
-                        <Form.Control as="select"
-                                        value={this.props.parameters.target_args.serverSideEncryption}
-                                        onChange={(e) => {
-                                            this.props.parameters.target_args.serverSideEncryption = e.target.value;
-                                            this.props.setParameters(this.props.parameters);
-                                        }}
-                        >
+                      <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("Credentials Secret")}</Form.Label>
+                        <Col sm="8">
+                          <Form.Control
+                            as="textarea" rows={3}
+                            placeholder={T("Credentials Secret")}
+                            spellCheck="false"
+                            value={this.props.parameters.target_args.credentialsSecret}
+                            onChange={e => {
+                                this.props.parameters.target_args.credentialsSecret = e.target.value;
+                                this.props.setParameters(this.props.parameters);
+                            }}
+                          />
+                        </Col>
+                      </Form.Group>
+                      <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("Region")}</Form.Label>
+                        <Col sm="8">
+                          <Form.Control
+                            as="textarea" rows={3}
+                            placeholder={T("Region")}
+                            spellCheck="false"
+                            value={this.props.parameters.target_args.region}
+                            onChange={e => {
+                                this.props.parameters.target_args.region = e.target.value;
+                                this.props.setParameters(this.props.parameters);
+                            }}
+                          />
+                        </Col>
+                      </Form.Group>
+                      <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("Endpoint")}</Form.Label>
+                        <Col sm="8">
+                          <Form.Control
+                            as="textarea" rows={3}
+                            placeholder={T("Endpoint (blank for AWS)")}
+                            spellCheck="false"
+                            value={this.props.parameters.target_args.endpoint}
+                            onChange={e => {
+                                this.props.parameters.target_args.endpoint = e.target.value;
+                                this.props.setParameters(this.props.parameters);
+                            }}
+                          />
+                        </Col>
+                      </Form.Group>
+                      <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("Server Side Encryption")}</Form.Label>
+                        <Col sm="8">
+                          <Form.Control
+                            as="select"
+                            value={this.props.parameters.target_args.serverSideEncryption}
+                            onChange={(e) => {
+                                this.props.parameters.target_args.serverSideEncryption = e.target.value;
+                                this.props.setParameters(this.props.parameters);
+                            }}
+                          >
                             <option value="">None</option>
                             <option value="aws:kms">aws:kms</option>
                             <option value="AES256">AES256</option>
-                        </Form.Control>
-                      </Col>
-                    </Form.Group>
-                    <Form.Group as={Row}>
+                          </Form.Control>
+                        </Col>
+                      </Form.Group>
+                      <Form.Group as={Row}>
                         <Form.Label column sm="3">{T("Skip Cert Verification")}</Form.Label>
                         <Col sm="8">
-                        <Form.Control as="select"
-                                        value={this.props.parameters.target_args.noverifycert}
-                                        onChange={(e) => {
-                                            this.props.parameters.target_args.noverifycert = e.target.value;
-                                            this.props.setParameters(this.props.parameters);
-                                        }}
-                        >
+                          <Form.Control
+                            as="select"
+                            value={this.props.parameters.target_args.noverifycert}
+                            onChange={(e) => {
+                                this.props.parameters.target_args.noverifycert = e.target.value;
+                                this.props.setParameters(this.props.parameters);
+                            }}
+                          >
                             <option value="N">N</option>
                             <option value="Y">Y</option>
-                        </Form.Control>
+                          </Form.Control>
                         </Col>
-                    </Form.Group>
+                      </Form.Group>
                     </>
                   }
 
-                  { this.props.parameters.target === "SFTP" && <>
-                    <Form.Group as={Row}>
-                    <Form.Label column sm="3">{T("Upload Path")}</Form.Label>
-                      <Col sm="8">
-                        <Form.Control as="textarea" rows={3}
-                                      placeholder={T("Upload Path")}
-                                      spellCheck="false"
-                                      value={this.props.parameters.target_args.path}
-                                      onChange={e => {
-                                          this.props.parameters.target_args.path = e.target.value;
-                                          this.props.setParameters(this.props.parameters);
-                                      }}
-                        />
-                      </Col>
-                    </Form.Group>
-
-                    <Form.Group as={Row}>
-                      <Form.Label column sm="3">{T("Private Key")}</Form.Label>
-                      <Col sm="8">
-                        <Form.Control as="textarea" rows={3}
-                                      placeholder={T("Private Key")}
-                                      spellCheck="false"
-                                      value={this.props.parameters.target_args.privatekey}
-                                      onChange={e => {
-                                          this.props.parameters.target_args.privatekey = e.target.value;
-                                          this.props.setParameters(this.props.parameters);
-                                      }}
-                        />
-                      </Col>
-                    </Form.Group>
-
-                    <Form.Group as={Row}>
-                      <Form.Label column sm="3">{T("User")}</Form.Label>
+                  { this.props.parameters.target === "SFTP" &&
+                    <>
+                      <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("Upload Path")}</Form.Label>
                         <Col sm="8">
-                            <Form.Control as="textarea" rows={3}
-                                          placeholder={T("User")}
-                                    spellCheck="false"
-                                    value={this.props.parameters.target_args.user}
-                                    onChange={e => {
-                                        this.props.parameters.target_args.user = e.target.value;
-                                        this.props.setParameters(this.props.parameters);
-                                    }}
-                        />
-                    </Col>
-                    </Form.Group>
-
-                    <Form.Group as={Row}>
-                      <Form.Label column sm="3">{T("Endpoint")}</Form.Label>
-                        <Col sm="8">
-                        <Form.Control as="textarea" rows={3}
-                                      placeholder={T("Endpoint")}
-                                    spellCheck="false"
-                                    value={this.props.parameters.target_args.endpoint}
-                                    onChange={e => {
-                                        this.props.parameters.target_args.endpoint = e.target.value;
-                                        this.props.setParameters(this.props.parameters);
-                                    }}
-                            />
+                          <Form.Control
+                            as="textarea" rows={3}
+                            placeholder={T("Upload Path")}
+                            spellCheck="false"
+                            value={this.props.parameters.target_args.path}
+                            onChange={e => {
+                                this.props.parameters.target_args.path = e.target.value;
+                                this.props.setParameters(this.props.parameters);
+                            }}
+                          />
                         </Col>
-                    </Form.Group>
+                      </Form.Group>
 
-                    <Form.Group as={Row}>
-                      <Form.Label column sm="3">{T("Host Key")}</Form.Label>
+                      <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("Private Key")}</Form.Label>
                         <Col sm="8">
-                          <Form.Control as="textarea" rows={3}
-                                        placeholder={T("Leave Blank to disable host key checking")}
+                          <Form.Control
+                            as="textarea" rows={3}
+                            placeholder={T("Private Key")}
+                            spellCheck="false"
+                            value={this.props.parameters.target_args.privatekey}
+                            onChange={e => {
+                                this.props.parameters.target_args.privatekey = e.target.value;
+                                this.props.setParameters(this.props.parameters);
+                            }}
+                          />
+                        </Col>
+                      </Form.Group>
+
+                      <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("User")}</Form.Label>
+                        <Col sm="8">
+                          <Form.Control
+                            as="textarea" rows={3}
+                            placeholder={T("User")}
+                            spellCheck="false"
+                            value={this.props.parameters.target_args.user}
+                            onChange={e => {
+                                this.props.parameters.target_args.user = e.target.value;
+                                this.props.setParameters(this.props.parameters);
+                            }}
+                          />
+                        </Col>
+                      </Form.Group>
+
+                      <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("Endpoint")}</Form.Label>
+                        <Col sm="8">
+                          <Form.Control
+                            as="textarea" rows={3}
+                            placeholder={T("Endpoint")}
+                            spellCheck="false"
+                            value={this.props.parameters.target_args.endpoint}
+                            onChange={e => {
+                                this.props.parameters.target_args.endpoint = e.target.value;
+                                this.props.setParameters(this.props.parameters);
+                            }}
+                          />
+                        </Col>
+                      </Form.Group>
+
+                      <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("Host Key")}</Form.Label>
+                        <Col sm="8">
+                          <Form.Control
+                            as="textarea" rows={3}
+                            placeholder={T("Leave Blank to disable host key checking")}
                             spellCheck="false"
                             value={this.props.parameters.target_args.hostkey}
-                                onChange={(e) => {
-                                    this.props.parameters.target_args.hostkey = e.target.value;
-                                    this.props.setParameters(this.props.parameters);
-                                }}
-                            />
-                    </Col>
-                    </Form.Group>
+                            onChange={(e) => {
+                                this.props.parameters.target_args.hostkey = e.target.value;
+                                this.props.setParameters(this.props.parameters);
+                            }}
+                          />
+                        </Col>
+                      </Form.Group>
                     </>
                   }
 
                   <Form.Group as={Row}>
                     <Form.Label column sm="3">{T("Velociraptor Binary")}</Form.Label>
                     <Col sm="8">
-                       <ToolViewer name={tool_name_lookup[this.props.parameters.target_os]}/>
+                      <ToolViewer name={tool_name_lookup[this.props.parameters.target_os]}/>
                     </Col>
                   </Form.Group>
                   <Form.Group as={Row}>
-                      <Form.Label column sm="3">{T("Temp directory")}</Form.Label>
+                    <Form.Label column sm="3">{T("Temp directory")}</Form.Label>
                     <Col sm="8">
-                      <Form.Control as="input"
-                                    placeholder={T("Temp location")}
-                                    spellCheck="false"
-                                    value={this.props.parameters.opt_tempdir}
-                                    onChange={e => {
-                                        this.props.parameters.opt_tempdir = e.target.value;
-                                        this.props.setParameters(this.props.parameters);
-                                    }}
+                      <Form.Control
+                        as="input"
+                        placeholder={T("Temp location")}
+                        spellCheck="false"
+                        value={this.props.parameters.opt_tempdir}
+                        onChange={e => {
+                            this.props.parameters.opt_tempdir = e.target.value;
+                            this.props.setParameters(this.props.parameters);
+                        }}
                       />
                     </Col>
                   </Form.Group>
@@ -453,31 +479,51 @@ class OfflineCollectorParameters  extends React.Component {
                   </Form.Group>
 
                   <Form.Group as={Row}>
-                      <Form.Label column sm="3">{T("Output format")}</Form.Label>
+                    <Form.Label column sm="3">{T("Output format")}</Form.Label>
                     <Col sm="8">
-                      <Form.Control as="select"
-                                    value={this.props.parameters.opt_format}
-                                    onChange={(e) => {
-                                        this.props.parameters.opt_format = e.target.value;
-                                        this.props.setParameters(this.props.parameters);
-                                    }}
+                      <Form.Control
+                        as="select"
+                        value={this.props.parameters.opt_format}
+                        onChange={(e) => {
+                            this.props.parameters.opt_format = e.target.value;
+                            this.props.setParameters(this.props.parameters);
+                        }}
                       >
-                          <option value="jsonl">JSON</option>
-                          <option value="csv">{T("CSV and JSON")}</option>
+                        <option value="jsonl">JSON</option>
+                        <option value="csv">{T("CSV and JSON")}</option>
                       </Form.Control>
                     </Col>
                   </Form.Group>
                   <Form.Group as={Row}>
-                      <Form.Label column sm="3">{T("Output Prefix")}</Form.Label>
+                    <Form.Label column sm="3">{T("Pause For Prompt")}</Form.Label>
                     <Col sm="8">
-                      <Form.Control as="input"
-                                    placeholder={T("Output filename prefix")}
-                                    spellCheck="false"
-                                    value={this.props.parameters.opt_output_directory}
-                                    onChange={e => {
-                                        this.props.parameters.opt_output_directory = e.target.value;
-                                        this.props.setParameters(this.props.parameters);
-                                    }}
+                      <Form.Check
+                        type="checkbox"
+                        onChange={(e) => {
+                            if (e.currentTarget.checked) {
+                                this.props.parameters.opt_prompt = "Y";
+                            } else {
+                                this.props.parameters.opt_prompt = "N";
+                            }
+                            this.props.setParameters(this.props.parameters);
+                        }}
+                        checked={this.props.parameters.opt_prompt === "Y"}
+                      >
+                      </Form.Check>
+                    </Col>
+                  </Form.Group>
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">{T("Output Prefix")}</Form.Label>
+                    <Col sm="8">
+                      <Form.Control
+                        as="input"
+                        placeholder={T("Output filename prefix")}
+                        spellCheck="false"
+                        value={this.props.parameters.opt_output_directory}
+                        onChange={e => {
+                            this.props.parameters.opt_output_directory = e.target.value;
+                            this.props.setParameters(this.props.parameters);
+                        }}
                       />
                     </Col>
                   </Form.Group>
@@ -555,12 +601,12 @@ class OfflineCollectionResources extends React.Component {
         return (
             <>
               <Modal.Header closeButton>
-                  <Modal.Title>{ T(this.props.paginator.title) }</Modal.Title>
+                <Modal.Title>{ T(this.props.paginator.title) }</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <Form>
                   <Form.Group as={Row}>
-                      <Form.Label column sm="3">{T("CPU Limit Percent")}</Form.Label>
+                    <Form.Label column sm="3">{T("CPU Limit Percent")}</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder={this.getCpuLimit(this.props.artifacts)}
@@ -575,7 +621,7 @@ class OfflineCollectionResources extends React.Component {
                   </Form.Group>
 
                   <Form.Group as={Row}>
-                      <Form.Label column sm="3">{T("Max Execution Time in Seconds")}</Form.Label>
+                    <Form.Label column sm="3">{T("Max Execution Time in Seconds")}</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
                         placeholder={this.getTimeout(this.props.artifacts)}
@@ -589,7 +635,7 @@ class OfflineCollectionResources extends React.Component {
                     <Form.Label column sm="3">Max Idle Time in Seconds</Form.Label>
                     <Col sm="8">
                       <ValidatedInteger
-                          placeholder={T("If set collection will be terminated after this many seconds with no progress.")}
+                        placeholder={T("If set collection will be terminated after this many seconds with no progress.")}
                         value={resources.progress_timeout}
                         setInvalid={value => this.setState({invalid_3: value})}
                         setValue={value => this.props.setResources({
@@ -600,7 +646,7 @@ class OfflineCollectionResources extends React.Component {
                 </Form>
               </Modal.Body>
               <Modal.Footer>
-            { this.props.paginator.makePaginator({
+                { this.props.paginator.makePaginator({
                     props: this.props,
                     isFocused: this.isInvalid(),
                 }) }
@@ -645,12 +691,13 @@ export default class OfflineCollectorWizard extends React.Component {
             pubkey: "",
             encryption_scheme: "None",
             encryption_args: {
-              public_key: "",
-              password: ""
+                public_key: "",
+                password: ""
             },
             opt_level: 5,
             opt_output_directory: "",
             opt_format: "jsonl",
+            opt_prompt: "N",
         },
         resources: {},
     }
@@ -683,7 +730,7 @@ export default class OfflineCollectorWizard extends React.Component {
         env.push({key: "encryption_args", value: JSON.stringify(this.state.collector_parameters.encryption_args)});
         env.push({key: "opt_verbose", value: "Y"});
         env.push({key: "opt_banner", value: "Y"});
-        env.push({key: "opt_prompt", value: "N"});
+        env.push({key: "opt_prompt", value: this.state.collector_parameters.opt_prompt});
         env.push({key: "opt_admin", value: "Y"});
         env.push({key: "opt_tempdir", value: this.state.collector_parameters.opt_tempdir});
         env.push({key: "opt_level", value: this.state.collector_parameters.opt_level.toString()});
@@ -753,62 +800,65 @@ export default class OfflineCollectorWizard extends React.Component {
                    enforceFocus={false}
                    scrollable={true}
                    onHide={this.props.onCancel}>
-              <HotKeys keyMap={keymap} handlers={handlers}><ObserveKeys>
-              <StepWizard ref={n=>this.step=n}>
-                <NewCollectionSelectArtifacts
-                  paginator={new OfflinePaginator(
-                      "Select Artifacts",
-                      "Create Offline collector: Select artifacts to collect",
-                      (isFocused, step) => {
-                          return isFocused;
-                      })}
-                  artifacts={this.state.artifacts}
-                  artifactType="CLIENT"
-                  setParameters={this.setParameters}
-                  setArtifacts={this.setArtifacts}/>
+              <HotKeys keyMap={keymap}
+                       handlers={handlers}>
+                <ObserveKeys>
+                  <StepWizard ref={n=>this.step=n}>
+                    <NewCollectionSelectArtifacts
+                      paginator={new OfflinePaginator(
+                          "Select Artifacts",
+                          "Create Offline collector: Select artifacts to collect",
+                          (isFocused, step) => {
+                              return isFocused;
+                          })}
+                      artifacts={this.state.artifacts}
+                      artifactType="CLIENT"
+                      setParameters={this.setParameters}
+                      setArtifacts={this.setArtifacts}/>
 
-                <NewCollectionConfigParameters
-                  parameters={this.state.parameters}
-                  setParameters={this.setParameters}
-                  artifacts={this.state.artifacts}
-                  setArtifacts={this.setArtifacts}
-                  paginator={new OfflinePaginator(
-                      "Configure Parameters",
-                      "Create Offline Collector: Configure artifact parameters")}
-                />
+                    <NewCollectionConfigParameters
+                      parameters={this.state.parameters}
+                      setParameters={this.setParameters}
+                      artifacts={this.state.artifacts}
+                      setArtifacts={this.setArtifacts}
+                      paginator={new OfflinePaginator(
+                          "Configure Parameters",
+                          "Create Offline Collector: Configure artifact parameters")}
+                    />
 
-                <OfflineCollectorParameters
-                  setParameters={(x) => this.setState({collector_parameters: x})}
-                  parameters={this.state.collector_parameters}
-                  paginator={new OfflinePaginator(
-                      "Configure Collection",
-                      "Create Offline Collector: Configure collector")}
-                />
+                    <OfflineCollectorParameters
+                      setParameters={(x) => this.setState({collector_parameters: x})}
+                      parameters={this.state.collector_parameters}
+                      paginator={new OfflinePaginator(
+                          "Configure Collection",
+                          "Create Offline Collector: Configure collector")}
+                    />
 
-                <OfflineCollectionResources
-                  artifacts={this.state.artifacts}
-                  resources={this.state.resources}
-                  paginator={new OfflinePaginator(
-                      "Specify Resources",
-                      "New Collection: Specify Resources")}
-                  setResources={this.setResources} />
+                    <OfflineCollectionResources
+                      artifacts={this.state.artifacts}
+                      resources={this.state.resources}
+                      paginator={new OfflinePaginator(
+                          "Specify Resources",
+                          "New Collection: Specify Resources")}
+                      setResources={this.setResources} />
 
-                <NewCollectionRequest
-                  paginator={new OfflinePaginator(
-                      "Review",
-                      "Create Offline Collector: Review request")}
-                  request={this.prepareRequest()} />
+                    <NewCollectionRequest
+                      paginator={new OfflinePaginator(
+                          "Review",
+                          "Create Offline Collector: Review request")}
+                      request={this.prepareRequest()} />
 
-                <NewCollectionLaunch
-                  artifacts={this.state.artifacts}
-                  tools={extra_tools}
-                  paginator={new OfflinePaginator(
-                      "Launch",
-                      "Create Offline Collector: Create collector")}
-                  launch={this.launch} />
+                    <NewCollectionLaunch
+                      artifacts={this.state.artifacts}
+                      tools={extra_tools}
+                      paginator={new OfflinePaginator(
+                          "Launch",
+                          "Create Offline Collector: Create collector")}
+                      launch={this.launch} />
 
-              </StepWizard>
-              </ObserveKeys></HotKeys>
+                  </StepWizard>
+                </ObserveKeys>
+              </HotKeys>
             </Modal>
         );
     }
