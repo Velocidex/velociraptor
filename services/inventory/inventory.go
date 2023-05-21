@@ -586,6 +586,11 @@ func NewInventoryService(
 	}
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
+	if config_obj.Defaults != nil &&
+		config_obj.Defaults.DisableInventoryServiceExternalAccess {
+		inventory_service.Client = DummyHTTPClient{}
+	}
+
 	// If we are not the root inventory we need to delegate any
 	// unknown tools to the root inventory.
 	if !utils.IsRootOrg(config_obj.OrgId) {
