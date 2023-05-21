@@ -21,9 +21,11 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -173,6 +175,11 @@ func AutoDev() error {
 // Mac.
 func Release() error {
 	err := Clean()
+	if err != nil {
+		return err
+	}
+
+	err = UpdateDependentTools()
 	if err != nil {
 		return err
 	}
@@ -400,7 +407,23 @@ func build_gui_files() error {
 		return err
 	}
 
-	return sh.RunV("npm", "run", "build")
+	err = sh.RunV("npm", "run", "build")
+	if err != nil {
+		return err
+	}
+
+	// Recreate the keep files since sometimes they get removed.
+	for _, keep_path := range []string{
+		"build/.keep",
+	} {
+		os.MkdirAll(path.Dir(keep_path), 0600)
+
+		fd, err := os.OpenFile(keep_path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		if err == nil {
+			fd.Close()
+		}
+	}
+	return nil
 }
 
 func flags() string {
@@ -497,4 +520,30 @@ func timestamp_of(path string) int64 {
 	}
 
 	return stat.ModTime().UnixNano()
+}
+
+func UpdateDependentTools() error {
+	template := "artifacts/definitions/Server/Internal/ToolDependencies.tmpl"
+	fd, err := os.Open(template)
+	if err != nil {
+		return err
+	}
+	defer fd.Close()
+
+	data, err := ioutil.ReadAll(fd)
+	if err != nil {
+		return err
+	}
+
+	outfile := strings.ReplaceAll(template, "tmpl", "yaml")
+	outfd, err := os.OpenFile(outfile,
+		os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return err
+	}
+	defer outfd.Close()
+
+	_, err = outfd.Write(
+		bytes.ReplaceAll(data, []byte("<VERSION>"), []byte(constants.VERSION)))
+	return err
 }

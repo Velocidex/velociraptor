@@ -98,6 +98,8 @@ func (self RepackFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	// If arg.Version is not specified we select the latest version
+	// available.
 	exe_bytes, err := readExeFile(ctx, config_obj, scope,
 		arg.Exe, arg.Accessor, arg.Target, arg.Version)
 	if err != nil {
@@ -196,7 +198,9 @@ func readExeFile(
 		return ioutil.ReadAll(fd)
 	}
 
-	// Fetch the tool definition
+	// Fetch the tool definition. NOTE: The definitions are in the
+	// Server.Internal.ToolDependencies artifact and will become
+	// available as soon as that artifact is compiled.
 	inventory, err := services.GetInventory(config_obj)
 	if err != nil {
 		return nil, err

@@ -108,6 +108,8 @@ if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
 let api_handlers = base_path + "/api/";
 
 const handle_error = err=>{
+    console.log(err);
+
     if (isCancel(err)) {
         return {data: {}, cancel: true};
     };
@@ -115,7 +117,8 @@ const handle_error = err=>{
     if (err.response && err.response.status === 401) {
         const redirectTemplate = window.globals.AuthRedirectTemplate || "";
         if (redirectTemplate !== "") {
-            const instantiatedTemplate = redirectTemplate.replaceAll('%LOCATION%', encodeURIComponent(window.location.href));
+            const instantiatedTemplate = redirectTemplate.replaceAll(
+                '%LOCATION%', encodeURIComponent(window.location.href));
             window.location.assign(instantiatedTemplate);
             return {data: {}, cancel: false};
         }
