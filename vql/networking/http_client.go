@@ -438,15 +438,16 @@ func (self *_HttpPlugin) Call(
 			n, err := io.ReadFull(http_resp.Body, buf)
 			if n > 0 {
 				response.Content = string(buf[:n])
-				select {
-				case <-ctx.Done():
-					return
-				case output_chan <- response:
-				}
+			} else if err == io.EOF {
+				response.Content = ""
+			} else if err != nil {
+				break
 			}
 
-			if err == io.EOF {
-				break
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- response:
 			}
 
 			if err != nil {
