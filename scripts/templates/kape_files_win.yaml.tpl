@@ -28,8 +28,8 @@ parameters:
     type: bool
     default: Y
   - name: Device
-    description: Name of the drive letter to search.
-    default: "C:"
+    description: Name of the drive letter to search. You can add multiple drives separated with a comma.
+    default: "C:,D:"
   - name: VSSAnalysis
     type: bool
     default:
@@ -81,7 +81,7 @@ sources:
 
       -- Call the generic VSS file collector with the globs we want in
       -- a new CSV file.
-      LET all_results <= SELECT * FROM if(
+      LET all_results_from_device(Device) = SELECT * FROM if(
            condition=VSSAnalysis,
            then={
              SELECT * FROM chain(async=TRUE,
@@ -118,6 +118,14 @@ sources:
                       collectionSpec=rule_specs_lazy_ntfs)
                })
            })
+
+      // This materializes all the files into memory and then into
+      // a tempfile if the list is too long.
+      LET all_results <= SELECT * FROM foreach(
+        row=split(string=Device, sep="\\s*,\\s*"),
+        query={
+          SELECT * FROM all_results_from_device(Device=_value)
+        })
 
       SELECT * FROM all_results WHERE _Source =~ "Metadata"
 
