@@ -43,8 +43,9 @@ sources:
       -- Generate the collection globs for each device
       LET specs = SELECT RootPath + Glob AS Glob
             FROM collectionSpec
-            WHERE log(message=format(format="Processing Device %v with %v: %v",
-                      args=[Root, Accessor, Glob]))
+            WHERE log(message=format(
+               format="Processing Device %v with %v: glob is %v",
+               args=[Root, Accessor, Glob]))
 
       -- Join all the collection rules into a single Glob plugin. This ensure we
       -- only make one pass over the filesystem. We only want LFNs.
