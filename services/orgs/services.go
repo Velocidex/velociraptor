@@ -427,6 +427,20 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		service_container.mu.Unlock()
 	}
 
+	// Inventory service needs to start before we import built in
+	// artifacts so they can add their tool dependencies.
+	if spec.InventoryService {
+		i, err := inventory.NewInventoryService(
+			ctx, wg, org_config)
+		if err != nil {
+			return err
+		}
+
+		service_container.mu.Lock()
+		service_container.inventory = i
+		service_container.mu.Unlock()
+	}
+
 	if spec.RepositoryManager {
 		repo_manager, err := repository.NewRepositoryManager(
 			ctx, wg, org_config)
@@ -480,18 +494,6 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 
 		service_container.mu.Lock()
 		service_container.repository = repo_manager
-		service_container.mu.Unlock()
-	}
-
-	if spec.InventoryService {
-		i, err := inventory.NewInventoryService(
-			ctx, wg, org_config)
-		if err != nil {
-			return err
-		}
-
-		service_container.mu.Lock()
-		service_container.inventory = i
 		service_container.mu.Unlock()
 	}
 

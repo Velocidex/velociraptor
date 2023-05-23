@@ -80,7 +80,7 @@ require (
 	github.com/xor-gate/debpkg v1.0.0
 	go.starlark.net v0.0.0-20221010140840-6bf6f0955179
 	golang.org/x/crypto v0.9.0
-	golang.org/x/mod v0.8.0
+	golang.org/x/mod v0.10.0
 	golang.org/x/net v0.10.0
 	golang.org/x/sys v0.8.0
 	golang.org/x/text v0.9.0 // indirect

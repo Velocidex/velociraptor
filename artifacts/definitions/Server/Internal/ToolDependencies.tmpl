@@ -1,0 +1,35 @@
+name: Server.Internal.ToolDependencies
+description: |
+  An internal artifact that defines some tool
+  depenencies. Velociraptor releases for offline collector
+
+tools:
+  - name: VelociraptorWindows
+    url: https://github.com/Velocidex/velociraptor/releases/download/v<VERSION>/velociraptor-v<VERSION>-windows-amd64.exe
+    serve_locally: true
+    version: <VERSION>
+
+  - name: VelociraptorWindows_x86
+    url: https://github.com/Velocidex/velociraptor/releases/download/v<VERSION>/velociraptor-v<VERSION>-windows-386.exe
+    serve_locally: true
+    version: <VERSION>
+
+  - name: VelociraptorLinux
+    url: https://github.com/Velocidex/velociraptor/releases/download/v<VERSION>/velociraptor-v<VERSION>-linux-amd64-musl
+    serve_locally: true
+    version: <VERSION>
+
+  - name: VelociraptorDarwin
+    url: https://github.com/Velocidex/velociraptor/releases/download/v<VERSION>/velociraptor-v<VERSION>-darwin-amd64
+    serve_locally: true
+    version: <VERSION>
+
+  - name: VelociraptorWindowsMSI
+    url: https://github.com/Velocidex/velociraptor/releases/download/v<VERSION>/velociraptor-v<VERSION>-windows-amd64.msi
+    serve_locally: true
+    version: <VERSION>
+
+  - name: VelociraptorWindows_x86MSI
+    url: https://github.com/Velocidex/velociraptor/releases/download/v<VERSION>/velociraptor-v<VERSION>-windows-386.msi
+    serve_locally: true
+    version: <VERSION>

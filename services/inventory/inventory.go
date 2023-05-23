@@ -75,11 +75,21 @@ type githubAssets struct {
 }
 
 type InventoryService struct {
-	mu       sync.Mutex
+	mu sync.Mutex
+
+	// An index of all tools keyed by name, version. These tools are
+	// possibly materialized or updated by the user and contain more
+	// information than the original definition within the artifact.
 	binaries *artifacts_proto.ThirdParty
+
+	// An index of all original definitions keyed by tool name and
+	// version. It is possible to reset the definitions in `binaries`
+	// above with one of these original definitions.
 	versions map[string][]*artifacts_proto.Tool
-	Client   networking.HTTPClient
-	Clock    utils.Clock
+
+	// A HTTPClient that is used to download tools automatically.
+	Client networking.HTTPClient
+	Clock  utils.Clock
 
 	// The parent is the inventory service of the root org. The root
 	// org maintain the parent's repository and takes the default
@@ -106,6 +116,8 @@ func (self *InventoryService) ClearForTests() {
 func (self *InventoryService) ProbeToolInfo(
 	ctx context.Context, config_obj *config_proto.Config,
 	name, version string) (*artifacts_proto.Tool, error) {
+
+	var match *artifacts_proto.Tool
 	for _, tool := range self.Get().Tools {
 		// If version is specified we look for the exact tool version
 		if version != "" {
@@ -115,10 +127,23 @@ func (self *InventoryService) ProbeToolInfo(
 			continue
 		}
 
-		// Otherwise any version of the tool will do
-		if tool.Name == name {
-			return self.AddAllVersions(ctx, config_obj, tool), nil
+		if tool.Name != name {
+			continue
 		}
+
+		// Otherwise get the latest version available
+		if match == nil {
+			match = tool
+			continue
+		}
+
+		if utils.CompareVersions(match.Version, tool.Version) < 0 {
+			match = tool
+		}
+	}
+
+	if match != nil {
+		return self.AddAllVersions(ctx, config_obj, match), nil
 	}
 
 	if self.parent != nil {
@@ -161,6 +186,14 @@ func (self *InventoryService) AddAllVersions(
 	return self.addAllVersions(ctx, config_obj, tool)
 }
 
+// The same tool may be defined in multiple artifacts and these
+// definitions may be different. This function collects all compatible
+// definitions into the Tool protobuf. This gives us a list of all
+// definitions of the tool.
+//
+// Compatible definitions are those with the same name and version.
+// The user may select one of these definitions to be used by all
+// artifacts.
 func (self *InventoryService) addAllVersions(
 	ctx context.Context, config_obj *config_proto.Config,
 	tool *artifacts_proto.Tool) *artifacts_proto.Tool {
@@ -168,7 +201,12 @@ func (self *InventoryService) addAllVersions(
 
 	versions, _ := self.versions[tool.Name]
 	result.Versions = nil
+
 	for _, v := range versions {
+		if tool.Version != "" && tool.Version != v.Version {
+			continue
+		}
+
 		result.Versions = append(result.Versions, v)
 	}
 
@@ -188,21 +226,37 @@ func (self *InventoryService) GetToolInfo(
 		self.binaries = &artifacts_proto.ThirdParty{}
 	}
 
+	// If a version is not specified, we need to sort the tools by
+	// semantic version so we get the latest version available.
+	var match *artifacts_proto.Tool
 	for _, item := range self.binaries.Tools {
 		if item.Name != tool {
 			continue
 		}
 
-		if version != "" && version != item.Version {
+		if version != "" && version == item.Version {
+			match = item
+			break
+		}
+
+		// Look for the largest version available
+		if match == nil {
+			match = item
 			continue
 		}
 
+		if utils.CompareVersions(match.Version, item.Version) < 0 {
+			match = item
+		}
+	}
+
+	if match != nil {
 		// Currently we require to know all tool's hashes. If the hash
 		// is missing then the tool is not tracked. We have to
 		// materialize it in order to track it.
-		if item.Hash == "" {
+		if match.Hash == "" {
 			// Try to download the item.
-			err := self.materializeTool(ctx, config_obj, item)
+			err := self.materializeTool(ctx, config_obj, match)
 			if err != nil {
 				return nil, err
 			}
@@ -210,7 +264,7 @@ func (self *InventoryService) GetToolInfo(
 
 		// Already holding the mutex here - call the lock free
 		// version.
-		return self.addAllVersions(ctx, config_obj, item), nil
+		return self.addAllVersions(ctx, config_obj, match), nil
 	}
 
 	return nil, fmt.Errorf("Tool %v not declared in inventory.", tool)

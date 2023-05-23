@@ -5,31 +5,31 @@ description: |
 
 tools:
   - name: VelociraptorWindows
-    url: https://github.com/Velocidex/velociraptor/releases/download/v0.6.9-rc1/velociraptor-v0.6.9-rc1-windows-amd64.exe
+    url: https://github.com/Velocidex/velociraptor/releases/download/v0.6.9/velociraptor-v0.6.9-windows-amd64.exe
     serve_locally: true
-    version: 0.6.9-rc1
+    version: 0.6.9
 
   - name: VelociraptorWindows_x86
-    url: https://github.com/Velocidex/velociraptor/releases/download/v0.6.9-rc1/velociraptor-v0.6.9-rc1-windows-386.exe
+    url: https://github.com/Velocidex/velociraptor/releases/download/v0.6.9/velociraptor-v0.6.9-windows-386.exe
     serve_locally: true
-    version: 0.6.9-rc1
+    version: 0.6.9
 
   - name: VelociraptorLinux
-    url: https://github.com/Velocidex/velociraptor/releases/download/v0.6.9-rc1/velociraptor-v0.6.9-rc1-linux-amd64-musl
+    url: https://github.com/Velocidex/velociraptor/releases/download/v0.6.9/velociraptor-v0.6.9-linux-amd64-musl
     serve_locally: true
-    version: 0.6.9-rc1
+    version: 0.6.9
 
   - name: VelociraptorDarwin
-    url: https://github.com/Velocidex/velociraptor/releases/download/v0.6.9-rc1/velociraptor-v0.6.9-rc1-darwin-amd64
+    url: https://github.com/Velocidex/velociraptor/releases/download/v0.6.9/velociraptor-v0.6.9-darwin-amd64
     serve_locally: true
-    version: 0.6.9-rc1
+    version: 0.6.9
 
   - name: VelociraptorWindowsMSI
-    url: https://github.com/Velocidex/velociraptor/releases/download/v0.6.9-rc1/velociraptor-v0.6.9-rc1-windows-amd64.msi
+    url: https://github.com/Velocidex/velociraptor/releases/download/v0.6.9/velociraptor-v0.6.9-windows-amd64.msi
     serve_locally: true
-    version: 0.6.9-rc1
+    version: 0.6.9
 
   - name: VelociraptorWindows_x86MSI
-    url: https://github.com/Velocidex/velociraptor/releases/download/v0.6.9-rc1/velociraptor-v0.6.9-rc1-windows-386.msi
+    url: https://github.com/Velocidex/velociraptor/releases/download/v0.6.9/velociraptor-v0.6.9-windows-386.msi
     serve_locally: true
-    version: 0.6.9-rc1
+    version: 0.6.9
