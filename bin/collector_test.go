@@ -189,6 +189,7 @@ func (self *CollectorTestSuite) uploadToolDefinitions() {
 	for _, os_name := range []string{"Windows", "Windows_x86", "Linux", "Darwin"} {
 		cmd := exec.Command(self.binary, "--config", self.config_file,
 			"tools", "upload", "--name", "Velociraptor"+os_name,
+			"--tool_version", constants.VERSION,
 			self.config_file)
 		out, err := cmd.CombinedOutput()
 		fmt.Println(string(out))
@@ -197,7 +198,9 @@ func (self *CollectorTestSuite) uploadToolDefinitions() {
 
 	// Upload the real thing for the architecture we are running on.
 	cmd := exec.Command(self.binary, "--config", self.config_file,
-		"tools", "upload", "--name", "Velociraptor"+self.OS_TYPE, self.binary)
+		"tools", "upload", "--name", "Velociraptor"+self.OS_TYPE,
+		"--tool_version", constants.VERSION,
+		self.binary)
 	out, err := cmd.CombinedOutput()
 	fmt.Println(string(out))
 	require.NoError(t, err)

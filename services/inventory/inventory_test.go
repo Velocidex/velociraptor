@@ -578,6 +578,140 @@ func (self *ServicesTestSuite) TestMultipleVersions() {
 	assert.False(self.T(), tool.ServeLocally)
 }
 
+func (self *ServicesTestSuite) TestMultipleSemanticVersions() {
+	// Define a new artifact that requires a new tool
+	self.LoadArtifacts(`
+name: TestArtifactSemver1
+tools:
+- name: SampleToolSemver
+  url: http://www.example.com/SampleTool0.6.5.exe
+  version: "0.6.5"
+sources:
+- query: SELECT Version065 FROM scope()
+`, `
+name: TestArtifactSemver2
+tools:
+- name: SampleToolSemver
+  url: http://www.example.com/SampleTool0.6.5-rc2.exe
+  version: "0.6.5-rc2"
+sources:
+- query: SELECT Version065_rc2 FROM scope()
+`, `
+name: TestArtifactSemverNoVersion
+tools:
+- name: SampleToolSemver
+sources:
+- query: SELECT HighestVersion FROM scope()
+`, `
+name: TestArtifactConflictingVersion
+tools:
+- name: SampleToolSemver
+  url: http://www.example.com/ConflictingVersion.exe
+  version: "0.6.5-rc2"
+sources:
+- query: SELECT Version065_rc2 FROM scope()
+`)
+
+	self.mock = &MockClient{
+		responses: map[string]string{
+			"http://www.example.com/SampleTool0.6.5.exe":     "File Content 1",
+			"http://www.example.com/SampleTool0.6.5-rc2.exe": "File Content 2",
+		},
+	}
+
+	inventory_service, err := services.GetInventory(self.ConfigObj)
+	assert.NoError(self.T(), err)
+	inventory_service.(*inventory.InventoryService).Client = self.mock
+
+	// Tools are only loaded when we compile the artifact since they are lazy.
+	launcher, err := services.GetLauncher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	repository, err := manager.GetGlobalRepository(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	response, err := launcher.CompileCollectorArgs(
+		self.Ctx, self.ConfigObj, acl_managers.NullACLManager{}, repository,
+		services.CompilerOptions{},
+		&flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{
+				"TestArtifactSemver1",
+				"TestArtifactSemver2",
+				"TestArtifactSemverNoVersion",
+				"TestArtifactConflictingVersion",
+			},
+		})
+	assert.NoError(self.T(), err)
+
+	// When an artifact defines a tool with a version they will
+	// automatically use the version defined in that artifact.
+	assert.Contains(self.T(), response[0].Query[0].VQL, "Version065")
+	assert.Contains(self.T(), response[0].Env[1].Value, "SampleTool0.6.5.exe")
+
+	assert.Contains(self.T(), response[1].Query[0].VQL, "Version065_rc2")
+	assert.Contains(self.T(), response[1].Env[1].Value, "SampleTool0.6.5-rc2.exe")
+
+	// If an artifact does not specify the version it will pick the
+	// highest known version.
+	assert.Contains(self.T(), response[2].Query[0].VQL, "HighestVersion")
+	assert.Contains(self.T(), response[2].Env[1].Value, "SampleTool0.6.5.exe")
+
+	// When no version is specified gets the latest version
+	tool, err := inventory_service.ProbeToolInfo(
+		self.Ctx, self.ConfigObj, "SampleToolSemver", "")
+	assert.NoError(self.T(), err)
+
+	// Make sure we get the latest version (0.6.5 is later than 0.6.5-rc2)
+	assert.Equal(self.T(), tool.Version, "0.6.5")
+	assert.Equal(self.T(), tool.Filename, "SampleTool0.6.5.exe")
+
+	tool, err = inventory_service.GetToolInfo(
+		self.Ctx, self.ConfigObj, "SampleToolSemver", "")
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), tool.Version, "0.6.5")
+	assert.Equal(self.T(), tool.Filename, "SampleTool0.6.5.exe")
+
+	// But we can still explicitely get the old version if we wanted to
+	tool, err = inventory_service.GetToolInfo(
+		self.Ctx, self.ConfigObj, "SampleToolSemver", "0.6.5-rc2")
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), tool.Version, "0.6.5-rc2")
+	assert.Equal(self.T(), tool.Filename, "SampleTool0.6.5-rc2.exe")
+
+	// 0.6.5-rc2 has two conflicting versions, the Tool description
+	// should show both but not show any other version.
+	assert.Equal(self.T(), 2, len(tool.Versions))
+
+	// The active tool is defined in TestArtifactSemver2
+	assert.Equal(self.T(), "TestArtifactSemver2", tool.Artifact)
+
+	golden := ordereddict.NewDict().Set("Original Version", tool)
+
+	// Now simulate the user overriding the active version in the GUI.
+	err = inventory_service.AddTool(self.Ctx, self.ConfigObj,
+		tool.Versions[1], services.ToolOptions{
+			ArtifactDefinition: true,
+		})
+	assert.NoError(self.T(), err)
+
+	tool, err = inventory_service.GetToolInfo(
+		self.Ctx, self.ConfigObj, "SampleToolSemver", "0.6.5-rc2")
+	assert.NoError(self.T(), err)
+
+	// The active tool is defined in TestArtifactSemver2
+	assert.Equal(self.T(), "TestArtifactConflictingVersion", tool.Artifact)
+
+	golden.Set("Updated Version", tool)
+
+	goldie.Assert(self.T(), "TestMultipleSemanticVersions",
+		json.MustMarshalIndent(golden))
+}
+
 // Multiple artifacts with different versions
 func (self *ServicesTestSuite) TestMultipleVersionsInArtifacts() {
 	// Define a new artifact that requires a new tool

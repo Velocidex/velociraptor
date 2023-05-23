@@ -1,0 +1,50 @@
+{
+ "Original Version": {
+  "name": "SampleToolSemver",
+  "url": "http://www.example.com/SampleTool0.6.5-rc2.exe",
+  "version": "0.6.5-rc2",
+  "artifact": "TestArtifactSemver2",
+  "filestore_path": "2f30b410203dd2aec421b39bad6e2d4f998d8087756d171c22538d40f8a8f559",
+  "serve_url": "http://www.example.com/SampleTool0.6.5-rc2.exe",
+  "filename": "SampleTool0.6.5-rc2.exe",
+  "hash": "b332d130486721123a6dd44f8216b105c632b68db2d80a11aecadf064dc3bceb",
+  "versions": [
+   {
+    "name": "SampleToolSemver",
+    "url": "http://www.example.com/SampleTool0.6.5-rc2.exe",
+    "version": "0.6.5-rc2",
+    "artifact": "TestArtifactSemver2"
+   },
+   {
+    "name": "SampleToolSemver",
+    "url": "http://www.example.com/ConflictingVersion.exe",
+    "version": "0.6.5-rc2",
+    "artifact": "TestArtifactConflictingVersion"
+   }
+  ]
+ },
+ "Updated Version": {
+  "name": "SampleToolSemver",
+  "url": "http://www.example.com/ConflictingVersion.exe",
+  "version": "0.6.5-rc2",
+  "artifact": "TestArtifactConflictingVersion",
+  "filestore_path": "2f30b410203dd2aec421b39bad6e2d4f998d8087756d171c22538d40f8a8f559",
+  "serve_url": "http://www.example.com/ConflictingVersion.exe",
+  "filename": "ConflictingVersion.exe",
+  "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "versions": [
+   {
+    "name": "SampleToolSemver",
+    "url": "http://www.example.com/SampleTool0.6.5-rc2.exe",
+    "version": "0.6.5-rc2",
+    "artifact": "TestArtifactSemver2"
+   },
+   {
+    "name": "SampleToolSemver",
+    "url": "http://www.example.com/ConflictingVersion.exe",
+    "version": "0.6.5-rc2",
+    "artifact": "TestArtifactConflictingVersion"
+   }
+  ]
+ }
+}
