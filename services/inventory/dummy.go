@@ -371,3 +371,9 @@ func NewInventoryDummyService(
 
 	return inventory_service, nil
 }
+
+type DummyHTTPClient struct{}
+
+func (self DummyHTTPClient) Do(req *http.Request) (*http.Response, error) {
+	return nil, errors.New("External tool access is disabled on this server. You can try to manually upload tools in the Tool Setup GUI")
+}
