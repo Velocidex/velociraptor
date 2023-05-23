@@ -5,6 +5,7 @@ import React, { Component } from 'react';
 import { formatColumns } from "../core/table.jsx";
 import T from '../i8n/i8n.jsx';
 import Card from 'react-bootstrap/Card';
+import Button from 'react-bootstrap/Button';
 
 import api from '../core/api-service.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -23,7 +24,11 @@ export default class AvailableDownloads extends Component {
                 vfs_path: row.path,
             }, {internal: true, arrayFormat: 'brackets'})}
                       target="_blank" download
-                      rel="noopener noreferrer">{row.name}</a>;
+                      rel="noopener noreferrer">
+                     <FontAwesomeIcon icon="download" />
+                     &nbsp;
+                     {row.name}
+                   </a>;
         }
         return <>
                  <FontAwesomeIcon icon="spinner" spin/>
