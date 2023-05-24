@@ -237,9 +237,9 @@ func encodeParams(arg *HttpPluginRequest, scope vfilter.Scope) *url.Values {
 						item, ok := value.(string)
 						if ok {
 							data.Add(member, item)
-							continue
 						}
 					}
+					continue
 				}
 				switch value.(type) {
 				case vfilter.Null, *vfilter.Null:

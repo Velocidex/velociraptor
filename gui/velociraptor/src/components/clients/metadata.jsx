@@ -1,5 +1,6 @@
 import _ from 'lodash';
 
+import "./metadata.css";
 import React, { Component } from 'react';
 import PropTypes from 'prop-types';
 import {CancelToken} from 'axios';
@@ -20,6 +21,7 @@ const POLL_TIME = 5000;
 export default class MetadataEditor extends Component {
     static propTypes = {
         client_id: PropTypes.string,
+        valueRenderer: PropTypes.func,
     }
 
     state = {
@@ -102,11 +104,13 @@ export default class MetadataEditor extends Component {
             sort: true,
             editable: true,
             filtered: true,
+            classes: "metadata-key",
             text: T("Key"),
         }, {
             dataField: "value",
             editable: true,
             sort: true,
+            formatter: this.props.valueRenderer,
             text: T("Value"),
         }]);
 
