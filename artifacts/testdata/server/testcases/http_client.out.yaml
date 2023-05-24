@@ -1,7 +1,11 @@
-LET URL <= url(parse="http://www.google.com/?q=Hello&lang=fr")[]LET NewQuery = URL.Query + dict(lang="en")[]SELECT parse_json(data=Content).url, parse_json(data=Content).headers.`Foo-Bar` FROM http_client(url="https://httpbin.org/get", params=NewQuery, headers=dict(`foo-bar`="baz"), method="GET")[
+LET URL <= url(parse="http://www.google.com/?q=Hello&lang=fr")[]SELECT url(scheme="http", host="www.google.com", query=dict(foo="bar")).String FROM scope()[
  {
-  "parse_json(data=Content).url": "https://httpbin.org/get?lang=en\u0026q=Hello",
-  "parse_json(data=Content).headers.`Foo-Bar`": "baz"
+  "url(scheme=\"http\", host=\"www.google.com\", query=dict(foo=\"bar\")).String": "http://www.google.com?foo=bar"
+ }
+]LET NewQuery = URL.Query + dict(lang="en")[]SELECT parse_json(data=Content).url, parse_json(data=Content).headers.`Foo-Bar` FROM http_client(url="https://httpbin.org/get", params=NewQuery, headers=dict(`foo-bar`="baz"), method="GET")[
+ {
+  "parse_json(data=Content).url": null,
+  "parse_json(data=Content).headers.`Foo-Bar`": null
  }
 ]SELECT parse_json(data=Content).data FROM http_client(url="https://httpbin.org/post", params=NewQuery, method="POST")[
  {

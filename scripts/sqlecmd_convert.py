@@ -36,18 +36,20 @@ reference:
   - https://github.com/EricZimmerman/SQLECmd
 
 export: |
-  LET Identify(Query, OSPath, IdentifyValue) = SELECT {
+  LET Identify(Query, FileType, OSPath, IdentifyValue) = SELECT {
       SELECT *
       FROM sqlite(file=OSPath, query=Query)
     } AS Hits
   FROM scope()
   WHERE Hits = IdentifyValue
+    AND log(message="%%v was identified as %%v", args=[OSPath, FileType])
 
-  LET ApplyFile(IdentifyQuery, SQLQuery, IdentifyValue) = SELECT *
+  LET ApplyFile(IdentifyQuery, FileType, SQLQuery, IdentifyValue) = SELECT *
     FROM foreach(row=SQLiteFiles,
     query={
       SELECT * FROM if(
-        condition=Identify(Query=IdentifyQuery, OSPath=OSPath, IdentifyValue=IdentifyValue),
+        condition=Identify(Query=IdentifyQuery, FileType=FileType,
+                           OSPath=OSPath, IdentifyValue=IdentifyValue),
         then={
             SELECT *, OSPath FROM sqlite(file=OSPath, query=SQLQuery)
         })
@@ -96,10 +98,11 @@ SourceTemplate = """
     LET IdentifyQuery = '''%(IdentifyQuery)s'''
     LET IdentifyValue = %(IdentifyValue)d
     LET SQLQuery = '''%(Query)s'''
-    LET FileName = '''%(FileName)s'''
+    LET FileType = '''%(Name)s'''
 
     SELECT * FROM ApplyFile(
-      SQLQuery=SQLQuery, IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
+      SQLQuery=SQLQuery, FileType=FileType,
+      IdentifyQuery=IdentifyQuery, IdentifyValue=IdentifyValue)
 """
 
 def indent(text):
@@ -114,6 +117,10 @@ class SQLECmdContext(object):
         self.fd = open(output, "w+")
         self.globs = []
         self.tkape_names = dict()
+
+        # Open the template file
+        with open(output.replace(".yaml", ".csv")) as fd:
+            self.csv = fd.read()
 
     tkape_re = re.compile(
         "https://github.com/EricZimmerman/KapeFiles/blob/master/(.+tkape)", re.I)
@@ -164,8 +171,10 @@ class SQLECmdContext(object):
             self.globs.append(dict(name=name, glob=glob))
 
     def format_globs(self):
+        additional_csv = ['    %s' % x for (i,x) in
+                          enumerate(self.csv.splitlines()) if i > 0]
         result = ['    "%s","%s"' % (x["name"], x["glob"]) for x in self.globs]
-        return "\n".join(result)
+        return "\n".join(result + additional_csv)
 
     def read_maps(self):
         for root, dirs, files in os.walk(os.path.join(

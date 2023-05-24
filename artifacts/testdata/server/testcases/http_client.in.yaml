@@ -6,6 +6,10 @@ Queries:
 # more parameters and make a new request.
 - LET URL <= url(parse="http://www.google.com/?q=Hello&lang=fr")
 
+# Test various URL construction
+- SELECT url(scheme="http", host="www.google.com", query=dict(foo="bar")).String
+  FROM scope()
+
 # Dict addition can be used to override the original map replacing the
 # value of lang
 - LET NewQuery = URL.Query + dict(lang="en")
