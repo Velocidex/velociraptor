@@ -21,13 +21,11 @@ import (
 	"context"
 	"crypto/tls"
 	"errors"
-	"fmt"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"os"
-	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -40,6 +38,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/functions"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
@@ -224,35 +223,6 @@ func GetDefaultHTTPClient(
 	}, nil
 }
 
-func encodeParams(arg *HttpPluginRequest, scope vfilter.Scope) *url.Values {
-	data := url.Values{}
-	if arg.Params != nil {
-		for _, member := range scope.GetMembers(arg.Params) {
-			value, pres := scope.Associative(arg.Params, member)
-			if pres {
-				slice := reflect.ValueOf(value)
-				if slice.Type().Kind() == reflect.Slice {
-					for i := 0; i < slice.Len(); i++ {
-						value := slice.Index(i).Interface()
-						item, ok := value.(string)
-						if ok {
-							data.Add(member, item)
-						}
-					}
-					continue
-				}
-				switch value.(type) {
-				case vfilter.Null, *vfilter.Null:
-					continue
-				default:
-					data.Add(member, fmt.Sprintf("%v", value))
-				}
-			}
-		}
-	}
-	return &data
-}
-
 func (self *_HttpPlugin) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
@@ -302,7 +272,7 @@ func (self *_HttpPlugin) Call(
 		}
 
 		var req *http.Request
-		params := encodeParams(arg, scope)
+		params := functions.EncodeParams(arg.Params, scope)
 		switch method := strings.ToUpper(arg.Method); method {
 		case "GET":
 			{
@@ -317,9 +287,9 @@ func (self *_HttpPlugin) Call(
 		case "POST", "PUT", "PATCH", "DELETE":
 			{
 				// Set body to params if arg.Data is empty
-				if arg.Data == "" && len(*params) != 0 {
+				if arg.Data == "" && len(params) != 0 {
 					arg.Data = params.Encode()
-				} else if arg.Data != "" && len(*params) != 0 {
+				} else if arg.Data != "" && len(params) != 0 {
 					// Shouldn't set both params and data. Warn user
 					scope.Log("http_client: Both params and data set. Defaulting to data.")
 				}
