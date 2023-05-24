@@ -19,8 +19,10 @@ package functions
 
 import (
 	"context"
+	"fmt"
 	"net/url"
 	"path/filepath"
+	"reflect"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
@@ -30,12 +32,12 @@ import (
 )
 
 type UrlArgs struct {
-	Scheme   string `vfilter:"optional,field=scheme,doc=The scheme to use"`
-	Host     string `vfilter:"optional,field=host,doc=The host component"`
-	Path     string `vfilter:"optional,field=path,doc=The path component"`
-	Fragment string `vfilter:"optional,field=fragment,doc=The fragment"`
-
-	Parse string `vfilter:"optional,field=parse,doc=A url to parse"`
+	Scheme   string      `vfilter:"optional,field=scheme,doc=The scheme to use"`
+	Host     string      `vfilter:"optional,field=host,doc=The host component"`
+	Path     string      `vfilter:"optional,field=path,doc=The path component"`
+	Fragment string      `vfilter:"optional,field=fragment,doc=The fragment"`
+	Query    vfilter.Any `vfilter:"optional,field=query,doc=A dict representing a query string"`
+	Parse    string      `vfilter:"optional,field=parse,doc=A url to parse"`
 }
 
 type UrlFunction struct{}
@@ -64,9 +66,39 @@ func (self UrlFunction) Call(ctx context.Context,
 		Scheme:   arg.Scheme,
 		Host:     arg.Host,
 		Path:     normalize_path(arg.Path),
+		RawQuery: EncodeParams(arg.Query, scope).Encode(),
 		Fragment: arg.Fragment,
 	}
 
+}
+
+func EncodeParams(param vfilter.Any, scope vfilter.Scope) url.Values {
+	data := url.Values{}
+	if param != nil {
+		for _, member := range scope.GetMembers(param) {
+			value, pres := scope.Associative(param, member)
+			if pres {
+				slice := reflect.ValueOf(value)
+				if slice.Type().Kind() == reflect.Slice {
+					for i := 0; i < slice.Len(); i++ {
+						value := slice.Index(i).Interface()
+						item, ok := value.(string)
+						if ok {
+							data.Add(member, item)
+						}
+					}
+					continue
+				}
+				switch value.(type) {
+				case vfilter.Null, *vfilter.Null:
+					continue
+				default:
+					data.Add(member, fmt.Sprintf("%v", value))
+				}
+			}
+		}
+	}
+	return data
 }
 
 func normalize_path(path string) string {
