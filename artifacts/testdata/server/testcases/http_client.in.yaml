@@ -1,0 +1,22 @@
+# This tests the http client against a live test server - it might be
+# a bit flakey on the CI pipeline
+Queries:
+
+# Common use case - take a url, extract the query string, add some
+# more parameters and make a new request.
+- LET URL <= url(parse="http://www.google.com/?q=Hello&lang=fr")
+
+# Dict addition can be used to override the original map replacing the
+# value of lang
+- LET NewQuery = URL.Query + dict(lang="en")
+
+## Encode parameters in GET query. Check that we can send headers.
+- SELECT parse_json(data=Content).url, parse_json(data=Content).headers.`Foo-Bar`
+  FROM http_client(url="https://httpbin.org/get",
+      params=NewQuery, headers=dict(`foo-bar`="baz"),
+      method="GET")
+
+## Encode parameters in POST query
+- SELECT parse_json(data=Content).data
+  FROM http_client(url="https://httpbin.org/post",
+       params=NewQuery, method="POST")

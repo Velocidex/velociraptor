@@ -1,0 +1,10 @@
+LET URL <= url(parse="http://www.google.com/?q=Hello&lang=fr")[]LET NewQuery = URL.Query + dict(lang="en")[]SELECT parse_json(data=Content).url, parse_json(data=Content).headers.`Foo-Bar` FROM http_client(url="https://httpbin.org/get", params=NewQuery, headers=dict(`foo-bar`="baz"), method="GET")[
+ {
+  "parse_json(data=Content).url": "https://httpbin.org/get?lang=en\u0026q=Hello",
+  "parse_json(data=Content).headers.`Foo-Bar`": "baz"
+ }
+]SELECT parse_json(data=Content).data FROM http_client(url="https://httpbin.org/post", params=NewQuery, method="POST")[
+ {
+  "parse_json(data=Content).data": "lang=en\u0026q=Hello"
+ }
+]
