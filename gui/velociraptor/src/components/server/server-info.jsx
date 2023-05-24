@@ -8,6 +8,8 @@ import MetadataEditor from "../clients/metadata.jsx";
 
 import ToggleButtonGroup from 'react-bootstrap/ToggleButtonGroup';
 import ToggleButton from 'react-bootstrap/ToggleButton';
+import Button from 'react-bootstrap/Button';
+import T from '../i8n/i8n.jsx';
 import CardDeck from 'react-bootstrap/CardDeck';
 import Card from 'react-bootstrap/Card';
 
@@ -56,7 +58,16 @@ class ServerInfo extends Component {
                   <Card>
                     <Card.Header>Server configuration</Card.Header>
                     <Card.Body>
-                      <MetadataEditor client_id="server" />
+                      <MetadataEditor
+                        valueRenderer={(cell, row)=>{
+                            return <Button
+                                     className="btn-tooltip"
+                                     data-tooltip={T("Click to view or edit")}
+                                     variant="default-outline" size="sm">
+                                     <FontAwesomeIcon icon="wrench"/>
+                                   </Button>;
+                        }}
+                        client_id="server" />
                     </Card.Body>
                   </Card>
                 </CardDeck>

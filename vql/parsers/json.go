@@ -286,11 +286,13 @@ func (self _MapInterfaceAssociativeProtocol) Associative(
 
 func (self _MapInterfaceAssociativeProtocol) GetMembers(
 	scope vfilter.Scope, a vfilter.Any) []string {
+
 	result := []string{}
-	a_map, ok := a.(map[string]interface{})
-	if ok {
-		for k := range a_map {
-			result = append(result, k)
+	map_value := reflect.ValueOf(a)
+	if map_value.Kind() == reflect.Map {
+		for _, map_key_value := range map_value.MapKeys() {
+			result = append(result, map_key_value.String())
+
 		}
 	}
 
