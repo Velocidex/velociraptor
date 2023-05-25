@@ -366,8 +366,16 @@ func (self UserManager) GetUserOptions(ctx context.Context, username string) (
 		defaults = self.config_obj.Defaults
 	}
 
+	// Deprecated - moved to customizations
 	options.DisableServerEvents = defaults.DisableServerEvents
 	options.DisableQuarantineButton = defaults.DisableQuarantineButton
+
+	if options.Customizations == nil {
+		options.Customizations = &api_proto.GUICustomizations{}
+	}
+	options.Customizations.HuntExpiryHours = defaults.HuntExpiryHours
+	options.Customizations.DisableServerEvents = defaults.DisableServerEvents
+	options.Customizations.DisableQuarantineButton = defaults.DisableQuarantineButton
 
 	// Specify a default theme if specified in the config file.
 	if options.Theme == "" {
