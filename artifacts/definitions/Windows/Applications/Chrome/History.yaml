@@ -7,11 +7,12 @@ parameters:
     default: \AppData\{Local,Roaming}\{Google\Chrome\User Data,Microsoft\Edge\User Data,BraveSoftware\Brave-Browser\User Data,Vivaldi\User Data,Opera Software\Opera*Stable}\*\History
   - name: urlSQLQuery
     default: |
-      SELECT U.id AS id, U.url AS url, V.visit_time as visit_time,
-      U.title AS title, U.visit_count, U.typed_count,
-      U.last_visit_time, U.hidden, V.from_visit, strftime('%H:%M:%f',
-      V.visit_duration/1000000.0, 'unixepoch') as visit_duration,
-      V.transition FROM urls AS U JOIN visits AS V ON U.id = V.url
+      SELECT U.id AS id, U.url AS url, V.visit_time as visit_time, U.title AS title, U.visit_count, U.typed_count, U.last_visit_time, U.hidden,
+      CASE V.is_known_to_sync WHEN 0 THEN 'Local' WHEN 1 THEN 'Synced' END Source,
+      V.from_visit, 
+      strftime('%H:%M:%f', V.visit_duration/1000000.0, 'unixepoch') as visit_duration,
+      V.transition,      
+      FROM urls AS U JOIN visits AS V ON U.id = V.url
   - name: userRegex
     default: .
     type: regex
@@ -45,6 +46,7 @@ sources:
                    timestamp(winfiletime=last_visit_time * 10) AS last_visit_time,
                    hidden,
                    from_visit AS from_url_id,
+                   Source,
                    visit_duration,transition,
                    timestamp(winfiletime=last_visit_time * 10) as _SourceLastModificationTimestamp,
                    OSPath
