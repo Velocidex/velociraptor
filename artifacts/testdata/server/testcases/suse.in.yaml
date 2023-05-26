@@ -1,0 +1,23 @@
+Parameters:
+  ZypperMock: |
+    # zypper --xmlout search --installed-only --details --type=package
+    <?xml version='1.0'?>
+    <stream>
+    <message type="info">Loading repository data...</message>
+    <message type="info">Reading installed packages...</message>
+    
+    <search-result version="0.0">
+    <solvable-list>
+    <solvable status="installed" name="aaa_base" kind="package" edition="84.87+git20180409.04c9dae-150300.10.3.1" arch="x86_64" repository="Update repository with updates from SUSE Linux Enterprise 15"/>
+    <solvable status="installed" name="aaa_base-extras" kind="package" edition="84.87+git20180409.04c9dae-150300.10.3.1" arch="x86_64" repository="Update repository with updates from SUSE Linux Enterprise 15"/>
+    <solvable status="installed" name="apparmor-parser" kind="package" edition="3.0.4-150400.5.3.1" arch="x86_64" repository="Update repository with updates from SUSE Linux Enterprise 15"/>
+    </solvable-list>
+    </search-result>
+    </stream>
+
+Queries:
+  - LET X <= SELECT mock(plugin='execve', results={
+      SELECT Line AS Stdout FROM parse_lines(filename=ZypperMock, accessor="data")
+    }) FROM scope()
+
+  - SELECT * FROM Artifact.Linux.SuSE.Packages()
