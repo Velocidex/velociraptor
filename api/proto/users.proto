@@ -146,6 +146,9 @@ message GUICustomizations {
     bool disable_server_events = 1;
     bool disable_user_management = 2;
     bool disable_quarantine_button = 3;
+
+    // Updated from config_obj.Defaults.HuntExpiryHours
+    int64 hunt_expiry_hours = 4;
 }
 
 message SetGUIOptionsRequest {

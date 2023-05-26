@@ -193,6 +193,7 @@ func (self *ApiServer) VFSDownloadFile(
 
 	request := &flows_proto.ArtifactCollectorArgs{
 		ClientId:  in.ClientId,
+		Creator:   principal,
 		Urgent:    true,
 		Artifacts: []string{"System.VFS.DownloadFile"},
 		Specs: []*flows_proto.ArtifactSpec{{

@@ -32,7 +32,8 @@ func (self *ApiServer) GetToolInfo(ctx context.Context,
 		return inventory.GetToolInfo(ctx, org_config_obj, in.Name, in.Version)
 	}
 
-	return inventory.ProbeToolInfo(ctx, org_config_obj, in.Name, in.Version)
+	tool, err := inventory.ProbeToolInfo(ctx, org_config_obj, in.Name, in.Version)
+	return tool, Status(self.verbose, err)
 }
 
 func (self *ApiServer) SetToolInfo(ctx context.Context,
