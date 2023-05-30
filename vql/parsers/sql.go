@@ -20,6 +20,10 @@ import (
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
+var (
+	notValidDatabase = errors.New("Not a valid database")
+)
+
 type SQLPluginArgs struct {
 	Driver     string      `vfilter:"required,field=driver, doc=sqlite, mysql,or postgres"`
 	ConnString string      `vfilter:"optional,field=connstring, doc=SQL Connection String"`
@@ -115,6 +119,10 @@ func (self SQLPlugin) Call(
 			}
 
 			handle, err = GetHandleSqlite(ctx, arg, scope)
+			if err == notValidDatabase {
+				return
+			}
+
 			if err != nil {
 				scope.Log("sql: %s", err)
 				return

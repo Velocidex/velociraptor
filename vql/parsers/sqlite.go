@@ -35,6 +35,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	_ "github.com/mattn/go-sqlite3"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/constants"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -68,6 +69,29 @@ func VFSPathToFilesystemPath(path string) string {
 	return strings.TrimPrefix(path, "\\")
 }
 
+// Check the file header - ignore if this is not really an sqlite
+// file.
+func checkSQLiteHeader(scope vfilter.Scope, accessor, filename string) bool {
+	fs, err := accessors.GetAccessor(accessor, scope)
+	if err != nil {
+		return false
+	}
+
+	file, err := fs.Open(filename)
+	if err != nil {
+		return false
+	}
+	defer file.Close()
+
+	header := make([]byte, 12)
+	_, err = file.Read(header)
+	if err != nil {
+		return false
+	}
+
+	return string(header) == "SQLite forma"
+}
+
 func GetHandleSqlite(ctx context.Context,
 	arg *SQLPluginArgs, scope vfilter.Scope) (
 	handle *sqlx.DB, err error) {
@@ -80,7 +104,18 @@ func GetHandleSqlite(ctx context.Context,
 	key := "sqlite_" + filename + arg.Accessor
 	handle, ok := vql_subsystem.CacheGet(scope, key).(*sqlx.DB)
 	if !ok {
-		if arg.Accessor == "file" || arg.Accessor == "" {
+		// Check the header quickly to ensure that we dont copy the
+		// file needlessly.
+		if !checkSQLiteHeader(scope, arg.Accessor, filename) {
+			return nil, notValidDatabase
+		}
+
+		should_make_copy := vql_subsystem.GetBoolFromRow(scope, scope, constants.SQLITE_ALWAYS_MAKE_TEMPFILE)
+		if arg.Accessor != "file" && arg.Accessor != "" {
+			should_make_copy = true
+		}
+
+		if !should_make_copy {
 			handle, err = sqlx.Connect("sqlite3", filename)
 			if err != nil {
 				// An error occurred maybe the database
@@ -125,6 +160,7 @@ func GetHandleSqlite(ctx context.Context,
 			if err != nil {
 				return nil, err
 			}
+			scope.Log("Using local copy %v", filename)
 		}
 
 		// Try once again to connect to the new file
@@ -143,6 +179,7 @@ func GetHandleSqlite(ctx context.Context,
 			handle.Close()
 		})
 		if err != nil {
+			scope.Log("Unable to set destructor for %v", filename)
 			handle.Close()
 			return nil, err
 		}

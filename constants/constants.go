@@ -105,6 +105,9 @@ const (
 	// Set in the scope with one or more passwords
 	ZIP_PASSWORDS = "ZIP_PASSWORDS"
 
+	// If this is set we always copy SQLite files to a tempfile
+	SQLITE_ALWAYS_MAKE_TEMPFILE = "SQLITE_ALWAYS_MAKE_TEMPFILE"
+
 	PinnedServerName = "VelociraptorServer"
 
 	CLIENT_API_VERSION = uint32(4)
