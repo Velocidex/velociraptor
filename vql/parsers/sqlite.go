@@ -71,25 +71,25 @@ func VFSPathToFilesystemPath(path string) string {
 
 // Check the file header - ignore if this is not really an sqlite
 // file.
-func checkSQLiteHeader(scope vfilter.Scope, accessor, filename string) bool {
+func checkSQLiteHeader(scope vfilter.Scope, accessor, filename string) (bool, error) {
 	fs, err := accessors.GetAccessor(accessor, scope)
 	if err != nil {
-		return false
+		return false, err
 	}
 
 	file, err := fs.Open(filename)
 	if err != nil {
-		return false
+		return false, err
 	}
 	defer file.Close()
 
 	header := make([]byte, 12)
 	_, err = file.Read(header)
 	if err != nil {
-		return false
+		return false, err
 	}
 
-	return string(header) == "SQLite forma"
+	return string(header) == "SQLite forma", nil
 }
 
 func GetHandleSqlite(ctx context.Context,
@@ -105,8 +105,10 @@ func GetHandleSqlite(ctx context.Context,
 	handle, ok := vql_subsystem.CacheGet(scope, key).(*sqlx.DB)
 	if !ok {
 		// Check the header quickly to ensure that we dont copy the
-		// file needlessly.
-		if !checkSQLiteHeader(scope, arg.Accessor, filename) {
+		// file needlessly. If the file does not exist, we allow a
+		// connection because this will create a new file.
+		header_ok, err := checkSQLiteHeader(scope, arg.Accessor, filename)
+		if !errors.Is(err, os.ErrNotExist) && !header_ok {
 			return nil, notValidDatabase
 		}
 
@@ -128,9 +130,8 @@ func GetHandleSqlite(ctx context.Context,
 					scope.Log("Unable to open sqlite file: %v", err)
 				}
 
-				//If the database is missing etc we
-				//just return the error, but locked
-				//files are handled especially.
+				// If the database is missing etc we just return the
+				// error, but locked files are handled especially.
 				if !strings.Contains(err.Error(), "locked") {
 					return nil, err
 				}
@@ -138,12 +139,11 @@ func GetHandleSqlite(ctx context.Context,
 				scope.Log("Sqlite file %v is locked with %v, creating a local copy",
 					filename, err)
 
-				// When using the file accessor it is
-				// possible to pass sqlite options by
-				// encoding them into the filename. In
-				// this case we need to extract the
-				// filename (from before the ?) so we
-				// can copy it over.
+				// When using the file accessor it is possible to pass
+				// sqlite options by encoding them into the
+				// filename. In this case we need to extract the
+				// filename (from before the ?) so we can copy it
+				// over.
 				parts := strings.Split(filename, "?")
 				filename, err = _MakeTempfile(ctx, arg, parts[0], scope)
 				if err != nil {
