@@ -80,7 +80,7 @@ parameters:
 
   - name: ProcessNameRegex
     description: "regex search over source process name"
-    default: .
+    default: ^malware\.exe$
     type: regex
   - name: ProcessPathRegex
     description: "regex search over source process path"
