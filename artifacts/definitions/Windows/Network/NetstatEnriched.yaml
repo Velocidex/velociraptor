@@ -11,8 +11,12 @@ description: |
   KillProcess - attempts to use Taskill to kill the processes returned.  
   DumpProcess - dumps the process as a sparse file for post processing.  
   
-  Please only use these switches after scoping as there are no guardrails.
+  Please only use these switches after scoping as there are no guardrails on 
+  shooting yourself in the foot.
 
+required_permissions:
+  - EXECVE
+  
 precondition: SELECT OS From info() where OS = 'windows'
 
 parameters:
