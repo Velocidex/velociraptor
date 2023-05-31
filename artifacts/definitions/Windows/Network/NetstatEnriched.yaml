@@ -1,23 +1,28 @@
 name: Windows.Network.NetstatEnriched
+author: "Matt Green - @mgreen27"
 description: |
   NetstatEnhanced adds additional data points to the Netstat artifact and
   enables verbose search options.
 
   Examples include: Process name and path, authenticode information or
   network connection details.
-
-author: "Matthew Green - @mgreen27"
+  
+  WARNING:  
+  KillProcess - attempts to use Taskill to kill the processes returned.  
+  DumpProcess - dumps the process as a sparse file for post processing.  
+  
+  Please only use these switches after scoping as there are no guardrails.
 
 precondition: SELECT OS From info() where OS = 'windows'
 
 parameters:
   - name: IPRegex
     description: "regex search over IP address fields."
-    default:  ".*"
+    default:  .
     type: regex
   - name: PortRegex
     description: "regex search over port fields."
-    default: ".*"
+    default: .
     type: regex
   - name: Family
     description: "IP version family selection"
@@ -31,7 +36,7 @@ parameters:
     type: hidden
     default: |
       Choice,Regex
-      ALL,".*"
+      ALL,"."
       IPv4,"^IPv4$"
       IPv6,"^IPv6$"
 
@@ -47,7 +52,7 @@ parameters:
     type: hidden
     default: |
       Choice,Regex
-      ALL,".*"
+      ALL,"."
       TCP,"^TCP$"
       UDP,"^UDP$"
 
@@ -64,38 +69,38 @@ parameters:
     type: hidden
     default: |
       Choice,Regex
-      ALL,".*"
+      ALL,"."
       ESTABLISHED,"^ESTAB$"
       LISTENING,"^LISTEN$"
       OTHER,"CLOS|SENT|RCVD|LAST|WAIT|DELETE"
 
   - name: ProcessNameRegex
     description: "regex search over source process name"
-    default: ".*"
+    default: .
     type: regex
   - name: ProcessPathRegex
     description: "regex search over source process path"
-    default: ".*"
+    default: .
     type: regex
   - name: CommandLineRegex
     description: "regex search over source process commandline"
-    default: ".*"
+    default: .
     type: regex
   - name: HashRegex
     description: "regex search over source process hash"
-    default: ".*"
+    default: .
     type: regex
   - name: UsernameRegex
     description: "regex search over source process user context"
-    default: ".*"
+    default: .
     type: regex
   - name: AuthenticodeSubjectRegex
     description: "regex search over source Authenticode Subject"
-    default: ".*"
+    default: .
     type: regex
   - name: AuthenticodeIssuerRegex
     description: "regex search over source Authenticode Issuer"
-    default: ".*"
+    default: .
     type: regex
   - name: AuthenticodeVerified
     description: "Authenticode signiture selection"
@@ -110,11 +115,17 @@ parameters:
     type: hidden
     default: |
       Choice,Regex
-      ALL,".*"
+      ALL,"."
       TRUSTED,"^trusted$"
       UNSIGNED,"^unsigned$"
       NOT TRUSTED,"unsigned|disallowed|untrusted|error"
-
+  - name: DumpProcess
+    description: "WARNING: If selected will attempt to dump process from all results."
+    type: bool
+  - name: KillProcess
+    description: "WARNING: If selected will attempt to kill process from all results."
+    type: bool
+    
 sources:
   - name: Netstat
     query: |
@@ -141,36 +152,84 @@ sources:
             Username
         FROM Artifact.Windows.System.Pslist()
         WHERE Name =~ ProcessNameRegex
+            AND Exe =~ ProcessPathRegex
+            AND CommandLine =~ CommandLineRegex
 
-      SELECT Pid,
-            { SELECT Ppid FROM process WHERE PsId = Pid } as Ppid,
-            { SELECT Name FROM process WHERE PsId = Pid } as Name,
-            { SELECT Exe FROM process WHERE PsId = Pid } as Path,
-            { SELECT CommandLine FROM process WHERE PsId = Pid } as CommandLine,
-            { SELECT Hash FROM process WHERE PsId = Pid } as Hash,
-            { SELECT Username FROM process WHERE PsId = Pid } as Username,
-            { SELECT Authenticode FROM process WHERE PsId = Pid } as Authenticode,
-            FamilyString as Family,
-            TypeString as Type,
-            Status,
-            Laddr.IP, Laddr.Port,
-            Raddr.IP, Raddr.Port,
-            Timestamp
-        FROM netstat()
-        WHERE Path =~ ProcessPathRegex
-            and CommandLine =~ CommandLineRegex
-            and Username =~ UsernameRegex
-            and ( Hash.MD5 =~ HashRegex
-              or Hash.SHA1 =~ HashRegex
-              or Hash.SHA256 =~ HashRegex
-              or not Hash )
-            and ( Authenticode.IssuerName =~ AuthenticodeIssuerRegex or not Authenticode )
-            and ( Authenticode.SubjectName =~ AuthenticodeSubjectRegex or not Authenticode )
-            and ( Authenticode.Trusted =~ VerifiedRegex.Regex[0] or not Authenticode )
-            and Status =~ StatusRegex.Regex[0]
-            and Family =~ FamilyRegex.Regex[0]
-            and Type =~ TypeRegex.Regex[0]
-            and ( format(format="%v", args=Laddr.IP) =~ IPRegex
-                or format(format="%v", args=Raddr.IP) =~ IPRegex )
-            and ( format(format="%v", args=Laddr.Port) =~ PortRegex
-                or format(format="%v", args=Raddr.Port) =~ PortRegex )
+      LET results = SELECT Pid,
+                { SELECT Ppid FROM process WHERE PsId = Pid } as Ppid,
+                { SELECT Name FROM process WHERE PsId = Pid } as Name,
+                { SELECT Exe FROM process WHERE PsId = Pid } as Path,
+                { SELECT CommandLine FROM process WHERE PsId = Pid } as CommandLine,
+                { SELECT Hash FROM process WHERE PsId = Pid } as Hash,
+                { SELECT Username FROM process WHERE PsId = Pid } as Username,
+                { SELECT Authenticode FROM process WHERE PsId = Pid } as Authenticode,
+                FamilyString as Family,
+                TypeString as Type,
+                Status,
+                Laddr.IP as SrcIP, 
+                Laddr.Port as SrcPort,
+                Raddr.IP as DestIP, 
+                Raddr.Port as DestPort,
+                Timestamp
+            FROM netstat()
+            WHERE 
+                Name =~ ProcessNameRegex
+                AND Path =~ ProcessPathRegex
+                and CommandLine =~ CommandLineRegex
+                and Username =~ UsernameRegex
+                and ( Hash.MD5 =~ HashRegex
+                  or Hash.SHA1 =~ HashRegex
+                  or Hash.SHA256 =~ HashRegex
+                  or not Hash )
+                and ( Authenticode.IssuerName =~ AuthenticodeIssuerRegex or not Authenticode )
+                and ( Authenticode.SubjectName =~ AuthenticodeSubjectRegex or not Authenticode )
+                and ( Authenticode.Trusted =~ VerifiedRegex.Regex[0] or not Authenticode )
+                and Status =~ StatusRegex.Regex[0]
+                and Family =~ FamilyRegex.Regex[0]
+                and Type =~ TypeRegex.Regex[0]
+                and ( format(format="%v", args=SrcIP) =~ IPRegex
+                    or format(format="%v", args=DestIP) =~ IPRegex )
+                and ( format(format="%v", args=SrcPort) =~ PortRegex
+                    or format(format="%v", args=DestPort) =~ PortRegex )
+    
+      LET Regions(Pid) = SELECT dict(Offset=Address, Length=Size) AS Sparse
+        FROM vad(pid=Pid)
+        WHERE Protection =~ "r"
+      LET dump = SELECT *, 
+            upload(accessor="sparse",
+                    file=pathspec(
+                    Path=serialize(item=Regions(Pid=Pid).Sparse),
+                    DelegateAccessor="process",
+                    DelegatePath=format(format="/%d", args=Pid)),
+                     name=pathspec(Path=format(format="%d.dd", args=Pid))) AS ProcessMemory
+        FROM results
+      LET kill = SELECT *,
+            { 
+                SELECT 
+                    dict(ReturnCode=ReturnCode,Complete=Complete,Stdout=Stdout,Stderr=Stderr) as Execve,
+                    if(condition= Stdout=~'^SUCCESS',
+                            then= TRUE,
+                            else= FALSE) as Killed
+                FROM execve(argv=["taskkill", "/PID", Pid, "/T", "/F"])
+            } as KillProcess    
+        FROM results
+      LET dumpandkill = SELECT *,
+            { 
+                SELECT 
+                    dict(ReturnCode=ReturnCode,Complete=Complete,Stdout=Stdout,Stderr=Stderr) as Execve,
+                    if(condition= Stdout=~'^SUCCESS',
+                            then= TRUE,
+                            else= FALSE) as Killed
+                FROM execve(argv=["taskkill", "/PID", Pid, "/T", "/F"])
+            } as KillProcess 
+        FROM dump
+      
+      SELECT * FROM switch(
+            a = { SELECT * FROM if(condition= DumpProcess AND KillProcess,
+                        then= dumpandkill )},
+            b = { SELECT * FROM if(condition= DumpProcess,
+                        then= dump )},
+            c = { SELECT * FROM if(condition= KillProcess,
+                    then= kill) },
+            catch = results
+        )
