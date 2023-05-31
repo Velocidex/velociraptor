@@ -199,7 +199,7 @@ sources:
       LET Regions(Pid) = SELECT dict(Offset=Address, Length=Size) AS Sparse
         FROM vad(pid=Pid)
         WHERE Protection =~ "r"
-      LET dump = SELECT *, 
+      LET dump = SELECT *,
             upload(accessor="sparse",
                     file=pathspec(
                     Path=serialize(item=Regions(Pid=Pid).Sparse),
@@ -207,33 +207,19 @@ sources:
                     DelegatePath=format(format="/%d", args=Pid)),
                      name=pathspec(Path=format(format="%d.dd", args=Pid))) AS ProcessMemory
         FROM results
-      LET kill = SELECT *,
-            { 
-                SELECT 
-                    dict(ReturnCode=ReturnCode,Complete=Complete,Stdout=Stdout,Stderr=Stderr) as Execve,
-                    if(condition= Stdout=~'^SUCCESS',
-                            then= TRUE,
-                            else= FALSE) as Killed
-                FROM execve(argv=["taskkill", "/PID", Pid, "/T", "/F"])
-            } as KillProcess    
+      LET kill = SELECT *, pskill(pid=Pid) AS KillProcess    
         FROM results
-      LET dumpandkill = SELECT *,
-            { 
-                SELECT 
-                    dict(ReturnCode=ReturnCode,Complete=Complete,Stdout=Stdout,Stderr=Stderr) as Execve,
-                    if(condition= Stdout=~'^SUCCESS',
-                            then= TRUE,
-                            else= FALSE) as Killed
-                FROM execve(argv=["taskkill", "/PID", Pid, "/T", "/F"])
-            } as KillProcess 
+      LET dumpandkill = SELECT *, pskill(pid=Pid) AS KillProcess 
         FROM dump
       
       SELECT * FROM switch(
-            a = { SELECT * FROM if(condition= DumpProcess AND KillProcess,
-                        then= dumpandkill )},
-            b = { SELECT * FROM if(condition= DumpProcess,
-                        then= dump )},
-            c = { SELECT * FROM if(condition= KillProcess,
-                    then= kill) },
+            a = { 
+                SELECT *, if(condition= KillProcess=Null,then='Success',else=KillProcess) AS KillProcess
+                FROM if(condition= DumpProcess AND KillProcess, then= dumpandkill )},
+            b = { SELECT * FROM if(condition= DumpProcess, then= dump )},
+            c = { 
+                SELECT *, if(condition= KillProcess=Null,then='Success',else=KillProcess) AS KillProcess
+                FROM if(condition= KillProcess, then= kill) 
+            },
             catch = results
         )
