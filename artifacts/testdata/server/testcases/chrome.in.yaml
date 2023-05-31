@@ -1,0 +1,30 @@
+Parameters:
+  RemappingTemplate: |
+    remappings:
+      - type: shadow
+        from:
+          accessor: data
+        on:
+          accessor: data
+
+      - type: mount
+        from:
+          accessor: zip
+          path_type: linux
+          prefix: |
+            {
+              "DelegateAccessor": "file",
+              "DelegatePath": %q,
+              "Path": "/"
+            }
+        on:
+          accessor: "ntfs"
+          prefix: "C:/Users/Admin/AppData/Local/Google/Chrome/User Data/Default"
+          path_type: "windows"
+
+Queries:
+- LET X <= format(format=RemappingTemplate,
+       args=[srcDir + '/artifacts/testdata/files/Session Storage.zip'])
+- LET _ <= remap(config=X, clear=TRUE)
+
+- SELECT * FROM Artifact.Generic.Applications.Chrome.SessionStorage(Accessor="ntfs")

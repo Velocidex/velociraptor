@@ -1,0 +1,50 @@
+LET X <= format(format=RemappingTemplate, args=[srcDir + '/artifacts/testdata/files/Session Storage.zip'])[]LET _ <= remap(config=X, clear=TRUE)[]SELECT * FROM Artifact.Generic.Applications.Chrome.SessionStorage(Accessor="ntfs")[
+ {
+  "OSPath": "C:\\Users\\Admin\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Session Storage",
+  "GUID": "28bf6ff6_2c1e_41ce_9a1e_e3b35dabc4ae",
+  "URL": "chrome://newtab/",
+  "Mapping": {
+   "grid-sites-data-v2": "{\"gridSites\":[{\"favicon\":\"\",\"id\":1,\"source\":0,\"title\":\"Velociraptor Response and Monitoring\",\"title_direction\":2,\"title_source\":3,\"url\":\"https://192.168.1.112:8889/app/index.html\"},{\"favicon\":\"\",\"id\":2,\"source\":0,\"title\":\"net\",\"title_direction\":2,\"title_source\":3,\"url\":\"https://search.brave.com/search?q=net::ERR_UPLOAD_FILE_CHANGED(anony\u0026source=desktop\"},{\"favicon\":\"\",\"id\":3,\"source\":0,\"title\":\"Google\",\"title_direction\":2,\"title_source\":3,\"url\":\"https://www.google.com/\"},{\"favicon\":\"\",\"id\":4,\"source\":0,\"title\":\"Brave Browser\",\"title_direction\":2,\"title_source\":3,\"url\":\"https://brave.com/whats-new/\"},{\"favicon\":\"\",\"id\":5,\"source\":0,\"title\":\"Velociraptor Response and Monitoring\",\"title_direction\":2,\"title_source\":3,\"url\":\"https://localhost:8889/app/index.html?#/collected/C.b3b974e2280e2602-O123\"},{\"favicon\":\"\",\"id\":6,\"source\":0,\"title\":\"YouTube\",\"title_direction\":2,\"title_source\":3,\"url\":\"https://www.youtube.com/watch?v=1MxFK4yXL_0\"}],\"removedSites\":[],\"shouldShowSiteRemovedNotification\":false}"
+  },
+  "_Source": "Generic.Applications.Chrome.SessionStorage"
+ },
+ {
+  "OSPath": "C:\\Users\\Admin\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Session Storage",
+  "GUID": "28bf6ff6_2c1e_41ce_9a1e_e3b35dabc4ae",
+  "URL": "https://www.google.com/",
+  "Mapping": {
+   "myCat": "Tom"
+  },
+  "_Source": "Generic.Applications.Chrome.SessionStorage"
+ },
+ {
+  "OSPath": "C:\\Users\\Admin\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Session Storage",
+  "GUID": "a9850af8_8732_412b_830e_5322de59b217",
+  "URL": "chrome://newtab/",
+  "Mapping": {
+   "grid-sites-data-v2": "{\"gridSites\":[{\"favicon\":\"\",\"id\":1,\"source\":0,\"title\":\"Velociraptor Response and Monitoring\",\"title_direction\":2,\"title_source\":3,\"url\":\"https://192.168.1.112:8889/app/index.html\"},{\"favicon\":\"\",\"id\":2,\"source\":0,\"title\":\"Google\",\"title_direction\":2,\"title_source\":3,\"url\":\"https://www.google.com/\"},{\"favicon\":\"\",\"id\":3,\"source\":0,\"title\":\"net\",\"title_direction\":2,\"title_source\":3,\"url\":\"https://search.brave.com/search?q=net::ERR_UPLOAD_FILE_CHANGED(anony\u0026source=desktop\"},{\"favicon\":\"\",\"id\":4,\"source\":0,\"title\":\"Brave Browser\",\"title_direction\":2,\"title_source\":3,\"url\":\"https://brave.com/whats-new/\"},{\"favicon\":\"\",\"id\":5,\"source\":0,\"title\":\"Velociraptor Response and Monitoring\",\"title_direction\":2,\"title_source\":3,\"url\":\"https://localhost:8889/app/index.html?#/collected/C.b3b974e2280e2602-O123\"},{\"favicon\":\"\",\"id\":6,\"source\":0,\"title\":\"YouTube\",\"title_direction\":2,\"title_source\":3,\"url\":\"https://www.youtube.com/watch?v=1MxFK4yXL_0\"}],\"removedSites\":[],\"shouldShowSiteRemovedNotification\":false}"
+  },
+  "_Source": "Generic.Applications.Chrome.SessionStorage"
+ },
+ {
+  "OSPath": "C:\\Users\\Admin\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Session Storage",
+  "GUID": "a9850af8_8732_412b_830e_5322de59b217",
+  "URL": "https://accounts.google.com/",
+  "Mapping": {},
+  "_Source": "Generic.Applications.Chrome.SessionStorage"
+ },
+ {
+  "OSPath": "C:\\Users\\Admin\\AppData\\Local\\Google\\Chrome\\User Data\\Default\\Session Storage",
+  "GUID": "a9850af8_8732_412b_830e_5322de59b217",
+  "URL": "https://www.youtube.com/",
+  "Mapping": {
+   "yt-player-autonavstate": "{\"data\":\"2\",\"creation\":1685515347711}",
+   "yt-remote-cast-available": "{\"data\":\"false\",\"creation\":1685515345624}",
+   "yt-remote-cast-installed": "{\"data\":\"true\",\"creation\":1685515345621}",
+   "yt-remote-fast-check-period": "{\"data\":\"1685515645110\",\"creation\":1685515345110}",
+   "yt-remote-session-app": "{\"data\":\"youtube-desktop\",\"creation\":1685515345109}",
+   "yt-remote-session-name": "{\"data\":\"Desktop\",\"creation\":1685515345110}"
+  },
+  "_Source": "Generic.Applications.Chrome.SessionStorage"
+ }
+]
