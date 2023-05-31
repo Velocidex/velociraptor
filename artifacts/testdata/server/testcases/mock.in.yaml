@@ -151,28 +151,33 @@ Queries:
 
   # Netcat is trusted because it is signed should show up here.
   - SELECT * FROM Artifact.Windows.Network.NetstatEnriched(
+          ProcessNameRegex='.',
           AuthenticodeVerified="TRUSTED",
           Status="LISTENING",
           PortRegex="3889")
 
   # Netcat is listening over IPv6 so not hits here.
   - SELECT * FROM Artifact.Windows.Network.NetstatEnriched(
+          ProcessNameRegex='.',
           AuthenticodeVerified="TRUSTED",
           Status="LISTENING", Family="IPv4",
           PortRegex="3889")
 
   # Netcat is listening over IPv6
   - SELECT * FROM Artifact.Windows.Network.NetstatEnriched(
+          ProcessNameRegex='.',
           AuthenticodeVerified="TRUSTED",
           Status="LISTENING", Family="IPv6",
           PortRegex="3889")
 
   # Explorer has an established connection
   - SELECT * FROM Artifact.Windows.Network.NetstatEnriched(
+          ProcessNameRegex='.',
           Status="ESTABLISHED")
 
   # Explorer has an established connection but it is trusted so wont
   # show up here.
   - SELECT * FROM Artifact.Windows.Network.NetstatEnriched(
+          ProcessNameRegex='.',
           AuthenticodeVerified="NOT TRUSTED",
           Status="ESTABLISHED")
