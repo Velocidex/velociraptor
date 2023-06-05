@@ -165,9 +165,10 @@ func (self *ServerMetadataFunction) Call(ctx context.Context,
 func (self ServerMetadataFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:    "server_metadata",
-		Doc:     "Returns server metadata from the datastore. Server metadata is a set of free form key/value data",
-		ArgType: type_map.AddType(scope, &ClientMetadataFunctionArgs{}),
+		Name:     "server_metadata",
+		Doc:      "Returns server metadata from the datastore. Server metadata is a set of free form key/value data",
+		ArgType:  type_map.AddType(scope, &ClientMetadataFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 

@@ -55,6 +55,16 @@ func (self *DirectoryFileWriter) Size() (int64, error) {
 	return self.Fd.Seek(0, os.SEEK_END)
 }
 
+func (self *DirectoryFileWriter) Update(data []byte, offset int64) error {
+	_, err := self.Fd.Seek(offset, os.SEEK_SET)
+	if err != nil {
+		return err
+	}
+
+	_, err = self.Fd.Write(data)
+	return err
+}
+
 func (self *DirectoryFileWriter) Write(data []byte) (int, error) {
 
 	defer api.InstrumentWithDelay("write", "DirectoryFileWriter", nil)()

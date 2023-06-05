@@ -42,6 +42,12 @@ type FileWriter interface {
 	Flush() error
 }
 
+// Some filestore implementations allow updating a file by overwriting
+// a range.
+type FileUpdater interface {
+	Update(data []byte, offset int64) error
+}
+
 type FileInfo interface {
 	os.FileInfo
 	PathSpec() FSPathSpec
