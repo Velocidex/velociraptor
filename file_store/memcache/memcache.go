@@ -84,6 +84,17 @@ func (self *MemcacheFileWriter) _Size() (int64, error) {
 	return self.size, nil
 }
 
+// Just call the delegate immediately so this update hits the disk.
+func (self *MemcacheFileWriter) Update(data []byte, offset int64) error {
+	writer, err := self.delegate.WriteFile(self.filename)
+	if err != nil {
+		return err
+	}
+	defer writer.Close()
+
+	return writer.Update(data, offset)
+}
+
 func (self *MemcacheFileWriter) Write(data []byte) (int, error) {
 	defer api.Instrument("write", "MemcacheFileWriter", nil)()
 	self.mu.Lock()

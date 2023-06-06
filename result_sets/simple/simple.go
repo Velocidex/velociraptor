@@ -33,6 +33,8 @@ import (
 	"errors"
 	"io"
 	"os"
+	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/Velocidex/json"
@@ -53,6 +55,9 @@ type ResultSetWriterImpl struct {
 	opts     *json.EncOpts
 	fd       api.FileWriter
 	index_fd api.FileWriter
+
+	file_store_factory api.FileStore
+	log_path           api.FSPathSpec
 
 	sync bool
 }
@@ -182,7 +187,11 @@ func (self ResultSetFactory) NewResultSetWriter(
 	completion func(),
 	truncate result_sets.WriteMode) (result_sets.ResultSetWriter, error) {
 
-	result := &ResultSetWriterImpl{opts: opts}
+	result := &ResultSetWriterImpl{
+		opts:               opts,
+		file_store_factory: file_store_factory,
+		log_path:           log_path,
+	}
 
 	// If no path is provided, we are just a log sink
 	if utils.IsNil(log_path) {
@@ -231,6 +240,7 @@ type ResultSetReaderImpl struct {
 	fd         api.FileReader
 	idx_fd     api.FileReader
 	log_path   api.FSPathSpec
+	idx        int64
 }
 
 func (self *ResultSetReaderImpl) TotalRows() int64 {
@@ -317,6 +327,54 @@ func (self *ResultSetReaderImpl) Rows(ctx context.Context) <-chan *ordereddict.D
 			// We have reached the end.
 			if len(row_data) == 0 {
 				return
+			}
+
+			if len(row_data) < 2 {
+				continue
+			}
+
+			// This is a pointer to the real record.
+			if row_data[0] == '@' {
+				ptr_offset, err := strconv.ParseInt(
+					strings.Trim(string(row_data), "@\n"), 0, 64)
+				if err != nil {
+					continue
+				}
+
+				current_offset, err := self.fd.Seek(0, os.SEEK_CUR)
+				if err != nil {
+					return
+				}
+
+				_, err = self.fd.Seek(ptr_offset, os.SEEK_SET)
+				if err != nil {
+					return
+				}
+
+				// Make a new private buffer so as not to disturb the
+				// original buffer.
+				reader := bufio.NewReader(self.fd)
+				row_data, err = reader.ReadBytes('\n')
+				if err != nil {
+					return
+				}
+
+				// Seek back to the correct position
+				_, err = self.fd.Seek(current_offset, os.SEEK_SET)
+				if err != nil {
+					return
+				}
+
+				if len(row_data) < 2 {
+					continue
+				}
+				replacement := &replacement_record{}
+				err = json.Unmarshal(row_data[1:], replacement)
+				if err != nil {
+					continue
+				}
+
+				row_data = replacement.Data
 			}
 
 			item := ordereddict.NewDict()
