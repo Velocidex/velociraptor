@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 
@@ -50,28 +49,18 @@ func update_row(
 	file_store_factory api.FileStore,
 	log_path api.FSPathSpec, idx int64,
 	serialized []byte) error {
-	idx_writer_any, err := file_store_factory.WriteFile(log_path.
+	idx_writer, err := file_store_factory.WriteFile(log_path.
 		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
 	if err != nil {
 		return err
 	}
-	defer idx_writer_any.Close()
+	defer idx_writer.Close()
 
-	idx_writer, ok := idx_writer_any.(api.FileUpdater)
-	if !ok {
-		return errors.New("Filestore does not support updating")
-	}
-
-	fd_writer_any, err := file_store_factory.WriteFile(log_path)
+	fd_writer, err := file_store_factory.WriteFile(log_path)
 	if err != nil {
 		return err
 	}
-	defer fd_writer_any.Close()
-
-	fd_writer, ok := fd_writer_any.(api.FileUpdater)
-	if !ok {
-		return errors.New("Filestore does not support updating")
-	}
+	defer fd_writer.Close()
 
 	fd, err := file_store_factory.ReadFile(log_path)
 	if err != nil {
@@ -193,7 +182,7 @@ func update_row(
 				}
 
 				// Write the data at the end of the file.
-				end_offset, err := fd_writer_any.Size()
+				end_offset, err := fd_writer.Size()
 				if err != nil {
 					return err
 				}
@@ -201,7 +190,7 @@ func update_row(
 				replacement_bytes = append([]byte{'@'}, replacement_bytes...)
 				replacement_bytes = append(replacement_bytes, '\n')
 
-				_, err = fd_writer_any.Write(replacement_bytes)
+				_, err = fd_writer.Write(replacement_bytes)
 				if err != nil {
 					return err
 				}

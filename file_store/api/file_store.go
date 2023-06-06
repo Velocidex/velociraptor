@@ -38,14 +38,11 @@ type FileWriter interface {
 	Truncate() error
 	Close() error
 
+	// Allow the data to be updated in place.
+	Update(data []byte, offset int64) error
+
 	// Force the writer to be flushed to disk immediately.
 	Flush() error
-}
-
-// Some filestore implementations allow updating a file by overwriting
-// a range.
-type FileUpdater interface {
-	Update(data []byte, offset int64) error
 }
 
 type FileInfo interface {
