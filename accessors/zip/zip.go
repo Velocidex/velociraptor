@@ -643,9 +643,10 @@ and the Path representing the file within the zip file.
 Example:
 
        select FullPath, Mtime, Size from glob(
-         globs=pathspec(DelegateAccessor='file',
+         globs='/**/*.txt',
+         root=pathspec(DelegateAccessor='file',
               DelegatePath="File.zip",
-              Path='/**/*.txt'),
+              Path='/'),
          accessor='zip')
 
 `)

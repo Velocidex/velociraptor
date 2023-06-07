@@ -166,5 +166,11 @@
     "5573696e6720546f6f6c73": "Usando ferramentas",
     "566965746e616d657365": "Vietnamita",
     "5769647468": "Largura",
-    "57696e646f7773204f6e6c79": "Somente Windows"
+    "57696e646f7773204f6e6c79": "Somente Windows",
+    "436c69636b20746f2076696577206f722065646974": "Clique para visualizar ou editar",
+    "457870616e642073696465626172": "Expandir barra lateral",
+    "4b4d5320456e6372797074696f6e204b65792041524e2028626c616e6b206966204b4d53206e6f74207573656429": "ARN da chave de criptografia KMS (em branco se o KMS não for usado)",
+    "506172616d6574657273": "Parâmetros",
+    "506175736520466f722050726f6d7074": "Pausa para prompt",
+    "50726566697820666f722066696c6573206265696e672075706c6f616465642e20656e6420696e202f20666f7220666f6c646572732028626c616e6b206966206e6f74207573656429": "Prefixo para arquivos sendo carregado. terminar em / para pastas (em branco se não for usado)"
 }
