@@ -51,6 +51,14 @@ func (self *Launcher) GetFlows(
 		return result, nil
 	}
 
+	// The flow ids encode the creation time so we need to sort by
+	// flow id **before** we page the results.  NOTE: Currently the
+	// GUI will only show the top 1000 flows. If you have more than
+	// that it will not show more flows.
+	sort.Slice(flow_ids, func(i, j int) bool {
+		return flow_ids[i] > flow_ids[j]
+	})
+
 	// Page the flow urns
 	end := offset + length
 	if end > uint64(len(flow_ids)) {

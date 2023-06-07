@@ -108,8 +108,6 @@ if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
 let api_handlers = base_path + "/api/";
 
 const handle_error = err=>{
-    console.log(err);
-
     if (isCancel(err)) {
         return {data: {}, cancel: true};
     };

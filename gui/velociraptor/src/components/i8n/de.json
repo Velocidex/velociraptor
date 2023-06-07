@@ -161,6 +161,12 @@
      "557365726e616d65": "Benutzername",
      "5573696e6720546f6f6c73": "Werkzeuge verwenden",
      "5769647468": "Breite",
-     "57696e646f7773204f6e6c79": "Nur Windows",
-     "566965746e616d657365": "Vietnamesisch"
+    "57696e646f7773204f6e6c79": "Nur Windows",
+    "566965746e616d657365": "Vietnamesisch",
+    "436c69636b20746f2076696577206f722065646974": "Zum Anzeigen oder Bearbeiten klicken",
+    "457870616e642073696465626172": "Seitenleiste erweitern",
+    "4b4d5320456e6372797074696f6e204b65792041524e2028626c616e6b206966204b4d53206e6f74207573656429": "KMS-Verschlüsselungsschlüssel-ARN (leer, wenn KMS nicht verwendet wird)",
+    "506172616d6574657273": "Parameter",
+    "506175736520466f722050726f6d7074": "Pause für Eingabeaufforderung",
+    "50726566697820666f722066696c6573206265696e672075706c6f616465642e20656e6420696e202f20666f7220666f6c646572732028626c616e6b206966206e6f74207573656429": "Präfix für Dateien hochgeladen wird. endet in / für Ordner (leer, wenn nicht verwendet)"
 }
