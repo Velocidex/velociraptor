@@ -33,6 +33,9 @@ var (
 	CLIENTS_ROOT = path_specs.NewUnsafeDatastorePath("clients").
 			SetType(api.PATH_TYPE_DATASTORE_PROTO)
 
+	CLIENTS_INFO = path_specs.NewUnsafeFilestorePath("clients", "client_info").
+			SetType(api.PATH_TYPE_FILESTORE_JSON)
+
 	CONFIG_ROOT = path_specs.NewSafeDatastorePath("config").
 			SetType(api.PATH_TYPE_DATASTORE_JSON)
 

@@ -1,36 +1,36 @@
 /*
-   The client info manager caches client information in memory for
-   quick access without having to generate IO for each client record.
+  The client info manager caches client information in memory for
+  quick access without having to generate IO for each client record.
 
-   We maintain client stats as as:
+  We maintain client stats as as:
 
-   - Ping time - When the client was last seen - this is useful for the GUI
+  - Ping time - When the client was last seen - this is useful for the GUI
 
-   - IpAddress - Last seen IP address
+  - IpAddress - Last seen IP address
 
-   - LastHuntTimestamp - the last hunt that was run on this
-     client. This is used by the hunt dispatcher to decide which hunts
-     should be assigned to the client.
+  - LastHuntTimestamp - the last hunt that was run on this
+    client. This is used by the hunt dispatcher to decide which hunts
+    should be assigned to the client.
 
-   - LastEventTableVersion - the version of the client event table the
-     client currently has.
+  - LastEventTableVersion - the version of the client event table the
+    client currently has.
 
-   While client stats are needed on both the master and minion nodes
-   our goal is to minimize IO to the filestore.
+  While client stats are needed on both the master and minion nodes
+  our goal is to minimize IO to the filestore.
 
-   Therefore we have the following rules:
+  Therefore we have the following rules:
 
-   1. Minions can read client info from the datastore but do not
-      update it - Instead they send update mutation to the
-      Server.Internal.ClientPing queue.
+  1. Minions can read client info from the datastore but do not
+     update it - Instead they send update mutation to the
+     Server.Internal.ClientPing queue.
 
-   2. Only the master writes the update stats to storage.
+  2. Only the master writes the update stats to storage.
 
-   3. All other nodes (master and minions) maintain their own internal
-      cache by following the Server.Internal.ClientPing queue.
+  3. All other nodes (master and minions) maintain their own internal
+     cache by following the Server.Internal.ClientPing queue.
 
-   4. Update mutations are sent periodically in a combined way to
-      avoid RPC overheads.
+  4. Update mutations are sent periodically in a combined way to
+     avoid RPC overheads.
 */
 
 package client_info
@@ -46,7 +46,6 @@ import (
 	"github.com/Velocidex/ttlcache/v2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -169,43 +168,23 @@ func (self *CachedInfo) _UpdateStats(
 // Write ping record to data store if it is dirty.
 func (self *CachedInfo) Flush() error {
 	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	// Nothing to do
 	if !self.dirty {
-		self.mu.Unlock()
 		return nil
 	}
 
 	// Only the master actually writes the client stats to storage
 	if !self.is_master {
 		self.dirty = false
-		self.mu.Unlock()
 		return nil
 	}
 
-	ping_client_info := &actions_proto.ClientInfo{
-		Ping:                  self.record.Ping,
-		PingTime:              time.Unix(0, int64(self.record.Ping)*1000).String(),
-		IpAddress:             self.record.IpAddress,
-		LastHuntTimestamp:     self.record.LastHuntTimestamp,
-		LastEventTableVersion: self.record.LastEventTableVersion,
-	}
-	client_id := self.record.ClientId
+	self.record.PingTime = time.Unix(0, int64(self.record.Ping)*1000).String()
+	self.owner.storage.SetRecord(&self.record.ClientInfo)
 	self.dirty = false
 	self.last_flush = uint64(self.owner.Clock.Now().UnixNano() / 1000)
-	self.mu.Unlock()
-
-	// Record some stats about the client.
-	db, err := datastore.GetDB(self.owner.config_obj)
-	if err != nil {
-		return err
-	}
-
-	// A blind write will eventually hit the disk.
-	client_path_manager := paths.NewClientPathManager(client_id)
-	db.SetSubjectWithCompletion(
-		self.owner.config_obj, client_path_manager.Ping(),
-		ping_client_info, utils.BackgroundWriter)
 
 	return nil
 }
@@ -226,6 +205,8 @@ type ClientInfoManager struct {
 	is_master bool
 
 	mutation_manager *MutationManager
+
+	storage *Store
 }
 
 func (self *ClientInfoManager) GetCachedClients() []string {
@@ -711,11 +692,14 @@ func NewClientInfoManager(config_obj *config_proto.Config) *ClientInfoManager {
 		is_master:  services.IsMaster(config_obj),
 
 		mutation_manager: NewMutationManager(),
+		storage: &Store{
+			data: make(map[string]string),
+		},
 	}
 
 	// The LRU should be large enough to hold all the clients. each
 	// client has several records (client id, hostname, labels etc).
-	service.lru.SetCacheSizeLimit(int(expected_clients) * 10)
+	service.lru.SetCacheSizeLimit(int(expected_clients))
 
 	if config_obj.Frontend != nil &&
 		config_obj.Frontend.Resources != nil &&
