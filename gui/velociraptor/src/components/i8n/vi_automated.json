@@ -4,5 +4,6 @@
     "KMS Encryption Key ARN (blank if KMS not used)": "ARN kh\u00f3a m\u00e3 h\u00f3a KMS (tr\u1ed1ng n\u1ebfu kh\u00f4ng s\u1eed d\u1ee5ng KMS)",
     "Parameters": "Th\u00f4ng s\u1ed1",
     "Pause For Prompt": "T\u1ea1m d\u1eebng \u0111\u1ec3 nh\u1eafc",
-    "Prefix for files being uploaded. end in / for folders (blank if not used)": "Ti\u1ec1n t\u1ed1 cho t\u1ec7p \u0111ang \u0111\u01b0\u1ee3c t\u1ea3i l\u00ean. k\u1ebft th\u00fac b\u1eb1ng / cho c\u00e1c th\u01b0 m\u1ee5c (\u0111\u1ec3 tr\u1ed1ng n\u1ebfu kh\u00f4ng \u0111\u01b0\u1ee3c s\u1eed d\u1ee5ng)"
+    "Prefix for files being uploaded. end in / for folders (blank if not used)": "Ti\u1ec1n t\u1ed1 cho t\u1ec7p \u0111ang \u0111\u01b0\u1ee3c t\u1ea3i l\u00ean. k\u1ebft th\u00fac b\u1eb1ng / cho c\u00e1c th\u01b0 m\u1ee5c (\u0111\u1ec3 tr\u1ed1ng n\u1ebfu kh\u00f4ng \u0111\u01b0\u1ee3c s\u1eed d\u1ee5ng)",
+    "Server Monitoring": "Gi\u00e1m s\u00e1t m\u00e1y ch\u1ee7"
 }
