@@ -502,12 +502,15 @@ func (self *HTTPConnector) rekeyNextServer(ctx context.Context) error {
 	}
 
 	if resp.StatusCode != 200 {
-		return errors.New("Invalid status while downloading PEM")
+		err = errors.New("Invalid status while downloading PEM")
+		self.logger.Info("While getting %v: %v (%d)", url, err, resp.StatusCode)
+		return err
 	}
 
 	pem, err := ioutil.ReadAll(io.LimitReader(resp.Body, constants.MAX_MEMORY))
 	if err != nil {
 		self.server_name = ""
+		self.logger.Info("While reading %v: %v", url, err)
 		return errors.Wrap(err, 0)
 	}
 
