@@ -592,7 +592,7 @@ const Vietnamese = {
      "Server Event Monitoring: Select artifacts to collect on the server": "Giám sát sự kiện máy chủ: Chọn artifact để thu thập trên máy chủ",
      "Server Events": "Sự kiện máy chủ",
      "Server Side Encryption": "Mã hóa phía máy chủ",
-     "Servr Monitoring": "Giám sát máy chủ",
+     "Server Monitoring": "Giám sát máy chủ",
      "Set All": "Đặt tất cả",
      "Set Serve URL": "Đặt URL tải về",
      "Set a password in user preferences to lock the download file.": "Đặt mật khẩu trong tùy chọn người dùng để khóa tệp tải xuống.",
