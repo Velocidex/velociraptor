@@ -7,6 +7,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/orgs"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
@@ -53,5 +54,7 @@ func (self *UserManagerTestSuite) makeUsers() {
 }
 
 func TestUserManger(t *testing.T) {
+	orgs.NonceForTest = "Nonce"
+
 	suite.Run(t, &UserManagerTestSuite{})
 }
