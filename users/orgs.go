@@ -18,11 +18,26 @@ func GetOrgs(
 		return nil
 	}
 
+	root_config_obj, err := org_manager.GetOrgConfig(services.ROOT_ORG_ID)
+	if err != nil {
+		return nil
+	}
+
+	// ORG_ADMINs can see everything
+	is_superuser, _ := services.CheckAccess(
+		root_config_obj, principal, acls.ORG_ADMIN)
+
 	result := []*api_proto.OrgRecord{}
 
 	for _, org := range org_manager.ListOrgs() {
 		org_config_obj, err := org_manager.GetOrgConfig(org.Id)
 		if err != nil {
+			continue
+		}
+
+		// ORG_ADMIN can see everything
+		if is_superuser {
+			result = append(result, org)
 			continue
 		}
 

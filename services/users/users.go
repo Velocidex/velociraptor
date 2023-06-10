@@ -29,13 +29,13 @@ import (
 	"regexp"
 	"sync"
 
-	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	datastore "www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/users"
 )
 
 const (
@@ -200,34 +200,19 @@ func (self UserManager) ListUsers(
 }
 
 // Fill in the orgs the user has any permissions in.
-func normalizeOrgList(user_record *api_proto.VelociraptorUser) error {
+func normalizeOrgList(
+	ctx context.Context,
+	user_record *api_proto.VelociraptorUser) {
+	orgs := users.GetOrgs(ctx, user_record.Name)
 	user_record.Orgs = nil
 
-	org_manager, err := services.GetOrgManager()
-	if err != nil {
-		return err
-	}
-
-	// Fill in the org names if needed
-	for _, org_record := range org_manager.ListOrgs() {
-		org_config_obj, err := org_manager.GetOrgConfig(org_record.Id)
-		if err != nil {
-			continue
-		}
-
-		ok, _ := services.CheckAccess(org_config_obj,
-			user_record.Name, acls.READ_RESULTS)
-		if !ok {
-			continue
-		}
-
+	// Fill in some information from the orgs but not everything.
+	for _, org_record := range orgs {
 		user_record.Orgs = append(user_record.Orgs, &api_proto.OrgRecord{
 			Id:   org_record.Id,
 			Name: org_record.Name,
 		})
 	}
-
-	return nil
 }
 
 // Returns the user record after stripping sensitive information like
@@ -283,8 +268,8 @@ func (self UserManager) GetUserWithHashes(ctx context.Context, username string) 
 		return nil, err
 	}
 
-	err = normalizeOrgList(user_record)
-	return user_record, err
+	normalizeOrgList(ctx, user_record)
+	return user_record, nil
 }
 
 func (self UserManager) SetUserOptions(ctx context.Context,
