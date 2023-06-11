@@ -34,7 +34,7 @@ const presetFilters = [
     {value: "precondition:LINUX", label: T("Linux Only")},
     {value: "precondition:DARWIN", label: T("OSX Only")},
     {value: "type:CLIENT_EVENT", label: T("Client Monitoring")},
-    {value: "type:SERVER_EVENT", label: T("Servr Monitoring")},
+    {value: "type:SERVER_EVENT", label: T("Server Monitoring")},
     {value: "tool:.+", label: T("Using Tools")},
     {value: "^exchange.+", label: T("Exchange")},
     {value: "^custom.+", label: T("Custom")},

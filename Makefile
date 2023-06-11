@@ -102,3 +102,6 @@ UpdateCerts:
 # First git checkout origin/v0.6.3
 archive_artifacts:
 	zip -r release_artifacts_$(basename "$(git status | head -1)").zip artifacts/definitions/ -i \*.yaml
+
+translations:
+	python3 ./scripts/find_i8n_translations.py ./gui/velociraptor/src/components/i8n/

@@ -73,10 +73,21 @@ def ProcessFile(filename):
         outfd.write(json.dumps(existing_translations, sort_keys=True, indent=4))
         print("Wrote automated json file %s with %d entries" % (outfile, len(existing_translations)))
 
+def ProcessDirectory(path):
+    for root, dirs, files in os.walk(path):
+        for name in files:
+            if not name.endswith(".jsx"):
+                continue
+
+            jsx_path = os.path.join(root, name)
+            json_path = jsx_path.replace(".jsx", ".json")
+            if os.access(json_path, os.R_OK|os.W_OK):
+                ProcessFile(jsx_path)
+
 
 if __name__ == "__main__":
     argument_parser = argparse.ArgumentParser()
-    argument_parser.add_argument("language_file", help="Language file to open")
+    argument_parser.add_argument("language_directory", help="Path to the language directory")
 
     args = argument_parser.parse_args()
-    ProcessFile(args.language_file)
+    ProcessDirectory(args.language_directory)

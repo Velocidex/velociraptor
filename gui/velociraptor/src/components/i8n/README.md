@@ -69,3 +69,6 @@ So to summarize:
 5. If you are a native speaker, review `de_automated.json` and paste
    the translations in `de.jsx` directly, while removing them from
    `de.json`
+
+
+NOTE: This entire process can be achieved using `make translations`
