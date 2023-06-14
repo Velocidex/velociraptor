@@ -160,10 +160,13 @@ func getUserRecord(
 	policy, err := services.GetPolicy(org_config_obj, user_details.Name)
 	if err == nil {
 		details.Set("roles", policy.Roles)
+		details.Set("_policy",
+			cleanupDict(scope, vfilter.RowToDict(ctx, scope, policy)))
+
 	} else {
 		details.Set("roles", &vfilter.Null{})
+		details.Set("_policy", ordereddict.NewDict())
 	}
-	details.Set("_policy", cleanupDict(scope, vfilter.RowToDict(ctx, scope, policy)))
 
 	effective_policy, err := services.GetEffectivePolicy(org_config_obj, user_details.Name)
 	if err == nil {

@@ -1,0 +1,32 @@
+{
+ "OrgAdmin Sees all orgs": [
+  {
+   "name": "\u003croot\u003e",
+   "nonce": "rKNKAYam310=",
+   "id": "root"
+  },
+  {
+   "name": "O1",
+   "nonce": "Nonce",
+   "id": "O1"
+  },
+  {
+   "name": "O2",
+   "nonce": "Nonce",
+   "id": "O2"
+  }
+ ],
+ "AdminO1 Sees only O1 with nonce": [
+  {
+   "name": "O1",
+   "nonce": "Nonce",
+   "id": "O1"
+  }
+ ],
+ "UserO1 Sees only O1 but does not see nonce": [
+  {
+   "name": "O1",
+   "id": "O1"
+  }
+ ]
+}

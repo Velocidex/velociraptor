@@ -15,7 +15,7 @@ func (self *UserManagerTestSuite) TestListUsers() {
 	golden := ordereddict.NewDict()
 
 	// OrgAdmin is an org admin at the root org so should see all
-	// users.
+	// users and all their orgs.
 	user_list, err := users.ListUsers(
 		self.Ctx, "OrgAdmin", users.LIST_ALL_ORGS)
 	assert.NoError(self.T(), err)
