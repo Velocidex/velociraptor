@@ -4,10 +4,10 @@
     "private": true,
     "type": "module",
     "dependencies": {
-        "@babel/core": "^7.21.8",
+        "@babel/core": "^7.22.1",
         "@babel/plugin-syntax-flow": "^7.21.4",
-        "@babel/plugin-transform-react-jsx": "^7.21.5",
-        "@babel/runtime": "^7.21.5",
+        "@babel/plugin-transform-react-jsx": "^7.22.3",
+        "@babel/runtime": "^7.22.3",
         "@fortawesome/fontawesome-svg-core": "^6.4.0",
         "@fortawesome/free-solid-svg-icons": "^6.4.0",
         "@fortawesome/react-fontawesome": "0.2.0",
