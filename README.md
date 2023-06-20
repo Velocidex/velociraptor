@@ -51,11 +51,14 @@ Velociraptor is also useful as a local triage tool. You can create a self contai
 
 ## Building from source
 
-To build from source, make sure you have a recent Golang installed
-from https://golang.org/dl/ (Currently at least Go 1.17) and the go
-binary is on your path. In addition make sure the GOBIN directory is
-also on your path (Defaults are: on linux and mac `~/go/bin`, on
-Windows `c:\\Users\\<username>\\go\\bin`):
+To build from source, make sure you have:
+ - a recent Golang installed from https://golang.org/dl/ (Currently at least Go 1.17)
+   - the `go` binary is in your path.
+   - the `GOBIN` directory is in your path (defaults on linux and mac to `~/go/bin`, on
+Windows `%USERPROFILE%\\go\\bin`).
+ - `gcc` in your path for CGO usage (on Windows, [TDM-GCC](https://jmeubank.github.io/tdm-gcc/about/) has been verified to work)
+ - `make`
+ - Node.js LTS (the GUI is build using [Node v18.14.2](https://nodejs.org/en/blog/release/v18.14.2))
 
 ```bash
     $ git clone https://github.com/Velocidex/velociraptor.git
