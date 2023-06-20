@@ -8,7 +8,7 @@ description: |
   system and last execution date/time
 
 reference:
-  - https://www.andreafortuna.org/dfir/forensic-artifacts-evidences-of-program-execution-on-windows-systems/
+  - https://andreafortuna.org/2018/05/23/forensic-artifacts-evidences-of-program-execution-on-windows-systems/
 
 parameters:
   - name: bamKeys
