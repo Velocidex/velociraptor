@@ -30,6 +30,12 @@ func (self OrgCreateFunction) Call(
 		return vfilter.Null{}
 	}
 
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		scope.Log("org_create: Command can only run on the server")
+		return vfilter.Null{}
+	}
+
 	arg := &OrgCreateFunctionArgs{}
 	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -52,6 +58,14 @@ func (self OrgCreateFunction) Call(
 	if err != nil {
 		scope.Log("org_create: %s", err)
 		return vfilter.Null{}
+	} else if org_record != nil {
+		principal := vql_subsystem.GetPrincipal(scope)
+		services.LogAudit(ctx,
+			config_obj, principal, "org_create",
+			ordereddict.NewDict().
+				Set("name", org_record.Name).
+				Set("org_id", org_record.Id).
+				Set("nonce", org_record.Nonce))
 	}
 
 	return org_record

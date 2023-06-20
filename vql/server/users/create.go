@@ -57,6 +57,13 @@ func (self UserCreateFunction) Call(
 		return vfilter.Null{}
 	}
 
+	services.LogAudit(ctx,
+		org_config_obj, principal, "user_create",
+		ordereddict.NewDict().
+			Set("username", arg.Username).
+			Set("acl", policy).
+			Set("org_ids", arg.OrgIds))
+
 	if arg.Password != "" {
 		// Write the user record.
 		err = users.SetUserPassword(
@@ -66,13 +73,6 @@ func (self UserCreateFunction) Call(
 			return vfilter.Null{}
 		}
 	}
-
-	services.LogAudit(ctx,
-		org_config_obj, principal, "user_create",
-		ordereddict.NewDict().
-			Set("Username", arg.Username).
-			Set("Roles", arg.Roles).
-			Set("OrgIds", arg.OrgIds))
 
 	return arg.Username
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"sort"
 
+	"github.com/Velocidex/ordereddict"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -107,7 +108,7 @@ func (self *ApiServer) CreateUser(ctx context.Context,
 	in *api_proto.UpdateUserRequest) (*emptypb.Empty, error) {
 
 	users_manager := services.GetUserManager()
-	user_record, _, err := users_manager.GetUserFromContext(ctx)
+	user_record, org_config_obj, err := users_manager.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -125,6 +126,16 @@ func (self *ApiServer) CreateUser(ctx context.Context,
 	}
 
 	err = users.AddUserToOrg(ctx, mode, principal, in.Name, in.Orgs, acl)
+
+	if err == nil {
+		services.LogAudit(ctx,
+			org_config_obj, principal, "user_create",
+			ordereddict.NewDict().
+				Set("username", in.Name).
+				Set("acl", acl).
+				Set("org_ids", in.Orgs))
+	}
+
 	return &emptypb.Empty{}, err
 }
 
@@ -220,7 +231,7 @@ func (self *ApiServer) SetUserRoles(
 	in *api_proto.UserRoles) (*emptypb.Empty, error) {
 
 	users_manager := services.GetUserManager()
-	user_record, _, err := users_manager.GetUserFromContext(ctx)
+	user_record, org_config_obj, err := users_manager.GetUserFromContext(ctx)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -246,5 +257,15 @@ func (self *ApiServer) SetUserRoles(
 	// users.AddUserToOrg
 	err = users.AddUserToOrg(ctx, users.UseExistingUser,
 		principal, in.Name, []string{in.Org}, acl)
+
+	if err == nil {
+		services.LogAudit(ctx,
+			org_config_obj, principal, "user_grant",
+			ordereddict.NewDict().
+				Set("username", in.Name).
+				Set("acl", acl).
+				Set("org_ids", []string{in.Org}))
+	}
+
 	return &emptypb.Empty{}, err
 }
