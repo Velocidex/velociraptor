@@ -31,3 +31,12 @@ func ConvertToStringSlice(a interface{}) []string {
 	}
 	return result
 }
+
+func DeduplicateStringSlice(in []string) (out []string) {
+	for _, i := range in {
+		if !InString(out, i) {
+			out = append(out, i)
+		}
+	}
+	return out
+}
