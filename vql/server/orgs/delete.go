@@ -13,7 +13,8 @@ import (
 )
 
 type OrgDeleteFunctionArgs struct {
-	OrgId string `vfilter:"required,field=org,doc=The org ID to delete."`
+	OrgId      string `vfilter:"required,field=org,doc=The org ID to delete."`
+	ReallyDoIt bool   `vfilter:"optional,field=really_do_it,doc=If not specified, just show what org will be removed"`
 }
 
 type OrgDeleteFunction struct{}
@@ -42,23 +43,27 @@ func (self OrgDeleteFunction) Call(
 		return vfilter.Null{}
 	}
 
-	org_manager, err := services.GetOrgManager()
-	if err != nil {
-		scope.Log("org_delete: %s", err)
-		return vfilter.Null{}
-	}
+	if arg.ReallyDoIt {
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			scope.Log("org_delete: %s", err)
+			return vfilter.Null{}
+		}
 
-	err = org_manager.DeleteOrg(ctx, arg.OrgId)
-	if err != nil {
-		scope.Log("org_delete: %s", err)
-		return vfilter.Null{}
-	}
+		err = org_manager.DeleteOrg(ctx, arg.OrgId)
+		if err != nil {
+			scope.Log("org_delete: %s", err)
+			return vfilter.Null{}
+		}
 
-	principal := vql_subsystem.GetPrincipal(scope)
-	services.LogAudit(ctx,
-		config_obj, principal, "org_delete",
-		ordereddict.NewDict().
-			Set("org_id", arg.OrgId))
+		principal := vql_subsystem.GetPrincipal(scope)
+		services.LogAudit(ctx,
+			config_obj, principal, "org_delete",
+			ordereddict.NewDict().
+				Set("org_id", arg.OrgId))
+	} else {
+		scope.Log("org_delete: Will remove org %v", arg.OrgId)
+	}
 
 	return arg.OrgId
 }

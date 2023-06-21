@@ -3449,6 +3449,8 @@
     type: string
     description: The org ID to delete.
     required: true
+  - name: really_do_it
+    type: bool
   metadata:
     permissions: ORG_ADMIN
 - name: orgs
