@@ -43,17 +43,20 @@ func (self UserDeleteFunction) Call(
 		orgs = arg.OrgIds
 	}
 
-	principal := vql_subsystem.GetPrincipal(scope)
-	services.LogAudit(ctx,
-		config_obj, principal, "user_delete",
-		ordereddict.NewDict().Set("Username", arg.Username))
-
 	if arg.ReallyDoIt {
+		principal := vql_subsystem.GetPrincipal(scope)
 		err = users.DeleteUser(ctx, principal, arg.Username, orgs)
 		if err != nil {
 			scope.Log("user_delete: %s", err)
 			return vfilter.Null{}
 		}
+
+		services.LogAudit(ctx,
+			config_obj, principal, "user_delete",
+			ordereddict.NewDict().
+				Set("username", arg.Username).
+				Set("org_ids", orgs))
+
 	} else {
 		scope.Log("user_delete: Will remove %v from orgs %v", arg.Username, orgs)
 	}
