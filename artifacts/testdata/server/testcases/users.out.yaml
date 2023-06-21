@@ -25,7 +25,7 @@ SELECT whoami() FROM scope()[
    "roles": [
     "reader"
    ],
-   "_policy": {
+   "policy": {
     "roles": [
      "reader"
     ]
@@ -46,7 +46,7 @@ SELECT whoami() FROM scope()[
    "roles": [
     "reader"
    ],
-   "_policy": {
+   "policy": {
     "label_clients": true,
     "roles": [
      "reader"
@@ -68,7 +68,7 @@ SELECT whoami() FROM scope()[
   "roles": [
    "reader"
   ],
-  "_policy": {
+  "policy": {
    "label_clients": true,
    "roles": [
     "reader"
@@ -88,7 +88,7 @@ SELECT whoami() FROM scope()[
   "roles": [
    "administrator"
   ],
-  "_policy": {
+  "policy": {
    "roles": [
     "administrator"
    ]
@@ -128,7 +128,7 @@ SELECT whoami() FROM scope()[
   "roles": [
    "administrator"
   ],
-  "_policy": {
+  "policy": {
    "roles": [
     "administrator"
    ]

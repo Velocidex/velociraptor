@@ -32,7 +32,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "administrator"
   ],
-  "_policy": {
+  "policy": {
    "roles": [
     "administrator"
    ]
@@ -66,7 +66,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "picture": "",
   "email": false,
   "roles": null,
-  "_policy": {},
+  "policy": {},
   "effective_policy": null
  },
  {
@@ -78,7 +78,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "administrator"
   ],
-  "_policy": {
+  "policy": {
    "roles": [
     "administrator"
    ]
@@ -113,7 +113,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "reader"
   ],
-  "_policy": {
+  "policy": {
    "roles": [
     "reader"
    ]
@@ -131,7 +131,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "reader"
   ],
-  "_policy": {
+  "policy": {
    "roles": [
     "reader"
    ]
@@ -150,7 +150,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "administrator"
   ],
-  "_policy": {
+  "policy": {
    "roles": [
     "administrator"
    ]
@@ -186,7 +186,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "reader"
   ],
-  "_policy": {
+  "policy": {
    "roles": [
     "reader"
    ]
@@ -203,7 +203,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "picture": "",
   "email": false,
   "roles": null,
-  "_policy": {},
+  "policy": {},
   "effective_policy": null
  },
  {
@@ -215,7 +215,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "administrator"
   ],
-  "_policy": {
+  "policy": {
    "roles": [
     "administrator"
    ]
@@ -250,7 +250,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "reader"
   ],
-  "_policy": {
+  "policy": {
    "roles": [
     "reader"
    ]
@@ -289,7 +289,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "administrator"
   ],
-  "_policy": {
+  "policy": {
    "roles": [
     "administrator"
    ]
@@ -324,7 +324,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "roles": [
    "reader"
   ],
-  "_policy": {
+  "policy": {
    "roles": [
     "reader"
    ]
