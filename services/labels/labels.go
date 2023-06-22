@@ -201,6 +201,7 @@ func (self *Labeler) SetClientLabel(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	new_label = strings.TrimSpace(new_label)
 	checked_label := strings.ToLower(new_label)
 	cached, err := self.getRecord(config_obj, client_id)
 	if err != nil {
