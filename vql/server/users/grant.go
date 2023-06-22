@@ -64,7 +64,7 @@ func (self GrantFunction) Call(
 		scope.Log("user_grant: You must provide either roles or a policy object")
 		return vfilter.Null{}
 	}
-	policy.Roles = arg.Roles
+	policy.Roles = utils.DeduplicateStringSlice(append(policy.Roles, arg.Roles...))
 
 	principal := vql_subsystem.GetPrincipal(scope)
 	err = users.GrantUserToOrg(ctx, principal, arg.Username, orgs, policy)
