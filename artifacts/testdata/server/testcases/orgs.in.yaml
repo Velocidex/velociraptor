@@ -134,5 +134,5 @@ Queries:
     WHERE OSPath =~ "file.txt"
   }, org_id="ORGID2")
 
-- LET _ <= org_delete(org="ORGID2")
+- LET _ <= org_delete(org="ORGID2", really_do_it=TRUE)
 - SELECT OrgId FROM orgs()
