@@ -28,16 +28,10 @@ sources:
   - query: |
       SELECT
         EventTime,
-        if(condition= EventID = 1102,
-                then= Channel,
-                else= UserData.LogFileCleared.Channel
-            ) as ClearedLog,
+        UserData.LogFileCleared.Channel || Channel as ClearedLog,
         Message,
         UserData.LogFileCleared.SubjectDomainName + "\\" + UserData.LogFileCleared.SubjectUserName as Username,
-        if(condition= EventID = 104,
-                then= UserSID,
-                else= UserData.LogFileCleared.SubjectUserSid
-            ) as UserSID,
+        UserData.LogFileCleared.SubjectUserSid || UserSID as UserSID,
         dict(
             EventTime=EventTime,
             Computer=Computer,
