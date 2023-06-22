@@ -6,12 +6,17 @@ description: |
   More information about the tool can be found here
   https://www.nirsoft.net/utils/browsing_history_view.html
 
-  BrowsingHistoryView v2.45 - View browsing history of your Web browsers
-  Copyright (c) 2012 - 2020 Nir Sofer
+  NOTE: This binary is treated as malware by many detection engines
+  since it is capable of dumping user passwords and search history!!!
+  Running it on the endpoint may (hopefully) trigger endpoint defences.
+
+  BrowsingHistoryView v2.55 - View browsing history of your Web browsers
+  Copyright (c) 2012 - 2023 Nir Sofer
 
 tools:
  - name: NirsoftBrowsingHistoryView64
    url: https://github.com/Velocidex/Tools/raw/main/BrowsingHistoryView/BrowsingHistoryView-amd64.exe
+   expected_hash: c50d3f139bc7ed05fb0f5e25671ec0268b577d5930f27964291cc8747970f2c3
    serve_locally: true
 
 parameters:
