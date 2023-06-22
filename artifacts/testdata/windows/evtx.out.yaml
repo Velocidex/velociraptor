@@ -489,11 +489,10 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
 ]SELECT ClearedLog, Message, Message =~ "The audit log was cleared." FROM Artifact.Windows.EventLogs.Cleared()[
  {
   "ClearedLog": "Security",
-  "Message": "The audit log was cleared.%nSubject:%n%tSecurity ID:%t%1%n%tAccount Name:%t%2%n%tDomain Name:%t%3%n%tLogon ID:%t%4\r\n",
   "Message =~ \"The audit log was cleared.\"": true
  },
  {
-  "ClearedLog": null,
+  "ClearedLog": "System",
   "Message": "Log clear\r\n",
   "Message =~ \"The audit log was cleared.\"": false
  }
