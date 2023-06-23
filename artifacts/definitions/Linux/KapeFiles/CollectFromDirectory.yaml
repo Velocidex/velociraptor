@@ -2324,7 +2324,7 @@ sources:
       -- Call the generic VSS file collector with the globs we want in
       -- a new CSV file.
       LET all_results <= SELECT * FROM Artifact.Generic.Collectors.File(
-        Root=Device, Separator="/", Accessor="file", collectionSpec=rule_specs)
+        Root=Device, Accessor="file", collectionSpec=rule_specs)
 
       SELECT * FROM all_results WHERE _Source =~ "Metadata"
 
