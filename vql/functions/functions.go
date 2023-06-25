@@ -20,6 +20,7 @@ package functions
 import (
 	"bytes"
 	"context"
+	"encoding/ascii85"
 	"encoding/base64"
 	"encoding/binary"
 	"strconv"
@@ -62,6 +63,35 @@ func (self _Base64Decode) Call(
 func (self _Base64Decode) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "base64decode",
+		ArgType: type_map.AddType(scope, &_Base64DecodeArgs{}),
+	}
+}
+
+type _Base85Decode struct{}
+
+func (self _Base85Decode) Call(
+	ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+	arg := &_Base64DecodeArgs{}
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("base85decode: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	dest := make([]byte, len(arg.String))
+	src := strings.TrimSuffix(strings.TrimPrefix(arg.String, "<~"), "~>")
+	n, _, err := ascii85.Decode(dest, []byte(src), true)
+	if err != nil {
+		scope.Log("base85decode: %v %v", n, err)
+	}
+	return string(dest[:n])
+}
+
+func (self _Base85Decode) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "base85decode",
 		ArgType: type_map.AddType(scope, &_Base64DecodeArgs{}),
 	}
 }
@@ -448,6 +478,7 @@ func (self _SetFunction) Call(
 
 func init() {
 	vql_subsystem.RegisterFunction(&_Base64Decode{})
+	vql_subsystem.RegisterFunction(&_Base85Decode{})
 	vql_subsystem.RegisterFunction(&_Base64Encode{})
 	vql_subsystem.RegisterFunction(&_Scope{})
 	vql_subsystem.RegisterFunction(&_SetFunction{})
