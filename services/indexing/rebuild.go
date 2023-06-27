@@ -58,6 +58,7 @@ func (self *Indexer) LoadIndexFromDatastore(
 
 		// The all item corresponds to the "." search term.
 		self.SetIndex(client_id, "all")
+		self.SetIndex(client_id, client_id)
 
 		if client_info.OsInfo.Hostname != "" {
 			self.SetIndex(client_id, "host:"+client_info.OsInfo.Hostname)

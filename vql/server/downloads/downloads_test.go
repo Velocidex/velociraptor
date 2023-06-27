@@ -49,6 +49,9 @@ name: Custom.TestArtifactUpload
 type: CLIENT
 sources:
 - query: SELECT * FROM info()
+`, `
+name: Server.Audit.Logs
+type: INTERNAL
 `})
 
 	self.TestSuite.SetupTest()

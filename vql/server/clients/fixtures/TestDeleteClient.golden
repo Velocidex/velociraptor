@@ -56,7 +56,9 @@
  ],
  "After filestore": [
   "",
-  "/clients"
+  "/clients",
+  "/clients/C.12312",
+  "/clients/C.12312.db"
  ],
  "Files deleted": [
   {

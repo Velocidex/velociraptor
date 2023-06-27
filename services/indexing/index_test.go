@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/alecthomas/assert"
 	"github.com/stretchr/testify/suite"
@@ -13,8 +12,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/indexing"
-	"www.velocidex.com/golang/velociraptor/vtesting"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
@@ -30,24 +27,16 @@ func (self *TestSuite) SetupTest() {
 	self.ConfigObj.Services.IndexServer = true
 	self.ConfigObj.Frontend.Resources.IndexSnapshotFrequency = 100000
 
-	self.TestSuite.SetupTest()
+	self.populatedClientRecords()
 
-	self.populatedClients()
+	self.TestSuite.SetupTest()
 }
 
 // Make some clients in the index.
-func (self *TestSuite) populatedClients() {
+func (self *TestSuite) populatedClientRecords() {
 	self.clients = nil
 	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
-
-	indexer, err := services.GetIndexer(self.ConfigObj)
-	assert.NoError(self.T(), err)
-
-	// Wait here until the indexer is ready
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		return indexer.(*indexing.Indexer).IsReady()
-	})
 
 	count := 0
 
@@ -60,8 +49,6 @@ func (self *TestSuite) populatedClients() {
 				bytes[7] = byte(j)
 				client_id := fmt.Sprintf("C.%02x", bytes)
 				self.clients = append(self.clients, client_id)
-				err := indexer.SetIndex(client_id, client_id)
-				assert.NoError(self.T(), err)
 				count++
 
 				path_manager := paths.NewClientPathManager(client_id)
@@ -81,7 +68,7 @@ func (self *TestSuite) TestEnumerateIndex() {
 	ctx := context.Background()
 	searched_clients := []string{}
 	for hit := range indexer.SearchIndexWithPrefix(ctx, self.ConfigObj, "") {
-		if hit != nil {
+		if hit != nil && hit.Term != "all" {
 			client_id := hit.Entity
 			searched_clients = append(searched_clients, client_id)
 		}
