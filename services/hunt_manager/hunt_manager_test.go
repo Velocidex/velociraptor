@@ -48,13 +48,13 @@ func (self *HuntTestSuite) SetupTest() {
 	self.expected.FlowId = utils.CreateFlowIdFromHuntId(self.hunt_id)
 
 	// Write a client record.
-	client_info_obj := &actions_proto.ClientInfo{
-		ClientId: self.client_id,
-	}
-	client_path_manager := paths.NewClientPathManager(self.client_id)
-	db, _ := datastore.GetDB(self.ConfigObj)
-	err := db.SetSubject(self.ConfigObj,
-		client_path_manager.Path(), client_info_obj)
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
+		actions_proto.ClientInfo{
+			ClientId: self.client_id,
+		}})
 	assert.NoError(self.T(), err)
 }
 
@@ -475,25 +475,30 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 	}
 	flow_id := hunt_obj.StartRequest.FlowId
 
-	db, err := datastore.GetDB(self.ConfigObj)
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(t, err)
 
 	// Create a windows and linux client
 	client_id_1 := "C.12321"
 	client_id_2 := "C.12322"
 
-	client_path_manager := paths.NewClientPathManager(client_id_1)
-	err = db.SetSubject(self.ConfigObj,
-		client_path_manager.Path(), &actions_proto.ClientInfo{
-			System: "windows",
-		})
+	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
+		actions_proto.ClientInfo{
+			ClientId: client_id_1,
+			System:   "windows",
+		},
+	})
 	assert.NoError(t, err)
 
-	client_path_manager = paths.NewClientPathManager(client_id_2)
-	err = db.SetSubject(self.ConfigObj,
-		client_path_manager.Path(), &actions_proto.ClientInfo{
-			System: "linux",
-		})
+	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
+		actions_proto.ClientInfo{
+			ClientId: client_id_2,
+			System:   "linux",
+		},
+	})
+	assert.NoError(t, err)
+
+	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(t, err)
 
 	hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
@@ -541,17 +546,17 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
 	t := self.T()
 
-	db, err := datastore.GetDB(self.ConfigObj)
-	assert.NoError(t, err)
-
 	// Create initial client with no OS set.
 	self.client_id = "C.12326"
 
-	client_path_manager := paths.NewClientPathManager(self.client_id)
-	err = db.SetSubject(self.ConfigObj,
-		client_path_manager.Path(), &actions_proto.ClientInfo{
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(t, err)
+
+	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
+		actions_proto.ClientInfo{
 			ClientId: self.client_id,
-		})
+		},
+	})
 	assert.NoError(t, err)
 
 	// The hunt will launch the Generic.Client.Info on the client.
@@ -588,16 +593,13 @@ func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
 	assert.Contains(t, err.Error(), "does not match OS condition")
 
 	// Write a new OS to it
-	err = db.SetSubject(self.ConfigObj,
-		client_path_manager.Path(), &actions_proto.ClientInfo{
-			System: "windows",
-		})
+	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
+		actions_proto.ClientInfo{
+			ClientId: self.client_id,
+			System:   "windows",
+		},
+	})
 	assert.NoError(t, err)
-
-	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
-	assert.NoError(t, err)
-
-	client_info_manager.Flush(context.Background(), self.client_id)
 
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -606,8 +608,6 @@ func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", self.client_id),
 		}, "Server.Internal.Interrogation", self.client_id, ""))
-
-	time.Sleep(time.Second)
 
 	// Ensure the hunt is collected on the client.
 	mdb := test_utils.GetMemoryDataStore(self.T(), self.ConfigObj)

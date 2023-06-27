@@ -101,10 +101,6 @@ type ClientInfoManager interface {
 		client_id string,
 		req *crypto_proto.VeloMessage) error
 
-	// Remove client id from the cache - this is needed when the
-	// record chages and we need to force a read from storage.
-	Flush(ctx context.Context, client_id string)
-
 	// Be able to manipulate the client and server metadata.
 	GetMetadata(ctx context.Context,
 		client_id string) (*ordereddict.Dict, error)

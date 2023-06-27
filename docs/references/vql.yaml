@@ -998,11 +998,14 @@
   description: Delete all the files that make up a flow.
   type: Plugin
   args:
+  - name: flow_id
+    type: string
+    required: true
   - name: client_id
     type: string
     required: true
-  - name: flow_id
-    type: string
+  - name: really_do_it
+    type: bool
   metadata:
     permissions: DELETE_RESULTS
 - name: dict
@@ -2859,6 +2862,18 @@
     description: A list of items to filter
     required: true
   category: basic
+- name: leveldb
+  description: Enumerate all items in a level db database
+  type: Plugin
+  args:
+  - name: file
+    type: accessors.OSPath
+    description: The path to the leveldb file.
+  - name: accessor
+    type: string
+    description: The accessor to use.
+  metadata:
+    permissions: FILESYSTEM_READ
 - name: log
   description: |
     Log the message and return TRUE.
@@ -5084,6 +5099,8 @@
     type: string
     required: true
   category: server
+  metadata:
+    permissions: SERVER_ADMIN
 - name: server_set_metadata
   description: |
     Sets server metadata. Server metadata is a set of free form
@@ -5945,6 +5962,12 @@
   - name: serversideencryption
     type: string
     description: The server side encryption method to use
+  - name: kmsencryptionkey
+    type: string
+    description: The server side KMS key to use
+  - name: s3uploadroot
+    type: string
+    description: Prefix for the S3 object
   - name: noverifycert
     type: bool
     description: Skip TLS Verification (deprecated in favor of SkipVerify)
@@ -6106,6 +6129,9 @@
   - name: fragment
     type: string
     description: The fragment
+  - name: query
+    type: Any
+    description: A dict representing a query string
   - name: parse
     type: string
     description: A url to parse

@@ -16,7 +16,6 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -70,16 +69,14 @@ name: Generic.Client.Profile
 type: CLIENT
 `})
 
-	db, err := datastore.GetDB(self.ConfigObj)
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	// Create a client record for us to work with
-	client_path_manager := paths.NewClientPathManager(self.client_id)
-	client_info := &actions_proto.ClientInfo{
-		ClientId: self.client_id,
-	}
-	err = db.SetSubject(self.ConfigObj, client_path_manager.Path(), client_info)
-	assert.NoError(self.T(), err)
+	err = client_info_manager.Set(self.Ctx, &services.ClientInfo{
+		actions_proto.ClientInfo{
+			ClientId: self.client_id,
+		},
+	})
 }
 
 func (self *TestSuite) TestGetFlow() {
@@ -101,7 +98,7 @@ func (self *TestSuite) TestGetFlow() {
 	}
 
 	// Schedule new flows.
-	ctx := context.Background()
+	ctx := self.Ctx
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
@@ -167,7 +164,7 @@ func (self *TestSuite) TestRetransmission() {
 	}
 
 	// Schedule a new flow.
-	ctx := context.Background()
+	ctx := self.Ctx
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
@@ -194,14 +191,14 @@ func (self *TestSuite) TestRetransmission() {
 
 	runner := NewLegacyFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(ctx, message)
-	runner.Close(context.Background())
+	runner.Close(self.Ctx)
 
 	// Retransmit the same row again - this can happen if the
 	// server is loaded and the client is re-uploading the same
 	// payload multiple times.
 	runner = NewLegacyFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(ctx, message)
-	runner.Close(context.Background())
+	runner.Close(self.Ctx)
 
 	// Load the collection context and see what happened.
 	collection_context, err := LoadCollectionContext(self.Ctx, self.ConfigObj,
@@ -228,7 +225,7 @@ func (self *TestSuite) TestResourceLimits() {
 	}
 
 	// Schedule a new flow.
-	ctx := context.Background()
+	ctx := self.Ctx
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
@@ -243,9 +240,14 @@ func (self *TestSuite) TestResourceLimits() {
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	messages, err := client_info_manager.GetClientTasks(
-		context.Background(), self.client_id)
-	assert.NoError(self.T(), err)
+	var messages []*crypto_proto.VeloMessage
+
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		messages, err = client_info_manager.GetClientTasks(
+			self.Ctx, self.client_id)
+		assert.NoError(self.T(), err)
+		return len(messages) == 2
+	})
 
 	// The Generic.Client.Info has two source conditions so it
 	// contains two queries. To maintain backwards compatibility with
@@ -276,7 +278,7 @@ func (self *TestSuite) TestResourceLimits() {
 
 	runner := NewLegacyFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(ctx, message)
-	runner.Close(context.Background())
+	runner.Close(self.Ctx)
 
 	// Load the collection context and see what happened.
 	collection_context, err := LoadCollectionContext(self.Ctx, self.ConfigObj,
@@ -292,7 +294,7 @@ func (self *TestSuite) TestResourceLimits() {
 	message.ResponseId++
 	runner = NewLegacyFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(ctx, message)
-	runner.Close(context.Background())
+	runner.Close(self.Ctx)
 
 	// Load the collection context and see what happened.
 	collection_context, err = LoadCollectionContext(self.Ctx, self.ConfigObj,
@@ -310,7 +312,7 @@ func (self *TestSuite) TestResourceLimits() {
 	message.ResponseId++
 	runner = NewLegacyFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(ctx, message)
-	runner.Close(context.Background())
+	runner.Close(self.Ctx)
 
 	// Load the collection context and see what happened.
 	collection_context, err = LoadCollectionContext(self.Ctx, self.ConfigObj,
@@ -325,8 +327,13 @@ func (self *TestSuite) TestResourceLimits() {
 	assert.Contains(self.T(), collection_context.Status, "Row count exceeded")
 
 	// Make sure a cancel message was sent to the client.
-	messages, err = client_info_manager.PeekClientTasks(context.Background(), self.client_id)
-	assert.NoError(self.T(), err)
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		messages, err = client_info_manager.PeekClientTasks(
+			self.Ctx, self.client_id)
+		assert.NoError(self.T(), err)
+		return len(messages) == 1
+	})
+
 	assert.Equal(self.T(), len(messages), 1)
 	assert.NotNil(self.T(), messages[0].Cancel)
 
@@ -336,7 +343,7 @@ func (self *TestSuite) TestResourceLimits() {
 	message.ResponseId++
 	runner = NewLegacyFlowRunner(self.ConfigObj)
 	runner.ProcessSingleMessage(ctx, message)
-	runner.Close(context.Background())
+	runner.Close(self.Ctx)
 
 	// We still collect these rows but the flow is still in the
 	// error state. We do this so we dont lose the last few
@@ -369,7 +376,7 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 
 	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
 		Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}))
-	uploader.Upload(context.Background(), scope,
+	uploader.Upload(self.Ctx, scope,
 		filename, "ntfs", nil, 1000,
 		nilTime, nilTime, nilTime, nilTime, reader)
 
@@ -393,7 +400,7 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 
 	// Close the context should force uploaded files to be
 	// flushed.
-	closeContext(context.Background(), self.ConfigObj, collection_context)
+	closeContext(self.Ctx, self.ConfigObj, collection_context)
 
 	assert.Equal(self.T(), collection_context.TotalUploadedFiles, uint64(1))
 
@@ -655,7 +662,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 
 	scope := vql_subsystem.MakeScope().AppendVars(ordereddict.NewDict().
 		Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}))
-	uploader.Upload(context.Background(), scope,
+	uploader.Upload(self.Ctx, scope,
 		sparse_filename, "ntfs", nil, 1000,
 		nilTime, nilTime, nilTime, nilTime, reader)
 
@@ -682,7 +689,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 
 	// Close the context should force uploaded files to be
 	// flushed.
-	closeContext(context.Background(), self.ConfigObj, collection_context)
+	closeContext(self.Ctx, self.ConfigObj, collection_context)
 
 	// One file is uploaded
 	assert.Equal(self.T(), collection_context.TotalUploadedFiles, uint64(1))
@@ -790,7 +797,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 	}
 
 	// Upload the file to the responder.
-	uploader.Upload(context.Background(), scope,
+	uploader.Upload(self.Ctx, scope,
 		sparse_filename, "ntfs", nil, 1000,
 		nilTime, nilTime, nilTime, nilTime, fd)
 
@@ -811,7 +818,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 
 	// Close the context should force uploaded files to be
 	// flushed.
-	closeContext(context.Background(), self.ConfigObj, collection_context)
+	closeContext(self.Ctx, self.ConfigObj, collection_context)
 
 	// One file is uploaded
 	assert.Equal(self.T(), collection_context.TotalUploadedFiles, uint64(1))

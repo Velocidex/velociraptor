@@ -194,6 +194,10 @@ message ClientInfo {
     repeated string labels = 15;
     repeated string mac_addresses = 22;
 
+    // A hint if tasks are available. This does not have to be date -
+    // checking the task queue will yield the correct tasks.
+    bool has_tasks = 27;
+
     string last_interrogate_flow_id = 16;
 
     // This can be a customized artifact that is compatible with

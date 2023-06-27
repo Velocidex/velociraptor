@@ -693,10 +693,11 @@ type GUICustomizations struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	DisableServerEvents     bool  `protobuf:"varint,1,opt,name=disable_server_events,json=disableServerEvents,proto3" json:"disable_server_events,omitempty"`
-	DisableUserManagement   bool  `protobuf:"varint,2,opt,name=disable_user_management,json=disableUserManagement,proto3" json:"disable_user_management,omitempty"`
-	DisableQuarantineButton bool  `protobuf:"varint,3,opt,name=disable_quarantine_button,json=disableQuarantineButton,proto3" json:"disable_quarantine_button,omitempty"`
-	HuntExpiryHours         int64 `protobuf:"varint,4,opt,name=hunt_expiry_hours,json=huntExpiryHours,proto3" json:"hunt_expiry_hours,omitempty"`
+	DisableServerEvents     bool `protobuf:"varint,1,opt,name=disable_server_events,json=disableServerEvents,proto3" json:"disable_server_events,omitempty"`
+	DisableUserManagement   bool `protobuf:"varint,2,opt,name=disable_user_management,json=disableUserManagement,proto3" json:"disable_user_management,omitempty"`
+	DisableQuarantineButton bool `protobuf:"varint,3,opt,name=disable_quarantine_button,json=disableQuarantineButton,proto3" json:"disable_quarantine_button,omitempty"`
+	// Updated from config_obj.Defaults.HuntExpiryHours
+	HuntExpiryHours int64 `protobuf:"varint,4,opt,name=hunt_expiry_hours,json=huntExpiryHours,proto3" json:"hunt_expiry_hours,omitempty"`
 }
 
 func (x *GUICustomizations) Reset() {

@@ -33,6 +33,11 @@ var (
 	CLIENTS_ROOT = path_specs.NewUnsafeDatastorePath("clients").
 			SetType(api.PATH_TYPE_DATASTORE_PROTO)
 
+	// Stores a snapshot of all client records
+	CLIENTS_INFO_SNAPSHOT = path_specs.NewUnsafeFilestorePath(
+		"client_info", "snapshot").
+		SetType(api.PATH_TYPE_FILESTORE_JSON)
+
 	CONFIG_ROOT = path_specs.NewSafeDatastorePath("config").
 			SetType(api.PATH_TYPE_DATASTORE_JSON)
 
