@@ -18,24 +18,7 @@
 
 // A Zip accessor.
 
-// This accessor provides access to compressed archives. The filename
-// is encoded in such a way that this accessor can delegate to another
-// accessor to actually open the underlying zip file. This makes it
-// possible to open zip files read through e.g. raw ntfs.
-
-// For example a filename is URL encoded as:
-// ntfs:/c:\\Windows\\File.zip#/foo/bar
-
-// Refers to the file opened by the accessor "ntfs" (The URL Scheme)
-// with a path (URL Path) of c:\\Windows\File.zip. We then open this
-// file and return a member called /foo/bar (The URL Fragment) within
-// the archive.
-
-// This scheme allows us to nest zip files if we need to:
-// zip://fs:%2Fc:%5Cfoo%5Cbar%23nested.zip#foo/bar
-
-// Refers to the file /foo/bar stored within a zip file nested.zip
-// which is itself stored on the filesystem at c:\foo\bar\nested.zip
+// This accessor provides access to compressed archives.
 
 package zip
 

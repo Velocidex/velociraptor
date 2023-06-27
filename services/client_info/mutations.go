@@ -6,6 +6,10 @@ import (
 	"github.com/Velocidex/ordereddict"
 )
 
+// Updates to the master node are batched into a mutation object to
+// reduce API call overheads. This MutationManager is used to group
+// together updates to be flushed periodically to the master.
+
 // Builds up the mutation over time.
 type MutationManager struct {
 	mu sync.Mutex

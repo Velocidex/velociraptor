@@ -281,12 +281,6 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	}
 	client_info.FirstSeenAt = public_key_info.EnrollTime
 
-	// Expire the client info manager to force it to fetch fresh data.
-	client_info_manager, err := services.GetClientInfoManager(config_obj)
-	if err != nil {
-		return err
-	}
-
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
@@ -297,8 +291,6 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 
 		// Completion
 		func() {
-			client_info_manager.Flush(ctx, client_id)
-
 			journal.PushRowsToArtifactAsync(ctx, config_obj,
 				ordereddict.NewDict().
 					Set("ClientId", client_id),

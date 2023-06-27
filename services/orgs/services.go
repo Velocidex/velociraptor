@@ -527,7 +527,10 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 	}
 
 	if spec.ClientInfo {
-		c := client_info.NewClientInfoManager(org_config)
+		c, err := client_info.NewClientInfoManager(ctx, org_config)
+		if err != nil {
+			return err
+		}
 		err = c.Start(ctx, org_config, wg)
 		if err != nil {
 			return err
