@@ -13,6 +13,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
@@ -212,51 +213,53 @@ func (self *Indexer) searchClientIndex(
 	result := &api_proto.SearchClientsResponse{}
 	total_count := 0
 
-	resolver := NewClientResolver(ctx, config_obj, self)
-	defer resolver.Cancel()
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
+	if err != nil {
+		return nil, err
+	}
 
-	// Feed the hits to the resolver. This will look up the records in
-	// a worker pool.
-	go func() {
-		defer resolver.Close()
+	scope := vql_subsystem.MakeScope()
+	prefix, filter := splitSearchTermIntoPrefixAndFilter(scope, in.Query)
+	for hit := range self.SearchIndexWithPrefix(ctx, config_obj, prefix) {
+		if hit == nil {
+			continue
+		}
 
-		scope := vql_subsystem.MakeScope()
-		prefix, filter := splitSearchTermIntoPrefixAndFilter(scope, in.Query)
-		for hit := range self.SearchIndexWithPrefix(ctx, config_obj, prefix) {
-			if hit == nil {
+		if filter != nil && !filter.MatchString(hit.Term) {
+			continue
+		}
+		client_id := hit.Entity
+
+		// Uniquify the client ID
+		_, pres := seen[client_id]
+		if pres {
+			continue
+		}
+		seen[client_id] = true
+
+		// Skip clients that are offline
+		if in.Filter == api_proto.SearchClientsRequest_ONLINE {
+			stats, err := client_info_manager.GetStats(ctx, client_id)
+			if err != nil {
 				continue
 			}
 
-			if filter != nil && !filter.MatchString(hit.Term) {
+			// SKip clients that are too old
+			if now > stats.Ping &&
+				now-stats.Ping > 1000000*60*15 {
 				continue
-			}
-			client_id := hit.Entity
-
-			// Uniquify the client ID
-			_, pres := seen[client_id]
-			if pres {
-				continue
-			}
-			seen[client_id] = true
-			select {
-			case <-ctx.Done():
-				return
-			case resolver.In <- client_id:
 			}
 		}
-	}()
 
-	// Return all the valid records
-	for api_client := range resolver.Out {
 		total_count++
 		if uint64(total_count) < in.Offset {
 			continue
 		}
 
-		// Skip clients that are offline
-		if in.Filter == api_proto.SearchClientsRequest_ONLINE &&
-			now > api_client.LastSeenAt &&
-			now-api_client.LastSeenAt > 1000000*60*15 {
+		api_client, err := self._FastGetApiClient(ctx, self.config_obj,
+			client_id, client_info_manager)
+		if err != nil {
+			total_count--
 			continue
 		}
 

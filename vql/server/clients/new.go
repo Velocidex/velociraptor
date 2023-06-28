@@ -17,12 +17,13 @@ import (
 )
 
 type NewClientArgs struct {
-	FirstSeenAt time.Time `vfilter:"optional,field=first_seen_at"`
-	LastSeenAt  time.Time `vfilter:"optional,field=last_seen_at"`
-	Labels      []string  `vfilter:"optional,field=labels"`
-	OS          string    `vfilter:"optional,field=os,doc=What type of OS this is (default offline)"`
-	Hostname    string    `vfilter:"optional,field=hostname,doc=The hostname of the system"`
-	ClientId    string    `vfilter:"optional,field=client_id,doc=if set we use this client id otherwise we make a new one"`
+	FirstSeenAt  time.Time `vfilter:"optional,field=first_seen_at"`
+	LastSeenAt   time.Time `vfilter:"optional,field=last_seen_at"`
+	Labels       []string  `vfilter:"optional,field=labels"`
+	OS           string    `vfilter:"optional,field=os,doc=What type of OS this is (default offline)"`
+	Hostname     string    `vfilter:"optional,field=hostname,doc=The hostname of the system"`
+	ClientId     string    `vfilter:"optional,field=client_id,doc=if set we use this client id otherwise we make a new one"`
+	MacAddresses []string  `vfilter:"optional,field=mac_addresses"`
 }
 
 type NewClientFunction struct{}
@@ -66,11 +67,12 @@ func (self NewClientFunction) Call(ctx context.Context,
 
 	// Create a client record and index with elastic.
 	record := actions_proto.ClientInfo{
-		Hostname: arg.Hostname,
-		Fqdn:     arg.Hostname,
-		System:   arg.OS,
-		Labels:   arg.Labels,
-		ClientId: arg.ClientId,
+		Hostname:     arg.Hostname,
+		Fqdn:         arg.Hostname,
+		System:       arg.OS,
+		Labels:       arg.Labels,
+		ClientId:     arg.ClientId,
+		MacAddresses: arg.MacAddresses,
 	}
 
 	if !arg.FirstSeenAt.IsZero() {

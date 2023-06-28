@@ -11,9 +11,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -90,47 +88,38 @@ func (self *Labeler) SetClock(c utils.Clock) {
 
 // Assumption: We hold the lock entering this function.
 func (self *Labeler) getRecord(
+	ctx context.Context,
 	config_obj *config_proto.Config, client_id string) (*CachedLabels, error) {
 	cached_any, err := self.lru.Get(client_id)
 	if err == nil {
 		return cached_any.(*CachedLabels), nil
 	}
 
-	// We did not hit the lru - fetch from the datastore but we dont
-	// need to hold the lock for that.
-	self.mu.Unlock()
-
-	db, err := datastore.GetDB(config_obj)
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	cached := &CachedLabels{record: &api_proto.ClientLabels{}}
-	client_path_manager := paths.NewClientPathManager(client_id)
-	err = db.GetSubject(config_obj,
-		client_path_manager.Labels(), cached.record)
+	client_info, err := client_info_manager.Get(ctx, client_id)
+	if err != nil {
+		return nil, err
+	}
 
-	// In ancient versions we used to store labels in the client index
-	// instead of a dedicated record. This used to be migration code
-	// that populated labels from the index, but this is not necessary
-	// since the labels client record is the authoritative source.
-	preCalculatedLowCase(cached)
+	cached := &CachedLabels{record: &api_proto.ClientLabels{
+		Timestamp: client_info.LabelsTimestamp,
+		Label:     client_info.Labels,
+	}}
 
-	// Now set back to the lru with lock
-	self.mu.Lock()
-	self.lru.Set(client_id, cached)
-
-	return cached, nil
-}
-
-// Reset internal lower cased labels from the full labels. (Lower
-// cased labels are used for quick label comparisons).
-func preCalculatedLowCase(cached *CachedLabels) {
 	cached.lower_labels = nil
 	for _, label := range cached.record.Label {
 		cached.lower_labels = append(cached.lower_labels,
 			strings.ToLower(label))
 	}
+
+	// Now set back to the lru with lock
+	self.lru.Set(client_id, cached)
+
+	return cached, nil
 }
 
 func (self *Labeler) LastLabelTimestamp(
@@ -139,7 +128,7 @@ func (self *Labeler) LastLabelTimestamp(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	cached, err := self.getRecord(config_obj, client_id)
+	cached, err := self.getRecord(ctx, config_obj, client_id)
 	if err != nil {
 		return 0
 	}
@@ -162,7 +151,7 @@ func (self *Labeler) IsLabelSet(
 		return true
 	}
 
-	cached, err := self.getRecord(config_obj, client_id)
+	cached, err := self.getRecord(ctx, config_obj, client_id)
 	if err != nil {
 		return false
 	}
@@ -198,40 +187,42 @@ func (self *Labeler) SetClientLabel(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id, new_label string) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
 
 	new_label = strings.TrimSpace(new_label)
 	checked_label := strings.ToLower(new_label)
-	cached, err := self.getRecord(config_obj, client_id)
+
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return err
 	}
 
-	// Store the label in the datastore.
-	db, err := datastore.GetDB(config_obj)
+	client_info, err := client_info_manager.Get(ctx, client_id)
 	if err != nil {
 		return err
 	}
 
-	cached.record.Timestamp = uint64(self.Clock.Now().UnixNano())
-
-	// O(n) but n should be small.
-	if !utils.InString(cached.lower_labels, checked_label) {
-		cached.record.Label = append(cached.record.Label, new_label)
-		cached.lower_labels = append(cached.lower_labels, checked_label)
+	// Label is already set. O(n) but n should be small.
+	for _, l := range client_info.Labels {
+		if checked_label == strings.ToLower(l) {
+			return nil
+		}
 	}
 
-	client_path_manager := paths.NewClientPathManager(client_id)
-	err = db.SetSubjectWithCompletion(config_obj,
-		client_path_manager.Labels(), cached.record, nil)
+	client_info.Labels = append(client_info.Labels, new_label)
+	client_info.LabelsTimestamp = uint64(
+		self.Clock.Now().UnixNano())
+
+	// Update the client record
+	err = client_info_manager.Set(ctx, client_info)
 	if err != nil {
 		return err
 	}
 
-	// Cache the new record.
-	self.lru.Set(client_id, cached)
+	// Remove the record from the LRU - we will retrieve it from the
+	// client info manager later.
+	self.lru.Remove(client_id)
 
+	// Notify any clients that labels are added.
 	err = self.notifyClient(ctx, config_obj, client_id, new_label, "Add")
 	if err != nil {
 		return err
@@ -250,42 +241,46 @@ func (self *Labeler) RemoveClientLabel(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id, new_label string) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
 
 	checked_label := strings.ToLower(new_label)
-	cached, err := self.getRecord(config_obj, client_id)
+
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
+	if err != nil {
+		return err
+	}
+
+	client_info, err := client_info_manager.Get(ctx, client_id)
 	if err != nil {
 		return err
 	}
 
 	new_labels := []string{}
-	for _, label := range cached.record.Label {
-		if checked_label != strings.ToLower(label) {
-			new_labels = append(new_labels, label)
+
+	// Label is already set. O(n) but n should be small.
+	for _, l := range client_info.Labels {
+		if checked_label != strings.ToLower(l) {
+			new_labels = append(new_labels, l)
 		}
 	}
 
-	cached.record.Timestamp = uint64(self.Clock.Now().UnixNano())
-	cached.record.Label = new_labels
+	// Nothing was done.
+	if len(client_info.Labels) == len(new_labels) {
+		return nil
+	}
 
-	preCalculatedLowCase(cached)
+	client_info.Labels = new_labels
+	client_info.LabelsTimestamp = uint64(
+		self.Clock.Now().UnixNano())
 
-	// Store the label in the datastore.
-	db, err := datastore.GetDB(config_obj)
+	// Update the client record
+	err = client_info_manager.Set(ctx, client_info)
 	if err != nil {
 		return err
 	}
 
-	client_path_manager := paths.NewClientPathManager(client_id)
-	err = db.SetSubjectWithCompletion(config_obj,
-		client_path_manager.Labels(), cached.record, nil)
-	if err != nil {
-		return err
-	}
-
-	// Cache the new record.
-	self.lru.Set(client_id, cached)
+	// Remove the record from the LRU - we will retrieve it from the
+	// client info manager later.
+	self.lru.Remove(client_id)
 
 	err = self.notifyClient(ctx, config_obj, client_id, new_label, "Remove")
 	if err != nil {
@@ -308,7 +303,7 @@ func (self *Labeler) GetClientLabels(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	cached, err := self.getRecord(config_obj, client_id)
+	cached, err := self.getRecord(ctx, config_obj, client_id)
 	if err != nil {
 		return nil
 	}

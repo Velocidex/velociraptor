@@ -23,10 +23,13 @@ package client_info
 // When the master node writes the snapshot again, the
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"os"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
@@ -44,6 +47,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
+var (
+	info_regex = regexp.MustCompile(`"client_id":"([^"]+)","info":"([^"]+)"`)
+)
+
 type Store struct {
 	mu   sync.Mutex
 	data map[string][]byte
@@ -51,6 +58,17 @@ type Store struct {
 	uuid int64
 
 	dirty bool
+}
+
+func (self *Store) Keys() []string {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	result := make([]string, 0, len(self.data))
+	for k := range self.data {
+		result = append(result, k)
+	}
+	return result
 }
 
 func (self *Store) Remove(client_id string) {
@@ -114,16 +132,19 @@ func (self *Store) LoadFromSnapshot(
 	self.data = make(map[string][]byte)
 	self.dirty = false
 
-	for row := range reader.Rows(ctx) {
-		client_id, pres := row.GetString("client_id")
-		if !pres {
+	// Highly optimized reader for speed.
+	json_chan, err := reader.JSON(ctx)
+	if err != nil {
+		return err
+	}
+	for serialized := range json_chan {
+		matches := info_regex.FindStringSubmatch(string(serialized))
+		if len(matches) < 3 {
 			continue
 		}
 
-		hex_record, pres := row.GetString("info")
-		if !pres {
-			continue
-		}
+		client_id := matches[1]
+		hex_record := matches[2]
 
 		record, err := hex.DecodeString(hex_record)
 		if err != nil {
@@ -140,6 +161,7 @@ func (self *Store) LoadFromSnapshot(
 	return nil
 }
 
+// Write the snapshot to storage.
 func (self *Store) SaveSnapshot(
 	ctx context.Context, config_obj *config_proto.Config) error {
 
@@ -158,12 +180,13 @@ func (self *Store) SaveSnapshot(
 		return nil
 	}
 
-	record_count := len(self.data)
-
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
+
+	// Total number of records we flush to disk.
+	record_count := uint64(len(self.data))
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 	writer, err := result_sets.NewResultSetWriter(
@@ -187,11 +210,18 @@ func (self *Store) SaveSnapshot(
 	}
 	defer writer.Close()
 
-	for clients_id, serialized := range self.data {
-		writer.Write(ordereddict.NewDict().
-			Set("client_id", clients_id).
-			Set("info", hex.EncodeToString(serialized)))
+	// Write to memory buffer first then flush to disk in one
+	// operation to reduce IO overheads.
+	buffer := new(bytes.Buffer)
+
+	for client_id, serialized := range self.data {
+		// Use fmt to encode very quickly
+		line := fmt.Sprintf("{\"client_id\":%q,\"info\":%q}\n",
+			client_id, hex.EncodeToString(serialized))
+		buffer.Write([]byte(line))
 	}
+
+	writer.WriteJSONL(buffer.Bytes(), record_count)
 
 	self.dirty = false
 	return nil

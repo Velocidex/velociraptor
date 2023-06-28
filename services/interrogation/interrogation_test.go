@@ -37,10 +37,19 @@ type: INTERNAL
 `,
 	})
 
-	self.TestSuite.SetupTest()
-
 	self.client_id = "C.12312"
 	self.flow_id = "F.1232"
+
+	self.TestSuite.SetupTest()
+
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	client_info_manager.Set(self.Ctx, &services.ClientInfo{
+		actions_proto.ClientInfo{
+			ClientId: self.client_id,
+		},
+	})
 }
 
 func (self *ServicesTestSuite) EmulateCollection(
@@ -81,15 +90,13 @@ func (self *ServicesTestSuite) TestInterrogationService() {
 		})
 
 	// Wait here until the client is fully interrogated
-	db, err := datastore.GetDB(self.ConfigObj)
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	client_path_manager := paths.NewClientPathManager(self.client_id)
-	client_info := &actions_proto.ClientInfo{}
-
+	var client_info *services.ClientInfo
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		db.GetSubject(self.ConfigObj, client_path_manager.Path(), client_info)
-		return client_info.Hostname == hostname
+		client_info, err = client_info_manager.Get(self.Ctx, self.client_id)
+		return err == nil && client_info.Hostname == hostname
 	})
 
 	// Check that we record the last flow id.

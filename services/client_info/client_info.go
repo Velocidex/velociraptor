@@ -63,6 +63,23 @@ type ClientInfoManager struct {
 	storage *Store
 }
 
+func (self *ClientInfoManager) ListClients(ctx context.Context) <-chan string {
+	output_chan := make(chan string)
+	go func() {
+		defer close(output_chan)
+
+		for _, key := range self.storage.Keys() {
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- key:
+			}
+		}
+	}()
+
+	return output_chan
+}
+
 func (self *ClientInfoManager) GetStats(
 	ctx context.Context, client_id string) (*services.Stats, error) {
 	record, err := self.storage.GetRecord(client_id)
@@ -165,7 +182,8 @@ func (self *ClientInfoManager) Start(
 	// flush to disk that frequently because the master keeps a hot
 	// copy of the data in memory.
 	if services.IsMaster(config_obj) {
-		write_time := time.Duration(100) * time.Second
+		// By default write every 5 minutes
+		write_time := time.Duration(300) * time.Second
 		if config_obj.Frontend != nil && config_obj.Frontend.Resources != nil &&
 			config_obj.Frontend.Resources.ClientInfoWriteTime > 0 {
 			write_time = time.Duration(
@@ -245,6 +263,8 @@ func (self *ClientInfoManager) ProcessSnapshotWrites(
 		return nil
 	}
 
+	// If we receive a snapshot write broadcast then we are a minion
+	// and we must re-read the snapshot to receive the new data.
 	return self.storage.LoadFromSnapshot(ctx, config_obj)
 }
 

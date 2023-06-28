@@ -35,12 +35,14 @@ func (self *MultiAuthenticator) reject_with_username(
 	w http.ResponseWriter, r *http.Request, err error, username string) {
 
 	// Log into the audit log.
-	services.LogAudit(r.Context(),
-		self.config_obj, username, "User rejected by GUI",
-		ordereddict.NewDict().
-			Set("remote", r.RemoteAddr).
-			Set("method", r.Method).
-			Set("err", err.Error()))
+	if username != "" {
+		services.LogAudit(r.Context(),
+			self.config_obj, username, "User rejected by GUI",
+			ordereddict.NewDict().
+				Set("remote", r.RemoteAddr).
+				Set("method", r.Method).
+				Set("err", err.Error()))
+	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusUnauthorized)
