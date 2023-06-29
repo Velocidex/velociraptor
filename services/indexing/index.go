@@ -241,7 +241,6 @@ func NewIndexingService(ctx context.Context, wg *sync.WaitGroup,
 		services.GetOrgName(config_obj))
 
 	indexer := NewIndexer(config_obj)
-	indexer.Start(ctx, wg, config_obj)
 
-	return indexer, nil
+	return indexer, indexer.Start(ctx, wg, config_obj)
 }

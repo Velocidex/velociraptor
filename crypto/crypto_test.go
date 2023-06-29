@@ -56,7 +56,9 @@ type TestSuite struct {
 func (self *TestSuite) SetupTest() {
 	self.ConfigObj = self.LoadConfig()
 	self.ConfigObj.Services = &config_proto.ServerServicesConfig{
-		IndexServer: true,
+		IndexServer:    true,
+		ClientInfo:     true,
+		JournalService: true,
 	}
 	self.ConfigObj.Client.WritebackLinux = ""
 	self.ConfigObj.Client.WritebackWindows = ""

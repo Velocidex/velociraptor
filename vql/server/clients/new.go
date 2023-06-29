@@ -105,6 +105,15 @@ func (self NewClientFunction) Call(ctx context.Context,
 		}
 	}
 
+	labeler := services.GetLabeler(config_obj)
+	for _, label := range arg.Labels {
+		err := labeler.SetClientLabel(ctx, config_obj, arg.ClientId, label)
+		if err != nil {
+			scope.Log("client_create: %s", err)
+			break
+		}
+	}
+
 	principal := vql_subsystem.GetPrincipal(scope)
 	services.LogAudit(ctx,
 		config_obj, principal, "client_create",
