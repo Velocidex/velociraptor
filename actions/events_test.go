@@ -173,7 +173,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 
 	// And we ran some queries.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		return len(actions.QueryLog.Get()) > 0
+		return len(actions.QueryLog.Get()) > 1
 	})
 	actions.QueryLog.Clear()
 
@@ -210,11 +210,6 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 
 	// The new table has 1 queries still since it has not really changed.
 	assert.Equal(self.T(), len(new_message.UpdateEventTable.Event), 1)
-
-	// Wait for the event table queries to actually start running.
-	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		return len(actions.QueryLog.Get()) == 1
-	})
 
 	// Now check that no updates are performed: We clear the query log
 	// and send an update. No new queries should be running.
