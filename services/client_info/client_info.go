@@ -51,7 +51,8 @@ import (
 )
 
 var (
-	invalidError = errors.New("Invalid")
+	invalidError       = errors.New("Invalid")
+	invalidClientError = errors.New("Invalid Client Id")
 )
 
 type ClientInfoManager struct {
@@ -442,7 +443,7 @@ func (self *ClientInfoManager) Set(
 	ctx context.Context, client_info *services.ClientInfo) error {
 
 	if client_info.ClientId == "" {
-		return invalidError
+		return invalidClientError
 	}
 
 	return self.storage.SetRecord(&client_info.ClientInfo)

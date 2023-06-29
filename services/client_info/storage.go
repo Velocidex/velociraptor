@@ -92,6 +92,12 @@ func (self *Store) GetRecord(client_id string) (*actions_proto.ClientInfo, error
 	if err != nil {
 		return nil, err
 	}
+
+	// Ensure the client id is populated in the provided record.
+	if client_info.ClientId == "" {
+		client_info.ClientId = client_id
+	}
+
 	return client_info, nil
 }
 

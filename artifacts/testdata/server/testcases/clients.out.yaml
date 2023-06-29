@@ -26,7 +26,9 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
   "last_ip": "192.168.1.112:60239",
   "last_interrogate_flow_id": "F.BN21C82J8DM8K",
   "last_interrogate_artifact_name": "",
-  "labels": [],
+  "labels": [
+   "Dev"
+  ],
   "last_hunt_timestamp": 0,
   "last_event_table_version": 0,
   "last_label_timestamp": 0
