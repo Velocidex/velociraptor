@@ -51,6 +51,9 @@ const pageListRenderer = ({
     // page.
     if (totalPages * pageSize + 1 > totalRows) {
         totalPages--;
+        if (totalPages<0) {
+            totalPages = 0;
+        }
     }
     return (
         <Pagination>
