@@ -319,6 +319,8 @@ func (self *Store) LoadSnapshotFromLegacyData(
 		self.mu.Unlock()
 	}
 
+	logger.Debug("<green>ClientInfo Manager</> Rebuilt %v clients from Legacy data.", count)
+
 	// Save the data for next time.
 	return self.SaveSnapshot(ctx, config_obj)
 }
