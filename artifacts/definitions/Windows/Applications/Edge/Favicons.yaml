@@ -56,7 +56,7 @@ sources:
             SELECT ID, IconID, LastUpdated, PageURL, FaviconURL,
                    upload(accessor="data",
                           file=_image,
-                          name=format(format="Image%v.png", args=ID)) AS Image
+                          name=format(format="Image%v.png", args=ID)) AS Image, OSPath as _OSPath
             FROM sqlite(
               file=OSPath,
               query=faviconsQuery)
