@@ -1,22 +1,56 @@
 name: Windows.Forensics.Lnk
+author: Matt Green - @mgreen27
 description: |
-  A Lnk file parser.
+  This artiact parses LNK shortcut files.
+  
+  A LNK file is a type of Shell Item that serves as a shortcut or 
+reference to a 
+  specific file, folder, or application. It contains metadata and 
+information 
+  about the accessed file or location and is a valuable forensic artifact. 
+  LNK files can be automatically created by the Windows operating system 
+when a 
+  user accesses a file from a supported application or manually created by 
+the user.
+  
+  This artifact has several configurable options:
+  
+  - TargetGlob: glob targeting. Default targets *.lnk files in user path.
+  - IOCRegex: Regex search on key fields: StringData, TrackerData and 
+PropertyStore.
+  - IgnoreRegex: Ignore regex filter on key fields.
+  - UploadLnk: uploads lnk hits.
+  
+  List of fields targeted by filter regex:
+  
+    - StringData.TargetPath
+    - StringData.Name
+    - StringData.RelativePath
+    - StringData.WorkingDir
+    - StringData.Arguments
+    - StringData.IconLocation
+    - LinkTarget.LinkTarget
+    - PropertyStore
+    - TrackerData.MachineID
+    - TrackerData.MacAddress  
+      
+    NOTE: regex startof (^) and endof ($) line modifiers will not work.
 
-  Status: Experimental
-
-  NOTE: Not all shell bags are currently supported, just the common ones.
 
 reference:
-  - https://github.com/libyal/libfwsi/blob/main/documentation/Windows%20Shell%20Item%20format.asciidoc
-  - https://github.com/libyal/liblnk/blob/main/documentation/Windows%20Shortcut%20File%20(LNK)%20format.asciidoc
-  - https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink
-
+  - 
+https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-shllink
 
 parameters:
-  - name: Glob
-    default: C:\Users\*\AppData\Roaming\Microsoft\Windows\Recent\**\*.lnk
-
-  - name: AlsoUpload
+  - name: TargetGlob
+    default: C:\Users\**\*.lnk
+  - name: IocRegex
+    type: regex
+    description: A regex to filter on all fields
+  - name: IgnoreRegex
+    type: regex
+    description: A regex to ignore ilter all fields
+  - name: UploadLnk
     description: Also upload the link files themselves.
     type: bool
 
@@ -89,20 +123,110 @@ export: |
         ["WriteTime", 44, "WinFileTime", {
             "type": "uint64"
         }],
+        
         ["FileSize", 52, "uint32"],
         ["IconIndex", 56, "uint32"],
-        ["ShowCommand", 60, "uint32"],
-        ["HotKey", 62, "uint16"],
-
-        # The LinkTargetIDList only exists if the Link Flag is set otherwise it is empty.
+        ["ShowCommand", 60, "Enumeration", {
+            "type": "uint32",
+            "map": {
+                "SHOWNORMAL": 0x00000001,
+                "SHOWMAXIMIZED": 0x00000001,
+                "SHOWMINNOACTIVE": 0x00000007,
+            }
+        }],
+        ["__HotKeyLow", 62, "Enumeration", {
+            "type": "uint8",
+            "map": {
+                "No key assigned." : 0x00,
+                "0" :   0x30,
+                "1" :   0x31,
+                "2" :   0x32,
+                "3" :   0x33,
+                "4" :   0x34,
+                "5" :   0x35,
+                "6" :   0x36,
+                "7" :   0x37,
+                "8" :   0x38,
+                "9" :   0x39,
+                "A" :   0x41,
+                "B" :   0x42,
+                "C" :   0x43,
+                "D" :   0x44,
+                "E" :   0x45,
+                "F" :   0x46,
+                "G" :   0x47,
+                "H" :   0x48,
+                "I" :   0x49,
+                "J" :   0x4A,
+                "K" :   0x4B,
+                "L" :   0x4C,
+                "M" :   0x4D,
+                "N" :   0x4E,
+                "O" :   0x4F,
+                "P" :   0x50,
+                "Q" :   0x51,
+                "R" :   0x52,
+                "S" :   0x53,
+                "T" :   0x54,
+                "U" :   0x55,
+                "V" :   0x56,
+                "W" :   0x57,
+                "X" :   0x58,
+                "Y" :   0x59,
+                "Z" :   0x5A,
+                "F1" :   0x70,
+                "F2" :   0x71,
+                "F3" :   0x72,
+                "F4" :   0x73,
+                "F5" :   0x74,
+                "F6" :   0x75,
+                "F7" :   0x76,
+                "F8" :   0x77,
+                "F9" :   0x78,
+                "F10" :   0x79,
+                "F11" :   0x7A,
+                "F12" :   0x7B,
+                "F13" :   0x7C,
+                "F14" :   0x7D,
+                "F15" :   0x7E,
+                "F16" :   0x7F,
+                "F17" :   0x80,
+                "F18" :   0x81,
+                "F19" :   0x82,
+                "F20" :   0x83,
+                "F21" :   0x84,
+                "F22" :   0x85,
+                "F23" :   0x86,
+                "F24" :   0x87,
+                "NumLock" :   0x90,
+                "ScrollLock" :   0x91,
+            }
+        }],
+        ["__HotKeyHigh", 63, "Enumeration", {
+            "type": "uint8",
+            "map": {
+                "No modifier key used." : 0x00,
+                "SHIFT" : 0x01,
+                "CONTROL" : 0x02,
+                "ALT" : 0x04,
+            }
+        }],
+        ["HotKey", 0, "Value", {
+            "value": "x=>if(condition= x.__HotKeyLow=~'No key assigned',
+                            then=x.__HotKeyLow,
+                            else=x.__HotKeyLow + ' + ' + x.__HotKeyHigh)"
+            
+        }],
+        
+        # The LinkTargetIDList only exists if the Link Flag is set 
+otherwise it is empty.
         ["LinkTargetIDList", "x=>x.HeaderSize", "Union", {
             "selector": "x=>x.LinkFlags =~ 'HasLinkTargetIDList'",
             "choices": {
                 "true": "LinkTargetIDList",
                 "false": "Empty"
             }
-         }],
-
+        }],
         ["LinkInfo", "x=>x.LinkTargetIDList.EndOf", "Union", {
             "selector": "x=>x.LinkFlags =~ 'HasLinkInfo'",
             "choices": {
@@ -110,48 +234,52 @@ export: |
                 "false": "Empty"
             }
         }],
-
-        ["NameInfo", "x=>x.LinkInfo.EndOf", "Union", {
+        
+        # StringData flag checks
+        ["__Name", "x=>x.LinkInfo.EndOf", "Union", {
             "selector": "x=>x.LinkFlags =~ 'HasName'",
             "choices": {
-                "true": "NameInfo",
+                "true": "Name",
                 "false": "Empty"
             }
         }],
-
-        ["RelativePathInfo", "x=>x.NameInfo.EndOf", "Union", {
+        ["__RelativePath", "x=>x.__Name.EndOf", "Union", {
             "selector": "x=>x.LinkFlags =~ 'HasRelativePath'",
             "choices": {
-                "true": "RelativePathInfo",
+                "true": "RelativePath",
                 "false": "Empty"
             }
         }],
-
-        ["WorkingDirInfo", "x=>x.RelativePathInfo.EndOf", "Union", {
+        ["__WorkingDir", "x=>x.__RelativePath.EndOf", "Union", {
             "selector": "x=>x.LinkFlags =~ 'HasWorkingDir'",
             "choices": {
-                "true": "WorkingDirInfo",
+                "true": "WorkingDir",
                 "false": "Empty"
             }
         }],
-
-        ["ArgumentInfo", "x=>x.WorkingDirInfo.EndOf", "Union", {
+        ["__Arguments", "x=>x.__WorkingDir.EndOf", "Union", {
             "selector": "x=>x.LinkFlags =~ 'HasArguments'",
             "choices": {
-                "true": "ArgumentInfo",
+                "true": "Arguments",
                 "false": "Empty"
             }
         }],
-        ["IconInfo", "x=>x.ArgumentInfo.EndOf", "Union", {
+        ["__IconLocation", "x=>x.__Arguments.EndOf", "Union", {
             "selector": "x=>x.LinkFlags =~ 'HasIconLocation'",
             "choices": {
-                "true": "IconInfo",
+                "true": "IconLocation",
                 "false": "Empty"
             }
-        }]
+        }],
+        ["StringData",0,"StringData"],
+        ["ExtraData", "x=>x.__IconLocation.EndOf", "Array", {
+                "type": "ExtraData",
+                "count": 1000,
+                "sentinal": "x=>x.Size < 0x00000004"
+            }],
       ]],
       ["Empty", 0, []],
-
+      
       # Struct size includes the size field
       ["LinkTargetIDList", "x=>x.IDListSize + 2", [
         ["IDListSize", 0, "uint16"],
@@ -187,7 +315,7 @@ export: |
                "32": "ShellBag0x20",
             }
         }]
-      ]],
+        ]],
 
       ["ShellBag0x40", 0, [
          ["Name", 5, "String", {
@@ -202,9 +330,9 @@ export: |
       ]],
 
       # A LinkInfo stores information about the destination of the link.
-      ["LinkInfo", "x=>x.LinkInfoSize", [
-        ["Offset", 0, "Value", {"value": "x=>x.StartOf"}],
-        ["LinkInfoSize", 0, "uint32"],
+      ["LinkInfo", "x=>x.__LinkInfoSize", [
+        ["__LinkInfoOffset", 0, "Value", {"value": "x=>x.StartOf"}],
+        ["__LinkInfoSize", 0, "uint32"],
         ["__LinkInfoHeaderSize", 4, "uint32"],
         ["LinkInfoFlags", 8, "Flags", {
             "type": "uint32",
@@ -218,24 +346,27 @@ export: |
         ["__CommonNetworkRelativeLinkOffset", 20, "uint32"],
         ["__CommonPathSuffixOffset", 24, "uint32"],
         ["__LocalBasePath", "x=>x.__LocalBasePathOffset", "String", {}],
-        ["__CommonNetworkRelativePath", "x=>x.__CommonNetworkRelativeLinkOffset", "String"],
+        ["__CommonNetworkRelativePath", 
+"x=>x.__CommonNetworkRelativeLinkOffset", "String"],
         ["__CommonPathSuffix", "x=>x.__CommonPathSuffixOffset", "String"],
         ["__VolumeID", "x=>x.__VolumeIDOffset", "VolumeID"],
-        ["__CommonNetworkRelativeLink", "x=>x.__CommonNetworkRelativeLinkOffset", "CommonNetworkRelativeLink"],
-
-        # Depending on the LinkInfoFlags this struct needs to be interpreted differently.
-        ["Target", 0, "Value", {
+        ["__CommonNetworkRelativeLink", 
+"x=>x.__CommonNetworkRelativeLinkOffset", "CommonNetworkRelativeLink"],
+        ["Target", 0, "Value", { # Depending on the LinkInfoFlags this 
+struct needs to be interpreted differently.
             "value": '
-               x=>if(condition=x.LinkInfoFlags =~ "VolumeIDAndLocalBasePath",
-                     then=dict(path=x.__LocalBasePath,
-                               volume_info=x.__VolumeID),
-                     else=dict(path=format(format="%v\\%v",
-                               args=[x.__CommonNetworkRelativeLink.NetName, x.__CommonPathSuffix]),
-                               relative_link=x.__CommonNetworkRelativeLink)
-             )'
+               x=>if(condition=x.LinkInfoFlags =~ 
+"VolumeIDAndLocalBasePath",
+                     then=dict(Path=x.__LocalBasePath,
+                               VolumeInfo=x.__VolumeID),
+                     else=dict(Path=format(format="%v\\%v",
+                               
+args=[x.__CommonNetworkRelativeLink.NetName, x.__CommonPathSuffix]),
+                               RelativeLink=x.__CommonNetworkRelativeLink) 
+)'
         }]
       ]],
-
+      
       ["CommonNetworkRelativeLink", 0, [
         ["__CommonNetworkRelativeLinkSize", 0, "uint32"],
         ["__CommonNetworkRelativeLinkFlags", 4, "Flags", {
@@ -297,13 +428,17 @@ export: |
         ["__DeviceNameOffsetUnicode", 24, "uint32"],
         ["__NetNameAscii", "x=>x.__NetNameOffset", "String"],
         ["__DeviceNameAscii", "x=>x.__DeviceNameOffset", "String"],
-        ["__NetNameUnicode", "x=>x.__NetNameOffsetUnicode", "String", {"encoding": "utf16"}],
-        ["__DeviceNameUnicode", "x=>x.__DeviceNameOffsetUnicode", "String", {"encoding": "utf16"}],
+        ["__NetNameUnicode", "x=>x.__NetNameOffsetUnicode", "String", 
+{"encoding": "utf16"}],
+        ["__DeviceNameUnicode", "x=>x.__DeviceNameOffsetUnicode", 
+"String", {"encoding": "utf16"}],
         ["NetName", 0, "Value", {
-            "value": "x=>if(condition=x.__NetNameOffset, then=x.__NetNameAscii, else=x.__NetNameUnicode)"
+            "value": "x=>if(condition=x.__NetNameOffset, 
+then=x.__NetNameAscii, else=x.__NetNameUnicode)"
         }],
         ["DeviceName", 0, "Value", {
-            "value": "x=>if(condition=x.__DeviceNameOffset, then=x.__DeviceNameAscii, else=x.__DeviceNameUnicode)"
+            "value": "x=>if(condition=x.__DeviceNameOffset, 
+then=x.__DeviceNameAscii, else=x.__DeviceNameUnicode)"
         }]
       ]],
 
@@ -326,7 +461,8 @@ export: |
         ["__VolumeLabelOffset", 12, "uint32"],
         ["__VolumeLabelOffsetUnicode", 16, "uint32"],
         ["__VolumeLabelAscii", "x=>x.__VolumeLabelOffset", "String"],
-        ["__VolumeLabelUnicode", "x=>x.__VolumeLabelOffsetUnicode", "String", {"encoding": "utf16"}],
+        ["__VolumeLabelUnicode", "x=>x.__VolumeLabelOffsetUnicode", 
+"String", {"encoding": "utf16"}],
         ["VolumeLabel", 0, "Value", {
             "value": 'x=>if(condition=x.__VolumeLabelOffset,
                then=x.__VolumeLabelAscii, else=x.__VolumeLabelUnicode)'
@@ -338,7 +474,8 @@ export: |
          ["__Name", 3, "String"],
          # Name is only valid if the first bit is set.
          ["Name", 3, "Value", {
-             "value": "x=>if(condition=x.ParentOf.Subtype, then=x.__Name, else='')",
+             "value": "x=>if(condition=x.ParentOf.Subtype, then=x.__Name, 
+else='')",
          }],
          ["Description", 0, "Value", {
             "value": 'x=>dict(
@@ -375,7 +512,8 @@ export: |
         ["LastModificationTime", 8, "FatTimestamp"],
         ["ShortName", 14, "String"],
 
-        # Variable length search for the extension signature from the start of the struct.
+        # Variable length search for the extension signature from the 
+start of the struct.
         ["__pre", 0, "String", {
             "term_hex": "0400efbe"
         }],
@@ -383,152 +521,919 @@ export: |
         # The extension tag should be immediately after the search string.
         ["__ExtensionTag", "x=>len(list=x.__pre)", "uint32"],
 
-        # Extension starts 4 bytes before the tag
-        ["Extension", "x=>len(list=x.__pre) - 4", "Union", {
-            "selector": "x=>format(format='%#x', args=x.__ExtensionTag)",
-            "choices": {
-               "0xbeef0004": "Beef0004",
-            }
-         }],
+            # Extension starts 4 bytes before the tag
+            ["Extension", "x=>len(list=x.__pre) - 4", "Union", {
+                "selector": "x=>format(format='%#x', 
+args=x.__ExtensionTag)",
+                "choices": {
+                    "0xbeef0004": "Beef0004",
+                }
+            }],
 
-         # Put all the data together in a convenient location
-         ["Description", 0, "Value", {
-             "value": 'x=>dict(
-                 Type=x.SubType,
-                 Modified=if(condition=x.__LastModificationTime, then=x.LastModificationTime),
-                 LastAccessed=if(condition=x.Extension.__LastAccessed, then=x.Extension.LastAccessed),
-                 CreateDate=if(condition=x.Extension.__CreateDate, then=x.Extension.CreateDate),
-                 ShortName=x.ShortName,
-                 LongName=x.Extension.LongName,
-                 MFTID=x.Extension.MFTReference.MFTID,
-                 MFTSeq=x.Extension.MFTReference.SequenceNumber
-             )'
-         }]
-       ]],
-       ["Beef0004", 0, [
-          ["Size", 0, "uint16"],
-          ["Version", 2, "uint16"],
-          ["__Signature", 4, "uint32"],
-          ["Signature", 0, "Value", {
-              "value": "x=>format(format='%#x', args=x.__Signature)"
-          }],
-          ["__CreateDate", 8, "uint32"],
-          ["__LastAccessed", 12, "uint32"],
+            # Put all the data together in a convenient location
+            ["Description", 0, "Value", {
+                "value": 'x=>dict(
+                    Type=x.SubType,
+                    Modified=if(condition=x.__LastModificationTime, 
+then=x.LastModificationTime),
+                    LastAccessed=if(condition=x.Extension.__LastAccessed, 
+then=x.Extension.LastAccessed),
+                    CreateDate=if(condition=x.Extension.__CreateDate, 
+then=x.Extension.CreateDate),
+                    ShortName=x.ShortName,
+                    LongName=x.Extension.LongName,
+                    MFTID=x.Extension.MFTReference.MFTID,
+                    MFTSeq=x.Extension.MFTReference.SequenceNumber
+                )'
+            }]
+        ]],
+        ["Beef0004", 0, [
+            ["Size", 0, "uint16"],
+            ["Version", 2, "uint16"],
+            ["__Signature", 4, "uint32"],
+            ["Signature", 0, "Value", {
+                "value": "x=>format(format='%#x', args=x.__Signature)"
+            }],
+            ["__CreateDate", 8, "uint32"],
+            ["__LastAccessed", 12, "uint32"],
 
-          ["CreateDate", 8, "FatTimestamp"],
-          ["LastAccessed", 12, "FatTimestamp"],
-          ["MFTReference", 20, "MFTReference"],
-          ["LongName", 46, "String", {
-              "encoding": "utf16"
-          }]
-       ]],
-       ["MFTReference", 0, [
-         ["MFTID", 0, "BitField", {
-             "type": "uint64",
-             "start_bit": 0,
-             "end_bit": 48,
-         }],
-         ["SequenceNumber", 0, "BitField", {
-             "type": "uint64",
-             "start_bit": 48,
-             "end_bit": 64,
-         }]
-       ]],
-
-       ["NameInfo", "x=>x.NameInfoSize + 2", [
+            ["CreateDate", 8, "FatTimestamp"],
+            ["LastAccessed", 12, "FatTimestamp"],
+            ["MFTReference", 20, "MFTReference"],
+            ["LongName", 46, "String", {
+                "encoding": "utf16"
+            }]
+        ]],
+        ["MFTReference", 0, [
+            ["MFTID", 0, "BitField", {
+                "type": "uint64",
+                "start_bit": 0,
+                "end_bit": 48,
+            }],
+            ["SequenceNumber", 0, "BitField", {
+                "type": "uint64",
+                "start_bit": 48,
+                "end_bit": 64,
+            }]
+        ]],
+        
+        ["StringData",0,[
+            ["TargetPath",0,"Value",{ "value":"x=> 
+x.ParentOf.LinkInfo.Target.Path"}],
+            ["Name",0,"Value",{ "value":"x=> 
+x.ParentOf.__Name.StringData"}],
+            ["RelativePath",0,"Value",{ "value":"x=> 
+x.ParentOf.__RelativePath.StringData"}],
+            ["WorkingDir",0,"Value",{ "value":"x=> 
+x.ParentOf__WorkingDir.StringData"}],
+            ["Arguments",0,"Value",{ "value":"x=> 
+x.ParentOf.__Arguments.StringData"}],
+            ["IconLocation",0,"Value",{ "value":"x=> 
+x.ParentOf.__IconLocation.StringData"}],
+        ]],
+        
+        ## StringDataBlock structs
+        ["Name", "x=>x.Size + 2", [
             ["Offset", 0, "Value", {"value": "x=>x.StartOf"}],
-            ["NameInfoSize", 0, "Value", {
-                "value": "x=>x.__NameInfoSize * 2"
-            }],
-            ["Name", 2, "String", {
+            ["Characters", 0, "uint16"],
+            ["Size", 0, "Value", {"value": "x=>x.Characters * 2"}],
+            ["StringData", 2, "String", {
                 "encoding": "utf16",
-                "length": "x=>x.NameInfoSize",
+                "length": "x=>x.Size",
+                "max_length": "x=>x.Size",
+                "term": "",
             }],
-            ["__NameInfoSize", 0, "uint16"],
-       ]],
-
-       ["WorkingDirInfo", "x=>x.WorkingDirInfoSize + 2", [
+        ]],
+        ["WorkingDir", "x=>x.Size + 2", [
             ["Offset", 0, "Value", {"value": "x=>x.StartOf"}],
-            ["WorkingDirInfoSize", 0, "Value", {
-                "value": "x=>x.__WorkingDirInfoSize * 2"
-            }],
-            ["WorkingDir", 2, "String", {
+            ["Characters", 0, "uint16"],
+            ["Size", 0, "Value", {"value": "x=>x.Characters * 2"}],
+            ["StringData", 2, "String", {
                 "encoding": "utf16",
-                "length": "x=>x.WorkingDirInfoSize",
+                "length": "x=>x.Size",
+                "max_length": "x=>x.Size",
+                "term": "",
             }],
-            ["__WorkingDirInfoSize", 0, "uint16"],
-       ]],
-
-       ["RelativePathInfo", "x=>x.RelativePathInfoSize + 2", [
+        ]],
+        ["RelativePath", "x=>x.Size + 2", [
             ["Offset", 0, "Value", {"value": "x=>x.StartOf"}],
-            ["RelativePathInfoSize", 0, "Value", {
-                "value": "x=>x.__RelativePathInfoSize * 2"
-            }],
-            ["RelativePath", 2, "String", {
+            ["Characters", 0, "uint16"],
+            ["Size", 0, "Value", {"value": "x=>x.Characters * 2"}],
+            ["StringData", 2, "String", {
                 "encoding": "utf16",
-                "length": "x=>x.RelativePathInfoSize",
+                "length": "x=>x.Size",
+                "max_length": "x=>x.Size",
+                "term": "",
             }],
-            ["__RelativePathInfoSize", 0, "uint16"],
-       ]],
-
-       ["ArgumentInfo", "x=>x.ArgumentInfoSize + 2", [
+        ]],
+        ["Arguments", "x=>x.Size + 2", [
             ["Offset", 0, "Value", {"value": "x=>x.StartOf"}],
-            ["ArgumentInfoSize", 0, "Value", {
-                "value": "x=>x.__ArgumentInfoSize * 2"
-            }],
-            ["Arguments", 2, "String", {
+            ["Characters", 0, "uint16"],
+            ["Size", 0, "Value", {"value": "x=>x.Characters * 2"}],
+            ["StringData", 2, "String", {
                 "encoding": "utf16",
-                "length": "x=>x.ArgumentInfoSize",
+                "length": "x=>x.Size",
+                "max_length": "x=>x.Size",
+                "term": "",
             }],
-            ["__ArgumentInfoSize", 0, "uint16"],
-       ]],
-       ["IconInfo", "x=>x.IconInfoSize + 2", [
+        ]],
+        ["IconLocation", "x=>x.Size + 2", [
             ["Offset", 0, "Value", {"value": "x=>x.StartOf"}],
-            ["IconInfoSize", 0, "Value", {
-                "value": "x=>x.__IconInfoSize * 2"
-            }],
-            ["IconLocations", 2, "String", {
+            ["Characters", 0, "uint16"],
+            ["Size", 0, "Value", {"value": "x=>x.Characters * 2"}],
+            ["StringData", 2, "String", {
                 "encoding": "utf16",
-                "length": "x=>x.IconInfoSize",
+                "length": "x=>x.Size",
+                "max_length": "x=>x.Size",
+                "term": "",
             }],
-            ["__IconInfoSize", 0, "uint16"],
-       ]]
+        ]],
+        ["ExtraData","x=>x.Size",[
+            ["Offset",0,"Value",{"value":"x=>x.StartOf"}],
+            ["Size",0,"uint32"],
+            ["__Header",4,"uint32"],
+            ["Header",0,"Value",{"value":"x=>'0x' + 
+upcase(string=format(format='%08x',args=x.__Header))"}],
+            ["BlockClass", 4, "Enumeration", {
+                "type": "uint32",
+                "map": {
+                    "EnvironmentVariable": 0xA0000001,
+                    "Console": 0xA0000002, 
+                    "TrackerData": 0xA0000003,
+                    "ConsoleFE": 0xA0000004,
+                    "SpecialFolder": 0xA0000005,
+                    "Darwin": 0xA0000006,
+                    "IconEnvironment": 0xA0000007,
+                    "Shim": 0xA0000008,
+                    "PropertyStore": 0xA0000009,
+                    "KnownFolder": 0xA000000B,
+                    "VistaAndAboveIDList": 0xA000000C,
+                }}],
+            ["Data", 0, "Union", {
+               "selector": "x=>x.Header",
+                "choices": {
+                    "0xA0000001": "EnvironmentVariableDataBlock",
+                    "0xA0000002": "ConsoleDataBlock", 
+                    "0xA0000003": "TrackerDataBlock",
+                    "0xA0000004": "ConsoleFEDataBlock",
+                    "0xA0000005": "SpecialFolderDataBlock",
+                    "0xA0000006": "DarwinDataBlock",
+                    "0xA0000007": "IconEnvironmentDataBlock",
+                    "0xA0000008": "ShimDataBlock",
+                    "0xA0000009": "PropertyStoreDataBlock",
+                    "0xA000000B": "KnownFolderDataBlock",
+                    "0xA000000C": "VistaAndAboveIDListDataBlock",
+                }
+            }],
+        ]],
+        #0xA0000001
+        ["EnvironmentVariableDataBlock", 0x00000314, [
+            ["__DataBlockSize",0,"uint32"],
+            ["__TargetAnsi", 8, "String", {"max_length": 260 }],
+            ["__TargetUnicode", 268, "String", {
+                "encoding": "utf16",
+                "max_length": 520
+            }],
+            ["DataValue", 0, "Value",{ 
+                "value": "x=>if(condition= 
+x.__TargetAnsi=x.__TargetUnicode,
+                                    then=x.__TargetAnsi,
+                                    
+else=dict(Ascii=x.__TargetAnsi,Unicode=x.__TargetUnicode))" }],
+        ]],
+        #0xA0000002
+        ["ConsoleDataBlock", 0x000000CC, [
+            ["__DataBlockSize",0,"uint32"],
+            ["FillAttributes",8,"Flags", {
+                "type": "uint16",
+                "bitmap": {
+                    "FOREGROUND_BLUE": 0,
+                    "FOREGROUND_GREEN": 1,
+                    "FOREGROUND_RED": 2,
+                    "FOREGROUND_INTENSITY": 3,
+                    "BACKGROUND_BLUE": 4,
+                    "BACKGROUND_GREEN": 5,
+                    "BACKGROUND_RED": 6,
+                    "BACKGROUND_INTENSITY": 7, 
+                }}],
+            ["PopupFillAttributes",10,"Flags", {
+                "type": "uint16",
+                "bitmap": {
+                    "FOREGROUND_BLUE": 0,
+                    "FOREGROUND_GREEN": 1,
+                    "FOREGROUND_RED": 2,
+                    "FOREGROUND_INTENSITY": 3,
+                    "BACKGROUND_BLUE": 4,
+                    "BACKGROUND_GREEN": 5,
+                    "BACKGROUND_RED": 6,
+                    "BACKGROUND_INTENSITY": 7, 
+                }}],
+            ["__ScreenBufferSizeX",12,"int16"],
+            ["__ScreenBufferSizeY",14,"int16"],
+            ["ScreenBufferSize",0,"Value",{
+                "value":"x=>format(format='%v x 
+%v',args=[x.__ScreenBufferSizeX,x.__ScreenBufferSizeY])"
+            }],
+            ["__WindowSizeX",16,"int16"],
+            ["__WindowSizeY",18,"int16"],
+            ["WindowSize",0,"Value",{
+                "value":"x=>format(format='%v x 
+%v',args=[x.__WindowSizeX,x.__WindowSizeY])"
+            }],
+            ["__WindowOriginX",20,"int16"],
+            ["__WindowOriginY",22,"int16"],
+            ["WindowOrigin",0,"Value",{
+                "value":"x=>format(format='%v / 
+%v',args=[x.__WindowOriginX,x.__WindowOriginY])"
+            }], 
+            ["__FontSizeW",32,"int16"],
+            ["__FontSizeH",34,"int16"],
+            ["FontSize",0,"Value",{
+                "value":"x=>if(condition= x.__FontSizeW=0,
+                        then= x.__FontSizeH,
+                        else= format(format='%v / 
+%v',args=[x.__FontSizeW,x.__FontSizeH])) "
+            }],
+            ["__FontFamily", 36, "BitField", {
+                type: "uint32",
+                start_bit: 4,
+                end_bit: 31,
+            }],
+            ["FontFamily", 0, "Value", {
+                "value": "x=>get(item=dict(
+                                `0`='DONTCARE',
+                                `16`='ROMAN',
+                                `32`='SWISS',
+                                `48`='MODERN',
+                                `64`='SCRIPT',
+                                `80`='DECORATIVE'),
+                            member=x.__FontFamily)"
+            }],
+            ["__FontPitch", 36, "BitField", {
+                type: "uint32",
+                start_bit: 0,
+                end_bit: 3,
+            }],
+            # TODO: implement Flag select for FontPitch
+            ["FontPitch", 0 ,"Value",{
+                "value":"x=>format(format='0x%02x',args=x.__FontPitch)"
+            }],
+            ["__FontWeight",40,"uint32"],
+            ["BoldFont", 0 ,"Value",{
+                "value":"x=>if(condition= 700<=x.__FontWeight,
+                    then= True, 
+                    else= False)"
+            }],
+            ["FaceName", 44, "String", {
+                "encoding": "utf16",
+                "length": 64,
+            }],
+            ["__CursorSize",108,"uint32"],
+            ["CursorSize", 0 ,"Value",{
+                "value":"x=> if(condition= x.__CursorSize <= 25,
+                                then= 'Small',
+                        else=if(condition= x.__CursorSize >= 26 AND 
+x.__CursorSize <= 50,
+                                then= 'Medium',
+                        else=if(condition= x.__CursorSize >= 51 AND 
+x.__CursorSize <= 100,
+                                else= 'Large',
+                                else= x.__CursorSize )))"
+            }],
+            ["__FullScreen",112,"uint32"],
+            ["FullScreen", 0 ,"Value",{
+                "value":"x=> if(condition= x.__FullScreen > 0,
+                                then= True,
+                                else= False )"
+            }],
+            ["__QuickEdit",116,"uint32"],
+            ["QuickEdit", 0 ,"Value",{
+                "value":"x=> if(condition= x.__QuickEdit > 0,
+                                then= True,
+                                else= False )"
+            }],
+            ["__InsertMode",120,"uint32"],
+            ["InsertMode", 0 ,"Value",{
+                "value":"x=> if(condition= x.__InsertMode > 0,
+                                then= True,
+                                else= False )"
+            }],
+            ["__AutoPosition",124,"uint32"],
+            ["AutoPosition", 0 ,"Value",{
+                "value":"x=> if(condition= x.__AutoPosition > 0,
+                                then= True,
+                                else= False )"
+            }],
+            ["HistoryBufferSize",128,"uint32"],
+            ["NumberOfHistoryBuffers",132,"uint32"],
+            ["__HistoryNoDup",136,"uint32"],
+            ["HistoryDuplicatesAllowed", 0 ,"Value",{
+                "value":"x=> if(condition= x.__HistoryNoDup > 0,
+                                then= True,
+                                else= False )"
+            }],
+            ["ColorTable", 140, "Array", {
+                "type": "uint32",
+                "count": 16   # Max count until sentinal
+            }],
+        ]],
+        #0xA0000003
+        ["TrackerDataBlock", 0x00000060, [
+            ["__DataBlockSize",0,"uint32"],
+            ["__MachineID", 16, "String"],
+            ["MachineID", 0, "Value",{ "value": "x=>if(condition= 
+x.__MachineID=~'[^ -~]+', then=Null, else=x.__MachineID )" }],
+            ["MacAddress", 0, "Value",{ "value": 
+"x=>if(condition=x.MachineID,then=split(string=x.Droid[1],sep='-')[-1])" 
+}],
+            ["__Droid0", 32, "GUID"],
+            ["__Droid1", 48, "GUID"],
+            ["Droid", 0, "Value",{"value": 
+"x=>if(condition=x.MachineID,then=(x.__Droid0.Value,x.__Droid1.Value))" 
+}],
+            ["__DroidBirth0", 64, "GUID"],
+            ["__DroidBirth1", 80, "GUID"],
+            ["DroidBirth", 0, "Value",{ "value": 
+"x=>if(condition=x.MachineID,then=(x.__DroidBirth0.Value, 
+x.__DroidBirth0.Value))" }],
+        ]],
+        #0xA0000004
+        ["ConsoleFEDataBlock", 0x0000000C, [
+            ["__DataBlockSize",0,"uint32"],
+            ["CodePage",8,"uint32"],
+            ["DataValue",0,"Value",{"value":"x=>x.CodePage"}],
+        ]],
+        #0xA0000005
+        ["SpecialFolderDataBlock", 0x00000010, [
+            ["__DataBlockSize",0,"uint32"],
+            ["SpecialFolderId",8,"uint32"],
+            ["IdOffset",12,"uint32"],
+            ["DataValue",0,"Value",{"value":"x=>x.SpecialFolderId"}],
+        ]],
+        #0xA0000006
+        ["DarwinDataBlock", 0x00000314, [
+            ["__DataBlockSize",0,"uint32"],
+            ["__DarwinDataAnsi", 8, "String", {"max_length": 260 }],
+            ["__DarwinDataUnicode", 268, "String", {
+                "encoding": "utf16",
+                "max_length": 520
+            }],
+            ["DataValue", 0, "Value",{ 
+                "value": "x=>if(condition= 
+x.__DarwinDataAnsi=x.__DarwinDataUnicode,
+                                    then=x.__DarwinDataAnsi,
+                                    
+else=dict(Ascii=x.__DarwinDataAnsi,Unicode=x.__DarwinDataUnicode))" }],
+        ]],
+        #0xA0000007
+        ["IconEnvironmentDataBlock", 0x00000314, [
+            ["__DataBlockSize",0,"uint32"],
+            ["__TargetAnsi", 8, "String", {"max_length": 260 }],
+            ["__TargetUnicode", 268, "String", {
+                "encoding": "utf16",
+                "max_length": 520,
+            }],
+            ["DataValue", 0, "Value",{ 
+                "value": "x=>if(condition= 
+x.__TargetAnsi=x.__TargetUnicode,
+                                    then=x.__TargetAnsi,
+                                    
+else=dict(Ascii=x.__TargetAnsi,Unicode=x.__TargetUnicode))" }],
+        ]],
+        #0xA0000008
+        ["ShimDataBlock", "x=>x.__DataBlockSize", [
+            ["__DataBlockSize",0,"uint32"],
+            ["LayerName", 8, "String", { 
+                "encoding": "utf16",
+                "max_length": "x=>x.__DataBlockSize - 8"
+                }],
+            ["DataValue",0,"Value",{"value":"x=>x.LayerName"}],
+        ]],
+        #0xA0000009
+        ["PropertyStoreDataBlock", "x=>x.__DataBlockSize", [
+            ["__DataBlockSize",0,"uint32"],
+            ["PropertyStorage", 8, "Array", {
+                "count": 1000,
+                "type": "PropertyStorage",
+                "sentinal": "x=>x.__DataBlockSize = 0"
+            }],
+            
+["DataValue",0,"Value",{"value":"x=>x.PropertyStorage.PropertyValue"}],
+            
+#["DataValue",0,"Value",{"value":"x=>property_store(data=x.PropertyStorage.PropertyValue)"}],
+            
+        ]],
+        #0xA000000B
+        ["KnownFolderDataBlock", 0x00000314, [
+            ["__DataBlockSize",0,"uint32"],
+            ["__KnownFolderId", 8, "GUID"],
+            ["GUID",0,"Value",{"value":"x=>x.__KnownFolderId.Value"}],
+            ["__Offset", 24,"uint32"],
+            ["KnownFolder", 0, "Value", { 
+                "value": "x=> get(item=dict(
+                    
+`DE61D971-5EBC-4F02-A3A9-6C82895E5C04`='AddNewPrograms',
+                    `724EF170-A42D-4FEF-9F26-B60E846FBA4F`='AdminTools',
+                    `A520A1A4-1780-4FF6-BD18-167343C5AF16`='AppDataLow',
+                    `A305CE99-F527-492B-8B1A-7E76FA98D6E4`='AppUpdates',
+                    `9E52AB10-F80D-49DF-ACB8-4330F5687855`='CDBurning',
+                    
+`DF7266AC-9274-4867-8D55-3BD661DE872D`='ChangeRemovePrograms',
+                    
+`D0384E7D-BAC3-4797-8F14-CBA229B392B5`='CommonAdminTools',
+                    
+`C1BAE2D0-10DF-4334-BEDD-7AA20B227A9D`='CommonOEMLinks',
+                    
+`0139D44E-6AFE-49F2-8690-3DAFCAE6FFB8`='CommonPrograms',
+                    
+`A4115719-D62E-491D-AA7C-E74B8BE3B067`='CommonStartMenu',
+                    
+`82A5EA35-D9CD-47C5-9629-E15D2F714E6E`='CommonStartup',
+                    
+`B94237E7-57AC-4347-9151-B08C6C32D1F7`='CommonTemplates',
+                    `0AC0837C-BBF8-452A-850D-79D08E667CA7`='Computer',
+                    `4BFEFB45-347D-4006-A5BE-AC0CB0567192`='Conflict',
+                    `6F0CD92B-2E97-45D1-88FF-B0D186B8DEDD`='Connections',
+                    `56784854-C6CB-462B-8169-88E350ACB882`='Contacts',
+                    `82A74AEB-AEB4-465C-A014-D097EE346D63`='ControlPanel',
+                    `2B0F765D-C0E9-4171-908E-08A611B84FF6`='Cookies',
+                    `B4BFCC3A-DB2C-424C-B029-7FE99A87C641`='Desktop',
+                    `FDD39AD0-238F-46AF-ADB4-6C85480369C7`='Documents',
+                    `374DE290-123F-4565-9164-39C4925E467B`='Downloads',
+                    `1777F761-68AD-4D8A-87BD-30B759FA33DD`='Favorites',
+                    `FD228CB7-AE11-4AE3-864C-16F3910AB8FE`='Fonts',
+                    `CAC52C1A-B53D-4EDC-92D7-6B2E8AC19434`='Games',
+                    `054FAE61-4DD8-4787-80B6-090220C4B700`='GameTasks',
+                    `D9DC8A3B-B784-432E-A781-5A1130A75963`='History',
+                    `4D9F7874-4E0C-4904-967B-40B0D20C3E4B`='Internet',
+                    
+`352481E8-33BE-4251-BA85-6007CAEDCF9D`='InternetCache',
+                    `BFB9D5E0-C6A9-404C-B2B2-AE6DB6AF4968`='Links',
+                    `F1B32785-6FBA-4FCF-9D55-7B8E7F157091`='LocalAppData',
+                    
+`2A00375E-224C-49DE-B8D1-440DF7EF3DDC`='LocalizedResourcesDir',
+                    `4BD8D571-6D19-48D3-BE97-422220080E43`='Music',
+                    `C5ABBF53-E17F-4121-8900-86626FC2C973`='NetHood',
+                    `D20BEEC4-5CA8-4905-AE3B-BF251EA09B53`='Network',
+                    `31C0DD25-9439-4F12-BF41-7FF4EDA38722`='Objects3D',
+                    
+`2C36C0AA-5812-4B87-BFD0-4CD0DFB19B39`='OriginalImages',
+                    `69D2CF90-FC33-4FB7-9A0C-EBB0F0FCB43C`='PhotoAlbums',
+                    `33E28130-4E1E-4676-835A-98395C3BC3BB`='Pictures',
+                    `DE92C1C7-837F-4F69-A3BB-86E631204A23`='Playlists',
+                    `76FC4E2D-D6AD-4519-A663-37BD56068185`='Printers',
+                    `9274BD8D-CFD1-41C3-B35E-B13F55A758F4`='PrintHood',
+                    `5E6C858F-0E22-4760-9AFE-EA3317B67173`='Profile',
+                    `62AB5D82-FDC1-4DC3-A9DD-070D1D495D97`='ProgramData',
+                    `905E63B6-C1BF-494E-B29C-65B732D3D21A`='ProgramFiles',
+                    
+`F7F1ED05-9F6D-47A2-AAAE-29D317C6F066`='ProgramFilesCommon',
+                    
+`6365D5A7-0F0D-45E5-87F6-0DA56B6A4F7D`='ProgramFilesCommonX64',
+                    
+`DE974D24-D9C6-4D3E-BF91-F4455120B917`='ProgramFilesCommonX86',
+                    
+`6D809377-6AF0-444B-8957-A3773F02200E`='ProgramFilesX64',
+                    
+`7C5A40EF-A0FB-4BFC-874A-C0F2E0B9FA8E`='ProgramFilesX86',
+                    `A77F5D77-2E2B-44C3-A6A2-ABA601054A51`='Programs',
+                    `DFDF76A2-C82A-4D63-906A-5644AC457385`='Public',
+                    
+`C4AA340D-F20F-4863-AFEF-F87EF2E6BA25`='PublicDesktop',
+                    
+`ED4824AF-DCE4-45A8-81E2-FC7965083634`='PublicDocuments',
+                    
+`3D644C9B-1FB8-4F30-9B45-F670235F79C0`='PublicDownloads',
+                    
+`DEBF2536-E1A8-4C59-B6A2-414586476AEA`='PublicGameTasks',
+                    `3214FAB5-9757-4298-BB61-92A9DEAA44FF`='PublicMusic',
+                    
+`B6EBFB86-6907-413C-9AF7-4FC2ABF07CC5`='PublicPictures',
+                    `2400183A-6185-49FB-A2D8-4A392A602BA3`='PublicVideos',
+                    `52A4F021-7B75-48A9-9F6B-4B87A210BC8F`='QuickLaunch',
+                    `AE50C081-EBD2-438A-8655-8A092E34987A`='Recent',
+                    `BD85E001-112E-431E-983B-7B15AC09FFF1`='RecordedTV',
+                    `B7534046-3ECB-4C18-BE4E-64CD4CB7D6AC`='RecycleBin',
+                    `8AD10C31-2ADB-4296-A8F7-E4701232C972`='ResourceDir',
+                    
+`3EB685DB-65F9-4CF6-A03A-E3EF65729F3D`='RoamingAppData',
+                    `B250C668-F57D-4EE1-A63C-290EE7D1AA1F`='SampleMusic',
+                    
+`C4900540-2379-4C75-844B-64E6FAF8716B`='SamplePictures',
+                    
+`15CA69B3-30EE-49C1-ACE1-6B5EC372AFB5`='SamplePlaylists',
+                    `859EAD94-2E85-48AD-A71A-0969CB56A6CD`='SampleVideos',
+                    `4C5C32FF-BB9D-43B0-B5B4-2D72E54EAAA4`='SavedGames',
+                    
+`7D1D3A04-DEBB-4115-95CF-2F29DA2920DA`='SavedSearches',
+                    `EE32E446-31CA-4ABA-814F-A5EBD2FD6D5E`='SEARCH_CSC',
+                    `98EC0E18-2098-4D44-8644-66979315A281`='SEARCH_MAPI',
+                    `190337D1-B8CA-4121-A639-6D472D16972A`='SearchHome',
+                    `8983036C-27C0-404B-8F08-102D10DCFD74`='SendTo',
+                    
+`7B396E54-9EC5-4300-BE0A-2482EBAE1A26`='SidebarDefaultParts',
+                    `A75D362E-50FC-4FB7-AC2C-A8BEAA314493`='SidebarParts',
+                    `625B53C3-AB48-4EC1-BA1F-A1EF4146FC19`='StartMenu',
+                    `B97D20BB-F46A-4C97-BA10-5E3608430854`='Startup',
+                    `43668BF8-C14E-49B2-97C9-747784D784B7`='SyncManager',
+                    `289A9A43-BE44-4057-A41B-587A76D7E7F9`='SyncResults',
+                    `0F214138-B1D3-4A90-BBA9-27CBC0C5389A`='SyncSetup',
+                    `1AC14E77-02E7-4E5D-B744-2EB1AE5198B7`='System',
+                    `D65231B0-B2F1-4857-A4CE-A8E7C6EA7D27`='SystemX86',
+                    `A63293E8-664E-48DB-A079-DF759E0509F7`='Templates',
+                    
+`5B3749AD-B49F-49C1-83EB-15370FBD4882`='TreeProperties',
+                    `0762D272-C50A-4BB0-A382-697DCD729B80`='UserProfiles',
+                    `F3CE0F7C-4901-4ACC-8648-D5D44B04EF8F`='UsersFiles',
+                    `18989B1D-99B5-455B-841C-AB7C74E4DDFC`='Videos',
+                    `F38BF404-1D43-42F2-9305-67DE0B28FC23`='Windows'),
+                    field=x.GUID)"
+            }],
+        ]],
+        #0xA000000C
+        ["VistaAndAboveIDListDataBlock", "x=>x.__BlockSize", [
+            ["__DataBlockSize",0,"uint32"],
+            ["IDList", 8, "ItemIDList"],
+        ]],
+        
+        ["PropertyStorage","x=>x.StorageSize", [
+            ["StorageSize",0,"uint32"],
+            #["Version",4,"String",{ "length":4 }], #Expect 1SPS / 
+0x53505331
+            ["__Format", 8,"GUID"],
+            ["Format", 0, "Value",{"value": "x=>x.__Format.Value" }],
+            ["PropertyValue", 24, "Array", {
+                "type": "PropertyValue",
+                "count": 1000,
+                "sentinal": "x=>x.__ValueSize = 0"
+            }],
+        ]],
+        ["PropertyValue","x=>x.__ValueSize", [
+            ["__ValueSize",0,"uint32"],
+            ["__ID",4,"uint32"],
+            ["GuidId",0,"Value",{"value": "x=>x.ParentOf.Format + '/' + 
+str(str=x.__ID)"}],
+            ["Description", 0, "Value", { 
+                "value": "x=> get(item=dict(
+                        
+`28636AA6-953D-11D2-B5D6-00C04FD918D0`=x.__SHELL_DETAILS,
+                        `446D16B1-8DAD-4870-A748-402EA43D788C`=x.__CACHE,
+                        `46588AE2-4CBC-4338-BBFC-139326986DCE`=x.__User,
+                        
+`841E4F90-FF59-4D16-8947-E81BBFFAB36D`=x.__Software,
+                        `86407DB8-9DF7-48CD-B986-F999ADC19731`=x.__Share,
+                        `86D40B4D-9069-443C-819A-2A54090DCCEC`=x.__Tile,
+                        
+`9F4C2855-9F79-4B39-A8D0-E1D42DE1D5F3`=x.__AppUserModel,
+                        
+`B725F130-47EF-101A-A5F1-02608C9EEBAC`=x.__STORAGE,
+                        
+`DABD30ED-0043-4789-A7F8-D013A4736622`=x.__FolderDisplay,
+                        `E3E0584C-B788-4A5A-BB20-7F5A44C9ACDD`=x.__SEARCH,
+                        
+`F29F85E0-4FF9-1068-AB91-08002B27B3D9`=x.__Document,
+                        `FB8D2D7B-90D1-4E34-BF60-6EAC09922BBF`=x.__Hash),
+                    member=x.ParentOf.Format) || 'Unknown Guid' " 
+            }],
+            ["__STORAGE", 4, "Enumeration", {
+                "type": "uint32",
+                "map": {
+                    "System.ItemFolderNameDisplay": 0x00000002,
+                    "ClassId": 0x00000003,
+                    "System.ItemTypeText": 0x00000004,
+                    "FileIndex": 0x00000008,
+                    "USN": 0x00000009,
+                    "System.ItemNameDisplay": 0x0000000A,
+                    "Path": 0x0000000B,
+                    "System.Size": 0x0000000C,
+                    "System.FileAttributes": 0x0000000D,
+                    "System.DateModified": 0x0000000E,
+                    "System.DateCreated": 0x0000000F,
+                    "System.DateAccessed": 0x00000010,
+                    "AllocSize": 0x00000012,
+                    "ShortFilename": 0x00000014,
+                }}],
+            ["__SHELL_DETAILS", 4, "Enumeration", {
+                "type": "uint32",
+                "map": {
+                    "ComputerName": 0x00000005,
+                    "ContainedItems": 0x0000001D,
+                    "FileCount": 0x0000000C,
+                    "FindData": 0x00000000,
+                    "IsSendToTarget": 0x00000021,
+                    "ItemPathDisplayNarrow": 0x00000008,
+                    "ItemSubType": 0x00000025,
+                    "ItemType": 0x0000000B,
+                    "ParsingName": 0x00000018,
+                    "ParsingPath": 0x0000001E,
+                    "PerceivedType": 0x00000009,
+                    "SFGAOFlags": 0x00000019,
+                    "TotalFileSize": 0x0000000E,
+                    "DescriptionID": 0x00000002,
+                    "NamespaceCLSID": 0x00000006,
+                }}],
+            ["__CACHE", 4, "Enumeration", {
+                "type": "uint32",
+                "map": {
+                    "ThumbnailCacheId": 0x00000064,
+                    "VolumeId": 0x00000068,
+                }}],
+            ["__SEARCH", 4, "Enumeration", {
+                "type": "uint32",
+                "map": {
+                    "FolderPath": 0x00000006,
+                    "SearchRanking": 0x00000003,
+                }}],
+            ["__User", 4, "Enumeration", {
+                "type": "uint32",
+                "map": {
+                    "SID": 0x00000004,
+                }}],
+            ["__Share", 4, "Enumeration", {
+                "type": "uint32",
+                "map": {
+                    "Share Target Description": 0x00000002,
+                }}],
+            ["__Hash", 4, "Enumeration", {
+                "type": "uint32",
+                "map": {
+                    "WinX Hash": 0x00000002,
+                }}],
+            ["__FolderDisplay", 4, "Enumeration", {
+                "type": "uint32",
+                "map": {
+                    "Item Folder Path Display Narrow": 0x00000064,
+                }}],                
+            ["__AppUserModel", 4, "Enumeration", {
+                "type": "uint32",
+                "map": {
+                    "App User Model Relaunch Command": 2,
+                    "App User Model Relaunch Icon Resource": 3,
+                    "App User Model Relaunch Display Name Resource": 4,
+                    "App User Model ID": 5,
+                    "App User Model Is DestList Separator": 6,
+                    "App User Model Is DestList Link": 7,
+                    "App User Model Exclude From Show In New Install": 8,
+                    "App User Model Prevent Pinning": 9,
+                    "App User Model Best Shortcut": 10,
+                    "App User Model Is Dual Mode": 11,
+                    "App User Model Start Pin Option": 12,
+                    "App User Model Relevance": 13,
+                    "App User Model Host Environment": 14,
+                    "App User Model Package Install Path": 15,
+                    "App User Model Record State": 16,
+                    "App User Model Package Family Name": 17,
+                    "App User Model Installed By": 18,
+                    "App User Model Parent ID": 19,
+                    "App User Model Activation Context": 20,
+                    "App User Model Package Full Name": 21,
+                    "App User Model Package Relative Application ID": 22,
+                    "App User Model Excluded From Launcher": 23,
+                    "App User Model AppCompat ID": 24,
+                    "App User Model Run Flags": 25,
+                    "App User Model Toast Activator CLSID": 26,
+                    "App User Model DestList Provided Title": 27,
+                    "App User Model DestList Provided Description": 28,
+                    "App User Model DestList Logo Uri": 29,
+                    "App User Model DestList Provided Group Name": 30,
+                }}],
+            ["__Software", 4, "Enumeration", {
+                "type": "uint32",
+                "map": {
+                    "Publisher Display Name": 2,
+                    "Software Registered Owner": 3,
+                    "Software Registered Company": 4,
+                    "Software AppId": 5,
+                    "Software Support Url": 6,
+                    "Software Support Telephone": 7,
+                    "Software Help Link": 8,
+                    "Software Install Location": 9,
+                    "Software Install Source": 10,
+                    "Software Date Installed": 11,
+                    "Software Support Contact Name": 12,
+                    "Software ReadMe Url": 13,
+                    "Software Update Info Url": 14,
+                    "Software Times Used": 15,
+                    "Software Date Last Used": 16,
+                    "Software Tasks File Url": 17,
+                    "Software Parent Name": 18,
+                    "Software Product ID": 19,
+                    "Software Comments": 20,
+                    "Software Null Preview Total Size": 997,
+                    "Software Null Preview Subtitle": 998,
+                    "Software Null Preview Title": 999,
+                }}],
+            ["__Tile", 4, "Enumeration", {
+                "type": "uint32",
+                "map": {
+                    "Tile Small Image Location": 0x00000002,
+                    "Tile Background Color": 0x00000004,
+                    "Tile Foreground Color": 0x00000005,
+                    "Tile Display Name": 0x0000000b,
+                    "Tile Image Location": 0x0000000c,
+                    "Tile Wide 310x150 Logo Path": 0x0000000d,
+                    "Tile Unknown Flags": 0x0000000e,
+                    "Tile Badge Logo Path": 0x0000000f,
+                    "Tile Suite Display Name": 0x00000010,
+                    "Tile Suite Sor tName": 0x00000011,
+                    "Tile Display Name Language": 0x00000012,
+                    "Tile Square 310x310 Logo Path": 0x00000013,
+                    "Tile Square 70x70 Logo Path": 0x00000014,
+                    "Tile Fence Post": 0x00000015,
+                    "Tile Install Progress": 0x00000016,
+                    "Tile Encoded Target Path": 0x00000017,
+                }}],
+            ["__Document", 4, "Enumeration", {
+                "type": "uint32",
+                "map": {
+                    "Subject": 3,
+                    "Author": 4,
+                    "Keywords": 5,
+                    "Comment": 6,
+                    "Document Template": 7,
+                    "Document Last Author": 8,
+                    "Document Revision Number": 9,
+                    "Document Total Editing Time": 10,
+                    "Document Date Printed": 11,
+                    "Document Date Created": 12,
+                    "Document Date Saved": 13,
+                    "Document Page Count": 14,
+                    "Document Word Count": 15,
+                    "Document Character Count": 16,
+                    "Thumbnail": 17,
+                    "Application Name": 18,
+                    "Document Security": 19,
+                    "High Keywords": 24,
+                    "Low Keywords": 25,
+                    "Medium Keywords": 26,
+                    "Thumbnail Stream": 27,
+                }}],
+            #["Unused",8,"char"],
+            ["Type", 9, "Enumeration", {
+                "type": "uint32",
+                "map": {
+                    "LPWSTR": 0x0000001F,
+                    "FILETIME": 0x00000040,
+                    "UI8": 0x00000015,
+                    "CLSID": 0x00000048
+                }
+            }],
+            ["__Size",13,"uint32"],
+            ["__LPWSTR",17, "String",{ 
+                "term_hex": "00", 
+                "length": "x=>x.__Size * 2",
+                "encoding": "utf16"
+            }],
+            ["__FILETIME",13, "WinFileTime"],
+            ["__UI8",13, "uint64"],
+            ["__CLSID",13,"GUID"],
+            ["Value", 0, "Value", { 
+                "value": "x=> get(item=dict(
+                                    `LPWSTR`=x.__LPWSTR,
+                                    `FILETIME`=x.__FILETIME,
+                                    `UI8`=x.__UI8,
+                                    `CLSID`=x.__CLSID.Value),
+                                member=x.Type) || 'Unknown: First bytes 
+0x' + upcase(string=format(format='%08x',args=x.__Size))" 
+            }],
+        ]],
+        ["GUID", 16, [
+            ["__D1", 0, "uint32"],
+            ["__D2", 4, "uint16"],
+            ["__D3", 6, "uint16"],
+            ["__D4", 8, "String", {"term": "", "length": 2}],
+            ["__D5", 10, "String", {"term": "", "length": 6}],
+            ["Value", 0, "Value", { "value": "x=>upcase(string=
+                    format(format='%08x-%04x-%04x-%02x-%02x',
+                        args=[x.__D1, x.__D2, x.__D3, x.__D4, x.__D5]))" 
+}],
+        ]]
      ]
      '''
 
 sources:
   - query: |
-     LET link_files = SELECT parse_binary(
-         filename=FullPath,
-         profile=Profile, struct="ShellLinkHeader")  AS Parsed,
-         FullPath, Mtime as SourceModified, Btime as SourceCreated
-     FROM glob(globs=Glob)
+     LET targets = SELECT OSPath, Mtime,Atime,Ctime,Btime,Size,
+            read_file(filename=OSPath,offset=0,length=2) as _Header
+        FROM glob(globs=TargetGlob)
+        WHERE NOT IsDir AND _Header =~ '^L\x00$'
+     
+     LET lnk_files = SELECT *,
+            parse_binary(filename=OSPath,
+                profile=Profile, struct="ShellLinkHeader")  AS Parsed
+        FROM targets
 
-     SELECT FullPath, Parsed AS _Parsed, SourceCreated, SourceModified,
-            Parsed.LinkTargetIDList.IDList.ShellBag.Description AS _TargetIDInfo,
-            Parsed.CreationTime AS HeaderCreationTime,
-            Parsed.AccessTime AS HeaderAccessTime,
-            Parsed.WriteTime AS HeaderWriteTime,
-            Parsed.FileSize AS FileSize,
-            Parsed.LinkInfo.Target AS Target,
-            Parsed.NameInfo.Name AS Name,
-            Parsed.RelativePathInfo.RelativePath AS RelativePath,
-            Parsed.WorkingDirInfo.WorkingDir AS WorkingDir,
-            Parsed.ArgumentInfo.Arguments AS Arguments,
-            Parsed.IconInfo.IconLocations AS Icons,
-            if(condition=AlsoUpload, then=upload(file=FullPath)) AS Upload
-     FROM link_files
+     LET fixpath(data) = regex_transform(key='x', 
+source=join(sep='\\',array=data),
+            map=dict( `My Computer\\\\` = '', `:\\\\\\\\` = 
+''':\''',`\\\\\\\\\\\\` = '\\'))
+            
+     LET property_store(data) = SELECT * FROM 
+foreach(row=data,query={SELECT * FROM foreach(row=_value,
+            query={
+                SELECT GuidId,Description,Type,Value FROM 
+foreach(row=_value)
+            })})
+
+
+            
+     LET parsed = SELECT 
+            dict(OSPath=OSPath, Size=Size,
+                Mtime=Mtime,Btime=Btime) as SourceFile,
+            dict( 
+                Headersize = Parsed.HeaderSize,
+                LinkClsID = Parsed.LinkClsID,
+                LinkFlags = Parsed.LinkFlags,
+                FileAttributes = Parsed.FileAttributes,
+                FileSize = Parsed.FileSize,
+                CreationTime = Parsed.CreationTime,
+                AccessTime = Parsed.AccessTime,
+                WriteTime = Parsed.WriteTime,
+                IconIndex = Parsed.IconIndex,
+                ShowCommand = Parsed.ShowCommand,
+                HotKey = Parsed.HotKey
+            ) as ShellLinkHeader,
+            Parsed.LinkInfo as LinkInfo,
+            dict(
+                LinkTarget= if(condition= 
+len(list=fixpath(data=Parsed.LinkTargetIDList.IDList.ShellBag.Description.LongName))
+                    <   
+len(list=fixpath(data=Parsed.LinkTargetIDList.IDList.ShellBag.Description.ShortName)),
+                        then= 
+fixpath(data=Parsed.LinkTargetIDList.IDList.ShellBag.Description.ShortName),
+                        else= 
+fixpath(data=Parsed.LinkTargetIDList.IDList.ShellBag.Description.LongName)),
+                LinkTargetIDList = Parsed.LinkTargetIDList
+            ) as LinkTarget,
+            Parsed.StringData as StringData,
+            to_dict(item={
+                    SELECT 
+                        BlockClass as _key, 
+                        if(condition= Data.DataValue,
+                            then= Data.DataValue, else= Data)  as _value 
+                    FROM foreach(row=Parsed.ExtraData)
+                }) as ExtraData,
+            
+property_store(data=Parsed.ExtraData.Data.PropertyStorage.PropertyValue) 
+as PropertyStore
+        FROM lnk_files
+
+      LET results = SELECT 
+SourceFile,ShellLinkHeader,LinkInfo,LinkTarget,StringData,
+            if(condition=PropertyStore, 
+                then= ExtraData + dict(PropertyStore=PropertyStore),
+                else= ExtraData ) as ExtraData
+        FROM parsed
+        WHERE if(condition= IocRegex,
+                    then= 
+format(format='%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\s%s', 
+                        args=[
+                            StringData.TargetPath,
+                            StringData.Name,
+                            StringData.RelativePath,
+                            StringData.WorkingDir,
+                            StringData.Arguments,
+                            StringData.IconLocation,
+                            LinkTarget.LinkTarget,
+                            ExtraData.TrackerData.MachineID,
+                            ExtraData.TrackerData.MacAddress,
+                            join(array=PropertyStore.Value,sep='\n')
+                        ]) =~ IocRegex,
+                    else= True)
+                AND NOT if(condition= IgnoreRegex,
+                    then= 
+format(format='%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s\s%s', 
+                        args=[
+                            StringData.TargetPath,
+                            StringData.Name,
+                            StringData.RelativePath,
+                            StringData.WorkingDir,
+                            StringData.Arguments,
+                            StringData.IconLocation,
+                            LinkTarget.LinkTarget,
+                            ExtraData.TrackerData.MachineID,
+                            ExtraData.TrackerData.MacAddress,
+                            join(array=PropertyStore.Value,sep='\n')
+                        ]) =~ IgnoreRegex,
+                    else= False)
+        
+      LET upload_results = SELECT *, 
+            upload(file=SourceFile.OSPath) as UploadedLnk
+        FROM results
+        
+      SELECT *
+        FROM if(condition=UploadLnk,
+            then= upload_results,
+            else= results )
 
 column_types:
-  - name: Mtime
+  - name: SourceFile.Mtime
     type: timestamp
-  - name: Atime
+  - name: SourceFile.Btime
     type: timestamp
-  - name: Btime
+  - name: ShellLinkHeader.CreationTime
     type: timestamp
-  - name: HeaderCreationTime
+  - name: ShellLinkHeader.AccessTime
     type: timestamp
-  - name: HeaderAccessTime
-    type: timestamp
-  - name: HeaderWriteTime
+  - name: ShellLinkHeader.WriteTime
     type: timestamp
