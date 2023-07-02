@@ -24,8 +24,8 @@ Queries:
 
   - SELECT * FROM column_filter(query={
       SELECT * FROM Artifact.Windows.Forensics.Lnk(
-        Glob=srcDir + "/artifacts/testdata/files/password.txt.lnk")
-    }, exclude="FullPath|time|_|SourceModified|SourceCreated")
+        TargetGlob=srcDir + "/artifacts/testdata/files/password.txt.lnk")
+    }, exclude="SourceFile")
 
   # Check that binary parser arrays and foreach interact correctly
   # (array implement the iterator protocol properly).
