@@ -87,6 +87,8 @@ message SearchClientsResponse {
             description: "If name_only is specified in the request we only "
             "return the names here.",
         }];
+    uint64 total = 3;
+    SearchClientsRequest search_term = 4;
 }
 
 message GetClientRequest {

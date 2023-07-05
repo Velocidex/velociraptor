@@ -111,6 +111,9 @@ func (self *Indexer) searchRecents(
 		return result.Items[i].FirstSeenAt > result.Items[j].FirstSeenAt
 	})
 
+	result.Total = uint64(len(result.Items))
+	result.SearchTerm = in
+
 	// Page the result properly
 	start := int(in.Offset)
 	if start > len(result.Items) {
@@ -178,10 +181,10 @@ func (self *Indexer) searchClientIndex(
 	if in.Sort != api_proto.SearchClientsRequest_UNSORTED {
 		hits, err := self.searchClientIndex(ctx, config_obj,
 			&api_proto.SearchClientsRequest{
-				Limit:  1000,
+				Limit:  100000,
 				Query:  in.Query,
 				Filter: in.Filter,
-			}, 1000)
+			}, 100000)
 		if err != nil {
 			return nil, err
 		}
@@ -192,11 +195,21 @@ func (self *Indexer) searchClientIndex(
 				return hits.Items[x].OsInfo.Hostname <
 					hits.Items[y].OsInfo.Hostname
 			})
+
 		case api_proto.SearchClientsRequest_SORT_DOWN:
 			sort.Slice(hits.Items, func(x, y int) bool {
 				return hits.Items[x].OsInfo.Hostname >
 					hits.Items[y].OsInfo.Hostname
 			})
+		}
+
+		if in.Offset > uint64(len(hits.Items)) {
+			hits.Items = nil
+			return hits, nil
+		}
+
+		if in.Offset > 0 {
+			hits.Items = hits.Items[in.Offset:]
 		}
 
 		limit := in.Limit
@@ -211,7 +224,7 @@ func (self *Indexer) searchClientIndex(
 	now := uint64(time.Now().UnixNano() / 1000)
 	seen := make(map[string]bool)
 	result := &api_proto.SearchClientsResponse{}
-	total_count := 0
+	total_count := uint64(0)
 
 	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
@@ -256,19 +269,20 @@ func (self *Indexer) searchClientIndex(
 			continue
 		}
 
-		api_client, err := self._FastGetApiClient(ctx, self.config_obj,
-			client_id, client_info_manager)
-		if err != nil {
-			total_count--
-			continue
-		}
+		if uint64(len(result.Items)) <= limit {
+			api_client, err := self._FastGetApiClient(ctx, self.config_obj,
+				client_id, client_info_manager)
+			if err != nil {
+				total_count--
+				continue
+			}
 
-		result.Items = append(result.Items, api_client)
-		if uint64(len(result.Items)) > limit {
-			return result, nil
+			result.Items = append(result.Items, api_client)
 		}
 	}
 
+	result.Total = total_count
+	result.SearchTerm = in
 	return result, nil
 }
 
