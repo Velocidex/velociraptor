@@ -44,6 +44,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
@@ -204,6 +205,8 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	config_obj *config_proto.Config,
 	client_id, flow_id, artifact string) error {
 
+	utils.Debug(client_id)
+
 	file_store_factory := file_store.GetFileStore(config_obj)
 	path_manager, err := artifacts.NewArtifactPathManager(ctx, config_obj,
 		client_id, flow_id, artifact)
@@ -266,6 +269,11 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 		return errors.New("No Generic.Client.Info results")
 	}
 
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
+	if err != nil {
+		return err
+	}
+
 	client_path_manager := paths.NewClientPathManager(client_id)
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -286,19 +294,12 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 		return err
 	}
 
-	err = db.SetSubjectWithCompletion(config_obj,
-		client_path_manager.Path(), client_info,
+	client_info_manager.Set(ctx, &services.ClientInfo{*client_info})
 
-		// Completion
-		func() {
-			journal.PushRowsToArtifactAsync(ctx, config_obj,
-				ordereddict.NewDict().
-					Set("ClientId", client_id),
-				"Server.Internal.Interrogation")
-		})
-	if err != nil {
-		return err
-	}
+	journal.PushRowsToArtifactAsync(ctx, config_obj,
+		ordereddict.NewDict().
+			Set("ClientId", client_id),
+		"Server.Internal.Interrogation")
 
 	// Set labels in the labeler.
 	if len(client_info.Labels) > 0 {

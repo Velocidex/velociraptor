@@ -106,6 +106,16 @@ func (self *Indexer) FastGetApiClient(
 		return nil, err
 	}
 
+	return self._FastGetApiClient(ctx, config_obj, client_id, client_info_manager)
+
+}
+
+func (self *Indexer) _FastGetApiClient(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	client_id string,
+	client_info_manager services.ClientInfoManager) (*api_proto.ApiClient, error) {
+
 	client_info, err := client_info_manager.Get(ctx, client_id)
 	if err != nil {
 		return nil, err

@@ -39,7 +39,8 @@ name: Server.Internal.ClientInfoSnapshot
 type: INTERNAL
 `})
 
-	// Create a client in the datastore
+	// Create a client in the datastore so we can test initializing
+	// client info manager from legacy datastore records.
 	self.client_id = "C.1234"
 	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -61,16 +62,16 @@ func (self *ClientInfoTestSuite) TestClientInfo() {
 	assert.NoError(self.T(), err)
 
 	// Get a non-existing client id - should return an error
-	_, err = client_info_manager.Get(context.Background(), "C.DOESNOTEXIT")
+	_, err = client_info_manager.Get(self.Ctx, "C.DOESNOTEXIT")
 	assert.Error(self.T(), err)
 
-	info, err := client_info_manager.Get(context.Background(), self.client_id)
+	info, err := client_info_manager.Get(self.Ctx, self.client_id)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), info.ClientId, self.client_id)
 	assert.Equal(self.T(), info.Ping, uint64(0))
 
 	// Update the IP address
-	client_info_manager.UpdateStats(context.Background(),
+	client_info_manager.UpdateStats(self.Ctx,
 		self.client_id, &services.Stats{
 			Ping:      uint64(100 * 1000000),
 			IpAddress: "127.0.0.1",

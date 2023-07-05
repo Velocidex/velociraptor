@@ -7,9 +7,8 @@ import (
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 // Load all the client records slowly and rebuild the index. This
@@ -19,37 +18,21 @@ func (self *Indexer) LoadIndexFromDatastore(
 	ctx context.Context, config_obj *config_proto.Config) error {
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("<green>Indexing Service</>: Rebuilding Full index from filestore - this can take a while.")
-
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	children, err := db.ListChildren(config_obj, paths.CLIENTS_ROOT)
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
 		return err
 	}
 
 	now := time.Now()
 	count := 0
-	for _, child := range children {
+	for client_id := range client_info_manager.ListClients(ctx) {
 		select {
 		case <-ctx.Done():
 			return errors.New("Cancelled")
 		default:
 		}
 
-		if child.IsDir() {
-			continue
-		}
-
-		client_id := child.Base()
-		if !strings.HasPrefix(client_id, "C.") {
-			continue
-		}
-
-		client_info, err := self.FastGetApiClient(ctx, config_obj, child.Base())
+		client_info, err := client_info_manager.Get(ctx, client_id)
 		if err != nil {
 			continue
 		}
@@ -60,8 +43,8 @@ func (self *Indexer) LoadIndexFromDatastore(
 		self.SetIndex(client_id, "all")
 		self.SetIndex(client_id, client_id)
 
-		if client_info.OsInfo.Hostname != "" {
-			self.SetIndex(client_id, "host:"+client_info.OsInfo.Hostname)
+		if client_info.Hostname != "" {
+			self.SetIndex(client_id, "host:"+client_info.Hostname)
 		}
 
 		// Add labels to the index.
@@ -70,10 +53,8 @@ func (self *Indexer) LoadIndexFromDatastore(
 		}
 
 		// Add MAC addresses to the index.
-		if client_info.OsInfo != nil {
-			for _, mac := range client_info.OsInfo.MacAddresses {
-				self.SetIndex(client_id, "mac:"+mac)
-			}
+		for _, mac := range client_info.MacAddresses {
+			self.SetIndex(client_id, "mac:"+mac)
 		}
 	}
 

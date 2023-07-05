@@ -62,6 +62,8 @@ func (self ClientInfo) OS() ClientOS {
 }
 
 type ClientInfoManager interface {
+	ListClients(ctx context.Context) <-chan string
+
 	// Used to set a new client record.
 	Set(ctx context.Context,
 		client_info *ClientInfo) error
