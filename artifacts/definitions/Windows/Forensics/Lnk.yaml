@@ -124,7 +124,7 @@ export: |
             "type": "uint32",
             "map": {
                 "SHOWNORMAL": 0x00000001,
-                "SHOWMAXIMIZED": 0x00000001,
+                "SHOWMAXIMIZED": 0x00000003,
                 "SHOWMINNOACTIVE": 0x00000007,
             }
         }],
