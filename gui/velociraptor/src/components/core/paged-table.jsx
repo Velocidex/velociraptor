@@ -123,6 +123,9 @@ class VeloPagedTable extends Component {
         // If set we remove the option to filter/sort the table.
         no_transformations: PropTypes.bool,
 
+        // A list of column names to prevent transforms on
+        prevent_transformations: PropTypes.object,
+
         // An optional toolbar that can be passed to the table.
         toolbar: PropTypes.object,
 
@@ -142,6 +145,12 @@ class VeloPagedTable extends Component {
 
         // A callback that will be called for each row fetched.
         row_filter: PropTypes.func,
+
+        // Control the class of each row
+        row_classes: PropTypes.func,
+
+        // If set we disable the spinner.
+        no_spinner: PropTypes.bool,
     }
 
     state = {
@@ -523,6 +532,11 @@ class VeloPagedTable extends Component {
                     name, this.state.column_types);
             }
 
+            if (this.props.prevent_transformations &&
+                this.props.prevent_transformations[name]) {
+                definition.no_transformation = true;
+            }
+
             if (this.state.toggles[name]) {
                 definition.hidden = true;
             } else {
@@ -573,7 +587,8 @@ class VeloPagedTable extends Component {
             downloads.columns = column_names;
         }
         return (
-            <div className="velo-table full-height"> <Spinner loading={this.state.loading} />
+            <div className="velo-table full-height">
+              <Spinner loading={!this.props.no_spinner && this.state.loading} />
               <ToolkitProvider
                 bootstrap4
                 keyField="_id"
@@ -647,6 +662,7 @@ class VeloPagedTable extends Component {
                           keyField="_id"
                           headerClasses="alert alert-secondary"
                           bodyClasses="fixed-table-body"
+                          rowClasses={this.props.row_classes}
                           toggles={this.state.toggles}
                           onTableChange={(type, { page, sizePerPage }) => {
                               this.setState({start_row: page * sizePerPage});

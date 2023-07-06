@@ -19,6 +19,12 @@ func (self ClientPathManager) Path() api.DSPathSpec {
 	return self.root.SetTag("ClientInfo")
 }
 
+func (self ClientPathManager) FlowIndex() api.FSPathSpec {
+	return self.root.AddChild("flow_index").AsFilestorePath().
+		SetType(api.PATH_TYPE_FILESTORE_JSON).
+		SetTag("FlowIndex")
+}
+
 func NewClientPathManager(client_id string) *ClientPathManager {
 	return &ClientPathManager{
 		root:      CLIENTS_ROOT.AddChild(client_id),

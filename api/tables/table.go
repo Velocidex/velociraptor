@@ -108,7 +108,7 @@ func getTable(
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
-	options, err := getTableOptions(in)
+	options, err := GetTableOptions(in)
 	if err != nil {
 		return result, err
 	}
@@ -236,6 +236,10 @@ func getColumnTypes(
 func GetPathSpec(
 	ctx context.Context, config_obj *config_proto.Config,
 	in *api_proto.GetTableRequest) (api.FSPathSpec, error) {
+
+	if in.Type == "CLIENT_FLOWS" && in.ClientId != "" {
+		return paths.NewClientPathManager(in.ClientId).FlowIndex(), nil
+	}
 
 	if in.FlowId != "" && in.Artifact != "" {
 		mode := paths.MODE_CLIENT
@@ -420,7 +424,7 @@ func getTimeline(
 	return result, nil
 }
 
-func getTableOptions(in *api_proto.GetTableRequest) (
+func GetTableOptions(in *api_proto.GetTableRequest) (
 	options result_sets.ResultSetOptions, err error) {
 	if in.SortColumn != "" {
 		options.SortColumn = in.SortColumn
