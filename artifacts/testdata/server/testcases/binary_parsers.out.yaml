@@ -69,7 +69,7 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
    "AccessTime": "2020-11-12T01:43:21Z",
    "WriteTime": "2020-11-12T01:43:21Z",
    "IconIndex": 0,
-   "ShowCommand": "SHOWMAXIMIZED",
+   "ShowCommand": "SHOWNORMAL",
    "HotKey": "No key assigned."
   },
   "LinkInfo": {
@@ -120,7 +120,7 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
    "AccessTime": "2021-12-22T09:47:57Z",
    "WriteTime": "2021-06-05T12:05:12Z",
    "IconIndex": 97,
-   "ShowCommand": "SHOWMAXIMIZED",
+   "ShowCommand": "SHOWNORMAL",
    "HotKey": "No key assigned."
   },
   "LinkInfo": {
