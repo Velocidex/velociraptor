@@ -49,47 +49,178 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
   "Timestamp": "2019-11-22T01:10:45.946586608Z",
   "Functions[1]": "Set-BitsTransfer"
  }
-]SELECT * FROM column_filter(query={ SELECT * FROM Artifact.Windows.Forensics.Lnk( Glob=srcDir + "/artifacts/testdata/files/1.lnk") }, exclude="FullPath|time|_|SourceModified|SourceCreated")[
+]SELECT ShellLinkHeader,LinkInfo,LinkTarget.LinkTarget,StringData,ExtraData FROM Artifact.Windows.Forensics.Lnk(TargetGlob=srcDir + "/artifacts/testdata/files/1.lnk")[
  {
-  "HeaderCreationTime": "2020-11-12T01:43:21Z",
-  "HeaderAccessTime": "2020-11-12T01:43:21Z",
-  "HeaderWriteTime": "2020-11-12T01:43:21Z",
-  "FileSize": 1343,
-  "Target": {
-   "path": "\\\\vmware-host\\Shared Folders\\shared\\tmp\\1.yaml",
-   "relative_link": {
-    "NetworkProviderType": "WNNC_NET_VMWARE",
-    "NetName": "\\\\vmware-host\\Shared Folders\\shared",
-    "DeviceName": "F:"
+  "ShellLinkHeader": {
+   "Headersize": 76,
+   "LinkClsID": "0114020000000000c000000000000046",
+   "LinkFlags": [
+    "DisableKnownFolderTracking",
+    "HasLinkInfo",
+    "HasLinkTargetIDList",
+    "HasWorkingDir",
+    "IsUnicode"
+   ],
+   "FileAttributes": [
+    "FILE_ATTRIBUTE_NORMAL"
+   ],
+   "FileSize": 1343,
+   "CreationTime": "2020-11-12T01:43:21Z",
+   "AccessTime": "2020-11-12T01:43:21Z",
+   "WriteTime": "2020-11-12T01:43:21Z",
+   "IconIndex": 0,
+   "ShowCommand": "SHOWMAXIMIZED",
+   "HotKey": "No key assigned."
+  },
+  "LinkInfo": {
+   "LinkInfoFlags": [
+    "CommonNetworkRelativeLinkAndPathSuffix"
+   ],
+   "Target": {
+    "Path": "\\\\vmware-host\\Shared Folders\\shared\\tmp\\1.yaml",
+    "RelativeLink": {
+     "NetworkProviderType": "WNNC_NET_VMWARE",
+     "NetName": "\\\\vmware-host\\Shared Folders\\shared",
+     "DeviceName": "F:"
+    }
    }
   },
-  "Name": null,
-  "RelativePath": null,
-  "WorkingDir": "F:\\tmp",
-  "Arguments": null,
-  "Icons": null,
-  "Upload": null
+  "LinkTarget.LinkTarget": "F:\\tmp\\1.yaml",
+  "StringData": {
+   "TargetPath": "\\\\vmware-host\\Shared Folders\\shared\\tmp\\1.yaml",
+   "Name": null,
+   "RelativePath": null,
+   "WorkingDir": null,
+   "Arguments": null,
+   "IconLocation": null
+  },
+  "ExtraData": {}
  }
-]SELECT * FROM column_filter(query={ SELECT * FROM Artifact.Windows.Forensics.Lnk( Glob=srcDir + "/artifacts/testdata/files/password.txt.lnk") }, exclude="FullPath|time|_|SourceModified|SourceCreated")[
+]SELECT ShellLinkHeader,LinkInfo,LinkTarget.LinkTarget,StringData,ExtraData FROM Artifact.Windows.Forensics.Lnk(TargetGlob=srcDir + "/artifacts/testdata/files/password.txt.lnk")[
  {
-  "HeaderCreationTime": "2021-06-05T12:05:12Z",
-  "HeaderAccessTime": "2021-12-22T09:47:57Z",
-  "HeaderWriteTime": "2021-06-05T12:05:12Z",
-  "FileSize": 331776,
-  "Target": {
-   "path": "C:\\Windows\\System32\\cmd.exe",
-   "volume_info": {
-    "DriveType": "DRIVE_FIXED",
-    "DriveSerialNumber": 134260411,
-    "VolumeLabel": ""
+  "ShellLinkHeader": {
+   "Headersize": 76,
+   "LinkClsID": "0114020000000000c000000000000046",
+   "LinkFlags": [
+    "EnableTargetMetadata",
+    "HasArguments",
+    "HasExpString",
+    "HasIconLocation",
+    "HasLinkInfo",
+    "HasLinkTargetIDList",
+    "HasRelativePath",
+    "HasWorkingDir",
+    "IsUnicode"
+   ],
+   "FileAttributes": [
+    "FILE_ATTRIBUTE_ARCHIVE"
+   ],
+   "FileSize": 331776,
+   "CreationTime": "2021-06-05T12:05:12Z",
+   "AccessTime": "2021-12-22T09:47:57Z",
+   "WriteTime": "2021-06-05T12:05:12Z",
+   "IconIndex": 97,
+   "ShowCommand": "SHOWMAXIMIZED",
+   "HotKey": "No key assigned."
+  },
+  "LinkInfo": {
+   "LinkInfoFlags": [
+    "VolumeIDAndLocalBasePath"
+   ],
+   "Target": {
+    "Path": "C:\\Windows\\System32\\cmd.exe",
+    "VolumeInfo": {
+     "DriveType": "DRIVE_FIXED",
+     "DriveSerialNumber": 134260411,
+     "VolumeLabel": ""
+    }
    }
   },
-  "Name": null,
-  "RelativePath": "..\\..\\..\\Windows\\System32\\cmd.exe",
-  "WorkingDir": "%windir%\\sYSteM32",
-  "Arguments": "/c \"echo HeLLO \u0026\u0026 pAuSe\"",
-  "Icons": "%sYsTemRooT%\\sYSteM32\\iMagEreS.dll",
-  "Upload": null
+  "LinkTarget.LinkTarget": "C:\\Windows\\System32\\cmd.exe",
+  "StringData": {
+   "TargetPath": "C:\\Windows\\System32\\cmd.exe",
+   "Name": null,
+   "RelativePath": "..\\..\\..\\Windows\\System32\\cmd.exe",
+   "WorkingDir": null,
+   "Arguments": "/c \"echo HeLLO \u0026\u0026 pAuSe\"",
+   "IconLocation": "%sYsTemRooT%\\sYSteM32\\iMagEreS.dll"
+  },
+  "ExtraData": {
+   "EnvironmentVariable": "%sYsTemRooT%\\sYSteM32\\cMd.Exe",
+   "SpecialFolder": 37,
+   "KnownFolder": {
+    "GUID": "1AC14E77-02E7-4E5D-B744-2EB1AE5198B7",
+    "KnownFolder": "System"
+   },
+   "TrackerData": {
+    "MachineID": "cthdsk",
+    "MacAddress": "B42E99AFADFA",
+    "Droid": [
+     "7C96CA62-E939-4B3D-A1E1-48D9DD63DF46",
+     "07CAD38B-F90F-11EB-9AA3-B42E99AFADFA"
+    ],
+    "DroidBirth": [
+     "7C96CA62-E939-4B3D-A1E1-48D9DD63DF46",
+     "7C96CA62-E939-4B3D-A1E1-48D9DD63DF46"
+    ]
+   },
+   "PropertyStore": [
+    {
+     "GuidId": "DABD30ED-0043-4789-A7F8-D013A4736622/100",
+     "Description": "Item Folder Path Display Narrow",
+     "Type": "LPWSTR",
+     "Value": "System32 (C:\\Windows)"
+    },
+    {
+     "GuidId": "46588AE2-4CBC-4338-BBFC-139326986DCE/4",
+     "Description": "SID",
+     "Type": "LPWSTR",
+     "Value": "S-1-5-21-730516628-3352102648-2216876345-1001"
+    },
+    {
+     "GuidId": "B725F130-47EF-101A-A5F1-02608C9EEBAC/10",
+     "Description": "System.ItemNameDisplay",
+     "Type": "LPWSTR",
+     "Value": "cmd.exe"
+    },
+    {
+     "GuidId": "B725F130-47EF-101A-A5F1-02608C9EEBAC/15",
+     "Description": "System.DateCreated",
+     "Type": "FILETIME",
+     "Value": "2021-06-05T12:05:14Z"
+    },
+    {
+     "GuidId": "B725F130-47EF-101A-A5F1-02608C9EEBAC/12",
+     "Description": "System.Size",
+     "Type": "UI8",
+     "Value": 331776
+    },
+    {
+     "GuidId": "B725F130-47EF-101A-A5F1-02608C9EEBAC/4",
+     "Description": "System.ItemTypeText",
+     "Type": "LPWSTR",
+     "Value": "Application"
+    },
+    {
+     "GuidId": "B725F130-47EF-101A-A5F1-02608C9EEBAC/14",
+     "Description": "System.DateModified",
+     "Type": "FILETIME",
+     "Value": "2021-06-05T12:05:12Z"
+    },
+    {
+     "GuidId": "28636AA6-953D-11D2-B5D6-00C04FD918D0/30",
+     "Description": "ParsingPath",
+     "Type": "LPWSTR",
+     "Value": "C:\\Windows\\System32\\cmd.exe"
+    },
+    {
+     "GuidId": "446D16B1-8DAD-4870-A748-402EA43D788C/104",
+     "Description": "VolumeId",
+     "Type": "CLSID",
+     "Value": "15B7A6CC-2A32-42E4-B157-5824DCAFF312"
+    }
+   ]
+  }
  }
 ]SELECT * FROM foreach(row=parse_binary( accessor="data", filename=unhex(string=Data), profile=Profile, struct="MRU").Items)[
  {
