@@ -88,5 +88,6 @@ message ApiFlowRequest {
 }
 
 message ApiFlowResponse {
+    uint64 total = 1;
     repeated ArtifactCollectorContext items = 2;
 }

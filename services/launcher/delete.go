@@ -146,7 +146,14 @@ func (self *FlowStorageManager) DeleteFlow(
 			return nil
 		})
 
-	return r.responses, nil
+	// Rebuild the flow index to ensure GUI paging works
+	// properly. This is pretty slow but we do not expect to delete
+	// flows that often.
+	if really_do_it {
+		err = self.buildFlowIndexFromLegacy(ctx, config_obj, client_id)
+	}
+
+	return r.responses, err
 }
 
 type reporter struct {

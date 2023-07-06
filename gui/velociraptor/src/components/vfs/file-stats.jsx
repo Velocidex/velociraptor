@@ -14,8 +14,6 @@ import {CancelToken} from 'axios';
 import T from '../i8n/i8n.jsx';
 import PreviewUpload from '../widgets/preview_uploads.jsx';
 
-const POLL_TIME = 2000;
-
 class VeloFileStats extends Component {
     static propTypes = {
         client: PropTypes.object,

@@ -189,15 +189,9 @@ service API {
         };
     }
 
-    rpc GetClientFlows(ApiFlowRequest) returns (ApiFlowResponse) {
+    rpc GetClientFlows(GetTableRequest) returns (GetTableResponse) {
         option (google.api.http) = {
-            get: "/api/v1/GetClientFlows/{client_id}",
-            additional_bindings: {
-                custom: {
-                    kind: "HEAD",
-                    path: "/api/v1/GetClientFlows/{client_id}",
-                },
-            }
+            get: "/api/v1/GetClientFlows",
         };
     }
 
