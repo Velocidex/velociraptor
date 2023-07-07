@@ -129,6 +129,9 @@ class VeloPagedTable extends Component {
         // An optional toolbar that can be passed to the table.
         toolbar: PropTypes.object,
 
+        // If set we do not render any toolbar
+        no_toolbar: PropTypes.bool,
+
         // If specified we notify that a transform is set.
         transform: PropTypes.object,
         setTransform: PropTypes.func,
@@ -484,9 +487,10 @@ class VeloPagedTable extends Component {
 
                 return <>
                          <div className="col-12">
-                           <Navbar className="toolbar">
-                             { this.props.toolbar || <></> }
-                           </Navbar>
+                           { !this.props.no_toolbar &&
+                              <Navbar className="toolbar">
+                                { this.props.toolbar || <></> }
+                              </Navbar> }
                            <div className="no-content">
                              <div>{T("No Data Available.")}</div>
                              <Button variant="default" onClick={this.props.refresh}>
@@ -506,9 +510,10 @@ class VeloPagedTable extends Component {
             }
             return <>
                      <div className="col-12">
-                       <Navbar className="toolbar">
-                         { this.props.toolbar || <></> }
-                       </Navbar>
+                       { !this.props.no_toolbar &&
+                         <Navbar className="toolbar">
+                           { this.props.toolbar || <></> }
+                         </Navbar> }
                        <div className="no-content">
                          <div>{T("No Data Available.")}</div>
                        </div>
@@ -600,57 +605,58 @@ class VeloPagedTable extends Component {
             {
                 props => (
                     <div className="col-12">
-                      <Navbar className="toolbar">
-                        <ButtonGroup>
-                          <ColumnToggleList { ...props.columnToggleProps }
-                                            onColumnToggle={(c)=>{
-                                                // Do not make a copy
-                                                // here because set
-                                                // state is not
-                                                // immediately visible
-                                                // and this will be
-                                                // called for each
-                                                // column.
-                                                let toggles = this.state.toggles;
-                                                toggles[c] = !toggles[c];
-                                                this.setState({toggles: toggles});
-                                            }}
-                                            toggles={this.state.toggles} />
-                          <InspectRawJson rows={this.state.rows} />
-                          <Button variant="default"
-                                  target="_blank" rel="noopener noreferrer"
-                                  data-tooltip={T("Download JSON")}
-                                  data-position="right"
-                                  className="btn-tooltip"
-                                  href={api.href("/api/v1/DownloadTable",
-                                                 Object.assign(downloads, {
-                                                     timezone: timezone,
-                                                     download_format: "json",
-                                                 }), {internal: true})}>
-                            <FontAwesomeIcon icon="download"/>
-                            <span className="sr-only">{T("Download JSON")}</span>
-                          </Button>
-                          <Button variant="default"
-                                  target="_blank" rel="noopener noreferrer"
-                                  data-tooltip={T("Download CSV")}
-                                  data-position="right"
-                                  className="btn-tooltip"
-                                  href={api.href("/api/v1/DownloadTable",
-                                                 Object.assign(downloads, {
-                                                     timezone: timezone,
-                                                     download_format: "csv",
-                                                 }), {internal: true})}>
-                            <FontAwesomeIcon icon="file-csv"/>
-                            <span className="sr-only">{T("Download CSV")}</span>
-                          </Button>
-                        </ButtonGroup>
-                        { transformed.length > 0 &&
-                          <ButtonGroup className="float-right">
-                            { transformed }
+                      { !this.props.no_toolbar &&
+                        <Navbar className="toolbar">
+                          <ButtonGroup>
+                            <ColumnToggleList { ...props.columnToggleProps }
+                                              onColumnToggle={(c)=>{
+                                                  // Do not make a copy
+                                                  // here because set
+                                                  // state is not
+                                                  // immediately visible
+                                                  // and this will be
+                                                  // called for each
+                                                  // column.
+                                                  let toggles = this.state.toggles;
+                                                  toggles[c] = !toggles[c];
+                                                  this.setState({toggles: toggles});
+                                              }}
+                                              toggles={this.state.toggles} />
+                            <InspectRawJson rows={this.state.rows} />
+                            <Button variant="default"
+                                    target="_blank" rel="noopener noreferrer"
+                                    data-tooltip={T("Download JSON")}
+                                    data-position="right"
+                                    className="btn-tooltip"
+                                    href={api.href("/api/v1/DownloadTable",
+                                                   Object.assign(downloads, {
+                                                       timezone: timezone,
+                                                       download_format: "json",
+                                                   }), {internal: true})}>
+                              <FontAwesomeIcon icon="download"/>
+                              <span className="sr-only">{T("Download JSON")}</span>
+                            </Button>
+                            <Button variant="default"
+                                    target="_blank" rel="noopener noreferrer"
+                                    data-tooltip={T("Download CSV")}
+                                    data-position="right"
+                                    className="btn-tooltip"
+                                    href={api.href("/api/v1/DownloadTable",
+                                                   Object.assign(downloads, {
+                                                       timezone: timezone,
+                                                       download_format: "csv",
+                                                   }), {internal: true})}>
+                              <FontAwesomeIcon icon="file-csv"/>
+                              <span className="sr-only">{T("Download CSV")}</span>
+                            </Button>
                           </ButtonGroup>
-                        }
-                        { this.props.toolbar || <></> }
-                      </Navbar>
+                          { transformed.length > 0 &&
+                            <ButtonGroup className="float-right">
+                              { transformed }
+                            </ButtonGroup>
+                          }
+                          { this.props.toolbar || <></> }
+                        </Navbar> }
                       <div className="row col-12">
                         <BootstrapTable
                           { ...props.baseProps }
@@ -660,7 +666,7 @@ class VeloPagedTable extends Component {
                           selectRow={ this.props.selectRow }
                           noDataIndication={T("Table is Empty")}
                           keyField="_id"
-                          headerClasses="alert alert-secondary"
+                          headerClasses="alert alert-secondary paged-table-header"
                           bodyClasses="fixed-table-body"
                           rowClasses={this.props.row_classes}
                           toggles={this.state.toggles}

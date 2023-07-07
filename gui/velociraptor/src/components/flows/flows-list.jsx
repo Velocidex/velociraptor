@@ -625,6 +625,7 @@ class FlowsList extends React.Component {
                     setTransform={x=>{
                         this.setState({transform: x});
                     }}
+                    no_toolbar={true}
                   />
                 </HotKeys>
               </div>
@@ -653,7 +654,7 @@ const stateRenderer = (cell, row) => {
 };
 
 const rowClassRenderer = (row, rowIndex) => {
-    if (row.request && row.request.urgent) {
+    if (row._Urgent === "true") {
         return 'flow-urgent';
     }
     return '';
