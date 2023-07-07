@@ -666,7 +666,7 @@ class VeloPagedTable extends Component {
                           selectRow={ this.props.selectRow }
                           noDataIndication={T("Table is Empty")}
                           keyField="_id"
-                          headerClasses="alert alert-secondary"
+                          headerClasses="alert alert-secondary paged-table-header"
                           bodyClasses="fixed-table-body"
                           rowClasses={this.props.row_classes}
                           toggles={this.state.toggles}
