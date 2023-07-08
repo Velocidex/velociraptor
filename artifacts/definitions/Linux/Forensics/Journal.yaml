@@ -3,7 +3,7 @@ description: |
   Parses the binary journal logs. Systemd uses a binary log format to
   store logs. You can read these logs using journalctl command:
 
-  `journalctl --file /run/log/journal/4e7cbddbe9494fb9876af4e3e85c9eb4/system@d3f15424155b42f0b253bb84d6d740cf-0000000000004ad9-0005fb38b5ebfbfb.journal`
+  `journalctl --file /run/log/journal/*/*.journal`
 
   This artifact uses the Velociraptor Binary parser to parse the
   binary format. The format is documented
@@ -18,6 +18,10 @@ parameters:
 - name: OnlyShowMessage
   type: bool
   description: If set we only show the message entry (similar to syslog).
+
+- name: AlsoUpload
+  type: bool
+  description: If set we also upload the raw files.
 
 export: |
     LET JournalProfile = '''[
@@ -121,7 +125,7 @@ sources:
       SELECT OSPath FROM glob(globs=JournalGlob)
     }, query={
       SELECT *, if(condition=OnlyShowMessage,
-          then=filter(list=Data, regex="^MESSAGE="),
-          else=Data) AS Data
+          then=filter(list=Data, regex="^MESSAGE=")[0], else=Data) AS Data,
+          if(condition=AlsoUpload, then=upload(file=File)) AS Upload
       FROM ParseFile(File=OSPath)
     })

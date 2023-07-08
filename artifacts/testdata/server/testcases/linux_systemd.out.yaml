@@ -33,4 +33,10 @@ SELECT Offset, Timestamp, Data FROM Artifact.Linux.Forensics.Journal( JournalGlo
    "_HOSTNAME=devbox\u0002"
   ]
  }
+]SELECT Offset, Timestamp, Data FROM Artifact.Linux.Forensics.Journal(OnlyShowMessage=TRUE, JournalGlob=srcDir + '/artifacts/testdata/files/system.journal')[
+ {
+  "Offset": 151352,
+  "Timestamp": "2023-05-09T01:31:12.435195Z",
+  "Data": "MESSAGE=session-717.scope: Consumed 5.643s CPU time."
+ }
 ]
