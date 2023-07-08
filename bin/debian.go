@@ -221,13 +221,14 @@ func doSingleServerDeb(
 	if input == "" {
 		input, err = os.Executable()
 		if err != nil {
-			return fmt.Errorf("Unable to open executable: %w", err)
+			return fmt.Errorf("Unable to find executable: %w", err)
 		}
 	}
 
 	e, err := elf.Open(input)
 	if err != nil {
-		return fmt.Errorf("Unable to parse ELF executable: %w", err)
+		return fmt.Errorf("%s is not a valid Linux ELF binary. Use the --binary "+
+			"flag to specify the path to a Linux binary: %w", input, err)
 	}
 
 	arch, ok := debArchMap[e.Machine.String()]
@@ -336,13 +337,14 @@ func doClientDeb() error {
 	if input == "" {
 		input, err = os.Executable()
 		if err != nil {
-			return fmt.Errorf("Unable to open executable: %w", err)
+			return fmt.Errorf("Unable to find executable: %w", err)
 		}
 	}
 
 	e, err := elf.Open(input)
 	if err != nil {
-		return fmt.Errorf("Unable to parse ELF executable: %w", err)
+		return fmt.Errorf("%s is not a valid Linux ELF binary. Use the --binary "+
+			"flag to specify the path to a Linux binary: %w", input, err)
 	}
 
 	arch, ok := debArchMap[e.Machine.String()]
