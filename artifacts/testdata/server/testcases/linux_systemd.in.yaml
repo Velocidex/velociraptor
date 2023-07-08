@@ -1,0 +1,4 @@
+Queries:
+- SELECT Offset, Timestamp, Data
+   FROM Artifact.Linux.Forensics.Journal(
+     JournalGlob=srcDir + '/artifacts/testdata/files/system.journal')

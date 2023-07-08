@@ -1,0 +1,36 @@
+SELECT Offset, Timestamp, Data FROM Artifact.Linux.Forensics.Journal( JournalGlob=srcDir + '/artifacts/testdata/files/system.journal')[
+ {
+  "Offset": 151352,
+  "Timestamp": "2023-05-09T01:31:12.435195Z",
+  "Data": [
+   "PRIORITY=6",
+   "SYSLOG_FACILITY=3",
+   "TID=1",
+   "CODE_FILE=src/core/unit.c",
+   "CODE_LINE=2474",
+   "CODE_FUNC=unit_log_resources",
+   "SYSLOG_IDENTIFIER=systemd",
+   "CPU_USAGE_NSEC=5643944000",
+   "MESSAGE=session-717.scope: Consumed 5.643s CPU time.",
+   "MESSAGE_ID=ae8f7b866b0347b9af31fe1c80b127c0",
+   "UNIT=session-717.scope",
+   "INVOCATION_ID=b1659c39e4e94e9ca8fdb5ba9f9f6cb3",
+   "_TRANSPORT=journal",
+   "_PID=1",
+   "_UID=0",
+   "_GID=0",
+   "_COMM=systemd",
+   "_EXE=/usr/lib/systemd/systemd",
+   "_CMDLINE=/sbin/init",
+   "_CAP_EFFECTIVE=1ffffffffff",
+   "_SELINUX_CONTEXT=unconfined\n",
+   "_SYSTEMD_CGROUP=/init.scope",
+   "_SYSTEMD_UNIT=init.scope\u0002",
+   "_SYSTEMD_SLICE=-.slice",
+   "_SOURCE_REALTIME_TIMESTAMP=1683595864438049",
+   "_BOOT_ID=25557887eed141e0ad99932789c02184",
+   "_MACHINE_ID=4e7cbddbe9494fb9876af4e3e85c9eb4",
+   "_HOSTNAME=devbox\u0002"
+  ]
+ }
+]
