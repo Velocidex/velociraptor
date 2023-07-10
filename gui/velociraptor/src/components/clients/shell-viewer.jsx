@@ -612,7 +612,10 @@ class ShellViewer extends Component {
                    let rows = response.data.rows || [];
                    let columns = response.data.columns || [];
                    let column_idx = columns.findIndex(x=>x==="_Flow");
-
+                   if (column_idx < 0) {
+                       console.log("No _Flow column!");
+                       return;
+                   }
                    for(var i=0; i<rows.length; i++) {
                        // Column 8 is the _Flow column;
                        let flow_json = rows[i] && rows[i].cell &&
