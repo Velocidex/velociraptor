@@ -592,9 +592,13 @@ class ShellViewer extends Component {
         }
 
         let client_id = this.props.client.client_id;
-        api.get('v1/GetClientFlows/'+ client_id, {
-            count: 100, offset: 0,
-            artifact: "(Windows.System.PowerShell|Windows.System.CmdShell|Linux.Sys.BashShell|Generic.Client.VQL)"
+        api.get('v1/GetClientFlows', {
+            client_id: client_id,
+            filter_column: "Artifacts",
+            rows: 100,
+            start_row: 0,
+            sort_direction: false,
+            filter_regex: "(Windows.System.PowerShell|Windows.System.CmdShell|Linux.Sys.BashShell|Generic.Client.VQL)"
         },
                 this.source.token // CancelToken
                ).then(function(response) {
@@ -605,17 +609,31 @@ class ShellViewer extends Component {
 
                    let new_state  = Object.assign({}, this.state);
                    new_state.flows = [];
-                   let items = response.data.items || [];
+                   let rows = response.data.rows || [];
+                   let columns = response.data.columns || [];
+                   let column_idx = columns.findIndex(x=>x==="_Flow");
 
-                   for(var i=0; i<items.length; i++) {
-                       var artifacts = items[i].request.artifacts;
+                   for(var i=0; i<rows.length; i++) {
+                       // Column 8 is the _Flow column;
+                       let flow_json = rows[i] && rows[i].cell &&
+                           rows[i].cell[column_idx];
+                       try {
+                           var flow = JSON.parse(flow_json);
+                       } catch(e) {
+                           continue;
+                       }
+                       if (!flow || !flow.request) {
+                           continue;
+                       }
+
+                       var artifacts = flow.request.artifacts;
                        for (var j=0; j<artifacts.length; j++) {
                            var artifact = artifacts[j];
                            if (artifact === "Windows.System.PowerShell" ||
                                artifact === "Windows.System.CmdShell" ||
                                artifact === "Generic.Client.VQL" ||
                                artifact === "Linux.Sys.BashShell" ) {
-                               new_state.flows.push(items[i]);
+                               new_state.flows.push(flow);
                            }
                        }
                    };
