@@ -302,14 +302,14 @@ func (mr *MockAPIClientMockRecorder) GetClient(arg0, arg1 interface{}, arg2 ...i
 }
 
 // GetClientFlows mocks base method.
-func (m *MockAPIClient) GetClientFlows(arg0 context.Context, arg1 *proto0.ApiFlowRequest, arg2 ...grpc.CallOption) (*proto0.ApiFlowResponse, error) {
+func (m *MockAPIClient) GetClientFlows(arg0 context.Context, arg1 *proto0.GetTableRequest, arg2 ...grpc.CallOption) (*proto0.GetTableResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "GetClientFlows", varargs...)
-	ret0, _ := ret[0].(*proto0.ApiFlowResponse)
+	ret0, _ := ret[0].(*proto0.GetTableResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

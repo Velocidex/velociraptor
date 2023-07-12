@@ -239,6 +239,13 @@
     description: A string to decode
     required: true
   category: basic
+- name: base85decode
+  type: Function
+  args:
+  - name: string
+    type: string
+    description: A string to decode
+    required: true
 - name: basename
   description: |
     Return the basename of the path. For example basename(path="/foo/bar") -> "bar"
@@ -419,6 +426,9 @@
   - name: client_id
     type: string
     description: if set we use this client id otherwise we make a new one
+  - name: mac_addresses
+    type: string
+    repeated: true
   metadata:
     permissions: SERVER_ADMIN
 - name: client_delete
@@ -3466,6 +3476,7 @@
     required: true
   - name: really_do_it
     type: bool
+    description: If not specified, just show what org will be removed
   metadata:
     permissions: ORG_ADMIN
 - name: orgs

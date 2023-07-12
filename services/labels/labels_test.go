@@ -1,18 +1,14 @@
 package labels_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/labels"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -34,67 +30,66 @@ func (self *LabelsTestSuite) SetupTest() {
 	self.client_id = "C.12312"
 	self.Clock = &utils.IncClock{}
 
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	client_info_manager.Set(self.Ctx, &services.ClientInfo{
+		actions_proto.ClientInfo{
+			ClientId: self.client_id,
+		},
+	})
+
 	// Set an incremental clock on the labeler.
 	labeler := services.GetLabeler(self.ConfigObj)
 	labeler.(*labels.Labeler).Clock = self.Clock
 }
 
 func (self *LabelsTestSuite) TestAddLabel() {
-	db, err := datastore.GetDB(self.ConfigObj)
-	require.NoError(self.T(), err)
-
 	now := uint64(self.Clock.Now().UnixNano())
 
 	labeler := services.GetLabeler(self.ConfigObj)
-	err = labeler.SetClientLabel(context.Background(), self.ConfigObj, self.client_id, "Label1")
+	err := labeler.SetClientLabel(
+		self.Ctx, self.ConfigObj, self.client_id, "Label1")
 	assert.NoError(self.T(), err)
 
 	// Set the label twice - it should only set one label.
-	err = labeler.SetClientLabel(context.Background(), self.ConfigObj, self.client_id, "Label1")
+	err = labeler.SetClientLabel(
+		self.Ctx, self.ConfigObj, self.client_id, "Label1")
 	assert.NoError(self.T(), err)
-
-	// Make sure the new record is created in the data store.
-	record := &api_proto.ClientLabels{}
-	client_path_manager := paths.NewClientPathManager(self.client_id)
-	err = db.GetSubject(self.ConfigObj,
-		client_path_manager.Labels(), record)
-	assert.NoError(self.T(), err)
-
-	assert.Equal(self.T(), record.Label, []string{"Label1"})
 
 	// Checking against the label should work
 	assert.True(self.T(), labeler.IsLabelSet(
-		context.Background(), self.ConfigObj, self.client_id, "Label1"))
+		self.Ctx, self.ConfigObj, self.client_id, "Label1"))
 	// case insensitive.
 	assert.True(self.T(), labeler.IsLabelSet(
-		context.Background(), self.ConfigObj, self.client_id, "label1"))
+		self.Ctx, self.ConfigObj, self.client_id, "label1"))
 
 	assert.False(self.T(), labeler.IsLabelSet(
-		context.Background(), self.ConfigObj, self.client_id, "Label2"))
+		self.Ctx, self.ConfigObj, self.client_id, "Label2"))
 
 	// All clients belong to the All label.
 	assert.True(self.T(), labeler.IsLabelSet(
-		context.Background(), self.ConfigObj, self.client_id, "All"))
+		self.Ctx, self.ConfigObj, self.client_id, "All"))
 
 	// The timestamp should be reasonable
 	assert.Greater(self.T(), labeler.LastLabelTimestamp(
-		context.Background(), self.ConfigObj, self.client_id), now)
+		self.Ctx, self.ConfigObj, self.client_id), now)
 
 	// remember the time of the last update
 	now = labeler.LastLabelTimestamp(
-		context.Background(), self.ConfigObj, self.client_id)
+		self.Ctx, self.ConfigObj, self.client_id)
 
 	// Now remove the label.
 	err = labeler.RemoveClientLabel(
-		context.Background(), self.ConfigObj, self.client_id, "Label1")
+		self.Ctx, self.ConfigObj, self.client_id, "Label1")
 	assert.NoError(self.T(), err)
 
 	assert.False(self.T(), labeler.IsLabelSet(
-		context.Background(), self.ConfigObj, self.client_id, "Label1"))
+		self.Ctx, self.ConfigObj, self.client_id, "Label1"))
 
 	// The timestamp should be later than the previous time
 	assert.Greater(self.T(), labeler.LastLabelTimestamp(
-		context.Background(), self.ConfigObj, self.client_id), now)
+		self.Ctx, self.ConfigObj, self.client_id), now)
 }
 
 // Check that two labelers can syncronize changes between them via the
@@ -112,24 +107,24 @@ func (self *LabelsTestSuite) TestSyncronization() {
 
 	// Label is not set - fill the internal caches.
 	assert.False(self.T(), labeler1.IsLabelSet(
-		context.Background(), self.ConfigObj, self.client_id, "Label1"))
+		self.Ctx, self.ConfigObj, self.client_id, "Label1"))
 	assert.False(self.T(), labeler2.IsLabelSet(
-		context.Background(), self.ConfigObj, self.client_id, "Label1"))
+		self.Ctx, self.ConfigObj, self.client_id, "Label1"))
 
 	// Set the label in one labeler and wait for the change to be
 	// propagagted to the second labeler.
 	err = labeler1.SetClientLabel(
-		context.Background(), self.ConfigObj, self.client_id, "Label1")
+		self.Ctx, self.ConfigObj, self.client_id, "Label1")
 	assert.NoError(self.T(), err)
 
 	assert.True(self.T(), labeler1.IsLabelSet(
-		context.Background(), self.ConfigObj, self.client_id, "Label1"))
+		self.Ctx, self.ConfigObj, self.client_id, "Label1"))
 
 	// Labeler2 should be able to pick up the changes by itself
 	// within a short time.
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
 		return labeler2.IsLabelSet(
-			context.Background(), self.ConfigObj, self.client_id, "Label1")
+			self.Ctx, self.ConfigObj, self.client_id, "Label1")
 	})
 }
 

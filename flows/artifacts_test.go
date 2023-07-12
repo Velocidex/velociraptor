@@ -21,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/responder"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/uploads"
@@ -126,28 +127,11 @@ func (self *TestSuite) TestGetFlow() {
 	// Get all the responses - ask for 100 results if available
 	// but only 40 are there.
 	api_response, err := launcher.GetFlows(self.Ctx, self.ConfigObj,
-		self.client_id, true,
-		func(flow *flows_proto.ArtifactCollectorContext) bool {
-			return true
-		}, 0, 100)
+		self.client_id, result_sets.ResultSetOptions{}, 0, 100)
 	assert.NoError(self.T(), err)
 
 	// There should be 40 flows (2 sets of each)
 	assert.Equal(self.T(), 40, len(api_response.Items))
-
-	// Now only get Generic.Client.Info flows by applying a filter.
-	api_response, err = launcher.GetFlows(self.Ctx, self.ConfigObj,
-		self.client_id, true,
-		func(flow *flows_proto.ArtifactCollectorContext) bool {
-			return flow.Request.Artifacts[0] == "Generic.Client.Info"
-		}, 0, 100)
-	assert.NoError(self.T(), err)
-
-	// There should be 20 flows of type Generic.Client.Info
-	assert.Equal(self.T(), 20, len(api_response.Items))
-	for _, item := range api_response.Items {
-		assert.Equal(self.T(), "Generic.Client.Info", item.Request.Artifacts[0])
-	}
 }
 
 func (self *TestSuite) TestRetransmission() {

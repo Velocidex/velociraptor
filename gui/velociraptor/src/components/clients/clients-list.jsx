@@ -268,11 +268,15 @@ const pageListRenderer = ({
     // page.
     if (totalPages * pageSize + 1 > totalRows) {
         totalPages--;
+        if (totalPages<0) {
+            totalPages = 0;
+        }
     }
-
     return (
         <Pagination>
-          <Pagination.First onClick={()=>onPageChange(0)}/>
+          <Pagination.First
+            disabled={currentPage===0}
+            onClick={()=>onPageChange(0)}/>
           {
               pageWithoutIndication.map((p, idx)=>(
                 <Pagination.Item
@@ -283,21 +287,18 @@ const pageListRenderer = ({
                 </Pagination.Item>
             ))
           }
-          <Pagination.Next onClick={()=>{
-              if (_.isEmpty(pageWithoutIndication)) {
-                  return;
-              }
-              let last_page = pageWithoutIndication[pageWithoutIndication.length-1].page;
-              onPageChange(last_page);
-          }}/>
+          <Pagination.Last
+            disabled={currentPage===totalPages}
+            onClick={()=>onPageChange(totalPages)}/>
           <Form.Control
             as="input"
             className="pagination-form"
             placeholder={T("Goto Page")}
+            spellCheck="false"
             value={currentPage || ""}
             onChange={e=> {
                 let page = parseInt(e.currentTarget.value || 0);
-                if (page >= 0) {
+                if (page >= 0 && page < totalPages) {
                     onPageChange(page);
                 }
             }}/>
@@ -380,11 +381,34 @@ class VeloClientList extends Component {
             name_only: false,
         }, this.source.token).then(resp => {
             if (resp.cancel) return;
-
-            let items = resp.data && resp.data.items;
-            items = items || [];
-            this.setState({loading: false, clients: items});
+            let res = resp.data || {};
+            this.setState({
+                loading: false,
+                search_term: res.search_term,
+                total: res.total,
+                clients: res.items || []});
         });
+    }
+
+    renderSearchStats = ()=>{
+        let search_term = <></>;
+        if (!_.isUndefined(this.state.search_term)) {
+            search_term = <Button disabled={true} variant="outline-info"
+                          >{
+                T("Query:") + " " + this.state.search_term.query
+            } { this.state.search_term.filter == "ONLINE" &&
+                <span>{T("ONLINE")}</span>}
+            </Button>;
+        }
+        return <ButtonGroup>
+                 {search_term}
+
+                 { !_.isUndefined(this.state.total) &&
+                   <Button  disabled={true} variant="outline-info">
+                     { T("Total Matching Clients") + " " + this.state.total + " "}
+                   </Button>}
+
+               </ButtonGroup>;
     }
 
     openClientInfo = (client) => {
@@ -449,13 +473,6 @@ class VeloClientList extends Component {
 
     render() {
         let columns = getClientColumns();
-        let total_size = this.state.clients.length +
-            this.state.start_row;
-
-        if (total_size === this.state.page_size) {
-            total_size++;
-        }
-
         columns[0].headerFormatter = (column, colIndex, { sortElement, filterElement }) => {
             return (
                 <Button variant="outline-default"
@@ -508,6 +525,12 @@ class VeloClientList extends Component {
         };
 
         let affected_clients = this.getAffectedClients();
+        let total_rows = this.state.total || 0;
+        let page_size = this.state.page_size || 10;
+        let currentPage = this.state.start_row / this.state.page_size;
+        if (currentPage > total_rows / page_size) {
+            currentPage = 0;
+        };
 
         return (
             <>
@@ -544,6 +567,7 @@ class VeloClientList extends Component {
                 </ButtonGroup>
               </Navbar>
               <div className="fill-parent no-margins toolbar-margin selectable">
+                { this.renderSearchStats() }
                 <BootstrapTable
                   hover
                   remote
@@ -562,17 +586,18 @@ class VeloClientList extends Component {
                   }}
 
                   pagination={ paginationFactory({
-                      sizePerPage: this.state.page_size,
-                      totalSize: total_size,
-                      currSizePerPage: this.state.page_size,
+                      sizePerPage: page_size,
+                      totalSize: total_rows,
+                      currSizePerPage: page_size,
                       onSizePerPageChange: value=>{
                           this.setState({page_size: value});
                       },
                       pageStartIndex: 0,
                       pageListRenderer: ({pages, onPageChange})=>pageListRenderer({
-                          pageSize: this.state.page_size,
+                          pageSize: page_size,
                           pages: pages,
-                          currentPage: this.state.start_row / this.state.page_size,
+                          totalRows: total_rows,
+                          currentPage: currentPage,
                           onPageChange: onPageChange}),
                       sizePerPageRenderer
                   }) }

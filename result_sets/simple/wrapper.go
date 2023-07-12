@@ -26,7 +26,50 @@ func (self *ResultSetReaderWrapper) TotalRows() int64 {
 }
 
 func (self *ResultSetReaderWrapper) JSON(ctx context.Context) (<-chan []byte, error) {
-	return nil, errors.New("ResultSetReaderWrapper.JSON Not implemented")
+	output := make(chan []byte)
+	count := self.start_idx + uint64(self.offset)
+
+	go func() {
+		defer close(output)
+
+		if self.start_idx == self.end_idx {
+			return
+		}
+
+		subctx, cancel := context.WithCancel(ctx)
+		defer cancel()
+
+		json_chan, err := self.ResultSetReader.JSON(subctx)
+		if err != nil {
+			return
+		}
+
+		for {
+			select {
+			case <-subctx.Done():
+				return
+
+			case row, ok := <-json_chan:
+				if !ok {
+					return
+				}
+
+				select {
+				case <-ctx.Done():
+					return
+
+				case output <- row:
+				}
+
+				count++
+				if self.end_idx > 0 && count >= self.end_idx {
+					return
+				}
+			}
+		}
+	}()
+
+	return output, nil
 }
 
 func (self *ResultSetReaderWrapper) Rows(ctx context.Context) <-chan *ordereddict.Dict {

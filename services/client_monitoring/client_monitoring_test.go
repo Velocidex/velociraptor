@@ -94,6 +94,14 @@ sources:
 
 	assert.NoError(self.T(), err)
 
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	client_info_manager.Set(self.Ctx, &services.ClientInfo{
+		actions_proto.ClientInfo{
+			ClientId: self.client_id,
+		},
+	})
 }
 
 // Check that monitoring tables eventually follow when artifact
@@ -504,12 +512,12 @@ func (self *ClientMonitoringTestSuite) TestClientMonitoring() {
 
 	// Some time later we label the client.
 	current_clock.MockNow = time.Unix(20, 0)
-	labeler.SetClientLabel(context.Background(), self.ConfigObj, self.client_id, "Foobar")
+	labeler.SetClientLabel(self.Ctx, self.ConfigObj, self.client_id, "Foobar")
 
 	// Client will now be required to update its event table to
 	// make sure the new label does not apply.
 	assert.True(self.T(), manager.CheckClientEventsVersion(
-		context.Background(), self.ConfigObj,
+		self.Ctx, self.ConfigObj,
 		self.client_id, uint64(10000000000)))
 
 }

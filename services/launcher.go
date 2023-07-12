@@ -52,6 +52,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -90,12 +91,24 @@ type CompilerOptions struct {
 	LogBatchTime uint64
 }
 
+type FlowSummary struct {
+	FlowId    string   `json:"FlowId"`
+	Artifacts []string `json:"Artifacts"`
+	Created   uint64   `json:"Created"`
+	Creator   string   `json:"Creator"`
+}
+
 type FlowStorer interface {
 	WriteFlow(
 		ctx context.Context,
 		config_obj *config_proto.Config,
 		flow *flows_proto.ArtifactCollectorContext,
 		completion func()) error
+
+	WriteFlowIndex(
+		ctx context.Context,
+		config_obj *config_proto.Config,
+		flow *flows_proto.ArtifactCollectorContext) error
 
 	WriteTask(
 		ctx context.Context,
@@ -117,7 +130,9 @@ type FlowStorer interface {
 	ListFlows(
 		ctx context.Context,
 		config_obj *config_proto.Config,
-		client_id string) ([]string, error)
+		client_id string,
+		options result_sets.ResultSetOptions,
+		offset, length int64) ([]*FlowSummary, int64, error)
 
 	// Get the exact requests that were sent for this collection (for
 	// provenance).
@@ -194,9 +209,9 @@ type Launcher interface {
 	GetFlows(
 		ctx context.Context,
 		config_obj *config_proto.Config,
-		client_id string, include_archived bool,
-		flow_filter func(flow *flows_proto.ArtifactCollectorContext) bool,
-		offset uint64, length uint64) (*api_proto.ApiFlowResponse, error)
+		client_id string,
+		options result_sets.ResultSetOptions,
+		offset, length int64) (*api_proto.ApiFlowResponse, error)
 
 	// Get the details of a flow - this has a lot more information
 	// than the previous method.

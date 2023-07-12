@@ -6,3 +6,5 @@ server_artifact_logs
 client_idx
 artifact_definitions
 orgs
+snapshot.json
+snapshot.json.index

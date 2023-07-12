@@ -416,6 +416,9 @@ export function sortCaret(order, column) {
 export function formatColumns(columns, env, column_formatter) {
     _.each(columns, (x) => {
         x.headerFormatter = column_formatter || headerFormatter;
+        if(x.no_transformation) {
+            x.headerFormatter = headerFormatter;
+        }
         if (x.sort) {
             x.sortCaret = sortCaret;
         }

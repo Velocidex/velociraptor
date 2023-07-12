@@ -73,6 +73,15 @@ func (self *EventsTestSuite) SetupTest() {
 	self.client_id = "C.2232"
 	self.Clock = &utils.IncClock{}
 
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	client_info_manager.Set(self.Ctx, &services.ClientInfo{
+		actions_proto.ClientInfo{
+			ClientId: self.client_id,
+		},
+	})
+
 	self.responder = responder.TestResponderWithFlowId(
 		self.ConfigObj, "EventsTestSuite")
 	self.event_table = actions.NewEventTable(
@@ -122,7 +131,7 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	ctx, cancel := context.WithTimeout(self.Ctx, time.Second*60)
 	defer cancel()
 
 	// Wait until the entire event table is cleaned up.
@@ -139,12 +148,12 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// We definitely need to update the table on this client.
 	assert.True(self.T(),
 		client_manager.CheckClientEventsVersion(
-			context.Background(),
+			self.Ctx,
 			self.ConfigObj, self.client_id, version))
 
 	// Get the new table
 	message := client_manager.GetClientUpdateEventTableMessage(
-		context.Background(), self.ConfigObj, self.client_id)
+		self.Ctx, self.ConfigObj, self.client_id)
 
 	// Only one query will be selected now since no label is set
 	// on the client.
@@ -164,14 +173,14 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 
 	// And we ran some queries.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		return len(actions.QueryLog.Get()) > 0
+		return len(actions.QueryLog.Get()) > 1
 	})
 	actions.QueryLog.Clear()
 
 	// We no longer need to update the event table - it is up to date.
 	assert.False(self.T(),
 		client_manager.CheckClientEventsVersion(
-			context.Background(), self.ConfigObj, self.client_id,
+			self.Ctx, self.ConfigObj, self.client_id,
 			table.Version()))
 
 	// Now we set a label on the client. This should cause the
@@ -184,17 +193,17 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 
 	require.NoError(self.T(),
 		label_manager.SetClientLabel(
-			context.Background(), self.ConfigObj, self.client_id, "Foobar"))
+			self.Ctx, self.ConfigObj, self.client_id, "Foobar"))
 
 	// Setting the label will cause the client_monitoring manager
 	// to want to upgrade the event table.
 	assert.True(self.T(),
 		client_manager.CheckClientEventsVersion(
-			context.Background(), self.ConfigObj, self.client_id,
+			self.Ctx, self.ConfigObj, self.client_id,
 			table.Version()))
 
 	new_message := client_manager.GetClientUpdateEventTableMessage(
-		context.Background(), self.ConfigObj, self.client_id)
+		self.Ctx, self.ConfigObj, self.client_id)
 
 	assert.True(self.T(), new_message.UpdateEventTable.Version >
 		message.UpdateEventTable.Version)
@@ -202,8 +211,10 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 	// The new table has 1 queries still since it has not really changed.
 	assert.Equal(self.T(), len(new_message.UpdateEventTable.Event), 1)
 
-	// Now check that no updates are performed.
+	// Now check that no updates are performed: We clear the query log
+	// and send an update. No new queries should be running.
 	actions.QueryLog.Clear()
+
 	table.UpdateEventTable(ctx, wg, self.ConfigObj, output_chan,
 		new_message.UpdateEventTable)
 
@@ -214,27 +225,28 @@ func (self *EventsTestSuite) TestEventTableUpdate() {
 
 	// But the tables have not really changed, so the query will
 	// not be updated.
-	if len(actions.QueryLog.Get()) != 0 {
-		fmt.Printf("Queries that ran %v\n", actions.QueryLog.Get())
+	queries := actions.QueryLog.Get()
+	if len(queries) != 0 {
+		fmt.Printf("Queries that ran %v\n", queries)
 	}
-	assert.Equal(self.T(), len(actions.QueryLog.Get()), 0)
+	assert.Equal(self.T(), len(queries), 0)
 
 	// Now lets set the label to Label1
 	require.NoError(self.T(),
 		label_manager.SetClientLabel(
-			context.Background(), self.ConfigObj,
+			self.Ctx, self.ConfigObj,
 			self.client_id, "Label1"))
 
 	// We need to update the table again (takes a while for the
 	// client manager to notice the label change).
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		return client_manager.CheckClientEventsVersion(
-			context.Background(), self.ConfigObj, self.client_id,
+			self.Ctx, self.ConfigObj, self.client_id,
 			table.Version())
 	})
 
 	new_message = client_manager.GetClientUpdateEventTableMessage(
-		context.Background(), self.ConfigObj, self.client_id)
+		self.Ctx, self.ConfigObj, self.client_id)
 
 	// The new table has 2 event queries - one for the All label
 	// and one for Label1 label.
@@ -271,7 +283,7 @@ func (self *EventsTestSuite) TestEventEqual() {
 	assert.NoError(self.T(), err)
 	client_manager.(*client_monitoring.ClientEventTable).Clock = self.Clock
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
+	ctx, cancel := context.WithTimeout(self.Ctx, time.Second*60)
 	defer cancel()
 
 	// Wait until the entire event table is cleaned up.
@@ -284,7 +296,7 @@ func (self *EventsTestSuite) TestEventEqual() {
 		ctx, self.ConfigObj, "", server_state))
 
 	message := client_manager.GetClientUpdateEventTableMessage(
-		context.Background(), self.ConfigObj, self.client_id)
+		self.Ctx, self.ConfigObj, self.client_id)
 
 	// Update the table for the base message.
 	err, ok := table.Update(ctx, wg, self.ConfigObj, output_chan,

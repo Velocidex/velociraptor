@@ -36,7 +36,7 @@ var (
 		"Disables artifact compressions").Bool()
 	frontend_cmd_minion = frontend_cmd.Flag("minion", "This is a minion frontend").Bool()
 
-	frontend_cmd_node = frontend_cmd.Flag("node", "The name of a minion - selects from available frontend configurations").String()
+	frontend_cmd_node = frontend_cmd.Flag("node", "The name of a minion - selects from available frontend configurations (DEPRECATED: ignored)").String()
 
 	frontend_disable_panic_guard = frontend_cmd.Flag("disable-panic-guard",
 		"Disabled the panic guard mechanism (not recommended)").Bool()

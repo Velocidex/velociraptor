@@ -331,14 +331,17 @@ func reject_with_username(
 	w http.ResponseWriter, r *http.Request,
 	err error, username, login_url, provider string) {
 
-	// Log into the audit log.
-	services.LogAudit(r.Context(),
-		config_obj, username, "User rejected by GUI",
-		ordereddict.NewDict().
-			Set("remote", r.RemoteAddr).
-			Set("method", r.Method).
-			Set("url", r.URL.String()).
-			Set("err", err.Error()))
+	// Log failed login to the audit log only if there is an actual
+	// user. First redirect will have username blank.
+	if username != "" {
+		services.LogAudit(r.Context(),
+			config_obj, username, "User rejected by GUI",
+			ordereddict.NewDict().
+				Set("remote", r.RemoteAddr).
+				Set("method", r.Method).
+				Set("url", r.URL.String()).
+				Set("err", err.Error()))
+	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)

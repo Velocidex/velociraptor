@@ -671,8 +671,9 @@ type ClientInfo struct {
 	InstallTime   uint64   `protobuf:"varint,26,opt,name=install_time,json=installTime,proto3" json:"install_time,omitempty"`
 	Labels        []string `protobuf:"bytes,15,rep,name=labels,proto3" json:"labels,omitempty"`
 	MacAddresses  []string `protobuf:"bytes,22,rep,name=mac_addresses,json=macAddresses,proto3" json:"mac_addresses,omitempty"`
-	// A hint if tasks are available. This does not have to be date -
-	// checking the task queue will yield the correct tasks.
+	// A hint if tasks are available. This does not have to be
+	// accurate - checking the task queue will yield the correct
+	// tasks.
 	HasTasks              bool   `protobuf:"varint,27,opt,name=has_tasks,json=hasTasks,proto3" json:"has_tasks,omitempty"`
 	LastInterrogateFlowId string `protobuf:"bytes,16,opt,name=last_interrogate_flow_id,json=lastInterrogateFlowId,proto3" json:"last_interrogate_flow_id,omitempty"`
 	// This can be a customized artifact that is compatible with

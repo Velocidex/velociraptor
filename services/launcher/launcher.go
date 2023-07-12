@@ -508,6 +508,8 @@ func AddToolDependency(
 	return nil
 }
 
+// Scheduling artifact collections only happens on the master node at
+// the moment.
 func (self *Launcher) ScheduleArtifactCollection(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -515,6 +517,11 @@ func (self *Launcher) ScheduleArtifactCollection(
 	repository services.Repository,
 	collector_request *flows_proto.ArtifactCollectorArgs,
 	completion func()) (string, error) {
+
+	if !services.IsMaster(config_obj) {
+		return "", errors.New(
+			"ScheduleArtifactCollection can only be called on the master node")
+	}
 
 	args := collector_request.CompiledCollectorArgs
 	if args == nil {
@@ -645,9 +652,15 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 
 		// Write the collection object so the GUI can start tracking
 		// it.
+		redacted := redactCollectContext(collection_context)
 		err = self.Storage().WriteFlow(
-			ctx, config_obj, redactCollectContext(collection_context),
-			utils.BackgroundWriter)
+			ctx, config_obj, redacted, utils.BackgroundWriter)
+		if err != nil {
+			return "", err
+		}
+
+		// Write the flow on the index.
+		err = self.Storage().WriteFlowIndex(ctx, config_obj, redacted)
 		if err != nil {
 			return "", err
 		}
@@ -668,7 +681,9 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 		return "", err
 	}
 
-	return collection_context.SessionId, nil
+	// Write the flow on the index.
+	err = self.Storage().WriteFlowIndex(ctx, config_obj, collection_context)
+	return collection_context.SessionId, err
 }
 
 // Adds any parameters set in the ArtifactCollectorArgs into the

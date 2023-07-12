@@ -7,24 +7,31 @@
     width: 100%;
 }
 
-.paged-table-header {
+table.paged-table-header {
     width: 100%;
 }
 
-.paged-table-header td {
+table.paged-table-header td {
     vertical-align: middle;
 }
 
-.paged-table-header .sort-element {
+table.paged-table-header tr {
+    height: 48px;
+}
+
+table.paged-table-header .sort-element {
     float: right;
     display: none;
 }
 
-.paged-table-header:hover .sort-element {
-    float: right;
+table.paged-table-header:hover .sort-element {
     display: block;
 }
 
-.paged-table-header .sort-element.visible {
+table.paged-table-header .sort-element.visible {
     display: block;
+}
+
+tr.paged-table-header th {
+    padding: 0;
 }
