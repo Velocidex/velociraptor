@@ -2,37 +2,33 @@
  "Registry Glob": [
   {
    "Name": "windows-feedback",
-   "ModTime": "2021-06-01T06:29:02Z",
-   "FullPath": "HKEY_CURRENT_USER\\Software\\Classes\\windows-feedback",
    "OSPath": "HKEY_CURRENT_USER\\Software\\Classes\\windows-feedback",
    "Mtime": "2021-06-01T06:29:02Z",
-   "Btime": "2021-06-01T06:29:02Z",
-   "Ctime": "2021-06-01T06:29:02Z",
    "Atime": "2021-06-01T06:29:02Z",
-   "Data": {
-    "type": "Key"
-   },
+   "Ctime": "2021-06-01T06:29:02Z",
+   "Btime": "2021-06-01T06:29:02Z",
    "Size": 0,
+   "Mode": 2147484141,
    "IsDir": true,
    "IsLink": false,
-   "Mode": 2147484141
+   "Globs": [
+    "HKEY_CURRENT_USER\\Software\\Classes\\windows*"
+   ]
   },
   {
    "Name": "windowsdefender",
-   "ModTime": "2021-06-01T06:27:34Z",
-   "FullPath": "HKEY_CURRENT_USER\\Software\\Classes\\windowsdefender",
    "OSPath": "HKEY_CURRENT_USER\\Software\\Classes\\windowsdefender",
    "Mtime": "2021-06-01T06:27:34Z",
-   "Btime": "2021-06-01T06:27:34Z",
-   "Ctime": "2021-06-01T06:27:34Z",
    "Atime": "2021-06-01T06:27:34Z",
-   "Data": {
-    "type": "Key"
-   },
+   "Ctime": "2021-06-01T06:27:34Z",
+   "Btime": "2021-06-01T06:27:34Z",
    "Size": 0,
+   "Mode": 2147484141,
    "IsDir": true,
    "IsLink": false,
-   "Mode": 2147484141
+   "Globs": [
+    "HKEY_CURRENT_USER\\Software\\Classes\\windows*"
+   ]
   }
  ],
  "D drive Glob": [
