@@ -21,7 +21,6 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -41,21 +40,15 @@ type _PathFilterer interface {
 	Match(f accessors.FileInfo) bool
 }
 
-// A sentinel is used to determine if we should report this file. At
-// each level of walking the Match tree we check if a _Sentinel is
-// present at this level. If it is then we need to report this.
-type _Sentinel struct{}
-
-func (self _Sentinel) Match(f accessors.FileInfo) bool {
-	return true
-}
-
-func (self _Sentinel) String() string {
-	return "Sentinel"
+// A sentinel is used to determine if we should report this file. It
+// keeps a list of glob expressions that matched this node in the
+// tree.
+type _Sentinel struct {
+	globs []string
 }
 
 var (
-	sentinal_filter = _Sentinel{}
+	sentinel_filter = _Sentinel{}
 )
 
 type _RecursiveComponent struct {
@@ -107,10 +100,25 @@ type GlobOptions struct {
 	RecursionCallback func(file_info accessors.FileInfo) bool
 }
 
-// A tree of filters - each filter branches to a subfilter.
+// A tree of filters - each filter branches to a subfilter.  The tree
+// uses the glob component as keys to the next filter
+// globs. Eventually components reach the sentinel glober which cause
+// the match to be reported.
 type Globber struct {
 	filters map[_PathFilterer]*Globber
 	options GlobOptions
+
+	// A sentinel globbel is a special globber that reports its
+	// matches.
+	sentinel *_Sentinel
+}
+
+func (self *Globber) is_sentinel() bool {
+	return self.sentinel != nil
+}
+
+func (self *Globber) getHit(f accessors.FileInfo) *GlobHit {
+	return NewGlobHit(f, self.sentinel.globs)
 }
 
 func (self *Globber) WithOptions(options GlobOptions) *Globber {
@@ -141,7 +149,9 @@ func (self Globber) _DebugString(indent string) string {
 			continue
 		}
 		subtree := re.ReplaceAllString(v._DebugString(indent+"  "), indent)
-		result = append(result, fmt.Sprintf("%s: %s\n", k, subtree))
+		result = append(result,
+			fmt.Sprintf("%s: %s (sentienl %v)\n",
+				k, subtree, v.is_sentinel()))
 	}
 
 	return strings.Join(result, "\n")
@@ -153,7 +163,9 @@ func (self *Globber) Add(pattern *accessors.OSPath) error {
 	filter, err := convert_glob_into_path_components(pattern)
 	if err == nil {
 		// Expand path components into alternatives
-		return self._expand_path_components(filter, 0)
+		return self._expand_path_components(filter, 0, []string{
+			pattern.String(),
+		})
 
 	} else {
 		return err
@@ -162,7 +174,7 @@ func (self *Globber) Add(pattern *accessors.OSPath) error {
 
 // Adds the raw filter into the Globber tree. This is called
 // after any expansion.
-func (self *Globber) _add_filter(components []_PathFilterer) error {
+func (self *Globber) _add_filter(components []_PathFilterer, globs []string) error {
 	var current *Globber = self
 
 	for _, element := range components {
@@ -176,8 +188,14 @@ func (self *Globber) _add_filter(components []_PathFilterer) error {
 		}
 	}
 
-	// Add Sentinal to ensure matches are reported here.
-	current.filters[sentinal_filter] = nil
+	// Add Sentinel to ensure matches are reported here.
+	sentinel := current.sentinel
+	if sentinel == nil {
+		sentinel = &_Sentinel{}
+	}
+	sentinel.globs = append(sentinel.globs, globs...)
+	current.sentinel = sentinel
+
 	return nil
 }
 
@@ -247,6 +265,11 @@ func (self *Globber) ExpandWithContext(
 	go func() {
 		defer close(output_chan)
 
+		// Nothing to do here
+		if len(self.filters) == 0 {
+			return
+		}
+
 		// We want to do a breadth first recursion - not a
 		// depth first recursion. This ensures that readers of
 		// the results can detect all the hits in a particular
@@ -263,7 +286,9 @@ func (self *Globber) ExpandWithContext(
 			return
 		}
 
-		result := []accessors.FileInfo{}
+		// Use map to merge glob hits for the same file. This is
+		// needed to combine the globs array from different filters.
+		hits := newDirHits()
 
 		// For each file that matched, we check which component
 		// would match it.
@@ -277,9 +302,12 @@ func (self *Globber) ExpandWithContext(
 				if next == nil {
 					continue
 				}
-				_, next_has_sentinal := next.filters[sentinal_filter]
-				if next_has_sentinal {
-					result = append(result, f)
+
+				// Report the hit if we need to. If multiple filters
+				// would match the same file we need to merge their
+				// results together.
+				if next.is_sentinel() {
+					hits.mergeHit(basename, next.getHit(f))
 				}
 
 				// Only recurse into directories.
@@ -294,37 +322,18 @@ func (self *Globber) ExpandWithContext(
 			}
 		}
 
-		// Sort the results alphabetically.
-		sort.Slice(result, func(i, j int) bool {
-			return -1 == strings.Compare(
-				result[i].OSPath().Basename(),
-				result[j].OSPath().Basename())
-		})
-		var last string
-		for _, f := range result {
-			basename := f.OSPath().Basename()
-			if last == basename {
-				continue
-			}
-
+		for _, f := range hits.getHits() {
 			select {
 			case <-ctx.Done():
 				return
 
 			case output_chan <- f:
-				last = basename
 			}
 		}
 
 		for name, nexts := range children {
 			next_path := root.Append(name)
 			for _, next := range nexts {
-				// There is no point expanding this
-				// node if it is just a sentinal -
-				// special case it for efficiency.
-				if is_sentinal(next) {
-					continue
-				}
 				for f := range next.ExpandWithContext(
 					ctx, scope, config_obj, next_path, accessor) {
 					select {
@@ -341,22 +350,8 @@ func (self *Globber) ExpandWithContext(
 	return output_chan
 }
 
-func is_sentinal(globber *Globber) bool {
-	if len(globber.filters) != 1 {
-		return false
-	}
-
-	for k, v := range globber.filters {
-		if k == sentinal_filter && v == nil {
-			return true
-		}
-	}
-
-	return false
-}
-
 func (self Globber) _expand_path_components(
-	filter []_PathFilterer, depth int) error {
+	filter []_PathFilterer, depth int, globs []string) error {
 
 	// Create a new filter with simplified elements.
 	var new_filter []_PathFilterer
@@ -386,7 +381,7 @@ func (self Globber) _expand_path_components(
 				if (len(middle) == 0 && len(right) > 0) ||
 					len(middle) > 0 {
 					// Expand each component further.
-					err := self._expand_path_components(new_filter, depth+1)
+					err := self._expand_path_components(new_filter, depth+1, globs)
 					if err != nil {
 						return err
 					}
@@ -405,7 +400,7 @@ func (self Globber) _expand_path_components(
 
 	// If we get here the new_filter should be clean and
 	// need no expansions.
-	return self._add_filter(new_filter)
+	return self._add_filter(new_filter, globs)
 }
 
 var (

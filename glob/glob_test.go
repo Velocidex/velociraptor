@@ -184,7 +184,8 @@ func TestGlobWithContext(t *testing.T) {
 			accessors.MustNewLinuxOSPath("/"), // root
 			fs_accessor)
 		for row := range output_chan {
-			returned = append(returned, row.FullPath())
+			hit := fmt.Sprintf("%v Data: %v\n", row.OSPath(), row.Data())
+			returned = append(returned, hit)
 		}
 
 		result.Set(fmt.Sprintf("%03d %s %s", idx, fixture.name,

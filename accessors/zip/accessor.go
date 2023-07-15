@@ -154,7 +154,7 @@ func _GetZipFile(self *ZipFileSystemAccessor,
 	accessor, err := accessors.GetAccessor(
 		pathspec.DelegateAccessor, self.scope)
 	if err != nil {
-		self.scope.Log("%v: did you provide a URL or PathSpec?", err)
+		self.scope.Log("%v: did you provide a PathSpec?", err)
 		return nil, err
 	}
 
