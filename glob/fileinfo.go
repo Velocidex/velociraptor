@@ -4,7 +4,6 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 )
 
@@ -15,12 +14,9 @@ type GlobHit struct {
 	globs []string
 }
 
-func (self GlobHit) Data() *ordereddict.Dict {
-	data := self.FileInfo.Data()
-	if data == nil {
-		data = ordereddict.NewDict()
-	}
-	return data.Set("globs", self.globs)
+// Report all matching globs
+func (self GlobHit) Globs() []string {
+	return self.globs
 }
 
 func NewGlobHit(base accessors.FileInfo, globs []string) *GlobHit {
@@ -35,7 +31,7 @@ type dirHits struct {
 	hits map[string]*GlobHit
 }
 
-// Merge a hit on a glob with existing hits in this directory.
+// Merge a hit on a basename with existing hits in this directory.
 func (self *dirHits) mergeHit(basename string, hit *GlobHit) {
 
 	existing, ok := self.hits[basename]
@@ -49,7 +45,7 @@ func (self *dirHits) mergeHit(basename string, hit *GlobHit) {
 	}
 }
 
-// Return all the hits
+// Return all the hits sorted by increasing lexical basename
 func (self *dirHits) getHits() []*GlobHit {
 
 	// Sort dict by basename

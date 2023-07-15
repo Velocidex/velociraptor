@@ -57,8 +57,15 @@ type FileStoreFileInfo struct {
 	Data_      *ordereddict.Dict
 }
 
+// We return multiple files as the base (for example the json file and
+// the index both have the same basename)
 func (self FileStoreFileInfo) Name() string {
 	return self.fullpath.Base()
+}
+
+// This reports the unique basename
+func (self FileStoreFileInfo) UniqueName() string {
+	return self.ospath.Basename()
 }
 
 func (self *FileStoreFileInfo) Data() *ordereddict.Dict {

@@ -4,10 +4,8 @@ import (
 	"context"
 	"time"
 
-	"www.velocidex.com/golang/velociraptor/accessors"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
-	"www.velocidex.com/golang/vfilter/protocols"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
@@ -63,42 +61,7 @@ func (self _BoolEq) Applicable(a types.Any, b types.Any) bool {
 	return false
 }
 
-type _GlobFileInfoAssociative struct{}
-
-func (self _GlobFileInfoAssociative) Applicable(
-	a vfilter.Any, b vfilter.Any) bool {
-	_, a_ok := a.(accessors.FileInfo)
-	if !a_ok {
-		return false
-	}
-
-	_, b_ok := b.(string)
-	if !b_ok {
-		return false
-	}
-
-	return true
-}
-
-func (self _GlobFileInfoAssociative) Associative(
-	scope vfilter.Scope, a vfilter.Any, b vfilter.Any) (
-	vfilter.Any, bool) {
-	return protocols.DefaultAssociative{}.Associative(scope, a, b)
-}
-
-// Only expose some fields that are explicitly provided by the
-// glob.FileInfo interface. This cleans up * expansion in SELECT *
-// FROM ...
-func (self _GlobFileInfoAssociative) GetMembers(
-	scope vfilter.Scope, a vfilter.Any) []string {
-	return []string{"Name", "ModTime", "FullPath",
-		"OSPath", "Mtime", "Btime",
-		"Ctime", "Atime", "Data", "Size",
-		"IsDir", "IsLink", "Mode"}
-}
-
 func init() {
 	vql_subsystem.RegisterProtocol(&_BoolTime{})
 	vql_subsystem.RegisterProtocol(&_BoolEq{})
-	vql_subsystem.RegisterProtocol(&_GlobFileInfoAssociative{})
 }

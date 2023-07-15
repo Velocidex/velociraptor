@@ -293,7 +293,7 @@ func (self *Globber) ExpandWithContext(
 		// For each file that matched, we check which component
 		// would match it.
 		for _, f := range files {
-			basename := f.Name()
+			basename := getUniqueName(f)
 
 			for filterer, next := range self.filters {
 				if !filterer.Match(f) {

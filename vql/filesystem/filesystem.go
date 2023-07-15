@@ -145,18 +145,6 @@ func (self GlobPlugin) Call(
 				item = pathspec.Path
 				pathspec.Path = ""
 				root.SetPathSpec(pathspec)
-
-				// URL based pathspec. TODO: Remove support for this
-				// type of path.
-			} else if strings.Contains(item, "#") {
-
-				pathspec, err := accessors.PathSpecFromString(item)
-				if err == nil {
-					scope.Log("glob: Glob item appears to be a url. This is deprecated, please use the root arg instead.")
-					item = pathspec.Path
-					pathspec.Path = ""
-					root.SetPathSpec(pathspec)
-				}
 			}
 
 			item_path, err := root.Parse(item)
@@ -164,6 +152,7 @@ func (self GlobPlugin) Call(
 				scope.Log("glob: %v", err)
 				return
 			}
+
 			err = globber.Add(item_path)
 			if err != nil {
 				scope.Log("glob: %v", err)
