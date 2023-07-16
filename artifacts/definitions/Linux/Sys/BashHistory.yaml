@@ -26,11 +26,11 @@ parameters:
 
 sources:
   - query: |
-      LET files = SELECT FullPath FROM glob(globs=TargetGlob)
+      LET files = SELECT OSPath FROM glob(globs=TargetGlob)
 
       SELECT * FROM foreach(row=files,
           query={
-              SELECT Line, FullPath FROM parse_lines(filename=FullPath)
+              SELECT Line, OSPath FROM parse_lines(filename=OSPath)
               WHERE
                 Line =~ SearchRegex
                 AND NOT if(condition= WhitelistRegex,

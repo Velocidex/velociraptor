@@ -40,7 +40,7 @@ sources:
 
         -- Enumerate all the sockets and cache them in memory for
         -- reverse lookup. The following is basically lsof.
-        LET X = SELECT split(string=FullPath, sep="/")[2] AS Pid,
+        LET X = SELECT OSPath[2] AS Pid,
                Data.Link AS Filename,
                parse_string_with_regex(
                   string=Data.Link,

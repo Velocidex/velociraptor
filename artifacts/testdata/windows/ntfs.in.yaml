@@ -1,31 +1,31 @@
 Queries:
-  - SELECT FullPath FROM glob(globs="/*", accessor="ntfs")
-  - SELECT FullPath FROM glob(globs="\\*", accessor="ntfs")
-  - SELECT FullPath FROM glob(globs="\\\\.\\c:\\*", accessor="ntfs")
+  - SELECT OSPath FROM glob(globs="/*", accessor="ntfs")
+  - SELECT OSPath FROM glob(globs="\\*", accessor="ntfs")
+  - SELECT OSPath FROM glob(globs="\\\\.\\c:\\*", accessor="ntfs")
     WHERE Name = "Windows"
-  - SELECT FullPath FROM glob(globs="\\\\.\\c:\\Windows\\*", accessor="ntfs")
+  - SELECT OSPath FROM glob(globs="\\\\.\\c:\\Windows\\*", accessor="ntfs")
     WHERE Name = "notepad.exe"
-  - SELECT FullPath FROM glob(globs="c:/Windows/*", accessor="ntfs")
+  - SELECT OSPath FROM glob(globs="c:/Windows/*", accessor="ntfs")
     WHERE Name = "notepad.exe"
     # Expect to see an ADS and an alternative short file name.
-  - SELECT FullPath FROM glob(globs="c:\\*", accessor="ntfs")
+  - SELECT OSPath FROM glob(globs="c:\\*", accessor="ntfs")
     WHERE Name =~ "h.+txt"
 
     # Make sure lazy_ntfs can see the $LogFile
-  - SELECT FullPath FROM glob(globs="C:/$LogFile", accessor="lazy_ntfs")
-  - SELECT FullPath FROM glob(globs="C:/$LogFile", accessor="ntfs")
+  - SELECT OSPath FROM glob(globs="C:/$LogFile", accessor="lazy_ntfs")
+  - SELECT OSPath FROM glob(globs="C:/$LogFile", accessor="ntfs")
 
     # Check lazy_ntfs produces drives for root.
-  - SELECT FullPath FROM glob(globs="/*", accessor="lazy_ntfs")
-  - SELECT FullPath FROM glob(globs="\\*", accessor="lazy_ntfs")
-  - SELECT FullPath FROM glob(globs="\\\\.\\c:\\*", accessor="lazy_ntfs")
+  - SELECT OSPath FROM glob(globs="/*", accessor="lazy_ntfs")
+  - SELECT OSPath FROM glob(globs="\\*", accessor="lazy_ntfs")
+  - SELECT OSPath FROM glob(globs="\\\\.\\c:\\*", accessor="lazy_ntfs")
     WHERE Name = "Windows"
-  - SELECT FullPath FROM glob(globs="\\\\.\\c:\\Windows\\*", accessor="lazy_ntfs")
+  - SELECT OSPath FROM glob(globs="\\\\.\\c:\\Windows\\*", accessor="lazy_ntfs")
     WHERE Name = "notepad.exe"
-  - SELECT FullPath FROM glob(globs="c:/Windows/*", accessor="lazy_ntfs")
+  - SELECT OSPath FROM glob(globs="c:/Windows/*", accessor="lazy_ntfs")
     WHERE Name = "notepad.exe"
     # Expect to see an ADS and an alternative short file name.
-  - SELECT FullPath FROM glob(globs="c:\\*", accessor="lazy_ntfs")
+  - SELECT OSPath FROM glob(globs="c:\\*", accessor="lazy_ntfs")
     WHERE Name =~ "txt"
 
   # Test for ADSHunter - c:\adstest\test and ADS created via git action in windows.yaml

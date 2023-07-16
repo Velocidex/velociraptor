@@ -1,38 +1,25 @@
 Queries:
-  - LET zip_files = SELECT FullPath, Size FROM glob(
+  - LET zip_files = SELECT OSPath, Size FROM glob(
       globs=srcDir+"/artifacts/testdata/files/**/*.zip")
     WHERE Name =~ "test"
 
-  - SELECT basename(path=FullPath) as Name, Size FROM zip_files
+  - SELECT OSPath.Basename as Name, Size FROM zip_files
 
-  # The following use the deprecated url() notation which is still
-  # supported for now.
-
-  # Find txt files inside the zip files.
+  # We use the new pathspec() objects.
   - LET hits = SELECT * from foreach(row=zip_files, query= {
-       select FullPath, Mtime, Size from glob(
-          globs=url(
-            scheme='file',
-            path=FullPath,
-            fragment='/**/*.txt'), accessor='zip') } )
-
-  - SELECT url(parse=FullPath).Fragment as Name, Size, Mtime from hits
-
-  # Same as above but now we use the new pathspec() objects.
-  - LET hits = SELECT * from foreach(row=zip_files, query= {
-       select FullPath, Mtime, Size from glob(
+       SELECT OSPath, Mtime, Size from glob(
          globs=pathspec(DelegateAccessor='file',
-              DelegatePath=FullPath,
+              DelegatePath=OSPath,
               Path='/**/*.txt'),
          accessor='zip')
     } )
 
-  - SELECT pathspec(parse=FullPath).Path as Name, Size, Mtime from hits
+  - SELECT OSPath.Path as Name, Size, Mtime from hits
 
   # Make sure we can read the contents of zip members.
-  - SELECT Data, Offset, basename(path=FullPath) as Name
+  - SELECT Data, Offset, OSPath.Basename as Name
     FROM foreach(row=hits, query={
-       SELECT *, FullPath from read_file(filenames=FullPath, accessor='zip')
+       SELECT *, OSPath from read_file(filenames=OSPath, accessor='zip')
     })
 
   - SELECT read_file(
@@ -79,12 +66,12 @@ Queries:
   - SELECT OriginalPath, relpath(path=NewPath, base=tmpdir, sep="/"), Size
     FROM unzip(
        filename=read_file(filename=srcDir + '/artifacts/testdata/files/test.zip'),
-       accessor="data",
+       accessor="data", type="zip",
        output_directory=tmpdir)
 
   # We can pass a pathspec to zip accessor in glob root (root is on
   # test directory inside the zip).
-  - SELECT pathspec(parse=FullPath).Path AS Member
+  - SELECT OSPath.Path AS Member
     FROM glob(globs="/*.txt", accessor="zip",
      root=pathspec(
          DelegateAccessor="file",

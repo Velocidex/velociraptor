@@ -44,6 +44,13 @@ func (self _GlobHitAssociativeProtocol) GetMembers(
 
 func (self _GlobHitAssociativeProtocol) Associative(
 	scope vfilter.Scope, a vfilter.Any, b vfilter.Any) (vfilter.Any, bool) {
+
+	// Issue a deprecation warning if needed but only issue it once per query.
+	b_str, ok := b.(string)
+	if ok && b_str == "FullPath" {
+		scope.Log("Deprecation: The FullPath column of the Glob plugin is deprecated and will be removed soon - Use OSPath instead")
+	}
+
 	return protocols.DefaultAssociative{}.Associative(scope, a, b)
 }
 

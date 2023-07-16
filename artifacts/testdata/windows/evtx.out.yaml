@@ -97,7 +97,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "Level": 5,
   "Opcode": 15,
   "Task": 2,
-  "FullPath": "X:\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
+  "OSPath": "X:\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
   "_Source": "Windows.EventLogs.PowershellScriptblock"
  },
  {
@@ -114,7 +114,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "Level": 5,
   "Opcode": 15,
   "Task": 2,
-  "FullPath": "X:\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
+  "OSPath": "X:\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
   "_Source": "Windows.EventLogs.PowershellScriptblock"
  }
 ]SELECT * FROM Artifact.Windows.EventLogs.PowershellModule(EventLog=srcDir + "/artifacts/testdata/files/EID4103_PowershellModule.evtx" )[

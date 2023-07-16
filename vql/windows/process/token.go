@@ -4,12 +4,15 @@ package process
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"syscall"
+	"unsafe"
 
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -80,25 +83,62 @@ func (self TokenFunction) Call(
 		Set("IsElevated", token.IsElevated()).
 		Set("Groups", groups).
 		Set("SID", tokenUser.User.Sid.String()).
+		Set("Privileges", vfilter.Null{}).
 		Set("PrimaryGroup", vfilter.Null{})
 
 	// look up domain account by sid
 	account, domain, _, err := tokenUser.User.Sid.LookupAccount("localhost")
 	if err == nil {
-		result.Set("Username", fmt.Sprintf("%s\\%s", domain, account))
+		result.Update("Username", fmt.Sprintf("%s\\%s", domain, account))
 	}
 
 	profile_dir, err := token.GetUserProfileDirectory()
 	if err == nil {
-		result.Set("ProfileDir", profile_dir)
+		result.Update("ProfileDir", profile_dir)
 	}
 	pg, err := token.GetTokenPrimaryGroup()
 	if err == nil {
 		str := pg.PrimaryGroup.String()
-		result.Set("PrimaryGroup", str)
+		result.Update("PrimaryGroup", str)
+	}
+
+	// Get privileges if possible
+	privs, err := getTokenPrivileges(token)
+	if err == nil {
+		utils.Debug(privs)
+		result.Update("Privileges", privs)
 	}
 
 	return result
+}
+
+func getTokenPrivileges(t windows.Token) (*ordereddict.Dict, error) {
+	n := uint32(1024)
+	for {
+		b := make([]byte, n)
+		e := windows.GetTokenInformation(t, windows.TokenPrivileges, &b[0], uint32(len(b)), &n)
+		if n < 4 {
+			return nil, errors.New("GetTokenInformation call too small!")
+		}
+
+		if e == nil {
+			parsed := (*windows.Tokenprivileges)(unsafe.Pointer(&b[0]))
+			if parsed.PrivilegeCount < 1024 {
+				result := ordereddict.NewDict()
+				for _, item := range parsed.AllPrivileges() {
+					utils.Debug(item)
+				}
+				return result, nil
+			}
+			return nil, nil
+		}
+		if e != windows.ERROR_INSUFFICIENT_BUFFER {
+			return nil, e
+		}
+		if n <= uint32(len(b)) {
+			return nil, e
+		}
+	}
 }
 
 func (self TokenFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

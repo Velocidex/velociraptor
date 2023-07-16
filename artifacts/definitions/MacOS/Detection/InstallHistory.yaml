@@ -15,11 +15,11 @@ parameters:
 sources:
 - name: Install History
   query: |
-    LET SWplist = SELECT FullPath FROM glob(globs=InstallHistoryGlob)
+    LET SWplist = SELECT OSPath FROM glob(globs=InstallHistoryGlob)
 
     LET SoftwareDetails =
             SELECT * FROM foreach(
-                row=plist(file=FullPath),
+                row=plist(file=OSPath),
                 query={
                     SELECT
                         get(member="displayName", default="") AS DisplayName,

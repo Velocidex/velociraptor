@@ -29,7 +29,7 @@ sources:
     query: |
          /* Search for files which may contain apt sources. The user can
             pass new globs here. */
-         LET files = SELECT FullPath from glob(
+         LET files = SELECT OSPath from glob(
            globs=split(string=linuxAptSourcesGlobs, sep=","))
 
          /* Read each line in the sources which is not commented.
@@ -39,7 +39,7 @@ sources:
          */
          LET deb_sources = SELECT *
            FROM parse_records_with_regex(
-             file=files.FullPath,
+             file=files.OSPath,
              regex="(?m)^ *(?P<Type>deb(-src)?) (?:\\[arch=(?P<Arch>[^\\]]+)\\] )?" +
                   "(?P<URL>https?://(?P<base_uri>[^ ]+))" +
                   " +(?P<components>.+)")
@@ -51,7 +51,7 @@ sources:
          */
          LET parsed_apt_lines = SELECT Arch, URL,
             base_uri + " " + components as Name, Type,
-            FullPath as Source, aptCacheDirectory + regex_replace(
+            OSPath as Source, aptCacheDirectory + regex_replace(
               replace="_",
               re="_+",
               source=regex_replace(
@@ -78,7 +78,7 @@ sources:
          // Foreach row in the parsed cache file, collect the FileInfo too.
          LET add_stat_to_parsed_cache_file = SELECT * from foreach(
            query={
-             SELECT FullPath, Mtime, Ctime, Atime, Record, Type,
+             SELECT OSPath, Mtime, Ctime, Atime, Record, Type,
                Name, Arch, URL, Source from stat(filename=cache_file)
            }, row=parsed_cache_files)
 

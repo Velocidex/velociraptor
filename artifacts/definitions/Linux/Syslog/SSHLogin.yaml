@@ -24,12 +24,12 @@ sources:
                Event.event AS Result,
                Event.method AS Method,
                Event.user AS AttemptedUser,
-               FullPath
+               OSPath
         FROM foreach(
           row={
-              SELECT FullPath FROM glob(globs=syslogAuthLogPath)
+              SELECT OSPath FROM glob(globs=syslogAuthLogPath)
           }, query={
-              SELECT grok(grok=SSHGrok, data=Line) AS Event, FullPath
-              FROM parse_lines(filename=FullPath)
+              SELECT grok(grok=SSHGrok, data=Line) AS Event, OSPath
+              FROM parse_lines(filename=OSPath)
               WHERE Event.program = "sshd"
           })

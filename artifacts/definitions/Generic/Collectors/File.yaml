@@ -49,7 +49,7 @@ sources:
 
       -- Join all the collection rules into a single Glob plugin. This ensure we
       -- only make one pass over the filesystem. We only want LFNs.
-      LET hits = SELECT FullPath AS SourceFile, Size,
+      LET hits = SELECT OSPath AS SourceFile, Size,
                Ctime AS Created,
                Mtime AS Modified,
                Atime AS LastAccessed

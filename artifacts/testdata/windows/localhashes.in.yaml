@@ -1,6 +1,6 @@
 Queries:
   # Populate the hash database
-  - SELECT basename(path=FullPath) AS Name,
+  - SELECT OSPath.Basename AS Name,
            Size, Hash FROM Artifact.Generic.Forensic.LocalHashes.Glob(
            HashGlob=srcDir + '/artifacts/testdata/files/Security_1_record.evtx')
 
