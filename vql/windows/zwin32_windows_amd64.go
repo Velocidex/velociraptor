@@ -50,6 +50,7 @@ var (
 	procNtOpenDirectoryObject                = modntdll.NewProc("NtOpenDirectoryObject")
 	procAdjustTokenPrivileges                = modAdvapi32.NewProc("AdjustTokenPrivileges")
 	procLookupPrivilegeValueW                = modAdvapi32.NewProc("LookupPrivilegeValueW")
+	procLookupPrivilegeNameW                 = modAdvapi32.NewProc("LookupPrivilegeNameW")
 	procNtDuplicateObject                    = modntdll.NewProc("NtDuplicateObject")
 	procNtQueryInformationProcess            = modntdll.NewProc("NtQueryInformationProcess")
 	procNtQueryInformationThread             = modntdll.NewProc("NtQueryInformationThread")
@@ -151,6 +152,18 @@ func AdjustTokenPrivileges(TokenHandle syscall.Token, DisableAllPrivileges bool,
 
 func LookupPrivilegeValue(lpSystemName uintptr, lpName uintptr, out uintptr) (err error) {
 	r1, _, e1 := syscall.Syscall(procLookupPrivilegeValueW.Addr(), 3, uintptr(lpSystemName), uintptr(lpName), uintptr(out))
+	if r1 == 0 {
+		if e1 != 0 {
+			err = errnoErr(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func LookupPrivilegeName(lpSystemName *uint16, luid *LUID, out *uint16, ReturnLength *uint32) (err error) {
+	r1, _, e1 := syscall.Syscall6(procLookupPrivilegeNameW.Addr(), 4, uintptr(unsafe.Pointer(lpSystemName)), uintptr(unsafe.Pointer(luid)), uintptr(unsafe.Pointer(out)), uintptr(unsafe.Pointer(ReturnLength)), 0, 0)
 	if r1 == 0 {
 		if e1 != 0 {
 			err = errnoErr(e1)

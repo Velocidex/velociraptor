@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"syscall"
 	"unsafe"
 
@@ -15,8 +16,15 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	vwindows "www.velocidex.com/golang/velociraptor/vql/windows"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+)
+
+var (
+	luid_resolver = LuidResolver{
+		lookup: make(map[uint64]string),
+	}
 )
 
 type TokenArgs struct {
@@ -125,8 +133,31 @@ func getTokenPrivileges(t windows.Token) (*ordereddict.Dict, error) {
 			parsed := (*windows.Tokenprivileges)(unsafe.Pointer(&b[0]))
 			if parsed.PrivilegeCount < 1024 {
 				result := ordereddict.NewDict()
-				for _, item := range parsed.AllPrivileges() {
-					utils.Debug(item)
+				for _, luid_attr := range parsed.AllPrivileges() {
+					name := luid_resolver.Lookup(
+						luid_attr.Luid.LowPart, luid_attr.Luid.HighPart)
+					access := ""
+					if luid_attr.Attributes&windows.SE_PRIVILEGE_ENABLED > 0 {
+						access = "enabled"
+					}
+
+					if luid_attr.Attributes&windows.SE_PRIVILEGE_ENABLED_BY_DEFAULT > 0 {
+						access += " default"
+					}
+
+					if luid_attr.Attributes&windows.SE_PRIVILEGE_REMOVED > 0 {
+						access += " removed"
+					}
+
+					if luid_attr.Attributes&windows.SE_PRIVILEGE_USED_FOR_ACCESS > 0 {
+						access += " used"
+					}
+
+					// Only include privileges that are set to
+					// something.
+					if access != "" {
+						result.Set(name, access)
+					}
 				}
 				return result, nil
 			}
@@ -152,4 +183,36 @@ func (self TokenFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 
 func init() {
 	vql_subsystem.RegisterFunction(&TokenFunction{})
+}
+
+// Cache Luid to avoid having to make too many API calls
+type LuidResolver struct {
+	mu     sync.Mutex
+	lookup map[uint64]string
+}
+
+func (self *LuidResolver) Lookup(
+	low uint32, high int32) string {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	key := uint64(high)<<32 | uint64(low)
+
+	res, ok := self.lookup[key]
+	if ok {
+		return res
+	}
+
+	// Get the name of the privilege
+	b := make([]uint16, 50)
+	n := uint32(50)
+	luid := vwindows.LUID{low, high}
+	err := vwindows.LookupPrivilegeName(
+		nil, &luid, &b[0], &n)
+	if err == nil {
+		res = windows.UTF16ToString(b[:n])
+	}
+
+	self.lookup[key] = res
+	return res
 }

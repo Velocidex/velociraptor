@@ -1,20 +1,20 @@
-SELECT FullPath FROM glob(globs="/*", accessor="file") WHERE Name =~ "C"[
+SELECT OSPath FROM glob(globs="/*", accessor="file") WHERE Name =~ "C"[
  {
-  "FullPath": "C:"
+  "OSPath": "C:"
  }
-]SELECT FullPath FROM glob(globs="\\*", accessor="file") WHERE Name =~ "C"[
+]SELECT OSPath FROM glob(globs="\\*", accessor="file") WHERE Name =~ "C"[
  {
-  "FullPath": "C:"
+  "OSPath": "C:"
  }
-]SELECT FullPath FROM glob(globs="c:\\*", accessor="file") WHERE Name =~ "Windows"[
+]SELECT OSPath FROM glob(globs="c:\\*", accessor="file") WHERE Name =~ "Windows"[
  {
-  "FullPath": "C:\\Windows"
+  "OSPath": "C:\\Windows"
  },
  {
-  "FullPath": "C:\\WindowsAzure"
+  "OSPath": "C:\\WindowsAzure"
  }
-]SELECT FullPath FROM glob(globs="c:\\Users\\*link\\notepad.exe", accessor="file_links")[
+]SELECT OSPath FROM glob(globs="c:\\Users\\*link\\notepad.exe", accessor="file_links")[
  {
-  "FullPath": "C:\\Users\\link\\notepad.exe"
+  "OSPath": "C:\\Users\\link\\notepad.exe"
  }
-]SELECT FullPath FROM glob(globs="c:\\Users\\*link\\notepad.exe")[]
+]SELECT OSPath FROM glob(globs="c:\\Users\\*link\\notepad.exe")[]
