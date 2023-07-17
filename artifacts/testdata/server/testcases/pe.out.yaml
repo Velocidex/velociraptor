@@ -1,4 +1,4 @@
-SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM glob(globs=srcDir + "/artifacts/**10/*.{exe,sys}") WHERE PEInfo.ImpHash =~ "f34d5f2d4577"[
+SELECT basename(path=OSPath) AS Name, parse_pe(file=OSPath) as PEInfo FROM glob(globs=srcDir + "/artifacts/**10/*.{exe,sys}") WHERE PEInfo.ImpHash =~ "f34d5f2d4577"[
  {
   "Name": "3DBuilder.ResourceResolver.exe",
   "PEInfo": {
@@ -115,20 +115,20 @@ SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM g
    }
   }
  }
-]SELECT filter(list=parse_pe(file=FullPath).Imports, regex='MmGetPhysicalMemoryRanges') FROM glob(globs=srcDir + "/artifacts/**10/*.sys")[
+]SELECT filter(list=parse_pe(file=OSPath).Imports, regex='MmGetPhysicalMemoryRanges') FROM glob(globs=srcDir + "/artifacts/**10/*.sys")[
  {
-  "filter(list=parse_pe(file=FullPath).Imports, regex='MmGetPhysicalMemoryRanges')": [
+  "filter(list=parse_pe(file=OSPath).Imports, regex='MmGetPhysicalMemoryRanges')": [
    "ntoskrnl.exe!MmGetPhysicalMemoryRanges"
   ]
  }
-]LET X = SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM glob(globs=srcDir + "/artifacts/**10/*.{exe,sys}")[]SELECT PEInfo.VersionInformation.CompanyName AS CompanyName FROM X WHERE PEInfo.VersionInformation AND CompanyName =~ "Microsoft"[
+]LET X = SELECT basename(path=OSPath) AS Name, parse_pe(file=OSPath) as PEInfo FROM glob(globs=srcDir + "/artifacts/**10/*.{exe,sys}")[]SELECT PEInfo.VersionInformation.CompanyName AS CompanyName FROM X WHERE PEInfo.VersionInformation AND CompanyName =~ "Microsoft"[
  {
   "CompanyName": "Microsoft Corporation"
  },
  {
   "CompanyName": "Microsoft Corporation"
  }
-]SELECT Name FROM glob(globs=srcDir + "/artifacts/**10/*.{sys,exe}") WHERE "ntoskrnl.exe!MmGetSystemRoutineAddress" IN parse_pe(file=FullPath).Imports[
+]SELECT Name FROM glob(globs=srcDir + "/artifacts/**10/*.{sys,exe}") WHERE "ntoskrnl.exe!MmGetSystemRoutineAddress" IN parse_pe(file=OSPath).Imports[
  {
   "Name": "winpmem_x64.sys"
  }
@@ -173,7 +173,7 @@ SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo FROM g
   },
   "_Source": "Windows.Detection.BinaryRename"
  }
-]LET X = SELECT parse_pe(file=FullPath) as PEInfo FROM glob(globs=srcDir + "/artifacts/**/winpmem*.sys")[]SELECT PEInfo.Authenticode AS Authenticode, PEInfo.AuthenticodeHash AS AuthenticodeHash FROM X[
+]LET X = SELECT parse_pe(file=OSPath) as PEInfo FROM glob(globs=srcDir + "/artifacts/**/winpmem*.sys")[]SELECT PEInfo.Authenticode AS Authenticode, PEInfo.AuthenticodeHash AS AuthenticodeHash FROM X[
  {
   "Authenticode": {
    "Signer": {

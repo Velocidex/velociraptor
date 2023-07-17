@@ -5,7 +5,7 @@ Parameters:
       "EntryNumber": 64560,
       "InUse": true,
       "ParentEntryNumber": 95295,
-      "FullPath": "Users/yolo/Desktop/evil.txt",
+      "OSPath": "Users/yolo/Desktop/evil.txt",
       "FileName": "evil.txt",
       "FileSize": 1346,
       "ReferenceCount": 1,
@@ -23,7 +23,7 @@ Parameters:
       "EntryNumber": 187444,
       "InUse": true,
       "ParentEntryNumber": 95309,
-      "FullPath": "Users/yolo/AppData/Roaming/Microsoft/Windows/Recent/evil.txt.lnk",
+      "OSPath": "Users/yolo/AppData/Roaming/Microsoft/Windows/Recent/evil.txt.lnk",
       "FileName": "evil.txt.lnk",
       "FileSize": 524,
       "ReferenceCount": 2,
@@ -50,7 +50,7 @@ Queries:
           timestamp(epoch=LastRecordChange0x30s) AS LastRecordChange0x30,
           timestamp(epoch=LastAccess0x10s) AS LastAccess0x10,
           timestamp(epoch=LastAccess0x30s) AS LastAccess0x30,
-          pathspec(parse=FullPath, path_type="windows") AS OSPath
+          pathspec(parse=OSPath, path_type="windows") AS OSPath
        FROM parse_json_array(data=ParseMFTMock)
   - LET _ <= SELECT mock(plugin='info', results=[dict(Fqdn='DESKTOP-687T2NR', OS='windows')]),
         mock(plugin="parse_mft", results=my_mocks)

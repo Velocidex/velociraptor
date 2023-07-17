@@ -82,7 +82,7 @@ sources:
       LET metadata = SELECT * FROM foreach(row=files,
         query={
             SELECT
-                FullPath as MetaPath,
+                OSPath as MetaPath,
                 Mtime as MetaMtime,
                 Ctime as MetaCtime,
                 Atime as MetaAtime,
@@ -90,7 +90,7 @@ sources:
                     string=utf16(string=Line),
                     regex=['[\\s\\S]*(?P<Url>(http[s]?:|\\\\\\\\|ftp:)[\\s\\S]+)']
                         ).Url as Url
-            FROM parse_lines(filename=FullPath)
+            FROM parse_lines(filename=OSPath)
             WHERE MetaPath =~ '\\\\Microsoft\\\\CryptnetUrlCache\\\\metadata\\\\'
             GROUP BY MetaPath
         })
@@ -98,13 +98,13 @@ sources:
 
       -- find suspicious content files and extract headers
       LET hits = SELECT
-            FullPath,Name,Size,
+            OSPath,Name,Size,
             Mtime, Atime, Ctime,
-            hash(path=FullPath) as Hash,
-            read_file(length=4,filename=FullPath) as Header
+            hash(path=OSPath) as Hash,
+            read_file(length=4,filename=OSPath) as Header
         FROM files
         WHERE
-            FullPath =~ '\\\\Microsoft\\\\CryptnetUrlCache\\\\Content\\\\'
+            OSPath =~ '\\\\Microsoft\\\\CryptnetUrlCache\\\\Content\\\\'
             AND Size > int(int=SusSize)
 
 
@@ -112,14 +112,14 @@ sources:
       SELECT * FROM foreach(row=hits,
         query={
             SELECT
-                FullPath,Name,Size,Header,
+                OSPath,Name,Size,Header,
                 Mtime, Atime, Ctime,
                 Url, Hash,
                 if(condition= Header=~ 'MZ',
-                    then= parse_pe(file=FullPath).VersionInformation,
+                    then= parse_pe(file=OSPath).VersionInformation,
                     else= 'N/A' ) as VersionInformation,
                 if(condition= Header=~ 'MZ',
-                    then= authenticode(filename=FullPath),
+                    then= authenticode(filename=OSPath),
                     else= 'N/A' ) as Authenticode,
                 MetaPath,
                 MetaMtime,MetaAtime,MetaCtime
@@ -134,7 +134,7 @@ sources:
                     then= Url =~ UrlWhitelist,
                     else= FALSE)
                 AND split(
-                    string=FullPath,
+                    string=OSPath,
                         sep='CryptnetUrlCache')[0] = split(string=MetaPath,
                             sep='CryptnetUrlCache')[0]
         })

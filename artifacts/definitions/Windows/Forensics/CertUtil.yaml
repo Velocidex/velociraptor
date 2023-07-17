@@ -57,23 +57,23 @@ sources:
 
       -- Build a whitelist regex
       LET URLRegex <= "^" + join(array=URLWhitelist.URL, sep="|")
-      LET Files = SELECT FullPath,
+      LET Files = SELECT OSPath,
 
           -- Parse each metadata file.
-          parse_binary(filename=FullPath,
+          parse_binary(filename=OSPath,
                        profile=Profile,
                        struct="Header") AS Header,
 
                        -- The content is kept in the Content directory.
                        regex_replace(re="MetaData",
                                      replace="Content",
-                                     source=FullPath) AS Content
+                                     source=OSPath) AS Content
       FROM glob(globs=[MetadataGlobUser,MetadataGlobSystem])
 
       SELECT * FROM foreach(row=Files,
       query={
-          SELECT FullPath AS _MetadataFile,
-               if(condition=AlsoUpload, then=upload(file=FullPath)) AS _MetdataUpload,
+          SELECT OSPath AS _MetadataFile,
+               if(condition=AlsoUpload, then=upload(file=OSPath)) AS _MetdataUpload,
                if(condition=AlsoUpload, then=upload(file=Content)) AS _Upload,
                Header.URL AS URL,
                Header.FileSize AS FileSize,

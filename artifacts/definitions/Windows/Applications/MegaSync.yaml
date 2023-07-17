@@ -42,19 +42,19 @@ sources:
                 FROM Artifact.Windows.Search.VSS(SearchFilesGlob=LogFiles)
             },
             else= {
-                SELECT *, FullPath as Source
+                SELECT *, OSPath as Source
                 FROM glob(globs=LogFiles)
             })
 
       -- Collect all Lines in scope of regex search
       LET output <= SELECT * FROM foreach(row=files,
           query={
-              SELECT Line, FullPath,
+              SELECT Line, OSPath,
                 Mtime,
                 Atime,
                 Ctime,
                 Size
-              FROM parse_lines(filename=FullPath,accessor='file')
+              FROM parse_lines(filename=OSPath,accessor='file')
               WHERE TRUE
                 AND Line =~ SearchRegex
                 AND NOT if(condition= WhitelistRegex,
@@ -65,16 +65,16 @@ sources:
 
       SELECT
         Line as RawLine,
-        FullPath
+        OSPath
       FROM output
 
 
   - name: LogFiles
     query: |
         SELECT
-            FullPath,
+            OSPath,
             if(condition=UploadLogs,
-                then= upload(file=FullPath,accessor='ntfs')
+                then= upload(file=OSPath,accessor='ntfs')
                 ) as Upload,
             'MEGAsync logfile' as Description,
             Mtime,
@@ -82,4 +82,4 @@ sources:
             Ctime,
             Size
         FROM output
-        GROUP BY FullPath
+        GROUP BY OSPath

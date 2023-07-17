@@ -76,12 +76,12 @@ func (self TokenFunction) Call(
 		return vfilter.Null{}
 	}
 
-	groups := []string{}
+	groups := ordereddict.NewDict()
 	token_groups, err := token.GetTokenGroups()
 	if err == nil {
 		for _, grp := range token_groups.AllGroups() {
 			group_name := grp.Sid.String()
-			groups = append(groups, group_name)
+			groups.Set(group_name, grp.Attributes)
 		}
 	}
 

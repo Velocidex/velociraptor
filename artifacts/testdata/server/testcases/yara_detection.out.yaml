@@ -7,7 +7,6 @@ LET _ <= SELECT
         dict(
           Name='wkscli.dll',
           ModTime=timestamp(string='2021-06-21T05:57:50.185936246Z'),
-          FullPath=pathspec(Path=srcDir + '/artifacts/testdata/files/wkscli.dll'),
           OSPath=pathspec(Path=srcDir + '/artifacts/testdata/files/wkscli.dll'),
           Mtime=timestamp(string='2021-06-21T05:57:50.185936246Z'),
           Btime=timestamp(string='2021-06-21T05:57:50.185836399Z'),
@@ -21,7 +20,7 @@ LET _ <= SELECT
         dict(
           Name='notnbt.exe',
           ModTime=timestamp(string='2021-06-21T05:57:50.184145696Z'),
-          FullPath=pathspec(Path=srcDir + '/artifacts/testdata/files/notnbt.exe'),
+          OSPath=pathspec(Path=srcDir + '/artifacts/testdata/files/notnbt.exe'),
           OSPath=pathspec(Path=srcDir + '/artifacts/testdata/files/notnbt.exe'),
           Mtime=timestamp(string='2021-01-01T05:57:50.184145696Z'),
           Btime=timestamp(string='2021-03-01T05:57:50.184086639Z'),
@@ -40,7 +39,6 @@ LET _ <= SELECT
           InUse = true,
           ParentEntryNumber = 3589,
           MFTPath = srcDir + "$MFT",
-          FullPath =pathspec(Path=srcDir + "/artifacts/testdata/files/wkscli.dll"),
           OSPath =pathspec(Path=srcDir + "/artifacts/testdata/files/wkscli.dll"),
           FileName = "wkscli.dll",
           FileSize = 764976,

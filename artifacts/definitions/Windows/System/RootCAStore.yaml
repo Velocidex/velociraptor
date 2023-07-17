@@ -61,7 +61,7 @@ sources:
         // Glob for certificates in all the locations we know about.
         SELECT * FROM foreach(row=CertificateRootStoreGlobs,
         query={
-          SELECT FullPath AS _RegistryValue, ModTime,
+          SELECT OSPath AS _RegistryValue, ModTime,
                GetName(CertData=Data.value)[0].Name AS Name,
                GetFinger(CertData=Data.value)[0].FingerPrint AS FingerPrint,
                GetCert(CertData=Data.value)[0].Cert AS Certificate

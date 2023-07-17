@@ -339,14 +339,14 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
    "Generic.Client.Info"
   ]
  }
-]SELECT * FROM query(query={ SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123") }, runas="OrgUser", org_id="ORGID")[
+]SELECT * FROM query(query={ SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123") GROUP BY client_id }, runas="OrgUser", org_id="ORGID")[
  {
   "client_id": "C.123",
   "artifacts": [
    "Generic.Client.Info"
   ]
  }
-]SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123")[]SELECT * FROM query(query={ SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123") }, runas="OrgUser", org_id="ORGID2")[]SELECT * FROM query(query={ SELECT collect_client(client_id="C.123", artifacts="Generic.Client.Info").request.artifacts FROM scope() }, runas="OrgUser", org_id="ORGID2")[
+]SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123") GROUP BY client_id[]SELECT * FROM query(query={ SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123") GROUP BY client_id }, runas="OrgUser", org_id="ORGID2")[]SELECT * FROM query(query={ SELECT collect_client(client_id="C.123", artifacts="Generic.Client.Info").request.artifacts FROM scope() }, runas="OrgUser", org_id="ORGID2")[
  {
   "collect_client(client_id=\"C.123\", artifacts=\"Generic.Client.Info\").request.artifacts": null
  }
@@ -360,7 +360,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
    "Generic.Client.DiskSpace"
   ]
  }
-]SELECT * FROM query(query={ SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123") WHERE artifacts =~ "Disk" }, runas="OrgUser", org_id="ORGID")[
+]SELECT * FROM query(query={ SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123") WHERE artifacts =~ "Disk" GROUP BY client_id }, runas="OrgUser", org_id="ORGID")[
  {
   "client_id": "C.123",
   "artifacts": [

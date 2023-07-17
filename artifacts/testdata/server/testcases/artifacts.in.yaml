@@ -27,7 +27,7 @@ Queries:
   - SELECT name FROM artifact_definitions() WHERE name =~ 'Windows.KapeFiles.Targets'
 
   # Test the "fs" accessor
-  - SELECT FullPath FROM glob(
+  - SELECT OSPath FROM glob(
      globs="/clients/C.4f5e52adf0a337a9/collections/F.BN2HJCPOF5U7U/uploads/**",
      accessor="fs")
 

@@ -35,7 +35,7 @@ sources:
       SELECT OS From info() where OS = 'windows'
 
    query: |
-      LET X = SELECT split(string=FullPath, sep=":Zone.Identifier")[0] as DownloadedFilePath,
+      LET X = SELECT split(string=OSPath, sep=":Zone.Identifier")[0] as DownloadedFilePath,
                     Mtime,
                     read_file(filename=OSPath, accessor="ntfs") as _ZoneIdentifierContent
              FROM glob(

@@ -18,12 +18,12 @@ sources:
   - query: |
       SELECT * FROM foreach(
           row={
-            SELECT FullPath, tempfile(extension=".raw", remove_last=TRUE) AS Tempfile
+            SELECT OSPath, tempfile(extension=".raw", remove_last=TRUE) AS Tempfile
             FROM Artifact.Generic.Utils.FetchBinary(ToolName="WinPmem64")
           },
           query={
             SELECT Stdout, Stderr,
                    if(condition=Complete,
                       then=upload(file=Tempfile, name="PhysicalMemory.raw")) As Upload
-            FROM execve(argv=[FullPath, Tempfile], sep="\r\n")
+            FROM execve(argv=[OSPath, Tempfile], sep="\r\n")
         })

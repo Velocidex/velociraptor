@@ -6,15 +6,15 @@ Queries:
 
   # PEInfo is a lazy object - PEInfo.ImpHash is a callable - this
   # tests a callable regex works.
-  - SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo
+  - SELECT basename(path=OSPath) AS Name, parse_pe(file=OSPath) as PEInfo
     FROM glob(globs=srcDir + "/artifacts/**10/*.{exe,sys}")
     WHERE PEInfo.ImpHash =~ "f34d5f2d4577"
 
   # Check that Imports (which are lazy) can be passed to function args
-  - SELECT filter(list=parse_pe(file=FullPath).Imports, regex='MmGetPhysicalMemoryRanges')
+  - SELECT filter(list=parse_pe(file=OSPath).Imports, regex='MmGetPhysicalMemoryRanges')
     FROM glob(globs=srcDir + "/artifacts/**10/*.sys")
 
-  - LET X = SELECT basename(path=FullPath) AS Name, parse_pe(file=FullPath) as PEInfo
+  - LET X = SELECT basename(path=OSPath) AS Name, parse_pe(file=OSPath) as PEInfo
     FROM glob(globs=srcDir + "/artifacts/**10/*.{exe,sys}")
 
   # Test Associative protocol.
@@ -24,7 +24,7 @@ Queries:
   # Test membership protocol
   - SELECT Name
     FROM glob(globs=srcDir + "/artifacts/**10/*.{sys,exe}")
-    WHERE "ntoskrnl.exe!MmGetSystemRoutineAddress" IN parse_pe(file=FullPath).Imports
+    WHERE "ntoskrnl.exe!MmGetSystemRoutineAddress" IN parse_pe(file=OSPath).Imports
 
   # Test Iterate protocol on callables - Imports should iterate over
   # each string in the array.
@@ -43,7 +43,7 @@ Queries:
         TargetGlob =srcDir + '/artifacts/testdata/files/notnbt.exe')
 
   # Test the Authenticode analysis from parse_pe()
-  - LET X = SELECT parse_pe(file=FullPath) as PEInfo
+  - LET X = SELECT parse_pe(file=OSPath) as PEInfo
     FROM glob(globs=srcDir + "/artifacts/**/winpmem*.sys")
 
   - SELECT PEInfo.Authenticode AS Authenticode, PEInfo.AuthenticodeHash AS AuthenticodeHash FROM X

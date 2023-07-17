@@ -58,8 +58,8 @@ sources:
             FROM SinkholeTable
 
       -- Check for backup to determine if sinkhole applied
-      LET check_backup = SELECT FullPath FROM stat(filename=HostsFileBackup)
-      WHERE log(message="Found backup at " + FullPath)
+      LET check_backup = SELECT OSPath FROM stat(filename=HostsFileBackup)
+      WHERE log(message="Found backup at " + OSPath)
 
       -- Backup old config
       LET backup = copy(filename=HostsFile,dest=HostsFileBackup)

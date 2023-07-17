@@ -23,20 +23,20 @@ parameters:
 
 sources:
   - query: |
-      LET DLLs = SELECT FullPath, Name,
-             parse_pe(file=FullPath).Forwards AS Forwards,
+      LET DLLs = SELECT OSPath, Name,
+             parse_pe(file=OSPath).Forwards AS Forwards,
 
              -- Remove the .dll extension if present to get the bare dll filename.
              lowcase(string=parse_string_with_regex(
                   regex="^(?P<BareName>[^.]+)", string=Name).BareName) AS DLLBareName
 
         FROM glob(globs=DLLGlob)
-        WHERE NOT FullPath =~ ExcludeRegex
+        WHERE NOT OSPath =~ ExcludeRegex
 
       -- Speed up analysis a bit by using more workers.
       SELECT * FROM foreach(row=DLLs, workers=20,
         query={
-           SELECT FullPath AS DllPath, ForwardedImport,
+           SELECT OSPath AS DllPath, ForwardedImport,
 
                   -- The Bare DLL Name from the forwarded name
                   Parse.DllPath AS DllImportPath,

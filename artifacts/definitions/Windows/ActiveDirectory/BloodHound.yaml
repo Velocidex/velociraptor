@@ -55,7 +55,7 @@ sources:
 
 
       -- execute payload
-      LET deploy = SELECT * FROM execve(argv=[payload.FullPath[0],'--outputdirectory',
+      LET deploy = SELECT * FROM execve(argv=[payload.OSPath[0],'--outputdirectory',
                 tempfolder,'--nozip','--outputprefix',hostname.Fqdn[0] ])
 
 
@@ -63,14 +63,14 @@ sources:
       LET remove <= SELECT * FROM if(condition=RemovePayload,
                 then={
                     SELECT * FROM execve(argv=['powershell','Remove-Item',
-                                            payload.FullPath[0],'-Force' ])
+                                            payload.OSPath[0],'-Force' ])
                 })
 
 
       -- output rows
       SELECT * FROM if(condition= deploy.ReturnCode[0]= 0,
         then={
-            SELECT Name, upload(file=FullPath,name=Name)
+            SELECT Name, upload(file=OSPath,name=Name)
             FROM glob(globs="/*.json", root=tempfolder)
         },
         else=deploy)

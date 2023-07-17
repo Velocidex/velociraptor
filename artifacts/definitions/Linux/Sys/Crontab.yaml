@@ -53,9 +53,9 @@ sources:
       FROM raw
   - name: CronScripts
     query: |
-      SELECT Mtime, OSPath, read_file(filename=FullPath,length=Length) AS Content
+      SELECT Mtime, OSPath, read_file(filename=OSPath,length=Length) AS Content
       FROM glob(globs=split(string=cronTabScripts, sep=","))
   - name: Uploaded
     query: |
-      SELECT OSPath, upload(file=FullPath) AS Upload
+      SELECT OSPath, upload(file=OSPath) AS Upload
       FROM glob(globs=split(string=cronTabGlob + "," + cronTabScripts, sep=","))

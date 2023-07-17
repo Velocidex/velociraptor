@@ -47,6 +47,6 @@ sources:
                    host_key, name, path, value,
                    base64encode(string=encrypted_value) as EncryptedValue
             FROM sqlite(
-              file=FullPath,
+              file=OSPath,
               query=cookieSQLQuery)
           })

@@ -38,7 +38,7 @@ sources:
             Channel=Channel,
             EventID=EventID,
             EventRecordID=EventRecordID,
-            FullPath=FullPath,
+            OSPath=OSPath,
             UserData=UserData
         ) as EventData
       FROM Artifact.Windows.EventLogs.EvtxHunter(EvtxGlob=TargetGlob,

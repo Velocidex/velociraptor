@@ -1,4 +1,4 @@
-SELECT *, basename(path=_OSPath) AS _OSPath FROM Artifact.Windows.Forensics.UserAccessLogs( source="Clients", SUMGlob=srcDir+"/artifacts/testdata/files/*.mdb") GROUP BY AuthenticatedUserName ORDER BY CreationTime[
+SELECT *, basename(path=_OSPath) AS _OSPath FROM Artifact.Windows.Forensics.UserAccessLogs( source="Clients", SUMGlob=srcDir+"/artifacts/testdata/files/*.mdb") GROUP BY AuthenticatedUserName[
  {
   "RoleGuid": "{10a9226f-50ee-49d8-a393-9a501d47ce04}",
   "TenantId": "{00000000-0000-0000-0000-000000000000}",

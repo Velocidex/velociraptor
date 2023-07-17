@@ -116,6 +116,7 @@ func listDir(
 
 		case output_chan <- &services.VFSListRow{
 			FullPath:   f.FullPath(),
+			OSPath:     f.OSPath(),
 			Components: f.OSPath().Components,
 			Accessor:   accessor_name,
 			Data:       f.Data(),

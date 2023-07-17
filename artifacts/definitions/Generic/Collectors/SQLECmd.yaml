@@ -4287,7 +4287,7 @@ sources:
     WHEN doc_type = 12 THEN
     'Google Maps' ELSE 'Google File/Object'
     END AS DocType,
-    fschanges.full_path AS FullPath,
+    fschanges.full_path AS OSPath,
     fschanges.hash AS Hash,
     change_buffer_entries.failure_count AS FailureCount,
     change_buffer_entries.time AS Time,
@@ -4459,7 +4459,7 @@ sources:
     LET IdentifyValue = 5
     LET SQLQuery = '''SELECT
     main.volume_info.volume AS Volume,
-    main.volume_info.full_path AS FullPath,
+    main.volume_info.full_path AS OSPath,
     main.volume_info.uuid AS UUID,
     main.volume_info.label AS DriveLabel,
     main.volume_info.size AS SizeInBytes,

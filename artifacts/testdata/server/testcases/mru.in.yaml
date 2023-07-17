@@ -1,7 +1,7 @@
 Parameters:
   NTUserRunMRU: |
     [{
-      "FullPath": "ntfs:///C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5CMRUList",
+      "OSPath": "ntfs:///C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5CMRUList",
       "Data": {
         "type": "REG_SZ",
         "data_len": 6,
@@ -26,7 +26,7 @@ Parameters:
        "data_len": 6,
        "value": "ab"
       },
-      "FullPath": "/C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5CMRUList",
+      "OSPath": "/C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5CMRUList",
       "GetLink": "",
       "IsDir": false,
       "IsLink": false,
@@ -44,7 +44,7 @@ Parameters:
        "data_len": 22,
        "value": "powershell"
       },
-      "FullPath": "/C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5Ca",
+      "OSPath": "/C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5Ca",
       "GetLink": "",
       "IsDir": false,
       "IsLink": false,
@@ -62,7 +62,7 @@ Parameters:
        "data_len": 44,
        "value": "\\\\criticalserver\\c$\\1"
       },
-      "FullPath": "/C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5Cb",
+      "OSPath": "/C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5Cb",
       "GetLink": "",
       "IsDir": false,
       "IsLink": false,
@@ -86,11 +86,11 @@ Queries:
   # Mock up test for Windows.Timeline.Registry.RunMRU
   - LET _ <= SELECT mock(plugin='info', results=[dict(Fqdn='DESKTOP-687T2NR', OS='windows')]),
         mock(artifact=Artifact.Windows.Registry.NTUser, results={
-           SELECT *, pathspec(parse=FullPath) AS OSPath
+           SELECT *, pathspec(parse=OSPath) AS OSPath
            FROM parse_json_array(data=NTUserRunMRU)
         }),
         mock(plugin="glob", results={
-           SELECT *, pathspec(parse=FullPath) AS OSPath
+           SELECT *, pathspec(parse=OSPath) AS OSPath
            FROM parse_json_array(data=ArtifactRunMRUGlobMock)
         })
       FROM scope()

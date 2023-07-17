@@ -52,11 +52,11 @@ sources:
         then = DateBefore, else = "2200-01-01" )
 
       -- expand provided glob into a list of paths on the file system (fs)
-      LET fspaths <= SELECT FullPath
+      LET fspaths <= SELECT OSPath
         FROM glob(globs=expand(path=EvtxGlob))
 
       -- function returning list of VSS paths corresponding to path
-      LET vsspaths(path) = SELECT FullPath
+      LET vsspaths(path) = SELECT OSPath
         FROM Artifact.Windows.Search.VSS(SearchFilesGlob=path)
 
       -- function returning IOC hits
@@ -76,8 +76,8 @@ sources:
                     EventData.Data[21] as SourceIP,
                     EventData.Data[19] as Uri,
                     EventData.Data[11] as SitePath,
-                    FullPath
-                FROM parse_evtx(filename=FullPath)
+                    OSPath
+                FROM parse_evtx(filename=OSPath)
                 WHERE EventID = 1309
                     AND format(format='%v',args=EventData.Data) =~ IocRegex
                     AND NOT if(condition=WhitelistRegex,
@@ -92,14 +92,14 @@ sources:
             query={
                 SELECT *
                 FROM evtxsearch(PathList={
-                        SELECT FullPath FROM vsspaths(path=FullPath)
+                        SELECT OSPath FROM vsspaths(path=OSPath)
                     })
                 GROUP BY EventRecordID
               })
 
       -- exclude VSS in EvtxHunt`
       LET exclude_vss = SELECT *
-        FROM evtxsearch(PathList={SELECT FullPath FROM fspaths})
+        FROM evtxsearch(PathList={SELECT OSPath FROM fspaths})
 
       -- return rows
       SELECT * FROM if(condition=SearchVSS,

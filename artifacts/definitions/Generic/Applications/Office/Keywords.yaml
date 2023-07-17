@@ -41,14 +41,14 @@ parameters:
 
 sources:
   - query: |
-        LET office_docs = SELECT FullPath AS OfficePath,
+        LET office_docs = SELECT OSPath AS OfficePath,
              Mtime as OfficeMtime,
              Size as OfficeSize
         FROM glob(globs=searchGlob + documentGlobs)
 
         // A list of zip members inside the doc that have some content.
         LET document_parts = SELECT OfficePath,
-             FullPath AS ZipMemberPath
+             OSPath AS ZipMemberPath
         FROM glob(
            globs="/**",
            root=pathspec(DelegatePath=OfficePath),
@@ -61,7 +61,7 @@ sources:
                OfficeSize,
                File.ModTime as InternalMtime,
                String.HexData as HexContext,
-               File.FullPath AS FullPath
+               File.OSPath AS OSPath
         FROM foreach(
            row=office_docs,
            query={

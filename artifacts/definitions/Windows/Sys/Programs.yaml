@@ -31,6 +31,6 @@ sources:
                Publisher,
                UninstallString,
                InstallDate,
-               Key.FullPath as KeyPath
+               Key.OSPath as KeyPath
         FROM read_reg_key(globs=split(string=programKeys, sep=',[\\s]*'),
                           accessor="registry")

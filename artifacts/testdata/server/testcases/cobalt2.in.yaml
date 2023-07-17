@@ -1,4 +1,4 @@
-Parameters:
+ Parameters:
   RemappingTemplate: |
     remappings:
       - type: mount
@@ -22,7 +22,7 @@ Queries:
   - LET _ <= remap(config=RemappingTemplate, copy=["zip", "data", "scope"], clear=TRUE)
 
   # Scan all the files in the container.
-  - SELECT Rule,FullPath,Hash,Xor,DecodedConfig
+  - SELECT Rule,OSPath,Hash,Xor,DecodedConfig
     FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob="/**")
 
   # Use byte scanning of the raw file.

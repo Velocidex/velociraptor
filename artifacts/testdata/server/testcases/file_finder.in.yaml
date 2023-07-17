@@ -2,7 +2,7 @@ Parameters:
   GlobMock: |
     [
       {
-        "FullPath": "Users/yolo/Desktop/file.txt",
+        "OSPath": "Users/yolo/Desktop/file.txt",
         "Mtime": 1588167507,
         "Ctime": 1588167507,
         "Atime": 1588167507,
@@ -13,7 +13,7 @@ Parameters:
         "Data": {}
       },
       {
-        "FullPath": "Users/yolo/Desktop/file2.txt",
+        "OSPath": "Users/yolo/Desktop/file2.txt",
         "Mtime": 1588167610,
         "Ctime": 1588167507,
         "Atime": 1588167507,
@@ -24,7 +24,7 @@ Parameters:
         "Data": {}
       },
       {
-        "FullPath": "Users/yolo/Desktop/file3.txt",
+        "OSPath": "Users/yolo/Desktop/file3.txt",
         "Mtime": 1588167710,
         "Ctime": 1588167507,
         "Atime": 1588167507,
@@ -42,34 +42,34 @@ Queries:
     FROM scope()
 
 # Just find a zip file.
-  - SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords
+  - SELECT basename(path=OSPath) AS File, Hash, Size, Upload, Keywords
     FROM Artifact.Windows.Search.FileFinder(
         SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")
     WHERE File =~ "test"
 
 # Calculate the hash.
-  - SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords
+  - SELECT basename(path=OSPath) AS File, Hash, Size, Upload, Keywords
     FROM Artifact.Windows.Search.FileFinder(
         Calculate_Hash="Y",
         SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")
     WHERE File =~ "test"
 
 # Upload it.
-  - SELECT basename(path=FullPath) AS File, Hash, Size, Upload.md5, Keywords
+  - SELECT basename(path=OSPath) AS File, Hash, Size, Upload.md5, Keywords
     FROM Artifact.Windows.Search.FileFinder(
         Upload_File="Y",
         SearchFilesGlob=srcDir + "/artifacts/testdata/files/*.zip")
     WHERE File =~ "test"
 
 # Search for files that match a keyword
-  - SELECT basename(path=FullPath) AS File, Keywords
+  - SELECT basename(path=OSPath) AS File, Keywords
     FROM Artifact.Windows.Search.FileFinder(
         YaraRule="wide nocase ascii:supercalifragilisticexpialidocious",
         SearchFilesGlob=srcDir + "/artifacts/testdata/**/*.in.yaml")
 
 # Search globs provided in a csv table
   - |
-    SELECT basename(path=FullPath) AS File, Hash, Size, Upload, Keywords
+    SELECT basename(path=OSPath) AS File, Hash, Size, Upload, Keywords
     FROM Artifact.Windows.Search.FileFinder(
         SearchFilesGlob="",
         SearchFilesGlobTable="Glob\n"+ srcDir + "/artifacts/testdata/files/*.zip\n")
@@ -83,15 +83,15 @@ Queries:
        timestamp(epoch=Btime) AS Btime
     FROM parse_json_array(data=GlobMock)
   - LET _ <= mock(plugin="glob", results=MockData)
-  - SELECT FullPath, MTime
+  - SELECT OSPath, MTime
     FROM Artifact.Windows.Search.FileFinder(
         MoreRecentThan=timestamp(string="2020-04-29T13:39:00Z"))
 
-  - SELECT FullPath, MTime
+  - SELECT OSPath, MTime
     FROM Artifact.Windows.Search.FileFinder(
         ModifiedBefore=timestamp(string="2020-04-29T13:39:00Z"))
 
-  - SELECT FullPath, MTime
+  - SELECT OSPath, MTime
     FROM Artifact.Windows.Search.FileFinder(
         MoreRecentThan=timestamp(string="2020-04-29T13:39:00Z"),
         ModifiedBefore=timestamp(string="2020-04-29T13:41:00Z"))

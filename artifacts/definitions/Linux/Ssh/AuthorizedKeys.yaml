@@ -24,6 +24,6 @@ sources:
           query={
             SELECT Uid, User, OSPath, Key, Comment, Mtime
             FROM split_records(
-               filenames=FullPath, regex=" +", columns=["Type", "Key", "Comment"])
+               filenames=OSPath, regex=" +", columns=["Type", "Key", "Comment"])
                WHERE Type =~ "ssh"
           })

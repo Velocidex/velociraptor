@@ -48,13 +48,13 @@ sources:
         then=DateBefore, else="2200-01-01")
 
       -- expand provided glob into a list of paths on the file system (fs)
-      LET fspaths <= SELECT FullPath FROM glob(globs=expand(path=FileGlob))
+      LET fspaths <= SELECT OSPath FROM glob(globs=expand(path=FileGlob))
 
       -- function returning list of VSS paths corresponding to path
-      LET vsspaths(path) = SELECT FullPath
+      LET vsspaths(path) = SELECT OSPath
         FROM Artifact.Windows.Search.VSS(SearchFilesGlob=path)
 
-      LET parse_log(FullPath) = SELECT FullPath,
+      LET parse_log(OSPath) = SELECT OSPath,
           parse_string_with_regex(
             string=Line,
             regex="^(?P<TeamViewerID>^\\d+)\\s+"+
@@ -64,7 +64,7 @@ sources:
               "(?P<User>.+)\\s+" +
               "(?P<ConnectionType>[^\\s]+)\\s+" +
               "(?P<ConnectionID>.+)$") as Record
-        FROM parse_lines(filename=FullPath)
+        FROM parse_lines(filename=OSPath)
         WHERE Line
           AND Record.TeamViewerID =~ TeamViewerIDRegex
           AND Record.SourceHost =~ SourceHostRegex
@@ -78,7 +78,7 @@ sources:
                                 format="02-01-2006 15:04:05") AS StartTime,
                       timestamp(epoch=Record.EndTime,
                                 format="02-01-2006 15:04:05") AS EndTime
-               FROM parse_log(FullPath=FullPath)
+               FROM parse_log(OSPath=OSPath)
                WHERE StartTime < DateBeforeTime
                     AND StartTime > DateAfterTime
                     AND EndTime < DateBeforeTime
@@ -90,13 +90,13 @@ sources:
             query={
                 SELECT *
                 FROM logsearch(PathList={
-                        SELECT FullPath FROM vsspaths(path=FullPath)
+                        SELECT OSPath FROM vsspaths(path=OSPath)
                     })
                 GROUP BY Record
               })
 
       -- exclude VSS in logsearch`
-      LET exclude_vss = SELECT * FROM logsearch(PathList={SELECT FullPath FROM fspaths})
+      LET exclude_vss = SELECT * FROM logsearch(PathList={SELECT OSPath FROM fspaths})
 
 
       -- return rows
@@ -108,7 +108,7 @@ sources:
         Record.User as User,
         Record.ConnectionType as ConnectionType,
         Record.ConnectionID as ConnectionID,
-        FullPath
+        OSPath
       FROM if(condition=SearchVSS,
             then=include_vss,
             else=exclude_vss)

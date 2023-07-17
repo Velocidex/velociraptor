@@ -4,7 +4,6 @@ Queries:
       source="Clients",
       SUMGlob=srcDir+"/artifacts/testdata/files/*.mdb")
     GROUP BY AuthenticatedUserName
-    ORDER BY CreationTime
 
   - SELECT *, basename(path=_OSPath) AS _OSPath
     FROM Artifact.Windows.Forensics.UserAccessLogs(

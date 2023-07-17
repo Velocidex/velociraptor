@@ -23,7 +23,7 @@ parameters:
   - name: MFTDrive
     default: "C:"
   - name: HostPathRegex
-    description: "Regex search over FullPath."
+    description: "Regex search over OSPath."
     default: "."
     type: regex
   - name: DateAfter
@@ -92,7 +92,7 @@ sources:
            DateAfter=DateAfter,
            DateBefore=DateBefore,
            AllDrives=AllDrives)
-        WHERE -- NOT FullPath =~ 'HarddiskVolumeShadowCopy' AND
+        WHERE -- NOT OSPath =~ 'HarddiskVolumeShadowCopy' AND
           NtfsMetadata.Attributes.Type =~ '^\\$EA'
 
       -- enrich results for size filter, dropping metadata field output as this attribute is viewable in Ntfs field.
