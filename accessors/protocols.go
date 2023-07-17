@@ -72,8 +72,7 @@ func (self _LtOSPath) Lt(scope vfilter.Scope, a vfilter.Any, b vfilter.Any) bool
 	if !ok {
 		return false
 	}
-
-	return a_os_path.String() == b_os_path.String()
+	return a_os_path.String() < b_os_path.String()
 }
 
 type _RegexOSPath struct{}

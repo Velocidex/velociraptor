@@ -87,14 +87,27 @@ SELECT OSPath FROM glob(globs="/*", accessor="registry")[
   "OSPath": "HKEY_USERS\\S-1-5-18\\\"http://www.google.com\"\\\"\\a\\b\\c\\d\"",
   "Name": "\\a\\b\\c\\d"
  }
-]SELECT Name, OSPath, basename(path=OSPath), dirname(path=OSPath, path_type='windows') FROM glob(globs="HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\16.0\\Word\\Security\\Trusted Documents\\TrustRecords\\*", accessor="registry")[
+]SELECT Name, OSPath, OSPath.Basename, dirname(path=OSPath, path_type='windows') FROM glob(globs="HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\16.0\\Word\\Security\\Trusted Documents\\TrustRecords\\*", accessor="registry")[
  {
   "Name": "%USERPROFILE%/Desktop/test.docx",
   "OSPath": "HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\16.0\\Word\\Security\\Trusted Documents\\TrustRecords\\\"%USERPROFILE%/Desktop/test.docx\"",
-  "basename(path=OSPath)": "%USERPROFILE%/Desktop/test.docx",
+  "OSPath.Basename": "%USERPROFILE%/Desktop/test.docx",
   "dirname(path=OSPath, path_type='windows')": "HKEY_CURRENT_USER\\Software\\Microsoft\\Office\\16.0\\Word\\Security\\Trusted Documents\\TrustRecords"
  }
-]SELECT OSPath FROM glob(globs='HKEY_LOCAL_MACHINE\\SYSTEM\\*ControlSet*\\services\\PortProxy\\**', accessor='registry') WHERE Type ORDER BY OSPath[]LET KeyPath = '''HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\"Microsoft-Windows-Application Server-Applications/Debug"/Foobar2/'''[]SELECT reg_set_value(path=KeyPath + "Value", value="Hello", type="SZ", create=TRUE) FROM scope()[
+]SELECT OSPath FROM glob(globs='HKEY_LOCAL_MACHINE\\SYSTEM\\*ControlSet*\\services\\PortProxy\\**', accessor='registry') WHERE Data.type = "key" ORDER BY OSPath[
+ {
+  "OSPath": "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Services\\PortProxy\\v4tov4"
+ },
+ {
+  "OSPath": "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Services\\PortProxy\\v4tov4\\tcp"
+ },
+ {
+  "OSPath": "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\PortProxy\\v4tov4"
+ },
+ {
+  "OSPath": "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Services\\PortProxy\\v4tov4\\tcp"
+ }
+]LET KeyPath = '''HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WINEVT\Channels\"Microsoft-Windows-Application Server-Applications/Debug"/Foobar2/'''[]SELECT reg_set_value(path=KeyPath + "Value", value="Hello", type="SZ", create=TRUE) FROM scope()[
  {
   "reg_set_value(path=KeyPath + \"Value\", value=\"Hello\", type=\"SZ\", create=TRUE)": true
  }
