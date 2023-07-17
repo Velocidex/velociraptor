@@ -15,8 +15,8 @@ precondition:
 
 sources:
   - query: |
-      LET WifiPlist = SELECT FullPath from glob(globs=WifiGlob)
-      LET KnownNetworks = SELECT get(member="KnownNetworks") as KN from plist(file=WifiPlist.FullPath)
+      LET WifiPlist = SELECT OSPath from glob(globs=WifiGlob)
+      LET KnownNetworks = SELECT get(member="KnownNetworks") as KN from plist(file=WifiPlist.OSPath)
       LET EachNetwork = SELECT * from foreach(
          row=KnownNetworks,
          query={

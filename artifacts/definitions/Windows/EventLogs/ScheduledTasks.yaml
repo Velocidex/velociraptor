@@ -95,11 +95,11 @@ sources:
         `4702`="A scheduled task was updated.")
 
       -- expand provided glob into a list of paths on the file system (fs)
-      LET fspaths <= SELECT FullPath
+      LET fspaths <= SELECT OSPath
         FROM glob(globs=[expand(path=Security), expand(path=TaskScheduler)])
 
       -- function returning list of VSS paths corresponding to path
-      LET vsspaths(path) = SELECT FullPath
+      LET vsspaths(path) = SELECT OSPath
         FROM Artifact.Windows.Search.VSS(SearchFilesGlob=path)
 
       -- function to parse task content and replace xml in EventData
@@ -153,8 +153,8 @@ sources:
                             then= parse_task(data=EventData)[0],
                             else= EventData) as EventData,
                     get(field="Message") as Message,
-                    FullPath
-                FROM parse_evtx(filename=FullPath)
+                    OSPath
+                FROM parse_evtx(filename=OSPath)
                 WHERE
                     (( Channel = 'Microsoft-Windows-TaskScheduler/Operational'
                         AND str(str=EventID) =~ TaskSchedulerEventRegex )
@@ -180,14 +180,14 @@ sources:
             query={
                 SELECT *
                 FROM evtxsearch(PathList={
-                        SELECT FullPath FROM vsspaths(path=FullPath)
+                        SELECT OSPath FROM vsspaths(path=OSPath)
                     })
                 GROUP BY EventRecordID,Channel
               })
 
       -- exclude VSS in EvtxHunt`
       LET exclude_vss = SELECT *
-        FROM evtxsearch(PathList={SELECT FullPath FROM fspaths})
+        FROM evtxsearch(PathList={SELECT OSPath FROM fspaths})
 
       -- return rows
       SELECT
@@ -211,7 +211,7 @@ sources:
                     then= 'ClassId: ' + EventData.TaskContent.Actions.ComHandler.ClassId))),
             else= TaskAction) as TaskAction,
         EventData,
-        FullPath
+        OSPath
       FROM if(condition=SearchVSS,
         then=include_vss,
         else=exclude_vss)

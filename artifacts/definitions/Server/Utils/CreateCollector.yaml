@@ -323,7 +323,7 @@ parameters:
                 remove_last=TRUE,
                 permissions=if(condition=IsExecutable, then="x")))
 
-       SELECT copy(filename=Filename, accessor="me", dest=temp_binary) AS FullPath,
+       SELECT copy(filename=Filename, accessor="me", dest=temp_binary) AS OSPath,
               Filename AS Name
        FROM matching_tools
 

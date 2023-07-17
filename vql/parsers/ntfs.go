@@ -80,7 +80,7 @@ func (self NTFSFunction) Call(
 	}
 
 	if arg.Inode != "" {
-		mft_idx, _, _, err := ntfs.ParseMFTId(arg.Inode)
+		mft_idx, _, _, _, err := ntfs.ParseMFTId(arg.Inode)
 		if err != nil {
 			scope.Log("parse_ntfs: %v", err)
 			return &vfilter.Null{}
@@ -229,7 +229,7 @@ func (self NTFSI30ScanPlugin) Call(
 		}
 
 		if arg.Inode != "" {
-			mft_idx, _, _, err := ntfs.ParseMFTId(arg.Inode)
+			mft_idx, _, _, _, err := ntfs.ParseMFTId(arg.Inode)
 			if err != nil {
 				scope.Log("parse_ntfs_i30: %v", err)
 				return
@@ -304,9 +304,10 @@ func (self NTFSRangesPlugin) Call(
 		attr_type := int64(0)
 		attr_id := int64(0)
 		mft_idx := int64(arg.MFT)
+		stream_name := ""
 
 		if arg.Inode != "" {
-			mft_idx, attr_type, attr_id, err = ntfs.ParseMFTId(arg.Inode)
+			mft_idx, attr_type, attr_id, stream_name, err = ntfs.ParseMFTId(arg.Inode)
 			if err != nil {
 				scope.Log("parse_ntfs_ranges: %v", err)
 				return
@@ -333,7 +334,7 @@ func (self NTFSRangesPlugin) Call(
 		}
 
 		reader, err := ntfs.OpenStream(ntfs_ctx, mft_entry,
-			uint64(attr_type), uint16(attr_id))
+			uint64(attr_type), uint16(attr_id), stream_name)
 		if err != nil {
 			scope.Log("parse_ntfs_ranges: %v", err)
 			return

@@ -55,7 +55,7 @@ sources:
               FROM Artifact.Windows.Search.VSS(SearchFilesGlob=EventLog)
             },
             else= {
-              SELECT *, FullPath as Source
+              SELECT *, OSPath as Source
               FROM glob(globs=EventLog)
             })
 
@@ -77,7 +77,7 @@ sources:
                 System.Opcode as Opcode,
                 System.Task as Task,
                 Source
-              FROM parse_evtx(filename=FullPath)
+              FROM parse_evtx(filename=OSPath)
               WHERE EventID = 4103
                 AND EventTime > DateAfterTime
                 AND EventTime < DateBeforeTime

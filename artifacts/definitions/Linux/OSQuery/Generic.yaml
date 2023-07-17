@@ -26,11 +26,11 @@ parameters:
 
 sources:
   - query: |
-      LET binary <= SELECT FullPath
+      LET binary <= SELECT OSPath
       FROM Artifact.Generic.Utils.FetchBinary(ToolName="OSQueryLinux")
 
       LET result = SELECT * FROM execve(
-         argv=[binary[0].FullPath, "--json", Query],
+         argv=[binary[0].OSPath, "--json", Query],
          length=1000000)
 
       SELECT * FROM foreach(row=result,

@@ -81,6 +81,7 @@ var (
 		"(?i)Symbol .+ not found",
 		"(?i)Field .+ Expecting a .+ arg type, not",
 		"(?i)Artifact .+ not found",
+		"(?i)Order by column .+ not present in row",
 		"PANIC runtime error:",
 	}
 )

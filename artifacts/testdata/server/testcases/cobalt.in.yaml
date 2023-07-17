@@ -34,7 +34,7 @@ Parameters:
 Queries:
   #prefix: srcDir + "/artifacts/testdata/files/CSSectionPE.bin"
   # tests for file parsing
-  - SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Xor,DecodedConfig
+  - SELECT Rule, relpath(path=OSPath, base=srcDir, sep="/") as OSPath,Hash,Xor,DecodedConfig
     FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir + "/artifacts/testdata/files/CSDump.bin")
 
   # Test for data stream parsing, DecodedData output and bruteforce xor
@@ -43,7 +43,7 @@ Queries:
     FROM Artifact.Windows.Carving.CobaltStrike(TargetBytes=Encoded.Data[0],BruteXor="T", IncludeDecodedData="Y")
 
   # tests sleepfunction parsing
-  - SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Xor,DecodedConfig
+  - SELECT Rule, relpath(path=OSPath, base=srcDir, sep="/") as OSPath,Hash,Xor,DecodedConfig
     FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob=srcDir + "/artifacts/testdata/files/CSx86sleep.bin")
 
   # Generate this file with
@@ -61,13 +61,15 @@ Queries:
   - SELECT OSPath, Name FROM glob(globs="/**") ORDER BY Name
 
   # tests embedded shellcode in data section parsing
-  - SELECT Rule,FullPath.Basename,Hash,Xor,DecodedConfig
+  - SELECT Rule,OSPath.Basename,Hash,Xor,DecodedConfig
     FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob="/**/*.exe")
 
   # Use byte scanning of the raw file.
   - SELECT Rule,Hash,Xor,DecodedConfig
-    FROM Artifact.Windows.Carving.CobaltStrike(TargetBytes=read_file(filename="/CSsectionStager/CSsectionStager.exe"))
+    FROM Artifact.Windows.Carving.CobaltStrike(
+       TargetBytes=read_file(filename="/CSsectionStager/CSsectionStager.exe"))
 
   # tests shellcode parsing
-  - SELECT Rule, relpath(path=FullPath, base=srcDir, sep="/") as FullPath,Hash,Xor,DecodedConfig
+  - SELECT Rule, relpath(path=OSPath, base=srcDir, sep="/") as OSPath,
+           Hash,Xor,DecodedConfig
     FROM Artifact.Windows.Carving.CobaltStrike(TargetFileGlob="/**/*.bin")

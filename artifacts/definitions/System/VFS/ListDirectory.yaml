@@ -35,7 +35,7 @@ sources:
     name: Listing
     description: File listing of multiple directories in a single table.
     query: |
-      SELECT FullPath AS _FullPath,
+      SELECT OSPath AS _OSPath,
              Components AS _Components,
              Accessor AS _Accessor,
              Data AS _Data,
@@ -68,7 +68,7 @@ sources:
 
       // Old versions do not have the root parameter to glob()
       // Fixes https://github.com/Velocidex/velociraptor/issues/322
-      LET LegacyQuery = SELECT FullPath as _FullPath,
+      LET LegacyQuery = SELECT OSPath as _OSPath,
            Accessor as _Accessor,
            Data as _Data,
            Name, Size, Mode.String AS Mode,
@@ -79,7 +79,7 @@ sources:
              then=format(format='/**%v', args=Depth), else='/*'),
              accessor=Accessor)
 
-      LET NewQuery = SELECT FullPath as _FullPath,
+      LET NewQuery = SELECT OSPath as _OSPath,
            Accessor as _Accessor,
            Data as _Data,
            Name, Size, Mode.String AS Mode,

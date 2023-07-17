@@ -64,13 +64,13 @@ sources:
   - query: |
       // expand provided glob into a list of paths on the file system (fs)
       LET fspaths <=
-          SELECT FullPath FROM glob(globs=expand(path=EvtxGlob))
-          WHERE FullPath =~ PathRegex
+          SELECT OSPath FROM glob(globs=expand(path=EvtxGlob))
+          WHERE OSPath =~ PathRegex
 
       // function returning list of VSS paths corresponding to path
       LET vsspaths(path) =
-          SELECT FullPath FROM Artifact.Windows.Search.VSS(SearchFilesGlob=path)
-          WHERE FullPath =~ PathRegex
+          SELECT OSPath FROM Artifact.Windows.Search.VSS(SearchFilesGlob=path)
+          WHERE OSPath =~ PathRegex
 
       // function returning parsed evtx from list of paths
       LET evtxsearch(pathList) =
@@ -82,8 +82,8 @@ sources:
                 System.Channel as Channel,
                 System.EventRecordID as EventRecordID,
                 System.EventID.Value as EventID,
-                FullPath
-              FROM parse_evtx(filename=FullPath)
+                OSPath
+              FROM parse_evtx(filename=OSPath)
               WHERE
                 if(condition=StartDate,
                    then=TimeCreated >= timestamp(string=StartDate),
@@ -101,10 +101,10 @@ sources:
       SELECT * FROM if(condition=SearchVSS, then={
           SELECT * FROM foreach(row=fspaths, query={
             SELECT * FROM evtxsearch(pathList={
-                SELECT FullPath FROM vsspaths(path=FullPath)
+                SELECT OSPath FROM vsspaths(path=OSPath)
             })
             GROUP BY EventRecordID,Channel
           })
         }, else={
-          SELECT * FROM evtxsearch(pathList={SELECT FullPath FROM fspaths})
+          SELECT * FROM evtxsearch(pathList={SELECT OSPath FROM fspaths})
         })

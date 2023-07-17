@@ -1,12 +1,12 @@
 Queries:
   # Test the fs accessor. Glob should return an `fs:/path` path. Hash
   # should be able to read the data.
-  - SELECT FullPath,
-           hash(path=FullPath, accessor="fs")
+  - SELECT OSPath,
+           hash(path=OSPath, accessor="fs")
     FROM glob(
         globs='/clients/C.4f5e52adf0a337a9/artifacts/**', accessor="fs")
     WHERE NOT IsDir
-    ORDER BY FullPath
+    ORDER BY OSPath
 
   # We can read datastore files if the datastore and filestore
   # overlap. We can not currently find datastore objects with glob,

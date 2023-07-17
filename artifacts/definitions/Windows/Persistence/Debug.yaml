@@ -25,7 +25,7 @@ sources:
   - query: |
         LET X = scope()
         SELECT Key.ModTime as KeyLastWriteTimestamp,
-               Key.FullPath as _Key,
+               Key.OSPath as _Key,
                Key.Name AS Program,
                X.Debugger AS Debugger
         FROM read_reg_key(globs=imageFileExecutionOptions)

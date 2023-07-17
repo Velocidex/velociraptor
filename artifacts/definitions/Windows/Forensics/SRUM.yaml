@@ -32,15 +32,15 @@ parameters:
     type: bool
 
 export: |
-  LET resolveESEId(FullPath, Accessor, Id) = cache(
+  LET resolveESEId(OSPath, Accessor, Id) = cache(
       name="ESE",
-      func=srum_lookup_id(file=FullPath, accessor=Accessor, id=Id),
-      key=format(format="%v-%v-%v", args=[FullPath, Accessor, Id]))
+      func=srum_lookup_id(file=OSPath, accessor=Accessor, id=Id),
+      key=format(format="%v-%v-%v", args=[OSPath, Accessor, Id]))
 
-  LET lookupSIDCache(FullPath, Accessor, Id) = cache(
+  LET lookupSIDCache(OSPath, Accessor, Id) = cache(
       name="SID",
-      func=lookupSID(sid=srum_lookup_id(file=FullPath, accessor=Accessor, id=Id)),
-      key=format(format="%v-%v-%v", args=[FullPath, Accessor, Id]))
+      func=lookupSID(sid=srum_lookup_id(file=OSPath, accessor=Accessor, id=Id)),
+      key=format(format="%v-%v-%v", args=[OSPath, Accessor, Id]))
 
 sources:
   - name: Upload
@@ -52,34 +52,34 @@ sources:
 
   - name: Execution Stats
     query: |
-        LET SRUMFiles <= SELECT FullPath FROM glob(globs=SRUMLocation)
+        LET SRUMFiles <= SELECT OSPath FROM glob(globs=SRUMLocation)
 
         SELECT  AutoIncId AS ID,
                 TimeStamp,
-                resolveESEId(FullPath=SRUMFiles.FullPath,
+                resolveESEId(OSPath=SRUMFiles.OSPath,
                              Accessor=accessor, Id=AppId) AS App,
-                resolveESEId(FullPath=SRUMFiles.FullPath,
+                resolveESEId(OSPath=SRUMFiles.OSPath,
                              Accessor=accessor, Id=UserId) AS UserSid,
-                lookupSIDCache(FullPath=SRUMFiles.FullPath,
+                lookupSIDCache(OSPath=SRUMFiles.OSPath,
                           Accessor=accessor, Id=UserId) AS User,
                 timestamp(winfiletime=EndTime) AS EndTime,
                 DurationMS,
                 NetworkBytesRaw
-        FROM parse_ese(file=SRUMFiles.FullPath,
+        FROM parse_ese(file=SRUMFiles.OSPath,
                        accessor=accessor, table=ExecutionGUID)
         WHERE App =~ ExecutableRegex
 
   - name: Application Resource Usage
     query: |
-        LET SRUMFiles <= SELECT FullPath FROM glob(globs=SRUMLocation)
+        LET SRUMFiles <= SELECT OSPath FROM glob(globs=SRUMLocation)
 
         SELECT AutoIncId as SRUMId,
                TimeStamp,
-               resolveESEId(FullPath=SRUMFiles.FullPath,
+               resolveESEId(OSPath=SRUMFiles.OSPath,
                             Accessor=accessor, Id=AppId) AS App,
-               resolveESEId(FullPath=SRUMFiles.FullPath,
+               resolveESEId(OSPath=SRUMFiles.OSPath,
                             Accessor=accessor, Id=UserId) AS UserSid,
-               lookupSIDCache(FullPath=SRUMFiles.FullPath,
+               lookupSIDCache(OSPath=SRUMFiles.OSPath,
                          Accessor=accessor, Id=UserId) AS User,
                ForegroundCycleTime,
                BackgroundCycleTime,
@@ -96,40 +96,40 @@ sources:
                BackgroundNumReadOperations,
                BackgroundNumWriteOperations,
                BackgroundNumberOfFlushes
-        FROM parse_ese(file=SRUMFiles.FullPath,
+        FROM parse_ese(file=SRUMFiles.OSPath,
                        accessor=accessor, table=ApplicationResourceUsageGUID)
         WHERE App =~ ExecutableRegex
 
   - name: Network Connections
     query: |
-        LET SRUMFiles <= SELECT FullPath FROM glob(globs=SRUMLocation)
+        LET SRUMFiles <= SELECT OSPath FROM glob(globs=SRUMLocation)
 
         SELECT AutoIncId as SRUMId,
              TimeStamp,
-             resolveESEId(FullPath=SRUMFiles.FullPath,
+             resolveESEId(OSPath=SRUMFiles.OSPath,
                           Accessor=accessor, Id=AppId) AS App,
-             resolveESEId(FullPath=SRUMFiles.FullPath,
+             resolveESEId(OSPath=SRUMFiles.OSPath,
                           Accessor=accessor, Id=UserId) AS UserSid,
-             lookupSIDCache(FullPath=SRUMFiles.FullPath,
+             lookupSIDCache(OSPath=SRUMFiles.OSPath,
                        Accessor=accessor, Id=UserId) AS User,
              InterfaceLuid,
              ConnectedTime,
              timestamp(winfiletime=ConnectStartTime) AS StartTime
-        FROM parse_ese(file=SRUMFiles.FullPath,
+        FROM parse_ese(file=SRUMFiles.OSPath,
                        accessor=accessor, table=NetworkConnectionsGUID)
         WHERE App =~ ExecutableRegex
 
   - name: Network Usage
     query: |
-        LET SRUMFiles <= SELECT FullPath FROM glob(globs=SRUMLocation)
+        LET SRUMFiles <= SELECT OSPath FROM glob(globs=SRUMLocation)
 
         SELECT AutoIncId as SRUMId,
              TimeStamp,
-             resolveESEId(FullPath=SRUMFiles.FullPath,
+             resolveESEId(OSPath=SRUMFiles.OSPath,
                           Accessor=accessor, Id=AppId) AS App,
-             resolveESEId(FullPath=SRUMFiles.FullPath,
+             resolveESEId(OSPath=SRUMFiles.OSPath,
                           Accessor=accessor, Id=UserId) AS UserSid,
-             lookupSID(FullPath=SRUMFiles.FullPath,
+             lookupSID(OSPath=SRUMFiles.OSPath,
                        Accessor=accessor, Id=UserId) AS User,
              UserId,
              BytesSent,
@@ -137,7 +137,7 @@ sources:
              InterfaceLuid,
              L2ProfileId,
              L2ProfileFlags
-        FROM parse_ese(file=SRUMFiles.FullPath,
+        FROM parse_ese(file=SRUMFiles.OSPath,
                        accessor=accessor, table=NetworkUsageGUID)
         WHERE App =~ ExecutableRegex
 
@@ -154,10 +154,9 @@ sources:
                   max(item=TimeStamp) as Latest,
                   App,
                   User,UserId,
-                  sum(item=BytesSent) as TotalSent, 
+                  sum(item=BytesSent) as TotalSent,
                   sum(item=BytesRecvd) as TotalRecvd,
                   InterfaceLuid
               FROM source(artifact="Windows.Forensics.SRUM/Network Usage")
               GROUP BY App, User,InterfaceLuid
               ORDER BY TotalSent DESC
-    

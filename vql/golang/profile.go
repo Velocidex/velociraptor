@@ -66,7 +66,7 @@ func writeMetrics(
 		case output_chan <- ordereddict.NewDict().
 			Set("Type", "metrics").
 			Set("Line", metric).
-			Set("FullPath", ""):
+			Set("OSPath", ""):
 		}
 	}
 }
@@ -107,7 +107,8 @@ func writeProfile(
 	case output_chan <- ordereddict.NewDict().
 		Set("Type", name).
 		Set("Line", fmt.Sprintf("Generating profile %v", name)).
-		Set("FullPath", tmpfile.Name()):
+		Set("FullPath", tmpfile.Name()).
+		Set("OSPath", tmpfile.Name()):
 	}
 }
 
@@ -146,7 +147,7 @@ func writeCPUProfile(
 	case output_chan <- ordereddict.NewDict().
 		Set("Type", "profile").
 		Set("Line", "Generating CPU profile").
-		Set("FullPath", tmpfile.Name()):
+		Set("OSPath", tmpfile.Name()):
 	}
 }
 
@@ -181,7 +182,8 @@ func writeTraceProfile(
 	case output_chan <- ordereddict.NewDict().
 		Set("Type", "trace").
 		Set("Line", "Generating Trace profile").
-		Set("FullPath", tmpfile.Name()):
+		Set("FullPath", tmpfile.Name()).
+		Set("OSPath", tmpfile.Name()):
 	}
 }
 
@@ -261,7 +263,7 @@ func (self *ProfilePlugin) Call(ctx context.Context,
 				case output_chan <- ordereddict.NewDict().
 					Set("Type", "logs").
 					Set("Line", line).
-					Set("FullPath", ""):
+					Set("OSPath", ""):
 				}
 			}
 		}
@@ -275,7 +277,7 @@ func (self *ProfilePlugin) Call(ctx context.Context,
 				case output_chan <- ordereddict.NewDict().
 					Set("Type", "query").
 					Set("Line", q).
-					Set("FullPath", ""):
+					Set("OSPath", ""):
 				}
 			}
 		}

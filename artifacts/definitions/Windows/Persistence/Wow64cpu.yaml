@@ -13,7 +13,7 @@ sources:
       SELECT OS From info() where OS = 'windows'
 
     query: |
-      SELECT dirname(path=FullPath) as KeyPath,
+      SELECT OSPath.Dirname as KeyPath,
         Name as KeyName,
         Data.value as Value,
         Mtime AS LastModified

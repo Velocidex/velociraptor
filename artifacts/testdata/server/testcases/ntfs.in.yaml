@@ -2,7 +2,7 @@ Queries:
   # parse_ntfs can use an image file.
   - SELECT parse_ntfs(
       filename=srcDir+'/artifacts/testdata/files/test.ntfs.dd',
-      inode="46-128-0").FullPath AS FullPath
+      inode="46-128-0").OSPath AS OSPath
     FROM scope()
 
   # Parsing the MFT from a raw image requires extracting it using the
@@ -13,4 +13,4 @@ Queries:
          DelegateAccessor="file",
          DelegatePath=srcDir+'/artifacts/testdata/files/test.ntfs.dd'),
       accessor="raw_ntfs")
-    WHERE FullPath =~ "document.txt:goodbye.txt"
+    WHERE OSPath =~ "document.txt:goodbye.txt"

@@ -18,35 +18,35 @@ Queries:
 
 
   # Check the created zip file contains both combined and distinct results
-  - SELECT OSPath.Basename AS FullPath, Size
+  - SELECT OSPath.Basename AS OSPath, Size
     FROM glob(globs="**", root=RootPath, accessor='zip')
-    WHERE NOT IsDir AND FullPath =~ "NetstatEnriched"
-    ORDER BY FullPath
+    WHERE NOT IsDir AND OSPath =~ "NetstatEnriched"
+    ORDER BY OSPath
 
   - SELECT create_hunt_download(hunt_id='H.49ba8939',
         wait=TRUE, only_combined=TRUE) FROM scope()
 
   # Check the created zip file contains both combined and distinct
   # results (NOTE the generated filename is different)
-  - SELECT OSPath.Basename AS FullPath, Size
+  - SELECT OSPath.Basename AS OSPath, Size
     FROM glob(globs="**", root=RootPath, accessor='zip')
-    WHERE NOT IsDir AND FullPath =~ "NetstatEnriched"
-    ORDER BY FullPath
+    WHERE NOT IsDir AND OSPath =~ "NetstatEnriched"
+    ORDER BY OSPath
 
   # Only store json files.
   - SELECT create_hunt_download(hunt_id='H.49ba8939', format="json", base="json-",
         wait=TRUE, only_combined=TRUE) FROM scope()
 
-  - SELECT OSPath.Basename AS FullPath, Size
+  - SELECT OSPath.Basename AS OSPath, Size
     FROM glob(globs="**", root=SummaryRootPath, accessor='zip')
-    WHERE NOT IsDir AND FullPath =~ "NetstatEnriched"
-    ORDER BY FullPath
+    WHERE NOT IsDir AND OSPath =~ "NetstatEnriched"
+    ORDER BY OSPath
 
   # Only store csv files.
   - SELECT create_hunt_download(hunt_id='H.49ba8939', format="csv", base="csv-",
         wait=TRUE, only_combined=TRUE) FROM scope()
 
-  - SELECT OSPath.Basename AS FullPath, Size
+  - SELECT OSPath.Basename AS OSPath, Size
     FROM glob(globs="**", root=SummaryRootPath, accessor='zip')
-    WHERE NOT IsDir AND FullPath =~ "NetstatEnriched"
-    ORDER BY FullPath
+    WHERE NOT IsDir AND OSPath =~ "NetstatEnriched"
+    ORDER BY OSPath

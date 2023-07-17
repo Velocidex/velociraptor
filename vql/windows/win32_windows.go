@@ -369,6 +369,7 @@ type PROCESS_MEMORY_COUNTERS struct {
 //sys NtOpenDirectoryObject(DirectoryHandle *uint32,DesiredAccess uint32, ObjectAttributes *OBJECT_ATTRIBUTES) (status uint32) = ntdll.NtOpenDirectoryObject
 //sys AdjustTokenPrivileges(TokenHandle syscall.Token, DisableAllPrivileges bool, NewState uintptr, BufferLength int, PreviousState uintptr, ReturnLength *int) (err error) = Advapi32.AdjustTokenPrivileges
 //sys LookupPrivilegeValue(lpSystemName uintptr, lpName uintptr, out uintptr) (err error) = Advapi32.LookupPrivilegeValueW
+//sys LookupPrivilegeName(lpSystemName *uint16, luid *LUID, out *uint16, ReturnLength *uint32) (err error) = Advapi32.LookupPrivilegeNameW
 //sys NtDuplicateObject(SourceProcessHandle syscall.Handle, SourceHandle syscall.Handle, TargetProcessHandle syscall.Handle, TargetHandle *syscall.Handle, DesiredAccess uint32, InheritHandle uint32, Options uint32) (status uint32) = ntdll.NtDuplicateObject
 //sys NtQueryInformationProcess(Handle syscall.Handle, ObjectInformationClass uint32, ProcessInformation *byte, ProcessInformationLength uint32, ReturnLength *uint32) (status uint32) = ntdll.NtQueryInformationProcess
 //sys NtQueryInformationThread(Handle syscall.Handle, ObjectInformationClass uint32, ThreadInformation *byte, ThreadInformationLength uint32, ReturnLength *uint32) (status uint32, err error) = ntdll.NtQueryInformationThread
@@ -579,3 +580,13 @@ const (
 
 	INVALID_HANDLE_VALUE = syscall.Handle(0xFFFFFFFF)
 )
+
+type LUID struct {
+	LowPart  uint32
+	HighPart int32
+}
+
+type LUIDAndAttributes struct {
+	Luid       LUID
+	Attributes uint32
+}

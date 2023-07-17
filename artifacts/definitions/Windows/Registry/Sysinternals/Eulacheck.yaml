@@ -28,11 +28,11 @@ sources:
       WHERE Name =~ userRegex
 
       SELECT Key.Name as ProgramName,
-             Key.FullPath as Key,
+             Key.OSPath as Key,
              Key.Mtime AS TimeAccepted,
              {
                 SELECT Name FROM users WHERE UUID=regex_replace(
-                   source=Key.FullPath, re=".+\\\\(S-[^\\\\]+)\\\\.+", replace="$1")
+                   source=Key.OSPath, re=".+\\\\(S-[^\\\\]+)\\\\.+", replace="$1")
              } as User,
              EulaAccepted
       FROM read_reg_key(globs=split(string=Sysinternals_Reg_Key, sep=',[\\s]*'))

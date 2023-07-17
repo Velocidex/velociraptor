@@ -33,8 +33,8 @@ sources:
            FROM stat(filename=Components, accessor=Accessor)
         },
         else= {
-           SELECT FullPath AS Path, Accessor,
-              Size, upload(file=FullPath, accessor=Accessor) AS Upload
+           SELECT OSPath AS Path, Accessor,
+              Size, upload(file=OSPath, accessor=Accessor) AS Upload
           FROM stat(filename=Path, accessor=Accessor)
         })
 
@@ -48,8 +48,8 @@ sources:
            WHERE Mode.IsRegular
         },
         else={
-          SELECT FullPath AS Path, Accessor,
-            Size, upload(file=FullPath, accessor=Accessor) AS Upload
+          SELECT OSPath AS Path, Accessor,
+            Size, upload(file=OSPath, accessor=Accessor) AS Upload
           FROM glob(globs="**", root=Path, accessor=Accessor)
           WHERE Mode.IsRegular
        })

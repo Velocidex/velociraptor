@@ -62,7 +62,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "TransmittedServices": "-",
   "IpAddress": "::ffff:192.168.63.1",
   "IpPort": "52562",
-  "FullPath": "X:\\artifacts\\testdata\\files\\EID4769_Kerbroasting.evtx",
+  "OSPath": "X:\\artifacts\\testdata\\files\\EID4769_Kerbroasting.evtx",
   "_Source": "Windows.EventLogs.Kerbroasting"
  },
  {
@@ -79,7 +79,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "TransmittedServices": "-",
   "IpAddress": "::ffff:192.168.63.1",
   "IpPort": "52564",
-  "FullPath": "X:\\artifacts\\testdata\\files\\EID4769_Kerbroasting.evtx",
+  "OSPath": "X:\\artifacts\\testdata\\files\\EID4769_Kerbroasting.evtx",
   "_Source": "Windows.EventLogs.Kerbroasting"
  }
 ]SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock(EvtxGlob=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx", LogLevel="All")[
@@ -97,7 +97,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "Level": 5,
   "Opcode": 15,
   "Task": 2,
-  "FullPath": "X:\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
+  "OSPath": "X:\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
   "_Source": "Windows.EventLogs.PowershellScriptblock"
  },
  {
@@ -114,7 +114,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   "Level": 5,
   "Opcode": 15,
   "Task": 2,
-  "FullPath": "X:\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
+  "OSPath": "X:\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
   "_Source": "Windows.EventLogs.PowershellScriptblock"
  }
 ]SELECT * FROM Artifact.Windows.EventLogs.PowershellModule(EventLog=srcDir + "/artifacts/testdata/files/EID4103_PowershellModule.evtx" )[
@@ -156,7 +156,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
   },
   "UserData": null,
   "Message": "Creating Scriptblock text (1 of 1):\nGet-Service | select *\n\nScriptBlock ID: c434040f-afc8-4754-8d7e-b041dd6ad509\nPath: \r\n",
-  "FullPath": "X:\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
+  "OSPath": "X:\\artifacts\\testdata\\files\\EID4104_PowershellScriptblock.evtx",
   "_Source": "Windows.EventLogs.EvtxHunter"
  }
 ]SELECT * FROM Artifact.Windows.EventLogs.ScheduledTasks( Security=srcDir + '/artifacts/testdata/files/SecurityTasks.evtx', TaskScheduler= srcDir + '/artifacts/testdata/files/TaskScheduler.evtx', TaskNameRegex='T1053_005_powershell' )[
@@ -230,7 +230,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
    "RpcCallClientLocality": 0,
    "FQDN": "RE-Dev"
   },
-  "FullPath": "X:\\artifacts\\testdata\\files\\SecurityTasks.evtx",
+  "OSPath": "X:\\artifacts\\testdata\\files\\SecurityTasks.evtx",
   "_Source": "Windows.EventLogs.ScheduledTasks"
  },
  {
@@ -256,7 +256,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
    "RpcCallClientLocality": 0,
    "FQDN": "RE-Dev"
   },
-  "FullPath": "X:\\artifacts\\testdata\\files\\SecurityTasks.evtx",
+  "OSPath": "X:\\artifacts\\testdata\\files\\SecurityTasks.evtx",
   "_Source": "Windows.EventLogs.ScheduledTasks"
  },
  {
@@ -273,7 +273,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
    "TaskName": "\\T1053_005_powershell",
    "UserContext": "RE-DEV\\yolo"
   },
-  "FullPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
+  "OSPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
   "_Source": "Windows.EventLogs.ScheduledTasks"
  },
  {
@@ -292,7 +292,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
    "ProcessID": 6632,
    "Priority": 16384
   },
-  "FullPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
+  "OSPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
   "_Source": "Windows.EventLogs.ScheduledTasks"
  },
  {
@@ -310,7 +310,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
    "UserContext": "RE-DEV\\yolo",
    "InstanceId": "C3B3FB39-EE3C-4784-B325-D4B5A8787155"
   },
-  "FullPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
+  "OSPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
   "_Source": "Windows.EventLogs.ScheduledTasks"
  },
  {
@@ -329,7 +329,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
    "TaskInstanceId": "C3B3FB39-EE3C-4784-B325-D4B5A8787155",
    "EnginePID": 6632
   },
-  "FullPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
+  "OSPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
   "_Source": "Windows.EventLogs.ScheduledTasks"
  },
  {
@@ -347,7 +347,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
    "InstanceId": "5598D79C-1A6E-4922-ADF6-304C33D70505",
    "UserContext": "Administrators"
   },
-  "FullPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
+  "OSPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
   "_Source": "Windows.EventLogs.ScheduledTasks"
  },
  {
@@ -367,7 +367,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
    "ResultCode": 0,
    "EnginePID": 6632
   },
-  "FullPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
+  "OSPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
   "_Source": "Windows.EventLogs.ScheduledTasks"
  },
  {
@@ -385,7 +385,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
    "UserContext": "RE-DEV\\yolo",
    "InstanceId": "C3B3FB39-EE3C-4784-B325-D4B5A8787155"
   },
-  "FullPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
+  "OSPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
   "_Source": "Windows.EventLogs.ScheduledTasks"
  },
  {
@@ -402,7 +402,7 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
    "TaskName": "\\T1053_005_powershell",
    "UserName": "RE-DEV\\yolo"
   },
-  "FullPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
+  "OSPath": "X:\\artifacts\\testdata\\files\\TaskScheduler.evtx",
   "_Source": "Windows.EventLogs.ScheduledTasks"
  }
 ]SELECT EventID, DomainName, UserName, LogonType, SourceIP, Description FROM Artifact.Windows.EventLogs.RDPAuth( Security=srcDir + '/artifacts/testdata/files/RDPAuth_Security.evtx', System= srcDir + '/artifacts/testdata/files/RDPAuth_System.evtx', LocalSessionManager= srcDir + '/artifacts/testdata/files/RDPAuth_LocalSessionManager.evtx', RemoteConnectionManager= srcDir + '/artifacts/testdata/files/RDPAuth_RemoteConnectionManager.evtx') WHERE NOT LogonType = 3 GROUP BY EventID[

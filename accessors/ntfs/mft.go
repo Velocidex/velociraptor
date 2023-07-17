@@ -110,7 +110,7 @@ func (self *MFTFileSystemAccessor) OpenWithOSPath(full_path *accessors.OSPath) (
 	}
 
 	// Check that the subpath is correctly specified.
-	mft_idx, attr_type, attr_id, err := ntfs.ParseMFTId(subpath)
+	mft_idx, attr_type, attr_id, stream_name, err := ntfs.ParseMFTId(subpath)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func (self *MFTFileSystemAccessor) OpenWithOSPath(full_path *accessors.OSPath) (
 	info.IsDir = false
 
 	reader, err := ntfs.OpenStream(ntfs_ctx, mft_entry,
-		uint64(attr_type), uint16(attr_id))
+		uint64(attr_type), uint16(attr_id), stream_name)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +176,7 @@ func (self *MFTFileSystemAccessor) LstatWithOSPath(full_path *accessors.OSPath) 
 	}
 
 	// Check that the subpath is correctly specified.
-	mft_idx, _, _, err := ntfs.ParseMFTId(subpath)
+	mft_idx, _, _, _, err := ntfs.ParseMFTId(subpath)
 	if err != nil {
 		return nil, err
 	}

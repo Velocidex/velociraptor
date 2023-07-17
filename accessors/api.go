@@ -288,6 +288,13 @@ type FileInfo interface {
 	Mode() os.FileMode
 }
 
+// Some filesystems return multiple files with the same basename. They
+// should implement this interface so we can properly dedup based on a
+// unique name.
+type UniqueBasename interface {
+	UniqueName() string
+}
+
 // A File reader with
 type ReadSeekCloser interface {
 	io.ReadSeeker

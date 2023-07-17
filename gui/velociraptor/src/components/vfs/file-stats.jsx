@@ -52,7 +52,7 @@ class VeloFileStats extends Component {
 
     updateFile = () => {
         let selectedRow = this.props.selectedRow;
-        if (!selectedRow || !selectedRow._FullPath || !selectedRow._Accessor) {
+        if (!selectedRow || !(selectedRow._OSPath || selectedRow._FullPath) || !selectedRow._Accessor) {
             return;
         }
 
@@ -101,7 +101,7 @@ class VeloFileStats extends Component {
         return (
             <CardDeck className="file-stats">
               <Card>
-                <Card.Header>{selectedRow._FullPath || selectedRow.Name}</Card.Header>
+                <Card.Header>{selectedRow._OSPath || selectedRow._FullPath || selectedRow.Name}</Card.Header>
                 <Card.Body>
                     <dl className="row">
                       <dt className="col-4">{T("Size")}</dt>
@@ -212,7 +212,7 @@ class VeloFileStats extends Component {
                           env={{client_id: this.props.client.client_id,
                                 vfs_components: selectedRow.Download.components}}
                           upload={{Components: selectedRow.Download.components,
-                                   Path: selectedRow._FullPath,
+                                   Path: selectedRow._OSPath || selectedRow._FullPath,
                                    Accessor: this.props.node.path[0],
                                    Size: selectedRow.Size}} />
                       </dd>

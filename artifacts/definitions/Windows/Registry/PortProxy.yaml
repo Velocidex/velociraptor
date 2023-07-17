@@ -23,11 +23,11 @@ parameters:
 sources:
  - name: PortProxy
    query: |
-     SELECT FullPath,
-         basename(path=dirname(path=dirname(path=FullPath))) as ProxyType,
-         basename(path=dirname(path=FullPath)) as Protocol,
-         regex_replace(source=basename(path=FullPath),re="/",replace=":") as Listening,
-         regex_replace(source=Data.value,re="/",replace=":") as Destination,
+     SELECT OSPath,
+         OSPath[-3] AS ProxyType,
+         OSPath[-2] AS Protocol,
+         regex_replace(source=OSPath.Basename, re="/", replace=":") as Listening,
+         regex_replace(source=Data.value, re="/", replace=":") as Destination,
          Mtime as ModifiedTime,
          Type
        FROM glob(globs=KeyGlob, accessor="registry")

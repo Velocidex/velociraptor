@@ -92,7 +92,7 @@ sources:
               ToolInfo=ToolInfo)
 
       // Call the binary and return all its output in a single row.
-      LET output = SELECT * FROM execve(argv=[bin[0].FullPath,
+      LET output = SELECT * FROM execve(argv=[bin[0].OSPath,
             '-nobanner', '-accepteula', '-t', '-a',
             join(array=options.Option, sep=""),
             '-c', -- CSV output

@@ -26,7 +26,7 @@ sources:
        LET Parsed <= parse_ntfs(device=Drive, inode=MFTId)
 
        SELECT *, upload(accessor="mft", file=Drive + Inode,
-                        name=pathspec(Path=Parsed.FullPath + "/" + Inode)) AS IndexUpload
+                        name=pathspec(Path=Parsed.OSPath + "/" + Inode)) AS IndexUpload
        FROM foreach(
             row=Parsed.Attributes,
             query={

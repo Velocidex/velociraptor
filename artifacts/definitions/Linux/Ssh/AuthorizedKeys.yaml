@@ -15,15 +15,15 @@ sources:
              SELECT Uid, User, Homedir from Artifact.Linux.Sys.Users()
           },
           query={
-             SELECT FullPath, Mtime, Ctime, User, Uid
+             SELECT OSPath, Mtime, Ctime, User, Uid
              FROM glob(root=Homedir, globs=sshKeyFiles)
           })
 
       SELECT * from foreach(
           row=authorized_keys,
           query={
-            SELECT Uid, User, FullPath, Key, Comment, Mtime
+            SELECT Uid, User, OSPath, Key, Comment, Mtime
             FROM split_records(
-               filenames=FullPath, regex=" +", columns=["Type", "Key", "Comment"])
+               filenames=OSPath, regex=" +", columns=["Type", "Key", "Comment"])
                WHERE Type =~ "ssh"
           })

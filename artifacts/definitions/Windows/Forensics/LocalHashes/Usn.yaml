@@ -37,16 +37,16 @@ sources:
       LET NTFS_CACHE_TIME = 30
       LET USN_FREQUENCY = 60
 
-      LET hash_db <= SELECT FullPath
+      LET hash_db <= SELECT OSPath
       FROM Artifact.Generic.Forensic.LocalHashes.Init(HashDb=HashDb)
 
-      LET path <= hash_db[0].FullPath
+      LET path <= hash_db[0].OSPath
 
       LET _ <= log(message="Will use local hash database " + path)
 
-      LET file_modifications = SELECT Device + FullPath AS FullPath
+      LET file_modifications = SELECT Device + OSPath AS OSPath
       FROM watch_usn(device=Device, accessor="ntfs")
-      WHERE FullPath =~ PathRegex
+      WHERE OSPath =~ PathRegex
 
       -- The USN journal may contain multiple entries for the same
       -- file modification (e.g. TRUNCATE followed by APPEND and
@@ -62,28 +62,28 @@ sources:
              query=file_modifications,
              max_rows=5000,
              max_age=6000, flush=TRUE)
-         GROUP BY FullPath
+         GROUP BY OSPath
       })
 
       -- Stat each file that was changed to get its size and hash
       LET files = SELECT * FROM foreach(row=deduped,
       query={
-         SELECT FullPath, Size, hash(path=FullPath).MD5 AS Hash, now() AS Time
-         FROM stat(filename=FullPath)
+         SELECT OSPath, Size, hash(path=OSPath).MD5 AS Hash, now() AS Time
+         FROM stat(filename=OSPath)
          WHERE Mode.IsRegular
       })
 
       -- For each file hashed, insert to the local database
-      LET insertion = SELECT FullPath, Hash, Size, Time, {
+      LET insertion = SELECT OSPath, Hash, Size, Time, {
          SELECT * FROM sqlite(file=path,
             query="INSERT into hashes (path, md5, timestamp, size) values (?,?,?,?)",
-            args=[FullPath, Hash, Time, Size])
+            args=[OSPath, Hash, Time, Size])
       } AS Insert
       FROM files
       WHERE Insert OR TRUE
 
       // If output is suppressed do not emit a row, but still update the local database.
-      SELECT FullPath, Hash, Size, Time
+      SELECT OSPath, Hash, Size, Time
       FROM insertion
       WHERE NOT SuppressOutput
 

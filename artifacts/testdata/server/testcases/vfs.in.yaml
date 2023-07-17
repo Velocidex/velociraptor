@@ -25,4 +25,4 @@ Queries:
     FROM Artifact.System.VFS.ListDirectory(
        Depth=10, source="Listing",
        Components=pathspec(Path=srcDir+"/artifacts/definitions/System/").Components)
-    WHERE _FullPath =~ "ListDirectory.yaml$"
+    WHERE _OSPath =~ "ListDirectory.yaml$"

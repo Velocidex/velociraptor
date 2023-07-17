@@ -33,7 +33,7 @@ sources:
                     FROM Artifact.Windows.Search.VSS(SearchFilesGlob=EventLog)
                 },
                 else= {
-                    SELECT *, FullPath as Source
+                    SELECT *, OSPath as Source
                     FROM glob(globs=EventLog)
                 })
 
@@ -56,7 +56,7 @@ sources:
                   System.Opcode as Opcode,
                   System.Task as Task,
                   Source
-                FROM parse_evtx(filename=FullPath, accessor='file')
+                FROM parse_evtx(filename=OSPath, accessor='file')
                 WHERE System.EventID.Value = 7045 and
                   EventData.ImagePath =~ ComspecRegex
             })

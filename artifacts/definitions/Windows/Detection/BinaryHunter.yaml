@@ -116,7 +116,7 @@ sources:
 
       -- parse PE attributes and run final filters
       SELECT
-        dict(FullPath=OSPath,Name=Name,Size=Size,
+        dict(OSPath=OSPath,Name=Name,Size=Size,
             Timestamps=dict(Mtime=Mtime,Atime=Atime,Ctime=Ctime,Btime=Btime)
                 ) as File,
         authenticode(filename=OSPath) as Authenticode,

@@ -3,11 +3,11 @@ description: |
   This artifact will find all relevant files in the VSS. Typically used to
   out deduplicated paths for processing by other artifacts.
 
-  Input either search Glob or FullPath.
+  Input either search Glob or OSPath.
   Output is standard Glob results with additional fields:
   SHA1 hash for deduplication,
   Type for prioritisation, and
-  Deduped to indicate if FullPath has been deduped with another row.
+  Deduped to indicate if OSPath has been deduped with another row.
 
 author: Matt Green - @mgreen27
 
@@ -22,12 +22,12 @@ sources:
   - query: |
       -- Given a path in either device notation or drive notation,
       -- break it into a drive and path
-      LET extract_path(FullPath) = parse_string_with_regex(string=FullPath,
+      LET extract_path(OSPath) = parse_string_with_regex(string=OSPath,
          regex="^(?P<Device>\\\\\\\\.\\\\GLOBALROOT\\\\Device\\\\HarddiskVolumeShadowCopy[^\\\\]+\\\\|\\\\\\\\.\\\\.:\\\\|.:\\\\)(?P<Path>.+)$")
 
       -- Remove possible drive or device from the glob path - we will
       -- apply the glob to all devices.
-      LET StrippedGlob <= extract_path(FullPath=SearchFilesGlob).Path
+      LET StrippedGlob <= extract_path(OSPath=SearchFilesGlob).Path
 
       -- Get all logical disks and VSS
       LET roots = SELECT OSPath AS Root
@@ -35,8 +35,8 @@ sources:
         ORDER BY Root  DESC
 
       -- Glob for all files in SearchGlob and calculate their hash.
-      LET globvss(SearchGlob, Root) = SELECT *,
-            extract_path(FullPath=OSPath).Path AS Path,
+      LET globvss(SearchGlob, Root) = SELECT *, OSPath AS OSPath,
+            extract_path(OSPath=OSPath).Path AS Path,
             Root.String AS Source,
             hash(path=OSPath, accessor='ntfs').SHA1 as SHA1
          FROM glob(globs=SearchGlob, accessor='ntfs', root=Root)

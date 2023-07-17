@@ -27,7 +27,7 @@ type FileInfoRow struct {
 	Mtime     string                       `json:"mtime"`
 	Atime     string                       `json:"atime"`
 	Ctime     string                       `json:"ctime"`
-	FullPath  string                       `json:"_FullPath"`
+	OSPath    string                       `json:"_OSPath"`
 	Data      interface{}                  `json:"_Data"`
 }
 

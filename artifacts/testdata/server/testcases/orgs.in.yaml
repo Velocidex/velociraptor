@@ -80,14 +80,18 @@ Queries:
 - SELECT * FROM query(query={
     SELECT client_id, request.artifacts AS artifacts
     FROM flows(client_id="C.123")
+    GROUP BY client_id
   }, runas="OrgUser", org_id="ORGID")
 
 # The flow is not scheduled in the root org or in the second org
 - SELECT client_id, request.artifacts AS artifacts
   FROM flows(client_id="C.123")
+  GROUP BY client_id
+
 - SELECT * FROM query(query={
     SELECT client_id, request.artifacts AS artifacts
     FROM flows(client_id="C.123")
+    GROUP BY client_id
   }, runas="OrgUser", org_id="ORGID2")
 
 # OrgUser is a reader in ORGID2 so can not schedule collections
@@ -108,6 +112,7 @@ Queries:
 - SELECT * FROM query(query={
     SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123")
     WHERE artifacts =~ "Disk"
+    GROUP BY client_id
   }, runas="OrgUser", org_id="ORGID")
 
 # Check the fs accessor in multitenant mode. First create a file in the client's org filestore.

@@ -43,8 +43,8 @@ sources:
                               name=pathspec(Path=format(format="%d.dd", args=Pid))) AS ProcessMemory
              FROM scope()
           }, else={
-            SELECT ProcessName, CommandLine, Pid, FullPath,
-                   upload(file=FullPath) as CrashDump
+            SELECT ProcessName, CommandLine, Pid, OSPath,
+                   upload(file=OSPath) as CrashDump
             FROM proc_dump(pid=Pid)
           })
 

@@ -88,7 +88,7 @@ sources:
            })
 
       -- Load the winpmem binary
-      LET WinpmemBinary = SELECT FullPath
+      LET WinpmemBinary = SELECT OSPath
         FROM Artifact.Generic.Utils.FetchBinary(ToolName="WinPmem")
 
       -- Install the driver and schedule an uninstall when the query
@@ -98,9 +98,9 @@ sources:
       FROM foreach(row=WinpmemBinary,
       query={
          SELECT *, atexit(query={
-            SELECT * FROM execve(argv=[FullPath, "-u"])
-          }, env=dict(FullPath=FullPath)) AS AtExit
-         FROM execve(argv=[FullPath, "-l"], env=dict(TMP="C:\\Windows\\Temp"))
+            SELECT * FROM execve(argv=[OSPath, "-u"])
+          }, env=dict(OSPath=OSPath)) AS AtExit
+         FROM execve(argv=[OSPath, "-l"], env=dict(TMP="C:\\Windows\\Temp"))
       })
 
       SELECT

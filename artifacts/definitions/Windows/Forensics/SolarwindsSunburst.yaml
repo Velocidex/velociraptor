@@ -36,12 +36,12 @@ parameters:
 
 sources:
   - query: |
-      LET yara_rules <= SELECT read_file(filename=FullPath) AS Rule,
-           basename(path=FullPath) AS ToolName
+      LET yara_rules <= SELECT read_file(filename=OSPath) AS Rule,
+           basename(path=OSPath) AS ToolName
         FROM Artifact.Generic.Utils.FetchBinary(
              ToolName="SunburstYARARules", IsExecutable=FALSE)
 
-      LET ntfs_drives = SELECT FullPath + '/$MFT'as Path, FullPath AS Device
+      LET ntfs_drives = SELECT OSPath + '/$MFT'as Path, OSPath AS Device
           FROM glob(globs="/*", accessor="ntfs")
 
       LET MFTEntries = SELECT * from foreach(
@@ -49,7 +49,7 @@ sources:
             query={ SELECT Device, String.Offset AS Offset,
                String.HexData AS HexData,
                Device + "\\" + parse_ntfs(device=Device,
-                          mft=String.Offset / 1024).FullPath AS FilePath,
+                          mft=String.Offset / 1024).OSPath AS FilePath,
                parse_ntfs(device=Device,
                           mft=String.Offset / 1024) AS MFT
             FROM yara(

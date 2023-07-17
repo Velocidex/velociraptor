@@ -1,13 +1,13 @@
 name: Windows.Memory.Intezer
 description: |
-   This artifact will trigger an intezer agent scan on the endpoint. 
+   This artifact will trigger an intezer agent scan on the endpoint.
 
-   Scan: The scanner collects running code from memory and sends it to Intezer Analyze. 
-   Scans take approximately five to ten minutes. The first scan may take additional time.  
-   Please note: The scanner only collects executable code, not documents or any other 
-   data that is not binary code.  
-   Analyze: The collected modules are analyzed using Genetic Malware Analysis technology.  
-   View results: https://analyze.intezer.com/ endpoint analysis report.  
+   Scan: The scanner collects running code from memory and sends it to Intezer Analyze.
+   Scans take approximately five to ten minutes. The first scan may take additional time.
+   Please note: The scanner only collects executable code, not documents or any other
+   data that is not binary code.
+   Analyze: The collected modules are analyzed using Genetic Malware Analysis technology.
+   View results: https://analyze.intezer.com/ endpoint analysis report.
 
 author: Matt Green - @mgreen27
 
@@ -23,7 +23,7 @@ type: CLIENT
 parameters:
    - name: ApiKey
      description: Intezer API key to scan with
-     default: 
+     default:
 
 sources:
   - precondition:
@@ -34,6 +34,6 @@ sources:
       LET bin <= SELECT *
         FROM Artifact.Generic.Utils.FetchBinary(
             ToolName="Intezer")
-      
+
       -- execute payload
-      SELECT * FROM execve(argv=[ bin.FullPath[0], '-k', ApiKey ])
+      SELECT * FROM execve(argv=[ bin.OSPath[0], '-k', ApiKey ])

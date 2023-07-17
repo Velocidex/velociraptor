@@ -29,8 +29,8 @@ sources:
     query:  |
       // Force the file to be copied to the real temp directory since
       // we are just about to remove the Tools directory.
-      LET bin <= SELECT copy(filename=FullPath,
-          dest=expand(path="%SYSTEMROOT%\\Temp\\") + basename(path=FullPath)) AS Dest
+      LET bin <= SELECT copy(filename=OSPath,
+          dest=expand(path="%SYSTEMROOT%\\Temp\\") + OSPath.Basename) AS Dest
       FROM Artifact.Generic.Utils.FetchBinary(
          ToolName="WindowsMSI", IsExecutable=FALSE,
          SleepDuration=SleepDuration)

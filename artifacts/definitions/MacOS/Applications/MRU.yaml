@@ -149,14 +149,14 @@ sources:
   - query: |
         -- Parse the Plist file
         SELECT * FROM foreach(row={
-          SELECT FullPath FROM glob(globs=FinderPlistPath)
+          SELECT OSPath FROM glob(globs=FinderPlistPath)
         }, query={
           SELECT * FROM foreach(row={
-            SELECT FXRecentFolders FROM plist(file=FullPath)
+            SELECT FXRecentFolders FROM plist(file=OSPath)
           }, query={
             SELECT *
             FROM foreach(row=FXRecentFolders, query={
-               SELECT *, FullPath
+               SELECT *, OSPath
                FROM ParseBookmark(Bookmark=_value.`file-bookmark`)
             })
           })

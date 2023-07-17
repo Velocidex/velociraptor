@@ -16,10 +16,10 @@ Queries:
       SELECT OSPath, Size
       FROM glob(globs=srcDir + '/artifacts/testdata/server/downloads/notebooks/**/*.zip')
     }, query={
-      SELECT OSPath.Path AS FullPath, Size
+      SELECT OSPath.Path AS OSPath, Size
       FROM glob(globs="**",
                 root=pathspec(DelegatePath=OSPath,
                               DelegateAccessor="auto"), accessor='zip')
       WHERE NOT IsDir
-      ORDER BY FullPath
+      ORDER BY OSPath
     })
