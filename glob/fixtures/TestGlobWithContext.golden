@@ -64,6 +64,6 @@
   "/usr/bin/diff Data: [/usr/*/diff]\n"
  ],
  "012 Multiple globs matching same file /bin/bash , /bin/ba*": [
-  "/bin/bash Data: [/bin/bash /bin/ba*]\n"
+  "/bin/bash Data: [/bin/ba* /bin/bash]\n"
  ]
 }

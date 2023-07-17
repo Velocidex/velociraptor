@@ -21,6 +21,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 
@@ -185,8 +186,10 @@ func TestGlobWithContext(t *testing.T) {
 			fs_accessor)
 		for row := range output_chan {
 			hit := row.(*GlobHit)
+			globs := hit.Globs()
+			sort.Strings(globs)
 			returned = append(returned,
-				fmt.Sprintf("%v Data: %v\n", hit.OSPath(), hit.Globs()))
+				fmt.Sprintf("%v Data: %v\n", hit.OSPath(), globs))
 		}
 
 		result.Set(fmt.Sprintf("%03d %s %s", idx, fixture.name,
