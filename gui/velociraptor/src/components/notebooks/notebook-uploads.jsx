@@ -55,13 +55,24 @@ export default class NotebookUploads extends Component {
     }
 
     getDownloadLink = (cell, row) =>{
-        var stats = row.stats || {};
+        let stats = row.stats || {};
+        let type = row.type || "";
+        let components = stats.components;
+
+        if (!components.length) {
+            return <></>;
+        };
+
+        components[components.length-1] += type;
+
         return <a href={api.href("/api/v1/DownloadVFSFile", {
-            fs_components: stats.components,
-            vfs_path: cell,
+            fs_components: components,
+            vfs_path: cell + type,
         }, {internal: true, arrayFormat: 'brackets'})}
                   target="_blank" download
-                  rel="noopener noreferrer">{row.name}</a>;
+                  rel="noopener noreferrer">
+                 {row.name} { type && <FontAwesomeIcon icon="note-sticky"/>}
+               </a>;
     }
 
     getDeleteLink = (cell, row) =>{
@@ -81,7 +92,7 @@ export default class NotebookUploads extends Component {
         files = files || [];
 
         let columns = formatColumns([
-            {dataField: "name", text: "", formatter: this.getDeleteLink},
+            {dataField: "name_", text: "", formatter: this.getDeleteLink},
             {dataField: "name", text: T("Name"),
              sort: true, filtered: true, formatter: this.getDownloadLink},
             {dataField: "size", text: T("Size")},

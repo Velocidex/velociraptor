@@ -9,6 +9,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
 )
@@ -62,6 +63,7 @@ func (self *NotebookStoreImpl) GetAvailableUploadFiles(notebook_id string) (
 			Name: parts[1],
 			Size: uint64(item.Size()),
 			Date: item.ModTime().UTC().Format(time.RFC3339),
+			Type: api.GetExtensionForFilestore(ps),
 			Stats: &api_proto.ContainerStats{
 				Components: ps.Components(),
 			},

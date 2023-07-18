@@ -40,6 +40,11 @@ func (self *FileStoreUploader) Upload(
 		store_as_name = filename
 	}
 
+	res, err := self.maybeCollectSparseFile(ctx, reader, store_as_name)
+	if err == nil {
+		return res, nil
+	}
+
 	output_path := self.root_path.AddUnsafeChild(store_as_name.Components...)
 	out_fd, err := self.file_store.WriteFile(output_path)
 	if err != nil {

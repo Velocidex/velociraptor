@@ -586,8 +586,8 @@ func NewGuiTemplateEngine(
 	*GuiTemplateEngine, error) {
 
 	uploader := &NotebookUploader{
-		config_obj:  config_obj,
-		PathManager: notebook_cell_path_manager,
+		config_obj:                 config_obj,
+		notebook_cell_path_manager: notebook_cell_path_manager,
 	}
 
 	base_engine, err := newBaseTemplateEngine(
