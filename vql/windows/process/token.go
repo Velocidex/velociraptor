@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"syscall"
 	"unsafe"
@@ -13,7 +14,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vwindows "www.velocidex.com/golang/velociraptor/vql/windows"
@@ -81,7 +81,37 @@ func (self TokenFunction) Call(
 	if err == nil {
 		for _, grp := range token_groups.AllGroups() {
 			group_name := grp.Sid.String()
-			groups.Set(group_name, grp.Attributes)
+			access := []string{}
+			if grp.Attributes&windows.SE_GROUP_ENABLED > 0 {
+				access = append(access, "ENABLED")
+			}
+			if grp.Attributes&windows.SE_GROUP_ENABLED_BY_DEFAULT > 0 {
+				access = append(access, "ENABLED_BY_DEFAULT")
+			}
+			if grp.Attributes&windows.SE_GROUP_INTEGRITY > 0 {
+				access = append(access, "INTEGRITY")
+			}
+			if grp.Attributes&windows.SE_GROUP_INTEGRITY_ENABLED > 0 {
+				access = append(access, "INTEGRITY_ENABLED")
+			}
+			if grp.Attributes&windows.SE_GROUP_LOGON_ID > 0 {
+				access = append(access, "LOGON_ID")
+			}
+			if grp.Attributes&windows.SE_GROUP_MANDATORY > 0 {
+				access = append(access, "MANDATORY")
+			}
+			if grp.Attributes&windows.SE_GROUP_OWNER > 0 {
+				access = append(access, "OWNER")
+			}
+			if grp.Attributes&windows.SE_GROUP_RESOURCE > 0 {
+				access = append(access, "RESOURCE")
+			}
+			if grp.Attributes&windows.SE_GROUP_USE_FOR_DENY_ONLY > 0 {
+				access = append(access, "USE_FOR_DENY_ONLY")
+			}
+			if len(access) > 0 {
+				groups.Set(group_name, strings.Join(access, ","))
+			}
 		}
 	}
 
@@ -90,6 +120,14 @@ func (self TokenFunction) Call(
 		Set("ProfileDir", vfilter.Null{}).
 		Set("IsElevated", token.IsElevated()).
 		Set("Groups", groups).
+		Set("GroupNames", func() vfilter.Any {
+			result := ordereddict.NewDict()
+			for _, k := range groups.Keys() {
+				v, _ := groups.Get(k)
+				result.Set(vwindows.GetNameFromSID(k), v)
+			}
+			return result
+		}).
 		Set("SID", tokenUser.User.Sid.String()).
 		Set("Privileges", vfilter.Null{}).
 		Set("PrimaryGroup", vfilter.Null{})
@@ -113,7 +151,6 @@ func (self TokenFunction) Call(
 	// Get privileges if possible
 	privs, err := getTokenPrivileges(token)
 	if err == nil {
-		utils.Debug(privs)
 		result.Update("Privileges", privs)
 	}
 
@@ -136,27 +173,27 @@ func getTokenPrivileges(t windows.Token) (*ordereddict.Dict, error) {
 				for _, luid_attr := range parsed.AllPrivileges() {
 					name := luid_resolver.Lookup(
 						luid_attr.Luid.LowPart, luid_attr.Luid.HighPart)
-					access := ""
+					access := []string{}
 					if luid_attr.Attributes&windows.SE_PRIVILEGE_ENABLED > 0 {
-						access = "enabled"
+						access = append(access, "ENABLED")
 					}
 
 					if luid_attr.Attributes&windows.SE_PRIVILEGE_ENABLED_BY_DEFAULT > 0 {
-						access += " default"
+						access = append(access, "ENABLED_BY_DEFAULT")
 					}
 
 					if luid_attr.Attributes&windows.SE_PRIVILEGE_REMOVED > 0 {
-						access += " removed"
+						access = append(access, "REMOVED")
 					}
 
 					if luid_attr.Attributes&windows.SE_PRIVILEGE_USED_FOR_ACCESS > 0 {
-						access += " used"
+						access = append(access, "USED_FOR_ACCESS")
 					}
 
 					// Only include privileges that are set to
 					// something.
-					if access != "" {
-						result.Set(name, access)
+					if len(access) > 0 {
+						result.Set(name, strings.Join(access, ","))
 					}
 				}
 				return result, nil

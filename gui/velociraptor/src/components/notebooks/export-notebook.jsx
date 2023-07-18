@@ -46,6 +46,7 @@ export default class ExportNotebook extends React.Component {
 
     fetchNotebookDetails = () => {
         api.get("v1/GetNotebooks", {
+            include_uploads: true,
             notebook_id: this.props.notebook.notebook_id,
         }, this.source.token).then(resp=>{
             let items = resp.data.items;

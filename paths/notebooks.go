@@ -23,12 +23,12 @@ func NotebookDir() api.DSPathSpec {
 
 // Where to store attachments? In the notebook path.
 func (self *NotebookPathManager) Attachment(name string) api.FSPathSpec {
-	return self.root.AddUnsafeChild(self.notebook_id, "files", name).
+	return self.root.AddUnsafeChild(self.notebook_id, "uploads", "attach/"+name).
 		AsFilestorePath().SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
 func (self *NotebookPathManager) AttachmentDirectory() api.FSPathSpec {
-	return self.root.AddChild(self.notebook_id, "files").
+	return self.root.AddChild(self.notebook_id, "uploads").
 		AsFilestorePath().SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
@@ -188,17 +188,19 @@ func (self *NotebookCellPathManager) QueryStorage(id int64) *NotebookCellQuery {
 	}
 }
 
-// Uploads are stored in each cell separately.
+// Uploads are stored at the network level.
 func (self *NotebookCellPathManager) UploadsDir() api.FSPathSpec {
 	return self.root.AsFilestorePath().
-		AddUnsafeChild(self.notebook_id, self.cell_id, "uploads").
+		AddUnsafeChild(self.notebook_id, "uploads").
 		SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
 func (self *NotebookCellPathManager) GetUploadsFile(filename string) api.FSPathSpec {
+	// Cell id and filename are combined so we can read all
+	// attachments in a single ListDir
 	return self.root.AsFilestorePath().
 		AddUnsafeChild(self.notebook_id,
-			self.cell_id, "uploads", filename).
+			"uploads", fmt.Sprintf("%s/%s", self.cell_id, filename)).
 		SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 

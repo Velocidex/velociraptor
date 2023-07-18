@@ -741,12 +741,21 @@ func getTLSConfig(config_obj *config_proto.Config, in *tls.Config) error {
 		expected_clients = config_obj.Frontend.Resources.ExpectedClients
 	}
 
+	in.Certificates = certs
+
+	// If the user requested it we loosen the TLS restrictions to
+	// accept default protocols.
+	if config_obj.Client != nil && config_obj.Client.Crypto != nil &&
+		config_obj.Client.Crypto.AllowWeakTlsServer {
+		return nil
+	}
+
 	in.MinVersion = tls.VersionTLS13
 	in.CurvePreferences = []tls.CurveID{
 		tls.CurveP521, tls.CurveP384, tls.CurveP256}
 	in.ClientSessionCache = tls.NewLRUClientSessionCache(int(expected_clients))
 	in.PreferServerCipherSuites = true
-	in.Certificates = certs
+
 	in.CipherSuites = []uint16{
 		tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
 		tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,

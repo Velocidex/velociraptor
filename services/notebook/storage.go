@@ -1,6 +1,7 @@
 package notebook
 
 import (
+	"context"
 	"errors"
 	"time"
 
@@ -19,6 +20,7 @@ type NotebookStore interface {
 	SetNotebookCell(notebook_id string, in *api_proto.NotebookCell) error
 	GetNotebookCell(notebook_id, cell_id string) (*api_proto.NotebookCell, error)
 	StoreAttachment(notebook_id, filename string, data []byte) (api.FSPathSpec, error)
+	RemoveAttachment(ctx context.Context, notebook_id string, components []string) error
 
 	UpdateShareIndex(notebook *api_proto.NotebookMetadata) error
 

@@ -105,7 +105,7 @@ type IHuntDispatcher interface {
 	// periodically and can also be triggered when a change is
 	// written to the datastore (e.g. new hunt scheduled) to pick
 	// up the latest hunts.
-	Refresh(config_obj *config_proto.Config) error
+	Refresh(ctx context.Context, config_obj *config_proto.Config) error
 
 	// Clean up and close the hunt dispatcher. Only used in tests.
 	Close(config_obj *config_proto.Config)

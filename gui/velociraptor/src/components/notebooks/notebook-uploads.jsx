@@ -7,6 +7,7 @@ import Button from 'react-bootstrap/Button';
 import BootstrapTable from 'react-bootstrap-table-next';
 import { formatColumns } from "../core/table.jsx";
 import filterFactory from 'react-bootstrap-table2-filter';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
@@ -53,16 +54,36 @@ export default class NotebookUploads extends Component {
         });
     }
 
+    getDownloadLink = (cell, row) =>{
+        var stats = row.stats || {};
+        return <a href={api.href("/api/v1/DownloadVFSFile", {
+            fs_components: stats.components,
+            vfs_path: cell,
+        }, {internal: true, arrayFormat: 'brackets'})}
+                  target="_blank" download
+                  rel="noopener noreferrer">{row.name}</a>;
+    }
+
+    getDeleteLink = (cell, row) =>{
+        var stats = row.stats || {};
+        return <Button onClick={()=>{
+            api.post("v1/RemoveNotebookAttachment", {
+                components: stats.components,
+                notebook_id: this.props.notebook.notebook_id,
+            }, this.source.token).then(this.fetchNotebookDetails);
+        }}><FontAwesomeIcon icon="trash"/> </Button>;
+    }
+
     render() {
         let files = this.state.notebook &&
             this.state.notebook.available_uploads &&
             this.state.notebook.available_uploads.files;
         files = files || [];
 
-        // TODO: build a proper upload widget
         let columns = formatColumns([
+            {dataField: "name", text: "", formatter: this.getDeleteLink},
             {dataField: "name", text: T("Name"),
-             sort: true, filtered: true},
+             sort: true, filtered: true, formatter: this.getDownloadLink},
             {dataField: "size", text: T("Size")},
             {dataField: "date", text: T("Date"), type: "timestamp"},
         ]);
