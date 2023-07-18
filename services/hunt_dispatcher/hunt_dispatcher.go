@@ -399,9 +399,31 @@ func (self *HuntDispatcher) Close(config_obj *config_proto.Config) {
 	atomic.SwapUint64(&self.last_timestamp, 0)
 }
 
+func (self *HuntDispatcher) checkForExpiry(
+	ctx context.Context, config_obj *config_proto.Config) {
+	if self.I_am_master {
+		// Check if the hunt is expired and adjust its state if so
+		now := uint64(time.Now().UnixNano() / 1000)
+
+		self.ApplyFuncOnHunts(func(hunt_obj *api_proto.Hunt) error {
+			if now > hunt_obj.Expires {
+				self.MutateHunt(ctx, config_obj,
+					&api_proto.HuntMutation{
+						HuntId: hunt_obj.HuntId,
+						Stats:  &api_proto.HuntStats{Stopped: true},
+					})
+			}
+			return nil
+		})
+	}
+}
+
 // Check for new hunts from the datastore. The master frontend will
 // also flush updated hunt records to the datastore.
-func (self *HuntDispatcher) Refresh(config_obj *config_proto.Config) error {
+func (self *HuntDispatcher) Refresh(
+	ctx context.Context, config_obj *config_proto.Config) error {
+	self.checkForExpiry(ctx, config_obj)
+
 	// Now read all the data again from the data store.
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -465,6 +487,7 @@ func (self *HuntDispatcher) Refresh(config_obj *config_proto.Config) error {
 			atomic.StoreUint64(&self.last_timestamp, hunt_obj.StartTime)
 			dispatcherCurrentTimestamp.Set(float64(last_timestamp))
 		}
+
 		self.hunts[hunt_id] = &HuntRecord{Hunt: hunt_obj}
 	}
 
@@ -596,7 +619,7 @@ func (self *HuntDispatcher) CreateHunt(
 	if err != nil {
 		return "", err
 	}
-	return hunt.HuntId, hunt_dispatcher.Refresh(config_obj)
+	return hunt.HuntId, hunt_dispatcher.Refresh(ctx, config_obj)
 }
 
 func NewHuntDispatcher(
@@ -634,7 +657,7 @@ func NewHuntDispatcher(
 
 			case <-time.After(10 * time.Second):
 				// Re-read the hunts from the data store.
-				err := service.Refresh(config_obj)
+				err := service.Refresh(ctx, config_obj)
 				if err != nil {
 					logger.Error("Unable to sync hunts: %v", err)
 				}
@@ -644,7 +667,7 @@ func NewHuntDispatcher(
 
 	// Try to refresh the hunts table the first time. If we cant
 	// we will just keep trying anyway later.
-	err := service.Refresh(config_obj)
+	err := service.Refresh(ctx, config_obj)
 	if err != nil {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Error("Unable to Refresh hunt dispatcher: %v", err)

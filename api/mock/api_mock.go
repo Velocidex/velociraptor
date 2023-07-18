@@ -1001,6 +1001,26 @@ func (mr *MockAPIClientMockRecorder) ReformatVQL(arg0, arg1 interface{}, arg2 ..
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ReformatVQL", reflect.TypeOf((*MockAPIClient)(nil).ReformatVQL), varargs...)
 }
 
+// RemoveNotebookAttachment mocks base method.
+func (m *MockAPIClient) RemoveNotebookAttachment(arg0 context.Context, arg1 *proto0.NotebookFileUploadRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "RemoveNotebookAttachment", varargs...)
+	ret0, _ := ret[0].(*emptypb.Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RemoveNotebookAttachment indicates an expected call of RemoveNotebookAttachment.
+func (mr *MockAPIClientMockRecorder) RemoveNotebookAttachment(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveNotebookAttachment", reflect.TypeOf((*MockAPIClient)(nil).RemoveNotebookAttachment), varargs...)
+}
+
 // SearchFile mocks base method.
 func (m *MockAPIClient) SearchFile(arg0 context.Context, arg1 *proto0.SearchFileRequest, arg2 ...grpc.CallOption) (*proto0.SearchFileResponse, error) {
 	m.ctrl.T.Helper()

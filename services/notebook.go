@@ -17,7 +17,7 @@ func GetNotebookManager(config_obj *config_proto.Config) (NotebookManager, error
 }
 
 type NotebookManager interface {
-	GetNotebook(ctx context.Context, notebook_id string) (
+	GetNotebook(ctx context.Context, notebook_id string, include_uploads bool) (
 		*api_proto.NotebookMetadata, error)
 
 	GetSharedNotebooks(ctx context.Context,
@@ -55,4 +55,7 @@ type NotebookManager interface {
 	UploadNotebookAttachment(ctx context.Context,
 		in *api_proto.NotebookFileUploadRequest) (
 		*api_proto.NotebookFileUploadResponse, error)
+
+	RemoveNotebookAttachment(ctx context.Context,
+		notebook_id string, components []string) error
 }

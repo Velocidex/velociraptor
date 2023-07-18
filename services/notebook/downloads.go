@@ -1,6 +1,9 @@
 package notebook
 
 import (
+	"context"
+	"errors"
+	"strings"
 	"time"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -51,16 +54,41 @@ func (self *NotebookStoreImpl) GetAvailableUploadFiles(notebook_id string) (
 
 	for _, item := range files {
 		ps := item.PathSpec()
+		parts := strings.SplitN(ps.Base(), "/", 2)
+		if len(parts) < 2 {
+			continue
+		}
 
 		result.Files = append(result.Files, &api_proto.AvailableDownloadFile{
-			Name:     item.Name(),
-			Type:     api.GetExtensionForFilestore(ps),
-			Path:     ps.AsClientPath(),
-			Size:     uint64(item.Size()),
-			Date:     item.ModTime().UTC().Format(time.RFC3339),
-			Complete: true,
+			Name: parts[1],
+			Size: uint64(item.Size()),
+			Date: item.ModTime().UTC().Format(time.RFC3339),
+			Type: api.GetExtensionForFilestore(ps),
+			Stats: &api_proto.ContainerStats{
+				Components: ps.Components(),
+			},
 		})
 	}
 
 	return result, nil
+}
+
+func (self *NotebookManager) RemoveNotebookAttachment(ctx context.Context,
+	notebook_id string, components []string) error {
+	return self.Store.RemoveAttachment(ctx, notebook_id, components)
+}
+
+func (self *NotebookStoreImpl) RemoveAttachment(ctx context.Context,
+	notebook_id string, components []string) error {
+
+	if len(components) == 0 {
+		return errors.New("Attachment components empty")
+	}
+
+	notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
+	attachment_path := notebook_path_manager.AttachmentDirectory().
+		AddUnsafeChild(components[len(components)-1])
+
+	file_store_factory := file_store.GetFileStore(self.config_obj)
+	return file_store_factory.Delete(attachment_path)
 }

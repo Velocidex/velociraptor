@@ -1060,6 +1060,11 @@ message CryptoConfig {
     string certificate_verification_mode = 3 [(sem_type) = {
             description: "Selects the way in which Velociraptor verifies TLS certificates. Allowed values: PKI (the default), PKI_OR_THUMBPRINT, THUMBPRINT_ONLY"
         }];
+
+    // If this is set we do not enforce minimum configuration for TLS
+    // servers. This is required when connecting to Velociraptor with
+    // some legacy clients (like Powershell) who do not support TLS13
+    bool allow_weak_tls_server = 4;
 }
 
 message MountPoint {

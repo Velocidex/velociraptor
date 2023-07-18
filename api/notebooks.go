@@ -27,6 +27,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+const (
+	SKIP_UPLOADS = false
+)
+
 // Get all the current user's notebooks and those notebooks shared
 // with them.
 func (self *ApiServer) GetNotebooks(
@@ -58,7 +62,7 @@ func (self *ApiServer) GetNotebooks(
 
 	// We want a single notebook metadata.
 	if in.NotebookId != "" {
-		notebook_metadata, err := notebook_manager.GetNotebook(ctx, in.NotebookId)
+		notebook_metadata, err := notebook_manager.GetNotebook(ctx, in.NotebookId, in.IncludeUploads)
 		// Handle the EOF especially: it means there is no such
 		// notebook and return an empty result set.
 		if errors.Is(err, os.ErrNotExist) ||
@@ -190,7 +194,7 @@ func (self *ApiServer) UpdateNotebook(
 		return nil, Status(self.verbose, err)
 	}
 
-	old_notebook, err := notebook_manager.GetNotebook(ctx, in.NotebookId)
+	old_notebook, err := notebook_manager.GetNotebook(ctx, in.NotebookId, SKIP_UPLOADS)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -256,7 +260,7 @@ func (self *ApiServer) GetNotebookCell(
 		return nil, Status(self.verbose, err)
 	}
 
-	notebook_metadata, err := notebook_manager.GetNotebook(ctx, in.NotebookId)
+	notebook_metadata, err := notebook_manager.GetNotebook(ctx, in.NotebookId, SKIP_UPLOADS)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -302,7 +306,7 @@ func (self *ApiServer) UpdateNotebookCell(
 	}
 
 	// Check that the user has access to this notebook.
-	notebook_metadata, err := notebook_manager.GetNotebook(ctx, in.NotebookId)
+	notebook_metadata, err := notebook_manager.GetNotebook(ctx, in.NotebookId, SKIP_UPLOADS)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -537,4 +541,39 @@ func exportHTMLNotebook(config_obj *config_proto.Config,
 	}()
 
 	return nil
+}
+
+func (self *ApiServer) RemoveNotebookAttachment(
+	ctx context.Context,
+	in *api_proto.NotebookFileUploadRequest) (*emptypb.Empty, error) {
+	users := services.GetUserManager()
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+	principal := user_record.Name
+
+	permissions := acls.PREPARE_RESULTS
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
+	if !perm || err != nil {
+		return nil, PermissionDenied(err,
+			"User is not allowed to update notebooks.")
+	}
+
+	notebook_manager, err := services.GetNotebookManager(org_config_obj)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	notebook, err := notebook_manager.GetNotebook(ctx, in.NotebookId, SKIP_UPLOADS)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	if !notebook_manager.CheckNotebookAccess(notebook, principal) {
+		return nil, InvalidStatus("Notebook is not shared with user.")
+	}
+
+	return &emptypb.Empty{}, notebook_manager.RemoveNotebookAttachment(ctx,
+		in.NotebookId, in.Components)
 }

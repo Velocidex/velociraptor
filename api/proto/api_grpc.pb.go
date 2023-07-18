@@ -106,6 +106,8 @@ type APIClient interface {
 	CancelNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	CreateNotebookDownloadFile(ctx context.Context, in *NotebookExportRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	UploadNotebookAttachment(ctx context.Context, in *NotebookFileUploadRequest, opts ...grpc.CallOption) (*NotebookFileUploadResponse, error)
+	// Remove a notebook attachment.
+	RemoveNotebookAttachment(ctx context.Context, in *NotebookFileUploadRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	// This can be used by API clients to fetch file content.
 	VFSGetBuffer(ctx context.Context, in *VFSFileBuffer, opts ...grpc.CallOption) (*VFSFileBuffer, error)
 	// Streaming free form VQL.
@@ -673,6 +675,15 @@ func (c *aPIClient) UploadNotebookAttachment(ctx context.Context, in *NotebookFi
 	return out, nil
 }
 
+func (c *aPIClient) RemoveNotebookAttachment(ctx context.Context, in *NotebookFileUploadRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/proto.API/RemoveNotebookAttachment", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *aPIClient) VFSGetBuffer(ctx context.Context, in *VFSFileBuffer, opts ...grpc.CallOption) (*VFSFileBuffer, error) {
 	out := new(VFSFileBuffer)
 	err := c.cc.Invoke(ctx, "/proto.API/VFSGetBuffer", in, out, opts...)
@@ -897,6 +908,8 @@ type APIServer interface {
 	CancelNotebookCell(context.Context, *NotebookCellRequest) (*empty.Empty, error)
 	CreateNotebookDownloadFile(context.Context, *NotebookExportRequest) (*empty.Empty, error)
 	UploadNotebookAttachment(context.Context, *NotebookFileUploadRequest) (*NotebookFileUploadResponse, error)
+	// Remove a notebook attachment.
+	RemoveNotebookAttachment(context.Context, *NotebookFileUploadRequest) (*empty.Empty, error)
 	// This can be used by API clients to fetch file content.
 	VFSGetBuffer(context.Context, *VFSFileBuffer) (*VFSFileBuffer, error)
 	// Streaming free form VQL.
@@ -1100,6 +1113,9 @@ func (UnimplementedAPIServer) CreateNotebookDownloadFile(context.Context, *Noteb
 }
 func (UnimplementedAPIServer) UploadNotebookAttachment(context.Context, *NotebookFileUploadRequest) (*NotebookFileUploadResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UploadNotebookAttachment not implemented")
+}
+func (UnimplementedAPIServer) RemoveNotebookAttachment(context.Context, *NotebookFileUploadRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemoveNotebookAttachment not implemented")
 }
 func (UnimplementedAPIServer) VFSGetBuffer(context.Context, *VFSFileBuffer) (*VFSFileBuffer, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VFSGetBuffer not implemented")
@@ -2224,6 +2240,24 @@ func _API_UploadNotebookAttachment_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _API_RemoveNotebookAttachment_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NotebookFileUploadRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).RemoveNotebookAttachment(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/RemoveNotebookAttachment",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).RemoveNotebookAttachment(ctx, req.(*NotebookFileUploadRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _API_VFSGetBuffer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(VFSFileBuffer)
 	if err := dec(in); err != nil {
@@ -2656,6 +2690,10 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UploadNotebookAttachment",
 			Handler:    _API_UploadNotebookAttachment_Handler,
+		},
+		{
+			MethodName: "RemoveNotebookAttachment",
+			Handler:    _API_RemoveNotebookAttachment_Handler,
 		},
 		{
 			MethodName: "VFSGetBuffer",

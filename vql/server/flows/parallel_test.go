@@ -199,7 +199,7 @@ func (self *TestSuite) TestHuntsSource() {
 	}
 
 	hunt_rs_writer.Close()
-	hunt_dispatcher.Refresh(self.ConfigObj)
+	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj)
 
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,

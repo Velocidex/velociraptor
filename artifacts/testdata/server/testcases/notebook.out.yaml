@@ -32,10 +32,6 @@ LET _ <= mock_time(now=1669861615)[]LET _ <= SELECT OSPath, file_store_delete(pa
   "Size": 11
  },
  {
-  "OSPath": "/N.CG74N2JSSV75S/files/NA.CG75NPHSURTDQimage.png",
-  "Size": 9295
- },
- {
   "OSPath": "/Notebook.yaml",
   "Size": 1670
  }
