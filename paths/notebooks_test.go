@@ -17,7 +17,7 @@ func (self *PathManagerTestSuite) TestNotebookPathManager() {
 	assert.Equal(self.T(), "/ds/notebooks/N.123.json.db",
 		self.getDatastorePath(manager.Path()))
 
-	assert.Equal(self.T(), "/fs/notebooks/N.123/files/NA.123%2Fimage.png",
+	assert.Equal(self.T(), "/fs/notebooks/N.123/uploads/attach%2FNA.123%2Fimage.png",
 		self.getFilestorePath(manager.Attachment("NA.123/image.png")))
 
 	// Exports are available in the (authenticated) downloads directory.
