@@ -383,11 +383,14 @@ func EncodeIntoResponsePackets(
 			result_chan <- result
 			part += 1
 		}
+
 		// Send the last payload outstanding.
 		defer ship_payload()
-		for {
-			deadline := time.After(time.Duration(max_wait) * time.Second)
 
+		// First deadline is max_wait in the future
+		deadline := time.After(time.Duration(max_wait) * time.Second)
+
+		for {
 			select {
 			case <-ctx.Done():
 				return
@@ -398,6 +401,7 @@ func EncodeIntoResponsePackets(
 				if total_rows > 0 {
 					ship_payload()
 				}
+
 				// Update the deadline to re-fire next.
 				deadline = time.After(time.Duration(max_wait) * time.Second)
 
@@ -429,8 +433,8 @@ func EncodeIntoResponsePackets(
 				if total_rows >= maxrows ||
 					buffer.Len() > max_row_buffer_size {
 					ship_payload()
-					deadline = time.After(time.Duration(max_wait) *
-						time.Second)
+					deadline = time.After(
+						time.Duration(max_wait) * time.Second)
 				}
 			}
 		}
