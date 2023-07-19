@@ -15,6 +15,13 @@ const requestToParameters = (request) => {
             _.each(spec.parameters.env, param=>{
                 artifact_parameters[param.key] = param.value;
             });
+            if (spec.max_batch_wait) {
+                artifact_parameters["max_batch_wait"] = spec.max_batch_wait;
+            }
+            if (spec.max_batch_rows) {
+                artifact_parameters["max_batch_rows"] = spec.max_batch_rows;
+            }
+
             parameters[spec.artifact] = artifact_parameters;
         });
 

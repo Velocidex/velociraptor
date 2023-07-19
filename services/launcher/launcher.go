@@ -199,6 +199,15 @@ func (self *Launcher) CompileCollectorArgs(
 	for _, spec := range getCollectorSpecs(collector_request) {
 		var artifact *artifacts_proto.Artifact = nil
 
+		// Batching control
+		var max_batch_wait, max_batch_rows, max_batch_row_buffer uint64
+
+		if config_obj != nil && config_obj.Defaults != nil {
+			max_batch_rows = config_obj.Defaults.MaxRows
+			max_batch_row_buffer = config_obj.Defaults.MaxRowBufferSize
+			max_batch_wait = config_obj.Defaults.MaxBatchWait
+		}
+
 		if collector_request.AllowCustomOverrides {
 			artifact, _ = repository.Get(ctx, config_obj, "Custom."+spec.Artifact)
 		}
@@ -233,6 +242,32 @@ func (self *Launcher) CompileCollectorArgs(
 			if artifact.Resources.MaxUploadBytes > max_upload_bytes {
 				max_upload_bytes = artifact.Resources.MaxUploadBytes
 			}
+
+			if artifact.Resources.MaxBatchWait > max_batch_wait {
+				max_batch_wait = artifact.Resources.MaxBatchWait
+			}
+
+			if artifact.Resources.MaxBatchRows > max_batch_rows {
+				max_batch_rows = artifact.Resources.MaxBatchRows
+			}
+
+			if artifact.Resources.MaxBatchRowsBuffer > max_batch_row_buffer {
+				max_batch_row_buffer = artifact.Resources.MaxBatchRowsBuffer
+			}
+		}
+
+		// If the spec specifies a value it overrides the artifact
+		// definition
+		if spec.MaxBatchRows > 0 {
+			max_batch_rows = spec.MaxBatchRows
+		}
+
+		if spec.MaxBatchRowsBuffer > 0 {
+			max_batch_row_buffer = spec.MaxBatchRowsBuffer
+		}
+
+		if spec.MaxBatchWait > 0 {
+			max_batch_wait = spec.MaxBatchWait
 		}
 
 		for _, expanded_artifact := range expandArtifacts(artifact) {
@@ -242,6 +277,10 @@ func (self *Launcher) CompileCollectorArgs(
 			if err != nil {
 				return nil, err
 			}
+
+			vql_collector_args.MaxRow = max_batch_rows
+			vql_collector_args.MaxWait = max_batch_wait
+			vql_collector_args.MaxRowBufferSize = max_batch_row_buffer
 
 			// If the request specifies resource controls
 			// they override the defaults.
@@ -263,11 +302,6 @@ func (self *Launcher) CompileCollectorArgs(
 
 			if collector_request.Timeout > 0 {
 				vql_collector_args.Timeout = collector_request.Timeout
-			}
-
-			if config_obj != nil && config_obj.Defaults != nil {
-				vql_collector_args.MaxRow = config_obj.Defaults.MaxRows
-				vql_collector_args.MaxRowBufferSize = config_obj.Defaults.MaxRowBufferSize
 			}
 
 			if vql_collector_args.MaxRow == 0 {

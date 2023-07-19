@@ -8,12 +8,65 @@ import Button from 'react-bootstrap/Button';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import Form from 'react-bootstrap/Form';
+
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import Modal from 'react-bootstrap/Modal';
 import T from '../i8n/i8n.jsx';
 import BootstrapTable from 'react-bootstrap-table-next';
+
+class ResourceControl extends React.Component {
+    static propTypes = {
+        parameters: PropTypes.array,
+        artifact: PropTypes.string,
+        setValue: PropTypes.func.isRequired,
+    }
+
+    state = {
+        invalid: false,
+        visible: false,
+    }
+
+    render() {
+        if (!this.state.visible) {
+            return <Button onClick={()=>this.setState(
+                {visible: !this.state.visible})}>
+                     <FontAwesomeIcon icon="wrench"/>
+                   </Button>;
+        }
+
+        let params = this.props.parameters[this.props.artifact];
+        let max_batch_wait = params.max_batch_wait;
+        let max_batch_rows = params.max_batch_rows;
+        let params_batch_wait = {validating_regex: "\\d+",
+                                 description: "Default",
+                                 name: "max_batch_wait"};
+        let params_batch_rows = {validating_regex: "\\d+",
+                                 description: "Default",
+                                 name: "max_batch_rows"};
+
+        return (
+            <Form.Group as={Row}>
+              <Form.Label column sm="3">
+                {T("Configuration")}
+              </Form.Label>
+              <Col sm="8">
+                <VeloForm param={params_batch_wait}
+                          value={max_batch_wait}
+                          setValue={x=>this.props.setValue("max_batch_wait", x)}
+                />
+
+                <VeloForm param={params_batch_rows}
+                          value={max_batch_rows}
+                          setValue={x=>this.props.setValue("max_batch_rows", x)}
+                />
+              </Col>
+            </Form.Group>
+        );
+    }
+}
 
 class ParameterSuggestion extends React.Component {
     static propTypes = {
@@ -165,7 +218,13 @@ export default class NewCollectionConfigParameters extends React.Component {
                );
         });
 
-        let results = [];
+        let results = [
+            <ResourceControl
+              key="X"
+              parameters={this.props.parameters}
+              artifact={artifact.name}
+              setValue={(param_name, value) => this.setValue(
+                  artifact.name, param_name, value)}/>];
         if(suggestions.length > 6) {
             results.push(
                 <ParameterSuggestion key="Autosuggest" name="Autosuggest"

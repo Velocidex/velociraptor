@@ -1001,6 +1001,7 @@ message Defaults {
     // POST messages. If not set we use client defaults.
     uint64 max_rows = 30;
     uint64 max_row_buffer_size = 31;
+    uint64 max_batch_wait = 35;
 
     // When the server is in lockdown mode the following permissions
     // will be denied (Even for administrators).

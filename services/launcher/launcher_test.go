@@ -1144,6 +1144,96 @@ sources:
 	assert.Equal(self.T(), request.MaxRows, uint64(100))
 }
 
+func (self *LauncherTestSuite) TestMaxWait() {
+	artifact_definitions := []string{`
+name: Test.Artifact.MaxWait
+resources:
+  max_batch_wait: 22
+  max_batch_rows: 555
+
+type: CLIENT_EVENT
+
+sources:
+- query: |
+    SELECT * FROM scope()
+`, `
+name: Test.Artifact.Default
+type: CLIENT_EVENT
+sources:
+- query: |
+    SELECT * FROM scope()
+`}
+
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
+	repository := manager.NewRepository()
+
+	for _, definition := range artifact_definitions {
+		_, err := repository.LoadYaml(definition,
+			services.ArtifactOptions{
+				ValidateArtifact:  true,
+				ArtifactIsBuiltIn: true})
+
+		assert.NoError(self.T(), err)
+	}
+
+	request := &flows_proto.ArtifactCollectorArgs{
+		Artifacts: []string{
+			"Test.Artifact.MaxWait",
+			"Test.Artifact.Default",
+		},
+		Specs: []*flows_proto.ArtifactSpec{
+			{
+				Artifact: "Test.Artifact.MaxWait",
+			},
+			{
+				Artifact: "Test.Artifact.Default",
+			},
+		},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	// Compile the artifact request into VQL
+	acl_manager := acl_managers.NullACLManager{}
+	launcher, err := services.GetLauncher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	// No timeout specified in the request causes the timeout to
+	// be set according to the artifact defaults.
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.ConfigObj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+
+	// This artifact default is specified as MaxBatchRows = 555
+	assert.Equal(self.T(), getReqName(compiled[0]), "Test.Artifact.MaxWait")
+	assert.Equal(self.T(), compiled[0].MaxRow, uint64(555))
+	assert.Equal(self.T(), compiled[0].MaxWait, uint64(22))
+
+	// This artifact is not specified so MaxBatchRows is the default
+	// 1000
+	assert.Equal(self.T(), getReqName(compiled[1]), "Test.Artifact.Default")
+	assert.Equal(self.T(), compiled[1].MaxRow, uint64(1000))
+
+	// Specifying MaxBatchRows in the spec will override the default
+	request.Specs[0].MaxBatchRows = 12
+	request.Specs[0].MaxBatchWait = 66
+
+	compiled, err = launcher.CompileCollectorArgs(
+		ctx, self.ConfigObj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+
+	// The spec defines the Test.Artifact.MaxWait should have MaxRow = 12
+	assert.Equal(self.T(), getReqName(compiled[0]), "Test.Artifact.MaxWait")
+	assert.Equal(self.T(), compiled[0].MaxRow, uint64(12))
+	assert.Equal(self.T(), compiled[0].MaxWait, uint64(66))
+
+	// Does not affect the Test.Artifact.Default request.
+	assert.Equal(self.T(), getReqName(compiled[1]), "Test.Artifact.Default")
+	assert.Equal(self.T(), compiled[1].MaxRow, uint64(1000))
+}
+
 func getReqName(in *actions_proto.VQLCollectorArgs) string {
 	for _, query := range in.Query {
 		if query.Name != "" {
