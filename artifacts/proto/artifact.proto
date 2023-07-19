@@ -319,4 +319,9 @@ message Resources {
     // Default resource use for the entire collection.
     uint64 max_rows = 2;
     uint64 max_upload_bytes = 3;
+
+    // Batching control
+    uint64 max_batch_wait = 7;
+    uint64 max_batch_rows = 8;
+    uint64 max_batch_rows_buffer = 9;
 }

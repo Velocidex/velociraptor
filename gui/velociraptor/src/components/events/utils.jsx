@@ -18,7 +18,15 @@ function _ArtifactCollectorArgs_to_label_table(event_table) {
 
     _.each(event_table.specs, spec=>{
         let artifact_name = spec.artifact;
-        result.specs[artifact_name] = _ArtifactParameters2dict(spec.parameters);
+        let param_dict = _ArtifactParameters2dict(spec.parameters);
+        result.specs[artifact_name] = param_dict;
+        if(spec.max_batch_wait) {
+            param_dict.max_batch_wait = spec.max_batch_wait;
+        }
+
+        if(spec.max_batch_rows) {
+            param_dict.max_batch_rows = spec.max_batch_rows;
+        }
     });
 
     // If there is no spec the add an empty one.
@@ -51,6 +59,9 @@ function _ArtifactCollectorArgs_to_label_table(event_table) {
              key2, value2,
         },
    }
+
+   The special parameters max_batch_wait and max_batch_rows are
+   extracted into the spec protobuf from the general parameter object.
 */
 function proto2tables(table, cb) {
     let definitions = {};
@@ -112,11 +123,23 @@ function _label_table2ArtifactCollectorArgs(label_table) {
 
         let artifact_name = k;
         let parameters = {env: []};
+        let spec = {artifact: artifact_name,
+                    parameters: parameters};
+
         _.each(v, (v, k)=>{
+            if(k==="max_batch_wait") {
+                spec.max_batch_wait = parseInt(v);
+                return;
+            }
+            if(k==="max_batch_rows") {
+                spec.max_batch_rows = parseInt(v);
+                return;
+            }
+
             parameters.env.push({key: k, value: v});
         });
 
-        result.specs.push({artifact: artifact_name, parameters: parameters});
+        result.specs.push(spec);
     });
 
     return result;
