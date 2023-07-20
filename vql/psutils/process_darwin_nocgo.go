@@ -3,13 +3,8 @@
 
 package psutils
 
-import  (
-	"errors"
+import (
 	"context"
-)
-
-var (
-	NotImplementedError = errors.New("NotImplementedError")
 )
 
 func cmdNameWithContext(ctx context.Context, pid int32) (string, error) {

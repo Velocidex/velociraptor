@@ -5,12 +5,13 @@ package psutils
 
 import (
 	"context"
-	"time"
-	"golang.org/x/sys/unix"
 	"os/user"
 	"strconv"
 	"strings"
-	
+	"time"
+
+	"golang.org/x/sys/unix"
+
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -32,7 +33,9 @@ func ListProcesses(ctx context.Context) ([]*ordereddict.Dict, error) {
 	}
 
 	for _, item := range processes {
-		if false { utils.Debug(item)}
+		if false {
+			utils.Debug(item)
+		}
 		result = append(result, getProcessData(ctx, &item))
 	}
 
@@ -61,7 +64,7 @@ func getKProc(pid int32) (*unix.KinfoProc, error) {
 func getProcessData(ctx context.Context,
 	proc *unix.KinfoProc) *ordereddict.Dict {
 	pid := proc.Proc.P_pid
-	
+
 	name, err := cmdNameWithContext(ctx, pid)
 	if err != nil {
 		name = ByteToString(proc.Proc.P_comm[:])
@@ -85,7 +88,7 @@ func getProcessData(ctx context.Context,
 	}
 
 	memory_info, _ := MemoryInfoWithContext(ctx, pid)
-	
+
 	result := ordereddict.NewDict().
 		SetCaseInsensitive().
 		Set("Pid", pid).
@@ -104,4 +107,8 @@ func getProcessData(ctx context.Context,
 		Set("MemoryInfo", memory_info)
 
 	return result
+}
+
+func IOCountersWithContext(ctx context.Context, pid int32) (*IOCountersStat, error) {
+	return nil, NotImplementedError
 }

@@ -6,8 +6,19 @@ package psutils
 import (
 	"context"
 	"fmt"
+	"syscall"
+	"unsafe"
 
 	"golang.org/x/sys/windows"
+)
+
+const (
+	processQueryInformation = windows.PROCESS_QUERY_LIMITED_INFORMATION
+)
+
+var (
+	Modkernel32              = windows.NewLazySystemDLL("kernel32.dll")
+	procGetProcessIoCounters = Modkernel32.NewProc("GetProcessIoCounters")
 )
 
 func PidExistsWithContext(ctx context.Context, pid int32) (bool, error) {
@@ -41,4 +52,67 @@ func PidExistsWithContext(ctx context.Context, pid int32) (bool, error) {
 	defer windows.CloseHandle(h)
 	event, err := windows.WaitForSingleObject(h, 0)
 	return event == uint32(windows.WAIT_TIMEOUT), err
+}
+
+func TimesWithContext(ctx context.Context, pid int32) (*TimesStat, error) {
+	var times struct {
+		CreateTime syscall.Filetime
+		ExitTime   syscall.Filetime
+		KernelTime syscall.Filetime
+		UserTime   syscall.Filetime
+	}
+
+	h, err := windows.OpenProcess(processQueryInformation, false, uint32(pid))
+	if err != nil {
+		return nil, err
+	}
+	defer windows.CloseHandle(h)
+
+	err = syscall.GetProcessTimes(
+		syscall.Handle(h),
+		&times.CreateTime,
+		&times.ExitTime,
+		&times.KernelTime,
+		&times.UserTime,
+	)
+
+	user := float64(times.UserTime.HighDateTime)*429.4967296 + float64(times.UserTime.LowDateTime)*1e-7
+	kernel := float64(times.KernelTime.HighDateTime)*429.4967296 + float64(times.KernelTime.LowDateTime)*1e-7
+
+	return &TimesStat{
+		User:   user,
+		System: kernel,
+	}, nil
+}
+
+func IOCountersWithContext(ctx context.Context, pid int32) (*IOCountersStat, error) {
+	// ioCounters is an equivalent representation of IO_COUNTERS in the Windows API.
+	// https://docs.microsoft.com/windows/win32/api/winnt/ns-winnt-io_counters
+	var ioCounters struct {
+		ReadOperationCount  uint64
+		WriteOperationCount uint64
+		OtherOperationCount uint64
+		ReadTransferCount   uint64
+		WriteTransferCount  uint64
+		OtherTransferCount  uint64
+	}
+
+	c, err := windows.OpenProcess(processQueryInformation, false, uint32(pid))
+	if err != nil {
+		return nil, err
+	}
+	defer windows.CloseHandle(c)
+
+	ret, _, err := procGetProcessIoCounters.Call(uintptr(c), uintptr(unsafe.Pointer(&ioCounters)))
+	if ret == 0 {
+		return nil, err
+	}
+	stats := &IOCountersStat{
+		ReadCount:  ioCounters.ReadOperationCount,
+		ReadBytes:  ioCounters.ReadTransferCount,
+		WriteCount: ioCounters.WriteOperationCount,
+		WriteBytes: ioCounters.WriteTransferCount,
+	}
+
+	return stats, nil
 }

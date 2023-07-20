@@ -8,6 +8,7 @@ package actions
 import (
 	"context"
 	"os"
+	"runtime"
 	"sync"
 	"time"
 
@@ -56,7 +57,8 @@ type statsCollector struct {
 	cond *sync.Cond
 	id   uint64
 
-	proc *psutils.Process
+	// Our own pid so we can check stats etc
+	pid int32
 
 	samples [2]sample
 
@@ -69,21 +71,11 @@ type statsCollector struct {
 }
 
 func newStatsCollector(ctx context.Context) (*statsCollector, error) {
-	proc, err := psutils.NewProcessWithContext(ctx, int32(os.Getpid()))
-	if err != nil || proc == nil {
-		return nil, err
-	}
-
-	number_of_cores, err := psutils.CountsWithContext(ctx, true)
-	if err != nil || number_of_cores <= 0 {
-		return nil, err
-	}
-
 	result := &statsCollector{
 		check_duration_msec: 300,
 		id:                  utils.GetId(),
-		proc:                proc,
-		number_of_cores:     float64(number_of_cores),
+		pid:                 int32(os.Getpid()),
+		number_of_cores:     float64(runtime.NumCPU()),
 	}
 	result.cond = sync.NewCond(&result.mu)
 
@@ -136,15 +128,15 @@ func (self *statsCollector) GetAverageIOPS() float64 {
 // process. This is called not that frequently in order to minimize
 // the overheads of making a system call.
 func (self *statsCollector) getCpuTime(ctx context.Context) float64 {
-	cpu_time, err := self.proc.TimesWithContext(ctx)
+	cpu_time, err := psutils.TimesWithContext(ctx, self.pid)
 	if err != nil {
 		return 0
 	}
-	return cpu_time.Total()
+	return cpu_time.User + cpu_time.System
 }
 
 func (self *statsCollector) getIops(ctx context.Context) float64 {
-	counters, err := self.proc.IOCountersWithContext(ctx)
+	counters, err := psutils.IOCountersWithContext(ctx, self.pid)
 	if err != nil {
 		return 0
 	}
@@ -299,12 +291,8 @@ func init() {
 			}
 
 			ctx := context.Background()
-			proc, err := psutils.NewProcessWithContext(ctx, int32(os.Getpid()))
-			if err != nil || proc == nil {
-				return 0
-			}
-
-			counters, err := proc.IOCountersWithContext(ctx)
+			pid := int32(os.Getpid())
+			counters, err := psutils.IOCountersWithContext(ctx, pid)
 			if err != nil {
 				return 0
 			}
@@ -314,27 +302,19 @@ func init() {
 	_ = prometheus.Register(promauto.NewGaugeFunc(
 		prometheus.GaugeOpts{
 			Name: "process_cpu_used",
-			Help: "Current CPU utilization by this process",
+			Help: "Total CPU utilization by this process",
 		}, func() float64 {
 			if stats != nil {
 				return stats.GetAverageCPULoad()
 			}
 
 			ctx := context.Background()
-			proc, err := psutils.NewProcessWithContext(ctx, int32(os.Getpid()))
-			if err != nil || proc == nil {
-				return 0
-			}
-
-			number_of_cores, err := psutils.CountsWithContext(ctx, true)
-			if err != nil || number_of_cores <= 0 {
-				return 0
-			}
-
-			cpu_time, err := proc.CPUPercentWithContext(ctx)
+			pid := int32(os.Getpid())
+			number_of_cores := runtime.NumCPU()
+			cpu_time, err := psutils.TimesWithContext(ctx, pid)
 			if err != nil {
 				return 0
 			}
-			return cpu_time / float64(number_of_cores)
+			return float64(cpu_time.User+cpu_time.System) / float64(number_of_cores)
 		}))
 }

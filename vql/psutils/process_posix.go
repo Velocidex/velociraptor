@@ -1,56 +1,103 @@
-//go:build linux || freebsd || openbsd || darwin || solaris
-// +build linux freebsd openbsd darwin solaris
+//go:build linux || freebsd
+// +build linux freebsd
+
+// This file is for operating systems with /proc
 
 package psutils
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"os"
-	"syscall"
+
+	"github.com/Velocidex/ordereddict"
+	"github.com/shirou/gopsutil/v3/process"
 )
 
-func PidExistsWithContext(ctx context.Context, pid int32) (bool, error) {
-	if pid <= 0 {
-		return false, fmt.Errorf("invalid pid %v", pid)
-	}
-
-	// On Posix this always succeeds so we need to check further.
-	proc, err := os.FindProcess(int(pid))
+func GetProcess(ctx context.Context, pid int32) (*ordereddict.Dict, error) {
+	process_obj, err := process.NewProcessWithContext(ctx, pid)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 
-	// Check if the proc exists
-	pid_proc := GetHostProc(pid)
-	_, err = os.Stat(pid_proc)
-	if !os.IsNotExist(err) {
-		return true, nil
+	return getProcessData(process_obj), nil
+}
+
+func ListProcesses(ctx context.Context) ([]*ordereddict.Dict, error) {
+	result := []*ordereddict.Dict{}
+	processes, err := process.Processes()
+	if err != nil {
+		return nil, err
 	}
 
-	// procfs does not exist or is not mounted, check PID existence by
-	// signalling the pid
-	err = proc.Signal(syscall.Signal(0))
-	if err == nil {
-		return true, nil
-	}
-	if errors.Is(err, os.ErrProcessDone) {
-		return false, nil
+	for _, item := range processes {
+		result = append(result, getProcessData(item))
 	}
 
-	var errno syscall.Errno
-	if !errors.As(err, &errno) {
-		return false, err
+	return result, nil
+}
+
+// Only get a few fields from the process object otherwise we will
+// spend too much time calling into virtual methods.
+func getProcessData(process *process.Process) *ordereddict.Dict {
+	result := ordereddict.NewDict().SetCaseInsensitive().
+		Set("Pid", process.Pid)
+
+	name, _ := process.Name()
+	result.Set("Name", name)
+
+	ppid, _ := process.Ppid()
+	result.Set("Ppid", ppid)
+
+	// Make it compatible with the Windows pslist()
+	cmdline, _ := process.Cmdline()
+	result.Set("CommandLine", cmdline)
+
+	create_time, _ := process.CreateTime()
+	result.Set("CreateTime", create_time)
+
+	times, _ := process.Times()
+	result.Set("Times", times)
+
+	exe, _ := process.Exe()
+	result.Set("Exe", exe)
+
+	cwd, _ := process.Cwd()
+	result.Set("Cwd", cwd)
+
+	user, _ := process.Username()
+	result.Set("Username", user)
+
+	memory_info, _ := process.MemoryInfo()
+	result.Set("MemoryInfo", memory_info)
+
+	return result
+}
+
+func TimesWithContext(ctx context.Context, pid int32) (*TimesStat, error) {
+	delegate := &process.Process{Pid: pid}
+	times, err := delegate.TimesWithContext(ctx)
+	if err != nil {
+		return nil, err
 	}
 
-	switch errno {
-	case syscall.ESRCH:
-		return false, nil
+	return &TimesStat{
+		CPU:    times.CPU,
+		User:   times.User,
+		System: times.System,
+	}, nil
+}
 
-	case syscall.EPERM:
-		return true, nil
+func IOCountersWithContext(ctx context.Context, pid int32) (*IOCountersStat, error) {
+	delegate := &process.Process{Pid: pid}
+	counters, err := delegate.IOCountersWithContext(ctx)
+
+	if err != nil {
+		return nil, err
 	}
 
-	return false, err
+	return &IOCountersStat{
+		ReadCount:  counters.ReadCount,
+		WriteCount: counters.WriteCount,
+		ReadBytes:  counters.ReadBytes,
+		WriteBytes: counters.WriteBytes,
+	}, nil
 }

@@ -54,13 +54,12 @@ func (self *PsKillFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	process_obj, err := psutils.NewProcessWithContext(ctx, int32(arg.Pid))
+	err = psutils.Kill(int32(arg.Pid))
 	if err != nil {
 		scope.Log("pskill: %v", err)
 		return vfilter.Null{}
 	}
-
-	return process_obj.KillWithContext(ctx)
+	return arg.Pid
 }
 
 func (self PsKillFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
