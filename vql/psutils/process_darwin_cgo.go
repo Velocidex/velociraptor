@@ -1,7 +1,7 @@
 //go:build darwin && cgo
 // +build darwin,cgo
 
-package process
+package psutils
 
 // #include <stdlib.h>
 // #include <libproc.h>
@@ -52,7 +52,7 @@ func getTimeScaleToNanoSeconds() float64 {
 	return float64(timeBaseInfo.numer) / float64(timeBaseInfo.denom)
 }
 
-func ExeWithContext(ctx context.Context, pid uint32_t) (string, error) {
+func ExeWithContext(ctx context.Context, pid int32) (string, error) {
 	var c C.char // need a var for unsafe.Sizeof need a var
 	const bufsize = C.PROC_PIDPATHINFO_MAXSIZE * unsafe.Sizeof(c)
 	buffer := (*C.char)(C.malloc(C.size_t(bufsize)))
@@ -74,7 +74,7 @@ func ExeWithContext(ctx context.Context, pid uint32_t) (string, error) {
 // EUID can access.  Otherwise "operation not permitted" will be returned as the
 // error.
 // Note: This might also work for other *BSD OSs.
-func CwdWithContext(ctx context.Context, pid uint32_t) (string, error) {
+func CwdWithContext(ctx context.Context, pid int32) (string, error) {
 	const vpiSize = C.sizeof_struct_proc_vnodepathinfo
 	vpi := (*C.struct_proc_vnodepathinfo)(C.malloc(vpiSize))
 	defer C.free(unsafe.Pointer(vpi))
@@ -145,7 +145,7 @@ func cmdlineSliceWithContext(ctx context.Context, pid int32) ([]string, error) {
 }
 
 // cmdNameWithContext returns the command name (including spaces) without any arguments
-func cmdNameWithContext(ctx context.Context, pid uint32_t) (string, error) {
+func cmdNameWithContext(ctx context.Context, pid int32) (string, error) {
 	r, err := cmdlineSliceWithContext(ctx, pid)
 	if err != nil {
 		return "", err
@@ -158,15 +158,15 @@ func cmdNameWithContext(ctx context.Context, pid uint32_t) (string, error) {
 	return r[0], err
 }
 
-func CmdlineWithContext(ctx context.Context, pid uint32_t) (string, error) {
-	r, err := CmdlineSliceWithContext(ctx, pid)
+func CmdlineWithContext(ctx context.Context, pid int32) (string, error) {
+	r, err := cmdlineSliceWithContext(ctx, pid)
 	if err != nil {
 		return "", err
 	}
 	return strings.Join(r, " "), err
 }
 
-func NumThreadsWithContext(ctx context.Context, pid uint32_t) (int32, error) {
+func NumThreadsWithContext(ctx context.Context, pid int32) (int32, error) {
 	const tiSize = C.sizeof_struct_proc_taskinfo
 	ti := (*C.struct_proc_taskinfo)(C.malloc(tiSize))
 	defer C.free(unsafe.Pointer(ti))
@@ -179,7 +179,7 @@ func NumThreadsWithContext(ctx context.Context, pid uint32_t) (int32, error) {
 	return int32(ti.pti_threadnum), nil
 }
 
-func TimesWithContext(ctx context.Context, pid uint32_t) (*TimesStat, error) {
+func TimesWithContext(ctx context.Context, pid int32) (*TimesStat, error) {
 	const tiSize = C.sizeof_struct_proc_taskinfo
 	ti := (*C.struct_proc_taskinfo)(C.malloc(tiSize))
 	defer C.free(unsafe.Pointer(ti))
@@ -197,7 +197,7 @@ func TimesWithContext(ctx context.Context, pid uint32_t) (*TimesStat, error) {
 	return ret, nil
 }
 
-func MemoryInfoWithContext(ctx context.Context, pid uint32_t) (*MemoryInfoStat, error) {
+func MemoryInfoWithContext(ctx context.Context, pid int32) (*MemoryInfoStat, error) {
 	const tiSize = C.sizeof_struct_proc_taskinfo
 	ti := (*C.struct_proc_taskinfo)(C.malloc(tiSize))
 	defer C.free(unsafe.Pointer(ti))

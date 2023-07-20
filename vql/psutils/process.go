@@ -11,7 +11,32 @@ import (
 
 var (
 	ErrorProcessNotRunning = errors.New("ErrorProcessNotRunning")
+	ErrorNotPermitted                     = errors.New("operation not permitted")
 )
+
+type TimesStat struct {
+		CPU       string  `json:"cpu"`
+		User      float64 `json:"user"`
+		System    float64 `json:"system"`
+		Idle      float64 `json:"idle"`
+		Nice      float64 `json:"nice"`
+		Iowait    float64 `json:"iowait"`
+		Irq       float64 `json:"irq"`
+		Softirq   float64 `json:"softirq"`
+		Steal     float64 `json:"steal"`
+		Guest     float64 `json:"guest"`
+		GuestNice float64 `json:"guestNice"`
+}
+
+type MemoryInfoStat struct {
+	RSS    uint64 `json:"rss"`    // bytes
+	VMS    uint64 `json:"vms"`    // bytes
+	HWM    uint64 `json:"hwm"`    // bytes
+	Data   uint64 `json:"data"`   // bytes
+	Stack  uint64 `json:"stack"`  // bytes
+	Locked uint64 `json:"locked"` // bytes
+	Swap   uint64 `json:"swap"`   // bytes
+}
 
 type Process struct {
 	Pid int32
