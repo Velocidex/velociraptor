@@ -21,10 +21,10 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/shirou/gopsutil/v3/process"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/psutils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -54,13 +54,13 @@ func (self *PsKillFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	process_obj, err := process.NewProcess(int32(arg.Pid))
+	process_obj, err := psutils.NewProcessWithContext(ctx, int32(arg.Pid))
 	if err != nil {
 		scope.Log("pskill: %v", err)
 		return vfilter.Null{}
 	}
 
-	return process_obj.Kill()
+	return process_obj.KillWithContext(ctx)
 }
 
 func (self PsKillFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

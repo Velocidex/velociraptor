@@ -23,14 +23,14 @@ import (
 	"syscall"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/shirou/gopsutil/v3/net"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/psutils"
 	"www.velocidex.com/golang/vfilter"
 )
 
-func makeDict(in net.ConnectionStat) *ordereddict.Dict {
+func makeDict(in psutils.ConnectionStat) *ordereddict.Dict {
 	var family, conn_type string
 
 	switch in.Family {
@@ -90,7 +90,8 @@ func init() {
 					return result
 				}
 
-				if cons, err := net.Connections("all"); err == nil {
+				cons, err := psutils.ConnectionsWithContext(ctx, "all")
+				if err == nil {
 					for _, item := range cons {
 						result = append(result, makeDict(item))
 					}

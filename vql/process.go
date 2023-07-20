@@ -26,8 +26,8 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/shirou/gopsutil/v3/process"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql/psutils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -62,17 +62,17 @@ func init() {
 			// If the user asked for one process
 			// just return that one.
 			if arg.Pid != 0 {
-				process_obj, err := process.NewProcess(int32(arg.Pid))
+				process_obj, err := psutils.GetProcess(ctx, int32(arg.Pid))
 				if err == nil {
-					result = append(result, getProcessData(process_obj))
+					result = append(result, process_obj)
 				}
 				return result
 			}
 
-			processes, err := process.Processes()
+			processes, err := psutils.ListProcesses(ctx)
 			if err == nil {
 				for _, item := range processes {
-					result = append(result, getProcessData(item))
+					result = append(result, item)
 				}
 			}
 			return result
@@ -80,41 +80,4 @@ func init() {
 		ArgType: &PslistArgs{},
 		Doc:     "List processes",
 	})
-}
-
-// Only get a few fields from the process object otherwise we will
-// spend too much time calling into virtual methods.
-func getProcessData(process *process.Process) *ordereddict.Dict {
-	result := ordereddict.NewDict().SetCaseInsensitive().
-		Set("Pid", process.Pid)
-
-	name, _ := process.Name()
-	result.Set("Name", name)
-
-	ppid, _ := process.Ppid()
-	result.Set("Ppid", ppid)
-
-	// Make it compatible with the Windows pslist()
-	cmdline, _ := process.Cmdline()
-	result.Set("CommandLine", cmdline)
-
-	create_time, _ := process.CreateTime()
-	result.Set("CreateTime", create_time)
-
-	times, _ := process.Times()
-	result.Set("Times", times)
-
-	exe, _ := process.Exe()
-	result.Set("Exe", exe)
-
-	cwd, _ := process.Cwd()
-	result.Set("Cwd", cwd)
-
-	user, _ := process.Username()
-	result.Set("Username", user)
-
-	memory_info, _ := process.MemoryInfo()
-	result.Set("MemoryInfo", memory_info)
-
-	return result
 }

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/shirou/gopsutil/v3/host"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -27,6 +26,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/velociraptor/vql/psutils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -200,7 +200,7 @@ func (self *collectionManager) storeHostInfo() error {
 
 	version := config.GetVersion()
 	var info_dict *ordereddict.Dict
-	host_info, err := host.Info()
+	host_info, err := psutils.InfoWithContext(self.ctx)
 	if err != nil {
 		info_dict = ordereddict.NewDict()
 	} else {

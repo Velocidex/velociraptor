@@ -13,11 +13,11 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/shirou/gopsutil/v3/cpu"
-	"github.com/shirou/gopsutil/v3/process"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
+
+	"www.velocidex.com/golang/velociraptor/vql/psutils"
 )
 
 var (
@@ -56,7 +56,7 @@ type statsCollector struct {
 	cond *sync.Cond
 	id   uint64
 
-	proc *process.Process
+	proc *psutils.Process
 
 	samples [2]sample
 
@@ -68,13 +68,13 @@ type statsCollector struct {
 	number_of_cores     float64
 }
 
-func newStatsCollector() (*statsCollector, error) {
-	proc, err := process.NewProcess(int32(os.Getpid()))
+func newStatsCollector(ctx context.Context) (*statsCollector, error) {
+	proc, err := psutils.NewProcessWithContext(ctx, int32(os.Getpid()))
 	if err != nil || proc == nil {
 		return nil, err
 	}
 
-	number_of_cores, err := cpu.Counts(true)
+	number_of_cores, err := psutils.CountsWithContext(ctx, true)
 	if err != nil || number_of_cores <= 0 {
 		return nil, err
 	}
@@ -259,7 +259,7 @@ func NewThrottler(
 
 	if stats == nil {
 		var err error
-		stats, err = newStatsCollector()
+		stats, err = newStatsCollector(ctx)
 		if err != nil {
 			return nil
 		}
@@ -298,12 +298,13 @@ func init() {
 				return stats.GetAverageIOPS()
 			}
 
-			proc, err := process.NewProcess(int32(os.Getpid()))
+			ctx := context.Background()
+			proc, err := psutils.NewProcessWithContext(ctx, int32(os.Getpid()))
 			if err != nil || proc == nil {
 				return 0
 			}
 
-			counters, err := proc.IOCounters()
+			counters, err := proc.IOCountersWithContext(ctx)
 			if err != nil {
 				return 0
 			}
@@ -319,17 +320,18 @@ func init() {
 				return stats.GetAverageCPULoad()
 			}
 
-			proc, err := process.NewProcess(int32(os.Getpid()))
+			ctx := context.Background()
+			proc, err := psutils.NewProcessWithContext(ctx, int32(os.Getpid()))
 			if err != nil || proc == nil {
 				return 0
 			}
 
-			number_of_cores, err := cpu.Counts(true)
+			number_of_cores, err := psutils.CountsWithContext(ctx, true)
 			if err != nil || number_of_cores <= 0 {
 				return 0
 			}
 
-			cpu_time, err := proc.CPUPercent()
+			cpu_time, err := proc.CPUPercentWithContext(ctx)
 			if err != nil {
 				return 0
 			}

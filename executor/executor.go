@@ -77,7 +77,7 @@ type ClientExecutor struct {
 }
 
 func (self *ClientExecutor) GetClientInfo() *actions_proto.ClientInfo {
-	return actions.GetClientInfo(self.config_obj)
+	return actions.GetClientInfo(self.ctx, self.config_obj)
 }
 
 func (self *ClientExecutor) FlowManager() *responder.FlowManager {
