@@ -428,6 +428,19 @@ message GUIConfig {
             description: "Port to bind to."
         }];
 
+    // A list of CIDR addresses from permitted networks. If this is
+    // not set, permit all connections to the GUI from anywhere.
+    repeated string allowed_cidr = 23;
+
+    // Header defined by the proxy containing the remote address. This
+    // header will be used in the allowed_cidr matching if specified.
+    // NOTE: Only use this if you do have a reverse proxy in front of
+    // the server. Otherwise an attacker can simply send this header
+    // to pretent to come from any IP address. If this setting is
+    // specified we take the src address from the header, otherwise
+    // from the remote IP address.
+    string forwarded_proxy_header = 24;
+
     // Allows the GUI to start with no encryption - **WARNING** This
     // only makes sense if you have TLS proxy in front. In fact the
     // GUI **will not work** without a TLS proxy because the csrf
@@ -447,13 +460,6 @@ message GUIConfig {
             description: "The private key of the frontend server encoded in PEM format."
         }];
 
-    repeated string internal_cidr = 3 [(sem_type) = {
-            description: "CIDR addresses of internal networks (e.g. 192.168.0.0/16). We use this to show the internal/external icon."
-        }];
-
-    repeated string vpn_cidr = 4 [(sem_type) = {
-            description: "CIDR addresses of vpn networks (e.g. 192.168.0.0/16). We use this to show the internal/external icon."
-        }];
 
     string public_url = 7 [(sem_type) = {
             description: "The public URL of this server.",
@@ -489,6 +495,7 @@ message GUIConfig {
     string saml_idp_metadata_url = 14;
     string saml_root_url = 15;
     string saml_user_attribute = 16;
+
     // DEPRECATED: Will be moved to a Google authenticator
     string google_oauth_client_id = 5;
     string google_oauth_client_secret = 6;

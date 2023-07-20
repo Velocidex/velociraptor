@@ -74,8 +74,10 @@ func (self *GoogleAuthenticator) ProviderName() string {
 }
 
 func (self *GoogleAuthenticator) AddHandlers(mux *http.ServeMux) error {
-	mux.Handle(self.LoginHandler(), self.oauthGoogleLogin())
-	mux.Handle(self.CallbackHandler(), self.oauthGoogleCallback())
+	mux.Handle(self.LoginHandler(),
+		IpFilter(self.config_obj, self.oauthGoogleLogin()))
+	mux.Handle(self.CallbackHandler(),
+		IpFilter(self.config_obj, self.oauthGoogleCallback()))
 	return nil
 }
 
@@ -242,7 +244,7 @@ func (self *GoogleAuthenticator) getUserDataFromGoogle(
 
 func installLogoff(config_obj *config_proto.Config, mux *http.ServeMux) {
 	base := utils.GetBasePath(config_obj)
-	mux.Handle(utils.Join(base, "/app/logoff.html"),
+	mux.Handle(utils.Join(base, "/app/logoff.html"), IpFilter(config_obj,
 		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			params := r.URL.Query()
 			old_username, ok := params["username"]
@@ -264,7 +266,7 @@ func installLogoff(config_obj *config_proto.Config, mux *http.ServeMux) {
 			})
 
 			renderLogoffMessage(config_obj, w, username)
-		}))
+		})))
 }
 
 func authenticateUserHandle(

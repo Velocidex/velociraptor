@@ -64,9 +64,9 @@ func (self *GitHubAuthenticator) AuthRedirectTemplate() string {
 
 func (self *GitHubAuthenticator) AddHandlers(mux *http.ServeMux) error {
 	mux.Handle(utils.Join(self.base, "/auth/github/login"),
-		self.oauthGithubLogin())
+		IpFilter(self.config_obj, self.oauthGithubLogin()))
 	mux.Handle(utils.Join(self.base, "/auth/github/callback"),
-		self.oauthGithubCallback())
+		IpFilter(self.config_obj, self.oauthGithubCallback()))
 	return nil
 }
 
