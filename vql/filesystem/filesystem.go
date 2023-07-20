@@ -26,13 +26,13 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/go-errors/errors"
 
-	"github.com/shirou/gopsutil/v3/disk"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/glob"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/psutils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -448,7 +448,7 @@ func init() {
 				scope vfilter.Scope,
 				args *ordereddict.Dict) []vfilter.Row {
 				var result []vfilter.Row
-				partitions, err := disk.Partitions(true)
+				partitions, err := psutils.PartitionsWithContext(ctx)
 				if err == nil {
 					for _, item := range partitions {
 						result = append(result, item)

@@ -72,6 +72,22 @@ func getProcessData(process *process.Process) *ordereddict.Dict {
 	return result
 }
 
+func MemoryInfoWithContext(ctx context.Context, pid int32) (*MemoryInfoStat, error) {
+	delegate := &process.Process{Pid: pid}
+	mem, err := delegate.MemoryInfoWithContext(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := &MemoryInfoStat{
+		RSS:  mem.RSS,
+		VMS:  mem.VMS,
+		Swap: mem.Swap,
+	}
+
+	return ret, nil
+}
+
 func TimesWithContext(ctx context.Context, pid int32) (*TimesStat, error) {
 	delegate := &process.Process{Pid: pid}
 	times, err := delegate.TimesWithContext(ctx)

@@ -35,7 +35,6 @@ import (
 	"github.com/Velocidex/yaml/v2"
 	errors "github.com/go-errors/errors"
 	"github.com/sergi/go-diff/diffmatchpatch"
-	"github.com/shirou/gopsutil/v3/process"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -49,6 +48,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/velociraptor/vql/psutils"
 	"www.velocidex.com/golang/velociraptor/vql/remapping"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -128,9 +128,9 @@ func makeCtxWithTimeout(
 				// the goroutines and mutex and hard exit.
 			case <-time.After(time.Second):
 				if time.Now().Before(deadline) {
-					proc, _ := process.NewProcess(int32(os.Getpid()))
-					total_time, _ := proc.Percent(0)
-					memory, _ := proc.MemoryInfo()
+					pid := int32(os.Getpid())
+					total_time, _ := psutils.TimesWithContext(ctx, pid)
+					memory, _ := psutils.MemoryInfoWithContext(ctx, pid)
 
 					fmt.Printf("Not time to fire yet %v %v %v\n",
 						time.Now(), total_time, memory)

@@ -19,6 +19,9 @@ const (
 var (
 	Modkernel32              = windows.NewLazySystemDLL("kernel32.dll")
 	procGetProcessIoCounters = Modkernel32.NewProc("GetProcessIoCounters")
+
+	modpsapi                 = windows.NewLazySystemDLL("psapi.dll")
+	procGetProcessMemoryInfo = modpsapi.NewProc("GetProcessMemoryInfo")
 )
 
 func PidExistsWithContext(ctx context.Context, pid int32) (bool, error) {
@@ -83,6 +86,38 @@ func TimesWithContext(ctx context.Context, pid int32) (*TimesStat, error) {
 		User:   user,
 		System: kernel,
 	}, nil
+}
+
+func getProcessMemoryInfo(h windows.Handle, mem *PROCESS_MEMORY_COUNTERS) (err error) {
+	r1, _, e1 := syscall.Syscall(procGetProcessMemoryInfo.Addr(), 3, uintptr(h), uintptr(unsafe.Pointer(mem)), uintptr(unsafe.Sizeof(*mem)))
+	if r1 == 0 {
+		if e1 != 0 {
+			err = error(e1)
+		} else {
+			err = syscall.EINVAL
+		}
+	}
+	return
+}
+
+func MemoryInfoWithContext(ctx context.Context, pid int32) (*MemoryInfoStat, error) {
+	var mem PROCESS_MEMORY_COUNTERS
+
+	c, err := windows.OpenProcess(processQueryInformation, false, uint32(pid))
+	if err != nil {
+		return nil, err
+	}
+	defer windows.CloseHandle(c)
+	if err := getProcessMemoryInfo(c, &mem); err != nil {
+		return nil, err
+	}
+
+	ret := &MemoryInfoStat{
+		RSS: uint64(mem.WorkingSetSize),
+		VMS: uint64(mem.PagefileUsage),
+	}
+
+	return ret, nil
 }
 
 func IOCountersWithContext(ctx context.Context, pid int32) (*IOCountersStat, error) {

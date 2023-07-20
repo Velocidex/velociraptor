@@ -18,8 +18,6 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-// This module is built on gopsutils but this is too slow and
-// inefficient. Eventually we will remove it from the codebase.
 package vql
 
 import (
