@@ -80,8 +80,7 @@ func (self *FileBasedUploader) Upload(
 	atime time.Time,
 	ctime time.Time,
 	btime time.Time,
-	reader io.Reader) (
-	*UploadResponse, error) {
+	reader io.Reader) (*UploadResponse, error) {
 
 	if self.UploadDir == "" {
 		scope.Log("UploadDir is not set")
@@ -152,7 +151,10 @@ func (self *FileBasedUploader) Upload(
 	}
 
 	// It is not an error if we cant set the timestamps - best effort.
-	_ = setFileTimestamps(file_path, mtime, atime, ctime)
+	err = setFileTimestamps(file_path, mtime, atime, ctime)
+	if err != nil {
+		scope.Log("FileBasedUploader: %v", err)
+	}
 
 	scope.Log("Uploaded %v (%v bytes)", file_path, offset)
 	result = &UploadResponse{
@@ -171,8 +173,7 @@ func (self *FileBasedUploader) maybeCollectSparseFile(
 	ctx context.Context,
 	reader io.Reader,
 	store_as_name *accessors.OSPath,
-	sanitized_name string) (
-	*UploadResponse, error) {
+	sanitized_name string) (*UploadResponse, error) {
 
 	// Can the reader produce ranges?
 	range_reader, ok := reader.(RangeReader)

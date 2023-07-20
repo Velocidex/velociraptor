@@ -25,9 +25,9 @@ import (
 
 	fqdn "github.com/Showmax/go-fqdn"
 	"github.com/Velocidex/ordereddict"
-	"github.com/shirou/gopsutil/v3/host"
 
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql/psutils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -36,7 +36,7 @@ var (
 	start_time = time.Now()
 )
 
-func GetInfo(host *host.InfoStat) *ordereddict.Dict {
+func GetInfo(host *psutils.InfoStat) *ordereddict.Dict {
 	me, _ := os.Executable()
 	return ordereddict.NewDict().
 		Set("Hostname", host.Hostname).
@@ -84,9 +84,9 @@ func init() {
 				// It turns out that host.Info() is
 				// actually rather slow so we cache it
 				// in the scope cache.
-				info, ok := CacheGet(scope, "__info").(*host.InfoStat)
+				info, ok := CacheGet(scope, "__info").(*psutils.InfoStat)
 				if !ok {
-					info, err = host.Info()
+					info, err = psutils.InfoWithContext(ctx)
 					if err != nil {
 						scope.Log("info: %s", err)
 						return result
