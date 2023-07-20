@@ -113,9 +113,6 @@ GUI:
     W5gJrneEd85yOMZRQ+zR9lUBnfK+csnfdPys6Tf+lnTBlXGtXaN69rmAHD1WJp5l
     JL5WubPDAGJoNCt7TqNBOwMk6avXZPFQkVljQclVoysIBQ44Tac=
     -----END RSA PRIVATE KEY-----
-  internal_cidr:
-  - 127.0.0.1/12
-  - 192.168.0.0/16
   authenticator:
     type: Basic
 CA:

@@ -77,9 +77,6 @@ GUI:
     P2A0b1WQcnh7d6/HNGF9iRPP2BIyRCw2qbyOHTAgSzQni0mem1COO6NRNNMeoAdY
     NRhw0WXKTBTNUZTQJxIfpusSOc05iUQ6BgSIu7ew3xGjMqkcYHM=
     -----END RSA PRIVATE KEY-----
-  internal_cidr:
-  - 127.0.0.1/12
-  - 192.168.0.0/16
 
 API:
   bind_address: 127.0.0.1
