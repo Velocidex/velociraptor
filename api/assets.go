@@ -37,8 +37,9 @@ import (
 func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) {
 	base := utils.GetBasePath(config_obj)
 	dir := utils.Join(base, "/app/")
-	mux.Handle(dir, http.StripPrefix(
-		dir, gzipped.FileServer(NewCachedFilesystem(gui_assets.HTTP))))
+	mux.Handle(dir, ipFilter(config_obj, http.StripPrefix(
+		dir, gzipped.FileServer(NewCachedFilesystem(gui_assets.HTTP)))))
+
 	mux.Handle("/favicon.png",
 		http.RedirectHandler(utils.Join(base, "/favicon.ico"),
 			http.StatusMovedPermanently))

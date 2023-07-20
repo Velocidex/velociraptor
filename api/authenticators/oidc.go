@@ -74,8 +74,10 @@ func (self *OidcAuthenticator) AddHandlers(mux *http.ServeMux) error {
 		return err
 	}
 
-	mux.Handle(self.LoginHandler(), self.oauthOidcLogin(provider))
-	mux.Handle(self.CallbackHandler(), self.oauthOidcCallback(provider))
+	mux.Handle(self.LoginHandler(),
+		IpFilter(self.config_obj, self.oauthOidcLogin(provider)))
+	mux.Handle(self.CallbackHandler(),
+		IpFilter(self.config_obj, self.oauthOidcCallback(provider)))
 	return nil
 }
 
