@@ -135,52 +135,53 @@ func PrepareGUIMux(
 	}
 
 	base := utils.GetBasePath(config_obj)
-	mux.Handle(utils.Join(base, "/api/"), csrfProtect(config_obj,
-		auther.AuthenticateUserHandler(h)))
+	mux.Handle(utils.Join(base, "/api/"), ipFilter(config_obj,
+		csrfProtect(config_obj,
+			auther.AuthenticateUserHandler(h))))
 
 	mux.Handle(utils.Join(base, "/api/v1/DownloadTable"),
-		csrfProtect(config_obj,
-			auther.AuthenticateUserHandler(downloadTable())))
+		ipFilter(config_obj, csrfProtect(config_obj,
+			auther.AuthenticateUserHandler(downloadTable()))))
 
 	mux.Handle(utils.Join(base, "/api/v1/DownloadVFSFile"),
-		csrfProtect(config_obj,
-			auther.AuthenticateUserHandler(vfsFileDownloadHandler())))
+		ipFilter(config_obj, csrfProtect(config_obj,
+			auther.AuthenticateUserHandler(vfsFileDownloadHandler()))))
 
 	mux.Handle(utils.Join(base, "/api/v1/UploadTool"),
-		csrfProtect(config_obj,
-			auther.AuthenticateUserHandler(toolUploadHandler())))
+		ipFilter(config_obj, csrfProtect(config_obj,
+			auther.AuthenticateUserHandler(toolUploadHandler()))))
 
 	mux.Handle(utils.Join(base, "/api/v1/UploadFormFile"),
-		csrfProtect(config_obj,
-			auther.AuthenticateUserHandler(formUploadHandler())))
+		ipFilter(config_obj, csrfProtect(config_obj,
+			auther.AuthenticateUserHandler(formUploadHandler()))))
 
 	// Serve prepared zip files.
 	mux.Handle(utils.Join(base, "/downloads/"),
-		csrfProtect(config_obj,
+		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
 				http.StripPrefix(base,
-					downloadFileStore([]string{"downloads"})))))
+					downloadFileStore([]string{"downloads"}))))))
 
 	// Serve notebook items
 	mux.Handle(utils.Join(base, "/notebooks/"),
-		csrfProtect(config_obj,
+		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
 				http.StripPrefix(base,
-					downloadFileStore([]string{"notebooks"})))))
+					downloadFileStore([]string{"notebooks"}))))))
 
 	// Serve files from hunt notebooks
 	mux.Handle(utils.Join(base, "/hunts/"),
-		csrfProtect(config_obj,
+		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
 				http.StripPrefix(base,
-					downloadFileStore([]string{"hunts"})))))
+					downloadFileStore([]string{"hunts"}))))))
 
 	// Serve files from client notebooks
 	mux.Handle(utils.Join(base, "/clients/"),
-		csrfProtect(config_obj,
+		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
 				http.StripPrefix(base,
-					downloadFileStore([]string{"clients"})))))
+					downloadFileStore([]string{"clients"}))))))
 
 	// Assets etc do not need auth.
 	install_static_assets(config_obj, mux)
@@ -196,7 +197,8 @@ func PrepareGUIMux(
 		return nil, err
 	}
 	mux.Handle(utils.Join(base, "/app/index.html"),
-		csrfProtect(config_obj, auther.AuthenticateUserHandler(h)))
+		ipFilter(config_obj,
+			csrfProtect(config_obj, auther.AuthenticateUserHandler(h))))
 
 	// Redirect everything else to the app
 	mux.Handle(utils.GetBaseDirectory(config_obj),
@@ -299,4 +301,9 @@ func GetAPIHandler(
 		http.StripPrefix(base, grpc_proxy_mux))
 
 	return reverse_proxy_mux, nil
+}
+
+func ipFilter(config_obj *config_proto.Config,
+	parent http.Handler) http.Handler {
+	return authenticators.IpFilter(config_obj, parent)
 }

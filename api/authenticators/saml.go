@@ -80,7 +80,7 @@ func (self *SamlAuthenticator) AddHandlers(mux *http.ServeMux) error {
 	if err != nil {
 		return err
 	}
-	mux.Handle("/saml/", samlMiddleware)
+	mux.Handle("/saml/", IpFilter(self.config_obj, samlMiddleware))
 	logger.Info("Authentication via SAML enabled")
 	return nil
 }

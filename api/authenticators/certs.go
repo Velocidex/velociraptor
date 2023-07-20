@@ -113,11 +113,12 @@ func (self *CertAuthenticator) AddHandlers(mux *http.ServeMux) error {
 // It is not really possible to log off when using client certs
 func (self *CertAuthenticator) AddLogoff(mux *http.ServeMux) error {
 	mux.Handle(utils.Join(self.base, "/app/logoff.html"),
-		http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
-			http.Error(w, "authorization failed", http.StatusUnauthorized)
-			return
-		}))
+		IpFilter(self.config_obj,
+			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
+				http.Error(w, "authorization failed", http.StatusUnauthorized)
+				return
+			})))
 
 	return nil
 }
