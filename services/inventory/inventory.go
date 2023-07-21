@@ -334,7 +334,7 @@ func (self *InventoryService) materializeTool(
 	}
 
 	logger := logging.GetLogger(org_config_obj, &logging.FrontendComponent)
-	logger.Info("Downloading tool <green>%v</> FROM <red>%v</>", tool.Name,
+	logger.Info("Downloading tool <green>%v</> FROM <cyan>%v</>", tool.Name,
 		tool.Url)
 	request, err := http.NewRequestWithContext(ctx, "GET", tool.Url, nil)
 	if err != nil {

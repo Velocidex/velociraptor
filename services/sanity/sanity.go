@@ -284,7 +284,7 @@ func checkForServerUpgrade(
 					tool, err := inventory.ProbeToolInfo(
 						ctx, config_obj, tool_definition.Name, tool_definition.Version)
 					if err == nil && tool.AdminOverride {
-						logger.Info("<red>Skipping update</> of tool <green>%v</> because an admin manually overrode its definition.",
+						logger.Info("<yellow>Skipping update</> of tool <green>%v</> because an admin manually overrode its definition.",
 							tool_definition.Name)
 						continue
 					}
@@ -292,7 +292,7 @@ func checkForServerUpgrade(
 					// Log that the tool is upgraded.
 					logger.WithFields(logrus.Fields{
 						"Tool": tool_definition,
-					}).Info("Upgrading tool <red>" + key)
+					}).Info("Upgrading tool <green>" + key)
 
 					tool_definition = proto.Clone(
 						tool_definition).(*artifacts_proto.Tool)
