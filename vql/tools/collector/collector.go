@@ -38,7 +38,7 @@ type CollectPluginArgs struct {
 	Password            string              `vfilter:"optional,field=password,doc=An optional password to encrypt the collection zip."`
 	Format              string              `vfilter:"optional,field=format,doc=Output format (csv, jsonl, csv_only)."`
 	ArtifactDefinitions vfilter.Any         `vfilter:"optional,field=artifact_definitions,doc=Optional additional custom artifacts."`
-	Template            string              `vfilter:"optional,field=template,doc=The name of a template artifact (i.e. one which has report of type HTML)."`
+	Template            string              `vfilter:"optional,field=template,doc=(Deprecated Ignored)."`
 	Level               int64               `vfilter:"optional,field=level,doc=Compression level between 0 (no compression) and 9."`
 	OpsPerSecond        int64               `vfilter:"optional,field=ops_per_sec,doc=Rate limiting for collections (deprecated)."`
 	CpuLimit            float64             `vfilter:"optional,field=cpu_limit,doc=Set query cpu_limit value"`
@@ -46,6 +46,7 @@ type CollectPluginArgs struct {
 	ProgressTimeout     float64             `vfilter:"optional,field=progress_timeout,doc=If no progress is detected in this many seconds, we terminate the query and output debugging information"`
 	Timeout             float64             `vfilter:"optional,field=timeout,doc=Total amount of time in seconds, this collection will take. Collection is cancelled when timeout is exceeded."`
 	Metadata            vfilter.StoredQuery `vfilter:"optional,field=metadata,doc=Metadata to store in the zip archive. Outputs to metadata.json in top level of zip file."`
+	Concurrency         int64               `vfilter:"optional,field=concurrency,doc=Number of concurrent collections."`
 }
 
 type CollectPlugin struct{}
@@ -80,7 +81,7 @@ func (self CollectPlugin) Call(
 		}
 
 		collection_manager := newCollectionManager(ctx, config_obj,
-			output_chan, scope)
+			output_chan, int(arg.Concurrency), scope)
 		defer collection_manager.Close()
 
 		request, err := self.configureCollection(ctx, collection_manager, arg)

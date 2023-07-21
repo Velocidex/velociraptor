@@ -176,7 +176,7 @@ func makeUSNRecord(item *ntfs.USN_RECORD) *ordereddict.Dict {
 		Set("Timestamp", item.TimeStamp().Time).
 		Set("Filename", item.Filename()).
 		Set("_Links", links).
-		Set("FullPath", fullpath).
+		Set("OSPath", fullpath).
 		Set("FileAttributes", item.FileAttributes()).
 		Set("Reason", item.Reason()).
 		Set("SourceInfo", item.SourceInfo()).

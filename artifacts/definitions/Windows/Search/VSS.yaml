@@ -41,6 +41,7 @@ sources:
             hash(path=OSPath, accessor='ntfs').SHA1 as SHA1
          FROM glob(globs=SearchGlob, accessor='ntfs', root=Root)
          WHERE NOT IsDir
+           AND log(message="Hashing %v", dedup=10, args=OSPath, level="DEBUG")
 
       -- For each full glob (including VSS device) extract all files
       -- and hashes.

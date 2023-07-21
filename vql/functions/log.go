@@ -46,7 +46,7 @@ type logCache struct {
 
 type LogFunctionArgs struct {
 	Message   string      `vfilter:"required,field=message,doc=Message to log."`
-	DedupTime int64       `vfilter:"optional,field=dedup,doc=Suppress same message in this many seconds (default 60 sec)."`
+	DedupTime int64       `vfilter:"optional,field=dedup,doc=Suppress same message in this many seconds (default 60 sec). Use -1 to disable dedup."`
 	Args      vfilter.Any `vfilter:"optional,field=args,doc=An array of elements to apply into the format string."`
 	Level     string      `vfilter:"optional,field=level,doc=Level to log at (DEFAULT, WARN, ERROR, INFO)."`
 }
