@@ -23,7 +23,9 @@ func setFileTimestamps(file_path string,
 	defer syscall.Close(handle)
 
 	mtime_ := syscall.NsecToFiletime(mtime.UnixNano())
-	atime_ := syscall.NsecToFiletime(mtime.UnixNano())
-	ctime_ := syscall.NsecToFiletime(mtime.UnixNano())
-	return syscall.SetFileTime(handle, &ctime_, &atime_, &mtime_)
+	atime_ := syscall.NsecToFiletime(atime.UnixNano())
+	ctime_ := syscall.NsecToFiletime(ctime.UnixNano())
+	err = syscall.SetFileTime(handle, &ctime_, &atime_, &mtime_)
+
+	return err
 }
