@@ -1,0 +1,10 @@
+.error-message {
+}
+
+.debug-message {
+    color: var(--color-foreground-dimmed);
+}
+
+.info-message {
+    color: var(--color-foreground-dimmed);
+}

@@ -54,9 +54,16 @@ func (self *notebooCellLogger) Write(b []byte) (int, error) {
 	// all the log messages.
 	self.mu.Lock()
 	if len(self.messages) < 10 {
-		self.messages = append(self.messages, msg)
+		self.messages = append(self.messages, string(b))
 	} else {
 		self.more_messages = true
+
+		// Make sure errors are always shown in the snippet even if
+		// they get pushed out by earlier messages
+		if level == "ERROR" {
+			self.messages = append(self.messages, string(b))
+			self.messages = self.messages[1:]
+		}
 	}
 	self.mu.Unlock()
 
@@ -70,6 +77,7 @@ func (self *notebooCellLogger) Messages() []string {
 	return self.messages
 }
 
+// Are there additional messages?
 func (self *notebooCellLogger) MoreMessages() bool {
 	self.mu.Lock()
 	defer self.mu.Unlock()

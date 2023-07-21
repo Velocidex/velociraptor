@@ -12,7 +12,6 @@ import (
 
 	"github.com/Velocidex/yaml/v2"
 	"github.com/go-errors/errors"
-	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -166,28 +165,6 @@ func (self *Loader) WithRequiredUser() *Loader {
 						"Please change user with sudo first.",
 					config_obj.Frontend.RunAsUser, user.Username)
 			}
-			return nil
-		}})
-	return self
-}
-
-func (self *Loader) WithOverride(filename string) *Loader {
-	if filename == "" {
-		return self
-	}
-
-	self = self.Copy()
-	self.config_mutators = append(self.config_mutators, configMutator{
-		name: "WithOverride",
-		config_mutator_func: func(config_obj *config_proto.Config) error {
-			self.Log("Loading override config from file %v", filename)
-			override, err := read_config_from_file(filename)
-			if err != nil {
-				return HardError{err}
-			}
-
-			// Merge the json blob with the config
-			proto.Merge(config_obj, override)
 			return nil
 		}})
 	return self

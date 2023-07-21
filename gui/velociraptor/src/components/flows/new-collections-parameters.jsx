@@ -19,7 +19,7 @@ import BootstrapTable from 'react-bootstrap-table-next';
 
 class ResourceControl extends React.Component {
     static propTypes = {
-        parameters: PropTypes.array,
+        parameters: PropTypes.object,
         artifact: PropTypes.string,
         setValue: PropTypes.func.isRequired,
     }

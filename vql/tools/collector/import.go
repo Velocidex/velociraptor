@@ -212,6 +212,24 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		}
 	}
 
+	// If we got here - all went well and we can emit an event to let
+	// listeners know there is a new collection.
+	row := ordereddict.NewDict().
+		Set("Timestamp", utils.GetTime().Now().UTC().Unix()).
+		Set("Flow", collection_context).
+		Set("FlowId", collection_context.SessionId).
+		Set("ClientId", collection_context.ClientId)
+
+	journal, err := services.GetJournal(config_obj)
+	if err != nil {
+		return collection_context
+	}
+	journal.PushRowsToArtifact(ctx, config_obj,
+		[]*ordereddict.Dict{row},
+		"System.Flow.Completion", collection_context.ClientId,
+		collection_context.SessionId,
+	)
+
 	return collection_context
 }
 

@@ -592,7 +592,7 @@ then
 fi
 `)
 	r.AddPostun(`
-/sbin/service velociraptor condrestart > /dev/null 2>&1 || :
+/sbin/service velociraptor start  > /dev/null 2>&1 || :
 `)
 
 	fd, err := os.OpenFile(output_path,

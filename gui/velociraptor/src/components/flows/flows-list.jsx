@@ -32,6 +32,16 @@ import {CancelToken} from 'axios';
 
 const POLL_TIME = 5000;
 
+const SLIDE_STATES = [{
+    level: "30%",
+    icon: "arrow-down",
+}, {
+    level: "100%",
+    icon: "arrow-up",
+}, {
+    level: "42px",
+    icon: "arrows-up-down",
+}];
 
 export class DeleteFlowDialog extends React.PureComponent {
     static propTypes = {
@@ -199,8 +209,7 @@ class FlowsList extends React.Component {
         initialized_from_parent: false,
         selectedFlowId: undefined,
         version: {version: 0},
-        slider_level: "90%",
-        slider_icon: "maximize",
+        slider: 0,
         transform: undefined,
     }
 
@@ -212,7 +221,8 @@ class FlowsList extends React.Component {
         this.source = CancelToken.source();
         this.interval = setInterval(this.incrementVersion, POLL_TIME);
 
-        this.props.collapseToggle(this.state.slider_level);
+        let slider = SLIDE_STATES[this.state.slider];
+        this.props.collapseToggle(slider.level);
 
         let action = this.props.match && this.props.match.params &&
             this.props.match.params.flow_id;
@@ -313,16 +323,9 @@ class FlowsList extends React.Component {
     }
 
     expandSlider = ()=>{
-        if (this.state.slider_level===50) {
-            this.setState({slider_level: 100, slider_icon: "maximize"});
-            this.props.collapseToggle("100%");
-        } else if (this.state.slider_level===100) {
-            this.setState({slider_level: 10, slider_icon: "minimize"});
-            this.props.collapseToggle("42px");
-        } else {
-            this.setState({slider_level: 50, slider_icon: "arrow-down"});
-            this.props.collapseToggle("50%");
-        }
+        let next_slide = (this.state.slider + 1) % SLIDE_STATES.length;
+        this.setState({ slider: next_slide});
+        this.props.collapseToggle(SLIDE_STATES[next_slide].level);
     };
 
     render() {
@@ -513,7 +516,7 @@ class FlowsList extends React.Component {
                           className="btn-tooltip"
                           variant="default"
                           onClick={this.expandSlider}>
-                    <FontAwesomeIcon icon={this.state.slider_icon}/>
+                    <FontAwesomeIcon icon={SLIDE_STATES[this.state.slider].icon}/>
                   </Button>
 
                   { _.isEmpty(this.state.transform) ?
