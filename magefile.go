@@ -362,6 +362,15 @@ func LinuxM1() error {
 		disable_cgo: true,
 		arch:        "arm64"}.Run()
 }
+
+// To install cross compilers: apt-get install gcc-aarch64-linux-gnu
+func LinuxArm64() error {
+	return Builder{goos: "linux",
+		extra_tags: " release yara ",
+		cc:         "aarch64-linux-gnu-gcc",
+		arch:       "arm64"}.Run()
+}
+
 func DarwinBase() error {
 	return Builder{goos: "darwin",
 		extra_tags:  " release ",

@@ -21,7 +21,7 @@ class ClientFlowsView extends React.Component {
 
         // Only show the spinner when the component is first mounted.
         loading: true,
-        topPaneSize: undefined,
+        topPaneSize: "30%",
     }
 
     setSelectedFlow = (flow) => {
@@ -43,12 +43,13 @@ class ClientFlowsView extends React.Component {
     }
 
     render() {
+        console.log(this.state.topPaneSize);
         return (
             <>
               <SplitPane split="horizontal"
                          size={this.state.topPaneSize}
                          onResizerDoubleClick={x=>this.collapse("50%")}
-                         defaultSize="30%">
+                         defaultSize="80%">
                 <FlowsList
                   selected_flow={this.state.currentFlow}
                   collapseToggle={this.collapse}

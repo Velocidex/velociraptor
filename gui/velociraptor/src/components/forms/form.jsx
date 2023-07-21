@@ -26,6 +26,9 @@ import "./forms.css";
 
 const numberRegex = RegExp("^[0-9]+$");
 
+// Should match the code in services/launcher/compiler.go
+const boolRegex = RegExp('^(Y|TRUE|YES|OK)$', "i");
+
 // Returns a date object in local timestamp which represents the UTC
 // date. This is needed because the date selector widget expects to
 // work in local time.
@@ -569,7 +572,7 @@ export default class VeloForm extends React.Component {
                               this.props.setValue("N");
                           }
                       }}
-                      checked={this.props.value === "Y"}
+                      checked={boolRegex.test(this.props.value)}
                       value={this.props.value} />
                   </Col>
                 </Form.Group>

@@ -779,9 +779,23 @@ export default class NotebookCellRenderer extends React.Component {
                   { selected &&
                     <>
                       {_.map(this.state.cell.messages, (msg, idx) => {
-                          return <div key={idx} className="error-message">
-                               {msg}
-                             </div>;
+                          // Extract the log level and render the
+                          // classes based on it
+                          let className = "";
+                          let parts = msg.split(":", 2);
+                          if (parts.length === 2) {
+                              switch (parts[0]) {
+                              case "ERROR":
+                                  className = "error-message"; break;
+                              case "DEBUG":
+                                  className = "debug-message"; break;
+                              case "INFO":
+                                  className = "info-message"; break;
+                              }
+                          };
+                          return <div key={idx} className={className}>
+                                   {msg}
+                                 </div>;
                       })}
 
                       <Button

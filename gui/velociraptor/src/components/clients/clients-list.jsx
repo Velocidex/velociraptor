@@ -525,7 +525,7 @@ class VeloClientList extends Component {
         };
 
         let affected_clients = this.getAffectedClients();
-        let total_rows = this.state.total || 0;
+        let total_rows = parseInt(this.state.total) || 0;
         let page_size = this.state.page_size || 10;
         let currentPage = this.state.start_row / this.state.page_size;
         if (currentPage > total_rows / page_size) {

@@ -27,7 +27,7 @@ jobs:
     - name: Get dependencies
       run: |
         go get -v -t -d ./...
-        sudo apt-get install mingw-w64-x86-64-dev gcc-mingw-w64-x86-64 gcc-mingw-w64
+        sudo apt-get install mingw-w64-x86-64-dev gcc-mingw-w64-x86-64 gcc-mingw-w64 gcc-aarch64-linux-gnu
 
     - name: Use Node.js v16
       uses: actions/setup-node@v3
@@ -61,6 +61,7 @@ jobs:
         mkdir ./output/
         export PATH=$PATH:~/go/bin/
         go run make.go -v Linux
+        go run make.go -v LinuxArm64
         go run make.go -v Windows
         go run make.go -v Windowsx86
         go run make.go -v DarwinBase

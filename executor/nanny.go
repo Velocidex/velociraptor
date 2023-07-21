@@ -74,7 +74,7 @@ func (self *NannyService) _CheckMemory(message string) bool {
 
 	if m.Alloc > self.MaxMemoryHardLimit {
 		self.Logger.Error(
-			"NannyService: <red>%v of %v bytes: current heap usage %v bytes</>",
+			"NannyService: <red>Exceeding memory limit: %v of %v bytes: current heap usage %v bytes</>",
 			message, self.MaxMemoryHardLimit, m.Alloc)
 
 		self._Exit()

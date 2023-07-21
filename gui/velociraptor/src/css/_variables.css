@@ -33,6 +33,7 @@
     --color-proto-table-border: #c9c9c9;
     --color-proto-table-row-odd: #9fafd1;
     --color-proto-error: #f00;
+    --color-level-error: #990000;
     --color-doc-json: #f5f5f5;
     --color-nav-link-default-shadow: rgba(255, 255, 255, .5);
     --color-nav-link-active-shadow: rgba(0, 0, 0, .2);
