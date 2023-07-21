@@ -172,10 +172,6 @@ func (self *Container) StoreArtifact(
 	subctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	// Record query progress for stats and debugging.
-	query_log := actions.QueryLog.AddQuery(query.VQL)
-	defer query_log.Close()
-
 	vql, err := vfilter.Parse(query.VQL)
 	if err != nil {
 		return 0, err
@@ -185,11 +181,18 @@ func (self *Container) StoreArtifact(
 
 	// Dont store un-named queries but run them anyway.
 	if artifact_name == "" {
+		query_log := actions.QueryLog.AddQuery(query.VQL)
+		defer query_log.Close()
+
 		for range vql.Eval(subctx, scope) {
 			total_rows++
 		}
 		return total_rows, nil
 	}
+
+	// Record query progress for stats and debugging.
+	query_log := actions.QueryLog.AddQuery(query.Name + ":" + query.VQL)
+	defer query_log.Close()
 
 	// The name to use in the zip file to store results from this artifact
 	dest := ZipRootPath.Append(prefix.Components()...).Append(

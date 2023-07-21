@@ -39,10 +39,19 @@ func (self *QueryLogEntry) Close() {
 	defer self.mu.Unlock()
 
 	self.Duration = time.Now().UnixNano() - self.Start.UnixNano()
+
+	// We represent Duration == 0 as not yet complete but sometimes
+	// the query is closed so fast that self.Duration above is still
+	// zero. Account for this and make it 1.
+	if self.Duration == 0 {
+		self.Duration = 1
+	}
 }
 
 type QueryLogType struct {
 	mu sync.Mutex
+
+	limit int
 
 	Queries []*QueryLogEntry
 }
@@ -64,8 +73,20 @@ func (self *QueryLogType) AddQuery(query string) *QueryLogEntry {
 
 	self.Queries = append(self.Queries, q)
 
-	if len(self.Queries) > 50 {
-		self.Queries = self.Queries[1:]
+	if len(self.Queries) > self.limit {
+		// Drop the first finished message. This should keep the
+		// queries that are in flight in the queue as much as
+		// possible.
+		dropped := false
+		new_queries := make([]*QueryLogEntry, 0, len(self.Queries))
+		for _, i := range self.Queries {
+			if !dropped && i.Duration != 0 {
+				dropped = true
+			} else {
+				new_queries = append(new_queries, i)
+			}
+		}
+		self.Queries = new_queries
 	}
 
 	return q
@@ -85,5 +106,7 @@ func (self *QueryLogType) Get() []QueryLogEntry {
 }
 
 func NewQueryLog() *QueryLogType {
-	return &QueryLogType{}
+	return &QueryLogType{
+		limit: 100,
+	}
 }

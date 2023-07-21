@@ -35,9 +35,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ttlcache/v2"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
-	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -60,7 +60,7 @@ import (
 const READERS_CACHE = "$accessor_reader"
 
 type ReaderPool struct {
-	lru *cache.LRUCache
+	lru *ttlcache.Cache
 }
 
 // Moves the reader to the head of the LRU.
@@ -70,8 +70,8 @@ func (self *ReaderPool) Activate(reader *AccessorReader) {
 
 // Flush all contained readers.
 func (self *ReaderPool) Close() {
-	for _, k := range self.lru.Keys() {
-		self.lru.Delete(k)
+	for _, k := range self.lru.GetKeys() {
+		self.lru.Remove(k)
 	}
 }
 
@@ -167,6 +167,8 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 	// It is ok to close the reader at any time. We expect this
 	// and just re-open the underlying file when needed.
 	if self.reader == nil {
+		lifetime := self.Lifetime
+
 		accessor, err := accessors.GetAccessor(self.Accessor, self.Scope)
 		if err != nil {
 			self.mu.Unlock()
@@ -213,7 +215,7 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 
 				// Close the file after its lifetime
 				// is exhausted.
-			case <-time.After(self.GetLifetime()):
+			case <-time.After(lifetime):
 				self.Close()
 			}
 		}()
@@ -253,8 +255,21 @@ func GetReaderPool(scope vfilter.Scope, lru_size int64) *ReaderPool {
 
 		// Create a reader pool
 		pool := &ReaderPool{
-			lru: cache.NewLRUCache(lru_size),
+			lru: ttlcache.NewCache(),
 		}
+		pool.lru.SetCacheSizeLimit(int(lru_size))
+
+		// Close the item on expiration
+		pool.lru.SetExpirationReasonCallback(
+			func(key string, reason ttlcache.EvictionReason, value interface{}) {
+				accessor, ok := value.(*AccessorReader)
+				if ok {
+					accessor.Close()
+				}
+			})
+
+		// When the item expires from the cache we need to close it.
+
 		vql_subsystem.CacheSet(scope, READERS_CACHE, pool)
 
 		// Destroy the pool when the scope is done.
@@ -282,10 +297,18 @@ func NewPagedReader(scope vfilter.Scope,
 
 	// Try to get the reader from the pool
 	key := accessor + "://" + filename.String()
-	value, pres := pool.lru.Get(key)
-	if pres {
+	value, err := pool.lru.Get(key)
+	if err == nil {
 		return value.(*AccessorReader), nil
 	}
+
+	/*
+		if accessor != "data" {
+			fmt.Printf("Creating a new reader for %v\n", key)
+		} else {
+			fmt.Printf("Creating a new reader for data (len %v)\n", len(key))
+		}
+	*/
 
 	accessor_obj, err := accessors.GetAccessor(accessor, scope)
 	if err != nil {

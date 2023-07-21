@@ -3,6 +3,7 @@ package collector
 import (
 	"context"
 	"log"
+	"runtime"
 	"sync"
 	"time"
 
@@ -60,6 +61,9 @@ type collectionManager struct {
 	format reporting.ContainerFormat
 
 	scope vfilter.Scope
+
+	// Control concurrency
+	concurrency *utils.Concurrency
 }
 
 func (self *collectionManager) GetRepository(extra_artifacts vfilter.Any) (err error) {
@@ -242,6 +246,12 @@ func (self *collectionManager) collectQuery(
 	query *actions_proto.VQLRequest,
 	status *crypto_proto.VeloStatus) (err error) {
 
+	cancel, err := self.concurrency.StartConcurrencyControl(self.ctx)
+	if err != nil {
+		return err
+	}
+	defer cancel()
+
 	// Useful to know what is going on with the collection.
 	if query.Name != "" {
 		subscope.Log("Starting collection of %s", query.Name)
@@ -256,12 +266,14 @@ func (self *collectionManager) collectQuery(
 		if err != nil {
 			status.Status = crypto_proto.VeloStatus_GENERIC_ERROR
 			status.ErrorMessage = err.Error()
+			query_log.Close()
 			return err
 		}
 		for row := range vql.Eval(self.ctx, subscope) {
 			status.ResultRows++
 			select {
 			case <-self.ctx.Done():
+				query_log.Close()
 				return nil
 			case self.output_chan <- row:
 			}
@@ -421,14 +433,20 @@ func newCollectionManager(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	output_chan chan vfilter.Row,
+	concurrency int,
 	scope vfilter.Scope) *collectionManager {
 	subctx, cancel := context.WithCancel(ctx)
+
+	if concurrency == 0 {
+		concurrency = 2 * runtime.NumCPU()
+	}
 
 	return &collectionManager{
 		ctx:                subctx,
 		cancel:             cancel,
 		config_obj:         config_obj,
 		collection_context: flows.NewCollectionContext(ctx, config_obj),
+		concurrency:        utils.NewConcurrencyControl(concurrency, time.Hour),
 		output_chan:        output_chan,
 		scope:              scope,
 	}
