@@ -35,7 +35,7 @@ sources:
       LET Accessor = if(condition=VSSAnalysisAge > 0, then="ntfs_vss", else="auto")
 
       // Extract all target paths from glob
-      LET files = SELECT OSPath as Source
+      LET files = SELECT OSPath
       FROM glob(globs=EventLog, accessor=Accessor)
 
       // Parse all target files, order by source and add dedupe string
@@ -55,7 +55,7 @@ sources:
                   System.Level as Level,
                   System.Opcode as Opcode,
                   System.Task as Task,
-                  Source
+                  OSPath AS Source
                 FROM parse_evtx(filename=OSPath, accessor=Accessor)
                 WHERE System.EventID.Value = 7045 and
                   EventData.ImagePath =~ ComspecRegex
