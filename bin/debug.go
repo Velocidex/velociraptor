@@ -72,6 +72,10 @@ func initDebugServer(config_obj *config_proto.Config) error {
 		http.HandleFunc("/debug/queries", handleQueries)
 		http.HandleFunc("/debug/queries/running", handleRunningQueries)
 
+		// Switch off the debug flag so we do not run this again. (The
+		// GUI runs this function multiple times).
+		*debug_flag = false
+
 		go func() {
 			log.Println(http.ListenAndServe(
 				fmt.Sprintf("127.0.0.1:%d", *debug_flag_port), nil))

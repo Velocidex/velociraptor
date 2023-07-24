@@ -38,7 +38,7 @@ func (self _GlobHitAssociativeProtocol) GetMembers(
 	// FROM ...
 	return []string{
 		"Name", "OSPath", "Mtime", "Atime", "Ctime",
-		"Btime", "Size", "Mode", "IsDir", "IsLink", "Globs",
+		"Btime", "Size", "Mode", "IsDir", "IsLink", "Data", "Globs",
 	}
 }
 

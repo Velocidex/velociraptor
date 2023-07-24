@@ -18,28 +18,28 @@ parameters:
   - name: ComspecRegex
     default: "(COMSPEC|cmd.exe|ADMIN\\$)"
     type: regex
-  - name: SearchVSS
-    description: "Add VSS into query."
-    type: bool
+
+  - name: VSSAnalysisAge
+    type: int
+    default: 0
+    description: |
+      If larger than zero we analyze VSS within this many days
+      ago. (e.g 7 will analyze all VSS within the last week).  Note
+      that when using VSS analysis we have to use the ntfs accessor
+      for everything which will be much slower.
 
 sources:
   - name: ServiceCreation
     query: |
+      LET VSS_MAX_AGE_DAYS <= VSSAnalysisAge
+      LET Accessor = if(condition=VSSAnalysisAge > 0, then="ntfs_vss", else="auto")
+
       // Extract all target paths from glob
-      LET files = SELECT *
-            FROM if(condition=SearchVSS,
-                then= {
-                    SELECT *
-                    FROM Artifact.Windows.Search.VSS(SearchFilesGlob=EventLog)
-                },
-                else= {
-                    SELECT *, OSPath as Source
-                    FROM glob(globs=EventLog)
-                })
+      LET files = SELECT OSPath
+      FROM glob(globs=EventLog, accessor=Accessor)
 
       // Parse all target files, order by source and add dedupe string
-      LET hits = SELECT *
-            FROM foreach(
+      LET hits = SELECT * FROM foreach(
               row=files,
               query={
                 SELECT timestamp(epoch=System.TimeCreated.SystemTime) as EventTime,
@@ -55,19 +55,13 @@ sources:
                   System.Level as Level,
                   System.Opcode as Opcode,
                   System.Task as Task,
-                  Source
-                FROM parse_evtx(filename=OSPath, accessor='file')
+                  OSPath AS Source
+                FROM parse_evtx(filename=OSPath, accessor=Accessor)
                 WHERE System.EventID.Value = 7045 and
                   EventData.ImagePath =~ ComspecRegex
             })
             ORDER BY Source DESC
 
-      // Group results for deduplication
-      LET grouped = SELECT *
-          FROM hits
-          GROUP BY EventRecordID
-
-      // Output results
       SELECT
             EventTime,
             EventID,
@@ -80,4 +74,5 @@ sources:
             StartType,
             EventRecordID,
             Source
-        FROM grouped
+        FROM hits
+        GROUP BY EventRecordID, Channel

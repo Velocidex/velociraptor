@@ -2,7 +2,6 @@ package glob
 
 import (
 	"sort"
-	"strings"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
 )
@@ -61,7 +60,7 @@ func (self *dirHits) getHits() []*GlobHit {
 
 	// Sort the results alphabetically.
 	sort.Slice(tmp, func(i, j int) bool {
-		return -1 == strings.Compare(tmp[i].base, tmp[j].base)
+		return tmp[i].fileinfo.Name() < tmp[j].fileinfo.Name()
 	})
 
 	results := make([]*GlobHit, 0, len(tmp))

@@ -25,7 +25,7 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
   "expected_size": 1319,
   "basename(path=file_store(path=vfs_path))": "old_style.zip"
  }
-]SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.KapeFiles.Targets', env=dict(Device ='C:', VSSAnalysis='Y', KapeTriage='Y')).request AS Flow FROM scope()[
+]SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.KapeFiles.Targets', env=dict(Device ='C:', VSSAnalysisAge=2, KapeTriage='Y')).request AS Flow FROM scope()[
  {
   "Flow": {
    "creator": "VelociraptorServer",
@@ -47,8 +47,8 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
         "comment": ""
        },
        {
-        "key": "VSSAnalysis",
-        "value": "Y",
+        "key": "VSSAnalysisAge",
+        "value": "2",
         "comment": ""
        },
        {
@@ -76,7 +76,7 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
    "ops_per_second": 0
   }
  }
-]SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.KapeFiles.Targets', spec=dict(`Windows.KapeFiles.Targets`=dict( Device ='C:', VSSAnalysis='Y', KapeTriage='Y'))).request AS Flow FROM scope()[
+]SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.KapeFiles.Targets', spec=dict(`Windows.KapeFiles.Targets`=dict( Device ='C:', VSSAnalysisAge=2, KapeTriage='Y'))).request AS Flow FROM scope()[
  {
   "Flow": {
    "creator": "VelociraptorServer",
@@ -98,8 +98,8 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
         "comment": ""
        },
        {
-        "key": "VSSAnalysis",
-        "value": "Y",
+        "key": "VSSAnalysisAge",
+        "value": "2",
         "comment": ""
        },
        {
@@ -130,9 +130,6 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
 ]SELECT name FROM artifact_definitions(deps=TRUE, names='Windows.KapeFiles.Targets') ORDER BY name[
  {
   "name": "Generic.Collectors.File"
- },
- {
-  "name": "Windows.Collectors.VSS"
  },
  {
   "name": "Windows.KapeFiles.Targets"

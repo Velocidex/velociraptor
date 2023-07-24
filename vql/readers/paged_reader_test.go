@@ -153,7 +153,8 @@ func (self *TestSuite) TestPagedReader() {
 	})
 
 	// No outstanding readers
-	assert.Equal(self.T(), int64(0), self.pool.lru.Size())
+	metrics := self.pool.lru.GetMetrics()
+	assert.Equal(self.T(), int64(0), metrics.Size)
 
 }
 

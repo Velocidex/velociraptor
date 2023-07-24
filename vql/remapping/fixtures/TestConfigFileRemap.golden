@@ -11,6 +11,9 @@
    "Mode": 2147484141,
    "IsDir": true,
    "IsLink": false,
+   "Data": {
+    "type": "Key"
+   },
    "Globs": [
     "HKEY_CURRENT_USER\\Software\\Classes\\windows*"
    ]
@@ -26,6 +29,9 @@
    "Mode": 2147484141,
    "IsDir": true,
    "IsLink": false,
+   "Data": {
+    "type": "Key"
+   },
    "Globs": [
     "HKEY_CURRENT_USER\\Software\\Classes\\windows*"
    ]

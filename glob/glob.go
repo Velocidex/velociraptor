@@ -293,7 +293,7 @@ func (self *Globber) ExpandWithContext(
 		// For each file that matched, we check which component
 		// would match it.
 		for _, f := range files {
-			basename := getUniqueName(f)
+			basename := f.Name()
 
 			for filterer, next := range self.filters {
 				if !filterer.Match(f) {
@@ -307,7 +307,7 @@ func (self *Globber) ExpandWithContext(
 				// would match the same file we need to merge their
 				// results together.
 				if next.is_sentinel() {
-					hits.mergeHit(basename, next.getHit(f))
+					hits.mergeHit(getUniqueName(f), next.getHit(f))
 				}
 
 				// Only recurse into directories.

@@ -141,6 +141,8 @@ github.com/Velocidex/sflags v0.3.1-0.20210402155316-b09f53df5162 h1:wcYgZ8Z8w0JN
 github.com/Velocidex/sflags v0.3.1-0.20210402155316-b09f53df5162/go.mod h1:VbiCXG8oNiOTw+Dv6B0Qc3lKlbhlArfBMX20om018ZA=
 github.com/Velocidex/ttlcache/v2 v2.9.1-0.20211116035050-ddd93fed62f5 h1:ELXxIv+ozRkKsxbTgxCCsh8e2oE1pZKjZgmdznlfgMA=
 github.com/Velocidex/ttlcache/v2 v2.9.1-0.20211116035050-ddd93fed62f5/go.mod h1:3/pI9BBAF7gydBWvMVtV7W1qRwshEG9lBwed/d8xfFg=
+github.com/Velocidex/ttlcache/v2 v2.9.1-0.20230724083715-1eb048b1f6d6 h1:3HSrLwAt64gM7FNTPRXYMszpS5bRijQ6xaPVq2vsbuI=
+github.com/Velocidex/ttlcache/v2 v2.9.1-0.20230724083715-1eb048b1f6d6/go.mod h1:3/pI9BBAF7gydBWvMVtV7W1qRwshEG9lBwed/d8xfFg=
 github.com/Velocidex/yaml/v2 v2.2.5/go.mod h1:VBjrsTMc/b1h0ankOOnJPYoCbJNwhpGYpnDgICEs2mk=
 github.com/Velocidex/yaml/v2 v2.2.8 h1:GUrSy4SBJ6RjGt43k6MeBKtw2z/27gh4A3hfFmFY3No=
 github.com/Velocidex/yaml/v2 v2.2.8/go.mod h1:PlXIg/Pxmoja48C1vMHo7C5pauAZvLq/UEPOQ3DsjS4=
@@ -815,6 +817,8 @@ golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f/go.mod h1:RxMgew5VJxzue5/jJ
 golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.2.0 h1:PUR+T4wwASmuSTYdKjYHI5TD22Wy5ogLU5qZCOLxBrI=
 golang.org/x/sync v0.2.0/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
+golang.org/x/sync v0.3.0 h1:ftCYgMx6zT/asHUrPw8BLLscYtGznsLAnjq5RH9P66E=
+golang.org/x/sync v0.3.0/go.mod h1:FU7BRWz2tNW+3quACPkgCx/L+uEAv1htQ0V83Z9Rj+Y=
 golang.org/x/sys v0.0.0-20180830151530-49385e6e1522/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20180909124046-d0be0721c37e/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20190215142949-d0b11bdaac8a/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
