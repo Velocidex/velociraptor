@@ -38,6 +38,7 @@ var (
 
 func GetInfo(host *psutils.InfoStat) *ordereddict.Dict {
 	me, _ := os.Executable()
+	cwd, _ := os.Getwd()
 	return ordereddict.NewDict().
 		Set("Hostname", host.Hostname).
 		Set("Uptime", host.Uptime).
@@ -53,6 +54,7 @@ func GetInfo(host *psutils.InfoStat) *ordereddict.Dict {
 		Set("CompilerVersion", runtime.Version()).
 		Set("HostID", host.HostID).
 		Set("Exe", me).
+		Set("CWD", cwd).
 		Set("IsAdmin", IsAdmin()).
 		Set("ClientStart", start_time)
 }

@@ -95,6 +95,12 @@ parameters:
     default: ""
     description: An optional output directory prefix
 
+  - name: opt_filename_template
+    default: "Collection-%FQDN%-%TIMESTAMP%"
+    description: |
+      The filename to use. You can expand environment variables as
+      well as the following %FQDN% and %TIMESTAMP%.
+
   - name: opt_cpu_limit
     default: "0"
     type: int
@@ -129,10 +135,10 @@ parameters:
   - name: StandardCollection
     type: hidden
     default: |
-      LET _ <= log(message="Will collect package " + filename)
+      LET _ <= log(message="Will collect package %v", args=zip_filename)
 
       SELECT * FROM collect(artifacts=Artifacts,
-            args=Parameters, output=filename + ".zip",
+            args=Parameters, output=zip_filename,
             cpu_limit=CpuLimit,
             progress_timeout=ProgressTimeout,
             timeout=Timeout,
@@ -162,14 +168,16 @@ parameters:
   - name: GCSCollection
     type: hidden
     default: |
+      LET GCSBlob <= parse_json(data=target_args.GCSKey)
+
       // A utility function to upload the file.
       LET upload_file(filename, name, accessor) = upload_gcs(
           file=filename,
           accessor=accessor,
-          bucket=TargetArgs.bucket,
+          bucket=target_args.bucket,
           project=GCSBlob.project_id,
           name=name,
-          credentials=TargetArgs.GCSKey)
+          credentials=target_args.GCSKey)
 
   - name: AzureSASURL
     type: hidden
@@ -214,14 +222,30 @@ parameters:
        FROM parse_csv(filename="/uploads/inventory.csv", accessor="me")
        WHERE log(message="Adding tool " + ToolName)
 
-      LET baseline <= SELECT Fqdn, basename(path=Exe) AS Exe FROM info()
+      LET baseline <= SELECT Fqdn, dirname(path=Exe) AS ExePath,
+         basename(path=Exe) AS Exe,
+         scope().CWD AS CWD FROM info()
+
+      LET OutputPrefix <= if(condition= OutputPrefix,
+        then=pathspec(parse=OutputPrefix),
+        else= if(condition= baseline[0].CWD,
+          then=pathspec(parse= baseline[0].CWD),
+          else=pathspec(parse= baseline[0].ExePath)))
+
+      LET _ <= log(message="Output Prefix : %v", args= OutputPrefix)
+
+      LET FormatMessage(Message) = regex_transform(
+          map=dict(`%FQDN%`=baseline[0].Fqdn,
+                   `%Timestamp%`=timestamp(epoch=now()).MarshalText),
+          source=Message)
 
       // Make the filename safe on windows but we trust the OutputPrefix.
-      LET filename <= OutputPrefix + regex_replace(
-          source=format(format="Collection-%s-%s",
-                        args=[baseline[0].Fqdn,
-                              timestamp(epoch=now()).MarshalText]),
+      LET base_filename <= OutputPrefix + regex_replace(
+          source=expand(path=FormatMessage(Message=FilenameTemplate)),
           re="[^0-9A-Za-z\\-]", replace="_")
+
+      LET zip_filename <= base_filename.Dirname + (base_filename.Basename + ".zip")
+      LET log_filename <= base_filename.Dirname + (base_filename.Basename + ".log")
 
       -- Make a random hex string as a random password
       LET RandomPassword <= SELECT format(format="%02x",
@@ -267,27 +291,27 @@ parameters:
       // Try to upload the log file now to see if we are even able to
       // upload at all - we do this to avoid having to collect all the
       // data and then failing the upload step.
-      LET _ <= log(message="Uploading to " + filename + ".log")
+      LET _ <= log(message="Uploading to %v", args=log_filename)
       LET upload_test <= upload_file(
           filename="Test upload from " + baseline[0].Exe,
           accessor="data",
-          name=filename + ".log")
+          name=log_filename)
 
-      LET _ <= log(message="Will collect package " + filename +
-         " and upload to cloud bucket " + TargetArgs.bucket)
+      LET _ <= log(message="Will collect package %v  and upload to cloud bucket %v",
+         args=[zip_filename, TargetArgs.bucket])
 
       LET collect_and_upload = SELECT
           upload_file(filename=Container,
-                      name=filename+".zip",
+                      name=zip_filename,
                       accessor="file") AS Upload,
-          upload_file(filename=baseline[0].Exe + ".log",
-                      name=filename+".log",
+          upload_file(filename=log_filename,
+                      name=log_filename,
                       accessor="file") AS LogUpload
 
       FROM collect(artifacts=Artifacts,
           args=Parameters,
           format=Format,
-          output=tempfile(extension=".zip"),
+          output=zip_filename,
           cpu_limit=CpuLimit,
           progress_timeout=ProgressTimeout,
           timeout=Timeout,
@@ -295,11 +319,11 @@ parameters:
           level=Level,
           metadata=ContainerMetadata)
 
-      SELECT * FROM if(condition=upload_test.Path,
-          then=collect_and_upload,
-          else={SELECT log(
-             message="Aborting collection: Failed to upload to cloud bucket!")
-          FROM scope()})
+      LET _ <= if(condition=NOT upload_test.Path,
+         then=log(message="Failed to upload to cloud bucket! Leaving the collection behind for manual upload!"))
+
+      SELECT * FROM collect_and_upload
+      WHERE log(message="<green>Collection Complete!</green> Please remove %v when you are sure it was properly transferred", args=zip_filename)
 
   - name: FetchBinaryOverride
     type: hidden
@@ -416,6 +440,7 @@ sources:
                     dict(name="Level", default=opt_level, type="int"),
                     dict(name="Format", default=opt_format),
                     dict(name="OutputPrefix", default=opt_output_directory),
+                    dict(name="FilenameTemplate", default=opt_filename_template),
                     dict(name="CpuLimit", type="int",
                          default=opt_cpu_limit),
                     dict(name="ProgressTimeout", type="int",
