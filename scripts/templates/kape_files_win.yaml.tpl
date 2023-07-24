@@ -24,16 +24,27 @@ reference:
 
 parameters:
   - name: UseAutoAccessor
-    description: Uses file accessor when possible instead of ntfs parser - this is much faster.
+    description: |
+      Uses file accessor when possible instead of ntfs parser - this
+      is much faster. Note that when using VSS analysis we have to use
+      the ntfs accessor for everything which will be much slower.
     type: bool
     default: Y
+
   - name: Device
-    description: Name of the drive letter to search. You can add multiple drives separated with a comma.
+    description: |
+      Name of the drive letter to search. You can add multiple drives
+      separated with a comma.
     default: "C:,D:"
-  - name: VSSAnalysis
-    type: bool
-    default:
-    description: If set we run the collection across all VSS and collect only unique changes.
+
+  - name: VSSAnalysisAge
+    type: int
+    default: 0
+    description: |
+      If larger than zero we analyze VSS within this many days
+      ago. (e.g 7 will analyze all VSS within the last week).  Note
+      that when using VSS analysis we have to use the ntfs accessor
+      for everything which will be much slower.
 
 %(parameters)s
   - name: KapeRules
@@ -43,12 +54,12 @@ parameters:
 %(csv)s
   - name: KapeTargets
     type: hidden
-    description: Each parameter above represents a group of rules to be triggered. This table specifies which rule IDs will be included when the parameter is checked.
+    description: |
+      Each parameter above represents a group of rules to be
+      triggered. This table specifies which rule IDs will be included
+      when the parameter is checked.
     default: |
 %(rules)s
-  - name: DontBeLazy
-    description: Normally we prefer to use lazy_ntfs for speed. Sometimes this might miss stuff so setting this will fallback to the regular ntfs accessor.
-    type: bool
 
   - name: NTFS_CACHE_TIME
     type: int
@@ -58,6 +69,8 @@ parameters:
 sources:
   - name: All File Metadata
     query: |
+      LET VSS_MAX_AGE_DAYS <= VSSAnalysisAge
+
       -- Select all the rule Ids to be included depending on the group
       -- selection.
       LET targets <= SELECT * FROM parse_csv(
@@ -82,21 +95,13 @@ sources:
       -- Call the generic VSS file collector with the globs we want in
       -- a new CSV file.
       LET all_results_from_device(Device) = SELECT * FROM if(
-           condition=VSSAnalysis,
+           condition=VSSAnalysisAge > 0,
            then={
-             SELECT * FROM chain(async=TRUE,
-               a={
-                   -- For VSS we always need to parse NTFS
-                   SELECT * FROM Artifact.Windows.Collectors.VSS(
-                      RootDevice=Device, Accessor="ntfs",
-                      collectionSpec=rule_specs_ntfs)
-               }, b={
-                   SELECT * FROM Artifact.Windows.Collectors.VSS(
-                      RootDevice=Device,
-                      Accessor=if(condition=DontBeLazy,
-                                  then="ntfs", else="lazy_ntfs"),
-                      collectionSpec=rule_specs_lazy_ntfs)
-               })
+              -- Process everything with the ntfs_vss accessor.
+              SELECT * FROM Artifact.Generic.Collectors.File(
+                Root=Device,
+                Accessor="ntfs_vss",
+                collectionSpec=rule_specs_ntfs + rule_specs_lazy_ntfs)
            }, else={
              SELECT * FROM chain(async=TRUE,
                a={

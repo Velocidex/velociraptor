@@ -8,6 +8,9 @@ import "fmt"
 const (
 	// The operation completed successfully.
 	STATUS_SUCCESS = 0x00000000
+
+	STATUS_INVALID_HANDLE = 0xC0000008
+
 	// The caller specified WaitAny for WaitType and one of the dispatcher objects in the Object array has been set to the signaled state.
 	STATUS_WAIT_0 = 0x00000000
 	// The caller specified WaitAny for WaitType and one of the dispatcher objects in the Object array has been set to the signaled state.

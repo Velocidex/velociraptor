@@ -74,12 +74,22 @@ parameters:
     description: IOC regex to search for.
     default: .
     type: regex
-  - name: SearchVSS
-    description: "add VSS into query."
-    type: bool
+
+  - name: VSSAnalysisAge
+    type: int
+    default: 0
+    description: |
+      If larger than zero we analyze VSS within this many days
+      ago. (e.g 7 will analyze all VSS within the last week).  Note
+      that when using VSS analysis we have to use the ntfs accessor
+      for everything which will be much slower.
+
 
 sources:
   - query: |
+      LET VSS_MAX_AGE_DAYS <= VSSAnalysisAge
+      LET Accessor = if(condition=VSSAnalysisAge > 0, then="ntfs_vss", else="auto")
+
       -- firstly set timebounds for performance
       LET DateAfterTime <= if(condition=DateAfter,
         then=DateAfter, else=timestamp(epoch="1600-01-01"))
@@ -95,35 +105,33 @@ sources:
         `4702`="A scheduled task was updated.")
 
       -- expand provided glob into a list of paths on the file system (fs)
-      LET fspaths <= SELECT OSPath
-        FROM glob(globs=[expand(path=Security), expand(path=TaskScheduler)])
-
-      -- function returning list of VSS paths corresponding to path
-      LET vsspaths(path) = SELECT OSPath
-        FROM Artifact.Windows.Search.VSS(SearchFilesGlob=path)
+      LET fspaths = SELECT OSPath
+        FROM glob(globs=[expand(path=Security), expand(path=TaskScheduler)],
+        accessor=Accessor)
 
       -- function to parse task content and replace xml in EventData
-      LET parse_task(data) = SELECT
-                                data.SubjectUserSid as SubjectUserSid,
-                                data.SubjectUserName as SubjectUserName,
-                                data.SubjectDomainName as SubjectDomainName,
-                                data.SubjectLogonId as SubjectLogonId,
-                                data.TaskName as TaskName,
-                                parse_xml(
-                                    accessor='data',
-                                    file=regex_replace(
-                                        source= if(condition= data.TaskContentNew,
-                                            then= data.TaskContentNew,
-                                            else= if(condition= data.TaskContent,
-                                                then= data.TaskContent)),
-                                        re='<[?].+?>',
-                                        replace='')).Task as TaskContent,
-                                data.ClientProcessStartKey as ClientProcessStartKey,
-                                data.ClientProcessId as ClientProcessId,
-                                data.ParentProcessId as ParentProcessId,
-                                data.RpcCallClientLocality as RpcCallClientLocality,
-                               data.FQDN as FQDN
-                            FROM scope()
+      LET parse_task(data) = dict(
+         SubjectUserSid=data.SubjectUserSid,
+         SubjectUserName=data.SubjectUserName,
+         SubjectDomainName=data.SubjectDomainName,
+         SubjectLogonId=data.SubjectLogonId,
+         TaskName=data.TaskName,
+         TaskContent=parse_xml(
+            accessor='data',
+            file=regex_replace(
+              source= if(condition= data.TaskContentNew,
+                 then= data.TaskContentNew,
+                 else= if(condition= data.TaskContent,
+                    then= data.TaskContent)),
+                       re='<[?].+?>',
+                       replace='')).Task,
+
+         ClientProcessStartKey=data.ClientProcessStartKey,
+         ClientProcessId=data.ClientProcessId,
+         ParentProcessId=data.ParentProcessId,
+         RpcCallClientLocality=data.RpcCallClientLocality,
+         FQDN=data.FQDN)
+
 
       -- function returning query hits
       LET evtxsearch(PathList) = SELECT * FROM foreach(
@@ -150,11 +158,11 @@ sources:
                             then= EventData.Path,
                             else= 'N/A' )) as TaskAction,
                     if(condition=EventData.TaskContent OR EventData.TaskContentNew,
-                            then= parse_task(data=EventData)[0],
+                            then= parse_task(data=EventData),
                             else= EventData) as EventData,
                     get(field="Message") as Message,
                     OSPath
-                FROM parse_evtx(filename=OSPath)
+                FROM parse_evtx(filename=OSPath, accessor=Accessor)
                 WHERE
                     (( Channel = 'Microsoft-Windows-TaskScheduler/Operational'
                         AND str(str=EventID) =~ TaskSchedulerEventRegex )
@@ -175,21 +183,6 @@ sources:
             }
           )
 
-      -- include VSS in calculation and deduplicate with GROUP BY by file
-      LET include_vss = SELECT * FROM foreach(row=fspaths,
-            query={
-                SELECT *
-                FROM evtxsearch(PathList={
-                        SELECT OSPath FROM vsspaths(path=OSPath)
-                    })
-                GROUP BY EventRecordID,Channel
-              })
-
-      -- exclude VSS in EvtxHunt`
-      LET exclude_vss = SELECT *
-        FROM evtxsearch(PathList={SELECT OSPath FROM fspaths})
-
-      -- return rows
       SELECT
         EventTime,
         Computer,
@@ -201,7 +194,7 @@ sources:
         if(condition= Channel = 'Microsoft-Windows-TaskScheduler/Operational',
             then= Message,
             else=get(item=TaskIDLookup, member=str(str=EventID))) as Message,
-        if(condition= str(str=EventID)=~'^(4698|4699|4700|4701|4702)$',
+        if(condition= EventID =~'^(4698|4699|4700|4701|4702)$',
         then= if(condition= EventData.TaskContent.Actions,
             then= if(condition= EventData.TaskContent.Actions.Exec,
                 then= if(condition= EventData.TaskContent.Actions.Exec.Arguments,
@@ -212,6 +205,4 @@ sources:
             else= TaskAction) as TaskAction,
         EventData,
         OSPath
-      FROM if(condition=SearchVSS,
-        then=include_vss,
-        else=exclude_vss)
+      FROM evtxsearch(PathList=fspaths)

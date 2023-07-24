@@ -76,6 +76,10 @@ func (self *NTFSFileInfo) Name() string {
 	return self.info.Name
 }
 
+func (self *NTFSFileInfo) UniqueName() string {
+	return self._full_path.String()
+}
+
 func (self *NTFSFileInfo) Mode() os.FileMode {
 	var result os.FileMode = 0755
 	if self.IsDir() {

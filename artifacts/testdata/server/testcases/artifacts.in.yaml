@@ -8,7 +8,7 @@ Queries:
   - SELECT collect_client(
         client_id='C.11a3013ccaXXXXX',
         artifacts='Windows.KapeFiles.Targets',
-        env=dict(Device ='C:', VSSAnalysis='Y', KapeTriage='Y')).request AS Flow
+        env=dict(Device ='C:', VSSAnalysisAge=2, KapeTriage='Y')).request AS Flow
     FROM scope()
 
   # Schedule using a new style spec decleration.
@@ -16,7 +16,7 @@ Queries:
         client_id='C.11a3013ccaXXXXX',
         artifacts='Windows.KapeFiles.Targets',
         spec=dict(`Windows.KapeFiles.Targets`=dict(
-            Device ='C:', VSSAnalysis='Y', KapeTriage='Y'))).request AS Flow
+            Device ='C:', VSSAnalysisAge=2, KapeTriage='Y'))).request AS Flow
     FROM scope()
 
 

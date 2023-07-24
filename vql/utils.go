@@ -20,6 +20,7 @@ package vql
 import (
 	"context"
 	"runtime/debug"
+	"strconv"
 	"time"
 
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -94,6 +95,41 @@ func GetIntFromRow(scope vfilter.Scope,
 			return uint64(t)
 		case uint64:
 			return t
+		case float64:
+			return uint64(t)
+		}
+	}
+	return 0
+}
+
+func GetFloatFromRow(scope vfilter.Scope, row vfilter.Row, key string) float64 {
+	value, pres := scope.Associative(row, key)
+	if pres {
+		value = Materialize(context.Background(), scope, value)
+		switch t := value.(type) {
+		case int:
+			return float64(t)
+		case int8:
+			return float64(t)
+		case int16:
+			return float64(t)
+		case int32:
+			return float64(t)
+		case int64:
+			return float64(t)
+		case uint8:
+			return float64(t)
+		case uint16:
+			return float64(t)
+		case uint32:
+			return float64(t)
+		case uint64:
+			return float64(t)
+		case float64:
+			return t
+		case string:
+			res, _ := strconv.ParseFloat(t, 64)
+			return res
 		}
 	}
 	return 0

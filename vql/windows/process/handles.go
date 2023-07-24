@@ -267,6 +267,7 @@ func SendHandleInfo(arg *HandlesPluginArgs, scope vfilter.Scope,
 			case "Token":
 				result.TokenInfo = GetTokenInfo(scope, handle)
 			default:
+				// Try to get the name if possible
 				GetObjectName(scope, handle, result)
 			}
 		}
@@ -415,11 +416,16 @@ func GetObjectName(scope vfilter.Scope, handle syscall.Handle, result *HandleInf
 	status, _ := windows.NtQueryObject(handle, windows.ObjectNameInformation,
 		&buffer[0], uint32(len(buffer)), &length)
 
-	if status != windows.STATUS_SUCCESS {
-		scope.Log("GetObjectName status %v", windows.NTStatus_String(status))
+	if status == windows.STATUS_INVALID_HANDLE {
+		return
 	}
 
-	result.Name = (*windows.UNICODE_STRING)(unsafe.Pointer(&buffer[0])).String()
+	if status != windows.STATUS_SUCCESS {
+		scope.Log("GetObjectName status %v", windows.NTStatus_String(status))
+
+	} else {
+		result.Name = (*windows.UNICODE_STRING)(unsafe.Pointer(&buffer[0])).String()
+	}
 }
 
 func GetObjectType(handle syscall.Handle, scope vfilter.Scope) string {

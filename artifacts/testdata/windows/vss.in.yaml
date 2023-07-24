@@ -1,9 +1,9 @@
 Queries:
   # Test for deduplication
-  - SELECT OSPath, SHA1, Source, Deduped FROM Artifact.Windows.Search.VSS(SearchFilesGlob='c:\\Users\\test.txt')
+  - SELECT OSPath FROM Artifact.Windows.Search.VSS(SearchFilesGlob='c:\\Users\\test.txt')
 
   # Test for multiple hits
-  - SELECT OSPath, SHA1, Source, Deduped FROM Artifact.Windows.Search.VSS(SearchFilesGlob='c:\\Users\\test2.txt')
+  - SELECT OSPath FROM Artifact.Windows.Search.VSS(SearchFilesGlob='c:\\Users\\test2.txt')
 
   # Test evtx VSS support.
 
@@ -11,4 +11,4 @@ Queries:
   # even though the logs were cleared.
   - SELECT EventID,ServiceName,Source FROM Artifact.Windows.EventLogs.ServiceCreationComspec(
           EventLog="C:\\Windows\\system32\\winevt\\logs\\System.evtx",
-          SearchVSS=True)
+          VSSAnalysisAge=2)
