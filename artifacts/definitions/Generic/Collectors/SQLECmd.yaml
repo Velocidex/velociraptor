@@ -18,6 +18,11 @@ description: |
      within the search glob. This is slower but may find more
      potential files (e.g. renamed).
 
+  ## NOTES:
+
+  This artifact is deprecated in favor of
+  Generic.Forensic.SQLiteHunter and will be removed in future
+
 reference:
   - https://github.com/EricZimmerman/SQLECmd
 

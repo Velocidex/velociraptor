@@ -11,6 +11,11 @@ description: |
   user's Created and LastAccess timestamp and the fact that the user
   has actually visited the site and obtained a cookie.
 
+  ## NOTES:
+
+  This artifact is deprecated in favor of
+  Generic.Forensic.SQLiteHunter and will be removed in future
+
 parameters:
   - name: cookieGlobs
     default: \AppData\Local\Google\Chrome\User Data\*\Cookies

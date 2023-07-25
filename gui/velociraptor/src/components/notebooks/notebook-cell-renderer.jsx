@@ -194,9 +194,12 @@ export default class NotebookCellRenderer extends React.Component {
             return;
         }
 
-        // We detect the cell has changed by looking at both cell id and the cell timestamp.
-        let props_cell_timestamp = this.props.cell_metadata && this.props.cell_metadata.timestamp;
-        let props_cell_id = this.props.cell_metadata && this.props.cell_metadata.cell_id;
+        // We detect the cell has changed by looking at both cell id
+        // and the cell timestamp.
+        let props_cell_timestamp = this.props.cell_metadata &&
+            this.props.cell_metadata.timestamp;
+        let props_cell_id = this.props.cell_metadata &&
+            this.props.cell_metadata.cell_id;
 
         if (props_cell_timestamp !== this.state.cell_timestamp ||
             props_cell_id !== current_cell_id) {
@@ -204,7 +207,6 @@ export default class NotebookCellRenderer extends React.Component {
             // Prevent further updates to this cell by setting the
             // cell id and timestamp.
             this.setState({cell_timestamp: props_cell_timestamp,
-                           loading: true,
                            cell_id: props_cell_id});
             this.fetchCellContents();
         }

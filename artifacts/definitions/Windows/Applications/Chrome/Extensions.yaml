@@ -11,6 +11,12 @@ description: |
   those locale files. We then resolve the extension's name and
   description from there.
 
+  ## NOTES:
+
+  This artifact is deprecated in favor of
+  Generic.Forensic.SQLiteHunter and will be removed in future
+
+
 parameters:
   - name: extensionGlobs
     default: \AppData\Local\Google\Chrome\User Data\*\Extensions\*\*\manifest.json

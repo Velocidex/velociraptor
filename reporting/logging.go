@@ -54,7 +54,11 @@ func (self *notebooCellLogger) Write(b []byte) (int, error) {
 	// all the log messages.
 	self.mu.Lock()
 	if len(self.messages) < 10 {
-		self.messages = append(self.messages, string(b))
+		snippet := string(b)
+		if len(snippet) > 100 {
+			snippet = snippet[:100] + " ..."
+		}
+		self.messages = append(self.messages, snippet)
 	} else {
 		self.more_messages = true
 

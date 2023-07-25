@@ -9,6 +9,11 @@ description: |
   versions of Chrome stored Favicons in a 'Thumbnails' SQLite
   database, within the 'favicons' table.
 
+  ## NOTES:
+
+  This artifact is deprecated in favor of
+  Generic.Forensic.SQLiteHunter and will be removed in future
+
 references:
   - https://www.foxtonforensics.com/browser-history-examiner/chrome-history-location
 

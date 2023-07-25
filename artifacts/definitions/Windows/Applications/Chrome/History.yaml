@@ -1,34 +1,47 @@
 name: Windows.Applications.Chrome.History
 description: |
-  Enumerates a targets chrome history. Source based on Hindsight and code review of https://source.chromium.org/chromium/chromium/src/+/master:components/history/core/browser/history_types.h. NOTE: Some research has shown that older browsers may not have this table, then you should be treating it as you would in a traditional investigation, this changes is aimed at taking advantage of the newer tables to reduce false postitives.
-  
+  Enumerates a targets chrome history. Source based on Hindsight and
+  code review of
+  https://source.chromium.org/chromium/chromium/src/+/master:components/history/core/browser/history_types.h.
+
+  NOTE: Some research has shown that older browsers may not have this
+  table, then you should be treating it as you would in a traditional
+  investigation, this changes is aimed at taking advantage of the
+  newer tables to reduce false postitives.
+
+  ## NOTES:
+
+  This artifact is deprecated in favor of
+  Generic.Forensic.SQLiteHunter and will be removed in future
+
+
 author: Angry-Bender @angry-bender
 parameters:
   - name: historyGlobs
     default: \AppData\{Local,Roaming}\{Google\Chrome\User Data,Microsoft\Edge\User Data,BraveSoftware\Brave-Browser\User Data,Vivaldi\User Data,Opera Software\Opera*Stable}\*\History
   - name: urlSQLQuery
     default: |
-      SELECT U.id AS id, 
-             U.url AS url, 
+      SELECT U.id AS id,
+             U.url AS url,
              V.visit_time as visit_time,
-             U.title AS title, 
+             U.title AS title,
              U.visit_count,
              U.typed_count,
              U.last_visit_time, U.hidden,
              CASE VS.source
-             	WHEN 0 THEN 'Synced' 
-            	WHEN 1 THEN 'Local' 
-            	WHEN 2 THEN 'Extension'
-            	WHEN 3 THEN 'ImportFromFirefox'
-            	WHEN 4 THEN 'ImportFromSafari'
-            	WHEN 6 THEN 'ImportFromChrome/Edge'
+                WHEN 0 THEN 'Synced'
+                WHEN 1 THEN 'Local'
+                WHEN 2 THEN 'Extension'
+                WHEN 3 THEN 'ImportFromFirefox'
+                WHEN 4 THEN 'ImportFromSafari'
+                WHEN 6 THEN 'ImportFromChrome/Edge'
                 WHEN 7 THEN 'ImportFromEdgeHTML'
-            	ELSE 'Local'
-             END Source,  
+                ELSE 'Local'
+             END Source,
              V.from_visit,
              strftime('%H:%M:%f',V.visit_duration/1000000.0, 'unixepoch') as visit_duration,
-             V.transition 
-      FROM urls AS U 
+             V.transition
+      FROM urls AS U
       JOIN visits AS V ON U.id = V.url
       LEFT JOIN visit_source AS VS on V.id = VS.id
   - name: userRegex
