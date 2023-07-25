@@ -149,6 +149,9 @@ func (self *Indexer) SearchClients(
 	operator, term := splitIntoOperatorAndTerms(in.Query)
 	switch operator {
 	case "label", "host", "all", "mac":
+		if term == "none" {
+			return self.searchUnlabeledClients(ctx, config_obj, in, limit)
+		}
 		return self.searchClientIndex(ctx, config_obj, in, limit)
 
 	case "client":
@@ -249,6 +252,109 @@ func (self *Indexer) searchClientIndex(
 			continue
 		}
 		seen[client_id] = true
+
+		// Skip clients that are offline
+		if in.Filter == api_proto.SearchClientsRequest_ONLINE {
+			stats, err := client_info_manager.GetStats(ctx, client_id)
+			if err != nil {
+				continue
+			}
+
+			// SKip clients that are too old
+			if now > stats.Ping &&
+				now-stats.Ping > 1000000*60*15 {
+				continue
+			}
+		}
+
+		total_count++
+		if uint64(total_count) < in.Offset {
+			continue
+		}
+
+		if uint64(len(result.Items)) <= limit {
+			api_client, err := self._FastGetApiClient(ctx, self.config_obj,
+				client_id, client_info_manager)
+			if err != nil {
+				total_count--
+				continue
+			}
+
+			result.Items = append(result.Items, api_client)
+		}
+	}
+
+	result.Total = total_count
+	result.SearchTerm = in
+	return result, nil
+}
+
+// Return only clients that are unlabeled.
+func (self *Indexer) searchUnlabeledClients(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	in *api_proto.SearchClientsRequest,
+	limit uint64) (*api_proto.SearchClientsResponse, error) {
+
+	// If asked to sort, we need to retrieve a large number of clients
+	// and sort the results. This is much slower.
+	if in.Sort != api_proto.SearchClientsRequest_UNSORTED {
+		hits, err := self.searchUnlabeledClients(ctx, config_obj,
+			&api_proto.SearchClientsRequest{
+				Limit:  100000,
+				Query:  in.Query,
+				Filter: in.Filter,
+			}, 100000)
+		if err != nil {
+			return nil, err
+		}
+
+		switch in.Sort {
+		case api_proto.SearchClientsRequest_SORT_UP:
+			sort.Slice(hits.Items, func(x, y int) bool {
+				return hits.Items[x].OsInfo.Hostname <
+					hits.Items[y].OsInfo.Hostname
+			})
+
+		case api_proto.SearchClientsRequest_SORT_DOWN:
+			sort.Slice(hits.Items, func(x, y int) bool {
+				return hits.Items[x].OsInfo.Hostname >
+					hits.Items[y].OsInfo.Hostname
+			})
+		}
+
+		if in.Offset > uint64(len(hits.Items)) {
+			hits.Items = nil
+			return hits, nil
+		}
+
+		if in.Offset > 0 {
+			hits.Items = hits.Items[in.Offset:]
+		}
+
+		limit := in.Limit
+		if limit > uint64(len(hits.Items)) {
+			limit = uint64(len(hits.Items))
+		}
+		hits.Items = hits.Items[:limit]
+		return hits, nil
+	}
+
+	// Microseconds
+	now := uint64(time.Now().UnixNano() / 1000)
+	result := &api_proto.SearchClientsResponse{}
+	total_count := uint64(0)
+
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	labeler := services.GetLabeler(config_obj)
+	for client_id := range client_info_manager.ListClients(ctx) {
+		if len(labeler.GetClientLabels(ctx, config_obj, client_id)) > 0 {
+			continue
+		}
 
 		// Skip clients that are offline
 		if in.Filter == api_proto.SearchClientsRequest_ONLINE {

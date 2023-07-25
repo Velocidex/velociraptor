@@ -128,6 +128,18 @@ class VeloClientSearch extends Component {
                         <FontAwesomeIcon icon="bookmark"/>
                         <span className="button-label">{T("Recent Hosts")}</span>
                       </Dropdown.Item>
+                      <Dropdown.Item
+                        onClick={(e) => this.setQuery("label:*")}
+                        variant="default" type="button">
+                        <FontAwesomeIcon icon="tags"/>
+                        <span className="button-label">{T("Labeled Hosts")}</span>
+                      </Dropdown.Item>
+                      <Dropdown.Item
+                        onClick={(e) => this.setQuery("label:none")}
+                        variant="default" type="button">
+                        <FontAwesomeIcon icon="tags"/>
+                        <span className="button-label">{T("Unlabeled Hosts")}</span>
+                      </Dropdown.Item>
                     </Dropdown.Menu>
                   </Dropdown>
                 </ButtonGroup>

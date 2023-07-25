@@ -172,5 +172,17 @@
     "506172616d6574657273": "Parâmetros",
     "506175736520466f722050726f6d7074": "Pausa para prompt",
     "50726566697820666f722066696c6573206265696e672075706c6f616465642e20656e6420696e202f20666f7220666f6c646572732028626c616e6b206966206e6f74207573656429": "Prefixo para arquivos sendo carregado. terminar em / para pastas (em branco se não for usado)",
-    "536572766572204d6f6e69746f72696e67": "Monitoramento do servidor"
+    "536572766572204d6f6e69746f72696e67": "Monitoramento do servidor",
+    "436f6e66696775726174696f6e": "Configuração",
+     "46696c656e616d6520466f726d6174": "Formato do nome do arquivo",
+     "46696c656e616d6520666f726d6174": "Formato do nome do arquivo",
+     "4c6162656c656420486f737473": "Hosts rotulados",
+     "4f4e4c494e45": "ONLINE",
+     "4f7574707574204469726563746f7279": "Diretório de saída",
+     "4f7574707574206469726563746f7279": "Diretório de saída",
+     "51756572793a": "Consulta:",
+     "53686f7720616c6c20636f6c6c656374696f6e73": "Mostrar todas as coleções",
+     "53686f77206f6e6c79206d7920636f6c6c656374696f6e73": "Mostrar apenas minhas coleções",
+     "546f74616c204d61746368696e6720436c69656e7473": "Total de clientes correspondentes",
+     "556e6c6162656c656420486f737473": "Hosts não rotulados"
 }
