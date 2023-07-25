@@ -542,15 +542,30 @@ class OfflineCollectorParameters  extends React.Component {
                     </Col>
                   </Form.Group>
                   <Form.Group as={Row}>
-                    <Form.Label column sm="3">{T("Output Prefix")}</Form.Label>
+                    <Form.Label column sm="3">{T("Output Directory")}</Form.Label>
                     <Col sm="8">
                       <Form.Control
                         as="input"
-                        placeholder={T("Output filename prefix")}
+                        placeholder={T("Output directory")}
                         spellCheck="false"
                         value={this.props.parameters.opt_output_directory}
                         onChange={e => {
                             this.props.parameters.opt_output_directory = e.target.value;
+                            this.props.setParameters(this.props.parameters);
+                        }}
+                      />
+                    </Col>
+                  </Form.Group>
+                  <Form.Group as={Row}>
+                    <Form.Label column sm="3">{T("Filename Format")}</Form.Label>
+                    <Col sm="8">
+                      <Form.Control
+                        as="input"
+                        placeholder={T("Filename format")}
+                        spellCheck="false"
+                        value={this.props.parameters.opt_filename_template}
+                        onChange={e => {
+                            this.props.parameters.opt_filename_template = e.target.value;
                             this.props.setParameters(this.props.parameters);
                         }}
                       />
@@ -727,6 +742,7 @@ export default class OfflineCollectorWizard extends React.Component {
             },
             opt_level: 5,
             opt_output_directory: "",
+            opt_filename_template: "Collection-%FQDN%-%TIMESTAMP%",
             opt_format: "jsonl",
             opt_prompt: "N",
         },
@@ -766,6 +782,7 @@ export default class OfflineCollectorWizard extends React.Component {
         env.push({key: "opt_tempdir", value: this.state.collector_parameters.opt_tempdir});
         env.push({key: "opt_level", value: this.state.collector_parameters.opt_level.toString()});
         env.push({key: "opt_output_directory", value: this.state.collector_parameters.opt_output_directory});
+        env.push({key: "opt_filename_template", value: this.state.collector_parameters.opt_filename_template});
         env.push({key: "opt_progress_timeout", value: JSON.stringify(
             this.state.resources.progress_timeout)});
         env.push({key: "opt_timeout", value: JSON.stringify(
