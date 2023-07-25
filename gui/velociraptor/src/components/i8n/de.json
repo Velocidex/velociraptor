@@ -168,5 +168,17 @@
     "506172616d6574657273": "Parameter",
     "506175736520466f722050726f6d7074": "Pause für Eingabeaufforderung",
     "50726566697820666f722066696c6573206265696e672075706c6f616465642e20656e6420696e202f20666f7220666f6c646572732028626c616e6b206966206e6f74207573656429": "Präfix für Dateien hochgeladen wird. endet in / für Ordner (leer, wenn nicht verwendet)",
-    "536572766572204d6f6e69746f72696e67": "Serverüberwachung"
+    "536572766572204d6f6e69746f72696e67": "Serverüberwachung",
+    "436f6e66696775726174696f6e": "Konfiguration",
+    "46696c656e616d6520466f726d6174": "Dateinamenformat",
+    "46696c656e616d6520666f726d6174": "Dateinamenformat",
+    "4c6162656c656420486f737473": "Beschriftete Hosts",
+    "4f4e4c494e45": "ONLINE",
+    "4f7574707574204469726563746f7279": "Ausgabeverzeichnis",
+    "4f7574707574206469726563746f7279": "Ausgabeverzeichnis",
+    "51756572793a": "Abfrage:",
+    "53686f7720616c6c20636f6c6c656374696f6e73": "Alle Sammlungen anzeigen",
+    "53686f77206f6e6c79206d7920636f6c6c656374696f6e73": "Nur meine Sammlungen anzeigen",
+    "546f74616c204d61746368696e6720436c69656e7473": "Gesamtzahl übereinstimmender Kunden",
+    "556e6c6162656c656420486f737473": "Unbeschriftete Hosts"
 }
