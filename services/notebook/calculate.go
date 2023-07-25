@@ -19,7 +19,6 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-
 func (self *NotebookManager) UpdateNotebookCell(
 	ctx context.Context,
 	notebook_metadata *api_proto.NotebookMetadata,
@@ -258,11 +257,12 @@ func (self *NotebookManager) updateCellContents(
 					// Ignore code comments
 					comments := multiLineCommentsToString(vql)
 					if comments != "" {
-					    fragment_output, err := tmpl.Execute(&artifacts_proto.Report{Template: comments})
-					    if err != nil {
-						    return make_error_cell(output, err)
-					    }
-					    output += fragment_output
+						fragment_output, err := tmpl.Execute(
+							&artifacts_proto.Report{Template: comments})
+						if err != nil {
+							return make_error_cell(output, err)
+						}
+						output += fragment_output
 					}
 				}
 				if vql.Let != "" || vql.Query != nil || vql.StoredQuery != nil {

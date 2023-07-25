@@ -2,6 +2,12 @@ name: MacOS.Applications.Chrome.History
 description: |
   Read all User's chrome history.
 
+  ## NOTES:
+
+  This artifact is deprecated in favor of
+  Generic.Forensic.SQLiteHunter and will be removed in future
+
+
 parameters:
   - name: historyGlobs
     default: /Users/*/Library/Application Support/Google/Chrome/*/History

@@ -4,6 +4,11 @@ description: |
   accessible via the “WIN+TAB” key. The data is recorded in a SQLite
   database.
 
+  ## NOTES:
+
+  This artifact is deprecated in favor of
+  Generic.Forensic.SQLiteHunter and will be removed in future
+
 parameters:
   - name: UserFilter
     default: ""

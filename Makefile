@@ -92,6 +92,9 @@ KapeFilesSync:
 SQLECmdSync:
 	python3 scripts/sqlecmd_convert.py ~/projects/SQLECmd/ ~/projects/KapeFiles/ artifacts/definitions/Generic/Collectors/SQLECmd.yaml
 
+SQLiteHunter:
+	cp ~/projects/SQLiteHunter/output/SQLiteHunter.yaml artifacts/definitions/Generic/Forensic/SQLiteHunter/
+
 # Do this after fetching the build artifacts with `gh run download <RunID>`
 UpdateCIArtifacts:
 	mv artifact/server/* artifacts/testdata/server/testcases/
