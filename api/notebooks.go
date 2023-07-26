@@ -315,8 +315,9 @@ func (self *ApiServer) UpdateNotebookCell(
 		return nil, InvalidStatus("Notebook is not shared with user.")
 	}
 
-	return notebook_manager.UpdateNotebookCell(
+	res, err := notebook_manager.UpdateNotebookCell(
 		ctx, notebook_metadata, principal, in)
+	return res, Status(self.verbose, err)
 }
 
 func (self *ApiServer) CancelNotebookCell(

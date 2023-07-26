@@ -4,17 +4,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"runtime"
 	"runtime/debug"
 	"strings"
 	"time"
 
+	"www.velocidex.com/golang/vfilter/types"
+
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -27,7 +32,6 @@ func (self *NotebookManager) UpdateNotebookCell(
 
 	notebook_cell := &api_proto.NotebookCell{
 		Input:            in.Input,
-		Output:           `<div class="padded"><i class="fa fa-spinner fa-spin fa-fw"></i> Calculating...</div>`,
 		CellId:           in.CellId,
 		Type:             in.Type,
 		Timestamp:        time.Now().Unix(),
@@ -134,6 +138,10 @@ func (self *NotebookManager) UpdateNotebookCell(
 
 	}()
 
+	// Start a nanny to watch this calculation
+	go self.startNanny(query_ctx, self.config_obj, tmpl.Scope,
+		in.NotebookId, in.CellId)
+
 	// Main worker: Just run the query until done.
 	go func() {
 		// Cancel and release the main thread if we
@@ -172,6 +180,87 @@ func (self *NotebookManager) UpdateNotebookCell(
 	return notebook_cell, main_err
 }
 
+func (self *NotebookManager) startNanny(
+	ctx context.Context, config_obj *config_proto.Config,
+	scope vfilter.Scope,
+	notebook_id, cell_id string) {
+
+	// Reduce memory use now so the next measure of memory use is more
+	// reflective of our current workload.
+	debug.FreeOSMemory()
+
+	// Running in a goroutine it's ok to block.
+	for {
+
+		// Check for high memory use.
+		if self.config_obj.Defaults != nil &&
+			self.config_obj.Defaults.NotebookMemoryHighWaterMark > 0 {
+
+			high_memory_level := self.config_obj.Defaults.NotebookMemoryHighWaterMark
+
+			var m runtime.MemStats
+			runtime.ReadMemStats(&m)
+
+			// If we exceed memory we cancel this query.
+			if high_memory_level < m.Alloc {
+				scope.Log("ERROR:Insufficient resourcs: Query cancelled.")
+				self.CancelNotebookCell(ctx, notebook_id, cell_id)
+			}
+		}
+
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(time.Second):
+		}
+
+		// Check the cell for cancellation or errors
+		notebook_cell, err := self.Store.GetNotebookCell(notebook_id, cell_id)
+		if err != nil || notebook_cell.CellId != cell_id {
+			return
+		}
+
+		// Cancel the query - this cell is not longer running
+		if !notebook_cell.Calculating {
+			// Notify the calculator immediately
+			notifier, err := services.GetNotifier(self.config_obj)
+			if err != nil {
+				return
+			}
+
+			notifier.NotifyListener(ctx, self.config_obj, cell_id, "CancelNotebookCell")
+		}
+	}
+}
+
+func (self *NotebookManager) waitForMemoryLimit(
+	ctx context.Context, scope types.Scope,
+	config_obj *config_proto.Config) {
+	// Wait until memory is below the low water mark.
+	if self.config_obj.Defaults != nil &&
+		self.config_obj.Defaults.NotebookMemoryLowWaterMark > 0 {
+
+		low_memory_level := self.config_obj.Defaults.NotebookMemoryLowWaterMark
+
+		for {
+			var m runtime.MemStats
+			runtime.ReadMemStats(&m)
+
+			// Spin here until there is enough memory
+			if low_memory_level > m.Alloc {
+				break
+			}
+
+			select {
+			case <-ctx.Done():
+				scope.Log("ERROR:Unable to start query before timeout - insufficient resourcs.")
+				return
+			case <-time.After(time.Second):
+			}
+		}
+	}
+}
+
 func (self *NotebookManager) updateCellContents(
 	ctx context.Context,
 	tmpl *reporting.GuiTemplateEngine,
@@ -181,6 +270,7 @@ func (self *NotebookManager) updateCellContents(
 	input, original_input string) (res *api_proto.NotebookCell, err error) {
 
 	output := ""
+	now := time.Now().Unix()
 
 	cell_type = strings.ToLower(cell_type)
 
@@ -200,7 +290,7 @@ func (self *NotebookManager) updateCellContents(
 			CellId:           cell_id,
 			Type:             cell_type,
 			Env:              env,
-			Timestamp:        time.Now().Unix(),
+			Timestamp:        now,
 			CurrentlyEditing: currently_editing,
 			Duration:         int64(time.Since(tmpl.Start).Seconds()),
 		}
@@ -208,10 +298,16 @@ func (self *NotebookManager) updateCellContents(
 
 	// If an error occurs it is important to ensure the cell is
 	// still written with an error message.
-	make_error_cell := func(output string, err error) (
-		*api_proto.NotebookCell, error) {
-		tmpl.Scope.Log("Error: %v", err)
-		return make_cell(output), err
+	make_error_cell := func(
+		output string, err error) (*api_proto.NotebookCell, error) {
+		tmpl.Scope.Log("ERROR: %v", err)
+		error_cell := make_cell(output)
+		error_cell.Calculating = false
+		error_cell.Error = err.Error()
+
+		self.Store.SetNotebookCell(notebook_id, error_cell)
+
+		return error_cell, utils.InlineError
 	}
 
 	// Do not let exceptions take down the server.
@@ -222,6 +318,15 @@ func (self *NotebookManager) updateCellContents(
 				"PANIC: %v: %v", r, string(debug.Stack())))
 		}
 	}()
+
+	// Write a place holder immediately while we calculate the rest.
+	notebook_cell := make_cell(output)
+	notebook_cell.Calculating = true
+	err = self.Store.SetNotebookCell(notebook_id, notebook_cell)
+	if err != nil {
+		return nil, err
+	}
+	self.waitForMemoryLimit(ctx, tmpl.Scope, self.config_obj)
 
 	switch cell_type {
 
@@ -294,7 +399,7 @@ func (self *NotebookManager) updateCellContents(
 
 	tmpl.Close()
 
-	notebook_cell := make_cell(output)
+	notebook_cell = make_cell(output)
 	return notebook_cell, self.Store.SetNotebookCell(notebook_id, notebook_cell)
 }
 

@@ -126,21 +126,24 @@ func (self *NotebookManager) CancelNotebookCell(
 		return errors.New("No such cell")
 	}
 
+	// Switch the cell into not calculating - this will force all
+	// workers to exit.
 	notebook_cell.Calculating = false
-
+	notebook_cell.Error = "Cancelled!"
 	// Make sure we write the cancel message ASAP
 	err = self.Store.SetNotebookCell(notebook_id, notebook_cell)
 	if err != nil {
 		return err
 	}
 
-	// Notify the calculator immediately
+	// Notify the calculator immediately if we are in the same
+	// process. This makes it more responsive.x
 	notifier, err := services.GetNotifier(self.config_obj)
 	if err != nil {
 		return err
 	}
-	return notifier.NotifyListener(ctx, self.config_obj, cell_id,
-		"CancelNotebookCell")
+	return notifier.NotifyListener(
+		ctx, self.config_obj, cell_id, "CancelNotebookCell")
 }
 
 func (self *NotebookManager) UploadNotebookAttachment(ctx context.Context,

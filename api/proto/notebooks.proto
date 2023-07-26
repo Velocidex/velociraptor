@@ -121,6 +121,8 @@ message NotebookCell {
     bool calculating = 9;
 
     repeated Env env = 11;
+
+    string error = 13;
 }
 
 message NotebookFileUploadRequest {

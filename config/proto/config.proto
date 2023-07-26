@@ -956,6 +956,14 @@ message Defaults {
     int64 hunt_expiry_hours = 1;
     int64 notebook_cell_timeout_min = 2;
 
+    // When calculating a new cell we do not start calculation until
+    // the process memory is smaller than the low memory mark.
+    uint64 notebook_memory_low_water_mark = 36;
+
+    // When the process memory exceeds the high water marrk, we
+    // actively cancel in flight notebook cell calculations.
+    uint64 notebook_memory_high_water_mark = 37;
+
     // The default CSV delimiter
     string csv_delimiter = 3;
 
