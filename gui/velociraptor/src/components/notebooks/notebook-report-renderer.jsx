@@ -83,7 +83,7 @@ export default class NotebookReportRenderer extends React.Component {
     render() {
         let result = [];
         if (this.props.cell && this.props.cell.calculating && !this.props.cell.output) {
-            result.push(<div className="padded">
+            result.push(<div className="padded" key="1">
                           {T("Calculating...")}
                           <span className="padded">
                             <FontAwesomeIcon icon="spinner" spin/>
@@ -93,7 +93,7 @@ export default class NotebookReportRenderer extends React.Component {
 
         let output = this.props.cell && this.props.cell.output;
         if (!output) {
-            result.push(<hr/>);
+            result.push(<hr key="2"/>);
             return result;
         }
 
@@ -156,7 +156,7 @@ export default class NotebookReportRenderer extends React.Component {
                 return domNode;
             }
         });
-        result.push(<div  className="report-viewer">{template}</div>);
+        result.push(<div key="3" className="report-viewer">{template}</div>);
         return result;
     }
 };
