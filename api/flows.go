@@ -57,7 +57,7 @@ func (self *ApiServer) GetClientFlows(
 		TotalRows: int64(flows.Total),
 		Columns: []string{
 			"State", "FlowId", "Artifacts", "Created", "Last Active", "Creator",
-			"Mb", "Rows", "_Flow", "_Urgent",
+			"Mb", "Rows", "_Flow", "_Urgent", "_ArtifactsWithResults",
 		},
 		ColumnTypes: []*artifacts_proto.ColumnType{{
 			Name: "Created",
@@ -68,6 +68,9 @@ func (self *ApiServer) GetClientFlows(
 		}, {
 			Name: "Mb",
 			Type: "mb",
+		}, {
+			Name: "Rows",
+			Type: "number",
 		}},
 	}
 
@@ -87,6 +90,7 @@ func (self *ApiServer) GetClientFlows(
 			json.AnyToString(flow.TotalCollectedRows, vjson.DefaultEncOpts()),
 			json.MustMarshalString(flow),
 			json.AnyToString(flow.Request.Urgent, vjson.DefaultEncOpts()),
+			json.AnyToString(flow.ArtifactsWithResults, vjson.DefaultEncOpts()),
 		}
 		result.Rows = append(result.Rows, &api_proto.Row{Cell: row_data})
 	}
