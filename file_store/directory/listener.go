@@ -195,6 +195,10 @@ func (self *Listener) Close() {
 	}
 }
 
+func (self *Listener) FileBufferSize() int64 {
+	return self.file_buffer.PendingSize()
+}
+
 func (self *Listener) Debug() *ordereddict.Dict {
 	self.mu.Lock()
 	defer self.mu.Unlock()

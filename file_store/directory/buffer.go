@@ -204,6 +204,12 @@ func (self *FileBasedRingBuffer) _Truncate() {
 	_, _ = self.fd.WriteAt(serialized, 0)
 }
 
+func (self *FileBasedRingBuffer) PendingSize() int64 {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	return self.header.WritePointer - self.header.ReadPointer
+}
+
 func (self *FileBasedRingBuffer) Reset() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
