@@ -56,6 +56,7 @@ Client:
     filename_linux: /var/tmp/Velociraptor_Buffer.bin
     filename_windows: $TEMP/Velociraptor_Buffer.bin
     filename_darwin: /var/tmp/Velociraptor_Buffer.bin
+  disable_checkpoints: true
 API:
   bind_address: 127.0.0.1
   bind_port: 8001

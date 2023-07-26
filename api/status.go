@@ -7,6 +7,7 @@ import (
 	errors "github.com/go-errors/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Convert from various errors into gRPC status errors. This will be
@@ -16,6 +17,11 @@ func Status(verbose bool, err error) error {
 	_, ok := status.FromError(err)
 	if ok {
 		return err
+	}
+
+	// Do not report this error.
+	if err == utils.InlineError {
+		return nil
 	}
 
 	// With the verbose flag give more detailed errors to the browser.

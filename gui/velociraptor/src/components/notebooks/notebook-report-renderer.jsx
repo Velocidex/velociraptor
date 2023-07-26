@@ -3,6 +3,10 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
+import T from '../i8n/i8n.jsx';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+
+import Button from 'react-bootstrap/Button';
 import parse from 'html-react-parser';
 import VeloTable from '../core/table.jsx';
 import TimelineRenderer from "../timeline/timeline.jsx";
@@ -77,9 +81,20 @@ export default class NotebookReportRenderer extends React.Component {
     }
 
     render() {
+        let result = [];
+        if (this.props.cell && this.props.cell.calculating && !this.props.cell.output) {
+            result.push(<div className="padded" key="1">
+                          {T("Calculating...")}
+                          <span className="padded">
+                            <FontAwesomeIcon icon="spinner" spin/>
+                          </span>
+                        </div>);
+        }
+
         let output = this.props.cell && this.props.cell.output;
         if (!output) {
-            return <hr/>;
+            result.push(<hr key="2"/>);
+            return result;
         }
 
         let template = parse(this.props.cell.output, {
@@ -141,8 +156,7 @@ export default class NotebookReportRenderer extends React.Component {
                 return domNode;
             }
         });
-        return (
-            <div  className="report-viewer">{template}</div>
-        );
+        result.push(<div key="3" className="report-viewer">{template}</div>);
+        return result;
     }
 };

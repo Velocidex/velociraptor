@@ -233,7 +233,9 @@ export default class NotebookCellRenderer extends React.Component {
             }
 
             let cell = response.data;
-            this.setState({cell: cell, input: cell.input, loading: false});
+            if (!this.state.currently_editing) {
+                this.setState({cell: cell, input: cell.input, loading: false});
+            }
         });
     };
 
@@ -302,8 +304,14 @@ export default class NotebookCellRenderer extends React.Component {
                 return;
             }
 
+            let keep_editing = false;
+            if (response.data && response.data.error) {
+                // Send a snackbar error as well.
+                api.error(response.data.error);
+                keep_editing = true;
+            }
             this.setState({cell: response.data,
-                           currently_editing: false});
+                           currently_editing: keep_editing});
         });
 
     }
@@ -342,7 +350,14 @@ export default class NotebookCellRenderer extends React.Component {
                 return;
             }
 
-            this.setState({cell: response.data, currently_editing: false});
+            let keep_editing = false;
+            if (response.data && response.data.error) {
+                // Send a snackbar error as well.
+                api.error(response.data.error);
+                keep_editing = true;
+            }
+            this.setState({cell: response.data,
+                           currently_editing: keep_editing});
         });
     };
 
@@ -788,10 +803,13 @@ export default class NotebookCellRenderer extends React.Component {
                           if (parts.length === 2) {
                               switch (parts[0]) {
                               case "ERROR":
+                                  msg = parts[1];
                                   className = "error-message"; break;
                               case "DEBUG":
+                                  msg = parts[1];
                                   className = "debug-message"; break;
                               case "INFO":
+                                  msg = parts[1];
                                   className = "info-message"; break;
                               }
                           };
