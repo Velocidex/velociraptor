@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 
@@ -10,8 +11,10 @@ import VeloClientSearch from '../clients/search.jsx';
 import T from '../i8n/i8n.jsx';
 
 import { getClientColumns } from '../clients/clients-list.jsx';
-import { getFlowColumns } from '../flows/flows-list.jsx';
+import { flowRowRenderer } from '../flows/flows-list.jsx';
 import {CancelToken} from 'axios';
+
+import VeloPagedTable from '../core/paged-table.jsx';
 
 
 export default class AddCellFromFlowDialog extends React.Component {
@@ -41,22 +44,25 @@ export default class AddCellFromFlowDialog extends React.Component {
     }
 
     addCellFromFlow = (flow) => {
-        let client_id = flow.client_id;
-        var flow_id = flow.session_id;
+        let client_id = this.state.selectedClient;
+        var flow_id = flow.FlowId;
         var query = "SELECT * \nFROM source(\n";
-        var sources = flow["artifacts_with_results"] || flow["request"]["artifacts"];
+        var sources = flow._ArtifactsWithResults;
         query += "    artifact='" + sources[0] + "',\n";
         for (var i=1; i<sources.length; i++) {
             query += "    -- artifact='" + sources[i] + "',\n";
         }
-        query += "    client_id='" + client_id + "', flow_id='" +
-            flow_id + "')\nLIMIT 50\n";
+        query += "    client_id='" + client_id + "',\n    flow_id='" +
+            flow_id + "', hunt_id='')\nLIMIT 50\n";
 
         this.props.addCell(query, "VQL");
         this.props.closeDialog();
     }
 
     fetchFlows = (selectedClient) => {
+        this.setState({selectedClient: selectedClient.client_id});
+        return;
+
         let client_id = selectedClient.client_id;
         api.get("v1/GetClientFlows/" + client_id, {
             count: 100,
@@ -116,25 +122,23 @@ export default class AddCellFromFlowDialog extends React.Component {
             onSelect: this.addCellFromFlow,
         };
 
-        let columns = getFlowColumns(this.state.selectedClient.client_id);
-        return (
-            <>
-              <div className="no-margins selectable">
-                <BootstrapTable
-                  hover
-                  condensed
-                  keyField="session_id"
-                  bootstrap4
-                  headerClasses="alert alert-secondary"
-                  bodyClasses="fixed-table-body"
-                  data={this.state.flows}
-                  columns={columns}
-                  filter={ filterFactory() }
-                  selectRow={ selectRow }
-                />
-              </div>
-            </>
-        );
+        return <VeloPagedTable
+                 url="v1/GetClientFlows"
+                 params={{client_id: this.state.selectedClient}}
+                 translate_column_headers={true}
+                 prevent_transformations={{
+                     Mb: true, Rows: true,
+                     State: true, "Last Active": true}}
+                 selectRow={selectRow}
+                 renderers={flowRowRenderer}
+                 version={this.state.version}
+                 no_spinner={true}
+                 transform={this.state.transform}
+                 setTransform={x=>{
+                     this.setState({transform: x});
+                 }}
+                 no_toolbar={true}
+               />;
     }
 
     render() {

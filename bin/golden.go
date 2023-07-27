@@ -40,6 +40,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
@@ -83,6 +84,7 @@ var (
 		"(?i)Artifact .+ not found",
 		"(?i)Order by column .+ not present in row",
 		"PANIC runtime error:",
+		"Extra unrecognized arg",
 	}
 )
 
@@ -133,7 +135,8 @@ func makeCtxWithTimeout(
 					memory, _ := psutils.MemoryInfoWithContext(ctx, pid)
 
 					fmt.Printf("Not time to fire yet %v %v %v\n",
-						time.Now(), total_time, memory)
+						time.Now(), json.MustMarshalString(total_time),
+						json.MustMarshalString(memory))
 					continue
 				}
 
@@ -545,7 +548,7 @@ func (self MockTimeFunciton) Call(ctx context.Context,
 		return &vfilter.Null{}
 	}
 
-	clock := &utils.MockClock{time.Unix(arg.Now, 0)}
+	clock := utils.NewMockClock(time.Unix(arg.Now, 0))
 	cancel := utils.MockTime(clock)
 	err = vql_subsystem.GetRootScope(scope).AddDestructor(cancel)
 	if err != nil {

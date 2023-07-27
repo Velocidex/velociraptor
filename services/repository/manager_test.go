@@ -36,7 +36,7 @@ type: CLIENT
 }
 
 func (self *ManagerTestSuite) TestSetArtifact() {
-	clock := &utils.MockClock{MockNow: time.Unix(1000000000, 0)}
+	clock := utils.NewMockClock(time.Unix(1000000000, 0))
 	journal_manager, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
@@ -87,7 +87,7 @@ func (self *ManagerTestSuite) TestSetArtifactDetectedByMinion() {
 		},
 	}
 
-	clock := &utils.MockClock{MockNow: time.Unix(1000000000, 0)}
+	clock := utils.NewMockClock(time.Unix(1000000000, 0))
 	journal_manager, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 

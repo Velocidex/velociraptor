@@ -455,21 +455,21 @@ export function formatColumns(columns, env, column_formatter) {
 
         case "mb":
             x.formatter=(cell, row) => {
-                let result = cell/1024/1024;
+                let result = parseInt(cell/1024/1024);
                 let value = cell;
                 let suffix = "";
                 if (_.isFinite(result) && result > 0) {
                     suffix = "Mb";
-                    value = result.toFixed(0);
+                    value = parseInt(result);
                 } else {
-                    result = (cell /1024).toFixed(0);
+                    result = parseInt(cell /1024);
                     if (_.isFinite(result) && result > 0) {
                         suffix = "Kb";
-                        value = result.toFixed(0);
+                        value = parseInt(result);
                     } else {
                         if (_.isFinite(cell)) {
                             suffix = "b";
-                            value = cell.toFixed(0);
+                            value = parseInt(cell);
                         }
                     }
                 }

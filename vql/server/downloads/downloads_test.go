@@ -56,7 +56,7 @@ type: INTERNAL
 
 	self.TestSuite.SetupTest()
 
-	Clock = &utils.MockClock{MockNow: time.Unix(1602103388, 0)}
+	Clock = utils.NewMockClock(time.Unix(1602103388, 0))
 	reporting.Clock = Clock
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)

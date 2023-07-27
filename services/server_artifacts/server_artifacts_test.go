@@ -288,7 +288,7 @@ sources:
 // An artifact with two sources - one will produce an error. The
 // entire collection should fail but will have 2 rows returned.
 func (self *ServerArtifactsTestSuite) TestServerArtifactsMultiSource() {
-	closer := utils.MockTime(&utils.MockClock{MockNow: time.Unix(10, 10)})
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
 	defer closer()
 
 	self.LoadArtifacts(`
@@ -331,7 +331,7 @@ sources:
 
 // Multiple sources in the same precondition run serially
 func (self *ServerArtifactsTestSuite) TestServerArtifactsMultiSourceSerial() {
-	closer := utils.MockTime(&utils.MockClock{MockNow: time.Unix(10, 10)})
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
 	defer closer()
 
 	self.LoadArtifacts(`

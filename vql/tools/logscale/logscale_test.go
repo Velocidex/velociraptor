@@ -15,55 +15,53 @@ import (
 	"net/http"
 	"net/http/httptest"
 
-        "github.com/stretchr/testify/require"
-        "github.com/stretchr/testify/suite"
+	"github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/suite"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 
 	"github.com/Velocidex/ordereddict"
-        actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-        "www.velocidex.com/golang/velociraptor/datastore"
 
-        "www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
-        "www.velocidex.com/golang/velociraptor/paths"
-        "www.velocidex.com/golang/velociraptor/services"
-        "www.velocidex.com/golang/velociraptor/services/indexing"
-        "www.velocidex.com/golang/velociraptor/utils"
-        "www.velocidex.com/golang/velociraptor/vql/acl_managers"
-        vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
-        "www.velocidex.com/golang/velociraptor/vtesting"
+	"www.velocidex.com/golang/velociraptor/vtesting"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
 var (
-	validUrl = "https://cloud.community.humio.com/api"
-	validAuthToken = "valid-ingest-token"
-	validWorkerCount = 1
-	invalidWorkerCount = -11
+	validUrl              = "https://cloud.community.humio.com/api"
+	validAuthToken        = "valid-ingest-token"
+	validWorkerCount      = 1
+	invalidWorkerCount    = -11
 	testTimestampStringTZ = "2023-04-05T13:36:51-04:00"
-	testTimestampUNIX = uint64(1680716211)  // json ints are uint64
-	testTimestamp = "2023-04-05T17:36:51Z"
-	testClientId = "C.0030300330303000"
-	testHostname = "testhost12"
+	testTimestampUNIX     = uint64(1680716211) // json ints are uint64
+	testTimestamp         = "2023-04-05T17:36:51Z"
+	testClientId          = "C.0030300330303000"
+	testHostname          = "testhost12"
 )
 
 type LogScaleQueueTestSuite struct {
 	test_utils.TestSuite
 
-	queue		*LogScaleQueue
-	scope		vfilter.Scope
-	ctx		context.Context
+	queue *LogScaleQueue
+	scope vfilter.Scope
+	ctx   context.Context
 
-	repoManager	services.RepositoryManager
-	timestamp	time.Time
-        clients		[]string
+	repoManager services.RepositoryManager
+	timestamp   time.Time
+	clients     []string
 
-	server		*httptest.Server
-	start		time.Time
+	server *httptest.Server
+	start  time.Time
 
-	restoreClock	func()
+	restoreClock    func()
 	wantConnRefused bool
 }
 
@@ -82,7 +80,7 @@ func (self *LogScaleQueueTestSuite) SetupTest() {
 	self.queue.SetMaxRetries(1)
 	self.scope = self.getScope()
 
-	self.restoreClock = utils.MockTime(&utils.MockClock{MockNow: time.Unix(10, 10)})
+	self.restoreClock = utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
 
 	self.ctx = context.Background()
 	self.populateClients()
@@ -91,54 +89,22 @@ func (self *LogScaleQueueTestSuite) SetupTest() {
 }
 
 func (self *LogScaleQueueTestSuite) populateClients() {
-        self.clients = nil
-        db, err := datastore.GetDB(self.ConfigObj)
-        require.NoError(self.T(), err)
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
 
-	indexer, err := services.GetIndexer(self.ConfigObj)
-        require.NoError(self.T(), err)
-
-	count := 0
-
-        bytes := []byte("00000000")
-        for i := 0; i < 4; i++ {
-                bytes[0] = byte(i)
-                for k := 0; k < 4; k++ {
-                        bytes[3] = byte(k)
-                        for j := 0; j < 4; j++ {
-                                bytes[7] = byte(j)
-                                client_id := fmt.Sprintf("C.%02x", bytes)
-				hostname := ""
-				if count != 10 {
-					hostname = fmt.Sprintf("testhost%v", count)
-				}
-                                self.clients = append(self.clients, client_id)
-                                err := indexer.SetIndex(client_id, client_id)
-                                require.NoError(self.T(), err)
-
-                                path_manager := paths.NewClientPathManager(client_id)
-				record := &actions_proto.ClientInfo{ClientId: client_id, Hostname: hostname}
-                                err = db.SetSubject(self.ConfigObj, path_manager.Path(), record)
-                                require.NoError(self.T(), err)
-
-				count += 1
-                        }
-                }
-        }
-
-        // Wait here until the indexer is ready
-        vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-                return indexer.(*indexing.Indexer).IsReady()
-        })
+	client_info_manager.Set(self.Ctx,
+		&services.ClientInfo{actions_proto.ClientInfo{
+			ClientId: "C.0030300330303000",
+			Hostname: "testhost12",
+		}})
 }
-
 
 func (self *LogScaleQueueTestSuite) getHttpTransport() *http.Transport {
 	transport := http.DefaultTransport.(*http.Transport).Clone()
 
 	realDialContext := transport.DialContext
 
-	dc := func (ctx context.Context, network, addr string) (net.Conn, error) {
+	dc := func(ctx context.Context, network, addr string) (net.Conn, error) {
 		if self.wantConnRefused {
 			return nil, syscall.ECONNREFUSED
 		} else {
@@ -151,16 +117,16 @@ func (self *LogScaleQueueTestSuite) getHttpTransport() *http.Transport {
 }
 
 func (self *LogScaleQueueTestSuite) getScope() vfilter.Scope {
-        manager, err := services.GetRepositoryManager(self.ConfigObj)
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	require.NoError(self.T(), err)
 
-        builder := services.ScopeBuilder{
-                Config:     self.ConfigObj,
-                ACLManager: acl_managers.NullACLManager{},
-                Logger:     logging.NewPlainLogger(self.ConfigObj,
-						   &logging.FrontendComponent),
-                Env:        ordereddict.NewDict(),
-        }
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: acl_managers.NullACLManager{},
+		Logger: logging.NewPlainLogger(self.ConfigObj,
+			&logging.FrontendComponent),
+		Env: ordereddict.NewDict(),
+	}
 
 	return manager.BuildScope(builder)
 }
@@ -326,9 +292,9 @@ func (self *LogScaleQueueTestSuite) TestMaxRetriesPositive() {
 func (self *LogScaleQueueTestSuite) TestSetTaggedFieldsValid() {
 	args := []string{"x=y", "y=z", "z"}
 	expected := map[string]string{
-		"x" : "y",
-		"y" : "z",
-		"z" : "z",
+		"x": "y",
+		"y": "z",
+		"z": "z",
 	}
 	err := self.queue.SetTaggedFields(args)
 	require.NoError(self.T(), err)
@@ -336,10 +302,10 @@ func (self *LogScaleQueueTestSuite) TestSetTaggedFieldsValid() {
 }
 
 func (self *LogScaleQueueTestSuite) TestSetTaggedFieldsMultipleEquals() {
-	args := []string{"x=y", "y=z=z", }
+	args := []string{"x=y", "y=z=z"}
 	expected := map[string]string{
-		"x" : "y",
-		"y" : "z=z",
+		"x": "y",
+		"y": "z=z",
 	}
 	err := self.queue.SetTaggedFields(args)
 	require.NoError(self.T(), err)
@@ -361,7 +327,7 @@ func (self *LogScaleQueueTestSuite) TestSetTaggedFieldsEmptyTagArg() {
 }
 
 func (self *LogScaleQueueTestSuite) TestSetTaggedFieldsEmptyTagString() {
-	args := []string{"",}
+	args := []string{""}
 	err := self.queue.SetTaggedFields(args)
 	require.NotNil(self.T(), err)
 	require.ErrorAs(self.T(), err, &errInvalidArgument{})
@@ -485,7 +451,10 @@ func (self *LogScaleQueueTestSuite) TestAddClientInfo() {
 	payload := NewLogScalePayload(row)
 	self.queue.addClientInfo(self.ctx, row, payload)
 
-	require.Contains(self.T(), payload.Tags, "ClientHostname")
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		return strings.Contains(fmt.Sprintf("%v", payload.Tags), "ClientHostname")
+	})
+
 	require.EqualValues(self.T(), payload.Tags["ClientHostname"], testHostname)
 }
 
@@ -541,16 +510,16 @@ func (self *LogScaleQueueTestSuite) TestRowToPayload() {
 func (self *LogScaleQueueTestSuite) handleEndpointRequest(w http.ResponseWriter, r *http.Request) {
 	auth := r.Header.Get("Authorization")
 	if len(auth) < 8 || strings.ToLower(strings.TrimSpace(auth))[0:7] != "bearer " {
-	        w.WriteHeader(http.StatusUnauthorized)
-	        w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
-	        fmt.Fprintf(w, "The supplied authentication is invalid")
+		w.WriteHeader(http.StatusUnauthorized)
+		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+		fmt.Fprintf(w, "The supplied authentication is invalid")
 		return
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-	        w.WriteHeader(http.StatusInternalServerError)
-	        w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
 		fmt.Fprintf(w, "Internal failure. reason=%s", err)
 		return
 	}
@@ -559,10 +528,10 @@ func (self *LogScaleQueueTestSuite) handleEndpointRequest(w http.ResponseWriter,
 
 	err = json.Unmarshal(body, &data)
 	if err != nil {
-	        w.WriteHeader(http.StatusBadRequest)
-	        w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
-	        fmt.Fprintf(w, "Could not handle input. reason=%s", err)
-	        return
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Set("Content-Type", "text/plain; charset=UTF-8")
+		fmt.Fprintf(w, "Could not handle input. reason=%s", err)
+		return
 	}
 
 	// Empty submission is valid
@@ -577,7 +546,7 @@ func (self *LogScaleQueueTestSuite) handleEndpointRequest(w http.ResponseWriter,
 
 	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Content-Type", "application/json")
-	fmt.Fprintf(w,  "{}")
+	fmt.Fprintf(w, "{}")
 }
 
 func handler401(w http.ResponseWriter, r *http.Request) {
@@ -594,12 +563,12 @@ func handler500(w http.ResponseWriter, r *http.Request) {
 
 func (self *LogScaleQueueTestSuite) startMockServerWithHandler(handler func(w http.ResponseWriter, r *http.Request)) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-	    switch strings.TrimSpace(r.URL.Path) {
-	    case apiEndpoint:
-		    handler(w, r)
-	    default:
-		http.NotFoundHandler().ServeHTTP(w, r)
-	    }
+		switch strings.TrimSpace(r.URL.Path) {
+		case apiEndpoint:
+			handler(w, r)
+		default:
+			http.NotFoundHandler().ServeHTTP(w, r)
+		}
 	}))
 }
 
@@ -615,7 +584,7 @@ func (self *LogScaleQueueTestSuite) updateEndpointUrl(server *httptest.Server) {
 
 func (self *LogScaleQueueTestSuite) preparePayloads(payloads []*LogScalePayload) []byte {
 	opts := vql_subsystem.EncOptsFromScope(self.scope)
-        data, err := json.MarshalWithOptions(payloads, opts)
+	data, err := json.MarshalWithOptions(payloads, opts)
 	require.NoError(self.T(), err)
 	return data
 }
@@ -624,19 +593,19 @@ func (self *LogScaleQueueTestSuite) TestPostBytesValid() {
 	row := generateRow()
 	timestamp, _ := functions.TimeFromAny(self.scope, testTimestampStringTZ)
 	payloads := []*LogScalePayload{
-			&LogScalePayload{
-				Events: []LogScaleEvent{
-					LogScaleEvent{
-						Attributes: row,
-						Timestamp: timestamp,
-					},
-				},
-				Tags: map[string]interface{}{
-					"ClientId" : testClientId,
-					"ClientHostname" : testHostname,
+		&LogScalePayload{
+			Events: []LogScaleEvent{
+				LogScaleEvent{
+					Attributes: row,
+					Timestamp:  timestamp,
 				},
 			},
-		}
+			Tags: map[string]interface{}{
+				"ClientId":       testClientId,
+				"ClientHostname": testHostname,
+			},
+		},
+	}
 
 	server := self.startMockServer()
 	defer server.Close()
@@ -697,13 +666,13 @@ func (self *LogScaleQueueTestSuite) TestPostBytesEmptyConnRefused() {
 
 func (self *LogScaleQueueTestSuite) TestPostBytesNoEvents() {
 	payloads := []*LogScalePayload{
-			&LogScalePayload{
-				Tags: map[string]interface{}{
-					"ClientId" : testClientId,
-					"ClientHostname" : testHostname,
-				},
+		&LogScalePayload{
+			Tags: map[string]interface{}{
+				"ClientId":       testClientId,
+				"ClientHostname": testHostname,
 			},
-		}
+		},
+	}
 
 	server := self.startMockServer()
 	defer server.Close()
@@ -831,8 +800,8 @@ func (self *LogScaleQueueTestSuite) TestQueueEvents_Queued() {
 	require.Equal(self.T(), len(rows), int(atomic.LoadInt64(&self.queue.currentQueueDepth)))
 
 	// Nothing is clearing the queue, so clear it so we don't get stuck during close
-	for _, _ = range(rows) {
-		<- self.queue.listener.Output()
+	for _, _ = range rows {
+		<-self.queue.listener.Output()
 	}
 }
 
@@ -854,7 +823,7 @@ func (self *LogScaleQueueTestSuite) TestQueueEventsOpen_Dequeued() {
 	rows = append(rows, generateRow())
 	rows = append(rows, generateRow())
 
-	ctx, cancel := context.WithTimeout(self.ctx, time.Duration(1) * time.Second)
+	ctx, cancel := context.WithTimeout(self.ctx, time.Duration(1)*time.Second)
 
 	// This is a worker.  It would've been started as part of Open()
 	wg := sync.WaitGroup{}
@@ -863,12 +832,12 @@ func (self *LogScaleQueueTestSuite) TestQueueEventsOpen_Dequeued() {
 	go func() {
 		defer wg.Done()
 		count := 0
-		L:
+	L:
 		for {
 			select {
-			case <- ctx.Done():
+			case <-ctx.Done():
 				break L
-			case row, ok := <- self.queue.listener.Output():
+			case row, ok := <-self.queue.listener.Output():
 				if !ok {
 					break L
 				}
@@ -913,7 +882,7 @@ func (self *LogScaleQueueTestSuite) TestQueueEventsOpen_DequeuedFailure() {
 	rows = append(rows, generateRow())
 	rows = append(rows, generateRow())
 
-	ctx, cancel := context.WithTimeout(self.ctx, time.Duration(5) * time.Second)
+	ctx, cancel := context.WithTimeout(self.ctx, time.Duration(5)*time.Second)
 
 	// This is a worker.  It would've been started as part of Open()
 	wg := sync.WaitGroup{}
@@ -922,12 +891,12 @@ func (self *LogScaleQueueTestSuite) TestQueueEventsOpen_DequeuedFailure() {
 	go func() {
 		defer wg.Done()
 		count := 0
-		L:
+	L:
 		for {
 			select {
-			case <- ctx.Done():
+			case <-ctx.Done():
 				break L
-			case row, ok := <- self.queue.listener.Output():
+			case row, ok := <-self.queue.listener.Output():
 				if !ok {
 					break L
 				}
@@ -991,7 +960,7 @@ func (self *LogScaleQueueTestSuite) TestQueueEventsOpen_DequeuedConnRefused() {
 	rows = append(rows, generateRow())
 	rows = append(rows, generateRow())
 
-	ctx, cancel := context.WithTimeout(self.ctx, time.Duration(5) * time.Second)
+	ctx, cancel := context.WithTimeout(self.ctx, time.Duration(5)*time.Second)
 
 	// This is a worker.  It would've been started as part of Open()
 	wg := sync.WaitGroup{}
@@ -1000,12 +969,12 @@ func (self *LogScaleQueueTestSuite) TestQueueEventsOpen_DequeuedConnRefused() {
 	go func() {
 		defer wg.Done()
 		count := 0
-		L:
+	L:
 		for {
 			select {
-			case <- ctx.Done():
+			case <-ctx.Done():
 				break L
-			case row, ok := <- self.queue.listener.Output():
+			case row, ok := <-self.queue.listener.Output():
 				if !ok {
 					break L
 				}
@@ -1087,10 +1056,10 @@ func (self *LogScaleQueueTestSuite) TestProcessEvents_ShutdownWhileFailing() {
 	wg.Add(1)
 
 	self.queue.SetEventBatchSize(1)
-	err := self.queue.addDebugCallback(nRows / 2, func(count int) {
-			self.queue.endpointUrl = "http://localhost:1" + apiEndpoint
-			wg.Done()
-		})
+	err := self.queue.addDebugCallback(nRows/2, func(count int) {
+		self.queue.endpointUrl = "http://localhost:1" + apiEndpoint
+		wg.Done()
+	})
 
 	err = self.queue.Open(self.ctx, self.scope, server.URL, validAuthToken)
 	require.NoError(self.T(), err)
@@ -1112,8 +1081,8 @@ func (self *LogScaleQueueTestSuite) TestProcessEvents_ShutdownWhileFailing() {
 
 	require.Equal(self.T(), 0, int(atomic.LoadInt64(&self.queue.currentQueueDepth)))
 	require.Equal(self.T(), 0, int(atomic.LoadInt64(&self.queue.totalRetries)))
-	require.Equal(self.T(), (nRows / 2) - 1, int(atomic.LoadInt64(&self.queue.droppedEvents)))
-	require.Equal(self.T(), nRows / 2, int(atomic.LoadInt64(&self.queue.postedEvents)))
+	require.Equal(self.T(), (nRows/2)-1, int(atomic.LoadInt64(&self.queue.droppedEvents)))
+	require.Equal(self.T(), nRows/2, int(atomic.LoadInt64(&self.queue.postedEvents)))
 	require.Equal(self.T(), 1, int(atomic.LoadInt64(&self.queue.failedEvents)))
 	self.queue = nil
 }
@@ -1129,22 +1098,22 @@ func (self *LogScaleQueueTestSuite) TestProcessEvents_ShutdownAfterRecovery() {
 	wg1 := sync.WaitGroup{}
 	wg1.Add(1)
 	err := self.queue.addDebugCallback(25, func(count int) {
-			server.Close()
-			server = self.startMockServerWithHandler(handler500)
-			self.updateEndpointUrl(server)
+		server.Close()
+		server = self.startMockServerWithHandler(handler500)
+		self.updateEndpointUrl(server)
 
-		})
+	})
 
 	err = self.queue.addDebugCallback(26, func(count int) {
-			server.Close()
-			server = self.startMockServer()
-			self.updateEndpointUrl(server)
+		server.Close()
+		server = self.startMockServer()
+		self.updateEndpointUrl(server)
 
-		})
+	})
 
 	err = self.queue.addDebugCallback(99, func(count int) {
 		wg1.Done()
-		})
+	})
 
 	err = self.queue.Open(self.ctx, self.scope, server.URL, validAuthToken)
 	require.NoError(self.T(), err)
@@ -1167,7 +1136,7 @@ func (self *LogScaleQueueTestSuite) TestProcessEvents_ShutdownAfterRecovery() {
 
 	require.Equal(self.T(), 0, int(atomic.LoadInt64(&self.queue.currentQueueDepth)))
 	require.Equal(self.T(), 0, int(atomic.LoadInt64(&self.queue.droppedEvents)))
-	require.Equal(self.T(), nRows - 1, int(atomic.LoadInt64(&self.queue.postedEvents)))
+	require.Equal(self.T(), nRows-1, int(atomic.LoadInt64(&self.queue.postedEvents)))
 	require.Equal(self.T(), 1, int(atomic.LoadInt64(&self.queue.totalRetries)))
 	require.Equal(self.T(), 1, int(atomic.LoadInt64(&self.queue.failedEvents)))
 	self.queue = nil
@@ -1183,22 +1152,22 @@ func (self *LogScaleQueueTestSuite) TestProcessEvents_4xx() {
 	wg1 := sync.WaitGroup{}
 	wg1.Add(1)
 	err := self.queue.addDebugCallback(25, func(count int) {
-			server.Close()
-			server = self.startMockServerWithHandler(handler401)
-			self.updateEndpointUrl(server)
+		server.Close()
+		server = self.startMockServerWithHandler(handler401)
+		self.updateEndpointUrl(server)
 
-		})
+	})
 
 	err = self.queue.addDebugCallback(30, func(count int) {
-			server.Close()
-			server = self.startMockServer()
-			self.updateEndpointUrl(server)
+		server.Close()
+		server = self.startMockServer()
+		self.updateEndpointUrl(server)
 
-		})
+	})
 
 	err = self.queue.addDebugCallback(99, func(count int) {
 		wg1.Done()
-		})
+	})
 
 	err = self.queue.Open(self.ctx, self.scope, server.URL, validAuthToken)
 	require.NoError(self.T(), err)
@@ -1230,5 +1199,5 @@ func (self *LogScaleQueueTestSuite) TestProcessEvents_4xx() {
 func TestLogScaleQueue(t *testing.T) {
 	gMaxPoll = 1
 	gMaxPollDev = 1
-        suite.Run(t, new(LogScaleQueueTestSuite))
+	suite.Run(t, new(LogScaleQueueTestSuite))
 }

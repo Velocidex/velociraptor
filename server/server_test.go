@@ -331,10 +331,7 @@ func (self *ServerTestSuite) TestMonitoring() {
 // Receiving a response from the server to the monitoring flow will
 // write the rows into a jsonl file in the client's monitoring area.
 func (self *ServerTestSuite) TestMonitoringAlerts() {
-	mock_clock := &utils.MockClock{
-		MockNow: time.Unix(1602103388, 0),
-	}
-
+	mock_clock := utils.NewMockClock(time.Unix(1602103388, 0))
 	closer := utils.MockTime(mock_clock)
 	defer closer()
 

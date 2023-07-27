@@ -83,7 +83,7 @@ sources:
                                 format="02-01-2006 15:04:05") AS StartTime,
                       timestamp(epoch=Record.EndTime,
                                 format="02-01-2006 15:04:05") AS EndTime
-               FROM parse_log(OSPath=OSPath, accessor=Accessor)
+               FROM parse_log(OSPath=OSPath, Accessor=Accessor)
                WHERE StartTime < DateBeforeTime
                     AND StartTime > DateAfterTime
                     AND EndTime < DateBeforeTime

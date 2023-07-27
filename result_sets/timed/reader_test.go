@@ -16,7 +16,7 @@ import (
 // Test migration from an old index arrangement.
 func (self *TimedResultSetTestSuite) TestTimedResultSetMigration() {
 	now := time.Unix(1587800000, 0)
-	clock := &utils.MockClock{MockNow: now}
+	clock := utils.NewMockClock(now)
 
 	// Start off by writing some events on a queue.
 	path_manager, err := artifacts.NewArtifactPathManager(
@@ -35,7 +35,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetMigration() {
 	for i := int64(0); i < 50; i++ {
 		// Advance the clock by 1 hour.
 		now := 1587800000 + 10000*i
-		clock.MockNow = time.Unix(now, 0).UTC()
+		clock.Set(time.Unix(now, 0).UTC())
 
 		writer, err := result_sets.NewResultSetWriter(
 			file_store_factory, path_manager.Path(),
@@ -44,7 +44,7 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetMigration() {
 
 		writer.Write(ordereddict.NewDict().
 			Set("_ts", now).
-			Set("Time", clock.MockNow))
+			Set("Time", clock.Now()))
 		writer.Close()
 	}
 

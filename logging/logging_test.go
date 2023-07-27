@@ -44,9 +44,7 @@ func (self *LoggingTestSuite) TestAuditLog() {
 	assert.NoError(t, err)
 	defer os.RemoveAll(dir)
 
-	closer := utils.MockTime(&utils.MockClock{
-		MockNow: time.Unix(1602103388, 0),
-	})
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(1602103388, 0)))
 	defer closer()
 
 	config_obj := config.GetDefaultConfig()

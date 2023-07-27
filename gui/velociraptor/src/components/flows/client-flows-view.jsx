@@ -43,7 +43,6 @@ class ClientFlowsView extends React.Component {
     }
 
     render() {
-        console.log(this.state.topPaneSize);
         return (
             <>
               <SplitPane split="horizontal"

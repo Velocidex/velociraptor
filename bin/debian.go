@@ -411,7 +411,7 @@ chmod o+x "%s"
 		version, arch)
 
 	// If they have forgotten .deb in the filename, add it in.
-	if *server_debian_command_output != "" {
+	if *client_debian_command_output != "" {
 		output_path = fmt.Sprintf("%s.deb", strings.TrimSuffix(*client_debian_command_output, ".deb"))
 	}
 

@@ -256,13 +256,7 @@ func TestBuildDeb(t *testing.T) {
 	config_file.Write(out)
 	config_file.Close()
 
-	// Create a tempfile for the binary executable.
-	binary_file, err := ioutil.TempFile("", "binary")
-	assert.NoError(t, err)
-
-	defer os.Remove(binary_file.Name())
-	binary_file.Write([]byte("\x7f\x45\x4c\x46XXXXXXXXXX"))
-	binary_file.Close()
+	binary_file, _ := filepath.Abs("../artifacts/testdata/files/test.elf")
 
 	output_file, err := ioutil.TempFile("", "output*.deb")
 	assert.NoError(t, err)
@@ -271,10 +265,10 @@ func TestBuildDeb(t *testing.T) {
 
 	cmd = exec.Command(
 		binary, "--config", config_file.Name(),
-		"debian", "client", "--binary", binary_file.Name(),
+		"debian", "client", "--binary", binary_file,
 		"--output", output_file.Name())
-	_, err = cmd.Output()
-	require.NoError(t, err)
+	out, err = cmd.CombinedOutput()
+	require.NoError(t, err, string(out))
 
 	// Make sure the file is written
 	fd, err := os.Open(output_file.Name())
@@ -293,10 +287,10 @@ func TestBuildDeb(t *testing.T) {
 
 	cmd = exec.Command(
 		binary, "--config", config_file.Name(),
-		"debian", "server", "--binary", binary_file.Name(),
+		"debian", "server", "--binary", binary_file,
 		"--output", output_file.Name())
-	_, err = cmd.Output()
-	require.NoError(t, err)
+	out, err = cmd.Output()
+	require.NoError(t, err, string(out))
 
 	// Make sure the file is written
 	fd, err = os.Open(output_file.Name())
@@ -320,7 +314,7 @@ func TestGenerateConfigWithMerge(t *testing.T) {
 		binary, "config", "generate", "--merge",
 		`{"Client": {"nonce": "Foo", "writeback_linux": "some_location"}}`)
 	out, err := cmd.Output()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 
 	// Write the config to the tmp file
 	config_file_content := out
@@ -342,7 +336,7 @@ func TestGenerateConfigWithMerge(t *testing.T) {
 		"VELOCIRAPTOR_CONFIG=",
 	)
 	out, err = cmd.Output()
-	require.Error(t, err)
+	require.Error(t, err, string(out))
 
 	// Specify the config on the commandline - should load correctly
 	cmd = exec.Command(binary, "config", "show", "--config", config_file.Name())
@@ -350,7 +344,7 @@ func TestGenerateConfigWithMerge(t *testing.T) {
 		"VELOCIRAPTOR_CONFIG=",
 	)
 	out, err = cmd.Output()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 	require.Contains(t, string(out), "Foo")
 
 	// Specify the config in the environment

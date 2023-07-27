@@ -132,11 +132,11 @@ tools:
 
 sources:
  - query: |
-     LET binary <= SELECT FullPath, Name
+     LET binary <= SELECT OSPath, Name
          FROM Artifact.Generic.Utils.FetchBinary(
               ToolName="MyTool", SleepDuration='0')
 
-     LET data_file <= SELECT FullPath, Name
+     LET data_file <= SELECT OSPath, Name
          FROM Artifact.Generic.Utils.FetchBinary(
               ToolName="MyDataFile", SleepDuration='0',
               IsExecutable=FALSE)
@@ -144,10 +144,10 @@ sources:
      LET _ <= sleep(time=1)
 
      SELECT "Foobar", Stdout, binary[0].Name,
-            data_file[0].FullPath AS DataFilePath,
-            data_file[0].FullPath =~ ".yar$" AS HasYarExtension,
-            read_file(filename=data_file[0].FullPath) AS Data
-     FROM execve(argv=[binary[0].FullPath, "artifacts", "list"])
+            data_file[0].OSPath AS DataFilePath,
+            data_file[0].OSPath =~ ".yar$" AS HasYarExtension,
+            read_file(filename=data_file[0].OSPath) AS Data
+     FROM execve(argv=[binary[0].OSPath, "artifacts", "list"])
 `))
 	fd.Close()
 

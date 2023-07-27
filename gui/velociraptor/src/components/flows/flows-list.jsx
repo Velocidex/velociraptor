@@ -369,15 +369,6 @@ class FlowsList extends React.Component {
             COLLECT: ()=>this.setState({showWizard: true}),
         };
 
-        let renderers = {
-            State: stateRenderer,
-            Artifacts: (cell, row) => {
-                return _.map(cell, function(item, idx) {
-                    return <div key={idx}>{item}</div>;
-                });
-            },
-        };
-
         return (
             <>
               { this.state.showDeleteWizard &&
@@ -620,7 +611,7 @@ class FlowsList extends React.Component {
                         Mb: true, Rows: true,
                         State: true, "Last Active": true}}
                     selectRow={selectRow}
-                    renderers={renderers}
+                    renderers={flowRowRenderer}
                     version={this.state.version}
                     no_spinner={true}
                     row_classes={rowClassRenderer}
@@ -656,35 +647,19 @@ const stateRenderer = (cell, row) => {
     return <div className="flow-status-icon">{result}</div>;
 };
 
+export const flowRowRenderer = {
+    State: stateRenderer,
+    Artifacts: (cell, row) => {
+        return _.map(cell, function(item, idx) {
+            return <div key={idx}>{item}</div>;
+        });
+    },
+};
+
+
 const rowClassRenderer = (row, rowIndex) => {
     if (row._Urgent === "true") {
         return 'flow-urgent';
     }
     return '';
 };
-
-export function getFlowColumns(client_id) {
-    return formatColumns([
-        {dataField: "state", text: T("State"), sort: true,
-         formatter: stateRenderer,
-        },
-        {dataField: "session_id", text: T("FlowId"), type: "flow"},
-        {dataField: "request.artifacts", text: T("Artifacts"),
-         sort: true, filtered: true,
-         formatter: (cell, row) => {
-             return _.map(cell, function(item, idx) {
-                 return <div key={idx}>{item}</div>;
-             });
-         }},
-        {dataField: "create_time", text: T("Created"), sort: true,
-         type: "timestamp"},
-        {dataField: "active_time", text: T("Last Active"), sort: true,
-         type: "timestamp"},
-        {dataField: "request.creator", text: T("Creator"),
-         sort: true, filtered: true},
-        {dataField: "total_uploaded_bytes", text: T("Mb"),
-         align: 'right', sort: true, sortNumeric: true, type: "mb"},
-        {dataField: "total_collected_rows", text: T("Rows"),
-         sort: true, sortNumeric: true, align: 'right'}
-    ]);
-}

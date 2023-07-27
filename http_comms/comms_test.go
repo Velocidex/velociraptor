@@ -46,7 +46,7 @@ var (
 )
 
 type FakeClock struct {
-	utils.MockClock
+	*utils.MockClock
 
 	events *[]string
 }
@@ -229,8 +229,9 @@ func (self *CommsTestSuite) TestAbort() {
 func (self *CommsTestSuite) TestEnrollment() {
 	urls := []string{self.frontend1.URL}
 
-	clock := &FakeClock{events: &self.frontend1.events}
-	clock.MockNow = time.Now()
+	clock := &FakeClock{
+		MockClock: utils.NewMockClock(time.Unix(100, 0)),
+		events:    &self.frontend1.events}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -266,8 +267,9 @@ func (self *CommsTestSuite) TestEnrollment() {
 func (self *CommsTestSuite) TestServerError() {
 	urls := []string{self.frontend1.URL}
 
-	clock := &FakeClock{events: &self.frontend1.events}
-	clock.MockNow = time.Now()
+	clock := &FakeClock{
+		MockClock: utils.NewMockClock(time.Unix(100, 0)),
+		events:    &self.frontend1.events}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -314,8 +316,9 @@ func (self *CommsTestSuite) TestServerError() {
 func (self *CommsTestSuite) TestMultiFrontends() {
 	urls := []string{self.frontend1.URL, self.frontend2.URL}
 
-	clock := &FakeClock{events: &self.frontend1.events}
-	clock.MockNow = time.Now()
+	clock := &FakeClock{
+		MockClock: utils.NewMockClock(time.Unix(100, 0)),
+		events:    &self.frontend1.events}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -375,8 +378,9 @@ func (self *CommsTestSuite) TestMultiFrontends() {
 func (self *CommsTestSuite) TestMultiFrontendsAllIsBorked() {
 	urls := []string{self.frontend1.URL, self.frontend2.URL}
 
-	clock := &FakeClock{events: &self.frontend1.events}
-	clock.MockNow = time.Now()
+	clock := &FakeClock{
+		MockClock: utils.NewMockClock(time.Unix(100, 0)),
+		events:    &self.frontend1.events}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -449,8 +453,9 @@ func (self *CommsTestSuite) TestMultiFrontendsAllIsBorked() {
 func (self *CommsTestSuite) TestMultiFrontendsIntermittantFailure() {
 	urls := []string{self.frontend1.URL, self.frontend2.URL}
 
-	clock := &FakeClock{events: &self.frontend1.events}
-	clock.MockNow = time.Now()
+	clock := &FakeClock{
+		MockClock: utils.NewMockClock(time.Unix(100, 0)),
+		events:    &self.frontend1.events}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -509,8 +514,9 @@ func (self *CommsTestSuite) TestMultiFrontendsIntermittantFailure() {
 func (self *CommsTestSuite) TestMultiFrontendsHeavyFailure() {
 	urls := []string{self.frontend1.URL, self.frontend2.URL}
 
-	clock := &FakeClock{events: &self.frontend1.events}
-	clock.MockNow = time.Now()
+	clock := &FakeClock{
+		MockClock: utils.NewMockClock(time.Unix(100, 0)),
+		events:    &self.frontend1.events}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -583,8 +589,9 @@ func (self *CommsTestSuite) TestMultiFrontendRedirect() {
 	// FE2 is not known to the client in advance.
 	urls := []string{self.frontend1.URL}
 
-	clock := &FakeClock{events: &self.frontend1.events}
-	clock.MockNow = time.Now()
+	clock := &FakeClock{
+		MockClock: utils.NewMockClock(time.Unix(100, 0)),
+		events:    &self.frontend1.events}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -650,8 +657,9 @@ func (self *CommsTestSuite) TestMultiFrontendRedirect() {
 func (self *CommsTestSuite) TestMultiFrontendRedirectWithErrors() {
 	urls := []string{self.frontend1.URL}
 
-	clock := &FakeClock{events: &self.frontend1.events}
-	clock.MockNow = time.Now()
+	clock := &FakeClock{
+		MockClock: utils.NewMockClock(time.Unix(100, 0)),
+		events:    &self.frontend1.events}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -744,8 +752,9 @@ func (self *CommsTestSuite) TestMultiFrontendRedirectWithErrors() {
 func (self *CommsTestSuite) TestMultiRedirects() {
 	urls := []string{self.frontend1.URL}
 
-	clock := &FakeClock{events: &self.frontend1.events}
-	clock.MockNow = time.Now()
+	clock := &FakeClock{
+		MockClock: utils.NewMockClock(time.Unix(100, 0)),
+		events:    &self.frontend1.events}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
