@@ -55,13 +55,19 @@ func (self RealClock) Now() time.Time {
 
 type MockClock struct {
 	mu      sync.Mutex
-	MockNow time.Time
+	mockNow time.Time
 }
 
 func (self *MockClock) Now() time.Time {
 	self.mu.Lock()
 	defer self.mu.Unlock()
-	return self.MockNow
+	return self.mockNow
+}
+
+func (self *MockClock) Set(t time.Time) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self.mockNow = t
 }
 
 // Advance the time and return immediately for sleeps.
@@ -69,7 +75,7 @@ func (self *MockClock) After(d time.Duration) <-chan time.Time {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.MockNow = self.MockNow.Add(d)
+	self.mockNow = self.mockNow.Add(d)
 	res := make(chan time.Time)
 	close(res)
 	return res
@@ -79,7 +85,13 @@ func (self *MockClock) Sleep(d time.Duration) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.MockNow = self.MockNow.Add(d)
+	self.mockNow = self.mockNow.Add(d)
+}
+
+func NewMockClock(now time.Time) *MockClock {
+	return &MockClock{
+		mockNow: now,
+	}
 }
 
 // A clock that increments each time someone calls Now()

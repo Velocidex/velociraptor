@@ -137,7 +137,7 @@ func TestClientUploaderSparseWithEOF(t *testing.T) {
 }
 
 func TestClientUploaderMultipleBuffers(t *testing.T) {
-	cancel := utils.MockTime(&utils.MockClock{MockNow: time.Unix(10, 10)})
+	cancel := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
 	defer cancel()
 
 	responder_obj := responder.TestResponderWithFlowId(
@@ -181,7 +181,7 @@ func TestClientUploaderMultipleBuffers(t *testing.T) {
 }
 
 func TestClientUploaderMultipleUploads(t *testing.T) {
-	cancel := utils.MockTime(&utils.MockClock{MockNow: time.Unix(10, 10)})
+	cancel := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
 	defer cancel()
 
 	responder_obj := responder.TestResponderWithFlowId(
@@ -266,7 +266,7 @@ func TestClientUploaderCompletelySparse(t *testing.T) {
 }
 
 func TestClientUploaderSparseMultiBuffer(t *testing.T) {
-	cancel := utils.MockTime(&utils.MockClock{MockNow: time.Unix(10, 10)})
+	cancel := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
 	defer cancel()
 
 	resp := responder.TestResponderWithFlowId(
@@ -331,7 +331,7 @@ func TestClientUploaderSparseMultiBuffer(t *testing.T) {
 // * Each message should have an upload ID incrementing from 0 for all
 //   packets in the same file.
 func TestClientUploaderUploadId(t *testing.T) {
-	cancel := utils.MockTime(&utils.MockClock{MockNow: time.Unix(10, 10)})
+	cancel := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
 	defer cancel()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -369,7 +369,7 @@ func TestClientUploaderUploadId(t *testing.T) {
 // deduplicate the files based on store_as_name so only actually
 // upload a single file.
 func TestClientUploaderDeduplicateStoreAsName(t *testing.T) {
-	cancel := utils.MockTime(&utils.MockClock{MockNow: time.Unix(10, 10)})
+	cancel := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
 	defer cancel()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 50*time.Second)

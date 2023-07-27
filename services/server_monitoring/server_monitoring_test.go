@@ -97,7 +97,8 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 
 	event_table, err := services.GetServerEventManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
-	event_table.(*server_monitoring.EventTable).SetClock(&utils.MockClock{MockNow: time.Unix(1602103388, 0)})
+	event_table.(*server_monitoring.EventTable).SetClock(
+		utils.NewMockClock(time.Unix(1602103388, 0)))
 
 	// Initially Server.Monitor.Health should be created if no
 	// other config exists.
@@ -178,9 +179,7 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 }
 
 func (self *ServerMonitoringTestSuite) TestAlertEvent() {
-	mock_clock := &utils.MockClock{
-		MockNow: time.Unix(1602103388, 0),
-	}
+	mock_clock := utils.NewMockClock(time.Unix(1602103388, 0))
 
 	closer := utils.MockTime(mock_clock)
 	defer closer()
@@ -223,7 +222,7 @@ func (self *ServerMonitoringTestSuite) TestEmptyTable() {
 	event_table, err := services.GetServerEventManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 	event_table.(*server_monitoring.EventTable).SetClock(
-		&utils.MockClock{MockNow: time.Unix(1602103388, 0)})
+		utils.NewMockClock(time.Unix(1602103388, 0)))
 
 	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -337,7 +336,7 @@ func (self *ServerMonitoringTestSuite) TestUpdateWhenArtifactModified() {
 
 	event_table, err := services.GetServerEventManager(self.ConfigObj)
 	event_table.(*server_monitoring.EventTable).SetClock(
-		&utils.MockClock{MockNow: time.Unix(1602103388, 0)})
+		utils.NewMockClock(time.Unix(1602103388, 0)))
 
 	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)

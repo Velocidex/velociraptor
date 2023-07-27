@@ -80,7 +80,7 @@ func (self *LogScaleQueueTestSuite) SetupTest() {
 	self.queue.SetMaxRetries(1)
 	self.scope = self.getScope()
 
-	self.restoreClock = utils.MockTime(&utils.MockClock{MockNow: time.Unix(10, 10)})
+	self.restoreClock = utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
 
 	self.ctx = context.Background()
 	self.populateClients()

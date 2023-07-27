@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
@@ -62,7 +63,7 @@ func (self *JournalTestSuite) TestJournalWriting() {
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	clock := &utils.MockClock{}
+	clock := utils.NewMockClock(time.Time{})
 	start := clock.Now()
 
 	// Simulate a slow filesystem (70 ms per filesystem access).
@@ -115,7 +116,7 @@ func (self *JournalTestSuite) TestJournalJsonlWriting() {
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	clock := &utils.MockClock{}
+	clock := utils.NewMockClock(time.Time{})
 	start := clock.Now()
 
 	// Simulate a slow filesystem (70 ms per filesystem access).

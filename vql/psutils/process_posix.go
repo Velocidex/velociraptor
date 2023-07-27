@@ -96,7 +96,6 @@ func TimesWithContext(ctx context.Context, pid int32) (*TimesStat, error) {
 	}
 
 	return &TimesStat{
-		CPU:    times.CPU,
 		User:   times.User,
 		System: times.System,
 	}, nil

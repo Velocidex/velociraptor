@@ -12,7 +12,6 @@ var (
 )
 
 type TimesStat struct {
-	CPU    string  `json:"cpu"`
 	User   float64 `json:"user"`
 	System float64 `json:"system"`
 }

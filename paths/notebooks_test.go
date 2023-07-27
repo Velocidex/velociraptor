@@ -10,9 +10,7 @@ import (
 
 func (self *PathManagerTestSuite) TestNotebookPathManager() {
 	manager := paths.NewNotebookPathManager("N.123")
-	manager.Clock = &utils.MockClock{
-		MockNow: time.Unix(1000000000, 0).UTC(),
-	}
+	manager.Clock = utils.NewMockClock(time.Unix(1000000000, 0).UTC())
 
 	assert.Equal(self.T(), "/ds/notebooks/N.123.json.db",
 		self.getDatastorePath(manager.Path()))

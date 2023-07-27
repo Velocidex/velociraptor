@@ -58,7 +58,7 @@ func (self *VFSServiceTestSuite) SetupTest() {
 	assert.NoError(self.T(), err)
 
 	// Mock the time so we get a stable output
-	journal_service.SetClock(&utils.MockClock{time.Unix(1000, 0)})
+	journal_service.SetClock(utils.NewMockClock(time.Unix(1000, 0)))
 }
 
 func (self *VFSServiceTestSuite) EmulateCollection(
