@@ -25,8 +25,6 @@ import yaml
 from collections import OrderedDict
 
 BLACKLISTED = ["!ALL.tkape",
-               "$SDS.tkape", # This one should be fetched via the
-                             # Windows.Triage.SDS
                ]
 
 # The following paths are not NTFS files, so they can be read normally.
