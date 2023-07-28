@@ -146,8 +146,7 @@ func vfsFileDownloadHandler() http.Handler {
 			path_spec = path_specs.NewUnsafeFilestorePath(request.FSComponents...).
 				SetType(api.PATH_TYPE_FILESTORE_ANY)
 
-			base := utils.Base(request.VfsPath)
-			filename = strings.Replace(base, "\"", "_", -1)
+			filename = utils.Base(request.VfsPath)
 
 			// Uploads table has direct vfs paths
 		} else if request.VfsPath != "" {
@@ -157,7 +156,7 @@ func vfsFileDownloadHandler() http.Handler {
 				returnError(w, 404, err.Error())
 				return
 			}
-			filename = strings.Replace(path_spec.Base(), "\"", "_", -1)
+			filename = path_spec.Base()
 
 		} else {
 			// Just reject the request
@@ -247,8 +246,8 @@ func vfsFileDownloadHandler() http.Handler {
 			// Write an ok status which includes the attachment name
 			// but only if no other data was sent.
 			if !headers_sent {
-				w.Header().Set("Content-Disposition", "attachment; filename="+
-					url.PathEscape(filename))
+				w.Header().Set("Content-Disposition", "attachment; "+
+					sanitizeFilenameForAttachment(filename))
 				w.Header().Set("Content-Type",
 					detectMime(buf[:n], request.DetectMime))
 				w.WriteHeader(200)
@@ -385,14 +384,44 @@ func downloadFileStore(prefix []string) http.Handler {
 
 		// From here on we already sent the headers and we can
 		// not really report an error to the client.
-		w.Header().Set("Content-Disposition", "attachment; filename="+
-			url.PathEscape(path_spec.Base())+api.GetExtensionForFilestore(path_spec))
+		w.Header().Set("Content-Disposition", "attachment; "+
+			sanitizePathspecForAttachment(path_spec))
 
 		w.Header().Set("Content-Type", "binary/octet-stream")
 		w.WriteHeader(200)
 
 		utils.Copy(r.Context(), w, fd)
 	})
+}
+
+// Allowed chars in non extended names
+const allowedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!#$&+-.^_`|~@'=()[]{}0123456789 "
+
+func sanitizePathspecForAttachment(path_spec api.FSPathSpec) string {
+	// https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
+	// >  The string following filename should always be put into quotes;
+	base_filename := path_spec.Base() + api.GetExtensionForFilestore(path_spec)
+	return sanitizeFilenameForAttachment(base_filename)
+}
+
+func sanitizeFilenameForAttachment(base_filename string) string {
+	// If the base filename contains path separator we use the last one
+	if strings.Contains(base_filename, "/") {
+		parts := strings.Split(base_filename, "/")
+		base_filename = parts[len(parts)-1]
+	}
+
+	base_filename_ascii := []byte{}
+	for _, c := range base_filename {
+		if strings.Contains(allowedChars, string(c)) {
+			base_filename_ascii = append(base_filename_ascii, byte(c))
+		} else {
+			base_filename_ascii = append(base_filename_ascii, '_')
+		}
+	}
+
+	return fmt.Sprintf("filename*=utf-8''\"%s\"; filename=\"%s\" ",
+		url.PathEscape(base_filename), url.PathEscape(string(base_filename_ascii)))
 }
 
 // Download the table as specified by the v1/GetTable API.
@@ -461,8 +490,8 @@ func downloadTable() http.Handler {
 
 			// From here on we already sent the headers and we can
 			// not really report an error to the client.
-			w.Header().Set("Content-Disposition", "attachment; filename="+
-				url.PathEscape(download_name))
+			w.Header().Set("Content-Disposition", "attachment; "+
+				sanitizeFilenameForAttachment(download_name))
 			w.Header().Set("Content-Type", "binary/octet-stream")
 			w.WriteHeader(200)
 
@@ -490,8 +519,8 @@ func downloadTable() http.Handler {
 
 			// From here on we already sent the headers and we can
 			// not really report an error to the client.
-			w.Header().Set("Content-Disposition", "attachment; filename="+
-				url.PathEscape(download_name))
+			w.Header().Set("Content-Disposition", "attachment; "+
+				sanitizeFilenameForAttachment(download_name))
 			w.Header().Set("Content-Type", "binary/octet-stream")
 			w.WriteHeader(200)
 
