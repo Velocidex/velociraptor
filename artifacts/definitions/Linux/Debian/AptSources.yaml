@@ -1,86 +1,350 @@
 name: Linux.Debian.AptSources
 description: |
   Parse Debian apt sources.
+  
+  This Artifact searches for all apt sources files and parses all
+  fields in both one–line \*.list files and \*.sources files
+  (deb822-style format). The results are presented both in a readable
+  table and a flattened version for parsing.
 
-  We first search for \*.list files which contain lines of the form
+  \*.list files contains lines of the form
 
   .. code:: console
 
      deb http://us.archive.ubuntu.com/ubuntu/ bionic main restricted
+     deb-src [arch=amd64,i386 signed-by=/usr/share/keyrings/foo.gpg] https://foo.bar.baz/ubuntu/main jammy main restricted universe multiverse # Comment
+  
+  deb indicates a source for binary packages, and deb-src instructs APT where
+  to find source code for packages.
 
-  For each line we construct the cache file by spliting off the
-  section (last component) and replacing / and " " with _.
+  \*.sources files (deb822-style format) are in the form of key–value
+  lines, and as opposed to the one–line format, they can contain
+  multiple URIs, components and types (deb/deb-src), along with
+  embedded GPG keys. Example:
+  
+  .. code:: console
+  
+     Types: deb deb-src
+     URIs: file:/home/apt/debian http://foo.bar.baz/main
+     Suites: unstable
+     Components: main contrib non-free
+     
+  The exported function parse_aptsources(OSPath, flatten) parses
+  both formats and returns a flattened table with
+   - OSPath
+   - Types (deb/deb-src)
+   - Components (e.g. main/contrib/non-free/restricted,universe)
+   - Suites (e.g. unstable/bookworm/jammy)
+   - _URIBase (.e.g us.archive.ubuntu.com/ubuntu/)
+   - _Transport (e.g. http/https/file/cdrom/ftp)
+   - URIs (e.g. http://us.archive.ubuntu.com/ubuntu/)
+  
+  Any option is added to individuals column. Typical options are
+   - Architectures (e.g. amd64/i386/armel)
+   - Signed-By (e.g. /usr/share/keyrings/osquery.gpg)
+   
+  All known option names are transformed to the plural SnakeCase
+  variants as listed in the sources.list man page. Any undocumented
+  options will still be included in the results, with names unchanged.
+   
+  If the GPG key is embedded in a .sources file, the whole GPG key
+  will be included in the cell. Otherwise the value will be a file
+  path.
+  
+  If flatten is False, multi–value fields (like Components) will
+  be combined in a single-space-separated string in each row.
 
-  We then try to open the file. If the file exists we parse some
-  metadata from it. If not we leave those columns empty.
+  In addition to the two apt sources tables, a third table correlates
+  information from InRelease and Release files to provide additional
+  metadata. The modification timestamps may tell when the package
+  lists where last updated.
 
 reference:
-  - https://osquery.io/schema/3.2.6#apt_sources
+  - https://manpages.debian.org/bookworm/apt/sources.list.5.en.html
+  - https://manpages.debian.org/bookworm/dpkg-dev/deb822.5.en.html
+  - https://wiki.debian.org/DebianRepository/Format#A.22Release.22_files
+
+export: |
+        /* Remove whitespace from the beginning and end of a string: */
+        LET Trim(string) = regex_transform(source=string, map=dict(
+            `(?m)^\\s+`='',
+            `(?m)\\s+$`=''
+        ))
+        
+        /* Replace any repeating whitespace with a single space: */
+        LET Simplify(string) = regex_replace(source=string, re='''\s+''', replace=' ')
+        
+        /* The syntax in lists (deb822) and sources (one-line) files varies a bit,
+           and deb822 is case-insensitive. Normalise all known fields (as per
+           the man page): */
+        LET NormaliseOpts(string) = regex_transform(source=string, map=dict(
+            `(?i)types|type`='Types',
+            `(?i)uris|uri`='URIs',
+            `(?i)suites|suite`='Suites',
+            `(?i)components|component`='Components',
+            `(?i)architectures|arch`='Architectures',
+            `(?i)languages|lang`='Languages',
+            `(?i)targets|target`='Targets',
+            `(?i)pdiffs`='PDiffs',
+            `(?i)by-hash`='By-Hash',
+            `(?i)allow-insecure`='Allow-Insecure',
+            `(?i)allow-weak`='Allow-Weak',
+            `(?i)allow-downgrade-to-insecure`='Allow-Downgrade-To-Insecure',
+            `(?i)trusted`='Trusted',
+            `(?i)signed-by`='Signed-By',
+            `(?i)check-valid-until`='Check-Valid-Until',
+            `(?i)valid-until-min`='Check-Until-Min',
+            `(?i)valid-until-max`='Valid-Until-Max',
+            `(?i)check-date`='Check-Date',
+            `(?i)date-max-future`='Date-Max-Futere',
+            `(?i)inrelease-path`='InRelease-Path'
+        ))
+        
+        /* Whether the field may contain multiple values (one–line): */
+        LET IsMultiValue(field) = field in ('Architectures', 'Languages', 'Targets')
+
+        /* Get keys and values from 'key=value' strings: */
+        LET OptStringToKeyValues(string) = SELECT *
+            FROM parse_records_with_regex(
+                regex='''(?P<Key>[^= ]+)=(?P<Value>[^ ]+)''',
+                accessor='data', file=string
+        )
+        
+        /* Convert a string of key–value pairs to a dict, and use consistent
+           option names: */
+        LET OptStringToDict(string, flatten) = to_dict(item={
+            SELECT NormaliseOpts(string=Key) AS _key,
+                if(condition=flatten, then=split(sep_string=',', string=Value),
+                    else=regex_replace(source=Value, re=',', replace=' ')) AS _value
+            FROM OptStringToKeyValues(string=string)
+        })
+
+        /* Parse a one-line deb sources.list file with options as a single string: */
+        LET DebOneLine_Opts(OSPath) = SELECT OSPath, Type AS Types,
+            Simplify(string=Options) AS Options, URI AS URIs,
+            Transport AS _Transport, URIBase AS _URIBase, Suite AS Suites,
+            Simplify(string=Trim(string=Components)) AS Components
+            /* test */
+            FROM parse_records_with_regex(
+                file=OSPath,
+                regex='''(?m)^\s*(?P<Type>deb(-src)?)(?:\s+\[(?P<Options>[^\]]+)\])?\s+(?P<URI>(?P<Transport>[^:]+):(?://)?(?P<URIBase>[^\s]+))\s+(?P<Suite>\S+)\s+(?P<Components>[^\n#]+)'''
+            )
+
+        /* Parse a one-line deb sources.list file and output a dict: */
+        LET DebOneLine_Dict(OSPath, flatten) = SELECT OSPath, *
+            FROM foreach(row=DebOneLine_Opts(OSPath=OSPath),
+                query={SELECT _value + OptStringToDict(string=Options, flatten=flatten) AS Contents
+                    FROM items(item={SELECT Types, URIs, _Transport, _URIBase, Suites,
+                        if(condition=flatten, then=split(sep_string=' ',
+                            string=Components), else=Components) AS Components
+                        FROM scope()
+                    })
+                })
+        
+        /* Parse a one-line deb sources.list file with options in individual columns: */
+        LET DebOneLine(OSPath) = SELECT OSPath, * FROM foreach(
+            row=DebOneLine_Dict(OSPath=OSPath, flatten=false),
+            column='Contents'
+        )
+        
+        /* Parse a one-line deb sources.list file with options in individual
+           columns and flatten: */
+        LET DebOneLine_Flattened(OSPath) = SELECT OSPath, * FROM flatten(
+            query={SELECT * FROM foreach(
+                row=DebOneLine_Dict(OSPath=OSPath, flatten=true),
+                column='Contents'
+                )
+            })
+        
+        /* Extract the transport/protocol and base from a URI: */
+        LET URIComponents(URI) = parse_string_with_regex(
+            regex='''(?P<Transport>[^:]+):(?://)?(?P<URIBase>[^\s]+)''',
+            string=URI
+        )
+        
+        /* Whether the field from deb822 may contain multiple values: */
+        LET Is822MultiValue(field) = field in ('Types', 'URIs', 'Suites',
+            'Components', 'Architectures', 'Languages', 'Targets')
+        
+        /* Parse a deb822 sources file section into a series of key–value pairs.
+           Notes about the format:
+             - Keys must be at the beginning of the line (no whitespace allowed)
+             - Keys are case-insensitive
+             - Comments may only appear at the beginning of the line
+             - Values may be multi-line (like when containing an embedded GPG key),
+               but following lines must be prefixed by whitespace. Multilines
+               may contain comments (prefixed by whitespace or not). Empty lines
+               part of a multi-line value must be prefixed by whitespace and "."
+             - A file may contain multiple entries, separated by empty lines.
+               A file must be split into sections fed individuall to this function
+        */
+        LET Deb822_KeyValues_(section) = SELECT Key,
+            Simplify(string=Trim(string=Value)) AS Value
+            FROM parse_records_with_regex(
+                accessor='data',
+                /* A key is anything but whitespace up to a colon
+                   Values can continue on several lines, but only if the following
+                   lines are indented with whitespace
+                */
+                regex='''(?m)^(?P<Key>[^#:\s]+)\s*:[^\S\n]*(?P<Value>[^\n]*(?:\n[^\S\n]+[^\n]+)*)''',
+                /* Before parsing the key–values, remove all comments from the file
+                   (otherwise forming a regex without lookarounds would be very
+                   difficult, if not impossible), Luckily, comments follow strict
+                   rules and must start with ^#.
+                */
+                file=regex_replace(
+                    re='''(?m)^#.+\n''',
+                    source=section
+                )
+            )
+
+        /* Parse a deb822 sources file section into a dict with consistent option
+           names: */
+        LET Deb822_KeyValues(section) = SELECT to_dict(
+            item={
+                SELECT  NormaliseOpts(string=Key) as _key,
+                        Value AS _value
+                FROM    Deb822_KeyValues_(section=section)
+                
+            }) AS Contents
+            FROM scope()
+
+        /* Parse a deb822 sources file section into a dict with consistent option
+           names, multi-value fields as arrays: */
+        LET Deb822_KeyValuesArrays(section) = SELECT to_dict(
+            item={
+                SELECT  NormaliseOpts(string=Key) as _key,
+                        if(condition=IsMultiValue(field=Key),
+                            then=split(sep_string=' ', string=Value),
+                            else=Value) AS _value
+                FROM    Deb822_KeyValues_(section=section)
+                
+            }) AS Contents
+            FROM scope()
+                
+        /* Split paragraphs in a file (separated by one or several empty
+           lines) into rows. ('regex' is anything that is illegal in Deb822Sections
+           to prevent splitting data into records.): */
+        LET Deb822Sections(OSPath) = SELECT * FROM split_records(
+            filenames=OSPath,
+            columns='Section',
+            regex='^ #', record_regex='''\n{2,}'''
+        )
+        
+        LET Deb822_Flattened_(OSPath) = SELECT * FROM foreach(
+            row=Deb822Sections(OSPath=OSPath),
+            query={SELECT OSPath, * FROM flatten(query={
+                SELECT * FROM foreach(
+                    row=Deb822_KeyValuesArrays(section=Section),
+                    column='Contents'
+                )
+            })}
+        )
+        
+        /* Parse a deb822 sources file with options in individual columns: */
+        LET Deb822(OSPath) = SELECT * FROM foreach(
+            row=Deb822Sections(OSPath=OSPath),
+            query={SELECT OSPath, * FROM foreach(
+                row=Deb822_KeyValues(section=Section),
+                column='Contents'
+            )}
+        )
+        
+        /* Parse a deb822 sources file with options in individual columns, flattened: */
+        LET Deb822_Flattened(OSPath) = SELECT * FROM flatten(query={
+            SELECT OSPath, *, URIComponents(URI=URIs).URIBase AS _URIBase,
+                URIComponents(URI=URIs).Transport AS _Transport
+            FROM Deb822_Flattened_(OSPath=OSPath)
+        })
+
+        /* Parse an apt sources/list file */
+        LET parse_aptsources(OSPath, flatten) = if(
+            condition=OSPath=~'.list$',
+            then=if(condition=flatten,
+                then=DebOneLine_Flattened(OSPath=OSPath),
+                else=DebOneLine(OSPath=OSPath)
+            ),
+            else=if(condition=flatten,
+                then=Deb822_Flattened(OSPath=OSPath),
+                else=Deb822(OSPath=OSPath)
+            )
+        )
 parameters:
   - name: linuxAptSourcesGlobs
-    description: Globs to find apt source *.list files.
-    default: /etc/apt/sources.list,/etc/apt/sources.list.d/*.list
-  - name:  aptCacheDirectory
+    description: Globs to find apt source *.list and .sources files.
+    default: /etc/apt/sources.list,/etc/apt/sources.list.d/*.{list,sources}
+  - name: aptCacheDirectory
     description: Location of the apt cache directory.
     default: /var/lib/apt/lists/
+
+precondition:
+    SELECT OS From info() where OS = 'linux'
+
 sources:
-  - precondition:
-      SELECT OS From info() where OS = 'linux'
+  - name: Sources
     query: |
-         /* Search for files which may contain apt sources. The user can
-            pass new globs here. */
-         LET files = SELECT OSPath from glob(
-           globs=split(string=linuxAptSourcesGlobs, sep=","))
+        LET files = SELECT OSPath FROM glob(
+           globs=split(string=linuxAptSourcesGlobs, sep=''',\s*'''))
+        
+        /* Output sources in a readable format: */
+        SELECT * FROM foreach(row=files,
+            query={SELECT * FROM parse_aptsources(OSPath=OSPath, flatten=false)}
+        )
 
-         /* Read each line in the sources which is not commented.
-            Deb lines look like:
-            deb [arch=amd64] http://dl.google.com/linux/chrome-remote-desktop/deb/ stable main
-            Contains URL, base_uri and components.
-         */
-         LET deb_sources = SELECT *
-           FROM parse_records_with_regex(
-             file=files.OSPath,
-             regex="(?m)^ *(?P<Type>deb(-src)?) (?:\\[arch=(?P<Arch>[^\\]]+)\\] )?" +
-                  "(?P<URL>https?://(?P<base_uri>[^ ]+))" +
-                  " +(?P<components>.+)")
-
-         /* We try to get at the Release file in /var/lib/apt/ by munging
+  - name: SourcesFlattened
+    query: |
+        LET deb_sources = SELECT * FROM foreach(row=files,
+            query={SELECT * FROM parse_aptsources(OSPath=OSPath, flatten=true)}
+        )
+        
+        /* Output sources flattened for ease of analysis: */
+        SELECT * FROM deb_sources
+        
+  - name: SourcesCacheFiles
+    query: |
+        /* We try to get at the Release file in /var/lib/apt/ by munging
            the components and URL.
            Strip the last component off, convert / and space to _ and
-           add _Release to get the filename.
-         */
-         LET parsed_apt_lines = SELECT Arch, URL,
-            base_uri + " " + components as Name, Type,
+           add _Release/_InRelease to get the filename.
+        */
+        LET parsed_apt_lines = SELECT get(field='Architectures', default='') AS Architectures, URIs,
+            _URIBase + " " + Suites + " " + Components as Name, Types,
             OSPath as Source, aptCacheDirectory + regex_replace(
               replace="_",
               re="_+",
               source=regex_replace(
                 replace="_", re="[ /]",
-                source=base_uri + "_dists_" + regex_replace(
-                   source=components,
-                   replace="", re=" +[^ ]+$")) + "_Release"
-              )  as cache_file
-         FROM deb_sources
+                source=_URIBase + "_dists_" + Suites
+              )) as cache_file
+        FROM deb_sources
+        GROUP BY URIs, Suites
 
-         /* This runs if the file was found. Read the entire file into
+        // fixed: gnupg in InRelease
+        // fixed: no duplicate entries, group by ospath
+        // fixed: allow multi-value
+        /* This runs if the file was found. Read the entire file into
             memory and parse the same record using multiple RegExps.
-         */
-         LET parsed_cache_files = SELECT Name, Arch, URL, Type,
-           Source, parse_string_with_regex(
-                string=Record,
-                regex=["Codename: (?P<Release>[^\\s]+)",
-                       "Version: (?P<Version>[^\\s]+)",
-                       "Origin: (?P<Maintainer>[^\\s]+)",
-                       "Architectures: (?P<Architectures>[^\\s]+)",
-                       "Components: (?P<Components>[^\\s]+)"]) as Record
-           FROM parse_records_with_regex(file=cache_file, regex="(?sm)(?P<Record>.+)")
+        */
+        LET parsed_cache_files(file) = SELECT Name, Architectures, URIs, Types,
+            Source, parse_string_with_regex(
+                string=regex_replace(source=Record,
+                    re='(?m)^Version: GnuPG v.+$', replace=''
+                ),
+                regex=["Codename: (?P<Release>[^\\n]+)",
+                       "Version: (?P<Version>[^\\n]+)",
+                       "Origin: (?P<Maintainer>[^\\n]+)",
+                       "Architectures: (?P<Architectures>[^\\n]+)",
+                       "Components: (?P<Components>[^\\n]+)"]) as Record
+           FROM parse_records_with_regex(file=file, regex="(?sm)(?P<Record>.+)")
 
          // Foreach row in the parsed cache file, collect the FileInfo too.
-         LET add_stat_to_parsed_cache_file = SELECT * from foreach(
+         LET add_stat_to_parsed_cache_file(file) = SELECT * from foreach(
            query={
-             SELECT OSPath, Mtime, Ctime, Atime, Record, Type,
-               Name, Arch, URL, Source from stat(filename=cache_file)
-           }, row=parsed_cache_files)
+             SELECT OSPath, Mtime, Ctime, Atime, Record, Types,
+               Name, Architectures, URIs, Source from stat(filename=file)
+           }, row=parsed_cache_files(file=file))
+           WHERE Record
+           GROUP BY OSPath
 
          /* For each row in the parsed file, run the appropriate query
             depending on if the cache file exists.
@@ -90,13 +354,19 @@ sources:
          */
          LET parse_cache_or_pass = SELECT * from if(
            condition={
-              SELECT * from stat(filename=cache_file)
+              SELECT * from stat(filename=cache_file + '_InRelease')
            },
-           then=add_stat_to_parsed_cache_file,
-           else={
-           SELECT Source, Null as Mtime, Null as Ctime,
-               Null as Atime, Type,
-               Null as Record, Arch, URL, Name from scope()
+           then=add_stat_to_parsed_cache_file(file=cache_file + '_InRelease'),
+           else={SELECT * FROM if(
+            condition={
+              SELECT * from stat(filename=cache_file + '_Release')
+            },
+            then=add_stat_to_parsed_cache_file(file=cache_file + '_Release'),
+            else={
+            SELECT Source, Null as Mtime, Null as Ctime,
+               Null as Atime, Types,
+               Null as Record, Architectures, URIs, Name from scope()
+            })
            })
 
          -- For each parsed apt .list file line produce some output.
