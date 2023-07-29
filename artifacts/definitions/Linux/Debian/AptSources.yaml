@@ -124,7 +124,6 @@ export: |
             Simplify(string=Options) AS Options, URI AS URIs,
             Transport AS _Transport, URIBase AS _URIBase, Suite AS Suites,
             Simplify(string=Trim(string=Components)) AS Components
-            /* test */
             FROM parse_records_with_regex(
                 file=OSPath,
                 regex='''(?m)^\s*(?P<Type>deb(-src)?)(?:\s+\[(?P<Options>[^\]]+)\])?\s+(?P<URI>(?P<Transport>[^:]+):(?://)?(?P<URIBase>[^\s]+))\s+(?P<Suite>\S+)\s+(?P<Components>[^\n#]+)'''
