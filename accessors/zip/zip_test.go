@@ -36,8 +36,8 @@ func (self *ZipTestSuite) TestReferenceCount() {
 	snapshot := vtesting.GetMetrics(self.T(), "accessor_zip_")
 
 	rows, err := test_utils.RunQuery(self.ConfigObj, `
-SELECT pathspec(parse=FullPath).Path AS Base,
-    read_file(filename=FullPath, length=10, accessor='zip') AS Data
+SELECT OSPath.Path AS Base,
+    read_file(filename=OSPath, length=10, accessor='zip') AS Data
 FROM glob(globs=Glob, root=Root, accessor='zip')
 WHERE NOT IsDir`, ordereddict.NewDict().
 		Set("Root", zip_file_pathspec).
@@ -71,13 +71,13 @@ func (self *ZipTestSuite) TestReferenceCountNested() {
 	rows, err := test_utils.RunQuery(self.ConfigObj, `
 SELECT * FROM foreach(
 row={
-  SELECT pathspec(parse=FullPath).Path AS Base,
-    read_file(filename=FullPath, length=10, accessor='zip') AS Data
+  SELECT OSPath.Path AS Base,
+    read_file(filename=OSPath, length=10, accessor='zip') AS Data
   FROM glob(globs=Glob, root=Root, accessor='zip')
   WHERE NOT IsDir
 }, query={
-  SELECT pathspec(parse=FullPath).Path AS Base,
-    read_file(filename=FullPath, length=10, accessor='zip') AS Data
+  SELECT OSPath.Path AS Base,
+    read_file(filename=OSPath, length=10, accessor='zip') AS Data
   FROM glob(globs=Glob, root=Root, accessor='zip')
   WHERE NOT IsDir
 })`, ordereddict.NewDict().

@@ -730,8 +730,10 @@ func (self *GuiTemplateEngine) RunQuery(vql *vfilter.VQL,
 		// Report progress even if no row is emitted
 		case <-time.After(4 * time.Second):
 			rs_writer.Flush()
-			self.Progress.Report(fmt.Sprintf(
-				"Total Rows %v", row_idx))
+			if self.Progress != nil {
+				self.Progress.Report(fmt.Sprintf(
+					"Total Rows %v", row_idx))
+			}
 			next_progress = time.Now().Add(4 * time.Second)
 
 		}

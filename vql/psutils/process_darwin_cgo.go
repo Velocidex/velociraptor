@@ -190,7 +190,6 @@ func TimesWithContext(ctx context.Context, pid int32) (*TimesStat, error) {
 	}
 
 	ret := &TimesStat{
-		CPU:    "cpu",
 		User:   float64(ti.pti_total_user) * timescaleToNanoSeconds / 1e9,
 		System: float64(ti.pti_total_system) * timescaleToNanoSeconds / 1e9,
 	}

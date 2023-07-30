@@ -81,6 +81,10 @@ func (self RawS3SystemAccessor) ReadDirWithOSPath(
 		return nil, err
 	}
 
+	// Keys may not have a leading / but we should handle them as
+	// well.
+	key = strings.TrimPrefix(key, "/")
+
 	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{
 		Bucket: aws.String(bucket),
 		Prefix: aws.String(key),
