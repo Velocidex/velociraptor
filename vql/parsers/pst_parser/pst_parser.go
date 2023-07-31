@@ -118,6 +118,7 @@ func (self *PSTParser) Call(ctx context.Context, scope vfilter.Scope, args *orde
 
 				attachmentIterator, err := message.GetAttachmentIterator()
 				attachmentName := make([]string, 0)
+				attachmentId := make([]string, 0)
 
 				if eris.Is(err, pst.ErrAttachmentsNotFound) {
 					// This message has no attachments.
@@ -135,18 +136,23 @@ func (self *PSTParser) Call(ctx context.Context, scope vfilter.Scope, args *orde
 					attachment := attachmentIterator.Value()
 
 					var attachmentNameId string
+					var attachtId string
 
 					if attachment.GetAttachLongFilename() != "" {
 						attachmentNameId = fmt.Sprintf("%d-%s", attachment.Identifier, attachment.GetAttachLongFilename())
 						attachmentName = append(attachmentName, attachmentNameId)
+						attachtId = fmt.Sprintf("%d", attachment.Identifier)
+						attachmentId = append(attachmentId, attachtId)
 
 					} else {
 						attachmentNameId = fmt.Sprintf("%d-%s", attachment.Identifier, "")
 						attachmentName = append(attachmentName, attachmentNameId)
+						attachtId = fmt.Sprintf("%d", attachment.Identifier)
+						attachmentId = append(attachmentId, attachtId)
 						scope.Log("attachments/UNKNOWN_%d", attachment.Identifier)
 					}
 					// Set attachment name and Id to the output channel
-					output.Set("AttachmentId", attachment.Identifier)
+					output.Set("AttachmentId", attachmentId)
 					output.Set("Attachments", attachmentName)
 
 					// Save to attachments folder only if FolderPath is specified
