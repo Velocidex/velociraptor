@@ -93,7 +93,7 @@ parameters:
 
   - name: opt_output_directory
     default: ""
-    description: An optional output directory prefix
+    description: Where we actually write the collection to. You can specify this as a mapped drive to write over the network.
 
   - name: opt_filename_template
     default: "Collection-%FQDN%-%TIMESTAMP%"
@@ -222,8 +222,7 @@ parameters:
        FROM parse_csv(filename="/uploads/inventory.csv", accessor="me")
        WHERE log(message="Adding tool " + ToolName)
 
-      LET baseline <= SELECT Fqdn, dirname(path=Exe) AS ExePath,
-         basename(path=Exe) AS Exe,
+      LET baseline <= SELECT Fqdn, dirname(path=Exe) AS ExePath, Exe,
          scope().CWD AS CWD FROM info()
 
       LET OutputPrefix <= if(condition= OutputPrefix,
@@ -239,13 +238,17 @@ parameters:
                    `%Timestamp%`=timestamp(epoch=now()).MarshalText),
           source=Message)
 
-      // Make the filename safe on windows but we trust the OutputPrefix.
-      LET base_filename <= OutputPrefix + regex_replace(
+      // Format the filename safely according to the filename
+      // template. This will be the name uploaded to the bucket.
+      LET formatted_zip_name <= regex_replace(
           source=expand(path=FormatMessage(Message=FilenameTemplate)),
-          re="[^0-9A-Za-z\\-]", replace="_")
+          re="[^0-9A-Za-z\\-]", replace="_") + ".zip"
 
-      LET zip_filename <= base_filename.Dirname + (base_filename.Basename + ".zip")
-      LET log_filename <= base_filename.Dirname + (base_filename.Basename + ".log")
+      // This is where we write the files on the endpoint.
+      LET zip_filename <= OutputPrefix + formatted_zip_name
+
+      // The log is always written to the executable path
+      LET log_filename <= pathspec(parse= baseline[0].Exe + ".log")
 
       -- Make a random hex string as a random password
       LET RandomPassword <= SELECT format(format="%02x",
@@ -288,24 +291,22 @@ parameters:
     default: |
       LET TargetArgs <= target_args
 
-      // Try to upload the log file now to see if we are even able to
-      // upload at all - we do this to avoid having to collect all the
-      // data and then failing the upload step.
-      LET _ <= log(message="Uploading to %v", args=log_filename)
-      LET upload_test <= upload_file(
-          filename="Test upload from " + baseline[0].Exe,
-          accessor="data",
-          name=log_filename)
+      // When uploading to the cloud it is allowed to use directory //
+      // separators and we trust the filename template to be a valid
+      // filename.
+      LET upload_name <= regex_replace(
+          source=expand(path=FormatMessage(Message=FilenameTemplate)),
+          re="[^0-9A-Za-z\\-/]", replace="_")
 
-      LET _ <= log(message="Will collect package %v  and upload to cloud bucket %v",
+      LET _ <= log(message="Will collect package %v and upload to cloud bucket %v",
          args=[zip_filename, TargetArgs.bucket])
 
-      LET collect_and_upload = SELECT
+      LET Result <= SELECT
           upload_file(filename=Container,
-                      name=zip_filename,
+                      name= upload_name + ".zip",
                       accessor="file") AS Upload,
           upload_file(filename=log_filename,
-                      name=log_filename,
+                      name= upload_name + ".log",
                       accessor="file") AS LogUpload
 
       FROM collect(artifacts=Artifacts,
@@ -319,11 +320,12 @@ parameters:
           level=Level,
           metadata=ContainerMetadata)
 
-      LET _ <= if(condition=NOT upload_test.Path,
-         then=log(message="Failed to upload to cloud bucket! Leaving the collection behind for manual upload!"))
+      LET _ <= if(condition=NOT Result[0].Upload.Path,
+         then=log(message="<red>Failed to upload to cloud bucket!</> Leaving the collection behind for manual upload!"),
+         else=log(message="<green>Collection Complete!</> Please remove %v when you are sure it was properly transferred", args=zip_filename))
 
-      SELECT * FROM collect_and_upload
-      WHERE log(message="<green>Collection Complete!</green> Please remove %v when you are sure it was properly transferred", args=zip_filename)
+      SELECT * FROM Result
+
 
   - name: FetchBinaryOverride
     type: hidden

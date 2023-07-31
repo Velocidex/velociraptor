@@ -100,7 +100,7 @@ func (self *RemapTestSuite) checkQueries(scope vfilter.Scope) {
 	// HKCU shorthand.
 	vql, err := vfilter.Parse(`
 SELECT * FROM glob(globs='/HKCU/Software/Classes/windows*', accessor='registry')
-ORDER BY FullPath
+ORDER BY OSPath
 `)
 	assert.NoError(self.T(), err)
 
@@ -113,8 +113,8 @@ ORDER BY FullPath
 
 	// Default accessor is the auto accessor.
 	vql, err = vfilter.Parse(`
-SELECT FullPath FROM glob(globs='D:\\ntuser*')
-ORDER BY FullPath
+SELECT OSPath FROM glob(globs='D:\\ntuser*')
+ORDER BY OSPath
 `)
 	assert.NoError(self.T(), err)
 
