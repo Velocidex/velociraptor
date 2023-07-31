@@ -39,7 +39,7 @@
  ],
  "D drive Glob": [
   {
-   "FullPath": "D:\\ntuser.dat"
+   "OSPath": "D:\\ntuser.dat"
   }
  ]
 }
