@@ -1,5 +1,5 @@
 name: Windows.Applications.Outlook.PST
-author: "Sikha Puthanveedu"
+author: "Sikha Puthanveedu @SikhaMohan"
 description: |
   This artifact fetch emails and attachments from outlook PST file.
   This artifact parse for outlook pst files and display the details and save 
@@ -23,7 +23,6 @@ sources:
                  Message as Message,
                  DateandTime as DeliveryTime,
                  Attachments as AttachmentNames,
-                 AttachmentId as AttachmentId,
                  Body as Body
             from parse_pst(filename=outlookPSTfile, FolderPath=AttachmentFolder)
           
