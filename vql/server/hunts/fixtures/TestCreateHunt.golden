@@ -35,15 +35,15 @@
   }
  },
  "exclude label hunt": {
-  "HuntId": "H.CJ4LL1PLKRI8K",
+  "HuntId": "H.1234",
   "Request": {
-   "hunt_id": "H.CJ4LL1PLKRI8K",
+   "hunt_id": "H.1234",
    "create_time": "100000000",
    "start_time": "100000000",
    "expires": "604900000000",
    "hunt_description": "foo",
    "start_request": {
-    "flow_id": "F.CJ4LL1PLKRI8K.H",
+    "flow_id": "F.1234.H",
     "artifacts": [
      "Test.Artifact"
     ],
@@ -70,15 +70,15 @@
   }
  },
  "include label hunt": {
-  "HuntId": "H.CJ4LL1S5IS1F0",
+  "HuntId": "H.1234",
   "Request": {
-   "hunt_id": "H.CJ4LL1S5IS1F0",
+   "hunt_id": "H.1234",
    "create_time": "100000000",
    "start_time": "100000000",
    "expires": "604900000000",
    "hunt_description": "foo",
    "start_request": {
-    "flow_id": "F.CJ4LL1S5IS1F0.H",
+    "flow_id": "F.1234.H",
     "artifacts": [
      "Test.Artifact"
     ],
@@ -105,15 +105,15 @@
   }
  },
  "include and exclude label hunt": {
-  "HuntId": "H.CJ4LL1VLAJ5EE",
+  "HuntId": "H.1234",
   "Request": {
-   "hunt_id": "H.CJ4LL1VLAJ5EE",
+   "hunt_id": "H.1234",
    "create_time": "100000000",
    "start_time": "100000000",
    "expires": "604900000000",
    "hunt_description": "foo",
    "start_request": {
-    "flow_id": "F.CJ4LL1VLAJ5EE.H",
+    "flow_id": "F.1234.H",
     "artifacts": [
      "Test.Artifact"
     ],
@@ -145,15 +145,15 @@
   }
  },
  "os hunt": {
-  "HuntId": "H.CJ4LL1PREU2UI",
+  "HuntId": "H.1234",
   "Request": {
-   "hunt_id": "H.CJ4LL1PREU2UI",
+   "hunt_id": "H.1234",
    "create_time": "100000000",
    "start_time": "100000000",
    "expires": "604900000000",
    "hunt_description": "foo",
    "start_request": {
-    "flow_id": "F.CJ4LL1PREU2UI.H",
+    "flow_id": "F.1234.H",
     "artifacts": [
      "Test.Artifact"
     ],
@@ -178,15 +178,15 @@
   }
  },
  "os and label hunt": {
-  "HuntId": "H.CJ4LL1TVQ2QDE",
+  "HuntId": "H.1234",
   "Request": {
-   "hunt_id": "H.CJ4LL1TVQ2QDE",
+   "hunt_id": "H.1234",
    "create_time": "100000000",
    "start_time": "100000000",
    "expires": "604900000000",
    "hunt_description": "foo",
    "start_request": {
-    "flow_id": "F.CJ4LL1TVQ2QDE.H",
+    "flow_id": "F.1234.H",
     "artifacts": [
      "Test.Artifact"
     ],
