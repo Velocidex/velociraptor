@@ -167,11 +167,14 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 				},
 			},
 		}
+	}
 
-		if len(arg.ExcludeLabels) > 0 {
-			hunt_request.Condition.ExcludedLabels = &api_proto.HuntLabelCondition{
-				Label: arg.ExcludeLabels,
-			}
+	if len(arg.ExcludeLabels) > 0 {
+		if hunt_request.Condition == nil {
+			hunt_request.Condition = &api_proto.HuntCondition{}
+		}
+		hunt_request.Condition.ExcludedLabels = &api_proto.HuntLabelCondition{
+			Label: arg.ExcludeLabels,
 		}
 	}
 
