@@ -88,6 +88,7 @@ var testCases = []struct {
 func (self *TestSuite) TestCreateHunt() {
 	result := ordereddict.NewDict()
 	hunt_dispatcher.SetHuntIdForTests("H.1234")
+
 	Clock := &utils.MockClock{}
 	Clock.Set(time.Unix(100, 0))
 
@@ -113,6 +114,8 @@ func (self *TestSuite) TestCreateHunt() {
 
 	plugin := &ScheduleHuntFunction{}
 	for _, test_case := range testCases {
+		hunt_dispatcher.SetHuntIdForTests("H.1234")
+
 		result.Set(test_case.description, plugin.Call(
 			self.Ctx, scope, test_case.args))
 	}
