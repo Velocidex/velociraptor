@@ -1,0 +1,58 @@
+name: Windows.Detection.Registry
+description: |
+  This artifact detects registry changes and triggers an alert. 
+
+author: Jos Clephas - @DfirJos
+
+type: CLIENT_EVENT
+
+precondition:
+  SELECT * FROM info() WHERE OS =~ "windows"
+
+parameters:
+  - name: Period
+    type: int
+    default: 60
+  - name: RegistryPath
+    default: HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\*
+  - name: RegistryData
+    type: regex
+    default: .
+  - name: AlertName
+    default: "T1112 - Suspicious registry key modification"
+  - name: diff
+    default: added
+  - name: CertificateInfo
+    default: N
+    type: bool
+  - name: regex_IssuerName
+    default: .
+  - name: Calculate_hashes
+    default: N
+    type: bool
+  - name: regex_sha256
+    default: .
+
+sources:
+  - query: |
+
+        LET query_registry = SELECT *, OSPath.String + '\\' + Data.value AS FullPath, 
+                                    expand(path=Data.value) AS Datavalue
+                            FROM glob(globs=RegistryPath, accessor="registry") WHERE Data.value =~ RegistryData
+  
+        LET query_diff = SELECT *, parse_string_with_regex(regex=
+                                        ['^"(?P<AbsolutePath>[^"]+)','(?P<AbsolutePath>^[^ "]+)'],
+                                        string=Datavalue).AbsolutePath as AbsolutePath
+              FROM diff(query=query_registry, period=Period, key="FullPath")
+              WHERE Diff = diff
+                
+        SELECT *,
+            alert(name=AlertName, Key=OSPath, Value=Datavalue, RegistryValue=Diff) as AlertSent,
+            if(condition=Calculate_hashes,
+                then=hash(path=AbsolutePath, accessor="auto")) AS Hash,
+            if(condition=CertificateInfo,
+                then=authenticode(filename=AbsolutePath)) AS Certinfo
+        FROM query_diff 
+        WHERE Diff = diff AND 
+              Hash.SHA256 =~ regex_sha256 AND
+              Certinfo.IssuerName=~regex_IssuerName
