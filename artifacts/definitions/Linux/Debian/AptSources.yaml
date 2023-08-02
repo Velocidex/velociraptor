@@ -93,10 +93,10 @@ export: |
             `(?i)trusted`='Trusted',
             `(?i)signed-by`='Signed-By',
             `(?i)check-valid-until`='Check-Valid-Until',
-            `(?i)valid-until-min`='Check-Until-Min',
+            `(?i)valid-until-min`='Valid-Until-Min',
             `(?i)valid-until-max`='Valid-Until-Max',
             `(?i)check-date`='Check-Date',
-            `(?i)date-max-future`='Date-Max-Futere',
+            `(?i)date-max-future`='Date-Max-Future',
             `(?i)inrelease-path`='InRelease-Path'
         ))
         
