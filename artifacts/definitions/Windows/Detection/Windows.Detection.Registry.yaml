@@ -12,7 +12,7 @@ precondition:
 parameters:
   - name: Period
     type: int
-    default: 60
+    default: 120
   - name: RegistryPath
     default: HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\*
   - name: RegistryData
@@ -27,6 +27,10 @@ parameters:
     type: bool
   - name: regex_IssuerName
     default: .
+  - name: UntrustedAuthenticode
+    description: Show only Executables that are not trusted by Authenticode.
+    type: bool
+    default: N
   - name: Calculate_hashes
     default: N
     type: bool
@@ -36,23 +40,24 @@ parameters:
 sources:
   - query: |
 
-        LET query_registry = SELECT *, OSPath.String + '\\' + Data.value AS FullPath, 
+        LET query_registry = SELECT *, OSPath.String + Data.value AS FullPath, 
                                     expand(path=Data.value) AS Datavalue
                             FROM glob(globs=RegistryPath, accessor="registry") WHERE Data.value =~ RegistryData
-  
-        LET query_diff = SELECT *, parse_string_with_regex(regex=
-                                        ['^"(?P<AbsolutePath>[^"]+)','(?P<AbsolutePath>^[^ "]+)'],
-                                        string=Datavalue).AbsolutePath as AbsolutePath
+
+        LET query_diff = SELECT *, commandline_split(command=Datavalue) as AbsolutePath
               FROM diff(query=query_registry, period=Period, key="FullPath")
               WHERE Diff = diff
-                
+
         SELECT *,
             alert(name=AlertName, Key=OSPath, Value=Datavalue, RegistryValue=Diff) as AlertSent,
             if(condition=Calculate_hashes,
-                then=hash(path=AbsolutePath, accessor="auto")) AS Hash,
+                then=hash(path=AbsolutePath[0], accessor="auto")) AS Hash,
             if(condition=CertificateInfo,
-                then=authenticode(filename=AbsolutePath)) AS Certinfo
+                then=authenticode(filename=AbsolutePath[0])) AS Certinfo
         FROM query_diff 
-        WHERE Diff = diff AND 
-              Hash.SHA256 =~ regex_sha256 AND
-              Certinfo.IssuerName=~regex_IssuerName
+        WHERE Diff = diff  
+              AND Hash.SHA256 =~ regex_sha256 
+              AND Certinfo.IssuerName=~regex_IssuerName
+              AND NOT if(condition= UntrustedAuthenticode,
+                        then= Certinfo.Trusted = 'trusted',
+                        else= False )
