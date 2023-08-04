@@ -455,6 +455,66 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 	assert.Error(t, err)
 }
 
+func (self *HuntTestSuite) TestHuntWithLabelClientHasOnlyExcludedLabel() {
+	t := self.T()
+
+	// The hunt will launch the Generic.Client.Info on the client.
+	hunt_obj := &api_proto.Hunt{
+		HuntId:       self.hunt_id,
+		StartRequest: self.expected,
+		State:        api_proto.Hunt_RUNNING,
+		Stats:        &api_proto.HuntStats{},
+		Expires:      uint64(time.Now().Add(7*24*time.Hour).UTC().UnixNano() / 1000),
+		Condition: &api_proto.HuntCondition{
+			ExcludedLabels: &api_proto.HuntLabelCondition{
+				Label: []string{"DoNotRunHunts"},
+			},
+		},
+	}
+
+	flow_id := hunt_obj.StartRequest.FlowId
+
+	db, err := datastore.GetDB(self.ConfigObj)
+	assert.NoError(t, err)
+
+	hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
+	err = db.SetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt_obj)
+	assert.NoError(t, err)
+
+	labeler := services.GetLabeler(self.ConfigObj)
+	err = labeler.SetClientLabel(
+		context.Background(), self.ConfigObj, self.client_id, "MyLabel")
+	assert.NoError(t, err)
+
+	// Also set the excluded label - this trumps an include label.
+	err = labeler.SetClientLabel(
+		context.Background(), self.ConfigObj, self.client_id, "DoNotRunHunts")
+	assert.NoError(t, err)
+
+	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
+	assert.NoError(t, err)
+	hunt_dispatcher.Refresh(self.Ctx, self.ConfigObj)
+
+	// Simulate a System.Hunt.Participation event
+	journal, err := services.GetJournal(self.ConfigObj)
+	assert.NoError(t, err)
+
+	journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
+		[]*ordereddict.Dict{ordereddict.NewDict().
+			Set("HuntId", self.hunt_id).
+			Set("ClientId", self.client_id).
+			Set("Fqdn", "MyHost"),
+		},
+		"System.Hunt.Participation", self.client_id, "")
+
+	time.Sleep(time.Second)
+
+	// No flow should be launched.
+	_, err = self.storage_manager.LoadCollectionContext(
+		self.Ctx, self.ConfigObj, self.client_id, flow_id)
+	assert.Error(t, err)
+}
+
 func (self *HuntTestSuite) TestHuntClientOSCondition() {
 	t := self.T()
 

@@ -1,0 +1,213 @@
+{
+ "simple hunt": {
+  "HuntId": "H.1234",
+  "Request": {
+   "hunt_id": "H.1234",
+   "create_time": "100000000",
+   "start_time": "100000000",
+   "expires": "604900000000",
+   "hunt_description": "foo",
+   "start_request": {
+    "flow_id": "F.1234.H",
+    "artifacts": [
+     "Test.Artifact"
+    ],
+    "compiled_collector_args": [
+     {
+      "query_id": "1",
+      "total_queries": "1",
+      "max_row": "1000"
+     }
+    ]
+   },
+   "condition": {
+    "labels": {
+     "label": [
+      "Label1"
+     ]
+    }
+   },
+   "stats": {},
+   "artifacts": [
+    "Test.Artifact"
+   ],
+   "state": "RUNNING"
+  }
+ },
+ "exclude label hunt": {
+  "HuntId": "H.1234",
+  "Request": {
+   "hunt_id": "H.1234",
+   "create_time": "100000000",
+   "start_time": "100000000",
+   "expires": "604900000000",
+   "hunt_description": "foo",
+   "start_request": {
+    "flow_id": "F.1234.H",
+    "artifacts": [
+     "Test.Artifact"
+    ],
+    "compiled_collector_args": [
+     {
+      "query_id": "1",
+      "total_queries": "1",
+      "max_row": "1000"
+     }
+    ]
+   },
+   "condition": {
+    "excluded_labels": {
+     "label": [
+      "ExcludeLabel"
+     ]
+    }
+   },
+   "stats": {},
+   "artifacts": [
+    "Test.Artifact"
+   ],
+   "state": "RUNNING"
+  }
+ },
+ "include label hunt": {
+  "HuntId": "H.1234",
+  "Request": {
+   "hunt_id": "H.1234",
+   "create_time": "100000000",
+   "start_time": "100000000",
+   "expires": "604900000000",
+   "hunt_description": "foo",
+   "start_request": {
+    "flow_id": "F.1234.H",
+    "artifacts": [
+     "Test.Artifact"
+    ],
+    "compiled_collector_args": [
+     {
+      "query_id": "1",
+      "total_queries": "1",
+      "max_row": "1000"
+     }
+    ]
+   },
+   "condition": {
+    "labels": {
+     "label": [
+      "IncludeLabel"
+     ]
+    }
+   },
+   "stats": {},
+   "artifacts": [
+    "Test.Artifact"
+   ],
+   "state": "RUNNING"
+  }
+ },
+ "include and exclude label hunt": {
+  "HuntId": "H.1234",
+  "Request": {
+   "hunt_id": "H.1234",
+   "create_time": "100000000",
+   "start_time": "100000000",
+   "expires": "604900000000",
+   "hunt_description": "foo",
+   "start_request": {
+    "flow_id": "F.1234.H",
+    "artifacts": [
+     "Test.Artifact"
+    ],
+    "compiled_collector_args": [
+     {
+      "query_id": "1",
+      "total_queries": "1",
+      "max_row": "1000"
+     }
+    ]
+   },
+   "condition": {
+    "excluded_labels": {
+     "label": [
+      "ExcludeLabel"
+     ]
+    },
+    "labels": {
+     "label": [
+      "IncludeLabel"
+     ]
+    }
+   },
+   "stats": {},
+   "artifacts": [
+    "Test.Artifact"
+   ],
+   "state": "RUNNING"
+  }
+ },
+ "os hunt": {
+  "HuntId": "H.1234",
+  "Request": {
+   "hunt_id": "H.1234",
+   "create_time": "100000000",
+   "start_time": "100000000",
+   "expires": "604900000000",
+   "hunt_description": "foo",
+   "start_request": {
+    "flow_id": "F.1234.H",
+    "artifacts": [
+     "Test.Artifact"
+    ],
+    "compiled_collector_args": [
+     {
+      "query_id": "1",
+      "total_queries": "1",
+      "max_row": "1000"
+     }
+    ]
+   },
+   "condition": {
+    "os": {
+     "os": "WINDOWS"
+    }
+   },
+   "stats": {},
+   "artifacts": [
+    "Test.Artifact"
+   ],
+   "state": "RUNNING"
+  }
+ },
+ "os and label hunt": {
+  "HuntId": "H.1234",
+  "Request": {
+   "hunt_id": "H.1234",
+   "create_time": "100000000",
+   "start_time": "100000000",
+   "expires": "604900000000",
+   "hunt_description": "foo",
+   "start_request": {
+    "flow_id": "F.1234.H",
+    "artifacts": [
+     "Test.Artifact"
+    ],
+    "compiled_collector_args": [
+     {
+      "query_id": "1",
+      "total_queries": "1",
+      "max_row": "1000"
+     }
+    ]
+   },
+   "condition": {
+    "os": {
+     "os": "WINDOWS"
+    }
+   },
+   "stats": {},
+   "artifacts": [
+    "Test.Artifact"
+   ],
+   "state": "RUNNING"
+  }
+ }
+}
