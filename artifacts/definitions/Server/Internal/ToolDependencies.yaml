@@ -30,6 +30,6 @@ tools:
     version: 0.7.0-rc1
 
   - name: VelociraptorWindows_x86MSI
-    url: https://github.com/Velocidex/velociraptor/releases/download/v0.7.0-rc1/velociraptor-v0.7.0-rc1-windows-386.msi
+    url: https://github.com/Velocidex/velociraptor/releases/download/v0.7.0/velociraptor-v0.7.0-rc1-windows-386.msi
     serve_locally: true
     version: 0.7.0-rc1
