@@ -43,9 +43,12 @@ description: |
    - Architectures (e.g. amd64/i386/armel)
    - Signed-By (e.g. /usr/share/keyrings/osquery.gpg)
    
-  All known option names are transformed to the plural SnakeCase
+  All known option names are transformed to the plural PascalCase
   variants as listed in the sources.list man page. Any undocumented
   options will still be included in the results, with names unchanged.
+  Options in the one-line format of the form "lang+=de"/"arch-=i386"
+  will be in columns named "Languages-Add"/"Architectures-Remove",
+  matching the option names having the same effect in deb822.
    
   If the GPG key is embedded in a .sources file, the whole GPG key
   will be included in the cell. Otherwise the value will be a file
@@ -82,9 +85,15 @@ export: |
             `(?i)uris|uri`='URIs',
             `(?i)suites|suite`='Suites',
             `(?i)components|component`='Components',
-            `(?i)architectures|arch`='Architectures',
-            `(?i)languages|lang`='Languages',
-            `(?i)targets|target`='Targets',
+            `(?i)architectures$|arch$`='Architectures',
+            `(?i)architectures-add`='Architectures-Add',
+            `(?i)architectures-remove`='Architectures-Remove',
+            `(?i)languages$|lang$`='Languages',
+            `(?i)languages-add`='Languages-Add',
+            `(?i)languages-remove`='Languages-Remove',
+            `(?i)targets$|target$`='Targets',
+            `(?i)targets-add`='Targets-Add',
+            `(?i)targets-remove`='Targets-Remove',
             `(?i)pdiffs`='PDiffs',
             `(?i)by-hash`='By-Hash',
             `(?i)allow-insecure`='Allow-Insecure',
@@ -106,14 +115,17 @@ export: |
         /* Get keys and values from 'key=value' strings: */
         LET OptStringToKeyValues(string) = SELECT *
             FROM parse_records_with_regex(
-                regex='''(?P<Key>[^= ]+)=(?P<Value>[^ ]+)''',
+                regex='''(?P<Key>[^ ]+?)(?P<Op>-|\+)?=(?P<Value>[^ ]+)''',
                 accessor='data', file=string
         )
         
+        LET OpName(op) = if(condition=op='+',then='-Add',else=
+            if(condition=op='-',then='-Remove',else=''))
+
         /* Convert a string of key–value pairs to a dict, and use consistent
            option names: */
         LET OptStringToDict(string, flatten) = to_dict(item={
-            SELECT NormaliseOpts(string=Key) AS _key,
+            SELECT NormaliseOpts(string=Key)+OpName(op=Op) AS _key,
                 if(condition=flatten, then=split(sep_string=',', string=Value),
                     else=regex_replace(source=Value, re=',', replace=' ')) AS _value
             FROM OptStringToKeyValues(string=string)
@@ -163,7 +175,9 @@ export: |
         
         /* Whether the field from deb822 may contain multiple values: */
         LET Is822MultiValue(field) = field in ('Types', 'URIs', 'Suites',
-            'Components', 'Architectures', 'Languages', 'Targets')
+            'Components', 'Architectures', 'Architectures-Add',
+            'Architectures-Remove', 'Languages', 'Languages-Add',
+            'Languages-Remove', 'Targets')
         
         /* Parse a deb822 sources file section into a series of key–value pairs.
            Notes about the format:
