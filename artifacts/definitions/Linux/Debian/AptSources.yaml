@@ -323,9 +323,6 @@ sources:
         FROM deb_sources
         GROUP BY URIs, Suites
 
-        // fixed: gnupg in InRelease
-        // fixed: no duplicate entries, group by ospath
-        // fixed: allow multi-value
         /* This runs if the file was found. Read the entire file into
             memory and parse the same record using multiple RegExps.
         */
