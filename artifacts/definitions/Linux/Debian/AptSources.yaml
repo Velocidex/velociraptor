@@ -271,7 +271,12 @@ export: |
 parameters:
   - name: linuxAptSourcesGlobs
     description: Globs to find apt source *.list and .sources files.
-    default: /etc/apt/sources.list,/etc/apt/sources.list.d/*.{list,sources}
+    type: csv
+    default: |
+        ListGlobs
+        /etc/apt/sources.list
+        /etc/apt/sources.list.d/*.list
+        /etc/apt/sources.list.d/*.sources
   - name: aptCacheDirectory
     description: Location of the apt cache directory.
     default: /var/lib/apt/lists/
@@ -283,7 +288,7 @@ sources:
   - name: Sources
     query: |
         LET files = SELECT OSPath FROM glob(
-           globs=split(string=linuxAptSourcesGlobs, sep=''',\s*'''))
+           globs=linuxAptSourcesGlobs.ListGlobs)
         
         /* Output sources in a readable format: */
         SELECT * FROM foreach(row=files,
