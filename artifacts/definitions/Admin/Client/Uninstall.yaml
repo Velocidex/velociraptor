@@ -59,7 +59,7 @@ sources:
 
   - name: RPMBased
     precondition: |
-      -- Only run if dpkg is installed.
+      -- Only run if rpm is installed.
       SELECT OS, {
          SELECT ReturnCode FROM execve(argv=["rpm", "--help"])
       } AS ReturnCode
