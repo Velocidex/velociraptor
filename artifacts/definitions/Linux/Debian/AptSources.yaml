@@ -112,22 +112,47 @@ export: |
         /* Whether the field may contain multiple values (one–line): */
         LET IsMultiValue(field) = field in ('Architectures', 'Languages', 'Targets')
 
-        /* Get keys and values from 'key=value' strings: */
-        LET OptStringToKeyValues(string) = SELECT *
+        /* Extract Key–Value pairs from option string. If assignment is -=/+=,
+           the -/+ operator is captured in Op: */
+        LET OptStringToKeyValues__(string) = SELECT *
             FROM parse_records_with_regex(
                 regex='''(?P<Key>[^ ]+?)(?P<Op>-|\+)?=(?P<Value>[^ ]+)''',
                 accessor='data', file=string
         )
         
+        /* Since option values may have multiple words, split them and flatten
+           the results for further processing: */
+        LET OptStringToKeyValues_(string) = SELECT *
+            FROM flatten(query={
+                SELECT Key,
+                    Op,
+                    split(sep_string=',', string=Value) AS Value
+                    FROM OptStringToKeyValues__(string=string)
+            })
+        
+        /* Since options may be repeated, enumerate and group all values
+           per key and operation: */
+        LET OptStringToKeyValues(string) = SELECT Key,
+            Op,
+            enumerate(items=Value) AS Value
+            FROM OptStringToKeyValues_(string=string)
+            GROUP BY Key, Op
+        
+        /* When an option is specified with +/-, represent this by appending
+           -Add/-Remove to the option name. These names match the syntax in
+           the deb822 format (i.e. "arch-=i386" == "Arhitectures-Remove: i386").
+           The purpose of these assignments is to keep the default values
+           (rather than overriding them), but add or remove one or several
+           values: */
         LET OpName(op) = if(condition=op='+',then='-Add',else=
             if(condition=op='-',then='-Remove',else=''))
-
+        
         /* Convert a string of key–value pairs to a dict, and use consistent
            option names: */
         LET OptStringToDict(string, flatten) = to_dict(item={
             SELECT NormaliseOpts(string=Key)+OpName(op=Op) AS _key,
-                if(condition=flatten, then=split(sep_string=',', string=Value),
-                    else=regex_replace(source=Value, re=',', replace=' ')) AS _value
+                if(condition=flatten, then=Value,
+                    else=join(array=Value, sep=' ')) AS _value
             FROM OptStringToKeyValues(string=string)
         })
 
@@ -144,7 +169,8 @@ export: |
         /* Parse a one-line deb sources.list file and output a dict: */
         LET DebOneLine_Dict(OSPath, flatten) = SELECT OSPath, *
             FROM foreach(row=DebOneLine_Opts(OSPath=OSPath),
-                query={SELECT _value + OptStringToDict(string=Options, flatten=flatten) AS Contents
+                query={SELECT _value +
+                        OptStringToDict(string=Options, flatten=flatten) AS Contents
                     FROM items(item={SELECT Types, URIs, _Transport, _URIBase, Suites,
                         if(condition=flatten, then=split(sep_string=' ',
                             string=Components), else=Components) AS Components
@@ -183,6 +209,10 @@ export: |
            Notes about the format:
              - Keys must be at the beginning of the line (no whitespace allowed)
              - Keys are case-insensitive
+             - Keys may be repeated. Values are not overridden, but combined
+             - Special keys that end in -Add/-Remove uses the default values,
+               but add or remove individual values. These keys are treated as
+               individual option names.
              - Comments may only appear at the beginning of the line
              - Values may be multi-line (like when containing an embedded GPG key),
                but following lines must be prefixed by whitespace. Multilines
@@ -191,8 +221,11 @@ export: |
              - A file may contain multiple entries, separated by empty lines.
                A file must be split into sections fed individuall to this function
         */
-        LET Deb822_KeyValues_(section) = SELECT Key,
-            Simplify(string=Trim(string=Value)) AS Value
+        LET Deb822_KeyValues___(section) = SELECT Key,
+            if(condition=NormaliseOpts(string=Key)!='Signed-By',
+                then=split(sep_string=' ',
+                string=Simplify(string=Trim(string=Value))),
+                else=Value) AS Value
             FROM parse_records_with_regex(
                 accessor='data',
                 /* A key is anything but whitespace up to a colon
@@ -211,27 +244,24 @@ export: |
                 )
             )
 
+        LET Deb822_KeyValues__(section) = SELECT * FROM flatten(query={
+            SELECT * FROM Deb822_KeyValues___(section=section)
+        })
+        
+        LET Deb822_KeyValues_(section) = SELECT Key,
+            enumerate(items=Value) AS Value
+            FROM Deb822_KeyValues__(section=section)
+            GROUP BY Key
+
+        // TODO: Keep as array instead of joining to string? Here and in oneline?
         /* Parse a deb822 sources file section into a dict with consistent option
            names: */
-        LET Deb822_KeyValues(section) = SELECT to_dict(
+        LET Deb822_KeyValues(section, flatten) = SELECT to_dict(
             item={
-                SELECT  NormaliseOpts(string=Key) as _key,
-                        Value AS _value
-                FROM    Deb822_KeyValues_(section=section)
-                
-            }) AS Contents
-            FROM scope()
-
-        /* Parse a deb822 sources file section into a dict with consistent option
-           names, multi-value fields as arrays: */
-        LET Deb822_KeyValuesArrays(section) = SELECT to_dict(
-            item={
-                SELECT  NormaliseOpts(string=Key) as _key,
-                        if(condition=IsMultiValue(field=Key),
-                            then=split(sep_string=' ', string=Value),
-                            else=Value) AS _value
-                FROM    Deb822_KeyValues_(section=section)
-                
+                SELECT NormaliseOpts(string=Key) as _key,
+                    if(condition=flatten, then=Value,
+                        else=join(array=Value, sep=' ')) AS _value
+                FROM Deb822_KeyValues_(section=section)
             }) AS Contents
             FROM scope()
                 
@@ -244,21 +274,25 @@ export: |
             regex='^ #', record_regex='''\n{2,}'''
         )
         
+        /* TODO: flattened works on components, but not arch and suites: */
         LET Deb822_Flattened_(OSPath) = SELECT * FROM foreach(
             row=Deb822Sections(OSPath=OSPath),
             query={SELECT OSPath, * FROM flatten(query={
                 SELECT * FROM foreach(
-                    row=Deb822_KeyValuesArrays(section=Section),
+                    row=Deb822_KeyValues(section=Section, flatten=true),
                     column='Contents'
                 )
             })}
         )
         
-        /* Parse a deb822 sources file with options in individual columns: */
+        /* Parse a deb822 sources file with options in individual columns.
+           Note that, as opposed to DebOneLine and Deb822_Flattened, this
+           function does not return the columns _URIBase and _Transport, since
+           this format supports mulitple URIs to be specified: */
         LET Deb822(OSPath) = SELECT * FROM foreach(
             row=Deb822Sections(OSPath=OSPath),
             query={SELECT OSPath, * FROM foreach(
-                row=Deb822_KeyValues(section=Section),
+                row=Deb822_KeyValues(section=Section, flatten=false),
                 column='Contents'
             )}
         )
