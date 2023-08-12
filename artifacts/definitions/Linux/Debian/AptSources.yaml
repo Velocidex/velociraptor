@@ -65,6 +65,7 @@ description: |
 reference:
   - https://manpages.debian.org/bookworm/apt/sources.list.5.en.html
   - https://manpages.debian.org/bookworm/dpkg-dev/deb822.5.en.html
+  - https://salsa.debian.org/apt-team/apt/-/blob/main/apt-pkg/sourcelist.cc
   - https://wiki.debian.org/DebianRepository/Format#A.22Release.22_files
 
 export: |
@@ -163,7 +164,14 @@ export: |
             Simplify(string=Trim(string=Components)) AS Components
             FROM parse_records_with_regex(
                 file=OSPath,
-                regex='''(?m)^\s*(?P<Type>deb(-src)?)(?:\s+\[(?P<Options>[^\]]+)\])?\s+(?P<URI>(?P<Transport>[^:]+):(?://)?(?P<URIBase>[^\s]+))\s+(?P<Suite>\S+)\s+(?P<Components>[^\n#]+)'''
+                /* This regex attemps to cover most of the ways a sources
+                   line can be written without being overly complex. Quotes
+                   ("" and []) are actually allowed to certain degree by the
+                   apt source code, but this is considered obscure syntax and
+                   is not expected to be found in the wild. The exception is
+                   "cdrom:[word word…]", which is capture correctly in order 
+                   to not end up with incorrectly captured words: */
+                regex='''(?m)^\s*(?P<Type>deb(-src)?)(?:\s+\[(?P<Options>[^\]#]+)(?:#[^\]]+)?\])?\s+"?(?P<URI>(?P<Transport>[^:]+):(?://)?(?P<URIBase>\[.+?\]|\S+?))"?\s+(?P<Suite>\S+)\s+(?P<Components>[^\n#]+)'''
             )
 
         /* Parse a one-line deb sources.list file and output a dict: */
