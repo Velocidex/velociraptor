@@ -109,9 +109,6 @@ export: |
             `(?i)date-max-future`='Date-Max-Future',
             `(?i)inrelease-path`='InRelease-Path'
         ))
-        
-        /* Whether the field may contain multiple values (one–line): */
-        LET IsMultiValue(field) = field in ('Architectures', 'Languages', 'Targets')
 
         /* Extract Key–Value pairs from option string. If assignment is -=/+=,
            the -/+ operator is captured in Op: */
@@ -206,12 +203,6 @@ export: |
             regex='''(?P<Transport>[^:]+):(?://)?(?P<URIBase>[^\s]+)''',
             string=URI
         )
-        
-        /* Whether the field from deb822 may contain multiple values: */
-        LET Is822MultiValue(field) = field in ('Types', 'URIs', 'Suites',
-            'Components', 'Architectures', 'Architectures-Add',
-            'Architectures-Remove', 'Languages', 'Languages-Add',
-            'Languages-Remove', 'Targets')
         
         /* Parse a deb822 sources file section into a series of key–value pairs.
            Notes about the format:
