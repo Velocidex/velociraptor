@@ -378,7 +378,7 @@ sources:
                 ),
                 regex=["Codename: (?P<Release>[^\\n]+)",
                        "Version: (?P<Version>[^\\n]+)",
-                       "Origin: (?P<Maintainer>[^\\n]+)",
+                       "Origin: (?P<Origin>[^\\n]+)",
                        "Architectures: (?P<Architectures>[^\\n]+)",
                        "Components: (?P<Components>[^\\n]+)"]) as Record
            FROM parse_records_with_regex(file=file, regex="(?sm)(?P<Record>.+)")
