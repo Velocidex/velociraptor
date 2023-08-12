@@ -252,7 +252,6 @@ export: |
             FROM Deb822_KeyValues__(section=section)
             GROUP BY Key
 
-        // TODO: Keep as array instead of joining to string? Here and in oneline?
         /* Parse a deb822 sources file section into a dict with consistent option
            names: */
         LET Deb822_KeyValues(section, flatten) = SELECT to_dict(
@@ -272,8 +271,7 @@ export: |
             columns='Section',
             regex='^ #', record_regex='''\n{2,}'''
         )
-        
-        /* TODO: flattened works on components, but not arch and suites: */
+
         LET Deb822_Flattened_(OSPath) = SELECT * FROM foreach(
             row=Deb822Sections(OSPath=OSPath),
             query={SELECT OSPath, * FROM flatten(query={
