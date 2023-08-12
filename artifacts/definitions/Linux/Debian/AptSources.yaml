@@ -30,7 +30,7 @@ description: |
      Components: main contrib non-free
      
   The exported function parse_aptsources(OSPath, flatten) parses
-  both formats and returns a flattened table with
+  both formats and returns a (optionally flattened) table with
    - OSPath
    - Types (deb/deb-src)
    - Components (e.g. main/contrib/non-free/restricted,universe)
@@ -39,7 +39,7 @@ description: |
    - _Transport (e.g. http/https/file/cdrom/ftp)
    - URIs (e.g. http://us.archive.ubuntu.com/ubuntu/)
   
-  Any option is added to individuals column. Typical options are
+  Any option is added to an individual column. Typical options are
    - Architectures (e.g. amd64/i386/armel)
    - Signed-By (e.g. /usr/share/keyrings/osquery.gpg)
    
@@ -47,8 +47,8 @@ description: |
   variants as listed in the sources.list man page. Any undocumented
   options will still be included in the results, with names unchanged.
   Options in the one-line format of the form "lang+=de"/"arch-=i386"
-  will be in columns named "Languages-Add"/"Architectures-Remove",
-  matching the option names having the same effect in deb822.
+  will be in columns like "Languages-Add"/"Architectures-Remove", matching
+  the option names having the same effect in deb822.
    
   If the GPG key is embedded in a .sources file, the whole GPG key
   will be included in the cell. Otherwise the value will be a file
@@ -227,7 +227,7 @@ export: |
                may contain comments (prefixed by whitespace or not). Empty lines
                part of a multi-line value must be prefixed by whitespace and "."
              - A file may contain multiple entries, separated by empty lines.
-               A file must be split into sections fed individuall to this function
+               A file must be split into sections, fed individually to this function
         */
         LET Deb822_KeyValues___(section) = SELECT Key,
             if(condition=NormaliseOpts(string=Key)!='Signed-By',
@@ -274,7 +274,7 @@ export: |
             FROM scope()
                 
         /* Split paragraphs in a file (separated by one or several empty
-           lines) into rows. ('regex' is anything that is illegal in Deb822Sections
+           lines) into rows. ('regex' is just anything that is illegal in Deb822Sections
            to prevent splitting data into records.): */
         LET Deb822Sections(OSPath) = SELECT * FROM split_records(
             filenames=OSPath,
