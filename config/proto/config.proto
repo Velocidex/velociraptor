@@ -794,6 +794,17 @@ message DatastoreConfig {
     string location = 2;
     string filestore_directory = 3;
 
+    // Used by the default FileBaseDataStore
+
+    // Set to the min required disk space. When we fall below this
+    // available disk space, we refuse to write files. This avoids the
+    // possibility of writing corrupted files. Default is 50mb. Set to
+    // -1 to disable disk space checking.
+    int64 min_allowed_file_space_mb = 15;
+
+    // How often to check the disk space (default 10 sec)
+    int64 disk_check_frequency_sec = 16;
+
     // Cap directories to this size after reporting error - this
     // should not happen normally but may happen if the deployment has
     // been very active or due to a bug!
