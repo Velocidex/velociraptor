@@ -36,10 +36,12 @@ type ServerArtifactsTestSuite struct {
 	test_utils.TestSuite
 }
 
-func (self *ServerArtifactsTestSuite) SetupTest() {
+func (self *ServerArtifactsTestSuite) SetupSuite() {
 	self.ConfigObj = self.TestSuite.LoadConfig()
 	self.ConfigObj.Services.ServerArtifacts = true
+}
 
+func (self *ServerArtifactsTestSuite) SetupTest() {
 	self.TestSuite.SetupTest()
 
 	// Create an administrator user
@@ -48,7 +50,9 @@ func (self *ServerArtifactsTestSuite) SetupTest() {
 }
 
 func (self *ServerArtifactsTestSuite) ScheduleAndWait(
-	name, user, flow_id string) *api_proto.FlowDetails {
+	name, user, flow_id string,
+	wg *sync.WaitGroup, // If set we signal this wg when we finished scheduling.
+) *api_proto.FlowDetails {
 	ctx := self.Ctx
 
 	manager, _ := services.GetRepositoryManager(self.ConfigObj)
@@ -96,11 +100,16 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 		})
 	assert.NoError(self.T(), err)
 
+	if wg != nil {
+		wg.Done()
+	}
+
 	// Wait for the collection to complete
 	var details *api_proto.FlowDetails
 	vtesting.WaitUntil(time.Second*50, self.T(), func() bool {
 		mu.Lock()
 		defer mu.Unlock()
+
 		details, err = launcher.GetFlowDetails(
 			self.Ctx, self.ConfigObj, "server", flow_id)
 		assert.NoError(self.T(), err)
@@ -124,7 +133,7 @@ type: SERVER
 sources:
 - query: SELECT "Foo" FROM scope()
 `)
-	details := self.ScheduleAndWait("Test1", "admin", "F.1234")
+	details := self.ScheduleAndWait("Test1", "admin", "F.1234", nil)
 
 	// One row is collected
 	assert.Equal(self.T(), uint64(1), details.Context.TotalCollectedRows)
@@ -148,12 +157,19 @@ sources:
 	cancel_mu := &sync.Mutex{}
 	var details *api_proto.FlowDetails
 
+	schedule_wg := &sync.WaitGroup{}
+	schedule_wg.Add(1)
+
 	go func() {
-		flow_details := self.ScheduleAndWait("Test1", "admin", "F.1234")
+		flow_details := self.ScheduleAndWait(
+			"Test1", "admin", "F.1234", schedule_wg)
+
 		cancel_mu.Lock()
 		details = flow_details
 		cancel_mu.Unlock()
 	}()
+
+	schedule_wg.Wait()
 
 	// Wait for the flow to be created
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
@@ -188,7 +204,7 @@ sources:
 resources:
   max_rows: 10
 `)
-	details := self.ScheduleAndWait("Test1", "admin", "F.1234")
+	details := self.ScheduleAndWait("Test1", "admin", "F.1234", nil)
 
 	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_ERROR,
 		details.Context.State)
@@ -212,7 +228,7 @@ sources:
                    name="test.txt")
      FROM scope()
 `)
-	details := self.ScheduleAndWait("TestUpload", "admin", "F.1234")
+	details := self.ScheduleAndWait("TestUpload", "admin", "F.1234", nil)
 
 	// One row is collected
 	assert.Equal(self.T(), uint64(1), details.Context.TotalCollectedRows)
@@ -255,7 +271,7 @@ sources:
                    name="test_many.txt")
      FROM range(end=10)
 `)
-	details := self.ScheduleAndWait("TestUploadMany", "admin", "F.1234")
+	details := self.ScheduleAndWait("TestUploadMany", "admin", "F.1234", nil)
 
 	// 10 rows are collected
 	assert.Equal(self.T(), uint64(10), details.Context.TotalCollectedRows)
@@ -305,7 +321,7 @@ sources:
   precondition: SELECT 1 FROM scope()
   query: SELECT "Foo" FROM scope()
 `)
-	details := self.ScheduleAndWait("TestMultiSource", "admin", "F.1234")
+	details := self.ScheduleAndWait("TestMultiSource", "admin", "F.1234", nil)
 
 	// Two rows are collected
 	assert.Equal(self.T(), uint64(2), details.Context.TotalCollectedRows)
@@ -346,7 +362,7 @@ sources:
 - name: Source2
   query: SELECT "Foo" FROM scope()
 `)
-	details := self.ScheduleAndWait("TestMultiSourceSerial", "admin", "F.1234")
+	details := self.ScheduleAndWait("TestMultiSourceSerial", "admin", "F.1234", nil)
 
 	// Two rows are collected
 	assert.Equal(self.T(), uint64(2), details.Context.TotalCollectedRows)
@@ -377,7 +393,7 @@ sources:
 resources:
   max_upload_bytes: 20
 `)
-	details := self.ScheduleAndWait("Test1", "admin", "F.1234")
+	details := self.ScheduleAndWait("Test1", "admin", "F.1234", nil)
 
 	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_ERROR,
 		details.Context.State)
@@ -401,7 +417,7 @@ sources:
 - query: SELECT sleep(time=200) FROM scope()
 `)
 
-	details := self.ScheduleAndWait("Test2", "admin", "F.1234")
+	details := self.ScheduleAndWait("Test2", "admin", "F.1234", nil)
 
 	// No rows are collected because the query timed out.
 	assert.Equal(self.T(), uint64(0), details.Context.TotalCollectedRows)
@@ -432,7 +448,7 @@ sources:
 - query: SELECT * FROM info()
 `)
 
-	details := self.ScheduleAndWait("Test", "admin", "F.1234")
+	details := self.ScheduleAndWait("Test", "admin", "F.1234", nil)
 
 	// Admin user should be able to collect since it has EXECVE
 	assert.Equal(self.T(), uint64(1), details.Context.TotalCollectedRows)
@@ -442,7 +458,7 @@ sources:
 	err := services.GrantRoles(self.ConfigObj, "gumby", []string{"reader"})
 	assert.NoError(self.T(), err)
 
-	details = self.ScheduleAndWait("Test", "gumby", "F.1234")
+	details = self.ScheduleAndWait("Test", "gumby", "F.1234", nil)
 
 	// Gumby user has no permissions to run the artifact.
 	assert.Equal(self.T(), uint64(0), details.Context.TotalCollectedRows)

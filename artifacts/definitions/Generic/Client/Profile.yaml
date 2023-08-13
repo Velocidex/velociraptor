@@ -116,13 +116,13 @@ sources:
 
   - name: RunningQueries
     query: |
-      SELECT Line.Start AS Start, int(int = Line.Duration / 1000000) AS DurationSec, Line.Query AS Query
+      SELECT Line.Start AS Timestamp, Line.Query AS Query
       FROM profile(queries=TRUE)
       WHERE NOT Line.Duration
 
   - name: AllQueries
     query: |
-      SELECT Line.Start AS Start, int(int = Line.Duration / 1000000) AS DurationSec, Line.Query AS Query
+      SELECT Line.Start AS Timestamp, int(int = Line.Duration / 1000000) AS DurationSec, Line.Query AS Query
       FROM profile(queries=TRUE)
 
   - name: Metrics
