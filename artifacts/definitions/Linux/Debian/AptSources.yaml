@@ -303,6 +303,10 @@ export: |
             columns='Section',
             regex='^ #', record_regex='''\n{2,}'''
         )
+        /* Sections may be empty due to several newlines or comments on their own
+           separated by newlines. Ensure that at least one field is present
+           (URIs are mandatory): */
+        WHERE URIs
 
         LET Deb822_Flattened_(OSPath) = SELECT * FROM foreach(
             row=Deb822Sections(OSPath=OSPath),
