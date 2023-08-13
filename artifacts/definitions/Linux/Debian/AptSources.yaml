@@ -203,6 +203,17 @@ export: |
             regex='''(?P<Transport>[^:]+):(?://)?(?P<URIBase>[^\s]+)''',
             string=URI
         )
+
+        /* Although the documentation says to use whitespace and not comma
+           for multi-values in deb822, comma still appears to be supported,
+           and this use is seen in the wild. Treat these values correctly.
+           Note that this does not affect all keys, like suites and
+           components:
+        */
+        LET MaybeReplaceComma(key, value) = if(
+            condition=key=~'(?i)^(?:arch|lang|targets)',
+            then=regex_replace(re='\s*,\s*', source=value, replace=' '),
+            else=value)
         
         /* Parse a deb822 sources file section into a series of key–value pairs.
            Notes about the format:
@@ -213,6 +224,9 @@ export: |
                but add or remove individual values. These keys are treated as
                individual option names.
              - Comments may only appear at the beginning of the line
+             - Multiple values are separated by whitespace, not comma. However,
+               some multi-value fields separated by comma are still split, even
+               if this is not mentioned in the documentation.
              - Values may be multi-line (like when containing an embedded GPG key),
                but following lines must be prefixed by whitespace. Multilines
                may contain comments (prefixed by whitespace or not). Empty lines
@@ -223,7 +237,8 @@ export: |
         LET Deb822_KeyValues___(section) = SELECT Key,
             if(condition=NormaliseOpts(string=Key)!='Signed-By',
                 then=split(sep_string=' ',
-                string=Simplify(string=Trim(string=Value))),
+                string=MaybeReplaceComma(key=Key,
+                    value=Simplify(string=Trim(string=Value)))),
                 else=Value) AS Value
             FROM parse_records_with_regex(
                 accessor='data',
