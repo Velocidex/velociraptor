@@ -49,6 +49,13 @@ description: |
   Options in the one-line format of the form "lang+=de"/"arch-=i386"
   will be in columns like "Languages-Add"/"Architectures-Remove", matching
   the option names having the same effect in deb822.
+
+  Entries in deb822 sources files may be disabled by including
+  "Enabled: no" instead of commenting out all lines. If this field
+  is not present with a falsly value, the entry is enabled. Use the
+  exported functions DebTrue()/DebFalse() to correctly parse all
+  accepted true/false strings, or use the VQL suggestion "Enabled"
+  to filter on this column (true), if present.
    
   If the GPG key is embedded in a .sources file, the whole GPG key
   will be included in the cell. Otherwise the value will be a file
@@ -107,8 +114,16 @@ export: |
             `(?i)valid-until-max`='Valid-Until-Max',
             `(?i)check-date`='Check-Date',
             `(?i)date-max-future`='Date-Max-Future',
-            `(?i)inrelease-path`='InRelease-Path'
+            `(?i)inrelease-path`='InRelease-Path',
+            `(?i)enabled`='Enabled'
         ))
+
+        LET DebTrue(string) = if(
+            condition=string=~'(?i)^(?:yes|true|with|on|enable)$',
+            then=true, else=false)
+        LET DebFalse(string) = if(
+            condition=string=~'(?i)^(?:no|false|without|off|disable)$',
+            then=true, else=false)
 
         /* Extract Key–Value pairs from option string. If assignment is -=/+=,
            the -/+ operator is captured in Op: */
@@ -356,6 +371,18 @@ sources:
         SELECT * FROM foreach(row=files,
             query={SELECT * FROM parse_aptsources(OSPath=OSPath, flatten=false)}
         )
+    notebook:
+      - type: vql_suggestion
+        name: Only enabled sources
+        template: |
+            SELECT * FROM source(artifact='Custom.Linux.Debian.AptSources/Sources')
+            WHERE get(field='Enabled', default='yes') =~ '(?i)^(?:yes|true|with|on|enable)$'
+
+      - type: vql_suggestion
+        name: Trusted sources (apt-secure bypassed)
+        template: |
+            SELECT * FROM source(artifact='Custom.Linux.Debian.AptSources/Sources')
+            WHERE get(field='Trusted', default='') =~ '(?i)^(?:yes|true|with|on|enable)$'
 
   - name: SourcesFlattened
     query: |
