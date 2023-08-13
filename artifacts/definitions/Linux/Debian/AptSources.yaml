@@ -1,7 +1,7 @@
 name: Linux.Debian.AptSources
 description: |
   Parse Debian apt sources.
-  
+
   This Artifact searches for all apt sources files and parses all
   fields in both one–line \*.list files and \*.sources files
   (deb822-style format). The results are presented both in a readable
@@ -13,7 +13,7 @@ description: |
 
      deb http://us.archive.ubuntu.com/ubuntu/ bionic main restricted
      deb-src [arch=amd64,i386 signed-by=/usr/share/keyrings/foo.gpg] https://foo.bar.baz/ubuntu/main jammy main restricted universe multiverse # Comment
-  
+
   deb indicates a source for binary packages, and deb-src instructs APT where
   to find source code for packages.
 
@@ -21,9 +21,9 @@ description: |
   lines, and as opposed to the one–line format, they can contain
   multiple URIs, components and types (deb/deb-src), along with
   embedded GPG keys. Example:
-  
+
   .. code:: console
-  
+
      Types: deb deb-src
      URIs: file:/home/apt/debian http://foo.bar.baz/main
      Suites: unstable
@@ -38,7 +38,7 @@ description: |
    - _URIBase (.e.g us.archive.ubuntu.com/ubuntu/)
    - _Transport (e.g. http/https/file/cdrom/ftp)
    - URIs (e.g. http://us.archive.ubuntu.com/ubuntu/)
-  
+
   Any option is added to an individual column. Typical options are
    - Architectures (e.g. amd64/i386/armel)
    - Signed-By (e.g. /usr/share/keyrings/osquery.gpg)
@@ -60,7 +60,7 @@ description: |
   If the GPG key is embedded in a .sources file, the whole GPG key
   will be included in the cell. Otherwise the value will be a file
   path.
-  
+
   If flatten is False, multi–value fields (like Components) will
   be combined in a single-space-separated string in each row.
 
