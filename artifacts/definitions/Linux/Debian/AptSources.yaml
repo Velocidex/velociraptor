@@ -235,6 +235,8 @@ export: |
                A file must be split into sections, fed individually to this function
         */
         LET Deb822_KeyValues___(section) = SELECT Key,
+            /* Signed-By is special (it could be an embedded GPG key),and
+               shouldn't be split: */
             if(condition=NormaliseOpts(string=Key)!='Signed-By',
                 then=split(sep_string=' ',
                 string=MaybeReplaceComma(key=Key,
