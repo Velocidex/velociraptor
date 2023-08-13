@@ -227,6 +227,12 @@ func (self *OrgManager) Scan() error {
 
 		delete(existing, org_id)
 
+		if org_record.Id == "" || org_record.Nonce == "" {
+			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+			logger.Info("<yellow>Org is corrupted %v</>", org_id)
+			continue
+		}
+
 		_, err = self.GetOrgConfig(org_id)
 		if err != nil {
 			err = self.startOrg(org_record)
