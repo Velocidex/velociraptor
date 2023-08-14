@@ -171,6 +171,8 @@ sources:
 
 	schedule_wg.Wait()
 
+	time.Sleep(time.Second)
+
 	// Wait for the flow to be created
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
 		_, err := launcher.GetFlowDetails(
