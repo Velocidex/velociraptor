@@ -224,6 +224,7 @@ func (self *HuntDispatcher) ApplyFuncOnHunts(
 
 	// Take a snapshot of the hunts list.
 	var hunts []*api_proto.Hunt
+
 	self.mu.Lock()
 	for _, h := range self.getHunts() {
 		hunts = append(hunts, proto.Clone(h).(*api_proto.Hunt))
@@ -443,11 +444,8 @@ func (self *HuntDispatcher) Refresh(
 			continue
 		}
 
-		requests = append(requests, &datastore.MultiGetSubjectRequest{
-			Path:    paths.NewHuntPathManager(hunt_id).Path(),
-			Message: &api_proto.Hunt{},
-			Data:    hunt_id,
-		})
+		requests = append(requests, datastore.NewMultiGetSubjectRequest(
+			&api_proto.Hunt{}, paths.NewHuntPathManager(hunt_id).Path(), hunt_id))
 	}
 
 	err = datastore.MultiGetSubject(config_obj, requests)
@@ -461,7 +459,8 @@ func (self *HuntDispatcher) Refresh(
 
 	for _, request := range requests {
 		hunt_id := request.Data.(string)
-		hunt_obj, ok := request.Message.(*api_proto.Hunt)
+		message := request.Message()
+		hunt_obj, ok := message.(*api_proto.Hunt)
 		if !ok {
 			continue
 		}

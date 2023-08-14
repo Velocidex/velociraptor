@@ -38,6 +38,12 @@ func (self *QueryLogEntry) Close() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	// Query was already closed - allow Close to be called multiple
+	// times.
+	if self.Duration > 0 {
+		return
+	}
+
 	self.Duration = time.Now().UnixNano() - self.Start.UnixNano()
 
 	// We represent Duration == 0 as not yet complete but sometimes
