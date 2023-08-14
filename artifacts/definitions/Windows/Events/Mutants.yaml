@@ -18,7 +18,7 @@ parameters:
     type: int
     default: 120
   - name: MutantNameRegex
-    default: EvillMutant
+    default: EvilMutant
     type: regex
   - name: AlertName
     default: "Suspicious mutex created"
@@ -32,8 +32,7 @@ parameters:
 sources:
     - query: |
     
-        LET processes = SELECT Pid AS ProcPid, Name AS ProcName, Exe FROM pslist()
-        WHERE ProcName =~ processRegex AND ProcPid > 0
+        LET processes = SELECT Pid AS ProcPid, Name AS ProcName, Exe FROM process_tracker_pslist() WHERE ProcName =~ processRegex AND int(int=ProcPid) > 0
 
         LET query_mutant = SELECT * FROM winobj() WHERE Type = "Mutant" AND Name =~ MutantNameRegex 
 
@@ -41,7 +40,7 @@ sources:
           row=processes,
           query={
             SELECT ProcPid, ProcName, Exe, Type, Name, Handle
-            FROM handles(pid=ProcPid, types="Mutant")
+            FROM handles(pid=int(int=ProcPid), types="Mutant")
           })
         WHERE Type = "Mutant" AND Name =~ MutantNameRegex
         
