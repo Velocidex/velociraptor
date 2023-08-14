@@ -272,8 +272,7 @@ func (self *MemcacheFileDataStore) GetSubject(
 	if errors.Is(err, os.ErrNotExist) {
 		// The file is not in the cache, read it from the file system
 		// instead.
-		serialized_content, err := readContentFromFile(
-			config_obj, urn, true /* must exist */)
+		serialized_content, err := readContentFromFile(config_obj, urn)
 		if err != nil {
 			return err
 		}
@@ -549,8 +548,7 @@ func (self *MemcacheFileDataStore) GetBuffer(
 		return bulk_data, err
 	}
 
-	bulk_data, err = readContentFromFile(
-		config_obj, urn, true /* must exist */)
+	bulk_data, err = readContentFromFile(config_obj, urn)
 	if err != nil {
 		return nil, err
 	}

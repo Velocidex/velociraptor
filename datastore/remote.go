@@ -337,7 +337,7 @@ func NewRemoteDataStore(ctx context.Context) *RemoteDataStore {
 	return result
 }
 
-func StartRemoteDatastore(
+func StartDatastore(
 	ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
 
@@ -356,6 +356,8 @@ func StartRemoteDatastore(
 		remote_datastopre_imp = NewRemoteDataStore(ctx)
 		g_impl = nil
 		remote_mu.Unlock()
+	} else if implementation == "FileBaseDataStore" {
+		return startFullDiskChecker(ctx, wg, config_obj)
 	}
 	return nil
 }

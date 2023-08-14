@@ -15,25 +15,21 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-// This is a file based data store. It is really simple - basically just
-// writing a single file for each AFF4 object. There is no locking so
-// it is not suitable for contended queues but Velociraptor does not
-// use much locking any more so it should work pretty well for fairly
-// large installations.
 
-// Some limitation of this data store:
+// This is a file based data store. It is the default data store we
+// use for both small and large deployments. The datastore is only
+// used for storing local metadata and uses no locking:
 
-// 1. There is a small amount of overheads for small files. This
-//    should not be too much but it can be reduced by using smaller
-//    block sizes.
-// 2. This has only been tested with a local filesystem. It may work
-//    with a remote filesystem (like NFS) but performance may not be
-//    that great.
+// Object IO is considered atomic - there are no locks. This can
+// result in races for contentended objects but the Velociraptor
+// design avoids file contention at all times.
 
-// It should be safe and efficient to run multiple server instances in
-// different processes since Velociraptor does not rely on locks any
-// more. It is probably also wise to run the file store on the same
-// filesystem.
+// Files can be written as protobuf encoding (this is the old
+// standard) but this makes it harder to debug so now most files will
+// be written as json encoded blobs. There is fallback code to be able
+// to read only protobuf encoded files if they are there but newer
+// files will be written as JSON.
+
 package datastore
 
 import (
@@ -45,6 +41,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/go-errors/errors"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -61,6 +58,8 @@ var (
 	file_based_imp = &FileBaseDataStore{}
 
 	datastoreNotConfiguredError = errors.New("Datastore not configured")
+	invalidFileError            = errors.New("Invalid file error")
+	insufficientDiskSpace       = errors.New("Insufficient disk space!")
 )
 
 const (
@@ -69,11 +68,13 @@ const (
 	WINDOWS_LFN_PREFIX = "\\\\?\\"
 )
 
-type FileBaseDataStore struct{}
+type FileBaseDataStore struct {
+	mu  sync.Mutex
+	err error
+}
 
 /* Gets a protobuf encoded struct from the data store.  Objects are
-   addressed by the urn which is a string (URNs are typically managed
-   by a path manager)
+   addressed by the urn (URNs are typically managed by a path manager)
 */
 func (self *FileBaseDataStore) GetSubject(
 	config_obj *config_proto.Config,
@@ -83,14 +84,19 @@ func (self *FileBaseDataStore) GetSubject(
 	defer InstrumentWithDelay("read", "FileBaseDataStore", urn)()
 
 	Trace(config_obj, "GetSubject", urn)
-	serialized_content, err := readContentFromFile(
-		config_obj, urn, true /* must_exist */)
+	serialized_content, err := readContentFromFile(config_obj, urn)
 	if err != nil {
 		return fmt.Errorf("While opening %v: %w", urn.AsClientPath(),
 			os.ErrNotExist)
 	}
 
 	if len(serialized_content) == 0 {
+		// JSON encoded files must contain at least '{}' two
+		// characters. If the file is empty something went wrong -
+		// usually this is because the disk was full.
+		if urn.Type() == api.PATH_TYPE_DATASTORE_JSON {
+			return invalidFileError
+		}
 		return nil
 	}
 
@@ -130,6 +136,11 @@ func (self *FileBaseDataStore) SetSubjectWithCompletion(
 	message proto.Message, completion func()) error {
 
 	defer InstrumentWithDelay("write", "FileBaseDataStore", urn)()
+
+	err := self.Error()
+	if err != nil {
+		return err
+	}
 
 	// Make sure to call the completer on all exit points
 	// (FileBaseDataStore is actually synchronous).
@@ -303,7 +314,11 @@ func writeContentToFile(config_obj *config_proto.Config,
 	filename := urn.AsDatastoreFilename(config_obj)
 
 	// Truncate the file immediately so we dont need to make a seocnd
-	// syscall.
+	// syscall. Empirically on Linux, a truncate call always works,
+	// even if there is no available disk space to accommodate the
+	// required file size. This means we can not avoid file corruption
+	// when the disk is full! We may as well truncate to 0 on open and
+	// hope the file write succeeds later.
 	file, err := os.OpenFile(
 		filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0660)
 
@@ -334,8 +349,7 @@ func writeContentToFile(config_obj *config_proto.Config,
 }
 
 func readContentFromFile(
-	config_obj *config_proto.Config, urn api.DSPathSpec,
-	must_exist bool) ([]byte, error) {
+	config_obj *config_proto.Config, urn api.DSPathSpec) ([]byte, error) {
 
 	if config_obj.Datastore == nil {
 		return nil, datastoreNotConfiguredError
@@ -374,11 +388,6 @@ func readContentFromFile(
 
 			return result, nil
 		}
-	}
-
-	// Its ok if the file does not exist - no error.
-	if !must_exist && os.IsNotExist(err) {
-		return []byte{}, nil
 	}
 	return nil, errors.Wrap(err, 0)
 }
@@ -434,15 +443,33 @@ func (self *FileBaseDataStore) GetBuffer(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) ([]byte, error) {
 
-	return readContentFromFile(
-		config_obj, urn, true /* must exist */)
+	return readContentFromFile(config_obj, urn)
+}
+
+func (self *FileBaseDataStore) Error() error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.err
+}
+
+func (self *FileBaseDataStore) SetError(err error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.err = err
 }
 
 func (self *FileBaseDataStore) SetBuffer(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec, data []byte, completion func()) error {
 
-	err := writeContentToFile(config_obj, urn, data)
+	err := self.Error()
+	if err != nil {
+		return err
+	}
+
+	err = writeContentToFile(config_obj, urn, data)
 	if completion != nil &&
 		!utils.CompareFuncs(completion, utils.SyncCompleter) {
 		completion()

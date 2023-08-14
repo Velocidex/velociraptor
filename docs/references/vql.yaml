@@ -592,8 +592,7 @@
     description: Optional additional custom artifacts.
   - name: template
     type: string
-    description: The name of a template artifact (i.e. one which has report of type
-      HTML).
+    description: (Deprecated Ignored).
   - name: level
     type: int64
     description: Compression level between 0 (no compression) and 9.
@@ -618,6 +617,9 @@
     type: StoredQuery
     description: Metadata to store in the zip archive. Outputs to metadata.json in
       top level of zip file.
+  - name: concurrency
+    type: int64
+    description: Number of concurrent collections.
   category: plugin
   metadata:
     permissions: FILESYSTEM_WRITE
@@ -2934,7 +2936,8 @@
     required: true
   - name: dedup
     type: int64
-    description: Suppress same message in this many seconds (default 60 sec).
+    description: Suppress same message in this many seconds (default 60 sec). Use
+      -1 to disable dedup.
   - name: args
     type: Any
     description: An array of elements to apply into the format string.
@@ -2942,6 +2945,56 @@
     type: string
     description: Level to log at (DEFAULT, WARN, ERROR, INFO).
   category: basic
+- name: logscale_upload
+  description: Upload rows to LogScale ingestion server.
+  type: Plugin
+  args:
+  - name: query
+    type: StoredQuery
+    description: Source for rows to upload.
+    required: true
+  - name: apibaseurl
+    type: string
+    description: Base URL for Ingestion API
+    required: true
+  - name: ingest_token
+    type: string
+    description: Ingest token for API
+    required: true
+  - name: threads
+    type: int
+    description: How many threads to use to post batched events.
+  - name: http_timeout
+    type: int
+    description: 'Timeout for http requests (default: 10s)'
+  - name: max_retries
+    type: int
+    description: 'Maximum number of retries before failing an operation. A value <
+      0 means retry forever. (default: 7200)'
+  - name: root_ca
+    type: string
+    description: As a better alternative to skip_verify, allows root ca certs to be
+      added here.
+  - name: skip_verify
+    type: bool
+    description: 'Skip verification of server certificates (default: false)'
+  - name: batching_timeout_ms
+    type: int
+    description: 'Timeout between posts (default: 3000ms)'
+  - name: event_batch_size
+    type: int
+    description: 'Items to batch before post (default: 2000)'
+  - name: tag_fields
+    type: string
+    description: Name of fields to be used as tags. Fields can be renamed using =<newname>
+    repeated: true
+  - name: stats_interval
+    type: int
+    description: 'Interval, in seconds, to post statistics to the log (default: 600,
+      0 to disable)'
+  - name: debug
+    type: bool
+    description: Enable verbose logging.
 - name: lookupSID
   description: Get information about the SID.
   type: Function
@@ -4167,10 +4220,6 @@
 - name: partitions
   description: List all partitions
   type: Plugin
-  args:
-  - name: all
-    type: bool
-    description: If specified list all Partitions
   category: windows
 - name: passwd
   description: Updates the user's password.
@@ -4595,6 +4644,16 @@
     type: int64
     description: Duration of samples (default 30 sec)
   category: plugin
+  metadata:
+    permissions: MACHINE_STATE
+- name: profile_goroutines
+  description: Enumerates all running goroutines.
+  type: Plugin
+  metadata:
+    permissions: MACHINE_STATE
+- name: profile_memory
+  description: Enumerates all in use memory within the runtime.
+  type: Plugin
   metadata:
     permissions: MACHINE_STATE
 - name: pskill

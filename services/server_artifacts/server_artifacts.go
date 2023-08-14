@@ -63,6 +63,11 @@ func (self *ServerArtifactRunner) LaunchServerArtifact(
 		return err
 	}
 
+	// Install the manager now so it is available for cancellation
+	self.mu.Lock()
+	self.in_flight_collections[session_id] = collection_context_manager
+	self.mu.Unlock()
+
 	sub_ctx, cancel := context.WithCancel(self.ctx)
 
 	collection_context_manager.StartRefresh(self.wg)
@@ -103,10 +108,6 @@ func (self *ServerArtifactRunner) ProcessTask(
 	req *crypto_proto.FlowRequest) error {
 
 	defer collection_context.Close(ctx)
-
-	self.mu.Lock()
-	self.in_flight_collections[session_id] = collection_context
-	self.mu.Unlock()
 
 	// Wait here for all the queries to exit then remove them from the
 	// in_flight_collections map.

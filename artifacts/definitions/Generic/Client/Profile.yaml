@@ -27,6 +27,9 @@ description: |
   at the same time since this artifacts itself will not be doing very
   much other than just measuring the state of the process.
 
+  NOTE: As of 0.7.0 release, this artifact will also collect
+  goroutines and heap profiles as distinct sources in a more readable
+  way.
 
 parameters:
   - name: Allocs
@@ -66,6 +69,11 @@ parameters:
     description: Duration of sampling for Profile and Trace.
     default: "30"
 
+export: |
+    LET CleanUp(Name) = regex_replace(
+        re="www.velocidex.com/golang/velociraptor/",
+        replace="", source=Name)
+
 sources:
   - query: |
       SELECT Type,
@@ -77,3 +85,51 @@ sources:
                    logs=Logs, queries=QueryLogs, metrics=Metrics,
                    debug=if(condition=Verbose, then=2, else=1),
                    duration=atoi(string=Duration))
+
+  - name: Goroutines
+    query: |
+      SELECT *, {
+         SELECT format(format="%v (%v:%v)",
+             args=[CleanUp(Name=Name), basename(path=File), Line])
+         FROM CallStack
+         WHERE File =~ 'velociraptor|vfilter|go-ntfs'
+         LIMIT 10
+      } AS CallStack
+      FROM profile_goroutines()
+      WHERE CallStack
+
+  - name: Memory
+    query: |
+      SELECT InUseBytes, InUseObjects, {
+          SELECT format(format="%v (%v:%v)",
+            args=[CleanUp(Name=Name), basename(path=File), Line])
+          FROM CallStack
+          WHERE File =~ 'velociraptor|vfilter|go-ntfs'
+          LIMIT 10
+      } AS CallStack
+      FROM profile_memory()
+      ORDER BY InUseBytes DESC
+
+  - name: Logs
+    query: |
+      SELECT * FROM profile(logs=TRUE)
+
+  - name: RunningQueries
+    query: |
+      SELECT Line.Start AS Timestamp, Line.Query AS Query
+      FROM profile(queries=TRUE)
+      WHERE NOT Line.Duration
+
+  - name: AllQueries
+    query: |
+      SELECT Line.Start AS Timestamp, int(int = Line.Duration / 1000000) AS DurationSec, Line.Query AS Query
+      FROM profile(queries=TRUE)
+
+  - name: Metrics
+    query: |
+      SELECT Line.name AS Name, Line.value as value
+      FROM profile(metrics=TRUE)
+
+column_types:
+  - name: InUseBytes
+    type: mb
