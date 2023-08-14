@@ -259,6 +259,8 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("Starting services for %v", services.GetOrgName(org_config))
 
+	orgStartCounter.Inc()
+
 	org_ctx := &OrgContext{
 		record:     org_record,
 		config_obj: org_config,
@@ -323,7 +325,7 @@ func (self *OrgManager) startRootOrgServices(
 		return err
 	}
 
-	err = datastore.StartRemoteDatastore(
+	err = datastore.StartDatastore(
 		ctx, wg, org_config)
 	if err != nil {
 		return err

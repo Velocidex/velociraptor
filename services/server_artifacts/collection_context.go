@@ -378,8 +378,13 @@ func (self *contextManager) RunQuery(
 	for _, query := range arg.Query {
 		query_log := actions.QueryLog.AddQuery(query.VQL)
 
+		// Might not be called until all queries are processed but it
+		// is ok to call Close() multiple times on the query log.
+		defer query_log.Close()
+
 		vql, err := vfilter.Parse(query.VQL)
 		if err != nil {
+			query_log.Close()
 			return err
 		}
 
@@ -389,6 +394,7 @@ func (self *contextManager) RunQuery(
 			// are normally LET queries.
 			for _ = range vql.Eval(sub_ctx, scope) {
 			}
+			query_log.Close()
 			continue
 		}
 
