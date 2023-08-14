@@ -12,6 +12,7 @@ type: SERVER_EVENT
 
 sources:
   - name: Prometheus
+    query: SELECT sleep(time=10000000) FROM scope()
 
 reports:
   - type: SERVER_EVENT
