@@ -293,6 +293,11 @@ func (self OSFileSystemAccessor) ReadDir(dir string) ([]accessors.FileInfo, erro
 	return self.ReadDirWithOSPath(full_path)
 }
 
+func (self *OSFileSystemAccessor) GetUnderlyingAPIFilename(
+	full_path *accessors.OSPath) (string, error) {
+	return full_path.PathSpec().Path, nil
+}
+
 func (self OSFileSystemAccessor) ReadDirWithOSPath(
 	full_path *accessors.OSPath) ([]accessors.FileInfo, error) {
 	dir := full_path.PathSpec().Path

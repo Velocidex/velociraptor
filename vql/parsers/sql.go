@@ -12,6 +12,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
@@ -25,12 +26,12 @@ var (
 )
 
 type SQLPluginArgs struct {
-	Driver     string      `vfilter:"required,field=driver, doc=sqlite, mysql,or postgres"`
-	ConnString string      `vfilter:"optional,field=connstring, doc=SQL Connection String"`
-	Filename   string      `vfilter:"optional,field=file, doc=Required if using sqlite driver"`
-	Accessor   string      `vfilter:"optional,field=accessor,doc=The accessor to use if using sqlite"`
-	Query      string      `vfilter:"required,field=query"`
-	Args       vfilter.Any `vfilter:"optional,field=args"`
+	Driver     string            `vfilter:"required,field=driver, doc=sqlite, mysql,or postgres"`
+	ConnString string            `vfilter:"optional,field=connstring, doc=SQL Connection String"`
+	Filename   *accessors.OSPath `vfilter:"optional,field=file, doc=Required if using sqlite driver"`
+	Accessor   string            `vfilter:"optional,field=accessor,doc=The accessor to use if using sqlite"`
+	Query      string            `vfilter:"required,field=query"`
+	Args       vfilter.Any       `vfilter:"optional,field=args"`
 }
 
 type SQLPlugin struct{}
