@@ -171,6 +171,7 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
 ]SELECT * FROM parse_ntfs_i30( accessor='ntfs', device='c:/$MFT', inode="41-144-1")[
  {
   "MFTId": "45",
+  "SequenceNumber": 0,
   "Mtime": "2018-09-24T07:55:44.4592119Z",
   "Atime": "2022-03-18T04:09:07.2885951Z",
   "Ctime": "2018-09-24T07:55:20.6489276Z",

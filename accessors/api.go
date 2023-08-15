@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	errors "github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -319,4 +320,32 @@ type FileSystemAccessor interface {
 	OpenWithOSPath(path *OSPath) (ReadSeekCloser, error)
 	LstatWithOSPath(path *OSPath) (FileInfo, error)
 	New(scope vfilter.Scope) (FileSystemAccessor, error)
+}
+
+// Some filesystems can attempt to retrieve the underlying file. If
+// this interface exists on the accessor **and** the
+// GetUnderlyingAPIFilename() call succeeds, then it should be
+// possible to directly access the returned filename using the OS
+// APIs.
+type RawFileAPIAccessor interface {
+	GetUnderlyingAPIFilename(path *OSPath) (string, error)
+}
+
+var (
+	NotRawFileSystem = errors.New("NotRawFileSystem")
+)
+
+func GetUnderlyingAPIFilename(accessor string,
+	scope vfilter.Scope, path *OSPath) (string, error) {
+	accessor_obj, err := GetAccessor(accessor, scope)
+	if err != nil {
+		return "", err
+	}
+
+	raw_accessor, ok := accessor_obj.(RawFileAPIAccessor)
+	if !ok {
+		return "", NotRawFileSystem
+	}
+
+	return raw_accessor.GetUnderlyingAPIFilename(path)
 }
