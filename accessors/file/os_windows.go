@@ -151,6 +151,11 @@ func (self OSFileSystemAccessor) New(scope vfilter.Scope) (
 	return result, nil
 }
 
+func (self *OSFileSystemAccessor) GetUnderlyingAPIFilename(
+	full_path *accessors.OSPath) (string, error) {
+	return full_path.PathSpec().Path, nil
+}
+
 func discoverDriveLetters() ([]accessors.FileInfo, error) {
 	result := []accessors.FileInfo{}
 
