@@ -42,10 +42,10 @@ import (
 )
 
 type SQLiteArgs struct {
-	Filename string      `vfilter:"required,field=file"`
-	Accessor string      `vfilter:"optional,field=accessor,doc=The accessor to use."`
-	Query    string      `vfilter:"required,field=query"`
-	Args     vfilter.Any `vfilter:"optional,field=args"`
+	Filename *accessors.OSPath `vfilter:"required,field=file"`
+	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	Query    string            `vfilter:"required,field=query"`
+	Args     vfilter.Any       `vfilter:"optional,field=args"`
 }
 
 type SQLitePlugin struct{}
@@ -71,13 +71,10 @@ func VFSPathToFilesystemPath(path string) string {
 
 // Check the file header - ignore if this is not really an sqlite
 // file.
-func checkSQLiteHeader(scope vfilter.Scope, accessor, filename string) (bool, error) {
-	fs, err := accessors.GetAccessor(accessor, scope)
-	if err != nil {
-		return false, err
-	}
-
-	file, err := fs.Open(filename)
+func checkSQLiteHeader(scope vfilter.Scope,
+	accessor accessors.FileSystemAccessor,
+	filename *accessors.OSPath) (bool, error) {
+	file, err := accessor.OpenWithOSPath(filename)
 	if err != nil {
 		return false, err
 	}
@@ -95,9 +92,13 @@ func checkSQLiteHeader(scope vfilter.Scope, accessor, filename string) (bool, er
 func GetHandleSqlite(ctx context.Context,
 	arg *SQLPluginArgs, scope vfilter.Scope) (
 	handle *sqlx.DB, err error) {
-	filename := VFSPathToFilesystemPath(arg.Filename)
+	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
+	if err != nil {
+		return nil, err
+	}
 
-	if filename == "" {
+	filename := arg.Filename.String()
+	if arg.Filename == nil || filename == "" {
 		return nil, errors.New("file parameter required for sqlite driver!")
 	}
 
@@ -107,14 +108,25 @@ func GetHandleSqlite(ctx context.Context,
 		// Check the header quickly to ensure that we dont copy the
 		// file needlessly. If the file does not exist, we allow a
 		// connection because this will create a new file.
-		header_ok, err := checkSQLiteHeader(scope, arg.Accessor, filename)
+		header_ok, err := checkSQLiteHeader(scope, accessor, arg.Filename)
 		if !errors.Is(err, os.ErrNotExist) && !header_ok {
 			return nil, notValidDatabase
 		}
 
-		should_make_copy := vql_subsystem.GetBoolFromRow(scope, scope, constants.SQLITE_ALWAYS_MAKE_TEMPFILE)
-		if arg.Accessor != "file" && arg.Accessor != "" {
-			should_make_copy = true
+		should_make_copy := vql_subsystem.GetBoolFromRow(
+			scope, scope, constants.SQLITE_ALWAYS_MAKE_TEMPFILE)
+
+		if !should_make_copy {
+			// We need raw file access to use the sqlite library directly.
+			raw_accessor, ok := accessor.(accessors.RawFileAPIAccessor)
+			if !ok {
+				should_make_copy = true
+			} else {
+				filename, err = raw_accessor.GetUnderlyingAPIFilename(arg.Filename)
+				if err != nil {
+					should_make_copy = true
+				}
+			}
 		}
 
 		if !should_make_copy {
@@ -147,10 +159,10 @@ func GetHandleSqlite(ctx context.Context,
 				parts := strings.Split(filename, "?")
 				filename, err = _MakeTempfile(ctx, arg, parts[0], scope)
 				if err != nil {
-					scope.Log("Unable to create temp file: %v", err)
+					scope.Log("sqlite: Unable to create temp file: %v", err)
 					return nil, err
 				}
-				scope.Log("Using local copy %v", filename)
+				scope.Log("sqlite: Using local copy %v", filename)
 			}
 
 			// All other accessors, make a copy and
@@ -160,7 +172,7 @@ func GetHandleSqlite(ctx context.Context,
 			if err != nil {
 				return nil, err
 			}
-			scope.Log("Using local copy %v", filename)
+			scope.Log("sqlite: Using local copy %v", filename)
 		}
 
 		// Try once again to connect to the new file
@@ -179,7 +191,7 @@ func GetHandleSqlite(ctx context.Context,
 			handle.Close()
 		})
 		if err != nil {
-			scope.Log("Unable to set destructor for %v", filename)
+			scope.Log("sqlite: Unable to set destructor for %v", filename)
 			handle.Close()
 			return nil, err
 		}
@@ -193,7 +205,7 @@ func _MakeTempfile(ctx context.Context,
 	string, error) {
 
 	if arg.Accessor != "data" {
-		scope.Log("Will try to copy %v to temp file", filename)
+		scope.Log("sqlite: Will try to copy %v to temp file", filename)
 	}
 
 	tmpfile, err := ioutil.TempFile("", "tmp*.sqlite")

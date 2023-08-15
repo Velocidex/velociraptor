@@ -146,23 +146,32 @@ func (self YaraScanPlugin) Call(
 			}
 			matcher.filename = filename
 
-			// If accessor is not specified we call yara's
-			// ScanFile API which mmaps the entire file
-			// into memory avoiding the need for
-			// buffering.
-			if arg.Accessor == "" || arg.Accessor == "file" {
-				err := matcher.scanFile(ctx, output_chan)
+			accessor, err := accessors.GetAccessor(arg.Accessor, scope)
+			if err != nil {
+				scope.Log("yara: %v", err)
+				return
+			}
+
+			// As an optimization, we try to call yara's ScanFile API
+			// which mmaps the entire file into memory avoiding the
+			// need for buffering.
+			raw_accessor, ok := accessor.(accessors.RawFileAPIAccessor)
+			if ok {
+				underlying_file, err := raw_accessor.GetUnderlyingAPIFilename(filename)
 				if err == nil {
-					continue
-				} else {
-					scope.Log("Directly scanning file %v failed, will use accessor",
-						filename.String())
+					err := matcher.scanFile(ctx, underlying_file, output_chan)
+					if err == nil {
+						continue
+					} else {
+						scope.Log("Directly scanning file %v failed, will use accessor",
+							filename.String())
+					}
 				}
 			}
 
 			// If scanning with the file api failed above
 			// we fall back to accessor scanning.
-			matcher.scanFileByAccessor(ctx, arg.Accessor,
+			matcher.scanFileByAccessor(ctx, arg.Accessor, accessor,
 				arg.Blocksize, arg.Start, arg.End, output_chan)
 		}
 	}()
@@ -234,17 +243,12 @@ func getYaraRules(key, namespace, rules string,
 func (self *scanReporter) scanFileByAccessor(
 	ctx context.Context,
 	accessor_name string,
+	accessor accessors.FileSystemAccessor,
 	blocksize uint64,
 	start, end uint64,
 	output_chan chan vfilter.Row) {
 
 	defer utils.CheckForPanic("Panic in scanFileByAccessor")
-
-	accessor, err := accessors.GetAccessor(accessor_name, self.scope)
-	if err != nil {
-		self.scope.Log("yara: %v", err)
-		return
-	}
 
 	// Open the file with the accessor
 	f, err := accessor.OpenWithOSPath(self.filename)
@@ -354,9 +358,11 @@ func (self *scanReporter) scanRange(start, end uint64, f accessors.ReadSeekClose
 // filename to libyara directly for faster scanning using mmap. This
 // also ensures that all yara features (like the PE plugin) work.
 func (self *scanReporter) scanFile(
-	ctx context.Context, output_chan chan vfilter.Row) error {
+	ctx context.Context,
+	underlying_file string,
+	output_chan chan vfilter.Row) error {
 
-	fd, err := os.Open(self.filename.String())
+	fd, err := os.Open(underlying_file)
 	if err != nil {
 		return err
 	}
@@ -377,7 +383,7 @@ func (self *scanReporter) scanFile(
 	err = scanner.SetCallback(self).
 		SetTimeout(10 * time.Second).
 		SetFlags(self.yara_flag).
-		ScanFile(self.filename.String())
+		ScanFile(underlying_file)
 	if err != nil {
 		return err
 	}

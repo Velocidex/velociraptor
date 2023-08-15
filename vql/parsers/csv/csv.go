@@ -224,7 +224,7 @@ func (self _WatchCSVPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 }
 
 type WriteCSVPluginArgs struct {
-	Filename string              `vfilter:"required,field=filename,doc=CSV files to open"`
+	Filename *accessors.OSPath   `vfilter:"required,field=filename,doc=CSV files to open"`
 	Accessor string              `vfilter:"optional,field=accessor,doc=The accessor to use"`
 	Query    vfilter.StoredQuery `vfilter:"required,field=query,doc=query to write into the file."`
 }
@@ -257,7 +257,14 @@ func (self WriteCSVPlugin) Call(
 				return
 			}
 
-			file, err := os.OpenFile(arg.Filename,
+			underlying_file, err := accessors.GetUnderlyingAPIFilename(
+				arg.Accessor, scope, arg.Filename)
+			if err != nil {
+				scope.Log("write_csv: %s", err)
+				return
+			}
+
+			file, err := os.OpenFile(underlying_file,
 				os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0700)
 			if err != nil {
 				scope.Log("write_csv: Unable to open file %s: %s",

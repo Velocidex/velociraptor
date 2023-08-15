@@ -32,6 +32,7 @@ func (self LevelDBPlugin) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
+
 	go func() {
 		defer close(output_chan)
 		defer utils.RecoverVQL(scope)
@@ -53,54 +54,9 @@ func (self LevelDBPlugin) Call(
 			return
 		}
 
-		var db *leveldb.DB
-		switch arg.Accessor {
-		case "", "auto", "file":
-			db, err = leveldb.OpenFile(arg.Filename.String(), &opt.Options{
-				ReadOnly: true,
-				Strict:   opt.NoStrict,
-			})
-			if err != nil {
-				if !retriableError(err) {
-					scope.Log("leveldb: %v", err)
-					return
-				}
-				scope.Log("DEBUG:leveldb: Directly opening file faild with %v, retrying on a local copy", err)
-				local_path, err1 := maybeMakeLocalCopy(ctx, scope, arg)
-				if err1 != nil {
-					scope.Log("leveldb: %v", err)
-					scope.Log("leveldb: %v", err1)
-					return
-				}
-
-				// Try again with the copy
-				db, err = leveldb.OpenFile(local_path, &opt.Options{
-					ReadOnly: true,
-					Strict:   opt.NoStrict,
-				})
-				if err != nil {
-					scope.Log("leveldb: %v", err)
-					return
-				}
-			}
-
-			// For other accessors we just always make a copy.
-		default:
-			local_path, err := maybeMakeLocalCopy(ctx, scope, arg)
-			if err != nil {
-				scope.Log("leveldb: %v", err)
-				return
-			}
-
-			// Try again with the copy
-			db, err = leveldb.OpenFile(local_path, &opt.Options{
-				ReadOnly: true,
-				Strict:   opt.NoStrict,
-			})
-			if err != nil {
-				scope.Log("leveldb: %v", err)
-				return
-			}
+		db, err := getLevelDBHandle(ctx, scope, arg.Accessor, arg.Filename)
+		if err != nil {
+			return
 		}
 		defer db.Close()
 
@@ -134,25 +90,61 @@ func (self LevelDBPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 	}
 }
 
-// Maybe make a local copy of the database files.
-func maybeMakeLocalCopy(
+func getLevelDBHandle(
 	ctx context.Context, scope vfilter.Scope,
-	arg *LevelDBPluginArgs) (string, error) {
-	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
+	accessor string, filename *accessors.OSPath) (
+	db *leveldb.DB, err error) {
+
+	underlying_file, err := accessors.GetUnderlyingAPIFilename(
+		accessor, scope, filename)
+	if err == nil {
+		// Try to open the underlying_file
+		db, err = leveldb.OpenFile(underlying_file, &opt.Options{
+			ReadOnly: true,
+			Strict:   opt.NoStrict,
+		})
+		if err == nil {
+			// Ok it worked, lets use it.
+			return db, nil
+		}
+		scope.Log("DEBUG:leveldb: Directly opening file faild with %v, retrying on a local copy", err)
+	}
+
+	local_path, err := makeLocalCopy(ctx, scope, accessor, filename)
+	if err != nil {
+		scope.Log("leveldb: %v", err)
+		return
+	}
+
+	// Try again with the copy
+	return leveldb.OpenFile(local_path, &opt.Options{
+		ReadOnly: true,
+		Strict:   opt.NoStrict,
+	})
+}
+
+// Maybe make a local copy of the database files.
+func makeLocalCopy(
+	ctx context.Context, scope vfilter.Scope,
+	accessor_name string,
+	filename *accessors.OSPath) (string, error) {
+
+	accessor, err := accessors.GetAccessor(accessor_name, scope)
 	if err != nil {
 		return "", err
 	}
 
-	files, err := accessor.ReadDirWithOSPath(arg.Filename)
+	files, err := accessor.ReadDirWithOSPath(filename)
 	if err != nil {
 		return "", err
 	}
 
 	// Create a temp directory to contain all the files.
-	tmpdir_any := (&filesystem.TempdirFunction{}).Call(ctx, scope, ordereddict.NewDict())
+	tmpdir_any := (&filesystem.TempdirFunction{}).Call(
+		ctx, scope, ordereddict.NewDict())
 	tmpdir, ok := tmpdir_any.(string)
 	if !ok {
-		return "", errors.New("Unable to create tempdir")
+		return "", errors.New("leveldb: Unable to create tempdir")
 	}
 
 	total_bytes := 0
@@ -178,7 +170,7 @@ func maybeMakeLocalCopy(
 
 	scope.Log("INFO:leveldb: Copied db %v with accessor %v to local "+
 		"tmp directory %v (Copied %v files, %v bytes)\n",
-		arg.Filename, arg.Accessor, tmpdir, len(files), total_bytes)
+		filename.String(), accessor_name, tmpdir, len(files), total_bytes)
 	return tmpdir, nil
 }
 

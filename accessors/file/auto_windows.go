@@ -135,6 +135,11 @@ func (self AutoFilesystemAccessor) New(scope vfilter.Scope) (accessors.FileSyste
 	}, nil
 }
 
+func (self *AutoFilesystemAccessor) GetUnderlyingAPIFilename(
+	full_path *accessors.OSPath) (string, error) {
+	return full_path.PathSpec().Path, nil
+}
+
 func (self *AutoFilesystemAccessor) ReadDirWithOSPath(
 	path *accessors.OSPath) ([]accessors.FileInfo, error) {
 	result, err := self.file_delegate.ReadDirWithOSPath(path)
