@@ -228,9 +228,12 @@ func (self *CommsTestSuite) TestAbort() {
 
 func (self *CommsTestSuite) TestEnrollment() {
 	urls := []string{self.frontend1.URL}
+	mock_clock := utils.NewMockClock(time.Unix(100, 0))
+	cancel := utils.MockTime(mock_clock)
+	defer cancel()
 
 	clock := &FakeClock{
-		MockClock: utils.NewMockClock(time.Unix(100, 0)),
+		MockClock: mock_clock,
 		events:    &self.frontend1.events}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -266,9 +269,12 @@ func (self *CommsTestSuite) TestEnrollment() {
 
 func (self *CommsTestSuite) TestServerError() {
 	urls := []string{self.frontend1.URL}
+	mock_clock := utils.NewMockClock(time.Unix(100, 0))
+	cancel := utils.MockTime(mock_clock)
+	defer cancel()
 
 	clock := &FakeClock{
-		MockClock: utils.NewMockClock(time.Unix(100, 0)),
+		MockClock: mock_clock,
 		events:    &self.frontend1.events}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -315,9 +321,12 @@ func (self *CommsTestSuite) TestServerError() {
 // 500, Frontend2 is down too.
 func (self *CommsTestSuite) TestMultiFrontends() {
 	urls := []string{self.frontend1.URL, self.frontend2.URL}
+	mock_clock := utils.NewMockClock(time.Unix(100, 0))
+	cancel := utils.MockTime(mock_clock)
+	defer cancel()
 
 	clock := &FakeClock{
-		MockClock: utils.NewMockClock(time.Unix(100, 0)),
+		MockClock: mock_clock,
 		events:    &self.frontend1.events}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -377,9 +386,12 @@ func (self *CommsTestSuite) TestMultiFrontends() {
 // Client configured with two frontends. Both keep failing.
 func (self *CommsTestSuite) TestMultiFrontendsAllIsBorked() {
 	urls := []string{self.frontend1.URL, self.frontend2.URL}
+	mock_clock := utils.NewMockClock(time.Unix(100, 0))
+	cancel := utils.MockTime(mock_clock)
+	defer cancel()
 
 	clock := &FakeClock{
-		MockClock: utils.NewMockClock(time.Unix(100, 0)),
+		MockClock: mock_clock,
 		events:    &self.frontend1.events}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -452,9 +464,12 @@ func (self *CommsTestSuite) TestMultiFrontendsAllIsBorked() {
 // switching to FE2
 func (self *CommsTestSuite) TestMultiFrontendsIntermittantFailure() {
 	urls := []string{self.frontend1.URL, self.frontend2.URL}
+	mock_clock := utils.NewMockClock(time.Unix(100, 0))
+	cancel := utils.MockTime(mock_clock)
+	defer cancel()
 
 	clock := &FakeClock{
-		MockClock: utils.NewMockClock(time.Unix(100, 0)),
+		MockClock: mock_clock,
 		events:    &self.frontend1.events}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -513,9 +528,12 @@ func (self *CommsTestSuite) TestMultiFrontendsIntermittantFailure() {
 // fails we switch back to FE1.
 func (self *CommsTestSuite) TestMultiFrontendsHeavyFailure() {
 	urls := []string{self.frontend1.URL, self.frontend2.URL}
+	mock_clock := utils.NewMockClock(time.Unix(100, 0))
+	cancel := utils.MockTime(mock_clock)
+	defer cancel()
 
 	clock := &FakeClock{
-		MockClock: utils.NewMockClock(time.Unix(100, 0)),
+		MockClock: mock_clock,
 		events:    &self.frontend1.events}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -588,9 +606,12 @@ func (self *CommsTestSuite) TestMultiFrontendsHeavyFailure() {
 func (self *CommsTestSuite) TestMultiFrontendRedirect() {
 	// FE2 is not known to the client in advance.
 	urls := []string{self.frontend1.URL}
+	mock_clock := utils.NewMockClock(time.Unix(100, 0))
+	cancel := utils.MockTime(mock_clock)
+	defer cancel()
 
 	clock := &FakeClock{
-		MockClock: utils.NewMockClock(time.Unix(100, 0)),
+		MockClock: mock_clock,
 		events:    &self.frontend1.events}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -655,10 +676,14 @@ func (self *CommsTestSuite) TestMultiFrontendRedirect() {
 
 // Check that redirects do not cause un-neccesary sleeps.
 func (self *CommsTestSuite) TestMultiFrontendRedirectWithErrors() {
+	mock_clock := utils.NewMockClock(time.Unix(100, 0))
+	cancel := utils.MockTime(mock_clock)
+	defer cancel()
+
 	urls := []string{self.frontend1.URL}
 
 	clock := &FakeClock{
-		MockClock: utils.NewMockClock(time.Unix(100, 0)),
+		MockClock: mock_clock,
 		events:    &self.frontend1.events}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -751,9 +776,12 @@ func (self *CommsTestSuite) TestMultiFrontendRedirectWithErrors() {
 // Frontends redirecting to each other.
 func (self *CommsTestSuite) TestMultiRedirects() {
 	urls := []string{self.frontend1.URL}
+	mock_clock := utils.NewMockClock(time.Unix(100, 0))
+	cancel := utils.MockTime(mock_clock)
+	defer cancel()
 
 	clock := &FakeClock{
-		MockClock: utils.NewMockClock(time.Unix(100, 0)),
+		MockClock: mock_clock,
 		events:    &self.frontend1.events}
 
 	ctx, cancel := context.WithCancel(context.Background())

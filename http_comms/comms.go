@@ -926,6 +926,14 @@ func NewHTTPCommunicator(
 		logger:     logger,
 		clock:      clock,
 	}
+
+	// Shuffle the list of URLs so that if a server goes down,
+	// clients will be distributed better accross
+	// the remaining servers.
+	rand.Seed(utils.GetTime().Now().UnixNano())
+	rand.Shuffle(len(urls), func(i, j int) {
+		urls[i], urls[j] = urls[j], urls[i]
+	})
 	connector, err := NewHTTPConnector(config_obj, crypto_manager, logger, urls, clock)
 	if err != nil {
 		return nil, err
