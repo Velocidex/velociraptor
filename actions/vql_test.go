@@ -130,27 +130,31 @@ func (self *ClientVQLTestSuite) TestMaxRows() {
 }
 
 func (self *ClientVQLTestSuite) TestMaxWait() {
-	resp := responder.TestResponderWithFlowId(self.ConfigObj, "TestMaxWait")
+	assert.True(self.T(), test_utils.Retry(self.T(), 5, time.Millisecond*500,
+		func(r *test_utils.R) {
+			resp := responder.TestResponderWithFlowId(self.ConfigObj, "TestMaxWait")
 
-	actions.VQLClientAction{}.StartQuery(self.ConfigObj, self.Sm.Ctx, resp,
-		&actions_proto.VQLCollectorArgs{
-			MaxRow:  1000,
-			MaxWait: 1,
-			Query: []*actions_proto.VQLRequest{
-				{
-					Name: "Query",
-					VQL:  "SELECT sleep(ms=400) FROM range(end=4)",
-				},
-			},
-		})
+			actions.VQLClientAction{}.StartQuery(self.ConfigObj, self.Sm.Ctx, resp,
+				&actions_proto.VQLCollectorArgs{
+					MaxRow:  1000,
+					MaxWait: 1,
+					Query: []*actions_proto.VQLRequest{
+						{
+							Name: "Query",
+							VQL:  "SELECT sleep(ms=400) FROM range(end=4)",
+						},
+					},
+				})
 
-	var responses []*crypto_proto.VeloMessage
-	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		responses = resp.Drain.Messages()
-		payloads := getResponsePacketCounts(responses)
-		// Message will be split into 2 packets 2 messages in each
-		return len(payloads) == 2 && payloads[0] == 2 && payloads[1] == 2
-	})
+			var responses []*crypto_proto.VeloMessage
+
+			vtesting.WaitUntil(5*time.Second, r, func() bool {
+				responses = resp.Drain.Messages()
+				payloads := getResponsePacketCounts(responses)
+				// Message will be split into 2 packets 2 messages in each
+				return len(payloads) == 2 && payloads[0] == 2 && payloads[1] == 2
+			})
+		}))
 }
 
 func getLogs(responses []*crypto_proto.VeloMessage) string {

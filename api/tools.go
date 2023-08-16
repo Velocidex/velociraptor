@@ -63,7 +63,7 @@ func (self *ApiServer) SetToolInfo(ctx context.Context,
 		return nil, Status(self.verbose, err)
 	}
 
-	// Clear internally managed tools the user should not be allowed
+	// Clear internally managed fields the user should not be allowed
 	// to set.
 	in.Versions = nil
 	in.ServeUrl = ""

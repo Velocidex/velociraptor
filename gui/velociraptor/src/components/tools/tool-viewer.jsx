@@ -128,11 +128,18 @@ export default class ToolViewer extends React.Component {
     setServeUrl = url=>{
         let tool = Object.assign({}, this.state.tool);
         tool.url = this.state.remote_url;
-        tool.hash = "";
+
+        // Preserve the hash if we already know it. This avoids us
+        // having to refetch the file all the time.
+        // tool.hash = "";
         tool.filename = "";
         tool.github_project = "";
         tool.serve_locally = false;
-        tool.materialize = true;
+
+        // Do not force a materialize - it is possible that the server
+        // has no egress access and it is not possible to materialize
+        // the tool from the server.
+        tool.materialize = false;
         this.setToolInfo(tool);
     };
 

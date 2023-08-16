@@ -209,8 +209,10 @@ func formUploadHandler() http.Handler {
 			org_config_obj, form_desc.Filename)
 
 		pathspec, file_store_factory, err := path_manager.Path()
-		returnError(w, 403, fmt.Sprintf("Error: %v", err))
-		return
+		if err != nil {
+			returnError(w, 403, fmt.Sprintf("Error: %v", err))
+			return
+		}
 
 		form_desc.Url = path_manager.URL()
 
