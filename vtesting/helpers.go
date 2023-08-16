@@ -31,6 +31,10 @@ import (
 	"www.velocidex.com/golang/vfilter/types"
 )
 
+type TestFailer interface {
+	Fatalf(format string, args ...interface{})
+}
+
 func ReadFile(t *testing.T, filename string) []byte {
 	result, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -62,7 +66,7 @@ func ContainsString(expected string, watched []string) bool {
 	return false
 }
 
-func WaitUntil(deadline time.Duration, t *testing.T, cb func() bool) {
+func WaitUntil(deadline time.Duration, t TestFailer, cb func() bool) {
 	end_time := time.Now().Add(deadline)
 
 	for end_time.After(time.Now()) {

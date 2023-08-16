@@ -5421,7 +5421,7 @@
     type: string
     description: SQL Connection String
   - name: file
-    type: string
+    type: accessors.OSPath
     description: Required if using sqlite driver
   - name: accessor
     type: string
@@ -5439,7 +5439,7 @@
   type: Plugin
   args:
   - name: file
-    type: string
+    type: accessors.OSPath
     required: true
   - name: accessor
     type: string
@@ -6560,7 +6560,7 @@
   type: Plugin
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: CSV files to open
     required: true
   - name: accessor
@@ -6578,7 +6578,7 @@
   type: Plugin
   args:
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: CSV files to open
     required: true
   - name: accessor
