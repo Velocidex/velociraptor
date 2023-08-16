@@ -6,6 +6,7 @@
     "filename": "www.company.com",
     "filestore_path": "95b097fd386adb06d90ff35d45f18fb507675b076522e7993b5be4a695f4247a",
     "name": "Tool1",
+    "serve_url": "https://www.company.com",
     "url": "https://www.company.com"
    },
    {
@@ -13,6 +14,7 @@
     "filename": "www.example2.com",
     "filestore_path": "9a0dbc5804c7e06fc2e371a936bbe1d90b206aa9b8fbad7601f4a7f70fb596e1",
     "name": "Tool2",
+    "serve_url": "https://www.example2.com/",
     "url": "https://www.example2.com/"
    }
   ],
