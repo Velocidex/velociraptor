@@ -176,11 +176,13 @@ export default class NotebookCellRenderer extends React.Component {
 
     componentDidMount() {
         this.source = CancelToken.source();
+        this.update_source = CancelToken.source();
         this.fetchCellContents();
     }
 
     componentWillUnmount() {
         this.source.cancel();
+        this.update_source.cancel();
     }
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
@@ -288,9 +290,16 @@ export default class NotebookCellRenderer extends React.Component {
 
     recalculate = () => {
         let cell = this.state.cell;
-        cell.output = "Loading";
+        cell.output = T("Loading");
         cell.timestamp = 0;
+        cell.calculating = true;
+        cell.messages = [];
+
         this.setState({cell: cell});
+
+        // Reset any inflight calls.
+        this.update_source.cancel();
+        this.update_source = CancelToken.source();
 
         api.post('v1/UpdateNotebookCell', {
             notebook_id: this.props.notebook_id,
@@ -299,8 +308,9 @@ export default class NotebookCellRenderer extends React.Component {
             env: this.state.cell.env,
             currently_editing: false,
             input: this.state.cell.input,
-        }, this.source.token).then( (response) => {
+        }, this.update_source.token).then( (response) => {
             if (response.cancel) {
+                this.setState({currently_editing: false});
                 return;
             }
 
@@ -310,6 +320,7 @@ export default class NotebookCellRenderer extends React.Component {
                 api.error(response.data.error);
                 keep_editing = true;
             }
+
             this.setState({cell: response.data,
                            currently_editing: keep_editing});
         });
@@ -334,9 +345,16 @@ export default class NotebookCellRenderer extends React.Component {
     saveCell = () => {
         let cell = this.state.cell;
         cell.input = this.state.ace.getValue();
-        cell.output = "Loading";
+        cell.output = T("Loading");
         cell.timestamp = 0;
-        this.setState({cell: cell});
+        cell.calculating = true;
+        cell.messages = [];
+
+        this.setState({cell: cell, currently_editing: false});
+
+        // Reset any inflight calls.
+        this.update_source.cancel();
+        this.update_source = CancelToken.source();
 
         api.post('v1/UpdateNotebookCell', {
             notebook_id: this.props.notebook_id,
@@ -345,8 +363,9 @@ export default class NotebookCellRenderer extends React.Component {
             env: this.state.cell.env,
             currently_editing: false,
             input: cell.input,
-        }, this.source.token).then( (response) => {
+        }, this.update_source.token).then( (response) => {
             if (response.cancel) {
+                this.setState({currently_editing: false});
                 return;
             }
 
