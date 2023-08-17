@@ -371,6 +371,7 @@ sources:
        b={ SELECT "VelociraptorWindows_x86" AS Type FROM scope() WHERE OS = "Windows_x86"},
        c={ SELECT "VelociraptorLinux" AS Type FROM scope() WHERE OS = "Linux"},
        d={ SELECT "VelociraptorDarwin" AS Type FROM scope() WHERE OS = "MacOS"},
+       d={ SELECT "VelociraptorDarwinArm" AS Type FROM scope() WHERE OS = "MacOSArm"},
        e={ SELECT "" AS Type FROM scope()
            WHERE NOT log(message="Unknown target type " + OS) }
       )

@@ -16,7 +16,7 @@ func writeLogOnPanic() error {
 	// Figure out the log directory.
 	config_obj, err := new(config.Loader).
 		WithFileLoader(*config_path).
-		WithEmbedded().
+		WithEmbedded(*embedded_config_path).
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
 		LoadAndValidate()
 	if err != nil {

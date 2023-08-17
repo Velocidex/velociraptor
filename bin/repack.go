@@ -50,9 +50,9 @@ var (
 		"config_file", "The filename to write into the binary.").
 		Required().File()
 
-	repack_command_append = repack_command.Flag(
-		"append", "If provided we append the file to the output binary.").
-		File()
+	repack_command_binaries = repack_command.Flag(
+		"binaries", "The list of tool names to append to the binary.").
+		Strings()
 
 	repack_command_output = repack_command.Arg(
 		"output", "The filename to write the repacked binary.").
@@ -91,10 +91,26 @@ func doRepack() error {
 	}
 
 	config_obj := &config_proto.Config{}
+	if isConfigSpecified(os.Args) {
+		config_obj, err = APIConfigLoader.WithNullLoader().
+			LoadAndValidate()
+		if err != nil {
+			return err
+		}
+		config_obj.Services = services.GenericToolServices()
+		if config_obj.Datastore != nil && config_obj.Datastore.Location != "" {
+			config_obj.Services.IndexServer = true
+			config_obj.Services.ClientInfo = true
+			config_obj.Services.Label = true
+		}
+
+	} else {
+		config_obj.Services = services.GenericToolServices()
+	}
+
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
-	config_obj.Services = services.GenericToolServices()
 	sm, err := startup.StartToolServices(ctx, config_obj)
 	defer sm.Close()
 
@@ -116,11 +132,12 @@ func doRepack() error {
 		Env: ordereddict.NewDict().
 			Set("ConfigData", config_data).
 			Set("Exe", executable).
+			Set("Binaries", *repack_command_binaries).
 			Set("UploadName", filepath.Base(output_path)),
 	}
 
 	query := `
-       SELECT repack(exe=Exe, accessor="file",
+       SELECT repack(exe=Exe, accessor="file", binaries=Binaries,
           config=ConfigData, upload_name=UploadName) AS RepackInfo
        FROM scope()
 `
