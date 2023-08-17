@@ -340,9 +340,11 @@ func (self *Loader) WithEmbedded(embedded_file string) *Loader {
 		loader_func: func(self *Loader) (*config_proto.Config, error) {
 			if embedded_file == "" {
 				result, err := read_embedded_config()
-				if err == nil {
-					self.Log("Loaded embedded config")
+				if err != nil {
+					return nil, err
 				}
+
+				self.Log("Loaded embedded config")
 
 				EmbeddedFile, err = os.Executable()
 				return result, err
