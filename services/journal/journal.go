@@ -63,10 +63,17 @@ func (self *JournalService) Watch(
 		return nil, func() {}
 	}
 
+	disable_file_buffering := false
+	if self.config_obj.Frontend != nil &&
+		self.config_obj.Frontend.Resources != nil {
+		disable_file_buffering = self.config_obj.Frontend.Resources.DisableFileBuffering
+	}
+
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("%s: Watching for events from %v", watcher_name, queue_name)
 	res, cancel := self.qm.Watch(ctx, queue_name, &api.QueueOptions{
-		OwnerName: watcher_name,
+		OwnerName:            watcher_name,
+		DisableFileBuffering: disable_file_buffering,
 	})
 
 	// Advertise new watchers

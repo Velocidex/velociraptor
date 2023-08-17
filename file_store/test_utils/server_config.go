@@ -210,6 +210,7 @@ Frontend:
     expected_clients: 10000
     default_log_batch_time: 100
     default_monitoring_log_batch_time: 100
+    disable_file_buffering: true
 
 Datastore:
   implementation: Test
