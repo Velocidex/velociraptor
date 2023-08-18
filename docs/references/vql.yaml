@@ -2874,7 +2874,12 @@
   metadata:
     permissions: LABEL_CLIENT
 - name: len
-  description: Returns the length of an object.
+  description: |
+    Returns the length of an object.
+
+    For strings, this is the number of bytes.
+    For arrays, this is the number of entries.
+    For dicts, this is the number of key/value pairs.
   type: Function
   args:
   - name: list
