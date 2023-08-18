@@ -2,10 +2,10 @@ package zip
 
 import (
 	"io"
-	"os"
 
 	"github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -19,10 +19,7 @@ type MEFileSystemAccessor struct {
 func (self *MEFileSystemAccessor) GetZipFile(file_path *accessors.OSPath) (
 	*ZipFileCache, error) {
 
-	me, err := os.Executable()
-	if err != nil {
-		return nil, err
-	}
+	me := config.EmbeddedFile
 
 	mu.Lock()
 	zip_file_cache, pres := self.fd_cache[me]

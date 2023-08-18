@@ -30,7 +30,7 @@ func (self *CollectorTestSuite) TestDeaddisk() {
 	cmd := exec.Command(self.binary, "deaddisk", "-v",
 		"--add_windows_directory", windows_dir, remapping_path)
 	out, err := cmd.CombinedOutput()
-	require.NoError(t, err)
+	require.NoError(t, err, string(out))
 
 	assert.Contains(t, string(out), `Adding windows mounted directory at`)
 

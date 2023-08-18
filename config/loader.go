@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/user"
+	"regexp"
 	"runtime"
 
 	"github.com/Velocidex/yaml/v2"
@@ -15,6 +16,15 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
+)
+
+var (
+	noEmbeddedConfig = errors.New(
+		"No embedded config - you can pack one with the `config repack` command")
+
+	embedded_re = regexp.MustCompile(`#{3}<Begin Embedded Config>\r?\n`)
+
+	EmbeddedFile = ""
 )
 
 // A hard error causes the loader to stop immediately.
@@ -323,14 +333,49 @@ func (self *Loader) WithEnvLiteralLoader(env_var string) *Loader {
 	return self
 }
 
-func (self *Loader) WithEmbedded() *Loader {
+func (self *Loader) WithEmbedded(embedded_file string) *Loader {
 	self = self.Copy()
 	self.loaders = append(self.loaders, loaderFunction{
 		name: "WithEmbedded",
 		loader_func: func(self *Loader) (*config_proto.Config, error) {
-			result, err := read_embedded_config()
-			if err == nil {
+			if embedded_file == "" {
+				result, err := read_embedded_config()
+				if err != nil {
+					return nil, err
+				}
+
 				self.Log("Loaded embedded config")
+
+				EmbeddedFile, err = os.Executable()
+				return result, err
+			}
+
+			// Ensure the "me" accessor uses this file for embedded zip.
+			EmbeddedFile = embedded_file
+
+			fd, err := os.Open(embedded_file)
+			if err != nil {
+				return nil, err
+			}
+
+			buf := make([]byte, len(FileConfigDefaultYaml)+1024)
+			n, err := fd.Read(buf)
+			if err != nil {
+				return nil, err
+			}
+
+			buf = buf[:n]
+
+			// Find the embedded marker in the buffer.
+			match := embedded_re.FindIndex(buf)
+			if match == nil {
+				return nil, noEmbeddedConfig
+			}
+
+			embedded_string := buf[match[0]:]
+			result, err := decode_embedded_config(embedded_string)
+			if err == nil {
+				self.Log("Loaded embedded config from %v", embedded_file)
 			}
 			return result, err
 		}})
@@ -487,22 +532,29 @@ func (self *Loader) LoadAndValidate() (*config_proto.Config, error) {
 }
 
 func read_embedded_config() (*config_proto.Config, error) {
+	return decode_embedded_config(FileConfigDefaultYaml)
+}
+
+func decode_embedded_config(encoded_string []byte) (*config_proto.Config, error) {
 	// Get the first line which is never disturbed
-	idx := bytes.IndexByte(FileConfigDefaultYaml, '\n')
+	idx := bytes.IndexByte(encoded_string, '\n')
+
+	if len(encoded_string) < idx+10 {
+		return nil, noEmbeddedConfig
+	}
 
 	// If the following line still starts with # then the file is not
 	// repacked - the repacker will replace all further data with the
 	// compressed string.
-	if FileConfigDefaultYaml[idx+1] == '#' {
-		return nil, errors.New(
-			"No embedded config - you can pack one with the `config repack` command")
+	if encoded_string[idx+1] == '#' {
+		return nil, noEmbeddedConfig
 	}
 
 	// Decompress the rest of the data - note that zlib will ignore
 	// any padding anyway because the zlib header already contains the
 	// length of the compressed data so it is safe to just feed it the
 	// whole string here.
-	r, err := zlib.NewReader(bytes.NewReader(FileConfigDefaultYaml[idx+1:]))
+	r, err := zlib.NewReader(bytes.NewReader(encoded_string[idx+1:]))
 	if err != nil {
 		return nil, err
 	}

@@ -156,5 +156,13 @@ func install_sig_handler() (context.Context, context.CancelFunc) {
 	}()
 
 	return ctx, cancel
+}
 
+func isConfigSpecified(argv []string) bool {
+	for _, a := range argv {
+		if a == "--config" {
+			return true
+		}
+	}
+	return false
 }

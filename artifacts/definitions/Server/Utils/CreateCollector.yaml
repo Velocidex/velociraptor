@@ -370,8 +370,10 @@ sources:
        a={ SELECT "VelociraptorWindows" AS Type FROM scope() WHERE OS = "Windows"},
        b={ SELECT "VelociraptorWindows_x86" AS Type FROM scope() WHERE OS = "Windows_x86"},
        c={ SELECT "VelociraptorLinux" AS Type FROM scope() WHERE OS = "Linux"},
-       d={ SELECT "VelociraptorDarwin" AS Type FROM scope() WHERE OS = "MacOS"},
-       e={ SELECT "" AS Type FROM scope()
+       d={ SELECT "VelociraptorCollector" AS Type FROM scope() WHERE OS = "MacOS"},
+       e={ SELECT "VelociraptorCollector" AS Type FROM scope() WHERE OS = "MacOSArm"},
+       f={ SELECT "VelociraptorCollector" AS Type FROM scope() WHERE OS = "Generic"},
+       g={ SELECT "" AS Type FROM scope()
            WHERE NOT log(message="Unknown target type " + OS) }
       )
 
