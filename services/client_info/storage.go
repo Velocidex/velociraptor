@@ -37,6 +37,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -293,6 +294,14 @@ func (self *Store) LoadSnapshotFromLegacyData(
 			continue
 		}
 
+		// Load any labels
+		label_record := &api_proto.ClientLabels{}
+		err = db.GetSubject(config_obj,
+			client_path_manager.Labels(), label_record)
+		if err == nil {
+			client_info.Labels = label_record.Label
+		}
+
 		count++
 		if count%1000 == 0 {
 			logger.Info("<green>ClientInfo Manager</> Rebuilt %v clients from Legacy data.", count)
@@ -317,6 +326,7 @@ func (self *Store) LoadSnapshotFromLegacyData(
 		self.data[client_id] = serialized
 		self.dirty = true
 		self.mu.Unlock()
+
 	}
 
 	logger.Debug("<green>ClientInfo Manager</> Rebuilt %v clients from Legacy data.", count)

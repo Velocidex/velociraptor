@@ -31,7 +31,9 @@ const tool_name_lookup = {
     Windows: "VelociraptorWindows",
     Windows_x86: "VelociraptorWindows_x86",
     Linux: "VelociraptorLinux",
-    MacOS: "VelociraptorDarwin",
+    MacOS: "VelociraptorCollector",
+    MacOSArm: "VelociraptorCollector",
+    Generic: "VelociraptorCollector",
 }
 
 
@@ -65,6 +67,8 @@ class OfflineCollectorParameters  extends React.Component {
                         <option value="Windows_x86">Windows_x86</option>
                         <option value="Linux">Linux</option>
                         <option value="MacOS">Mac OS</option>
+                        <option value="MacOSArm">Mac OS Arm</option>
+                        <option value="Generic">Generic Collector</option>
                       </Form.Control>
                     </Col>
                   </Form.Group>

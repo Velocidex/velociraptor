@@ -43,6 +43,9 @@ var (
 
 	config_path = app.Flag("config", "The configuration file.").
 			Short('c').String()
+
+	embedded_config_path = app.Flag("embedded_config", "Extract the embedded configuration from this file.").String()
+
 	api_config_path = app.Flag("api_config", "The API configuration file.").
 			Short('a').String()
 
@@ -129,7 +132,7 @@ func main() {
 	pre, post := splitArgs(args)
 	if len(pre) == 0 {
 		config_obj, err := new(config.Loader).WithVerbose(*verbose_flag).
-			WithEmbedded().LoadAndValidate()
+			WithEmbedded(*embedded_config_path).LoadAndValidate()
 		if err == nil && config_obj.Autoexec != nil && config_obj.Autoexec.Argv != nil {
 			args = nil
 			for _, arg := range config_obj.Autoexec.Argv {
@@ -163,7 +166,7 @@ func main() {
 		WithCustomValidator("Validator maybe_unlock_api_config",
 			maybe_unlock_api_config).
 		WithFileLoader(*config_path).
-		WithEmbedded().
+		WithEmbedded(*embedded_config_path).
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
 		WithConfigMutator("Mutator mergeFlagConfig",
 			func(config_obj *config_proto.Config) error {
@@ -210,7 +213,7 @@ func makeDefaultConfigLoader() *config.Loader {
 		WithVerbose(*verbose_flag).
 		WithTempdir(*tempdir_flag).
 		WithFileLoader(*config_path).
-		WithEmbedded().
+		WithEmbedded(*embedded_config_path).
 		WithEnvLoader("VELOCIRAPTOR_CONFIG").
 		WithConfigMutator("Mutator mergeFlagConfig",
 			func(config_obj *config_proto.Config) error {
@@ -231,10 +234,19 @@ func makeDefaultConfigLoader() *config.Loader {
 // Split the command line into args before the -- and after the --
 func splitArgs(args []string) (pre, post []string) {
 	seen := false
-	for _, arg := range args {
+	for idx := 0; idx < len(args); idx++ {
+		arg := args[idx]
+
+		// Separate the args into pre and post args. Post args will be
+		// added to the autoexec command line while still triggering
+		// the autoexec condition.
 		if arg == "--" {
 			seen = true
 			continue
+		}
+
+		if arg == "--embedded_config" && idx < len(args) {
+			embedded_config_path = &args[idx+1]
 		}
 
 		if seen {

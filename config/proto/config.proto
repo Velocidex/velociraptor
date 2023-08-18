@@ -630,6 +630,10 @@ message FrontendResourceControl {
     // log messages before forwarding them to the server (default 600
     // second).
     uint64 default_monitoring_log_batch_time = 32;
+
+    // Disables file buffering for event queues. This may result in
+    // poor performance under load.
+    bool disable_file_buffering = 33;
 }
 
 

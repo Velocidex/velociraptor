@@ -113,6 +113,7 @@ class NewHuntConfigureHunt extends React.Component {
                           <option label="Windows" value="WINDOWS">Windows</option>
                           <option label="Linux" value="LINUX">LINUX</option>
                           <option label="MacOS" value="OSX">OSX</option>
+                          <option label="MacOSArm" value="OSX">OSX Arm</option>
                         </Form.Control>
                       </Col>
                     </Form.Group>
