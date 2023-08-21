@@ -83,7 +83,7 @@ require (
 	golang.org/x/mod v0.10.0
 	golang.org/x/net v0.12.0
 	golang.org/x/sys v0.10.0
-	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/text v0.12.0 // indirect
 	golang.org/x/time v0.3.0
 	google.golang.org/api v0.126.0
 	google.golang.org/genproto v0.0.0-20230530153820-e85fd2cbaebc // indirect
@@ -96,7 +96,7 @@ require (
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	howett.net/plist v1.0.0
 	www.velocidex.com/golang/evtx v0.2.1-0.20220404133451-1fdf8be7325e
-	www.velocidex.com/golang/go-ese v0.1.1-0.20220107095505-c38622559671
+	www.velocidex.com/golang/go-ese v0.1.1-0.20230821030256-2d2478da26e1
 	www.velocidex.com/golang/go-ntfs v0.1.2-0.20230815140127-6a3dd72bfbf1
 	www.velocidex.com/golang/go-pe v0.1.1-0.20230228112150-ef2eadf34bc3
 	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
@@ -133,7 +133,7 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20230530153820-e85fd2cbaebc
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
 	software.sslmate.com/src/go-pkcs12 v0.2.0
-	www.velocidex.com/golang/vtypes v0.0.0-20220816192452-6a27ae078f12
+	www.velocidex.com/golang/vtypes v0.0.0-20230821104433-297db7c471d8
 )
 
 require (
