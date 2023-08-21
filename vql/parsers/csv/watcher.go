@@ -33,7 +33,7 @@ type CSVWatcherService struct {
 
 func NewCSVWatcherService(config_obj *config_proto.Config) *CSVWatcherService {
 	mu.Lock()
-	defer mu.Lock()
+	defer mu.Unlock()
 
 	if GlobalCSVService == nil {
 		GlobalCSVService = &CSVWatcherService{

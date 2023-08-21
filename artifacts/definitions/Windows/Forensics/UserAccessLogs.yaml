@@ -111,8 +111,8 @@ sources:
                })) AS Value
             FROM items(item={
                SELECT *, get(item=RoleLookup, field=RoleGuid).RoleName AS RoleName,
-                  format(format="%02x", args=Address) AS RawAddress,
-                  FormatAddress(Address=Address) AS Address
+                  Address AS RawAddress,
+                  FormatAddress(Address=unhex(string=Address)) AS Address
                FROM parse_ese(file=OSPath, table="CLIENTS")
             })
         }, column="Value")

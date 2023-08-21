@@ -26,6 +26,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/vql"
@@ -191,10 +192,16 @@ func (self _WatchCSVPlugin) Call(
 
 		event_channel := make(chan vfilter.Row)
 
+		config_obj, ok := vql_subsystem.GetServerConfig(scope)
+		if !ok {
+			config_obj = config.GetDefaultConfig()
+		}
+
 		// Register the output channel as a listener to the
 		// global event.
 		for _, filename := range arg.Filenames {
-			GlobalCSVService.Register(
+			watcher_service := NewCSVWatcherService(config_obj)
+			watcher_service.Register(
 				filename, arg.Accessor,
 				ctx, scope, event_channel)
 		}
