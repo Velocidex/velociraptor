@@ -96,7 +96,7 @@ require (
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	howett.net/plist v1.0.0
 	www.velocidex.com/golang/evtx v0.2.1-0.20220404133451-1fdf8be7325e
-	www.velocidex.com/golang/go-ese v0.1.1-0.20230821030256-2d2478da26e1
+	www.velocidex.com/golang/go-ese v0.1.1-0.20230821114411-ecb5494187ed
 	www.velocidex.com/golang/go-ntfs v0.1.2-0.20230815140127-6a3dd72bfbf1
 	www.velocidex.com/golang/go-pe v0.1.1-0.20230228112150-ef2eadf34bc3
 	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
