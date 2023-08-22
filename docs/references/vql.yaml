@@ -253,6 +253,7 @@
     required: true
   category: basic
 - name: base85decode
+  description: Decode a base85 encoded string.
   type: Function
   args:
   - name: string
