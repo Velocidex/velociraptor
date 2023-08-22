@@ -30,7 +30,7 @@ import (
 )
 
 type GunzipArgs struct {
-	String string `vfilter:"required,field=string,doc=Data to apply Gunzip"`
+	String string `vfilter:"required,field=string,doc=Data to uncompress"`
 }
 
 type Gunzip struct{}
@@ -68,7 +68,7 @@ func (self *Gunzip) Call(ctx context.Context,
 func (self Gunzip) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "gunzip",
-		Doc:     "Apply Gunzip to the data.",
+		Doc:     "Uncompress a gzip-compressed block of data.",
 		ArgType: type_map.AddType(scope, &GunzipArgs{}),
 	}
 }
