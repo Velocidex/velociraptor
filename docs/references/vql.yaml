@@ -99,8 +99,13 @@
     Create an array with all the args.
 
     This function accepts arbitrary arguments and creates an array by
-    flattening the arguments. For example `array(a=1, b=2)` will return
-    `[1, 2]`.
+    flattening the arguments. 
+
+    ### Examples
+
+    ```vql
+    array(a=1, b=2) -> [1, 2]
+    ```
 
     You can use this to flatten a subquery as well:
 
@@ -156,7 +161,7 @@
     Install a query to run when the query is unwound. This is used to
     clean up when the query ends.
 
-    For example:
+    ### Example
 
     ```vql
     LET _ <= atexit(query={
@@ -256,7 +261,14 @@
     required: true
 - name: basename
   description: |
-    Return the basename of the path. For example basename(path="/foo/bar") -> "bar"
+    Return the basename of the path.
+
+    ### Example
+    ```vql
+    basename(path="/foo/bar") -> "bar"
+    ```
+
+    Related: `dirname()`
   type: Function
   args:
   - name: path
@@ -275,8 +287,9 @@
     Batches query rows into multiple arrays.
 
     This is useful for batching multiple rows from a query into
-    another query (for example sending into an API endpoint). For
-    example:
+    another query, such as sending results to an API endpoint.
+
+    ### Example
 
     ```vql
     SELECT * FROM batch(query={
@@ -495,7 +508,7 @@
     Client metadata is a set of free form key/value data (see
     client_metadata() function).
 
-    Example:
+    ### Example
 
     ```vql
     SELECT client_set_metadata(ClientId="C.1234", Foo="Bar")
@@ -763,7 +776,7 @@
     Split a commandline into separate components following the windows
     conventions.
 
-    Example:
+    ### Example
     ```vql
     SELECT
       commandline_split(command='''"C:\Program Files\Velociraptor\Velociraptor.exe" service run'''),
@@ -1135,9 +1148,12 @@
   description: |
     Return the directory path.
 
-    For example direname(path="/usr/bin/ls") -> "/usr/bin"
+    ### Example
+    ```vql
+    dirname(path="/usr/bin/ls") -> "/usr/bin"
+    ```
 
-    Related: basename()
+    Related: `basename()`
   type: Function
   args:
   - name: path
@@ -1768,7 +1784,9 @@
     Create a named generator that receives rows from the query.
 
     This plugin allow multiple queries to efficiently filter rows from
-    the same query. For example:
+    the same query. 
+
+    ### Example
 
     ```vql
     LET SystemLog = generate(query={
@@ -1790,9 +1808,9 @@
     })
     ```
 
-    NOTE: The generate() function produces a stored query that can be
+    NOTE: The `generate()` function produces a stored query that can be
     used as the target of any `SELECT ... FROM` statement. Therefore
-    it does not make sense to materialize the output of generate()
+    it does not make sense to materialize the output of `generate()`
     because it is equivalent to materializing the actual target query
     itself.
 
@@ -2739,7 +2757,7 @@
     produces unpredictable columns or you need to operate over the
     column names somehow.
 
-    For example:
+    ### Example
 
     ```vql
     SELECT * FROM items(item={ SELECT * FROM info() })
@@ -3083,7 +3101,7 @@
     You can also write your own signatures using the magic syntax (see
     https://man7.org/linux/man-pages/man4/magic.4.html )
 
-    ## Example
+    ### Example
 
     The following will check all files in /var/lib applying a custom
     magic rule.
@@ -3945,7 +3963,7 @@
     It can either operate on an image file or the raw device (on
     windows).
 
-    ## Example:
+    ### Example:
 
     ```vql
     SELECT parse_ntfs(
@@ -5129,7 +5147,7 @@
     query and a network query. The `query` can then search for relevant
     network event closely followed by a process event.
 
-    For example:
+    ### Example
     ```vql
     SELECT * FROM sequence(
     network={
@@ -5194,7 +5212,7 @@
     Sets server metadata. Server metadata is a set of free form
     key/value data, usually used for configuration of artifacts.
 
-    Example:
+    ### Example
 
     ```vql
     SELECT server_set_metadata(`Slack Token`="X12233")
@@ -5491,7 +5509,7 @@
     more powerful language to create small functions to transform
     certain fields etc.
 
-    ## Example
+    ### Example
 
     In the following example we define a Starl code block and compile
     it into a module. VQL code can then reference any functions
