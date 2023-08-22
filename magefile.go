@@ -31,6 +31,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -532,6 +533,11 @@ func timestamp_of(path string) int64 {
 }
 
 func UpdateDependentTools() error {
+	v, err := semver.NewVersion(constants.VERSION)
+	if err != nil {
+		return err
+	}
+
 	template := "artifacts/definitions/Server/Internal/ToolDependencies.tmpl"
 	fd, err := os.Open(template)
 	if err != nil {
@@ -552,7 +558,10 @@ func UpdateDependentTools() error {
 	}
 	defer outfd.Close()
 
-	_, err = outfd.Write(
-		bytes.ReplaceAll(data, []byte("<VERSION>"), []byte(constants.VERSION)))
+	data = bytes.ReplaceAll(data, []byte("<VERSION>"), []byte(constants.VERSION))
+	data = bytes.ReplaceAll(data, []byte("<VERSION_BARE>"),
+		[]byte(fmt.Sprintf("%d.%d.%d", v.Major(), v.Minor(), v.Patch())))
+
+	_, err = outfd.Write(data)
 	return err
 }
