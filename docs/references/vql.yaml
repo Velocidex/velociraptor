@@ -6304,7 +6304,13 @@
   type: Plugin
   category: windows
 - name: utf16
-  description: Parse input from utf16.
+  description: |
+    Parse input from utf16.
+
+    ### Example
+    ```vql
+    utf16(string='A\x00B\x00C\x00D\x00') -> "ABCD"
+    ```
   type: Function
   args:
   - name: string
@@ -6313,7 +6319,13 @@
     required: true
   category: basic
 - name: utf16_encode
-  description: Encode a string to utf16 bytes.
+  description: |
+    Encode a string to utf16 bytes.
+
+    ### Example
+    ```vql
+    utf16_encode(string="ABCD") -> "A\u0000B\u0000C\u0000D\u0000"
+    ```
   type: Function
   args:
   - name: string
