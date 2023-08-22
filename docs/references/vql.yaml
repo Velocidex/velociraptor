@@ -109,7 +109,7 @@
 
     You can use this to flatten a subquery as well:
 
-    ```sql
+    ```vql
     SELECT array(a1={ SELECT User FROM Artifact.Windows.System.Users() }) as Users FROM scope()
     ```
 
@@ -393,7 +393,7 @@
     The following returns the rows from the first query then the rows from
     the second query.
 
-    ```sql
+    ```vql
     SELECT * FROM chain(
       a={ SELECT ...},
       b={ SELECT ...},
@@ -558,7 +558,7 @@
 
     The following will generate an event every 10 seconds.
 
-    ```sql
+    ```vql
     SELECT Second FROM clock(period=10)
     ```
 
@@ -1497,7 +1497,7 @@
     The following checks for 5 failed logons followed by a successful
     logon.
 
-    ```sql
+    ```vql
     LET failed_logon = SELECT EventData as FailedEventData,
        System as FailedSystem
     FROM watch_evtx(filename=securityLogFile)
@@ -1816,14 +1816,14 @@
 
     In other words this:
 
-    ```
+    ```vql
     LET X <= generate(query={ SELECT * FROM watch_etw(...) })
     ```
 
     Will attempt to enumerate the target query into an array and is
     equivalent to:
 
-    ```
+    ```vql
     LET X <= SELECT * FROM watch_etw(...)
     ```
 
@@ -1876,13 +1876,14 @@
 
     ### Example
 
-    ```sql
+    ```vql
     select get(item=[dict(foo=3), 2, 3, 4], member='0.foo') AS Foo from scope()
-
+    ```
+    ```json
     [
-     {
-       "Foo": 3
-     }
+      {
+        "Foo": 3
+      }
     ]
     ```
 
@@ -1979,7 +1980,7 @@
     By default globs do not expand environment variables. If you need to
     expand environment variables use the `expand()` function explicitly:
 
-    ```sql
+    ```vql
     glob(globs=expand(string="%SystemRoot%\System32\Winevt\Logs\*"))
     ```
 
@@ -1987,7 +1988,7 @@
 
     The following searches the raw NTFS disk for event logs.
 
-    ```sql
+    ```vql
     SELECT FullPath FROM glob(
     globs="C:\Windows\System32\Winevt\Logs\*.evtx",
     accessor="ntfs")
@@ -2209,7 +2210,7 @@
     The following VQL returns the client's external IP as seen by the
     externalip service.
 
-    ```sql
+    ```vql
     SELECT Content as IP from http_client(url='http://www.myexternalip.com/raw')
     ```
 
@@ -2708,7 +2709,7 @@
     encoded as an array of 8 bytes which makes it easy to format using the
     `format()` function:
 
-    ```
+    ```vql
       format(format="%x:%x:%x:%x:%x:%x:%x:%x", value)
     ```
   type: Function
@@ -2934,7 +2935,7 @@
     clause as a form of debugging (It is basically equivalent to the
     print statement of other languages).
 
-    ```sql
+    ```vql
     SELECT * FROM glob(...)
     WHERE log(message="Value of OSPath is %v", args=OSPath)
     ```
@@ -3246,7 +3247,7 @@
     The following query lists all the processes and shows the largest
     bash pid of all bash processes.
 
-    ```SQL
+    ```vql
     SELECT Name, max(items=Pid) as LargestPid from pslist() Where Name =~ 'bash' group by Name
     ```
   type: Function
@@ -3324,7 +3325,7 @@
     The following query lists all the processes and shows the smallest
     bash pid of all bash processes.
 
-    ```SQL
+    ```vql
     SELECT Name, min(items=Pid) as SmallestPid from pslist() Where Name =~ 'bash' group by Name
     ```
   type: Function
@@ -3730,7 +3731,7 @@
     The following stacks the result from a
     `Windows.Applications.Chrome.Extensions` artifact:
 
-    ```sql
+    ```vql
     SELECT count(items=User) As TotalUsers, Name
     FROM parse_csv(filename="All Windows.Applications.Chrome.Extensions.csv")
     Order By TotalUsers
@@ -3807,7 +3808,7 @@
 
     ### Example
 
-    ```sql
+    ```vql
     SELECT System.TimeCreated.SystemTime as Timestamp,
            System.EventID.Value as EventID,
            EventData.ImagePath as ImagePath,
@@ -4137,7 +4138,7 @@
     using parse_string_with_regex() to further break the block into
     fields.
 
-    ```sql
+    ```vql
     SELECT parse_string_with_regex(
        string=Record,
        regex=['Package:\\s(?P<Package>.+)',
@@ -4280,18 +4281,19 @@
     I practice you can use this to update server settings - for
     example, consider the client event monitoring state.
 
-    ```text
+    ```vql
     SELECT get_client_monitoring() FROM scope()
-
-     [
+    ```
+    ```json
+    [
       {
-       "get_client_monitoring": {
-        "artifacts": [
-         "Generic.Client.Stats"
-        ]
-       }
+        "get_client_monitoring": {
+          "artifacts": [
+            "Generic.Client.Stats"
+          ]
+        }
       }
-     ]
+    ]
     ```
 
     Suppose we wish to add a new artifact, we can patch it with the json:
@@ -4302,7 +4304,7 @@
     This can then be immediately pushed to `set_client_monitoring()`
     to update the monitoring state.
 
-    ```
+    ```vql
     SELECT set_client_monitoring(value=patch(
            item=get_client_monitoring(),
            patch=[dict(op="add", path="/artifacts/0", value="Windows.Events.DNSQueries")]))
@@ -5110,7 +5112,7 @@
 
     ### Example
 
-    ```sql
+    ```vql
     SELECT 1+1 As Two FROM scope()
     ```
   type: Plugin
@@ -5711,7 +5713,7 @@
     You can also provide a string, and `timestamp()` will try to parse
     it by guessing what it represents. For example
 
-    ```
+    ```vql
     SELECT timestamp(string='March 3 2019'),
            timestamp(string='07/25/2019 5pm')
     FROM scope()
@@ -6375,7 +6377,7 @@
 
     For example the following can chose from a legacy query or a
     modern query based on the plugin version:
-    ```
+    ```vql
      SELECT * FROM if(
       condition=version(plugin="glob") >= 1,
       then=NewQuery,
