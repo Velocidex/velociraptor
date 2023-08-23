@@ -13,13 +13,19 @@ Queries:
       aptCacheDirectory=srcDir + "/artifacts/testdata/files/debian/"
    )
 
- - SELECT "" AS Source, OSPath.Basename as OSPath, *
+ - SELECT OSPath.Basename as OSPath,
+      NULL AS Mtime,
+      NULL AS Ctime,
+      NULL AS Atime,
+      NULL AS Source, *
+
    FROM Artifact.Linux.Debian.AptSources(
       source="SourcesCacheFiles",
       linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list")],
       aptCacheDirectory=srcDir + "/artifacts/testdata/files/debian/"
    )
-   WHERE OSPath
+   WHERE Record
+
 
  - SELECT *
    FROM Artifact.Linux.Debian.Packages(

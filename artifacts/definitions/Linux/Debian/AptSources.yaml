@@ -466,7 +466,9 @@ sources:
 
          -- For each parsed apt .list file line produce some output.
          SELECT * from foreach(
-             row={SELECT * FROM parsed_apt_lines},
+             row={
+                 SELECT * FROM parsed_apt_lines
+             },
              query={
                 SELECT * FROM parse_cache_or_pass
               })

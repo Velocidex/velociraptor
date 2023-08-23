@@ -460,13 +460,14 @@ SELECT OSPath.Basename AS OSPath, * FROM Artifact.Linux.Debian.AptSources( sourc
   "Types": "deb",
   "_Source": "Linux.Debian.AptSources/SourcesFlattened"
  }
-]SELECT "" AS Source, OSPath.Basename as OSPath, * FROM Artifact.Linux.Debian.AptSources( source="SourcesCacheFiles", linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list")], aptCacheDirectory=srcDir + "/artifacts/testdata/files/debian/" ) WHERE OSPath[
+]SELECT OSPath.Basename as OSPath, NULL AS Mtime, NULL AS Ctime, NULL AS Atime, NULL AS Source, *
+FROM Artifact.Linux.Debian.AptSources( source="SourcesCacheFiles", linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list")], aptCacheDirectory=srcDir + "/artifacts/testdata/files/debian/" ) WHERE Record[
  {
-  "Source": "",
   "OSPath": "au.archive.ubuntu.com_ubuntu_dists_jammy_InRelease",
-  "Mtime": "2023-08-23T10:45:25Z",
-  "Ctime": "2023-08-23T10:45:25Z",
-  "Atime": "2023-08-23T10:55:22Z",
+  "Mtime": null,
+  "Ctime": null,
+  "Atime": null,
+  "Source": null,
   "Record": {
    "Release": "jammy",
    "Version": "22.04",
