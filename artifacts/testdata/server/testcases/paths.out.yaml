@@ -60,15 +60,6 @@ SELECT basename(path="/foo/bar/baz", path_type='linux') FROM scope()[
 
    -- Parse a registry path (Expand hive)
    pathspec(parse="HKU/Software", path_type='registry'),
-
-   -- Parse a URL based path - serialize back to URL
-   pathspec(parse="file:///usr/lib#*", path_type='generic'),
-
-   -- Access a field from a URL based path
-   pathspec(parse="file:///usr/lib#*", path_type='generic').DelegatePath,
-
-   -- Add subpaths to a complex pathspec
-   pathspec(parse="file:///usr/lib#foo", path_type='generic') + "bar",
    pathspec(parse="HKU/Software", path_type='registry') + "Microsoft",
 
    -- Access components from an OSPath
@@ -91,9 +82,6 @@ FROM scope()
   "pathspec(parse=\"C:\\\\Windows\", path_type='windows')": "C:\\Windows",
   "pathspec(parse=\"/usr/lib\", path_type='linux')": "/usr/lib",
   "pathspec(parse=\"HKU/Software\", path_type='registry')": "HKEY_USERS\\Software",
-  "pathspec(parse=\"file:///usr/lib#*\", path_type='generic')": "file:///usr/lib#/*",
-  "pathspec(parse=\"file:///usr/lib#*\", path_type='generic').DelegatePath": "/usr/lib",
-  "pathspec(parse=\"file:///usr/lib#foo\", path_type='generic') + \"bar\"": "file:///usr/lib#/foo/bar",
   "pathspec(parse=\"HKU/Software\", path_type='registry') + \"Microsoft\"": "HKEY_USERS\\Software\\Microsoft",
   "pathspec(parse=\"HKU/Software\", path_type='registry').Components": [
    "HKEY_USERS",

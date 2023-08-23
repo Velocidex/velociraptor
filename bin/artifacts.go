@@ -204,12 +204,11 @@ func doArtifactCollect() error {
 		return err
 	}
 
-	logger := log.New(&LogWriter{config_obj}, "", 0)
-
+	logger := &LogWriter{config_obj: config_obj}
 	scope := manager.BuildScope(services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: acl_managers.NullACLManager{},
-		Logger:     logger,
+		Logger:     log.New(&LogWriter{config_obj: config_obj}, "", 0),
 		Env: ordereddict.NewDict().
 			Set("Artifacts", *artifact_command_collect_names).
 			Set("Output", *artifact_command_collect_output).
@@ -266,9 +265,14 @@ func doArtifactCollect() error {
                         timeout=Timeout, progress_timeout=ProgressTimeout,
                         cpu_limit=CpuLimit,
                         password=Password, args=Args, format=Format)`
-	return eval_local_query(
+	err = eval_local_query(
 		sm.Ctx, config_obj,
 		*artifact_command_collect_format, query, scope)
+	if err != nil {
+		return err
+	}
+
+	return logger.Error
 }
 
 func getFilterRegEx(pattern string) (*regexp.Regexp, error) {

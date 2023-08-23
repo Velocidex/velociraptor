@@ -42,10 +42,11 @@ func doCSV() error {
 		return err
 	}
 
+	logger := &LogWriter{config_obj: config_obj}
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: acl_managers.NullACLManager{},
-		Logger:     log.New(&LogWriter{config_obj}, "", 0),
+		Logger:     log.New(logger, "", 0),
 		Env: ordereddict.NewDict().
 			Set(vql_subsystem.ACL_MANAGER_VAR,
 				acl_managers.NewRoleACLManager(config_obj, "administrator")).
@@ -77,12 +78,19 @@ func doCSV() error {
 		table.Render()
 
 	case "jsonl":
-		return outputJSONL(ctx, scope, vql, os.Stdout)
+		err = outputJSONL(ctx, scope, vql, os.Stdout)
+		if err != nil {
+			return err
+		}
 
 	case "json":
-		return outputJSON(ctx, scope, vql, os.Stdout)
+		err = outputJSON(ctx, scope, vql, os.Stdout)
+		if err != nil {
+			return err
+		}
+
 	}
-	return nil
+	return logger.Error
 }
 
 func init() {
