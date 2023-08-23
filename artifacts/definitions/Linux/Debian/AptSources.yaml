@@ -3,32 +3,32 @@ description: |
   Parse Debian apt sources.
 
   This Artifact searches for all apt sources files and parses all
-  fields in both one–line \*.list files and \*.sources files
+  fields in both one–line `*.list` files and `*.sources` files
   (deb822-style format). The results are presented both in a readable
   table and a flattened version for parsing.
 
-  \*.list files contains lines of the form
+  `*.list` files contains lines of the form
 
-  .. code:: console
-
-     deb http://us.archive.ubuntu.com/ubuntu/ bionic main restricted
-     deb-src [arch=amd64,i386 signed-by=/usr/share/keyrings/foo.gpg] https://foo.bar.baz/ubuntu/main jammy main restricted universe multiverse # Comment
+  ```
+  deb http://us.archive.ubuntu.com/ubuntu/ bionic main restricted
+  deb-src [arch=amd64,i386 signed-by=/usr/share/keyrings/foo.gpg] https://foo.bar.baz/ubuntu/main jammy main restricted universe multiverse # Comment
+  ```
 
   deb indicates a source for binary packages, and deb-src instructs APT where
   to find source code for packages.
 
-  \*.sources files (deb822-style format) are in the form of key–value
+  `*.sources` files (deb822-style format) are in the form of key–value
   lines, and as opposed to the one–line format, they can contain
   multiple URIs, components and types (deb/deb-src), along with
   embedded GPG keys. Example:
 
-  .. code:: console
+  ```
+  Types: deb deb-src
+  URIs: file:/home/apt/debian http://foo.bar.baz/main
+  Suites: unstable
+  Components: main contrib non-free
+  ```
 
-     Types: deb deb-src
-     URIs: file:/home/apt/debian http://foo.bar.baz/main
-     Suites: unstable
-     Components: main contrib non-free
-     
   The exported function parse_aptsources(OSPath, flatten) parses
   both formats and returns a (optionally flattened) table with
    - OSPath
@@ -42,7 +42,7 @@ description: |
   Any option is added to an individual column. Typical options are
    - Architectures (e.g. amd64/i386/armel)
    - Signed-By (e.g. /usr/share/keyrings/osquery.gpg)
-   
+
   All known option names are transformed to the plural PascalCase
   variants as listed in the sources.list man page. Any undocumented
   options will still be included in the results, with names unchanged.
@@ -56,7 +56,7 @@ description: |
   exported functions DebTrue()/DebFalse() to correctly parse all
   accepted true/false strings, or use the VQL suggestion "Enabled"
   to filter on this column (true), if present.
-   
+
   If the GPG key is embedded in a .sources file, the whole GPG key
   will be included in the cell. Otherwise the value will be a file
   path.
@@ -81,10 +81,10 @@ export: |
             `(?m)^\\s+`='',
             `(?m)\\s+$`=''
         ))
-        
+
         /* Replace any repeating whitespace with a single space: */
         LET Simplify(string) = regex_replace(source=string, re='''\s+''', replace=' ')
-        
+
         /* The syntax in lists (deb822) and sources (one-line) files varies a bit,
            and deb822 is case-insensitive. Normalise all known fields (as per
            the man page): */
@@ -132,7 +132,7 @@ export: |
                 regex='''(?P<Key>[^ ]+?)(?P<Op>-|\+)?=(?P<Value>[^ ]+)''',
                 accessor='data', file=string
         )
-        
+
         /* Since option values may have multiple words, split them and flatten
            the results for further processing: */
         LET OptStringToKeyValues_(string) = SELECT *
@@ -142,7 +142,7 @@ export: |
                     split(sep_string=',', string=Value) AS Value
                     FROM OptStringToKeyValues__(string=string)
             })
-        
+
         /* Since options may be repeated, enumerate and group all values
            per key and operation: */
         LET OptStringToKeyValues(string) = SELECT Key,
@@ -150,7 +150,7 @@ export: |
             enumerate(items=Value) AS Value
             FROM OptStringToKeyValues_(string=string)
             GROUP BY Key, Op
-        
+
         /* When an option is specified with +/-, represent this by appending
            -Add/-Remove to the option name. These names match the syntax in
            the deb822 format (i.e. "arch-=i386" == "Arhitectures-Remove: i386").
@@ -159,7 +159,7 @@ export: |
            values: */
         LET OpName(op) = if(condition=op='+',then='-Add',else=
             if(condition=op='-',then='-Remove',else=''))
-        
+
         /* Convert a string of key–value pairs to a dict, and use consistent
            option names: */
         LET OptStringToDict(string, flatten) = to_dict(item={
@@ -181,7 +181,7 @@ export: |
                    ("" and []) are actually allowed to certain degree by the
                    apt source code, but this is considered obscure syntax and
                    is not expected to be found in the wild. The exception is
-                   "cdrom:[word word…]", which is capture correctly in order 
+                   "cdrom:[word word…]", which is capture correctly in order
                    to not end up with incorrectly captured words: */
                 regex='''(?m)^\s*(?P<Type>deb(-src)?)(?:\s+\[(?P<Options>[^\]#]+)(?:#[^\]]+)?\])?\s+"?(?P<URI>(?P<Transport>[^:]+):(?://)?(?P<URIBase>\[.+?\]|\S+?))"?\s+(?P<Suite>\S+)\s+(?P<Components>[^\n#]+)'''
             )
@@ -197,13 +197,13 @@ export: |
                         FROM scope()
                     })
                 })
-        
+
         /* Parse a one-line deb sources.list file with options in individual columns: */
         LET DebOneLine(OSPath) = SELECT OSPath, * FROM foreach(
             row=DebOneLine_Dict(OSPath=OSPath, flatten=false),
             column='Contents'
         )
-        
+
         /* Parse a one-line deb sources.list file with options in individual
            columns and flatten: */
         LET DebOneLine_Flattened(OSPath) = SELECT OSPath, * FROM flatten(
@@ -212,7 +212,7 @@ export: |
                 column='Contents'
                 )
             })
-        
+
         /* Extract the transport/protocol and base from a URI: */
         LET URIComponents(URI) = parse_string_with_regex(
             regex='''(?P<Transport>[^:]+):(?://)?(?P<URIBase>[^\s]+)''',
@@ -229,7 +229,7 @@ export: |
             condition=key=~'(?i)^(?:arch|lang|targets)',
             then=regex_replace(re='\s*,\s*', source=value, replace=' '),
             else=value)
-        
+
         /* Parse a deb822 sources file section into a series of key–value pairs.
            Notes about the format:
              - Keys must be at the beginning of the line (no whitespace allowed)
@@ -278,7 +278,7 @@ export: |
         LET Deb822_KeyValues__(section) = SELECT * FROM flatten(query={
             SELECT * FROM Deb822_KeyValues___(section=section)
         })
-        
+
         LET Deb822_KeyValues_(section) = SELECT Key,
             enumerate(items=Value) AS Value
             FROM Deb822_KeyValues__(section=section)
@@ -294,11 +294,11 @@ export: |
                 FROM Deb822_KeyValues_(section=section)
             }) AS Contents
             FROM scope()
-                
+
         /* Split paragraphs in a file (separated by one or several empty
            lines) into rows. ('regex' is just anything that is illegal in Deb822Sections
            to prevent splitting data into records.): */
-        LET Deb822Sections(OSPath) = SELECT * FROM split_records(
+        LET Deb822Sections(OSPath) = SELECT OSPath,* FROM split_records(
             filenames=OSPath,
             columns='Section',
             regex='^ #', record_regex='''\n{2,}'''
@@ -317,7 +317,7 @@ export: |
                 )
             })}
         )
-        
+
         /* Parse a deb822 sources file with options in individual columns.
            Note that, as opposed to DebOneLine and Deb822_Flattened, this
            function does not return the columns _URIBase and _Transport, since
@@ -329,7 +329,7 @@ export: |
                 column='Contents'
             )}
         )
-        
+
         /* Parse a deb822 sources file with options in individual columns, flattened: */
         LET Deb822_Flattened(OSPath) = SELECT * FROM flatten(query={
             SELECT OSPath, *, URIComponents(URI=URIs).URIBase AS _URIBase,
@@ -349,6 +349,14 @@ export: |
                 else=Deb822(OSPath=OSPath)
             )
         )
+
+        LET files = SELECT OSPath FROM glob(
+           globs=linuxAptSourcesGlobs.ListGlobs)
+
+        LET deb_sources = SELECT * FROM foreach(row=files,
+            query={SELECT * FROM parse_aptsources(OSPath=OSPath, flatten=true)}
+        )
+
 parameters:
   - name: linuxAptSourcesGlobs
     description: Globs to find apt source *.list and .sources files.
@@ -368,9 +376,6 @@ precondition:
 sources:
   - name: Sources
     query: |
-        LET files = SELECT OSPath FROM glob(
-           globs=linuxAptSourcesGlobs.ListGlobs)
-        
         /* Output sources in a readable format: */
         SELECT * FROM foreach(row=files,
             query={SELECT * FROM parse_aptsources(OSPath=OSPath, flatten=false)}
@@ -390,13 +395,9 @@ sources:
 
   - name: SourcesFlattened
     query: |
-        LET deb_sources = SELECT * FROM foreach(row=files,
-            query={SELECT * FROM parse_aptsources(OSPath=OSPath, flatten=true)}
-        )
-        
         /* Output sources flattened for ease of analysis: */
         SELECT * FROM deb_sources
-        
+
   - name: SourcesCacheFiles
     query: |
         /* We try to get at the Release file in /var/lib/apt/ by munging
@@ -457,7 +458,7 @@ sources:
             },
             then=add_stat_to_parsed_cache_file(file=cache_file + '_Release'),
             else={
-            SELECT Source, Null as Mtime, Null as Ctime,
+            SELECT Source, NULL AS OSPath, Null as Mtime, Null as Ctime,
                Null as Atime, Types,
                Null as Record, Architectures, URIs, Name from scope()
             })
@@ -465,5 +466,7 @@ sources:
 
          -- For each parsed apt .list file line produce some output.
          SELECT * from foreach(
-             row=parsed_apt_lines,
-             query=parse_cache_or_pass)
+             row={SELECT * FROM parsed_apt_lines},
+             query={
+                SELECT * FROM parse_cache_or_pass
+              })

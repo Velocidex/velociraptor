@@ -1,0 +1,524 @@
+SELECT OSPath.Basename AS OSPath, * FROM Artifact.Linux.Debian.AptSources( source="Sources", linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list")], aptCacheDirectory=srcDir + "/artifacts/testdata/files/debian/" )[
+ {
+  "OSPath": "sources.list",
+  "Types": "deb",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "Suites": "jammy",
+  "Components": "main restricted universe multiverse",
+  "_Source": "Linux.Debian.AptSources/Sources"
+ },
+ {
+  "OSPath": "sources.list",
+  "Types": "deb",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "Suites": "jammy-updates",
+  "Components": "main restricted universe multiverse",
+  "_Source": "Linux.Debian.AptSources/Sources"
+ },
+ {
+  "OSPath": "sources.list",
+  "Types": "deb",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "Suites": "jammy-security",
+  "Components": "main restricted universe multiverse",
+  "_Source": "Linux.Debian.AptSources/Sources"
+ },
+ {
+  "OSPath": "sources.list",
+  "Types": "deb",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "Suites": "jammy-backports",
+  "Components": "main restricted universe multiverse",
+  "_Source": "Linux.Debian.AptSources/Sources"
+ },
+ {
+  "OSPath": "sources.list",
+  "Types": "deb",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "Suites": "jammy",
+  "Components": "main restricted",
+  "_Source": "Linux.Debian.AptSources/Sources"
+ },
+ {
+  "OSPath": "sources.list",
+  "Types": "deb",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "Suites": "jammy-updates",
+  "Components": "main restricted",
+  "_Source": "Linux.Debian.AptSources/Sources"
+ },
+ {
+  "OSPath": "sources.list",
+  "Types": "deb",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "Suites": "jammy",
+  "Components": "universe",
+  "_Source": "Linux.Debian.AptSources/Sources"
+ },
+ {
+  "OSPath": "sources.list",
+  "Types": "deb",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "Suites": "jammy-updates",
+  "Components": "universe",
+  "_Source": "Linux.Debian.AptSources/Sources"
+ },
+ {
+  "OSPath": "sources.list",
+  "Types": "deb",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "Suites": "jammy",
+  "Components": "multiverse",
+  "_Source": "Linux.Debian.AptSources/Sources"
+ },
+ {
+  "OSPath": "sources.list",
+  "Types": "deb",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "Suites": "jammy-updates",
+  "Components": "multiverse",
+  "_Source": "Linux.Debian.AptSources/Sources"
+ },
+ {
+  "OSPath": "sources.list",
+  "Types": "deb",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "Suites": "jammy-backports",
+  "Components": "main restricted universe multiverse",
+  "_Source": "Linux.Debian.AptSources/Sources"
+ },
+ {
+  "OSPath": "sources.list",
+  "Types": "deb",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "Suites": "jammy-security",
+  "Components": "main restricted",
+  "_Source": "Linux.Debian.AptSources/Sources"
+ },
+ {
+  "OSPath": "sources.list",
+  "Types": "deb",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "Suites": "jammy-security",
+  "Components": "universe",
+  "_Source": "Linux.Debian.AptSources/Sources"
+ },
+ {
+  "OSPath": "sources.list",
+  "Types": "deb",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "Suites": "jammy-security",
+  "Components": "multiverse",
+  "_Source": "Linux.Debian.AptSources/Sources"
+ }
+]SELECT OSPath.Basename AS OSPath, * FROM Artifact.Linux.Debian.AptSources( source="SourcesFlattened", linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list")], aptCacheDirectory=srcDir + "/artifacts/testdata/files/debian/" )[
+ {
+  "OSPath": "sources.list",
+  "Components": "main",
+  "Suites": "jammy",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "restricted",
+  "Suites": "jammy",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "universe",
+  "Suites": "jammy",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "multiverse",
+  "Suites": "jammy",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "main",
+  "Suites": "jammy-updates",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "restricted",
+  "Suites": "jammy-updates",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "universe",
+  "Suites": "jammy-updates",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "multiverse",
+  "Suites": "jammy-updates",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "main",
+  "Suites": "jammy-security",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "restricted",
+  "Suites": "jammy-security",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "universe",
+  "Suites": "jammy-security",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "multiverse",
+  "Suites": "jammy-security",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "main",
+  "Suites": "jammy-backports",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "restricted",
+  "Suites": "jammy-backports",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "universe",
+  "Suites": "jammy-backports",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "multiverse",
+  "Suites": "jammy-backports",
+  "_URIBase": "archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "main",
+  "Suites": "jammy",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "restricted",
+  "Suites": "jammy",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "main",
+  "Suites": "jammy-updates",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "restricted",
+  "Suites": "jammy-updates",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "universe",
+  "Suites": "jammy",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "universe",
+  "Suites": "jammy-updates",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "multiverse",
+  "Suites": "jammy",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "multiverse",
+  "Suites": "jammy-updates",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "main",
+  "Suites": "jammy-backports",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "restricted",
+  "Suites": "jammy-backports",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "universe",
+  "Suites": "jammy-backports",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "multiverse",
+  "Suites": "jammy-backports",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "main",
+  "Suites": "jammy-security",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "restricted",
+  "Suites": "jammy-security",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "universe",
+  "Suites": "jammy-security",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ },
+ {
+  "OSPath": "sources.list",
+  "Components": "multiverse",
+  "Suites": "jammy-security",
+  "_URIBase": "au.archive.ubuntu.com/ubuntu",
+  "_Transport": "http",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "Types": "deb",
+  "_Source": "Linux.Debian.AptSources/SourcesFlattened"
+ }
+]SELECT "" AS Source, OSPath.Basename as OSPath, * FROM Artifact.Linux.Debian.AptSources( source="SourcesCacheFiles", linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list")], aptCacheDirectory=srcDir + "/artifacts/testdata/files/debian/" ) WHERE OSPath[
+ {
+  "Source": "",
+  "OSPath": "au.archive.ubuntu.com_ubuntu_dists_jammy_InRelease",
+  "Mtime": "2023-08-23T10:45:25Z",
+  "Ctime": "2023-08-23T10:45:25Z",
+  "Atime": "2023-08-23T10:55:22Z",
+  "Record": {
+   "Release": "jammy",
+   "Version": "22.04",
+   "Origin": "Ubuntu",
+   "Architectures": "amd64 arm64 armhf i386 ppc64el riscv64 s390x",
+   "Components": "main restricted universe multiverse"
+  },
+  "Types": "deb",
+  "Name": "au.archive.ubuntu.com_ubuntu_dists_jammy_InRelease",
+  "Architectures": "",
+  "URIs": "http://au.archive.ubuntu.com/ubuntu",
+  "_Source": "Linux.Debian.AptSources/SourcesCacheFiles"
+ }
+]SELECT * FROM Artifact.Linux.Debian.Packages( linuxDpkgStatus=srcDir + "/artifacts/testdata/files/debian/status")[
+ {
+  "Package": "adduser",
+  "InstalledSize": 608,
+  "Version": "3.118ubuntu5",
+  "Source": null,
+  "Architecture": "all",
+  "_Source": "Linux.Debian.Packages"
+ },
+ {
+  "Package": "adwaita-icon-theme",
+  "InstalledSize": 5234,
+  "Version": "41.0-1ubuntu1",
+  "Source": null,
+  "Architecture": "all",
+  "_Source": "Linux.Debian.Packages"
+ },
+ {
+  "Package": "adwaita-icon-theme-full",
+  "InstalledSize": 21330,
+  "Version": "41.0-1ubuntu1",
+  "Source": "adwaita-icon-theme",
+  "Architecture": "all",
+  "_Source": "Linux.Debian.Packages"
+ },
+ {
+  "Package": "alsa-topology-conf",
+  "InstalledSize": 420,
+  "Version": "1.2.5.1-2",
+  "Source": null,
+  "Architecture": "all",
+  "_Source": "Linux.Debian.Packages"
+ },
+ {
+  "Package": "alsa-ucm-conf",
+  "InstalledSize": 560,
+  "Version": "1.2.6.3-1ubuntu1.7",
+  "Source": null,
+  "Architecture": "all",
+  "_Source": "Linux.Debian.Packages"
+ }
+]
