@@ -99,7 +99,7 @@
     Create an array with all the args.
 
     This function accepts arbitrary arguments and creates an array by
-    flattening the arguments. 
+    flattening the arguments.
 
     ### Examples
 
@@ -1784,7 +1784,7 @@
     Create a named generator that receives rows from the query.
 
     This plugin allow multiple queries to efficiently filter rows from
-    the same query. 
+    the same query.
 
     ### Example
 
@@ -2980,7 +2980,7 @@
     description: An array of elements to apply into the format string.
   - name: level
     type: string
-    description: Level to log at (DEFAULT, WARN, ERROR, INFO).
+    description: Level to log at (DEFAULT, WARN, ERROR, INFO, DEBUG).
   category: basic
 - name: logscale_upload
   description: Upload rows to LogScale ingestion server.
