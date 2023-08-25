@@ -5584,7 +5584,20 @@
     required: true
   category: basic
 - name: strip
-  description: Strip a prefix from a string.
+  description: |
+    Strip prefix and/or suffix from a string
+
+    If neither prefix nor suffix are provided, leading and trailing
+    whitespace is stripped.
+
+    ### Examples
+
+    ```vql
+    strip(string=">>  lorem ipsum  <<", prefix=">>", suffix="<<") -> "  lorem ipsum  "
+    ```
+    ```vql
+    strip(string="   lorem ipsum   ") -> "lorem ipsum"
+    ```
   type: Function
   args:
   - name: string
