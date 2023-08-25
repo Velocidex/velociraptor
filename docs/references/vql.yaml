@@ -5613,7 +5613,11 @@
     description: The suffix to strip
   category: basic
 - name: substr
-  description: Create a substring from a string
+  description: |
+    Create a substring from a string
+
+    If start is not provided, the beginning of the string is used.
+    If end is not provided, the end of the string are used.
   type: Function
   args:
   - name: str
