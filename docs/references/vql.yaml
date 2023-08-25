@@ -5575,7 +5575,7 @@
   metadata:
     permissions: FILESYSTEM_READ
 - name: str
-  description: Normalize a String.
+  description: Returns the string representation of provided data
   type: Function
   args:
   - name: str
