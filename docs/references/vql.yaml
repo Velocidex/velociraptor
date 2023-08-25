@@ -3695,7 +3695,14 @@
     The profile is compiled and overlaid on top of the offset specified,
     then the object is emitted with its required fields.
 
-    You can read more about profiles here https://github.com/Velocidex/vtypes
+    Please refer to [Binary
+    Parsing](https://docs.velociraptor.app/docs/forensic/binary/) for
+    a background in parsing binary data for forensic purposes and for
+    instructions on how to construct profiles like the example above.
+
+    More detailed information about profiles and their implementation
+    can be found in the [vfilter](https://github.com/Velocidex/vtypes)
+    module documentation.
   type: Function
   args:
   - name: filename
