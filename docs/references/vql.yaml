@@ -1166,7 +1166,7 @@
     description: Separator to use (default /)
   - name: path_type
     type: string
-    description: Type of path (e.g. 'windows,linux)
+    description: Type of path (e.g. windows, linux)
   category: basic
 - name: dns
   description: |
