@@ -5640,7 +5640,11 @@
     required: true
   category: basic
 - name: switch
-  description: Executes each query. The first query to return any rows will be emitted.
+  description: |
+    Conditional execution of multiple queries in order
+    
+    Executes each query in order. If a query returns any rows, those
+    are emitted. Any further queries are ignored.
   type: Plugin
   category: plugin
 - name: tempdir
