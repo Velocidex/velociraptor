@@ -1,0 +1,32 @@
+name: Linux.Memory.Acquisition
+author: Zawadi Done (@zawadidone)
+description: |
+  Acquires a full memory image in LiME output format. We download
+  avml and use it to acquire a full memory image.
+
+  NOTE: This artifact usually transfers a lot of data. You should
+  increase the default timeout to allow it to complete.
+
+required_permissions:
+  - EXECVE
+
+tools:
+  - name: avml
+    github_project: microsoft/avml
+    github_asset_regex: avml
+    serve_locally: true
+
+precondition: SELECT OS From info() where OS = 'linux' AND Architecture = "amd64"
+
+sources:
+  - query: |
+      SELECT * FROM foreach(
+          row={
+            SELECT OSPath, tempfile(extension=".lime", remove_last=TRUE) AS Tempfile 
+            FROM Artifact.Generic.Utils.FetchBinary(ToolName="avml")
+          },
+          query={
+            SELECT Stdout, Stderr,
+                   if(condition=Complete, then=upload(file=Tempfile, name="output.lime")) As Upload
+            FROM execve(argv=[OSPath, Tempfile], sep="\r\n")
+        })
