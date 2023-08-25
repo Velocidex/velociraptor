@@ -3048,10 +3048,11 @@
   category: windows
 - name: lowcase
   type: Function
+  description: Returns the lowercase version of a string.
   args:
   - name: string
     type: string
-    description: A string to lower
+    description: The string to process
     required: true
   category: basic
 - name: lru
@@ -5918,11 +5919,12 @@
   metadata:
     permissions: FILESYSTEM_WRITE,FILESYSTEM_READ
 - name: upcase
+  description: Returns an uppercase version of the string.
   type: Function
   args:
   - name: string
     type: string
-    description: A string to lower
+    description: The string to process
     required: true
   category: basic
 - name: upload

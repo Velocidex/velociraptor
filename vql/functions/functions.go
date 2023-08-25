@@ -148,6 +148,7 @@ func (self _ToLower) Call(
 func (self _ToLower) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "lowcase",
+		Doc:     "Returns the lowercase version of a string.",
 		ArgType: type_map.AddType(scope, &_ToLowerArgs{}),
 	}
 }
@@ -171,6 +172,7 @@ func (self _ToUpper) Call(
 func (self _ToUpper) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "upcase",
+		Doc:     "Returns the uppercase version of a string.",
 		ArgType: type_map.AddType(scope, &_ToLowerArgs{}),
 	}
 }
