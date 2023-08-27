@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/user"
+	"path/filepath"
 	"regexp"
 	"runtime"
 
@@ -351,9 +352,14 @@ func (self *Loader) WithEmbedded(embedded_file string) *Loader {
 			}
 
 			// Ensure the "me" accessor uses this file for embedded zip.
-			EmbeddedFile = embedded_file
+			full_path, err := filepath.Abs(embedded_file)
+			if err != nil {
+				return nil, err
+			}
 
-			fd, err := os.Open(embedded_file)
+			EmbeddedFile = full_path
+
+			fd, err := os.Open(full_path)
 			if err != nil {
 				return nil, err
 			}

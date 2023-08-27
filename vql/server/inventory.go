@@ -146,6 +146,7 @@ func (self *InventoryAddFunction) Info(
 type InventoryGetFunctionArgs struct {
 	Tool    string `vfilter:"required,field=tool"`
 	Version string `vfilter:"optional,field=version"`
+	Probe   bool   `vfilter:"optional,field=probe,doc=If specified we only probe the tool definition without materializing"`
 }
 
 type InventoryGetFunction struct{}
@@ -179,7 +180,12 @@ func (self *InventoryGetFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	tool, err := inventory.GetToolInfo(ctx, config_obj, arg.Tool, arg.Version)
+	var tool *artifacts_proto.Tool
+	if !arg.Probe {
+		tool, err = inventory.GetToolInfo(ctx, config_obj, arg.Tool, arg.Version)
+	} else {
+		tool, err = inventory.ProbeToolInfo(ctx, config_obj, arg.Tool, arg.Version)
+	}
 	if err != nil {
 		scope.Log("inventory_get: %s", err.Error())
 		return vfilter.Null{}
