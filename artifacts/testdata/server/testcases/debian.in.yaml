@@ -1,0 +1,32 @@
+Queries:
+ - SELECT OSPath.Basename AS OSPath, *
+   FROM Artifact.Linux.Debian.AptSources(
+      source="Sources",
+      linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list")],
+      aptCacheDirectory=srcDir + "/artifacts/testdata/files/debian/"
+   )
+
+ - SELECT OSPath.Basename AS OSPath, *
+   FROM Artifact.Linux.Debian.AptSources(
+      source="SourcesFlattened",
+      linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list")],
+      aptCacheDirectory=srcDir + "/artifacts/testdata/files/debian/"
+   )
+
+ - SELECT OSPath.Basename as OSPath,
+      NULL AS Mtime,
+      NULL AS Ctime,
+      NULL AS Atime,
+      NULL AS Source, *
+
+   FROM Artifact.Linux.Debian.AptSources(
+      source="SourcesCacheFiles",
+      linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list")],
+      aptCacheDirectory=srcDir + "/artifacts/testdata/files/debian/"
+   )
+   WHERE Record
+
+
+ - SELECT *
+   FROM Artifact.Linux.Debian.Packages(
+      linuxDpkgStatus=srcDir + "/artifacts/testdata/files/debian/status")
