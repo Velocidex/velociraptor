@@ -40,15 +40,6 @@ Queries:
 
        -- Parse a registry path (Expand hive)
        pathspec(parse="HKU/Software", path_type='registry'),
-
-       -- Parse a URL based path - serialize back to URL
-       pathspec(parse="file:///usr/lib#*", path_type='generic'),
-
-       -- Access a field from a URL based path
-       pathspec(parse="file:///usr/lib#*", path_type='generic').DelegatePath,
-
-       -- Add subpaths to a complex pathspec
-       pathspec(parse="file:///usr/lib#foo", path_type='generic') + "bar",
        pathspec(parse="HKU/Software", path_type='registry') + "Microsoft",
 
        -- Access components from an OSPath

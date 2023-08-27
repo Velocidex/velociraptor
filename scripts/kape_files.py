@@ -24,8 +24,7 @@ import os
 import yaml
 from collections import OrderedDict
 
-BLACKLISTED = ["!ALL.tkape",
-               ]
+BLACKLISTED = ["!ALL.tkape"]
 
 # The following paths are not NTFS files, so they can be read normally.
 NOT_NTFS = ["$Recycle.Bin"]
@@ -49,8 +48,8 @@ class KapeContext:
     pathsep_converter = pathsep_converter_identity
 
 def read_targets(ctx, project_path):
-    for root, dirs, files in os.walk(
-            project_path + "/Targets", topdown=False):
+    for root, dirs, files in sorted(os.walk(
+            project_path + "/Targets", topdown=False)):
 
         for name in sorted(files):
             if not name.endswith(".tkape") or name in BLACKLISTED:
@@ -66,8 +65,11 @@ def read_targets(ctx, project_path):
 
             ctx.groups[name] = set()
 
-    for name, data in ctx.kape_data.items():
+    for name, data in sorted(ctx.kape_data.items()):
         for target in data["Targets"]:
+            if not target:
+                continue
+
             glob = target.get("Path", "")
 
             if target.get("Recursive") or ctx.kape_data.get("RecreateDirectories"):
@@ -101,7 +103,7 @@ def read_targets(ctx, project_path):
                 target.get("Comment", "")])
 
     for i in range(3):
-        for name, data in ctx.kape_data.items():
+        for name, data in sorted(ctx.kape_data.items()):
             for target in data["Targets"]:
                 glob = target.get("Path", "")
 
@@ -117,7 +119,7 @@ def read_targets(ctx, project_path):
                         #import pdb; pdb.set_trace()
                         continue
 
-                    for dependency in deps:
+                    for dependency in sorted(deps):
                         ctx.groups[name].add(dependency)
 
 def find_accessor(glob):
@@ -170,9 +172,9 @@ def format(ctx):
             sanitize(k),
             ctx.kape_data[k].get("Description"),
             ctx.kape_data[k].get("Author"),
-            ", ".join(sorted([ctx.rows[x][1] for x in v])))
+            ", ".join(sorted([ctx.rows[x][1] for x in sorted(v)])))
 
-        ids = ['%s' % x for x in v]
+        ids = ['%s' % x for x in sorted(v)]
         if len(ids) > 0:
             rules.append([sanitize(k), sorted(v)])
 

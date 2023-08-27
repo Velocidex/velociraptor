@@ -42,6 +42,7 @@ parameters:
 sources:
  - query: |
         LET hostname_lu <= SELECT Fqdn FROM info()
+        LET HKEY_USERS <= pathspec(parse="HKEY_USERS", path_type="registry")
 
         // First we need to extract populated RunMRU
         LET MRUList <= SELECT OSPath,
@@ -60,9 +61,7 @@ sources:
                 Username,
                 Mtime as reg_mtime,
                 OSPath.Basename as reg_name,
-                path_join(components=[
-                   "HKEY_USERS", UUID, OSPath.Dirname.Path
-                ], path_type="registry") as reg_key,
+                HKEY_USERS + UUID + OSPath.Dirname.Path as reg_key,
 
                 -- Value data is similar to 'cmd.exe\1' so we just need the bit before the \
                 regex_replace(source=Data.value, re="\\\\1$", replace="") as reg_value,

@@ -122,13 +122,14 @@ func doRepack() error {
 	if err != nil {
 		return err
 	}
+	logger := &StdoutLogWriter{}
 	builder := services.ScopeBuilder{
 		Config:     sm.Config,
 		ACLManager: acl_managers.NewRoleACLManager(sm.Config, "administrator"),
 		Uploader: &uploads.FileBasedUploader{
 			UploadDir: filepath.Dir(output_path),
 		},
-		Logger: log.New(&StdoutLogWriter{}, "", 0),
+		Logger: log.New(logger, "", 0),
 		Env: ordereddict.NewDict().
 			Set("ConfigData", config_data).
 			Set("Exe", executable).
@@ -137,10 +138,21 @@ func doRepack() error {
 	}
 
 	query := `
+       SELECT repack(exe=Exe, accessor="file",
+          config=ConfigData, upload_name=UploadName) AS RepackInfo
+       FROM scope()
+`
+
+	// Repacking binaries requires a working inventory service -
+	// therefore a server config.
+	if len(*repack_command_binaries) > 0 {
+		query = `
        SELECT repack(exe=Exe, accessor="file", binaries=Binaries,
           config=ConfigData, upload_name=UploadName) AS RepackInfo
        FROM scope()
 `
+	}
+
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return err
@@ -161,7 +173,7 @@ func doRepack() error {
 		}
 	}
 
-	return nil
+	return logger.Error
 }
 
 func init() {

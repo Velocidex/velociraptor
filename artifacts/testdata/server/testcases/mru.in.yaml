@@ -1,7 +1,7 @@
 Parameters:
   NTUserRunMRU: |
     [{
-      "OSPath": "ntfs:///C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5CMRUList",
+      "OSPath": "{\"Path\":\"/Software/Microsoft/Windows/CurrentVersion/Explorer/RunMRU/MRUList\", \"DelegateAccessor\":\"ntfs\", \"DelegatePath\":\"C:/Users/yolo/NTUSER.DAT\"}",
       "Data": {
         "type": "REG_SZ",
         "data_len": 6,
@@ -26,7 +26,7 @@ Parameters:
        "data_len": 6,
        "value": "ab"
       },
-      "OSPath": "/C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5CMRUList",
+      "OSPath": "{\"Path\":\"/Software/Microsoft/Windows/CurrentVersion/Explorer/RunMRU/MRUList\", \"DelegatePath\":\"C:/Users/yolo/NTUSER.DAT\"}",
       "GetLink": "",
       "IsDir": false,
       "IsLink": false,
@@ -44,7 +44,7 @@ Parameters:
        "data_len": 22,
        "value": "powershell"
       },
-      "OSPath": "/C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5Ca",
+      "OSPath": "{\"Path\":\"/Software/Microsoft/Windows/CurrentVersion/Explorer/RunMRU/a\", \"DelegatePath\":\"C:/Users/yolo/NTUSER.DAT\"}",
       "GetLink": "",
       "IsDir": false,
       "IsLink": false,
@@ -62,7 +62,7 @@ Parameters:
        "data_len": 44,
        "value": "\\\\criticalserver\\c$\\1"
       },
-      "OSPath": "/C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5Cb",
+      "OSPath": "{\"Path\":\"/Software/Microsoft/Windows/CurrentVersion/Explorer/RunMRU/b\", \"DelegatePath\":\"C:/Users/yolo/NTUSER.DAT\"}",
       "GetLink": "",
       "IsDir": false,
       "IsLink": false,
