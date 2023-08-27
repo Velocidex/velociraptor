@@ -101,12 +101,6 @@ var registry_testcases = []testcase{
 	{"HKLM\\\"http://www.google.com\"\\Foo",
 		[]string{"HKEY_LOCAL_MACHINE", "http://www.google.com", "Foo"},
 		"HKEY_LOCAL_MACHINE\\\"http://www.google.com\"\\Foo"},
-
-	// Support backwards compatible paths based on URLs.
-	{"/C:/Users/yolo/NTUSER.DAT#%5CSoftware%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5CMRUList",
-		[]string{"Software", "Microsoft", "Windows", "CurrentVersion", "Explorer",
-			"RunMRU", "MRUList"},
-		"/C:/Users/yolo/NTUSER.DAT#Software%5CMicrosoft%5CWindows%5CCurrentVersion%5CExplorer%5CRunMRU%5CMRUList"},
 }
 
 func TestRegistryManipulators(t *testing.T) {

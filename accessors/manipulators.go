@@ -2,7 +2,6 @@ package accessors
 
 import (
 	"fmt"
-	"net/url"
 	"regexp"
 	"strings"
 
@@ -514,23 +513,6 @@ func maybeParsePathSpec(path string, result *OSPath) error {
 		}
 		result.pathspec = pathspec
 		return nil
-	}
-
-	// This is a hack to support old URL based pathspecs.
-
-	// TODO: deprecate them completely in future.
-	if strings.Contains(path, "#") {
-		parsed_url, err := url.Parse(path)
-		if err == nil {
-			// Support urls for backwards compatibility.
-			result.pathspec = &PathSpec{
-				DelegateAccessor: parsed_url.Scheme,
-				DelegatePath:     parsed_url.Path,
-				Path:             parsed_url.Fragment,
-				url_based:        true,
-			}
-			return nil
-		}
 	}
 
 	result.pathspec = &PathSpec{

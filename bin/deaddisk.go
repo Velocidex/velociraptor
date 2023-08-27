@@ -56,10 +56,11 @@ func addWindowsDirectory(
 	directory_path string, config_obj *config_proto.Config) error {
 	addCommonPermissions(config_obj)
 
+	logger := &LogWriter{config_obj: config_obj}
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: acl_managers.NullACLManager{},
-		Logger:     log.New(&LogWriter{config_obj}, "", 0),
+		Logger:     log.New(logger, "", 0),
 	}
 
 	manager, err := services.GetRepositoryManager(config_obj)
@@ -158,16 +159,17 @@ func addWindowsDirectory(
 				},
 			})
 	}
-	return nil
+	return logger.Error
 }
 
 func addWindowsHardDisk(
 	image string, config_obj *config_proto.Config) error {
 
+	logger := &LogWriter{config_obj: config_obj}
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: acl_managers.NullACLManager{},
-		Logger:     log.New(&LogWriter{config_obj}, "", 0),
+		Logger:     log.New(logger, "", 0),
 		Env: ordereddict.NewDict().
 			Set(vql_subsystem.ACL_MANAGER_VAR,
 				acl_managers.NewRoleACLManager(config_obj, "administrator")).
@@ -204,7 +206,7 @@ func addWindowsHardDisk(
 
 	addCommonShadowAccessors(config_obj)
 
-	return nil
+	return logger.Error
 }
 
 func getPartitionOffsets(

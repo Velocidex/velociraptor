@@ -150,10 +150,11 @@ func doLS(path, accessor string) error {
 		path += "*"
 	}
 
+	logger := &LogWriter{config_obj: config_obj}
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: acl_managers.NullACLManager{},
-		Logger:     log.New(&LogWriter{config_obj}, "", 0),
+		Logger:     log.New(logger, "", 0),
 		Env: ordereddict.NewDict().
 			Set(vql_subsystem.ACL_MANAGER_VAR,
 				acl_managers.NewRoleACLManager(config_obj, "administrator")).
@@ -179,8 +180,13 @@ func doLS(path, accessor string) error {
 		query += " WHERE Sys.name_type != 'DOS' "
 	}
 
-	return eval_query(sm.Ctx, config_obj,
+	err = eval_query(sm.Ctx, config_obj,
 		*fs_command_format, query, scope, builder.Env)
+	if err != nil {
+		return err
+	}
+
+	return logger.Error
 }
 
 func doRM(path, accessor string) error {
@@ -216,10 +222,11 @@ func doRM(path, accessor string) error {
 		return fmt.Errorf("Only fs:// URLs support removal")
 	}
 
+	logger := &LogWriter{config_obj: config_obj}
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: acl_managers.NewRoleACLManager(config_obj, "administrator"),
-		Logger:     log.New(&LogWriter{config_obj}, "", 0),
+		Logger:     log.New(logger, "", 0),
 		Env: ordereddict.NewDict().
 			Set("accessor", accessor).
 			Set("path", path),
@@ -235,8 +242,13 @@ func doRM(path, accessor string) error {
 		"file_store_delete(path=FullPath) AS Deletion " +
 		"FROM glob(globs=path, accessor=accessor) "
 
-	return eval_query(sm.Ctx,
+	err = eval_query(sm.Ctx,
 		config_obj, *fs_command_format, query, scope, builder.Env)
+	if err != nil {
+		return err
+	}
+
+	return logger.Error
 }
 
 func doCp(path, accessor string, dump_dir string) error {
@@ -282,9 +294,10 @@ func doCp(path, accessor string, dump_dir string) error {
 		output_path = matches[2]
 	}
 
+	logger := &LogWriter{config_obj: config_obj}
 	builder := services.ScopeBuilder{
 		Config: config_obj,
-		Logger: log.New(&LogWriter{config_obj}, "", 0),
+		Logger: log.New(logger, "", 0),
 		Env: ordereddict.NewDict().
 			Set("accessor", accessor).
 			Set("path", path),
@@ -318,7 +331,7 @@ func doCp(path, accessor string, dump_dir string) error {
 	scope.Log("Copy from %v (%v) to %v (%v)",
 		path, accessor, output_path, output_accessor)
 
-	return eval_query(sm.Ctx, config_obj, *fs_command_format, `
+	err = eval_query(sm.Ctx, config_obj, *fs_command_format, `
 SELECT * from foreach(
   row={
     SELECT Name, Size, Mode.String AS Mode,
@@ -329,6 +342,11 @@ SELECT * from foreach(
      upload(file=FullPath, accessor=accessor, name=Name) AS Upload
      FROM scope()
   })`, scope, builder.Env)
+	if err != nil {
+		return err
+	}
+
+	return logger.Error
 }
 
 func doCat(path, accessor_name string) error {
