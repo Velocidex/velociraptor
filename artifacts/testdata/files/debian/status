@@ -1,0 +1,138 @@
+Package: adduser
+Status: install ok installed
+Priority: important
+Section: admin
+Installed-Size: 608
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Architecture: all
+Multi-Arch: foreign
+Version: 3.118ubuntu5
+Depends: passwd, debconf (>= 0.5) | debconf-2.0
+Suggests: liblocale-gettext-perl, perl, ecryptfs-utils (>= 67-1)
+Conffiles:
+ /etc/deluser.conf 773fb95e98a27947de4a95abb3d3f2a2
+Description: add and remove users and groups
+ This package includes the 'adduser' and 'deluser' commands for creating
+ and removing users.
+ .
+  - 'adduser' creates new users and groups and adds existing users to
+    existing groups;
+  - 'deluser' removes users and groups and removes users from a given
+    group.
+ .
+ Adding users with 'adduser' is much easier than adding them manually.
+ Adduser will choose appropriate UID and GID values, create a home
+ directory, copy skeletal user configuration, and automate setting
+ initial values for the user's password, real name and so on.
+ .
+ Deluser can back up and remove users' home directories
+ and mail spool or all the files they own on the system.
+ .
+ A custom script can be executed after each of the commands.
+Original-Maintainer: Debian Adduser Developers <adduser@packages.debian.org>
+
+Package: adwaita-icon-theme
+Status: install ok installed
+Priority: optional
+Section: gnome
+Installed-Size: 5234
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Architecture: all
+Multi-Arch: foreign
+Version: 41.0-1ubuntu1
+Replaces: adwaita-icon-theme-full (<< 41.0-1ubuntu1), gnome-themes-standard-data (<< 3.18.0-2~)
+Depends: hicolor-icon-theme, gtk-update-icon-cache, ubuntu-mono | adwaita-icon-theme-full
+Recommends: librsvg2-common
+Breaks: adwaita-icon-theme-full (<< 41.0-1ubuntu1), gnome-themes-standard-data (<< 3.18.0-2~)
+Description: default icon theme of GNOME (small subset)
+ This package contains the default icon theme used by the GNOME desktop.
+ The icons are used in many of the official gnome applications like eog,
+ evince, system monitor, and many more.
+ .
+ This package only contains a small subset of the original GNOME icons which
+ are not provided by the Humanity icon theme, to avoid installing many
+ duplicated icons. Please install adwaita-icon-theme-full if you want the full
+ set.
+Original-Maintainer: Debian GNOME Maintainers <pkg-gnome-maintainers@lists.alioth.debian.org>
+
+Package: adwaita-icon-theme-full
+Status: install ok installed
+Priority: optional
+Section: gnome
+Installed-Size: 21330
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Architecture: all
+Multi-Arch: foreign
+Source: adwaita-icon-theme
+Version: 41.0-1ubuntu1
+Replaces: adwaita-icon-theme (<< 41.0-1ubuntu1), gnome-themes-standard-data (<< 3.18.0-2~)
+Provides: gnome-icon-theme-symbolic
+Depends: adwaita-icon-theme (= 41.0-1ubuntu1), gtk-update-icon-cache
+Recommends: librsvg2-common
+Breaks: adwaita-icon-theme (<< 41.0-1ubuntu1), gnome-themes-standard-data (<< 3.18.0-2~)
+Description: default icon theme of GNOME
+ This package contains the default icon theme used by the GNOME desktop.
+ The icons are used in many of the official GNOME applications like eog,
+ Evince, system monitor, and many more.
+Original-Maintainer: Debian GNOME Maintainers <pkg-gnome-maintainers@lists.alioth.debian.org>
+
+Package: alsa-topology-conf
+Status: install ok installed
+Priority: optional
+Section: libs
+Installed-Size: 420
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Architecture: all
+Multi-Arch: foreign
+Version: 1.2.5.1-2
+Replaces: libasound2-data (<< 1.2.1)
+Breaks: libasound2-data (<< 1.2.1)
+Enhances: libasound2-data
+Description: ALSA topology configuration files
+ This package contains ALSA topology configuration files that can be used
+ by libasound2 for specific audio hardware.
+ .
+ ALSA is the Advanced Linux Sound Architecture.
+Original-Maintainer: Debian ALSA Maintainers <pkg-alsa-devel@lists.alioth.debian.org>
+Homepage: https://www.alsa-project.org/
+
+Package: alsa-ucm-conf
+Status: install ok installed
+Priority: optional
+Section: libs
+Installed-Size: 560
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Architecture: all
+Multi-Arch: foreign
+Version: 1.2.6.3-1ubuntu1.7
+Depends: libasound2 (>= 1.2.4)
+Description: ALSA Use Case Manager configuration files
+ This package contains ALSA Use Case Manager configuration of audio
+ input/output names and routing for specific audio hardware. They can be
+ used with the alsaucm tool.
+ .
+ ALSA is the Advanced Linux Sound Architecture.
+Homepage: https://www.alsa-project.org/
+Original-Maintainer: Debian ALSA Maintainers <pkg-alsa-devel@lists.alioth.debian.org>
+
+Package: amd64-microcode
+Status: install ok installed
+Priority: standard
+Section: non-free/admin
+Installed-Size: 82
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Architecture: amd64
+Version: 3.20191218.1ubuntu2.1
+Recommends: initramfs-tools (>= 0.113~) | dracut (>= 044) | tiny-initramfs
+Breaks: intel-microcode (<< 2)
+Conffiles:
+ /etc/default/amd64-microcode eaa8a5fa3fb59af4f0f55e851a6e9b20
+ /etc/modprobe.d/amd64-microcode-blacklist.conf 71327241f6583b34944e638a955aba91
+Description: Processor microcode firmware for AMD CPUs
+ This package contains microcode patches for all AMD AMD64
+ processors.  AMD releases microcode patches to correct
+ processor behavior as documented in the respective processor
+ revision guides.
+ .
+ For Intel processors, please refer to the intel-microcode package.
+Original-Maintainer: Henrique de Moraes Holschuh <hmh@debian.org>

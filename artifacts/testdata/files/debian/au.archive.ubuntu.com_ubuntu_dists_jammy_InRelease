@@ -1,0 +1,32 @@
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+Origin: Ubuntu
+Label: Ubuntu
+Suite: jammy
+Version: 22.04
+Codename: jammy
+Date: Thu, 21 Apr 2022 17:16:08 UTC
+Architectures: amd64 arm64 armhf i386 ppc64el riscv64 s390x
+Components: main restricted universe multiverse
+Description: Ubuntu Jammy 22.04
+MD5Sum:
+ 8f73d18065a4f05ee7362c50553ea4b26ca2b4b3786472676b6b1ee58b4cff72         17832892 universe/source/Sources.xz
+Acquire-By-Hash: yes
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1
+
+iQIcBAEBCgAGBQJiYZF3AAoJEIcZINGZG8k8oMMQAJGLXDzjk/IxqaxUwhgx8F/S
+ultWd3vuBeWK1guBZAl4dbmunNZBbKNYcOGlOmpVF9jBZtVQ0jVWhcuVbTPfkUO/
+sz1fVWn12lzBnETsV5v6Nscz03NgNlojkD8jlEWV7xxPWh9r+CNZ8y5LzwTwlufZ
+e4dm8L5d2nhHDsajX8f7ZRcch4TH7jPN2AwHWtn7yASTzUbrQ/S9shQjP1dQI38Z
+VrKbBzvma9neoTzRalDf+CGGmtykfhdbT0nMGFdHXtUGNZU0QUoSw+0KxWuXwo8O
+nJ5H8bN5w1+Dur8LUn2yPXZcjF7GkeGnIk1FSyleV+UOzGN1f/0T7OpId36spQ9Y
+2w24Fij4xvRHQC+uD6VYSz+YXjB5qD6u00PrzqBHP8wDgJwJPBHbncuwBbpsiJBv
+HQ4mYRLPWz9UCmWXXVOao/nYM+Y++M1FYwhUuptFx9HHJFuR/UILzP4/WFJTMfzs
+UGVcOfyoXqi/cTZJ+Rr/S6jhecpNbUAoA2VG4ZjX1ZSaS3Hupd4t7PdCHoWB7ODT
+AscDVBEidU5kimmZzo6nWNDU8LfhSUrS0inbX0YMcBweaLWpMMtB+Ffu6mvy6Ejn
+P+w15a4DgOg53uxHaq/pzp7IIEfhJGfwyhznN4f86pOX6BHWikGcGHBL62WywHSK
+pxgP/fNHYqIhYWCgUWeM
+=DmDL
+-----END PGP SIGNATURE-----
