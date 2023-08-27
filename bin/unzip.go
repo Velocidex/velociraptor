@@ -69,10 +69,11 @@ func doUnzip() error {
 		return err
 	}
 
+	logger := &LogWriter{config_obj: sm.Config}
 	builder := services.ScopeBuilder{
 		Config:     sm.Config,
 		ACLManager: acl_managers.NewRoleACLManager(sm.Config, "administrator"),
-		Logger:     log.New(&LogWriter{sm.Config}, "", 0),
+		Logger:     log.New(logger, "", 0),
 		Env: ordereddict.NewDict().
 			Set("ZipPath", filename).
 			Set("DumpDir", *unzip_path).
@@ -80,12 +81,17 @@ func doUnzip() error {
 	}
 
 	if *unzip_cmd_list {
-		return runUnzipList(builder)
+		err = runUnzipList(builder)
 	} else if *unzip_cmd_print {
-		return runUnzipPrint(builder)
+		err = runUnzipPrint(builder)
 	} else {
-		return runUnzipFiles(builder)
+		err = runUnzipFiles(builder)
 	}
+	if err != nil {
+		return err
+	}
+
+	return logger.Error
 }
 
 func runUnzipList(builder services.ScopeBuilder) error {

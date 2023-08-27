@@ -47,10 +47,11 @@ func doHuntReconstruct() error {
 		return err
 	}
 
+	logger := &StdoutLogWriter{}
 	builder := services.ScopeBuilder{
 		Config:     sm.Config,
 		ACLManager: acl_managers.NewRoleACLManager(sm.Config, "administrator"),
-		Logger:     log.New(&StdoutLogWriter{}, "", 0),
+		Logger:     log.New(logger, "", 0),
 		Env:        ordereddict.NewDict(),
 	}
 
@@ -99,7 +100,7 @@ func doHuntReconstruct() error {
 		}
 	}
 
-	return nil
+	return logger.Error
 }
 
 func init() {

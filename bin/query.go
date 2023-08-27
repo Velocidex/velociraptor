@@ -298,10 +298,11 @@ func doQuery() error {
 		return fmt.Errorf("Artifact GetGlobalRepository: %w ", err)
 	}
 
+	logger := &LogWriter{config_obj: config_obj}
 	builder := services.ScopeBuilder{
 		Config:     config_obj,
 		ACLManager: acl_managers.NullACLManager{},
-		Logger:     log.New(&LogWriter{config_obj}, "", 0),
+		Logger:     log.New(logger, "", 0),
 		Env:        ordereddict.NewDict(),
 	}
 
@@ -417,7 +418,7 @@ func doQuery() error {
 			}
 		}
 	}
-	return nil
+	return logger.Error
 }
 
 func init() {

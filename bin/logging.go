@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	errors "github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
@@ -12,19 +13,30 @@ import (
 
 type LogWriter struct {
 	config_obj *config_proto.Config
+	Error      error
 }
 
 func (self *LogWriter) Write(b []byte) (int, error) {
 	level, msg := logging.SplitIntoLevelAndLog(b)
+	if level == "ERROR" {
+		self.Error = errors.New(msg)
+	}
 	logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
 	logger.LogWithLevel(level, "%s", msg)
 
 	return len(b), nil
 }
 
-type StdoutLogWriter struct{}
+type StdoutLogWriter struct {
+	Error error
+}
 
 func (self *StdoutLogWriter) Write(b []byte) (int, error) {
+	level, msg := logging.SplitIntoLevelAndLog(b)
+	if level == "ERROR" {
+		self.Error = errors.New(msg)
+	}
+
 	fmt.Printf("%v", string(b))
 	return len(b), nil
 }
