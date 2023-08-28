@@ -210,6 +210,14 @@ func (self *InventoryService) addAllVersions(
 		result.Versions = append(result.Versions, v)
 	}
 
+	// Merge the parent's versions as well.
+	if self.parent != nil {
+		parent_tool, err := self.parent.ProbeToolInfo(ctx, config_obj, tool.Name, "")
+		if err == nil {
+			result.Versions = append(result.Versions, parent_tool.Versions...)
+		}
+	}
+
 	return result
 }
 
@@ -416,7 +424,7 @@ func (self *InventoryService) UpdateVersion(tool_request *artifacts_proto.Tool) 
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	// Update the list of version for this tool, replacing existing
+	// Update the list of versions for this tool, replacing existing
 	// definitions.
 	versions, _ := self.versions[tool_request.Name]
 	version_known := false
