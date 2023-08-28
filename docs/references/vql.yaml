@@ -2694,6 +2694,9 @@
     required: true
   - name: version
     type: string
+  - name: probe
+    type: bool
+    description: If specified we only probe the tool definition without materializing
   category: server
   metadata:
     permissions: SERVER_ADMIN
