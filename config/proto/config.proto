@@ -1045,7 +1045,7 @@ message Defaults {
     // - MACHINE_STATE
     repeated string lockdown_denied_permissions = 32;
 
-    // Default expiry of certificant issuances (default 365 days)
+    // Default expiry of certificate issuances (default 365 days)
     int64 certificate_validity_days = 33;
 
     // Normally the inventory service attempts to download tools in
