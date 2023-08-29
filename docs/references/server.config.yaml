@@ -14,7 +14,7 @@ version:
   name: velociraptor
 
   # The release version on GitHub.
-  version: 0.6.4-rc4
+  version: 0.7.0
 
   # The commit at which this binary was built. This is more accurate
   # than the version for reporting issues etc.
@@ -23,7 +23,9 @@ version:
   # The time the binary was built.
   build_time: "2022-04-13T02:24:43+10:00"
 
-  # The URL to the Github Action CI job that built this binary.
+  # The URL to the Github Action CI job that built this binary. Not
+  # all release binaries are built on the Github CI due to signing
+  # requirements.
   ci_build_url: https://github.com/Velocidex/velociraptor/actions/runs/3391188003
 
   # The version of the Go compiler that built this binary
@@ -84,6 +86,12 @@ Client:
     ##   certificate_thumbprints. All other certificates will be rejected. This mode is
     ##   also known as certificate pinning.
     certificate_verification_mode: "PKI"
+
+    ## By default velociraptor uses TLS 1.3 to secure it's
+    ## communications. Some networks use a MITM TLS proxy which does
+    ## not support more secure protocols so this setting can be
+    ## applied to make the server allow lower TLS versions.
+    allow_weak_tls_server: false
 
   ## A list of one or more URLs the clients will try to connect
   ## to. When all connections fail the client will back off for a
@@ -168,7 +176,23 @@ Client:
   # URGENT will skip this control and run anyway.
   concurrency: 2
 
+  # If set the client will hard exit when it uses this much memory (in
+  # bytes). This is a safety feature to prevent runaway process -
+  # ensure this is not set too low.
+  max_memory_hard_limit: 0
 
+  # Clients will send a Server.Internal.ClientInfo message to the
+  # server every this many seconds. This helps to keep the server info
+  # up to date about each client. This should not be sent too
+  # frequently. The default is 1 day (86400 seconds).
+  client_info_update_time: 86400
+
+  # When a collection starts on the client, the client writes a
+  # checkpoint file so it can detect when it crashed previously and
+  # restarted.  If this option is set we disable client checkpoints
+  # and so we can not report to the server when the client crashes
+  # while collecting an artifact.
+  disable_checkpoints: false
 
   ## These settings are used by the `velociraptor service install`
   ## command. We typically do not use this as we prefer to distribute
@@ -279,6 +303,23 @@ GUI:
   # The public URL of this server. Change this if you are proxying the
   # GUI using a different URL.
   public_url: http://velo.example.com
+
+  # A list of CIDR addresses from permitted networks. If this is not
+  # set, permit all connections to the GUI from anywhere. This is
+  # useful when you want to limit access to the GUI by IP address but
+  # still allow access to clients from any IP, while running both the
+  # frontend and GUI on the same port (normally port 443)
+  allowed_cidr:
+    - 192.168.0.0/16
+
+  # Header defined by the proxy containing the remote address. This
+  # header will be used in the allowed_cidr matching if specified.
+  # NOTE: Only use this if you do have a reverse proxy in front of
+  # the server. Otherwise an attacker can simply send this header
+  # to pretend to come from any IP address. If this setting is
+  # specified we take the src address from the header, otherwise
+  # from the remote IP address. Default is not set.
+  forwarded_proxy_header: "X-Forwarded-For"
 
   ## Allows additional links to be defined for site customization.
   links:
@@ -418,6 +459,14 @@ GUI:
     # URL to redirect to on Unauthorized API call. If blank we just
     # cycle to the logon screen again.
     auth_redirect_template: http://www.google.com
+
+    # Certs authenticator: If a user presents a certificate but does
+    # not exist in the system, the user will automatically receive a
+    # default role. If this is not set the user will be rejected and
+    # you will have to manually add the user to a role before they are
+    # allowed.
+    default_roles_for_unknown_user:
+      - administrator
 
     # How long to keep the session alive between auth flows - default 24 hours
     default_session_expiry_min: 8000
@@ -677,6 +726,15 @@ Datastore:
   # active or due to a bug!
   max_dir_size: 50000
 
+  # Set to the min required disk space. When we fall below this
+  # available disk space, we refuse to write files. This avoids the
+  # possibility of writing corrupted files. Default is 50mb. Set to -1
+  # to disable disk space monitoring.
+  min_allowed_file_space_mb: 50
+
+  # How often to check the disk space (default 10 sec)
+  disk_check_frequency_sec: 10
+
   # The following apply to the MemcacheFileDataStore
 
   # How long to expire the memcache (default 10 min)
@@ -734,7 +792,8 @@ Logging:
 
   # The logging components to forward. If not specified we only send
   # Audit events.
-  remote_syslog_components: "VelociraptorAudit"
+  remote_syslog_components:
+    - VelociraptorAudit
 
   ## Specific configuration for each log level. If a log level is not
   ## configured here it is logged as normal.
@@ -972,6 +1031,21 @@ defaults:
   ## change this.
   notebook_cell_timeout_min: 10
 
+  # When running on a shared server notebook calculations can
+  # increases memory use and affect other users. The following
+  # settings control notebook calculations to ensure they do not use
+  # too much memory. You should set the following in accordance with
+  # the VM settings of the server with a small margin of safety.
+
+  # When calculating a new cell we do not start calculation until the
+  # process memory is smaller than the low memory mark.
+  notebook_memory_low_water_mark: 0
+
+  # When the process memory exceeds the high water marrk, we actively
+  # cancel in flight notebook cell calculations to bring memory use
+  # down.
+  notebook_memory_high_water_mark: 0
+
   ## When exporting to CSV from the GUI the usual separator is comma
   ## (`,`). This setting allows to change the default to any single
   ## character.
@@ -1026,3 +1100,32 @@ defaults:
   # Ignore messages from unauthenticated clients for this long - gives
   # them a chance to enrol first (default 10 sec).
   unauthenticated_lru_timeout_sec: 10
+
+  # Normally the inventory service attempts to download tools in
+  # its own but if this is set, we prevent any external access.
+  disable_inventory_service_external_access: false
+
+  # Default expiry of certificate issuances (default 365 days). This
+  # will apply for e.g. rotating certificates or issuing an api cert.
+  certificate_validity_days: 365
+
+
+
+  # When the server is in lockdown mode the following permissions
+  # will be denied (Even for administrators).
+  lockdown_denied_permissions:
+   - ARTIFACT_WRITER
+   - SERVER_ARTIFACT_WRITER
+   - EXECVE
+   - SERVER_ADMIN
+   - FILESYSTEM_WRITE
+   - FILESYSTEM_READ
+   - MACHINE_STATE
+
+# The Velociraptor server may be placed into "lockdown" mode. While in
+# lockdown mode certain permissions are denied - even for
+# administrators. This additional protection mode helps to mitigate
+# the case when a Velociraptor administrator's account is
+# compromised. The server can be taken out of lockdown mode by setting
+# lockdown to false and restarting the server.
+lockdown: false
