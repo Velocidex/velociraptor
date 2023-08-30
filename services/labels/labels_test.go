@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/labels"
@@ -42,6 +43,55 @@ func (self *LabelsTestSuite) SetupTest() {
 	// Set an incremental clock on the labeler.
 	labeler := services.GetLabeler(self.ConfigObj)
 	labeler.(*labels.Labeler).Clock = self.Clock
+}
+
+// Check how labels interact with the indexing service
+func (self *LabelsTestSuite) TestLabelsAndIndexing() {
+
+	indexer, err := services.GetIndexer(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	// Search for clients with label
+	resp, err := indexer.SearchClients(self.Ctx, self.ConfigObj,
+		&api_proto.SearchClientsRequest{
+			Offset: 0, Limit: 10,
+			Query: "label:Label1",
+		}, "admin")
+	assert.NoError(self.T(), err)
+
+	// No clients have this label yet
+	assert.Equal(self.T(), 0, len(resp.Items))
+
+	labeler := services.GetLabeler(self.ConfigObj)
+	err = labeler.SetClientLabel(
+		self.Ctx, self.ConfigObj, self.client_id, "Label1")
+	assert.NoError(self.T(), err)
+
+	resp, err = indexer.SearchClients(self.Ctx, self.ConfigObj,
+		&api_proto.SearchClientsRequest{
+			Offset: 0, Limit: 10,
+			Query: "label:Label1",
+		}, "admin")
+	assert.NoError(self.T(), err)
+
+	// Client should have label now.
+	assert.Equal(self.T(), 1, len(resp.Items))
+	assert.Equal(self.T(), self.client_id, resp.Items[0].ClientId)
+
+	// Now remove the label.
+	err = labeler.RemoveClientLabel(
+		self.Ctx, self.ConfigObj, self.client_id, "Label1")
+	assert.NoError(self.T(), err)
+
+	resp, err = indexer.SearchClients(self.Ctx, self.ConfigObj,
+		&api_proto.SearchClientsRequest{
+			Offset: 0, Limit: 10,
+			Query: "label:Label1",
+		}, "admin")
+	assert.NoError(self.T(), err)
+
+	// No client should not match the label
+	assert.Equal(self.T(), 0, len(resp.Items))
 }
 
 func (self *LabelsTestSuite) TestAddLabel() {

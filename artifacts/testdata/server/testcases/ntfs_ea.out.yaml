@@ -73,7 +73,8 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
    "Hardlinks": [
     "another_file.txt"
    ],
-   "Device": "\\\\.\\C:"
+   "Device": "\\\\.\\C:",
+   "OSPath": "\\\\.\\C:\\another_file.txt"
   },
   "EA": {
    "Name": "SECOND",
@@ -165,7 +166,8 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
    "Hardlinks": [
     "another_file.txt"
    ],
-   "Device": "\\\\.\\C:"
+   "Device": "\\\\.\\C:",
+   "OSPath": "\\\\.\\C:\\another_file.txt"
   },
   "EA": {
    "Name": "THIRD",
@@ -258,7 +260,8 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
    "Hardlinks": [
     "just_a_file.txt"
    ],
-   "Device": "\\\\.\\C:"
+   "Device": "\\\\.\\C:",
+   "OSPath": "\\\\.\\C:\\just_a_file.txt"
   },
   "EA": {
    "Name": "NOTHINGTOSEEHERE",
