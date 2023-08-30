@@ -47,6 +47,7 @@ type NTFSModel struct {
 	*ntfs.NTFSFileInformation
 
 	Device *accessors.OSPath
+	OSPath *accessors.OSPath
 }
 
 type NTFSFunction struct{}
@@ -116,7 +117,16 @@ func (self NTFSFunction) Call(
 		return &vfilter.Null{}
 	}
 
-	return &NTFSModel{NTFSFileInformation: result, Device: arg.Filename}
+	ospath := arg.Filename
+	if len(result.Hardlinks) > 0 {
+		ospath = ospath.Append(strings.Split(result.Hardlinks[0], "\\")...)
+	}
+
+	return &NTFSModel{
+		NTFSFileInformation: result,
+		Device:              arg.Filename,
+		OSPath:              ospath,
+	}
 }
 
 type MFTScanPluginArgs struct {
