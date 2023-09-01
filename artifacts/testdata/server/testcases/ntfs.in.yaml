@@ -1,8 +1,13 @@
 Queries:
   # parse_ntfs can use an image file.
-  - SELECT parse_ntfs(
+  - LET NTFSInfoFromImage <= parse_ntfs(
       filename=srcDir+'/artifacts/testdata/files/test.ntfs.dd',
-      inode="46-128-0").OSPath AS OSPath
+      inode="46-128-0")
+
+  # Prove we can read that data from the OSPath we received
+  - SELECT NTFSInfoFromImage.OSPath.Path AS OSPath_Path,
+      read_file(accessor="raw_ntfs",
+                filename= NTFSInfoFromImage.OSPath) AS Data
     FROM scope()
 
   # Parsing the MFT from a raw image requires extracting it using the
