@@ -47,6 +47,7 @@ type NTFSModel struct {
 	*ntfs.NTFSFileInformation
 
 	Device *accessors.OSPath
+	OSPath *accessors.OSPath
 }
 
 type NTFSFunction struct{}
@@ -116,7 +117,34 @@ func (self NTFSFunction) Call(
 		return &vfilter.Null{}
 	}
 
-	return &NTFSModel{NTFSFileInformation: result, Device: arg.Filename}
+	var ospath *accessors.OSPath
+
+	// A Device was given the OSPath should be relative to the device
+	// so it can be opened by the 'ntfs' accessor
+	if arg.Device != "" && arg.Filename != nil {
+		if len(result.Hardlinks) > 0 {
+			ospath = arg.Filename.Append(strings.Split(result.Hardlinks[0], "\\")...)
+		}
+	} else {
+
+		// A filename was given - we just return the OSPath relative
+		// to the root of the filesystem. This can be used to open the
+		// file with the 'raw_ntfs' accessor.
+		if len(result.Hardlinks) > 0 {
+			ospath, _ = accessors.NewWindowsNTFSPath("")
+			ospath.SetPathSpec(&accessors.PathSpec{
+				DelegateAccessor: arg.Accessor,
+				DelegatePath:     arg.Filename.Path(),
+				Path:             result.Hardlinks[0],
+			})
+		}
+	}
+
+	return &NTFSModel{
+		NTFSFileInformation: result,
+		Device:              arg.Filename,
+		OSPath:              ospath,
+	}
 }
 
 type MFTScanPluginArgs struct {
