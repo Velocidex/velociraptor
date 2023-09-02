@@ -303,10 +303,6 @@ export: |
             columns='Section',
             regex='^ #', record_regex='''\n{2,}'''
         )
-        /* Sections may be empty due to several newlines or comments on their own
-           separated by newlines. Ensure that at least one field is present
-           (URIs are mandatory): */
-        WHERE URIs
 
         LET Deb822_Flattened_(OSPath) = SELECT * FROM foreach(
             row=Deb822Sections(OSPath=OSPath),
@@ -317,6 +313,9 @@ export: |
                 )
             })}
         )
+        /* DEB822_Sections() may produce empty rows. Exclude these by filtering
+           for a required column, like URIs: */
+        WHERE URIs
 
         /* Parse a deb822 sources file with options in individual columns.
            Note that, as opposed to DebOneLine and Deb822_Flattened, this
@@ -329,6 +328,7 @@ export: |
                 column='Contents'
             )}
         )
+        WHERE URIs
 
         /* Parse a deb822 sources file with options in individual columns, flattened: */
         LET Deb822_Flattened(OSPath) = SELECT * FROM flatten(query={
