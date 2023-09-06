@@ -2,14 +2,14 @@ Queries:
  - SELECT OSPath.Basename AS OSPath, *
    FROM Artifact.Linux.Debian.AptSources(
       source="Sources",
-      linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list")],
+      linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list/*")],
       aptCacheDirectory=srcDir + "/artifacts/testdata/files/debian/"
    )
 
  - SELECT OSPath.Basename AS OSPath, *
    FROM Artifact.Linux.Debian.AptSources(
       source="SourcesFlattened",
-      linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list")],
+      linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list/*")],
       aptCacheDirectory=srcDir + "/artifacts/testdata/files/debian/"
    )
 
@@ -21,7 +21,7 @@ Queries:
 
    FROM Artifact.Linux.Debian.AptSources(
       source="SourcesCacheFiles",
-      linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list")],
+      linuxAptSourcesGlobs=[dict(ListGlobs=srcDir + "/artifacts/testdata/files/debian/sources.list/sources.list")],
       aptCacheDirectory=srcDir + "/artifacts/testdata/files/debian/"
    )
    WHERE Record
