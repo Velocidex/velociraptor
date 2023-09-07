@@ -117,7 +117,8 @@ precondition:
   SELECT OS From info() where OS = 'windows'
 
 sources:
-  - query: |
+  - name: Parsed
+    query: |
         SELECT Key.OSPath.Path AS Key,
            Key.OSPath.DelegatePath AS Hive,
            get(field="F") AS _F,
