@@ -32,7 +32,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/time/rate"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -95,6 +94,9 @@ func (self *EnrollmentService) Start(
 		self.ProcessEnrollment)
 }
 
+// Called when Server.Internal.Enrollment queue receives client
+// id. This is sent when a client key is not found and we sent it a
+// 406 HTTP response ( server/enroll.go:enroll() ).
 func (self *EnrollmentService) ProcessEnrollment(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -170,13 +172,21 @@ func (self *EnrollmentService) ProcessEnrollment(
 	// flight. We are here because the client_info_manager does not
 	// have the record in cache, so next Get() will just read it from
 	// disk on all minions.
-	err = client_info_manager.Set(ctx, &services.ClientInfo{
-		actions_proto.ClientInfo{
-			ClientId:                    client_id,
-			FirstSeenAt:                 uint64(time.Now().Unix()),
-			LastInterrogateFlowId:       flow_id,
-			LastInterrogateArtifactName: interrogation_artifact,
-		}})
+	err = client_info_manager.Modify(ctx, client_id,
+		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+			if client_info == nil {
+				client_info = &services.ClientInfo{}
+			}
+
+			client_info.ClientId = client_id
+			if client_info.FirstSeenAt == 0 {
+				client_info.FirstSeenAt = uint64(utils.GetTime().Now().Unix())
+			}
+			client_info.LastInterrogateFlowId = flow_id
+			client_info.LastInterrogateArtifactName = interrogation_artifact
+
+			return client_info, nil
+		})
 	if err != nil {
 		return err
 	}
@@ -200,121 +210,91 @@ func (self *EnrollmentService) ProcessEnrollment(
 	return nil
 }
 
-func (self *EnrollmentService) ProcessInterrogateResults(
-	ctx context.Context,
+func setfield(row *ordereddict.Dict, field_name string, target *string) {
+	result, pres := row.GetString(field_name)
+	if pres {
+		*target = result
+	}
+}
+
+// Update the client record in the datastore: under lock. This should
+// be very fast so for now we take a global lock on the client info
+// manager.
+func modifyRecord(ctx context.Context,
 	config_obj *config_proto.Config,
-	client_id, flow_id, artifact string) error {
+	client_info *services.ClientInfo,
+	client_id, flow_id, artifact string,
+	row *ordereddict.Dict) (*services.ClientInfo, error) {
 
-	utils.Debug(client_id)
-
-	file_store_factory := file_store.GetFileStore(config_obj)
-	path_manager, err := artifacts.NewArtifactPathManager(ctx, config_obj,
-		client_id, flow_id, artifact)
-	if err != nil {
-		return err
-	}
-
-	rs_reader, err := result_sets.NewResultSetReader(
-		file_store_factory, path_manager.Path())
-	if err != nil {
-		return err
-	}
-	defer rs_reader.Close()
-
-	var client_info *actions_proto.ClientInfo
-
-	// Should return only one row
-	for row := range rs_reader.Rows(ctx) {
-		getter := func(field string) string {
-			result, _ := row.GetString(field)
-			return result
-		}
-
-		client_info = &actions_proto.ClientInfo{
-			ClientId:                    client_id,
-			Hostname:                    getter("Hostname"),
-			System:                      getter("OS"),
-			Release:                     getter("Platform") + getter("PlatformVersion"),
-			Architecture:                getter("Architecture"),
-			Fqdn:                        getter("Fqdn"),
-			ClientName:                  getter("Name"),
-			ClientVersion:               getter("Version"),
-			BuildUrl:                    getter("build_url"),
-			LastInterrogateFlowId:       flow_id,
-			LastInterrogateArtifactName: artifact,
-		}
-
-		build_time, pres := row.Get("BuildTime")
-		if pres {
-			t, ok := build_time.(time.Time)
-			if ok {
-				client_info.BuildTime = t.UTC().Format(time.RFC3339)
-			}
-		}
-
-		label_array, ok := row.GetStrings("Labels")
-		if ok {
-			client_info.Labels = append(client_info.Labels, label_array...)
-		}
-
-		mac_addresses, ok := row.GetStrings("MACAddresses")
-		if ok {
-			client_info.MacAddresses = append(
-				client_info.MacAddresses, mac_addresses...)
-		}
-		break
-	}
-
+	// Client Id is not known make new record
 	if client_info == nil {
-		return errors.New("No Generic.Client.Info results")
+		client_info = &services.ClientInfo{}
 	}
 
-	client_info_manager, err := services.GetClientInfoManager(config_obj)
-	if err != nil {
-		return err
+	client_info.ClientId = client_id
+	client_info.LastInterrogateFlowId = flow_id
+	client_info.LastInterrogateArtifactName = artifact
+
+	os, pres := row.GetString("OS")
+	if !pres {
+		// Make sure we get at least some of the fields we expect.
+		return nil, errors.New("No Generic.Client.Info results")
+	}
+	client_info.System = os
+
+	setfield(row, "Hostname", &client_info.Hostname)
+	setfield(row, "Architecture", &client_info.Architecture)
+	setfield(row, "Fqdn", &client_info.Fqdn)
+	setfield(row, "Version", &client_info.ClientVersion)
+	setfield(row, "Name", &client_info.ClientName)
+	setfield(row, "build_url", &client_info.BuildUrl)
+
+	platform, _ := row.GetString("Platform")
+	platform_version, _ := row.GetString("PlatformVersion")
+	client_info.Release = platform + platform_version
+
+	build_time, pres := row.Get("BuildTime")
+	if pres {
+		t, ok := build_time.(time.Time)
+		if ok {
+			client_info.BuildTime = t.UTC().Format(time.RFC3339)
+		}
 	}
 
-	client_path_manager := paths.NewClientPathManager(client_id)
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
+	label_array, ok := row.GetStrings("Labels")
+	if ok {
+		client_info.Labels = append(client_info.Labels, label_array...)
 	}
 
-	public_key_info := &crypto_proto.PublicKey{}
-	err = db.GetSubject(config_obj, client_path_manager.Key(),
-		public_key_info)
-	if err != nil {
-		// Offline clients do not have public key files, so this is
-		// not actually an error. In that case FirstSeenAt becomes 0.
-	}
-	client_info.FirstSeenAt = public_key_info.EnrollTime
-
-	journal, err := services.GetJournal(config_obj)
-	if err != nil {
-		return err
+	mac_addresses, ok := row.GetStrings("MACAddresses")
+	if ok {
+		client_info.MacAddresses = append(
+			client_info.MacAddresses, mac_addresses...)
 	}
 
-	client_info_manager.Set(ctx, &services.ClientInfo{*client_info})
+	if client_info.FirstSeenAt == 0 {
+		// Check if we have the first seen time.
+		client_path_manager := paths.NewClientPathManager(client_id)
+		db, err := datastore.GetDB(config_obj)
+		if err != nil {
+			return nil, err
+		}
 
-	journal.PushRowsToArtifactAsync(ctx, config_obj,
-		ordereddict.NewDict().
-			Set("ClientId", client_id),
-		"Server.Internal.Interrogation")
-
-	// Set labels in the labeler.
-	if len(client_info.Labels) > 0 {
-		labeler := services.GetLabeler(config_obj)
-		for _, label := range client_info.Labels {
-			err := labeler.SetClientLabel(ctx, config_obj, client_id, label)
-			if err != nil {
-				return err
-			}
+		public_key_info := &crypto_proto.PublicKey{}
+		err = db.GetSubject(config_obj, client_path_manager.Key(),
+			public_key_info)
+		if err != nil {
+			// Offline clients do not have public key files, so this is
+			// not actually an error. In that case FirstSeenAt becomes 0.
+			client_info.FirstSeenAt = uint64(utils.GetTime().Now().Unix())
+		} else {
+			client_info.FirstSeenAt = public_key_info.EnrollTime
 		}
 	}
 
 	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Add MAC addresses to the index.
@@ -339,6 +319,68 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 			logger.Error("Unable to set index: %v", err)
 		}
 	}
+
+	return client_info, nil
+}
+
+func (self *EnrollmentService) ProcessInterrogateResults(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	client_id, flow_id, artifact string) error {
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+	path_manager, err := artifacts.NewArtifactPathManager(ctx, config_obj,
+		client_id, flow_id, artifact)
+	if err != nil {
+		return err
+	}
+
+	rs_reader, err := result_sets.NewResultSetReader(
+		file_store_factory, path_manager.Path())
+	if err != nil {
+		return err
+	}
+	defer rs_reader.Close()
+
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
+	if err != nil {
+		return err
+	}
+
+	// Should return only one row
+	for row := range rs_reader.Rows(ctx) {
+		err := client_info_manager.Modify(ctx, client_id,
+			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+				return modifyRecord(ctx, config_obj, client_info,
+					client_id, flow_id, artifact, row)
+			})
+		if err != nil {
+			return err
+		}
+
+		// Needs to be outside mutation because it calls the labeler.
+		label_array, ok := row.GetStrings("Labels")
+		if ok {
+			labeler := services.GetLabeler(config_obj)
+			for _, label := range label_array {
+				err := labeler.SetClientLabel(ctx, config_obj, client_id, label)
+				if err != nil {
+					return err
+				}
+			}
+		}
+		break
+	}
+
+	journal, err := services.GetJournal(config_obj)
+	if err != nil {
+		return err
+	}
+
+	journal.PushRowsToArtifactAsync(ctx, config_obj,
+		ordereddict.NewDict().
+			Set("ClientId", client_id),
+		"Server.Internal.Interrogation")
 
 	return nil
 }

@@ -2,6 +2,7 @@ package labels
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"sync"
 
@@ -196,24 +197,27 @@ func (self *Labeler) SetClientLabel(
 		return err
 	}
 
-	client_info, err := client_info_manager.Get(ctx, client_id)
-	if err != nil {
-		return err
-	}
+	err = client_info_manager.Modify(ctx, client_id,
+		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+			if client_info == nil {
+				return nil, errors.New("ClientId not known")
+			}
 
-	// Label is already set. O(n) but n should be small.
-	for _, l := range client_info.Labels {
-		if checked_label == strings.ToLower(l) {
-			return nil
-		}
-	}
+			// Label is already set. O(n) but n should be small.
+			for _, l := range client_info.Labels {
+				if checked_label == strings.ToLower(l) {
+					// No change is needed the label is already in
+					// there.
+					return nil, nil
+				}
+			}
 
-	client_info.Labels = append(client_info.Labels, new_label)
-	client_info.LabelsTimestamp = uint64(
-		self.Clock.Now().UnixNano())
+			client_info.Labels = append(client_info.Labels, new_label)
+			client_info.LabelsTimestamp = uint64(
+				self.Clock.Now().UnixNano())
 
-	// Update the client record
-	err = client_info_manager.Set(ctx, client_info)
+			return client_info, nil
+		})
 	if err != nil {
 		return err
 	}
@@ -249,31 +253,32 @@ func (self *Labeler) RemoveClientLabel(
 		return err
 	}
 
-	client_info, err := client_info_manager.Get(ctx, client_id)
-	if err != nil {
-		return err
-	}
+	err = client_info_manager.Modify(ctx, client_id,
+		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+			if client_info == nil {
+				return nil, errors.New("ClientId not known")
+			}
 
-	new_labels := []string{}
+			new_labels := []string{}
 
-	// Label is already set. O(n) but n should be small.
-	for _, l := range client_info.Labels {
-		if checked_label != strings.ToLower(l) {
-			new_labels = append(new_labels, l)
-		}
-	}
+			// Label is already set. O(n) but n should be small.
+			for _, l := range client_info.Labels {
+				if checked_label != strings.ToLower(l) {
+					new_labels = append(new_labels, l)
+				}
+			}
 
-	// Nothing was done.
-	if len(client_info.Labels) == len(new_labels) {
-		return nil
-	}
+			// Nothing was done - no change is needed.
+			if len(client_info.Labels) == len(new_labels) {
+				return nil, nil
+			}
 
-	client_info.Labels = new_labels
-	client_info.LabelsTimestamp = uint64(
-		self.Clock.Now().UnixNano())
+			client_info.Labels = new_labels
+			client_info.LabelsTimestamp = uint64(
+				self.Clock.Now().UnixNano())
 
-	// Update the client record
-	err = client_info_manager.Set(ctx, client_info)
+			return client_info, nil
+		})
 	if err != nil {
 		return err
 	}

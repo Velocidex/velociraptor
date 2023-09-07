@@ -414,6 +414,13 @@ func (self *ClientInfoManager) ProcessPing(
 	return nil
 }
 
+func (self *ClientInfoManager) Modify(
+	ctx context.Context, client_id string,
+	modifier func(client_info *services.ClientInfo) (
+		*services.ClientInfo, error)) error {
+	return self.storage.Modify(ctx, client_id, modifier)
+}
+
 func (self *ClientInfoManager) Get(
 	ctx context.Context, client_id string) (*services.ClientInfo, error) {
 	record, err := self.storage.GetRecord(client_id)

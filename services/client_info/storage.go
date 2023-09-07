@@ -79,10 +79,45 @@ func (self *Store) Remove(client_id string) {
 	delete(self.data, client_id)
 }
 
+func (self *Store) Modify(
+	ctx context.Context, client_id string,
+	modifier func(client_info *services.ClientInfo) (
+		*services.ClientInfo, error)) error {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	client_info, _ := self._GetRecord(client_id)
+	var record *services.ClientInfo
+
+	if client_info != nil {
+		record = &services.ClientInfo{*client_info}
+	}
+
+	// If the record was not changed just ignore it.
+	new_record, err := modifier(record)
+	if err != nil {
+		return err
+	}
+
+	// Callback can indicate no change is needed by returning a nil
+	// for client_info.
+	if new_record == nil {
+		return nil
+	}
+
+	// Write the modified record to the LRU
+	return self._SetRecord(&new_record.ClientInfo)
+}
+
 func (self *Store) GetRecord(client_id string) (*actions_proto.ClientInfo, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	return self._GetRecord(client_id)
+}
+
+func (self *Store) _GetRecord(client_id string) (*actions_proto.ClientInfo, error) {
 	serialized, pres := self.data[client_id]
 	if !pres {
 		return nil, os.ErrNotExist
@@ -106,6 +141,10 @@ func (self *Store) SetRecord(record *actions_proto.ClientInfo) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	return self._SetRecord(record)
+}
+
+func (self *Store) _SetRecord(record *actions_proto.ClientInfo) error {
 	serialized, err := proto.Marshal(record)
 	if err != nil {
 		return err
