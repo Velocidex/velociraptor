@@ -319,7 +319,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
    }
   }
  }
-]SELECT ParsedF, ParsedV FROM Artifact.Windows.Forensics.SAM( SAMPath=srcDir+"/artifacts/testdata/files/SAM")[
+]SELECT ParsedF, ParsedV FROM Artifact.Windows.Forensics.SAM( SAMPath=srcDir+"/artifacts/testdata/files/SAM", source="Parsed")[
  {
   "ParsedF": {
    "LastLoginDate": "1601-01-01T00:00:00Z",
@@ -455,6 +455,32 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
    "lmpwd_hash": "\u0002\u0002",
    "ntpwd_hash": "\u0002\u0002\u0010"
   }
+ }
+]SELECT * FROM Artifact.Windows.Forensics.SAM( SAMPath=srcDir+"/artifacts/testdata/files/SAM", source="CreateTimes")[
+ {
+  "Username": "Administrator",
+  "CreatedTime": "2021-10-08T00:54:13Z",
+  "_Source": "Windows.Forensics.SAM/CreateTimes"
+ },
+ {
+  "Username": "DefaultAccount",
+  "CreatedTime": "2021-10-08T00:54:13Z",
+  "_Source": "Windows.Forensics.SAM/CreateTimes"
+ },
+ {
+  "Username": "Guest",
+  "CreatedTime": "2021-10-08T00:54:13Z",
+  "_Source": "Windows.Forensics.SAM/CreateTimes"
+ },
+ {
+  "Username": "WDAGUtilityAccount",
+  "CreatedTime": "2021-10-08T00:54:13Z",
+  "_Source": "Windows.Forensics.SAM/CreateTimes"
+ },
+ {
+  "Username": "test",
+  "CreatedTime": "2021-10-07T08:07:32Z",
+  "_Source": "Windows.Forensics.SAM/CreateTimes"
  }
 ]SELECT utf16(string=read_file(filename=pathspec( Path="\\Root\\DeviceCensus\\Processor\\ProcessorIdentifier", DelegatePath=srcDir+"/artifacts/testdata/files/Amcache.hve", DelegateAccessor='file'), accessor="raw_reg")) FROM scope()[
  {
