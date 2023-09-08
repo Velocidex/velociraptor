@@ -76,14 +76,15 @@ sources:
   - name: Hosts
     query: |
       SELECT OSPath, Address,
-        filter(list= (Hostname, ) + Aliases, regex=HostnameRegex) AS Hostname,
+        (Hostname, ) + Aliases AS Hostname,
         Comment
       FROM HostsFiles
       WHERE Hostname AND Address =~ AddressRegex
 
   - name: HostsFlattened
     query: |
-      SELECT * FROM flatten(query={
+      SELECT OSPath, Address, Hostname, Comment
+      FROM flatten(query={
         SELECT OSPath, Address, (Hostname, ) + Aliases AS Hostname, Comment
         FROM HostsFiles
       })
