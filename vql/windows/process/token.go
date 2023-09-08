@@ -50,11 +50,15 @@ func (self TokenFunction) Call(
 		scope.Log("token: %s", err.Error())
 		return vfilter.Null{}
 	}
+
+	TryToGrantSeDebugPrivilege()
+
 	handle, err := windows.OpenProcess(
 		syscall.PROCESS_QUERY_INFORMATION, false, uint32(arg.Pid))
 
 	if err != nil {
-		scope.Log("token: %s", err.Error())
+		scope.Log("token: OpenProcess for %v: %s",
+			GetProcessContext(ctx, scope, uint64(arg.Pid)), err.Error())
 		return vfilter.Null{}
 	}
 	defer windows.CloseHandle(handle)
@@ -64,7 +68,8 @@ func (self TokenFunction) Call(
 	// Find process token via win32
 	err = windows.OpenProcessToken(handle, syscall.TOKEN_QUERY, &token)
 	if err != nil {
-		scope.Log("token: %s", err.Error())
+		scope.Log("token: OpenProcessToken for %v: %s",
+			GetProcessContext(ctx, scope, uint64(arg.Pid)), err.Error())
 		return vfilter.Null{}
 	}
 	defer token.Close()
@@ -72,7 +77,8 @@ func (self TokenFunction) Call(
 	// Find the token user
 	tokenUser, err := token.GetTokenUser()
 	if err != nil {
-		scope.Log("token: %s", err.Error())
+		scope.Log("token: GetTokenUser for %v: %s",
+			GetProcessContext(ctx, scope, uint64(arg.Pid)), err.Error())
 		return vfilter.Null{}
 	}
 

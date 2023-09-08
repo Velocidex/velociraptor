@@ -195,7 +195,7 @@ func (self PslistPlugin) Call(
 
 		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
 		if err != nil {
-			scope.Log("pslist: %s", err)
+			scope.Log("pslist: %v", err)
 			return
 		}
 
@@ -206,7 +206,7 @@ func (self PslistPlugin) Call(
 
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
-			scope.Log("pslist: %s", err.Error())
+			scope.Log("pslist: %v", err)
 			return
 		}
 

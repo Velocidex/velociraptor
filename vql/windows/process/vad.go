@@ -18,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/windows"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 type VMemInfo struct {
@@ -70,7 +71,8 @@ func (self ModulesPlugin) Call(
 
 		modules, err := GetProcessModules(uint32(arg.Pid))
 		if err != nil {
-			scope.Log("modules: %s", err.Error())
+			scope.Log("modules: GetProcessModules %v: %v",
+				GetProcessContext(ctx, scope, uint64(arg.Pid)), err)
 			return
 		}
 
@@ -118,9 +120,9 @@ func (self VADPlugin) Call(
 			return
 		}
 
-		vads, handle, err := GetVads(uint32(arg.Pid))
+		vads, handle, err := GetVads(ctx, scope, uint32(arg.Pid))
 		if err != nil {
-			scope.Log("vad: %s", err.Error())
+			scope.Log("vad: %v", err)
 			return
 		}
 		defer windows.CloseHandle(handle)
@@ -145,7 +147,9 @@ func (self VADPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfil
 	}
 }
 
-func GetVads(pid uint32) ([]*VMemInfo, syscall.Handle, error) {
+func GetVads(
+	ctx context.Context, scope types.Scope,
+	pid uint32) ([]*VMemInfo, syscall.Handle, error) {
 	result := []*VMemInfo{}
 
 	proc_handle, err := windows.OpenProcess(
@@ -153,7 +157,8 @@ func GetVads(pid uint32) ([]*VMemInfo, syscall.Handle, error) {
 		false, pid)
 	if err != nil {
 		return nil, 0, errors.New(
-			fmt.Sprintf("OpenProcess for pid %v: %v ", pid, err))
+			fmt.Sprintf("OpenProcess for pid %v: %v ",
+				GetProcessContext(ctx, scope, uint64(pid)), err))
 	}
 
 	var si windows.SYSTEM_INFO
