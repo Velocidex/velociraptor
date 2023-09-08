@@ -38,5 +38,10 @@ func GetClientInfo(
 		result.BuildTime = config_obj.Version.BuildTime
 		result.InstallTime = config_obj.Version.InstallTime
 	}
+
+	if config_obj.Client != nil {
+		result.Labels = config_obj.Client.Labels
+	}
+
 	return result
 }

@@ -13,7 +13,6 @@ import (
 	"golang.org/x/sys/unix"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func GetProcess(ctx context.Context, pid int32) (*ordereddict.Dict, error) {
@@ -33,9 +32,6 @@ func ListProcesses(ctx context.Context) ([]*ordereddict.Dict, error) {
 	}
 
 	for _, item := range processes {
-		if false {
-			utils.Debug(item)
-		}
 		result = append(result, getProcessData(ctx, &item))
 	}
 
