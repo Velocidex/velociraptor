@@ -85,3 +85,7 @@ func True(t TestingT, expected bool, msgAndArgs ...interface{}) {
 func NotNil(t TestingT, expected interface{}, msgAndArgs ...interface{}) {
 	assert.NotNil(t, expected, msgAndArgs...)
 }
+
+func Nil(t TestingT, expected interface{}, msgAndArgs ...interface{}) {
+	assert.Nil(t, expected, msgAndArgs...)
+}

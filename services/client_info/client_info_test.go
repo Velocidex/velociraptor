@@ -56,6 +56,48 @@ type: INTERNAL
 	self.TestSuite.SetupTest()
 }
 
+func (self *ClientInfoTestSuite) TestClientInfoModify() {
+	// Fetch the client from the manager
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	info, err := client_info_manager.Get(self.Ctx, self.client_id)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), info.ClientId, self.client_id)
+	assert.Equal(self.T(), info.Ping, uint64(0))
+
+	// Update the ping time
+	err = client_info_manager.Modify(self.Ctx, self.client_id,
+		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+			assert.NotNil(self.T(), client_info)
+
+			client_info.Ping = 10
+			return client_info, nil
+		})
+	assert.NoError(self.T(), err)
+
+	// Now get the client record and check that it is updated
+	info, err = client_info_manager.Get(self.Ctx, self.client_id)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), info.Ping, uint64(10))
+
+	// Now modify a nonexistant client - equivalent to a Set() call
+	// (atomic check and set).
+	err = client_info_manager.Modify(self.Ctx, "C.DOESNOTEXIT",
+		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+			assert.Nil(self.T(), client_info)
+			return &services.ClientInfo{actions_proto.ClientInfo{
+				ClientId: "C.DOESNOTEXIT",
+				Ping:     20,
+			}}, nil
+		})
+	assert.NoError(self.T(), err)
+
+	info, err = client_info_manager.Get(self.Ctx, "C.DOESNOTEXIT")
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), info.Ping, uint64(20))
+}
+
 func (self *ClientInfoTestSuite) TestClientInfo() {
 	// Fetch the client from the manager
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
