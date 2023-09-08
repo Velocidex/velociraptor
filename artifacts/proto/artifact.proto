@@ -202,7 +202,7 @@ message Artifact {
     // Artifact was already compiled.
     bool compiled = 14;
 
-    // The artifact is considered built and and can not be overriden by the GUI
+    // The artifact is considered built in and can not be overriden by the GUI
     bool built_in = 20;
 
     // The artifact is built into the Velociraptor binary.
