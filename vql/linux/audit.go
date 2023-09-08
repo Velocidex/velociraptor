@@ -18,6 +18,7 @@ import (
 )
 
 type streamHandler struct {
+	ctx         context.Context
 	scope       vfilter.Scope
 	output_chan chan vfilter.Row
 }
@@ -27,7 +28,8 @@ func (self *streamHandler) ReassemblyComplete(msgs []*auparse.AuditMessage) {
 }
 
 func (self *streamHandler) EventsLost(count int) {
-	self.scope.Log("Detected the loss of %v sequences.", count)
+	// This is not a useful message - there is nothing we can do about it
+	//self.scope.Log("Detected the loss of %v sequences.", count)
 }
 
 func (self *streamHandler) outputMultipleMessages(msgs []*auparse.AuditMessage) {
@@ -35,7 +37,11 @@ func (self *streamHandler) outputMultipleMessages(msgs []*auparse.AuditMessage) 
 	if err != nil {
 		return
 	}
-	self.output_chan <- event
+
+	// Convert the events to dicts so they can be accessed easier.
+	dict := vfilter.RowToDict(self.ctx, self.scope, event)
+	dict.SetCaseInsensitive()
+	self.output_chan <- dict
 }
 
 type AuditPlugin struct{}
@@ -70,7 +76,7 @@ func (self AuditPlugin) Call(
 		defer client.Close()
 
 		reassembler, err := libaudit.NewReassembler(5, 2*time.Second,
-			&streamHandler{scope, output_chan})
+			&streamHandler{ctx, scope, output_chan})
 		if err != nil {
 			scope.Log("audit: %v", err)
 			return

@@ -84,7 +84,8 @@ func (self *ServicesTestSuite) TestInterrogationService() {
 	flow_id := self.EmulateCollection(
 		"Generic.Client.Info/BasicInformation", []*ordereddict.Dict{
 			ordereddict.NewDict().
-				Set("ClientId", self.client_id).
+				Set("Name", "velociraptor").
+				Set("OS", "windows").
 				Set("Hostname", hostname).
 				Set("Labels", []string{"Foo"}),
 		})
