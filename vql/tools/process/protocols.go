@@ -34,6 +34,10 @@ func (self ProcessTrackerUpdater) Call(
 	go func() {
 		defer close(output_chan)
 
+		if tracker == nil {
+			return
+		}
+
 		// First message is a full sync message.
 		update := ordereddict.NewDict()
 		for _, p := range tracker.Processes(ctx, scope) {

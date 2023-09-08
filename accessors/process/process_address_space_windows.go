@@ -16,6 +16,7 @@
 package process
 
 import (
+	"context"
 	"errors"
 	"os"
 	"strconv"
@@ -212,8 +213,9 @@ func (self ProcessReader) Stat() (os.FileInfo, error) {
 }
 
 type ProcessAccessor struct {
-	mu  sync.Mutex
-	lru *ttlcache.Cache
+	mu    sync.Mutex
+	lru   *ttlcache.Cache
+	scope vfilter.Scope
 }
 
 const _ProcessAccessorTag = "_ProcessAccessor"
@@ -227,7 +229,8 @@ func (self ProcessAccessor) New(scope vfilter.Scope) (
 	if result_any == nil {
 		// Create a new cache in the scope.
 		result := &ProcessAccessor{
-			lru: ttlcache.NewCache(),
+			lru:   ttlcache.NewCache(),
+			scope: scope,
 		}
 		result.lru.SetTTL(time.Second)
 		result.lru.SetCheckExpirationCallback(func(key string, value interface{}) bool {
@@ -346,7 +349,8 @@ func (self *ProcessAccessor) OpenWithOSPath(
 	}
 
 	// Open the process and enumerate its ranges
-	ranges, proc_handle, err := process.GetVads(uint32(pid))
+	ranges, proc_handle, err := process.GetVads(
+		context.Background(), self.scope, uint32(pid))
 	if err != nil {
 		return nil, err
 	}
