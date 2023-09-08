@@ -40,7 +40,7 @@ export: |
             /* Remove any whitespace between comment character and comment: */
             regex_replace(re='''^\s+''', source=Comment, replace='$1') AS Comment
             FROM parse_records_with_regex(file=OSPath,
-                regex='''(?m)^[\t ]*(?P<Address>[^\s#]+)[\t ]+(?P<Hostname>[^\s#]+)(?P<Aliases>[^#\n\r]+)?(?:[\t ]*#(?P<Comment>[^\n\r]+))?$''')
+                regex='''(?m)^[\t ]*(?P<Address>[^\s#]+)[\t ]+(?P<Hostname>[^\s#]+)(?P<Aliases>[^#\n\r]+)?(?:[\t ]*#(?P<Comment>[^\n\r]+)[\n\r]*)?$''')
 
         LET Files = SELECT OSPath FROM glob(globs=hostsFileGlobs.HostsFileGlobs)
 
