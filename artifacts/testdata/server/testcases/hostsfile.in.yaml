@@ -1,12 +1,30 @@
 Queries:
-  - SELECT * FROM Artifact.Generic.System.HostsFile(
+  - SELECT * FROM Artifact.Windows.System.HostsFile(
            HostsFile=srcDir + '/artifacts/testdata/files/hosts',
            HostnameRegex = 'second.com')
 
-  - SELECT * FROM Artifact.Generic.System.HostsFile(
+  - SELECT * FROM Artifact.Windows.System.HostsFile(
            HostsFile=srcDir + '/artifacts/testdata/files/hosts',
            ResolutionRegex = '127.0.0')
 
-  - SELECT * FROM Artifact.Generic.System.HostsFile(
+  - SELECT * FROM Artifact.Windows.System.HostsFile(
            HostsFile=srcDir + '/artifacts/testdata/files/hosts',
-           ResolutionRegex = '0.3.3$')
+           ResolutionRegex = '127.0.3.3')
+
+  - LET hostsFileGlobs = (dict(HostsFileGlobs=srcDir + '/artifacts/testdata/files/hosts'),)
+
+  - SELECT Address, Hostname, Comment
+    FROM Artifact.Generic.System.HostsFile(
+       hostsFileGlobs=hostsFileGlobs, HostnameRegex = 'second.com', source='HostsFlattened')
+
+  - SELECT Address, Hostname, Comment
+    FROM Artifact.Generic.System.HostsFile(
+       hostsFileGlobs=hostsFileGlobs, AddressRegex = '127.0.0', source='HostsFlattened')
+
+  - SELECT Address, Hostname, Comment
+    FROM Artifact.Generic.System.HostsFile(
+       hostsFileGlobs=hostsFileGlobs, AddressRegex = '0.3.3$', source='HostsFlattened')
+
+  - SELECT Address, Hostname, Comment
+    FROM Artifact.Generic.System.HostsFile(
+       hostsFileGlobs=hostsFileGlobs, HostnameRegex = 'second.com', source='Hosts')
