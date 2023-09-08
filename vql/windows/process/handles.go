@@ -99,7 +99,7 @@ func (self HandlesPlugin) Call(
 			scope.Log("handles while trying to grant SeDebugPrivilege: %v", err)
 		}
 
-		GetHandles(scope, arg, output_chan)
+		GetHandles(ctx, scope, arg, output_chan)
 	}()
 
 	return output_chan
@@ -156,11 +156,14 @@ func SaneNtQuerySystemInformation(class uint32) ([]byte, error) {
 	return nil, errors.New("Too much memory needed")
 }
 
-func GetHandles(scope vfilter.Scope, arg *HandlesPluginArgs, out chan<- vfilter.Row) {
+func GetHandles(
+	ctx context.Context,
+	scope vfilter.Scope,
+	arg *HandlesPluginArgs, out chan<- vfilter.Row) {
 	// This should be large enough to fit all the handles.
 	buffer, err := SaneNtQuerySystemInformation(windows.SystemHandleInformation)
 	if err != nil {
-		scope.Log("GetHandles %v", err)
+		scope.Log("GetHandles: %v", err)
 		return
 	}
 
@@ -195,7 +198,8 @@ func GetHandles(scope vfilter.Scope, arg *HandlesPluginArgs, out chan<- vfilter.
 					windows.PROCESS_DUP_HANDLE,
 					false, uint32(pid))
 				if err != nil {
-					scope.Log("OpenProcess for pid %v: %v\n", pid, err)
+					scope.Log("OpenProcess for pid %v: %v\n",
+						GetProcessContext(ctx, scope, uint64(pid)), err)
 					return
 				}
 				process_handle = h

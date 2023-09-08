@@ -42,6 +42,10 @@ func GetGlobalTracker() IProcessTracker {
 	clock_mu.Lock()
 	defer clock_mu.Unlock()
 
+	if g_tracker == nil {
+		g_tracker = &DummyProcessTracker{}
+	}
+
 	return g_tracker
 }
 

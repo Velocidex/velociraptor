@@ -36,6 +36,10 @@ func (self *DummyProcessTracker) getLookup(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	if self.lookup == nil {
+		self.lookup = make(map[string]*ProcessEntry)
+	}
+
 	// Expire old looksup after 10 seconds
 	now := time.Now()
 	if now.Before(self.age.Add(10 * time.Second)) {
