@@ -79,7 +79,8 @@ sources:
         (Hostname, ) + Aliases AS Hostname,
         Comment
       FROM HostsFiles
-      WHERE Hostname AND Address =~ AddressRegex
+      WHERE Hostname =~ HostnameRegex
+        AND Address =~ AddressRegex
 
   - name: HostsFlattened
     query: |
