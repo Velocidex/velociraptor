@@ -28,4 +28,35 @@ SELECT * FROM Artifact.Windows.System.HostsFile( HostsFile=srcDir + '/artifacts/
   "Comment": "testing standard comment",
   "_Source": "Windows.System.HostsFile"
  }
+]LET hostsFileGlobs = (dict(HostsFileGlobs=srcDir + '/artifacts/testdata/files/hosts'),)[]SELECT Address, Hostname, Comment FROM Artifact.Generic.System.HostsFile( hostsFileGlobs=hostsFileGlobs, HostnameRegex = 'second.com', source='HostsFlattened')[
+ {
+  "Address": "127.0.3.4",
+  "Hostname": "second.com",
+  "Comment": "testing standard comment"
+ }
+]SELECT Address, Hostname, Comment FROM Artifact.Generic.System.HostsFile( hostsFileGlobs=hostsFileGlobs, AddressRegex = '127.0.0', source='HostsFlattened')[
+ {
+  "Address": "127.0.0.1",
+  "Hostname": "test.com",
+  "Comment": ""
+ },
+ {
+  "Address": "127.0.0.2",
+  "Hostname": "test2.com",
+  "Comment": ""
+ }
+]SELECT Address, Hostname, Comment FROM Artifact.Generic.System.HostsFile( hostsFileGlobs=hostsFileGlobs, AddressRegex = '0.3.3$', source='HostsFlattened')[
+ {
+  "Address": "127.0.3.3",
+  "Hostname": "standardcomment.com",
+  "Comment": "testing standard comment"
+ }
+]SELECT Address, Hostname, Comment FROM Artifact.Generic.System.HostsFile( hostsFileGlobs=hostsFileGlobs, HostnameRegex = 'second.com', source='Hosts')[
+ {
+  "Address": "127.0.3.4",
+  "Hostname": [
+   "second.com"
+  ],
+  "Comment": "testing standard comment"
+ }
 ]

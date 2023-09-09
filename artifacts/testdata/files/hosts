@@ -19,7 +19,10 @@
 #	::1             localhost
 
 127.0.0.1		test.com
+# Comment to ignore
 	127.0.0.2	test2.com
+# Comment to ignore
 	127.0.3.3		standardcomment.com # testing standard comment
+# Comment to ignore
 	127.0.3.4	second.com standardcomment2.com # testing standard comment
 	8.8.8.8		evil.com
