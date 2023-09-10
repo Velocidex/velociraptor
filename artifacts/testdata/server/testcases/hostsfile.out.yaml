@@ -55,7 +55,8 @@ SELECT * FROM Artifact.Windows.System.HostsFile( HostsFile=srcDir + '/artifacts/
  {
   "Address": "127.0.3.4",
   "Hostname": [
-   "second.com"
+   "second.com",
+   "standardcomment2.com"
   ],
   "Comment": "testing standard comment"
  }
