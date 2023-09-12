@@ -19,6 +19,14 @@ type UserManagerTestSuite struct {
 	test_utils.TestSuite
 }
 
+func (self *UserManagerTestSuite) SetupTest() {
+	self.TestSuite.SetupTest()
+
+	self.LoadArtifacts(`name: Server.Audit.Logs
+type: SERVER_EVENT
+`)
+}
+
 func (self *UserManagerTestSuite) makeUserWithRoles(username, org_id, role string) {
 	org_manager, err := services.GetOrgManager()
 	assert.NoError(self.T(), err)
