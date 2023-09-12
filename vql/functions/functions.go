@@ -126,7 +126,7 @@ func (self _Base64Encode) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 }
 
 type _ToLowerArgs struct {
-	String string `vfilter:"required,field=string,doc=A string to lower"`
+	String string `vfilter:"required,field=string,doc=The string to process"`
 }
 
 type _ToLower struct{}

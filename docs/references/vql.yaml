@@ -281,7 +281,7 @@
     description: Separator to use (default /)
   - name: path_type
     type: string
-    description: Type of path (e.g. 'windows,linux)
+    description: Type of path (e.g. windows, linux)
   category: basic
 - name: batch
   description: |
@@ -3047,8 +3047,8 @@
   type: Function
   category: windows
 - name: lowcase
-  type: Function
   description: Returns the lowercase version of a string.
+  type: Function
   args:
   - name: string
     type: string
@@ -5642,7 +5642,7 @@
 - name: switch
   description: |
     Conditional execution of multiple queries in order
-    
+
     Executes each query in order. If a query returns any rows, those
     are emitted. Any further queries are ignored.
   type: Plugin
@@ -6818,4 +6818,3 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
-

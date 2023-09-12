@@ -30,7 +30,7 @@ import (
 )
 
 type GunzipArgs struct {
-	String string `vfilter:"required,field=string,doc=Data to uncompress"`
+	String string `vfilter:"required,field=string,doc=Data to apply Gunzip"`
 }
 
 type Gunzip struct{}
