@@ -15,7 +15,7 @@ import (
 )
 
 type CreateNotebookDownloadArgs struct {
-	NotebookId string `vfilter:"required,field=notebook_id,doc=Client ID to export."`
+	NotebookId string `vfilter:"required,field=notebook_id,doc=Notebook ID to export."`
 }
 
 type CreateNotebookDownload struct{}
