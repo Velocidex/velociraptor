@@ -28,32 +28,107 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+type InterfacesPlugin struct {
+}
+
+func (self InterfacesPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name: "interfaces",
+		Doc: "List all active interfaces.",
+		Metadata:   vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+	}
+}
+
+func (self InterfacesPlugin) Call(
+	ctx context.Context, scope vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+
+		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+		if err != nil {
+			scope.Log("interfaces: %s", err)
+			return
+		}
+
+		interfaces, err := net.Interfaces()
+		if err != nil {
+			scope.Log("interfaces: failed to enumerate interfaces: %s", err)
+			return
+		}
+
+		for _, iface := range interfaces {
+			row := ordereddict.NewDict().
+				Set("Name", iface.Name).
+				Set("HardwareAddr", iface.HardwareAddr).
+				Set("MTU", iface.MTU).
+				Set("Index", iface.Index).
+				Set("Flags", iface.Flags.String())
+
+			// Enumerate some useful flags
+			if (iface.Flags & net.FlagLoopback) == net.FlagLoopback {
+				row.Set("Loopback", "Y")
+			} else {
+				row.Set("Loopback", "N")
+			}
+
+			if (iface.Flags & net.FlagPointToPoint) == net.FlagPointToPoint {
+				row.Set("PointToPoint", "Y")
+			} else {
+				row.Set("PointToPoint", "N")
+			}
+
+			if (iface.Flags & net.FlagUp) == net.FlagUp {
+				row.Set("Up", "Y")
+			} else {
+				row.Set("Up", "N")
+			}
+
+			// Add net.FlagRunning once we require go 1.20
+//			if (iface.Flags & net.FlagRunning) == net.FlagRunning {
+//				row.Set("Running", "Y")
+//			} else {
+//				row.Set("Running", "N")
+//			}
+
+			row.Set("HardwareAddrString", iface.HardwareAddr.String())
+
+			addrs, err := iface.Addrs()
+			if err != nil {
+				scope.Log("interfaces: Failed to get addresses for interface %s: %s",
+					  iface.Name, err)
+				continue
+			}
+			row.Set("Addrs", addrs)
+
+			addrList := []string{}
+			for _, addr := range addrs {
+				addrList = append(addrList, addr.String())
+			}
+			row.Set("AddrsString", addrList)
+
+			addrs, err = iface.MulticastAddrs()
+			if err != nil {
+				scope.Log("interfaces: Failed to get multicast addresses for interface %s: %s",
+					  iface.Name, err)
+			}
+			row.Set("MulticastAddrs", addrs)
+
+			addrList = []string{}
+			for _, addr := range addrs {
+				addrList = append(addrList, addr.String())
+			}
+			row.Set("MulticastAddrsString", addrList)
+
+			output_chan <- row
+		}
+	}()
+
+	return output_chan
+}
+
 func init() {
-	vql_subsystem.RegisterPlugin(
-		&vfilter.GenericListPlugin{
-			PluginName: "interfaces",
-			Metadata:   vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
-			Function: func(
-				ctx context.Context,
-				scope vfilter.Scope,
-				args *ordereddict.Dict) []vfilter.Row {
-				var result []vfilter.Row
-
-				err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
-				if err != nil {
-					scope.Log("interfaces: %s", err)
-					return result
-				}
-
-				if interfaces, err := net.Interfaces(); err == nil {
-					for _, item := range interfaces {
-						local_item := item
-						result = append(result, &local_item)
-					}
-				}
-
-				return result
-			},
-			Doc: "List all active interfaces.",
-		})
+	vql_subsystem.RegisterPlugin(&InterfacesPlugin{})
 }
