@@ -68,7 +68,7 @@ func (self *Gunzip) Call(ctx context.Context,
 func (self Gunzip) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "gunzip",
-		Doc:     "Apply Gunzip to the data.",
+		Doc:     "Uncompress a gzip-compressed block of data.",
 		ArgType: type_map.AddType(scope, &GunzipArgs{}),
 	}
 }

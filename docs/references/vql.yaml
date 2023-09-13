@@ -253,6 +253,7 @@
     required: true
   category: basic
 - name: base85decode
+  description: Decode a base85 encoded string.
   type: Function
   args:
   - name: string
@@ -280,7 +281,7 @@
     description: Separator to use (default /)
   - name: path_type
     type: string
-    description: Type of path (e.g. 'windows,linux)
+    description: Type of path (e.g. windows, linux)
   category: basic
 - name: batch
   description: |
@@ -969,7 +970,7 @@
   args:
   - name: notebook_id
     type: string
-    description: Client ID to export.
+    description: Notebook ID to export.
     required: true
   metadata:
     permissions: PREPARE_RESULTS
@@ -1165,7 +1166,7 @@
     description: Separator to use (default /)
   - name: path_type
     type: string
-    description: Type of path (e.g. 'windows,linux)
+    description: Type of path (e.g. windows, linux)
   category: basic
 - name: dns
   description: |
@@ -2120,7 +2121,13 @@
       org.
   category: server
 - name: gunzip
-  description: Apply Gunzip to the data.
+  description: |
+    Uncompress a gzip-compressed block of data.
+
+    ### Example
+    ```vql
+    gunzip(string=base64decode(string="H4sIAAAAAAACA3N0pC4AAKAb0QxQAAAA")) -> "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+    ```
   type: Function
   args:
   - name: string
@@ -3040,11 +3047,12 @@
   type: Function
   category: windows
 - name: lowcase
+  description: Returns the lowercase version of a string.
   type: Function
   args:
   - name: string
     type: string
-    description: A string to lower
+    description: The string to process
     required: true
   category: basic
 - name: lru
@@ -3688,7 +3696,14 @@
     The profile is compiled and overlaid on top of the offset specified,
     then the object is emitted with its required fields.
 
-    You can read more about profiles here https://github.com/Velocidex/vtypes
+    Please refer to [Binary
+    Parsing](https://docs.velociraptor.app/docs/forensic/binary/) for
+    a background in parsing binary data for forensic purposes and for
+    instructions on how to construct profiles like the example above.
+
+    More detailed information about profiles and their implementation
+    can be found in the [vfilter](https://github.com/Velocidex/vtypes)
+    module documentation.
   type: Function
   args:
   - name: filename
@@ -5561,7 +5576,7 @@
   metadata:
     permissions: FILESYSTEM_READ
 - name: str
-  description: Normalize a String.
+  description: Returns the string representation of provided data
   type: Function
   args:
   - name: str
@@ -5570,7 +5585,20 @@
     required: true
   category: basic
 - name: strip
-  description: Strip a prefix from a string.
+  description: |
+    Strip prefix and/or suffix from a string
+
+    If neither prefix nor suffix are provided, leading and trailing
+    whitespace is stripped.
+
+    ### Examples
+
+    ```vql
+    strip(string=">>  lorem ipsum  <<", prefix=">>", suffix="<<") -> "  lorem ipsum  "
+    ```
+    ```vql
+    strip(string="   lorem ipsum   ") -> "lorem ipsum"
+    ```
   type: Function
   args:
   - name: string
@@ -5585,7 +5613,11 @@
     description: The suffix to strip
   category: basic
 - name: substr
-  description: Create a substring from a string
+  description: |
+    Create a substring from a string
+
+    If start is not provided, the beginning of the string is used.
+    If end is not provided, the end of the string are used.
   type: Function
   args:
   - name: str
@@ -5608,7 +5640,11 @@
     required: true
   category: basic
 - name: switch
-  description: Executes each query. The first query to return any rows will be emitted.
+  description: |
+    Conditional execution of multiple queries in order
+
+    Executes each query in order. If a query returns any rows, those
+    are emitted. Any further queries are ignored.
   type: Plugin
   category: plugin
 - name: tempdir
@@ -5891,11 +5927,12 @@
   metadata:
     permissions: FILESYSTEM_WRITE,FILESYSTEM_READ
 - name: upcase
+  description: Returns an uppercase version of the string.
   type: Function
   args:
   - name: string
     type: string
-    description: A string to lower
+    description: The string to process
     required: true
   category: basic
 - name: upload
@@ -6781,4 +6818,3 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
-
