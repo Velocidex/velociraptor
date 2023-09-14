@@ -1,9 +1,12 @@
 package api
 
 import (
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	errors "github.com/go-errors/errors"
 
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -13,7 +16,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	vjson "www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -137,18 +139,18 @@ func (self *ApiServer) CreateHunt(
 		orgs = append(orgs, org_config_obj.OrgId)
 	}
 
-	logger := logging.GetLogger(org_config_obj, &logging.FrontendComponent)
 	org_manager, err := services.GetOrgManager()
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 
 	var orgs_we_scheduled []string
+	var errors_msg []string
 
 	for _, org_id := range orgs {
 		org_config_obj, err := org_manager.GetOrgConfig(org_id)
 		if err != nil {
-			logger.Error("CreateHunt: GetOrgConfig %v", err)
+			errors_msg = append(errors_msg, fmt.Sprintf("In Org %v: GetOrgConfig %v", org_id, err))
 			continue
 		}
 
@@ -157,24 +159,29 @@ func (self *ApiServer) CreateHunt(
 			org_config_obj, in.Creator, permissions)
 		if !perm {
 			if err != nil {
-				logger.Error("%v: CreateHunt: User is not allowed to launch hunts in "+
-					"org %v.", err, org_id)
+				errors_msg = append(errors_msg, fmt.Sprintf(
+					"%v: CreateHunt: User is not allowed to launch hunts in "+
+						"org %v.", err, org_id))
+			} else {
+				errors_msg = append(errors_msg, fmt.Sprintf(
+					"CreateHunt: User is not allowed to launch hunts in "+
+						"org %v.", org_id))
 			}
-			logger.Error("CreateHunt: User is not allowed to launch hunts in "+
-				"org %v.", org_id)
 			continue
 		}
 
 		hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
 		if err != nil {
-			logger.Error("CreateHunt: GetOrgConfig %v", err)
+			errors_msg = append(errors_msg, fmt.Sprintf(
+				"%v: CreateHunt: GetOrgConfig %v", org_id, err))
 			continue
 		}
 
 		hunt_id, err := hunt_dispatcher.CreateHunt(
 			ctx, org_config_obj, acl_manager, in)
 		if err != nil {
-			logger.Error("CreateHunt: GetOrgConfig %v", err)
+			errors_msg = append(errors_msg, fmt.Sprintf(
+				"%v: CreateHunt: GetOrgConfig %v", org_id, err))
 			continue
 		}
 
@@ -183,6 +190,11 @@ func (self *ApiServer) CreateHunt(
 		// orgs - this makes it easier to combine results from all
 		// orgs.
 		in.HuntId = hunt_id
+	}
+
+	if len(errors_msg) != 0 {
+		return nil, Status(self.verbose,
+			errors.New(strings.Join(errors_msg, "\n")))
 	}
 
 	result := &api_proto.StartFlowResponse{}
