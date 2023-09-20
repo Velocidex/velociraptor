@@ -52,3 +52,10 @@ func NewOSFileSystemAccessor() *OSFileSystemAccessor {
 		root: root_path,
 	}
 }
+
+func splitDevNumber(dev uint64) (major, minor uint64) {
+	// See bits/sysmacros.h (glibc) or sys/sysmacros.h (musl-libc)
+	major = ((dev >> 32) & 0xfffff000) | ((dev >> 8) & 0xfff)
+	minor = ((dev >> 12) & 0xffffff00) | (dev & 0xff)
+	return
+}

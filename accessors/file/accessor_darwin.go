@@ -43,3 +43,10 @@ func (self *OSFileInfo) Atime() time.Time {
 	ts := self._Sys().Atimespec
 	return time.Unix(0, ts.Nsec+ts.Sec*1000000000)
 }
+
+func splitDevNumber(dev uint64) (major, minor uint64) {
+	// See xnu/bsd/sys/types.h
+	major = (dev >> 24) & 0xff
+	minor = dev & &0xffffff
+	return
+}
