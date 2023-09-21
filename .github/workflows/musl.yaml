@@ -51,6 +51,7 @@ jobs:
         mkdir ./output/
         export PATH=$PATH:~/go/bin/:/usr/local/musl/bin
         go run make.go -v LinuxMusl
+        go run make.go -v LinuxMuslArm64
 
     - name: StoreBinaries
       uses: actions/upload-artifact@v3

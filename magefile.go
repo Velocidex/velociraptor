@@ -229,6 +229,16 @@ func LinuxMusl() error {
 		arch:          "amd64"}.Run()
 }
 
+func LinuxMuslArm64() error {
+	return Builder{
+		extra_tags:    " release yara ",
+		goos:          "linux",
+		cc:            "musl-gcc",
+		extra_name:    "-musl",
+		extra_ldflags: "-linkmode external -extldflags \"-static\"",
+		arch:          "arm64"}.Run()
+}
+
 func LinuxMusl386() error {
 	return Builder{
 		extra_tags:    " release yara disable_gui ",
