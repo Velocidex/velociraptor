@@ -128,7 +128,7 @@ func (self *OSFileInfo) Data() *ordereddict.Dict {
 	result := ordereddict.NewDict()
 	sys, ok := self._FileInfo.Sys().(*syscall.Stat_t)
 	if ok {
-		major, minor := splitDevNumber(sys.Dev)
+		major, minor := splitDevNumber(uint64(sys.Dev))
 		result.Set("DevMajor", major).
 			Set("DevMinor", minor)
 	}
