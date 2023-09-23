@@ -223,7 +223,8 @@ func checkForServerUpgrade(
 		return errors.New("config_obj.Version not configured")
 	}
 
-	if utils.CompareVersions(state.Version, config_obj.Version.Version) < 0 {
+	if utils.CompareVersions("velociraptor",
+		state.Version, config_obj.Version.Version) < 0 {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("Server upgrade detected %v -> %v... running upgrades.",
 			state.Version, config_obj.Version.Version)

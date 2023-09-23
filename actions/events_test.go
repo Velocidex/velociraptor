@@ -21,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/labels"
+	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
@@ -69,6 +70,9 @@ func (self *EventsTestSuite) SetupTest() {
 	self.ConfigObj.Services.ClientMonitoring = true
 	self.ConfigObj.Services.IndexServer = true
 	self.TestSuite.SetupTest()
+
+	writeback_service := writeback.GetWritebackService()
+	writeback_service.LoadWriteback(self.ConfigObj)
 
 	self.client_id = "C.2232"
 	self.Clock = &utils.IncClock{}

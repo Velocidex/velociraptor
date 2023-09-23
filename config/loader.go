@@ -16,6 +16,7 @@ import (
 	"github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -505,10 +506,8 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 
 	if config_obj.Client != nil {
 		if self.use_writeback {
-			err := self.loadWriteback(config_obj)
-			if err != nil {
-				return err
-			}
+			writeback_service := writeback.GetWritebackService()
+			writeback_service.LoadWriteback(config_obj)
 		}
 		err := ValidateClientConfig(config_obj)
 		if err != nil {

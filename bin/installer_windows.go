@@ -36,12 +36,12 @@ import (
 	"golang.org/x/sys/windows/svc/eventlog"
 	"golang.org/x/sys/windows/svc/mgr"
 	kingpin "gopkg.in/alecthomas/kingpin.v2"
-	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
@@ -390,6 +390,7 @@ func loadClientConfig() (*config_proto.Config, error) {
 	}
 
 	executor.SetTempfile(config_obj)
+	writeback.StartWritebackService()
 
 	// Make sure the config is ok.
 	err = crypto_utils.VerifyConfig(config_obj)
@@ -525,7 +526,8 @@ func runOnce(ctx context.Context,
 		return
 	}
 
-	writeback, err := config.GetWriteback(config_obj.Client)
+	writeback_service := writeback.GetWritebackService()
+	writeback, err := writeback_service.GetWriteback(config_obj)
 	if err != nil {
 		return
 	}

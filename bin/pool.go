@@ -23,7 +23,6 @@ import (
 	"path"
 	"sync"
 
-	config "www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/executor"
@@ -32,6 +31,7 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/startup"
 )
 
@@ -133,7 +133,8 @@ func doPoolClient() error {
 				return fmt.Errorf("Invalid config: %w", err)
 			}
 
-			writeback, err := config.GetWriteback(client_config.Client)
+			writeback_service := writeback.GetWritebackService()
+			writeback, err := writeback_service.GetWriteback(client_config)
 			if err != nil {
 				return err
 			}

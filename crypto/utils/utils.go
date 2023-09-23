@@ -30,8 +30,8 @@ import (
 	"fmt"
 
 	"github.com/go-errors/errors"
-	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/services/writeback"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -214,48 +214,43 @@ func VerifyConfig(config_obj *config_proto.Config) error {
 		return errors.New("No server URLs configured!")
 	}
 
-	writeback, err := config.GetWriteback(config_obj.Client)
-	if err != nil {
-		writeback = &config_proto.Writeback{}
-	}
+	writeback_service := writeback.GetWritebackService()
+	return writeback_service.MutateWriteback(config_obj,
+		func(wb *config_proto.Writeback) error {
+			if wb.PrivateKey != "" {
+				// Add a client id for information here.
+				if wb.ClientId == "" {
+					private_key, err := ParseRsaPrivateKeyFromPemStr(
+						[]byte(wb.PrivateKey))
+					if err != nil {
+						return errors.Wrap(err, 0)
+					}
 
-	if writeback.PrivateKey == "" {
-		fmt.Println("Generating new private key....")
-		pem, err := GeneratePrivateKey()
-		if err != nil {
-			return errors.Wrap(err, 0)
-		}
+					wb.ClientId = ClientIDFromPublicKey(
+						&private_key.PublicKey)
+					return writeback.WritebackUpdateLevel1
+				}
 
-		private_key, err := ParseRsaPrivateKeyFromPemStr(pem)
-		if err != nil {
-			return errors.Wrap(err, 0)
-		}
+				return writeback.WritebackNoUpdate
+			}
 
-		// Add a client id for information here
-		writeback.ClientId = ClientIDFromPublicKey(&private_key.PublicKey)
-		writeback.PrivateKey = string(pem)
-		err = config.UpdateWriteback(config_obj.Client, writeback)
-		if err != nil {
-			return fmt.Errorf("During UpdateWriteback: %w", err)
-		}
-	}
+			fmt.Println("Generating new private key....")
+			pem, err := GeneratePrivateKey()
+			if err != nil {
+				return errors.Wrap(err, 0)
+			}
 
-	// Make sure the client if is set in the writeback.
-	if writeback.ClientId == "" {
-		private_key, err := ParseRsaPrivateKeyFromPemStr([]byte(writeback.PrivateKey))
-		if err != nil {
-			return errors.Wrap(err, 0)
-		}
+			private_key, err := ParseRsaPrivateKeyFromPemStr(pem)
+			if err != nil {
+				return errors.Wrap(err, 0)
+			}
 
-		// Add a client id for information here
-		writeback.ClientId = ClientIDFromPublicKey(&private_key.PublicKey)
-		err = config.UpdateWriteback(config_obj.Client, writeback)
-		if err != nil {
-			return fmt.Errorf("During UpdateWriteback: %w", err)
-		}
-	}
+			// Add a client id for information here
+			wb.ClientId = ClientIDFromPublicKey(&private_key.PublicKey)
+			wb.PrivateKey = string(pem)
 
-	return nil
+			return writeback.WritebackUpdateLevel1
+		})
 }
 
 func GetSubjectName(cert *x509.Certificate) string {
