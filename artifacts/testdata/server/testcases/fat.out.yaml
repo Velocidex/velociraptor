@@ -1,0 +1,52 @@
+SELECT *, OSPath.Path AS OSPath,
+     if(condition=NOT IsDir,
+        then= read_file(accessor="fat", filename=OSPath)) AS Contents
+FROM glob(globs='/**', accessor="fat",
+    root=pathspec(
+      Path="a", -- Only look under this directory
+      DelegateAccessor="file",
+      DelegatePath=srcDir+'/artifacts/testdata/files/fat_very_small.dd'))
+[
+ {
+  "Name": "b",
+  "Mtime": "2023-09-23T09:33:48Z",
+  "Atime": "2023-09-23T00:00:00Z",
+  "Ctime": "2023-09-23T09:33:49.72Z",
+  "Btime": "2023-09-23T09:33:49.72Z",
+  "Size": 0,
+  "Mode": 2147484141,
+  "IsDir": true,
+  "IsLink": false,
+  "Data": {
+   "first_cluster": 4,
+   "attr": "D",
+   "short_name": "B"
+  },
+  "Globs": [
+   "/**"
+  ],
+  "OSPath": "/a/b",
+  "Contents": null
+ },
+ {
+  "Name": "hello.txt",
+  "Mtime": "2023-09-23T09:33:48Z",
+  "Atime": "2023-09-23T00:00:00Z",
+  "Ctime": "2023-09-23T09:33:49.72Z",
+  "Btime": "2023-09-23T09:33:49.72Z",
+  "Size": 12,
+  "Mode": 493,
+  "IsDir": false,
+  "IsLink": false,
+  "Data": {
+   "first_cluster": 5,
+   "attr": "A",
+   "short_name": "HELLO.TXT"
+  },
+  "Globs": [
+   "/**"
+  ],
+  "OSPath": "/a/b/hello.txt",
+  "Contents": "hello world\n"
+ }
+]

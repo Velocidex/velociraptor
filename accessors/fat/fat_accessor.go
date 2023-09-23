@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -136,7 +137,10 @@ func (self FATFileSystemAccessor) New(scope vfilter.Scope) (
 
 func (self FATFileSystemAccessor) ParsePath(path string) (
 	*accessors.OSPath, error) {
-	return accessors.NewWindowsNTFSPath(path)
+	if runtime.GOOS == "windows" {
+		return accessors.NewWindowsNTFSPath(path)
+	}
+	return accessors.NewLinuxOSPath(path)
 }
 
 func (self *FATFileSystemAccessor) ReadDir(path string) (
@@ -346,19 +350,20 @@ func init() {
 
 This accessor is designed to operate on images directly. It requires a
 delegate accessor to get the raw image and will open files using the
-NTFS full path rooted at the top of the filesystem.
+FAT full path rooted at the top of the filesystem.
 
 ## Example
 
-The following query will open the $MFT file from the raw image file
-that will be accessed using the file accessor.
+The following query will glob all the files under the directory 'a'
+inside a FAT image file
 
-SELECT * FROM parse_mft(
-  filename=pathspec(
-    Path="$MFT",
+SELECT *
+FROM glob(globs='/**',
+  accessor="fat",
+  root=pathspec(
+    Path="a",
     DelegateAccessor="file",
-    DelegatePath='fat.dd'),
-  accessor="fat")
+    DelegatePath='fat.dd'))
 
 `)
 

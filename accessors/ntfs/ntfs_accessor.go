@@ -25,6 +25,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"runtime/debug"
 	"strings"
 	"sync"
@@ -165,7 +166,10 @@ func (self *NTFSFileSystemAccessor) getRootMFTEntry(ntfs_ctx *ntfs.NTFSContext) 
 
 func (self NTFSFileSystemAccessor) ParsePath(path string) (
 	*accessors.OSPath, error) {
-	return accessors.NewWindowsNTFSPath(path)
+	if runtime.GOOS == "windows" {
+		return accessors.NewWindowsNTFSPath(path)
+	}
+	return accessors.NewLinuxOSPath(path)
 }
 
 func (self *NTFSFileSystemAccessor) ReadDir(path string) (

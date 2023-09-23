@@ -12,6 +12,7 @@ import (
 func GetFatContext(scope vfilter.Scope,
 	device, fullpath *accessors.OSPath, accessor string) (
 	result *fat.FATContext, err error) {
+
 	if device == nil {
 		device, err = fullpath.Delegate(scope)
 		if err != nil {
@@ -20,11 +21,36 @@ func GetFatContext(scope vfilter.Scope,
 		accessor = fullpath.DelegateAccessor()
 	}
 
-	lru_size := vql_subsystem.GetIntFromRow(
-		scope, scope, constants.NTFS_CACHE_SIZE)
+	return GetFATCache(scope, device, accessor)
+}
 
-	paged_reader, err := readers.NewPagedReader(
-		scope, accessor, device, int(lru_size))
+func GetFATCache(scope vfilter.Scope,
+	device *accessors.OSPath, accessor string) (*fat.FATContext, error) {
+	key := "fat_cache" + device.String() + accessor
 
-	return fat.GetFATContext(paged_reader)
+	// Get the cache context from the root scope's cache
+	cache_ctx, ok := vql_subsystem.CacheGet(scope, key).(*fat.FATContext)
+	if !ok {
+		lru_size := vql_subsystem.GetIntFromRow(
+			scope, scope, constants.NTFS_CACHE_SIZE)
+
+		paged_reader, err := readers.NewPagedReader(
+			scope, accessor, device, int(lru_size))
+
+		cache_ctx, err = fat.GetFATContext(paged_reader)
+		if err != nil {
+			return nil, err
+		}
+		vql_subsystem.CacheSet(scope, key, cache_ctx)
+
+		// Close the device when we are done with this query.
+		err = vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+			paged_reader.Close()
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return cache_ctx, nil
 }
