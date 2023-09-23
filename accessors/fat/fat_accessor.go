@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"runtime"
 	"runtime/debug"
 	"sync"
 	"time"
@@ -137,10 +136,7 @@ func (self FATFileSystemAccessor) New(scope vfilter.Scope) (
 
 func (self FATFileSystemAccessor) ParsePath(path string) (
 	*accessors.OSPath, error) {
-	if runtime.GOOS == "windows" {
-		return accessors.NewWindowsNTFSPath(path)
-	}
-	return accessors.NewLinuxOSPath(path)
+	return accessors.NewWindowsNTFSPath(path)
 }
 
 func (self *FATFileSystemAccessor) ReadDir(path string) (

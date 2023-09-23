@@ -23,9 +23,9 @@ FROM glob(globs='/**', accessor="fat",
    "short_name": "B"
   },
   "Globs": [
-   "/**"
+   "**"
   ],
-  "OSPath": "/a/b",
+  "OSPath": "a\\b",
   "Contents": null
  },
  {
@@ -44,9 +44,9 @@ FROM glob(globs='/**', accessor="fat",
    "short_name": "HELLO.TXT"
   },
   "Globs": [
-   "/**"
+   "**"
   ],
-  "OSPath": "/a/b/hello.txt",
+  "OSPath": "a\\b\\hello.txt",
   "Contents": "hello world\n"
  }
 ]
