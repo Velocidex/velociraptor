@@ -2,8 +2,6 @@ package writeback
 
 import (
 	"errors"
-	"os"
-	"runtime"
 	"sync"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -25,7 +23,7 @@ func (self *WritebackService) MutateWriteback(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	location, err := self.WritebackLocation(config_obj)
+	location, err := WritebackLocation(config_obj)
 	if err != nil {
 		return err
 	}
@@ -44,7 +42,7 @@ func (self *WritebackService) GetWriteback(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	location, err := self.WritebackLocation(config_obj)
+	location, err := WritebackLocation(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -57,13 +55,29 @@ func (self *WritebackService) GetWriteback(
 	return manager.GetWriteback(), nil
 }
 
+// Only used in a test
+func (self *WritebackService) Reset(
+	config_obj *config_proto.Config) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	location, err := WritebackLocation(config_obj)
+	if err != nil {
+		return writeback_not_enabled_error
+	}
+
+	manager := NewWritebackManager(config_obj, location)
+	self.dispatcher[location] = manager
+	return manager.Load()
+}
+
 func (self *WritebackService) LoadWriteback(
 	config_obj *config_proto.Config) error {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	location, err := self.WritebackLocation(config_obj)
+	location, err := WritebackLocation(config_obj)
 	if err != nil {
 		return writeback_not_enabled_error
 	}
@@ -75,28 +89,6 @@ func (self *WritebackService) LoadWriteback(
 	}
 
 	return manager.Load()
-}
-
-// Return the location of the writeback file.
-func (self *WritebackService) WritebackLocation(
-	config_obj *config_proto.Config) (string, error) {
-	if config_obj == nil || config_obj.Client == nil {
-		return "", errors.New("Client not configured")
-	}
-
-	switch runtime.GOOS {
-	case "darwin":
-		return os.ExpandEnv(config_obj.Client.WritebackDarwin), nil
-
-	case "linux":
-		return os.ExpandEnv(config_obj.Client.WritebackLinux), nil
-
-	case "windows":
-		return os.ExpandEnv(config_obj.Client.WritebackWindows), nil
-
-	default:
-		return os.ExpandEnv(config_obj.Client.WritebackLinux), nil
-	}
 }
 
 func NewWritebackService() WritebackServiceInterface {

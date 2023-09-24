@@ -390,7 +390,6 @@ func loadClientConfig() (*config_proto.Config, error) {
 	}
 
 	executor.SetTempfile(config_obj)
-	writeback.StartWritebackService()
 
 	// Make sure the config is ok.
 	err = crypto_utils.VerifyConfig(config_obj)

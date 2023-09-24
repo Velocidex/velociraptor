@@ -32,11 +32,6 @@ func ValidateClientConfig(config_obj *config_proto.Config) error {
 		return errors.New("No Client.server_urls configured")
 	}
 
-	_, err := WritebackLocation(config_obj.Client)
-	if err != nil {
-		return err
-	}
-
 	// Add defaults
 	if config_obj.Logging == nil {
 		config_obj.Logging = &config_proto.LoggingConfig{}
@@ -75,7 +70,16 @@ func ValidateClientConfig(config_obj *config_proto.Config) error {
 	config_obj.Version = GetVersion()
 	config_obj.Client.Version = config_obj.Version
 
+	// Ensure the writeback service is configured.
 	writeback_service := writeback.GetWritebackService()
+	_, err := writeback_service.GetWriteback(config_obj)
+	if err != nil {
+		err := writeback_service.LoadWriteback(config_obj)
+		if err != nil {
+			return err
+		}
+	}
+
 	writeback, err := writeback_service.GetWriteback(config_obj)
 	if err == nil && writeback.InstallTime != 0 {
 		config_obj.Client.Version.InstallTime = writeback.InstallTime

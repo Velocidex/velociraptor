@@ -169,6 +169,12 @@ message ClientConfig {
             description: "A path where windows clients will write local state."
         }];
 
+    // If this is set we use a second file for the level2
+    // writeback. The string expected here is added to the regular
+    // writeback filename. For example setting to "l2" will create a
+    // file named "velociraptor.writeback.yaml.l2"
+    string level2_writeback_suffix = 44;
+
     // A path to set the temp directory. If not set we use the system
     // default. The path may be relative to the current directory
     // (usually the location of the executable). If the path does not
