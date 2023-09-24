@@ -12,6 +12,7 @@ package raw_file
 
 import (
 	"errors"
+	"fmt"
 	"os"
 
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
@@ -23,7 +24,9 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-type RawFileSystemAccessor struct{}
+type RawFileSystemAccessor struct {
+	scope vfilter.Scope
+}
 
 func (self RawFileSystemAccessor) ParsePath(path string) (*accessors.OSPath, error) {
 	return accessors.NewRawFilePath(path)
@@ -38,7 +41,9 @@ func (self RawFileSystemAccessor) New(scope vfilter.Scope) (
 		return nil, err
 	}
 
-	result := &RawFileSystemAccessor{}
+	result := &RawFileSystemAccessor{
+		scope: scope,
+	}
 	return result, nil
 }
 
@@ -61,7 +66,7 @@ func (self RawFileSystemAccessor) Open(filename string) (accessors.ReadSeekClose
 	// Treat the path as a raw OS path.
 	file, err := os.Open(filename)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("While opening %v: %v", filename, err)
 	}
 
 	reader, err := ntfs.NewPagedReader(file, 0x1000, 10000)
@@ -79,6 +84,16 @@ func (self RawFileSystemAccessor) Lstat(path string) (accessors.FileInfo, error)
 	}
 
 	stat, err := os.Lstat(path)
+	if err != nil {
+		// On Windows it is not always possible to stat a device. In
+		// that case we need to return a fake object so it is not an
+		// error.
+		stat = &accessors.VirtualFileInfo{
+			Path:  full_path,
+			Size_: 1<<63 - 1,
+		}
+	}
+
 	return file.NewOSFileInfo(stat, full_path), err
 }
 
@@ -87,6 +102,16 @@ func (self RawFileSystemAccessor) LstatWithOSPath(
 
 	path := full_path.String()
 	stat, err := os.Lstat(path)
+	if err != nil {
+		// On Windows it is not always possible to stat a device. In
+		// that case we need to return a fake object so it is not an
+		// error.
+		stat = &accessors.VirtualFileInfo{
+			Path:  full_path,
+			Size_: 1<<63 - 1,
+		}
+	}
+
 	return file.NewOSFileInfo(stat, full_path), err
 }
 
