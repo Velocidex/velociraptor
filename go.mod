@@ -74,7 +74,7 @@ require (
 	github.com/sebdah/goldie/v2 v2.5.3
 	github.com/sergi/go-diff v1.2.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	github.com/tink-ab/tempfile v0.0.0-20180226111222-33beb0518f1a
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v1.0.0
@@ -97,7 +97,7 @@ require (
 	howett.net/plist v1.0.0
 	www.velocidex.com/golang/evtx v0.2.1-0.20220404133451-1fdf8be7325e
 	www.velocidex.com/golang/go-ese v0.1.1-0.20230821114411-ecb5494187ed
-	www.velocidex.com/golang/go-ntfs v0.1.2-0.20230815140127-6a3dd72bfbf1
+	www.velocidex.com/golang/go-ntfs v0.1.2-0.20230922133004-33eadbbaf1f2
 	www.velocidex.com/golang/go-pe v0.1.1-0.20230228112150-ef2eadf34bc3
 	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
 	www.velocidex.com/golang/oleparse v0.0.0-20230217092320-383a0121aafe
@@ -108,10 +108,12 @@ require (
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.6
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.0.0
+	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11
+	github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a
 	github.com/Velocidex/grok v0.0.1
-	github.com/Velocidex/ordereddict v0.0.0-20221110130714-6a7cb85851cd
+	github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d
 	github.com/andybalholm/brotli v1.0.4
 	github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.1-0.20221027171526-76a36be4fa02
 	github.com/coreos/go-oidc/v3 v3.4.0
@@ -144,7 +146,6 @@ require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.3.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.1.1 // indirect
-	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/PuerkitoBio/goquery v1.8.0 // indirect
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
@@ -214,6 +215,7 @@ require (
 // replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter
 // replace www.velocidex.com/golang/regparser => /home/mic/projects/regparser
 // replace www.velocidex.com/golang/go-ntfs => /home/mic/projects/go-ntfs
+// replace github.com/Velocidex/go-fat => /home/mic/projects/go-fat
 // replace www.velocidex.com/golang/go-pe => /home/mic/projects/go-pe
 // replace www.velocidex.com/golang/evtx => /home/mic/projects/evtx
 // replace www.velocidex.com/golang/go-ese => /home/mic/projects/go-ese

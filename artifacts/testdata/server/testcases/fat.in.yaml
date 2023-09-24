@@ -1,0 +1,13 @@
+# This tests a very small fat12 file just to test the fat
+# accessor. More comprehensive tests are available in the go-fat
+# project.
+Queries:
+  - |
+    SELECT *, OSPath.Path AS OSPath,
+         if(condition=NOT IsDir,
+            then= read_file(accessor="fat", filename=OSPath)) AS Contents
+    FROM glob(globs='/**', accessor="fat",
+        root=pathspec(
+          Path="a", -- Only look under this directory
+          DelegateAccessor="file",
+          DelegatePath=srcDir+'/artifacts/testdata/files/fat_very_small.dd'))
