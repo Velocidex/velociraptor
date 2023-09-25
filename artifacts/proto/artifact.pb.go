@@ -523,7 +523,7 @@ type Artifact struct {
 	Raw string `protobuf:"bytes,7,opt,name=raw,proto3" json:"raw,omitempty"`
 	// Artifact was already compiled.
 	Compiled bool `protobuf:"varint,14,opt,name=compiled,proto3" json:"compiled,omitempty"`
-	// The artifact is considered built and and can not be overriden by the GUI
+	// The artifact is considered built in and can not be overriden by the GUI
 	BuiltIn bool `protobuf:"varint,20,opt,name=built_in,json=builtIn,proto3" json:"built_in,omitempty"`
 	// The artifact is built into the Velociraptor binary.
 	CompiledIn bool `protobuf:"varint,24,opt,name=compiled_in,json=compiledIn,proto3" json:"compiled_in,omitempty"`

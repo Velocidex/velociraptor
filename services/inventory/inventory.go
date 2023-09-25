@@ -137,7 +137,7 @@ func (self *InventoryService) ProbeToolInfo(
 			continue
 		}
 
-		if utils.CompareVersions(match.Version, tool.Version) < 0 {
+		if utils.CompareVersions(tool.Name, match.Version, tool.Version) < 0 {
 			match = tool
 		}
 	}
@@ -253,7 +253,7 @@ func (self *InventoryService) GetToolInfo(
 			continue
 		}
 
-		if utils.CompareVersions(match.Version, item.Version) < 0 {
+		if utils.CompareVersions(item.Name, match.Version, item.Version) < 0 {
 			match = item
 		}
 	}

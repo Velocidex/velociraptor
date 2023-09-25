@@ -11,12 +11,12 @@ import (
 	"time"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	constants "www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -170,14 +170,15 @@ func makeCheckpoint(
 	// We just need the name
 	checkpoint.Close()
 
-	config.MutateWriteback(config_obj.Client,
+	writeback_service := writeback.GetWritebackService()
+	writeback_service.MutateWriteback(config_obj,
 		func(wb *config_proto.Writeback) error {
 			wb.Checkpoints = append(wb.Checkpoints,
 				&config_proto.FlowCheckPoint{
 					FlowId: flow_id,
 					Path:   checkpoint.Name(),
 				})
-			return nil
+			return writeback.WritebackUpdateLevel2
 		})
 
 	logger := logging.GetLogger(config_obj, &logging.ClientComponent)
@@ -274,17 +275,24 @@ func (self *FlowContext) _Close() {
 	}
 	if self.checkpoint != "" {
 		os.Remove(self.checkpoint)
-		config.MutateWriteback(self.config_obj.Client,
+
+		writeback_service := writeback.GetWritebackService()
+		writeback_service.MutateWriteback(self.config_obj,
 			func(wb *config_proto.Writeback) error {
-				new_list := make([]*config_proto.FlowCheckPoint, 0, len(wb.Checkpoints))
+				new_list := make([]*config_proto.FlowCheckPoint,
+					0, len(wb.Checkpoints))
 				for _, cp := range wb.Checkpoints {
 					if cp.Path != self.checkpoint {
 						new_list = append(new_list, cp)
 					}
 				}
 
+				if len(new_list) == len(wb.Checkpoints) {
+					return writeback.WritebackNoUpdate
+				}
+
 				wb.Checkpoints = new_list
-				return nil
+				return writeback.WritebackUpdateLevel2
 			})
 
 		// Do not write a checkpoint any more.

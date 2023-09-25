@@ -184,19 +184,7 @@ sources:
 func (self *CollectorTestSuite) uploadToolDefinitions() {
 	t := self.T()
 
-	// Upload a small file (the config file) for all the other
-	// architectures.
-	for _, os_name := range []string{"Windows", "Windows_x86", "Linux", "Darwin"} {
-		cmd := exec.Command(self.binary, "--config", self.config_file,
-			"tools", "upload", "--name", "Velociraptor"+os_name,
-			"--tool_version", constants.VERSION,
-			self.config_file)
-		out, err := cmd.CombinedOutput()
-		fmt.Println(string(out))
-		require.NoError(t, err)
-	}
-
-	// Upload the real thing for the architecture we are running on.
+	// Upload the real binary for the architecture we are running on.
 	cmd := exec.Command(self.binary, "--config", self.config_file,
 		"tools", "upload", "--name", "Velociraptor"+self.OS_TYPE,
 		"--tool_version", constants.VERSION,

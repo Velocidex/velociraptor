@@ -7,8 +7,9 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
-	"www.velocidex.com/golang/velociraptor/config"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
+	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -44,18 +45,13 @@ func (self *RekeyFunction) Call(ctx context.Context,
 	}
 
 	// Check the config if we are allowed to execve at all.
-	config_obj, ok := artifacts.GetConfig(scope)
-	if !ok || config_obj == nil {
-		scope.Log("rekey: Must be running on a client to rekey %v", config_obj)
+	client_config_obj, ok := artifacts.GetConfig(scope)
+	if !ok || client_config_obj == nil {
+		scope.Log("rekey: Must be running on a client to rekey")
 		return vfilter.Null{}
 	}
 
-	writeback, err := config.GetWriteback(config_obj)
-	if err != nil {
-		scope.Log("rekey: %v", err)
-		return vfilter.Null{}
-	}
-
+	config_obj := &config_proto.Config{Client: client_config_obj}
 	pem, err := crypto_utils.GeneratePrivateKey()
 	if err != nil {
 		scope.Log("rekey: %v", err)
@@ -68,15 +64,19 @@ func (self *RekeyFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	new_client_id := crypto_utils.ClientIDFromPublicKey(&private_key.PublicKey)
+
 	// Update the write back.
-	writeback.PrivateKey = string(pem)
-	err = config.UpdateWriteback(config_obj, writeback)
+	err = writeback.GetWritebackService().MutateWriteback(config_obj,
+		func(wb *config_proto.Writeback) error {
+			wb.PrivateKey = string(pem)
+			wb.ClientId = new_client_id
+			return writeback.WritebackUpdateLevel1
+		})
 	if err != nil {
 		scope.Log("rekey: %v", err)
 		return vfilter.Null{}
 	}
-
-	new_client_id := crypto_utils.ClientIDFromPublicKey(&private_key.PublicKey)
 
 	// Send the new client id to the main client loop so it can
 	// restart, but wait a bit to allow messages to be sent to the
