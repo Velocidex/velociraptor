@@ -67,6 +67,7 @@ type OSFileInfo struct {
 	_FileInfo     os.FileInfo
 	_full_path    *accessors.OSPath
 	_accessor_ctx *AccessorContext
+	_fstype       string
 }
 
 func NewOSFileInfo(base os.FileInfo, path *accessors.OSPath) *OSFileInfo {
@@ -116,21 +117,24 @@ func (self *OSFileInfo) Dev() uint64 {
 }
 
 func (self *OSFileInfo) Data() *ordereddict.Dict {
+	result := ordereddict.NewDict()
 	if self.IsLink() {
 		path := self.FullPath()
 		target, err := os.Readlink(path)
 		if err == nil {
-			return ordereddict.NewDict().
-				Set("Link", target)
+			result.Set("Link", target)
 		}
 	}
 
-	result := ordereddict.NewDict()
 	sys, ok := self._FileInfo.Sys().(*syscall.Stat_t)
 	if ok {
 		major, minor := splitDevNumber(uint64(sys.Dev))
 		result.Set("DevMajor", major).
 			Set("DevMinor", minor)
+	}
+
+	if self._fstype != "" {
+		result.Set("FSType", self._fstype)
 	}
 
 	return result
@@ -344,6 +348,8 @@ func (self OSFileSystemAccessor) ReadDirWithOSPath(
 		}
 	}
 
+	dirfstype := getFSType(dir)
+
 	files, err := utils.ReadDir(dir)
 	if err != nil {
 		return nil, err
@@ -351,11 +357,19 @@ func (self OSFileSystemAccessor) ReadDirWithOSPath(
 
 	var result []accessors.FileInfo
 	for _, f := range files {
+		fp := full_path.Append(f.Name())
+		var fstype string
+		if f.IsDir() {
+			fstype = getFSType(fp.String())
+		} else {
+			fstype = dirfstype
+		}
 		result = append(result,
 			&OSFileInfo{
 				_FileInfo:     f,
-				_full_path:    full_path.Append(f.Name()),
+				_full_path:    fp,
 				_accessor_ctx: self.context,
+				_fstype:       fstype,
 			})
 	}
 
