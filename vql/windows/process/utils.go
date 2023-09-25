@@ -1,4 +1,4 @@
-// +build windows,cgo
+// +build windows
 
 package process
 

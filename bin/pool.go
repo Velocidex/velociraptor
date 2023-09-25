@@ -76,7 +76,7 @@ func doPoolClient() error {
 
 	client_config, err := makeDefaultConfigLoader().
 		WithRequiredClient().
-		WithVerbose(*verbose_flag).
+		WithVerbose(*verbose_flag).WithWriteback().
 		LoadAndValidate()
 	if err != nil {
 		return fmt.Errorf("Unable to load config file: %w", err)
@@ -97,6 +97,7 @@ func doPoolClient() error {
 
 	// Make a copy of all the configs for each client.
 	serialized, _ := json.Marshal(client_config)
+	logger := logging.GetLogger(client_config, &logging.ClientComponent)
 
 	c := counter{}
 
@@ -127,21 +128,27 @@ func doPoolClient() error {
 			// Disable client info updates in pool clients
 			client_config.Client.ClientInfoUpdateTime = -1
 
+			// Load existing writebacks if we need them
+			writeback_service := writeback.GetWritebackService()
+			writeback_service.LoadWriteback(client_config)
+
 			// Make sure the config is ok.
 			err = crypto_utils.VerifyConfig(client_config)
 			if err != nil {
+				logger.Error("Invalid config: %v", err)
 				return fmt.Errorf("Invalid config: %w", err)
 			}
 
-			writeback_service := writeback.GetWritebackService()
-			writeback, err := writeback_service.GetWriteback(client_config)
+			wb, err := writeback_service.GetWriteback(client_config)
 			if err != nil {
+				logger.Error("Writeback: %v", err)
 				return err
 			}
 
 			exe, err := executor.NewPoolClientExecutor(
-				ctx, writeback.ClientId, client_config, i)
+				ctx, wb.ClientId, client_config, i)
 			if err != nil {
+				logger.Error("Can not create executor: %v", err)
 				return fmt.Errorf("Can not create executor: %w", err)
 			}
 
@@ -149,6 +156,7 @@ func doPoolClient() error {
 				sm.Ctx, sm.Wg, client_config, exe,
 				func(ctx context.Context, config_obj *config_proto.Config) {})
 			if err != nil {
+				logger.Error("StartHttpCommunicatorService: %v", err)
 				return err
 			}
 

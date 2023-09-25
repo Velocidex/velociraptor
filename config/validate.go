@@ -72,14 +72,6 @@ func ValidateClientConfig(config_obj *config_proto.Config) error {
 
 	// Ensure the writeback service is configured.
 	writeback_service := writeback.GetWritebackService()
-	_, err := writeback_service.GetWriteback(config_obj)
-	if err != nil {
-		err := writeback_service.LoadWriteback(config_obj)
-		if err != nil {
-			return err
-		}
-	}
-
 	writeback, err := writeback_service.GetWriteback(config_obj)
 	if err == nil && writeback.InstallTime != 0 {
 		config_obj.Client.Version.InstallTime = writeback.InstallTime
