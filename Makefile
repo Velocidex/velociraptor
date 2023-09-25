@@ -45,6 +45,9 @@ linux_arm64:
 linux_musl:
 	go run make.go -v LinuxMusl
 
+linux_muslarm64:
+	go run make.go -v LinuxMuslArm64
+
 linux:
 	go run make.go -v linux
 
