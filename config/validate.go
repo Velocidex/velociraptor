@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -29,11 +30,6 @@ func ValidateClientConfig(config_obj *config_proto.Config) error {
 
 	if config_obj.Client.ServerUrls == nil {
 		return errors.New("No Client.server_urls configured")
-	}
-
-	_, err := WritebackLocation(config_obj.Client)
-	if err != nil {
-		return err
 	}
 
 	// Add defaults
@@ -74,8 +70,10 @@ func ValidateClientConfig(config_obj *config_proto.Config) error {
 	config_obj.Version = GetVersion()
 	config_obj.Client.Version = config_obj.Version
 
-	writeback, err := GetWriteback(config_obj.Client)
-	if err == nil {
+	// Ensure the writeback service is configured.
+	writeback_service := writeback.GetWritebackService()
+	writeback, err := writeback_service.GetWriteback(config_obj)
+	if err == nil && writeback.InstallTime != 0 {
 		config_obj.Client.Version.InstallTime = writeback.InstallTime
 	}
 
