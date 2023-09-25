@@ -8,11 +8,11 @@ import (
 	"os"
 	"sync"
 
-	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services/writeback"
 )
 
 func CheckForCrashes(
@@ -26,9 +26,14 @@ func CheckForCrashes(
 		return nil
 	}
 
-	return config.MutateWriteback(config_obj.Client,
+	writeback_service := writeback.GetWritebackService()
+	return writeback_service.MutateWriteback(config_obj,
 		func(wb *config_proto.Writeback) error {
 			checkpoints := wb.Checkpoints
+			if len(checkpoints) == 0 {
+				return writeback.WritebackNoUpdate
+			}
+
 			wb.Checkpoints = nil
 
 			wg.Add(1)
@@ -68,6 +73,7 @@ func CheckForCrashes(
 					}
 				}
 			}()
-			return nil
+
+			return writeback.WritebackUpdateLevel2
 		})
 }

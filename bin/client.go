@@ -23,12 +23,12 @@ import (
 	"os"
 	"sync"
 
-	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/http_comms"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/vql/tools"
 )
@@ -123,7 +123,8 @@ func runClientOnce(
 
 	executor.SetTempfile(config_obj)
 
-	writeback, err := config.GetWriteback(config_obj.Client)
+	writeback_service := writeback.GetWritebackService()
+	writeback, err := writeback_service.GetWriteback(config_obj)
 	if err != nil {
 		return err
 	}

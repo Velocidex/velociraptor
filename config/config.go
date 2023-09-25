@@ -19,7 +19,6 @@ package config
 
 import (
 	"io/ioutil"
-	"os"
 	"runtime"
 
 	"github.com/Velocidex/yaml/v2"
@@ -36,24 +35,6 @@ var (
 	commit_hash string
 	ci_run_url  string
 )
-
-// Return the location of the writeback file.
-func WritebackLocation(self *config_proto.ClientConfig) (string, error) {
-	if self == nil {
-		return "", errors.New("Client not configured")
-	}
-
-	switch runtime.GOOS {
-	case "darwin":
-		return os.ExpandEnv(self.WritebackDarwin), nil
-	case "linux":
-		return os.ExpandEnv(self.WritebackLinux), nil
-	case "windows":
-		return os.ExpandEnv(self.WritebackWindows), nil
-	default:
-		return os.ExpandEnv(self.WritebackLinux), nil
-	}
-}
 
 func GetVersion() *config_proto.Version {
 	return &config_proto.Version{
@@ -74,8 +55,9 @@ func GetDefaultConfig() *config_proto.Config {
 			WritebackLinux:  "/etc/velociraptor.writeback.yaml",
 			WritebackWindows: "$ProgramFiles\\Velociraptor\\" +
 				"velociraptor.writeback.yaml",
-			TempdirWindows: "$ProgramFiles\\Velociraptor\\Tools",
-			MaxPoll:        60,
+			Level2WritebackSuffix: ".bak",
+			TempdirWindows:        "$ProgramFiles\\Velociraptor\\Tools",
+			MaxPoll:               60,
 
 			// By default restart the client if we are unable to
 			// contant the server within this long. (NOTE - even a

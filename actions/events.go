@@ -33,13 +33,13 @@ import (
 
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
-	config "www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
@@ -291,7 +291,8 @@ func (self *EventTable) StartFromWriteback(
 	// Get the event table from the writeback if possible.
 	event_table := &actions_proto.VQLEventTable{}
 
-	writeback, err := config.GetWriteback(config_obj.Client)
+	writeback_service := writeback.GetWritebackService()
+	writeback, err := writeback_service.GetWriteback(config_obj)
 	if err == nil && writeback.EventQueries != nil {
 		event_table = writeback.EventQueries
 		self.UpdateEventTable(ctx, wg, config_obj, output_chan, event_table)
@@ -315,10 +316,16 @@ func (self *EventTable) UpdateEventTable(
 		return
 	}
 
+	writeback_service := writeback.GetWritebackService()
+
 	// No change required, skip it.
 	if !changed {
 		// We still need to write the new version
-		err = update_writeback(config_obj, update_table)
+		err = writeback_service.MutateWriteback(config_obj,
+			func(wb *config_proto.Writeback) error {
+				wb.EventQueries = update_table
+				return writeback.WritebackUpdateLevel2
+			})
 		if err != nil {
 			responder.MakeErrorResponse(output_chan, "F.Monitoring",
 				fmt.Sprintf("Unable to write events to writeback: %v", err))
@@ -329,24 +336,17 @@ func (self *EventTable) UpdateEventTable(
 	// Kick off the queries
 	self.StartQueries(ctx, config_obj, output_chan)
 
-	err = update_writeback(config_obj, update_table)
+	// Update the writeback
+	err = writeback_service.MutateWriteback(config_obj,
+		func(wb *config_proto.Writeback) error {
+			wb.EventQueries = update_table
+			return writeback.WritebackUpdateLevel2
+		})
 	if err != nil {
 		responder.MakeErrorResponse(output_chan, "F.Monitoring",
 			fmt.Sprintf("Unable to write events to writeback: %v", err))
 		return
 	}
-}
-
-func update_writeback(
-	config_obj *config_proto.Config,
-	event_table *actions_proto.VQLEventTable) error {
-
-	// Read the existing writeback file - it is ok if it does not
-	// exist yet.
-	writeback, _ := config.GetWriteback(config_obj.Client)
-	writeback.EventQueries = event_table
-
-	return config.UpdateWriteback(config_obj.Client, writeback)
 }
 
 func NewEventTable(
