@@ -16,6 +16,7 @@ import (
 	"github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -504,11 +505,19 @@ func (self *Loader) Validate(config_obj *config_proto.Config) error {
 	}
 
 	if config_obj.Client != nil {
+		// We only use the writeback for certain cases where is it
+		// needed:
+		// - Running as a client, pool client , service etc
+		//
+		// Other cases do not use the writeback and will fail to write
+		// on it. This stops us randomly writing the writeback when
+		// e.g. run as a command line tool, offline collector etc.
+		//
+		// The main programs will set this via WithWriteback()
+		// directive when they prepare the config loader.
 		if self.use_writeback {
-			err := self.loadWriteback(config_obj)
-			if err != nil {
-				return err
-			}
+			writeback_service := writeback.GetWritebackService()
+			writeback_service.LoadWriteback(config_obj)
 		}
 		err := ValidateClientConfig(config_obj)
 		if err != nil {

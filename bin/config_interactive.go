@@ -123,6 +123,10 @@ This is useful for a shared server where users are not fully trusted.
 It removes potentially dangerous plugins like execve(),filesystem access etc.
 `,
 	}
+
+	registry_writeback_question = &survey.Confirm{
+		Message: `Would you like to use the registry to store the writeback files? (Experimental)`,
+	}
 )
 
 func regexValidator(re string) survey.Validator {
@@ -214,6 +218,20 @@ func configureDeploymentType(config_obj *config_proto.Config) error {
 			return err
 		}
 	}
+
+	return nil
+}
+
+func configureRegistryWriteback(config_obj *config_proto.Config) error {
+	use_registry := false
+	err := survey.AskOne(registry_writeback_question, &use_registry, nil)
+	if err != nil {
+		return err
+	}
+
+	if use_registry {
+		config_obj.Client.WritebackWindows = "HKLM\\SOFTWARE\\Velocidex\\Velociraptor"
+	}
 	return nil
 }
 
@@ -232,6 +250,7 @@ func doGenerateConfigInteractive() error {
 
 	configureDataStore(config_obj)
 	configureDeploymentType(config_obj)
+	configureRegistryWriteback(config_obj)
 
 	// The API's public DNS name allows external callers but by
 	// default we bind to loopback only.
