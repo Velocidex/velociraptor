@@ -7,7 +7,10 @@ Queries:
       IncludeFilesAccessed=TRUE)
 
   # Exclude the Btime added rows
-  - SELECT *, "hostname" AS hostname, basename(path=source) AS source
+  - SELECT *, "hostname" AS hostname,
+       "prefetch_ctime" AS prefetch_ctime,
+       "prefetch_mtime" AS prefetch_mtime,
+       basename(path=source) AS source
     FROM Artifact.Windows.Timeline.Prefetch(
        prefetchGlobs=srcDir+"/artifacts/testdata/files/*.pf")
     WHERE NOT message =~ "Btime"
