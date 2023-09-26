@@ -39,9 +39,10 @@ sources:
     query: |
       SELECT
       sysinfo() AS `Computer Info`,
-      { SELECT Name, HardwareAddrString AS MACAddress, Up, PointToPoint,
-               join(array=AddrsString, sep=', ') AS IPAddresses
-               FROM interfaces() WHERE HardwareAddr} AS `Network Info`
+      { SELECT Name, HardwareAddrString AS MACAddress,
+               Up, PointToPoint,
+               AddrsString AS IPAddresses
+        FROM interfaces() WHERE HardwareAddr} AS `Network Info`
       FROM scope()
 
   - name: WindowsInfo
@@ -134,14 +135,39 @@ reports:
          })
       {{ end }}
 
+      {{ define "computerinfo" }}
+      LET X <= SELECT *
+        FROM source(artifact='Generic.Client.Info/LinuxInfo')
+        LIMIT 1
+
+      SELECT humanize(bytes=TotalPhysicalMemory) AS  TotalPhysicalMemory,
+             humanize(bytes=TotalFreeMemory) AS  TotalFreeMemory,
+             humanize(bytes=TotalSharedMemory) AS  TotalSharedMemory,
+             humanize(bytes=TotalSwap) AS  TotalSwap,
+             humanize(bytes=FreeSwap) AS  FreeSwap
+      FROM foreach(row=X[0].`Computer Info`)
+      {{ end }}
+
       <div>
       {{ Query "resources" | LineChart "xaxis_mode" "time" "RSS.yaxis" 2 }}
       </div>
 
       {{ $windows_info := Query "SELECT * FROM source(source='WindowsInfo')" }}
-      {{ if $windows_info }}
+      {{ if $windows_info | Expand }}
       # Windows agent information
         {{ $windows_info | Table }}
+      {{ end }}
+
+      {{ $linux_info := Query "LET X <= SELECT * FROM source(artifact='Generic.Client.Info/LinuxInfo') LIMIT 1 SELECT * FROM X" }}
+      {{ if Query "SELECT * FROM source(artifact='Generic.Client.Info/LinuxInfo')" | Expand }}
+      # Linux agent information
+
+      ### Network Info
+        {{ Query "SELECT * FROM foreach(row=X[0].`Network Info`)" | Table }}
+
+      ### Computer Info
+        {{ Query "computerinfo" | Table }}
+
       {{ end }}
 
       # Active Users
