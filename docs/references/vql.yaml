@@ -2933,9 +2933,9 @@
     description: The accessor to use.
   metadata:
     permissions: FILESYSTEM_READ
-- name: linux_sysinfo
+- name: sysinfo
   description: Collect system information on Linux clients
-  type: Plugin
+  type: Function
   metadata:
     permissions: MACHINE_STATE
 - name: log
