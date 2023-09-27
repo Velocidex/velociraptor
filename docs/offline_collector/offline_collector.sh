@@ -66,5 +66,13 @@ SELECT * FROM Artifact.Server.Utils.CreateCollector(
 EOF
 )
 
+# If you have custom artifacts you need to store them in an
+# "artifact_definitions" directory.
+CUSTOM_ARGS=""
+if [ -d "artifact_definitions" ]; then
+  CUSTOM_ARGS="--definitions artifact_definitions"
+fi
 
-$VELOCIRAPTOR --config server.config.yaml query -v --env SPECFILE="${SPECFILE}" "${QUERY}" --dump_dir .
+echo $VELOCIRAPTOR --config server.config.yaml query -v --env SPECFILE="${SPECFILE}" "${QUERY}" --dump_dir . $CUSTOM_ARGS
+
+$VELOCIRAPTOR --config server.config.yaml query -v --env SPECFILE="${SPECFILE}" "${QUERY}" --dump_dir . $CUSTOM_ARGS
