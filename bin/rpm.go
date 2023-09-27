@@ -265,7 +265,7 @@ func doClientRPM() error {
 
 	version := strings.ReplaceAll(constants.VERSION, "-", ".")
 
-	output_path := fmt.Sprintf("velociraptor-client-%s.%s.rpm", version, arch)
+	output_path := fmt.Sprintf("velociraptor_client_%s_%s.rpm", version, arch)
 	if *client_rpm_command_output != "" {
 		output_path = *client_rpm_command_output
 	}
@@ -535,7 +535,7 @@ func doClientSysVRPM() error {
 
 	version := strings.ReplaceAll(constants.VERSION, "-", ".")
 
-	output_path := fmt.Sprintf("velociraptor-client-%s.%s.rpm", version, arch)
+	output_path := fmt.Sprintf("velociraptor_client_%s_%s.rpm", version, arch)
 	if *client_rpm_command_output != "" {
 		output_path = *client_rpm_command_output
 	}
