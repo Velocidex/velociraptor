@@ -8,7 +8,7 @@ Artifacts:
   Windows.Sysinternals.Autoruns:
 
 # Can be ZIP, GCS, S3, Azure, SMBShare, SFTP
-#Target: ZIP
+Target: ZIP
 
 # Relevant args to the Target type above.
 TargetArgs:
