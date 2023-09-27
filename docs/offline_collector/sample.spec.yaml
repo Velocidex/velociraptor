@@ -1,0 +1,35 @@
+# Can be Windows, Windows_x86, Linux, MacOS, MacOSArm, Generic
+OS: Windows
+
+# The list of artifacts and their args.
+Artifacts:
+  Windows.KapeFiles.Targets:
+    EventLogs: Y
+  Windows.Sysinternals.Autoruns:
+
+# Can be ZIP, GCS, S3, Azure, SMBShare, SFTP
+#Target: ZIP
+
+# Relevant args to the Target type above.
+TargetArgs:
+  bucket:
+  GCSKey:
+
+# Can be None, X509
+EncryptionScheme: X509
+
+# Following can be Y or N
+OptVerbose: Y
+OptBanner: Y
+OptPrompt: N
+OptAdmin: Y
+
+# A path to use for the temp file (Blank for system default)
+OptTempdir:
+
+# Compression level to use
+OptLevel: 5
+OptFilenameTemplate: "Collection-%FQDN%-%TIMESTAMP%"
+
+# Can be jsonl or csv
+OptFormat: jsonl
