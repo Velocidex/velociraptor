@@ -1361,32 +1361,21 @@ sources:
                             join(array=PropertyStore.Value,sep='\n')
                         ]) =~ IgnoreRegex,
                     else= False)
-        
       
       LET add_suspicious = SELECT *, dict(
-                `Large Size` = if(condition= SourceFile.Size > SusSize, then=True, else=False),
-                `Startup Path` = if(condition= SourceFile.OSPath =~ '''\\Startup\\''', then=True, else=False),
-                `Environment variable script` = if(condition= ExtraData.EnvironmentVariable =~ '''\.(bat|cmd|ps1|js|vbs|vbe|py)$''', then=True, else=False),
-                `No Target with environmant variable` = if(condition= ExtraData.EnvironmentVariable AND StringData.Arguments AND NOT (StringData.TargetPath OR StringData.RelativePath), then=True, else=False),
-                `Suspicious argument size` = if(condition= len(list=StringData.Arguments > SusArgSize), then=True, else=False),
-                `Arguments have ticks` = if(condition= StringData.Arguments=~'''\^''', then=True, else=False),
-                `Arguments have environment variables` = if(condition= StringData.Arguments=~'''\%|\$env:''', then=True, else=False),
-                `Arguments have rare characters` = if(condition= StringData.Arguments=~'''\?\!\~\@''', then=True, else=False),
-                `Arguments have leading space` = if(condition= StringData.Arguments=~'^ ', then=True, else=False),
-                `Arguments have http strings` = if(condition= StringData.Arguments=~'''https?://''', then=True, else=False),
-                `Suspicious arguments` = if(condition= StringData.Arguments=~SusArgRegex, then=True, else=False),
-                `Suspicious hostname` = 
-                    if(condition=ExtraData.TrackerData.MachineID AND SusHostnameRegex, 
-                        then= if(condition= ExtraData.TrackerData.MachineID=~SusHostnameRegex AND NOT lowcase(string=ExtraData.TrackerData.MachineID)=~lowcase(string=hostname[0].Hostname),
-                            then=True, 
-                            else=False), 
-                        else=False),
-                `Hostname mismatch` = 
-                    if(condition=CheckHostnameMismatch AND ExtraData.TrackerData.MachineID, 
-                        then= if(condition= NOT ExtraData.TrackerData.MachineID=~hostname[0].Hostname, 
-                            then=True,
-                            else=False),
-                        else=False)
+                `Large Size` = SourceFile.Size > SusSize,
+                `Startup Path` = SourceFile.OSPath =~ '''\\Startup\\''',
+                `Environment variable script` = ExtraData.EnvironmentVariable =~ '''\.(bat|cmd|ps1|js|vbs|vbe|py)$''',
+                `No Target with environmant variable` = ExtraData.EnvironmentVariable AND StringData.Arguments AND NOT (StringData.TargetPath OR StringData.RelativePath),
+                `Suspicious argument size` = len(list=StringData.Arguments) > SusArgSize,
+                `Arguments have ticks` = StringData.Arguments=~'''\^''',
+                `Arguments have environment variables` = StringData.Arguments=~'''\%|\$env:''',
+                `Arguments have rare characters` = StringData.Arguments=~'''\?\!\~\@''',
+                `Arguments have leading space` = StringData.Arguments =~ '^ ',
+                `Arguments have http strings` = StringData.Arguments =~'''https?://''',
+                `Suspicious arguments` = StringData.Arguments =~ SusArgRegex,
+                `Suspicious hostname` = ExtraData.TrackerData.MachineID AND SusHostnameRegex AND ExtraData.TrackerData.MachineID=~SusHostnameRegex AND NOT lowcase(string=ExtraData.TrackerData.MachineID)=~lowcase(string=hostname[0].Hostname),
+                `Hostname mismatch` = CheckHostnameMismatch AND ExtraData.TrackerData.MachineID AND NOT lowcase(string=ExtraData.TrackerData.MachineID)=~lowcase(string=hostname[0].Hostname)
             ) as Suspicious
         FROM results
         WHERE if(condition=SuspiciousOnly,
