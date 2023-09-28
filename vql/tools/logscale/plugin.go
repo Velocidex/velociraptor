@@ -224,7 +224,7 @@ func (self logscalePlugin) Call(ctx context.Context,
 
 		var tickerChan <- chan time.Time
 		if arg.StatsInterval != 0 {
-			ticker := time.NewTicker(time.Duration(arg.StatsInterval))
+			ticker := time.NewTicker(time.Duration(arg.StatsInterval) * time.Second)
 			tickerChan = ticker.C
 			defer ticker.Stop()
 		} else {
