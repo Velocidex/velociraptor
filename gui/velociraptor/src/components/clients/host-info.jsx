@@ -370,6 +370,12 @@ class VeloHostInfo extends Component {
                         <dd className="col-sm-9">
                           { info.os_info.machine }
                         </dd>
+			<dt className="col-sm-3">MAC Addresses</dt>
+			<dd className="col-sm-9">
+			  { _.map(info.os_info.mac_addresses, (address, idx) => {
+			      return <div>{address}</div>
+			  })}
+			</dd>
                       </dl>
                       <hr />
                       <Card.Header>{T("Client Metadata")}</Card.Header>
