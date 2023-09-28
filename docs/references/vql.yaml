@@ -3511,7 +3511,7 @@
 - name: netstat
   description: Collect network information.
   type: Plugin
-  category: windows
+  category: plugin
 - name: notebook_delete
   description: 'Delete a notebook with all its cells. '
   type: Plugin

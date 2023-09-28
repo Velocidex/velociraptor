@@ -18,7 +18,7 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package windows
+package networking
 
 import (
 	"context"
@@ -32,7 +32,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -68,23 +67,6 @@ var (
 	}
 )
 
-// Addr is implemented compatibility to psutil
-type Addr struct {
-	IP   string
-	Port uint32
-}
-
-type ConnectionStat struct {
-	Fd        uint32
-	Family    uint32
-	Type      uint32
-	Laddr     Addr
-	Raddr     Addr
-	Status    string
-	Pid       int32
-	Timestamp time.Time
-}
-
 func (self *ConnectionStat) FamilyString() string {
 	switch self.Family {
 	case windows.AF_INET:
@@ -106,9 +88,6 @@ func (self *ConnectionStat) TypeString() string {
 		return fmt.Sprintf("%d", self.Type)
 	}
 }
-
-// The VQL WMI plugin.
-type NetstatArgs struct{}
 
 func runNetstat(
 	ctx context.Context, scope vfilter.Scope, args *ordereddict.Dict) []vfilter.Row {
@@ -363,11 +342,5 @@ func getNetTable(fn uintptr, family int, class int) ([]byte, error) {
 }
 
 func init() {
-	vql_subsystem.RegisterPlugin(&vfilter.GenericListPlugin{
-		PluginName: "netstat",
-		Doc:        "Collect network information.",
-		Function:   runNetstat,
-		ArgType:    &NetstatArgs{},
-		Metadata:   vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
-	})
+	vql_subsystem.RegisterPlugin(&_Netstat)
 }
