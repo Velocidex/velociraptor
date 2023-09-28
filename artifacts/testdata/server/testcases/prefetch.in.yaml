@@ -5,3 +5,19 @@ Queries:
     FROM Artifact.Windows.Forensics.Prefetch(
       prefetchGlobs=srcDir+"/artifacts/testdata/files/*.pf",
       IncludeFilesAccessed=TRUE)
+
+  # Exclude the Btime added rows
+  - SELECT *, "hostname" AS hostname,
+       "prefetch_ctime" AS prefetch_ctime,
+       "prefetch_mtime" AS prefetch_mtime,
+       basename(path=source) AS source
+    FROM Artifact.Windows.Timeline.Prefetch(
+       prefetchGlobs=srcDir+"/artifacts/testdata/files/*.pf")
+    WHERE NOT message =~ "Btime"
+
+  # Make sure there is a single Btime row
+  - SELECT count()
+    FROM Artifact.Windows.Timeline.Prefetch(
+       prefetchGlobs=srcDir+"/artifacts/testdata/files/*.pf")
+    WHERE message =~ "Btime"
+    GROUP BY 1

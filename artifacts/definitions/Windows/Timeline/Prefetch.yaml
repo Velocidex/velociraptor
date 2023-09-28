@@ -39,76 +39,68 @@ sources:
   - query: |
       LET hostname <= SELECT Fqdn FROM info()
 
-      -- Parse prefetch files and apply non time filters
-      LET pf = SELECT * FROM foreach(
-              row={
-                 SELECT * FROM glob(globs=prefetchGlobs)
-              },
-              query={
-                SELECT
-                    Executable,
-                    FileSize,
-                    Hash,
-                    Version,
-                    LastRunTimes,
-                    RunCount,
-                    // FilesAccessed,
-                    OSPath,
-                    Name AS PrefetchFileName,
-                    Btime as CreationTime,
-                    Mtime as ModificationTime
-                 FROM prefetch(filename=OSPath)
-                 WHERE
-                    if(condition=binaryRegex, then= Executable =~ binaryRegex,
-                    else=TRUE) AND
-                    if(condition=hashRegex, then= Hash =~ hashRegex,
-                    else=TRUE)
-              })
-      -- Flattern and filter on time.
-      LET executionTimes = SELECT * FROM flatten(
-                query = {
-                    SELECT *,
-                        OSPath as FilteredPath,
-                        LastRunTimes as ExecutionTime
-                    FROM pf
-                })
-            WHERE
-                if(condition=dateAfter, then=ExecutionTime > timestamp(string=dateAfter),
-                    else=TRUE) AND
-                if(condition=dateBefore, then=ExecutionTime < timestamp(string=dateBefore),
-                    else=TRUE)
-            GROUP BY ExecutionTime
-      LET creationTimes = SELECT * FROM flatten(
-                query = {
-                    SELECT *,
-                        OSPath as FilteredPath,
-                        CreationTime as ExecutionTime
-                    FROM pf
-                    WHERE RunCount > 8
-                })
-            WHERE
-                if(condition=dateAfter, then=ExecutionTime > timestamp(string=dateAfter),
-                    else=TRUE) AND
-                if(condition=dateBefore, then=ExecutionTime < timestamp(string=dateBefore),
-                        else=TRUE)
-            GROUP BY ExecutionTime
-
-      -- Output results ready for timeline
-      LET flatOutput = SELECT
-                    ExecutionTime as event_time,
-                    hostname.Fqdn[0] as hostname,
-                    "Prefetch" as parser,
-                    "Evidence of Execution: " + Executable + format(format=" Prefetch run count %v", args=RunCount) as message,
-                    FilteredPath as source,
-                    Executable as file_name,
-                    CreationTime as prefetch_ctime,
-                    ModificationTime as prefetch_mtime,
-                    FileSize as prefetch_size,
-                    Hash as prefetch_hash,
-                    Version as prefetch_version,
-                    PrefetchFileName as prefetch_file,
-                    RunCount as prefetch_count
-            FROM chain(
-                    a = { SELECT * FROM executionTimes },
-                    b = { SELECT * FROM creationTimes  })
-      SELECT * FROM flatOutput
+      SELECT  LastRunTimes as event_time,
+              hostname.Fqdn[0] as hostname,
+              "Prefetch" as parser,
+              message,
+              OSPath as source,
+              Executable as file_name,
+              CreationTime as prefetch_ctime,
+              ModificationTime as prefetch_mtime,
+              FileSize as prefetch_size,
+              Hash as prefetch_hash,
+              Version as prefetch_version,
+              PrefetchFileName as prefetch_file,
+              RunCount as prefetch_count
+      FROM foreach(
+      row={
+        SELECT *
+        FROM Artifact.Windows.Forensics.Prefetch(
+          prefetchGlobs=prefetchGlobs,
+          dateAfter=dateAfter,
+          dateBefore=dateBefore,
+          binaryRegex=binaryRegex,
+          hashRegex=hashRegex)
+      },
+      query={
+        SELECT *
+        FROM chain(a1={
+           SELECT *
+           FROM flatten(query={
+            SELECT Executable,
+                   FileSize,
+                   Hash,
+                   Version,
+                   LastRunTimes,
+                   "Evidence of Execution: " + Executable + format(
+                      format=" Prefetch run count %v", args=RunCount) as message,
+                   RunCount,
+                   OSPath,
+                   PrefetchFileName,
+                   CreationTime,
+                   ModificationTime,
+                   Binary
+            FROM scope()
+          })
+        }, b1={
+            -- One more row for creation time
+            SELECT Executable,
+                   FileSize,
+                   Hash,
+                   Version,
+                   CreationTime AS LastRunTimes,
+                   "Evidence of Execution (Btime): " + Executable + format(
+                      format=" Prefetch run count %v", args=RunCount) as message,
+                   RunCount,
+                   OSPath,
+                   PrefetchFileName,
+                   CreationTime,
+                   ModificationTime,
+                   Binary
+            FROM scope()
+        })
+        -- This group by applies on only a single prefetch file to
+        -- remove duplication with CreationTime
+        GROUP BY LastRunTimes
+      })
+      ORDER BY event_time
