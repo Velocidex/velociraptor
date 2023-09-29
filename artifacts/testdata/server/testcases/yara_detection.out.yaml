@@ -147,4 +147,19 @@ FROM scope()
   "Ctime": "2021-03-21T05:57:50.184145696Z",
   "Btime": "2021-03-01T05:57:50.184086639Z"
  }
+]SELECT relpath(path=DevicePath, base=srcDir, sep="/") as TestPath, CleanContext(HitContext=HitContext), StartOffest,ScanLength,Rule,YaraString,HitOffset FROM Artifact.Windows.Detection.Yara.Device(DevicePath=srcDir + "/artifacts/testdata/files/MBR")[
+ {
+  "TestPath": "artifacts/testdata/files/MBR",
+  "CleanContext(HitContext=HitContext)": {
+   "StoredSize": 512,
+   "Path": "data",
+   "Size": 512,
+   "sha256": "0c05714e525951781417248c7ee8a2f42ec5bfa04f8f3e0e10cd118e438a67eb"
+  },
+  "StartOffest": 0,
+  "ScanLength": 512,
+  "Rule": "MBR",
+  "YaraString": "$mbr",
+  "HitOffset": 0
+ }
 ]
