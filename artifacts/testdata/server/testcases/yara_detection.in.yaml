@@ -104,3 +104,9 @@ Queries:
     CleanContext(HitContext=HitContext),
     Size,Rule,Mtime,Atime,Ctime,Btime
     FROM Artifact.Generic.Detection.Yara.Glob(DateBefore='2021-04-01',ContextBytes=10,YaraRule=MZRule)
+
+  # test Windows.Detection.Yara.Device (shoudl also work cross platform)
+  - SELECT relpath(path=DevicePath, base=srcDir, sep="/") as TestPath,
+      CleanContext(HitContext=HitContext),
+      StartOffest,ScanLength,Rule,YaraString,HitOffset
+    FROM Artifact.Windows.Detection.Yara.Device(DevicePath=srcDir + "/artifacts/testdata/files/MBR")

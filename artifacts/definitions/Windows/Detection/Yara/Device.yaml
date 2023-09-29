@@ -1,0 +1,91 @@
+name: Windows.Detection.Yara.Device
+author: Matt Green - @mgreen27
+description: |
+  This artifact enables running Yara over a Physical device and offset
+  specific targeting.
+
+  There are 2 kinds of Yara rules that can be deployed:
+
+  1. Url link to a yara rule.  
+  2. or a Standard Yara rule attached as a parameter.  
+
+  Only one method of Yara will be applied and search order is as above. The
+  default is targeting the Master Boot Record (MBR).
+
+  Note: by default the Yara scan will stop after one hit. Multi-string rules will also only
+  show one string in returned rows.
+
+  Due to scanning raw devices and size being potentially very large I have included
+  an example on how to upload the MBR as the default yara rule.
+
+parameters:
+  - name: DevicePath
+    default: \\.\PHYSICALDRIVE0
+    description: Raw Device for main disk to target.
+  - name: StartOffest
+    type: int
+    default: 0
+  - name: ScanLength
+    type: int
+    default: 512
+  - name: YaraUrl
+    description: If configured will attempt to download Yara rules from Url
+    type: upload
+  - name: YaraRule
+    type: yara
+    default: |
+        rule MBR {
+            meta:
+                author = "Matt Green - @mgreen27"
+                description = "Checks MBR header at offset 510 and collects MBR in HitContext"
+            strings:
+                $mbr = /^.{512}$/ //first entry covering bytes we want to upload.
+                $mbrheader = { 55 AA }
+            condition:
+                $mbr and $mbrheader at 510
+        }
+  - name: NumberOfHits
+    description: THis artifact will stop by default at one hit. This setting allows additional hits
+    default: 1
+    type: int
+  - name: ContextBytes
+    description: Include this amount of bytes around hit as context.
+    default: 0
+    type: int64
+
+sources:
+  - query: |
+      -- check which Yara to use
+      LET yara_rules <= YaraUrl || YaraRule
+
+      -- target yara with raw_file pachspec
+      SELECT
+        DevicePath,
+        StartOffest,
+        ScanLength,
+        Namespace,
+        Rule,
+        Meta,
+        Tags,
+        String.Name as YaraString,
+        String.Offset AS HitOffset,
+        upload(
+            accessor='data',
+            file=String.Data,
+            name=format(format='%s_%s',
+                    args=[basename(path=DevicePath),str(str=String.Offset)])
+                ) AS HitContext
+      FROM yara(files=pathspec(
+                    DelegateAccessor="raw_file",
+                    DelegatePath=DevicePath,
+                    Path=StartOffest),
+                accessor='offset',
+                start=0,
+                end=ScanLength,
+                rules=yara_rules,
+                context=ContextBytes,
+                number=NumberOfHits )
+
+column_types:
+  - name: HitContext
+    type: upload_preview
