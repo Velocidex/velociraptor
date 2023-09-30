@@ -8,7 +8,7 @@ SELECT *, basename(path=_OSPath) AS _OSPath FROM Artifact.Windows.Forensics.User
   "AuthenticatedUserName": "win-e5k9rc5gu23\\administrator",
   "RoleName": "File Server",
   "RawAddress": "00000000000000000000000000000001",
-  "Address": ":01",
+  "Address": "0000:0000:0000:0000:0000:0000:0000:0001",
   "Days": {
    "Day233": 1
   },
