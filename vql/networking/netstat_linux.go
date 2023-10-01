@@ -203,7 +203,7 @@ func readProcNet(which string, si socketInfo) ([]*ConnectionStat, error) {
 			Raddr:  Addr{rip.String(), rport},
 			Status: st,
 			Pid:    pid,
-			// Timestamp time.Time
+			// timestamp: not available on Linux
 		})
 	}
 	return rv, nil

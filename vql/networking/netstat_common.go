@@ -22,7 +22,7 @@ type ConnectionStat struct {
 	Raddr     Addr
 	Status    string
 	Pid       int32
-	Timestamp time.Time
+	timestamp time.Time
 }
 
 var _Netstat = vfilter.GenericListPlugin{

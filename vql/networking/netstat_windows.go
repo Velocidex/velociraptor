@@ -89,6 +89,10 @@ func (self *ConnectionStat) TypeString() string {
 	}
 }
 
+func (self *ConnectionStat) Timestamp() time.Time {
+	return self.timestamp
+}
+
 func runNetstat(
 	ctx context.Context, scope vfilter.Scope, args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
@@ -186,7 +190,7 @@ func parse_MIB_UDPROW_OWNER_MODULE(res []byte) []*ConnectionStat {
 				},
 				Pid: int32(binary.LittleEndian.Uint32(
 					res[pos+8 : pos+12])),
-				Timestamp: time.Unix(int64(timestamp), 0),
+				timestamp: time.Unix(int64(timestamp), 0),
 			})
 
 			// struct length
@@ -230,7 +234,7 @@ func parse_MIB_TCPROW_OWNER_MODULE(res []byte) []*ConnectionStat {
 				},
 				Pid: int32(binary.LittleEndian.Uint32(
 					res[pos+20 : pos+24])),
-				Timestamp: time.Unix(int64(timestamp), 0),
+				timestamp: time.Unix(int64(timestamp), 0),
 			})
 
 			// struct length
@@ -274,7 +278,7 @@ func parse_MIB_TCP6ROW_OWNER_MODULE(res []byte) []*ConnectionStat {
 				},
 				Pid: int32(binary.LittleEndian.Uint32(
 					res[pos+52 : pos+56])),
-				Timestamp: time.Unix(int64(timestamp), 0),
+				timestamp: time.Unix(int64(timestamp), 0),
 			})
 
 			// struct length
@@ -307,7 +311,7 @@ func parse_MIB_UDP6ROW_OWNER_MODULE(res []byte) []*ConnectionStat {
 				},
 				Pid: int32(binary.LittleEndian.Uint32(
 					res[pos+24 : pos+28])),
-				Timestamp: time.Unix(int64(timestamp), 0),
+				timestamp: time.Unix(int64(timestamp), 0),
 			})
 
 			// struct length
