@@ -342,55 +342,9 @@ func (self *NotebookManager) updateCellContents(
 		}
 
 	case "vql":
-		// No query, nothing to do
-		if reporting.IsEmptyQuery(input) {
-			tmpl.Error("Please specify a query to run")
-		} else {
-			vqls, err := vfilter.MultiParseWithComments(input)
-			if err != nil {
-				// Try parsing without comments if comment parser fails
-				vqls, err = vfilter.MultiParse(input)
-				if err != nil {
-					return make_error_cell(output, err)
-				}
-			}
-
-			no_query := true
-			for _, vql := range vqls {
-				if vql.Comments != nil {
-					// Only extract multiline comments to render template
-					// Ignore code comments
-					comments := multiLineCommentsToString(vql)
-					if comments != "" {
-						fragment_output, err := tmpl.Execute(
-							&artifacts_proto.Report{Template: comments})
-						if err != nil {
-							return make_error_cell(output, err)
-						}
-						output += fragment_output
-					}
-				}
-				if vql.Let != "" || vql.Query != nil || vql.StoredQuery != nil {
-					no_query = false
-					rows, err := tmpl.RunQuery(vql, nil)
-
-					if err != nil {
-						return make_error_cell(output, err)
-					}
-
-					// VQL Let won't return rows. Ignore
-					if vql.Let == "" {
-						output_any, ok := tmpl.Table(rows).(string)
-						if ok {
-							output += output_any
-						}
-					}
-				}
-			}
-			// No VQL found, only comments
-			if no_query {
-				tmpl.Error("Please specify a query to run")
-			}
+		output, err = self.VqlProcessor.Process(tmpl, input)
+		if err != nil {
+			return make_error_cell(output, err)
 		}
 
 	default:
@@ -401,20 +355,4 @@ func (self *NotebookManager) updateCellContents(
 
 	notebook_cell = make_cell(output)
 	return notebook_cell, self.Store.SetNotebookCell(notebook_id, notebook_cell)
-}
-
-func multiLineCommentsToString(vql *vfilter.VQL) string {
-	output := ""
-
-	for _, comment := range vql.Comments {
-		if comment.MultiLine != nil {
-			output += *comment.MultiLine
-		}
-	}
-
-	if output != "" {
-		return output[2 : len(output)-2]
-	} else {
-		return output
-	}
 }

@@ -20,8 +20,9 @@ import (
 )
 
 type NotebookManager struct {
-	config_obj *config_proto.Config
-	Store      NotebookStore
+	config_obj   *config_proto.Config
+	Store        NotebookStore
+	VqlProcessor VqlProcessor
 }
 
 func (self *NotebookManager) GetNotebook(
@@ -171,10 +172,12 @@ func (self *NotebookManager) UploadNotebookAttachment(ctx context.Context,
 
 func NewNotebookManager(
 	config_obj *config_proto.Config,
-	storage NotebookStore) *NotebookManager {
+	storage NotebookStore,
+	processor VqlProcessor) *NotebookManager {
 	result := &NotebookManager{
-		config_obj: config_obj,
-		Store:      storage,
+		config_obj:   config_obj,
+		Store:        storage,
+		VqlProcessor: processor,
 	}
 	return result
 }
@@ -187,7 +190,8 @@ func NewNotebookManagerService(
 	return NewNotebookManager(config_obj,
 		&NotebookStoreImpl{
 			config_obj: config_obj,
-		}), nil
+		},
+		&VqlCell{}), nil
 }
 
 func (self *NotebookManager) ReformatVQL(
