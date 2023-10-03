@@ -18,7 +18,7 @@ import (
 var (
 	app      = kingpin.New("config_check", "Check Config.")
 	filename = app.Arg("filename",
-		"Yaml filename to read (server.config.yaml)").String()
+		"Yaml filename to read (server.config.yaml)").Required().String()
 	tagRegEx = regexp.MustCompile("json:\"([^,]+)")
 
 	// Usually deprecated fields we dont want people to use.
