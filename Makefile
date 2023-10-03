@@ -111,3 +111,6 @@ archive_artifacts:
 
 translations:
 	python3 ./scripts/find_i8n_translations.py ./gui/velociraptor/src/components/i8n/
+
+config_check:
+	go run ./docs/references/sample_config/main.go ./docs/references/server.config.yaml
