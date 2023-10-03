@@ -133,7 +133,18 @@ Client:
   ## removed on uninstall).
   writeback_darwin: /etc/velociraptor.writeback.yaml
   writeback_linux: /tmp/velociraptor.writeback.yaml
+
+  ## From 0.7.0-3: On Windows if the writeback path starts with HKLM\
+  ## the path will be interpreted as a registry key that will be used
+  ## to store the writeback instead of files on disk.
   writeback_windows: $ProgramFiles\Velociraptor\velociraptor.writeback.yaml
+
+  # If this value is specified, Velociraptor will create a level 2
+  # writeback file. This second file is used as a backup and to write
+  # more frequently updated content. This scheme should reduce the
+  # likelihood that the file is corrupted to the point that the client
+  # id is lost.
+  level2_writeback_suffix: l2
 
   ## This is the directory Velociraptor will use for temporary
   ## files. If not specified or not writable, Velociraptor will use
