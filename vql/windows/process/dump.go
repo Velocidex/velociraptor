@@ -35,6 +35,7 @@ import (
 	"unsafe"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -102,13 +103,22 @@ func (self ProcDumpPlugin) Call(
 			return
 		}
 
+		result := ordereddict.NewDict().
+			Set("FullPath", filename).
+			Set("Pid", arg.Pid)
+
+		os_path, err := accessors.NewWindowsOSPath(filename)
+		if err != nil {
+			result.Set("OSPath", filename)
+		} else {
+			result.Set("OSPath", os_path)
+		}
+
 		select {
 		case <-ctx.Done():
 			return
 
-		case output_chan <- ordereddict.NewDict().
-			Set("OSPath", filename).
-			Set("Pid", arg.Pid):
+		case output_chan <- result:
 		}
 	}()
 
