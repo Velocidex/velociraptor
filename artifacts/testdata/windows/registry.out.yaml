@@ -36,7 +36,7 @@ SELECT OSPath FROM glob(globs="/*", accessor="registry")[
  {
   "OSPath": "HKEY_USERS"
  }
-]SELECT OSPath FROM glob(globs="\\HKEY_LOCAL_MACHINE\\*", accessor="registry")[
+]SELECT OSPath FROM glob(globs="\\HKEY_LOCAL_MACHINE\\S*", accessor="registry")[
  {
   "OSPath": "HKEY_LOCAL_MACHINE\\SAM"
  },
@@ -46,7 +46,8 @@ SELECT OSPath FROM glob(globs="/*", accessor="registry")[
  {
   "OSPath": "HKEY_LOCAL_MACHINE\\SYSTEM"
  }
-]SELECT OSPath FROM glob(globs="HKEY_LOCAL_MACHINE\\*", accessor="registry")[
+]SELECT OSPath FROM glob(globs="HKEY_LOCAL_MACHINE\\S*", accessor="registry")[
+ {
   "OSPath": "HKEY_LOCAL_MACHINE\\SAM"
  },
  {
