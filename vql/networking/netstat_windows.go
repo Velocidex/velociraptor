@@ -18,7 +18,7 @@
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-package windows
+package networking
 
 import (
 	"context"
@@ -32,7 +32,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows"
 	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -68,23 +67,6 @@ var (
 	}
 )
 
-// Addr is implemented compatibility to psutil
-type Addr struct {
-	IP   string
-	Port uint32
-}
-
-type ConnectionStat struct {
-	Fd        uint32
-	Family    uint32
-	Type      uint32
-	Laddr     Addr
-	Raddr     Addr
-	Status    string
-	Pid       int32
-	Timestamp time.Time
-}
-
 func (self *ConnectionStat) FamilyString() string {
 	switch self.Family {
 	case windows.AF_INET:
@@ -107,8 +89,9 @@ func (self *ConnectionStat) TypeString() string {
 	}
 }
 
-// The VQL WMI plugin.
-type NetstatArgs struct{}
+func (self *ConnectionStat) Timestamp() time.Time {
+	return self.timestamp
+}
 
 func runNetstat(
 	ctx context.Context, scope vfilter.Scope, args *ordereddict.Dict) []vfilter.Row {
@@ -207,7 +190,7 @@ func parse_MIB_UDPROW_OWNER_MODULE(res []byte) []*ConnectionStat {
 				},
 				Pid: int32(binary.LittleEndian.Uint32(
 					res[pos+8 : pos+12])),
-				Timestamp: time.Unix(int64(timestamp), 0),
+				timestamp: time.Unix(int64(timestamp), 0),
 			})
 
 			// struct length
@@ -251,7 +234,7 @@ func parse_MIB_TCPROW_OWNER_MODULE(res []byte) []*ConnectionStat {
 				},
 				Pid: int32(binary.LittleEndian.Uint32(
 					res[pos+20 : pos+24])),
-				Timestamp: time.Unix(int64(timestamp), 0),
+				timestamp: time.Unix(int64(timestamp), 0),
 			})
 
 			// struct length
@@ -295,7 +278,7 @@ func parse_MIB_TCP6ROW_OWNER_MODULE(res []byte) []*ConnectionStat {
 				},
 				Pid: int32(binary.LittleEndian.Uint32(
 					res[pos+52 : pos+56])),
-				Timestamp: time.Unix(int64(timestamp), 0),
+				timestamp: time.Unix(int64(timestamp), 0),
 			})
 
 			// struct length
@@ -328,7 +311,7 @@ func parse_MIB_UDP6ROW_OWNER_MODULE(res []byte) []*ConnectionStat {
 				},
 				Pid: int32(binary.LittleEndian.Uint32(
 					res[pos+24 : pos+28])),
-				Timestamp: time.Unix(int64(timestamp), 0),
+				timestamp: time.Unix(int64(timestamp), 0),
 			})
 
 			// struct length
@@ -363,11 +346,5 @@ func getNetTable(fn uintptr, family int, class int) ([]byte, error) {
 }
 
 func init() {
-	vql_subsystem.RegisterPlugin(&vfilter.GenericListPlugin{
-		PluginName: "netstat",
-		Doc:        "Collect network information.",
-		Function:   runNetstat,
-		ArgType:    &NetstatArgs{},
-		Metadata:   vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
-	})
+	vql_subsystem.RegisterPlugin(&_Netstat)
 }
