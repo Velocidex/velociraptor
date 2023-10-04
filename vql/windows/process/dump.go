@@ -107,7 +107,7 @@ func (self ProcDumpPlugin) Call(
 			return
 
 		case output_chan <- ordereddict.NewDict().
-			Set("FullPath", filename).
+			Set("OSPath", filename).
 			Set("Pid", arg.Pid):
 		}
 	}()
