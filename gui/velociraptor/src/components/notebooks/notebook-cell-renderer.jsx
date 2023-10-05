@@ -172,6 +172,9 @@ export default class NotebookCellRenderer extends React.Component {
 
         showSuggestionSubmenu: false,
         showMoreLogs: false,
+
+        local_completions_lookup: {},
+        local_completions: [],
     }
 
     componentDidMount() {
@@ -214,6 +217,20 @@ export default class NotebookCellRenderer extends React.Component {
         }
     };
 
+    registerCompletions = (completions)=>{
+        let local_completions = this.state.local_completions;
+        let local_completions_lookup = this.state.local_completions_lookup;
+        _.map(completions, x=>{
+            if(!local_completions_lookup[x]) {
+                local_completions_lookup[x] = true;
+                local_completions.push(x);
+            }
+        });
+        this.setState({
+            local_completions_lookup: local_completions_lookup,
+            local_completions: local_completions});
+    }
+
     getEnv = ()=>{
         let env = Object.assign({},this.props.env || {});
         return Object.assign(env, {
@@ -236,7 +253,11 @@ export default class NotebookCellRenderer extends React.Component {
 
             let cell = response.data;
             if (!this.state.currently_editing) {
-                this.setState({cell: cell, input: cell.input, loading: false});
+                this.setState({cell: cell,
+                               local_completions: [],
+                               local_completions_lookup: {},
+                               input: cell.input,
+                               loading: false});
             }
         });
     };
@@ -260,14 +281,14 @@ export default class NotebookCellRenderer extends React.Component {
         // Attach a completer to ACE.
         let completer = new Completer();
         completer.initializeAceEditor(ace, {});
-
+        completer.registerCompletions(this.state.local_completions);
         ace.setOptions({
             autoScrollEditorIntoView: true,
             maxLines: 25,
             placeholder: this.getPlaceholder(),
         });
 
-        this.setState({ace: ace});
+        this.setState({ace: ace, completer: completer});
     };
 
     ace_type = (type) => {
@@ -811,6 +832,7 @@ export default class NotebookCellRenderer extends React.Component {
                     env={this.getEnv()}
                     refresh={this.recalculate}
                     notebook_id={this.props.notebook_id}
+                    completion_reporter={this.registerCompletions}
                     cell={this.state.cell}/>
                   { selected &&
                     <>

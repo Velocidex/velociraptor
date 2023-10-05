@@ -154,6 +154,9 @@ class VeloPagedTable extends Component {
 
         // If set we disable the spinner.
         no_spinner: PropTypes.bool,
+
+        // If set we report table columns here for completion.
+        completion_reporter: PropTypes.func,
     }
 
     state = {
@@ -325,6 +328,11 @@ class VeloPagedTable extends Component {
             if (this.props.extra_columns) {
                 columns = columns.concat(this.props.extra_columns);
             };
+
+            if(this.props.completion_reporter) {
+                this.props.completion_reporter(columns);
+            }
+
             if (_.isEmpty(this.state.toggles) && !_.isUndefined(columns)) {
                 let hidden = 0;
 

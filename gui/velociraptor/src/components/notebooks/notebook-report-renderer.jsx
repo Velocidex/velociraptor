@@ -27,6 +27,10 @@ export default class NotebookReportRenderer extends React.Component {
         refresh: PropTypes.func,
         cell: PropTypes.object,
         notebook_id: PropTypes.string,
+
+        // Will be called with addtional completions
+        completion_reporter: PropTypes.func
+,
     };
 
     // Notebook charts make API calls to actually get their data.
@@ -106,6 +110,10 @@ export default class NotebookReportRenderer extends React.Component {
                         let value = decodeURIComponent(domNode.attribs.value || "");
                         let response = data[value] || {};
                         let rows = JSON.parse(response.Response);
+                        if(this.props.completion_reporter) {
+                            this.props.completion_reporter(response.Columns);
+                        }
+
                         return (
                             <VeloTable
                               env={this.props.env}
@@ -136,6 +144,7 @@ export default class NotebookReportRenderer extends React.Component {
                               env={this.props.env}
                               refresh={this.props.refresh}
                               params={parse_param(domNode)}
+                              completion_reporter={this.props.completion_reporter}
                             />
                         );
                     } catch(e) {

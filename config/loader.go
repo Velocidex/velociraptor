@@ -425,6 +425,7 @@ func (self *Loader) WithEnvApiLoader(env_var string) *Loader {
 func (self *Loader) Copy() *Loader {
 	return &Loader{
 		verbose:         self.verbose,
+		use_writeback:   self.use_writeback,
 		logger:          self.logger,
 		loaders:         append([]loaderFunction{}, self.loaders...),
 		validators:      append([]validatorFunction{}, self.validators...),

@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import api from '../core/api-service.jsx';
 
 import language_tools from 'ace-builds/src-min-noconflict/ext-language_tools.js';
@@ -19,6 +20,12 @@ const escapeHTML = function(htmlStr) {
 export default class Completer {
     state = {
         completions: [],
+    }
+
+    local_completions = []
+
+    registerCompletions = (completions)=>{
+        this.local_completions = completions;
     }
 
     distill = (previous) => {
@@ -244,9 +251,30 @@ export default class Completer {
         return completions;
     };
 
+    getLocalCompletions = (prefix) => {
+        var completions = [];
+
+        _.map(this.local_completions, (x, idx)=>{
+            let caption = x;
+            if (prefix === "?") {
+                caption = prefix + x;
+            } else if (!x.startsWith(prefix)) {
+                return;
+            }
+            completions.push({
+                caption: caption,
+                snippet: x,
+                type: "column",
+                value: x,
+                score: 100 - idx,
+                meta: "column",
+            });
+        });
+        return completions;
+    }
 
     getFunctionCompletions = (prefix) => {
-        var completions = [];
+        var completions = this.getLocalCompletions(prefix);
         for (var i =0; i<this.state.completions.length; i++) {
             var item = this.state.completions[i];
             if (item.type === "Function") {
