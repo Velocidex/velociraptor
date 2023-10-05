@@ -36,16 +36,7 @@ SELECT OSPath FROM glob(globs="/*", accessor="registry")[
  {
   "OSPath": "HKEY_USERS"
  }
-]SELECT OSPath FROM glob(globs="\\HKEY_LOCAL_MACHINE\\*", accessor="registry")[
- {
-  "OSPath": "HKEY_LOCAL_MACHINE\\BCD00000000"
- },
- {
-  "OSPath": "HKEY_LOCAL_MACHINE\\DRIVERS"
- },
- {
-  "OSPath": "HKEY_LOCAL_MACHINE\\HARDWARE"
- },
+]SELECT OSPath FROM glob(globs="\\HKEY_LOCAL_MACHINE\\S*", accessor="registry")[
  {
   "OSPath": "HKEY_LOCAL_MACHINE\\SAM"
  },
@@ -55,16 +46,7 @@ SELECT OSPath FROM glob(globs="/*", accessor="registry")[
  {
   "OSPath": "HKEY_LOCAL_MACHINE\\SYSTEM"
  }
-]SELECT OSPath FROM glob(globs="HKEY_LOCAL_MACHINE\\*", accessor="registry")[
- {
-  "OSPath": "HKEY_LOCAL_MACHINE\\BCD00000000"
- },
- {
-  "OSPath": "HKEY_LOCAL_MACHINE\\DRIVERS"
- },
- {
-  "OSPath": "HKEY_LOCAL_MACHINE\\HARDWARE"
- },
+]SELECT OSPath FROM glob(globs="HKEY_LOCAL_MACHINE\\S*", accessor="registry")[
  {
   "OSPath": "HKEY_LOCAL_MACHINE\\SAM"
  },

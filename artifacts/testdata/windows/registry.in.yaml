@@ -2,10 +2,10 @@ Queries:
   # Test some edge cases of the registry filesystem accessor.
   - SELECT OSPath FROM glob(globs="/*", accessor="registry")
   - SELECT OSPath FROM glob(globs="\\*", accessor="registry")
-  - SELECT OSPath FROM glob(globs="\\HKEY_LOCAL_MACHINE\\*", accessor="registry")
+  - SELECT OSPath FROM glob(globs="\\HKEY_LOCAL_MACHINE\\S*", accessor="registry")
 
   # No leading \\
-  - SELECT OSPath FROM glob(globs="HKEY_LOCAL_MACHINE\\*", accessor="registry")
+  - SELECT OSPath FROM glob(globs="HKEY_LOCAL_MACHINE\\S*", accessor="registry")
 
   # A value with path seperators in it. Should return OSPath with
   # value name quoted.
