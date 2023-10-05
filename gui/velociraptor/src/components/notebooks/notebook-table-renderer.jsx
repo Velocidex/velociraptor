@@ -8,6 +8,7 @@ export default class NotebookTableRenderer extends React.Component {
         env: PropTypes.object,
         refresh: PropTypes.func,
         params: PropTypes.object,
+        completion_reporter: PropTypes.func,
     };
 
     render() {
@@ -16,6 +17,7 @@ export default class NotebookTableRenderer extends React.Component {
                  className="col-12"
                  refresh={this.props.refresh}
                  params={this.props.params}
+                 completion_reporter={this.props.completion_reporter}
                />;
     }
 }
