@@ -135,6 +135,8 @@ func (self *NTFSCachedContext) GetNTFSContext() (*ntfs.NTFSContext, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	self.scope.ChargeOp()
+
 	// If the cache is valid just return it.
 	if self.ntfs_ctx != nil {
 		return self.ntfs_ctx, nil

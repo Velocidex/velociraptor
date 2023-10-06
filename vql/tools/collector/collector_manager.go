@@ -64,6 +64,9 @@ type collectionManager struct {
 
 	// Control concurrency
 	concurrency *utils.Concurrency
+
+	// The throttler we will use
+	throttler types.Throttler
 }
 
 func (self *collectionManager) GetRepository(extra_artifacts vfilter.Any) (err error) {
@@ -165,16 +168,16 @@ func (self *collectionManager) AddThrottler(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	throttler := actions.NewThrottler(self.ctx, self.scope,
+	self.throttler = actions.NewThrottler(self.ctx, self.scope,
 		ops_per_sec, cpu_limit, iops_limit)
 
 	if progress_timeout > 0 {
-		throttler = actions.NewProgressThrottler(
-			self.ctx, self.scope, self.cancel, throttler,
+		self.throttler = actions.NewProgressThrottler(
+			self.ctx, self.scope, self.cancel, self.throttler,
 			time.Duration(progress_timeout*1e9)*time.Nanosecond)
 	}
 
-	self.scope.SetThrottler(throttler)
+	self.scope.SetThrottler(self.throttler)
 }
 
 func (self *collectionManager) SetMetadata(metadata vfilter.StoredQuery) {
@@ -380,6 +383,8 @@ func (self *collectionManager) Collect(request *flows_proto.ArtifactCollectorArg
 
 			subscope := manager.BuildScope(builder)
 			subscope.AppendVars(env)
+			subscope.SetThrottler(self.throttler)
+
 			defer subscope.Close()
 
 			status := &crypto_proto.VeloStatus{
@@ -449,6 +454,7 @@ func newCollectionManager(
 		concurrency:        utils.NewConcurrencyControl(concurrency, time.Hour),
 		output_chan:        output_chan,
 		scope:              scope,
+		throttler:          &actions.DummyThrottler{},
 	}
 }
 

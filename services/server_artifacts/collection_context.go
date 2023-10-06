@@ -373,6 +373,21 @@ func (self *contextManager) RunQuery(
 
 	scope.Log("<green>Starting</> query execution.")
 
+	rate := arg.OpsPerSecond
+	cpu_limit := arg.CpuLimit
+	iops_limit := arg.IopsLimit
+
+	throttler := actions.NewThrottler(self.ctx, scope, float64(rate),
+		float64(cpu_limit), float64(iops_limit))
+
+	if arg.ProgressTimeout > 0 {
+		duration := time.Duration(arg.ProgressTimeout) * time.Second
+		throttler = actions.NewProgressThrottler(
+			sub_ctx, scope, cancel, throttler, duration)
+		scope.Log("query: Installing a progress alarm for %v", duration)
+	}
+	scope.SetThrottler(throttler)
+
 	// All the queries will use the same scope. This allows one
 	// query to define functions for the next query in order.
 	for _, query := range arg.Query {

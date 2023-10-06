@@ -108,6 +108,9 @@ func (self *MergeSortGrouper) groupWithSorting(
 			}
 			materialized_row := actor.MaterializeRow(ctx, row, scope).
 				Set(GROUPBY_COLUMN, bin_idx)
+
+			scope.ChargeOp()
+
 			select {
 			case <-ctx.Done():
 				return
