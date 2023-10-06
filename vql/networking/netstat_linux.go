@@ -15,6 +15,8 @@ import (
 	"syscall"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
@@ -225,6 +227,14 @@ func runNetstat(ctx context.Context, scope vfilter.Scope, args *ordereddict.Dict
 	}
 
 	return result
+}
+
+var _Netstat = vfilter.GenericListPlugin{
+	PluginName: "netstat",
+	Doc:        "Collect network information.",
+	Function:   runNetstat,
+	ArgType:    &NetstatArgs{},
+	Metadata:   vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 }
 
 func init() {

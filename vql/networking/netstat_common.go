@@ -2,10 +2,6 @@ package networking
 
 import (
 	"time"
-
-	"www.velocidex.com/golang/velociraptor/acls"
-	"www.velocidex.com/golang/velociraptor/vql"
-	vfilter "www.velocidex.com/golang/vfilter"
 )
 
 // Addr is implemented compatibility to psutil
@@ -23,14 +19,6 @@ type ConnectionStat struct {
 	Status    string
 	Pid       int32
 	timestamp time.Time
-}
-
-var _Netstat = vfilter.GenericListPlugin{
-	PluginName: "netstat",
-	Doc:        "Collect network information.",
-	Function:   runNetstat,
-	ArgType:    &NetstatArgs{},
-	Metadata:   vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 }
 
 type NetstatArgs struct{}
