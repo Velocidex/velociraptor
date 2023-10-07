@@ -1,0 +1,87 @@
+package sigma
+
+import (
+	"context"
+
+	"github.com/Velocidex/ordereddict"
+	"github.com/bradleyjkemp/sigma-go"
+	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
+)
+
+/* This provides support for direct evaluation of sigma rules. */
+
+type SigmaPluginArgs struct {
+	Rules         []string          `vfilter:"required,field=rules,doc=A list of sigma rules to compile."`
+	LogSources    vfilter.Any       `vfilter:"required,field=log_sources,doc=A log source object as obtained from the sigma_log_sources() VQL function."`
+	FieldMappings *ordereddict.Dict `vfilter:"optional,field=field_mapping,doc=A dict containing a mapping between a rule field name and a VQL Lambda to get the value of the field from the event."`
+}
+
+type SigmaPlugin struct{}
+
+func (self SigmaPlugin) Call(
+	ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+
+		arg := &SigmaPluginArgs{}
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+		if err != nil {
+			scope.Log("sigma: %v", err)
+			return
+		}
+
+		log_sources, ok := arg.LogSources.(*LogSourceProvider)
+		if !ok {
+			scope.Log("sigma: log_sources must be a LogSourceProvider not %T. You can obtain one from the sigma_log_sources() function.", arg.LogSources)
+			return
+		}
+
+		// Compile all the rules
+		var rules []sigma.Rule
+		for _, r := range arg.Rules {
+			rule, err := sigma.ParseRule([]byte(r))
+			if err != nil {
+				// Skip the rules we can not parse
+				scope.Log("sigma: Error parsing: %v in rule '%v'",
+					err, utils.Elide(r, 20))
+				continue
+			}
+			rules = append(rules, rule)
+		}
+
+		// Build a new evaluation context around the rules. This binds
+		// the rules to the log sources. Only the relevant log sources
+		// will be evaluated - i.e. only those that have some rules
+		// watching them.
+		sigma_context, err := NewSigmaContext(rules, arg.FieldMappings, log_sources)
+		if err != nil {
+			scope.Log("sigma: %v", err)
+			return
+		}
+
+		for row := range sigma_context.Rows(ctx, scope) {
+			output_chan <- row
+		}
+	}()
+
+	return output_chan
+}
+
+func (self SigmaPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "sigma",
+		Doc:     "Evaluate sigma rules.",
+		ArgType: type_map.AddType(scope, &SigmaPluginArgs{}),
+	}
+}
+
+func init() {
+	vql_subsystem.RegisterPlugin(&SigmaPlugin{})
+}
