@@ -53,6 +53,8 @@ parameters:
     type: bool
   - name: Winlogon entries
     type: bool
+  - name: Verify digital signatures
+    type: bool
   - name: ToolInfo
     type: hidden
     description: Override Tool information.
@@ -80,8 +82,16 @@ sources:
       w,Winlogon entries
       '''
 
+      LET Options = '''Option,Name
+      -s,Verify digital signatures
+      '''
+
+      -- The flags actually selected
+      LET flags = SELECT Option FROM parse_csv(accessor="data", filename=Flags)
+        WHERE get(field=Name)
+
       -- The options actually selected
-      LET options = SELECT Option FROM parse_csv(accessor="data", filename=Flags)
+      LET options = SELECT Option FROM parse_csv(accessor="data", filename=Options)
         WHERE get(field=Name)
 
       LET os_info <= SELECT Architecture FROM info()
@@ -94,7 +104,8 @@ sources:
       // Call the binary and return all its output in a single row.
       LET output = SELECT * FROM execve(argv=[bin[0].OSPath,
             '-nobanner', '-accepteula', '-t', '-a',
-            join(array=options.Option, sep=""),
+            join(array=flags.Option, sep=""),
+            join(array=options.Option, sep=" "),
             '-c', -- CSV output
             '-h', -- Also calculate hashes
             '*'   -- All user profiles.
