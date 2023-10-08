@@ -55,6 +55,7 @@ parameters:
     type: bool
   - name: Verify digital signatures
     type: bool
+    default: Y
   - name: ToolInfo
     type: hidden
     description: Override Tool information.
