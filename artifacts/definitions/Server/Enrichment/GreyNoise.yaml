@@ -1,7 +1,7 @@
 name: Server.Enrichment.GreyNoise
 author: Wes Lambert -- @therealwlambert
 description: |
-  Submit an IP to the GreyNoise Community API.
+  Submit an IP to the GreyNoise API.
 
   https://developer.greynoise.io/reference/community-api
 
@@ -19,15 +19,35 @@ parameters:
       type: string
       description: The IP to submit to GreyNoise.
       default:
+    - name: ApiKey
+      type: string
+      description: The API key to submit to GreyNoise.
+      default: ''
+    - name: AccountType
+      type: string
+      description: The GreyNoise account type - enterprise or community.
+      default: community
+    - name: CommunityURL
+      type: string
+      description: The GreyNoise community API URL.
+      default: https://api.greynoise.io/v3/community/
+    - name: EnterpriseURL
+      type: string
+      description: The GreyNoise enterprise API URL.
+      default: https://api.greynoise.io/v2/noise/quick/
 
 sources:
   - query: |
-        LET URL <= 'https://api.greynoise.io/v3/community/'
+        LET URL <= if(condition= AccountType='community', then=CommunityURL, else=EnterpriseURL)
 
-        LET Data = SELECT parse_json(data=Content) AS GreyNoiseLookup
-        FROM http_client(url=URL + IP,
-                         headers=dict(`Accept`="application/json"),
-                         method='GET')
+        LET Data = if(condition= ApiKey!='', 
+        then={
+            SELECT parse_json(data=Content) AS GreyNoiseLookup
+            FROM http_client(url=URL + IP, headers=dict(`Accept`="application/json",`key`=ApiKey), method='GET')
+        }, else={
+            SELECT parse_json(data=Content) AS GreyNoiseLookup
+            FROM http_client(url=URL + IP, headers=dict(`Accept`="application/json"), method='GET')
+        })
 
         SELECT
             GreyNoiseLookup.ip AS IP,
