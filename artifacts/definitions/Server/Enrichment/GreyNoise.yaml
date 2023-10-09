@@ -24,9 +24,12 @@ parameters:
       description: The API key to submit to GreyNoise.
       default: ''
     - name: AccountType
-      type: string
+      type: choices
       description: The GreyNoise account type - enterprise or community.
       default: community
+      choices:
+        - community
+        - enterprise
     - name: CommunityURL
       type: string
       description: The GreyNoise community API URL.
