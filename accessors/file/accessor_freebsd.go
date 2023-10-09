@@ -21,6 +21,7 @@
 package file
 
 import (
+	"syscall"
 	"time"
 )
 
