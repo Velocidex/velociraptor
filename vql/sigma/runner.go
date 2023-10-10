@@ -25,7 +25,8 @@ type SigmaContext struct {
 	// x=>x.System.EventID.Value
 	fieldmappings map[string]*vfilter.Lambda
 
-	debug bool
+	debug       bool
+	total_rules int
 }
 
 func (self *SigmaContext) SetDebug() {
@@ -60,7 +61,9 @@ func (self *SigmaContext) Rows(
 
 					row_dict := vfilter.RowToDict(ctx, scope, row)
 					row_dict.Set("_Match", match).
-						Set("_Rule", rule.Title)
+						Set("_Rule", rule.Title).
+						Set("_References", rule.References).
+						Set("Level", rule.Level)
 
 					select {
 					case <-ctx.Done():
@@ -107,6 +110,7 @@ func NewSigmaContext(
 	}
 
 	var runners []*SigmaExecutionContext
+	total_rules := 0
 
 	// Split rules into log sources
 	for name, query := range log_sources.queries {
@@ -119,6 +123,7 @@ func NewSigmaContext(
 			if matchLogSource(log_target, r) {
 				runner.rules = append(runner.rules,
 					evaluator.NewVQLRuleEvaluator(scope, r, compiled_fieldmappings))
+				total_rules++
 			}
 		}
 
@@ -130,6 +135,7 @@ func NewSigmaContext(
 	result := &SigmaContext{
 		runners:       runners,
 		fieldmappings: compiled_fieldmappings,
+		total_rules:   total_rules,
 	}
 	return result, nil
 }

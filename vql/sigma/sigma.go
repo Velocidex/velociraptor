@@ -72,6 +72,10 @@ func (self SigmaPlugin) Call(
 			sigma_context.SetDebug()
 		}
 
+		scope.Log("INFO:sigma: Loaded %v rules (from %v) into %v log sources and %v field mappings",
+			sigma_context.total_rules, len(rules), len(sigma_context.runners),
+			len(sigma_context.fieldmappings))
+
 		for row := range sigma_context.Rows(ctx, scope) {
 			output_chan <- row
 		}

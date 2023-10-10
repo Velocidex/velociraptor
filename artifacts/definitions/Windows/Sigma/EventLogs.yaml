@@ -7,14 +7,23 @@ parameters:
   default: C:/Windows/System32/WinEvt/Logs/
 - name: InlineSigmaRules
   description: A single string of sigma rules separated by --- lines
+- name: SigmaRuleFile
+  description: A path to a file containing sigma rules
 - name: Debug
   type: bool
   description: Enable full debug trace
 
 export: |
   LET StandardSigmaLogSource = sigma_log_sources(
-    `process_creation/windows` = {
-      SELECT * FROM parse_evtx(filename= EventLogDirectory + "/Microsoft-Windows-Sysmon%4Operational.evtx")
+  `process_creation/windows` = {
+    SELECT *
+    FROM parse_evtx(
+      filename= EventLogDirectory + "/Microsoft-Windows-Sysmon%4Operational.evtx")
+  },
+  `*/windows/sysmon` = {
+    SELECT *
+    FROM parse_evtx(
+      filename= EventLogDirectory + "/Microsoft-Windows-Sysmon%4Operational.evtx")
   })
 
   LET StandardSigmaFieldMapping = dict(
@@ -263,8 +272,10 @@ export: |
 
 sources:
 - query: |
+    LET Rules = InlineSigmaRules ||
+       if(condition=SigmaRuleFile, then=read_file(path=SigmaRuleFile, length=10000000))
 
     SELECT * FROM sigma(
-       rules=split(string= InlineSigmaRules, sep_string="\n---\n"),
+       rules=split(string= Rules, sep_string="\n---\n"),
        log_sources= StandardSigmaLogSource, debug=Debug,
        field_mapping= StandardSigmaFieldMapping)
