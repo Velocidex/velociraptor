@@ -65,6 +65,10 @@ SELECT * FROM Artifact.Windows.Sigma.EventLogs( EventLogDirectory=srcDir + "/art
    ]
   },
   "_Rule": "Run Whoami as SYSTEM",
+  "_References": [
+   "https://speakerdeck.com/heirhabarov/hunting-for-privilege-escalation-in-windows-environment"
+  ],
+  "Level": "high",
   "_Source": "Windows.Sigma.EventLogs"
  }
 ]
