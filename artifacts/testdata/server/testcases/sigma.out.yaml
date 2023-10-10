@@ -1,0 +1,70 @@
+SELECT * FROM Artifact.Windows.Sigma.EventLogs( EventLogDirectory=srcDir + "/artifacts/testdata/files/evtx", Debug=FALSE, InlineSigmaRules=read_file(filename=srcDir + "/artifacts/testdata/files/evtx/proc_creation_win_whoami_as_system.yml"))[
+ {
+  "System": {
+   "Provider": {
+    "Name": "Microsoft-Windows-Sysmon",
+    "Guid": "5770385F-C22A-43E0-BF4C-06F5698FFBD9"
+   },
+   "EventID": {
+    "Value": 1
+   },
+   "Version": 5,
+   "Level": 4,
+   "Task": 1,
+   "Opcode": 0,
+   "Keywords": 9223372036854775808,
+   "TimeCreated": {
+    "SystemTime": 1590282834.1201713
+   },
+   "EventRecordID": 196375,
+   "Correlation": {},
+   "Execution": {
+    "ProcessID": 2812,
+    "ThreadID": 3656
+   },
+   "Channel": "Microsoft-Windows-Sysmon/Operational",
+   "Computer": "MSEDGEWIN10",
+   "Security": {
+    "UserID": "S-1-5-18"
+   }
+  },
+  "EventData": {
+   "RuleName": "",
+   "UtcTime": "2020-05-24 01:13:54.117",
+   "ProcessGuid": "747F3D96-CA52-5EC9-0000-001027FA3700",
+   "ProcessId": 4456,
+   "Image": "C:\\Windows\\System32\\whoami.exe",
+   "FileVersion": "10.0.17763.1 (WinBuild.160101.0800)",
+   "Description": "whoami - displays logged on user information",
+   "Product": "Microsoft® Windows® Operating System",
+   "Company": "Microsoft Corporation",
+   "OriginalFileName": "whoami.exe",
+   "CommandLine": "whoami",
+   "CurrentDirectory": "C:\\Windows\\system32\\",
+   "User": "NT AUTHORITY\\SYSTEM",
+   "LogonGuid": "747F3D96-BDD1-5EC9-0000-0020E7030000",
+   "LogonId": 999,
+   "TerminalSessionId": 1,
+   "IntegrityLevel": "System",
+   "Hashes": "SHA1=47D7864D26FC67E0D60391CBF170D33DA518C322,MD5=43C2D3293AD939241DF61B3630A9D3B6,SHA256=1D5491E3C468EE4B4EF6EDFF4BBC7D06EE83180F6F0B1576763EA2EFE049493A,IMPHASH=7FF0758B766F747CE57DFAC70743FB88",
+   "ParentProcessGuid": "747F3D96-CA4E-5EC9-0000-00109FE23700",
+   "ParentProcessId": 1516,
+   "ParentImage": "C:\\Windows\\System32\\cmd.exe",
+   "ParentCommandLine": "c:\\Windows\\System32\\cmd.exe"
+  },
+  "Message": "",
+  "_Match": {
+   "Match": true,
+   "SearchResults": {
+    "process_creation": true,
+    "selection_img": true,
+    "selection_user": true
+   },
+   "ConditionResults": [
+    true
+   ]
+  },
+  "_Rule": "Run Whoami as SYSTEM",
+  "_Source": "Windows.Sigma.EventLogs"
+ }
+]

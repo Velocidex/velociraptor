@@ -55,7 +55,9 @@ detection:
 `
 
 	testRows = []*ordereddict.Dict{
-		ordereddict.NewDict().Set("Foo", "Bar"),
+		ordereddict.NewDict().
+			Set("Foo", "Bar").
+			Set("Baz", "Hello"),
 		ordereddict.NewDict().
 			Set("System", ordereddict.NewDict().
 				Set("EventID", 2)),
@@ -80,17 +82,57 @@ detection:
 		},
 		{
 			description: "Match field with regex",
-			// Regex matching is case insensitive.
 			rule: `
 title: RegexField
 logsource:
    product: windows
    service: application
 
+# Case insensitive Regex matching
 detection:
   selection:
      Foo|re: b.r
   condition: selection
+`,
+			fieldmappings: ordereddict.NewDict(),
+			rows:          testRows,
+		},
+		{
+			description: "Match field with logical operators",
+			rule: `
+title: AndRule
+logsource:
+   product: windows
+   service: application
+
+# Case insensitive Regex matching
+detection:
+  selection:
+     Foo|re: b.r
+  selection2:
+     Baz|re: h.+lo
+
+  condition: selection and selection2
+`,
+			fieldmappings: ordereddict.NewDict(),
+			rows:          testRows,
+		},
+		{
+			description: "Match field with logical or operator",
+			rule: `
+title: OrRule
+logsource:
+   product: windows
+   service: application
+
+# Case insensitive Regex matching
+detection:
+  selection:
+     Foo|re: b.r
+  selection2:
+     Baz|re: something
+
+  condition: selection or selection2
 `,
 			fieldmappings: ordereddict.NewDict(),
 			rows:          testRows,

@@ -48,7 +48,9 @@ func (self *VQLRuleEvaluator) evaluateSearchExpression(
 
 	case sigma.OneOfPattern:
 		for name := range self.Detection.Searches {
-			// it's not possible for this call to error because the search expression parser won't allow this to contain invalid expressions
+			// it's not possible for this call to error because the
+			// search expression parser won't allow this to contain
+			// invalid expressions
 			matchesPattern, _ := path.Match(s.Pattern, name)
 			if !matchesPattern {
 				continue
@@ -82,7 +84,8 @@ func (self *VQLRuleEvaluator) evaluateSearchExpression(
 		}
 		return true
 	}
-	panic(fmt.Sprintf("unhandled node type %T", search))
+	self.scope.Log("ERROR:unhandled node type %T", search)
+	return false
 }
 
 func (self *VQLRuleEvaluator) evaluateSearch(

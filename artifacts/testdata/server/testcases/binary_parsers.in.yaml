@@ -17,9 +17,9 @@ Queries:
     LIMIT 10
 
   # Check the lnk parser
-  - SELECT ShellLinkHeader,LinkInfo,LinkTarget.LinkTarget,StringData,ExtraData 
+  - SELECT ShellLinkHeader,LinkInfo,LinkTarget.LinkTarget,StringData,ExtraData
     FROM Artifact.Windows.Forensics.Lnk(TargetGlob=srcDir + "/artifacts/testdata/files/1.lnk")
-    
+
   - SELECT ShellLinkHeader,LinkInfo,LinkTarget.LinkTarget,StringData,ExtraData
     FROM Artifact.Windows.Forensics.Lnk(TargetGlob=srcDir + "/artifacts/testdata/files/password.txt.lnk")
 
@@ -29,3 +29,10 @@ Queries:
       accessor="data",
       filename=unhex(string=Data),
       profile=Profile, struct="MRU").Items)
+
+  # Check that binary parser and flatten work properly
+  - SELECT * FROM flatten(query={
+      SELECT 1 AS Foo, parse_binary(accessor="data",
+         filename=unhex(string=Data),profile=Profile, struct="MRU").Items AS Items
+      FROM scope()
+    })

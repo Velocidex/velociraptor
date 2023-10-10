@@ -24,6 +24,12 @@ type SigmaContext struct {
 	// passed the event. For example EID can be the lambda
 	// x=>x.System.EventID.Value
 	fieldmappings map[string]*vfilter.Lambda
+
+	debug bool
+}
+
+func (self *SigmaContext) SetDebug() {
+	self.debug = true
 }
 
 func (self *SigmaContext) Rows(
@@ -48,7 +54,7 @@ func (self *SigmaContext) Rows(
 						continue
 					}
 
-					if !match.Match {
+					if !self.debug && !match.Match {
 						continue
 					}
 
@@ -76,6 +82,7 @@ func (self *SigmaContext) Rows(
 }
 
 func NewSigmaContext(
+	scope types.Scope,
 	rules []sigma.Rule,
 	fieldmappings *ordereddict.Dict,
 	log_sources *LogSourceProvider) (*SigmaContext, error) {
@@ -111,7 +118,7 @@ func NewSigmaContext(
 		for _, r := range rules {
 			if matchLogSource(log_target, r) {
 				runner.rules = append(runner.rules,
-					evaluator.NewVQLRuleEvaluator(r, compiled_fieldmappings))
+					evaluator.NewVQLRuleEvaluator(scope, r, compiled_fieldmappings))
 			}
 		}
 

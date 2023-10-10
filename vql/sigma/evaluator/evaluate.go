@@ -17,15 +17,19 @@ type Result struct {
 
 type VQLRuleEvaluator struct {
 	sigma.Rule
+	scope types.Scope
 
 	fieldmappings map[string]*vfilter.Lambda
 }
 
-func NewVQLRuleEvaluator(rule sigma.Rule,
+func NewVQLRuleEvaluator(
+	scope types.Scope,
+	rule sigma.Rule,
 	fieldmappings map[string]*vfilter.Lambda) *VQLRuleEvaluator {
 	// Make a local copy of the map so we dont need to lock it.
 
 	result := &VQLRuleEvaluator{
+		scope:         scope,
 		Rule:          rule,
 		fieldmappings: make(map[string]*vfilter.Lambda),
 	}

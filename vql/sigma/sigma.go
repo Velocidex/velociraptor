@@ -17,6 +17,7 @@ type SigmaPluginArgs struct {
 	Rules         []string          `vfilter:"required,field=rules,doc=A list of sigma rules to compile."`
 	LogSources    vfilter.Any       `vfilter:"required,field=log_sources,doc=A log source object as obtained from the sigma_log_sources() VQL function."`
 	FieldMappings *ordereddict.Dict `vfilter:"optional,field=field_mapping,doc=A dict containing a mapping between a rule field name and a VQL Lambda to get the value of the field from the event."`
+	Debug         bool              `vfilter:"optional,field=debug,doc=If enabled we emit all match objects with description of what would match."`
 }
 
 type SigmaPlugin struct{}
@@ -60,10 +61,15 @@ func (self SigmaPlugin) Call(
 		// the rules to the log sources. Only the relevant log sources
 		// will be evaluated - i.e. only those that have some rules
 		// watching them.
-		sigma_context, err := NewSigmaContext(rules, arg.FieldMappings, log_sources)
+		sigma_context, err := NewSigmaContext(
+			scope, rules, arg.FieldMappings, log_sources)
 		if err != nil {
 			scope.Log("sigma: %v", err)
 			return
+		}
+
+		if arg.Debug {
+			sigma_context.SetDebug()
 		}
 
 		for row := range sigma_context.Rows(ctx, scope) {
