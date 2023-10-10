@@ -22,7 +22,7 @@ require (
 	github.com/alecthomas/assert v1.0.0
 	github.com/alecthomas/chroma v0.7.3
 	github.com/alecthomas/participle v0.7.1
-	github.com/alecthomas/repr v0.2.1-0.20230322203820-fba37eeb3a59 // indirect
+	github.com/alecthomas/repr v0.3.0 // indirect
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/aws/aws-sdk-go v1.44.118
@@ -83,7 +83,7 @@ require (
 	golang.org/x/mod v0.10.0
 	golang.org/x/net v0.12.0
 	golang.org/x/sys v0.10.0
-	golang.org/x/text v0.12.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	golang.org/x/time v0.3.0
 	google.golang.org/api v0.126.0
 	google.golang.org/genproto v0.0.0-20230530153820-e85fd2cbaebc // indirect
@@ -102,7 +102,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
 	www.velocidex.com/golang/oleparse v0.0.0-20230217092320-383a0121aafe
 	www.velocidex.com/golang/regparser v0.0.0-20221020153526-bbc758cbd18b
-	www.velocidex.com/golang/vfilter v0.0.0-20230730233014-4610600570e4
+	www.velocidex.com/golang/vfilter v0.0.0-20231010134631-be693e5b98cf
 )
 
 require (
@@ -115,6 +115,7 @@ require (
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d
 	github.com/andybalholm/brotli v1.0.4
+	github.com/bradleyjkemp/sigma-go v0.6.4
 	github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.1-0.20221027171526-76a36be4fa02
 	github.com/coreos/go-oidc/v3 v3.4.0
 	github.com/evanphx/json-patch/v5 v5.6.0
@@ -134,6 +135,7 @@ require (
 	golang.org/x/oauth2 v0.8.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20230530153820-e85fd2cbaebc
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
+	gopkg.in/yaml.v3 v3.0.1
 	software.sslmate.com/src/go-pkcs12 v0.2.0
 	www.velocidex.com/golang/vtypes v0.0.0-20230821104433-297db7c471d8
 )
@@ -146,6 +148,8 @@ require (
 	github.com/360EntSecGroup-Skylar/excelize v1.4.1 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.3.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.1.1 // indirect
+	github.com/PaesslerAG/gval v1.0.0 // indirect
+	github.com/PaesslerAG/jsonpath v0.1.1 // indirect
 	github.com/PuerkitoBio/goquery v1.8.0 // indirect
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
@@ -207,7 +211,6 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230530153820-e85fd2cbaebc // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
 	www.velocidex.com/golang/binparsergen v0.1.1-0.20220107080050-ae6122c5ed14 // indirect
 )
 

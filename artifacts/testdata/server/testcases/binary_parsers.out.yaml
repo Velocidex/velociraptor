@@ -232,4 +232,17 @@ SELECT ModuleName, Timestamp, Functions[1] FROM Artifact.Windows.System.Powershe
  {
   "_value": 5
  }
+]SELECT * FROM flatten(query={ SELECT 1 AS Foo, parse_binary(accessor="data", filename=unhex(string=Data),profile=Profile, struct="MRU").Items AS Items FROM scope() })[
+ {
+  "Foo": 1,
+  "Items": 3
+ },
+ {
+  "Foo": 1,
+  "Items": 4
+ },
+ {
+  "Foo": 1,
+  "Items": 5
+ }
 ]
