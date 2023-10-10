@@ -285,6 +285,7 @@ export default class NotebookCellRenderer extends React.Component {
         ace.setOptions({
             autoScrollEditorIntoView: true,
             maxLines: 25,
+            relativeLineNumbers: false,
             placeholder: this.getPlaceholder(),
         });
 
