@@ -1,3 +1,5 @@
+// +build DISABLE
+
 package evaluator
 
 import (

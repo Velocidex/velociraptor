@@ -1,0 +1,95 @@
+{
+ "Match single field": [
+  {
+   "Foo": "Bar",
+   "Baz": "Hello",
+   "_Match": {
+    "Match": true,
+    "SearchResults": {
+     "selection": true
+    },
+    "ConditionResults": [
+     true
+    ]
+   },
+   "_Rule": "SingleField",
+   "_References": null,
+   "Level": ""
+  }
+ ],
+ "Match field with regex": [
+  {
+   "Foo": "Bar",
+   "Baz": "Hello",
+   "_Match": {
+    "Match": true,
+    "SearchResults": {
+     "selection": true
+    },
+    "ConditionResults": [
+     true
+    ]
+   },
+   "_Rule": "RegexField",
+   "_References": null,
+   "Level": ""
+  }
+ ],
+ "Match field with logical operators": [
+  {
+   "Foo": "Bar",
+   "Baz": "Hello",
+   "_Match": {
+    "Match": true,
+    "SearchResults": {
+     "selection": true,
+     "selection2": true
+    },
+    "ConditionResults": [
+     true
+    ]
+   },
+   "_Rule": "AndRule",
+   "_References": null,
+   "Level": ""
+  }
+ ],
+ "Match field with logical or operator": [
+  {
+   "Foo": "Bar",
+   "Baz": "Hello",
+   "_Match": {
+    "Match": true,
+    "SearchResults": {
+     "selection": true,
+     "selection2": false
+    },
+    "ConditionResults": [
+     true
+    ]
+   },
+   "_Rule": "OrRule",
+   "_References": null,
+   "Level": ""
+  }
+ ],
+ "Match simple logsource": [
+  {
+   "System": {
+    "EventID": 2
+   },
+   "_Match": {
+    "Match": true,
+    "SearchResults": {
+     "selection": true
+    },
+    "ConditionResults": [
+     true
+    ]
+   },
+   "_Rule": "NoopRule",
+   "_References": null,
+   "Level": ""
+  }
+ ]
+}

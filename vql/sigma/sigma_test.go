@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -185,7 +186,8 @@ func (self *SigmaTestSuite) TestSigma() {
 		result.Set(test_case.description, rows)
 	}
 
-	json.Dump(result)
+	goldie.Assert(self.T(), "TestSigma",
+		json.MustMarshalIndent(result))
 }
 
 func TestSigmaPlugin(t *testing.T) {
