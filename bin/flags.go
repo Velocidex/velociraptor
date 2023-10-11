@@ -5,8 +5,8 @@ import (
 
 	"github.com/Velocidex/sflags"
 	"github.com/Velocidex/sflags/gen/gkingpin"
+	kingpin "github.com/alecthomas/kingpin/v2"
 	proto "google.golang.org/protobuf/proto"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 )

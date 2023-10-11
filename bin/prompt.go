@@ -1,6 +1,10 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/inconshreveable/mousetrap"
+)
 
 var (
 	prompt_flag = app.Flag(
@@ -9,7 +13,7 @@ var (
 
 // Possibly ask for a prompt before exiting.
 func doPrompt() {
-	if *prompt_flag {
+	if *prompt_flag || mousetrap.StartedByExplorer() {
 		fmt.Println("Press the Enter Key to end")
 		fmt.Scanln()
 	}

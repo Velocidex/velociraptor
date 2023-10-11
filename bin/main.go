@@ -25,8 +25,8 @@ import (
 	"runtime/trace"
 
 	"github.com/AlecAivazis/survey/v2"
+	kingpin "github.com/alecthomas/kingpin/v2"
 	errors "github.com/go-errors/errors"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -125,6 +125,11 @@ var (
 func main() {
 	app.HelpFlag.Short('h')
 	app.UsageTemplate(kingpin.CompactUsageTemplate)
+	app.Terminate(func(s int) {
+		doPrompt()
+		os.Exit(s)
+	})
+
 	args := os.Args[1:]
 
 	// If no args are given check if there is an embedded config

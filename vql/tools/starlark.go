@@ -541,6 +541,7 @@ func init() {
 	resolve.AllowRecursion = true
 	resolve.AllowLambda = true
 	resolve.AllowNestedDef = true
+	resolve.AllowGlobalReassign = true
 	vql_subsystem.RegisterFunction(&StarlarkCompileFunction{})
 	vql_subsystem.RegisterProtocol(&StarlModuleAssociative{})
 }
