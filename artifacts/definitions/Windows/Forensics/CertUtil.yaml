@@ -93,6 +93,7 @@ sources:
                if(condition=AlsoUpload, then=upload(file=OSPath, accessor=Accessor)) AS _MetdataUpload,
                if(condition=AlsoUpload, then=upload(file=_ContentPath, accessor=Accessor)) AS _Upload,
                Header.URL AS URL,
+               parse_string_with_regex(string=Header.URL,regex='^(?:https?:\/\/)?(?:[^@\/\n]+@)?(?:www\.)?([^:\/\n]+)').g1 AS UrlTLD,
                Header.FileSize AS FileSize,
                regex_replace(re='"', replace="", source=Header.Hash) AS Hash,
                timestamp(winfiletime=Header.DownloadTime) AS DownloadTime,
