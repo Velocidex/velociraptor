@@ -90,7 +90,7 @@ func (self *VQLRuleEvaluator) evaluateSearchExpression(
 
 func (self *VQLRuleEvaluator) evaluateSearch(
 	ctx context.Context, scope types.Scope,
-	search sigma.Search, event types.Row) (bool, error) {
+	search sigma.Search, event *Event) (bool, error) {
 	if len(search.Keywords) > 0 {
 		return false, fmt.Errorf("keywords unsupported")
 	}
@@ -125,12 +125,15 @@ eventMatcher:
 			if err != nil {
 				return false, err
 			}
-			values, err := self.GetFieldValuesFromEvent(ctx, scope, fieldMatcher.Field, event)
+
+			values, err := self.GetFieldValuesFromEvent(
+				ctx, scope, fieldMatcher.Field, event)
 			if err != nil {
 				return false, err
 			}
 			if !self.matcherMatchesValues(matcherValues, comparator, allValuesMustMatch, values) {
-				// this field didn't match so the overall matcher doesn't match, try the next EventMatcher
+				// this field didn't match so the overall matcher
+				// doesn't match, try the next EventMatcher
 				continue eventMatcher
 			}
 		}
@@ -164,48 +167,21 @@ func (self *VQLRuleEvaluator) getMatcherValues(ctx context.Context, matcher sigm
 
 func (self *VQLRuleEvaluator) GetFieldValuesFromEvent(
 	ctx context.Context, scope types.Scope,
-	field string, event types.Row) ([]interface{}, error) {
+	field string, event *Event) ([]interface{}, error) {
 
 	// There is a field mapping - lets evaluate it
-	lambda, pres := self.fieldmappings[field]
-	if pres {
-		return toGenericSlice(lambda.Reduce(ctx, scope, []types.Any{event})), nil
+	for _, m := range self.fieldmappings {
+		if m.Name == field {
+			return toGenericSlice(event.Reduce(ctx, scope, field, m.Lambda)), nil
+		}
 	}
 
-	value, ok := scope.Associative(event, field)
+	value, ok := event.Get(field)
 	if !ok {
 		return nil, nil
 	}
 
 	return toGenericSlice(value), nil
-
-	/*
-		// First collect this list of event values we're matching against
-		var actualValues []interface{}
-		if len(rule.fieldmappings[field]) == 0 {
-			// No FieldMapping exists so use the name directly from the rule
-			actualValues = []interface{}{eventValue(event, field)}
-		} else {
-			// FieldMapping does exist so check each of the possible mapped names instead of the name from the rule
-			for _, mapping := range rule.fieldmappings[field] {
-				var v interface{}
-				var err error
-
-				switch {
-				case strings.HasPrefix(mapping, "$.") || strings.HasPrefix(mapping, "$["):
-					v, err = evaluateJSONPath(mapping, event)
-				default:
-					v = eventValue(event, mapping)
-				}
-				if err != nil {
-					return nil, err
-				}
-
-				actualValues = append(actualValues, toGenericSlice(v)...)
-			}
-		}
-		return actualValues, nil
-	*/
 }
 
 func (self *VQLRuleEvaluator) matcherMatchesValues(

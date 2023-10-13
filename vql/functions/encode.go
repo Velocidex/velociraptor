@@ -53,7 +53,7 @@ func (self *EncodeFunction) Call(ctx context.Context,
 		opts := vql_subsystem.EncOptsFromScope(scope)
 		serialized_content, err := json.MarshalIndentWithOptions(result, opts)
 		if err != nil {
-			scope.Log("serialize: %s", err.Error())
+			scope.Log("serialize: %v", err)
 			return vfilter.Null{}
 		}
 

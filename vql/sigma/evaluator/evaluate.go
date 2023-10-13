@@ -19,37 +19,35 @@ type VQLRuleEvaluator struct {
 	sigma.Rule
 	scope types.Scope
 
-	fieldmappings map[string]*vfilter.Lambda
+	fieldmappings []FieldMappingRecord
+}
+
+type FieldMappingRecord struct {
+	Name   string
+	Lambda *vfilter.Lambda
 }
 
 func NewVQLRuleEvaluator(
 	scope types.Scope,
 	rule sigma.Rule,
-	fieldmappings map[string]*vfilter.Lambda) *VQLRuleEvaluator {
-	// Make a local copy of the map so we dont need to lock it.
-
+	fieldmappings []FieldMappingRecord) *VQLRuleEvaluator {
 	result := &VQLRuleEvaluator{
 		scope:         scope,
 		Rule:          rule,
-		fieldmappings: make(map[string]*vfilter.Lambda),
+		fieldmappings: fieldmappings,
 	}
-
-	for k, v := range fieldmappings {
-		result.fieldmappings[k] = v
-	}
-
 	return result
 }
 
 // TODO: Not supported yet
 func (self *VQLRuleEvaluator) evaluateAggregationExpression(
 	ctx context.Context, conditionIndex int,
-	aggregation sigma.AggregationExpr, event types.Row) (bool, error) {
+	aggregation sigma.AggregationExpr, event *Event) (bool, error) {
 	return false, nil
 }
 
 func (self *VQLRuleEvaluator) Match(ctx context.Context,
-	scope types.Scope, event types.Row) (Result, error) {
+	scope types.Scope, event *Event) (Result, error) {
 	result := Result{
 		Match:            false,
 		SearchResults:    map[string]bool{},

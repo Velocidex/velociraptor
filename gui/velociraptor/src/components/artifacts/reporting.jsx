@@ -191,8 +191,12 @@ export default class VeloReportViewer extends React.Component {
 
                 if (domNode.name === "grr-tool-viewer") {
                     let name = decodeURIComponent(domNode.attribs.name ||"");
+                    let tool_version = decodeURIComponent(
+                        domNode.attribs.version ||"");
                     return (
-                        <ToolViewer name={name} version={this.state.version}/>
+                        <ToolViewer name={name}
+                                    tool_version={tool_version}
+                                    version={this.state.version}/>
                     );
                 };
 
