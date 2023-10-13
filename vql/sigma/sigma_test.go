@@ -19,6 +19,10 @@ type MockQuery struct {
 	rows []*ordereddict.Dict
 }
 
+func (self *MockQuery) ToString(scope types.Scope) string {
+	return "Mock Query"
+}
+
 func (self *MockQuery) Eval(ctx context.Context, scope types.Scope) <-chan types.Row {
 	output_chan := make(chan vfilter.Row)
 
