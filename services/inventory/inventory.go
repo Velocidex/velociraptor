@@ -58,6 +58,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 )
 
+const ALL_VERSIONS = ""
+
 var (
 	inventoryTotalLoad = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "inventory_service_total_file_load",
@@ -122,7 +124,7 @@ func (self *InventoryService) ProbeToolInfo(
 		// If version is specified we look for the exact tool version
 		if version != "" {
 			if tool.Name == name && tool.Version == version {
-				return self.AddAllVersions(ctx, config_obj, tool), nil
+				return self.AddAllVersions(ctx, config_obj, tool, version), nil
 			}
 			continue
 		}
@@ -143,7 +145,7 @@ func (self *InventoryService) ProbeToolInfo(
 	}
 
 	if match != nil {
-		return self.AddAllVersions(ctx, config_obj, match), nil
+		return self.AddAllVersions(ctx, config_obj, match, ALL_VERSIONS), nil
 	}
 
 	if self.parent != nil {
@@ -161,13 +163,15 @@ func (self *InventoryService) ProbeToolInfo(
 				// If version is specified we look for the exact tool version
 				if version != "" {
 					if tool.Name == name && tool.Version == version {
-						return self.AddAllVersions(ctx, config_obj, tool), nil
+						return self.AddAllVersions(
+							ctx, config_obj, tool, version), nil
 					}
 					continue
 				}
 
 				if tool.Name == name {
-					return self.AddAllVersions(ctx, config_obj, tool), nil
+					return self.AddAllVersions(
+						ctx, config_obj, tool, ALL_VERSIONS), nil
 				}
 			}
 		}
@@ -179,11 +183,11 @@ func (self *InventoryService) ProbeToolInfo(
 // Enrich the tool definition with all known versions of this tool.
 func (self *InventoryService) AddAllVersions(
 	ctx context.Context, config_obj *config_proto.Config,
-	tool *artifacts_proto.Tool) *artifacts_proto.Tool {
+	tool *artifacts_proto.Tool, required_version string) *artifacts_proto.Tool {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return self.addAllVersions(ctx, config_obj, tool)
+	return self.addAllVersions(ctx, config_obj, tool, required_version)
 }
 
 // The same tool may be defined in multiple artifacts and these
@@ -196,14 +200,14 @@ func (self *InventoryService) AddAllVersions(
 // artifacts.
 func (self *InventoryService) addAllVersions(
 	ctx context.Context, config_obj *config_proto.Config,
-	tool *artifacts_proto.Tool) *artifacts_proto.Tool {
+	tool *artifacts_proto.Tool, required_version string) *artifacts_proto.Tool {
 	result := proto.Clone(tool).(*artifacts_proto.Tool)
 
 	versions, _ := self.versions[tool.Name]
 	result.Versions = nil
 
 	for _, v := range versions {
-		if tool.Version != "" && tool.Version != v.Version {
+		if required_version != "" && required_version != v.Version {
 			continue
 		}
 
@@ -272,7 +276,7 @@ func (self *InventoryService) GetToolInfo(
 
 		// Already holding the mutex here - call the lock free
 		// version.
-		return self.addAllVersions(ctx, config_obj, match), nil
+		return self.addAllVersions(ctx, config_obj, match, version), nil
 	}
 
 	return nil, fmt.Errorf("Tool %v not declared in inventory.", tool)

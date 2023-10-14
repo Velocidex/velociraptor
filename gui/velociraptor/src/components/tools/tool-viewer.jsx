@@ -71,6 +71,7 @@ class ResetToolDialog extends React.Component {
 export default class ToolViewer extends React.Component {
     static propTypes = {
         name: PropTypes.string,
+        tool_version: PropTypes.string,
         version: PropTypes.number,
     };
 
@@ -530,7 +531,10 @@ export default class ToolViewer extends React.Component {
                 onClick={() => this.setState({showDialog: true})}
                 variant="outline-info">
                 <FontAwesomeIcon icon="external-link-alt"/>
-                <span className="button-label">{ this.props.name }</span>
+                <span className="button-label">
+                  { this.props.name } { this.props.tool_version &&
+                                        "(" + this.props.tool_version + ")"  }
+                </span>
               </Button>
             </>
         );

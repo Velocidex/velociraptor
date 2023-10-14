@@ -55,7 +55,7 @@ func normalizeSemVer(version string) string {
 func CompareVersions(tool, v, w string) int {
 	v = normalizeSemVer(v)
 	w = normalizeSemVer(w)
-	if strings.Contains("velociraptor", strings.ToLower(tool)) {
+	if strings.Contains(strings.ToLower(tool), "velociraptor") {
 		v = normalizeVelciraptorVersion(v)
 		w = normalizeVelciraptorVersion(w)
 	}

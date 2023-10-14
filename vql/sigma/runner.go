@@ -7,12 +7,16 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/bradleyjkemp/sigma-go"
+	"www.velocidex.com/golang/velociraptor/actions"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/sigma/evaluator"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
 type SigmaExecutionContext struct {
+	Name string
+
 	query types.StoredQuery
 	rules []*evaluator.VQLRuleEvaluator
 }
@@ -23,75 +27,85 @@ type SigmaContext struct {
 	// Map between sigma field names to event. The lambda will be
 	// passed the event. For example EID can be the lambda
 	// x=>x.System.EventID.Value
-	fieldmappings map[string]*vfilter.Lambda
+	fieldmappings []evaluator.FieldMappingRecord
 
+	mu          sync.Mutex
 	debug       bool
 	total_rules int
+	hit_count   int
+
+	pool *workerPool
+
+	output_chan chan types.Row
+	wg          sync.WaitGroup
 }
 
-func (self *SigmaContext) SetDebug() {
-	self.debug = true
+func (self *SigmaContext) IncHitCount() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.hit_count++
 }
 
 func (self *SigmaContext) Rows(
 	ctx context.Context, scope types.Scope) chan vfilter.Row {
-	output_chan := make(chan vfilter.Row)
-
-	var wg sync.WaitGroup
 
 	for _, runner := range self.runners {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		subscope := scope.Copy()
 
-			subscope := scope.Copy()
+		self.wg.Add(1)
+		go func(runner *SigmaExecutionContext) {
+			defer self.wg.Done()
 			defer subscope.Close()
 
+			count := 0
+			hit_count := 0
+			start := utils.GetTime().Now()
+
+			defer func() {
+				scope.Log("INFO:sigma: Consumed %v messages from log source %v with %v hits on %v rules (%v)",
+					count, runner.Name, hit_count, len(runner.rules),
+					utils.GetTime().Now().Sub(start))
+			}()
+
+			query_log := actions.QueryLog.AddQuery(
+				vfilter.FormatToString(subscope, runner.query))
+			defer query_log.Close()
+
 			for row := range runner.query.Eval(ctx, subscope) {
+				count++
+
+				row_dict := toDict(subscope, row)
+
 				// Evalute the row with all relevant rules
-				for _, rule := range runner.rules {
-					match, err := rule.Match(ctx, scope, row)
-					if err != nil {
-						continue
-					}
-
-					if !self.debug && !match.Match {
-						continue
-					}
-
-					row_dict := vfilter.RowToDict(ctx, scope, row)
-					row_dict.Set("_Match", match).
-						Set("_Rule", rule.Title).
-						Set("_References", rule.References).
-						Set("Level", rule.Level)
-
-					select {
-					case <-ctx.Done():
-						return
-					case output_chan <- row_dict:
-					}
-				}
+				self.pool.Run(ctx, subscope,
+					evaluator.NewEvent(row_dict), runner.rules)
 			}
-		}()
+		}(runner)
 	}
 
 	go func() {
-		wg.Wait()
-		close(output_chan)
-
+		self.wg.Wait()
+		close(self.output_chan)
 	}()
 
-	return output_chan
+	return self.output_chan
 }
 
 func NewSigmaContext(
+	ctx context.Context,
 	scope types.Scope,
 	rules []sigma.Rule,
 	fieldmappings *ordereddict.Dict,
-	log_sources *LogSourceProvider) (*SigmaContext, error) {
+	log_sources *LogSourceProvider,
+	debug bool) (*SigmaContext, error) {
 
-	// Compile the field mappings
-	compiled_fieldmappings := make(map[string]*vfilter.Lambda)
+	// Compile the field mappings.  NOTE: The compiled_fieldmappings
+	// is shared between all the worker goroutines. Benchmarking shows
+	// it is faster to make a slice copy than having to use a mutex to
+	// protect it. This is O(1) but lock free. Using map copies uses
+	// up significant amount of memory for local map copies.
+	var compiled_fieldmappings []evaluator.FieldMappingRecord
 	if fieldmappings != nil {
 		for _, k := range fieldmappings.Keys() {
 			v, _ := fieldmappings.Get(k)
@@ -105,7 +119,8 @@ func NewSigmaContext(
 			if err != nil {
 				return nil, fmt.Errorf("fieldmapping for %s is not a valid VQL Lambda: %v", k, err)
 			}
-			compiled_fieldmappings[k] = lambda
+			compiled_fieldmappings = append(compiled_fieldmappings,
+				evaluator.FieldMappingRecord{Name: k, Lambda: lambda})
 		}
 	}
 
@@ -116,13 +131,15 @@ func NewSigmaContext(
 	for name, query := range log_sources.queries {
 		runner := &SigmaExecutionContext{
 			query: query,
+			Name:  name,
 		}
 		log_target := parseLogSourceTarget(name)
 
 		for _, r := range rules {
 			if matchLogSource(log_target, r) {
 				runner.rules = append(runner.rules,
-					evaluator.NewVQLRuleEvaluator(scope, r, compiled_fieldmappings))
+					evaluator.NewVQLRuleEvaluator(
+						scope, r, compiled_fieldmappings))
 				total_rules++
 			}
 		}
@@ -132,10 +149,29 @@ func NewSigmaContext(
 		}
 	}
 
+	output_chan := make(chan vfilter.Row)
 	result := &SigmaContext{
+		output_chan:   output_chan,
 		runners:       runners,
 		fieldmappings: compiled_fieldmappings,
 		total_rules:   total_rules,
+		debug:         debug,
 	}
+	result.pool = NewWorkerPool(ctx, &result.wg, result, output_chan)
 	return result, nil
+}
+
+// A shallow copy of the dict
+func toDict(scope vfilter.Scope, row vfilter.Row) *ordereddict.Dict {
+	result, ok := row.(*ordereddict.Dict)
+	if ok {
+		return result
+	}
+
+	result = ordereddict.NewDict()
+	for _, k := range scope.GetMembers(row) {
+		v, _ := scope.Associative(row, k)
+		result.Set(k, v)
+	}
+	return result
 }
