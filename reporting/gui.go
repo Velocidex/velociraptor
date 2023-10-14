@@ -652,7 +652,7 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 	p.AllowAttrs("params").OnElements("notebook-scatter-chart")
 	p.AllowAttrs("params").OnElements("notebook-time-chart")
 	p.AllowAttrs("name", "params").OnElements("grr-timeline")
-	p.AllowAttrs("name").OnElements("grr-tool-viewer")
+	p.AllowAttrs("name", "version").OnElements("grr-tool-viewer")
 
 	// Required for syntax highlighting.
 	p.AllowAttrs("class").OnElements("span")

@@ -117,7 +117,7 @@ sources:
               "Downloaded" AS DownloadStatus,
               copy(filename=Content, dest=(ToolPath[0]).Path,
                    permissions=if(condition=IsExecutable, then="x")) AS OSPath
-          FROM http_client(url=(args[0]).ToolURL, tempfile_extension=".exe")
+          FROM http_client(url=(args[0]).ToolURL, tempfile_extension=".tmp")
           WHERE log(message=format(format="downloaded hash of %v: %v, expected %v", args=[
                     Content, Hash.SHA256, (args[0]).ToolHash]))
                 AND Hash.SHA256 = (args[0]).ToolHash

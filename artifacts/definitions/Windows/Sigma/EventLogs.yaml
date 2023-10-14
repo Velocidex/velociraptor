@@ -14,7 +14,7 @@ parameters:
   description: Enable full debug trace
 
 export: |
-  LET StandardSigmaLogSource = sigma_log_sources(
+  LET StandardSigmaLogSource <= sigma_log_sources(
   `process_creation/windows` = {
     SELECT *
     FROM parse_evtx(
@@ -26,7 +26,7 @@ export: |
       filename= EventLogDirectory + "/Microsoft-Windows-Sysmon%4Operational.evtx")
   })
 
-  LET StandardSigmaFieldMapping = dict(
+  LET StandardSigmaFieldMapping <= dict(
     AccessList="x=>x.EventData.AccessList",
     AccessMask="x=>x.EventData.AccessMask",
     Accesses="x=>x.EventData.Accesses",

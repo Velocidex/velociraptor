@@ -9,6 +9,9 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+
+	// For Lambda protocols
+	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
 )
 
 /* This provides support for direct evaluation of sigma rules. */
@@ -18,6 +21,7 @@ type SigmaPluginArgs struct {
 	LogSources    vfilter.Any       `vfilter:"required,field=log_sources,doc=A log source object as obtained from the sigma_log_sources() VQL function."`
 	FieldMappings *ordereddict.Dict `vfilter:"optional,field=field_mapping,doc=A dict containing a mapping between a rule field name and a VQL Lambda to get the value of the field from the event."`
 	Debug         bool              `vfilter:"optional,field=debug,doc=If enabled we emit all match objects with description of what would match."`
+	RuleFilter    *vfilter.Lambda   `vfilter:"optional,field=rule_filter,doc=If specified we use this callback to filter the rules for inclusion."`
 }
 
 type SigmaPlugin struct{}
@@ -54,6 +58,12 @@ func (self SigmaPlugin) Call(
 					err, utils.Elide(r, 20))
 				continue
 			}
+
+			if arg.RuleFilter != nil &&
+				!scope.Bool(arg.RuleFilter.Reduce(ctx, scope, []vfilter.Any{rule})) {
+				continue
+			}
+
 			rules = append(rules, rule)
 		}
 
@@ -62,14 +72,11 @@ func (self SigmaPlugin) Call(
 		// will be evaluated - i.e. only those that have some rules
 		// watching them.
 		sigma_context, err := NewSigmaContext(
-			scope, rules, arg.FieldMappings, log_sources)
+			ctx, scope, rules, arg.FieldMappings, log_sources,
+			arg.Debug)
 		if err != nil {
 			scope.Log("sigma: %v", err)
 			return
-		}
-
-		if arg.Debug {
-			sigma_context.SetDebug()
 		}
 
 		scope.Log("INFO:sigma: Loaded %v rules (from %v) into %v log sources and %v field mappings",

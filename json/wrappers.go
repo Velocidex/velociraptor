@@ -85,7 +85,10 @@ func MarshalIndentWithOptions(v interface{}, opts *json.EncOpts) ([]byte, error)
 	if err != nil {
 		return nil, err
 	}
-	return buf.Bytes(), nil
+
+	// Need to make a copy because the real buffer will be reused in
+	// the pool.
+	return CopySlice(buf.Bytes()), nil
 }
 
 func MarshalJsonl(v interface{}) ([]byte, error) {
@@ -110,7 +113,9 @@ func MarshalJsonl(v interface{}) ([]byte, error) {
 		out.Write(serialized)
 		out.Write([]byte{'\n'})
 	}
-	// Need to make a copy because the real buffer will be reused in the pool.
+
+	// Need to make a copy because the real buffer will be reused in
+	// the pool.
 	return CopySlice(out.Bytes()), nil
 }
 

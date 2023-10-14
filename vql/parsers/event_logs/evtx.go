@@ -35,6 +35,7 @@ type _ParseEvtxPluginArgs struct {
 	Filenames []*accessors.OSPath `vfilter:"required,field=filename,doc=A list of event log files to parse."`
 	Accessor  string              `vfilter:"optional,field=accessor,doc=The accessor to use."`
 	Database  string              `vfilter:"optional,field=messagedb,doc=A Message database from https://github.com/Velocidex/evtx-data."`
+	Workers   int64               `vfilter:"optional,field=workers,doc=If specified we use this many workers to parse the file in parallel (default 1)."`
 }
 
 type _ParseEvtxPlugin struct{}
@@ -102,31 +103,17 @@ func (self _ParseEvtxPlugin) Call(
 					return
 				}
 
-				for _, chunk := range chunks {
-					records, _ := chunk.Parse(0)
-					for _, i := range records {
-						event_map, ok := i.Event.(*ordereddict.Dict)
-						if !ok {
-							continue
-						}
-						event, pres := ordereddict.GetMap(event_map, "Event")
-						if !pres {
-							continue
-						}
-
-						if resolver != nil {
-							event.Set("Message", evtx.ExpandMessage(event, resolver))
-						}
-
-						select {
-						case <-ctx.Done():
-							return
-
-						case output_chan <- event:
-						}
-					}
+				workers := arg.Workers
+				if workers == 0 {
+					workers = 1
 				}
 
+				pool := newPool(ctx, output_chan, int(workers), resolver)
+				defer pool.Close()
+
+				for _, chunk := range chunks {
+					pool.Run(chunk, resolver)
+				}
 			}()
 		}
 	}()
