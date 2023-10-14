@@ -141,6 +141,8 @@ github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a h1:H7dVazNcaE80V8c
 github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a/go.mod h1:/fy/Eg4TQz9KkJduvZfGCnbWTQ/LKaknS2wYB52cU6c=
 github.com/Velocidex/sflags v0.3.1-0.20231011011525-620ab7ca8617 h1:pxAOaYTYwbWhoSwRoJOT3TJmUAjD2D011A1c8M2yyEE=
 github.com/Velocidex/sflags v0.3.1-0.20231011011525-620ab7ca8617/go.mod h1:TTYBEgQFkjJvyBOC2s7G1+mNPZ3IHuqLZmVFRzyPfq4=
+github.com/Velocidex/sigma-go v0.0.0-20231015053605-117f1827960e h1:OyrCQ2wjJ0Y/pgClrOE+oIYlJCnzQyR0uz5bbwcdO3U=
+github.com/Velocidex/sigma-go v0.0.0-20231015053605-117f1827960e/go.mod h1:fHCN8y8cC1l5CYY7oOhPIznHmj/yeGxUvU+vAV7alr4=
 github.com/Velocidex/ttlcache/v2 v2.9.1-0.20230724083715-1eb048b1f6d6 h1:3HSrLwAt64gM7FNTPRXYMszpS5bRijQ6xaPVq2vsbuI=
 github.com/Velocidex/ttlcache/v2 v2.9.1-0.20230724083715-1eb048b1f6d6/go.mod h1:3/pI9BBAF7gydBWvMVtV7W1qRwshEG9lBwed/d8xfFg=
 github.com/Velocidex/yaml/v2 v2.2.5/go.mod h1:VBjrsTMc/b1h0ankOOnJPYoCbJNwhpGYpnDgICEs2mk=
@@ -199,8 +201,6 @@ github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
 github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
 github.com/bradfitz/gomemcache v0.0.0-20170208213004-1952afaa557d/go.mod h1:PmM6Mmwb0LSuEubjR8N7PtNe1KxZLtOUHtbeikc5h60=
 github.com/bradleyjkemp/cupaloy/v2 v2.6.0 h1:knToPYa2xtfg42U3I6punFEjaGFKWQRXJwj0JTv4mTs=
-github.com/bradleyjkemp/sigma-go v0.6.4 h1:J6Sqwbgv7wsEuP7xbsG8dvTrTc9lhkf5BvYF+gO9vzc=
-github.com/bradleyjkemp/sigma-go v0.6.4/go.mod h1:fHCN8y8cC1l5CYY7oOhPIznHmj/yeGxUvU+vAV7alr4=
 github.com/cavaliergopher/cpio v1.0.1 h1:KQFSeKmZhv0cr+kawA3a0xTQCU4QxXF1vhU7P7av2KM=
 github.com/cavaliergopher/cpio v1.0.1/go.mod h1:pBdaqQjnvXxdS/6CvNDwIANIFSP0xRKI16PX4xejRQc=
 github.com/census-instrumentation/opencensus-proto v0.2.1/go.mod h1:f6KPmirojxKA12rnyqOA5BBL4O983OfeGPqjHWSTneU=

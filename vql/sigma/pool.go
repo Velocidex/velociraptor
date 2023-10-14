@@ -40,11 +40,10 @@ func (self *workerJob) Run() {
 
 		// Make a copy here because another thread might match at the same
 		// time.
-		event_copy := self.event.Copy()
+		event_copy := self.sigma_context.AddDetail(
+			self.ctx, self.scope, self.event, rule)
 		event_copy.Set("_Match", match).
-			Set("_Rule", rule.Title).
-			Set("_References", rule.References).
-			Set("Level", rule.Level)
+			Set("_Rule", rule)
 
 		select {
 		case <-self.ctx.Done():

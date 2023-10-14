@@ -17,11 +17,12 @@ import (
 /* This provides support for direct evaluation of sigma rules. */
 
 type SigmaPluginArgs struct {
-	Rules         []string          `vfilter:"required,field=rules,doc=A list of sigma rules to compile."`
-	LogSources    vfilter.Any       `vfilter:"required,field=log_sources,doc=A log source object as obtained from the sigma_log_sources() VQL function."`
-	FieldMappings *ordereddict.Dict `vfilter:"optional,field=field_mapping,doc=A dict containing a mapping between a rule field name and a VQL Lambda to get the value of the field from the event."`
-	Debug         bool              `vfilter:"optional,field=debug,doc=If enabled we emit all match objects with description of what would match."`
-	RuleFilter    *vfilter.Lambda   `vfilter:"optional,field=rule_filter,doc=If specified we use this callback to filter the rules for inclusion."`
+	Rules          []string          `vfilter:"required,field=rules,doc=A list of sigma rules to compile."`
+	LogSources     vfilter.Any       `vfilter:"required,field=log_sources,doc=A log source object as obtained from the sigma_log_sources() VQL function."`
+	FieldMappings  *ordereddict.Dict `vfilter:"optional,field=field_mapping,doc=A dict containing a mapping between a rule field name and a VQL Lambda to get the value of the field from the event."`
+	Debug          bool              `vfilter:"optional,field=debug,doc=If enabled we emit all match objects with description of what would match."`
+	RuleFilter     *vfilter.Lambda   `vfilter:"optional,field=rule_filter,doc=If specified we use this callback to filter the rules for inclusion."`
+	DefaultDetails *vfilter.Lambda   `vfilter:"optional,field=default_details,doc=If specified we use this callback to determine a details column if the sigma rule does not specify it."`
 }
 
 type SigmaPlugin struct{}
@@ -72,8 +73,9 @@ func (self SigmaPlugin) Call(
 		// will be evaluated - i.e. only those that have some rules
 		// watching them.
 		sigma_context, err := NewSigmaContext(
-			ctx, scope, rules, arg.FieldMappings, log_sources,
-			arg.Debug)
+			ctx, scope, rules,
+			arg.FieldMappings, log_sources,
+			arg.DefaultDetails, arg.Debug)
 		if err != nil {
 			scope.Log("sigma: %v", err)
 			return
