@@ -3,6 +3,7 @@
   {
    "Foo": "Bar",
    "Baz": "Hello",
+   "Details": null,
    "_Match": {
     "Match": true,
     "SearchResults": {
@@ -12,15 +13,138 @@
      true
     ]
    },
-   "_Rule": "SingleField",
-   "_References": null,
-   "Level": ""
+   "_Rule": {
+    "Title": "SingleField",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "application"
+    },
+    "Detection": {
+     "Searches": {
+      "selection": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Values": [
+           "Bar"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "condition": [
+      {
+       "Search": {
+        "Name": "selection"
+       }
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "Rule With Details": [
+  {
+   "Foo": "Bar",
+   "Baz": "Hello",
+   "Details": "This is column Foo=Bar",
+   "_Match": {
+    "Match": true,
+    "SearchResults": {
+     "selection": true
+    },
+    "ConditionResults": [
+     true
+    ]
+   },
+   "_Rule": {
+    "Title": "RuleWithDetails",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "application"
+    },
+    "Detection": {
+     "Searches": {
+      "selection": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Values": [
+           "Bar"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "condition": [
+      {
+       "Search": {
+        "Name": "selection"
+       }
+      }
+     ]
+    },
+    "AdditionalFields": {
+     "details": "This is column Foo=%Foo%"
+    }
+   }
+  }
+ ],
+ "Default Details in callback": [
+  {
+   "Foo": "Bar",
+   "Baz": "Hello",
+   "Details": "I'm a scope var:Default Detail Foo=Bar",
+   "_Match": {
+    "Match": true,
+    "SearchResults": {
+     "selection": true
+    },
+    "ConditionResults": [
+     true
+    ]
+   },
+   "_Rule": {
+    "Title": "RuleWithDetails",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "application"
+    },
+    "Detection": {
+     "Searches": {
+      "selection": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Values": [
+           "Bar"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "condition": [
+      {
+       "Search": {
+        "Name": "selection"
+       }
+      }
+     ]
+    }
+   }
   }
  ],
  "Match field with regex": [
   {
    "Foo": "Bar",
    "Baz": "Hello",
+   "Details": null,
    "_Match": {
     "Match": true,
     "SearchResults": {
@@ -30,15 +154,46 @@
      true
     ]
    },
-   "_Rule": "RegexField",
-   "_References": null,
-   "Level": ""
+   "_Rule": {
+    "Title": "RegexField",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "application"
+    },
+    "Detection": {
+     "Searches": {
+      "selection": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Modifiers": [
+           "re"
+          ],
+          "Values": [
+           "b.r"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "condition": [
+      {
+       "Search": {
+        "Name": "selection"
+       }
+      }
+     ]
+    }
+   }
   }
  ],
  "Match field with logical operators": [
   {
    "Foo": "Bar",
    "Baz": "Hello",
+   "Details": null,
    "_Match": {
     "Match": true,
     "SearchResults": {
@@ -49,15 +204,66 @@
      true
     ]
    },
-   "_Rule": "AndRule",
-   "_References": null,
-   "Level": ""
+   "_Rule": {
+    "Title": "AndRule",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "application"
+    },
+    "Detection": {
+     "Searches": {
+      "selection": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Modifiers": [
+           "re"
+          ],
+          "Values": [
+           "b.r"
+          ]
+         }
+        ]
+       ]
+      },
+      "selection2": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Baz",
+          "Modifiers": [
+           "re"
+          ],
+          "Values": [
+           "h.+lo"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "condition": [
+      {
+       "Search": [
+        {
+         "Name": "selection"
+        },
+        {
+         "Name": "selection2"
+        }
+       ]
+      }
+     ]
+    }
+   }
   }
  ],
  "Match field with logical or operator": [
   {
    "Foo": "Bar",
    "Baz": "Hello",
+   "Details": null,
    "_Match": {
     "Match": true,
     "SearchResults": {
@@ -68,9 +274,59 @@
      true
     ]
    },
-   "_Rule": "OrRule",
-   "_References": null,
-   "Level": ""
+   "_Rule": {
+    "Title": "OrRule",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "application"
+    },
+    "Detection": {
+     "Searches": {
+      "selection": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Modifiers": [
+           "re"
+          ],
+          "Values": [
+           "b.r"
+          ]
+         }
+        ]
+       ]
+      },
+      "selection2": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Baz",
+          "Modifiers": [
+           "re"
+          ],
+          "Values": [
+           "something"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "condition": [
+      {
+       "Search": [
+        {
+         "Name": "selection"
+        },
+        {
+         "Name": "selection2"
+        }
+       ]
+      }
+     ]
+    }
+   }
   }
  ],
  "Match simple logsource": [
@@ -78,6 +334,7 @@
    "System": {
     "EventID": 2
    },
+   "Details": null,
    "_Match": {
     "Match": true,
     "SearchResults": {
@@ -87,9 +344,36 @@
      true
     ]
    },
-   "_Rule": "NoopRule",
-   "_References": null,
-   "Level": ""
+   "_Rule": {
+    "Title": "NoopRule",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "application"
+    },
+    "Detection": {
+     "Searches": {
+      "selection": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "EID",
+          "Values": [
+           2
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "condition": [
+      {
+       "Search": {
+        "Name": "selection"
+       }
+      }
+     ]
+    }
+   }
   }
  ]
 }

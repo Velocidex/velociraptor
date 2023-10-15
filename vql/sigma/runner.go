@@ -38,6 +38,8 @@ type SigmaContext struct {
 
 	output_chan chan types.Row
 	wg          sync.WaitGroup
+
+	default_details *vfilter.Lambda
 }
 
 func (self *SigmaContext) IncHitCount() {
@@ -98,6 +100,7 @@ func NewSigmaContext(
 	rules []sigma.Rule,
 	fieldmappings *ordereddict.Dict,
 	log_sources *LogSourceProvider,
+	default_details *vfilter.Lambda,
 	debug bool) (*SigmaContext, error) {
 
 	// Compile the field mappings.  NOTE: The compiled_fieldmappings
@@ -151,11 +154,12 @@ func NewSigmaContext(
 
 	output_chan := make(chan vfilter.Row)
 	result := &SigmaContext{
-		output_chan:   output_chan,
-		runners:       runners,
-		fieldmappings: compiled_fieldmappings,
-		total_rules:   total_rules,
-		debug:         debug,
+		output_chan:     output_chan,
+		runners:         runners,
+		fieldmappings:   compiled_fieldmappings,
+		total_rules:     total_rules,
+		default_details: default_details,
+		debug:           debug,
 	}
 	result.pool = NewWorkerPool(ctx, &result.wg, result, output_chan)
 	return result, nil

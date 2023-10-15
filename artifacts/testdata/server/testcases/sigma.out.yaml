@@ -53,6 +53,7 @@ SELECT * FROM Artifact.Windows.Sigma.EventLogs( EventLogDirectory=srcDir + "/art
    "ParentCommandLine": "c:\\Windows\\System32\\cmd.exe"
   },
   "Message": "",
+  "Details": null,
   "_Match": {
    "Match": true,
    "SearchResults": {
@@ -64,11 +65,108 @@ SELECT * FROM Artifact.Windows.Sigma.EventLogs( EventLogDirectory=srcDir + "/art
     true
    ]
   },
-  "_Rule": "Run Whoami as SYSTEM",
-  "_References": [
-   "https://speakerdeck.com/heirhabarov/hunting-for-privilege-escalation-in-windows-environment"
-  ],
-  "Level": "high",
+  "_Rule": {
+   "Title": "Run Whoami as SYSTEM",
+   "Logsource": {
+    "Category": "process_creation",
+    "Product": "windows"
+   },
+   "Detection": {
+    "Searches": {
+     "process_creation": {
+      "EventMatchers": [
+       [
+        {
+         "Field": "EventID",
+         "Values": [
+          1
+         ]
+        },
+        {
+         "Field": "Channel",
+         "Values": [
+          "Microsoft-Windows-Sysmon/Operational"
+         ]
+        }
+       ]
+      ]
+     },
+     "selection_img": {
+      "EventMatchers": [
+       [
+        {
+         "Field": "OriginalFileName",
+         "Values": [
+          "whoami.exe"
+         ]
+        }
+       ],
+       [
+        {
+         "Field": "Image",
+         "Modifiers": [
+          "endswith"
+         ],
+         "Values": [
+          "\\whoami.exe"
+         ]
+        }
+       ]
+      ]
+     },
+     "selection_user": {
+      "EventMatchers": [
+       [
+        {
+         "Field": "User",
+         "Modifiers": [
+          "contains"
+         ],
+         "Values": [
+          "AUTHORI",
+          "AUTORI"
+         ]
+        }
+       ]
+      ]
+     }
+    },
+    "condition": [
+     {
+      "Search": [
+       {
+        "Name": "process_creation"
+       },
+       {
+        "Pattern": "selection*"
+       }
+      ]
+     }
+    ]
+   },
+   "ID": "80167ada-7a12-41ed-b8e9-aa47195c66a1",
+   "Status": "deprecated",
+   "Description": "Detects a whoami.exe executed by LOCAL SYSTEM. This may be a sign of a successful local privilege escalation.",
+   "Author": "Teymur Kheirkhabarov, Florian Roth",
+   "Level": "high",
+   "References": [
+    "https://speakerdeck.com/heirhabarov/hunting-for-privilege-escalation-in-windows-environment"
+   ],
+   "Tags": [
+    "attack.privilege_escalation",
+    "attack.discovery",
+    "attack.t1033",
+    "sysmon"
+   ],
+   "AdditionalFields": {
+    "date": "2019/10/23",
+    "falsepositives": [
+     "Possible name overlap with NT AUHTORITY substring to cover all languages"
+    ],
+    "modified": "2023/02/28",
+    "ruletype": "Sigma"
+   }
+  },
   "_Source": "Windows.Sigma.EventLogs"
  }
 ]

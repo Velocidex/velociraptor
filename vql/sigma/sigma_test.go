@@ -40,6 +40,7 @@ func (self *MockQuery) Eval(ctx context.Context, scope types.Scope) <-chan types
 
 type testCase struct {
 	description, rule string
+	default_details   string
 	fieldmappings     *ordereddict.Dict
 	rows              []*ordereddict.Dict
 }
@@ -84,6 +85,42 @@ detection:
 `,
 			fieldmappings: ordereddict.NewDict(),
 			rows:          testRows,
+		},
+		{
+			description: "Rule With Details",
+			rule: `
+title: RuleWithDetails
+details: This is column Foo=%Foo%
+logsource:
+   product: windows
+   service: application
+
+detection:
+  selection:
+     Foo: Bar
+  condition: selection
+`,
+			fieldmappings: ordereddict.NewDict(),
+			rows:          testRows,
+		},
+		{
+			description: "Default Details in callback",
+			rule: `
+title: RuleWithDetails
+logsource:
+   product: windows
+   service: application
+
+detection:
+  selection:
+     Foo: Bar
+  condition: selection
+`,
+			fieldmappings: ordereddict.NewDict(),
+			rows:          testRows,
+			// Show that the default details call back has access to
+			// the scope and returns a string with interpolations.
+			default_details: "x=>ScopeVar + 'Default Detail Foo=%Foo%'",
 		},
 		{
 			description: "Match field with regex",
@@ -160,7 +197,8 @@ func (self *SigmaTestSuite) TestSigma() {
 	result := ordereddict.NewDict()
 
 	ctx := context.Background()
-	scope := vql_subsystem.MakeScope()
+	scope := vql_subsystem.MakeScope().
+		AppendVars(ordereddict.NewDict().Set("ScopeVar", "I'm a scope var:"))
 	scope.SetLogger(log.New(os.Stderr, "", 0))
 	defer scope.Close()
 
@@ -182,6 +220,10 @@ func (self *SigmaTestSuite) TestSigma() {
 				},
 			}).
 			Set("field_mapping", test_case.fieldmappings)
+
+		if test_case.default_details != "" {
+			args.Set("default_details", test_case.default_details)
+		}
 
 		for row := range plugin.Call(ctx, scope, args) {
 			rows = append(rows, row)
