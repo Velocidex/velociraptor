@@ -30,6 +30,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 const (
@@ -148,4 +149,13 @@ func (self LogFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 
 func init() {
 	vql_subsystem.RegisterFunction(&LogFunction{})
+}
+
+// Deduplicate this message
+func DeduplicatedLog(
+	ctx context.Context,
+	scope types.Scope, message string, args ...types.Any) {
+	(&LogFunction{}).Call(ctx, scope,
+		ordereddict.NewDict().Set("message", message).
+			Set("args", args))
 }
