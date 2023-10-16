@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -89,7 +90,6 @@ func (self *EventLogWatcherService) StartMonitoring(
 	accessor_name string, frequency uint64) {
 	defer scope.Close()
 
-	scope.Log("StartMonitoring")
 	defer utils.CheckForPanic("StartMonitoring")
 
 	// By default check every 15 seconds. Event logs are not flushed
@@ -206,8 +206,9 @@ func (self *EventLogWatcherService) monitorOnce(
 	fd, err := accessor.OpenWithOSPath(filename)
 	if err != nil {
 		for _, handle := range handles {
-			handle.scope.Log("Unable to open file %s: %v",
-				filename, err)
+			functions.DeduplicatedLog(
+				context.Background(), handle.scope,
+				"Unable to open file %v: %v", filename, err)
 		}
 		return 0
 	}
