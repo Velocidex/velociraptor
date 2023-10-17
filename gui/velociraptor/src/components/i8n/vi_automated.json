@@ -5,6 +5,8 @@
     "Filename Format": "\u0110\u1ecbnh d\u1ea1ng t\u00ean t\u1ec7p",
     "Filename format": "\u0110\u1ecbnh d\u1ea1ng t\u00ean t\u1ec7p",
     "KMS Encryption Key ARN (blank if KMS not used)": "ARN kh\u00f3a m\u00e3 h\u00f3a KMS (tr\u1ed1ng n\u1ebfu kh\u00f4ng s\u1eed d\u1ee5ng KMS)",
+    "Kill Clients": "Gi\u1ebft kh\u00e1ch h\u00e0ng",
+    "KillMessage": "B\u1ea1n s\u1eafp gi\u1ebft nh\u1eefng \u0111\u1eb7c v\u1ee5 sau",
     "Labeled Hosts": "M\u00e1y ch\u1ee7 \u0111\u01b0\u1ee3c g\u1eafn nh\u00e3n",
     "ONLINE": "TR\u1ef0C TUY\u1ebeN",
     "Output Directory": "Danh m\u1ee5c \u0111\u1ea7u ra",

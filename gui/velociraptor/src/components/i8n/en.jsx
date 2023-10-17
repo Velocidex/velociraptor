@@ -54,6 +54,7 @@ const English = {
         return value + ' ' + unit + ' ago';
     },
     "DeleteMessage": "You are about to permanently delete the following clients",
+    "KillMessage": "You are about to kill the following clients",
     "You are about to delete": name=>"You are about to delete "+name,
     "Edit Artifact": name=>{
         return "Edit Artifact " + name;

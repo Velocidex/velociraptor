@@ -1,0 +1,25 @@
+name: Server.Utils.KillClient
+description: |
+  This artifact agressively kills a client.
+
+  If the client runs as a service, it will restart.
+
+type: SERVER
+
+parameters:
+  - name: ClientIdList
+    description: A list of client ids to kill.
+    default:
+
+sources:
+  - query: |
+      let clients_list = SELECT ClientId
+      FROM parse_records_with_regex(
+          accessor="data", file=ClientIdList,
+          regex="(?P<ClientId>C\\.[0-9a-z-]+)")
+      WHERE log(message="Killing client " + ClientId)
+
+      SELECT * FROM foreach(row=clients_list,
+      query={
+         SELECT killkillkill(client_id=ClientId) FROM scope()
+      })

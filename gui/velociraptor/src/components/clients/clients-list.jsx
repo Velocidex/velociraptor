@@ -252,6 +252,116 @@ class DeleteClients extends Component {
     }
 }
 
+class KillClients extends Component {
+    static propTypes = {
+        affectedClients: PropTypes.array,
+        onResolve: PropTypes.func.isRequired,
+    }
+
+    state = {
+        flow_id: null,
+    }
+
+    componentDidMount() {
+        this.source = CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+    }
+
+    killClients = () => {
+        let client_ids = _.map(this.props.affectedClients,
+                               client => client.client_id);
+
+        api.post("v1/CollectArtifact", {
+            client_id: "server",
+            artifacts: ["Server.Utils.KillClient"],
+            specs: [{artifact: "Server.Utils.KillClient",
+                     parameters: {"env": [
+                         { "key": "ClientIdList", "value": client_ids.join(",")},
+                     ]}}],
+        }, this.source.token).then((response) => {
+            // Hold onto the flow id.
+            this.setState({flow_id: response.data.flow_id});
+
+            // Start polling for flow completion.
+            this.recursive_download_interval = setInterval(() => {
+                api.get("v1/GetFlowDetails", {
+                    client_id: "server",
+                    flow_id: this.state.flow_id,
+                }, this.source.token).then((response) => {
+                    let context = response.data.context;
+                    if (context.state === "RUNNING") {
+                        this.setState({flow_context: context});
+                        return;
+                    }
+
+                    // The node is refreshed with the correct flow id, we can stop polling.
+                    clearInterval(this.recursive_download_interval);
+                    this.recursive_download_interval = undefined;
+
+                    this.props.onResolve();
+                });
+            }, POLL_TIME);
+        });
+    }
+
+    render() {
+        let clients = this.props.affectedClients || [];
+        let columns = formatColumns([
+            {dataField: "last_seen_at", text: T("Online"), sort: true,
+             formatter: (cell, row) => {
+                 return <VeloClientStatusIcon client={row}/>;
+             }},
+            {dataField: "client_id", text: T("Client ID")},
+            {dataField: "os_info.hostname", text: T("Hostname"), sort: false},
+        ]);
+
+        return (
+            <Modal show={true}
+                   size="lg"
+                   onHide={this.props.onResolve} >
+              <Modal.Header closeButton>
+                <Modal.Title>{T("Kill Clients")}</Modal.Title>
+              </Modal.Header>
+
+              <Modal.Body>
+                <Alert variant="danger">
+                  {T("KillMessage")}
+                </Alert>
+                <div className="deleted-client-list">
+                <BootstrapTable
+                    hover
+                    condensed
+                    keyField="client_id"
+                    bootstrap4
+                    headerClasses="alert alert-secondary"
+                    bodyClasses="fixed-table-body"
+                    data={clients}
+                    columns={columns}
+                />
+                  </div>
+              </Modal.Body>
+
+              <Modal.Footer>
+                <Button variant="secondary"
+                        onClick={this.props.onResolve}>
+                  {T("Close")}
+                </Button>
+                <Button variant="primary"
+                        disabled={this.state.flow_id}
+                        onClick={this.killClients}>
+                  {this.state.flow_id && <FontAwesomeIcon icon="spinner" spin/>}
+                  {T("Yeah do it!")}
+                </Button>
+              </Modal.Footer>
+            </Modal>
+
+        );
+    }
+}
+
 
 const pageListRenderer = ({
     pages,
@@ -541,6 +651,13 @@ class VeloClientList extends Component {
                       this.setState({showDeleteDialog: false});
                       this.searchClients();
                   }}/>}
+              { this.state.showKillDialog &&
+                <KillClients
+                  affectedClients={affected_clients}
+                  onResolve={() => {
+                      this.setState({showKillDialog: false});
+                      this.searchClients();
+                  }}/>}
               { this.state.showLabelDialog &&
                 <LabelClients
                   affectedClients={affected_clients}
@@ -562,6 +679,12 @@ class VeloClientList extends Component {
                           onClick={() => this.setState({showDeleteDialog: true})}
                           variant="default">
                     <FontAwesomeIcon icon="trash"/>
+                  </Button>
+                  <Button title={T("Kill Clients")}
+                          disabled={_.isEmpty(this.state.selected)}
+                          onClick={() => this.setState({showKillDialog: true})}
+                          variant="default">
+                    <FontAwesomeIcon icon="ban"/>
                   </Button>
 
                 </ButtonGroup>
