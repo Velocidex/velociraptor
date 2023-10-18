@@ -64,6 +64,7 @@ func (self *QueuePool) GetWatchers() []string {
 func (self *QueuePool) Register(
 	ctx context.Context, vfs_path string,
 	options api.QueueOptions) (<-chan *ordereddict.Dict, func()) {
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -74,7 +75,7 @@ func (self *QueuePool) Register(
 	if err != nil {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.Warn("Failed to register QueuePool for %s: %v", vfs_path, err)
-
+		fmt.Printf("Failed to register QueuePool for %s: %v", vfs_path, err)
 		cancel()
 		output_chan := make(chan *ordereddict.Dict)
 		close(output_chan)
@@ -102,6 +103,7 @@ func (self *QueuePool) unregister(vfs_path string, id uint64) (found bool) {
 		new_registrations := make([]*Listener, 0, len(registrations))
 		for _, item := range registrations {
 			if id == item.id {
+				fmt.Printf("unregisterying for shutdown")
 				item.Close()
 				found = true
 

@@ -14,7 +14,7 @@ import (
 // frontends to spread the load between them.
 
 var (
-	FrontendIsMaster = os.ErrNotExist
+	FrontendIsMaster = fmt.Errorf("FrontendIsMaster: %w", os.ErrNotExist)
 )
 
 func GetFrontendManager(config_obj *config_proto.Config) (

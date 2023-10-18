@@ -18,6 +18,8 @@ type SchedulerTestSuite struct {
 func (self *SchedulerTestSuite) SetupTest() {
 	self.ConfigObj = self.TestSuite.LoadConfig()
 	self.ConfigObj.Services.NotebookService = true
+	self.ConfigObj.Services.SchedulerService = true
+	self.ConfigObj.Services.ApiServer = true
 	self.TestSuite.SetupTest()
 }
 
@@ -29,7 +31,7 @@ func (self *SchedulerTestSuite) TestScheduler() {
 
 	// Register a worker
 	ctx, cancel := context.WithCancel(self.Ctx)
-	out, err := scheduler.RegisterWorker(ctx, "Foobar")
+	out, err := scheduler.RegisterWorker(ctx, "Foobar", 10)
 	assert.NoError(self.T(), err)
 
 	// Now read worker jobs in the background

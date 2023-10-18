@@ -361,6 +361,12 @@ type MinionFrontendManager struct {
 	name       string
 }
 
+func NewMinionFrontendManager(
+	config_obj *config_proto.Config,
+	name string) *MinionFrontendManager {
+	return &MinionFrontendManager{config_obj: config_obj, name: name}
+}
+
 func (self MinionFrontendManager) GetMinionCount() int {
 	return 0
 }

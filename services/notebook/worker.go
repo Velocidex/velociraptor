@@ -102,16 +102,18 @@ func (self *NotebookManager) processUpdateRequest(
 	// Update the content asynchronously
 	start_time := utils.GetTime().Now()
 
+	notifier, err := services.GetNotifier(self.config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	// The notification is removed either inline or in the background.
+	cancel_notify, remove_notification := notifier.ListenForNotification(in.CellId)
+	defer remove_notification()
+
 	// Watcher thread: Wait for cancellation from the GUI or a 10 min timeout.
 	go func() {
 		defer query_cancel()
-
-		notifier, err := services.GetNotifier(self.config_obj)
-		if err != nil {
-			return
-		}
-		cancel_notify, remove_notification := notifier.
-			ListenForNotification(in.CellId)
 		defer remove_notification()
 
 		default_notebook_expiry := self.config_obj.Defaults.NotebookCellTimeoutMin
@@ -146,13 +148,10 @@ func (self *NotebookManager) processUpdateRequest(
 	}, nil
 }
 
-func (self *NotebookManager) registerWorker(
+func (self *NotebookManager) RegisterWorker(
 	ctx context.Context,
-	config_obj *config_proto.Config) error {
-	scheduler, err := services.GetSchedulerService(config_obj)
-	if err != nil {
-		return err
-	}
+	config_obj *config_proto.Config,
+	scheduler services.Scheduler) error {
 
 	job_chan, err := scheduler.RegisterWorker(ctx, "Notebook", 10)
 	if err != nil {
@@ -169,6 +168,7 @@ func (self *NotebookManager) registerWorker(
 				if !ok {
 					return
 				}
+
 				request := &NotebookRequest{}
 				err := json.Unmarshal([]byte(job.Job), request)
 				if err != nil {
@@ -201,8 +201,13 @@ func (self *NotebookManager) Start(
 		local_workers = config_obj.Defaults.NotebookNumberOfLocalWorkers
 	}
 
+	scheduler, err := services.GetSchedulerService(config_obj)
+	if err != nil {
+		return err
+	}
+
 	for i := int64(0); i < local_workers; i++ {
-		err := self.registerWorker(ctx, config_obj)
+		err := self.RegisterWorker(ctx, config_obj, scheduler)
 		if err != nil {
 			return err
 		}

@@ -34,6 +34,10 @@ type NotebookStoreImpl struct {
 	config_obj *config_proto.Config
 }
 
+func NewNotebookStore(config_obj *config_proto.Config) *NotebookStoreImpl {
+	return &NotebookStoreImpl{config_obj: config_obj}
+}
+
 func (self *NotebookStoreImpl) SetNotebook(in *api_proto.NotebookMetadata) error {
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {

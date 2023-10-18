@@ -253,6 +253,7 @@ func (self *Notifier) CountConnectedClients() uint64 {
 func (self *Notifier) NotifyListener(
 	ctx context.Context, config_obj *config_proto.Config,
 	id, tag string) error {
+
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err

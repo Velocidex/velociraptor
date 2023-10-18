@@ -26,6 +26,7 @@ func (self *NotebookManager) UpdateNotebookCell(
 	notebook_metadata *api_proto.NotebookMetadata,
 	user_name string,
 	in *api_proto.NotebookCellRequest) (*api_proto.NotebookCell, error) {
+
 	request := &NotebookRequest{
 		NotebookMetadata:    notebook_metadata,
 		Username:            user_name,
@@ -106,12 +107,12 @@ func (self *NotebookManager) startNanny(
 		// Cancel the query - this cell is not longer running
 		if !notebook_cell.Calculating {
 			// Notify the calculator immediately
-			notifier, err := services.GetNotifier(self.config_obj)
-			if err != nil {
-				return
-			}
+			//notifier, err := services.GetNotifier(self.config_obj)
+			//if err != nil {
+			//	return
+			//}
 
-			notifier.NotifyListener(ctx, self.config_obj, cell_id, "CancelNotebookCell")
+			//notifier.NotifyListener(ctx, self.config_obj, cell_id, "CancelNotebookCell")
 		}
 	}
 }

@@ -17,6 +17,15 @@ type MinionScheduler struct {
 	ctx        context.Context
 }
 
+func NewMinionScheduler(
+	config_obj *config_proto.Config,
+	ctx context.Context) *MinionScheduler {
+	return &MinionScheduler{
+		config_obj: config_obj,
+		ctx:        ctx,
+	}
+}
+
 // Connect to the server and bind the local worker with the server
 func (self *MinionScheduler) RegisterWorker(
 	ctx context.Context, name string, priority int) (
