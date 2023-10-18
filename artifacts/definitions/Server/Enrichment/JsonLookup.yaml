@@ -1,0 +1,36 @@
+name: Server.Enrichment.JsonLookup
+description: Allows pulling in JSON lists from an external URL to perform lookups against
+author: Whitney Champion (@shortxstack)
+type: SERVER
+
+parameters:
+    - name: LookupUrl
+      type: string
+      default: 
+
+sources:
+  - query: |
+  
+        // Assumes JSON is formatted like this:
+        // {
+        //     "list":
+        //     [
+        //         {"key":"value"},
+        //         {"key":"value"}
+        //     ]
+        // }
+
+        LET Data = SELECT parse_json(data=Content) AS Lookup
+            FROM http_client(url=LookupUrl, headers=dict(`Accept`="application/json"), method='GET')
+
+        SELECT 
+            Lookup.list AS Lookup
+        FROM Data
+        
+        // 
+        // Notebook usage:
+        //
+        // LET List <= SELECT Lookup from Artifact.Custom.Server.Enrichment.JsonLookup(LookupUrl="https://")
+        // SELECT * FROM foreach(row=array(array=List.Lookup))
+        //
+        
