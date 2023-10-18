@@ -21,6 +21,7 @@ import "csv.proto";
 import "download.proto";
 import "completions.proto";
 import "vfs_api.proto";
+import "scheduler.proto";
 
 package proto;
 
@@ -546,6 +547,9 @@ service API {
 
     // Push monitoring event to the server.
     rpc WriteEvent(VQLResponse) returns (google.protobuf.Empty) {}
+
+    // Scheduler endpoint for minion scheduling
+    rpc Scheduler(stream ScheduleRequest) returns (stream ScheduleResponse) {}
 
     // Remote data store access.
     rpc GetSubject(DataRequest) returns (DataResponse) {}

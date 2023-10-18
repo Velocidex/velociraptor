@@ -7,6 +7,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type progressReporter struct {
@@ -19,7 +20,7 @@ type progressReporter struct {
 }
 
 func (self *progressReporter) Report(message string) {
-	now := time.Now()
+	now := utils.GetTime().Now()
 	if now.Before(self.last.Add(4 * time.Second)) {
 		return
 	}

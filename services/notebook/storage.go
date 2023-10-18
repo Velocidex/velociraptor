@@ -3,7 +3,6 @@ package notebook
 import (
 	"context"
 	"errors"
-	"time"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -12,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type NotebookStore interface {
@@ -83,7 +83,7 @@ func (self *NotebookStoreImpl) SetNotebookCell(
 		if cell_md.CellId == in.CellId {
 			new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
 				CellId:    in.CellId,
-				Timestamp: time.Now().Unix(),
+				Timestamp: utils.GetTime().Now().Unix(),
 			})
 			continue
 		}

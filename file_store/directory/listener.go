@@ -67,6 +67,8 @@ type Listener struct {
 
 // Should not block - very fast.
 func (self *Listener) Send(item *ordereddict.Dict) {
+	defer utils.CheckForPanic("Listener.Send: %v", item)
+
 	// This will block senders until we can send output
 	if atomic.LoadInt32(&self.disable_file_buffering) > 0 {
 		select {

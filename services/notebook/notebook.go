@@ -8,7 +8,6 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"time"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -55,7 +54,7 @@ func (self *NotebookManager) NewNotebook(
 
 	// Override these attributes
 	in.Creator = username
-	in.CreatedTime = time.Now().Unix()
+	in.CreatedTime = utils.GetTime().Now().Unix()
 	in.ModifiedTime = in.CreatedTime
 
 	// Allow hunt notebooks to be created with a specified hunt ID.
@@ -137,7 +136,7 @@ func (self *NotebookManager) CancelNotebookCell(
 	}
 
 	// Notify the calculator immediately if we are in the same
-	// process. This makes it more responsive.x
+	// process. This makes it more responsive.
 	notifier, err := services.GetNotifier(self.config_obj)
 	if err != nil {
 		return err
@@ -184,10 +183,12 @@ func NewNotebookManagerService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) (services.NotebookManager, error) {
 
-	return NewNotebookManager(config_obj,
+	notebook_service := NewNotebookManager(config_obj,
 		&NotebookStoreImpl{
 			config_obj: config_obj,
-		}), nil
+		})
+
+	return notebook_service, notebook_service.Start(ctx, config_obj, wg)
 }
 
 func (self *NotebookManager) ReformatVQL(

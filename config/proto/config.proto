@@ -967,6 +967,7 @@ message ServerServicesConfig {
    bool label = 22;
    bool launcher = 23;
    bool notebook_service = 24;
+   bool scheduler_service = 29;
 
     // Client services
    bool http_communicator = 27;
@@ -984,6 +985,9 @@ message Defaults {
     // When the process memory exceeds the high water marrk, we
     // actively cancel in flight notebook cell calculations.
     uint64 notebook_memory_high_water_mark = 37;
+
+    // Set to -1 to disable local workers
+    int64 notebook_number_of_local_workers = 38;
 
     // The default CSV delimiter
     string csv_delimiter = 3;

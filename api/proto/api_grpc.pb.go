@@ -118,6 +118,8 @@ type APIClient interface {
 	PushEvents(ctx context.Context, in *PushEventRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	// Push monitoring event to the server.
 	WriteEvent(ctx context.Context, in *proto2.VQLResponse, opts ...grpc.CallOption) (*empty.Empty, error)
+	// Scheduler endpoint for minion scheduling
+	Scheduler(ctx context.Context, opts ...grpc.CallOption) (API_SchedulerClient, error)
 	// Remote data store access.
 	GetSubject(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*DataResponse, error)
 	SetSubject(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*DataResponse, error)
@@ -775,6 +777,37 @@ func (c *aPIClient) WriteEvent(ctx context.Context, in *proto2.VQLResponse, opts
 	return out, nil
 }
 
+func (c *aPIClient) Scheduler(ctx context.Context, opts ...grpc.CallOption) (API_SchedulerClient, error) {
+	stream, err := c.cc.NewStream(ctx, &API_ServiceDesc.Streams[2], "/proto.API/Scheduler", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &aPISchedulerClient{stream}
+	return x, nil
+}
+
+type API_SchedulerClient interface {
+	Send(*ScheduleRequest) error
+	Recv() (*ScheduleResponse, error)
+	grpc.ClientStream
+}
+
+type aPISchedulerClient struct {
+	grpc.ClientStream
+}
+
+func (x *aPISchedulerClient) Send(m *ScheduleRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *aPISchedulerClient) Recv() (*ScheduleResponse, error) {
+	m := new(ScheduleResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (c *aPIClient) GetSubject(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*DataResponse, error) {
 	out := new(DataResponse)
 	err := c.cc.Invoke(ctx, "/proto.API/GetSubject", in, out, opts...)
@@ -920,6 +953,8 @@ type APIServer interface {
 	PushEvents(context.Context, *PushEventRequest) (*empty.Empty, error)
 	// Push monitoring event to the server.
 	WriteEvent(context.Context, *proto2.VQLResponse) (*empty.Empty, error)
+	// Scheduler endpoint for minion scheduling
+	Scheduler(API_SchedulerServer) error
 	// Remote data store access.
 	GetSubject(context.Context, *DataRequest) (*DataResponse, error)
 	SetSubject(context.Context, *DataRequest) (*DataResponse, error)
@@ -1131,6 +1166,9 @@ func (UnimplementedAPIServer) PushEvents(context.Context, *PushEventRequest) (*e
 }
 func (UnimplementedAPIServer) WriteEvent(context.Context, *proto2.VQLResponse) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method WriteEvent not implemented")
+}
+func (UnimplementedAPIServer) Scheduler(API_SchedulerServer) error {
+	return status.Errorf(codes.Unimplemented, "method Scheduler not implemented")
 }
 func (UnimplementedAPIServer) GetSubject(context.Context, *DataRequest) (*DataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSubject not implemented")
@@ -2354,6 +2392,32 @@ func _API_WriteEvent_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _API_Scheduler_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(APIServer).Scheduler(&aPISchedulerServer{stream})
+}
+
+type API_SchedulerServer interface {
+	Send(*ScheduleResponse) error
+	Recv() (*ScheduleRequest, error)
+	grpc.ServerStream
+}
+
+type aPISchedulerServer struct {
+	grpc.ServerStream
+}
+
+func (x *aPISchedulerServer) Send(m *ScheduleResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *aPISchedulerServer) Recv() (*ScheduleRequest, error) {
+	m := new(ScheduleRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func _API_GetSubject_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(DataRequest)
 	if err := dec(in); err != nil {
@@ -2738,6 +2802,12 @@ var API_ServiceDesc = grpc.ServiceDesc{
 			StreamName:    "WatchEvent",
 			Handler:       _API_WatchEvent_Handler,
 			ServerStreams: true,
+		},
+		{
+			StreamName:    "Scheduler",
+			Handler:       _API_Scheduler_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
 		},
 	},
 	Metadata: "api.proto",

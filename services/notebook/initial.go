@@ -33,11 +33,11 @@ func (self *NotebookManager) NewNotebookCell(
 			// New cell goes above existing cell.
 			new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
 				CellId:    notebook.LatestCellId,
-				Timestamp: time.Now().Unix(),
+				Timestamp: utils.GetTime().Now().Unix(),
 			})
 			new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
 				CellId:    cell_md.CellId,
-				Timestamp: time.Now().Unix(),
+				Timestamp: utils.GetTime().Now().Unix(),
 			})
 			added = true
 			continue
@@ -49,7 +49,7 @@ func (self *NotebookManager) NewNotebookCell(
 	if !added {
 		new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
 			CellId:    notebook.LatestCellId,
-			Timestamp: time.Now().Unix(),
+			Timestamp: utils.GetTime().Now().Unix(),
 		})
 	}
 
@@ -126,7 +126,7 @@ func CreateInitialNotebook(ctx context.Context,
 			notebook_metadata.CellMetadata, &api_proto.NotebookCell{
 				CellId:    new_cell_id,
 				Env:       cell.Env,
-				Timestamp: time.Now().Unix(),
+				Timestamp: utils.GetTime().Now().Unix(),
 			})
 		cell.NotebookId = notebook_metadata.NotebookId
 		cell.CellId = new_cell_id
@@ -161,13 +161,13 @@ func getCellsForEvents(ctx context.Context,
 	// If there are no custom cells, add the default cell.
 	if len(result) == 0 {
 		// Start the event display 1 day ago.
-		start_time := time.Now().AddDate(0, 0, -1).UTC().Format(time.RFC3339)
+		start_time := utils.GetTime().Now().AddDate(0, 0, -1).UTC().Format(time.RFC3339)
 		if notebook_metadata.Context.StartTime > 0 {
 			start_time = utils.ParseTimeFromInt64(
 				notebook_metadata.Context.StartTime).UTC().Format(time.RFC3339)
 		}
 
-		end_time := time.Now().UTC().Format(time.RFC3339)
+		end_time := utils.GetTime().Now().UTC().Format(time.RFC3339)
 		if notebook_metadata.Context.EndTime > 0 {
 			end_time = utils.ParseTimeFromInt64(
 				notebook_metadata.Context.EndTime).UTC().Format(time.RFC3339)

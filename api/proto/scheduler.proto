@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package proto;
+
+option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
+
+message ScheduleRequest {
+    // The queue we want to receive jobs on
+    string queue = 1;
+
+    // First request must be "register" then for each completed job "completion"
+    string type = 2;
+
+    // The request ID this is a completion for.
+    uint64 id = 3;
+
+    uint64 priority = 6;
+
+    // A json encoded response
+    string response = 4;
+
+    // An error message or "" for no error.
+    string error = 5;
+}
+
+// This represents a job request from the server to the minion,
+message ScheduleResponse {
+    // The id must be matched with the response.
+    uint64 id = 1;
+
+    string queue = 2;
+
+    // A json serialized request suitable for the named queue.
+    string job = 3;
+}

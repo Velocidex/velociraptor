@@ -61,6 +61,7 @@ type ServiceContainer interface {
 	Notifier() (Notifier, error)
 	ACLManager() (ACLManager, error)
 	AuditManager() (AuditManager, error)
+	Scheduler() (Scheduler, error)
 }
 
 // The org manager manages multi-tenancies.

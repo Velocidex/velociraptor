@@ -15,12 +15,9 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -29,155 +26,41 @@ func (self *NotebookManager) UpdateNotebookCell(
 	notebook_metadata *api_proto.NotebookMetadata,
 	user_name string,
 	in *api_proto.NotebookCellRequest) (*api_proto.NotebookCell, error) {
-
-	notebook_cell := &api_proto.NotebookCell{
-		Input:            in.Input,
-		CellId:           in.CellId,
-		Type:             in.Type,
-		Timestamp:        time.Now().Unix(),
-		CurrentlyEditing: in.CurrentlyEditing,
-		Calculating:      true,
-		Env:              in.Env,
+	request := &NotebookRequest{
+		NotebookMetadata:    notebook_metadata,
+		Username:            user_name,
+		NotebookCellRequest: in,
 	}
 
-	notebook_path_manager := paths.NewNotebookPathManager(
-		notebook_metadata.NotebookId)
-
-	err := self.Store.SetNotebook(notebook_metadata)
+	scheduler, err := services.GetSchedulerService(self.config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	// Run the actual query independently.
-	query_ctx, query_cancel := context.WithCancel(context.Background())
-
-	acl_manager := acl_managers.NewServerACLManager(self.config_obj, user_name)
-
-	manager, err := services.GetRepositoryManager(self.config_obj)
-	if err != nil {
-		return nil, err
-	}
-	global_repo, err := manager.GetGlobalRepository(self.config_obj)
+	response_chan, err := scheduler.Schedule(ctx, services.SchedulerJob{
+		Queue: "Notebook",
+		Job:   json.MustMarshalString(request),
+	})
 	if err != nil {
 		return nil, err
 	}
 
-	tmpl, err := reporting.NewGuiTemplateEngine(
-		self.config_obj, query_ctx, nil, acl_manager, global_repo,
-		notebook_path_manager.Cell(in.CellId),
-		"Server.Internal.ArtifactDescription")
-	if err != nil {
-		return nil, err
-	}
+	select {
+	case <-ctx.Done():
+		return nil, errors.New("Cancelled")
 
-	tmpl.SetEnv("NotebookId", in.NotebookId)
-
-	// Register a progress reporter so we can monitor how the
-	// template rendering is going.
-	tmpl.Progress = &progressReporter{
-		config_obj:    self.config_obj,
-		notebook_cell: notebook_cell,
-		notebook_id:   in.NotebookId,
-		start:         time.Now(),
-		store:         self.Store,
-	}
-
-	// Add the notebook environment into the cell template.
-	for _, env := range notebook_metadata.Env {
-		tmpl.SetEnv(env.Key, env.Value)
-	}
-
-	// Also apply the cell env
-	for _, env := range in.Env {
-		tmpl.SetEnv(env.Key, env.Value)
-	}
-
-	input := in.Input
-	cell_type := in.Type
-
-	// Update the content asynchronously
-	start_time := time.Now()
-
-	// RPC call deadline - if we can complete within 1 second pass
-	// the response directly to the RPC caller.
-	sub_ctx, sub_cancel := context.WithTimeout(ctx, time.Second)
-
-	// Main error will be delivered to the RPC caller if we can
-	// complete the entire operation before the deadline.
-	var main_err error
-
-	// Watcher thread: Wait for cancellation from the GUI or a 10 min timeout.
-	go func() {
-		defer query_cancel()
-
-		notifier, err := services.GetNotifier(self.config_obj)
+	case job_resp, ok := <-response_chan:
+		if !ok {
+			return nil, errors.New("Cancelled")
+		}
+		notebook_resp := &NotebookResponse{}
+		err := json.Unmarshal([]byte(job_resp.Job), notebook_resp)
 		if err != nil {
-			return
-		}
-		cancel_notify, remove_notification := notifier.
-			ListenForNotification(in.CellId)
-		defer remove_notification()
-
-		default_notebook_expiry := self.config_obj.Defaults.NotebookCellTimeoutMin
-		if default_notebook_expiry == 0 {
-			default_notebook_expiry = 10
+			return nil, err
 		}
 
-		select {
-		// Query is done - get out of here.
-		case <-query_ctx.Done():
-
-		// Active cancellation from the GUI.
-		case <-cancel_notify:
-			tmpl.Scope.Log("Cancelled after %v !", time.Since(start_time))
-
-			// Set a timeout.
-		case <-time.After(time.Duration(default_notebook_expiry) * time.Minute):
-			tmpl.Scope.Log("Query timed out after %v !", time.Since(start_time))
-		}
-
-	}()
-
-	// Start a nanny to watch this calculation
-	go self.startNanny(query_ctx, self.config_obj, tmpl.Scope,
-		in.NotebookId, in.CellId)
-
-	// Main worker: Just run the query until done.
-	go func() {
-		// Cancel and release the main thread if we
-		// finish quickly before the timeout.
-		defer sub_cancel()
-
-		// Make sure to cancel the query context if we
-		// finished early - the Waiter goroutine above will be
-		// released.
-		defer query_cancel()
-
-		// Close the template when we are done with it.
-		defer tmpl.Close()
-
-		resp, err := self.updateCellContents(query_ctx, tmpl,
-			in.CurrentlyEditing, in.NotebookId,
-			in.CellId, cell_type, in.Env, input, in.Input)
-		if err != nil {
-			main_err = err
-			logger := logging.GetLogger(self.config_obj, &logging.GUIComponent)
-			logger.Error("Rendering error: %v", err)
-		}
-
-		// Update the response if we can.
-		if resp != nil {
-			notebook_cell = resp
-		}
-	}()
-
-	// Wait here up to 1 second for immediate response - but if
-	// the response takes too long, just give up and return a
-	// continuation. The GUI will continue polling for notebook
-	// state and will pick up the changes by itself.
-	<-sub_ctx.Done()
-
-	return notebook_cell, main_err
+		return notebook_resp.NotebookCell, job_resp.Err
+	}
 }
 
 func (self *NotebookManager) startNanny(
@@ -269,8 +152,12 @@ func (self *NotebookManager) updateCellContents(
 	env []*api_proto.Env,
 	input, original_input string) (res *api_proto.NotebookCell, err error) {
 
+	// Start a nanny to watch this calculation
+	go self.startNanny(ctx, self.config_obj, tmpl.Scope,
+		notebook_id, cell_id)
+
 	output := ""
-	now := time.Now().Unix()
+	now := utils.GetTime().Now().Unix()
 
 	cell_type = strings.ToLower(cell_type)
 
