@@ -370,8 +370,13 @@ func (self *NotebookWorker) RegisterWorker(
 		return err
 	}
 
+	var priority int64
+	if config_obj.Defaults != nil {
+		priority = config_obj.Defaults.NotebookWorkerPriority
+	}
+
 	queue := "Notebook"
-	job_chan, err := scheduler.RegisterWorker(ctx, queue, name, 10)
+	job_chan, err := scheduler.RegisterWorker(ctx, queue, name, int(priority))
 	if err != nil {
 		return err
 	}

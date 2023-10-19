@@ -219,7 +219,11 @@ func StartSchedulerService(
 
 	services.RegisterScheduler(scheduler)
 
-	debug.RegisterProfileWriter(scheduler.WriteProfile)
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name:          "worker",
+		Description:   "Reporting information about current worker tasks.",
+		ProfileWriter: scheduler.WriteProfile,
+	})
 
 	return nil
 }

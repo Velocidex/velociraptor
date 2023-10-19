@@ -88,6 +88,8 @@ sources:
 
   - name: Goroutines
     query: |
+      -- Only show our own code. This removed unnecessary library
+      -- calls and cleans up the output.
       SELECT *, {
          SELECT format(format="%v (%v:%v)",
              args=[CleanUp(Name=Name), basename(path=File), Line])

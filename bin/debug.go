@@ -19,10 +19,14 @@ package main
 
 import (
 	"fmt"
+	"html"
 	"io"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
+	"net/url"
+	"path"
+	"regexp"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -31,6 +35,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/golang"
 )
@@ -73,6 +78,16 @@ func handleProfile(config_obj *config_proto.Config) func(w http.ResponseWriter, 
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 
+		profile_type, _ := url.QueryUnescape(path.Base(r.URL.Path))
+
+		// The root level shows all profile information.
+		if profile_type == "profile" || profile_type == "all" {
+			profile_type = "."
+		} else {
+			// Take the profile type as a literal string not a regex
+			profile_type = regexp.QuoteMeta(profile_type)
+		}
+
 		builder := services.ScopeBuilder{
 			Config:     config_obj,
 			ACLManager: acl_managers.NullACLManager{},
@@ -87,7 +102,8 @@ func handleProfile(config_obj *config_proto.Config) func(w http.ResponseWriter, 
 		defer scope.Close()
 
 		plugin := &golang.ProfilePlugin{}
-		for row := range plugin.Call(r.Context(), scope, ordereddict.NewDict()) {
+		for row := range plugin.Call(r.Context(), scope, ordereddict.NewDict().
+			Set("type", profile_type)) {
 			serialized, _ := json.Marshal(row)
 			serialized = append(serialized, '\n')
 			w.Write(serialized)
@@ -95,13 +111,36 @@ func handleProfile(config_obj *config_proto.Config) func(w http.ResponseWriter, 
 	}
 }
 
+func handleIndex(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	w.Write([]byte(`
+<html><body>
+<h1>Debug Server</h1>
+<ul>
+<li><a href="/debug/queries">Show all queries</a></li>
+<li><a href="/debug/queries/running">Show currently running queries</a></li>
+<li><a href="/debug/profile/all">Show all profile items</a></li>
+`))
+
+	for _, i := range debug.GetProfileWriters() {
+		w.Write([]byte(fmt.Sprintf(`
+<li><a href="/debug/profile/%s">%s</a></li>`,
+			url.QueryEscape(i.Name),
+			html.EscapeString(i.Description))))
+	}
+
+	w.Write([]byte(`</body></html>`))
+}
+
 func initDebugServer(config_obj *config_proto.Config) error {
 	if *debug_flag {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("<green>Starting</> debug server on <cyan>http://127.0.0.1:%v/debug/pprof", *debug_flag_port)
 
+		http.HandleFunc("/debug", handleIndex)
 		http.HandleFunc("/debug/queries", handleQueries)
-		http.HandleFunc("/debug/profile", handleProfile(config_obj))
+		http.HandleFunc("/debug/profile/", handleProfile(config_obj))
 		http.HandleFunc("/debug/queries/running", handleRunningQueries)
 
 		// Switch off the debug flag so we do not run this again. (The

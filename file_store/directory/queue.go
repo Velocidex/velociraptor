@@ -286,26 +286,32 @@ func NewDirectoryQueueManager(config_obj *config_proto.Config,
 		Clock:      utils.RealClock{},
 	}
 
-	debug.RegisterProfileWriter(func(ctx context.Context,
-		scope vfilter.Scope, output_chan chan vfilter.Row) {
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name: "QueueManager " + services.GetOrgName(config_obj),
+		Description: fmt.Sprintf(
+			"Report the current states of server artifact event queues for org %v.",
+			services.GetOrgName(config_obj)),
+		ProfileWriter: func(ctx context.Context,
+			scope vfilter.Scope, output_chan chan vfilter.Row) {
 
-		d := result.Debug()
-		keys := []string{}
-		for _, k := range d.Keys() {
-			keys = append(keys, k)
-		}
+			d := result.Debug()
+			keys := []string{}
+			for _, k := range d.Keys() {
+				keys = append(keys, k)
+			}
 
-		sort.Strings(keys)
+			sort.Strings(keys)
 
-		for _, k := range keys {
-			v, _ := d.Get(k)
+			for _, k := range keys {
+				v, _ := d.Get(k)
 
-			output_chan <- ordereddict.NewDict().
-				Set("Type", "QueueManager").
-				Set("Org", services.GetOrgName(config_obj)).
-				Set("Name", k).
-				Set("Line", v)
-		}
+				output_chan <- ordereddict.NewDict().
+					Set("Type", "QueueManager").
+					Set("Org", services.GetOrgName(config_obj)).
+					Set("Name", k).
+					Set("Line", v)
+			}
+		},
 	})
 
 	return result

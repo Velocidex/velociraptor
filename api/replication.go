@@ -233,11 +233,15 @@ func (self *replicationTracker) Add(queue, peer, org_id string) (*replicatedStat
 }
 
 func init() {
-	debug.RegisterProfileWriter(func(ctx context.Context,
-		scope vfilter.Scope, output_chan chan vfilter.Row) {
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name:        "Replication",
+		Description: "Report current replication connections between master and minion",
+		ProfileWriter: func(ctx context.Context,
+			scope vfilter.Scope, output_chan chan vfilter.Row) {
 
-		for _, i := range gReplicationTracker.Debug() {
-			output_chan <- i
-		}
+			for _, i := range gReplicationTracker.Debug() {
+				output_chan <- i
+			}
+		},
 	})
 }

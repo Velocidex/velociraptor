@@ -44,6 +44,7 @@ tools:
 `})
 	self.ConfigObj.Services.NotebookService = true
 	self.ConfigObj.Services.UserManager = true
+	self.ConfigObj.Services.SchedulerService = true
 
 	self.TestSuite.SetupTest()
 }

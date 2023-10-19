@@ -73,16 +73,19 @@ func (self *MinionSchedulerTestSuite) TestNotebookMinionScheduler() {
 	// Get a minion scheduler that will connect to the api server.
 	minion_scheduler := scheduler.NewMinionScheduler(self.ConfigObj, self.Ctx)
 
-	// Start a worker and connect to the api
-	minion_worker := &notebook.NotebookWorker{}
-	err = minion_worker.RegisterWorker(self.Ctx, self.ConfigObj,
-		"Test", minion_scheduler)
-	assert.NoError(self.T(), err)
+	// Start a worker and connect to the api. The worker remains
+	// running in the background throughout.
+	go func() {
+		minion_worker := &notebook.NotebookWorker{}
+		minion_worker.RegisterWorker(self.Ctx, self.ConfigObj,
+			"Test", minion_scheduler)
+	}()
 
 	notebook_manager, err := services.GetNotebookManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	// Create a notebook the usual way
+	// Create a notebook the usual way (This calls the worker for the
+	// initial cell)
 	var notebook *api_proto.NotebookMetadata
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
 		notebook, err = notebook_manager.NewNotebook(

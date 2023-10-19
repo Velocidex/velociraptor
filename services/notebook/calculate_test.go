@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/notebook"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 var (
@@ -48,11 +49,14 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerUpdateCell() {
 	golden := ordereddict.NewDict()
 
 	// Create a notebook the usual way
-	notebook, err := notebook_manager.NewNotebook(self.Ctx, "admin", &api_proto.NotebookMetadata{
-		Name:        "Test Notebook",
-		Description: "This is a test",
+	var notebook *api_proto.NotebookMetadata
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		notebook, err = notebook_manager.NewNotebook(self.Ctx, "admin", &api_proto.NotebookMetadata{
+			Name:        "Test Notebook",
+			Description: "This is a test",
+		})
+		return err == nil
 	})
-	assert.NoError(self.T(), err)
 
 	// Should come with one cell.
 	assert.Equal(self.T(), len(notebook.CellMetadata), 1)
