@@ -58,6 +58,7 @@ jobs:
         echo "VSStest2 with more data" > c:\Users\test2.txt
         echo Clearing the event logs
         wevtutil.exe cl System
+        wevtutil.exe cl security
 
         echo Create second service.
         sc.exe create TestingDetection2 binPath="%COMSPEC% /Q /c echo 'COMSPEC testing 2"
