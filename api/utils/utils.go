@@ -1,4 +1,4 @@
-package authenticators
+package utils
 
 import (
 	"strings"

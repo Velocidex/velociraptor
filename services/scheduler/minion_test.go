@@ -1,10 +1,12 @@
 package scheduler_test
 
 import (
-	"fmt"
+	"sync"
 	"testing"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
+	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -15,6 +17,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/notebook"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
 	"www.velocidex.com/golang/velociraptor/services/scheduler"
+	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
@@ -37,6 +41,7 @@ func (self *MinionSchedulerTestSuite) SetupTest() {
 	// Do not start local workers to force us to go through the remote
 	// one.
 	self.ConfigObj.Defaults.NotebookNumberOfLocalWorkers = -1
+	self.ConfigObj.API.BindPort = 8345
 
 	self.LoadArtifactsIntoConfig(mock_definitions)
 	self.TestSuite.SetupTest()
@@ -46,11 +51,17 @@ func (self *MinionSchedulerTestSuite) startAPIServer() {
 	builder, err := api.NewServerBuilder(self.Ctx, self.ConfigObj, self.Sm.Wg)
 	assert.NoError(self.T(), err)
 
-	err = builder.WithAPIServer(self.Ctx, self.Sm.Wg)
-	assert.NoError(self.T(), err)
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		err := builder.WithAPIServer(self.Ctx, self.Sm.Wg)
+		return err == nil
+	})
 }
 
-func (self *MinionSchedulerTestSuite) TestMinionScheduler() {
+func (self *MinionSchedulerTestSuite) TestNotebookMinionScheduler() {
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
+	defer closer()
+	defer notebook.SetTestMode()()
+
 	self.startAPIServer()
 
 	org_manager, err := services.GetOrgManager()
@@ -61,39 +72,90 @@ func (self *MinionSchedulerTestSuite) TestMinionScheduler() {
 
 	// Get a minion scheduler that will connect to the api server.
 	minion_scheduler := scheduler.NewMinionScheduler(self.ConfigObj, self.Ctx)
-	minion_notebook_service := notebook.NewNotebookManager(self.ConfigObj,
-		notebook.NewNotebookStore(self.ConfigObj))
 
 	// Start a worker and connect to the api
-	err = minion_notebook_service.RegisterWorker(self.Ctx, self.ConfigObj, minion_scheduler)
+	minion_worker := &notebook.NotebookWorker{}
+	err = minion_worker.RegisterWorker(self.Ctx, self.ConfigObj,
+		"Test", minion_scheduler)
 	assert.NoError(self.T(), err)
-
-	time.Sleep(time.Second)
 
 	notebook_manager, err := services.GetNotebookManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	// Create a notebook the usual way
-	notebook, err := notebook_manager.NewNotebook(self.Ctx, "admin", &api_proto.NotebookMetadata{
-		Name:        "Test Notebook",
-		Description: "This is a test",
+	var notebook *api_proto.NotebookMetadata
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		notebook, err = notebook_manager.NewNotebook(
+			self.Ctx, "admin", &api_proto.NotebookMetadata{
+				Name:        "Test Notebook",
+				Description: "This is a test",
+			})
+		return err == nil
 	})
-	assert.NoError(self.T(), err)
+
+	cell_id := notebook.CellMetadata[0].CellId
 
 	// Now update the cell to some markdown
 	cell, err := notebook_manager.UpdateNotebookCell(self.Ctx, notebook,
 		"admin", &api_proto.NotebookCellRequest{
 			NotebookId: notebook.NotebookId,
-			CellId:     notebook.CellMetadata[0].CellId,
-			Input:      "/*\n# 1\n*/\nselect sleep(time=1) FROM scope()\n",
+			CellId:     cell_id,
+			Input:      "/*\n# 1\n*/\nselect sleep(ms=500) FROM scope()\n",
 			Type:       "vql",
 		})
 	assert.NoError(self.T(), err)
 
-	json.Dump(cell)
+	golden := ordereddict.NewDict().
+		Set("Updated Cell", cell)
 
-	fmt.Println("Test done!")
+	var wg sync.WaitGroup
 
+	// Test cancellations
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		// Should block for 500 sec if cancellation fails.
+		cell, err := notebook_manager.UpdateNotebookCell(self.Ctx, notebook,
+			"admin", &api_proto.NotebookCellRequest{
+				NotebookId: notebook.NotebookId,
+				CellId:     cell_id,
+				Input:      "/*\n# 1\n*/\nselect sleep(time=500) FROM scope()\n",
+				Type:       "vql",
+			})
+		assert.NoError(self.T(), err)
+		assert.Contains(self.T(), json.MustMarshalString(cell), "Cancelled")
+	}()
+
+	// Issue the cancellaion. Cancellation should be dispatched across
+	// to the minion through the notification service.
+	time.Sleep(200 * time.Millisecond)
+
+	// Trying to schedule now should result in an error because all
+	// workers are busy.
+	cell, err = notebook_manager.UpdateNotebookCell(self.Ctx, notebook,
+		"admin", &api_proto.NotebookCellRequest{
+			NotebookId: notebook.NotebookId,
+			CellId:     cell_id,
+			Input:      "/*\n# 1\n*/\nselect sleep(time=500) FROM scope()\n",
+			Type:       "vql",
+		})
+	assert.Error(self.T(), err)
+	assert.Contains(self.T(), err.Error(), "No workers available")
+
+	err = notebook_manager.CancelNotebookCell(self.Ctx, notebook.NotebookId, cell_id)
+	assert.NoError(self.T(), err)
+
+	// Wait here until the cell is cancelled
+	wg.Wait()
+
+	// Check the cell contents
+	cell, err = notebook_manager.GetNotebookCell(
+		self.Ctx, notebook.NotebookId, cell_id)
+	assert.NoError(self.T(), err)
+
+	goldie.Assert(self.T(), "TestNotebookMinionScheduler",
+		json.MustMarshalIndent(golden))
 }
 
 func TestMinionScheduler(t *testing.T) {

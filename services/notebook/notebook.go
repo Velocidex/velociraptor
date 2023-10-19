@@ -64,7 +64,12 @@ func (self *NotebookManager) NewNotebook(
 		in.NotebookId = NewNotebookId()
 	}
 
-	err := CreateInitialNotebook(ctx, self.config_obj, in, username)
+	err := self.Store.SetNotebook(in)
+	if err != nil {
+		return nil, err
+	}
+
+	err = CreateInitialNotebook(ctx, self.config_obj, in, username)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +82,6 @@ func (self *NotebookManager) NewNotebook(
 		return nil, err
 	}
 
-	err = self.Store.SetNotebook(in)
 	return in, err
 }
 

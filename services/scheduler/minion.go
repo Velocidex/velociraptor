@@ -9,6 +9,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type MinionScheduler struct {
@@ -28,7 +29,7 @@ func NewMinionScheduler(
 
 // Connect to the server and bind the local worker with the server
 func (self *MinionScheduler) RegisterWorker(
-	ctx context.Context, name string, priority int) (
+	ctx context.Context, queue, name string, priority int) (
 	chan services.SchedulerJob, error) {
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
@@ -53,16 +54,16 @@ func (self *MinionScheduler) RegisterWorker(
 
 	// Register the worker on the server
 	err = stream.Send(&api_proto.ScheduleRequest{
-		Queue: name,
+		Queue: queue,
 		Type:  "register",
 	})
 	if err != nil {
 		logger.Error("MinionScheduler: Unable to register worker for %v: %v",
-			name, err)
+			queue, err)
 		return nil, err
 	}
 
-	logger.Info("MinionScheduler: Registered worker for <green>%v</>", name)
+	logger.Info("MinionScheduler: Registered worker for <green>%v</>", queue)
 
 	output_chan := make(chan services.SchedulerJob)
 	go func() {
@@ -73,19 +74,22 @@ func (self *MinionScheduler) RegisterWorker(
 			if err != nil {
 				return
 			}
-
+			start := utils.GetTime().Now()
 			select {
 			case <-ctx.Done():
 				return
+
 			case output_chan <- services.SchedulerJob{
 				Queue: req.Queue,
 				Job:   req.Job,
+				OrgId: req.OrgId,
 				Done: func(result string, err error) {
 					err_str := ""
 					if err != nil {
 						err_str = err.Error()
 					}
-
+					logger.Debug("MinionScheduler: Completed job for queue <green>%v</> in %v on %v",
+						queue, utils.GetTime().Now().Sub(start), req.OrgId)
 					stream.Send(
 						&api_proto.ScheduleRequest{
 							Queue:    req.Queue,
@@ -96,6 +100,8 @@ func (self *MinionScheduler) RegisterWorker(
 						})
 				},
 			}:
+				logger.Debug("MinionScheduler: Received job for queue <green>%v</> in %v",
+					queue, req.OrgId)
 			}
 		}
 	}()

@@ -1,10 +1,13 @@
 package api
 
 import (
+	"fmt"
 	"io"
+	"strings"
 	"sync"
 
 	errors "github.com/go-errors/errors"
+	"google.golang.org/grpc/peer"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -24,10 +27,17 @@ func (self *ApiServer) Scheduler(
 
 	// This is usually only for minions
 	permissions := acls.DATASTORE_ACCESS
-	principal := user_record.Name
-	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
+	peer_name := user_record.Name
+	perm, err := services.CheckAccess(org_config_obj, peer_name, permissions)
 	if !perm || err != nil {
-		return PermissionDenied(err, "User is not allowed to read notebooks.")
+		return PermissionDenied(err,
+			fmt.Sprintf("User %v is not allowed to read notebooks.", peer_name))
+	}
+
+	// Update the peer name to make it unique
+	peer_addr, ok := peer.FromContext(ctx)
+	if ok {
+		peer_name = strings.Split(peer_addr.Addr.String(), ":")[0]
 	}
 
 	scheduler, err := services.GetSchedulerService(org_config_obj)
@@ -48,7 +58,8 @@ func (self *ApiServer) Scheduler(
 		return errors.New("First request must be a register request")
 	}
 
-	job_chan, err := scheduler.RegisterWorker(ctx, req.Queue, int(req.Priority))
+	job_chan, err := scheduler.RegisterWorker(ctx, req.Queue,
+		peer_name, int(req.Priority))
 	if err != nil {
 		return Status(self.verbose, err)
 	}
@@ -117,6 +128,7 @@ func (self *ApiServer) Scheduler(
 				Id:    id,
 				Queue: job_req.Queue,
 				Job:   job_req.Job,
+				OrgId: job_req.OrgId,
 			})
 			if err != nil {
 				return Status(self.verbose, err)

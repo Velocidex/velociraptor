@@ -2,10 +2,15 @@ package notebook
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"runtime/debug"
+	"strings"
 	"sync"
 	"time"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -14,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/vfilter"
 )
 
 type NotebookRequest struct {
@@ -26,15 +32,22 @@ type NotebookResponse struct {
 	NotebookCell *api_proto.NotebookCell
 }
 
-func (self *NotebookManager) processUpdateRequest(
+type NotebookWorker struct{}
+
+// Process an update request from the scheduler "Notebook" queue.
+func (self *NotebookWorker) processUpdateRequest(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	request *NotebookRequest) (*NotebookResponse, error) {
+	request *NotebookRequest,
+	store NotebookStore) (*NotebookResponse, error) {
+
+	logger := logging.GetLogger(config_obj, &logging.GUIComponent)
 
 	notebook_metadata := request.NotebookMetadata
 	user_name := request.Username
 	in := request.NotebookCellRequest
 
+	// Set the cell as calculating
 	notebook_cell := &api_proto.NotebookCell{
 		Input:            in.Input,
 		CellId:           in.CellId,
@@ -48,25 +61,33 @@ func (self *NotebookManager) processUpdateRequest(
 	notebook_path_manager := paths.NewNotebookPathManager(
 		notebook_metadata.NotebookId)
 
-	err := self.Store.SetNotebook(notebook_metadata)
+	err := store.SetNotebook(notebook_metadata)
 	if err != nil {
 		return nil, err
 	}
 
+	// The query will run in a sub context of the main context to
+	// allow our notification to cancel it.  NOTE: The
+	// updateCellContents() function itself must run as the parent
+	// context to ensure we are able to write **after** the query is
+	// cancelled. Otherwise the template will not be able to write any
+	// error messages or flush any queues after cancellation.
 	query_ctx, query_cancel := context.WithCancel(ctx)
-	acl_manager := acl_managers.NewServerACLManager(self.config_obj, user_name)
 
-	manager, err := services.GetRepositoryManager(self.config_obj)
+	// Run this query as the specified username
+	acl_manager := acl_managers.NewServerACLManager(config_obj, user_name)
+
+	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil, err
 	}
-	global_repo, err := manager.GetGlobalRepository(self.config_obj)
+	global_repo, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return nil, err
 	}
 
 	tmpl, err := reporting.NewGuiTemplateEngine(
-		self.config_obj, query_ctx, nil, acl_manager, global_repo,
+		config_obj, query_ctx, nil, acl_manager, global_repo,
 		notebook_path_manager.Cell(in.CellId),
 		"Server.Internal.ArtifactDescription")
 	if err != nil {
@@ -79,11 +100,11 @@ func (self *NotebookManager) processUpdateRequest(
 	// Register a progress reporter so we can monitor how the
 	// template rendering is going.
 	tmpl.Progress = &progressReporter{
-		config_obj:    self.config_obj,
+		config_obj:    config_obj,
 		notebook_cell: notebook_cell,
 		notebook_id:   in.NotebookId,
 		start:         utils.GetTime().Now(),
-		store:         self.Store,
+		store:         store,
 	}
 
 	// Add the notebook environment into the cell template.
@@ -102,7 +123,7 @@ func (self *NotebookManager) processUpdateRequest(
 	// Update the content asynchronously
 	start_time := utils.GetTime().Now()
 
-	notifier, err := services.GetNotifier(self.config_obj)
+	notifier, err := services.GetNotifier(config_obj)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +137,7 @@ func (self *NotebookManager) processUpdateRequest(
 		defer query_cancel()
 		defer remove_notification()
 
-		default_notebook_expiry := self.config_obj.Defaults.NotebookCellTimeoutMin
+		default_notebook_expiry := config_obj.Defaults.NotebookCellTimeoutMin
 		if default_notebook_expiry == 0 {
 			default_notebook_expiry = 10
 		}
@@ -126,19 +147,22 @@ func (self *NotebookManager) processUpdateRequest(
 
 		// Active cancellation from the GUI.
 		case <-cancel_notify:
-			tmpl.Scope.Log("Cancelled after %v !", time.Since(start_time))
+			tmpl.Scope.Log("ERROR:Cancelled after %v !",
+				utils.GetTime().Now().Sub(start_time))
 
 			// Set a timeout.
 		case <-time.After(time.Duration(default_notebook_expiry) * time.Minute):
-			tmpl.Scope.Log("Query timed out after %v !", time.Since(start_time))
+			tmpl.Scope.Log("ERROR:Query timed out after %v !",
+				utils.GetTime().Now().Sub(start_time))
 		}
 	}()
 
-	resp, err := self.updateCellContents(query_ctx, tmpl,
+	// This must run with the parent context not the query_ctx to
+	// ensure we can still write after query cancellation.
+	resp, err := self.updateCellContents(ctx, config_obj, store, tmpl,
 		in.CurrentlyEditing, in.NotebookId,
 		in.CellId, cell_type, in.Env, input, in.Input)
 	if err != nil {
-		logger := logging.GetLogger(self.config_obj, &logging.GUIComponent)
 		logger.Error("Rendering error: %v", err)
 		return nil, err
 	}
@@ -148,51 +172,307 @@ func (self *NotebookManager) processUpdateRequest(
 	}, nil
 }
 
-func (self *NotebookManager) RegisterWorker(
+func (self *NotebookWorker) updateCellContents(
 	ctx context.Context,
 	config_obj *config_proto.Config,
+	store NotebookStore,
+	tmpl *reporting.GuiTemplateEngine,
+	currently_editing bool,
+	notebook_id, cell_id, cell_type string,
+	env []*api_proto.Env,
+	input, original_input string) (res *api_proto.NotebookCell, err error) {
+
+	// Start a nanny to watch this calculation
+	//go self.startNanny(ctx, self.config_obj, tmpl.Scope,
+	//	notebook_id, cell_id)
+
+	output := ""
+	now := utils.GetTime().Now().Unix()
+
+	cell_type = strings.ToLower(cell_type)
+
+	// Create a new cell to set the result in.
+	make_cell := func(output string) *api_proto.NotebookCell {
+		encoded_data, err := json.Marshal(tmpl.Data)
+		if err != nil {
+			tmpl.Scope.Log("Error: %v", err)
+		}
+
+		return &api_proto.NotebookCell{
+			Input:            original_input,
+			Output:           output,
+			Data:             string(encoded_data),
+			Messages:         tmpl.Messages(),
+			MoreMessages:     tmpl.MoreMessages(),
+			CellId:           cell_id,
+			Type:             cell_type,
+			Env:              env,
+			Timestamp:        now,
+			CurrentlyEditing: currently_editing,
+			Duration:         int64(time.Since(tmpl.Start).Seconds()),
+		}
+	}
+
+	// If an error occurs it is important to ensure the cell is
+	// still written with an error message.
+	make_error_cell := func(
+		output string, err error) (*api_proto.NotebookCell, error) {
+		tmpl.Scope.Log("ERROR: %v", err)
+		error_cell := make_cell(output)
+		error_cell.Calculating = false
+		error_cell.Error = err.Error()
+
+		store.SetNotebookCell(notebook_id, error_cell)
+
+		return error_cell, utils.InlineError
+	}
+
+	// Do not let exceptions take down the server.
+	defer func() {
+		r := recover()
+		if r != nil {
+			res, err = make_error_cell("", fmt.Errorf(
+				"PANIC: %v: %v", r, string(debug.Stack())))
+		}
+	}()
+
+	// Write a place holder immediately while we calculate the rest.
+	notebook_cell := make_cell(output)
+	notebook_cell.Calculating = true
+	err = store.SetNotebookCell(notebook_id, notebook_cell)
+	if err != nil {
+		return nil, err
+	}
+
+	waitForMemoryLimit(ctx, tmpl.Scope, config_obj)
+
+	switch cell_type {
+
+	case "vql_suggestion":
+		// noop - these cells will be created by the user on demand.
+
+	case "markdown", "md":
+		// A Markdown cell just feeds directly into the
+		// template.
+		output, err = tmpl.Execute(&artifacts_proto.Report{Template: input})
+		if err != nil {
+			return make_error_cell(output, err)
+		}
+
+	case "vql":
+		// No query, nothing to do
+		if reporting.IsEmptyQuery(input) {
+			tmpl.Error("Please specify a query to run")
+		} else {
+			vqls, err := vfilter.MultiParseWithComments(input)
+			if err != nil {
+				// Try parsing without comments if comment parser fails
+				vqls, err = vfilter.MultiParse(input)
+				if err != nil {
+					return make_error_cell(output, err)
+				}
+			}
+
+			no_query := true
+			for _, vql := range vqls {
+				if vql.Comments != nil {
+					// Only extract multiline comments to render template
+					// Ignore code comments
+					comments := multiLineCommentsToString(vql)
+					if comments != "" {
+						fragment_output, err := tmpl.Execute(
+							&artifacts_proto.Report{Template: comments})
+						if err != nil {
+							return make_error_cell(output, err)
+						}
+						output += fragment_output
+					}
+				}
+				if vql.Let != "" || vql.Query != nil || vql.StoredQuery != nil {
+					no_query = false
+					rows, err := tmpl.RunQuery(vql, nil)
+
+					if err != nil {
+						return make_error_cell(output, err)
+					}
+
+					// VQL Let won't return rows. Ignore
+					if vql.Let == "" {
+						output_any, ok := tmpl.Table(rows).(string)
+						if ok {
+							output += output_any
+						}
+					}
+				}
+			}
+			// No VQL found, only comments
+			if no_query {
+				tmpl.Error("Please specify a query to run")
+			}
+		}
+
+	default:
+		return make_error_cell(output, errors.New("Unsupported cell type."))
+	}
+
+	tmpl.Close()
+
+	notebook_cell = make_cell(output)
+	return notebook_cell, store.SetNotebookCell(notebook_id, notebook_cell)
+}
+
+func multiLineCommentsToString(vql *vfilter.VQL) string {
+	output := ""
+
+	for _, comment := range vql.Comments {
+		if comment.MultiLine != nil {
+			output += *comment.MultiLine
+		}
+	}
+
+	if output != "" {
+		return output[2 : len(output)-2]
+	} else {
+		return output
+	}
+}
+
+func (self *NotebookWorker) Start(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	name string,
+	scheduler services.Scheduler) {
+	for {
+		err := self.RegisterWorker(ctx, config_obj, name, scheduler)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+			logger.Error("NotebookWorker: %v", err)
+		}
+
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(10 * time.Second):
+		}
+	}
+
+}
+
+// Register a worker with the scheduler and process any tasks.
+func (self *NotebookWorker) RegisterWorker(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	name string,
 	scheduler services.Scheduler) error {
 
-	job_chan, err := scheduler.RegisterWorker(ctx, "Notebook", 10)
+	org_manager, err := services.GetOrgManager()
 	if err != nil {
 		return err
 	}
 
-	go func() {
-		for {
-			select {
-			case <-ctx.Done():
-				return
+	queue := "Notebook"
+	job_chan, err := scheduler.RegisterWorker(ctx, queue, name, 10)
+	if err != nil {
+		return err
+	}
 
-			case job, ok := <-job_chan:
-				if !ok {
-					return
-				}
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+	logger.Info("NotebookWorker: <green> Connecting to master scheduler with worker %v</>",
+		name)
 
-				request := &NotebookRequest{}
-				err := json.Unmarshal([]byte(job.Job), request)
-				if err != nil {
-					logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-					logger.Error("NotebookManager: Invalid job request in worker: %v: %v",
-						err, job.Job)
-					continue
-				}
+	for {
+		select {
+		case <-ctx.Done():
+			return errors.New("Cancellation")
 
-				// Call our processor
-				resp, err := self.processUpdateRequest(ctx, config_obj, request)
-				serialized, _ := json.Marshal(resp)
-				job.Done(string(serialized), err)
+		case job, ok := <-job_chan:
+			if !ok {
+				return errors.New("Cancellation")
 			}
+
+			request := &NotebookRequest{}
+			err := json.Unmarshal([]byte(job.Job), request)
+			if err != nil {
+				logger.Error("NotebookManager: Invalid job request in worker: %v: %v",
+					err, job.Job)
+				continue
+			}
+
+			// run the query in the correct ORG. We assume ACL
+			// checks occur in the GUI so we can only receive
+			// valid requrests here.
+			org_config_obj, err := org_manager.GetOrgConfig(job.OrgId)
+			if err != nil {
+				job.Done("", err)
+				continue
+			}
+
+			// Run this on the notebook manager that belongs to the org.
+			notebook_manager_if, err := services.GetNotebookManager(org_config_obj)
+			if err != nil {
+				job.Done("", err)
+				continue
+			}
+
+			notebook_manager, ok := notebook_manager_if.(*NotebookManager)
+			if !ok {
+				job.Done("", fmt.Errorf("Unsupported notebook manager %T",
+					notebook_manager_if))
+				continue
+			}
+
+			// Call our processor on the correct org.
+			resp, err := self.processUpdateRequest(ctx, org_config_obj, request,
+				notebook_manager.Store)
+			serialized, _ := json.Marshal(resp)
+			job.Done(string(serialized), err)
 		}
-	}()
+	}
 
 	return nil
+}
+
+type WorkerPool struct {
+	workers []*NotebookWorker
+}
+
+func NewWorkerPool(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	number int64) (*WorkerPool, error) {
+	result := &WorkerPool{}
+
+	scheduler, err := services.GetSchedulerService(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := int64(0); i < number; i++ {
+		worker := &NotebookWorker{}
+		name := fmt.Sprintf("local_notebook_%d", i)
+		if !services.IsMaster(config_obj) {
+			name = fmt.Sprintf("%v_notebook_%d",
+				services.GetNodeName(config_obj.Frontend), i)
+		}
+
+		go worker.Start(ctx, config_obj, name, scheduler)
+		result.workers = append(result.workers, worker)
+	}
+
+	return result, nil
 }
 
 func (self *NotebookManager) Start(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) error {
+
+	// Only start this once for all orgs. Otherwise we would have as
+	// many workers as orgs. Orgs will switch into the correct org for
+	// processing
+	if !utils.IsRootOrg(config_obj.OrgId) {
+		return nil
+	}
 
 	// Start a few local workers for notebooks. This also limits
 	// concurrency on notebook processing.
@@ -201,17 +481,6 @@ func (self *NotebookManager) Start(
 		local_workers = config_obj.Defaults.NotebookNumberOfLocalWorkers
 	}
 
-	scheduler, err := services.GetSchedulerService(config_obj)
-	if err != nil {
-		return err
-	}
-
-	for i := int64(0); i < local_workers; i++ {
-		err := self.RegisterWorker(ctx, config_obj, scheduler)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	_, err := NewWorkerPool(ctx, config_obj, local_workers)
+	return err
 }

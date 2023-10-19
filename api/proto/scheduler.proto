@@ -19,6 +19,8 @@ message ScheduleRequest {
     // A json encoded response
     string response = 4;
 
+    string org_id = 7;
+
     // An error message or "" for no error.
     string error = 5;
 }
@@ -32,4 +34,6 @@ message ScheduleResponse {
 
     // A json serialized request suitable for the named queue.
     string job = 3;
+
+    string org_id = 7;
 }

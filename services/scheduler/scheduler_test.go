@@ -31,7 +31,7 @@ func (self *SchedulerTestSuite) TestScheduler() {
 
 	// Register a worker
 	ctx, cancel := context.WithCancel(self.Ctx)
-	out, err := scheduler.RegisterWorker(ctx, "Foobar", 10)
+	out, err := scheduler.RegisterWorker(ctx, "Foobar", "Name Worker", 10)
 	assert.NoError(self.T(), err)
 
 	// Now read worker jobs in the background

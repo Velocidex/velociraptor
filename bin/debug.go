@@ -25,9 +25,14 @@ import (
 	_ "net/http/pprof"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/actions"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/velociraptor/vql/golang"
 )
 
 var (
@@ -64,12 +69,39 @@ func handleRunningQueries(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func handleProfile(config_obj *config_proto.Config) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+
+		builder := services.ScopeBuilder{
+			Config:     config_obj,
+			ACLManager: acl_managers.NullACLManager{},
+			Env:        ordereddict.NewDict(),
+		}
+
+		manager, err := services.GetRepositoryManager(config_obj)
+		if err != nil {
+			return
+		}
+		scope := manager.BuildScope(builder)
+		defer scope.Close()
+
+		plugin := &golang.ProfilePlugin{}
+		for row := range plugin.Call(r.Context(), scope, ordereddict.NewDict()) {
+			serialized, _ := json.Marshal(row)
+			serialized = append(serialized, '\n')
+			w.Write(serialized)
+		}
+	}
+}
+
 func initDebugServer(config_obj *config_proto.Config) error {
 	if *debug_flag {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("<green>Starting</> debug server on <cyan>http://127.0.0.1:%v/debug/pprof", *debug_flag_port)
 
 		http.HandleFunc("/debug/queries", handleQueries)
+		http.HandleFunc("/debug/profile", handleProfile(config_obj))
 		http.HandleFunc("/debug/queries/running", handleRunningQueries)
 
 		// Switch off the debug flag so we do not run this again. (The

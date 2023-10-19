@@ -55,7 +55,8 @@ type Scheduler interface {
 	// is Done, the channel will be closed.
 	//
 	// When the worker completes the task they need to call job.Done()
-	RegisterWorker(ctx context.Context, name string, priority int) (chan SchedulerJob, error)
+	RegisterWorker(ctx context.Context,
+		name, queue string, priority int) (chan SchedulerJob, error)
 
 	// Called by code that wants to schedule the job. The job will be
 	// scheduled to one of the available workers.

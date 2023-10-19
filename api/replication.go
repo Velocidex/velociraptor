@@ -2,6 +2,10 @@ package api
 
 import (
 	"fmt"
+	"sort"
+	"strings"
+	"sync"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/prometheus/client_golang/prometheus"
@@ -9,13 +13,17 @@ import (
 	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/debug"
+	"www.velocidex.com/golang/vfilter"
 )
 
 var (
@@ -27,6 +35,10 @@ var (
 		},
 		[]string{"status"},
 	)
+
+	gReplicationTracker = &replicationTracker{
+		currentReplications: make(map[string]*replicatedStats),
+	}
 )
 
 func streamEvents(
@@ -34,7 +46,8 @@ func streamEvents(
 	config_obj *config_proto.Config,
 	in *api_proto.EventRequest,
 	stream api_proto.API_WatchEventServer,
-	peer_name string) (err error) {
+	peer_name string,
+	stats *replicatedStats) (err error) {
 
 	logger := logging.GetLogger(config_obj, &logging.APICmponent)
 	logger.WithFields(logrus.Fields{
@@ -55,6 +68,7 @@ func streamEvents(
 		stream.Send(&api_proto.EventResponse{
 			Jsonl: serialized,
 		})
+		stats.Sent++
 	}
 
 	// The API service is running on the master only! This means
@@ -68,7 +82,11 @@ func streamEvents(
 		case <-ctx.Done():
 			return
 
-		case event := <-output_chan:
+		case event, ok := <-output_chan:
+			if !ok {
+				return
+			}
+
 			serialized, err := json.Marshal(event)
 			if err != nil {
 				continue
@@ -82,8 +100,18 @@ func streamEvents(
 					replicationReceiveHistorgram.WithLabelValues("").Observe(v)
 				}))
 
-			err = stream.Send(response)
+			// If we are not able to send within the sepecified 5
+			// seconds we must abort the connection.
+
+			err = utils.DoWithTimeout(func() error {
+				return stream.Send(response)
+			}, 5*time.Second)
+			if err != nil {
+				return err
+			}
+
 			timer.ObserveDuration()
+			stats.Sent++
 
 			if err != nil {
 				continue
@@ -108,6 +136,8 @@ func (self *ApiServer) WatchEvent(
 		return err
 	}
 
+	// This name is taken from the certificate usually
+	// VelociraptorServer.
 	peer_name := user_record.Name
 
 	// Check that the principal is allowed to issue queries.
@@ -123,6 +153,12 @@ func (self *ApiServer) WatchEvent(
 		return status.Error(codes.PermissionDenied, fmt.Sprintf(
 			"Permission denied: User %v requires permission %v to run queries",
 			peer_name, permissions))
+	}
+
+	// Update the peer name to make it unique
+	peer_addr, ok := peer.FromContext(ctx)
+	if ok {
+		peer_name = strings.Split(peer_addr.Addr.String(), ":")[0]
 	}
 
 	// Wait here for orderly shutdown of event streams.
@@ -142,6 +178,66 @@ func (self *ApiServer) WatchEvent(
 	}
 
 	// Cert is good enough for us, run the query.
+	stats, closer := gReplicationTracker.Add(in.Queue, peer_name, in.OrgId)
+	defer closer()
+
 	return streamEvents(
-		ctx, org_config_obj, in, stream, peer_name)
+		ctx, org_config_obj, in, stream, peer_name, stats)
+}
+
+type replicatedStats struct {
+	Sent int
+}
+
+type replicationTracker struct {
+	mu                  sync.Mutex
+	currentReplications map[string]*replicatedStats
+}
+
+func (self *replicationTracker) Debug() []*ordereddict.Dict {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	result := []*ordereddict.Dict{}
+	keys := []string{}
+	for k := range self.currentReplications {
+		keys = append(keys, k)
+	}
+
+	sort.Strings(keys)
+	for _, k := range keys {
+		v, _ := self.currentReplications[k]
+		result = append(result, ordereddict.NewDict().
+			Set("Type", "Replication").
+			Set("Name", k).
+			Set("Stats", v))
+	}
+	return result
+}
+
+func (self *replicationTracker) Add(queue, peer, org_id string) (*replicatedStats, func()) {
+	key := queue + "->" + peer + " " + org_id
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	stats := &replicatedStats{}
+
+	self.currentReplications[key] = stats
+
+	return stats, func() {
+		self.mu.Lock()
+		defer self.mu.Unlock()
+
+		delete(self.currentReplications, key)
+	}
+}
+
+func init() {
+	debug.RegisterProfileWriter(func(ctx context.Context,
+		scope vfilter.Scope, output_chan chan vfilter.Row) {
+
+		for _, i := range gReplicationTracker.Debug() {
+			output_chan <- i
+		}
+	})
 }

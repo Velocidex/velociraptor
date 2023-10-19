@@ -612,12 +612,21 @@ func (self *ReplicationService) Watch(
 
 	go func() {
 		for {
+			in_chan := self.watchOnce(subctx, queue, watcher_name)
+
+		retry:
+			for {
+				select {
+				case event, ok := <-in_chan:
+					if !ok {
+						break retry
+					}
+					output_chan <- event
+				}
+			}
+
 			// Keep retrying to reconnect in case the
 			// connection dropped.
-			for event := range self.watchOnce(
-				subctx, queue, watcher_name) {
-				output_chan <- event
-			}
 
 			select {
 			case <-self.ctx.Done():

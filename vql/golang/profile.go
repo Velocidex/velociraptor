@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/tools/process"
@@ -282,6 +283,8 @@ func (self *ProfilePlugin) Call(ctx context.Context,
 			}
 		}
 
+		// Now add any other interesting things
+		debug.WriteProfile(ctx, scope, output_chan)
 	}()
 
 	return output_chan
