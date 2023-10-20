@@ -46,6 +46,10 @@ func IsMaster(config_obj *config_proto.Config) bool {
 	return true
 }
 
+func IsMinion(config_obj *config_proto.Config) bool {
+	return !IsMaster(config_obj)
+}
+
 func GetNodeName(frontend_config *config_proto.FrontendConfig) string {
 	if frontend_config == nil {
 		return "-"

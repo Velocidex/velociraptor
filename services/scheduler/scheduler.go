@@ -32,6 +32,8 @@ type Worker struct {
 	// If this is busy we do not assign any requests to it.
 	busy bool
 
+	request vfilter.Any
+
 	output chan services.SchedulerJob
 }
 
@@ -47,6 +49,20 @@ func (self *Worker) IsBusy() bool {
 	defer self.mu.Unlock()
 
 	return self.busy
+}
+
+func (self *Worker) Request() vfilter.Any {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.request
+}
+
+func (self *Worker) SetRequest(r vfilter.Any) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.request = r
 }
 
 type Scheduler struct {
@@ -106,8 +122,10 @@ func (self *Scheduler) WriteProfile(ctx context.Context,
 			output_chan <- ordereddict.NewDict().
 				Set("Type", "Worker").
 				Set("Name", q.name).
+				Set("Priority", q.priority).
 				Set("Queue", queue_name).
-				Set("IsBusy", q.IsBusy())
+				Set("IsBusy", q.IsBusy()).
+				Set("Request", q.Request())
 		}
 	}
 	self.mu.Unlock()
@@ -155,6 +173,7 @@ func (self *Scheduler) Schedule(ctx context.Context,
 					Err: err,
 				}
 
+				w.SetRequest(vfilter.Null{})
 				w.SetBusy(false)
 				close(result_chan)
 			}
@@ -168,6 +187,7 @@ func (self *Scheduler) Schedule(ctx context.Context,
 			case w.output <- job:
 				// It worked! Make this worker busy so it can not be
 				// assigned work.
+				w.SetRequest(job.Job)
 				w.SetBusy(true)
 				self.mu.Unlock()
 				return result_chan, nil

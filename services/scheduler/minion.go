@@ -54,8 +54,9 @@ func (self *MinionScheduler) RegisterWorker(
 
 	// Register the worker on the server
 	err = stream.Send(&api_proto.ScheduleRequest{
-		Queue: queue,
-		Type:  "register",
+		Queue:    queue,
+		Priority: int64(priority),
+		Type:     "register",
 	})
 	if err != nil {
 		logger.Error("MinionScheduler: Unable to register worker for %v: %v",
@@ -89,7 +90,7 @@ func (self *MinionScheduler) RegisterWorker(
 						err_str = err.Error()
 					}
 					logger.Debug("MinionScheduler: Completed job for queue <green>%v</> in %v on %v",
-						queue, utils.GetTime().Now().Sub(start), req.OrgId)
+						queue, utils.GetTime().Now().Sub(start), utils.NormalizedOrgId(req.OrgId))
 					stream.Send(
 						&api_proto.ScheduleRequest{
 							Queue:    req.Queue,
@@ -101,7 +102,7 @@ func (self *MinionScheduler) RegisterWorker(
 				},
 			}:
 				logger.Debug("MinionScheduler: Received job for queue <green>%v</> in %v",
-					queue, req.OrgId)
+					queue, utils.NormalizedOrgId(req.OrgId))
 			}
 		}
 	}()
