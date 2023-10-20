@@ -2,9 +2,13 @@ name: Server.Utils.KillClient
 description: |
   This artifact agressively kills a client.
 
-  If the client runs as a service, it will restart.
+  If the client runs as a service, it will restart by the service manager.
+
+  NOTE: If the client is not running as a service (i.e. interactively)
+  it may not restart and further communication will be lost!
 
 type: SERVER
+
 
 parameters:
   - name: ClientIdList

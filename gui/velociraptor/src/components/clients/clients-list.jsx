@@ -23,6 +23,7 @@ import Row from 'react-bootstrap/Row';
 import Pagination from 'react-bootstrap/Pagination';
 import paginationFactory from 'react-bootstrap-table2-paginator';
 import Alert from 'react-bootstrap/Alert';
+import UserConfig from '../core/user.jsx';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
@@ -419,6 +420,8 @@ const pageListRenderer = ({
 
 
 class VeloClientList extends Component {
+    static contextType = UserConfig;
+
     static propTypes = {
         query: PropTypes.string.isRequired,
         version: PropTypes.any,
@@ -680,12 +683,19 @@ class VeloClientList extends Component {
                           variant="default">
                     <FontAwesomeIcon icon="trash"/>
                   </Button>
-                  <Button title={T("Kill Clients")}
-                          disabled={_.isEmpty(this.state.selected)}
-                          onClick={() => this.setState({showKillDialog: true})}
-                          variant="default">
-                    <FontAwesomeIcon icon="ban"/>
-                  </Button>
+                  { // Kiling clients requires the machine_state
+                    // permission. Hide this button for users who do
+                    // not have it.
+                    this.context && this.context.traits &&
+                    this.context.traits.Permissions &&
+                    this.context.traits.Permissions.machine_state &&
+                    <Button title={T("Kill Clients")}
+                            disabled={_.isEmpty(this.state.selected)}
+                            onClick={() => this.setState({showKillDialog: true})}
+                            variant="default">
+                      <FontAwesomeIcon icon="ban"/>
+                    </Button>
+                  }
 
                 </ButtonGroup>
               </Navbar>
