@@ -10,6 +10,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -106,4 +107,17 @@ func (self GoRoutinesPlugin) Info(
 
 func init() {
 	vql_subsystem.RegisterPlugin(&GoRoutinesPlugin{})
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name:        "goroutines",
+		Description: "Outout goroutine information",
+		ProfileWriter: func(
+			ctx context.Context, scope vfilter.Scope, output_chan chan vfilter.Row) {
+			plugin := GoRoutinesPlugin{}
+			for row := range plugin.Call(
+				ctx, scope, ordereddict.NewDict()) {
+				output_chan <- row
+			}
+		},
+	})
+
 }

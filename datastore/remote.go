@@ -97,6 +97,9 @@ func (self *RemoteDataStore) _GetSubject(
 	defer cancel()
 
 	conn, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	if err != nil {
+		return err
+	}
 	defer closer()
 
 	result, err := conn.GetSubject(ctx, &api_proto.DataRequest{

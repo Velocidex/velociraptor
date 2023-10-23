@@ -1021,6 +1021,26 @@ func (mr *MockAPIClientMockRecorder) RemoveNotebookAttachment(arg0, arg1 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveNotebookAttachment", reflect.TypeOf((*MockAPIClient)(nil).RemoveNotebookAttachment), varargs...)
 }
 
+// Scheduler mocks base method.
+func (m *MockAPIClient) Scheduler(arg0 context.Context, arg1 ...grpc.CallOption) (proto0.API_SchedulerClient, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0}
+	for _, a := range arg1 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Scheduler", varargs...)
+	ret0, _ := ret[0].(proto0.API_SchedulerClient)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Scheduler indicates an expected call of Scheduler.
+func (mr *MockAPIClientMockRecorder) Scheduler(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0}, arg1...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Scheduler", reflect.TypeOf((*MockAPIClient)(nil).Scheduler), varargs...)
+}
+
 // SearchFile mocks base method.
 func (m *MockAPIClient) SearchFile(arg0 context.Context, arg1 *proto0.SearchFileRequest, arg2 ...grpc.CallOption) (*proto0.SearchFileResponse, error) {
 	m.ctrl.T.Helper()

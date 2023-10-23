@@ -854,6 +854,18 @@ message DatastoreConfig {
     string master_implementation = 8;
 }
 
+// This configuration applies for minions. On minions this will
+// override the settings elsewhere in the config file allowing an easy
+// way to manage the difference between minions and master nodes.
+
+// This override occurs at config load times so you can see the final configuration using
+// velociraptor --minion --config server.config.yaml config show
+message MinionConfig {
+    // Used to override Defaults.notebook_number_of_local_workers
+    int64 notebook_number_of_local_workers = 1;
+    int64 notebook_worker_priority = 2;
+}
+
 // Configuration for the mail server.
 message MailConfig {
     string from = 1 [(sem_type) = {
@@ -967,6 +979,7 @@ message ServerServicesConfig {
    bool label = 22;
    bool launcher = 23;
    bool notebook_service = 24;
+   bool scheduler_service = 29;
 
     // Client services
    bool http_communicator = 27;
@@ -985,6 +998,16 @@ message Defaults {
     // actively cancel in flight notebook cell calculations.
     uint64 notebook_memory_high_water_mark = 37;
 
+    // Set to -1 to disable local workers. The default is 5 local
+    // workers. If you want the master to **not** perform any notebook
+    // computations reduce this to -1 and set
+    // Minion.notebook_number_of_local_workers to 5.
+    int64 notebook_number_of_local_workers = 38;
+
+    // The default priority of notebook processors (Higher priority
+    // will receive jobs over lower priority).
+    int64 notebook_worker_priority = 39;
+
     // The default CSV delimiter
     string csv_delimiter = 3;
 
@@ -996,8 +1019,11 @@ message Defaults {
     // is off by default.
     bool event_change_notify_all_clients = 6;
 
+    // Deprecated - not used
     uint64 max_vfs_directory_size = 7;
 
+    // These artifact definitions will also be loaded at start and
+    // will be considered built in.
     repeated string artifact_definitions_directories = 8;
 
     // The number of rows to keep in memory during a group by
@@ -1174,6 +1200,10 @@ message Config {
     MailConfig Mail = 11;
 
     LoggingConfig Logging = 23;
+
+    // Minion specific overrides
+    MinionConfig Minion = 40;
+
 
     bool verbose = 20 [(sem_type) = {
             description: "Enable verbose logging output.",

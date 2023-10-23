@@ -22,8 +22,8 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/proto"
-	proto_5 "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	proto_6 "www.velocidex.com/golang/velociraptor/flows/proto"
+	proto_7 "www.velocidex.com/golang/velociraptor/artifacts/proto"
+	proto_2 "www.velocidex.com/golang/velociraptor/flows/proto"
 )
 
 // Suppress "imported and not used" errors
@@ -1243,7 +1243,7 @@ func local_request_API_SearchFile_0(ctx context.Context, marshaler runtime.Marsh
 }
 
 func request_API_CollectArtifact_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_6.ArtifactCollectorArgs
+	var protoReq proto_2.ArtifactCollectorArgs
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1260,7 +1260,7 @@ func request_API_CollectArtifact_0(ctx context.Context, marshaler runtime.Marsha
 }
 
 func local_request_API_CollectArtifact_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_6.ArtifactCollectorArgs
+	var protoReq proto_2.ArtifactCollectorArgs
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1577,7 +1577,7 @@ var (
 )
 
 func request_API_GetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_5.Tool
+	var protoReq proto_7.Tool
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -1593,7 +1593,7 @@ func request_API_GetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler,
 }
 
 func local_request_API_GetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_5.Tool
+	var protoReq proto_7.Tool
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -1609,7 +1609,7 @@ func local_request_API_GetToolInfo_0(ctx context.Context, marshaler runtime.Mars
 }
 
 func request_API_SetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_5.Tool
+	var protoReq proto_7.Tool
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1626,7 +1626,7 @@ func request_API_SetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler,
 }
 
 func local_request_API_SetToolInfo_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_5.Tool
+	var protoReq proto_7.Tool
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1695,7 +1695,7 @@ func local_request_API_GetServerMonitoringState_0(ctx context.Context, marshaler
 }
 
 func request_API_SetServerMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_6.ArtifactCollectorArgs
+	var protoReq proto_2.ArtifactCollectorArgs
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1712,7 +1712,7 @@ func request_API_SetServerMonitoringState_0(ctx context.Context, marshaler runti
 }
 
 func local_request_API_SetServerMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_6.ArtifactCollectorArgs
+	var protoReq proto_2.ArtifactCollectorArgs
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1733,7 +1733,7 @@ var (
 )
 
 func request_API_GetClientMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_6.GetClientMonitoringStateRequest
+	var protoReq proto_2.GetClientMonitoringStateRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -1749,7 +1749,7 @@ func request_API_GetClientMonitoringState_0(ctx context.Context, marshaler runti
 }
 
 func local_request_API_GetClientMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_6.GetClientMonitoringStateRequest
+	var protoReq proto_2.GetClientMonitoringStateRequest
 	var metadata runtime.ServerMetadata
 
 	if err := req.ParseForm(); err != nil {
@@ -1765,7 +1765,7 @@ func local_request_API_GetClientMonitoringState_0(ctx context.Context, marshaler
 }
 
 func request_API_SetClientMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_6.ClientEventTable
+	var protoReq proto_2.ClientEventTable
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
@@ -1782,7 +1782,7 @@ func request_API_SetClientMonitoringState_0(ctx context.Context, marshaler runti
 }
 
 func local_request_API_SetClientMonitoringState_0(ctx context.Context, marshaler runtime.Marshaler, server APIServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq proto_6.ClientEventTable
+	var protoReq proto_2.ClientEventTable
 	var metadata runtime.ServerMetadata
 
 	newReader, berr := utilities.IOReaderFactory(req.Body)
