@@ -14,7 +14,7 @@ message ScheduleRequest {
     // The request ID this is a completion for.
     uint64 id = 3;
 
-    uint64 priority = 6;
+    int64 priority = 6;
 
     // A json encoded response
     string response = 4;

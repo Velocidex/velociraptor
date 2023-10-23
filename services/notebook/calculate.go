@@ -3,17 +3,11 @@ package notebook
 import (
 	"context"
 	"errors"
-	"runtime"
-	"runtime/debug"
 	"time"
 
-	"www.velocidex.com/golang/vfilter/types"
-
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/vfilter"
 )
 
 func (self *NotebookManager) UpdateNotebookCell(
@@ -57,6 +51,14 @@ func (self *NotebookManager) UpdateNotebookCell(
 		OrgId: self.config_obj.OrgId,
 	})
 	if err != nil {
+		// Failed to schedule this cell - write the error in the cell.
+		notebook_cell.Calculating = false
+		notebook_cell.Error = err.Error()
+		notebook_cell.Messages = append(notebook_cell.Messages,
+			"ERROR:"+err.Error())
+
+		self.Store.SetNotebookCell(notebook_metadata.NotebookId, notebook_cell)
+
 		return nil, err
 	}
 
@@ -75,86 +77,5 @@ func (self *NotebookManager) UpdateNotebookCell(
 		}
 
 		return notebook_resp.NotebookCell, job_resp.Err
-	}
-}
-
-func (self *NotebookManager) startNanny(
-	ctx context.Context, config_obj *config_proto.Config,
-	scope vfilter.Scope,
-	notebook_id, cell_id string) {
-
-	// Reduce memory use now so the next measure of memory use is more
-	// reflective of our current workload.
-	debug.FreeOSMemory()
-
-	// Running in a goroutine it's ok to block.
-	for {
-
-		// Check for high memory use.
-		if self.config_obj.Defaults != nil &&
-			self.config_obj.Defaults.NotebookMemoryHighWaterMark > 0 {
-
-			high_memory_level := self.config_obj.Defaults.NotebookMemoryHighWaterMark
-
-			var m runtime.MemStats
-			runtime.ReadMemStats(&m)
-
-			// If we exceed memory we cancel this query.
-
-			if high_memory_level < m.Alloc {
-				scope.Log("ERROR:Insufficient resourcs: Query cancelled.")
-				self.CancelNotebookCell(ctx, notebook_id, cell_id)
-			}
-		}
-
-		select {
-		case <-ctx.Done():
-			return
-		case <-time.After(time.Second):
-		}
-
-		// Check the cell for cancellation or errors
-		notebook_cell, err := self.Store.GetNotebookCell(notebook_id, cell_id)
-		if err != nil || notebook_cell.CellId != cell_id {
-			continue
-		}
-
-		// Cancel the query - this cell is not longer running
-		if !notebook_cell.Calculating {
-			// Notify the calculator immediately
-			notifier, err := services.GetNotifier(self.config_obj)
-			if err != nil {
-				return
-			}
-			scope.Log("ERROR:NotebookManager: Detected cell %v is cancelled. Stopping.", cell_id)
-			notifier.NotifyDirectListener(cell_id)
-		}
-	}
-}
-
-func waitForMemoryLimit(
-	ctx context.Context, scope types.Scope, config_obj *config_proto.Config) {
-	// Wait until memory is below the low water mark.
-	if config_obj.Defaults != nil &&
-		config_obj.Defaults.NotebookMemoryLowWaterMark > 0 {
-
-		low_memory_level := config_obj.Defaults.NotebookMemoryLowWaterMark
-
-		for {
-			var m runtime.MemStats
-			runtime.ReadMemStats(&m)
-
-			// Spin here until there is enough memory
-			if low_memory_level > m.Alloc {
-				break
-			}
-
-			select {
-			case <-ctx.Done():
-				scope.Log("ERROR:Unable to start query before timeout - insufficient resourcs.")
-				return
-			case <-time.After(time.Second):
-			}
-		}
 	}
 }

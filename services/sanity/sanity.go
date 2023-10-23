@@ -68,12 +68,6 @@ func (self *SanityChecks) CheckRootOrg(
 		return err
 	}
 
-	// Check for minion overrides
-	err = self.CheckForMinionSettings(ctx, config_obj)
-	if err != nil {
-		return err
-	}
-
 	err = self.CheckFrontendSettings(config_obj)
 	if err != nil {
 		return err
@@ -126,6 +120,7 @@ func (self *SanityChecks) CheckRootOrg(
 
 func (self *SanityChecks) Check(
 	ctx context.Context, config_obj *config_proto.Config) error {
+
 	if utils.IsRootOrg(config_obj.OrgId) {
 		err := self.CheckRootOrg(ctx, config_obj)
 		if err != nil {

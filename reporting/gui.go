@@ -22,6 +22,7 @@ import (
 	chroma_html "github.com/alecthomas/chroma/formatters/html"
 	"github.com/microcosm-cc/bluemonday"
 	blackfriday "github.com/russross/blackfriday/v2"
+	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -665,6 +666,10 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 
 func (self *GuiTemplateEngine) RunQuery(vql *vfilter.VQL,
 	result []*paths.NotebookCellQuery) ([]*paths.NotebookCellQuery, error) {
+	query_log := actions.QueryLog.AddQuery(
+		vfilter.FormatToString(self.Scope, vql))
+	defer query_log.Close()
+
 	if result == nil {
 		result = []*paths.NotebookCellQuery{}
 	}

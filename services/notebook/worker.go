@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"runtime"
 	"runtime/debug"
 	"strings"
 	"sync"
@@ -19,7 +20,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 type NotebookRequest struct {
@@ -161,7 +164,7 @@ func (self *NotebookWorker) processUpdateRequest(
 	// ensure we can still write after query cancellation.
 	resp, err := self.updateCellContents(ctx, config_obj, store, tmpl,
 		in.CurrentlyEditing, in.NotebookId,
-		in.CellId, cell_type, in.Env, input, in.Input)
+		in.CellId, cell_type, in.Env, query_cancel, input, in.Input)
 	if err != nil {
 		logger.Error("Rendering error: %v", err)
 		return nil, err
@@ -180,11 +183,12 @@ func (self *NotebookWorker) updateCellContents(
 	currently_editing bool,
 	notebook_id, cell_id, cell_type string,
 	env []*api_proto.Env,
+	query_cancel func(),
 	input, original_input string) (res *api_proto.NotebookCell, err error) {
 
 	// Start a nanny to watch this calculation
-	//go self.startNanny(ctx, self.config_obj, tmpl.Scope,
-	//	notebook_id, cell_id)
+	go self.startNanny(ctx, config_obj, tmpl.Scope, store, query_cancel,
+		notebook_id, cell_id)
 
 	output := ""
 	now := utils.GetTime().Now().Unix()
@@ -375,6 +379,17 @@ func (self *NotebookWorker) RegisterWorker(
 		priority = config_obj.Defaults.NotebookWorkerPriority
 	}
 
+	if services.IsMinion(config_obj) {
+		// By default minion workers have lower priority if not
+		// specified to keep the default running notebook processing
+		// on the master.
+		priority = -10
+		if config_obj.Minion != nil &&
+			config_obj.Minion.NotebookWorkerPriority != 0 {
+			priority = config_obj.Minion.NotebookWorkerPriority
+		}
+	}
+
 	queue := "Notebook"
 	job_chan, err := scheduler.RegisterWorker(ctx, queue, name, int(priority))
 	if err != nil {
@@ -485,7 +500,104 @@ func (self *NotebookManager) Start(
 	if config_obj.Defaults.NotebookNumberOfLocalWorkers != 0 {
 		local_workers = config_obj.Defaults.NotebookNumberOfLocalWorkers
 	}
+	if services.IsMinion(config_obj) && config_obj.Minion != nil &&
+		config_obj.Minion.NotebookNumberOfLocalWorkers > 0 {
+		local_workers = config_obj.Minion.NotebookNumberOfLocalWorkers
+	}
 
 	_, err := NewWorkerPool(ctx, config_obj, local_workers)
 	return err
+}
+
+func (self *NotebookWorker) startNanny(
+	ctx context.Context, config_obj *config_proto.Config,
+	scope vfilter.Scope,
+	store NotebookStore, query_cancel func(),
+	notebook_id, cell_id string) {
+
+	// Reduce memory use now so the next measure of memory use is more
+	// reflective of our current workload.
+	debug.FreeOSMemory()
+
+	// Running in a goroutine it's ok to block.
+	for {
+
+		// Check for high memory use.
+		if config_obj.Defaults != nil &&
+			config_obj.Defaults.NotebookMemoryHighWaterMark > 0 {
+
+			high_memory_level := config_obj.Defaults.NotebookMemoryHighWaterMark
+
+			var m runtime.MemStats
+			// NOTE: We assume this is reasonable fast as we check it
+			// frequently.
+			runtime.ReadMemStats(&m)
+
+			// If we exceed memory we cancel this query.
+			if high_memory_level < m.Alloc {
+				scope.Log("ERROR:Insufficient resourcs: Query cancelled. Memory used %v, Limit %v",
+					m.Alloc, high_memory_level)
+				query_cancel()
+			}
+		}
+
+		select {
+		case <-ctx.Done():
+			return
+
+			// Wait for a bit then check if the query is cancelled.
+		case <-time.After(time.Second):
+		}
+
+		// Check the cell for cancellation or errors
+		notebook_cell, err := store.GetNotebookCell(notebook_id, cell_id)
+		if err != nil || notebook_cell.CellId != cell_id {
+			continue
+		}
+
+		// Cancel the query - this cell is no longer running
+		if !notebook_cell.Calculating {
+			// Notify the calculator immediately
+			notifier, err := services.GetNotifier(config_obj)
+			if err != nil {
+				return
+			}
+			scope.Log("ERROR:NotebookManager: Detected cell %v is cancelled. Stopping.", cell_id)
+			notifier.NotifyDirectListener(cell_id)
+		}
+	}
+}
+
+func waitForMemoryLimit(
+	ctx context.Context, scope types.Scope, config_obj *config_proto.Config) {
+	// Wait until memory is below the low water mark.
+	if config_obj.Defaults != nil &&
+		config_obj.Defaults.NotebookMemoryLowWaterMark > 0 {
+
+		low_memory_level := config_obj.Defaults.NotebookMemoryLowWaterMark
+
+		for {
+			// Reduce memory use now so the next measure of memory use
+			// is more reflective of our current workload.
+			debug.FreeOSMemory()
+
+			var m runtime.MemStats
+			runtime.ReadMemStats(&m)
+
+			// Spin here until there is enough memory
+			if low_memory_level > m.Alloc {
+				break
+			}
+
+			functions.DeduplicatedLog(ctx, scope,
+				"INFO:Waiting for memory use to allow starting the query.")
+
+			select {
+			case <-ctx.Done():
+				scope.Log("ERROR:Unable to start query before timeout - insufficient resourcs.")
+				return
+			case <-time.After(time.Second):
+			}
+		}
+	}
 }
