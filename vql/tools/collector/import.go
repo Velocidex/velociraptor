@@ -23,6 +23,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -109,9 +110,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	}
 
 	if arg.ImportType == "" {
-		hunt_check := root.Append("hunt")
-		var hunt_check_details *api_proto.Hunt
-		err = self.getFile(accessor, hunt_check.Append("hunt_info.json"), hunt_check_details)
+		_, err = self.checkHuntInfo(root, accessor)
 		if err != nil {
 			arg.ImportType = "collector"
 		} else {
@@ -120,14 +119,26 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	}
 
 	if arg.ImportType == "collector" {
-		return self.ImportFlow(
+		return self.importFlow(
 			ctx, scope, config_obj,
 			db, accessor, root, arg.ClientId,
 			arg.Hostname)
 
 	} else if arg.ImportType == "hunt" {
+		// Check if there is a hunt_info.json. This won't work with
+		// older exports (<0.7.4) because we previously didn't export
+		// all the hunt information.
+		hunt_info, err := self.checkHuntInfo(root, accessor)
+		if err != nil {
+			scope.Log("import_collection: %v", err)
+		}
+
+		// Update the huntId in case it was already taken.
+		hunt_info.HuntId, err = self.importHunt(ctx, scope, config_obj, hunt_info)
+
 		directory_listing, err := accessor.ReadDirWithOSPath(root)
 		if err != nil {
+			scope.Log("import_collection: %v", err)
 			return vfilter.Null{}
 		}
 
@@ -150,7 +161,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 				continue
 			}
 
-			self.ImportFlow(
+			self.importFlow(
 				ctx, scope, config_obj, db,
 				accessor, path, client_info.ClientId, client_info.Hostname)
 		}
@@ -162,7 +173,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	return vfilter.Null{}
 }
 
-func (self ImportCollectionFunction) ImportFlow(
+func (self ImportCollectionFunction) importFlow(
 	ctx context.Context,
 	scope vfilter.Scope,
 	config_obj *config_proto.Config,
@@ -177,7 +188,7 @@ func (self ImportCollectionFunction) ImportFlow(
 	err = self.getFile(accessor, root.Append("collection_context.json"),
 		collection_context)
 	if err != nil || collection_context.SessionId == "" {
-		scope.Log("import_collection: unable to load collection_context: %v", err)
+		scope.Log("import_flow: unable to load collection_context: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -185,7 +196,7 @@ func (self ImportCollectionFunction) ImportFlow(
 		client_id, err = self.getClientIdFromHostname(
 			ctx, scope, config_obj, hostname)
 		if err != nil {
-			scope.Log("import_collection: %v", err)
+			scope.Log("import_flow: %v", err)
 			return vfilter.Null{}
 		}
 	}
@@ -197,7 +208,7 @@ func (self ImportCollectionFunction) ImportFlow(
 
 	err = db.SetSubject(config_obj, flow_path_manager.Path(), collection_context)
 	if err != nil {
-		scope.Log("import_collection: %v", err)
+		scope.Log("import_flow: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -207,18 +218,18 @@ func (self ImportCollectionFunction) ImportFlow(
 	if err == nil {
 		err = db.SetSubject(config_obj, flow_path_manager.Task(), tasks)
 		if err != nil {
-			scope.Log("import_collection: %v", err)
+			scope.Log("import_flow: %v", err)
 			return vfilter.Null{}
 		}
 	} else {
-		scope.Log("import_collection: %v", err)
+		scope.Log("import_flow: %v", err)
 	}
 
 	// Copy the logs results set over.
 	err = self.copyResultSet(ctx, config_obj, scope,
 		accessor, root.Append("log.json"), flow_path_manager.Log())
 	if err != nil {
-		scope.Log("import_collection: %v", err)
+		scope.Log("import_flow: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -231,7 +242,7 @@ func (self ImportCollectionFunction) ImportFlow(
 			accessor, root.Append("results", artifact+".json"),
 			artifact_path_manager.Path())
 		if err != nil {
-			scope.Log("import_collection: %v", err)
+			scope.Log("import_flow: %v", err)
 		}
 	}
 
@@ -249,7 +260,7 @@ func (self ImportCollectionFunction) ImportFlow(
 		reader, err := result_sets.NewResultSetReader(file_store_factory,
 			flow_path_manager.UploadMetadata())
 		if err != nil {
-			scope.Log("import_collection: %v", err)
+			scope.Log("import_flow: %v", err)
 			return vfilter.Null{}
 		}
 		defer reader.Close()
@@ -277,7 +288,7 @@ func (self ImportCollectionFunction) ImportFlow(
 			err := self.copyFileWithIndex(ctx, config_obj, scope,
 				accessor, src, dest)
 			if err != nil {
-				scope.Log("import_collection: %v", err)
+				scope.Log("import_flow: %v", err)
 			}
 		}
 	}
@@ -301,6 +312,71 @@ func (self ImportCollectionFunction) ImportFlow(
 	)
 
 	return collection_context
+}
+
+func (self ImportCollectionFunction) importHunt(
+	ctx context.Context,
+	scope vfilter.Scope,
+	config_obj *config_proto.Config,
+	hunt *api_proto.Hunt) (string, error) {
+	// Check if valid hunt id and no duplicates.
+	if hunt.HuntId == "" {
+		hunt.HuntId = hunt_dispatcher.GetNewHuntId()
+	} else {
+		// If it has a hunt id, see if it already exists,
+		// create a new one if so.
+		hunt_disp, err := services.GetHuntDispatcher(config_obj)
+		if err != nil {
+			scope.Log("ImportHunt: %v", err)
+			return "", err
+		}
+
+		_, pres := hunt_disp.GetHunt(hunt.HuntId)
+		if pres {
+			hunt.HuntId = hunt_dispatcher.GetNewHuntId()
+		}
+	}
+
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		scope.Log("ImportHunt: %v", err)
+		return "", err
+	}
+
+	row := ordereddict.NewDict().
+		Set("Timestamp", time.Now().UTC().Unix()).
+		Set("Hunt", hunt)
+
+	journal, err := services.GetJournal(config_obj)
+	if err != nil {
+		scope.Log("ImportHunt: %v", err)
+		return "", err
+	}
+
+	err = journal.PushRowsToArtifact(ctx, config_obj,
+		[]*ordereddict.Dict{row}, "System.Hunt.Import",
+		"server", hunt.HuntId)
+	if err != nil {
+		scope.Log("ImportHunt: %v", err)
+		return "", err
+	}
+
+	hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
+	err = db.SetSubject(config_obj, hunt_path_manager.Path(), hunt)
+	if err != nil {
+		scope.Log("ImportHunt: %v", err)
+		return "", err
+	}
+
+	// Trigger a refresh of the hunt dispatcher. This guarantees
+	// that fresh data will be read in subsequent ListHunt()
+	// calls.
+	hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		scope.Log("ImportHunt: %v", err)
+		return "", err
+	}
+	return hunt.HuntId, hunt_dispatcher.Refresh(ctx, config_obj)
 }
 
 func (self ImportCollectionFunction) getClientIdFromHostname(
@@ -495,6 +571,14 @@ func (self ImportCollectionFunction) Info(scope vfilter.Scope, type_map *vfilter
 		ArgType:  type_map.AddType(scope, &ImportCollectionFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.COLLECT_SERVER, acls.FILESYSTEM_READ).Build(),
 	}
+}
+
+func (self ImportCollectionFunction) checkHuntInfo(
+	root *accessors.OSPath, accessor accessors.FileSystemAccessor) (*api_proto.Hunt, error) {
+	hunt_path := root.Append("hunt")
+	var hunt_info *api_proto.Hunt
+	err := self.getFile(accessor, hunt_path.Append("hunt_info.json"), hunt_info)
+	return hunt_info, err
 }
 
 func getExistingClientOrNewClient(
