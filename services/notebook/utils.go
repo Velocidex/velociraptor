@@ -4,14 +4,36 @@ import (
 	"crypto/rand"
 	"encoding/base32"
 	"encoding/binary"
-	"time"
+	"strings"
+
+	"www.velocidex.com/golang/velociraptor/utils"
 )
+
+var (
+	testMode bool
+)
+
+func SetTestMode() func() {
+	testMode = true
+	return func() {
+		testMode = false
+	}
+}
+
+func getRand(buf []byte) {
+	if testMode {
+		b := strings.NewReader("XXXX112342")
+		b.Read(buf)
+		return
+	}
+	rand.Read(buf)
+}
 
 func NewNotebookId() string {
 	buf := make([]byte, 8)
-	_, _ = rand.Read(buf)
+	getRand(buf)
 
-	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
+	binary.BigEndian.PutUint32(buf, uint32(utils.GetTime().Now().Unix()))
 	result := base32.HexEncoding.EncodeToString(buf)[:13]
 
 	return "N." + result
@@ -19,9 +41,9 @@ func NewNotebookId() string {
 
 func NewNotebookCellId() string {
 	buf := make([]byte, 8)
-	_, _ = rand.Read(buf)
+	getRand(buf)
 
-	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
+	binary.BigEndian.PutUint32(buf, uint32(utils.GetTime().Now().Unix()))
 	result := base32.HexEncoding.EncodeToString(buf)[:13]
 
 	return "NC." + result
@@ -29,9 +51,9 @@ func NewNotebookCellId() string {
 
 func NewNotebookAttachmentId() string {
 	buf := make([]byte, 8)
-	_, _ = rand.Read(buf)
+	getRand(buf)
 
-	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
+	binary.BigEndian.PutUint32(buf, uint32(utils.GetTime().Now().Unix()))
 	result := base32.HexEncoding.EncodeToString(buf)[:13]
 
 	return "NA." + result

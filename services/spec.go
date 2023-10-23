@@ -48,7 +48,13 @@ func MinionServicesSpec() *config_proto.ServerServicesConfig {
 		RepositoryManager:   true,
 		FrontendServer:      true,
 		JournalService:      true,
+		SchedulerService:    true,
 		DynDns:              true,
+
+		// Run the notebook service on the minion so it can run
+		// notebook jobs remotely.
+		NotebookService: true,
+		UserManager:     true,
 	}
 }
 
@@ -79,5 +85,6 @@ func AllServerServicesSpec() *config_proto.ServerServicesConfig {
 		Label:               true,
 		Launcher:            true,
 		NotebookService:     true,
+		SchedulerService:    true,
 	}
 }

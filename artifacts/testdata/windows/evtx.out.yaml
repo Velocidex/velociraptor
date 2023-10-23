@@ -455,9 +455,5 @@ SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1
  {
   "ClearedLog": "Security",
   "Message =~ \"The audit log was cleared.\"": true
- },
- {
-  "ClearedLog": "System",
-  "Message =~ \"The audit log was cleared.\"": false
  }
 ]

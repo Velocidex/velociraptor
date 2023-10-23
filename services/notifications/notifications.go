@@ -146,6 +146,8 @@ func NewNotificationService(
 				if !ok {
 					continue
 				}
+				fmt.Printf("%v: Got notification for %v\n", time.Now(), target)
+
 				if self.notification_pool != nil {
 					notificationsReceivedCounter.Inc()
 					self.notification_pool.Notify(target)
@@ -253,6 +255,7 @@ func (self *Notifier) CountConnectedClients() uint64 {
 func (self *Notifier) NotifyListener(
 	ctx context.Context, config_obj *config_proto.Config,
 	id, tag string) error {
+
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err

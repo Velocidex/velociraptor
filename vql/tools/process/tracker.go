@@ -22,6 +22,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/ttlcache/v2"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -514,4 +515,15 @@ func (self *_InstallProcessTracker) Info(scope vfilter.Scope, type_map *vfilter.
 
 func init() {
 	vql_subsystem.RegisterFunction(&_InstallProcessTracker{})
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name:        "process_tracker",
+		Description: "Report process tracker stats",
+		ProfileWriter: func(ctx context.Context,
+			scope vfilter.Scope, output_chan chan vfilter.Row) {
+			output_chan <- ordereddict.NewDict().
+				Set("Type", "process_tracker").
+				Set("Line", GetGlobalTracker().Stats())
+		},
+	})
+
 }

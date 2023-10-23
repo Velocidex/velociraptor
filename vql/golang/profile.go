@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"runtime/pprof"
 	"runtime/trace"
+	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -14,26 +16,27 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/velociraptor/vql/tools/process"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type ProfilePluginArgs struct {
-	Allocs    bool  `vfilter:"optional,field=allocs,doc=A sampling of all past memory allocations"`
-	Block     bool  `vfilter:"optional,field=block,doc=Stack traces that led to blocking on synchronization primitives"`
-	Goroutine bool  `vfilter:"optional,field=goroutine,doc=Stack traces of all current goroutines"`
-	Heap      bool  `vfilter:"optional,field=heap,doc=A sampling of memory allocations of live objects."`
-	Mutex     bool  `vfilter:"optional,field=mutex,doc=Stack traces of holders of contended mutexes"`
-	Profile   bool  `vfilter:"optional,field=profile,doc=CPU profile."`
-	Trace     bool  `vfilter:"optional,field=trace,doc=CPU trace."`
-	Debug     int64 `vfilter:"optional,field=debug,doc=Debug level"`
-	Logs      bool  `vfilter:"optional,field=logs,doc=Recent logs"`
-	Queries   bool  `vfilter:"optional,field=queries,doc=Recent Queries run"`
-	Metrics   bool  `vfilter:"optional,field=metrics,doc=Collect metrics"`
-	Duration  int64 `vfilter:"optional,field=duration,doc=Duration of samples (default 30 sec)"`
+	Allocs    bool   `vfilter:"optional,field=allocs,doc=A sampling of all past memory allocations"`
+	Block     bool   `vfilter:"optional,field=block,doc=Stack traces that led to blocking on synchronization primitives"`
+	Goroutine bool   `vfilter:"optional,field=goroutine,doc=Stack traces of all current goroutines"`
+	Heap      bool   `vfilter:"optional,field=heap,doc=A sampling of memory allocations of live objects."`
+	Mutex     bool   `vfilter:"optional,field=mutex,doc=Stack traces of holders of contended mutexes"`
+	Profile   bool   `vfilter:"optional,field=profile,doc=CPU profile."`
+	Trace     bool   `vfilter:"optional,field=trace,doc=CPU trace."`
+	Debug     int64  `vfilter:"optional,field=debug,doc=Debug level"`
+	Logs      bool   `vfilter:"optional,field=logs,doc=Recent logs"`
+	Queries   bool   `vfilter:"optional,field=queries,doc=Recent Queries run"`
+	Metrics   bool   `vfilter:"optional,field=metrics,doc=Collect metrics"`
+	Duration  int64  `vfilter:"optional,field=duration,doc=Duration of samples (default 30 sec)"`
+	Type      string `vfilter:"optional,field=type,doc=The type of profile (this is a regex of debug output types that will be shown)."`
 }
 
 func remove(scope vfilter.Scope, name string) {
@@ -210,6 +213,11 @@ func (self *ProfilePlugin) Call(ctx context.Context,
 			return
 		}
 
+		types := []string{}
+		if arg.Type != "" {
+			types = append(types, arg.Type)
+		}
+
 		if arg.Duration == 0 {
 			arg.Duration = 30
 		}
@@ -243,41 +251,27 @@ func (self *ProfilePlugin) Call(ctx context.Context,
 		}
 
 		if arg.Metrics {
-			writeMetrics(ctx, scope, output_chan)
-			select {
-			case <-ctx.Done():
-				return
-
-			case output_chan <- ordereddict.NewDict().
-				Set("Type", "process_tracker").
-				Set("Line", process.GetGlobalTracker().Stats()):
-			}
+			types = append(types, "metrics")
 		}
 
 		if arg.Logs {
-			for _, line := range logging.GetMemoryLogs() {
-				select {
-				case <-ctx.Done():
-					return
-
-				case output_chan <- ordereddict.NewDict().
-					Set("Type", "logs").
-					Set("Line", line).
-					Set("OSPath", ""):
-				}
-			}
+			types = append(types, "logs")
 		}
 
 		if arg.Queries {
-			for _, q := range actions.QueryLog.Get() {
-				select {
-				case <-ctx.Done():
-					return
+			types = append(types, "queries")
+		}
 
-				case output_chan <- ordereddict.NewDict().
-					Set("Type", "query").
-					Set("Line", q).
-					Set("OSPath", ""):
+		// Now add any other interesting things
+		if len(types) > 0 {
+			re, err := regexp.Compile("(?i)" + strings.Join(types, "|"))
+			if err != nil {
+				scope.Log("profile: %s", err.Error())
+				return
+			}
+			for _, writer := range debug.GetProfileWriters() {
+				if re.MatchString(writer.Name) {
+					writer.ProfileWriter(ctx, scope, output_chan)
 				}
 			}
 		}
@@ -299,4 +293,47 @@ func (self ProfilePlugin) Info(
 
 func init() {
 	vql_subsystem.RegisterPlugin(&ProfilePlugin{})
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name:          "Metrics",
+		Description:   "Report all the current process running metrics.",
+		ProfileWriter: writeMetrics,
+	})
+
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name:        "logs",
+		Description: "Dump recent logs from memory ring buffer.",
+		ProfileWriter: func(ctx context.Context,
+			scope vfilter.Scope, output_chan chan vfilter.Row) {
+			for _, line := range logging.GetMemoryLogs() {
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- ordereddict.NewDict().
+					Set("Type", "logs").
+					Set("Line", line).
+					Set("OSPath", ""):
+				}
+			}
+		},
+	})
+
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name:        "Queries",
+		Description: "Report all the recent queries.",
+		ProfileWriter: func(ctx context.Context,
+			scope vfilter.Scope, output_chan chan vfilter.Row) {
+			for _, q := range actions.QueryLog.Get() {
+				select {
+				case <-ctx.Done():
+					return
+
+				case output_chan <- ordereddict.NewDict().
+					Set("Type", "query").
+					Set("Line", q).
+					Set("OSPath", ""):
+				}
+			}
+		},
+	})
 }

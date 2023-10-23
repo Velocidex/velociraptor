@@ -189,9 +189,21 @@ func migrate_0_6_1(config_obj *config_proto.Config) {
 	}
 }
 
+func migrate_0_7_0(config_obj *config_proto.Config) {
+	// Check for defaults:
+	if config_obj.Defaults == nil {
+		config_obj.Defaults = &config_proto.Defaults{}
+	}
+
+	if config_obj.Defaults.NotebookNumberOfLocalWorkers == 0 {
+		config_obj.Defaults.NotebookNumberOfLocalWorkers = 5
+	}
+}
+
 func migrate(config_obj *config_proto.Config) {
 	migrate_0_4_2(config_obj)
 	migrate_0_4_6(config_obj)
 	migrate_0_5_6(config_obj)
 	migrate_0_6_1(config_obj)
+	migrate_0_7_0(config_obj)
 }

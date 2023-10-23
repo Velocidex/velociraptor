@@ -30,6 +30,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/notifications"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/services/sanity"
+	"www.velocidex.com/golang/velociraptor/services/scheduler"
 	"www.velocidex.com/golang/velociraptor/services/server_artifacts"
 	"www.velocidex.com/golang/velociraptor/services/server_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/users"
@@ -52,6 +53,7 @@ type ServiceContainer struct {
 	hunt_dispatcher         services.IHuntDispatcher
 	launcher                services.Launcher
 	notebook_manager        services.NotebookManager
+	scheduler               services.Scheduler
 	client_event_manager    services.ClientEventTable
 	server_event_manager    services.ServerEventManager
 	server_artifact_manager services.ServerArtifactRunner
@@ -188,6 +190,17 @@ func (self *ServiceContainer) VFSService() (services.VFSService, error) {
 	}
 
 	return self.vfs_service, nil
+}
+
+func (self *ServiceContainer) Scheduler() (services.Scheduler, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.scheduler == nil {
+		return nil, errors.New("Scheduler service not initialized")
+	}
+
+	return self.scheduler, nil
 }
 
 func (self *ServiceContainer) Labeler() (services.Labeler, error) {
@@ -329,6 +342,13 @@ func (self *OrgManager) startRootOrgServices(
 		ctx, wg, org_config)
 	if err != nil {
 		return err
+	}
+
+	if spec.SchedulerService {
+		err := scheduler.StartSchedulerService(ctx, wg, org_config)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
