@@ -184,5 +184,7 @@
     "53686f7720616c6c20636f6c6c656374696f6e73": "Mostrar todas las colecciones",
     "53686f77206f6e6c79206d7920636f6c6c656374696f6e73": "Mostrar solo mis colecciones",
     "546f74616c204d61746368696e6720436c69656e7473": "Total de clientes coincidentes",
-    "556e6c6162656c656420486f737473": "Hosts sin etiquetar"
+    "556e6c6162656c656420486f737473": "Hosts sin etiquetar",
+    "4b696c6c20436c69656e7473": "Matar Clientes",
+    "4b696c6c4d657373616765": "Estás a punto de matar a los siguientes clientes"
 }
