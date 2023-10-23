@@ -763,6 +763,13 @@ func createHuntDownloadFile(
 			time.Duration(timeout)*time.Second)
 		defer cancel()
 
+		err = zip_writer.WriteJSON(
+			paths.ZipPathFromFSPathSpec(path_specs.NewSafeFilestorePath("hunt").AddChild("hunt_info")),
+			hunt_details)
+		if err != nil {
+			return
+		}
+
 		err = generateCombinedResults(
 			sub_ctx, config_obj, scope,
 			hunt_details, format, zip_writer)

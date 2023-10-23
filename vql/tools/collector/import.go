@@ -41,9 +41,10 @@ const (
 )
 
 type ImportCollectionFunctionArgs struct {
-	ClientId string `vfilter:"required,field=client_id,doc=The client id to import to. Use 'auto' to generate a new client id."`
-	Hostname string `vfilter:"optional,field=hostname,doc=When creating a new client, set this as the hostname."`
-	Filename string `vfilter:"required,field=filename,doc=Path on server to the collector zip."`
+	ClientId   string `vfilter:"optional,field=client_id,doc=The client id to import to. Use 'auto' to generate a new client id."`
+	Hostname   string `vfilter:"optional,field=hostname,doc=When creating a new client, set this as the hostname."`
+	Filename   string `vfilter:"required,field=filename,doc=Path on server to the collector zip."`
+	ImportType string `vfilter:"optional,field=import_type,doc=Whether the import is an offline_collector or hunt."`
 }
 
 type ImportCollectionFunction struct{}
@@ -103,6 +104,75 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		DelegatePath:     arg.Filename,
 	})
 
+	if arg.ImportType != "hunt" && arg.ImportType != "collector" {
+		arg.ImportType = ""
+	}
+
+	if arg.ImportType == "" {
+		hunt_check := root.Append("hunt")
+		var hunt_check_details *api_proto.Hunt
+		err = self.getFile(accessor, hunt_check.Append("hunt_info.json"), hunt_check_details)
+		if err != nil {
+			arg.ImportType = "collector"
+		} else {
+			arg.ImportType = "hunt"
+		}
+	}
+
+	if arg.ImportType == "collector" {
+		return self.ImportFlow(
+			ctx, scope, config_obj,
+			db, accessor, root, arg.ClientId,
+			arg.Hostname)
+
+	} else if arg.ImportType == "hunt" {
+		directory_listing, err := accessor.ReadDirWithOSPath(root)
+		if err != nil {
+			return vfilter.Null{}
+		}
+
+		for _, item := range directory_listing {
+			if !item.IsDir() || item.Name() == "results" || item.Name() == "uploads" {
+				continue
+			}
+
+			path := root.Append(item.Name())
+
+			// Get client info_json
+			var client_info *services.ClientInfo
+			err = self.getFile(accessor, path.Append("client_info.json"), client_info)
+			if err != nil {
+				continue
+			}
+
+			err = self.checkClientIdExists(ctx, config_obj, scope, client_info)
+			if err != nil {
+				continue
+			}
+
+			self.ImportFlow(
+				ctx, scope, config_obj, db,
+				accessor, path, client_info.ClientId, client_info.Hostname)
+		}
+
+	} else {
+		return vfilter.Null{}
+	}
+
+	return vfilter.Null{}
+}
+
+func (self ImportCollectionFunction) ImportFlow(
+	ctx context.Context,
+	scope vfilter.Scope,
+	config_obj *config_proto.Config,
+	db datastore.DataStore,
+	accessor accessors.FileSystemAccessor,
+	root *accessors.OSPath,
+	client_id string,
+	hostname string) vfilter.Any {
+
+	var err error
 	collection_context := &flows_proto.ArtifactCollectorContext{}
 	err = self.getFile(accessor, root.Append("collection_context.json"),
 		collection_context)
@@ -111,19 +181,19 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	if arg.ClientId == "auto" || arg.ClientId == "" {
-		arg.ClientId, err = self.getClientId(
-			ctx, scope, config_obj, arg.Hostname)
+	if client_id == "auto" || client_id == "" {
+		client_id, err = self.getClientIdFromHostname(
+			ctx, scope, config_obj, hostname)
 		if err != nil {
 			scope.Log("import_collection: %v", err)
 			return vfilter.Null{}
 		}
 	}
 
-	flow_path_manager := paths.NewFlowPathManager(
-		arg.ClientId, collection_context.SessionId)
+	collection_context.ClientId = client_id
 
-	collection_context.ClientId = arg.ClientId
+	flow_path_manager := paths.NewFlowPathManager(
+		client_id, collection_context.SessionId)
 
 	err = db.SetSubject(config_obj, flow_path_manager.Path(), collection_context)
 	if err != nil {
@@ -155,7 +225,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	// Now Copy the results.
 	for _, artifact := range collection_context.ArtifactsWithResults {
 		artifact_path_manager := artifacts.NewArtifactPathManagerWithMode(
-			config_obj, arg.ClientId, collection_context.SessionId,
+			config_obj, client_id, collection_context.SessionId,
 			artifact, paths.MODE_CLIENT)
 		err = self.copyResultSet(ctx, config_obj, scope,
 			accessor, root.Append("results", artifact+".json"),
@@ -233,9 +303,11 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	return collection_context
 }
 
-func (self ImportCollectionFunction) getClientId(
-	ctx context.Context, scope types.Scope,
-	config_obj *config_proto.Config, hostname string) (string, error) {
+func (self ImportCollectionFunction) getClientIdFromHostname(
+	ctx context.Context,
+	scope types.Scope,
+	config_obj *config_proto.Config,
+	hostname string) (string, error) {
 
 	if hostname != "" {
 		indexer, err := services.GetIndexer(config_obj)
@@ -277,6 +349,50 @@ func (self ImportCollectionFunction) getClientId(
 	client_id := clients.NewClientId()
 	scope.Log("Creating a new client id '%v'", client_id)
 	return client_id, nil
+}
+
+func (self ImportCollectionFunction) checkClientIdExists(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	scope vfilter.Scope,
+	client_info *services.ClientInfo) error {
+	indexer, err := services.GetIndexer(config_obj)
+	if err != nil {
+		return err
+	}
+
+	scope.Log("Searching for a client id with hostname '%v'", client_info.ClientId)
+
+	// Search for an existing client with the same hostname
+	search_resp, err := indexer.SearchClients(ctx, config_obj,
+		&api_proto.SearchClientsRequest{Query: "client:" + client_info.ClientId}, "")
+	if err == nil {
+		return err
+	}
+
+	for _, resp := range search_resp.Items {
+		if strings.EqualFold(resp.ClientId, client_info.ClientId) {
+			scope.Log("client id found '%v'", resp.ClientId)
+			return nil
+		}
+	}
+
+	// If we made it here, client id doesn't exist, so then we can
+	// create a new client
+	res := clients.NewClientFunction{}.Call(ctx, scope, ordereddict.NewDict().
+		Set("client_id", client_info.ClientId).
+		Set("first_seen_at", time.Now()).
+		Set("last_seen_at", time.Now()).
+		Set("hostname", client_info.Hostname).
+		Set("labels", client_info.Labels).
+		Set("os", client_info.OS()).
+		Set("mac_address", client_info.MacAddresses))
+
+	if res == nil {
+		return errors.New("Failed to create new client.")
+	}
+
+	return nil
 }
 
 func (self ImportCollectionFunction) copyResultSet(
