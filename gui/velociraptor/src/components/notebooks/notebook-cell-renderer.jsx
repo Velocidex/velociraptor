@@ -25,6 +25,7 @@ import VeloTimestamp from "../utils/time.jsx";
 import { AddTimelineDialog, AddVQLCellToTimeline } from "./timelines.jsx";
 import T from '../i8n/i8n.jsx';
 import ViewCellLogs from "./logs.jsx";
+import CopyCellToNotebookDialog from './notebook-copy-cell.jsx';
 
 import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
@@ -169,7 +170,7 @@ export default class NotebookCellRenderer extends React.Component {
         showAddCellFromHunt: false,
         showAddCellFromFlow: false,
         showCreateArtifactFromCell: false,
-
+        showCopyCellToNotebook: false,
         showSuggestionSubmenu: false,
         showMoreLogs: false,
 
@@ -598,6 +599,14 @@ export default class NotebookCellRenderer extends React.Component {
                  <FontAwesomeIcon icon="calendar-alt"/>
                </Button>}
 
+               <Button data-tooltip={T("Copy Cell")}
+                       data-position="right"
+                       className="btn-tooltip"
+                       onClick={()=>this.setState({showCopyCellToNotebook: true})}
+                       variant="default">
+                 <FontAwesomeIcon icon="file-import"/>
+               </Button>
+
               <Dropdown data-tooltip={T("Add Cell")}
                         data-position="right"
                         className="btn-tooltip"
@@ -786,7 +795,15 @@ export default class NotebookCellRenderer extends React.Component {
                   closeDialog={()=>this.setState({showMoreLogs: false})}
                 />
               }
+              { this.state.showCopyCellToNotebook &&
+                <CopyCellToNotebookDialog
+                  cell={this.state.cell}
+                  notebook_metadata={this.props.notebook_metadata}
+                  closeDialog={()=>this.setState({showCopyCellToNotebook: false})}
+                  >
 
+                </CopyCellToNotebookDialog>
+              }
               <div className={classNames({selected: selected, "notebook-cell": true})} >
                 <div className='notebook-input'>
                   { this.state.currently_editing && selected &&
