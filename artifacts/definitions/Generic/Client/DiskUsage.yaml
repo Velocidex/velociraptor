@@ -1,0 +1,57 @@
+name: Generic.Client.DiskUsage
+description: |
+  This artifact reports the amount of space used by each directory
+  recursively (Similar to the `du` command).
+
+  Unlike the `du` command, this artifact can filter only certain file
+  name patterns.
+
+  If you change the `TopLevelDirectory` to the drive letter
+  (e.g. `C:\\`) it may take a while to complete as it will need to
+  examine every file on the drive.
+
+parameters:
+  - name: TopLevelDirectory
+    default: C:/Program Files
+    description: The top level directory to start calculating disk usage.
+
+  - name: FilenameGlob
+    default: '*'
+    description: A Glob expression for considering files
+
+  - name: DirectoryGlob
+    default: '*'
+    description: A Glob expression for considering directories to recurse into.
+
+sources:
+  - query: |
+      LET Res <= dict()
+
+      LET _DirInfo(DirPath) = SELECT DirPath, Size, sum(item=Size) AS TotalSize
+      FROM chain(a={
+        SELECT Size FROM glob(globs=FilenameGlob, root=DirPath)
+        WHERE NOT IsDir
+      }, b={
+        SELECT * FROM foreach(row={
+          SELECT OSPath FROM glob(globs=DirectoryGlob, root=DirPath)
+          WHERE IsDir
+        },
+        query={
+           SELECT TotalSize AS Size FROM DirInfo(DirPath=OSPath)
+        })
+      })
+      GROUP BY 1 -- Needed for sum()
+
+      LET DirInfo(DirPath) = SELECT * FROM _DirInfo(DirPath=DirPath)
+      WHERE set(item=Res, field=DirPath,
+                value=dict(DirPath=DirPath, TotalSize=TotalSize))
+
+      -- Recurse into the TopLevelDirectory and rely on the set()
+      -- above to store the results.
+      LET _ <= SELECT * FROM DirInfo(DirPath=TopLevelDirectory)
+
+      SELECT *, humanize(bytes=TotalSize) AS TotalSizeHuman
+      FROM foreach(row={
+        SELECT * FROM items(item=Res)
+      }, column="_value")
+      ORDER BY TotalSize DESC
