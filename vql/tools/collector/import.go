@@ -135,6 +135,9 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 
 		// Update the huntId in case it was already taken.
 		hunt_info.HuntId, err = self.importHunt(ctx, scope, config_obj, hunt_info)
+		if err != nil {
+			return vfilter.Null{}
+		}
 
 		directory_listing, err := accessor.ReadDirWithOSPath(root)
 		if err != nil {
@@ -166,11 +169,10 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 				accessor, path, client_info.ClientId, client_info.Hostname)
 		}
 
+		return hunt_info
 	} else {
 		return vfilter.Null{}
 	}
-
-	return vfilter.Null{}
 }
 
 func (self ImportCollectionFunction) importFlow(
@@ -575,9 +577,8 @@ func (self ImportCollectionFunction) Info(scope vfilter.Scope, type_map *vfilter
 
 func (self ImportCollectionFunction) checkHuntInfo(
 	root *accessors.OSPath, accessor accessors.FileSystemAccessor) (*api_proto.Hunt, error) {
-	hunt_path := root.Append("hunt")
-	var hunt_info *api_proto.Hunt
-	err := self.getFile(accessor, hunt_path.Append("hunt_info.json"), hunt_info)
+	hunt_info := &api_proto.Hunt{}
+	err := self.getFile(accessor, root.Append("hunt_info.json"), hunt_info)
 	return hunt_info, err
 }
 

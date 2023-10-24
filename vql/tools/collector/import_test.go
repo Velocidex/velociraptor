@@ -80,3 +80,34 @@ func (self *TestSuite) TestImportCollection() {
 	// The new flow was created on the same client id as before.
 	assert.Equal(self.T(), context2.ClientId, context.ClientId)
 }
+
+func (self *TestSuite) TestImportHunt() {
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
+	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
+	_, err := repository.LoadYaml(CustomTestArtifactDependent,
+		services.ArtifactOptions{
+			ValidateArtifact:  true,
+			ArtifactIsBuiltIn: true})
+
+	assert.NoError(self.T(), err)
+
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: acl_managers.NullACLManager{},
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
+		Env:        ordereddict.NewDict(),
+	}
+
+	ctx := context.Background()
+	scope := manager.BuildScope(builder)
+
+	import_file_path, err := filepath.Abs("fixtures/import_hunt.zip")
+	assert.NoError(self.T(), err)
+
+	result := ImportCollectionFunction{}.Call(ctx, scope,
+		ordereddict.NewDict().
+			Set("filename", import_file_path).
+			Set("import_type", "hunt"))
+	_, ok := result.(*proto.ArtifactCollectorContext)
+	assert.True(self.T(), ok)
+}
