@@ -14,5 +14,5 @@ sources:
         list=split(sep_string=',', string=Members)) AS Members
       FROM split_records(
             filenames=GroupFile,
-            regex=':', record_regex='\n',
+            regex=':', record_regex='\r?\n',
             columns=['Group', 'Password', 'GID', 'Members'])
