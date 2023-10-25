@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/ioutil"
 	"path/filepath"
+	"sort"
 	"testing"
 	"time"
 
@@ -24,13 +25,16 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/server/clients"
 	"www.velocidex.com/golang/velociraptor/vql/server/hunts"
 	"www.velocidex.com/golang/velociraptor/vql/tools/collector"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/vfilter"
 
+	_ "www.velocidex.com/golang/velociraptor/accessors/data"
 	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
 )
 
@@ -43,6 +47,7 @@ func (self *TestSuite) SetupTest() {
 	self.ConfigObj = self.LoadConfig()
 	self.ConfigObj.Services.HuntDispatcher = true
 	self.ConfigObj.Services.HuntManager = true
+	self.ConfigObj.Services.ServerArtifacts = true
 
 	self.LoadArtifactsIntoConfig([]string{`
 name: Custom.TestArtifactUpload
@@ -52,27 +57,56 @@ sources:
 `, `
 name: Server.Audit.Logs
 type: INTERNAL
+`, `
+name: TestArtifact
+type: SERVER
+sources:
+- query: |
+    SELECT "Hello" AS Col,
+      upload(accessor="data", file="Some Data", name="test.txt") AS Upload1,
+      upload(accessor="data", file="Some Other Data", name="test2.txt") AS Upload2
+    FROM scope()
 `})
 
 	self.TestSuite.SetupTest()
 
 	Clock = utils.NewMockClock(time.Unix(1602103388, 0))
 	reporting.Clock = Clock
+
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 	launcher.SetFlowIdForTests("F.1234")
 }
 
 func (self *TestSuite) TestExportCollectionServerArtifact() {
-	import_file_path, err := filepath.Abs("fixtures/export_server_artifact.zip")
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
+	defer closer()
+
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
+	repository, err := manager.GetGlobalRepository(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	test_utils.UnzipToFilestore(self.ConfigObj,
-		path_specs.NewUnsafeFilestorePath("clients", "server", "collections"),
-		import_file_path)
+	launcher, err := services.GetLauncher(self.ConfigObj)
+	assert.NoError(self.T(), err)
 
-	// test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
-	manager, _ := services.GetRepositoryManager(self.ConfigObj)
+	var acl_manager vql_subsystem.ACLManager
+
+	flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx, self.ConfigObj,
+		acl_manager, repository, &flows_proto.ArtifactCollectorArgs{
+			Artifacts: []string{"TestArtifact"},
+			ClientId:  "server",
+		}, utils.SyncCompleter)
+	assert.NoError(self.T(), err)
+
+	// Wait here until the collection is completed.
+	vtesting.WaitUntil(time.Second*50, self.T(), func() bool {
+		flow, err := launcher.GetFlowDetails(self.Ctx, self.ConfigObj, "server", flow_id)
+		assert.NoError(self.T(), err)
+
+		return flow.Context.State == flows_proto.ArtifactCollectorContext_FINISHED
+	})
+
+	// Now create a download of this collection.
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
 		ACLManager: acl_managers.NullACLManager{},
@@ -88,7 +122,7 @@ func (self *TestSuite) TestExportCollectionServerArtifact() {
 	result := (&CreateFlowDownload{}).Call(ctx, scope,
 		ordereddict.NewDict().
 			Set("client_id", "server").
-			Set("flow_id", "F.CGLR6OS84DP00").
+			Set("flow_id", flow_id).
 			Set("wait", true).
 			Set("expand_sparse", false).
 			Set("name", "Test"))
@@ -100,6 +134,7 @@ func (self *TestSuite) TestExportCollectionServerArtifact() {
 	file_details, err := openZipFile(self.ConfigObj, scope, path_spec)
 	assert.NoError(self.T(), err)
 
+	// Make sure the collection is
 	goldie.Assert(self.T(), "TestExportCollectionServerArtifact",
 		json.MustMarshalIndent(file_details))
 }
@@ -322,6 +357,11 @@ func openZipFile(
 		return nil, err
 	}
 
+	// Sort files for comparison stability.
+	sort.Slice(r.File, func(i, j int) bool {
+		return r.File[i].Name < r.File[j].Name
+	})
+
 	for _, f := range r.File {
 		rc, err := f.Open()
 		if err != nil {
@@ -332,13 +372,28 @@ func openZipFile(
 			return nil, err
 		}
 
-		rows, err := utils.ParseJsonToDicts(serialized)
-		if err != nil {
-			result.Set(f.Name, string(serialized))
+		if len(serialized) == 0 {
+			result.Set(f.Name, "")
 			continue
 		}
 
-		result.Set(f.Name, rows)
+		if serialized[0] == '{' {
+			item, err := utils.ParseJsonToObject(serialized)
+			if err == nil {
+				result.Set(f.Name, item)
+			}
+			continue
+		}
+
+		if serialized[0] == '[' {
+			rows, err := utils.ParseJsonToDicts(serialized)
+			if err == nil {
+				result.Set(f.Name, rows)
+				continue
+			}
+		}
+
+		result.Set(f.Name, string(serialized))
 	}
 
 	return result, nil
