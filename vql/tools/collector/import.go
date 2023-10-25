@@ -131,6 +131,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		hunt_info, err := self.checkHuntInfo(root, accessor)
 		if err != nil {
 			scope.Log("import_collection: %v", err)
+			return vfilter.Null{}
 		}
 
 		// Update the huntId in case it was already taken.
@@ -578,7 +579,21 @@ func (self ImportCollectionFunction) Info(scope vfilter.Scope, type_map *vfilter
 func (self ImportCollectionFunction) checkHuntInfo(
 	root *accessors.OSPath, accessor accessors.FileSystemAccessor) (*api_proto.Hunt, error) {
 	hunt_info := &api_proto.Hunt{}
-	err := self.getFile(accessor, root.Append("hunt_info.json"), hunt_info)
+
+	fd, err := accessor.OpenWithOSPath(root.Append("hunt_info.json"))
+	if err != nil {
+		return nil, err
+	}
+	defer fd.Close()
+
+	limitedReader := &io.LimitedReader{R: fd, N: BUFF_SIZE}
+	data, err := ioutil.ReadAll(limitedReader)
+	if err != nil && err != io.EOF {
+		return nil, err
+	}
+
+	err = json.Unmarshal(data, hunt_info)
+
 	return hunt_info, err
 }
 

@@ -764,7 +764,7 @@ func createHuntDownloadFile(
 		defer cancel()
 
 		err = zip_writer.WriteJSON(
-			paths.ZipPathFromFSPathSpec(path_specs.NewSafeFilestorePath().AddChild("hunt_info")),
+			paths.ZipPathFromFSPathSpec(path_specs.NewUnsafeFilestorePath().AddChild("hunt_info")),
 			hunt_details)
 		if err != nil {
 			return
