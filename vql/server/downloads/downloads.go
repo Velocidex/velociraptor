@@ -364,9 +364,14 @@ func copyUploadFiles(
 	}
 
 	output_chan := make(chan vfilter.Row)
+
+	// Need to create a local pool so we can wait for all files to be
+	// written to the container before we close the output chan.
+	pool := newPool(ctx, config_obj, scope, container)
+
 	go func() {
 		defer close(output_chan)
-		defer reader.Close()
+		defer pool.Close()
 
 		for row := range reader.Rows(ctx) {
 			components, pres := row.GetStrings("_Components")
@@ -502,14 +507,11 @@ func copyUploadFiles(
 				dest = dest.SetType(api.PATH_TYPE_FILESTORE_SPARSE_IDX)
 			}
 
-			// Copy from the file store at these locations.
-			err = copyFile(ctx, scope, config_obj, container,
-				src, dest, expand_sparse)
-			if err != nil {
-				row.Set("Error", err.Error())
-			}
+			pool.copyFile(src, dest, row, expand_sparse, output_chan)
 
-			// Write the modified row into the uploads.json file.
+			// Write the row into the upload file immediately so the
+			// rows maintain the same order as the original file. If
+			// an error occurs a second error row will be written.
 			output_chan <- row
 		}
 	}()
@@ -521,6 +523,7 @@ func copyUploadFiles(
 	return err
 }
 
+// Copy a single file from the filestore into the container.
 func copyFile(
 	ctx context.Context,
 	scope vfilter.Scope,
@@ -553,7 +556,9 @@ func copyFile(
 		reader = maybeExpandSparseFile(ctx, scope, config_obj, src, fd)
 	}
 
-	_, err = utils.Copy(ctx, out_fd, reader)
+	buff := make([]byte, 1024*1024)
+	_, err = utils.CopyWithBuffer(ctx, out_fd, reader, buff)
+
 	return err
 }
 
@@ -604,6 +609,8 @@ func maybeExpandSparseFile(
 	})
 }
 
+// Copies the result set into the container - possibly convert into
+// CSV.
 func copyResultSetIntoContainer(
 	ctx context.Context,
 	config_obj *config_proto.Config,

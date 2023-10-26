@@ -1,56 +1,177 @@
 {
+ "collection_context.json": {
+  "context": {
+   "client_id": "server",
+   "session_id": "F.1234",
+   "request": {
+    "client_id": "server",
+    "artifacts": [
+     "TestArtifact"
+    ]
+   },
+   "create_time": 10000000,
+   "start_time": 10000000,
+   "active_time": 10000000,
+   "total_uploaded_files": 2,
+   "total_expected_uploaded_bytes": 24,
+   "total_uploaded_bytes": 24,
+   "total_collected_rows": 1,
+   "total_logs": 5,
+   "total_requests": 1,
+   "state": 2,
+   "artifacts_with_results": [
+    "TestArtifact"
+   ],
+   "query_stats": [
+    {
+     "last_active": 10000000,
+     "first_active": 10000000,
+     "names_with_response": [
+      "TestArtifact"
+     ],
+     "Artifact": "TestArtifact",
+     "log_rows": 5,
+     "uploaded_files": 2,
+     "uploaded_bytes": 24,
+     "expected_uploaded_bytes": 24,
+     "result_rows": 1
+    }
+   ]
+  },
+  "available_downloads": {
+   "files": [
+    {
+     "name": "server-F.1234",
+     "path": "downloads/server/F.1234/Test.zip",
+     "type": "zip",
+     "stats": {
+      "timestamp": 1602103388,
+      "components": [
+       "downloads",
+       "server",
+       "F.1234",
+       "Test.zip"
+      ],
+      "type": "zip"
+     }
+    }
+   ]
+  }
+ },
  "logs.json": [
   {
-   "Timestamp": 1680585571852796,
+   "Timestamp": 10000000,
    "Level": "DEFAULT",
-   "message": "Running query on behalf of user mic\n"
+   "message": "Running query on behalf of user VelociraptorServer\n"
   },
   {
-   "Timestamp": 1680585571852838,
+   "Timestamp": 10000000,
    "Level": "DEFAULT",
    "message": "\u003cgreen\u003eStarting\u003c/\u003e query execution.\n"
   },
   {
-   "Timestamp": 1680585571855305,
+   "Timestamp": 10000000,
    "Level": "DEFAULT",
-   "message": "Uploaded /File0.txt.json (37 bytes)\n"
+   "message": "Uploaded /test.txt (9 bytes)\n"
   },
   {
-   "Timestamp": 1680585571856397,
+   "Timestamp": 10000000,
    "Level": "DEFAULT",
-   "message": "Uploaded /File1.txt.json (37 bytes)\n"
+   "message": "Uploaded /test2.txt (15 bytes)\n"
   },
   {
-   "Timestamp": 1680585571857412,
+   "Timestamp": 10000000,
    "Level": "DEBUG",
-   "message": "Query Stats: {\"RowsScanned\":2,\"PluginsCalled\":1,\"FunctionsCalled\":4,\"ProtocolSearch\":0,\"ScopeCopy\":6}\n"
+   "message": "Query Stats: {\"RowsScanned\":2,\"PluginsCalled\":1,\"FunctionsCalled\":2,\"ProtocolSearch\":0,\"ScopeCopy\":6}\n"
   }
  ],
- "uploads/File0.txt": "This is a long test with many letters",
- "uploads/File1.txt": "This is a long test with many letters",
- "uploads.json.index": "\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0000\u0000\u0000\u0000\u0001\u0000\u0000",
+ "requests.json": {
+  "items": [
+   {
+    "session_id": "F.1234",
+    "request_id": 1,
+    "FlowRequest": {
+     "VQLClientActions": [
+      {
+       "query_id": 1,
+       "total_queries": 1,
+       "Query": [
+        {
+         "VQL": "LET TestArtifact_0_0 = SELECT \"Hello\" AS Col, upload(accessor=\"data\", file=\"Some Data\", name=\"test.txt\") AS Upload1, upload(accessor=\"data\", file=\"Some Other Data\", name=\"test2.txt\") AS Upload2 FROM scope()"
+        },
+        {
+         "Name": "TestArtifact",
+         "VQL": "SELECT * FROM TestArtifact_0_0"
+        }
+       ],
+       "max_row": 1000
+      }
+     ],
+     "log_batch_time": 100
+    }
+   }
+  ]
+ },
+ "results/TestArtifact.json": [
+  {
+   "Col": "Hello",
+   "Upload1": {
+    "Path": "/test.txt",
+    "Size": 9,
+    "StoredSize": 9,
+    "sha256": "2d27ec8437ec76ec2db484c98ed89f7793f0575e271518dd1d62a18fde6e202d",
+    "md5": "30057e5031bcf44d47b005a1f1700f7b",
+    "Components": [
+     "clients",
+     "server",
+     "collections",
+     "F.1234",
+     "uploads",
+     "test.txt"
+    ]
+   },
+   "Upload2": {
+    "Path": "/test2.txt",
+    "Size": 15,
+    "StoredSize": 15,
+    "sha256": "c42af293c4c339ce802ae6827124cc416bfffb574da3d9f35068b6068a75528b",
+    "md5": "d89eef4147c900bc8af8a49e73a09de4",
+    "Components": [
+     "clients",
+     "server",
+     "collections",
+     "F.1234",
+     "uploads",
+     "test2.txt"
+    ]
+   }
+  }
+ ],
  "uploads.json": [
   {
-   "Timestamp": 1680585571,
-   "started": "2023-04-04 05:19:31.855375283 +0000 UTC",
-   "vfs_path": "/File0.txt.json",
+   "Timestamp": 10,
+   "started": "1970-01-01 00:00:10.00000001 +0000 UTC",
+   "vfs_path": "/test.txt",
    "_Components": [
     "uploads",
-    "File0.txt"
+    "test.txt"
    ],
-   "file_size": 37,
-   "uploaded_size": 37
+   "file_size": 9,
+   "uploaded_size": 9
   },
   {
-   "Timestamp": 1680585571,
-   "started": "2023-04-04 05:19:31.856444777 +0000 UTC",
-   "vfs_path": "/File1.txt.json",
+   "Timestamp": 10,
+   "started": "1970-01-01 00:00:10.00000001 +0000 UTC",
+   "vfs_path": "/test2.txt",
    "_Components": [
     "uploads",
-    "File1.txt"
+    "test2.txt"
    ],
-   "file_size": 37,
-   "uploaded_size": 37
+   "file_size": 15,
+   "uploaded_size": 15
   }
- ]
+ ],
+ "uploads.json.index": "\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0000\u0000\u0000\u0000\u0001\u0000\u0000",
+ "uploads/test.txt": "Some Data",
+ "uploads/test2.txt": "Some Other Data"
 }

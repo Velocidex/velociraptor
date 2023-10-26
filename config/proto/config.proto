@@ -1083,6 +1083,8 @@ message Defaults {
     // Normally the inventory service attempts to download tools in
     // its own but if this is set, we prevent any external access.
     bool disable_inventory_service_external_access = 34;
+
+    int64 export_concurrency = 40;
 }
 
 // Configures crypto preferences
