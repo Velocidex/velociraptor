@@ -17,6 +17,7 @@ import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Alert from 'react-bootstrap/Alert';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import CSVForm from './csv.jsx';
 
 import BootstrapTable from 'react-bootstrap-table-next';
 import cellEditFactory, { Type } from 'react-bootstrap-table2-editor';
@@ -245,7 +246,7 @@ export default class VeloForm extends React.Component {
     }
 
     render() {
-        let param = this.props.param;
+        let param = this.props.param || {};
         let name = param.friendly_name || param.name;
 
         switch(param.type) {
@@ -253,102 +254,10 @@ export default class VeloForm extends React.Component {
             return <></>;
 
         case "csv": {
-            let data = parseCSV(this.props.value);
-            let columns = [{
-                dataField: "_id",
-                text: "",
-                style: {
-                    width: '8%',
-                },
-                headerFormatter: (column, colIndex) => {
-                    if (colIndex === 0) {
-                        return <ButtonGroup>
-                                 <Button variant="default-outline" size="sm"
-                                    onClick={() => {
-                                        // Add an extra row at the current row index.
-                                        let data = parseCSV(this.props.value);
-                                        data.data.splice(0, 0, {});
-                                        this.props.setValue(
-                                            serializeCSV(data.data,
-                                                         data.columns));
-                                    }}
-                                 >
-                                   <FontAwesomeIcon icon="plus"/>
-                                 </Button>
-                               </ButtonGroup>;
-                    };
-                    return column;
-                },
-                formatter: (id, row) => {
-                    return <ButtonGroup>
-                             <Button variant="default-outline" size="sm"
-                                     onClick={() => {
-                                         // Add an extra row at the current row index.
-                                         let data = parseCSV(this.props.value);
-                                         data.data.splice(id, 0, {});
-                                         this.props.setValue(
-                                             serializeCSV(data.data,
-                                                          data.columns));
-                                     }}
-                             >
-                               <FontAwesomeIcon icon="plus"/>
-                             </Button>
-                             <Button variant="default-outline" size="sm"
-                                     onClick={() => {
-                                         // Drop th current row at the current row index.
-                                         let data = parseCSV(this.props.value);
-                                         data.data.splice(id, 1);
-                                         this.props.setValue(
-                                             serializeCSV(data.data,
-                                                          data.columns));
-                                     }}
-                             >
-                               <FontAwesomeIcon icon="trash"/>
-                             </Button>
-                           </ButtonGroup>;
-                },
-            }];
-            _.each(data.columns, (name) => {
-                columns.push({dataField: name,
-                               editor: {
-                                   type: Type.TEXTAREA
-                               },
-                              text: name});
-            });
-
-            _.map(data.data, (item, idx) => {item["_id"] = idx;});
-
-            return (
-                <Form.Group as={Row}>
-                  <Form.Label column sm="3">
-                    <OverlayTrigger
-                      delay={{show: 250, hide: 400}}
-                      overlay={(props)=>renderToolTip(props, param)}>
-                      <div>
-                        {name}
-                      </div>
-                    </OverlayTrigger>
-                  </Form.Label>
-
-                  <Col sm="8">
-                    <BootstrapTable
-                      hover condensed bootstrap4
-                      data={data.data}
-                      keyField="_id"
-                      columns={columns}
-                      cellEdit={ cellEditFactory({
-                          mode: 'click',
-                          afterSaveCell: (oldValue, newValue, row, column) => {
-                              // Update the CSV value.
-                              let new_data = serializeCSV(data.data, data.columns);
-                              this.props.setValue(new_data);
-                          },
-                          blurToSave: true,
-                      }) }
-                    />
-                  </Col>
-                </Form.Group>
-            );
+            return <CSVForm
+                     param={this.props.param}
+                     value={this.props.value}
+                     setValue={this.props.setValue}/>;
         }
 
         case "regex":
