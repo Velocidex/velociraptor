@@ -200,6 +200,12 @@ func (self *MasterFrontendManager) processMetrics(ctx context.Context,
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	if _, ok := self.stats[metric.NodeName]; ok {
+		logger := logging.GetLogger(self.config_obj,
+			&logging.FrontendComponent)
+		logger.Error("Multipe frontend metric sets for '%s' received. Check minion configurations for duplicate names.",
+			metric.NodeName)
+	}
 	self.stats[metric.NodeName] = metric
 
 	return nil
@@ -262,6 +268,9 @@ func (self *MasterFrontendManager) prepareOrgStats() (
 			Set("MemoryUse", total_ProcessResidentMemoryBytes).
 			Set("client_comms_current_connections", total)
 	}
+
+	// Reset
+	self.stats = make(map[string]*FrontendMetrics)
 
 	return result, nil
 }
