@@ -299,6 +299,8 @@ func (self *TestSuite) TestExportHunt() {
 
 	assert.Equal(self.T(), self.client_id, result.(string))
 
+	time.Sleep(500 * time.Millisecond)
+
 	// Now create a hunt download export.
 	result = (&CreateHuntDownload{}).Call(ctx, scope,
 		ordereddict.NewDict().
