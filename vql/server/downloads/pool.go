@@ -40,10 +40,11 @@ func (self *workerJob) Run(ctx context.Context) {
 			self.copyFileJob.dest, self.copyFileJob.expand_sparse)
 		if err != nil {
 			self.copyFileJob.row.Set("Error", err.Error())
-		}
 
-		// Write the modified row into the uploads.json file.
-		self.copyFileJob.output_chan <- self.copyFileJob.row
+			// Write the error row into the uploads.json file. This
+			// will be in addition to the original row.
+			self.copyFileJob.output_chan <- self.copyFileJob.row
+		}
 
 		return
 	}

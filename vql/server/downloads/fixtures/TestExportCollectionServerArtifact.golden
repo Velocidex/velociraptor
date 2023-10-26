@@ -58,6 +58,33 @@
    ]
   }
  },
+ "logs.json": [
+  {
+   "Timestamp": 10000000,
+   "Level": "DEFAULT",
+   "message": "Running query on behalf of user VelociraptorServer\n"
+  },
+  {
+   "Timestamp": 10000000,
+   "Level": "DEFAULT",
+   "message": "\u003cgreen\u003eStarting\u003c/\u003e query execution.\n"
+  },
+  {
+   "Timestamp": 10000000,
+   "Level": "DEFAULT",
+   "message": "Uploaded /test.txt (9 bytes)\n"
+  },
+  {
+   "Timestamp": 10000000,
+   "Level": "DEFAULT",
+   "message": "Uploaded /test2.txt (15 bytes)\n"
+  },
+  {
+   "Timestamp": 10000000,
+   "Level": "DEBUG",
+   "message": "Query Stats: {\"RowsScanned\":2,\"PluginsCalled\":1,\"FunctionsCalled\":2,\"ProtocolSearch\":0,\"ScopeCopy\":6}\n"
+  }
+ ],
  "requests.json": {
   "items": [
    {
@@ -85,39 +112,65 @@
    }
   ]
  },
- "results/TestArtifact.json": {
-  "Col": "Hello",
-  "Upload1": {
-   "Path": "/test.txt",
-   "Size": 9,
-   "StoredSize": 9,
-   "sha256": "2d27ec8437ec76ec2db484c98ed89f7793f0575e271518dd1d62a18fde6e202d",
-   "md5": "30057e5031bcf44d47b005a1f1700f7b",
-   "Components": [
-    "clients",
-    "server",
-    "collections",
-    "F.1234",
+ "results/TestArtifact.json": [
+  {
+   "Col": "Hello",
+   "Upload1": {
+    "Path": "/test.txt",
+    "Size": 9,
+    "StoredSize": 9,
+    "sha256": "2d27ec8437ec76ec2db484c98ed89f7793f0575e271518dd1d62a18fde6e202d",
+    "md5": "30057e5031bcf44d47b005a1f1700f7b",
+    "Components": [
+     "clients",
+     "server",
+     "collections",
+     "F.1234",
+     "uploads",
+     "test.txt"
+    ]
+   },
+   "Upload2": {
+    "Path": "/test2.txt",
+    "Size": 15,
+    "StoredSize": 15,
+    "sha256": "c42af293c4c339ce802ae6827124cc416bfffb574da3d9f35068b6068a75528b",
+    "md5": "d89eef4147c900bc8af8a49e73a09de4",
+    "Components": [
+     "clients",
+     "server",
+     "collections",
+     "F.1234",
+     "uploads",
+     "test2.txt"
+    ]
+   }
+  }
+ ],
+ "uploads.json": [
+  {
+   "Timestamp": 10,
+   "started": "1970-01-01 00:00:10.00000001 +0000 UTC",
+   "vfs_path": "/test.txt",
+   "_Components": [
     "uploads",
     "test.txt"
-   ]
+   ],
+   "file_size": 9,
+   "uploaded_size": 9
   },
-  "Upload2": {
-   "Path": "/test2.txt",
-   "Size": 15,
-   "StoredSize": 15,
-   "sha256": "c42af293c4c339ce802ae6827124cc416bfffb574da3d9f35068b6068a75528b",
-   "md5": "d89eef4147c900bc8af8a49e73a09de4",
-   "Components": [
-    "clients",
-    "server",
-    "collections",
-    "F.1234",
+  {
+   "Timestamp": 10,
+   "started": "1970-01-01 00:00:10.00000001 +0000 UTC",
+   "vfs_path": "/test2.txt",
+   "_Components": [
     "uploads",
     "test2.txt"
-   ]
+   ],
+   "file_size": 15,
+   "uploaded_size": 15
   }
- },
+ ],
  "uploads.json.index": "\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0000\u0000\u0000\u0000\u0001\u0000\u0000",
  "uploads/test.txt": "Some Data",
  "uploads/test2.txt": "Some Other Data"

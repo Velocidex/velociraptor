@@ -2,7 +2,6 @@ package utils
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"sync"
 )
@@ -50,8 +49,6 @@ func Copy(ctx context.Context, dst io.Writer, src io.Reader) (n int, err error) 
 func CopyWithBuffer(ctx context.Context, dst io.Writer,
 	src io.Reader, buff []byte) (n int, err error) {
 	offset := 0
-
-	fmt.Printf("CopyWithBuffer %v\n", len(buff))
 
 	for {
 		select {

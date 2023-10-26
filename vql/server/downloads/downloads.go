@@ -371,7 +371,6 @@ func copyUploadFiles(
 
 	go func() {
 		defer close(output_chan)
-		defer reader.Close()
 		defer pool.Close()
 
 		for row := range reader.Rows(ctx) {
@@ -509,6 +508,11 @@ func copyUploadFiles(
 			}
 
 			pool.copyFile(src, dest, row, expand_sparse, output_chan)
+
+			// Write the row into the upload file immediately so the
+			// rows maintain the same order as the original file. If
+			// an error occurs a second error row will be written.
+			output_chan <- row
 		}
 	}()
 

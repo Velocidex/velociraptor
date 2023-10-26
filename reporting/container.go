@@ -650,6 +650,8 @@ func NewContainerFromWriter(
 		level = 5
 	}
 
+	fd = utils.NewBufferCloser(fd)
+
 	sha_sum := sha256.New()
 
 	result := &Container{

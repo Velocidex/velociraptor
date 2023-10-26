@@ -142,7 +142,7 @@ func (self *TestSuite) TestExportCollectionServerArtifact() {
 // First import a collection from a zip file to create a
 // collection. Then we export the collection back into zip files to
 // test the export functionality.
-func (self *TestSuite) TestExportCollection() {
+func (self *TestSuite) TestExportCollection1() {
 	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 
 	builder := services.ScopeBuilder{
@@ -299,8 +299,6 @@ func (self *TestSuite) TestExportHunt() {
 
 	assert.Equal(self.T(), self.client_id, result.(string))
 
-	time.Sleep(time.Second)
-
 	// Now create a hunt download export.
 	result = (&CreateHuntDownload{}).Call(ctx, scope,
 		ordereddict.NewDict().
@@ -372,8 +370,10 @@ func openZipFile(
 			return nil, err
 		}
 
-		if len(serialized) == 0 {
-			result.Set(f.Name, "")
+		// Either JSON array or JSONL
+		rows, err := utils.ParseJsonToDicts(serialized)
+		if err == nil {
+			result.Set(f.Name, rows)
 			continue
 		}
 
@@ -383,14 +383,6 @@ func openZipFile(
 				result.Set(f.Name, item)
 			}
 			continue
-		}
-
-		if serialized[0] == '[' {
-			rows, err := utils.ParseJsonToDicts(serialized)
-			if err == nil {
-				result.Set(f.Name, rows)
-				continue
-			}
 		}
 
 		result.Set(f.Name, string(serialized))
