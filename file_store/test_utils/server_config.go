@@ -257,7 +257,7 @@ defaults:
 
 services:
   hunt_manager: false
-  hunt_dispatcher: false
+  hunt_dispatcher: true
   stats_collector: false
   server_monitoring: false
   server_artifacts: false

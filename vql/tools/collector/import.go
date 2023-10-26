@@ -122,7 +122,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		return self.importFlow(
 			ctx, scope, config_obj,
 			db, accessor, root, arg.ClientId,
-			arg.Hostname)
+			arg.Hostname, false)
 
 	} else if arg.ImportType == "hunt" {
 		// Check if there is a hunt_info.json. This won't work with
@@ -153,8 +153,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 
 			path := root.Append(item.Name())
 
-			// Get client info_json
-			var client_info *services.ClientInfo
+			client_info := &services.ClientInfo{}
 			err = self.getFile(accessor, path.Append("client_info.json"), client_info)
 			if err != nil {
 				continue
@@ -167,7 +166,8 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 
 			self.importFlow(
 				ctx, scope, config_obj, db,
-				accessor, path, client_info.ClientId, client_info.Hostname)
+				accessor, path, client_info.ClientId, client_info.Hostname, true)
+
 		}
 
 		return hunt_info
@@ -184,15 +184,27 @@ func (self ImportCollectionFunction) importFlow(
 	accessor accessors.FileSystemAccessor,
 	root *accessors.OSPath,
 	client_id string,
-	hostname string) vfilter.Any {
+	hostname string,
+	hunt bool) vfilter.Any {
 
 	var err error
 	collection_context := &flows_proto.ArtifactCollectorContext{}
-	err = self.getFile(accessor, root.Append("collection_context.json"),
-		collection_context)
-	if err != nil || collection_context.SessionId == "" {
-		scope.Log("import_flow: unable to load collection_context: %v", err)
-		return vfilter.Null{}
+	if hunt {
+		flow_details := &api_proto.FlowDetails{}
+		err = self.getFile(accessor, root.Append("collection_context.json"),
+			flow_details)
+		collection_context := flow_details.Context
+		if err != nil || collection_context.SessionId == "" {
+			scope.Log("import_flow: unable to load collection_context: %v", err)
+			return vfilter.Null{}
+		}
+	} else {
+		err = self.getFile(accessor, root.Append("collection_context.json"),
+			collection_context)
+		if err != nil || collection_context.SessionId == "" {
+			scope.Log("import_flow: unable to load collection_context: %v", err)
+			return vfilter.Null{}
+		}
 	}
 
 	if client_id == "auto" || client_id == "" {
@@ -229,11 +241,20 @@ func (self ImportCollectionFunction) importFlow(
 	}
 
 	// Copy the logs results set over.
-	err = self.copyResultSet(ctx, config_obj, scope,
-		accessor, root.Append("log.json"), flow_path_manager.Log())
-	if err != nil {
-		scope.Log("import_flow: %v", err)
-		return vfilter.Null{}
+
+	if hunt {
+		err := self.copyFile(ctx, config_obj, scope,
+			accessor, root.Append("logs.json"), flow_path_manager.Log())
+		if err != nil {
+			return err
+		}
+	} else {
+		err = self.copyResultSet(ctx, config_obj, scope,
+			accessor, root.Append("log.json"), flow_path_manager.Log())
+		if err != nil {
+			scope.Log("import_flow: %v", err)
+			return vfilter.Null{}
+		}
 	}
 
 	// Now Copy the results.
@@ -357,7 +378,7 @@ func (self ImportCollectionFunction) importHunt(
 	}
 
 	err = journal.PushRowsToArtifact(ctx, config_obj,
-		[]*ordereddict.Dict{row}, "System.Hunt.Import",
+		[]*ordereddict.Dict{row}, "System.Flow.Completion",
 		"server", hunt.HuntId)
 	if err != nil {
 		scope.Log("ImportHunt: %v", err)
@@ -445,7 +466,7 @@ func (self ImportCollectionFunction) checkClientIdExists(
 	// Search for an existing client with the same hostname
 	search_resp, err := indexer.SearchClients(ctx, config_obj,
 		&api_proto.SearchClientsRequest{Query: "client:" + client_info.ClientId}, "")
-	if err == nil {
+	if err != nil {
 		return err
 	}
 
@@ -465,7 +486,7 @@ func (self ImportCollectionFunction) checkClientIdExists(
 		Set("hostname", client_info.Hostname).
 		Set("labels", client_info.Labels).
 		Set("os", client_info.OS()).
-		Set("mac_address", client_info.MacAddresses))
+		Set("mac_addresses", client_info.MacAddresses))
 
 	if res == nil {
 		return errors.New("Failed to create new client.")
