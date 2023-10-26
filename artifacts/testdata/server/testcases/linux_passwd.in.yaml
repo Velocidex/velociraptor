@@ -1,0 +1,10 @@
+Queries:
+ - SELECT *
+   FROM Artifact.Linux.Sys.Users(
+      PasswordFile=srcDir + '/artifacts/testdata/files/linux/passwd'
+   )
+
+ - SELECT *
+   FROM Artifact.Linux.Sys.Groups(
+      GroupFile=srcDir + '/artifacts/testdata/files/linux/group'
+   )
