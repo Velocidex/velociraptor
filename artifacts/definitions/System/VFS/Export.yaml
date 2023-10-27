@@ -1,0 +1,21 @@
+name: System.VFS.Export
+description: |
+  Exports parts of the VFS in a server side collection.
+
+type: SERVER
+
+parameters:
+  - name: Components
+    type: json_array
+    description: The top level to recurse from.
+  - name: ClientId
+    description: The client id to apply the artifact on
+
+
+sources:
+  - query: |
+      SELECT Name, OSPath, Size, IsDir,
+             Data.DownloadInfo.flow_id AS FlowId,
+             upload(accessor="vfs", file=OSPath) AS Upload
+      FROM glob(globs="/**", root=Components, accessor="vfs")
+      WHERE NOT IsDir AND flow_id

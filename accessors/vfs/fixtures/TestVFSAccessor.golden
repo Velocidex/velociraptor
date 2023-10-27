@@ -1,0 +1,14 @@
+{
+ "DirectoryListings": [
+  "/vfs_test/C:",
+  "/vfs_test/C:/Windows",
+  "/vfs_test/C:/Windows/File1.txt",
+  "/vfs_test/C:/Windows/System32",
+  "/vfs_test/C:/Windows/System32/File.txt",
+  "/vfs_test/D:"
+ ],
+ "FileContents": {
+  "/vfs_test/C:/Windows/File1.txt": "File in Windows",
+  "/vfs_test/C:/Windows/System32/File.txt": "File in System32"
+ }
+}

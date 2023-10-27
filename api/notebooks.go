@@ -234,11 +234,11 @@ func (self *ApiServer) GetNotebookCell(
 	defer Instrument("GetNotebookCell")()
 
 	if !strings.HasPrefix(in.NotebookId, "N.") {
-		return nil, InvalidStatus("Invalid NoteboookId")
+		return nil, InvalidStatus("Invalid NotebookId")
 	}
 
 	if !strings.HasPrefix(in.CellId, "NC.") {
-		return nil, InvalidStatus("Invalid NoteboookCellId")
+		return nil, InvalidStatus("Invalid NotebookCellId")
 	}
 
 	users := services.GetUserManager()
@@ -279,11 +279,11 @@ func (self *ApiServer) UpdateNotebookCell(
 	defer Instrument("UpdateNotebookCell")()
 
 	if !strings.HasPrefix(in.NotebookId, "N.") {
-		return nil, InvalidStatus("Invalid NoteboookId")
+		return nil, InvalidStatus("Invalid NotebookId")
 	}
 
 	if !strings.HasPrefix(in.CellId, "NC.") {
-		return nil, InvalidStatus("Invalid NoteboookCellId")
+		return nil, InvalidStatus("Invalid NotebookCellId")
 	}
 
 	users := services.GetUserManager()
@@ -327,11 +327,11 @@ func (self *ApiServer) CancelNotebookCell(
 	defer Instrument("CancelNotebookCell")()
 
 	if !strings.HasPrefix(in.NotebookId, "N.") {
-		return nil, InvalidStatus("Invalid NoteboookId")
+		return nil, InvalidStatus("Invalid NotebookId")
 	}
 
 	if !strings.HasPrefix(in.CellId, "NC.") {
-		return nil, InvalidStatus("Invalid NoteboookCellId")
+		return nil, InvalidStatus("Invalid NotebookCellId")
 	}
 
 	users := services.GetUserManager()

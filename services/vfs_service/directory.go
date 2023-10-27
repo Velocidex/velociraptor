@@ -2,6 +2,7 @@ package vfs_service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/proto"
@@ -16,6 +17,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/utils"
+)
+
+var (
+	notAvailableError = errors.New("Not available")
 )
 
 type FileInfoRow struct {
@@ -240,19 +246,29 @@ func (self *VFSService) ListDirectoryFiles(
 		return nil, err
 	}
 
+	if stat.FlowId == "" {
+		return &api_proto.GetTableResponse{}, nil
+	}
+
 	table_request := proto.Clone(in).(*api_proto.GetTableRequest)
 	table_request.Artifact = stat.Artifact
 	if table_request.Artifact == "" {
 		table_request.Artifact = "System.VFS.ListDirectory"
 	}
 
+	if table_request.Type == "" {
+		table_request.Type = "CLIENT"
+	}
+
 	// Transform the table into a subsection of the main table.
 	table_request.StartIdx = stat.StartIdx
 	table_request.EndIdx = stat.EndIdx
+	table_request.FlowId = stat.FlowId
 
 	// Get the table possibly applying any table transformations.
 	result, err := tables.GetTable(ctx, config_obj, table_request)
 	if err != nil {
+		utils.DlvBreak()
 		return nil, err
 	}
 

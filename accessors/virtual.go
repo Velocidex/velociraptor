@@ -167,7 +167,7 @@ type VirtualFilesystemAccessor struct {
 
 func (self VirtualFilesystemAccessor) New(scope vfilter.Scope) (
 	FileSystemAccessor, error) {
-	return VirtualFilesystemAccessor{}, nil
+	return self, nil
 }
 
 func (self VirtualFilesystemAccessor) ParsePath(path string) (*OSPath, error) {
@@ -284,6 +284,7 @@ func (self *VirtualFilesystemAccessor) SetVirtualFileInfo(
 
 func NewVirtualFilesystemAccessor(root_path *OSPath) *VirtualFilesystemAccessor {
 	return &VirtualFilesystemAccessor{
+		root_path: root_path,
 		root: directory_node{
 			file_info: &VirtualFileInfo{
 				Path:   root_path,

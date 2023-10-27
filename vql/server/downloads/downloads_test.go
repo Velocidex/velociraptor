@@ -48,6 +48,7 @@ func (self *TestSuite) SetupTest() {
 	self.ConfigObj.Services.HuntDispatcher = true
 	self.ConfigObj.Services.HuntManager = true
 	self.ConfigObj.Services.ServerArtifacts = true
+	self.ConfigObj.Services.VfsService = true
 
 	self.LoadArtifactsIntoConfig([]string{`
 name: Custom.TestArtifactUpload
@@ -99,7 +100,7 @@ func (self *TestSuite) TestExportCollectionServerArtifact() {
 	assert.NoError(self.T(), err)
 
 	// Wait here until the collection is completed.
-	vtesting.WaitUntil(time.Second*50, self.T(), func() bool {
+	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
 		flow, err := launcher.GetFlowDetails(self.Ctx, self.ConfigObj, "server", flow_id)
 		assert.NoError(self.T(), err)
 
