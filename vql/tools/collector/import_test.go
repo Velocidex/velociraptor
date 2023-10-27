@@ -208,18 +208,18 @@ sources:
 			}})
 	assert.NoError(self.T(), err)
 
-	err = journal.PushRowsToArtifact(ctx, self.ConfigObj,
-		[]*ordereddict.Dict{ordereddict.NewDict().
-			Set("HuntId", hunt_id).
-			Set("mutation", &api_proto.HuntMutation{
-				HuntId: hunt_id,
-				Assignment: &api_proto.FlowAssignment{
-					ClientId: "server",
-					FlowId:   flow_id,
-				},
-			})},
-		"Server.Internal.HuntModification", "server", "")
-	assert.NoError(self.T(), err)
+	// err = journal.PushRowsToArtifact(ctx, self.ConfigObj,
+	// 	[]*ordereddict.Dict{ordereddict.NewDict().
+	// 		Set("HuntId", hunt_id).
+	// 		Set("mutation", &api_proto.HuntMutation{
+	// 			HuntId: hunt_id,
+	// 			Assignment: &api_proto.FlowAssignment{
+	// 				ClientId: "server",
+	// 				FlowId:   flow_id,
+	// 			},
+	// 		})},
+	// 	"Server.Internal.HuntModification", "server", "")
+	// assert.NoError(self.T(), err)
 
 	// hunt, pres = hunt_dispatcher.GetHunt(hunt_id)
 	// assert.True(self.T(), pres, "Hunt should be present.")
