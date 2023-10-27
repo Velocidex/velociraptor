@@ -260,7 +260,7 @@ services:
   hunt_dispatcher: true
   stats_collector: false
   server_monitoring: false
-  server_artifacts: false
+  server_artifacts: true
   dyn_dns: false
   interrogation: false
   sanity_checker: false

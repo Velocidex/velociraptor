@@ -8,6 +8,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/flows/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -149,6 +150,9 @@ sources:
 	ctx := self.Ctx
 	scope := manager.BuildScope(builder)
 
+	journal, _ := services.GetJournal(self.ConfigObj)
+	assert.NotEmpty(self.T(), journal)
+
 	hunt_id, err := hunt_dispatcher.CreateHunt(
 		self.Ctx, self.ConfigObj, acl_manager, request)
 
@@ -157,34 +161,73 @@ sources:
 	hunt, pres := hunt_dispatcher.GetHunt(hunt_id)
 	assert.True(self.T(), pres, "Hunt should be present.")
 
-	// Start the hunt.
-	hunt.State = api_proto.Hunt_RUNNING
-	err = hunt_dispatcher.ModifyHunt(self.Ctx, self.ConfigObj, hunt, hunt.Creator)
-	assert.NoError(self.T(), err, "Failed to start hunt.")
+	// flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx, self.ConfigObj,
+	// 	acl_manager, repository, &flows_proto.ArtifactCollectorArgs{
+	// 		Artifacts: []string{"TestArtifact", "AnotherTestArtifact"},
+	// 		ClientId:  "server",
+	// 	}, utils.SyncCompleter)
+	// assert.NoError(self.T(), err)
 
-	flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx, self.ConfigObj,
-		acl_manager, repository, &flows_proto.ArtifactCollectorArgs{
+	// // Wait here until the collection is completed.
+	// vtesting.WaitUntil(time.Second*50, self.T(), func() bool {
+	// 	flow, err := launcher.GetFlowDetails(self.Ctx, self.ConfigObj, "server", flow_id)
+	// 	assert.NoError(self.T(), err)
+
+	// 	return flow.Context.State == flows_proto.ArtifactCollectorContext_FINISHED
+	// })
+
+	flow_id, err := launcher.WriteArtifactCollectionRecord(
+		ctx, self.ConfigObj, &flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact", "AnotherTestArtifact"},
 			ClientId:  "server",
-		}, utils.SyncCompleter)
+		}, hunt.StartRequest.CompiledCollectorArgs,
+		func(task *crypto_proto.VeloMessage) {
+			client_manager, err := services.GetClientInfoManager(self.ConfigObj)
+			if err != nil {
+				return
+			}
+
+			// Queue and notify the client about the new tasks
+			client_manager.QueueMessageForClient(
+				ctx, "server", task,
+				services.NOTIFY_CLIENT, utils.BackgroundWriter)
+		})
 	assert.NoError(self.T(), err)
 
-	// Wait here until the collection is completed.
-	vtesting.WaitUntil(time.Second*50, self.T(), func() bool {
-		flow, err := launcher.GetFlowDetails(self.Ctx, self.ConfigObj, "server", flow_id)
-		assert.NoError(self.T(), err)
-
-		return flow.Context.State == flows_proto.ArtifactCollectorContext_FINISHED
-	})
-
-	err = hunt_dispatcher.MutateHunt(ctx, self.ConfigObj,
-		&api_proto.HuntMutation{
-			HuntId: hunt_id,
-			Assignment: &api_proto.FlowAssignment{
-				ClientId: "server",
-				FlowId:   flow_id,
-			}})
+	flow, err := launcher.GetFlowDetails(self.Ctx, self.ConfigObj, "server", flow_id)
 	assert.NoError(self.T(), err)
+
+	assert.ObjectsAreEqual(flows_proto.ArtifactCollectorContext_FINISHED, flow.Context.State)
+
+	// err = hunt_dispatcher.MutateHunt(ctx, self.ConfigObj,
+	// 	&api_proto.HuntMutation{
+	// 		HuntId: hunt_id,
+	// 		Assignment: &api_proto.FlowAssignment{
+	// 			ClientId: "server",
+	// 			FlowId:   flow_id,
+	// 		}})
+	// assert.NoError(self.T(), err)
+
+	err = journal.PushRowsToArtifact(ctx, self.ConfigObj,
+		[]*ordereddict.Dict{ordereddict.NewDict().
+			Set("HuntId", hunt_id).
+			Set("mutation", &api_proto.HuntMutation{
+				HuntId: hunt_id,
+				Assignment: &api_proto.FlowAssignment{
+					ClientId: "server",
+					FlowId:   flow_id,
+				},
+			})},
+		"Server.Internal.HuntModification", "server", "")
+	assert.NoError(self.T(), err)
+
+	// hunt, pres = hunt_dispatcher.GetHunt(hunt_id)
+	// assert.True(self.T(), pres, "Hunt should be present.")
+
+	// // Start the hunt.
+	// hunt.State = api_proto.Hunt_RUNNING
+	// err = hunt_dispatcher.ModifyHunt(self.Ctx, self.ConfigObj, hunt, hunt.Creator)
+	// assert.NoError(self.T(), err, "Failed to start hunt.")
 
 	// Wait here until the collection is completed.
 	vtesting.WaitUntil(time.Second*100, self.T(), func() bool {
