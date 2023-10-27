@@ -1,4 +1,4 @@
-package collector
+package collector_test
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/flows/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -17,6 +16,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/server/downloads"
+	"www.velocidex.com/golang/velociraptor/vql/server/hunts"
+	"www.velocidex.com/golang/velociraptor/vql/tools/collector"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
 	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
@@ -45,7 +46,7 @@ func (self *TestSuite) TestImportCollection() {
 	import_file_path, err := filepath.Abs("fixtures/import.zip")
 	assert.NoError(self.T(), err)
 
-	result := ImportCollectionFunction{}.Call(ctx, scope,
+	result := collector.ImportCollectionFunction{}.Call(ctx, scope,
 		ordereddict.NewDict().
 			Set("client_id", "auto").
 			Set("hostname", "MyNewHost").
@@ -75,7 +76,7 @@ func (self *TestSuite) TestImportCollection() {
 	// Importing the collection again and providing the same host name
 	// will reuse the client id
 
-	result2 := ImportCollectionFunction{}.Call(ctx, scope,
+	result2 := collector.ImportCollectionFunction{}.Call(ctx, scope,
 		ordereddict.NewDict().
 			Set("client_id", "auto").
 			Set("hostname", "MyNewHost").
@@ -161,73 +162,32 @@ sources:
 	hunt, pres := hunt_dispatcher.GetHunt(hunt_id)
 	assert.True(self.T(), pres, "Hunt should be present.")
 
-	// flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx, self.ConfigObj,
-	// 	acl_manager, repository, &flows_proto.ArtifactCollectorArgs{
-	// 		Artifacts: []string{"TestArtifact", "AnotherTestArtifact"},
-	// 		ClientId:  "server",
-	// 	}, utils.SyncCompleter)
-	// assert.NoError(self.T(), err)
-
-	// // Wait here until the collection is completed.
-	// vtesting.WaitUntil(time.Second*50, self.T(), func() bool {
-	// 	flow, err := launcher.GetFlowDetails(self.Ctx, self.ConfigObj, "server", flow_id)
-	// 	assert.NoError(self.T(), err)
-
-	// 	return flow.Context.State == flows_proto.ArtifactCollectorContext_FINISHED
-	// })
-
-	flow_id, err := launcher.WriteArtifactCollectionRecord(
-		ctx, self.ConfigObj, &flows_proto.ArtifactCollectorArgs{
+	flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx, self.ConfigObj,
+		acl_manager, repository, &flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact", "AnotherTestArtifact"},
 			ClientId:  "server",
-		}, hunt.StartRequest.CompiledCollectorArgs,
-		func(task *crypto_proto.VeloMessage) {
-			client_manager, err := services.GetClientInfoManager(self.ConfigObj)
-			if err != nil {
-				return
-			}
-
-			// Queue and notify the client about the new tasks
-			client_manager.QueueMessageForClient(
-				ctx, "server", task,
-				services.NOTIFY_CLIENT, utils.BackgroundWriter)
-		})
+		}, utils.SyncCompleter)
 	assert.NoError(self.T(), err)
+
+	// Wait here until the collection is completed.
+	vtesting.WaitUntil(time.Second*50, self.T(), func() bool {
+		flow, err := launcher.GetFlowDetails(self.Ctx, self.ConfigObj, "server", flow_id)
+		assert.NoError(self.T(), err)
+
+		return flow.Context.State == flows_proto.ArtifactCollectorContext_FINISHED
+	})
 
 	flow, err := launcher.GetFlowDetails(self.Ctx, self.ConfigObj, "server", flow_id)
 	assert.NoError(self.T(), err)
 
 	assert.ObjectsAreEqual(flows_proto.ArtifactCollectorContext_FINISHED, flow.Context.State)
 
-	err = hunt_dispatcher.MutateHunt(ctx, self.ConfigObj,
-		&api_proto.HuntMutation{
-			HuntId: hunt_id,
-			Assignment: &api_proto.FlowAssignment{
-				ClientId: "server",
-				FlowId:   flow_id,
-			}})
-	assert.NoError(self.T(), err)
-
-	// err = journal.PushRowsToArtifact(ctx, self.ConfigObj,
-	// 	[]*ordereddict.Dict{ordereddict.NewDict().
-	// 		Set("HuntId", hunt_id).
-	// 		Set("mutation", &api_proto.HuntMutation{
-	// 			HuntId: hunt_id,
-	// 			Assignment: &api_proto.FlowAssignment{
-	// 				ClientId: "server",
-	// 				FlowId:   flow_id,
-	// 			},
-	// 		})},
-	// 	"Server.Internal.HuntModification", "server", "")
-	// assert.NoError(self.T(), err)
-
-	// hunt, pres = hunt_dispatcher.GetHunt(hunt_id)
-	// assert.True(self.T(), pres, "Hunt should be present.")
-
-	// // Start the hunt.
-	// hunt.State = api_proto.Hunt_RUNNING
-	// err = hunt_dispatcher.ModifyHunt(self.Ctx, self.ConfigObj, hunt, hunt.Creator)
-	// assert.NoError(self.T(), err, "Failed to start hunt.")
+	flow_update := (&hunts.AddToHuntFunction{}).Call(
+		ctx, scope, ordereddict.NewDict().
+			Set("hunt_id", hunt_id).
+			Set("client_id", "server").
+			Set("flow_id", flow_id))
+	assert.NotEmpty(self.T(), flow_update)
 
 	// Wait here until the collection is completed.
 	vtesting.WaitUntil(time.Second*100, self.T(), func() bool {
@@ -251,7 +211,7 @@ sources:
 	download_pathspec := result.(path_specs.FSPathSpec)
 	assert.NotEmpty(self.T(), download_pathspec)
 
-	imported_hunt := (&ImportCollectionFunction{}).Call(ctx, scope, ordereddict.NewDict().
+	imported_hunt := (&collector.ImportCollectionFunction{}).Call(ctx, scope, ordereddict.NewDict().
 		Set("file_path", download_pathspec))
 	assert.IsType(self.T(), &api_proto.Hunt{}, imported_hunt)
 }

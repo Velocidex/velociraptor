@@ -1,4 +1,4 @@
-package collector
+package collector_test
 
 import (
 	"context"
@@ -36,10 +36,11 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/networking"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/csv"
+	"www.velocidex.com/golang/velociraptor/vql/tools/collector"
 )
 
 var (
-	simpleCollectorArgs = &CollectPluginArgs{
+	simpleCollectorArgs = &collector.CollectPluginArgs{
 		Artifacts: []string{"CollectionWithTypes"},
 		Args: ordereddict.NewDict().
 			Set("CollectionWithTypes", ordereddict.NewDict().
@@ -187,8 +188,8 @@ func (self *TestSuite) SetupTest() {
 		"../../../artifacts/definitions/Reporting/Default.yaml",
 	)
 
-	Clock = utils.NewMockClock(time.Unix(1602103388, 0))
-	reporting.Clock = Clock
+	collector.Clock = utils.NewMockClock(time.Unix(1602103388, 0))
+	reporting.Clock = collector.Clock
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 	launcher.SetFlowIdForTests("F.1234")
@@ -225,7 +226,7 @@ func (self *TestSuite) TestCollectionWithArtifacts() {
 	additionalArtifactCollectorArgs.Set("report", report_file.Name())
 
 	results := []vfilter.Row{}
-	for row := range (CollectPlugin{}).Call(context.Background(),
+	for row := range (collector.CollectPlugin{}).Call(context.Background(),
 		scope, additionalArtifactCollectorArgs) {
 		results = append(results, row)
 	}
@@ -262,7 +263,7 @@ func (self *TestSuite) TestCollectionWithTypes() {
 		Set("output", output_file.Name()).
 		Set("args", simpleCollectorArgs.Args)
 
-	for row := range (CollectPlugin{}).Call(context.Background(),
+	for row := range (collector.CollectPlugin{}).Call(context.Background(),
 		scope, args) {
 		results = append(results, row)
 	}
@@ -298,7 +299,7 @@ func (self *TestSuite) TestCollectionWithUpload() {
 	// Set the output file.
 	uploadArtifactCollectorArgs.Set("output", output_file.Name())
 
-	for row := range (CollectPlugin{}).Call(context.Background(),
+	for row := range (collector.CollectPlugin{}).Call(context.Background(),
 		scope, uploadArtifactCollectorArgs) {
 		results = append(results, row)
 	}
@@ -309,7 +310,7 @@ func (self *TestSuite) TestCollectionWithUpload() {
 	golden := ordereddict.NewDict().
 		Set("zip_contents", zip_contents)
 
-	import_func := ImportCollectionFunction{}
+	import_func := collector.ImportCollectionFunction{}
 	result := import_func.Call(self.Ctx, scope,
 		ordereddict.NewDict().
 			Set("client_id", "C.30b949dd33e1330a").
