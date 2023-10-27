@@ -301,7 +301,7 @@ func downloadFlowToZip(
 	if err == nil {
 		err = zip_writer.WriteJSON(
 			paths.ZipPathFromFSPathSpec(prefix.AddChild("collection_context")),
-			flow_details)
+			flow_details.Context)
 		if err != nil {
 			return err
 		}

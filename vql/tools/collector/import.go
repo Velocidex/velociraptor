@@ -189,22 +189,12 @@ func (self ImportCollectionFunction) importFlow(
 
 	var err error
 	collection_context := &flows_proto.ArtifactCollectorContext{}
-	if hunt {
-		flow_details := &api_proto.FlowDetails{}
-		err = self.getFile(accessor, root.Append("collection_context.json"),
-			flow_details)
-		collection_context := flow_details.Context
-		if err != nil || collection_context.SessionId == "" {
-			scope.Log("import_flow: unable to load collection_context: %v", err)
-			return vfilter.Null{}
-		}
-	} else {
-		err = self.getFile(accessor, root.Append("collection_context.json"),
-			collection_context)
-		if err != nil || collection_context.SessionId == "" {
-			scope.Log("import_flow: unable to load collection_context: %v", err)
-			return vfilter.Null{}
-		}
+
+	err = self.getFile(accessor, root.Append("collection_context.json"),
+		collection_context)
+	if err != nil || collection_context.SessionId == "" {
+		scope.Log("import_flow: unable to load collection_context: %v", err)
+		return vfilter.Null{}
 	}
 
 	if client_id == "auto" || client_id == "" {
