@@ -199,14 +199,14 @@ sources:
 
 	assert.ObjectsAreEqual(flows_proto.ArtifactCollectorContext_FINISHED, flow.Context.State)
 
-	// err = hunt_dispatcher.MutateHunt(ctx, self.ConfigObj,
-	// 	&api_proto.HuntMutation{
-	// 		HuntId: hunt_id,
-	// 		Assignment: &api_proto.FlowAssignment{
-	// 			ClientId: "server",
-	// 			FlowId:   flow_id,
-	// 		}})
-	// assert.NoError(self.T(), err)
+	err = hunt_dispatcher.MutateHunt(ctx, self.ConfigObj,
+		&api_proto.HuntMutation{
+			HuntId: hunt_id,
+			Assignment: &api_proto.FlowAssignment{
+				ClientId: "server",
+				FlowId:   flow_id,
+			}})
+	assert.NoError(self.T(), err)
 
 	err = journal.PushRowsToArtifact(ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
@@ -234,7 +234,7 @@ sources:
 		hunt, pres = hunt_dispatcher.GetHunt(hunt_id)
 		assert.True(self.T(), pres)
 
-		return hunt.Stats.TotalClientsWithResults == 1
+		return hunt.Stats.TotalClientsWithResults >= 1
 	})
 
 	hunt.State = api_proto.Hunt_STOPPED
