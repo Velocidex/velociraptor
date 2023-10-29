@@ -236,7 +236,14 @@ func createDownloadFile(
 		// Will also close the underlying fd.
 		defer zip_writer.Close()
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*600)
+		timeout := int64(600)
+		if config_obj.Defaults != nil &&
+			config_obj.Defaults.ExportMaxTimeoutSec > 0 {
+			timeout = config_obj.Defaults.ExportMaxTimeoutSec
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(),
+			time.Second*time.Duration(timeout))
 		defer cancel()
 
 		err := downloadFlowToZip(ctx, scope, config_obj, format,
@@ -746,8 +753,14 @@ func createHuntDownloadFile(
 		// Will also close the underlying fd.
 		defer zip_writer.Close()
 
-		// Allow one hour to write the zip
-		sub_ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
+		timeout := int64(3600)
+		if config_obj.Defaults != nil &&
+			config_obj.Defaults.ExportMaxTimeoutSec > 0 {
+			timeout = config_obj.Defaults.ExportMaxTimeoutSec
+		}
+
+		sub_ctx, cancel := context.WithTimeout(context.Background(),
+			time.Duration(timeout)*time.Second)
 		defer cancel()
 
 		err = generateCombinedResults(

@@ -63,7 +63,7 @@ require (
 	github.com/mitchellh/panicwrap v1.0.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/oschwald/maxminddb-golang v1.8.0
-	github.com/pkg/sftp v1.13.1
+	github.com/pkg/sftp v1.13.6
 	github.com/prometheus/client_golang v1.15.1
 	github.com/prometheus/client_model v0.4.0
 	github.com/qri-io/starlib v0.5.0
