@@ -486,6 +486,7 @@ func send_client_messages(server_obj *Server) http.Handler {
 		message_info, err := server_obj.Decrypt(req.Context(), body)
 		if err != nil {
 			// Just plain reject with a 403.
+			server_obj.Debug("Rejecting request from %v: %v", req.RemoteAddr, err)
 			http.Error(w, "", http.StatusForbidden)
 			return
 		}

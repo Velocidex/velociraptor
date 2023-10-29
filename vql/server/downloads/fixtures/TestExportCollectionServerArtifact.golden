@@ -127,6 +127,7 @@
      "collections",
      "F.1234",
      "uploads",
+     "data",
      "test.txt"
     ]
    },
@@ -142,6 +143,7 @@
      "collections",
      "F.1234",
      "uploads",
+     "data",
      "test2.txt"
     ]
    }
@@ -154,6 +156,7 @@
    "vfs_path": "/test.txt",
    "_Components": [
     "uploads",
+    "data",
     "test.txt"
    ],
    "file_size": 9,
@@ -165,6 +168,7 @@
    "vfs_path": "/test2.txt",
    "_Components": [
     "uploads",
+    "data",
     "test2.txt"
    ],
    "file_size": 15,
@@ -172,6 +176,6 @@
   }
  ],
  "uploads.json.index": "\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0000\u0000\u0000\u0000\u0001\u0000\u0000",
- "uploads/test.txt": "Some Data",
- "uploads/test2.txt": "Some Other Data"
+ "uploads/data/test.txt": "Some Data",
+ "uploads/data/test2.txt": "Some Other Data"
 }
