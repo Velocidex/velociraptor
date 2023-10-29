@@ -1,6 +1,7 @@
 package vfs
 
 import (
+	"fmt"
 	"sort"
 	"testing"
 	"time"
@@ -119,7 +120,7 @@ func (self *TestSuite) TestVFSAccessor() {
 
 	time.Sleep(time.Second)
 
-	scope.Log("Starting collections System.VFS.ListDirectory System.VFS.DownloadFile")
+	fmt.Printf("Starting collections System.VFS.ListDirectory System.VFS.DownloadFile")
 
 	flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx, self.ConfigObj,
 		acl_manager, repository, &flows_proto.ArtifactCollectorArgs{
