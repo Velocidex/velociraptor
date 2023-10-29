@@ -257,10 +257,10 @@ defaults:
 
 services:
   hunt_manager: false
-  hunt_dispatcher: true
+  hunt_dispatcher: false
   stats_collector: false
   server_monitoring: false
-  server_artifacts: true
+  server_artifacts: false
   dyn_dns: false
   interrogation: false
   sanity_checker: false

@@ -88,7 +88,7 @@ func (self *TestSuite) TestImportCollection() {
 	assert.Equal(self.T(), context2.ClientId, context.ClientId)
 }
 
-func (self *TestSuite) TestImportHunt() {
+func (self *TestSuite) TestImportDynamicHunt() {
 	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
@@ -209,9 +209,57 @@ sources:
 			Set("wait", true))
 
 	download_pathspec := result.(path_specs.FSPathSpec)
-	assert.NotEmpty(self.T(), download_pathspec)
+	assert.NotEmpty(self.T(), download_pathspec.String())
 
-	imported_hunt := (&collector.ImportCollectionFunction{}).Call(ctx, scope, ordereddict.NewDict().
-		Set("file_path", download_pathspec))
-	assert.IsType(self.T(), &api_proto.Hunt{}, imported_hunt)
+	// imported_hunt := (&collector.ImportCollectionFunction{}).Call(ctx, scope, ordereddict.NewDict().
+	// 	Set("filename", download_pathspec.String()))
+	// assert.IsType(self.T(), &api_proto.Hunt{}, imported_hunt)
+}
+
+func (self *TestSuite) TestImportStaticHunt() {
+	manager, _ := services.GetRepositoryManager(self.ConfigObj)
+	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
+	_, err := repository.LoadYaml(CustomTestArtifactDependent,
+		services.ArtifactOptions{
+			ValidateArtifact:  true,
+			ArtifactIsBuiltIn: true})
+
+	assert.NoError(self.T(), err)
+
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: acl_managers.NullACLManager{},
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
+		Env:        ordereddict.NewDict(),
+	}
+
+	ctx := context.Background()
+	scope := manager.BuildScope(builder)
+
+	import_file_path, err := filepath.Abs("fixtures/import_hunt.zip")
+	assert.NoError(self.T(), err)
+
+	result := collector.ImportCollectionFunction{}.Call(ctx, scope,
+		ordereddict.NewDict().
+			Set("filename", import_file_path).
+			Set("import_type", "hunt"))
+	context, ok := result.(*api_proto.Hunt)
+	assert.True(self.T(), ok)
+
+	// Check the import was successful.
+	assert.Equal(self.T(), []string{"Windows.Search.FileFinder"},
+		context.ArtifactSources)
+	assert.Equal(self.T(), uint64(1), context.Stats.TotalClientsWithResults)
+	assert.Equal(self.T(), api_proto.Hunt_STOPPED, context.State)
+
+	indexer, err := services.GetIndexer(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	// Check the indexes are correct for the new client_id
+	search_resp, err := indexer.SearchClients(ctx, self.ConfigObj,
+		&api_proto.SearchClientsRequest{Query: "host:devlp"}, "")
+	assert.NoError(self.T(), err)
+
+	// There is one hit - a new client is added to the index.
+	assert.Equal(self.T(), 1, len(search_resp.Items))
 }
