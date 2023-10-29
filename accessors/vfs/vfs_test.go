@@ -117,6 +117,8 @@ func (self *TestSuite) TestVFSAccessor() {
 
 	var acl_manager vql_subsystem.ACLManager
 
+	time.Sleep(time.Second)
+
 	flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx, self.ConfigObj,
 		acl_manager, repository, &flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"System.VFS.ListDirectory", "System.VFS.DownloadFile"},
