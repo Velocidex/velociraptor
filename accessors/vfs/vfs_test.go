@@ -164,7 +164,7 @@ func (self *TestSuite) TestVFSAccessor() {
 	assert.NoError(self.T(), err)
 
 	// Wait here until the collection is completed.
-	vtesting.WaitUntil(time.Second*500, self.T(), func() bool {
+	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
 		flow, err := launcher.GetFlowDetails(self.Ctx, self.ConfigObj, "server", flow_id)
 		assert.NoError(self.T(), err)
 		return flow.Context.State == flows_proto.ArtifactCollectorContext_FINISHED
@@ -176,7 +176,7 @@ func (self *TestSuite) TestVFSAccessor() {
 	// test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
 
 	// Wait until the vfs service processes it
-	vtesting.WaitUntil(time.Second*50, self.T(), func() bool {
+	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
 		dir, err := vfs_service.ListDirectoryFiles(self.Ctx, self.ConfigObj,
 			&api_proto.GetTableRequest{
 				Rows:          10,
