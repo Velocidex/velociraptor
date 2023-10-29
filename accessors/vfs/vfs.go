@@ -7,6 +7,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -29,6 +30,12 @@ type VFSFileSystemAccessor struct {
 
 func (self VFSFileSystemAccessor) New(
 	scope vfilter.Scope) (accessors.FileSystemAccessor, error) {
+
+	// Check we have permission to open files.
+	err := vql_subsystem.CheckAccess(scope, acls.READ_RESULTS)
+	if err != nil {
+		return nil, err
+	}
 
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
