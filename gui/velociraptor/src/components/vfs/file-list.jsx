@@ -18,6 +18,9 @@ import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import VeloForm from "../forms/form.jsx";
+import FlowLink from "../flows/flow-link.jsx";
+import { runArtifact } from "../flows/utils.jsx";
 
 import T from '../i8n/i8n.jsx';
 
@@ -65,6 +68,78 @@ class DownloadAllDialog extends Component {
     }
 }
 
+class ExportDialog extends Component {
+    static propTypes = {
+        client: PropTypes.object,
+        node: PropTypes.object,
+        onCancel: PropTypes.func.isRequired,
+        onClose: PropTypes.func.isRequired,
+    }
+
+    state = {
+        glob: "/**",
+        flow_id: "",
+    }
+
+    componentDidMount = () => {
+        this.source = CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel();
+    }
+
+    doIt = ()=>{
+        let client_id = this.props.client && this.props.client.client_id;
+        runArtifact("server", "System.VFS.Export", {
+            Components: JSON.stringify(this.props.node.path),
+            ClientId: client_id,
+            FileGlob: this.state.glob || "/**",
+        }, (resp)=>{
+            this.setState({flow_id: resp.session_id});
+        }, this.source.token);
+    }
+
+    render() {
+        let client_id = this.props.client && this.props.client.client_id;
+        let path = "/" + this.props.node.path.join("/");
+        return (
+            <Modal show={true} onHide={this.props.onCancel}>
+              <Modal.Header closeButton>
+                <Modal.Title>{T("Export VFS Files")}</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                {T("Collect files from the VFS starting from ")}
+                <div className="vfspath">{path}</div>
+                { this.state.flow_id ?
+                  <FlowLink
+                    flow_id={this.state.flow_id}
+                    client_id="server"
+                  />
+                  :
+                  <VeloForm
+                    value={this.state.glob}
+                    setValue={x=>this.setState({glob: x})}
+                    param={{name: T("Glob"), description: T("Export file glob")}}
+                  />
+                }
+              </Modal.Body>
+              <Modal.Footer>
+                <Button variant="secondary" onClick={this.props.onCancel}>
+                  {T("Close")}
+                </Button>
+                { !this.state.flow_id &&
+                  <Button variant="primary" onClick={this.doIt}>
+                    {T("Yes do it!")}
+                  </Button>
+                }
+              </Modal.Footer>
+            </Modal>
+        );
+    }
+}
+
+
 function DownloadContextMenu({children, value}) {
     const { show } = useContextMenu({
         id: "download-menu-id",
@@ -100,6 +175,7 @@ class VeloFileList extends Component {
 
         // Manage recursive VFS downloads
         showDownloadAllDialog: false,
+        showExportDialog: false,
         lastRecursiveDownloadFlowId: null,
         lastRecursiveDownloadData: {},
         selectedFile: "",
@@ -358,6 +434,7 @@ class VeloFileList extends Component {
         };
 
         let toolbar = (
+            <>
               <ButtonGroup className="float-right vfs-toolbar">
                 { this.shouldSpinSyncDir() ?
                   <Button data-tooltip={T("Currently refreshing")}
@@ -444,9 +521,17 @@ class VeloFileList extends Component {
                         className="btn-tooltip"
                         variant="default"
                         onClick={this.props.collapseToggle}>
-                    <FontAwesomeIcon icon="expand"/>
+                  <FontAwesomeIcon icon="expand"/>
+                </Button>
+                <Button data-tooltip={T("Prepare Download")}
+                        data-position="left"
+                        className="btn-tooltip"
+                        onClick={()=>this.setState({showExportDialog: true})}
+                        variant="default">
+                  <FontAwesomeIcon icon="file-export" />
                 </Button>
               </ButtonGroup>
+            </>
         );
 
         if (!this.props.node || !this.props.node.flow_id) {
@@ -576,6 +661,13 @@ class VeloFileList extends Component {
                   client={this.props.client}
                   onCancel={()=>this.setState({showDownloadAllDialog: false})}
                   onClose={this.startRecursiveVfsDownloadOperation}
+                />}
+              { this.state.showExportDialog &&
+                <ExportDialog
+                  node={this.props.node}
+                  client={this.props.client}
+                  onCancel={()=>this.setState({showExportDialog: false})}
+                  onClose={()=>this.setState({showExportDialog: false})}
                 />}
               <div className="fill-parent no-margins selectable">
                 <VeloPagedTable
