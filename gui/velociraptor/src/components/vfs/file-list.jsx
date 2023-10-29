@@ -20,7 +20,6 @@ import {CancelToken} from 'axios';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import VeloForm from "../forms/form.jsx";
 import FlowLink from "../flows/flow-link.jsx";
-import { runArtifact } from "../flows/utils.jsx";
 
 import T from '../i8n/i8n.jsx';
 
@@ -91,13 +90,23 @@ class ExportDialog extends Component {
 
     doIt = ()=>{
         let client_id = this.props.client && this.props.client.client_id;
-        runArtifact("server", "System.VFS.Export", {
-            Components: JSON.stringify(this.props.node.path),
-            ClientId: client_id,
-            FileGlob: this.state.glob || "/**",
-        }, (resp)=>{
-            this.setState({flow_id: resp.session_id});
-        }, this.source.token);
+        api.post("v1/CollectArtifact", {
+            client_id: "server",
+            artifacts: ["System.VFS.Export"],
+            specs: [{artifact: "System.VFS.Export",
+                     parameters: {env: [
+                         {key: "Components",
+                          value: JSON.stringify(this.props.node.path)},
+                         {key: "ClientId", value: client_id},
+                         {key: "FileGlob", value: this.state.glob || "/**"},
+                     ]}}],
+            max_upload_bytes: 1000000000000,
+        }, this.source.token).then((resp)=>{
+            console.log(resp);
+            if(resp.data) {
+                this.setState({flow_id: resp.data.flow_id});
+            };
+        });
     }
 
     render() {
