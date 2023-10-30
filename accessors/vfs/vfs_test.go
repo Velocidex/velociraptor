@@ -1,7 +1,6 @@
 package vfs
 
 import (
-	"fmt"
 	"sort"
 	"testing"
 	"time"
@@ -118,9 +117,7 @@ func (self *TestSuite) TestVFSAccessor() {
 
 	var acl_manager vql_subsystem.ACLManager
 
-	time.Sleep(time.Second)
-
-	fmt.Printf("Starting collections System.VFS.ListDirectory System.VFS.DownloadFile")
+	time.Sleep(5 * time.Second)
 
 	flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx, self.ConfigObj,
 		acl_manager, repository, &flows_proto.ArtifactCollectorArgs{
@@ -172,7 +169,6 @@ func (self *TestSuite) TestVFSAccessor() {
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
 		flow, err := launcher.GetFlowDetails(self.Ctx, self.ConfigObj, "server", flow_id)
 		assert.NoError(self.T(), err)
-		json.Dump(flow)
 		return flow.Context.State == flows_proto.ArtifactCollectorContext_FINISHED
 	})
 

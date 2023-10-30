@@ -146,8 +146,6 @@ func NewNotificationService(
 				if !ok {
 					continue
 				}
-				fmt.Printf("%v: Got notification for %v\n", time.Now(), target)
-
 				if self.notification_pool != nil {
 					notificationsReceivedCounter.Inc()
 					self.notification_pool.Notify(target)

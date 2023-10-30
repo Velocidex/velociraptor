@@ -20,7 +20,6 @@ func (self *workerJob) Run(ctx context.Context) {
 	defer self.wg.Done()
 
 	records, _ := self.chunk.Parse(0)
-	//fmt.Printf("Chunk has %v records\n", len(records))
 	for _, i := range records {
 		event_map, ok := i.Event.(*ordereddict.Dict)
 		if !ok {

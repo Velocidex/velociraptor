@@ -302,14 +302,6 @@ func NewPagedReader(scope vfilter.Scope,
 		return value.(*AccessorReader), nil
 	}
 
-	/*
-		if accessor != "data" {
-			fmt.Printf("Creating a new reader for %v\n", key)
-		} else {
-			fmt.Printf("Creating a new reader for data (len %v)\n", len(key))
-		}
-	*/
-
 	accessor_obj, err := accessors.GetAccessor(accessor, scope)
 	if err != nil {
 		return nil, err

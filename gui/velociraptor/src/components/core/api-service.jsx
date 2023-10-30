@@ -185,11 +185,18 @@ const get_blob = function(url, params, cancel_token) {
 
         return arrayPromise;
     }).catch(err=>{
-        let data = err.response && err.response.data;
-        if(data) {
-            data.text().then((message)=>_.each(hooks, h=>h("Error: " + message)));
-        }
-        return "";
+        return {
+            error: err,
+            // If callers want to actually report the error they need
+            // to call this.
+            report_error: ()=>{
+                let data = err.response && err.response.data;
+                if(data) {
+                    data.text().then((message)=>_.each(
+                        hooks, h=>h("Error: " + message)));
+                }
+            }
+        };
     });
 };
 

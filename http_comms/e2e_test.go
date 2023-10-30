@@ -169,7 +169,6 @@ func (self *TestSuite) TestServerRotateKeyE2E() {
 	// Stop the receive and send loops to prevent race with direct post
 	comm.SetPause(true)
 
-	//	json.Dump(logging.GetMemoryLogs())
 	logging.ClearMemoryLogs()
 
 	// Now rotate the server keys: First shut down the old server.
