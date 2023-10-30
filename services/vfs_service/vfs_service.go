@@ -214,7 +214,6 @@ func (self *VFSService) ProcessListDirectoryLegacy(
 	flow_id, _ := row.GetString("FlowId")
 	ts, _ := row.GetInt64("_ts")
 
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Debug("VFSService: Processing System.VFS.ListDirectory from %v", client_id)
 
 	path_manager := artifacts.NewArtifactPathManagerWithMode(
