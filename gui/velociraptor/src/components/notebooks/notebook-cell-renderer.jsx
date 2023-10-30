@@ -255,8 +255,6 @@ export default class NotebookCellRenderer extends React.Component {
             let cell = response.data;
             if (!this.state.currently_editing) {
                 this.setState({cell: cell,
-                               local_completions: [],
-                               local_completions_lookup: {},
                                input: cell.input,
                                loading: false});
             }
@@ -317,7 +315,10 @@ export default class NotebookCellRenderer extends React.Component {
         cell.calculating = true;
         cell.messages = [];
 
-        this.setState({cell: cell});
+        this.setState({cell: cell,
+                       local_completions: [],
+                       local_completions_lookup: {},
+                      });
 
         // Reset any inflight calls.
         this.update_source.cancel();
@@ -372,7 +373,13 @@ export default class NotebookCellRenderer extends React.Component {
         cell.calculating = true;
         cell.messages = [];
 
-        this.setState({cell: cell, currently_editing: false});
+        // Clear completions as they will be updated once the cell is
+        // re-calculated.
+        this.setState({cell: cell,
+                       local_completions: [],
+                       currently_editing: false,
+                       local_completions_lookup: {},
+                      });
 
         // Reset any inflight calls.
         this.update_source.cancel();

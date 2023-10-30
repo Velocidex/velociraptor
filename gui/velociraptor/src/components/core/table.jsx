@@ -565,14 +565,23 @@ export function formatColumns(columns, env, column_formatter) {
         case "preview_upload":
         case "upload_preview":
             x.formatter = (cell, row) => {
-                if(!env.client_id && row.ClientId) {
-                    env.client_id = row.ClientId;
+                let new_env = Object.assign({}, env);
+
+                // If the row has a more updated client id and flow id
+                // use them, otherwise use the ones from the query
+                // env. For example when this component is viewed in a
+                // hunt notebook we require the client id and flow id
+                // to be in the table. But when viewed in the client
+                // notebook we can use the client id and flow id from
+                // the notebook env.
+                if(row.ClientId) {
+                    new_env.client_id = row.ClientId;
                 }
-                if(!env.flow_id && row.FlowId) {
-                    env.flow_id = row.FlowId;
+                if(row.FlowId) {
+                    new_env.flow_id = row.FlowId;
                 }
                 return <PreviewUpload
-                         env={env}
+                         env={new_env}
                          upload={cell}/>;
             };
             x.type = null;
