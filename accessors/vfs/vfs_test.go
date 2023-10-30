@@ -1,7 +1,6 @@
 package vfs
 
 import (
-	"fmt"
 	"sort"
 	"testing"
 	"time"
@@ -120,9 +119,6 @@ func (self *TestSuite) TestVFSAccessor() {
 
 	time.Sleep(5 * time.Second)
 
-	fmt.Printf("%v: Starting collections System.VFS.ListDirectory System.VFS.DownloadFile",
-		time.Now())
-
 	flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx, self.ConfigObj,
 		acl_manager, repository, &flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"System.VFS.ListDirectory", "System.VFS.DownloadFile"},
@@ -189,7 +185,6 @@ func (self *TestSuite) TestVFSAccessor() {
 				ClientId:      "server",
 				VfsComponents: []string{"vfs_test", "C:", "Windows"},
 			})
-		json.Dump(dir)
 		if err != nil {
 			return false
 		}

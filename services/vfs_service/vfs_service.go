@@ -197,8 +197,6 @@ func (self *VFSService) ProcessListDirectoryLegacy(
 	basic_flow *flows_proto.ArtifactCollectorContext) {
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("VFSService: Processing Legacy ListDirectory ")
-
 	flow, err := journal.GetFlowFromQueue(ctx, config_obj, row)
 	if err != nil {
 		return
@@ -214,7 +212,7 @@ func (self *VFSService) ProcessListDirectoryLegacy(
 	flow_id, _ := row.GetString("FlowId")
 	ts, _ := row.GetInt64("_ts")
 
-	logger.Debug("VFSService: Processing System.VFS.ListDirectory from %v", client_id)
+	logger.Debug("VFSService: Processing Legacy System.VFS.ListDirectory from %v", client_id)
 
 	path_manager := artifacts.NewArtifactPathManagerWithMode(
 		config_obj, client_id, flow_id, "System.VFS.ListDirectory",

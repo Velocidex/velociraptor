@@ -58,15 +58,6 @@ func NewDictJar(dict *ordereddict.Dict) http.CookieJar {
 	return self
 }
 
-/*
-func (self *DictBasedCookieJar) Cookies(u *url.URL) (cookies []*http.Cookie) {
-	cookies = self.Jar.Cookies(u)
-	fmt.Printf("Cookies for %v are %v\n", u.String(),
-               json.MustMarshalString(cookies))
-	return cookies
-}
-*/
-
 // Intercept calls to SetCookies and copy the cookies to the dict.
 func (self *DictBasedCookieJar) SetCookies(u *url.URL, cookies []*http.Cookie) {
 	key := u.String()

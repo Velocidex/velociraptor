@@ -166,7 +166,6 @@ func (self *RegexParserTestSuite) TestParseRecordsWithRegex() {
 		}
 		result.Set(fmt.Sprintf("%v: %v", idx, test_case.description), rows)
 	}
-	//json.Dump(result)
 	goldie.Assert(self.T(), "TestParseFileWithRegex",
 		json.MustMarshalIndent(result))
 }
