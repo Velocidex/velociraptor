@@ -2295,6 +2295,9 @@
   - name: cookie_jar
     type: ordereddict.Dict
     description: A cookie jar to use if provided. This is a dict of cookie structures.
+  - name: user_agent
+    type: string
+    description: If specified, set a HTTP User-Agent.
   category: plugin
   metadata:
     permissions: COLLECT_SERVER
@@ -6287,6 +6290,9 @@
   - name: skip_verify
     type: bool
     description: Skip TLS Verification
+  - name: user_agent
+    type: string
+    description: If specified, set a HTTP User-Agent.
   category: basic
   metadata:
     permissions: FILESYSTEM_READ

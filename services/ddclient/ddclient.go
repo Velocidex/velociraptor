@@ -200,6 +200,7 @@ func UpdateDDNSRecord(config_obj *config_proto.Config,
 	if err != nil {
 		return err
 	}
+	req.Header.Set("User-Agent", "")
 	req.SetBasicAuth(user, pw)
 
 	resp, err := client.Do(req)

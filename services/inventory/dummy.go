@@ -187,6 +187,7 @@ func (self *Dummy) materializeTool(
 	if err != nil {
 		return err
 	}
+	request.Header.Set("User-Agent", "")
 	res, err := self.Client.Do(request)
 	if err != nil {
 		return err
@@ -223,6 +224,7 @@ func getGithubRelease(ctx context.Context, Client networking.HTTPClient,
 		return "", err
 	}
 
+	request.Header.Set("User-Agent", "")
 	logger.Info("Resolving latest Github release for <green>%v</>", tool.Name)
 	res, err := Client.Do(request)
 	if err != nil {
