@@ -109,14 +109,15 @@ func (self *CrytpoStoreTestSuite) testWriting() {
 }
 
 func (self *CrytpoStoreTestSuite) testReading() {
-	output := filepath.Join(self.tmp_dir, "test.bin")
-
-	fd, err := NewCryptoFileReader(self.Ctx, self.ConfigObj, output)
+	fd, err := os.Open(filepath.Join(self.tmp_dir, "test.bin"))
 	assert.NoError(self.T(), err)
-	defer fd.Close()
+
+	reader, err := NewCryptoFileReader(self.Ctx, self.ConfigObj, fd)
+	assert.NoError(self.T(), err)
+	defer reader.Close()
 
 	var golden []*crypto_proto.VeloMessage
-	for msg := range fd.Parse(self.Ctx) {
+	for msg := range reader.Parse(self.Ctx) {
 		golden = append(golden, msg)
 	}
 

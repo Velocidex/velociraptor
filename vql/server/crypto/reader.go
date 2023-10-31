@@ -3,19 +3,31 @@ package crypto
 import (
 	"context"
 	"encoding/json"
+	"io"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/crypto/storage"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
+type ReaderAtterCloser struct {
+	io.ReaderAt
+	fd utils.Closer
+}
+
+func (self *ReaderAtterCloser) Close() error {
+	return self.fd.Close()
+}
+
 type ReadCryptFilePluginArgs struct {
 	Filename *accessors.OSPath `vfilter:"required,field=filename,doc=Path to the file to write"`
+	Accessor string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
 }
 
 type ReadCryptFilePlugin struct{}
@@ -48,14 +60,33 @@ func (self ReadCryptFilePlugin) Call(
 			return
 		}
 
-		fd, err := storage.NewCryptoFileReader(ctx, config_obj, arg.Filename.String())
+		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 		if err != nil {
-			scope.Log("write_crypto_file: %v", err)
+			scope.Log("read_crypto_file: %v", err)
+			return
+		}
+
+		fd, err := accessor.OpenWithOSPath(arg.Filename)
+		if err != nil {
+			scope.Log("read_crypto_file: Unable to open file %s: %v",
+				arg.Filename.String(), err)
 			return
 		}
 		defer fd.Close()
 
-		for packet := range fd.Parse(ctx) {
+		reader, err := storage.NewCryptoFileReader(ctx,
+			config_obj,
+			&ReaderAtterCloser{
+				ReaderAt: utils.MakeReaderAtter(fd),
+				fd:       fd,
+			})
+		if err != nil {
+			scope.Log("write_crypto_file: %v", err)
+			return
+		}
+		defer reader.Close()
+
+		for packet := range reader.Parse(ctx) {
 			if packet.VQLResponse == nil {
 				continue
 			}

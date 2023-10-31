@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"os"
 	"sync"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -13,10 +12,15 @@ import (
 	crypto_server "www.velocidex.com/golang/velociraptor/crypto/server"
 )
 
+type ReaderAtCloser interface {
+	io.ReaderAt
+	Close() error
+}
+
 type CryptoFileReader struct {
 	config_obj *config_proto.Config
 
-	fd             *os.File
+	fd             ReaderAtCloser
 	header         *Header
 	crypto_manager *crypto_server.ServerCryptoManager
 	client_id      string
@@ -118,11 +122,7 @@ func (self *CryptoFileReader) readPacket(
 func NewCryptoFileReader(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	filename string) (*CryptoFileReader, error) {
-	fd, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
+	fd ReaderAtCloser) (*CryptoFileReader, error) {
 
 	result := &CryptoFileReader{
 		config_obj: config_obj,
@@ -131,7 +131,7 @@ func NewCryptoFileReader(
 	}
 
 	// Try to read the header to see if there is an existing file
-	err = result.header.Read(fd)
+	err := result.header.Read(fd)
 	if err != nil {
 		return nil, err
 	}

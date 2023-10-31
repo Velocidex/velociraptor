@@ -1,0 +1,28 @@
+name: Generic.Client.LocalLogsRetrieve
+description: |
+  Retrives the locally written logs.
+
+type: CLIENT
+
+parameters:
+- name: LocalFilename
+  default: "%TEMP%/locallogs.log"
+  description: The local filename that will be retrieved (Env variables will be expanded).
+
+sources:
+- query: |
+    SELECT upload(file=expand(path=LocalFilename)) AS Upload
+    FROM scope()
+  notebook:
+    - type: vql
+      name: Decrypt logs
+      template: |
+        /*
+        # Retrieved local logs from endpoint
+        */
+
+        SELECT * FROM foreach(row={
+           SELECT * FROM uploads(client_id=ClientId, flow_id=FlowId)
+        }, query={
+           SELECT * FROM read_crypto_file(filename=vfs_path, accessor="fs")
+        })
