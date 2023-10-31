@@ -565,8 +565,12 @@ func send_client_messages(server_obj *Server) http.Handler {
 			// Send a message that there is a client conflict.
 			journal, err := services.GetJournal(org_config_obj)
 			if err == nil {
+				info := ordereddict.NewDict().
+					Set("ClientId", source).
+					Set("RemoteAddr", message_info.RemoteAddr).
+					Set("UserAgent", req.UserAgent())
 				journal.PushRowsToArtifactAsync(ctx, org_config_obj,
-					ordereddict.NewDict().Set("ClientId", source),
+					info,
 					"Server.Internal.ClientConflict")
 			}
 
