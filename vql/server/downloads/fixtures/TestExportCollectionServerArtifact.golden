@@ -36,7 +36,8 @@
      "expected_uploaded_bytes": 24,
      "result_rows": 1
     }
-   ]
+   ],
+   "user_notified": true
   },
   "available_downloads": {
    "files": [

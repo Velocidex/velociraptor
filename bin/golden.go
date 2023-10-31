@@ -173,6 +173,10 @@ func makeCtxWithTimeout(
 func runTest(fixture *testFixture, sm *services.Service,
 	config_obj *config_proto.Config) (string, error) {
 
+	// Freeze the time for consistent golden tests Monday, May 31, 2020 3:28:05 PM
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(1590938885, 10)))
+	defer closer()
+
 	ctx := sm.Ctx
 
 	// Limit each test for maxmimum time

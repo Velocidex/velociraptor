@@ -3,6 +3,7 @@ package storage
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"io"
 
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -74,6 +75,10 @@ type PublicKey struct {
 }
 
 func (self *PublicKey) WriteAt(fd io.WriterAt, offset int64) error {
+	if len(self.Pem) == 0 {
+		return errors.New("Server PEM not initialized")
+	}
+
 	self.Message.Type = PUB_KEY_TYPE
 	self.Message.Start = uint64(offset) + uint64(binary.Size(self.Message))
 	self.Message.Length = uint32(len(self.Pem))

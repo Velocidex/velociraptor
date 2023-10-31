@@ -214,7 +214,7 @@ func (self *CryptoFileWriter) writeCerts() error {
 
 	// Add the pem to the file to rekey the reader. We will write it
 	// at the next available position as indicated by the header.
-	pub_key := PublicKey{Pem: self.server_pem}
+	pub_key := PublicKey{Pem: server_pem}
 	err := pub_key.WriteAt(self.fd, int64(self.header.Next))
 	if err != nil {
 		return err
@@ -240,7 +240,13 @@ func (self *CryptoFileWriter) writeCerts() error {
 
 	self.header.Next = csr.Next
 
-	return self.header.Write(self.fd)
+	err = self.header.Write(self.fd)
+	if err != nil {
+		return err
+	}
+
+	self.written_headers = true
+	return nil
 }
 
 func NewCryptoFileWriter(
