@@ -2933,11 +2933,6 @@
     description: The accessor to use.
   metadata:
     permissions: FILESYSTEM_READ
-- name: sysinfo
-  description: Collect system information on Linux clients
-  type: Function
-  metadata:
-    permissions: MACHINE_STATE
 - name: log
   description: |
     Log the message and return TRUE.
@@ -2997,6 +2992,14 @@
     type: string
     description: Level to log at (DEFAULT, WARN, ERROR, INFO, DEBUG).
   category: basic
+- name: logging
+  description: Watch the logs emitted by the server.
+  type: Plugin
+  args:
+  - name: component
+    type: string
+  metadata:
+    permissions: READ_RESULTS
 - name: logscale_upload
   description: Upload rows to LogScale ingestion server.
   type: Plugin
@@ -3512,6 +3515,8 @@
   description: Collect network information.
   type: Plugin
   category: plugin
+  metadata:
+    permissions: MACHINE_STATE
 - name: notebook_delete
   description: 'Delete a notebook with all its cells. '
   type: Plugin
@@ -3855,6 +3860,10 @@
   - name: messagedb
     type: string
     description: A Message database from https://github.com/Velocidex/evtx-data.
+  - name: workers
+    type: int64
+    description: If specified we use this many workers to parse the file in parallel
+      (default 1).
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
@@ -4704,6 +4713,10 @@
   - name: duration
     type: int64
     description: Duration of samples (default 30 sec)
+  - name: type
+    type: string
+    description: The type of profile (this is a regex of debug output types that will
+      be shown).
   category: plugin
   metadata:
     permissions: MACHINE_STATE
@@ -4829,6 +4842,16 @@
     description: The Y float
     required: true
   category: server
+- name: read_crypto_file
+  description: Read a previously stored encrypted local storage file.
+  type: Plugin
+  args:
+  - name: filename
+    type: accessors.OSPath
+    description: Path to the file to write
+    required: true
+  metadata:
+    permissions: FILESYSTEM_READ
 - name: read_file
   description: Read a file into a string.
   type: Function
@@ -5287,6 +5310,40 @@
   category: server
   metadata:
     permissions: COLLECT_SERVER
+- name: sigma
+  description: Evaluate sigma rules.
+  type: Plugin
+  args:
+  - name: rules
+    type: string
+    description: A list of sigma rules to compile.
+    repeated: true
+    required: true
+  - name: log_sources
+    type: Any
+    description: A log source object as obtained from the sigma_log_sources() VQL
+      function.
+    required: true
+  - name: field_mapping
+    type: ordereddict.Dict
+    description: A dict containing a mapping between a rule field name and a VQL Lambda
+      to get the value of the field from the event.
+  - name: debug
+    type: bool
+    description: If enabled we emit all match objects with description of what would
+      match.
+  - name: rule_filter
+    type: vfilter.Lambda
+    description: If specified we use this callback to filter the rules for inclusion.
+  - name: default_details
+    type: vfilter.Lambda
+    description: If specified we use this callback to determine a details column if
+      the sigma rule does not specify it.
+- name: sigma_log_sources
+  description: Constructs a Log sources object to be used in sigma rules. Call with
+    args being category/product/service and values being stored queries. You may use
+    a * as a placeholder for any of these fields.
+  type: Function
 - name: sleep
   description: Sleep for the specified number of seconds. Always returns true.
   type: Function
@@ -5652,6 +5709,11 @@
     are emitted. Any further queries are ignored.
   type: Plugin
   category: plugin
+- name: sysinfo
+  description: Collect system information on Linux clients
+  type: Function
+  metadata:
+    permissions: MACHINE_STATE
 - name: tempdir
   description: Create a temporary directory. The directory will be removed when the
     query ends.
@@ -6557,6 +6619,10 @@
   - name: messagedb
     type: string
     description: A Message database from https://github.com/Velocidex/evtx-data.
+  - name: workers
+    type: int64
+    description: If specified we use this many workers to parse the file in parallel
+      (default 1).
   category: event
   metadata:
     permissions: FILESYSTEM_READ
@@ -6650,6 +6716,29 @@
     description: Wait this many seconds for events and then quit.
     required: true
   category: event
+- name: write_crypto_file
+  description: Write a query into an encrypted local storage file.
+  type: Plugin
+  args:
+  - name: filename
+    type: accessors.OSPath
+    description: Path to the file to write
+    required: true
+  - name: query
+    type: StoredQuery
+    description: query to write into the file.
+    required: true
+  - name: max_wait
+    type: uint64
+    description: How often to flush the file (default 60 sec).
+  - name: max_rows
+    type: uint64
+    description: How many rows to buffer before writing (default 1000).
+  - name: max_size
+    type: uint64
+    description: When the file grows to this size, truncate it (default 1Gb).
+  metadata:
+    permissions: FILESYSTEM_WRITE
 - name: write_csv
   description: Write a query into a CSV file.
   type: Plugin
@@ -6823,3 +6912,4 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+

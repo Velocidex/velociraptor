@@ -1,7 +1,7 @@
 Client:
   server_urls:
     - https://127.0.0.1:8/
-  ca_certificate:
+  ca_certificate: |
     -----BEGIN CERTIFICATE-----
     MIIDKjCCAhKgAwIBAgIQF6ez0Fecf/sHLEfqHttIqTANBgkqhkiG9w0BAQsFADAa
     MRgwFgYDVQQKEw9WZWxvY2lyYXB0b3IgQ0EwHhcNMjAwNDIzMTQ0MTQxWhcNMjEw
@@ -139,3 +139,34 @@ Frontend:
 Datastore:
   implementation: FileBaseDataStore
   filestore_directory: x:\artifacts\testdata\server
+
+
+Writeback:
+  private_key: |
+    -----BEGIN RSA PRIVATE KEY-----
+    MIIEogIBAAKCAQEArmgftoc6pi/ZMGZO40UIKXlscTXrZWifDtTGsAhXfaKG4xzu
+    LLLIM4Cr+L3ctYgFkWyczXst6Tx6zRyU/l2OqaWmJjhNwXlRwNajx+2ZqTa5zA8r
+    lr+QeYrg19+Acmgb8DkPwp8in/f3tHl7Na8U8GE/3CX4nMsLOzcfAEdH/4IRh3b0
+    3VW361dlBL8Sw2KJ7ECmhujjtlxu7BUDolxxf8bIkFDVt/nhs9xxm2yI+b2xQnsy
+    LDHpsZzSuXj/M38s8u0r59QtJ+ByjFjte+gjGpTc9WlMytTvI/RJUbiEKwOPjBVn
+    BcV/1IZ08KokSfhq4xpVY/GPZVL4CEf/ZOo9rQIDAQABAoIBAFnNUW75yHAjuRBb
+    zYjmVaKNXBIa8l8f9K59TuT7FpmhIxU0I0surzkdqu8ES+3I4R0VMNP49hXfR1fv
+    vKQQ5lFh8uBBI4BYiIjjvCdIp1Ni015H/Wi8sJZ0tPtSoN/HzYLuzremmvyFgK0T
+    1CY7RWvUlz4y6wVI4zqVUkgha+gaZjoQklzamwqKHQwqtFyPVISmSp6XL/zexk95
+    GVUGps4mtsXWUsSnsmlUD5Ola/7hXeEgbD1nj2Znobu9z0y8mDlIhpFpQJwu36KB
+    3o3tqBOXuoukxmsvuW8QxW1xzCICuh8CU5g6kWkyNJOsf4X5Y2js/5Zo9dbLkOrd
+    VEnnV+ECgYEAydqTmbWQyOeUxV9mfD2BbjnzLvxMCCggW/i4TGYhtLweO7UPSiQT
+    /zK0KX317vupUou//vGEcFKLPVu4xchsGrayOVCWEpurqvZfPmg9lWyF2fi8rZK0
+    vOWCw8HIgIbb8EvRCH1v0gNMdzjaf1qLN28W5H/7re4rruQOEuyv29kCgYEA3TC9
+    XFAVSePV/Ky22AdbccVacABmM5RAneot/E7DTrA9uGujUB+9kCPIDsPLCjT2uXj/
+    yP/a210t8KZBtvW+1Ums06titw65lkG7rjapB08vjF1aD0bjPE4R1uapm+CM6dlm
+    oc3Beb8kyA+bXZMpnJT1KtAI3/zrdlZkhQlAL/UCgYAs/uViIUAqGL1oFfERhuBg
+    Qti7w4/rTY6REet7VFT1Je4TXzQOUeaHP7U7fpGg+UZwWSiuWwYrx6q0Pcr9g8Td
+    W5Z1AkrB0SO+U3c9wRzhPzTDNxhQFODnLr4shvj79ZP3h98L5nJTvVqBRRIny3Y3
+    IDNZMlJXHj1smfetLkexWQKBgBgcgAfYEvoDBAiPKz9RTf6Q7NLYuEtXFdQg+vJO
+    A6xIOfIoiZzqWNeljuFNJozuSRbewcM/YLQY7DEXboJrN2o4pcZNIG2kBUcD01mi
+    S7qoPx6l7nNL3ulr+TXb3xFG4RV8xVtN+pEy7OeCDAWfTSHseu030D/aajB0KnD2
+    GTEhAoGARB/E6j/WX+CBPWiF4XLV03F1hEMYY/ZSfijcZQniCNtRQUuIkTMiSv1E
+    LZ5KmiY35bmYwkGOST6sd9T586nNEdIfs2ngcXwRcgPmQU7VaKQdeVnxhEG2xXFG
+    NtyI/STijkpVi99wF39BvXkQGdJuDjAArjGj5kevCpvyveudL5g=
+    -----END RSA PRIVATE KEY-----

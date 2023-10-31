@@ -39,12 +39,15 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/crypto/storage"
+	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -170,6 +173,10 @@ func makeCtxWithTimeout(
 func runTest(fixture *testFixture, sm *services.Service,
 	config_obj *config_proto.Config) (string, error) {
 
+	// Freeze the time for consistent golden tests Monday, May 31, 2020 3:28:05 PM
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(1590938885, 10)))
+	defer closer()
+
 	ctx := sm.Ctx
 
 	// Limit each test for maxmimum time
@@ -178,6 +185,17 @@ func runTest(fixture *testFixture, sm *services.Service,
 		defer cancel()
 
 		ctx = sub_ctx
+	}
+
+	// Set this to emulate a working client.
+	storage.SetCurrentServerPem([]byte(config_obj.Frontend.Certificate))
+
+	writeback_service := writeback.GetWritebackService()
+	writeback_service.LoadWriteback(config_obj)
+
+	err := crypto_utils.VerifyConfig(config_obj)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	// Create an output container.
@@ -201,6 +219,7 @@ func runTest(fixture *testFixture, sm *services.Service,
 		Uploader:   container,
 		Env: ordereddict.NewDict().
 			Set("GoldenOutput", tmpfile.Name()).
+			Set("config", config_obj.Client).
 			Set("_SessionId", "F.Golden").
 			Set(constants.SCOPE_MOCK, &remapping.MockingScopeContext{}),
 	}

@@ -43,5 +43,6 @@
    "log_rows": 4,
    "result_rows": 1
   }
- ]
+ ],
+ "user_notified": true
 }

@@ -9,6 +9,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 type ClientCryptoManager struct {
@@ -30,7 +31,8 @@ func (self *ClientCryptoManager) AddCertificate(
 
 	// Verify that the certificate is signed by the CA.
 	opts := x509.VerifyOptions{
-		Roots: self.caPool,
+		Roots:       self.caPool,
+		CurrentTime: utils.GetTime().Now(),
 	}
 
 	_, err = server_cert.Verify(opts)

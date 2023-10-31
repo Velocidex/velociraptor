@@ -84,7 +84,8 @@ func (self *VFSService) ProcessDownloadFile(
 	ts, _ := row.GetInt64("_ts")
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Debug("VFSService: Processing System.VFS.DownloadFile from %v", client_id)
+	logger.Debug("VFSService: Processing System.VFS.DownloadFile from %v %v",
+		client_id, flow_id)
 
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	artifact_path_manager, err := artifacts.NewArtifactPathManager(ctx, config_obj,
@@ -212,8 +213,6 @@ func (self *VFSService) ProcessListDirectoryLegacy(
 	flow_id, _ := row.GetString("FlowId")
 	ts, _ := row.GetInt64("_ts")
 
-	logger.Debug("VFSService: Processing Legacy System.VFS.ListDirectory from %v", client_id)
-
 	path_manager := artifacts.NewArtifactPathManagerWithMode(
 		config_obj, client_id, flow_id, "System.VFS.ListDirectory",
 		paths.MODE_CLIENT)
@@ -228,6 +227,8 @@ func (self *VFSService) ProcessListDirectoryLegacy(
 		return
 	}
 	defer reader.Close()
+
+	logger.Debug("VFSService: Processing Legacy System.VFS.ListDirectory from %v", client_id)
 
 	var current_vfs_components []string = nil
 
@@ -341,7 +342,8 @@ func (self *VFSService) ProcessListDirectory(
 	ts, _ := row.GetInt64("_ts")
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("VFSService: Processing System.VFS.ListDirectory/Stats from %v", client_id)
+	logger.Info("VFSService: Processing System.VFS.ListDirectory/Stats from %v %v",
+		client_id, flow_id)
 
 	path_manager := artifacts.NewArtifactPathManagerWithMode(
 		config_obj, client_id, flow_id, "System.VFS.ListDirectory/Stats",
