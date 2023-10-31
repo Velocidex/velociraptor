@@ -18,6 +18,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
+const (
+	writeback_path = "fixtures/writeback.yaml"
+)
+
 type CrytpoStoreTestSuite struct {
 	test_utils.TestSuite
 
@@ -31,6 +35,9 @@ func (self *CrytpoStoreTestSuite) SetupTest() {
 		ClientInfo:     true,
 		JournalService: true,
 	}
+
+	self.ConfigObj.Client.WritebackLinux = writeback_path
+	self.ConfigObj.Client.WritebackWindows = writeback_path
 
 	self.TestSuite.SetupTest()
 

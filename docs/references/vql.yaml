@@ -2933,11 +2933,6 @@
     description: The accessor to use.
   metadata:
     permissions: FILESYSTEM_READ
-- name: sysinfo
-  description: Collect system information on Linux clients
-  type: Function
-  metadata:
-    permissions: MACHINE_STATE
 - name: log
   description: |
     Log the message and return TRUE.
@@ -3512,6 +3507,8 @@
   description: Collect network information.
   type: Plugin
   category: plugin
+  metadata:
+    permissions: MACHINE_STATE
 - name: notebook_delete
   description: 'Delete a notebook with all its cells. '
   type: Plugin
@@ -3855,6 +3852,10 @@
   - name: messagedb
     type: string
     description: A Message database from https://github.com/Velocidex/evtx-data.
+  - name: workers
+    type: int64
+    description: If specified we use this many workers to parse the file in parallel
+      (default 1).
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
@@ -5287,6 +5288,36 @@
   category: server
   metadata:
     permissions: COLLECT_SERVER
+- name: sigma
+  description: Evaluate sigma rules.
+  type: Plugin
+  args:
+  - name: rules
+    type: string
+    description: A list of sigma rules to compile.
+    repeated: true
+    required: true
+  - name: log_sources
+    type: Any
+    description: A log source object as obtained from the sigma_log_sources() VQL
+      function.
+    required: true
+  - name: field_mapping
+    type: ordereddict.Dict
+    description: A dict containing a mapping between a rule field name and a VQL Lambda
+      to get the value of the field from the event.
+  - name: debug
+    type: bool
+    description: If enabled we emit all match objects with description of what would
+      match.
+  - name: rule_filter
+    type: vfilter.Lambda
+    description: If specified we use this callback to filter the rules for inclusion.
+- name: sigma_log_sources
+  description: Constructs a Log sources object to be used in sigma rules. Call with
+    args being category/product/service and values being stored queries. You may use
+    a * as a placeholder for any of these fields.
+  type: Function
 - name: sleep
   description: Sleep for the specified number of seconds. Always returns true.
   type: Function
@@ -5652,6 +5683,11 @@
     are emitted. Any further queries are ignored.
   type: Plugin
   category: plugin
+- name: sysinfo
+  description: Collect system information on Linux clients
+  type: Function
+  metadata:
+    permissions: MACHINE_STATE
 - name: tempdir
   description: Create a temporary directory. The directory will be removed when the
     query ends.
@@ -6557,6 +6593,10 @@
   - name: messagedb
     type: string
     description: A Message database from https://github.com/Velocidex/evtx-data.
+  - name: workers
+    type: int64
+    description: If specified we use this many workers to parse the file in parallel
+      (default 1).
   category: event
   metadata:
     permissions: FILESYSTEM_READ
@@ -6823,3 +6863,4 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+

@@ -1,0 +1,4 @@
+name: Generic.Client.LocalLogs
+description: |
+  Write client logs locally in an encrypted container. This helps when
+  we need to access what the client was doing in the past.
