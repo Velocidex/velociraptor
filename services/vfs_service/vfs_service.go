@@ -212,8 +212,6 @@ func (self *VFSService) ProcessListDirectoryLegacy(
 	flow_id, _ := row.GetString("FlowId")
 	ts, _ := row.GetInt64("_ts")
 
-	logger.Debug("VFSService: Processing Legacy System.VFS.ListDirectory from %v", client_id)
-
 	path_manager := artifacts.NewArtifactPathManagerWithMode(
 		config_obj, client_id, flow_id, "System.VFS.ListDirectory",
 		paths.MODE_CLIENT)
@@ -228,6 +226,8 @@ func (self *VFSService) ProcessListDirectoryLegacy(
 		return
 	}
 	defer reader.Close()
+
+	logger.Debug("VFSService: Processing Legacy System.VFS.ListDirectory from %v", client_id)
 
 	var current_vfs_components []string = nil
 

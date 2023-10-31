@@ -162,30 +162,71 @@ type LogContext struct {
 
 	mu      sync.Mutex
 	enabled map[string]bool
+
+	listeners map[uint64]chan string
+}
+
+func (self *LogContext) AddListener(c chan string) func() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.listeners == nil {
+		self.listeners = make(map[uint64]chan string)
+	}
+
+	id := utils.GetId()
+	self.listeners[id] = c
+
+	return func() {
+		self.mu.Lock()
+		defer self.mu.Unlock()
+
+		delete(self.listeners, id)
+	}
+}
+
+func (self *LogContext) forwardMessage(msg string) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	for _, c := range self.listeners {
+		select {
+		case c <- msg:
+		default:
+		}
+	}
 }
 
 func (self *LogContext) Debug(format string, v ...interface{}) {
+	msg := fmt.Sprintf(format, v...)
 	if self.Logger != nil {
-		self.Logger.Debug(fmt.Sprintf(format, v...))
+		self.Logger.Debug(msg)
 	}
+	self.forwardMessage(msg)
 }
 
 func (self *LogContext) Info(format string, v ...interface{}) {
+	msg := fmt.Sprintf(format, v...)
 	if self.Logger != nil {
-		self.Logger.Info(fmt.Sprintf(format, v...))
+		self.Logger.Info(msg)
 	}
+	self.forwardMessage(msg)
 }
 
 func (self *LogContext) Warn(format string, v ...interface{}) {
+	msg := fmt.Sprintf(format, v...)
 	if self.Logger != nil {
-		self.Logger.Warn(fmt.Sprintf(format, v...))
+		self.Logger.Warn(msg)
 	}
+	self.forwardMessage(msg)
 }
 
 func (self *LogContext) Error(format string, v ...interface{}) {
+	msg := fmt.Sprintf(format, v...)
 	if self.Logger != nil {
-		self.Logger.Error(fmt.Sprintf(format, v...))
+		self.Logger.Error(msg)
 	}
+	self.forwardMessage(msg)
 }
 
 func (self *LogContext) IsEnabled(level string) bool {
@@ -312,7 +353,7 @@ func (self *LogManager) makeNewComponent(
 	enabled := make(map[string]bool)
 
 	Log := logrus.New()
-	Log.Out = inMemoryLogWriter{}
+	Log.Out = newInMemoryLogWriter()
 	Log.Level = logrus.DebugLevel
 
 	if !disable_log_to_files &&
@@ -495,4 +536,8 @@ func (self inMemoryLogWriter) Write(p []byte) (n int, err error) {
 	memory_logs = append(memory_logs, string(p))
 
 	return len(p), nil
+}
+
+func newInMemoryLogWriter() *inMemoryLogWriter {
+	return &inMemoryLogWriter{}
 }

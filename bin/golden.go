@@ -39,12 +39,15 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/crypto/storage"
+	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -180,6 +183,17 @@ func runTest(fixture *testFixture, sm *services.Service,
 		ctx = sub_ctx
 	}
 
+	// Set this to emulate a working client.
+	storage.SetCurrentServerPem([]byte(config_obj.Frontend.Certificate))
+
+	writeback_service := writeback.GetWritebackService()
+	writeback_service.LoadWriteback(config_obj)
+
+	err := crypto_utils.VerifyConfig(config_obj)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// Create an output container.
 	tmpfile, err := ioutil.TempFile("", "golden")
 	if err != nil {
@@ -201,6 +215,7 @@ func runTest(fixture *testFixture, sm *services.Service,
 		Uploader:   container,
 		Env: ordereddict.NewDict().
 			Set("GoldenOutput", tmpfile.Name()).
+			Set("config", config_obj.Client).
 			Set("_SessionId", "F.Golden").
 			Set(constants.SCOPE_MOCK, &remapping.MockingScopeContext{}),
 	}
