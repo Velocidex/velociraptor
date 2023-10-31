@@ -1,7 +1,7 @@
 Client:
   server_urls:
     - https://127.0.0.1:8/
-  ca_certificate:
+  ca_certificate: |
     -----BEGIN CERTIFICATE-----
     MIIDKjCCAhKgAwIBAgIQF6ez0Fecf/sHLEfqHttIqTANBgkqhkiG9w0BAQsFADAa
     MRgwFgYDVQQKEw9WZWxvY2lyYXB0b3IgQ0EwHhcNMjAwNDIzMTQ0MTQxWhcNMjEw
