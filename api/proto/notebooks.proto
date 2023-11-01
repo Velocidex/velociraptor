@@ -61,6 +61,9 @@ message NotebookMetadata {
     // A list of usernames that have access to this notebook.
     repeated string collaborators = 12;
 
+    // A list of NOTEBOOK artifacts to create the notebook with.
+    repeated string artifacts = 20;
+
     // If this is set, the notebook is public.
     bool public = 13;
 

@@ -80,11 +80,68 @@ func (self *NotebookManager) NewNotebookCell(
 	return notebook, err
 }
 
-// Create the initial cells of the notebook.
-func CreateInitialNotebook(ctx context.Context,
+func getInitialCellsFromArtifacts(
+	ctx context.Context,
 	config_obj *config_proto.Config,
-	notebook_metadata *api_proto.NotebookMetadata,
-	principal string) error {
+	in *api_proto.NotebookMetadata) (
+	result []*api_proto.NotebookCellRequest, err error) {
+
+	manager, err := services.GetRepositoryManager(config_obj)
+	if err != nil {
+		return nil, err
+	}
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, artifact_name := range in.Artifacts {
+		artifact, pres := repository.Get(ctx, config_obj, artifact_name)
+		if !pres {
+			continue
+		}
+
+		for _, s := range artifact.Sources {
+			for _, n := range s.Notebook {
+				env := []*api_proto.Env{}
+				for _, i := range n.Env {
+					env = append(env, &api_proto.Env{
+						Key:   i.Key,
+						Value: i.Value,
+					})
+				}
+
+				switch strings.ToLower(n.Type) {
+				case "vql", "md", "markdown":
+					result = append(result, &api_proto.NotebookCellRequest{
+						Type:  n.Type,
+						Input: n.Template,
+					})
+				case "vql_suggestion":
+					in.Suggestions = append(in.Suggestions,
+						&api_proto.NotebookCellRequest{
+							Type:  "vql",
+							Name:  n.Name,
+							Input: n.Template,
+							Env:   env,
+						})
+				}
+			}
+		}
+	}
+	return result, nil
+}
+
+func getInitialCells(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	notebook_metadata *api_proto.NotebookMetadata) (
+	[]*api_proto.NotebookCellRequest, error) {
+
+	// Initialize the notebook from these artifacts
+	if len(notebook_metadata.Artifacts) > 0 {
+		return getInitialCellsFromArtifacts(ctx, config_obj, notebook_metadata)
+	}
 
 	// All cells receive a header from the name and description of
 	// the notebook.
@@ -112,6 +169,20 @@ func CreateInitialNotebook(ctx context.Context,
 				notebook_metadata.Context.ClientId,
 				notebook_metadata.Context.EventArtifact, notebook_metadata)
 		}
+	}
+
+	return new_cells, nil
+}
+
+// Create the initial cells of the notebook.
+func CreateInitialNotebook(ctx context.Context,
+	config_obj *config_proto.Config,
+	notebook_metadata *api_proto.NotebookMetadata,
+	principal string) error {
+
+	new_cells, err := getInitialCells(ctx, config_obj, notebook_metadata)
+	if err != nil {
+		return err
 	}
 
 	notebook_manager, err := services.GetNotebookManager(config_obj)

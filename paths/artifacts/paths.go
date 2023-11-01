@@ -79,7 +79,7 @@ func NewArtifactPathManager(
 func (self *ArtifactPathManager) IsEvent() bool {
 	switch self.mode {
 	// These are regular artifacts
-	case paths.MODE_CLIENT, paths.MODE_SERVER:
+	case paths.MODE_CLIENT, paths.MODE_SERVER, paths.MODE_NOTEBOOK:
 		return false
 
 		// These are all event artifacts
@@ -169,7 +169,7 @@ func (self *ArtifactPathManager) GetPathForWriting() (api.FSPathSpec, error) {
 					self.FlowId), nil
 		}
 
-	case paths.MODE_SERVER:
+	case paths.MODE_SERVER, paths.MODE_NOTEBOOK:
 		if self.source != "" {
 			return paths.CLIENTS_ROOT.AsFilestorePath().
 				SetType(api.PATH_TYPE_FILESTORE_JSON).

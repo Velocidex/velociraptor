@@ -29,7 +29,7 @@ func (self *ArtifactLogPathManager) GetRootPath() api.FSPathSpec {
 			self.FlowId, "logs").AsFilestorePath().
 			SetType(api.PATH_TYPE_FILESTORE_JSON)
 
-	case paths.MODE_SERVER:
+	case paths.MODE_SERVER, paths.MODE_NOTEBOOK:
 		return paths.CLIENTS_ROOT.AddChild(
 			"server", "collections",
 			self.FlowId, "logs").AsFilestorePath().
@@ -61,7 +61,7 @@ func (self *ArtifactLogPathManager) GetPathForWriting() (api.FSPathSpec, error) 
 			self.ClientId, "collections",
 			self.FlowId, "logs").AsFilestorePath(), nil
 
-	case paths.MODE_SERVER:
+	case paths.MODE_SERVER, paths.MODE_NOTEBOOK:
 		return paths.CLIENTS_ROOT.AddChild(
 			"server", "collections",
 			self.FlowId, "logs").AsFilestorePath(), nil
