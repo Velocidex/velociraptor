@@ -29,6 +29,7 @@ import SplitPane from 'react-split-pane';
 const presetFilters = [
     {value: "type:CLIENT", label: T("Client Artifacts")},
     {value: "type:SERVER", label: T("Server Artifacts")},
+    {value: "type:NOTEBOOK", label: T("Notebook templates")},
     {value: "", label: T("All Artifacts")},
     {value: "precondition:WINDOWS", label: T("Windows Only")},
     {value: "precondition:LINUX", label: T("Linux Only")},

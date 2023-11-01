@@ -20,6 +20,8 @@ reports:
       ##### Author: {{ $artifact.Author }}
       {{end}}
 
+      {{ if $artifact.Description }}
+
       <div class="description-content">
 
       {{ $artifact.Description }}
@@ -34,6 +36,8 @@ reports:
       </ul>
       {{ end }}
       </div>
+
+      {{ end }}
 
       {{ if $artifact.Tools }}
       ### Tools
@@ -100,6 +104,8 @@ reports:
 
       {{ range $source := $artifact.Sources }}
 
+      {{ if or $source.Queries $source.Query }}
+
       ### Source {{ $source.Name }}
       {{ if $source.Query }}
 
@@ -114,6 +120,8 @@ reports:
       {{- $query -}}
       {{ end }}
       ```
+      {{ end }}
+
       {{ end }}
 
       {{ end }}

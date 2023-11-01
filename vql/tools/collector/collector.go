@@ -382,7 +382,7 @@ func CheckArtifactModification(
 			return errors.New("Permission denied: ARTIFACT_WRITER")
 		}
 
-	case "SERVER", "SERVER_EVENT", "INTERNAL":
+	case "SERVER", "SERVER_EVENT", "NOTEBOOK", "INTERNAL":
 		ok, err = acl_manager.CheckAccess(acls.SERVER_ARTIFACT_WRITER)
 		if !ok {
 			return errors.New("Permission denied: SERVER_ARTIFACT_WRITER")
@@ -415,7 +415,7 @@ func CheckArtifactCollection(
 			return errors.New("Permission denied: COLLECT_CLIENT")
 		}
 
-	case "SERVER", "SERVER_EVENT", "INTERNAL":
+	case "SERVER", "SERVER_EVENT", "NOTEBOOK", "INTERNAL":
 		ok, err = acl_manager.CheckAccess(acls.COLLECT_SERVER)
 		if !ok {
 			return errors.New("Permission denied: COLLECT_SERVER")

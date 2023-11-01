@@ -155,7 +155,7 @@ func (self *ArtifactDeleteFunction) Call(ctx context.Context,
 	def_type := strings.ToLower(definition.Type)
 
 	switch def_type {
-	case "client", "client_event", "":
+	case "client", "client_event", "notebook", "":
 		permission = acls.ARTIFACT_WRITER
 	case "server", "server_event":
 		permission = acls.SERVER_ARTIFACT_WRITER
