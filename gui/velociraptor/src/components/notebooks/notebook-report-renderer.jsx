@@ -7,7 +7,8 @@ import T from '../i8n/i8n.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 import Button from 'react-bootstrap/Button';
-import parse from 'html-react-parser';
+import parseHTML from '../core/sanitize.jsx';
+
 import VeloTable from '../core/table.jsx';
 import TimelineRenderer from "../timeline/timeline.jsx";
 import { VeloLineChart, VeloTimeChart } from '../artifacts/line-charts.jsx';
@@ -101,7 +102,7 @@ export default class NotebookReportRenderer extends React.Component {
             return result;
         }
 
-        let template = parse(this.props.cell.output, {
+        let template = parseHTML(this.props.cell.output, {
             replace: (domNode) => {
                 // A table which contains the data inline.
                 if (domNode.name === "inline-table-viewer") {
