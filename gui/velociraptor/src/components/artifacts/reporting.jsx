@@ -4,7 +4,7 @@ import _ from 'lodash';
 import React from 'react';
 import PropTypes from 'prop-types';
 import {CancelToken} from 'axios';
-import parse from 'html-react-parser';
+import parseHTML from '../core/sanitize.jsx';
 
 import api from '../core/api-service.jsx';
 import VeloTable from '../core/table.jsx';
@@ -18,7 +18,6 @@ import { NotebookLineChart, NotebookTimeChart,
        } from '../notebooks/notebook-chart-renderer.jsx';
 
 // Renders a report in the DOM.
-
 const parse_param = domNode=>JSON.parse(decodeURIComponent(
     domNode.attribs.params || "{}"));
 
@@ -142,11 +141,12 @@ export default class VeloReportViewer extends React.Component {
         html = html.replace(/>\s*<\/tr/g, "></tr");
         html = html.replace(/>\s*<\/th/g, "></th");
         html = html.replace(/>\s*<\/td/g, "></td");
+
         return html;
     }
 
     render() {
-        let template = parse(this.cleanupHTML(this.state.template), {
+        let template = parseHTML(this.cleanupHTML(this.state.template), {
             replace: (domNode) => {
                 if (domNode.name === "inline-table-viewer") {
                     try {

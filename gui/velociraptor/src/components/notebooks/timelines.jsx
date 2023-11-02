@@ -6,7 +6,8 @@ import _ from 'lodash';
 import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
 
-import parse from 'html-react-parser';
+import parseHTML from '../core/sanitize.jsx';
+
 import Modal from 'react-bootstrap/Modal';
 import CreatableSelect from 'react-select/creatable';
 import Select from 'react-select';
@@ -116,7 +117,7 @@ export class AddVQLCellToTimeline extends React.Component {
     getTables = ()=>{
         let tags = [];
 
-        parse(this.props.cell.output, {
+        parseHTML(this.props.cell.output, {
             replace: (domNode) => {
                 if (domNode.name === "grr-csv-viewer") {
                     try {
