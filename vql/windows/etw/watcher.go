@@ -46,6 +46,7 @@ func (self *EventTraceWatcherService) Register(
 	provider_guid string,
 	session_name string,
 	any_keyword uint64, all_keyword uint64, level int64,
+	wGuid windows.GUID,
 	output_chan chan vfilter.Row) (func(), error) {
 
 	self.mu.Lock()
@@ -68,23 +69,13 @@ func (self *EventTraceWatcherService) Register(
 		frequency := vql_subsystem.GetIntFromRow(
 			scope, scope, constants.EVTX_FREQUENCY)
 
-		session, pres := self.sessions[session_name]
-		if pres {
-			// We can exit here as the session is already running.
-			// It will pick up the new provider.
-			err := self.UpdateSession(
-				ctx, scope, session, provider_guid, session_name,
-				any_keyword, all_keyword, level)
-			return cancel, err
-		}
-
 		session, err := self.createSession(ctx, scope, session_name, output_chan)
 		if err != nil {
 			return cancel, err
 		}
 
 		err = self.UpdateSession(
-			ctx, scope, session, provider_guid, session_name,
+			ctx, scope, session, wGuid, session_name,
 			any_keyword, all_keyword, level)
 		if err != nil {
 			return cancel, err
@@ -116,7 +107,6 @@ func (self *EventTraceWatcherService) Register(
 func (self *EventTraceWatcherService) StartMonitoring(
 	ctx context.Context, scope vfilter.Scope, session *etw.Session,
 	key string, frequency uint64, cancel context.CancelFunc) {
-	defer scope.Close()
 
 	defer utils.CheckForPanic("StartMonitoring")
 
@@ -184,10 +174,27 @@ func (self *EventTraceWatcherService) createSession(
 	ctx context.Context, scope types.Scope,
 	session_name string,
 	output_chan chan vfilter.Row) (*etw.Session, error) {
+
+	session, pres := self.sessions[session_name]
+	if pres {
+		return session, nil
+	}
+
 	session, err := etw.NewSession(session_name)
 	if err != nil {
 		scope.Log("watch_etw: %s", err.Error())
-		return session, err
+
+		// Try to kill the session and recreate it.
+		err = etw.KillSession(session_name)
+		if err != nil {
+			return session, err
+		}
+
+		session, err = etw.NewSession(session_name)
+		if err != nil {
+			return session, err
+		}
+
 	}
 
 	self.sessions[session_name] = session
@@ -197,21 +204,15 @@ func (self *EventTraceWatcherService) createSession(
 
 func (self *EventTraceWatcherService) UpdateSession(
 	ctx context.Context, scope types.Scope,
-	session *etw.Session, guid string, session_name string,
+	session *etw.Session, guid windows.GUID, session_name string,
 	any_keyword uint64, all_keyword uint64, level int64) error {
 
-	// Add the provider to the session.
-	wGuid, err := windows.GUIDFromString(guid)
-	if err != nil {
-		return err
-	}
-
-	return session.UpdateOptions(wGuid, func(cfg *etw.SessionOptions) {
+	return session.UpdateOptions(guid, func(cfg *etw.SessionOptions) {
 		cfg.MatchAnyKeyword = any_keyword
 		cfg.MatchAllKeyword = all_keyword
 		cfg.Level = etw.TraceLevel(level)
 		cfg.Name = session_name
-		cfg.Guid = wGuid
+		cfg.Guid = guid
 	})
 }
 

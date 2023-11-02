@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"golang.org/x/sys/windows"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -39,6 +40,13 @@ func (self WatchETWPlugin) Call(
 			return
 		}
 
+		// Check that we have a valid GUID.
+		wGuid, err := windows.GUIDFromString(arg.Provider)
+		if err != nil {
+			scope.Log("watch_etw: %s", err.Error())
+			return
+		}
+
 		// By default listen to DEBUG level logs
 		if arg.Level == 0 {
 			arg.Level = 5
@@ -55,10 +63,10 @@ func (self WatchETWPlugin) Call(
 			cancel, err := GlobalEventTraceService.Register(
 				ctx, scope, arg.Provider, arg.Name,
 				arg.AnyKeywords, arg.AllKeywords, arg.Level,
-				event_channel)
-			defer cancel()
+				wGuid, event_channel)
 			if err != nil {
 				scope.Log("watch_etw: %v", err)
+				cancel()
 				scope.Log("ETW session interrupted, will retry again.")
 				select {
 				case <-ctx.Done():
@@ -67,6 +75,7 @@ func (self WatchETWPlugin) Call(
 					continue
 				}
 			}
+			defer cancel()
 
 			// Wait until the query is complete.
 			for event := range event_channel {
