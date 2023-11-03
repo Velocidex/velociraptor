@@ -34,7 +34,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	constants "www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -83,6 +82,7 @@ type HttpPluginRequest struct {
 	RemoveLast         bool              `vfilter:"optional,field=remove_last,doc=If set we delay removal as much as possible."`
 	RootCerts          string            `vfilter:"optional,field=root_ca,doc=As a better alternative to disable_ssl_security, allows root ca certs to be added here."`
 	CookieJar          *ordereddict.Dict `vfilter:"optional,field=cookie_jar,doc=A cookie jar to use if provided. This is a dict of cookie structures."`
+	UserAgent          string            `vfilter:"optional,field=user_agent,doc=If specified, set a HTTP User-Agent."`
 }
 
 type _HttpPluginResponse struct {
@@ -309,7 +309,7 @@ func (self *_HttpPlugin) Call(
 
 		scope.Log("Fetching %v\n", arg.Url)
 
-		req.Header.Set("User-Agent", constants.USER_AGENT)
+		req.Header.Set("User-Agent", arg.UserAgent)
 
 		// Set various headers
 		if arg.Headers != nil {

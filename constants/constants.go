@@ -22,11 +22,9 @@ import (
 	"regexp"
 )
 
-var (
-	VERSION = "0.7.0-3"
-)
-
 const (
+	VERSION = "0.7.0-3"
+
 	ENROLLMENT_WELL_KNOWN_FLOW = "E:Enrol"
 	MONITORING_WELL_KNOWN_FLOW = FLOW_PREFIX + "Monitoring"
 
@@ -49,7 +47,7 @@ const (
 	// Messages to the client which we dont care about their responses.
 	IgnoreResponseState = uint64(101)
 
-	USER_AGENT = "Velociraptor - Dig Deeper!"
+	USER_AGENT = "Velociraptor/" + VERSION
 
 	// Globals set in VQL scopes.
 	SCOPE_CONFIG            = "config"
