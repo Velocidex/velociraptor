@@ -81,6 +81,7 @@ func (self WatchETWPlugin) Call(
 			for event := range event_channel {
 				select {
 				case <-ctx.Done():
+					CloseSession(arg.Name, arg.Provider)
 					return
 				case output_chan <- event:
 				}

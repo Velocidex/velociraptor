@@ -125,7 +125,8 @@ func (self *EventTraceWatcherService) StartMonitoring(
 
 	cb := func(e *etw.Event) {
 		event := ordereddict.NewDict().
-			Set("System", e.Header)
+			Set("System", e.Header).
+			Set("ProviderGUID", e.Header.ProviderID.String())
 
 		data, err := e.EventProperties()
 		if err == nil {
@@ -138,6 +139,7 @@ func (self *EventTraceWatcherService) StartMonitoring(
 
 		// No more listeners left, we are done.
 		if !pres || len(handles) == 0 {
+			session.Close()
 			return
 		}
 
@@ -202,6 +204,32 @@ func (self *EventTraceWatcherService) UpdateSession(
 		cfg.Name = session_name
 		cfg.Guid = guid
 	})
+}
+
+func CloseSession(session_name string, provider_guid string) error {
+	handles, pres := GlobalEventTraceService.registrations[session_name]
+	if !pres {
+		return nil // No Session to kill.
+	}
+
+	// Check if GUID is valid
+	guid, err := windows.GUIDFromString(provider_guid)
+	if err != nil {
+		return err
+	}
+
+	// Remove our entry from the list of handles.
+	for i, handle := range handles {
+		if handle.guid == guid {
+			handle.ctx.Done()
+			handles = append(handles[:i], handles[i+1:]...)
+		}
+	}
+	GlobalEventTraceService.registrations[session_name] = handles
+	if len(handles) == 0 {
+		return etw.KillSession(session_name)
+	}
+	return nil
 }
 
 // Handle is given for each interested party. We write the event on
