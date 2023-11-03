@@ -21,7 +21,6 @@ import (
 
 var (
 	GlobalEventTraceService = NewEventTraceWatcherService()
-	GlobalEventSession      = etw.Session{}
 )
 
 // EventTraceWatcherService watches one or more event ETW sessions and multiplexes
@@ -57,18 +56,17 @@ func (self *EventTraceWatcherService) Register(
 	handle := &Handle{
 		ctx:         subctx,
 		output_chan: output_chan,
-		scope:       scope}
+		scope:       scope,
+		guid:        wGuid}
 
-	key := session_name + provider_guid
-
-	registration, pres := self.registrations[key]
+	registration, pres := self.registrations[session_name]
 	if !pres {
 		registration = []*Handle{}
-		self.registrations[key] = registration
+		self.registrations[session_name] = registration
+	}
 
-		frequency := vql_subsystem.GetIntFromRow(
-			scope, scope, constants.EVTX_FREQUENCY)
-
+	session, pres := self.sessions[session_name]
+	if !pres {
 		session, err := self.createSession(ctx, scope, session_name, output_chan)
 		if err != nil {
 			return cancel, err
@@ -89,13 +87,22 @@ func (self *EventTraceWatcherService) Register(
 		manager := &repository.RepositoryManager{}
 		builder := services.ScopeBuilderFromScope(scope)
 		subscope := manager.BuildScope(builder)
+		frequency := vql_subsystem.GetIntFromRow(
+			scope, scope, constants.EVTX_FREQUENCY)
 
 		go self.StartMonitoring(
-			subctx, subscope, session, key, frequency, cancel)
+			subctx, subscope, session, session_name, frequency, cancel)
+	} else {
+		err := self.UpdateSession(
+			ctx, scope, session, wGuid, session_name,
+			any_keyword, all_keyword, level)
+		if err != nil {
+			return cancel, err
+		}
 	}
 
 	registration = append(registration, handle)
-	self.registrations[key] = registration
+	self.registrations[session_name] = registration
 
 	scope.Log("Registering watcher for %v", provider_guid)
 
@@ -135,32 +142,18 @@ func (self *EventTraceWatcherService) StartMonitoring(
 		}
 
 		// Send the event to all interested parties.
-		new_handles := make([]*Handle, 0, len(handles))
 		for _, handle := range handles {
-			select {
-			case <-ctx.Done():
-				return
-			case handle.output_chan <- event:
-				new_handles = append(new_handles, handle)
+			if handle.guid == e.Header.ProviderID {
+				select {
+				case <-ctx.Done():
+					return
+				case handle.output_chan <- event:
+				}
 			}
 		}
-
-		// No more listeners - we dont care any more.
-		if len(new_handles) == 0 {
-			delete(self.registrations, key)
-			return
-		}
-
-		// Update the registrations - possibly
-		// omitting finished listeners.
-		self.mu.Lock()
-		self.registrations[key] = new_handles
-		self.mu.Unlock()
 	}
 
 	go func() {
-		defer cancel()
-		defer session.Close()
 		// When session.Process() exits, we exit the
 		// query.
 		err := session.Process(cb)
@@ -174,11 +167,6 @@ func (self *EventTraceWatcherService) createSession(
 	ctx context.Context, scope types.Scope,
 	session_name string,
 	output_chan chan vfilter.Row) (*etw.Session, error) {
-
-	session, pres := self.sessions[session_name]
-	if pres {
-		return session, nil
-	}
 
 	session, err := etw.NewSession(session_name)
 	if err != nil {
@@ -224,4 +212,5 @@ type Handle struct {
 	ctx         context.Context
 	output_chan chan vfilter.Row
 	scope       vfilter.Scope
+	guid        windows.GUID
 }

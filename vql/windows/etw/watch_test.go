@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/windows/etw"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
 func TestSession(t *testing.T) {
@@ -86,21 +87,32 @@ func (self *sessionSuite) TestSession_MultipleProviders() {
 
 	// Test with valid GUID for Microsoft-Windows-Kernel-Process
 	output := etw.WatchETWPlugin{}.Call(ctx, scope, ordereddict.NewDict().
-		Set("guid", "{22FB2CD6-0E7B-422B-A0C7-2FAD1FD0E716}")) // GUID for Microsoft-Windows-Kernel-Process
-	msg, ok := <-output
-	self.True(ok, "Output channel should not be closed for valid GUID")
-	scope.Log("msg1: %v", msg)
+		Set("guid", "{7DD42A49-5329-4832-8DFD-43D979153A88}")) // GUID for Microsoft-Windows-Kernel-Process
 
 	output2 := etw.WatchETWPlugin{}.Call(ctx, scope, ordereddict.NewDict().
-		Set("guid", "{ABF1F586-2E50-4BA8-928D-49044E6F0DB7}")) // GUID for Microsoft-Windows-Kernel-IO
-	msg2, ok := <-output2
-	self.True(ok, "Output channel should not be closed for valid GUID")
-	scope.Log("msg2: %v", msg2)
-	self.NotNil(msg, "Message should not be nil for valid GUID")
+		Set("guid", "{D1D93EF7-E1F2-4F45-9943-03D245FE6C00}")) // GUID for Microsoft-Windows-Network
 
-	msg, ok = <-output
-	self.True(ok, "Output channel should not be closed for valid GUID")
-	scope.Log("msg1: %v", msg)
+	o1 := 0
+	o2 := 0
+	for {
+		select {
+		case msg, ok := <-output:
+			assert.True(self.T(), ok, "Output channel should not be closed for valid GUID")
+			assert.NotNil(self.T(), msg, "Message should not be nil for valid GUID")
+			//scope.Log("OUTPUT1: %v", msg)
+			o1++
+		case msg, ok := <-output2:
+			assert.True(self.T(), ok, "Output channel should not be closed for valid GUID")
+			assert.NotNil(self.T(), msg, "Message should not be nil for valid GUID")
+			//scope.Log("OUTPUT2: %v", msg)
+			o2++
+		default:
+		}
+
+		if o1 > 1 && o2 > 1 {
+			break
+		}
+	}
 }
 
 func (self *sessionSuite) TestFailures() {
