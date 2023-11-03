@@ -1,0 +1,8 @@
+SELECT ProviderGUID FROM chain(a={SELECT * FROM watch_etw(guid='{D1D93EF7-E1F2-4F45-9943-03D245FE6C00}') limit 1}, b={SELECT * FROM watch_etw(guid='{7DD42A49-5329-4832-8DFD-43D979153A88}') limit 1}, async=TRUE) ORDER BY ProviderGUID[
+ {
+  "ProviderGUID": "{D1D93EF7-E1F2-4F45-9943-03D245FE6C00}"
+ },
+ {
+  "ProviderGUID": "{7DD42A49-5329-4832-8DFD-43D979153A88}"
+ }
+]
