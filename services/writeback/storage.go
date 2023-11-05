@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"regexp"
 	"runtime"
 
 	"github.com/Velocidex/yaml/v2"
@@ -124,18 +125,20 @@ func WritebackLocation(
 
 	result := ""
 
+	nonce := config_obj.Client.Nonce
+
 	switch runtime.GOOS {
 	case "darwin":
-		result = os.ExpandEnv(config_obj.Client.WritebackDarwin)
+		result = expandOrgId(config_obj.Client.WritebackDarwin, nonce)
 
 	case "linux":
-		result = os.ExpandEnv(config_obj.Client.WritebackLinux)
+		result = expandOrgId(config_obj.Client.WritebackLinux, nonce)
 
 	case "windows":
-		result = os.ExpandEnv(config_obj.Client.WritebackWindows)
+		result = expandOrgId(config_obj.Client.WritebackWindows, nonce)
 
 	default:
-		result = os.ExpandEnv(config_obj.Client.WritebackLinux)
+		result = expandOrgId(config_obj.Client.WritebackLinux, nonce)
 	}
 
 	if result == "" {
@@ -143,4 +146,13 @@ func WritebackLocation(
 	}
 
 	return result, nil
+}
+
+var (
+	org_id_regex = regexp.MustCompile("\\$NONCE|%NONCE%")
+)
+
+func expandOrgId(path, nonce string) string {
+	path = org_id_regex.ReplaceAllString(path, utils.SanitizeString(nonce))
+	return os.ExpandEnv(path)
 }

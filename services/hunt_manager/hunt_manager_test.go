@@ -639,9 +639,11 @@ func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
 	assert.NoError(t, err)
 
-	self.hunt_id, err = hunt_dispatcher.CreateHunt(
+	new_hunt, err := hunt_dispatcher.CreateHunt(
 		self.Ctx, self.ConfigObj, acl_manager, hunt_obj)
 	assert.NoError(t, err)
+
+	self.hunt_id = new_hunt.HuntId
 
 	// Force the hunt manager to process a participation row
 	err = hunt_manager.HuntManagerForTests.ProcessParticipationWithError(

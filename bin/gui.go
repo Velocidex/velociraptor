@@ -14,6 +14,7 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/users"
+	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/startup"
 )
 
@@ -95,7 +96,7 @@ func doGUI() error {
 		config_obj.Client.ServerUrls = []string{"https://localhost:8000/"}
 		config_obj.Client.UseSelfSignedSsl = true
 
-		write_back := filepath.Join(datastore_directory, "Velociraptor.writeback.yaml")
+		write_back := filepath.Join(datastore_directory, "Velociraptor.writeback.%NONCE%.yaml")
 		config_obj.Client.WritebackWindows = write_back
 		config_obj.Client.WritebackLinux = write_back
 		config_obj.Client.WritebackDarwin = write_back
@@ -259,10 +260,9 @@ func doGUI() error {
 				Client:  proto.Clone(org_config_obj.Client).(*config_proto.ClientConfig),
 			}
 
-			write_back := filepath.Join(datastore_directory, "Velociraptor.Acme.writeback.yaml")
-			org_client_config.Client.WritebackWindows = write_back
-			org_client_config.Client.WritebackLinux = write_back
-			org_client_config.Client.WritebackDarwin = write_back
+			// Make sure the client writeback is initialized
+			writeback_service := writeback.GetWritebackService()
+			writeback_service.LoadWriteback(org_config_obj)
 
 			sm.Wg.Add(1)
 			go func() {

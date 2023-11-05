@@ -143,7 +143,7 @@ func (self *TestSuite) TestHuntsSource() {
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	hunt_id, err := hunt_dispatcher.CreateHunt(ctx,
+	new_hunt, err := hunt_dispatcher.CreateHunt(ctx,
 		self.ConfigObj, acl_managers.NullACLManager{},
 		&api_proto.Hunt{
 			StartRequest: &flows_proto.ArtifactCollectorArgs{
@@ -155,6 +155,7 @@ func (self *TestSuite) TestHuntsSource() {
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
+	hunt_id := new_hunt.HuntId
 	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 	hunt_path_manager := paths.NewHuntPathManager(hunt_id).Clients()
 	hunt_rs_writer, err := result_sets.NewResultSetWriter(
