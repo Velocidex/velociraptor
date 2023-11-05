@@ -208,12 +208,27 @@ message Artifact {
     // The artifact is built into the Velociraptor binary.
     bool compiled_in = 24;
     bool is_alias = 22;
+
+    // Not read from the artifact definition but it is managed by the
+    // repository.
+    ArtifactMetadata metadata = 25;
 }
 
 message ArtifactDescriptors {
     repeated Artifact items = 1;
 }
 
+
+// Artifact can have metadata associated with them. The metadata can
+// be manipulated by the user, even for built in artifacts.
+message ArtifactMetadata {
+    // Do not show this artifact in the GUI search screen.
+    bool hidden = 1;
+}
+
+message ArtifactMetadataStorage {
+    map<string, ArtifactMetadata> metadata = 1;
+}
 
 
 // Tools are external files that Velociraptor ensures are available to

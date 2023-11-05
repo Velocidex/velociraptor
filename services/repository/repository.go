@@ -44,6 +44,7 @@ import (
 type Repository struct {
 	mu          sync.Mutex
 	Data        map[string]*artifacts_proto.Artifact
+	Metadata    map[string]*artifacts_proto.ArtifactMetadata
 	loaded_dirs []string
 
 	// Each repository may have a parent - we search for the artifact
@@ -336,6 +337,17 @@ func (self *Repository) GetSource(
 	return nil, false
 }
 
+func (self *Repository) DecorateMetadata(
+	artifact *artifacts_proto.Artifact) *artifacts_proto.Artifact {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	metadata, pres := self.Metadata[artifact.Name]
+	if pres {
+		artifact.Metadata = metadata
+	}
+	return artifact
+}
+
 func (self *Repository) Get(
 	ctx context.Context, config_obj *config_proto.Config,
 	name string) (*artifacts_proto.Artifact, bool) {
@@ -346,7 +358,11 @@ func (self *Repository) Get(
 
 		// If we have a parent repository just get it from there.
 		if self.parent != nil {
-			return self.parent.Get(ctx, self.parent_config_obj, name)
+			artifact, err := self.parent.Get(ctx, self.parent_config_obj, name)
+			if artifact != nil {
+				artifact = self.DecorateMetadata(artifact)
+			}
+			return artifact, err
 		}
 		return nil, false
 	}
@@ -356,7 +372,7 @@ func (self *Repository) Get(
 	self.mu.Unlock()
 
 	if result.Compiled {
-		return result, true
+		return self.DecorateMetadata(result), true
 	}
 
 	// Delay processing until we need it. This means loading
@@ -376,7 +392,7 @@ func (self *Repository) Get(
 	}
 	self.mu.Unlock()
 
-	return result, true
+	return self.DecorateMetadata(result), true
 }
 
 func (self *Repository) get(name string) (*artifacts_proto.Artifact, bool) {
@@ -408,6 +424,34 @@ func (self *Repository) get(name string) (*artifacts_proto.Artifact, bool) {
 
 	// If we get here the source is not found in the artifact.
 	return nil, false
+}
+
+func (self *Repository) setMetadata(
+	name string, metadata *artifacts_proto.ArtifactMetadata) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.Metadata == nil {
+		self.Metadata = make(map[string]*artifacts_proto.ArtifactMetadata)
+	}
+
+	self.Metadata[name] = metadata
+}
+
+func (self *Repository) getMetadata() *artifacts_proto.ArtifactMetadataStorage {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	copy := make(map[string]*artifacts_proto.ArtifactMetadata)
+	if self.Metadata != nil {
+		for k, v := range self.Metadata {
+			copy[k] = v
+		}
+	}
+
+	return &artifacts_proto.ArtifactMetadataStorage{
+		Metadata: copy,
+	}
 }
 
 func (self *Repository) Del(name string) {
