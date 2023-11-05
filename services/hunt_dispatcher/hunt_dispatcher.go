@@ -498,6 +498,10 @@ func (self *HuntDispatcher) CreateHunt(
 	config_obj *config_proto.Config,
 	acl_manager vql_subsystem.ACLManager,
 	hunt *api_proto.Hunt) (string, error) {
+
+	// Make a local copy so we can modify it safely.
+	hunt, _ = proto.Clone(hunt).(*api_proto.Hunt)
+
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
 		return "", err
