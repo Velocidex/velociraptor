@@ -236,7 +236,7 @@ func (self *ServerTestSuite) TestForeman() {
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	hunt_id, err := hunt_dispatcher.CreateHunt(
+	new_hunt, err := hunt_dispatcher.CreateHunt(
 		self.Ctx, self.ConfigObj,
 		acl_managers.NullACLManager{},
 		&api_proto.Hunt{
@@ -247,12 +247,13 @@ func (self *ServerTestSuite) TestForeman() {
 
 	// Check for hunt object in the data store.
 	hunt := &api_proto.Hunt{}
-	hunt_path_manager := paths.NewHuntPathManager(hunt_id)
+	hunt_path_manager := paths.NewHuntPathManager(new_hunt.HuntId)
 	err = db.GetSubject(self.ConfigObj, hunt_path_manager.Path(), hunt)
 	require.NoError(t, err)
 
 	assert.NotNil(t, hunt.StartRequest.CompiledCollectorArgs)
 
+	hunt.StartRequest.FlowId = ""
 	hunt.StartRequest.CompiledCollectorArgs = nil
 	expected.CompiledCollectorArgs = nil
 

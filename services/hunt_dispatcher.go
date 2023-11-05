@@ -90,7 +90,7 @@ type IHuntDispatcher interface {
 	CreateHunt(ctx context.Context,
 		config_obj *config_proto.Config,
 		acl_manager vql_subsystem.ACLManager,
-		hunt *api_proto.Hunt) (string, error)
+		hunt *api_proto.Hunt) (*api_proto.Hunt, error)
 
 	ListHunts(ctx context.Context,
 		config_obj *config_proto.Config,

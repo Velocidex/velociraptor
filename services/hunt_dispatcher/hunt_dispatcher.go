@@ -497,14 +497,14 @@ func (self *HuntDispatcher) CreateHunt(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	acl_manager vql_subsystem.ACLManager,
-	hunt *api_proto.Hunt) (string, error) {
+	hunt *api_proto.Hunt) (*api_proto.Hunt, error) {
 
 	// Make a local copy so we can modify it safely.
 	hunt, _ = proto.Clone(hunt).(*api_proto.Hunt)
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if hunt.Stats == nil {
@@ -516,7 +516,7 @@ func (self *HuntDispatcher) CreateHunt(
 	}
 
 	if hunt.StartRequest == nil || hunt.StartRequest.Artifacts == nil {
-		return "", errors.New("No artifacts to collect.")
+		return nil, errors.New("No artifacts to collect.")
 	}
 
 	hunt.CreateTime = uint64(utils.GetTime().Now().UTC().UnixNano() / 1000)
@@ -531,7 +531,7 @@ func (self *HuntDispatcher) CreateHunt(
 	}
 
 	if hunt.Expires < hunt.CreateTime {
-		return "", errors.New("Hunt expiry is in the past!")
+		return nil, errors.New("Hunt expiry is in the past!")
 	}
 
 	// Set the artifacts information in the hunt object itself.
@@ -546,12 +546,12 @@ func (self *HuntDispatcher) CreateHunt(
 
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Compile the start request and store it in the hunt. We will
@@ -562,7 +562,7 @@ func (self *HuntDispatcher) CreateHunt(
 	// schedule consistent VQL on the clients.
 	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	compiled, err := launcher.CompileCollectorArgs(
@@ -572,7 +572,7 @@ func (self *HuntDispatcher) CreateHunt(
 		},
 		hunt.StartRequest)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Set the collection ID already on the hunt request - all flows
@@ -599,20 +599,20 @@ func (self *HuntDispatcher) CreateHunt(
 
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	err = journal.PushRowsToArtifact(ctx, config_obj,
 		[]*ordereddict.Dict{row}, "System.Hunt.Creation",
 		"server", hunt.HuntId)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
 	err = db.SetSubject(config_obj, hunt_path_manager.Path(), hunt)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Trigger a refresh of the hunt dispatcher. This guarantees
@@ -620,9 +620,9 @@ func (self *HuntDispatcher) CreateHunt(
 	// calls.
 	hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return hunt.HuntId, hunt_dispatcher.Refresh(ctx, config_obj)
+	return hunt, hunt_dispatcher.Refresh(ctx, config_obj)
 }
 
 func NewHuntDispatcher(
