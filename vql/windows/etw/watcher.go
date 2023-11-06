@@ -28,16 +28,16 @@ var (
 type EventTraceWatcherService struct {
 	mu sync.Mutex
 
-	registrations map[string][]*Handle
-	sessions      map[string]*etw.Session
+	sessions map[string]*SessionContext
 }
 
 func NewEventTraceWatcherService() *EventTraceWatcherService {
 	return &EventTraceWatcherService{
-		registrations: make(map[string][]*Handle),
-		sessions:      make(map[string]*etw.Session),
+		sessions: make(map[string]*SessionContext),
 	}
 }
+
+// Register returns a channel.
 
 func (self *EventTraceWatcherService) Register(
 	ctx context.Context,
@@ -45,13 +45,13 @@ func (self *EventTraceWatcherService) Register(
 	provider_guid string,
 	session_name string,
 	any_keyword uint64, all_keyword uint64, level int64,
-	wGuid windows.GUID,
-	output_chan chan vfilter.Row) (func(), error) {
+	wGuid windows.GUID) (func(), chan vfilter.Row, error) {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
-
 	subctx, cancel := context.WithCancel(ctx)
+
+	output_chan := make(chan vfilter.Row)
 
 	handle := &Handle{
 		ctx:         subctx,
@@ -59,25 +59,49 @@ func (self *EventTraceWatcherService) Register(
 		scope:       scope,
 		guid:        wGuid}
 
-	registration, pres := self.registrations[session_name]
-	if !pres {
-		registration = []*Handle{}
-		self.registrations[session_name] = registration
+	deregistration := func() {
+		cancel()
+
+		scope.Log("Unregistering %v\n", handle.guid)
+
+		self.mu.Lock()
+		sessionContext, pres := self.sessions[session_name]
+		self.mu.Unlock()
+		if !pres {
+			return
+		}
+
+		sessionContext.mu.Lock()
+		defer sessionContext.mu.Unlock()
+
+		new_reg := make([]*Handle, len(sessionContext.registrations))
+		for _, handle := range sessionContext.registrations {
+			if handle.guid != wGuid {
+				new_reg = append(new_reg, handle)
+			}
+		}
+
+		if len(new_reg) == 0 {
+			sessionContext.Close()
+			delete(self.sessions, session_name)
+		} else {
+			sessionContext.registrations = new_reg
+		}
 	}
 
-	session, pres := self.sessions[session_name]
+	// Check if we already have a session for this provider.
+	sessionContext, pres := self.sessions[session_name]
 	if !pres {
-		session, err := self.createSession(ctx, scope, session_name, output_chan)
+		var err error
+		sessionContext, err = self.NewSessionContext(session_name, scope)
 		if err != nil {
-			return cancel, err
+			return cancel, nil, err
 		}
 
-		err = self.UpdateSession(
-			ctx, scope, session, wGuid, session_name,
-			any_keyword, all_keyword, level)
-		if err != nil {
-			return cancel, err
-		}
+		// err = sessionContext.UpdateSession(ctx, scope, wGuid, any_keyword, all_keyword, level)
+		// if err != nil {
+		// 	return cancel, nil, err
+		// }
 
 		// Create a scope with a completely different lifespan since
 		// it may outlive this query (if another query starts watching
@@ -91,28 +115,30 @@ func (self *EventTraceWatcherService) Register(
 			scope, scope, constants.EVTX_FREQUENCY)
 
 		go self.StartMonitoring(
-			subctx, subscope, session, session_name, frequency, cancel)
-	} else {
-		err := self.UpdateSession(
-			ctx, scope, session, wGuid, session_name,
-			any_keyword, all_keyword, level)
-		if err != nil {
-			return cancel, err
-		}
+			subctx, subscope, sessionContext, session_name, frequency, cancel)
+
 	}
 
-	registration = append(registration, handle)
-	self.registrations[session_name] = registration
+	err := sessionContext.UpdateSession(
+		ctx, scope, wGuid, any_keyword,
+		all_keyword, level)
+	if err != nil {
+		return cancel, output_chan, err
+	}
 
 	scope.Log("Registering watcher for %v", provider_guid)
+	sessionContext.mu.Lock()
+	handles := sessionContext.registrations
+	sessionContext.registrations = append(handles, handle)
+	sessionContext.mu.Unlock()
 
-	return cancel, nil
+	return deregistration, output_chan, nil
 }
 
 // StartMonitoring monitors the session and emits events to all interested
 // listeners. If no listeners exist we terminate.
 func (self *EventTraceWatcherService) StartMonitoring(
-	ctx context.Context, scope vfilter.Scope, session *etw.Session,
+	ctx context.Context, scope vfilter.Scope, sessionContext *SessionContext,
 	key string, frequency uint64, cancel context.CancelFunc) {
 
 	defer utils.CheckForPanic("StartMonitoring")
@@ -133,13 +159,17 @@ func (self *EventTraceWatcherService) StartMonitoring(
 			event.Set("EventData", data)
 		}
 
-		self.mu.Lock()
-		handles, pres := self.registrations[key]
-		self.mu.Unlock()
+		if !sessionContext.status {
+			return
+		}
+
+		sessionContext.mu.Lock()
+		handles := sessionContext.registrations
+		sessionContext.mu.Unlock()
 
 		// No more listeners left, we are done.
-		if !pres || len(handles) == 0 {
-			session.Close()
+		if len(handles) == 0 || handles[0] == nil {
+			sessionContext.Close()
 			return
 		}
 
@@ -158,78 +188,88 @@ func (self *EventTraceWatcherService) StartMonitoring(
 	go func() {
 		// When session.Process() exits, we exit the
 		// query.
-		err := session.Process(cb)
+		err := sessionContext.session.Process(cb)
 		if err != nil {
 			scope.Log("watch_etw: %v", err)
 		}
 	}()
 }
 
-func (self *EventTraceWatcherService) createSession(
-	ctx context.Context, scope types.Scope,
-	session_name string,
-	output_chan chan vfilter.Row) (*etw.Session, error) {
+type SessionContext struct {
+	mu sync.Mutex
 
-	session, err := etw.NewSession(session_name)
+	name          string
+	status        bool
+	session       *etw.Session
+	registrations []*Handle
+}
+
+func (self *SessionContext) Close() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self.status = false
+
+	// Empty the registrations and close the session.
+	self.registrations = []*Handle{}
+	self.session.Close()
+	delete(GlobalEventTraceService.sessions, self.name)
+}
+
+func (self *EventTraceWatcherService) NewSessionContext(name string, scope vfilter.Scope) (*SessionContext, error) {
+
+	sessionContext := &SessionContext{
+		name:          name,
+		registrations: []*Handle{},
+		status:        true,
+	}
+
+	err := sessionContext.createSession()
 	if err != nil {
-		scope.Log("watch_etw: %s", err.Error())
+		scope.Log("NewSessionContext: Failed to create session: %v", err)
+		return nil, err
+	}
+	scope.Log("NewSessionContext: Created session %v", name)
+
+	self.sessions[name] = sessionContext
+
+	return sessionContext, nil
+}
+
+func (self *SessionContext) createSession() error {
+
+	session, err := etw.NewSession(self.name)
+	if err != nil {
 
 		// Try to kill the session and recreate it.
-		err = etw.KillSession(session_name)
+		err = etw.KillSession(self.name)
 		if err != nil {
-			return session, err
+			return err
 		}
 
-		session, err = etw.NewSession(session_name)
+		session, err = etw.NewSession(self.name)
 		if err != nil {
-			return session, err
+			return err
 		}
 
 	}
 
-	self.sessions[session_name] = session
+	self.session = session
 
-	return session, nil
+	return nil
 }
 
-func (self *EventTraceWatcherService) UpdateSession(
+func (self *SessionContext) UpdateSession(
 	ctx context.Context, scope types.Scope,
-	session *etw.Session, guid windows.GUID, session_name string,
-	any_keyword uint64, all_keyword uint64, level int64) error {
+	guid windows.GUID, any_keyword uint64,
+	all_keyword uint64, level int64) error {
 
-	return session.UpdateOptions(guid, func(cfg *etw.SessionOptions) {
+	return self.session.UpdateOptions(guid, func(cfg *etw.SessionOptions) {
 		cfg.MatchAnyKeyword = any_keyword
 		cfg.MatchAllKeyword = all_keyword
 		cfg.Level = etw.TraceLevel(level)
-		cfg.Name = session_name
+		cfg.Name = self.name
 		cfg.Guid = guid
 	})
-}
-
-func CloseSession(session_name string, provider_guid string) error {
-	handles, pres := GlobalEventTraceService.registrations[session_name]
-	if !pres {
-		return nil // No Session to kill.
-	}
-
-	// Check if GUID is valid
-	guid, err := windows.GUIDFromString(provider_guid)
-	if err != nil {
-		return err
-	}
-
-	// Remove our entry from the list of handles.
-	for i, handle := range handles {
-		if handle.guid == guid {
-			handle.ctx.Done()
-			handles = append(handles[:i], handles[i+1:]...)
-		}
-	}
-	GlobalEventTraceService.registrations[session_name] = handles
-	if len(handles) == 0 {
-		return etw.KillSession(session_name)
-	}
-	return nil
 }
 
 // Handle is given for each interested party. We write the event on

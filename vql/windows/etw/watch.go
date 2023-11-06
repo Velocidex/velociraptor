@@ -57,13 +57,11 @@ func (self WatchETWPlugin) Call(
 			arg.Name = "Velociraptor"
 		}
 
-		event_channel := make(chan vfilter.Row)
-
 		for {
-			cancel, err := GlobalEventTraceService.Register(
+			cancel, event_channel, err := GlobalEventTraceService.Register(
 				ctx, scope, arg.Provider, arg.Name,
 				arg.AnyKeywords, arg.AllKeywords, arg.Level,
-				wGuid, event_channel)
+				wGuid)
 			if err != nil {
 				scope.Log("watch_etw: %v", err)
 				cancel()
@@ -81,7 +79,6 @@ func (self WatchETWPlugin) Call(
 			for event := range event_channel {
 				select {
 				case <-ctx.Done():
-					CloseSession(arg.Name, arg.Provider)
 					return
 				case output_chan <- event:
 				}
