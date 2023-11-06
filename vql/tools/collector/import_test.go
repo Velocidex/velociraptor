@@ -1,13 +1,20 @@
 package collector_test
 
 import (
+	"archive/zip"
 	"context"
+	"io/ioutil"
+	"os"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/alecthomas/assert"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/flows/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -19,6 +26,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/server/hunts"
 	"www.velocidex.com/golang/velociraptor/vql/tools/collector"
 	"www.velocidex.com/golang/velociraptor/vtesting"
+	"www.velocidex.com/golang/vfilter"
 
 	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
 )
@@ -211,9 +219,28 @@ sources:
 	download_pathspec := result.(path_specs.FSPathSpec)
 	assert.NotEmpty(self.T(), download_pathspec.String())
 
-	// imported_hunt := (&collector.ImportCollectionFunction{}).Call(ctx, scope, ordereddict.NewDict().
-	// 	Set("filename", download_pathspec.String()))
-	// assert.IsType(self.T(), &api_proto.Hunt{}, imported_hunt)
+	file_store_factory := file_store.GetFileStore(self.ConfigObj)
+
+	// When we exit from here we make sure to remove this file to
+	// cleanup
+	defer file_store_factory.Delete(download_pathspec)
+
+	reader, err := file_store_factory.ReadFile(download_pathspec)
+	assert.NoError(self.T(), err)
+	defer reader.Close()
+
+	f, err := os.Create("fixtures/test_hunt.zip")
+	assert.NoError(self.T(), err)
+	defer os.Remove("fixtures/test_hunt.zip")
+	defer f.Close()
+
+	_, err = utils.Copy(ctx, f, reader)
+	assert.NoError(self.T(), err)
+
+	imported_hunt := (&collector.ImportCollectionFunction{}).Call(ctx, scope, ordereddict.NewDict().
+		Set("filename", "fixtures/test_hunt.zip").
+		Set("import_type", "hunt"))
+	assert.IsType(self.T(), &api_proto.Hunt{}, imported_hunt)
 }
 
 func (self *TestSuite) TestImportStaticHunt() {
@@ -262,4 +289,69 @@ func (self *TestSuite) TestImportStaticHunt() {
 
 	// There is one hit - a new client is added to the index.
 	assert.Equal(self.T(), 1, len(search_resp.Items))
+}
+
+// Read the entire zip file for inspection.
+func openVirtualZipFile(
+	config_obj *config_proto.Config,
+	scope vfilter.Scope,
+	src api.FSPathSpec) (*ordereddict.Dict, error) {
+	file_store_factory := file_store.GetFileStore(config_obj)
+
+	// When we exit from here we make sure to remove this file to
+	// cleanup
+	defer file_store_factory.Delete(src)
+
+	reader, err := file_store_factory.ReadFile(src)
+	if err != nil {
+		return nil, err
+	}
+	defer reader.Close()
+
+	file_info, err := reader.Stat()
+	if err != nil {
+		return nil, err
+	}
+
+	result := ordereddict.NewDict()
+
+	r, err := zip.NewReader(utils.MakeReaderAtter(reader), file_info.Size())
+	if err != nil {
+		return nil, err
+	}
+
+	// Sort files for comparison stability.
+	sort.Slice(r.File, func(i, j int) bool {
+		return r.File[i].Name < r.File[j].Name
+	})
+
+	for _, f := range r.File {
+		rc, err := f.Open()
+		if err != nil {
+			return nil, err
+		}
+		serialized, err := ioutil.ReadAll(rc)
+		if err != nil {
+			return nil, err
+		}
+
+		// Either JSON array or JSONL
+		rows, err := utils.ParseJsonToDicts(serialized)
+		if err == nil {
+			result.Set(f.Name, rows)
+			continue
+		}
+
+		if serialized[0] == '{' {
+			item, err := utils.ParseJsonToObject(serialized)
+			if err == nil {
+				result.Set(f.Name, item)
+			}
+			continue
+		}
+
+		result.Set(f.Name, string(serialized))
+	}
+
+	return result, nil
 }
