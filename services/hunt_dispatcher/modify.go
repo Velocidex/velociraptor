@@ -2,12 +2,12 @@ package hunt_dispatcher
 
 import (
 	"context"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // This method modifies the hunt. Only the following modifications are allowed:
@@ -38,7 +38,7 @@ func (self *HuntDispatcher) ModifyHunt(
 		mutation.State = api_proto.Hunt_ARCHIVED
 
 		row := ordereddict.NewDict().
-			Set("Timestamp", time.Now().UTC().Unix()).
+			Set("Timestamp", utils.GetTime().Now().UTC().Unix()).
 			Set("HuntId", mutation.HuntId).
 			Set("User", user)
 
@@ -68,7 +68,7 @@ func (self *HuntDispatcher) ModifyHunt(
 		// to re-do a hunt is to copy it and
 		// do it again.
 		mutation.State = api_proto.Hunt_RUNNING
-		mutation.StartTime = uint64(time.Now().UnixNano() / 1000)
+		mutation.StartTime = uint64(utils.GetTime().Now().UnixNano() / 1000)
 
 		// We are trying to pause or stop the hunt.
 	} else if hunt_modification.State == api_proto.Hunt_STOPPED ||

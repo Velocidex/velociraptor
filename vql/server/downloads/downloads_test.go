@@ -241,6 +241,9 @@ func (self *TestSuite) TestExportCollection1() {
 }
 
 func (self *TestSuite) TestExportHunt() {
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
+	defer closer()
+
 	// Operate on a different client
 	self.client_id = "C.1235"
 

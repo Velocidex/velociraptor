@@ -188,9 +188,9 @@
  ],
  "hunt_info.json": {
   "hunt_id": "H.123",
-  "version": "1699294277971426136",
-  "create_time": "1699294277968401",
-  "expires": "1699899077968401",
+  "version": "10000000010",
+  "create_time": "10000000",
+  "expires": "604810000000",
   "start_request": {
    "flow_id": "F.123.H",
    "artifacts": [
