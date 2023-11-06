@@ -19,6 +19,7 @@
         "classnames": "^2.3.2",
         "csv-parse": "4.16.3",
         "csv-stringify": "5.6.5",
+        "dompurify": "3.0.6",
         "dotenv": "^8.6.0",
         "env-cmd": "^10.1.0",
         "hosted-git-info": "^2.8.9",
@@ -69,7 +70,7 @@
     "scripts": {
         "build": "vite build",
         "start": "vite serve",
-    "lint": "eslint ./src --ext .js,.jsx",
+        "lint": "eslint ./src --ext .js,.jsx",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "watch": {
@@ -96,15 +97,15 @@
         ]
     },
     "devDependencies": {
-    "@babel/eslint-parser": "^7.19.1",
-    "@babel/preset-react": "^7.18.6",
-    "@testing-library/react": "12",
-    "@vitejs/plugin-react": "^3.0.0",
-    "eslint": "^8.35.0",
-    "eslint-plugin-import": "^2.27.5",
-    "eslint-plugin-jsx-a11y": "^6.7.1",
-    "eslint-plugin-react": "^7.32.2",
-    "vite": "^4.1.5",
-    "vite-plugin-compression": "^0.5.1"
+        "@babel/eslint-parser": "^7.19.1",
+        "@babel/preset-react": "^7.18.6",
+        "@testing-library/react": "12",
+        "@vitejs/plugin-react": "^3.0.0",
+        "eslint": "^8.35.0",
+        "eslint-plugin-import": "^2.27.5",
+        "eslint-plugin-jsx-a11y": "^6.7.1",
+        "eslint-plugin-react": "^7.32.2",
+        "vite": "^4.1.5",
+        "vite-plugin-compression": "^0.5.1"
     }
 }
