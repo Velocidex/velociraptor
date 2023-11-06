@@ -156,6 +156,19 @@
   category: server
   metadata:
     permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
+- name: artifact_set_metadata
+  description: Sets metadata about the artifact.
+  type: Function
+  args:
+  - name: name
+    type: string
+    description: The Artifact to delete
+    required: true
+  - name: hidden
+    type: bool
+    description: Set to make the artifact hidden in the GUI
+  metadata:
+    permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
 - name: atexit
   description: |
     Install a query to run when the query is unwound. This is used to
@@ -2501,7 +2514,11 @@
     required: true
   - name: brief
     type: bool
-    description: If set we return less columns.
+    description: If set we return less columns (deprecated).
+  - name: orgs
+    type: string
+    description: If set we combine results from all orgs.
+    repeated: true
   category: server
   metadata:
     permissions: READ_RESULTS
@@ -4853,6 +4870,9 @@
     type: accessors.OSPath
     description: Path to the file to write
     required: true
+  - name: accessor
+    type: string
+    description: The accessor to use
   metadata:
     permissions: FILESYSTEM_READ
 - name: read_file

@@ -323,8 +323,8 @@ func (self ArtifactsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 }
 
 type ArtifactSetMetadataFunctionArgs struct {
-	Name   string `vfilter:"required,field=name,doc=The Artifact to delete"`
-	Hidden bool   `vfilter:"optional,field=hidden,doc=Set to make the artifact hidden in the GUI"`
+	Name   string `vfilter:"required,field=name,doc=The Artifact to update"`
+	Hidden bool   `vfilter:"optional,field=hidden,doc=Set to true make the artifact hidden in the GUI, false to make it visible again."`
 }
 
 type ArtifactSetMetadataFunction struct{}

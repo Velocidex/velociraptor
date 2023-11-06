@@ -37,6 +37,7 @@ func (self *RepositoryManager) NewRepository() services.Repository {
 	}
 
 	if self.metadata != nil {
+		result.Metadata = make(map[string]*artifacts_proto.ArtifactMetadata)
 		for k, v := range self.metadata.Metadata {
 			result.Metadata[k] = v
 		}
