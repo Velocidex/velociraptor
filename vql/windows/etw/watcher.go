@@ -10,11 +10,9 @@ import (
 	"github.com/Velocidex/etw"
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -61,32 +59,11 @@ func (self *EventTraceWatcherService) Register(
 
 	deregistration := func() {
 		cancel()
-
-		scope.Log("Unregistering %v\n", handle.guid)
-
-		self.mu.Lock()
-		sessionContext, pres := self.sessions[session_name]
-		self.mu.Unlock()
+		session, pres := self.sessions[session_name]
 		if !pres {
 			return
 		}
-
-		sessionContext.mu.Lock()
-		defer sessionContext.mu.Unlock()
-
-		new_reg := make([]*Handle, len(sessionContext.registrations))
-		for _, handle := range sessionContext.registrations {
-			if handle.guid != wGuid {
-				new_reg = append(new_reg, handle)
-			}
-		}
-
-		if len(new_reg) == 0 {
-			sessionContext.Close()
-			delete(self.sessions, session_name)
-		} else {
-			sessionContext.registrations = new_reg
-		}
+		session.Deregister(wGuid)
 	}
 
 	// Check if we already have a session for this provider.
@@ -111,11 +88,9 @@ func (self *EventTraceWatcherService) Register(
 		manager := &repository.RepositoryManager{}
 		builder := services.ScopeBuilderFromScope(scope)
 		subscope := manager.BuildScope(builder)
-		frequency := vql_subsystem.GetIntFromRow(
-			scope, scope, constants.EVTX_FREQUENCY)
 
 		go self.StartMonitoring(
-			subctx, subscope, sessionContext, session_name, frequency, cancel)
+			subctx, subscope, sessionContext, session_name, cancel)
 
 	}
 
@@ -139,15 +114,9 @@ func (self *EventTraceWatcherService) Register(
 // listeners. If no listeners exist we terminate.
 func (self *EventTraceWatcherService) StartMonitoring(
 	ctx context.Context, scope vfilter.Scope, sessionContext *SessionContext,
-	key string, frequency uint64, cancel context.CancelFunc) {
+	key string, cancel context.CancelFunc) {
 
 	defer utils.CheckForPanic("StartMonitoring")
-
-	// By default check every 15 seconds. Event logs are not flushed
-	// that often so checking more frequently does not help much.
-	if frequency == 0 {
-		frequency = 15
-	}
 
 	cb := func(e *etw.Event) {
 		event := ordereddict.NewDict().
@@ -164,7 +133,8 @@ func (self *EventTraceWatcherService) StartMonitoring(
 		}
 
 		sessionContext.mu.Lock()
-		handles := sessionContext.registrations
+		handles := make([]*Handle, len(sessionContext.registrations))
+		copy(sessionContext.registrations, handles)
 		sessionContext.mu.Unlock()
 
 		// No more listeners left, we are done.
@@ -193,6 +163,13 @@ func (self *EventTraceWatcherService) StartMonitoring(
 			scope.Log("watch_etw: %v", err)
 		}
 	}()
+}
+
+func (self *EventTraceWatcherService) Deregister(session_name string) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	delete(self.sessions, session_name)
 }
 
 type SessionContext struct {
@@ -270,6 +247,26 @@ func (self *SessionContext) UpdateSession(
 		cfg.Name = self.name
 		cfg.Guid = guid
 	})
+}
+
+func (self *SessionContext) Deregister(wGuid windows.GUID) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	new_reg := make([]*Handle, len(self.registrations))
+	for _, handle := range self.registrations {
+		if handle.guid != wGuid {
+			new_reg = append(new_reg, handle)
+		}
+	}
+
+	if len(new_reg) == 0 {
+		self.Close()
+		GlobalEventTraceService.Deregister(self.name)
+	} else {
+		self.registrations = new_reg
+	}
 }
 
 // Handle is given for each interested party. We write the event on
