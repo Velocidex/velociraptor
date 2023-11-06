@@ -322,7 +322,97 @@ func (self ArtifactsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 	}
 }
 
+type ArtifactSetMetadataFunctionArgs struct {
+	Name   string `vfilter:"required,field=name,doc=The Artifact to delete"`
+	Hidden bool   `vfilter:"optional,field=hidden,doc=Set to make the artifact hidden in the GUI"`
+}
+
+type ArtifactSetMetadataFunction struct{}
+
+func (self *ArtifactSetMetadataFunction) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	arg := &ArtifactSetMetadataFunctionArgs{}
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("artifact_set_metadata: %v", err)
+		return vfilter.Null{}
+	}
+
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		scope.Log("artifact_set_metadata: Command can only run on the server")
+		return vfilter.Null{}
+	}
+
+	manager, _ := services.GetRepositoryManager(config_obj)
+	if manager == nil {
+		scope.Log("artifact_set_metadata: Command can only run on the server")
+		return vfilter.Null{}
+	}
+
+	global_repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		scope.Log("artifact_delete: %v", err)
+		return vfilter.Null{}
+	}
+
+	definition, pres := global_repository.Get(ctx, config_obj, arg.Name)
+	if !pres {
+		scope.Log("artifact_delete: Artifact '%v' not found", arg.Name)
+		return vfilter.Null{}
+	}
+
+	metadata := definition.Metadata
+	if metadata == nil {
+		metadata = &artifacts_proto.ArtifactMetadata{}
+	}
+
+	var permission acls.ACL_PERMISSION
+	def_type := strings.ToLower(definition.Type)
+
+	switch def_type {
+	case "client", "client_event", "notebook", "":
+		permission = acls.ARTIFACT_WRITER
+	case "server", "server_event":
+		permission = acls.SERVER_ARTIFACT_WRITER
+	}
+
+	err = vql_subsystem.CheckAccess(scope, permission)
+	if err != nil {
+		scope.Log("artifact_set_metadata: %s", err)
+		return vfilter.Null{}
+	}
+
+	_, pres = args.Get("hidden")
+	if pres {
+		metadata.Hidden = arg.Hidden
+	}
+
+	principal := vql_subsystem.GetPrincipal(scope)
+	err = manager.SetArtifactMetadata(ctx, config_obj, principal, arg.Name, metadata)
+	if err != nil {
+		scope.Log("artifact_set_metadata: %s", err)
+		return vfilter.Null{}
+	}
+
+	return metadata
+}
+
+func (self ArtifactSetMetadataFunction) Info(
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "artifact_set_metadata",
+		Doc:     "Sets metadata about the artifact.",
+		ArgType: type_map.AddType(scope, &ArtifactSetMetadataFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(
+			acls.ARTIFACT_WRITER, acls.SERVER_ARTIFACT_WRITER).Build(),
+	}
+}
+
 func init() {
+	vql_subsystem.RegisterFunction(&ArtifactSetMetadataFunction{})
 	vql_subsystem.RegisterPlugin(&ArtifactsPlugin{})
 	vql_subsystem.RegisterFunction(&ArtifactSetFunction{})
 	vql_subsystem.RegisterFunction(&ArtifactDeleteFunction{})

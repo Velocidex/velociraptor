@@ -47,3 +47,9 @@ Queries:
        SELECT * FROM artifact_definitions(names="Generic.Client.Info")
        WHERE name =~ "Generic.Client.Info"
      })
+
+  # Set artifact metadata
+  - SELECT artifact_set_metadata(name="Custom.Generic.Client.Info", hidden=TRUE)
+    FROM scope()
+
+  - SELECT name, metadata FROM artifact_definitions(names="Custom.Generic.Client.Info")
