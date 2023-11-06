@@ -1,63 +1,42 @@
 {
  "collection_context.json": {
-  "context": {
+  "client_id": "server",
+  "session_id": "F.1234",
+  "request": {
    "client_id": "server",
-   "session_id": "F.1234",
-   "request": {
-    "client_id": "server",
-    "artifacts": [
-     "TestArtifact"
-    ]
-   },
-   "create_time": 10000000,
-   "start_time": 10000000,
-   "active_time": 10000000,
-   "total_uploaded_files": 2,
-   "total_expected_uploaded_bytes": 24,
-   "total_uploaded_bytes": 24,
-   "total_collected_rows": 1,
-   "total_logs": 5,
-   "total_requests": 1,
-   "state": 2,
-   "artifacts_with_results": [
+   "artifacts": [
     "TestArtifact"
-   ],
-   "query_stats": [
-    {
-     "last_active": 10000000,
-     "first_active": 10000000,
-     "names_with_response": [
-      "TestArtifact"
-     ],
-     "Artifact": "TestArtifact",
-     "log_rows": 5,
-     "uploaded_files": 2,
-     "uploaded_bytes": 24,
-     "expected_uploaded_bytes": 24,
-     "result_rows": 1
-    }
-   ],
-   "user_notified": true
-  },
-  "available_downloads": {
-   "files": [
-    {
-     "name": "server-F.1234",
-     "path": "downloads/server/F.1234/Test.zip",
-     "type": "zip",
-     "stats": {
-      "timestamp": 1602103388,
-      "components": [
-       "downloads",
-       "server",
-       "F.1234",
-       "Test.zip"
-      ],
-      "type": "zip"
-     }
-    }
    ]
-  }
+  },
+  "create_time": 10000000,
+  "start_time": 10000000,
+  "active_time": 10000000,
+  "total_uploaded_files": 2,
+  "total_expected_uploaded_bytes": 24,
+  "total_uploaded_bytes": 24,
+  "total_collected_rows": 1,
+  "total_logs": 5,
+  "total_requests": 1,
+  "state": 2,
+  "artifacts_with_results": [
+   "TestArtifact"
+  ],
+  "query_stats": [
+   {
+    "last_active": 10000000,
+    "first_active": 10000000,
+    "names_with_response": [
+     "TestArtifact"
+    ],
+    "Artifact": "TestArtifact",
+    "log_rows": 5,
+    "uploaded_files": 2,
+    "uploaded_bytes": 24,
+    "expected_uploaded_bytes": 24,
+    "result_rows": 1
+   }
+  ],
+  "user_notified": true
  },
  "logs.json": [
   {
