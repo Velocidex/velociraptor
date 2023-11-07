@@ -18,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/server/downloads"
+	"www.velocidex.com/golang/velociraptor/vql/server/flows"
 	"www.velocidex.com/golang/velociraptor/vql/tools/collector"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
@@ -90,7 +91,7 @@ func (self *TestSuite) TestImportDynamicCollection() {
 		Set("Original Flow", self.snapshotHuntFlow())
 
 	// Now delete the old flow
-	for _ = range (&flowseleteFlowPlugin{}).Call(ctx, scope,
+	for _ = range (&flows.DeleteFlowPlugin{}).Call(ctx, scope,
 		ordereddict.NewDict().
 			Set("client_id", client_id).
 			Set("flow_id", flow_id).
