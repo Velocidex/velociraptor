@@ -31,8 +31,8 @@
    }
   ]
  },
- "TestClient-C.1235/logs.csv": "_ts,client_time,level,message\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Starting collection of Custom.TestArtifactUpload\\n\"\"\"\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Collecting file hello world into /uploads/data/file.txt (11 bytes)\\n\"\"\"\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Collecting file {\\\"\"DelegateAccessor\\\"\":\\\"\"data\\\"\",\\\"\"DelegatePath\\\"\":\\\"\"This is... into /uploads/sparse/C%3A/file.sparse.txt (21 bytes)\\n\"\"\"\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Collected 1 rows for Custom.TestArtifactUpload\\n\"\"\"\n1602103388,1602103388,\"\"\"DEBUG\"\"\",\"\"\"Query Stats: {\\\"\"RowsScanned\\\"\":2,\\\"\"PluginsCalled\\\"\":1,\\\"\"FunctionsCalled\\\"\":4,\\\"\"ProtocolSearch\\\"\":0,\\\"\"ScopeCopy\\\"\":6}\\n\"\"\"\n",
- "TestClient-C.1235/logs.json": [
+ "TestClient-C.1235/log.csv": "_ts,client_time,level,message\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Starting collection of Custom.TestArtifactUpload\\n\"\"\"\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Collecting file hello world into /uploads/data/file.txt (11 bytes)\\n\"\"\"\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Collecting file {\\\"\"DelegateAccessor\\\"\":\\\"\"data\\\"\",\\\"\"DelegatePath\\\"\":\\\"\"This is... into /uploads/sparse/C%3A/file.sparse.txt (21 bytes)\\n\"\"\"\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Collected 1 rows for Custom.TestArtifactUpload\\n\"\"\"\n1602103388,1602103388,\"\"\"DEBUG\"\"\",\"\"\"Query Stats: {\\\"\"RowsScanned\\\"\":2,\\\"\"PluginsCalled\\\"\":1,\\\"\"FunctionsCalled\\\"\":4,\\\"\"ProtocolSearch\\\"\":0,\\\"\"ScopeCopy\\\"\":6}\\n\"\"\"\n",
+ "TestClient-C.1235/log.json": [
   {
    "_ts": 1602103388,
    "client_time": 1602103388,

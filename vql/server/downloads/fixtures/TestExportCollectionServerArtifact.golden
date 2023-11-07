@@ -1,4 +1,7 @@
 {
+ "client_info.json": {
+  "client_id": "server"
+ },
  "collection_context.json": {
   "client_id": "server",
   "session_id": "F.1234",
@@ -38,7 +41,7 @@
   ],
   "user_notified": true
  },
- "logs.json": [
+ "log.json": [
   {
    "Timestamp": 10000000,
    "Level": "DEFAULT",

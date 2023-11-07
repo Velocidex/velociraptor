@@ -517,7 +517,9 @@ func (self *HuntDispatcher) CreateHunt(
 		return nil, errors.New("No artifacts to collect.")
 	}
 
-	hunt.CreateTime = uint64(utils.GetTime().Now().UTC().UnixNano() / 1000)
+	if hunt.CreateTime == 0 {
+		hunt.CreateTime = uint64(utils.GetTime().Now().UTC().UnixNano() / 1000)
+	}
 	if hunt.Expires == 0 {
 		default_expiry := config_obj.Defaults.HuntExpiryHours
 		if default_expiry == 0 {

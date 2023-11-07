@@ -280,14 +280,19 @@ func downloadFlowToZip(
 		return err
 	}
 
+	// If we dont know anything this client, at least add an empty
+	// record so the flow is recognized by the importer.
 	client_info, err := client_info_manager.Get(ctx, client_id)
-	if err == nil {
-		err = zip_writer.WriteJSON(
-			paths.ZipPathFromFSPathSpec(prefix.AddChild("client_info")),
-			client_info)
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		client_info = &services.ClientInfo{}
+		client_info.ClientId = client_id
+	}
+
+	err = zip_writer.WriteJSON(
+		paths.ZipPathFromFSPathSpec(prefix.AddChild("client_info")),
+		client_info)
+	if err != nil {
+		return err
 	}
 
 	// Write the flow details.
@@ -321,7 +326,7 @@ func downloadFlowToZip(
 	// Copy the collection logs
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	err = copyResultSetIntoContainer(ctx, config_obj, zip_writer, format,
-		flow_path_manager.Log(), prefix.AddChild("logs"))
+		flow_path_manager.Log(), prefix.AddChild("log"))
 	if err != nil {
 		return err
 	}

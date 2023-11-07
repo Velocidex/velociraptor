@@ -183,13 +183,9 @@ func (self *TestSuite) SetupTest() {
 	self.ConfigObj.Services.HuntManager = true
 	self.ConfigObj.Services.ServerArtifacts = true
 	self.LoadArtifactsIntoConfig([]string{customCollectionWithTypes})
+	self.LoadArtifactsIntoConfig(importHuntArtifacts)
 
 	self.TestSuite.SetupTest()
-
-	self.LoadArtifactFiles(
-		"../../../artifacts/definitions/Demo/Plugins/GUI.yaml",
-		"../../../artifacts/definitions/Reporting/Default.yaml",
-	)
 
 	collector.Clock = utils.NewMockClock(time.Unix(1602103388, 0))
 	reporting.Clock = collector.Clock
