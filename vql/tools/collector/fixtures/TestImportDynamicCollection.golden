@@ -1,29 +1,65 @@
 {
  "Original Flow": {
-  "/clients/server/artifacts/AnotherTestArtifact/F.1234.json": "{\"Artifact\":\"AnotherTestArtifact\"}\n",
-  "/clients/server/artifacts/AnotherTestArtifact/F.1234.json.index": "0000000000000000",
-  "/clients/server/artifacts/TestArtifact/F.1234.json": "{\"Artifact\":\"TestArtifact\",\"Upload\":{\"Path\":\"/Hello\",\"Size\":5,\"StoredSize\":5,\"sha256\":\"185f8db32271fe25f561a6fc938b2e264306ec304eda518007d1764826381969\",\"md5\":\"8b1a9953c4611296a827abf8c47804d7\",\"Components\":[\"clients\",\"server\",\"collections\",\"F.1234\",\"uploads\",\"data\",\"Hello\"]}}\n",
-  "/clients/server/artifacts/TestArtifact/F.1234.json.index": "0000000000000000",
-  "/clients/server/collections/F.1234/logs.json": "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"Running query on behalf of user VelociraptorServer\\n\"}\n{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"\\u003cgreen\\u003eStarting\\u003c/\\u003e query execution.\\n\"}\n{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"Running query on behalf of user VelociraptorServer\\n\"}\n{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"\\u003cgreen\\u003eStarting\\u003c/\\u003e query execution.\\n\"}\n{\"Timestamp\":10000000,\"Level\":\"DEBUG\",\"message\":\"Query Stats: {\\\"RowsScanned\\\":2,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":0,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":6}\\n\"}\n{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"Uploaded /Hello (5 bytes)\\n\"}\n{\"Timestamp\":10000000,\"Level\":\"DEBUG\",\"message\":\"Query Stats: {\\\"RowsScanned\\\":2,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":1,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":6}\\n\"}\n",
-  "/clients/server/collections/F.1234/logs.json.index": "00000000000000006a00000000000000d9000000000000004301000000000000b2010000000000005702000000000000a802000000000000",
+  "/clients/server/artifacts/AnotherTestArtifact/F.1234.json": [
+   "",
+   "{\"Artifact\":\"AnotherTestArtifact\"}"
+  ],
+  "/clients/server/artifacts/AnotherTestArtifact/F.1234.json.index": "Index 8 bytes",
+  "/clients/server/artifacts/TestArtifact/F.1234.json": [
+   "",
+   "{\"Artifact\":\"TestArtifact\",\"Upload\":{\"Path\":\"/Hello\",\"Size\":5,\"StoredSize\":5,\"sha256\":\"185f8db32271fe25f561a6fc938b2e264306ec304eda518007d1764826381969\",\"md5\":\"8b1a9953c4611296a827abf8c47804d7\",\"Components\":[\"clients\",\"server\",\"collections\",\"F.1234\",\"uploads\",\"data\",\"Hello\"]}}"
+  ],
+  "/clients/server/artifacts/TestArtifact/F.1234.json.index": "Index 8 bytes",
+  "/clients/server/collections/F.1234/logs.json": [
+   "",
+   "{\"Timestamp\":10000000,\"Level\":\"DEBUG\",\"message\":\"Query Stats: {\\\"RowsScanned\\\":2,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":0,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":6}\\n\"}",
+   "{\"Timestamp\":10000000,\"Level\":\"DEBUG\",\"message\":\"Query Stats: {\\\"RowsScanned\\\":2,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":1,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":6}\\n\"}",
+   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"Running query on behalf of user VelociraptorServer\\n\"}",
+   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"Running query on behalf of user VelociraptorServer\\n\"}",
+   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"Uploaded /Hello (5 bytes)\\n\"}",
+   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"\\u003cgreen\\u003eStarting\\u003c/\\u003e query execution.\\n\"}",
+   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"\\u003cgreen\\u003eStarting\\u003c/\\u003e query execution.\\n\"}"
+  ],
+  "/clients/server/collections/F.1234/logs.json.index": "Index 56 bytes",
   "/clients/server/collections/F.1234/uploads/data/Hello": "Hello"
  },
  "Deleted Flow": {
-  "/clients/server/artifacts/AnotherTestArtifact/F.1234.json": "",
-  "/clients/server/artifacts/AnotherTestArtifact/F.1234.json.index": "",
-  "/clients/server/artifacts/TestArtifact/F.1234.json": "",
-  "/clients/server/artifacts/TestArtifact/F.1234.json.index": "",
-  "/clients/server/collections/F.1234/logs.json": "",
-  "/clients/server/collections/F.1234/logs.json.index": "",
+  "/clients/server/artifacts/AnotherTestArtifact/F.1234.json": [
+   ""
+  ],
+  "/clients/server/artifacts/AnotherTestArtifact/F.1234.json.index": "Index 0 bytes",
+  "/clients/server/artifacts/TestArtifact/F.1234.json": [
+   ""
+  ],
+  "/clients/server/artifacts/TestArtifact/F.1234.json.index": "Index 0 bytes",
+  "/clients/server/collections/F.1234/logs.json": [
+   ""
+  ],
+  "/clients/server/collections/F.1234/logs.json.index": "Index 0 bytes",
   "/clients/server/collections/F.1234/uploads/data/Hello": ""
  },
  "Imported Flow": {
-  "/clients/server/artifacts/AnotherTestArtifact/F.1234.json": "{\"Artifact\":\"AnotherTestArtifact\"}\n",
-  "/clients/server/artifacts/AnotherTestArtifact/F.1234.json.index": "0000000000000000",
-  "/clients/server/artifacts/TestArtifact/F.1234.json": "{\"Artifact\":\"TestArtifact\",\"Upload\":{\"Path\":\"/Hello\",\"Size\":5,\"StoredSize\":5,\"sha256\":\"185f8db32271fe25f561a6fc938b2e264306ec304eda518007d1764826381969\",\"md5\":\"8b1a9953c4611296a827abf8c47804d7\",\"Components\":[\"clients\",\"server\",\"collections\",\"F.1234\",\"uploads\",\"data\",\"Hello\"]}}\n",
-  "/clients/server/artifacts/TestArtifact/F.1234.json.index": "0000000000000000",
-  "/clients/server/collections/F.1234/logs.json": "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"Running query on behalf of user VelociraptorServer\\n\"}\n{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"\\u003cgreen\\u003eStarting\\u003c/\\u003e query execution.\\n\"}\n{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"Running query on behalf of user VelociraptorServer\\n\"}\n{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"\\u003cgreen\\u003eStarting\\u003c/\\u003e query execution.\\n\"}\n{\"Timestamp\":10000000,\"Level\":\"DEBUG\",\"message\":\"Query Stats: {\\\"RowsScanned\\\":2,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":0,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":6}\\n\"}\n{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"Uploaded /Hello (5 bytes)\\n\"}\n{\"Timestamp\":10000000,\"Level\":\"DEBUG\",\"message\":\"Query Stats: {\\\"RowsScanned\\\":2,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":1,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":6}\\n\"}\n",
-  "/clients/server/collections/F.1234/logs.json.index": "0000000000000000000000000001000000000000000200000000000000030000000000000004000000000000000500000000000000060000",
+  "/clients/server/artifacts/AnotherTestArtifact/F.1234.json": [
+   "",
+   "{\"Artifact\":\"AnotherTestArtifact\"}"
+  ],
+  "/clients/server/artifacts/AnotherTestArtifact/F.1234.json.index": "Index 8 bytes",
+  "/clients/server/artifacts/TestArtifact/F.1234.json": [
+   "",
+   "{\"Artifact\":\"TestArtifact\",\"Upload\":{\"Path\":\"/Hello\",\"Size\":5,\"StoredSize\":5,\"sha256\":\"185f8db32271fe25f561a6fc938b2e264306ec304eda518007d1764826381969\",\"md5\":\"8b1a9953c4611296a827abf8c47804d7\",\"Components\":[\"clients\",\"server\",\"collections\",\"F.1234\",\"uploads\",\"data\",\"Hello\"]}}"
+  ],
+  "/clients/server/artifacts/TestArtifact/F.1234.json.index": "Index 8 bytes",
+  "/clients/server/collections/F.1234/logs.json": [
+   "",
+   "{\"Timestamp\":10000000,\"Level\":\"DEBUG\",\"message\":\"Query Stats: {\\\"RowsScanned\\\":2,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":0,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":6}\\n\"}",
+   "{\"Timestamp\":10000000,\"Level\":\"DEBUG\",\"message\":\"Query Stats: {\\\"RowsScanned\\\":2,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":1,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":6}\\n\"}",
+   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"Running query on behalf of user VelociraptorServer\\n\"}",
+   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"Running query on behalf of user VelociraptorServer\\n\"}",
+   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"Uploaded /Hello (5 bytes)\\n\"}",
+   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"\\u003cgreen\\u003eStarting\\u003c/\\u003e query execution.\\n\"}",
+   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"\\u003cgreen\\u003eStarting\\u003c/\\u003e query execution.\\n\"}"
+  ],
+  "/clients/server/collections/F.1234/logs.json.index": "Index 56 bytes",
   "/clients/server/collections/F.1234/uploads/data/Hello": "Hello"
  }
 }

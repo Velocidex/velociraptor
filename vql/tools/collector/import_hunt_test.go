@@ -1,8 +1,9 @@
 package collector_test
 
 import (
-	"encoding/hex"
+	"fmt"
 	"path/filepath"
+	"sort"
 	"strings"
 	"time"
 
@@ -162,11 +163,7 @@ func (self *TestSuite) TestImportDynamicHunt() {
 }
 
 func (self *TestSuite) snapshotHuntFlow() *ordereddict.Dict {
-	fs := test_utils.GetMemoryFileStore(self.T(), self.ConfigObj)
-	result := ordereddict.NewDict()
-
-	// These are the files we care about in the hunt collection.
-	for _, path := range []string{
+	return self.snapshot([]string{
 		"/clients/server/artifacts/AnotherTestArtifact/F.1234.json",
 		"/clients/server/artifacts/AnotherTestArtifact/F.1234.json.index",
 		"/clients/server/artifacts/TestArtifact/F.1234.json",
@@ -174,15 +171,7 @@ func (self *TestSuite) snapshotHuntFlow() *ordereddict.Dict {
 		"/clients/server/collections/F.1234/logs.json",
 		"/clients/server/collections/F.1234/logs.json.index",
 		"/clients/server/collections/F.1234/uploads/data/Hello",
-	} {
-		value, _ := fs.Get(path)
-		golden := string(value)
-		if strings.HasSuffix(path, "index") {
-			golden = hex.EncodeToString(value)
-		}
-		result.Set(path, golden)
-	}
-	return result
+	})
 }
 
 func (self *TestSuite) TestImportStaticHunt() {
@@ -250,11 +239,7 @@ func (self *TestSuite) TestImportStaticHunt() {
 }
 
 func (self *TestSuite) snapshotStaticHuntFlow() *ordereddict.Dict {
-	fs := test_utils.GetMemoryFileStore(self.T(), self.ConfigObj)
-	result := ordereddict.NewDict()
-
-	// These are the files we care about in the hunt collection.
-	for _, path := range []string{
+	return self.snapshot([]string{
 		"/clients/C.a99faf363b5601fe/artifacts/Windows.Search.FileFinder/F.CKRG32QRAB5N0.H.json",
 		"/clients/C.a99faf363b5601fe/artifacts/Windows.Search.FileFinder/F.CKRG32QRAB5N0.H.json.index",
 		"/clients/C.a99faf363b5601fe/collections/F.CKRG32QRAB5N0.H/uploads.json",
@@ -264,11 +249,30 @@ func (self *TestSuite) snapshotStaticHuntFlow() *ordereddict.Dict {
 
 		"/hunts/H.CKRG32QRAB5N0_errors.json",
 		"/hunts/H.CKRG32QRAB5N0_errors.json.index",
-	} {
+	})
+}
+
+func (self *TestSuite) snapshot(paths []string) *ordereddict.Dict {
+	fs := test_utils.GetMemoryFileStore(self.T(), self.ConfigObj)
+	result := ordereddict.NewDict()
+
+	// These are the files we care about in the hunt collection.
+	for _, path := range paths {
 		value, _ := fs.Get(path)
 		golden := string(value)
 		if strings.HasSuffix(path, "index") {
-			golden = hex.EncodeToString(value)
+			// The index is in binary and depends on the row order.
+			result.Set(path, fmt.Sprintf("Index %v bytes", len(value)))
+			continue
+
+		} else if strings.HasSuffix(path, "json") {
+
+			// Log files sometimes come out of order so we sort for
+			// comparison.
+			golden_list := strings.Split(golden, "\n")
+			sort.Strings(golden_list)
+			result.Set(path, golden_list)
+			continue
 		}
 		result.Set(path, golden)
 	}
