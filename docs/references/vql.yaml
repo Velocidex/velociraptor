@@ -2627,7 +2627,6 @@
   - name: client_id
     type: string
     description: The client id to import to. Use 'auto' to generate a new client id.
-    required: true
   - name: hostname
     type: string
     description: When creating a new client, set this as the hostname.
@@ -2635,6 +2634,9 @@
     type: string
     description: Path on server to the collector zip.
     required: true
+  - name: import_type
+    type: string
+    description: Whether the import is an offline_collector or hunt.
   category: server
   metadata:
     permissions: COLLECT_SERVER,FILESYSTEM_READ

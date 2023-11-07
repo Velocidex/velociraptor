@@ -5,37 +5,34 @@
   "fqdn": "TestClient"
  },
  "TestClient-C.1235/collection_context.json": {
-  "context": {
-   "client_id": "C.1235",
-   "session_id": "F.1234",
-   "request": {
-    "artifacts": [
-     "Custom.TestArtifactUpload"
-    ]
-   },
-   "create_time": 1602103388000000000,
-   "total_collected_rows": 1,
-   "total_logs": 3,
-   "total_requests": 2,
-   "state": 2,
-   "artifacts_with_results": [
+  "client_id": "C.1235",
+  "session_id": "F.1234",
+  "request": {
+   "artifacts": [
     "Custom.TestArtifactUpload"
-   ],
-   "query_stats": [
-    {},
-    {
-     "names_with_response": [
-      "Custom.TestArtifactUpload"
-     ],
-     "log_rows": 3,
-     "result_rows": 1
-    }
    ]
   },
-  "available_downloads": {}
+  "create_time": 1602103388000000000,
+  "total_collected_rows": 1,
+  "total_logs": 3,
+  "total_requests": 2,
+  "state": 2,
+  "artifacts_with_results": [
+   "Custom.TestArtifactUpload"
+  ],
+  "query_stats": [
+   {},
+   {
+    "names_with_response": [
+     "Custom.TestArtifactUpload"
+    ],
+    "log_rows": 3,
+    "result_rows": 1
+   }
+  ]
  },
- "TestClient-C.1235/logs.csv": "_ts,client_time,level,message\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Starting collection of Custom.TestArtifactUpload\\n\"\"\"\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Collecting file hello world into /uploads/data/file.txt (11 bytes)\\n\"\"\"\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Collecting file {\\\"\"DelegateAccessor\\\"\":\\\"\"data\\\"\",\\\"\"DelegatePath\\\"\":\\\"\"This is... into /uploads/sparse/C%3A/file.sparse.txt (21 bytes)\\n\"\"\"\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Collected 1 rows for Custom.TestArtifactUpload\\n\"\"\"\n1602103388,1602103388,\"\"\"DEBUG\"\"\",\"\"\"Query Stats: {\\\"\"RowsScanned\\\"\":2,\\\"\"PluginsCalled\\\"\":1,\\\"\"FunctionsCalled\\\"\":4,\\\"\"ProtocolSearch\\\"\":0,\\\"\"ScopeCopy\\\"\":6}\\n\"\"\"\n",
- "TestClient-C.1235/logs.json": [
+ "TestClient-C.1235/log.csv": "_ts,client_time,level,message\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Starting collection of Custom.TestArtifactUpload\\n\"\"\"\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Collecting file hello world into /uploads/data/file.txt (11 bytes)\\n\"\"\"\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Collecting file {\\\"\"DelegateAccessor\\\"\":\\\"\"data\\\"\",\\\"\"DelegatePath\\\"\":\\\"\"This is... into /uploads/sparse/C%3A/file.sparse.txt (21 bytes)\\n\"\"\"\n1602103388,1602103388,\"\"\"DEFAULT\"\"\",\"\"\"Collected 1 rows for Custom.TestArtifactUpload\\n\"\"\"\n1602103388,1602103388,\"\"\"DEBUG\"\"\",\"\"\"Query Stats: {\\\"\"RowsScanned\\\"\":2,\\\"\"PluginsCalled\\\"\":1,\\\"\"FunctionsCalled\\\"\":4,\\\"\"ProtocolSearch\\\"\":0,\\\"\"ScopeCopy\\\"\":6}\\n\"\"\"\n",
+ "TestClient-C.1235/log.json": [
   {
    "_ts": 1602103388,
    "client_time": 1602103388,
@@ -189,6 +186,46 @@
    ]
   }
  ],
+ "hunt_info.json": {
+  "hunt_id": "H.123",
+  "version": "10000000010",
+  "create_time": "10000000",
+  "expires": "604810000000",
+  "start_request": {
+   "flow_id": "F.123.H",
+   "artifacts": [
+    "Custom.TestArtifactUpload"
+   ],
+   "compiled_collector_args": [
+    {
+     "query_id": "1",
+     "total_queries": "1",
+     "Query": [
+      {
+       "VQL": "LET Custom_TestArtifactUpload_0_0 = SELECT * FROM info()"
+      },
+      {
+       "Name": "Custom.TestArtifactUpload",
+       "VQL": "SELECT * FROM Custom_TestArtifactUpload_0_0"
+      }
+     ],
+     "max_row": "1000"
+    }
+   ]
+  },
+  "stats": {
+   "total_clients_scheduled": "1",
+   "total_clients_with_results": "1",
+   "available_downloads": {}
+  },
+  "artifacts": [
+   "Custom.TestArtifactUpload"
+  ],
+  "artifact_sources": [
+   "Custom.TestArtifactUpload"
+  ],
+  "state": "PAUSED"
+ },
  "results/All Custom.TestArtifactUpload.csv": "Upload,SparseUpload,FlowId,ClientId,Fqdn\n\"{\"\"Path\"\":\"\"data\"\",\"\"Size\"\":11,\"\"StoredSize\"\":11,\"\"sha256\"\":\"\"b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9\"\",\"\"md5\"\":\"\"5eb63bbbe01eeed093cb22bb8f5acdc3\"\",\"\"StoredName\"\":\"\"/uploads/data/file.txt\"\",\"\"Components\"\":[\"\"uploads\"\",\"\"data\"\",\"\"file.txt\"\"]}\",\"{\"\"Path\"\":\"\"{\\\"\"DelegateAccessor\\\"\":\\\"\"data\\\"\",\\\"\"DelegatePath\\\"\":\\\"\"This is...\"\",\"\"Size\"\":21,\"\"StoredSize\"\":8,\"\"sha256\"\":\"\"d2bc3dd9279837fd268d82ea397b6980dee5ae462464493c80f495786b4025c2\"\",\"\"md5\"\":\"\"f55a5cc260e3fc562d841a2f6d2b7d22\"\",\"\"StoredName\"\":\"\"/uploads/sparse/C%3A/file.sparse.txt\"\",\"\"Components\"\":[\"\"uploads\"\",\"\"sparse\"\",\"\"C:\"\",\"\"file.sparse.txt\"\"]}\",F.1234,C.1235,TestClient\n",
  "results/All Custom.TestArtifactUpload.json": [
   {

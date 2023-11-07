@@ -76,8 +76,6 @@ var (
 		Name: "hunt_dispatcher_last_timestamp",
 		Help: "Last timestamp of most recent hunt.",
 	})
-
-	Clock utils.Clock = &utils.RealClock{}
 )
 
 type HuntRecord struct {
@@ -311,7 +309,7 @@ func (self *HuntDispatcher) ModifyHuntObject(
 	}
 
 	// Update the hunt version
-	hunt_obj.Hunt.Version = Clock.Now().UnixNano()
+	hunt_obj.Hunt.Version = utils.GetTime().Now().UnixNano()
 
 	// Call the callback to see if we need to change this hunt.
 	modification := cb(hunt_obj.Hunt)
@@ -404,7 +402,7 @@ func (self *HuntDispatcher) checkForExpiry(
 	ctx context.Context, config_obj *config_proto.Config) {
 	if self.I_am_master {
 		// Check if the hunt is expired and adjust its state if so
-		now := uint64(time.Now().UnixNano() / 1000)
+		now := uint64(utils.GetTime().Now().UnixNano() / 1000)
 
 		self.ApplyFuncOnHunts(func(hunt_obj *api_proto.Hunt) error {
 			if now > hunt_obj.Expires {
@@ -519,7 +517,9 @@ func (self *HuntDispatcher) CreateHunt(
 		return nil, errors.New("No artifacts to collect.")
 	}
 
-	hunt.CreateTime = uint64(utils.GetTime().Now().UTC().UnixNano() / 1000)
+	if hunt.CreateTime == 0 {
+		hunt.CreateTime = uint64(utils.GetTime().Now().UTC().UnixNano() / 1000)
+	}
 	if hunt.Expires == 0 {
 		default_expiry := config_obj.Defaults.HuntExpiryHours
 		if default_expiry == 0 {
@@ -594,7 +594,7 @@ func (self *HuntDispatcher) CreateHunt(
 	}
 
 	row := ordereddict.NewDict().
-		Set("Timestamp", time.Now().UTC().Unix()).
+		Set("Timestamp", utils.GetTime().Now().UTC().Unix()).
 		Set("Hunt", hunt)
 
 	journal, err := services.GetJournal(config_obj)
@@ -699,7 +699,7 @@ func GetNewHuntId() string {
 	buf := make([]byte, 8)
 	_, _ = rand.Read(buf)
 
-	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
+	binary.BigEndian.PutUint32(buf, uint32(utils.GetTime().Now().Unix()))
 	result := base32.HexEncoding.EncodeToString(buf)[:13]
 
 	return constants.HUNT_PREFIX + result

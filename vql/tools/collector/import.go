@@ -1,6 +1,8 @@
 package collector
 
 import (
+	"bufio"
+	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -11,7 +13,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -23,6 +24,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -32,7 +34,7 @@ import (
 	"www.velocidex.com/golang/vfilter/types"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/collector"
-	_ "www.velocidex.com/golang/velociraptor/accessors/file"
+	_ "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
 
@@ -41,9 +43,11 @@ const (
 )
 
 type ImportCollectionFunctionArgs struct {
-	ClientId string `vfilter:"required,field=client_id,doc=The client id to import to. Use 'auto' to generate a new client id."`
-	Hostname string `vfilter:"optional,field=hostname,doc=When creating a new client, set this as the hostname."`
-	Filename string `vfilter:"required,field=filename,doc=Path on server to the collector zip."`
+	ClientId   string `vfilter:"optional,field=client_id,doc=The client id to import to. Use 'auto' to generate a new client id."`
+	Hostname   string `vfilter:"optional,field=hostname,doc=When creating a new client, set this as the hostname."`
+	Filename   string `vfilter:"required,field=filename,doc=Path on server to the collector zip."`
+	Accessor   string `vfilter:"optional,field=accessor,doc=The accessor to use."`
+	ImportType string `vfilter:"optional,field=import_type,doc=Whether the import is an offline_collector or hunt."`
 }
 
 type ImportCollectionFunction struct{}
@@ -99,35 +103,126 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	}
 
 	root.SetPathSpec(&accessors.PathSpec{
-		DelegateAccessor: "file",
+		DelegateAccessor: arg.Accessor,
 		DelegatePath:     arg.Filename,
 	})
 
-	collection_context := &flows_proto.ArtifactCollectorContext{}
-	err = self.getFile(accessor, root.Append("collection_context.json"),
-		collection_context)
-	if err != nil || collection_context.SessionId == "" {
-		scope.Log("import_collection: unable to load collection_context: %v", err)
-		return vfilter.Null{}
+	if arg.ImportType != "hunt" && arg.ImportType != "collector" {
+		arg.ImportType = ""
 	}
 
-	if arg.ClientId == "auto" || arg.ClientId == "" {
-		arg.ClientId, err = self.getClientId(
-			ctx, scope, config_obj, arg.Hostname)
+	if arg.ImportType == "" {
+		_, err = self.checkHuntInfo(root, accessor)
+		if err != nil {
+			arg.ImportType = "collector"
+		} else {
+			arg.ImportType = "hunt"
+		}
+	}
+
+	if arg.ImportType == "collector" {
+		return self.importFlow(
+			ctx, scope, config_obj,
+			db, accessor, root, arg.ClientId,
+			arg.Hostname, false)
+
+	} else if arg.ImportType == "hunt" {
+		// Check if there is a hunt_info.json. This won't work with
+		// older exports (<0.7.1) because we previously didn't export
+		// all the hunt information.
+		hunt_info, err := self.checkHuntInfo(root, accessor)
 		if err != nil {
 			scope.Log("import_collection: %v", err)
 			return vfilter.Null{}
 		}
+
+		// Update the huntId in case it was already taken.
+		hunt_info.HuntId, err = self.importHunt(ctx, scope, config_obj, hunt_info)
+		if err != nil {
+			scope.Log("import_collection: %v", err)
+			return vfilter.Null{}
+		}
+
+		directory_listing, err := accessor.ReadDirWithOSPath(root)
+		if err != nil {
+			scope.Log("import_collection: %v", err)
+			return vfilter.Null{}
+		}
+
+		for _, item := range directory_listing {
+			if !item.IsDir() || item.Name() == "results" || item.Name() == "uploads" {
+				continue
+			}
+
+			path := root.Append(item.Name())
+
+			client_info := &services.ClientInfo{}
+			err = self.getFile(accessor, path.Append("client_info.json"), client_info)
+			if err != nil {
+				continue
+			}
+
+			err = self.checkClientIdExists(ctx, config_obj, scope, client_info)
+			if err != nil {
+				continue
+			}
+
+			self.importFlow(
+				ctx, scope, config_obj, db,
+				accessor, path, client_info.ClientId, client_info.Hostname, true)
+
+		}
+
+		return hunt_info
+	} else {
+		return vfilter.Null{}
+	}
+}
+
+func (self ImportCollectionFunction) importFlow(
+	ctx context.Context,
+	scope vfilter.Scope,
+	config_obj *config_proto.Config,
+	db datastore.DataStore,
+	accessor accessors.FileSystemAccessor,
+	root *accessors.OSPath,
+	client_id string,
+	hostname string,
+	hunt bool) vfilter.Any {
+
+	collection_context := &flows_proto.ArtifactCollectorContext{}
+	path := root.Append("collection_context.json")
+
+	err := self.getFile(accessor, path, collection_context)
+	if err != nil || collection_context.SessionId == "" {
+		// Support older collections which were encoded a bit
+		// differently.
+		details := &api_proto.FlowDetails{}
+		err := self.getFile(accessor, path, details)
+		if err != nil {
+			scope.Log("import_flow: unable to load collection_context: %v", err)
+			return vfilter.Null{}
+		}
+		collection_context = details.Context
 	}
 
-	flow_path_manager := paths.NewFlowPathManager(
-		arg.ClientId, collection_context.SessionId)
+	if client_id == "auto" || client_id == "" {
+		client_id, err = self.getClientIdFromHostname(
+			ctx, scope, config_obj, hostname)
+		if err != nil {
+			scope.Log("import_flow: %v", err)
+			return vfilter.Null{}
+		}
+	}
 
-	collection_context.ClientId = arg.ClientId
+	collection_context.ClientId = client_id
+
+	flow_path_manager := paths.NewFlowPathManager(
+		client_id, collection_context.SessionId)
 
 	err = db.SetSubject(config_obj, flow_path_manager.Path(), collection_context)
 	if err != nil {
-		scope.Log("import_collection: %v", err)
+		scope.Log("import_flow: %v", err)
 		return vfilter.Null{}
 	}
 
@@ -137,31 +232,34 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	if err == nil {
 		err = db.SetSubject(config_obj, flow_path_manager.Task(), tasks)
 		if err != nil {
-			scope.Log("import_collection: %v", err)
+			scope.Log("import_flow: %v", err)
 			return vfilter.Null{}
 		}
 	} else {
-		scope.Log("import_collection: %v", err)
+		scope.Log("import_flow: %v", err)
 	}
 
 	// Copy the logs results set over.
 	err = self.copyResultSet(ctx, config_obj, scope,
 		accessor, root.Append("log.json"), flow_path_manager.Log())
 	if err != nil {
-		scope.Log("import_collection: %v", err)
-		return vfilter.Null{}
+		err = self.copyResultSet(ctx, config_obj, scope,
+			accessor, root.Append("logs.json"), flow_path_manager.Log())
+		if err != nil {
+			scope.Log("import_flow: %v", err)
+		}
 	}
 
 	// Now Copy the results.
 	for _, artifact := range collection_context.ArtifactsWithResults {
 		artifact_path_manager := artifacts.NewArtifactPathManagerWithMode(
-			config_obj, arg.ClientId, collection_context.SessionId,
+			config_obj, client_id, collection_context.SessionId,
 			artifact, paths.MODE_CLIENT)
 		err = self.copyResultSet(ctx, config_obj, scope,
 			accessor, root.Append("results", artifact+".json"),
 			artifact_path_manager.Path())
 		if err != nil {
-			scope.Log("import_collection: %v", err)
+			scope.Log("import_flow: %v", err)
 		}
 	}
 
@@ -179,7 +277,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 		reader, err := result_sets.NewResultSetReader(file_store_factory,
 			flow_path_manager.UploadMetadata())
 		if err != nil {
-			scope.Log("import_collection: %v", err)
+			scope.Log("import_flow: %v", err)
 			return vfilter.Null{}
 		}
 		defer reader.Close()
@@ -207,7 +305,7 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 			err := self.copyFileWithIndex(ctx, config_obj, scope,
 				accessor, src, dest)
 			if err != nil {
-				scope.Log("import_collection: %v", err)
+				scope.Log("import_flow: %v", err)
 			}
 		}
 	}
@@ -233,9 +331,50 @@ func (self ImportCollectionFunction) Call(ctx context.Context,
 	return collection_context
 }
 
-func (self ImportCollectionFunction) getClientId(
-	ctx context.Context, scope types.Scope,
-	config_obj *config_proto.Config, hostname string) (string, error) {
+func (self ImportCollectionFunction) importHunt(
+	ctx context.Context,
+	scope vfilter.Scope,
+	config_obj *config_proto.Config,
+	hunt *api_proto.Hunt) (string, error) {
+
+	hunt_disp, err := services.GetHuntDispatcher(config_obj)
+	if err != nil {
+		return "", err
+	}
+
+	// Check if valid hunt id and no duplicates.
+	if hunt.HuntId == "" {
+		hunt.HuntId = hunt_dispatcher.GetNewHuntId()
+	} else {
+		// If it has a hunt id, see if it already exists,
+		// create a new one if so.
+		_, pres := hunt_disp.GetHunt(hunt.HuntId)
+		if pres {
+			hunt.HuntId = hunt_dispatcher.GetNewHuntId()
+		}
+	}
+
+	hunt.State = api_proto.Hunt_STOPPED
+
+	manager_any, pres := scope.Resolve(vql_subsystem.ACL_MANAGER_VAR)
+	if !pres {
+		return "", errors.New("No ACL manager")
+	}
+
+	acl_manager, ok := manager_any.(vql_subsystem.ACLManager)
+	if !ok {
+		return "", errors.New("No ACL manager")
+	}
+
+	_, err = hunt_disp.CreateHunt(ctx, config_obj, acl_manager, hunt)
+	return hunt.HuntId, err
+}
+
+func (self ImportCollectionFunction) getClientIdFromHostname(
+	ctx context.Context,
+	scope types.Scope,
+	config_obj *config_proto.Config,
+	hostname string) (string, error) {
 
 	if hostname != "" {
 		indexer, err := services.GetIndexer(config_obj)
@@ -279,6 +418,48 @@ func (self ImportCollectionFunction) getClientId(
 	return client_id, nil
 }
 
+func (self ImportCollectionFunction) checkClientIdExists(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	scope vfilter.Scope,
+	client_info *services.ClientInfo) error {
+
+	// This is a well known client
+	if client_info.ClientId == "server" {
+		return nil
+	}
+
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
+	if err != nil {
+		return err
+	}
+
+	_, err = client_info_manager.Get(ctx, client_info.ClientId)
+	if err == nil {
+		return nil
+	}
+
+	scope.Log("Info: ClientId %v (%v) not found, creating a new client",
+		client_info.ClientId, client_info.Hostname)
+
+	// If we made it here, client id doesn't exist, so then we can
+	// create a new client
+	res := clients.NewClientFunction{}.Call(ctx, scope, ordereddict.NewDict().
+		Set("client_id", client_info.ClientId).
+		Set("first_seen_at", utils.GetTime().Now()).
+		Set("last_seen_at", utils.GetTime().Now()).
+		Set("hostname", client_info.Hostname).
+		Set("labels", client_info.Labels).
+		Set("os", client_info.System).
+		Set("mac_addresses", client_info.MacAddresses))
+
+	if res == nil {
+		return errors.New("Failed to create new client.")
+	}
+
+	return nil
+}
+
 func (self ImportCollectionFunction) copyResultSet(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -286,15 +467,59 @@ func (self ImportCollectionFunction) copyResultSet(
 	accessor accessors.FileSystemAccessor,
 	src *accessors.OSPath, dest api.FSPathSpec) error {
 
-	err := self.copyFile(ctx, config_obj, scope,
-		accessor, src, dest)
+	fd, err := accessor.OpenWithOSPath(src)
 	if err != nil {
 		return err
 	}
+	defer fd.Close()
 
-	return self.copyFile(ctx, config_obj, scope,
-		accessor, src.Dirname().Append(src.Basename()+".index"),
-		dest.SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
+	// Read the JSONL from the zip and write into a new result set. We
+	// could just copy the JSONL across but there are non disk based
+	// filestores so we need to do it the slow way.
+	file_store_factory := file_store.GetFileStore(config_obj)
+	rs_writer, err := result_sets.NewResultSetWriter(file_store_factory,
+		dest, json.DefaultEncOpts(), utils.SyncCompleter, result_sets.TruncateMode)
+	if err != nil {
+		return err
+	}
+	defer rs_writer.Close()
+
+	// Copy the file into the results set 100 rows at the time.
+	reader := bufio.NewReader(fd)
+	count := uint64(0)
+	buffer := bytes.Buffer{}
+
+	flush := func() {
+		if count > 0 {
+			rs_writer.WriteJSONL(buffer.Bytes(), count)
+			count = 0
+			buffer.Reset()
+		}
+	}
+	defer flush()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return nil
+
+		default:
+			row_data, err := reader.ReadBytes('\n')
+			if err != nil {
+				return nil
+			}
+			buffer.Write(row_data)
+			count++
+
+			// Dump chunks into the result set - this is much faster
+			// than parsing the encoding.
+			if count > 100 {
+				flush()
+			}
+		}
+	}
+
+	return nil
 }
 
 func (self ImportCollectionFunction) getFile(
@@ -381,83 +606,25 @@ func (self ImportCollectionFunction) Info(scope vfilter.Scope, type_map *vfilter
 	}
 }
 
-func getExistingClientOrNewClient(
-	ctx context.Context,
-	scope vfilter.Scope,
-	config_obj *config_proto.Config,
-	hostname string) (string, error) {
+func (self ImportCollectionFunction) checkHuntInfo(
+	root *accessors.OSPath, accessor accessors.FileSystemAccessor) (*api_proto.Hunt, error) {
+	hunt_info := &api_proto.Hunt{}
 
-	indexer, err := services.GetIndexer(config_obj)
+	fd, err := accessor.OpenWithOSPath(root.Append("hunt_info.json"))
 	if err != nil {
-		return "", err
+		return nil, err
+	}
+	defer fd.Close()
+
+	limitedReader := &io.LimitedReader{R: fd, N: BUFF_SIZE}
+	data, err := ioutil.ReadAll(limitedReader)
+	if err != nil && err != io.EOF {
+		return nil, err
 	}
 
-	scope.Log("Searching for a client id with name '%v'", hostname)
+	err = json.Unmarshal(data, hunt_info)
 
-	// Search for an existing client with the same hostname
-	search_resp, err := indexer.SearchClients(ctx, config_obj,
-		&api_proto.SearchClientsRequest{Query: "host:" + hostname}, "")
-	if err == nil && len(search_resp.Items) > 0 {
-		client_id := search_resp.Items[0].ClientId
-		scope.Log("client id found '%v'", client_id)
-		return client_id, nil
-	}
-
-	return makeNewClient(config_obj, scope, hostname)
-}
-
-// Create a new client record
-func makeNewClient(
-	config_obj *config_proto.Config,
-	scope vfilter.Scope,
-	hostname string) (string, error) {
-
-	if hostname == "" {
-		return "", errors.New("New clients must have a hostname")
-	}
-
-	client_id := clients.NewClientId()
-	client_info := &actions_proto.ClientInfo{
-		ClientId:     client_id,
-		Hostname:     hostname,
-		Fqdn:         hostname,
-		Architecture: "Offline",
-		ClientName:   "OfflineVelociraptor",
-	}
-
-	scope.Log("Creating new client '%v'", client_id)
-
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return "", err
-	}
-
-	indexer, err := services.GetIndexer(config_obj)
-	if err != nil {
-		return "", err
-	}
-
-	client_path_manager := paths.NewClientPathManager(client_id)
-	err = db.SetSubject(config_obj,
-		client_path_manager.Path(), client_info)
-	if err != nil {
-		return "", err
-	}
-
-	// Add the new client to the index.
-	for _, term := range []string{
-		"all", // This is used for "." search
-		client_id,
-		"host:" + client_info.Fqdn,
-		"host:" + client_info.Hostname,
-	} {
-		err = indexer.SetIndex(client_id, term)
-		if err != nil {
-			return client_id, err
-		}
-	}
-
-	return client_id, nil
+	return hunt_info, err
 }
 
 func init() {

@@ -35,6 +35,8 @@ import (
 	"www.velocidex.com/golang/vfilter"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
+	_ "www.velocidex.com/golang/velociraptor/accessors/file"
+	_ "www.velocidex.com/golang/velociraptor/accessors/ntfs"
 	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
 )
 
@@ -241,6 +243,9 @@ func (self *TestSuite) TestExportCollection1() {
 }
 
 func (self *TestSuite) TestExportHunt() {
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
+	defer closer()
+
 	// Operate on a different client
 	self.client_id = "C.1235"
 

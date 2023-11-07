@@ -89,12 +89,7 @@ func (self *TestSuite) TestCreateHunt() {
 	result := ordereddict.NewDict()
 	hunt_dispatcher.SetHuntIdForTests("H.1234")
 
-	Clock := &utils.MockClock{}
-	Clock.Set(time.Unix(100, 0))
-
-	hunt_dispatcher.Clock = Clock
-
-	closer := utils.MockTime(hunt_dispatcher.Clock)
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(100, 10)))
 	defer closer()
 
 	repository := self.LoadArtifacts(testArtifacts...)
