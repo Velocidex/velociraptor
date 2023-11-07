@@ -354,8 +354,6 @@ func (self ImportCollectionFunction) importHunt(
 		}
 	}
 
-	json.Dump(hunt)
-
 	hunt.State = api_proto.Hunt_STOPPED
 
 	manager_any, pres := scope.Resolve(vql_subsystem.ACL_MANAGER_VAR)

@@ -18,12 +18,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/server/downloads"
-	"www.velocidex.com/golang/velociraptor/vql/server/flows"
 	"www.velocidex.com/golang/velociraptor/vql/tools/collector"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
 	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
+	_ "www.velocidex.com/golang/velociraptor/accessors/ntfs"
 	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
 )
 
@@ -90,12 +90,11 @@ func (self *TestSuite) TestImportDynamicCollection() {
 		Set("Original Flow", self.snapshotHuntFlow())
 
 	// Now delete the old flow
-	for row := range (&flows.DeleteFlowPlugin{}).Call(ctx, scope,
+	for _ = range (&flowseleteFlowPlugin{}).Call(ctx, scope,
 		ordereddict.NewDict().
 			Set("client_id", client_id).
 			Set("flow_id", flow_id).
 			Set("really_do_it", true)) {
-		json.Dump(row)
 	}
 
 	golden.Set("Deleted Flow", self.snapshotHuntFlow())

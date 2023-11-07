@@ -140,10 +140,9 @@ func (self *TestSuite) TestImportDynamicHunt() {
 		Set("Original Flow", self.snapshotHuntFlow())
 
 	// Now delete the old hunt
-	for row := range (&hunts.DeleteHuntPlugin{}).Call(ctx, scope,
+	for _ = range (&hunts.DeleteHuntPlugin{}).Call(ctx, scope,
 		ordereddict.NewDict().Set("hunt_id", hunt.HuntId).
 			Set("really_do_it", true)) {
-		json.Dump(row)
 	}
 
 	golden.Set("Deleted Flow", self.snapshotHuntFlow())
@@ -155,8 +154,6 @@ func (self *TestSuite) TestImportDynamicHunt() {
 		Set("accessor", "fs").
 		Set("import_type", "hunt"))
 	assert.IsType(self.T(), &api_proto.Hunt{}, imported_hunt)
-
-	json.Dump(imported_hunt)
 
 	//	test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
 	golden.Set("Imported Flow", self.snapshotHuntFlow())
