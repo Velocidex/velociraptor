@@ -58,27 +58,27 @@ func (self *EventTraceWatcherService) Register(
 		guid:        wGuid}
 
 	deregistration := func() {
+		scope.Log("Deregistering watcher for %v", provider_guid)
 		cancel()
 		session, pres := self.sessions[session_name]
 		if !pres {
 			return
 		}
-		session.Deregister(wGuid)
+		closed_session := session.Deregister(wGuid)
+		if closed_session {
+			scope.Log("Closing session %v", session_name)
+			GlobalEventTraceService.Deregister(session_name)
+		}
 	}
 
 	// Check if we already have a session for this provider.
 	sessionContext, pres := self.sessions[session_name]
 	if !pres {
 		var err error
-		sessionContext, err = self.NewSessionContext(session_name, scope)
+		sessionContext, err = self.newSessionContext(session_name, scope)
 		if err != nil {
 			return cancel, nil, err
 		}
-
-		// err = sessionContext.UpdateSession(ctx, scope, wGuid, any_keyword, all_keyword, level)
-		// if err != nil {
-		// 	return cancel, nil, err
-		// }
 
 		// Create a scope with a completely different lifespan since
 		// it may outlive this query (if another query starts watching
@@ -98,14 +98,11 @@ func (self *EventTraceWatcherService) Register(
 		ctx, scope, wGuid, any_keyword,
 		all_keyword, level)
 	if err != nil {
-		return cancel, output_chan, err
+		return deregistration, output_chan, err
 	}
 
 	scope.Log("Registering watcher for %v", provider_guid)
-	sessionContext.mu.Lock()
-	handles := sessionContext.registrations
-	sessionContext.registrations = append(handles, handle)
-	sessionContext.mu.Unlock()
+	sessionContext.UpdateRegistrations(*handle)
 
 	return deregistration, output_chan, nil
 }
@@ -132,19 +129,18 @@ func (self *EventTraceWatcherService) StartMonitoring(
 			return
 		}
 
-		sessionContext.mu.Lock()
-		handles := make([]*Handle, len(sessionContext.registrations))
-		copy(sessionContext.registrations, handles)
-		sessionContext.mu.Unlock()
+		handles := sessionContext.GetRegistrations()
 
 		// No more listeners left, we are done.
-		if len(handles) == 0 || handles[0] == nil {
-			sessionContext.Close()
+		if len(handles) == 0 {
 			return
 		}
 
 		// Send the event to all interested parties.
 		for _, handle := range handles {
+			if handle == nil {
+				continue
+			}
 			if handle.guid == e.Header.ProviderID {
 				select {
 				case <-ctx.Done():
@@ -172,27 +168,7 @@ func (self *EventTraceWatcherService) Deregister(session_name string) {
 	delete(self.sessions, session_name)
 }
 
-type SessionContext struct {
-	mu sync.Mutex
-
-	name          string
-	status        bool
-	session       *etw.Session
-	registrations []*Handle
-}
-
-func (self *SessionContext) Close() {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-	self.status = false
-
-	// Empty the registrations and close the session.
-	self.registrations = []*Handle{}
-	self.session.Close()
-	delete(GlobalEventTraceService.sessions, self.name)
-}
-
-func (self *EventTraceWatcherService) NewSessionContext(name string, scope vfilter.Scope) (*SessionContext, error) {
+func (self *EventTraceWatcherService) newSessionContext(name string, scope vfilter.Scope) (*SessionContext, error) {
 
 	sessionContext := &SessionContext{
 		name:          name,
@@ -200,7 +176,7 @@ func (self *EventTraceWatcherService) NewSessionContext(name string, scope vfilt
 		status:        true,
 	}
 
-	err := sessionContext.createSession()
+	err := sessionContext.CreateSession()
 	if err != nil {
 		scope.Log("NewSessionContext: Failed to create session: %v", err)
 		return nil, err
@@ -212,7 +188,24 @@ func (self *EventTraceWatcherService) NewSessionContext(name string, scope vfilt
 	return sessionContext, nil
 }
 
-func (self *SessionContext) createSession() error {
+type SessionContext struct {
+	mu sync.Mutex
+
+	name          string
+	status        bool
+	session       *etw.Session
+	registrations []*Handle
+}
+
+func (self *SessionContext) close() {
+	self.status = false
+
+	// Empty the registrations and close the session.
+	self.registrations = []*Handle{}
+	self.session.Close()
+}
+
+func (self *SessionContext) CreateSession() error {
 
 	session, err := etw.NewSession(self.name)
 	if err != nil {
@@ -230,8 +223,9 @@ func (self *SessionContext) createSession() error {
 
 	}
 
+	self.mu.Lock()
 	self.session = session
-
+	self.mu.Unlock()
 	return nil
 }
 
@@ -249,24 +243,52 @@ func (self *SessionContext) UpdateSession(
 	})
 }
 
-func (self *SessionContext) Deregister(wGuid windows.GUID) {
+func (self *SessionContext) Deregister(wGuid windows.GUID) bool {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	new_reg := make([]*Handle, len(self.registrations))
-	for _, handle := range self.registrations {
+	registrations := self.GetRegistrations()
+
+	if len(registrations) == 0 || registrations == nil {
+		self.close()
+		return true
+	}
+	for _, handle := range registrations {
+		if handle == nil {
+			continue
+		}
 		if handle.guid != wGuid {
 			new_reg = append(new_reg, handle)
 		}
 	}
 
 	if len(new_reg) == 0 {
-		self.Close()
-		GlobalEventTraceService.Deregister(self.name)
+		self.close()
+		return true
 	} else {
 		self.registrations = new_reg
+		return false
 	}
+}
+
+func (self *SessionContext) GetRegistrations() []*Handle {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	handles := make([]*Handle, len(self.registrations))
+	copy(handles, self.registrations)
+	return handles
+}
+
+func (self *SessionContext) UpdateRegistrations(handle Handle) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	handles := make([]*Handle, len(self.registrations))
+	copy(self.registrations, handles)
+	self.registrations = append(handles, &handle)
 }
 
 // Handle is given for each interested party. We write the event on

@@ -112,8 +112,6 @@ github.com/Velocidex/chroma v0.6.8-0.20200418131129-82edc291369c h1:ipQHX4FX5HKR
 github.com/Velocidex/chroma v0.6.8-0.20200418131129-82edc291369c/go.mod h1:sko8vR34/90zvl5QdcUdvzL3J8NKjAUx9va9jPuFNoM=
 github.com/Velocidex/errors v0.0.0-20221019164655-9ace6bf61e26 h1:VwbeNpMRuS3bRieg7WLaSYIMaI8RjH/wGxd37oj6H1g=
 github.com/Velocidex/errors v0.0.0-20221019164655-9ace6bf61e26/go.mod h1:sIVyrIiJhuEF+Pj9Ebtd6P/rEYROXFi3BopGUQ5a5Og=
-github.com/Velocidex/etw v0.0.0-20210723072214-4d0cffd1ff22 h1:dDMLVs1Uj4xuKsYH1T/J6W+wJyWeyfmkT9RQq27WzTs=
-github.com/Velocidex/etw v0.0.0-20210723072214-4d0cffd1ff22/go.mod h1:F3/xFKE2Puol7bJKW5xcj/9H2O8n/sJN87Xgm66G6sc=
 github.com/Velocidex/etw v0.0.0-20231030232355-d02877b399a1 h1:hhPHS09DZPrJ/KYPzUoHrTgYUYiZz8UqqrIcohu5IkU=
 github.com/Velocidex/etw v0.0.0-20231030232355-d02877b399a1/go.mod h1:F3/xFKE2Puol7bJKW5xcj/9H2O8n/sJN87Xgm66G6sc=
 github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11 h1:pQY9p6hvmbFKXJg8suzGSG9/t8Ij9ece32GUFIdHgqg=
