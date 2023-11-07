@@ -20,7 +20,6 @@ package functions
 import (
 	"context"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
@@ -129,9 +128,9 @@ func (self JoinFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *v
 }
 
 type FilterFunctionArgs struct {
-	List      []vfilter.Any `vfilter:"required,field=list,doc=A list of items to filter"`
-	Regex     []string      `vfilter:"optional,field=regex,doc=A regex to test each item"`
-	Condition string        `vfilter:"optional,field=condition,doc=A VQL lambda to use to filter elements"`
+	List      []vfilter.Any   `vfilter:"required,field=list,doc=A list of items to filter"`
+	Regex     string          `vfilter:"optional,field=regex,doc=A regex to test each item"`
+	Condition *vfilter.Lambda `vfilter:"optional,field=condition,doc=A VQL lambda to use to filter elements"`
 }
 type FilterFunction struct{}
 
@@ -145,50 +144,26 @@ func (self *FilterFunction) Call(ctx context.Context,
 		return &vfilter.Null{}
 	}
 
-	res := []*regexp.Regexp{}
-	for _, re := range arg.Regex {
-		r, err := regexp.Compile("(?i)" + re)
-		if err != nil {
-			scope.Log("filter: Unable to compile regex %s", re)
-			return false
+	if arg.Condition != nil {
+		if arg.Regex != "" {
+			scope.Log("ERROR:filter: Both regex and condition are specified - Will only use the condition and ignore regex!")
 		}
-		res = append(res, r)
-	}
 
-	var lambda *vfilter.Lambda
-	if arg.Condition != "" {
-		lambda, err = vfilter.ParseLambda(arg.Condition)
-		if err != nil {
-			scope.Log("filter: Unable to compile lambda %s", arg.Condition)
-			return false
-		}
-	}
-
-	matcher := func(item vfilter.Any) bool {
-		str, ok := item.(string)
-		if ok {
-			for _, regex := range res {
-				if regex.MatchString(str) {
-					return true
-				}
+		result := []types.Any{}
+		for _, item := range arg.List {
+			if scope.Bool(arg.Condition.Reduce(ctx, scope, []vfilter.Any{item})) {
+				result = append(result, item)
 			}
-			return false
 		}
-
-		if lambda != nil {
-			return scope.Bool(lambda.Reduce(ctx, scope, []types.Any{item}))
-
-		}
-		return false
+		return result
 	}
 
 	result := []types.Any{}
 	for _, item := range arg.List {
-		if matcher(item) {
+		if scope.Match(arg.Regex, item) {
 			result = append(result, item)
 		}
 	}
-
 	return result
 }
 
