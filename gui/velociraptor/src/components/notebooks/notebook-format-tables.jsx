@@ -84,6 +84,8 @@ export default class FormatTableDialog extends Component {
                 selected_columns.push(x[1]);
                 selection.push({column: x[1], type: x[2]});
             });
+        } else {
+            suffix = vql;
         }
 
         this.setState({selection: selection,

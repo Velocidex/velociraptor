@@ -162,11 +162,12 @@
   args:
   - name: name
     type: string
-    description: The Artifact to delete
+    description: The Artifact to update
     required: true
   - name: hidden
     type: bool
-    description: Set to make the artifact hidden in the GUI
+    description: Set to true make the artifact hidden in the GUI, false to make it
+      visible again.
   metadata:
     permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
 - name: atexit
@@ -1604,6 +1605,9 @@
   description: |
     Filters an array by regex or condition.
 
+    Note that if a condition is specified as well as a regex then only
+    the condition is applied.
+
     ### Examples
     ```vql
     filter(list=["AA", "AB", "BA", "BB"], regex="^A") -> ["AA", "AB"]
@@ -1620,9 +1624,8 @@
   - name: regex
     type: string
     description: A regex to test each item
-    repeated: true
   - name: condition
-    type: string
+    type: vfilter.Lambda
     description: A VQL lambda to use to filter elements
   category: basic
 - name: flatten
@@ -2634,6 +2637,9 @@
     type: string
     description: Path on server to the collector zip.
     required: true
+  - name: accessor
+    type: string
+    description: The accessor to use.
   - name: import_type
     type: string
     description: Whether the import is an offline_collector or hunt.

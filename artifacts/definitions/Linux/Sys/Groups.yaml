@@ -10,7 +10,7 @@ sources:
   - precondition: |
       SELECT OS From info() where OS = 'linux'
     query: |
-      SELECT Group, int(int=GID) AS GID, filter(regex='.',
+      SELECT Group, int(int=GID) AS GID, filter(regex='.+',
         list=split(sep_string=',', string=Members)) AS Members
       FROM split_records(
             filenames=GroupFile,

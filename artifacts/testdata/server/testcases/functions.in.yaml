@@ -117,3 +117,13 @@ Queries:
   - SELECT any(items=TestArray, filter="x=>x.Y =~ 'Good'"),
            all(items=TestArray, filter="x=>x.Y =~ 'Good'")
     FROM scope()
+
+  # Test the filter function
+  - LET List <= (1, "two", 3, "", 0)
+
+  # Regex . matches everything including empty string.
+  # .+ also matches ints but not the empty string.
+  - SELECT filter(list=List, condition='x=>x'),
+           filter(list=List, regex="."),
+           filter(list=List, regex=".+")
+    FROM scope()

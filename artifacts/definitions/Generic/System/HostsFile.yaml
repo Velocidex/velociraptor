@@ -42,7 +42,7 @@ export: |
 
   LET parse_hostsfile(OSPath) = SELECT Parsed.Address AS Address,
      Parsed.Hostname AS Hostname,
-     filter(list=split(sep='''\s+''', string=Parsed.Aliases), regex='.') AS Aliases,
+     filter(list=split(sep='''\s+''', string=Parsed.Aliases), regex='.+') AS Aliases,
 
      /* Remove any whitespace between comment character and comment: */
      regex_replace(re='''^\s+''', source=Parsed.Comment, replace='$1') AS Comment
