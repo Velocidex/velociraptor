@@ -59,16 +59,17 @@ func (self *EventTraceWatcherService) Register(
 
 	deregistration := func() {
 		scope.Log("Deregistering watcher for %v", provider_guid)
-		cancel()
 		session, pres := self.sessions[session_name]
 		if !pres {
 			return
 		}
-		closed_session := session.Deregister(wGuid)
-		if closed_session {
+		open_handles := session.Deregister(wGuid)
+		scope.Log("Remaining open ETW handles: %v", open_handles)
+		if open_handles == 0 {
 			scope.Log("Closing session %v", session_name)
 			GlobalEventTraceService.Deregister(session_name)
 		}
+		cancel()
 	}
 
 	// Check if we already have a session for this provider.
@@ -101,8 +102,8 @@ func (self *EventTraceWatcherService) Register(
 		return deregistration, output_chan, err
 	}
 
-	scope.Log("Registering watcher for %v", provider_guid)
 	sessionContext.UpdateRegistrations(*handle)
+	scope.Log("Registered watcher for %v", provider_guid)
 
 	return deregistration, output_chan, nil
 }
@@ -154,6 +155,7 @@ func (self *EventTraceWatcherService) StartMonitoring(
 	go func() {
 		// When session.Process() exits, we exit the
 		// query.
+		scope.Log("watch_etw: Starting monitoring for %v", key)
 		err := sessionContext.session.Process(cb)
 		if err != nil {
 			scope.Log("watch_etw: %v", err)
@@ -243,17 +245,18 @@ func (self *SessionContext) UpdateSession(
 	})
 }
 
-func (self *SessionContext) Deregister(wGuid windows.GUID) bool {
+func (self *SessionContext) Deregister(wGuid windows.GUID) int {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	new_reg := make([]*Handle, len(self.registrations))
-	registrations := self.GetRegistrations()
+	new_reg := []*Handle{}
+	registrations := make([]*Handle, len(self.registrations))
+	copy(registrations, self.registrations)
 
 	if len(registrations) == 0 || registrations == nil {
 		self.close()
-		return true
+		return 0
 	}
 	for _, handle := range registrations {
 		if handle == nil {
@@ -264,13 +267,11 @@ func (self *SessionContext) Deregister(wGuid windows.GUID) bool {
 		}
 	}
 
-	if len(new_reg) == 0 {
-		self.close()
-		return true
-	} else {
+	if len(new_reg) != 0 {
 		self.registrations = new_reg
-		return false
 	}
+
+	return len(new_reg)
 }
 
 func (self *SessionContext) GetRegistrations() []*Handle {
@@ -287,7 +288,7 @@ func (self *SessionContext) UpdateRegistrations(handle Handle) {
 	defer self.mu.Unlock()
 
 	handles := make([]*Handle, len(self.registrations))
-	copy(self.registrations, handles)
+	copy(handles, self.registrations)
 	self.registrations = append(handles, &handle)
 }
 
