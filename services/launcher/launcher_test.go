@@ -19,7 +19,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
-	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -652,14 +651,13 @@ func (self *LauncherTestSuite) TestParameterTypes() {
 			self.ConfigObj, ctx, test_responder, vql_request)
 	}
 
-	var messages []*crypto_proto.VeloMessage
+	var messages []*ordereddict.Dict
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
 		messages = getResponses(test_responder.Drain.Messages())
 		return len(messages) > 0
 	})
 
-	goldie.Assert(self.T(), "TestParameterTypes",
-		json.MustMarshalIndent(messages))
+	goldie.Assert(self.T(), "TestParameterTypes", json.MustMarshalIndent(messages))
 }
 
 var (
