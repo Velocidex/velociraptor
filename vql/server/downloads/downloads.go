@@ -348,6 +348,13 @@ func downloadFlowToZip(
 		}
 	}
 
+	// err = copyNotebookFiles(
+	// 	ctx, scope, config_obj, zip_writer,
+	// 	prefix, format, flow_path_manager)
+	// if err != nil {
+	// 	return err
+	// }
+
 	// Copy uploads
 	err = copyUploadFiles(ctx, scope, config_obj, zip_writer,
 		prefix, format, flow_path_manager, expand_sparse)
@@ -533,6 +540,29 @@ func copyUploadFiles(
 		paths.ZipPathFromFSPathSpec(prefix.AddChild("uploads")), output_chan)
 
 	return err
+}
+
+func copyNotebookFiles(
+	ctx context.Context,
+	scope vfilter.Scope,
+	config_obj *config_proto.Config,
+	container *reporting.Container,
+	prefix api.FSPathSpec,
+	format reporting.ContainerFormat,
+	flow_path_manager *paths.FlowPathManager) error {
+	// notebook_path_manager := flow_path_manager.Notebook()
+
+	// wg := &sync.WaitGroup{}
+
+	// err := reporting.ExportNotebookWithFlow(
+	// 	ctx, config_obj, wg, notebook_path_manager, container)
+	// if err != nil {
+	// 	return err
+	// }
+
+	// wg.Wait()
+
+	return nil
 }
 
 // Copy a single file from the filestore into the container.

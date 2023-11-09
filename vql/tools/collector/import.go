@@ -610,6 +610,11 @@ func (self ImportCollectionFunction) checkHuntInfo(
 	root *accessors.OSPath, accessor accessors.FileSystemAccessor) (*api_proto.Hunt, error) {
 	hunt_info := &api_proto.Hunt{}
 
+	_, err := accessor.LstatWithOSPath(root.Append("hunt_info.json"))
+	if err != nil {
+		return nil, err
+	}
+
 	fd, err := accessor.OpenWithOSPath(root.Append("hunt_info.json"))
 	if err != nil {
 		return nil, err
