@@ -654,12 +654,12 @@ func (self *LauncherTestSuite) TestParameterTypes() {
 
 	var messages []*crypto_proto.VeloMessage
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		messages = test_responder.Drain.Messages()
+		messages = getResponses(test_responder.Drain.Messages())
 		return len(messages) > 0
 	})
 
 	goldie.Assert(self.T(), "TestParameterTypes",
-		json.MustMarshalIndent(getResponses(messages)))
+		json.MustMarshalIndent(messages))
 }
 
 var (
