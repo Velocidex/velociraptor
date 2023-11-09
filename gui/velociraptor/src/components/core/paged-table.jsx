@@ -90,6 +90,147 @@ const pageListRenderer = ({
     );
 };
 
+class ColumnFilter extends Component {
+    static propTypes = {
+        column:  PropTypes.string,
+        transform: PropTypes.object,
+        setTransform: PropTypes.func,
+    }
+
+    state = {
+        edit_visible: false,
+        edit_filter: "",
+    }
+
+    componentDidMount = () => {
+        this.updateFiltersFromTransform();
+    }
+
+    componentDidUpdate(prevProps, prevState, snapshot) {
+        if (!_.isEqual(prevProps.transform, this.props.transform)) {
+            this.updateFiltersFromTransform();
+        }
+    }
+
+    updateFiltersFromTransform = () => {
+        let transform = this.props.transform || {};
+        let edit_filter = "";
+
+        if(this.props.column === transform.filter_column) {
+            edit_filter = transform.filter_regex;
+        }
+        this.setState({
+            edit_filter: edit_filter,
+            edit_visible: transform.editing === this.props.column,
+        });
+    }
+
+    submitSearch = ()=>{
+        let edit_filter = this.state.edit_filter;
+        let transform = Object.assign({}, this.props.transform);
+        transform.editing = "";
+
+        if(edit_filter) {
+            transform.filter_column = this.props.column;
+            transform.filter_regex = this.state.edit_filter;
+        } else {
+            transform.filter_column = null;
+            transform.filter_regex = null;
+        }
+        this.setState({
+            edit_visible: false,
+        });
+        this.props.setTransform(transform);
+    }
+
+    render() {
+        let classname = "hidden-edit";
+
+        if(this.state.edit_visible) {
+            return <Form onSubmit={()=>this.submitSearch()}>
+                     <Form.Control
+                       as="input"
+                       className="visible"
+                       placeholder={T("Regex")}
+                       spellCheck="false"
+                       value={this.state.edit_filter}
+                       onChange={e=> {
+                           this.setState({edit_filter: e.currentTarget.value});
+                       }}/>
+                   </Form>;
+        }
+
+        if (this.state.edit_filter) {
+            classname = "visible";
+        }
+
+        return <Button
+                 size="sm"
+                 variant="outline-dark"
+                 className={classname}
+                 onClick={()=>{
+                     this.setState({
+                         edit_visible: true,
+                     });
+                     this.props.setTransform({editing: this.props.column});
+                 }}>
+                 <FontAwesomeIcon icon="filter"/>
+                 { this.state.edit_filter }
+               </Button>;
+    }
+}
+
+
+
+
+class ColumnSort extends Component {
+    static propTypes = {
+        column:  PropTypes.string,
+        transform: PropTypes.object,
+        setTransform: PropTypes.func,
+    }
+
+    submitSort = next_dir=>{
+        let transform = Object.assign({}, this.props.transform);
+        transform.sort_column = this.props.column;
+        transform.sort_direction = next_dir;;
+        this.props.setTransform(transform);
+    }
+
+    render() {
+        let icon = "sort";
+        let next_dir = "Ascending";
+        let classname = "hidden-edit";
+
+        let sort_direction = "";
+        if (this.props.transform &&
+            this.props.transform.sort_column == this.props.column) {
+            sort_direction = this.props.transform.sort_direction;
+        }
+
+        if (sort_direction === "Ascending") {
+            icon = "arrow-up-a-z";
+            next_dir = "Descending";
+            classname = "visible";
+        } else if (sort_direction === "Descending"){
+            icon = "arrow-down-a-z";
+            next_dir = "Ascending";
+            classname = "visible";
+        }
+
+
+        return <Button
+                 size="sm"
+                 className={classname}
+                 variant="outline-dark"
+                 onClick={()=>this.submitSort(next_dir)}
+               >
+                 <FontAwesomeIcon icon={icon}/>
+               </Button>;
+    }
+}
+
+
 class VeloPagedTable extends Component {
     static contextType = UserConfig;
 
@@ -176,9 +317,6 @@ class VeloPagedTable extends Component {
 
         // A transform applied on the basic table.
         transform: {},
-
-        edit_filter_column: "",
-        edit_filter: "",
     }
 
     componentDidMount = () => {
@@ -255,6 +393,8 @@ class VeloPagedTable extends Component {
         return this.defaultFormatter;
     }
 
+    // Render the transformed view at the top right of the
+    // table. Shows the user what transforms are currnetly active.
     getTransformed = ()=>{
         let result = [];
         let transform = this.state.transform || {};
@@ -374,97 +514,45 @@ class VeloPagedTable extends Component {
         </span>
     );
 
-    headerFormatter = (column, colIndex) => {
-        let icon = "sort";
-        let next_dir = "Ascending";
-        let classname = "sort-element";
-        let sort_column = this.state.transform && this.state.transform.sort_column;
-        let sort_dir = this.state.transform && this.state.transform.sort_direction;
-        let filter =  this.state.transform && this.state.transform.filter_regex;
-        let filter_column = this.state.transform &&
-            this.state.transform.filter_column;
-        let edit_filter_visible = this.state.edit_filter_column &&
-            this.state.edit_filter_column === column.text;
-
-        if (sort_column === column.text) {
-            if (sort_dir === "Ascending") {
-                icon = "arrow-up-a-z";
-                next_dir = "Descending";
-            } else {
-                icon = "arrow-down-a-z";
+    // Update the transform specification between all the columns
+    setTransform = transform=>{
+        let new_transform = Object.assign({}, this.state.transform);
+        new_transform = Object.assign(new_transform, transform);
+        if(!_.isEqual(new_transform, this.state.transform)) {
+            // When the transform changes filters we need to reset to
+            // the first page because otherwise we might be past the
+            // end of the table.
+            if (new_transform.filter_column !== this.state.transform.filter_column ||
+                new_transform.filter_regex !== this.state.transform.filter_regex) {
+                this.setState({start_row: 0});
             }
-            classname = "visible sort-element";
-        } else if (filter_column == column.text || edit_filter_visible) {
-            classname = "visible sort-element";
+            if(this.props.setTransform) {
+                this.props.setTransform(transform);
+            }
+            this.setState({transform: new_transform});
         }
+    }
 
+    // Format the column headers. Columns have a sort and an filter button
+    // which keep track of their own filtering and sorting states but
+    // update the primary transform.
+    headerFormatter = (column, colIndex) => {
         return (
             <table className="paged-table-header">
               <tbody>
                 <tr>
                   <td>{ column.text }</td>
-                  <td className={classname}>
+                  <td className="sort-element">
                     <ButtonGroup>
-                      <Button
-                        size="sm"
-                        variant="outline-dark"
-                        onClick={()=>{
-                            let transform = Object.assign({}, this.state.transform);
-                            transform.sort_column = column.text;
-                            transform.sort_direction = next_dir;
-                            this.setState({
-                                transform: transform,
-                            });
-                            if(this.props.setTransform) {
-                                this.props.setTransform(transform);
-                            }
-                        }}
-                      >
-                        <FontAwesomeIcon icon={icon}/>
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline-dark"
-                        onClick={()=>{
-                            if (!edit_filter_visible) {
-                                this.setState({
-                                    edit_filter_column: column.text,
-                                    edit_filter: filter || "",
-                                });
-                                return;
-                            }
+                      <ColumnSort column={column.text}
+                                  transform={this.state.transform}
+                                  setTransform={this.setTransform}
+                      />
 
-                            let edit_filter = this.state.edit_filter;
-                            let transform = Object.assign({}, this.state.transform);
-                            if(edit_filter) {
-                                transform.filter_column = column.text;
-                                transform.filter_regex = this.state.edit_filter;
-                            } else {
-                                transform.filter_column = null;
-                                transform.filter_regex = null;
-                            }
-                            this.setState({
-                                edit_filter_column: null,
-                                transform: transform,
-                            });
-                            if(this.props.setTransform) {
-                                this.props.setTransform(transform);
-                            }
-                        }}
-                      >
-                        <FontAwesomeIcon icon="filter"/>
-                        { filter_column == column.text && !edit_filter_visible && filter }
-                      </Button>
-                      { edit_filter_visible &&
-                        <Form.Control
-                          as="input"
-                          className="pagination-form"
-                          placeholder={T("Regex")}
-                          spellCheck="false"
-                          value={this.state.edit_filter}
-                          onChange={e=> {
-                              this.setState({edit_filter: e.currentTarget.value});
-                          }}/> }
+                      <ColumnFilter column={column.text}
+                                    transform={this.state.transform}
+                                    setTransform={this.setTransform}
+                      />
                     </ButtonGroup>
                   </td>
                 </tr>

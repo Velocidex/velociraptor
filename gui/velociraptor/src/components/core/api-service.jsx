@@ -53,8 +53,8 @@ function retryDelay(retryNumber = 0) {
 }
 
 function isRetryableError(error) {
-  return error.code !== 'ECONNABORTED' && (!error.response || (
-      error.response.status >= 500 && error.response.status <= 599));
+    return error.code !== 'ECONNABORTED' && (!error.response || (
+        error.response.status >= 500 && error.response.status <= 599));
 }
 
 function isNetworkError(error) {
@@ -82,6 +82,7 @@ function isNetworkOrIdempotentRequestError(error) {
 function simpleNetworkErrorCheck(error) {
   if ((error && error.message) === 'Network Error') {
     return true;
+
   } else {
       return isNetworkOrIdempotentRequestError(error);
   }

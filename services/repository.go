@@ -151,6 +151,8 @@ type RepositoryManager interface {
 	// Delete the file from the global repository and the data store.
 	DeleteArtifactFile(ctx context.Context,
 		config_obj *config_proto.Config, principal, name string) error
+
+	ReformatVQL(ctx context.Context, artifact_yaml string) (string, error)
 }
 
 type MockablePlugin interface {
