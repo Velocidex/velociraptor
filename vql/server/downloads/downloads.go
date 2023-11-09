@@ -348,12 +348,10 @@ func downloadFlowToZip(
 		}
 	}
 
-	// err = copyNotebookFiles(
-	// 	ctx, scope, config_obj, zip_writer,
-	// 	prefix, format, flow_path_manager)
-	// if err != nil {
-	// 	return err
-	// }
+	notebook_path_manager := flow_path_manager.Notebook()
+	copyNotebookFiles(
+		ctx, scope, config_obj,
+		zip_writer, notebook_path_manager)
 
 	// Copy uploads
 	err = copyUploadFiles(ctx, scope, config_obj, zip_writer,
@@ -547,22 +545,18 @@ func copyNotebookFiles(
 	scope vfilter.Scope,
 	config_obj *config_proto.Config,
 	container *reporting.Container,
-	prefix api.FSPathSpec,
-	format reporting.ContainerFormat,
-	flow_path_manager *paths.FlowPathManager) error {
-	// notebook_path_manager := flow_path_manager.Notebook()
+	notebook_path_manager *paths.NotebookPathManager) {
 
-	// wg := &sync.WaitGroup{}
+	wg := &sync.WaitGroup{}
 
-	// err := reporting.ExportNotebookWithFlow(
-	// 	ctx, config_obj, wg, notebook_path_manager, container)
-	// if err != nil {
-	// 	return err
-	// }
+	err := reporting.ExportNotebookWithFlow(
+		ctx, config_obj, wg, notebook_path_manager, container)
+	// Not all flows have notebooks, so exit if there is none.
+	if err != nil {
+		scope.Log("copyNotebookFiles: %v", err)
+	}
 
-	// wg.Wait()
-
-	return nil
+	wg.Wait()
 }
 
 // Copy a single file from the filestore into the container.
@@ -818,6 +812,11 @@ func createHuntDownloadFile(
 		if only_combined {
 			return
 		}
+
+		notebook_path_manager := paths.NewNotebookPathManager("N." + hunt_id)
+		copyNotebookFiles(
+			ctx, scope, config_obj,
+			zip_writer, notebook_path_manager)
 
 		for flow_details := range hunt_dispatcher.GetFlows(sub_ctx,
 			config_obj, scope, hunt_id, 0) {

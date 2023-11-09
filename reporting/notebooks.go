@@ -294,106 +294,107 @@ func ExportNotebookToZip(
 	return nil
 }
 
-// func ExportNotebookWithFlow(
-// 	ctx context.Context,
-// 	config_obj *config_proto.Config,
-// 	wg *sync.WaitGroup,
-// 	notebook_path_manager *paths.NotebookPathManager,
-// 	zip_writer *Container) error {
+func ExportNotebookWithFlow(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	wg *sync.WaitGroup,
+	notebook_path_manager *paths.NotebookPathManager,
+	zip_writer *Container) error {
 
-// 	db, err := datastore.GetDB(config_obj)
-// 	if err != nil {
-// 		return err
-// 	}
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
+	}
 
-// 	notebook := &api_proto.NotebookMetadata{}
-// 	err = db.GetSubject(config_obj, notebook_path_manager.Path(),
-// 		notebook)
-// 	if err != nil {
-// 		return err
-// 	}
+	notebook := &api_proto.NotebookMetadata{}
+	err = db.GetSubject(config_obj, notebook_path_manager.Path(),
+		notebook)
+	if err != nil {
+		return err
+	}
 
-// 	for _, metadata := range notebook.CellMetadata {
-// 		if metadata.CellId != "" {
-// 			err = db.GetSubject(config_obj,
-// 				notebook_path_manager.Cell(metadata.CellId).Path(),
-// 				metadata)
-// 			if err != nil {
-// 				return err
-// 			}
-// 			metadata.Data = ""
-// 		}
-// 	}
+	for _, metadata := range notebook.CellMetadata {
+		if metadata.CellId != "" {
+			err = db.GetSubject(config_obj,
+				notebook_path_manager.Cell(metadata.CellId).Path(),
+				metadata)
+			if err != nil {
+				return err
+			}
+			metadata.Data = ""
+		}
+	}
 
-// 	serialized, err := yaml.Marshal(notebook)
-// 	if err != nil {
-// 		return err
-// 	}
+	serialized, err := yaml.Marshal(notebook)
+	if err != nil {
+		return err
+	}
 
-// 	file_store_factory := file_store.GetFileStore(config_obj)
-// 	exported_path_manager := NewNotebookExportPathManager(notebook.NotebookId)
+	file_store_factory := file_store.GetFileStore(config_obj)
+	exported_path_manager := NewNotebookExportPathManager(notebook.NotebookId)
+	exported_path_manager.root = exported_path_manager.root.Append("notebooks")
 
-// 	cell_copier := func(cell_id string) {
-// 		cell_path_manager := notebook_path_manager.Cell(cell_id)
+	cell_copier := func(cell_id string) {
+		cell_path_manager := notebook_path_manager.Cell(cell_id)
 
-// 		// Copy cell contents
-// 		err = copyUploads(ctx, config_obj,
-// 			cell_path_manager.Directory(),
-// 			exported_path_manager.CellDirectory(cell_id),
-// 			zip_writer, file_store_factory)
-// 		if err != nil {
-// 			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
-// 			logger.Info("ExportNotebookToZip Erorr: %v\n", err)
-// 		}
+		// Copy cell contents
+		err = copyUploads(ctx, config_obj,
+			cell_path_manager.Directory(),
+			exported_path_manager.CellDirectory(cell_id),
+			zip_writer, file_store_factory)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+			logger.Info("ExportNotebookWithFlow Erorr: %v\n", err)
+		}
 
-// 		// Now copy the uploads
-// 		err = copyUploads(ctx, config_obj,
-// 			cell_path_manager.UploadsDir(),
-// 			exported_path_manager.CellUploadRoot(cell_id),
-// 			zip_writer, file_store_factory)
-// 		if err != nil {
-// 			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
-// 			logger.Info("ExportNotebookToZip Erorr: %v\n", err)
-// 		}
-// 	}
+		// Now copy the uploads
+		err = copyUploads(ctx, config_obj,
+			cell_path_manager.UploadsDir(),
+			exported_path_manager.CellUploadRoot(cell_id),
+			zip_writer, file_store_factory)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+			logger.Info("ExportNotebookWithFlow Erorr: %v\n", err)
+		}
+	}
 
-// 	wg.Add(1)
+	wg.Add(1)
 
-// 	// Write the bulk of the data asyncronously.
-// 	go func() {
-// 		defer wg.Done()
+	// Write the bulk of the data asyncronously.
+	go func() {
+		defer wg.Done()
 
-// 		// Will also close the underlying fd.
-// 		defer zip_writer.Close()
+		// Will also close the underlying fd.
+		defer zip_writer.Close()
 
-// 		for _, cell := range notebook.CellMetadata {
-// 			cell_copier(cell.CellId)
-// 		}
+		for _, cell := range notebook.CellMetadata {
+			cell_copier(cell.CellId)
+		}
 
-// 		// Copy the attachments - Attachmentrs may not exist if there
-// 		// are none in the notebook - so this is not an error.
-// 		// Attachments are added to the notebook when the user pastes
-// 		// them into it (e.g. an image)
-// 		err = copyUploads(ctx, config_obj,
-// 			notebook_path_manager.AttachmentDirectory(),
-// 			exported_path_manager.UploadRoot(),
-// 			zip_writer, file_store_factory)
-// 		if err != nil {
-// 			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
-// 			logger.Info("ExportNotebookToZip Erorr: %v\n", err)
-// 		}
+		// Copy the attachments - Attachmentrs may not exist if there
+		// are none in the notebook - so this is not an error.
+		// Attachments are added to the notebook when the user pastes
+		// them into it (e.g. an image)
+		err = copyUploads(ctx, config_obj,
+			notebook_path_manager.AttachmentDirectory(),
+			exported_path_manager.UploadRoot(),
+			zip_writer, file_store_factory)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+			logger.Info("ExportNotebookToZip Erorr: %v\n", err)
+		}
 
-// 		f, err := zip_writer.Create("Notebook.yaml", time.Time{})
-// 		if err != nil {
-// 			return
-// 		}
-// 		defer f.Close()
+		f, err := zip_writer.Create("Notebook.yaml", time.Time{})
+		if err != nil {
+			return
+		}
+		defer f.Close()
 
-// 		_, err = f.Write(serialized)
-// 	}()
+		_, err = f.Write(serialized)
+	}()
 
-// 	return nil
-// }
+	return nil
+}
 
 func copyUploads(
 	ctx context.Context,
