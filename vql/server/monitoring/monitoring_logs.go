@@ -107,7 +107,7 @@ func (self MonitoringLogsPlugin) Call(
 		}
 
 		if !utils.IsNil(arg.StartTime) {
-			start_time, err := functions.TimeFromAny(scope, arg.StartTime)
+			start_time, err := functions.TimeFromAny(ctx, scope, arg.StartTime)
 			if err == nil {
 				err = result_set_reader.SeekToTime(start_time)
 				if err != nil {
@@ -118,7 +118,7 @@ func (self MonitoringLogsPlugin) Call(
 		}
 
 		if !utils.IsNil(arg.EndTime) {
-			end, err := functions.TimeFromAny(scope, arg.EndTime)
+			end, err := functions.TimeFromAny(ctx, scope, arg.EndTime)
 			if err == nil {
 				result_set_reader.SetMaxTime(end)
 			}

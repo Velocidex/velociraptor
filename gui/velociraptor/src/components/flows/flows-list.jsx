@@ -159,12 +159,12 @@ export class SaveCollectionDialog extends React.PureComponent {
               <Modal.Body>
                 {T("ArtifactFavorites", artifacts)}
                 <VeloForm
-                  param={{name: "Name", description: T("New Favorite name")}}
+                  param={{name: T("Name"), description: T("New Favorite name")}}
                   value={this.state.name}
                   setValue={x=>this.setState({name:x})}
                 />
                 <VeloForm
-                  param={{name: "Description",
+                  param={{name: T("Description"),
                           description: T("Describe this favorite")}}
                   value={this.state.description}
                   setValue={x=>this.setState({description:x})}

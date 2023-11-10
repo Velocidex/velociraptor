@@ -61,7 +61,7 @@ func (self ClockPlugin) Call(
 			time.Duration(arg.PeriodMs)*time.Second/1000
 
 		if !utils.IsNil(arg.StartTime) {
-			start, err := functions.TimeFromAny(scope, arg.StartTime)
+			start, err := functions.TimeFromAny(ctx, scope, arg.StartTime)
 			if err != nil {
 				scope.Log("clock: %v", err)
 				return

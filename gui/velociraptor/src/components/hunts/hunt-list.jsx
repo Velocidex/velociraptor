@@ -15,6 +15,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { withRouter } from "react-router-dom";
 import { formatColumns } from "../core/table.jsx";
 
+import VeloForm from '../forms/form.jsx';
+
 import NewHuntWizard from './new-hunt.jsx';
 import DeleteNotebookDialog from '../notebooks/notebook-delete.jsx';
 import ExportNotebook from '../notebooks/export-notebook.jsx';
@@ -23,6 +25,94 @@ import UserConfig from '../core/user.jsx';
 
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
+
+
+class ModifyHuntDialog extends React.Component {
+    static contextType = UserConfig;
+
+    static propTypes = {
+        hunt: PropTypes.object.isRequired,
+        onCancel: PropTypes.func.isRequired,
+        onResolve: PropTypes.func.isRequired,
+    }
+
+    state = {
+        description: "",
+        expires: ""
+    }
+
+    componentDidMount = () => {
+        this.source = CancelToken.source();
+    }
+
+    componentWillUnmount() {
+        this.source.cancel();
+    }
+
+    getExpiryEpoch = ()=>{
+        let expires = this.props.hunt.expires / 1000000;
+        if(this.state.expires) {
+            expires = Date.parse(this.state.expires) / 1000;
+        }
+        return expires;
+    }
+
+    modifyHunt = ()=>{
+        let hunt_id = this.props.hunt &&
+            this.props.hunt.hunt_id;
+
+        let description = this.state.description || this.props.hunt.hunt_description;
+
+        if (!hunt_id) { return; };
+
+        api.post("v1/ModifyHunt", {
+            hunt_description: description,
+            expires: this.getExpiryEpoch() * 1000000,
+            hunt_id: hunt_id,
+        }, this.source.token).then((response) => {
+            this.props.onResolve();
+        });
+    }
+
+    render() {
+        let description = this.state.description || this.props.hunt.hunt_description;
+        let expires = this.getExpiryEpoch();
+        let now = Date.now() / 1000;
+
+        return <Modal show={true}
+                      onHide={this.props.onCancel} >
+                 <Modal.Header closeButton>
+                   <Modal.Title>{T("Modify Hunt")}</Modal.Title>
+                 </Modal.Header>
+
+                 <Modal.Body>
+                   <VeloForm
+                     param={{name: T("Description"), description: T("Hunt description")}}
+                     value={description}
+                     setValue={x=>this.setState({description:x})}
+                   />
+                   <VeloForm
+                     param={{name: T("Expiry"), type: "timestamp",
+                             description: T("Time hunt will expire")}}
+                     value={expires}
+                     setValue={x=>this.setState({expires:x})}
+                   />
+                 </Modal.Body>
+
+                 <Modal.Footer>
+                   <Button variant="secondary"
+                           onClick={this.props.onCancel}>
+                     {T("Close")}
+                   </Button>
+                   <Button variant="primary"
+                           disabled={expires < now}
+                           onClick={this.modifyHunt}>
+                     {T("Run it!")}
+                   </Button>
+                 </Modal.Footer>
+               </Modal>;
+    }
+}
 
 
 class HuntList extends React.Component {
@@ -76,6 +166,7 @@ class HuntList extends React.Component {
         showDeleteNotebook: false,
         showCopyWizard: false,
         showNotebookUploadsDialog: false,
+        showModifyHuntDialog: false,
 
         filter: "",
     }
@@ -270,7 +361,15 @@ class HuntList extends React.Component {
                         onResolve={this.setCollectionRequest}
                     />
                 }
-
+                { this.state.showModifyHuntDialog &&
+                     <ModifyHuntDialog
+                       onResolve={()=>{
+                           this.props.updateHunts();
+                           this.setState({showModifyHuntDialog: false});
+                       }}
+                       onCancel={()=>this.setState({showModifyHuntDialog: false})}
+                       hunt={this.props.selected_hunt}/>
+                }
                 {this.state.showRunHuntDialog &&
                     <Modal show={this.state.showRunHuntDialog}
                         onHide={() => this.setState({ showRunHuntDialog: false })} >
@@ -349,6 +448,15 @@ class HuntList extends React.Component {
                             variant="default">
                             <FontAwesomeIcon icon="plus" />
                             <span className="sr-only">{T("New Hunt")}</span>
+                        </Button>
+                        <Button data-tooltip={T("Modify Hunt")}
+                            data-position="right"
+                            className="btn-tooltip"
+                            disabled={!this.props.selected_hunt}
+                            onClick={() => this.setState({ showModifyHuntDialog: true })}
+                            variant="default">
+                            <FontAwesomeIcon icon="wrench" />
+                            <span className="sr-only">{T("Modify Hunt")}</span>
                         </Button>
                         <Button data-tooltip={T("Run Hunt")}
                             data-position="right"

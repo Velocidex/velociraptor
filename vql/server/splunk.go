@@ -216,7 +216,7 @@ func send_to_splunk(
 		if arg.TimestampField != "" {
 			ts, ok := dict.Get(arg.TimestampField)
 			if ok {
-				timestamp, ok := functions.TimeFromAny(scope, ts)
+				timestamp, ok := functions.TimeFromAny(ctx, scope, ts)
 				if ok != nil {
 					// Default to start of Epoch if parse error
 					timestamp = time.Date(1970, time.Month(1), 1, 0, 0, 0, 0, time.UTC)

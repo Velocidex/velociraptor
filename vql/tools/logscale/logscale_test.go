@@ -347,7 +347,7 @@ func (self *LogScaleQueueTestSuite) TestTimestamp_TimeString() {
 
 	payload := NewLogScalePayload(row)
 
-	self.queue.addTimestamp(self.scope, row, payload)
+	self.queue.addTimestamp(self.ctx, self.scope, row, payload)
 
 	self.checkTimestamp(payload)
 }
@@ -360,7 +360,7 @@ func (self *LogScaleQueueTestSuite) TestTimestamp_timestampString() {
 
 	payload := NewLogScalePayload(row)
 
-	self.queue.addTimestamp(self.scope, row, payload)
+	self.queue.addTimestamp(self.ctx, self.scope, row, payload)
 
 	self.checkTimestamp(payload)
 }
@@ -372,7 +372,7 @@ func (self *LogScaleQueueTestSuite) TestTimestamp__tsString() {
 
 	payload := NewLogScalePayload(row)
 
-	self.queue.addTimestamp(self.scope, row, payload)
+	self.queue.addTimestamp(self.ctx, self.scope, row, payload)
 
 	self.checkTimestamp(payload)
 }
@@ -386,7 +386,7 @@ func (self *LogScaleQueueTestSuite) TestTimestamp_TimeUNIX() {
 
 	payload := NewLogScalePayload(row)
 
-	self.queue.addTimestamp(self.scope, row, payload)
+	self.queue.addTimestamp(self.ctx, self.scope, row, payload)
 
 	self.checkTimestamp(payload)
 }
@@ -399,7 +399,7 @@ func (self *LogScaleQueueTestSuite) TestTimestamp_timestampUNIX() {
 
 	payload := NewLogScalePayload(row)
 
-	self.queue.addTimestamp(self.scope, row, payload)
+	self.queue.addTimestamp(self.ctx, self.scope, row, payload)
 
 	self.checkTimestamp(payload)
 }
@@ -411,7 +411,7 @@ func (self *LogScaleQueueTestSuite) TestTimestamp__tsUNIX() {
 
 	payload := NewLogScalePayload(row)
 
-	self.queue.addTimestamp(self.scope, row, payload)
+	self.queue.addTimestamp(self.ctx, self.scope, row, payload)
 
 	self.checkTimestamp(payload)
 }
@@ -591,7 +591,7 @@ func (self *LogScaleQueueTestSuite) preparePayloads(payloads []*LogScalePayload)
 
 func (self *LogScaleQueueTestSuite) TestPostBytesValid() {
 	row := generateRow()
-	timestamp, _ := functions.TimeFromAny(self.scope, testTimestampStringTZ)
+	timestamp, _ := functions.TimeFromAny(self.ctx, self.scope, testTimestampStringTZ)
 	payloads := []*LogScalePayload{
 		&LogScalePayload{
 			Events: []LogScaleEvent{
