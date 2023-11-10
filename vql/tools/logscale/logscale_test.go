@@ -591,7 +591,7 @@ func (self *LogScaleQueueTestSuite) preparePayloads(payloads []*LogScalePayload)
 
 func (self *LogScaleQueueTestSuite) TestPostBytesValid() {
 	row := generateRow()
-	timestamp, _ := functions.TimeFromAny(self.scope, testTimestampStringTZ)
+	timestamp, _ := functions.TimeFromAny(self.ctx, self.scope, testTimestampStringTZ)
 	payloads := []*LogScalePayload{
 		&LogScalePayload{
 			Events: []LogScaleEvent{

@@ -405,10 +405,13 @@ func (self *HuntDispatcher) checkForExpiry(
 		now := uint64(utils.GetTime().Now().UnixNano() / 1000)
 
 		self.ApplyFuncOnHunts(func(hunt_obj *api_proto.Hunt) error {
-			if now > hunt_obj.Expires {
+			if hunt_obj.State == api_proto.Hunt_RUNNING &&
+				now > hunt_obj.Expires {
+
 				self.MutateHunt(ctx, config_obj,
 					&api_proto.HuntMutation{
 						HuntId: hunt_obj.HuntId,
+						State:  api_proto.Hunt_STOPPED,
 						Stats:  &api_proto.HuntStats{Stopped: true},
 					})
 			}

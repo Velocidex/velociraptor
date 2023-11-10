@@ -14,8 +14,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/Velocidex/ordereddict"
+	"github.com/hashicorp/go-retryablehttp"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
@@ -29,16 +29,16 @@ import (
 )
 
 var (
-	defaultEventBatchSize = 2000
-	defaultBatchingTimeoutDuration = time.Duration(3000) * time.Millisecond
+	defaultEventBatchSize            = 2000
+	defaultBatchingTimeoutDuration   = time.Duration(3000) * time.Millisecond
 	defaultHttpClientTimeoutDuration = time.Duration(10) * time.Second
-	defaultNWorkers = 1
-	defaultMaxRetries = 7200 // ~2h more or less
-	defaultStatsInterval = time.Duration(30) * time.Second
+	defaultNWorkers                  = 1
+	defaultMaxRetries                = 7200 // ~2h more or less
+	defaultStatsInterval             = time.Duration(30) * time.Second
 
-	gMaxPoll = time.Duration(60) * time.Second
-	gMaxPollDev = 30
-	gNextId int64 = 0
+	gMaxPoll          = time.Duration(60) * time.Second
+	gMaxPollDev       = 30
+	gNextId     int64 = 0
 
 	apiEndpoint = "/v1/ingest/humio-structured"
 )
@@ -58,12 +58,12 @@ func (err errInvalidArgument) Is(other error) bool {
 
 type errMaxRetriesExceeded struct {
 	LastError error
-	Retries int
+	Retries   int
 }
 
 func (err errMaxRetriesExceeded) Error() string {
 	return fmt.Sprintf("Maximum retries exceeded: %v attempts, last error=%s",
-			   err.Retries, err.LastError)
+		err.Retries, err.LastError)
 }
 
 func (err errMaxRetriesExceeded) Unwrap() error {
@@ -77,58 +77,58 @@ func (err errMaxRetriesExceeded) Timeout() bool {
 var errQueueOpened = errors.New("Cannot modify parameters of open queue")
 
 type LogScaleQueue struct {
-	scope                  	  vfilter.Scope
-	config                 	  *config_proto.Config
-	lock			  sync.Mutex
-	cancel			  func()
+	scope  vfilter.Scope
+	config *config_proto.Config
+	lock   sync.Mutex
+	cancel func()
 
-	listener                  *directory.Listener
-	workerWg		  sync.WaitGroup
+	listener *directory.Listener
+	workerWg sync.WaitGroup
 
-	httpClient                *http.Client
-	httpTransport             *http.Transport
-	opened			  bool
+	httpClient    *http.Client
+	httpTransport *http.Transport
+	opened        bool
 
 	endpointUrl               string
-	authToken		  string
+	authToken                 string
 	nWorkers                  int
 	tagMap                    map[string]string
 	batchingTimeoutDuration   time.Duration
 	httpClientTimeoutDuration time.Duration
 	eventBatchSize            int
-	httpTimeout		  int
-	debug			  bool
-	debugEventsEnabled	  bool
-	debugEventsMap		  map[int][]func(int)
-	id			  int
-	logPrefix		  string
-	maxRetries		  int
-	queueClosing		  int64
+	httpTimeout               int
+	debug                     bool
+	debugEventsEnabled        bool
+	debugEventsMap            map[int][]func(int)
+	id                        int
+	logPrefix                 string
+	maxRetries                int
+	queueClosing              int64
 
 	// Statistics
 	// count of events queued for posting across all workers
-	currentQueueDepth	  int64
+	currentQueueDepth int64
 	// count of events dropped during shutdown across all workers
-	droppedEvents		  int64
+	droppedEvents int64
 	// count of events successfully posted
-	postedEvents		  int64
+	postedEvents int64
 	// count of bytes successfully posted
-	postedBytes		  int64
+	postedBytes int64
 	// count of events that failed to post
-	failedEvents		  int64
+	failedEvents int64
 	// count of retries since startup
-	totalRetries		  int64
+	totalRetries int64
 }
 
 type LogScaleEvent struct {
-	Timestamp time.Time          `json:"timestamp"`
+	Timestamp  time.Time         `json:"timestamp"`
 	Attributes *ordereddict.Dict `json:"attributes"`
-	Timezone string              `json:"timezone,omitempty"`
+	Timezone   string            `json:"timezone,omitempty"`
 }
 
 type LogScalePayload struct {
-	Events []LogScaleEvent          `json:"events"`
-	Tags map[string]interface{}  `json:"tags,omitempty"`
+	Events []LogScaleEvent        `json:"events"`
+	Tags   map[string]interface{} `json:"tags,omitempty"`
 }
 
 func (self *LogScalePayload) String() string {
@@ -142,12 +142,12 @@ func (self *LogScalePayload) String() string {
 
 func NewLogScaleQueue(config_obj *config_proto.Config) *LogScaleQueue {
 	return &LogScaleQueue{
-		config: config_obj,
-		nWorkers: defaultNWorkers,
-		batchingTimeoutDuration: defaultBatchingTimeoutDuration,
-		eventBatchSize: defaultEventBatchSize,
+		config:                    config_obj,
+		nWorkers:                  defaultNWorkers,
+		batchingTimeoutDuration:   defaultBatchingTimeoutDuration,
+		eventBatchSize:            defaultEventBatchSize,
 		httpClientTimeoutDuration: defaultHttpClientTimeoutDuration,
-		maxRetries: defaultMaxRetries,
+		maxRetries:                defaultMaxRetries,
 	}
 }
 
@@ -296,7 +296,7 @@ func (self *LogScaleQueue) SetHttpTransport(transport *http.Transport) error {
 }
 
 func (self *LogScaleQueue) Open(parentCtx context.Context, scope vfilter.Scope,
-				baseUrl string, authToken string) error {
+	baseUrl string, authToken string) error {
 	self.lock.Lock()
 	defer self.lock.Unlock()
 
@@ -334,22 +334,22 @@ func (self *LogScaleQueue) Open(parentCtx context.Context, scope vfilter.Scope,
 	}
 
 	self.httpClient = &http.Client{Timeout: self.httpClientTimeoutDuration,
-				       Transport: transport}
+		Transport: transport}
 
 	self.id = int(atomic.AddInt64(&gNextId, 1))
 	self.logPrefix = fmt.Sprintf("logscale/%v: ", self.id)
 
 	self.currentQueueDepth = int64(0)
-	self.droppedEvents     = int64(0)
-	self.postedEvents      = int64(0)
-	self.postedBytes       = int64(0)
-	self.failedEvents      = int64(0)
-	self.totalRetries      = int64(0)
+	self.droppedEvents = int64(0)
+	self.postedEvents = int64(0)
+	self.postedBytes = int64(0)
+	self.failedEvents = int64(0)
+	self.totalRetries = int64(0)
 
 	options := api.QueueOptions{
 		DisableFileBuffering: false,
-		FileBufferLeaseSize: 100,
-		OwnerName: "logscale-plugin",
+		FileBufferLeaseSize:  100,
+		OwnerName:            "logscale-plugin",
 	}
 
 	// If we allow the listener to be canceled with the rest of our context, it will stop
@@ -399,7 +399,7 @@ func (self *LogScaleQueue) addDebugCallback(count int, callback func(int)) error
 // Provide the hostname for the client host if it's a client query
 // since an external system will not have a way to map it to a hostname.
 func (self *LogScaleQueue) addClientInfo(ctx context.Context, row *ordereddict.Dict,
-				      payload *LogScalePayload) {
+	payload *LogScalePayload) {
 	client_id, ok := row.GetString("ClientId")
 	if ok {
 		payload.Tags["ClientId"] = client_id
@@ -421,8 +421,9 @@ func (self *LogScaleQueue) addMappedTags(row *ordereddict.Dict, payload *LogScal
 	}
 }
 
-func (self *LogScaleQueue) addTimestamp(scope vfilter.Scope, row *ordereddict.Dict,
-				     payload *LogScalePayload) {
+func (self *LogScaleQueue) addTimestamp(
+	ctx context.Context, scope vfilter.Scope, row *ordereddict.Dict,
+	payload *LogScalePayload) {
 	timestamp, ok := row.Get("Time")
 	if !ok {
 		timestamp, ok = row.Get("timestamp")
@@ -433,7 +434,7 @@ func (self *LogScaleQueue) addTimestamp(scope vfilter.Scope, row *ordereddict.Di
 	var ts time.Time
 	if ok {
 		// It's only an error if it's nil, and it can't be.
-		ts, _ = functions.TimeFromAny(scope, timestamp)
+		ts, _ = functions.TimeFromAny(ctx, scope, timestamp)
 	} else {
 		ts = time.Now()
 	}
@@ -442,8 +443,8 @@ func (self *LogScaleQueue) addTimestamp(scope vfilter.Scope, row *ordereddict.Di
 }
 
 func NewLogScalePayload(row *ordereddict.Dict) *LogScalePayload {
-	return  &LogScalePayload{
-		Events: []LogScaleEvent {
+	return &LogScalePayload{
+		Events: []LogScaleEvent{
 			LogScaleEvent{
 				Attributes: row,
 			},
@@ -453,12 +454,12 @@ func NewLogScalePayload(row *ordereddict.Dict) *LogScalePayload {
 }
 
 func (self *LogScaleQueue) rowToPayload(ctx context.Context, scope vfilter.Scope,
-				     row *ordereddict.Dict) *LogScalePayload {
+	row *ordereddict.Dict) *LogScalePayload {
 	payload := NewLogScalePayload(row)
 
 	self.addClientInfo(ctx, row, payload)
 	self.addMappedTags(row, payload)
-	self.addTimestamp(scope, row, payload)
+	self.addTimestamp(ctx, scope, row, payload)
 
 	return payload
 }
@@ -476,7 +477,7 @@ func (self *LogScaleQueue) postBytes(scope vfilter.Scope, data []byte, count int
 	resp, err := self.httpClient.Do(req)
 	if resp != nil {
 		self.Debug(scope, "sent %d events %d bytes, response with status: %v",
-			   count, len(data), resp.Status)
+			count, len(data), resp.Status)
 	}
 
 	return resp, err
@@ -487,7 +488,7 @@ func (self *LogScaleQueue) shouldRetryRequest(ctx context.Context, resp *http.Re
 }
 
 func (self *LogScaleQueue) postEvents(ctx context.Context, scope vfilter.Scope,
-				   rows []*ordereddict.Dict) error {
+	rows []*ordereddict.Dict) error {
 	nRows := len(rows)
 	opts := vql_subsystem.EncOptsFromScope(scope)
 
@@ -501,7 +502,7 @@ func (self *LogScaleQueue) postEvents(ctx context.Context, scope vfilter.Scope,
 	clock := utils.GetTime()
 
 	payloads := []*LogScalePayload{}
-	for _, row := range(rows) {
+	for _, row := range rows {
 		payloads = append(payloads, self.rowToPayload(ctx, scope, row))
 	}
 
@@ -546,14 +547,14 @@ func (self *LogScaleQueue) postEvents(ctx context.Context, scope vfilter.Scope,
 				atomic.AddInt64(&self.failedEvents, int64(nRows))
 				return errMaxRetriesExceeded{
 					LastError: err,
-					Retries: retries,
+					Retries:   retries,
 				}
 			}
 
-			wait := retryablehttp.DefaultBackoff(1 * time.Second, gMaxPoll, retries, resp)
+			wait := retryablehttp.DefaultBackoff(1*time.Second, gMaxPoll, retries, resp)
 			atomic.AddInt64(&self.totalRetries, 1)
 			self.Log(scope, "Failed to POST events, will attempt retry #%v in %v.",
-				 retries, wait)
+				retries, wait)
 
 			clock.Sleep(wait)
 			continue
@@ -577,7 +578,7 @@ func (self *LogScaleQueue) postEvents(ctx context.Context, scope vfilter.Scope,
 func (self *LogScaleQueue) debugEvents(count int) {
 
 	events, ok := self.debugEventsMap[count]
-	if ok  {
+	if ok {
 		for _, callback := range events {
 			callback(count)
 		}
@@ -704,18 +705,18 @@ func (self *LogScaleQueue) Close(scope vfilter.Scope) {
 	dropped := atomic.LoadInt64(&self.droppedEvents)
 	backlog = atomic.LoadInt64(&self.currentQueueDepth)
 	if (dropped + backlog) > 0 {
-		self.Log(scope, "Queue closed with %v dropped events", dropped + backlog)
+		self.Log(scope, "Queue closed with %v dropped events", dropped+backlog)
 	}
 	atomic.StoreInt64(&self.queueClosing, 0)
 }
 
 func (self *LogScaleQueue) Log(scope vfilter.Scope, fmt string, args ...any) {
-	scope.Log(self.logPrefix + fmt, args...)
+	scope.Log(self.logPrefix+fmt, args...)
 }
 
 func (self *LogScaleQueue) Debug(scope vfilter.Scope, fmt string, args ...any) {
 	if self.debug {
-		scope.Log(self.logPrefix + fmt, args...)
+		scope.Log(self.logPrefix+fmt, args...)
 	}
 }
 
@@ -728,8 +729,8 @@ func (self *LogScaleQueue) PostStats(scope vfilter.Scope) {
 	totalRetries := atomic.LoadInt64(&self.totalRetries)
 
 	self.Log(scope, "Posted %v events %v bytes, backlog of %v events %v bytes, %v events dropped, %v retries",
-		 postedEvents, postedBytes, currentQueueDepth, queuedBytes, droppedEvents,
-		 totalRetries)
+		postedEvents, postedBytes, currentQueueDepth, queuedBytes, droppedEvents,
+		totalRetries)
 }
 
 type logscalePlugin struct{}
@@ -737,4 +738,3 @@ type logscalePlugin struct{}
 func (self *LogScaleQueue) EnableDebugging(enabled bool) {
 	self.debug = enabled
 }
-
