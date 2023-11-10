@@ -25,6 +25,17 @@ func (self *ApiServer) ReformatVQL(
 			"User is not allowed to read notebooks.")
 	}
 
+	if in.Artifact != "" {
+		manager, err := services.GetRepositoryManager(org_config_obj)
+		if err != nil {
+			return nil, Status(self.verbose, err)
+		}
+
+		reformated_vql, err := manager.ReformatVQL(ctx, in.Artifact)
+		return &api_proto.ReformatVQLMessage{
+			Artifact: reformated_vql,
+		}, Status(self.verbose, err)
+	}
 	notebook_manager, err := services.GetNotebookManager(org_config_obj)
 	if err != nil {
 		return nil, Status(self.verbose, err)

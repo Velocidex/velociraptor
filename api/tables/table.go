@@ -18,6 +18,7 @@
 package tables
 
 import (
+	"io"
 	"regexp"
 	"time"
 
@@ -137,6 +138,10 @@ func getTable(
 
 	// Seek to the row we need.
 	err = rs_reader.SeekToRow(int64(in.StartRow))
+	if err == io.EOF {
+		return result, nil
+	}
+
 	if err != nil {
 		return nil, err
 	}

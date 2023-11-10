@@ -1,0 +1,49 @@
+{
+ "Simple": [
+  "",
+  "name: Foo",
+  "sources:",
+  "- query: |",
+  "   SELECT A,",
+  "          B,",
+  "          C",
+  "   FROM info(arg1=Foobar, arg2=\"XXXXX\")",
+  "",
+  "- query: |-",
+  "   SELECT A,",
+  "          B,",
+  "          C",
+  "   FROM info()",
+  "",
+  "- description: Foo bar",
+  ""
+ ],
+ "Single line queries are not reformatted.": [
+  "",
+  "name: Single line",
+  "sources:",
+  "- query: SELECT * FROM info()",
+  "- query: |",
+  "   SELECT A",
+  "   FROM scope()",
+  ""
+ ],
+ "export reformatted": [
+  "",
+  "name: Exported",
+  "export: |",
+  " SELECT *",
+  " FROM scope()",
+  ""
+ ],
+ "preconditions": [
+  "",
+  "name: Preconditions",
+  "precondition: SELECT * FROM info()",
+  "sources:",
+  "- precondition: |",
+  "   SELECT *",
+  "   FROM info()",
+  ""
+ ]
+}
