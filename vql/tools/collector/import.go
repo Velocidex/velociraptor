@@ -310,6 +310,22 @@ func (self ImportCollectionFunction) importFlow(
 		}
 	}
 
+	err = self.copyFile(ctx, config_obj, scope, accessor, root.Append("Notebook.yaml"),
+		flow_path_manager.Path().AsFilestorePath().AddChild("Notebook.yaml"))
+	if err == nil {
+		// It is not an error if there is no uploads metadata - it
+		// just means that there were no uploads.
+
+		// Open the upload metadata and try to find the actual files in
+		// the container.
+		err = self.CopyDirectory(ctx, config_obj, scope, accessor,
+			root.Append("notebooks"), flow_path_manager.Path().AsFilestorePath().AddChild("notebook"))
+		if err != nil {
+			scope.Log("import_flow: %v", err)
+			return vfilter.Null{}
+		}
+	}
+
 	// If we got here - all went well and we can emit an event to let
 	// listeners know there is a new collection.
 	row := ordereddict.NewDict().
@@ -587,7 +603,7 @@ func (self ImportCollectionFunction) copyFile(
 
 	out_fd.Truncate()
 
-	scope.Log("import_collection: Copying %v to %v", src.String(), dest.AsClientPath())
+	scope.Log("import_collection: Copying %v to %v", src.String(), dest.String())
 
 	_, err = utils.Copy(ctx, out_fd, fd)
 	if err != nil {
@@ -595,6 +611,38 @@ func (self ImportCollectionFunction) copyFile(
 	}
 
 	return err
+}
+
+func (self ImportCollectionFunction) CopyDirectory(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	scope vfilter.Scope,
+	accessor accessors.FileSystemAccessor,
+	src *accessors.OSPath, dest api.FSPathSpec) error {
+
+	// Open the upload metadata and try to find the actual files in
+	// the container.
+	directory_listing, err := accessor.ReadDirWithOSPath(src)
+	if err != nil {
+		return err
+	}
+
+	for _, item := range directory_listing {
+		if item.IsDir() {
+			self.CopyDirectory(ctx, config_obj, scope, accessor,
+				src.Append(item.Name()), dest.AddChild(item.Name()))
+		} else {
+			err = self.copyFile(ctx, config_obj, scope, accessor,
+				src.Append(item.Name()),
+				dest.AddChild(item.Name()).SetType(api.PATH_TYPE_DATASTORE_UNKNOWN))
+			if err != nil {
+				scope.Log("import_flow: %v", err)
+				continue
+			}
+		}
+	}
+
+	return nil
 }
 
 func (self ImportCollectionFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

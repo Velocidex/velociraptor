@@ -349,9 +349,13 @@ func downloadFlowToZip(
 	}
 
 	notebook_path_manager := flow_path_manager.Notebook()
-	copyNotebookFiles(
+	err = copyNotebookFiles(
 		ctx, scope, config_obj,
-		zip_writer, notebook_path_manager)
+		zip_writer, prefix.AddChild("notebook", "N."+flow_id+"-"+client_id), format,
+		notebook_path_manager.Path(), expand_sparse)
+	if err != nil {
+		return err
+	}
 
 	// Copy uploads
 	err = copyUploadFiles(ctx, scope, config_obj, zip_writer,
@@ -360,6 +364,82 @@ func downloadFlowToZip(
 		return err
 	}
 	return nil
+}
+
+func copyNotebookFiles(
+	ctx context.Context,
+	scope vfilter.Scope,
+	config_obj *config_proto.Config,
+	container *reporting.Container,
+	prefix api.FSPathSpec,
+	format reporting.ContainerFormat,
+	notebook_path api.DSPathSpec,
+	expand_sparse bool) error {
+
+	// Read all the upload metadata and copy the files to the container.
+	file_store_factory := file_store.GetFileStore(config_obj)
+	output_chan := make(chan vfilter.Row)
+
+	// Need to create a local pool so we can wait for all files to be
+	// written to the container before we close the output chan.
+	pool := newPool(ctx, config_obj, scope, container)
+
+	go func() {
+		defer close(output_chan)
+		defer pool.Close()
+
+		loopNotebook(
+			ctx, scope, config_obj, container, format, expand_sparse,
+			file_store_factory, notebook_path.AsFilestorePath(), prefix,
+			output_chan, pool)
+	}()
+
+	// Copy the modified rows into the uploads file.
+	_, err := container.WriteResultSet(ctx, config_obj, scope, format,
+		paths.ZipPathFromFSPathSpec(prefix.AddChild("notebooks")), output_chan)
+
+	return err
+}
+
+func loopNotebook(
+	ctx context.Context,
+	scope vfilter.Scope,
+	config_obj *config_proto.Config,
+	container *reporting.Container,
+	format reporting.ContainerFormat,
+	expand_sparse bool,
+	file_store_factory api.FileStore,
+	src api.FSPathSpec, dst api.FSPathSpec,
+	output_chan chan vfilter.Row,
+	pool *pool) {
+	files, err := file_store_factory.ListDirectory(src)
+	if err != nil {
+		return
+	}
+
+	for _, file := range files {
+		scope.Log("DEBUG: loopNotebook: Copy file from %v\n", file.PathSpec())
+		if file.IsDir() {
+			loopNotebook(
+				ctx, scope, config_obj, container, format, expand_sparse,
+				file_store_factory, src.AddChild(file.Name()).SetType(api.PATH_TYPE_DATASTORE_DIRECTORY),
+				dst.AddChild(file.Name()), output_chan, pool)
+		}
+		new_src := src.AddChild(file.Name())
+		new_dst := dst.AddChild(file.Name())
+
+		row := ordereddict.NewDict().
+			Set("Name", file.Name()).
+			Set("Path", dst.String()).
+			Set("Size", file.Size())
+
+		pool.copyFile(new_src, new_dst, row, expand_sparse, output_chan)
+
+		// Write the row into the upload file immediately so the
+		// rows maintain the same order as the original file. If
+		// an error occurs a second error row will be written.
+		output_chan <- row
+	}
 }
 
 func copyUploadFiles(
@@ -538,25 +618,6 @@ func copyUploadFiles(
 		paths.ZipPathFromFSPathSpec(prefix.AddChild("uploads")), output_chan)
 
 	return err
-}
-
-func copyNotebookFiles(
-	ctx context.Context,
-	scope vfilter.Scope,
-	config_obj *config_proto.Config,
-	container *reporting.Container,
-	notebook_path_manager *paths.NotebookPathManager) {
-
-	wg := &sync.WaitGroup{}
-
-	err := reporting.ExportNotebookWithFlow(
-		ctx, config_obj, wg, notebook_path_manager, container)
-	// Not all flows have notebooks, so exit if there is none.
-	if err != nil {
-		scope.Log("copyNotebookFiles: %v", err)
-	}
-
-	wg.Wait()
 }
 
 // Copy a single file from the filestore into the container.
@@ -813,10 +874,14 @@ func createHuntDownloadFile(
 			return
 		}
 
-		notebook_path_manager := paths.NewNotebookPathManager("N." + hunt_id)
-		copyNotebookFiles(
-			ctx, scope, config_obj,
-			zip_writer, notebook_path_manager)
+		notebook_path := hunt_path_manager.Path().AddChild("notebook", "N."+hunt_id).SetType(api.PATH_TYPE_DATASTORE_DIRECTORY)
+		scope.Log("DEBUG: createHuntDownloadFile: Copy notebook files from %v.\n", notebook_path)
+		err := copyNotebookFiles(
+			ctx, scope, config_obj, zip_writer, path_specs.NewUnsafeFilestorePath().AddChild("notebook"),
+			format, notebook_path, expand_sparse)
+		if err != nil {
+			return
+		}
 
 		for flow_details := range hunt_dispatcher.GetFlows(sub_ctx,
 			config_obj, scope, hunt_id, 0) {
