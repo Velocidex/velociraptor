@@ -20,6 +20,8 @@ Queries:
     WHERE Profile.Watchers = 2
     LIMIT 1
 
+  - SELECT sleep(time=1) FROM scope()
+
   # Now Check that session is removed.
   - SELECT * FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2"
 
@@ -49,6 +51,8 @@ Queries:
          SELECT * FROM watch_etw(guid=GUID2, name="VeloTest2", timeout=5)
       })
     LIMIT 1
+
+  - SELECT sleep(time=1) FROM scope()
 
   # Now make sure that the session is actually removed when there are
   # no interested parties.

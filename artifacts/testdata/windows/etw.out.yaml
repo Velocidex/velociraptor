@@ -10,7 +10,13 @@ LET SessionExists = SELECT Stdout =~ "VeloTest2" FROM execve(argv=["logman", "qu
    "Stdout =~ \"VeloTest2\"": true
   }
  }
-]SELECT * FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2"[]SELECT { SELECT * FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2" ORDER BY GUID } AS Profile, SessionExists[0] FROM chain(async=TRUE, a={ SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5) }, b={ SELECT * FROM watch_etw(guid=GUID2, name="VeloTest2", timeout=5) }) LIMIT 1[
+]SELECT * FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2"[
+ {
+  "SessionName": "VeloTest2",
+  "GUID": "{70EB4F03-C1DE-4F73-A051-33D13D5413BD}",
+  "Watchers": 1
+ }
+]SELECT { SELECT * FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2" ORDER BY GUID } AS Profile, SessionExists[0] FROM chain(async=TRUE, a={ SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5) }, b={ SELECT * FROM watch_etw(guid=GUID2, name="VeloTest2", timeout=5) }) LIMIT 1[
  {
   "Profile": [
    {
@@ -41,6 +47,6 @@ LET SessionExists = SELECT Stdout =~ "VeloTest2" FROM execve(argv=["logman", "qu
  }
 ]SELECT * FROM SessionExists[
  {
-  "Stdout =~ \"VeloTest2\"": false
+  "Stdout =~ \"VeloTest2\"": true
  }
 ]
