@@ -78,7 +78,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 
 	var expires uint64
 	if !utils.IsNil(arg.Expires) {
-		expiry_time, err := functions.TimeFromAny(scope, arg.Expires.Reduce(ctx))
+		expiry_time, err := functions.TimeFromAny(ctx, scope, arg.Expires.Reduce(ctx))
 		if err != nil {
 			scope.Log("hunt: expiry time invalid: %v", err)
 			return vfilter.Null{}

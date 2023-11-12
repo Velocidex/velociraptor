@@ -93,7 +93,7 @@ func (self MonitoringPlugin) Call(
 		}
 
 		if !utils.IsNil(arg.StartTime) {
-			start, err := functions.TimeFromAny(scope, arg.StartTime)
+			start, err := functions.TimeFromAny(ctx, scope, arg.StartTime)
 			if err == nil {
 				err = reader.SeekToTime(start)
 				if err != nil {
@@ -104,7 +104,7 @@ func (self MonitoringPlugin) Call(
 		}
 
 		if !utils.IsNil(arg.EndTime) {
-			end, err := functions.TimeFromAny(scope, arg.EndTime)
+			end, err := functions.TimeFromAny(ctx, scope, arg.EndTime)
 			if err == nil {
 				reader.SetMaxTime(end)
 			}

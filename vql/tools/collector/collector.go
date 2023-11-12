@@ -322,7 +322,7 @@ func AddSpecProtobuf(
 
 			case "timestamp":
 				if !is_str && !utils.IsNil(value_any) {
-					value_time, err := functions.TimeFromAny(scope, value_any)
+					value_time, err := functions.TimeFromAny(ctx, scope, value_any)
 					if err != nil {
 						scope.Log("Invalid timestamp for %v",
 							parameter_definition.Name)

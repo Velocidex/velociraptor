@@ -25,13 +25,13 @@ func (self *HuntDispatcher) ModifyHunt(
 	// We can not modify the hunt directly, instead we send a
 	// mutation to the hunt manager on the master.
 	mutation := &api_proto.HuntMutation{
-		HuntId:      hunt_modification.HuntId,
-		Description: hunt_modification.HuntDescription,
+		HuntId: hunt_modification.HuntId,
 	}
 
 	// Is the description changed?
-	if hunt_modification.HuntDescription != "" {
+	if hunt_modification.HuntDescription != "" || hunt_modification.Expires > 0 {
 		mutation.Description = hunt_modification.HuntDescription
+		mutation.Expires = hunt_modification.Expires
 
 		// Archive the hunt.
 	} else if hunt_modification.State == api_proto.Hunt_ARCHIVED {

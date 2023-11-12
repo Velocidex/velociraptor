@@ -189,6 +189,7 @@ message HuntMutation {
     string description = 3;
     Hunt.State state = 4;
     uint64 start_time = 5;
+    uint64 expires = 7;
 
     // A mutation can directly assign an existing flow to the
     // hunt. This allows a flow to be rerun and added to the hunt

@@ -99,7 +99,7 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 		}
 
 		if !utils.IsNil(key) {
-			ts, err := functions.TimeFromAny(scope, key)
+			ts, err := functions.TimeFromAny(ctx, scope, key)
 			if err == nil {
 				writer.Write(ts, vfilter.RowToDict(sub_ctx, subscope, row))
 			}

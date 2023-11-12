@@ -61,6 +61,18 @@ export default class NewArtifactDialog extends React.Component {
             });
     }
 
+    reformatArtifact = ()=>{
+        this.setState({loading: true});
+        api.post("v1/ReformatVQL",
+                 {artifact: this.state.text}, this.source.token).then(
+                     response=>{
+                         if (response.data.artifact) {
+                             this.setState({text: response.data.artifact});
+                         };
+                         this.setState({loading: false});
+                     });
+    }
+
     aceConfig = (ace) => {
         // Attach a completer to ACE.
         let completer = new Completer();
@@ -113,6 +125,10 @@ export default class NewArtifactDialog extends React.Component {
                 <Navbar className="w-100 justify-content-between">
                 <ButtonGroup className="float-left">
                   <SettingsButton ace={this.state.ace}/>
+                  <Button variant="default"
+                          onClick={this.reformatArtifact}>
+                    <FontAwesomeIcon icon="indent"/>
+                  </Button>
                 </ButtonGroup>
 
                 <ButtonGroup className="float-right">

@@ -10,8 +10,8 @@ option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
 message ReformatVQLMessage {
     string vql = 1;
+    string artifact = 2;
 }
-
 
 message Env {
     string key = 1;

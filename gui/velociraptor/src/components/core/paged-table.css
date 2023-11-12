@@ -28,10 +28,18 @@ table.paged-table-header:hover .sort-element {
     display: block;
 }
 
-table.paged-table-header .sort-element.visible {
+table.paged-table-header .sort-element {
     display: block;
 }
 
 tr.paged-table-header th {
     padding: 0;
+}
+
+table.paged-table-header .hidden-edit {
+    visibility: hidden;
+}
+
+table.paged-table-header:hover .hidden-edit {
+    visibility: visible;
 }

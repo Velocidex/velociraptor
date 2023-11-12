@@ -243,6 +243,12 @@ func (self *HuntManager) processMutation(
 				modification = services.HuntPropagateChanges
 			}
 
+			if mutation.Expires > 0 {
+				hunt_obj.Expires = mutation.Expires
+
+				modification = services.HuntPropagateChanges
+			}
+
 			// Hunt is restarted, notify all connected clients
 			if mutation.StartTime > 0 {
 				hunt_obj.StartTime = mutation.StartTime
