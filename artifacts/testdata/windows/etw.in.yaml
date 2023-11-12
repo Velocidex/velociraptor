@@ -38,7 +38,7 @@ Queries:
     LIMIT 1
 
   # Check that GUID1 is removed when no one is interested any more
-- SELECT {
+  - SELECT {
       SELECT * FROM profile(type="ETW")
       WHERE SessionName =~ "VeloTest2"
     } AS Profile, SessionExists[0]
