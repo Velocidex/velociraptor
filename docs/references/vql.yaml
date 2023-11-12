@@ -391,6 +391,8 @@
     artifact.
   type: Plugin
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
 - name: chain
   description: |
     Chain the output of several queries into the same table.
@@ -2163,6 +2165,8 @@
     description: If specified only get handles of this type.
     repeated: true
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
 - name: hash
   description: |
     Calculate the hash of a file.
@@ -2542,6 +2546,9 @@
   - name: description
     type: string
     description: Update hunt description
+  - name: expires
+    type: time.Time
+    description: Update hunt expiry
   metadata:
     permissions: START_HUNT
 - name: hunts
@@ -3081,7 +3088,14 @@
 - name: lookupSID
   description: Get information about the SID.
   type: Function
+  args:
+  - name: sid
+    type: string
+    description: 'A SID to lookup using LookupAccountSid '
+    required: true
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
 - name: lowcase
   description: Returns the lowercase version of a string.
   type: Function
@@ -3444,6 +3458,8 @@
     description: The PID to dump out.
     required: true
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
 - name: monitoring
   description: Extract monitoring log from a client. If client_id is not specified
     we watch the global journal which contains event logs from all clients.
@@ -4596,6 +4612,8 @@
     description: The PID to dump out.
     required: true
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
 - name: proc_yara
   description: |
     Scan processes using yara rules.
@@ -4780,8 +4798,7 @@
   args:
   - name: pid
     type: int64
-    description: A pid to list. If this is provided we are able to operate much faster
-      by only opening a single process.
+    description: A process ID to list. If not provided list all processes.
   category: plugin
   metadata:
     permissions: MACHINE_STATE
@@ -5965,6 +5982,8 @@
     description: The PID to get the token for.
     required: true
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
 - name: trace
   description: Upload a trace file.
   type: Function
@@ -6624,6 +6643,13 @@
   - name: level
     type: int64
     description: Log level (0-5)
+  - name: stop
+    type: vfilter.Lambda
+    description: If provided we stop watching automatically when this lambda returns
+      true
+  - name: timeout
+    type: uint64
+    description: If provided we stop after this much time
   category: event
 - name: watch_evtx
   description: |
@@ -6711,6 +6737,8 @@
     type: string
     description: Object namespace path.
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
 - name: wmi
   description: |
     Execute simple WMI queries synchronously.
@@ -6730,6 +6758,8 @@
     type: string
     description: The WMI namespace to use (ROOT/CIMV2)
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
 - name: wmi_events
   description: |
     Executes an evented WMI queries asynchronously.
@@ -6750,6 +6780,8 @@
     description: Wait this many seconds for events and then quit.
     required: true
   category: event
+  metadata:
+    permissions: MACHINE_STATE
 - name: write_crypto_file
   description: Write a query into an encrypted local storage file.
   type: Plugin

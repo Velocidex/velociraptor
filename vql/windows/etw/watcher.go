@@ -7,25 +7,25 @@ import (
 	"context"
 	"sync"
 
-	"github.com/Velocidex/etw"
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows"
-	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/repository"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/vfilter"
-	"www.velocidex.com/golang/vfilter/types"
 )
 
 var (
 	GlobalEventTraceService = NewEventTraceWatcherService()
 )
 
-// EventTraceWatcherService watches one or more event ETW sessions and multiplexes
-// events to multiple readers.
+// EventTraceWatcherService watches one or more event ETW sessions and
+// multiplexes events to multiple readers.
 type EventTraceWatcherService struct {
 	mu sync.Mutex
 
+	// Map session names to session contexts - Each session can watch
+	// multiple GUIDs, and there can be multiple watchers on the same
+	// GUID. This is all managed by the session context. At the global
+	// level we just multiplex by session names.
 	sessions map[string]*SessionContext
 }
 
@@ -35,270 +35,72 @@ func NewEventTraceWatcherService() *EventTraceWatcherService {
 	}
 }
 
-// Register returns a channel.
-
+// Register returns a channel where readers can receive events. When a
+// reader is no longer interested in the data, they should call the
+// closer function or cancel the ctx and the channel will be closed.
+// It is possible for multiple watchers to watch the same session and
+// GUID.
 func (self *EventTraceWatcherService) Register(
 	ctx context.Context,
 	scope vfilter.Scope,
-	provider_guid string,
 	session_name string,
 	any_keyword uint64, all_keyword uint64, level int64,
-	wGuid windows.GUID) (func(), chan vfilter.Row, error) {
-
-	self.mu.Lock()
-	defer self.mu.Unlock()
-	subctx, cancel := context.WithCancel(ctx)
-
-	output_chan := make(chan vfilter.Row)
-
-	handle := &Handle{
-		ctx:         subctx,
-		output_chan: output_chan,
-		scope:       scope,
-		guid:        wGuid}
-
-	deregistration := func() {
-		scope.Log("Deregistering watcher for %v", provider_guid)
-		session, pres := self.sessions[session_name]
-		if !pres {
-			return
-		}
-		open_handles := session.Deregister(wGuid)
-		scope.Log("Remaining open ETW handles: %v", open_handles)
-		if open_handles == 0 {
-			scope.Log("Closing session %v", session_name)
-			GlobalEventTraceService.Deregister(session_name)
-		}
-		cancel()
+	wGuid windows.GUID) (closer func(), output_chan chan vfilter.Row, err error) {
+	session, err := self.SessionContext(session_name, scope)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	// Check if we already have a session for this provider.
-	sessionContext, pres := self.sessions[session_name]
+	return session.Register(
+		ctx, scope, any_keyword, all_keyword, level, wGuid)
+}
+
+func (self *EventTraceWatcherService) SessionContext(
+	name string, scope vfilter.Scope) (*SessionContext, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	sessionContext, pres := self.sessions[name]
 	if !pres {
-		var err error
-		sessionContext, err = self.newSessionContext(session_name, scope)
-		if err != nil {
-			return cancel, nil, err
+		sessionContext = &SessionContext{
+			name:          name,
+			registrations: make(map[string][]*Handle),
 		}
-
-		// Create a scope with a completely different lifespan since
-		// it may outlive this query (if another query starts watching
-		// the same file). The query will inherit the same ACL
-		// manager, log manager etc but this is usually fine as there
-		// are not different ACLs managers on the client side.
-		manager := &repository.RepositoryManager{}
-		builder := services.ScopeBuilderFromScope(scope)
-		subscope := manager.BuildScope(builder)
-
-		go self.StartMonitoring(
-			subctx, subscope, sessionContext, session_name, cancel)
-
+		self.sessions[name] = sessionContext
 	}
-
-	err := sessionContext.UpdateSession(
-		ctx, scope, wGuid, any_keyword,
-		all_keyword, level)
-	if err != nil {
-		return deregistration, output_chan, err
-	}
-
-	sessionContext.UpdateRegistrations(*handle)
-	scope.Log("Registered watcher for %v", provider_guid)
-
-	return deregistration, output_chan, nil
-}
-
-// StartMonitoring monitors the session and emits events to all interested
-// listeners. If no listeners exist we terminate.
-func (self *EventTraceWatcherService) StartMonitoring(
-	ctx context.Context, scope vfilter.Scope, sessionContext *SessionContext,
-	key string, cancel context.CancelFunc) {
-
-	defer utils.CheckForPanic("StartMonitoring")
-
-	cb := func(e *etw.Event) {
-		event := ordereddict.NewDict().
-			Set("System", e.Header).
-			Set("ProviderGUID", e.Header.ProviderID.String())
-
-		data, err := e.EventProperties()
-		if err == nil {
-			event.Set("EventData", data)
-		}
-
-		if !sessionContext.status {
-			return
-		}
-
-		handles := sessionContext.GetRegistrations()
-
-		// No more listeners left, we are done.
-		if len(handles) == 0 {
-			return
-		}
-
-		// Send the event to all interested parties.
-		for _, handle := range handles {
-			if handle == nil {
-				continue
-			}
-			if handle.guid == e.Header.ProviderID {
-				select {
-				case <-ctx.Done():
-					return
-				case handle.output_chan <- event:
-				}
-			}
-		}
-	}
-
-	go func() {
-		// When session.Process() exits, we exit the
-		// query.
-		scope.Log("watch_etw: Starting monitoring for %v", key)
-		err := sessionContext.session.Process(cb)
-		if err != nil {
-			scope.Log("watch_etw: %v", err)
-		}
-	}()
-}
-
-func (self *EventTraceWatcherService) Deregister(session_name string) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	delete(self.sessions, session_name)
-}
-
-func (self *EventTraceWatcherService) newSessionContext(name string, scope vfilter.Scope) (*SessionContext, error) {
-
-	sessionContext := &SessionContext{
-		name:          name,
-		registrations: []*Handle{},
-		status:        true,
-	}
-
-	err := sessionContext.CreateSession()
-	if err != nil {
-		scope.Log("NewSessionContext: Failed to create session: %v", err)
-		return nil, err
-	}
-	scope.Log("NewSessionContext: Created session %v", name)
-
-	self.sessions[name] = sessionContext
 
 	return sessionContext, nil
 }
 
-type SessionContext struct {
-	mu sync.Mutex
-
-	name          string
-	status        bool
-	session       *etw.Session
-	registrations []*Handle
-}
-
-func (self *SessionContext) close() {
-	self.status = false
-
-	// Empty the registrations and close the session.
-	self.registrations = []*Handle{}
-	self.session.Close()
-}
-
-func (self *SessionContext) CreateSession() error {
-
-	session, err := etw.NewSession(self.name)
-	if err != nil {
-
-		// Try to kill the session and recreate it.
-		err = etw.KillSession(self.name)
-		if err != nil {
-			return err
-		}
-
-		session, err = etw.NewSession(self.name)
-		if err != nil {
-			return err
-		}
-
-	}
-
+func (self *EventTraceWatcherService) Stats() []ProviderStat {
 	self.mu.Lock()
-	self.session = session
-	self.mu.Unlock()
-	return nil
+	defer self.mu.Unlock()
+
+	result := []ProviderStat{}
+	for session_name, session_ctx := range self.sessions {
+		for _, s := range session_ctx.Stats() {
+			s.SessionName = session_name
+			result = append(result, s)
+		}
+	}
+	return result
 }
 
-func (self *SessionContext) UpdateSession(
-	ctx context.Context, scope types.Scope,
-	guid windows.GUID, any_keyword uint64,
-	all_keyword uint64, level int64) error {
+func writeMetrics(
+	ctx context.Context, scope vfilter.Scope,
+	output_chan chan vfilter.Row) {
+	for _, s := range GlobalEventTraceService.Stats() {
+		output_chan <- ordereddict.NewDict().
+			Set("SessionName", s.SessionName).
+			Set("GUID", s.GUID).
+			Set("Watchers", s.Watchers)
+	}
+}
 
-	return self.session.UpdateOptions(guid, func(cfg *etw.SessionOptions) {
-		cfg.MatchAnyKeyword = any_keyword
-		cfg.MatchAllKeyword = all_keyword
-		cfg.Level = etw.TraceLevel(level)
-		cfg.Name = self.name
-		cfg.Guid = guid
+func init() {
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name:          "ETW",
+		Description:   "Report the current state of the ETW subsystem",
+		ProfileWriter: writeMetrics,
 	})
-}
-
-func (self *SessionContext) Deregister(wGuid windows.GUID) int {
-
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	new_reg := []*Handle{}
-	registrations := make([]*Handle, len(self.registrations))
-	copy(registrations, self.registrations)
-
-	if len(registrations) == 0 || registrations == nil {
-		self.close()
-		return 0
-	}
-	for _, handle := range registrations {
-		if handle == nil {
-			continue
-		}
-		if handle.guid != wGuid {
-			new_reg = append(new_reg, handle)
-		}
-	}
-
-	if len(new_reg) != 0 {
-		self.registrations = new_reg
-	}
-
-	return len(new_reg)
-}
-
-func (self *SessionContext) GetRegistrations() []*Handle {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	handles := make([]*Handle, len(self.registrations))
-	copy(handles, self.registrations)
-	return handles
-}
-
-func (self *SessionContext) UpdateRegistrations(handle Handle) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	handles := make([]*Handle, len(self.registrations))
-	copy(handles, self.registrations)
-	self.registrations = append(handles, &handle)
-}
-
-// Handle is given for each interested party. We write the event on
-// to the output_chan unless the context is done. When all interested
-// parties are done we may destroy the monitoring go routine and remove
-// the registration.
-type Handle struct {
-	ctx         context.Context
-	output_chan chan vfilter.Row
-	scope       vfilter.Scope
-	guid        windows.GUID
 }
