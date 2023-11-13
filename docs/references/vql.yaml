@@ -3088,14 +3088,7 @@
 - name: lookupSID
   description: Get information about the SID.
   type: Function
-  args:
-  - name: sid
-    type: string
-    description: 'A SID to lookup using LookupAccountSid '
-    required: true
   category: windows
-  metadata:
-    permissions: MACHINE_STATE
 - name: lowcase
   description: Returns the lowercase version of a string.
   type: Function
@@ -4798,7 +4791,8 @@
   args:
   - name: pid
     type: int64
-    description: A process ID to list. If not provided list all processes.
+    description: A pid to list. If this is provided we are able to operate much faster
+      by only opening a single process.
   category: plugin
   metadata:
     permissions: MACHINE_STATE
