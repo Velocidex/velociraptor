@@ -1,0 +1,59 @@
+Parameters:
+  GUID1: "{70eb4f03-c1de-4f73-a051-33d13d5413bd}"
+  GUID2: '{A669021C-C450-4609-A035-5AF59AF4DF18}'
+
+Queries:
+  - LET SessionExists = SELECT Stdout =~ "VeloTest2"
+    FROM execve(argv=["logman", "query", "-ets"])
+
+  # Check that two queries for the same provider apply 2 watchers.
+  - SELECT ProviderGUID, {
+        SELECT * FROM profile(type="ETW")
+        WHERE SessionName =~ "VeloTest2"
+    } AS Profile, SessionExists[0]
+    FROM chain(async=TRUE,
+      a={
+         SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5)
+      }, b={
+         SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5)
+      })
+    WHERE Profile.Watchers = 2
+    LIMIT 1
+
+  - SELECT sleep(time=1) FROM scope()
+
+  # Now Check that session is removed.
+  - SELECT * FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2"
+
+  # Now Check two queries to different proviers
+  - SELECT {
+      SELECT * FROM profile(type="ETW")
+      WHERE SessionName =~ "VeloTest2"
+      ORDER BY GUID
+    } AS Profile, SessionExists[0]
+    FROM chain(async=TRUE,
+      a={
+         SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5)
+      }, b={
+         SELECT * FROM watch_etw(guid=GUID2, name="VeloTest2", timeout=5)
+      })
+    LIMIT 1
+
+  # Check that GUID1 is removed when no one is interested any more
+  - SELECT {
+      SELECT * FROM profile(type="ETW")
+      WHERE SessionName =~ "VeloTest2"
+    } AS Profile, SessionExists[0]
+    FROM chain(async=TRUE,
+      a={
+         SELECT * FROM watch_etw(guid=GUID2, name="VeloTest2", timeout=5)
+      }, b={
+         SELECT * FROM watch_etw(guid=GUID2, name="VeloTest2", timeout=5)
+      })
+    LIMIT 1
+
+  - SELECT sleep(time=1) FROM scope()
+
+  # Now make sure that the session is actually removed when there are
+  # no interested parties.
+  - SELECT * FROM SessionExists

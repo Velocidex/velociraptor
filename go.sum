@@ -112,8 +112,8 @@ github.com/Velocidex/chroma v0.6.8-0.20200418131129-82edc291369c h1:ipQHX4FX5HKR
 github.com/Velocidex/chroma v0.6.8-0.20200418131129-82edc291369c/go.mod h1:sko8vR34/90zvl5QdcUdvzL3J8NKjAUx9va9jPuFNoM=
 github.com/Velocidex/errors v0.0.0-20221019164655-9ace6bf61e26 h1:VwbeNpMRuS3bRieg7WLaSYIMaI8RjH/wGxd37oj6H1g=
 github.com/Velocidex/errors v0.0.0-20221019164655-9ace6bf61e26/go.mod h1:sIVyrIiJhuEF+Pj9Ebtd6P/rEYROXFi3BopGUQ5a5Og=
-github.com/Velocidex/etw v0.0.0-20210723072214-4d0cffd1ff22 h1:dDMLVs1Uj4xuKsYH1T/J6W+wJyWeyfmkT9RQq27WzTs=
-github.com/Velocidex/etw v0.0.0-20210723072214-4d0cffd1ff22/go.mod h1:F3/xFKE2Puol7bJKW5xcj/9H2O8n/sJN87Xgm66G6sc=
+github.com/Velocidex/etw v0.0.0-20231112235748-6aa453259070 h1:FfB/6jJgyvpKfSoHctv4gSs1DEFFzfFdK7V5x688wp8=
+github.com/Velocidex/etw v0.0.0-20231112235748-6aa453259070/go.mod h1:F3/xFKE2Puol7bJKW5xcj/9H2O8n/sJN87Xgm66G6sc=
 github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11 h1:pQY9p6hvmbFKXJg8suzGSG9/t8Ij9ece32GUFIdHgqg=
 github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11/go.mod h1:Ya1f4Kowt2GC7gbnu1MbNncvI1Lp3i1plN2xLiETJfg=
 github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b h1:XaAmLVXrqPv60nbiQtzj5Sch7lwz3XH8x5IocQwRPJg=
@@ -929,8 +929,8 @@ golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab/go.mod h1:oPkhp1MJrh7nUepCBc
 golang.org/x/sys v0.1.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.5.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
 golang.org/x/sys v0.7.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
-golang.org/x/sys v0.13.0 h1:Af8nKPmuFypiUBjVoU9V20FiaFXOcuZI21p0ycVYYGE=
-golang.org/x/sys v0.13.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=
+golang.org/x/sys v0.14.0 h1:Vz7Qs629MkJkGyHxUlRHizWJRG2j8fbQKjELVSNhy7Q=
+golang.org/x/sys v0.14.0/go.mod h1:/VUhepiaJMQUp4+oa/7Zr1D23ma6VTLIYjOOTFZPUcA=
 golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1/go.mod h1:bj7SfCRtBDWHUb9snDiAeCFNEtKQo2Wmx5Cou7ajbmo=
 golang.org/x/term v0.0.0-20210503060354-a79de5458b56/go.mod h1:tfny5GFUkzUvx4ps4ajbZsCe5lw1metzhBm9T3x7oIY=
 golang.org/x/term v0.0.0-20210927222741-03fcf44c2211/go.mod h1:jbD1KX2456YbFQfuXm/mYQcufACuNUgVhRMnK/tPxf8=
