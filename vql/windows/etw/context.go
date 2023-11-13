@@ -185,7 +185,7 @@ func (self *SessionContext) Register(
 	ctx context.Context,
 	scope vfilter.Scope,
 	any_keyword uint64, all_keyword uint64, level int64,
-	guid windows.GUID) (closer func(), output_chan chan vfilter.Row, err error) {
+	guid windows.GUID, capture_state bool) (closer func(), output_chan chan vfilter.Row, err error) {
 
 	key := guid.String()
 	handle := NewHandle(ctx, scope, guid)
@@ -207,6 +207,7 @@ func (self *SessionContext) Register(
 			Level:           etw.TraceLevel(level),
 			MatchAnyKeyword: any_keyword,
 			MatchAllKeyword: all_keyword,
+			CaptureState:    capture_state,
 		})
 		if err != nil {
 			scope.Log("etw: Can not add provider to session %v: %v", self.name, err)
