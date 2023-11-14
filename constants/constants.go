@@ -47,7 +47,7 @@ const (
 	// Messages to the client which we dont care about their responses.
 	IgnoreResponseState = uint64(101)
 
-	USER_AGENT = "Velociraptor/" + VERSION
+	USER_AGENT = "Velociraptor"
 
 	// Globals set in VQL scopes.
 	SCOPE_CONFIG            = "config"

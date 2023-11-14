@@ -93,6 +93,8 @@ func (self *ApiServer) GetNotebooks(
 		return result, nil
 	}
 
+	// This is only called for global notebooks because client and
+	// hunt notebooks always specify the exact notebook id.
 	notebooks, err := notebook_manager.GetSharedNotebooks(ctx,
 		principal, in.Offset, in.Count)
 	if err != nil {

@@ -50,6 +50,7 @@ export default class HuntNotebook extends React.Component {
         this.setState({loading: true});
         api.get("v1/GetNotebooks", {
             notebook_id: notebook_id,
+            include_uploads: true,
         }, this.source.token).then(response=>{
             if (response.cancel) return;
             let notebooks = response.data.items || [];

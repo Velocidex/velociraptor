@@ -20,7 +20,6 @@ class ServerFlowsView extends React.Component {
     };
 
     state = {
-        flows: [],
         currentFlow: {},
         topPaneSize: undefined,
     }
@@ -75,8 +74,6 @@ class ServerFlowsView extends React.Component {
                          defaultSize="30%">
                 <FlowsList
                   selected_flow={this.state.currentFlow}
-                  flows={this.state.flows}
-                  fetchFlows={this.fetchFlows}
                   collapseToggle={this.collapse}
                   setSelectedFlow={this.setSelectedFlow}
                   client={{client_id: "server"}}/>

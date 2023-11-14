@@ -25,6 +25,7 @@ func (self *NotebookManager) NewNotebookCell(
 
 	new_cell_md := []*api_proto.NotebookCell{}
 	added := false
+	now := utils.GetTime().Now().Unix()
 
 	notebook.LatestCellId = NewNotebookCellId()
 
@@ -33,11 +34,11 @@ func (self *NotebookManager) NewNotebookCell(
 			// New cell goes above existing cell.
 			new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
 				CellId:    notebook.LatestCellId,
-				Timestamp: utils.GetTime().Now().Unix(),
+				Timestamp: now,
 			})
 			new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
 				CellId:    cell_md.CellId,
-				Timestamp: utils.GetTime().Now().Unix(),
+				Timestamp: now,
 			})
 			added = true
 			continue
@@ -49,11 +50,12 @@ func (self *NotebookManager) NewNotebookCell(
 	if !added {
 		new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
 			CellId:    notebook.LatestCellId,
-			Timestamp: utils.GetTime().Now().Unix(),
+			Timestamp: now,
 		})
 	}
 
 	notebook.CellMetadata = new_cell_md
+	notebook.ModifiedTime = now
 	err = self.Store.SetNotebook(notebook)
 	if err != nil {
 		return nil, err

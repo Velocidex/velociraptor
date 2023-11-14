@@ -33,7 +33,9 @@ func (self *NotebookManager) CheckNotebookAccess(
 }
 
 // Returns all the notebooks which are either owned or shared with the
-// user
+// user. This view is only called from the global notebook view so it
+// only needs to return a brief version of the notebooks - it does not
+// include uploads and timelines.
 func (self *NotebookManager) GetSharedNotebooks(
 	ctx context.Context, user string, offset, count uint64) (
 	[]*api_proto.NotebookMetadata, error) {
