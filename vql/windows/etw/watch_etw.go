@@ -16,13 +16,14 @@ import (
 )
 
 type WatchETWArgs struct {
-	Name        string          `vfilter:"optional,field=name,doc=A session name "`
-	Provider    string          `vfilter:"required,field=guid,doc=A Provider GUID to watch "`
-	AnyKeywords uint64          `vfilter:"optional,field=any,doc=Any Keywords "`
-	AllKeywords uint64          `vfilter:"optional,field=all,doc=All Keywords "`
-	Level       int64           `vfilter:"optional,field=level,doc=Log level (0-5)"`
-	Stop        *vfilter.Lambda `vfilter:"optional,field=stop,doc=If provided we stop watching automatically when this lambda returns true"`
-	Timeout     uint64          `vfilter:"optional,field=timeout,doc=If provided we stop after this much time"`
+	Name         string          `vfilter:"optional,field=name,doc=A session name "`
+	Provider     string          `vfilter:"required,field=guid,doc=A Provider GUID to watch "`
+	AnyKeywords  uint64          `vfilter:"optional,field=any,doc=Any Keywords "`
+	AllKeywords  uint64          `vfilter:"optional,field=all,doc=All Keywords "`
+	Level        int64           `vfilter:"optional,field=level,doc=Log level (0-5)"`
+	Stop         *vfilter.Lambda `vfilter:"optional,field=stop,doc=If provided we stop watching automatically when this lambda returns true"`
+	Timeout      uint64          `vfilter:"optional,field=timeout,doc=If provided we stop after this much time"`
+	CaptureState bool            `vfilter:"optional,field=capture_state,doc=If true, capture the state of the provider when the event is triggered"`
 }
 
 type WatchETWPlugin struct{}
@@ -71,7 +72,7 @@ func (self WatchETWPlugin) Call(
 		for {
 			err = self.WatchOnce(ctx, scope, arg.Stop, output_chan,
 				arg.Name, arg.AnyKeywords, arg.AllKeywords,
-				arg.Level, wGuid)
+				arg.Level, wGuid, arg.CaptureState)
 			if err != nil {
 				scope.Log("watch_etw: ETW session interrupted, will retry again.")
 				utils.SleepWithCtx(ctx, 10*time.Second)
@@ -88,9 +89,9 @@ func (self WatchETWPlugin) WatchOnce(
 	ctx context.Context, scope vfilter.Scope,
 	stop *vfilter.Lambda, output_chan chan vfilter.Row,
 	session string, any, all uint64, level int64,
-	wGuid windows.GUID) error {
+	wGuid windows.GUID, capture_state bool) error {
 	cancel, event_channel, err := GlobalEventTraceService.Register(
-		ctx, scope, session, any, all, level, wGuid)
+		ctx, scope, session, any, all, level, wGuid, capture_state)
 	if err != nil {
 		return err
 	}
