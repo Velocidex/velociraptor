@@ -3,8 +3,7 @@ Parameters:
   GUID2: '{A669021C-C450-4609-A035-5AF59AF4DF18}'
 
 Queries:
-  - LET SessionExists = SELECT Stdout =~ "VeloTest2"
-    FROM execve(argv=["logman", "query", "-ets"])
+  - LET SessionExists = SELECT SessionName FROM etw_sessions() WHERE SessionName =~ "VeloTest2" LIMIT 1
 
   # Check that two queries for the same provider apply 2 watchers.
   - SELECT ProviderGUID, {

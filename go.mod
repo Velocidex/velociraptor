@@ -235,7 +235,8 @@ require (
 // replace github.com/Velocidex/ttlcache/v2 => /home/mic/projects/ttlcache
 // replace github.com/Velocidex/zip => /home/mic/projects/zip
 // replace github.com/Velocidex/sflags => /home/mic/projects/sflags
-// replace github.com/Velocidex/etw => /home/mic/projects/etw
+// replace github.com/Velocidex/etw => ../etw
+
 // replace github.com/Velocidex/grpc-go-pool => /home/mic/projects/grpc-go-pool
 // replace www.velocidex.com/golang/oleparse => /home/matt/git/oleparse
 // replace github.com/go-errors/errors => /home/mic/projects/errors

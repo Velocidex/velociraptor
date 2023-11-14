@@ -1372,6 +1372,15 @@
       per row
     repeated: true
   category: plugin
+- name: etw_sessions
+  description: Enumerates all active ETW sessions
+  type: Plugin
+  args:
+  - name: count
+    type: uint64
+    description: 'The count of sessions to retrieve (default 64) '
+  metadata:
+    permissions: MACHINE_STATE
 - name: execve
   description: |
     This plugin launches an external command and captures its STDERR,
