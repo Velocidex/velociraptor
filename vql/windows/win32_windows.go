@@ -40,6 +40,7 @@ type (
 	LPWSTR         *uint16
 	LPCWSTR        *uint16
 	NET_API_STATUS DWORD
+	HANDLE         uint64
 
 	USER_INFO_3 struct {
 		Name             LPWSTR
@@ -386,6 +387,7 @@ type PROCESS_MEMORY_COUNTERS struct {
 //sys NetApiBufferFree(Buffer uintptr) (status NET_API_STATUS) = netapi32.NetApiBufferFree
 //sys NetUserEnum(servername *uint16, level uint32, filter uint32, bufptr *uintptr, prefmaxlen uint32, entriesread *uint32, totalentries *uint32, resume_handle *uint32) (status NET_API_STATUS) = netapi32.NetUserEnum
 //sys NetUserGetGroups(servername *LPCWSTR, username *LPCWSTR, level DWORD, bufptr *LPBYTE, prefmaxlen DWORD, entriesread *LPDWORD, totalentries *LPDWORD) (status NET_API_STATUS) = netapi32.NetUserGetGroups
+//sys QueryAllTracesW(PropertyArray uintptr, PropertyArrayCount uint32, LoggerCount *uint32) (status uint32) = advapi32.QueryAllTracesA
 
 // Converts a pointer to a wide string to a regular go string. The
 // underlying buffer may be freed afterwards by the Windows API.

@@ -401,12 +401,19 @@ func NTStatus_String(status uint32) string {
 		return "STATUS_WAIT_3"
 	case 0x0000003F:
 		return "STATUS_WAIT_63"
+	case 0x00000057:
+		return "ERROR_INVALID_PARAMETER"
+
 	case 0x00000080:
 		return "STATUS_ABANDONED_WAIT_0"
 	case 0x000000BF:
 		return "STATUS_ABANDONED_WAIT_63"
 	case 0x000000C0:
 		return "STATUS_USER_APC"
+
+	case 0x000000EA:
+		return "ERROR_MORE_DATA"
+
 	case 0x00000101:
 		return "STATUS_ALERTED"
 	case 0x00000102:
