@@ -30,6 +30,8 @@ class Notebooks extends React.Component {
         // Only show the spinner the first time the component is
         // mounted.
         loading: true,
+
+        refreshed_from_router: false,
     }
 
     componentDidMount = () => {
@@ -55,31 +57,65 @@ class Notebooks extends React.Component {
             if (response.cancel) return;
 
             let notebooks = response.data.items || [];
-            let selected_notebook = {};
+
+            this.setState({notebooks: notebooks, loading: false});
+
+            let selected_notebook_id = this.state.selected_notebook &&
+                this.state.selected_notebook.notebook_id;
 
             // Check the router for a notebook id
-            let notebook_id = this.props.match && this.props.match.params &&
-                this.props.match.params.notebook_id;
-            if (notebook_id) {
-                for(var i = 0; i < notebooks.length; i++){
-                    if (notebooks[i].notebook_id === notebook_id) {
-                        selected_notebook = notebooks[i];
-                        break;
-                    }
+            if (!this.state.refreshed_from_router) {
+                let router_notebook_id = this.props.match && this.props.match.params &&
+                    this.props.match.params.notebook_id;
+                if (router_notebook_id) {
+                    selected_notebook_id = router_notebook_id;
+                }
+                this.setState({refreshed_from_router: true});
+            }
+
+            // Now search the notebooks records to find the selected
+            // notebook record. We need to get its last modified time to figure
+            // out if it needs reloading.
+            let selected_brief_record = {};
+            for(let i = 0; i < notebooks.length; i++) {
+                if (notebooks[i].notebook_id === selected_notebook_id) {
+                    selected_brief_record = notebooks[i];
+                    break;
                 }
             }
 
-            this.setState({notebooks: notebooks,
-                           loading: false,
-                           selected_notebook: selected_notebook});
+            // Only reload the full version if the notebook is modified.
+            if (this.state.selected_notebook.modified_time !==
+                selected_brief_record.modified_time) {
+                this.setSelectedNotebook({notebook_id: selected_notebook_id});
+            };
         });
     }
 
     setSelectedNotebook = (notebook) => {
-        notebook.loading = true;
-        this.setState({selected_notebook: notebook});
-        this.props.history.push("/notebooks/" + notebook.notebook_id);
-    }
+        // Fetch the data again with more details this time
+        this.source.cancel();
+        this.source = CancelToken.source();
+
+        api.get("v1/GetNotebooks", {
+            notebook_id: notebook.notebook_id,
+            include_uploads: true,
+        }, this.source.token).then(response=>{
+            if (response.cancel) return;
+
+            let notebooks = response.data.items || [];
+
+            if (notebooks.length > 0) {
+                let selected_notebook = notebooks[0];
+                let current_selected_notebook = this.state.selected_notebook || {};
+                // Only modify the notebook if it has changed
+                if (selected_notebook.modified_time != current_selected_notebook.modified_time) {
+                    this.setState({selected_notebook: notebooks[0], loading: false});
+                    this.props.history.push("/notebooks/" + notebooks[0].notebook_id);
+                }
+            }
+        });
+    };
 
     render() {
         return (

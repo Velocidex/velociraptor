@@ -660,7 +660,6 @@ export const flowRowRenderer = {
     },
 };
 
-
 const rowClassRenderer = (selected_flow_id) => {
     return (row, rowIndex) => {
         let session_id = row._Flow && row._Flow.session_id;

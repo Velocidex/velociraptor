@@ -45,6 +45,9 @@ func (self *NotebookStoreImpl) SetNotebook(in *api_proto.NotebookMetadata) error
 	}
 
 	notebook_path_manager := paths.NewNotebookPathManager(in.NotebookId)
+
+	// Ensure the notebook reflects the last time it was set.
+	in.ModifiedTime = utils.GetTime().Now().Unix()
 	return db.SetSubject(self.config_obj, notebook_path_manager.Path(), in)
 }
 
@@ -81,20 +84,21 @@ func (self *NotebookStoreImpl) SetNotebookCell(
 		return err
 	}
 
+	now := utils.GetTime().Now().Unix()
+
 	// Update the cell's timestamp so the gui will refresh it.
 	new_cell_md := []*api_proto.NotebookCell{}
 	for _, cell_md := range notebook.CellMetadata {
 		if cell_md.CellId == in.CellId {
 			new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
 				CellId:    in.CellId,
-				Timestamp: utils.GetTime().Now().Unix(),
+				Timestamp: now,
 			})
 			continue
 		}
 		new_cell_md = append(new_cell_md, cell_md)
 	}
 	notebook.CellMetadata = new_cell_md
-
 	return self.SetNotebook(notebook)
 }
 

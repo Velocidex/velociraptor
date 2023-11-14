@@ -88,6 +88,7 @@ func (self *NotebookManager) NewNotebook(
 func (self *NotebookManager) UpdateNotebook(
 	ctx context.Context, in *api_proto.NotebookMetadata) error {
 
+	in.ModifiedTime = utils.GetTime().Now().Unix()
 	err := self.Store.SetNotebook(in)
 	if err != nil {
 		return err
