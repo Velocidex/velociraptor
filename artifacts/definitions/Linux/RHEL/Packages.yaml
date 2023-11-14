@@ -22,4 +22,4 @@ sources:
             a=exec(cmd=["dnf", "--quiet", "list", "installed"]),
             b=exec(cmd=["yum", "--quiet", "list", "installed"]),
             c={SELECT log(level="ERROR",message="Could not retrieve Package Information") FROM scope()}
-            )
+            ) WHERE Package
