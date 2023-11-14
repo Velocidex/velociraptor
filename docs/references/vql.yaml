@@ -3088,6 +3088,11 @@
 - name: lookupSID
   description: Get information about the SID.
   type: Function
+  args:
+  - name: sid
+    type: string
+    description: 'A SID to lookup using LookupAccountSid '
+    required: true
   category: windows
 - name: lowcase
   description: Returns the lowercase version of a string.
