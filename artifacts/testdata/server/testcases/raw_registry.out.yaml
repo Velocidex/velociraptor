@@ -61,7 +61,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
   "_Parsed": {
    "ItemIDSize": 20,
    "Offset": 0,
-   "Type": 16,
+   "Type": 1,
    "Subtype": 1,
    "ShellBag": {
     "Description": {
@@ -83,7 +83,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
   "_Parsed": {
    "ItemIDSize": 20,
    "Offset": 0,
-   "Type": 16,
+   "Type": 1,
    "Subtype": 1,
    "ShellBag": {
     "Description": {
@@ -106,7 +106,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
   "_Parsed": {
    "ItemIDSize": 20,
    "Offset": 0,
-   "Type": 32,
+   "Type": 2,
    "Subtype": 0,
    "ShellBag": {
     "Name": "",
@@ -130,7 +130,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
   "_Parsed": {
    "ItemIDSize": 85,
    "Offset": 0,
-   "Type": 16,
+   "Type": 1,
    "Subtype": 1,
    "ShellBag": {
     "Description": {
@@ -152,7 +152,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
   "_Parsed": {
    "ItemIDSize": 20,
    "Offset": 0,
-   "Type": 16,
+   "Type": 1,
    "Subtype": 1,
    "ShellBag": {
     "Description": {
@@ -188,7 +188,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
   "_Parsed": {
    "ItemIDSize": 58,
    "Offset": 0,
-   "Type": 64,
+   "Type": 4,
    "Subtype": 1,
    "ShellBag": {
     "Name": "\\\\vmware-host\\Shared Folders",
@@ -220,7 +220,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
   "_Parsed": {
    "ItemIDSize": 84,
    "Offset": 0,
-   "Type": 48,
+   "Type": 3,
    "Subtype": 1,
    "ShellBag": {
     "Size": 84,
@@ -280,7 +280,7 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
   "_Parsed": {
    "ItemIDSize": 74,
    "Offset": 0,
-   "Type": 48,
+   "Type": 3,
    "Subtype": 1,
    "ShellBag": {
     "Size": 74,
