@@ -31,6 +31,8 @@ type SessionContext struct {
 
 	// Registrations keyed by GUID
 	registrations map[string][]*Handle
+
+	resolve_map_info bool
 }
 
 // Handle is used to track all watchers. We write the event on to the
@@ -152,7 +154,7 @@ func (self *SessionContext) processEvent(e *etw.Event) {
 		Set("System", e.Header).
 		Set("ProviderGUID", event_guid)
 
-	data, err := e.EventProperties()
+	data, err := e.EventProperties(self.resolve_map_info)
 	if err == nil {
 		event.Set("EventData", data)
 	}
@@ -183,15 +185,18 @@ func (self *SessionContext) Stats() []ProviderStat {
 // Callers call this to register a watcher on the GUID
 func (self *SessionContext) Register(
 	ctx context.Context,
-	scope vfilter.Scope,
-	any_keyword uint64, all_keyword uint64, level int64,
-	guid windows.GUID, capture_state bool) (closer func(), output_chan chan vfilter.Row, err error) {
+	scope vfilter.Scope, options ETWOptions,
+	guid windows.GUID) (closer func(), output_chan chan vfilter.Row, err error) {
 
 	key := guid.String()
 	handle := NewHandle(ctx, scope, guid)
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	if options.EnableMapInfo {
+		self.resolve_map_info = options.EnableMapInfo
+	}
 
 	registrations, pres := self.registrations[key]
 	if !pres {
@@ -204,10 +209,10 @@ func (self *SessionContext) Register(
 
 		err = session.SubscribeToProvider(etw.SessionOptions{
 			Guid:            guid,
-			Level:           etw.TraceLevel(level),
-			MatchAnyKeyword: any_keyword,
-			MatchAllKeyword: all_keyword,
-			CaptureState:    capture_state,
+			Level:           etw.TraceLevel(options.Level),
+			MatchAnyKeyword: options.AnyKeyword,
+			MatchAllKeyword: options.AllKeyword,
+			CaptureState:    options.CaptureState,
 		})
 		if err != nil {
 			scope.Log("etw: Can not add provider to session %v: %v", self.name, err)
