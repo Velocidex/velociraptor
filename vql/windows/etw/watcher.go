@@ -43,16 +43,14 @@ func NewEventTraceWatcherService() *EventTraceWatcherService {
 func (self *EventTraceWatcherService) Register(
 	ctx context.Context,
 	scope vfilter.Scope,
-	session_name string,
-	any_keyword uint64, all_keyword uint64, level int64,
-	wGuid windows.GUID, capture_state bool) (closer func(), output_chan chan vfilter.Row, err error) {
+	session_name string, options ETWOptions,
+	wGuid windows.GUID) (closer func(), output_chan chan vfilter.Row, err error) {
 	session, err := self.SessionContext(session_name, scope)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return session.Register(
-		ctx, scope, any_keyword, all_keyword, level, wGuid, capture_state)
+	return session.Register(ctx, scope, options, wGuid)
 }
 
 func (self *EventTraceWatcherService) SessionContext(
