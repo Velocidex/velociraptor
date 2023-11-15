@@ -1,25 +1,18 @@
 name: Linux.RHEL.Packages
 description: |
   Parse packages installed from dnf or yum
-
-parameters:
-  - name: DNFGrokExpression
-    description: A Grok expression to parse the output from `dns list installed`
-    default: "%{DATA:Package}%{SPACE} %{DATA:Version}%{SPACE} %{GREEDYDATA:Repository}"
-
 sources:
   - precondition: |
       SELECT OS From info() where OS = 'linux'
 
     query: |
         LET exec = SELECT * FROM foreach(row={
-          SELECT grok(grok=DNFGrokExpression, data=Stdout) AS Parsed
+          SELECT grok(grok="%{DATA:Package}%{SPACE} %{DATA:Version}%{SPACE} %{GREEDYDATA:Repository}", data=Stdout) AS Parsed
           FROM execve(argv=cmd, sep="\n")
-          WHERE count() > 2
         }, column="Parsed")
         
         SELECT * FROM switch(
-            a=exec(cmd=["dnf", "--quiet", "list", "installed"]),
-            b=exec(cmd=["yum", "--quiet", "list", "installed"]),
-            c={SELECT log(level="ERROR",message="Could not retrieve Package Information") FROM scope()}
+            a=exec(cmd=["sh","-c" ,"dnf --quiet list installed | tail -n +2 | xargs -n3 | column -t"]),
+            b=exec(cmd=["sh","-c" ,"yum --quiet list installed | tail -n +2 | xargs -n3 | column -t"]),
+            c={SELECT log(level="ERROR",message="Could not retrieve package list") FROM scope()}
             )
