@@ -375,7 +375,7 @@ func (self *ArtifactSetMetadataFunction) Call(ctx context.Context,
 	switch def_type {
 	case "client", "client_event", "notebook", "":
 		permission = acls.ARTIFACT_WRITER
-	case "server", "server_event":
+	case "server", "server_event", "internal":
 		permission = acls.SERVER_ARTIFACT_WRITER
 	}
 

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -65,7 +66,7 @@ name: TestArtifact
 type: SERVER
 sources:
 - query: |
-    SELECT "Hello" AS Col,
+    SELECT "Hello" AS Col, pathspec(parse="/bin/ls", path_type="linux") AS OSPath,
       upload(accessor="data", file="Some Data", name="test.txt") AS Upload1,
       upload(accessor="data", file="Some Other Data", name="test2.txt") AS Upload2
     FROM scope()
@@ -127,6 +128,7 @@ func (self *TestSuite) TestExportCollectionServerArtifact() {
 			Set("client_id", "server").
 			Set("flow_id", flow_id).
 			Set("wait", true).
+			Set("format", "csv").
 			Set("expand_sparse", false).
 			Set("name", "Test"))
 
@@ -376,6 +378,11 @@ func openZipFile(
 		serialized, err := ioutil.ReadAll(rc)
 		if err != nil {
 			return nil, err
+		}
+
+		if strings.HasSuffix(f.Name, "csv") {
+			result.Set(f.Name, strings.Split(string(serialized), "\n"))
+			continue
 		}
 
 		// Either JSON array or JSONL

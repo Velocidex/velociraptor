@@ -21,7 +21,11 @@
    "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"\\u003cgreen\\u003eStarting\\u003c/\\u003e query execution.\\n\"}"
   ],
   "/clients/server/collections/F.1234/logs.json.index": "Index 56 bytes",
-  "/clients/server/collections/F.1234/uploads/data/Hello": "Hello"
+  "/clients/server/collections/F.1234/uploads/data/Hello": "Hello",
+  "/hunts/H.1234.json": [
+   ""
+  ],
+  "/hunts/H.1234.json.index": "Index 0 bytes"
  },
  "Deleted Flow": {
   "/clients/server/artifacts/AnotherTestArtifact/F.1234.json": [
@@ -36,7 +40,11 @@
    ""
   ],
   "/clients/server/collections/F.1234/logs.json.index": "Index 0 bytes",
-  "/clients/server/collections/F.1234/uploads/data/Hello": ""
+  "/clients/server/collections/F.1234/uploads/data/Hello": "",
+  "/hunts/H.1234.json": [
+   ""
+  ],
+  "/hunts/H.1234.json.index": "Index 0 bytes"
  },
  "Imported Flow": {
   "/clients/server/artifacts/AnotherTestArtifact/F.1234.json": [
@@ -60,6 +68,10 @@
    "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"\\u003cgreen\\u003eStarting\\u003c/\\u003e query execution.\\n\"}"
   ],
   "/clients/server/collections/F.1234/logs.json.index": "Index 56 bytes",
-  "/clients/server/collections/F.1234/uploads/data/Hello": "Hello"
+  "/clients/server/collections/F.1234/uploads/data/Hello": "Hello",
+  "/hunts/H.1234.json": [
+   ""
+  ],
+  "/hunts/H.1234.json.index": "Index 0 bytes"
  }
 }

@@ -167,12 +167,11 @@ func (self *NotebookWorker) processUpdateRequest(
 		in.CellId, cell_type, in.Env, query_cancel, input, in.Input)
 	if err != nil {
 		logger.Error("Rendering error: %v", err)
-		return nil, err
 	}
 
 	return &NotebookResponse{
 		NotebookCell: resp,
-	}, nil
+	}, err
 }
 
 func (self *NotebookWorker) updateCellContents(
@@ -445,6 +444,9 @@ func (self *NotebookWorker) RegisterWorker(
 			resp, err := self.processUpdateRequest(ctx, org_config_obj, request,
 				notebook_manager.Store)
 			serialized, _ := json.Marshal(resp)
+			if resp == nil {
+				serialized = nil
+			}
 			job.Done(string(serialized), err)
 		}
 	}
