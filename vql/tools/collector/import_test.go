@@ -109,7 +109,7 @@ func (self *TestSuite) TestImportDynamicCollection() {
 			Set("accessor", "fs"))
 	assert.IsType(self.T(), &flows_proto.ArtifactCollectorContext{}, imported_flow)
 
-	//	test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
+	// test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
 	golden.Set("Imported Flow", self.snapshotHuntFlow())
 
 	goldie.Assert(self.T(), "TestImportDynamicCollection", json.MustMarshalIndent(golden))

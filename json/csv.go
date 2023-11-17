@@ -158,7 +158,28 @@ func (self *CSVEncoder) Encode(obj *fastjson.Object) []byte {
 			return
 		}
 
-		self.row[idx] = string(v.MarshalTo(nil))
+		// Encode the value into Velociraptor's CSV as described in
+		// file_store/csv/doc.go
+		switch v.Type() {
+
+		// Write strings directly without escaping - csv will escape
+		// if needed.
+		case fastjson.TypeString:
+			// It is already a string
+			b, err := v.StringBytes()
+			if err == nil {
+				self.row[idx] = string(b)
+			}
+
+			// Nulls should be written as a empty strings
+		case fastjson.TypeNull:
+			self.row[idx] = ""
+
+			// Everything else will be JSON encoded.
+		default:
+			self.row[idx] = string(v.MarshalTo(nil))
+		}
+
 	})
 
 	for i, k := range self.extra_keys {

@@ -66,9 +66,12 @@ func AnyToString(item vfilter.Any, opts *json.EncOpts) string {
 			return ""
 		}
 
-		if len(serialized) > 0 && (serialized[0] == '{' ||
-			serialized[0] == '[') {
-			value = string(serialized)
+		if len(serialized) > 0 {
+			if serialized[0] == '{' || serialized[0] == '[' {
+				value = string(serialized)
+			} else if serialized[0] == '"' && serialized[len(serialized)-1] == '"' {
+				value, _ = strconv.Unquote(string(serialized))
+			}
 		}
 	}
 

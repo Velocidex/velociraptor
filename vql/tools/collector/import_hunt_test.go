@@ -19,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	hunt_dispatcher_service "www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/server/downloads"
@@ -31,6 +32,9 @@ import (
 
 var (
 	importHuntArtifacts = []string{`
+name: Server.Audit.Logs
+type: SERVER_EVENT
+`, `
 name: TestArtifact
 sources:
 - query: |
@@ -55,6 +59,8 @@ sources:
 func (self *TestSuite) TestImportDynamicHunt() {
 	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
 	defer closer()
+
+	hunt_dispatcher_service.SetHuntIdForTests("H.1234")
 
 	fs_factory := file_store_accessor.NewFileStoreFileSystemAccessor(self.ConfigObj)
 	accessors.Register("fs", fs_factory, "")
@@ -156,7 +162,14 @@ func (self *TestSuite) TestImportDynamicHunt() {
 		Set("import_type", "hunt"))
 	assert.IsType(self.T(), &api_proto.Hunt{}, imported_hunt)
 
-	//	test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
+	// Wait here until the hunt is updated - this happens
+	// asyncronously by the hunt dispatcher.
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		snapshot, _ := self.snapshotHuntFlow().Get("/hunts/H.1234.json")
+		return json.AnyToString(snapshot, json.DefaultEncOpts()) != ""
+	})
+
+	// test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
 	golden.Set("Imported Flow", self.snapshotHuntFlow())
 
 	goldie.Assert(self.T(), "TestImportDynamicHunt", json.MustMarshalIndent(golden))
@@ -171,6 +184,9 @@ func (self *TestSuite) snapshotHuntFlow() *ordereddict.Dict {
 		"/clients/server/collections/F.1234/logs.json",
 		"/clients/server/collections/F.1234/logs.json.index",
 		"/clients/server/collections/F.1234/uploads/data/Hello",
+
+		"/hunts/H.1234.json",
+		"/hunts/H.1234.json.index",
 	})
 }
 
@@ -178,6 +194,9 @@ func (self *TestSuite) TestImportStaticHunt() {
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 	launcher.SetFlowIdForTests("F.1234XX")
+
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
+	defer closer()
 
 	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
@@ -230,7 +249,7 @@ func (self *TestSuite) TestImportStaticHunt() {
 	// Wait here until the hunt manager updates the hunt stats
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
 		fs := test_utils.GetMemoryFileStore(self.T(), self.ConfigObj)
-		value, _ := fs.Get("/hunts/H.CKRG32QRAB5N0_errors.json")
+		value, _ := fs.Get("/hunts/H.CKRG32QRAB5N0.json")
 		return len(value) > 0
 	})
 
@@ -247,6 +266,8 @@ func (self *TestSuite) snapshotStaticHuntFlow() *ordereddict.Dict {
 		"/clients/C.a99faf363b5601fe/collections/F.CKRG32QRAB5N0.H/logs.json",
 		"/clients/C.a99faf363b5601fe/collections/F.CKRG32QRAB5N0.H/logs.json.index",
 
+		"/hunts/H.CKRG32QRAB5N0.json",
+		"/hunts/H.CKRG32QRAB5N0.json.index",
 		"/hunts/H.CKRG32QRAB5N0_errors.json",
 		"/hunts/H.CKRG32QRAB5N0_errors.json.index",
 	})
