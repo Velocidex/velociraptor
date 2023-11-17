@@ -142,6 +142,10 @@ func (self *TestSuite) TestImportDynamicHunt() {
 	assert.NotEmpty(self.T(), download_pathspec.String())
 
 	// test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		snapshot, _ := self.snapshotHuntFlow().Get("/hunts/H.1234.json")
+		return len(json.AnyToString(snapshot, json.DefaultEncOpts())) > 10
+	})
 
 	golden := ordereddict.NewDict().
 		Set("Original Flow", self.snapshotHuntFlow())
@@ -166,7 +170,7 @@ func (self *TestSuite) TestImportDynamicHunt() {
 	// asyncronously by the hunt dispatcher.
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
 		snapshot, _ := self.snapshotHuntFlow().Get("/hunts/H.1234.json")
-		return json.AnyToString(snapshot, json.DefaultEncOpts()) != ""
+		return len(json.AnyToString(snapshot, json.DefaultEncOpts())) > 10
 	})
 
 	// test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
