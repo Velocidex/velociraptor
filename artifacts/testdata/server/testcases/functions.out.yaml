@@ -125,4 +125,25 @@ LET rows <= SELECT * FROM scope()[]SELECT len(list=["a", "b"]), len(list="hello"
   "any(items=TestArray, filter=\"x=\u003ex.Y =~ 'Good'\")": true,
   "all(items=TestArray, filter=\"x=\u003ex.Y =~ 'Good'\")": false
  }
+]LET List <= (1, "two", 3, "", 0)[]SELECT filter(list=List, condition='x=>x'), filter(list=List, regex="."), filter(list=List, regex=".+") FROM scope()[
+ {
+  "filter(list=List, condition='x=\u003ex')": [
+   1,
+   "two",
+   3
+  ],
+  "filter(list=List, regex=\".\")": [
+   1,
+   "two",
+   3,
+   "",
+   0
+  ],
+  "filter(list=List, regex=\".+\")": [
+   1,
+   "two",
+   3,
+   0
+  ]
+ }
 ]

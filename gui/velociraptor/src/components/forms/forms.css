@@ -40,3 +40,7 @@ input[type="checkbox"][value="Y"] {
     border-color: var(--color-btn-default-background-hover);
     background-color: var(--accent-color);
 }
+
+.full-width {
+    width: 100%;
+}

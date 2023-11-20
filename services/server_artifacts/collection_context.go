@@ -55,6 +55,8 @@ type contextManager struct {
 
 	row_limit  int64
 	byte_limit int64
+
+	dirty bool
 }
 
 func NewCollectionContextManager(
@@ -93,6 +95,7 @@ func NewCollectionContextManager(
 		log_writer: &counterWriter{ResultSetWriter: log_writer},
 		row_limit:  row_limit,
 		byte_limit: byte_limit,
+		dirty:      true,
 	}
 
 	return self, nil
@@ -229,6 +232,7 @@ func (self *contextManager) Load() error {
 	}
 
 	self.context = details.Context
+	self.dirty = false
 	return nil
 }
 
@@ -238,6 +242,10 @@ func (self *contextManager) Save() error {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	if !self.dirty {
+		return nil
+	}
 
 	launcher, err := services.GetLauncher(self.config_obj)
 	if err != nil {
@@ -274,9 +282,25 @@ func (self *contextManager) Close(ctx context.Context) {
 // the entire flow completion.
 func (self *contextManager) maybeSendCompletionMessage(ctx context.Context) {
 	flow_context := self.GetContext()
-	if flow_context.State == flows_proto.ArtifactCollectorContext_RUNNING {
+	if flow_context.UserNotified ||
+		flow_context.State == flows_proto.ArtifactCollectorContext_RUNNING {
 		return
 	}
+
+	// Remember that we notified this already.
+	self.mu.Lock()
+	self.context.UserNotified = true
+	self.mu.Unlock()
+
+	launcher, err := services.GetLauncher(self.config_obj)
+	if err != nil {
+		return
+	}
+
+	// Write the context synchronously because listeners may be wait
+	// for the messages.
+	launcher.Storage().WriteFlow(
+		ctx, self.config_obj, flow_context, utils.SyncCompleter)
 
 	row := ordereddict.NewDict().
 		Set("Timestamp", utils.GetTime().Now().UTC().Unix()).
@@ -288,10 +312,8 @@ func (self *contextManager) maybeSendCompletionMessage(ctx context.Context) {
 	if err != nil {
 		return
 	}
-	journal.PushRowsToArtifact(ctx, self.config_obj,
-		[]*ordereddict.Dict{row},
-		"System.Flow.Completion", "server", self.session_id,
-	)
+	journal.PushRowsToArtifactAsync(ctx, self.config_obj,
+		row, "System.Flow.Completion")
 }
 
 func (self *contextManager) RunQuery(

@@ -1,4 +1,4 @@
-name: Admin.Client.Upgrade
+name: Admin.Client.Upgrade.Windows
 description: |
   Remotely push new client updates.
 

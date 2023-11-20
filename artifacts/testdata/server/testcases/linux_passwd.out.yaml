@@ -1,0 +1,463 @@
+SELECT * FROM Artifact.Linux.Sys.Users( PasswordFile=srcDir + '/artifacts/testdata/files/linux/passwd' )[
+ {
+  "User": "root",
+  "Description": "root",
+  "Uid": "0",
+  "Gid": "0",
+  "Homedir": "/root",
+  "Shell": "/bin/bash",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "daemon",
+  "Description": "daemon",
+  "Uid": "1",
+  "Gid": "1",
+  "Homedir": "/usr/sbin",
+  "Shell": "/usr/sbin/nologin",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "bin",
+  "Description": "bin",
+  "Uid": "2",
+  "Gid": "2",
+  "Homedir": "/bin",
+  "Shell": "/usr/sbin/nologin",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "sys",
+  "Description": "sys",
+  "Uid": "3",
+  "Gid": "3",
+  "Homedir": "/dev",
+  "Shell": "/usr/sbin/nologin",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "sync",
+  "Description": "sync",
+  "Uid": "4",
+  "Gid": "65534",
+  "Homedir": "/bin",
+  "Shell": "/bin/sync",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "games",
+  "Description": "games",
+  "Uid": "5",
+  "Gid": "60",
+  "Homedir": "/usr/games",
+  "Shell": "/usr/sbin/nologin",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "man",
+  "Description": "man",
+  "Uid": "6",
+  "Gid": "12",
+  "Homedir": "/var/cache/man",
+  "Shell": "/usr/sbin/nologin",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "lp",
+  "Description": "lp",
+  "Uid": "7",
+  "Gid": "7",
+  "Homedir": "/var/spool/lpd",
+  "Shell": "/usr/sbin/nologin",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "mail",
+  "Description": "mail",
+  "Uid": "8",
+  "Gid": "8",
+  "Homedir": "/var/mail",
+  "Shell": "/usr/sbin/nologin",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "news",
+  "Description": "news",
+  "Uid": "9",
+  "Gid": "9",
+  "Homedir": "/var/spool/news",
+  "Shell": "/usr/sbin/nologin",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "uucp",
+  "Description": "uucp",
+  "Uid": "10",
+  "Gid": "10",
+  "Homedir": "/var/spool/uucp",
+  "Shell": "/usr/sbin/nologin",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "proxy",
+  "Description": "proxy",
+  "Uid": "13",
+  "Gid": "13",
+  "Homedir": "/bin",
+  "Shell": "/usr/sbin/nologin",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "www-data",
+  "Description": "www-data",
+  "Uid": "33",
+  "Gid": "33",
+  "Homedir": "/var/www",
+  "Shell": "/usr/sbin/nologin",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "backup",
+  "Description": "backup",
+  "Uid": "34",
+  "Gid": "34",
+  "Homedir": "/var/backups",
+  "Shell": "/usr/sbin/nologin",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "list",
+  "Description": "Mailing List Manager",
+  "Uid": "38",
+  "Gid": "38",
+  "Homedir": "/var/list",
+  "Shell": "/usr/sbin/nologin",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "irc",
+  "Description": "ircd",
+  "Uid": "39",
+  "Gid": "39",
+  "Homedir": "/run/ircd",
+  "Shell": "/usr/sbin/nologin",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "gnats",
+  "Description": "Gnats Bug-Reporting System (admin)",
+  "Uid": "41",
+  "Gid": "41",
+  "Homedir": "/var/lib/gnats",
+  "Shell": "/usr/sbin/nologin",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "nobody",
+  "Description": "nobody",
+  "Uid": "65534",
+  "Gid": "65534",
+  "Homedir": "/nonexistent",
+  "Shell": "/usr/sbin/nologin",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "_apt",
+  "Description": "",
+  "Uid": "100",
+  "Gid": "65534",
+  "Homedir": "/nonexistent",
+  "Shell": "/usr/sbin/nologin",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "testuser1",
+  "Description": "Test User 1,Room number 1,12345678,23456789,Misc",
+  "Uid": "1000",
+  "Gid": "1000",
+  "Homedir": "/home/testuser1",
+  "Shell": "/bin/bash",
+  "_Source": "Linux.Sys.Users"
+ },
+ {
+  "User": "testuser2",
+  "Description": "Test User 2,,34567890,45678901,Other",
+  "Uid": "1001",
+  "Gid": "1001",
+  "Homedir": "/home/testuser2",
+  "Shell": "/bin/bash",
+  "_Source": "Linux.Sys.Users"
+ }
+]SELECT * FROM Artifact.Linux.Sys.Groups( GroupFile=srcDir + '/artifacts/testdata/files/linux/group' )[
+ {
+  "Group": "root",
+  "GID": 0,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "daemon",
+  "GID": 1,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "bin",
+  "GID": 2,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "sys",
+  "GID": 3,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "adm",
+  "GID": 4,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "tty",
+  "GID": 5,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "disk",
+  "GID": 6,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "lp",
+  "GID": 7,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "mail",
+  "GID": 8,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "news",
+  "GID": 9,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "uucp",
+  "GID": 10,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "man",
+  "GID": 12,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "proxy",
+  "GID": 13,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "kmem",
+  "GID": 15,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "dialout",
+  "GID": 20,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "fax",
+  "GID": 21,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "voice",
+  "GID": 22,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "cdrom",
+  "GID": 24,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "floppy",
+  "GID": 25,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "tape",
+  "GID": 26,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "sudo",
+  "GID": 27,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "audio",
+  "GID": 29,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "dip",
+  "GID": 30,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "www-data",
+  "GID": 33,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "backup",
+  "GID": 34,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "operator",
+  "GID": 37,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "list",
+  "GID": 38,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "irc",
+  "GID": 39,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "src",
+  "GID": 40,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "gnats",
+  "GID": 41,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "shadow",
+  "GID": 42,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "utmp",
+  "GID": 43,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "video",
+  "GID": 44,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "sasl",
+  "GID": 45,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "plugdev",
+  "GID": 46,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "staff",
+  "GID": 50,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "games",
+  "GID": 60,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "users",
+  "GID": 100,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "nogroup",
+  "GID": 65534,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "testuser1",
+  "GID": 1000,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "testuser2",
+  "GID": 1001,
+  "Members": [],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "group1",
+  "GID": 1002,
+  "Members": [
+   "testuser1"
+  ],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "group2",
+  "GID": 1003,
+  "Members": [
+   "testuser2"
+  ],
+  "_Source": "Linux.Sys.Groups"
+ },
+ {
+  "Group": "group3",
+  "GID": 1004,
+  "Members": [
+   "testuser1",
+   "testuser2"
+  ],
+  "_Source": "Linux.Sys.Groups"
+ }
+]

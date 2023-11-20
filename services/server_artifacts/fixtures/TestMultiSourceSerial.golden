@@ -34,5 +34,6 @@
    "log_rows": 4,
    "result_rows": 2
   }
- ]
+ ],
+ "user_notified": true
 }

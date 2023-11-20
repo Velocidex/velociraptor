@@ -112,6 +112,7 @@ func (self ParseCSVPlugin) Call(
 
 				var headers []string
 				for {
+					before_offset := csv_reader.ByteOffset
 					row := ordereddict.NewDict()
 					row_data, err := csv_reader.ReadAny()
 					if err == io.EOF {
@@ -120,7 +121,12 @@ func (self ParseCSVPlugin) Call(
 
 					if err != nil {
 						// Report the error and skip to the next record
-						scope.Log("parse_csv: %v", err)
+						scope.Log("INFO:parse_csv: %v", err)
+
+						// If we are not making any progress, just give up
+						if csv_reader.ByteOffset == before_offset {
+							return
+						}
 						continue
 					}
 

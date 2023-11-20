@@ -268,8 +268,8 @@ func modifyRecord(ctx context.Context,
 
 	mac_addresses, ok := row.GetStrings("MACAddresses")
 	if ok {
-		client_info.MacAddresses = append(
-			client_info.MacAddresses, mac_addresses...)
+		client_info.MacAddresses = mac_addresses
+		client_info.MacAddresses = utils.Uniquify(client_info.MacAddresses)
 	}
 
 	if client_info.FirstSeenAt == 0 {

@@ -17,6 +17,7 @@
    ]
   }
  ],
+ "0: CSV with column header and JSON logs": "",
  "1: CSV with no headers and linebreak": [
   {
    "Col0": 1,
@@ -29,11 +30,15 @@
    "Col2": 5
   }
  ],
+ "1: CSV with no headers and linebreak logs": "",
  "2: CSV with separator": [
   {
    "ColA": 1,
    "ColB": 2,
    "ColC": 3
   }
- ]
+ ],
+ "2: CSV with separator logs": "",
+ "3: CSV with invalid separator": [],
+ "3: CSV with invalid separator logs": "INFO:parse_csv: csv: invalid field or comment delimiter\n"
 }

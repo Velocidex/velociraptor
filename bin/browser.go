@@ -22,8 +22,17 @@ func Commands() [][]string {
 	switch runtime.GOOS {
 	case "darwin":
 		cmds = append(cmds, []string{"/usr/bin/open"})
+
 	case "windows":
+		// Default browser
 		cmds = append(cmds, []string{"cmd", "/c", "start"})
+
+		// MSEdge should be there
+		cmds = append(cmds, []string{"cmd", "/c", "start", "msedge"})
+
+		// Or maybe try to use exact path
+		cmds = append(cmds, []string{`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`})
+
 	default:
 		if os.Getenv("DISPLAY") != "" {
 			// xdg-open is only for use in a desktop environment.

@@ -252,12 +252,12 @@ sources:
 	uploads_data := test_utils.FileReadAll(self.T(), self.ConfigObj,
 		flow_path_manager.UploadMetadata())
 	assert.Contains(self.T(), uploads_data,
-		`"_Components":["clients","server","collections","F.1234","uploads","test.txt"]`)
+		`"_Components":["clients","server","collections","F.1234","uploads","data","test.txt"]`)
 
 	// Now read the uploaded file.
 	data := test_utils.FileReadAll(self.T(), self.ConfigObj,
 		path_specs.NewUnsafeFilestorePath(
-			"clients", "server", "collections", "F.1234", "uploads", "test.txt").
+			"clients", "server", "collections", "F.1234", "uploads", "data", "test.txt").
 			SetType(api.PATH_TYPE_FILESTORE_ANY))
 	assert.Equal(self.T(), "Hello world", string(data))
 }
@@ -289,7 +289,7 @@ sources:
 		flow_path_manager.UploadMetadata())
 
 	assert.Contains(self.T(), uploads_data,
-		`"_Components":["clients","server","collections","F.1234","uploads","test_many.txt"]`)
+		`"_Components":["clients","server","collections","F.1234","uploads","data","test_many.txt"]`)
 
 	// There is only one uploaded file in the uploads file
 	assert.Equal(self.T(), 1, len(strings.Split("\n", uploads_data)))
@@ -298,7 +298,7 @@ sources:
 	data := test_utils.FileReadAll(self.T(), self.ConfigObj,
 		path_specs.NewUnsafeFilestorePath(
 			"clients", "server", "collections", "F.1234",
-			"uploads", "test_many.txt").
+			"uploads", "data", "test_many.txt").
 			SetType(api.PATH_TYPE_FILESTORE_ANY))
 	assert.Equal(self.T(), "Hello world", string(data))
 }

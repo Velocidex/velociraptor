@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -35,6 +36,8 @@ import (
 	"www.velocidex.com/golang/vfilter"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
+	_ "www.velocidex.com/golang/velociraptor/accessors/file"
+	_ "www.velocidex.com/golang/velociraptor/accessors/ntfs"
 	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
 )
 
@@ -48,6 +51,7 @@ func (self *TestSuite) SetupTest() {
 	self.ConfigObj.Services.HuntDispatcher = true
 	self.ConfigObj.Services.HuntManager = true
 	self.ConfigObj.Services.ServerArtifacts = true
+	self.ConfigObj.Services.VfsService = true
 
 	self.LoadArtifactsIntoConfig([]string{`
 name: Custom.TestArtifactUpload
@@ -62,7 +66,7 @@ name: TestArtifact
 type: SERVER
 sources:
 - query: |
-    SELECT "Hello" AS Col,
+    SELECT "Hello" AS Col, pathspec(parse="/bin/ls", path_type="linux") AS OSPath,
       upload(accessor="data", file="Some Data", name="test.txt") AS Upload1,
       upload(accessor="data", file="Some Other Data", name="test2.txt") AS Upload2
     FROM scope()
@@ -99,7 +103,7 @@ func (self *TestSuite) TestExportCollectionServerArtifact() {
 	assert.NoError(self.T(), err)
 
 	// Wait here until the collection is completed.
-	vtesting.WaitUntil(time.Second*50, self.T(), func() bool {
+	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
 		flow, err := launcher.GetFlowDetails(self.Ctx, self.ConfigObj, "server", flow_id)
 		assert.NoError(self.T(), err)
 
@@ -124,6 +128,7 @@ func (self *TestSuite) TestExportCollectionServerArtifact() {
 			Set("client_id", "server").
 			Set("flow_id", flow_id).
 			Set("wait", true).
+			Set("format", "csv").
 			Set("expand_sparse", false).
 			Set("name", "Test"))
 
@@ -240,6 +245,9 @@ func (self *TestSuite) TestExportCollection1() {
 }
 
 func (self *TestSuite) TestExportHunt() {
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
+	defer closer()
+
 	// Operate on a different client
 	self.client_id = "C.1235"
 
@@ -370,6 +378,11 @@ func openZipFile(
 		serialized, err := ioutil.ReadAll(rc)
 		if err != nil {
 			return nil, err
+		}
+
+		if strings.HasSuffix(f.Name, "csv") {
+			result.Set(f.Name, strings.Split(string(serialized), "\n"))
+			continue
 		}
 
 		// Either JSON array or JSONL

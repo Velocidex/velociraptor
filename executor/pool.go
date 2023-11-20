@@ -320,13 +320,13 @@ func (self *PoolClientExecutor) ProcessRequest(
 		// Replay the transaction into the output channel but swap the
 		// session id to be from thie request.
 		for _, resp := range tran.Responses {
-			response := &crypto_proto.VeloMessage{
-				SessionId:   message.SessionId,
-				RequestId:   message.RequestId,
-				VQLResponse: maybeTransformResponse(resp.VQLResponse, self.id),
-				LogMessage:  resp.LogMessage,
-				FlowStats:   resp.FlowStats,
-			}
+			// Copy the original response and change it to appear as
+			// if it came from this session.
+			response := proto.Clone(resp).(*crypto_proto.VeloMessage)
+			response.SessionId = message.SessionId
+			response.RequestId = message.RequestId
+			response.VQLResponse = maybeTransformResponse(resp.VQLResponse, self.id)
+
 			select {
 			case <-ctx.Done():
 				return

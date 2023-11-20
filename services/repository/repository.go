@@ -44,6 +44,7 @@ import (
 type Repository struct {
 	mu          sync.Mutex
 	Data        map[string]*artifacts_proto.Artifact
+	Metadata    map[string]*artifacts_proto.ArtifactMetadata
 	loaded_dirs []string
 
 	// Each repository may have a parent - we search for the artifact
@@ -173,7 +174,8 @@ func (self *Repository) LoadProto(
 		// By default use the client type.
 		artifact.Type = "client"
 
-	case "client", "client_event", "server", "server_event", "internal":
+	case "client", "client_event", "server",
+		"server_event", "notebook", "internal":
 		// These types are acceptable.
 
 	default:
@@ -239,33 +241,30 @@ func (self *Repository) LoadProto(
 				}
 			}
 
-			if len(source.Query) == 0 {
-				return nil, fmt.Errorf(
-					"Source %s in artifact %s contains no queries!",
-					source.Name, artifact.Name)
-			}
+			if len(source.Query) > 0 {
 
-			// Check we can parse it properly.
-			queries, err := vfilter.MultiParse(source.Query)
-			if err != nil {
-				return nil, fmt.Errorf("While parsing source query: %w", err)
-			}
+				// Check we can parse it properly.
+				queries, err := vfilter.MultiParse(source.Query)
+				if err != nil {
+					return nil, fmt.Errorf("While parsing source query: %w", err)
+				}
 
-			// Make sure the source format is correct
-			for idx2, vql := range queries {
-				if idx2 < len(queries)-1 {
-					if vql.Let == "" {
-						return nil, fmt.Errorf(
-							"Invalid artifact %s: All Queries in a source "+
-								"must be LET queries, except for the "+
-								"final one.", artifact.Name)
-					}
-				} else {
-					if vql.Let != "" {
-						return nil, fmt.Errorf(
-							"Invalid artifact  %s: All Queries in a source "+
-								"must be LET queries, except for the "+
-								"final one.", artifact.Name)
+				// Make sure the source format is correct
+				for idx2, vql := range queries {
+					if idx2 < len(queries)-1 {
+						if vql.Let == "" {
+							return nil, fmt.Errorf(
+								"Invalid artifact %s: All Queries in a source "+
+									"must be LET queries, except for the "+
+									"final one.", artifact.Name)
+						}
+					} else {
+						if vql.Let != "" {
+							return nil, fmt.Errorf(
+								"Invalid artifact  %s: All Queries in a source "+
+									"must be LET queries, except for the "+
+									"final one.", artifact.Name)
+						}
 					}
 				}
 			}
@@ -275,7 +274,7 @@ func (self *Repository) LoadProto(
 			for _, cell := range source.Notebook {
 				cell.Type = strings.ToLower(cell.Type)
 				switch cell.Type {
-				case "md", "markdown", "vql", "vql_suggestion":
+				case "md", "markdown", "vql", "vql_suggestion", "notebook":
 				default:
 					return nil, fmt.Errorf(
 						"Artifact %s contains an invalid notebook cell type: %v",
@@ -338,6 +337,17 @@ func (self *Repository) GetSource(
 	return nil, false
 }
 
+func (self *Repository) DecorateMetadata(
+	artifact *artifacts_proto.Artifact) *artifacts_proto.Artifact {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	metadata, pres := self.Metadata[artifact.Name]
+	if pres {
+		artifact.Metadata = metadata
+	}
+	return artifact
+}
+
 func (self *Repository) Get(
 	ctx context.Context, config_obj *config_proto.Config,
 	name string) (*artifacts_proto.Artifact, bool) {
@@ -348,7 +358,11 @@ func (self *Repository) Get(
 
 		// If we have a parent repository just get it from there.
 		if self.parent != nil {
-			return self.parent.Get(ctx, self.parent_config_obj, name)
+			artifact, err := self.parent.Get(ctx, self.parent_config_obj, name)
+			if artifact != nil {
+				artifact = self.DecorateMetadata(artifact)
+			}
+			return artifact, err
 		}
 		return nil, false
 	}
@@ -358,7 +372,7 @@ func (self *Repository) Get(
 	self.mu.Unlock()
 
 	if result.Compiled {
-		return result, true
+		return self.DecorateMetadata(result), true
 	}
 
 	// Delay processing until we need it. This means loading
@@ -378,7 +392,7 @@ func (self *Repository) Get(
 	}
 	self.mu.Unlock()
 
-	return result, true
+	return self.DecorateMetadata(result), true
 }
 
 func (self *Repository) get(name string) (*artifacts_proto.Artifact, bool) {
@@ -410,6 +424,34 @@ func (self *Repository) get(name string) (*artifacts_proto.Artifact, bool) {
 
 	// If we get here the source is not found in the artifact.
 	return nil, false
+}
+
+func (self *Repository) setMetadata(
+	name string, metadata *artifacts_proto.ArtifactMetadata) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.Metadata == nil {
+		self.Metadata = make(map[string]*artifacts_proto.ArtifactMetadata)
+	}
+
+	self.Metadata[name] = metadata
+}
+
+func (self *Repository) getMetadata() *artifacts_proto.ArtifactMetadataStorage {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	copy := make(map[string]*artifacts_proto.ArtifactMetadata)
+	if self.Metadata != nil {
+		for k, v := range self.Metadata {
+			copy[k] = v
+		}
+	}
+
+	return &artifacts_proto.ArtifactMetadataStorage{
+		Metadata: copy,
+	}
 }
 
 func (self *Repository) Del(name string) {
@@ -503,7 +545,7 @@ func compileArtifact(
 	}
 
 	for _, source := range artifact.Sources {
-		if source.Queries == nil {
+		if source.Queries == nil && source.Query != "" {
 			// The Queries field contains the compiled queries -
 			// removing any comments.
 			queries, err := splitQueryToQueries(source.Query)

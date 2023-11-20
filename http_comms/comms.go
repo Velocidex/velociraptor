@@ -41,6 +41,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/crypto/storage"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -533,6 +534,8 @@ func (self *HTTPConnector) rekeyNextServer(ctx context.Context) error {
 
 	self.server_name = server_name
 	self.logger.Info("Received PEM for %v from %v", self.server_name, url)
+
+	storage.SetCurrentServerPem(pem)
 
 	return nil
 }

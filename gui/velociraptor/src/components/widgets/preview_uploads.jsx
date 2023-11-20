@@ -304,6 +304,7 @@ export default class PreviewUpload extends Component {
         hexDataRows: [],
         view: undefined,
         showDialog: false,
+        error: false,
     }
 
     componentDidMount = () => {
@@ -320,7 +321,8 @@ export default class PreviewUpload extends Component {
             this.fetchPreview_();
         };
 
-        return _.isEqual(this.state.view, prevState.view);
+        return _.isEqual(this.state.view, prevState.view) &&
+            _.isEqual(this.state.error, prevState.error) ;
     }
 
     isValidEnv = env=>{
@@ -369,11 +371,17 @@ export default class PreviewUpload extends Component {
         };
         let url = 'v1/DownloadVFSFile';
 
-        this.setState({url: url, params: params, loading: true});
+        this.setState({url: url, params: params,
+                       error: false, loading: true});
 
         api.get_blob(url, params, this.source.token).then(buffer=>{
-            const view = new Uint8Array(buffer);
-            this.setState({view: view});
+            if(buffer.error) {
+                this.setState({error: true});
+
+            } else {
+                const view = new Uint8Array(buffer);
+                this.setState({view: view, error: false});
+            }
         });
     };
 
@@ -382,6 +390,10 @@ export default class PreviewUpload extends Component {
     }
 
     render() {
+        if (this.state.error) {
+            return <FontAwesomeIcon icon="circle-exclamation" />;
+        }
+
         if (_.isString(this.props.upload)) {
             return <>{this.props.upload}</>;
         }

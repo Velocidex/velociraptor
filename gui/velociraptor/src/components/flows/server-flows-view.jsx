@@ -6,6 +6,9 @@ import FlowsList from './flows-list.jsx';
 import FlowInspector from "./flows-inspector.jsx";
 import { withRouter }  from "react-router-dom";
 
+import {CancelToken} from 'axios';
+import api from '../core/api-service.jsx';
+
 
 class ServerFlowsView extends React.Component {
     static propTypes = {
@@ -17,9 +20,31 @@ class ServerFlowsView extends React.Component {
     };
 
     state = {
-        flows: [],
         currentFlow: {},
         topPaneSize: undefined,
+    }
+
+    componentDidMount = () => {
+        this.source = CancelToken.source();
+
+        let flow_id = this.props.match && this.props.match.params &&
+            this.props.match.params.flow_id;
+
+        if(flow_id) {
+            let client_id = this.props.match && this.props.match.params &&
+                this.props.match.params.client_id;
+
+            api.get("v1/GetFlowDetails", {
+                flow_id: flow_id,
+                client_id: client_id || "server",
+            }, this.source.token).then((response) => {
+                this.setState({currentFlow: response.data.context});
+            });
+        }
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
     }
 
     setSelectedFlow = (flow) => {
@@ -49,8 +74,6 @@ class ServerFlowsView extends React.Component {
                          defaultSize="30%">
                 <FlowsList
                   selected_flow={this.state.currentFlow}
-                  flows={this.state.flows}
-                  fetchFlows={this.fetchFlows}
                   collapseToggle={this.collapse}
                   setSelectedFlow={this.setSelectedFlow}
                   client={{client_id: "server"}}/>

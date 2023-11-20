@@ -9,3 +9,11 @@ Queries:
 
   # Test cyrpto_rc4
   - SELECT crypto_rc4(string=crypto_rc4(string='this is my plain text', key='yolo'), key='yolo') FROM scope()
+
+  # Test writing encrypted local storage
+  - LET tmp <= tempfile()
+  - SELECT * FROM write_crypto_file(filename=tmp, query={
+      SELECT _value AS X FROM range(end=3) })
+
+  # Now read the data again
+  - SELECT * FROM read_crypto_file(filename=tmp)

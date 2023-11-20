@@ -8,7 +8,7 @@ require (
 	github.com/Showmax/go-fqdn v1.0.0
 	github.com/Velocidex/ahocorasick v0.0.0-20180712114356-e1c353eeaaee
 	github.com/Velocidex/amsi v0.0.0-20200608120838-e5d93b76f119
-	github.com/Velocidex/etw v0.0.0-20210723072214-4d0cffd1ff22
+	github.com/Velocidex/etw v0.0.0-20231115144702-0b885b292f0f
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-magic v0.0.0-20211018155418-c5dc48282f28
 	github.com/Velocidex/go-yara v1.1.10-0.20221202090138-c7dde4c43aa4
@@ -63,7 +63,7 @@ require (
 	github.com/mitchellh/panicwrap v1.0.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/oschwald/maxminddb-golang v1.8.0
-	github.com/pkg/sftp v1.13.1
+	github.com/pkg/sftp v1.13.6
 	github.com/prometheus/client_golang v1.15.1
 	github.com/prometheus/client_model v0.4.0
 	github.com/qri-io/starlib v0.5.0
@@ -74,7 +74,7 @@ require (
 	github.com/sebdah/goldie/v2 v2.5.3
 	github.com/sergi/go-diff v1.2.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.4
 	github.com/tink-ab/tempfile v0.0.0-20180226111222-33beb0518f1a
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7 // indirect
 	github.com/xor-gate/debpkg v1.0.0
@@ -82,8 +82,8 @@ require (
 	golang.org/x/crypto v0.14.0
 	golang.org/x/mod v0.10.0
 	golang.org/x/net v0.17.0
-	golang.org/x/sys v0.13.0
-	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/sys v0.14.0
+	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.3.0
 	google.golang.org/api v0.146.0
 	google.golang.org/genproto v0.0.0-20231009173412-8bfb1ae86b6c // indirect
@@ -139,7 +139,7 @@ require (
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
 	gopkg.in/yaml.v3 v3.0.1
 	software.sslmate.com/src/go-pkcs12 v0.2.0
-	www.velocidex.com/golang/vtypes v0.0.0-20230821104433-297db7c471d8
+	www.velocidex.com/golang/vtypes v0.0.0-20231115033415-7856327477d2
 )
 
 require (
@@ -235,7 +235,8 @@ require (
 // replace github.com/Velocidex/ttlcache/v2 => /home/mic/projects/ttlcache
 // replace github.com/Velocidex/zip => /home/mic/projects/zip
 // replace github.com/Velocidex/sflags => /home/mic/projects/sflags
-// replace github.com/Velocidex/etw => /home/mic/projects/etw
+// replace github.com/Velocidex/etw => ../etw
+
 // replace github.com/Velocidex/grpc-go-pool => /home/mic/projects/grpc-go-pool
 // replace www.velocidex.com/golang/oleparse => /home/matt/git/oleparse
 // replace github.com/go-errors/errors => /home/mic/projects/errors

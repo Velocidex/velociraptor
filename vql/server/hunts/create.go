@@ -78,7 +78,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 
 	var expires uint64
 	if !utils.IsNil(arg.Expires) {
-		expiry_time, err := functions.TimeFromAny(scope, arg.Expires.Reduce(ctx))
+		expiry_time, err := functions.TimeFromAny(ctx, scope, arg.Expires.Reduce(ctx))
 		if err != nil {
 			scope.Log("hunt: expiry time invalid: %v", err)
 			return vfilter.Null{}
@@ -220,6 +220,8 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 
 	var orgs_we_scheduled []string
 
+	var new_hunt *api_proto.Hunt
+
 	// Schedule the hunt on all the relevant orgs.
 	for _, org_id := range arg.OrgIds {
 		org_config_obj, err := org_manager.GetOrgConfig(org_id)
@@ -245,7 +247,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 			continue
 		}
 
-		hunt_id, err := hunt_dispatcher.CreateHunt(
+		new_hunt, err = hunt_dispatcher.CreateHunt(
 			ctx, org_config_obj, acl_manager, hunt_request)
 		if err != nil {
 			scope.Log("hunt: %v", err)
@@ -254,19 +256,25 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 
 		orgs_we_scheduled = append(orgs_we_scheduled, org_id)
 
-		hunt_request.HuntId = hunt_id
+		// The first hunt will create an Id then subsequent hunts will
+		// reuse same ID.
+		hunt_request.HuntId = new_hunt.HuntId
+	}
+
+	if new_hunt == nil {
+		return vfilter.Null{}
 	}
 
 	services.LogAudit(ctx,
 		config_obj, principal, "CreateHunt",
 		ordereddict.NewDict().
-			Set("hunt_id", hunt_request.HuntId).
+			Set("hunt_id", new_hunt.HuntId).
 			Set("details", vfilter.RowToDict(ctx, scope, arg)).
 			Set("orgs", orgs_we_scheduled))
 
 	return ordereddict.NewDict().
-		Set("HuntId", hunt_request.HuntId).
-		Set("Request", hunt_request)
+		Set("HuntId", new_hunt.HuntId).
+		Set("Request", new_hunt)
 }
 
 func (self ScheduleHuntFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

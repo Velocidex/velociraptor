@@ -17,5 +17,7 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/accessors/s3"
 	_ "www.velocidex.com/golang/velociraptor/accessors/smb"
 	_ "www.velocidex.com/golang/velociraptor/accessors/sparse"
+	_ "www.velocidex.com/golang/velociraptor/accessors/ssh"
+	_ "www.velocidex.com/golang/velociraptor/accessors/vfs"
 	_ "www.velocidex.com/golang/velociraptor/accessors/zip"
 )

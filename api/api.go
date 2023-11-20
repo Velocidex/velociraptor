@@ -783,7 +783,7 @@ func (self *ApiServer) SetArtifactFile(
 	switch strings.ToUpper(artifact_definition.Type) {
 	case "CLIENT", "CLIENT_EVENT":
 		permissions = acls.ARTIFACT_WRITER
-	case "SERVER", "SERVER_EVENT":
+	case "SERVER", "SERVER_EVENT", "NOTEBOOK":
 		permissions = acls.SERVER_ARTIFACT_WRITER
 	}
 

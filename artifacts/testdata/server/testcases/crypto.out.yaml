@@ -20,4 +20,24 @@ LET X <= SELECT mock(plugin="glob", results=[dict(OSPath='''\HKEY_LOCAL_MACHINE\
  {
   "crypto_rc4(string=crypto_rc4(string='this is my plain text', key='yolo'), key='yolo')": "this is my plain text"
  }
+]LET tmp <= tempfile()[]SELECT * FROM write_crypto_file(filename=tmp, query={ SELECT _value AS X FROM range(end=3) })[
+ {
+  "X": 0
+ },
+ {
+  "X": 1
+ },
+ {
+  "X": 2
+ }
+]SELECT * FROM read_crypto_file(filename=tmp)[
+ {
+  "X": 0
+ },
+ {
+  "X": 1
+ },
+ {
+  "X": 2
+ }
 ]

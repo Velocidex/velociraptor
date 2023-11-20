@@ -243,6 +243,12 @@ func (self *HuntManager) processMutation(
 				modification = services.HuntPropagateChanges
 			}
 
+			if mutation.Expires > 0 {
+				hunt_obj.Expires = mutation.Expires
+
+				modification = services.HuntPropagateChanges
+			}
+
 			// Hunt is restarted, notify all connected clients
 			if mutation.StartTime > 0 {
 				hunt_obj.StartTime = mutation.StartTime
@@ -289,7 +295,7 @@ func (self *HuntManager) maybeDirectlyAssignFlow(
 				Set("HuntId", mutation.HuntId).
 				Set("ClientId", assignment.ClientId).
 				Set("FlowId", assignment.FlowId).
-				Set("Timestamp", time.Now().Unix()),
+				Set("Timestamp", utils.GetTime().Now().Unix()),
 		})
 	if err != nil {
 		return err
@@ -558,7 +564,7 @@ func (self *HuntManager) ProcessParticipationWithError(
 	}
 
 	// Hunt limit exceeded or it expired - we stop it.
-	now := uint64(time.Now().UnixNano() / 1000)
+	now := uint64(utils.GetTime().Now().UnixNano() / 1000)
 	if (hunt_obj.ClientLimit > 0 &&
 		hunt_obj.Stats.TotalClientsScheduled >= hunt_obj.ClientLimit) ||
 		now > hunt_obj.Expires {
@@ -764,7 +770,7 @@ func scheduleHuntOnClient(
 		Set("HuntId", hunt_id).
 		Set("ClientId", client_id).
 		Set("FlowId", flow_id).
-		Set("Timestamp", time.Now().Unix())
+		Set("Timestamp", utils.GetTime().Now().Unix())
 
 	path_manager := paths.NewHuntPathManager(hunt_id)
 	err = journal.AppendToResultSet(config_obj,

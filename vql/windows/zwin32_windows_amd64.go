@@ -40,6 +40,7 @@ var (
 	modpsapi    = NewLazySystemDLL("psapi.dll")
 	modAdvapi32 = NewLazySystemDLL("Advapi32.dll")
 	modnetapi32 = NewLazySystemDLL("netapi32.dll")
+	modadvapi32 = NewLazySystemDLL("advapi32.dll")
 	modwintrust = NewLazySystemDLL("wintrust.dll")
 
 	procNtOpenThreadToken                    = modntdll.NewProc("NtOpenThreadToken")
@@ -67,6 +68,7 @@ var (
 	procNetApiBufferFree                     = modnetapi32.NewProc("NetApiBufferFree")
 	procNetUserEnum                          = modnetapi32.NewProc("NetUserEnum")
 	procNetUserGetGroups                     = modnetapi32.NewProc("NetUserGetGroups")
+	procQueryAllTracesA                      = modadvapi32.NewProc("QueryAllTracesA")
 	procCryptCATAdminAcquireContext2         = modwintrust.NewProc("CryptCATAdminAcquireContext2")
 	procCryptCATAdminReleaseContext          = modwintrust.NewProc("CryptCATAdminReleaseContext")
 	procCryptCATAdminCalcHashFromFileHandle2 = modwintrust.NewProc("CryptCATAdminCalcHashFromFileHandle2")
@@ -339,6 +341,12 @@ func NetUserEnum(servername *uint16, level uint32, filter uint32, bufptr *uintpt
 func NetUserGetGroups(servername *LPCWSTR, username *LPCWSTR, level DWORD, bufptr *LPBYTE, prefmaxlen DWORD, entriesread *LPDWORD, totalentries *LPDWORD) (status NET_API_STATUS) {
 	r0, _, _ := syscall.Syscall9(procNetUserGetGroups.Addr(), 7, uintptr(unsafe.Pointer(servername)), uintptr(unsafe.Pointer(username)), uintptr(level), uintptr(unsafe.Pointer(bufptr)), uintptr(prefmaxlen), uintptr(unsafe.Pointer(entriesread)), uintptr(unsafe.Pointer(totalentries)), 0, 0)
 	status = NET_API_STATUS(r0)
+	return
+}
+
+func QueryAllTracesW(PropertyArray uintptr, PropertyArrayCount uint32, LoggerCount *uint32) (status uint32) {
+	r0, _, _ := syscall.Syscall(procQueryAllTracesA.Addr(), 3, uintptr(PropertyArray), uintptr(PropertyArrayCount), uintptr(unsafe.Pointer(LoggerCount)))
+	status = uint32(r0)
 	return
 }
 

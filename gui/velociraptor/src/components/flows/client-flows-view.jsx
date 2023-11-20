@@ -1,10 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import SplitPane from 'react-split-pane';
 
+import SplitPane from 'react-split-pane';
 import FlowsList from './flows-list.jsx';
 import FlowInspector from "./flows-inspector.jsx";
 import { withRouter }  from "react-router-dom";
+
+import {CancelToken} from 'axios';
+import api from '../core/api-service.jsx';
 
 
 class ClientFlowsView extends React.Component {
@@ -18,10 +21,30 @@ class ClientFlowsView extends React.Component {
 
     state = {
         currentFlow: {},
+        topPaneSize: undefined,
+    }
 
-        // Only show the spinner when the component is first mounted.
-        loading: true,
-        topPaneSize: "30%",
+    componentDidMount = () => {
+        this.source = CancelToken.source();
+
+        let flow_id = this.props.match && this.props.match.params &&
+            this.props.match.params.flow_id;
+
+        if(flow_id) {
+            let client_id = this.props.match && this.props.match.params &&
+                this.props.match.params.client_id;
+
+            api.get("v1/GetFlowDetails", {
+                flow_id: flow_id,
+                client_id: client_id || "server",
+            }, this.source.token).then((response) => {
+                this.setState({currentFlow: response.data.context});
+            });
+        }
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
     }
 
     setSelectedFlow = (flow) => {
@@ -56,7 +79,7 @@ class ClientFlowsView extends React.Component {
                   client={this.props.client}/>
                 <FlowInspector
                   flow={this.state.currentFlow}
-                  client={this.props.client}/>
+                  client={{client_id: this.props.client}}/>
               </SplitPane>
             </>
         );

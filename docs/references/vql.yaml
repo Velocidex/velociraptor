@@ -156,6 +156,20 @@
   category: server
   metadata:
     permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
+- name: artifact_set_metadata
+  description: Sets metadata about the artifact.
+  type: Function
+  args:
+  - name: name
+    type: string
+    description: The Artifact to update
+    required: true
+  - name: hidden
+    type: bool
+    description: Set to true make the artifact hidden in the GUI, false to make it
+      visible again.
+  metadata:
+    permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
 - name: atexit
   description: |
     Install a query to run when the query is unwound. This is used to
@@ -377,6 +391,8 @@
     artifact.
   type: Plugin
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
 - name: chain
   description: |
     Chain the output of several queries into the same table.
@@ -1356,6 +1372,15 @@
       per row
     repeated: true
   category: plugin
+- name: etw_sessions
+  description: Enumerates all active ETW sessions
+  type: Plugin
+  args:
+  - name: count
+    type: uint64
+    description: 'The count of sessions to retrieve (default 64) '
+  metadata:
+    permissions: MACHINE_STATE
 - name: execve
   description: |
     This plugin launches an external command and captures its STDERR,
@@ -1591,6 +1616,9 @@
   description: |
     Filters an array by regex or condition.
 
+    Note that if a condition is specified as well as a regex then only
+    the condition is applied.
+
     ### Examples
     ```vql
     filter(list=["AA", "AB", "BA", "BB"], regex="^A") -> ["AA", "AB"]
@@ -1607,9 +1635,8 @@
   - name: regex
     type: string
     description: A regex to test each item
-    repeated: true
   - name: condition
-    type: string
+    type: vfilter.Lambda
     description: A VQL lambda to use to filter elements
   category: basic
 - name: flatten
@@ -2147,6 +2174,8 @@
     description: If specified only get handles of this type.
     repeated: true
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
 - name: hash
   description: |
     Calculate the hash of a file.
@@ -2295,6 +2324,9 @@
   - name: cookie_jar
     type: ordereddict.Dict
     description: A cookie jar to use if provided. This is a dict of cookie structures.
+  - name: user_agent
+    type: string
+    description: If specified, set a HTTP User-Agent.
   category: plugin
   metadata:
     permissions: COLLECT_SERVER
@@ -2498,7 +2530,11 @@
     required: true
   - name: brief
     type: bool
-    description: If set we return less columns.
+    description: If set we return less columns (deprecated).
+  - name: orgs
+    type: string
+    description: If set we combine results from all orgs.
+    repeated: true
   category: server
   metadata:
     permissions: READ_RESULTS
@@ -2519,6 +2555,9 @@
   - name: description
     type: string
     description: Update hunt description
+  - name: expires
+    type: time.Time
+    description: Update hunt expiry
   metadata:
     permissions: START_HUNT
 - name: hunts
@@ -2607,7 +2646,6 @@
   - name: client_id
     type: string
     description: The client id to import to. Use 'auto' to generate a new client id.
-    required: true
   - name: hostname
     type: string
     description: When creating a new client, set this as the hostname.
@@ -2615,6 +2653,12 @@
     type: string
     description: Path on server to the collector zip.
     required: true
+  - name: accessor
+    type: string
+    description: The accessor to use.
+  - name: import_type
+    type: string
+    description: Whether the import is an offline_collector or hunt.
   category: server
   metadata:
     permissions: COLLECT_SERVER,FILESYSTEM_READ
@@ -2933,11 +2977,6 @@
     description: The accessor to use.
   metadata:
     permissions: FILESYSTEM_READ
-- name: sysinfo
-  description: Collect system information on Linux clients
-  type: Function
-  metadata:
-    permissions: MACHINE_STATE
 - name: log
   description: |
     Log the message and return TRUE.
@@ -2997,6 +3036,14 @@
     type: string
     description: Level to log at (DEFAULT, WARN, ERROR, INFO, DEBUG).
   category: basic
+- name: logging
+  description: Watch the logs emitted by the server.
+  type: Plugin
+  args:
+  - name: component
+    type: string
+  metadata:
+    permissions: READ_RESULTS
 - name: logscale_upload
   description: Upload rows to LogScale ingestion server.
   type: Plugin
@@ -3050,6 +3097,11 @@
 - name: lookupSID
   description: Get information about the SID.
   type: Function
+  args:
+  - name: sid
+    type: string
+    description: 'A SID to lookup using LookupAccountSid '
+    required: true
   category: windows
 - name: lowcase
   description: Returns the lowercase version of a string.
@@ -3413,6 +3465,8 @@
     description: The PID to dump out.
     required: true
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
 - name: monitoring
   description: Extract monitoring log from a client. If client_id is not specified
     we watch the global journal which contains event logs from all clients.
@@ -3512,6 +3566,8 @@
   description: Collect network information.
   type: Plugin
   category: plugin
+  metadata:
+    permissions: MACHINE_STATE
 - name: notebook_delete
   description: 'Delete a notebook with all its cells. '
   type: Plugin
@@ -3855,6 +3911,10 @@
   - name: messagedb
     type: string
     description: A Message database from https://github.com/Velocidex/evtx-data.
+  - name: workers
+    type: int64
+    description: If specified we use this many workers to parse the file in parallel
+      (default 1).
   category: parsers
   metadata:
     permissions: FILESYSTEM_READ
@@ -4559,6 +4619,8 @@
     description: The PID to dump out.
     required: true
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
 - name: proc_yara
   description: |
     Scan processes using yara rules.
@@ -4704,6 +4766,10 @@
   - name: duration
     type: int64
     description: Duration of samples (default 30 sec)
+  - name: type
+    type: string
+    description: The type of profile (this is a regex of debug output types that will
+      be shown).
   category: plugin
   metadata:
     permissions: MACHINE_STATE
@@ -4829,6 +4895,19 @@
     description: The Y float
     required: true
   category: server
+- name: read_crypto_file
+  description: Read a previously stored encrypted local storage file.
+  type: Plugin
+  args:
+  - name: filename
+    type: accessors.OSPath
+    description: Path to the file to write
+    required: true
+  - name: accessor
+    type: string
+    description: The accessor to use
+  metadata:
+    permissions: FILESYSTEM_READ
 - name: read_file
   description: Read a file into a string.
   type: Function
@@ -5287,6 +5366,40 @@
   category: server
   metadata:
     permissions: COLLECT_SERVER
+- name: sigma
+  description: Evaluate sigma rules.
+  type: Plugin
+  args:
+  - name: rules
+    type: string
+    description: A list of sigma rules to compile.
+    repeated: true
+    required: true
+  - name: log_sources
+    type: Any
+    description: A log source object as obtained from the sigma_log_sources() VQL
+      function.
+    required: true
+  - name: field_mapping
+    type: ordereddict.Dict
+    description: A dict containing a mapping between a rule field name and a VQL Lambda
+      to get the value of the field from the event.
+  - name: debug
+    type: bool
+    description: If enabled we emit all match objects with description of what would
+      match.
+  - name: rule_filter
+    type: vfilter.Lambda
+    description: If specified we use this callback to filter the rules for inclusion.
+  - name: default_details
+    type: vfilter.Lambda
+    description: If specified we use this callback to determine a details column if
+      the sigma rule does not specify it.
+- name: sigma_log_sources
+  description: Constructs a Log sources object to be used in sigma rules. Call with
+    args being category/product/service and values being stored queries. You may use
+    a * as a placeholder for any of these fields.
+  type: Function
 - name: sleep
   description: Sleep for the specified number of seconds. Always returns true.
   type: Function
@@ -5652,6 +5765,11 @@
     are emitted. Any further queries are ignored.
   type: Plugin
   category: plugin
+- name: sysinfo
+  description: Collect system information on Linux clients
+  type: Function
+  metadata:
+    permissions: MACHINE_STATE
 - name: tempdir
   description: Create a temporary directory. The directory will be removed when the
     query ends.
@@ -5872,6 +5990,8 @@
     description: The PID to get the token for.
     required: true
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
 - name: trace
   description: Upload a trace file.
   type: Function
@@ -6225,6 +6345,9 @@
   - name: skip_verify
     type: bool
     description: Skip TLS Verification
+  - name: user_agent
+    type: string
+    description: If specified, set a HTTP User-Agent.
   category: basic
   metadata:
     permissions: FILESYSTEM_READ
@@ -6528,6 +6651,13 @@
   - name: level
     type: int64
     description: Log level (0-5)
+  - name: stop
+    type: vfilter.Lambda
+    description: If provided we stop watching automatically when this lambda returns
+      true
+  - name: timeout
+    type: uint64
+    description: If provided we stop after this much time
   category: event
 - name: watch_evtx
   description: |
@@ -6557,6 +6687,10 @@
   - name: messagedb
     type: string
     description: A Message database from https://github.com/Velocidex/evtx-data.
+  - name: workers
+    type: int64
+    description: If specified we use this many workers to parse the file in parallel
+      (default 1).
   category: event
   metadata:
     permissions: FILESYSTEM_READ
@@ -6611,6 +6745,8 @@
     type: string
     description: Object namespace path.
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
 - name: wmi
   description: |
     Execute simple WMI queries synchronously.
@@ -6630,6 +6766,8 @@
     type: string
     description: The WMI namespace to use (ROOT/CIMV2)
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
 - name: wmi_events
   description: |
     Executes an evented WMI queries asynchronously.
@@ -6650,6 +6788,31 @@
     description: Wait this many seconds for events and then quit.
     required: true
   category: event
+  metadata:
+    permissions: MACHINE_STATE
+- name: write_crypto_file
+  description: Write a query into an encrypted local storage file.
+  type: Plugin
+  args:
+  - name: filename
+    type: accessors.OSPath
+    description: Path to the file to write
+    required: true
+  - name: query
+    type: StoredQuery
+    description: query to write into the file.
+    required: true
+  - name: max_wait
+    type: uint64
+    description: How often to flush the file (default 60 sec).
+  - name: max_rows
+    type: uint64
+    description: How many rows to buffer before writing (default 1000).
+  - name: max_size
+    type: uint64
+    description: When the file grows to this size, truncate it (default 1Gb).
+  metadata:
+    permissions: FILESYSTEM_WRITE
 - name: write_csv
   description: Write a query into a CSV file.
   type: Plugin
@@ -6823,3 +6986,4 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+

@@ -159,12 +159,12 @@ export class SaveCollectionDialog extends React.PureComponent {
               <Modal.Body>
                 {T("ArtifactFavorites", artifacts)}
                 <VeloForm
-                  param={{name: "Name", description: T("New Favorite name")}}
+                  param={{name: T("Name"), description: T("New Favorite name")}}
                   value={this.state.name}
                   setValue={x=>this.setState({name:x})}
                 />
                 <VeloForm
-                  param={{name: "Description",
+                  param={{name: T("Description"),
                           description: T("Describe this favorite")}}
                   value={this.state.description}
                   setValue={x=>this.setState({description:x})}
@@ -328,6 +328,8 @@ class FlowsList extends React.Component {
         this.props.collapseToggle(SLIDE_STATES[next_slide].level);
     };
 
+
+
     render() {
         let tab = this.props.match && this.props.match.params &&
             this.props.match.params.tab;
@@ -335,6 +337,8 @@ class FlowsList extends React.Component {
         let selected_flow = this.props.selected_flow && this.props.selected_flow.session_id;
         let username = this.context &&
             this.context.traits && this.context.traits.username;
+        let router_flow_id = this.props.match && this.props.match.params &&
+            this.props.match.params.flow_id;
 
         const selectRow = {
             mode: "radio",
@@ -614,7 +618,7 @@ class FlowsList extends React.Component {
                     renderers={flowRowRenderer}
                     version={this.state.version}
                     no_spinner={true}
-                    row_classes={rowClassRenderer}
+                    row_classes={rowClassRenderer(router_flow_id)}
                     transform={this.state.transform}
                     setTransform={x=>{
                         this.setState({transform: x});
@@ -656,10 +660,15 @@ export const flowRowRenderer = {
     },
 };
 
-
-const rowClassRenderer = (row, rowIndex) => {
-    if (row._Urgent === "true") {
-        return 'flow-urgent';
-    }
-    return '';
-};
+const rowClassRenderer = (selected_flow_id) => {
+    return (row, rowIndex) => {
+        let session_id = row._Flow && row._Flow.session_id;
+        if (session_id === selected_flow_id) {
+            return "row-selected";
+        }
+        if (row._Urgent === "true") {
+            return 'flow-urgent';
+        }
+        return '';
+    };
+}

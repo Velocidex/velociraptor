@@ -2,11 +2,13 @@ package hunts
 
 import (
 	"context"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -14,10 +16,11 @@ import (
 )
 
 type UpdateHuntFunctionArg struct {
-	HuntId      string `vfilter:"required,field=hunt_id,doc=The hunt to update"`
-	Stop        bool   `vfilter:"optional,field=stop,doc=Stop the hunt"`
-	Start       bool   `vfilter:"optional,field=start,doc=Start the hunt"`
-	Description string `vfilter:"optional,field=description,doc=Update hunt description"`
+	HuntId      string    `vfilter:"required,field=hunt_id,doc=The hunt to update"`
+	Stop        bool      `vfilter:"optional,field=stop,doc=Stop the hunt"`
+	Start       bool      `vfilter:"optional,field=start,doc=Start the hunt"`
+	Description string    `vfilter:"optional,field=description,doc=Update hunt description"`
+	Expires     time.Time `vfilter:"optional,field=expires,doc=Update hunt expiry"`
 }
 
 type UpdateHuntFunction struct{}
@@ -68,11 +71,21 @@ func (self *UpdateHuntFunction) Call(ctx context.Context,
 		}
 	}
 
-	if arg.Description != "" {
+	if arg.Description != "" || !arg.Expires.IsZero() {
+		expires := uint64(0)
+		if !arg.Expires.IsZero() {
+			if utils.GetTime().Now().After(arg.Expires) {
+				scope.Log("hunt_update: expiry time spectified is in the past.")
+				return vfilter.Null{}
+			}
+			expires = uint64(arg.Expires.UnixNano()) / 1000
+		}
+
 		err = hunt_dispatcher.MutateHunt(
 			ctx, config_obj, &api_proto.HuntMutation{
 				HuntId:      arg.HuntId,
 				Description: arg.Description,
+				Expires:     expires,
 			})
 		if err != nil {
 			scope.Log("hunt_update: %v", err)

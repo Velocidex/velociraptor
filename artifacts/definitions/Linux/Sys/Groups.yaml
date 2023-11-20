@@ -1,0 +1,18 @@
+name: Linux.Sys.Groups
+author: Andreas Misje – @misje
+description: Get system group IDs, names and memberships from /etc/group
+parameters:
+  - name: GroupFile
+    default: /etc/group
+    description: The location of the group file
+
+sources:
+  - precondition: |
+      SELECT OS From info() where OS = 'linux'
+    query: |
+      SELECT Group, int(int=GID) AS GID, filter(regex='.+',
+        list=split(sep_string=',', string=Members)) AS Members
+      FROM split_records(
+            filenames=GroupFile,
+            regex=':', record_regex='\r?\n',
+            columns=['Group', 'Password', 'GID', 'Members'])

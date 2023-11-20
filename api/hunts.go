@@ -177,7 +177,7 @@ func (self *ApiServer) CreateHunt(
 			continue
 		}
 
-		hunt_id, err := hunt_dispatcher.CreateHunt(
+		new_hunt, err := hunt_dispatcher.CreateHunt(
 			ctx, org_config_obj, acl_manager, in)
 		if err != nil {
 			errors_msg = append(errors_msg, fmt.Sprintf(
@@ -189,7 +189,7 @@ func (self *ApiServer) CreateHunt(
 		// Reuse the hunt id for all the hunts we launch on all the
 		// orgs - this makes it easier to combine results from all
 		// orgs.
-		in.HuntId = hunt_id
+		in.HuntId = new_hunt.HuntId
 	}
 
 	if len(errors_msg) != 0 {

@@ -160,4 +160,17 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
  {
   "artifact_set(definition=patch(item=_value, merge=dict(name=\"Custom.Generic.Client.Info\"))).name": "Custom.Generic.Client.Info"
  }
+]SELECT artifact_set_metadata(name="Custom.Generic.Client.Info", hidden=TRUE) FROM scope()[
+ {
+  "artifact_set_metadata(name=\"Custom.Generic.Client.Info\", hidden=TRUE)": {
+   "hidden": true
+  }
+ }
+]SELECT name, metadata FROM artifact_definitions(names="Custom.Generic.Client.Info")[
+ {
+  "name": "Custom.Generic.Client.Info",
+  "metadata": {
+   "hidden": true
+  }
+ }
 ]

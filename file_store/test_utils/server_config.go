@@ -33,7 +33,7 @@ Client:
     -----END CERTIFICATE-----
   nonce: rKNKAYam310=
   writeback_darwin: /etc/velociraptor.writeback.yaml
-  writeback_linux: /tmp/1/velociraptor.writeback.yaml
+  writeback_linux: /tmp/velociraptor.writeback.yaml
   writeback_windows: $ProgramFiles\Velociraptor\velociraptor.writeback.yaml
   max_poll: 600
   windows_installer:

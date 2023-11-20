@@ -1,64 +1,61 @@
 {
+ "client_info.json": {
+  "client_id": "server"
+ },
  "collection_context.json": {
-  "context": {
+  "client_id": "server",
+  "session_id": "F.1234",
+  "request": {
    "client_id": "server",
-   "session_id": "F.1234",
-   "request": {
-    "client_id": "server",
-    "artifacts": [
-     "TestArtifact"
-    ]
-   },
-   "create_time": 10000000,
-   "start_time": 10000000,
-   "active_time": 10000000,
-   "total_uploaded_files": 2,
-   "total_expected_uploaded_bytes": 24,
-   "total_uploaded_bytes": 24,
-   "total_collected_rows": 1,
-   "total_logs": 5,
-   "total_requests": 1,
-   "state": 2,
-   "artifacts_with_results": [
+   "artifacts": [
     "TestArtifact"
-   ],
-   "query_stats": [
-    {
-     "last_active": 10000000,
-     "first_active": 10000000,
-     "names_with_response": [
-      "TestArtifact"
-     ],
-     "Artifact": "TestArtifact",
-     "log_rows": 5,
-     "uploaded_files": 2,
-     "uploaded_bytes": 24,
-     "expected_uploaded_bytes": 24,
-     "result_rows": 1
-    }
    ]
   },
-  "available_downloads": {
-   "files": [
-    {
-     "name": "server-F.1234",
-     "path": "downloads/server/F.1234/Test.zip",
-     "type": "zip",
-     "stats": {
-      "timestamp": 1602103388,
-      "components": [
-       "downloads",
-       "server",
-       "F.1234",
-       "Test.zip"
-      ],
-      "type": "zip"
-     }
-    }
-   ]
-  }
+  "create_time": 10000000,
+  "start_time": 10000000,
+  "active_time": 10000000,
+  "total_uploaded_files": 2,
+  "total_expected_uploaded_bytes": 24,
+  "total_uploaded_bytes": 24,
+  "total_collected_rows": 1,
+  "total_logs": 5,
+  "total_requests": 1,
+  "state": 2,
+  "artifacts_with_results": [
+   "TestArtifact"
+  ],
+  "query_stats": [
+   {
+    "last_active": 10000000,
+    "first_active": 10000000,
+    "names_with_response": [
+     "TestArtifact"
+    ],
+    "Artifact": "TestArtifact",
+    "log_rows": 5,
+    "uploaded_files": 2,
+    "uploaded_bytes": 24,
+    "expected_uploaded_bytes": 24,
+    "result_rows": 1
+   }
+  ],
+  "user_notified": true
  },
- "logs.json": [
+ "log.csv": [
+  "Timestamp,Level,message",
+  "10000000,DEFAULT,\"Running query on behalf of user VelociraptorServer",
+  "\"",
+  "10000000,DEFAULT,\"\u003cgreen\u003eStarting\u003c/\u003e query execution.",
+  "\"",
+  "10000000,DEFAULT,\"Uploaded /test.txt (9 bytes)",
+  "\"",
+  "10000000,DEFAULT,\"Uploaded /test2.txt (15 bytes)",
+  "\"",
+  "10000000,DEBUG,\"Query Stats: {\"\"RowsScanned\"\":2,\"\"PluginsCalled\"\":1,\"\"FunctionsCalled\"\":3,\"\"ProtocolSearch\"\":0,\"\"ScopeCopy\"\":6}",
+  "\"",
+  ""
+ ],
+ "log.json": [
   {
    "Timestamp": 10000000,
    "Level": "DEFAULT",
@@ -82,7 +79,7 @@
   {
    "Timestamp": 10000000,
    "Level": "DEBUG",
-   "message": "Query Stats: {\"RowsScanned\":2,\"PluginsCalled\":1,\"FunctionsCalled\":2,\"ProtocolSearch\":0,\"ScopeCopy\":6}\n"
+   "message": "Query Stats: {\"RowsScanned\":2,\"PluginsCalled\":1,\"FunctionsCalled\":3,\"ProtocolSearch\":0,\"ScopeCopy\":6}\n"
   }
  ],
  "requests.json": {
@@ -97,7 +94,7 @@
        "total_queries": 1,
        "Query": [
         {
-         "VQL": "LET TestArtifact_0_0 = SELECT \"Hello\" AS Col, upload(accessor=\"data\", file=\"Some Data\", name=\"test.txt\") AS Upload1, upload(accessor=\"data\", file=\"Some Other Data\", name=\"test2.txt\") AS Upload2 FROM scope()"
+         "VQL": "LET TestArtifact_0_0 = SELECT \"Hello\" AS Col, pathspec(parse=\"/bin/ls\", path_type=\"linux\") AS OSPath, upload(accessor=\"data\", file=\"Some Data\", name=\"test.txt\") AS Upload1, upload(accessor=\"data\", file=\"Some Other Data\", name=\"test2.txt\") AS Upload2 FROM scope()"
         },
         {
          "Name": "TestArtifact",
@@ -112,9 +109,15 @@
    }
   ]
  },
+ "results/TestArtifact.csv": [
+  "Col,OSPath,Upload1,Upload2",
+  "Hello,/bin/ls,\"{\"\"Path\"\":\"\"/test.txt\"\",\"\"Size\"\":9,\"\"StoredSize\"\":9,\"\"sha256\"\":\"\"2d27ec8437ec76ec2db484c98ed89f7793f0575e271518dd1d62a18fde6e202d\"\",\"\"md5\"\":\"\"30057e5031bcf44d47b005a1f1700f7b\"\",\"\"Components\"\":[\"\"clients\"\",\"\"server\"\",\"\"collections\"\",\"\"F.1234\"\",\"\"uploads\"\",\"\"data\"\",\"\"test.txt\"\"]}\",\"{\"\"Path\"\":\"\"/test2.txt\"\",\"\"Size\"\":15,\"\"StoredSize\"\":15,\"\"sha256\"\":\"\"c42af293c4c339ce802ae6827124cc416bfffb574da3d9f35068b6068a75528b\"\",\"\"md5\"\":\"\"d89eef4147c900bc8af8a49e73a09de4\"\",\"\"Components\"\":[\"\"clients\"\",\"\"server\"\",\"\"collections\"\",\"\"F.1234\"\",\"\"uploads\"\",\"\"data\"\",\"\"test2.txt\"\"]}\"",
+  ""
+ ],
  "results/TestArtifact.json": [
   {
    "Col": "Hello",
+   "OSPath": "/bin/ls",
    "Upload1": {
     "Path": "/test.txt",
     "Size": 9,
@@ -127,6 +130,7 @@
      "collections",
      "F.1234",
      "uploads",
+     "data",
      "test.txt"
     ]
    },
@@ -142,10 +146,25 @@
      "collections",
      "F.1234",
      "uploads",
+     "data",
      "test2.txt"
     ]
    }
   }
+ ],
+ "uploads.csv": [
+  "Timestamp,started,vfs_path,_Components,file_size,uploaded_size",
+  "10,1970-01-01 00:00:10.00000001 +0000 UTC,/test.txt,\"[",
+  " \"\"uploads\"\",",
+  " \"\"data\"\",",
+  " \"\"test.txt\"\"",
+  "]\",9,9",
+  "10,1970-01-01 00:00:10.00000001 +0000 UTC,/test2.txt,\"[",
+  " \"\"uploads\"\",",
+  " \"\"data\"\",",
+  " \"\"test2.txt\"\"",
+  "]\",15,15",
+  ""
  ],
  "uploads.json": [
   {
@@ -154,6 +173,7 @@
    "vfs_path": "/test.txt",
    "_Components": [
     "uploads",
+    "data",
     "test.txt"
    ],
    "file_size": 9,
@@ -165,6 +185,7 @@
    "vfs_path": "/test2.txt",
    "_Components": [
     "uploads",
+    "data",
     "test2.txt"
    ],
    "file_size": 15,
@@ -172,6 +193,6 @@
   }
  ],
  "uploads.json.index": "\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0000\u0000\u0000\u0000\u0001\u0000\u0000",
- "uploads/test.txt": "Some Data",
- "uploads/test2.txt": "Some Other Data"
+ "uploads/data/test.txt": "Some Data",
+ "uploads/data/test2.txt": "Some Other Data"
 }

@@ -352,6 +352,7 @@ func (self *InventoryService) materializeTool(
 	if err != nil {
 		return err
 	}
+	request.Header.Set("User-Agent", "")
 	res, err := self.Client.Do(request)
 	if err != nil {
 		return err

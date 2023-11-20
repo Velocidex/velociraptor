@@ -14,14 +14,14 @@ JSONL:
 CSV:
 ------
 "Col With "" 1",Object,Col2,ClientId,HuntId
-"""Value \"" with quotes: 0""","{""Foo"":1}",0,C.123,H.123
-"""Value \"" with quotes: 1""","{""Foo"":1}",2,C.123,H.123
-"""Value \"" with quotes: 2""","{""Foo"":1}",4,C.123,H.123
-"""Value \"" with quotes: 3""","{""Foo"":1}",6,C.123,H.123
-"""Value \"" with quotes: 4""","{""Foo"":1}",8,C.123,H.123
-"""Value \"" with quotes: 5""","{""Foo"":1}",10,C.123,H.123
-"""Value \"" with quotes: 6""","{""Foo"":1}",12,C.123,H.123
-"""Value \"" with quotes: 7""","{""Foo"":1}",14,C.123,H.123
-"""Value \"" with quotes: 8""","{""Foo"":1}",16,C.123,H.123
-"""Value \"" with quotes: 9""","{""Foo"":1}",18,C.123,H.123
+"Value "" with quotes: 0","{""Foo"":1}",0,C.123,H.123
+"Value "" with quotes: 1","{""Foo"":1}",2,C.123,H.123
+"Value "" with quotes: 2","{""Foo"":1}",4,C.123,H.123
+"Value "" with quotes: 3","{""Foo"":1}",6,C.123,H.123
+"Value "" with quotes: 4","{""Foo"":1}",8,C.123,H.123
+"Value "" with quotes: 5","{""Foo"":1}",10,C.123,H.123
+"Value "" with quotes: 6","{""Foo"":1}",12,C.123,H.123
+"Value "" with quotes: 7","{""Foo"":1}",14,C.123,H.123
+"Value "" with quotes: 8","{""Foo"":1}",16,C.123,H.123
+"Value "" with quotes: 9","{""Foo"":1}",18,C.123,H.123
 

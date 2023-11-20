@@ -400,8 +400,9 @@ func (self *CryptoManager) extractMessageInfo(
 
 	org_id, err := org_manager.OrgIdByNonce(packed_message_list.Nonce)
 	if err != nil {
-		return nil, nil, errors.New(
-			"Client Nonce is not valid - rejecting message.")
+		return nil, nil, fmt.Errorf(
+			"Client Nonce %v is not valid - rejecting message.",
+			packed_message_list.Nonce)
 	}
 
 	org_config_obj, err := org_manager.GetOrgConfig(org_id)

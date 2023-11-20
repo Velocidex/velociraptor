@@ -28,134 +28,7 @@ import { withRouter }  from "react-router-dom";
 
 import T from '../i8n/i8n.jsx';
 
-class NewNotebook extends React.Component {
-    static propTypes = {
-        notebook: PropTypes.object,
-        closeDialog: PropTypes.func.isRequired,
-        updateNotebooks: PropTypes.func.isRequired,
-    }
-
-    componentDidMount = () => {
-        this.source = CancelToken.source();
-        if(!_.isEmpty(this.props.notebook)) {
-            this.setState({
-                name: this.props.notebook.name,
-                notebook_id: this.props.notebook.notebook_id,
-                public: this.props.notebook.public,
-                description: this.props.notebook.description,
-                modified_time: this.props.notebook.modified_time,
-                cell_metadata: this.props.notebook.cell_metadata,
-                collaborators: this.props.notebook.collaborators || [],
-            });
-        }
-    }
-
-    componentWillUnmount() {
-        this.source.cancel("unmounted");
-    }
-
-    newNotebook = () => {
-        let api_url = "v1/NewNotebook";
-        if (!_.isEmpty(this.props.notebook)) {
-            api_url = "v1/UpdateNotebook";
-        }
-
-        api.post(api_url, {
-            name: this.state.name,
-            description: this.state.description,
-            public: this.state.public,
-            collaborators: this.state.collaborators,
-            modified_time: this.state.modified_time,
-            notebook_id: this.state.notebook_id,
-            cell_metadata: this.state.cell_metadata,
-        }, this.source.token).then(this.props.updateNotebooks);
-    }
-
-    state = {
-        name: "",
-        description: "",
-        collaborators: [],
-        users: [],
-        public: false,
-        notebook_id: undefined,
-        modified_time: undefined,
-    }
-
-    render() {
-        return (
-            <Modal show={true}
-                   size="lg"
-                   onHide={this.props.closeDialog} >
-              <Modal.Header closeButton>
-                <Modal.Title>
-                  {_.isEmpty(this.props.notebook) ?
-                   T("Create a new Notebook") :
-                   T("Edit notebook ") + this.props.notebook.notebook_id}
-                </Modal.Title>
-              </Modal.Header>
-
-              <Modal.Body>
-                <Form.Group as={Row}>
-                  <Form.Label column sm="3">Name</Form.Label>
-                  <Col sm="8">
-                    <Form.Control as="textarea"
-                                  rows={1}
-                                  value={this.state.name}
-                                  onChange={(e) => this.setState(
-                                      {name: e.currentTarget.value})} />
-                  </Col>
-                </Form.Group>
-
-                <Form.Group as={Row}>
-                  <Form.Label column sm="3">{T("Description")}</Form.Label>
-                  <Col sm="8">
-                    <Form.Control as="textarea"
-                                  rows={1}
-                                  value={this.state.description}
-                                  onChange={(e) => this.setState(
-                                      {description: e.currentTarget.value})} />
-                  </Col>
-                </Form.Group>
-
-                <Form.Group as={Row}>
-                  <Form.Label column sm="3">{T("Public")}</Form.Label>
-                  <Col sm="8">
-                    <Form.Check
-                      type="checkbox"
-                      label="Share with all users"
-                      checked={this.state.public}
-                      value={this.state.public}
-                      onChange={(e) => this.setState(
-                          {public: e.currentTarget.checked})}/>
-                  </Col>
-                </Form.Group>
-
-                { !this.state.public &&
-                <Form.Group as={Row}>
-                  <Form.Label column sm="3">{T("Collaborators")}</Form.Label>
-                  <Col sm="8">
-                    <UserForm
-                      value={this.state.collaborators}
-                      onChange={(value) => this.setState({collaborators: value})}/>
-                  </Col>
-                </Form.Group>}
-
-              </Modal.Body>
-              <Modal.Footer>
-                <Button variant="secondary"
-                        onClick={this.props.closeDialog}>
-                  {T("Cancel")}
-                </Button>
-                <Button variant="primary"
-                        onClick={this.newNotebook}>
-                  {T("Submit")}
-                </Button>
-              </Modal.Footer>
-            </Modal>
-        );
-    }
-}
-
+import { NewNotebook, EditNotebook } from './new-notebook.jsx';
 
 class DeleteNotebook extends React.Component {
     static propTypes = {
@@ -299,7 +172,7 @@ class NotebooksList extends React.Component {
                 />
               }
               { this.state.showEditNotebookDialog &&
-                <NewNotebook
+                <EditNotebook
                   notebook={this.props.selected_notebook}
                   updateNotebooks={()=>{
                       this.props.fetchNotebooks();

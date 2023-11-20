@@ -236,7 +236,14 @@ func createDownloadFile(
 		// Will also close the underlying fd.
 		defer zip_writer.Close()
 
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*600)
+		timeout := int64(600)
+		if config_obj.Defaults != nil &&
+			config_obj.Defaults.ExportMaxTimeoutSec > 0 {
+			timeout = config_obj.Defaults.ExportMaxTimeoutSec
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(),
+			time.Second*time.Duration(timeout))
 		defer cancel()
 
 		err := downloadFlowToZip(ctx, scope, config_obj, format,
@@ -273,14 +280,19 @@ func downloadFlowToZip(
 		return err
 	}
 
+	// If we dont know anything this client, at least add an empty
+	// record so the flow is recognized by the importer.
 	client_info, err := client_info_manager.Get(ctx, client_id)
-	if err == nil {
-		err = zip_writer.WriteJSON(
-			paths.ZipPathFromFSPathSpec(prefix.AddChild("client_info")),
-			client_info)
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		client_info = &services.ClientInfo{}
+		client_info.ClientId = client_id
+	}
+
+	err = zip_writer.WriteJSON(
+		paths.ZipPathFromFSPathSpec(prefix.AddChild("client_info")),
+		client_info)
+	if err != nil {
+		return err
 	}
 
 	// Write the flow details.
@@ -294,7 +306,7 @@ func downloadFlowToZip(
 	if err == nil {
 		err = zip_writer.WriteJSON(
 			paths.ZipPathFromFSPathSpec(prefix.AddChild("collection_context")),
-			flow_details)
+			flow_details.Context)
 		if err != nil {
 			return err
 		}
@@ -314,7 +326,7 @@ func downloadFlowToZip(
 	// Copy the collection logs
 	flow_path_manager := paths.NewFlowPathManager(client_id, flow_id)
 	err = copyResultSetIntoContainer(ctx, config_obj, zip_writer, format,
-		flow_path_manager.Log(), prefix.AddChild("logs"))
+		flow_path_manager.Log(), prefix.AddChild("log"))
 	if err != nil {
 		return err
 	}
@@ -746,9 +758,22 @@ func createHuntDownloadFile(
 		// Will also close the underlying fd.
 		defer zip_writer.Close()
 
-		// Allow one hour to write the zip
-		sub_ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
+		timeout := int64(3600)
+		if config_obj.Defaults != nil &&
+			config_obj.Defaults.ExportMaxTimeoutSec > 0 {
+			timeout = config_obj.Defaults.ExportMaxTimeoutSec
+		}
+
+		sub_ctx, cancel := context.WithTimeout(context.Background(),
+			time.Duration(timeout)*time.Second)
 		defer cancel()
+
+		err = zip_writer.WriteJSON(
+			paths.ZipPathFromFSPathSpec(path_specs.NewUnsafeFilestorePath().AddChild("hunt_info")),
+			hunt_details)
+		if err != nil {
+			return
+		}
 
 		err = generateCombinedResults(
 			sub_ctx, config_obj, scope,

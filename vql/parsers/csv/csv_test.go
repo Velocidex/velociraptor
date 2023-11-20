@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
+	"strings"
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
@@ -26,6 +26,7 @@ type testCase struct {
 	csv         string
 	AutoHeaders bool
 	separator   string
+	columns     []string
 }
 
 var csvTestCases = []testCase{
@@ -48,23 +49,36 @@ var csvTestCases = []testCase{
 1|2|3
 `,
 		separator: "|"},
+	{
+		description: "CSV with invalid separator",
+		csv: `ColA|ColB|ColC
+1|2|3
+`,
+		columns:   []string{"ColA"},
+		separator: "\x00"},
 }
 
 func (self *CSVParserTestSuite) TestCSVParser() {
 	result := ordereddict.NewDict()
 	ctx := context.Background()
-	scope := vql_subsystem.MakeScope()
-	scope.SetLogger(log.New(os.Stderr, "", 0))
-
-	defer scope.Close()
-
 	plugin := ParseCSVPlugin{}
 
 	for idx, test_case := range csvTestCases {
+		log_buffer := &strings.Builder{}
+
+		scope := vql_subsystem.MakeScope()
+		scope.SetLogger(log.New(log_buffer, "", 0))
+
+		defer scope.Close()
+
 		rows := []types.Row{}
 		args := ordereddict.NewDict().
 			Set("filename", test_case.csv).
 			Set("accessor", "data")
+
+		if len(test_case.columns) > 0 {
+			args.Set("columns", test_case.columns)
+		}
 
 		if test_case.AutoHeaders {
 			args.Set("auto_headers", test_case.AutoHeaders)
@@ -78,6 +92,8 @@ func (self *CSVParserTestSuite) TestCSVParser() {
 			rows = append(rows, row)
 		}
 		result.Set(fmt.Sprintf("%v: %v", idx, test_case.description), rows)
+		result.Set(fmt.Sprintf("%v: %v logs", idx, test_case.description),
+			log_buffer.String())
 	}
 	goldie.Assert(self.T(), "TestCSVParser", json.MustMarshalIndent(result))
 }

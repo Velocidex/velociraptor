@@ -74,7 +74,9 @@ type ScopeBuilder struct {
 	Repository   Repository
 }
 
-// An artifact repository holds definitions for artifacts.
+// An artifact repository holds definitions for artifacts. This object
+// specifically does not IO by itself, but it is fully managed by the
+// RepositoryManager which implements the backend work.
 type Repository interface {
 	// Make a copy of this repository.
 	Copy() Repository
@@ -141,9 +143,16 @@ type RepositoryManager interface {
 		ctx context.Context, config_obj *config_proto.Config, principal string,
 		data, required_prefix string) (*artifacts_proto.Artifact, error)
 
+	SetArtifactMetadata(
+		ctx context.Context, config_obj *config_proto.Config,
+		principal, name string,
+		metadata *artifacts_proto.ArtifactMetadata) error
+
 	// Delete the file from the global repository and the data store.
 	DeleteArtifactFile(ctx context.Context,
 		config_obj *config_proto.Config, principal, name string) error
+
+	ReformatVQL(ctx context.Context, artifact_yaml string) (string, error)
 }
 
 type MockablePlugin interface {

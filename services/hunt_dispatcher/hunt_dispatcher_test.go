@@ -28,6 +28,8 @@ type HuntDispatcherTestSuite struct {
 
 	master_dispatcher *hunt_dispatcher.HuntDispatcher
 	minion_dispatcher *hunt_dispatcher.HuntDispatcher
+
+	time_closer func()
 }
 
 func (self *HuntDispatcherTestSuite) SetupTest() {
@@ -40,13 +42,13 @@ name: Server.Internal.HuntUpdate
 type: INTERNAL
 `})
 
-	hunt_dispatcher.Clock = &utils.IncClock{}
+	self.time_closer = utils.MockTime(&utils.IncClock{})
 
 	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	for i := 0; i < 5; i++ {
-		now := hunt_dispatcher.Clock.Now().Unix()
+		now := utils.GetTime().Now().Unix()
 		hunt_obj := &api_proto.Hunt{
 			HuntId:    fmt.Sprintf("H.%d", i),
 			State:     api_proto.Hunt_RUNNING,
@@ -93,6 +95,12 @@ func (self *HuntDispatcherTestSuite) TestLoadingFromDisk() {
 	assert.Equal(self.T(), len(hunts), 5)
 	for _, h := range hunts {
 		assert.Equal(self.T(), h.State, api_proto.Hunt_RUNNING)
+	}
+}
+
+func (self *HuntDispatcherTestSuite) TearDownTest() {
+	if self.time_closer != nil {
+		self.time_closer()
 	}
 }
 

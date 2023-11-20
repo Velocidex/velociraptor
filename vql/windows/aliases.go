@@ -8,6 +8,10 @@ import (
 
 type GUID windows.GUID
 
+func (self GUID) String() string {
+	return windows.GUID(self).String()
+}
+
 func UTF16ToString(in []uint16) string {
 	return windows.UTF16ToString(in)
 }

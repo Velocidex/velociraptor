@@ -51,7 +51,7 @@ const (
 description: |
    This is the human readable description of the artifact.
 
-# Can be CLIENT, CLIENT_EVENT, SERVER, SERVER_EVENT
+# Can be CLIENT, CLIENT_EVENT, SERVER, SERVER_EVENT or NOTEBOOK
 type: CLIENT
 
 parameters:
@@ -212,6 +212,9 @@ type matchPlan struct {
 	// Acceptable types
 	types []string
 
+	// Show hidden artifacts
+	hidden bool
+
 	builtin *bool
 }
 
@@ -299,6 +302,13 @@ func (self *matchPlan) matchType(artifact *artifacts_proto.Artifact) bool {
 
 // All conditions must match
 func (self *matchPlan) matchArtifact(artifact *artifacts_proto.Artifact) bool {
+	if !self.hidden && // Dont show hidden artifacts
+
+		// Artifact is set to hidden
+		artifact.Metadata != nil && artifact.Metadata.Hidden {
+		return false
+	}
+
 	if !self.matchType(artifact) {
 		return false
 	}
@@ -335,6 +345,12 @@ func prepareMatchPlan(search string) *matchPlan {
 			verb := parts[0]
 			term := parts[1]
 			switch verb {
+			case "hidden":
+				if term == "true" {
+					result.hidden = true
+				}
+				continue
+
 			case "type":
 				result.types = append(result.types,
 					strings.ToLower(term))

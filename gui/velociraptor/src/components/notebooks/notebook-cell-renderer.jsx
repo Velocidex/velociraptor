@@ -26,6 +26,7 @@ import { AddTimelineDialog, AddVQLCellToTimeline } from "./timelines.jsx";
 import T from '../i8n/i8n.jsx';
 import ViewCellLogs from "./logs.jsx";
 import CopyCellToNotebookDialog from './notebook-copy-cell.jsx';
+import FormatTableDialog from './notebook-format-tables.jsx';
 
 import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
@@ -173,6 +174,7 @@ export default class NotebookCellRenderer extends React.Component {
         showCopyCellToNotebook: false,
         showSuggestionSubmenu: false,
         showMoreLogs: false,
+        showFormatTablesDialog: false,
 
         local_completions_lookup: {},
         local_completions: [],
@@ -255,8 +257,6 @@ export default class NotebookCellRenderer extends React.Component {
             let cell = response.data;
             if (!this.state.currently_editing) {
                 this.setState({cell: cell,
-                               local_completions: [],
-                               local_completions_lookup: {},
                                input: cell.input,
                                loading: false});
             }
@@ -310,14 +310,16 @@ export default class NotebookCellRenderer extends React.Component {
         return "yaml";
     }
 
-    recalculate = () => {
-        let cell = this.state.cell;
+    recalculate = (cell) => {
         cell.output = T("Loading");
         cell.timestamp = 0;
         cell.calculating = true;
         cell.messages = [];
 
-        this.setState({cell: cell});
+        this.setState({cell: cell,
+                       local_completions: [],
+                       local_completions_lookup: {},
+                      });
 
         // Reset any inflight calls.
         this.update_source.cancel();
@@ -364,15 +366,19 @@ export default class NotebookCellRenderer extends React.Component {
         });
     }
 
-    saveCell = () => {
-        let cell = this.state.cell;
-        cell.input = this.state.ace.getValue();
+    saveCell = (cell) => {
         cell.output = T("Loading");
         cell.timestamp = 0;
         cell.calculating = true;
         cell.messages = [];
 
-        this.setState({cell: cell, currently_editing: false});
+        // Clear completions as they will be updated once the cell is
+        // re-calculated.
+        this.setState({cell: cell,
+                       local_completions: [],
+                       currently_editing: false,
+                       local_completions_lookup: {},
+                      });
 
         // Reset any inflight calls.
         this.update_source.cancel();
@@ -399,6 +405,10 @@ export default class NotebookCellRenderer extends React.Component {
             }
             this.setState({cell: response.data,
                            currently_editing: keep_editing});
+
+            if(this.state.ace && this.state.ace.setValue && response.data.input) {
+                this.state.ace.setValue(response.data.input);
+            }
         });
     };
 
@@ -530,7 +540,7 @@ export default class NotebookCellRenderer extends React.Component {
                       data-position="right"
                       className="btn-tooltip"
                       disabled={this.state.cell.calculating}
-                      onClick={this.recalculate}
+                      onClick={()=>this.recalculate(this.state.cell)}
                       variant="default">
                 <FontAwesomeIcon icon="sync"/>
               </Button>
@@ -590,23 +600,33 @@ export default class NotebookCellRenderer extends React.Component {
                 <FontAwesomeIcon icon="arrow-down"/>
               </Button>
 
+              <Button data-tooltip={T("Copy Cell")}
+                      data-position="right"
+                      className="btn-tooltip"
+                      onClick={()=>this.setState({showCopyCellToNotebook: true})}
+                      variant="default">
+                <FontAwesomeIcon icon="file-import"/>
+              </Button>
+
               {this.state.cell && this.state.cell.type === "vql" &&
-               <Button data-tooltip={T("Add Timeline")}
-                       data-position="right"
-                       className="btn-tooltip"
-                       onClick={()=>this.setState({showAddCellToTimeline: true})}
-                       variant="default">
-                 <FontAwesomeIcon icon="calendar-alt"/>
-               </Button>}
+               <>
+                 <Button data-tooltip={T("Add Timeline")}
+                         data-position="right"
+                         className="btn-tooltip"
+                         onClick={()=>this.setState({showAddCellToTimeline: true})}
+                         variant="default">
+                   <FontAwesomeIcon icon="calendar-alt"/>
+                 </Button>
 
-               <Button data-tooltip={T("Copy Cell")}
-                       data-position="right"
-                       className="btn-tooltip"
-                       onClick={()=>this.setState({showCopyCellToNotebook: true})}
-                       variant="default">
-                 <FontAwesomeIcon icon="file-import"/>
-               </Button>
-
+                 <Button data-tooltip={T("Format Tables")}
+                         data-position="right"
+                         className="btn-tooltip"
+                         onClick={()=>this.setState({showFormatTablesDialog: true})}
+                         variant="default">
+                   <FontAwesomeIcon icon="table"/>
+                 </Button>
+               </>
+              }
               <Dropdown data-tooltip={T("Add Cell")}
                         data-position="right"
                         className="btn-tooltip"
@@ -720,7 +740,11 @@ export default class NotebookCellRenderer extends React.Component {
                 <Button data-tooltip={T("Save")}
                         data-position="right"
                         className="btn-tooltip"
-                        onClick={this.saveCell}
+                        onClick={()=>{
+                            let cell = this.state.cell;
+                            cell.input = this.state.ace.getValue();
+                            this.saveCell(cell);
+                        }}
                         variant="default">
                   <FontAwesomeIcon icon="save"/>
                 </Button>
@@ -768,6 +792,15 @@ export default class NotebookCellRenderer extends React.Component {
                       this.props.addCell(this.state.cell.cell_id, type, text, env);
                   }}
                   closeDialog={()=>this.setState({showAddCellFromFlow: false})} />
+              }
+              { this.state.showFormatTablesDialog &&
+                <FormatTableDialog
+                  cell={this.state.cell}
+                  saveCell={cell=>{
+                      this.saveCell(cell);
+                  }}
+                  columns={this.state.local_completions}
+                  closeDialog={()=>this.setState({showFormatTablesDialog: false})} />
               }
               { this.state.showCreateArtifactFromCell &&
                 <CreateArtifactFromCell
@@ -821,7 +854,9 @@ export default class NotebookCellRenderer extends React.Component {
                                     name: 'saveAndExit',
                                     bindKey: {win: 'Ctrl-Enter',  mac: 'Command-Enter'},
                                     exec: (editor) => {
-                                        this.saveCell();
+                                        let cell = this.state.cell;
+                                        cell.input = this.state.ace.getValue();
+                                        this.saveCell(cell);
                                     },
                                 }]}
                               />
@@ -847,7 +882,7 @@ export default class NotebookCellRenderer extends React.Component {
                 >
                   <NotebookReportRenderer
                     env={this.getEnv()}
-                    refresh={this.recalculate}
+                    refresh={()=>this.recalculate(this.state.cell)}
                     notebook_id={this.props.notebook_id}
                     completion_reporter={this.registerCompletions}
                     cell={this.state.cell}/>

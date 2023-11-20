@@ -10,8 +10,8 @@ option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
 message ReformatVQLMessage {
     string vql = 1;
+    string artifact = 2;
 }
-
 
 message Env {
     string key = 1;
@@ -60,6 +60,9 @@ message NotebookMetadata {
 
     // A list of usernames that have access to this notebook.
     repeated string collaborators = 12;
+
+    // A list of NOTEBOOK artifacts to create the notebook with.
+    repeated string artifacts = 20;
 
     // If this is set, the notebook is public.
     bool public = 13;

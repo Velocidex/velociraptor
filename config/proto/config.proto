@@ -1084,7 +1084,9 @@ message Defaults {
     // its own but if this is set, we prevent any external access.
     bool disable_inventory_service_external_access = 34;
 
+    // Controls how exports work (creating hunt or colletion exports to a zip file).
     int64 export_concurrency = 40;
+    int64 export_max_timeout_sec = 41;
 }
 
 // Configures crypto preferences

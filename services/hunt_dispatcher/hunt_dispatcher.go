@@ -76,8 +76,6 @@ var (
 		Name: "hunt_dispatcher_last_timestamp",
 		Help: "Last timestamp of most recent hunt.",
 	})
-
-	Clock utils.Clock = &utils.RealClock{}
 )
 
 type HuntRecord struct {
@@ -311,7 +309,7 @@ func (self *HuntDispatcher) ModifyHuntObject(
 	}
 
 	// Update the hunt version
-	hunt_obj.Hunt.Version = Clock.Now().UnixNano()
+	hunt_obj.Hunt.Version = utils.GetTime().Now().UnixNano()
 
 	// Call the callback to see if we need to change this hunt.
 	modification := cb(hunt_obj.Hunt)
@@ -404,13 +402,16 @@ func (self *HuntDispatcher) checkForExpiry(
 	ctx context.Context, config_obj *config_proto.Config) {
 	if self.I_am_master {
 		// Check if the hunt is expired and adjust its state if so
-		now := uint64(time.Now().UnixNano() / 1000)
+		now := uint64(utils.GetTime().Now().UnixNano() / 1000)
 
 		self.ApplyFuncOnHunts(func(hunt_obj *api_proto.Hunt) error {
-			if now > hunt_obj.Expires {
+			if hunt_obj.State == api_proto.Hunt_RUNNING &&
+				now > hunt_obj.Expires {
+
 				self.MutateHunt(ctx, config_obj,
 					&api_proto.HuntMutation{
 						HuntId: hunt_obj.HuntId,
+						State:  api_proto.Hunt_STOPPED,
 						Stats:  &api_proto.HuntStats{Stopped: true},
 					})
 			}
@@ -497,10 +498,14 @@ func (self *HuntDispatcher) CreateHunt(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	acl_manager vql_subsystem.ACLManager,
-	hunt *api_proto.Hunt) (string, error) {
+	hunt *api_proto.Hunt) (*api_proto.Hunt, error) {
+
+	// Make a local copy so we can modify it safely.
+	hunt, _ = proto.Clone(hunt).(*api_proto.Hunt)
+
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if hunt.Stats == nil {
@@ -512,10 +517,12 @@ func (self *HuntDispatcher) CreateHunt(
 	}
 
 	if hunt.StartRequest == nil || hunt.StartRequest.Artifacts == nil {
-		return "", errors.New("No artifacts to collect.")
+		return nil, errors.New("No artifacts to collect.")
 	}
 
-	hunt.CreateTime = uint64(utils.GetTime().Now().UTC().UnixNano() / 1000)
+	if hunt.CreateTime == 0 {
+		hunt.CreateTime = uint64(utils.GetTime().Now().UTC().UnixNano() / 1000)
+	}
 	if hunt.Expires == 0 {
 		default_expiry := config_obj.Defaults.HuntExpiryHours
 		if default_expiry == 0 {
@@ -527,7 +534,7 @@ func (self *HuntDispatcher) CreateHunt(
 	}
 
 	if hunt.Expires < hunt.CreateTime {
-		return "", errors.New("Hunt expiry is in the past!")
+		return nil, errors.New("Hunt expiry is in the past!")
 	}
 
 	// Set the artifacts information in the hunt object itself.
@@ -542,12 +549,12 @@ func (self *HuntDispatcher) CreateHunt(
 
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Compile the start request and store it in the hunt. We will
@@ -558,7 +565,7 @@ func (self *HuntDispatcher) CreateHunt(
 	// schedule consistent VQL on the clients.
 	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	compiled, err := launcher.CompileCollectorArgs(
@@ -568,7 +575,7 @@ func (self *HuntDispatcher) CreateHunt(
 		},
 		hunt.StartRequest)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Set the collection ID already on the hunt request - all flows
@@ -590,25 +597,25 @@ func (self *HuntDispatcher) CreateHunt(
 	}
 
 	row := ordereddict.NewDict().
-		Set("Timestamp", time.Now().UTC().Unix()).
+		Set("Timestamp", utils.GetTime().Now().UTC().Unix()).
 		Set("Hunt", hunt)
 
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	err = journal.PushRowsToArtifact(ctx, config_obj,
 		[]*ordereddict.Dict{row}, "System.Hunt.Creation",
 		"server", hunt.HuntId)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
 	err = db.SetSubject(config_obj, hunt_path_manager.Path(), hunt)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Trigger a refresh of the hunt dispatcher. This guarantees
@@ -616,9 +623,9 @@ func (self *HuntDispatcher) CreateHunt(
 	// calls.
 	hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return hunt.HuntId, hunt_dispatcher.Refresh(ctx, config_obj)
+	return hunt, hunt_dispatcher.Refresh(ctx, config_obj)
 }
 
 func NewHuntDispatcher(
@@ -695,7 +702,7 @@ func GetNewHuntId() string {
 	buf := make([]byte, 8)
 	_, _ = rand.Read(buf)
 
-	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
+	binary.BigEndian.PutUint32(buf, uint32(utils.GetTime().Now().Unix()))
 	result := base32.HexEncoding.EncodeToString(buf)[:13]
 
 	return constants.HUNT_PREFIX + result

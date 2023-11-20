@@ -16,6 +16,7 @@ const (
 	MODE_CLIENT_EVENT
 	MODE_SERVER
 	MODE_SERVER_EVENT
+	MODE_NOTEBOOK
 	INTERNAL
 )
 
@@ -30,6 +31,8 @@ func ModeNameToMode(name string) int {
 		return MODE_SERVER
 	case "SERVER_EVENT":
 		return MODE_SERVER_EVENT
+	case "NOTEBOOK":
+		return MODE_NOTEBOOK
 	case "INTERNAL":
 		return INTERNAL
 	}

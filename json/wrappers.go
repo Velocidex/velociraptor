@@ -6,6 +6,8 @@ import (
 	"sync"
 
 	"github.com/Velocidex/json"
+	"google.golang.org/protobuf/encoding/protojson"
+	"google.golang.org/protobuf/proto"
 )
 
 type RawMessage = json.RawMessage
@@ -120,6 +122,12 @@ func MarshalJsonl(v interface{}) ([]byte, error) {
 }
 
 func Unmarshal(b []byte, v interface{}) error {
+
+	self, ok := v.(proto.Message)
+	if ok {
+		return protojson.Unmarshal(b, self)
+	}
+
 	return json.Unmarshal(b, v)
 }
 

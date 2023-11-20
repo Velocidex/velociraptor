@@ -486,6 +486,7 @@ func send_client_messages(server_obj *Server) http.Handler {
 		message_info, err := server_obj.Decrypt(req.Context(), body)
 		if err != nil {
 			// Just plain reject with a 403.
+			server_obj.Debug("Rejecting request from %v: %v", req.RemoteAddr, err)
 			http.Error(w, "", http.StatusForbidden)
 			return
 		}
@@ -564,8 +565,12 @@ func send_client_messages(server_obj *Server) http.Handler {
 			// Send a message that there is a client conflict.
 			journal, err := services.GetJournal(org_config_obj)
 			if err == nil {
+				info := ordereddict.NewDict().
+					Set("ClientId", source).
+					Set("RemoteAddr", message_info.RemoteAddr).
+					Set("UserAgent", req.UserAgent())
 				journal.PushRowsToArtifactAsync(ctx, org_config_obj,
-					ordereddict.NewDict().Set("ClientId", source),
+					info,
 					"Server.Internal.ClientConflict")
 			}
 

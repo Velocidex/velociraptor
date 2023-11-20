@@ -130,10 +130,11 @@ func (self HuntsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 }
 
 type HuntResultsPluginArgs struct {
-	Artifact string `vfilter:"optional,field=artifact,doc=The artifact to retrieve"`
-	Source   string `vfilter:"optional,field=source,doc=An optional source within the artifact."`
-	HuntId   string `vfilter:"required,field=hunt_id,doc=The hunt id to read."`
-	Brief    bool   `vfilter:"optional,field=brief,doc=If set we return less columns."`
+	Artifact string   `vfilter:"optional,field=artifact,doc=The artifact to retrieve"`
+	Source   string   `vfilter:"optional,field=source,doc=An optional source within the artifact."`
+	HuntId   string   `vfilter:"required,field=hunt_id,doc=The hunt id to read."`
+	Brief    bool     `vfilter:"optional,field=brief,doc=If set we return less columns (deprecated)."`
+	Orgs     []string `vfilter:"optional,field=orgs,doc=If set we combine results from all orgs."`
 }
 
 type HuntResultsPlugin struct{}
@@ -213,63 +214,86 @@ func (self HuntResultsPlugin) Call(
 					}
 				}
 			}
+		}
 
-		} else if arg.Source != "" {
+		if arg.Source != "" {
 			arg.Artifact += "/" + arg.Source
 		}
 
-		indexer, err := services.GetIndexer(config_obj)
+		if len(arg.Orgs) == 0 {
+			arg.Orgs = append(arg.Orgs, config_obj.OrgId)
+		}
+
+		org_manager, err := services.GetOrgManager()
 		if err != nil {
 			return
 		}
 
-		hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
-		if err != nil {
-			return
-		}
-
-		for flow_details := range hunt_dispatcher.GetFlows(
-			ctx, config_obj, scope, arg.HuntId, 0) {
-
-			api_client, err := indexer.FastGetApiClient(ctx,
-				config_obj, flow_details.Context.ClientId)
-			if err != nil {
-				scope.Log("hunt_results: %v", err)
-				continue
-			}
-
-			// Read individual flow's results.
-			path_manager, err := artifact_paths.NewArtifactPathManager(
-				ctx, config_obj,
-				flow_details.Context.ClientId,
-				flow_details.Context.SessionId,
-				arg.Artifact)
+		for _, org_id := range arg.Orgs {
+			org_config_obj, err := org_manager.GetOrgConfig(org_id)
 			if err != nil {
 				continue
 			}
 
-			file_store_factory := file_store.GetFileStore(config_obj)
-
-			reader, err := result_sets.NewResultSetReader(
-				file_store_factory, path_manager.Path())
+			indexer, err := services.GetIndexer(org_config_obj)
 			if err != nil {
-				continue
+				return
 			}
 
-			// Read each result set and emit it
-			// with some extra columns for
-			// context.
-			for row := range reader.Rows(ctx) {
-				row.Set("FlowId", flow_details.Context.SessionId).
-					Set("ClientId", flow_details.Context.ClientId)
+			hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
+			if err != nil {
+				return
+			}
 
-				if api_client.OsInfo != nil {
-					row.Set("Fqdn", api_client.OsInfo.Fqdn)
+			for flow_details := range hunt_dispatcher.GetFlows(
+				ctx, org_config_obj, scope, arg.HuntId, 0) {
+
+				api_client, err := indexer.FastGetApiClient(ctx,
+					org_config_obj, flow_details.Context.ClientId)
+				if err != nil {
+					scope.Log("hunt_results: %v", err)
+					continue
 				}
-				select {
-				case <-ctx.Done():
-					return
-				case output_chan <- row:
+
+				artifact_name := arg.Artifact
+				if arg.Source != "" {
+					artifact_name += "/" + arg.Source
+				}
+
+				// Read individual flow's results.
+				path_manager, err := artifact_paths.NewArtifactPathManager(
+					ctx, org_config_obj,
+					flow_details.Context.ClientId,
+					flow_details.Context.SessionId,
+					arg.Artifact)
+				if err != nil {
+					continue
+				}
+
+				file_store_factory := file_store.GetFileStore(org_config_obj)
+
+				reader, err := result_sets.NewResultSetReader(
+					file_store_factory, path_manager.Path())
+				if err != nil {
+					continue
+				}
+
+				// Read each result set and emit it
+				// with some extra columns for
+				// context.
+				for row := range reader.Rows(ctx) {
+					row.Set("FlowId", flow_details.Context.SessionId).
+						Set("ClientId", flow_details.Context.ClientId).
+						Set("_OrgId", org_id)
+
+					if api_client.OsInfo != nil {
+						row.Set("Fqdn", api_client.OsInfo.Fqdn)
+					}
+					select {
+					case <-ctx.Done():
+						return
+					case output_chan <- row:
+					}
 				}
 			}
 		}

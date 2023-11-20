@@ -186,7 +186,7 @@ func (self _Timestamp) Call(ctx context.Context, scope vfilter.Scope,
 		}
 	}
 
-	result, err := TimeFromAny(scope, arg.Epoch)
+	result, err := TimeFromAny(ctx, scope, arg.Epoch)
 	if err != nil {
 		return vfilter.Null{}
 	}
@@ -194,10 +194,14 @@ func (self _Timestamp) Call(ctx context.Context, scope vfilter.Scope,
 	return result
 }
 
-func TimeFromAny(scope vfilter.Scope, timestamp vfilter.Any) (time.Time, error) {
+func TimeFromAny(ctx context.Context,
+	scope vfilter.Scope, timestamp vfilter.Any) (time.Time, error) {
 	sec := int64(0)
 	dec := int64(0)
 	switch t := timestamp.(type) {
+	case vfilter.LazyExpr:
+		return TimeFromAny(ctx, scope, t.ReduceWithScope(ctx, scope))
+
 	case float64:
 		sec_f, dec_f := math.Modf(t)
 		sec = int64(sec_f)
@@ -212,7 +216,7 @@ func TimeFromAny(scope vfilter.Scope, timestamp vfilter.Any) (time.Time, error) 
 		// It might really be an int encoded as a string.
 		int_time, ok := utils.ToInt64(t)
 		if ok {
-			return TimeFromAny(scope, int_time)
+			return TimeFromAny(ctx, scope, int_time)
 		}
 
 		return ParseTimeFromString(scope, t)

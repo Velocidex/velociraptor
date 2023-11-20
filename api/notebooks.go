@@ -93,6 +93,8 @@ func (self *ApiServer) GetNotebooks(
 		return result, nil
 	}
 
+	// This is only called for global notebooks because client and
+	// hunt notebooks always specify the exact notebook id.
 	notebooks, err := notebook_manager.GetSharedNotebooks(ctx,
 		principal, in.Offset, in.Count)
 	if err != nil {
@@ -234,11 +236,11 @@ func (self *ApiServer) GetNotebookCell(
 	defer Instrument("GetNotebookCell")()
 
 	if !strings.HasPrefix(in.NotebookId, "N.") {
-		return nil, InvalidStatus("Invalid NoteboookId")
+		return nil, InvalidStatus("Invalid NotebookId")
 	}
 
 	if !strings.HasPrefix(in.CellId, "NC.") {
-		return nil, InvalidStatus("Invalid NoteboookCellId")
+		return nil, InvalidStatus("Invalid NotebookCellId")
 	}
 
 	users := services.GetUserManager()
@@ -279,11 +281,11 @@ func (self *ApiServer) UpdateNotebookCell(
 	defer Instrument("UpdateNotebookCell")()
 
 	if !strings.HasPrefix(in.NotebookId, "N.") {
-		return nil, InvalidStatus("Invalid NoteboookId")
+		return nil, InvalidStatus("Invalid NotebookId")
 	}
 
 	if !strings.HasPrefix(in.CellId, "NC.") {
-		return nil, InvalidStatus("Invalid NoteboookCellId")
+		return nil, InvalidStatus("Invalid NotebookCellId")
 	}
 
 	users := services.GetUserManager()
@@ -327,11 +329,11 @@ func (self *ApiServer) CancelNotebookCell(
 	defer Instrument("CancelNotebookCell")()
 
 	if !strings.HasPrefix(in.NotebookId, "N.") {
-		return nil, InvalidStatus("Invalid NoteboookId")
+		return nil, InvalidStatus("Invalid NotebookId")
 	}
 
 	if !strings.HasPrefix(in.CellId, "NC.") {
-		return nil, InvalidStatus("Invalid NoteboookCellId")
+		return nil, InvalidStatus("Invalid NotebookCellId")
 	}
 
 	users := services.GetUserManager()
