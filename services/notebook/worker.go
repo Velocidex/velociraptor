@@ -50,6 +50,10 @@ func (self *NotebookWorker) processUpdateRequest(
 	user_name := request.Username
 	in := request.NotebookCellRequest
 
+	logger.Debug("NotebookWorker: Processing cell %v/%v from %v in org %v",
+		request.NotebookMetadata.NotebookId, in.CellId, request.Username,
+		utils.NormalizedOrgId(config_obj.OrgId))
+
 	// Set the cell as calculating
 	notebook_cell := &api_proto.NotebookCell{
 		Input:            in.Input,

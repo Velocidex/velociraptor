@@ -1057,6 +1057,20 @@ defaults:
   # down.
   notebook_memory_high_water_mark: 0
 
+  # Since Version 0.7.1, notebook queries are run in separate worker
+  # threads, even on single server configurations. This parameters
+  # sets the number of workers available.
+  #
+  # Set to -1 to disable local workers. The default is 5 local
+  # workers. If you want the master to **not** perform any notebook
+  # computations reduce this to -1 and set
+  # Minion.notebook_number_of_local_workers to 5.
+  notebook_number_of_local_workers: 5
+
+  # The default priority of notebook processors (Higher priority will
+  # receive jobs over lower priority).
+  notebook_worker_priority: 10
+
   ## When exporting to CSV from the GUI the usual separator is comma
   ## (`,`). This setting allows to change the default to any single
   ## character.
@@ -1120,8 +1134,6 @@ defaults:
   # will apply for e.g. rotating certificates or issuing an api cert.
   certificate_validity_days: 365
 
-
-
   # When the server is in lockdown mode the following permissions
   # will be denied (Even for administrators).
   lockdown_denied_permissions:
@@ -1133,6 +1145,15 @@ defaults:
    - FILESYSTEM_READ
    - MACHINE_STATE
 
+  # Controls how exports work (creating hunt or colletion exports to a
+  # zip file). On slow filesystems, increase the number of worker
+  # threads to increase parallelism. You can also increase the timeout
+  # if the filesystem is too slow to build large hunt zip files within
+  # the default 10 minute timeout.
+  export_concurrency: 10
+  export_max_timeout_sec: 600
+
+
 # The Velociraptor server may be placed into "lockdown" mode. While in
 # lockdown mode certain permissions are denied - even for
 # administrators. This additional protection mode helps to mitigate
@@ -1140,3 +1161,17 @@ defaults:
 # compromised. The server can be taken out of lockdown mode by setting
 # lockdown to false and restarting the server.
 lockdown: false
+
+# This configuration applies for minions. On minions this will
+# override the settings elsewhere in the config file allowing an easy
+# way to manage the difference between minions and master nodes.
+# This override occurs at config load times so you can see the final configuration using
+# velociraptor --minion --config server.config.yaml config show
+Minion:
+  # Used to override Defaults.notebook_number_of_local_workers
+  notebook_number_of_local_workers: 4
+
+  # Used to override Defaults.notebook_worker_priority. By default
+  # minion workers have higher priority than the master node allowing
+  # minions to take over notebook calculations most of he time.
+  notebook_worker_priority: 10
