@@ -60,18 +60,7 @@ func (self ThreadPlugin) Call(
 			return
 		}
 
-		threads := getProcessThreads(scope, arg)
-		if threads == nil {
-			return
-		}
-
-		for _, thread := range threads {
-			select {
-			case <-ctx.Done():
-				return
-			case output_chan <- thread:
-			}
-		}
+		getProcessThreads(scope, arg, output_chan)
 	}()
 
 	return output_chan
@@ -79,13 +68,14 @@ func (self ThreadPlugin) Call(
 
 func getProcessThreads(
 	scope vfilter.Scope,
-	arg *ThreadArgs) []vfilter.Row {
+	arg *ThreadArgs,
+	output_chan chan vfilter.Row) {
 
 	handle, err := windows.CreateToolhelp32Snapshot(
 		windows.TH32CS_SNAPTHREAD, uint32(arg.Pid))
 	if err != nil {
 		scope.Log("CreateToolhelp32Snapshot: %v ", err)
-		return nil
+		return
 	}
 	defer windows.Close(handle)
 
@@ -95,10 +85,8 @@ func getProcessThreads(
 	err = windows.Thread32First(handle, &entry)
 	if err != nil {
 		scope.Log("Thread32First: %v ", err)
-		return nil
+		return
 	}
-
-	ret := []vfilter.Row{}
 
 	for {
 		if entry.OwnerProcessID == uint32(arg.Pid) {
@@ -108,7 +96,7 @@ func getProcessThreads(
 			}
 
 			if row != nil {
-				ret = append(ret, row)
+				output_chan <- row
 			}
 		}
 
@@ -118,7 +106,7 @@ func getProcessThreads(
 		}
 	}
 
-	return ret
+	return
 }
 
 func checkThread(
