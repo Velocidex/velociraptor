@@ -104,10 +104,12 @@ const (
 	// represent failure.
 	VQL_ERROR_REGEX = "(?i)(Error:|Symbol.+?not found|Expecting a path arg type, not)"
 
-	// Set in the scope with one or more passwords
+	// Set in the scope with one or more passwords. Used by the zip
+	// accessor to open password protected zip files.
 	ZIP_PASSWORDS = "ZIP_PASSWORDS"
 
-	// If this is set we always copy SQLite files to a tempfile
+	// If this is set we always copy SQLite files to a tempfile. Used
+	// by the sqlite() plugin.
 	SQLITE_ALWAYS_MAKE_TEMPFILE = "SQLITE_ALWAYS_MAKE_TEMPFILE"
 
 	PinnedServerName = "VelociraptorServer"
