@@ -5,6 +5,8 @@ package process
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"syscall"
 	"unsafe"
 
@@ -18,41 +20,72 @@ import (
 )
 
 const (
-	THREAD_BASIC_INFORMATION = 0x0008
+	ThreadBasicInformation          = 0x00
+	ThreadQueryInformation          = 0x40
+	ThreadQuerySetWin32StartAddress = 0x09
 )
 
 type ThreadArgs struct {
-	Pid             int64  `vfilter:"required,field=pid,doc=The PID to get the thread for."`
-	ThreadInfoClass string `vfilter:"optional,field=thread_info_class,doc=The thread information class to query."`
+	Pid int64 `vfilter:"required,field=pid,doc=The PID to get the thread for."`
 }
 
-type ThreadFunction struct{}
+type ThreadPlugin struct{}
 
-func (self ThreadFunction) Call(
+func (self ThreadPlugin) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
-	args *ordereddict.Dict) vfilter.Any {
-	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
 
-	if err != nil {
-		scope.Log("thread: %s", err)
-		return vfilter.Null{}
-	}
+	go func() {
+		defer close(output_chan)
+		defer vql_subsystem.CheckForPanic(scope, "thread")
 
-	arg := &ThreadArgs{}
-	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
-	if err != nil {
-		scope.Log("thread: %s", err.Error())
-		return vfilter.Null{}
-	}
+		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+		if err != nil {
+			scope.Log("thread: %s", err)
+			return
+		}
 
-	TryToGrantSeDebugPrivilege()
+		arg := &ThreadArgs{}
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+		if err != nil {
+			scope.Log("thread: %s", err.Error())
+			return
+		}
+
+		err = TryToGrantSeDebugPrivilege()
+		if err != nil {
+			scope.Log("thread: Cannot get SeDebugPrivilege, %s", err.Error())
+			return
+		}
+
+		threads := getProcessThreads(scope, arg)
+		if threads == nil {
+			return
+		}
+
+		for _, thread := range threads {
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- thread:
+			}
+		}
+	}()
+
+	return output_chan
+}
+
+func getProcessThreads(
+	scope vfilter.Scope,
+	arg *ThreadArgs) []vfilter.Row {
 
 	handle, err := windows.CreateToolhelp32Snapshot(
 		windows.TH32CS_SNAPTHREAD, uint32(arg.Pid))
 	if err != nil {
 		scope.Log("CreateToolhelp32Snapshot: %v ", err)
-		return vfilter.Null{}
+		return nil
 	}
 	defer windows.Close(handle)
 
@@ -62,27 +95,21 @@ func (self ThreadFunction) Call(
 	err = windows.Thread32First(handle, &entry)
 	if err != nil {
 		scope.Log("Thread32First: %v ", err)
-		return vfilter.Null{}
+		return nil
 	}
 
+	ret := []vfilter.Row{}
+
 	for {
-		if entry.OwnerProcessID != uint32(arg.Pid) {
-			thread, err := windows.OpenThread(THREAD_BASIC_INFORMATION, false, entry.ThreadID)
+		if entry.OwnerProcessID == uint32(arg.Pid) {
+			row, err := checkThread(scope, arg.Pid, entry)
 			if err != nil {
-				continue
+				scope.Log("checkThread: %v ", err)
 			}
 
-			var info vwindows.THREAD_BASIC_INFORMATION
-			buffer := make([]byte, unsafe.Sizeof(info))
-			var return_length uint32
-
-			vwindows.NtQueryInformationThread(
-				syscall.Handle(thread),
-				vwindows.ThreadBasicInformation,
-				&buffer[0],
-				uint32(unsafe.Sizeof(info)),
-				&return_length)
-
+			if row != nil {
+				ret = append(ret, row)
+			}
 		}
 
 		err = windows.Thread32Next(handle, &entry)
@@ -90,4 +117,97 @@ func (self ThreadFunction) Call(
 			break
 		}
 	}
+
+	return ret
+}
+
+func checkThread(
+	scope vfilter.Scope, pid int64,
+	entry windows.ThreadEntry32) (vfilter.Row, error) {
+	if entry.ThreadID == 0 {
+		return nil, errors.New("ThreadID is 0")
+	}
+
+	thread, err := windows.OpenThread(ThreadQueryInformation, false, entry.ThreadID)
+	if err != nil {
+		return nil, err
+	}
+	defer windows.CloseHandle(thread)
+
+	thread_info := vwindows.THREAD_BASIC_INFORMATION{}
+	var length uint32
+
+	status, _ := vwindows.NtQueryInformationThread(
+		syscall.Handle(thread),
+		vwindows.ThreadBasicInformation,
+		(*byte)(unsafe.Pointer(&thread_info)),
+		uint32(unsafe.Sizeof(thread_info)),
+		&length)
+	if status != vwindows.STATUS_SUCCESS || length == 0 {
+		return nil, fmt.Errorf("NtQueryInformationProcess failed, %X", status)
+	}
+
+	var thread_start_address uint64
+
+	status, _ = vwindows.NtQueryInformationThread(
+		syscall.Handle(thread),
+		ThreadQuerySetWin32StartAddress,
+		(*byte)(unsafe.Pointer(&thread_start_address)),
+		uint32(unsafe.Sizeof(thread_start_address)),
+		&length)
+	if status != vwindows.STATUS_SUCCESS || length == 0 {
+		return nil, fmt.Errorf("NtQueryInformationProcess failed, %X", status)
+	}
+
+	proc_handle, err := windows.OpenProcess(vwindows.PROCESS_ALL_ACCESS, false, entry.OwnerProcessID)
+	if err != nil {
+		return nil, err
+	}
+	defer windows.Close(proc_handle)
+
+	memory_basic_info := &vwindows.MEMORY_BASIC_INFORMATION{}
+	mem_length, err := vwindows.VirtualQueryEx(
+		syscall.Handle(proc_handle),
+		thread_start_address,
+		memory_basic_info,
+		uintptr(unsafe.Sizeof(*memory_basic_info)))
+	if err != nil || mem_length == 0 {
+		return nil, err
+	}
+
+	// If address space is MEM_IMAGE, get the filename.
+	filename := ""
+	if memory_basic_info.Type == 0x1000000 {
+		wide_filename := make([]uint16, syscall.MAX_PATH)
+		len, err := vwindows.GetMappedFileNameW(
+			syscall.Handle(proc_handle),
+			thread_start_address,
+			&wide_filename[0], syscall.MAX_PATH)
+		if err == nil {
+			filename = syscall.UTF16ToString(wide_filename[:len])
+		}
+	}
+
+	ret := ordereddict.NewDict().
+		Set("pid", pid).
+		Set("tid", entry.ThreadID).
+		Set("thread_info", thread_info).
+		Set("thread_start_address", thread_start_address).
+		Set("memory_basic_info", memory_basic_info).
+		Set("filename", filename)
+
+	return ret, nil
+}
+
+func (self ThreadPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:     "threads",
+		Doc:      "Enumerate threads in a process.",
+		ArgType:  type_map.AddType(scope, &ThreadArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+	}
+}
+
+func init() {
+	vql_subsystem.RegisterPlugin(&ThreadPlugin{})
 }
