@@ -1,0 +1,2 @@
+Queries:
+  - SELECT thread_info.BasePriority FROM threads(pid=getpid()) WHERE thread_info.BasePriority = 0 LIMIT 1
