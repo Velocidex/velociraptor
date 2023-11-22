@@ -5,6 +5,7 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -18,12 +19,11 @@ func (self *UserManager) ListUsers(
 	ctx context.Context,
 	principal string, orgs []string) ([]*api_proto.VelociraptorUser, error) {
 
-	org_manager, err := services.GetOrgManager()
-	if err != nil {
-		return nil, err
-	}
+	// ORG_ADMINs can see everything
+	principal_is_org_admin, _ := services.CheckAccess(self.config_obj,
+		principal, acls.ORG_ADMIN)
 
-	root_config_obj, err := org_manager.GetOrgConfig(services.ROOT_ORG_ID)
+	org_manager, err := services.GetOrgManager()
 	if err != nil {
 		return nil, err
 	}
@@ -36,75 +36,91 @@ func (self *UserManager) ListUsers(
 	// Filter the users according to the access
 	result := make([]*api_proto.VelociraptorUser, 0, len(users))
 	type org_info struct {
-		hidden       bool
-		allowed      bool
-		allowed_full bool
-	}
-	seen := make(map[string]org_info)
+		// If the principal is only a user in this org they can only
+		// see partial records.
+		allowed bool
 
+		// If the principal is an admin in this org they can see the
+		// full record.
+		allowed_full bool
+
+		org_config_obj *config_proto.Config
+		org_name       string
+	}
+
+	// A plan of which orgs will be visible to the principal.
+	plan := make(map[string]*org_info)
+	for _, org := range org_manager.ListOrgs() {
+		// Caller is only interested in these orgs.
+		if len(orgs) > 0 && !utils.OrgIdInList(org.Id, orgs) {
+			continue
+		}
+
+		info := &org_info{
+			org_name: org.Name,
+		}
+
+		info.org_config_obj, err = org_manager.GetOrgConfig(org.Id)
+		if err != nil {
+			continue
+		}
+
+		if principal_is_org_admin {
+			info.allowed_full = true
+			plan[org.Id] = info
+			continue
+		}
+
+		// Server admin can see the full record.
+		allowed, _ := services.CheckAccess(info.org_config_obj,
+			principal, acls.SERVER_ADMIN)
+		if allowed {
+			info.allowed_full = true
+			plan[org.Id] = info
+			continue
+		}
+
+		// A user in that org can see a partial record.
+		allowed, _ = services.CheckAccess(info.org_config_obj,
+			principal, acls.READ_RESULTS)
+		if allowed {
+			info.allowed = true
+			plan[org.Id] = info
+			continue
+		}
+	}
+
+	// Filtering the user list according to the following criteria:
+	// The principal can see that org
+	// The user has at least read permission in the org.
 	for _, user := range users {
+		user.Orgs = nil
+
 		// This is the record we will return.
 		user_record := &api_proto.VelociraptorUser{
 			Name: user.Name,
 		}
 
-		allowed_full := false
-		returned_orgs := []*api_proto.OrgRecord{}
-
-		for _, user_org := range user.Orgs {
-			info, pres := seen[user_org.Id]
-			if !pres {
-				if len(orgs) > 0 && !utils.OrgIdInList(user_org.Id, orgs) {
-					info.hidden = true
-				} else {
-					org_config_obj, err := org_manager.GetOrgConfig(user_org.Id)
-					if err != nil {
-						continue
-					}
-
-					// ORG_ADMINs can see everything
-					info.allowed_full, _ = services.CheckAccess(
-						root_config_obj, principal, acls.ORG_ADMIN)
-
-					// Otherwise the user is an admin in their org
-					if !info.allowed_full {
-						info.allowed_full, _ = services.CheckAccess(org_config_obj,
-							principal, acls.SERVER_ADMIN)
-					}
-
-					// If they just have reader access in their org
-					// they only see the name.
-					if !info.allowed_full {
-						info.allowed, _ = services.CheckAccess(org_config_obj,
-							principal, acls.READ_RESULTS)
-					}
-				}
-				seen[user_org.Id] = info
-			}
-
-			if info.hidden {
+		for org_id, org_info := range plan {
+			// Is the user in this org?
+			user_in_org, err := services.CheckAccess(org_info.org_config_obj,
+				user.Name, acls.READ_RESULTS)
+			if err != nil || !user_in_org {
 				continue
 			}
 
-			// If we have full access, copy the entire record.
-			if info.allowed_full {
-				allowed_full = true
-
-				// If we have only read access only copy the name.
-			} else if !info.allowed {
-				continue
-			}
-
-			returned_orgs = append(returned_orgs, user_org)
+			user_record.Orgs = append(user_record.Orgs, &api_proto.OrgRecord{
+				Id:   utils.NormalizedOrgId(org_id),
+				Name: org_info.org_name,
+			})
 		}
 
-		if len(returned_orgs) > 0 {
-			if allowed_full {
-				user_record.Orgs = returned_orgs
-			}
-
-			result = append(result, user_record)
+		// No orgs are visible - hide the user
+		if len(user_record.Orgs) == 0 {
+			continue
 		}
+
+		result = append(result, user_record)
 	}
 
 	return result, nil

@@ -28,6 +28,7 @@ import (
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 )
@@ -104,16 +105,16 @@ func validateUsername(config_obj *config_proto.Config, name string) error {
 
 	if config_obj.API != nil &&
 		config_obj.API.PinnedGwName == name {
-		return fmt.Errorf("Unacceptable username %v", name)
+		return fmt.Errorf("Username is reserved: %v", name)
 	}
 
 	if config_obj.Client != nil &&
 		config_obj.Client.PinnedServerName == name {
-		return fmt.Errorf("Unacceptable username %v", name)
+		return fmt.Errorf("Username is reserved: %v", name)
 	}
 
-	if name == "GRPC_GW" || name == "VelociraptorServer" {
-		return fmt.Errorf("Unacceptable username %v", name)
+	if name == constants.PinnedGwName || name == constants.PinnedServerName {
+		return fmt.Errorf("Username is reserved: %v", name)
 	}
 
 	return nil

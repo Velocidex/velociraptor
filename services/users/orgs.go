@@ -23,7 +23,7 @@ func (self *UserManager) GetOrgs(
 	}
 
 	// ORG_ADMINs can see everything so they have permissions in all
-	// the orgs.
+	// the orgs
 	is_superuser, _ := services.CheckAccess(
 		root_config_obj, principal, acls.ORG_ADMIN)
 

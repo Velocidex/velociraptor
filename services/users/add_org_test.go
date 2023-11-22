@@ -78,7 +78,7 @@ func (self *UserManagerTestSuite) TestAddUserToOrg() {
 	err = users_manager.AddUserToOrg(
 		self.Ctx, services.AddNewUser,
 		"AdminO2", "VelociraptorServer", []string{"O2"}, reader_policy)
-	assert.ErrorContains(self.T(), err, "Unacceptable username")
+	assert.ErrorContains(self.T(), err, "reserved")
 
 	goldie.Assert(self.T(), "TestAddUserToOrg", json.MustMarshalIndent(golden))
 }
