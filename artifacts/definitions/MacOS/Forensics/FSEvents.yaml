@@ -1,4 +1,4 @@
-name: MacOS.Forensics.FSEvents
+name: Rapid7.MacOS.Forensics.FSEvents
 description: |
    This artifact parses the FSEvents log files.
    
@@ -9,8 +9,12 @@ description: |
    /Library/LaunchAgents, Library/Preferences, /Library/LaunchDaemons, or 
    /Library/Internet Plugins.
    
-   NOTE: FSEvents do not have timestamps so we specify source file Mtime and 
+   NOTE: 
+   
+   - FSEvents do not have timestamps so we specify source file Mtime and 
    Btime. 
+   - default timeout is only 600 seconds - you will need to increase for this 
+   colection to finish.
 
 reference:
 - https://www.osdfcon.org/presentations/2017/Ibrahim-Understanding-MacOS-File-Ststem-Events-with-FSEvents-Parser.pdf
@@ -42,6 +46,9 @@ parameters:
    - name: DateBefore
      type: timestamp
      description: "search for source files with Mtime before this date. YYYY-MM-DDTmm:hh:ssZ"
+   - name: LogSource
+     type: bool
+     description: "Adds the Source file OSPath into logs"
 
 export: |
     LET FSEventProfile = '''[
@@ -108,7 +115,7 @@ sources:
                 path as EnrtryPath,
                 id as EntryId, 
                 join(array=flags, sep=", ") AS EntryFlags,
-                OSPath as SourceOSPath, 
+                OSPath.Basename as SourceFile, 
                 Mtime as SourceMtime, 
                 Btime as SourceBtime 
             FROM foreach(row=parse_binary(
