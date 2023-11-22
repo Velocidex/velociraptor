@@ -89,7 +89,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/users"
 )
 
 var (
@@ -166,7 +165,7 @@ func (self *CertAuthenticator) AuthenticateUserHandler(
 		}
 
 		users_manager := services.GetUserManager()
-		user_record, err := users_manager.GetUser(r.Context(), username)
+		user_record, err := users_manager.GetUser(r.Context(), username, username)
 		if err != nil {
 			if err != services.UserNotFoundError || len(self.default_roles) == 0 {
 				http.Error(w,
@@ -187,7 +186,7 @@ func (self *CertAuthenticator) AuthenticateUserHandler(
 
 			// Use the super user principal to actually add the
 			// username so we have enough permissions.
-			err = users.AddUserToOrg(r.Context(), users.AddNewUser,
+			err = users_manager.AddUserToOrg(r.Context(), services.AddNewUser,
 				constants.PinnedServerName, username,
 				[]string{"root"}, policy)
 			if err != nil {

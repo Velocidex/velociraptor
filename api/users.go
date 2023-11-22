@@ -13,7 +13,6 @@ import (
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/users"
 )
 
 // This is only used to set the user's own password which is always
@@ -50,7 +49,7 @@ func (self *ApiServer) SetPassword(
 		target = principal
 	}
 
-	err = users.SetUserPassword(
+	err = user_manager.SetUserPassword(
 		ctx, org_config_obj, principal, target, in.Password, "")
 	if err != nil {
 		return nil, Status(self.verbose, err)
@@ -72,7 +71,7 @@ func (self *ApiServer) GetUsers(
 	principal := user_record.Name
 
 	// Only show users in the current org
-	users, err := users.ListUsers(ctx, principal, []string{org_config_obj.OrgId})
+	users, err := user_manager.ListUsers(ctx, principal, []string{org_config_obj.OrgId})
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -94,7 +93,7 @@ func (self *ApiServer) GetGlobalUsers(
 	principal := user_record.Name
 
 	// Show all users visible to us
-	users, err := users.ListUsers(ctx, principal, []string{})
+	users, err := user_manager.ListUsers(ctx, principal, []string{})
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -120,12 +119,12 @@ func (self *ApiServer) CreateUser(ctx context.Context,
 		Roles: in.Roles,
 	}
 
-	mode := users.UseExistingUser
+	mode := services.UseExistingUser
 	if in.AddNewUser {
-		mode = users.AddNewUser
+		mode = services.AddNewUser
 	}
 
-	err = users.AddUserToOrg(ctx, mode, principal, in.Name, in.Orgs, acl)
+	err = users_manager.AddUserToOrg(ctx, mode, principal, in.Name, in.Orgs, acl)
 
 	if err == nil {
 		services.LogAudit(ctx,
@@ -148,7 +147,7 @@ func (self *ApiServer) GetUser(
 		return nil, err
 	}
 
-	user, err := users.GetUser(ctx, user_record.Name, in.Name)
+	user, err := users_manager.GetUser(ctx, user_record.Name, in.Name)
 	if err != nil {
 		if errors.Is(err, acls.PermissionDenied) {
 			return nil, status.Error(codes.PermissionDenied,
@@ -255,7 +254,7 @@ func (self *ApiServer) SetUserRoles(
 
 	// Now attempt to set the ACL - permission checks are done by
 	// users.AddUserToOrg
-	err = users.AddUserToOrg(ctx, users.UseExistingUser,
+	err = users_manager.AddUserToOrg(ctx, services.UseExistingUser,
 		principal, in.Name, []string{in.Org}, acl)
 
 	if err == nil {

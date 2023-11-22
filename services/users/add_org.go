@@ -10,13 +10,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
-type AddUserOptions int
-
-const (
-	UseExistingUser AddUserOptions = iota
-	AddNewUser
-)
-
 // Adds the user to the org.
 // - OrgAdmin can add any user to any org.
 // - ServerAdmin is required in all orgs.
@@ -26,14 +19,15 @@ const (
 
 // This function effectively grants permissions in the org so it is
 // the same as GrantUserInOrg
-func AddUserToOrg(
+func (self *UserManager) AddUserToOrg(
 	ctx context.Context,
-	options AddUserOptions,
+	options services.AddUserOptions,
 	principal, username string,
 	orgs []string, policy *acl_proto.ApiClientACL) error {
 
-	if isNameReserved(username) {
-		return NameReservedError
+	err := validateUsername(self.config_obj, username)
+	if err != nil {
+		return err
 	}
 
 	org_manager, err := services.GetOrgManager()
@@ -64,13 +58,14 @@ func AddUserToOrg(
 		}
 	}
 
-	user_manager := services.GetUserManager()
-
-	// Hold on to the error until after ACL check
-	user_record, err := user_manager.GetUserWithHashes(ctx, username)
+	// Hold on to the error until after ACL check.  Get the full
+	// unfiltered user record with all the orgs they belong to so we
+	// can remove those orgs the principal is allowed to touch and put
+	// the rest back.
+	user_record, err := self.storage.GetUserWithHashes(ctx, username)
 	if err != nil {
 		if err == services.UserNotFoundError &&
-			options == UseExistingUser {
+			options == services.UseExistingUser {
 			return err
 		}
 
@@ -101,14 +96,16 @@ func AddUserToOrg(
 
 	}
 
-	return user_manager.SetUser(ctx, user_record)
+	return self.SetUser(ctx, user_record)
 }
 
 func GrantUserToOrg(
 	ctx context.Context,
 	principal, username string,
 	orgs []string, policy *acl_proto.ApiClientACL) error {
-	return AddUserToOrg(ctx, UseExistingUser,
+
+	user_manager := services.GetUserManager()
+	return user_manager.AddUserToOrg(ctx, services.UseExistingUser,
 		principal, username, orgs, policy)
 }
 

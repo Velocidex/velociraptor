@@ -377,6 +377,17 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		service_container.mu.Unlock()
 	}
 
+	if spec.JournalService {
+		j, err := journal.NewJournalService(ctx, wg, org_config)
+		if err != nil {
+			return err
+		}
+		service_container.mu.Lock()
+		service_container.journal = j
+		service_container.broadcast = broadcast.NewBroadcastService(org_config)
+		service_container.mu.Unlock()
+	}
+
 	// Now start service on the root org
 	if utils.IsRootOrg(org_id) {
 		err := self.startRootOrgServices(ctx, wg, spec, org_config, service_container)
@@ -385,6 +396,7 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		}
 	}
 
+	// ACL manager exist for each org
 	if spec.UserManager {
 		m, err := acl_manager.NewACLManager(ctx, wg, org_config)
 		if err != nil {
@@ -399,17 +411,6 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 	// Now start the services for this org. Services depend on other
 	// services so they need to be accessible as soon as they are
 	// ready.
-	if spec.JournalService {
-		j, err := journal.NewJournalService(ctx, wg, org_config)
-		if err != nil {
-			return err
-		}
-		service_container.mu.Lock()
-		service_container.journal = j
-		service_container.broadcast = broadcast.NewBroadcastService(org_config)
-		service_container.mu.Unlock()
-	}
-
 	if spec.NotificationService {
 		n, err := notifications.NewNotificationService(ctx, wg, org_config)
 		if err != nil {

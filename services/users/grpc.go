@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/peer"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -17,23 +18,37 @@ import (
 )
 
 func (self UserManager) GetUserFromContext(ctx context.Context) (
-	*api_proto.VelociraptorUser, *config_proto.Config, error) {
+	user_record *api_proto.VelociraptorUser, org_config_obj *config_proto.Config, err error) {
 
 	grpc_user_info := GetGRPCUserInfo(self.config_obj, ctx, self.ca_pool)
-	user_record, err := self.GetUser(ctx, grpc_user_info.Name)
-	if err != nil {
-		return nil, nil, err
+
+	// This is not a real user but represents the grpc gateway
+	// connection - it is always allowed.
+	if grpc_user_info.Name == constants.PinnedServerName ||
+		(self.config_obj.API != nil &&
+			self.config_obj.API.PinnedGwName == grpc_user_info.Name) {
+		user_record = &api_proto.VelociraptorUser{
+			Name: grpc_user_info.Name,
+		}
+
+	} else {
+		user_record, err = self.storage.GetUserWithHashes(ctx, grpc_user_info.Name)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 
 	user_record.CurrentOrg = grpc_user_info.CurrentOrg
+	user_record.PasswordSalt = nil
+	user_record.PasswordHash = nil
 
-	// Fetch the appropriate config file fro the org manager.
+	// Fetch the appropriate config file from the org manager.
 	org_manager, err := services.GetOrgManager()
 	if err != nil {
 		return nil, nil, err
 	}
 
-	org_config_obj, err := org_manager.GetOrgConfig(user_record.CurrentOrg)
+	org_config_obj, err = org_manager.GetOrgConfig(user_record.CurrentOrg)
 	return user_record, org_config_obj, err
 }
 

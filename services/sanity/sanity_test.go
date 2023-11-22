@@ -41,6 +41,8 @@ tools:
 - name: Tool2
   url: https://www.example2.com/
 
+`, `name: Server.Internal.UserManager
+type: INTERNAL
 `})
 	self.ConfigObj.Services.NotebookService = true
 	self.ConfigObj.Services.UserManager = true
