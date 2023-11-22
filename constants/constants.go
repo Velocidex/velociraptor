@@ -113,6 +113,7 @@ const (
 	SQLITE_ALWAYS_MAKE_TEMPFILE = "SQLITE_ALWAYS_MAKE_TEMPFILE"
 
 	PinnedServerName = "VelociraptorServer"
+	PinnedGwName     = "GRPC_GW"
 
 	CLIENT_API_VERSION = uint32(4)
 

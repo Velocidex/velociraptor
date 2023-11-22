@@ -9,9 +9,8 @@ import (
 )
 
 // List all the orgs the user can see.
-func GetOrgs(
-	ctx context.Context,
-	principal string) []*api_proto.OrgRecord {
+func (self *UserManager) GetOrgs(
+	ctx context.Context, principal string) []*api_proto.OrgRecord {
 
 	org_manager, err := services.GetOrgManager()
 	if err != nil {
@@ -23,7 +22,8 @@ func GetOrgs(
 		return nil
 	}
 
-	// ORG_ADMINs can see everything
+	// ORG_ADMINs can see everything so they have permissions in all
+	// the orgs
 	is_superuser, _ := services.CheckAccess(
 		root_config_obj, principal, acls.ORG_ADMIN)
 
@@ -60,4 +60,20 @@ func GetOrgs(
 	}
 
 	return result
+}
+
+// Fill in the orgs that the user has any permissions in.
+func (self *UserManager) normalizeOrgList(
+	ctx context.Context,
+	user_record *api_proto.VelociraptorUser) {
+	orgs := self.GetOrgs(ctx, user_record.Name)
+	user_record.Orgs = nil
+
+	// Fill in some information from the orgs but not everything.
+	for _, org_record := range orgs {
+		user_record.Orgs = append(user_record.Orgs, &api_proto.OrgRecord{
+			Id:   org_record.Id,
+			Name: org_record.Name,
+		})
+	}
 }

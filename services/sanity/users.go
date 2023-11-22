@@ -21,6 +21,11 @@ func createInitialUsers(
 		return nil
 	}
 
+	superuser := "VelociraptorServer"
+	if config_obj.Client != nil {
+		superuser = config_obj.Client.PinnedServerName
+	}
+
 	user_names := config_obj.GUI.InitialUsers
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
@@ -30,6 +35,7 @@ func createInitialUsers(
 	for _, org := range config_obj.GUI.InitialOrgs {
 		org_list = append(org_list, org.OrgId)
 	}
+
 	org_manager, err := services.GetOrgManager()
 	if err != nil {
 		return err
@@ -37,7 +43,7 @@ func createInitialUsers(
 
 	for _, user := range user_names {
 		users_manager := services.GetUserManager()
-		user_record, err := users_manager.GetUser(ctx, user.Name)
+		user_record, err := users_manager.GetUser(ctx, superuser, user.Name)
 		if err != nil || user_record.Name != user.Name {
 			logger.Info("Initial user %v not present, creating", user.Name)
 			new_user, err := users.NewUserRecord(config_obj, user.Name)

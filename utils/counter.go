@@ -8,9 +8,10 @@ import (
 )
 
 var (
-	idx uint64
+	idx uint64 = uint64(GetGUID() >> 4)
 )
 
+// Get unique ID
 func GetId() uint64 {
 	return atomic.AddUint64(&idx, 1)
 }

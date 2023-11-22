@@ -60,16 +60,6 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   }
  },
  {
-  "name": "OrgAdmin",
-  "org_id": "ORGID",
-  "org_name": "MyOrg",
-  "picture": "",
-  "email": false,
-  "roles": null,
-  "_policy": {},
-  "effective_policy": null
- },
- {
   "name": "OrgUser",
   "org_id": "ORGID",
   "org_name": "MyOrg",
@@ -196,16 +186,6 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   }
  }
 ]SELECT * FROM query(query={ SELECT * FROM gui_users() ORDER BY name }, org_id="ORGID")[
- {
-  "name": "OrgAdmin",
-  "org_id": "ORGID",
-  "org_name": "MyOrg",
-  "picture": "",
-  "email": false,
-  "roles": null,
-  "_policy": {},
-  "effective_policy": null
- },
  {
   "name": "OrgUser",
   "org_id": "ORGID",

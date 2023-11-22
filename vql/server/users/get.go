@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -37,7 +37,8 @@ func (self UserFunction) Call(
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
-	user_details, err := users.GetUser(ctx, principal, arg.Username)
+	users_manager := services.GetUserManager()
+	user_details, err := users_manager.GetUser(ctx, principal, arg.Username)
 	if err != nil {
 		scope.Log("user: %s", err)
 		return vfilter.Null{}

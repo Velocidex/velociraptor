@@ -8,7 +8,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/users"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -47,13 +46,14 @@ func (self UsersPlugin) Call(
 			return
 		}
 
-		orgs := users.LIST_ALL_ORGS
+		orgs := services.LIST_ALL_ORGS
 		if !arg.AllOrgs {
 			// Only list the current org.
 			orgs = []string{config_obj.OrgId}
 		}
 
-		user_list, err := users.ListUsers(ctx, principal, orgs)
+		users_manager := services.GetUserManager()
+		user_list, err := users_manager.ListUsers(ctx, principal, orgs)
 		if err != nil {
 			scope.Log("users: %v", err)
 			return

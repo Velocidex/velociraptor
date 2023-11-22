@@ -1,0 +1,4 @@
+name: Server.Internal.UserManager
+type: INTERNAL
+description: |
+  An internal artifact notifying when user accounts are modified.

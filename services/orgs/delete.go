@@ -16,17 +16,17 @@ import (
 )
 
 func RemoveOrgFromUsers(
-	ctx context.Context, org_id string) error {
+	ctx context.Context, principal, org_id string) error {
 
 	// Remove the org from all the users.
 	user_manager := services.GetUserManager()
-	users, err := user_manager.ListUsers(ctx)
+	users, err := user_manager.ListUsers(ctx, principal, services.LIST_ALL_ORGS)
 	if err != nil {
 		return err
 	}
 
 	for _, u := range users {
-		record, err := user_manager.GetUserWithHashes(ctx, u.Name)
+		record, err := user_manager.GetUserWithHashes(ctx, principal, u.Name)
 		if err == nil {
 			new_orgs := []*api_proto.OrgRecord{}
 			for _, org := range record.Orgs {
@@ -44,12 +44,12 @@ func RemoveOrgFromUsers(
 	return nil
 }
 
-func (self *OrgManager) DeleteOrg(ctx context.Context, org_id string) error {
+func (self *OrgManager) DeleteOrg(ctx context.Context, principal, org_id string) error {
 	if utils.IsRootOrg(org_id) {
 		return errors.New("Can not remove root org.")
 	}
 
-	err := RemoveOrgFromUsers(ctx, org_id)
+	err := RemoveOrgFromUsers(ctx, principal, org_id)
 	if err != nil {
 		return err
 	}

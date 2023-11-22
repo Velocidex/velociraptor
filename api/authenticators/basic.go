@@ -12,7 +12,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/users"
 )
 
 // Implement basic authentication.
@@ -81,7 +80,8 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 		// Get the full user record with hashes so we can
 		// verify it below.
 		users_manager := services.GetUserManager()
-		user_record, err := users_manager.GetUserWithHashes(r.Context(), username)
+		user_record, err := users_manager.GetUserWithHashes(r.Context(),
+			username, username)
 		if err != nil || user_record.Name != username {
 			services.LogAudit(r.Context(),
 				self.config_obj, username, "Unknown username",
@@ -92,12 +92,14 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 			http.Error(w, "authorization failed", http.StatusUnauthorized)
 			return
 		}
-
-		if !users.VerifyPassword(user_record, password) {
+		ok, err = users_manager.VerifyPassword(r.Context(),
+			username, username, password)
+		if !ok || err != nil {
 			services.LogAudit(r.Context(),
 				self.config_obj, username, "Invalid password",
 				ordereddict.NewDict().
 					Set("remote", r.RemoteAddr).
+					Set("error", err.Error()).
 					Set("status", http.StatusUnauthorized))
 
 			http.Error(w, "authorization failed", http.StatusUnauthorized)
