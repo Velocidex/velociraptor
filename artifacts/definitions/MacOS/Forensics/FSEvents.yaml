@@ -1,4 +1,4 @@
-name: Rapid7.MacOS.Forensics.FSEvents
+name: MacOS.Forensics.FSEvents
 description: |
    This artifact parses the FSEvents log files.
    
