@@ -25,6 +25,7 @@ import (
 
 	"golang.org/x/crypto/ssh/terminal"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -152,13 +153,15 @@ func doShowUser() error {
 	defer sm.Close()
 
 	users_manager := services.GetUserManager()
-	user_record, err := users_manager.GetUser(ctx, *user_show_name)
+	user_record, err := users_manager.GetUser(ctx, constants.PinnedServerName,
+		*user_show_name)
 	if err != nil {
 		return err
 	}
 
 	if *user_show_hashes {
-		user_record, err := users_manager.GetUserWithHashes(ctx, *user_show_name)
+		user_record, err := users_manager.GetUserWithHashes(ctx,
+			constants.PinnedServerName, *user_show_name)
 		if err != nil {
 			return err
 		}
@@ -197,7 +200,8 @@ func doLockUser() error {
 	defer sm.Close()
 
 	users_manager := services.GetUserManager()
-	user_record, err := users_manager.GetUser(ctx, *user_lock_name)
+	user_record, err := users_manager.GetUser(ctx, constants.PinnedServerName,
+		*user_lock_name)
 	if err != nil {
 		return fmt.Errorf("Unable to find user %s", *user_lock_name)
 	}

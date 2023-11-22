@@ -4,7 +4,6 @@
    "name": "AdminO1",
    "orgs": [
     {
-     "name": "O1",
      "id": "O1"
     }
    ]
@@ -13,7 +12,6 @@
    "name": "AdminO2",
    "orgs": [
     {
-     "name": "O2",
      "id": "O2"
     }
    ]
@@ -21,25 +19,13 @@
   {
    "name": "OrgAdmin",
    "orgs": [
-    {
-     "name": "\u003croot\u003e",
-     "id": "root"
-    },
-    {
-     "name": "O1",
-     "id": "O1"
-    },
-    {
-     "name": "O2",
-     "id": "O2"
-    }
+    {}
    ]
   },
   {
    "name": "UserO1",
    "orgs": [
     {
-     "name": "O1",
      "id": "O1"
     }
    ]
@@ -48,7 +34,6 @@
    "name": "UserO2",
    "orgs": [
     {
-     "name": "O2",
      "id": "O2"
     }
    ]
@@ -59,16 +44,6 @@
    "name": "AdminO1",
    "orgs": [
     {
-     "name": "O1",
-     "id": "O1"
-    }
-   ]
-  },
-  {
-   "name": "OrgAdmin",
-   "orgs": [
-    {
-     "name": "O1",
      "id": "O1"
     }
    ]
@@ -77,7 +52,6 @@
    "name": "UserO1",
    "orgs": [
     {
-     "name": "O1",
      "id": "O1"
     }
    ]
@@ -88,16 +62,6 @@
    "name": "AdminO1",
    "orgs": [
     {
-     "name": "O1",
-     "id": "O1"
-    }
-   ]
-  },
-  {
-   "name": "OrgAdmin",
-   "orgs": [
-    {
-     "name": "O1",
      "id": "O1"
     }
    ]
@@ -106,7 +70,6 @@
    "name": "UserO1",
    "orgs": [
     {
-     "name": "O1",
      "id": "O1"
     }
    ]
@@ -117,9 +80,6 @@
    "name": "AdminO1"
   },
   {
-   "name": "OrgAdmin"
-  },
-  {
    "name": "UserO1"
   }
  ],
@@ -128,7 +88,6 @@
    "name": "AdminO1",
    "orgs": [
     {
-     "name": "O2",
      "id": "O2"
     }
    ]
@@ -137,16 +96,6 @@
    "name": "AdminO2",
    "orgs": [
     {
-     "name": "O2",
-     "id": "O2"
-    }
-   ]
-  },
-  {
-   "name": "OrgAdmin",
-   "orgs": [
-    {
-     "name": "O2",
      "id": "O2"
     }
    ]
@@ -155,7 +104,6 @@
    "name": "UserO2",
    "orgs": [
     {
-     "name": "O2",
      "id": "O2"
     }
    ]
@@ -166,11 +114,9 @@
    "name": "AdminO1",
    "orgs": [
     {
-     "name": "O1",
      "id": "O1"
     },
     {
-     "name": "O2",
      "id": "O2"
     }
    ]
@@ -179,20 +125,6 @@
    "name": "AdminO2",
    "orgs": [
     {
-     "name": "O2",
-     "id": "O2"
-    }
-   ]
-  },
-  {
-   "name": "OrgAdmin",
-   "orgs": [
-    {
-     "name": "O1",
-     "id": "O1"
-    },
-    {
-     "name": "O2",
      "id": "O2"
     }
    ]
@@ -201,7 +133,6 @@
    "name": "UserO1",
    "orgs": [
     {
-     "name": "O1",
      "id": "O1"
     }
    ]
@@ -210,7 +141,6 @@
    "name": "UserO2",
    "orgs": [
     {
-     "name": "O2",
      "id": "O2"
     }
    ]

@@ -7,7 +7,6 @@ import (
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/users"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -67,7 +66,7 @@ func (self GrantFunction) Call(
 	policy.Roles = utils.DeduplicateStringSlice(append(policy.Roles, arg.Roles...))
 
 	principal := vql_subsystem.GetPrincipal(scope)
-	err = users.GrantUserToOrg(ctx, principal, arg.Username, orgs, policy)
+	err = services.GrantUserToOrg(ctx, principal, arg.Username, orgs, policy)
 	if err != nil {
 		scope.Log("user_grant: %s", err)
 		return vfilter.Null{}

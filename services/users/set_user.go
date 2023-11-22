@@ -12,7 +12,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
@@ -24,14 +23,15 @@ var (
 // A user may update their own password.
 // A ServerAdmin in any of the orgs the user belongs to can update their password.
 // An OrgAdmin can update everyone's password
-func SetUserPassword(
+func (self *UserManager) SetUserPassword(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	principal, username string,
 	password, current_org string) error {
 
-	if isNameReserved(username) {
-		return NameReservedError
+	err := validateUsername(config_obj, username)
+	if err != nil {
+		return err
 	}
 
 	org_manager, err := services.GetOrgManager()
@@ -47,7 +47,7 @@ func SetUserPassword(
 	user_manager := services.GetUserManager()
 
 	// Hold on to the error until after ACL check
-	user_record, user_err := user_manager.GetUser(ctx, username)
+	user_record, user_err := user_manager.GetUser(ctx, principal, username)
 
 	// Update the password if needed.
 	if password != "" {
@@ -143,25 +143,15 @@ func verifyPassword(self *api_proto.VelociraptorUser, password string) bool {
 	return subtle.ConstantTimeCompare(hash[:], self.PasswordHash) == 1
 }
 
-func VerifyPassword(
+func (self *UserManager) VerifyPassword(
 	ctx context.Context,
 	principal, username string,
 	password string) (bool, error) {
 
-	user_record, err := getUserWithHashes(ctx, principal, username)
+	user_record, err := self.GetUserWithHashes(ctx, principal, username)
 	if err != nil {
 		return false, err
 	}
 
 	return verifyPassword(user_record, password), nil
-}
-
-// Store this special name from being added - This principal is used
-// internally by the server to bypass the ACL system when needed.
-func isNameReserved(username string) bool {
-	switch username {
-	case constants.PinnedServerName:
-		return true
-	}
-	return false
 }

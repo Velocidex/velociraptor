@@ -20,12 +20,14 @@ func (self UserManager) GetUserFromContext(ctx context.Context) (
 	*api_proto.VelociraptorUser, *config_proto.Config, error) {
 
 	grpc_user_info := GetGRPCUserInfo(self.config_obj, ctx, self.ca_pool)
-	user_record, err := self.GetUser(ctx, grpc_user_info.Name)
+	user_record, err := self.storage.GetUserWithHashes(ctx, grpc_user_info.Name)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	user_record.CurrentOrg = grpc_user_info.CurrentOrg
+	user_record.PasswordSalt = nil
+	user_record.PasswordHash = nil
 
 	// Fetch the appropriate config file fro the org manager.
 	org_manager, err := services.GetOrgManager()

@@ -9,16 +9,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-var (
-	LIST_ALL_ORGS []string = nil
-)
-
 // List all the users visible to this principal.
 // - If the principal is an ORG_ADMIN they can see all users
 // - If the user is SERVER_ADMIN they will see the full user records.
 // - Otherwise list all users belonging to the orgs in which the user
 //   has at least read access. Only user names will be shown.
-func ListUsers(
+func (self *UserManager) ListUsers(
 	ctx context.Context,
 	principal string, orgs []string) ([]*api_proto.VelociraptorUser, error) {
 
@@ -32,8 +28,7 @@ func ListUsers(
 		return nil, err
 	}
 
-	user_manager := services.GetUserManager()
-	users, err := user_manager.ListUsers(ctx)
+	users, err := self.storage.ListAllUsers(ctx)
 	if err != nil {
 		return nil, err
 	}

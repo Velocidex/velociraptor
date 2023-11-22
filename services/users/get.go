@@ -8,28 +8,41 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
+// Returns the user record after stripping sensitive information like
+// password hashes.
+
 // Gets the user record.
 // If the principal == username the user is getting their own record.
 // If the principal is a SERVER_ADMIN in any orgs the user belongs in
 // they can see the full record.
 // If the principal has READER in any orgs the user belongs in they
 // can only see the user name.
-func GetUser(
-	ctx context.Context,
-	principal, username string) (*api_proto.VelociraptorUser, error) {
+func (self *UserManager) GetUser(
+	ctx context.Context, principal, username string) (*api_proto.VelociraptorUser, error) {
 
-	result, err := getUserWithHashes(ctx, principal, username)
+	// For the server name we dont have a real user record, we make a
+	// hard coded user record instead.
+	if username == self.config_obj.Client.PinnedServerName {
+		return &api_proto.VelociraptorUser{
+			Name: username,
+		}, nil
+	}
+
+	// Call our overloaded method which check permissions and
+	// visibility.
+	result, err := self.GetUserWithHashes(ctx, principal, username)
 	if err != nil {
 		return nil, err
 	}
 
+	// Clear the hashes
 	result.PasswordHash = nil
 	result.PasswordSalt = nil
 
 	return result, nil
 }
 
-func getUserWithHashes(
+func (self *UserManager) GetUserWithHashes(
 	ctx context.Context,
 	principal, username string) (*api_proto.VelociraptorUser, error) {
 
@@ -43,10 +56,15 @@ func getUserWithHashes(
 		return nil, err
 	}
 
-	user_manager := services.GetUserManager()
-
 	// Hold on to the error until after ACL check
-	user, user_err := user_manager.GetUserWithHashes(ctx, username)
+	user, user_err := self.storage.GetUserWithHashes(ctx, username)
+	if user_err != nil {
+		return nil, user_err
+	}
+
+	// Fill in the org memberships for the user record using the org
+	// manager.
+	self.normalizeOrgList(ctx, user)
 
 	// A user can always get their own user record regarless of
 	// permissions.
@@ -64,6 +82,8 @@ func getUserWithHashes(
 		return nil, acls.PermissionDenied
 	}
 
+	// Filter the org list according to the principal's permissions
+	// and visibility rules.
 	allowed_full := false
 	returned_orgs := []*api_proto.OrgRecord{}
 
@@ -106,6 +126,7 @@ func getUserWithHashes(
 		Name: user.Name,
 	}
 
+	// We are allowed to return a filtered list of org memberships.
 	if allowed_full {
 		user_record.Orgs = returned_orgs
 	}

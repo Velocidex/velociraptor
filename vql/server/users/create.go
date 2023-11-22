@@ -6,7 +6,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/users"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -50,7 +49,8 @@ func (self UserCreateFunction) Call(
 		Roles: arg.Roles,
 	}
 
-	err = users.AddUserToOrg(ctx, users.AddNewUser,
+	users_manager := services.GetUserManager()
+	err = users_manager.AddUserToOrg(ctx, services.AddNewUser,
 		principal, arg.Username, arg.OrgIds, policy)
 	if err != nil {
 		scope.Log("user_create: %s", err)
@@ -66,7 +66,7 @@ func (self UserCreateFunction) Call(
 
 	if arg.Password != "" {
 		// Write the user record.
-		err = users.SetUserPassword(
+		err = users_manager.SetUserPassword(
 			ctx, org_config_obj, principal, arg.Username, arg.Password, "")
 		if err != nil {
 			scope.Log("user_create: %s", err)
