@@ -125,7 +125,10 @@ func Unmarshal(b []byte, v interface{}) error {
 
 	self, ok := v.(proto.Message)
 	if ok {
-		return protojson.Unmarshal(b, self)
+		options := &protojson.UnmarshalOptions{
+			DiscardUnknown: true,
+		}
+		return options.Unmarshal(b, self)
 	}
 
 	return json.Unmarshal(b, v)

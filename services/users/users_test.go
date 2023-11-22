@@ -11,7 +11,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
-	"www.velocidex.com/golang/velociraptor/users"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
@@ -20,10 +19,15 @@ type UserManagerTestSuite struct {
 }
 
 func (self *UserManagerTestSuite) SetupTest() {
+	self.ConfigObj = self.TestSuite.LoadConfig()
+	self.ConfigObj.Services.JournalService = true
+
 	self.TestSuite.SetupTest()
 
 	self.LoadArtifacts(`name: Server.Audit.Logs
 type: SERVER_EVENT
+`, `name: Server.Internal.UserManager
+type: INTERNAL
 `)
 }
 
@@ -70,32 +74,32 @@ func (self *UserManagerTestSuite) TestMakeUsers() {
 	self.makeUsers()
 
 	golden := ordereddict.NewDict()
-
-	user_record, err := users.GetUser(self.Ctx, "OrgAdmin", "OrgAdmin")
+	users_manager := services.GetUserManager()
+	user_record, err := users_manager.GetUser(self.Ctx, "OrgAdmin", "OrgAdmin")
 	assert.NoError(self.T(), err)
 	golden.Set("OrgAdmin OrgAdmin", user_record)
 
-	user_record, err = users.GetUser(self.Ctx, "OrgAdmin", "UserO1")
+	user_record, err = users_manager.GetUser(self.Ctx, "OrgAdmin", "UserO1")
 	assert.NoError(self.T(), err)
 	golden.Set("OrgAdmin UserO1", user_record)
 
-	user_record, err = users.GetUser(self.Ctx, "AdminO1", "UserO1")
+	user_record, err = users_manager.GetUser(self.Ctx, "AdminO1", "UserO1")
 	assert.NoError(self.T(), err)
 	golden.Set("AdminO1 UserO1", user_record)
 
-	user_record, err = users.GetUser(self.Ctx, "AdminO2", "UserO1")
+	user_record, err = users_manager.GetUser(self.Ctx, "AdminO2", "UserO1")
 	assert.ErrorContains(self.T(), err, "PermissionDenied")
 	golden.Set("AdminO2 UserO1", err.Error())
 
-	user_record, err = users.GetUser(self.Ctx, "OrgAdmin", "UserO2")
+	user_record, err = users_manager.GetUser(self.Ctx, "OrgAdmin", "UserO2")
 	assert.NoError(self.T(), err)
 	golden.Set("OrgAdmin UserO2", user_record)
 
-	user_record, err = users.GetUser(self.Ctx, "AdminO2", "UserO2")
+	user_record, err = users_manager.GetUser(self.Ctx, "AdminO2", "UserO2")
 	assert.NoError(self.T(), err)
 	golden.Set("AdminO2 UserO2", user_record)
 
-	user_record, err = users.GetUser(self.Ctx, "AdminO1", "UserO2")
+	user_record, err = users_manager.GetUser(self.Ctx, "AdminO1", "UserO2")
 	assert.ErrorContains(self.T(), err, "PermissionDenied")
 	golden.Set("AdminO1 UserO2", err.Error())
 

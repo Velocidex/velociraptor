@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	"www.velocidex.com/golang/velociraptor/users"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -41,7 +41,8 @@ func (self SetPasswordFunction) Call(
 		return vfilter.Null{}
 	}
 
-	err = users.SetUserPassword(ctx, config_obj, principal, arg.Username,
+	users_manager := services.GetUserManager()
+	err = users_manager.SetUserPassword(ctx, config_obj, principal, arg.Username,
 		arg.Password, "")
 	if err != nil {
 		scope.Log("passwd: %v", err)

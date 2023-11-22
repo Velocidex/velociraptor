@@ -50,13 +50,13 @@ func (self OrgDeleteFunction) Call(
 			return vfilter.Null{}
 		}
 
-		err = org_manager.DeleteOrg(ctx, arg.OrgId)
+		principal := vql_subsystem.GetPrincipal(scope)
+		err = org_manager.DeleteOrg(ctx, principal, arg.OrgId)
 		if err != nil {
 			scope.Log("org_delete: %s", err)
 			return vfilter.Null{}
 		}
 
-		principal := vql_subsystem.GetPrincipal(scope)
 		services.LogAudit(ctx,
 			config_obj, principal, "org_delete",
 			ordereddict.NewDict().

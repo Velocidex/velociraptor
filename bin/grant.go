@@ -8,6 +8,7 @@ import (
 	jsonpatch "github.com/evanphx/json-patch/v5"
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -78,7 +79,7 @@ func doGrant() error {
 
 	// Check the user actually exists first
 	user_manager := services.GetUserManager()
-	_, err = user_manager.GetUser(ctx, principal)
+	_, err = user_manager.GetUser(ctx, constants.PinnedServerName, principal)
 	if err != nil {
 		return err
 	}

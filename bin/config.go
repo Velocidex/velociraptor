@@ -34,6 +34,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -550,7 +551,8 @@ func doDumpApiClientConfig() error {
 
 		// Make sure the user actually exists.
 		user_manager := services.GetUserManager()
-		_, err = user_manager.GetUser(ctx, *config_api_client_common_name)
+		_, err = user_manager.GetUser(ctx, constants.PinnedServerName,
+			*config_api_client_common_name)
 		if err != nil {
 			// Need to ensure we have a user
 			err := user_manager.SetUser(ctx, &api_proto.VelociraptorUser{

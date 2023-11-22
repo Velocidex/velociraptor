@@ -172,6 +172,6 @@ SELECT whoami() FROM scope()[
  }
 ]SELECT * FROM test_read_logs() WHERE Log =~ "Username is reserved" AND NOT Log =~ "SELECT"[
  {
-  "Log": "Velociraptor: user_create: Username is reserved\n"
+  "Log": "Velociraptor: user_create: Username is reserved: VelociraptorServer\n"
  }
 ]

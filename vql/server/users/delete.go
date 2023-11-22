@@ -5,7 +5,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/users"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -45,7 +44,8 @@ func (self UserDeleteFunction) Call(
 
 	if arg.ReallyDoIt {
 		principal := vql_subsystem.GetPrincipal(scope)
-		err = users.DeleteUser(ctx, principal, arg.Username, orgs)
+		users_manager := services.GetUserManager()
+		err = users_manager.DeleteUser(ctx, principal, arg.Username, orgs)
 		if err != nil {
 			scope.Log("user_delete: %s", err)
 			return vfilter.Null{}
