@@ -20,12 +20,12 @@ SELECT OSPath.Basename, Content.home FROM Artifact.MacOS.System.Plist( PlistGlob
   "_Architecture": "arch_arm_i64",
   "_Source": "MacOS.System.Packages"
  }
-]SELECT File, path, id, flags FROM Artifact.MacOS.Forensics.FSEvents(Glob=srcDir+"/artifacts/testdata/files/fs_events_*")[
+]SELECT SourceFile, EnrtryPath, EntryId, EntryFlags FROM Artifact.MacOS.Forensics.FSEvents(Glob=srcDir+"/artifacts/testdata/files/fs_events_*")[
  {
-  "File": "fs_events_00000000007cff3d",
-  "path": ".fseventsd/sl-compat",
-  "id": 163194,
-  "flags": "IsDirectory"
+  "SourceFile": "fs_events_00000000007cff3d",
+  "EnrtryPath": ".fseventsd/sl-compat",
+  "EntryId": 163194,
+  "EntryFlags": "IsDirectory"
  }
 ]SELECT *, OSPath.Basename AS OSPath FROM Artifact.MacOS.System.Dock(DockGlob=srcDir+"/artifacts/testdata/files/com.apple.dock.plist")[
  {
