@@ -137,8 +137,6 @@ func (self *Dummy) GetToolInfo(
 			return proto.Clone(item).(*artifacts_proto.Tool), nil
 		}
 	}
-	fmt.Printf("Resolving tool %v version %v\n", tool, version)
-	json.Dump(self.binaries)
 	return nil, fmt.Errorf("Dummy inventory: Tool %v not declared in inventory.", tool)
 }
 
