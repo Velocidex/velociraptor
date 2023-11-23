@@ -325,7 +325,7 @@ fi
 
 if [ $1 == 0 ] ; then
     /bin/systemctl disable velociraptor_client.service
-	/bin/systemctl stop velociraptor_client.service
+    /bin/systemctl stop velociraptor_client.service
 fi
 `)
 
