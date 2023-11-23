@@ -20,15 +20,13 @@ parameters:
 
 sources:
   - precondition:
-      SELECT OS From info() where OS = 'Linux'
+      SELECT OS From info() where OS = 'linux'
 
     query:  |
-      // Force the file to be copied to the real temp directory since
-      // we are just about to remove the Tools directory.
-      LET bin <= SELECT copy(filename=OSPath,
-          dest=expand(path="/tmp/") + basename(path=OSPath)) AS Dest
+      // FetchBinary downloads to /tmp on linux
+      LET bin <= SELECT OSPath AS Dest
       FROM Artifact.Generic.Utils.FetchBinary(
-         ToolName="VelociraptorLinux", IsExecutable=FALSE,
+         ToolName="VelociraptorDebian", IsExecutable=FALSE,
          SleepDuration=SleepDuration)
 
       // Call the binary and return all its output in a single row.
@@ -36,6 +34,6 @@ sources:
       SELECT * FROM foreach(row=bin,
       query={
          SELECT * FROM execve(
-              argv=["dpkg", "-i", Dest],
+              argv=["/bin/bash", "-c", "rm /var/lib/dpkg/info/velociraptor-client.prerm && dpkg -i " + str(str=Dest) + " && systemctl restart velociraptor_client"],
               length=10000000)
       })
