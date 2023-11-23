@@ -23,7 +23,7 @@ sources:
       SELECT OS From info() where OS = 'linux'
 
     query:  |
-       // FetchBinary downloads to /tmp on linux
+      // FetchBinary downloads to /tmp on linux
       LET bin <= SELECT OSPath AS Dest
       FROM Artifact.Generic.Utils.FetchBinary(
          ToolName="VelociraptorRedHat", IsExecutable=FALSE,
