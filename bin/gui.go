@@ -33,6 +33,128 @@ var (
 		"noclient", "Do not bring up a client").Bool()
 )
 
+func generateGUIConfig(datastore_directory, server_config_path, client_config_path string) (
+	*config_proto.Config, error) {
+	config_obj := config.GetDefaultConfig()
+	err := generateNewKeys(config_obj)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to create config: %w", err)
+	}
+
+	// GUI Configuration - hard coded username/password
+	// and no SSL are suitable for local deployment only!
+	config_obj.GUI.BindAddress = "127.0.0.1"
+	config_obj.GUI.BindPort = 8889
+
+	// Frontend only suitable for local client
+	config_obj.Frontend.BindAddress = "127.0.0.1"
+	config_obj.Frontend.BindPort = 8000
+	config_obj.Frontend.DoNotCompressArtifacts = true
+
+	// Client configuration.
+	config_obj.Client.ServerUrls = []string{"https://localhost:8000/"}
+	config_obj.Client.UseSelfSignedSsl = true
+
+	write_back := filepath.Join(datastore_directory, "Velociraptor.writeback.%NONCE%.yaml")
+	config_obj.Client.WritebackWindows = write_back
+	config_obj.Client.WritebackLinux = write_back
+	config_obj.Client.WritebackDarwin = write_back
+
+	// Do not use a local buffer file since there is no
+	// point - we are by definition directly connected.
+	config_obj.Client.LocalBuffer.DiskSize = 0
+	config_obj.Client.LocalBuffer.FilenameWindows = ""
+	config_obj.Client.LocalBuffer.FilenameLinux = ""
+	config_obj.Client.LocalBuffer.FilenameDarwin = ""
+
+	// Make the client use the datastore_directory for tempfiles as well.
+	tmpdir := filepath.Join(datastore_directory, "temp")
+	err = os.MkdirAll(tmpdir, 0700)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to create temp directory: %w", err)
+	}
+
+	config_obj.Client.TempdirLinux = tmpdir
+	config_obj.Client.TempdirWindows = tmpdir
+	config_obj.Client.TempdirDarwin = tmpdir
+
+	config_obj.Datastore.Location = datastore_directory
+	config_obj.Datastore.FilestoreDirectory = datastore_directory
+
+	// Make events run much faster in this configuration
+	config_obj.Defaults.EventMaxWait = 1
+	config_obj.Defaults.EventMaxWaitJitter = 1
+	config_obj.Defaults.EventChangeNotifyAllClients = true
+
+	// Load the "fs" accessor this time (It will be loaded
+	// automatically after restart).
+	err = initFilestoreAccessor(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a user with default password
+	user_record, err := users.NewUserRecord(config_obj, "admin")
+	if err != nil {
+		return nil, fmt.Errorf("Unable to create admin user: %w", err)
+	}
+
+	users.SetPassword(user_record, "password")
+	config_obj.GUI.InitialUsers = append(config_obj.GUI.InitialUsers,
+		&config_proto.GUIUser{
+			Name:         user_record.Name,
+			PasswordHash: hex.EncodeToString(user_record.PasswordHash),
+			PasswordSalt: hex.EncodeToString(user_record.PasswordSalt),
+		})
+
+	// For the GUI org create a separate org.
+	config_obj.GUI.InitialOrgs = append(config_obj.GUI.InitialOrgs,
+		&config_proto.InitialOrgRecord{
+			OrgId: "O123",
+			Name:  "ACME Inc",
+			Nonce: "ACME",
+		})
+
+	// Write the config for next time
+	serialized, err := yaml.Marshal(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	fd, err := os.OpenFile(server_config_path,
+		os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return nil, fmt.Errorf("Open file %s: %w", server_config_path, err)
+	}
+	_, err = fd.Write(serialized)
+	if err != nil {
+		return nil, fmt.Errorf("Write file %s: %w", server_config_path, err)
+	}
+	fd.Close()
+
+	// Now also write a client config
+	client_config := getClientConfig(config_obj)
+	client_config.Logging = config_obj.Logging
+
+	serialized, err = yaml.Marshal(client_config)
+	if err != nil {
+		return nil, err
+	}
+
+	fd, err = os.OpenFile(client_config_path,
+		os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		return nil, fmt.Errorf("Open file %s: %w", client_config_path, err)
+	}
+	_, err = fd.Write(serialized)
+	if err != nil {
+		return nil, fmt.Errorf("Write file %s: %w", client_config_path, err)
+	}
+	fd.Close()
+
+	return config_obj, nil
+}
+
 func doGUI() error {
 	// Start from a clean slate
 	os.Setenv("VELOCIRAPTOR_CONFIG", "")
@@ -76,122 +198,11 @@ func doGUI() error {
 		logging.Prelog("No valid config found - " +
 			"will generare a new one at <green>" + server_config_path)
 
-		config_obj = config.GetDefaultConfig()
-		err := generateNewKeys(config_obj)
-		if err != nil {
-			return fmt.Errorf("Unable to create config: %w", err)
-		}
-
-		// GUI Configuration - hard coded username/password
-		// and no SSL are suitable for local deployment only!
-		config_obj.GUI.BindAddress = "127.0.0.1"
-		config_obj.GUI.BindPort = 8889
-
-		// Frontend only suitable for local client
-		config_obj.Frontend.BindAddress = "127.0.0.1"
-		config_obj.Frontend.BindPort = 8000
-		config_obj.Frontend.DoNotCompressArtifacts = true
-
-		// Client configuration.
-		config_obj.Client.ServerUrls = []string{"https://localhost:8000/"}
-		config_obj.Client.UseSelfSignedSsl = true
-
-		write_back := filepath.Join(datastore_directory, "Velociraptor.writeback.%NONCE%.yaml")
-		config_obj.Client.WritebackWindows = write_back
-		config_obj.Client.WritebackLinux = write_back
-		config_obj.Client.WritebackDarwin = write_back
-
-		// Do not use a local buffer file since there is no
-		// point - we are by definition directly connected.
-		config_obj.Client.LocalBuffer.DiskSize = 0
-		config_obj.Client.LocalBuffer.FilenameWindows = ""
-		config_obj.Client.LocalBuffer.FilenameLinux = ""
-		config_obj.Client.LocalBuffer.FilenameDarwin = ""
-
-		// Make the client use the datastore_directory for tempfiles as well.
-		tmpdir := filepath.Join(datastore_directory, "temp")
-		err = os.MkdirAll(tmpdir, 0700)
-		if err != nil {
-			return fmt.Errorf("Unable to create temp directory: %w", err)
-		}
-
-		config_obj.Client.TempdirLinux = tmpdir
-		config_obj.Client.TempdirWindows = tmpdir
-		config_obj.Client.TempdirDarwin = tmpdir
-
-		config_obj.Datastore.Location = datastore_directory
-		config_obj.Datastore.FilestoreDirectory = datastore_directory
-
-		// Make events run much faster in this configuration
-		config_obj.Defaults.EventMaxWait = 1
-		config_obj.Defaults.EventMaxWaitJitter = 1
-		config_obj.Defaults.EventChangeNotifyAllClients = true
-
-		// Load the "fs" accessor this time (It will be loaded
-		// automatically after restart).
-		err = initFilestoreAccessor(config_obj)
+		config_obj, err = generateGUIConfig(
+			datastore_directory, server_config_path, client_config_path)
 		if err != nil {
 			return err
 		}
-
-		// Create a user with default password
-		user_record, err := users.NewUserRecord(config_obj, "admin")
-		if err != nil {
-			return fmt.Errorf("Unable to create admin user: %w", err)
-		}
-
-		users.SetPassword(user_record, "password")
-		config_obj.GUI.InitialUsers = append(config_obj.GUI.InitialUsers,
-			&config_proto.GUIUser{
-				Name:         user_record.Name,
-				PasswordHash: hex.EncodeToString(user_record.PasswordHash),
-				PasswordSalt: hex.EncodeToString(user_record.PasswordSalt),
-			})
-
-		// For the GUI org create a separate org.
-		config_obj.GUI.InitialOrgs = append(config_obj.GUI.InitialOrgs,
-			&config_proto.InitialOrgRecord{
-				OrgId: "O123",
-				Name:  "ACME Inc",
-				Nonce: "ACME",
-			})
-
-		// Write the config for next time
-		serialized, err := yaml.Marshal(config_obj)
-		if err != nil {
-			return err
-		}
-
-		fd, err := os.OpenFile(server_config_path,
-			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-		if err != nil {
-			return fmt.Errorf("Open file %s: %w", server_config_path, err)
-		}
-		_, err = fd.Write(serialized)
-		if err != nil {
-			return fmt.Errorf("Write file %s: %w", server_config_path, err)
-		}
-		fd.Close()
-
-		// Now also write a client config
-		client_config := getClientConfig(config_obj)
-		client_config.Logging = config_obj.Logging
-
-		serialized, err = yaml.Marshal(client_config)
-		if err != nil {
-			return err
-		}
-
-		fd, err = os.OpenFile(client_config_path,
-			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-		if err != nil {
-			return fmt.Errorf("Open file %s: %w", client_config_path, err)
-		}
-		_, err = fd.Write(serialized)
-		if err != nil {
-			return fmt.Errorf("Write file %s: %w", client_config_path, err)
-		}
-		fd.Close()
 	}
 
 	if config_obj.Services == nil {
