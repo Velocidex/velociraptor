@@ -77,7 +77,7 @@ func doCollector() error {
 # An example spec file follows. You can redirect to a file and edit as needed.
 
 `, os.Args[0])
-		fmt.Println(SampleSpec)
+		fmt.Printf("%s", SampleSpec)
 		return errors.New("No Spec file provided")
 	}
 
