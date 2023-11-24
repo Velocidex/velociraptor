@@ -1037,6 +1037,7 @@ class NewCollectionWizard extends React.Component {
                       setParameters={this.setParameters}
                       artifacts={this.state.artifacts}
                       setArtifacts={this.setArtifacts}
+                      configureResourceControl={true}
                       paginator={new PaginationBuilder(
                           T("Configure Parameters"),
                           T("New Collection: Configure Parameters"))}
