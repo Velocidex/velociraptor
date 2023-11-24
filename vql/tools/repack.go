@@ -353,7 +353,8 @@ func AppendBinaries(
 			Set("ToolName", tool.Name).
 			Set("Filename", "uploads/"+tool.Filename).
 			Set("ExpectedHash", tool.Hash).
-			Set("Size", n))
+			Set("Size", n).
+			Set("Version", tool.Version))
 	}
 
 	csv_writer.Close()

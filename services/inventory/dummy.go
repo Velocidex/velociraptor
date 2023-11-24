@@ -118,7 +118,7 @@ func (self *Dummy) GetToolInfo(
 	for _, item := range self.binaries.Tools {
 		// If a version is specified skip tools that are not the
 		// correct version.
-		if version != "" && (item.Name != tool || item.Version == version) {
+		if version != "" && (item.Name != tool || item.Version != version) {
 			continue
 		}
 
@@ -137,7 +137,7 @@ func (self *Dummy) GetToolInfo(
 			return proto.Clone(item).(*artifacts_proto.Tool), nil
 		}
 	}
-	return nil, errors.New(fmt.Sprintf("Tool %v not declared in inventory.", tool))
+	return nil, fmt.Errorf("Dummy inventory: Tool %v not declared in inventory.", tool)
 }
 
 // Actually download and resolve the tool and make sure it is
@@ -239,14 +239,14 @@ func getGithubRelease(ctx context.Context, Client networking.HTTPClient,
 	response, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return "", fmt.Errorf(
-			"While make Github API call to %v: %w ", url, err)
+			"While making Github API call to %v: %w ", url, err)
 	}
 
 	api_obj := &githubReleasesAPI{}
 	err = json.Unmarshal(response, &api_obj)
 	if err != nil {
 		return "", fmt.Errorf(
-			"While make Github API call to  %v: %w ", url, err)
+			"While making Github API call to  %v: %w ", url, err)
 	}
 
 	release_re, err := regexp.Compile(tool.GithubAssetRegex)
@@ -299,6 +299,18 @@ func (self *Dummy) AddTool(
 	// Replace the tool in the inventory.
 	found := false
 	for i, item := range self.binaries.Tools {
+		// Definition has a version
+		if tool.Version != "" {
+			if item.Name == tool.Name && item.Version == tool.Version {
+				found = true
+				self.binaries.Tools[i] = tool
+				break
+			}
+			continue
+		}
+
+		// Definition does not have a version - equivalent to an empty
+		// version.
 		if item.Name == tool.Name {
 			found = true
 			self.binaries.Tools[i] = tool
