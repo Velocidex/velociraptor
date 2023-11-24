@@ -26,7 +26,7 @@ parameters:
 
 sources:
   - precondition:
-      SELECT OS From info() where OS = 'linux'
+      SELECT OS From info() where OS =~ 'linux'
 
     query:  |
       // FetchBinary downloads to /tmp on linux
@@ -40,9 +40,10 @@ sources:
       SELECT * FROM foreach(row=bin,
       query={
         SELECT * FROM chain(
-          // Install the new client
+          // Install the new client (Disabled preun because older versions
+          // had a bug where preun would shut down the service - see #3122).
+
           b={SELECT * FROM execve(argv=["rpm", "--nopreun", "-U", str(str=Dest)])},
-          // Restart the client
           c={SELECT * FROM execve(argv=["systemctl", "restart", ServiceName])}
         )
       })

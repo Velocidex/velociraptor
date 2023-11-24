@@ -26,7 +26,7 @@ parameters:
 
 sources:
   - precondition:
-      SELECT OS From info() where OS = 'linux'
+      SELECT OS From info() where OS =~ 'linux'
 
     query:  |
       // FetchBinary downloads to /tmp on linux
@@ -35,10 +35,10 @@ sources:
          ToolName="VelociraptorDebian", IsExecutable=FALSE,
          SleepDuration=SleepDuration)
 
-      // Version handling for older clients. 
+      // Version handling for older clients.
       LET Rm(X) = if(
-        condition=version(function='rm')!=NULL, 
-        then=rm(filename=X), 
+        condition=version(function='rm')!=NULL,
+        then=rm(filename=X),
         else={ SELECT * FROM execve(argv=["rm", "-f", X]) })
 
       // Call the binary and return all its output in a single row.
@@ -46,10 +46,13 @@ sources:
       SELECT * FROM foreach(row=bin,
       query={
         SELECT * FROM chain(
-          // Remove the existing
+          // Remove the existing prerm - Previous versions had a bug that
+          // would shutdown the service during uninstall. See #3122
           a={SELECT * FROM Rm(X="/var/lib/dpkg/info/velociraptor-client.prerm")},
+
           // Install the new client
           b={SELECT * FROM execve(argv=["dpkg", "-i", str(str=Dest)])},
+
           // Restart the client
           c={SELECT * FROM execve(argv=["systemctl", "restart", ServiceName])}
         )
