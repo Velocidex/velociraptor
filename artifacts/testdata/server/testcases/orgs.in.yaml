@@ -28,14 +28,14 @@ Queries:
     roles="administrator", password="X")
   FROM scope()
 
-- SELECT * FROM gui_users(all_orgs=TRUE) ORDER BY name
+- SELECT *, name+org_id AS Key FROM gui_users(all_orgs=TRUE) ORDER BY Key
 
 # We are at the root org - gui_users should show only root org users
-- SELECT * FROM gui_users() ORDER BY name
+- SELECT *, name+org_id AS Key FROM gui_users() ORDER BY Key
 
 # Run the query from the suborg, query should show only users in that org.
 - SELECT * FROM query(query={
-   SELECT * FROM gui_users() ORDER BY name
+   SELECT *, name+org_id AS Key FROM gui_users() ORDER BY Key
   }, org_id="ORGID")
 
 # Running the orgs() plugin as the reader will fail due to access
@@ -68,7 +68,7 @@ Queries:
     roles="reader", password="X", orgs=["ORGID2"])
 
 # OrgUser should be an admin in ORGID and reader in ORGID2
-- SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "OrgUser" ORDER BY name
+- SELECT *, name+org_id AS Key FROM gui_users(all_orgs=TRUE) WHERE name =~ "OrgUser" ORDER BY Key
 
 # Launching collections on different orgs can be done using a number of ways.
 # 1. Use the query() plugin to run the query on another org.
