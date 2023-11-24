@@ -7,7 +7,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
  {
   "Log": "Velociraptor: user_create: Org not found\n"
  }
-]SELECT * FROM gui_users(all_orgs=TRUE) ORDER BY name[]LET _ <= org_create(name="MyOrg", org_id="ORGID")[]SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
+]SELECT *, name+org_id AS Key FROM gui_users(all_orgs=TRUE) ORDER BY Key[]LET _ <= org_create(name="MyOrg", org_id="ORGID")[]SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
  {
   "Name": "MyOrg",
   "OrgId": "ORGID"

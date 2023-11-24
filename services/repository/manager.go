@@ -443,7 +443,7 @@ func LoadBuiltInArtifacts(ctx context.Context,
 
 	now := time.Now()
 
-	assets.Init()
+	assets.InitOnce()
 
 	files, err := assets.WalkDirs("", false)
 	if err != nil {

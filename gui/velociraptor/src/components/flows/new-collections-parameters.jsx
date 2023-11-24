@@ -37,7 +37,7 @@ class ResourceControl extends React.Component {
                    </Button>;
         }
 
-        let params = this.props.parameters[this.props.artifact];
+        let params = this.props.parameters[this.props.artifact] || {};
         let max_batch_wait = params.max_batch_wait;
         let max_batch_rows = params.max_batch_rows;
         let params_batch_wait = {validating_regex: "\\d+",
@@ -165,6 +165,7 @@ export default class NewCollectionConfigParameters extends React.Component {
         parameters: PropTypes.object,
         setParameters: PropTypes.func.isRequired,
         paginator: PropTypes.object,
+        configureResourceControl: PropTypes.bool,
     };
 
     setValue = (artifact, name, value) => {
@@ -218,13 +219,15 @@ export default class NewCollectionConfigParameters extends React.Component {
                );
         });
 
-        let results = [
-            <ResourceControl
+        let results = [];
+        if(this.props.configureResourceControl) {
+            results.push(<ResourceControl
               key="X"
               parameters={this.props.parameters}
               artifact={artifact.name}
               setValue={(param_name, value) => this.setValue(
-                  artifact.name, param_name, value)}/>];
+                  artifact.name, param_name, value)}/>);
+        };
         if(suggestions.length > 6) {
             results.push(
                 <ParameterSuggestion key="Autosuggest" name="Autosuggest"

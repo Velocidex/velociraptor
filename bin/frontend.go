@@ -90,7 +90,7 @@ func doFrontend() error {
 
 	// Load the assets into memory if we are the master node.
 	if services.IsMaster(config_obj) {
-		assets.Init()
+		assets.InitOnce()
 	}
 
 	// Increase resource limits.

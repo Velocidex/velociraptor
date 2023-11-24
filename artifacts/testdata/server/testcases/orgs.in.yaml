@@ -9,7 +9,7 @@ Queries:
 
 - SELECT * FROM test_read_logs() WHERE Log =~ "Org not found" AND NOT Log =~ "SELECT"
 
-- SELECT * FROM gui_users(all_orgs=TRUE) ORDER BY name
+- SELECT *, name+org_id AS Key FROM gui_users(all_orgs=TRUE) ORDER BY Key
 
 # Now create a new org
 - LET _ <= org_create(name="MyOrg", org_id="ORGID")
