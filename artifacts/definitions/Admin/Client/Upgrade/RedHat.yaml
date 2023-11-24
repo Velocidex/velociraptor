@@ -18,6 +18,12 @@ parameters:
       overwhelm the server so we stagger the download over this many
       seconds.
 
+  - name: ServiceName
+    default: "velociraptor_client"
+    type: str
+    description: |
+      The name of the service to restart after the upgrade.
+
 sources:
   - precondition:
       SELECT OS From info() where OS = 'linux'
@@ -33,7 +39,10 @@ sources:
       // If we fail to download the binary we do not run the command.
       SELECT * FROM foreach(row=bin,
       query={
-         SELECT * FROM execve(
-              argv=["/bin/bash", "-c", "rpm --nopreun -U " + str(str=Dest) + " && systemctl restart velociraptor_client"],
-              length=10000000)
+        SELECT * FROM chain(
+          // Install the new client
+          b={SELECT * FROM execve(argv=["rpm", "--nopreun", "-U", str(str=Dest)])},
+          // Restart the client
+          c={SELECT * FROM execve(argv=["systemctl", "restart", ServiceName])}
+        )
       })

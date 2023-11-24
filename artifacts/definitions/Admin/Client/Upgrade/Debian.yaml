@@ -18,6 +18,12 @@ parameters:
       overwhelm the server so we stagger the download over this many
       seconds.
 
+  - name: ServiceName
+    default: "velociraptor_client"
+    type: str
+    description: |
+      The name of the service to restart after the upgrade.
+
 sources:
   - precondition:
       SELECT OS From info() where OS = 'linux'
@@ -29,11 +35,22 @@ sources:
          ToolName="VelociraptorDebian", IsExecutable=FALSE,
          SleepDuration=SleepDuration)
 
+      // Version handling for older clients. 
+      LET Rm(X) = if(
+        condition=version(function='rm')!=NULL, 
+        then=rm(filename=X), 
+        else={ SELECT * FROM execve(argv=["rm", "-f", X]) })
+
       // Call the binary and return all its output in a single row.
       // If we fail to download the binary we do not run the command.
       SELECT * FROM foreach(row=bin,
       query={
-         SELECT * FROM execve(
-              argv=["/bin/bash", "-c", "rm /var/lib/dpkg/info/velociraptor-client.prerm && dpkg -i " + str(str=Dest) + " && systemctl restart velociraptor_client"],
-              length=10000000)
+        SELECT * FROM chain(
+          // Remove the existing
+          a={SELECT * FROM Rm(X="/var/lib/dpkg/info/velociraptor-client.prerm")},
+          // Install the new client
+          b={SELECT * FROM execve(argv=["dpkg", "-i", str(str=Dest)])},
+          // Restart the client
+          c={SELECT * FROM execve(argv=["systemctl", "restart", ServiceName])}
+        )
       })
