@@ -24,24 +24,29 @@ Queries:
   - LET _ <= user_grant(user="TestUser", roles="administrator", orgs="ORGID2")
 
   # TestUser is an admin in ORGID2 and reader in root
-  - SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUser"
+  - SELECT *, name+org_id AS Key FROM gui_users(all_orgs=TRUE)
+    WHERE name =~ "TestUser" ORDER BY Key
 
   # Now delete it from the root org
   - SELECT user_delete(user="TestUser", really_do_it=TRUE) FROM scope()
 
   # Should be gone now but the user still exists in the ORGID2
-  - SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUser"
+  - SELECT *, name+org_id AS Key FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUser"
+    ORDER BY Key
 
   # Now delete it from the org
   - SELECT user_delete(user="TestUser", really_do_it=TRUE, orgs="ORGID2") FROM scope()
 
   # Should be gone now
-  - SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUser"
+  - SELECT *, name+org_id AS Key FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUser"
+    ORDER BY Key
 
   # Grant a non existant user a role
   - SELECT user_grant(user="TestUserNotThere", roles="reader") FROM scope()
   - SELECT * FROM test_read_logs() WHERE Log =~ "User not found" AND NOT Log =~ "SELECT"
-  - SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUserNotThere"
+  - SELECT *, name+org_id AS Key FROM gui_users(all_orgs=TRUE)
+    WHERE name =~ "TestUserNotThere"
+    ORDER BY Key
 
   # Should refuse to add a user with a reserved name
   - SELECT user_create(
