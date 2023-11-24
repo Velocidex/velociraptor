@@ -217,10 +217,13 @@ parameters:
   - name: CommonCollections
     type: hidden
     default: |
+      LET S = scope()
+
       // Add all the tools we are going to use to the inventory.
-      LET _ <= SELECT inventory_add(tool=ToolName, hash=ExpectedHash)
+      LET _ <= SELECT inventory_add(tool=ToolName, hash=ExpectedHash, version=S.Version)
        FROM parse_csv(filename="/uploads/inventory.csv", accessor="me")
-       WHERE log(message="Adding tool " + ToolName)
+       WHERE log(message="Adding tool " + ToolName +
+             " version " + (S.Version || "Unknown"))
 
       LET baseline <= SELECT Fqdn, dirname(path=Exe) AS ExePath, Exe,
          scope().CWD AS CWD FROM info()
@@ -335,6 +338,7 @@ parameters:
 
     default: |
        LET RequiredTool <= ToolName
+       LET S = scope()
 
        LET matching_tools <= SELECT ToolName, Filename
        FROM parse_csv(filename="/uploads/inventory.csv", accessor="me")
