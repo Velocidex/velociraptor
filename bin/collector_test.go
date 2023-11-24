@@ -128,6 +128,7 @@ func (self *CollectorTestSuite) addArtifactDefinitions() {
 	fd.Write([]byte(`name: Custom.TestArtifactDependent
 tools:
   - name: MyTool
+    version: 1
   - name: MyDataFile
 
 sources:
@@ -202,7 +203,8 @@ func (self *CollectorTestSuite) uploadToolDefinitions() {
 	// Add ourselves again as a tool called MyTool - the artifact will
 	// call it.
 	cmd = exec.Command(self.binary, "--config", self.config_file,
-		"tools", "upload", "--name", "MyTool", self.binary)
+		"tools", "upload", "--name", "MyTool",
+		"--tool_version", "1", self.binary)
 	out, err = cmd.CombinedOutput()
 	fmt.Println(string(out))
 	require.NoError(t, err)
