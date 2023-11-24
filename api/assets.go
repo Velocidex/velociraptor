@@ -47,7 +47,7 @@ func install_static_assets(config_obj *config_proto.Config, mux *http.ServeMux) 
 
 func GetTemplateHandler(
 	config_obj *config_proto.Config, template_name string) (http.Handler, error) {
-	gui_assets.Init()
+	gui_assets.InitOnce()
 
 	data, err := gui_assets.ReadFile(template_name)
 	if err != nil {

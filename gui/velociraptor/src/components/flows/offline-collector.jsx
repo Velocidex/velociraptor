@@ -873,6 +873,7 @@ export default class OfflineCollectorWizard extends React.Component {
                       setParameters={this.setParameters}
                       artifacts={this.state.artifacts}
                       setArtifacts={this.setArtifacts}
+                      configureResourceControl={false}
                       paginator={new OfflinePaginator(
                           "Configure Parameters",
                           "Create Offline Collector: Configure artifact parameters")}
