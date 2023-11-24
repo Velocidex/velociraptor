@@ -107,7 +107,7 @@ func runUnzipList(builder services.ScopeBuilder) error {
 		query += " AND " + *unzip_cmd_filter
 	}
 
-	return runQueryWithEnv(query, builder)
+	return runQueryWithEnv(query, builder, *unzip_format)
 }
 
 func runUnzipFiles(builder services.ScopeBuilder) error {
@@ -128,7 +128,7 @@ func runUnzipFiles(builder services.ScopeBuilder) error {
 		query += " AND " + *unzip_cmd_filter
 	}
 
-	return runQueryWithEnv(query, builder)
+	return runQueryWithEnv(query, builder, *unzip_format)
 }
 
 func runUnzipPrint(builder services.ScopeBuilder) error {
@@ -145,7 +145,7 @@ func runUnzipPrint(builder services.ScopeBuilder) error {
           FROM parse_jsonl(filename=OSPath, accessor='collector')
        })
     `
-	return runQueryWithEnv(query, builder)
+	return runQueryWithEnv(query, builder, *unzip_format)
 }
 
 func getAllStats(
@@ -178,7 +178,7 @@ func getAllStats(
 }
 
 func runQueryWithEnv(
-	query string, builder services.ScopeBuilder) error {
+	query string, builder services.ScopeBuilder, format string) error {
 	manager, err := services.GetRepositoryManager(builder.Config)
 	if err != nil {
 		return err
@@ -196,9 +196,9 @@ func runQueryWithEnv(
 	defer cancel()
 
 	for _, vql := range vqls {
-		scope.Log("Running query %v", query)
+		scope.Log("Running query %v", vfilter.FormatToString(scope, vql))
 
-		switch *unzip_format {
+		switch format {
 		case "text":
 			table := reporting.EvalQueryToTable(ctx, scope, vql, os.Stdout)
 			table.Render()
