@@ -22,7 +22,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   "user_create(user=\"OrgUser\", roles=\"administrator\", password=\"X\", orgs=[\"ORGID\"])": "OrgUser",
   "user_create(user=\"OrgAdmin\", roles=\"administrator\", password=\"X\")": "OrgAdmin"
  }
-]SELECT * FROM gui_users(all_orgs=TRUE) ORDER BY name[
+]SELECT *, name+org_id AS Key FROM gui_users(all_orgs=TRUE) ORDER BY Key[
  {
   "name": "OrgAdmin",
   "org_id": "root",
@@ -57,7 +57,8 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
    "machine_state": true,
    "prepare_results": true,
    "delete_results": true
-  }
+  },
+  "Key": "OrgAdminroot"
  },
  {
   "name": "OrgUser",
@@ -92,25 +93,8 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
    "machine_state": true,
    "prepare_results": true,
    "delete_results": true
-  }
- },
- {
-  "name": "ReaderUser",
-  "org_id": "root",
-  "org_name": "\u003croot\u003e",
-  "picture": "",
-  "email": false,
-  "roles": [
-   "reader"
-  ],
-  "_policy": {
-   "roles": [
-    "reader"
-   ]
   },
-  "effective_policy": {
-   "read_results": true
-  }
+  "Key": "OrgUserORGID"
  },
  {
   "name": "ReaderUser",
@@ -128,9 +112,29 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   },
   "effective_policy": {
    "read_results": true
-  }
+  },
+  "Key": "ReaderUserORGID"
+ },
+ {
+  "name": "ReaderUser",
+  "org_id": "root",
+  "org_name": "\u003croot\u003e",
+  "picture": "",
+  "email": false,
+  "roles": [
+   "reader"
+  ],
+  "_policy": {
+   "roles": [
+    "reader"
+   ]
+  },
+  "effective_policy": {
+   "read_results": true
+  },
+  "Key": "ReaderUserroot"
  }
-]SELECT * FROM gui_users() ORDER BY name[
+]SELECT *, name+org_id AS Key FROM gui_users() ORDER BY Key[
  {
   "name": "OrgAdmin",
   "org_id": "root",
@@ -165,7 +169,8 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
    "machine_state": true,
    "prepare_results": true,
    "delete_results": true
-  }
+  },
+  "Key": "OrgAdminroot"
  },
  {
   "name": "ReaderUser",
@@ -183,9 +188,10 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   },
   "effective_policy": {
    "read_results": true
-  }
+  },
+  "Key": "ReaderUserroot"
  }
-]SELECT * FROM query(query={ SELECT * FROM gui_users() ORDER BY name }, org_id="ORGID")[
+]SELECT * FROM query(query={ SELECT *, name+org_id AS Key FROM gui_users() ORDER BY Key }, org_id="ORGID")[
  {
   "name": "OrgUser",
   "org_id": "ORGID",
@@ -219,7 +225,8 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
    "machine_state": true,
    "prepare_results": true,
    "delete_results": true
-  }
+  },
+  "Key": "OrgUserORGID"
  },
  {
   "name": "ReaderUser",
@@ -237,7 +244,8 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   },
   "effective_policy": {
    "read_results": true
-  }
+  },
+  "Key": "ReaderUserORGID"
  }
 ]SELECT * FROM query(query={ SELECT * FROM orgs() ORDER BY OrgId }, runas="ReaderUser")[
  {
@@ -259,7 +267,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
  {
   "OrgId": "ORGID"
  }
-]SELECT * FROM test_read_logs() WHERE Log =~ "Permission denied.+ORG_ADMIN" AND NOT Log =~ "SELECT"[]LET _ <= org_create(name="MySecondOrg", org_id="ORGID2")[]LET _ <= user_create(user="OrgUser", roles="reader", password="X", orgs=["ORGID2"])[]SELECT * FROM gui_users(all_orgs=TRUE) WHERE name =~ "OrgUser" ORDER BY name[
+]SELECT * FROM test_read_logs() WHERE Log =~ "Permission denied.+ORG_ADMIN" AND NOT Log =~ "SELECT"[]LET _ <= org_create(name="MySecondOrg", org_id="ORGID2")[]LET _ <= user_create(user="OrgUser", roles="reader", password="X", orgs=["ORGID2"])[]SELECT *, name+org_id AS Key FROM gui_users(all_orgs=TRUE) WHERE name =~ "OrgUser" ORDER BY Key[
  {
   "name": "OrgUser",
   "org_id": "ORGID",
@@ -293,7 +301,8 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
    "machine_state": true,
    "prepare_results": true,
    "delete_results": true
-  }
+  },
+  "Key": "OrgUserORGID"
  },
  {
   "name": "OrgUser",
@@ -311,7 +320,8 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
   },
   "effective_policy": {
    "read_results": true
-  }
+  },
+  "Key": "OrgUserORGID2"
  }
 ]SELECT * FROM query(query={ SELECT collect_client(client_id="C.123", artifacts="Generic.Client.Info").request.artifacts FROM scope() }, runas="OrgUser", org_id="ORGID")[
  {
