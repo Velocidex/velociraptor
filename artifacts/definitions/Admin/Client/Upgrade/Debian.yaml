@@ -18,24 +18,42 @@ parameters:
       overwhelm the server so we stagger the download over this many
       seconds.
 
+  - name: ServiceName
+    default: "velociraptor_client"
+    type: str
+    description: |
+      The name of the service to restart after the upgrade.
+
 sources:
   - precondition:
-      SELECT OS From info() where OS = 'Linux'
+      SELECT OS From info() where OS =~ 'linux'
 
     query:  |
-      // Force the file to be copied to the real temp directory since
-      // we are just about to remove the Tools directory.
-      LET bin <= SELECT copy(filename=OSPath,
-          dest=expand(path="/tmp/") + basename(path=OSPath)) AS Dest
+      // FetchBinary downloads to /tmp on linux
+      LET bin <= SELECT OSPath AS Dest
       FROM Artifact.Generic.Utils.FetchBinary(
-         ToolName="VelociraptorLinux", IsExecutable=FALSE,
+         ToolName="VelociraptorDebian", IsExecutable=FALSE,
          SleepDuration=SleepDuration)
+
+      // Version handling for older clients.
+      LET Rm(X) = if(
+        condition=version(function='rm')!=NULL,
+        then=rm(filename=X),
+        else={ SELECT * FROM execve(argv=["rm", "-f", X]) })
 
       // Call the binary and return all its output in a single row.
       // If we fail to download the binary we do not run the command.
       SELECT * FROM foreach(row=bin,
       query={
-         SELECT * FROM execve(
-              argv=["dpkg", "-i", Dest],
-              length=10000000)
+        SELECT * FROM chain(
+          // Remove the existing prerm - Previous versions had a bug that
+          // would shutdown the service during uninstall. See #3122
+          a={SELECT * FROM Rm(X="/var/lib/dpkg/info/velociraptor-client.prerm")},
+
+          // Install the new client
+          b={SELECT * FROM execve(argv=["dpkg", "-i", str(str=Dest)])},
+
+          // Restart the client
+          c={SELECT * FROM execve(argv=["systemctl", "restart", ServiceName])}
+        )
       })
