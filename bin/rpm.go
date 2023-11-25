@@ -317,9 +317,16 @@ func doClientRPM() error {
 /bin/systemctl start velociraptor_client.service
 `)
 
+	// check for upgrade vs uninstall
 	r.AddPreun(`
-/bin/systemctl disable velociraptor_client.service
-/bin/systemctl stop velociraptor_client.service
+if [ $1 == 1 ] ; then
+    /bin/systemctl restart velociraptor_client.service
+fi
+
+if [ $1 == 0 ] ; then
+    /bin/systemctl disable velociraptor_client.service
+    /bin/systemctl stop velociraptor_client.service
+fi
 `)
 
 	fd, err := os.OpenFile(output_path,
