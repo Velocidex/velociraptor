@@ -8,6 +8,21 @@ description: |
   to adjust the index size/lifetime according to the artifact it is
   holding.
 
+  NOTE: Elastic is a database and still must have a stable
+  schema. This means that artifacts that produce inconsistant columns
+  and types will **NOT** work as expected. What will happen is that
+  the first row that is inserted will create the Elastic database
+  schema (In Elastic terminology "mapping") and then any subsequent
+  row with a different type for these fields will be rejected by
+  Elastic.
+
+  In particular this does not work with event logs because event logs
+  have a varied schema (The EventData field is a free form field
+  depending on the event log itself). Therefore forwarding event log
+  data to Elastic with this artifact will cause Elastic to drop many
+  events!! This artifact is not suitable for forwarding Windows Event
+  Logs!
+
 type: SERVER_EVENT
 
 parameters:

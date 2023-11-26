@@ -1,0 +1,592 @@
+name: Elastic.EventLogs.Sysmon
+description: |
+  Ship the the Sysmon event log in ECS schema.
+
+  The Elastic Common Schema (ECS) is an open source specification,
+  developed with support from the Elastic user community. ECS defines
+  a common set of fields to be used when storing event data in
+  Elasticsearch, such as logs and metrics.
+
+  NOTE: ECS is poorly documented. There is no clear documentation of
+  where each field in the ECS record comes from other than the actual
+  source code of the winlogbeats client. This artifact implements the
+  winlogbeat transformation as described in
+  https://github.com/elastic/beats/blob/master/x-pack/winlogbeat/module/sysmon/ingest/sysmon.yml
+
+  There may be slight variations between the data produced by this
+  artifact and the official winlogbeat client. If you find such
+  variation, please file an issue on Velociraptor's GitHub issue
+  board.
+
+reference:
+  - https://www.elastic.co/guide/en/ecs/current/ecs-reference.html
+
+parameters:
+  - name: LogFileGlob
+    default: C:/Windows/System32/WinEvt/Logs/Microsoft-Windows-Sysmon%4Operational.evtx
+
+export: |
+  -- ECS clears many fields from EventData but we preserve them all,
+  -- although to ensure that Elastic does not reject the fields we
+  -- convert them all to strings.
+  LET NormalizeEventData(EventData) = to_dict(item={
+    SELECT _key, str(str=_value) AS _value FROM items(item=EventData)
+  })
+
+  LET OpcodesLookup <= dict(
+    `0`= "Info",
+    `1`= "Start",
+    `2`= "Stop",
+    `3`= "DCStart",
+    `4`= "DCStop",
+    `5`= "Extension",
+    `6`= "Reply",
+    `7`= "Resume",
+    `8`= "Suspend",
+    `9`= "Send")
+
+  LET LevelLookup <= dict(
+    `0`= "Information",
+    `1`= "Critical",
+    `2`= "Error",
+    `3`= "Warning",
+    `4`= "Information",
+    `5`= "Verbose")
+
+  LET CategoryLookup <= dict(
+     `1`=["process",],
+     `2`=["file",],
+     `3`=["network",],
+     `4`=["process",],
+     `5`=["process",],
+     `6`=["driver",],
+     `7`=["process",],
+     `8`=["process",],
+     `9`=["process",],
+     `10`=["process",],
+     `11`=["file",],
+     `12`=["configuration","registry"],
+     `13`=["configuration","registry"],
+     `14`=["configuration","registry"],
+     `15`=["file",],
+     `16`=["configuration",],
+     `17`=["file",],
+     `18`=["file",],
+     `19`=["process",],
+     `20`=["process",],
+     `21`=["network",],
+     `22`=["network",],
+     `23`=["file",],
+     `24`=["",],
+     `25`=["process",],
+     `26`=["file",],
+     `27`=["file",],
+     `28`=["file",],
+     `255`=["process",])
+
+  LET TypeLookup <= dict(
+     `1`=["start",],
+     `2`=["change",],
+     `3`=["start", "connection", "protocol"],
+     `4`=["change",],
+     `5`=["end",],
+     `6`=["start",],
+     `7`=["change",],
+     `8`=["change",],
+     `9`=["access",],
+     `10`=["access",],
+     `11`=["creation",],
+     `12`=["change",],
+     `13`=["change",],
+     `14`=["change",],
+     `15`=["access",],
+     `16`=["change",],
+     `17`=["creation",],
+     `18`=["access",],
+     `19`=["creation",],
+     `20`=["creation",],
+     `21`=["access",],
+     `22`=["connection", "protocol", "info"],
+     `23`=["deletion",],
+     `24`=["change",],
+     `25`=["change",],
+     `26`=["deletion",],
+     `27`=["creation", "denied"],
+     `28`=["deletion", "denied"],
+     `255`=["error",])
+
+  LET DNSLookup <= dict(
+        `1`= "A",
+        `2`= "NS",
+        `3`= "MD",
+        `4`= "MF",
+        `5`= "CNAME",
+        `6`= "SOA",
+        `7`= "MB",
+        `8`= "MG",
+        `9`= "MR",
+        `10`= "NULL",
+        `11`= "WKS",
+        `12`= "PTR",
+        `13`= "HINFO",
+        `14`= "MINFO",
+        `15`= "MX",
+        `16`= "TXT",
+        `17`= "RP",
+        `18`= "AFSDB",
+        `19`= "X25",
+        `20`= "ISDN",
+        `21`= "RT",
+        `22`= "NSAP",
+        `23`= "NSAPPTR",
+        `24`= "SIG",
+        `25`= "KEY",
+        `26`= "PX",
+        `27`= "GPOS",
+        `28`= "AAAA",
+        `29`= "LOC",
+        `30`= "NXT",
+        `31`= "EID",
+        `32`= "NIMLOC",
+        `33`= "SRV",
+        `34`= "ATMA",
+        `35`= "NAPTR",
+        `36`= "KX",
+        `37`= "CERT",
+        `38`= "A6",
+        `39`= "DNAME",
+        `40`= "SINK",
+        `41`= "OPT",
+        `43`= "DS",
+        `46`= "RRSIG",
+        `47`= "NSEC",
+        `48`= "DNSKEY",
+        `49`= "DHCID",
+        `100`= "UINFO",
+        `101`= "UID",
+        `102`= "GID",
+        `103`= "UNSPEC",
+        `248`= "ADDRS",
+        `249`= "TKEY",
+        `250`= "TSIG",
+        `251`= "IXFR",
+        `252`= "AXFR",
+        `253`= "MAILB",
+        `254`= "MAILA",
+        `255`= "ANY",
+        `65281`= "WINS",
+        `65282`= "WINSR"
+  )
+
+  LET DnsStatusLookup <= dict(
+    `5`= "ERROR_ACCESS_DENIED",
+    `0`= "SUCCESS",
+    `8`= "ERROR_NOT_ENOUGH_MEMORY",
+    `13`= "ERROR_INVALID_DATA",
+    `14`= "ERROR_OUTOFMEMORY",
+    `123`= "ERROR_INVALID_NAME",
+    `1214`= "ERROR_INVALID_NETNAME",
+    `1223`= "ERROR_CANCELLED",
+    `1460`= "ERROR_TIMEOUT",
+    `4312`= "ERROR_OBJECT_NOT_FOUND",
+    `9001`= "DNS_ERROR_RCODE_FORMAT_ERROR",
+    `9002`= "DNS_ERROR_RCODE_SERVER_FAILURE",
+    `9003`= "DNS_ERROR_RCODE_NAME_ERROR",
+    `9004`= "DNS_ERROR_RCODE_NOT_IMPLEMENTED",
+    `9005`= "DNS_ERROR_RCODE_REFUSED",
+    `9006`= "DNS_ERROR_RCODE_YXDOMAIN",
+    `9007`= "DNS_ERROR_RCODE_YXRRSET",
+    `9008`= "DNS_ERROR_RCODE_NXRRSET",
+    `9009`= "DNS_ERROR_RCODE_NOTAUTH",
+    `9010`= "DNS_ERROR_RCODE_NOTZONE",
+    `9016`= "DNS_ERROR_RCODE_BADSIG",
+    `9017`= "DNS_ERROR_RCODE_BADKEY",
+    `9018`= "DNS_ERROR_RCODE_BADTIME",
+    `9101`= "DNS_ERROR_KEYMASTER_REQUIRED",
+    `9102`= "DNS_ERROR_NOT_ALLOWED_ON_SIGNED_ZONE",
+    `9103`= "DNS_ERROR_NSEC3_INCOMPATIBLE_WITH_RSA_SHA1",
+    `9104`= "DNS_ERROR_NOT_ENOUGH_SIGNING_KEY_DESCRIPTORS",
+    `9105`= "DNS_ERROR_UNSUPPORTED_ALGORITHM",
+    `9106`= "DNS_ERROR_INVALID_KEY_SIZE",
+    `9107`= "DNS_ERROR_SIGNING_KEY_NOT_ACCESSIBLE",
+    `9108`= "DNS_ERROR_KSP_DOES_NOT_SUPPORT_PROTECTION",
+    `9109`= "DNS_ERROR_UNEXPECTED_DATA_PROTECTION_ERROR",
+    `9110`= "DNS_ERROR_UNEXPECTED_CNG_ERROR",
+    `9111`= "DNS_ERROR_UNKNOWN_SIGNING_PARAMETER_VERSION",
+    `9112`= "DNS_ERROR_KSP_NOT_ACCESSIBLE",
+    `9113`= "DNS_ERROR_TOO_MANY_SKDS",
+    `9114`= "DNS_ERROR_INVALID_ROLLOVER_PERIOD",
+    `9115`= "DNS_ERROR_INVALID_INITIAL_ROLLOVER_OFFSET",
+    `9116`= "DNS_ERROR_ROLLOVER_IN_PROGRESS",
+    `9117`= "DNS_ERROR_STANDBY_KEY_NOT_PRESENT",
+    `9118`= "DNS_ERROR_NOT_ALLOWED_ON_ZSK",
+    `9119`= "DNS_ERROR_NOT_ALLOWED_ON_ACTIVE_SKD",
+    `9120`= "DNS_ERROR_ROLLOVER_ALREADY_QUEUED",
+    `9121`= "DNS_ERROR_NOT_ALLOWED_ON_UNSIGNED_ZONE",
+    `9122`= "DNS_ERROR_BAD_KEYMASTER",
+    `9123`= "DNS_ERROR_INVALID_SIGNATURE_VALIDITY_PERIOD",
+    `9124`= "DNS_ERROR_INVALID_NSEC3_ITERATION_COUNT",
+    `9125`= "DNS_ERROR_DNSSEC_IS_DISABLED",
+    `9126`= "DNS_ERROR_INVALID_XML",
+    `9127`= "DNS_ERROR_NO_VALID_TRUST_ANCHORS",
+    `9128`= "DNS_ERROR_ROLLOVER_NOT_POKEABLE",
+    `9129`= "DNS_ERROR_NSEC3_NAME_COLLISION",
+    `9130`= "DNS_ERROR_NSEC_INCOMPATIBLE_WITH_NSEC3_RSA_SHA1",
+    `9501`= "DNS_INFO_NO_RECORDS",
+    `9502`= "DNS_ERROR_BAD_PACKET",
+    `9503`= "DNS_ERROR_NO_PACKET",
+    `9504`= "DNS_ERROR_RCODE",
+    `9505`= "DNS_ERROR_UNSECURE_PACKET",
+    `9506`= "DNS_REQUEST_PENDING",
+    `9551`= "DNS_ERROR_INVALID_TYPE",
+    `9552`= "DNS_ERROR_INVALID_IP_ADDRESS",
+    `9553`= "DNS_ERROR_INVALID_PROPERTY",
+    `9554`= "DNS_ERROR_TRY_AGAIN_LATER",
+    `9555`= "DNS_ERROR_NOT_UNIQUE",
+    `9556`= "DNS_ERROR_NON_RFC_NAME",
+    `9557`= "DNS_STATUS_FQDN",
+    `9558`= "DNS_STATUS_DOTTED_NAME",
+    `9559`= "DNS_STATUS_SINGLE_PART_NAME",
+    `9560`= "DNS_ERROR_INVALID_NAME_CHAR",
+    `9561`= "DNS_ERROR_NUMERIC_NAME",
+    `9562`= "DNS_ERROR_NOT_ALLOWED_ON_ROOT_SERVER",
+    `9563`= "DNS_ERROR_NOT_ALLOWED_UNDER_DELEGATION",
+    `9564`= "DNS_ERROR_CANNOT_FIND_ROOT_HINTS",
+    `9565`= "DNS_ERROR_INCONSISTENT_ROOT_HINTS",
+    `9566`= "DNS_ERROR_DWORD_VALUE_TOO_SMALL",
+    `9567`= "DNS_ERROR_DWORD_VALUE_TOO_LARGE",
+    `9568`= "DNS_ERROR_BACKGROUND_LOADING",
+    `9569`= "DNS_ERROR_NOT_ALLOWED_ON_RODC",
+    `9570`= "DNS_ERROR_NOT_ALLOWED_UNDER_DNAME",
+    `9571`= "DNS_ERROR_DELEGATION_REQUIRED",
+    `9572`= "DNS_ERROR_INVALID_POLICY_TABLE",
+    `9573`= "DNS_ERROR_ADDRESS_REQUIRED",
+    `9601`= "DNS_ERROR_ZONE_DOES_NOT_EXIST",
+    `9602`= "DNS_ERROR_NO_ZONE_INFO",
+    `9603`= "DNS_ERROR_INVALID_ZONE_OPERATION",
+    `9604`= "DNS_ERROR_ZONE_CONFIGURATION_ERROR",
+    `9605`= "DNS_ERROR_ZONE_HAS_NO_SOA_RECORD",
+    `9606`= "DNS_ERROR_ZONE_HAS_NO_NS_RECORDS",
+    `9607`= "DNS_ERROR_ZONE_LOCKED",
+    `9608`= "DNS_ERROR_ZONE_CREATION_FAILED",
+    `9609`= "DNS_ERROR_ZONE_ALREADY_EXISTS",
+    `9610`= "DNS_ERROR_AUTOZONE_ALREADY_EXISTS",
+    `9611`= "DNS_ERROR_INVALID_ZONE_TYPE",
+    `9612`= "DNS_ERROR_SECONDARY_REQUIRES_MASTER_IP",
+    `9613`= "DNS_ERROR_ZONE_NOT_SECONDARY",
+    `9614`= "DNS_ERROR_NEED_SECONDARY_ADDRESSES",
+    `9615`= "DNS_ERROR_WINS_INIT_FAILED",
+    `9616`= "DNS_ERROR_NEED_WINS_SERVERS",
+    `9617`= "DNS_ERROR_NBSTAT_INIT_FAILED",
+    `9618`= "DNS_ERROR_SOA_DELETE_INVALID",
+    `9619`= "DNS_ERROR_FORWARDER_ALREADY_EXISTS",
+    `9620`= "DNS_ERROR_ZONE_REQUIRES_MASTER_IP",
+    `9621`= "DNS_ERROR_ZONE_IS_SHUTDOWN",
+    `9622`= "DNS_ERROR_ZONE_LOCKED_FOR_SIGNING",
+    `9651`= "DNS_ERROR_PRIMARY_REQUIRES_DATAFILE",
+    `9652`= "DNS_ERROR_INVALID_DATAFILE_NAME",
+    `9653`= "DNS_ERROR_DATAFILE_OPEN_FAILURE",
+    `9654`= "DNS_ERROR_FILE_WRITEBACK_FAILED",
+    `9655`= "DNS_ERROR_DATAFILE_PARSING",
+    `9701`= "DNS_ERROR_RECORD_DOES_NOT_EXIST",
+    `9702`= "DNS_ERROR_RECORD_FORMAT",
+    `9703`= "DNS_ERROR_NODE_CREATION_FAILED",
+    `9704`= "DNS_ERROR_UNKNOWN_RECORD_TYPE",
+    `9705`= "DNS_ERROR_RECORD_TIMED_OUT",
+    `9706`= "DNS_ERROR_NAME_NOT_IN_ZONE",
+    `9707`= "DNS_ERROR_CNAME_LOOP",
+    `9708`= "DNS_ERROR_NODE_IS_CNAME",
+    `9709`= "DNS_ERROR_CNAME_COLLISION",
+    `9710`= "DNS_ERROR_RECORD_ONLY_AT_ZONE_ROOT",
+    `9711`= "DNS_ERROR_RECORD_ALREADY_EXISTS",
+    `9712`= "DNS_ERROR_SECONDARY_DATA",
+    `9713`= "DNS_ERROR_NO_CREATE_CACHE_DATA",
+    `9714`= "DNS_ERROR_NAME_DOES_NOT_EXIST",
+    `9715`= "DNS_WARNING_PTR_CREATE_FAILED",
+    `9716`= "DNS_WARNING_DOMAIN_UNDELETED",
+    `9717`= "DNS_ERROR_DS_UNAVAILABLE",
+    `9718`= "DNS_ERROR_DS_ZONE_ALREADY_EXISTS",
+    `9719`= "DNS_ERROR_NO_BOOTFILE_IF_DS_ZONE",
+    `9720`= "DNS_ERROR_NODE_IS_DNAME",
+    `9721`= "DNS_ERROR_DNAME_COLLISION",
+    `9722`= "DNS_ERROR_ALIAS_LOOP",
+    `9751`= "DNS_INFO_AXFR_COMPLETE",
+    `9752`= "DNS_ERROR_AXFR",
+    `9753`= "DNS_INFO_ADDED_LOCAL_WINS",
+    `9801`= "DNS_STATUS_CONTINUE_NEEDED",
+    `9851`= "DNS_ERROR_NO_TCPIP",
+    `9852`= "DNS_ERROR_NO_DNS_SERVERS",
+    `9901`= "DNS_ERROR_DP_DOES_NOT_EXIST",
+    `9902`= "DNS_ERROR_DP_ALREADY_EXISTS",
+    `9903`= "DNS_ERROR_DP_NOT_ENLISTED",
+    `9904`= "DNS_ERROR_DP_ALREADY_ENLISTED",
+    `9905`= "DNS_ERROR_DP_NOT_AVAILABLE",
+    `9906`= "DNS_ERROR_DP_FSMO_ERROR",
+    `9911`= "DNS_ERROR_RRL_NOT_ENABLED",
+    `9912`= "DNS_ERROR_RRL_INVALID_WINDOW_SIZE",
+    `9913`= "DNS_ERROR_RRL_INVALID_IPV4_PREFIX",
+    `9914`= "DNS_ERROR_RRL_INVALID_IPV6_PREFIX",
+    `9915`= "DNS_ERROR_RRL_INVALID_TC_RATE",
+    `9916`= "DNS_ERROR_RRL_INVALID_LEAK_RATE",
+    `9917`= "DNS_ERROR_RRL_LEAK_RATE_LESSTHAN_TC_RATE",
+    `9921`= "DNS_ERROR_VIRTUALIZATION_INSTANCE_ALREADY_EXISTS",
+    `9922`= "DNS_ERROR_VIRTUALIZATION_INSTANCE_DOES_NOT_EXIST",
+    `9923`= "DNS_ERROR_VIRTUALIZATION_TREE_LOCKED",
+    `9924`= "DNS_ERROR_INVAILD_VIRTUALIZATION_INSTANCE_NAME",
+    `9925`= "DNS_ERROR_DEFAULT_VIRTUALIZATION_INSTANCE",
+    `9951`= "DNS_ERROR_ZONESCOPE_ALREADY_EXISTS",
+    `9952`= "DNS_ERROR_ZONESCOPE_DOES_NOT_EXIST",
+    `9953`= "DNS_ERROR_DEFAULT_ZONESCOPE",
+    `9954`= "DNS_ERROR_INVALID_ZONESCOPE_NAME",
+    `9955`= "DNS_ERROR_NOT_ALLOWED_WITH_ZONESCOPES",
+    `9956`= "DNS_ERROR_LOAD_ZONESCOPE_FAILED",
+    `9957`= "DNS_ERROR_ZONESCOPE_FILE_WRITEBACK_FAILED",
+    `9958`= "DNS_ERROR_INVALID_SCOPE_NAME",
+    `9959`= "DNS_ERROR_SCOPE_DOES_NOT_EXIST",
+    `9960`= "DNS_ERROR_DEFAULT_SCOPE",
+    `9961`= "DNS_ERROR_INVALID_SCOPE_OPERATION",
+    `9962`= "DNS_ERROR_SCOPE_LOCKED",
+    `9963`= "DNS_ERROR_SCOPE_ALREADY_EXISTS",
+    `9971`= "DNS_ERROR_POLICY_ALREADY_EXISTS",
+    `9972`= "DNS_ERROR_POLICY_DOES_NOT_EXIST",
+    `9973`= "DNS_ERROR_POLICY_INVALID_CRITERIA",
+    `9974`= "DNS_ERROR_POLICY_INVALID_SETTINGS",
+    `9975`= "DNS_ERROR_CLIENT_SUBNET_IS_ACCESSED",
+    `9976`= "DNS_ERROR_CLIENT_SUBNET_DOES_NOT_EXIST",
+    `9977`= "DNS_ERROR_CLIENT_SUBNET_ALREADY_EXISTS",
+    `9978`= "DNS_ERROR_SUBNET_DOES_NOT_EXIST",
+    `9979`= "DNS_ERROR_SUBNET_ALREADY_EXISTS",
+    `9980`= "DNS_ERROR_POLICY_LOCKED",
+    `9981`= "DNS_ERROR_POLICY_INVALID_WEIGHT",
+    `9982`= "DNS_ERROR_POLICY_INVALID_NAME",
+    `9983`= "DNS_ERROR_POLICY_MISSING_CRITERIA",
+    `9984`= "DNS_ERROR_INVALID_CLIENT_SUBNET_NAME",
+    `9985`= "DNS_ERROR_POLICY_PROCESSING_ORDER_INVALID",
+    `9986`= "DNS_ERROR_POLICY_SCOPE_MISSING",
+    `9987`= "DNS_ERROR_POLICY_SCOPE_NOT_ALLOWED",
+    `9988`= "DNS_ERROR_SERVERSCOPE_IS_REFERENCED",
+    `9989`= "DNS_ERROR_ZONESCOPE_IS_REFERENCED",
+    `9990`= "DNS_ERROR_POLICY_INVALID_CRITERIA_CLIENT_SUBNET",
+    `9991`= "DNS_ERROR_POLICY_INVALID_CRITERIA_TRANSPORT_PROTOCOL",
+    `9992`= "DNS_ERROR_POLICY_INVALID_CRITERIA_NETWORK_PROTOCOL",
+    `9993`= "DNS_ERROR_POLICY_INVALID_CRITERIA_INTERFACE",
+    `9994`= "DNS_ERROR_POLICY_INVALID_CRITERIA_FQDN",
+    `9995`= "DNS_ERROR_POLICY_INVALID_CRITERIA_QUERY_TYPE",
+    `9996`= "DNS_ERROR_POLICY_INVALID_CRITERIA_TIME_OF_DAY",
+    `10054`= "WSAECONNRESET",
+    `10055`= "WSAENOBUFS",
+    `10060`= "WSAETIMEDOUT"
+  )
+
+  LET ParseDNSAnswers(X) = SELECT if(condition=_value =~ "^type",
+  then=dict(
+     data=parse_string_with_regex(
+        string=regex_replace(source=_value, replace="", re="::ffff:"),
+        regex="(?P<Data>[^\\s]+)$").Data,
+     type=get(item=DNSLookup,
+       field=parse_string_with_regex(
+         string=_value, regex="type:\\s+([0-9]+)").g1)),
+  else=dict(
+     data=regex_replace(source=_value, replace="", re="::ffff:"),
+     type=if(condition=regex_replace(source=_value, replace="", re="::ffff:") =~ ":",
+             then="AAAA", else="A")
+  )) AS Field
+  FROM foreach(row=split(string=X, sep=";"))
+  WHERE _value
+
+  LET ParseHashes(Hashes) = to_dict(item={
+     SELECT split(string=_value, sep="=")[0] AS _key,
+            split(string=_value, sep="=")[1] AS _value
+     FROM foreach(row=split(string=Hashes, sep=","))
+  })
+
+  LET _EventToECSBase(System, EventData) = dict(
+     ecs=dict(version="1.12.0"),
+     log=dict(level=System.Level),
+     event=dict(
+        module="sysmon",
+        kind="event",
+        code=System.EventID.Value,
+        category=get(item=CategoryLookup, field=str(str=System.EventID.Value)),
+        type=get(item=TypeLookup, field=str(str=System.EventID.Value)),
+        created=timestamp(epoch=System.TimeCreated.SystemTime)
+     ),
+     error=dict(
+       code=if(condition=System.EventID.Value = 255, then=EventData.ID, else=0)
+     ),
+     rule=dict(
+       name=EventData.RuleName
+     ),
+     message=if(condition=System.EventID.Value = 255, then=EventData.Type, else=""),
+     winlog=dict(
+        api="wineventlog",
+        channel=System.Channel,
+        computer_name=System.Computer,
+        event_data=NormalizeEventData(EventData=EventData),
+        event_id=System.EventID.Value ,
+        opcode=get(item=OpcodesLookup, field=str(str=System.Opcode)),
+        process=dict(
+           pid=System.Execution.ProcessID,
+           thread=dict(
+             id=System.Execution.ThreadID
+           )
+        ),
+        provider_guid=System.Provider.Guid,
+        provider_name=System.Provider.Name,
+        record_id=str(str=System.EventRecordID),
+        user=dict(
+          identifier=System.Security.UserID
+        )
+     )
+  )
+
+  LET _EventToECSProcess(System, EventData) = dict(
+     process=dict(
+       hash=ParseHashes(Hashes=EventData.Hashes),
+       entity_id=EventData.ProcessGuid || EventData.SourceProcessGuid || EventData.SourceProcessGUID,
+       pid=EventData.ProcessId || EventData.SourceProcessId,
+       executable=EventData.Image || EventData.SourceImage || EventData.Destination,
+       command_line=EventData.CommandLine,
+       working_directory=EventData.CurrentDirectory,
+       parent=dict(
+          pid=EventData.ParentProcessId,
+          entity_id= EventData.ParentProcessGuid,
+          executable=EventData.ParentImage,
+          command_line=EventData.ParentCommandLine,
+          args=commandline_split(command=EventData.ParentCommandLine),
+          args_count=len(list=commandline_split(command=EventData.ParentCommandLine)),
+          name=pathspec(parse=EventData.ParentImage, path_type="windows").Basename
+       ),
+       thread=dict(
+          id= EventData.SourceThreadId || 0
+       ),
+       pe=if(condition=System.EventID.Value != 7, then=dict(
+         original_file_name=EventData.OriginalFileName || "",
+         company=EventData.Company || "",
+         description=EventData.Description || "",
+         file_version=EventData.FileVersion || "",
+         product= EventData.Product || ""
+       )),
+       args=commandline_split(command=EventData.CommandLine),
+       args_count=len(list=commandline_split(command=EventData.CommandLine)),
+       name=pathspec(parse=EventData.Image, path_type="windows").Basename
+    )
+  )
+
+  LET _EventToECSNetwork(System, EventData) = dict(
+    network=dict(
+      transport=EventData.Protocol,
+      protocol=if(condition=System.EventID.Value = 22, then="dns", else=EventData.DestinationPortName || EventData.SourcePortName),
+      direction=if(condition= EventData.Initiated, then="egress", else="ingress"),
+      type=if(condition= EventData.SourceIsIpv6, then="ipv6", else="ipv4")
+    ),
+    source=dict(
+      ip=EventData.SourceIp,
+      domain=EventData.SourceHostname,
+      port=EventData.SourcePort
+    ),
+    destination=dict(
+      ip=EventData.DestinationIp,
+      domain=EventData.DestinationHostname,
+      port=EventData.DestinationPort
+    ),
+    dns=dict(
+      answers=ParseDNSAnswers(X=EventData.QueryResults).Field,
+      question=dict(
+         name=EventData.QueryName
+      ),
+      status=get(item=DnsStatusLookup, field=str(str=EventData.QueryStatus))
+    )
+  )
+
+  LET _ParseRegData(X) = if(condition=X =~ "^DWORD",
+     then=dict(
+        strings=[str(str=int(int= parse_string_with_regex(string=X, regex="\\((.+?)\\)").g1)),],
+        type="DWORD"),
+     else=if(condition=X =~ "^Binary Data",
+             then=dict(
+               strings=["Binary Data",],
+               type="REG_BINARY"),
+             else=if(condition=X =~ "^QWORD",
+                     then=dict(
+                         strings=[str(str=int(int= regex_replace(re="-0x", replace="",
+                                  source=parse_string_with_regex(string=X, regex="\\((.+?)\\)").g1))),],
+                         type="QWORD"),
+                     else=dict(strings=X, type=parse_string_with_regex(string=X, regex="(^[^\\S]+)").g1)
+            )
+     ))
+
+  LET _EventToECSRegistry(System, EventData) = dict(
+     process=dict(
+       entity_id=EventData.ProcessGuid || EventData.SourceProcessGuid || EventData.SourceProcessGUID,
+       pid=EventData.ProcessId || EventData.SourceProcessId,
+       executable=EventData.Image || EventData.SourceImage || EventData.Destination,
+       name=pathspec(parse=EventData.Image, path_type="windows").Basename
+     ),
+     registry=dict(
+        hive=pathspec(parse=EventData.TargetObject, path_type="registry")[0],
+        key=pathspec(parse=EventData.TargetObject, path_type="registry")[1:],
+        path=EventData.TargetObject,
+        value=pathspec(parse=EventData.TargetObject, path_type="registry").Basename,
+        data= _ParseRegData(X=EventData.Details)
+     )
+  )
+
+  LET _EventToECSFile(System, EventData) = dict(
+    file=dict(
+      path=EventData.TargetFilename || EventData.Device || EventData.ImageLoaded,
+      directory=pathspec(parse=EventData.TargetFilename || EventData.Device || EventData.ImageLoaded, path_type="windows").Dirname,
+      name=EventData.PipeName || pathspec(parse=EventData.TargetFilename || EventData.Device || EventData.ImageLoaded, path_type="windows").Basename,
+      code_signature=dict(
+        subject_name= EventData.Signature || "",
+        status = EventData.SignatureStatus || "",
+        signed=if(condition=EventData.Signed, then=TRUE, else=FALSE),
+        valid=EventData.SignatureStatus = "Valid"
+      ),
+      process=dict(
+        entity_id=EventData.ProcessGuid || EventData.SourceProcessGuid || EventData.SourceProcessGUID,
+        pid=EventData.ProcessId || EventData.SourceProcessId,
+        executable=EventData.Image || EventData.SourceImage || EventData.Destination,
+        name=pathspec(parse=EventData.Image, path_type="windows").Basename,
+        hash=ParseHashes(Hashes=EventData.Hash)
+      ),
+      pe=dict(
+        original_file_name=EventData.OriginalFileName || "",
+        company=EventData.Company || "",
+        description=EventData.Description || "",
+        file_version=EventData.FileVersion || "",
+        product=EventData.Product || ""
+      ),
+      sysmon=dict(
+        file=dict(
+          archived=if(condition=EventData.Archived =~ "true", then=TRUE, else=FALSE),
+          is_executable=if(condition=EventData.is_executable, then=TRUE, else=FALSE)
+        )
+      )
+    )
+  )
+
+  LET SysmonEventToECS(System, EventData) = _EventToECSBase(System=System, EventData=EventData) + if(
+        condition=get(item=CategoryLookup, field=str(str=System.EventID.Value)) =~ "process",
+        then=_EventToECSProcess(System=System, EventData=EventData),
+      else=if(
+        condition=get(item=CategoryLookup, field=str(str=System.EventID.Value)) =~ "network",
+        then=_EventToECSNetwork(System=System, EventData=EventData),
+      else=if(
+        condition=get(item=CategoryLookup, field=str(str=System.EventID.Value)) =~ "registry",
+        then=_EventToECSRegistry(System=System, EventData=EventData),
+      else=if(
+        condition=get(item=CategoryLookup, field=str(str=System.EventID.Value)) =~ "file",
+        then=_EventToECSFile(System=System, EventData=EventData),
+      else=dict()))))
+
+sources:
+  - query: |
+      SELECT * FROM foreach(row={
+        SELECT * FROM foreach(row={
+           SELECT OSPath FROM glob(globs=LogFileGlob)
+        }, query={
+           SELECT SysmonEventToECS(System=System, EventData=EventData) AS ECS
+           FROM parse_evtx(filename=OSPath)
+        })
+      }, column="ECS")
