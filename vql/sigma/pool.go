@@ -31,6 +31,7 @@ func (self *workerJob) Run() {
 	for _, rule := range self.rules {
 		match, err := rule.Match(self.ctx, self.scope, self.event)
 		if err != nil {
+			self.scope.Log("While evaluating rule %v: %v", rule.Title, err)
 			continue
 		}
 

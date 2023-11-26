@@ -1,3 +1,5 @@
+// +build linux
+
 // Parse auditd log files.
 
 // Auditd writes multiple lines for the same event. We therefore need
@@ -10,9 +12,9 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/elastic/go-libaudit"
-	"github.com/elastic/go-libaudit/aucoalesce"
-	"github.com/elastic/go-libaudit/auparse"
+	"github.com/elastic/go-libaudit/v2"
+	"github.com/elastic/go-libaudit/v2/aucoalesce"
+	"github.com/elastic/go-libaudit/v2/auparse"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -88,7 +90,7 @@ func (self *streamHandler) ReassemblyComplete(msgs []*auparse.AuditMessage) {
 }
 
 func (self *streamHandler) EventsLost(count int) {
-	self.scope.Log("Detected the loss of %v sequences.", count)
+	// self.scope.Log("Detected the loss of %v sequences.", count)
 }
 
 func (self *streamHandler) outputMultipleMessages(
