@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path"
 	"reflect"
+	"strings"
 
 	"www.velocidex.com/golang/velociraptor/vql/sigma/evaluator/modifiers"
 	"www.velocidex.com/golang/vfilter/types"
@@ -92,7 +93,16 @@ func (self *VQLRuleEvaluator) evaluateSearch(
 	ctx context.Context, scope types.Scope,
 	search sigma.Search, event *Event) (bool, error) {
 	if len(search.Keywords) > 0 {
-		return false, fmt.Errorf("keywords unsupported")
+		event_str := event.AsJson()
+
+		// A keyword match occurs over the entire event.
+		for _, kw := range search.Keywords {
+			if strings.Contains(event_str, strings.ToLower(kw)) {
+				return true, nil
+			}
+		}
+
+		return false, nil
 	}
 
 	if len(search.EventMatchers) == 0 {

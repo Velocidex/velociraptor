@@ -2,6 +2,7 @@ package evaluator
 
 import (
 	"context"
+	"strings"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
@@ -26,8 +27,21 @@ import (
 type Event struct {
 	*ordereddict.Dict
 
-	mu    sync.Mutex
-	cache map[string]types.Any
+	mu         sync.Mutex
+	cache      map[string]types.Any
+	cache_json string
+}
+
+func (self *Event) AsJson() string {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.cache_json == "" {
+		serialized, _ := self.Dict.MarshalJSON()
+		self.cache_json = strings.ToLower(string(serialized))
+	}
+
+	return self.cache_json
 }
 
 func (self *Event) Copy() *ordereddict.Dict {
