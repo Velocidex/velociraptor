@@ -34,3 +34,5 @@ Queries:
         hunt(description='Test Hunt1', artifacts='Generic.Client.Info',
            os="linux").Request.condition
     FROM scope()
+
+  - SELECT * FROM Artifact.Reporting.Hunts.Details()

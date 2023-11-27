@@ -5,22 +5,38 @@ description: |
 
 type: SERVER
 
+parameters:
+  - name: ArtifactRegex
+    type: regex
+    default: .
+    description: Filter hunts by this
+
+  - name: DescriptionRegex
+    type: regex
+    default: .
+    description: Filter hunts by this description
+
 sources:
   - query: |
-        LET hunts = SELECT basename(path=hunt_id) as hunt_id,
-            create_time,
-            hunt_description
-        FROM hunts() order by create_time desc limit 6
+      LET hunts = SELECT hunt_id,
+                         create_time,
+                         hunt_description
+        FROM hunts()
+        WHERE artifacts =~ ArtifactRegex AND hunt_description =~ DescriptionRegex
+        ORDER BY create_time DESC
 
-        LET flows = select hunt_id,
-          hunt_description,
-          { SELECT os_info.fqdn FROM  clients(search=ClientId) } as FQDN,,
-          ClientId,
-          { SELECT os_info.system FROM clients(search=ClientId) } as OS,
-          timestamp(epoch=Flow.create_time/1000000) as create_time,
-          basename(path=Flow.session_id) as flow_id,
-          (Flow.active_time - Flow.create_time) / 1000000 as Duration,
-          format(format='%v', args=[Flow.state]) as State
-        FROM hunt_flows(hunt_id=hunt_id) order by create_time desc
+      LET flows = SELECT hunt_id,
+                         hunt_description,
+                         client_info(client_id=ClientId).os_info.fqdn AS FQDN,
+                         ClientId,
+                         client_info(client_id=ClientId).os_info.system AS OS,
+                         timestamp(epoch=Flow.create_time) AS create_time,
+                         timestamp(epoch=Flow.start_time) AS start_time,
+                         timestamp(epoch=Flow.active_time) AS active_time,
+                         FlowId AS flow_id,
+                         Flow.execution_duration / 1000000000 AS Duration,
+                         Flow.state AS State
+        FROM hunt_flows(hunt_id=hunt_id)
+        ORDER BY create_time DESC
 
-        SELECT * from foreach(row=hunts, query=flows)
+      SELECT * FROM foreach(row=hunts, query=flows)
