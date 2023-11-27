@@ -2,6 +2,7 @@ package users
 
 import (
 	"context"
+	"sort"
 
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -76,4 +77,9 @@ func (self *UserManager) normalizeOrgList(
 			Name: org_record.Name,
 		})
 	}
+
+	// Sort orgs for stable output
+	sort.Slice(user_record.Orgs, func(i, j int) bool {
+		return user_record.Orgs[i].Id < user_record.Orgs[j].Id
+	})
 }
