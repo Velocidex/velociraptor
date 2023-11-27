@@ -93,6 +93,32 @@ Client:
     ## applied to make the server allow lower TLS versions.
     allow_weak_tls_server: false
 
+
+    ## If you want to use mTLS to mutually authenticate clients to the
+    ## server, place a pem encoded client certificate here. This
+    ## certificate will be presented to the server before a TLS
+    ## connection can be made.
+    ##
+    ## This is an additional level of security that controls
+    ## connections between clients and server. It is normally not
+    ## needed as client connections are controlled via the embedded
+    ## nonce. However mTLS authentication allows termination of the
+    ## TLS before the server (e.g. using a reverse proxy).
+    ##
+    ## To configure this feature you can create a certificate signed
+    ## by the Velociraptor CA:
+    ## velociraptor --config server.config.yaml config api_client --name "Client" api.config.yaml
+    ##
+    ## This will create an api config file with the key pair encoded
+    ## as PEM strings. You can then copy and paste those into the
+    ## settings below. Only clients configured with these keys can
+    ## talk with the server
+    ##
+    ## To require the frontend to only talk with mTLS authenticated
+    ## clients, set the Frontend.require_client_certificates to true.
+    client_certificate: ""
+    client_certificate_private_key: ""
+
   ## A list of one or more URLs the clients will try to connect
   ## to. When all connections fail the client will back off for a
   ## while. Clients will choose one of these at random so it is a good
@@ -509,6 +535,21 @@ Frontend:
   # the wizard - you will need to manually configure it. You better
   # know what you are doing here!
   use_plain_http: false
+
+  # Enabling this requires the clients to present a valid certificate
+  # (signed by one of the Root CAs listed in Client.Crypto.root_certs
+  # or the Velociraptor built in CA itself). NOTE: If you use
+  # configurations that place the Frontend and the GUI on the same
+  # port then you **MUST** use the ClientCertificate authenticator.
+  # See further discussions at Client.Crypto.client_certificate.
+  #
+  # If this setting is enabled it becomes more difficult to
+  # troubleshoot the server since a simple curl command will be
+  # rejected. To test connectivity with the server you should instead
+  # provide client cert and key files:
+  #
+  # curl -kv https://localhost:8000/server.pem --cert client.pem --key key.pem
+  require_client_certificates: false
 
   # A proxy setting to use - Velociraptor needs to connect to download
   # tools. This setting will force it to go out over this proxy. NOTE-
