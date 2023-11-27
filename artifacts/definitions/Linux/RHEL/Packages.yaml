@@ -7,8 +7,8 @@ sources:
 
     query: |
         LET Data <= SELECT * FROM switch(
-            a={ SELECT Stdout FROM execve(cmd=["dnf", "--quiet", "list", "installed"], length=10000000) },
-            b={ SELECT Stdout FROM execve(cmd=["yum", "--quiet", "list", "installed"], length=10000000) },
+            a={ SELECT Stdout FROM execve(argv=["dnf", "--quiet", "list", "installed"], length=10000000) },
+            b={ SELECT Stdout FROM execve(argv=["yum", "--quiet", "list", "installed"], length=10000000) },
             c={SELECT "" AS Stdout FROM scope() WHERE log(level="ERROR",message="Could not retrieve package list") })
 
         // Sometimes lines overflow to the next line, correct for that
