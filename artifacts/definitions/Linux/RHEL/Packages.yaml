@@ -6,13 +6,16 @@ sources:
       SELECT OS From info() where OS = 'linux'
 
     query: |
-        LET exec = SELECT * FROM foreach(row={
-          SELECT grok(grok="%{DATA:Package}%{SPACE} %{DATA:Version}%{SPACE} %{GREEDYDATA:Repository}", data=Stdout) AS Parsed
-          FROM execve(argv=cmd, sep="\n")
-        }, column="Parsed")
-        
-        SELECT * FROM switch(
-            a=exec(cmd=["sh","-c" ,"dnf --quiet list installed | tail -n +2 | xargs -n3 | column -t"]),
-            b=exec(cmd=["sh","-c" ,"yum --quiet list installed | tail -n +2 | xargs -n3 | column -t"]),
-            c={SELECT log(level="ERROR",message="Could not retrieve package list") FROM scope()}
-            )
+        LET Data <= SELECT * FROM switch(
+            a={ SELECT Stdout FROM execve(cmd=["dnf", "--quiet", "list", "installed"], length=10000000) },
+            b={ SELECT Stdout FROM execve(cmd=["yum", "--quiet", "list", "installed"], length=10000000) },
+            c={SELECT "" AS Stdout FROM scope() WHERE log(level="ERROR",message="Could not retrieve package list") })
+
+        // Sometimes lines overflow to the next line, correct for that
+        LET Normalized <= regex_replace(source=Data[0].Stdout, re='''(?sm)\n\s''', replace="")
+        LET Parsed = SELECT parse_string_with_regex(string=Line, regex='''([^\s]+)\s+([^\s]+)\s+([^\s]+)''') AS Parsed
+        FROM parse_lines(accessor="data", filename=Normalized)
+
+        SELECT Parsed.g1 AS Package, Parsed.g2 AS Version, Parsed.g3 AS Repository
+        FROM Parsed
+        WHERE Repository =~ "^@"
