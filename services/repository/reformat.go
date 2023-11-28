@@ -95,7 +95,17 @@ func applyMutations(text string, mu []mutation) string {
 			current_mu = mu[current_mu_idx]
 		}
 	}
-	return strings.Join(result, "\n")
+
+	// Remove lines that consist of only spaces
+	trimmed := make([]string, 0, len(result))
+	for _, i := range result {
+		if len(i) > 0 && len(strings.TrimSpace(i)) == 0 {
+			continue
+		}
+		trimmed = append(trimmed, i)
+	}
+
+	return strings.Join(trimmed, "\n")
 }
 
 func reformatVQL(in string) (string, error) {
