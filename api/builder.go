@@ -124,7 +124,7 @@ func (self *Builder) withAutoCertFrontendSelfSignedGUI(
 	if config_obj.Services.GuiServer && config_obj.GUI != nil {
 		mux := http.NewServeMux()
 
-		router, err := PrepareGUIMux(ctx, config_obj, mux)
+		router, err := PrepareGUIMux(ctx, config_obj, server_obj, mux)
 		if err != nil {
 			return err
 		}
@@ -177,7 +177,7 @@ func (self *Builder) WithAutocertGUI(
 		}
 	}
 
-	router, err := PrepareGUIMux(ctx, self.config_obj, mux)
+	router, err := PrepareGUIMux(ctx, self.config_obj, self.server_obj, mux)
 	if err != nil {
 		return err
 	}
@@ -207,19 +207,37 @@ func startSharedSelfSignedFrontend(
 		}
 	}
 
-	router, err := PrepareGUIMux(ctx, config_obj, mux)
+	router, err := PrepareGUIMux(ctx, config_obj, server_obj, mux)
 	if err != nil {
 		return err
 	}
 
 	// Combine both frontend and GUI on HTTP server.
 	if config_obj.GUI.UsePlainHttp && config_obj.Frontend.UsePlainHttp {
+		server_obj.Info("Frontend and GUI both share port with plain HTTP %v",
+			config_obj.Frontend.BindPort)
+
 		return StartFrontendPlainHttp(
 			ctx, wg, config_obj, server_obj, mux)
 	}
 
-	return StartFrontendHttps(ctx, wg,
-		config_obj, server_obj, router)
+	server_obj.Info("Frontend and GUI both share port %v",
+		config_obj.Frontend.BindPort)
+
+	auther, err := authenticators.NewAuthenticator(config_obj)
+	if err != nil {
+		return err
+	}
+
+	if config_obj.Frontend.RequireClientCertificates != auther.RequireClientCerts() {
+		return errors.New(
+			"When using configurations that place the Frontend and GUI on the same port and requiring mTLS client certificates, then the GUI must also use the client certificate authenticator. Either split the frotnend and GUI on different ports or use the ClientCertificate authenticator.")
+	}
+
+	if config_obj.Frontend.RequireClientCertificates {
+		server_obj.Info("Frontend and GUI will both require mTLS client side certificates!")
+	}
+	return StartFrontendHttps(ctx, wg, config_obj, server_obj, router)
 }
 
 // Start the Frontend and GUI on different ports using different
@@ -238,7 +256,7 @@ func startSelfSignedFrontend(
 	if config_obj.Services.GuiServer {
 		mux := http.NewServeMux()
 
-		router, err := PrepareGUIMux(ctx, config_obj, mux)
+		router, err := PrepareGUIMux(ctx, config_obj, server_obj, mux)
 		if err != nil {
 			return err
 		}
@@ -312,6 +330,14 @@ func StartFrontendHttps(
 	err := getTLSConfig(config_obj, tls_config)
 	if err != nil {
 		return err
+	}
+
+	if config_obj.Frontend.RequireClientCertificates {
+		err = addClientCerts(config_obj, tls_config)
+		if err != nil {
+			return err
+		}
+		server_obj.Info("Frontend will require mTLS client side certificates!")
 	}
 
 	listenAddr := fmt.Sprintf(
@@ -475,15 +501,26 @@ func StartFrontendWithAutocert(
 		return err
 	}
 
-	err = maybeAddClientCerts(config_obj, tls_config)
+	auther, err := authenticators.NewAuthenticator(config_obj)
 	if err != nil {
 		return err
 	}
 
-	// The frontend can not work with client certs required, so if we are in
-	if tls_config.ClientAuth == tls.RequireAndVerifyClientCert {
+	// The frontend can not work with client certs required, so if we
+	// are in autocert mode we need either both frontend and gui to be
+	// configured with client cert or neither.
+	if config_obj.Frontend.RequireClientCertificates != auther.RequireClientCerts() {
 		return errors.New(
-			"The Frontend can not work with client Certificate authenticators. Make sure the GUI is listening on a different port to the Frontend!")
+			"When using configurations that place the Frontend and GUI on the same port and requiring mTLS client certificates, then the GUI must also use the client certificate authenticator. Either split the Frotnend and GUI on different ports or use the ClientCertificate authenticator.")
+	}
+
+	if auther.RequireClientCerts() {
+		err = addClientCerts(config_obj, tls_config)
+		if err != nil {
+			return err
+		}
+
+		server_obj.Info("Frontend and GUI will require mTLS client side certificates!")
 	}
 
 	// Autocert selects its own certificates by itself
@@ -641,9 +678,16 @@ func StartSelfSignedGUI(
 
 	// If we are using an authenticator that requires client side
 	// certs, add the required TLS config here.
-	err = maybeAddClientCerts(config_obj, tls_config)
+	auther, err := authenticators.NewAuthenticator(config_obj)
 	if err != nil {
 		return err
+	}
+
+	if auther.RequireClientCerts() {
+		err = addClientCerts(config_obj, tls_config)
+		if err != nil {
+			return err
+		}
 	}
 
 	listenAddr := fmt.Sprintf("%s:%d",
@@ -703,20 +747,21 @@ func get_hostname(fe_hostname, bind_addr string) string {
 	return bind_addr
 }
 
-func maybeAddClientCerts(config_obj *config_proto.Config, in *tls.Config) error {
-	auther, err := authenticators.NewAuthenticator(config_obj)
-	if err != nil {
-		return err
-	}
-
-	if !auther.RequireClientCerts() {
-		return nil
-	}
-
+func addClientCerts(config_obj *config_proto.Config, in *tls.Config) error {
 	// Require the browser to use client certificates
 	client_ca := x509.NewCertPool()
 	if config_obj.Client != nil {
 		client_ca.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
+
+		// Also trust any of our trusted root CAs.
+		if config_obj.Client.Crypto != nil &&
+			config_obj.Client.Crypto.RootCerts != "" {
+			if !client_ca.AppendCertsFromPEM(
+				[]byte(config_obj.Client.Crypto.RootCerts)) {
+				return errors.New(
+					"Unable to parse Crypto.root_certs in the config file.")
+			}
+		}
 	}
 
 	in.ClientAuth = tls.RequireAndVerifyClientCert
@@ -735,10 +780,11 @@ func getTLSConfig(config_obj *config_proto.Config, in *tls.Config) error {
 	}
 
 	expected_clients := int64(20000)
-	if config_obj.Frontend != nil &&
-		config_obj.Frontend.Resources != nil &&
-		config_obj.Frontend.Resources.ExpectedClients > 0 {
-		expected_clients = config_obj.Frontend.Resources.ExpectedClients
+	if config_obj.Frontend != nil {
+		if config_obj.Frontend.Resources != nil &&
+			config_obj.Frontend.Resources.ExpectedClients > 0 {
+			expected_clients = config_obj.Frontend.Resources.ExpectedClients
+		}
 	}
 
 	in.Certificates = certs
