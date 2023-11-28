@@ -1,20 +1,38 @@
-LET X <= SELECT mock(plugin='execve', results={ SELECT Line AS Stdout FROM parse_lines(filename=DNFMock, accessor="data") }) FROM scope()[]SELECT * FROM Artifact.Linux.RHEL.Packages()[
+LET _ <= mock(plugin='execve', results={ SELECT read_file(filename=DNFMock, accessor="data") AS Stdout FROM scope() })[]SELECT * FROM Artifact.Linux.RHEL.Packages()[
  {
-  "Package": "acl.x86_64",
-  "Repository": "@anaconda",
-  "Version": "2.2.53-1.el8",
+  "Package": "diffutils.x86_64",
+  "Version": "3.8-1.amzn2023.0.2",
+  "Repository": "@System",
   "_Source": "Linux.RHEL.Packages"
  },
  {
-  "Package": "audit.x86_64",
-  "Repository": "@anaconda",
-  "Version": "3.0-0.10.20180831git0047a6c.el8",
+  "Package": "dnf.noarch",
+  "Version": "4.12.0-2.amzn2023.0.4",
+  "Repository": "@System",
   "_Source": "Linux.RHEL.Packages"
  },
  {
-  "Package": "audit-libs.x86_64",
-  "Repository": "@anaconda",
-  "Version": "3.0-0.10.20180831git0047a6c.el8",
+  "Package": "dnf-data.noarch",
+  "Version": "4.12.0-2.amzn2023.0.4",
+  "Repository": "@System",
+  "_Source": "Linux.RHEL.Packages"
+ },
+ {
+  "Package": "dnf-plugin-release-notification.noarch",
+  "Version": "1.2-1.amzn2023.0.2",
+  "Repository": "@System",
+  "_Source": "Linux.RHEL.Packages"
+ },
+ {
+  "Package": "dnf-plugin-support-info.noarch",
+  "Version": "1.2-1.amzn2023",
+  "Repository": "@System",
+  "_Source": "Linux.RHEL.Packages"
+ },
+ {
+  "Package": "dnf-plugins-core.noarch",
+  "Version": "4.1.0-1.amzn2023.0.3",
+  "Repository": "@System",
   "_Source": "Linux.RHEL.Packages"
  }
 ]
