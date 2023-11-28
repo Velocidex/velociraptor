@@ -1290,6 +1290,9 @@
     type: uint64
     description: How large we allow the memory buffer to grow to while we are trying
       to contact the Elastic server (default 100mb).
+  - name: action
+    type: string
+    description: Either index or create. For data streams this must be create.
   category: server
   metadata:
     permissions: COLLECT_SERVER

@@ -40,6 +40,7 @@ import (
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/server"
 )
 
 // A Mux for the reverse proxy feature.
@@ -102,7 +103,9 @@ func AddProxyMux(config_obj *config_proto.Config, mux *http.ServeMux) error {
 // Prepares a mux for the GUI by adding handlers required by the GUI.
 func PrepareGUIMux(
 	ctx context.Context,
-	config_obj *config_proto.Config, mux *http.ServeMux) (http.Handler, error) {
+	config_obj *config_proto.Config,
+	server_obj *server.Server,
+	mux *http.ServeMux) (http.Handler, error) {
 	if config_obj.GUI == nil {
 		return nil, errors.New("GUI not configured")
 	}
@@ -120,6 +123,9 @@ func PrepareGUIMux(
 	auther, err := authenticators.NewAuthenticator(config_obj)
 	if err != nil {
 		return nil, err
+	}
+	if config_obj.GUI != nil && config_obj.GUI.Authenticator != nil {
+		server_obj.Info("GUI will use the %v authenticator", config_obj.GUI.Authenticator.Type)
 	}
 
 	// Add the authenticator specific handlers.
