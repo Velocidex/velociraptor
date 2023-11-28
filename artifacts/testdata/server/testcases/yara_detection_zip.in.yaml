@@ -1,3 +1,30 @@
+Parameters:
+  PartitionTable: |
+    [{
+      "StartOffset": 0,
+      "EndOffset": 1000,
+      "Size": "25MB",
+      "name": "EFI system partition",
+      "TopLevelDirectory": "a",
+      "Magic": "EFI test file"
+    }]
+
+  YaraRule: |
+    rule HelloWorld {
+      strings:
+        $a = "hello world" nocase wide ascii
+      condition:
+        any of them
+    }
+
 Queries:
+  # Setup our mocks UEFI needs to be mocked as below to pass srcDir
+  - LET _ <= SELECT mock(artifact=Artifact.Windows.Forensics.PartitionTable, results=parse_json_array(data=PartitionTable))
+    FROM scope()
   - SELECT relpath(path=Container, base=srcDir, sep="/") as RelativeContainer,relpath(path=ExtractedPath, base=srcDir,sep="/") as RelativeExtracted,FilePath,Rule,Size,Mtime,Atime,Ctime,Btime,Hash
     FROM Artifact.Generic.Detection.Yara.Zip(TargetGlob=srcDir + '/artifacts/testdata/files/compressedpe.zip')
+
+  # test Windows.Detection.Yara.UEFI
+  # OSPath, relpath(path=DevicePath, base=srcDir, sep="/") as TestPath, Rule, HitOffset
+  - SELECT OSPath, Size, Rule, HitOffset
+    FROM Artifact.Windows.Detection.Yara.UEFI(ImagePath=srcDir + "/artifacts/testdata/files/fat_very_small.dd",TargetGlob="**/*",YaraRule=YaraRule)
