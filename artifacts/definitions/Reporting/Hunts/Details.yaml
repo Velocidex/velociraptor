@@ -14,7 +14,7 @@ sources:
 
         LET flows = select hunt_id,
           hunt_description,
-          Fqdn,
+          { SELECT os_info.fqdn FROM  clients(search=ClientId) } as FQDN,,
           ClientId,
           { SELECT os_info.system FROM clients(search=ClientId) } as OS,
           timestamp(epoch=Flow.create_time/1000000) as create_time,
