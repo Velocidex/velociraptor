@@ -1,4 +1,4 @@
-SELECT relpath(path=Container, base=srcDir, sep="/") as RelativeContainer,relpath(path=ExtractedPath, base=srcDir,sep="/") as RelativeExtracted,FilePath,Rule,Size,Mtime,Atime,Ctime,Btime,Hash FROM Artifact.Generic.Detection.Yara.Zip(TargetGlob=srcDir + '/artifacts/testdata/files/compressedpe.zip')[
+LET _ <= SELECT mock(artifact=Artifact.Windows.Forensics.PartitionTable, results=parse_json_array(data=PartitionTable)) FROM scope()[]SELECT relpath(path=Container, base=srcDir, sep="/") as RelativeContainer,relpath(path=ExtractedPath, base=srcDir,sep="/") as RelativeExtracted,FilePath,Rule,Size,Mtime,Atime,Ctime,Btime,Hash FROM Artifact.Generic.Detection.Yara.Zip(TargetGlob=srcDir + '/artifacts/testdata/files/compressedpe.zip')[
  {
   "RelativeContainer": "artifacts/testdata/files/compressedpe.zip",
   "RelativeExtracted": "artifacts/testdata/files/compressedpe.zip -\u003e /firstfolder/secondlevel.zip -\u003e /folder/smallest.zip -\u003e /smallest/smallexe64.exe",
@@ -14,5 +14,12 @@ SELECT relpath(path=Container, base=srcDir, sep="/") as RelativeContainer,relpat
    "SHA1": "dd1e68d95f9b5dd5b017aeba9868200d35adb3f9",
    "SHA256": "7895875505da2ba49261622f30ae1d8cd825a85eded354f2e676e991c52e2f23"
   }
+ }
+]SELECT OSPath, Size, Rule, HitOffset FROM Artifact.Windows.Detection.Yara.UEFI(ImagePath=srcDir + "/artifacts/testdata/files/fat_very_small.dd",TargetGlob="**/*",YaraRule=YaraRule)[
+ {
+  "OSPath": "a\\b\\hello.txt",
+  "Size": 12,
+  "Rule": "HelloWorld",
+  "HitOffset": 0
  }
 ]

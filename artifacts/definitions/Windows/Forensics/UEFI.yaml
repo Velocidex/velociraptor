@@ -1,33 +1,72 @@
 name: Windows.Forensics.UEFI
+author: Matt Green - @mgreen27
 description: |
-  Searches for an EFI partition in the current partition table and
-  enumerates all files in it.
+  This artifact enables disk analysis over an EFI System Partition (ESP).
+  
+  The artifact queries the specified pysical disk, parses the partition table 
+  to targets the ESPs File Allocation Table (FAT).
+  
+  The default artifact returns file information, and PE enrichment as typical EFI files are in the PE format.
+  
+  We can looks for anomalities in EFI such as:
+  
+  - unexpected time stamps outside install / OS updates
+  - unexpected paths (EFI/ is typically the root folder on this partition)
+  - unexpected metadata: signer non microsoft or known vendor (note we expect non trusted certificates here as the authenticode api does not service ESP binaries)
+  
+  NOTE: default returns EFI files, rerun with ```TargetGlob=**/*``` glob and 
+  return all files.
 
 parameters:
   - name: ImagePath
-    default: "\\\\?\\GLOBALROOT\\Device\\Harddisk0\\DR0"
+    default: \\.\PhysicalDrive0
     description: Raw Device for main disk containing partition table to parse.
   - name: SectorSize
     type: int
     default: 512
+  - name: TargetGlob
+    default: "**/*.efi"
 
 sources:
 - query: |
-    SELECT * FROM foreach(row={
-       SELECT *, Size AS PartitionSize
+      LET find_efi = SELECT StartOffset,EndOffset,
+            Size AS PartitionSize,
+            name AS PartitionName
        FROM Artifact.Windows.Forensics.PartitionTable(
           ImagePath=ImagePath, SectorSize=SectorSize)
-      WHERE name =~ "EFI"
-
-    }, query={
-       SELECT StartOffset, PartitionSize, name,
-              OSPath.Path AS OSPath, Size, Mtime, Atime, Ctime, Data
-       FROM glob(globs="/*",
-          accessor="fat",
-          root=pathspec(
-            DelegateAccessor="offset",
-            DelegatePath=pathspec(
-               DelegateAccessor="raw_file",
-               DelegatePath=ImagePath,
-               Path=format(format="%d", args=StartOffset))))
-    })
+      WHERE PartitionName =~ "EFI"
+      
+      LET find_files = SELECT * FROM foreach(row=find_efi, 
+        query={
+            SELECT *,
+                StartOffset as PartitionOffset,
+                PartitionSize,
+                PartitionName
+            FROM glob(globs=TargetGlob,
+                accessor="fat",
+                root=pathspec(
+                    DelegateAccessor="offset",
+                    DelegatePath=pathspec(
+                        DelegateAccessor="raw_file",
+                        DelegatePath=ImagePath,
+                        Path=format(format="%d", args=StartOffset))))
+        })
+      
+      SELECT
+        dict(
+            ImagePath=ImagePath,
+            PartitionOffset=PartitionOffset,
+            PartitionSize=PartitionSize,
+            PartitionName=PartitionName
+                ) as Partition,
+        OSPath.Path as OSPath, 
+        Size, Mtime, Atime, Ctime, Btime,
+        Data.first_cluster as FirstCluster,
+        Data.attr AS Attr,
+        Data.deleted as IsDeleted,
+        Data.short_name AS ShortName,
+        hash(accessor='fat',path=OSPath) as Hash,
+        magic(accessor='fat',path=OSPath) as Magic,
+        parse_pe(accessor='fat',file=OSPath) as PEInfo,
+        authenticode(accessor='fat',filename=OSPath) as Authenticode
+      FROM find_files
