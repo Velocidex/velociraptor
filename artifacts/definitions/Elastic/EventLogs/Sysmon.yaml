@@ -590,3 +590,28 @@ sources:
            FROM parse_evtx(filename=OSPath)
         })
       }, column="ECS")
+
+    notebook:
+      - type: vql_suggestion
+        name: "Upload to Elastic"
+        template: |
+          /*
+             * Modify the Elastic parameters to upload this dataset.
+             * You might need to add authentication to Elastic.
+          */
+          LET ElasicAddress = "http://localhost:9200"
+
+          // Uncomment this when you are ready to upload the data
+          LET X = SELECT *
+          FROM elastic_upload(
+            addresses=ElasicAddress,
+            index="winlogbeat-velo",
+            action="create",
+            query={
+               SELECT timestamp(epoch=now()) AS `@timestamp`,
+                      ClientId,
+                      client_info(client_id=ClientId).Hostname AS Hostname,
+                      *
+               FROM source(artifact="Elastic.EventLogs.Sysmon")
+               LIMIT 10
+            })

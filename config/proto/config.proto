@@ -665,6 +665,12 @@ message FrontendConfig {
     // it. You better know what you are doing here!
     bool use_plain_http = 24;
 
+    // Enabling this requires the clients to present a valid
+    // certificate (signed by one of the Root CAs listed in
+    // Client.Crypto.root_certs or the Velociraptor built in CA
+    // itself).
+    bool require_client_certificates = 36;
+
     // A proxy setting to use - Velociraptor needs to connect to
     // download tools. This setting will force it to go out over this
     // proxy. NOTE- If you dont want to allow outbound connections,
@@ -1132,6 +1138,13 @@ message CryptoConfig {
     // servers. This is required when connecting to Velociraptor with
     // some legacy clients (like Powershell) who do not support TLS13
     bool allow_weak_tls_server = 4;
+
+    // If you want to use mTLS to mutually authenticate clients to the
+    // server, place a list of pem encoded client certificates
+    // here. They will be presented to the server if the server
+    // requires mTLS authentication.
+    string client_certificate = 5;
+    string client_certificate_private_key = 6;
 }
 
 message MountPoint {

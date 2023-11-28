@@ -54,6 +54,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
@@ -78,6 +79,7 @@ type _ElasticPluginArgs struct {
 	SkipVerify         bool                `vfilter:"optional,field=skip_verify,doc=Disable ssl certificate verifications."`
 	RootCerts          string              `vfilter:"optional,field=root_ca,doc=As a better alternative to disable_ssl_security, allows root ca certs to be added here."`
 	MaxMemoryBuffer    uint64              `vfilter:"optional,field=max_memory_buffer,doc=How large we allow the memory buffer to grow to while we are trying to contact the Elastic server (default 100mb)."`
+	Action             string              `vfilter:"optional,field=action,doc=Either index or create. For data streams this must be create."`
 }
 
 type _ElasticPlugin struct{}
@@ -100,6 +102,14 @@ func (self _ElasticPlugin) Call(ctx context.Context,
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, &arg)
 		if err != nil {
 			scope.Log("elastic: %v", err)
+			return
+		}
+
+		if arg.Action == "" {
+			arg.Action = "index"
+		}
+		if arg.Action != "index" && arg.Action != "create" {
+			scope.Log("elastic: action must be either index or create")
 			return
 		}
 
@@ -127,7 +137,7 @@ func (self _ElasticPlugin) Call(ctx context.Context,
 
 			// Start an uploader on a thread.
 			go upload_rows(ctx, config_obj, scope, output_chan,
-				row_chan, id, &wg, &arg)
+				row_chan, id, arg.Action, &wg, &arg)
 		}
 
 		wg.Wait()
@@ -141,7 +151,7 @@ func upload_rows(
 	config_obj *config_proto.ClientConfig,
 	scope vfilter.Scope, output_chan chan vfilter.Row,
 	row_chan <-chan vfilter.Row,
-	id int64,
+	id int64, action string,
 	wg *sync.WaitGroup,
 	arg *_ElasticPluginArgs) {
 	defer wg.Done()
@@ -185,7 +195,6 @@ func upload_rows(
 	}
 
 	wait_time := time.Duration(arg.WaitTime) * time.Second
-	next_send_id := id + arg.ChunkSize
 	next_send_time := time.After(wait_time)
 
 	// If the buffer is too large we need to drop the data on the
@@ -201,6 +210,8 @@ func upload_rows(
 
 	opts := vql_subsystem.EncOptsFromScope(scope)
 
+	count := int64(0)
+
 	// Batch sending to elastic: Either
 	// when we get to chuncksize or wait
 	// time whichever comes first.
@@ -211,27 +222,25 @@ func upload_rows(
 				return
 			}
 
-			// FIXME: Find a better way to interleave id's
-			// to avoid collisions.
-			id = id + 3
-			err := append_row_to_buffer(ctx, scope, row, id, &buf, arg, opts)
+			id = int64(utils.GetId())
+			err := append_row_to_buffer(ctx, scope, action, row, id, &buf, arg, opts)
 			if err != nil {
 				scope.Log("elastic: %v", err)
 				continue
 			}
 
-			if id > next_send_id ||
+			count++
+
+			if count > arg.ChunkSize ||
 				buf.Len() > int(max_buffer_size) {
-				send_to_elastic(ctx, scope, output_chan,
-					client, &buf)
-				next_send_id = id + arg.ChunkSize
+				send_to_elastic(ctx, scope, output_chan, client, &buf)
+				count = 0
 				next_send_time = time.After(wait_time)
 			}
 
 		case <-next_send_time:
-			send_to_elastic(ctx, scope, output_chan,
-				client, &buf)
-			next_send_id = id + arg.ChunkSize
+			send_to_elastic(ctx, scope, output_chan, client, &buf)
+			count = 0
 			next_send_time = time.After(wait_time)
 		}
 	}
@@ -240,6 +249,7 @@ func upload_rows(
 func append_row_to_buffer(
 	ctx context.Context,
 	scope vfilter.Scope,
+	action string,
 	row vfilter.Row, id int64, buf *bytes.Buffer,
 	arg *_ElasticPluginArgs, opts *json.EncOpts) error {
 
@@ -255,11 +265,11 @@ func append_row_to_buffer(
 	var meta []byte
 	pipeline := arg.PipeLine
 	if pipeline != "" {
-		meta = []byte(fmt.Sprintf(`{ "index" : {"_id" : "%d", "_index": "%s", "pipeline": "%s" } }%s`,
-			id, index, pipeline, "\n"))
+		meta = []byte(fmt.Sprintf(`{ %q : {"_id" : "%d", "_index": %q, "pipeline": %q } }%s`,
+			action, id, index, pipeline, "\n"))
 	} else {
-		meta = []byte(fmt.Sprintf(`{ "index" : {"_id" : "%d", "_index": "%s"} }%s`,
-			id, index, "\n"))
+		meta = []byte(fmt.Sprintf(`{ %q : {"_id" : "%d", "_index": %q} }%s`,
+			action, id, index, "\n"))
 	}
 
 	data, err := json.MarshalWithOptions(row_dict, opts)
