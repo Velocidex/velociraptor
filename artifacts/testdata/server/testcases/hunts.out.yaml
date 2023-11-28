@@ -92,4 +92,19 @@ FROM scope()[
    }
   }
  }
+]SELECT * FROM Artifact.Reporting.Hunts.Details()[
+ {
+  "hunt_id": "H.49ba8939",
+  "hunt_description": "netstat",
+  "FQDN": "DESKTOP-BP4S7TF",
+  "ClientId": "C.4f5e52adf0a337a9",
+  "OS": "windows",
+  "create_time": "2023-11-28T12:43:36.907783Z",
+  "start_time": "2023-11-28T12:43:36.937261Z",
+  "active_time": "2023-11-28T12:43:52.476534Z",
+  "flow_id": "F.BSJMEJIPT6P9I",
+  "Duration": 15.539273,
+  "State": "FINISHED",
+  "_Source": "Reporting.Hunts.Details"
+ }
 ]

@@ -200,5 +200,20 @@ func (self *NotebookManager) ReformatVQL(
 	ctx context.Context, vql string) (string, error) {
 
 	scope := vql_subsystem.MakeScope()
-	return reformat.ReFormatVQL(scope, vql, vfilter.DefaultFormatOptions)
+	reformatted, err := reformat.ReFormatVQL(scope, vql, vfilter.DefaultFormatOptions)
+	if err != nil {
+		return "", err
+	}
+	result := strings.Split(reformatted, "\n")
+
+	// Remove lines that consist of only spaces
+	trimmed := make([]string, 0, len(result))
+	for _, i := range result {
+		if len(i) > 0 && len(strings.TrimSpace(i)) == 0 {
+			continue
+		}
+		trimmed = append(trimmed, i)
+	}
+
+	return strings.Join(trimmed, "\n"), nil
 }

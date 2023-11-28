@@ -1,0 +1,1 @@
+{"clientId":"C.4f5e52adf0a337a9","sessionId":"F.BSJMEJIPT6P9I","request":{"creator":"admin","clientId":"C.622d19ea21109231","artifacts":["Windows.Network.NetstatEnriched"],"specs":[{"artifact":"Windows.Network.NetstatEnriched","parameters":{}}]},"createTime":"1701175416907783","totalRequests":"1","outstandingRequests":"1","state":"RUNNING"}
