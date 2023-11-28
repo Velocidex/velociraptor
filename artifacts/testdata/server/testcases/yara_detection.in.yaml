@@ -12,7 +12,6 @@ Parameters:
           uint32(uint32(0x3C)) == 0x00004550
       }
 
-
 Queries:
   # Setup our mocks --MFT needs to be mocked as below to pass srcDir
   - |
@@ -105,7 +104,7 @@ Queries:
     Size,Rule,Mtime,Atime,Ctime,Btime
     FROM Artifact.Generic.Detection.Yara.Glob(DateBefore='2021-04-01',ContextBytes=10,YaraRule=MZRule)
 
-  # test Windows.Detection.Yara.Device (shoudl also work cross platform)
+  # test Windows.Detection.Yara.Device (should also work cross platform)
   - SELECT relpath(path=DevicePath, base=srcDir, sep="/") as TestPath,
       CleanContext(HitContext=HitContext),
       StartOffest,ScanLength,Rule,YaraString,HitOffset

@@ -1,0 +1,184 @@
+name: Windows.Detection.Yara.UEFI
+author: Matt Green - @mgreen27
+description: |
+  This artifact enables running yara over files in an EFI System Partition (ESP).
+  
+
+parameters:
+  - name: ImagePath
+    default: \\.\PhysicalDrive0
+    description: Raw Device for main disk containing partition table to parse.
+  - name: SectorSize
+    type: int
+    default: 512
+  - name: TargetGlob
+    default: "**/*.efi"
+  - name: SizeMax
+    description: maximum size of target file.
+    type: int64
+  - name: SizeMin
+    description: minimum size of target file.
+    type: int64
+  - name: UploadHits
+    type: bool
+  - name: DateAfter
+    type: timestamp
+    description: "search for events after this date. YYYY-MM-DDTmm:hh:ssZ"
+  - name: DateBefore
+    type: timestamp
+    description: "search for events before this date. YYYY-MM-DDTmm:hh:ssZ"
+  - name: YaraUrl
+    description: If configured will attempt to download Yara rules form Url
+    type: upload
+  - name: YaraRule
+    type: yara
+    description: Final Yara option and the default if no other options provided.
+    default: |
+            rule win_blacklotus_auto {
+                meta:
+                    author = "Felix Bilstein - yara-signator at cocacoding dot com"
+                    date = "2023-07-11"
+                    description = "Detects win.blacklotus."
+                strings:
+                    $sequence_0 = { 498bcf e8???????? 448bc0 498bd7 4d03c0 488bce }
+                    $sequence_1 = { 4c897020 55 488d68c8 4881ec30010000 4c8bd1 }
+                    $sequence_2 = { 488b0d???????? 4c8d054e140100 488bd7 488bd8 e8???????? 488b05???????? 488bcb }
+                    $sequence_3 = { 8b0c91 498bd2 4903c9 e8???????? }
+                    $sequence_4 = { 4585d2 743f 8b05???????? 4103c1 }
+                    $sequence_5 = { 4883ec20 488d7910 8bea 488b1f 33f6 }
+                    $sequence_6 = { 488bd9 b10e e8???????? 8a4b02 40b70d }
+                    $sequence_7 = { 410f47f7 8bc6 488b742460 4883c430 415f }
+                    $sequence_8 = { 4923d3 4803d1 440fb74a0c 440fb7520e }
+                    $sequence_9 = { 6642837cc11010 0f859d000000 428b54c114 41bbffffff7f 4923d3 }
+                condition:
+                    7 of them and filesize < 181248
+            }
+            rule MAL_Rootkit_CosmicStrand
+            {
+                meta:
+                	author = "Natalie Zargarov @ Rapid7"
+                    description = "CosmicStrand UEFI rootkit detection rule. Detects the compromised .efi driver "
+                    targeting = "process,efi"
+                    tags ="Rootkit"
+                strings:
+                    $trait_0 = {89 C6 53 89 D8 BB 3F B8 11 03}
+                    $trait_1 = {8B 3D 18 10 01 00 33 DB 8D 45 F8 50 53 53 6A 0B}
+                    $trait_2= {83 EC 4C 53 57 68 A0 10 01 00 8D 45 F8}
+                    $trait_3= {53 81 C7 FF 0F 00 00 68 54 44 55 00 81 E7 00 F0 FF FF 57 6A 01}
+                    $trait_4= {50 68 08 08 08 08 68 D0 43 DE DE 68 1F 96 00 00 BF E4 10 01 00}
+                    $string_0 = "winlogon.exe" 
+                condition:
+                    1 of ($trait_*) and 
+                    1 of ($string_*)
+            }
+  - name: NumberOfHits
+    description: This artifact will stop by default at one hit. This setting allows additional hits
+    default: 1
+    type: int
+  - name: ContextBytes
+    description: Include this amount of bytes around hit as context.
+    default: 0
+    type: int
+
+sources:
+- query: |
+      -- check which Yara to use
+      LET yara_rules <= YaraUrl || YaraRule
+
+      -- time testing
+      LET time_test(stamp) =
+            if(condition= DateBefore AND DateAfter,
+                then= stamp < DateBefore AND stamp > DateAfter,
+                else=
+            if(condition=DateBefore,
+                then= stamp < DateBefore,
+                else=
+            if(condition= DateAfter,
+                then= stamp > DateAfter,
+                else= True
+            )))
+            
+      LET find_efi = SELECT StartOffset,EndOffset,
+            Size AS PartitionSize,
+            name AS PartitionName
+       FROM Artifact.Windows.Forensics.PartitionTable(
+          ImagePath=ImagePath, SectorSize=SectorSize)
+      WHERE PartitionName =~ "EFI"
+      
+      LET find_files = SELECT * FROM foreach(row=find_efi, 
+        query={
+            SELECT *,
+                StartOffset,EndOffset,
+                PartitionSize,
+                PartitionName
+            FROM glob(globs=TargetGlob,
+                accessor="fat",
+                root=pathspec(
+                    DelegateAccessor="offset",
+                    DelegatePath=pathspec(
+                        DelegateAccessor="raw_file",
+                        DelegatePath=ImagePath,
+                        Path=format(format="%d", args=StartOffset))))
+        })
+      
+      LET target_files = SELECT 
+            StartOffset as PartitionOffset, PartitionSize,
+            OSPath,
+            Size, Mtime, Atime, Ctime, Btime,
+            Data.first_cluster as FirstCluster,
+            Data.attr AS Attr,
+            Data.deleted as IsDeleted,
+            Data.short_name AS ShortName
+        FROM find_files
+        WHERE NOT IsDir
+            AND if(condition=SizeMin,
+                        then= SizeMin < Size,
+                        else= True)
+            AND if(condition=SizeMax,
+                        then= SizeMax > Size,
+                        else= True)
+            AND ( time_test(stamp=Mtime)
+                    OR time_test(stamp=Atime)
+                    OR time_test(stamp=Ctime)
+                    OR time_test(stamp=Btime))
+        
+      -- scan files and prepare hit metadata
+      LET hits = SELECT * FROM foreach(row=target_files,
+        query={
+            SELECT 
+                OSPath as _OSPath,
+                OSPath.Path as OSPath,
+                File.Size as Size,
+                Mtime, Atime, Ctime, Btime,
+                Rule, Tags, Meta,
+                String.Name as YaraString,
+                String.Offset as HitOffset,
+                upload( accessor='scope',
+                        file='String.Data',
+                        name=format(format="%v-%v-%v",
+                        args=[
+                            OSPath.Path,
+                            if(condition= String.Offset - ContextBytes < 0,
+                                then= 0,
+                                else= String.Offset - ContextBytes),
+                            if(condition= String.Offset + ContextBytes > Size,
+                                then= Size,
+                                else= String.Offset + ContextBytes) ]
+                        )) as HitContext
+            FROM yara( accessor='fat', rules=yara_rules,files=OSPath,
+                    context=ContextBytes,number=NumberOfHits )
+        })
+      
+      -- upload files if selected
+      LET upload_hits = SELECT *, 
+            upload(accessor='fat',file=_OSPath,name=_OSPath.Path) as Upload 
+        FROM hits
+
+      -- return rows
+      SELECT * FROM if(condition= UploadHits,
+                        then= upload_hits,
+                        else= hits )
+
+column_types:
+  - name: HitContext
+    type: preview_upload
