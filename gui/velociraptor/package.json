@@ -4,8 +4,8 @@
     "private": true,
     "type": "module",
     "dependencies": {
-        "@babel/core": "^7.23.2",
-        "@babel/plugin-syntax-flow": "^7.22.5",
+        "@babel/core": "^7.23.3",
+        "@babel/plugin-syntax-flow": "^7.23.3",
         "@babel/plugin-transform-react-jsx": "^7.22.15",
         "@babel/runtime": "^7.23.2",
         "@fortawesome/fontawesome-svg-core": "^6.4.2",
