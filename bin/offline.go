@@ -177,6 +177,7 @@ SELECT * FROM Artifact.Server.Utils.CreateCollector(
    target=Spec.Target,
    target_args=Spec.TargetArgs,
    encryption_scheme=Spec.EncryptionScheme,
+   encryption_args=Spec.EncryptionArgs,
    opt_verbose=Spec.OptVerbose,
    opt_banner=Spec.OptBanner,
    opt_prompt=Spec.OptPrompt,
