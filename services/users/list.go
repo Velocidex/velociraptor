@@ -2,6 +2,7 @@ package users
 
 import (
 	"context"
+	"sort"
 
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -119,6 +120,11 @@ func (self *UserManager) ListUsers(
 		if len(user_record.Orgs) == 0 {
 			continue
 		}
+
+		// Sort orgs for stable output
+		sort.Slice(user_record.Orgs, func(i, j int) bool {
+			return user_record.Orgs[i].Id < user_record.Orgs[j].Id
+		})
 
 		result = append(result, user_record)
 	}

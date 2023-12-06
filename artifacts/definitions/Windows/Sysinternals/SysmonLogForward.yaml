@@ -31,4 +31,6 @@ sources:
     SELECT System.ID AS ID,
            System.TimeStamp AS Timestamp,
            get(member='EventData') AS EventData
-    FROM watch_etw(guid='{5770385f-c22a-43e0-bf4c-06f5698ffbd9}')
+    FROM watch_etw(
+       description='Microsoft-Windows-Sysmon/Operational',
+       guid='{5770385f-c22a-43e0-bf4c-06f5698ffbd9}')
