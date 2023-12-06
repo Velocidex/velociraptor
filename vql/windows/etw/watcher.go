@@ -62,7 +62,7 @@ func (self *EventTraceWatcherService) SessionContext(
 	if !pres {
 		sessionContext = &SessionContext{
 			name:          name,
-			registrations: make(map[string][]*Handle),
+			registrations: make(map[string]*Registration),
 		}
 		self.sessions[name] = sessionContext
 	}
@@ -91,7 +91,10 @@ func writeMetrics(
 		output_chan <- ordereddict.NewDict().
 			Set("SessionName", s.SessionName).
 			Set("GUID", s.GUID).
-			Set("Watchers", s.Watchers)
+			Set("Description", s.Description).
+			Set("Watchers", s.Watchers).
+			Set("EventCount", s.EventCount).
+			Set("Started", s.Started)
 	}
 }
 

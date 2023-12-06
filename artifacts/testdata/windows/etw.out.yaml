@@ -1,4 +1,4 @@
-LET SessionExists = SELECT SessionName FROM etw_sessions() WHERE SessionName =~ "VeloTest2" LIMIT 1[]SELECT ProviderGUID, { SELECT * FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2" } AS Profile, SessionExists[0] FROM chain(async=TRUE, a={ SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5) }, b={ SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5) }) WHERE Profile.Watchers = 2 LIMIT 1[
+LET SessionExists = SELECT SessionName FROM etw_sessions() WHERE SessionName =~ "VeloTest2" LIMIT 1[]SELECT ProviderGUID, { SELECT SessionName, GUID, Watchers FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2" } AS Profile, SessionExists[0] FROM chain(async=TRUE, a={ SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5) }, b={ SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5) }) WHERE Profile.Watchers = 2 LIMIT 1[
  {
   "ProviderGUID": "{70EB4F03-C1DE-4F73-A051-33D13D5413BD}",
   "Profile": {
@@ -14,30 +14,27 @@ LET SessionExists = SELECT SessionName FROM etw_sessions() WHERE SessionName =~ 
  {
   "sleep(time=1)": true
  }
-]SELECT * FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2"[]SELECT { SELECT * FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2" ORDER BY GUID } AS Profile, SessionExists[0] FROM chain(async=TRUE, a={ SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5) }, b={ SELECT * FROM watch_etw(guid=GUID2, name="VeloTest2", timeout=5) }) LIMIT 1[
+]SELECT * FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2"[]SELECT { SELECT SessionName, GUID FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2" ORDER BY GUID } AS Profile, SessionExists[0] FROM chain(async=TRUE, a={ SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5) }, b={ SELECT * FROM watch_etw(guid=GUID2, name="VeloTest2", timeout=5) }) LIMIT 1[
  {
   "Profile": [
    {
     "SessionName": "VeloTest2",
-    "GUID": "{70EB4F03-C1DE-4F73-A051-33D13D5413BD}",
-    "Watchers": 1
+    "GUID": "{70EB4F03-C1DE-4F73-A051-33D13D5413BD}"
    },
    {
     "SessionName": "VeloTest2",
-    "GUID": "{A669021C-C450-4609-A035-5AF59AF4DF18}",
-    "Watchers": 1
+    "GUID": "{A669021C-C450-4609-A035-5AF59AF4DF18}"
    }
   ],
   "SessionExists[0]": {
    "SessionName": "VeloTest2"
   }
  }
-]SELECT { SELECT * FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2" } AS Profile, SessionExists[0] FROM chain(async=TRUE, a={ SELECT * FROM watch_etw(guid=GUID2, name="VeloTest2", timeout=5) }, b={ SELECT * FROM watch_etw(guid=GUID2, name="VeloTest2", timeout=5) }) LIMIT 1[
+]SELECT { SELECT SessionName, GUID FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2" } AS Profile, SessionExists[0] FROM chain(async=TRUE, a={ SELECT * FROM watch_etw(guid=GUID2, name="VeloTest2", timeout=5) }, b={ SELECT * FROM watch_etw(guid=GUID2, name="VeloTest2", timeout=5) }) LIMIT 1[
  {
   "Profile": {
    "SessionName": "VeloTest2",
-   "GUID": "{A669021C-C450-4609-A035-5AF59AF4DF18}",
-   "Watchers": 2
+   "GUID": "{A669021C-C450-4609-A035-5AF59AF4DF18}"
   },
   "SessionExists[0]": {
    "SessionName": "VeloTest2"

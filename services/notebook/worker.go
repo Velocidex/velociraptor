@@ -38,7 +38,7 @@ type NotebookResponse struct {
 type NotebookWorker struct{}
 
 // Process an update request from the scheduler "Notebook" queue.
-func (self *NotebookWorker) processUpdateRequest(
+func (self *NotebookWorker) ProcessUpdateRequest(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	request *NotebookRequest,
@@ -445,7 +445,7 @@ func (self *NotebookWorker) RegisterWorker(
 			}
 
 			// Call our processor on the correct org.
-			resp, err := self.processUpdateRequest(ctx, org_config_obj, request,
+			resp, err := self.ProcessUpdateRequest(ctx, org_config_obj, request,
 				notebook_manager.Store)
 			serialized, _ := json.Marshal(resp)
 			if resp == nil {

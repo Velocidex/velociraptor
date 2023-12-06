@@ -47,7 +47,9 @@ sources:
     LET registry_access = SELECT System, EventData,
        get(item=EventLookup, field=str(str=System.ID)) AS EventType,
        get(item=Cache, field=EventData.KeyObject) || EventData.KeyName AS KeyName
-    FROM watch_etw(guid="{70EB4F03-C1DE-4F73-A051-33D13D5413BD}", any=0x7720)
+    FROM watch_etw(
+      description="Microsoft-Windows-Kernel-Registry",
+      guid="{70EB4F03-C1DE-4F73-A051-33D13D5413BD}", any=0x7720)
     WHERE System.ProcessID != getpid() -- exclude ourselves
         AND EventType  -- we only care about these events
         AND if(condition=System.ID in (1, 2, 4),

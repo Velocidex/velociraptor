@@ -5,4 +5,7 @@ type ETWOptions struct {
 	Level                  int64
 	CaptureState           bool
 	EnableMapInfo          bool
+
+	// A description string to be associated with the registration.
+	Description string
 }
