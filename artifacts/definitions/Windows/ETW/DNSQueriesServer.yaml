@@ -31,7 +31,9 @@ sources:
                EventData.Source as Source,
                EventData.TCP as TCP,
                EventData.XID as XID
-        FROM watch_etw(guid="{EB79061A-A566-4698-9119-3ED2807060E7}")
+        FROM watch_etw(
+          description="EventLog-Microsoft-Windows-DNSServer-Analytical",
+          guid="{EB79061A-A566-4698-9119-3ED2807060E7}")
         WHERE EventData AND
               QNAME =~ QueryNameRegex AND
               Source =~ SourceIPRegex
