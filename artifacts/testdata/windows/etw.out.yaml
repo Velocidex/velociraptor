@@ -1,4 +1,16 @@
-LET SessionExists = SELECT SessionName FROM etw_sessions() WHERE SessionName =~ "VeloTest2" LIMIT 1[]SELECT ProviderGUID, { SELECT SessionName, GUID FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2" } AS Profile, SessionExists[0] FROM chain(async=TRUE, a={ SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5) }, b={ SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5) }) WHERE Profile.Watchers = 2 LIMIT 1[]SELECT sleep(time=1) FROM scope()[
+LET SessionExists = SELECT SessionName FROM etw_sessions() WHERE SessionName =~ "VeloTest2" LIMIT 1[]SELECT ProviderGUID, { SELECT SessionName, GUID, Watchers FROM profile(type="ETW") WHERE SessionName =~ "VeloTest2" } AS Profile, SessionExists[0] FROM chain(async=TRUE, a={ SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5) }, b={ SELECT * FROM watch_etw(guid=GUID1, name="VeloTest2", timeout=5) }) WHERE Profile.Watchers = 2 LIMIT 1[
+ {
+  "ProviderGUID": "{70EB4F03-C1DE-4F73-A051-33D13D5413BD}",
+  "Profile": {
+   "SessionName": "VeloTest2",
+   "GUID": "{70EB4F03-C1DE-4F73-A051-33D13D5413BD}",
+   "Watchers": 2
+  },
+  "SessionExists[0]": {
+   "SessionName": "VeloTest2"
+  }
+ }
+]SELECT sleep(time=1) FROM scope()[
  {
   "sleep(time=1)": true
  }
