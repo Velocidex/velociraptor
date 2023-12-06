@@ -4,7 +4,10 @@ LET SessionExists = SELECT SessionName FROM etw_sessions() WHERE SessionName =~ 
   "Profile": {
    "SessionName": "VeloTest2",
    "GUID": "{70EB4F03-C1DE-4F73-A051-33D13D5413BD}",
-   "Watchers": 2
+   "Description": "",
+   "Watchers": 2,
+   "EventCount": 6,
+   "Started": "2020-05-31T15:28:05.00000001Z"
   },
   "SessionExists[0]": {
    "SessionName": "VeloTest2"
@@ -20,12 +23,18 @@ LET SessionExists = SELECT SessionName FROM etw_sessions() WHERE SessionName =~ 
    {
     "SessionName": "VeloTest2",
     "GUID": "{70EB4F03-C1DE-4F73-A051-33D13D5413BD}",
-    "Watchers": 1
+    "Description": "",
+    "Watchers": 1,
+    "EventCount": 6,
+    "Started": "2020-05-31T15:28:05.00000001Z"
    },
    {
     "SessionName": "VeloTest2",
     "GUID": "{A669021C-C450-4609-A035-5AF59AF4DF18}",
-    "Watchers": 1
+    "Description": "",
+    "Watchers": 1,
+    "EventCount": 0,
+    "Started": "2020-05-31T15:28:05.00000001Z"
    }
   ],
   "SessionExists[0]": {
@@ -37,7 +46,10 @@ LET SessionExists = SELECT SessionName FROM etw_sessions() WHERE SessionName =~ 
   "Profile": {
    "SessionName": "VeloTest2",
    "GUID": "{A669021C-C450-4609-A035-5AF59AF4DF18}",
-   "Watchers": 2
+   "Description": "",
+   "Watchers": 2,
+   "EventCount": 4,
+   "Started": "2020-05-31T15:28:05.00000001Z"
   },
   "SessionExists[0]": {
    "SessionName": "VeloTest2"
