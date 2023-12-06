@@ -7,7 +7,7 @@ Queries:
 
   # Check that two queries for the same provider apply 2 watchers.
   - SELECT ProviderGUID, {
-        SELECT * FROM profile(type="ETW")
+        SELECT SessionName, GUID FROM profile(type="ETW")
         WHERE SessionName =~ "VeloTest2"
     } AS Profile, SessionExists[0]
     FROM chain(async=TRUE,
@@ -26,7 +26,7 @@ Queries:
 
   # Now Check two queries to different proviers
   - SELECT {
-      SELECT * FROM profile(type="ETW")
+      SELECT SessionName, GUID FROM profile(type="ETW")
       WHERE SessionName =~ "VeloTest2"
       ORDER BY GUID
     } AS Profile, SessionExists[0]
@@ -40,7 +40,7 @@ Queries:
 
   # Check that GUID1 is removed when no one is interested any more
   - SELECT {
-      SELECT * FROM profile(type="ETW")
+      SELECT SessionName, GUID FROM profile(type="ETW")
       WHERE SessionName =~ "VeloTest2"
     } AS Profile, SessionExists[0]
     FROM chain(async=TRUE,
