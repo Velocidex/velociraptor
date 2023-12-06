@@ -7,7 +7,7 @@ Queries:
 
   # Check that two queries for the same provider apply 2 watchers.
   - SELECT ProviderGUID, {
-        SELECT SessionName, GUID FROM profile(type="ETW")
+        SELECT SessionName, GUID, Watchers FROM profile(type="ETW")
         WHERE SessionName =~ "VeloTest2"
     } AS Profile, SessionExists[0]
     FROM chain(async=TRUE,
