@@ -28,5 +28,7 @@ sources:
              System.TimeStamp AS Timestamp,
              get(item=m, field=System.ProcessID) AS ProcInfo,
              get(member="EventData.URL") AS URL
-      FROM watch_etw(guid="{245F975D-909D-49ED-B8F9-9A75691D6B6B}")
+      FROM watch_etw(
+        description="Microsoft-Windows-URLMon",
+        guid="{245F975D-909D-49ED-B8F9-9A75691D6B6B}")
       WHERE ID = 805 AND URL =~ URLFilter

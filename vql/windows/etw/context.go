@@ -6,6 +6,7 @@ package etw
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/Velocidex/etw"
 	"github.com/Velocidex/ordereddict"
@@ -13,6 +14,13 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
+
+type Registration struct {
+	handles     []*Handle
+	count       int
+	description string
+	started     time.Time
+}
 
 // A Session context manages an ETW session:
 
@@ -30,7 +38,7 @@ type SessionContext struct {
 	wg sync.WaitGroup
 
 	// Registrations keyed by GUID
-	registrations map[string][]*Handle
+	registrations map[string]*Registration
 
 	resolve_map_info bool
 }
@@ -141,13 +149,14 @@ func (self *SessionContext) processEvent(e *etw.Event) {
 	event_guid := e.Header.ProviderID.String()
 
 	self.mu.Lock()
-	registrations, pres := self.registrations[event_guid]
+	registration, pres := self.registrations[event_guid]
 	if !pres {
 		self.mu.Unlock()
 		return
 	}
 
-	handlers := append([]*Handle{}, registrations...)
+	registration.count++
+	handlers := append([]*Handle{}, registration.handles...)
 	self.mu.Unlock()
 
 	event := ordereddict.NewDict().
@@ -172,10 +181,13 @@ func (self *SessionContext) Stats() []ProviderStat {
 	defer self.mu.Unlock()
 
 	result := []ProviderStat{}
-	for guid, registrations := range self.registrations {
+	for guid, registration := range self.registrations {
 		result = append(result, ProviderStat{
-			GUID:     guid,
-			Watchers: len(registrations),
+			GUID:        guid,
+			EventCount:  registration.count,
+			Description: registration.description,
+			Watchers:    len(registration.handles),
+			Started:     registration.started,
 		})
 	}
 
@@ -198,8 +210,13 @@ func (self *SessionContext) Register(
 		self.resolve_map_info = options.EnableMapInfo
 	}
 
-	registrations, pres := self.registrations[key]
+	registration, pres := self.registrations[key]
 	if !pres {
+		registration = &Registration{
+			description: options.Description,
+			started:     utils.GetTime().Now(),
+		}
+
 		// No one is currently watching this GUID, lets begin watching
 		// it.
 		session, err := self._Session(scope)
@@ -221,8 +238,8 @@ func (self *SessionContext) Register(
 		scope.Log("etw: Added provider %v to session %v", guid.String(), self.name)
 	}
 
-	registrations = append(registrations, handle)
-	self.registrations[key] = registrations
+	registration.handles = append(registration.handles, handle)
+	self.registrations[key] = registration
 
 	return func() {
 		self.DeregisterHandle(key, handle.id, guid, scope)
@@ -235,15 +252,15 @@ func (self *SessionContext) DeregisterHandle(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	registrations, pres := self.registrations[key]
+	registration, pres := self.registrations[key]
 	if !pres {
 		// No registrations for this provider
 		return
 	}
 
 	// Remove the handle from the registrations
-	new_reg := make([]*Handle, 0, len(registrations))
-	for _, handle := range registrations {
+	new_reg := make([]*Handle, 0, len(registration.handles))
+	for _, handle := range registration.handles {
 		if handle.id == id {
 			scope.Log("etw: Deregistering %v from session %v",
 				handle.guid.String(), self.name)
@@ -256,7 +273,7 @@ func (self *SessionContext) DeregisterHandle(
 	}
 
 	if len(new_reg) > 0 {
-		self.registrations[key] = new_reg
+		registration.handles = new_reg
 		return
 	}
 

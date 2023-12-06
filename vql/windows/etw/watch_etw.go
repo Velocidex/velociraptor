@@ -25,6 +25,7 @@ type WatchETWArgs struct {
 	Timeout       uint64          `vfilter:"optional,field=timeout,doc=If provided we stop after this much time"`
 	CaptureState  bool            `vfilter:"optional,field=capture_state,doc=If true, capture the state of the provider when the event is triggered"`
 	EnableMapInfo bool            `vfilter:"optional,field=enable_map_info,doc=Resolving MapInfo with TdhGetEventMapInformation is very expensive and causes events to be dropped so we disabled it by default. Enable with this flag."`
+	Description   string          `vfilter:"optional,field=description,doc=Description for this GUID provider"`
 }
 
 type WatchETWPlugin struct{}
@@ -76,6 +77,7 @@ func (self WatchETWPlugin) Call(
 			Level:         arg.Level,
 			CaptureState:  arg.CaptureState,
 			EnableMapInfo: arg.EnableMapInfo,
+			Description:   arg.Description,
 		}
 
 		for {

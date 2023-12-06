@@ -68,8 +68,7 @@ func writeMetrics(
 			return
 		case output_chan <- ordereddict.NewDict().
 			Set("Type", "metrics").
-			Set("Line", metric).
-			Set("OSPath", ""):
+			Set("Line", metric):
 		}
 	}
 }
@@ -311,8 +310,7 @@ func init() {
 
 				case output_chan <- ordereddict.NewDict().
 					Set("Type", "logs").
-					Set("Line", line).
-					Set("OSPath", ""):
+					Set("Line", line):
 				}
 			}
 		},

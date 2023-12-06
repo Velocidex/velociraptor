@@ -158,6 +158,21 @@ func (self UserManager) GetUserOptions(ctx context.Context, username string) (
 	return self.storage.GetUserOptions(ctx, username)
 }
 
+func NewUserManager(
+	config_obj *config_proto.Config,
+	storage IUserStorageManager) *UserManager {
+	CA_Pool := x509.NewCertPool()
+	if config_obj.Client != nil {
+		CA_Pool.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
+	}
+
+	return &UserManager{
+		ca_pool:    CA_Pool,
+		config_obj: config_obj,
+		storage:    storage,
+	}
+}
+
 func StartUserManager(
 	ctx context.Context,
 	wg *sync.WaitGroup,
@@ -166,21 +181,12 @@ func StartUserManager(
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> user manager service for org %v", config_obj.OrgId)
 
-	CA_Pool := x509.NewCertPool()
-	if config_obj.Client != nil {
-		CA_Pool.AppendCertsFromPEM([]byte(config_obj.Client.CaCertificate))
-	}
-
 	storage, err := NewUserStorageManager(ctx, wg, config_obj)
 	if err != nil {
 		return err
 	}
 
-	service := &UserManager{
-		ca_pool:    CA_Pool,
-		config_obj: config_obj,
-		storage:    storage,
-	}
+	service := NewUserManager(config_obj, storage)
 	services.RegisterUserManager(service)
 
 	return nil
@@ -188,10 +194,6 @@ func StartUserManager(
 
 // Make sure there is always something available.
 func init() {
-	service := &UserManager{
-		ca_pool:    x509.NewCertPool(),
-		config_obj: &config_proto.Config{},
-		storage:    &NullStorageManager{},
-	}
+	service := NewUserManager(&config_proto.Config{}, &NullStorageManager{})
 	services.RegisterUserManager(service)
 }
