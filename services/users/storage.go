@@ -262,7 +262,6 @@ func (self *UserStorageManager) SetUserOptions(ctx context.Context,
 	if cache == nil {
 		cache = &_CachedUserObject{}
 	}
-	cache.gui_options = proto.Clone(options).(*api_proto.SetGUIOptionsRequest)
 
 	path_manager := paths.UserPathManager{Name: username}
 	db, err := datastore.GetDB(self.config_obj)
@@ -308,8 +307,10 @@ func (self *UserStorageManager) SetUserOptions(ctx context.Context,
 		return err
 	}
 
-	// Update the LRU
+	// Update the LRU to hold the latest version from disk.
+	cache.gui_options = proto.Clone(old_options).(*api_proto.SetGUIOptionsRequest)
 	self.lru.Set(username, cache)
+
 	return self.notifyChanges(ctx, username)
 }
 
