@@ -295,6 +295,12 @@ func (self *ZipFileCache) Open(full_path *accessors.OSPath) (
 		return nil, err
 	}
 
+	// Disable stream authentication because the library unpacks the
+	// entire stream into memory to verify it. In practice, the
+	// embedded data.zip file provides sufficient authentication
+	// anyway. See https://github.com/Velocidex/velociraptor/issues/3150
+	info.member_file.DeferAuth = true
+
 	fd, err := info.member_file.Open()
 	if err == zip.ErrPassword {
 		password := self.maybeGetPassword()

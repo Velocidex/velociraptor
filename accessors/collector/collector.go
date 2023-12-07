@@ -252,7 +252,11 @@ func (self *CollectorAccessor) maybeSetZipPassword(
 			}
 
 			self.scope.SetContext(constants.ZIP_PASSWORDS, string(zip_pass))
-
+			value, pres := self.scope.Resolve(constants.REPORT_ZIP_PASSWORD)
+			if pres && self.scope.Bool(value) {
+				self.scope.Log("CollectorAccessor: X509 Decrypted password is %q",
+					string(zip_pass))
+			}
 			// Transform the path so it can be used by the zip
 			// collector.
 			return collectorPathToDelegatePath(full_path), nil
