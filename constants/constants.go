@@ -108,6 +108,9 @@ const (
 	// accessor to open password protected zip files.
 	ZIP_PASSWORDS = "ZIP_PASSWORDS"
 
+	// If this is set, the logs will report the decrypted password
+	REPORT_ZIP_PASSWORD = "REPORT_ZIP_PASSWORD"
+
 	// If this is set we always copy SQLite files to a tempfile. Used
 	// by the sqlite() plugin.
 	SQLITE_ALWAYS_MAKE_TEMPFILE = "SQLITE_ALWAYS_MAKE_TEMPFILE"
