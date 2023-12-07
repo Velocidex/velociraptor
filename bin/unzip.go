@@ -8,6 +8,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -18,8 +19,9 @@ import (
 )
 
 var (
-	unzip_cmd        = app.Command("unzip", "Unzip a container file")
-	unzip_cmd_filter = unzip_cmd.Flag("where", "A WHERE condition for the query").String()
+	unzip_cmd                 = app.Command("unzip", "Unzip a container file")
+	unzip_cmd_report_password = unzip_cmd.Flag("report_password", "Log the X509 session password").Bool()
+	unzip_cmd_filter          = unzip_cmd.Flag("where", "A WHERE condition for the query").String()
 
 	unzip_path = unzip_cmd.Flag("dump_dir", "Directory to dump output files.").
 			Default(".").String()
@@ -77,7 +79,8 @@ func doUnzip() error {
 		Env: ordereddict.NewDict().
 			Set("ZipPath", filename).
 			Set("DumpDir", *unzip_path).
-			Set("MemberGlob", *unzip_cmd_member),
+			Set("MemberGlob", *unzip_cmd_member).
+			Set(constants.REPORT_ZIP_PASSWORD, *unzip_cmd_report_password),
 	}
 
 	if *unzip_cmd_list {
