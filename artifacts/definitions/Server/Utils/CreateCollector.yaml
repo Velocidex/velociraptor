@@ -413,7 +413,7 @@ sources:
       )
 
       LET use_server_cert = encryption_scheme =~ "x509"
-         AND NOT encryption_args.public_key =~ "----BEGIN CERTIFICATE-----"
+         AND NOT encryption_args.public_key =~ "-----BEGIN CERTIFICATE-----"
          AND log(message="Pubkey encryption specified, but no cert/key provided. Defaulting to server frontend cert")
 
       -- For x509, if no public key cert is specified, we use the
