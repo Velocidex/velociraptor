@@ -116,9 +116,19 @@ func (self *ServicesTestSuite) TestCreateUser() {
 		self.ConfigObj, user_path_manager.ACL(), acl_obj)
 	assert.NoError(self.T(), err)
 
+	// User org membership is not stored in the datastore since it is
+	// derived by the user manager all the time - so these should not
+	// include org list
 	golden := ordereddict.NewDict().
 		Set("/users/User1", user1).
 		Set("/acl/User1.json", acl_obj)
+
+	user_manager := services.GetUserManager()
+	user1_full, err := user_manager.GetUserWithHashes(self.Ctx, "VelociraptorServer", "User1")
+	assert.NoError(self.T(), err)
+
+	// Should include the user hashes and their orgs list
+	golden.Set("user1_full", user1_full)
 
 	serialized, err := json.MarshalIndentNormalized(golden)
 	assert.NoError(self.T(), err)
@@ -179,9 +189,20 @@ func (self *ServicesTestSuite) TestCreateUserInOrgs() {
 			err = db.GetSubject(org_config_obj, user_path_manager.ACL(), acl_obj)
 			assert.NoError(self.T(), err)
 
+			// User org membership is not stored in the datastore
+			// since it is derived by the user manager all the time -
+			// so these should not include org list
 			golden.Set(org_id+"/org", org_record).
 				Set(org_id+"/acl/User1.json", acl_obj)
 		}
+
+		user_manager := services.GetUserManager()
+		user1_full, err := user_manager.GetUserWithHashes(self.Ctx, "VelociraptorServer", "User1")
+		assert.NoError(self.T(), err)
+
+		// Should include the user hashes and all their orgs list
+		golden.Set("user1_full", user1_full)
+
 		serialized, err := json.MarshalIndentNormalized(golden)
 		assert.NoError(self.T(), err)
 

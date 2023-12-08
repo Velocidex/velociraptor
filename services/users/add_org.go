@@ -77,12 +77,6 @@ func (self *UserManager) AddUserToOrg(
 	}
 
 	for _, org := range orgs {
-		if !inUserOrgs(org, user_record) {
-			user_record.Orgs = append(user_record.Orgs, &api_proto.OrgRecord{
-				Id: org,
-			})
-		}
-
 		org_config_obj, err := org_manager.GetOrgConfig(org)
 		if err != nil {
 			return err
@@ -93,7 +87,6 @@ func (self *UserManager) AddUserToOrg(
 		if err != nil {
 			return err
 		}
-
 	}
 
 	return self.SetUser(ctx, user_record)
