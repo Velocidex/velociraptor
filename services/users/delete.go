@@ -6,7 +6,6 @@ import (
 	"github.com/pkg/errors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -21,12 +20,6 @@ func (self *UserManager) DeleteUser(
 	if err != nil {
 		return err
 	}
-
-	// Hold on to the error until after ACL check.  Get the full
-	// unfiltered user record with all the orgs they belong to so we
-	// can remove those orgs the principal is allowed to touch and put
-	// the rest back.
-	user_record, user_err := self.storage.GetUserWithHashes(ctx, username)
 
 	org_manager, err := services.GetOrgManager()
 	if err != nil {
@@ -44,6 +37,11 @@ func (self *UserManager) DeleteUser(
 		return err
 	}
 
+	// Hold on to the error until after ACL check.  Get the full
+	// unfiltered user record with all the orgs they belong to so we
+	// can remove those orgs the principal is allowed to touch and put
+	// the rest back.
+	user_record, user_err := self.storage.GetUserWithHashes(ctx, username)
 	if user_err != nil {
 		if principal_is_org_admin {
 			return user_err
@@ -52,20 +50,21 @@ func (self *UserManager) DeleteUser(
 			acls.PermissionDenied, principal)
 	}
 
-	remaining_orgs := []*api_proto.OrgRecord{}
+	// Fill in the orgs this user is in.
+	self.normalizeOrgList(ctx, user_record)
+
 	// Empty policy - no permissions.
 	policy := &acl_proto.ApiClientACL{}
 
+	orgs_deleted := 0
 	for _, user_org := range user_record.Orgs {
 		org_config_obj, err := org_manager.GetOrgConfig(user_org.Id)
 		if err != nil {
-			remaining_orgs = append(remaining_orgs, user_org)
 			continue
 		}
 
 		// Skip orgs that are not specified.
 		if len(orgs) > 0 && !utils.OrgIdInList(user_org.Id, orgs) {
-			remaining_orgs = append(remaining_orgs, user_org)
 			continue
 		}
 
@@ -76,7 +75,6 @@ func (self *UserManager) DeleteUser(
 			if !ok {
 				// If the user is not server admin on this org they
 				// may not remove the user from this org
-				remaining_orgs = append(remaining_orgs, user_org)
 				continue
 			}
 		}
@@ -86,13 +84,13 @@ func (self *UserManager) DeleteUser(
 		if err != nil {
 			return err
 		}
+		orgs_deleted++
 	}
 
-	if len(remaining_orgs) > 0 {
-		// Update the user's record
-		user_record.Orgs = remaining_orgs
-		return self.SetUser(ctx, user_record)
+	// If no more orgs remain, delete the actual user record.
+	if orgs_deleted >= len(user_record.Orgs) {
+		return self.storage.DeleteUser(ctx, username)
 	}
 
-	return self.storage.DeleteUser(ctx, username)
+	return nil
 }
