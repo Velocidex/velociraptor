@@ -442,6 +442,7 @@ func searchArtifact(
 				if fields.Name {
 					new_item.Name = artifact.Name
 					new_item.BuiltIn = artifact.BuiltIn
+					new_item.IsInherited = artifact.IsInherited
 				}
 
 				if fields.Description {

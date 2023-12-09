@@ -1,20 +1,6 @@
 {
  "/users/User1": {
   "name": "User1",
-  "orgs": [
-   {
-    "id": "root",
-    "name": "\u003croot\u003e"
-   },
-   {
-    "id": "O01",
-    "name": "Org1"
-   },
-   {
-    "id": "OT02",
-    "name": "Org2"
-   }
-  ],
   "password_hash": "DX3EdpodhRYoAnA6GFW3bjtlK9o+BYKrMkM/Y9xqBzY=",
   "password_salt": "D2GtD9Y5FRMCEkLvuax4AkXMIVJ/o/nF5VLUciPjg6I="
  },
@@ -47,5 +33,24 @@
   "id": "root",
   "name": "\u003croot\u003e",
   "nonce": "Nonce Of root"
+ },
+ "user1_full": {
+  "name": "User1",
+  "orgs": [
+   {
+    "id": "O01",
+    "name": "Org1"
+   },
+   {
+    "id": "OT02",
+    "name": "Org2"
+   },
+   {
+    "id": "root",
+    "name": "\u003croot\u003e"
+   }
+  ],
+  "password_hash": "DX3EdpodhRYoAnA6GFW3bjtlK9o+BYKrMkM/Y9xqBzY=",
+  "password_salt": "D2GtD9Y5FRMCEkLvuax4AkXMIVJ/o/nF5VLUciPjg6I="
  }
 }
