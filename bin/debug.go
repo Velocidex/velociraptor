@@ -312,12 +312,12 @@ func initDebugServer(config_obj *config_proto.Config) error {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("<green>Starting</> debug server on <cyan>http://127.0.0.1:%v/debug/pprof", *debug_flag_port)
 
-		http.HandleFunc("/debug", handleIndex)
 		http.HandleFunc("/debug/queries/", maybeRenderHTML(handleQueries))
 		http.HandleFunc("/debug/profile/", maybeRenderHTML(
 			handleProfile(config_obj)))
 		http.HandleFunc("/debug/queries/running/",
 			maybeRenderHTML(handleRunningQueries))
+		http.HandleFunc("/", handleIndex)
 
 		// Switch off the debug flag so we do not run this again. (The
 		// GUI runs this function multiple times).

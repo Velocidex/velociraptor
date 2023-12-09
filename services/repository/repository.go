@@ -358,11 +358,16 @@ func (self *Repository) Get(
 
 		// If we have a parent repository just get it from there.
 		if self.parent != nil {
-			artifact, err := self.parent.Get(ctx, self.parent_config_obj, name)
-			if artifact != nil {
-				artifact = self.DecorateMetadata(artifact)
+			artifact, found := self.parent.Get(ctx, self.parent_config_obj, name)
+			if !found || artifact == nil {
+				return nil, false
 			}
-			return artifact, err
+
+			// Tag this artifact as inherited.
+			artifact = self.DecorateMetadata(artifact)
+			artifact.IsInherited = true
+
+			return artifact, true
 		}
 		return nil, false
 	}
@@ -388,7 +393,7 @@ func (self *Repository) Get(
 	self.mu.Lock()
 	_, pres = self.Data[name]
 	if pres {
-		self.Data[name] = result
+		self.Data[name] = proto.Clone(result).(*artifacts_proto.Artifact)
 	}
 	self.mu.Unlock()
 

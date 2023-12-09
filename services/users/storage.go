@@ -149,8 +149,13 @@ func (self *UserStorageManager) GetUserWithHashes(ctx context.Context, username 
 		return nil, err
 	}
 
+	// Do not cache orgs because this is determined at runtime based
+	// on permissions etc and should not be cached.
+	user_record.Orgs = nil
+
 	// Add the record to the lru
 	cache.user_record = proto.Clone(user_record).(*api_proto.VelociraptorUser)
+
 	self.lru.Set(username, cache)
 
 	return user_record, nil
@@ -170,6 +175,10 @@ func (self *UserStorageManager) SetUser(
 	if err != nil {
 		return err
 	}
+
+	// Do not cache orgs because this is determined at runtime based
+	// on permissions etc and should not be cached.
+	user_record.Orgs = nil
 
 	var cache *_CachedUserObject
 

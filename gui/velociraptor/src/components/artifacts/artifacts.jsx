@@ -277,10 +277,25 @@ class ArtifactInspector extends React.Component {
                />;
     }
 
+    getItemIcon = item=>{
+        if (!item.built_in && !item.is_inherited) {
+            return <FontAwesomeIcon icon="user-edit" /> ;
+        }
+
+        if (!item.built_in && item.is_inherited) {
+            return <FontAwesomeIcon icon="house" /> ;
+        }
+
+        return <span className="invisible">
+                 <FontAwesomeIcon icon="user-edit" />
+               </span>;
+    };
+
     render() {
         let selected = this.state.selectedDescriptor && this.state.selectedDescriptor.name;
         let deletable = this.state.selectedDescriptor &&
-            !this.state.selectedDescriptor.built_in;
+            !this.state.selectedDescriptor.built_in &&
+            !this.state.selectedDescriptor.is_inherited;
 
         return (
             <div className="full-width-height"><Spinner loading={this.state.loading}/>
@@ -444,11 +459,8 @@ class ArtifactInspector extends React.Component {
                                                className="link-button"
                                                onClick={e=>this.onSelect(item, e)}>
                                          {item.name}
-                                         <span className={classNames({
-                                             "built-in-icon": true,
-                                             "invisible": item.built_in,
-                                         })}>
-                                           <FontAwesomeIcon icon="user-edit" />
+                                         <span className="built-in-icon">
+                                           { this.getItemIcon(item) }
                                          </span>
                                        </button>
 

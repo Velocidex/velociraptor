@@ -36,6 +36,8 @@ func (self UserManager) GetUserFromContext(ctx context.Context) (
 		if err != nil {
 			return nil, nil, err
 		}
+
+		self.normalizeOrgList(ctx, user_record)
 	}
 
 	user_record.CurrentOrg = grpc_user_info.CurrentOrg
