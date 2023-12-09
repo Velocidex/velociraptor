@@ -12,9 +12,14 @@ import (
 // semantic. Here we try to massage the version into a valid semver so
 // we can compare it properly. In future we should move Velociraptor
 // to a more strict semver.
-// v0.6.9 Means major 0 minor 6 and patch 9 as per standard -> 0.6.9
+
+// In order to do this accurately we need to convert the old scheme
+// into a standard scheme in a consistent way. According to the old
+// scheme:
+
+// v0.6.9   Means major 0 minor 69 and patch 0 as per standard -> 0.69.0
 // v0.6.9-2 Means major 0, minor 69 and patch level 2 -> 0.69.2
-// v0.6.9-rc2 Means major 0, minor 60, patch 9 and prerelease rc2 -> 0.6.9-rc2
+// v0.6.9-rc2 Means major 0, minor 69 and prerelease rc2 -> 0.69.rc2
 //
 // Therefore v0.6.9-rc2 < v0.6.9 < v0.6.9-2
 // 0.60.9-rc2 < 0.6.9 < 0.69.2
@@ -29,7 +34,7 @@ var (
 func normalizeVelciraptorVersion(v string) string {
 	m := velociraptor_rc_regex.FindStringSubmatch(v)
 	if len(m) > 0 {
-		return fmt.Sprintf("v%v.%v.%v-rc%v", m[1], m[2], m[3], m[4])
+		return fmt.Sprintf("v%v.%v%v.0-rc%v", m[1], m[2], m[3], m[4])
 	}
 
 	m = velociraptor_post_regex.FindStringSubmatch(v)

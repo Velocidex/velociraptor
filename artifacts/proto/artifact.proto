@@ -209,6 +209,9 @@ message Artifact {
     bool compiled_in = 24;
     bool is_alias = 22;
 
+    // Artifact is inherited from the root org.
+    bool is_inherited = 26;
+
     // Not read from the artifact definition but it is managed by the
     // repository.
     ArtifactMetadata metadata = 25;

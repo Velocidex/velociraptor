@@ -83,14 +83,6 @@ var (
 		"output_level", "Compression level for zip output.").
 		Default("5").Int64()
 
-	artifact_command_collect_report = artifact_command_collect.Flag(
-		"report", "When specified we create a report html file.").
-		Default("").String()
-
-	artifact_command_collect_report_template = artifact_command_collect.Flag(
-		"report_template", "Use this artifact to provide the report template.").
-		Default("").String()
-
 	artificat_command_collect_admin_flag = artifact_command_collect.Flag(
 		"require_admin", "Ensure the user is an admin").Bool()
 
@@ -107,7 +99,7 @@ var (
 		Required().HintAction(listArtifactsHint).Strings()
 
 	artifact_command_collect_args = artifact_command_collect.Flag(
-		"args", "Artifact args.").Strings()
+		"args", "Artifact args (e.g. --args Foo=Bar).").Strings()
 
 	artifact_command_collect_hardmemory = artifact_command_collect.Flag(
 		"hard_memory_limit", "If we reach this memory limit in bytes we exit.").Uint64()
@@ -214,8 +206,6 @@ func doArtifactCollect() error {
 			Set("Output", *artifact_command_collect_output).
 			Set("Level", *artifact_command_collect_output_compression).
 			Set("Password", *artifact_command_collect_output_password).
-			Set("Report", *artifact_command_collect_report).
-			Set("Template", *artifact_command_collect_report_template).
 			Set("Args", spec).
 			Set("Format", *artifact_command_collect_format).
 			Set("Timeout", *artifact_command_collect_timeout).
@@ -260,11 +250,10 @@ func doArtifactCollect() error {
 	}
 
 	query := `
-  SELECT * FROM collect(artifacts=Artifacts, output=Output, report=Report,
-                        level=Level, template=Template,
-                        timeout=Timeout, progress_timeout=ProgressTimeout,
-                        cpu_limit=CpuLimit,
-                        password=Password, args=Args, format=Format)`
+  SELECT * FROM collect(
+     artifacts=Artifacts, output=Output, report=Report,
+     level=Level, timeout=Timeout, progress_timeout=ProgressTimeout,
+     cpu_limit=CpuLimit, password=Password, args=Args, format=Format)`
 	err = eval_local_query(
 		sm.Ctx, config_obj,
 		*artifact_command_collect_format, query, scope)
