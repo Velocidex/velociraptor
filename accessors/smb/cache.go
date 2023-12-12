@@ -13,6 +13,7 @@ import (
 	"github.com/hirochachacha/go-smb2"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -179,7 +180,7 @@ func getCreadentials(
 	ctx context.Context, scope vfilter.Scope, hostname string) (
 	*smb2.NTLMInitiator, error) {
 
-	credentials, pres := scope.Resolve("SMB_CREDENTIALS")
+	credentials, pres := scope.Resolve(constants.SMB_CREDENTIALS)
 	if !pres {
 		return nil, errors.New("No credentials provided for smb connections")
 	}
