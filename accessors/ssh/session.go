@@ -5,18 +5,15 @@ import (
 	"fmt"
 
 	"golang.org/x/crypto/ssh"
+	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
-)
-
-const (
-	SSH_CONFIG = "SSH_CONFIG"
 )
 
 func GetSSHClient(scope vfilter.Scope) (*ssh.Client, func() error, error) {
 	// Empty credentials are OK - they just mean to get creds from the
 	// process env
-	setting, pres := scope.Resolve(SSH_CONFIG)
+	setting, pres := scope.Resolve(constants.SSH_CONFIG)
 	if !pres {
 		return nil, nil, errors.New("Configure the 'ssh' accessor using 'LET SSH_CONFIG <= dict(...)'")
 	}

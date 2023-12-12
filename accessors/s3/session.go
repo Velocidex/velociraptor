@@ -8,20 +8,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
 )
 
 const (
-	S3_CREDENTIALS = "S3_CREDENTIALS"
-	S3_TAG         = "_S3_TAG"
+	S3_TAG = "_S3_TAG"
 )
 
 func GetS3Session(scope vfilter.Scope) (*session.Session, error) {
 	// Empty credentials are OK - they just mean to get creds from the
 	// process env
-	setting, pres := scope.Resolve(S3_CREDENTIALS)
+	setting, pres := scope.Resolve(constants.S3_CREDENTIALS)
 	if !pres {
 		setting = ordereddict.NewDict()
 	}

@@ -260,11 +260,10 @@ func doArtifactCollect() error {
 	}
 
 	query := `
-  SELECT * FROM collect(artifacts=Artifacts, output=Output, report=Report,
-                        level=Level, template=Template,
-                        timeout=Timeout, progress_timeout=ProgressTimeout,
-                        cpu_limit=CpuLimit,
-                        password=Password, args=Args, format=Format)`
+  SELECT * FROM collect(
+     artifacts=Artifacts, output=Output,
+     level=Level, timeout=Timeout, progress_timeout=ProgressTimeout,
+     cpu_limit=CpuLimit, password=Password, args=Args, format=Format)`
 	err = eval_local_query(
 		sm.Ctx, config_obj,
 		*artifact_command_collect_format, query, scope)

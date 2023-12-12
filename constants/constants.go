@@ -90,6 +90,15 @@ const (
 	USN_FREQUENCY       = "USN_FREQUENCY"
 	ZIP_FILE_CACHE_SIZE = "ZIP_FILE_CACHE_SIZE"
 
+	// Used by the SSH accessor to configure access
+	SSH_CONFIG = "SSH_CONFIG"
+
+	// Used by the SMB accessor to configure credentials.
+	SMB_CREDENTIALS = "SMB_CREDENTIALS"
+
+	// Used by the S3 accessor to configure credentials.
+	S3_CREDENTIALS = "S3_CREDENTIALS"
+
 	// VQL tries to balance memory/cpu tradeoffs and also place limits
 	// on memory use. These parameters control this behavior. You can
 	// set them in the VQL environment to influence how the engine

@@ -484,6 +484,8 @@ func (self *Repository) List(ctx context.Context,
 		}
 	}
 
+	sort.Strings(results)
+
 	return results, nil
 }
 
@@ -492,7 +494,6 @@ func (self *Repository) list() []string {
 	for k := range self.Data {
 		result = append(result, k)
 	}
-	sort.Strings(result)
 	return result
 }
 
