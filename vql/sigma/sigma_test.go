@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"sort"
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
@@ -198,8 +199,6 @@ logsource:
    service: application
 
 custom_field: Some Custom Field
-impure:
-  - selection
 
 # VQL modifier can operate on a field or has access to the
 # entire rule via the Rule member which also has access
@@ -261,6 +260,12 @@ func (self *SigmaTestSuite) TestSigma() {
 		for row := range plugin.Call(ctx, scope, args) {
 			rows = append(rows, row)
 		}
+
+		sort.Slice(rows, func(i, j int) bool {
+			serialized1 := json.MustMarshalString(rows[i])
+			serialized2 := json.MustMarshalString(rows[j])
+			return string(serialized1) < string(serialized2)
+		})
 
 		result.Set(test_case.description, rows)
 	}

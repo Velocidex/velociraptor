@@ -378,59 +378,6 @@
  ],
  "Match field with vql operator": [
   {
-   "Foo": "Baz",
-   "Baz": "Bye",
-   "Details": null,
-   "_Match": {
-    "Match": true,
-    "SearchResults": {
-     "selection": true
-    },
-    "ConditionResults": [
-     true
-    ]
-   },
-   "_Rule": {
-    "Title": "VqlRule",
-    "Logsource": {
-     "Product": "windows",
-     "Service": "application"
-    },
-    "Detection": {
-     "Searches": {
-      "selection": {
-       "EventMatchers": [
-        [
-         {
-          "Field": "Foo",
-          "Modifiers": [
-           "vql"
-          ],
-          "Values": [
-           "x=\u003elog(message=\"Field %v evaluated on Event %v\", args=[Rule.AdditionalFields.custom_field, Event])"
-          ]
-         }
-        ]
-       ]
-      }
-     },
-     "condition": [
-      {
-       "Search": {
-        "Name": "selection"
-       }
-      }
-     ]
-    },
-    "AdditionalFields": {
-     "custom_field": "Some Custom Field",
-     "impure": [
-      "selection"
-     ]
-    }
-   }
-  },
-  {
    "Foo": "Bar",
    "Baz": "Hello",
    "Details": null,
@@ -476,10 +423,57 @@
      ]
     },
     "AdditionalFields": {
-     "custom_field": "Some Custom Field",
-     "impure": [
-      "selection"
+     "custom_field": "Some Custom Field"
+    }
+   }
+  },
+  {
+   "Foo": "Baz",
+   "Baz": "Bye",
+   "Details": null,
+   "_Match": {
+    "Match": true,
+    "SearchResults": {
+     "selection": true
+    },
+    "ConditionResults": [
+     true
+    ]
+   },
+   "_Rule": {
+    "Title": "VqlRule",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "application"
+    },
+    "Detection": {
+     "Searches": {
+      "selection": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Modifiers": [
+           "vql"
+          ],
+          "Values": [
+           "x=\u003elog(message=\"Field %v evaluated on Event %v\", args=[Rule.AdditionalFields.custom_field, Event])"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "condition": [
+      {
+       "Search": {
+        "Name": "selection"
+       }
+      }
      ]
+    },
+    "AdditionalFields": {
+     "custom_field": "Some Custom Field"
     }
    }
   }
