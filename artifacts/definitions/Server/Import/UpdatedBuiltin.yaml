@@ -1,0 +1,37 @@
+name: Server.Import.UpdatedBuiltin
+description: |
+  This artifact allows importing updated versions of some common built
+  in artifacts. If you do not want to wait for the next full release
+  you can use this artifact to import a more recent version of some
+  select artifacts which might include later feature.
+
+  NOTE: There is no guarantees that the updated artifact will work on
+  an older version. Make sure to test properly.
+
+type: SERVER
+
+required_permissions:
+- SERVER_ADMIN
+
+parameters:
+  - name: PackageName
+    type: choices
+    default: Windows.KapeFiles.Targets
+    choices:
+      - Windows.KapeFiles.Targets
+      - Generic.Forensic.SQLiteHunter
+
+  - name: Prefix
+    description: Add artifacts with this prefix
+    default: Updated.
+
+sources:
+  - query: |
+      LET URLlookup = dict(
+        `Windows.KapeFiles.Targets`="https://raw.githubusercontent.com/Velocidex/velociraptor/master/artifacts/definitions/Windows/KapeFiles/Targets.yaml",
+        `Generic.Forensic.SQLiteHunter`="https://raw.githubusercontent.com/Velocidex/SQLiteHunter/main/output/SQLiteHunter.yaml"
+      )
+
+      SELECT artifact_set(definition=Content, prefix="Updated.") AS Artifact
+      FROM http_client(url=get(item=URLlookup, field=PackageName))
+      WHERE Response = 200

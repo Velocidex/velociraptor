@@ -1,6 +1,7 @@
 package modifiers
 
 import (
+	"context"
 	"encoding/base64"
 	"fmt"
 	"net"
@@ -9,6 +10,7 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v3"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 func GetComparator(modifiers ...string) (ComparatorFunc, error) {
@@ -54,7 +56,9 @@ func getComparator(comparators map[string]Comparator, modifiers ...string) (Comp
 		comparator = baseComparator{}
 	}
 
-	return func(actual, expected any) (bool, error) {
+	return func(
+		ctx context.Context, scope types.Scope,
+		actual, expected any) (bool, error) {
 		var err error
 		for _, modifier := range eventValueModifiers {
 			actual, err = modifier.Modify(actual)
@@ -69,17 +73,23 @@ func getComparator(comparators map[string]Comparator, modifiers ...string) (Comp
 			}
 		}
 
-		return comparator.Matches(actual, expected)
+		return comparator.Matches(
+			ctx, scope, actual, expected)
 	}, nil
 }
 
-// Comparator defines how the comparison between actual and expected field values is performed (the default is exact string equality).
-// For example, the `cidr` modifier uses a check based on the *net.IPNet Contains function
+// Comparator defines how the comparison between actual and expected
+// field values is performed (the default is exact string equality).
+// For example, the `cidr` modifier uses a check based on the
+// *net.IPNet Contains function
 type Comparator interface {
-	Matches(actual any, expected any) (bool, error)
+	Matches(ctx context.Context, scope types.Scope,
+		actual any, expected any) (bool, error)
 }
 
-type ComparatorFunc func(actual, expected any) (bool, error)
+type ComparatorFunc func(
+	ctx context.Context, scope types.Scope,
+	actual, expected any) (bool, error)
 
 // ValueModifier modifies the expected value before it is passed to the comparator.
 // For example, the `base64` modifier converts the expected value to base64.
@@ -97,6 +107,7 @@ var Comparators = map[string]Comparator{
 	"gte":        gte{},
 	"lt":         lt{},
 	"lte":        lte{},
+	"vql":        vql{},
 }
 
 var ComparatorsCaseSensitive = map[string]Comparator{
@@ -109,6 +120,7 @@ var ComparatorsCaseSensitive = map[string]Comparator{
 	"gte":        gte{},
 	"lt":         lt{},
 	"lte":        lte{},
+	"vql":        vql{},
 }
 
 var ValueModifiers = map[string]ValueModifier{
@@ -120,7 +132,9 @@ var EventValueModifiers = map[string]ValueModifier{}
 
 type baseComparator struct{}
 
-func (baseComparator) Matches(actual, expected any) (bool, error) {
+func (baseComparator) Matches(
+	ctx context.Context, scope types.Scope,
+	actual, expected any) (bool, error) {
 	switch {
 	case actual == nil && expected == "null":
 		// special case: "null" should match the case where a field isn't present (and so actual is nil)
@@ -133,40 +147,52 @@ func (baseComparator) Matches(actual, expected any) (bool, error) {
 
 type contains struct{}
 
-func (contains) Matches(actual, expected any) (bool, error) {
+func (contains) Matches(
+	ctx context.Context, scope types.Scope,
+	actual, expected any) (bool, error) {
 	// The Sigma spec defines that by default comparisons are case-insensitive
 	return strings.Contains(strings.ToLower(coerceString(actual)), strings.ToLower(coerceString(expected))), nil
 }
 
 type endswith struct{}
 
-func (endswith) Matches(actual, expected any) (bool, error) {
+func (endswith) Matches(
+	ctx context.Context, scope types.Scope,
+	actual, expected any) (bool, error) {
 	// The Sigma spec defines that by default comparisons are case-insensitive
 	return strings.HasSuffix(strings.ToLower(coerceString(actual)), strings.ToLower(coerceString(expected))), nil
 }
 
 type startswith struct{}
 
-func (startswith) Matches(actual, expected any) (bool, error) {
+func (startswith) Matches(
+	ctx context.Context, scope types.Scope,
+	actual, expected any) (bool, error) {
 	// The Sigma spec defines that by default comparisons are case-insensitive
 	return strings.HasPrefix(strings.ToLower(coerceString(actual)), strings.ToLower(coerceString(expected))), nil
 }
 
 type containsCS struct{}
 
-func (containsCS) Matches(actual, expected any) (bool, error) {
+func (containsCS) Matches(
+	ctx context.Context, scope types.Scope,
+	actual, expected any) (bool, error) {
 	return strings.Contains(coerceString(actual), coerceString(expected)), nil
 }
 
 type endswithCS struct{}
 
-func (endswithCS) Matches(actual, expected any) (bool, error) {
+func (endswithCS) Matches(
+	ctx context.Context, scope types.Scope,
+	actual, expected any) (bool, error) {
 	return strings.HasSuffix(coerceString(actual), coerceString(expected)), nil
 }
 
 type startswithCS struct{}
 
-func (startswithCS) Matches(actual, expected any) (bool, error) {
+func (startswithCS) Matches(
+	ctx context.Context, scope types.Scope,
+	actual, expected any) (bool, error) {
 	return strings.HasPrefix(coerceString(actual), coerceString(expected)), nil
 }
 
@@ -178,7 +204,9 @@ func (b64) Modify(value any) (any, error) {
 
 type re struct{}
 
-func (re) Matches(actual any, expected any) (bool, error) {
+func (re) Matches(
+	ctx context.Context, scope types.Scope,
+	actual any, expected any) (bool, error) {
 	re, err := regexp.Compile("(?i)" + coerceString(expected))
 	if err != nil {
 		return false, err
@@ -189,7 +217,9 @@ func (re) Matches(actual any, expected any) (bool, error) {
 
 type cidr struct{}
 
-func (cidr) Matches(actual any, expected any) (bool, error) {
+func (cidr) Matches(
+	ctx context.Context, scope types.Scope,
+	actual any, expected any) (bool, error) {
 	_, cidr, err := net.ParseCIDR(coerceString(expected))
 	if err != nil {
 		return false, err
@@ -201,28 +231,36 @@ func (cidr) Matches(actual any, expected any) (bool, error) {
 
 type gt struct{}
 
-func (gt) Matches(actual any, expected any) (bool, error) {
+func (gt) Matches(
+	ctx context.Context, scope types.Scope,
+	actual any, expected any) (bool, error) {
 	gt, _, _, _, err := compareNumeric(actual, expected)
 	return gt, err
 }
 
 type gte struct{}
 
-func (gte) Matches(actual any, expected any) (bool, error) {
+func (gte) Matches(
+	ctx context.Context, scope types.Scope,
+	actual any, expected any) (bool, error) {
 	_, gte, _, _, err := compareNumeric(actual, expected)
 	return gte, err
 }
 
 type lt struct{}
 
-func (lt) Matches(actual any, expected any) (bool, error) {
+func (lt) Matches(
+	ctx context.Context, scope types.Scope,
+	actual any, expected any) (bool, error) {
 	_, _, lt, _, err := compareNumeric(actual, expected)
 	return lt, err
 }
 
 type lte struct{}
 
-func (lte) Matches(actual any, expected any) (bool, error) {
+func (lte) Matches(
+	ctx context.Context, scope types.Scope,
+	actual any, expected any) (bool, error) {
 	_, _, _, lte, err := compareNumeric(actual, expected)
 	return lte, err
 }

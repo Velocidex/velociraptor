@@ -1,9 +1,12 @@
 package modifiers
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
 	"testing"
+
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
 func Test_compareNumeric(t *testing.T) {
@@ -49,6 +52,9 @@ func Test_compareNumeric(t *testing.T) {
 func BenchmarkContains(b *testing.B) {
 	needle := "abcdefg"
 
+	ctx := context.Background()
+	scope := vql_subsystem.MakeScope()
+
 	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 	haystack := make([]rune, 1_000_000)
 	for i := range haystack {
@@ -57,7 +63,8 @@ func BenchmarkContains(b *testing.B) {
 	haystackString := string(haystack)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := contains{}.Matches(string(haystackString), needle)
+		_, err := contains{}.Matches(
+			ctx, scope, string(haystackString), needle)
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -67,6 +74,9 @@ func BenchmarkContains(b *testing.B) {
 func BenchmarkContainsCS(b *testing.B) {
 	needle := "abcdefg"
 
+	ctx := context.Background()
+	scope := vql_subsystem.MakeScope()
+
 	var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
 	haystack := make([]rune, 1_000_000)
 	for i := range haystack {
@@ -75,7 +85,8 @@ func BenchmarkContainsCS(b *testing.B) {
 	haystackString := string(haystack)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, err := containsCS{}.Matches(string(haystackString), needle)
+		_, err := containsCS{}.Matches(
+			ctx, scope, string(haystackString), needle)
 		if err != nil {
 			b.Fatal(err)
 		}
