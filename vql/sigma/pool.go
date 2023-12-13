@@ -4,6 +4,7 @@ import (
 	"context"
 	"sync"
 
+	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/velociraptor/vql/sigma/evaluator"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
@@ -31,7 +32,8 @@ func (self *workerJob) Run() {
 	for _, rule := range self.rules {
 		match, err := rule.Match(self.ctx, self.scope, self.event)
 		if err != nil {
-			self.scope.Log("While evaluating rule %v: %v", rule.Title, err)
+			functions.DeduplicatedLog(self.ctx, self.scope,
+				"While evaluating rule %v: %v", rule.Title, err)
 			continue
 		}
 

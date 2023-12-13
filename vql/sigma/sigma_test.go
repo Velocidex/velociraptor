@@ -13,6 +13,9 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
+
+	// For map[string]interface{} protocl
+	_ "www.velocidex.com/golang/velociraptor/vql/parsers"
 )
 
 type MockQuery struct {
@@ -186,6 +189,36 @@ detection:
 				Set("EID", "x=>x.System.EventID"),
 			rows: testRows,
 		},
+		{
+			description: "Match field with vql operator",
+			rule: `
+title: VqlRule
+logsource:
+   product: windows
+   service: application
+
+custom_field: Some Custom Field
+impure:
+  - selection
+
+# VQL modifier can operate on a field or has access to the
+# entire rule via the Rule member which also has access
+# to custom fields.
+detection:
+  selection:
+     Foo|vql: x=>log(message="Field %v evaluated on Event %v", args=[Rule.AdditionalFields.custom_field, Event])
+  condition: selection
+`,
+			fieldmappings: ordereddict.NewDict(),
+			rows: []*ordereddict.Dict{
+				ordereddict.NewDict().
+					Set("Foo", "Bar").
+					Set("Baz", "Hello"),
+				ordereddict.NewDict().
+					Set("Foo", "Baz").
+					Set("Baz", "Bye"),
+			},
+		},
 	}
 )
 
@@ -205,7 +238,7 @@ func (self *SigmaTestSuite) TestSigma() {
 	plugin := SigmaPlugin{}
 
 	for i, test_case := range sigmaTestCases {
-		if i != 1 {
+		if i != 7 {
 			//continue
 		}
 
