@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/bradleyjkemp/sigma-go"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
@@ -48,18 +49,29 @@ func (self *VQLRuleEvaluator) evaluateAggregationExpression(
 
 func (self *VQLRuleEvaluator) Match(ctx context.Context,
 	scope types.Scope, event *Event) (Result, error) {
+	subscope := scope.Copy().AppendVars(
+		ordereddict.NewDict().
+			Set("Event", event).
+			Set("Rule", self.Rule))
+	defer subscope.Close()
+
 	result := Result{
 		Match:            false,
 		SearchResults:    map[string]bool{},
 		ConditionResults: make([]bool, len(self.Detection.Conditions)),
 	}
 
+	// TODO: This needs to be done lazily so conditions do not need to
+	// be evaluated needlessly.
 	for identifier, search := range self.Detection.Searches {
 		var err error
-		result.SearchResults[identifier], err = self.evaluateSearch(ctx, scope, search, event)
+
+		eval_result, err := self.evaluateSearch(ctx, subscope, search, event)
 		if err != nil {
 			return Result{}, fmt.Errorf("error evaluating search %s: %w", identifier, err)
 		}
+
+		result.SearchResults[identifier] = eval_result
 	}
 
 	for conditionIndex, condition := range self.Detection.Conditions {

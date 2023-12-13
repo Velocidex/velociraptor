@@ -141,7 +141,9 @@ eventMatcher:
 			if err != nil {
 				return false, err
 			}
-			if !self.matcherMatchesValues(matcherValues, comparator, allValuesMustMatch, values) {
+			if !self.matcherMatchesValues(
+				ctx, scope,
+				matcherValues, comparator, allValuesMustMatch, values) {
 				// this field didn't match so the overall matcher
 				// doesn't match, try the next EventMatcher
 				continue eventMatcher
@@ -195,6 +197,7 @@ func (self *VQLRuleEvaluator) GetFieldValuesFromEvent(
 }
 
 func (self *VQLRuleEvaluator) matcherMatchesValues(
+	ctx context.Context, scope types.Scope,
 	matcherValues []string, comparator modifiers.ComparatorFunc, allValuesMustMatch bool, actualValues []interface{}) bool {
 	matched := allValuesMustMatch
 	for _, expectedValue := range matcherValues {
@@ -202,7 +205,8 @@ func (self *VQLRuleEvaluator) matcherMatchesValues(
 		// There are multiple possible event fields that each expected
 		// value needs to be compared against
 		for _, actualValue := range actualValues {
-			comparatorMatched, err := comparator(actualValue, expectedValue)
+			comparatorMatched, err := comparator(
+				ctx, scope, actualValue, expectedValue)
 			if err != nil {
 				// todo
 			}
