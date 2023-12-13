@@ -16,7 +16,7 @@ jobs:
 
     - name: Configure test environment
       shell: cmd
-      if: always()
+      if: success()
       run: |
         echo %PATH%
         echo %GOPATH%
@@ -36,7 +36,7 @@ jobs:
         regedit /S artifacts/testdata/windows/init.reg
 
     - name: Build
-      if: always()
+      if: success()
       env:
         CC: x86_64-w64-mingw32-gcc
       shell: bash
@@ -44,7 +44,7 @@ jobs:
         go run make.go -v WindowsTest
 
     - name: Prepare second stage
-      if: always()
+      if: success()
       shell: cmd
       # We have to wait a short time between the service creation
       # event to be flushed to disk. Hopefully building the test
@@ -65,7 +65,7 @@ jobs:
 
     - name: Test
       shell: bash
-      if: always()
+      if: success()
       env:
         # Disable CGO for building tests - it takes too long and it is
         # not needed (mainly disables Yara building again).
@@ -77,7 +77,7 @@ jobs:
 
     - name: Test Golden Generic
       shell: cmd
-      if: always()
+      if: success()
       # We depend on the second service logs to be flushed to disk -
       # hopefulling the unit tests take long enough for this to
       # happen.
@@ -93,7 +93,7 @@ jobs:
 
     - name: Test Golden Windows
       shell: cmd
-      if: always()
+      if: success()
       run: |
         echo Running windows specific tests.
         output\velociraptor.exe -v golden X:\artifacts\testdata\windows\ --env srcDir=X:\ --config X:\artifacts\testdata\windows\github_actions.config.yaml
