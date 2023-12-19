@@ -19,3 +19,7 @@ func UTF16ToString(in []uint16) string {
 func UTF16FromString(in string) ([]uint16, error) {
 	return windows.UTF16FromString(in)
 }
+
+func UTF16PtrFromString(in string) (*uint16, error) {
+	return windows.UTF16PtrFromString(in)
+}

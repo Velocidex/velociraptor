@@ -4,18 +4,12 @@ package authenticode
 
 import (
 	"fmt"
-	"runtime"
-	"sync"
 	"unsafe"
 
 	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	windows "www.velocidex.com/golang/velociraptor/vql/windows"
 	"www.velocidex.com/golang/vfilter"
-)
-
-var (
-	mu sync.Mutex
 )
 
 func VerifyFileSignature(
@@ -26,16 +20,6 @@ func VerifyFileSignature(
 		constants.DISABLE_DANGEROUS_API_CALLS) {
 		return "Unknown"
 	}
-
-	// This API function can not run on multiple threads
-	// safely. Restrict to running on a single thread at the time. See
-	// #2574
-	mu.Lock()
-	defer mu.Unlock()
-
-	// Try to lock to OS thread to ensure safer API call
-	runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
 
 	err := windows.HasWintrustDll()
 	if err != nil {
@@ -53,14 +37,14 @@ func VerifyFileSignature(
 
 	fi := new(windows.WINTRUST_FILE_INFO)
 	fi.CbStruct = uint32(unsafe.Sizeof(*fi))
-	fi.PcwszFilePath = (uintptr)(unsafe.Pointer(&filename[0]))
+	fi.PcwszFilePath = &filename[0]
 
-	trustData := new(windows.WINTRUST_DATA)
+	trustData := new(windows.WINTRUST_DATA_FILE_INFO)
 	trustData.CbStruct = uint32(unsafe.Sizeof(*trustData))
 	trustData.DwUIChoice = windows.WTD_UI_NONE
 	trustData.FdwRevocationChecks = windows.WTD_REVOKE_NONE
 	trustData.DwUnionChoice = windows.WTD_CHOICE_FILE
-	trustData.Union = (uintptr)(unsafe.Pointer(fi))
+	trustData.PFile = fi
 	trustData.DwStateAction = windows.WTD_STATEACTION_VERIFY
 	trustData.DwProvFlags = windows.WTD_SAFER_FLAG
 
