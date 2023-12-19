@@ -336,16 +336,33 @@ func (self OSFileSystemAccessor) ReadDirWithOSPath(
 	} else {
 		// If it is a symlink, we need to check the target of the
 		// symlink and make sure it is a directory.
-		target, err := os.Readlink(dir)
+		target, err := filepath.EvalSymlinks(dir)
 		if err == nil {
+			// The target is interpreted relative to the directory of
+			// the link.
+			if !strings.HasPrefix(target, "/") {
+				target = full_path.Dirname().PathSpec().Path + "/" + target
+			}
 			lstat, err := os.Lstat(target)
+
 			// Target of the link is not there or inaccessible or
 			// points to something that is not a directory - just
 			// ignore it with no errors.
 			if err != nil || !lstat.IsDir() {
 				return nil, nil
 			}
+
+			sys, ok := lstat.Sys().(*syscall.Stat_t)
+			if ok {
+				// Keep track of the links we visited.
+				if self.context.WasLinkVisited(
+					uint64(sys.Dev), sys.Ino) {
+					return nil, errors.New("Symlink cycle detected")
+				}
+				self.context.LinkVisited(uint64(sys.Dev), sys.Ino)
+			}
 		}
+		dir = target
 	}
 
 	dirfstype := getFSType(dir)

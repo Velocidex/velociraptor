@@ -182,6 +182,7 @@ func (self *AccessorWindowsTestSuite) TestSymlinks() {
 
 }
 
+// Test both the Windows and Linux File accessor.
 func TestWindowsLinux(t *testing.T) {
 	suite.Run(t, &AccessorWindowsTestSuite{})
 }

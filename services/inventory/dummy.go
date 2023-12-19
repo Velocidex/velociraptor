@@ -19,6 +19,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -187,7 +188,7 @@ func (self *Dummy) materializeTool(
 	if err != nil {
 		return err
 	}
-	request.Header.Set("User-Agent", "")
+	request.Header.Set("User-Agent", constants.USER_AGENT)
 	res, err := self.Client.Do(request)
 	if err != nil {
 		return err
@@ -224,7 +225,7 @@ func getGithubRelease(ctx context.Context, Client networking.HTTPClient,
 		return "", err
 	}
 
-	request.Header.Set("User-Agent", "")
+	request.Header.Set("User-Agent", constants.USER_AGENT)
 	logger.Info("Resolving latest Github release for <green>%v</>", tool.Name)
 	res, err := Client.Do(request)
 	if err != nil {

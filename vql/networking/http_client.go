@@ -34,6 +34,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -308,6 +309,9 @@ func (self *_HttpPlugin) Call(
 		}
 
 		scope.Log("Fetching %v\n", arg.Url)
+		if arg.UserAgent == "" {
+			arg.UserAgent = constants.USER_AGENT
+		}
 
 		req.Header.Set("User-Agent", arg.UserAgent)
 

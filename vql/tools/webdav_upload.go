@@ -15,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -50,6 +51,10 @@ func (self *WebDAVUploadFunction) Call(ctx context.Context,
 
 	if arg.NoVerifyCert {
 		scope.Log("upload_webdav: NoVerifyCert is deprecated, please use SkipVerify instead")
+	}
+
+	if arg.UserAgent == "" {
+		arg.UserAgent = constants.USER_AGENT
 	}
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)

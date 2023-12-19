@@ -14,6 +14,7 @@ import (
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 )
@@ -200,7 +201,7 @@ func UpdateDDNSRecord(config_obj *config_proto.Config,
 	if err != nil {
 		return err
 	}
-	req.Header.Set("User-Agent", "")
+	req.Header.Set("User-Agent", constants.USER_AGENT)
 	req.SetBasicAuth(user, pw)
 
 	resp, err := client.Do(req)

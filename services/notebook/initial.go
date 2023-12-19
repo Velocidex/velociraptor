@@ -365,7 +365,7 @@ LET ERRORS = SELECT ClientId,
        FlowId, Flow.start_time As StartedTime,
        Flow.state AS FlowState, Flow.status as FlowStatus,
        Flow.execution_duration as Duration,
-       Flow.total_collected_bytes as TotalBytes,
+       Flow.total_uploaded_bytes as TotalBytes,
        Flow.total_collected_rows as TotalRows
 FROM hunt_flows(hunt_id=HuntId)
 WHERE FlowState =~ 'ERROR'
@@ -390,7 +390,7 @@ SELECT ClientId,
        FlowId, Flow.start_time As StartedTime,
        Flow.state AS FlowState, Flow.status as FlowStatus,
        Flow.execution_duration as Duration,
-       Flow.total_collected_bytes as TotalBytes,
+       Flow.total_uploaded_bytes as TotalBytes,
        Flow.total_collected_rows as TotalRows
 FROM hunt_flows(hunt_id=HuntId)
 WHERE FlowState =~ 'RUNNING'
@@ -403,7 +403,7 @@ SELECT ClientId,
        FlowId, Flow.start_time As StartedTime,
        Flow.state AS FlowState, Flow.status as FlowStatus,
        Flow.execution_duration as Duration,
-       Flow.total_collected_bytes as TotalBytes,
+       Flow.total_uploaded_bytes as TotalBytes,
        Flow.total_collected_rows as TotalRows
 FROM hunt_flows(hunt_id=HuntId)
 WHERE FlowState =~ 'Finished'
