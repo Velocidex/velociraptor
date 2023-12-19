@@ -17,6 +17,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/hashicorp/go-retryablehttp"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -470,7 +471,7 @@ func (self *LogScaleQueue) postBytes(scope vfilter.Scope, data []byte, count int
 		return nil, err
 	}
 
-	req.Header.Set("User-Agent", "")
+	req.Header.Set("User-Agent", constants.USER_AGENT)
 	req.Header.Add("Accept", "application/json")
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", self.authToken))
 

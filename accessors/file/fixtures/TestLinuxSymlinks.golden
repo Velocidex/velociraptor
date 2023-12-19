@@ -1,0 +1,6 @@
+[
+ "/second_bin/ls",
+ "/subdir/ls",
+ "/subdir/sym2/subdir/ls",
+ "/sym1/ls"
+]

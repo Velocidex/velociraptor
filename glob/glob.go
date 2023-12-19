@@ -200,7 +200,9 @@ func (self *Globber) _add_filter(components []_PathFilterer, globs []string) err
 }
 
 func (self *Globber) is_dir_or_link(
-	f accessors.FileInfo, accessor accessors.FileSystemAccessor, depth int) bool {
+	scope vfilter.Scope, root *accessors.OSPath,
+	f accessors.FileInfo,
+	accessor accessors.FileSystemAccessor, depth int) bool {
 	// Do not follow symlinks to symlinks deeply.
 	if depth > 10 {
 		return false
@@ -220,7 +222,11 @@ func (self *Globber) is_dir_or_link(
 		}
 
 		target, err := f.GetLink()
-		if err == nil {
+		if err != nil {
+			//scope.Log("Globber: %v while processing %v",
+			//	err, root.String())
+
+		} else {
 			target_info, err := accessor.Lstat(target.String())
 			if err == nil {
 				// Check if the target is on a different filesystem
@@ -235,7 +241,8 @@ func (self *Globber) is_dir_or_link(
 					}
 				}
 
-				return self.is_dir_or_link(target_info, accessor, depth+1)
+				return self.is_dir_or_link(
+					scope, root, target_info, accessor, depth+1)
 			}
 
 			// Hmm we failed to lstat the target - assume
@@ -311,7 +318,7 @@ func (self *Globber) ExpandWithContext(
 				}
 
 				// Only recurse into directories.
-				if self.is_dir_or_link(f, accessor, 0) {
+				if self.is_dir_or_link(scope, root, f, accessor, 0) {
 					item := []*Globber{next}
 					prev_item, pres := children[basename]
 					if pres {
