@@ -49,6 +49,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -352,7 +353,7 @@ func (self *InventoryService) materializeTool(
 	if err != nil {
 		return err
 	}
-	request.Header.Set("User-Agent", "")
+	request.Header.Set("User-Agent", constants.USER_AGENT)
 	res, err := self.Client.Do(request)
 	if err != nil {
 		return err
