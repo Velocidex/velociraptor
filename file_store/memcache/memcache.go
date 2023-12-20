@@ -233,6 +233,11 @@ func NewMemcacheFileStore(config_obj *config_proto.Config) *MemcacheFileStore {
 		ttl = 1000
 	}
 
+	max_writers := config_obj.Datastore.MemcacheWriteMutationWriters
+	if max_writers == 0 {
+		max_writers = 200
+	}
+
 	result := &MemcacheFileStore{
 		delegate:   directory.NewDirectoryFileStore(config_obj),
 		data_cache: ttlcache.NewCache(),
@@ -242,7 +247,7 @@ func NewMemcacheFileStore(config_obj *config_proto.Config) *MemcacheFileStore {
 
 	result.data_cache.SetTTL(result.min_age)
 	result.data_cache.SkipTTLExtensionOnHit(true)
-
+	result.data_cache.SetCacheSizeLimit(int(max_writers))
 	result.data_cache.SetNewItemCallback(func(key string, value interface{}) {
 		metricDataLRU.Inc()
 	})

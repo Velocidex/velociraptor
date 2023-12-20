@@ -494,7 +494,7 @@ func ensure_assets() error {
 		}
 	}
 
-	return nil
+	return UpdateDependentTools()
 }
 
 func mingwxcompiler_exists() bool {
