@@ -50,6 +50,7 @@ jobs:
       run: |
         mkdir ./output/
         export PATH=$PATH:~/go/bin/:/usr/local/musl/bin
+        go run make.go -v UpdateDependentTools
         go run make.go -v LinuxMusl
 
     - name: StoreBinaries
