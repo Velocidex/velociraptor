@@ -116,13 +116,13 @@ Client:
     ##
     ## To require the frontend to only talk with mTLS authenticated
     ## clients, set the Frontend.require_client_certificates to true.
-    client_certificate: ""
-    client_certificate_private_key: ""
+    client_certificate: "-----BEGIN CERTIFICATE----- ..."
+    client_certificate_private_key: "-----BEGIN RSA PRIVATE KEY----- ..."
 
   ## A list of one or more URLs the clients will try to connect
   ## to. When all connections fail the client will back off for a
   ## while. Clients will choose one of these at random so it is a good
-  ## way of acheiving fault tolerance and load balancing.
+  ## way of achieving fault tolerance and load balancing.
   server_urls:
   - https://192.168.1.1:8000/
   - https://192.168.1.2:8000/
@@ -635,8 +635,8 @@ Frontend:
     - Generic.Client.Stats
 
   # The user that the frontend should run as. If set we refuse to run
-  # as a different user. This is normally set by the ubuntu deb
-  # package as it is running as a low priv user called
+  # as a different user. This is normally set by the Ubuntu deb
+  # package as it is running as a low privilege user called
   # "velociraptor". This setting is important as it stops users from
   # running velociraptor as root with sudo - doing this will break the
   # velociraptor datastore when it creates files only readable by
@@ -672,7 +672,7 @@ Frontend:
     connections_per_second: 300
 
     # The rate at which we notify clients of new work (e.g. a new hunt
-    # is started). Slower notification rate helps to slow dows the
+    # is started). Slower notification rate helps to slow down the
     # swarm effect and reduced load on the server.
     notifications_per_second: 1000
 
@@ -1093,7 +1093,7 @@ defaults:
   # process memory is smaller than the low memory mark.
   notebook_memory_low_water_mark: 0
 
-  # When the process memory exceeds the high water marrk, we actively
+  # When the process memory exceeds the high water mark, we actively
   # cancel in flight notebook cell calculations to bring memory use
   # down.
   notebook_memory_high_water_mark: 0
@@ -1134,12 +1134,6 @@ defaults:
   # to true in order to get a responsive GUI.
   event_change_notify_all_clients: false
 
-  # When viewing the VFS on a client we create objects in the data
-  # store to facilitate the GUI navigation. If the directory is too
-  # large the GUI performance suffers so we truncate the directory at
-  # this size (default 1000 files).
-  max_vfs_directory_size: 1000
-
   # Additional directories to load artifacts from on start up.
   artifact_definitions_directories:
     - /etc/artifacts/
@@ -1171,7 +1165,7 @@ defaults:
   # its own but if this is set, we prevent any external access.
   disable_inventory_service_external_access: false
 
-  # Default expiry of certificate issuances (default 365 days). This
+  # Default expiry of certificate issuance (default 365 days). This
   # will apply for e.g. rotating certificates or issuing an api cert.
   certificate_validity_days: 365
 
@@ -1186,7 +1180,7 @@ defaults:
    - FILESYSTEM_READ
    - MACHINE_STATE
 
-  # Controls how exports work (creating hunt or colletion exports to a
+  # Controls how exports work (creating hunt or collection exports to a
   # zip file). On slow filesystems, increase the number of worker
   # threads to increase parallelism. You can also increase the timeout
   # if the filesystem is too slow to build large hunt zip files within

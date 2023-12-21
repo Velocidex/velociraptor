@@ -1,0 +1,19 @@
+SELECT OSPath.Path AS OSPath, Size, Mode.String
+FROM glob(
+   globs="*", accessor="raw_ntfs", root=pathspec(
+      Path="/",
+      DelegateAccessor="ewf",
+      DelegatePath=srcDir + "/artifacts/testdata/files/test.ntfs.dd.E01"))
+WHERE OSPath =~ ".txt$"
+[
+ {
+  "OSPath": "another_file.txt",
+  "Size": 14,
+  "Mode.String": "-rwxr-xr-x"
+ },
+ {
+  "OSPath": "just_a_file.txt",
+  "Size": 12,
+  "Mode.String": "-rwxr-xr-x"
+ }
+]
