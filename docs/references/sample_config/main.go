@@ -72,6 +72,7 @@ var (
 		"services",
 		"Client.disable_compression",
 		"Client.default_server_flow_stats_update",
+		"defaults.max_vfs_directory_size",
 
 		// Fields that are already handled but their default value is
 		// false or 0.
@@ -79,6 +80,7 @@ var (
 		"GUI.links.disabled",
 		"GUI.authenticator.oidc_issuer",
 		"Frontend.use_plain_http",
+		"Frontend.require_client_certificates",
 
 		"Client.nanny_max_connection_delay",
 		"Client.prevent_execve",
