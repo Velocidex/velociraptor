@@ -96,7 +96,7 @@ require (
 	howett.net/plist v1.0.0
 	www.velocidex.com/golang/evtx v0.2.1-0.20220404133451-1fdf8be7325e
 	www.velocidex.com/golang/go-ese v0.1.1-0.20230821114411-ecb5494187ed
-	www.velocidex.com/golang/go-ntfs v0.1.2-0.20230922133004-33eadbbaf1f2
+	www.velocidex.com/golang/go-ntfs v0.1.2-0.20231201083609-cc79ced94180
 	www.velocidex.com/golang/go-pe v0.1.1-0.20230228112150-ef2eadf34bc3
 	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
 	www.velocidex.com/golang/oleparse v0.0.0-20230217092320-383a0121aafe
@@ -110,10 +110,11 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11
+	github.com/Velocidex/go-ewf v0.0.0-20231221151253-96290a08e96a
 	github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d
-	github.com/alecthomas/kingpin/v2 v2.3.2
+	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/andybalholm/brotli v1.0.4
 	github.com/bradleyjkemp/sigma-go v0.6.4
 	github.com/clayscode/Go-Splunk-HTTP/splunk/v2 v2.0.1-0.20221027171526-76a36be4fa02
@@ -237,7 +238,7 @@ require (
 // replace github.com/Velocidex/zip => /home/mic/projects/zip
 // replace github.com/Velocidex/sflags => /home/mic/projects/sflags
 // replace github.com/Velocidex/etw => ../etw
-
+// replace github.com/Velocidex/go-ewf => ../go-ewf
 // replace github.com/Velocidex/grpc-go-pool => /home/mic/projects/grpc-go-pool
 // replace www.velocidex.com/golang/oleparse => /home/matt/git/oleparse
 // replace github.com/go-errors/errors => /home/mic/projects/errors
