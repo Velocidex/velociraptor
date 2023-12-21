@@ -453,44 +453,64 @@ func HasWintrustDll() error {
 
 type WINTRUST_FILE_INFO struct {
 	CbStruct       uint32
-	PcwszFilePath  uintptr
+	PcwszFilePath  *uint16
 	HFile          uintptr
 	PgKnownSubject *GUID
 }
 
 type CATALOG_INFO struct {
 	CbStruct       uint32
-	WszCatalogFile [1024]byte
+	WszCatalogFile [512]uint16
 }
 
 type WINTRUST_CATALOG_INFO struct {
 	CbStruct             uint32
 	DwCatalogVersion     uint32
-	PcwszCatalogFilePath uintptr
-	PcwszMemberTag       uintptr
-	PcwszMemberFilePath  uintptr
-	HMemberFile          uintptr
-	PbCalculatedFileHash uintptr
+	PcwszCatalogFilePath *uint16
+	PcwszMemberTag       *uint16
+	PcwszMemberFilePath  *uint16
+	HMemberFile          syscall.Handle
+	PbCalculatedFileHash *uint8
 	CbCalculatedFileHash uint32
 	PcCatalogContext     uintptr
 	HCatAdmin            syscall.Handle
 }
 
-type WINTRUST_DATA struct {
-	CbStruct            uint32                       //0-4
-	PPolicyCallbackData uintptr                      //4-12
-	PSIPClientData      uintptr                      //12-20
-	DwUIChoice          uint32                       //20-24
-	FdwRevocationChecks uint32                       //24-28
-	DwUnionChoice       uint32                       //28-32
-	Union               uintptr                      //32-40
-	DwStateAction       uint32                       //40-44
-	HWVTStateData       syscall.Handle               //44-48
-	PwszURLReference    uintptr                      //48-56
-	DwProvFlags         uint32                       //56-60
-	DwUIContext         uint32                       // 60-64
-	PSignatureSettings  *WINTRUST_SIGNATURE_SETTINGS // 64-72
-} // 72
+type WINTRUST_DATA_FILE_INFO struct {
+	CbStruct            uint32
+	PPolicyCallbackData uintptr
+	PSIPClientData      uintptr
+	DwUIChoice          uint32
+	FdwRevocationChecks uint32
+	DwUnionChoice       uint32
+	PFile               *WINTRUST_FILE_INFO
+	DwStateAction       uint32
+	HWVTStateData       syscall.Handle
+	PwszURLReference    uintptr
+	DwProvFlags         uint32
+	DwUIContext         uint32
+	PSignatureSettings  *WINTRUST_SIGNATURE_SETTINGS
+}
+
+type WINTRUST_DATA_CATALOG_INFO struct {
+	CbStruct            uint32
+	PPolicyCallbackData uintptr
+	PSIPClientData      uintptr
+	DwUIChoice          uint32
+	FdwRevocationChecks uint32
+	DwUnionChoice       uint32
+	PCatalog            *WINTRUST_CATALOG_INFO
+	DwStateAction       uint32
+	HWVTStateData       syscall.Handle
+	PwszURLReference    uintptr
+	DwProvFlags         uint32
+	DwUIContext         uint32
+	PSignatureSettings  *WINTRUST_SIGNATURE_SETTINGS
+}
+
+type WINTRUST_DATA interface {
+	WINTRUST_DATA_CATALOG_INFO | WINTRUST_DATA_FILE_INFO
+}
 
 type WINTRUST_SIGNATURE_SETTINGS struct {
 	CbStruct           uint32
