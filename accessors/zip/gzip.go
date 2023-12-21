@@ -282,7 +282,7 @@ func GetGzipFile(full_path *accessors.OSPath, scope vfilter.Scope) (ReaderStat, 
 
 	accessor, err := accessors.GetAccessor(pathspec.DelegateAccessor, scope)
 	if err != nil {
-		scope.Log("%v: did you provide a URL or PathSpec?", err)
+		scope.Log("%v: did you provide a PathSpec?", err)
 		return nil, err
 	}
 
