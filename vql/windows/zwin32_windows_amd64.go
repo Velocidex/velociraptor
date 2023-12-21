@@ -410,7 +410,7 @@ func CryptCATAdminReleaseCatalogContext(handle syscall.Handle, handle2 syscall.H
 	return
 }
 
-func WinVerifyTrust(handle syscall.Handle, action *GUID, data *WINTRUST_DATA) (ret uint32, err error) {
+func WinVerifyTrust[dataT WINTRUST_DATA](handle syscall.Handle, action *GUID, data *dataT) (ret uint32, err error) {
 	r0, _, e1 := syscall.Syscall(procWinVerifyTrust.Addr(), 3, uintptr(handle), uintptr(unsafe.Pointer(action)), uintptr(unsafe.Pointer(data)))
 	ret = uint32(r0)
 	if ret != 0 {
