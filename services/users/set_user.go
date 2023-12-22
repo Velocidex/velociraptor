@@ -158,7 +158,7 @@ func (self *UserManager) VerifyPassword(
 
 	ok := verifyPassword(user_record, password)
 	if !ok {
-		return ok, AuthenticationFailed
+		return ok, AuthenticationFailedError
 	}
 
 	return true, nil
