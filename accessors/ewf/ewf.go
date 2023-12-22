@@ -5,16 +5,11 @@ import (
 	"errors"
 	"io"
 	"os"
-	"regexp"
 
 	"github.com/Velocidex/go-ewf/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/zip"
 	"www.velocidex.com/golang/vfilter"
-)
-
-var (
-	extension_regex = regexp.MustCompile("\\.[eE][0-9][0-9]")
 )
 
 type EWFReader struct {
@@ -107,5 +102,19 @@ SELECT * FROM glob(
     Path="/",
     DelegateAccessor="ewf",
     DelegatePath="C:/test.ntfs.dd.E01"))
+
+The next example reads a FAT partition through the offset
+accessor (32256 is the byte offset of the first FAT partition).
+
+    SELECT OSPath.Path AS OSPath, Size, Mode.String
+    FROM glob(
+       globs="*", accessor="fat", root=pathspec(
+          Path="/",
+          DelegateAccessor="offset",
+          DelegatePath=pathspec(
+            Path="/32256",
+            DelegateAccessor="ewf",
+            DelegatePath="/tmp/ubnist1.gen3.E01")))
+
 `)
 }

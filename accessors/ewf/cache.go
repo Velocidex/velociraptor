@@ -1,6 +1,7 @@
 package ewf
 
 import (
+	"errors"
 	"io"
 	"strings"
 	"sync"
@@ -79,6 +80,10 @@ func getCachedEWFFile(
 		return nil, err
 	}
 
+	if len(files) == 0 {
+		return nil, errors.New("No volumes found")
+	}
+
 	// Adapt all these readers for the EWF object
 	files_readat := make([]io.ReaderAt, 0, len(files))
 	for _, r := range files {
@@ -99,6 +104,7 @@ func getCachedEWFFile(
 	}
 
 	cache.Set(key, ewf)
+	scope.Log("ewf: Opened EWF file %v\n", key)
 
 	return ewf, nil
 }
@@ -125,13 +131,15 @@ func getAllVolumes(
 
 		children, err := accessor.ReadDirWithOSPath(dirname)
 		if err == nil {
+			// Technically a volume set can use all the letters so we
+			// cant assume it has to have an .Exx extension.
 			for _, c := range children {
 				if !strings.HasPrefix(c.Name(), prefix) {
 					continue
 				}
 
 				extension := c.Name()[len(prefix):]
-				if !extension_regex.MatchString(extension) {
+				if len(extension) != 4 || extension[0] != '.' {
 					continue
 				}
 
