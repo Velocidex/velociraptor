@@ -16,7 +16,8 @@ import (
 )
 
 var (
-	NameReservedError = errors.New("Username is reserved")
+	NameReservedError         = errors.New("Username is reserved")
+	AuthenticationFailedError = errors.New("Authentication Failed")
 )
 
 // Update the user's password.
@@ -143,6 +144,8 @@ func verifyPassword(self *api_proto.VelociraptorUser, password string) bool {
 	return subtle.ConstantTimeCompare(hash[:], self.PasswordHash) == 1
 }
 
+// Verifies the username's password is ok.  If the password is not OK
+// returns an AuthenticationFailedError too.
 func (self *UserManager) VerifyPassword(
 	ctx context.Context,
 	principal, username string,
@@ -153,5 +156,10 @@ func (self *UserManager) VerifyPassword(
 		return false, err
 	}
 
-	return verifyPassword(user_record, password), nil
+	ok := verifyPassword(user_record, password)
+	if !ok {
+		return ok, AuthenticationFailedError
+	}
+
+	return true, nil
 }
