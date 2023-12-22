@@ -2,6 +2,7 @@ package interrogation_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -13,8 +14,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
@@ -37,7 +40,7 @@ type: INTERNAL
 `,
 	})
 
-	self.client_id = "C.12312"
+	self.client_id = fmt.Sprintf("C.1%d", utils.GetId())
 	self.flow_id = "F.1232"
 
 	self.TestSuite.SetupTest()
@@ -180,6 +183,7 @@ func (self *ServicesTestSuite) TestEnrollService() {
 		}
 	}
 
+	json.Dump(children)
 	assert.Equal(self.T(), len(children), 1)
 	assert.Equal(self.T(), children[0].Base(),
 		client_info.LastInterrogateFlowId)
