@@ -118,8 +118,8 @@ github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11 h1:pQY9p
 github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11/go.mod h1:Ya1f4Kowt2GC7gbnu1MbNncvI1Lp3i1plN2xLiETJfg=
 github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b h1:XaAmLVXrqPv60nbiQtzj5Sch7lwz3XH8x5IocQwRPJg=
 github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b/go.mod h1:draN67DBVJDAVmLWDIJ85CrV0UxmIGfWZ4njukhINQs=
-github.com/Velocidex/go-ewf v0.0.0-20231221151253-96290a08e96a h1:Dm8KkKs0/xH28O7glaJgoS5cUgcXELJkapCen0wG/LU=
-github.com/Velocidex/go-ewf v0.0.0-20231221151253-96290a08e96a/go.mod h1:hUJpwwfJLnrv5VAx3yyBB29hBeYO/M91NJUR1jKEJyY=
+github.com/Velocidex/go-ewf v0.0.0-20231222082421-349320bae93a h1:2s9rIVswf984MGUwQe5lFiDdzpZJmufpvp+JxavVhHo=
+github.com/Velocidex/go-ewf v0.0.0-20231222082421-349320bae93a/go.mod h1:JrGP9QRoPe63ijMmU1UTfoGySg+zpgx68XcsGV/dItI=
 github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a h1:dWHPlB3C86vh+M5P14dZxF6Hh8o2/u8FTRF/bs2EM+Q=
 github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a/go.mod h1:g74FCv59tsVP48V2o1eyIK8aKbNKPLJIJ+HuiUPVc6E=
 github.com/Velocidex/go-magic v0.0.0-20211018155418-c5dc48282f28 h1:3FMhXfGzZR4oNHmV8NizrviyaTv+2SmLuj+43cMJCUQ=
@@ -601,8 +601,8 @@ github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFR
 github.com/rogpeppe/go-internal v1.6.1/go.mod h1:xXDCJY+GAPziupqXw64V24skbSoqbTEfhy4qGm1nDQc=
 github.com/rogpeppe/go-internal v1.8.0/go.mod h1:WmiCO8CzOY8rg0OYDC4/i/2WRWAB6poM+XZ2dLUbcbE=
 github.com/rogpeppe/go-internal v1.9.0/go.mod h1:WtVeX8xhTBvf0smdhujwtBcq4Qrzq/fJaraNFVN+nFs=
-github.com/rogpeppe/go-internal v1.10.0 h1:TMyTOH3F/DB16zRVcYyreMH6GnZZrwQVAoYjRBZyWFQ=
-github.com/rogpeppe/go-internal v1.10.0/go.mod h1:UQnix2H7Ngw/k4C5ijL5+65zddjncjaFoBhdsK/akog=
+github.com/rogpeppe/go-internal v1.12.0 h1:exVL4IDcn6na9z1rAb56Vxr+CgyK3nn3O+epU5NdKM8=
+github.com/rogpeppe/go-internal v1.12.0/go.mod h1:E+RYuTGaKKdloAfM02xzb0FW3Paa99yedzYV+kq4uf4=
 github.com/russellhaering/goxmldsig v1.3.0 h1:DllIWUgMy0cRUMfGiASiYEa35nsieyD3cigIwLonTPM=
 github.com/russellhaering/goxmldsig v1.3.0/go.mod h1:gM4MDENBQf7M+V824SGfyIUVFWydB7n0KkEubVJl+Tw=
 github.com/scylladb/termtables v0.0.0-20191203121021-c4c0b6d42ff4/go.mod h1:C1a7PQSMz9NShzorzCiG2fk9+xuCgLkPeCvMHYR2OWg=
