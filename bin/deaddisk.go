@@ -163,7 +163,9 @@ func addWindowsDirectory(
 }
 
 func addWindowsHardDisk(
-	image string, config_obj *config_proto.Config) error {
+	accessor string,
+	image string,
+	config_obj *config_proto.Config) error {
 
 	logger := &LogWriter{config_obj: config_obj}
 	builder := services.ScopeBuilder{
@@ -173,6 +175,7 @@ func addWindowsHardDisk(
 		Env: ordereddict.NewDict().
 			Set(vql_subsystem.ACL_MANAGER_VAR,
 				acl_managers.NewRoleACLManager(config_obj, "administrator")).
+			Set("Accessor", accessor).
 			Set("ImagePath", image),
 	}
 
@@ -194,13 +197,14 @@ func addWindowsHardDisk(
 			// directory
 			if checkForName(scope, row, "TopLevelDirectory", "Windows") {
 				partition_start := vql_subsystem.GetIntFromRow(scope, row, "StartOffset")
-				addWindowsPartition(config_obj, scope, image, partition_start)
+				addWindowsPartition(config_obj, scope,
+					accessor, image, partition_start)
 			}
 		}
 
 	} else {
 		addWindowsPartition(
-			config_obj, scope, image,
+			config_obj, scope, accessor, image,
 			uint64(*deaddisk_command_add_windows_disk_offset))
 	}
 
@@ -216,7 +220,8 @@ func getPartitionOffsets(
 	scope.Log("Enumerating partitions using Windows.Forensics.PartitionTable")
 	query := `
 SELECT *
-FROM Artifact.Windows.Forensics.PartitionTable(ImagePath=ImagePath)
+FROM Artifact.Windows.Forensics.PartitionTable(
+    ImagePath=ImagePath, Accessor=Accessor)
 `
 	vqls, err := vfilter.MultiParse(query)
 	if err != nil {
@@ -257,13 +262,19 @@ func doDeadDisk() error {
 		Remappings: full_config_obj.Remappings,
 	}
 
+	accessor := "file"
+
 	if *deaddisk_command_add_windows_disk != "" {
 		abs_path, err := filepath.Abs(*deaddisk_command_add_windows_disk)
 		if err != nil {
 			return err
 		}
 
-		err = addWindowsHardDisk(abs_path, config_obj)
+		if strings.HasSuffix(strings.ToLower(abs_path), ".e01") {
+			accessor = "ewf"
+		}
+
+		err = addWindowsHardDisk(accessor, abs_path, config_obj)
 		if err != nil {
 			return err
 		}
@@ -310,7 +321,8 @@ func checkForName(
 		TopLevelDirectory, ok := top_level_any.([]vfilter.Any)
 		if ok {
 			re := regexp.MustCompile(regex)
-			scope.Log("Searching for a Windows directory at the top level")
+			scope.Log("Searching for a Windows directory at the top level of %v",
+				row)
 			for _, i := range TopLevelDirectory {
 				i_str, ok := i.(string)
 				if !ok {
@@ -427,6 +439,7 @@ func addCommonPermissions(config_obj *config_proto.Config) {
 func addWindowsPartition(
 	config_obj *config_proto.Config,
 	scope vfilter.Scope,
+	accessor string,
 	image string,
 	partition_start uint64) {
 	addCommonPermissions(config_obj)
@@ -440,13 +453,13 @@ func addWindowsPartition(
 		Prefix: fmt.Sprintf(`{
   "DelegateAccessor": "offset",
   "Delegate": {
-    "DelegateAccessor": "file",
+    "DelegateAccessor": %q,
     "DelegatePath": %q,
     "Path":"%d"
   },
   "Path": "/"
 }
-`, image, partition_start),
+`, accessor, image, partition_start),
 	}
 
 	// Add an NTFS mount accessible via the "ntfs" accessor
@@ -511,13 +524,13 @@ func addWindowsPartition(
   "Delegate": {
     "DelegateAccessor":"offset",
     "Delegate": {
-      "DelegateAccessor": "file",
+      "DelegateAccessor": %q,
       "DelegatePath": %q,
       "Path": "%d"
     },
     "Path":%q
   }
-}`, definition.key_path, image, partition_start, definition.path),
+}`, definition.key_path, accessor, image, partition_start, definition.path),
 					PathType: "registry",
 				},
 				On: &config_proto.MountPoint{

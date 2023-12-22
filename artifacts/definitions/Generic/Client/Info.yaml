@@ -37,8 +37,7 @@ sources:
     description: Linux specific information about the host
     precondition: SELECT OS From info() where OS = 'linux'
     query: |
-      SELECT
-      sysinfo() AS `Computer Info`,
+      SELECT if(condition=version(function='sysinfo') != NULL, then=sysinfo()) AS `Computer Info`,
       { SELECT Name, HardwareAddrString AS MACAddress,
                Up, PointToPoint,
                AddrsString AS IPAddresses
