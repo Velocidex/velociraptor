@@ -183,7 +183,7 @@ func (self *ServicesTestSuite) TestEnrollService() {
 	}
 
 	if len(children) > 1 {
-		test_utils.GetMemoryDataStore(self.T(), self.config_obj).Debug()
+		test_utils.GetMemoryDataStore(self.T(), self.ConfigObj).Debug(self.ConfigObj)
 	}
 
 	assert.Equal(self.T(), len(children), 1)
