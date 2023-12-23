@@ -1,7 +1,6 @@
 package interrogation_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 	"time"
@@ -66,12 +65,11 @@ func (self *ServicesTestSuite) EmulateCollection(
 	journal, err := services.GetJournal(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	ctx := context.Background()
-	journal.PushRowsToArtifact(ctx, self.ConfigObj,
+	journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		rows, artifact, self.client_id, self.flow_id)
 
 	// Emulate a flow completion message coming from the flow processor.
-	journal.PushRowsToArtifact(ctx, self.ConfigObj,
+	journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", self.client_id).
 			Set("FlowId", self.flow_id).
@@ -115,7 +113,7 @@ func (self *ServicesTestSuite) TestInterrogationService() {
 	labeler := services.GetLabeler(self.ConfigObj)
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		return labeler.IsLabelSet(
-			context.Background(), self.ConfigObj, self.client_id, "Foo")
+			self.Ctx, self.ConfigObj, self.client_id, "Foo")
 	})
 	assert.NoError(self.T(), err)
 }
