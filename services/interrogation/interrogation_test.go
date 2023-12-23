@@ -16,6 +16,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/interrogation"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 
@@ -52,6 +53,8 @@ type: INTERNAL
 			ClientId: self.client_id,
 		},
 	})
+
+	interrogation.DEBUG = true
 }
 
 func (self *ServicesTestSuite) EmulateCollection(
@@ -183,7 +186,7 @@ func (self *ServicesTestSuite) TestEnrollService() {
 	}
 
 	if len(children) > 1 {
-		test_utils.GetMemoryDataStore(self.T(), self.ConfigObj).Debug(self.ConfigObj)
+		test_utils.GetMemoryDataStore(self.T(), self.ConfigObj).Dump()
 	}
 
 	assert.Equal(self.T(), len(children), 1)
