@@ -22,6 +22,7 @@ import (
 	"io"
 	"log"
 	"runtime/debug"
+	"sync"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -36,6 +37,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
@@ -99,6 +101,10 @@ func streamQuery(
 	// Now execute the query.
 	scope := manager.BuildScope(builder)
 
+	// Keep the connection open until the logs are sent.
+	wg := sync.WaitGroup{}
+	defer wg.Wait()
+
 	subctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -108,13 +114,19 @@ func streamQuery(
 		timed_ctx, timed_cancel := context.WithTimeout(subctx,
 			time.Second*time.Duration(arg.Timeout))
 
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
+
 			select {
-			case <-ctx.Done():
+			// Cancelling the parent will not return a log.
+			case <-subctx.Done():
 				timed_cancel()
+
+				// Log the timeout
 			case <-timed_ctx.Done():
 				scope.Log("collect: <red>Timeout Error:</> Collection timed out after %v",
-					time.Now().Sub(start))
+					utils.GetTime().Now().Sub(start))
 				// Cancel the main context.
 				cancel()
 				timed_cancel()
@@ -126,7 +138,9 @@ func streamQuery(
 	scope.SetThrottler(
 		actions.NewThrottler(subctx, scope, 0, float64(arg.CpuLimit), 0))
 
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		defer close(response_channel)
 		defer scope.Close()
 

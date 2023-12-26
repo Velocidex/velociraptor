@@ -1,5 +1,6 @@
 name: Windows Test
 on: [pull_request]
+
 jobs:
   build:
     name: Windows Test
@@ -16,7 +17,7 @@ jobs:
 
     - name: Configure test environment
       shell: cmd
-      if: success()
+      if: always()
       run: |
         echo %PATH%
         echo %GOPATH%
@@ -36,7 +37,7 @@ jobs:
         regedit /S artifacts/testdata/windows/init.reg
 
     - name: Build
-      if: success()
+      if: always()
       env:
         CC: x86_64-w64-mingw32-gcc
       shell: bash
@@ -65,7 +66,7 @@ jobs:
 
     - name: Test
       shell: bash
-      if: success()
+      if: always()
       env:
         # Disable CGO for building tests - it takes too long and it is
         # not needed (mainly disables Yara building again).
