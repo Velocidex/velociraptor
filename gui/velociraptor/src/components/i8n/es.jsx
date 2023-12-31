@@ -179,8 +179,8 @@ const Spanish = {
     "Permanently delete collection": "Eliminar colección de forma permanente",
     "ArtifactDeletionDialog": (session_id, artifacts, total_bytes, total_rows)=>
     <>
-      Está a punto de eliminar de forma permanente la colección de artefactos
-      <b>{session_id}</b>.
+      Está a punto de eliminar de forma permanente la colección de
+      artefactos <b>{session_id}</b>.
       <br/>
       Esta colección comprende los artefactos <b className="wrapped-text">
          {artifacts}
@@ -382,17 +382,17 @@ const Spanish = {
     </>,
     "ServedFromURL": (base_path, url)=>
     <>
-    Los hosts descargarán la herramienta directamente de
-    <a href={base_path + url}>{url}</a> si es
+    Los hosts descargarán la herramienta directamente
+    de <a href={base_path + url}>{url}</a> si es
     necesario. Tenga en cuenta que si el hash no coincide con el
     hash esperado, los hosts rechazarán el archivo.
     </>,
     "ServedFromGithub": (github_project, github_asset_regex)=>
     <>
     La URL de la herramienta será actualizada por
-    GitHub como la última versión del proyecto
-    <b>{github_project}</b>  que coincida con
-    <b>{github_asset_regex}</b>
+    GitHub como la última versión del 
+    proyecto <b>{github_project}</b> que coincida
+    con <b>{github_asset_regex}</b>
     </>,
     "PlaceHolder":
     <>
