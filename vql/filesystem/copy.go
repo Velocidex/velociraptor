@@ -20,6 +20,7 @@ package filesystem
 import (
 	"context"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -40,6 +41,7 @@ type CopyFunctionArgs struct {
 	Destination string            `vfilter:"required,field=dest,doc=The destination file to write."`
 	Permissions string            `vfilter:"optional,field=permissions,doc=Required permissions (e.g. 'x')."`
 	Append      bool              `vfilter:"optional,field=append,doc=If true we append to the target file otherwise truncate it"`
+	Directories bool              `vfilter:"optional,field=create_directories,doc=If true we ensure the destination directories exist"`
 }
 
 type CopyFunction struct{}
@@ -122,6 +124,15 @@ func (self *CopyFunction) Call(ctx context.Context,
 	flags := os.O_RDWR | os.O_CREATE | os.O_TRUNC
 	if arg.Append {
 		flags = os.O_WRONLY | os.O_APPEND
+	}
+
+	if arg.Directories {
+		err = os.MkdirAll(filepath.Dir(arg.Destination), 0700)
+		if err != nil {
+			scope.Log("copy: Failed to create directories for %v: %v",
+				arg.Destination, err)
+			return vfilter.Null{}
+		}
 	}
 
 	to, err := os.OpenFile(arg.Destination, flags, permissions)
