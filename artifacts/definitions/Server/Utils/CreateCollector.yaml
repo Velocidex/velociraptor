@@ -158,6 +158,7 @@ parameters:
           name=name,
           credentialskey=TargetArgs.credentialsKey,
           credentialssecret=TargetArgs.credentialsSecret,
+          credentialstoken=TargetArgs.credentialsToken,
           region=TargetArgs.region,
           endpoint=TargetArgs.endpoint,
           serversideencryption=TargetArgs.serverSideEncryption,
