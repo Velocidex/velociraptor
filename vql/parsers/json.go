@@ -20,6 +20,8 @@ package parsers
 import (
 	"bufio"
 	"context"
+	"errors"
+	"io"
 	"os"
 	"reflect"
 	"strconv"
@@ -174,12 +176,16 @@ func (self ParseJsonlPlugin) Call(
 
 			default:
 				row_data, err := reader.ReadBytes('\n')
-				if err != nil {
+				if err != nil && !errors.Is(err, io.EOF) {
+					scope.Log("parse_jsonl: %v", err)
+					return
+				} else if errors.Is(err, io.EOF) && len(row_data) == 0 {
 					return
 				}
 				item := ordereddict.NewDict()
 				err = item.UnmarshalJSON(row_data)
 				if err != nil {
+					scope.Log("parse_jsonl: %v", err)
 					return
 				}
 
