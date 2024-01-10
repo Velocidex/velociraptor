@@ -78,16 +78,17 @@ func (self WatchETWPlugin) Call(
 			EnableMapInfo: arg.EnableMapInfo,
 		}
 
-		for {
+		for i := 0; i < 10; i++ {
 			err = self.WatchOnce(ctx, scope, arg.Stop, output_chan,
 				arg.Name, options, wGuid)
 			if err != nil {
-				scope.Log("watch_etw: ETW session interrupted, will retry again.")
-				utils.SleepWithCtx(ctx, 10*time.Second)
+				scope.Log("watch_etw: ETW session interrupted, will retry again in 2 minutes.")
+				utils.SleepWithCtx(ctx, 2*time.Minute)
 				continue
 			}
 			return
 		}
+		scope.Log("watch_etw: Repeatedly interrupted, giving up.")
 	}()
 
 	return output_chan
