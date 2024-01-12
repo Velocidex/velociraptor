@@ -27,7 +27,9 @@ type WatchETWArgs struct {
 	EnableMapInfo bool            `vfilter:"optional,field=enable_map_info,doc=Resolving MapInfo with TdhGetEventMapInformation is very expensive and causes events to be dropped so we disabled it by default. Enable with this flag."`
 }
 
-type WatchETWPlugin struct{}
+type WatchETWPlugin struct {
+	RetryTimer time.Duration
+}
 
 func (self WatchETWPlugin) Call(
 	ctx context.Context,
@@ -78,14 +80,14 @@ func (self WatchETWPlugin) Call(
 			EnableMapInfo: arg.EnableMapInfo,
 		}
 
-		timer := 10 * time.Second
+		self.RetryTimer = 1 * time.Second
 		for {
 			err = self.WatchOnce(ctx, scope, arg.Stop, output_chan,
 				arg.Name, options, wGuid)
 			if err != nil {
-				scope.Log("watch_etw: ETW session interrupted, will retry again in %d seconds: %v", timer, err)
-				utils.SleepWithCtx(ctx, timer)
-				timer *= 2
+				scope.Log("watch_etw: ETW session interrupted, will retry again in %d seconds: %v", self.RetryTimer, err)
+				utils.SleepWithCtx(ctx, self.RetryTimer)
+				self.RetryTimer *= 2
 				continue
 			}
 			return
@@ -128,6 +130,11 @@ func (self WatchETWPlugin) WatchOnce(
 			case <-ctx.Done():
 				return nil
 			case output_chan <- event:
+			}
+
+			// Slowly reset the time on each successful message.
+			if self.RetryTimer > 1*time.Second {
+				self.RetryTimer /= 2
 			}
 		}
 	}
