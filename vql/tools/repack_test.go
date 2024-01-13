@@ -1,10 +1,13 @@
 package tools
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
@@ -134,6 +137,130 @@ autoexec:
 	}
 	assert.Equal(self.T(), []string{
 		"uploads/binary.exe",
+		"uploads/inventory.csv",
+	}, files)
+}
+
+// The Generic Embedded container allows packing arbitrary sized
+// payloads. Unlike repacking the executable itself, the amount of
+// space available is unlimited as we can just grow the file as much
+// as needed. This is a valid workaround for when we need to repack
+// very large payloads into the offline collector which are too large
+// to fit in the pre-allocated space.
+func (self *RepackTestSuite) TestRepackGenericContainer() {
+	ctx := self.Ctx
+
+	dir, err := ioutil.TempDir("", "tmp")
+	assert.NoError(self.T(), err)
+
+	defer os.RemoveAll(dir)
+
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: acl_managers.NullACLManager{},
+		Uploader: &uploads.FileBasedUploader{
+			UploadDir: dir,
+		},
+	}
+
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	scope := manager.BuildScope(builder)
+	scope.SetLogger(log.New(os.Stderr, "", 0))
+
+	defer scope.Close()
+
+	binary_src = filepath.Join(dir, "offline.sh")
+	fd, err := os.OpenFile(binary_src, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0660)
+	assert.NoError(self.T(), err)
+
+	fd.Write([]byte(`#!/bin/sh
+
+###<Begin Embedded Config>
+#############################################################################
+`))
+	fd.Close()
+
+	accessor, err := accessors.GetAccessor("file", scope)
+	assert.NoError(self.T(), err)
+
+	tool_pathspec, err := accessor.ParsePath(binary_src)
+	assert.NoError(self.T(), err)
+
+	// Add the Windows Binary to the inventory
+	result := (&server.InventoryAddFunction{}).Call(
+		ctx, scope, ordereddict.NewDict().
+			Set("tool", "GenericCollector").
+			Set("accessor", "file").
+			Set("file", tool_pathspec))
+
+	_, ok := result.(*ordereddict.Dict)
+	assert.True(self.T(), ok, "Result type is %T", result)
+
+	// Make the embedded config really large. This is ok for the
+	// Generic container because we just grow it as needed.
+	embedded_config := `
+autoexec:
+ argv:
+  - help
+ artifact_definitions:
+  - name: CustomArtifact
+    description: |
+`
+	// Make some random data
+	data := make([]byte, 200*1024)
+	rand.Read(data)
+	data_str := hex.EncodeToString(data)
+
+	for i := 0; i < len(data_str)-80; i += 80 {
+		embedded_config += "\n     " + data_str[i:i+80]
+	}
+
+	result = RepackFunction{}.Call(
+		ctx, scope,
+		ordereddict.NewDict().
+			// Set a fixed client id to keep it predictable
+			Set("target", "GenericCollector").
+			Set("config", embedded_config).
+			Set("binaries", []string{"GenericCollector"}).
+			Set("upload_name", "test.zip"))
+
+	upload_response, ok := result.(*uploads.UploadResponse)
+	assert.True(self.T(), ok, "Result type is %T", result)
+
+	// Now extract the config from the result.
+	config_obj, err := config.ExtractEmbeddedConfig(upload_response.Path)
+	assert.NoError(self.T(), err)
+
+	// Make sure all the encoded config is preserved
+	encoded_data := strings.ReplaceAll(
+		config_obj.Autoexec.ArtifactDefinitions[0].Description,
+		"\n", "")
+	assert.Equal(self.T(),
+		encoded_data, data_str[:len(encoded_data)])
+
+	// Save a copy of the repacked data for inspection.
+	if repacked_dst != "" {
+		utils.CopyFile(ctx, upload_response.Path, repacked_dst, 0644)
+		scope.Log("Stored repacked binary in %v for manual inspection", repacked_dst)
+	}
+
+	// Check the content of the packed binaries.
+	fd, err = os.Open(upload_response.Path)
+	assert.NoError(self.T(), err)
+	s, err := fd.Stat()
+	assert.NoError(self.T(), err)
+
+	zip, err := zip.NewReader(fd, s.Size())
+	assert.NoError(self.T(), err)
+
+	files := []string{}
+	for _, f := range zip.File {
+		files = append(files, f.Name)
+	}
+	assert.Equal(self.T(), []string{
+		"uploads/offline.sh",
 		"uploads/inventory.csv",
 	}, files)
 }

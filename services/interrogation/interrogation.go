@@ -264,12 +264,12 @@ func modifyRecord(ctx context.Context,
 	label_array, ok := row.GetStrings("Labels")
 	if ok {
 		client_info.Labels = append(client_info.Labels, label_array...)
+		client_info.Labels = utils.Uniquify(client_info.Labels)
 	}
 
 	mac_addresses, ok := row.GetStrings("MACAddresses")
 	if ok {
-		client_info.MacAddresses = mac_addresses
-		client_info.MacAddresses = utils.Uniquify(client_info.MacAddresses)
+		client_info.MacAddresses = utils.Uniquify(mac_addresses)
 	}
 
 	if client_info.FirstSeenAt == 0 {
