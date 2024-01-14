@@ -35,6 +35,7 @@ import (
 	utils "www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -168,6 +169,7 @@ func (self ParseJsonlPlugin) Call(
 		}
 		defer fd.Close()
 
+		count := 0
 		reader := bufio.NewReader(fd)
 		for {
 			select {
@@ -176,17 +178,50 @@ func (self ParseJsonlPlugin) Call(
 
 			default:
 				row_data, err := reader.ReadBytes('\n')
+				// Need to at least read something to make progress.
+				if len(row_data) == 0 {
+					return
+				}
+
+				// Report errors
 				if err != nil && !errors.Is(err, io.EOF) {
 					scope.Log("parse_jsonl: %v", err)
 					return
-				} else if errors.Is(err, io.EOF) && len(row_data) == 0 {
-					return
 				}
-				item := ordereddict.NewDict()
-				err = item.UnmarshalJSON(row_data)
-				if err != nil {
-					scope.Log("parse_jsonl: %v", err)
-					return
+
+				// Skip empty lines
+				if len(row_data) == 1 {
+					continue
+				}
+
+				count++
+				var item vfilter.Row
+
+				// This looks like a dict - parse it as and ordered
+				// dict so we preserve key order.
+				if row_data[0] == '{' {
+					item_dict := ordereddict.NewDict()
+					err = item_dict.UnmarshalJSON(row_data)
+					if err != nil {
+						// Skip lines that are not valid - they might be corrupted
+						functions.DeduplicatedLog(ctx, scope,
+							"parse_jsonl: error at line %v: %v skipping all invalid lines", count, err)
+						continue
+					}
+					item = item_dict
+
+					// Otherwise parse it as whatever it looks like
+					// and return a row with _value column in it
+				} else {
+					err = json.Unmarshal(row_data, &item)
+					if err != nil {
+						// Skip lines that are not valid - they might be corrupted
+						functions.DeduplicatedLog(ctx, scope,
+							"parse_jsonl: error at line %v: %v skipping all invalid lines", count, err)
+						continue
+					}
+
+					item = ordereddict.NewDict().Set("_value", item)
 				}
 
 				select {
