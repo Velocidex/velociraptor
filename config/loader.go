@@ -1,10 +1,7 @@
 package config
 
 import (
-	"bytes"
-	"compress/zlib"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"os/user"
@@ -351,7 +348,6 @@ func (self *Loader) WithEmbedded(embedded_file string) *Loader {
 				EmbeddedFile, err = os.Executable()
 				return result, err
 			}
-
 			// Ensure the "me" accessor uses this file for embedded zip.
 			full_path, err := filepath.Abs(embedded_file)
 			if err != nil {
@@ -360,31 +356,12 @@ func (self *Loader) WithEmbedded(embedded_file string) *Loader {
 
 			EmbeddedFile = full_path
 
-			fd, err := os.Open(full_path)
-			if err != nil {
-				return nil, err
-			}
-
-			buf := make([]byte, len(FileConfigDefaultYaml)+1024)
-			n, err := fd.Read(buf)
-			if err != nil {
-				return nil, err
-			}
-
-			buf = buf[:n]
-
-			// Find the embedded marker in the buffer.
-			match := embedded_re.FindIndex(buf)
-			if match == nil {
-				return nil, noEmbeddedConfig
-			}
-
-			embedded_string := buf[match[0]:]
-			result, err := decode_embedded_config(embedded_string)
+			result, err := ExtractEmbeddedConfig(full_path)
 			if err == nil {
-				self.Log("Loaded embedded config from %v", embedded_file)
+				self.Log("Loaded embedded config from %v", full_path)
 			}
 			return result, err
+
 		}})
 	return self
 }
@@ -545,49 +522,6 @@ func (self *Loader) LoadAndValidate() (*config_proto.Config, error) {
 		self.Log("%v", err)
 	}
 	return nil, errors.New("Unable to load config from any source.")
-}
-
-func read_embedded_config() (*config_proto.Config, error) {
-	return decode_embedded_config(FileConfigDefaultYaml)
-}
-
-func decode_embedded_config(encoded_string []byte) (*config_proto.Config, error) {
-	// Get the first line which is never disturbed
-	idx := bytes.IndexByte(encoded_string, '\n')
-
-	if len(encoded_string) < idx+10 {
-		return nil, noEmbeddedConfig
-	}
-
-	// If the following line still starts with # then the file is not
-	// repacked - the repacker will replace all further data with the
-	// compressed string.
-	if encoded_string[idx+1] == '#' {
-		return nil, noEmbeddedConfig
-	}
-
-	// Decompress the rest of the data - note that zlib will ignore
-	// any padding anyway because the zlib header already contains the
-	// length of the compressed data so it is safe to just feed it the
-	// whole string here.
-	r, err := zlib.NewReader(bytes.NewReader(encoded_string[idx+1:]))
-	if err != nil {
-		return nil, err
-	}
-
-	b := &bytes.Buffer{}
-	_, err = io.Copy(b, r)
-	if err != nil {
-		return nil, err
-	}
-	r.Close()
-
-	result := &config_proto.Config{}
-	err = yaml.Unmarshal(b.Bytes(), result)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
 }
 
 func read_config_from_file(filename string) (*config_proto.Config, error) {
