@@ -470,6 +470,8 @@ sources:
                dict(name="SleepDuration", type="int", default="0"),
                dict(name="ToolName"),
                dict(name="ToolInfo"),
+               dict(name="TemporaryOnly", type="bool"),
+               dict(name="Version"),
                dict(name="IsExecutable", type="bool", default="Y"),
             ) AS parameters,
             (
