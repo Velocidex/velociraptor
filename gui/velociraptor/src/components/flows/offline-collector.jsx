@@ -297,6 +297,22 @@ class OfflineCollectorParameters  extends React.Component {
                           />
                         </Col>
                       </Form.Group>
+
+                      <Form.Group as={Row}>
+                        <Form.Label column sm="3">{T("Credentials Token")}</Form.Label>
+                        <Col sm="8">
+                          <Form.Control
+                            as="textarea" rows={3}
+                            placeholder={T("Credentials Token")}
+                            spellCheck="false"
+                            value={this.props.parameters.target_args.credentialsToken}
+                            onChange={e => {
+                                this.props.parameters.target_args.credentialsToken = e.target.value;
+                                this.props.setParameters(this.props.parameters);
+                            }}
+                          />
+                        </Col>
+                      </Form.Group>
                       <Form.Group as={Row}>
                         <Form.Label column sm="3">{T("Region")}</Form.Label>
                         <Col sm="8">
@@ -728,6 +744,7 @@ export default class OfflineCollectorWizard extends React.Component {
                 // For S3 buckets.
                 credentialsKey: "",
                 credentialsSecret: "",
+                credentialsToken: "",
                 region: "",
                 endpoint: "",
                 serverSideEncryption: "",

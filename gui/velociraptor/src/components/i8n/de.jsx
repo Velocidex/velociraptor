@@ -178,8 +178,8 @@ const Deutsch = {
     "Permanently delete collection": "Sammlung endgültig löschen",
     "ArtifactDeletionDialog": (session_id, artifacts, total_bytes, total_rows)=>
     <>
-      Sie sind im Begriff, die Artefaktsammlung endgültig zu löschen
-      <b>{session_id}</b>.
+      Sie sind im Begriff, die Artefaktsammlung endgültig zu
+      löschen <b>{session_id}</b>.
       <br/>
       Diese Sammlung hatte die Artefakte <b className="wrapped-text">
          {artifacts}
@@ -382,15 +382,16 @@ const Deutsch = {
     </>,
     "ServedFromURL": (base_path, url)=>
     <>
-    Die Clients rufen das Tool bei Bedarf direkt von
-    <a href={base_path + url}>{url}</a> ab. Wenn der Hashwert nicht mit dem
+    Die Clients rufen das Tool bei Bedarf direkt
+    von <a href={base_path + url}>{url}</a> ab. Wenn der Hashwert nicht mit dem
     erwarteten Hashwert übereinstimmt, weisen die Clients die Datei zurück.
     </>,
     "ServedFromGithub": (github_project, github_asset_regex)=>
     <>
-    Die Tool-URL wird von GitHub als die neueste Version des Projekts
-    <b>{github_project}</b>, die mit <b>{github_asset_regex}</b>
-    übereinstimmt, aktualisiert.
+    Die Tool-URL wird von GitHub als die neueste Version des
+    Projekts <b>{github_project}</b>, die
+    mit <b>{github_asset_regex}</b> übereinstimmt,
+    aktualisiert.
     </>,
     "PlaceHolder":
     <>

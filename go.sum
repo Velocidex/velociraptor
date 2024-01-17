@@ -118,8 +118,8 @@ github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11 h1:pQY9p
 github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11/go.mod h1:Ya1f4Kowt2GC7gbnu1MbNncvI1Lp3i1plN2xLiETJfg=
 github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b h1:XaAmLVXrqPv60nbiQtzj5Sch7lwz3XH8x5IocQwRPJg=
 github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b/go.mod h1:draN67DBVJDAVmLWDIJ85CrV0UxmIGfWZ4njukhINQs=
-github.com/Velocidex/go-ewf v0.0.0-20231222082421-349320bae93a h1:2s9rIVswf984MGUwQe5lFiDdzpZJmufpvp+JxavVhHo=
-github.com/Velocidex/go-ewf v0.0.0-20231222082421-349320bae93a/go.mod h1:JrGP9QRoPe63ijMmU1UTfoGySg+zpgx68XcsGV/dItI=
+github.com/Velocidex/go-ewf v0.0.0-20240116235705-14389cfdaa75 h1:m/xf4OgH18zn+II7z+HzMsVf4D0V330TL27BJcl/KBo=
+github.com/Velocidex/go-ewf v0.0.0-20240116235705-14389cfdaa75/go.mod h1:JrGP9QRoPe63ijMmU1UTfoGySg+zpgx68XcsGV/dItI=
 github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a h1:dWHPlB3C86vh+M5P14dZxF6Hh8o2/u8FTRF/bs2EM+Q=
 github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a/go.mod h1:g74FCv59tsVP48V2o1eyIK8aKbNKPLJIJ+HuiUPVc6E=
 github.com/Velocidex/go-magic v0.0.0-20211018155418-c5dc48282f28 h1:3FMhXfGzZR4oNHmV8NizrviyaTv+2SmLuj+43cMJCUQ=

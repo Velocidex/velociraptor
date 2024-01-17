@@ -6,7 +6,7 @@ description: |
    You will need to provide credentials to upload to the bucket. The
    credentials can be given as parameters or they will be taken from
    the server metadata (as DefaultBucket, DefaultRegion,
-   S3AccessKeyId, S3AccessSecret)
+   S3AccessKeyId, S3AccessSecret, S3AccessToken)
 
    Thanks to @shortxstack and @Recon_InfoSec
 
@@ -23,6 +23,7 @@ parameters:
    - name: Region
    - name: CredentialsKey
    - name: CredentialsSecret
+   - name: CredentialsToken
 
    - name: RemoveDownloads
      type: bool
@@ -39,6 +40,8 @@ sources:
            else=server_metadata().DefaultRegion)
       LET credentialssecret <= if(condition=CredentialsSecret,
               then=CredentialsSecret, else=server_metadata().S3AccessSecret)
+      LET credentialstoken <= if(condition=CredentialsToken,
+              then=CredentialsToken, else=server_metadata().S3AccessToken)
 
       LET completions = SELECT *,
          client_info(client_id=ClientId).os_info.fqdn AS Fqdn,
@@ -51,6 +54,7 @@ sources:
          bucket=bucket,
          credentialskey=credentialskey,
          credentialssecret=credentialssecret,
+         credentialstoken=credentialstoken,
          region=region,
          file=FlowDownload,
          accessor="fs",

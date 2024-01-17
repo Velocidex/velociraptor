@@ -18,7 +18,6 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"io/ioutil"
 	"regexp"
 	"strings"
@@ -41,6 +40,7 @@ import (
 )
 
 var (
+	generic_re      = []byte(`#!/bin/sh`)
 	embedded_re     = regexp.MustCompile(`#{3}<Begin Embedded Config>\r?\n`)
 	embedded_msi_re = regexp.MustCompile(`## Velociraptor client configuration`)
 )
@@ -126,8 +126,10 @@ func (self RepackFunction) Call(ctx context.Context,
 	}
 	w.Close()
 
-	if b.Len() > len(config.FileConfigDefaultYaml)-40 {
-		return fmt.Errorf("config file is too large to embed.")
+	exe_bytes, err = resizeEmbeddedSize(exe_bytes, b.Len())
+	if err != nil {
+		scope.Log("ERROR:client_repack: %v", err)
+		return vfilter.Null{}
 	}
 
 	compressed_config_data := b.Bytes()
@@ -243,6 +245,31 @@ func readExeFile(
 	}
 
 	return exe_bytes[:n], nil
+}
+
+func resizeEmbeddedSize(
+	exe_bytes []byte, required_size int) ([]byte, error) {
+	if len(exe_bytes) < 100 {
+		return nil, errors.New("Binary is too small to resize")
+	}
+
+	// Are we dealing with the generic collector? It has an unlimited
+	// size so we can just increase it to the required size.
+	if utils.BytesEqual(exe_bytes[:len(generic_re)], generic_re) {
+		resize_bytes := make([]byte, len(exe_bytes)+required_size)
+		for i := 0; i < len(exe_bytes); i++ {
+			resize_bytes[i] = exe_bytes[i]
+		}
+		return resize_bytes, nil
+	}
+
+	// For real binaries we have limited space determined by the
+	// compiled in placeholder.
+	if required_size > len(config.FileConfigDefaultYaml)-40 {
+		return nil, errors.New("config file is too large to embed.")
+	}
+
+	return exe_bytes, nil
 }
 
 func RepackMSI(
