@@ -35,8 +35,7 @@ const Vietnamese = {
     "Notebook for Collection": name=>"Ghi chú cho Collection "+name,
     "ArtifactDeletionDialog": (session_id, artifacts, total_bytes, total_rows)=>
     <>
-      Chuẩn bị xoá vĩnh viễn artifact collection
-      <b>{session_id}</b>.
+      Chuẩn bị xoá vĩnh viễn artifact collection <b>{session_id}</b>.
       <br/>
       Collection này có các artifacts <b className="wrapped-text">
          {artifacts}
@@ -70,13 +69,13 @@ const Vietnamese = {
     </>,
     "ServedFromURL": (base_path, url)=>
     <>
-    Máy trạm sẽ tải trực tiếp công cụ từ
-    <a href={base_path + url}>{url}</a> nếu cần thiết. Lưu ý rằng nếu hàm băm không khớp với hàm băm dự kiến, máy trạm sẽ từ chối tệp.
+    Máy trạm sẽ tải trực tiếp công cụ
+    từ <a href={base_path + url}>{url}</a> nếu cần thiết. Lưu ý rằng nếu hàm băm không khớp với hàm băm dự kiến, máy trạm sẽ từ chối tệp.
     </>,
     "ServedFromGithub": (github_project, github_asset_regex)=>
     <>
-    Công cụ sẽ được tải xuống từ GitHub dưới dạng release mới nhất từ
-    <b>{github_project}</b>, phù hợp với <b>{github_asset_regex}</b>
+    Công cụ sẽ được tải xuống từ GitHub dưới dạng release mới nhất
+    từ <b>{github_project}</b>, phù hợp với <b>{github_asset_regex}</b>
     </>,
     "PlaceHolder":
     <>
