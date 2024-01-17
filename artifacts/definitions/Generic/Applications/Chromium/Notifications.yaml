@@ -1,0 +1,92 @@
+name: Generic.Applications.Chromium.Notifications
+description: |
+  Recover the Chromium notification preferences and associated interactions.
+
+  Browser notifications may be leveraged for social engineering;
+  This artifact recovers the Chromium (Google Chrome, Microsoft Edge, ...) 
+  notification preferences and associated interactions.
+
+  The notification preferences allow for the identification of which URLs may
+  or may not send notifications. The associated interactions provide metrics on
+  when notifications have been sent, their amount as well as whether the user
+  interacted.
+
+  Chromium maintains a local database of notifications within the profile's
+  `Platform Notifications` folder which may be consulted for further
+  investigations. This database includes amongst others the notification's title,
+  thumbnail, message and actions.
+
+type: CLIENT
+
+parameters:
+  - name: Preferences
+    type: csv
+    description: A list of glob expressions matching Chromium user-preferences.
+    default: |
+      Glob
+      *:/Users/*/AppData/Local/Google/Chrome/User Data/*/Preferences
+      /Users/*/Library/Application Support/Google/Chrome/*/Preferences
+      /home/*/.config/google-chrome/*/Preferences
+      *:/Users/*/AppData/Local/Microsoft/Edge/User Data/*/Preferences
+      /Users/*/Library/Application Support/Microsoft/Edge/*/Preferences
+      /home/*/.config/microsoft-edge/*/Preferences
+
+sources:
+  - name: Notification Preferences
+    
+    precondition:
+      SELECT OS From info() where OS = 'windows' OR OS = 'linux' OR OS = 'darwin'
+    
+    query: |
+      LET ContentSettings <= array(`0`="Default",`1`="Allow",`2`="Block",`3`="Ask",`4`="Session Only",`5`="Detect Important Content")
+      LET Notifications <= SELECT * FROM foreach(
+        row={SELECT OSPath FROM glob(globs=Preferences.Glob)},
+        query={
+          SELECT profile.content_settings.exceptions.notifications AS Notifications, OSPath
+          FROM parse_jsonl(filename=OSPath)
+        })
+      SELECT * FROM foreach(
+        row=Notifications,
+        query={
+          SELECT
+            _key as URL,
+            timestamp(winfiletime=(int(int=_value.last_modified)*10)) as LastModified,
+            ContentSettings[_value.setting] AS Setting,
+            OSPath
+          FROM items(item=Notifications)
+        })
+    
+  - name: Notification Interactions
+    
+    precondition:
+      SELECT OS From info() where OS = 'windows' OR OS = 'linux' OR OS = 'darwin'
+    
+    query: |
+      LET Notifications <= SELECT * FROM foreach(
+        row={SELECT OSPath FROM glob(globs=Preferences.Glob)},
+        query={
+          SELECT profile.content_settings.exceptions.notification_interactions AS Interactions, OSPath
+          FROM parse_jsonl(filename=OSPath)
+        })
+      LET Interactions <= SELECT * FROM foreach(
+        row=Notifications,
+        query={
+          SELECT
+            _key as URL,
+            timestamp(winfiletime=(int(int=_value.last_modified)*10)) as LastModified,
+            _value.setting AS Setting,
+            OSPath
+          FROM items(item=Interactions)
+        })
+      SELECT * FROM foreach(
+        row=Interactions,
+        query={
+          SELECT
+            URL, 
+            LastModified,
+            timestamp(epoch=_key) as Date,
+            _value.display_count as DisplayCount,
+            _value.click_count as ClickCount,
+            OSPath
+          FROM items(item=Setting)
+        })
