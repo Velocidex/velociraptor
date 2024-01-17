@@ -12,7 +12,7 @@ import (
 
 // Return essential information about the client used for indexing
 // etc. This augments the interrogation workflow via the
-// Server.Internal.ClientInfo artifact. We send this message tothe
+// Server.Internal.ClientInfo artifact. We send this message to the
 // server periodically to avoid having to issue Generic.Client.Info
 // hunts all the time.
 func GetClientInfo(

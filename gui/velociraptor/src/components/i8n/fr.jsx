@@ -182,8 +182,8 @@ const French = {
     "Permanently delete collection": "Supprimer définitivement la collection",
     "ArtifactDeletionDialog": (session_id, artifacts, total_bytes, total_rows)=>
     <>
-       Vous êtes sur le point de supprimer définitivement la collection d'artefacts
-       <b>{session_id}</b>.
+       Vous êtes sur le point de supprimer définitivement la collection
+       d'artefacts <b>{session_id}</b>.
        <br/>
        Cette collection avait les artefacts <b className="wrapped-text">
           {artifacts}
@@ -386,17 +386,17 @@ const French = {
     </>,
     "ServedFromURL": (base_path, url)=>
     <>
-    Les clients iront chercher l'outil directement à partir de
-    <a href={base_path + url}>{url}</a> si
+    Les clients iront chercher l'outil directement à partir
+    de <a href={base_path + url}>{url}</a> si
     nécessaire. Notez que si le hachage ne correspond pas au
     hachage attendu, les clients rejetteront le fichier.
     </>,
     "ServedFromGithub": (github_project, github_asset_regex)=>
     <>
     L'URL de l'outil est mise à jour par
-    GitHub comme dernière version du projet
-    <b>{github_project}</b> qui correspond
-    <b>{github_asset_regex}</b>
+    GitHub comme dernière version du
+    projet <b>{github_project}</b> qui
+    correspond <b>{github_asset_regex}</b>
     </>,
     "PlaceHolder":
     <>

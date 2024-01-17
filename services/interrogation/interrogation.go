@@ -47,6 +47,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
+var (
+	DEBUG = false
+)
+
 type EnrollmentService struct {
 	limiter *rate.Limiter
 }
@@ -101,6 +105,13 @@ func (self *EnrollmentService) ProcessEnrollment(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	row *ordereddict.Dict) error {
+
+	if DEBUG {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Debug("Got enrollment request for %v", row)
+		defer logger.Debug("Done with enrollment for %v", row)
+	}
+
 	client_id, pres := row.GetString("ClientId")
 	if !pres {
 		return nil
@@ -264,12 +275,12 @@ func modifyRecord(ctx context.Context,
 	label_array, ok := row.GetStrings("Labels")
 	if ok {
 		client_info.Labels = append(client_info.Labels, label_array...)
+		client_info.Labels = utils.Uniquify(client_info.Labels)
 	}
 
 	mac_addresses, ok := row.GetStrings("MACAddresses")
 	if ok {
-		client_info.MacAddresses = mac_addresses
-		client_info.MacAddresses = utils.Uniquify(client_info.MacAddresses)
+		client_info.MacAddresses = utils.Uniquify(mac_addresses)
 	}
 
 	if client_info.FirstSeenAt == 0 {

@@ -153,6 +153,20 @@ func SlicesEqual(a []string, b []string) bool {
 	return true
 }
 
+func BytesEqual(a []byte, b []byte) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for idx, a_item := range a {
+		if a_item != b[idx] {
+			return false
+		}
+	}
+
+	return true
+}
+
 func ToString(x interface{}) string {
 	switch t := x.(type) {
 	case string:
