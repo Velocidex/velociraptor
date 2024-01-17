@@ -28,7 +28,9 @@ type WatchETWArgs struct {
 	Description   string          `vfilter:"optional,field=description,doc=Description for this GUID provider"`
 }
 
-type WatchETWPlugin struct{}
+type WatchETWPlugin struct {
+	RetryTimer time.Duration
+}
 
 func (self WatchETWPlugin) Call(
 	ctx context.Context,
@@ -80,12 +82,14 @@ func (self WatchETWPlugin) Call(
 			Description:   arg.Description,
 		}
 
+		self.RetryTimer = 1 * time.Second
 		for {
 			err = self.WatchOnce(ctx, scope, arg.Stop, output_chan,
 				arg.Name, options, wGuid)
 			if err != nil {
-				scope.Log("watch_etw: ETW session interrupted, will retry again.")
-				utils.SleepWithCtx(ctx, 10*time.Second)
+				scope.Log("watch_etw: ETW session interrupted, will retry again in %d seconds: %v", self.RetryTimer, err)
+				utils.SleepWithCtx(ctx, self.RetryTimer)
+				self.RetryTimer *= 2
 				continue
 			}
 			return
@@ -128,6 +132,11 @@ func (self WatchETWPlugin) WatchOnce(
 			case <-ctx.Done():
 				return nil
 			case output_chan <- event:
+			}
+
+			// Slowly reset the time on each successful message.
+			if self.RetryTimer > 1*time.Second {
+				self.RetryTimer /= 2
 			}
 		}
 	}

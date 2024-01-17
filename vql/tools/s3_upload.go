@@ -31,6 +31,7 @@ type S3UploadArgs struct {
 	Region               string            `vfilter:"required,field=region,doc=The region the bucket is in"`
 	CredentialsKey       string            `vfilter:"optional,field=credentialskey,doc=The AWS key credentials to use"`
 	CredentialsSecret    string            `vfilter:"optional,field=credentialssecret,doc=The AWS secret credentials to use"`
+	CredentialsToken     string            `vfilter:"optional,field=credentialstoken,doc=The AWS session token to use (only needed for temporary credentials)"`
 	Endpoint             string            `vfilter:"optional,field=endpoint,doc=The Endpoint to use"`
 	ServerSideEncryption string            `vfilter:"optional,field=serversideencryption,doc=The server side encryption method to use"`
 	KmsEncryptionKey     string            `vfilter:"optional,field=kmsencryptionkey,doc=The server side KMS key to use"`
@@ -95,6 +96,7 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 			arg.Name,
 			arg.CredentialsKey,
 			arg.CredentialsSecret,
+			arg.CredentialsToken,
 			arg.Region,
 			arg.Endpoint,
 			arg.ServerSideEncryption,
@@ -118,6 +120,7 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 	bucket, name string,
 	credentialsKey string,
 	credentialsSecret string,
+	credentialsToken string,
 	region string,
 	endpoint string,
 	serverSideEncryption string,
@@ -134,8 +137,7 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 
 	conf := aws.NewConfig().WithRegion(region)
 	if credentialsKey != "" && credentialsSecret != "" {
-		token := ""
-		creds := credentials.NewStaticCredentials(credentialsKey, credentialsSecret, token)
+		creds := credentials.NewStaticCredentials(credentialsKey, credentialsSecret, credentialsToken)
 		_, err := creds.Get()
 		if err != nil {
 			return &uploads.UploadResponse{

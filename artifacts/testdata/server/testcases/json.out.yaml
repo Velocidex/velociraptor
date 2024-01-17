@@ -36,4 +36,46 @@ SELECT parse_json_array(data=JSONArrayWithDicts) FROM scope()[
  {
   "_value": 2
  }
+]SELECT * FROM parse_jsonl(accessor="data", filename='{"Foo":"First"}\n{"Foo":"Second"}')[
+ {
+  "Foo": "First"
+ },
+ {
+  "Foo": "Second"
+ }
+]SELECT * FROM parse_jsonl(accessor="data", filename='{"Foo":"First"}\n\n{"Foo":"Second"}')[
+ {
+  "Foo": "First"
+ },
+ {
+  "Foo": "Second"
+ }
+]SELECT * FROM parse_jsonl(accessor="data", filename='{"Foo":"First}\n{"Foo":"Second"}')[
+ {
+  "Foo": "Second"
+ }
+]SELECT * FROM parse_jsonl(accessor="data", filename='{"Foo":"First"}\n{"Foo":\n{"Foo":\n{"Foo":"Second"}')[
+ {
+  "Foo": "First"
+ },
+ {
+  "Foo": "Second"
+ }
+]SELECT * FROM parse_jsonl(accessor="data", filename='1\ntrue\n[1,2,3]\n{"Foo":"First"}\n')[
+ {
+  "_value": 1
+ },
+ {
+  "_value": true
+ },
+ {
+  "_value": [
+   1,
+   2,
+   3
+  ]
+ },
+ {
+  "Foo": "First"
+ }
 ]

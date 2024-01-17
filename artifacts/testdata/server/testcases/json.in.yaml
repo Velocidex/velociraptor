@@ -16,3 +16,19 @@ Queries:
        filename=T,
        query={SELECT * FROM range(end=3)})
   - SELECT * FROM parse_jsonl(filename=T)
+
+
+  # Missing final \n is allowed and should return both rows
+  - SELECT * FROM parse_jsonl(accessor="data", filename='{"Foo":"First"}\n{"Foo":"Second"}')
+
+  # Empty line should be ignore
+  - SELECT * FROM parse_jsonl(accessor="data", filename='{"Foo":"First"}\n\n{"Foo":"Second"}')
+
+  # Skip corrupted lines but try to get other lines
+  - SELECT * FROM parse_jsonl(accessor="data", filename='{"Foo":"First}\n{"Foo":"Second"}')
+
+  # Corrupted last line is ignored
+  - SELECT * FROM parse_jsonl(accessor="data", filename='{"Foo":"First"}\n{"Foo":\n{"Foo":\n{"Foo":"Second"}')
+
+  # JSONL files with non-dict lines
+  - SELECT * FROM parse_jsonl(accessor="data", filename='1\ntrue\n[1,2,3]\n{"Foo":"First"}\n')

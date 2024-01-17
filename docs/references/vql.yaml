@@ -6232,6 +6232,9 @@
   - name: credentialssecret
     type: string
     description: The AWS secret credentials to use
+  - name: credentialstoken
+    type: string
+    description: The AWS session token to use (only needed for temporary credentials)
   - name: endpoint
     type: string
     description: The Endpoint to use
