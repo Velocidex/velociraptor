@@ -110,7 +110,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11
-	github.com/Velocidex/go-ewf v0.0.0-20231222082421-349320bae93a
+	github.com/Velocidex/go-ewf v0.0.0-20240116235705-14389cfdaa75
 	github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d

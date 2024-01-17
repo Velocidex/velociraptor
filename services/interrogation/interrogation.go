@@ -47,6 +47,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
+var (
+	DEBUG = false
+)
+
 type EnrollmentService struct {
 	limiter *rate.Limiter
 }
@@ -101,6 +105,13 @@ func (self *EnrollmentService) ProcessEnrollment(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	row *ordereddict.Dict) error {
+
+	if DEBUG {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Debug("Got enrollment request for %v", row)
+		defer logger.Debug("Done with enrollment for %v", row)
+	}
+
 	client_id, pres := row.GetString("ClientId")
 	if !pres {
 		return nil
