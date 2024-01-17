@@ -178,8 +178,7 @@ const Japanese = {
     "Permanently delete collection": "コレクションを永久に削除する",
     "ArtifactDeletionDialog": (session_id, artifacts, total_bytes, total_rows)=>
     <>
-      アーティファクトコレクションを永久に削除しようとしています。
-      <b>{session_id}</b>.
+      アーティファクトコレクションを永久に削除しようとしています。<b>{session_id}</b>.
       <br/>
       コレクションのアーティファクト： <b className="wrapped-text">
          {artifacts}

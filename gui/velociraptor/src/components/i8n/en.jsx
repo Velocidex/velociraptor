@@ -63,8 +63,8 @@ const English = {
     "Import Artifacts": length=><>Import {length} Artifacts</>,
     "ArtifactDeletionDialog": (session_id, artifacts, total_bytes, total_rows)=>
     <>
-      You are about to permanently delete the artifact collection
-      <b>{session_id}</b>.
+      You are about to permanently delete the artifact
+      collection <b>{session_id}</b>.
       <br/>
       This collection had the artifacts <b className="wrapped-text">
                                           {artifacts}</b>
@@ -101,17 +101,17 @@ const English = {
     </>,
     "ServedFromURL": (base_path, url)=>
     <>
-      Clients will fetch the tool directly from
-      <a href={base_path + url}>{url}</a> if
+      Clients will fetch the tool directly 
+      from <a href={base_path + url}>{url}</a> if
       needed. Note that if the hash does not match the
       expected hash the clients will reject the file.
     </>,
     "ServedFromGithub": (github_project, github_asset_regex)=>
     <>
       Tool URL will be refreshed from
-      GitHub as the latest release from the project
-      <b>{github_project}</b> that matches
-      <b>{github_asset_regex}</b>
+      GitHub as the latest release from the
+      project <b>{github_project}</b> that
+      matches <b>{github_asset_regex}</b>
     </>,
     "PlaceHolder":
     <>
