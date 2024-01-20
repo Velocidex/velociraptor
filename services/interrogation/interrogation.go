@@ -52,6 +52,7 @@ var (
 )
 
 type EnrollmentService struct {
+	mu      sync.Mutex
 	limiter *rate.Limiter
 }
 
@@ -134,6 +135,15 @@ func (self *EnrollmentService) ProcessEnrollment(
 
 	// Wait for rate token
 	self.limiter.Wait(ctx)
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	// Try again in case things changed while we waited for the limiter.
+	client_info, err = client_info_manager.Get(ctx, client_id)
+	if err == nil && client_info.LastInterrogateFlowId != "" {
+		return nil
+	}
 
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
