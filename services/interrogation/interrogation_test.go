@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/interrogation"
@@ -185,6 +186,7 @@ func (self *ServicesTestSuite) TestEnrollService() {
 
 	if len(children) > 1 {
 		test_utils.GetMemoryDataStore(self.T(), self.ConfigObj).Dump()
+		json.Debug(children)
 	}
 
 	assert.Equal(self.T(), len(children), 1)
