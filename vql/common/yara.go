@@ -475,7 +475,7 @@ func (self *scanReporter) RuleMatching(
 
 		// Make a copy of the underlying data.
 		data := make([]byte, context_end-context_start)
-		n, _ := self.reader.ReadAt(data, int64(context_start))
+		n, _ := self.reader.ReadAt(data, int64(context_start)+int64(match_string.Base))
 		data = data[:n]
 
 		res := &YaraResult{
@@ -486,7 +486,7 @@ func (self *scanReporter) RuleMatching(
 			FileName: self.filename,
 			String: &YaraHit{
 				Name:    match_string.Name,
-				Offset:  match_string.Offset + self.base_offset,
+				Offset:  match_string.Offset + self.base_offset + match_string.Base,
 				Data:    data,
 				HexData: strings.Split(hex.Dump(data), "\n"),
 			},
@@ -583,6 +583,28 @@ func (self YaraProcPlugin) Call(
 			return
 		}
 
+		accessor, err := accessors.GetAccessor("process", scope)
+		if err != nil {
+			scope.Log("proc_yara: %v", err)
+			return
+		}
+
+		filename := fmt.Sprintf("/%v", arg.Pid)
+		process_stat, err := accessor.Lstat(filename)
+		if err != nil {
+			scope.Log("proc_yara: %v", err)
+			return
+		}
+
+		// Open a handle into the process so we can read context out
+		process_address_space, err := accessor.OpenWithOSPath(
+			process_stat.OSPath())
+		if err != nil {
+			scope.Log("proc_yara: %v", err)
+			return
+		}
+		defer process_address_space.Close()
+
 		rules, err := getYaraRules(arg.Key, arg.Namespace,
 			arg.Rules, arg.YaraVariables, scope)
 		if err != nil {
@@ -606,9 +628,12 @@ func (self YaraProcPlugin) Call(
 			number_of_hits: arg.NumberOfHits,
 			context:        arg.Context,
 			ctx:            ctx,
+			reader:         utils.MakeReaderAtter(process_address_space),
 
 			rules:     rules,
 			scope:     scope,
+			filename:  process_stat.OSPath(),
+			file_info: process_stat,
 			yara_flag: yara_flag,
 		}
 
