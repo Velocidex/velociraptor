@@ -2,6 +2,16 @@
  "Match single field": [
   {
    "Foo": "Bar",
+   "Integer": 4,
+   "List": [
+    1,
+    2,
+    3
+   ],
+   "Dict": {
+    "X": 1,
+    "Y": 2
+   },
    "Baz": "Hello",
    "Details": null,
    "_Match": {
@@ -48,8 +58,18 @@
  "Rule With Details": [
   {
    "Foo": "Bar",
+   "Integer": 4,
+   "List": [
+    1,
+    2,
+    3
+   ],
+   "Dict": {
+    "X": 1,
+    "Y": 2
+   },
    "Baz": "Hello",
-   "Details": "This is column Foo=Bar",
+   "Details": "This is column Foo=Bar Int=4 List=[1,2,3] Dict={\"X\":1,\"Y\":2}",
    "_Match": {
     "Match": true,
     "SearchResults": {
@@ -75,6 +95,12 @@
           "Values": [
            "Bar"
           ]
+         },
+         {
+          "Field": "Integer",
+          "Values": [
+           4
+          ]
          }
         ]
        ]
@@ -89,7 +115,7 @@
      ]
     },
     "AdditionalFields": {
-     "details": "This is column Foo=%Foo%"
+     "details": "This is column Foo=%Foo% Int=%Integer% List=%List% Dict=%Dict%"
     }
    }
   }
@@ -97,6 +123,16 @@
  "Default Details in callback": [
   {
    "Foo": "Bar",
+   "Integer": 4,
+   "List": [
+    1,
+    2,
+    3
+   ],
+   "Dict": {
+    "X": 1,
+    "Y": 2
+   },
    "Baz": "Hello",
    "Details": "I'm a scope var:Default Detail Foo=Bar",
    "_Match": {
@@ -143,6 +179,16 @@
  "Match field with regex": [
   {
    "Foo": "Bar",
+   "Integer": 4,
+   "List": [
+    1,
+    2,
+    3
+   ],
+   "Dict": {
+    "X": 1,
+    "Y": 2
+   },
    "Baz": "Hello",
    "Details": null,
    "_Match": {
@@ -192,6 +238,16 @@
  "Match field with logical operators": [
   {
    "Foo": "Bar",
+   "Integer": 4,
+   "List": [
+    1,
+    2,
+    3
+   ],
+   "Dict": {
+    "X": 1,
+    "Y": 2
+   },
    "Baz": "Hello",
    "Details": null,
    "_Match": {
@@ -262,6 +318,16 @@
  "Match field with logical or operator": [
   {
    "Foo": "Bar",
+   "Integer": 4,
+   "List": [
+    1,
+    2,
+    3
+   ],
+   "Dict": {
+    "X": 1,
+    "Y": 2
+   },
    "Baz": "Hello",
    "Details": null,
    "_Match": {
