@@ -67,6 +67,11 @@ detection:
 	testRows = []*ordereddict.Dict{
 		ordereddict.NewDict().
 			Set("Foo", "Bar").
+			Set("Integer", 4).
+			Set("List", []int64{1, 2, 3}).
+			Set("Dict", map[string]interface{}{
+				"X": 1, "Y": 2,
+			}).
 			Set("Baz", "Hello"),
 		ordereddict.NewDict().
 			Set("System", ordereddict.NewDict().
@@ -94,7 +99,7 @@ detection:
 			description: "Rule With Details",
 			rule: `
 title: RuleWithDetails
-details: This is column Foo=%Foo%
+details: This is column Foo=%Foo% Int=%Integer% List=%List% Dict=%Dict%
 logsource:
    product: windows
    service: application
@@ -102,6 +107,7 @@ logsource:
 detection:
   selection:
      Foo: Bar
+     Integer: 4
   condition: selection
 `,
 			fieldmappings: ordereddict.NewDict(),
