@@ -2,6 +2,7 @@ package sigma
 
 import (
 	"context"
+	"encoding/json"
 	"regexp"
 
 	"github.com/Velocidex/ordereddict"
@@ -46,10 +47,26 @@ func (self *SigmaContext) AddDetail(
 				return in
 			}
 
-			res, ok := resolved[0].(string)
-			if ok {
-				return res
+			if len(resolved) == 1 {
+				res, ok := resolved[0].(string)
+				if ok {
+					return res
+				}
+
+				// If it is not a string, serialize to json and
+				// interpolate instead.
+				serialized, err := json.Marshal(resolved[0])
+				if err == nil {
+					return string(serialized)
+				}
 			}
+
+			// Handle lists and dicts
+			serialized, err := json.Marshal(resolved)
+			if err == nil {
+				return string(serialized)
+			}
+
 			return in
 		})
 	}
