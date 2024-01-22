@@ -1,4 +1,4 @@
-name: Custom.Windows.Detection.Yara.Process
+name: Windows.Detection.Yara.Process
 author: Matt Green - @mgreen27
 description: |
   This artifact enables running Yara over processes in memory.
