@@ -1,6 +1,6 @@
 /*
    Velociraptor - Dig Deeper
-   Copyright (C) 2019-2022 Rapid7 Inc.
+   Copyright (C) 2019-2024 Rapid7 Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Affero General Public License as published
@@ -49,6 +49,9 @@ func (self *IntFunction) Call(ctx context.Context,
 		result, _ := strconv.ParseInt(t, 0, 64)
 		return result
 
+	case float32:
+		return int64(t)
+
 	case float64:
 		return int64(t)
 
@@ -63,6 +66,9 @@ func (self *IntFunction) Call(ctx context.Context,
 
 	case uint32:
 		return uint64(t)
+
+	case int32:
+		return int64(t)
 
 	}
 
