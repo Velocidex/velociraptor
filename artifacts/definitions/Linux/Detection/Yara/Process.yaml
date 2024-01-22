@@ -87,8 +87,8 @@ sources:
                 ProcessName,
                 CommandLine,
                 Pid,
-                Namespace,
                 Rule,
+                Tag,
                 Meta,
                 String.Name as YaraString,
                 String.Offset as HitOffset,
@@ -97,9 +97,12 @@ sources:
                     name=format(format="%v-%v_%v_%v", 
                     args=[ ProcessName, Pid, String.Offset, ContextBytes ]
                         )) as HitContext
-             FROM yara(files=format(format="/%d", args=Pid),
-                       accessor='process',rules=yara_rules,
-                       context=ContextBytes, number=NumberOfHits )
+             FROM proc_yara(
+                        pid=Pid,
+                        rules=yara_rules,
+                        context=ContextBytes,
+                        number=NumberOfHits 
+                    )
           })
 
       -- upload hits using the process accessor
