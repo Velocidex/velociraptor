@@ -1,0 +1,15 @@
+SELECT OSPath.Basename AS OSPath, * FROM Artifact.Linux.Sys.LastUserLogin( recent_x_days=10000, wtmpGlobs=srcDir+"/artifacts/testdata/files/wtmp.1") WHERE logout_time LIMIT 1[
+ {
+  "OSPath": "wtmp.1",
+  "login_Type": "USER_PROCESS",
+  "login_ID": null,
+  "login_PID": 3435060,
+  "login_Host": "192.168.1.2",
+  "login_User": "mic",
+  "login_IpAddr": "192.168.1.2",
+  "login_Terminal": "pts/9",
+  "login_time": "2023-12-21T15:54:24Z",
+  "logout_time": "2023-12-21T17:34:32Z",
+  "_Source": "Linux.Sys.LastUserLogin"
+ }
+]

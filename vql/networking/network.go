@@ -1,6 +1,6 @@
 /*
    Velociraptor - Dig Deeper
-   Copyright (C) 2019-2022 Rapid7 Inc.
+   Copyright (C) 2019-2024 Rapid7 Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU Affero General Public License as published
@@ -33,9 +33,9 @@ type InterfacesPlugin struct {
 
 func (self InterfacesPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name: "interfaces",
-		Doc: "List all active interfaces.",
-		Metadata:   vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+		Name:     "interfaces",
+		Doc:      "List all active interfaces.",
+		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 
@@ -87,18 +87,18 @@ func (self InterfacesPlugin) Call(
 			}
 
 			// Add net.FlagRunning once we require go 1.20
-//			if (iface.Flags & net.FlagRunning) == net.FlagRunning {
-//				row.Set("Running", "Y")
-//			} else {
-//				row.Set("Running", "N")
-//			}
+			//			if (iface.Flags & net.FlagRunning) == net.FlagRunning {
+			//				row.Set("Running", "Y")
+			//			} else {
+			//				row.Set("Running", "N")
+			//			}
 
 			row.Set("HardwareAddrString", iface.HardwareAddr.String())
 
 			addrs, err := iface.Addrs()
 			if err != nil {
 				scope.Log("interfaces: Failed to get addresses for interface %s: %s",
-					  iface.Name, err)
+					iface.Name, err)
 				continue
 			}
 			row.Set("Addrs", addrs)
@@ -112,7 +112,7 @@ func (self InterfacesPlugin) Call(
 			addrs, err = iface.MulticastAddrs()
 			if err != nil {
 				scope.Log("interfaces: Failed to get multicast addresses for interface %s: %s",
-					  iface.Name, err)
+					iface.Name, err)
 			}
 			row.Set("MulticastAddrs", addrs)
 
