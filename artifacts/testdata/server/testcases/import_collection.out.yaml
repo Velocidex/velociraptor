@@ -4,10 +4,10 @@ LET Sanitize(X) = regex_replace(re="[C]\\.[0-9a-z]+", replace="C.ID", source=X)[
  }
 ]SELECT Sanitize(X=vfs_path) AS vfs_path FROM Artifact.Server.Utils.DeleteClient( ClientIdList=[X[0].ClientId, Y[0].ClientId], ReallyDoIt=TRUE) WHERE NOT vfs_path =~ "monitoring" Order by vfs_path[
  {
-  "vfs_path": "/clients/C.ID/artifacts/Linux.Search.FileFinder/F.3.json"
+  "vfs_path": "/clients/C.ID/artifacts/Linux.Search.FileFinder/F.1.json"
  },
  {
-  "vfs_path": "/clients/C.ID/artifacts/Linux.Search.FileFinder/F.3.json.index"
+  "vfs_path": "/clients/C.ID/artifacts/Linux.Search.FileFinder/F.1.json.index"
  },
  {
   "vfs_path": "/clients/C.ID/artifacts/Linux.Search.FileFinder/F.CD62UJJO259A4.json"
@@ -16,22 +16,22 @@ LET Sanitize(X) = regex_replace(re="[C]\\.[0-9a-z]+", replace="C.ID", source=X)[
   "vfs_path": "/clients/C.ID/artifacts/Linux.Search.FileFinder/F.CD62UJJO259A4.json.index"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/F.3.json.db"
+  "vfs_path": "/clients/C.ID/collections/F.1.json.db"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/F.3/logs.json"
+  "vfs_path": "/clients/C.ID/collections/F.1/logs.json"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/F.3/logs.json.index"
+  "vfs_path": "/clients/C.ID/collections/F.1/logs.json.index"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/F.3/uploads.json"
+  "vfs_path": "/clients/C.ID/collections/F.1/uploads.json"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/F.3/uploads.json.index"
+  "vfs_path": "/clients/C.ID/collections/F.1/uploads.json.index"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/F.3/uploads/file/tmp/\"ls\\with\\back:slash\""
+  "vfs_path": "/clients/C.ID/collections/F.1/uploads/file/tmp/\"ls\\with\\back:slash\""
  },
  {
   "vfs_path": "/clients/C.ID/collections/F.CD62UJJO259A4.json.db"
