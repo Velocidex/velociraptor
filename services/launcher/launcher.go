@@ -755,7 +755,7 @@ func addOrReplaceParameter(
 }
 
 func (self *Launcher) SetFlowIdForTests(id string) {
-	utils.NextFlowIdForTests = id
+	utils.SetFlowIdGenerator(utils.ConstantFlowIdGenerator(id))
 }
 
 func NewLauncherService(

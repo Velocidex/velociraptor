@@ -1,33 +1,63 @@
-LET Sanitize(X) = regex_replace(re="[CF]\\.[0-9a-z]+", replace="C.ID", source=X)[]LET X <= SELECT * FROM Artifact.Server.Utils.ImportCollection( Hostname="FooBarHost", Path=srcDir+"/vql/tools/collector/fixtures/import.zip")[]LET Y <= SELECT * FROM Artifact.Server.Utils.ImportCollection( Hostname="FooBarHost", Path=srcDir+"/vql/tools/collector/fixtures/import.zip")[]SELECT X[0].ClientId = Y[0].ClientId AS ClientIdEqual FROM scope()[
+LET Sanitize(X) = regex_replace(re="[C]\\.[0-9a-z]+", replace="C.ID", source=X)[]LET X <= SELECT * FROM Artifact.Server.Utils.ImportCollection( Hostname="FooBarHost", Path=srcDir+"/vql/tools/collector/fixtures/import.zip")[]LET Y <= SELECT * FROM Artifact.Server.Utils.ImportCollection( Hostname="FooBarHost", Path=srcDir+"/vql/tools/collector/fixtures/import.zip")[]SELECT X[0].ClientId = Y[0].ClientId AS ClientIdEqual FROM scope()[
  {
   "ClientIdEqual": true
  }
 ]SELECT Sanitize(X=vfs_path) AS vfs_path FROM Artifact.Server.Utils.DeleteClient( ClientIdList=[X[0].ClientId, Y[0].ClientId], ReallyDoIt=TRUE) WHERE NOT vfs_path =~ "monitoring" Order by vfs_path[
  {
-  "vfs_path": "/clients/C.ID/artifacts/Linux.Search.FileFinder/C.ID.json"
+  "vfs_path": "/clients/C.ID/artifacts/Linux.Search.FileFinder/F.3.json"
  },
  {
-  "vfs_path": "/clients/C.ID/artifacts/Linux.Search.FileFinder/C.ID.json.index"
+  "vfs_path": "/clients/C.ID/artifacts/Linux.Search.FileFinder/F.3.json.index"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/C.ID.json.db"
+  "vfs_path": "/clients/C.ID/artifacts/Linux.Search.FileFinder/F.CD62UJJO259A4.json"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/C.ID/logs.json"
+  "vfs_path": "/clients/C.ID/artifacts/Linux.Search.FileFinder/F.CD62UJJO259A4.json.index"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/C.ID/logs.json.index"
+  "vfs_path": "/clients/C.ID/collections/F.3.json.db"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/C.ID/task.db"
+  "vfs_path": "/clients/C.ID/collections/F.3/logs.json"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/C.ID/uploads.json"
+  "vfs_path": "/clients/C.ID/collections/F.3/logs.json.index"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/C.ID/uploads.json.index"
+  "vfs_path": "/clients/C.ID/collections/F.3/uploads.json"
  },
  {
-  "vfs_path": "/clients/C.ID/collections/C.ID/uploads/file/tmp/\"ls\\with\\back:slash\""
+  "vfs_path": "/clients/C.ID/collections/F.3/uploads.json.index"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/F.3/uploads/file/tmp/\"ls\\with\\back:slash\""
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/F.CD62UJJO259A4.json.db"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/F.CD62UJJO259A4/logs.json"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/F.CD62UJJO259A4/logs.json.index"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/F.CD62UJJO259A4/task.db"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/F.CD62UJJO259A4/uploads.json"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/F.CD62UJJO259A4/uploads.json.index"
+ },
+ {
+  "vfs_path": "/clients/C.ID/collections/F.CD62UJJO259A4/uploads/file/tmp/\"ls\\with\\back:slash\""
+ },
+ {
+  "vfs_path": "/clients/C.ID/flow_index.json"
+ },
+ {
+  "vfs_path": "/clients/C.ID/flow_index.json.index"
  }
 ]
