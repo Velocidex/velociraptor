@@ -28,7 +28,7 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
 )
 
-func (self *TestSuite) TestImportDynamicCollection() {
+func (self *TestSuite) TestCreateAndImportCollection() {
 	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
 	defer closer()
 
@@ -112,10 +112,10 @@ func (self *TestSuite) TestImportDynamicCollection() {
 	// test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
 	golden.Set("Imported Flow", self.snapshotHuntFlow())
 
-	goldie.Assert(self.T(), "TestImportDynamicCollection", json.MustMarshalIndent(golden))
+	goldie.Assert(self.T(), "TestCreateAndImportCollection", json.MustMarshalIndent(golden))
 }
 
-func (self *TestSuite) TestImportStaticCollection() {
+func (self *TestSuite) TestImportCollectionFromFixture() {
 	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
 	_, err := repository.LoadYaml(CustomTestArtifactDependent,

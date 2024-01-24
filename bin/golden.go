@@ -173,6 +173,9 @@ func makeCtxWithTimeout(
 func runTest(fixture *testFixture, sm *services.Service,
 	config_obj *config_proto.Config) (string, error) {
 
+	gen := utils.IncrementalFlowIdGenerator(0)
+	utils.SetFlowIdGenerator(&gen)
+
 	// Freeze the time for consistent golden tests Monday, May 31, 2020 3:28:05 PM
 	closer := utils.MockTime(utils.NewMockClock(time.Unix(1590938885, 10)))
 	defer closer()

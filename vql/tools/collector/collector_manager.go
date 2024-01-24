@@ -478,7 +478,7 @@ func (self *collectionManager) MakeContainer(filename, password string, level in
 
 	self.scope.Log("Will create container at %s", filename)
 
-	self.collection_context.SessionId = launcher.NewFlowId("")
+	self.collection_context.SessionId = utils.NewFlowId("")
 	self.log_file, err = reporting.NewResultSetWriter(
 		self.container, "log.json")
 	return err
