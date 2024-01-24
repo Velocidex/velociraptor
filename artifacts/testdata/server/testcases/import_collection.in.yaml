@@ -1,6 +1,6 @@
 Queries:
   # Client IDs are random so we sanitize them in the results below.
-  - LET Sanitize(X) = regex_replace(re="[CF]\\.[0-9a-z]+", replace="C.ID", source=X)
+  - LET Sanitize(X) = regex_replace(re="[C]\\.[0-9a-z]+", replace="C.ID", source=X)
 
   # Import a collection once
   - LET X <= SELECT * FROM Artifact.Server.Utils.ImportCollection(

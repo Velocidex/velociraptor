@@ -23,7 +23,7 @@ parameters:
 
 
   - name: recent_x_days
-    default: 14
+    default: 100000
     type: int
     description: |
       show all logs within the last X days (default 14 days)
@@ -46,7 +46,7 @@ export: |
     ["records", 0, "Array", {
         "type": "utmp",
         "count": "x=>MaxCount",
-        "max_count": "x=>MaxCount",
+        "max_count": 100000,
     }],
     ]],
     ["utmp", 384, [

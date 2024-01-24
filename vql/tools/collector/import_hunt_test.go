@@ -56,7 +56,7 @@ sources:
 	}
 )
 
-func (self *TestSuite) TestImportDynamicHunt() {
+func (self *TestSuite) TestCreateAndImportHunt() {
 	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
 	defer closer()
 
@@ -176,7 +176,7 @@ func (self *TestSuite) TestImportDynamicHunt() {
 	// test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
 	golden.Set("Imported Flow", self.snapshotHuntFlow())
 
-	goldie.Assert(self.T(), "TestImportDynamicHunt", json.MustMarshalIndent(golden))
+	goldie.Assert(self.T(), "TestCreateAndImportHunt", json.MustMarshalIndent(golden))
 }
 
 func (self *TestSuite) snapshotHuntFlow() *ordereddict.Dict {
@@ -194,7 +194,7 @@ func (self *TestSuite) snapshotHuntFlow() *ordereddict.Dict {
 	})
 }
 
-func (self *TestSuite) TestImportStaticHunt() {
+func (self *TestSuite) TestImportHuntFromFixture() {
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 	launcher.SetFlowIdForTests("F.1234XX")
@@ -257,7 +257,7 @@ func (self *TestSuite) TestImportStaticHunt() {
 		return len(value) > 0
 	})
 
-	goldie.Assert(self.T(), "TestImportStaticHunt",
+	goldie.Assert(self.T(), "TestImportHuntFromFixture",
 		json.MustMarshalIndent(self.snapshotStaticHuntFlow()))
 }
 

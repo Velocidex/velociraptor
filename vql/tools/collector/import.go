@@ -16,7 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
+	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -251,15 +251,28 @@ func (self ImportCollectionFunction) importFlow(
 
 	collection_context.ClientId = client_id
 
-	flow_path_manager := paths.NewFlowPathManager(
-		client_id, collection_context.SessionId)
-
-	db, err := datastore.GetDB(config_obj)
+	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
 		return nil, err
 	}
 
-	err = db.SetSubject(config_obj, flow_path_manager.Path(), collection_context)
+	// Check if this flow is already in this client. If it is then we
+	// make a new flow id so the new import is kept separated.
+	_, err = launcher.GetFlowDetails(ctx, config_obj, client_id,
+		collection_context.SessionId)
+	if err == nil {
+		collection_context.SessionId = utils.NewFlowId(client_id)
+	}
+
+	// Write the flow and update indexes
+	err = launcher.Storage().WriteFlow(ctx, config_obj,
+		collection_context, utils.BackgroundWriter)
+	if err != nil {
+		return nil, err
+	}
+
+	err = launcher.Storage().WriteFlowIndex(ctx, config_obj,
+		collection_context)
 	if err != nil {
 		return nil, err
 	}
@@ -268,13 +281,20 @@ func (self ImportCollectionFunction) importFlow(
 	tasks := &api_proto.ApiFlowRequestDetails{}
 
 	// If there is no requests.json, just write an empty one
-	_ = self.getFile(accessor, root.Append("requests.json"), tasks)
-	err = db.SetSubject(config_obj, flow_path_manager.Task(), tasks)
+	err = self.getFile(accessor, root.Append("requests.json"), tasks)
+	if err != nil || len(tasks.Items) == 0 {
+		tasks.Items = append(tasks.Items, &crypto_proto.VeloMessage{})
+	}
+
+	err = launcher.Storage().WriteTask(ctx, config_obj, client_id,
+		tasks.Items[0])
 	if err != nil {
 		return nil, err
 	}
 
 	// Copy the logs results set over.
+	flow_path_manager := paths.NewFlowPathManager(client_id,
+		collection_context.SessionId)
 	err = self.copyResultSet(ctx, config_obj, scope,
 		accessor, root.Append("log.json"), flow_path_manager.Log())
 	if err != nil {

@@ -140,7 +140,7 @@ require (
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
 	gopkg.in/yaml.v3 v3.0.1
 	software.sslmate.com/src/go-pkcs12 v0.2.0
-	www.velocidex.com/golang/vtypes v0.0.0-20231115033415-7856327477d2
+	www.velocidex.com/golang/vtypes v0.0.0-20240123105603-069d4a7f435c
 )
 
 require (
