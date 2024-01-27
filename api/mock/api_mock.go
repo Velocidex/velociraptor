@@ -1021,6 +1021,26 @@ func (mr *MockAPIClientMockRecorder) RemoveNotebookAttachment(arg0, arg1 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveNotebookAttachment", reflect.TypeOf((*MockAPIClient)(nil).RemoveNotebookAttachment), varargs...)
 }
 
+// RevertNotebookCell mocks base method.
+func (m *MockAPIClient) RevertNotebookCell(arg0 context.Context, arg1 *proto0.NotebookCellRequest, arg2 ...grpc.CallOption) (*proto0.NotebookCell, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "RevertNotebookCell", varargs...)
+	ret0, _ := ret[0].(*proto0.NotebookCell)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RevertNotebookCell indicates an expected call of RevertNotebookCell.
+func (mr *MockAPIClientMockRecorder) RevertNotebookCell(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevertNotebookCell", reflect.TypeOf((*MockAPIClient)(nil).RevertNotebookCell), varargs...)
+}
+
 // Scheduler mocks base method.
 func (m *MockAPIClient) Scheduler(arg0 context.Context, arg1 ...grpc.CallOption) (proto0.API_SchedulerClient, error) {
 	m.ctrl.T.Helper()

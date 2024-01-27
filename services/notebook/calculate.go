@@ -72,7 +72,7 @@ func (self *NotebookManager) UpdateNotebookCell(
 	err := self.Store.SetNotebookCell(
 		notebook_metadata.NotebookId, notebook_cell)
 	if err != nil {
-		return nil, err
+		return notebook_cell, err
 	}
 
 	request := &NotebookRequest{
@@ -83,7 +83,7 @@ func (self *NotebookManager) UpdateNotebookCell(
 
 	scheduler, err := services.GetSchedulerService(self.config_obj)
 	if err != nil {
-		return nil, err
+		return notebook_cell, err
 	}
 
 	response_chan, err := scheduler.Schedule(ctx, services.SchedulerJob{
@@ -100,7 +100,7 @@ func (self *NotebookManager) UpdateNotebookCell(
 
 		self.Store.SetNotebookCell(notebook_metadata.NotebookId, notebook_cell)
 
-		return nil, err
+		return notebook_cell, err
 	}
 
 	select {
@@ -109,7 +109,7 @@ func (self *NotebookManager) UpdateNotebookCell(
 
 	case job_resp, ok := <-response_chan:
 		if !ok {
-			return nil, errors.New("Cancelled")
+			return notebook_cell, errors.New("Cancelled")
 		}
 		notebook_resp := &NotebookResponse{}
 		err := json.Unmarshal([]byte(job_resp.Job), notebook_resp)
