@@ -36,6 +36,8 @@ message GetTableRequest {
     // For notebook tables.
     string notebook_id = 9;
     string cell_id = 10;
+    string cell_version = 29;
+
     int64 table_id = 11;
 
     // For timelines

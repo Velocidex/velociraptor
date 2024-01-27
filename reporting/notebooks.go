@@ -188,7 +188,8 @@ func ExportNotebookToZip(
 	for _, metadata := range notebook.CellMetadata {
 		if metadata.CellId != "" {
 			err = db.GetSubject(config_obj,
-				notebook_path_manager.Cell(metadata.CellId).Path(),
+				notebook_path_manager.Cell(
+					metadata.CellId, metadata.CurrentVersion).Path(),
 				metadata)
 			if err != nil {
 				return err
@@ -231,8 +232,8 @@ func ExportNotebookToZip(
 
 	exported_path_manager := NewNotebookExportPathManager(notebook.NotebookId)
 
-	cell_copier := func(cell_id string) {
-		cell_path_manager := notebook_path_manager.Cell(cell_id)
+	cell_copier := func(cell_id, version string) {
+		cell_path_manager := notebook_path_manager.Cell(cell_id, version)
 
 		// Copy cell contents
 		err = copyUploads(ctx, config_obj,
@@ -266,7 +267,7 @@ func ExportNotebookToZip(
 		defer zip_writer.Close()
 
 		for _, cell := range notebook.CellMetadata {
-			cell_copier(cell.CellId)
+			cell_copier(cell.CellId, cell.CurrentVersion)
 		}
 
 		// Copy the attachments - Attachmentrs may not exist if there
@@ -362,7 +363,8 @@ func ExportNotebookToHTML(
 	cell := &api_proto.NotebookCell{}
 	for _, cell_md := range notebook.CellMetadata {
 		err = db.GetSubject(config_obj,
-			notebook_path_manager.Cell(cell_md.CellId).Path(),
+			notebook_path_manager.Cell(
+				cell_md.CellId, cell_md.CurrentVersion).Path(),
 			cell)
 		if err != nil {
 			return err
@@ -386,7 +388,8 @@ func ExportNotebookToHTML(
 					extra = submatches[3]
 				}
 
-				item_path := notebook_path_manager.Cell("").Item(submatches[2])
+				item_path := notebook_path_manager.Cell(
+					"", "").Item(submatches[2])
 				fd, err := file_store_factory.ReadFile(item_path)
 				if err != nil {
 					return in
@@ -458,7 +461,7 @@ func convertCSVTags(
 	}
 
 	path_manager := paths.NewNotebookPathManager(params.NotebookId).Cell(
-		params.CellId).QueryStorage(params.TableId)
+		params.CellId, params.CellVersion).QueryStorage(params.TableId)
 	file_store_factory := file_store.GetFileStore(config_obj)
 	reader, err := result_sets.NewResultSetReader(
 		file_store_factory, path_manager.Path())

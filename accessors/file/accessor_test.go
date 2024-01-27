@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -106,6 +107,11 @@ func (self *AccessorWindowsTestSuite) TestNoCase() {
 // tmpdir/subdir/parent_link -> tmpdir/subdir
 // tmpdir/subdir/dir_link -> tmpdir/subdir/parent_link
 func (self *AccessorWindowsTestSuite) TestSymlinks() {
+	// This test only works on Linux and MacOS
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	dirname := filepath.Join(self.tmpdir, "subdir")
 	err := os.Mkdir(dirname, 0777)
 	assert.NoError(self.T(), err)
@@ -177,7 +183,7 @@ func (self *AccessorWindowsTestSuite) TestSymlinks() {
 	}
 
 	assert.Equal(self.T(),
-		[]string{"/subdir/1.txt"},
+		[]string{"/subdir/1.txt", "/subdir/dir_link/subdir/1.txt"},
 		hits)
 
 }

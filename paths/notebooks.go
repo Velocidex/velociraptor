@@ -44,7 +44,13 @@ func (self *NotebookPathManager) Path() api.DSPathSpec {
 	return self.root.AddChild(self.notebook_id).SetTag("Notebook")
 }
 
-func (self *NotebookPathManager) Cell(cell_id string) *NotebookCellPathManager {
+// Support versioned cells by appending the version to the cell id.
+func (self *NotebookPathManager) Cell(
+	cell_id, version string) *NotebookCellPathManager {
+	if version != "" {
+		cell_id += "-" + version
+	}
+
 	return &NotebookCellPathManager{
 		notebook_id: self.notebook_id,
 		cell_id:     cell_id,
@@ -143,6 +149,10 @@ type NotebookCellPathManager struct {
 
 func (self *NotebookCellPathManager) Directory() api.FSPathSpec {
 	return self.root.AddChild(self.notebook_id, self.cell_id).AsFilestorePath()
+}
+
+func (self *NotebookCellPathManager) DSDirectory() api.DSPathSpec {
+	return self.root.AddChild(self.notebook_id, self.cell_id)
 }
 
 func (self *NotebookCellPathManager) Path() api.DSPathSpec {

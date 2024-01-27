@@ -1014,6 +1014,9 @@ message Defaults {
     // will receive jobs over lower priority).
     int64 notebook_worker_priority = 39;
 
+    // Total number of cell versions we keep for undo/redo support.
+    int64 notebook_versions = 42;
+
     // The default CSV delimiter
     string csv_delimiter = 3;
 

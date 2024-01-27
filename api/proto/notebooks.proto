@@ -23,9 +23,13 @@ message NotebookExportRequest {
     string type = 2;
 }
 
+// Message sent to the notebook processor ro request a cell recalc.
 message NotebookCellRequest {
     string notebook_id = 1;
     string cell_id = 2;
+    string version = 12;
+    repeated string available_versions = 13;
+
     string input = 3;
     string name = 11;
 
@@ -126,6 +130,9 @@ message NotebookCell {
     repeated Env env = 11;
 
     string error = 13;
+
+    string current_version = 14;
+    repeated string available_versions = 15;
 }
 
 message NotebookFileUploadRequest {

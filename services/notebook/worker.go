@@ -56,13 +56,15 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 
 	// Set the cell as calculating
 	notebook_cell := &api_proto.NotebookCell{
-		Input:            in.Input,
-		CellId:           in.CellId,
-		Type:             in.Type,
-		Timestamp:        utils.GetTime().Now().Unix(),
-		CurrentlyEditing: in.CurrentlyEditing,
-		Calculating:      true,
-		Env:              in.Env,
+		Input:             in.Input,
+		CellId:            in.CellId,
+		Type:              in.Type,
+		Timestamp:         utils.GetTime().Now().Unix(),
+		CurrentlyEditing:  in.CurrentlyEditing,
+		Calculating:       true,
+		Env:               in.Env,
+		CurrentVersion:    in.Version,
+		AvailableVersions: in.AvailableVersions,
 	}
 
 	notebook_path_manager := paths.NewNotebookPathManager(
@@ -95,7 +97,7 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 
 	tmpl, err := reporting.NewGuiTemplateEngine(
 		config_obj, query_ctx, nil, acl_manager, global_repo,
-		notebook_path_manager.Cell(in.CellId),
+		notebook_path_manager.Cell(in.CellId, in.Version),
 		"Server.Internal.ArtifactDescription")
 	if err != nil {
 		return nil, err
@@ -168,7 +170,8 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 	// ensure we can still write after query cancellation.
 	resp, err := self.updateCellContents(ctx, config_obj, store, tmpl,
 		in.CurrentlyEditing, in.NotebookId,
-		in.CellId, cell_type, in.Env, query_cancel, input, in.Input)
+		in.CellId, in.Version, in.AvailableVersions,
+		cell_type, in.Env, query_cancel, input, in.Input)
 	if err != nil {
 		logger.Error("Rendering error: %v", err)
 	}
@@ -184,14 +187,16 @@ func (self *NotebookWorker) updateCellContents(
 	store NotebookStore,
 	tmpl *reporting.GuiTemplateEngine,
 	currently_editing bool,
-	notebook_id, cell_id, cell_type string,
+	notebook_id, cell_id, version string,
+	available_versions []string,
+	cell_type string,
 	env []*api_proto.Env,
 	query_cancel func(),
 	input, original_input string) (res *api_proto.NotebookCell, err error) {
 
 	// Start a nanny to watch this calculation
 	go self.startNanny(ctx, config_obj, tmpl.Scope, store, query_cancel,
-		notebook_id, cell_id)
+		notebook_id, cell_id, version)
 
 	output := ""
 	now := utils.GetTime().Now().Unix()
@@ -217,6 +222,10 @@ func (self *NotebookWorker) updateCellContents(
 			Timestamp:        now,
 			CurrentlyEditing: currently_editing,
 			Duration:         int64(time.Since(tmpl.Start).Seconds()),
+
+			// Version management
+			CurrentVersion:    version,
+			AvailableVersions: available_versions,
 		}
 	}
 
@@ -353,7 +362,7 @@ func (self *NotebookWorker) Start(
 		err := self.RegisterWorker(ctx, config_obj, name, scheduler)
 		if err != nil {
 			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
-			logger.Error("NotebookWorker: %v", err)
+			logger.Info("NotebookWorker: %v", err)
 		}
 
 		select {
@@ -406,11 +415,11 @@ func (self *NotebookWorker) RegisterWorker(
 	for {
 		select {
 		case <-ctx.Done():
-			return errors.New("Cancellation")
+			return nil
 
 		case job, ok := <-job_chan:
 			if !ok {
-				return errors.New("Cancellation")
+				return nil
 			}
 
 			request := &NotebookRequest{}
@@ -519,7 +528,7 @@ func (self *NotebookWorker) startNanny(
 	ctx context.Context, config_obj *config_proto.Config,
 	scope vfilter.Scope,
 	store NotebookStore, query_cancel func(),
-	notebook_id, cell_id string) {
+	notebook_id, cell_id, version string) {
 
 	// Reduce memory use now so the next measure of memory use is more
 	// reflective of our current workload.
@@ -556,7 +565,7 @@ func (self *NotebookWorker) startNanny(
 		}
 
 		// Check the cell for cancellation or errors
-		notebook_cell, err := store.GetNotebookCell(notebook_id, cell_id)
+		notebook_cell, err := store.GetNotebookCell(notebook_id, cell_id, version)
 		if err != nil || notebook_cell.CellId != cell_id {
 			continue
 		}

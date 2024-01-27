@@ -275,7 +275,7 @@ func GetPathSpec(
 
 	} else if in.NotebookId != "" && in.CellId != "" && in.Type == "logs" {
 		return paths.NewNotebookPathManager(in.NotebookId).Cell(
-			in.CellId).Logs(), nil
+			in.CellId, in.CellVersion).Logs(), nil
 
 		// Handle dashboards specially. Dashboards are kind of
 		// non-interactive notebook stored in a special notebook ID
@@ -288,7 +288,7 @@ func GetPathSpec(
 
 	} else if in.NotebookId != "" && in.CellId != "" {
 		return paths.NewNotebookPathManager(in.NotebookId).Cell(
-			in.CellId).QueryStorage(in.TableId).Path(), nil
+			in.CellId, in.CellVersion).QueryStorage(in.TableId).Path(), nil
 	}
 
 	return nil, errors.New("Invalid request")

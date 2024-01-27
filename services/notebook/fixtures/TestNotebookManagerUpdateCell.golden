@@ -5,11 +5,15 @@
   "creator": "admin",
   "created_time": 10,
   "modified_time": 10,
-  "notebook_id": "N.000002HH64P36",
+  "notebook_id": "N.01",
   "cell_metadata": [
    {
-    "cell_id": "NC.000002HH64P36",
-    "timestamp": 10
+    "cell_id": "NC.02",
+    "timestamp": 10,
+    "current_version": "03",
+    "available_versions": [
+     "03"
+    ]
    }
   ]
  },
@@ -17,22 +21,33 @@
   "input": "# Heading 1\n\nHello world\n",
   "output": "\u003ch1\u003eHeading 1\u003c/h1\u003e\n\n\u003cp\u003eHello world\u003c/p\u003e\n",
   "data": "{}",
-  "cell_id": "NC.000002HH64P36",
+  "cell_id": "NC.02",
   "messages": [
    "DEBUG:Query Stats: {\"RowsScanned\":0,\"PluginsCalled\":0,\"FunctionsCalled\":0,\"ProtocolSearch\":0,\"ScopeC ..."
   ],
   "timestamp": 10,
-  "type": "markdown"
+  "type": "markdown",
+  "current_version": "04",
+  "available_versions": [
+   "03",
+   "04"
+  ]
  },
  "VQL Cell": {
   "input": "SELECT _value AS X FROM range(end=2)",
-  "output": "\u003cdiv class=\"panel\"\u003e\u003cgrr-csv-viewer base-url=\"'v1/GetTable'\" params='%7B%22notebook_id%22%3A%22N.000002HH64P36%22%2C%22client_id%22%3A%22%22%2C%22cell_id%22%3A%22NC.000002HH64P36%22%2C%22table_id%22%3A1%2C%22TableOptions%22%3A%7B%7D%2C%22Version%22%3A10%7D' /\u003e\u003c/div\u003e",
+  "output": "\u003cdiv class=\"panel\"\u003e\u003cgrr-csv-viewer base-url=\"'v1/GetTable'\" params='%7B%22notebook_id%22%3A%22N.01%22%2C%22client_id%22%3A%22%22%2C%22cell_id%22%3A%22NC.02-05%22%2C%22table_id%22%3A1%2C%22TableOptions%22%3A%7B%7D%2C%22Version%22%3A10%7D' /\u003e\u003c/div\u003e",
   "data": "{}",
-  "cell_id": "NC.000002HH64P36",
+  "cell_id": "NC.02",
   "messages": [
    "DEBUG:Query Stats: {\"RowsScanned\":2,\"PluginsCalled\":1,\"FunctionsCalled\":0,\"ProtocolSearch\":0,\"ScopeC ..."
   ],
   "timestamp": 10,
-  "type": "vql"
+  "type": "vql",
+  "current_version": "05",
+  "available_versions": [
+   "03",
+   "04",
+   "05"
+  ]
  }
 }

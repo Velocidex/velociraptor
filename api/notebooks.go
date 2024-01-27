@@ -271,7 +271,7 @@ func (self *ApiServer) GetNotebookCell(
 		return nil, InvalidStatus("Notebook is not shared with user.")
 	}
 
-	return notebook_manager.GetNotebookCell(ctx, in.NotebookId, in.CellId)
+	return notebook_manager.GetNotebookCell(ctx, in.NotebookId, in.CellId, in.Version)
 }
 
 func (self *ApiServer) UpdateNotebookCell(
@@ -322,6 +322,54 @@ func (self *ApiServer) UpdateNotebookCell(
 	return res, Status(self.verbose, err)
 }
 
+func (self *ApiServer) RevertNotebookCell(
+	ctx context.Context,
+	in *api_proto.NotebookCellRequest) (*api_proto.NotebookCell, error) {
+
+	defer Instrument("RevertNotebookCell")()
+
+	if !strings.HasPrefix(in.NotebookId, "N.") {
+		return nil, InvalidStatus("Invalid NotebookId")
+	}
+
+	if !strings.HasPrefix(in.CellId, "NC.") {
+		return nil, InvalidStatus("Invalid NotebookCellId")
+	}
+
+	users := services.GetUserManager()
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+	principal := user_record.Name
+
+	permissions := acls.NOTEBOOK_EDITOR
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
+	if !perm || err != nil {
+		return nil, PermissionDenied(err,
+			"User is not allowed to edit notebooks.")
+	}
+
+	notebook_manager, err := services.GetNotebookManager(org_config_obj)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	// Check that the user has access to this notebook.
+	notebook_metadata, err := notebook_manager.GetNotebook(ctx, in.NotebookId, SKIP_UPLOADS)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	if !notebook_manager.CheckNotebookAccess(notebook_metadata, principal) {
+		return nil, InvalidStatus("Notebook is not shared with user.")
+	}
+
+	res, err := notebook_manager.RevertNotebookCellVersion(
+		ctx, in.NotebookId, in.CellId, in.Version)
+	return res, Status(self.verbose, err)
+}
+
 func (self *ApiServer) CancelNotebookCell(
 	ctx context.Context,
 	in *api_proto.NotebookCellRequest) (*emptypb.Empty, error) {
@@ -356,7 +404,7 @@ func (self *ApiServer) CancelNotebookCell(
 	}
 
 	return &emptypb.Empty{}, notebook_manager.CancelNotebookCell(
-		ctx, in.NotebookId, in.CellId)
+		ctx, in.NotebookId, in.CellId, in.Version)
 }
 
 func (self *ApiServer) UploadNotebookAttachment(
