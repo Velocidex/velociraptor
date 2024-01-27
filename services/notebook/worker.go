@@ -420,6 +420,7 @@ func (self *NotebookWorker) RegisterWorker(
 
 		case job, ok := <-job_chan:
 			if !ok {
+				job.Done("", errors.New("Cancellation"))
 				return nil
 			}
 
@@ -428,6 +429,7 @@ func (self *NotebookWorker) RegisterWorker(
 			if err != nil {
 				logger.Error("NotebookManager: Invalid job request in worker: %v: %v",
 					err, job.Job)
+				job.Done("", err)
 				continue
 			}
 
@@ -580,6 +582,8 @@ func (self *NotebookWorker) startNanny(
 			}
 			scope.Log("ERROR:NotebookManager: Detected cell %v is cancelled. Stopping.", cell_id)
 			notifier.NotifyDirectListener(cell_id + version)
+
+			return
 		}
 	}
 }
