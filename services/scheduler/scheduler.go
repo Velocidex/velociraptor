@@ -167,20 +167,32 @@ func (self *Scheduler) Schedule(ctx context.Context,
 		})
 
 		for _, w := range available_workers {
+			// The worker can get back to the pool immediately while
+			// we wait for our consumer.
 			job.Done = func(result string, err error) {
-				result_chan <- services.JobResponse{
+				w.SetBusy(false)
+				w.SetRequest(vfilter.Null{})
+				defer close(result_chan)
+
+				select {
+				case <-ctx.Done():
+					return
+
+				case result_chan <- services.JobResponse{
 					Job: result,
 					Err: err,
+				}:
 				}
-
-				w.SetRequest(vfilter.Null{})
-				w.SetBusy(false)
-				close(result_chan)
 			}
 
 			select {
+
+			// If the caller is cancelled we can return the worker to
+			// the pool.
 			case <-ctx.Done():
 				self.mu.Unlock()
+				w.SetBusy(false)
+				w.SetRequest(vfilter.Null{})
 				close(result_chan)
 				return result_chan, errors.New("Cancelled")
 
