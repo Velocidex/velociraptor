@@ -40,34 +40,17 @@ sources:
       SELECT OS From info() where OS = 'windows'
 
    query: |
-      LET glob_patterns = SELECT *
-      FROM foreach(
-        row=DirectoryPathGlob.Path,
-        query={
-          SELECT join(array=[_value, ':Zone.Identifier']) AS element
-          FROM scope()
-        })
-      LET X = SELECT 
-                    split(string=OSPath, sep=":Zone.Identifier")[0] AS DownloadedFilePath,
-                    Mtime,
-                    read_file(
-                      filename=OSPath,
-                      accessor="ntfs") AS _ZoneIdentifierContent
-        FROM glob(globs=glob_patterns.element,
-                  accessor="ntfs")
-        WHERE NOT IsDir
+      LET glob_patterns = SELECT Path + ':Zone.Identifier' AS Glob FROM DirectoryPathGlob
+      LET X = SELECT
+         split(string=OSPath, sep=":Zone.Identifier")[0] AS DownloadedFilePath,
+         Mtime,
+         read_file(filename=OSPath, accessor="ntfs") AS _ZoneIdentifierContent
+      FROM glob(globs=glob_patterns.Glob, accessor="ntfs")
+      WHERE NOT IsDir
+
       SELECT *,
-            if(
-              condition=DownloadedFilePath,
-              then=hash(
-                path=DownloadedFilePath)) AS FileHash,
-            parse_string_with_regex(
-              regex="ZoneId=(.+)",
-              string=_ZoneIdentifierContent).g1 AS ZoneId,
-            parse_string_with_regex(
-              regex="HostUrl=(.+)",
-              string=_ZoneIdentifierContent).g1 AS HostUrl,
-            parse_string_with_regex(
-              regex="ReferrerUrl=(.+)",
-              string=_ZoneIdentifierContent).g1 AS ReferrerUrl
+        if(condition=DownloadedFilePath, then=hash(path=DownloadedFilePath)) AS FileHash,
+        parse_string_with_regex(regex="ZoneId=([^\\r\\n]+)", string=_ZoneIdentifierContent).g1 AS ZoneId,
+        parse_string_with_regex(regex="HostUrl=([^\\r\\n]+)", string=_ZoneIdentifierContent).g1 AS HostUrl,
+        parse_string_with_regex(regex="ReferrerUrl=([^\\r\\n]+)", string=_ZoneIdentifierContent).g1 AS ReferrerUrl
       FROM X
