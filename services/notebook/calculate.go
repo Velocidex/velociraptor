@@ -103,9 +103,13 @@ func (self *NotebookManager) UpdateNotebookCell(
 		return notebook_cell, err
 	}
 
+	// Only wait here for a short time to keep the browser moving.
+	fast_ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+
 	select {
-	case <-ctx.Done():
-		return nil, errors.New("Cancelled")
+	case <-fast_ctx.Done():
+		return notebook_cell, nil
 
 	case job_resp, ok := <-response_chan:
 		if !ok {

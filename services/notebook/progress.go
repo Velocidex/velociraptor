@@ -2,6 +2,7 @@ package notebook
 
 import (
 	"fmt"
+	"html"
 	"time"
 
 	"google.golang.org/protobuf/proto"
@@ -11,10 +12,10 @@ import (
 )
 
 type progressReporter struct {
-	config_obj            *config_proto.Config
-	notebook_cell         *api_proto.NotebookCell
-	notebook_id, table_id string
-	last, start           time.Time
+	config_obj                     *config_proto.Config
+	notebook_cell                  *api_proto.NotebookCell
+	notebook_id, table_id, version string
+	last, start                    time.Time
 
 	store NotebookStore
 }
@@ -35,11 +36,14 @@ func (self *progressReporter) Report(message string) {
 </div>
 <div class="panel">
    <grr-csv-viewer base-url="'v1/GetTable'"
-                   params='{"notebook_id":"%s","cell_id":"%s","table_id":1,"message": "%s"}' />
+                   params='{"notebook_id":"%s","cell_id":"%s","table_id":1,"cell_version": "%s", "message": "%s"}' />
 </div>
 `,
 		message, duration,
-		self.notebook_id, self.notebook_cell.CellId, message)
+		html.EscapeString(self.notebook_id),
+		html.EscapeString(self.notebook_cell.CellId),
+		html.EscapeString(self.version),
+		html.EscapeString(message))
 	notebook_cell.Timestamp = now.Unix()
 	notebook_cell.Duration = int64(duration.Seconds())
 

@@ -149,7 +149,7 @@ func (self *NotebookManager) CancelNotebookCell(
 		return err
 	}
 	return notifier.NotifyListener(
-		ctx, self.config_obj, cell_id, "CancelNotebookCell")
+		ctx, self.config_obj, cell_id+version, "CancelNotebookCell")
 }
 
 func (self *NotebookManager) UploadNotebookAttachment(

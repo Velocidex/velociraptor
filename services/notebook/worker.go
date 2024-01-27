@@ -112,6 +112,7 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 		config_obj:    config_obj,
 		notebook_cell: notebook_cell,
 		notebook_id:   in.NotebookId,
+		version:       in.Version,
 		start:         utils.GetTime().Now(),
 		store:         store,
 	}
@@ -138,7 +139,7 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 	}
 
 	// The notification is removed either inline or in the background.
-	cancel_notify, remove_notification := notifier.ListenForNotification(in.CellId)
+	cancel_notify, remove_notification := notifier.ListenForNotification(in.CellId + in.Version)
 	defer remove_notification()
 
 	// Watcher thread: Wait for cancellation from the GUI or a 10 min timeout.
@@ -578,7 +579,7 @@ func (self *NotebookWorker) startNanny(
 				return
 			}
 			scope.Log("ERROR:NotebookManager: Detected cell %v is cancelled. Stopping.", cell_id)
-			notifier.NotifyDirectListener(cell_id)
+			notifier.NotifyDirectListener(cell_id + version)
 		}
 	}
 }
