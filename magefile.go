@@ -533,6 +533,12 @@ func timestamp_of(path string) int64 {
 }
 
 func UpdateDependentTools() error {
+	// Do not update dependencies for dev builds as the uploaded
+	// binaries do not exist yet.
+	if strings.Contains(constants.VERSION, "dev") {
+		return nil
+	}
+
 	v, err := semver.NewVersion(constants.VERSION)
 	if err != nil {
 		return err

@@ -215,8 +215,9 @@ export default class NotebookCellRenderer extends React.Component {
             // Prevent further updates to this cell by setting the
             // cell id and timestamp.
             this.setState({cell_timestamp: props_cell_timestamp,
-                           cell_id: props_cell_id});
-            this.fetchCellContents();
+                           cell_id: props_cell_id,
+                           cell: this.props.cell_metadata,
+                           input: this.props.cell_metadata.input});
         }
     };
 
@@ -246,9 +247,13 @@ export default class NotebookCellRenderer extends React.Component {
         this.source.cancel();
         this.source = CancelToken.source();
 
+        let cell_version = (this.state.cell && this.state.cell.current_version) ||
+            (this.props.cell_metadata && this.props.cell_metadata.current_version);
+
         api.get("v1/GetNotebookCell", {
             notebook_id: this.props.notebook_id,
             cell_id: this.props.cell_metadata.cell_id,
+            version: cell_version,
         }, this.source.token).then((response) => {
             if (response.cancel) {
                 return;
@@ -518,6 +523,92 @@ export default class NotebookCellRenderer extends React.Component {
                </>;
     }
 
+    undo_available = ()=>{
+        if(!this.state.cell || this.state.loading) {
+            return false;
+        }
+
+        let available_versions = this.state.cell.available_versions || [];
+        let current_version = this.state.cell.current_version;
+
+        return available_versions.length > 0 && current_version !== available_versions[0]
+    }
+
+    redo_available = ()=>{
+        if(!this.state.cell || this.state.loading) {
+            return false;
+        }
+
+        let available_versions = this.state.cell.available_versions || [];
+        let current_version = this.state.cell.current_version;
+
+        return available_versions.length > 0 &&
+            current_version !== available_versions[available_versions.length-1];
+    }
+
+    undo = ()=>{
+        if(!this.state.cell) {
+            return;
+        }
+
+        let available_versions = this.state.cell.available_versions || [];
+        let current_version = this.state.cell.current_version;
+
+        for(let i=0; i<available_versions.length; i++) {
+            if (available_versions[i]===current_version && i > 0) {
+                this.setState({loading: true});
+
+                api.post("v1/RevertNotebookCell", {
+                    notebook_id: this.props.notebook_id,
+                    cell_id: this.state.cell.cell_id,
+                    version: available_versions[i-1],
+                }, this.source.token).then(response=>{
+                    if (response.cancel) {
+                        return;
+                    }
+                    let cell = response.data;
+                    this.setState({cell: cell,
+                                   input: cell.input,
+                                   loading: false});
+                });
+
+                return;
+            }
+        };
+    }
+
+    redo = ()=>{
+        if(!this.state.cell) {
+            return;
+        }
+
+        let available_versions = this.state.cell.available_versions || [];
+        let current_version = this.state.cell.current_version;
+
+        for(let i=0; i<available_versions.length; i++) {
+            if (available_versions[i]===current_version &&
+                i < available_versions.length) {
+                this.setState({loading: true});
+
+                api.post("v1/RevertNotebookCell", {
+                    notebook_id: this.props.notebook_id,
+                    cell_id: this.state.cell.cell_id,
+                    version: available_versions[i+1],
+                }, this.source.token).then(response=>{
+                    if (response.cancel) {
+                        return;
+                    }
+                    let cell = response.data;
+                    this.setState({cell: cell,
+                                   input: cell.input,
+                                   loading: false});
+                });
+
+                return;
+            }
+        };
+    }
+
     render() {
         let selected = this.state.cell.cell_id === this.props.selected_cell_id;
 
@@ -599,6 +690,24 @@ export default class NotebookCellRenderer extends React.Component {
                       variant="default">
                 <FontAwesomeIcon icon="arrow-down"/>
               </Button>
+
+              <Button data-tooltip={T("Undo")}
+                      data-position="right"
+                      disabled={!this.undo_available()}
+                      className="btn-tooltip"
+                      onClick={this.undo}
+                      variant="default">
+                <FontAwesomeIcon icon="rotate-left"/>
+              </Button>
+              <Button data-tooltip={T("Redo")}
+                      data-position="right"
+                      disabled={!this.redo_available()}
+                      className="btn-tooltip"
+                      onClick={this.redo}
+                      variant="default">
+                <FontAwesomeIcon icon="rotate-right"/>
+              </Button>
+
 
               <Button data-tooltip={T("Copy Cell")}
                       data-position="right"

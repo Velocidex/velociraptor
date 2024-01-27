@@ -75,9 +75,10 @@ type SourcePluginArgs struct {
 	// allows post processing in multiple stages - one query
 	// reduces the data into a result set and subsequent queries
 	// operate on that reduced set.
-	NotebookId        string `vfilter:"optional,field=notebook_id,doc=The notebook to read from (should also include cell id)"`
-	NotebookCellId    string `vfilter:"optional,field=notebook_cell_id,doc=The notebook cell read from (should also include notebook id)"`
-	NotebookCellTable int64  `vfilter:"optional,field=notebook_cell_table,doc=A notebook cell can have multiple tables.)"`
+	NotebookId          string `vfilter:"optional,field=notebook_id,doc=The notebook to read from (should also include cell id)"`
+	NotebookCellId      string `vfilter:"optional,field=notebook_cell_id,doc=The notebook cell read from (should also include notebook id)"`
+	NotebookCellVersion string `vfilter:"optional,field=notebook_cell_version,doc=The notebook cell version to read from (should also include notebook id and notebook cell)"`
+	NotebookCellTable   int64  `vfilter:"optional,field=notebook_cell_table,doc=A notebook cell can have multiple tables.)"`
 
 	StartRow int64 `vfilter:"optional,field=start_row,doc=Start reading the result set from this row"`
 	Limit    int64 `vfilter:"optional,field=count,doc=Maximum number of clients to fetch (default unlimited)'"`
@@ -240,8 +241,9 @@ func getResultSetReader(
 		if table == 0 {
 			table = 1
 		}
-		path_manager := paths.NewNotebookPathManager(
-			arg.NotebookId).Cell(arg.NotebookCellId).QueryStorage(table)
+		path_manager := paths.NewNotebookPathManager(arg.NotebookId).
+			Cell(arg.NotebookCellId, arg.NotebookCellVersion).
+			QueryStorage(table)
 
 		return result_sets.NewResultSetReader(
 			file_store_factory, path_manager.Path())

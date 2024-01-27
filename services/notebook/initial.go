@@ -23,6 +23,9 @@ func (self *NotebookManager) NewNotebookCell(
 		return nil, err
 	}
 
+	// The new cell version
+	new_version := GetNextVersion("")
+
 	new_cell_md := []*api_proto.NotebookCell{}
 	added := false
 	now := utils.GetTime().Now().Unix()
@@ -31,15 +34,17 @@ func (self *NotebookManager) NewNotebookCell(
 
 	for _, cell_md := range notebook.CellMetadata {
 		if cell_md.CellId == in.CellId {
+
 			// New cell goes above existing cell.
 			new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
-				CellId:    notebook.LatestCellId,
-				Timestamp: now,
+				CellId:            notebook.LatestCellId,
+				CurrentVersion:    new_version,
+				AvailableVersions: []string{new_version},
+				Timestamp:         now,
 			})
-			new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
-				CellId:    cell_md.CellId,
-				Timestamp: now,
-			})
+
+			cell_md.Timestamp = now
+			new_cell_md = append(new_cell_md, cell_md)
 			added = true
 			continue
 		}
@@ -49,8 +54,10 @@ func (self *NotebookManager) NewNotebookCell(
 	// Add it to the end of the document.
 	if !added {
 		new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
-			CellId:    notebook.LatestCellId,
-			Timestamp: now,
+			CellId:            notebook.LatestCellId,
+			CurrentVersion:    new_version,
+			AvailableVersions: []string{new_version},
+			Timestamp:         now,
 		})
 	}
 
@@ -68,11 +75,13 @@ func (self *NotebookManager) NewNotebookCell(
 
 	// Create the new cell with fresh content.
 	new_cell_request := &api_proto.NotebookCellRequest{
-		Input:      in.Input,
-		NotebookId: in.NotebookId,
-		CellId:     notebook.LatestCellId,
-		Type:       in.Type,
-		Env:        in.Env,
+		Input:             in.Input,
+		NotebookId:        in.NotebookId,
+		CellId:            notebook.LatestCellId,
+		Version:           new_version,
+		AvailableVersions: []string{new_version},
+		Type:              in.Type,
+		Env:               in.Env,
 
 		// New cells are opened for editing.
 		CurrentlyEditing: true,
@@ -177,40 +186,54 @@ func getInitialCells(
 }
 
 // Create the initial cells of the notebook.
-func CreateInitialNotebook(ctx context.Context,
+func (self *NotebookManager) CreateInitialNotebook(ctx context.Context,
 	config_obj *config_proto.Config,
 	notebook_metadata *api_proto.NotebookMetadata,
 	principal string) error {
 
-	new_cells, err := getInitialCells(ctx, config_obj, notebook_metadata)
+	new_cell_requests, err := getInitialCells(ctx, config_obj, notebook_metadata)
 	if err != nil {
 		return err
 	}
 
-	notebook_manager, err := services.GetNotebookManager(config_obj)
-	if err != nil {
-		return err
-	}
-
-	for _, cell := range new_cells {
+	for _, cell_req := range new_cell_requests {
 		new_cell_id := NewNotebookCellId()
 
-		notebook_metadata.CellMetadata = append(
-			notebook_metadata.CellMetadata, &api_proto.NotebookCell{
-				CellId:    new_cell_id,
-				Env:       cell.Env,
-				Timestamp: utils.GetTime().Now().Unix(),
-			})
-		cell.NotebookId = notebook_metadata.NotebookId
-		cell.CellId = new_cell_id
+		cell_req.NotebookId = notebook_metadata.NotebookId
+		cell_req.CellId = new_cell_id
 
-		_, err := notebook_manager.UpdateNotebookCell(
-			ctx, notebook_metadata, principal, cell)
+		// Create the initial version of the cell
+		cell_req.Version = GetNextVersion("")
+		cell_req.AvailableVersions = append(cell_req.AvailableVersions, cell_req.Version)
+
+		cell_metadata := &api_proto.NotebookCell{
+			CellId:            new_cell_id,
+			Env:               cell_req.Env,
+			Timestamp:         utils.GetTime().Now().Unix(),
+			CurrentVersion:    cell_req.Version,
+			AvailableVersions: cell_req.AvailableVersions,
+		}
+
+		// Add the new cell to the notebook metadata and fire off the
+		// calculation in the background.
+		notebook_metadata.CellMetadata = append(
+			notebook_metadata.CellMetadata, cell_metadata)
+	}
+
+	// Write the notebook to storage and kick off calculation.
+	err = self.Store.SetNotebook(notebook_metadata)
+	if err != nil {
+		return err
+	}
+
+	for _, cell_req := range new_cell_requests {
+		_, err = self.UpdateNotebookCell(
+			ctx, notebook_metadata, principal, cell_req)
 		if err != nil {
 			return err
 		}
 	}
-	return nil
+	return err
 }
 
 func getCellsForEvents(ctx context.Context,

@@ -499,6 +499,13 @@ service API {
         };
     }
 
+   rpc RevertNotebookCell(NotebookCellRequest) returns (NotebookCell) {
+        option (google.api.http) = {
+            post: "/api/v1/RevertNotebookCell",
+            body: "*",
+        };
+    }
+
    rpc CancelNotebookCell(NotebookCellRequest) returns (google.protobuf.Empty) {
         option (google.api.http) = {
             post: "/api/v1/CancelNotebookCell",

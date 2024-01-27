@@ -5,49 +5,55 @@ import (
 	"encoding/base32"
 	"encoding/binary"
 	"fmt"
+	"strings"
 	"time"
-
-	"www.velocidex.com/golang/velociraptor/constants"
 )
 
 var (
-	generator FlowIdGenerator = RandomFlowIdGenerator{}
+	generator IdGenerator = RandomIdGenerator{}
 )
 
-type FlowIdGenerator interface {
+type IdGenerator interface {
 	Next(client_id string) string
 }
 
-type RandomFlowIdGenerator struct{}
+type RandomIdGenerator struct{}
 
-func (self RandomFlowIdGenerator) Next(client_id string) string {
+func (self RandomIdGenerator) Next(client_id string) string {
 	buf := make([]byte, 8)
 	_, _ = rand.Read(buf)
 
 	binary.BigEndian.PutUint32(buf, uint32(time.Now().Unix()))
 	result := base32.HexEncoding.EncodeToString(buf)[:13]
 
-	return constants.FLOW_PREFIX + result
-
+	return result
 }
 
-type ConstantFlowIdGenerator string
+type ConstantIdGenerator string
 
-func (self ConstantFlowIdGenerator) Next(client_id string) string {
+func (self ConstantIdGenerator) Next(client_id string) string {
 	return string(self)
 }
 
-type IncrementalFlowIdGenerator int
+type IncrementalIdGenerator int
 
-func (self *IncrementalFlowIdGenerator) Next(client_id string) string {
+func (self *IncrementalIdGenerator) Next(client_id string) string {
 	*self = *self + 1
-	return fmt.Sprintf("F.%d", *self)
+	return fmt.Sprintf("%02d", *self)
+}
+
+func NextId() string {
+	return generator.Next("")
 }
 
 func NewFlowId(client_id string) string {
-	return generator.Next(client_id)
+	next := generator.Next(client_id)
+	if !strings.HasPrefix(next, "F.") {
+		return "F." + next
+	}
+	return next
 }
 
-func SetFlowIdGenerator(gen FlowIdGenerator) {
+func SetIdGenerator(gen IdGenerator) {
 	generator = gen
 }

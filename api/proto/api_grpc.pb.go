@@ -103,6 +103,7 @@ type APIClient interface {
 	NewNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*NotebookMetadata, error)
 	GetNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*NotebookCell, error)
 	UpdateNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*NotebookCell, error)
+	RevertNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*NotebookCell, error)
 	CancelNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	CreateNotebookDownloadFile(ctx context.Context, in *NotebookExportRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	UploadNotebookAttachment(ctx context.Context, in *NotebookFileUploadRequest, opts ...grpc.CallOption) (*NotebookFileUploadResponse, error)
@@ -650,6 +651,15 @@ func (c *aPIClient) UpdateNotebookCell(ctx context.Context, in *NotebookCellRequ
 	return out, nil
 }
 
+func (c *aPIClient) RevertNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*NotebookCell, error) {
+	out := new(NotebookCell)
+	err := c.cc.Invoke(ctx, "/proto.API/RevertNotebookCell", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *aPIClient) CancelNotebookCell(ctx context.Context, in *NotebookCellRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
 	out := new(empty.Empty)
 	err := c.cc.Invoke(ctx, "/proto.API/CancelNotebookCell", in, out, opts...)
@@ -938,6 +948,7 @@ type APIServer interface {
 	NewNotebookCell(context.Context, *NotebookCellRequest) (*NotebookMetadata, error)
 	GetNotebookCell(context.Context, *NotebookCellRequest) (*NotebookCell, error)
 	UpdateNotebookCell(context.Context, *NotebookCellRequest) (*NotebookCell, error)
+	RevertNotebookCell(context.Context, *NotebookCellRequest) (*NotebookCell, error)
 	CancelNotebookCell(context.Context, *NotebookCellRequest) (*empty.Empty, error)
 	CreateNotebookDownloadFile(context.Context, *NotebookExportRequest) (*empty.Empty, error)
 	UploadNotebookAttachment(context.Context, *NotebookFileUploadRequest) (*NotebookFileUploadResponse, error)
@@ -1139,6 +1150,9 @@ func (UnimplementedAPIServer) GetNotebookCell(context.Context, *NotebookCellRequ
 }
 func (UnimplementedAPIServer) UpdateNotebookCell(context.Context, *NotebookCellRequest) (*NotebookCell, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateNotebookCell not implemented")
+}
+func (UnimplementedAPIServer) RevertNotebookCell(context.Context, *NotebookCellRequest) (*NotebookCell, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RevertNotebookCell not implemented")
 }
 func (UnimplementedAPIServer) CancelNotebookCell(context.Context, *NotebookCellRequest) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CancelNotebookCell not implemented")
@@ -2224,6 +2238,24 @@ func _API_UpdateNotebookCell_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _API_RevertNotebookCell_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NotebookCellRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).RevertNotebookCell(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/RevertNotebookCell",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).RevertNotebookCell(ctx, req.(*NotebookCellRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _API_CancelNotebookCell_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(NotebookCellRequest)
 	if err := dec(in); err != nil {
@@ -2742,6 +2774,10 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateNotebookCell",
 			Handler:    _API_UpdateNotebookCell_Handler,
+		},
+		{
+			MethodName: "RevertNotebookCell",
+			Handler:    _API_RevertNotebookCell_Handler,
 		},
 		{
 			MethodName: "CancelNotebookCell",

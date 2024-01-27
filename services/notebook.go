@@ -36,7 +36,7 @@ type NotebookManager interface {
 	UpdateShareIndex(notebook *api_proto.NotebookMetadata) error
 
 	GetNotebookCell(ctx context.Context,
-		notebook_id, cell_id string) (*api_proto.NotebookCell, error)
+		notebook_id, cell_id, version string) (*api_proto.NotebookCell, error)
 
 	ReformatVQL(ctx context.Context, vql string) (string, error)
 
@@ -46,8 +46,13 @@ type NotebookManager interface {
 		user_name string,
 		in *api_proto.NotebookCellRequest) (*api_proto.NotebookCell, error)
 
+	// Revert the cell to a different version. If the version does not
+	// exist we get an error.
+	RevertNotebookCellVersion(ctx context.Context,
+		notebook_id, cell_id, version string) (*api_proto.NotebookCell, error)
+
 	// Cancel a current operation
-	CancelNotebookCell(ctx context.Context, notebook_id, cell_id string) error
+	CancelNotebookCell(ctx context.Context, notebook_id, cell_id, version string) error
 
 	CheckNotebookAccess(
 		notebook *api_proto.NotebookMetadata, user string) bool

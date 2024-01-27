@@ -69,7 +69,7 @@ func (self *NotebookManager) NewNotebook(
 		return nil, err
 	}
 
-	err = CreateInitialNotebook(ctx, self.config_obj, in, username)
+	err = self.CreateInitialNotebook(ctx, self.config_obj, in, username)
 	if err != nil {
 		return nil, err
 	}
@@ -98,18 +98,20 @@ func (self *NotebookManager) UpdateNotebook(
 }
 
 func (self *NotebookManager) GetNotebookCell(ctx context.Context,
-	notebook_id, cell_id string) (*api_proto.NotebookCell, error) {
+	notebook_id, cell_id, version string) (*api_proto.NotebookCell, error) {
 
-	notebook_cell, err := self.Store.GetNotebookCell(notebook_id, cell_id)
+	notebook_cell, err := self.Store.GetNotebookCell(notebook_id, cell_id, version)
 
 	// Cell does not exist, make it a default cell.
 	if errors.Is(err, os.ErrNotExist) {
 		return &api_proto.NotebookCell{
-			Input:  "",
-			Output: "",
-			Data:   "{}",
-			CellId: cell_id,
-			Type:   "Markdown",
+			Input:             "",
+			Output:            "",
+			Data:              "{}",
+			CellId:            cell_id,
+			CurrentVersion:    version,
+			AvailableVersions: []string{version},
+			Type:              "Markdown",
 		}, nil
 	}
 	if err != nil {
@@ -121,11 +123,11 @@ func (self *NotebookManager) GetNotebookCell(ctx context.Context,
 
 // Cancel a current operation
 func (self *NotebookManager) CancelNotebookCell(
-	ctx context.Context, notebook_id, cell_id string) error {
+	ctx context.Context, notebook_id, cell_id, version string) error {
 
 	// Unset the calculating bit in the notebook in case the
 	// renderer is not actually running (e.g. server restart).
-	notebook_cell, err := self.Store.GetNotebookCell(notebook_id, cell_id)
+	notebook_cell, err := self.Store.GetNotebookCell(notebook_id, cell_id, version)
 	if err != nil || notebook_cell.CellId != cell_id {
 		return errors.New("No such cell")
 	}
@@ -150,8 +152,8 @@ func (self *NotebookManager) CancelNotebookCell(
 		ctx, self.config_obj, cell_id, "CancelNotebookCell")
 }
 
-func (self *NotebookManager) UploadNotebookAttachment(ctx context.Context,
-	in *api_proto.NotebookFileUploadRequest) (
+func (self *NotebookManager) UploadNotebookAttachment(
+	ctx context.Context, in *api_proto.NotebookFileUploadRequest) (
 	*api_proto.NotebookFileUploadResponse, error) {
 	decoded, err := base64.StdEncoding.DecodeString(in.Data)
 	if err != nil {
