@@ -69,22 +69,22 @@ type: INTERNAL
 	assert.NoError(self.T(), err)
 
 	self.master_dispatcher = master_dispatcher.(*hunt_dispatcher.HuntDispatcher)
-	self.master_dispatcher.I_am_master = true
+	self.master_dispatcher.Store.(*hunt_dispatcher.HuntStorageManagerImpl).I_am_master = true
 
 	minion_dispatcher, err := hunt_dispatcher.NewHuntDispatcher(
 		self.Ctx, self.Wg, self.ConfigObj)
 	assert.NoError(self.T(), err)
 	self.minion_dispatcher = minion_dispatcher.(*hunt_dispatcher.HuntDispatcher)
-	self.minion_dispatcher.I_am_master = false
+	self.minion_dispatcher.Store.(*hunt_dispatcher.HuntStorageManagerImpl).I_am_master = false
 
 	// Wait until the hunt dispatchers are fully loaded.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		hunt, pres := self.master_dispatcher.GetHunt("H.4")
+		hunt, pres := self.master_dispatcher.GetHunt(self.Ctx, "H.4")
 		return pres && hunt.HuntId == "H.4"
 	})
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		hunt, pres := self.minion_dispatcher.GetHunt("H.4")
+		hunt, pres := self.minion_dispatcher.GetHunt(self.Ctx, "H.4")
 		return pres && hunt.HuntId == "H.4"
 	})
 }
@@ -126,12 +126,12 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntFlushToDatastore() {
 	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_STOPPED)
 
 	// Should also be visible in master
-	hunt_obj, pres := self.master_dispatcher.GetHunt("H.1")
+	hunt_obj, pres := self.master_dispatcher.GetHunt(self.Ctx, "H.1")
 	assert.True(self.T(), pres)
 	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_STOPPED)
 
 	// But not immediately visible in minion
-	hunt_obj, pres = self.minion_dispatcher.GetHunt("H.1")
+	hunt_obj, pres = self.minion_dispatcher.GetHunt(self.Ctx, "H.1")
 	assert.True(self.T(), pres)
 	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_RUNNING)
 }
@@ -159,13 +159,13 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntPropagateChanges() {
 	assert.Equal(self.T(), modification, services.HuntPropagateChanges)
 
 	// But they should be visible in master
-	hunt_obj, pres := self.master_dispatcher.GetHunt("H.2")
+	hunt_obj, pres := self.master_dispatcher.GetHunt(self.Ctx, "H.2")
 	assert.True(self.T(), pres)
 	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_STOPPED)
 
 	// And eventually also visible in minion
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		hunt_obj, pres = self.minion_dispatcher.GetHunt("H.2")
+		hunt_obj, pres = self.minion_dispatcher.GetHunt(self.Ctx, "H.2")
 		return pres && hunt_obj.State == api_proto.Hunt_STOPPED
 	})
 
@@ -182,7 +182,7 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntPropagateChanges() {
 func (self *HuntDispatcherTestSuite) getAllHunts() []*api_proto.Hunt {
 	// Get the list of all hunts
 	hunts := []*api_proto.Hunt{}
-	err := self.master_dispatcher.ApplyFuncOnHunts(
+	err := self.master_dispatcher.ApplyFuncOnHunts(self.Ctx,
 		func(hunt *api_proto.Hunt) error {
 			hunts = append(hunts, hunt)
 			return nil

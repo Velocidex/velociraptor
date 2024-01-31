@@ -94,8 +94,8 @@ func CheckClientStatus(
 		return err
 	}
 
-	// Can we get away without a lock? If the client is already up
-	// to date we dont need to look further.
+	// If the client is already up to date we dont need to look
+	// further.
 	hunts_last_timestamp := dispatcher.GetLastTimestamp()
 	if stats.LastHuntTimestamp >= hunts_last_timestamp {
 		return nil
@@ -104,7 +104,7 @@ func CheckClientStatus(
 	// Take a snapshot of the hunts that we need to run on this
 	// client to reduce the time under lock.
 	hunts := make([]*api_proto.Hunt, 0)
-	err = dispatcher.ApplyFuncOnHunts(func(hunt *api_proto.Hunt) error {
+	err = dispatcher.ApplyFuncOnHunts(ctx, func(hunt *api_proto.Hunt) error {
 		// Hunt is stopped we dont care about it.
 		if hunt.State != api_proto.Hunt_RUNNING {
 			return nil

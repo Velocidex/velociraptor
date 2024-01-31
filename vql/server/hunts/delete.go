@@ -63,7 +63,7 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 			return
 		}
 
-		hunt_obj, pres := hunt_dispatcher.GetHunt(arg.HuntId)
+		hunt_obj, pres := hunt_dispatcher.GetHunt(ctx, arg.HuntId)
 		if !pres {
 			scope.Log("hunt_delete: not found")
 			return

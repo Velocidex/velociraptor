@@ -102,7 +102,6 @@ class ExportDialog extends Component {
                      ]}}],
             max_upload_bytes: 1000000000000,
         }, this.source.token).then((resp)=>{
-            console.log(resp);
             if(resp.data) {
                 this.setState({flow_id: resp.data.flow_id});
             };
