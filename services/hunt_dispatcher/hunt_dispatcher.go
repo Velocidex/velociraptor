@@ -494,14 +494,10 @@ func (self *HuntDispatcher) CreateHunt(
 		return nil, err
 	}
 
-	// Trigger a refresh of the hunt dispatcher. This guarantees
-	// that fresh data will be read in subsequent ListHunt()
-	// calls.
-	hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
-	if err != nil {
-		return nil, err
-	}
-	return hunt, hunt_dispatcher.Refresh(ctx, config_obj)
+	// Trigger a refresh of the hunt dispatcher. This guarantees that
+	// fresh data will be read in subsequent ListHunt() calls and the
+	// GUI will show the new hunt immediately.
+	return hunt, self.Store.FlushIndex(ctx)
 }
 
 func NewHuntDispatcher(
@@ -526,7 +522,7 @@ func NewHuntDispatcher(
 	go func() {
 		defer wg.Done()
 
-		refresh := int64(600)
+		refresh := int64(60)
 		if config_obj.Defaults != nil &&
 			config_obj.Defaults.HuntDispatcherRefreshSec > 0 {
 			refresh = config_obj.Defaults.HuntDispatcherRefreshSec
@@ -553,21 +549,13 @@ func NewHuntDispatcher(
 
 			case <-time.After(time.Duration(refresh) * time.Second):
 				// Re-read the hunts from the data store.
-				err := service.Refresh(ctx, config_obj)
+				err := service.Store.Refresh(ctx, config_obj)
 				if err != nil {
 					logger.Error("Unable to sync hunts: %v", err)
 				}
 			}
 		}
 	}()
-
-	// Try to refresh the hunts table the first time. If we cant
-	// we will just keep trying anyway later.
-	err = service.Refresh(ctx, config_obj)
-	if err != nil {
-		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-		logger.Error("Unable to Refresh hunt dispatcher: %v", err)
-	}
 
 	return service, journal.WatchQueueWithCB(ctx, config_obj, wg,
 		"Server.Internal.HuntUpdate", "HuntDispatcher",

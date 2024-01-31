@@ -3,6 +3,7 @@ package hunt_dispatcher
 import (
 	"context"
 	"sort"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -25,6 +26,20 @@ func (self *HuntStorageManagerImpl) FlushIndex(
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	// Nothing to do because none of the records are dirty.
+	if !self.dirty {
+		return nil
+	}
+
+	// Debounce the flushing a bit so we dont overload the system for
+	// fast events. Note that flushes occur periodically anyway so if
+	// we skip a flush we will get it later.
+	now := utils.GetTime().Now()
+	if now.Sub(self.last_flush_time) < 5*time.Second {
+		return nil
+	}
+	self.last_flush_time = now
 
 	hunt_ids := make([]string, 0, len(self.hunts))
 	for hunt_id := range self.hunts {
@@ -53,7 +68,7 @@ func (self *HuntStorageManagerImpl) FlushIndex(
 
 	// Sort hunts by hunt id so latest hunt is at the top of the
 	// table.
-	sort.Strings(hunt_ids)
+	sort.Sort(sort.Reverse(sort.StringSlice(hunt_ids)))
 
 	for _, hunt_id := range hunt_ids {
 		hunt_record, pres := self.hunts[hunt_id]
@@ -66,11 +81,15 @@ func (self *HuntStorageManagerImpl) FlushIndex(
 			continue
 		}
 
+		// Clean all the records. By the time this function exits all
+		// records should be clean.
 		if hunt_record.dirty {
+			hunt_record.dirty = false
 			serialized, err := json.Marshal(hunt_record.Hunt)
 			if err == nil {
 				hunt_record.serialized = serialized
 			}
+			self.hunts[hunt_id] = hunt_record
 		}
 
 		rs_writer.Write(ordereddict.NewDict().
@@ -82,6 +101,9 @@ func (self *HuntStorageManagerImpl) FlushIndex(
 			Set("Creator", hunt_record.Creator).
 			Set("Hunt", hunt_record.serialized))
 	}
+
+	self.dirty = false
+
 	return nil
 }
 

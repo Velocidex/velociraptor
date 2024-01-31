@@ -129,6 +129,7 @@ class HuntList extends React.Component {
         // the hunt.
         setSelectedHuntId: PropTypes.func,
         updateHunts: PropTypes.func,
+        collapseToggle: PropTypes.func,
 
         // React router props.
         match: PropTypes.object,
@@ -505,6 +506,14 @@ class HuntList extends React.Component {
                             <FontAwesomeIcon icon="copy" />
                           <span className="sr-only">{T("Copy Hunt")}</span>
                         </Button>
+                        <Button data-tooltip={T("Stats Toggle")}
+                                data-position="left"
+                                className="btn-tooltip"
+                                variant="default"
+                                onClick={this.props.collapseToggle}>
+                          <FontAwesomeIcon icon="expand"/>
+                        </Button>
+
                       { !this.state.filter ?
                         <Button data-tooltip={T("Show only my hunts")}
                                 data-position="right"

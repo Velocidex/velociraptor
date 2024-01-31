@@ -5,6 +5,7 @@ import (
 	"errors"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -27,7 +28,10 @@ type HuntIndexEntry struct {
 	Started     uint64 `json:"Started"`
 	Expires     uint64 `json:"Expires"`
 	Creator     string `json:"Creator"`
-	Hunt        []byte `json:"Hunt"`
+
+	// The hunt object is serialized into JSON here to make it quicker
+	// to write the index if nothing is changed.
+	Hunt []byte `json:"Hunt"`
 }
 
 type HuntStorageManager interface {
@@ -49,6 +53,8 @@ type HuntStorageManager interface {
 
 	Refresh(ctx context.Context,
 		config_obj *config_proto.Config) error
+
+	FlushIndex(ctx context.Context) error
 
 	// Get the latest hunt timestamp
 	GetLastTimestamp() uint64
@@ -72,6 +78,11 @@ type HuntStorageManagerImpl struct {
 	hunts map[string]*HuntRecord
 
 	I_am_master bool
+
+	// If any of the hunt objects are dirty this will be set.
+	dirty bool
+
+	last_flush_time time.Time
 }
 
 func NewHuntStorageManagerImpl(
@@ -113,6 +124,7 @@ func (self *HuntStorageManagerImpl) ModifyHuntObject(
 	default:
 		// Update the hunt object
 		hunt_record.dirty = true
+		self.dirty = true
 
 		// Update the hunt version
 		hunt_record.Version = utils.GetTime().Now().UnixNano()
@@ -172,6 +184,7 @@ func (self *HuntStorageManagerImpl) SetHunt(
 		Hunt:  hunt,
 		dirty: true,
 	}
+	self.dirty = true
 
 	return nil
 }
@@ -275,9 +288,18 @@ func (self *HuntStorageManagerImpl) loadHuntsFromDatastore(
 			continue
 		}
 
+		// Ignore archived hunts.
+		if hunt_obj.State == api_proto.Hunt_ARCHIVED {
+			continue
+		}
+
 		old_hunt_record, pres := self.hunts[hunt_id]
 		if !pres {
-			old_hunt_record = &HuntRecord{Hunt: hunt_obj, dirty: true}
+			old_hunt_record = &HuntRecord{
+				Hunt:  hunt_obj,
+				dirty: true,
+			}
+			self.dirty = true
 
 			// The old hunt record is newer than the one on disk, ignore it.
 		} else if old_hunt_record.Version >= hunt_obj.Version {
@@ -292,7 +314,11 @@ func (self *HuntStorageManagerImpl) loadHuntsFromDatastore(
 		}
 
 		old_hunt_record.Hunt = hunt_obj
+
+		// Hunts read from the old datastore hunt files are marked
+		// dirty so they are forced to be written to the index.
 		old_hunt_record.dirty = true
+		self.dirty = true
 
 		self.hunts[hunt_id] = old_hunt_record
 	}

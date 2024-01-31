@@ -32,6 +32,9 @@ class VeloHunts extends React.Component {
         hunts: [],
 
         filter: "",
+
+        collapsed: false,
+        topPaneSize: "30%",
     }
 
     componentDidMount = () => {
@@ -42,6 +45,14 @@ class VeloHunts extends React.Component {
     componentWillUnmount() {
         this.get_hunts_source.cancel();
         clearInterval(this.interval);
+    }
+
+    collapse = () => {
+        if (!this.state.collapsed) {
+            this.setState({topPaneSize: "100%", collapsed: true});
+        } else {
+            this.setState({topPaneSize: "30%", collapsed: false});
+        }
     }
 
     setSelectedHuntId = (hunt_id) => {
@@ -86,8 +97,12 @@ class VeloHunts extends React.Component {
     render() {
         return (
             <>
-              <SplitPane split="horizontal" defaultSize="30%">
+              <SplitPane
+                size={this.state.topPaneSize}
+                split="horizontal"
+                defaultSize="30%">
                 <HuntList
+                  collapseToggle={this.collapse}
                   updateHunts={this.fetchSelectedHunt}
                   selected_hunt={this.state.full_selected_hunt}
                   setSelectedHuntId={this.setSelectedHuntId} />
