@@ -141,6 +141,10 @@ body.ncurses {
   font-size: var(--font-size-base) !important;
 }
 
+.ncurses .ace_editor, .ace_editor * {
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", "Droid Sans Mono", "Consolas", monospace !important;
+}
+
 /* this is for the context help popup */
 .ncurses .ace_editor {
   font-family: var(--font-family-monospace) !important;
