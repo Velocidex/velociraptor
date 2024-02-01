@@ -2,15 +2,15 @@ package authenticators
 
 import (
 	"context"
-	"net/http"
-	"strings"
-
 	oidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
+	"net/http"
+	"strings"
 	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/vql/networking"
 )
 
 type OidcAuthenticator struct {
@@ -64,8 +64,14 @@ func (self *OidcAuthenticator) CallbackURL() string {
 }
 
 func (self *OidcAuthenticator) AddHandlers(mux *http.ServeMux) error {
+	client := &http.Client{
+		Transport: &http.Transport{
+			Proxy: networking.GetProxy(),
+		},
+	}
+	ctx := oidc.ClientContext(context.Background(), client)
 	provider, err := oidc.NewProvider(
-		context.Background(), self.authenticator.OidcIssuer)
+		ctx, self.authenticator.OidcIssuer)
 	if err != nil {
 		logging.GetLogger(self.config_obj, &logging.GUIComponent).
 			Errorf("can not get information from OIDC provider, "+
@@ -148,7 +154,14 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 
 		oidcOauthConfig := self.getGenOauthConfig(
 			provider.Endpoint(), self.CallbackHandler())
-		oauthToken, err := oidcOauthConfig.Exchange(r.Context(), r.FormValue("code"))
+
+		client := &http.Client{
+			Transport: &http.Transport{
+				Proxy: networking.GetProxy(),
+			},
+		}
+		ctx := oidc.ClientContext(r.Context(), client)
+		oauthToken, err := oidcOauthConfig.Exchange(ctx, r.FormValue("code"))
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("can not get oauthToken from OIDC provider: %v", err)
@@ -157,7 +170,7 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 			return
 		}
 		userInfo, err := provider.UserInfo(
-			r.Context(), oauth2.StaticTokenSource(oauthToken))
+			ctx, oauth2.StaticTokenSource(oauthToken))
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("can not get UserInfo from OIDC provider: %v", err)
