@@ -72,8 +72,15 @@ func (self UploadsPlugins) Call(
 			return
 		}
 
-		for flow_details := range hunt_dispatcher.GetFlows(
-			ctx, config_obj, scope, arg.HuntId, 0) {
+		options := result_sets.ResultSetOptions{}
+		flow_chan, _, err := hunt_dispatcher.GetFlows(
+			ctx, config_obj, options, scope, arg.HuntId, 0)
+		if err != nil {
+			scope.Log("uploads: %v", err)
+			return
+		}
+
+		for flow_details := range flow_chan {
 			client_id := flow_details.Context.ClientId
 			flow_id := flow_details.Context.SessionId
 

@@ -52,7 +52,9 @@ type ResultSetReader interface {
 	// to parse the data from storage.
 	JSON(ctx context.Context) (<-chan []byte, error)
 	Close()
+
 	TotalRows() int64
+	MTime() time.Time
 }
 
 type TimedResultSetReader interface {

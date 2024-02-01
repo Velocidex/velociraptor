@@ -53,7 +53,6 @@ export default class HuntClients extends React.Component {
               renderers={renderers}
               params={params}
               translate_column_headers={true}
-              no_transformations={true}
               no_toolbar={true}
             />
         );

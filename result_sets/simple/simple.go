@@ -36,6 +36,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/Velocidex/json"
 	"github.com/Velocidex/ordereddict"
@@ -237,14 +238,20 @@ func (self ResultSetFactory) NewResultSetWriter(
 // A ResultSetReader can produce rows from a result set.
 type ResultSetReaderImpl struct {
 	total_rows int64
-	fd         api.FileReader
-	idx_fd     api.FileReader
-	log_path   api.FSPathSpec
-	idx        int64
+	mtime      time.Time
+
+	fd       api.FileReader
+	idx_fd   api.FileReader
+	log_path api.FSPathSpec
+	idx      int64
 }
 
 func (self *ResultSetReaderImpl) TotalRows() int64 {
 	return self.total_rows
+}
+
+func (self *ResultSetReaderImpl) MTime() time.Time {
+	return self.mtime
 }
 
 // Seeks the fd to the starting location. If successful then fd is
@@ -477,12 +484,14 @@ func (self ResultSetFactory) NewResultSetReader(
 
 	// -1 indicates we dont know how many rows there are
 	total_rows := int64(-1)
+	var mtime time.Time
 	idx_fd, err := file_store_factory.ReadFile(log_path.
 		SetType(api.PATH_TYPE_FILESTORE_JSON_INDEX))
 	if err == nil {
 		stat, err := idx_fd.Stat()
 		if err == nil {
 			total_rows = stat.Size() / 8
+			mtime = stat.ModTime()
 		}
 	}
 
@@ -495,6 +504,7 @@ func (self ResultSetFactory) NewResultSetReader(
 
 	return &ResultSetReaderImpl{
 		total_rows: total_rows,
+		mtime:      mtime,
 		fd:         fd,
 		idx_fd:     idx_fd,
 		log_path:   log_path,

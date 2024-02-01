@@ -9,8 +9,6 @@ import (
 	errors "github.com/go-errors/errors"
 
 	context "golang.org/x/net/context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -41,31 +39,31 @@ func (self *ApiServer) GetHuntFlows(
 			"User is not allowed to view hunt results.")
 	}
 
+	options, err := tables.GetTableOptions(in)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
 	hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 
-	hunt, pres := hunt_dispatcher.GetHunt(ctx, in.HuntId)
-	if !pres {
-		return nil, status.Error(codes.InvalidArgument, "No hunt known")
-	}
-
-	total_scheduled := int64(-1)
-	if hunt.Stats != nil {
-		total_scheduled = int64(hunt.Stats.TotalClientsScheduled)
+	scope := vql_subsystem.MakeScope()
+	flow_chan, total_rows, err := hunt_dispatcher.GetFlows(
+		ctx, org_config_obj, options, scope, in.HuntId, int(in.StartRow))
+	if err != nil {
+		return nil, Status(self.verbose, err)
 	}
 
 	result := &api_proto.GetTableResponse{
-		TotalRows: total_scheduled,
+		TotalRows: total_rows,
 		Columns: []string{
 			"ClientId", "Hostname", "FlowId", "StartedTime", "State", "Duration",
 			"TotalBytes", "TotalRows",
 		}}
 
-	scope := vql_subsystem.MakeScope()
-	for flow := range hunt_dispatcher.GetFlows(ctx, org_config_obj, scope,
-		in.HuntId, int(in.StartRow)) {
+	for flow := range flow_chan {
 		if flow.Context == nil {
 			continue
 		}
