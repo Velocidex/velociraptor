@@ -186,7 +186,13 @@ func (self *HuntStorageManagerImpl) SetHunt(
 	}
 	self.dirty = true
 
-	return nil
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return err
+	}
+
+	hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
+	return db.SetSubject(self.config_obj, hunt_path_manager.Path(), hunt)
 }
 
 func (self *HuntStorageManagerImpl) ListHunts(

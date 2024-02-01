@@ -379,11 +379,6 @@ func (self *HuntDispatcher) CreateHunt(
 	// Make a local copy so we can modify it safely.
 	hunt, _ = proto.Clone(hunt).(*api_proto.Hunt)
 
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return nil, err
-	}
-
 	if hunt.Stats == nil {
 		hunt.Stats = &api_proto.HuntStats{}
 	}
@@ -488,8 +483,7 @@ func (self *HuntDispatcher) CreateHunt(
 		return nil, err
 	}
 
-	hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
-	err = db.SetSubject(config_obj, hunt_path_manager.Path(), hunt)
+	err = self.Store.SetHunt(ctx, hunt)
 	if err != nil {
 		return nil, err
 	}
