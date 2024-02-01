@@ -330,7 +330,7 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 			return vfilter.Null{}
 		}
 
-		hunt_obj, pres := hunt_dispatcher.GetHunt(arg.HuntId)
+		hunt_obj, pres := hunt_dispatcher.GetHunt(ctx, arg.HuntId)
 		if !pres || hunt_obj == nil ||
 			hunt_obj.StartRequest == nil ||
 			hunt_obj.StartRequest.CompiledCollectorArgs == nil {

@@ -164,6 +164,7 @@ message ListHuntsRequest {
 }
 
 message ListHuntsResponse {
+    int64 total = 2;
     repeated Hunt items = 1;
 }
 

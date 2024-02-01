@@ -403,7 +403,7 @@ func (self ImportCollectionFunction) importHuntObject(
 	} else {
 		// If it has a hunt id, see if it already exists,
 		// create a new one if so.
-		_, pres := hunt_disp.GetHunt(hunt.HuntId)
+		_, pres := hunt_disp.GetHunt(ctx, hunt.HuntId)
 		if pres {
 			hunt.HuntId = hunt_dispatcher.GetNewHuntId()
 		}

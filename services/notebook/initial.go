@@ -354,7 +354,7 @@ func getCellsForHunt(ctx context.Context,
 		return nil
 	}
 
-	hunt_obj, pres := dispatcher.GetHunt(hunt_id)
+	hunt_obj, pres := dispatcher.GetHunt(ctx, hunt_id)
 	if !pres {
 		return nil
 	}

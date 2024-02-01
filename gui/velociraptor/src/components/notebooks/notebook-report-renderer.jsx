@@ -166,6 +166,7 @@ export default class NotebookReportRenderer extends React.Component {
                 return domNode;
             }
         });
+
         result.push(<div key="3" className="report-viewer">{template}</div>);
         return result;
     }

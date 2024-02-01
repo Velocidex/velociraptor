@@ -86,7 +86,7 @@ func (self HuntsPlugin) Call(
 
 		// Show a specific hunt
 		if arg.HuntId != "" {
-			hunt_obj, pres := hunt_dispatcher.GetHunt(arg.HuntId)
+			hunt_obj, pres := hunt_dispatcher.GetHunt(ctx, arg.HuntId)
 			if pres {
 				select {
 				case <-ctx.Done():
@@ -176,7 +176,7 @@ func (self HuntResultsPlugin) Call(
 				return
 			}
 
-			hunt_obj, pres := hunt_dispatcher_service.GetHunt(arg.HuntId)
+			hunt_obj, pres := hunt_dispatcher_service.GetHunt(ctx, arg.HuntId)
 			if !pres {
 				return
 			}

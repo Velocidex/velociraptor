@@ -51,6 +51,10 @@ func (self HuntPathManager) HuntDirectory() api.DSPathSpec {
 	return HUNTS_ROOT
 }
 
+func (self HuntPathManager) HuntIndex() api.FSPathSpec {
+	return HUNTS_ROOT.AddChild("index").AsFilestorePath()
+}
+
 // Get result set for storing participating clients.
 func (self HuntPathManager) Clients() api.FSPathSpec {
 	return HUNTS_ROOT.AddChild(self.hunt_id).AsFilestorePath()

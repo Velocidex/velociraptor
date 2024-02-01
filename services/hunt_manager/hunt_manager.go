@@ -175,7 +175,8 @@ func (self *HuntManager) processMutation(
 		return err
 	}
 
-	dispatcher.ModifyHuntObject(ctx, mutation.HuntId,
+	modification := dispatcher.ModifyHuntObject(
+		ctx, mutation.HuntId,
 		func(hunt_obj *api_proto.Hunt) services.HuntModificationAction {
 			modification := services.HuntUnmodified
 
@@ -258,6 +259,12 @@ func (self *HuntManager) processMutation(
 
 			return modification
 		})
+
+	// Force the dispatcher to write the index.
+	if modification == services.HuntPropagateChanges {
+		return dispatcher.Refresh(ctx, config_obj)
+	}
+
 	return nil
 }
 
@@ -460,7 +467,7 @@ func (self *HuntManager) participateInAllHunts(ctx context.Context,
 		return err
 	}
 
-	return dispatcher.ApplyFuncOnHunts(func(hunt *api_proto.Hunt) error {
+	return dispatcher.ApplyFuncOnHunts(ctx, func(hunt *api_proto.Hunt) error {
 		if !should_participate_cb(hunt) {
 			return nil
 		}
@@ -532,7 +539,7 @@ func (self *HuntManager) ProcessParticipationWithError(
 		return err
 	}
 
-	hunt_obj, pres := dispatcher.GetHunt(participation_row.HuntId)
+	hunt_obj, pres := dispatcher.GetHunt(ctx, participation_row.HuntId)
 	if !pres {
 		return fmt.Errorf("Hunt %v not known", participation_row.HuntId)
 	}

@@ -119,6 +119,13 @@ service API {
         };
     }
 
+    rpc GetHuntTable(GetTableRequest) returns (GetTableResponse) {
+        option (google.api.http) = {
+            get: "/api/v1/GetHuntTable",
+        };
+    }
+
+    // Deprecated
     rpc ListHunts(ListHuntsRequest) returns (ListHuntsResponse) {
         option (google.api.http) = {
             get: "/api/v1/ListHunts",

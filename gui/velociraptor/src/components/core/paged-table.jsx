@@ -317,6 +317,8 @@ class VeloPagedTable extends Component {
 
         // A transform applied on the basic table.
         transform: {},
+
+        last_data: [],
     }
 
     componentDidMount = () => {
@@ -331,22 +333,14 @@ class VeloPagedTable extends Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (!_.isEqual(prevProps.version, this.props.version)) {
-            this.fetchRows();
-        }
-
         if (this.props.transform &&
             !_.isEqual(prevProps.transform, this.props.transform)) {
             this.setState({transform: this.props.transform});
         }
 
-        if (!_.isEqual(prevProps.params, this.props.params)) {
-            this.setState({
-                start_row: 0,
-                transform: {},
-                toggles: {},
-                columns: [],
-            });
+        if (!_.isEqual(prevProps.version, this.props.version)) {
+            this.fetchRows();
+            return;
         }
 
         if (!_.isEqual(prevProps.params, this.props.params) ||
@@ -456,12 +450,20 @@ class VeloPagedTable extends Component {
         this.source.cancel();
         this.source = CancelToken.source();
 
-        this.setState({loading: true});
         api.get(url, params, this.source.token).then((response) => {
             if (response.cancel) {
                 return;
             }
 
+            /*
+            // Ignore updates that return the same data - this
+            // prevents the table from redrawing when no data has
+            // changed.
+            if (_.isEqual(this.state.last_data, response.data)) {
+                return;
+            }
+            this.setState({last_data: response.data});
+            */
             let pageData = PrepareData(response.data);
             let toggles = Object.assign({}, this.state.toggles);
             let columns = pageData.columns;

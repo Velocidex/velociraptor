@@ -724,7 +724,7 @@ func createHuntDownloadFile(
 		return nil, err
 	}
 
-	hunt_details, pres := hunt_dispatcher.GetHunt(hunt_id)
+	hunt_details, pres := hunt_dispatcher.GetHunt(ctx, hunt_id)
 	if !pres {
 		fd.Close()
 		return nil, errors.New("Hunt not found")
