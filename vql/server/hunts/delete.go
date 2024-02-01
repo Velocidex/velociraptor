@@ -6,6 +6,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -75,8 +76,15 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 				Set("hunt_id", arg.HuntId).
 				Set("details", hunt_obj))
 
-		for flow_details := range hunt_dispatcher.GetFlows(
-			ctx, config_obj, scope, arg.HuntId, 0) {
+		options := result_sets.ResultSetOptions{}
+		flow_chan, _, err := hunt_dispatcher.GetFlows(
+			ctx, config_obj, options, scope, arg.HuntId, 0)
+		if err != nil {
+			scope.Log("hunt_delete: %v", err)
+			return
+		}
+
+		for flow_details := range flow_chan {
 
 			results, err := launcher.Storage().DeleteFlow(ctx, config_obj,
 				flow_details.Context.ClientId,

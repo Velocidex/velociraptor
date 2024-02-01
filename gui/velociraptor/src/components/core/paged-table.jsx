@@ -450,20 +450,13 @@ class VeloPagedTable extends Component {
         this.source.cancel();
         this.source = CancelToken.source();
 
+        this.setState({loading: true});
+
         api.get(url, params, this.source.token).then((response) => {
             if (response.cancel) {
                 return;
             }
 
-            /*
-            // Ignore updates that return the same data - this
-            // prevents the table from redrawing when no data has
-            // changed.
-            if (_.isEqual(this.state.last_data, response.data)) {
-                return;
-            }
-            this.setState({last_data: response.data});
-            */
             let pageData = PrepareData(response.data);
             let toggles = Object.assign({}, this.state.toggles);
             let columns = pageData.columns;

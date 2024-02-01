@@ -60,6 +60,12 @@ func (self HuntPathManager) Clients() api.FSPathSpec {
 	return HUNTS_ROOT.AddChild(self.hunt_id).AsFilestorePath()
 }
 
+// A frequently refreshed table that mirrors the Clients() table above
+// but include filterable/searchable fields.
+func (self HuntPathManager) EnrichedClients() api.FSPathSpec {
+	return HUNTS_ROOT.AddChild(self.hunt_id, "enriched").AsFilestorePath()
+}
+
 // Where to store client errors.
 func (self HuntPathManager) ClientErrors() api.FSPathSpec {
 	return HUNTS_ROOT.AddChild(self.hunt_id + "_errors").
