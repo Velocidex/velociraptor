@@ -46,7 +46,6 @@ import (
 	"encoding/base32"
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"path"
 	"strings"
 	"sync"
@@ -60,10 +59,8 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
@@ -182,16 +179,9 @@ func (self *HuntDispatcher) ProcessUpdate(
 
 	// On the master we also write it to storage.
 	if self.I_am_master {
-		hunt_path_manager := paths.NewHuntPathManager(hunt_obj.HuntId)
-		db, err := datastore.GetDB(config_obj)
+		err = self.Store.SetHunt(ctx, hunt_obj)
 		if err != nil {
 			return err
-		}
-
-		err = db.SetSubjectWithCompletion(
-			config_obj, hunt_path_manager.Path(), hunt_obj, nil)
-		if err != nil {
-			return fmt.Errorf("Flushing hunt update %s to disk: %w", hunt_obj.HuntId, err)
 		}
 	}
 
