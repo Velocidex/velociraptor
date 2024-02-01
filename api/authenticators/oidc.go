@@ -2,15 +2,15 @@ package authenticators
 
 import (
 	"context"
+	"net/http"
+	"strings"
+
 	oidc "github.com/coreos/go-oidc/v3/oidc"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
-	"net/http"
-	"strings"
 	utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/vql/networking"
 )
 
 type OidcAuthenticator struct {
@@ -64,14 +64,11 @@ func (self *OidcAuthenticator) CallbackURL() string {
 }
 
 func (self *OidcAuthenticator) AddHandlers(mux *http.ServeMux) error {
-	client := &http.Client{
-		Transport: &http.Transport{
-			Proxy: networking.GetProxy(),
-		},
+	ctx, err := ClientContext(context.Background(), self.config_obj)
+	if err != nil {
+		return err
 	}
-	ctx := oidc.ClientContext(context.Background(), client)
-	provider, err := oidc.NewProvider(
-		ctx, self.authenticator.OidcIssuer)
+	provider, err := oidc.NewProvider(ctx, self.authenticator.OidcIssuer)
 	if err != nil {
 		logging.GetLogger(self.config_obj, &logging.GUIComponent).
 			Errorf("can not get information from OIDC provider, "+
@@ -155,12 +152,14 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 		oidcOauthConfig := self.getGenOauthConfig(
 			provider.Endpoint(), self.CallbackHandler())
 
-		client := &http.Client{
-			Transport: &http.Transport{
-				Proxy: networking.GetProxy(),
-			},
+		ctx, err := ClientContext(r.Context(), self.config_obj)
+		if err != nil {
+			logging.GetLogger(self.config_obj, &logging.GUIComponent).
+				Error("invalid client context of OIDC")
+			http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.StatusTemporaryRedirect)
+			return
 		}
-		ctx := oidc.ClientContext(r.Context(), client)
 		oauthToken, err := oidcOauthConfig.Exchange(ctx, r.FormValue("code"))
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
