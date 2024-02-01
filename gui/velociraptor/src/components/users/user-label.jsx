@@ -377,7 +377,7 @@ export default class UserLabel extends React.Component {
         let ace_options = JSON.parse(this.context.traits.ui_settings || "{}");
         if (options.theme === "no-theme") {
             ace_options.theme = "ace/theme/xcode";
-            ace_options.fontFamily = "monospace";
+            ace_options.fontFamily = "Iosevka Term";
         } else if (options.theme === "veloci-dark") {
             ace_options.theme = "ace/theme/vibrant_ink";
             ace_options.fontFamily = "Iosevka Term";
