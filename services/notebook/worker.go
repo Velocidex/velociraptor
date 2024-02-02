@@ -410,7 +410,9 @@ func (self *NotebookWorker) RegisterWorker(
 
 		case job, ok := <-job_chan:
 			if !ok {
-				job.Done("", errors.New("Cancellation"))
+				if job.Done != nil {
+					job.Done("", errors.New("Cancellation"))
+				}
 				return nil
 			}
 

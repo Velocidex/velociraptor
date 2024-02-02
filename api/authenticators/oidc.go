@@ -64,8 +64,11 @@ func (self *OidcAuthenticator) CallbackURL() string {
 }
 
 func (self *OidcAuthenticator) AddHandlers(mux *http.ServeMux) error {
-	provider, err := oidc.NewProvider(
-		context.Background(), self.authenticator.OidcIssuer)
+	ctx, err := ClientContext(context.Background(), self.config_obj)
+	if err != nil {
+		return err
+	}
+	provider, err := oidc.NewProvider(ctx, self.authenticator.OidcIssuer)
 	if err != nil {
 		logging.GetLogger(self.config_obj, &logging.GUIComponent).
 			Errorf("can not get information from OIDC provider, "+
@@ -148,7 +151,16 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 
 		oidcOauthConfig := self.getGenOauthConfig(
 			provider.Endpoint(), self.CallbackHandler())
-		oauthToken, err := oidcOauthConfig.Exchange(r.Context(), r.FormValue("code"))
+
+		ctx, err := ClientContext(r.Context(), self.config_obj)
+		if err != nil {
+			logging.GetLogger(self.config_obj, &logging.GUIComponent).
+				Error("invalid client context of OIDC")
+			http.Redirect(w, r, utils.Homepage(self.config_obj),
+				http.StatusTemporaryRedirect)
+			return
+		}
+		oauthToken, err := oidcOauthConfig.Exchange(ctx, r.FormValue("code"))
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("can not get oauthToken from OIDC provider: %v", err)
@@ -157,7 +169,7 @@ func (self *OidcAuthenticator) oauthOidcCallback(
 			return
 		}
 		userInfo, err := provider.UserInfo(
-			r.Context(), oauth2.StaticTokenSource(oauthToken))
+			ctx, oauth2.StaticTokenSource(oauthToken))
 		if err != nil {
 			logging.GetLogger(self.config_obj, &logging.GUIComponent).
 				Error("can not get UserInfo from OIDC provider: %v", err)
