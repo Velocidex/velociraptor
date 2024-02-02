@@ -1,0 +1,39 @@
+name: Windows.Persistence.DSRMBackdoor
+author: Chris Jones - CPIRT | FabFaeb | Antonio Blescia (TheThMando) | bmcder02
+description: |
+    The password used to enter Directory Services Restore Mode (DSRM) is the 
+    password set to the local administrator of a Domain Controller during 
+    DCPROMO. If the DsrmAdminLogonBehavior property of the 
+    HKLM:\System\CurrentControlSet\Control\Lsa key is set to 2, this password 
+    can be used to access the Domain Controller with the local administrator account.
+reference:
+    - https://github.com/last-byte/PersistenceSniper/blob/main/PersistenceSniper/PersistenceSniper.psm1
+    - https://adsecurity.org/?p=1785
+type: CLIENT
+
+parameters:
+  - name: GlobPath
+    default: "HKEY_LOCAL_MACHINE\\SYSTEM\\*ControlSet*\\Control\\Lsa\\*"
+    description: The path to check. 
+  - name: Value
+    default: 2
+    type: int
+    description: The value to search for. 
+  - name: GlobName
+    default: "DsrmAdminLogonBehavior"
+    description: The name to check. 
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    query: |
+      SELECT
+        Mtime as LastModified,
+        OSPath as KeyPath,
+        Name as KeyName,
+        Data.type as KeyType,
+        Data.value as KeyValue    
+      FROM glob(globs=GlobPath, accessor="registry")
+      WHERE KeyName =~ GlobName
+        AND KeyValue = Value

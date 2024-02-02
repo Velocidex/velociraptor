@@ -1,0 +1,44 @@
+name: Custom.Windows.Persistence.GhostTask
+author: Chris Jones - CPIRT | FabFaeb | Antonio Blescia (TheThMando) | bmcder02
+description: |
+    Malicious scheduled tasks can be created manually by properly modifying some 
+    registry keys. Tasks created in this way and without the SD property do not 
+    show up in the Task Scheduler utility or in the Event Log. 
+reference:
+    - https://github.com/netero1010/GhostTask
+    - https://github.com/last-byte/PersistenceSniper/blob/main/PersistenceSniper/PersistenceSniper.psm1
+type: CLIENT
+
+sources:
+  - precondition:
+      SELECT OS From info() where OS = 'windows'
+
+    query: |
+        LET Root = pathspec(
+            parse="HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Schedule\\TaskCache",
+            path_type="registry")
+        
+        -- Go up two levels and append the Id to find the tasks key
+        LET Tree = SELECT Key.OSPath AS TreePath,
+                          Id,
+                          Key.OSPath.Dirname.Dirname + ("Tasks", Id) AS TaskKey
+        FROM read_reg_key(root=Root + "Tree", globs="*")
+        WHERE not SD
+        
+        -- Read each tasks key and show all the values
+        SELECT * FROM foreach(
+          row=Tree,
+          query={
+            SELECT TreePath,
+                   Id,
+                   Path,
+                   format(format="%02x", args=str(str=Hash)) AS Hash,
+                   Schema,
+                   Version,
+                   Description,
+                   URI,
+                   Triggers,
+                   Actions,
+                   DynamicInfo
+            FROM read_reg_key(root=TaskKey, globs="*")
+          })
