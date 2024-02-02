@@ -317,6 +317,8 @@ class VeloPagedTable extends Component {
 
         // A transform applied on the basic table.
         transform: {},
+
+        last_data: [],
     }
 
     componentDidMount = () => {
@@ -331,22 +333,14 @@ class VeloPagedTable extends Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        if (!_.isEqual(prevProps.version, this.props.version)) {
-            this.fetchRows();
-        }
-
         if (this.props.transform &&
             !_.isEqual(prevProps.transform, this.props.transform)) {
             this.setState({transform: this.props.transform});
         }
 
-        if (!_.isEqual(prevProps.params, this.props.params)) {
-            this.setState({
-                start_row: 0,
-                transform: {},
-                toggles: {},
-                columns: [],
-            });
+        if (!_.isEqual(prevProps.version, this.props.version)) {
+            this.fetchRows();
+            return;
         }
 
         if (!_.isEqual(prevProps.params, this.props.params) ||
@@ -457,6 +451,7 @@ class VeloPagedTable extends Component {
         this.source = CancelToken.source();
 
         this.setState({loading: true});
+
         api.get(url, params, this.source.token).then((response) => {
             if (response.cancel) {
                 return;

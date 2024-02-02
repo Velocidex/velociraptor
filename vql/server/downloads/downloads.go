@@ -724,7 +724,7 @@ func createHuntDownloadFile(
 		return nil, err
 	}
 
-	hunt_details, pres := hunt_dispatcher.GetHunt(hunt_id)
+	hunt_details, pres := hunt_dispatcher.GetHunt(ctx, hunt_id)
 	if !pres {
 		fd.Close()
 		return nil, errors.New("Hunt not found")
@@ -789,8 +789,14 @@ func createHuntDownloadFile(
 			return
 		}
 
-		for flow_details := range hunt_dispatcher.GetFlows(sub_ctx,
-			config_obj, scope, hunt_id, 0) {
+		options := result_sets.ResultSetOptions{}
+		flow_chan, _, err := hunt_dispatcher.GetFlows(sub_ctx,
+			config_obj, options, scope, hunt_id, 0)
+		if err != nil {
+			return
+		}
+
+		for flow_details := range flow_chan {
 
 			if flow_details == nil || flow_details.Context == nil {
 				continue
@@ -857,8 +863,14 @@ func generateCombinedResults(
 		defer maybeClose(json_writer)
 		defer maybeClose(csv_writer)
 
-		for flow_details := range hunt_dispatcher.GetFlows(ctx,
-			config_obj, scope, hunt_details.HuntId, 0) {
+		options := result_sets.ResultSetOptions{}
+		flow_chan, _, err := hunt_dispatcher.GetFlows(ctx,
+			config_obj, options, scope, hunt_details.HuntId, 0)
+		if err != nil {
+			return err
+		}
+
+		for flow_details := range flow_chan {
 
 			if flow_details == nil || flow_details.Context == nil {
 				continue

@@ -51,9 +51,19 @@ func (self HuntPathManager) HuntDirectory() api.DSPathSpec {
 	return HUNTS_ROOT
 }
 
+func (self HuntPathManager) HuntIndex() api.FSPathSpec {
+	return HUNTS_ROOT.AddChild("index").AsFilestorePath()
+}
+
 // Get result set for storing participating clients.
 func (self HuntPathManager) Clients() api.FSPathSpec {
 	return HUNTS_ROOT.AddChild(self.hunt_id).AsFilestorePath()
+}
+
+// A frequently refreshed table that mirrors the Clients() table above
+// but include filterable/searchable fields.
+func (self HuntPathManager) EnrichedClients() api.FSPathSpec {
+	return HUNTS_ROOT.AddChild(self.hunt_id, "enriched").AsFilestorePath()
 }
 
 // Where to store client errors.

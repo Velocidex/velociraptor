@@ -994,6 +994,11 @@ message ServerServicesConfig {
 
 message Defaults {
     int64 hunt_expiry_hours = 1;
+
+    // How often to refresh the hunt index (default 600 sec)
+    int64 hunt_dispatcher_refresh_sec = 43;
+
+
     int64 notebook_cell_timeout_min = 2;
 
     // When calculating a new cell we do not start calculation until

@@ -719,12 +719,12 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 
 	// This will schedule a hunt on this client.
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		h, _ := dispatcher.GetHunt(hunt_obj.HuntId)
+		h, _ := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
 		return h.Stats.TotalClientsScheduled == 1
 	})
 
 	// However client has not completed yet.
-	h, _ := dispatcher.GetHunt(hunt_obj.HuntId)
+	h, _ := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
 	assert.Equal(self.T(), h.Stats.TotalClientsWithResults, uint64(0))
 
 	// For client to have completed we send a
@@ -749,7 +749,7 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 		}, "System.Flow.Completion", self.client_id, ""))
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		h, _ := dispatcher.GetHunt(hunt_obj.HuntId)
+		h, _ := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
 		return h.Stats.TotalClientsWithResults == 1
 	})
 
@@ -765,11 +765,11 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 		}, "Server.Internal.HuntModification", "", ""))
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		h, _ := dispatcher.GetHunt(hunt_obj.HuntId)
+		h, _ := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
 		return h.State == api_proto.Hunt_STOPPED
 	})
 
-	h, _ = dispatcher.GetHunt(hunt_obj.HuntId)
+	h, _ = dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
 	assert.Equal(self.T(), h.State, api_proto.Hunt_STOPPED)
 	assert.True(self.T(), h.Stats.Stopped)
 }
@@ -808,7 +808,7 @@ func (self *HuntTestSuite) TestHuntManagerErrors() {
 
 	// This will schedule a hunt on this client.
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		h, _ := dispatcher.GetHunt(hunt_obj.HuntId)
+		h, _ := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
 		return h.Stats.TotalClientsScheduled == 1
 	})
 
@@ -831,7 +831,7 @@ func (self *HuntTestSuite) TestHuntManagerErrors() {
 	// Both TotalClientsWithResults and TotalClientsWithErrors should
 	// increase.
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
-		h, _ := dispatcher.GetHunt(hunt_obj.HuntId)
+		h, _ := dispatcher.GetHunt(self.Ctx, hunt_obj.HuntId)
 		return h.Stats.TotalClientsWithResults == 1 &&
 			h.Stats.TotalClientsWithErrors == 1
 	})

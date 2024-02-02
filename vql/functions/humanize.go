@@ -19,7 +19,7 @@ package functions
 
 import (
 	"context"
-	"fmt"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	humanize "github.com/dustin/go-humanize"
@@ -29,7 +29,10 @@ import (
 )
 
 type HumanizeArgs struct {
-	Bytes int64 `vfilter:"optional,field=bytes,doc=Format bytes with units"`
+	Bytes  int64     `vfilter:"optional,field=bytes,doc=Format bytes with units (e.g. MB)"`
+	IBytes int64     `vfilter:"optional,field=ibytes,doc=Format bytes with units (e.g. MiB)"`
+	Time   time.Time `vfilter:"optional,field=time,doc=Format time (e.g. 2 hours ago)"`
+	Comma  int64     `vfilter:"optional,field=comma,doc=Format integer with comma (e.g. 1,230)"`
 }
 
 type HumanizeFunction struct{}
@@ -44,11 +47,19 @@ func (self *HumanizeFunction) Call(ctx context.Context,
 		return false
 	}
 
-	if arg.Bytes > 0 {
+	if !arg.Time.IsZero() {
+		return humanize.Time(arg.Time)
+	}
+
+	if arg.Comma != 0 {
+		return humanize.Comma(arg.Comma)
+	}
+
+	if arg.Bytes != 0 {
 		return humanize.Bytes(uint64(arg.Bytes))
 	}
 
-	return fmt.Sprintf("%v", arg.Bytes)
+	return humanize.IBytes(uint64(arg.Bytes))
 }
 
 func (self HumanizeFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

@@ -18,14 +18,15 @@ import (
 //  - type: mount
 //    from:
 //      accessor: file
-//      prefix: /shared/deaddisk/c/
+//      prefix: /mnt/data
 //    on:
 //      accessor: file
 //      prefix: C:\
 //
-// This reads like "mount directory from file:/mnt/data on file:/
+// This reads like "mount directory from file:/mnt/data on file:/C:
 // Means when VQL opens a path using accessor "file" in all paths
-// below "/", the "file" accessor will be used on "/mnt/data" instead.
+// below "C:/", the "file" accessor will be used on "/mnt/data"
+// instead.
 func InstallMountPoints(
 	config_obj *config_proto.Config,
 	pristine_scope vfilter.Scope,

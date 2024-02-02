@@ -9,11 +9,10 @@ import (
 	errors "github.com/go-errors/errors"
 
 	context "golang.org/x/net/context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/api/tables"
 	"www.velocidex.com/golang/velociraptor/json"
 	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -40,31 +39,31 @@ func (self *ApiServer) GetHuntFlows(
 			"User is not allowed to view hunt results.")
 	}
 
+	options, err := tables.GetTableOptions(in)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
 	hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
 
-	hunt, pres := hunt_dispatcher.GetHunt(in.HuntId)
-	if !pres {
-		return nil, status.Error(codes.InvalidArgument, "No hunt known")
-	}
-
-	total_scheduled := int64(-1)
-	if hunt.Stats != nil {
-		total_scheduled = int64(hunt.Stats.TotalClientsScheduled)
+	scope := vql_subsystem.MakeScope()
+	flow_chan, total_rows, err := hunt_dispatcher.GetFlows(
+		ctx, org_config_obj, options, scope, in.HuntId, int(in.StartRow))
+	if err != nil {
+		return nil, Status(self.verbose, err)
 	}
 
 	result := &api_proto.GetTableResponse{
-		TotalRows: total_scheduled,
+		TotalRows: total_rows,
 		Columns: []string{
 			"ClientId", "Hostname", "FlowId", "StartedTime", "State", "Duration",
 			"TotalBytes", "TotalRows",
 		}}
 
-	scope := vql_subsystem.MakeScope()
-	for flow := range hunt_dispatcher.GetFlows(ctx, org_config_obj, scope,
-		in.HuntId, int(in.StartRow)) {
+	for flow := range flow_chan {
 		if flow.Context == nil {
 			continue
 		}
@@ -79,6 +78,73 @@ func (self *ApiServer) GetHuntFlows(
 				vjson.DefaultEncOpts()),
 			json.AnyToString(flow.Context.TotalUploadedBytes, vjson.DefaultEncOpts()),
 			json.AnyToString(flow.Context.TotalCollectedRows, vjson.DefaultEncOpts())}
+
+		result.Rows = append(result.Rows, &api_proto.Row{Cell: row_data})
+
+		if uint64(len(result.Rows)) > in.Rows {
+			break
+		}
+	}
+	return result, nil
+}
+
+func (self *ApiServer) GetHuntTable(
+	ctx context.Context,
+	in *api_proto.GetTableRequest) (*api_proto.GetTableResponse, error) {
+
+	users := services.GetUserManager()
+	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+	principal := user_record.Name
+
+	permissions := acls.READ_RESULTS
+	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
+	if !perm || err != nil {
+		return nil, PermissionDenied(err,
+			"User is not allowed to view hunt results.")
+	}
+
+	hunt_dispatcher, err := services.GetHuntDispatcher(org_config_obj)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	options, err := tables.GetTableOptions(in)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	hunts, total, err := hunt_dispatcher.GetHunts(ctx, org_config_obj, options,
+		int64(in.StartRow), int64(in.Rows))
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	result := &api_proto.GetTableResponse{
+		TotalRows: total,
+		Columns: []string{
+			"State", "HuntId", "Description", "Created",
+			"Started", "Expires", "Scheduled", "Creator",
+		}}
+
+	for _, hunt := range hunts {
+		var total_clients_scheduled uint64
+		if hunt.Stats != nil {
+			total_clients_scheduled = hunt.Stats.TotalClientsScheduled
+		}
+
+		row_data := []string{
+			fmt.Sprintf("%v", hunt.State),
+			hunt.HuntId,
+			hunt.HuntDescription,
+			json.AnyToString(hunt.CreateTime, vjson.DefaultEncOpts()),
+			json.AnyToString(hunt.StartTime, vjson.DefaultEncOpts()),
+			json.AnyToString(hunt.Expires, vjson.DefaultEncOpts()),
+			fmt.Sprintf("%v", total_clients_scheduled),
+			hunt.Creator,
+		}
 
 		result.Rows = append(result.Rows, &api_proto.Row{Cell: row_data})
 
@@ -339,7 +405,7 @@ func (self *ApiServer) GetHunt(
 		return nil, Status(self.verbose, err)
 	}
 
-	result, pres := hunt_dispatcher.GetHunt(in.HuntId)
+	result, pres := hunt_dispatcher.GetHunt(ctx, in.HuntId)
 	if !pres {
 		return nil, InvalidStatus("Hunt not found")
 	}

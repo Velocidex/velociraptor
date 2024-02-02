@@ -64,6 +64,28 @@ OptFilenameTemplate: "Collection-%FQDN%-%TIMESTAMP%"
 
 # Can be jsonl or csv
 OptFormat: jsonl
+
+# Where we actually write the collection to. You can specify this as a
+# mapped drive to write over the network.
+OptOutputDirectory: ""
+
+# A number between 0 to 100 representing the target maximum CPU
+# utilization during running of this artifact.
+OptCpuLimit: 0
+
+# If specified the collector is terminated if it made no progress in
+# this long. Note: Execution time may be a lot longer since each time
+# any result is produced this counter is reset.
+OptProgressTimeout: 1800
+
+# If specified the collection must complete in the given time.
+OptTimeout: 0
+
+# If specified the collection will be packed with the specified
+# version of the binary. NOTE: This is rarely what you want because
+# the packed builtin artifacts are only compatible with the current
+# release version.
+OptVersion: ""
 `
 
 func doCollector() error {
@@ -185,7 +207,12 @@ SELECT * FROM Artifact.Server.Utils.CreateCollector(
    opt_tempdir=Spec.OptTempdir,
    opt_level=Spec.OptLevel,
    opt_filename_template=Spec.OptFilenameTemplate,
-   opt_format=Spec.OptFormat
+   opt_format=Spec.OptFormat,
+   opt_output_directory=Spec.OptOutputDirectory,
+   opt_cpu_limit=Spec.OptCpuLimit,
+   opt_progress_timeout=Spec.OptProgressTimeout,
+   opt_timeout=Spec.OptTimeout,
+   opt_version=Spec.OptVersion
    )
 `
 	return runQueryWithEnv(query, builder, "json")

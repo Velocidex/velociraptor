@@ -97,7 +97,14 @@ export default class FormatTableDialog extends Component {
     }
 
     updateCell = () => {
-        if (this.state.selection) {
+        let selection = this.state.selection || [];
+
+        if(this.state.new_selection_column) {
+            selection.push({column: this.state.new_selection_column,
+                            type: this.state.new_selection_type});
+        }
+
+        if (selection) {
             // Build the VQL for ColumnTypes
             let vql = "LET ColumnTypes<=dict("+
                 _.map(this.state.selection,

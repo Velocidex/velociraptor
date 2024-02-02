@@ -447,7 +447,7 @@ func HasWintrustDll() error {
 //sys CryptCATAdminEnumCatalogFromHash(handle syscall.Handle, pbHash *byte, pcbHash uint32, dwFlags uint32, phPrevCatInfo *syscall.Handle) (HCATINFO syscall.Handle) = wintrust.CryptCATAdminEnumCatalogFromHash
 //sys CryptCATCatalogInfoFromContext(handle syscall.Handle, psCatInfo *CATALOG_INFO, dwFlags uint32) (err error) = wintrust.CryptCATCatalogInfoFromContext
 //sys CryptCATAdminReleaseCatalogContext(handle syscall.Handle, handle2 syscall.Handle, dwFlags uint32) (err error) = wintrust.CryptCATAdminReleaseCatalogContext
-//sys WinVerifyTrust(handle syscall.Handle, action *GUID, data *WINTRUST_DATA) (ret uint32, err error) [failretval!=0] = wintrust.WinVerifyTrust
+//sys WinVerifyTrust[dataT WINTRUST_DATA](handle syscall.Handle, action *GUID, data *dataT) (ret uint32, err error) [failretval!=0] = wintrust.WinVerifyTrust
 //sys WTHelperProvDataFromStateData(handle syscall.Handle) (provider *CRYPT_PROVIDER_DATA, err error) [failretval==nil] = wintrust.WTHelperProvDataFromStateData
 //sys WTHelperGetProvSignerFromChain(pProvData *CRYPT_PROVIDER_DATA, idxSigner uint32, fCounterSigner bool, idxCounterSigner uint32) (signer *CRYPT_PROVIDER_SGNR, err error) [failretval==nil] = wintrust.WTHelperGetProvSignerFromChain
 

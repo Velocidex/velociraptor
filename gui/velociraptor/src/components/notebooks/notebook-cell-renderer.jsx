@@ -20,7 +20,6 @@ import filterFactory from 'react-bootstrap-table2-filter';
 import CreateArtifactFromCell from './create-artifact-from-cell.jsx';
 import AddCellFromFlowDialog from './add-cell-from-flow.jsx';
 import Completer from '../artifacts/syntax.jsx';
-import { getHuntColumns } from '../hunts/hunt-list.jsx';
 import VeloTimestamp from "../utils/time.jsx";
 import { AddTimelineDialog, AddVQLCellToTimeline } from "./timelines.jsx";
 import T from '../i8n/i8n.jsx';
@@ -108,7 +107,6 @@ class AddCellFromHunt extends React.PureComponent {
                     headerClasses="alert alert-secondary"
                     bodyClasses="fixed-table-body"
                     data={this.state.hunts}
-                    columns={getHuntColumns()}
                     filter={ filterFactory() }
                     selectRow={ selectRow }
                   />
@@ -209,15 +207,16 @@ export default class NotebookCellRenderer extends React.Component {
         let props_cell_id = this.props.cell_metadata &&
             this.props.cell_metadata.cell_id;
 
-        if (props_cell_timestamp !== this.state.cell_timestamp ||
+        if (prevProps.notebook_id !== this.props.notebook_id ||
+            props_cell_timestamp !== this.state.cell_timestamp ||
             props_cell_id !== current_cell_id) {
 
             // Prevent further updates to this cell by setting the
             // cell id and timestamp.
             this.setState({cell_timestamp: props_cell_timestamp,
                            cell_id: props_cell_id,
-                           cell: this.props.cell_metadata,
-                           input: this.props.cell_metadata.input});
+                           });
+            this.fetchCellContents();
         }
     };
 
@@ -247,8 +246,7 @@ export default class NotebookCellRenderer extends React.Component {
         this.source.cancel();
         this.source = CancelToken.source();
 
-        let cell_version = (this.state.cell && this.state.cell.current_version) ||
-            (this.props.cell_metadata && this.props.cell_metadata.current_version);
+        let cell_version = (this.props.cell_metadata && this.props.cell_metadata.current_version);
 
         api.get("v1/GetNotebookCell", {
             notebook_id: this.props.notebook_id,
@@ -532,7 +530,7 @@ export default class NotebookCellRenderer extends React.Component {
         let available_versions = this.state.cell.available_versions || [];
         let current_version = this.state.cell.current_version;
 
-        return available_versions.length > 0 && current_version !== available_versions[0]
+        return available_versions.length > 0 && current_version !== available_versions[0];
     }
 
     redo_available = ()=>{
@@ -708,7 +706,6 @@ export default class NotebookCellRenderer extends React.Component {
                       variant="default">
                 <FontAwesomeIcon icon="rotate-right"/>
               </Button>
-
 
               <Button data-tooltip={T("Copy Cell")}
                       data-position="right"
