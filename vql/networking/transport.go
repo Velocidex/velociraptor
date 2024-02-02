@@ -7,9 +7,14 @@ import (
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/config/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
 func GetHttpTransport(config_obj *proto.ClientConfig, extra_roots string) (*http.Transport, error) {
+	if config_obj == nil {
+		config_obj = &config_proto.ClientConfig{}
+	}
+
 	timeout := config_obj.ConnectionTimeout
 	if timeout == 0 {
 		timeout = 300 // 5 Min default
