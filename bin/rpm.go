@@ -20,7 +20,7 @@ var (
 		"rpm", "Create an rpm package")
 
 	rpm_command_release = rpm_command.Flag(
-		"relasdfease", "Rpm package release version").Default("A").String()
+		"release", "Rpm package release version").Default("A").String()
 
 	client_rpm_command = rpm_command.Command(
 		"client", "Create a client package from a server config file.")
