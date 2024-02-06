@@ -19,6 +19,9 @@ var (
 	rpm_command = app.Command(
 		"rpm", "Create an rpm package")
 
+	rpm_command_release = rpm_command.Flag(
+		"release", "Rpm package release version").Default("A").String()
+
 	client_rpm_command = rpm_command.Command(
 		"client", "Create a client package from a server config file.")
 
@@ -275,7 +278,7 @@ func doClientRPM() error {
 	r, err := rpmpack.NewRPM(rpmpack.RPMMetaData{
 		Name:    "velociraptor-client",
 		Version: version,
-		Release: "A",
+		Release: *rpm_command_release,
 		Arch:    arch,
 	})
 	if err != nil {
@@ -431,7 +434,7 @@ func doSingleServerRPM(
 	r, err := rpmpack.NewRPM(rpmpack.RPMMetaData{
 		Name:    "velociraptor-server",
 		Version: version,
-		Release: "A",
+		Release: *rpm_command_release,
 		Arch:    arch,
 	})
 	if err != nil {
@@ -552,7 +555,7 @@ func doClientSysVRPM() error {
 	r, err := rpmpack.NewRPM(rpmpack.RPMMetaData{
 		Name:    "velociraptor-client",
 		Version: version,
-		Release: "A",
+		Release: *rpm_command_release,
 		Arch:    arch,
 	})
 	if err != nil {
