@@ -2,7 +2,6 @@ package darwin
 
 import (
 	"context"
-	"log"
 	"os"
 	"testing"
 	"time"
@@ -10,68 +9,97 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/ivaxer/go-xattr"
 	"github.com/stretchr/testify/suite"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	_ "www.velocidex.com/golang/velociraptor/accessors/file"
+	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
 type XattrTestSuite struct {
-	suite.Suite
+	test_utils.TestSuite
 }
 
 func (self *XattrTestSuite) TestXAttr() {
 	filepath := "/tmp/xattr.test"
-	attr := "vr.test"
+	attr1 := "vr.test"
+	attr2 := "vr.test"
 
 	_, err := os.Create(filepath)
 	if err != nil {
 		self.T().Errorf("xattr: failed to create test file: %s", err)
 		return
 	}
+	defer os.Remove(filepath)
 
-	xattr.Set(filepath, attr, []byte("test-value"))
+	xattr.Set(filepath, attr1, []byte("test-value"))
+	xattr.Set(filepath, attr2, []byte("test-value"))
 
 	ctx := context.Background()
 	sub_ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
 	defer cancel()
 
-	scope := vql_subsystem.MakeScope()
-	scope.SetLogger(log.New(os.Stderr, "", 0))
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: acl_managers.NullACLManager{},
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
+		Env:        ordereddict.NewDict(),
+	}
+
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
 
 	testcases := []struct {
 		name string
-		attr string
+		attr []string
 		pass bool
 	}{
 		{
 			name: filepath,
-			attr: attr,
+			attr: []string{},
+			pass: false,
+		},
+		{
+			name: filepath,
+			attr: []string{attr1},
 			pass: true,
 		},
 		{
 			name: filepath,
-			attr: "vr.wrong",
+			attr: []string{attr1, attr2},
+			pass: true,
+		},
+		{
+			name: filepath,
+			attr: []string{attr1, "invalid.test"},
+			pass: true,
+		},
+		{
+			name: filepath,
+			attr: []string{"invalud.test"},
 			pass: false,
 		},
 	}
 
-	for _, test := range testcases {
+	for i, test := range testcases {
 		defer scope.Close()
-		output_chan := XAttrPlugin{}.Call(sub_ctx, scope, ordereddict.NewDict().Set("filename", test.name).Set("attribute", test.attr))
-		select {
-		case event, ok := <-output_chan:
-			if ok != test.pass {
-				self.T().Errorf("xattr: Unexpected OK status. Expected %t, got %t", test.pass, ok)
-				continue
+		ret := XAttrFunction{}.Call(sub_ctx, scope, ordereddict.NewDict().Set("filename", test.name).Set("attribute", test.attr))
+		if ret == nil {
+			if test.pass {
+				self.T().Errorf("xattr: test %d: Got %t, espected %t", i, false, test.pass)
 			}
-
-			if (event == nil) == test.pass {
-				self.T().Errorf("xattr: Unexpected event type, got %T", event)
+		} else {
+			if !test.pass {
+				self.T().Errorf("xattr: test %d: Got %t, espected %t", i, true, test.pass)
 			}
 		}
 	}
-
-	os.Remove(filepath)
 }
 
-func TestXAttrPlugin(t *testing.T) {
+func TestXAttrFunction(t *testing.T) {
 	suite.Run(t, &XattrTestSuite{})
 }
