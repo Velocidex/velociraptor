@@ -4,7 +4,6 @@ import (
 	"context"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/ivaxer/go-xattr"
@@ -15,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
+	"www.velocidex.com/golang/vfilter"
 )
 
 type XattrTestSuite struct {
@@ -22,37 +22,14 @@ type XattrTestSuite struct {
 }
 
 func (self *XattrTestSuite) TestXAttr() {
-	filepath := "/tmp/xattr.test"
-	attr1 := "vr.test"
-	attr2 := "vr.test"
-
-	_, err := os.Create(filepath)
-	if err != nil {
-		self.T().Errorf("xattr: failed to create test file: %s", err)
-		return
-	}
+	file, err := os.CreateTemp("", "")
+	assert.NoError(self.T(), err, "xattr: failed to create test file")
+	filepath := file.Name()
+	file.Close()
 	defer os.Remove(filepath)
 
-	xattr.Set(filepath, attr1, []byte("test-value"))
-	xattr.Set(filepath, attr2, []byte("test-value"))
-
-	ctx := context.Background()
-	sub_ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
-	defer cancel()
-
-	builder := services.ScopeBuilder{
-		Config:     self.ConfigObj,
-		ACLManager: acl_managers.NullACLManager{},
-		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
-		Env:        ordereddict.NewDict(),
-	}
-
-	manager, err := services.GetRepositoryManager(self.ConfigObj)
-	assert.NoError(self.T(), err)
-
-	scope := manager.BuildScope(builder)
-	defer scope.Close()
-
+	attr1 := "vr.test"
+	attr2 := "vr.test"
 	testcases := []struct {
 		name string
 		attr []string
@@ -80,23 +57,35 @@ func (self *XattrTestSuite) TestXAttr() {
 		},
 		{
 			name: filepath,
-			attr: []string{"invalud.test"},
+			attr: []string{"invalid.test"},
 			pass: false,
 		},
 	}
 
+	xattr.Set(filepath, attr1, []byte("test-value"))
+	xattr.Set(filepath, attr2, []byte("test-value"))
+
+	self.Ctx = context.Background()
+	sub_ctx, cancel := context.WithCancel(self.Ctx)
+	defer cancel()
+
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: acl_managers.NullACLManager{},
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
+		Env:        ordereddict.NewDict(),
+	}
+
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
+
 	for i, test := range testcases {
 		defer scope.Close()
 		ret := XAttrFunction{}.Call(sub_ctx, scope, ordereddict.NewDict().Set("filename", test.name).Set("attribute", test.attr))
-		if ret == nil {
-			if test.pass {
-				self.T().Errorf("xattr: test %d: Got %t, espected %t", i, false, test.pass)
-			}
-		} else {
-			if !test.pass {
-				self.T().Errorf("xattr: test %d: Got %t, espected %t", i, true, test.pass)
-			}
-		}
+		assert.Equal(self.T(), test.pass, (ret != vfilter.Null{}), "These two values should be the same. Test %d", i)
 	}
 }
 
