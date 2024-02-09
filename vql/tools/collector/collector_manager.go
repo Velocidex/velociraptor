@@ -274,11 +274,15 @@ func (self *collectionManager) collectQuery(
 		}
 		for row := range vql.Eval(self.ctx, subscope) {
 			status.ResultRows++
+			row_dict := vfilter.RowToDict(self.ctx, subscope, row)
+			if query.Name != "" {
+        			row_dict.Set("_Source", query.Name)
+     			}
 			select {
 			case <-self.ctx.Done():
 				query_log.Close()
 				return nil
-			case self.output_chan <- row:
+			case self.output_chan <- row_dict:
 			}
 		}
 		query_log.Close()
