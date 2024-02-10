@@ -562,7 +562,7 @@ func (self WriteJSONPlugin) Call(
 			underlying_file, err := accessors.GetUnderlyingAPIFilename(
 				arg.Accessor, scope, arg.Filename)
 			if err != nil {
-				scope.Log("write_csv: %s", err)
+				scope.Log("write_jsonl: %s", err)
 				return
 			}
 

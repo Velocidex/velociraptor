@@ -95,7 +95,7 @@ require (
 	gopkg.in/square/go-jose.v2 v2.6.0 // indirect
 	howett.net/plist v1.0.0
 	www.velocidex.com/golang/evtx v0.2.1-0.20220404133451-1fdf8be7325e
-	www.velocidex.com/golang/go-ese v0.1.1-0.20230821114411-ecb5494187ed
+	www.velocidex.com/golang/go-ese v0.2.1-0.20240207005444-85d57b555f8b
 	www.velocidex.com/golang/go-ntfs v0.1.2-0.20231201083609-cc79ced94180
 	www.velocidex.com/golang/go-pe v0.1.1-0.20230228112150-ef2eadf34bc3
 	www.velocidex.com/golang/go-prefetch v0.0.0-20220801101854-338dbe61982a
@@ -110,7 +110,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.2.1
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11
-	github.com/Velocidex/go-ewf v0.0.0-20240116235705-14389cfdaa75
+	github.com/Velocidex/go-ewf v0.0.0-20240210123447-97dc81b7d8c3
 	github.com/Velocidex/go-fat v0.0.0-20230923165230-3e6c4265297a
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d
