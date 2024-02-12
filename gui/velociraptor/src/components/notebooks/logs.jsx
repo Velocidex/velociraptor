@@ -21,6 +21,7 @@ class ViewCellLogsTable extends FlowLogs {
             notebook_id: this.props.notebook_metadata &&
                 this.props.notebook_metadata.notebook_id,
             cell_id: this.props.cell && this.props.cell.cell_id,
+            cell_version: this.props.cell && this.props.cell.current_version,
             type: "logs",
         };
     }

@@ -390,7 +390,7 @@ class UsersOverview extends Component {
                               <Button
                                 disabled={!this.state.user_name}
                                 data-tooltip={T("Update User Password")}
-                                data-position="top"
+                                data-position="left"
                                 onClick={()=>this.setState({
                                     showEditUserDialog: true
                                 })}
@@ -405,7 +405,7 @@ class UsersOverview extends Component {
                             }
                             <Button
                               data-tooltip={T("Add a new user")}
-                              data-position="top"
+                              data-position="left"
                               onClick={()=>this.setState({
                                   showAddUserDialog: true
                               })}
@@ -448,7 +448,7 @@ class UsersOverview extends Component {
                             <Button
                               disabled={!this.state.user_name}
                               data-tooltip={T("Assign user to Orgs")}
-                              data-position="top"
+                              data-position="left"
                               onClick={()=>this.setState({
                                   showAddOrgDialog: true
                               })}

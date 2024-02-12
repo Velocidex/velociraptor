@@ -22,6 +22,7 @@ import "download.proto";
 import "completions.proto";
 import "vfs_api.proto";
 import "scheduler.proto";
+import "secrets.proto";
 
 package proto;
 
@@ -539,6 +540,41 @@ service API {
         option (google.api.http) = {
             post: "/api/v1/RemoveNotebookAttachment",
             body: "*",
+        };
+    }
+
+    // Secret management
+    rpc DefineSecret(SecretDefinition) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/DefineSecret",
+            body: "*",
+        };
+    }
+
+    rpc GetSecretDefinitions(google.protobuf.Empty) returns (SecretDefinitionList) {
+        option (google.api.http) = {
+            get: "/api/v1/GetSecretDefinitions",
+        };
+    }
+
+    rpc AddSecret(Secret) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/AddSecret",
+            body: "*",
+        };
+    }
+
+    rpc ModifySecret(ModifySecretRequest) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            post: "/api/v1/ModifySecret",
+            body: "*",
+        };
+    }
+
+    // Returns a redacted version of the secret.
+   rpc GetSecret(Secret) returns (Secret) {
+        option (google.api.http) = {
+            get: "/api/v1/GetSecret",
         };
     }
 

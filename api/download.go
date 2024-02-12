@@ -375,6 +375,27 @@ func downloadFileStore(prefix []string) http.Handler {
 			return
 		}
 
+		// The following is not strictly necessary because this
+		// function is behind the authenticator middleware which means
+		// that if we get here the user is already authenticated and
+		// has at least read permissions on this org. But we check
+		// again to make sure we are resilient against possible
+		// regressions in the authenticator code.
+		users := services.GetUserManager()
+		user_record, err := users.GetUserFromHTTPContext(r.Context())
+		if err != nil {
+			returnError(w, 404, err.Error())
+			return
+		}
+
+		principal := user_record.Name
+		permissions := acls.READ_RESULTS
+		perm, err := services.CheckAccess(org_config_obj, principal, permissions)
+		if !perm || err != nil {
+			returnError(w, 403, "User is not allowed to read files.")
+			return
+		}
+
 		file_store_factory := file_store.GetFileStore(org_config_obj)
 		fd, err := file_store_factory.ReadFile(path_spec)
 		if err != nil {

@@ -24,6 +24,9 @@ var (
 type Authenticator interface {
 	AddHandlers(mux *http.ServeMux) error
 	AddLogoff(mux *http.ServeMux) error
+
+	// Make sure the user is authenticated and has at least read
+	// access to the requested org.
 	AuthenticateUserHandler(parent http.Handler) http.Handler
 
 	IsPasswordLess() bool

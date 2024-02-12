@@ -111,6 +111,13 @@ type APIClient interface {
 	UploadNotebookAttachment(ctx context.Context, in *NotebookFileUploadRequest, opts ...grpc.CallOption) (*NotebookFileUploadResponse, error)
 	// Remove a notebook attachment.
 	RemoveNotebookAttachment(ctx context.Context, in *NotebookFileUploadRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	// Secret management
+	DefineSecret(ctx context.Context, in *SecretDefinition, opts ...grpc.CallOption) (*empty.Empty, error)
+	GetSecretDefinitions(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*SecretDefinitionList, error)
+	AddSecret(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*empty.Empty, error)
+	ModifySecret(ctx context.Context, in *ModifySecretRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	// Returns a redacted version of the secret.
+	GetSecret(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*Secret, error)
 	// This can be used by API clients to fetch file content.
 	VFSGetBuffer(ctx context.Context, in *VFSFileBuffer, opts ...grpc.CallOption) (*VFSFileBuffer, error)
 	// Streaming free form VQL.
@@ -707,6 +714,51 @@ func (c *aPIClient) RemoveNotebookAttachment(ctx context.Context, in *NotebookFi
 	return out, nil
 }
 
+func (c *aPIClient) DefineSecret(ctx context.Context, in *SecretDefinition, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/proto.API/DefineSecret", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aPIClient) GetSecretDefinitions(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*SecretDefinitionList, error) {
+	out := new(SecretDefinitionList)
+	err := c.cc.Invoke(ctx, "/proto.API/GetSecretDefinitions", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aPIClient) AddSecret(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/proto.API/AddSecret", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aPIClient) ModifySecret(ctx context.Context, in *ModifySecretRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/proto.API/ModifySecret", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aPIClient) GetSecret(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*Secret, error) {
+	out := new(Secret)
+	err := c.cc.Invoke(ctx, "/proto.API/GetSecret", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *aPIClient) VFSGetBuffer(ctx context.Context, in *VFSFileBuffer, opts ...grpc.CallOption) (*VFSFileBuffer, error) {
 	out := new(VFSFileBuffer)
 	err := c.cc.Invoke(ctx, "/proto.API/VFSGetBuffer", in, out, opts...)
@@ -967,6 +1019,13 @@ type APIServer interface {
 	UploadNotebookAttachment(context.Context, *NotebookFileUploadRequest) (*NotebookFileUploadResponse, error)
 	// Remove a notebook attachment.
 	RemoveNotebookAttachment(context.Context, *NotebookFileUploadRequest) (*empty.Empty, error)
+	// Secret management
+	DefineSecret(context.Context, *SecretDefinition) (*empty.Empty, error)
+	GetSecretDefinitions(context.Context, *empty.Empty) (*SecretDefinitionList, error)
+	AddSecret(context.Context, *Secret) (*empty.Empty, error)
+	ModifySecret(context.Context, *ModifySecretRequest) (*empty.Empty, error)
+	// Returns a redacted version of the secret.
+	GetSecret(context.Context, *Secret) (*Secret, error)
 	// This can be used by API clients to fetch file content.
 	VFSGetBuffer(context.Context, *VFSFileBuffer) (*VFSFileBuffer, error)
 	// Streaming free form VQL.
@@ -1181,6 +1240,21 @@ func (UnimplementedAPIServer) UploadNotebookAttachment(context.Context, *Noteboo
 }
 func (UnimplementedAPIServer) RemoveNotebookAttachment(context.Context, *NotebookFileUploadRequest) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method RemoveNotebookAttachment not implemented")
+}
+func (UnimplementedAPIServer) DefineSecret(context.Context, *SecretDefinition) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DefineSecret not implemented")
+}
+func (UnimplementedAPIServer) GetSecretDefinitions(context.Context, *empty.Empty) (*SecretDefinitionList, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSecretDefinitions not implemented")
+}
+func (UnimplementedAPIServer) AddSecret(context.Context, *Secret) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddSecret not implemented")
+}
+func (UnimplementedAPIServer) ModifySecret(context.Context, *ModifySecretRequest) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ModifySecret not implemented")
+}
+func (UnimplementedAPIServer) GetSecret(context.Context, *Secret) (*Secret, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetSecret not implemented")
 }
 func (UnimplementedAPIServer) VFSGetBuffer(context.Context, *VFSFileBuffer) (*VFSFileBuffer, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VFSGetBuffer not implemented")
@@ -2362,6 +2436,96 @@ func _API_RemoveNotebookAttachment_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
+func _API_DefineSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SecretDefinition)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).DefineSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/DefineSecret",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).DefineSecret(ctx, req.(*SecretDefinition))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _API_GetSecretDefinitions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(empty.Empty)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).GetSecretDefinitions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/GetSecretDefinitions",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).GetSecretDefinitions(ctx, req.(*empty.Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _API_AddSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Secret)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).AddSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/AddSecret",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).AddSecret(ctx, req.(*Secret))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _API_ModifySecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ModifySecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).ModifySecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/ModifySecret",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).ModifySecret(ctx, req.(*ModifySecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _API_GetSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Secret)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).GetSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/GetSecret",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).GetSecret(ctx, req.(*Secret))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _API_VFSGetBuffer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(VFSFileBuffer)
 	if err := dec(in); err != nil {
@@ -2832,6 +2996,26 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RemoveNotebookAttachment",
 			Handler:    _API_RemoveNotebookAttachment_Handler,
+		},
+		{
+			MethodName: "DefineSecret",
+			Handler:    _API_DefineSecret_Handler,
+		},
+		{
+			MethodName: "GetSecretDefinitions",
+			Handler:    _API_GetSecretDefinitions_Handler,
+		},
+		{
+			MethodName: "AddSecret",
+			Handler:    _API_AddSecret_Handler,
+		},
+		{
+			MethodName: "ModifySecret",
+			Handler:    _API_ModifySecret_Handler,
+		},
+		{
+			MethodName: "GetSecret",
+			Handler:    _API_GetSecret_Handler,
 		},
 		{
 			MethodName: "VFSGetBuffer",
