@@ -41,6 +41,26 @@ func (m *MockAPIClient) EXPECT() *MockAPIClientMockRecorder {
 	return m.recorder
 }
 
+// AddSecret mocks base method.
+func (m *MockAPIClient) AddSecret(arg0 context.Context, arg1 *proto0.Secret, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "AddSecret", varargs...)
+	ret0, _ := ret[0].(*emptypb.Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AddSecret indicates an expected call of AddSecret.
+func (mr *MockAPIClientMockRecorder) AddSecret(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddSecret", reflect.TypeOf((*MockAPIClient)(nil).AddSecret), varargs...)
+}
+
 // CancelFlow mocks base method.
 func (m *MockAPIClient) CancelFlow(arg0 context.Context, arg1 *proto0.ApiFlowRequest, arg2 ...grpc.CallOption) (*proto0.StartFlowResponse, error) {
 	m.ctrl.T.Helper()
@@ -199,6 +219,26 @@ func (mr *MockAPIClientMockRecorder) CreateUser(arg0, arg1 interface{}, arg2 ...
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateUser", reflect.TypeOf((*MockAPIClient)(nil).CreateUser), varargs...)
+}
+
+// DefineSecret mocks base method.
+func (m *MockAPIClient) DefineSecret(arg0 context.Context, arg1 *proto0.SecretDefinition, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DefineSecret", varargs...)
+	ret0, _ := ret[0].(*emptypb.Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DefineSecret indicates an expected call of DefineSecret.
+func (mr *MockAPIClientMockRecorder) DefineSecret(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DefineSecret", reflect.TypeOf((*MockAPIClient)(nil).DefineSecret), varargs...)
 }
 
 // DeleteSubject mocks base method.
@@ -581,6 +621,46 @@ func (mr *MockAPIClientMockRecorder) GetReport(arg0, arg1 interface{}, arg2 ...i
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetReport", reflect.TypeOf((*MockAPIClient)(nil).GetReport), varargs...)
 }
 
+// GetSecret mocks base method.
+func (m *MockAPIClient) GetSecret(arg0 context.Context, arg1 *proto0.Secret, arg2 ...grpc.CallOption) (*proto0.Secret, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetSecret", varargs...)
+	ret0, _ := ret[0].(*proto0.Secret)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSecret indicates an expected call of GetSecret.
+func (mr *MockAPIClientMockRecorder) GetSecret(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSecret", reflect.TypeOf((*MockAPIClient)(nil).GetSecret), varargs...)
+}
+
+// GetSecretDefinitions mocks base method.
+func (m *MockAPIClient) GetSecretDefinitions(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto0.SecretDefinitionList, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetSecretDefinitions", varargs...)
+	ret0, _ := ret[0].(*proto0.SecretDefinitionList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetSecretDefinitions indicates an expected call of GetSecretDefinitions.
+func (mr *MockAPIClientMockRecorder) GetSecretDefinitions(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSecretDefinitions", reflect.TypeOf((*MockAPIClient)(nil).GetSecretDefinitions), varargs...)
+}
+
 // GetServerMonitoringState mocks base method.
 func (m *MockAPIClient) GetServerMonitoringState(arg0 context.Context, arg1 *emptypb.Empty, arg2 ...grpc.CallOption) (*proto2.ArtifactCollectorArgs, error) {
 	m.ctrl.T.Helper()
@@ -899,6 +979,26 @@ func (mr *MockAPIClientMockRecorder) ModifyHunt(arg0, arg1 interface{}, arg2 ...
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifyHunt", reflect.TypeOf((*MockAPIClient)(nil).ModifyHunt), varargs...)
+}
+
+// ModifySecret mocks base method.
+func (m *MockAPIClient) ModifySecret(arg0 context.Context, arg1 *proto0.ModifySecretRequest, arg2 ...grpc.CallOption) (*emptypb.Empty, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ModifySecret", varargs...)
+	ret0, _ := ret[0].(*emptypb.Empty)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ModifySecret indicates an expected call of ModifySecret.
+func (mr *MockAPIClientMockRecorder) ModifySecret(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ModifySecret", reflect.TypeOf((*MockAPIClient)(nil).ModifySecret), varargs...)
 }
 
 // NewNotebook mocks base method.
