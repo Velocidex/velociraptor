@@ -28,7 +28,6 @@ func (self XAttrFunction) Call(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	defer vql_subsystem.CheckForPanic(scope, "xattr")
-	attr := map[string]string{}
 	arg := &XAttrArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
@@ -42,49 +41,43 @@ func (self XAttrFunction) Call(
 		return nil
 	}
 
-	filename, err := accessors.GetUnderlyingAPIFilename(arg.Accessor, scope, arg.Filename)
+	filename, err := accessors.GetUnderlyingAPIFilename(
+		arg.Accessor, scope, arg.Filename)
 	if err != nil {
-		scope.Log("xattr: Failed to get underlying filename for %s: %s", arg.Filename.String(), err)
+		scope.Log("xattr: Failed to get underlying filename for %s: %s",
+			arg.Filename.String(), err)
 	}
 
 	if len(arg.Attributes) > 0 {
-		attr = self.getAttributeValues(scope, arg.Attributes, filename)
+		return self.getAttributeValues(scope, arg.Attributes, filename)
 	} else {
 		attributes, err := xattr.List(filename)
 		if err != nil {
-			scope.Log("xattr: Failed to list attributes for filename %s: %s", filename, err)
+			scope.Log("xattr: Failed to list attributes for filename %s: %s",
+				filename, err)
 			return vfilter.Null{}
 		}
 
-		attr = self.getAttributeValues(scope, attributes, filename)
+		return self.getAttributeValues(scope, attributes, filename)
 	}
-
-	if attr == nil {
-		return vfilter.Null{}
-	}
-
-	return ordereddict.NewDict().
-		Set("filename", filename).
-		Set("attribute", attr)
 }
 
-func (self *XAttrFunction) getAttributeValues(scope vfilter.Scope, Attributes []string, Filename string) map[string]string {
-	ret := map[string]string{}
+func (self *XAttrFunction) getAttributeValues(
+	scope vfilter.Scope, Attributes []string,
+	Filename string) *ordereddict.Dict {
+	ret := ordereddict.NewDict()
 	for _, attr := range Attributes {
 		value, err := xattr.Get(Filename, attr)
 		if err != nil {
 			continue
 		}
-		ret[attr] = string(value)
-	}
-	if len(ret) == 0 {
-		scope.Log("xattr: Failed to get attribute values for filename %s", Filename)
-		return nil
+		ret.Set(attr, value)
 	}
 	return ret
 }
 
-func (self XAttrFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self XAttrFunction) Info(
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:     "xattr",
 		Doc:      "query a file for the specified extended attribute",
