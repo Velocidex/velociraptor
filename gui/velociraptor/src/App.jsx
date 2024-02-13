@@ -33,6 +33,7 @@ import { UserSettings } from './components/core/user.jsx';
 import { ContextMenuPopup } from './components/utils/context.jsx';
 import { Switch, Route, withRouter } from "react-router-dom";
 import { Join } from './components/utils/paths.jsx';
+import SecretManager from './components/secrets/secrets.jsx';
 
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
@@ -145,6 +146,9 @@ class App extends Component {
                          query={this.state.query}
                          setClient={this.setClient}
                        />
+                     </Route>
+                     <Route path="/secrets/">
+                       <SecretManager/>
                      </Route>
                      <Route path="/artifacts/:artifact?">
                        <ArtifactInspector client={this.state.client}/>

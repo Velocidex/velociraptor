@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 	"crypto/x509"
+	"errors"
 
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
@@ -52,6 +53,30 @@ func (self UserManager) GetUserFromContext(ctx context.Context) (
 
 	org_config_obj, err = org_manager.GetOrgConfig(user_record.CurrentOrg)
 	return user_record, org_config_obj, err
+}
+
+// Used for direct HTTP connections. User context was added by the
+// authenticator.
+func (self UserManager) GetUserFromHTTPContext(ctx context.Context) (
+	user_record *api_proto.VelociraptorUser, err error) {
+
+	user_info := &api_proto.VelociraptorUser{}
+	serialized_any := ctx.Value(constants.GRPC_USER_CONTEXT)
+	if serialized_any == nil {
+		return nil, errors.New("Unauthenticated request")
+	}
+
+	serialized, ok := serialized_any.(string)
+	if !ok {
+		return nil, errors.New("Unauthenticated request")
+	}
+
+	err = json.Unmarshal([]byte(serialized), user_info)
+	if err != nil {
+		return nil, errors.New("Unauthenticated request")
+	}
+
+	return user_info, err
 }
 
 // GetGRPCUserInfo: Extracts user information from GRPC context.

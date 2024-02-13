@@ -68,6 +68,9 @@ type UserManager interface {
 	GetUserFromContext(ctx context.Context) (
 		*api_proto.VelociraptorUser, *config_proto.Config, error)
 
+	GetUserFromHTTPContext(ctx context.Context) (
+		*api_proto.VelociraptorUser, error)
+
 	// Used to get the user's record including password hashes. This
 	// only makes sense when using the `Basic` authenticator because
 	// otherwise we dont maintain passwords.

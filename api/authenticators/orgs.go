@@ -39,6 +39,11 @@ func GetOrgIdFromRequest(r *http.Request) string {
 	return org_id
 }
 
+// Checks to make sure the user has access to the org they
+// requested. If they do not have access to the org they requested we
+// switch them to any org in which they have at least read
+// access. This behaviour ensures that when a user's access is removed
+// from an org the GUI immediately switched to the next available org.
 func CheckOrgAccess(r *http.Request, user_record *api_proto.VelociraptorUser) error {
 	org_id := GetOrgIdFromRequest(r)
 	err := _checkOrgAccess(r, org_id, user_record)

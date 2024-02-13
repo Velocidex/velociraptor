@@ -31,6 +31,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/services/sanity"
 	"www.velocidex.com/golang/velociraptor/services/scheduler"
+	"www.velocidex.com/golang/velociraptor/services/secrets"
 	"www.velocidex.com/golang/velociraptor/services/server_artifacts"
 	"www.velocidex.com/golang/velociraptor/services/server_monitoring"
 	"www.velocidex.com/golang/velociraptor/services/users"
@@ -59,6 +60,7 @@ type ServiceContainer struct {
 	server_artifact_manager services.ServerArtifactRunner
 	notifier                services.Notifier
 	acl_manager             services.ACLManager
+	secrets                 services.SecretsService
 }
 
 func (self *ServiceContainer) MockFrontendManager(svc services.FrontendManager) {
@@ -131,6 +133,17 @@ func (self *ServiceContainer) NotebookManager() (services.NotebookManager, error
 	}
 
 	return self.notebook_manager, nil
+}
+
+func (self *ServiceContainer) SecretsService() (services.SecretsService, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.secrets == nil {
+		return nil, errors.New("Secrets service not initialized")
+	}
+
+	return self.secrets, nil
 }
 
 func (self *ServiceContainer) AuditManager() (services.AuditManager, error) {
@@ -405,6 +418,15 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 
 		service_container.mu.Lock()
 		service_container.acl_manager = m
+		service_container.mu.Unlock()
+
+		s, err := secrets.NewSecretsService(ctx, wg, org_config)
+		if err != nil {
+			return err
+		}
+
+		service_container.mu.Lock()
+		service_container.secrets = s
 		service_container.mu.Unlock()
 	}
 
