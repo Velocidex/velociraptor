@@ -455,6 +455,8 @@ github.com/inconshreveable/log15 v0.0.0-20170622235902-74a0988b5f80/go.mod h1:cO
 github.com/inconshreveable/mousetrap v1.0.1/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2s0bqwp9tc8=
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
+github.com/ivaxer/go-xattr v1.1.1 h1:ugr8VSr2Int1FOIMbbniFg4hQ1pZSYYinkvdLTURShE=
+github.com/ivaxer/go-xattr v1.1.1/go.mod h1:OpHnbEWzslZVYurbd1wtW0o2Tsp5x33BZ4N0pasCNyM=
 github.com/jawher/mow.cli v1.1.0/go.mod h1:aNaQlc7ozF3vw6IJ2dHjp2ZFiA4ozMIYY6PyuRJwlUg=
 github.com/jessevdk/go-flags v1.4.0/go.mod h1:4FA24M0QyGHXBuZZK/XkWh8h0e1EYbRYJSGM75WSRxI=
 github.com/jmespath/go-jmespath v0.4.0 h1:BEgLn5cpjn8UN1mAw4NjwDrS35OdebyEtFe+9YPoQUg=

@@ -1,0 +1,14 @@
+{
+ "Case #0": null,
+ "Case #1": {
+  "vr.test": "dGVzdC52YWx1ZQ=="
+ },
+ "Case #2": {
+  "vr.test": "dGVzdC52YWx1ZQ==",
+  "vr.test2": "dGVzdC52YWx1ZQ=="
+ },
+ "Case #3": {
+  "vr.test": "dGVzdC52YWx1ZQ=="
+ },
+ "Case #4": {}
+}
