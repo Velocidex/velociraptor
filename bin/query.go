@@ -281,6 +281,19 @@ func doQuery() error {
 		return err
 	}
 
+	if *query_org_id != "" {
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return err
+		}
+
+		org_config_obj, err := org_manager.GetOrgConfig(*query_org_id)
+		if err != nil {
+			return err
+		}
+		config_obj = org_config_obj
+	}
+
 	env := ordereddict.NewDict()
 	for k, v := range *env_map {
 		env.Set(k, v)

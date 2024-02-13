@@ -149,6 +149,8 @@ func (self VQLClientAction) StartQuery(
 		Config: &config_proto.Config{
 			Remappings: config_obj.Remappings,
 		},
+		Ctx: ctx,
+
 		// Only provide the client config since we are running in
 		// client context.
 		ClientConfig: config_obj.Client,

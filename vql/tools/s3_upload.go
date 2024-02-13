@@ -4,6 +4,7 @@ package tools
 
 import (
 	"crypto/tls"
+	"errors"
 	"net/http"
 
 	"github.com/Velocidex/ordereddict"
@@ -15,6 +16,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
+	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -28,7 +31,7 @@ type S3UploadArgs struct {
 	Name                 string            `vfilter:"optional,field=name,doc=The name of the file that should be stored on the server"`
 	Accessor             string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
 	Bucket               string            `vfilter:"required,field=bucket,doc=The bucket to upload to"`
-	Region               string            `vfilter:"required,field=region,doc=The region the bucket is in"`
+	Region               string            `vfilter:"optional,field=region,doc=The region the bucket is in"`
 	CredentialsKey       string            `vfilter:"optional,field=credentialskey,doc=The AWS key credentials to use"`
 	CredentialsSecret    string            `vfilter:"optional,field=credentialssecret,doc=The AWS secret credentials to use"`
 	CredentialsToken     string            `vfilter:"optional,field=credentialstoken,doc=The AWS session token to use (only needed for temporary credentials)"`
@@ -38,6 +41,7 @@ type S3UploadArgs struct {
 	S3UploadRoot         string            `vfilter:"optional,field=s3uploadroot,doc=Prefix for the S3 object"`
 	NoVerifyCert         bool              `vfilter:"optional,field=noverifycert,doc=Skip TLS Verification (deprecated in favor of SkipVerify)"`
 	SkipVerify           bool              `vfilter:"optional,field=skip_verify,doc=Skip TLS Verification"`
+	Secret               string            `vfilter:"optional,field=secret,doc=Alternatively use a secret from the secrets service. Secret must be of type 'AWS S3 Creds'"`
 }
 
 type S3UploadFunction struct{}
@@ -51,6 +55,14 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 	if err != nil {
 		scope.Log("upload_S3: %s", err.Error())
 		return vfilter.Null{}
+	}
+
+	if arg.Secret != "" {
+		err := mergeSecret(ctx, scope, arg)
+		if err != nil {
+			scope.Log("upload_S3: %s", err)
+			return vfilter.Null{}
+		}
 	}
 
 	if arg.NoVerifyCert {
@@ -223,6 +235,41 @@ func (self S3UploadFunction) Info(
 		ArgType:  type_map.AddType(scope, &S3UploadArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
+}
+
+func mergeSecret(ctx context.Context, scope vfilter.Scope, arg *S3UploadArgs) error {
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		return errors.New("Secrets may only be used on the server")
+	}
+
+	secrets_service, err := services.GetSecretsService(config_obj)
+	if err != nil {
+		return err
+	}
+
+	principal := vql_subsystem.GetPrincipal(scope)
+
+	secret_record, err := secrets_service.GetSecret(ctx, principal,
+		constants.AWS_S3_CREDS, arg.Secret)
+	if err != nil {
+		return err
+	}
+
+	get := func(field string) string {
+		return vql_subsystem.GetStringFromRow(
+			scope, secret_record.Data, field)
+	}
+
+	arg.Region = get("region")
+	arg.CredentialsKey = get("credentials_key")
+	arg.CredentialsSecret = get("credentials_secret")
+	arg.CredentialsToken = get("credentials_token")
+	arg.Endpoint = get("endpoint")
+	arg.ServerSideEncryption = get("serversideencryption")
+	arg.KmsEncryptionKey = get("kmsencryptionkey")
+
+	return nil
 }
 
 func init() {

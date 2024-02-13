@@ -64,6 +64,7 @@ type ScopeBuilder struct {
 	// In server context this contains the full server config required
 	// for server plugins.
 	Config *config_proto.Config
+	Ctx    context.Context
 
 	// If running in client context we only present the client config.
 	ClientConfig *config_proto.ClientConfig

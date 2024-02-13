@@ -62,7 +62,7 @@ func (self *ApiServer) DefineSecret(
 		return nil, Status(self.verbose, err)
 	}
 
-	err = secrets.DefineSecret(ctx, in.TypeName, in.Verifier)
+	err = secrets.DefineSecret(ctx, in)
 	if err == nil {
 		services.LogAudit(ctx,
 			org_config_obj, principal, "User Defined Secret",

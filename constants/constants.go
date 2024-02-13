@@ -137,6 +137,10 @@ const (
 	CLIENT_API_VERSION_0_6_8 = uint32(4)
 
 	DISABLE_DANGEROUS_API_CALLS = "DISABLE_DANGEROUS_API_CALLS"
+
+	// Fixed secret types - definitions in the sanity service
+	AWS_S3_CREDS    = "AWS S3 Creds"
+	SSH_PRIVATE_KEY = "SSH PrivateKey"
 )
 
 type key int

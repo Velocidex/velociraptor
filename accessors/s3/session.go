@@ -1,7 +1,9 @@
 package s3
 
 import (
+	"context"
 	"crypto/tls"
+	"errors"
 	"net/http"
 
 	"github.com/Velocidex/ordereddict"
@@ -9,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/vfilter"
@@ -18,12 +21,21 @@ const (
 	S3_TAG = "_S3_TAG"
 )
 
-func GetS3Session(scope vfilter.Scope) (*session.Session, error) {
+func GetS3Session(scope vfilter.Scope) (res *session.Session, err error) {
 	// Empty credentials are OK - they just mean to get creds from the
 	// process env
 	setting, pres := scope.Resolve(constants.S3_CREDENTIALS)
 	if !pres {
 		setting = ordereddict.NewDict()
+	}
+
+	// Check for a secret from the secrets service
+	secret := vql_subsystem.GetStringFromRow(scope, setting, "secret")
+	if secret != "" {
+		setting, err = getSecret(scope, secret)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	conf := aws.NewConfig()
@@ -81,4 +93,30 @@ func GetS3Session(scope vfilter.Scope) (*session.Session, error) {
 	}
 
 	return sess, nil
+}
+
+func getSecret(scope vfilter.Scope, secret string) (
+	*ordereddict.Dict, error) {
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		return nil, errors.New("Secrets may only be used on the server")
+	}
+
+	secrets_service, err := services.GetSecretsService(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	principal := vql_subsystem.GetPrincipal(scope)
+
+	// Extract the context from the scope.
+	ctx := context.TODO()
+
+	secret_record, err := secrets_service.GetSecret(ctx, principal,
+		constants.AWS_S3_CREDS, secret)
+	if err != nil {
+		return nil, err
+	}
+
+	return secret_record.Data, nil
 }
