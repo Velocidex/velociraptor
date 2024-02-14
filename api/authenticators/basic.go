@@ -99,7 +99,6 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 				self.config_obj, username, "Invalid password",
 				ordereddict.NewDict().
 					Set("remote", r.RemoteAddr).
-					Set("error", err.Error()).
 					Set("status", http.StatusUnauthorized))
 
 			http.Error(w, "authorization failed", http.StatusUnauthorized)
