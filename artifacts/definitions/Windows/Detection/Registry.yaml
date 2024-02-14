@@ -1,6 +1,6 @@
 name: Windows.Detection.Registry
 description: |
-  This artifact detects registry changes and triggers an alert. 
+  This artifact detects registry changes and triggers an alert.
 
 author: Jos Clephas - @DfirJos
 
@@ -36,11 +36,16 @@ parameters:
     type: bool
   - name: regex_sha256
     default: .
+  - name: DISABLE_DANGEROUS_API_CALLS
+    type: bool
+    description: |
+      Enable this to disable potentially flakey APIs which may cause
+      crashes.
 
 sources:
   - query: |
 
-        LET query_registry = SELECT *, OSPath.String + Data.value AS FullPath, 
+        LET query_registry = SELECT *, OSPath.String + Data.value AS FullPath,
                                     expand(path=Data.value) AS Datavalue
                             FROM glob(globs=RegistryPath, accessor="registry") WHERE Data.value =~ RegistryData
 
@@ -54,9 +59,9 @@ sources:
                 then=hash(path=AbsolutePath[0], accessor="auto")) AS Hash,
             if(condition=CertificateInfo,
                 then=authenticode(filename=AbsolutePath[0])) AS Certinfo
-        FROM query_diff 
-        WHERE Diff = diff  
-              AND Hash.SHA256 =~ regex_sha256 
+        FROM query_diff
+        WHERE Diff = diff
+              AND Hash.SHA256 =~ regex_sha256
               AND Certinfo.IssuerName=~regex_IssuerName
               AND NOT if(condition= UntrustedAuthenticode,
                         then= Certinfo.Trusted = 'trusted',

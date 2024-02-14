@@ -1,12 +1,12 @@
 name: Windows.ETW.DotNetRundown
-author: @bmcder02
+author: "@bmcder02"
 description: |
-   Queries the Microsoft-Windows-DotNETRuntimeRundown provider to collect a list of
-   DotNet modules loaded into a process. This can be useful when responding to 
-   reflectively loaded DotNet malware. 
-   
-   NOTE: System.Timestamp represents when the artifact was run, NOT when the module was
-   loaded.
+   Queries the Microsoft-Windows-DotNETRuntimeRundown provider to
+   collect a list of DotNet modules loaded into a process. This can be
+   useful when responding to reflectively loaded DotNet malware.
+
+   NOTE: System.Timestamp represents when the artifact was run, NOT
+   when the module was loaded.
 
 
 type: CLIENT
@@ -21,7 +21,7 @@ parameters:
   - name: EventIDRegex
     default: .
     type: regex
-  - name: Timeout 
+  - name: Timeout
     default: 20
     type: int
 sources:
@@ -29,14 +29,14 @@ sources:
       SELECT OS From info() where OS = 'windows'
 
     query: |
-      LET EventData = SELECT System.ID AS EventID, System.ProcessID AS ProcessID, 
+      LET EventData = SELECT System.ID AS EventID, System.ProcessID AS ProcessID,
         process_tracker_get(id=System.ProcessID) AS ProcessDetails,
         *
       FROM watch_etw(
-        guid="{A669021C-C450-4609-A035-5AF59AF4DF18}", 
+        guid="{A669021C-C450-4609-A035-5AF59AF4DF18}",
         any=0x48, timeout=Timeout)
-        
-      SELECT EventID, ProcessID, ProcessDetails.Data.Name AS ProcessName, 
+
+      SELECT EventID, ProcessID, ProcessDetails.Data.Name AS ProcessName,
         ProcessDetails.Data.Exe AS ProcessPath, System, EventData, ProviderGUID,
         ProcessDetails
       FROM EventData
