@@ -30,10 +30,11 @@ func (self *SecretDefinition) Clone() *SecretDefinition {
 	}
 }
 
-func NewSecretDefinition(type_name, verifier string) (
+func NewSecretDefinition(definition *api_proto.SecretDefinition) (
 	*SecretDefinition, error) {
 
 	// an empty verifier means all secret formats are accepted.
+	verifier := definition.Verifier
 	if verifier == "" {
 		verifier = "x=>TRUE"
 	}
@@ -44,11 +45,8 @@ func NewSecretDefinition(type_name, verifier string) (
 	}
 
 	return &SecretDefinition{
-		SecretDefinition: &api_proto.SecretDefinition{
-			TypeName: type_name,
-			Verifier: verifier,
-		},
-		verifierLambda: lambda,
+		SecretDefinition: definition,
+		verifierLambda:   lambda,
 	}, nil
 }
 
@@ -100,9 +98,9 @@ type SecretsService struct {
 }
 
 func (self *SecretsService) DefineSecret(
-	ctx context.Context, type_name string, verifier string) error {
+	ctx context.Context, definition *api_proto.SecretDefinition) error {
 
-	result, err := NewSecretDefinition(type_name, verifier)
+	result, err := NewSecretDefinition(definition)
 	if err != nil {
 		return err
 	}
@@ -113,13 +111,13 @@ func (self *SecretsService) DefineSecret(
 	}
 
 	err = db.SetSubject(self.config_obj,
-		secret_path_manager.SecretsDefinition(type_name),
+		secret_path_manager.SecretsDefinition(definition.TypeName),
 		result.SecretDefinition)
 	if err != nil {
 		return err
 	}
 
-	return self.definitions_lru.Set(type_name, result)
+	return self.definitions_lru.Set(definition.TypeName, result)
 }
 
 func (self *SecretsService) getSecretDefinition(
@@ -143,8 +141,7 @@ func (self *SecretsService) getSecretDefinition(
 		return nil, err
 	}
 
-	result, err := NewSecretDefinition(secrets_definition.TypeName,
-		secrets_definition.Verifier)
+	result, err := NewSecretDefinition(secrets_definition)
 	if err != nil {
 		return nil, err
 	}

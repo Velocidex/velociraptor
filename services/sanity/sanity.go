@@ -158,6 +158,11 @@ func (self *SanityChecks) Check(
 		return err
 	}
 
+	err = self.createBuiltInSecretDefinitions(ctx, config_obj)
+	if err != nil {
+		return err
+	}
+
 	return checkForServerUpgrade(ctx, config_obj)
 }
 

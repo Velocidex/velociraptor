@@ -27,17 +27,23 @@ func (self *SecretsTestSuite) TestSecretsService() {
 	assert.NoError(self.T(), err)
 
 	// Define a secret - invalid verifier
-	err = secrets.DefineSecret(self.Ctx, "MySecretType", "invalid VQL")
+	err = secrets.DefineSecret(self.Ctx,
+		&api_proto.SecretDefinition{
+			TypeName: "MySecretType",
+			Verifier: "invalid VQL"})
 	assert.Error(self.T(), err)
 	assert.Contains(self.T(), err.Error(), `Invalid verifier lambda:`)
 
 	// Empty verifier is ok
-	err = secrets.DefineSecret(self.Ctx, "MySecretType", "")
+	err = secrets.DefineSecret(self.Ctx, &api_proto.SecretDefinition{
+		TypeName: "MySecretType"})
 	assert.NoError(self.T(), err)
 
 	// Add a verifier that requires a field matched a certain format
 	err = secrets.DefineSecret(self.Ctx,
-		"MySecretType", "x=>x.MyField =~ 'FieldFormat'")
+		&api_proto.SecretDefinition{
+			TypeName: "MySecretType",
+			Verifier: "x=>x.MyField =~ 'FieldFormat'"})
 	assert.NoError(self.T(), err)
 
 	// Now add an invalid secret.

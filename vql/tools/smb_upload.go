@@ -164,7 +164,7 @@ func (self *SMBUploadFunction) Call(ctx context.Context,
 
 	// Abort uploading when the scope is destroyed.
 	sub_ctx, cancel := context.WithCancel(ctx)
-	// Cancel the s3 upload when the scope destroys.
+	// Cancel the smb upload when the scope destroys.
 	_ = scope.AddDestructor(cancel)
 	upload_response, err := self.upload_smb(
 		sub_ctx, sub_scope, file, arg.Name, arg.Username, arg.Password,

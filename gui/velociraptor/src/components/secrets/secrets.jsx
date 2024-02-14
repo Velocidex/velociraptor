@@ -16,6 +16,7 @@ import VeloForm from '../forms/form.jsx';
 import Row from 'react-bootstrap/Row';
 import DictEditor from '../forms/dict.jsx';
 import UserForm from '../utils/users.jsx';
+import Form from 'react-bootstrap/Form';
 
 import "./secrets.css";
 
@@ -56,6 +57,9 @@ class AddSecretTypeDialog extends Component {
     render() {
         return(
             <Modal show={true}
+                   size="lg"
+                   enforceFocus={true}
+                   dialogClassName="modal-90w"
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
                 <Modal.Title>{T("Warning")}</Modal.Title>
@@ -134,13 +138,16 @@ class EditSecretDialog extends Component {
     render() {
         return(
             <Modal show={true}
+                   size="lg"
+                   enforceFocus={true}
+                   dialogClassName="modal-90w"
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
                 <Modal.Title>{T("Warning")}</Modal.Title>
               </Modal.Header>
               <Modal.Body >
-                {T("Edit Secret")}
-                { this.state.secret.name }
+                <h1>{T("Edit Secret")} { this.state.secret.name } </h1>
+                {T("Share secret with these users")}
                 <UserForm
                   value={this.state.new_users}
                   onChange={users=>this.setState({new_users: users})}/>
@@ -204,6 +211,9 @@ class DeleteSecretDialog extends Component {
     render() {
         return(
             <Modal show={true}
+                   size="lg"
+                   enforceFocus={true}
+                   dialogClassName="modal-90w"
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
                 <Modal.Title>{T("Warning")}</Modal.Title>
@@ -231,11 +241,14 @@ class DeleteSecretDialog extends Component {
 class AddSecretDialog extends Component {
     static propTypes = {
         type_name: PropTypes.string,
+        verifier: PropTypes.string,
+        secret: PropTypes.array,
         onClose: PropTypes.func.isRequired,
     }
 
     componentDidMount = () => {
         this.source = CancelToken.source();
+        this.setState({secret: [...this.props.secret]});
     }
 
     componentWillUnmount = () => {
@@ -271,6 +284,9 @@ class AddSecretDialog extends Component {
     render() {
         return(
             <Modal show={true}
+                   size="lg"
+                   enforceFocus={true}
+                   dialogClassName="modal-90w"
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
                 <Modal.Title>{T("Warning")}</Modal.Title>
@@ -282,6 +298,14 @@ class AddSecretDialog extends Component {
                    value={this.state.name}
                    setValue={x=>this.setState({name:x})}
                  />
+                <Form.Group as={Row}>
+                  <Form.Label column sm="3">
+                    {T("Verify Expression")}
+                  </Form.Label>
+                  <Col sm="8">
+                    { this.props.verifier }
+                  </Col>
+                </Form.Group>
 
                 <DictEditor
                   value={this.state.secret}
@@ -372,6 +396,14 @@ export default class SecretManager extends Component {
                 });
     }
 
+    updateTemplate = ()=>{
+        let res = [];
+        _.map(this.state.current_definition.template || {}, (y, x)=>{
+            res.push([x,y]);
+        });
+        this.setState({current_secret: res});
+    }
+
     fetchSecret = (type_name, name) => {
         this.source.cancel();
         this.source = CancelToken.source();
@@ -402,7 +434,9 @@ export default class SecretManager extends Component {
               }
               { this.state.showAddSecretDialog &&
                 <AddSecretDialog
+                  secret={this.state.current_secret}
                   type_name={this.state.current_definition.type_name}
+                  verifier={this.state.current_definition.verifier}
                   onClose={()=>{
                       this.setState({showAddSecretDialog: false});
                       this.getSecretDefinitions();
@@ -460,7 +494,9 @@ export default class SecretManager extends Component {
                                   "row-selected" : undefined
                           }>
                                    <td onClick={e=>{
-                                       this.setState({current_definition: item});
+                                       this.setState({
+                                           current_secret: {},
+                                           current_definition: item});
                                    }}>
                                      {item.type_name}
                                    </td>
@@ -481,9 +517,10 @@ export default class SecretManager extends Component {
                             <Button
                               data-tooltip={T("Add new secret")}
                               data-position="left"
-                              onClick={()=>this.setState({
-                                  showAddSecretDialog: true
-                              })}
+                              onClick={()=>{
+                                  this.setState({showAddSecretDialog: true});
+                                  this.updateTemplate();
+                              }}
                               className="btn-tooltip new-user-btn"
                               variant="outline-default"
                               as="button">
