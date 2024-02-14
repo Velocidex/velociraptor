@@ -17,7 +17,7 @@ import (
 
 type XAttrArgs struct {
 	Filename   *accessors.OSPath `vfilter:"required,field=filename,doc=Filename to inspect."`
-	Attributes []string          `vfilter:"optional,field=attribute,doc=Attribute to collect."`
+	Attributes []string          `vfilter:"optional,field=attribute,doc=Attribute to collect. "`
 	Accessor   string            `vfilter:"optional,field=accessor,doc=File accessor"`
 }
 
@@ -80,7 +80,7 @@ func (self XAttrFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:     "xattr",
-		Doc:      "query a file for the specified extended attribute",
+		Doc:      "Query a file for the specified extended attribute.",
 		ArgType:  type_map.AddType(scope, &XAttrArgs{}),
 		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
