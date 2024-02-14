@@ -177,7 +177,6 @@
     SELECT name, artifact_set_metadata(name=name, hidden=TRUE)
     FROM artifact_definitions() WHERE NOT description =~ "ACME"
     ```
-
   type: Function
   args:
   - name: name
@@ -894,6 +893,9 @@
   - name: append
     type: bool
     description: If true we append to the target file otherwise truncate it
+  - name: create_directories
+    type: bool
+    description: If true we ensure the destination directories exist
   category: basic
   metadata:
     permissions: FILESYSTEM_WRITE,FILESYSTEM_READ
@@ -2362,7 +2364,16 @@
   args:
   - name: bytes
     type: int64
-    description: Format bytes with units
+    description: Format bytes with units (e.g. MB)
+  - name: ibytes
+    type: int64
+    description: Format bytes with units (e.g. MiB)
+  - name: time
+    type: time.Time
+    description: Format time (e.g. 2 hours ago)
+  - name: comma
+    type: int64
+    description: Format integer with comma (e.g. 1,230)
   category: basic
 - name: hunt
   description: |
@@ -3522,6 +3533,10 @@
   - name: notebook_cell_id
     type: string
     description: The notebook cell read from (should also include notebook id)
+  - name: notebook_cell_version
+    type: string
+    description: The notebook cell version to read from (should also include notebook
+      id and notebook cell)
   - name: notebook_cell_table
     type: int64
     description: A notebook cell can have multiple tables.)
@@ -5492,6 +5507,10 @@
   - name: notebook_cell_id
     type: string
     description: The notebook cell read from (should also include notebook id)
+  - name: notebook_cell_version
+    type: string
+    description: The notebook cell version to read from (should also include notebook
+      id and notebook cell)
   - name: notebook_cell_table
     type: int64
     description: A notebook cell can have multiple tables.)
@@ -6874,6 +6893,26 @@
     required: true
   metadata:
     permissions: FILESYSTEM_WRITE
+- name: xattr
+  description: 'Query a file for the specified extended attribute. If not attributes
+    are provided, this function will return all extended attributes for the file.
+    Please note: this API is not reliable, so please provided extended attributes
+    where possible. '
+  type: Function
+  args:
+  - name: filename
+    type: accessors.OSPath
+    description: Filename to inspect.
+    required: true
+  - name: attribute
+    type: string
+    description: 'Attribute to collect. '
+    repeated: true
+  - name: accessor
+    type: string
+    description: File accessor
+  metadata:
+    permissions: FILESYSTEM_READ
 - name: xor
   description: Apply xor to the string and key.
   type: Function
@@ -7012,3 +7051,4 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+
