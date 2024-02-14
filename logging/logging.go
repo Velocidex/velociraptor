@@ -164,6 +164,7 @@ type LogContext struct {
 	enabled map[string]bool
 
 	listeners map[uint64]chan string
+	component string
 }
 
 func (self *LogContext) AddListener(c chan string) func() {
@@ -281,7 +282,8 @@ func (self *LogManager) GetLogger(
 				Hooks:     make(logrus.LevelHooks),
 				Level:     logrus.DebugLevel,
 			},
-			enabled: make(map[string]bool),
+			component: *component,
+			enabled:   make(map[string]bool),
 		}
 	}
 	return ctx
@@ -427,8 +429,9 @@ func (self *LogManager) makeNewComponent(
 	}
 
 	return &LogContext{
-		Logger:  Log,
-		enabled: enabled,
+		Logger:    Log,
+		enabled:   enabled,
+		component: *component,
 	}, nil
 }
 

@@ -62,9 +62,9 @@ class AddSecretTypeDialog extends Component {
                    dialogClassName="modal-90w"
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
-                <Modal.Title>{T("Warning")}</Modal.Title>
+                <Modal.Title>{T("Add a new secret")}</Modal.Title>
               </Modal.Header>
-              <Modal.Body >
+              <Modal.Body>
                 {T("Add Secret Type")}
                  <VeloForm
                    param={{name: T("Secret Type"), description: T("Type of secret to add")}}
@@ -143,7 +143,7 @@ class EditSecretDialog extends Component {
                    dialogClassName="modal-90w"
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
-                <Modal.Title>{T("Warning")}</Modal.Title>
+                <Modal.Title>{T("Edit Secret properties")}</Modal.Title>
               </Modal.Header>
               <Modal.Body >
                 <h1>{T("Edit Secret")} { this.state.secret.name } </h1>
@@ -216,7 +216,7 @@ class DeleteSecretDialog extends Component {
                    dialogClassName="modal-90w"
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
-                <Modal.Title>{T("Warning")}</Modal.Title>
+                <Modal.Title>{T("Delete secret")}</Modal.Title>
               </Modal.Header>
               <Modal.Body >
                 <h1>{this.props.secret.name }</h1>
@@ -242,13 +242,19 @@ class AddSecretDialog extends Component {
     static propTypes = {
         type_name: PropTypes.string,
         verifier: PropTypes.string,
-        secret: PropTypes.array,
+        description: PropTypes.string,
+        secret: PropTypes.object,
         onClose: PropTypes.func.isRequired,
     }
 
     componentDidMount = () => {
         this.source = CancelToken.source();
-        this.setState({secret: [...this.props.secret]});
+        let secret_array = [];
+        _.map(this.props.secret, (v,k)=>{
+            secret_array.push([k, v]);
+        });
+
+        this.setState({secret: secret_array});
     }
 
     componentWillUnmount = () => {
@@ -289,10 +295,13 @@ class AddSecretDialog extends Component {
                    dialogClassName="modal-90w"
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
-                <Modal.Title>{T("Warning")}</Modal.Title>
+                <Modal.Title>{T("Add secret from template: ")}
+                  {this.props.type_name}</Modal.Title>
               </Modal.Header>
-              <Modal.Body >
-                {T("Add New Secret")}
+              <Modal.Body  className="new-secret-dialog">
+                <p>
+                  {this.props.description}
+                </p>
                  <VeloForm
                    param={{name: T("Secret Name"), description: T("The name of the secret to add")}}
                    value={this.state.name}
@@ -397,11 +406,8 @@ export default class SecretManager extends Component {
     }
 
     updateTemplate = ()=>{
-        let res = [];
-        _.map(this.state.current_definition.template || {}, (y, x)=>{
-            res.push([x,y]);
-        });
-        this.setState({current_secret: res});
+        this.setState({
+            current_secret: this.state.current_definition.template});
     }
 
     fetchSecret = (type_name, name) => {
@@ -437,6 +443,7 @@ export default class SecretManager extends Component {
                   secret={this.state.current_secret}
                   type_name={this.state.current_definition.type_name}
                   verifier={this.state.current_definition.verifier}
+                  description={this.state.current_definition.description || ""}
                   onClose={()=>{
                       this.setState({showAddSecretDialog: false});
                       this.getSecretDefinitions();
