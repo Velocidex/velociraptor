@@ -177,7 +177,6 @@
     SELECT name, artifact_set_metadata(name=name, hidden=TRUE)
     FROM artifact_definitions() WHERE NOT description =~ "ACME"
     ```
-
   type: Function
   args:
   - name: name
@@ -894,6 +893,9 @@
   - name: append
     type: bool
     description: If true we append to the target file otherwise truncate it
+  - name: create_directories
+    type: bool
+    description: If true we ensure the destination directories exist
   category: basic
   metadata:
     permissions: FILESYSTEM_WRITE,FILESYSTEM_READ
@@ -3126,6 +3128,8 @@
     description: 'A SID to lookup using LookupAccountSid '
     required: true
   category: windows
+  metadata:
+    permissions: MACHINE_STATE
 - name: lowcase
   description: Returns the lowercase version of a string.
   type: Function
@@ -4828,8 +4832,7 @@
   args:
   - name: pid
     type: int64
-    description: A pid to list. If this is provided we are able to operate much faster
-      by only opening a single process.
+    description: A process ID to list. If not provided list all processes.
   category: plugin
   metadata:
     permissions: MACHINE_STATE
@@ -5827,6 +5830,16 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_WRITE
+- name: threads
+  description: Enumerate threads in a process.
+  type: Plugin
+  args:
+  - name: pid
+    type: int64
+    description: The PID to get the thread for.
+    required: true
+  metadata:
+    permissions: MACHINE_STATE
 - name: timeline
   description: Read a timeline. You can create a timeline with the timeline_add()
     function
@@ -6684,6 +6697,17 @@
   - name: timeout
     type: uint64
     description: If provided we stop after this much time
+  - name: capture_state
+    type: bool
+    description: If true, capture the state of the provider when the event is triggered
+  - name: enable_map_info
+    type: bool
+    description: Resolving MapInfo with TdhGetEventMapInformation is very expensive
+      and causes events to be dropped so we disabled it by default. Enable with this
+      flag.
+  - name: description
+    type: string
+    description: Description for this GUID provider
   category: event
 - name: watch_evtx
   description: |
@@ -7012,3 +7036,4 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+

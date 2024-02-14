@@ -66,6 +66,11 @@ parameters:
   - name: SHA256List
     description: SHA256 hash list to hunt for. New SHA256 hash on each line
     default:
+  - name: DISABLE_DANGEROUS_API_CALLS
+    type: bool
+    description: |
+      Enable this to disable potentially flakey APIs which may cause
+      crashes.
 
 sources:
   - query: |

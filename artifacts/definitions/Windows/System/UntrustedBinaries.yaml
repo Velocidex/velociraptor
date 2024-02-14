@@ -19,6 +19,12 @@ parameters:
     default: "lsass|svchost|conhost|taskmgr|winlogon|wmiprv|dwm|csrss|velociraptor"
     type: regex
 
+  - name: DISABLE_DANGEROUS_API_CALLS
+    type: bool
+    description: |
+      Enable this to disable potentially flakey APIs which may cause
+      crashes.
+
 sources:
   - precondition: |
       SELECT OS From info() where OS = 'windows'
