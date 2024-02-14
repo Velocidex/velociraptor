@@ -189,6 +189,12 @@ func (self *EnrollmentService) ProcessEnrollment(
 		return err
 	}
 
+	if DEBUG {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Debug("Launched collection %v for client %v",
+			flow_id, client_id)
+	}
+
 	// Write an intermediate record while the interrogation is in
 	// flight. We are here because the client_info_manager does not
 	// have the record in cache, so next Get() will just read it from
