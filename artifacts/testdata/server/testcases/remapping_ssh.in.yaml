@@ -1,0 +1,37 @@
+Parameters:
+  RemappingTemplate: |
+    remappings:
+      # SSH mount from
+      - type: mount
+        scope: |
+          LET X <= log(message="Evaluated Remapping")
+          LET SSH_CONFIG <= dict(hostname='localhost:22',
+             username='test', private_key="XXX")
+        from:
+          accessor: ssh
+
+        on:
+          accessor: file
+          prefix: /remote/mnt
+          path_type: linux
+
+  LogRegex: "While parsing private key: ssh: no key found|remap: Failed to apply remapping|Unknown filesystem accessor file"
+
+Queries:
+  - LET _ <= remap(config=RemappingTemplate)
+
+  # Test that we are launching the ssh accessor
+  - SELECT * FROM glob(
+       globs='/*', root='/remote/mnt/foobar', accessor="file")
+
+  # The above should emit some errors so check for them now.
+
+  # 1. ssh: no key found shows that ssh accessor is receiving the
+  #    bogus key and trying to parse it.
+  # 2. Failed to apply remapping - remapping failed to apply this will
+  #    wipe all accessors from the device manager.
+  # 3. Unknown filesystem accessor file - the file accessor is no
+  #    longer available. This ensures we dont accidentally operate on
+  #    the host filesystem if the mapping is broken.
+  - |
+    SELECT * FROM test_read_logs() WHERE Log =~ LogRegex
