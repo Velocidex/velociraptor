@@ -368,8 +368,13 @@ func (self *_HttpPlugin) Call(
 		}
 
 		var req *http.Request
-		params := functions.EncodeParams(arg.Params, scope)
-		switch method := strings.ToUpper(arg.Method); method {
+		var params url.Values
+		if arg.Params != nil {
+			params = functions.EncodeParams(arg.Params, scope)
+		}
+		method := strings.ToUpper(arg.Method)
+
+		switch method {
 		case "GET":
 			{
 				req, err = http.NewRequestWithContext(
