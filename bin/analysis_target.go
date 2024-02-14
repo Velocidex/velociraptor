@@ -6,10 +6,10 @@ import (
 	"io/ioutil"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/Velocidex/yaml/v2"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/remapping"
@@ -32,11 +32,11 @@ func applyAnalysisTarget(config_obj *config_proto.Config) error {
 	}
 
 	remapping_config := []*config_proto.RemappingConfig{}
-	err = yaml.Unmarshal(data, remapping_config)
+	err = utils.YamlUnmarshal(data, remapping_config)
 	if err != nil {
 		// It might be a regular config file
 		full_config := &config_proto.Config{}
-		err := yaml.Unmarshal(data, full_config)
+		err := utils.YamlUnmarshal(data, full_config)
 		if err != nil {
 			return err
 		}

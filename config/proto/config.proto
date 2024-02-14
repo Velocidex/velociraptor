@@ -1169,6 +1169,10 @@ message RemappingConfig {
     // produce.
     string description = 10;
 
+    // A Sequence of VQL LET statements to preconfigure the scope for
+    // the accessor in the From clause.
+    string scope = 11;
+
     // For mount options
     MountPoint from = 2;
     MountPoint on = 3;

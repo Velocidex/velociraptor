@@ -15,6 +15,7 @@ import (
 // Process a "mount" type remapping directive.
 // Example:
 //
+//  remapping:
 //  - type: mount
 //    from:
 //      accessor: file
@@ -27,7 +28,32 @@ import (
 // Means when VQL opens a path using accessor "file" in all paths
 // below "C:/", the "file" accessor will be used on "/mnt/data"
 // instead.
+//
+// You can also preconfigure the scope that will be used with the
+// mounted accessor. This is needed for some accessors which look to
+// the scope to configure them - for example the `ssh` accessor can be
+// used with the following remapping file:
+//
+//remappings:
+//- type: permissions
+//  permissions:
+//  - FILESYSTEM_READ
+//
+//- "type": mount
+//  scope: |
+//    LET SSH_CONFIG <= dict(hostname='localhost:22',
+//      username='user',
+//      private_key=read_file(filename='/home/user/.ssh/id_rsa'))
+//
+//  "from":
+//    accessor: ssh
+//    prefix: /
+//  "on":
+//    accessor: auto
+//    prefix: /
+
 func InstallMountPoints(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	pristine_scope vfilter.Scope,
 	manager accessors.DeviceManager,
@@ -64,9 +90,16 @@ func InstallMountPoints(
 			from_accessor = "file"
 		}
 
+		// Evaluate VQL on pristine scope to prepare for accessor
+		// configuration.
+		evaluated_scope, err := evaluateScopeQuery(ctx,
+			pristine_scope, remapping.Scope)
+		if err != nil {
+			return err
+		}
+
 		from_fs, err := accessors.GetDefaultDeviceManager(
-			config_obj).GetAccessor(
-			from_accessor, pristine_scope)
+			config_obj).GetAccessor(from_accessor, evaluated_scope)
 		if err != nil {
 			return err
 		}
@@ -196,7 +229,7 @@ func ApplyRemappingOnScope(
 	}
 
 	for to_accessor, remappings := range mounts {
-		err := InstallMountPoints(config_obj, pristine_scope,
+		err := InstallMountPoints(ctx, config_obj, pristine_scope,
 			manager, remappings, to_accessor)
 		if err != nil {
 			return err
@@ -206,4 +239,30 @@ func ApplyRemappingOnScope(
 	installExpandMock(pristine_scope, remappings)
 
 	return nil
+}
+
+func evaluateScopeQuery(
+	ctx context.Context, scope vfilter.Scope, query string) (vfilter.Scope, error) {
+	if query == "" {
+		return scope, nil
+	}
+
+	sub_scope := scope.Copy()
+
+	vqls, err := vfilter.MultiParse(query)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"While evaluating remapping scope: %w", err)
+	}
+
+	for _, vql := range vqls {
+		if vql.Let == "" {
+			return nil, fmt.Errorf(
+				"While evaluating remapping scope: Only LET statements allowed in this context")
+		}
+		for _ = range vql.Eval(ctx, sub_scope) {
+		}
+	}
+
+	return sub_scope, nil
 }
