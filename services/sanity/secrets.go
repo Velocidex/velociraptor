@@ -12,7 +12,7 @@ import (
 var built_in_definitions = []string{`{
   "typeName":"AWS S3 Creds",
   "verifier":"x=>(x.credentials_key AND x.credentials_secret) OR x.credentials_token OR x.serversideencryption OR x.kmsencryptionkey",
-  "description": "Credentials used to interact with S3 buckets. Not all fields should be filled and only certain combinations are valid.",
+  "description": "Credentials used to interact with S3 buckets.",
   "template": {
      "region": "us-east-1",
      "credentials_key": "",
@@ -32,6 +32,18 @@ var built_in_definitions = []string{`{
      "hostname": ""
   },
   "verifier": "x=>x.username AND x.hostname =~ ':[0-9]+$' AND (x.password OR x.private_key =~ 'BEGIN OPENSSH PRIVATE KEY')"
+}`, `{
+  "typeName":"HTTP Secrets",
+  "description": "Credentials to be used in HTTP requests with http_client() calls.",
+  "template": {
+     "url": "",
+     "method": "",
+     "user_agent": "",
+     "extra_params": "# Add extra parameters as YAML strings\n#Foo: Value\n#Baz:Value2\n",
+     "extra_headers": "# Add extra headers as YAML strings\n#Authorization: Value\n",
+     "cookies": "# Add cookies as YAML strings\n#Cookie1: Value\n#Cookie2: Value2\n"
+  },
+  "verifier": "x=>x.url"
 }`,
 }
 
