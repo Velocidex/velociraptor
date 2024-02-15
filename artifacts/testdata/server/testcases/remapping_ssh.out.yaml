@@ -1,0 +1,12 @@
+LET _ <= remap(config=RemappingTemplate)[]SELECT * FROM glob( globs='/*', root='/remote/mnt/foobar', accessor="file")[]SELECT * FROM test_read_logs() WHERE Log =~ LogRegex
+[
+ {
+  "Log": "Velociraptor: remap: ssh: While parsing private key: ssh: no key found\n"
+ },
+ {
+  "Log": "Velociraptor: remap: Failed to apply remapping - will apply an empty remapping to block further processing\n"
+ },
+ {
+  "Log": "Velociraptor: glob: Field root Unknown filesystem accessor file\n"
+ }
+]
