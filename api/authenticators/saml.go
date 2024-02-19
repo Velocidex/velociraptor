@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/crewjam/saml/samlsp"
@@ -71,15 +72,29 @@ func (self *SamlAuthenticator) AddHandlers(mux *http.ServeMux) error {
 		return err
 	}
 
-	samlMiddleware, err = samlsp.New(samlsp.Options{
+	opts := samlsp.Options{
 		IDPMetadata: idpMetadata,
 		URL:         *rootURL,
 		Key:         key,
 		Certificate: cert,
-	})
+	}
+	samlMiddleware, err = samlsp.New(opts)
 	if err != nil {
 		return err
 	}
+
+	expiry_min := self.authenticator.DefaultSessionExpiryMin
+	if expiry_min == 0 {
+		expiry_min = 60 * 24 // 1 Day by default
+	}
+	maxAge := time.Minute * time.Duration(expiry_min)
+	jwtSessionCodec := samlsp.DefaultSessionCodec(opts)
+	jwtSessionCodec.MaxAge = maxAge
+	cookieSessionProvider := samlsp.DefaultSessionProvider(opts)
+	cookieSessionProvider.MaxAge = maxAge
+	cookieSessionProvider.Codec = jwtSessionCodec
+	samlMiddleware.Session = cookieSessionProvider
+
 	mux.Handle("/saml/", IpFilter(self.config_obj, samlMiddleware))
 	logger.Info("Authentication via SAML enabled")
 	return nil
