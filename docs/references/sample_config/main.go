@@ -106,6 +106,7 @@ var (
 		"defaults.max_batch_wait",
 		"defaults.disable_inventory_service_external_access",
 		"lockdown",
+		"debug_mode",
 	}
 )
 

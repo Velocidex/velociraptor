@@ -94,9 +94,9 @@ func (self ScannerPlugin) Call(
 	return output_chan
 }
 
-type _WatchSyslogPlugin struct{}
+type WatchSyslogPlugin struct{}
 
-func (self _WatchSyslogPlugin) Call(
+func (self WatchSyslogPlugin) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) <-chan vfilter.Row {
@@ -160,7 +160,7 @@ func (self _WatchSyslogPlugin) Call(
 	return output_chan
 }
 
-func (self _WatchSyslogPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self WatchSyslogPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:     "watch_syslog",
 		Doc:      "Watch a syslog file and stream events from it. ",
@@ -193,6 +193,6 @@ func maybeOpenGzip(scope vfilter.Scope,
 }
 
 func init() {
-	vql_subsystem.RegisterPlugin(&_WatchSyslogPlugin{})
+	vql_subsystem.RegisterPlugin(&WatchSyslogPlugin{})
 	vql_subsystem.RegisterPlugin(&ScannerPlugin{})
 }

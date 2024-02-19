@@ -506,7 +506,7 @@ GUI:
       - administrator
 
     # How long to keep the session alive between auth flows - default 24 hours
-    default_session_expiry_min: 8000
+    default_session_expiry_min: 1440
 
     # Used by the multi authenticator to provide multiple
     # authenticators. NOTE: Sub authenticators must be oauth based
@@ -1188,6 +1188,21 @@ defaults:
   export_concurrency: 10
   export_max_timeout_sec: 600
 
+  # The server maintains an index of all hunts in order to quickly
+  # allow the GUI to filter/sort them. This setting controls how often
+  # to rebuild the hunt index (default 600 sec). You probably dont
+  # need to change it.
+  hunt_dispatcher_refresh_sec: 600
+
+  # Total number of cell versions we keep for undo/redo support.
+  notebook_versions: 5
+
+  # Watch plugin frequency sleep time in seconds: How often
+  # watch_syslog() will check for changes (default 3).
+  watch_plugin_frequency: 3
+
+  # Maximum length of the line that will be parsed (16kb)
+  watch_plugin_buffer_size: 16384
 
 # The Velociraptor server may be placed into "lockdown" mode. While in
 # lockdown mode certain permissions are denied - even for
@@ -1196,6 +1211,9 @@ defaults:
 # compromised. The server can be taken out of lockdown mode by setting
 # lockdown to false and restarting the server.
 lockdown: false
+
+# This will be set when Velociraptor is started with the --debug flag.
+debug_mode: false
 
 # This configuration applies for minions. On minions this will
 # override the settings elsewhere in the config file allowing an easy

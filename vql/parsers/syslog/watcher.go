@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"io"
+	"os"
 	"sync"
 	"time"
 
@@ -14,11 +15,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
-)
-
-const (
-	FREQUENCY   = 3 * time.Second
-	BUFFER_SIZE = 16 * 1024
 )
 
 var (
@@ -43,10 +39,30 @@ type SyslogWatcherService struct {
 
 	config_obj    *config_proto.Config
 	registrations map[string][]*Handle
+
+	sleep_time  time.Duration
+	buffer_size int64
+
+	monitor_count int
 }
 
 func NewSyslogWatcherService(config_obj *config_proto.Config) *SyslogWatcherService {
+
+	sleep_time := 3 * time.Second
+	buffer_size := int64(16 * 1024)
+	if config_obj.Defaults != nil {
+		if config_obj.Defaults.WatchPluginFrequency > 0 {
+			sleep_time = time.Second * time.Duration(
+				config_obj.Defaults.WatchPluginFrequency)
+		}
+		if config_obj.Defaults.WatchPluginBufferSize > 0 {
+			buffer_size = config_obj.Defaults.WatchPluginBufferSize
+		}
+	}
+
 	return &SyslogWatcherService{
+		sleep_time:    sleep_time,
+		buffer_size:   buffer_size,
 		config_obj:    config_obj,
 		registrations: make(map[string][]*Handle),
 	}
@@ -126,7 +142,7 @@ func (self *SyslogWatcherService) StartMonitoring(
 
 		cursor = self.monitorOnce(filename, accessor_name, accessor, cursor)
 
-		time.Sleep(FREQUENCY)
+		time.Sleep(self.sleep_time)
 	}
 }
 
@@ -148,7 +164,7 @@ func (self *SyslogWatcherService) findLastLineOffset(
 	defer fd.Close()
 
 	cursor.file_size = stat.Size()
-	last_offset := cursor.file_size - BUFFER_SIZE
+	last_offset := cursor.file_size - self.buffer_size
 	if last_offset < 0 {
 		last_offset = 0
 	}
@@ -159,7 +175,7 @@ func (self *SyslogWatcherService) findLastLineOffset(
 		return cursor
 	}
 
-	buff := make([]byte, BUFFER_SIZE)
+	buff := make([]byte, self.buffer_size)
 	n, err := fd.Read(buff)
 	if err != nil && err != io.EOF {
 		return cursor
@@ -182,7 +198,10 @@ func (self *SyslogWatcherService) monitorOnce(
 	cursor *Cursor) *Cursor {
 
 	self.mu.Lock()
-	defer self.mu.Unlock()
+	defer func() {
+		self.monitor_count++
+		self.mu.Unlock()
+	}()
 
 	stat, err := accessor.LstatWithOSPath(filename)
 	if err != nil {
@@ -198,7 +217,7 @@ func (self *SyslogWatcherService) monitorOnce(
 	// file was truncated.
 	if stat.Size() < cursor.file_size {
 		logger := logging.GetLogger(self.config_obj, &logging.ClientComponent)
-		logger.Info("File size (%v) is smaller than last know size (%v) - assuming file was truncated. Will start reading at the start again.",
+		logger.Info("File size (%v) is smaller than last known size (%v) - assuming file was truncated. Will start reading at the start again.",
 			stat.Size(), cursor.file_size)
 		cursor.last_line_offset = 0
 	}
@@ -217,55 +236,86 @@ func (self *SyslogWatcherService) monitorOnce(
 	}
 	defer fd.Close()
 
-	// File must be seekable
-	pos, err := fd.Seek(cursor.last_line_offset, 0)
-	if err != nil {
-		return cursor
-	}
+	for {
+		// Only read up to the last offset in case the file grows more.
+		to_read := cursor.file_size - cursor.last_line_offset
+		if to_read > self.buffer_size {
+			to_read = self.buffer_size
+		}
 
-	// File is truncated, start reading from the front again.
-	if cursor.last_line_offset != pos {
-		cursor.last_line_offset = 0
-		return cursor
-	}
+		if to_read == 0 {
+			return cursor
+		}
 
-	buff := make([]byte, BUFFER_SIZE)
-	n, err := fd.Read(buff)
-	if err != nil && err != io.EOF {
-		return cursor
-	}
+		// File must be seekable
+		pos, err := fd.Seek(cursor.last_line_offset, os.SEEK_SET)
+		if err != nil {
+			return cursor
+		}
 
-	buff = buff[:n]
-	offset := 0
+		// File is truncated, start reading from the front again.
+		if cursor.last_line_offset != pos {
+			cursor.last_line_offset = 0
+			return cursor
+		}
 
-	// Read whole lines inside the buffer
-	for len(buff)-offset > 0 {
-		new_lf := bytes.IndexByte(buff[offset:], '\n')
-		if new_lf > 0 {
-			new_handles := self.distributeLine(
-				string(buff[offset:offset+new_lf]), filename, key, handles)
+		buff := make([]byte, to_read)
+		n, err := fd.Read(buff)
+		if err != nil && err != io.EOF {
+			return cursor
+		}
 
-			// No more listeners - we dont care any more.
-			if len(new_handles) == 0 {
-				delete(self.registrations, key)
+		buff = buff[:n]
+
+		// Read whole lines inside the buffer
+		for len(buff) > 0 {
+			new_lf := bytes.IndexByte(buff, '\n')
+			if new_lf >= 0 {
 				cursor.last_line_offset += int64(new_lf) + 1
+
+				handles = self.distributeLine(
+					string(buff[:new_lf]), filename, key, handles)
+
+				// No more listeners - we dont care any more.
+				if len(handles) == 0 {
+					return cursor
+				}
+
+				// Advance the cursor to the next line
+				buff = buff[new_lf+1:]
+
+				// Get next line
+				continue
+			}
+
+			// The entire buffer does not contain lf at all - we skip
+			// the entire buffer and hope to get a line on the next
+			// read.
+			if len(buff) == n {
+
+				// The last line is just too long for the buffer. We
+				// break it up into multiple lines to fit.
+				if cursor.file_size-cursor.last_line_offset >
+					self.buffer_size {
+					cursor.last_line_offset += int64(len(buff))
+
+					handles = self.distributeLine(
+						string(buff), filename, key, handles)
+
+					// No more listeners - we dont care any more.
+					if len(handles) == 0 {
+						return cursor
+					}
+
+					// Drop the buffer and read some more.
+					break
+				}
+
 				return cursor
 			}
 
-			// Update the registrations - possibly
-			// omitting finished listeners.
-			self.registrations[key] = new_handles
-			handles = new_handles
-
-			cursor.last_line_offset += int64(new_lf) + 1
-			offset += new_lf + 1
-
-		} else {
-			// The buffer does not contain lf at all - we
-			// skip the entire buffer and hope to get a
-			// line on the next read.
-			cursor.last_line_offset += int64(len(buff) - offset)
-			return cursor
+			// Abandon this buffer and try again
+			break
 		}
 	}
 	return cursor
@@ -289,6 +339,13 @@ func (self *SyslogWatcherService) distributeLine(
 			new_handles = append(new_handles, handle)
 		}
 	}
+
+	// Update the registrations - possibly omitting finished
+	// listeners.
+	if len(new_handles) == 0 {
+		delete(self.registrations, key)
+	}
+	self.registrations[key] = new_handles
 
 	return new_handles
 }
