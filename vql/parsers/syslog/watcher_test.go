@@ -2,6 +2,7 @@ package syslog
 
 import (
 	"context"
+	"io/ioutil"
 	"os"
 	"sync"
 	"testing"
@@ -88,7 +89,11 @@ func (self *SyslogWatcherTestSuite) SetupTest() {
 
 	self.scope = manager.BuildScope(builder)
 
-	self.temp_file = "/tmp/2.jsonl"
+	fd, err := ioutil.TempFile("", "tmp")
+	assert.NoError(self.T(), err)
+	fd.Close()
+
+	self.temp_file = fd.Name()
 
 	self.truncateFile()
 
