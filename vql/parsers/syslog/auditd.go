@@ -150,7 +150,7 @@ func (self WatchAuditdPlugin) Call(
 			}
 		}()
 
-		scanner := _WatchSyslogPlugin{}
+		scanner := WatchSyslogPlugin{}
 		for row := range scanner.Call(ctx, scope, args) {
 			line, pres := scope.Associative(row, "Line")
 			if !pres {

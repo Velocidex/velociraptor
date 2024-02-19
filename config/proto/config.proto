@@ -1098,9 +1098,17 @@ message Defaults {
     // its own but if this is set, we prevent any external access.
     bool disable_inventory_service_external_access = 34;
 
-    // Controls how exports work (creating hunt or colletion exports to a zip file).
+    // Controls how exports work (creating hunt or colletion exports
+    // to a zip file).
     int64 export_concurrency = 40;
     int64 export_max_timeout_sec = 41;
+
+    // Watch plugin frequency sleep time in seconds: How often
+    // watch_syslog() will check for changes (default 3).
+    int64 watch_plugin_frequency = 44;
+
+    // Maximum length of the line that will be parsed (16kb)
+    int64 watch_plugin_buffer_size = 45;
 }
 
 // Configures crypto preferences
@@ -1281,7 +1289,7 @@ message Config {
     // does not know or use its own org id.
     string org_id = 36;
     string org_name = 37;
-
+    bool debug_mode = 41;
 
     // The services that will run at initialization. Note this is not
     // set in the config file by the user but is propagated from the

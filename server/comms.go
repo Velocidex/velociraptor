@@ -27,6 +27,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"os"
 	"sync/atomic"
 	"time"
 
@@ -47,10 +48,12 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	http_utils "www.velocidex.com/golang/velociraptor/utils/http"
 )
 
 var (
 	packetTooLargeError = errors.New("Packet too large!")
+	notFoundError       = errors.New("Not Found")
 
 	currentConnections = promauto.NewGauge(prometheus.GaugeOpts{
 		Name: "client_comms_current_connections",
@@ -684,33 +687,12 @@ func send_client_messages(server_obj *Server) http.Handler {
 	})
 }
 
-// Record the status of the request so we can log it.
-type statusRecorder struct {
-	http.ResponseWriter
-	http.Flusher
-	status int
-	error  []byte
-}
-
-func (self *statusRecorder) WriteHeader(code int) {
-	self.status = code
-	self.ResponseWriter.WriteHeader(code)
-}
-
-func (self *statusRecorder) Write(buf []byte) (int, error) {
-	if self.status == 500 {
-		self.error = buf
-	}
-
-	return self.ResponseWriter.Write(buf)
-}
-
 func GetLoggingHandler(config_obj *config_proto.Config,
 	handler string) func(http.Handler) http.Handler {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			rec := &statusRecorder{
+			rec := &http_utils.StatusRecorder{
 				w,
 				w.(http.Flusher),
 				200, nil}
@@ -722,7 +704,7 @@ func GetLoggingHandler(config_obj *config_proto.Config,
 						"url":        r.URL.Path,
 						"remote":     r.RemoteAddr,
 						"user-agent": r.UserAgent(),
-						"status":     rec.status,
+						"status":     rec.Status,
 						"handler":    handler,
 					}).Info("Access to handler")
 			}()
@@ -740,7 +722,7 @@ func downloadPublic(
 		// make sure the prefix is correct
 		for i, p := range prefix {
 			if len(components) <= i || p != components[i] {
-				returnError(w, 404, "Not Found")
+				returnError(config_obj, w, 404, notFoundError)
 				return
 			}
 		}
@@ -748,7 +730,7 @@ func downloadPublic(
 		file_store_factory := file_store.GetFileStore(config_obj)
 		fd, err := file_store_factory.ReadFile(path_spec)
 		if err != nil {
-			returnError(w, 404, err.Error())
+			returnError(config_obj, w, 404, err)
 			return
 		}
 
@@ -764,9 +746,23 @@ func downloadPublic(
 	})
 }
 
-func returnError(w http.ResponseWriter, code int, message string) {
+func returnError(
+	config_obj *config_proto.Config,
+	w http.ResponseWriter, code int, err error) {
 	w.WriteHeader(code)
-	_, _ = w.Write([]byte(html.EscapeString(message)))
+
+	if config_obj.DebugMode {
+		_, _ = w.Write([]byte(html.EscapeString(err.Error())))
+		return
+	}
+
+	// In production provide generic errors.
+	if errors.Is(err, os.ErrNotExist) {
+		_, _ = w.Write([]byte("Not Found"))
+
+	} else {
+		_, _ = w.Write([]byte("Error"))
+	}
 }
 
 // Calculate QPS
