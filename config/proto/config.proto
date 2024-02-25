@@ -534,9 +534,22 @@ message ReverseProxyConfig {
 message DynDNSConfig {
     string hostname = 1 [deprecated=true];
 
-    // Not used any more - we take the hostname from Frontend.Hostname.
+    // Type of DynDNS server. Currently supported:
+    // * empty string or dyndns
+    // * cloudflare
+    string type = 8;
+
     string ddns_username = 2;
     string ddns_password = 3;
+
+    // Some providers require a different hostname be updated that the
+    // actual hostname (e.g. no-ip.com uses all.ddnskey.com to hide
+    // the domain)
+    string ddns_hostname = 11;
+
+    // This can be a full golang template for example
+    // http://ip1.dynupdate.no-ip.com/nic/update?hostname={{.Hostname}}&myip={{.IP}}
+    // or just the base URL
     string update_url = 4;
     uint64 frequency = 5;
 
@@ -545,6 +558,10 @@ message DynDNSConfig {
 
     // DNS server we query for our own hostname/ip mapping (default 8.8.8.8:53)
     string dns_server = 7;
+
+    // cloudflare settings - required
+    string api_token = 9;
+    string zone_name = 10;
 }
 
 message FrontendResourceControl {
