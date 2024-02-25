@@ -1,15 +1,12 @@
-//go:build !windows
-// +build !windows
+//go:build linux || darwin
 
 package darwin
 
 import (
-	"fmt"
 	"os"
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/ivaxer/go-xattr"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	_ "www.velocidex.com/golang/velociraptor/accessors/file"
@@ -34,44 +31,49 @@ func (self *XattrTestSuite) TestXAttr() {
 	file.Close()
 	defer os.Remove(filepath)
 
-	attr1 := "vr.test"
-	attr2 := "vr.test2"
-	value := "test.value"
-
 	testcases := []struct {
-		name string
-		attr []string
-		pass bool
+		name     string
+		filename string
+		attr     []string
+		pass     bool
 	}{
 		{
-			name: filepath,
-			attr: []string{},
-			pass: false,
+			name:     "List All attributes",
+			filename: filepath,
+			attr:     []string{},
+			pass:     false,
 		},
 		{
-			name: filepath,
-			attr: []string{attr1},
-			pass: true,
+			name:     "Get one specific attribute",
+			filename: filepath,
+			attr:     []string{"vr.test"},
+			pass:     true,
 		},
 		{
-			name: filepath,
-			attr: []string{attr1, attr2},
-			pass: true,
+			name:     "Get both attributes by name",
+			filename: filepath,
+			attr:     []string{"vr.test", "vr.test2"},
+			pass:     true,
 		},
 		{
-			name: filepath,
-			attr: []string{attr1, "invalid.test"},
-			pass: true,
+			name:     "Get one attribute present and one not available.",
+			filename: filepath,
+			attr:     []string{"vr.test", "invalid.test"},
+			pass:     true,
 		},
 		{
-			name: filepath,
-			attr: []string{"invalid.test"},
-			pass: false,
+			name:     "Get only unavailable attribute",
+			filename: filepath,
+			attr:     []string{"invalid.test"},
+			pass:     false,
 		},
 	}
 
-	xattr.Set(filepath, attr1, []byte(value))
-	xattr.Set(filepath, attr2, []byte(value))
+	err = Set(filepath, "vr.test", []byte("test.value"))
+	assert.NoError(self.T(), err)
+
+	err = Set(filepath, "vr.test2", []byte("test.value"))
+	assert.NoError(self.T(), err)
 
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
@@ -88,15 +90,16 @@ func (self *XattrTestSuite) TestXAttr() {
 	defer scope.Close()
 
 	ret := ordereddict.NewDict()
-	for i, test := range testcases {
-		ret.Set(fmt.Sprintf("Case #%d", i), XAttrFunction{}.Call(
+	for _, test := range testcases {
+		res := XAttrFunction{}.Call(
 			self.Ctx, scope,
 			ordereddict.NewDict().
-				Set("filename", test.name).
-				Set("attribute", test.attr)))
+				Set("filename", test.filename).
+				Set("attribute", test.attr))
+		ret.Set(test.name, res)
 
 	}
-	goldie.Assert(self.T(), "xattrReturnCheck", json.MustMarshalIndent(ret))
+	goldie.Assert(self.T(), "TestXAttr", json.MustMarshalIndent(ret))
 }
 
 func TestXAttrFunction(t *testing.T) {

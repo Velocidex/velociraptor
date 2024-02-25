@@ -21,6 +21,12 @@ var (
 
 func RecordHTTPStats(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Ignore Websocket connections
+		if is_ws_connection(r) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
 		rec := &http_utils.StatusRecorder{
 			w,
 			w.(http.Flusher),

@@ -40,6 +40,11 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
+const (
+	DrainRequestsForClient      = true
+	DoNotDrainRequestsForClient = false
+)
+
 type Server struct {
 	manager *crypto_server.ServerCryptoManager
 	logger  *logging.LogContext

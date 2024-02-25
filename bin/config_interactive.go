@@ -59,12 +59,22 @@ What OS will the server be deployed on?
 	}
 
 	// https://docs.microsoft.com/en-us/troubleshoot/windows-server/identity/naming-conventions-for-computer-domain-site-ou#dns-host-names
-	url_validator = regexValidator("^[a-z0-9.A-Z\\-]+$")
-	port_question = &survey.Input{
+	url_validator          = regexValidator("^[a-z0-9.A-Z\\-]+$")
+	frontend_port_question = &survey.Input{
 		Message: "Enter the frontend port to listen on.",
 		Default: "8000",
 	}
 	port_validator = regexValidator("^[0-9]+$")
+
+	should_use_websocket = false
+	websocket_question   = &survey.Confirm{
+		Message: `Would you like to try the new experimental websocket comms?
+
+Websocket is a bidirectional low latency communication protocol supported by
+most modern proxies and load balancers. This method is more efficient and
+portable than plain HTTP. Be sure to test this in you environment.
+`,
+	}
 
 	gui_port_question = &survey.Input{
 		Message: "Enter the port for the GUI to listen on.",
@@ -461,11 +471,10 @@ func configSelfSigned(config_obj *config_proto.Config) error {
 		},
 		{
 			Name:     "BindPort",
-			Prompt:   port_question,
+			Prompt:   frontend_port_question,
 			Validate: port_validator,
 		},
 	}, config_obj.Frontend)
-
 	if err != nil {
 		return err
 	}
@@ -481,6 +490,16 @@ func configSelfSigned(config_obj *config_proto.Config) error {
 		return err
 	}
 
+	err = survey.AskOne(websocket_question, &should_use_websocket, nil)
+	if err != nil {
+		return err
+	}
+
+	protocol := "https"
+	if should_use_websocket {
+		protocol = "wss"
+	}
+
 	config_obj.GUI.PublicUrl = fmt.Sprintf(
 		"https://%s:%d/", config_obj.Frontend.Hostname,
 		config_obj.GUI.BindPort)
@@ -488,7 +507,7 @@ func configSelfSigned(config_obj *config_proto.Config) error {
 	config_obj.Client.UseSelfSignedSsl = true
 	config_obj.Client.ServerUrls = append(
 		config_obj.Client.ServerUrls,
-		fmt.Sprintf("https://%s:%d/", config_obj.Frontend.Hostname,
+		fmt.Sprintf("%s://%s:%d/", protocol, config_obj.Frontend.Hostname,
 			config_obj.Frontend.BindPort))
 
 	config_obj.GUI.Authenticator = &config_proto.Authenticator{
@@ -504,6 +523,11 @@ func configAutocert(config_obj *config_proto.Config) error {
 		Prompt:   url_question,
 	},
 	}, config_obj.Frontend)
+	if err != nil {
+		return err
+	}
+
+	err = survey.AskOne(websocket_question, &should_use_websocket, nil)
 	if err != nil {
 		return err
 	}

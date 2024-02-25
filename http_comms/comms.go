@@ -224,13 +224,7 @@ func NewHTTPConnector(
 
 		urls: urls,
 
-		client: &http.Client{
-			// Let us handle redirect ourselves.
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				return http.ErrUseLastResponse
-			},
-			Transport: transport,
-		},
+		client: NewHTTPClient(config_obj, transport),
 	}
 
 	return self, nil
@@ -297,7 +291,7 @@ func (self *HTTPConnector) Post(
 	}
 
 	self.logger.Info("%s: sent %d bytes, response with status: %v after %v, waiting for server messages",
-		name, len(data), resp.Status, utils.GetTime().Now().Sub(now))
+		name, len(data), resp.StatusCode, utils.GetTime().Now().Sub(now))
 
 	// Handle redirect. Frontends may redirect us to other
 	// frontends.
@@ -658,7 +652,7 @@ func (self *NotificationReader) sendMessageList(
 
 	for {
 		if atomic.LoadInt32(&self.IsPaused) == 0 {
-			err := self.sendToURL(ctx, message_list, urgent, compression)
+			err := self.SendToURL(ctx, message_list, urgent, compression)
 			// Success!
 			if err == nil {
 				return
@@ -704,7 +698,7 @@ func (self *NotificationReader) sendMessageList(
 
 }
 
-func (self *NotificationReader) sendToURL(
+func (self *NotificationReader) SendToURL(
 	ctx context.Context,
 	message_list [][]byte,
 	urgent bool,
@@ -897,7 +891,7 @@ type HTTPCommunicator struct {
 	enroller *Enroller
 
 	// Sends results back to the server.
-	sender *Sender
+	Sender *Sender
 
 	// Will be called when we exit the communicator.
 	on_exit func()
@@ -910,7 +904,7 @@ func (self *HTTPCommunicator) SetPause(is_paused bool) {
 	if is_paused {
 		value = 1
 	}
-	atomic.StoreInt32(&self.sender.IsPaused, value)
+	atomic.StoreInt32(&self.Sender.IsPaused, value)
 	atomic.StoreInt32(&self.receiver.IsPaused, value)
 }
 
@@ -920,7 +914,7 @@ func (self *HTTPCommunicator) Run(
 	self.logger.Info("Starting HTTPCommunicator: %v", self.receiver.connector)
 
 	self.receiver.Start(ctx, wg)
-	self.sender.Start(ctx, wg)
+	self.Sender.Start(ctx, wg)
 
 	<-ctx.Done()
 }
@@ -1039,7 +1033,7 @@ func NewHTTPCommunicator(
 			clock:      clock,
 		},
 		on_exit:  on_exit,
-		sender:   sender,
+		Sender:   sender,
 		receiver: receiver,
 		Manager:  crypto_manager,
 	}

@@ -135,14 +135,15 @@ func PrepareFrontendMux(
 
 	base := config_obj.Frontend.BasePath
 	router.Handle(base+"/healthz", healthz(server_obj))
-	router.Handle(base+"/server.pem", server_pem(config_obj))
+	router.Handle(base+"/server.pem", server_pem(config_obj, server_obj))
 
 	// DEPRECATED: These are the old handler names - not great
 	// but here for backwards compatibility.
 	router.Handle(base+"/control",
 		RecordHTTPStats(receive_client_messages(config_obj, server_obj)))
+
 	router.Handle(base+"/reader",
-		RecordHTTPStats(send_client_messages(server_obj)))
+		RecordHTTPStats(send_client_messages(config_obj, server_obj)))
 
 	// Send a message to the server.
 	router.Handle(base+"/send_messages",
@@ -150,7 +151,7 @@ func PrepareFrontendMux(
 
 	// Receive new messages from the server.
 	router.Handle(base+"/receive_messages",
-		RecordHTTPStats(send_client_messages(server_obj)))
+		RecordHTTPStats(send_client_messages(config_obj, server_obj)))
 
 	// Publicly accessible part of the filestore. NOTE: this
 	// does not have to be a physical directory - it is served
@@ -172,8 +173,18 @@ func healthz(server_obj *Server) http.Handler {
 	})
 }
 
-func server_pem(config_obj *config_proto.Config) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func server_pem(config_obj *config_proto.Config, server_obj *Server) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+
+		if is_ws_connection(req) {
+			err := ws_server_pem(config_obj, server_obj, w, req)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			return
+		}
+
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusOK)
 		flusher, _ := w.(http.Flusher)
@@ -274,6 +285,17 @@ func receive_client_messages(
 	serialized_pad, _ := proto.Marshal(pad)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
+
+		// Handle WS connections transparently.
+		if is_ws_connection(req) {
+			err := ws_receive_client_messages(config_obj, server_obj, w, req)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			return
+		}
+
 		flusher, ok := w.(http.Flusher)
 		if !ok {
 			panic("http handler is not a flusher")
@@ -459,13 +481,24 @@ func receive_client_messages(
 // connection will persist up to Client.MaxPoll so we always have a
 // channel to the client. This allows us to send the client jobs
 // immediately with low latency.
-func send_client_messages(server_obj *Server) http.Handler {
+func send_client_messages(
+	config_obj *config_proto.Config,
+	server_obj *Server) http.Handler {
 	pad := &crypto_proto.ClientCommunication{}
 	pad.Padding = append(pad.Padding, 0)
 	serialized_pad, _ := proto.Marshal(pad)
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
+
+		if is_ws_connection(req) {
+			err := ws_send_client_messages(config_obj, server_obj, w, req)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			return
+		}
 
 		flusher, ok := w.(http.Flusher)
 		if !ok {
