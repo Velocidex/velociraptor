@@ -1,0 +1,17 @@
+{
+ "List All attributes": {
+  "vr.test": "test.value",
+  "vr.test2": "test.value"
+ },
+ "Get one specific attribute": {
+  "vr.test": "test.value"
+ },
+ "Get both attributes by name": {
+  "vr.test": "test.value",
+  "vr.test2": "test.value"
+ },
+ "Get one attribute present and one not available.": {
+  "vr.test": "test.value"
+ },
+ "Get only unavailable attribute": {}
+}

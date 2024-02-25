@@ -199,6 +199,11 @@ message ClientConfig {
             default: "30",
         }];
 
+    // When using websockets the server pings the client periodically
+    // to see if it is still there. This setting controls how often
+    // this ping occurs (default 10).
+    uint64 ws_ping_wait_sec = 45;
+
     // If this is set, the nanny will exit if we are not able to send
     // messages to the server within this many seconds. NOTE - even a
     // failed connection will reset the counter, the nanny will only

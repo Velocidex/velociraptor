@@ -33,6 +33,9 @@ type: INTERNAL
 name: Server.Internal.ClientInfoSnapshot
 type: INTERNAL
 `, `
+name: Server.Internal.ClientInfo
+type: INTERNAL
+`, `
 name: Server.Internal.ClientDelete
 type: INTERNAL
 `, `
