@@ -62,6 +62,7 @@ func (self *AddLabels) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	principal := vql_subsystem.GetPrincipal(scope)
 	labeler := services.GetLabeler(config_obj)
 	for _, label := range arg.Labels {
 		if label == "" {
@@ -71,9 +72,24 @@ func (self *AddLabels) Call(ctx context.Context,
 		switch arg.Op {
 		case "set":
 			err = labeler.SetClientLabel(ctx, config_obj, arg.ClientId, label)
+			if err == nil {
+				services.LogAudit(ctx,
+					config_obj, principal, "SetClientLabel",
+					ordereddict.NewDict().
+						Set("client_id", arg.ClientId).
+						Set("label", label))
+			}
 
 		case "remove":
-			err = labeler.RemoveClientLabel(ctx, config_obj, arg.ClientId, label)
+			err = labeler.RemoveClientLabel(
+				ctx, config_obj, arg.ClientId, label)
+			if err == nil {
+				services.LogAudit(ctx,
+					config_obj, principal, "RemoveClientLabel",
+					ordereddict.NewDict().
+						Set("client_id", arg.ClientId).
+						Set("label", label))
+			}
 
 		case "check":
 			if !labeler.IsLabelSet(ctx, config_obj, arg.ClientId, label) {

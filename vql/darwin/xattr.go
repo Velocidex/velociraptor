@@ -4,7 +4,8 @@ package darwin
 
 import (
 	"context"
-	"x/sys/unix"
+
+	"golang.org/x/sys/unix"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"

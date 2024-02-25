@@ -1455,7 +1455,6 @@
     or quoting issues (since there is no shell involved). Additionally
     it does not invoke powershell which means that any execution
     artifacts are not trampled by this VQL.
-
   type: Plugin
   args:
   - name: argv
@@ -2254,6 +2253,46 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+- name: host
+  description: |
+    Perform a DNS resolution.
+
+    This function allows DNS to be resolved from within VQL. You can
+    use the regular system resolver (for example on windows will go
+    through the resolver cache service).
+
+    You can also specify an external DNS server, causing the query to
+    contact the DNS server for resolving the names.
+
+    NOTE: No cachig is currently provided so this may generate a lot
+    of load on DNS servers when scanning many rows.
+
+    Example: The first query resolves through an external DNS server
+    while the second uses the local resolver.
+
+    ```
+    SELECT host(name='www.google.com', server='8.8.8.8:53'),
+       host(name='www.google.com')
+    FROM scope()
+    ```
+
+  type: Function
+  args:
+  - name: name
+    type: string
+    description: The name to lookup
+    required: true
+  - name: server
+    type: string
+    description: A DNS server to query - if not provided uses the system resolver.
+  - name: type
+    type: string
+    description: Type of lookup, can be CNAME, NS, SOA, TXT, DNSKEY, AXFR, A (default)
+  - name: prefer_go
+    type: bool
+    description: Prefer calling the native Go implementation rather than the system.
+  metadata:
+    permissions: MACHINE_STATE
 - name: http_client
   description: |
     Make a http request.
@@ -2345,10 +2384,10 @@
     description: The URL to fetch
     required: true
   - name: params
-    type: Any
+    type: ordereddict.Dict
     description: Parameters to encode as POST or GET query strings
   - name: headers
-    type: Any
+    type: ordereddict.Dict
     description: A dict of headers to send.
   - name: method
     type: string
@@ -2383,6 +2422,10 @@
   - name: user_agent
     type: string
     description: If specified, set a HTTP User-Agent.
+  - name: secret
+    type: string
+    description: If specified, use this managed secret. The secret should be of type
+      'HTTP Secrets'. Alternatively specify the Url as secret://name
   category: plugin
   metadata:
     permissions: COLLECT_SERVER
@@ -6295,7 +6338,6 @@
   - name: region
     type: string
     description: The region the bucket is in
-    required: true
   - name: credentialskey
     type: string
     description: The AWS key credentials to use
@@ -6323,6 +6365,10 @@
   - name: skip_verify
     type: bool
     description: Skip TLS Verification
+  - name: secret
+    type: string
+    description: Alternatively use a secret from the secrets service. Secret must
+      be of type 'AWS S3 Creds'
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
@@ -6770,6 +6816,23 @@
   category: event
   metadata:
     permissions: FILESYSTEM_READ
+- name: watch_jsonl
+  description: Watch a jsonl file and stream events from it.
+  type: Plugin
+  args:
+  - name: filename
+    type: accessors.OSPath
+    description: A list of log files to parse.
+    repeated: true
+    required: true
+  - name: accessor
+    type: string
+    description: The accessor to use.
+  - name: buffer_size
+    type: int
+    description: Maximum size of line buffer.
+  metadata:
+    permissions: FILESYSTEM_READ
 - name: watch_monitoring
   description: |
     Watch clients' monitoring log. This is an event plugin. This
@@ -6922,6 +6985,9 @@
     type: StoredQuery
     description: query to write into the file.
     required: true
+  - name: buffer_size
+    type: int
+    description: Maximum size of buffer before flushing to file.
   metadata:
     permissions: FILESYSTEM_WRITE
 - name: xattr

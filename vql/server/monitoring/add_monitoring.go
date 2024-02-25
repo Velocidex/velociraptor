@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	vql_utils "www.velocidex.com/golang/velociraptor/vql/utils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -47,13 +48,7 @@ func (self AddClientMonitoringFunction) Call(
 	}
 
 	// Now verify the artifact actually exists
-	manager, err := services.GetRepositoryManager(config_obj)
-	if err != nil {
-		scope.Log("add_client_monitoring: %v", err)
-		return vfilter.Null{}
-	}
-
-	repository, err := manager.GetGlobalRepository(config_obj)
+	repository, err := vql_utils.GetRepository(scope)
 	if err != nil {
 		scope.Log("add_client_monitoring: %v", err)
 		return vfilter.Null{}
@@ -211,13 +206,7 @@ func (self AddServerMonitoringFunction) Call(
 	}
 
 	// Now verify the artifact actually exists
-	manager, err := services.GetRepositoryManager(config_obj)
-	if err != nil {
-		scope.Log("add_server_monitoring: %v", err)
-		return vfilter.Null{}
-	}
-
-	repository, err := manager.GetGlobalRepository(config_obj)
+	repository, err := vql_utils.GetRepository(scope)
 	if err != nil {
 		scope.Log("add_server_monitoring: %v", err)
 		return vfilter.Null{}

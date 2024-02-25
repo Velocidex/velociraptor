@@ -150,7 +150,7 @@ func breakIntoScopes(
 	// the parameters, we need to get the reader from different
 	// places.
 	result_set_reader, err := getResultSetReader(
-		ctx, config_obj, &SourcePluginArgs{
+		ctx, config_obj, scope, &SourcePluginArgs{
 			ClientId:          arg.ClientId,
 			FlowId:            arg.FlowId,
 			Artifact:          arg.Artifact,

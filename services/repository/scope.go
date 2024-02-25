@@ -30,12 +30,16 @@ func _build(self services.ScopeBuilder, from_scratch bool) vfilter.Scope {
 		env.Set("_SessionId", "")
 	}
 
+	// If the repository is not specified, use the global repository.
 	if self.Repository == nil {
-		manager, _ := services.GetRepositoryManager(self.Config)
-		if manager == nil {
+		manager, err := services.GetRepositoryManager(self.Config)
+		if manager == nil || err != nil {
 			return vfilter.NewScope()
 		}
-		self.Repository, _ = manager.GetGlobalRepository(self.Config)
+		self.Repository, err = manager.GetGlobalRepository(self.Config)
+		if err != nil {
+			return vfilter.NewScope()
+		}
 	}
 
 	var scope vfilter.Scope
@@ -92,7 +96,12 @@ func _build(self services.ScopeBuilder, from_scratch bool) vfilter.Scope {
 	scope.SetExplainer(explain.NewLoggingExplainer(scope))
 
 	artifact_plugin := NewArtifactRepositoryPlugin(self.Repository, self.Config)
-	env.Set("Artifact", artifact_plugin)
+	// Pass the repository into the scope env. Plugins that need to
+	// consult the repository should always get it from this variable
+	// so it can be subsistuted with an isolate repository for
+	// clients.
+	env.Set("Artifact", artifact_plugin).
+		Set(constants.SCOPE_REPOSITORY, self.Repository)
 
 	scope.AppendVars(env).AddProtocolImpl(
 		_ArtifactRepositoryPluginAssociativeProtocol{})
