@@ -4,6 +4,7 @@ package ddclient
 
 import (
 	"context"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net"
@@ -116,12 +117,34 @@ func StartDynDNSService(
 		dns_server:      config_obj.Frontend.DynDns.DnsServer,
 	}
 
-	switch strings.ToLower(config_obj.Frontend.DynDns.Type) {
-	case "", "noip":
+	dyndns_type := strings.ToLower(config_obj.Frontend.DynDns.Type)
+	if config_obj.Frontend.DynDns.Type == "" {
+		if config_obj.Frontend.DynDns.DdnsUsername != "" {
+			dyndns_type = "noip"
+		} else {
+			// No DynDNS specified. This backwards compatibility
+			// setting ignores the dyndns setting when both the type
+			// is unset and the ddns_username is not set. This allows
+			// a setting like:
+			// dyndns: {}
+			//
+			// To mean unconfigured dyndns service.
+			return nil
+		}
+	}
+
+	switch dyndns_type {
+	case "noip":
 		result.updater, err = NewNoIPUpdater(config_obj)
 
 	case "cloudflare":
 		result.updater, err = NewCloudflareUpdater(config_obj)
+
+	case "":
+		return nil
+
+	default:
+		return errors.New("DynDns: provider type not supported (currently only noip and cloudflare)")
 	}
 	if err != nil {
 		return err

@@ -101,11 +101,11 @@ func (self NoIPUpdater) UpdateDDNSRecord(
 
 func NewNoIPUpdater(config_obj *config_proto.Config) (Updater, error) {
 	if config_obj.Frontend.DynDns.DdnsUsername == "" {
-		return nil, errors.New("DynDns: Username must be provided for the Google service")
+		return nil, errors.New("DynDns: Username must be provided for the NoIP service")
 	}
 
 	if config_obj.Frontend.DynDns.DdnsPassword == "" {
-		return nil, errors.New("DynDns: ddns_password must be provided for the Google service")
+		return nil, errors.New("DynDns: ddns_password must be provided for the NoIP service")
 	}
 
 	ddns_service := config_obj.Frontend.DynDns.UpdateUrl
