@@ -272,6 +272,7 @@ func (self *ArtifactRepositoryPlugin) copyScope(
 		constants.SCOPE_THROTTLE,
 		constants.SCOPE_ROOT,
 		constants.SCOPE_RESPONDER,
+		constants.SCOPE_REPOSITORY,
 		constants.SCOPE_UPLOADER} {
 		value, pres := scope.Resolve(field)
 		if pres {

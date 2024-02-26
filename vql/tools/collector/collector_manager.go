@@ -28,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/psutils"
+	vql_utils "www.velocidex.com/golang/velociraptor/vql/utils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -73,12 +74,7 @@ func (self *collectionManager) GetRepository(extra_artifacts vfilter.Any) (err e
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	manager, err := services.GetRepositoryManager(self.config_obj)
-	if err != nil {
-		return err
-	}
-
-	self.repository, err = manager.GetGlobalRepository(self.config_obj)
+	self.repository, err = vql_utils.GetRepository(self.scope)
 	if err != nil {
 		return err
 	}
@@ -276,8 +272,8 @@ func (self *collectionManager) collectQuery(
 			status.ResultRows++
 			row_dict := vfilter.RowToDict(self.ctx, subscope, row)
 			if query.Name != "" {
-        			row_dict.Set("_Source", query.Name)
-     			}
+				row_dict.Set("_Source", query.Name)
+			}
 			select {
 			case <-self.ctx.Done():
 				query_log.Close()

@@ -30,6 +30,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/tools/collector"
+	vql_utils "www.velocidex.com/golang/velociraptor/vql/utils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -120,12 +121,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		}
 	}
 
-	manager, err := services.GetRepositoryManager(config_obj)
-	if err != nil {
-		scope.Log("collect_client: Command can only run on the server")
-		return vfilter.Null{}
-	}
-	repository, err := manager.GetGlobalRepository(config_obj)
+	repository, err := vql_utils.GetRepository(scope)
 	if err != nil {
 		scope.Log("collect_client: Command can only run on the server")
 		return vfilter.Null{}

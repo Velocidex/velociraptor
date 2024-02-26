@@ -33,6 +33,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/server/hunts"
+	vql_utils "www.velocidex.com/golang/velociraptor/vql/utils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -136,7 +137,7 @@ func (self SourcePlugin) Call(
 
 	// Event artifacts just proxy for the monitoring plugin.
 	if arg.NotebookCellId == "" && arg.Artifact != "" {
-		ok, _ := isArtifactEvent(ctx, config_obj, arg)
+		ok, _ := isArtifactEvent(scope, ctx, config_obj, arg)
 		if ok {
 			// Just delegate directly to the monitoring plugin.
 			return MonitoringPlugin{}.Call(ctx, scope, args)
@@ -148,7 +149,7 @@ func (self SourcePlugin) Call(
 
 		// Depending on the parameters, we need to read from
 		// different places.
-		result_set_reader, err := getResultSetReader(ctx, config_obj, arg)
+		result_set_reader, err := getResultSetReader(ctx, config_obj, scope, arg)
 		if err != nil {
 			scope.Log("source: %v", err)
 			return
@@ -192,15 +193,10 @@ func (self SourcePlugin) Info(
 // Figure out if the artifact is an event artifact based on its
 // definition.
 func isArtifactEvent(
-	ctx context.Context, config_obj *config_proto.Config,
+	scope vfilter.Scope, ctx context.Context, config_obj *config_proto.Config,
 	arg *SourcePluginArgs) (bool, error) {
 
-	manager, err := services.GetRepositoryManager(config_obj)
-	if err != nil {
-		return false, err
-	}
-
-	repository, err := manager.GetGlobalRepository(config_obj)
+	repository, err := vql_utils.GetRepository(scope)
 	if err != nil {
 		return false, err
 	}
@@ -231,6 +227,7 @@ func isArtifactEvent(
 func getResultSetReader(
 	ctx context.Context,
 	config_obj *config_proto.Config,
+	scope vfilter.Scope,
 	arg *SourcePluginArgs) (result_sets.ResultSetReader, error) {
 
 	file_store_factory := file_store.GetFileStore(config_obj)
@@ -255,7 +252,7 @@ func getResultSetReader(
 			arg.Source = ""
 		}
 
-		is_event, err := isArtifactEvent(ctx, config_obj, arg)
+		is_event, err := isArtifactEvent(scope, ctx, config_obj, arg)
 		if err != nil {
 			return nil, err
 		}

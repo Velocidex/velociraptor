@@ -59,6 +59,7 @@ const (
 	SCOPE_ROOT              = "$root"
 	SCOPE_STACK             = "$stack"
 	SCOPE_DEVICE_MANAGER    = "$device_manager"
+	SCOPE_REPOSITORY        = "$repository"
 	SCOPE_RESPONDER_CONTEXT = "_Context"
 
 	// Artifact names from packs should start with this

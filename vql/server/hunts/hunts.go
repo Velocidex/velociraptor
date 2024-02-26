@@ -34,6 +34,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	vql_utils "www.velocidex.com/golang/velociraptor/vql/utils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -196,12 +197,7 @@ func (self HuntResultsPlugin) Call(
 			// first named source from the artifact
 			// definition.
 			if arg.Source == "" {
-				manager, err := services.GetRepositoryManager(config_obj)
-				if err != nil {
-					scope.Log("hunt_results: %v", err)
-					return
-				}
-				repo, err := manager.GetGlobalRepository(config_obj)
+				repo, err := vql_utils.GetRepository(scope)
 				if err == nil {
 					artifact_def, ok := repo.Get(ctx, config_obj, arg.Artifact)
 					if ok {

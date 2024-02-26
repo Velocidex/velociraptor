@@ -328,10 +328,24 @@ func (self *ApiServer) LabelClients(
 			case "set":
 				err = labeler.SetClientLabel(ctx,
 					org_config_obj, client_id, label)
+				if err == nil {
+					services.LogAudit(ctx,
+						org_config_obj, principal, "SetClientLabel",
+						ordereddict.NewDict().
+							Set("client_id", client_id).
+							Set("label", label))
+				}
 
 			case "remove":
 				err = labeler.RemoveClientLabel(ctx,
 					org_config_obj, client_id, label)
+				if err == nil {
+					services.LogAudit(ctx,
+						org_config_obj, principal, "RemoveClientLabel",
+						ordereddict.NewDict().
+							Set("client_id", client_id).
+							Set("label", label))
+				}
 
 			default:
 				return nil, errors.New("Unknown label operation")
