@@ -287,13 +287,15 @@ func (self *HuntDispatcher) ModifyHuntObject(
 				// Relay the new update to all other hunt dispatchers.
 				journal, err := services.GetJournal(self.config_obj)
 				if err == nil {
+					hunt_copy := proto.Clone(hunt_record.Hunt).(*api_proto.Hunt)
+
 					// Make sure these are pushed out ASAP to the
 					// other dispatchers.
 					journal.PushRowsToArtifact(ctx, self.config_obj,
 						[]*ordereddict.Dict{
 							ordereddict.NewDict().
 								Set("HuntId", hunt_record.HuntId).
-								Set("Hunt", hunt_record.Hunt).
+								Set("Hunt", hunt_copy).
 								Set("TriggerParticipation", true),
 						},
 						"Server.Internal.HuntUpdate", "server", "")
@@ -304,13 +306,15 @@ func (self *HuntDispatcher) ModifyHuntObject(
 				// Relay the new update to all other hunt dispatchers.
 				journal, err := services.GetJournal(self.config_obj)
 				if err == nil {
+					hunt_copy := proto.Clone(hunt_record.Hunt).(*api_proto.Hunt)
+
 					// Make sure these are pushed out ASAP to the
 					// other dispatchers.
 					journal.PushRowsToArtifact(ctx, self.config_obj,
 						[]*ordereddict.Dict{
 							ordereddict.NewDict().
 								Set("HuntId", hunt_record.HuntId).
-								Set("Hunt", hunt_record.Hunt),
+								Set("Hunt", hunt_copy),
 						},
 						"Server.Internal.HuntUpdate", "server", "")
 				}

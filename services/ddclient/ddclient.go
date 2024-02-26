@@ -4,7 +4,7 @@ package ddclient
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"io"
 	"io/ioutil"
 	"net"
@@ -14,9 +14,7 @@ import (
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/vql/networking"
 )
 
 var (
@@ -28,52 +26,43 @@ type DynDNSService struct {
 
 	external_ip_url string
 	dns_server      string
+
+	updater Updater
 }
 
-func (self *DynDNSService) updateIP(config_obj *config_proto.Config) {
+// Failing to update the DNS is not a fatal error we can try again
+// later.
+func (self *DynDNSService) updateIP(
+	ctx context.Context, config_obj *config_proto.Config) {
 	if config_obj.Frontend == nil || config_obj.Frontend.DynDns == nil {
 		return
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("Checking DNS with %v", self.external_ip_url)
+	logger.Info("DynDns: Checking DNS with %v", self.external_ip_url)
 
 	externalIP, err := self.GetExternalIp()
 	if err != nil {
-		logger.Error("Unable to get external IP: %v", err)
+		logger.Error("DynDns: Unable to get external IP: %v", err)
 		return
 	}
 
 	ddns_hostname := config_obj.Frontend.Hostname
-	hostnameIPs, err := self.GetCurrentDDNSIp(ddns_hostname)
-	if err != nil {
-		logger.Error("Unable to resolve DDNS hostname IP: %v", err)
-		return
-	}
-
+	// If we can not resolve the current hostname then lets try to
+	// update it anyway.
+	hostnameIPs, _ := self.GetCurrentDDNSIp(ddns_hostname)
 	for _, ip := range hostnameIPs {
 		if ip == externalIP {
 			return
 		}
 	}
 
-	logger.Info("DNS UPDATE REQUIRED. External IP=%v. %v=%v.",
+	logger.Info("DynDns: DNS UPDATE REQUIRED. External IP=%v. %v=%v.",
 		externalIP, ddns_hostname, hostnameIPs)
 
-	reqstr := fmt.Sprintf(
-		"https://%v/nic/update?hostname=%v&myip=%v",
-		ddns_service,
-		ddns_hostname,
-		externalIP)
-	logger.Debug("Submitting update request to %v", reqstr)
-
-	err = UpdateDDNSRecord(
-		config_obj,
-		reqstr,
-		config_obj.Frontend.DynDns.DdnsUsername,
-		config_obj.Frontend.DynDns.DdnsPassword)
+	err = self.updater.UpdateDDNSRecord(ctx, config_obj, externalIP)
 	if err != nil {
-		logger.Error("Failed to update: %v", err)
+		logger.Error("DynDns: Unable to set dns: %v", err)
 		return
 	}
 }
@@ -95,7 +84,7 @@ func (self *DynDNSService) Start(
 	}
 
 	// First time check immediately.
-	self.updateIP(config_obj)
+	self.updateIP(ctx, config_obj)
 
 	for {
 		select {
@@ -106,7 +95,7 @@ func (self *DynDNSService) Start(
 			// get banned. It takes a while for dns
 			// records to propagate.
 		case <-time.After(time.Duration(min_update_wait) * time.Second):
-			self.updateIP(config_obj)
+			self.updateIP(ctx, config_obj)
 		}
 	}
 }
@@ -114,11 +103,10 @@ func (self *DynDNSService) Start(
 func StartDynDNSService(
 	ctx context.Context,
 	wg *sync.WaitGroup,
-	config_obj *config_proto.Config) error {
+	config_obj *config_proto.Config) (err error) {
 
 	if config_obj.Frontend == nil ||
 		config_obj.Frontend.DynDns == nil ||
-		config_obj.Frontend.DynDns.DdnsUsername == "" ||
 		config_obj.Frontend.Hostname == "" {
 		return nil
 	}
@@ -127,6 +115,39 @@ func StartDynDNSService(
 		config_obj:      config_obj,
 		external_ip_url: config_obj.Frontend.DynDns.CheckipUrl,
 		dns_server:      config_obj.Frontend.DynDns.DnsServer,
+	}
+
+	dyndns_type := strings.ToLower(config_obj.Frontend.DynDns.Type)
+	if config_obj.Frontend.DynDns.Type == "" {
+		if config_obj.Frontend.DynDns.DdnsUsername != "" {
+			dyndns_type = "noip"
+		} else {
+			// No DynDNS specified. This backwards compatibility
+			// setting ignores the dyndns setting when both the type
+			// is unset and the ddns_username is not set. This allows
+			// a setting like:
+			// dyndns: {}
+			//
+			// To mean unconfigured dyndns service.
+			return nil
+		}
+	}
+
+	switch dyndns_type {
+	case "noip":
+		result.updater, err = NewNoIPUpdater(config_obj)
+
+	case "cloudflare":
+		result.updater, err = NewCloudflareUpdater(config_obj)
+
+	case "":
+		return nil
+
+	default:
+		return errors.New("DynDns: provider type not supported (currently only noip and cloudflare)")
+	}
+	if err != nil {
+		return err
 	}
 
 	// Set sensible defaults that should work reliably most of the
@@ -165,7 +186,7 @@ func (self *DynDNSService) GetExternalIp() (string, error) {
 	return result, nil
 }
 
-func (self *DynDNSService) GoogleDNSDialer(ctx context.Context, network, address string) (net.Conn, error) {
+func (self *DynDNSService) GetDNSDialer(ctx context.Context, network, address string) (net.Conn, error) {
 	d := net.Dialer{}
 	return d.DialContext(ctx, "udp", self.dns_server)
 }
@@ -173,7 +194,7 @@ func (self *DynDNSService) GoogleDNSDialer(ctx context.Context, network, address
 func (self *DynDNSService) GetCurrentDDNSIp(fqdn string) ([]string, error) {
 	r := net.Resolver{
 		PreferGo: true,
-		Dial:     self.GoogleDNSDialer,
+		Dial:     self.GetDNSDialer,
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -184,38 +205,4 @@ func (self *DynDNSService) GetCurrentDDNSIp(fqdn string) ([]string, error) {
 		return nil, err
 	}
 	return ips, nil
-}
-
-func UpdateDDNSRecord(config_obj *config_proto.Config,
-	url, user, pw string) error {
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-
-	client := &http.Client{
-		CheckRedirect: nil,
-		Transport: &http.Transport{
-			Proxy: networking.GetProxy(),
-		},
-	}
-
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("User-Agent", constants.USER_AGENT)
-	req.SetBasicAuth(user, pw)
-
-	resp, err := client.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	logger.Debug("Update response: %v", string(body))
-
-	return nil
 }
