@@ -1,4 +1,14 @@
+//go:build darwin && cgo
 // +build darwin,cgo
+
+/*
+  This is an implementation of netstat().
+
+  Reference for this code is
+  https://opensource.apple.com/source/network_cmds/network_cmds-307/netstat.tproj/inet.c
+  and function protopr()
+
+*/
 
 package networking
 
@@ -124,98 +134,137 @@ func (self *ConnectionStat) TypeString() string {
 	}
 }
 
-func gatherTCP() ([]*ConnectionStat, error) {
-	b, err := syscall.Sysctl("net.inet.tcp.pcblist")
+// Walk over all the entries and call the callback on each.
+func walkEntries(sysctl string, cb func(buff []byte)) error {
+	b, err := syscall.Sysctl(sysctl)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	buf := []byte(b)
-	// syscall.Sysctl seems to expect null-terminated strings.
-	buf = append(buf, 0)
-	if len(buf) < int(unsafe.Sizeof(C.xinpgen{})) {
-		return nil, errors.New("buffer too short")
-	}
-	xig := (*C.xinpgen)(unsafe.Pointer(&buf[0]))
-	var rv []*ConnectionStat
 
-	buf = buf[int(unsafe.Sizeof(C.xinpgen{})):]
-	for n := 0; n < int(xig.xig_count); n += 1 {
-		if len(buf) < int(unsafe.Sizeof(C.xtcpcb{})) {
-			return nil, fmt.Errorf("unexpected end of buffer after %d records, %d bytes left",
-				n, len(buf))
+	sizeof_xinpgen := int(unsafe.Sizeof(C.xinpgen{}))
+
+	// Need to have at least one xinpgen to process.
+	if len(buf) < sizeof_xinpgen {
+		return errors.New("buffer too short")
+	}
+
+	offset := 0
+
+	xig := (*C.xinpgen)(unsafe.Pointer(&buf[offset]))
+	total_count := int(xig.xig_count)
+
+	fmt.Printf("total_count %v len %v\n", total_count, xig)
+
+	// Now we have a packed list of xinpgen
+	for n := 0; n < total_count; n += 1 {
+		// Not enough space for another record.
+		if offset+sizeof_xinpgen > len(buf) {
+			break
 		}
-		var cs C.conn_stat
-		len := C.extract_xtcpcb((*C.xtcpcb)(unsafe.Pointer(&buf[0])), &cs)
-		status := socketStates[uint16(cs.st)]
-		rv = append(rv, &ConnectionStat{
-			Family: uint32(cs.family),
-			Type:   uint32(cs.typ),
-			Status: status,
-			Laddr:  to_addr(cs.family, (*[16]byte)(unsafe.Pointer(&cs.laddr[0])), cs.lport),
-			Raddr:  to_addr(cs.family, (*[16]byte)(unsafe.Pointer(&cs.faddr[0])), cs.fport),
-		})
-		buf = buf[int(len):]
-	}
-	if len(buf) < int(unsafe.Sizeof(C.xinpgen{})) {
-		return nil, errors.New("unexpected end of buffer while reading suffix xnipgen")
+
+		xig := (*C.xinpgen)(unsafe.Pointer(&buf[offset]))
+		len := int(xig.xig_len)
+
+		// We need to make some progress.
+		if len < int(sizeof_xinpgen) {
+			break
+		}
+
+		cb(buf[offset:])
+
+		// Go to the next one
+		offset += len
 	}
 
-	return rv, nil
+	return nil
+}
+
+func gatherTCP() ([]*ConnectionStat, error) {
+	res := []*ConnectionStat{}
+
+	sizeof_xtcpcb := int(unsafe.Sizeof(C.xtcpcb{}))
+
+	err := walkEntries("net.inet.tcp.pcblist",
+		func(buf []byte) {
+			xig := (*C.xinpgen)(unsafe.Pointer(&buf[0]))
+
+			// Buffer is not large enough for a xtcpcb
+			if int(xig.xig_len) < sizeof_xtcpcb {
+				return
+			}
+
+			// Read the record.
+			xtcpcb := (*C.xtcpcb)(unsafe.Pointer(&buf[0]))
+
+			var cs C.conn_stat
+
+			C.extract_xtcpcb(xtcpcb, &cs)
+
+			status := socketStates[uint16(cs.st)]
+			conn_stat := &ConnectionStat{
+				Family: uint32(cs.family),
+				Type:   uint32(cs.typ),
+				Status: status,
+				Laddr:  to_addr(cs.family, (*[16]byte)(unsafe.Pointer(&cs.laddr[0])), cs.lport),
+				Raddr:  to_addr(cs.family, (*[16]byte)(unsafe.Pointer(&cs.faddr[0])), cs.fport),
+			}
+			res = append(res, conn_stat)
+		})
+	return res, err
 }
 
 func gatherUDP() ([]*ConnectionStat, error) {
-	b, err := syscall.Sysctl("net.inet.udp.pcblist")
-	if err != nil {
-		return nil, err
-	}
-	buf := []byte(b)
-	// syscall.Sysctl seems to expect null-terminated strings.
-	buf = append(buf, 0)
-	if len(buf) < int(unsafe.Sizeof(C.xinpgen{})) {
-		return nil, errors.New("buffer too short")
-	}
-	xig := (*C.xinpgen)(unsafe.Pointer(&buf[0]))
-	var rv []*ConnectionStat
+	res := []*ConnectionStat{}
 
-	buf = buf[int(unsafe.Sizeof(C.xinpgen{})):]
-	for n := 0; n < int(xig.xig_count); n += 1 {
-		if len(buf) < int(unsafe.Sizeof(C.xinpcb{})) {
-			return nil, fmt.Errorf("unexpected end of buffer after %d record, %d bytes left",
-				n, len(buf))
-		}
-		var cs C.conn_stat
-		len := C.extract_xinpcb((*C.xinpcb)(unsafe.Pointer(&buf[0])), &cs)
-		rv = append(rv, &ConnectionStat{
-			Family: uint32(cs.family),
-			Type:   uint32(cs.typ),
-			Laddr:  to_addr(cs.family, (*[16]byte)(unsafe.Pointer(&cs.laddr[0])), cs.lport),
-			Raddr:  to_addr(cs.family, (*[16]byte)(unsafe.Pointer(&cs.faddr[0])), cs.fport),
+	sizeof_xinpcb := int(unsafe.Sizeof(C.xinpcb{}))
+	err := walkEntries("net.inet.udp.pcblist",
+		func(buf []byte) {
+			xig := (*C.xinpgen)(unsafe.Pointer(&buf[0]))
+
+			// Buffer is not large enough for a xtcpcb
+			if int(xig.xig_len) < sizeof_xinpcb {
+				return
+			}
+
+			// Read the record.
+			xinpcb := (*C.xinpcb)(unsafe.Pointer(&buf[0]))
+
+			var cs C.conn_stat
+
+			C.extract_xinpcb(xinpcb, &cs)
+			conn_stat := &ConnectionStat{
+				Family: uint32(cs.family),
+				Type:   uint32(cs.typ),
+				Laddr:  to_addr(cs.family, (*[16]byte)(unsafe.Pointer(&cs.laddr[0])), cs.lport),
+				Raddr:  to_addr(cs.family, (*[16]byte)(unsafe.Pointer(&cs.faddr[0])), cs.fport),
+			}
+			res = append(res, conn_stat)
 		})
-		buf = buf[int(len):]
-	}
-	if len(buf) < int(unsafe.Sizeof(C.xinpgen{})) {
-		return nil, errors.New("unexpected end of buffer while reading suffix xnipgen")
-	}
-
-	return rv, nil
+	return res, err
 }
 
 func runNetstat(ctx context.Context, scope vfilter.Scope, args *ordereddict.Dict) []vfilter.Row {
 	var result []vfilter.Row
-	if cs, err := gatherTCP(); err != nil {
+
+	cs, err := gatherTCP()
+	if err != nil {
 		scope.Log("netstat: gatherTCP: %v", err)
-	} else {
-		for _, item := range cs {
-			result = append(result, item)
-		}
 	}
-	if cs, err := gatherUDP(); err != nil {
+
+	for _, item := range cs {
+		result = append(result, item)
+	}
+
+	cs, err = gatherUDP()
+	if err != nil {
 		scope.Log("netstat: gatherUDP: %v", err)
-	} else {
-		for _, item := range cs {
-			result = append(result, item)
-		}
 	}
+
+	for _, item := range cs {
+		result = append(result, item)
+	}
+
 	return result
 }
 
