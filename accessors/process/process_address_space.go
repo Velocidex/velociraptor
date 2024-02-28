@@ -1,4 +1,5 @@
-// +build linux
+//go:build linux || darwin
+// +build linux darwin
 
 // An accessor for process address space.
 // Using this accessor it is possible to read directly from different processes, e.g.
@@ -7,13 +8,10 @@
 package process
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"io"
 	"os"
-	"regexp"
-	"strconv"
 	"sync"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -23,6 +21,11 @@ import (
 
 const PAGE_SIZE = 0x1000
 
+type ReadAtCloser interface {
+	io.ReaderAt
+	io.Closer
+}
+
 type ProcessReader struct {
 	mu     sync.Mutex
 	pid    uint64
@@ -30,8 +33,37 @@ type ProcessReader struct {
 	size   int64
 
 	// A file handle to the /proc/pid/mem file.
-	handle *os.File
+	handle ReadAtCloser
 	ranges []*uploads.Range
+}
+
+func (self ProcessReader) Close() error {
+	return self.handle.Close()
+}
+
+func (self *ProcessReader) Ranges() []uploads.Range {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	result := []uploads.Range{}
+	size := int64(0)
+	for _, rng := range self.ranges {
+		// Fill in a sparse range if needed
+		if rng.Offset > size {
+			result = append(result, uploads.Range{
+				Offset:   size,
+				Length:   rng.Offset - size,
+				IsSparse: true,
+			})
+		}
+
+		// Move the pointer past the end of this range.
+		size = rng.Offset + rng.Length
+
+		// Add a real data run
+		result = append(result, *rng)
+	}
+	return result
 }
 
 // Repeat the read operation one page at the time in order to retrieve
@@ -114,31 +146,6 @@ func (self *ProcessReader) Read(buf []byte) (int, error) {
 	return 0, io.EOF
 }
 
-func (self *ProcessReader) Ranges() []uploads.Range {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	result := []uploads.Range{}
-	size := int64(0)
-	for _, rng := range self.ranges {
-		// Fill in a sparse range if needed
-		if rng.Offset > size {
-			result = append(result, uploads.Range{
-				Offset:   size,
-				Length:   rng.Offset - size,
-				IsSparse: true,
-			})
-		}
-
-		// Move the pointer past the end of this range.
-		size = rng.Offset + rng.Length
-
-		// Add a real data run
-		result = append(result, *rng)
-	}
-	return result
-}
-
 func (self *ProcessReader) Seek(offset int64, whence int) (int64, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -153,10 +160,6 @@ func (self *ProcessReader) Seek(offset int64, whence int) (int64, error) {
 	}
 
 	return int64(self.offset), nil
-}
-
-func (self ProcessReader) Close() error {
-	return self.handle.Close()
 }
 
 func (self ProcessReader) Stat() (os.FileInfo, error) {
@@ -216,94 +219,8 @@ func (self *ProcessAccessor) Open(
 	return self.OpenWithOSPath(full_path)
 }
 
-func (self *ProcessAccessor) OpenWithOSPath(
-	path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
-	if len(path.Components) == 0 {
-		return nil, errors.New("Unable to list all processes, use the pslist() plugin.")
-	}
-
-	pid, err := strconv.ParseUint(path.Components[0], 0, 64)
-	if err != nil {
-		return nil, errors.New("First directory path must be a process.")
-	}
-
-	// Open the device file for the process
-	fd, err := os.Open(fmt.Sprintf("/proc/%d/mem", pid))
-	if err != nil {
-		return nil, err
-	}
-
-	// Open the process and enumerate its ranges
-	ranges, err := GetVads(pid)
-	if err != nil {
-		return nil, err
-	}
-	result := &ProcessReader{
-		pid:    pid,
-		handle: fd,
-	}
-
-	for _, r := range ranges {
-		result.ranges = append(result.ranges, r)
-	}
-
-	return result, nil
-}
-
 func init() {
 	accessors.Register("process",
 		&ProcessAccessor{},
 		`Access process memory like a file. The Path is taken in the form "/<pid>", i.e. the pid appears as the top level file.`)
-}
-
-var (
-	maps_regexp = regexp.MustCompile("(?P<Start>^[^-]+)-(?P<End>[^\\s]+)\\s+(?P<Perm>[^\\s]+)\\s+(?P<Size>[^\\s]+)\\s+[^\\s]+\\s+(?P<PermInt>[^\\s]+)\\s+(?P<Filename>.+?)(?P<Deleted> \\(deleted\\))?$")
-)
-
-func GetVads(pid uint64) ([]*uploads.Range, error) {
-	maps_fd, err := os.Open(fmt.Sprintf("/proc/%d/maps", pid))
-	if err != nil {
-		return nil, err
-	}
-	defer maps_fd.Close()
-
-	var result []*uploads.Range
-
-	scanner := bufio.NewScanner(maps_fd)
-	for scanner.Scan() {
-		hits := maps_regexp.FindStringSubmatch(scanner.Text())
-		if len(hits) > 0 {
-			protection := hits[3]
-			// Only include readable ranges.
-			if len(protection) < 2 || protection[0] != 'r' {
-				continue
-			}
-
-			start, err := strconv.ParseInt(hits[1], 16, 64)
-			if err != nil {
-				continue
-			}
-
-			end, err := strconv.ParseInt(hits[2], 16, 64)
-			if err != nil {
-				continue
-			}
-
-			// We can not read kernel memory
-			if start < 0 || end < 0 {
-				continue
-			}
-
-			result = append(result, &uploads.Range{
-				Offset: start, Length: end - start,
-			})
-		}
-	}
-
-	err = scanner.Err()
-	if err != nil {
-		return nil, err
-	}
-
-	return result, nil
 }

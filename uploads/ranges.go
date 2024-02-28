@@ -1,6 +1,8 @@
 package uploads
 
-import "sort"
+import (
+	"sort"
+)
 
 // Find the current range blocking offset and the next range after
 // offset. If the offset does not correspond to a current range, then
