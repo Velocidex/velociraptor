@@ -154,8 +154,6 @@ func walkEntries(sysctl string, cb func(buff []byte)) error {
 	xig := (*C.xinpgen)(unsafe.Pointer(&buf[offset]))
 	total_count := int(xig.xig_count)
 
-	fmt.Printf("total_count %v len %v\n", total_count, xig)
-
 	// Now we have a packed list of xinpgen
 	for n := 0; n < total_count; n += 1 {
 		// Not enough space for another record.
