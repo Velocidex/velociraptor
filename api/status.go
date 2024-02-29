@@ -7,6 +7,7 @@ import (
 	errors "github.com/go-errors/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -22,6 +23,10 @@ func Status(verbose bool, err error) error {
 	// Do not report this error.
 	if err == utils.InlineError {
 		return nil
+	}
+
+	if errors.Is(err, acls.PermissionDenied) {
+		return status.Error(codes.PermissionDenied, err.Error())
 	}
 
 	// With the verbose flag give more detailed errors to the browser.

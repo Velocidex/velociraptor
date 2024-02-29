@@ -13,7 +13,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/artifacts/assets"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -27,20 +26,13 @@ type RepositoryManager struct {
 	global_repository *Repository
 	wg                *sync.WaitGroup
 	config_obj        *config_proto.Config
-
-	metadata *artifacts_proto.ArtifactMetadataStorage
+	metadata          *metadataManager
 }
 
 func (self *RepositoryManager) NewRepository() services.Repository {
 	result := &Repository{
-		Data: make(map[string]*artifacts_proto.Artifact),
-	}
-
-	if self.metadata != nil {
-		result.Metadata = make(map[string]*artifacts_proto.ArtifactMetadata)
-		for k, v := range self.metadata.Metadata {
-			result.Metadata[k] = v
-		}
+		Data:     make(map[string]*artifacts_proto.Artifact),
+		metadata: self.metadata,
 	}
 
 	return result
@@ -134,27 +126,8 @@ func (self *RepositoryManager) SetArtifactMetadata(
 	ctx context.Context, config_obj *config_proto.Config,
 	principal, name string, metadata *artifacts_proto.ArtifactMetadata) error {
 
-	global_repository_any, err := self.GetGlobalRepository(config_obj)
-	if err != nil {
-		return err
-	}
-
-	global_repository, ok := global_repository_any.(*Repository)
-	if !ok {
-		return errors.New("Invalid global repository")
-	}
-
-	global_repository.setMetadata(name, metadata)
-
-	// Flush the metadata file.
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	path_manager := paths.RepositoryPathManager{}
-	err = db.SetSubject(config_obj, path_manager.Metadata(),
-		global_repository.getMetadata())
+	self.metadata.Set(name, metadata)
+	err := self.metadata.saveMetadata(ctx, config_obj)
 	if err != nil {
 		return err
 	}
@@ -280,19 +253,6 @@ func (self *RepositoryManager) SetArtifactFile(
 	return artifact, err
 }
 
-func (self *RepositoryManager) loadMetadata(
-	ctx context.Context, config_obj *config_proto.Config) error {
-
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	self.metadata = &artifacts_proto.ArtifactMetadataStorage{}
-	path_manager := paths.RepositoryPathManager{}
-	return db.GetSubject(config_obj, path_manager.Metadata(), self.metadata)
-}
-
 func (self *RepositoryManager) SetParent(
 	config_obj *config_proto.Config, parent services.Repository) {
 	self.global_repository.SetParent(parent, config_obj)
@@ -349,7 +309,7 @@ func NewRepositoryManagerForTest(
 
 	// It is not an error if the metadata file does not exist, just
 	// move on.
-	_ = self.loadMetadata(ctx, config_obj)
+	_ = self.metadata.loadMetadata(ctx, config_obj)
 
 	// Load some artifacts via the autoexec mechanism.
 	if config_obj.Autoexec != nil {
@@ -371,13 +331,20 @@ func NewRepositoryManagerForTest(
 func _newRepositoryManager(
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup) *RepositoryManager {
+
+	// Shared between the manager repositories.
+	metadata_manager := &metadataManager{}
+
 	return &RepositoryManager{
 		wg:         wg,
 		id:         utils.GetId(),
 		config_obj: config_obj,
 		global_repository: &Repository{
-			Data: make(map[string]*artifacts_proto.Artifact),
+			// Artifact name -> definition
+			Data:     make(map[string]*artifacts_proto.Artifact),
+			metadata: metadata_manager,
 		},
+		metadata: metadata_manager,
 	}
 }
 
@@ -392,7 +359,7 @@ func NewRepositoryManager(ctx context.Context, wg *sync.WaitGroup,
 
 	// It is not an error if the metadata file does not exist, just
 	// move on.
-	_ = self.loadMetadata(ctx, config_obj)
+	_ = self.metadata.loadMetadata(ctx, config_obj)
 
 	return self, self.StartWatchingForUpdates(ctx, wg, config_obj)
 }

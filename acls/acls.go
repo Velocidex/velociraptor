@@ -75,6 +75,11 @@ const (
 	// Schedule or cancel new collections on clients.
 	COLLECT_CLIENT
 
+	// This is a special custom permission which allows the user to
+	// collect "basic" artifacts. For this to work the administrator
+	// needs to set the "basic" metadata on the artifact definition.
+	COLLECT_BASIC
+
 	// Allows the user to start a hunt
 	START_HUNT
 
@@ -148,6 +153,8 @@ func (self ACL_PERMISSION) String() string {
 		return "LABEL_CLIENT"
 	case COLLECT_CLIENT:
 		return "COLLECT_CLIENT"
+	case COLLECT_BASIC:
+		return "COLLECT_BASIC"
 	case START_HUNT:
 		return "START_HUNT"
 	case COLLECT_SERVER:
@@ -200,6 +207,8 @@ func GetPermission(name string) ACL_PERMISSION {
 		return LABEL_CLIENT
 	case "COLLECT_CLIENT":
 		return COLLECT_CLIENT
+	case "COLLECT_BASIC":
+		return COLLECT_BASIC
 	case "START_HUNT":
 		return START_HUNT
 	case "COLLECT_SERVER":

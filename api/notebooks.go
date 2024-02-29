@@ -83,8 +83,7 @@ func (self *ApiServer) GetNotebooks(
 				org_config_obj, principal, "notebook not shared.",
 				ordereddict.NewDict().
 					Set("action", "Access Denied").
-					Set("notebook", in.NotebookId).
-					Set("error", err.Error()))
+					Set("notebook", in.NotebookId))
 
 			return nil, InvalidStatus("User has no access to this notebook")
 		}

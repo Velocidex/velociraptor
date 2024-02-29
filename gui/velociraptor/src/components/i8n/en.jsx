@@ -101,7 +101,7 @@ const English = {
     </>,
     "ServedFromURL": (base_path, url)=>
     <>
-      Clients will fetch the tool directly 
+      Clients will fetch the tool directly
       from <a href={base_path + url}>{url}</a> if
       needed. Note that if the hash does not match the
       expected hash the clients will reject the file.
@@ -217,6 +217,7 @@ const English = {
     "Perm_READ_RESULTS" : "Read results",
     "Perm_LABEL_CLIENT" : "Label Clients",
     "Perm_COLLECT_CLIENT" : "Collect Client",
+    "Perm_COLLECT_BASIC": "Collect Basic Client",
     "Perm_START_HUNT" : "Start Hunt",
     "Perm_COLLECT_SERVER" : "Collect Server",
     "Perm_ARTIFACT_WRITER" : "Artifact Writer",
@@ -240,6 +241,7 @@ const English = {
     "ToolPerm_READ_RESULTS" : "Read results from already run hunts, flows, or notebooks",
     "ToolPerm_LABEL_CLIENT" : "Can manipulate client labels and metadata",
     "ToolPerm_COLLECT_CLIENT" : "Schedule or cancel new collections on clients",
+    "ToolPerm_COLLECT_BASIC" : "Schedule basic collections on clients",
     "ToolPerm_START_HUNT" : "Start a new hunt",
     "ToolPerm_COLLECT_SERVER" : "Schedule new artifact collections on Velociraptor servers",
     "ToolPerm_ARTIFACT_WRITER" : "Add or edit custom artifacts that run on the server",

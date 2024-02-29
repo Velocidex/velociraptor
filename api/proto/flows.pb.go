@@ -163,7 +163,7 @@ type AvailableDownloadFile struct {
 
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Path string `protobuf:"bytes,5,opt,name=path,proto3" json:"path,omitempty"`
-	// Deprecated thiese are now stored in the stats.
+	// Deprecated things are now stored in the stats.
 	Type     string          `protobuf:"bytes,6,opt,name=type,proto3" json:"type,omitempty"`
 	Complete bool            `protobuf:"varint,2,opt,name=complete,proto3" json:"complete,omitempty"`
 	Size     uint64          `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"`

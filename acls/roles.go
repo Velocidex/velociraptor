@@ -20,6 +20,7 @@ var (
 		"READ_RESULTS",
 		"LABEL_CLIENT",
 		"COLLECT_CLIENT",
+		"COLLECT_BASIC",
 		"START_HUNT",
 		"COLLECT_SERVER",
 		"ARTIFACT_WRITER",
@@ -58,6 +59,9 @@ func DescribePermissions(token *acl_proto.ApiClientACL) []string {
 	}
 	if token.CollectClient {
 		result = append(result, "COLLECT_CLIENT")
+	}
+	if token.CollectBasic {
+		result = append(result, "COLLECT_BASIC")
 	}
 	if token.StartHunt {
 		result = append(result, "START_HUNT")
@@ -127,6 +131,8 @@ func SetTokenPermission(
 			token.LabelClients = true
 		case "COLLECT_CLIENT":
 			token.CollectClient = true
+		case "COLLECT_BASIC":
+			token.CollectBasic = true
 		case "START_HUNT":
 			token.StartHunt = true
 		case "COLLECT_SERVER":
@@ -184,6 +190,7 @@ func GetRolePermissions(
 			result.Impersonation = true
 			result.LabelClients = true
 			result.CollectClient = true
+			result.CollectBasic = true
 			result.StartHunt = true
 			result.CollectServer = true
 			result.ArtifactWriter = true

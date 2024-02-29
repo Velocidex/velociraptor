@@ -1,7 +1,7 @@
 package acl_managers
 
 import (
-	"errors"
+	"fmt"
 	"sync"
 
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	notLockedDownError = errors.New("PERMISSION_DENIED: Server locked down")
+	lockedDownError = fmt.Errorf("%w: Server locked down", acls.PermissionDenied)
 )
 
 // ServerACLManager is used when running server side VQL to control
@@ -30,31 +30,47 @@ func (self *ServerACLManager) GetPrincipal() string {
 	return self.principal
 }
 
+// Check against the lockdown token if available. If there is no
+// lockdown token (i.e. we are not in lockdown mode) we allow this
+// request and further checks are performed.
 func (self *ServerACLManager) handleLockdown(
 	permissions []acls.ACL_PERMISSION) (bool, error) {
+	// Not in lockdown mode, permit access
 	if acls.LockdownToken() == nil {
-		return false, nil
+		return true, nil
 	}
 
+	// If any of the permissions are denied by the lockdown token then
+	// block access.
 	for _, perm := range permissions {
 		ok, err := services.CheckAccessWithToken(acls.LockdownToken(), perm)
-		if err == nil && ok {
-			return false, notLockedDownError
+		if err == nil && !ok {
+			return false, lockedDownError
 		}
 	}
-	return false, nil
+
+	// If we get here all permissions are allowed.
+	return true, nil
 }
 
 // Token must have *ALL* the specified permissions.
 func (self *ServerACLManager) CheckAccess(
 	permissions ...acls.ACL_PERMISSION) (bool, error) {
 
-	// If we are in lockdown, immediately reject permission
-	ok, err := self.handleLockdown(permissions)
-	if err != nil {
-		return ok, err
+	// Check against the lockdown token and immediately reject
+	// permission
+	allowed, err := self.handleLockdown(permissions)
+	if err != nil || !allowed {
+		return false, err
 	}
 
+	// If the principal is the super user we allow them everything.
+	if self.config_obj.Client != nil &&
+		self.principal == self.config_obj.Client.PinnedServerName {
+		return true, nil
+	}
+
+	// Check access against the policy
 	policy, err := self.getPolicyInOrg(self.config_obj.OrgId)
 	if err != nil {
 		return false, err

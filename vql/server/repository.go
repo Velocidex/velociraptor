@@ -321,6 +321,7 @@ func (self ArtifactsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 type ArtifactSetMetadataFunctionArgs struct {
 	Name   string `vfilter:"required,field=name,doc=The Artifact to update"`
 	Hidden bool   `vfilter:"optional,field=hidden,doc=Set to true make the artifact hidden in the GUI, false to make it visible again."`
+	Basic  bool   `vfilter:"optional,field=basic,doc=Set to true make the artifact a 'basic' artifact. This allows users with the COLLECT_BASIC permission able to collect it."`
 }
 
 type ArtifactSetMetadataFunction struct{}
@@ -344,13 +345,13 @@ func (self *ArtifactSetMetadataFunction) Call(ctx context.Context,
 
 	global_repository, err := vql_utils.GetRepository(scope)
 	if err != nil {
-		scope.Log("artifact_delete: %v", err)
+		scope.Log("artifact_set_metadata: %v", err)
 		return vfilter.Null{}
 	}
 
 	definition, pres := global_repository.Get(ctx, config_obj, arg.Name)
 	if !pres {
-		scope.Log("artifact_delete: Artifact '%v' not found", arg.Name)
+		scope.Log("artifact_set_metadata: Artifact '%v' not found", arg.Name)
 		return vfilter.Null{}
 	}
 
@@ -375,9 +376,16 @@ func (self *ArtifactSetMetadataFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	// Need to explicitly check if the arg is passed at all or just
+	// false.
 	_, pres = args.Get("hidden")
 	if pres {
 		metadata.Hidden = arg.Hidden
+	}
+
+	_, pres = args.Get("basic")
+	if pres {
+		metadata.Basic = arg.Basic
 	}
 
 	principal := vql_subsystem.GetPrincipal(scope)
