@@ -2,6 +2,7 @@ package users
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -64,7 +65,7 @@ func (self *UserManager) AddUserToOrg(
 	// the rest back.
 	user_record, err := self.storage.GetUserWithHashes(ctx, username)
 	if err != nil {
-		if err == services.UserNotFoundError &&
+		if errors.Is(err, services.UserNotFoundError) &&
 			options == services.UseExistingUser {
 			return err
 		}

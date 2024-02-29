@@ -472,7 +472,7 @@ func (self ResultSetFactory) NewResultSetReader(
 	log_path api.FSPathSpec) (result_sets.ResultSetReader, error) {
 
 	fd, err := file_store_factory.ReadFile(log_path)
-	if err == io.EOF || errors.Is(err, os.ErrNotExist) {
+	if errors.Is(err, io.EOF) || errors.Is(err, os.ErrNotExist) {
 		fd = &NullReader{
 			Reader:    bytes.NewReader([]byte{}),
 			pathSpec_: log_path,

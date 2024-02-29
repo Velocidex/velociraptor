@@ -89,7 +89,7 @@ func (self *TimedResultSetReader) SeekToTime(offset time.Time) error {
 			self.current_files_idx = idx
 
 			reader, err := self.getReader()
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				return nil
 			}
 
@@ -98,7 +98,7 @@ func (self *TimedResultSetReader) SeekToTime(offset time.Time) error {
 			}
 
 			err = reader.SeekToTime(offset)
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				return nil
 			}
 
