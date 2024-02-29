@@ -43,6 +43,7 @@ package services
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -53,6 +54,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -61,6 +63,10 @@ const (
 	// the call.
 	NoAuditLogging = ""
 	DryRunOnly     = false
+)
+
+var (
+	FlowNotFoundError = utils.Wrap(os.ErrNotExist, "Flow not found")
 )
 
 type DeleteFlowResponse struct {

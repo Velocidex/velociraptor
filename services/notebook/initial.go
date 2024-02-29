@@ -8,6 +8,7 @@ import (
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -453,9 +454,39 @@ func getCellsForFlow(ctx context.Context,
 	}
 	flow_context := flow_details.Context
 
-	sources := flow_context.ArtifactsWithResults
-	if len(sources) == 0 && flow_context.Request != nil {
-		sources = flow_context.Request.Artifacts
+	var sources []string
+
+	// If the collection is still running we can not rely on the
+	// ArtifactsWithResults because they may not all be here yet. In
+	// that case we need to create a cell for each possible source.
+	if flow_context.State != flows_proto.ArtifactCollectorContext_RUNNING {
+		sources = flow_context.ArtifactsWithResults
+
+	} else if flow_context.Request != nil {
+		manager, err := services.GetRepositoryManager(config_obj)
+		if err != nil {
+			return nil
+		}
+
+		repository, err := manager.GetGlobalRepository(config_obj)
+		if err != nil {
+			return nil
+		}
+
+		for _, artifact_name := range flow_context.Request.Artifacts {
+			artifact, pres := repository.Get(ctx, config_obj, artifact_name)
+			if !pres {
+				continue
+			}
+
+			for _, source := range artifact.Sources {
+				if source.Name == "" {
+					sources = append(sources, artifact.Name)
+					break
+				}
+				sources = append(sources, fmt.Sprintf("%v/%v", artifact.Name, source.Name))
+			}
+		}
 	}
 
 	notebook_metadata.Suggestions = append(notebook_metadata.Suggestions,

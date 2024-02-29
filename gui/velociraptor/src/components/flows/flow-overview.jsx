@@ -75,7 +75,7 @@ export default class FlowOverview extends React.Component {
         let flow_id = this.props.flow.session_id;
         let client_id = this.props.flow.client_id;
 
-        if (_.isUndefined(flow_id) || _.isUndefined(client_id)) {
+        if (_.isUndefined(flow_id) || _.isUndefined(client_id) || flow_id === 'new') {
             return;
         }
 

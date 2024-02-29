@@ -1,19 +1,19 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package server
 
@@ -491,6 +491,11 @@ func send_client_messages(
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		ctx := req.Context()
 
+		// Keep track of currently connected clients - this account
+		// for clients using http and websocket.
+		currentConnections.Inc()
+		defer currentConnections.Dec()
+
 		if is_ws_connection(req) {
 			err := ws_send_client_messages(config_obj, server_obj, w, req)
 			if err != nil {
@@ -506,10 +511,6 @@ func send_client_messages(
 		}
 
 		sendCounter.Inc()
-
-		// Keep track of currently connected clients.
-		currentConnections.Inc()
-		defer currentConnections.Dec()
 
 		body, err := ioutil.ReadAll(
 			io.LimitReader(req.Body, constants.MAX_MEMORY))

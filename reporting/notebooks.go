@@ -225,11 +225,6 @@ func ExportNotebookToZip(
 
 	// zip_writer now owns fd and will close it when it closes below.
 
-	// Report the progress as we write the container.
-	progress_reporter := NewProgressReporter(config_obj,
-		notebook_path_manager.PathStats(output_filename),
-		output_filename, zip_writer)
-
 	exported_path_manager := NewNotebookExportPathManager(notebook.NotebookId)
 
 	cell_copier := func(cell_id, version string) {
@@ -261,6 +256,21 @@ func ExportNotebookToZip(
 	// Write the bulk of the data asyncronously.
 	go func() {
 		defer wg.Done()
+
+		timeout := int64(600)
+		if config_obj.Defaults != nil &&
+			config_obj.Defaults.ExportMaxTimeoutSec > 0 {
+			timeout = config_obj.Defaults.ExportMaxTimeoutSec
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(),
+			time.Second*time.Duration(timeout))
+		defer cancel()
+
+		// Report the progress as we write the container.
+		progress_reporter := NewProgressReporter(ctx, config_obj,
+			notebook_path_manager.PathStats(output_filename),
+			output_filename, zip_writer)
 		defer progress_reporter.Close()
 
 		// Will also close the underlying fd.

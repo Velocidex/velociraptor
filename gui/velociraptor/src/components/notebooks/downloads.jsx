@@ -6,6 +6,8 @@ import { formatColumns } from "../core/table.jsx";
 import T from '../i8n/i8n.jsx';
 import Card from 'react-bootstrap/Card';
 import Button from 'react-bootstrap/Button';
+import Alert from 'react-bootstrap/Alert';
+import Row from 'react-bootstrap/Row';
 
 import api from '../core/api-service.jsx';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -18,7 +20,8 @@ export default class AvailableDownloads extends Component {
 
     getDownloadLink = (row) =>{
         var stats = row.stats || {};
-        if (row.complete) {
+        var complete = stats.error;
+        if (complete) {
             return <a href={api.href("/api/v1/DownloadVFSFile", {
                 fs_components: stats.components,
                 vfs_path: row.path,
@@ -57,7 +60,14 @@ export default class AvailableDownloads extends Component {
                                {this.getDownloadLink(x)}
                              </Card.Header>
                              <Card.Body>
-                             <dl className="row">
+                               <dl className="row">
+                                 { stats.error && stats.error !== "Complete" &&
+                                   <dd className="col-12">
+                                     <Alert variant="danger">
+                                       {T(stats.error)}
+                                   </Alert>
+                                   </dd>
+                                 }
                                <dt className="col-4">{T("Uncompressed")}</dt>
                                <dd className="col-8">
                                  {columns[0].formatter(

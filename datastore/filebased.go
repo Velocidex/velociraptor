@@ -73,8 +73,9 @@ type FileBaseDataStore struct {
 	err error
 }
 
-/* Gets a protobuf encoded struct from the data store.  Objects are
-   addressed by the urn (URNs are typically managed by a path manager)
+/*
+Gets a protobuf encoded struct from the data store.  Objects are
+addressed by the urn (URNs are typically managed by a path manager)
 */
 func (self *FileBaseDataStore) GetSubject(
 	config_obj *config_proto.Config,

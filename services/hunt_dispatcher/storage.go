@@ -2,7 +2,8 @@ package hunt_dispatcher
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"os"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -19,6 +20,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+)
+
+var (
+	HuntNotFoundError = utils.Wrap(os.ErrNotExist, "Hunt not found")
 )
 
 type HuntIndexEntry struct {
@@ -162,7 +167,7 @@ func (self *HuntStorageManagerImpl) GetHunt(
 
 	hunt, pres := self.hunts[hunt_id]
 	if !pres {
-		return nil, errors.New("Hunt ID not found")
+		return nil, fmt.Errorf("%w: %v", services.HuntNotFoundError, hunt_id)
 	}
 
 	return proto.Clone(hunt).(*api_proto.Hunt), nil

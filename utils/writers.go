@@ -14,9 +14,11 @@ func (self *TeeWriter) Count() int {
 }
 
 func (self *TeeWriter) Write(p []byte) (n int, err error) {
+	// Keep track of the total bytes that are written to the file.
+	self.count += len(p)
+
 	for _, writer := range self.writers {
 		n, err = writer.Write(p)
-		self.count += n
 		if err != nil && err != io.EOF {
 			return n, err
 		}

@@ -34,13 +34,15 @@ message ContainerStats {
     repeated string components = 7;
 
     string type = 10;
+
+    string error = 11;
 }
 
 message AvailableDownloadFile {
     string name = 1;
     string path = 5;
 
-    // Deprecated thiese are now stored in the stats.
+    // Deprecated things are now stored in the stats.
     string type = 6;
     bool complete = 2;
     uint64 size = 3;
