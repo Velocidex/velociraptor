@@ -30,7 +30,7 @@ class ClientFlowsView extends React.Component {
         let flow_id = this.props.match && this.props.match.params &&
             this.props.match.params.flow_id;
 
-        if(flow_id) {
+        if(flow_id && flow_id !== "new") {
             let client_id = this.props.match && this.props.match.params &&
                 this.props.match.params.client_id;
 

@@ -3,6 +3,7 @@ package users
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"sync"
 	"time"
@@ -142,7 +143,7 @@ func (self *UserStorageManager) GetUserWithHashes(ctx context.Context, username 
 	err = db.GetSubject(self.config_obj,
 		paths.UserPathManager{Name: username}.Path(), user_record)
 	if errors.Is(err, os.ErrNotExist) || user_record.Name == "" {
-		return nil, services.UserNotFoundError
+		return nil, fmt.Errorf("%w: %v", services.UserNotFoundError, username)
 	}
 
 	if err != nil {
@@ -359,6 +360,10 @@ func (self *UserStorageManager) getUserOptions(ctx context.Context, username str
 
 	options := &api_proto.SetGUIOptionsRequest{}
 	err = db.GetSubject(self.config_obj, path_manager.GUIOptions(), options)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, fmt.Errorf("%w: %v", services.UserNotFoundError, username)
+	}
+
 	if options.Options == "" {
 		options.Options = default_user_options
 	}

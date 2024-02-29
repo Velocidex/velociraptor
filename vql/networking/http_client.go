@@ -512,7 +512,7 @@ func (self *_HttpPlugin) Call(
 			n, err := io.ReadFull(http_resp.Body, buf)
 			if n > 0 {
 				response.Content = string(buf[:n])
-			} else if err == io.EOF {
+			} else if errors.Is(err, io.EOF) {
 				response.Content = ""
 			} else if err != nil {
 				break

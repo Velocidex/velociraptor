@@ -219,7 +219,7 @@ func NewBufferFile(
 	}
 	data := make([]byte, FirstRecordOffset)
 	n, err := fd.ReadAt(data, 0)
-	if n > 0 && n < FirstRecordOffset && err == io.EOF {
+	if n > 0 && n < FirstRecordOffset && errors.Is(err, io.EOF) {
 		log_ctx.Error("Possible corruption detected: file too short.")
 		err = fd.Truncate(0)
 		if err != nil {

@@ -2,6 +2,8 @@ package launcher
 
 import (
 	"context"
+	"fmt"
+	"os"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/go-errors/errors"
@@ -213,18 +215,24 @@ func (self *FlowStorageManager) LoadCollectionContext(
 
 	err = db.GetSubject(
 		config_obj, flow_path_manager.Path(), collection_context)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, fmt.Errorf("%w: %v in client '%v'",
+			services.FlowNotFoundError, flow_id, client_id)
+	}
 	if err != nil {
 		return nil, err
 	}
 
 	if collection_context.SessionId == "" {
-		return nil, errors.New("Unknown flow " + client_id + " " + flow_id)
+		return nil, fmt.Errorf("%w: %v in client '%v'",
+			services.FlowNotFoundError, flow_id, client_id)
 	}
 
 	// Try to open the stats context
 	stats_context := &flows_proto.ArtifactCollectorContext{}
 	err = db.GetSubject(
 		config_obj, flow_path_manager.Stats(), stats_context)
+	// Stats file is missing that is ok and not an error.
 	if err != nil {
 		UpdateFlowStats(collection_context)
 		return collection_context, nil
@@ -258,6 +266,11 @@ func (self *FlowStorageManager) GetFlowRequests(
 	flow_details := &api_proto.ApiFlowRequestDetails{}
 	err = db.GetSubject(
 		config_obj, flow_path_manager.Task(), flow_details)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil, fmt.Errorf("%w: %v in client '%v'",
+			services.FlowNotFoundError, flow_id, client_id)
+	}
+
 	if err != nil {
 		return nil, err
 	}

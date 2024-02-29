@@ -407,7 +407,8 @@ func (self *ApiServer) GetHunt(
 
 	result, pres := hunt_dispatcher.GetHunt(ctx, in.HuntId)
 	if !pres {
-		return nil, InvalidStatus("Hunt not found")
+		return nil, Status(self.verbose,
+			fmt.Errorf("%w: %v", services.HuntNotFoundError, in.HuntId))
 	}
 
 	return result, nil

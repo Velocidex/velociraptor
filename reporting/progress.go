@@ -2,6 +2,7 @@ package reporting
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -11,10 +12,15 @@ import (
 )
 
 type progressReporter struct {
-	ctx            context.Context
+	// Upstream context allows us to watch for cancellation of the
+	// container writer.
+	ctx context.Context
+
+	// Signal stop for periodic stats updates.
+	mu             sync.Mutex
+	error          string
 	config_obj     *config_proto.Config
 	path           api.DSPathSpec
-	cancel         func()
 	zip_writer     *Container
 	container_path api.FSPathSpec
 
@@ -22,6 +28,9 @@ type progressReporter struct {
 }
 
 func (self *progressReporter) writeStats() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return
@@ -29,28 +38,33 @@ func (self *progressReporter) writeStats() {
 	stats := self.zip_writer.Stats()
 	stats.Type = self.Type
 	stats.Components = path_specs.AsGenericComponentList(self.container_path)
+	stats.Error = self.error
+
 	_ = db.SetSubject(self.config_obj, self.path, stats)
 }
 
+// If we call Close() before the timeout then the collection worked
+// fine - even when the context is cancelled.
 func (self *progressReporter) Close() {
-	self.cancel()
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.error == "" {
+		self.error = "Complete"
+	}
 }
 
 func NewProgressReporter(
+	ctx context.Context,
 	config_obj *config_proto.Config,
 	path api.DSPathSpec,
 	container_path api.FSPathSpec,
 	zip_writer *Container) *progressReporter {
 
-	// Export happens asynchrounously outside the context of the
-	// calling API.
-	ctx, cancel := context.WithCancel(context.Background())
-
 	self := &progressReporter{
 		ctx:            ctx,
 		config_obj:     config_obj,
 		path:           path,
-		cancel:         cancel,
 		zip_writer:     zip_writer,
 		container_path: container_path,
 		Type:           "zip",
@@ -59,7 +73,16 @@ func NewProgressReporter(
 	go func() {
 		for {
 			select {
-			case <-self.ctx.Done():
+			case <-ctx.Done():
+
+				// Update the error stats if the context has timed
+				// out.
+				self.mu.Lock()
+				if self.error == "" {
+					self.error = "Timeout"
+				}
+				self.mu.Unlock()
+
 				self.writeStats()
 				return
 

@@ -1831,8 +1831,11 @@ type DynDNSConfig struct {
 	// actual hostname (e.g. no-ip.com uses all.ddnskey.com to hide
 	// the domain)
 	DdnsHostname string `protobuf:"bytes,11,opt,name=ddns_hostname,json=ddnsHostname,proto3" json:"ddns_hostname,omitempty"`
-	UpdateUrl    string `protobuf:"bytes,4,opt,name=update_url,json=updateUrl,proto3" json:"update_url,omitempty"`
-	Frequency    uint64 `protobuf:"varint,5,opt,name=frequency,proto3" json:"frequency,omitempty"`
+	// This can be a full golang template for example
+	// http://ip1.dynupdate.no-ip.com/nic/update?hostname={{.Hostname}}&myip={{.IP}}
+	// or just the base URL
+	UpdateUrl string `protobuf:"bytes,4,opt,name=update_url,json=updateUrl,proto3" json:"update_url,omitempty"`
+	Frequency uint64 `protobuf:"varint,5,opt,name=frequency,proto3" json:"frequency,omitempty"`
 	// The url we will use to check the ip. Should return a plain IP address
 	CheckipUrl string `protobuf:"bytes,6,opt,name=checkip_url,json=checkipUrl,proto3" json:"checkip_url,omitempty"`
 	// DNS server we query for our own hostname/ip mapping (default 8.8.8.8:53)

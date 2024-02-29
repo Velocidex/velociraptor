@@ -6,6 +6,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/vfilter"
@@ -67,6 +68,9 @@ func (self *pool) Close() {
 	self.wg.Wait()
 
 	self.cancel()
+
+	// Wait here until the filestore is fully flushed.
+	file_store.FlushFilestore(self.config_obj)
 }
 
 func (self *pool) copyFile(

@@ -9,6 +9,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/gorilla/websocket"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/http_comms"
@@ -30,6 +32,11 @@ var (
 		"Only a single instance of the client is " +
 		"allowed to connect at the same time.")
 	notConnectedError = errors.New("WS Socket is not conencted")
+
+	currentWSConnections = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "client_comms_current_ws_connections",
+		Help: "Number of currently connected clients using websockets.",
+	})
 )
 
 var upgrader = websocket.Upgrader{}
@@ -214,6 +221,10 @@ func ws_send_client_messages(
 		return err
 	}
 	defer ws.Close()
+
+	// Keep track of currently connected clients.
+	currentWSConnections.Inc()
+	defer currentWSConnections.Dec()
 
 	ws.SetPongHandler(func(string) error {
 		deadline := utils.GetTime().Now().Add(http_comms.PongPeriod(config_obj))

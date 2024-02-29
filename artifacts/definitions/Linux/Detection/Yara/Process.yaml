@@ -17,6 +17,9 @@ description: |
   Note: the Yara scan will stop after one hit. Multi-string rules will also only
   show one string in returned rows.
 
+aliases:
+- MacOS.Detection.Yara.Process
+
 type: CLIENT
 parameters:
   - name: ProcessRegex
@@ -56,7 +59,7 @@ parameters:
 
 sources:
   - precondition:
-      SELECT OS From info() where OS = 'linux'
+      SELECT OS From info() where OS = 'linux' OR OS = 'darwin'
 
     query: |
       -- check which Yara to use

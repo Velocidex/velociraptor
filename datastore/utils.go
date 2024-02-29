@@ -137,3 +137,28 @@ func GetImplementationName(
 
 	return config_obj.Datastore.Implementation, nil
 }
+
+type Flusher interface {
+	Flush()
+}
+
+func FlushDatastore(config_obj *config_proto.Config) error {
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
+	db, err := GetDB(config_obj)
+	if err != nil {
+		return err
+	}
+
+	flusher, ok := db.(Flusher)
+	if ok {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			flusher.Flush()
+		}()
+	}
+
+	return nil
+}

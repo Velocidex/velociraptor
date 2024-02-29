@@ -699,37 +699,14 @@ func maybeFlushFilesOnClose(
 		return nil
 	}
 
-	// Flush the filestore if needed. Not all filestores need
-	// flushing.
-	file_store_factory := file_store.GetFileStore(org_config)
-	flusher, ok := file_store_factory.(Flusher)
-	if ok {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			<-ctx.Done()
-			if flusher != nil {
-				flusher.Flush()
-			}
-		}()
-	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-ctx.Done()
 
-	db, err := datastore.GetDB(org_config)
-	if err != nil {
-		return err
-	}
-
-	flusher, ok = db.(Flusher)
-	if ok {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			<-ctx.Done()
-			if flusher != nil {
-				flusher.Flush()
-			}
-		}()
-	}
+		file_store.FlushFilestore(org_config)
+		datastore.FlushDatastore(org_config)
+	}()
 
 	return nil
 }

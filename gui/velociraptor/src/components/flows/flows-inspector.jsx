@@ -70,14 +70,20 @@ class FlowInspector extends React.Component {
             return;
         };
 
+        let flow_id = this.props.flow.session_id;
+        let client_id = this.props.flow.client_id;
+        if(!flow_id || !client_id || flow_id === "new") {
+            return;
+        }
+
         // Cancel any in flight requests.
         this.source.cancel();
         this.source = CancelToken.source();
         this.setState({loading: true});
 
         api.get("v1/GetFlowDetails", {
-            flow_id: this.props.flow.session_id,
-            client_id: this.props.flow.client_id,
+            flow_id: flow_id,
+            client_id: client_id,
         }, this.source.token).then((response) => {
             if (response.cancel) {
                 return;
