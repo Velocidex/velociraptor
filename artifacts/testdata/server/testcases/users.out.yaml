@@ -167,7 +167,7 @@ SELECT whoami() FROM scope()[
  }
 ]SELECT * FROM test_read_logs() WHERE Log =~ "User not found" AND NOT Log =~ "SELECT"[
  {
-  "Log": "Velociraptor: user_grant: User not found\n"
+  "Log": "Velociraptor: user_grant: User not found: TestUserNotThere\n"
  }
 ]SELECT *, name+org_id AS Key FROM gui_users(all_orgs=TRUE) WHERE name =~ "TestUserNotThere" ORDER BY Key[]SELECT user_create( user="VelociraptorServer", password="hunter2", roles=["investigator"]) FROM scope()[
  {
