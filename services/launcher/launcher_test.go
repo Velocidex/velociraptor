@@ -578,7 +578,13 @@ sources:
 
 	acl_manager := acl_managers.NewServerACLManager(self.ConfigObj, "UserX")
 
-	// Permission denied - the principal is not allowed to compile this artifact.
+	// Lets give the user some permissions.
+	err := services.SetPolicy(self.ConfigObj, "UserX",
+		&acl_proto.ApiClientACL{CollectClient: true})
+	assert.NoError(self.T(), err)
+
+	// Permission denied - the principal is not allowed to compile
+	// this artifact.
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
@@ -590,7 +596,7 @@ sources:
 
 	// Lets give the user some permissions.
 	err = services.SetPolicy(self.ConfigObj, "UserX",
-		&acl_proto.ApiClientACL{Execve: true})
+		&acl_proto.ApiClientACL{Execve: true, CollectClient: true})
 	assert.NoError(self.T(), err)
 
 	// Should be fine now.

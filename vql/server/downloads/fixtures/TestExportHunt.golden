@@ -227,8 +227,10 @@
   "hunt_id": "H.123",
   "version": "10000000010",
   "create_time": "10000000",
+  "creator": "admin",
   "expires": "604810000000",
   "start_request": {
+   "creator": "admin",
    "flow_id": "F.123.H",
    "artifacts": [
     "Custom.TestArtifactUpload"

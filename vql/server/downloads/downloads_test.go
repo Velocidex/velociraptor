@@ -44,6 +44,8 @@ import (
 type TestSuite struct {
 	test_utils.TestSuite
 	client_id string
+
+	acl_manager vql_subsystem.ACLManager
 }
 
 func (self *TestSuite) SetupTest() {
@@ -80,6 +82,13 @@ sources:
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 	launcher.SetFlowIdForTests("F.1234")
+
+	// Create an administrator user
+	err = services.GrantRoles(self.ConfigObj, "admin", []string{"administrator"})
+	assert.NoError(self.T(), err)
+
+	self.acl_manager = acl_managers.NewServerACLManager(
+		self.ConfigObj, "admin")
 }
 
 func (self *TestSuite) TestExportCollectionServerArtifact() {
@@ -93,10 +102,9 @@ func (self *TestSuite) TestExportCollectionServerArtifact() {
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	var acl_manager vql_subsystem.ACLManager
-
 	flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx, self.ConfigObj,
-		acl_manager, repository, &flows_proto.ArtifactCollectorArgs{
+		self.acl_manager,
+		repository, &flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},
 			ClientId:  "server",
 		}, utils.SyncCompleter)
@@ -113,7 +121,7 @@ func (self *TestSuite) TestExportCollectionServerArtifact() {
 	// Now create a download of this collection.
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: acl_managers.NullACLManager{},
+		ACLManager: self.acl_manager,
 		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}
@@ -152,7 +160,7 @@ func (self *TestSuite) TestExportCollection1() {
 
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: acl_managers.NullACLManager{},
+		ACLManager: self.acl_manager,
 		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}
@@ -255,7 +263,7 @@ func (self *TestSuite) TestExportHunt() {
 
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: acl_managers.NullACLManager{},
+		ACLManager: self.acl_manager,
 		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}

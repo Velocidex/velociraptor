@@ -47,11 +47,11 @@ func CheckAccess(
 	perm, err = acl_manager.CheckAccess(permissions)
 	if !perm || err != nil {
 		return fmt.Errorf(
-			"%w: User is not allowed to launch flows.",
-			acls.PermissionDenied)
+			"%w: User is not allowed to launch flows %v.",
+			acls.PermissionDenied, permissions)
 	}
 
-	if artifact.RequiredPermissions == nil {
+	if artifact.RequiredPermissions != nil {
 		err := checkRequiredPermissions(config_obj,
 			artifact, acl_manager)
 		if err != nil {
@@ -74,12 +74,12 @@ func checkRequiredPermissions(
 		if !perm {
 			if err != nil {
 				return fmt.Errorf(
-					"While collecting artifact (%s) permission denied %v: %v",
-					artifact.Name, permission, err)
+					"%w: While collecting artifact (%s) permission denied %v",
+					err, artifact.Name, permission)
 			}
 			return fmt.Errorf(
-				"While collecting artifact (%s) permission denied %v",
-				artifact.Name, permission)
+				"%w: While collecting artifact (%s) permission denied %v",
+				acls.PermissionDenied, artifact.Name, permission)
 		}
 	}
 

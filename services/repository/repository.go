@@ -340,6 +340,10 @@ func (self *Repository) GetSource(
 func (self *Repository) DecorateMetadata(
 	artifact *artifacts_proto.Artifact) *artifacts_proto.Artifact {
 
+	if self.metadata == nil {
+		return artifact
+	}
+
 	// Query the metadataManager for metadata about this artifact.
 	metadata, pres := self.metadata.Get(artifact.Name)
 	if pres {

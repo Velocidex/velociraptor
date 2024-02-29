@@ -115,7 +115,7 @@ func (self *TestSuite) TestVFSAccessor() {
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	var acl_manager vql_subsystem.ACLManager
+	var acl_manager vql_subsystem.ACLManager = acl_managers.NullACLManager{}
 
 	flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx, self.ConfigObj,
 		acl_manager, repository, &flows_proto.ArtifactCollectorArgs{
