@@ -170,7 +170,8 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
  {
   "name": "Custom.Generic.Client.Info",
   "metadata": {
-   "hidden": true
+   "hidden": true,
+   "basic": false
   }
  }
 ]

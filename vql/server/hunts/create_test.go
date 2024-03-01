@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
@@ -26,6 +27,8 @@ name: Server.Audit.Logs
 type TestSuite struct {
 	test_utils.TestSuite
 	client_id, flow_id string
+
+	acl_manager vql_subsystem.ACLManager
 }
 
 func (self *TestSuite) SetupTest() {
@@ -33,6 +36,13 @@ func (self *TestSuite) SetupTest() {
 	self.ConfigObj.Services.HuntDispatcher = true
 
 	self.TestSuite.SetupTest()
+
+	// Create an administrator user
+	err := services.GrantRoles(self.ConfigObj, "admin", []string{"administrator"})
+	assert.NoError(self.T(), err)
+
+	self.acl_manager = acl_managers.NewServerACLManager(
+		self.ConfigObj, "admin")
 }
 
 var testCases = []struct {
@@ -95,7 +105,7 @@ func (self *TestSuite) TestCreateHunt() {
 	repository := self.LoadArtifacts(testArtifacts...)
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: acl_managers.NullACLManager{},
+		ACLManager: self.acl_manager,
 		Repository: repository,
 		Logger: logging.NewPlainLogger(
 			self.ConfigObj, &logging.FrontendComponent),

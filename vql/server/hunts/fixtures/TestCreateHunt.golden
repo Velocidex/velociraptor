@@ -4,10 +4,12 @@
   "Request": {
    "hunt_id": "H.1234",
    "create_time": "100000000",
+   "creator": "admin",
    "start_time": "100000000",
    "expires": "604900000000",
    "hunt_description": "foo",
    "start_request": {
+    "creator": "admin",
     "flow_id": "F.1234.H",
     "artifacts": [
      "Test.Artifact"
@@ -39,10 +41,12 @@
   "Request": {
    "hunt_id": "H.1234",
    "create_time": "100000000",
+   "creator": "admin",
    "start_time": "100000000",
    "expires": "604900000000",
    "hunt_description": "foo",
    "start_request": {
+    "creator": "admin",
     "flow_id": "F.1234.H",
     "artifacts": [
      "Test.Artifact"
@@ -74,10 +78,12 @@
   "Request": {
    "hunt_id": "H.1234",
    "create_time": "100000000",
+   "creator": "admin",
    "start_time": "100000000",
    "expires": "604900000000",
    "hunt_description": "foo",
    "start_request": {
+    "creator": "admin",
     "flow_id": "F.1234.H",
     "artifacts": [
      "Test.Artifact"
@@ -109,10 +115,12 @@
   "Request": {
    "hunt_id": "H.1234",
    "create_time": "100000000",
+   "creator": "admin",
    "start_time": "100000000",
    "expires": "604900000000",
    "hunt_description": "foo",
    "start_request": {
+    "creator": "admin",
     "flow_id": "F.1234.H",
     "artifacts": [
      "Test.Artifact"
@@ -149,10 +157,12 @@
   "Request": {
    "hunt_id": "H.1234",
    "create_time": "100000000",
+   "creator": "admin",
    "start_time": "100000000",
    "expires": "604900000000",
    "hunt_description": "foo",
    "start_request": {
+    "creator": "admin",
     "flow_id": "F.1234.H",
     "artifacts": [
      "Test.Artifact"
@@ -182,10 +192,12 @@
   "Request": {
    "hunt_id": "H.1234",
    "create_time": "100000000",
+   "creator": "admin",
    "start_time": "100000000",
    "expires": "604900000000",
    "hunt_description": "foo",
    "start_request": {
+    "creator": "admin",
     "flow_id": "F.1234.H",
     "artifacts": [
      "Test.Artifact"

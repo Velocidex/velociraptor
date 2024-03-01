@@ -36,20 +36,24 @@ type PrincipalACLManager interface {
 func CheckAccess(scope vfilter.Scope, permissions ...acls.ACL_PERMISSION) error {
 	manager_any, pres := scope.Resolve(ACL_MANAGER_VAR)
 	if !pres {
-		return fmt.Errorf("Permission denied: %v", permissions)
+		return fmt.Errorf("%w: Permission denied: %v",
+			acls.PermissionDenied, permissions)
 	}
 
 	manager, ok := manager_any.(ACLManager)
 	if !ok {
-		return fmt.Errorf("Permission denied: %v", permissions)
+		return fmt.Errorf("%w: Permission denied: %v",
+			acls.PermissionDenied, permissions)
 	}
 
 	perm, err := manager.CheckAccess(permissions...)
 	if !perm {
 		if err == nil {
-			return fmt.Errorf("Permission denied: %v", permissions)
+			return fmt.Errorf("%w: Permission denied: %v",
+				acls.PermissionDenied, permissions)
 		}
-		return fmt.Errorf("%v: %v", err, permissions)
+		return fmt.Errorf("%W: %v: %v",
+			acls.PermissionDenied, err, permissions)
 	}
 
 	return nil

@@ -43,6 +43,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
    "read_results": true,
    "label_clients": true,
    "collect_client": true,
+   "collect_basic": true,
    "start_hunt": true,
    "collect_server": true,
    "artifact_writer": true,
@@ -80,6 +81,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
    "read_results": true,
    "label_clients": true,
    "collect_client": true,
+   "collect_basic": true,
    "start_hunt": true,
    "collect_server": true,
    "artifact_writer": true,
@@ -155,6 +157,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
    "read_results": true,
    "label_clients": true,
    "collect_client": true,
+   "collect_basic": true,
    "start_hunt": true,
    "collect_server": true,
    "artifact_writer": true,
@@ -212,6 +215,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
    "read_results": true,
    "label_clients": true,
    "collect_client": true,
+   "collect_basic": true,
    "start_hunt": true,
    "collect_server": true,
    "artifact_writer": true,
@@ -288,6 +292,7 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
    "read_results": true,
    "label_clients": true,
    "collect_client": true,
+   "collect_basic": true,
    "start_hunt": true,
    "collect_server": true,
    "artifact_writer": true,
@@ -342,22 +347,13 @@ SELECT Name, OrgId FROM orgs() ORDER BY OrgId[
  }
 ]SELECT * FROM test_read_logs() WHERE Log =~ "Permission denied.+COLLECT_CLIENT" AND NOT Log =~ "SELECT"[
  {
-  "Log": "Velociraptor: collect_client: Permission denied: [COLLECT_CLIENT]\n"
+  "Log": "Velociraptor: collect_client: PermissionDenied: Permission denied: [COLLECT_CLIENT]\n"
  }
 ]SELECT * FROM query(query={ SELECT collect_client(client_id="C.123", artifacts="Generic.Client.DiskSpace", org_id="ORGID").request.artifacts FROM scope() }, runas="OrgUser")[
  {
-  "collect_client(client_id=\"C.123\", artifacts=\"Generic.Client.DiskSpace\", org_id=\"ORGID\").request.artifacts": [
-   "Generic.Client.DiskSpace"
-  ]
+  "collect_client(client_id=\"C.123\", artifacts=\"Generic.Client.DiskSpace\", org_id=\"ORGID\").request.artifacts": null
  }
-]SELECT * FROM query(query={ SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123") WHERE artifacts =~ "Disk" GROUP BY client_id }, runas="OrgUser", org_id="ORGID")[
- {
-  "client_id": "C.123",
-  "artifacts": [
-   "Generic.Client.DiskSpace"
-  ]
- }
-]SELECT * FROM query(query={ SELECT write_filestore(data="X", path="/clients/C.123/uploads/ORG1_file.txt") FROM scope() }, org_id="ORGID")[
+]SELECT * FROM query(query={ SELECT client_id, request.artifacts AS artifacts FROM flows(client_id="C.123") WHERE artifacts =~ "Disk" GROUP BY client_id }, runas="OrgUser", org_id="ORGID")[]SELECT * FROM query(query={ SELECT write_filestore(data="X", path="/clients/C.123/uploads/ORG1_file.txt") FROM scope() }, org_id="ORGID")[
  {
   "write_filestore(data=\"X\", path=\"/clients/C.123/uploads/ORG1_file.txt\")": true
  }

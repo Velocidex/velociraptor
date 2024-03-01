@@ -223,7 +223,9 @@ func (self *Launcher) CompileCollectorArgs(
 			return nil, errors.New("Unknown artifact " + spec.Artifact)
 		}
 
-		err := CheckAccess(config_obj, artifact, acl_manager)
+		// Make sure the user can collect this artifact.
+		err := CheckAccess(
+			config_obj, artifact, collector_request, acl_manager)
 		if err != nil {
 			return nil, err
 		}

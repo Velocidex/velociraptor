@@ -12,9 +12,11 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/go-errors/errors"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
+	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
@@ -576,7 +578,13 @@ sources:
 
 	acl_manager := acl_managers.NewServerACLManager(self.ConfigObj, "UserX")
 
-	// Permission denied - the principal is not allowed to compile this artifact.
+	// Lets give the user some permissions.
+	err := services.SetPolicy(self.ConfigObj, "UserX",
+		&acl_proto.ApiClientACL{CollectClient: true})
+	assert.NoError(self.T(), err)
+
+	// Permission denied - the principal is not allowed to compile
+	// this artifact.
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
@@ -588,13 +596,77 @@ sources:
 
 	// Lets give the user some permissions.
 	err = services.SetPolicy(self.ConfigObj, "UserX",
-		&acl_proto.ApiClientACL{Execve: true})
+		&acl_proto.ApiClientACL{Execve: true, CollectClient: true})
 	assert.NoError(self.T(), err)
 
 	// Should be fine now.
 	acl_manager = acl_managers.NewServerACLManager(self.ConfigObj, "UserX")
 	compiled, err = launcher.CompileCollectorArgs(
 		ctx, self.ConfigObj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), len(compiled[0].Query), 2)
+}
+
+func (self *LauncherTestSuite) TestBasicPermissions() {
+	repository := self.LoadArtifacts(`
+name: Test.Artifact.BasicPermissions
+sources:
+- query:  |
+    SELECT * FROM info()
+`)
+
+	// The artifact compiler converts artifacts into a VQL request
+	// to be run by the clients.
+	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:      "UserX",
+		ClientId:     "C.1234",
+		Artifacts:    []string{"Test.Artifact.BasicPermissions"},
+		OpsPerSecond: 42,
+		Timeout:      73,
+	}
+
+	// acl_manager caches tokens so we need a new one each time.
+	acl_manager := acl_managers.NewServerACLManager(
+		self.ConfigObj, "UserX")
+
+	launcher, err := services.GetLauncher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(
+		self.Ctx, self.ConfigObj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.Error(self.T(), err)
+	assert.True(self.T(), errors.Is(err, acls.PermissionDenied))
+
+	// Lets give the user COLLECT_BASIC
+	err = services.SetPolicy(self.ConfigObj, "UserX",
+		&acl_proto.ApiClientACL{CollectBasic: true})
+	assert.NoError(self.T(), err)
+
+	// Try again - this is not enough though because the artifact is
+	// not marked as "basic"
+	compiled, err = launcher.CompileCollectorArgs(
+		self.Ctx, self.ConfigObj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.Error(self.T(), err)
+	assert.True(self.T(), errors.Is(err, acls.PermissionDenied))
+
+	// Mark the artifact as "Basic"
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	err = manager.SetArtifactMetadata(self.Ctx, self.ConfigObj,
+		"UserX", "Test.Artifact.BasicPermissions",
+		&artifacts_proto.ArtifactMetadata{
+			Basic: true,
+		})
+	assert.NoError(self.T(), err)
+
+	// Should be fine now.
+	acl_manager = acl_managers.NewServerACLManager(self.ConfigObj, "UserX")
+	compiled, err = launcher.CompileCollectorArgs(
+		self.Ctx, self.ConfigObj, acl_manager, repository,
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), len(compiled[0].Query), 2)
@@ -855,8 +927,10 @@ func (self *LauncherTestSuite) TestParameterTypesDepsQuery() {
 	goldie.Assert(self.T(), "TestParameterTypesDepsQuery", json.MustMarshalIndent(results))
 }
 
-/* When the precondition is at the top level, there will be a single
-   request with multiple sources in the same request: Serial Mode
+/*
+When the precondition is at the top level, there will be a single
+
+	request with multiple sources in the same request: Serial Mode
 */
 func (self *LauncherTestSuite) TestPreconditionTopLevel() {
 	repository := self.LoadArtifacts(`
@@ -906,8 +980,10 @@ sources:
 		json.MustMarshalIndent(fixture))
 }
 
-/* When preconditions are at the source level, artifact is collected
-   in parallel mode.
+/*
+When preconditions are at the source level, artifact is collected
+
+	in parallel mode.
 */
 func (self *LauncherTestSuite) TestPreconditionSourceLevel() {
 	repository := self.LoadArtifacts(`

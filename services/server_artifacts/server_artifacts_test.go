@@ -12,6 +12,7 @@ import (
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 
+	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -52,11 +53,12 @@ func (self *ServerArtifactsTestSuite) SetupTest() {
 func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 	name, user, flow_id string,
 	wg *sync.WaitGroup, // If set we signal this wg when we finished scheduling.
-) *api_proto.FlowDetails {
+) (*api_proto.FlowDetails, error) {
 	ctx := self.Ctx
 
 	manager, _ := services.GetRepositoryManager(self.ConfigObj)
 	repository, _ := manager.GetGlobalRepository(self.ConfigObj)
+	details := &api_proto.FlowDetails{}
 
 	var mu sync.Mutex
 	complete_flow_id := ""
@@ -98,14 +100,16 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 			err = notifier.NotifyListener(ctx, self.ConfigObj, "server", "")
 			assert.NoError(self.T(), err)
 		})
-	assert.NoError(self.T(), err)
+	if err != nil {
+		return details, err
+	}
 
 	if wg != nil {
 		wg.Done()
 	}
 
 	// Wait for the collection to complete
-	var details *api_proto.FlowDetails
+
 	vtesting.WaitUntil(time.Second*50, self.T(), func() bool {
 		mu.Lock()
 		defer mu.Unlock()
@@ -123,7 +127,7 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 		return complete_flow_id == flow_id
 	})
 
-	return details
+	return details, nil
 }
 
 func (self *ServerArtifactsTestSuite) TestServerArtifacts() {
@@ -133,7 +137,8 @@ type: SERVER
 sources:
 - query: SELECT "Foo" FROM scope()
 `)
-	details := self.ScheduleAndWait("Test1", "admin", "F.1234", nil)
+	details, err := self.ScheduleAndWait("Test1", "admin", "F.1234", nil)
+	assert.NoError(self.T(), err)
 
 	// One row is collected
 	assert.Equal(self.T(), uint64(1), details.Context.TotalCollectedRows)
@@ -161,8 +166,9 @@ sources:
 	schedule_wg.Add(1)
 
 	go func() {
-		flow_details := self.ScheduleAndWait(
+		flow_details, err := self.ScheduleAndWait(
 			"Test1", "admin", "F.1234", schedule_wg)
+		assert.NoError(self.T(), err)
 
 		cancel_mu.Lock()
 		details = flow_details
@@ -206,7 +212,8 @@ sources:
 resources:
   max_rows: 10
 `)
-	details := self.ScheduleAndWait("Test1", "admin", "F.1234", nil)
+	details, err := self.ScheduleAndWait("Test1", "admin", "F.1234", nil)
+	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_ERROR,
 		details.Context.State)
@@ -230,7 +237,8 @@ sources:
                    name="test.txt")
      FROM scope()
 `)
-	details := self.ScheduleAndWait("TestUpload", "admin", "F.1234", nil)
+	details, err := self.ScheduleAndWait("TestUpload", "admin", "F.1234", nil)
+	assert.NoError(self.T(), err)
 
 	// One row is collected
 	assert.Equal(self.T(), uint64(1), details.Context.TotalCollectedRows)
@@ -273,7 +281,8 @@ sources:
                    name="test_many.txt")
      FROM range(end=10)
 `)
-	details := self.ScheduleAndWait("TestUploadMany", "admin", "F.1234", nil)
+	details, err := self.ScheduleAndWait("TestUploadMany", "admin", "F.1234", nil)
+	assert.NoError(self.T(), err)
 
 	// 10 rows are collected
 	assert.Equal(self.T(), uint64(10), details.Context.TotalCollectedRows)
@@ -323,7 +332,8 @@ sources:
   precondition: SELECT 1 FROM scope()
   query: SELECT "Foo" FROM scope()
 `)
-	details := self.ScheduleAndWait("TestMultiSource", "admin", "F.1234", nil)
+	details, err := self.ScheduleAndWait("TestMultiSource", "admin", "F.1234", nil)
+	assert.NoError(self.T(), err)
 
 	// Two rows are collected
 	assert.Equal(self.T(), uint64(2), details.Context.TotalCollectedRows)
@@ -364,7 +374,8 @@ sources:
 - name: Source2
   query: SELECT "Foo" FROM scope()
 `)
-	details := self.ScheduleAndWait("TestMultiSourceSerial", "admin", "F.1234", nil)
+	details, err := self.ScheduleAndWait("TestMultiSourceSerial", "admin", "F.1234", nil)
+	assert.NoError(self.T(), err)
 
 	// Two rows are collected
 	assert.Equal(self.T(), uint64(2), details.Context.TotalCollectedRows)
@@ -395,7 +406,8 @@ sources:
 resources:
   max_upload_bytes: 20
 `)
-	details := self.ScheduleAndWait("Test1", "admin", "F.1234", nil)
+	details, err := self.ScheduleAndWait("Test1", "admin", "F.1234", nil)
+	assert.NoError(self.T(), err)
 
 	assert.Equal(self.T(), flows_proto.ArtifactCollectorContext_ERROR,
 		details.Context.State)
@@ -419,7 +431,8 @@ sources:
 - query: SELECT sleep(time=200) FROM scope()
 `)
 
-	details := self.ScheduleAndWait("Test2", "admin", "F.1234", nil)
+	details, err := self.ScheduleAndWait("Test2", "admin", "F.1234", nil)
+	assert.NoError(self.T(), err)
 
 	// No rows are collected because the query timed out.
 	assert.Equal(self.T(), uint64(0), details.Context.TotalCollectedRows)
@@ -450,19 +463,36 @@ sources:
 - query: SELECT * FROM info()
 `)
 
-	details := self.ScheduleAndWait("Test", "admin", "F.1234", nil)
+	details, err := self.ScheduleAndWait("Test", "admin", "F.1234", nil)
+	assert.NoError(self.T(), err)
 
 	// Admin user should be able to collect since it has EXECVE
 	assert.Equal(self.T(), uint64(1), details.Context.TotalCollectedRows)
 
 	// Create a reader user called gumby - reader role lacks the
-	// MACHINE_STATE permission.
-	err := services.GrantRoles(self.ConfigObj, "gumby", []string{"reader"})
+	// COLLECT_SERVER permission.
+	err = services.GrantRoles(self.ConfigObj, "gumby", []string{"reader"})
 	assert.NoError(self.T(), err)
 
-	details = self.ScheduleAndWait("Test", "gumby", "F.1234", nil)
+	// Can not launch collection.
+	details, err = self.ScheduleAndWait("Test", "gumby", "F.1234", nil)
+	assert.Error(self.T(), err)
+	assert.Contains(self.T(), err.Error(), "COLLECT_SERVER")
 
-	// Gumby user has no permissions to run the artifact.
+	// Now give the user an investigator role with COLLECT_SERVER so
+	// they can collect the artifact but they still do not have
+	// MACHINE_STATE so the artifact will fail at run time.
+	err = services.SetPolicy(self.ConfigObj, "gumby", &acl_proto.ApiClientACL{
+		Roles:         []string{"investigator"},
+		CollectServer: true,
+	})
+	assert.NoError(self.T(), err)
+
+	// Collection is ok now
+	details, err = self.ScheduleAndWait("Test", "gumby", "F.1234", nil)
+	assert.NoError(self.T(), err)
+
+	// Gumby user has no permissions to run the info() plugin
 	assert.Equal(self.T(), uint64(0), details.Context.TotalCollectedRows)
 
 	flow_path_manager := paths.NewFlowPathManager(
