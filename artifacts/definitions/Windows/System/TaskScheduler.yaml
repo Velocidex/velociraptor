@@ -15,6 +15,13 @@ parameters:
     default: c:/Windows/System32/Tasks/**
   - name: AlsoUpload
     type: bool
+    description: |
+      If set we also upload the task XML files.
+  - name: UploadCommands
+    type: bool
+    description: |
+      If set we attempt to upload the commands that are
+      mentioned in the scheduled tasks
 
 sources:
   - name: Analysis
@@ -35,10 +42,23 @@ sources:
                     replace='')) AS XML
         FROM read_file(filenames=OSPath)
 
-      SELECT OSPath,
+      LET Results = SELECT OSPath,
             XML.Task.Actions.Exec.Command as Command,
+            expand(path=XML.Task.Actions.Exec.Command)  AS ExpandedCommand,
             XML.Task.Actions.Exec.Arguments as Arguments,
             XML.Task.Actions.ComHandler.ClassId as ComHandler,
             XML.Task.Principals.Principal.UserId as UserId,
             XML as _XML
         FROM foreach(row=Uploads, query=parse_task)
+
+      SELECT *,
+         authenticode(filename=ExpandedCommand) AS Authenticode,
+         if(condition=UploadCommands and ExpandedCommand,
+            then=upload(file=ExpandedCommand)) AS Upload
+      FROM Results
+
+column_types:
+- name: Upload
+  type: upload_preview
+- name: Authenticode
+  type: folded

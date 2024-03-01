@@ -2,8 +2,10 @@ package notebook
 
 import (
 	"context"
-	"errors"
 	"os"
+	"sort"
+	"sync"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/proto"
@@ -13,7 +15,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -36,23 +37,48 @@ type NotebookStore interface {
 	StoreAttachment(notebook_id, filename string, data []byte) (api.FSPathSpec, error)
 	RemoveAttachment(ctx context.Context, notebook_id string, components []string) error
 
-	UpdateShareIndex(notebook *api_proto.NotebookMetadata) error
-
 	GetAvailableDownloadFiles(notebook_id string) (*api_proto.AvailableDownloads, error)
 	GetAvailableTimelines(notebook_id string) []string
 	GetAvailableUploadFiles(notebook_id string) (
 		*api_proto.AvailableDownloads, error)
+
+	GetAllNotebooks() ([]*api_proto.NotebookMetadata, error)
 }
 
 type NotebookStoreImpl struct {
 	config_obj *config_proto.Config
+
+	// Keep an in memory cache of all global notebooks.
+	mu               sync.Mutex
+	global_notebooks map[string]*api_proto.NotebookMetadata
 }
 
-func NewNotebookStore(config_obj *config_proto.Config) *NotebookStoreImpl {
-	return &NotebookStoreImpl{config_obj: config_obj}
+func NewNotebookStore(
+	ctx context.Context,
+	config_obj *config_proto.Config) (*NotebookStoreImpl, error) {
+	result := &NotebookStoreImpl{
+		config_obj: config_obj,
+	}
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-utils.GetTime().After(time.Minute):
+				result.syncAllNotebooks()
+			}
+		}
+	}()
+
+	return result, result.syncAllNotebooks()
 }
 
 func (self *NotebookStoreImpl) SetNotebook(in *api_proto.NotebookMetadata) error {
+	self.mu.Lock()
+	self.global_notebooks[in.NotebookId] = in
+	self.mu.Unlock()
+
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
@@ -242,27 +268,69 @@ func (self *NotebookStoreImpl) StoreAttachment(notebook_id, filename string, dat
 	return full_path, err
 }
 
-// Update the notebook index for all the users and collaborators.
-func (self *NotebookStoreImpl) UpdateShareIndex(
-	notebook *api_proto.NotebookMetadata) error {
+func (self *NotebookStoreImpl) GetAllNotebooks() (
+	[]*api_proto.NotebookMetadata, error) {
 
-	// Flow notebooks and hunt notebooks are not indexable by the
-	// general purpose notebook index because we can easily locate
-	// them using the hunt id or the flow id.
-	if nonIndexingRegex.MatchString(notebook.NotebookId) {
-		return nil
+	result := []*api_proto.NotebookMetadata{}
+	self.mu.Lock()
+	for _, notebook := range self.global_notebooks {
+		result = append(result,
+			proto.Clone(notebook).(*api_proto.NotebookMetadata))
 	}
+	self.mu.Unlock()
 
-	if notebook.Creator == "" {
-		return errors.New("A notebook creator must be specified")
-	}
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].NotebookId < result[j].NotebookId
+	})
 
-	users := append([]string{notebook.Creator}, notebook.Collaborators...)
-	indexer, err := services.GetIndexer(self.config_obj)
+	return result, nil
+}
+
+func (self *NotebookStoreImpl) syncAllNotebooks() error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
 	}
 
-	return indexer.SetSimpleIndex(self.config_obj, paths.NOTEBOOK_INDEX,
-		notebook.NotebookId, users)
+	// List all available notebooks
+	notebook_urns, err := db.ListChildren(self.config_obj, paths.NotebookDir())
+	if err != nil {
+		return err
+	}
+
+	requests := make([]*datastore.MultiGetSubjectRequest,
+		0, len(notebook_urns))
+
+	for _, urn := range notebook_urns {
+		if urn.IsDir() {
+			continue
+		}
+		requests = append(requests,
+			datastore.NewMultiGetSubjectRequest(
+				&api_proto.NotebookMetadata{}, urn, nil))
+	}
+
+	err = datastore.MultiGetSubject(self.config_obj, requests)
+	if err != nil {
+		return nil
+	}
+
+	// Update global notebook cache
+	self.global_notebooks = make(map[string]*api_proto.NotebookMetadata)
+	for _, res := range requests {
+		if res.Error() != nil {
+			continue
+		}
+
+		notebook := res.Message().(*api_proto.NotebookMetadata)
+		if notebook.NotebookId == "" {
+			continue
+		}
+		self.global_notebooks[notebook.NotebookId] = notebook
+	}
+
+	return nil
 }

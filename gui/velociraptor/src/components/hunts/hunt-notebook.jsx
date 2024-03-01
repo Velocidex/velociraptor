@@ -60,6 +60,7 @@ export default class HuntNotebook extends React.Component {
                 return;
             }
 
+            let orgs = this.props.hunt.org_ids || [];
             let request = {
                 name: T("Notebook for Hunt", hunt_id),
                 description: this.props.hunt.description ||
@@ -73,6 +74,7 @@ export default class HuntNotebook extends React.Component {
                 public: true,
                 env: [
                     {key: "HuntId", value: hunt_id},
+                    {key: "Orgs", value: orgs.join(",")},
                 ],
             };
 

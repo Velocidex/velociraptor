@@ -74,14 +74,6 @@ func (self *NotebookManager) NewNotebook(
 		return nil, err
 	}
 
-	// Add the new notebook to the index so it can be seen. Only
-	// non-hunt notebooks are searchable in the index since the
-	// hunt notebooks are always found in the hunt results.
-	err = self.Store.UpdateShareIndex(in)
-	if err != nil {
-		return nil, err
-	}
-
 	return in, err
 }
 
@@ -89,12 +81,7 @@ func (self *NotebookManager) UpdateNotebook(
 	ctx context.Context, in *api_proto.NotebookMetadata) error {
 
 	in.ModifiedTime = utils.GetTime().Now().Unix()
-	err := self.Store.SetNotebook(in)
-	if err != nil {
-		return err
-	}
-
-	return self.Store.UpdateShareIndex(in)
+	return self.Store.SetNotebook(in)
 }
 
 func (self *NotebookManager) GetNotebookCell(ctx context.Context,
@@ -190,10 +177,11 @@ func NewNotebookManagerService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) (services.NotebookManager, error) {
 
-	notebook_service := NewNotebookManager(config_obj,
-		&NotebookStoreImpl{
-			config_obj: config_obj,
-		})
+	store, err := NewNotebookStore(ctx, config_obj)
+	if err != nil {
+		return nil, err
+	}
+	notebook_service := NewNotebookManager(config_obj, store)
 
 	return notebook_service, notebook_service.Start(ctx, config_obj, wg)
 }

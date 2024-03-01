@@ -15,7 +15,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 const column_types = [
     "string", "number", "mb", "timestamp", "nobreak", "tree", "url",
     "safe_url", "flow", "preview_uploads", "client", "hex",
-    "base64",
+    "base64", "collapsed"
 ];
 
 const column_type_regex = /^([\s\S]*)LET ColumnTypes<=dict\((.+)\)\n\n([\S\s]+)$/m;

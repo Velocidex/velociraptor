@@ -562,6 +562,14 @@ export function formatColumns(columns, env, column_formatter) {
             x.type = null;
             break;
 
+        case "collapsed":
+            x.formatter = (cell, row) => {
+                return <VeloValueRenderer
+                         value={cell} collapsed={true}/>;
+            };
+            x.type = null;
+            break;
+
         case "preview_upload":
         case "upload_preview":
             x.formatter = (cell, row) => {

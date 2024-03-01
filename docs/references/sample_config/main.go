@@ -107,6 +107,8 @@ var (
 		"defaults.disable_inventory_service_external_access",
 		"lockdown",
 		"debug_mode",
+		"Client.proxy_config.ignore_environment",
+		"Frontend.proxy_config.ignore_environment",
 	}
 )
 
@@ -158,6 +160,10 @@ func is_set(a reflect.Value) bool {
 
 	if a.Kind() == reflect.Float32 {
 		return a.Interface().(float32) != 0
+	}
+
+	if a.Kind() == reflect.Map {
+		return a.Len() > 0
 	}
 
 	spew.Dump(a.Kind())

@@ -1,19 +1,19 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package flows
 
@@ -83,6 +83,8 @@ type SourcePluginArgs struct {
 
 	StartRow int64 `vfilter:"optional,field=start_row,doc=Start reading the result set from this row"`
 	Limit    int64 `vfilter:"optional,field=count,doc=Maximum number of clients to fetch (default unlimited)'"`
+
+	OrgIds []string `vfilter:"optional,field=orgs,doc=Run the query over these orgs. If empty use the current org.'"`
 }
 
 type SourcePlugin struct{}
@@ -129,7 +131,8 @@ func (self SourcePlugin) Call(
 		new_args := ordereddict.NewDict().
 			Set("hunt_id", arg.HuntId).
 			Set("artifact", arg.Artifact).
-			Set("source", arg.Source)
+			Set("source", arg.Source).
+			Set("orgs", arg.OrgIds)
 
 		// Just delegate to the hunt_results() plugin.
 		return hunts.HuntResultsPlugin{}.Call(ctx, scope, new_args)
