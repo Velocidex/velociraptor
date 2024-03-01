@@ -25,9 +25,11 @@ type: SERVER
 
 type NotebookManagerTestSuite struct {
 	test_utils.TestSuite
+	closer func()
 }
 
 func (self *NotebookManagerTestSuite) SetupTest() {
+	self.closer = utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
 	self.ConfigObj = self.TestSuite.LoadConfig()
 	self.ConfigObj.Services.NotebookService = true
 	self.ConfigObj.Services.SchedulerService = true
@@ -44,10 +46,12 @@ func (self *NotebookManagerTestSuite) SetupTest() {
 	utils.SetIdGenerator(&gen)
 }
 
-func (self *NotebookManagerTestSuite) TestNotebookManagerUpdateCell() {
-	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
-	defer closer()
+func (self *NotebookManagerTestSuite) TearDownTest() {
+	self.TestSuite.TearDownTest()
+	self.closer()
+}
 
+func (self *NotebookManagerTestSuite) TestNotebookManagerUpdateCell() {
 	notebook_manager, err := services.GetNotebookManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 

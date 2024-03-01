@@ -55,12 +55,15 @@ type NotebookStoreImpl struct {
 
 func NewNotebookStore(
 	ctx context.Context,
+	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) (*NotebookStoreImpl, error) {
 	result := &NotebookStoreImpl{
 		config_obj: config_obj,
 	}
 
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		for {
 			select {
 			case <-ctx.Done():

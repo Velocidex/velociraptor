@@ -177,7 +177,7 @@ func NewNotebookManagerService(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) (services.NotebookManager, error) {
 
-	store, err := NewNotebookStore(ctx, config_obj)
+	store, err := NewNotebookStore(ctx, wg, config_obj)
 	if err != nil {
 		return nil, err
 	}

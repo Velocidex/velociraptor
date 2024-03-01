@@ -8,6 +8,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func (self *NotebookManager) UpdateNotebookCell(
@@ -61,7 +62,7 @@ func (self *NotebookManager) UpdateNotebookCell(
 		Input:             in.Input,
 		CellId:            in.CellId,
 		Type:              in.Type,
-		Timestamp:         time.Now().Unix(),
+		Timestamp:         utils.GetTime().Now().Unix(),
 		CurrentlyEditing:  in.CurrentlyEditing,
 		Calculating:       true,
 		Env:               in.Env,
