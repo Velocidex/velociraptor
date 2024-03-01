@@ -33,7 +33,10 @@
    "artifacts": [
     "Test.Artifact"
    ],
-   "state": "RUNNING"
+   "state": "RUNNING",
+   "org_ids": [
+    "root"
+   ]
   }
  },
  "exclude label hunt": {
@@ -70,7 +73,10 @@
    "artifacts": [
     "Test.Artifact"
    ],
-   "state": "RUNNING"
+   "state": "RUNNING",
+   "org_ids": [
+    "root"
+   ]
   }
  },
  "include label hunt": {
@@ -107,7 +113,10 @@
    "artifacts": [
     "Test.Artifact"
    ],
-   "state": "RUNNING"
+   "state": "RUNNING",
+   "org_ids": [
+    "root"
+   ]
   }
  },
  "include and exclude label hunt": {
@@ -149,7 +158,10 @@
    "artifacts": [
     "Test.Artifact"
    ],
-   "state": "RUNNING"
+   "state": "RUNNING",
+   "org_ids": [
+    "root"
+   ]
   }
  },
  "os hunt": {
@@ -184,7 +196,10 @@
    "artifacts": [
     "Test.Artifact"
    ],
-   "state": "RUNNING"
+   "state": "RUNNING",
+   "org_ids": [
+    "root"
+   ]
   }
  },
  "os and label hunt": {
@@ -219,7 +234,10 @@
    "artifacts": [
     "Test.Artifact"
    ],
-   "state": "RUNNING"
+   "state": "RUNNING",
+   "org_ids": [
+    "root"
+   ]
   }
  }
 }

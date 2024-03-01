@@ -263,7 +263,10 @@
   "artifact_sources": [
    "Custom.TestArtifactUpload"
   ],
-  "state": "PAUSED"
+  "state": "PAUSED",
+  "org_ids": [
+   "root"
+  ]
  },
  "results/All Custom.TestArtifactUpload.csv": [
   "Upload,SparseUpload,FlowId,ClientId,Fqdn",

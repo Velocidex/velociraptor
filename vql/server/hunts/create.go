@@ -110,7 +110,7 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 
 	} else {
 		// Schedule on the current org
-		arg.OrgIds = append(arg.OrgIds, config_obj.OrgId)
+		arg.OrgIds = append(arg.OrgIds, utils.NormalizedOrgId(config_obj.OrgId))
 	}
 
 	repository, err := vql_utils.GetRepository(scope)
