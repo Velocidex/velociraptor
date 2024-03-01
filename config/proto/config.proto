@@ -149,6 +149,10 @@ message ClientConfig {
     // A proxy setting to use.
     string proxy = 32;
 
+    // For more complex proxy configurations use this setting
+    // (overrides the `proxy` configuration above).
+    ProxyConfig proxy_config = 46;
+
     string ca_certificate = 11 [(sem_type) = {
             description: "The CA's certificate encoded in PEM. The client will trust any server signed with this CA."
         }];
@@ -349,6 +353,25 @@ message ApiClientConfig {
         }];
 
     string pinned_server_name = 6;
+}
+
+// Fine grained configuration of proxies for http connections.
+message ProxyConfig {
+    string https = 1;
+    string http = 2;
+
+    // A list of url regexp to match the url and connect to the
+    // target. Use and empty string to denote direct connection.  For
+    // example: {"^https://localhost/": "",
+    //           "^https://www.example.com/": "http://localhost:3182"}
+    map<string,string> proxy_url_regexp = 3;
+
+    // Location of a PAC file (overrides the above settings).
+    string pac = 4;
+
+    // If this is set we ignore the HTTP_PROXY and HTTPS_PROXY
+    // environment variables.
+    bool ignore_environment = 5;
 }
 
 message GUILink {
@@ -695,9 +718,14 @@ message FrontendConfig {
 
     // A proxy setting to use - Velociraptor needs to connect to
     // download tools. This setting will force it to go out over this
-    // proxy. NOTE- If you dont want to allow outbound connections,
-    // just set this to an non existant setting.
+    // proxy. NOTE- If you dont want your server to allow outbound
+    // connections, just set this to an non existant setting.
     string proxy = 33;
+
+    // For more complex proxy configurations use this setting
+    // (overrides the `proxy` configuration above).
+    ProxyConfig proxy_config = 37;
+
 
     // These are used to secure the client/server communications -
     // Even when using external TLS certificates! This certificate

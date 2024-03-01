@@ -67,7 +67,7 @@ require (
 	github.com/prometheus/client_model v0.4.0
 	github.com/qri-io/starlib v0.5.0
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5
-	github.com/robertkrimen/otto v0.2.1
+	github.com/robertkrimen/otto v0.3.0
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/sebdah/goldie v1.0.0
 	github.com/sebdah/goldie/v2 v2.5.3
@@ -130,12 +130,14 @@ require (
 	github.com/hillu/go-archive-zip-crypto v0.0.0-20200712202847-bd5cf365dd44
 	github.com/hirochachacha/go-smb2 v1.1.0
 	github.com/inconshreveable/mousetrap v1.1.0
+	github.com/jackwakefield/gopac v1.0.2
 	github.com/lpar/gzipped v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/rogpeppe/go-internal v1.12.0
 	github.com/shirou/gopsutil/v3 v3.21.11
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/valyala/fastjson v1.6.4
+	github.com/vincent-petithory/dataurl v1.0.0
 	golang.org/x/oauth2 v0.13.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20231009173412-8bfb1ae86b6c
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
