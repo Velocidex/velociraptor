@@ -30,6 +30,12 @@ func (self *MultiGetSubjectRequest) Message() proto.Message {
 	return proto.Clone(self.message)
 }
 
+func (self *MultiGetSubjectRequest) Error() error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	return self.Err
+}
+
 func NewMultiGetSubjectRequest(message proto.Message, path api.DSPathSpec, data interface{}) *MultiGetSubjectRequest {
 	return &MultiGetSubjectRequest{
 		message: proto.Clone(message),

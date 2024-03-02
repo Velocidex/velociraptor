@@ -23,6 +23,8 @@ type NotebookManager interface {
 	GetSharedNotebooks(ctx context.Context,
 		username string, offset, count uint64) ([]*api_proto.NotebookMetadata, error)
 
+	GetAllNotebooks() ([]*api_proto.NotebookMetadata, error)
+
 	NewNotebook(ctx context.Context,
 		username string, in *api_proto.NotebookMetadata) (
 		*api_proto.NotebookMetadata, error)
@@ -32,8 +34,6 @@ type NotebookManager interface {
 		*api_proto.NotebookMetadata, error)
 
 	UpdateNotebook(ctx context.Context, in *api_proto.NotebookMetadata) error
-
-	UpdateShareIndex(notebook *api_proto.NotebookMetadata) error
 
 	GetNotebookCell(ctx context.Context,
 		notebook_id, cell_id, version string) (*api_proto.NotebookCell, error)

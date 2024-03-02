@@ -75,7 +75,7 @@ func (self *MockClock) After(d time.Duration) <-chan time.Time {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.mockNow = self.mockNow.Add(d)
+	//self.mockNow = self.mockNow.Add(d)
 	res := make(chan time.Time)
 	close(res)
 	return res

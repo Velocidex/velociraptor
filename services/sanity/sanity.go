@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"regexp"
-	"strings"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -18,7 +17,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/notebook"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -128,27 +126,7 @@ func (self *SanityChecks) Check(
 		}
 	}
 
-	// Reindex all the notebooks.
-	notebooks, err := notebook.GetAllNotebooks(config_obj)
-	if err != nil {
-		return err
-	}
-
-	notebook_manager, err := services.GetNotebookManager(config_obj)
-	if err != nil {
-		return err
-	}
-	for _, notebook := range notebooks {
-		if !strings.HasPrefix(notebook.NotebookId, "N.H.") &&
-			!strings.HasPrefix(notebook.NotebookId, "N.F.") {
-			err = notebook_manager.UpdateShareIndex(notebook)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	err = configServerMetadata(ctx, config_obj)
+	err := configServerMetadata(ctx, config_obj)
 	if err != nil {
 		return err
 	}

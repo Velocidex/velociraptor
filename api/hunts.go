@@ -9,6 +9,7 @@ import (
 	errors "github.com/go-errors/errors"
 
 	context "golang.org/x/net/context"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -17,6 +18,7 @@ import (
 	vjson "www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
@@ -243,8 +245,14 @@ func (self *ApiServer) CreateHunt(
 			continue
 		}
 
+		// In the root org mark the org ids that we are launching.
+		org_hunt_request := proto.Clone(in).(*api_proto.Hunt)
+		if !utils.IsRootOrg(org_id) {
+			org_hunt_request.OrgIds = nil
+		}
+
 		new_hunt, err := hunt_dispatcher.CreateHunt(
-			ctx, org_config_obj, acl_manager, in)
+			ctx, org_config_obj, acl_manager, org_hunt_request)
 		if err != nil {
 			errors_msg = append(errors_msg, fmt.Sprintf(
 				"%v: CreateHunt: GetOrgConfig %v", org_id, err))

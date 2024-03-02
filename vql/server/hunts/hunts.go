@@ -220,6 +220,8 @@ func (self HuntResultsPlugin) Call(
 			arg.Orgs = append(arg.Orgs, config_obj.OrgId)
 		}
 
+		principal := vql_subsystem.GetPrincipal(scope)
+
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
 			return
@@ -228,6 +230,14 @@ func (self HuntResultsPlugin) Call(
 		for _, org_id := range arg.Orgs {
 			org_config_obj, err := org_manager.GetOrgConfig(org_id)
 			if err != nil {
+				continue
+			}
+
+			// Make sure the principal has read access in this org.
+			permissions := acls.READ_RESULTS
+			perm, err := services.CheckAccess(
+				org_config_obj, principal, permissions)
+			if !perm || err != nil {
 				continue
 			}
 

@@ -60,6 +60,7 @@ export default class VeloValueRenderer extends React.Component {
     static contextType = UserConfig;
     static propTypes = {
         value: PropTypes.any,
+        collapsed: PropTypes.bool,
     };
 
     getTheme = ()=> {
@@ -108,7 +109,7 @@ export default class VeloValueRenderer extends React.Component {
         return (
             <ContextMenu value={v}>
               <ReactJson name={false}
-                         collapsed={1}
+                         collapsed={this.props.collapsed}
                          theme={theme}
                          enableClipboard={false}
                          collapseStringsAfterLength={100}

@@ -538,6 +538,32 @@ func getDefaultCellsForSources(
 		// Build a default empty notebook that shows off all the
 		// results if there are no custom cells.
 		if len(new_cells) == 0 {
+			var query string
+			orgs, pres := getKeyFromEnv(notebook_metadata.Env, "Orgs")
+			if pres && orgs != "" {
+				org_ids := []string{}
+
+				for _, o := range strings.Split(orgs, ",") {
+					org_ids = append(org_ids, "'''"+o+"'''")
+				}
+				query = fmt.Sprintf(`
+LET Orgs <= (%v)
+
+/*
+# %v
+*/
+SELECT * FROM source(artifact=%q /*, orgs=Orgs */)
+LIMIT 50`, strings.Join(org_ids, ", "), source, source)
+			} else {
+				query = fmt.Sprintf(`
+/*
+# %v
+*/
+SELECT * FROM source(artifact=%q)
+LIMIT 50
+`, source, source)
+			}
+
 			result = append(result, &api_proto.NotebookCellRequest{
 				Type: "VQL",
 
@@ -547,16 +573,19 @@ func getDefaultCellsForSources(
 				Env: []*api_proto.Env{{
 					Key: "ArtifactName", Value: source,
 				}},
-				Input: fmt.Sprintf(`
-/*
-# %v
-*/
-SELECT * FROM source(artifact=%q)
-LIMIT 50
-`, source, source),
+				Input: query,
 			})
 		}
 	}
 
 	return result
+}
+
+func getKeyFromEnv(env []*api_proto.Env, key string) (string, bool) {
+	for _, e := range env {
+		if e.Key == key {
+			return e.Value, true
+		}
+	}
+	return "", false
 }
