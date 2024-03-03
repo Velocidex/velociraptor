@@ -13,7 +13,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
-	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
@@ -41,10 +40,9 @@ func (self *HTTPTestSuite) TestMultipartUploadTest() {
 	scope := manager.BuildScope(builder)
 	defer scope.Close()
 
-	params := functions.EncodeParams(
-		ordereddict.NewDict().
-			Set("Baz", "Bar").
-			Set("Foo", "Bar2"), scope)
+	params := ordereddict.NewDict().
+		Set("Baz", "Bar").
+		Set("Foo", "Bar2")
 
 	files := []*ordereddict.Dict{
 		ordereddict.NewDict().

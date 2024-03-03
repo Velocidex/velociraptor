@@ -7,7 +7,6 @@ import (
 	"io"
 	"io/ioutil"
 	"mime/multipart"
-	"net/textproto"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
@@ -88,19 +87,9 @@ func GetMultiPartReader(
 		file_spec.size = stat.Size()
 		file_spec.closer = fd.Close
 
-		h := make(textproto.MIMEHeader)
-		h.Set("Content-Disposition",
-			fmt.Sprintf(`form-data; name="%s"; filename="%s"`,
-				escapeQuotes(file_spec.Key), escapeQuotes(file_spec.File)))
-		h.Set("Content-Type", "application/octet-stream")
-		for k, vv := range h {
-			for _, v := range vv {
-				file_spec.headers = append(file_spec.headers,
-					[]byte(fmt.Sprintf("%v: %v\r\n", k, v))...)
-			}
-		}
-		// Final line feed
-		file_spec.headers = append(file_spec.headers, []byte("\r\n")...)
+		file_spec.headers = append(file_spec.headers,
+			[]byte(fmt.Sprintf("Content-Disposition: form-data; name=\"%s\"; filename=\"%s\"\r\nContent-Type: application/octet-stream\r\n\r\n",
+				escapeQuotes(file_spec.Key), escapeQuotes(file_spec.File)))...)
 		result.files = append(result.files, file_spec)
 	}
 
