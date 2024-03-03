@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package linux
@@ -15,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/utils/dict"
 )
 
 type streamHandler struct {
@@ -39,7 +41,7 @@ func (self *streamHandler) outputMultipleMessages(msgs []*auparse.AuditMessage) 
 	}
 
 	// Convert the events to dicts so they can be accessed easier.
-	dict := vfilter.RowToDict(self.ctx, self.scope, event)
+	dict := dict.RowToDict(self.ctx, self.scope, event)
 	dict.SetCaseInsensitive()
 	self.output_chan <- dict
 }

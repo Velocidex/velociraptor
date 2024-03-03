@@ -169,7 +169,7 @@ github.com/alecthomas/repr v0.0.0-20200325044227-4184120f674c/go.mod h1:xTS7Pm1p
 github.com/alecthomas/repr v0.0.0-20201120212035-bb82daffcca2/go.mod h1:2kn6fqh/zIyPLmm3ugklbEi5hg5wS435eygvNfaDQL8=
 github.com/alecthomas/repr v0.0.0-20210801044451-80ca428c5142/go.mod h1:2kn6fqh/zIyPLmm3ugklbEi5hg5wS435eygvNfaDQL8=
 github.com/alecthomas/repr v0.1.1/go.mod h1:Fr0507jx4eOXV7AlPV6AVZLYrLIuIeSOWtW57eE/O/4=
-github.com/alecthomas/repr v0.2.1-0.20230322203820-fba37eeb3a59/go.mod h1:Fr0507jx4eOXV7AlPV6AVZLYrLIuIeSOWtW57eE/O/4=
+github.com/alecthomas/repr v0.3.0/go.mod h1:Fr0507jx4eOXV7AlPV6AVZLYrLIuIeSOWtW57eE/O/4=
 github.com/alecthomas/repr v0.4.0 h1:GhI2A8MACjfegCPVq9f1FLvIBS+DrQ2KQBFZP1iFzXc=
 github.com/alecthomas/repr v0.4.0/go.mod h1:Fr0507jx4eOXV7AlPV6AVZLYrLIuIeSOWtW57eE/O/4=
 github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 h1:JYp7IbQjafoB+tBA3gMyHYHrpOtNuDiK/uB5uXxq5wM=
@@ -1303,7 +1303,7 @@ www.velocidex.com/golang/oleparse v0.0.0-20230217092320-383a0121aafe h1:o9jQWSwK
 www.velocidex.com/golang/oleparse v0.0.0-20230217092320-383a0121aafe/go.mod h1:R7IisRzDO7q5LVRJsCQf1xA50LrIavsPWzAjVE4THyY=
 www.velocidex.com/golang/regparser v0.0.0-20221020153526-bbc758cbd18b h1:NrnjFXwjUi7vdLEDKgSxu6cs304UJLZE/H7pSXXakVA=
 www.velocidex.com/golang/regparser v0.0.0-20221020153526-bbc758cbd18b/go.mod h1:pxSECT5mWM3goJ4sxB4HCJNKnKqiAlpyT8XnvBwkLGU=
-www.velocidex.com/golang/vfilter v0.0.0-20231014062339-d62b5a5877d2 h1:lYCetJ0TDKrYSqDhLTfZN3LyBRupx0B1XVcVy3rIw5E=
-www.velocidex.com/golang/vfilter v0.0.0-20231014062339-d62b5a5877d2/go.mod h1:4mDQuvnVu6oPvDu/rZm8eYXh0h8mM7j9CJpj1nRfu8g=
+www.velocidex.com/golang/vfilter v0.0.0-20240303080907-94aa960dc510 h1:EGvv3HsTF4AzTzDbAN9btXiaGrPVJt4GdB/y+wiD8Ug=
+www.velocidex.com/golang/vfilter v0.0.0-20240303080907-94aa960dc510/go.mod h1:P50KPQr2LpWVAu7ilGH8CBLBASGtOJ2971yA9YhR8rY=
 www.velocidex.com/golang/vtypes v0.0.0-20240123105603-069d4a7f435c h1:rL/It+Ig+mvIhmy9vl5gg5b6CX2J12x0v2SXIT2RoWE=
 www.velocidex.com/golang/vtypes v0.0.0-20240123105603-069d4a7f435c/go.mod h1:tjaJNlBWbvH4cEMrEu678CFR2hrtcdyPINIpRxrOh4U=

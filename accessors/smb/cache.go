@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/utils/dict"
 )
 
 var (
@@ -185,7 +186,7 @@ func getCreadentials(
 		return nil, errors.New("No credentials provided for smb connections")
 	}
 
-	creds, pres := vfilter.RowToDict(ctx, scope, credentials).GetString(hostname)
+	creds, pres := dict.RowToDict(ctx, scope, credentials).GetString(hostname)
 	if !pres {
 		return nil, fmt.Errorf("No credentials found for %v", hostname)
 	}

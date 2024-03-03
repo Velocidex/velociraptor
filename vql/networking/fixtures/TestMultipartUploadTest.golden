@@ -1,0 +1,27 @@
+{
+ "Content-Type": "multipart/form-data; boundary=AAAA",
+ "Content-Length": 409,
+ "Uploaded Data": [
+  "--AAAA",
+  "Content-Disposition: form-data; name=\"Baz\"",
+  "",
+  "Bar",
+  "--AAAA",
+  "Content-Disposition: form-data; name=\"Foo\"",
+  "",
+  "Bar2",
+  "--AAAA",
+  "Content-Disposition: form-data; name=\"file\"; filename=\"MyFile.txt\"",
+  "Content-Type: application/octet-stream",
+  "",
+  "This is some data 1",
+  "--AAAA",
+  "Content-Disposition: form-data; name=\"file\"; filename=\"My Second File.txt\"",
+  "Content-Type: application/octet-stream",
+  "",
+  "This is Data2",
+  "--AAAA--",
+  ""
+ ],
+ "Buffer Length": 409
+}
