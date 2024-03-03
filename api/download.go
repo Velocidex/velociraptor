@@ -99,6 +99,10 @@ type vfsFileDownloadRequest struct {
 
 	// If set we pad the file out.
 	Padding bool `schema:"padding"`
+
+	// If set we filter binary chars to reveal only text
+	TextFilter bool `schema:"text_filter"`
+	Lines      int  `schema:"lines"`
 }
 
 // URL format: /api/v1/DownloadVFSFile
@@ -204,6 +208,25 @@ func vfsFileDownloadHandler() http.Handler {
 			total_size = calculateTotalReaderSize(file)
 		}
 
+		if request.TextFilter {
+			output, next_offset, err := filterData(reader_at, request)
+			if err != nil {
+				returnError(w, 500, err.Error())
+				return
+			}
+
+			w.Header().Set("Content-Disposition", "attachment; "+
+				sanitizeFilenameForAttachment(filename))
+			w.Header().Set("Content-Type",
+				detectMime(output, request.DetectMime))
+			w.Header().Set("Content-Range",
+				fmt.Sprintf("bytes %d-%d/%d", request.Offset, next_offset, total_size))
+			w.WriteHeader(200)
+
+			_, _ = w.Write(output)
+			return
+		}
+
 		emitContentLength(w, int(request.Offset), int(request.Length), total_size)
 
 		offset := request.Offset
@@ -263,6 +286,71 @@ func vfsFileDownloadHandler() http.Handler {
 			offset += int64(n)
 		}
 	})
+}
+
+// Read data from offset and filter it until the requested number of
+// lines is found. This produces text only output, aka "strings"
+func filterData(reader_at io.ReaderAt,
+	request vfsFileDownloadRequest) (
+	output []byte, next_offset int64, err error) {
+
+	lines := 0
+	required_lines := request.Lines
+	if required_lines == 0 {
+		required_lines = 25
+	}
+	offset := request.Offset
+
+	buf := pool.Get().([]byte)
+	defer pool.Put(buf)
+
+	// This is a safety mechanism in case the file is mostly 0
+	total_read := 0
+
+	for {
+		if total_read > 10*1024*1024 {
+			break
+		}
+
+		n, err := reader_at.ReadAt(buf, offset)
+		if err != nil && err != io.EOF {
+			return nil, 0, err
+		}
+
+		if n <= 0 {
+			break
+		}
+
+		total_read += n
+
+		// Read the buffer and filter it collecting only printable
+		// chars.
+		for i := 0; i < n; i++ {
+			c := buf[i]
+			switch c {
+			case 0:
+				continue
+
+			case '\n':
+				lines++
+				if request.Lines <= lines {
+					return output, offset + int64(i), nil
+				}
+				fallthrough
+
+			default:
+				if c >= 0x20 && c < 0x7f ||
+					c == 10 || c == 13 || c == 9 {
+					output = append(output, c)
+				} else {
+					output = append(output, '.')
+				}
+			}
+		}
+		offset += int64(n)
+	}
+
+	return output, offset, nil
 }
 
 func detectMime(buffer []byte, detect_mime bool) string {

@@ -178,7 +178,7 @@ const get_blob = function(url, params, cancel_token) {
             var reader = new FileReader();
 
             reader.onloadend = function() {
-                resolve(reader.result);
+                resolve({data: reader.result, blob: blob});
             };
 
             reader.readAsArrayBuffer(blob.data);
