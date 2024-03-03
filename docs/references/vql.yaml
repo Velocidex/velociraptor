@@ -187,6 +187,10 @@
     type: bool
     description: Set to true make the artifact hidden in the GUI, false to make it
       visible again.
+  - name: basic
+    type: bool
+    description: Set to true make the artifact a 'basic' artifact. This allows users
+      with the COLLECT_BASIC permission able to collect it.
   metadata:
     permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
 - name: atexit
@@ -2275,7 +2279,6 @@
        host(name='www.google.com')
     FROM scope()
     ```
-
   type: Function
   args:
   - name: name
@@ -2354,28 +2357,26 @@
 
     ### Example: Uploading files
 
-    Many API handlers support uploading files via POST messages. While
-    this is not directly supported by http_client it is possible to
-    upload a file using simple VQL - by formatting the POST body using
-    the multipart rules.
+    Many API handlers support uploading files via POST messages. This
+    is supported using the `files` parameter for this plugin. The
+    plugin will automatically switch to `multipart/form` mode and
+    stream the file content. This allows you to upload very large
+    files with minimal memory impact. Here is an example:
 
     ```vql
-    LET file_bytes = read_file(filename="/bin/ls")
-
     SELECT *
     FROM http_client(
         url='http://localhost:8002/test/',
         method='POST',
-        headers=dict(
-            `Content-Type`="multipart/form-data;boundary=83fcda3640aca670"
-        ),
-        data='--83fcda3640aca670\r\nContent-Disposition: form-data; name="file";filename="ls"\r\nContent-Type: application/octet-stream\r\n\r\n' +
-             file_bytes + '\r\n--83fcda3640aca670--')
+        files=dict(file='file.txt', key='file', path='/etc/passwd', accessor="file")
+    )
     ```
+    Here the files can be an array of dicts with the following fields:
+    * file: The name of the file that will be stored on the server
+    * key: The name of the form element that will receive the file
+    * path: This is an OSPath object that we open and stream into the form.
+    * accessor: Any accessor required for the path.
 
-    Note how custom headers can be provided using a dict - note also
-    how dict keys with special characters in them can be constructed
-    using the backtick quoting.
   type: Plugin
   version: 2
   args:
@@ -2426,6 +2427,11 @@
     type: string
     description: If specified, use this managed secret. The secret should be of type
       'HTTP Secrets'. Alternatively specify the Url as secret://name
+  - name: files
+    type: ordereddict.Dict
+    description: If specified, upload these files using multipart form upload. For
+      example [dict(file="My filename.txt", path=OSPath, accessor="auto"),]
+    repeated: true
   category: plugin
   metadata:
     permissions: COLLECT_SERVER
@@ -3620,6 +3626,10 @@
   - name: count
     type: int64
     description: Maximum number of clients to fetch (default unlimited)'
+  - name: orgs
+    type: string
+    description: Run the query over these orgs. If empty use the current org.'
+    repeated: true
   category: server
   metadata:
     permissions: READ_RESULTS
@@ -5594,6 +5604,10 @@
   - name: count
     type: int64
     description: Maximum number of clients to fetch (default unlimited)'
+  - name: orgs
+    type: string
+    description: Run the query over these orgs. If empty use the current org.'
+    repeated: true
   category: server
   metadata:
     permissions: READ_RESULTS

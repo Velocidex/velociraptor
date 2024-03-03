@@ -85,14 +85,15 @@ type HttpPluginRequest struct {
 	Chunk   int               `vfilter:"optional,field=chunk_size,doc=Read input with this chunk size and send each chunk as a row"`
 
 	// Sometimes it is useful to be able to query misconfigured hosts.
-	DisableSSLSecurity bool              `vfilter:"optional,field=disable_ssl_security,doc=Disable ssl certificate verifications (deprecated in favor of SkipVerify)."`
-	SkipVerify         bool              `vfilter:"optional,field=skip_verify,doc=Disable ssl certificate verifications."`
-	TempfileExtension  string            `vfilter:"optional,field=tempfile_extension,doc=If specified we write to a tempfile. The content field will contain the full path to the tempfile."`
-	RemoveLast         bool              `vfilter:"optional,field=remove_last,doc=If set we delay removal as much as possible."`
-	RootCerts          string            `vfilter:"optional,field=root_ca,doc=As a better alternative to disable_ssl_security, allows root ca certs to be added here."`
-	CookieJar          *ordereddict.Dict `vfilter:"optional,field=cookie_jar,doc=A cookie jar to use if provided. This is a dict of cookie structures."`
-	UserAgent          string            `vfilter:"optional,field=user_agent,doc=If specified, set a HTTP User-Agent."`
-	Secret             string            `vfilter:"optional,field=secret,doc=If specified, use this managed secret. The secret should be of type 'HTTP Secrets'. Alternatively specify the Url as secret://name"`
+	DisableSSLSecurity bool                `vfilter:"optional,field=disable_ssl_security,doc=Disable ssl certificate verifications (deprecated in favor of SkipVerify)."`
+	SkipVerify         bool                `vfilter:"optional,field=skip_verify,doc=Disable ssl certificate verifications."`
+	TempfileExtension  string              `vfilter:"optional,field=tempfile_extension,doc=If specified we write to a tempfile. The content field will contain the full path to the tempfile."`
+	RemoveLast         bool                `vfilter:"optional,field=remove_last,doc=If set we delay removal as much as possible."`
+	RootCerts          string              `vfilter:"optional,field=root_ca,doc=As a better alternative to disable_ssl_security, allows root ca certs to be added here."`
+	CookieJar          *ordereddict.Dict   `vfilter:"optional,field=cookie_jar,doc=A cookie jar to use if provided. This is a dict of cookie structures."`
+	UserAgent          string              `vfilter:"optional,field=user_agent,doc=If specified, set a HTTP User-Agent."`
+	Secret             string              `vfilter:"optional,field=secret,doc=If specified, use this managed secret. The secret should be of type 'HTTP Secrets'. Alternatively specify the Url as secret://name"`
+	Files              []*ordereddict.Dict `vfilter:"optional,field=files,doc=If specified, upload these files using multipart form upload. For example [dict(file=\"My filename.txt\", path=OSPath, accessor=\"auto\"),]"`
 }
 
 type _HttpPluginResponse struct {
@@ -385,22 +386,54 @@ func (self *_HttpPlugin) Call(
 				}
 				req.URL.RawQuery = params.Encode()
 			}
+
 		case "POST", "PUT", "PATCH", "DELETE":
 			{
-				// Set body to params if arg.Data is empty
-				if arg.Data == "" && len(params) != 0 {
-					arg.Data = params.Encode()
-				} else if arg.Data != "" && len(params) != 0 {
-					// Shouldn't set both params and data. Warn user
-					scope.Log("http_client: Both params and data set. Defaulting to data.")
+				var reader io.Reader
+
+				if arg.Data != "" {
+					reader = strings.NewReader(arg.Data)
 				}
+
+				if len(params) != 0 {
+					if reader != nil {
+						// Shouldn't set both params and data. Warn user
+						scope.Log("http_client: Both params and data set. Defaulting to data.")
+					} else {
+						reader = strings.NewReader(params.Encode())
+					}
+				}
+
+				if len(arg.Files) != 0 {
+					if arg.Data != "" {
+						scope.Log("http_client: Both files and data set. Defaulting to data.")
+					} else {
+						mp_reader, err := GetMultiPartReader(ctx, scope,
+							arg.Files, arg.Params)
+						if err != nil {
+							scope.Log("http_client: %v", err)
+							return
+						}
+
+						reader = mp_reader.Reader()
+						if arg.Headers == nil {
+							arg.Headers = ordereddict.NewDict()
+						}
+
+						arg.Headers.
+							Set("Content-Type", mp_reader.ContentType()).
+							Set("Content-Length", mp_reader.ContentLength())
+					}
+				}
+
 				req, err = http.NewRequestWithContext(
-					ctx, method, arg.real_url, strings.NewReader(arg.Data))
+					ctx, method, arg.real_url, reader)
 				if err != nil {
 					scope.Log("%s: %v", self.Name(), err)
 					return
 				}
 			}
+
 		default:
 			{
 				scope.Log("http_client: Invalid HTTP Method %s", method)
