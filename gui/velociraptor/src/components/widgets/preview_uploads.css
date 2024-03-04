@@ -45,3 +45,12 @@ input.goto-invalid.form-control:focus {
 .preview-json {
     margin-top: 45px;
 }
+
+.text-paginator {
+    text-wrap: nowrap;
+}
+
+.textdump {
+    overflow-y: auto;
+    height: calc(100vh - 360px);
+}

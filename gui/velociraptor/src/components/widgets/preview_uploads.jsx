@@ -20,7 +20,10 @@ import T from '../i8n/i8n.jsx';
 import VeloValueRenderer from '../utils/value.jsx';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
+import Form from 'react-bootstrap/Form';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import Pagination from 'react-bootstrap/Pagination';
+import classNames from "classnames";
 
 // https://en.wikipedia.org/wiki/List_of_file_signatures
 const patterns = [
@@ -57,11 +60,13 @@ function checkMime(buffer) {
     return "";
 }
 
-class HexViewTab  extends React.PureComponent {
+class TextViewTab extends React.Component {
     static propTypes = {
         params:  PropTypes.object,
         url:     PropTypes.string,
         size:    PropTypes.number,
+        base_offset: PropTypes.number,
+        setBaseOffset: PropTypes.func,
     }
 
     componentDidMount = () => {
@@ -75,27 +80,18 @@ class HexViewTab  extends React.PureComponent {
 
     componentDidUpdate = (prevProps, prevState, rootNode) => {
         if (!_.isEqual(prevProps.params, this.props.params) ||
+            !_.isEqual(prevProps.base_offset, this.props.base_offset) ||
             !_.isEqual(prevState.page, this.state.page) ||
             !_.isEqual(prevState.columns, this.state.columns)) {
             this.fetchPage_(this.state.page);
         };
     }
 
-    state = {
-        // The offset in the file where this screen views
-        base_offset: 0,
-        page: 0,
-        rows: 25,
-        columns: 0x10,
-        view: undefined,
-        loading: true,
-        textview_only: false,
-        highlights: {},
-        highlight_version: 0,
-        version: 0,
-    }
-
     fetchPage_ = (page, ondone) => {
+        if (this.state.goto_error) {
+            return;
+        }
+
         let params = Object.assign({}, this.props.params);
 
         this.source.cancel();
@@ -103,19 +99,29 @@ class HexViewTab  extends React.PureComponent {
 
         // read a bit more than we need to so the text view looks a
         // bit more full.
-        params.length = this.state.rows * this.state.columns * 2;
-        params.offset = page * this.state.rows * this.state.columns;
+        params.lines = 40;
+        params.offset = this.props.base_offset || 0;
+        params.text_filter = true;
 
-        api.get_blob(this.props.url, params, this.source.token).then(buffer=>{
-            const view = new Uint8Array(buffer);
-            this.setState({
-                base_offset: params.offset,
-                view: view,
-                version: this.state.version+1,
-                rawdata: this.parseFileContentToTextRepresentation_(view),
-                loading: false});
-            if(ondone) {ondone();};
-        });
+        api.get_blob(this.props.url, params, this.source.token).then(
+            response=>{
+                let content_range = response.blob && response.blob.headers &&
+                    response.blob.headers["content-range"];
+                if(content_range) {
+                    const matches = content_range.match(/^(\w+) ((\d+)-(\d+)|\*)\/(\d+|\*)$/);
+                    const [, unit, , start, end, size] = matches;
+                    this.setState({next_offset: Number(end || 0), total_size: Number(size || 0)});
+                }
+
+                const view = new Uint8Array(response.data);
+                this.setState({
+                    base_offset: params.offset,
+                    view: view,
+                    version: this.state.version+1,
+                    rawdata: this.parseFileContentToTextRepresentation_(view),
+                    loading: false});
+                if(ondone) {ondone();};
+            });
         this.setState({loading: true});
     }
 
@@ -138,6 +144,141 @@ class HexViewTab  extends React.PureComponent {
         return rawdata;
     };
 
+    state = {
+        rawdata: "",
+        next_offset: 0,
+        total_size: 0,
+    }
+
+    render() {
+        return  <Container className="file-hex-view">
+                  <Spinner loading={this.state.loading}/>
+                  <Row>
+                    <Col sm="12">
+                      <Pagination className="hex-goto">
+                        <Pagination.First
+                          disabled={this.props.base_offset===0}
+                          onClick={()=>this.props.setBaseOffset(0)}/>
+                        <Button
+                          variant="outline-info"
+                          className="page-link form-control text-paginator"
+                          disabled={true}
+                          >
+                          { this.props.base_offset } - { this.state.next_offset } / { this.state.total_size }
+                        </Button>
+                        <Form.Control
+                          as="input"
+                          className={classNames({
+                              "page-link": true,
+                              "goto-invalid": this.state.goto_error,
+                          })}
+                          placeholder={T("Goto Offset")}
+                          spellCheck="false"
+                          value={this.state.goto_offset}
+                          onChange={e=> {
+                              let goto_offset = e.target.value;
+                              let old_goto_offset = this.state.goto_offset;
+
+                              if (goto_offset === "") {
+                                  this.props.setBaseOffset(0);
+                                  this.setState({goto_offset: "", goto_error: false});
+                                  return;
+                              }
+
+                              let base_offset = Number(goto_offset);
+                              if (isNaN(base_offset)) {
+                                  this.setState({goto_offset: old_goto_offset});
+                                  return;
+                              }
+
+                              if (base_offset > this.state.total_size) {
+                                  goto_offset = this.state.total_size;
+                                  base_offset = this.state.total_size;
+                                  goto_offset = old_goto_offset;
+                              }
+                              this.props.setBaseOffset(goto_offset);
+                              this.setState({goto_offset: goto_offset, goto_error: false});
+                          }}/>
+
+                        <Pagination.Next
+                          disabled={this.state.next_offset===this.state.total_size}
+                          onClick={()=>this.props.setBaseOffset(this.state.next_offset)}/>
+                      </Pagination>
+                    </Col>
+                  </Row>
+                  <Row>
+                    <Col sm="12" className="hexdump-pane">
+                      <div className="panel textdump">
+                        {this.state.rawdata}
+                      </div>
+                    </Col>
+                  </Row>
+                </Container>;
+    };
+}
+
+class HexViewTab  extends React.Component {
+    static propTypes = {
+        params:  PropTypes.object,
+        url:     PropTypes.string,
+        size:    PropTypes.number,
+
+        // The offset in the file where this screen views
+        base_offset: PropTypes.number,
+        setBaseOffset: PropTypes.func,
+    }
+
+    componentDidMount = () => {
+        this.source = CancelToken.source();
+        this.fetchPage_(0);
+    }
+
+    componentWillUnmount() {
+        this.source.cancel("unmounted");
+    }
+
+    componentDidUpdate = (prevProps, prevState, rootNode) => {
+        if (!_.isEqual(prevProps.params, this.props.params) ||
+            !_.isEqual(prevProps.base_offset, this.props.base_offset) ||
+            !_.isEqual(prevState.page, this.state.page) ||
+            !_.isEqual(prevState.columns, this.state.columns)) {
+            this.fetchPage_(this.state.page);
+        };
+    }
+
+    state = {
+        page: 0,
+        rows: 25,
+        columns: 0x10,
+        view: undefined,
+        loading: true,
+        highlights: {},
+        highlight_version: 0,
+        version: 0,
+    }
+
+    fetchPage_ = (page, ondone) => {
+        let params = Object.assign({}, this.props.params);
+
+        this.source.cancel();
+        this.source = CancelToken.source();
+
+        params.length = this.state.rows * this.state.columns;
+        params.offset = this.props.base_offset;
+
+        api.get_blob(this.props.url, params, this.source.token).then(
+            response=>{
+                const view = new Uint8Array(response.data);
+                this.setState({
+                    base_offset: params.offset,
+                    view: view,
+                    version: this.state.version+1,
+                    loading: false});
+                if(ondone) {ondone();};
+            });
+        this.setState({loading: true});
+    }
+
     render() {
         var chunkSize = this.state.rows * this.state.columns;
         let total_size = this.props.size || 0;
@@ -147,16 +288,7 @@ class HexViewTab  extends React.PureComponent {
             <Container className="file-hex-view">
               <Spinner loading={this.state.loading}/>
               <Row>
-                <Col sm="1">
-                  <Button variant="secondary"
-                          className="page-link hex-goto"
-                          onClick={()=>this.setState({
-                              textview_only: !this.state.textview_only,
-                          })}>
-                    <FontAwesomeIcon icon="text-height"/>
-                  </Button>
-                </Col>
-                <Col sm="3">
+                <Col sm="4">
                   <HexPaginationControl
                     page_size={chunkSize}
                     total_size={total_size}
@@ -171,8 +303,8 @@ class HexViewTab  extends React.PureComponent {
                     }}
                     onPageChange={page=>{
                         this.fetchPage_(page, ()=>{
+                            this.props.setBaseOffset(page * chunkSize);
                             this.setState({
-                                base_offset: page * chunkSize,
                                 page: page,
                             });
                         });
@@ -190,8 +322,8 @@ class HexViewTab  extends React.PureComponent {
                     version={this.state.version}
                     onPageChange={page=>{
                         this.fetchPage_(page, ()=>{
+                            this.props.setBaseOffset(page * chunkSize);
                             this.setState({
-                                base_offset: page * chunkSize,
                                 page: page,
                             });
                         });
@@ -206,40 +338,30 @@ class HexViewTab  extends React.PureComponent {
                 </Col>
               </Row>
               <Row>
-                { this.state.textview_only ?
-                  <Col sm="12">
-                    <div className="panel textdump">
-                      {this.state.rawdata}
-                    </div>
-                  </Col>
-                  :
-                  <>
-                    <Col sm="12" className="hexdump-pane">
-                      <div className="panel hexdump">
-                        <HexView
-                          // Highlights on top of the data.
-                          highlights={this.state.highlights}
-                          highlight_version={this.state.highlight_version}
-                          base_offset={this.state.base_offset}
-                          height={this.state.rows}
-                          rows={this.state.rows}
-                          setColumns={v=>this.setState({columns: v})}
-                          columns={this.state.columns}
+                <Col sm="12" className="hexdump-pane">
+                  <div className="panel hexdump">
+                    <HexView
+            // Highlights on top of the data.
+                      highlights={this.state.highlights}
+                      highlight_version={this.state.highlight_version}
+                      base_offset={this.props.base_offset}
+                      height={this.state.rows}
+                      rows={this.state.rows}
+                      setColumns={v=>this.setState({columns: v})}
+                      columns={this.state.columns}
 
-                          // The data that will be rendered
-                          byte_array={this.state.view}
-                          version={this.state.version} />
-                      </div>
-                    </Col>
-                  </>
-                }
+            // The data that will be rendered
+                      byte_array={this.state.view}
+                      version={this.state.version} />
+                  </div>
+                </Col>
               </Row>
             </Container>
         );
     }
 }
 
-class InspectDialog extends React.PureComponent {
+class InspectDialog extends React.Component {
     static propTypes = {
         params:  PropTypes.object,
         url:     PropTypes.string,
@@ -249,7 +371,8 @@ class InspectDialog extends React.PureComponent {
     }
 
     state = {
-        tab: "overview",
+        tab: "hex",
+        base_offset: 0,
     }
 
     render() {
@@ -266,12 +389,23 @@ class InspectDialog extends React.PureComponent {
               <Modal.Body>
                 <Tabs activeKey={this.state.tab}
                       onSelect={tab=>this.setState({tab: tab})}>
-                  <Tab eventKey="overview" title={T("Overview")}>
-                    { this.state.tab === "overview" &&
+                  <Tab eventKey="hex" title={T("Hex")}>
+                    { this.state.tab === "hex" &&
                       <HexViewTab params={this.props.params}
                                   url={this.props.url}
-                                  size={this.props.size}
-                      />}
+                                  base_offset={this.state.base_offset}
+                                  setBaseOffset={x=>this.setState({base_offset: x})}
+                                  size={this.props.size}/>
+                    }
+                  </Tab>
+                  <Tab eventKey="text" title={T("Text")}>
+                    { this.state.tab === "text" &&
+                      <TextViewTab  params={this.props.params}
+                                    url={this.props.url}
+                                    base_offset={this.state.base_offset}
+                                    setBaseOffset={x=>this.setState({base_offset: x})}
+                                    size={this.props.size}/>
+                    }
                   </Tab>
                   <Tab eventKey="details" title={T("Details")}>
                     { this.state.tab === "details" &&
@@ -374,15 +508,16 @@ export default class PreviewUpload extends Component {
         this.setState({url: url, params: params,
                        error: false, loading: true});
 
-        api.get_blob(url, params, this.source.token).then(buffer=>{
-            if(buffer.error) {
-                this.setState({error: true});
+        api.get_blob(url, params, this.source.token).then(
+            response=>{
+                if(response.data && response.data.error) {
+                    this.setState({error: true});
 
-            } else {
-                const view = new Uint8Array(buffer);
-                this.setState({view: view, error: false});
-            }
-        });
+                } else {
+                    const view = new Uint8Array(response.data);
+                    this.setState({view: view, error: false});
+                }
+            });
     };
 
     uintToString = (uintArray) => {
