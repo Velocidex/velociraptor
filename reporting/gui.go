@@ -26,6 +26,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -56,7 +57,7 @@ type GuiTemplateEngine struct {
 	*BaseTemplateEngine
 	tmpl         *template.Template
 	ctx          context.Context
-	log_writer   *notebooCellLogger
+	log_writer   *notebookCellLogger
 	path_manager *paths.NotebookCellPathManager
 	Data         map[string]*actions_proto.VQLResponse
 	Progress     utils.ProgressReporter
@@ -92,7 +93,7 @@ func parseOptions(values []interface{}) (*ordereddict.Dict, []interface{}) {
 // When rendering a table the user can introduce options into the
 // scope.
 func (self *GuiTemplateEngine) getTableOptions() (*ordereddict.Dict, error) {
-	column_types, pres := self.Scope.Resolve("ColumnTypes")
+	column_types, pres := self.Scope.Resolve(constants.COLUMN_TYPES)
 	if !pres {
 		return nil, errors.New("Not found")
 	}
@@ -547,6 +548,7 @@ func (self *GuiTemplateEngine) MoreMessages() bool {
 func (self *GuiTemplateEngine) Close() {
 	if self.log_writer != nil {
 		self.log_writer.Flush()
+		self.log_writer.Close()
 	}
 	self.BaseTemplateEngine.Close()
 }

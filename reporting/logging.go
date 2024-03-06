@@ -2,7 +2,6 @@ package reporting
 
 import (
 	"sync"
-	"time"
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -14,7 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
-type notebooCellLogger struct {
+type notebookCellLogger struct {
 	mu       sync.Mutex
 	messages []string
 
@@ -26,7 +25,7 @@ type notebooCellLogger struct {
 
 func newNotebookCellLogger(
 	config_obj *config_proto.Config, log_path api.FSPathSpec) (
-	*notebooCellLogger, error) {
+	*notebookCellLogger, error) {
 	file_store_factory := file_store.GetFileStore(config_obj)
 
 	// Create a new result set to write the logs
@@ -37,15 +36,15 @@ func newNotebookCellLogger(
 		return nil, err
 	}
 
-	return &notebooCellLogger{
+	return &notebookCellLogger{
 		rs_writer: rs_writer,
 	}, nil
 }
 
-func (self *notebooCellLogger) Write(b []byte) (int, error) {
+func (self *notebookCellLogger) Write(b []byte) (int, error) {
 	level, msg := logging.SplitIntoLevelAndLog(b)
 	self.rs_writer.Write(ordereddict.NewDict().
-		Set("Timestamp", time.Now().UTC().UnixNano()/1000).
+		Set("Timestamp", utils.GetTime().Now().UTC().UnixNano()/1000).
 		Set("Level", level).
 		Set("message", msg))
 
@@ -74,7 +73,7 @@ func (self *notebooCellLogger) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
-func (self *notebooCellLogger) Messages() []string {
+func (self *notebookCellLogger) Messages() []string {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -82,13 +81,17 @@ func (self *notebooCellLogger) Messages() []string {
 }
 
 // Are there additional messages?
-func (self *notebooCellLogger) MoreMessages() bool {
+func (self *notebookCellLogger) MoreMessages() bool {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	return self.more_messages
 }
 
-func (self *notebooCellLogger) Flush() {
+func (self *notebookCellLogger) Flush() {
 	self.rs_writer.Flush()
+}
+
+func (self *notebookCellLogger) Close() {
+	self.rs_writer.Close()
 }

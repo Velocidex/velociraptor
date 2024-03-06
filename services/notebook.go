@@ -7,6 +7,11 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
+const (
+	DO_NOT_INCLUDE_UPLOADS = false
+	INCLUDE_UPLOADS        = true
+)
+
 func GetNotebookManager(config_obj *config_proto.Config) (NotebookManager, error) {
 	org_manager, err := GetOrgManager()
 	if err != nil {

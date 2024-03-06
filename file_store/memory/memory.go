@@ -367,6 +367,7 @@ func (self *MemoryFileStore) ListDirectory(root_path api.FSPathSpec) ([]api.File
 			continue
 		}
 
+		// The next level after root_path
 		name := components[len(root_components)]
 
 		// It is a directory if there are more components so we add a
@@ -381,6 +382,8 @@ func (self *MemoryFileStore) ListDirectory(root_path api.FSPathSpec) ([]api.File
 		// components = ["a", "b"]
 		var new_child api.FileInfo
 		if len(root_components)+1 == len(components) {
+			// Get the original extension so we can determine if it is
+			// a datastore path.
 			base_name := path.Base(filename)
 
 			// This is a datastore path - skip
@@ -388,7 +391,7 @@ func (self *MemoryFileStore) ListDirectory(root_path api.FSPathSpec) ([]api.File
 				continue
 			}
 
-			name_type, name := api.GetFileStorePathTypeFromExtension(base_name)
+			name_type, _ := api.GetFileStorePathTypeFromExtension(base_name)
 			child := root_path.AddUnsafeChild(name).SetType(name_type)
 
 			new_child = &vtesting.MockFileInfo{

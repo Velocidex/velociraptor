@@ -12,7 +12,6 @@ import Button from 'react-bootstrap/Button';
 
 import api from '../core/api-service.jsx';
 import { formatColumns } from "../core/table.jsx";
-import NotebookUploads from '../notebooks/notebook-uploads.jsx';
 
 import NewCollectionWizard from './new-collection.jsx';
 import OfflineCollectorWizard from './offline-collector.jsx';
@@ -434,12 +433,6 @@ class FlowsList extends React.Component {
                   onClose={(e) => this.setState({showDeleteNotebook: false})}/>
               }
 
-              { this.state.showNotebookUploadsDialog &&
-                <NotebookUploads
-                  notebook={{notebook_id: "N." + selected_flow + "-" + client_id}}
-                  closeDialog={(e) => this.setState({showNotebookUploadsDialog: false})}/>
-              }
-
               { this.state.showExportNotebook &&
                 <ExportNotebook
                   notebook={{notebook_id: "N." + selected_flow + "-" + client_id}}
@@ -583,14 +576,6 @@ class FlowsList extends React.Component {
                       <span className="sr-only">{T("Delete Notebook")}</span>
                     </Button>
 
-                    <Button data-tooltip={T("Notebook Uploads")}
-                            data-position="left"
-                            className="btn-tooltip"
-                            onClick={() => this.setState({showNotebookUploadsDialog: true})}
-                            variant="default">
-                      <FontAwesomeIcon icon="fa-file-download"/>
-                      <span className="sr-only">{T("Notebook Uploads")}</span>
-                    </Button>
 
                     <Button data-tooltip={T("Export Notebook")}
                             data-position="left"

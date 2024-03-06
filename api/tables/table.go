@@ -1,19 +1,19 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package tables
 
@@ -24,7 +24,6 @@ import (
 
 	errors "github.com/go-errors/errors"
 	context "golang.org/x/net/context"
-	"www.velocidex.com/golang/velociraptor/datastore"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -217,19 +216,17 @@ func getColumnTypes(
 
 	// For notebooks, the column_types are set in the notebook metadata.
 	if in.NotebookId != "" {
-		notebook_path_manager := paths.NewNotebookPathManager(
-			in.NotebookId)
-
-		db, err := datastore.GetDB(config_obj)
+		notebook_manager, err := services.GetNotebookManager(config_obj)
 		if err != nil {
 			return nil
 		}
 
-		notebook := &api_proto.NotebookMetadata{}
-		err = db.GetSubject(config_obj, notebook_path_manager.Path(), notebook)
-		if err == nil {
-			return notebook.ColumnTypes
+		notebook, err := notebook_manager.GetNotebook(ctx, in.NotebookId,
+			services.DO_NOT_INCLUDE_UPLOADS)
+		if err != nil {
+			return nil
 		}
+		return notebook.ColumnTypes
 	}
 
 	return nil

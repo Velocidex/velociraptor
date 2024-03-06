@@ -7,8 +7,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -17,6 +15,7 @@ import (
 
 type CreateNotebookDownloadArgs struct {
 	NotebookId string `vfilter:"required,field=notebook_id,doc=Notebook ID to export."`
+	Filename   string `vfilter:"optional,field=filename,doc=The name of the export. If not set this will be named according to the notebook id and timestamp"`
 }
 
 type CreateNotebookDownload struct{}
@@ -44,10 +43,10 @@ func (self *CreateNotebookDownload) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	notebook_path_manager := paths.NewNotebookPathManager(arg.NotebookId)
 	wg := &sync.WaitGroup{}
-
-	err = reporting.ExportNotebookToZip(ctx, config_obj, wg, notebook_path_manager)
+	principal := vql_subsystem.GetPrincipal(scope)
+	path, err := ExportNotebookToZip(ctx,
+		config_obj, wg, arg.NotebookId, principal, arg.Filename)
 	if err != nil {
 		scope.Log("create_notebook_download: %s", err)
 		return vfilter.Null{}
@@ -57,7 +56,7 @@ func (self *CreateNotebookDownload) Call(ctx context.Context,
 	wg.Wait()
 	file_store.FlushFilestore(config_obj)
 
-	return notebook_path_manager.ZipExport()
+	return path
 }
 
 func (self CreateNotebookDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

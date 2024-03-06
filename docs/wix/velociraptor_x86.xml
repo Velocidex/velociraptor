@@ -114,6 +114,7 @@
       <ComponentRef Id='CleanupCache' />
     </Feature>
     <MajorUpgrade DowngradeErrorMessage="Downgrades are not allowed."
+                  AllowSameVersionUpgrades="yes"
                   Schedule="afterInstallValidate" />
     <Property Id="ALLUSERS" Value="1" />
     <Property Id="ARPNOREPAIR" Value="1" />

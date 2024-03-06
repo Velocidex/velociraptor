@@ -14,13 +14,8 @@ func (self *NotebookExportPathManager) CellMetadata(
 	return self.root.Append(self.notebook_id, cell_id+".db")
 }
 
-func (self *NotebookExportPathManager) UploadRoot() *accessors.OSPath {
-	return self.root.Append(self.notebook_id, "files")
-}
-
-func (self *NotebookExportPathManager) CellUploadRoot(
-	cell_id string) *accessors.OSPath {
-	return self.root.Append(self.notebook_id, cell_id, "uploads")
+func (self *NotebookExportPathManager) AttachmentRoot() *accessors.OSPath {
+	return self.root.Append(self.notebook_id, "attach")
 }
 
 func (self *NotebookExportPathManager) CellDirectory(

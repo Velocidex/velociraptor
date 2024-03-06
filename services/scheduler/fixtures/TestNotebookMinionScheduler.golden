@@ -7,7 +7,6 @@
   "messages": [
    "DEBUG:Query Stats: {\"RowsScanned\":1,\"PluginsCalled\":1,\"FunctionsCalled\":1,\"ProtocolSearch\":0,\"ScopeC ..."
   ],
-  "timestamp": 10,
   "type": "vql",
   "current_version": "XXX",
   "available_versions": [

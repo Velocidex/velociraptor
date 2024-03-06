@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -86,9 +88,9 @@ func (self *BulkData) Len() int {
 }
 
 // Stored in dir_cache - contains information about a directory.
-// - List of children in the directory.
-// - If the directory is too large we cache this information: Further
-//   listings will delegate to file based datastore.
+//   - List of children in the directory.
+//   - If the directory is too large we cache this information: Further
+//     listings will delegate to file based datastore.
 type DirectoryMetadata struct {
 	mu   sync.Mutex
 	data map[string]api.DSPathSpec
@@ -583,6 +585,20 @@ func (self *MemcacheDatastore) Close() {
 func (self *MemcacheDatastore) Clear() {
 	self.data_cache.Purge()
 	self.dir_cache.Purge()
+}
+
+func (self *MemcacheDatastore) GetForTests(
+	config_obj *config_proto.Config,
+	path string) ([]byte, error) {
+	components := []string{}
+	for _, s := range strings.Split(path, "/") {
+		if s != "" {
+			components = append(components, s)
+		}
+	}
+
+	return self.GetBuffer(config_obj,
+		path_specs.NewUnsafeDatastorePath(components...))
 }
 
 // Support RawDataStore interface

@@ -54,6 +54,15 @@ func (self *NotebookManager) UpdateNotebookCell(
 		if err != nil {
 			return nil, err
 		}
+
+		// Preserve the cell type
+		if in.Type == "" {
+			in.Type = cell_metadata.Type
+		}
+	}
+
+	if in.Type == "" {
+		in.Type = "markdown"
 	}
 
 	// Write the cell record as calculating while we attempt to
@@ -68,6 +77,16 @@ func (self *NotebookManager) UpdateNotebookCell(
 		Env:               in.Env,
 		CurrentVersion:    in.Version,
 		AvailableVersions: in.AvailableVersions,
+	}
+
+	// If the output field is specified, we just set it as is without
+	// actually calculating it.
+	if in.Output != "" {
+		notebook_cell.Calculating = false
+		notebook_cell.CurrentlyEditing = false
+		notebook_cell.Output = in.Output
+		return notebook_cell, self.Store.SetNotebookCell(
+			notebook_metadata.NotebookId, notebook_cell)
 	}
 
 	err := self.Store.SetNotebookCell(

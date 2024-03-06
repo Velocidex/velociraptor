@@ -77,6 +77,7 @@ func (self *NotebookManager) NewNotebookCell(
 	// Create the new cell with fresh content.
 	new_cell_request := &api_proto.NotebookCellRequest{
 		Input:             in.Input,
+		Output:            in.Output,
 		NotebookId:        in.NotebookId,
 		CellId:            notebook.LatestCellId,
 		Version:           new_version,

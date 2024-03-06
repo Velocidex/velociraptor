@@ -26,18 +26,23 @@ type NotebookStore interface {
 	SetNotebook(in *api_proto.NotebookMetadata) error
 	GetNotebook(notebook_id string) (*api_proto.NotebookMetadata, error)
 	SetNotebookCell(notebook_id string, in *api_proto.NotebookCell) error
-	GetNotebookCell(notebook_id, cell_id, version string) (*api_proto.NotebookCell, error)
+	GetNotebookCell(notebook_id, cell_id, version string) (
+		*api_proto.NotebookCell, error)
 
 	// progress_chan receives information about deletion. It may be
 	// nil if callers dont care about it.
 	RemoveNotebookCell(
 		ctx context.Context, config_obj *config_proto.Config,
-		notebook_id, cell_id, version string, progress_chan chan *ordereddict.Dict) error
+		notebook_id, cell_id, version string,
+		progress_chan chan *ordereddict.Dict) error
 
-	StoreAttachment(notebook_id, filename string, data []byte) (api.FSPathSpec, error)
-	RemoveAttachment(ctx context.Context, notebook_id string, components []string) error
+	StoreAttachment(notebook_id,
+		filename string, data []byte) (api.FSPathSpec, error)
+	RemoveAttachment(ctx context.Context,
+		notebook_id string, components []string) error
 
-	GetAvailableDownloadFiles(notebook_id string) (*api_proto.AvailableDownloads, error)
+	GetAvailableDownloadFiles(notebook_id string) (
+		*api_proto.AvailableDownloads, error)
 	GetAvailableTimelines(notebook_id string) []string
 	GetAvailableUploadFiles(notebook_id string) (
 		*api_proto.AvailableDownloads, error)
@@ -257,7 +262,8 @@ func (self *NotebookStoreImpl) GetNotebookCell(
 	return notebook_cell, err
 }
 
-func (self *NotebookStoreImpl) StoreAttachment(notebook_id, filename string, data []byte) (api.FSPathSpec, error) {
+func (self *NotebookStoreImpl) StoreAttachment(
+	notebook_id, filename string, data []byte) (api.FSPathSpec, error) {
 	full_path := paths.NewNotebookPathManager(notebook_id).
 		Attachment(filename)
 	file_store_factory := file_store.GetFileStore(self.config_obj)

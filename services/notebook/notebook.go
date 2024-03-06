@@ -18,6 +18,10 @@ import (
 	"www.velocidex.com/golang/vfilter/reformat"
 )
 
+var (
+	invalidNotebookId = errors.New("Invalid notebook id")
+)
+
 type NotebookManager struct {
 	config_obj *config_proto.Config
 	Store      NotebookStore
@@ -26,6 +30,11 @@ type NotebookManager struct {
 func (self *NotebookManager) GetNotebook(
 	ctx context.Context, notebook_id string, include_uploads bool) (
 	*api_proto.NotebookMetadata, error) {
+
+	err := verifyNotebookId(notebook_id)
+	if err != nil {
+		return nil, err
+	}
 
 	notebook, err := self.Store.GetNotebook(notebook_id)
 	if err != nil {
@@ -79,6 +88,10 @@ func (self *NotebookManager) NewNotebook(
 
 func (self *NotebookManager) UpdateNotebook(
 	ctx context.Context, in *api_proto.NotebookMetadata) error {
+	err := verifyNotebookId(in.NotebookId)
+	if err != nil {
+		return err
+	}
 
 	in.ModifiedTime = utils.GetTime().Now().Unix()
 	return self.Store.SetNotebook(in)
@@ -86,6 +99,11 @@ func (self *NotebookManager) UpdateNotebook(
 
 func (self *NotebookManager) GetNotebookCell(ctx context.Context,
 	notebook_id, cell_id, version string) (*api_proto.NotebookCell, error) {
+
+	err := verifyNotebookId(notebook_id)
+	if err != nil {
+		return nil, err
+	}
 
 	notebook_cell, err := self.Store.GetNotebookCell(notebook_id, cell_id, version)
 
@@ -111,6 +129,11 @@ func (self *NotebookManager) GetNotebookCell(ctx context.Context,
 // Cancel a current operation
 func (self *NotebookManager) CancelNotebookCell(
 	ctx context.Context, notebook_id, cell_id, version string) error {
+
+	err := verifyNotebookId(notebook_id)
+	if err != nil {
+		return err
+	}
 
 	// Unset the calculating bit in the notebook in case the
 	// renderer is not actually running (e.g. server restart).
@@ -147,7 +170,12 @@ func (self *NotebookManager) UploadNotebookAttachment(
 		return nil, err
 	}
 
-	filename := NewNotebookAttachmentId() + in.Filename
+	err = verifyNotebookId(in.NotebookId)
+	if err != nil {
+		return nil, err
+	}
+
+	filename := NewNotebookAttachmentId() + "-" + in.Filename
 
 	full_path, err := self.Store.StoreAttachment(
 		in.NotebookId, filename, decoded)
@@ -158,7 +186,9 @@ func (self *NotebookManager) UploadNotebookAttachment(
 	result := &api_proto.NotebookFileUploadResponse{
 		Url: full_path.AsClientPath() + "?org_id=" +
 			url.QueryEscape(utils.NormalizedOrgId(self.config_obj.OrgId)),
+		Filename: filename,
 	}
+
 	return result, nil
 }
 
@@ -206,4 +236,11 @@ func (self *NotebookManager) ReformatVQL(
 	}
 
 	return strings.Join(trimmed, "\n"), nil
+}
+
+func verifyNotebookId(notebook_id string) error {
+	if !strings.HasPrefix(notebook_id, "N.") {
+		return invalidNotebookId
+	}
+	return nil
 }

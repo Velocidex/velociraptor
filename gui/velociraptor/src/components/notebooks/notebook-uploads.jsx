@@ -18,6 +18,7 @@ const POLL_TIME = 5000;
 export default class NotebookUploads extends Component {
     static propTypes = {
         notebook: PropTypes.object,
+        cell: PropTypes.object,
         closeDialog: PropTypes.func.isRequired,
     }
 
@@ -75,16 +76,6 @@ export default class NotebookUploads extends Component {
                </a>;
     }
 
-    getDeleteLink = (cell, row) =>{
-        var stats = row.stats || {};
-        return <Button onClick={()=>{
-            api.post("v1/RemoveNotebookAttachment", {
-                components: stats.components,
-                notebook_id: this.props.notebook.notebook_id,
-            }, this.source.token).then(this.fetchNotebookDetails);
-        }}><FontAwesomeIcon icon="trash"/> </Button>;
-    }
-
     render() {
         let files = this.state.notebook &&
             this.state.notebook.available_uploads &&
@@ -92,7 +83,6 @@ export default class NotebookUploads extends Component {
         files = files || [];
 
         let columns = formatColumns([
-            {dataField: "name_", text: "", formatter: this.getDeleteLink},
             {dataField: "name", text: T("Name"),
              sort: true, filtered: true, formatter: this.getDownloadLink},
             {dataField: "size", text: T("Size")},
