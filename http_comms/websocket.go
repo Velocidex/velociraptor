@@ -27,6 +27,21 @@ var (
 	notConnectedError = errors.New("WS Socket is not conencted")
 )
 
+// The websocket conenction is not thread safe so we need to
+// synchronize it.
+type Conn struct {
+	*websocket.Conn
+
+	mu sync.Mutex
+}
+
+func (self *Conn) WriteMessage(message_type int, message []byte) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.Conn.WriteMessage(message_type, message)
+}
+
 type WebSocketConnection struct {
 	from_server chan *http.Response
 	to_server   chan []byte
@@ -37,7 +52,7 @@ type WebSocketConnection struct {
 	cancel     func()
 	ctx        context.Context
 	config_obj *config_proto.Config
-	ws         *websocket.Conn
+	ws         *Conn
 
 	transport *http.Transport
 
@@ -104,10 +119,12 @@ func (self *HTTPClientWithWebSocketTransport) NewWebSocketConnection(
 
 	key := req.URL.String()
 
-	ws, _, err := dialer.Dial(key, nil)
+	ws_, _, err := dialer.Dial(key, nil)
 	if err != nil {
 		return nil, err
 	}
+
+	ws := &Conn{Conn: ws_}
 
 	ctx, cancel := context.WithCancel(ctx)
 
@@ -318,7 +335,7 @@ func makeHTTPResponse(
 }
 
 func ReadMessageWithCtx(
-	ws *websocket.Conn,
+	ws *Conn,
 	ctx context.Context,
 	config_obj *config_proto.Config) (
 	messageType int, p []byte, err error) {

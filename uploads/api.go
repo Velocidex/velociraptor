@@ -4,6 +4,7 @@ package uploads
 import (
 	"context"
 	"io"
+	"os"
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -39,6 +40,7 @@ type Uploader interface {
 		atime time.Time,
 		ctime time.Time,
 		btime time.Time,
+		mode os.FileMode,
 		reader io.Reader) (*UploadResponse, error)
 }
 

@@ -3,6 +3,7 @@ package reporting
 import (
 	"context"
 	"io"
+	"os"
 	"time"
 
 	"github.com/go-errors/errors"
@@ -31,6 +32,7 @@ func (self *NotebookUploader) Upload(
 	atime time.Time,
 	ctime time.Time,
 	btime time.Time,
+	mode os.FileMode,
 	reader io.Reader) (
 	*uploads.UploadResponse, error) {
 
@@ -63,7 +65,8 @@ func (self *NotebookUploader) Upload(
 	// flat filenames in the same directory.
 	res, err := delegate_uploader.Upload(ctx, scope, filename, accessor,
 		accessors.MustNewGenericOSPath("/").Append(dest_path_spec.Base()),
-		expected_size, mtime, atime, ctime, btime, reader)
+		expected_size, mtime, atime, ctime, btime,
+		mode, reader)
 	if err != nil {
 		return nil, err
 	}

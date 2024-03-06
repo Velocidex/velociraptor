@@ -51,11 +51,13 @@ func ws_server_pem(
 	server_obj *Server, w http.ResponseWriter,
 	req *http.Request) error {
 
-	ws, err := upgrader.Upgrade(w, req, nil)
+	ws_, err := upgrader.Upgrade(w, req, nil)
 	if err != nil {
 		return err
 	}
-	defer ws.Close()
+	defer ws_.Close()
+
+	ws := &http_comms.Conn{Conn: ws_}
 
 	for {
 		// Just read a message and ignore it.
@@ -78,11 +80,13 @@ func ws_receive_client_messages(
 	server_obj *Server, w http.ResponseWriter,
 	req *http.Request) error {
 
-	ws, err := upgrader.Upgrade(w, req, nil)
+	ws_, err := upgrader.Upgrade(w, req, nil)
 	if err != nil {
 		return err
 	}
-	defer ws.Close()
+	defer ws_.Close()
+
+	ws := &http_comms.Conn{Conn: ws_}
 
 	ws.SetPongHandler(func(string) error {
 		deadline := utils.GetTime().Now().Add(
@@ -175,7 +179,7 @@ func ws_receive_client_messages(
 	}
 }
 
-func send_message(ws *websocket.Conn, message []byte) error {
+func send_message(ws *http_comms.Conn, message []byte) error {
 	msg := crypto.WSErrorMessage{
 		HTTPCode: http.StatusOK,
 		Data:     message,
@@ -186,7 +190,7 @@ func send_message(ws *websocket.Conn, message []byte) error {
 }
 
 // Deliver the HTTP code to the remote end so it can be recreated.
-func send_error(ws *websocket.Conn, err error, code int) error {
+func send_error(ws *http_comms.Conn, err error, code int) error {
 	msg := crypto.WSErrorMessage{
 		HTTPCode: code,
 	}
@@ -205,7 +209,7 @@ func send_error(ws *websocket.Conn, err error, code int) error {
 }
 
 func send_ping(
-	ws *websocket.Conn,
+	ws *http_comms.Conn,
 	config_obj *config_proto.Config) error {
 	deadline := utils.GetTime().Now().Add(http_comms.PongPeriod(config_obj))
 	ws.SetWriteDeadline(deadline)
@@ -216,11 +220,13 @@ func ws_send_client_messages(
 	config_obj *config_proto.Config,
 	server_obj *Server, w http.ResponseWriter,
 	req *http.Request) error {
-	ws, err := upgrader.Upgrade(w, req, nil)
+	ws_, err := upgrader.Upgrade(w, req, nil)
 	if err != nil {
 		return err
 	}
-	defer ws.Close()
+	defer ws_.Close()
+
+	ws := &http_comms.Conn{Conn: ws_}
 
 	// Keep track of currently connected clients.
 	currentWSConnections.Inc()
@@ -238,7 +244,8 @@ func ws_send_client_messages(
 		// Read the first message to authenticate the client's connection
 		ws.SetReadLimit(maxMessageSize)
 		ws.SetReadDeadline(utils.GetTime().Now().Add(http_comms.PongPeriod(config_obj)))
-		_, message, err := http_comms.ReadMessageWithCtx(ws, ctx, config_obj)
+		_, message, err := http_comms.ReadMessageWithCtx(
+			ws, ctx, config_obj)
 		if err != nil {
 			return send_error(ws, err, http.StatusServiceUnavailable)
 		}
@@ -363,7 +370,7 @@ func ws_send_client_messages(
 
 func send_one_message(
 	ctx context.Context,
-	ws *websocket.Conn,
+	ws *http_comms.Conn,
 	server_obj *Server,
 	org_config_obj *config_proto.Config,
 	message_info *crypto.MessageInfo) error {

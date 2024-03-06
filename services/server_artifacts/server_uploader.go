@@ -2,7 +2,10 @@ package server_artifacts
 
 import (
 	"context"
+	"fmt"
 	"io"
+	"io/fs"
+	"os"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -39,7 +42,13 @@ func (self *ServerUploader) Upload(
 	atime time.Time,
 	ctime time.Time,
 	btime time.Time,
+	mode os.FileMode,
 	reader io.Reader) (*uploads.UploadResponse, error) {
+
+	if !mode.IsRegular() {
+		return nil, fmt.Errorf("%w: Directories not supported",
+			fs.ErrInvalid)
+	}
 
 	if filename == nil {
 		return nil, errors.New("Not found")
@@ -57,7 +66,7 @@ func (self *ServerUploader) Upload(
 
 	result, err := self.FileStoreUploader.Upload(ctx, scope, filename,
 		accessor, store_as_name, expected_size,
-		mtime, atime, ctime, btime, reader)
+		mtime, atime, ctime, btime, mode, reader)
 	if err != nil {
 		return nil, err
 	}

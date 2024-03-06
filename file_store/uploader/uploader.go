@@ -5,7 +5,10 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"io"
+	"io/fs"
+	"os"
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -33,8 +36,14 @@ func (self *FileStoreUploader) Upload(
 	atime time.Time,
 	ctime time.Time,
 	btime time.Time,
+	mode os.FileMode,
 	reader io.Reader) (
 	*uploads.UploadResponse, error) {
+
+	if !mode.IsRegular() {
+		return nil, fmt.Errorf("%w: Directories not supported",
+			fs.ErrInvalid)
+	}
 
 	if store_as_name == nil {
 		store_as_name = filename

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
@@ -72,6 +73,17 @@ type StatWrapper struct {
 
 func (self StatWrapper) Size() int64 {
 	return self.real_size
+}
+
+func (self StatWrapper) Mode() os.FileMode {
+	if self.real_size == 0 {
+		return os.FileMode(0755)
+	}
+	return self.FileInfo.Mode()
+}
+
+func (self StatWrapper) IsDir() bool {
+	return self.real_size == 0
 }
 
 // Paths returned by our underlying zip delegator need to be
@@ -417,7 +429,20 @@ func (self *CollectorAccessor) ReadDirWithOSPath(
 		return nil, err
 	}
 
-	return self.ZipFileSystemAccessor.ReadDirWithOSPath(updated_full_path)
+	res, err := self.ZipFileSystemAccessor.ReadDirWithOSPath(
+		updated_full_path)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range res {
+		res[i] = StatWrapper{
+			FileInfo:  res[i],
+			real_size: res[i].Size(),
+		}
+	}
+
+	return res, nil
 }
 
 func init() {
