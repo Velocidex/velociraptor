@@ -1059,6 +1059,10 @@ message Defaults {
     // actively cancel in flight notebook cell calculations.
     uint64 notebook_memory_high_water_mark = 37;
 
+    // Wait this long for a worker to become available before giving
+    // up.
+    int64 notebook_wait_time_for_worker_ms = 46;
+
     // Set to -1 to disable local workers. The default is 5 local
     // workers. If you want the master to **not** perform any notebook
     // computations reduce this to -1 and set

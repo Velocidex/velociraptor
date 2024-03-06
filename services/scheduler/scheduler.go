@@ -69,6 +69,8 @@ type Scheduler struct {
 	mu sync.Mutex
 
 	queues map[string][]*Worker
+
+	config_obj *config_proto.Config
 }
 
 func (self *Scheduler) RegisterWorker(
@@ -133,15 +135,28 @@ func (self *Scheduler) WriteProfile(ctx context.Context,
 
 func (self *Scheduler) Schedule(ctx context.Context,
 	job services.SchedulerJob) (chan services.JobResponse, error) {
+
+	var wait_time time.Duration
+	if self.config_obj.Defaults != nil {
+		config_wait_time := self.config_obj.Defaults.NotebookWaitTimeForWorkerMs
+		if config_wait_time > 0 {
+			wait_time = time.Millisecond * time.Duration(config_wait_time)
+		} else if config_wait_time == 0 {
+			wait_time = 10 * time.Second
+		} else if config_wait_time < 0 {
+			wait_time = 0
+		}
+	}
+
 	for {
 		// The following does not block so we can do it all under lock
-		self.mu.Lock()
-
 		var available_workers []*Worker
 
 		// Retry a few times to get a worker from the queue.
 		start := utils.GetTime().Now()
 		for {
+			self.mu.Lock()
+
 			// Find a ready worker
 			workers, _ := self.queues[job.Queue]
 			for _, w := range workers {
@@ -152,15 +167,19 @@ func (self *Scheduler) Schedule(ctx context.Context,
 
 			// Yes we got some workers.
 			if len(available_workers) > 0 {
+				// Hold the lock on break
 				break
 			}
 
-			if utils.GetTime().Now().Sub(start) > 10*time.Second {
-				self.mu.Unlock()
+			// Do not wait with the lock held
+			self.mu.Unlock()
+
+			// Give up after 10 seconds.
+			if utils.GetTime().Now().Sub(start) > wait_time {
 				return nil, fmt.Errorf("No workers available on queue %v!", job.Queue)
 			}
 
-			// Try again soon.
+			// Try again soon
 			utils.GetTime().Sleep(100 * time.Millisecond)
 		}
 
@@ -258,7 +277,8 @@ func StartSchedulerService(
 	logger.Info("Starting Server Scheduler Service for %v", services.GetOrgName(config_obj))
 
 	scheduler := &Scheduler{
-		queues: make(map[string][]*Worker),
+		queues:     make(map[string][]*Worker),
+		config_obj: config_obj,
 	}
 
 	services.RegisterScheduler(scheduler)

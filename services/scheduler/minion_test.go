@@ -41,6 +41,7 @@ func (self *MinionSchedulerTestSuite) SetupTest() {
 	// Do not start local workers to force us to go through the remote
 	// one.
 	self.ConfigObj.Defaults.NotebookNumberOfLocalWorkers = -1
+	self.ConfigObj.Defaults.NotebookWaitTimeForWorkerMs = -1
 	self.ConfigObj.API.BindPort = 8345
 
 	// Mock out cell ID generation for tests
@@ -111,6 +112,7 @@ func (self *MinionSchedulerTestSuite) TestNotebookMinionScheduler() {
 		})
 	assert.NoError(self.T(), err)
 
+	cell.Timestamp = 0
 	golden := ordereddict.NewDict().
 		Set("Updated Cell", cell)
 
