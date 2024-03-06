@@ -2,7 +2,6 @@ package notebooks
 
 import (
 	"archive/zip"
-	"fmt"
 	"io/ioutil"
 	"strings"
 	"testing"
@@ -240,10 +239,9 @@ func (self *NotebookTestSuite) TestCreateNotebook() {
 
 	// Make sure the stats record for the export is written.
 	mem_data_store := test_utils.GetMemoryDataStore(self.T(), self.ConfigObj)
-	mem_data_store.Debug(self.ConfigObj)
 
-	stat, _ := mem_data_store.GetForTests("/downloads/notebooks/N.01/Test.json.db")
-	fmt.Println(string(stat))
+	stat, _ := mem_data_store.GetForTests(self.ConfigObj,
+		"/downloads/notebooks/N.01/Test")
 	assert.Contains(self.T(), string(stat), "\"hash\"")
 	assert.Contains(self.T(), string(stat), "\"Test.html\"")
 

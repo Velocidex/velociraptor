@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -586,17 +588,17 @@ func (self *MemcacheDatastore) Clear() {
 }
 
 func (self *MemcacheDatastore) GetForTests(
+	config_obj *config_proto.Config,
 	path string) ([]byte, error) {
-	bulk_data_any, err := self.data_cache.Get(path)
-	if err != nil {
-		return nil, err
+	components := []string{}
+	for _, s := range strings.Split(path, "/") {
+		if s != "" {
+			components = append(components, s)
+		}
 	}
 
-	bulk_data, ok := bulk_data_any.(*BulkData)
-	if !ok {
-		return nil, internalError
-	}
-	return bulk_data.data, nil
+	return self.GetBuffer(config_obj,
+		path_specs.NewUnsafeDatastorePath(components...))
 }
 
 // Support RawDataStore interface
