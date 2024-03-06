@@ -139,17 +139,29 @@ func (self *Scheduler) Schedule(ctx context.Context,
 
 		var available_workers []*Worker
 
-		// Find a ready worker
-		workers, _ := self.queues[job.Queue]
-		for _, w := range workers {
-			if !w.IsBusy() {
-				available_workers = append(available_workers, w)
+		// Retry a few times to get a worker from the queue.
+		start := utils.GetTime().Now()
+		for {
+			// Find a ready worker
+			workers, _ := self.queues[job.Queue]
+			for _, w := range workers {
+				if !w.IsBusy() {
+					available_workers = append(available_workers, w)
+				}
 			}
-		}
 
-		if len(available_workers) == 0 {
-			self.mu.Unlock()
-			return nil, fmt.Errorf("No workers available on queue %v!", job.Queue)
+			// Yes we got some workers.
+			if len(available_workers) > 0 {
+				break
+			}
+
+			if utils.GetTime().Now().Sub(start) > 10*time.Second {
+				self.mu.Unlock()
+				return nil, fmt.Errorf("No workers available on queue %v!", job.Queue)
+			}
+
+			// Try again soon.
+			utils.GetTime().Sleep(100 * time.Millisecond)
 		}
 
 		result_chan := make(chan services.JobResponse)

@@ -361,6 +361,7 @@ func (self *NotebookWorker) Start(
 	config_obj *config_proto.Config,
 	name string,
 	scheduler services.Scheduler) {
+
 	for {
 		err := self.RegisterWorker(ctx, config_obj, name, scheduler)
 		if err != nil {
@@ -510,8 +511,8 @@ func (self *NotebookManager) Start(
 	wg *sync.WaitGroup) error {
 
 	// Only start this once for all orgs. Otherwise we would have as
-	// many workers as orgs. Orgs will switch into the correct org for
-	// processing
+	// many workers as orgs. Workers will switch into the correct org
+	// for processing
 	if !utils.IsRootOrg(config_obj.OrgId) {
 		return nil
 	}
