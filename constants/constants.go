@@ -1,19 +1,19 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package constants
 
@@ -124,6 +124,18 @@ const (
 	// If this is set we always copy SQLite files to a tempfile. Used
 	// by the sqlite() plugin.
 	SQLITE_ALWAYS_MAKE_TEMPFILE = "SQLITE_ALWAYS_MAKE_TEMPFILE"
+
+	// This variable in the scope can set a dict that maps columns to
+	// their types. For example
+	// LET ColumnTypes <= dict(Column1="preview_upload")
+	COLUMN_TYPES = "ColumnTypes"
+
+	// Setting this in the scope causes times to be serialized in the
+	// specified timezone instead of UTC. NOTE: The GUI changes times
+	// to the timezone specified in the user preferences so this may
+	// not be immediately visible in the GUI but will affect the
+	// timezone actually serialized.
+	TZ = "TZ"
 
 	PinnedServerName = "VelociraptorServer"
 	PinnedGwName     = "GRPC_GW"

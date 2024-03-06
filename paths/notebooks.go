@@ -21,14 +21,22 @@ func NotebookDir() api.DSPathSpec {
 	return NOTEBOOK_ROOT
 }
 
-// Where to store attachments? In the notebook path.
+// Attachments are not the same as uploads - they are usually uploaded
+// by pasting in the cell eg an image. We want the attachment to
+// remain whenever the cell is updated to a new version.
+// Example workflow:
+//   - User uploads an attachment into a cell
+//   - Cell is updated with a link to the attachment
+//   - User continues to edit the cell in newer versions but the link
+//     remains valid because the attachment is stored in the notebook
+//     and not the cell.
 func (self *NotebookPathManager) Attachment(name string) api.FSPathSpec {
-	return self.root.AddUnsafeChild(self.notebook_id, "uploads", "attach/"+name).
+	return self.root.AddUnsafeChild(self.notebook_id, "attach", name).
 		AsFilestorePath().SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
 func (self *NotebookPathManager) AttachmentDirectory() api.FSPathSpec {
-	return self.root.AddChild(self.notebook_id, "uploads").
+	return self.root.AddChild(self.notebook_id, "attach").
 		AsFilestorePath().SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
@@ -67,10 +75,13 @@ func (self *NotebookPathManager) DSDirectory() api.DSPathSpec {
 	return self.root.AddChild(self.notebook_id)
 }
 
-func (self *NotebookPathManager) HtmlExport() api.FSPathSpec {
-	return DOWNLOADS_ROOT.AddChild("notebooks", self.notebook_id,
-		fmt.Sprintf("%s-%s", self.notebook_id,
-			self.Clock.Now().UTC().Format("20060102150405Z"))).
+func (self *NotebookPathManager) HtmlExport(prefered_name string) api.FSPathSpec {
+	if prefered_name == "" {
+		prefered_name = fmt.Sprintf("%s-%s", self.notebook_id,
+			self.Clock.Now().UTC().Format("20060102150405Z"))
+	}
+	return DOWNLOADS_ROOT.AddChild(
+		"notebooks", self.notebook_id, prefered_name).
 		SetType(api.PATH_TYPE_FILESTORE_DOWNLOAD_REPORT)
 }
 
@@ -201,16 +212,15 @@ func (self *NotebookCellPathManager) QueryStorage(id int64) *NotebookCellQuery {
 // Uploads are stored at the network level.
 func (self *NotebookCellPathManager) UploadsDir() api.FSPathSpec {
 	return self.root.AsFilestorePath().
-		AddUnsafeChild(self.notebook_id, "uploads").
+		AddUnsafeChild(self.notebook_id, self.cell_id, "uploads").
 		SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 
 func (self *NotebookCellPathManager) GetUploadsFile(filename string) api.FSPathSpec {
-	// Cell id and filename are combined so we can read all
-	// attachments in a single ListDir
+	// Uploads exist inside each cell so when cells are reaped we
+	// remove the uploads.
 	return self.root.AsFilestorePath().
-		AddUnsafeChild(self.notebook_id,
-			"uploads", fmt.Sprintf("%s/%s", self.cell_id, filename)).
+		AddUnsafeChild(self.notebook_id, self.cell_id, "uploads", filename).
 		SetType(api.PATH_TYPE_FILESTORE_ANY)
 }
 

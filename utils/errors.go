@@ -9,8 +9,9 @@ var (
 	// Error relayed when the error details are added inline. The GUI
 	// API will strip this error as the details are included in the
 	// response already.
-	InlineError  = errors.New("InlineError")
-	TimeoutError = errors.New("Timeout")
+	InlineError   = errors.New("InlineError")
+	TimeoutError  = errors.New("Timeout")
+	InvalidStatus = errors.New("InvalidStatus")
 )
 
 // This is a custom error type that wraps an inner error but does not

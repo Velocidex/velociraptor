@@ -100,6 +100,8 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 		notebook_path_manager.Cell(in.CellId, in.Version),
 		"Server.Internal.ArtifactDescription")
 	if err != nil {
+		logger.Debug("NotebookWorker: While evaluating template: %v", err)
+
 		return nil, err
 	}
 	defer tmpl.Close()

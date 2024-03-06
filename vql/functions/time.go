@@ -12,6 +12,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/araddon/dateparse"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/third_party/cache"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -79,7 +80,7 @@ func getTimezone(scope types.Scope) (*time.Location, string) {
 
 	// Otherwise the user may have specified a global timezone (which
 	// also affects output).
-	tz, pres = scope.Resolve("TZ")
+	tz, pres = scope.Resolve(constants.TZ)
 	if pres {
 		tz_str, ok := tz.(string)
 		if ok {

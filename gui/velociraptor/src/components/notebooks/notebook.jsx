@@ -99,7 +99,7 @@ class Notebooks extends React.Component {
 
         api.get("v1/GetNotebooks", {
             notebook_id: notebook.notebook_id,
-            include_uploads: true,
+            include_uploads: false,
         }, this.source.token).then(response=>{
             if (response.cancel) return;
 

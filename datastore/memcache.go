@@ -86,9 +86,9 @@ func (self *BulkData) Len() int {
 }
 
 // Stored in dir_cache - contains information about a directory.
-// - List of children in the directory.
-// - If the directory is too large we cache this information: Further
-//   listings will delegate to file based datastore.
+//   - List of children in the directory.
+//   - If the directory is too large we cache this information: Further
+//     listings will delegate to file based datastore.
 type DirectoryMetadata struct {
 	mu   sync.Mutex
 	data map[string]api.DSPathSpec
@@ -583,6 +583,20 @@ func (self *MemcacheDatastore) Close() {
 func (self *MemcacheDatastore) Clear() {
 	self.data_cache.Purge()
 	self.dir_cache.Purge()
+}
+
+func (self *MemcacheDatastore) GetForTests(
+	path string) ([]byte, error) {
+	bulk_data_any, err := self.data_cache.Get(path)
+	if err != nil {
+		return nil, err
+	}
+
+	bulk_data, ok := bulk_data_any.(*BulkData)
+	if !ok {
+		return nil, internalError
+	}
+	return bulk_data.data, nil
 }
 
 // Support RawDataStore interface

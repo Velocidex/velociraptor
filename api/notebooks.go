@@ -1,9 +1,6 @@
 package api
 
 import (
-	"crypto/md5"
-	"crypto/sha256"
-	"encoding/hex"
 	"os"
 	"strings"
 	"sync"
@@ -11,20 +8,13 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
-	"github.com/sirupsen/logrus"
 	context "golang.org/x/net/context"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/datastore"
-	file_store "www.velocidex.com/golang/velociraptor/file_store"
-	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/paths"
-	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/server/notebooks"
 )
 
 const (
@@ -62,7 +52,8 @@ func (self *ApiServer) GetNotebooks(
 
 	// We want a single notebook metadata.
 	if in.NotebookId != "" {
-		notebook_metadata, err := notebook_manager.GetNotebook(ctx, in.NotebookId, in.IncludeUploads)
+		notebook_metadata, err := notebook_manager.GetNotebook(
+			ctx, in.NotebookId, in.IncludeUploads)
 		// Handle the EOF especially: it means there is no such
 		// notebook and return an empty result set.
 		if errors.Is(err, os.ErrNotExist) ||
@@ -430,7 +421,13 @@ func (self *ApiServer) UploadNotebookAttachment(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
-	return notebook_manager.UploadNotebookAttachment(ctx, in)
+	res, err := notebook_manager.UploadNotebookAttachment(ctx, in)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	res.MimeType = detectMime([]byte(in.Data), true)
+	return res, nil
 }
 
 func (self *ApiServer) CreateNotebookDownloadFile(
@@ -453,144 +450,22 @@ func (self *ApiServer) CreateNotebookDownloadFile(
 			"User is not allowed to export notebooks.")
 	}
 
+	wg := &sync.WaitGroup{}
+
 	switch in.Type {
 	case "zip":
-		return &emptypb.Empty{}, exportZipNotebook(
-			org_config_obj, in.NotebookId, principal)
+		_, err := notebooks.ExportNotebookToZip(ctx,
+			org_config_obj, wg, in.NotebookId,
+			principal, in.PreferredName)
+
+		return &emptypb.Empty{}, Status(self.verbose, err)
+
 	default:
-		return &emptypb.Empty{}, exportHTMLNotebook(
-			org_config_obj, in.NotebookId, principal)
+		_, err := notebooks.ExportNotebookToHTML(
+			org_config_obj, wg, in.NotebookId,
+			principal, in.PreferredName)
+		return &emptypb.Empty{}, Status(self.verbose, err)
 	}
-}
-
-// Create a portable notebook into a zip file.
-func exportZipNotebook(
-	config_obj *config_proto.Config,
-	notebook_id, principal string) error {
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	notebook := &api_proto.NotebookMetadata{}
-	notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
-	err = db.GetSubject(config_obj, notebook_path_manager.Path(), notebook)
-	if err != nil {
-		return err
-	}
-
-	notebook_manager, err := services.GetNotebookManager(config_obj)
-	if err != nil {
-		return err
-	}
-	if !notebook_manager.CheckNotebookAccess(notebook, principal) {
-		return InvalidStatus("Notebook is not shared with user.")
-	}
-
-	filename := notebook_path_manager.ZipExport()
-
-	// Allow 1 hour to export the notebook.
-	sub_ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
-
-	go func() {
-		defer cancel()
-
-		wg := &sync.WaitGroup{}
-
-		err := reporting.ExportNotebookToZip(
-			sub_ctx, config_obj, wg, notebook_path_manager)
-		if err != nil {
-			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
-			logger.WithFields(logrus.Fields{
-				"notebook_id": notebook.NotebookId,
-				"export_file": filename,
-				"error":       err.Error(),
-			}).Error("CreateNotebookDownloadFile")
-			return
-		}
-
-		// Wait for the export to finish before we return.
-		wg.Wait()
-	}()
-
-	return nil
-}
-
-func exportHTMLNotebook(config_obj *config_proto.Config,
-	notebook_id, principal string) error {
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	notebook := &api_proto.NotebookMetadata{}
-	notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
-	err = db.GetSubject(config_obj, notebook_path_manager.Path(), notebook)
-	if err != nil {
-		return err
-	}
-
-	notebook_manager, err := services.GetNotebookManager(config_obj)
-	if err != nil {
-		return err
-	}
-
-	if !notebook_manager.CheckNotebookAccess(notebook, principal) {
-		return InvalidStatus("Notebook is not shared with user.")
-	}
-
-	file_store_factory := file_store.GetFileStore(config_obj)
-	filename := notebook_path_manager.HtmlExport()
-
-	writer, err := file_store_factory.WriteFile(filename)
-	if err != nil {
-		return err
-	}
-
-	sha_sum := sha256.New()
-	md5_sum := md5.New()
-	tee_writer := utils.NewTee(writer, sha_sum, md5_sum)
-
-	stats := &api_proto.ContainerStats{
-		Timestamp:  uint64(time.Now().Unix()),
-		Type:       "html",
-		Components: path_specs.AsGenericComponentList(filename),
-	}
-	stats_path := notebook_path_manager.PathStats(filename)
-
-	err = db.SetSubject(config_obj, stats_path, stats)
-	if err != nil {
-		return err
-	}
-
-	// Allow 1 hour to export the notebook.
-	sub_ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
-
-	go func() {
-		defer writer.Close()
-		defer cancel()
-
-		defer func() {
-			stats.Hash = hex.EncodeToString(sha_sum.Sum(nil))
-			stats.TotalDuration = uint64(time.Now().Unix()) - stats.Timestamp
-
-			db.SetSubject(config_obj, stats_path, stats)
-		}()
-
-		err := reporting.ExportNotebookToHTML(
-			sub_ctx, config_obj, notebook.NotebookId, tee_writer)
-		if err != nil {
-			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
-			logger.WithFields(logrus.Fields{
-				"notebook_id": notebook.NotebookId,
-				"export_file": filename,
-				"error":       err.Error(),
-			}).Error("CreateNotebookDownloadFile")
-			return
-		}
-	}()
-
-	return nil
 }
 
 func (self *ApiServer) RemoveNotebookAttachment(

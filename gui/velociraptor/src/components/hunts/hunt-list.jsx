@@ -9,7 +9,6 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import filterFactory from 'react-bootstrap-table2-filter';
 import cellEditFactory from 'react-bootstrap-table2-editor';
-import NotebookUploads from '../notebooks/notebook-uploads.jsx';
 import VeloTimestamp from "../utils/time.jsx";
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -176,7 +175,6 @@ class HuntList extends React.Component {
         showExportNotebook: false,
         showDeleteNotebook: false,
         showCopyWizard: false,
-        showNotebookUploadsDialog: false,
         showModifyHuntDialog: false,
 
         filter: "",
@@ -414,13 +412,6 @@ class HuntList extends React.Component {
                         }} />
                 }
 
-                {this.state.showNotebookUploadsDialog &&
-                    <NotebookUploads
-                        notebook={{ notebook_id: "N." + selected_hunt }}
-                        closeDialog={() => this.setState({ showNotebookUploadsDialog: false })}
-                    />
-                }
-
                 {this.state.showExportNotebook &&
                     <ExportNotebook
                         notebook={{ notebook_id: "N." + selected_hunt }}
@@ -568,15 +559,6 @@ class HuntList extends React.Component {
                                 variant="default">
                                 <FontAwesomeIcon icon="trash" />
                                 <span className="sr-only">{T("Delete Notebook")}</span>
-                            </Button>
-
-                            <Button data-tooltip={T("Notebook Uploads")}
-                                data-position="left"
-                                className="btn-tooltip"
-                                onClick={() => this.setState({ showNotebookUploadsDialog: true })}
-                                variant="default">
-                                <FontAwesomeIcon icon="fa-file-download" />
-                                <span className="sr-only">{T("Notebook Uploads")}</span>
                             </Button>
 
                             <Button data-tooltip={T("Export Notebook")}

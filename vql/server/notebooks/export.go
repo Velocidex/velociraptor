@@ -1,12 +1,13 @@
-package reporting
+package notebooks
 
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"html"
-	"io"
 	"io/ioutil"
 	"net/url"
 	"os"
@@ -14,21 +15,115 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/yaml/v2"
 	"github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
+
+var ()
+
+type ExportNotebookArg struct {
+	NotebookId string `vfilter:"required,field=notebook_id,doc=The id of the notebook to export"`
+	Filename   string `vfilter:"optional,field=filename,doc=The name of the export. If not set this will be named according to the notebook id and timestamp"`
+	Type       string `vfilter:"optional,field=type,doc=Set the type of the export (html or zip)."`
+}
+
+type ExportNotebookFunction struct{}
+
+func (self ExportNotebookFunction) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	arg := &ExportNotebookArg{}
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("notebook_export: %v", err)
+		return vfilter.Null{}
+	}
+
+	err = vql_subsystem.CheckAccess(scope, acls.PREPARE_RESULTS)
+	if err != nil {
+		scope.Log("notebook_export: %v", err)
+		return vfilter.Null{}
+	}
+
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		scope.Log("notebook_export: Command can only run on the server")
+		return vfilter.Null{}
+	}
+
+	wg := &sync.WaitGroup{}
+	defer func() {
+		// Wait here until the export is done.
+		wg.Wait()
+
+		// Make sure the data is flushed to disk so the VQL can get
+		// it.
+		file_store.FlushFilestore(config_obj)
+	}()
+
+	principal := vql_subsystem.GetPrincipal(scope)
+
+	switch arg.Type {
+	case "", "zip":
+		result, err := ExportNotebookToZip(ctx,
+			config_obj, wg, arg.NotebookId,
+			principal, arg.Filename)
+		if err != nil {
+			scope.Log("notebook_export: %v", err)
+			return vfilter.Null{}
+		}
+		return result
+
+	case "html":
+		result, err := ExportNotebookToHTML(
+			config_obj, wg, arg.NotebookId,
+			principal, arg.Filename)
+		if err != nil {
+			scope.Log("notebook_export: %v", err)
+			return vfilter.Null{}
+		}
+		return result
+
+	default:
+		scope.Log("notebook_export: unsupported export type %v", arg.Type)
+		return vfilter.Null{}
+	}
+}
+
+func (self ExportNotebookFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:     "notebook_export",
+		Doc:      "Exports a notebook to a zip file or HTML.",
+		ArgType:  type_map.AddType(scope, &ExportNotebookArg{}),
+		Metadata: vql.VQLMetadata().Permissions(acls.PREPARE_RESULTS).Build(),
+	}
+}
+
+func init() {
+	vql_subsystem.RegisterFunction(&ExportNotebookFunction{})
+}
 
 var (
 	// Must match the output emitted by GuiTemplateEngine.Table
@@ -36,7 +131,10 @@ var (
 		`<grr-csv-viewer base-url="'v1/GetTable'" params='([^']+)' />`)
 
 	imageRegex = regexp.MustCompile(
-		`<img src=\"/notebooks/(?P<NotebookId>N.[^/]+)/(?P<Attachment>NA.[^.]+.png)\" (?P<Extra>[^>]*)>`)
+		`<img src=".+?/(?P<NotebookId>N\.[^/]+)/attach/(?P<Attachment>NA\.[^\?"]+)(?P<Extra>[^>]*)>`)
+
+	hrefRegex = regexp.MustCompile(
+		`<a href=".+?/(?P<NotebookId>N\.[^/]+)/attach/(?P<Attachment>NA\.[^\?"]+)(?P<Extra>[^>]*)>(?P<Filename>[^<]+)</a>`)
 )
 
 const (
@@ -52,6 +150,32 @@ const (
     <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+<script>
+
+function base64ToArrayBuffer(_base64Str) {
+      var binaryString = window.atob(_base64Str);
+      var binaryLen = binaryString.length;
+      var bytes = new Uint8Array(binaryLen);
+      for (var i = 0; i < binaryLen; i++) {
+            var ascii = binaryString.charCodeAt(i);
+            bytes[i] = ascii;
+     }
+     return bytes;
+}
+
+function downloadFile(_base64Str, filename) {
+      var byte = base64ToArrayBuffer(_base64Str);
+      var a = document.createElement("a");
+      document.body.appendChild(a);
+      var blob = new Blob([byte], { type: "binary/octet-stream" });
+      var url = window.URL.createObjectURL(blob);
+        a.href = url;
+        a.download = filename;
+        a.click();
+}
+</script>
+
 
     <style>
 pre {
@@ -171,61 +295,73 @@ func ExportNotebookToZip(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	wg *sync.WaitGroup,
-	notebook_path_manager *paths.NotebookPathManager) error {
+	notebook_id, principal, preferred_name string) (api.FSPathSpec, error) {
 
-	db, err := datastore.GetDB(config_obj)
+	notebook_manager, err := services.GetNotebookManager(config_obj)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	notebook := &api_proto.NotebookMetadata{}
-	err = db.GetSubject(config_obj, notebook_path_manager.Path(),
-		notebook)
+	notebook, err := notebook_manager.GetNotebook(ctx, notebook_id,
+		services.DO_NOT_INCLUDE_UPLOADS)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	for _, metadata := range notebook.CellMetadata {
-		if metadata.CellId != "" {
-			err = db.GetSubject(config_obj,
-				notebook_path_manager.Cell(
-					metadata.CellId, metadata.CurrentVersion).Path(),
-				metadata)
-			if err != nil {
-				return err
-			}
-			metadata.Data = ""
+	if !notebook_manager.CheckNotebookAccess(notebook, principal) {
+		return nil, fmt.Errorf("%w: Notebook is not shared with user.",
+			utils.InvalidStatus)
+	}
+
+	notebook_path_manager := paths.NewNotebookPathManager(
+		notebook_id)
+	output_filename := notebook_path_manager.ZipExport()
+	if preferred_name != "" {
+		output_filename = output_filename.Dir().AddUnsafeChild(preferred_name)
+	}
+
+	// Replace the cell metadata with the full cell definition for
+	// export.
+	for idx, metadata := range notebook.CellMetadata {
+		if metadata.CellId == "" {
+			continue
 		}
+		cell, err := notebook_manager.GetNotebookCell(ctx,
+			notebook_id, metadata.CellId,
+			metadata.CurrentVersion)
+		if err != nil {
+			continue
+		}
+		notebook.CellMetadata[idx] = cell
 	}
 
 	serialized, err := yaml.Marshal(notebook)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
-	output_filename := notebook_path_manager.ZipExport()
 	fd, err := file_store_factory.WriteFile(output_filename)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = fd.Truncate()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// Create a new ZipContainer to write on. The container will close
 	// the underlying writer.
-	zip_writer, err := NewContainerFromWriter(
-		config_obj, fd, "", DEFAULT_COMPRESSION, NO_METADATA)
+	zip_writer, err := reporting.NewContainerFromWriter(
+		config_obj, fd, "", reporting.DEFAULT_COMPRESSION, reporting.NO_METADATA)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// zip_writer now owns fd and will close it when it closes below.
 
-	exported_path_manager := NewNotebookExportPathManager(notebook.NotebookId)
+	exported_path_manager := reporting.NewNotebookExportPathManager(notebook.NotebookId)
 
 	cell_copier := func(cell_id, version string) {
 		cell_path_manager := notebook_path_manager.Cell(cell_id, version)
@@ -234,16 +370,6 @@ func ExportNotebookToZip(
 		err = copyUploads(ctx, config_obj,
 			cell_path_manager.Directory(),
 			exported_path_manager.CellDirectory(cell_id),
-			zip_writer, file_store_factory)
-		if err != nil {
-			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
-			logger.Info("ExportNotebookToZip Erorr: %v\n", err)
-		}
-
-		// Now copy the uploads
-		err = copyUploads(ctx, config_obj,
-			cell_path_manager.UploadsDir(),
-			exported_path_manager.CellUploadRoot(cell_id),
 			zip_writer, file_store_factory)
 		if err != nil {
 			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
@@ -268,7 +394,7 @@ func ExportNotebookToZip(
 		defer cancel()
 
 		// Report the progress as we write the container.
-		progress_reporter := NewProgressReporter(ctx, config_obj,
+		progress_reporter := reporting.NewProgressReporter(ctx, config_obj,
 			notebook_path_manager.PathStats(output_filename),
 			output_filename, zip_writer)
 		defer progress_reporter.Close()
@@ -280,13 +406,13 @@ func ExportNotebookToZip(
 			cell_copier(cell.CellId, cell.CurrentVersion)
 		}
 
-		// Copy the attachments - Attachmentrs may not exist if there
+		// Copy the attachments - Attachments may not exist if there
 		// are none in the notebook - so this is not an error.
 		// Attachments are added to the notebook when the user pastes
 		// them into it (e.g. an image)
 		err = copyUploads(ctx, config_obj,
 			notebook_path_manager.AttachmentDirectory(),
-			exported_path_manager.UploadRoot(),
+			exported_path_manager.AttachmentRoot(),
 			zip_writer, file_store_factory)
 		if err != nil {
 			logger := logging.GetLogger(config_obj, &logging.GUIComponent)
@@ -302,7 +428,13 @@ func ExportNotebookToZip(
 		_, err = f.Write(serialized)
 	}()
 
-	return nil
+	services.LogAudit(ctx,
+		config_obj, principal, "ExportNotebook",
+		ordereddict.NewDict().
+			Set("notebook_id", notebook_id).
+			Set("output_filename", output_filename))
+
+	return output_filename, nil
 }
 
 func copyUploads(
@@ -310,7 +442,7 @@ func copyUploads(
 	config_obj *config_proto.Config,
 	src api.FSPathSpec,
 	dest *accessors.OSPath,
-	zip_writer *Container,
+	zip_writer *reporting.Container,
 	file_store_factory api.FileStore) error {
 
 	return api.Walk(file_store_factory, src,
@@ -343,101 +475,213 @@ func copyUploads(
 }
 
 func ExportNotebookToHTML(
-	ctx context.Context,
 	config_obj *config_proto.Config,
-	notebook_id string, output io.Writer) error {
+	wg *sync.WaitGroup,
+	notebook_id, principal, preferred_name string) (api.FSPathSpec, error) {
 
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
+	// Allow an hour to actually do the export. Our caller can wait on
+	// the wg or allow operation in background.
+	ctx, cancel := context.WithTimeout(context.Background(), time.Hour)
 
 	notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
-	notebook := &api_proto.NotebookMetadata{}
-	err = db.GetSubject(config_obj, notebook_path_manager.Path(),
-		notebook)
-	if err != nil {
-		return err
-	}
+	output_filename := notebook_path_manager.HtmlExport(preferred_name)
 
-	_, err = output.Write([]byte(fmt.Sprintf(HtmlPreable, notebook.Name)))
-	if err != nil {
-		return err
-	}
+	wg.Add(1)
+	go func() (api.FSPathSpec, error) {
+		defer wg.Done()
+		defer cancel()
 
-	// Write the postscript when we are done.
-	defer func() {
-		_, _ = output.Write([]byte(HtmlPostscript))
-	}()
+		file_store_factory := file_store.GetFileStore(config_obj)
 
-	cell := &api_proto.NotebookCell{}
-	for _, cell_md := range notebook.CellMetadata {
-		err = db.GetSubject(config_obj,
-			notebook_path_manager.Cell(
-				cell_md.CellId, cell_md.CurrentVersion).Path(),
-			cell)
+		output, err := file_store_factory.WriteFile(output_filename)
 		if err != nil {
-			return err
+			return nil, err
+		}
+		defer output.Close()
+
+		err = output.Truncate()
+		if err != nil {
+			return nil, err
 		}
 
-		_, err = output.Write([]byte("<div class=\"notebook-cell\">\n"))
+		sha_sum := sha256.New()
+		tee_writer := utils.NewTee(output, sha_sum)
+
+		notebook_manager, err := services.GetNotebookManager(config_obj)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
-		cell_output := imageRegex.ReplaceAllStringFunc(
-			cell.Output, func(in string) string {
-				file_store_factory := file_store.GetFileStore(config_obj)
+		notebook, err := notebook_manager.GetNotebook(
+			ctx, notebook_id, services.INCLUDE_UPLOADS)
+		if err != nil {
+			return nil, err
+		}
 
-				submatches := imageRegex.FindStringSubmatch(in)
-				if len(submatches) < 3 {
-					return in
-				}
-				extra := ""
-				if len(submatches) > 3 {
-					extra = submatches[3]
-				}
+		_, err = tee_writer.Write([]byte(fmt.Sprintf(HtmlPreable, notebook.Name)))
+		if err != nil {
+			return nil, err
+		}
 
-				item_path := notebook_path_manager.Cell(
-					"", "").Item(submatches[2])
+		stats := &api_proto.ContainerStats{
+			Timestamp:  uint64(time.Now().Unix()),
+			Type:       "html",
+			Components: path_specs.AsGenericComponentList(output_filename),
+		}
+		stats_path := notebook_path_manager.PathStats(
+			output_filename)
+		db, err := datastore.GetDB(config_obj)
+		if err != nil {
+			return nil, err
+		}
+
+		err = db.SetSubject(config_obj, stats_path, stats)
+		if err != nil {
+			return nil, err
+		}
+
+		// Write the postscript and stats when we are done.
+		defer func() {
+			_, _ = tee_writer.Write([]byte(HtmlPostscript))
+
+			stats.TotalUncompressedBytes = uint64(tee_writer.Count())
+			stats.TotalCompressedBytes = uint64(tee_writer.Count())
+			stats.TotalContainerFiles = 1
+			stats.Hash = hex.EncodeToString(sha_sum.Sum(nil))
+			stats.TotalDuration = uint64(time.Now().Unix()) - stats.Timestamp
+
+			db.SetSubject(config_obj, stats_path, stats)
+		}()
+
+		for _, cell_md := range notebook.CellMetadata {
+			cell, err := notebook_manager.GetNotebookCell(ctx,
+				notebook_id, cell_md.CellId, cell_md.CurrentVersion)
+			if err != nil {
+				return nil, err
+			}
+
+			_, err = tee_writer.Write([]byte("<div class=\"notebook-cell\">\n"))
+			if err != nil {
+				return nil, err
+			}
+
+			get_file_base64 := func(notebook_id, attachment string) (string, error) {
+				notebook_path_manager := paths.NewNotebookPathManager(notebook_id)
+				item_path := notebook_path_manager.AttachmentDirectory().
+					AddChild(attachment)
 				fd, err := file_store_factory.ReadFile(item_path)
 				if err != nil {
-					return in
+					return "", err
 				}
 
 				data, err := ioutil.ReadAll(fd)
 				if err != nil {
-					return in
+					return "", err
 				}
 
-				return fmt.Sprintf(`<img src="data:image/jpg;base64,%v" %s>`,
-					base64.StdEncoding.EncodeToString(data), extra)
-			})
+				return base64.StdEncoding.EncodeToString(data), nil
+			}
 
-		// Expand tables
-		new_cell_output := csvViewerRegexp.ReplaceAllStringFunc(
-			cell_output, func(in string) string {
-				result, err := convertCSVTags(ctx, config_obj, in, cell)
-				if err != nil {
-					return fmt.Sprintf(
-						"<error>%s</error>",
-						html.EscapeString(err.Error()))
+			// Fix up img tags.
+			cell_output := imageRegex.ReplaceAllStringFunc(
+				cell.Output, func(in string) string {
+
+					submatches := imageRegex.FindStringSubmatch(in)
+					if len(submatches) != 4 {
+						return in
+					}
+					data, err := get_file_base64(submatches[1], submatches[2])
+					if err != nil {
+						return in
+					}
+					return fmt.Sprintf(`<img src="data:image/png;base64,%s">`,
+						data)
+				})
+
+			// Fix up <a href tags.
+			cell_output = hrefRegex.ReplaceAllStringFunc(
+				cell_output, func(in string) string {
+
+					submatches := hrefRegex.FindStringSubmatch(in)
+					if len(submatches) != 5 {
+						return in
+					}
+
+					notebook_id := submatches[1]
+					attachment_id := submatches[2]
+					filename := submatches[4]
+
+					data, err := get_file_base64(notebook_id, attachment_id)
+					if err != nil {
+						return in
+					}
+					return fmt.Sprintf(`<a href="#" onclick="downloadFile('%s', '%s')">%s</a>`,
+						data, filename, filename)
+				})
+
+			// Expand tables
+			new_cell_output := csvViewerRegexp.ReplaceAllStringFunc(
+				cell_output, func(in string) string {
+					result, err := convertCSVTags(ctx, config_obj, in, cell)
+					if err != nil {
+						return fmt.Sprintf(
+							"<error>%s</error>",
+							html.EscapeString(err.Error()))
+					}
+					return result
+				})
+
+			// Now create links for uploads
+			if notebook.AvailableUploads != nil {
+				new_cell_output += "\n<h5>Uploads</h5>\n<ul>\n"
+				for _, upload := range notebook.AvailableUploads.Files {
+					if upload.Stats == nil {
+						continue
+					}
+
+					item_path := path_specs.NewSafeFilestorePath().
+						AddUnsafeChild(upload.Stats.Components...).
+						SetType(api.PATH_TYPE_FILESTORE_ANY)
+
+					fd, err := file_store_factory.ReadFile(item_path)
+					if err != nil {
+						continue
+					}
+
+					data, err := ioutil.ReadAll(fd)
+					if err != nil {
+						continue
+					}
+
+					filename := upload.Name
+					new_cell_output += fmt.Sprintf(
+						`<li><a href="#" onclick="downloadFile('%s', '%s')">%s</a></li>`,
+						base64.StdEncoding.EncodeToString(data), filename, filename)
 				}
-				return result
-			})
+				new_cell_output += "</ul>\n"
+			}
 
-		_, err := output.Write([]byte(new_cell_output))
-		if err != nil {
-			return err
+			_, err = tee_writer.Write([]byte(new_cell_output))
+			if err != nil {
+				return nil, err
+			}
+
+			_, err = tee_writer.Write([]byte("</div>\n"))
+			if err != nil {
+				return nil, err
+			}
 		}
 
-		_, err = output.Write([]byte("</div>\n"))
-		if err != nil {
-			return err
-		}
-	}
+		return output_filename, nil
+	}()
 
-	return nil
+	services.LogAudit(ctx,
+		config_obj, principal, "ExportNotebook",
+		ordereddict.NewDict().
+			Set("notebook_id", notebook_id).
+			Set("output_filename", output_filename))
+
+	return output_filename, nil
 }
 
 // Unpack the table referenced in the csv view tag from the data field.

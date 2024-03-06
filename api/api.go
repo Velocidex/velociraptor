@@ -880,8 +880,12 @@ func (self *ApiServer) GetServerMonitoringState(
 			fmt.Sprintf("User is not allowed to read results (%v).", permissions))
 	}
 
-	result, err := getServerMonitoringState(org_config_obj)
-	return result, Status(self.verbose, err)
+	server_event_manager, err := services.GetServerEventManager(org_config_obj)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	return server_event_manager.Get(), nil
 }
 
 func (self *ApiServer) SetServerMonitoringState(
@@ -907,7 +911,12 @@ func (self *ApiServer) SetServerMonitoringState(
 			fmt.Sprintf("User is not allowed to modify artifacts (%v).", permissions))
 	}
 
-	err = setServerMonitoringState(ctx, org_config_obj, principal, in)
+	server_event_manager, err := services.GetServerEventManager(org_config_obj)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	err = server_event_manager.Update(ctx, org_config_obj, principal, in)
 	return in, Status(self.verbose, err)
 }
 

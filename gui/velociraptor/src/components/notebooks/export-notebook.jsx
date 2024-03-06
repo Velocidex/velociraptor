@@ -108,7 +108,7 @@ export default class ExportNotebook extends React.Component {
             {dataField: "name", text: T("Name"),
              sort: true, filtered: true, formatter: this.getDownloadLink},
             {dataField: "size", text: T("Size")},
-            {dataField: "date", text: T("Date"), type: "timestamp"},
+            {dataField: "stats.timestamp", text: T("Date"), type: "timestamp"},
         ]);
 
         return (

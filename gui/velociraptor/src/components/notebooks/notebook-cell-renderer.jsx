@@ -26,6 +26,7 @@ import T from '../i8n/i8n.jsx';
 import ViewCellLogs from "./logs.jsx";
 import CopyCellToNotebookDialog from './notebook-copy-cell.jsx';
 import FormatTableDialog from './notebook-format-tables.jsx';
+import NotebookUploads from '../notebooks/notebook-uploads.jsx';
 
 import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
@@ -173,6 +174,7 @@ export default class NotebookCellRenderer extends React.Component {
         showSuggestionSubmenu: false,
         showMoreLogs: false,
         showFormatTablesDialog: false,
+        showNotebookUploadsDialog: false,
 
         local_completions_lookup: {},
         local_completions: [],
@@ -443,10 +445,13 @@ export default class NotebookCellRenderer extends React.Component {
             if (item.kind === 'file') {
                 let blob = item.getAsFile();
                 let reader = new FileReader();
+                let current_cell_id = this.state.cell_id;
+
                 reader.onload = (event) => {
                     let request = {
                         data: reader.result.split(",")[1],
                         notebook_id: this.props.notebook_id,
+                        cell_id: current_cell_id,
                         filename: blob.name,
                         size: blob.size,
                     };
@@ -455,7 +460,23 @@ export default class NotebookCellRenderer extends React.Component {
                         'v1/UploadNotebookAttachment', request, this.source.token
                     ).then((response) => {
                         if (response.cancel) return;
-                        this.state.ace.insert("\n!["+blob.name+"]("+response.data.url+")\n");
+
+                        // Add direct html to ensure exports recognize
+                        // it.
+                        let filename = encodeURI(blob.name);
+                        let url = encodeURI(response.data.url);
+                        if (/image/.test(response.mime_type)) {
+                            this.state.ace.insert(
+                                "\n<img src=\"" +
+                                    url + "\" alt=\"" +
+                                    filename + "\"/>\n");
+                        } else {
+                            this.state.ace.insert(
+                                "\n<a href=\"" +
+                                    url + "\">" +
+                                    filename + "</a>\n");
+                        }
+
                     }, function failure(response) {
                         console.log("Error " + response.data);
                     });
@@ -732,6 +753,15 @@ export default class NotebookCellRenderer extends React.Component {
                          variant="default">
                    <FontAwesomeIcon icon="table"/>
                  </Button>
+
+                 <Button data-tooltip={T("Notebook Uploads")}
+                         data-position="left"
+                         className="btn-tooltip"
+                         onClick={() => this.setState({ showNotebookUploadsDialog: true })}
+                         variant="default">
+                   <FontAwesomeIcon icon="fa-file-download" />
+                   <span className="sr-only">{T("Notebook Uploads")}</span>
+                 </Button>
                </>
               }
               <Dropdown data-tooltip={T("Add Cell")}
@@ -944,6 +974,14 @@ export default class NotebookCellRenderer extends React.Component {
 
                 </CopyCellToNotebookDialog>
               }
+              {this.state.showNotebookUploadsDialog &&
+               <NotebookUploads
+                 notebook={this.props.notebook_metadata}
+                 cell={this.state.cell}
+                 closeDialog={() => this.setState({ showNotebookUploadsDialog: false })}
+               />
+              }
+
               <div className={classNames({selected: selected, "notebook-cell": true})} >
                 <div className='notebook-input'>
                   { this.state.currently_editing && selected &&
