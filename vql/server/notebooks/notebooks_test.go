@@ -240,11 +240,12 @@ func (self *NotebookTestSuite) TestCreateNotebook() {
 
 	// Make sure the stats record for the export is written.
 	mem_data_store := test_utils.GetMemoryDataStore(self.T(), self.ConfigObj)
+	mem_data_store.Debug(self.ConfigObj)
+
 	stat, _ := mem_data_store.GetForTests("/downloads/notebooks/N.01/Test.json.db")
+	fmt.Println(string(stat))
 	assert.Contains(self.T(), string(stat), "\"hash\"")
 	assert.Contains(self.T(), string(stat), "\"Test.html\"")
-
-	fmt.Println(string(stat))
 
 	html_export_bytes, _ := mem_file_store.Get("/downloads/notebooks/N.01/Test.html")
 	html_export := string(html_export_bytes)
