@@ -4,6 +4,7 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"os"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
@@ -74,16 +75,15 @@ func (self StatWrapper) Size() int64 {
 	return self.real_size
 }
 
-// Paths returned by our underlying zip delegator need to be
-// transformed back so that further access to them can retrieve from
-// the same zip file.
-func (self StatWrapper) OSPath() *accessors.OSPath {
-	delegate_path := self.FileInfo.OSPath()
-	res, err := delegatePathToCollectorPath(delegate_path)
-	if err != nil {
-		return delegate_path
+func (self StatWrapper) Mode() os.FileMode {
+	if self.real_size == 0 {
+		return os.FileMode(0755)
 	}
-	return res
+	return self.FileInfo.Mode()
+}
+
+func (self StatWrapper) IsDir() bool {
+	return self.real_size == 0
 }
 
 type CollectorAccessor struct {
@@ -151,26 +151,6 @@ func collectorPathToDelegatePath(full_path *accessors.OSPath) *accessors.OSPath 
 	res.Components = full_path.Components
 
 	return res
-}
-
-func delegatePathToCollectorPath(full_path *accessors.OSPath) (
-	*accessors.OSPath, error) {
-	delegate_pathspec := full_path.PathSpec()
-
-	nested_pathspec, err := accessors.PathSpecFromString(delegate_pathspec.DelegatePath)
-	if err != nil {
-		return nil, err
-	}
-
-	res := full_path.Copy()
-	res.SetPathSpec(&accessors.PathSpec{
-		Path:             nested_pathspec.DelegatePath,
-		DelegateAccessor: "collector",
-		DelegatePath:     nested_pathspec.DelegateAccessor,
-	})
-	res.Components = full_path.Components
-
-	return res, nil
 }
 
 // Try to set a password if it exists in metadata
@@ -417,7 +397,20 @@ func (self *CollectorAccessor) ReadDirWithOSPath(
 		return nil, err
 	}
 
-	return self.ZipFileSystemAccessor.ReadDirWithOSPath(updated_full_path)
+	res, err := self.ZipFileSystemAccessor.ReadDirWithOSPath(
+		updated_full_path)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range res {
+		res[i] = StatWrapper{
+			FileInfo:  res[i],
+			real_size: res[i].Size(),
+		}
+	}
+
+	return res, nil
 }
 
 func init() {

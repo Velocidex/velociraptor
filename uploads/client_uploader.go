@@ -6,7 +6,10 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"io"
+	"io/fs"
+	"os"
 	"time"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -39,8 +42,14 @@ func (self *VelociraptorUploader) Upload(
 	atime time.Time,
 	ctime time.Time,
 	btime time.Time,
+	mode os.FileMode,
 	reader io.Reader) (
 	*UploadResponse, error) {
+
+	if mode.IsDir() {
+		return nil, fmt.Errorf("%w: Directories not supported",
+			fs.ErrInvalid)
+	}
 
 	if accessor == "" {
 		accessor = "auto"

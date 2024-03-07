@@ -2,14 +2,16 @@ package collector_test
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -25,11 +27,14 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/filesystem"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/vfilter"
 
 	// Load all needed plugins
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
 	_ "www.velocidex.com/golang/velociraptor/accessors/sparse"
+	_ "www.velocidex.com/golang/velociraptor/accessors/zip"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	_ "www.velocidex.com/golang/velociraptor/vql/filesystem"
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
@@ -96,6 +101,16 @@ var (
 				// This will be injected into the output zip by the below artifact.
 				Set("FooVar", "HelloFooVar"))).
 		Set("artifact_definitions", CustomTestArtifactDependent)
+
+	simpleGlobUploader = `
+name: Custom.Uploader
+parameters:
+- name: Root
+sources:
+- query: |
+     SELECT upload(file=OSPath) AS Upload
+     FROM glob(globs='**', root=Root)
+`
 
 	CustomTestArtifactDependent = `
 name: Custom.TestArtifactDependent
@@ -193,6 +208,111 @@ func (self *TestSuite) SetupTest() {
 	assert.NoError(self.T(), err)
 	launcher.SetFlowIdForTests("F.1234")
 
+}
+
+func (self *TestSuite) TestCollectionWithDirectories() {
+	// Create a directory structure with files and directories.
+	dir, err := ioutil.TempDir("", "zip")
+	assert.NoError(self.T(), err)
+
+	defer os.RemoveAll(dir)
+
+	subdir_top := filepath.Join(dir, "Subdir")
+	subdir := filepath.Join(subdir_top, "data")
+	err = os.MkdirAll(subdir, 0700)
+	assert.NoError(self.T(), err)
+
+	filename := filepath.Join(subdir, "hello.txt")
+	fd, err := os.OpenFile(filename,
+		os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0660)
+	assert.NoError(self.T(), err)
+	fd.Write([]byte("Hello World"))
+	fd.Close()
+
+	output := filepath.Join(dir, "output.zip")
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: acl_managers.NullACLManager{},
+		Logger: logging.NewPlainLogger(
+			self.ConfigObj, &logging.FrontendComponent),
+		Env: ordereddict.NewDict(),
+	}
+
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
+
+	for _ = range (collector.CollectPlugin{}).Call(self.Ctx,
+		scope, ordereddict.NewDict().
+			Set("artifacts", []string{"Custom.Uploader"}).
+			Set("args", ordereddict.NewDict().
+				Set("Custom.Uploader", ordereddict.NewDict().
+					Set("Root", subdir_top))).
+			Set("output", output).
+			Set("artifact_definitions", simpleGlobUploader)) {
+	}
+
+	zip_contents, err := openZipFile(output)
+	assert.NoError(self.T(), err)
+
+	// The directory must be stored with a trailing /
+	found := false
+	for _, k := range zip_contents.Keys() {
+		if strings.HasSuffix(k, "/Subdir/data/") {
+			found = true
+			break
+		}
+	}
+	assert.True(self.T(), found)
+
+	// The upload result should complain about uploading a directory
+	upload_results_any, _ := zip_contents.Get("results/Custom.Uploader.json")
+	upload_results := upload_results_any.([]*ordereddict.Dict)
+	assert.Regexp(self.T(), "(is a directory|Incorrect function)",
+		fmt.Sprintf("%v", upload_results[0]))
+
+	// Glob the file with the collector accessor
+	root_path_spec := (filesystem.PathSpecFunction{}).Call(self.Ctx, scope,
+		ordereddict.NewDict().Set("DelegatePath", output))
+
+	// Check that we found the hello file.
+	found = false
+	for row := range (filesystem.GlobPlugin{}).Call(self.Ctx,
+		scope, ordereddict.NewDict().
+			Set("globs", "**").
+			Set("accessor", "collector").
+			Set("root", root_path_spec)) {
+		line := json.MustMarshalString(row)
+		if strings.Contains(line, "/Subdir/data/hello.txt\"") {
+			found = true
+		}
+	}
+	assert.True(self.T(), found)
+
+	// Now do this same thing with a corrupted zip - in the past we
+	// would store a directory without a trailing / which confuses the
+	// glob code so it can not recurse into it.
+	test_zip_file_path, err := filepath.Abs("fixtures/invalid_dir.zip")
+	assert.NoError(self.T(), err)
+
+	root_path_spec = (filesystem.PathSpecFunction{}).Call(self.Ctx, scope,
+		ordereddict.NewDict().Set("DelegatePath", test_zip_file_path))
+
+	// Check that we found the hello file.
+	found = false
+	for row := range (filesystem.GlobPlugin{}).Call(self.Ctx,
+		scope, ordereddict.NewDict().
+			Set("globs", "**").
+			Set("accessor", "collector").
+			Set("root", root_path_spec)) {
+		line := json.MustMarshalString(row)
+		if strings.Contains(line, "/Subdir/data/hello.txt\"") {
+			found = true
+		}
+	}
+	assert.True(self.T(), found)
 }
 
 func (self *TestSuite) TestCollectionWithArtifacts() {

@@ -362,7 +362,7 @@ func (self *TestSuite) TestClientUploaderStoreFile() {
 		Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}))
 	uploader.Upload(self.Ctx, scope,
 		filename, "ntfs", nil, 1000,
-		nilTime, nilTime, nilTime, nilTime, reader)
+		nilTime, nilTime, nilTime, nilTime, 0, reader)
 
 	// Get a new collection context.
 	collection_context := NewCollectionContext(self.Ctx, self.ConfigObj)
@@ -648,7 +648,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFile() {
 		Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}))
 	uploader.Upload(self.Ctx, scope,
 		sparse_filename, "ntfs", nil, 1000,
-		nilTime, nilTime, nilTime, nilTime, reader)
+		nilTime, nilTime, nilTime, nilTime, 0, reader)
 
 	// Get a new collection context.
 	collection_context := NewCollectionContext(self.Ctx, self.ConfigObj)
@@ -783,7 +783,7 @@ func (self *TestSuite) TestClientUploaderStoreSparseFileNTFS() {
 	// Upload the file to the responder.
 	uploader.Upload(self.Ctx, scope,
 		sparse_filename, "ntfs", nil, 1000,
-		nilTime, nilTime, nilTime, nilTime, fd)
+		nilTime, nilTime, nilTime, nilTime, 0, fd)
 
 	// Get a new collection context.
 	collection_context := NewCollectionContext(self.Ctx, self.ConfigObj)

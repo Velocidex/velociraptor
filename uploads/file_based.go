@@ -1,19 +1,19 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package uploads
 
@@ -80,6 +80,7 @@ func (self *FileBasedUploader) Upload(
 	atime time.Time,
 	ctime time.Time,
 	btime time.Time,
+	mode os.FileMode,
 	reader io.Reader) (*UploadResponse, error) {
 
 	if self.UploadDir == "" {
@@ -103,6 +104,24 @@ func (self *FileBasedUploader) Upload(
 		scope.Log("Can not create dir: %s(%s) %s", store_as_name.String(),
 			file_path, err.Error())
 		return nil, err
+	}
+
+	// For directories just create them
+	if mode.IsDir() {
+		err := os.MkdirAll(file_path, 0700)
+		if err != nil {
+			scope.Log("Can not create dir: %s(%s) %s", store_as_name.String(),
+				file_path, err.Error())
+			return nil, err
+		}
+
+		result := &UploadResponse{
+			Path:       file_path,
+			Components: store_as_name.Components,
+		}
+
+		CacheUploadResult(scope, store_as_name, result)
+		return result, nil
 	}
 
 	// Try to collect sparse files if possible

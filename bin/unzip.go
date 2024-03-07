@@ -144,7 +144,7 @@ func runUnzipPrint(builder services.ScopeBuilder) error {
                     accessor='collector')
           WHERE NOT IsDir AND FullPath =~ '.json$'
        }, query={
-          SELECT *
+           SELECT *
           FROM parse_jsonl(filename=OSPath, accessor='collector')
        })
     `
