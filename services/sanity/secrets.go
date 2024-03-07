@@ -11,16 +11,17 @@ import (
 
 var built_in_definitions = []string{`{
   "typeName":"AWS S3 Creds",
-  "verifier":"x=>(x.credentials_key AND x.credentials_secret) OR x.credentials_token OR x.serversideencryption OR x.kmsencryptionkey",
+  "verifier":"x=>(x.credentials_key AND x.credentials_secret) OR x.credentials_token OR x.serverside_encryption OR x.kms_encryption_key",
   "description": "Credentials used to interact with S3 buckets.",
   "template": {
      "region": "us-east-1",
+     "skip_verify": "",
      "credentials_key": "",
      "credentials_secret": "",
      "credentials_token": "",
      "endpoint": "",
-     "serversideencryption": "",
-     "kmsencryptionkey": ""
+     "serverside_encryption": "",
+     "kms_encryption_key": ""
   }
 }`, `{
   "typeName":"SSH PrivateKey",
