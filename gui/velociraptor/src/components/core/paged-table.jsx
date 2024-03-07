@@ -677,7 +677,6 @@ class VeloPagedTable extends Component {
             }
         }
         let transformed = this.getTransformed();
-        // let downloads = Object.assign({columns: column_names}, this.props.params);
         let downloads = Object.assign({}, this.props.params);
         if (!_.isEqual(this.state.all_columns, column_names)) {
             downloads.columns = column_names;
