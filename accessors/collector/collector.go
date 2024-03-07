@@ -86,18 +86,6 @@ func (self StatWrapper) IsDir() bool {
 	return self.real_size == 0
 }
 
-// Paths returned by our underlying zip delegator need to be
-// transformed back so that further access to them can retrieve from
-// the same zip file.
-func (self StatWrapper) OSPath() *accessors.OSPath {
-	delegate_path := self.FileInfo.OSPath()
-	res, err := delegatePathToCollectorPath(delegate_path)
-	if err != nil {
-		return delegate_path
-	}
-	return res
-}
-
 type CollectorAccessor struct {
 	*zip.ZipFileSystemAccessor
 	scope vfilter.Scope
@@ -163,26 +151,6 @@ func collectorPathToDelegatePath(full_path *accessors.OSPath) *accessors.OSPath 
 	res.Components = full_path.Components
 
 	return res
-}
-
-func delegatePathToCollectorPath(full_path *accessors.OSPath) (
-	*accessors.OSPath, error) {
-	delegate_pathspec := full_path.PathSpec()
-
-	nested_pathspec, err := accessors.PathSpecFromString(delegate_pathspec.DelegatePath)
-	if err != nil {
-		return nil, err
-	}
-
-	res := full_path.Copy()
-	res.SetPathSpec(&accessors.PathSpec{
-		Path:             nested_pathspec.DelegatePath,
-		DelegateAccessor: "collector",
-		DelegatePath:     nested_pathspec.DelegateAccessor,
-	})
-	res.Components = full_path.Components
-
-	return res, nil
 }
 
 // Try to set a password if it exists in metadata
