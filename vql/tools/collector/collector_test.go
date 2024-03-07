@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/alecthomas/assert"
 	"github.com/sebdah/goldie"
 	"github.com/stretchr/testify/suite"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -29,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/filesystem"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/vfilter"
 
 	// Load all needed plugins
@@ -270,7 +270,8 @@ func (self *TestSuite) TestCollectionWithDirectories() {
 	// The upload result should complain about uploading a directory
 	upload_results_any, _ := zip_contents.Get("results/Custom.Uploader.json")
 	upload_results := upload_results_any.([]*ordereddict.Dict)
-	assert.Contains(self.T(), fmt.Sprintf("%v", upload_results[0]), "is a directory")
+	assert.Regexp(self.T(), "(is a directory|Incorrect function)",
+		fmt.Sprintf("%v", upload_results[0]))
 
 	// Glob the file with the collector accessor
 	root_path_spec := (filesystem.PathSpecFunction{}).Call(self.Ctx, scope,
