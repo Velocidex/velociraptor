@@ -30,22 +30,25 @@ SELECT Authors, OSPath, License, Name, Summary, Version FROM source( client_id='
  }
 ]SELECT * from source( artifact='Server.Monitor.Health/Prometheus') LIMIT 2[
  {
+  "TotalFrontends": 0,
   "CPUPercent": 0,
   "MemoryUse": 0,
   "client_comms_current_connections": 0,
-  "_ts": 1604840903000
+  "_ts": 1590938885000
  },
  {
-  "CPUPercent": 53,
-  "MemoryUse": 256434176,
+  "TotalFrontends": 1,
+  "CPUPercent": 0,
+  "MemoryUse": 87781376,
   "client_comms_current_connections": 0,
-  "_ts": 1604840923000
+  "_ts": 1590938885000
  }
 ]SELECT * from source( start_row=1, artifact='Server.Monitor.Health/Prometheus') LIMIT 1[
  {
-  "CPUPercent": 53,
-  "MemoryUse": 256434176,
+  "TotalFrontends": 1,
+  "CPUPercent": 0,
+  "MemoryUse": 87781376,
   "client_comms_current_connections": 0,
-  "_ts": 1604840923000
+  "_ts": 1590938885000
  }
 ]
