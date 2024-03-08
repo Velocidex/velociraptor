@@ -156,15 +156,15 @@ parameters:
           accessor=accessor,
           bucket=TargetArgs.bucket,
           name=name,
-          credentialskey=TargetArgs.credentialsKey,
-          credentialssecret=TargetArgs.credentialsSecret,
-          credentialstoken=TargetArgs.credentialsToken,
+          credentials_key=TargetArgs.credentialsKey,
+          credentials_secret=TargetArgs.credentialsSecret,
+          credentials_token=TargetArgs.credentialsToken,
           region=TargetArgs.region,
           endpoint=TargetArgs.endpoint,
-          serversideencryption=TargetArgs.serverSideEncryption,
-          kmsencryptionkey=TargetArgs.kmsEncryptionKey,
-          s3uploadroot=TargetArgs.s3UploadRoot,
-          noverifycert=TargetArgs.noverifycert)
+          serverside_encryption=TargetArgs.serverSideEncryption,
+          kms_encryption_key=TargetArgs.kmsEncryptionKey,
+          s3upload_root=TargetArgs.s3UploadRoot,
+          skip_verify=TargetArgs.noverifycert)
 
   - name: GCSCollection
     type: hidden

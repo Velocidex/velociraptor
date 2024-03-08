@@ -1,5 +1,3 @@
-//go:build extras
-
 package tools
 
 import (
@@ -8,10 +6,12 @@ import (
 	"net/http"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"golang.org/x/net/context"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -32,23 +32,24 @@ type S3UploadArgs struct {
 	Accessor             string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
 	Bucket               string            `vfilter:"required,field=bucket,doc=The bucket to upload to"`
 	Region               string            `vfilter:"optional,field=region,doc=The region the bucket is in"`
-	CredentialsKey       string            `vfilter:"optional,field=credentialskey,doc=The AWS key credentials to use"`
-	CredentialsSecret    string            `vfilter:"optional,field=credentialssecret,doc=The AWS secret credentials to use"`
-	CredentialsToken     string            `vfilter:"optional,field=credentialstoken,doc=The AWS session token to use (only needed for temporary credentials)"`
+	CredentialsKey       string            `vfilter:"optional,field=credentials_key,doc=The AWS key credentials to use"`
+	CredentialsSecret    string            `vfilter:"optional,field=credentials_secret,doc=The AWS secret credentials to use"`
+	CredentialsToken     string            `vfilter:"optional,field=credentials_token,doc=The AWS session token to use (only needed for temporary credentials)"`
 	Endpoint             string            `vfilter:"optional,field=endpoint,doc=The Endpoint to use"`
-	ServerSideEncryption string            `vfilter:"optional,field=serversideencryption,doc=The server side encryption method to use"`
-	KmsEncryptionKey     string            `vfilter:"optional,field=kmsencryptionkey,doc=The server side KMS key to use"`
-	S3UploadRoot         string            `vfilter:"optional,field=s3uploadroot,doc=Prefix for the S3 object"`
-	NoVerifyCert         bool              `vfilter:"optional,field=noverifycert,doc=Skip TLS Verification (deprecated in favor of SkipVerify)"`
+	ServerSideEncryption string            `vfilter:"optional,field=serverside_encryption,doc=The server side encryption method to use"`
+	KmsEncryptionKey     string            `vfilter:"optional,field=kms_encryption_key,doc=The server side KMS key to use"`
+	S3UploadRoot         string            `vfilter:"optional,field=s3upload_root,doc=Prefix for the S3 object"`
 	SkipVerify           bool              `vfilter:"optional,field=skip_verify,doc=Skip TLS Verification"`
 	Secret               string            `vfilter:"optional,field=secret,doc=Alternatively use a secret from the secrets service. Secret must be of type 'AWS S3 Creds'"`
 }
 
 type S3UploadFunction struct{}
 
-func (self *S3UploadFunction) Call(ctx context.Context,
+func (self S3UploadFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
+
+	mergeScope(ctx, scope, args)
 
 	arg := &S3UploadArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
@@ -63,10 +64,6 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 			scope.Log("upload_S3: %s", err)
 			return vfilter.Null{}
 		}
-	}
-
-	if arg.NoVerifyCert {
-		scope.Log("upload_S3: NoVerifyCert is deprecated, please use SkipVerify")
 	}
 
 	err = vql_subsystem.CheckFilesystemAccess(scope, arg.Accessor)
@@ -114,7 +111,7 @@ func (self *S3UploadFunction) Call(ctx context.Context,
 			arg.ServerSideEncryption,
 			arg.KmsEncryptionKey,
 			arg.S3UploadRoot,
-			arg.NoVerifyCert || arg.SkipVerify,
+			arg.SkipVerify,
 			uint64(stat.Size()))
 		if err != nil {
 			scope.Log("upload_S3: %v", err)
@@ -147,21 +144,21 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 	}
 	scope.Log("upload_S3: Uploading %v to %v", name, bucket)
 
-	conf := aws.NewConfig().WithRegion(region)
-	if credentialsKey != "" && credentialsSecret != "" {
-		creds := credentials.NewStaticCredentials(credentialsKey, credentialsSecret, credentialsToken)
-		_, err := creds.Get()
-		if err != nil {
-			return &uploads.UploadResponse{
-				Error: err.Error(),
-			}, err
-		}
+	conf := []func(*config.LoadOptions) error{
+		config.WithRegion(region)}
 
-		conf = conf.WithCredentials(creds)
+	if credentialsKey != "" && credentialsSecret != "" {
+		conf = append(conf, config.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(
+				credentialsKey, credentialsSecret, credentialsToken),
+		))
 	}
 
+	s3_opts := []func(*s3.Options){}
 	if endpoint != "" {
-		conf = conf.WithEndpoint(endpoint).WithS3ForcePathStyle(true)
+		s3_opts = append(s3_opts, func(o *s3.Options) {
+			o.BaseEndpoint = aws.String(endpoint)
+		})
 
 		if NoVerifyCert {
 			clientConfig, _ := artifacts.GetConfig(scope)
@@ -180,37 +177,41 @@ func upload_S3(ctx context.Context, scope vfilter.Scope,
 					authority string, c *tls.Conn) http.RoundTripper),
 			}
 
-			client := &http.Client{Transport: tr}
+			http_client := &http.Client{Transport: tr}
 
-			conf = conf.WithHTTPClient(client)
+			conf = append(conf, config.WithHTTPClient(http_client))
 		}
 	}
 
-	sess, err := session.NewSession(conf)
+	sess, err := config.LoadDefaultConfig(ctx, conf...)
 	if err != nil {
 		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err
 	}
 
-	uploader := s3manager.NewUploader(sess)
-	var result *s3manager.UploadOutput
+	client := s3.NewFromConfig(sess, s3_opts...)
 
-	s3_params := &s3manager.UploadInput{
+	uploader := manager.NewUploader(client, func(u *manager.Uploader) {
+		// Define a strategy that will buffer 25 MiB in memory
+		u.BufferProvider = manager.NewBufferedReadSeekerWriteToPool(25 * 1024 * 1024)
+	})
+	var result *manager.UploadOutput
+
+	s3_params := &s3.PutObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(name),
 		Body:   reader,
 	}
 	if serverSideEncryption != "" {
-		s3_params.ServerSideEncryption = aws.String(serverSideEncryption)
+		s3_params.ServerSideEncryption = types.ServerSideEncryption(serverSideEncryption)
 	}
 
 	if kmsEncryptionKey != "" {
 		s3_params.SSEKMSKeyId = aws.String(kmsEncryptionKey)
 	}
 
-	result, err = uploader.UploadWithContext(
-		ctx, s3_params)
+	result, err = uploader.Upload(ctx, s3_params)
 
 	if err != nil {
 		return &uploads.UploadResponse{
@@ -234,6 +235,48 @@ func (self S3UploadFunction) Info(
 		Doc:      "Upload files to S3.",
 		ArgType:  type_map.AddType(scope, &S3UploadArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Version:  2,
+	}
+}
+
+var critical_fields = []string{
+	"secret", "region",
+	"credentials_key", "credentials_secret", "credentials_token",
+	"endpoint", "skip_verify",
+	"serverside_encryption", "kms_encryption_key",
+}
+
+// The S3 accessor can be configured with the S3_CREDENTIALS scope
+// variable. This function looks to that variable for configuration.
+func mergeScope(ctx context.Context,
+	scope vfilter.Scope, args *ordereddict.Dict) {
+
+	for _, key := range critical_fields {
+		_, pres := args.Get(key)
+		if pres {
+			// Do not read settings from scope.
+			return
+		}
+	}
+
+	// Are there settings in scope?
+	setting, pres := scope.Resolve(constants.S3_CREDENTIALS)
+	if !pres {
+		// Nope.
+		return
+	}
+
+	for _, key := range critical_fields {
+		value, pres := scope.Associative(setting, key)
+		if !pres {
+			continue
+		}
+		// These values are boolean actually.
+		if key == "skip_verify" {
+			value = scope.Bool(value)
+		}
+
+		args.Set(key, value)
 	}
 }
 
@@ -266,8 +309,8 @@ func mergeSecret(ctx context.Context, scope vfilter.Scope, arg *S3UploadArgs) er
 	arg.CredentialsSecret = get("credentials_secret")
 	arg.CredentialsToken = get("credentials_token")
 	arg.Endpoint = get("endpoint")
-	arg.ServerSideEncryption = get("serversideencryption")
-	arg.KmsEncryptionKey = get("kmsencryptionkey")
+	arg.ServerSideEncryption = get("serverside_encryption")
+	arg.KmsEncryptionKey = get("kms_encryption_key")
 
 	return nil
 }

@@ -1,17 +1,17 @@
 package s3
 
 import (
+	"context"
 	"fmt"
-	"io"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 type S3Reader struct {
-	downloader *s3manager.Downloader
+	ctx        context.Context
+	downloader *manager.Downloader
 	offset     int64
 	bucket     string
 	key        string
@@ -26,19 +26,11 @@ func (self *S3Reader) Read(buff []byte) (int, error) {
 				self.offset+int64(len(buff)-1))),
 	}
 
-	n, err := self.downloader.Download(aws.NewWriteAtBuffer(buff), req)
+	n, err := self.downloader.Download(self.ctx,
+		manager.NewWriteAtBuffer(buff), req)
 
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok {
-			switch aerr.Code() {
-			case "InvalidRange":
-				// Not really an error - this happens at the end of
-				// the file, just return EOF
-				return 0, io.EOF
-			default:
-				return 0, err
-			}
-		}
+		return 0, err
 	}
 	self.offset += n
 

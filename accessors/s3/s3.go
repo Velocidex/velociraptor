@@ -3,13 +3,17 @@
 package s3
 
 import (
+	"context"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -18,7 +22,20 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
+var (
+	// Total number of keys we fetch in each ListObjects call
+	mu      sync.Mutex
+	maxKeys = int32(1000)
+
+	metricS3OpsListObjects = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "s3_ops_list_objects",
+			Help: "Number of s3 ListObjects operations",
+		})
+)
+
 type RawS3SystemAccessor struct {
+	ctx   context.Context
 	scope vfilter.Scope
 }
 
@@ -35,7 +52,10 @@ func (self RawS3SystemAccessor) New(scope vfilter.Scope) (
 		return nil, err
 	}
 
-	result := &RawS3SystemAccessor{scope: scope}
+	result := &RawS3SystemAccessor{
+		ctx:   context.TODO(),
+		scope: scope,
+	}
 	return result, nil
 }
 
@@ -53,15 +73,13 @@ func (self RawS3SystemAccessor) ReadDir(
 func (self RawS3SystemAccessor) ReadDirWithOSPath(
 	path *accessors.OSPath) ([]accessors.FileInfo, error) {
 
-	session, err := GetS3Session(self.scope)
+	client, err := GetS3Client(self.ctx, self.scope)
 	if err != nil {
 		return nil, err
 	}
 
-	svc := s3.New(session)
-
 	if len(path.Components) == 0 {
-		resp, err := svc.ListBuckets(&s3.ListBucketsInput{})
+		resp, err := client.ListBuckets(self.ctx, &s3.ListBucketsInput{})
 		if err != nil {
 			return nil, err
 		}
@@ -84,41 +102,54 @@ func (self RawS3SystemAccessor) ReadDirWithOSPath(
 	// Keys may not have a leading / but we should handle them as
 	// well.
 	key = strings.TrimPrefix(key, "/")
-
-	resp, err := svc.ListObjectsV2(&s3.ListObjectsV2Input{
-		Bucket: aws.String(bucket),
-		Prefix: aws.String(key),
-	})
-	if err != nil {
-		return nil, err
-	}
-
 	bucket_path := accessors.MustNewLinuxOSPath(bucket)
-
 	child_directories := ordereddict.NewDict()
 	child_files := []*S3FileInfo{}
 
-	result := make([]accessors.FileInfo, 0, len(resp.Contents))
-	for _, object := range resp.Contents {
-		component_path, err := self.ParsePath(*object.Key)
+	params := &s3.ListObjectsV2Input{
+		Bucket: aws.String(bucket),
+		Prefix: aws.String(path.Dirname().String()),
+	}
+
+	// Create the Paginator for the ListObjectsV2 operation.
+	paginator := s3.NewListObjectsV2Paginator(
+		client, params, func(o *s3.ListObjectsV2PaginatorOptions) {
+			mu.Lock()
+			defer mu.Unlock()
+
+			o.Limit = maxKeys
+		})
+
+	result := []accessors.FileInfo{}
+	for paginator.HasMorePages() {
+		metricS3OpsListObjects.Inc()
+
+		page, err := paginator.NextPage(self.ctx)
 		if err != nil {
-			continue
+			return nil, err
 		}
 
-		object_path := bucket_path.Append(component_path.Components...)
+		for _, object := range page.Contents {
+			component_path, err := self.ParsePath(*object.Key)
+			if err != nil {
+				continue
+			}
 
-		// Skip components that are not direct children.
-		if len(object_path.Components) > len(path.Components)+1 {
-			child_directories.Set(
-				object_path.Components[len(path.Components)], true)
+			object_path := bucket_path.Append(component_path.Components...)
 
-		} else if len(object_path.Components) == len(path.Components)+1 {
-			child_files = append(child_files, &S3FileInfo{
-				path:     object_path,
-				is_dir:   false,
-				size:     *object.Size,
-				mod_time: *object.LastModified,
-			})
+			// Skip components that are not direct children.
+			if len(object_path.Components) > len(path.Components)+1 {
+				child_directories.Set(
+					object_path.Components[len(path.Components)], true)
+
+			} else if len(object_path.Components) == len(path.Components)+1 {
+				child_files = append(child_files, &S3FileInfo{
+					path:     object_path,
+					is_dir:   false,
+					size:     *object.Size,
+					mod_time: *object.LastModified,
+				})
+			}
 		}
 	}
 
@@ -151,7 +182,7 @@ func getBucketAndKey(path *accessors.OSPath) (string, string, error) {
 func (self RawS3SystemAccessor) OpenWithOSPath(
 	path *accessors.OSPath) (accessors.ReadSeekCloser, error) {
 
-	session, err := GetS3Session(self.scope)
+	svc, err := GetS3Client(self.ctx, self.scope)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +193,8 @@ func (self RawS3SystemAccessor) OpenWithOSPath(
 	}
 
 	reader := &S3Reader{
-		downloader: s3manager.NewDownloader(session),
+		ctx:        self.ctx,
+		downloader: manager.NewDownloader(svc),
 		bucket:     bucket,
 		key:        key,
 	}
@@ -198,7 +230,7 @@ func (self RawS3SystemAccessor) Lstat(path string) (accessors.FileInfo, error) {
 func (self RawS3SystemAccessor) LstatWithOSPath(
 	path *accessors.OSPath) (accessors.FileInfo, error) {
 
-	session, err := GetS3Session(self.scope)
+	svc, err := GetS3Client(self.ctx, self.scope)
 	if err != nil {
 		return nil, err
 	}
@@ -208,13 +240,12 @@ func (self RawS3SystemAccessor) LstatWithOSPath(
 		return nil, err
 	}
 
-	svc := s3.New(session)
 	headObj := s3.HeadObjectInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
 	}
 
-	result, err := svc.HeadObject(&headObj)
+	result, err := svc.HeadObject(self.ctx, &headObj)
 	if err != nil {
 		return nil, err
 	}
@@ -222,7 +253,7 @@ func (self RawS3SystemAccessor) LstatWithOSPath(
 	return &accessors.VirtualFileInfo{
 		Data_: ordereddict.NewDict(),
 		Path:  path,
-		Size_: aws.Int64Value(result.ContentLength),
+		Size_: *result.ContentLength,
 	}, nil
 }
 
@@ -250,4 +281,13 @@ SELECT *, read_file(filename=OSPath,
 FROM glob(globs='/velociraptor/orgs/root/clients/C.39a107c4c58c5efa/collections/*/uploads/auto/*', accessor='s3')
 
 `)
+}
+
+// Set the page size for tests. Normally we dont need to adjust this
+// at all.
+func SetPageSize(size int32) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	maxKeys = size
 }
