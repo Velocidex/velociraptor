@@ -42,7 +42,6 @@ type EventTable struct {
 	wg *sync.WaitGroup
 
 	logger *serverLogger
-	clock  utils.Clock
 
 	tracer *QueryTracer
 
@@ -54,28 +53,11 @@ func (self *EventTable) Wait() {
 	self.wg.Wait()
 }
 
-func (self *EventTable) Clock() utils.Clock {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	return self.clock
-}
-
 func (self *EventTable) Tracer() *QueryTracer {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
 	return self.tracer
-}
-
-func (self *EventTable) SetClock(clock utils.Clock) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	self.clock = clock
-	if self.logger != nil {
-		self.logger.Clock = clock
-	}
 }
 
 func (self *EventTable) Close() {
@@ -337,20 +319,15 @@ func (self *EventTable) RunQuery(
 		return err
 	}
 
-	path_manager.Clock = self.clock
-
 	// We write the logs to special files.
 	log_path_manager, err := artifacts.NewArtifactLogPathManager(ctx,
 		config_obj, "server", "", artifact_name)
 	if err != nil {
 		return err
 	}
-	log_path_manager.Clock = self.clock
-
 	self.logger = &serverLogger{
 		config_obj:   self.config_obj,
 		path_manager: log_path_manager,
-		Clock:        self.clock,
 		ctx:          ctx,
 		artifact:     artifact_name,
 	}
@@ -387,9 +364,9 @@ func (self *EventTable) RunQuery(
 	scope.Log("server_monitoring: Collecting <green>%v</>", artifact_name)
 
 	// Write files in the background
-	rs_writer, err := result_sets.NewTimedResultSetWriterWithClock(
+	rs_writer, err := result_sets.NewTimedResultSetWriter(
 		file_store_factory, path_manager, opts,
-		utils.BackgroundWriter, self.clock)
+		utils.BackgroundWriter)
 	if err != nil {
 		scope.Close()
 		return err
@@ -404,7 +381,7 @@ func (self *EventTable) RunQuery(
 
 		for _, query := range vql_request.Query {
 			query_log := actions.QueryLog.AddQuery(query.VQL)
-			query_start := uint64(self.Clock().Now().UTC().UnixNano() / 1000)
+			query_start := uint64(utils.GetTime().Now().UTC().UnixNano() / 1000)
 
 			// Record the current query.
 			self.Tracer().Set(query.VQL)
@@ -427,7 +404,7 @@ func (self *EventTable) RunQuery(
 
 				case <-time.After(time.Second * time.Duration(heartbeat)):
 					scope.Log("Time %v: %s: Waiting for rows.",
-						(uint64(self.Clock().Now().UTC().UnixNano()/1000)-
+						(uint64(utils.GetTime().Now().UTC().UnixNano()/1000)-
 							query_start)/1000000, query.Name)
 
 				case row, ok := <-eval_chan:
@@ -437,7 +414,7 @@ func (self *EventTable) RunQuery(
 					}
 
 					rs_writer.Write(vfilter.RowToDict(ctx, scope, row).
-						Set("_ts", self.Clock().Now().Unix()))
+						Set("_ts", utils.GetTime().Now().Unix()))
 					rs_writer.Flush()
 				}
 			}
@@ -480,7 +457,6 @@ func NewServerMonitoringService(
 		config_obj: config_obj,
 		parent_ctx: ctx,
 		wg:         &sync.WaitGroup{},
-		clock:      utils.RealClock{},
 		tracer:     NewQueryTracer(),
 	}
 

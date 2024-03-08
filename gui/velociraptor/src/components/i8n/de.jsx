@@ -251,7 +251,7 @@ const Deutsch = {
     "Max Execution Time in Seconds":"Max. Ausführungszeit in Sekunden",
     "Max Idle Time in Seconds":"Maximale Leerlaufzeit in Sekunden",
     "If set collection will be terminated after this many seconds with no progress.":"Wenn die Satzsammlung nach so vielen Sekunden ohne Fortschritt beendet wird.",
-    "Max Mb Uploaded":"Max. MB hochgeladen",
+    "Max bytes Uploaded":"Max. MB hochgeladen",
     "Collection did not upload files":"Sammlung hat keine Dateien hochgeladen",
 
     "Create Offline collector: Select artifacts to collect":"Offline-Collector erstellen: Zu sammelnde Artefakte auswählen",

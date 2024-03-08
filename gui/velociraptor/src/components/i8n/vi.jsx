@@ -442,7 +442,7 @@ const Vietnamese = {
      "Max Execution Time in Seconds": "Thời gian thực hiện tối đa tính bằng giây",
      "Max Idle Time in Seconds": "Thời gian rỗi tối đa tính bằng giây",
      "Max Mb": "Mb tối đa",
-     "Max Mb Uploaded": "Mb tối đa đã tải lên",
+     "Max bytes Uploaded": "Mb tối đa đã tải lên",
      "Max Rows": "Số hàng tối đa",
      "Mb": "Mb",
      "Midnight Inferno (very dark)": "Midnight Inferno (very dark)",

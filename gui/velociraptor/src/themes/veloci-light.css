@@ -125,6 +125,8 @@
 
   --hex-highlight-background: var(--accent-color);
   --hex-highlight-foreground: var(--color-canvas-background);
+
+  --invalid-form-control-error: #ffc3c3;
 }
 
 body.veloci-light {

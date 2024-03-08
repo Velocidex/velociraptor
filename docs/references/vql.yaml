@@ -512,12 +512,25 @@
     Velociraptor maintains basic information about the client in the
     data store, such as its hostname, OS etc.
 
-    This information is refreshed each time the `Generic.Client.Info`
-    artifact is collected from the endpoint so it can be out of
-    date. This process is called "interrogation" of the endpoint.
+    You can use this function to enrich information about clients in
+    VQL output. NOTE: This function queries the internal in-memory
+    database so it is very fast and suitable to be called frequently
+    on each row.
 
-    You can refresh the entire fleet's datastore by scheduling a
-    `Generic.Client.Info` hunt.
+    # Example - enriching hostnames
+
+    Internally, Velociraptor uses client id to uniquely identify the
+    client. But often we want to provide a hostname as well. In the
+    below we look at collection output from the `source()` plugin and
+    add an additional Hostname column by resolving the client id on
+    each row to its hostname.
+
+    ```vql
+    SELECT *,
+       client_info(client_id=client_id).os_info.hostname AS Hostname
+    FROM source()
+    ```
+
   type: Function
   args:
   - name: client_id
@@ -725,6 +738,39 @@
     NOTE: When constructing the dictionaries for the spec parameter
     you will often need to specify a field name containing full
     stop. You can escape this using the backticks like the example above.
+
+    # Example - conditional collections
+
+    In this example we wish to create an artifact with check buttons
+    for selecting groups of artifacts to launch. Assume `Do1` and
+    `Do2` are boolean parameters:
+
+    1. Depending on the checkbox condition we set a set of dicts and
+       potential arguments.
+
+    2. Next we rely on the fact that dict additions merge the keys of
+       each dict to create a merged dict. The `Spec` dict is
+       constructed by joining the different parts together
+
+    3. To obtain the list of unique artifacts we use the `items()`
+       plugin to extract the keys from the spec dict.
+
+    ```vql
+    LET X1 = if(condition=Do1, then=dict(`Generic.Client.Info`=dict()), else=dict())
+    LET X2 = if(condition=Do2, then=dict(`Generic.System.Pstree`=dict()), else=dict())
+
+    LET Spec = X1 + X2
+
+    LET ArtifactNames = SELECT _key FROM items(item=Spec)
+
+    SELECT collect_client(
+             spec=Spec,
+             artifacts=ArtifactNames._key,
+             client_id='C.49982ba4c2ccef20') AS collection
+    FROM scope()
+    ```
+
+
   type: Function
   args:
   - name: client_id

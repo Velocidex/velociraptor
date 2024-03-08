@@ -124,6 +124,7 @@
   --background-calendar-tile-now: #feffe0;
 
   --color-level-error: #aa0000;
+  --invalid-form-control-error: #aa0000;
 }
 
 body.github-dimmed-dark {

@@ -78,6 +78,8 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWriting() {
 
 	now := time.Unix(1587800000, 0)
 	clock := utils.NewMockClock(now)
+	closer := utils.MockTime(clock)
+	defer closer()
 
 	// Start off by writing some events on a queue.
 	path_manager, err := artifacts.NewArtifactPathManager(
@@ -86,7 +88,6 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWriting() {
 		self.flow_id,
 		"Windows.Events.ProcessCreation")
 	assert.NoError(self.T(), err)
-	path_manager.Clock = clock
 
 	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 	writer, err := timed.NewTimedResultSetWriter(
@@ -96,8 +97,6 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWriting() {
 			mu.Unlock()
 		})
 	assert.NoError(self.T(), err)
-
-	writer.(*timed.TimedResultSetWriterImpl).Clock = clock
 
 	// Push an event every hour for 48 hours.
 	for i := int64(0); i < 50; i++ {
@@ -155,6 +154,8 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWritingJsonl() {
 
 	now := time.Unix(1587800000, 0)
 	clock := utils.NewMockClock(now)
+	closer := utils.MockTime(clock)
+	defer closer()
 
 	// Start off by writing some events on a queue.
 	path_manager, err := artifacts.NewArtifactPathManager(
@@ -163,7 +164,6 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWritingJsonl() {
 		self.flow_id,
 		"Windows.Events.ProcessCreation")
 	assert.NoError(self.T(), err)
-	path_manager.Clock = clock
 
 	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 	writer, err := timed.NewTimedResultSetWriter(
@@ -173,8 +173,6 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWritingJsonl() {
 			mu.Unlock()
 		})
 	assert.NoError(self.T(), err)
-
-	writer.(*timed.TimedResultSetWriterImpl).Clock = clock
 
 	// Push an event every hour for 48 hours.
 	for i := int64(0); i < 50; i++ {
@@ -234,6 +232,8 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWritingNoFlushing() {
 
 	now := time.Unix(1587800000, 0)
 	clock := utils.NewMockClock(now)
+	closer := utils.MockTime(clock)
+	defer closer()
 
 	// Start off by writing some events on a queue.
 	path_manager, err := artifacts.NewArtifactPathManager(
@@ -242,7 +242,6 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWritingNoFlushing() {
 		self.flow_id,
 		"Windows.Events.ProcessCreation")
 	assert.NoError(self.T(), err)
-	path_manager.Clock = clock
 
 	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 	writer, err := timed.NewTimedResultSetWriter(
@@ -252,8 +251,6 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWritingNoFlushing() {
 			mu.Unlock()
 		})
 	assert.NoError(self.T(), err)
-
-	writer.(*timed.TimedResultSetWriterImpl).Clock = clock
 
 	// Push an event every hour for 48 hours.
 	for i := int64(0); i < 50; i++ {

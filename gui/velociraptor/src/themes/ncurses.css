@@ -98,6 +98,8 @@
 
   --color-vfs-files-timestomped: #ed5d40;
   --color-level-error: #aa0000;
+
+  --invalid-form-control-error: #ff6666;
 }
 
 body.ncurses {

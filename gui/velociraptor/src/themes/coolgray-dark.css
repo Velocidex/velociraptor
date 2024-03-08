@@ -111,7 +111,7 @@
   --color-vfs-files-timestomped: #ed5d40;
   --color-calendar-background: var(--color-canvas-background);
   --color-level-error: #ff0000;
-
+  --invalid-form-control-error: #ff0000;
   --color-danger-emphasis: #dd4b3920;
 }
 

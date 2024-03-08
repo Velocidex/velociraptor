@@ -126,6 +126,8 @@
   --color-vfs-files-timestomped: #0220af;
   --color-timeline-table-shown: #5cd00a80;
   --color-level-error: #ff0000;
+
+  --invalid-form-control-error: #3f0505;
 }
 
 body.veloci-dark {

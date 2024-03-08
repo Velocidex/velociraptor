@@ -152,7 +152,6 @@ func (self *ClientFlowRunner) MonitoringLogMessage(
 	if err != nil {
 		return err
 	}
-	log_path_manager.Clock = utils.GetTime()
 
 	// Write the logs asynchronously
 	file_store_factory := file_store.GetFileStore(self.config_obj)
@@ -508,7 +507,6 @@ func (self *ClientFlowRunner) VQLResponse(
 	if err != nil {
 		return err
 	}
-	path_manager.Clock = utils.GetTime()
 
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	rs_writer, err := result_sets.NewResultSetWriter(

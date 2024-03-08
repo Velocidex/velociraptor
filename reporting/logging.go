@@ -1,6 +1,7 @@
 package reporting
 
 import (
+	"context"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
@@ -10,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -21,9 +23,13 @@ type notebookCellLogger struct {
 
 	// If true we have more messages in the result set.
 	more_messages bool
+
+	ctx        context.Context
+	config_obj *config_proto.Config
 }
 
 func newNotebookCellLogger(
+	ctx context.Context,
 	config_obj *config_proto.Config, log_path api.FSPathSpec) (
 	*notebookCellLogger, error) {
 	file_store_factory := file_store.GetFileStore(config_obj)
@@ -37,7 +43,9 @@ func newNotebookCellLogger(
 	}
 
 	return &notebookCellLogger{
-		rs_writer: rs_writer,
+		ctx:        ctx,
+		config_obj: config_obj,
+		rs_writer:  rs_writer,
 	}, nil
 }
 
@@ -47,6 +55,10 @@ func (self *notebookCellLogger) Write(b []byte) (int, error) {
 		Set("Timestamp", utils.GetTime().Now().UTC().UnixNano()/1000).
 		Set("Level", level).
 		Set("message", msg))
+
+	if level == logging.ALERT {
+		self.processAlert(msg)
+	}
 
 	// Only keep the first 10 messages in the cell. This provides a
 	// good balance between seeing if the query worked and examining
@@ -71,6 +83,28 @@ func (self *notebookCellLogger) Write(b []byte) (int, error) {
 	self.mu.Unlock()
 
 	return len(b), nil
+}
+
+func (self *notebookCellLogger) processAlert(msg string) error {
+	alert := &services.AlertMessage{}
+	err := json.Unmarshal([]byte(msg), alert)
+	if err != nil {
+		return err
+	}
+
+	alert.ClientId = "server"
+	serialized, err := json.Marshal(alert)
+	if err != nil {
+		return err
+	}
+	serialized = append(serialized, '\n')
+
+	journal, err := services.GetJournal(self.config_obj)
+	if err != nil {
+		return err
+	}
+	return journal.PushJsonlToArtifact(self.ctx, self.config_obj,
+		serialized, 1, "Server.Internal.Alerts", "server", "")
 }
 
 func (self *notebookCellLogger) Messages() []string {

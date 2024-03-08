@@ -9,7 +9,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -34,12 +33,6 @@ type TimedFactory interface {
 		opts *json.EncOpts,
 		completion func()) (TimedResultSetWriter, error)
 
-	NewTimedResultSetWriterWithClock(
-		file_store_factory api.FileStore,
-		path_manager api.PathManager,
-		opts *json.EncOpts,
-		completion func(), clock utils.Clock) (TimedResultSetWriter, error)
-
 	NewTimedResultSetReader(
 		ctx context.Context,
 		file_store api.FileStore,
@@ -59,21 +52,6 @@ func NewTimedResultSetWriter(
 	}
 	return timed_rs_factory.NewTimedResultSetWriter(file_store_factory,
 		path_manager, opts, completion)
-}
-
-func NewTimedResultSetWriterWithClock(
-	file_store_factory api.FileStore,
-	path_manager api.PathManager,
-	opts *json.EncOpts,
-	completion func(), clock utils.Clock) (TimedResultSetWriter, error) {
-	l_mu.Lock()
-	defer l_mu.Unlock()
-
-	if timed_rs_factory == nil {
-		panic(errors.New("TimedFactory not initialized"))
-	}
-	return timed_rs_factory.NewTimedResultSetWriterWithClock(file_store_factory,
-		path_manager, opts, completion, clock)
 }
 
 func NewTimedResultSetReader(

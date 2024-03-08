@@ -37,6 +37,8 @@ type VFSServiceTestSuite struct {
 
 	client_id string
 	flow_id   string
+
+	closer func()
 }
 
 func (self *VFSServiceTestSuite) SetupTest() {
@@ -54,11 +56,12 @@ func (self *VFSServiceTestSuite) SetupTest() {
 	// the GUI will present the correct data.
 	users.RegisterTestUserManager(self.ConfigObj, "VelociraptorServer")
 
-	journal_service, err := services.GetJournal(self.ConfigObj)
-	assert.NoError(self.T(), err)
+	self.closer = utils.MockTime(utils.NewMockClock(time.Unix(1000, 0)))
+}
 
-	// Mock the time so we get a stable output
-	journal_service.SetClock(utils.NewMockClock(time.Unix(1000, 0)))
+func (self *VFSServiceTestSuite) TearDownTest() {
+	self.TestSuite.TearDownTest()
+	self.closer()
 }
 
 func (self *VFSServiceTestSuite) EmulateCollection(

@@ -1,6 +1,7 @@
 package notebook_test
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -20,6 +21,9 @@ var (
 	mock_definitions = []string{`
 name: Server.Internal.ArtifactDescription
 type: SERVER
+`, `
+name: Server.Internal.Alerts
+type: SERVER_EVENT
 `}
 )
 
@@ -107,6 +111,42 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerUpdateCell() {
 	golden.Set("VQL Cell", cell)
 	goldie.Assert(self.T(), "TestNotebookManagerUpdateCell",
 		json.MustMarshalIndent(golden))
+}
+
+func (self *NotebookManagerTestSuite) TestNotebookManagerAlert() {
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(100, 10)))
+	defer closer()
+
+	notebook_manager, err := services.GetNotebookManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	// Create a notebook the usual way.
+	var notebook *api_proto.NotebookMetadata
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		notebook, err = notebook_manager.NewNotebook(self.Ctx, "admin", &api_proto.NotebookMetadata{
+			Name:        "Test Notebook",
+			Description: "This is a test",
+		})
+		return err == nil
+	})
+
+	// Now update the cell to some markdown
+	_, err = notebook_manager.UpdateNotebookCell(self.Ctx, notebook,
+		"admin", &api_proto.NotebookCellRequest{
+			NotebookId: notebook.NotebookId,
+			CellId:     notebook.CellMetadata[0].CellId,
+			Input:      "SELECT alert(name='My Alert', Context='Something went wrong!') FROM scope()",
+			Type:       "vql",
+		})
+	assert.NoError(self.T(), err)
+
+	mem_file_store := test_utils.GetMemoryFileStore(self.T(), self.ConfigObj)
+
+	// Make sure the alert is sent.
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		alert, _ := mem_file_store.Get("/server_artifacts/Server.Internal.Alerts/1970-01-01.json")
+		return strings.Contains(string(alert), `"name":"My Alert"`)
+	})
 }
 
 func TestNotebookManager(t *testing.T) {
