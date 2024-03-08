@@ -352,8 +352,10 @@ export default class EventTimelineViewer extends React.Component {
         let start_time = moment(this.state.visibleTimeStart).format();
         let end_time = moment(this.state.visibleTimeEnd).format();
         let basename = `${this.props.artifact}-${start_time}-${end_time}-${this.props.client_id}`;
+
+        // For JSON do not expand the columns - just pass them through
+        // as they are.
         let downloads_json = {
-            columns: this.state.columns,
             client_id: this.props.client_id,
             artifact: this.props.artifact,
             type: mode,
@@ -364,8 +366,12 @@ export default class EventTimelineViewer extends React.Component {
             download_filename: basename,
         };
 
+        // For CSV we want all the columns expanded. This is not ideal
+        // as it only includes the columns in this page.
         let downloads_csv = Object.assign({}, downloads_json);
         downloads_csv.download_format = "csv";
+        downloads_csv.columns = this.state.columns;
+
         return <>
                  {this.pageSizeSelector()}
                  <Dropdown>

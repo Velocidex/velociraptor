@@ -22,6 +22,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
 	context "golang.org/x/net/context"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
@@ -92,7 +93,6 @@ func getTable(
 	in *api_proto.GetTableRequest) (
 	*api_proto.GetTableResponse, error) {
 
-	rows := uint64(0)
 	if in.Rows == 0 {
 		in.Rows = 2000
 	}
@@ -145,48 +145,8 @@ func getTable(
 		return nil, err
 	}
 
-	opts := json.GetJsonOptsForTimezone(in.Timezone)
-
-	column_known := make(map[string]bool)
-
-	// Unpack the rows into the output protobuf. Although not ideal,
-	// each row can have a different set of columns that the previous
-	// row. We keep track of all columns seen in this table page and
-	// their relative order.
-	for row := range rs_reader.Rows(ctx) {
-		data := make(map[string]string)
-		for _, key := range row.Keys() {
-			// Do we already know about this column?
-			_, pres := column_known[key]
-			if !pres {
-				result.Columns = append(result.Columns, key)
-				column_known[key] = true
-			}
-
-			value, pres := row.Get(key)
-			if pres {
-				data[key] = json.AnyToString(value, opts)
-			} else {
-				data[key] = "null"
-			}
-		}
-
-		row_proto := &api_proto.Row{}
-		for _, k := range result.Columns {
-			value, pres := data[k]
-			if !pres {
-				value = "null"
-			}
-			row_proto.Cell = append(row_proto.Cell, value)
-		}
-		result.Rows = append(result.Rows, row_proto)
-
-		rows += 1
-		if rows >= in.Rows {
-			break
-		}
-	}
-	return result, nil
+	return ConvertRowsToTableResponse(
+		rs_reader.Rows(ctx), result, in.Timezone, in.Rows), nil
 }
 
 // The GUI is requesting table data. This function tries to figure out
@@ -318,6 +278,57 @@ func getEventTableLogs(
 	return getEventTableWithPathManager(ctx, config_obj, in, path_manager)
 }
 
+// Unpack the rows into the output protobuf. Although not ideal, each
+// row can have a different set of columns that the previous row. We
+// keep track of all columns seen in this table page and their
+// relative order.
+func ConvertRowsToTableResponse(
+	in <-chan *ordereddict.Dict,
+	result *api_proto.GetTableResponse,
+	timezone string,
+	limit uint64,
+) *api_proto.GetTableResponse {
+	opts := json.GetJsonOptsForTimezone(timezone)
+
+	var rows uint64
+	column_known := make(map[string]bool)
+	for row := range in {
+		data := make(map[string]string)
+		for _, key := range row.Keys() {
+			// Do we already know about this column?
+			_, pres := column_known[key]
+			if !pres {
+				result.Columns = append(result.Columns, key)
+				column_known[key] = true
+			}
+
+			value, pres := row.Get(key)
+			if pres {
+				data[key] = json.AnyToString(value, opts)
+			} else {
+				data[key] = "null"
+			}
+		}
+
+		row_proto := &api_proto.Row{}
+		for _, k := range result.Columns {
+			value, pres := data[k]
+			if !pres {
+				value = "null"
+			}
+			row_proto.Cell = append(row_proto.Cell, value)
+		}
+		result.Rows = append(result.Rows, row_proto)
+
+		rows += 1
+		if rows >= limit {
+			break
+		}
+	}
+
+	return result
+}
+
 func getEventTableWithPathManager(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -325,7 +336,6 @@ func getEventTableWithPathManager(
 	path_manager api.PathManager) (
 	*api_proto.GetTableResponse, error) {
 
-	rows := uint64(0)
 	if in.Rows == 0 {
 		in.Rows = 10
 	}
@@ -349,30 +359,8 @@ func getEventTableWithPathManager(
 		rs_reader.SetMaxTime(time.Unix(int64(in.EndTime), 0))
 	}
 
-	opts := json.GetJsonOptsForTimezone(in.Timezone)
-
-	// Unpack the rows into the output protobuf
-	for row := range rs_reader.Rows(ctx) {
-		if result.Columns == nil {
-			result.Columns = row.Keys()
-		}
-
-		row_data := make([]string, 0, len(result.Columns))
-		for _, key := range result.Columns {
-			value, _ := row.Get(key)
-			row_data = append(row_data, json.AnyToString(value, opts))
-		}
-		result.Rows = append(result.Rows, &api_proto.Row{
-			Cell: row_data,
-		})
-
-		rows += 1
-		if rows > in.Rows {
-			break
-		}
-	}
-
-	return result, nil
+	return ConvertRowsToTableResponse(
+		rs_reader.Rows(ctx), result, in.Timezone, in.Rows), nil
 }
 
 func getTimeline(
