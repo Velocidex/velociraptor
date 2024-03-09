@@ -53,10 +53,11 @@ type: INTERNAL
 
 // Check tool upgrade.
 func (self *ServicesTestSuite) TestUpgradeTools() {
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(100, 0)))
+	defer closer()
 
 	// Admin forces Tool1 to non-default
 	inventory_service, err := services.GetInventory(self.ConfigObj)
-	inventory_service.(*inventory.InventoryService).Clock = utils.NewMockClock(time.Unix(100, 0))
 	inventory_service.(*inventory.InventoryService).ClearForTests()
 
 	tool_definition := &artifacts_proto.Tool{
