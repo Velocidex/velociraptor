@@ -31,11 +31,13 @@ Queries:
 
   # Reading server event artifacts
   - SELECT * from source(
+       start_time=1694102596,
        artifact='Server.Monitor.Health/Prometheus')
     LIMIT 2
 
   # Page it a bit.
   - SELECT * from source(
        start_row=1,
+       start_time=1694102596,
        artifact='Server.Monitor.Health/Prometheus')
     LIMIT 1

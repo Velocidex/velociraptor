@@ -6,7 +6,6 @@ import (
 	"github.com/Velocidex/json"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/result_sets"
-	"www.velocidex.com/golang/velociraptor/utils"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/simple"
 )
@@ -20,15 +19,6 @@ func (self TimedFactory) NewTimedResultSetWriter(
 	completion func()) (result_sets.TimedResultSetWriter, error) {
 	return NewTimedResultSetWriter(
 		file_store_factory, path_manager, opts, completion)
-}
-
-func (self TimedFactory) NewTimedResultSetWriterWithClock(
-	file_store_factory api.FileStore,
-	path_manager api.PathManager,
-	opts *json.EncOpts,
-	completion func(), clock utils.Clock) (result_sets.TimedResultSetWriter, error) {
-	return NewTimedResultSetWriterWithClock(
-		file_store_factory, path_manager, opts, completion, clock)
 }
 
 func (self TimedFactory) NewTimedResultSetReader(

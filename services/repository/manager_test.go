@@ -13,7 +13,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/repository"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
@@ -36,12 +35,8 @@ type: CLIENT
 }
 
 func (self *ManagerTestSuite) TestSetArtifact() {
-	clock := utils.NewMockClock(time.Unix(1000000000, 0))
-	journal_manager, err := services.GetJournal(self.ConfigObj)
-	assert.NoError(self.T(), err)
-
-	// Install a mock clock for this test.
-	journal_manager.(*journal.JournalService).Clock = clock
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(1000000000, 0)))
+	defer closer()
 
 	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -66,7 +61,6 @@ name: TestArtifact
 	path_manager, err := artifacts.NewArtifactPathManager(self.Ctx,
 		self.ConfigObj, "", "", "Server.Internal.ArtifactModification")
 	assert.NoError(self.T(), err)
-	path_manager.Clock = clock
 
 	data, pres = file_store.Get(
 		path_manager.Path().AsFilestoreFilename(self.ConfigObj))
@@ -87,12 +81,8 @@ func (self *ManagerTestSuite) TestSetArtifactDetectedByMinion() {
 		},
 	}
 
-	clock := utils.NewMockClock(time.Unix(1000000000, 0))
-	journal_manager, err := services.GetJournal(self.ConfigObj)
-	assert.NoError(self.T(), err)
-
-	// Install a mock clock for this test.
-	journal_manager.(*journal.JournalService).Clock = clock
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(1000000000, 0)))
+	defer closer()
 
 	master_manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)

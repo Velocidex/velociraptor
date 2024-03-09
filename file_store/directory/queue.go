@@ -190,11 +190,6 @@ type DirectoryQueueManager struct {
 	queue_pool *QueuePool
 	FileStore  api.FileStore
 	config_obj *config_proto.Config
-	Clock      utils.Clock
-}
-
-func (self *DirectoryQueueManager) SetClock(clock utils.Clock) {
-	self.Clock = clock
 }
 
 func (self *DirectoryQueueManager) Debug() *ordereddict.Dict {
@@ -206,7 +201,7 @@ func (self *DirectoryQueueManager) Broadcast(
 	path_manager api.PathManager, dict_rows []*ordereddict.Dict) {
 	for _, row := range dict_rows {
 		// Set a timestamp per event for easier querying.
-		row.Set("_ts", int(self.Clock.Now().Unix()))
+		row.Set("_ts", int(utils.GetTime().Now().Unix()))
 		self.queue_pool.Broadcast(path_manager.GetQueueName(), row)
 	}
 }
@@ -225,7 +220,7 @@ func (self *DirectoryQueueManager) PushEventRows(
 
 	for _, row := range dict_rows {
 		// Set a timestamp per event for easier querying.
-		row.Set("_ts", int(self.Clock.Now().Unix()))
+		row.Set("_ts", int(utils.GetTime().Now().Unix()))
 		rs_writer.Write(row)
 		self.queue_pool.Broadcast(path_manager.GetQueueName(), row)
 	}
@@ -244,7 +239,8 @@ func (self *DirectoryQueueManager) PushEventJsonl(
 	}
 	defer rs_writer.Close()
 
-	jsonl = json.AppendJsonlItem(jsonl, "_ts", int(self.Clock.Now().Unix()))
+	jsonl = json.AppendJsonlItem(jsonl, "_ts",
+		int(utils.GetTime().Now().Unix()))
 	rs_writer.WriteJSONL(jsonl, row_count)
 	self.queue_pool.BroadcastJsonl(path_manager.GetQueueName(), jsonl)
 
@@ -283,7 +279,6 @@ func NewDirectoryQueueManager(config_obj *config_proto.Config,
 		FileStore:  file_store,
 		config_obj: config_obj,
 		queue_pool: NewQueuePool(config_obj),
-		Clock:      utils.RealClock{},
 	}
 
 	debug.RegisterProfileWriter(debug.ProfileWriterInfo{

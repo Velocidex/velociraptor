@@ -23,7 +23,6 @@ type ArtifactPathManager struct {
 	ClientId, FlowId, FullArtifactName string
 	base_artifact_name, source         string
 	mode                               int
-	Clock                              utils.Clock
 	file_store                         api.FileStore
 }
 
@@ -43,7 +42,6 @@ func NewArtifactPathManagerWithMode(
 		base_artifact_name: artifact_name,
 		source:             artifact_source,
 		mode:               mode,
-		Clock:              utils.RealClock{},
 		file_store:         file_store_factory,
 	}
 }
@@ -68,7 +66,6 @@ func NewArtifactPathManager(
 		base_artifact_name: artifact_name,
 		source:             artifact_source,
 		mode:               mode,
-		Clock:              utils.RealClock{},
 		file_store:         file_store_factory,
 	}, nil
 }
@@ -138,7 +135,7 @@ func (self *ArtifactPathManager) GetRootPath() api.FSPathSpec {
 }
 
 func (self *ArtifactPathManager) getDayName() string {
-	now := self.Clock.Now().UTC()
+	now := utils.GetTime().Now().UTC()
 	return fmt.Sprintf("%d-%02d-%02d", now.Year(),
 		now.Month(), now.Day())
 }

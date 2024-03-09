@@ -46,8 +46,6 @@ type TimedResultSetWriterImpl struct {
 	last_log_base string
 	writer        *timelines.TimelineWriter
 	completer     *utils.Completer
-
-	Clock utils.Clock
 }
 
 func (self *TimedResultSetWriterImpl) Write(row *ordereddict.Dict) {
@@ -62,7 +60,7 @@ func (self *TimedResultSetWriterImpl) Write(row *ordereddict.Dict) {
 	self.rows = append(self.rows, rowContainer{
 		serialized: serialized,
 		count:      1,
-		ts:         self.Clock.Now(),
+		ts:         utils.GetTime().Now(),
 	})
 	self.total_rows_cached += 1
 
@@ -75,7 +73,7 @@ func (self *TimedResultSetWriterImpl) WriteJSONL(jsonl []byte, count int) {
 	self.rows = append(self.rows, rowContainer{
 		serialized: jsonl,
 		count:      count,
-		ts:         self.Clock.Now(),
+		ts:         utils.GetTime().Now(),
 	})
 	self.total_rows_cached += count
 
@@ -166,22 +164,5 @@ func NewTimedResultSetWriter(
 		// Only call the completion function once all writes
 		// completed.
 		completer: utils.NewCompleter(completion),
-		Clock:     utils.RealClock{},
-	}, nil
-}
-
-func NewTimedResultSetWriterWithClock(
-	file_store_factory api.FileStore,
-	path_manager api.PathManager,
-	opts *json.EncOpts,
-	completion func(),
-	clock utils.Clock) (result_sets.TimedResultSetWriter, error) {
-
-	return &TimedResultSetWriterImpl{
-		file_store_factory: file_store_factory,
-		path_manager:       path_manager,
-		completer:          utils.NewCompleter(completion),
-		opts:               opts,
-		Clock:              clock,
 	}, nil
 }

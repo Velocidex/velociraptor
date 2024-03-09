@@ -1,13 +1,13 @@
-input.invalid {
-    background-color: #f8d7da;
-    background-image: linear-gradient(to bottom, #f2dede 0%, #e7c3c3 100%);
-    background-repeat: repeat-x;
-    border-color: #dca7a7;
+input.invalid.form-control {
+    background-color: var(--invalid-form-control-error);
+    background-image: var(--invalid-form-control-error);
+}
+
+input.invalid.form-control:focus {
+    background-color: var(--invalid-form-control-error);
+    background-image: var(--invalid-form-control-error);
 }
 
 textarea.invalid {
-    background-color: #f8d7da;
-    background-image: linear-gradient(to bottom, #f2dede 0%, #e7c3c3 100%);
-    background-repeat: repeat-x;
-    border-color: #dca7a7;
+    background-image: var(--invalid-form-control-error);
 }

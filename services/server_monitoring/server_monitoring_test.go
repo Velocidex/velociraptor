@@ -95,10 +95,11 @@ func (self *ServerMonitoringTestSuite) SetupTest() {
 func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 	db := test_utils.GetMemoryDataStore(self.T(), self.ConfigObj)
 
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(1602103388, 0)))
+	defer closer()
+
 	event_table, err := services.GetServerEventManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
-	event_table.(*server_monitoring.EventTable).SetClock(
-		utils.NewMockClock(time.Unix(1602103388, 0)))
 
 	// Initially Server.Monitor.Health should be created if no
 	// other config exists.
@@ -179,18 +180,11 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 }
 
 func (self *ServerMonitoringTestSuite) TestAlertEvent() {
-	mock_clock := utils.NewMockClock(time.Unix(1602103388, 0))
-
-	closer := utils.MockTime(mock_clock)
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(1602103388, 0)))
 	defer closer()
-
-	journal, err := services.GetJournal(self.ConfigObj)
-	assert.NoError(self.T(), err)
-	journal.SetClock(mock_clock)
 
 	event_table, err := services.GetServerEventManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
-	event_table.(*server_monitoring.EventTable).SetClock(mock_clock)
 
 	// Install the two event artifacts.
 	err = event_table.Update(self.Ctx,
@@ -221,8 +215,9 @@ func (self *ServerMonitoringTestSuite) TestAlertEvent() {
 func (self *ServerMonitoringTestSuite) TestEmptyTable() {
 	event_table, err := services.GetServerEventManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
-	event_table.(*server_monitoring.EventTable).SetClock(
-		utils.NewMockClock(time.Unix(1602103388, 0)))
+
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(1602103388, 0)))
+	defer closer()
 
 	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -334,9 +329,8 @@ func (self *ServerMonitoringTestSuite) TestUpdateWhenArtifactModified() {
 
 	defer os.RemoveAll(tempdir)
 
-	event_table, err := services.GetServerEventManager(self.ConfigObj)
-	event_table.(*server_monitoring.EventTable).SetClock(
-		utils.NewMockClock(time.Unix(1602103388, 0)))
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(1602103388, 0)))
+	defer closer()
 
 	manager, err := services.GetRepositoryManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -358,6 +352,9 @@ sources:
 		ValidateArtifact:  true,
 		ArtifactIsBuiltIn: false})
 
+	assert.NoError(self.T(), err)
+
+	event_table, err := services.GetServerEventManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
 	// Install a table with an initial artifact

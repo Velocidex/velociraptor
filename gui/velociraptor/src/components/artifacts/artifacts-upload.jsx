@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 import Modal from 'react-bootstrap/Modal';
 import Form from 'react-bootstrap/Form';
+import Container from  'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import Button from 'react-bootstrap/Button';
@@ -15,6 +16,10 @@ import {CancelToken} from 'axios';
 import filterFactory from 'react-bootstrap-table2-filter';
 import { formatColumns } from "../core/table.jsx";
 import T from '../i8n/i8n.jsx';
+import Alert from 'react-bootstrap/Alert';
+
+import "./artifacts-upload.css";
+
 
 export default class ArtifactsUpload extends React.Component {
     static propTypes = {
@@ -30,6 +35,7 @@ export default class ArtifactsUpload extends React.Component {
 
         // after upload the server will cache the file here.
         vfs_path: [],
+        errors: [],
     }
 
     componentDidMount() {
@@ -78,6 +84,7 @@ export default class ArtifactsUpload extends React.Component {
                                  return {name: x, id: idx};
                              });
                          this.setState({loading:false,
+                                        errors: response.data.errors || [],
                                         vfs_path: response.data.vfs_path,
                                         uploaded: uploaded});
                      });
@@ -217,6 +224,26 @@ export default class ArtifactsUpload extends React.Component {
                         filter={ filterFactory() }
                       />
                     </Form> }
+
+                  { this.state.errors.length > 0 &&
+                    <Container className="artifact-import-errors">
+                      <Alert variant="danger">
+                        {T("Errors")}
+                      </Alert>
+                      <Alert variant="warningXX">
+                        <dl className="row" >
+                          {_.map(this.state.errors, (msg, idx) => {
+                              return <React.Fragment key={idx}>
+                                       <dt className="col-4">{msg.filename}</dt>
+                                       <dd className="col-8">
+                                         <div className="error-message">{msg.error}</div>
+                                       </dd>
+                                     </React.Fragment>;
+                          })}
+                        </dl>
+                      </Alert>
+                  </Container>}
+
                 </Modal.Body>
                 <Modal.Footer>
                   <Button variant="secondary" onClick={this.props.onClose}>

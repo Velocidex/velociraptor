@@ -255,7 +255,7 @@ const French = {
     "Max Execution Time in Seconds":"Temps d'exécution maximal en secondes",
     "Max Idle Time in Seconds":"Temps d'inactivité maximal en secondes",
     "If set collection will be terminated after this many seconds with no progress.":"Si l'ensemble de collecte sera terminé après ce nombre de secondes sans progression.",
-    "Max Mb Uploaded":"Max Mo téléversé",
+    "Max bytes Uploaded":"Max Mo téléversé",
     "Collection did not upload files":"La collection n'a pas de fichiers téléversés",
 
     "Create Offline collector: Select artifacts to collect":"Créer un collecteur hors ligne: sélectionnez les artefacts à collecter",

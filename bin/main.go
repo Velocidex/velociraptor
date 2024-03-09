@@ -20,6 +20,7 @@ package main
 import (
 	"crypto/x509"
 	"encoding/pem"
+	"fmt"
 	"os"
 	"runtime/pprof"
 	"runtime/trace"
@@ -131,6 +132,11 @@ func main() {
 		os.Exit(s)
 	})
 
+	err := logArgv(os.Args)
+	if err != nil {
+		fmt.Printf("Error sending to the event log: %v\n", err)
+	}
+
 	args := os.Args[1:]
 
 	// If no args are given check if there is an embedded config
@@ -150,7 +156,6 @@ func main() {
 	}
 
 	// Automatically add config flags
-	var err error
 	default_config, err = parseFlagsToDefaultConfig(app)
 	kingpin.FatalIfError(err, "Adding config flags.")
 

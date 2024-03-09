@@ -1,3 +1,4 @@
+//go:build !windows
 // +build !windows
 
 package main
@@ -16,3 +17,5 @@ func checkAdmin() error {
 }
 
 func checkMutex() error { return nil }
+
+func logArgv(argv []string) {}

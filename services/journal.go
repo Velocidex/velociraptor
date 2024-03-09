@@ -20,7 +20,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func GetJournal(config_obj *config_proto.Config) (JournalService, error) {
@@ -71,7 +70,4 @@ type JournalService interface {
 	PushRowsToArtifactAsync(
 		ctx context.Context, config_obj *config_proto.Config,
 		row *ordereddict.Dict, name string)
-
-	// Sets the clock for tests
-	SetClock(clock utils.Clock)
 }

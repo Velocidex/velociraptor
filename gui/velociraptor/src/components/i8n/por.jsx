@@ -252,7 +252,7 @@ const Portuguese = {
     "Max Execution Time in Seconds":"Tempo Máx. de Execução em Segundos",
     "Max Idle Time in Seconds":"Tempo Ocioso Máximo em Segundos",
     "If set collection will be terminated after this many seconds with no progress.":"Caso configurado, a coleta terminará após se passar o numero selecionado em segundos sem nenhum progresso.",
-    "Max Mb Uploaded":"Máximo de MB carregados",
+    "Max bytes Uploaded":"Máximo de MB carregados",
     "Collection did not upload files":"A coleta não possui arquivos enviados",
 
     "Create Offline collector: Select artifacts to collect":"Criar Coletor Offline: Selecione Artefatos para Coletar",

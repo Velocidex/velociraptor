@@ -1,20 +1,21 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+
 package flows
 
 import (
@@ -36,18 +37,18 @@ import (
 )
 
 type ScheduleCollectionFunctionArg struct {
-	ClientId     string      `vfilter:"required,field=client_id,doc=The client id to schedule a collection on"`
-	Artifacts    []string    `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
-	Env          vfilter.Any `vfilter:"optional,field=env,doc=Parameters to apply to the artifact (an alternative to a full spec)"`
-	Spec         vfilter.Any `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
-	Timeout      uint64      `vfilter:"optional,field=timeout,doc=Set query timeout (default 10 min)"`
-	OpsPerSecond float64     `vfilter:"optional,field=ops_per_sec,doc=Set query ops_per_sec value"`
-	CpuLimit     float64     `vfilter:"optional,field=cpu_limit,doc=Set query cpu_limit value"`
-	IopsLimit    float64     `vfilter:"optional,field=iops_limit,doc=Set query iops_limit value"`
-	MaxRows      uint64      `vfilter:"optional,field=max_rows,doc=Max number of rows to fetch"`
-	MaxBytes     uint64      `vfilter:"optional,field=max_bytes,doc=Max number of bytes to upload"`
-	Urgent       bool        `vfilter:"optional,field=urgent,doc=Set the collection as urgent - skips other queues collections on the client."`
-	OrgId        string      `vfilter:"optional,field=org_id,doc=If set the collection will be started in the specified org."`
+	ClientId     string            `vfilter:"required,field=client_id,doc=The client id to schedule a collection on"`
+	Artifacts    []string          `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
+	Env          *ordereddict.Dict `vfilter:"optional,field=env,doc=Parameters to apply to the artifact (an alternative to a full spec)"`
+	Spec         *ordereddict.Dict `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
+	Timeout      uint64            `vfilter:"optional,field=timeout,doc=Set query timeout (default 10 min)"`
+	OpsPerSecond float64           `vfilter:"optional,field=ops_per_sec,doc=Set query ops_per_sec value"`
+	CpuLimit     float64           `vfilter:"optional,field=cpu_limit,doc=Set query cpu_limit value"`
+	IopsLimit    float64           `vfilter:"optional,field=iops_limit,doc=Set query iops_limit value"`
+	MaxRows      uint64            `vfilter:"optional,field=max_rows,doc=Max number of rows to fetch"`
+	MaxBytes     uint64            `vfilter:"optional,field=max_bytes,doc=Max number of bytes to upload"`
+	Urgent       bool              `vfilter:"optional,field=urgent,doc=Set the collection as urgent - skips other queues collections on the client."`
+	OrgId        string            `vfilter:"optional,field=org_id,doc=If set the collection will be started in the specified org."`
 }
 
 type ScheduleCollectionFunction struct{}
@@ -61,6 +62,12 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	if err != nil {
 		scope.Log("collect_client: %s", err.Error())
 		return vfilter.Null{}
+	}
+
+	// If a full spec is provided we dont need to provide the
+	// artifacts again.
+	if arg.Spec != nil && len(arg.Artifacts) == 0 {
+		arg.Artifacts = arg.Spec.Keys()
 	}
 
 	if len(arg.Artifacts) == 0 {

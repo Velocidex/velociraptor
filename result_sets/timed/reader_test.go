@@ -17,6 +17,8 @@ import (
 func (self *TimedResultSetTestSuite) TestTimedResultSetMigration() {
 	now := time.Unix(1587800000, 0)
 	clock := utils.NewMockClock(now)
+	closer := utils.MockTime(clock)
+	defer closer()
 
 	// Start off by writing some events on a queue.
 	path_manager, err := artifacts.NewArtifactPathManager(
@@ -25,7 +27,6 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetMigration() {
 		self.flow_id,
 		"Windows.Events.ProcessCreation")
 	assert.NoError(self.T(), err)
-	path_manager.Clock = clock
 
 	// Recreate events from older version. Previously we used the
 	// regular ResultSetWriter to write unindexed files.

@@ -168,11 +168,6 @@ type MemoryQueueManager struct {
 	FileStore  api.FileStore
 	pool       *QueuePool
 	config_obj *config_proto.Config
-	Clock      utils.Clock
-}
-
-func (self *MemoryQueueManager) SetClock(clock utils.Clock) {
-	self.Clock = clock
 }
 
 func (self *MemoryQueueManager) Debug() {
@@ -186,7 +181,7 @@ func (self *MemoryQueueManager) Broadcast(
 	path_manager api.PathManager, dict_rows []*ordereddict.Dict) {
 	for _, row := range dict_rows {
 		// Set a timestamp per event for easier querying.
-		row.Set("_ts", int(self.Clock.Now().Unix()))
+		row.Set("_ts", int(utils.GetTime().Now().Unix()))
 		self.pool.Broadcast(path_manager.GetQueueName(), row)
 	}
 }
@@ -203,7 +198,8 @@ func (self *MemoryQueueManager) PushEventJsonl(
 	}
 	defer rs_writer.Close()
 
-	jsonl = json.AppendJsonlItem(jsonl, "_ts", int(self.Clock.Now().Unix()))
+	jsonl = json.AppendJsonlItem(jsonl, "_ts",
+		int(utils.GetTime().Now().Unix()))
 	rs_writer.WriteJSONL(jsonl, row_count)
 
 	self.pool.BroadcastJsonl(path_manager.GetQueueName(), jsonl)
@@ -224,7 +220,7 @@ func (self *MemoryQueueManager) PushEventRows(
 
 	for _, row := range dict_rows {
 		// Set a timestamp per event for easier querying.
-		row.Set("_ts", int(self.Clock.Now().Unix()))
+		row.Set("_ts", int(utils.GetTime().Now().Unix()))
 		rs_writer.Write(row)
 		self.pool.Broadcast(path_manager.GetQueueName(), row)
 	}
@@ -247,6 +243,5 @@ func NewMemoryQueueManager(config_obj *config_proto.Config,
 		FileStore:  file_store,
 		pool:       NewQueuePool(config_obj),
 		config_obj: config_obj,
-		Clock:      utils.RealClock{},
 	}
 }

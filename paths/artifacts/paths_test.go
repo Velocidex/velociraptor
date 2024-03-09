@@ -94,6 +94,8 @@ func (self *PathManageTestSuite) TearDownTest() {
 // by day to ensure they are not too large and can be easily archived.
 func (self *PathManageTestSuite) TestPathManager() {
 	ts := int64(1587800823)
+	closer := utils.MockTime(utils.NewMockClock(time.Unix(ts, 0)))
+	defer closer()
 
 	for _, testcase := range path_tests {
 		path_manager, err := artifacts.NewArtifactPathManager(
@@ -103,7 +105,6 @@ func (self *PathManageTestSuite) TestPathManager() {
 			testcase.full_artifact_name)
 		assert.NoError(self.T(), err)
 
-		path_manager.Clock = utils.NewMockClock(time.Unix(ts, 0))
 		path, err := path_manager.GetPathForWriting()
 		assert.NoError(self.T(), err)
 		assert.Equal(self.T(),
@@ -115,7 +116,6 @@ func (self *PathManageTestSuite) TestPathManager() {
 
 		qm := memory.NewMemoryQueueManager(
 			self.ConfigObj, file_store).(*memory.MemoryQueueManager)
-		qm.Clock = path_manager.Clock
 
 		err = qm.PushEventRows(path_manager,
 			[]*ordereddict.Dict{ordereddict.NewDict()})

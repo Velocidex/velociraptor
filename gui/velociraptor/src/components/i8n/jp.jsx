@@ -246,7 +246,7 @@ const Japanese = {
     "Max Execution Time in Seconds":"最大実行時間(秒)",
     "Max Idle Time in Seconds":"最大アイドル時間(秒)",
     "If set collection will be terminated after this many seconds with no progress.":"設定された場合、収集はこの秒数後に何も進行していない状態で終了されます。",
-    "Max Mb Uploaded":"アップロード可能な最大Mb",
+    "Max bytes Uploaded":"アップロード可能な最大Mb",
     "Collection did not upload files":"コレクションがファイルをアップロードしていない",
 
     "Create Offline collector: Select artifacts to collect":"オフライン: 収集するアーティファクトを選択する",

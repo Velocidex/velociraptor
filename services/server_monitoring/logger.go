@@ -18,7 +18,6 @@ import (
 type serverLogger struct {
 	config_obj   *config_proto.Config
 	path_manager api.PathManager
-	Clock        utils.Clock
 	artifact     string
 	ctx          context.Context
 }
@@ -28,9 +27,9 @@ func (self *serverLogger) Write(b []byte) (int, error) {
 
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 
-	writer, err := timed.NewTimedResultSetWriterWithClock(
+	writer, err := timed.NewTimedResultSetWriter(
 		file_store_factory, self.path_manager, nil,
-		utils.BackgroundWriter, self.Clock)
+		utils.BackgroundWriter)
 	if err != nil {
 		return 0, err
 	}
@@ -40,7 +39,7 @@ func (self *serverLogger) Write(b []byte) (int, error) {
 	// like the regular artifacts.
 	msg = artifacts.DeobfuscateString(self.config_obj, msg)
 	writer.Write(ordereddict.NewDict().
-		Set("Timestamp", self.Clock.Now().UTC().String()).
+		Set("Timestamp", utils.GetTime().Now().UTC().String()).
 		Set("Level", level).
 		Set("Message", msg))
 

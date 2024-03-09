@@ -75,8 +75,7 @@ type ReplicationService struct {
 	ctx        context.Context
 
 	// Locally connected watchers.
-	qm    api.QueueManager
-	Clock utils.Clock
+	qm api.QueueManager
 
 	sender chan *api_proto.PushEventRequest
 
@@ -113,10 +112,6 @@ func (self *ReplicationService) isEventRegistered(artifact string) bool {
 
 	ok, pres := self.masterRegistrations[artifact]
 	return pres && ok
-}
-
-func (self *ReplicationService) SetClock(clock utils.Clock) {
-	self.qm.SetClock(clock)
 }
 
 func (self *ReplicationService) pumpEventFromBufferFile() error {
@@ -465,7 +460,6 @@ func (self *ReplicationService) pushRowsToLocalQueueManager(
 	if err != nil {
 		return err
 	}
-	path_manager.Clock = self.Clock
 
 	// Just a regular artifact, append to the existing result set.
 	if !path_manager.IsEvent() {
@@ -493,7 +487,6 @@ func (self *ReplicationService) pushJsonlToLocalQueueManager(
 	if err != nil {
 		return err
 	}
-	path_manager.Clock = self.Clock
 
 	// Just a regular artifact, append to the existing result set.
 	if !path_manager.IsEvent() {
@@ -735,7 +728,6 @@ func NewReplicationService(
 		locks:               make(map[string]*sync.Mutex),
 		masterRegistrations: make(map[string]bool),
 		batch:               make(map[string]*jsonBatch),
-		Clock:               utils.RealClock{},
 	}
 
 	qm, err := file_store.GetQueueManager(config_obj)

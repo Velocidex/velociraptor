@@ -39,8 +39,6 @@ type JournalService struct {
 	// process!
 	mu    sync.Mutex
 	locks map[string]*sync.Mutex
-
-	Clock utils.Clock
 }
 
 func (self *JournalService) GetWatchers() []string {
@@ -201,7 +199,6 @@ func (self *JournalService) PushJsonlToArtifact(
 	if err != nil {
 		return err
 	}
-	path_manager.Clock = self.Clock
 
 	// Just a regular artifact, append to the existing result set.
 	if !path_manager.IsEvent() {
@@ -229,7 +226,6 @@ func (self *JournalService) PushRowsToArtifact(
 	if err != nil {
 		return err
 	}
-	path_manager.Clock = self.Clock
 
 	// Just a regular artifact, append to the existing result set.
 	if !path_manager.IsEvent() {
@@ -260,11 +256,6 @@ func (self *JournalService) PushRowsToInternalEventArtifact(
 	return nil
 }
 
-func (self *JournalService) SetClock(clock utils.Clock) {
-	self.Clock = clock
-	self.qm.SetClock(clock)
-}
-
 func (self *JournalService) Start(config_obj *config_proto.Config) error {
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	logger.Info("<green>Starting</> Journal service for %v.",
@@ -288,12 +279,10 @@ func NewJournalService(
 	service := &JournalService{
 		config_obj: config_obj,
 		locks:      make(map[string]*sync.Mutex),
-		Clock:      utils.RealClock{},
 	}
 
 	qm, err := file_store.GetQueueManager(config_obj)
 	if err == nil && qm != nil {
-		qm.SetClock(service.Clock)
 		service.qm = qm
 	}
 
