@@ -55,7 +55,7 @@
     }
    }
   ],
-  "log.json.index": "\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000}\u0000\u0000\u0000\u0000\u0001\u0000\u0000\u000b\u0001\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0001\u0000\u0000\u0000\u0001\u0000\u0000T\u0002\u0000\u0000\u0000\u0001\u0000\u0000",
+  "log.json.index": "\u0000\u0000\u0000\u0000\u0000\u0001\u0000\u0000}\u0000\u0000\u0000\u0000\u0001\u0000\u0000\u0010\u0001\u0000\u0000\u0000\u0001\u0000\u0000\ufffd\u0001\u0000\u0000\u0000\u0001\u0000\u0000Y\u0002\u0000\u0000\u0000\u0001\u0000\u0000",
   "log.json": [
    {
     "_ts": 1602103388,
@@ -67,7 +67,7 @@
     "_ts": 1602103388,
     "client_time": 1602103388,
     "level": "DEFAULT",
-    "message": "Collecting file hello world into /uploads/data/file.db (11 bytes)\n"
+    "message": "Collecting file data:hello world into /uploads/data/file.db (11 bytes)\n"
    },
    {
     "_ts": 1602103388,
