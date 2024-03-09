@@ -18,4 +18,6 @@ func checkAdmin() error {
 
 func checkMutex() error { return nil }
 
-func logArgv(argv []string) {}
+func logArgv(argv []string) error {
+	return nil
+}

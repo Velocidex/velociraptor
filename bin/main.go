@@ -132,11 +132,6 @@ func main() {
 		os.Exit(s)
 	})
 
-	err := logArgv(os.Args)
-	if err != nil {
-		fmt.Printf("Error sending to the event log: %v\n", err)
-	}
-
 	args := os.Args[1:]
 
 	// If no args are given check if there is an embedded config
@@ -153,6 +148,12 @@ func main() {
 			args = append(args, post...)
 			logging.Prelog("Autoexec with parameters: %v", args)
 		}
+	}
+
+	// Log the actual argv that will be run.
+	err := logArgv(append([]string{os.Args[0]}, args...))
+	if err != nil {
+		fmt.Printf("Error sending to the event log: %v\n", err)
 	}
 
 	// Automatically add config flags

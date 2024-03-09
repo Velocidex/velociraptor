@@ -92,7 +92,6 @@ type InventoryService struct {
 
 	// A HTTPClient that is used to download tools automatically.
 	Client networking.HTTPClient
-	Clock  utils.Clock
 
 	// The parent is the inventory service of the root org. The root
 	// org maintain the parent's repository and takes the default
@@ -536,7 +535,7 @@ func (self *InventoryService) AddTool(
 		self.binaries.Tools = append(self.binaries.Tools, tool)
 	}
 
-	self.binaries.Version = uint64(self.Clock.Now().UnixNano())
+	self.binaries.Version = uint64(utils.GetTime().Now().UnixNano())
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -598,7 +597,6 @@ func NewInventoryService(
 	}
 
 	inventory_service := &InventoryService{
-		Clock:    utils.RealClock{},
 		binaries: &artifacts_proto.ThirdParty{},
 		versions: make(map[string][]*artifacts_proto.Tool),
 		// Use the VQL http client so it can accept the same certs.

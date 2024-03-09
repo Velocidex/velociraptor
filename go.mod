@@ -11,7 +11,7 @@ require (
 	github.com/Velocidex/etw v0.0.0-20231115144702-0b885b292f0f
 	github.com/Velocidex/go-elasticsearch/v7 v7.3.1-0.20191001125819-fee0ef9cac6b
 	github.com/Velocidex/go-magic v0.0.0-20211018155418-c5dc48282f28
-	github.com/Velocidex/go-yara v1.1.10-0.20221202090138-c7dde4c43aa4
+	github.com/Velocidex/go-yara v1.1.10-0.20240309155455-3f491847cec9
 	github.com/Velocidex/grpc-go-pool v1.2.2-0.20211129003310-ece3b3fe13f4
 	github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a
 	github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a

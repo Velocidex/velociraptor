@@ -101,4 +101,33 @@ files=srcDir+"/artifacts/testdata/files/3DBuilder.ResourceResolver.exe")
   "\"imphash\"": "imphash",
   "basename(path=FileName)": "3DBuilder.ResourceResolver.exe"
  }
+]SELECT * FROM yara(files='This is a secret', accessor="data",
+   rules=read_file(filename=srcDir+"/artifacts/testdata/files/test.yarac"))
+[
+ {
+  "Rule": "Hit",
+  "Meta": null,
+  "Tags": null,
+  "String": {
+   "Name": "$A",
+   "Offset": 10,
+   "HexData": [
+    "00000000  73 65 63 72 65 74                                 |secret|",
+    ""
+   ],
+   "Data": "c2VjcmV0"
+  },
+  "File": {
+   "FullPath": "This is a secret",
+   "Size": 16,
+   "Mode": 420,
+   "ModeStr": "-rw-r--r--",
+   "ModTime": "0001-01-01T00:00:00Z",
+   "Data": {},
+   "Mtime": "0001-01-01T00:00:00Z",
+   "Ctime": "0001-01-01T00:00:00Z",
+   "Atime": "0001-01-01T00:00:00Z"
+  },
+  "FileName": "This is a secret"
+ }
 ]
