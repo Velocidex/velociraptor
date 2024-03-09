@@ -93,3 +93,8 @@ Queries:
     SELECT "imphash", basename(path=FileName)
     FROM yara(rules=imphashSig, accessor="file",
     files=srcDir+"/artifacts/testdata/files/3DBuilder.ResourceResolver.exe")
+
+  # Test we can apply compiled rules
+  - |
+    SELECT * FROM yara(files='This is a secret', accessor="data",
+       rules=read_file(filename=srcDir+"/artifacts/testdata/files/test.yarac"))

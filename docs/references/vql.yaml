@@ -530,7 +530,6 @@
        client_info(client_id=client_id).os_info.hostname AS Hostname
     FROM source()
     ```
-
   type: Function
   args:
   - name: client_id
@@ -769,8 +768,6 @@
              client_id='C.49982ba4c2ccef20') AS collection
     FROM scope()
     ```
-
-
   type: Function
   args:
   - name: client_id
@@ -783,10 +780,10 @@
     repeated: true
     required: true
   - name: env
-    type: Any
+    type: ordereddict.Dict
     description: Parameters to apply to the artifact (an alternative to a full spec)
   - name: spec
-    type: Any
+    type: ordereddict.Dict
     description: Parameters to apply to the artifacts
   - name: timeout
     type: uint64
@@ -1060,6 +1057,10 @@
     type: string
     description: Notebook ID to export.
     required: true
+  - name: filename
+    type: string
+    description: The name of the export. If not set this will be named according to
+      the notebook id and timestamp
   metadata:
     permissions: PREPARE_RESULTS
 - name: crypto_rc4
@@ -2422,7 +2423,6 @@
     * key: The name of the form element that will receive the file
     * path: This is an OSPath object that we open and stream into the form.
     * accessor: Any accessor required for the path.
-
   type: Plugin
   version: 2
   args:
@@ -3736,6 +3736,32 @@
   category: plugin
   metadata:
     permissions: MACHINE_STATE
+- name: notebook_create
+  description: Create a new notebook.
+  type: Function
+  args:
+  - name: name
+    type: string
+    description: The name of the notebook
+  - name: description
+    type: string
+    description: The description of the notebook
+  - name: collaborators
+    type: string
+    description: A list of users to share the notebook with.
+    repeated: true
+  - name: public
+    type: bool
+    description: If set the notebook will be public.
+  - name: artifacts
+    type: string
+    description: A list of NOTEBOOK artifacts to create the notebook with (Notebooks.Default)
+    repeated: true
+  - name: env
+    type: ordereddict.Dict
+    description: An environment to initialize the notebook with
+  metadata:
+    permissions: COLLECT_SERVER
 - name: notebook_delete
   description: 'Delete a notebook with all its cells. '
   type: Plugin
@@ -3748,6 +3774,58 @@
   category: server
   metadata:
     permissions: SERVER_ADMIN
+- name: notebook_export
+  description: Exports a notebook to a zip file or HTML.
+  type: Function
+  args:
+  - name: notebook_id
+    type: string
+    description: The id of the notebook to export
+    required: true
+  - name: filename
+    type: string
+    description: The name of the export. If not set this will be named according to
+      the notebook id and timestamp
+  - name: type
+    type: string
+    description: Set the type of the export (html or zip).
+  metadata:
+    permissions: PREPARE_RESULTS
+- name: notebook_get
+  description: Get a notebook.
+  type: Function
+  args:
+  - name: notebook_id
+    type: string
+    description: The id of the notebook to fetch
+    required: true
+  metadata:
+    permissions: READ_RESULTS
+- name: notebook_update_cell
+  description: Update a notebook cell.
+  type: Function
+  args:
+  - name: notebook_id
+    type: string
+    description: The id of the notebook to update
+    required: true
+  - name: cell_id
+    type: string
+    description: The cell of the notebook to update. If this is empty we add a new
+      cell to the notebook
+  - name: type
+    type: string
+    description: Set the type of the cell if needed (markdown or vql).
+  - name: input
+    type: string
+    description: The new cell content.
+    required: true
+  - name: output
+    type: string
+    description: If this is set, we do not calculate the cell but set this as the
+      rendered output.
+  metadata:
+    permissions: COLLECT_SERVER
 - name: now
   description: Returns current time in seconds since epoch.
   type: Function
@@ -6380,6 +6458,7 @@
 - name: upload_s3
   description: Upload files to S3.
   type: Function
+  version: 2
   args:
   - name: file
     type: accessors.OSPath
@@ -6398,30 +6477,27 @@
   - name: region
     type: string
     description: The region the bucket is in
-  - name: credentialskey
+  - name: credentials_key
     type: string
     description: The AWS key credentials to use
-  - name: credentialssecret
+  - name: credentials_secret
     type: string
     description: The AWS secret credentials to use
-  - name: credentialstoken
+  - name: credentials_token
     type: string
     description: The AWS session token to use (only needed for temporary credentials)
   - name: endpoint
     type: string
     description: The Endpoint to use
-  - name: serversideencryption
+  - name: serverside_encryption
     type: string
     description: The server side encryption method to use
-  - name: kmsencryptionkey
+  - name: kms_encryption_key
     type: string
     description: The server side KMS key to use
-  - name: s3uploadroot
+  - name: s3upload_root
     type: string
     description: Prefix for the S3 object
-  - name: noverifycert
-    type: bool
-    description: Skip TLS Verification (deprecated in favor of SkipVerify)
   - name: skip_verify
     type: bool
     description: Skip TLS Verification
@@ -7098,10 +7174,18 @@
     accessor is used to open the various files which allows this plugin to
     work across raw ntfs, zip members or indeed process memory.
 
-    Scanning proceeds by reading a block from the file, then applying the
-    yara rule on the block. This will fail if the signature is split
-    across block boundary. You can choose the block size to be
-    appropriate.
+    There are two modes supported. If the accessor is "process" or
+    "file", we delegate scanning directly to the yara libary. This
+    allows yara to see the entire file and apply signatures that span
+    large offset differences (e.g. a signature looking for a string in
+    the middle of the file and the header).
+
+    For other accessors we need to use buffer scanning. In this mode,
+    Velociraptor will read buffers from the accessor and apply the
+    yara library to the buffer. Due to limitations in the yara API, it
+    is not possible to match signatures that are split on buffer
+    boundaries. You can choose the block size to try to fit the entire
+    signature with each block.
 
     If the accessor is **not** specified we use the yara library to
     directly open the file itself without Velociraptor's accessor
@@ -7128,26 +7212,17 @@
     recommended that the `key` parameter be specified because it makes
     it more efficient since we do not need to hash the rules each time.
 
-    ### Shorthand rules
+    You can supply a `compiled yara rule` as produced by the `yarac`
+    program. This is not recommended because it is not portable - the
+    rule must have been compiled with the exact same version of Yara
+    that is embedded in Velociraptor (Currently 4.5.0). Compiled rules
+    are generally larger too than the plain text rules.
 
-    This plugin accepts yara rules in the `rules` parameter. But typically
-    we only search for keywords so writing a full yara syntax rule is
-    tedious. Therefore we provide a shorthand way to specify the
-    keywords. For example:
-
-    ```
-    wide nocase:foo,bar,baz
-    ```
-
-    When the rule is provided in the above form, the plugin will
-    automatically generate a yara rule which matches any of the specified
-    keywords. The specification before the `:` means the same thing as the
-    yara DSL and the following combinations are supported `wide`,
-    `wide ascii`, `wide nocase`, `wide nocase ascii`.
-
-    This shorthand notation is less useful because recent Velociraptor
-    versions offer a context sensitive Yara rule editor in the GUI
-    (simply press ? to bring up a rule template).
+    When creating an artifact which requires a yara rule, set the type
+    of the parameter to `yara` and Velociraptor will offer a context
+    sensitive Yara rule editor in the GUI (simply press ? to bring up
+    a rule template). This makes it easier to write quick rules in the
+    GUI.
 
     {{% notice note %}}
 
@@ -7177,8 +7252,7 @@
   args:
   - name: rules
     type: string
-    description: Yara rules in the yara DSL.
-    required: true
+    description: Yara rules in the yara DSL or after being compiled by the yarac compiler.
   - name: files
     type: Any
     description: The list of files to scan.
@@ -7214,3 +7288,4 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+

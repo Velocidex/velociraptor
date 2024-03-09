@@ -13,6 +13,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	"github.com/alexmullins/zip"
 	"github.com/dustin/go-humanize"
@@ -303,7 +304,21 @@ func formatFilename(filename *accessors.OSPath, accessor string) string {
 
 	// These paths can be very large so we elide them.
 	switch accessor {
-	case "data", "sparse":
+	case "data":
+		elided_result := "data:"
+		for _, r := range result {
+			if unicode.IsPrint(r) {
+				elided_result += string(r)
+			}
+			if len(elided_result) > 50 {
+				elided_result += " ..."
+				break
+			}
+		}
+
+		return elided_result
+
+	case "sparse":
 		if len(result) > 50 {
 			result = result[:50] + "..."
 		}

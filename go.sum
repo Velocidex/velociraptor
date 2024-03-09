@@ -126,6 +126,8 @@ github.com/Velocidex/go-magic v0.0.0-20211018155418-c5dc48282f28 h1:3FMhXfGzZR4o
 github.com/Velocidex/go-magic v0.0.0-20211018155418-c5dc48282f28/go.mod h1:n9o/44DFcqU/E55pWoIt4sKkxBC3k4JVNqvTAb9kZlI=
 github.com/Velocidex/go-yara v1.1.10-0.20221202090138-c7dde4c43aa4 h1:sBy6e+0saSFIwwST8VfziY0yO2uCra1m8lxOIv56UEk=
 github.com/Velocidex/go-yara v1.1.10-0.20221202090138-c7dde4c43aa4/go.mod h1:5KKwF74avzF4GPZg37NoWfJiDgrBF5ASHH27g1p83zk=
+github.com/Velocidex/go-yara v1.1.10-0.20240309155455-3f491847cec9 h1:m+sfPvJnRTDL9EoJdlBOGa1dQlm0NPJgcXB/zpK/W7Y=
+github.com/Velocidex/go-yara v1.1.10-0.20240309155455-3f491847cec9/go.mod h1:5KKwF74avzF4GPZg37NoWfJiDgrBF5ASHH27g1p83zk=
 github.com/Velocidex/grok v0.0.1 h1:bOaqowsW9ecfJISQOM9K47Jk/ID9V945BLfKngUZEjo=
 github.com/Velocidex/grok v0.0.1/go.mod h1:tO25ta1WAuru0QA9ajcK0bAsk0gpWiT8so+fR4u3GZE=
 github.com/Velocidex/grpc-go-pool v1.2.2-0.20211129003310-ece3b3fe13f4 h1:EfgJNtG9KBbbT8fhWIs0E+PP5prHixSE5/tQ1yzk7jI=
