@@ -98,7 +98,7 @@ class OfflineCollectorParameters  extends React.Component {
                      <Col sm="8">
                        <Form.Control
                          as="textarea"
-                         placeholder={T("Public Key/Certificate To Encrypt With. If X509, Defaults To Frontend Cert")}
+                         placeholder={T("Public Key/Certificate To Encrypt With. If empty, defaults To Frontend Cert")}
                          spellCheck="false"
                          value={this.props.parameters.encryption_args.public_key}
                          onChange={e => {

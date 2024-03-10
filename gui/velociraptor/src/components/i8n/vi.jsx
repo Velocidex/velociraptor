@@ -512,7 +512,6 @@ const Vietnamese = {
      "Properties": "Thuộc tính",
      "Public": "Công khai",
      "Public Key/Cert": "Public Key/Cert",
-     "Public Key/Certificate To Encrypt With. If X509, Defaults To Frontend Cert": "Public Key/Certificate để mã hóa. Nếu X509, Mặc định là Frontend Cert",
      "Quarantine Host": "Cách ly host",
      "Quarantine Message": "Thông báo cách ly",
      "Quarantine host": "Cách ly host",
