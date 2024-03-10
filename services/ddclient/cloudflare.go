@@ -15,10 +15,12 @@ hostname under that domain, e.g. "velociraptor.example.com"
 Using this information you can now create the dyndns configuration:
 
 ```yaml
+Frontend:
+  ....
   dyn_dns:
     type: cloudflare
     api_token: XXXYYYZZZ
-    ZoneName: example.com
+    zone_name: example.com
 ```
 
 Make sure the Frontend.Hostname field is set to the correct hostname
@@ -26,11 +28,10 @@ to update - for example
 
 ```yaml
 Frontend:
-  Hostname: velociraptor.example.com
+  hostname: velociraptor.example.com
 ```
 
 This is the hostname that will be updated.
-
 */
 
 import (
@@ -208,7 +209,6 @@ func (self CloudflareUpdater) UpdateDDNSRecord(
 
 	record_id, err := self.getRecordId(zone_id)
 	if err != nil {
-		// TODO - if the record is missing we need to add it.
 		return err
 	}
 

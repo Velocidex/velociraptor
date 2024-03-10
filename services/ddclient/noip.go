@@ -9,6 +9,8 @@ package ddclient
 
 Sample config:
 ```yaml
+Frontend:
+  ...
   dyn_dns:
     type: noip
     ddns_username: USER123
@@ -16,8 +18,8 @@ Sample config:
 ```
 
 This provider also supports other formats for the update URL so it can
-be used with other dyndns providers. The update_url is a Golang
-template which will be expanded into the full URL.
+be used with other dyndns providers. The `update_url` field is a
+Golang template which will be expanded into the full URL.
 
 For noip.com the template defaults to
 https://dynupdate.no-ip.com/nic/update?hostname={{.Hostname}}&myip={{.IP}}
