@@ -328,11 +328,11 @@ func (self *collectionManager) collectQuery(
 }
 
 func (self *collectionManager) Collect(request *flows_proto.ArtifactCollectorArgs) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	self.start_time = Clock.Now()
 	self.collection_context.Request = request
@@ -392,6 +392,9 @@ func (self *collectionManager) Collect(request *flows_proto.ArtifactCollectorArg
 		go func(vql_request *actions_proto.VQLCollectorArgs) {
 			defer wg.Done()
 
+			self.mu.Lock()
+			defer self.mu.Unlock()
+
 			// Create a new environment for each request.
 			env := ordereddict.NewDict()
 			for _, env_spec := range vql_request.Env {
@@ -411,9 +414,6 @@ func (self *collectionManager) Collect(request *flows_proto.ArtifactCollectorArg
 			query_start_time := Clock.Now()
 
 			defer func() {
-				// self.collection_context is already locked with
-				// self.mu because this goroutine does not run outside
-				// our Collect() function
 				status.Duration = Clock.Now().UnixNano() - query_start_time.UnixNano()
 				self.collection_context.QueryStats = append(
 					self.collection_context.QueryStats, status)
