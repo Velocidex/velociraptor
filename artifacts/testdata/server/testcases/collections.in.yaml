@@ -1,6 +1,15 @@
 # This file tests the collector accessor which provides transparent
 # access to Velociraptor offline collections with automatic decryption
 # if possible.
+Parameters:
+  Artifact1: |
+    name: Artifact1
+    sources:
+    - query: SELECT 1 AS X FROM scope()
+  Artifact2: |
+    name: Artifact2
+    sources:
+    - query: SELECT 2 AS X FROM scope()
 
 Queries:
   # First unencrypted file
@@ -28,3 +37,16 @@ Queries:
       root=pathspec(
           DelegatePath=srcDir +
               '/artifacts/testdata/files/encrypted_collector_password.zip'))
+
+  # Test we can pass definitions to the collect() plugin. This passes
+  # a []string{} to artifact_definitions.
+  - SELECT * FROM collect(
+       artifact_definitions=split(sep_string="-----", string=Artifact1 + "-----" + Artifact2),
+       artifacts=["Artifact1", "Artifact2"])
+    ORDER BY _Source
+
+  # This is passes a []LazyExpr{} to artifact_definitions
+  - SELECT * FROM collect(
+       artifact_definitions=[Artifact1, Artifact2],
+       artifacts=["Artifact1", "Artifact2"])
+    ORDER BY _Source

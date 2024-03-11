@@ -10,4 +10,22 @@ SELECT read_file(filename=OSPath, accessor='collector') FROM glob(globs='**/Basi
  {
   "read_file(filename=OSPath, accessor='collector')": "{\"Name\":\"velociraptor\",\"BuildTime\":\"2022-10-10T07:34:08+10:00\",\"Version\":\"0.6.7-dev\",\"build_url\":\"\",\"Labels\":null,\"Hostname\":\"DESKTOP-SU8FH31\",\"OS\":\"windows\",\"Architecture\":\"amd64\",\"Platform\":\"Microsoft Windows 11 Enterprise Evaluation\",\"PlatformVersion\":\"10.0.22000 Build 22000\",\"KernelVersion\":\"10.0.22000 Build 22000\",\"Fqdn\":\"DESKTOP-SU8FH31.lan\",\"MACAddresses\":[\"00:0c:29:00:26:7e\"]}\n"
  }
+]SELECT * FROM collect( artifact_definitions=split(sep_string="-----", string=Artifact1 + "-----" + Artifact2), artifacts=["Artifact1", "Artifact2"]) ORDER BY _Source[
+ {
+  "X": 1,
+  "_Source": "Artifact1"
+ },
+ {
+  "X": 2,
+  "_Source": "Artifact2"
+ }
+]SELECT * FROM collect( artifact_definitions=[Artifact1, Artifact2], artifacts=["Artifact1", "Artifact2"]) ORDER BY _Source[
+ {
+  "X": 1,
+  "_Source": "Artifact1"
+ },
+ {
+  "X": 2,
+  "_Source": "Artifact2"
+ }
 ]
