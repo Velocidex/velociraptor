@@ -2315,7 +2315,7 @@
     You can also specify an external DNS server, causing the query to
     contact the DNS server for resolving the names.
 
-    NOTE: No cachig is currently provided so this may generate a lot
+    NOTE: No caching is currently provided so this may generate a lot
     of load on DNS servers when scanning many rows.
 
     Example: The first query resolves through an external DNS server
@@ -7175,7 +7175,7 @@
     work across raw ntfs, zip members or indeed process memory.
 
     There are two modes supported. If the accessor is "process" or
-    "file", we delegate scanning directly to the yara libary. This
+    "file", we delegate scanning directly to the yara library. This
     allows yara to see the entire file and apply signatures that span
     large offset differences (e.g. a signature looking for a string in
     the middle of the file and the header).
@@ -7288,4 +7288,3 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
-
