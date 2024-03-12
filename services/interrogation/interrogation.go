@@ -107,12 +107,6 @@ func (self *EnrollmentService) ProcessEnrollment(
 	config_obj *config_proto.Config,
 	row *ordereddict.Dict) error {
 
-	if DEBUG {
-		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-		logger.Debug("Got enrollment request for %v", row)
-		defer logger.Debug("Done with enrollment for %v", row)
-	}
-
 	client_id, pres := row.GetString("ClientId")
 	if !pres {
 		return nil
@@ -138,6 +132,16 @@ func (self *EnrollmentService) ProcessEnrollment(
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	if DEBUG {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Debug("Got enrollment request for %v", row)
+		defer func() {
+			logger.Debug("Done with enrollment for %v", row)
+			client_info, _ := client_info_manager.Get(ctx, client_id)
+			utils.Debug(client_info)
+		}()
+	}
 
 	// Try again in case things changed while we waited for the limiter.
 	client_info, err = client_info_manager.Get(ctx, client_id)

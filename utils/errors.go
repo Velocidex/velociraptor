@@ -12,6 +12,7 @@ var (
 	InlineError   = errors.New("InlineError")
 	TimeoutError  = errors.New("Timeout")
 	InvalidStatus = errors.New("InvalidStatus")
+	TypeError     = errors.New("TypeError")
 )
 
 // This is a custom error type that wraps an inner error but does not
