@@ -1,0 +1,37 @@
+name: Server.Import.Rapid7Labs
+description: |
+   This artifact will import curated artifacts by Rapid7 Labs.
+
+type: SERVER
+
+required_permissions:
+- SERVER_ADMIN
+
+parameters:
+   - name: Rapid7LabsURL
+     default: https://github.com/rapid7/Rapid7-Labs/raw/main/Vql/release/Rapid7LabsVQL.zip
+   - name: Prefix
+     description: Add artifacts with this prefix
+     default: Rapid7Labs.
+
+sources:
+  - query: |
+        LET X = SELECT artifact_set(prefix=Prefix, definition=Definition) AS Definition
+        FROM foreach(row={
+          SELECT Content FROM http_client(
+             remove_last=TRUE,
+             tempfile_extension=".zip", url=Rapid7LabsURL)
+        }, query={
+          SELECT read_file(accessor="zip", filename=OSPath) AS Definition
+          FROM glob(
+             globs='/**/*.yaml',
+             root=pathspec(
+                DelegateAccessor="auto",
+                DelegatePath=Content),
+             accessor="zip")
+        })
+
+        SELECT Definition.name AS Name,
+               Definition.description AS Description,
+               Definition.author AS Author
+        FROM X
