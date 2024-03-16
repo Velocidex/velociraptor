@@ -39,6 +39,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"path"
 	"sync"
 	"time"
@@ -384,10 +385,11 @@ func (self *InventoryService) materializeTool(
 	tool.InvalidHash = ""
 
 	if tool.ServeLocally {
-		if org_config_obj.Client == nil || len(org_config_obj.Client.ServerUrls) == 0 {
-			return errors.New("No server URLs configured!")
+		base_url, err := getPublicURL(org_config_obj)
+		if err != nil {
+			return err
 		}
-		tool.ServeUrl = org_config_obj.Client.ServerUrls[0] + "public/" + tool.FilestorePath
+		tool.ServeUrl = base_url + "public/" + tool.FilestorePath
 
 	} else {
 		tool.ServeUrl = tool.Url
@@ -503,10 +505,11 @@ func (self *InventoryService) AddTool(
 	}
 
 	if tool.ServeLocally {
-		if config_obj.Client == nil || len(config_obj.Client.ServerUrls) == 0 {
-			return errors.New("No server URLs configured!")
+		base_url, err := getPublicURL(config_obj)
+		if err != nil {
+			return err
 		}
-		tool.ServeUrl = config_obj.Client.ServerUrls[0] + "public/" + tool.FilestorePath
+		tool.ServeUrl = base_url + "public/" + tool.FilestorePath
 	} else {
 		// If we dont serve the tool, the clients will directly get
 		// the tool from its upstream URL.
@@ -699,4 +702,22 @@ func isDefinitionBetter(old, new *artifacts_proto.Tool) bool {
 
 	// We prefer to keep the old tool.
 	return true
+}
+
+// Calculates the URL of the /public/ directory from the config file.
+func getPublicURL(config_obj *config_proto.Config) (string, error) {
+	if config_obj.Client == nil || len(config_obj.Client.ServerUrls) == 0 {
+		return "", fmt.Errorf("%w: No server URLs configured!", utils.InvalidConfigError)
+	}
+
+	parsed_url, err := url.Parse(config_obj.Client.ServerUrls[0])
+	if err != nil {
+		return "", fmt.Errorf("%w: %w!", utils.InvalidConfigError, err)
+	}
+
+	if parsed_url.Scheme == "wss" {
+		parsed_url.Scheme = "https"
+	}
+
+	return parsed_url.String(), nil
 }

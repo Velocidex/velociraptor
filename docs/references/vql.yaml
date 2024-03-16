@@ -271,6 +271,22 @@
   category: windows
   metadata:
     permissions: MACHINE_STATE
+- name: backup
+  description: Generates a backup file.
+  type: Plugin
+  args:
+  - name: name
+    type: string
+    description: The name of the backup file.
+    required: true
+- name: backup_restore
+  description: Restore state from a backup file.
+  type: Plugin
+  args:
+  - name: name
+    type: string
+    description: The name of the backup file.
+    required: true
 - name: base64decode
   description: Decodes a base64 encoded string.
   type: Function
@@ -7288,3 +7304,4 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+
