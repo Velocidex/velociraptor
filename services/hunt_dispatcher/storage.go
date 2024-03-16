@@ -92,11 +92,23 @@ type HuntStorageManagerImpl struct {
 
 func NewHuntStorageManagerImpl(
 	config_obj *config_proto.Config) HuntStorageManager {
-	return &HuntStorageManagerImpl{
+	result := &HuntStorageManagerImpl{
 		config_obj:  config_obj,
 		hunts:       make(map[string]*HuntRecord),
 		I_am_master: services.IsMaster(config_obj),
 	}
+
+	if result.I_am_master {
+		backup_service, err := services.GetBackupService(config_obj)
+		if err == nil {
+			backup_service.Register(&HuntBackupProvider{
+				config_obj: config_obj,
+				store:      result,
+			})
+		}
+	}
+
+	return result
 }
 
 func (self *HuntStorageManagerImpl) GetLastTimestamp() uint64 {
@@ -249,11 +261,14 @@ func (self *HuntStorageManagerImpl) ListHunts(
 	return result, rs_reader.TotalRows(), nil
 }
 
-// Loads hunts from the datastore files. This is how we used to store
-// hunts in the past but now we store the hunts in the index. This
-// function allows us to rebuild the index.
+// Loads hunts from the datastore files. The hunt objects are written
+// as discrete files in the data store and this reloads the index from
+// those.
 func (self *HuntStorageManagerImpl) loadHuntsFromDatastore(
 	ctx context.Context, config_obj *config_proto.Config) error {
+
+	// Ensure all the records are ready to read.
+	datastore.FlushDatastore(config_obj)
 
 	// Read all the data again from the data store.
 	db, err := datastore.GetDB(config_obj)
@@ -339,6 +354,7 @@ func (self *HuntStorageManagerImpl) loadHuntsFromDatastore(
 
 func (self *HuntStorageManagerImpl) Refresh(
 	ctx context.Context, config_obj *config_proto.Config) error {
+
 	err := self.loadHuntsFromDatastore(ctx, config_obj)
 	if err != nil {
 		return err

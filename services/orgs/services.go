@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/acl_manager"
 	"www.velocidex.com/golang/velociraptor/services/audit_manager"
+	"www.velocidex.com/golang/velociraptor/services/backup"
 	"www.velocidex.com/golang/velociraptor/services/broadcast"
 	"www.velocidex.com/golang/velociraptor/services/client_info"
 	"www.velocidex.com/golang/velociraptor/services/client_monitoring"
@@ -61,6 +62,7 @@ type ServiceContainer struct {
 	notifier                services.Notifier
 	acl_manager             services.ACLManager
 	secrets                 services.SecretsService
+	backups                 services.BackupService
 }
 
 func (self *ServiceContainer) MockFrontendManager(svc services.FrontendManager) {
@@ -267,6 +269,16 @@ func (self *ServiceContainer) BroadcastService() (services.BroadcastService, err
 	return self.broadcast, nil
 }
 
+func (self *ServiceContainer) BackupService() (services.BackupService, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.backups == nil {
+		return nil, errors.New("Backup Service not ready")
+	}
+	return self.backups, nil
+}
+
 func (self *ServiceContainer) ACLManager() (services.ACLManager, error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -378,6 +390,12 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 	spec := services.ClientServicesSpec()
 	if org_config.Services != nil {
 		spec = org_config.Services
+	}
+
+	if spec.BackupService {
+		service_container.mu.Lock()
+		service_container.backups = backup.NewBackupService(ctx, wg, org_config)
+		service_container.mu.Unlock()
 	}
 
 	if spec.FrontendServer {

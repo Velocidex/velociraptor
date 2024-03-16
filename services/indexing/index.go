@@ -85,7 +85,6 @@ type Indexer struct {
 	items int
 
 	ready bool
-	dirty bool
 
 	last_snapshot_read time.Time
 
@@ -145,7 +144,7 @@ func (self *Indexer) Ascend(iterator btree.ItemIterator) {
 func (self *Indexer) Start(
 	ctx context.Context, wg *sync.WaitGroup,
 	config_obj *config_proto.Config) error {
-	return self.LoadIndexFromDatastore(ctx, config_obj)
+	return self.RebuildIndex(ctx, config_obj)
 }
 
 // Set in memory indexer - it will be flushed later.
@@ -165,7 +164,6 @@ func (self *Indexer) setIndex(client_id, term string) error {
 	old := self.btree.ReplaceOrInsert(record)
 	if old == nil {
 		self.items++
-		self.dirty = true
 	}
 	metricLRUTotalTerms.Inc()
 	return nil

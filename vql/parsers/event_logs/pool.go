@@ -6,11 +6,13 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/evtx"
+	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
 type workerJob struct {
 	wg          *sync.WaitGroup
+	scope       vfilter.Scope
 	output_chan chan types.Row
 	chunk       *evtx.Chunk
 	resolver    evtx.MessageResolver
@@ -21,6 +23,8 @@ func (self *workerJob) Run(ctx context.Context) {
 
 	records, _ := self.chunk.Parse(0)
 	for _, i := range records {
+		self.scope.ChargeOp()
+
 		event_map, ok := i.Event.(*ordereddict.Dict)
 		if !ok {
 			continue
@@ -60,10 +64,12 @@ func (self *pool) Close() {
 }
 
 func (self *pool) Run(
+	scope vfilter.Scope,
 	chunk *evtx.Chunk,
 	resolver evtx.MessageResolver) {
 	job := &workerJob{
 		wg:          &self.wg,
+		scope:       scope,
 		output_chan: self.output_chan,
 		chunk:       chunk,
 		resolver:    resolver,
