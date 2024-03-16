@@ -11,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/notebook"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
@@ -77,9 +78,13 @@ func (self *ACLTestSuite) TestNotebookPublicACL() {
 	assert.True(self.T(), notebook_manager.CheckNotebookAccess(new_notebook, "User1"))
 
 	// What notebooks does User1 have access to?
-	notebooks, err := notebook_manager.GetSharedNotebooks(self.Sm.Ctx, "User1", 0, 100)
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), 1, len(notebooks))
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		notebooks, err := notebook_manager.GetSharedNotebooks(self.Sm.Ctx, "User1", 0, 100)
+		assert.NoError(self.T(), err)
+
+		return 1 == len(notebooks)
+	})
+
 	assert.Equal(self.T(), new_notebook.NotebookId, notebooks[0].NotebookId)
 
 	// Check GetAllNotebooks without ACL checks
