@@ -473,6 +473,14 @@ func NewClientInfoManager(
 		return nil, err
 	}
 
+	backup_service, err := services.GetBackupService(config_obj)
+	if err == nil {
+		backup_service.Register(&ClientInfoBackupProvider{
+			config_obj: config_obj,
+			store:      service.storage,
+		})
+	}
+
 	return service, nil
 }
 
