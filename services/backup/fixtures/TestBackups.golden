@@ -1,0 +1,26 @@
+{
+ "TestProvider.json": [
+  "{\"TestColumn\":1,\"Foo\":\"Bar\"}",
+  ""
+ ],
+ "TestProvider Stats": [
+  {
+   "Name": "TestProvider",
+   "Error": null,
+   "Message": "Wrote 1 rows"
+  }
+ ],
+ "RestoredTestProvider": [
+  {
+   "TestColumn": 1,
+   "Foo": "Bar"
+  }
+ ],
+ "RestoredTestProviderStats": [
+  {
+   "Name": "TestProvider",
+   "Error": null,
+   "Message": "All good!"
+  }
+ ]
+}

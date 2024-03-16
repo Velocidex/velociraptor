@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/btree"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -14,8 +15,15 @@ import (
 // Load all the client records slowly and rebuild the index. This
 // takes a long time. It mirrors the job of the interrogation service
 // and so should be kept in sync with it.
-func (self *Indexer) LoadIndexFromDatastore(
+func (self *Indexer) RebuildIndex(
 	ctx context.Context, config_obj *config_proto.Config) error {
+
+	// Hold a lock on the index while we rebuild it.
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	// Clear the index completely.
+	self.btree = btree.New(10)
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	client_info_manager, err := services.GetClientInfoManager(config_obj)
@@ -40,21 +48,21 @@ func (self *Indexer) LoadIndexFromDatastore(
 		count++
 
 		// The all item corresponds to the "." search term.
-		self.SetIndex(client_id, "all")
-		self.SetIndex(client_id, client_id)
+		self.setIndex(client_id, "all")
+		self.setIndex(client_id, client_id)
 
 		if client_info.Hostname != "" {
-			self.SetIndex(client_id, "host:"+client_info.Hostname)
+			self.setIndex(client_id, "host:"+client_info.Hostname)
 		}
 
 		// Add labels to the index.
 		for _, label := range client_info.Labels {
-			self.SetIndex(client_id, "label:"+strings.ToLower(label))
+			self.setIndex(client_id, "label:"+strings.ToLower(label))
 		}
 
 		// Add MAC addresses to the index.
 		for _, mac := range client_info.MacAddresses {
-			self.SetIndex(client_id, "mac:"+mac)
+			self.setIndex(client_id, "mac:"+mac)
 		}
 	}
 
@@ -62,10 +70,7 @@ func (self *Indexer) LoadIndexFromDatastore(
 		count, time.Now().Sub(now))
 
 	// Merge the new index quickly and mark ourselves as ready.
-	self.mu.Lock()
 	self.ready = true
-	self.dirty = true
-	self.mu.Unlock()
 
 	return nil
 }

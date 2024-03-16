@@ -27,6 +27,9 @@ var (
 	NOTEBOOK_ROOT = path_specs.NewSafeDatastorePath("notebooks").
 			SetType(api.PATH_TYPE_DATASTORE_JSON)
 
+	BACKUPS_ROOT = path_specs.NewSafeFilestorePath("backups").
+			SetType(api.PATH_TYPE_FILESTORE_ANY)
+
 	DOWNLOADS_ROOT = path_specs.NewUnsafeFilestorePath("downloads").
 			SetType(api.PATH_TYPE_FILESTORE_DOWNLOAD_ZIP)
 

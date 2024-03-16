@@ -63,6 +63,7 @@ type ServiceContainer interface {
 	AuditManager() (AuditManager, error)
 	Scheduler() (Scheduler, error)
 	SecretsService() (SecretsService, error)
+	BackupService() (BackupService, error)
 }
 
 // The org manager manages multi-tenancies.
