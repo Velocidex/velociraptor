@@ -14,6 +14,7 @@ var (
 	InvalidStatus       = errors.New("InvalidStatus")
 	TypeError           = errors.New("TypeError")
 	NotImplementedError = errors.New("Not implemented")
+	InvalidConfigError  = errors.New("InvalidConfigError")
 )
 
 // This is a custom error type that wraps an inner error but does not
