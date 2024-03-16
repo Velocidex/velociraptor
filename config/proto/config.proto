@@ -1036,6 +1036,7 @@ message ServerServicesConfig {
    bool launcher = 23;
    bool notebook_service = 24;
    bool scheduler_service = 29;
+   bool backup_service = 30;
 
     // Client services
    bool http_communicator = 27;
@@ -1163,6 +1164,9 @@ message Defaults {
 
     // Maximum length of the line that will be parsed (16kb)
     int64 watch_plugin_buffer_size = 45;
+
+    // Period in seconds when to produce a backup
+    int64 backup_period_seconds = 47;
 }
 
 // Configures crypto preferences

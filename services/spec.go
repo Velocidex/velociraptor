@@ -86,5 +86,6 @@ func AllServerServicesSpec() *config_proto.ServerServicesConfig {
 		Launcher:            true,
 		NotebookService:     true,
 		SchedulerService:    true,
+		BackupService:       true,
 	}
 }

@@ -69,4 +69,8 @@ type Indexer interface {
 		ctx context.Context,
 		config_obj *config_proto.Config,
 		client_id string) (*api_proto.ApiClient, error)
+
+	// Rebuild the index completely from the client info manager.
+	RebuildIndex(ctx context.Context,
+		config_obj *config_proto.Config) error
 }
