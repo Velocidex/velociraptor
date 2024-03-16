@@ -78,8 +78,10 @@ func (self *ACLTestSuite) TestNotebookPublicACL() {
 	assert.True(self.T(), notebook_manager.CheckNotebookAccess(new_notebook, "User1"))
 
 	// What notebooks does User1 have access to?
+	var notebooks []*api_proto.NotebookMetadata
+
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		notebooks, err := notebook_manager.GetSharedNotebooks(self.Sm.Ctx, "User1", 0, 100)
+		notebooks, err = notebook_manager.GetSharedNotebooks(self.Sm.Ctx, "User1", 0, 100)
 		assert.NoError(self.T(), err)
 
 		return 1 == len(notebooks)
