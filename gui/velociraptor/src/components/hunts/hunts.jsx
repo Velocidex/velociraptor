@@ -39,12 +39,10 @@ class VeloHunts extends React.Component {
 
     componentDidMount = () => {
         this.get_hunts_source = CancelToken.source();
-        this.interval = setInterval(this.fetchSelectedHunt, POLL_TIME);
     }
 
     componentWillUnmount() {
         this.get_hunts_source.cancel();
-        clearInterval(this.interval);
     }
 
     collapse = () => {
