@@ -37,6 +37,9 @@ type BackupService struct {
 func (self *BackupService) CreateBackup(
 	export_path api.FSPathSpec) (stats []services.BackupStat, err error) {
 
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	start := utils.GetTime().Now()
 
