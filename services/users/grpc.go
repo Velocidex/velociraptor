@@ -25,9 +25,8 @@ func (self UserManager) GetUserFromContext(ctx context.Context) (
 
 	// This is not a real user but represents the grpc gateway
 	// connection - it is always allowed.
-	if grpc_user_info.Name == constants.PinnedServerName ||
-		(self.config_obj.API != nil &&
-			self.config_obj.API.PinnedGwName == grpc_user_info.Name) {
+	if grpc_user_info.Name == utils.GetSuperuserName(org_config_obj) ||
+		grpc_user_info.Name == utils.GetSuperuserGWName(org_config_obj) {
 		user_record = &api_proto.VelociraptorUser{
 			Name: grpc_user_info.Name,
 		}

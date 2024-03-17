@@ -74,14 +74,12 @@ func (self *SanityChecks) CheckRootOrg(
 	// Make sure our internal VelociraptorServer service account is
 	// properly created. Default accounts are created with org admin
 	// so they can add new orgs as required.
-	if config_obj.Client != nil && config_obj.Client.PinnedServerName != "" {
-		service_account_name := config_obj.Client.PinnedServerName
-		err := services.GrantRoles(
-			config_obj, service_account_name,
-			[]string{"administrator", "org_admin"})
-		if err != nil {
-			return err
-		}
+	service_account_name := utils.GetSuperuserName(config_obj)
+	err = services.GrantRoles(
+		config_obj, service_account_name,
+		[]string{"administrator", "org_admin"})
+	if err != nil {
+		return err
 	}
 
 	if config_obj.Frontend != nil {

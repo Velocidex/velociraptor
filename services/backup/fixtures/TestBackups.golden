@@ -22,5 +22,13 @@
    "Error": null,
    "Message": "All good!"
   }
+ ],
+ "RestoredTestProvider With Error": null,
+ "RestoredTestProviderStatsWithError": [
+  {
+   "Name": "TestProvider",
+   "Error": {},
+   "Message": "I have an error"
+  }
  ]
 }

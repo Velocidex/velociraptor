@@ -189,7 +189,7 @@ func NewHTTPConnector(
 		// server. This setting also allows the server to be accessed
 		// by e.g. localhost despite the certificate being issued to
 		// VelociraptorServer.
-		transport.TLSClientConfig.ServerName = config_obj.Client.PinnedServerName
+		transport.TLSClientConfig.ServerName = utils.GetSuperuserName(config_obj)
 	} else {
 		// Not self signed - add the public roots for verifications.
 		crypto.AddPublicRoots(transport.TLSClientConfig.RootCAs)
@@ -533,7 +533,7 @@ func (self *HTTPConnector) rekeyNextServer(ctx context.Context) error {
 
 	// We must be talking to the server! The server certificate
 	// must have this common name.
-	if server_name != self.config_obj.Client.PinnedServerName {
+	if server_name != utils.GetSuperuserName(self.config_obj) {
 		self.server_name = ""
 		self.logger.Info("Invalid server certificate common name %v!", server_name)
 		return errors.New("Invalid server certificate common name!")

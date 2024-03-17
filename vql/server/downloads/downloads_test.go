@@ -106,6 +106,7 @@ func (self *TestSuite) TestExportCollectionServerArtifact() {
 		self.acl_manager,
 		repository, &flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},
+			Creator:   utils.GetSuperuserName(self.ConfigObj),
 			ClientId:  "server",
 		}, utils.SyncCompleter)
 	assert.NoError(self.T(), err)

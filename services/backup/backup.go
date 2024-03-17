@@ -151,6 +151,8 @@ func (self *BackupService) RestoreBackup(
 			dest := strings.Join(provider.Name(), "/")
 			logger.Info("BackupService: <red>Error restoring to %v: %v",
 				dest, err)
+			stat.Name = provider.ProviderName()
+			stat.Error = err
 		}
 		stats = append(stats, stat)
 	}
@@ -161,6 +163,7 @@ func (self *BackupService) RestoreBackup(
 func (self *BackupService) feedProvider(
 	provider services.BackupProvider,
 	container *zip.Reader) (stat services.BackupStat, err error) {
+
 	dest := strings.Join(provider.Name(), "/")
 	member, err := container.Open(dest)
 	if err != nil {
@@ -175,6 +178,18 @@ func (self *BackupService) feedProvider(
 	wg := &sync.WaitGroup{}
 	defer wg.Wait()
 
+	// The provider will return a result when done.
+	results := make(chan services.BackupStat)
+	defer func() {
+		// Wait here until the provider is done.
+		stat = <-results
+		stat.Name = provider.ProviderName()
+		if stat.Error != nil {
+			err = stat.Error
+		}
+	}()
+
+	// Feed rows into this channel so provider can restore backups.
 	output := make(chan vfilter.Row)
 	defer close(output)
 
@@ -184,14 +199,19 @@ func (self *BackupService) feedProvider(
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer cancel()
+		defer close(results)
 
 		// Preserve the provider error as our return
-		stat, err = provider.Restore(sub_ctx, output)
-		stat.Name = provider.ProviderName()
+		stat, err := provider.Restore(sub_ctx, output)
 		if err != nil {
 			stat.Error = err
 		}
+
+		// Stop new rows to be written - we dont care any more.
+		cancel()
+
+		// Pass the result to the main routine.
+		results <- stat
 	}()
 
 	// Now dump the rows into the provider.
@@ -213,6 +233,7 @@ func (self *BackupService) feedProvider(
 		select {
 		case <-sub_ctx.Done():
 			return stat, nil
+
 		case output <- row:
 		}
 	}
@@ -238,10 +259,16 @@ func NewBackupService(
 
 	// Every day
 	delay := time.Hour * 24
-	if config_obj.Defaults != nil &&
-		config_obj.Defaults.BackupPeriodSeconds > 0 {
-		delay = time.Duration(
-			config_obj.Defaults.BackupPeriodSeconds) * time.Second
+	if config_obj.Defaults != nil {
+		// Backups are disabled.
+		if config_obj.Defaults.BackupPeriodSeconds < 0 {
+			return result
+		}
+
+		if config_obj.Defaults.BackupPeriodSeconds > 0 {
+			delay = time.Duration(
+				config_obj.Defaults.BackupPeriodSeconds) * time.Second
+		}
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)

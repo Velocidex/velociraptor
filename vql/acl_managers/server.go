@@ -8,6 +8,7 @@ import (
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
 
@@ -65,8 +66,7 @@ func (self *ServerACLManager) CheckAccess(
 	}
 
 	// If the principal is the super user we allow them everything.
-	if self.config_obj.Client != nil &&
-		self.principal == self.config_obj.Client.PinnedServerName {
+	if self.principal == utils.GetSuperuserName(self.config_obj) {
 		return true, nil
 	}
 

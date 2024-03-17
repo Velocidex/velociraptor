@@ -125,7 +125,8 @@ func (self *ServicesTestSuite) TestCreateUser() {
 		Set("/acl/User1.json", acl_obj)
 
 	user_manager := services.GetUserManager()
-	user1_full, err := user_manager.GetUserWithHashes(self.Ctx, "VelociraptorServer", "User1")
+	user1_full, err := user_manager.GetUserWithHashes(
+		self.Ctx, utils.GetSuperuserName(self.ConfigObj), "User1")
 	assert.NoError(self.T(), err)
 
 	// Should include the user hashes and their orgs list
@@ -198,7 +199,8 @@ func (self *ServicesTestSuite) TestCreateUserInOrgs() {
 		}
 
 		user_manager := services.GetUserManager()
-		user1_full, err := user_manager.GetUserWithHashes(self.Ctx, "VelociraptorServer", "User1")
+		user1_full, err := user_manager.GetUserWithHashes(
+			self.Ctx, utils.GetSuperuserName(self.ConfigObj), "User1")
 		assert.NoError(self.T(), err)
 
 		// Should include the user hashes and all their orgs list

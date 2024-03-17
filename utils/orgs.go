@@ -65,3 +65,7 @@ func OrgIdInList(org_id string, list []string) bool {
 	}
 	return false
 }
+
+func GetOrgId(config_obj *config_proto.Config) string {
+	return NormalizedOrgId(config_obj.OrgId)
+}

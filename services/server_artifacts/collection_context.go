@@ -354,8 +354,8 @@ func (self *contextManager) RunQuery(
 	}
 
 	principal := arg.Principal
-	if principal == "" && self.config_obj.Client != nil {
-		principal = self.config_obj.Client.PinnedServerName
+	if principal == "" {
+		return errors.New("Principal must be set")
 	}
 
 	flow_path_manager := paths.NewFlowPathManager("server", self.session_id)

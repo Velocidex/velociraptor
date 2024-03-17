@@ -1,19 +1,19 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package main
 
@@ -34,13 +34,13 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/crypto"
-	"www.velocidex.com/golang/velociraptor/crypto/utils"
+	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -221,7 +221,7 @@ func generateNewKeys(config_obj *config_proto.Config) error {
 	// have a constant common name - clients will refuse to talk
 	// with another common name.
 	frontend_cert, err := crypto.GenerateServerCert(
-		config_obj, config_obj.Client.PinnedServerName)
+		config_obj, utils.GetSuperuserName(config_obj))
 	if err != nil {
 		return fmt.Errorf("Unable to create Frontend cert: %w", err)
 	}
@@ -292,7 +292,7 @@ func doRotateKeyConfig() error {
 
 	// Frontends must have a well known common name.
 	frontend_cert, err := crypto.GenerateServerCert(
-		config_obj, config_obj.Client.PinnedServerName)
+		config_obj, utils.GetSuperuserName(config_obj))
 	if err != nil {
 		return fmt.Errorf("Unable to create Frontend cert: %w", err)
 	}
@@ -423,7 +423,7 @@ func doDumpApiClientConfig() error {
 		return err
 	}
 
-	if *config_api_client_common_name == config_obj.Client.PinnedServerName {
+	if *config_api_client_common_name == utils.GetSuperuserName(config_obj) {
 		return errors.New("Name reserved! You may not name your " +
 			"api keys with this name.")
 	}
@@ -476,7 +476,7 @@ func doDumpApiClientConfig() error {
 
 	// Possibly dump out the pkcs12 key
 	if *config_api_client_pkcs12_output != "" {
-		ca_cert, err := utils.ParseX509CertFromPemStr([]byte(
+		ca_cert, err := crypto_utils.ParseX509CertFromPemStr([]byte(
 			config_obj.Client.CaCertificate))
 		if err != nil {
 			return err
@@ -551,8 +551,8 @@ func doDumpApiClientConfig() error {
 
 		// Make sure the user actually exists.
 		user_manager := services.GetUserManager()
-		_, err = user_manager.GetUser(ctx, constants.PinnedServerName,
-			*config_api_client_common_name)
+		_, err = user_manager.GetUser(ctx,
+			utils.GetSuperuserName(config_obj), *config_api_client_common_name)
 		if err != nil {
 			// Need to ensure we have a user
 			err := user_manager.SetUser(ctx, &api_proto.VelociraptorUser{

@@ -53,7 +53,7 @@ func normalizeThumbPrints(thumbprints []string) []string {
 // to be able to trust our own server. Our own server is signed by our
 // own CA and also may have a different common name (not related to
 // DNS). For example, in self signed mode, the server certificate is
-// signed for VelociraptorServer but may be served over
+// signed for "VelociraptorServer" but may be served over
 // "localhost". Using the default TLS configuration this connection
 // will be rejected.
 

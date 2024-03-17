@@ -84,11 +84,12 @@ import (
 	"github.com/gorilla/csrf"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	utils "www.velocidex.com/golang/velociraptor/api/utils"
+	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -111,7 +112,7 @@ func (self *CertAuthenticator) AddHandlers(mux *http.ServeMux) error {
 
 // It is not really possible to log off when using client certs
 func (self *CertAuthenticator) AddLogoff(mux *http.ServeMux) error {
-	mux.Handle(utils.Join(self.base, "/app/logoff.html"),
+	mux.Handle(api_utils.Join(self.base, "/app/logoff.html"),
 		IpFilter(self.config_obj,
 			http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
@@ -187,7 +188,7 @@ func (self *CertAuthenticator) AuthenticateUserHandler(
 			// Use the super user principal to actually add the
 			// username so we have enough permissions.
 			err = users_manager.AddUserToOrg(r.Context(), services.AddNewUser,
-				constants.PinnedServerName, username,
+				utils.GetSuperuserName(self.config_obj), username,
 				[]string{"root"}, policy)
 			if err != nil {
 				http.Error(w,

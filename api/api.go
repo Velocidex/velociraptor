@@ -162,15 +162,12 @@ func (self *ApiServer) CollectArtifact(
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
-	principal := user_record.Name
 
-	// Internal calls from the frontend can set the creator.
-	if principal != org_config_obj.Client.PinnedServerName {
-		in.Creator = principal
-	}
+	// Ensure the request is marked with the real caller.
+	in.Creator = user_record.Name
 
 	acl_manager := acl_managers.NewServerACLManager(
-		org_config_obj, principal)
+		org_config_obj, in.Creator)
 
 	manager, err := services.GetRepositoryManager(org_config_obj)
 	if err != nil {
@@ -198,7 +195,7 @@ func (self *ApiServer) CollectArtifact(
 
 	// Log this event as an Audit event.
 	services.LogAudit(ctx,
-		org_config_obj, principal, "ScheduleFlow",
+		org_config_obj, in.Creator, "ScheduleFlow",
 		ordereddict.NewDict().
 			Set("client", in.ClientId).
 			Set("flow_id", flow_id).

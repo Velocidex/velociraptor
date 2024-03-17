@@ -171,6 +171,7 @@ func (self *TestSuite) TestHuntsSource() {
 			self.ConfigObj, acl_managers.NullACLManager{},
 			repository, &flows_proto.ArtifactCollectorArgs{
 				ClientId:  client_id,
+				Creator:   utils.GetSuperuserName(self.ConfigObj),
 				Artifacts: []string{"Test.Artifact"},
 			}, nil)
 		assert.NoError(self.T(), err)
