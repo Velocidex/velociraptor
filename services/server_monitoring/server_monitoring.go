@@ -338,8 +338,7 @@ func (self *EventTable) RunQuery(
 		// artifact launches other artifacts then it will indicate the
 		// creator was the server.
 		ACLManager: acl_managers.NewServerACLManager(
-			self.config_obj,
-			self.config_obj.Client.PinnedServerName),
+			self.config_obj, utils.GetSuperuserName(config_obj)),
 		Env:        ordereddict.NewDict(),
 		Repository: repository,
 		Logger:     log.New(self.logger, "", 0),

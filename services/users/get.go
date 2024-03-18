@@ -6,6 +6,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Returns the user record after stripping sensitive information like
@@ -22,7 +23,7 @@ func (self *UserManager) GetUser(
 
 	// For the server name we dont have a real user record, we make a
 	// hard coded user record instead.
-	if username == self.config_obj.Client.PinnedServerName {
+	if username == utils.GetSuperuserName(self.config_obj) {
 		return &api_proto.VelociraptorUser{
 			Name: username,
 		}, nil

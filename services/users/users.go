@@ -1,19 +1,19 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package users
 
@@ -28,9 +28,9 @@ import (
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 const (
@@ -103,17 +103,16 @@ func validateUsername(config_obj *config_proto.Config, name string) error {
 		return fmt.Errorf("Unacceptable username %v", name)
 	}
 
+	if utils.GetSuperuserName(config_obj) == name {
+		return fmt.Errorf("Username is reserved: %v", name)
+	}
+
 	if config_obj.API != nil &&
 		config_obj.API.PinnedGwName == name {
 		return fmt.Errorf("Username is reserved: %v", name)
 	}
 
-	if config_obj.Client != nil &&
-		config_obj.Client.PinnedServerName == name {
-		return fmt.Errorf("Username is reserved: %v", name)
-	}
-
-	if name == constants.PinnedGwName || name == constants.PinnedServerName {
+	if name == utils.GetSuperuserGWName(config_obj) {
 		return fmt.Errorf("Username is reserved: %v", name)
 	}
 

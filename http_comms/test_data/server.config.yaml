@@ -245,3 +245,4 @@ obfuscation_nonce: RzlAlmdcUyw=
 defaults:
   hunt_expiry_hours: 168
   notebook_cell_timeout_min: 10
+  backup_period_seconds: -1

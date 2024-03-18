@@ -61,6 +61,7 @@ func (self *TestSuite) TestCreateAndImportCollection() {
 	flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx, self.ConfigObj,
 		acl_manager, repository, &flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact", "AnotherTestArtifact"},
+			Creator:   utils.GetSuperuserName(self.ConfigObj),
 			ClientId:  client_id,
 		}, utils.SyncCompleter)
 	assert.NoError(self.T(), err)

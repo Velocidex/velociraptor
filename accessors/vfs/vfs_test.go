@@ -120,6 +120,7 @@ func (self *TestSuite) TestVFSAccessor() {
 	flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx, self.ConfigObj,
 		acl_manager, repository, &flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"System.VFS.ListDirectory", "System.VFS.DownloadFile"},
+			Creator:   utils.GetSuperuserName(self.ConfigObj),
 			Specs: []*flows_proto.ArtifactSpec{
 				{
 					Artifact: "System.VFS.DownloadFile",
@@ -167,6 +168,7 @@ func (self *TestSuite) TestVFSAccessor() {
 	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
 		flow, err := launcher.GetFlowDetails(self.Ctx, self.ConfigObj, "server", flow_id)
 		assert.NoError(self.T(), err)
+
 		return flow.Context.State == flows_proto.ArtifactCollectorContext_FINISHED
 	})
 

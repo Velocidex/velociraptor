@@ -21,11 +21,7 @@ func createInitialUsers(
 		return nil
 	}
 
-	superuser := "VelociraptorServer"
-	if config_obj.Client != nil {
-		superuser = config_obj.Client.PinnedServerName
-	}
-
+	superuser := utils.GetSuperuserName(config_obj)
 	user_names := config_obj.GUI.InitialUsers
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)

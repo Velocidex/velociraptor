@@ -34,7 +34,7 @@ import (
 	"google.golang.org/grpc/credentials"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -71,17 +71,14 @@ func getCreds(config_obj *config_proto.Config) (credentials.TransportCredentials
 			certificate = config_obj.Frontend.Certificate
 			private_key = config_obj.Frontend.PrivateKey
 			ca_certificate = config_obj.Client.CaCertificate
-			server_name = config_obj.Client.PinnedServerName
+			server_name = utils.GetSuperuserName(config_obj)
 		}
 		if config_obj.ApiConfig != nil &&
 			config_obj.ApiConfig.ClientCert != "" {
 			certificate = config_obj.ApiConfig.ClientCert
 			private_key = config_obj.ApiConfig.ClientPrivateKey
 			ca_certificate = config_obj.ApiConfig.CaCertificate
-			server_name = config_obj.ApiConfig.PinnedServerName
-			if server_name == "" {
-				server_name = constants.PinnedServerName
-			}
+			server_name = utils.GetSuperuserGWName(config_obj)
 		}
 
 		if certificate == "" {

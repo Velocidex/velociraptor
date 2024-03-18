@@ -6,6 +6,7 @@ import (
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
@@ -77,7 +78,8 @@ func (self *UserManagerTestSuite) TestAddUserToOrg() {
 	// Try to create a reserved user
 	err = users_manager.AddUserToOrg(
 		self.Ctx, services.AddNewUser,
-		"AdminO2", "VelociraptorServer", []string{"O2"}, reader_policy)
+		"AdminO2", utils.GetSuperuserName(self.ConfigObj),
+		[]string{"O2"}, reader_policy)
 	assert.ErrorContains(self.T(), err, "reserved")
 
 	goldie.Assert(self.T(), "TestAddUserToOrg", json.MustMarshalIndent(golden))

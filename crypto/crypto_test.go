@@ -1,19 +1,19 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package crypto_test
 
@@ -32,7 +32,6 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/proto"
-	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
@@ -162,9 +161,8 @@ func (self *TestSuite) TestEncDecClientToServerWithSpoof() {
 			Source: "C.1234Spoof",
 			Name:   "OMG it's a string"})
 
-	ConfigObj := config.GetDefaultConfig()
 	cipher_text, err := self._EncryptMessageListWithSpoofedPackedMessage(
-		message_list, ConfigObj.Client.PinnedServerName)
+		message_list, utils.GetSuperuserName(self.ConfigObj))
 	assert.NoError(t, err)
 
 	message_info, err := self.server_manager.Decrypt(cipher_text)
@@ -256,7 +254,7 @@ func (self *TestSuite) TestEncDecClientToServer() {
 	cipher_text, err := self.client_manager.EncryptMessageList(
 		message_list,
 		crypto_proto.PackedMessageList_ZCOMPRESSION,
-		nonce, self.ConfigObj.Client.PinnedServerName)
+		nonce, utils.GetSuperuserName(self.ConfigObj))
 	assert.NoError(t, err)
 
 	initial_c := testutil.ToFloat64(crypto_client.RsaDecryptCounter)
@@ -296,7 +294,7 @@ func (self *TestSuite) TestEncryption() {
 			[][]byte{compressed},
 			crypto_proto.PackedMessageList_ZCOMPRESSION,
 			self.ConfigObj.Client.Nonce,
-			self.ConfigObj.Client.PinnedServerName)
+			utils.GetSuperuserName(self.ConfigObj))
 		assert.NoError(t, err)
 
 		result, err := self.server_manager.Decrypt(cipher_text)

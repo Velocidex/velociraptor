@@ -90,11 +90,13 @@ func (self *TestSuite) TestGetFlow() {
 
 	request1 := &flows_proto.ArtifactCollectorArgs{
 		ClientId:  self.client_id,
+		Creator:   utils.GetSuperuserName(self.ConfigObj),
 		Artifacts: []string{"Generic.Client.Info"},
 	}
 
 	request2 := &flows_proto.ArtifactCollectorArgs{
 		ClientId:  self.client_id,
+		Creator:   utils.GetSuperuserName(self.ConfigObj),
 		Artifacts: []string{"Generic.Client.Profile"},
 	}
 
@@ -144,6 +146,7 @@ func (self *TestSuite) TestRetransmission() {
 
 	request := &flows_proto.ArtifactCollectorArgs{
 		ClientId:  self.client_id,
+		Creator:   utils.GetSuperuserName(self.ConfigObj),
 		Artifacts: []string{"Generic.Client.Info"},
 	}
 
@@ -202,6 +205,7 @@ func (self *TestSuite) TestResourceLimits() {
 
 	request := &flows_proto.ArtifactCollectorArgs{
 		ClientId:  self.client_id,
+		Creator:   utils.GetSuperuserName(self.ConfigObj),
 		Artifacts: []string{"Generic.Client.Info"},
 
 		// Only accept 5 rows.

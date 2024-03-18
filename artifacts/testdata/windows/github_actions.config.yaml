@@ -140,6 +140,8 @@ Datastore:
   implementation: FileBaseDataStore
   filestore_directory: x:\artifacts\testdata\server
 
+defaults:
+  backup_period_seconds: -1
 
 Writeback:
   private_key: |
