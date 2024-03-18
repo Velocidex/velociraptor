@@ -1,6 +1,9 @@
 package acl_managers
 
-import "www.velocidex.com/golang/velociraptor/acls"
+import (
+	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/constants"
+)
 
 // Satisfy the interface vql_subsystem.ACLManager
 
@@ -22,4 +25,8 @@ func (self NullACLManager) CheckAccessWithArgs(
 func (self NullACLManager) CheckAccessInOrg(
 	org_id string, permission ...acls.ACL_PERMISSION) (bool, error) {
 	return true, nil
+}
+
+func (self NullACLManager) GetPrincipal() string {
+	return constants.PinnedServerName
 }

@@ -45,6 +45,13 @@ func NewACLManager(
 	// ACLs do not typically change that quickly, cache for 60 sec.
 	result.lru.SetTTL(timeout)
 
+	backups, err := services.GetBackupService(config_obj)
+	if err == nil {
+		backups.Register(&ACLBackupProvider{
+			config_obj: config_obj,
+		})
+	}
+
 	return result, nil
 }
 
@@ -89,8 +96,7 @@ func (self ACLManager) GetEffectivePolicy(
 	acl_obj := &acl_proto.ApiClientACL{}
 
 	// The server identity is special - it means the user is an admin.
-	if config_obj != nil && config_obj.Client != nil &&
-		config_obj.Client.PinnedServerName == principal {
+	if principal == utils.GetSuperuserName(config_obj) {
 		return &acl_proto.ApiClientACL{SuperUser: true}, nil
 	}
 
@@ -155,7 +161,7 @@ func (self ACLManager) CheckAccess(
 	}
 
 	// Internal calls from the server are allowed to do anything.
-	if config_obj.Client != nil && principal == config_obj.Client.PinnedServerName {
+	if principal == utils.GetSuperuserName(config_obj) {
 		return true, nil
 	}
 

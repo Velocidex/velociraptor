@@ -48,10 +48,6 @@ func ValidateClientConfig(config_obj *config_proto.Config) error {
 		config_obj.Client.MaxPoll = 60 // One minute
 	}
 
-	if config_obj.Client.PinnedServerName == "" {
-		config_obj.Client.PinnedServerName = "VelociraptorServer"
-	}
-
 	if config_obj.Client.MaxUploadSize == 0 {
 		config_obj.Client.MaxUploadSize = 5242880
 	}

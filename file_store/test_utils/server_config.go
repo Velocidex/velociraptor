@@ -48,7 +48,6 @@ Client:
     version: 0.6.4-rc4
     commit: f3264824
     build_time: "2022-04-14T02:23:05+10:00"
-  pinned_server_name: VelociraptorServer
   max_upload_size: 5242880
   local_buffer:
     memory_size: 52428800
@@ -254,6 +253,7 @@ obfuscation_nonce: RzlAlmdcUyw=
 defaults:
   hunt_expiry_hours: 168
   notebook_cell_timeout_min: 10
+  backup_period_seconds: -1
 
 services:
   hunt_manager: false

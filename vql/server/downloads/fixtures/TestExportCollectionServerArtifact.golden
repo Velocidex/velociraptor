@@ -6,6 +6,7 @@
   "client_id": "server",
   "session_id": "F.1234",
   "request": {
+   "creator": "VelociraptorServer",
    "client_id": "server",
    "artifacts": [
     "TestArtifact"
@@ -92,6 +93,7 @@
       {
        "query_id": 1,
        "total_queries": 1,
+       "principal": "VelociraptorServer",
        "Query": [
         {
          "VQL": "LET TestArtifact_0_0 = SELECT \"Hello\" AS Col, pathspec(parse=\"/bin/ls\", path_type=\"linux\") AS OSPath, upload(accessor=\"data\", file=\"Some Data\", name=\"test.txt\") AS Upload1, upload(accessor=\"data\", file=\"Some Other Data\", name=\"test2.txt\") AS Upload2 FROM scope()"
