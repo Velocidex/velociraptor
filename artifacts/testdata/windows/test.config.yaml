@@ -141,6 +141,9 @@ Datastore:
   filestore_directory: ./artifacts/testdata/server/
   location: ./artifacts/testdata/server/
 
+defaults:
+  backup_period_seconds: -1
+
 Writeback:
   private_key: |
     -----BEGIN RSA PRIVATE KEY-----

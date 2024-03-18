@@ -54,7 +54,8 @@ func (self *VFSServiceTestSuite) SetupTest() {
 	// Register a user manager that returns the superuser user to skip
 	// any ACLs checks. This helps us test the API server to make sure
 	// the GUI will present the correct data.
-	users.RegisterTestUserManager(self.ConfigObj, "VelociraptorServer")
+	users.RegisterTestUserManager(
+		self.ConfigObj, utils.GetSuperuserName(self.ConfigObj))
 
 	self.closer = utils.MockTime(utils.NewMockClock(time.Unix(1000, 0)))
 }

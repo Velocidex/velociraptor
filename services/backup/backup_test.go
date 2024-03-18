@@ -3,6 +3,7 @@ package backup_test
 import (
 	"archive/zip"
 	"context"
+	"errors"
 	"io/ioutil"
 	"strings"
 	"sync"
@@ -30,7 +31,8 @@ type TestBackupProvider struct {
 	rows []*ordereddict.Dict
 
 	// Restored rows from backup
-	restored []vfilter.Row
+	restored       []vfilter.Row
+	restored_error error
 }
 
 func (self TestBackupProvider) ProviderName() string {
@@ -62,6 +64,14 @@ func (self TestBackupProvider) BackupResults(
 
 func (self *TestBackupProvider) Restore(
 	ctx context.Context, in <-chan vfilter.Row) (services.BackupStat, error) {
+
+	if self.restored_error != nil {
+		return services.BackupStat{
+			Error:   self.restored_error,
+			Message: self.restored_error.Error(),
+		}, self.restored_error
+	}
+
 	for row := range in {
 		self.restored = append(self.restored, row)
 	}
@@ -129,6 +139,17 @@ func (self *BackupTestSuite) TestBackups() {
 
 	golden.Set("RestoredTestProvider", provider.restored).
 		Set("RestoredTestProviderStats", filterStats(stats))
+
+	// Now restore the data from backup with an error
+	provider.restored_error = errors.New("I have an error")
+	provider.restored = nil
+
+	stats, err = backup_service.(*backup.BackupService).
+		RestoreBackup(export_path)
+	assert.NoError(self.T(), err)
+
+	golden.Set("RestoredTestProvider With Error", provider.restored).
+		Set("RestoredTestProviderStatsWithError", filterStats(stats))
 
 	goldie.Assert(self.T(), "TestBackups",
 		json.MustMarshalIndent(golden))

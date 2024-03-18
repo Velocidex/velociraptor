@@ -4,7 +4,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -33,7 +32,7 @@ func (self *RoleACLManager) CheckAccess(
 
 func (self *RoleACLManager) GetPrincipal() string {
 	if self.is_admin {
-		return constants.PinnedServerName
+		return utils.GetSuperuserName(self.config_obj)
 	}
 	return ""
 }

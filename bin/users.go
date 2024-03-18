@@ -1,19 +1,19 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package main
 
@@ -25,12 +25,12 @@ import (
 
 	"golang.org/x/crypto/ssh/terminal"
 	"www.velocidex.com/golang/velociraptor/api/authenticators"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/users"
 	"www.velocidex.com/golang/velociraptor/startup"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -153,15 +153,15 @@ func doShowUser() error {
 	defer sm.Close()
 
 	users_manager := services.GetUserManager()
-	user_record, err := users_manager.GetUser(ctx, constants.PinnedServerName,
-		*user_show_name)
+	user_record, err := users_manager.GetUser(ctx,
+		utils.GetSuperuserName(config_obj), *user_show_name)
 	if err != nil {
 		return err
 	}
 
 	if *user_show_hashes {
 		user_record, err := users_manager.GetUserWithHashes(ctx,
-			constants.PinnedServerName, *user_show_name)
+			utils.GetSuperuserName(config_obj), *user_show_name)
 		if err != nil {
 			return err
 		}
@@ -200,8 +200,8 @@ func doLockUser() error {
 	defer sm.Close()
 
 	users_manager := services.GetUserManager()
-	user_record, err := users_manager.GetUser(ctx, constants.PinnedServerName,
-		*user_lock_name)
+	user_record, err := users_manager.GetUser(ctx,
+		utils.GetSuperuserName(config_obj), *user_lock_name)
 	if err != nil {
 		return fmt.Errorf("Unable to find user %s", *user_lock_name)
 	}

@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
@@ -84,11 +85,7 @@ func startInitialArtifacts(
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 
 		// Run artifacts with full privileges.
-		principal := ""
-		if config_obj.Client != nil {
-			principal = config_obj.Client.PinnedServerName
-		}
-
+		principal := utils.GetSuperuserName(config_obj)
 		_, err = launcher.ScheduleArtifactCollection(ctx, config_obj,
 			acl_managers.NewRoleACLManager(config_obj, "administrator"),
 			repository,

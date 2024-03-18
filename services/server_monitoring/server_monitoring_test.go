@@ -360,7 +360,7 @@ sources:
 	// Install a table with an initial artifact
 	filename := filepath.Join(tempdir, "testfile1.txt")
 	err = event_table.Update(self.Ctx,
-		self.ConfigObj, "VelociraptorServer",
+		self.ConfigObj, utils.GetSuperuserName(self.ConfigObj),
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact"},
 			Specs: []*flows_proto.ArtifactSpec{{

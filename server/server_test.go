@@ -429,6 +429,7 @@ func (self *ServerTestSuite) TestScheduleCollection() {
 	t := self.T()
 	request := &flows_proto.ArtifactCollectorArgs{
 		ClientId:  self.client_id,
+		Creator:   utils.GetSuperuserName(self.ConfigObj),
 		Artifacts: []string{"Generic.Client.Info"},
 	}
 
@@ -490,6 +491,7 @@ func (self *ServerTestSuite) createArtifactCollection() (string, error) {
 		repository,
 		&flows_proto.ArtifactCollectorArgs{
 			ClientId:  self.client_id,
+			Creator:   utils.GetSuperuserName(self.ConfigObj),
 			Artifacts: []string{"Generic.Client.Info"},
 		}, nil)
 

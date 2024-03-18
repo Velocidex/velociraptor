@@ -230,6 +230,7 @@ func (self *TestSuite) testScheduleCollection() (closer func()) {
 	request := &flows_proto.ArtifactCollectorArgs{
 		ClientId:  self.client_id,
 		Artifacts: []string{"TestArtifact"},
+		Creator:   utils.GetSuperuserName(self.ConfigObj),
 	}
 
 	flow_id, err := launcher.ScheduleArtifactCollection(self.Ctx,
@@ -294,7 +295,7 @@ func (self *TestSuite) TestServerRotateKeyE2E() {
 
 	// Now rekey the server
 	frontend_cert, err := crypto.GenerateServerCert(
-		self.ConfigObj, self.ConfigObj.Client.PinnedServerName)
+		self.ConfigObj, utils.GetSuperuserName(self.ConfigObj))
 	assert.NoError(self.T(), err)
 
 	self.ConfigObj.Frontend.Certificate = frontend_cert.Cert
