@@ -214,7 +214,8 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
      "Id": 0,
      "Inode": "49-16-0",
      "Size": 72,
-     "Name": ""
+     "Name": "",
+     "Resident": true
     },
     {
      "Type": "$FILE_NAME",
@@ -222,7 +223,8 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
      "Id": 2,
      "Inode": "49-48-2",
      "Size": 96,
-     "Name": ""
+     "Name": "",
+     "Resident": true
     },
     {
      "Type": "$DATA",
@@ -230,7 +232,8 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
      "Id": 1,
      "Inode": "49-128-1",
      "Size": 12,
-     "Name": ""
+     "Name": "",
+     "Resident": true
     },
     {
      "Type": "$EA_INFORMATION",
@@ -238,7 +241,8 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
      "Id": 3,
      "Inode": "49-208-3",
      "Size": 8,
-     "Name": ""
+     "Name": "",
+     "Resident": true
     },
     {
      "Type": "$EA",
@@ -246,7 +250,8 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
      "Id": 4,
      "Inode": "49-224-4",
      "Size": 10268,
-     "Name": ""
+     "Name": "",
+     "Resident": false
     }
    ],
    "Hardlinks": [

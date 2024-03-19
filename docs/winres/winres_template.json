@@ -11,7 +11,7 @@
       "0409": {
         "identity": {
           "name": "",
-          "version": "0.72.0.1"
+          "version": "0.0.0.0"
         },
         "description": "Velociraptor: Digging deeper!",
         "minimum-os": "win10",
@@ -35,22 +35,22 @@
     "#1": {
       "0000": {
         "fixed": {
-          "file_version": "0.72.0.1",
-          "product_version": "0.72.0.1"
+          "file_version": "0.0.0.0",
+          "product_version": "0.0.0.0"
         },
         "info": {
           "0409": {
             "Comments": "",
             "CompanyName": "Rapid 7 Inc",
             "FileDescription": "Velociraptor: Digging Deeper!",
-            "FileVersion": "0.72.0.1",
+            "FileVersion": "0.0.0.0",
             "InternalName": "",
             "LegalCopyright": "Rapid 7 Inc",
             "LegalTrademarks": "",
             "OriginalFilename": "Velociraptor.exe",
             "PrivateBuild": "",
             "ProductName": "Velociraptor",
-            "ProductVersion": "0.72.0.1",
+            "ProductVersion": "0.0.0.0",
             "SpecialBuild": ""
           }
         }
