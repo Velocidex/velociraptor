@@ -127,7 +127,8 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
      "Id": 0,
      "Inode": "46-16-0",
      "Size": 72,
-     "Name": ""
+     "Name": "",
+     "Resident": true
     },
     {
      "Type": "$FILE_NAME",
@@ -135,7 +136,8 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
      "Id": 3,
      "Inode": "46-48-3",
      "Size": 124,
-     "Name": ""
+     "Name": "",
+     "Resident": true
     },
     {
      "Type": "$OBJECT_ID",
@@ -143,7 +145,8 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
      "Id": 4,
      "Inode": "46-64-4",
      "Size": 16,
-     "Name": ""
+     "Name": "",
+     "Resident": true
     },
     {
      "Type": "$DATA",
@@ -151,7 +154,8 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
      "Id": 1,
      "Inode": "46-128-1",
      "Size": 12,
-     "Name": ""
+     "Name": "",
+     "Resident": true
     },
     {
      "Type": "$DATA",
@@ -159,7 +163,8 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
      "Id": 5,
      "Inode": "46-128-5",
      "Size": 20,
-     "Name": "goodbye.txt"
+     "Name": "goodbye.txt",
+     "Resident": true
     }
    ],
    "Hardlinks": [
@@ -190,9 +195,16 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
  }
 ]SELECT * FROM parse_ntfs_ranges(accessor='ntfs', device='c:/$MFT', inode="46-128-5")[
  {
-  "Offset": 0,
+  "Type": "MappedReader",
+  "Level": 0,
+  "FromOffset": 0,
+  "ToOffset": 0,
   "Length": 20,
-  "IsSparse": false
+  "CompressedLength": 0,
+  "IsSparse": false,
+  "ClusterSize": 1,
+  "Reader": "*bytes.Reader",
+  "String": " 0 MappedReader: FileOffset 0 -\u003e DiskOffset 0 (Length 20,  Cluster 1) Delegate *bytes.Reader"
  }
 ]SELECT OSPath FROM glob(accessor='registry', globs="/HKLM/*/xbox*")[
  {
