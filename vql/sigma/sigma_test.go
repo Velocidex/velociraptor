@@ -1,6 +1,7 @@
 package sigma
 
 import (
+	"bytes"
 	"context"
 	"log"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/json"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 
@@ -47,6 +49,7 @@ type testCase struct {
 	default_details   string
 	fieldmappings     *ordereddict.Dict
 	rows              []*ordereddict.Dict
+	log_regex         string
 }
 
 var (
@@ -224,6 +227,69 @@ detection:
 					Set("Baz", "Bye"),
 			},
 		},
+		{
+			description: "Match with no condition",
+			rule: `
+title: NoConditions
+logsource:
+   product: windows
+   service: application
+
+detection:
+  selection:
+     Foo: bar
+`,
+			fieldmappings: ordereddict.NewDict().
+				Set("Foo", "x=>x.Foo"),
+			rows: []*ordereddict.Dict{
+				ordereddict.NewDict().
+					Set("Foo", "bar").
+					Set("Baz", "Hello"),
+			},
+		},
+		{
+			description: "Match with NULL",
+			rule: `
+title: NullRule
+logsource:
+   product: windows
+   service: application
+
+detection:
+  selection:
+     Foo: null
+     Bar: 1
+  condition: selection
+`,
+			fieldmappings: ordereddict.NewDict().
+				Set("Foo", "x=>x.Foo").
+				Set("Bar", "x=>x.Bar"),
+			rows: []*ordereddict.Dict{
+				ordereddict.NewDict().
+					Set("Bar", 1),
+			},
+		},
+		{
+			description: "Unknown modifiers",
+			rule: `
+title: BadModifiers
+logsource:
+   product: windows
+   service: application
+
+detection:
+  selection:
+     Foo|somemodifier: XXXX
+  condition: selection
+`,
+			fieldmappings: ordereddict.NewDict().
+				Set("Foo", "x=>x.Foo"),
+			rows: []*ordereddict.Dict{
+				ordereddict.NewDict().
+					Set("Foo", "Bar"),
+			},
+			log_regex: "unknown modifier somemodifier",
+		},
 	}
 )
 
@@ -237,15 +303,14 @@ func (self *SigmaTestSuite) TestSigma() {
 	ctx := context.Background()
 	scope := vql_subsystem.MakeScope().
 		AppendVars(ordereddict.NewDict().Set("ScopeVar", "I'm a scope var:"))
-	scope.SetLogger(log.New(os.Stderr, "", 0))
+
 	defer scope.Close()
 
 	plugin := SigmaPlugin{}
 
-	for i, test_case := range sigmaTestCases {
-		if i != 7 {
-			//continue
-		}
+	for _, test_case := range sigmaTestCases {
+		log_collector := &bytes.Buffer{}
+		scope.SetLogger(log.New(log_collector, "", 0))
 
 		rows := []types.Row{}
 		args := ordereddict.NewDict().
@@ -274,6 +339,13 @@ func (self *SigmaTestSuite) TestSigma() {
 		})
 
 		result.Set(test_case.description, rows)
+
+		if test_case.log_regex != "" {
+			assert.Regexp(self.T(), test_case.log_regex,
+				string(log_collector.Bytes()))
+		}
+
+		os.Stderr.Write(log_collector.Bytes())
 	}
 
 	goldie.Assert(self.T(), "TestSigma",

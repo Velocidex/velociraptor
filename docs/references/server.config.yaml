@@ -627,8 +627,7 @@ Frontend:
   # be used for TLS on both the frontend and GUI. NOTE: We expect
   # these to be proper certificates - i.e. NOT self signed. If you
   # want to use certificates issued by another CA you will also need
-  # to add that CA cert to the Frontend.Crypto.root_certs and
-  # Client.Crypto.root_certs field.
+  # to add that CA cert to the Client.Crypto.root_certs field.
   #
   # Be sure to set Client.use_self_signed_ssl=false when you set this.
   tls_certificate_filename: "/etc/cert.pem"

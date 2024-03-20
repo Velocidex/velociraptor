@@ -543,5 +543,103 @@
     }
    }
   }
- ]
+ ],
+ "Match with no condition": [
+  {
+   "Foo": "bar",
+   "Baz": "Hello",
+   "Details": null,
+   "_Match": {
+    "Match": true,
+    "SearchResults": {
+     "selection": true
+    },
+    "ConditionResults": [
+     true
+    ]
+   },
+   "_Rule": {
+    "Title": "NoConditions",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "application"
+    },
+    "Detection": {
+     "Searches": {
+      "selection": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Values": [
+           "bar"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "condition": [
+      {
+       "Search": {
+        "Name": "selection"
+       }
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "Match with NULL": [
+  {
+   "Bar": 1,
+   "Details": null,
+   "_Match": {
+    "Match": true,
+    "SearchResults": {
+     "selection": true
+    },
+    "ConditionResults": [
+     true
+    ]
+   },
+   "_Rule": {
+    "Title": "NullRule",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "application"
+    },
+    "Detection": {
+     "Searches": {
+      "selection": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Values": [
+           null
+          ]
+         },
+         {
+          "Field": "Bar",
+          "Values": [
+           1
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "condition": [
+      {
+       "Search": {
+        "Name": "selection"
+       }
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "Unknown modifiers": []
 }
