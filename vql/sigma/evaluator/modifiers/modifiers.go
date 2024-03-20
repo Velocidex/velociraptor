@@ -266,6 +266,6 @@ func coerceString(in interface{}) string {
 	case *string:
 		return *t
 	default:
-		return fmt.Sprint("%v", in)
+		return fmt.Sprintf("%v", in)
 	}
 }
