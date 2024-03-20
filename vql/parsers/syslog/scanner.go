@@ -5,6 +5,7 @@ import (
 	"compress/gzip"
 	"context"
 	"io"
+	"os"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/dimchansky/utfbom"
@@ -182,11 +183,25 @@ func maybeOpenGzip(scope vfilter.Scope,
 		return nil, err
 	}
 
+	// If the fd is not seekable we can not try to open as a gzip
+	// file.
+	if !accessors.IsSeekable(fd) {
+		return fd, nil
+	}
+
 	zr, err := gzip.NewReader(fd)
 	if err == nil {
 		return zr, nil
 	}
 
+	// Rewind the file back if we can
+	off, err := fd.Seek(0, os.SEEK_SET)
+	if err == nil && off == 0 {
+		return fd, nil
+	}
+
+	// We can not rewind it - force the file to reopen. This is more
+	// expensive but should restore the file to the correct state.
 	fd.Close()
 
 	return accessor.OpenWithOSPath(filename)
