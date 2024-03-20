@@ -5,11 +5,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"net"
-	"reflect"
-	"regexp"
 	"strings"
 
-	"gopkg.in/yaml.v3"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
@@ -40,14 +37,17 @@ func getComparator(comparators map[string]Comparator, modifiers ...string) (Comp
 		// Validate correctness
 		case comparatorModifier == nil && valueModifier == nil && eventValueModifier == nil:
 			return nil, fmt.Errorf("unknown modifier %s", modifier)
+
 		case i < len(modifiers)-1 && comparators[modifier] != nil:
 			return nil, fmt.Errorf("comparator modifier %s must be the last modifier", modifier)
 
 		// Build up list of modifiers
 		case valueModifier != nil:
 			valueModifiers = append(valueModifiers, valueModifier)
+
 		case eventValueModifier != nil:
 			eventValueModifiers = append(eventValueModifiers, eventValueModifier)
+
 		case comparatorModifier != nil:
 			comparator = comparatorModifier
 		}
@@ -127,7 +127,8 @@ var ValueModifiers = map[string]ValueModifier{
 	"base64": b64{},
 }
 
-// EventValueModifiers modify the value in the event before comparison (as opposed to ValueModifiers which modify the value in the rule)
+// EventValueModifiers modify the value in the event before comparison
+// (as opposed to ValueModifiers which modify the value in the rule)
 var EventValueModifiers = map[string]ValueModifier{}
 
 type baseComparator struct{}
@@ -135,14 +136,9 @@ type baseComparator struct{}
 func (baseComparator) Matches(
 	ctx context.Context, scope types.Scope,
 	actual, expected any) (bool, error) {
-	switch {
-	case actual == nil && expected == "null":
-		// special case: "null" should match the case where a field isn't present (and so actual is nil)
-		return true, nil
-	default:
-		// The Sigma spec defines that by default comparisons are case-insensitive
-		return strings.EqualFold(coerceString(actual), coerceString(expected)), nil
-	}
+
+	// Delegate actual comparisons to the scope.
+	return scope.Eq(actual, expected), nil
 }
 
 type contains struct{}
@@ -207,12 +203,9 @@ type re struct{}
 func (re) Matches(
 	ctx context.Context, scope types.Scope,
 	actual any, expected any) (bool, error) {
-	re, err := regexp.Compile("(?i)" + coerceString(expected))
-	if err != nil {
-		return false, err
-	}
 
-	return re.MatchString(coerceString(actual)), nil
+	// Delegate actual comparisons to the scope.
+	return scope.Match(expected, actual), nil
 }
 
 type cidr struct{}
@@ -234,8 +227,8 @@ type gt struct{}
 func (gt) Matches(
 	ctx context.Context, scope types.Scope,
 	actual any, expected any) (bool, error) {
-	gt, _, _, _, err := compareNumeric(actual, expected)
-	return gt, err
+
+	return scope.Gt(actual, expected), nil
 }
 
 type gte struct{}
@@ -243,8 +236,9 @@ type gte struct{}
 func (gte) Matches(
 	ctx context.Context, scope types.Scope,
 	actual any, expected any) (bool, error) {
-	_, gte, _, _, err := compareNumeric(actual, expected)
-	return gte, err
+
+	return scope.Gt(actual, expected) ||
+		scope.Eq(actual, expected), nil
 }
 
 type lt struct{}
@@ -252,8 +246,8 @@ type lt struct{}
 func (lt) Matches(
 	ctx context.Context, scope types.Scope,
 	actual any, expected any) (bool, error) {
-	_, _, lt, _, err := compareNumeric(actual, expected)
-	return lt, err
+
+	return scope.Lt(actual, expected), nil
 }
 
 type lte struct{}
@@ -261,79 +255,17 @@ type lte struct{}
 func (lte) Matches(
 	ctx context.Context, scope types.Scope,
 	actual any, expected any) (bool, error) {
-	_, _, _, lte, err := compareNumeric(actual, expected)
-	return lte, err
+	return scope.Lt(actual, expected) ||
+		scope.Eq(actual, expected), nil
 }
 
-func coerceString(v interface{}) string {
-	switch vv := v.(type) {
+func coerceString(in interface{}) string {
+	switch t := in.(type) {
 	case string:
-		return vv
-	case []byte:
-		return string(vv)
+		return t
+	case *string:
+		return *t
 	default:
-		return fmt.Sprint(vv)
-	}
-}
-
-// coerceNumeric makes both operands into the widest possible number of the same type
-func coerceNumeric(left, right interface{}) (interface{}, interface{}, error) {
-	leftV := reflect.ValueOf(left)
-	leftType := reflect.ValueOf(left).Type()
-	rightV := reflect.ValueOf(right)
-	rightType := reflect.ValueOf(right).Type()
-
-	switch {
-	// Both integers or both floats? Return directly
-	case leftType.Kind() == reflect.Int && rightType.Kind() == reflect.Int:
-		fallthrough
-	case leftType.Kind() == reflect.Float64 && rightType.Kind() == reflect.Float64:
-		return left, right, nil
-
-	// Mixed integer, float? Return two floats
-	case leftType.Kind() == reflect.Int && rightType.Kind() == reflect.Float64:
-		fallthrough
-	case leftType.Kind() == reflect.Float64 && rightType.Kind() == reflect.Int:
-		floatType := reflect.TypeOf(float64(0))
-		return leftV.Convert(floatType).Interface(), rightV.Convert(floatType).Interface(), nil
-
-	// One or more strings? Parse and recurse.
-	// We use `yaml.Unmarshal` to parse the string because it's a cheat's way of parsing either an integer or a float
-	case leftType.Kind() == reflect.String:
-		var leftParsed interface{}
-		if err := yaml.Unmarshal([]byte(left.(string)), &leftParsed); err != nil {
-			return nil, nil, err
-		}
-		return coerceNumeric(leftParsed, right)
-	case rightType.Kind() == reflect.String:
-		var rightParsed interface{}
-		if err := yaml.Unmarshal([]byte(right.(string)), &rightParsed); err != nil {
-			return nil, nil, err
-		}
-		return coerceNumeric(left, rightParsed)
-
-	default:
-		return nil, nil, fmt.Errorf("cannot coerce %T and %T to numeric", left, right)
-	}
-}
-
-func compareNumeric(left, right interface{}) (gt, gte, lt, lte bool, err error) {
-	left, right, err = coerceNumeric(left, right)
-	if err != nil {
-		return
-	}
-
-	switch left.(type) {
-	case int:
-		left := left.(int)
-		right := right.(int)
-		return left > right, left >= right, left < right, left <= right, nil
-	case float64:
-		left := left.(float64)
-		right := right.(float64)
-		return left > right, left >= right, left < right, left <= right, nil
-	default:
-		err = fmt.Errorf("internal, please report! coerceNumeric returned unexpected types %T and %T", left, right)
-		return
+		return fmt.Sprintf("%v", in)
 	}
 }

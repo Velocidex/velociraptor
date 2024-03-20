@@ -49,3 +49,16 @@ Queries:
   - SELECT * FROM parse_csv(filename=Path,
       comment="#", columns=["Foo", "Bar"])
     LIMIT 1
+
+  # Test writing the CSV
+  - LET TempFile <= tempfile()
+  - |
+    SELECT * FROM write_csv(filename=TempFile,
+    query={
+       SELECT pathspec(Path="C:/Windows", path_type="windows") AS OSPath,
+              1 AS Integer,
+              "Hello" AS String,
+              dict(A=1) AS Dict,
+              (1,2,3) AS List
+       FROM scope()
+    })
