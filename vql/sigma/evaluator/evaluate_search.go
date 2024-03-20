@@ -2,7 +2,6 @@ package evaluator
 
 import (
 	"context"
-	"fmt"
 	"path"
 	"reflect"
 	"strings"
@@ -125,13 +124,10 @@ eventMatcher:
 				fieldModifiers = fieldModifiers[:len(fieldModifiers)-1]
 			}
 
-			// field matchers can specify modifiers (FieldName|modifier1|modifier2) which change the matching behaviour
+			// field matchers can specify modifiers
+			// (FieldName|modifier1|modifier2) which change the
+			// matching behaviour
 			comparator, err := modifiers.GetComparator(fieldModifiers...)
-			if err != nil {
-				return false, err
-			}
-
-			matcherValues, err := self.getMatcherValues(ctx, fieldMatcher)
 			if err != nil {
 				return false, err
 			}
@@ -143,7 +139,7 @@ eventMatcher:
 			}
 			if !self.matcherMatchesValues(
 				ctx, scope,
-				matcherValues, comparator, allValuesMustMatch, values) {
+				fieldMatcher.Values, comparator, allValuesMustMatch, values) {
 				// this field didn't match so the overall matcher
 				// doesn't match, try the next EventMatcher
 				continue eventMatcher
@@ -158,23 +154,9 @@ eventMatcher:
 	return false, nil
 }
 
-func (self *VQLRuleEvaluator) getMatcherValues(ctx context.Context, matcher sigma.FieldMatcher) ([]string, error) {
-	matcherValues := []string{}
-	for _, abstractValue := range matcher.Values {
-		value := ""
-
-		switch abstractValue := abstractValue.(type) {
-		case string:
-			value = abstractValue
-		case int, float32, float64, bool:
-			value = fmt.Sprintf("%v", abstractValue)
-		default:
-			return nil, fmt.Errorf("expected scalar field matching value got: %v (%T)", abstractValue, abstractValue)
-		}
-
-		matcherValues = append(matcherValues, value)
-	}
-	return matcherValues, nil
+func (self *VQLRuleEvaluator) getMatcherValues(
+	ctx context.Context, matcher sigma.FieldMatcher) ([]interface{}, error) {
+	return matcher.Values, nil
 }
 
 func (self *VQLRuleEvaluator) GetFieldValuesFromEvent(
@@ -198,7 +180,9 @@ func (self *VQLRuleEvaluator) GetFieldValuesFromEvent(
 
 func (self *VQLRuleEvaluator) matcherMatchesValues(
 	ctx context.Context, scope types.Scope,
-	matcherValues []string, comparator modifiers.ComparatorFunc, allValuesMustMatch bool, actualValues []interface{}) bool {
+	matcherValues []interface{},
+	comparator modifiers.ComparatorFunc,
+	allValuesMustMatch bool, actualValues []interface{}) bool {
 	matched := allValuesMustMatch
 	for _, expectedValue := range matcherValues {
 		valueMatchedEvent := false

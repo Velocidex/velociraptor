@@ -279,12 +279,22 @@ func NewBackupService(
 	go func() {
 		defer wg.Done()
 
+		last_run := utils.GetTime().Now()
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
 
 			case <-utils.GetTime().After(delay):
+				// Avoid doing backups too quickly. This is mainly for
+				// tests where the time is mocked for the After(delay)
+				// above does not work.
+				if utils.GetTime().Now().Sub(last_run) < time.Second {
+					utils.SleepWithCtx(ctx, time.Minute)
+					continue
+				}
+
 				export_path := paths.NewBackupPathManager().
 					BackupFile()
 				result.CreateBackup(export_path)
