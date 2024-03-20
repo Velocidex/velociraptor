@@ -41,7 +41,17 @@ func DeduplicateStringSlice(in []string) (out []string) {
 	return out
 }
 
-func SliceEqual(a []string, b []string) bool {
+func InString(hay []string, needle string) bool {
+	for _, x := range hay {
+		if x == needle {
+			return true
+		}
+	}
+
+	return false
+}
+
+func StringSliceEq(a []string, b []string) bool {
 	if len(a) != len(b) {
 		return false
 	}
@@ -51,5 +61,6 @@ func SliceEqual(a []string, b []string) bool {
 			return false
 		}
 	}
+
 	return true
 }

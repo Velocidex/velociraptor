@@ -54,7 +54,7 @@ type OSPath struct {
 }
 
 func (self *OSPath) Equal(other *OSPath) bool {
-	if !utils.SliceEqual(self.Components, other.Components) {
+	if !utils.StringSliceEq(self.Components, other.Components) {
 		return false
 	}
 
