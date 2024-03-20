@@ -159,14 +159,16 @@ func (self *MountFileSystemAccessor) ParsePath(path string) (*OSPath, error) {
 // Example:
 // /usr is mounted on /mnt/ - therefore node tree will look like:
 // root -> prefix: /, accessor: file, children: [
-//   node: name: usr, accessor: file, prefix: /mnt/data,
+//
+//	node: name: usr, accessor: file, prefix: /mnt/data,
+//
 // ]
 //
 // Now assume we access /usr/bin/ls -> We walk the tree from root:
-// 1. First component is usr -> next node is child root's child.
-// 2. The residual is the rest of the path which is not consumed yet
-//    -> i.e. "bin/ls"
-// 3. Now, we can access the file as node.prefix + residual -> /mnt/data/bin/ls
+//  1. First component is usr -> next node is child root's child.
+//  2. The residual is the rest of the path which is not consumed yet
+//     -> i.e. "bin/ls"
+//  3. Now, we can access the file as node.prefix + residual -> /mnt/data/bin/ls
 func (self *MountFileSystemAccessor) getDelegateNode(os_path *OSPath) (
 	*node, []string, error) {
 	node := self.root
@@ -210,6 +212,8 @@ func (self *MountFileSystemAccessor) ReadDir(path string) (
 func (self *MountFileSystemAccessor) ReadDirWithOSPath(os_path *OSPath) (
 	[]FileInfo, error) {
 
+	// delegate_node is the node we must list to get this os_path
+	// delegate_path is the path we must list in the node to get this os_path
 	delegate_node, delegate_path, err := self.getDelegatePath(os_path)
 	if err != nil {
 		return nil, err
@@ -230,25 +234,28 @@ func (self *MountFileSystemAccessor) ReadDirWithOSPath(os_path *OSPath) (
 		})
 	}
 
-	// Add any additional mounted children if needed.
-	for _, child_node := range delegate_node.children {
-		if utils.InString(names, child_node.name) {
-			continue
-		}
+	// If we are listing the path of the delegate node, we need to add
+	// any children to the answer.
+	if os_path.Equal(delegate_node.path) {
+		for _, child_node := range delegate_node.children {
+			if utils.InString(names, child_node.name) {
+				continue
+			}
 
-		// The child node represents a new filesystem mounted at the
-		// current point in the mount tree. We need to request it to
-		// do a stat of the prefix within its own namespace.
-		child_stat, err := child_node.accessor.LstatWithOSPath(
-			child_node.prefix)
-		if err == nil {
-			child_name := child_stat.Name()
-			names = append(names, child_name)
-			res = append(res, &FileInfoWrapper{
-				FileInfo:      child_stat,
-				prefix:        child_node.path.Copy(),
-				remove_prefix: child_node.prefix.Copy(),
-			})
+			// The child node represents a new filesystem mounted at the
+			// current point in the mount tree. We need to request it to
+			// do a stat of the prefix within its own namespace.
+			child_stat, err := child_node.accessor.LstatWithOSPath(
+				child_node.prefix)
+			if err == nil {
+				child_name := child_stat.Name()
+				names = append(names, child_name)
+				res = append(res, &FileInfoWrapper{
+					FileInfo:      child_stat,
+					prefix:        child_node.path.Copy(),
+					remove_prefix: child_node.prefix.Copy(),
+				})
+			}
 		}
 	}
 

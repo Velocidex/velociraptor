@@ -53,6 +53,14 @@ type OSPath struct {
 	Manipulator PathManipulator
 }
 
+func (self *OSPath) Equal(other *OSPath) bool {
+	if !utils.SliceEqual(self.Components, other.Components) {
+		return false
+	}
+
+	return self.String() == other.String()
+}
+
 func (self *OSPath) DescribeType() string {
 	subtype := ""
 	switch self.Manipulator.(type) {

@@ -9,6 +9,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -37,6 +38,13 @@ func (self RemappingFunc) Call(ctx context.Context,
 	if err != nil {
 		scope.Log("remap: %v", err)
 		return vfilter.Null{}
+	}
+
+	// It is possible that yaml.UnmarshalStrict can unmarshal nil!
+	for _, remap := range config_obj.Remappings {
+		if utils.IsNil(remap) {
+			return vfilter.Null{}
+		}
 	}
 
 	remapping_config := config_obj.Remappings
