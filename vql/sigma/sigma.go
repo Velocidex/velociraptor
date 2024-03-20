@@ -65,6 +65,14 @@ func (self SigmaPlugin) Call(
 				continue
 			}
 
+			// Check rule for sanity
+			err = CheckRule(&rule)
+			if err != nil {
+				scope.Log("sigma: Error parsing: %v in rule '%v'",
+					err, utils.Elide(r, 20))
+				continue
+			}
+
 			rules = append(rules, rule)
 		}
 
