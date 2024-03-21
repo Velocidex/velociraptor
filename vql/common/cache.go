@@ -37,7 +37,7 @@ func (self *_CacheObj) Get(key string) (vfilter.Any, bool) {
 	if time.Now().After(self.expires) {
 		self.cache = make(map[string]vfilter.Any)
 		self.expires = time.Now().Add(self.period)
-		self.Materialize()
+		self.materialize()
 	}
 
 	value, pres := self.cache[key]
@@ -55,6 +55,10 @@ func (self *_CacheObj) Materialize() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	self.materialize()
+}
+
+func (self *_CacheObj) materialize() {
 	self.cache = make(map[string]vfilter.Any)
 	stored_query := arg_parser.ToStoredQuery(self.ctx, self.expression)
 
@@ -159,6 +163,7 @@ func (self _CacheFunc) Call(ctx context.Context, scope vfilter.Scope,
 		}
 
 		new_cache_obj := NewCacheObj(ctx, scope, "", arg.Name)
+		new_cache_obj.expression = arg.Func
 		new_cache_obj.period = time.Duration(arg.Period) * time.Second
 		cache_obj = new_cache_obj
 	}
