@@ -38,6 +38,10 @@ func (self *ReadSeekReaderAdapter) Read(buf []byte) (int, error) {
 	return n, err
 }
 
+func (self *ReadSeekReaderAdapter) IsSeekable() bool {
+	return true
+}
+
 func (self *ReadSeekReaderAdapter) Seek(offset int64, whence int) (int64, error) {
 	if whence != 0 {
 		return 0, errors.New("Unsupported whence")

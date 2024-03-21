@@ -27,6 +27,16 @@ import UserConfig from '../core/user.jsx';
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 
+const SLIDE_STATES = [{
+    level: "30%",
+    icon: "arrow-down",
+}, {
+    level: "100%",
+    icon: "arrow-up",
+}, {
+    level: "42px",
+    icon: "arrows-up-down",
+}];
 
 const POLL_TIME = 5000;
 
@@ -155,6 +165,9 @@ class HuntList extends React.Component {
             this.props.history.push("/hunts");
         }
         this.interval = setInterval(this.incrementVersion, POLL_TIME);
+
+        let slider = SLIDE_STATES[this.state.slider];
+        this.props.collapseToggle(slider.level);
     }
 
     componentWillUnmount() {
@@ -177,6 +190,7 @@ class HuntList extends React.Component {
         showCopyWizard: false,
         showModifyHuntDialog: false,
 
+        slider: 0,
         filter: "",
         selected_row: undefined,
         version: 1,
@@ -332,6 +346,12 @@ class HuntList extends React.Component {
             }
         });
     }
+
+    expandSlider = ()=>{
+        let next_slide = (this.state.slider + 1) % SLIDE_STATES.length;
+        this.setState({ slider: next_slide});
+        this.props.collapseToggle(SLIDE_STATES[next_slide].level);
+    };
 
     render() {
         let selected_hunt = this.props.selected_hunt &&
@@ -501,8 +521,9 @@ class HuntList extends React.Component {
                                 data-position="left"
                                 className="btn-tooltip"
                                 variant="default"
-                                onClick={this.props.collapseToggle}>
-                          <FontAwesomeIcon icon="expand"/>
+                                onClick={this.expandSlider}>
+                          <FontAwesomeIcon
+                            icon={SLIDE_STATES[this.state.slider].icon}/>
                         </Button>
 
                       { !this.state.filter ?

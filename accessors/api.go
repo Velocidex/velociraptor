@@ -302,6 +302,24 @@ type ReadSeekCloser interface {
 	io.Closer
 }
 
+// Some files are not really seekable (although they may pretend to
+// be). Sometimes it is important to know if the file may be rewound
+// back if we read from it - before we actually read from it. If a
+// ReadSeekCloser also implements the Seekable interface it may report
+// if it can be seeked.
+type Seekable interface {
+	IsSeekable() bool
+}
+
+func IsSeekable(fd ReadSeekCloser) bool {
+	seekable, ok := fd.(Seekable)
+	if ok {
+		return seekable.IsSeekable()
+	}
+
+	return true
+}
+
 // Interface for accessing the filesystem.
 type FileSystemAccessor interface {
 	// List a directory.
