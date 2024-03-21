@@ -17,7 +17,7 @@ import (
 
 func TestRegistryFilesystemAccessor(t *testing.T) {
 	scope := vql_subsystem.MakeScope()
-	accessor, err := &RegFileSystemAccessor{}.New(scope)
+	accessor, err := (&RegFileSystemAccessor{}).New(scope)
 	assert.NoError(t, err)
 
 	ls := func(path string, filter string) []string {
