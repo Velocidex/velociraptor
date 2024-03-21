@@ -405,6 +405,7 @@ const pageListRenderer = ({
             as="input"
             className="pagination-form"
             placeholder={T("Goto Page")}
+            id="goto-page"
             spellCheck="false"
             value={currentPage || ""}
             onChange={e=> {

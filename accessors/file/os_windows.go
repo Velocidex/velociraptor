@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 /*
@@ -260,6 +261,10 @@ func (self OSFileSystemAccessor) ReadDirWithOSPath(
 // Wrap the os.File object to keep track of open file handles.
 type OSFileWrapper struct {
 	*os.File
+}
+
+func (self OSFileWrapper) IsSeekable() bool {
+	return true
 }
 
 func (self OSFileWrapper) Close() error {
