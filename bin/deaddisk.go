@@ -218,10 +218,19 @@ func getPartitionOffsets(
 	image string,
 	config_obj *config_proto.Config) ([]*ordereddict.Dict, error) {
 	scope.Log("Enumerating partitions using Windows.Forensics.PartitionTable")
+	// Check the NTFS signature at the start of the image - if we find
+	// it then it must be a partition image and not a disk image, so
+	// pretend the partition starts at offset 0
 	query := `
-SELECT *
-FROM Artifact.Windows.Forensics.PartitionTable(
+SELECT * FROM if(condition=read_file(accessor=Accessor, filename=ImagePath, length=4, offset=3) = "NTFS",
+then={
+  SELECT 0 AS StartOffset, ("Windows", ) AS TopLevelDirectory FROM scope()
+  WHERE log(message="Detected NTFS signature at offset 0 - assuming this is a partition image")
+}, else={
+  SELECT *
+  FROM Artifact.Windows.Forensics.PartitionTable(
     ImagePath=ImagePath, Accessor=Accessor)
+})
 `
 	vqls, err := vfilter.MultiParse(query)
 	if err != nil {

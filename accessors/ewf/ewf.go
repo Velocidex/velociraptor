@@ -45,6 +45,10 @@ func (self *EWFReader) Read(buff []byte) (int, error) {
 		return 0, err
 	}
 
+	if n == 0 {
+		return 0, io.EOF
+	}
+
 	self.offset += int64(n)
 	return n, err
 }
