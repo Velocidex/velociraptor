@@ -40,7 +40,7 @@ parameters:
     default: ntfs
   - name: AllNtfs
     type: bool
-    description: "Return all NTFS metadata with resutls."
+    description: "Return all NTFS metadata with results."
   - name: PathRegex
     description: "Regex search over OSPath."
     default: "."
