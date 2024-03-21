@@ -290,6 +290,28 @@ detection:
 			},
 			log_regex: "unknown modifier somemodifier",
 		},
+		{
+			description: "All modifier",
+			rule: `
+title: BadModifiers
+logsource:
+   product: windows
+   service: application
+
+detection:
+  selection:
+     Foo|contains|all:
+       - a
+       - B
+  condition: selection
+`,
+			fieldmappings: ordereddict.NewDict().
+				Set("Foo", "x=>x.Foo"),
+			rows: []*ordereddict.Dict{
+				ordereddict.NewDict().
+					Set("Foo", "Bar"),
+			},
+		},
 	}
 )
 
