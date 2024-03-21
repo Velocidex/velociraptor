@@ -40,8 +40,8 @@ export: |
     -- HivePath: The path to the hive on disk
     -- RegistryPath: The path in the registry to mount the hive
     -- RegMountPoint: The path inside the hive to mount (usually /)
-    LET _map_file_to_reg_path(HivePath, RegistryPath, RegMountPoint, Accessor) = dict(
-       type="mount",
+    LET _map_file_to_reg_path(HivePath, RegistryPath, RegMountPoint, Accessor, Description) = dict(
+       type="mount", description=Description,
        `from`=dict(accessor='raw_reg',
                    prefix=pathspec(
                       Path=RegMountPoint,
@@ -52,42 +52,62 @@ export: |
                   prefix=RegistryPath,
                   path_type='registry'))
 
+    -- This needs to always be mapped because it is normally denied through the API
+    LET _required_mappings = (
+       _map_file_to_reg_path(
+          HivePath="C:/Windows/System32/Config/SECURITY",
+          RegistryPath="HKEY_LOCAL_MACHINE\\Security",
+          RegMountPoint="/",
+          Accessor='ntfs',
+          Description="Map SECURITY Hive to HKEY_LOCAL_MACHINE"),
+    )
+
     LET _standard_mappings = (
        _map_file_to_reg_path(
           HivePath="C:/Windows/System32/Config/SYSTEM",
           RegistryPath="HKEY_LOCAL_MACHINE\\System\\CurrentControlSet",
           RegMountPoint="/ControlSet001",
-          Accessor='ntfs'),
-
+          Accessor='ntfs',
+          Description="Map SYSTEM Hive to CurrentControlSet"),
        _map_file_to_reg_path(
           HivePath="C:/Windows/System32/Config/SOFTWARE",
           RegistryPath="HKEY_LOCAL_MACHINE\\Software",
           RegMountPoint="/",
-          Accessor='ntfs'),
+          Accessor='ntfs',
+          Description="Map Software hive to HKEY_LOCAL_MACHINE"),
        _map_file_to_reg_path(
           HivePath="C:/Windows/System32/Config/System",
           RegistryPath="HKEY_LOCAL_MACHINE\\System",
           RegMountPoint="/",
-          Accessor='ntfs')
+          Accessor='ntfs',
+          Description="Map System hive to HKEY_LOCAL_MACHINE")
     )
 
-    LET _make_ntuser_mappings = SELECT _map_file_to_reg_path(
+    LET _make_ntuser_mappings(Accessor, Hive, Subpath) = SELECT _map_file_to_reg_path(
       HivePath=NTUserPath,
       RegMountPoint="/",
-      Accessor='ntfs',
+      Accessor=Accessor,
+      Description=format(format="Map NTUSER.dat from User %v to HKEY_USERS", args=NTUserPath[2]),
       -- This is technically the SID but it is clearer to just use the username
-      RegistryPath="HKEY_USERS/" + NTUserPath[-2]) AS Mapping
+      RegistryPath="HKEY_USERS\\" + NTUserPath[2] + Subpath) AS Mapping
     FROM foreach(row={
-       SELECT pathspec(parse=expand(path=Directory), path_type="windows") + "NTUser.dat"  AS NTUserPath
+       SELECT pathspec(parse=expand(path=Directory),
+                       path_type="windows") + Hive  AS NTUserPath
        FROM Artifact.Windows.Sys.Users()
     }, query={
         -- Verify the file actually exists
         SELECT NTUserPath FROM stat(filename=NTUserPath)
     })
 
+    LET _user_mappings =
+      _make_ntuser_mappings(Accessor='auto', Hive="NTUser.dat", Subpath="").Mapping +
+      _make_ntuser_mappings(Accessor='auto',
+        Hive="\\AppData\\Local\\Microsoft\\Windows\\UsrClass.dat",
+        Subpath="\\Software\\Classes", Subpath="\\Software\\Classes").Mapping
+
     // Use this like `LET _ <= MapRawRegistryHives`
     LET MapRawRegistryHives =remap(config=dict(
-       remappings=_make_ntuser_mappings.Mapping + _standard_mappings))
+       remappings=_user_mappings + _standard_mappings + _required_mappings))
 
 sources:
  - query: |

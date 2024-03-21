@@ -1,0 +1,9 @@
+Queries:
+- LET AllData <= SELECT "A" AS Key, "B" AS Value
+    FROM scope()
+
+- LET Mem <= memoize(query={
+   SELECT * FROM AllData
+  }, key="Key")
+
+- SELECT get(item=Mem, field="A") FROM scope()

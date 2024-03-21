@@ -37,6 +37,7 @@ func errnoErr(e syscall.Errno) error {
 
 var (
 	modAdvapi32 = NewLazySystemDLL("Advapi32.dll")
+	modadvapi32 = NewLazySystemDLL("advapi32.dll")
 	modkernel32 = NewLazySystemDLL("kernel32.dll")
 	modnetapi32 = NewLazySystemDLL("netapi32.dll")
 	modntdll    = NewLazySystemDLL("ntdll.dll")
@@ -44,6 +45,7 @@ var (
 
 	procAdjustTokenPrivileges      = modAdvapi32.NewProc("AdjustTokenPrivileges")
 	procLookupPrivilegeValueW      = modAdvapi32.NewProc("LookupPrivilegeValueW")
+	procRegEnumValueW              = modadvapi32.NewProc("RegEnumValueW")
 	procCloseHandle                = modkernel32.NewProc("CloseHandle")
 	procCreateToolhelp32Snapshot   = modkernel32.NewProc("CreateToolhelp32Snapshot")
 	procGetProcessIoCounters       = modkernel32.NewProc("GetProcessIoCounters")
@@ -83,6 +85,14 @@ func LookupPrivilegeValue(lpSystemName uintptr, lpName uintptr, out uintptr) (er
 	r1, _, e1 := syscall.Syscall(procLookupPrivilegeValueW.Addr(), 3, uintptr(lpSystemName), uintptr(lpName), uintptr(out))
 	if r1 == 0 {
 		err = errnoErr(e1)
+	}
+	return
+}
+
+func RegEnumValue(key syscall.Handle, index uint32, name *byte, nameLen *uint32, reserved *uint32, valtype *uint32, buf *byte, buflen *uint32) (regerrno error) {
+	r0, _, _ := syscall.Syscall9(procRegEnumValueW.Addr(), 8, uintptr(key), uintptr(index), uintptr(unsafe.Pointer(name)), uintptr(unsafe.Pointer(nameLen)), uintptr(unsafe.Pointer(reserved)), uintptr(unsafe.Pointer(valtype)), uintptr(unsafe.Pointer(buf)), uintptr(unsafe.Pointer(buflen)), 0)
+	if r0 != 0 {
+		regerrno = syscall.Errno(r0)
 	}
 	return
 }

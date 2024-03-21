@@ -19,6 +19,7 @@ const (
 
 type _CacheObj struct {
 	mu         sync.Mutex
+	name       string
 	expires    time.Time
 	period     time.Duration
 	expression types.LazyExpr
@@ -36,7 +37,7 @@ func (self *_CacheObj) Get(key string) (vfilter.Any, bool) {
 	if time.Now().After(self.expires) {
 		self.cache = make(map[string]vfilter.Any)
 		self.expires = time.Now().Add(self.period)
-		return nil, false
+		self.Materialize()
 	}
 
 	value, pres := self.cache[key]
@@ -56,6 +57,7 @@ func (self *_CacheObj) Materialize() {
 
 	self.cache = make(map[string]vfilter.Any)
 	stored_query := arg_parser.ToStoredQuery(self.ctx, self.expression)
+
 	for row_item := range stored_query.Eval(self.ctx, self.scope) {
 		key, pres := self.scope.Associative(row_item, self.key)
 		if pres {
@@ -63,11 +65,15 @@ func (self *_CacheObj) Materialize() {
 			self.cache[key_str] = row_item
 		}
 	}
+
+	self.scope.Log("cache %v: Filled cache with %v rows",
+		self.name, len(self.cache))
 }
 
-func NewCacheObj(ctx context.Context, scope vfilter.Scope, key string) *_CacheObj {
+func NewCacheObj(ctx context.Context, scope vfilter.Scope, key, name string) *_CacheObj {
 	return &_CacheObj{
 		scope: scope,
+		name:  name,
 		ctx:   ctx,
 		key:   key,
 		cache: make(map[string]vfilter.Any),
@@ -152,7 +158,7 @@ func (self _CacheFunc) Call(ctx context.Context, scope vfilter.Scope,
 			arg.Period = 60
 		}
 
-		new_cache_obj := NewCacheObj(ctx, scope, "")
+		new_cache_obj := NewCacheObj(ctx, scope, "", arg.Name)
 		new_cache_obj.period = time.Duration(arg.Period) * time.Second
 		cache_obj = new_cache_obj
 	}
@@ -173,6 +179,7 @@ type _MemoizeFunctionArgs struct {
 	Query  types.LazyExpr `vfilter:"required,field=query,doc=Query to expand into memory"`
 	Key    string         `vfilter:"required,field=key,doc=The name of the column to use as a key."`
 	Period int64          `vfilter:"optional,field=period,doc=The latest age of the cache."`
+	Name   string         `vfilter:"optional,field=name,doc=The name of this cache."`
 }
 
 type _MemoizeFunction struct{}
@@ -199,9 +206,19 @@ func (self _MemoizeFunction) Call(ctx context.Context, scope vfilter.Scope,
 		arg.Period = 60
 	}
 
-	result := NewCacheObj(ctx, scope, arg.Key)
+	// The cache needs to remain alive for the duration of the query.
+	ctx, cancel := context.WithCancel(context.Background())
+	vql_subsystem.GetRootScope(scope).AddDestructor(cancel)
+
+	name := arg.Name
+	if name == "" {
+		name = vfilter.FormatToString(scope, arg.Query)
+	}
+
+	result := NewCacheObj(ctx, scope, arg.Key, name)
 	result.expression = arg.Query
 	result.period = time.Duration(arg.Period) * time.Second
+	result.Materialize()
 
 	return result
 }
