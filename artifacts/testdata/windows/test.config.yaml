@@ -142,7 +142,7 @@ Datastore:
   location: ./artifacts/testdata/server/
 
 defaults:
-  backup_period_seconds: -1
+#  backup_period_seconds: -1
 
 Writeback:
   private_key: |

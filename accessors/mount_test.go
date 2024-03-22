@@ -46,6 +46,16 @@ func TestMountFilesystemAccessor(t *testing.T) {
 			RawData: []byte("bar file"),
 		})
 
+	bin_fs_accessor.SetVirtualDirectory(
+		MustNewLinuxOSPath("/bin/foo/baz_dir"), &VirtualFileInfo{
+			IsDir_: true,
+		})
+
+	bin_fs_accessor.SetVirtualDirectory(
+		MustNewLinuxOSPath("/bin/foo/baz_dir/baz"), &VirtualFileInfo{
+			RawData: []byte("baz file"),
+		})
+
 	// Another filesystem will be mounted deeper again
 	deep_fs := NewVirtualFilesystemAccessor(root_path)
 	deep_fs.SetVirtualDirectory(
@@ -84,6 +94,7 @@ func TestMountFilesystemAccessor(t *testing.T) {
 		for _, c := range children {
 			results = append(results, c.FullPath())
 		}
+		//fmt.Printf("ls %v -> %v\n", path, results)
 		return results
 	}
 
@@ -103,6 +114,15 @@ func TestMountFilesystemAccessor(t *testing.T) {
 	assert.Equal(t,
 		[]string{"/usr/bin/deep/Users/mic"},
 		ls("/usr/bin/deep/Users/"))
+
+	// Check bind mount - /home directory comes from /bin/foo
+	assert.Equal(t,
+		[]string{"/home/bar", "/home/baz_dir"},
+		ls("/home/"))
+
+	assert.Equal(t,
+		[]string{"/home/baz_dir/baz"},
+		ls("/home/baz_dir"))
 
 	// Check the file contents
 	cat := func(path string) string {
