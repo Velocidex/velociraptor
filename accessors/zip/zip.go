@@ -461,14 +461,16 @@ func (self *ZipFileCache) Close() {
 	}
 }
 
-/* Zip members are normally compressed and therefore not seekable. If
-   we read the members sequentially (e.g. for yara scanning or other
-   sequential parsing), then there is no need to unpack the
-   file. However, if the callers need to seek within the archive
-   member we must unpack it to a tempfile.
+/*
+Zip members are normally compressed and therefore not seekable. If
 
-   This wrapper manages this by wrapping the underlying zip member and
-   unpacking to a tmpfile automatically depending on usage patterns.
+We read the members sequentially (e.g. for yara scanning or other
+sequential parsing), then there is no need to unpack the
+file. However, if the callers need to seek within the archive
+member we must unpack it to a tempfile.
+
+This wrapper manages this by wrapping the underlying zip member and
+unpacking to a tmpfile automatically depending on usage patterns.
 */
 type SeekableZip struct {
 	mu sync.Mutex
@@ -486,6 +488,10 @@ type SeekableZip struct {
 	tmp_file_backing *os.File
 
 	closed bool
+}
+
+func (self *SeekableZip) IsSeekable() bool {
+	return false
 }
 
 func (self *SeekableZip) Close() error {

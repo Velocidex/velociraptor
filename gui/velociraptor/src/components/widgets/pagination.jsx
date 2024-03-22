@@ -32,6 +32,7 @@ export class TextPaginationControl extends React.Component {
                     "page-link": true,
                     "goto-invalid": this.state.goto_error,
                 })}
+                id="goto_page"
                 placeholder={T("Goto Offset")}
                 spellCheck="false"
                 value={this.state.goto_offset}

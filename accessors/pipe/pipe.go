@@ -37,12 +37,17 @@ func (self *Pipe) Seek(offset int64, whence int) (int64, error) {
 	return 0, errors.New("Not Seekable")
 }
 
+func (self *Pipe) IsSeekable() bool {
+	return false
+}
+
 func (self *Pipe) Stat() (os.FileInfo, error) {
 	return nil, errors.New("Not implemented")
 }
 
 func (self *Pipe) Read(buff []byte) (int, error) {
 	select {
+
 	case <-self.ctx.Done():
 		return 0, io.EOF
 
@@ -108,7 +113,7 @@ func (self *PipeFunction) Call(ctx context.Context,
 
 	defer vql_subsystem.CacheSet(scope, key, cached_pipe)
 
-	if !ok {
+	if !ok || utils.IsNil(cached_pipe) {
 		row_chan := arg.Query.Eval(ctx, scope)
 		cached_pipe = &Pipe{
 			output_chan: row_chan,
@@ -172,7 +177,7 @@ func (self PipeFilesystemAccessor) ReadDirWithOSPath(path *accessors.OSPath) (
 // The path is the name of the scope variable that holds the pipe object
 func (self PipeFilesystemAccessor) Open(variable string) (accessors.ReadSeekCloser, error) {
 	variable_data, pres := self.scope.Resolve(variable)
-	if !pres {
+	if !pres || utils.IsNil(variable_data) {
 		return nil, os.ErrNotExist
 	}
 	variable_data_lazy, ok := variable_data.(types.StoredExpression)

@@ -19,13 +19,13 @@
 // file parsing.
 
 // We make the registry look like a filesystem:
-// 1. Keys are mapped as directories, and values are files.
-// 2. The file is interpreted as a URL with the following format:
-//    accessor:/path#key_path
-// 3. We use the accessor and path to open the underlying file, then
-//    extract the key or value named by the key_path from it.
-// 4. Normalized paths contain / for directory separators.
-// 5. Normalized paths have rawreg: prefix.
+//  1. Keys are mapped as directories, and values are files.
+//  2. The file is interpreted as a URL with the following format:
+//     accessor:/path#key_path
+//  3. We use the accessor and path to open the underlying file, then
+//     extract the key or value named by the key_path from it.
+//  4. Normalized paths contain / for directory separators.
+//  5. Normalized paths have rawreg: prefix.
 package raw_registry
 
 import (
@@ -421,7 +421,8 @@ func (self *RawRegFileSystemAccessor) LstatWithOSPath(
 
 	if len(full_path.Components) == 0 {
 		return &accessors.VirtualFileInfo{
-			Path: full_path,
+			Path:   full_path,
+			IsDir_: true,
 		}, nil
 	}
 

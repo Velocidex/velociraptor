@@ -53,6 +53,14 @@ type OSPath struct {
 	Manipulator PathManipulator
 }
 
+func (self *OSPath) Equal(other *OSPath) bool {
+	if !utils.StringSliceEq(self.Components, other.Components) {
+		return false
+	}
+
+	return self.String() == other.String()
+}
+
 func (self *OSPath) DescribeType() string {
 	subtype := ""
 	switch self.Manipulator.(type) {
@@ -300,6 +308,24 @@ type UniqueBasename interface {
 type ReadSeekCloser interface {
 	io.ReadSeeker
 	io.Closer
+}
+
+// Some files are not really seekable (although they may pretend to
+// be). Sometimes it is important to know if the file may be rewound
+// back if we read from it - before we actually read from it. If a
+// ReadSeekCloser also implements the Seekable interface it may report
+// if it can be seeked.
+type Seekable interface {
+	IsSeekable() bool
+}
+
+func IsSeekable(fd ReadSeekCloser) bool {
+	seekable, ok := fd.(Seekable)
+	if ok {
+		return seekable.IsSeekable()
+	}
+
+	return true
 }
 
 // Interface for accessing the filesystem.

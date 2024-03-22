@@ -641,5 +641,55 @@
    }
   }
  ],
- "Unknown modifiers": []
+ "Unknown modifiers": [],
+ "All modifier": [
+  {
+   "Foo": "Bar",
+   "Details": null,
+   "_Match": {
+    "Match": true,
+    "SearchResults": {
+     "selection": true
+    },
+    "ConditionResults": [
+     true
+    ]
+   },
+   "_Rule": {
+    "Title": "BadModifiers",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "application"
+    },
+    "Detection": {
+     "Searches": {
+      "selection": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Modifiers": [
+           "contains",
+           "all"
+          ],
+          "Values": [
+           "a",
+           "B"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "condition": [
+      {
+       "Search": {
+        "Name": "selection"
+       }
+      }
+     ]
+    }
+   }
+  }
+ ]
 }

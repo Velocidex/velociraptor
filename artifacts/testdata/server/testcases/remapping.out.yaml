@@ -1,4 +1,4 @@
-LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts/testdata/files/', srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/UsrClass.dat' ]), clear=TRUE)[]SELECT Hostname, Fqdn, OS, expand(path="%SystemRoot%\\System32") FROM info()[
+LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts/testdata/files/', srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/test.ntfs.dd', srcDir+'/artifacts/testdata/files/UsrClass.dat', srcDir+'/artifacts/testdata/files/ntuser.dat' ]), clear=TRUE)[]SELECT Hostname, Fqdn, OS, expand(path="%SystemRoot%\\System32") FROM info()[
  {
   "Hostname": "Virtual Host",
   "Fqdn": "Virtual Host",
@@ -239,6 +239,16 @@ LET _ <= remap(config=format(format=RemappingTemplate, args=[ srcDir+'/artifacts
  },
  {
   "OSPath": "HKEY_LOCAL_MACHINE\\Classes\\xboxgames"
+ }
+]SELECT OSPath, IsDir FROM glob(accessor='registry', globs="/HKLM/Classes/Foobar")[
+ {
+  "OSPath": "HKEY_LOCAL_MACHINE\\Classes\\Foobar",
+  "IsDir": true
+ }
+]SELECT OSPath, IsDir FROM glob(accessor='registry', globs="/HKLM/Classes/Foobar/*")[
+ {
+  "OSPath": "HKEY_LOCAL_MACHINE\\Classes\\Foobar\\Microsoft",
+  "IsDir": true
  }
 ]SELECT read_file(filename="hello world", accessor="data") FROM scope()[
  {

@@ -415,7 +415,73 @@ func (self ArtifactSetMetadataFunction) Info(
 	}
 }
 
+type ArtifactImportFunctionArgs struct {
+	Artifact string `vfilter:"required,field=artifact,doc=The Artifact to import"`
+}
+
+type ArtifactImportFunction struct{}
+
+func (self *ArtifactImportFunction) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	arg := &ArtifactImportFunctionArgs{}
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("import: %v", err)
+		return vfilter.Null{}
+	}
+
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		scope.Log("import: Command can only run on the server")
+		return vfilter.Null{}
+	}
+
+	global_repository, err := vql_utils.GetRepository(scope)
+	if err != nil {
+		scope.Log("import: %v", err)
+		return vfilter.Null{}
+	}
+
+	definition, pres := global_repository.Get(ctx, config_obj, arg.Artifact)
+	if !pres {
+		scope.Log("import: Artifact '%v' not found", arg.Artifact)
+		return vfilter.Null{}
+	}
+
+	// Compile the export section
+	if definition.Export != "" {
+		vqls, err := vfilter.MultiParse(definition.Export)
+		if err != nil {
+			scope.Log("import: Artifact '%v': %v", arg.Artifact, err)
+			return vfilter.Null{}
+		}
+
+		// Do not do anything with the rows since exports are not
+		// supposed to actually return rows (they should be only LET
+		// statements).
+		for _, vql := range vqls {
+			for _ = range vql.Eval(ctx, scope) {
+			}
+		}
+	}
+
+	return definition.Export
+}
+
+func (self ArtifactImportFunction) Info(
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:     "import",
+		Doc:      "Imports an artifact into the current scope. This only works in notebooks!",
+		ArgType:  type_map.AddType(scope, &ArtifactImportFunctionArgs{}),
+		Metadata: vql.VQLMetadata().Build(),
+	}
+}
+
 func init() {
+	vql_subsystem.RegisterFunction(&ArtifactImportFunction{})
 	vql_subsystem.RegisterFunction(&ArtifactSetMetadataFunction{})
 	vql_subsystem.RegisterPlugin(&ArtifactsPlugin{})
 	vql_subsystem.RegisterFunction(&ArtifactSetFunction{})

@@ -45,12 +45,8 @@ class VeloHunts extends React.Component {
         this.get_hunts_source.cancel();
     }
 
-    collapse = () => {
-        if (!this.state.collapsed) {
-            this.setState({topPaneSize: "100%", collapsed: true});
-        } else {
-            this.setState({topPaneSize: "30%", collapsed: false});
-        }
+    collapse = level=> {
+        this.setState({topPaneSize: level});
     }
 
     setSelectedHuntId = (hunt_id) => {
