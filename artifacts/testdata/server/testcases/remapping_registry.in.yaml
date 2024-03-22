@@ -1,0 +1,41 @@
+Parameters:
+Queries:
+  # From Windows.Registry.NTUser
+  - LET _map_file_to_reg_path(HivePath, RegistryPath, RegMountPoint, Accessor) = dict(
+       type="mount",
+       `from`=dict(accessor='raw_reg',
+                   prefix=pathspec(
+                      Path=RegMountPoint,
+                      DelegateAccessor=Accessor,
+                      DelegatePath=HivePath),
+                   path_type='registry'),
+        `on`=dict(accessor='registry',
+                  prefix=RegistryPath,
+                  path_type='registry'))
+
+  - LET SystemPath <= srcDir+'/artifacts/testdata/files/ntuser.dat'
+  - LET _ <= remap(config=dict(
+      remappings=(
+         _map_file_to_reg_path(
+           HivePath=SystemPath,
+           RegistryPath="HKEY_LOCAL_MACHINE\\System\\CurrentControlSet",
+           RegMountPoint="/Control Panel",
+           Accessor="auto"),
+        _map_file_to_reg_path(
+           HivePath=SystemPath,
+           RegistryPath="HKEY_LOCAL_MACHINE\\System",
+           RegMountPoint="/",
+           Accessor="auto"),
+     )))
+
+  # CurrentControlSet should **not** be present in subdirectories
+  # under the mount point.
+  - SELECT OSPath, IsDir FROM glob(globs='''HKEY_LOCAL_MACHINE\System\Environment\*''',
+          accessor="registry")
+    WHERE Name =~ "CurrentControlSet"
+
+  # CurrentControlSet should be present in the System hive even though
+  # it is virtualized
+  - SELECT OSPath, IsDir FROM glob(globs='''HKEY_LOCAL_MACHINE\System\*''',
+          accessor="registry")
+    WHERE Name =~ "CurrentControlSet"

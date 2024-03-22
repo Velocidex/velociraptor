@@ -40,12 +40,12 @@ export: |
     -- HivePath: The path to the hive on disk
     -- RegistryPath: The path in the registry to mount the hive
     -- RegMountPoint: The path inside the hive to mount (usually /)
-    LET _map_file_to_reg_path(HivePath, RegistryPath, RegMountPoint) = dict(
+    LET _map_file_to_reg_path(HivePath, RegistryPath, RegMountPoint, Accessor) = dict(
        type="mount",
        `from`=dict(accessor='raw_reg',
                    prefix=pathspec(
                       Path=RegMountPoint,
-                      DelegateAccessor='ntfs',
+                      DelegateAccessor=Accessor,
                       DelegatePath=HivePath),
                    path_type='registry'),
         `on`=dict(accessor='registry',
@@ -54,26 +54,32 @@ export: |
 
     LET _standard_mappings = (
        _map_file_to_reg_path(
+          HivePath="C:/Windows/System32/Config/SYSTEM",
+          RegistryPath="HKEY_LOCAL_MACHINE\\System\\CurrentControlSet",
+          RegMountPoint="/ControlSet001",
+          Accessor='ntfs'),
+
+       _map_file_to_reg_path(
           HivePath="C:/Windows/System32/Config/SOFTWARE",
           RegistryPath="HKEY_LOCAL_MACHINE\\Software",
-          RegMountPoint="/"),
+          RegMountPoint="/",
+          Accessor='ntfs'),
        _map_file_to_reg_path(
           HivePath="C:/Windows/System32/Config/System",
           RegistryPath="HKEY_LOCAL_MACHINE\\System",
-          RegMountPoint="/"),
-       _map_file_to_reg_path(
-          HivePath="C:/Windows/System32/Config/SYSTEM",
-          RegistryPath="HKEY_LOCAL_MACHINE\\System\\CurrentControlSet",
-          RegMountPoint="/ControlSet001"))
+          RegMountPoint="/",
+          Accessor='ntfs')
+    )
 
     LET _make_ntuser_mappings = SELECT _map_file_to_reg_path(
       HivePath=NTUserPath,
       RegMountPoint="/",
+      Accessor='ntfs',
       -- This is technically the SID but it is clearer to just use the username
       RegistryPath="HKEY_USERS/" + NTUserPath[-2]) AS Mapping
     FROM foreach(row={
        SELECT pathspec(parse=expand(path=Directory), path_type="windows") + "NTUser.dat"  AS NTUserPath
-       FROM Artifact.Windows.Sys.Users(OnlyRemote=TRUE)
+       FROM Artifact.Windows.Sys.Users()
     }, query={
         -- Verify the file actually exists
         SELECT NTUserPath FROM stat(filename=NTUserPath)
