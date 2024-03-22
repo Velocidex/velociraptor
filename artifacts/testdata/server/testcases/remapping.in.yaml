@@ -120,6 +120,21 @@ Parameters:
           prefix: "/HKEY_LOCAL_MACHINE/Classes"
           path_type: "registry"
 
+      - type: mount
+        from:
+          accessor: raw_reg
+          prefix: |
+            {
+              "DelegateAccessor": "file",
+              "DelegatePath": %q,
+              "Path": "/Software/Policies"
+            }
+          path_type: "registry"
+        on:
+          accessor: "registry"
+          prefix: "/HKEY_LOCAL_MACHINE/Classes/Foobar"
+          path_type: "registry"
+
 Queries:
   - LET _ <= remap(config=format(format=RemappingTemplate,
        args=[
@@ -127,7 +142,8 @@ Queries:
           srcDir+'/artifacts/testdata/files/test.ntfs.dd',
           srcDir+'/artifacts/testdata/files/test.ntfs.dd',
           srcDir+'/artifacts/testdata/files/test.ntfs.dd',
-          srcDir+'/artifacts/testdata/files/UsrClass.dat'
+          srcDir+'/artifacts/testdata/files/UsrClass.dat',
+          srcDir+'/artifacts/testdata/files/ntuser.dat'
       ]), clear=TRUE)
 
   # Check we are impersonating a windows machine with appropriate
@@ -166,6 +182,13 @@ Queries:
            inode="46-128-5")
 
   - SELECT OSPath FROM glob(accessor='registry', globs="/HKLM/*/xbox*")
+
+  # The mount point itself shold be a directory
+  - SELECT OSPath, IsDir FROM glob(accessor='registry', globs="/HKLM/Classes/Foobar")
+
+  # We should be able to list deep into the new hive. This comes from
+  # NTUSER/Software/Policies/
+  - SELECT OSPath, IsDir FROM glob(accessor='registry', globs="/HKLM/Classes/Foobar/*")
 
   # Test data remapping
   - SELECT read_file(filename="hello world", accessor="data")
