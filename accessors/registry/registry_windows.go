@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 /*
@@ -36,6 +37,9 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/Velocidex/ttlcache/v2"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"golang.org/x/sys/windows/registry"
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -56,6 +60,60 @@ var (
 	// Values smaller than this will be included in the stat entry
 	// itself.
 	MAX_EMBEDDED_REG_VALUE = 4 * 1024
+
+	metricsReadValue = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "registry_getvalue",
+			Help: "Number of time we Queried Value from the registry",
+		})
+
+	metricsAccessorReadValue = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "registry_accessor_getvalue",
+			Help: "Number of time we Queried Value from the accessor",
+		})
+
+	metricsLruHit = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "registry_keyinfo_lru_hit",
+			Help: "Performance of the Key Info Cache",
+		})
+
+	metricsLruMiss = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "registry_keyinfo_lru_miss",
+			Help: "Performance of the Key Info Cache",
+		})
+
+	metricsReadDirLruHit = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "registry_readdir_lru_hit",
+			Help: "Performance of the Read Dir Cache",
+		})
+
+	metricsReadDirLruMiss = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "registry_readdir_lru_miss",
+			Help: "Performance of the Read Dir Cache",
+		})
+
+	metricsOpen = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "registry_open",
+			Help: "Total number of Open operations",
+		})
+
+	metricsStat = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "registry_stat",
+			Help: "Total number of Lstat operations",
+		})
+
+	metricsOpenKey = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "registry_openkey",
+			Help: "Total number of RegOpenKey operations",
+		})
 )
 
 func GetHiveFromName(name string) (registry.Key, bool) {
@@ -159,8 +217,139 @@ func (self *RegValueInfo) Mode() os.FileMode {
 	return 0755
 }
 
+func (self *RegValueInfo) Data() *ordereddict.Dict {
+	metricsAccessorReadValue.Inc()
+
+	self.materialize()
+	return self._data
+}
+
 func (self *RegValueInfo) Size() int64 {
+	self.materialize()
+
 	return self._size
+}
+
+// RegValueInfo are lazy structures that only materialize themselves
+// just in time.
+func (self *RegValueInfo) materialize() error {
+	// Use self._data as indicator if the structure is materialized.
+	if self._data != nil {
+		return nil
+	}
+
+	// Last component is the value name
+	value_name := self._full_path.Basename()
+	full_key_path := self._full_path.Dirname()
+
+	// Internally we represent the default value of a key as the name
+	// '@'
+	if value_name == "@" {
+		value_name = ""
+	}
+
+	hive, key_path, err := getHiveAndKey(full_key_path)
+	if err != nil {
+		// Cache the error
+		self._data = ordereddict.NewDict().Set("Error", err.Error())
+		return err
+	}
+
+	metricsOpenKey.Inc()
+	key, err := registry.OpenKey(hive, key_path,
+		registry.READ|registry.QUERY_VALUE|registry.WOW64_64KEY)
+	if err != nil {
+		// Cache the error
+		self._data = ordereddict.NewDict().Set("Error", err.Error())
+		return err
+	}
+	defer key.Close()
+
+	buf_size, value_type, value, err := getValue(key, value_name)
+	if err != nil {
+		// Cache the error
+		self._data = ordereddict.NewDict().Set("Error", err.Error())
+		return err
+	}
+
+	self._size = int64(buf_size)
+
+	switch value_type {
+	case registry.DWORD, registry.DWORD_BIG_ENDIAN, registry.QWORD:
+		switch value_type {
+		case registry.DWORD_BIG_ENDIAN:
+			self.Type = "DWORD_BIG_ENDIAN"
+
+		case registry.DWORD:
+			self.Type = "DWORD"
+
+		case registry.QWORD:
+			self.Type = "QWORD"
+		}
+
+		self._data = ordereddict.NewDict().
+			Set("type", self.Type).
+			Set("value", value)
+
+	case registry.BINARY:
+		if buf_size < MAX_EMBEDDED_REG_VALUE {
+			self._data = ordereddict.NewDict().
+				Set("type", "BINARY").
+				Set("value", value)
+		}
+		value_bytes, _ := value.([]byte)
+		self._binary_data = value_bytes
+		self.Type = "BINARY"
+
+	case registry.MULTI_SZ:
+		value_str, _ := value.(string)
+		self._binary_data = []byte(value_str)
+		self.Type = "MULTI_SZ"
+
+		if buf_size < MAX_EMBEDDED_REG_VALUE {
+			self._data = ordereddict.NewDict().
+				Set("type", "MULTI_SZ").
+				Set("value", strings.Split(value_str, "\n"))
+		}
+
+	case registry.SZ, registry.EXPAND_SZ:
+		switch value_type {
+		case registry.SZ:
+			self.Type = "SZ"
+
+		case registry.EXPAND_SZ:
+			self.Type = "EXPAND_SZ"
+		}
+
+		value_str, _ := value.(string)
+		self._binary_data = []byte(value_str)
+
+		if buf_size < MAX_EMBEDDED_REG_VALUE {
+			self._data = ordereddict.NewDict().
+				Set("type", self.Type).
+
+				// We do not expand the value data because this will
+				// depend on the agent's own environment strings.
+				Set("value", value)
+		}
+
+	default:
+		value_bytes, _ := value.([]byte)
+		self._binary_data = value_bytes
+		self.Type = fmt.Sprintf("%d", value_type)
+
+		if buf_size < MAX_EMBEDDED_REG_VALUE {
+			self._data = ordereddict.NewDict().
+				Set("type", self.Type).
+				Set("value", value)
+		} else {
+			self._data = ordereddict.NewDict().
+				Set("type", self.Type).
+				Set("value", "<Binary Data>")
+		}
+	}
+
+	return nil
 }
 
 type ValueBuffer struct {
@@ -183,11 +372,31 @@ func NewValueBuffer(buf []byte, stat accessors.FileInfo) *ValueBuffer {
 	}
 }
 
-type RegFileSystemAccessor struct{}
+type RegFileSystemAccessor struct {
+	lru         *ttlcache.Cache
+	readdir_lru *ttlcache.Cache
+}
 
 func (self *RegFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
-	return self, nil
+	my_lru := self.lru
+	if my_lru == nil {
+		my_lru = ttlcache.NewCache()
+		my_lru.SetCacheSizeLimit(1000)
+		my_lru.SetTTL(time.Minute)
+	}
+
+	my_readdir_lru := self.readdir_lru
+	if my_readdir_lru == nil {
+		my_readdir_lru = ttlcache.NewCache()
+		my_readdir_lru.SetCacheSizeLimit(1000)
+		my_readdir_lru.SetTTL(time.Minute)
+	}
+
+	return &RegFileSystemAccessor{
+		lru:         my_lru,
+		readdir_lru: my_readdir_lru,
+	}, nil
 }
 
 func (self RegFileSystemAccessor) ParsePath(path string) (
@@ -207,8 +416,7 @@ func (self RegFileSystemAccessor) ReadDir(path string) (
 }
 
 func (self RegFileSystemAccessor) ReadDirWithOSPath(
-	full_path *accessors.OSPath) ([]accessors.FileInfo, error) {
-	var result []accessors.FileInfo
+	full_path *accessors.OSPath) (result []accessors.FileInfo, err error) {
 
 	// Root directory is just the name of the hives.
 	if len(full_path.Components) == 0 {
@@ -223,26 +431,15 @@ func (self RegFileSystemAccessor) ReadDirWithOSPath(
 		return result, nil
 	}
 
-	hive_name := full_path.Components[0]
-	hive_any, pres := root_keys.Get(hive_name)
-	if !pres {
-		// Not a real hive
-		return nil, errors.New("Unknown hive")
+	hive, key_path, err := getHiveAndKey(full_path)
+	if err != nil {
+		return nil, err
 	}
 
-	hive := hive_any.(registry.Key)
-
-	key_path := ""
-	// e.g. HKEY_PERFORMANCE_DATA
-	// Add a final \ to turn path into a directory path.
-	if len(full_path.Components) > 1 {
-		key_path = strings.Join(full_path.Components[1:], "\\")
-	}
-
+	metricsOpenKey.Inc()
 	key, err := registry.OpenKey(hive, key_path,
 		registry.READ|registry.QUERY_VALUE|
-			registry.ENUMERATE_SUB_KEYS|
-			registry.WOW64_64KEY)
+			registry.ENUMERATE_SUB_KEYS|registry.WOW64_64KEY)
 	if err != nil {
 		return nil, err
 	}
@@ -255,6 +452,14 @@ func (self RegFileSystemAccessor) ReadDirWithOSPath(
 	}
 
 	for _, subkey_name := range subkeys {
+		key_info, err := self.getCachedKeyInfo(full_path.Append(subkey_name))
+		if err == nil {
+			result = append(result, key_info)
+			continue
+		}
+
+		// Not in cache, we need to add it
+		metricsOpenKey.Inc()
 		subkey, err := registry.OpenKey(key, subkey_name,
 			registry.READ|registry.QUERY_VALUE|
 				registry.ENUMERATE_SUB_KEYS|
@@ -262,32 +467,40 @@ func (self RegFileSystemAccessor) ReadDirWithOSPath(
 		if err != nil {
 			continue
 		}
-		defer subkey.Close()
 
-		// Make a local copy.
-		key_info, err := getKeyInfo(subkey, full_path.Append(subkey_name))
-		if err != nil {
-			continue
+		// Add to the LRU
+		key_info, err = self.buildAndCacheKeyInfo(
+			subkey, full_path.Append(subkey_name))
+		if err == nil {
+			result = append(result, key_info)
 		}
-		result = append(result, key_info)
+		subkey.Close()
 	}
 
 	// Now enumerate the values.
-	values, err := key.ReadValueNames(-1)
+	values, err := ReadValueNames(key)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, value_name := range values {
-		if value_name == "" {
-			value_name = "@"
-		}
-		value_info, err := getValueInfo(
-			key, full_path.Append(value_name))
+	if len(values) > 0 {
+		cached, err := self.getCachedKeyInfo(full_path)
 		if err != nil {
-			continue
+			cached, _ = self.buildAndCacheKeyInfo(key, full_path)
 		}
-		result = append(result, value_info)
+
+		for _, value_name := range values {
+			if value_name == "" {
+				value_name = "@"
+			}
+			value_info, err := getValueInfo(
+				cached.ModTime(),
+				full_path.Append(value_name))
+			if err != nil {
+				continue
+			}
+			result = append(result, value_info)
+		}
 	}
 
 	return result, nil
@@ -295,6 +508,9 @@ func (self RegFileSystemAccessor) ReadDirWithOSPath(
 
 func (self RegFileSystemAccessor) OpenWithOSPath(path *accessors.OSPath) (
 	accessors.ReadSeekCloser, error) {
+
+	metricsOpen.Inc()
+
 	stat, err := self.LstatWithOSPath(path)
 	if err != nil {
 		return nil, err
@@ -302,6 +518,7 @@ func (self RegFileSystemAccessor) OpenWithOSPath(path *accessors.OSPath) (
 
 	value_info, ok := stat.(*RegValueInfo)
 	if ok {
+		value_info.materialize()
 		return NewValueBuffer(value_info._binary_data, stat), nil
 	}
 
@@ -319,6 +536,7 @@ func (self RegFileSystemAccessor) Open(path string) (
 
 	value_info, ok := stat.(*RegValueInfo)
 	if ok {
+		value_info.materialize()
 		return NewValueBuffer(value_info._binary_data, stat), nil
 	}
 
@@ -339,79 +557,108 @@ func (self *RegFileSystemAccessor) Lstat(filename string) (
 func (self *RegFileSystemAccessor) LstatWithOSPath(
 	full_path *accessors.OSPath) (accessors.FileInfo, error) {
 
-	if len(full_path.Components) == 0 {
-		return nil, errors.New("No filename given")
+	metricsStat.Inc()
+
+	// Is the full path a key ?
+	cached, err := self.getCachedKeyInfo(full_path)
+	if err == nil {
+		return cached, nil
 	}
 
-	hive_name := full_path.Components[0]
-	hive_any, pres := root_keys.Get(hive_name)
-	if !pres {
-		// Not a real hive
-		return nil, errors.New("Unknown hive")
+	// No: Try to open it as a key
+	hive, hive_key_path, err := getHiveAndKey(full_path)
+	if err != nil {
+		return nil, err
 	}
 
-	hive := hive_any.(registry.Key)
-
-	// The key path inside the hive
-	key_path := full_path.TrimComponents(hive_name)
-
-	hive_key_path := ""
-	// Convert the path into an OS specific string
-	if len(full_path.Components) > 1 {
-		hive_key_path = key_path.String()
-	}
-
+	metricsOpenKey.Inc()
 	key, err := registry.OpenKey(hive, hive_key_path,
-		registry.READ|registry.QUERY_VALUE|
-			registry.WOW64_64KEY)
-	if err != nil && len(key_path.Components) > 0 {
+		registry.READ|registry.QUERY_VALUE|registry.WOW64_64KEY)
+
+	// We could not open it as a key - it could be a value
+	if err != nil && len(full_path.Components) > 1 {
 
 		// Maybe its a value then - open the containing key
 		// and return a valueInfo
-		containing_key := key_path.Dirname()
-		containing_key_name := containing_key.String()
-		key, err := registry.OpenKey(hive, containing_key_name,
-			registry.READ|registry.QUERY_VALUE|
-				registry.WOW64_64KEY)
+		containing_key := full_path.Dirname()
+
+		// We have the containing key in cache - use it.
+		cached, err := self.getCachedKeyInfo(containing_key)
+		if err == nil {
+			return getValueInfo(cached.ModTime(), full_path)
+		}
+
+		// We need to open the containing key
+		hive, hive_key_path, err := getHiveAndKey(containing_key)
+		if err != nil {
+			return nil, err
+		}
+
+		metricsOpenKey.Inc()
+		key, err := registry.OpenKey(hive, hive_key_path,
+			registry.READ|registry.QUERY_VALUE|registry.WOW64_64KEY)
 		if err != nil {
 			return nil, err
 		}
 		defer key.Close()
 
-		return getValueInfo(key, full_path)
+		cached, err = self.buildAndCacheKeyInfo(key, containing_key)
+		if err != nil {
+			return nil, err
+		}
+		return getValueInfo(cached.ModTime(), full_path)
 	}
 	defer key.Close()
 
-	return getKeyInfo(key, full_path)
+	// We opened the full_path as a key - cache it for next time.
+	res, err := self.buildAndCacheKeyInfo(key, full_path)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }
 
-func getKeyInfo(key registry.Key, full_path *accessors.OSPath) (
+func (self *RegFileSystemAccessor) getCachedKeyInfo(full_path *accessors.OSPath) (
+	*RegKeyInfo, error) {
+	cache_key := full_path.String()
+	cached, err := self.lru.Get(cache_key)
+	if err == nil {
+		res, ok := cached.(*RegKeyInfo)
+		if ok {
+			metricsLruHit.Inc()
+			return res, nil
+		}
+	}
+
+	metricsLruMiss.Inc()
+	return nil, err
+}
+
+func (self *RegFileSystemAccessor) buildAndCacheKeyInfo(
+	key registry.Key, full_path *accessors.OSPath) (
 	*RegKeyInfo, error) {
 
 	stat, err := key.Stat()
 	if err != nil {
 		return nil, err
 	}
-	return &RegKeyInfo{
+
+	res := &RegKeyInfo{
 		_modtime:   stat.ModTime(),
 		_full_path: full_path.Copy(),
 		_data:      ordereddict.NewDict().Set("type", "key"),
-	}, nil
-}
-
-func getValueInfo(key registry.Key, full_path *accessors.OSPath) (
-	*RegValueInfo, error) {
-
-	// Last component is the value name
-	value_name := full_path.Basename()
-
-	var key_modtime time.Time
-	key_stat, err := key.Stat()
-	if err == nil {
-		key_modtime = key_stat.ModTime()
 	}
 
-	value_info := &RegValueInfo{
+	cache_key := full_path.String()
+	self.lru.Set(cache_key, res)
+	return res, nil
+}
+
+func getValueInfo(
+	key_modtime time.Time,
+	full_path *accessors.OSPath) (*RegValueInfo, error) {
+
+	return &RegValueInfo{
 		RegKeyInfo: RegKeyInfo{
 			// Values do not carry their own
 			// timestamp - the key they are in
@@ -421,108 +668,32 @@ func getValueInfo(key registry.Key, full_path *accessors.OSPath) (
 			// value.
 			_modtime:   key_modtime,
 			_full_path: full_path.Copy(),
-		}}
+			_data:      nil, // Not materialized yet - lazy
+		}}, nil
+}
 
-	// Internally we represent the default value of a key as the name
-	// '@'
-	if value_name == "@" {
-		value_name = ""
+func getHiveAndKey(full_path *accessors.OSPath) (registry.Key, string, error) {
+	if len(full_path.Components) == 0 {
+		return 0, "", errors.New("Invalid Path")
 	}
 
-	buf_size, value_type, err := key.GetValue(value_name, nil)
-	if err != nil {
-		return nil, err
+	hive_name := full_path.Components[0]
+	hive_any, pres := root_keys.Get(hive_name)
+	if !pres {
+		// Not a real hive
+		return 0, "", errors.New("Unknown hive")
 	}
 
-	value_info._size = int64(buf_size)
+	hive := hive_any.(registry.Key)
 
-	switch value_type {
-	case registry.DWORD, registry.DWORD_BIG_ENDIAN, registry.QWORD:
-		data, _, err := key.GetIntegerValue(value_name)
-		if err != nil {
-			return nil, err
-		}
-
-		switch value_type {
-		case registry.DWORD_BIG_ENDIAN:
-			value_info.Type = "DWORD_BIG_ENDIAN"
-		case registry.DWORD:
-			value_info.Type = "DWORD"
-		case registry.QWORD:
-			value_info.Type = "QWORD"
-		}
-
-		value_info._data = ordereddict.NewDict().
-			Set("type", value_info.Type).
-			Set("value", data)
-
-	case registry.BINARY:
-		data, _, err := key.GetBinaryValue(value_name)
-		if err != nil {
-			return nil, err
-		}
-
-		if buf_size < MAX_EMBEDDED_REG_VALUE {
-			value_info._data = ordereddict.NewDict().
-				Set("type", "BINARY").
-				Set("value", data)
-		}
-		value_info._binary_data = data
-		value_info.Type = "BINARY"
-
-	case registry.MULTI_SZ:
-		values, _, err := key.GetStringsValue(value_name)
-		if err != nil {
-			return nil, err
-		}
-		value_info._binary_data = []byte(strings.Join(values, "\n"))
-		value_info.Type = "MULTI_SZ"
-
-		if buf_size < MAX_EMBEDDED_REG_VALUE {
-			value_info._data = ordereddict.NewDict().
-				Set("type", "MULTI_SZ").
-				Set("value", values)
-		}
-
-	case registry.SZ, registry.EXPAND_SZ:
-		switch value_type {
-		case registry.SZ:
-			value_info.Type = "SZ"
-		case registry.EXPAND_SZ:
-			value_info.Type = "EXPAND_SZ"
-		}
-
-		data, _, err := key.GetStringValue(value_name)
-		if err != nil {
-			return nil, err
-		}
-		value_info._binary_data = []byte(data)
-
-		if buf_size < MAX_EMBEDDED_REG_VALUE {
-			value_info._data = ordereddict.NewDict().
-				Set("type", value_info.Type).
-				// We do not expand the value data
-				// because this will depend on the
-				// agent's own environment strings.
-				Set("value", data)
-		}
-
-	default:
-		buf := make([]byte, buf_size)
-		_, _, err := key.GetValue(value_name, buf)
-		if err != nil {
-			return nil, err
-		}
-		value_info._binary_data = buf
-		value_info.Type = fmt.Sprintf("%d", value_type)
-
-		if buf_size < MAX_EMBEDDED_REG_VALUE {
-			value_info._data = ordereddict.NewDict().
-				Set("type", value_info.Type).
-				Set("value", buf)
-		}
+	// Produce a string to use on the OpenKey API - the key is joined
+	// with \ on all components after the hive.
+	key_path := ""
+	if len(full_path.Components) > 1 {
+		key_path = strings.Join(full_path.Components[1:], "\\")
 	}
-	return value_info, nil
+
+	return hive, key_path, nil
 }
 
 func init() {

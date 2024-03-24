@@ -457,6 +457,7 @@ func newCollectionManager(
 	output_chan chan vfilter.Row,
 	concurrency int,
 	scope vfilter.Scope) *collectionManager {
+
 	subctx, cancel := context.WithCancel(ctx)
 
 	if concurrency == 0 {

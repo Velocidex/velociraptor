@@ -123,6 +123,8 @@ type FileInfoWrapper struct {
 	// mount path.
 	prefix        *OSPath
 	remove_prefix *OSPath
+
+	_ospath *OSPath
 }
 
 func (self FileInfoWrapper) FullPath() string {
@@ -134,10 +136,16 @@ func (self FileInfoWrapper) Name() string {
 }
 
 func (self FileInfoWrapper) OSPath() *OSPath {
+	if self._ospath != nil {
+		return self._ospath
+	}
+
 	delegate_path := self.FileInfo.OSPath()
 	trimmed_path := delegate_path.TrimComponents(
 		self.remove_prefix.Components...)
-	return self.prefix.Append(trimmed_path.Components...)
+
+	self._ospath = self.prefix.Append(trimmed_path.Components...)
+	return self._ospath
 }
 
 // A mount accessor maps several delegate accessors inside the same
