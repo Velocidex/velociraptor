@@ -48,6 +48,7 @@ var (
 	procLookupPrivilegeNameW                 = modAdvapi32.NewProc("LookupPrivilegeNameW")
 	procLookupPrivilegeValueW                = modAdvapi32.NewProc("LookupPrivilegeValueW")
 	procQueryAllTracesA                      = modadvapi32.NewProc("QueryAllTracesA")
+	procRegEnumValueW                        = modadvapi32.NewProc("RegEnumValueW")
 	procCloseHandle                          = modkernel32.NewProc("CloseHandle")
 	procCreateToolhelp32Snapshot             = modkernel32.NewProc("CreateToolhelp32Snapshot")
 	procGetProcessIoCounters                 = modkernel32.NewProc("GetProcessIoCounters")
@@ -112,6 +113,14 @@ func LookupPrivilegeValue(lpSystemName uintptr, lpName uintptr, out uintptr) (er
 func QueryAllTracesW(PropertyArray uintptr, PropertyArrayCount uint32, LoggerCount *uint32) (status uint32) {
 	r0, _, _ := syscall.Syscall(procQueryAllTracesA.Addr(), 3, uintptr(PropertyArray), uintptr(PropertyArrayCount), uintptr(unsafe.Pointer(LoggerCount)))
 	status = uint32(r0)
+	return
+}
+
+func RegEnumValue(key syscall.Handle, index uint32, name *byte, nameLen *uint32, reserved *uint32, valtype *uint32, buf *byte, buflen *uint32) (regerrno error) {
+	r0, _, _ := syscall.Syscall9(procRegEnumValueW.Addr(), 8, uintptr(key), uintptr(index), uintptr(unsafe.Pointer(name)), uintptr(unsafe.Pointer(nameLen)), uintptr(unsafe.Pointer(reserved)), uintptr(unsafe.Pointer(valtype)), uintptr(unsafe.Pointer(buf)), uintptr(unsafe.Pointer(buflen)), 0)
+	if r0 != 0 {
+		regerrno = syscall.Errno(r0)
+	}
 	return
 }
 

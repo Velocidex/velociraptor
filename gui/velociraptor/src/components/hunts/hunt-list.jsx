@@ -475,7 +475,7 @@ class HuntList extends React.Component {
                         <Button data-tooltip={T("Modify Hunt")}
                             data-position="right"
                             className="btn-tooltip"
-                            disabled={!this.props.selected_hunt}
+                            disabled={!selected_hunt}
                             onClick={() => this.setState({ showModifyHuntDialog: true })}
                             variant="default">
                             <FontAwesomeIcon icon="wrench" />

@@ -37,6 +37,9 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/Velocidex/ttlcache/v2"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"www.velocidex.com/golang/regparser"
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -49,6 +52,26 @@ import (
 
 const (
 	MAX_EMBEDDED_REG_VALUE = 4 * 1024
+)
+
+var (
+	metricsReadValue = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "rawreg_getvalue",
+			Help: "Number of time we Queried Value from the registry",
+		})
+
+	metricsReadDirLruHit = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "rawreg_readdir_lru_hit",
+			Help: "Performance of the Read Dir Cache",
+		})
+
+	metricsReadDirLruMiss = promauto.NewCounter(
+		prometheus.CounterOpts{
+			Name: "rawreg_readdir_lru_miss",
+			Help: "Performance of the Read Dir Cache",
+		})
 )
 
 type RawRegKeyInfo struct {
@@ -127,6 +150,8 @@ type RawRegValueInfo struct {
 	// (i.e. ReadDir() will list the key) but Open() will read the
 	// value.
 	is_default_value bool
+
+	_data *ordereddict.Dict
 }
 
 func (self *RawRegValueInfo) Name() string {
@@ -150,6 +175,11 @@ func (self *RawRegValueInfo) Size() int64 {
 }
 
 func (self *RawRegValueInfo) Data() *ordereddict.Dict {
+	if self._data != nil {
+		return self._data
+	}
+
+	metricsReadValue.Inc()
 	value_data := self.value.ValueData()
 	value_type := self.value.TypeString()
 	if self.is_default_value {
@@ -173,6 +203,7 @@ func (self *RawRegValueInfo) Data() *ordereddict.Dict {
 			result.Set("value", value_data.Data)
 		}
 	}
+	self._data = result
 	return result
 }
 
@@ -217,6 +248,9 @@ func (self *rawHiveCache) Set(name string, reg *regparser.Registry) {
 type RawRegFileSystemAccessor struct {
 	scope vfilter.Scope
 	root  *accessors.OSPath
+
+	lru         *ttlcache.Cache
+	readdir_lru *ttlcache.Cache
 }
 
 func getRegHiveCache(scope vfilter.Scope) *rawHiveCache {
@@ -293,9 +327,26 @@ const RawRegFileSystemTag = "_RawReg"
 func (self *RawRegFileSystemAccessor) New(scope vfilter.Scope) (
 	accessors.FileSystemAccessor, error) {
 
+	my_lru := self.lru
+	if my_lru == nil {
+		my_lru = ttlcache.NewCache()
+		my_lru.SetCacheSizeLimit(1000)
+		my_lru.SetTTL(time.Minute)
+	}
+
+	my_readdir_lru := self.readdir_lru
+	if my_readdir_lru == nil {
+		my_readdir_lru = ttlcache.NewCache()
+		my_readdir_lru.SetCacheSizeLimit(1000)
+		my_readdir_lru.SetTTL(time.Minute)
+	}
+
 	return &RawRegFileSystemAccessor{
 		scope: scope,
 		root:  self.root,
+
+		lru:         my_lru,
+		readdir_lru: my_readdir_lru,
 	}, nil
 }
 
@@ -320,10 +371,27 @@ func (self *RawRegFileSystemAccessor) ReadDir(key_path string) (
 }
 
 func (self *RawRegFileSystemAccessor) ReadDirWithOSPath(
-	full_path *accessors.OSPath) (
-	[]accessors.FileInfo, error) {
+	full_path *accessors.OSPath) (result []accessors.FileInfo, err error) {
 
-	var result []accessors.FileInfo
+	cache_key := full_path.String()
+	cached, err := self.readdir_lru.Get(cache_key)
+	if err == nil {
+		cached_res, ok := cached.(*readDirLRUItem)
+		if ok {
+			metricsReadDirLruHit.Inc()
+			return cached_res.children, cached_res.err
+		}
+	}
+	metricsReadDirLruMiss.Inc()
+
+	// Cache the result of this function
+	defer func() {
+		self.readdir_lru.Set(cache_key, &readDirLRUItem{
+			children: result,
+			err:      err,
+		})
+	}()
+
 	hive, err := getRegHive(self.scope, full_path)
 	if err != nil {
 		return nil, err

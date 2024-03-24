@@ -538,6 +538,16 @@ func compileArtifact(
 			source.Queries = queries
 		}
 	}
+
+	// Also compile the export section to alert immediately about any
+	// problems.
+	if artifact.Export != "" {
+		_, err := splitQueryToQueries(artifact.Export)
+		if err != nil {
+			return fmt.Errorf("While compiling Exports from %v: %w",
+				artifact.Name, err)
+		}
+	}
 	artifact.Compiled = true
 
 	return updateTools(ctx, config_obj, artifact)
