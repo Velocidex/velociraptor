@@ -82,6 +82,11 @@ func (self CollectPlugin) Call(
 
 		collection_manager := newCollectionManager(ctx, config_obj,
 			output_chan, int(arg.Concurrency), scope)
+
+		// Make sure the Close() is called under any circumstances.
+		vql_subsystem.GetRootScope(scope).AddDestructor(func() {
+			collection_manager.Close()
+		})
 		defer collection_manager.Close()
 
 		request, err := self.configureCollection(ctx, collection_manager, arg)

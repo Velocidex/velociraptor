@@ -1,21 +1,22 @@
+//go:build windows && 386
 // +build windows,386
 
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package windows
 
@@ -384,6 +385,7 @@ type PROCESS_MEMORY_COUNTERS struct {
 //sys NetApiBufferFree(Buffer uintptr) (status NET_API_STATUS) = netapi32.NetApiBufferFree
 //sys NetUserEnum(servername *uint16, level uint32, filter uint32, bufptr *uintptr, prefmaxlen uint32, entriesread *uint32, totalentries *uint32, resume_handle *uint32) (status NET_API_STATUS) = netapi32.NetUserEnum
 //sys NetUserGetGroups(servername *LPCWSTR, username *LPCWSTR, level DWORD, bufptr *LPBYTE, prefmaxlen DWORD, entriesread *LPDWORD, totalentries *LPDWORD) (status NET_API_STATUS) = netapi32.NetUserGetGroups
+//sys RegEnumValue(key syscall.Handle, index uint32, name *byte, nameLen *uint32, reserved *uint32, valtype *uint32, buf *byte, buflen *uint32) (regerrno error) = advapi32.RegEnumValueW
 
 // Converts a pointer to a wide string to a regular go string. The
 // underlying buffer may be freed afterwards by the Windows API.

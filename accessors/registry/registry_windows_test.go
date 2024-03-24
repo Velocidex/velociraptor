@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package registry
@@ -10,11 +11,14 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/sebdah/goldie"
 	"www.velocidex.com/golang/velociraptor/json"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
 func TestRegistryFilesystemAccessor(t *testing.T) {
-	accessor := &RegFileSystemAccessor{}
+	scope := vql_subsystem.MakeScope()
+	accessor, err := (&RegFileSystemAccessor{}).New(scope)
+	assert.NoError(t, err)
 
 	ls := func(path string, filter string) []string {
 		filter_re := regexp.MustCompile(filter)
