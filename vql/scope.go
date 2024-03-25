@@ -21,7 +21,6 @@ package vql
 import (
 	"sync"
 
-	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -44,36 +43,36 @@ func (self *ScopeCache) Set(key string, value interface{}) {
 	self.cache[key] = value
 }
 
-func CacheGet(scope vfilter.Scope, key string) interface{} {
-	any_obj, pres := scope.Resolve(CACHE_VAR)
+func getCache(scope vfilter.Scope) *ScopeCache {
+	any_obj, pres := scope.GetContext(CACHE_VAR)
 	if !pres {
-		scope.AppendVars(ordereddict.NewDict().
-			Set(CACHE_VAR, NewScopeCache()))
+		return NewScopeCache()
 	}
 	cache, ok := any_obj.(*ScopeCache)
-	if ok {
-		cache.mu.Lock()
-		defer cache.mu.Unlock()
-
-		return cache.cache[key]
+	if !ok {
+		return NewScopeCache()
 	}
-	return nil
+	return cache
+}
+
+func CacheGet(scope vfilter.Scope, key string) interface{} {
+	cache := getCache(scope)
+	defer scope.SetContext(CACHE_VAR, cache)
+
+	cache.mu.Lock()
+	defer cache.mu.Unlock()
+
+	return cache.cache[key]
 }
 
 func CacheSet(scope vfilter.Scope, key string, value interface{}) {
-	any_obj, pres := scope.Resolve(CACHE_VAR)
-	if !pres {
-		scope.AppendVars(ordereddict.NewDict().
-			Set(CACHE_VAR, NewScopeCache()))
-	}
+	cache := getCache(scope)
+	defer scope.SetContext(CACHE_VAR, cache)
 
-	cache, ok := any_obj.(*ScopeCache)
-	if ok {
-		cache.mu.Lock()
-		defer cache.mu.Unlock()
+	cache.mu.Lock()
+	defer cache.mu.Unlock()
 
-		cache.cache[key] = value
-	}
+	cache.cache[key] = value
 }
 
 // The server config is sensitive and so it is *not* stored in the
