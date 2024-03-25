@@ -33,7 +33,7 @@ func (self *RmFavorite) Call(ctx context.Context,
 	// to add their own favorites.
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
-		scope.Log("Command can only run on the server")
+		scope.Log("favorites_delete: Command can only run on the server")
 		return vfilter.Null{}
 	}
 

@@ -48,7 +48,7 @@ func (self *KillClientFunction) Call(ctx context.Context,
 
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
-		scope.Log("Command can only run on the server")
+		scope.Log("killkillkill: Command can only run on the server")
 		return vfilter.Null{}
 	}
 

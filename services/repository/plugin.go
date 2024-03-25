@@ -300,6 +300,12 @@ func (self *ArtifactRepositoryPlugin) copyScope(
 	result.ClearContext()
 	result.AppendVars(env)
 
+	// Copy the scope cache from the caller
+	cache, pres := scope.GetContext(vql_subsystem.CACHE_VAR)
+	if pres {
+		result.SetContext(vql_subsystem.CACHE_VAR, cache)
+	}
+
 	// Copy critical context variables
 	for _, field := range []string{
 		constants.SCOPE_RESPONDER_CONTEXT,

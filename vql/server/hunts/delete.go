@@ -46,7 +46,7 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			scope.Log("Command can only run on the server")
+			scope.Log("hunt_delete: Command can only run on the server")
 			return
 		}
 
