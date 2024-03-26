@@ -53,7 +53,7 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
-		scope.Log("Command can only run on the server")
+		scope.Log("inventory_add: Command can only run on the server")
 		return vfilter.Null{}
 	}
 
@@ -170,7 +170,7 @@ func (self *InventoryGetFunction) Call(ctx context.Context,
 
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
-		scope.Log("Command can only run on the server")
+		scope.Log("inventory_get: Command can only run on the server")
 		return vfilter.Null{}
 	}
 
@@ -229,7 +229,7 @@ func (self InventoryPlugin) Call(
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			scope.Log("Command can only run on the server")
+			scope.Log("inventory: Command can only run on the server")
 		}
 
 		inventory, err := services.GetInventory(config_obj)

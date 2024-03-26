@@ -28,7 +28,7 @@ func (self Generator) Eval(ctx context.Context, scope types.Scope) <-chan types.
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			scope.Log("Command can only run on the server")
+			scope.Log("generate: Command can only run on the server")
 			return
 		}
 
@@ -84,7 +84,7 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
-		scope.Log("Command can only run on the server")
+		scope.Log("generate: Command can only run on the server")
 		return false
 	}
 

@@ -20,9 +20,10 @@ import (
 )
 
 type UploadsPluginsArgs struct {
-	ClientId string `vfilter:"optional,field=client_id,doc=The client id to extract"`
-	FlowId   string `vfilter:"optional,field=flow_id,doc=A flow ID (client or server artifacts)"`
-	HuntId   string `vfilter:"optional,field=hunt_id,doc=A hunt ID"`
+	ClientId   string `vfilter:"optional,field=client_id,doc=The client id to extract"`
+	FlowId     string `vfilter:"optional,field=flow_id,doc=A flow ID (client or server artifacts)"`
+	HuntId     string `vfilter:"optional,field=hunt_id,doc=A hunt ID"`
+	NotebookId string `vfilter:"optional,field=notebook_id,doc=A notebook ID"`
 }
 
 type UploadsPlugins struct{}
@@ -46,7 +47,7 @@ func (self UploadsPlugins) Call(
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			scope.Log("Command can only run on the server")
+			scope.Log("uploads: Command can only run on the server")
 			return
 		}
 
@@ -57,6 +58,45 @@ func (self UploadsPlugins) Call(
 		if err != nil {
 			scope.Log("uploads: %v", err)
 			return
+		}
+
+		// Extract notebook uploads
+		if arg.NotebookId != "" {
+			notebook_manager, err := services.GetNotebookManager(config_obj)
+			if err != nil {
+				scope.Log("uploads: %v", err)
+				return
+			}
+
+			notebook_metadata, err := notebook_manager.GetNotebook(
+				ctx, arg.NotebookId, services.INCLUDE_UPLOADS)
+			if err != nil {
+				scope.Log("uploads: %v", err)
+				return
+			}
+
+			if notebook_metadata.AvailableUploads == nil {
+				return
+			}
+
+			for _, upload := range notebook_metadata.AvailableUploads.Files {
+				var components []string
+				if upload.Stats != nil {
+					components = upload.Stats.Components
+				}
+
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- ordereddict.NewDict().
+					Set("notebook_id", notebook_metadata.NotebookId).
+					Set("name", upload.Name).
+					Set("mtime", upload.Date).
+					Set("size", upload.Size).
+					Set("vfs_path", path_specs.NewUnsafeFilestorePath(components...).
+						SetType(api.PATH_TYPE_FILESTORE_ANY)):
+				}
+			}
 		}
 
 		if arg.HuntId == "" {
@@ -193,6 +233,11 @@ func ParseUploadArgsFromScope(arg *UploadsPluginsArgs, scope vfilter.Scope) {
 	hunt_id, pres := scope.Resolve("HuntId")
 	if pres {
 		arg.HuntId, _ = hunt_id.(string)
+	}
+
+	notebook_id, pres := scope.Resolve("NotebookId")
+	if pres {
+		arg.NotebookId, _ = notebook_id.(string)
 	}
 }
 

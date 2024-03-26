@@ -265,10 +265,8 @@ func (self *ArtifactRepositoryPlugin) copyScope(
 	env := ordereddict.NewDict()
 	for _, field := range []string{
 		vql_subsystem.ACL_MANAGER_VAR,
-		vql_subsystem.CACHE_VAR,
 		constants.SCOPE_MOCK,
 		constants.SCOPE_CONFIG,
-		constants.SCOPE_SERVER_CONFIG,
 		constants.SCOPE_THROTTLE,
 		constants.SCOPE_ROOT,
 		constants.SCOPE_RESPONDER,
@@ -301,6 +299,12 @@ func (self *ArtifactRepositoryPlugin) copyScope(
 	result := scope.Copy()
 	result.ClearContext()
 	result.AppendVars(env)
+
+	// Copy the scope cache from the caller
+	cache, pres := scope.GetContext(vql_subsystem.CACHE_VAR)
+	if pres {
+		result.SetContext(vql_subsystem.CACHE_VAR, cache)
+	}
 
 	// Copy critical context variables
 	for _, field := range []string{

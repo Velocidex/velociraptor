@@ -105,7 +105,7 @@ func (self SourcePlugin) Call(
 	arg := &SourcePluginArgs{}
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
-		scope.Log("Command can only run on the server")
+		scope.Log("uploads: Command can only run on the server")
 		close(output_chan)
 		return output_chan
 	}
@@ -379,7 +379,7 @@ func (self FlowResultsPlugin) Call(
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			scope.Log("Command can only run on the server")
+			scope.Log("flow_results: Command can only run on the server")
 			return
 		}
 
