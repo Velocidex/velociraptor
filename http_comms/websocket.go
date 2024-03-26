@@ -14,6 +14,7 @@ import (
 	"github.com/gorilla/websocket"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
+	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -167,6 +168,10 @@ func (self *HTTPClientWithWebSocketTransport) NewWebSocketConnection(
 		} else if _, ok := err.(net.Error); ok {
 			return nil
 		}
+
+		// Update the nanny as we got a valid read message.
+		self.nanny.UpdateReadFromServer()
+
 		return err
 	})
 
@@ -194,6 +199,7 @@ type HTTPClientWithWebSocketTransport struct {
 	config_obj     *config_proto.Config
 
 	transport *http.Transport
+	nanny     *executor.NannyService
 }
 
 func (self *HTTPClientWithWebSocketTransport) RoundTrip(
@@ -276,7 +282,8 @@ func (self *HTTPClientWithWebSocketTransport) roundTripWS(
 
 func NewHTTPClient(
 	config_obj *config_proto.Config,
-	transport *http.Transport) *http.Client {
+	transport *http.Transport,
+	nanny *executor.NannyService) *http.Client {
 	return &http.Client{
 		// Let us handle redirect ourselves.
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
@@ -286,6 +293,7 @@ func NewHTTPClient(
 			transport:      transport,
 			config_obj:     config_obj,
 			ws_connections: make(map[string]*WebSocketConnection),
+			nanny:          nanny,
 		},
 	}
 }

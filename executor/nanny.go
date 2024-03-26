@@ -138,6 +138,7 @@ func (self *NannyService) Start(
 
 			case <-Clock.After(10 * time.Second):
 				self.mu.Lock()
+
 				called := self._CheckTime(self.last_pump_to_rb_attempt, "Pump to Ring Buffer")
 				if self._CheckTime(self.last_pump_rb_to_server_attempt, "Pump Ring Buffer to Server") {
 					called = true

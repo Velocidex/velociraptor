@@ -44,9 +44,9 @@ reports:
             })
       {{ end }}
 
-      {{ $time := Query "SELECT timestamp(epoch=now()) AS Now FROM scope()" | Expand }}
-
-      ## Server status @ {{ Get $time "0.Now" }}
+      {{ $time_rows := Query "SELECT timestamp(epoch=now()) AS Now FROM scope()" | Expand }}
+      {{ $time := Get $time_rows "0.Now" }}
+      ## Server status @ <velo-value value="{{ $time.Format "2006-01-02T15:04:05Z07:00" }}" />
 
       <p>The following are total across all frontends.</p>
           <span class="container">
