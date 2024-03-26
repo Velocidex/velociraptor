@@ -48,7 +48,7 @@ func (self TimelinePlugin) Call(
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			scope.Log("Command can only run on the server")
+			scope.Log("timeline: Command can only run on the server")
 			return
 		}
 

@@ -39,7 +39,7 @@ func (self RemoveClientMonitoringFunction) Call(
 
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
-		scope.Log("Command can only run on the server")
+		scope.Log("rm_client_monitoring: Command can only run on the server")
 		return vfilter.Null{}
 	}
 
@@ -102,7 +102,7 @@ func (self RemoveServerMonitoringFunction) Call(
 
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
-		scope.Log("Command can only run on the server")
+		scope.Log("rm_server_monitoring: Command can only run on the server")
 		return vfilter.Null{}
 	}
 

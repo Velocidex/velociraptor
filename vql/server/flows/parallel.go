@@ -74,7 +74,7 @@ func (self ParallelPlugin) Call(
 		arg := &ParallelPluginArgs{}
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			scope.Log("Command can only run on the server")
+			scope.Log("parallel: Command can only run on the server")
 			return
 		}
 
