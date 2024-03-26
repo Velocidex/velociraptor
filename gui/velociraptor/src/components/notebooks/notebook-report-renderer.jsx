@@ -18,6 +18,7 @@ import { NotebookLineChart, NotebookTimeChart,
 
 import NotebookTableRenderer from './notebook-table-renderer.jsx';
 
+import VeloValueRenderer from '../utils/value.jsx';
 
 const parse_param = domNode=>JSON.parse(decodeURIComponent(
     domNode.attribs.params || "{}"));
@@ -126,6 +127,11 @@ export default class NotebookReportRenderer extends React.Component {
 
                     };
                 }
+
+                if (domNode.name === "velo-value") {
+                    let value = decodeURIComponent(domNode.attribs.value || "");
+                    return <VeloValueRenderer value={value}/>;
+                };
 
                 if (domNode.name === "grr-timeline") {
                     let name = decodeURIComponent(domNode.attribs.name || "");

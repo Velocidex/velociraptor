@@ -286,6 +286,10 @@ func RepackMSI(
 		config_data = append(config_data, '\n')
 	}
 
+	// Ensure the packed config ends with a YAML comment to avoid
+	// confusion with the padding being considered part of the yaml.
+	config_data = append(config_data, []byte("\n\n\n# Padding")...)
+
 	match := embedded_msi_re.FindIndex(data)
 	if match == nil || match[1] < 10 {
 		scope.Log("client_repack: I can not seem to locate the embedded config???? To repack an MSI, be sure to build from custom.xml with the custom.config.yaml file.")

@@ -151,7 +151,7 @@ func (self *EventTable) Update(
 
 	// If the new update is identical to the old queries we wont
 	// restart. This can happen e.g. if the server changes label
-	// groups and recaculates the table version but the actual
+	// groups and recalculates the table version but the actual
 	// queries dont end up changing.
 	if self.Equal(table.Event) {
 		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
