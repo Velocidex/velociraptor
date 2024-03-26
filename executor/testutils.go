@@ -30,6 +30,10 @@ func NewClientExecutorForTests(config_obj *config_proto.Config) *ClientExecutor 
 	}
 }
 
+func (self *_TestExecutor) Nanny() *NannyService {
+	return Nanny
+}
+
 func (self *_TestExecutor) GetClientInfo() *actions_proto.ClientInfo {
 	return &actions_proto.ClientInfo{}
 }
