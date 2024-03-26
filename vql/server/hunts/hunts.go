@@ -70,7 +70,7 @@ func (self HuntsPlugin) Call(
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			scope.Log("Command can only run on the server")
+			scope.Log("hunts: Command can only run on the server")
 			return
 		}
 
@@ -164,7 +164,7 @@ func (self HuntResultsPlugin) Call(
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			scope.Log("Command can only run on the server")
+			scope.Log("hunt_results: Command can only run on the server")
 			return
 		}
 
@@ -354,7 +354,7 @@ func (self HuntFlowsPlugin) Call(
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			scope.Log("Command can only run on the server")
+			scope.Log("hunt_flows: Command can only run on the server")
 			return
 		}
 

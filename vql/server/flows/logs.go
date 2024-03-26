@@ -44,7 +44,7 @@ func (self FlowLogsPlugin) Call(
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			scope.Log("Command can only run on the server")
+			scope.Log("flow_logs: Command can only run on the server")
 			return
 		}
 

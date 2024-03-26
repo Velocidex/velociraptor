@@ -418,6 +418,25 @@ func (self RegFileSystemAccessor) ReadDir(path string) (
 func (self RegFileSystemAccessor) ReadDirWithOSPath(
 	full_path *accessors.OSPath) (result []accessors.FileInfo, err error) {
 
+	cache_key := full_path.String()
+	cached, err := self.readdir_lru.Get(cache_key)
+	if err == nil {
+		cached_res, ok := cached.(*readDirLRUItem)
+		if ok {
+			metricsReadDirLruHit.Inc()
+			return cached_res.children, cached_res.err
+		}
+	}
+	metricsReadDirLruMiss.Inc()
+
+	// Cache the result of this function
+	defer func() {
+		self.readdir_lru.Set(cache_key, &readDirLRUItem{
+			children: result,
+			err:      err,
+		})
+	}()
+
 	// Root directory is just the name of the hives.
 	if len(full_path.Components) == 0 {
 		for _, k := range root_keys.Keys() {

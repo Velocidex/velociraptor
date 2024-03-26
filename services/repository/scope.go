@@ -51,8 +51,8 @@ func _build(self services.ScopeBuilder, from_scratch bool) vfilter.Scope {
 
 	scope.SetLogger(self.Logger)
 
-	cache := vql_subsystem.NewScopeCache()
-	env.Set(vql_subsystem.CACHE_VAR, cache)
+	// Make a new fresh context.
+	scope.SetContext(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	device_manager := accessors.GetDefaultDeviceManager(
 		self.Config).Copy()
@@ -62,7 +62,7 @@ func _build(self services.ScopeBuilder, from_scratch bool) vfilter.Scope {
 		// Server config contains secrets - they are stored in
 		// a way that VQL can not directly access them but
 		// plugins can get via vql_subsystem.GetServerConfig()
-		cache.Set(constants.SCOPE_SERVER_CONFIG, self.Config)
+		vql_subsystem.CacheSet(scope, constants.SCOPE_SERVER_CONFIG, self.Config)
 
 		if self.Config.Client != nil {
 			env.Set(constants.SCOPE_CONFIG, self.Config.Client)

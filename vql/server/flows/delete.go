@@ -44,7 +44,7 @@ func (self DeleteFlowPlugin) Call(
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			scope.Log("Command can only run on the server")
+			scope.Log("delete_flow: Command can only run on the server")
 			return
 		}
 

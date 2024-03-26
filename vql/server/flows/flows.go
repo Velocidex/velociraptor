@@ -45,7 +45,7 @@ func (self FlowsPlugin) Call(
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			scope.Log("Command can only run on the server")
+			scope.Log("flows: Command can only run on the server")
 			return
 		}
 
@@ -139,7 +139,7 @@ func (self *CancelFlowFunction) Call(ctx context.Context,
 
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
-		scope.Log("Command can only run on the server")
+		scope.Log("cancel_flow: Command can only run on the server")
 		return vfilter.Null{}
 	}
 
@@ -193,7 +193,7 @@ func (self EnumerateFlowPlugin) Call(
 
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			scope.Log("Command can only run on the server")
+			scope.Log("enumerate_flow: Command can only run on the server")
 			return
 		}
 
