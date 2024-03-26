@@ -648,6 +648,7 @@ func NewBlueMondayPolicy() *bluemonday.Policy {
 	p.AllowAttrs("value", "params").OnElements("bar-chart")
 	p.AllowAttrs("value", "params").OnElements("scatter-chart")
 	p.AllowAttrs("value", "params").OnElements("time-chart")
+	p.AllowAttrs("value").OnElements("velo-value")
 
 	//p.AllowNoAttrs().OnElements("accordion")
 	p.AllowAttrs("params").OnElements("notebook-bar-chart")

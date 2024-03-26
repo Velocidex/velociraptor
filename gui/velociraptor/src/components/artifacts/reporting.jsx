@@ -17,6 +17,8 @@ import { NotebookLineChart, NotebookTimeChart,
          NotebookScatterChart, NotebookBarChart
        } from '../notebooks/notebook-chart-renderer.jsx';
 
+import VeloValueRenderer from '../utils/value.jsx';
+
 // Renders a report in the DOM.
 const parse_param = domNode=>JSON.parse(decodeURIComponent(
     domNode.attribs.params || "{}"));
@@ -205,6 +207,12 @@ export default class VeloReportViewer extends React.Component {
                     return (
                         <Timeline name={name}/>
                     );
+                };
+
+                if (domNode.name === "velo-value") {
+                    let value = decodeURIComponent(domNode.attribs.value || "");
+                    return <VeloValueRenderer value={value}/>;
+
                 };
 
                 if (domNode.name === "grr-line-chart") {
