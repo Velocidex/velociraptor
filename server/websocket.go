@@ -167,15 +167,18 @@ func ws_receive_client_messages(
 		_, _, err = server_obj.Process(subctx, message_info,
 			DoNotDrainRequestsForClient)
 		if err != nil {
-			server_obj.Error("Error: %v", err)
+			// Send the client an error that indicates the request was
+			// incorrect but the client should not retry to send the
+			// data.
+			send_error(ws, err, http.StatusBadRequest)
 			cancel()
-			return send_error(ws, err, http.StatusServiceUnavailable)
+
+		} else {
+			// Send an ack to the client that we received this
+			// message.
+			send_error(ws, nil, http.StatusOK)
+			cancel()
 		}
-
-		// Send an ack to the client that we received this message.
-		send_error(ws, nil, http.StatusOK)
-
-		cancel()
 	}
 }
 

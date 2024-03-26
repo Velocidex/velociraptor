@@ -151,6 +151,7 @@ type HTTPConnector struct {
 	// server immediately and keep accessing that server until the
 	// an error occurs or we are further redirected.
 	redirect_to_server int
+	nanny              *executor.NannyService
 
 	clock utils.Clock
 }
@@ -160,6 +161,7 @@ func NewHTTPConnector(
 	manager crypto.IClientCryptoManager,
 	logger *logging.LogContext,
 	urls []string,
+	nanny *executor.NannyService,
 	clock utils.Clock) (*HTTPConnector, error) {
 
 	if config_obj.Client == nil {
@@ -222,9 +224,10 @@ func NewHTTPConnector(
 		maxPoll:    time.Duration(max_poll) * time.Second,
 		maxPollDev: maxPollDev,
 
-		urls: urls,
+		urls:  urls,
+		nanny: nanny,
 
-		client: NewHTTPClient(config_obj, transport),
+		client: NewHTTPClient(config_obj, transport, nanny),
 	}
 
 	return self, nil
@@ -353,6 +356,21 @@ func (self *HTTPConnector) Post(
 
 		return nil, RedirectError
 
+		// This error means something went wrong in processing the
+		// message we sent - we do not want to retry sending this
+		// message because the server already attempted to process it
+		// but it didnt work for some reason.
+	case 400:
+		data := &bytes.Buffer{}
+		_, err := utils.Copy(ctx, data, resp.Body)
+		if err != nil {
+			return nil, errors.Wrap(err, 0)
+		}
+
+		self.logger.Error("%s: Error: %v %v", name, resp.Status, string(data.Bytes()))
+
+		return &bytes.Buffer{}, nil
+
 	case 406:
 		return nil, EnrolError
 
@@ -414,9 +432,9 @@ func (self *HTTPConnector) advanceToNextServer(ctx context.Context) {
 
 		// While we wait to reconnect we need to update the nanny or
 		// we get killed.
-		if executor.Nanny != nil {
-			executor.Nanny.UpdatePumpRbToServer()
-			executor.Nanny.UpdateReadFromServer()
+		if self.nanny != nil {
+			self.nanny.UpdatePumpRbToServer()
+			self.nanny.UpdateReadFromServer()
 		}
 
 		// Release the lock while we wait.
@@ -683,10 +701,8 @@ func (self *NotificationReader) sendMessageList(
 
 		// While we wait to reconnect we need to update the nanny or
 		// we get killed.
-		if executor.Nanny != nil {
-			executor.Nanny.UpdatePumpRbToServer()
-			executor.Nanny.UpdateReadFromServer()
-		}
+		self.executor.Nanny().UpdatePumpRbToServer()
+		self.executor.Nanny().UpdateReadFromServer()
 
 		select {
 		case <-ctx.Done():
@@ -800,7 +816,7 @@ func (self *NotificationReader) Start(
 
 		// Periodically read from executor and push to ring buffer.
 		for {
-			executor.Nanny.UpdateReadFromServer()
+			self.executor.Nanny().UpdateReadFromServer()
 
 			// The Reader does not send any server bound
 			// messages - it is blocked reading server
@@ -944,7 +960,9 @@ func NewHTTPCommunicator(
 	rand.Shuffle(len(urls), func(i, j int) {
 		urls[i], urls[j] = urls[j], urls[i]
 	})
-	connector, err := NewHTTPConnector(config_obj, crypto_manager, logger, urls, clock)
+	connector, err := NewHTTPConnector(
+		config_obj, crypto_manager, logger, urls,
+		executor.Nanny(), clock)
 	if err != nil {
 		return nil, err
 	}

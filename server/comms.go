@@ -179,7 +179,7 @@ func server_pem(config_obj *config_proto.Config, server_obj *Server) http.Handle
 		if is_ws_connection(req) {
 			err := ws_server_pem(config_obj, server_obj, w, req)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
+				server_obj.Debug("During WSS server_pem connection: %v", err)
 				return
 			}
 			return
@@ -290,7 +290,7 @@ func receive_client_messages(
 		if is_ws_connection(req) {
 			err := ws_receive_client_messages(config_obj, server_obj, w, req)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
+				server_obj.Debug("During WSS receive_client_messages connection: %v", err)
 				return
 			}
 			return
@@ -499,7 +499,7 @@ func send_client_messages(
 		if is_ws_connection(req) {
 			err := ws_send_client_messages(config_obj, server_obj, w, req)
 			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
+				server_obj.Debug("During wss send_client_messages: %v", err)
 				return
 			}
 			return

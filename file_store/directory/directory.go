@@ -229,7 +229,7 @@ func (self *DirectoryFileStore) Delete(filename api.FSPathSpec) error {
 		err = os.Remove(dir_name)
 		if err == nil {
 			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-			logger.Debug("Prunning empty directory %v", dir_name)
+			logger.Debug("Pruning empty directory %v", dir_name)
 		}
 
 		// Check if this is the last file in the directory.

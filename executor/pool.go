@@ -272,6 +272,10 @@ type PoolClientExecutor struct {
 	client_id string
 }
 
+func (self *PoolClientExecutor) Nanny() *NannyService {
+	return Nanny
+}
+
 func (self *PoolClientExecutor) FlowManager() *responder.FlowManager {
 	return self.delegate.FlowManager()
 }
