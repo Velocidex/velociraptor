@@ -151,6 +151,14 @@ func (self *HTTPClientCache) mergeSecretToRequest(
 		}
 	}
 
+	get_bool := func(field string, target *bool) {
+		res := vql_subsystem.GetStringFromRow(
+			scope, secret_record.Data, field)
+		if res != "" {
+			*target = vql_subsystem.GetBoolFromString(res)
+		}
+	}
+
 	// We expect Dict parameters to be a YAML formatted object.
 	get_dict := func(field string, target *ordereddict.Dict) {
 		res := vql_subsystem.GetStringFromRow(
@@ -186,6 +194,8 @@ func (self *HTTPClientCache) mergeSecretToRequest(
 	get("url", &arg.real_url)
 	get("method", &arg.Method)
 	get("user_agent", &arg.UserAgent)
+	get("root_ca", &arg.RootCerts)
+	get_bool("skip_verify", &arg.SkipVerify)
 	get_dict("extra_params", arg.Params)
 	get_dict("extra_headers", arg.Headers)
 	get_dict("cookies", arg.CookieJar)

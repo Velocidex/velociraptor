@@ -155,6 +155,8 @@ const (
 	AWS_S3_CREDS    = "AWS S3 Creds"
 	SSH_PRIVATE_KEY = "SSH PrivateKey"
 	HTTP_SECRETS    = "HTTP Secrets"
+	SPLUNK_CREDS    = "Splunk Creds"
+	ELASTIC_CREDS   = "Elastic Creds"
 )
 
 type key int

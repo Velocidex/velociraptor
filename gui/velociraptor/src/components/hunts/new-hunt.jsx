@@ -299,6 +299,12 @@ export default class NewHuntWizard extends React.Component {
             state.hunt_parameters.expires = expiry;
             state.hunt_parameters.org_ids = hunt.org_ids || [];
 
+            if (_.isEmpty(request.artifacts)) {
+                this.setState({artifacts:[]});
+                return state;
+            }
+
+
             // Resolve the artifacts from the request into a list of descriptors.
             api.post("v1/GetArtifacts", {
                 names: request.artifacts,
