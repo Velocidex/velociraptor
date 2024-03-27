@@ -1,0 +1,35 @@
+Queries:
+  # The followings are here to test the Message extraction on a live Windows system.
+  - SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1_record.evtx')
+
+  - SELECT UserData FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1_record.evtx') WHERE System.EventId.Value = 1102
+
+  - SELECT UserData FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1_record.evtx') WHERE System.EventId.Value != 1102
+
+  # Powershell VQL tests
+  - SELECT * FROM Artifact.Windows.EventLogs.PowershellScriptblock(EvtxGlob=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx", LogLevel="All")
+
+  - SELECT * FROM Artifact.Windows.EventLogs.PowershellModule(EventLog=srcDir + "/artifacts/testdata/files/EID4103_PowershellModule.evtx" )
+
+  - SELECT Message FROM parse_evtx(
+      filename=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx")
+    LIMIT 1
+
+  - SELECT * FROM Artifact.Windows.EventLogs.EvtxHunter( EvtxGlob=srcDir + "/artifacts/testdata/files/EID4104_PowershellScriptblock.evtx",IocRegex="Get-Service" )
+
+  # Task Scheduler testing to ensure field parsing wrking as expected
+  - SELECT * FROM Artifact.Windows.EventLogs.ScheduledTasks( Security=srcDir + '/artifacts/testdata/files/SecurityTasks.evtx', TaskScheduler= srcDir + '/artifacts/testdata/files/TaskScheduler.evtx', TaskNameRegex='T1053_005_powershell' )
+
+   # RDPAuth testing to ensure field parsing working as expected
+  - SELECT EventID, DomainName, UserName, LogonType, SourceIP, Description
+    FROM Artifact.Windows.EventLogs.RDPAuth(
+        Security=srcDir + '/artifacts/testdata/files/RDPAuth_Security.evtx',
+        System= srcDir + '/artifacts/testdata/files/RDPAuth_System.evtx',
+        LocalSessionManager= srcDir + '/artifacts/testdata/files/RDPAuth_LocalSessionManager.evtx',
+        RemoteConnectionManager= srcDir + '/artifacts/testdata/files/RDPAuth_RemoteConnectionManager.evtx')
+    WHERE NOT LogonType = 3
+    GROUP BY EventID
+
+  # Add test for event log clearing and move from VSS test for improved speed
+  - SELECT ClearedLog, Message =~ "The audit log was cleared."
+    FROM Artifact.Windows.EventLogs.Cleared()
