@@ -155,7 +155,11 @@ type RawRegValueInfo struct {
 }
 
 func (self *RawRegValueInfo) Name() string {
-	return self.value.ValueName()
+	value_name := self.value.ValueName()
+	if self.is_default_value || value_name == "" {
+		return "@"
+	}
+	return value_name
 }
 
 func (self *RawRegValueInfo) IsDir() bool {

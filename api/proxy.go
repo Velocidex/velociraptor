@@ -288,7 +288,7 @@ func GetAPIHandler(
 	creds := credentials.NewTLS(&tls.Config{
 		Certificates: []tls.Certificate{cert},
 		RootCAs:      CA_Pool,
-		ServerName:   utils.GetSuperuserName(config_obj),
+		ServerName:   utils.GetSuperuserGWName(config_obj),
 	})
 
 	opts := []grpc.DialOption{
