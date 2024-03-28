@@ -75,6 +75,10 @@ function proto2tables(table, cb) {
         all_artifacts = all_artifacts.concat(event_table.artifacts);
     });
 
+    if (_.isEmpty(all_artifacts)) {
+        return {};
+    }
+
     // Now lookup all the artifacts for their definitions and replace
     // in client_event_table.
     api.post("v1/GetArtifacts", {names: all_artifacts}).then(response=>{

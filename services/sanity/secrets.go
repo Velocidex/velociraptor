@@ -40,11 +40,44 @@ var built_in_definitions = []string{`{
      "url": "",
      "method": "",
      "user_agent": "",
+     "root_ca": "",
+     "skip_verify": "FALSE",
      "extra_params": "# Add extra parameters as YAML strings\n#Foo: Value\n#Baz:Value2\n",
      "extra_headers": "# Add extra headers as YAML strings\n#Authorization: Value\n",
      "cookies": "# Add cookies as YAML strings\n#Cookie1: Value\n#Cookie2: Value2\n"
   },
   "verifier": "x=>x.url"
+}`, `{
+  "typeName":"Splunk Creds",
+  "description": "Credentials to be used in upload_splunk() calls.",
+  "template": {
+     "url": "",
+     "token": "",
+     "index": "",
+     "source": "",
+     "root_ca": "",
+     "hostname": "",
+     "hostname_field": "",
+     "skip_verify": "FALSE"
+  },
+  "verifier": "x=>x.index AND x.url"
+}`, `{
+  "typeName":"Elastic Creds",
+  "description": "Credentials to be used in upload_elastic() calls.",
+  "template": {
+     "index": "",
+     "type": "",
+     "addresses": "# Add URLs one per line\n# http://www.example.com/\n",
+     "username": "",
+     "password": "",
+     "cloud_id": "",
+     "api_key": "",
+     "pipeline": "",
+     "root_ca": "",
+     "action": "",
+     "skip_verify": "FALSE"
+  },
+  "verifier": "x=>x.addresses"
 }`,
 }
 

@@ -1,4 +1,5 @@
 Queries:
+  # The followings are here to test the Message extraction on a live Windows system.
   - SELECT * FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1_record.evtx')
 
   - SELECT UserData FROM parse_evtx(filename=srcDir + '/artifacts/testdata/files/Security_1_record.evtx') WHERE System.EventId.Value = 1102

@@ -1,24 +1,25 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package vql
 
 import (
 	"context"
+	"regexp"
 	"runtime/debug"
 	"strconv"
 	"time"
@@ -59,6 +60,22 @@ func GetStringFromRow(scope vfilter.Scope,
 	return ""
 }
 
+func GetStringsFromRow(scope vfilter.Scope,
+	row vfilter.Row, key string) (res []string) {
+
+	value, pres := scope.Associative(row, key)
+	if pres {
+		for item := range scope.Iterate(context.Background(), value) {
+			value := Materialize(context.Background(), scope, item)
+			value_str, ok := value.(string)
+			if ok {
+				res = append(res, value_str)
+			}
+		}
+	}
+	return res
+}
+
 func GetBoolFromRow(scope vfilter.Scope,
 	row vfilter.Row, key string) bool {
 	value, pres := scope.Associative(row, key)
@@ -67,6 +84,13 @@ func GetBoolFromRow(scope vfilter.Scope,
 		return scope.Bool(value)
 	}
 	return false
+}
+
+// Sometimes we encode bools in string values
+var boolRegEx = regexp.MustCompile("(?i)^\\s*(true|Y|1)\\s*$")
+
+func GetBoolFromString(value string) bool {
+	return boolRegEx.MatchString(value)
 }
 
 // GetIntFromRow gets a uint64 value from row. If it is not there
