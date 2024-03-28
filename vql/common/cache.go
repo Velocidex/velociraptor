@@ -56,6 +56,7 @@ func (self *_CacheObj) Materialize() {
 	defer self.mu.Unlock()
 
 	self.materialize()
+	self.expires = time.Now().Add(self.period)
 }
 
 func (self *_CacheObj) materialize() {
@@ -111,7 +112,6 @@ func (self _CacheAssociative) Associative(
 
 	if time.Now().After(cache_obj.expires) {
 		cache_obj.Materialize()
-		cache_obj.expires = time.Now().Add(cache_obj.period)
 	}
 
 	res, pres := cache_obj.cache[key]

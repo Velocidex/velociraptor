@@ -238,6 +238,10 @@ class NewCollectionSelectArtifacts extends React.Component {
         let artifacts = [];
         _.each(spec, x=>artifacts.push(x.artifact));
 
+        if(_.isEmpty(artifacts)) {
+            return;
+        }
+
         api.post("v1/GetArtifacts", {
             type: this.props.artifactType,
             names: artifacts}, this.source.token).then((response) => {
@@ -851,6 +855,12 @@ class NewCollectionWizard extends React.Component {
             resources: resources,
             initialized_from_parent: true,
         });
+
+        if (_.isEmpty(request.artifacts)) {
+            this.setState({artifacts:[]});
+            return;
+        }
+
 
         // Resolve the artifacts from the request into a list of descriptors.
         api.post("v1/GetArtifacts",

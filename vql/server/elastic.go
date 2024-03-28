@@ -53,7 +53,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -80,6 +82,7 @@ type _ElasticPluginArgs struct {
 	RootCerts          string              `vfilter:"optional,field=root_ca,doc=As a better alternative to disable_ssl_security, allows root ca certs to be added here."`
 	MaxMemoryBuffer    uint64              `vfilter:"optional,field=max_memory_buffer,doc=How large we allow the memory buffer to grow to while we are trying to contact the Elastic server (default 100mb)."`
 	Action             string              `vfilter:"optional,field=action,doc=Either index or create. For data streams this must be create."`
+	Secret             string              `vfilter:"optional,field=secret,doc=Alternatively use a secret from the secrets service. Secret must be of type 'AWS S3 Creds'"`
 }
 
 type _ElasticPlugin struct{}
@@ -98,11 +101,19 @@ func (self _ElasticPlugin) Call(ctx context.Context,
 			return
 		}
 
-		arg := _ElasticPluginArgs{}
-		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, &arg)
+		arg := &_ElasticPluginArgs{}
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("elastic: %v", err)
 			return
+		}
+
+		if arg.Secret != "" {
+			err := mergeSecretElastic(ctx, scope, arg)
+			if err != nil {
+				scope.Log("elastic_upload: %v", err)
+				return
+			}
 		}
 
 		if arg.Action == "" {
@@ -137,7 +148,7 @@ func (self _ElasticPlugin) Call(ctx context.Context,
 
 			// Start an uploader on a thread.
 			go upload_rows(ctx, config_obj, scope, output_chan,
-				row_chan, id, arg.Action, &wg, &arg)
+				row_chan, id, arg.Action, &wg, arg)
 		}
 
 		wg.Wait()
@@ -331,6 +342,64 @@ var sanitize_index_re = regexp.MustCompile("[^a-zA-Z0-9]")
 func sanitize_index(name string) string {
 	return sanitize_index_re.ReplaceAllLiteralString(
 		strings.ToLower(name), "_")
+}
+
+func mergeSecretElastic(ctx context.Context, scope vfilter.Scope, arg *_ElasticPluginArgs) error {
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		return errors.New("elastic_upload: Secrets may only be used on the server")
+	}
+
+	secrets_service, err := services.GetSecretsService(config_obj)
+	if err != nil {
+		return err
+	}
+
+	principal := vql_subsystem.GetPrincipal(scope)
+
+	secret_record, err := secrets_service.GetSecret(ctx, principal,
+		constants.ELASTIC_CREDS, arg.Secret)
+	if err != nil {
+		return err
+	}
+
+	get := func(field string) string {
+		return vql_subsystem.GetStringFromRow(
+			scope, secret_record.Data, field)
+	}
+
+	get_bool := func(field string) bool {
+		return vql_subsystem.GetBoolFromString(vql_subsystem.GetStringFromRow(
+			scope, secret_record.Data, field))
+	}
+
+	addresses := vql_subsystem.GetStringFromRow(
+		scope, secret_record.Data, "addresses")
+	arg.Addresses = nil
+	for _, line := range strings.Split(addresses, "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "#") {
+			continue
+		}
+		arg.Addresses = append(arg.Addresses, line)
+	}
+
+	if arg.Addresses == nil {
+		return errors.New("No addresses present in elastic secret!")
+	}
+
+	arg.Index = get("index")
+	arg.Type = get("type")
+	arg.Username = get("username")
+	arg.Password = get("password")
+	arg.CloudID = get("cloud_id")
+	arg.APIKey = get("api_key")
+	arg.PipeLine = get("pipeline")
+	arg.SkipVerify = get_bool("skip_verify")
+	arg.RootCerts = get("root_ca")
+	arg.Action = get("action")
+
+	return nil
 }
 
 func (self _ElasticPlugin) Info(

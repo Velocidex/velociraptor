@@ -23,6 +23,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"sync"
 	"time"
@@ -32,6 +33,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
@@ -43,7 +46,7 @@ import (
 type _SplunkPluginArgs struct {
 	Query          vfilter.StoredQuery `vfilter:"required,field=query,doc=Source for rows to upload."`
 	Threads        int64               `vfilter:"optional,field=threads,doc=How many threads to use."`
-	URL            string              `vfilter:"optional,field=url,doc=The Splunk Event Collector URL."`
+	URL            string              `vfilter:"required,field=url,doc=The Splunk Event Collector URL."`
 	Token          string              `vfilter:"optional,field=token,doc=Splunk HEC Token."`
 	Index          string              `vfilter:"required,field=index,doc=The name of the index to upload to."`
 	Source         string              `vfilter:"optional,field=source,doc=The source field for splunk. If not specified this will be 'velociraptor'."`
@@ -55,6 +58,7 @@ type _SplunkPluginArgs struct {
 	Hostname       string              `vfilter:"optional,field=hostname,doc=Hostname for Splunk Events. Defaults to server hostname."`
 	TimestampField string              `vfilter:"optional,field=timestamp_field,doc=Field to use as event timestamp."`
 	HostnameField  string              `vfilter:"optional,field=hostname_field,doc=Field to use as event hostname. Overrides hostname parameter."`
+	Secret         string              `vfilter:"optional,field=secret,doc=Alternatively use a secret from the secrets service. Secret must be of type 'AWS S3 Creds'"`
 }
 
 type _SplunkPlugin struct{}
@@ -72,10 +76,18 @@ func (self _SplunkPlugin) Call(ctx context.Context,
 			return
 		}
 
-		arg := _SplunkPluginArgs{}
-		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, &arg)
+		arg := &_SplunkPluginArgs{}
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			return
+		}
+
+		if arg.Secret != "" {
+			err := mergeSecretSplunk(ctx, scope, arg)
+			if err != nil {
+				scope.Log("splunk_upload: %v", err)
+				return
+			}
 		}
 
 		if arg.Threads == 0 {
@@ -107,7 +119,7 @@ func (self _SplunkPlugin) Call(ctx context.Context,
 
 			// Start an uploader on a thread.
 			go _upload_rows(ctx, scope, config_obj, output_chan,
-				row_chan, &wg, &arg)
+				row_chan, &wg, arg)
 		}
 
 		wg.Wait()
@@ -266,6 +278,47 @@ func send_to_splunk(
 			Set("Response", len(buf)):
 		}
 	}
+}
+
+func mergeSecretSplunk(ctx context.Context, scope vfilter.Scope, arg *_SplunkPluginArgs) error {
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		return errors.New("splunk_upload: Secrets may only be used on the server")
+	}
+
+	secrets_service, err := services.GetSecretsService(config_obj)
+	if err != nil {
+		return err
+	}
+
+	principal := vql_subsystem.GetPrincipal(scope)
+
+	secret_record, err := secrets_service.GetSecret(ctx, principal,
+		constants.SPLUNK_CREDS, arg.Secret)
+	if err != nil {
+		return err
+	}
+
+	get := func(field string) string {
+		return vql_subsystem.GetStringFromRow(
+			scope, secret_record.Data, field)
+	}
+
+	get_bool := func(field string) bool {
+		return vql_subsystem.GetBoolFromString(vql_subsystem.GetStringFromRow(
+			scope, secret_record.Data, field))
+	}
+
+	arg.URL = get("url")
+	arg.Token = get("token")
+	arg.Index = get("index")
+	arg.Source = get("source")
+	arg.RootCerts = get("root_ca")
+	arg.Hostname = get("hostname")
+	arg.HostnameField = get("hostname_field")
+	arg.SkipVerify = get_bool("skip_verify")
+
+	return nil
 }
 
 func (self _SplunkPlugin) Info(
