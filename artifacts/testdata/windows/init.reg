@@ -15,3 +15,6 @@ Windows Registry Editor Version 5.00
 
 [HKEY_USERS\S-1-5-18\http://www.google.com]
 "\\a\\b\\c\\d"="Foobar"
+
+[HKEY_CURRENT_USER\Software\Test]
+@="Test Data"
