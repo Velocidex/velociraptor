@@ -78,7 +78,7 @@ What OS will the server be deployed on?
 
 Websocket is a bidirectional low latency communication protocol supported by
 most modern proxies and load balancers. This method is more efficient and
-portable than plain HTTP. Be sure to test this in you environment.
+portable than plain HTTP. Be sure to test this in your environment.
 `,
 	}
 
