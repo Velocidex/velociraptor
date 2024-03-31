@@ -263,6 +263,10 @@ func (self *ArtifactRepositoryPlugin) copyScope(
 	scope vfilter.Scope, my_name string) (
 	vfilter.Scope, error) {
 	env := ordereddict.NewDict()
+
+	// TODO: Move most of these to the scope context as they dont
+	// change with subscopes so it should be faster to get them from
+	// the context.
 	for _, field := range []string{
 		vql_subsystem.ACL_MANAGER_VAR,
 		constants.SCOPE_MOCK,
@@ -300,15 +304,10 @@ func (self *ArtifactRepositoryPlugin) copyScope(
 	result.ClearContext()
 	result.AppendVars(env)
 
-	// Copy the scope cache from the caller
-	cache, pres := scope.GetContext(vql_subsystem.CACHE_VAR)
-	if pres {
-		result.SetContext(vql_subsystem.CACHE_VAR, cache)
-	}
-
 	// Copy critical context variables
 	for _, field := range []string{
 		constants.SCOPE_RESPONDER_CONTEXT,
+		vql_subsystem.CACHE_VAR,
 	} {
 		value, pres := scope.GetContext(field)
 		if pres {

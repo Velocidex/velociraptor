@@ -217,7 +217,9 @@ func PrepareGUIMux(
 }
 
 // An api handler which connects to the gRPC service (i.e. it is a
-// gRPC client).
+// gRPC client). This is used by the gRPC gateway to relay REST calls
+// to the gRPC API. This connection must be identified as the gateway
+// identity.
 func GetAPIHandler(
 	ctx context.Context,
 	config_obj *config_proto.Config) (http.Handler, error) {
@@ -285,10 +287,12 @@ func GetAPIHandler(
 		return nil, errors.New("GUI gRPC proxy Certificate is not correct")
 	}
 
+	// The API server's TLS address is pinned to the frontend's
+	// certificate. We must only connect to the real API server.
 	creds := credentials.NewTLS(&tls.Config{
 		Certificates: []tls.Certificate{cert},
 		RootCAs:      CA_Pool,
-		ServerName:   utils.GetSuperuserGWName(config_obj),
+		ServerName:   utils.GetSuperuserName(config_obj),
 	})
 
 	opts := []grpc.DialOption{

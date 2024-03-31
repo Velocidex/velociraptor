@@ -16,7 +16,7 @@ func (self *UserManager) DeleteUser(
 	principal, username string,
 	orgs []string) error {
 
-	err := validateUsername(self.config_obj, username)
+	err := ValidateUsername(self.config_obj, username)
 	if err != nil {
 		return err
 	}

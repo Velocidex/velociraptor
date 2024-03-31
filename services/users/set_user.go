@@ -30,7 +30,7 @@ func (self *UserManager) SetUserPassword(
 	principal, username string,
 	password, current_org string) error {
 
-	err := validateUsername(config_obj, username)
+	err := ValidateUsername(config_obj, username)
 	if err != nil {
 		return err
 	}

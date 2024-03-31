@@ -40,16 +40,15 @@ type AggregateContext struct {
 }
 
 /*
-  This is a memory efficient grouper with a contrained upper bound on
-  memory consumption.
+This is a memory efficient grouper with a contrained upper bound on
+memory consumption.
 
-  1. Grouped by rows are grouped into bins with a constant group key
-  2. When the number of bins exceeds the chunk size, we:
-  3. Sort the bins by the group key and then serialized the bins into a tmp file.
-  4. When the query is finished we perform a merge-sort on the resulting files:
-  5. Reading the bins from various files by order of the group key, we
-     can group duplicate bins from each file.
-
+ 1. Grouped by rows are grouped into bins with a constant group key
+ 2. When the number of bins exceeds the chunk size, we:
+ 3. Sort the bins by the group key and then serialized the bins into a tmp file.
+ 4. When the query is finished we perform a merge-sort on the resulting files:
+ 5. Reading the bins from various files by order of the group key, we
+    can group duplicate bins from each file.
 */
 type MergeSortGrouper struct {
 	ChunkSize  int
@@ -173,7 +172,8 @@ func (self *MergeSortGrouper) transformRow(
 	// mask original row (from plugin).
 	new_scope.AppendVars(row)
 	new_scope.AppendVars(transformed_row)
-	new_scope.SetContextDict(context)
+	new_scope.SetContext(
+		types.AGGREGATOR_CONTEXT_TAG, context)
 
 	return actor.MaterializeRow(ctx, transformed_row, new_scope)
 }
@@ -206,7 +206,9 @@ func (self *MergeSortGrouper) Group(
 
 			// The transform function receives its own unique context
 			// for the specific aggregate group.
-			new_scope.SetContextDict(aggregate_ctx.context)
+			new_scope.SetContext(
+				types.AGGREGATOR_CONTEXT_TAG,
+				aggregate_ctx.context)
 
 			// Update the row with the transformed columns. Note we
 			// must materialize these rows because evaluating the row

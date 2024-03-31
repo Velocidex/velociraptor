@@ -1101,8 +1101,8 @@ func startAPIServer(
 
 	// Use the server certificate to secure the gRPC connection.
 	cert, err := tls.X509KeyPair(
-		[]byte(config_obj.GUI.GwCertificate),
-		[]byte(config_obj.GUI.GwPrivateKey))
+		[]byte(config_obj.Frontend.Certificate),
+		[]byte(config_obj.Frontend.PrivateKey))
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}

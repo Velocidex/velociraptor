@@ -118,6 +118,8 @@ func doFuseZip() error {
 	kingpin.FatalIfError(err, "Mounting fuse")
 
 	go func() {
+		defer cancel()
+
 		server.Wait()
 	}()
 

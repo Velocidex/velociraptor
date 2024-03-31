@@ -129,7 +129,7 @@ func (self *UserStorageManager) GetUserWithHashes(ctx context.Context, username 
 		cache = &_CachedUserObject{}
 	}
 
-	err = validateUsername(self.config_obj, username)
+	err = ValidateUsername(self.config_obj, username)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func (self *UserStorageManager) SetUser(
 		return errors.New("Must set a username")
 	}
 
-	err := validateUsername(self.config_obj, user_record.Name)
+	err := ValidateUsername(self.config_obj, user_record.Name)
 	if err != nil {
 		return err
 	}

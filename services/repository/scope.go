@@ -51,7 +51,7 @@ func _build(self services.ScopeBuilder, from_scratch bool) vfilter.Scope {
 
 	scope.SetLogger(self.Logger)
 
-	// Make a new fresh context.
+	// Make a new fresh cache context.
 	scope.SetContext(vql_subsystem.CACHE_VAR, vql_subsystem.NewScopeCache())
 
 	device_manager := accessors.GetDefaultDeviceManager(

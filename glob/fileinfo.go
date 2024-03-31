@@ -4,6 +4,7 @@ import (
 	"sort"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // A FileInfo that reports the globs that matched.
@@ -15,7 +16,15 @@ type GlobHit struct {
 
 // Report all matching globs
 func (self GlobHit) Globs() []string {
-	return self.globs
+	ret := make([]string, 0, len(self.globs))
+
+	// Should be short so O(1) is OK
+	for _, i := range self.globs {
+		if !utils.InString(ret, i) {
+			ret = append(ret, i)
+		}
+	}
+	return ret
 }
 
 func NewGlobHit(base accessors.FileInfo, globs []string) *GlobHit {
