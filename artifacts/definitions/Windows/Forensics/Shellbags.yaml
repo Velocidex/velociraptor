@@ -19,7 +19,6 @@ parameters:
       C:/Users/*/NTUSER.dat,\Software\Microsoft\Windows\Shell\BagMRU\**
       C:/Users/*/AppData/Local/Microsoft/Windows/UsrClass.dat,\Local Settings\Software\Microsoft\Windows\Shell\BagMRU\**
 
-precondition: SELECT OS From info() where OS = 'windows'
 
 imports:
   # Link files use the same internal format as shellbags so we import
@@ -42,11 +41,11 @@ sources:
               root=pathspec(DelegatePath=HivePath),
               globs=KeyGlob,
               accessor="raw_reg")
-           WHERE Data.type =~ "BINARY" AND OSPath.Path =~ "[0-9]$"
+           WHERE Data.type =~ "BINARY" AND OSPath.Path =~ "[0-9]\\\\@$"
         })
 
       LET ParsedValues = SELECT
-          OSPath AS KeyPath,
+          OSPath.Dirname AS KeyPath,
           parse_binary(profile=Profile, filename=Data.value,
                        accessor="data", struct="ItemIDList") as _Parsed,
           base64encode(string=Data.value) AS _RawData, ModTime
