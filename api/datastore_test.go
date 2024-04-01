@@ -44,7 +44,7 @@ func (self *DatastoreAPITest) SetupTest() {
 	// Wait for the server to come up.
 	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
 		conn, closer, err := grpc_client.Factory.GetAPIClient(
-			self.Sm.Ctx, self.ConfigObj)
+			self.Sm.Ctx, grpc_client.SuperUser, self.ConfigObj)
 		assert.NoError(self.T(), err)
 		defer closer()
 
@@ -64,7 +64,7 @@ func (self *DatastoreAPITest) TestDatastore() {
 
 	// Make some RPC calls
 	conn, closer, err := grpc_client.Factory.GetAPIClient(
-		self.Sm.Ctx, self.ConfigObj)
+		self.Sm.Ctx, grpc_client.SuperUser, self.ConfigObj)
 	assert.NoError(self.T(), err)
 	defer closer()
 

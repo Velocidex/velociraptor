@@ -138,7 +138,10 @@ const (
 	TZ = "TZ"
 
 	PinnedServerName = "VelociraptorServer"
-	PinnedGwName     = "GRPC_GW"
+
+	// Default gateway identity. This is only used when creating the
+	// gateway certificates.
+	PinnedGwName = "GRPC_GW"
 
 	CLIENT_API_VERSION = uint32(4)
 

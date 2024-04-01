@@ -26,7 +26,7 @@ func (self *UserManager) AddUserToOrg(
 	principal, username string,
 	orgs []string, policy *acl_proto.ApiClientACL) error {
 
-	err := validateUsername(self.config_obj, username)
+	err := ValidateUsername(self.config_obj, username)
 	if err != nil {
 		return err
 	}

@@ -16,7 +16,9 @@ func GetSuperuserName(
 	return config_obj.Client.PinnedServerName
 }
 
-func GetSuperuserGWName(
+// The name of the gateway certificate. This is specified in the
+// GUI.gw_certificate and is populated by the sanity service.
+func GetGatewayName(
 	config_obj *config_proto.Config) string {
 	if config_obj == nil ||
 		config_obj.API == nil ||

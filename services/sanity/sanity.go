@@ -71,6 +71,11 @@ func (self *SanityChecks) CheckRootOrg(
 		return err
 	}
 
+	err = self.CheckAPISettings(config_obj)
+	if err != nil {
+		return err
+	}
+
 	// Make sure our internal VelociraptorServer service account is
 	// properly created. Default accounts are created with org admin
 	// so they can add new orgs as required.

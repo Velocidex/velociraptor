@@ -2,6 +2,26 @@ SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] ) FR
  {
   "mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')])": null
  }
+]SELECT OSPath.Path AS Key, Data FROM glob(globs="*", accessor="raw_reg", root=pathspec( Path="/Local Settings/Software/Microsoft/Windows/Shell/BagMRU", DelegatePath=srcDir+"/artifacts/testdata/files/UsrClass.dat")) WHERE OSPath.Basename =~ "0"[
+ {
+  "Key": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\0",
+  "Data": {
+   "type": "Key"
+  }
+ }
+]SELECT OSPath.Path AS Key, Data FROM glob(globs="*", accessor="raw_reg", root=pathspec( Path="/Local Settings/Software/Microsoft/Windows/Shell/BagMRU/0", DelegatePath=srcDir+"/artifacts/testdata/files/UsrClass.dat")) WHERE OSPath.Basename =~ "@"[
+ {
+  "Key": "\\Local Settings\\Software\\Microsoft\\Windows\\Shell\\BagMRU\\0\\@",
+  "Data": {
+   "type": "REG_BINARY",
+   "data_len": 22,
+   "value": "FAAfgMuFn2cgAoBAsptVQMwFqrYAAA=="
+  }
+ }
+]SELECT format(format="%02x", args=read_file(accessor='raw_reg', filename=pathspec( Path="/Local Settings/Software/Microsoft/Windows/Shell/BagMRU/0/@", DelegatePath=srcDir+"/artifacts/testdata/files/UsrClass.dat"))) AS ValueContent FROM scope()[
+ {
+  "ValueContent": "14001f80cb859f6720028040b29b5540cc05aab60000"
+ }
 ]SELECT LastModified, Binary, Name, Size, ProductName, Publisher, BinFileVersion FROM Artifact.Windows.System.Amcache( source="InventoryApplicationFile", amCacheGlob=srcDir+"/artifacts/testdata/files/Amcache.hve") LIMIT 5[
  {
   "LastModified": "2019-03-02T08:21:12Z",

@@ -45,6 +45,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/readers"
 	"www.velocidex.com/golang/vfilter"
@@ -75,8 +76,9 @@ var (
 )
 
 type RawRegKeyInfo struct {
-	key        *regparser.CM_KEY_NODE
 	_full_path *accessors.OSPath
+	_data      *ordereddict.Dict
+	_modtime   time.Time
 }
 
 func (self *RawRegKeyInfo) IsDir() bool {
@@ -84,7 +86,10 @@ func (self *RawRegKeyInfo) IsDir() bool {
 }
 
 func (self *RawRegKeyInfo) Data() *ordereddict.Dict {
-	return ordereddict.NewDict().Set("type", "Key")
+	if self._data == nil {
+		self._data = ordereddict.NewDict().Set("type", "Key")
+	}
+	return self._data
 }
 
 func (self *RawRegKeyInfo) Size() int64 {
@@ -104,11 +109,11 @@ func (self *RawRegKeyInfo) Mode() os.FileMode {
 }
 
 func (self *RawRegKeyInfo) Name() string {
-	return self.key.Name()
+	return self._full_path.Basename()
 }
 
 func (self *RawRegKeyInfo) ModTime() time.Time {
-	return self.key.LastWriteTime().Time
+	return self._modtime
 }
 
 func (self *RawRegKeyInfo) Mtime() time.Time {
@@ -143,35 +148,41 @@ func (self *RawRegKeyInfo) UnmarshalJSON(data []byte) error {
 type RawRegValueInfo struct {
 	// Containing key
 	*RawRegKeyInfo
-	value *regparser.CM_KEY_VALUE
 
-	// The windows registry can store a value inside a reg key. This
-	// makes the key act both as a directory and as a file
-	// (i.e. ReadDir() will list the key) but Open() will read the
-	// value.
-	is_default_value bool
+	// Hold a reference so value can be decoded lazily.
+	_value *regparser.CM_KEY_VALUE
 
+	// Once value is decoded once it will be cached here.
 	_data *ordereddict.Dict
+	_size int64
 }
 
-func (self *RawRegValueInfo) Name() string {
-	return self.value.ValueName()
+func (self *RawRegValueInfo) Copy() *RawRegValueInfo {
+	return &RawRegValueInfo{
+		RawRegKeyInfo: &RawRegKeyInfo{
+			_full_path: self._full_path,
+			_modtime:   self._modtime,
+		},
+		_value: self._value,
+		_data:  self._data,
+		_size:  self._size,
+	}
 }
 
 func (self *RawRegValueInfo) IsDir() bool {
-	// We are also a key so act as a directory.
-	return self.is_default_value
+	return false
 }
 
 func (self *RawRegValueInfo) Mode() os.FileMode {
-	if self.is_default_value {
-		return 0755
-	}
 	return 0644
 }
 
 func (self *RawRegValueInfo) Size() int64 {
-	return int64(self.value.DataSize())
+	if self._size > 0 {
+		return self._size
+	}
+	self._size = int64(self._value.DataSize())
+	return self._size
 }
 
 func (self *RawRegValueInfo) Data() *ordereddict.Dict {
@@ -180,11 +191,8 @@ func (self *RawRegValueInfo) Data() *ordereddict.Dict {
 	}
 
 	metricsReadValue.Inc()
-	value_data := self.value.ValueData()
-	value_type := self.value.TypeString()
-	if self.is_default_value {
-		value_type += "/Key"
-	}
+	value_data := self._value.ValueData()
+	value_type := self._value.TypeString()
 	result := ordereddict.NewDict().
 		Set("type", value_type).
 		Set("data_len", len(value_data.Data))
@@ -209,6 +217,7 @@ func (self *RawRegValueInfo) Data() *ordereddict.Dict {
 
 type RawValueBuffer struct {
 	*bytes.Reader
+
 	info *RawRegValueInfo
 }
 
@@ -218,7 +227,7 @@ func (self *RawValueBuffer) Close() error {
 
 func NewRawValueBuffer(buf string, stat *RawRegValueInfo) *RawValueBuffer {
 	return &RawValueBuffer{
-		bytes.NewReader(stat.value.ValueData().Data),
+		bytes.NewReader(stat._value.ValueData().Data),
 		stat,
 	}
 }
@@ -370,7 +379,83 @@ func (self *RawRegFileSystemAccessor) ReadDir(key_path string) (
 	return self.ReadDirWithOSPath(full_path)
 }
 
+// Get the default value of a Registry Key if possible.
+func (self *RawRegFileSystemAccessor) getDefaultValue(
+	full_path *accessors.OSPath) (result *RawRegValueInfo, err error) {
+
+	// A Key has a default value if its parent directory contains a
+	// value with the same name as the key.
+	basename := full_path.Basename()
+	contents, err := self._readDirWithOSPath(full_path.Dirname())
+	if err != nil {
+		return nil, err
+	}
+
+	for _, item := range contents {
+		value_item, ok := item.(*RawRegValueInfo)
+		if !ok {
+			continue
+		}
+
+		if item.Name() == basename {
+			item_copy := value_item.Copy()
+			item_copy._full_path = item_copy._full_path.Append("@")
+			return item_copy, nil
+		}
+	}
+
+	return nil, utils.NotFoundError
+}
+
 func (self *RawRegFileSystemAccessor) ReadDirWithOSPath(
+	full_path *accessors.OSPath) (result []accessors.FileInfo, err error) {
+
+	// Add the default value if the key has one
+	default_value, err := self.getDefaultValue(full_path)
+	if err == nil {
+		result = append(result, default_value)
+	}
+
+	contents, err := self._readDirWithOSPath(full_path)
+	if err != nil {
+		return nil, err
+	}
+
+	seen := make(map[string]bool)
+
+	for _, item := range contents {
+		basename := item.Name()
+
+		// Does this value have the same name as one of the keys? We
+		// special case it as a subdirectory with a file called @ in
+		// it:
+		// Subkeys: A, B, C
+		// Values: B -> Means Subkey B has default values.
+		//
+		// This will end up being:
+		// A/ -> Directory
+		// B/ -> Directory
+		// C/ -> Directory
+		// B/@ -> File
+		//
+		// Therefore skip such values at this level - a Glob will
+		// fetch them at the next level down.
+		_, pres := seen[basename]
+		if pres {
+			continue
+		}
+
+		seen[basename] = true
+
+		result = append(result, item)
+	}
+
+	return result, nil
+}
+
+// Return all the contents in the directory including all keys and all
+// values, even if some keys have a default value.
+func (self *RawRegFileSystemAccessor) _readDirWithOSPath(
 	full_path *accessors.OSPath) (result []accessors.FileInfo, err error) {
 
 	cache_key := full_path.String()
@@ -399,41 +484,31 @@ func (self *RawRegFileSystemAccessor) ReadDirWithOSPath(
 
 	key := OpenKeyComponents(hive, full_path.Components)
 	if key == nil {
-		return nil, errors.New("Key not found")
+		return nil, nil
 	}
 
-	seen := make(map[string]int)
-	for idx, subkey := range key.Subkeys() {
+	for _, subkey := range key.Subkeys() {
 		basename := subkey.Name()
 		subkey := &RawRegKeyInfo{
-			key:        subkey,
 			_full_path: full_path.Append(basename),
+			_modtime:   subkey.LastWriteTime().Time,
 		}
-		seen[basename] = idx
 		result = append(result, subkey)
 	}
 
+	// All Values carry their mode time as the parent key
+	key_mod_time := key.LastWriteTime().Time
 	for _, value := range key.Values() {
 		basename := value.ValueName()
 		value_obj := &RawRegValueInfo{
 			RawRegKeyInfo: &RawRegKeyInfo{
-				key:        key,
 				_full_path: full_path.Append(basename),
+				_modtime:   key_mod_time,
 			},
-			value: value,
+			_value: value,
 		}
-
-		// Does this value have the same name as one of the keys?
-		idx, pres := seen[basename]
-		if pres {
-			// Replace the old object with the value object
-			value_obj.is_default_value = true
-			result[idx] = value_obj
-		} else {
-			result = append(result, value_obj)
-		}
+		result = append(result, value_obj)
 	}
-
 	return result, nil
 }
 
@@ -447,7 +522,7 @@ func (self *RawRegFileSystemAccessor) Open(path string) (
 	value_info, ok := stat.(*RawRegValueInfo)
 	if ok {
 		return NewValueBuffer(
-			value_info.value.ValueData().Data, stat), nil
+			value_info._value.ValueData().Data, stat), nil
 	}
 
 	// Keys do not have any data.
@@ -465,7 +540,7 @@ func (self *RawRegFileSystemAccessor) OpenWithOSPath(path *accessors.OSPath) (
 	value_info, ok := stat.(*RawRegValueInfo)
 	if ok {
 		return NewValueBuffer(
-			value_info.value.ValueData().Data, stat), nil
+			value_info._value.ValueData().Data, stat), nil
 	}
 
 	// Keys do not have any data.
@@ -494,12 +569,20 @@ func (self *RawRegFileSystemAccessor) LstatWithOSPath(
 		}, nil
 	}
 
-	children, err := self.ReadDirWithOSPath(full_path.Dirname())
+	name := full_path.Basename()
+	container := full_path.Dirname()
+
+	// If the full_path refers to the default value of the key, return
+	// it.
+	if name == "@" {
+		return self.getDefaultValue(container)
+	}
+
+	children, err := self.ReadDirWithOSPath(container)
 	if err != nil {
 		return nil, err
 	}
 
-	name := full_path.Basename()
 	for _, child := range children {
 		if child.Name() == name {
 			return child, nil

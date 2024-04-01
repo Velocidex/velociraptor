@@ -54,7 +54,8 @@ func (self *RemoteTestSuite) SetupTest() {
 
 	self.TestSuite.SetupTest()
 
-	grpc_client.EnsureInit(self.Ctx, self.ConfigObj, true)
+	// Reset the api clients
+	grpc_client.Factory = &grpc_client.DummyGRPCAPIClient{}
 }
 
 func (self *RemoteTestSuite) startAPIServer() {
@@ -95,6 +96,7 @@ func (self *RemoteTestSuite) TestRemoteDataStoreMissing() {
 	}
 
 	datastore.RPC_BACKOFF = 0
+	datastore.RPC_RETRY = 2
 	logging.ClearMemoryLogs()
 
 	db := datastore.NewRemoteDataStore(self.Ctx)
@@ -118,8 +120,8 @@ func (self *RemoteTestSuite) TestRemoteDataStoreMissing() {
 		}
 	}
 
-	// We had at least 10 retries
-	assert.True(self.T(), len(matches) > 10)
+	// We had at least 5 retries to the various calls
+	assert.True(self.T(), len(matches) > 5)
 }
 
 func TestRemoteTestSuite(t *testing.T) {

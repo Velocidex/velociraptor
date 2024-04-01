@@ -161,7 +161,10 @@ func doRemoteQuery(
 	ctx, cancel := install_sig_handler()
 	defer cancel()
 
-	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, config_obj)
+	// Make a remote query using the API - we better have user API
+	// credentials in the config file.
+	client, closer, err := grpc_client.Factory.GetAPIClient(
+		ctx, grpc_client.API_User, config_obj)
 	if err != nil {
 		return err
 	}

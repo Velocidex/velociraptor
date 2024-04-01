@@ -98,7 +98,9 @@ type UserManager struct {
 	storage IUserStorageManager
 }
 
-func validateUsername(config_obj *config_proto.Config, name string) error {
+// Prevent certificates from being minted for critical privileged
+// accounts.
+func ValidateUsername(config_obj *config_proto.Config, name string) error {
 	if !validUsernameRegEx.MatchString(name) {
 		return fmt.Errorf("Unacceptable username %v", name)
 	}
@@ -112,8 +114,8 @@ func validateUsername(config_obj *config_proto.Config, name string) error {
 		return fmt.Errorf("Username is reserved: %v", name)
 	}
 
-	if name == utils.GetSuperuserGWName(config_obj) {
-		return fmt.Errorf("Username is reserved: %v", name)
+	if name == utils.GetGatewayName(config_obj) {
+		return fmt.Errorf("Username is reserved for the gateway: %v", name)
 	}
 
 	return nil
@@ -121,7 +123,7 @@ func validateUsername(config_obj *config_proto.Config, name string) error {
 
 func NewUserRecord(config_obj *config_proto.Config,
 	name string) (*api_proto.VelociraptorUser, error) {
-	err := validateUsername(config_obj, name)
+	err := ValidateUsername(config_obj, name)
 	if err != nil {
 		return nil, err
 	}
