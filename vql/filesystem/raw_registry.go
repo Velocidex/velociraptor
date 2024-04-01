@@ -69,7 +69,11 @@ func (self ReadKeyValues) Call(
 				if value_data != nil {
 					value, pres := value_data.Get("value")
 					if pres {
-						result.Set(item.Name(), value)
+						name := item.Name()
+						if name == "" {
+							name = "@"
+						}
+						result.Set(name, value)
 					}
 				}
 			}

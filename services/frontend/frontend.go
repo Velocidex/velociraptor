@@ -378,7 +378,9 @@ func (self MinionFrontendManager) IsMaster() bool {
 // The minion frontend replicates to the master node.
 func (self MinionFrontendManager) GetMasterAPIClient(ctx context.Context) (
 	api_proto.APIClient, func() error, error) {
-	client, closer, err := grpc_client.Factory.GetAPIClient(ctx, self.config_obj)
+	// Connect as the SuperUser
+	client, closer, err := grpc_client.Factory.GetAPIClient(
+		ctx, grpc_client.SuperUser, self.config_obj)
 	if err != nil {
 		return nil, nil, err
 	}

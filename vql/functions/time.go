@@ -160,15 +160,15 @@ func (self _Timestamp) Call(ctx context.Context, scope vfilter.Scope,
 	}
 
 	if arg.CocoaTime > 0 {
-		return time.Unix((arg.CocoaTime + 978307200), 0)
+		return time.Unix((arg.CocoaTime + 978307200), 0).UTC()
 	}
 
 	if arg.MacTime > 0 {
-		return time.Unix((arg.MacTime - 2082844800), 0)
+		return time.Unix((arg.MacTime - 2082844800), 0).UTC()
 	}
 
 	if arg.WinFileTime > 0 {
-		return time.Unix((arg.WinFileTime/10000000)-11644473600, 0)
+		return time.Unix((arg.WinFileTime/10000000)-11644473600, 0).UTC()
 	}
 
 	if arg.String != "" {
@@ -183,7 +183,7 @@ func (self _Timestamp) Call(ctx context.Context, scope vfilter.Scope,
 			if err != nil {
 				return vfilter.Null{}
 			}
-			return result
+			return result.UTC()
 		}
 	}
 
@@ -192,7 +192,7 @@ func (self _Timestamp) Call(ctx context.Context, scope vfilter.Scope,
 		return vfilter.Null{}
 	}
 
-	return result
+	return result.UTC()
 }
 
 func TimeFromAny(ctx context.Context,

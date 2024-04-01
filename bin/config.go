@@ -39,6 +39,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/users"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -231,7 +232,7 @@ func generateNewKeys(config_obj *config_proto.Config) error {
 
 	// Generate gRPC gateway certificate.
 	gw_certificate, err := crypto.GenerateServerCert(
-		config_obj, config_obj.API.PinnedGwName)
+		config_obj, utils.GetGatewayName(config_obj))
 	if err != nil {
 		return fmt.Errorf("Unable to create Frontend cert: %w", err)
 	}
@@ -302,7 +303,7 @@ func doRotateKeyConfig() error {
 
 	// Generate gRPC gateway certificate.
 	gw_certificate, err := crypto.GenerateServerCert(
-		config_obj, config_obj.API.PinnedGwName)
+		config_obj, utils.GetGatewayName(config_obj))
 	if err != nil {
 		return err
 	}
@@ -423,9 +424,9 @@ func doDumpApiClientConfig() error {
 		return err
 	}
 
-	if *config_api_client_common_name == utils.GetSuperuserName(config_obj) {
-		return errors.New("Name reserved! You may not name your " +
-			"api keys with this name.")
+	err = users.ValidateUsername(config_obj, *config_api_client_common_name)
+	if err != nil {
+		return err
 	}
 
 	if config_obj.Client == nil {

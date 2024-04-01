@@ -2,6 +2,36 @@ Queries:
   - SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] )
     FROM scope()
 
+  # Test semantics around listing registry keys with default
+  # values. The 0 key actually has a default value. In the glob model
+  # it is a directory (since it is a Key) as well as a file (because
+  # it also is a value).  Velociraptor's glob model can not deal with
+  # directories which are also files (most artifacts test for IsDir to
+  # avoid reading directories.).
+
+  # Therefore we separate the value out into a default value called
+  # "@" within the key/directory. Globbing the parent directory will
+  # only show keys, while Globbing the keys will show the default
+  # value of the key as @.
+
+  # Just a regular key
+  - SELECT OSPath.Path AS Key, Data FROM glob(globs="*", accessor="raw_reg", root=pathspec(
+       Path="/Local Settings/Software/Microsoft/Windows/Shell/BagMRU",
+       DelegatePath=srcDir+"/artifacts/testdata/files/UsrClass.dat"))
+    WHERE OSPath.Basename =~ "0"
+
+  # A value with name @
+  - SELECT OSPath.Path AS Key, Data FROM glob(globs="*", accessor="raw_reg", root=pathspec(
+       Path="/Local Settings/Software/Microsoft/Windows/Shell/BagMRU/0",
+       DelegatePath=srcDir+"/artifacts/testdata/files/UsrClass.dat"))
+    WHERE OSPath.Basename =~ "@"
+
+  # Now test read_file on values
+  - SELECT format(format="%02x", args=read_file(accessor='raw_reg', filename=pathspec(
+       Path="/Local Settings/Software/Microsoft/Windows/Shell/BagMRU/0/@",
+       DelegatePath=srcDir+"/artifacts/testdata/files/UsrClass.dat"))) AS ValueContent
+    FROM scope()
+
   # This artifact uses the raw registry parser.
   - SELECT LastModified, Binary, Name, Size, ProductName, Publisher, BinFileVersion
     FROM Artifact.Windows.System.Amcache(

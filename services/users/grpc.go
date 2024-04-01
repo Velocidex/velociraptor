@@ -23,10 +23,8 @@ func (self UserManager) GetUserFromContext(ctx context.Context) (
 
 	grpc_user_info := GetGRPCUserInfo(self.config_obj, ctx, self.ca_pool)
 
-	// This is not a real user but represents the grpc gateway
-	// connection - it is always allowed.
-	if grpc_user_info.Name == utils.GetSuperuserName(org_config_obj) ||
-		grpc_user_info.Name == utils.GetSuperuserGWName(org_config_obj) {
+	// If the call comes from the super user we allow it.
+	if grpc_user_info.Name == utils.GetSuperuserName(org_config_obj) {
 		user_record = &api_proto.VelociraptorUser{
 			Name: grpc_user_info.Name,
 		}
@@ -110,7 +108,7 @@ func GetGRPCUserInfo(
 				// convert web side authentication to a valid
 				// user name which it may pass in the call
 				// context.
-				if result.Name == config_obj.API.PinnedGwName {
+				if result.Name == utils.GetGatewayName(config_obj) {
 					md, ok := metadata.FromIncomingContext(ctx)
 					if ok {
 						userinfo := md.Get("USER")
