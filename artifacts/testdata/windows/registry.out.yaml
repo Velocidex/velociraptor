@@ -125,4 +125,19 @@ SELECT OSPath FROM glob(globs="/*", accessor="registry")[
   "User": "runneradmin",
   "ProgramName": "PsExec"
  }
+]SELECT OSPath.Path AS Key, Data FROM glob(globs='Test', root='HKEY_CURRENT_USER/Software', accessor='registry')[
+ {
+  "Key": "HKEY_CURRENT_USER\\Software\\Test",
+  "Data": {
+   "type": "key"
+  }
+ }
+]SELECT OSPath.Path AS Key, Data FROM glob(globs='Test/*', root='HKEY_CURRENT_USER/Software', accessor='registry')[
+ {
+  "Key": "HKEY_CURRENT_USER\\Software\\Test\\@",
+  "Data": {
+   "type": "SZ",
+   "value": "Test Data"
+  }
+ }
 ]
