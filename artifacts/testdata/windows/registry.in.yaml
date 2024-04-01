@@ -58,3 +58,9 @@ Queries:
   # Check for sysinternal eula - must be last because it remaps the hives.
   - SELECT User, ProgramName
     FROM Artifact.Windows.Registry.Sysinternals.Eulacheck(source="RegistryAPI")
+
+  # Test default value handling - The key itself looks like a regular directory
+  - SELECT OSPath.Path AS Key, Data FROM glob(globs='Test', root='HKEY_CURRENT_USER/Software', accessor='registry')
+
+  # Listing the key shows a single value with name @
+  - SELECT OSPath.Path AS Key, Data FROM glob(globs='Test/*', root='HKEY_CURRENT_USER/Software', accessor='registry')
