@@ -82,7 +82,7 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 		users_manager := services.GetUserManager()
 		user_record, err := users_manager.GetUserWithHashes(r.Context(),
 			username, username)
-		if err != nil || user_record.Name != username {
+		if err != nil {
 			services.LogAudit(r.Context(),
 				self.config_obj, username, "Unknown username",
 				ordereddict.NewDict().
@@ -92,11 +92,12 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 			http.Error(w, "authorization failed", http.StatusUnauthorized)
 			return
 		}
+
 		ok, err = users_manager.VerifyPassword(r.Context(),
-			username, username, password)
+			user_record.Name, user_record.Name, password)
 		if !ok || err != nil {
 			services.LogAudit(r.Context(),
-				self.config_obj, username, "Invalid password",
+				self.config_obj, user_record.Name, "Invalid password",
 				ordereddict.NewDict().
 					Set("remote", r.RemoteAddr).
 					Set("status", http.StatusUnauthorized))
@@ -109,7 +110,7 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 		err = CheckOrgAccess(r, user_record)
 		if err != nil {
 			services.LogAudit(r.Context(),
-				self.config_obj, username, "Unauthorized username",
+				self.config_obj, user_record.Name, "Unauthorized username",
 				ordereddict.NewDict().
 					Set("remote", r.RemoteAddr).
 					Set("status", http.StatusUnauthorized))
@@ -122,7 +123,7 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 		// build a token to pass to the underlying GRPC
 		// service with metadata about the user.
 		user_info := &api_proto.VelociraptorUser{
-			Name: username,
+			Name: user_record.Name,
 		}
 
 		// Must use json encoding because grpc can not handle
