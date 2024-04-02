@@ -155,6 +155,7 @@ class UserSettings extends React.PureComponent {
         default_password: "",
         org: "",
         org_changed: false,
+        edited: false
     }
 
     saveSettings = ()=> {
@@ -183,6 +184,7 @@ class UserSettings extends React.PureComponent {
     }
 
     render() {
+
         return (
             <Modal show={true}
                    dialogClassName="modal-70w"
@@ -247,14 +249,33 @@ class UserSettings extends React.PureComponent {
                     </Form.Control>
                   </Col>
                 </Form.Group>
-                <VeloForm
-                  param={{name: "Downloads Password",
-                          friendly_name: T("Downloads Password"),
-                          description: T("Default password to use for downloads"),
-                          type: "string"}}
-                  value={this.state.default_password}
-                  setValue={value=>this.setState({default_password: value})}
-                />
+
+
+                <Form.Group as={Row}>
+                    <Form.Label column sm="3">
+                    <OverlayTrigger
+                        delay={{show: 250, hide: 400}}
+                        overlay={(props)=><Tooltip {...props}>
+                            {T("Default password to use for downloads")}
+                                </Tooltip>}>
+                        <div>{T("Downloads Password")}</div>
+                    </OverlayTrigger>
+                    </Form.Label>
+                    <Col sm="8">
+                    <InputGroup className="mb-3">
+                        <Form.Control
+                            placeholder = {(this.state.default_password)}
+                            onChange = {e => {this.setState({"edited": true});
+                                        this.setState({"default_password": e.currentTarget.value})}
+                            }
+                            />
+                        <Button variant="default"
+                                disabled = {!this.state.edited}
+                                onClick={e => {this.props.setSetting({"default_password": this.state.default_password});
+                                    this.setState({"edited": false})}}>Set</Button>
+                    </InputGroup></Col>
+                </Form.Group>
+
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
                     <OverlayTrigger
