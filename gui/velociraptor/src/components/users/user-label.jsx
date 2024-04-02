@@ -20,7 +20,7 @@ import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
-import VeloForm from '../forms/form.jsx';
+//import VeloForm from '../forms/form.jsx';
 import T from '../i8n/i8n.jsx';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
