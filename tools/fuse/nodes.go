@@ -21,6 +21,8 @@ type FileNode struct {
 
 	accessor accessors.FileSystemAccessor
 	ospath   *accessors.OSPath
+
+	options *Options
 }
 
 func (self FileNode) Getattr(ctx context.Context,
@@ -33,10 +35,36 @@ func (self FileNode) Getattr(ctx context.Context,
 
 	out.Mode = uint32(0644)
 	out.Nlink = 1
+
+	// Zip times have resolution of 1 sec
 	out.Mtime = uint64(stat.Mtime().Unix())
 	out.Atime = out.Mtime
 	out.Ctime = out.Mtime
 	out.Size = uint64(stat.Size())
+
+	timestamp, ok := self.options.getTimestamp(self.ospath)
+	if ok {
+		out.Mtime = uint64(timestamp.Mtime.Unix())
+		out.Mtimensec = uint32(
+			uint64(timestamp.Mtime.UnixNano()) -
+				out.Mtime*1000000000)
+		out.Atime = uint64(timestamp.Atime.Unix())
+		out.Atimensec = uint32(
+			uint64(timestamp.Atime.UnixNano()) -
+				out.Atime*1000000000)
+
+		out.Ctime = uint64(timestamp.Ctime.Unix())
+		out.Ctimensec = uint32(
+			uint64(timestamp.Ctime.UnixNano()) -
+				out.Ctime*1000000000)
+
+		if timestamp.Ctime.IsZero() {
+			out.Ctime = uint64(timestamp.Btime.Unix())
+			out.Ctimensec = uint32(
+				uint64(timestamp.Btime.UnixNano()) -
+					out.Ctime*1000000000)
+		}
+	}
 
 	const bs = 512
 	out.Blksize = bs

@@ -24,6 +24,8 @@ type AccessorFuseFS struct {
 	containers []*accessors.OSPath
 
 	file_count int
+
+	options *Options
 }
 
 func (self *AccessorFuseFS) Close() {
@@ -44,7 +46,7 @@ func (self *AccessorFuseFS) add(
 
 	for _, child := range children {
 		child_ospath := child.OSPath()
-		basename := child_ospath.Basename()
+		basename := self.options.RemapPath(child_ospath)
 		if child.IsDir() {
 			// Check if there is a directory node already
 			child_node := node.GetChild(basename)
@@ -64,6 +66,7 @@ func (self *AccessorFuseFS) add(
 				ctx, &FileNode{
 					accessor: accessor,
 					ospath:   child_ospath,
+					options:  self.options,
 				}, fs.StableAttr{})
 			node.AddChild(basename, child_node, true)
 			self.file_count++
@@ -77,6 +80,8 @@ func (self *AccessorFuseFS) OnAdd(ctx context.Context) {
 	logger := logging.GetLogger(self.config_obj, &logging.ToolComponent)
 
 	for _, filename := range self.containers {
+		self.options.parseTimestamps(self.accessor, filename)
+
 		start := self.file_count
 		err := self.add(ctx, self.accessor, filename, &self.Inode)
 		if err != nil {
@@ -94,12 +99,14 @@ func NewAccessorFuseFS(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	accessor accessors.FileSystemAccessor,
+	options *Options,
 	files []*accessors.OSPath) (*AccessorFuseFS, error) {
 
 	fs := &AccessorFuseFS{
 		containers: files,
 		accessor:   accessor,
 		config_obj: config_obj,
+		options:    options,
 	}
 	return fs, nil
 }
