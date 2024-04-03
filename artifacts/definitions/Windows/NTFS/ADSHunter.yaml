@@ -9,23 +9,22 @@ description: |
    NTFS file systems. In NTFS, the primary $DATA attribute is 
    never named but subsequent $DATA attributes must be named.
    
-   Targetting is via mix of path globs and include / exclude regex. 
+   Targeting is via mix of path globs and include / exclude regex. 
    
-   - TargetFolder is a folder glob: e.g C:\, C:\Users\*\Downloads that the user wishes 
-   to recursively search.  
+   - TargetGlob is a glob to target for ADS. NOTE **\* is recursive. To hit C drive we need to search for C:\*
    - AdsName is name in glob format: e.g *, Zone.Identifier or Zone.*. 
    - AdsNameExclusion - A regex value, common ADS added to exclusions have been 
-   added by default. The artifact also exlcudes NTFS system files by default.    
-   
+   added by default. The artifact also excludes NTFS system files by default.
+
 reference:
   - https://attack.mitre.org/techniques/T1564/004/
   
 type: CLIENT
 
 parameters:
- - name: TargetFolder
-   description: Target folder to add to a glob path to recursively search for ADS. e.g C:\Users will convert to C:\Users\**\*
-   default: C:\
+ - name: TargetGlob
+   description: A Glob to search for target files. **\* is recursive. To hit C drive we need to search for C:\*
+   default: C:\{*,**\*}
  - name: AdsNameGlob
    description: AdsName in glob format. e.g *, Zone.Identifier or Zone.*
    default: '*'
@@ -50,7 +49,6 @@ parameters:
    description: If selected wil upload non-resident data streams.
    type: bool
    
-
 sources:
  - query: |
       -- Collect ADS entries using glob but exclude ntfs objects that contain ads
@@ -60,11 +58,11 @@ sources:
             Size,
             OSPath.Dirname + split(string=Name,sep=':')[0] as HostObject,
             dict(Mtime=Mtime,Atime=Atime,Ctime=Ctime,Btime=Btime) as HostTimestampsSI
-        FROM glob(globs=TargetFolder + "/**/*:" + AdsNameGlob, 
+        FROM glob(globs=TargetGlob + ":" + AdsNameGlob, 
                   accessor="ntfs",
                   nosymlink='Y')
-        WHERE 
-            NOT OSPath.Basename =~ '\\$Secure:\\$SDS|\\$Repair|\\$BadClus|\\$Bitmap|\\$UpCase'
+        WHERE
+            NOT OSPath =~ '''[a-z]:\\(\$Extend\\|\$Secure|\$UpCase|\$BadClus|\$Bitmap|\$Repair)'''
             AND if(condition=MinSize,
                     then= Size > MinSize,
                     else= True )

@@ -120,7 +120,7 @@ SELECT OSPath FROM glob(globs="/*", accessor="ntfs")[
  {
   "OSPath": "\\\\.\\C:\\hello.txt:myads"
  }
-]SELECT AdsName,Size,HostObject,AdsContent,OSPath FROM Artifact.Windows.NTFS.ADSHunter(TargetFolder='C:\\adstest')[
+]SELECT AdsName,Size,HostObject,AdsContent,OSPath FROM Artifact.Windows.NTFS.ADSHunter(TargetGlob='C:\\adstest\\*')[
  {
   "AdsName": "test.txt",
   "Size": 54,
