@@ -134,7 +134,7 @@ func SanitizeStringForZip(component string) string {
 			result = append(result, char)
 		}
 
-		// Maximum length on one component.
+		// Maximum length of one component.
 		if pos > 1024 {
 			break
 		}
