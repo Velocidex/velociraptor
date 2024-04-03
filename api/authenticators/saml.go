@@ -128,7 +128,7 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 		username := sa.GetAttributes().Get(self.user_attribute)
 		users := services.GetUserManager()
 		user_record, err := users.GetUser(r.Context(), username, username)
-		if err == nil && user_record.Name == username {
+		if err == nil {
 			// Does the user have access to the specified org?
 			err = CheckOrgAccess(r, user_record)
 		}
@@ -155,7 +155,7 @@ Contact your system administrator to get an account, then try again.
 		}
 
 		user_info := &api_proto.VelociraptorUser{
-			Name: username,
+			Name: user_record.Name,
 		}
 
 		serialized, _ := json.Marshal(user_info)
