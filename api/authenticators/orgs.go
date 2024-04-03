@@ -89,7 +89,8 @@ func _checkOrgAccess(r *http.Request, org_id string, user_record *api_proto.Velo
 		return err
 	}
 
-	perm, err := services.CheckAccess(org_config_obj, user_record.Name, acls.READ_RESULTS)
+	perm, err := services.CheckAccess(
+		org_config_obj, user_record.Name, acls.READ_RESULTS)
 	if err != nil {
 		return err
 	}

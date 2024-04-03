@@ -103,6 +103,11 @@ func (self *UserManagerTestSuite) TestMakeUsers() {
 	assert.ErrorContains(self.T(), err, "PermissionDenied")
 	golden.Set("AdminO1 UserO2", err.Error())
 
+	// Check case insensitive user records
+	user_record, err = users_manager.GetUser(self.Ctx, "OrgAdmin", "userO2")
+	assert.NoError(self.T(), err)
+	golden.Set("Case insensitive user02", user_record)
+
 	goldie.Assert(self.T(), "TestMakeUsers", json.MustMarshalIndent(golden))
 }
 

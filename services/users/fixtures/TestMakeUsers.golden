@@ -53,5 +53,14 @@
    }
   ]
  },
- "AdminO1 UserO2": "PermissionDenied"
+ "AdminO1 UserO2": "PermissionDenied",
+ "Case insensitive user02": {
+  "name": "UserO2",
+  "orgs": [
+   {
+    "name": "O2",
+    "id": "O2"
+   }
+  ]
+ }
 }

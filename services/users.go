@@ -19,7 +19,6 @@ package services
 
 import (
 	"context"
-	"os"
 
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -30,7 +29,7 @@ import (
 var (
 	global_user_manager UserManager
 
-	UserNotFoundError = utils.Wrap(os.ErrNotExist, "User not found")
+	UserNotFoundError = utils.Wrap(utils.NotFoundError, "User not found")
 
 	LIST_ALL_ORGS []string = nil
 )

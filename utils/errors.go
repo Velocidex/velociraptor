@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"fmt"
+	"os"
 )
 
 var (
@@ -15,7 +16,7 @@ var (
 	TypeError           = errors.New("TypeError")
 	NotImplementedError = errors.New("Not implemented")
 	InvalidConfigError  = errors.New("InvalidConfigError")
-	NotFoundError       = errors.New("NotFoundError")
+	NotFoundError       = Wrap(os.ErrNotExist, "NotFoundError")
 )
 
 // This is a custom error type that wraps an inner error but does not
