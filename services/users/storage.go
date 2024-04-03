@@ -7,6 +7,7 @@ import (
 	"os"
 	"sync"
 	"time"
+	"unicode"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/ttlcache/v2"
@@ -50,37 +51,37 @@ type NullStorageManager struct{}
 
 func (self *NullStorageManager) GetUserWithHashes(ctx context.Context, username string) (
 	*api_proto.VelociraptorUser, error) {
-	return nil, errors.New("Not Found")
+	return nil, utils.NotFoundError
 }
 
 func (self *NullStorageManager) SetUser(ctx context.Context,
 	user_record *api_proto.VelociraptorUser) error {
-	return errors.New("Not Implemented")
+	return utils.NotImplementedError
 }
 
 func (self *NullStorageManager) ListAllUsers(
 	ctx context.Context) ([]*api_proto.VelociraptorUser, error) {
-	return nil, errors.New("Not Implemented")
+	return nil, utils.NotImplementedError
 }
 
 func (self *NullStorageManager) GetUserOptions(ctx context.Context, username string) (
 	*api_proto.SetGUIOptionsRequest, error) {
-	return nil, errors.New("Not Implemented")
+	return nil, utils.NotImplementedError
 }
 
 func (self *NullStorageManager) SetUserOptions(ctx context.Context,
 	username string, options *api_proto.SetGUIOptionsRequest) error {
-	return errors.New("Not Implemented")
+	return utils.NotImplementedError
 }
 
 func (self *NullStorageManager) DeleteUser(ctx context.Context, username string) error {
-	return errors.New("Not Implemented")
+	return utils.NotImplementedError
 }
 
 func (self *NullStorageManager) GetFavorites(
 	ctx context.Context, org_config_obj *config_proto.Config,
 	principal, fav_type string) (*api_proto.Favorites, error) {
-	return nil, errors.New("Not Implemented")
+	return nil, utils.NotImplementedError
 }
 
 /*
@@ -100,7 +101,12 @@ type UserStorageManager struct {
 	config_obj *config_proto.Config
 
 	lru *ttlcache.Cache
-	id  int64
+
+	// There should not be too many users so we keep a mapping of all
+	// lowercases usernames to correct casing.
+	username_lookup map[string]string
+
+	id int64
 }
 
 func (self *UserStorageManager) GetUserWithHashes(ctx context.Context, username string) (
@@ -112,11 +118,15 @@ func (self *UserStorageManager) GetUserWithHashes(ctx context.Context, username 
 		return nil, errors.New("Must set a username")
 	}
 
+	correct_username, ok := self.getUsernameCasing(username)
+	if !ok {
+		return nil, fmt.Errorf("%w: %v", services.UserNotFoundError, username)
+	}
+
 	var cache *_CachedUserObject
-	var ok bool
 
 	// Check the LRU for a cache if it is there
-	cache_any, err := self.lru.Get(username)
+	cache_any, err := self.lru.Get(correct_username)
 	if err == nil {
 		cache, ok = cache_any.(*_CachedUserObject)
 		if ok && cache.user_record != nil {
@@ -141,7 +151,7 @@ func (self *UserStorageManager) GetUserWithHashes(ctx context.Context, username 
 
 	user_record := &api_proto.VelociraptorUser{}
 	err = db.GetSubject(self.config_obj,
-		paths.UserPathManager{Name: username}.Path(), user_record)
+		paths.UserPathManager{Name: correct_username}.Path(), user_record)
 	if errors.Is(err, os.ErrNotExist) || user_record.Name == "" {
 		return nil, fmt.Errorf("%w: %v", services.UserNotFoundError, username)
 	}
@@ -157,7 +167,7 @@ func (self *UserStorageManager) GetUserWithHashes(ctx context.Context, username 
 	// Add the record to the lru
 	cache.user_record = proto.Clone(user_record).(*api_proto.VelociraptorUser)
 
-	self.lru.Set(username, cache)
+	self.lru.Set(correct_username, cache)
 
 	return user_record, nil
 }
@@ -183,8 +193,14 @@ func (self *UserStorageManager) SetUser(
 
 	var cache *_CachedUserObject
 
+	correct_username, ok := self.getUsernameCasing(user_record.Name)
+	if !ok {
+		// This is a new user - preserve casing from caller.
+		correct_username = user_record.Name
+	}
+
 	// Check the LRU for a cache if it is there
-	cache_any, err := self.lru.Get(user_record.Name)
+	cache_any, err := self.lru.Get(correct_username)
 	if err == nil {
 		cache, _ = cache_any.(*_CachedUserObject)
 	}
@@ -199,13 +215,14 @@ func (self *UserStorageManager) SetUser(
 	}
 
 	err = db.SetSubject(self.config_obj,
-		paths.UserPathManager{Name: user_record.Name}.Path(),
+		paths.UserPathManager{Name: correct_username}.Path(),
 		user_record)
 	if err != nil {
 		return err
 	}
 
-	self.lru.Set(user_record.Name, cache)
+	self.lru.Set(correct_username, cache)
+	self.username_lookup[ToLower(correct_username)] = correct_username
 	return self.notifyChanges(ctx, user_record.Name)
 }
 
@@ -223,6 +240,40 @@ func (self *UserStorageManager) notifyChanges(
 			ordereddict.NewDict().Set("id", self.id).Set("username", username),
 		},
 		"Server.Internal.UserManager", "server", "")
+}
+
+// Returns the correct casing for the username given any case combination
+func (self *UserStorageManager) getUsernameCasing(username string) (string, bool) {
+	u, ok := self.username_lookup[ToLower(username)]
+	return u, ok
+}
+
+func (self *UserStorageManager) deleteUsernameCasing(username string) {
+	delete(self.username_lookup, ToLower(username))
+}
+
+// Build an in memory cache of all usernames and their lower cases so
+// we can compare quickly.
+func (self *UserStorageManager) buildUsernameLookup(ctx context.Context) error {
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return err
+	}
+
+	children, err := db.ListChildren(self.config_obj, paths.USERS_ROOT)
+	if err != nil {
+		return err
+	}
+
+	for _, child := range children {
+		if child.IsDir() {
+			continue
+		}
+
+		username := child.Base()
+		self.username_lookup[ToLower(username)] = username
+	}
+	return nil
 }
 
 func (self *UserStorageManager) ListAllUsers(
@@ -264,8 +315,14 @@ func (self *UserStorageManager) SetUserOptions(ctx context.Context,
 
 	var cache *_CachedUserObject
 
+	correct_username, ok := self.getUsernameCasing(username)
+	if !ok {
+		// This is a new user - preserve casing from caller.
+		correct_username = username
+	}
+
 	// Check the LRU for a cache if it is there
-	cache_any, err := self.lru.Get(username)
+	cache_any, err := self.lru.Get(correct_username)
 	if err == nil {
 		cache, _ = cache_any.(*_CachedUserObject)
 	}
@@ -273,14 +330,14 @@ func (self *UserStorageManager) SetUserOptions(ctx context.Context,
 		cache = &_CachedUserObject{}
 	}
 
-	path_manager := paths.UserPathManager{Name: username}
+	path_manager := paths.UserPathManager{Name: correct_username}
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
 	}
 
 	// Merge the old options with the new options
-	old_options, err := self.getUserOptions(ctx, username)
+	old_options, err := self.getUserOptions(ctx, correct_username)
 	if err != nil {
 		old_options = &api_proto.SetGUIOptionsRequest{}
 	}
@@ -319,9 +376,9 @@ func (self *UserStorageManager) SetUserOptions(ctx context.Context,
 
 	// Update the LRU to hold the latest version from disk.
 	cache.gui_options = proto.Clone(old_options).(*api_proto.SetGUIOptionsRequest)
-	self.lru.Set(username, cache)
-
-	return self.notifyChanges(ctx, username)
+	self.lru.Set(correct_username, cache)
+	self.username_lookup[ToLower(correct_username)] = correct_username
+	return self.notifyChanges(ctx, correct_username)
 }
 
 func (self *UserStorageManager) GetUserOptions(ctx context.Context, username string) (
@@ -338,8 +395,13 @@ func (self *UserStorageManager) getUserOptions(ctx context.Context, username str
 	var cache *_CachedUserObject
 	var ok bool
 
+	correct_username, ok := self.getUsernameCasing(username)
+	if !ok {
+		return nil, fmt.Errorf("%w: %v", services.UserNotFoundError, username)
+	}
+
 	// Check the LRU for a cache if it is there
-	cache_any, err := self.lru.Get(username)
+	cache_any, err := self.lru.Get(correct_username)
 	if err == nil {
 		cache, ok = cache_any.(*_CachedUserObject)
 		if ok && cache.gui_options != nil {
@@ -352,7 +414,7 @@ func (self *UserStorageManager) getUserOptions(ctx context.Context, username str
 		cache = &_CachedUserObject{}
 	}
 
-	path_manager := paths.UserPathManager{Name: username}
+	path_manager := paths.UserPathManager{Name: correct_username}
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return nil, err
@@ -404,7 +466,7 @@ func (self *UserStorageManager) getUserOptions(ctx context.Context, username str
 
 	// Add the record to the lru
 	cache.gui_options = proto.Clone(options).(*api_proto.SetGUIOptionsRequest)
-	self.lru.Set(username, cache)
+	self.lru.Set(correct_username, cache)
 
 	return options, nil
 }
@@ -452,15 +514,21 @@ func (self *UserStorageManager) DeleteUser(ctx context.Context, username string)
 		return err
 	}
 
+	correct_username, ok := self.getUsernameCasing(username)
+	if !ok {
+		correct_username = username
+	}
+
 	// No more orgs for this user, Just remove the user completely
-	user_path_manager := paths.NewUserPathManager(username)
+	user_path_manager := paths.NewUserPathManager(correct_username)
 	err = db.DeleteSubject(self.config_obj, user_path_manager.Path())
 	if err != nil {
 		return err
 	}
 
-	self.lru.Remove(username)
-	return self.notifyChanges(ctx, username)
+	self.lru.Remove(correct_username)
+	self.deleteUsernameCasing(correct_username)
+	return self.notifyChanges(ctx, correct_username)
 }
 
 func NewUserStorageManager(
@@ -468,13 +536,20 @@ func NewUserStorageManager(
 	wg *sync.WaitGroup,
 	config_obj *config_proto.Config) (*UserStorageManager, error) {
 	result := &UserStorageManager{
-		config_obj: config_obj,
-		lru:        ttlcache.NewCache(),
-		id:         utils.GetGUID(),
+		config_obj:      config_obj,
+		lru:             ttlcache.NewCache(),
+		username_lookup: make(map[string]string),
+		id:              utils.GetGUID(),
 	}
 
 	result.lru.SetCacheSizeLimit(1000)
 	result.lru.SetTTL(time.Minute)
+
+	// Get initial mapping between lower case usernames and correct usernames
+	err := result.buildUsernameLookup(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	journal_service, err := services.GetJournal(config_obj)
 	if err != nil {
@@ -516,4 +591,15 @@ func NewUserStorageManager(
 	}()
 
 	return result, nil
+}
+
+// Lower the string in a unicode aware way. This normalizes the
+// strings for comparisons.
+func ToLower(in string) string {
+	var result []rune
+	for _, c := range in {
+		result = append(result, unicode.ToLower(c))
+	}
+
+	return string(result)
 }
