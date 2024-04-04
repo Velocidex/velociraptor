@@ -1,31 +1,32 @@
-/* A general purpose cached reader pool
+/*
+A general purpose cached reader pool
 
-   Can be used by any plugins that wish to return references to an
-   open accessor/file set. We maintain an LRU of paged readers so when
-   another plugin wants to read the same file, we can immediately
-   serve it with a cached paged reader.
+Can be used by any plugins that wish to return references to an open
+accessor/file set. We maintain an LRU of paged readers so when
+another plugin wants to read the same file, we can immediately
+serve it with a cached paged reader.
 
-   Note that if the reader is evicted from the LRU, this is not an
-   error - the reader will simply be recreated on demand by re-opening
-   the file. This controls the number of concurrent open files so it
-   is not too large, but still maintains a good temporally correlated
-   cache.
+Note that if the reader is evicted from the LRU, this is not an
+error - the reader will simply be recreated on demand by re-opening
+the file. This controls the number of concurrent open files so it
+is not too large, but still maintains a good temporally correlated
+cache.
 
-   Depending on the query it is difficult to know when to close the
-   files based solely on scope. Consider a parser which returns a lazy
-   object:
+Depending on the query it is difficult to know when to close the
+files based solely on scope. Consider a parser which returns a lazy
+object:
 
-   SELECT parse_binary(...) FROM glob(globs=..)
+SELECT parse_binary(...) FROM glob(globs=..)
 
-   The parse_binary() function will return an object wrapping the file
-   - i.e. it will have a reference to the reader. Depending on the
-   query, the reader might be accessed at any time. It is difficult to
-   know when is it safe to remove the file reference - at the end of
-   the row? at the end the root scope?
+The parse_binary() function will return an object wrapping the file
+- i.e. it will have a reference to the reader. Depending on the
+query, the reader might be accessed at any time. It is difficult to
+know when is it safe to remove the file reference - at the end of
+the row? at the end the root scope?
 
-   Having an LRU allows us to be flexible and not worry about the
-   scope lifetime so much. Files will eventually get closed and cached
-   will be evicted.
+Having an LRU allows us to be flexible and not worry about the
+scope lifetime so much. Files will eventually get closed and cached
+will be evicted.
 */
 package readers
 
@@ -87,9 +88,6 @@ type AccessorReader struct {
 
 	reader       accessors.ReadSeekCloser
 	paged_reader *ntfs.PagedReader
-
-	created     time.Time
-	last_active time.Time
 
 	// Owner pool
 	pool *ReaderPool
@@ -192,7 +190,6 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 			self.mu.Unlock()
 			return 0, err
 		}
-		self.created = time.Now()
 
 		// Set an alarm to close the file in the future - this
 		// ensures we dont hold open handles for long running
@@ -220,7 +217,6 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 			}
 		}()
 
-		self.last_active = time.Now()
 		result, err := paged_reader.ReadAt(buf, offset)
 		self.paged_reader = paged_reader
 		self.reader = reader
@@ -235,7 +231,6 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 		return result, err
 	}
 
-	self.last_active = time.Now()
 	paged_reader := self.paged_reader
 
 	// Reading from the paged reader may trigger another reader due to
@@ -315,14 +310,12 @@ func NewPagedReader(scope vfilter.Scope,
 	}
 
 	result := &AccessorReader{
-		Accessor:    accessor,
-		File:        filename,
-		key:         key,
-		max_size:    max_size,
-		Scope:       scope,
-		pool:        pool,
-		created:     time.Now(),
-		last_active: time.Now(),
+		Accessor: accessor,
+		File:     filename,
+		key:      key,
+		max_size: max_size,
+		Scope:    scope,
+		pool:     pool,
 
 		// By default close all files after a minute.
 		Lifetime: time.Minute,
