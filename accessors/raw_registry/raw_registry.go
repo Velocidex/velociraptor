@@ -79,6 +79,8 @@ type RawRegKeyInfo struct {
 	_full_path *accessors.OSPath
 	_data      *ordereddict.Dict
 	_modtime   time.Time
+
+	_key *regparser.CM_KEY_NODE
 }
 
 func (self *RawRegKeyInfo) IsDir() bool {
@@ -162,6 +164,7 @@ func (self *RawRegValueInfo) Copy() *RawRegValueInfo {
 		RawRegKeyInfo: &RawRegKeyInfo{
 			_full_path: self._full_path,
 			_modtime:   self._modtime,
+			_key:       self._key,
 		},
 		_value: self._value,
 		_data:  self._data,
@@ -386,7 +389,7 @@ func (self *RawRegFileSystemAccessor) getDefaultValue(
 	// A Key has a default value if its parent directory contains a
 	// value with the same name as the key.
 	basename := full_path.Basename()
-	contents, err := self._readDirWithOSPath(full_path.Dirname())
+	contents, _, err := self._readDirWithOSPath(full_path.Dirname())
 	if err != nil {
 		return nil, err
 	}
@@ -397,7 +400,7 @@ func (self *RawRegFileSystemAccessor) getDefaultValue(
 			continue
 		}
 
-		if item.Name() == basename {
+		if strings.EqualFold(item.Name(), basename) {
 			item_copy := value_item.Copy()
 			item_copy._full_path = item_copy._full_path.Append("@")
 			return item_copy, nil
@@ -416,7 +419,7 @@ func (self *RawRegFileSystemAccessor) ReadDirWithOSPath(
 		result = append(result, default_value)
 	}
 
-	contents, err := self._readDirWithOSPath(full_path)
+	contents, _, err := self._readDirWithOSPath(full_path)
 	if err != nil {
 		return nil, err
 	}
@@ -455,8 +458,9 @@ func (self *RawRegFileSystemAccessor) ReadDirWithOSPath(
 
 // Return all the contents in the directory including all keys and all
 // values, even if some keys have a default value.
+// Additionally returns the CM_KEY_NODE for this actual directory.
 func (self *RawRegFileSystemAccessor) _readDirWithOSPath(
-	full_path *accessors.OSPath) (result []accessors.FileInfo, err error) {
+	full_path *accessors.OSPath) (result []accessors.FileInfo, key *regparser.CM_KEY_NODE, err error) {
 
 	cache_key := full_path.String()
 	cached, err := self.readdir_lru.Get(cache_key)
@@ -464,7 +468,7 @@ func (self *RawRegFileSystemAccessor) _readDirWithOSPath(
 		cached_res, ok := cached.(*readDirLRUItem)
 		if ok {
 			metricsReadDirLruHit.Inc()
-			return cached_res.children, cached_res.err
+			return cached_res.children, cached_res.key, cached_res.err
 		}
 	}
 	metricsReadDirLruMiss.Inc()
@@ -474,24 +478,66 @@ func (self *RawRegFileSystemAccessor) _readDirWithOSPath(
 		self.readdir_lru.Set(cache_key, &readDirLRUItem{
 			children: result,
 			err:      err,
+			key:      key,
 		})
 	}()
 
-	hive, err := getRegHive(self.scope, full_path)
+	// Listing the top level of the hive.
+	if len(full_path.Components) == 0 {
+		hive, err := getRegHive(self.scope, full_path)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		root_cell := hive.Profile.HCELL(hive.Reader,
+			0x1000+int64(hive.BaseBlock.RootCell()))
+
+		nk := root_cell.KeyNode()
+		if nk != nil {
+			listing, err := self._readDirFromKey(full_path, nk)
+			return listing, nk, err
+		}
+		return nil, nil, utils.NotFoundError
+	}
+
+	parent := full_path.Dirname()
+	basename := full_path.Basename()
+
+	// If the directory is not cached, get its parent and list it.
+	contents, key, err := self._readDirWithOSPath(parent)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	key := OpenKeyComponents(hive, full_path.Components)
-	if key == nil {
-		return nil, nil
+	// Find the required key in the parent directory listing.
+	for _, item := range contents {
+		key, ok := item.(*RawRegKeyInfo)
+		if !ok {
+			continue
+		}
+
+		// Found it!
+		if key._key != nil &&
+			strings.EqualFold(key.Name(), basename) {
+			listing, err := self._readDirFromKey(full_path, key._key)
+			return listing, key._key, err
+		}
 	}
 
-	for _, subkey := range key.Subkeys() {
+	return nil, nil, utils.NotFoundError
+}
+
+func (self *RawRegFileSystemAccessor) _readDirFromKey(
+	parent *accessors.OSPath, key *regparser.CM_KEY_NODE) (
+	result []accessors.FileInfo, err error) {
+
+	subkeys := key.Subkeys()
+	for _, subkey := range subkeys {
 		basename := subkey.Name()
 		subkey := &RawRegKeyInfo{
-			_full_path: full_path.Append(basename),
+			_full_path: parent.Append(basename),
 			_modtime:   subkey.LastWriteTime().Time,
+			_key:       subkey,
 		}
 		result = append(result, subkey)
 	}
@@ -502,7 +548,7 @@ func (self *RawRegFileSystemAccessor) _readDirWithOSPath(
 		basename := value.ValueName()
 		value_obj := &RawRegValueInfo{
 			RawRegKeyInfo: &RawRegKeyInfo{
-				_full_path: full_path.Append(basename),
+				_full_path: parent.Append(basename),
 				_modtime:   key_mod_time,
 			},
 			_value: value,
@@ -584,7 +630,7 @@ func (self *RawRegFileSystemAccessor) LstatWithOSPath(
 	}
 
 	for _, child := range children {
-		if child.Name() == name {
+		if strings.EqualFold(child.Name(), name) {
 			return child, nil
 		}
 	}
