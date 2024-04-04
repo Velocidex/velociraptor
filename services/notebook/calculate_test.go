@@ -56,6 +56,10 @@ func (self *NotebookManagerTestSuite) TearDownTest() {
 }
 
 func (self *NotebookManagerTestSuite) TestNotebookManagerUpdateCell() {
+	// Mock out cell ID generation for tests
+	gen := utils.IncrementalIdGenerator(0)
+	utils.SetIdGenerator(&gen)
+
 	notebook_manager, err := services.GetNotebookManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
