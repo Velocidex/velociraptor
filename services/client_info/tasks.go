@@ -8,6 +8,7 @@ package client_info
 
 import (
 	"context"
+	"errors"
 	"sync/atomic"
 
 	"github.com/Velocidex/ordereddict"
@@ -45,17 +46,23 @@ func (self *ClientInfoManager) ProcessNotification(
 	row *ordereddict.Dict) error {
 	client_id, pres := row.GetString("ClientId")
 	if pres {
-		record, err := self.storage.GetRecord(client_id)
-		if err != nil {
-			// If a record does not exist we ignore the notification.
-			return nil
-		}
-		record.HasTasks = true
-		notifier, err := services.GetNotifier(config_obj)
+		err := self.storage.Modify(ctx, client_id,
+			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+				if client_info == nil {
+					return nil, utils.NotFoundError
+				}
+				client_info.HasTasks = true
+				return client_info, nil
+			})
+
+		// If a record does not exist we ignore the notification.
 		if err == nil {
+			notifier, err := services.GetNotifier(config_obj)
+			if err != nil {
+				return err
+			}
 			notifier.NotifyDirectListener(client_id)
 		}
-		return self.storage.SetRecord(record)
 	}
 	return nil
 }
@@ -96,18 +103,22 @@ func (self *ClientInfoManager) QueueMessagesForClient(
 	// node this information will be flushed on the next snapshot
 	// write.
 	completer := utils.NewCompleter(func() {
-		record, err := self.storage.GetRecord(client_id)
-		if err != nil {
-			return
-		}
-		record.HasTasks = true
-		self.storage.SetRecord(record)
+		err := self.storage.Modify(ctx, client_id,
+			func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+				if client_info == nil {
+					return nil, utils.NotFoundError
+				}
+				client_info.HasTasks = true
+				return client_info, nil
+			})
 
-		journal.PushRowsToArtifactAsync(ctx, self.config_obj,
-			ordereddict.NewDict().
-				Set("ClientId", client_id).
-				Set("Notify", notify),
-			"Server.Internal.ClientTasks")
+		if err == nil {
+			journal.PushRowsToArtifactAsync(ctx, self.config_obj,
+				ordereddict.NewDict().
+					Set("ClientId", client_id).
+					Set("Notify", notify),
+				"Server.Internal.ClientTasks")
+		}
 	})
 	defer completer.GetCompletionFunc()()
 
@@ -213,20 +224,36 @@ func (self *ClientInfoManager) PeekClientTasks(ctx context.Context,
 	return result, nil
 }
 
+var (
+	noTasksError = errors.New("No Tasks")
+)
+
 // Gets all the tasks from the client and remove from the datastore.
 func (self *ClientInfoManager) GetClientTasks(
 	ctx context.Context, client_id string) (
 	[]*crypto_proto.VeloMessage, error) {
 
-	record, err := self.storage.GetRecord(client_id)
-	if err != nil {
+	err := self.storage.Modify(ctx, client_id,
+		func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+			if client_info == nil {
+				return nil, utils.NotFoundError
+			}
+			if !client_info.HasTasks {
+				return nil, noTasksError
+			}
+			// Reset the HasTasks flag
+			client_info.HasTasks = false
+			return client_info, nil
+		})
+
+	if err == utils.NotFoundError {
 		// Not an error if the client does not exist.
 		return nil, nil
 	}
 
 	// This is by far the most common case - we know the client has no
 	// tasks outstanding. We can return immediately without any IO
-	if !record.HasTasks {
+	if err == noTasksError {
 		return nil, nil
 	}
 
@@ -241,12 +268,6 @@ func (self *ClientInfoManager) GetClientTasks(
 	client_path_manager := paths.NewClientPathManager(client_id)
 	tasks, err = db.ListChildren(
 		self.config_obj, client_path_manager.TasksDirectory())
-	if err != nil {
-		return nil, err
-	}
-
-	record.HasTasks = false
-	err = self.storage.SetRecord(record)
 	if err != nil {
 		return nil, err
 	}
