@@ -257,7 +257,8 @@ func (self *UserStorageManager) deleteUsernameCasing(username string) {
 func (self *UserStorageManager) buildUsernameLookup(ctx context.Context) error {
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
-		return err
+		// Not an error - without a datastore we dont have any users.
+		return nil
 	}
 
 	children, err := db.ListChildren(self.config_obj, paths.USERS_ROOT)
