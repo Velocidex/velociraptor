@@ -77,9 +77,9 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerUpdateCell() {
 
 	assert.Equal(self.T(), len(notebook.CellMetadata), 1)
 	assert.Equal(self.T(),
-		notebook.CellMetadata[0].CurrentVersion, "03")
+		notebook.CellMetadata[0].CurrentVersion, "04")
 	assert.Equal(self.T(),
-		notebook.CellMetadata[0].AvailableVersions, []string{"03"})
+		notebook.CellMetadata[0].AvailableVersions, []string{"04"})
 
 	golden.Set("Notebook Metadata", notebook)
 

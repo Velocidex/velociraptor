@@ -8,17 +8,15 @@
   "notebook_id": "N.01",
   "cell_metadata": [
    {
-    "input": "# Test Notebook\n\nThis is a test\n",
     "cell_id": "NC.02",
     "timestamp": 10,
-    "type": "Markdown",
-    "calculating": true,
-    "current_version": "03",
+    "current_version": "04",
     "available_versions": [
-     "03"
+     "04"
     ]
    }
-  ]
+  ],
+  "latest_cell_id": "NC.02"
  },
  "Markdown Cell": {
   "input": "# Heading 1\n\nHello world\n",
