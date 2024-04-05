@@ -19,36 +19,65 @@ func (self *NotebookManager) NewNotebookCell(
 	in *api_proto.NotebookCellRequest, username string) (
 	*api_proto.NotebookMetadata, error) {
 
+	// Calculate the cell first then insert it into the notebook.
+
+	new_version := GetNextVersion("")
+	new_cell_request := &api_proto.NotebookCellRequest{
+		Input:             in.Input,
+		Output:            in.Output,
+		NotebookId:        in.NotebookId,
+		Version:           new_version,
+		AvailableVersions: []string{new_version},
+		Type:              in.Type,
+		Env:               in.Env,
+		Sync:              in.Sync,
+
+		// New cells are opened for editing.
+		CurrentlyEditing: true,
+	}
+
+	// Allow the caller to specify the cell id
+	if in.CellId != "" {
+		new_cell_request.CellId = in.CellId
+	} else {
+		new_cell_request.CellId = NewNotebookCellId()
+	}
+
 	// TODO: This is not thread safe!
 	notebook, err := self.Store.GetNotebook(in.NotebookId)
 	if err != nil {
 		return nil, err
 	}
 
-	// The new cell version
-	new_version := GetNextVersion("")
+	// Start off with some empty lines.
+	if in.Input == "" {
+		in.Input = "\n\n\n\n\n\n"
+	}
 
-	new_cell_md := []*api_proto.NotebookCell{}
+	new_cell, err := self.UpdateNotebookCell(ctx, notebook, username, new_cell_request)
+	if err != nil {
+		return nil, err
+	}
+
+	// The notebook only keep summary metadata and not the full
+	// results.
+	new_cell_summary := &api_proto.NotebookCell{
+		CellId:            new_cell.CellId,
+		CurrentVersion:    new_cell.CurrentVersion,
+		AvailableVersions: new_cell.AvailableVersions,
+		Timestamp:         new_cell.Timestamp,
+	}
+
 	added := false
 	now := utils.GetTime().Now().Unix()
 
-	// Allow the caller to specify the cell id
-	if in.CellId != "" {
-		notebook.LatestCellId = in.CellId
-	} else {
-		notebook.LatestCellId = NewNotebookCellId()
-	}
+	new_cell_md := []*api_proto.NotebookCell{}
 
 	for _, cell_md := range notebook.CellMetadata {
 		if cell_md.CellId == in.CellId {
 
 			// New cell goes above existing cell.
-			new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
-				CellId:            notebook.LatestCellId,
-				CurrentVersion:    new_version,
-				AvailableVersions: []string{new_version},
-				Timestamp:         now,
-			})
+			new_cell_md = append(new_cell_md, new_cell_summary)
 
 			cell_md.Timestamp = now
 			new_cell_md = append(new_cell_md, cell_md)
@@ -60,42 +89,18 @@ func (self *NotebookManager) NewNotebookCell(
 
 	// Add it to the end of the document.
 	if !added {
-		new_cell_md = append(new_cell_md, &api_proto.NotebookCell{
-			CellId:            notebook.LatestCellId,
-			CurrentVersion:    new_version,
-			AvailableVersions: []string{new_version},
-			Timestamp:         now,
-		})
+		new_cell_md = append(new_cell_md, new_cell_summary)
 	}
 
+	notebook.LatestCellId = new_cell.CellId
 	notebook.CellMetadata = new_cell_md
-	notebook.ModifiedTime = now
+	notebook.ModifiedTime = new_cell.Timestamp
+
 	err = self.Store.SetNotebook(notebook)
 	if err != nil {
 		return nil, err
 	}
 
-	// Start off with some empty lines.
-	if in.Input == "" {
-		in.Input = "\n\n\n\n\n\n"
-	}
-
-	// Create the new cell with fresh content.
-	new_cell_request := &api_proto.NotebookCellRequest{
-		Input:             in.Input,
-		Output:            in.Output,
-		NotebookId:        in.NotebookId,
-		CellId:            notebook.LatestCellId,
-		Version:           new_version,
-		AvailableVersions: []string{new_version},
-		Type:              in.Type,
-		Env:               in.Env,
-
-		// New cells are opened for editing.
-		CurrentlyEditing: true,
-	}
-
-	_, err = self.UpdateNotebookCell(ctx, notebook, username, new_cell_request)
 	return notebook, err
 }
 

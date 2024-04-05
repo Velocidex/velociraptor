@@ -97,9 +97,7 @@ func (self *NotebookTestSuite) TestCreateNotebook() {
 	assert.Equal(self.T(), len(notebook.CellMetadata), 1)
 
 	// Make sure the cell is rendered.
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		return strings.Contains("Hello world", notebook.CellMetadata[0].Output)
-	})
+	assert.Contains(self.T(), notebook.CellMetadata[0].Output, "Hello world")
 
 	// With one suggestion added from the NOTEBOOK artifact
 	assert.Equal(self.T(), len(notebook.Suggestions), 1)
@@ -169,19 +167,17 @@ func (self *NotebookTestSuite) TestCreateNotebook() {
 	})
 
 	// Check uploads - uploads are stored in each cell so they can be versioned
+	mem_file_store.Debug()
+
 	upload, _ := mem_file_store.Get(
-		"/notebooks/N.01/NC.02-05/uploads/data/file.txt")
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		return strings.Contains(`hello`, string(upload))
-	})
+		"/notebooks/N.01/NC.02-06/uploads/data/file.txt")
+	assert.Contains(self.T(), string(upload), `hello`)
 
 	// Attachments are global to the whole notebook and are not
 	// versioned.
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		attachment, _ := mem_file_store.Get(
-			"/notebooks/N.01/attach/NA.05-attachment.txt")
-		return string(attachment) == "Hello world"
-	})
+	attachment, _ := mem_file_store.Get(
+		"/notebooks/N.01/attach/NA.05-attachment.txt")
+	assert.Equal(self.T(), string(attachment), "Hello world")
 
 	// Export the notebook to html.
 	res_any = ExportNotebookFunction{}.Call(self.Ctx, scope,
@@ -231,10 +227,8 @@ func (self *NotebookTestSuite) TestCreateNotebook() {
 	assert.Contains(self.T(), data[0], "hello")
 
 	// Attachments are also exported.
-	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
-		data, _ = files.GetStrings("N.01/attach/NA.05-attachment.txt")
-		return len(data) > 0 && strings.Contains("Hello world", data[0])
-	})
+	data, _ = files.GetStrings("N.01/attach/NA.05-attachment.txt")
+	assert.Contains(self.T(), data[0], "Hello world")
 
 	// Now export the notebook to html
 	// Export the notebook to html.
