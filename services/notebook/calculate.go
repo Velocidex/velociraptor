@@ -123,8 +123,13 @@ func (self *NotebookManager) UpdateNotebookCell(
 		return notebook_cell, err
 	}
 
+	wait := 2 * time.Second
+	if in.Sync {
+		wait = time.Hour
+	}
+
 	// Only wait here for a short time to keep the browser moving.
-	fast_ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	fast_ctx, cancel := context.WithTimeout(ctx, wait)
 	defer cancel()
 
 	select {

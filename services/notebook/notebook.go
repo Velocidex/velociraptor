@@ -83,7 +83,9 @@ func (self *NotebookManager) NewNotebook(
 		return nil, err
 	}
 
-	return in, err
+	// Get the freshest version of the notebook
+	notebook, err := self.Store.GetNotebook(in.NotebookId)
+	return notebook, err
 }
 
 func (self *NotebookManager) UpdateNotebook(
