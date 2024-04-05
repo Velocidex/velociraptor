@@ -29,7 +29,7 @@ func (self HuntBackupProvider) Name() []string {
 	return []string{"hunts.json"}
 }
 
-// The backup will just dump out the contents of the client info manager.
+// The backup will just dump out the contents of the hunt dispatcher.
 func (self HuntBackupProvider) BackupResults(
 	ctx context.Context, wg *sync.WaitGroup) (
 	<-chan vfilter.Row, error) {

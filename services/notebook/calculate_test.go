@@ -77,9 +77,9 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerUpdateCell() {
 
 	assert.Equal(self.T(), len(notebook.CellMetadata), 1)
 	assert.Equal(self.T(),
-		notebook.CellMetadata[0].CurrentVersion, "03")
+		notebook.CellMetadata[0].CurrentVersion, "04")
 	assert.Equal(self.T(),
-		notebook.CellMetadata[0].AvailableVersions, []string{"03"})
+		notebook.CellMetadata[0].AvailableVersions, []string{"04"})
 
 	golden.Set("Notebook Metadata", notebook)
 
@@ -106,11 +106,11 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerUpdateCell() {
 
 	// The new cell should have a higher version
 	assert.Equal(self.T(), len(notebook.CellMetadata), 1)
-	assert.Equal(self.T(), cell.CurrentVersion, "05")
+	assert.Equal(self.T(), cell.CurrentVersion, "06")
 
 	// The old version is still there and available. There should be 3
 	// versions all up.
-	assert.Equal(self.T(), cell.AvailableVersions, []string{"03", "04", "05"})
+	assert.Equal(self.T(), cell.AvailableVersions, []string{"04", "05", "06"})
 
 	golden.Set("VQL Cell", cell)
 	goldie.Assert(self.T(), "TestNotebookManagerUpdateCell",
