@@ -20,7 +20,6 @@ import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
-import VeloForm from '../forms/form.jsx';
 import T from '../i8n/i8n.jsx';
 import OverlayTrigger from 'react-bootstrap/OverlayTrigger';
 import Tooltip from 'react-bootstrap/Tooltip';
@@ -155,6 +154,7 @@ class UserSettings extends React.PureComponent {
         default_password: "",
         org: "",
         org_changed: false,
+        edited: false
     }
 
     saveSettings = ()=> {
@@ -183,6 +183,7 @@ class UserSettings extends React.PureComponent {
     }
 
     render() {
+
         return (
             <Modal show={true}
                    dialogClassName="modal-70w"
@@ -197,8 +198,8 @@ class UserSettings extends React.PureComponent {
                       <OverlayTrigger
                         delay={{show: 250, hide: 400}}
                         overlay={(props)=><Tooltip {...props}>
-                                  {T("Switch to a different org")}
-                                </Tooltip>}>
+                                            {T("Switch to a different org")}
+                                          </Tooltip>}>
                         <div>{T("Organization")}</div>
                       </OverlayTrigger>
                     </Form.Label>
@@ -206,8 +207,7 @@ class UserSettings extends React.PureComponent {
                       <Form.Control as="select"
                                     value={this.state.org}
                                     placeholder={T("Select an org")}
-                                    onChange={e=>this.changeOrg(e.currentTarget.value)}
-                  >
+                                    onChange={e=>this.changeOrg(e.currentTarget.value)}>
                         {_.map(this.context.traits.orgs || [], function(x) {
                             return <option key={x.id} value={x.id}>{x.name}</option>;
                         })}
@@ -247,14 +247,42 @@ class UserSettings extends React.PureComponent {
                     </Form.Control>
                   </Col>
                 </Form.Group>
-                <VeloForm
-                  param={{name: "Downloads Password",
-                          friendly_name: T("Downloads Password"),
-                          description: T("Default password to use for downloads"),
-                          type: "string"}}
-                  value={this.state.default_password}
-                  setValue={value=>this.setState({default_password: value})}
-                />
+
+                <Form.Group as={Row}>
+                  <Form.Label column sm="3">
+                    <OverlayTrigger
+                      delay={{show: 250, hide: 400}}
+                      overlay={(props)=><Tooltip {...props}>
+                                                {T("Default password to use for downloads")}
+                                              </Tooltip>}>
+                      <div>{T("Downloads Password")}</div>
+                    </OverlayTrigger>
+                  </Form.Label>
+                  <Col sm="8">
+                    <InputGroup className="mb-3">
+                      <Form.Control
+                        type="text"
+                        placeholder = {(this.state.default_password)}
+                        onChange = {e => {this.setState({"edited": true});
+                                          this.setState({
+                                              default_password: e.currentTarget.value
+                                          });
+                                         }}/>
+                      <div className="input-group-append">
+                        <Button as="button" variant="default"
+                                disabled = {!this.state.edited}
+                                onClick={e => {
+                                    this.props.setSetting({
+                                        default_password: this.state.default_password
+                                    });
+                                    this.setState({"edited": false});
+                                }}>
+                          <FontAwesomeIcon icon="save" />
+                        </Button>
+                      </div>
+                    </InputGroup></Col>
+                </Form.Group>
+
                 <Form.Group as={Row}>
                   <Form.Label column sm="3">
                     <OverlayTrigger
