@@ -8,8 +8,11 @@
   "notebook_id": "N.01",
   "cell_metadata": [
    {
+    "input": "# Test Notebook\n\nThis is a test\n",
     "cell_id": "NC.02",
     "timestamp": 10,
+    "type": "Markdown",
+    "calculating": true,
     "current_version": "03",
     "available_versions": [
      "03"
@@ -27,15 +30,15 @@
   ],
   "timestamp": 10,
   "type": "markdown",
-  "current_version": "04",
+  "current_version": "05",
   "available_versions": [
-   "03",
-   "04"
+   "04",
+   "05"
   ]
  },
  "VQL Cell": {
   "input": "SELECT _value AS X FROM range(end=2)",
-  "output": "\u003cdiv class=\"panel\"\u003e\u003cgrr-csv-viewer base-url=\"'v1/GetTable'\" params='%7B%22notebook_id%22%3A%22N.01%22%2C%22client_id%22%3A%22%22%2C%22cell_id%22%3A%22NC.02-05%22%2C%22table_id%22%3A1%2C%22TableOptions%22%3A%7B%7D%2C%22Version%22%3A10%7D' /\u003e\u003c/div\u003e",
+  "output": "\u003cdiv class=\"panel\"\u003e\u003cgrr-csv-viewer base-url=\"'v1/GetTable'\" params='%7B%22notebook_id%22%3A%22N.01%22%2C%22client_id%22%3A%22%22%2C%22cell_id%22%3A%22NC.02-06%22%2C%22table_id%22%3A1%2C%22TableOptions%22%3A%7B%7D%2C%22Version%22%3A10%7D' /\u003e\u003c/div\u003e",
   "data": "{}",
   "cell_id": "NC.02",
   "messages": [
@@ -43,11 +46,11 @@
   ],
   "timestamp": 10,
   "type": "vql",
-  "current_version": "05",
+  "current_version": "06",
   "available_versions": [
-   "03",
    "04",
-   "05"
+   "05",
+   "06"
   ]
  }
 }

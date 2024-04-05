@@ -18,6 +18,7 @@ import ButtonGroup from 'react-bootstrap/ButtonGroup';
 import Alert from 'react-bootstrap/Alert';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import CSVForm from './csv.jsx';
+import Select from 'react-select';
 
 import BootstrapTable from 'react-bootstrap-table-next';
 import cellEditFactory, { Type } from 'react-bootstrap-table2-editor';
@@ -410,8 +411,47 @@ export default class VeloForm extends React.Component {
                   </Col>
                 </Form.Group>
             );
+
+        case "multichoice":
+            let options = [];
+            _.each(this.props.param.choices, x=>{
+                options.push({value: x, label: x});
+            });
+
+            let defaults = [];
+            try {
+                defaults = _.map(JSON.parse(this.props.value), x=>{return {value: x, label: x};});
+            } catch(e){};
+
+            return (
+                <Form.Group as={Row}>
+                  <Form.Label column sm="3">
+                    <OverlayTrigger
+                      delay={{show: 250, hide: 400}}
+                      overlay={(props)=>renderToolTip(props, param)}>
+                      <div>
+                        {name}
+                      </div>
+                    </OverlayTrigger>
+                  </Form.Label>
+                  <Col sm="8">
+                    <Select
+                      closeMenuOnSelect={false}
+                      isMulti
+                      defaultValue={defaults}
+                      onChange={e=>{
+                          let data = _.map(e, x=>x.value);
+                          this.props.setValue(JSON.stringify(data));
+                      }}
+                      options={options}
+                    />
+                  </Col>
+                </Form.Group>
+            );
+
         case "artifactset":
-            // No artifacts means we haven't loaded yet.  If there are truly no artifacts, we've got bigger problems.
+            // No artifacts means we haven't loaded yet.  If there are
+            // truly no artifacts, we've got bigger problems.
             if (this.state.multichoices === undefined ||
                 this.state.artifact_loading) {
               return <></>;

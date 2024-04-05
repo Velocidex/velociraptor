@@ -19,6 +19,7 @@ func (self *NotebookManager) NewNotebookCell(
 	in *api_proto.NotebookCellRequest, username string) (
 	*api_proto.NotebookMetadata, error) {
 
+	// TODO: This is not thread safe!
 	notebook, err := self.Store.GetNotebook(in.NotebookId)
 	if err != nil {
 		return nil, err
@@ -31,7 +32,12 @@ func (self *NotebookManager) NewNotebookCell(
 	added := false
 	now := utils.GetTime().Now().Unix()
 
-	notebook.LatestCellId = NewNotebookCellId()
+	// Allow the caller to specify the cell id
+	if in.CellId != "" {
+		notebook.LatestCellId = in.CellId
+	} else {
+		notebook.LatestCellId = NewNotebookCellId()
+	}
 
 	for _, cell_md := range notebook.CellMetadata {
 		if cell_md.CellId == in.CellId {
@@ -125,10 +131,22 @@ func getInitialCellsFromArtifacts(
 				}
 
 				switch strings.ToLower(n.Type) {
+				case "none":
+					// Means no cell to be produced.
+					result = append(result, &api_proto.NotebookCellRequest{
+						Type: n.Type,
+					})
+
 				case "vql", "md", "markdown":
 					result = append(result, &api_proto.NotebookCellRequest{
-						Type:  n.Type,
-						Input: n.Template,
+						Type:   n.Type,
+						Input:  n.Template,
+						Output: n.Output,
+
+						// Need to wait for all cells to calculate or
+						// we will overload the netowork workers if
+						// there are too many.
+						Sync: true,
 					})
 				case "vql_suggestion":
 					in.Suggestions = append(in.Suggestions,
@@ -198,7 +216,18 @@ func (self *NotebookManager) CreateInitialNotebook(ctx context.Context,
 		return err
 	}
 
+	// Write the notebook to storage first while we are calculating it.
+	err = self.Store.SetNotebook(notebook_metadata)
+	if err != nil {
+		return err
+	}
+
 	for _, cell_req := range new_cell_requests {
+		// Skip none cells - they are essentially "commented out"
+		if cell_req.Type == "none" {
+			continue
+		}
+
 		new_cell_id := NewNotebookCellId()
 
 		cell_req.NotebookId = notebook_metadata.NotebookId
@@ -211,6 +240,10 @@ func (self *NotebookManager) CreateInitialNotebook(ctx context.Context,
 		cell_metadata := &api_proto.NotebookCell{
 			CellId:            new_cell_id,
 			Env:               cell_req.Env,
+			Input:             cell_req.Input,
+			Output:            cell_req.Output,
+			Calculating:       true,
+			Type:              cell_req.Type,
 			Timestamp:         utils.GetTime().Now().Unix(),
 			CurrentVersion:    cell_req.Version,
 			AvailableVersions: cell_req.AvailableVersions,
@@ -222,19 +255,20 @@ func (self *NotebookManager) CreateInitialNotebook(ctx context.Context,
 			notebook_metadata.CellMetadata, cell_metadata)
 	}
 
-	// Write the notebook to storage and kick off calculation.
-	err = self.Store.SetNotebook(notebook_metadata)
-	if err != nil {
-		return err
-	}
-
+	// When we create the notebook we need to wait for all the cells
+	// to be calculated otherwise we will overwhelm the workers.
 	for _, cell_req := range new_cell_requests {
-		_, err = self.UpdateNotebookCell(
-			ctx, notebook_metadata, principal, cell_req)
+		if cell_req.Type == "none" {
+			continue
+		}
+
+		cell_req.Sync = true
+		_, err = self.NewNotebookCell(ctx, cell_req, principal)
 		if err != nil {
 			return err
 		}
 	}
+
 	return err
 }
 
@@ -323,11 +357,16 @@ func getCustomCells(
 		}
 
 		request := &api_proto.NotebookCellRequest{
-			Type:  cell.Type,
-			Env:   env,
-			Input: cell.Template}
+			Type:   cell.Type,
+			Env:    env,
+			Output: cell.Output,
+			Sync:   true,
+			Input:  cell.Template}
 
 		switch strings.ToLower(cell.Type) {
+		case "none":
+			result = append(result, request)
+
 		case "vql", "md", "markdown":
 			result = append(result, request)
 

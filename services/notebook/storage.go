@@ -23,8 +23,11 @@ var (
 )
 
 type NotebookStore interface {
+	// TODO: The following Get/Modify/Set pattern is not thread safe -
+	// Enhance the API to allow safe modifications.
 	SetNotebook(in *api_proto.NotebookMetadata) error
 	GetNotebook(notebook_id string) (*api_proto.NotebookMetadata, error)
+
 	SetNotebookCell(notebook_id string, in *api_proto.NotebookCell) error
 	GetNotebookCell(notebook_id, cell_id, version string) (
 		*api_proto.NotebookCell, error)

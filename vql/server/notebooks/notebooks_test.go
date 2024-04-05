@@ -97,8 +97,9 @@ func (self *NotebookTestSuite) TestCreateNotebook() {
 	assert.Equal(self.T(), len(notebook.CellMetadata), 1)
 
 	// Make sure the cell is rendered.
-	assert.Contains(self.T(),
-		notebook.CellMetadata[0].Output, "Hello world")
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		return strings.Contains("Hello world", notebook.CellMetadata[0].Output)
+	})
 
 	// With one suggestion added from the NOTEBOOK artifact
 	assert.Equal(self.T(), len(notebook.Suggestions), 1)
@@ -140,7 +141,7 @@ func (self *NotebookTestSuite) TestCreateNotebook() {
 			Set("notebook_id", notebook.NotebookId).
 			Set("input", "# Input field").
 			// Two types of links will be converted: img and a links.
-			Set("output", "Output Field With <img src=\"/notebooks/N.01/attach/NA.04-attachment.txt?org_id=root\">\n\n<a href=\"/notebooks/N.01/attach/NA.04-attachment.txt?org_id=root\">file</a> "))
+			Set("output", "Output Field With <img src=\"/notebooks/N.01/attach/NA.05-attachment.txt?org_id=root\">\n\n<a href=\"/notebooks/N.01/attach/NA.05-attachment.txt?org_id=root\">file</a> "))
 
 	notebook = res_any.(*api_proto.NotebookMetadata)
 	assert.Equal(self.T(), len(notebook.CellMetadata), 2)
@@ -170,13 +171,17 @@ func (self *NotebookTestSuite) TestCreateNotebook() {
 	// Check uploads - uploads are stored in each cell so they can be versioned
 	upload, _ := mem_file_store.Get(
 		"/notebooks/N.01/NC.02-05/uploads/data/file.txt")
-	assert.Contains(self.T(), string(upload), `hello`)
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		return strings.Contains(`hello`, string(upload))
+	})
 
 	// Attachments are global to the whole notebook and are not
 	// versioned.
-	attachment, _ := mem_file_store.Get(
-		"/notebooks/N.01/attach/NA.04-attachment.txt")
-	assert.Equal(self.T(), string(attachment), "Hello world")
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		attachment, _ := mem_file_store.Get(
+			"/notebooks/N.01/attach/NA.05-attachment.txt")
+		return string(attachment) == "Hello world"
+	})
 
 	// Export the notebook to html.
 	res_any = ExportNotebookFunction{}.Call(self.Ctx, scope,
@@ -226,8 +231,10 @@ func (self *NotebookTestSuite) TestCreateNotebook() {
 	assert.Contains(self.T(), data[0], "hello")
 
 	// Attachments are also exported.
-	data, _ = files.GetStrings("N.01/attach/NA.04-attachment.txt")
-	assert.Contains(self.T(), data[0], "Hello world")
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		data, _ = files.GetStrings("N.01/attach/NA.05-attachment.txt")
+		return len(data) > 0 && strings.Contains("Hello world", data[0])
+	})
 
 	// Now export the notebook to html
 	// Export the notebook to html.

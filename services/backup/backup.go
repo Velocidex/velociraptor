@@ -272,8 +272,8 @@ func NewBackupService(
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-	logger.Info("Starting <green>Backup Services</> for %v",
-		services.GetOrgName(config_obj))
+	logger.Info("Starting <green>Backup Services</> for %v every %v",
+		services.GetOrgName(config_obj), delay)
 
 	wg.Add(1)
 	go func() {
