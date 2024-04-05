@@ -267,7 +267,7 @@ func (self *NotebookWorker) updateCellContents(
 
 	switch cell_type {
 
-	case "vql_suggestion":
+	case "vql_suggestion", "none":
 		// noop - these cells will be created by the user on demand.
 
 	case "markdown", "md":
