@@ -99,6 +99,31 @@ func (self *SecretsTestSuite) TestSecretsService() {
 	assert.Error(self.T(), err)
 	assert.Contains(self.T(), err.Error(), `Permission Denied`)
 
+	// Get all known secrets
+	all_secrets := secrets.GetSecretDefinitions(self.Ctx)
+	assert.Equal(self.T(), len(all_secrets), 1)
+	assert.Equal(self.T(), all_secrets[0].SecretNames, []string{"MySecret"})
+
+	// Now remove the secret type
+	err = secrets.DeleteSecretDefinition(self.Ctx, &api_proto.SecretDefinition{
+		TypeName: "MySecretType",
+	})
+	assert.NoError(self.T(), err)
+
+	// No secrets known.
+	all_secrets = secrets.GetSecretDefinitions(self.Ctx)
+	assert.Equal(self.T(), len(all_secrets), 0)
+
+	// Create it again
+	err = secrets.DefineSecret(self.Ctx, &api_proto.SecretDefinition{
+		TypeName: "MySecretType"})
+	assert.NoError(self.T(), err)
+
+	// Try to get the old secret but it should be deleted.
+	assert.Equal(self.T(), len(
+		getData(self.ConfigObj,
+			db, "config/secrets/MySecretType/MySecret").Keys()), 0)
+
 	goldie.Assert(self.T(), "TestSecretsService",
 		json.MustMarshalIndent(golden))
 }

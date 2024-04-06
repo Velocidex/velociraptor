@@ -423,11 +423,8 @@ func (self *UserStorageManager) getUserOptions(ctx context.Context, username str
 
 	options := &api_proto.SetGUIOptionsRequest{}
 	err = db.GetSubject(self.config_obj, path_manager.GUIOptions(), options)
-	if errors.Is(err, os.ErrNotExist) {
-		return nil, fmt.Errorf("%w: %v", services.UserNotFoundError, username)
-	}
-
-	if options.Options == "" {
+	if errors.Is(err, os.ErrNotExist) || options.Options == "" {
+		// If the record is not found we need to create one from scratch.
 		options.Options = default_user_options
 	}
 

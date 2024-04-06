@@ -27,6 +27,7 @@ import ViewCellLogs from "./logs.jsx";
 import CopyCellToNotebookDialog from './notebook-copy-cell.jsx';
 import FormatTableDialog from './notebook-format-tables.jsx';
 import NotebookUploads from '../notebooks/notebook-uploads.jsx';
+import { formatColumns } from "../core/table.jsx";
 
 import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
@@ -100,19 +101,24 @@ class AddCellFromHunt extends React.PureComponent {
               </Modal.Header>
               <Modal.Body>
                 <div className="no-margins selectable">
-                  <BootstrapTable
-                    hover
-                    condensed
-                    keyField="hunt_id"
-                    bootstrap4
-                    headerClasses="alert alert-secondary"
-                    bodyClasses="fixed-table-body"
-                    data={this.state.hunts}
-                    filter={ filterFactory() }
-                    selectRow={ selectRow }
-                  />
-                  { _.isEmpty(this.state.hunts) &&
-                    <div className="no-content">{T("No hunts exist in the system. You can start a new hunt by clicking the New Hunt button above.")}</div>}
+                  { _.isEmpty(this.state.hunts) ?
+                    <div className="no-content">
+                      {T("No hunts exist in the system. You can start a new hunt by clicking the New Hunt button above.")}
+                    </div>
+                    :
+                    <BootstrapTable
+                      hover
+                      condensed
+                      keyField="hunt_id"
+                      bootstrap4
+                      headerClasses="alert alert-secondary"
+                      bodyClasses="fixed-table-body"
+                      data={this.state.hunts}
+                      columns={getHuntColumns()}
+                      filter={ filterFactory() }
+                      selectRow={ selectRow }
+                    />
+                  }
                 </div>
 
               </Modal.Body>
@@ -1068,3 +1074,48 @@ export default class NotebookCellRenderer extends React.Component {
         );
     }
 };
+
+function getHuntColumns() {
+    return formatColumns([
+        {
+            dataField: "state", text: T("State"),
+            formatter: (cell, row) => {
+                let stopped = row.stats && row.stats.stopped;
+                if (stopped || cell === "STOPPED") {
+                    return <div className="hunt-status-icon">
+                             <FontAwesomeIcon icon="stop" /></div>;
+                }
+                if (cell === "RUNNING") {
+                    return <div className="hunt-status-icon">
+                             <FontAwesomeIcon icon="hourglass" /></div>;
+                }
+                if (cell === "PAUSED") {
+                    return <div className="hunt-status-icon">
+                             <FontAwesomeIcon icon="pause" /></div>;
+                }
+                return <div className="hunt-status-icon">
+                         <FontAwesomeIcon icon="exclamation" /></div>;
+            }
+        },
+        { dataField: "hunt_id", text: T("Hunt ID") },
+        {
+            dataField: "hunt_description", text: T("Description"),
+            sort: true, filtered: true, editable: true
+        },
+        {
+            dataField: "create_time", text: T("Created"),
+            type: "timestamp", sort: true
+        },
+        {
+            dataField: "start_time", text: T("Started"),
+            type: "timestamp", sort: true
+        },
+        {
+            dataField: "expires",
+            text: T("Expires"), sort: true,
+            type: "timestamp"
+        },
+        { dataField: "stats.total_clients_scheduled", text: T("Scheduled") },
+        { dataField: "creator", text: T("Creator") },
+    ]);
+}

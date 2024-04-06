@@ -1,3 +1,4 @@
+//go:build server_vql
 // +build server_vql
 
 package clients
@@ -167,7 +168,7 @@ func (self ServerMetadataFunction) Info(
 	return &vfilter.FunctionInfo{
 		Name:     "server_metadata",
 		Doc:      "Returns server metadata from the datastore. Server metadata is a set of free form key/value data",
-		ArgType:  type_map.AddType(scope, &ClientMetadataFunctionArgs{}),
+		ArgType:  type_map.AddType(scope, &ServerMetadataFunctionArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }

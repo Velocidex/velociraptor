@@ -5563,13 +5563,10 @@
   metadata:
     permissions: MACHINE_STATE
 - name: server_metadata
-  description: Returns client metadata from the datastore. Client metadata is a set
-    of free form key/value data
+  description: |
+    Returns server metadata from the datastore. Server metadata is a
+    set of free form key/value data
   type: Function
-  args:
-  - name: client_id
-    type: string
-    required: true
   category: server
   metadata:
     permissions: SERVER_ADMIN
@@ -7304,4 +7301,3 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
-
