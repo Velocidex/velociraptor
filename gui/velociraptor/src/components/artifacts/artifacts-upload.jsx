@@ -230,7 +230,7 @@ export default class ArtifactsUpload extends React.Component {
                       <Alert variant="danger">
                         {T("Errors")}
                       </Alert>
-                      <Alert variant="warningXX">
+                      <Alert variant="warning">
                         <dl className="row" >
                           {_.map(this.state.errors, (msg, idx) => {
                               return <React.Fragment key={idx}>

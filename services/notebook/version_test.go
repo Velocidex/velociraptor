@@ -6,7 +6,6 @@ import (
 
 	"github.com/alecthomas/assert"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
@@ -74,8 +73,6 @@ func (self *NotebookManagerTestSuite) TestUpdateCellVersions() {
 		notebook.NotebookId, cell.CellId, available_versions[1])
 	assert.NoError(self.T(), err)
 
-	json.Dump(reverted_cell)
-
 	// Make sure we got the right version back
 	assert.Equal(self.T(),
 		reverted_cell.Input, inputs[available_versions[1]])
@@ -118,4 +115,21 @@ func (self *NotebookManagerTestSuite) TestUpdateCellVersions() {
 	// But the last version is advanced.
 	assert.Equal(self.T(), cell.AvailableVersions[2],
 		cell.CurrentVersion)
+
+	// Now check we can get the current version using GetNotebookCell()
+	new_cell, err := notebook_manager.GetNotebookCell(self.Ctx,
+		notebook.NotebookId, cell.CellId, "" /* Specify no cell version */)
+
+	// Fetches the current version.
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), new_cell.CurrentVersion, cell.CurrentVersion)
+
+	// Now get arbitrary versions
+	new_cell, err = notebook_manager.GetNotebookCell(self.Ctx,
+		notebook.NotebookId, cell.CellId, available_versions[1])
+	assert.NoError(self.T(), err)
+
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), new_cell.CurrentVersion, available_versions[1])
+	assert.True(self.T(), available_versions[1] != cell.CurrentVersion)
 }

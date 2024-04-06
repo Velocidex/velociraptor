@@ -3,6 +3,7 @@ package secrets
 import (
 	"context"
 	"fmt"
+	"sort"
 	"sync"
 	"time"
 
@@ -118,6 +119,53 @@ func (self *SecretsService) DefineSecret(
 	}
 
 	return self.definitions_lru.Set(definition.TypeName, result)
+}
+
+func (self *SecretsService) DeleteSecretDefinition(
+	ctx context.Context, definition *api_proto.SecretDefinition) error {
+
+	// Get the existing secrets
+	secrets, err := self.getSecretsForDefinition(definition.TypeName)
+	if err != nil {
+		return err
+	}
+
+	secret_path_manager := paths.SecretsPathManager{}
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return err
+	}
+
+	// Delete all secrets
+	for _, name := range secrets {
+		err = db.DeleteSubject(self.config_obj,
+			secret_path_manager.Secret(definition.TypeName, name))
+		if err != nil {
+			continue
+		}
+	}
+
+	self.definitions_lru.Remove(definition.TypeName)
+
+	return db.DeleteSubject(self.config_obj,
+		secret_path_manager.SecretsDefinition(definition.TypeName))
+}
+
+func (self *SecretsService) getSecretsForDefinition(
+	type_name string) (res []string, err error) {
+
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	children, _ := db.ListChildren(self.config_obj,
+		paths.SecretsPathManager{}.SecretsDefinition(type_name))
+	for _, c := range children {
+		secret_name := c.Base()
+		res = append(res, secret_name)
+	}
+	return res, nil
 }
 
 func (self *SecretsService) getSecretDefinition(
@@ -241,20 +289,17 @@ func (self *SecretsService) GetSecretDefinitions(
 		seen[type_name] = true
 
 		definition, err := self.getSecretDefinition(ctx, type_name)
-		if err == nil {
-			definition.SecretNames = nil
-
-			children, _ := db.ListChildren(self.config_obj,
-				paths.SecretsPathManager{}.SecretsDefinition(type_name))
-			for _, c := range children {
-				secret_name := c.Base()
-				definition.SecretNames = append(
-					definition.SecretNames, secret_name)
-			}
-
-			result = append(result, definition.SecretDefinition)
+		if err != nil {
+			continue
 		}
+
+		definition.SecretNames, _ = self.getSecretsForDefinition(type_name)
+		result = append(result, definition.SecretDefinition)
 	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].TypeName < result[j].TypeName
+	})
 
 	return result
 }

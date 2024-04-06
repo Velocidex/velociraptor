@@ -113,6 +113,7 @@ type APIClient interface {
 	RemoveNotebookAttachment(ctx context.Context, in *NotebookFileUploadRequest, opts ...grpc.CallOption) (*empty.Empty, error)
 	// Secret management
 	DefineSecret(ctx context.Context, in *SecretDefinition, opts ...grpc.CallOption) (*empty.Empty, error)
+	DeleteSecretDefinition(ctx context.Context, in *SecretDefinition, opts ...grpc.CallOption) (*empty.Empty, error)
 	GetSecretDefinitions(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*SecretDefinitionList, error)
 	AddSecret(ctx context.Context, in *Secret, opts ...grpc.CallOption) (*empty.Empty, error)
 	ModifySecret(ctx context.Context, in *ModifySecretRequest, opts ...grpc.CallOption) (*empty.Empty, error)
@@ -723,6 +724,15 @@ func (c *aPIClient) DefineSecret(ctx context.Context, in *SecretDefinition, opts
 	return out, nil
 }
 
+func (c *aPIClient) DeleteSecretDefinition(ctx context.Context, in *SecretDefinition, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
+	err := c.cc.Invoke(ctx, "/proto.API/DeleteSecretDefinition", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *aPIClient) GetSecretDefinitions(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*SecretDefinitionList, error) {
 	out := new(SecretDefinitionList)
 	err := c.cc.Invoke(ctx, "/proto.API/GetSecretDefinitions", in, out, opts...)
@@ -1021,6 +1031,7 @@ type APIServer interface {
 	RemoveNotebookAttachment(context.Context, *NotebookFileUploadRequest) (*empty.Empty, error)
 	// Secret management
 	DefineSecret(context.Context, *SecretDefinition) (*empty.Empty, error)
+	DeleteSecretDefinition(context.Context, *SecretDefinition) (*empty.Empty, error)
 	GetSecretDefinitions(context.Context, *empty.Empty) (*SecretDefinitionList, error)
 	AddSecret(context.Context, *Secret) (*empty.Empty, error)
 	ModifySecret(context.Context, *ModifySecretRequest) (*empty.Empty, error)
@@ -1243,6 +1254,9 @@ func (UnimplementedAPIServer) RemoveNotebookAttachment(context.Context, *Noteboo
 }
 func (UnimplementedAPIServer) DefineSecret(context.Context, *SecretDefinition) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DefineSecret not implemented")
+}
+func (UnimplementedAPIServer) DeleteSecretDefinition(context.Context, *SecretDefinition) (*empty.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteSecretDefinition not implemented")
 }
 func (UnimplementedAPIServer) GetSecretDefinitions(context.Context, *empty.Empty) (*SecretDefinitionList, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSecretDefinitions not implemented")
@@ -2454,6 +2468,24 @@ func _API_DefineSecret_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _API_DeleteSecretDefinition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SecretDefinition)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).DeleteSecretDefinition(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/DeleteSecretDefinition",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).DeleteSecretDefinition(ctx, req.(*SecretDefinition))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _API_GetSecretDefinitions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(empty.Empty)
 	if err := dec(in); err != nil {
@@ -3000,6 +3032,10 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DefineSecret",
 			Handler:    _API_DefineSecret_Handler,
+		},
+		{
+			MethodName: "DeleteSecretDefinition",
+			Handler:    _API_DeleteSecretDefinition_Handler,
 		},
 		{
 			MethodName: "GetSecretDefinitions",

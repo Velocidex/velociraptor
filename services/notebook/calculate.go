@@ -106,6 +106,7 @@ func (self *NotebookManager) UpdateNotebookCell(
 		return notebook_cell, err
 	}
 
+	// Read work is done in NotebookWorker.ProcessUpdateRequest
 	response_chan, err := scheduler.Schedule(ctx, services.SchedulerJob{
 		Queue: "Notebook",
 		Job:   json.MustMarshalString(request),
