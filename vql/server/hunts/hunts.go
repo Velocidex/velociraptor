@@ -193,9 +193,8 @@ func (self HuntResultsPlugin) Call(
 					hunt_obj.Artifacts[0])
 			}
 
-			// If the source is not specified find the
-			// first named source from the artifact
-			// definition.
+			// If the source is not specified find the first named
+			// source from the artifact definition.
 			if arg.Source == "" {
 				repo, err := vql_utils.GetRepository(scope)
 				if err == nil {
@@ -255,16 +254,21 @@ func (self HuntResultsPlugin) Call(
 			flow_chan, _, err := hunt_dispatcher.GetFlows(
 				ctx, org_config_obj, options, scope, arg.HuntId, 0)
 			if err != nil {
-				scope.Log("hunt_results: %v", err)
+				// If there are no flows in this hunt - it is not an
+				// error it just means no results.
 				return
 			}
 
 			for flow_details := range flow_chan {
+
+				// Use the indexer for enriching with Fqdn
+				fqdn := ""
 				api_client, err := indexer.FastGetApiClient(ctx,
 					org_config_obj, flow_details.Context.ClientId)
-				if err != nil {
-					scope.Log("hunt_results: %v", err)
-					continue
+				if err == nil {
+					if api_client.OsInfo != nil {
+						fqdn = api_client.OsInfo.Fqdn
+					}
 				}
 
 				artifact_name := arg.Artifact
@@ -296,11 +300,9 @@ func (self HuntResultsPlugin) Call(
 				for row := range reader.Rows(ctx) {
 					row.Set("FlowId", flow_details.Context.SessionId).
 						Set("ClientId", flow_details.Context.ClientId).
-						Set("_OrgId", org_id)
+						Set("_OrgId", org_id).
+						Set("Fqdn", fqdn)
 
-					if api_client.OsInfo != nil {
-						row.Set("Fqdn", api_client.OsInfo.Fqdn)
-					}
 					select {
 					case <-ctx.Done():
 						return

@@ -112,6 +112,24 @@ func (self *NotebookStoreImpl) GetNotebook(notebook_id string) (*api_proto.Noteb
 	notebook := &api_proto.NotebookMetadata{}
 	err = db.GetSubject(self.config_obj, notebook_path_manager.Path(),
 		notebook)
+
+	cell_metadata := ordereddict.NewDict()
+	for _, cell := range notebook.CellMetadata {
+		_, pres := cell_metadata.Get(cell.CellId)
+		if pres {
+			continue
+		}
+
+		cell_metadata.Set(cell.CellId, cell)
+	}
+
+	notebook.CellMetadata = nil
+	for _, k := range cell_metadata.Keys() {
+		v, _ := cell_metadata.Get(k)
+		notebook.CellMetadata = append(notebook.CellMetadata,
+			v.(*api_proto.NotebookCell))
+	}
+
 	return notebook, err
 }
 
@@ -143,7 +161,7 @@ func (self *NotebookStoreImpl) SetNotebookCell(
 	for _, cell_md := range notebook.CellMetadata {
 		if cell_md.CellId == in.CellId {
 			// Replace the cell with the new cell
-			cell_md = proto.Clone(in).(*api_proto.NotebookCell)
+			cell_md = SummarizeCell(in)
 			cell_md.Timestamp = now
 			found = true
 		}
@@ -252,6 +270,23 @@ func (self *NotebookStoreImpl) RemoveNotebookCell(
 
 func (self *NotebookStoreImpl) GetNotebookCell(
 	notebook_id, cell_id, version string) (*api_proto.NotebookCell, error) {
+
+	// If the caller does not specify the version it means they want
+	// the current version.
+	if version == "" {
+		notebook, err := self.GetNotebook(notebook_id)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, cell_md := range notebook.CellMetadata {
+			if cell_md.CellId == cell_id {
+				version = cell_md.CurrentVersion
+				break
+			}
+		}
+	}
+
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return nil, err

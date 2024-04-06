@@ -227,28 +227,54 @@ func isArtifactEvent(
 	}
 }
 
+func getNotebookResultSetReader(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	scope vfilter.Scope,
+	arg *SourcePluginArgs) (result_sets.ResultSetReader, error) {
+
+	// Version not specified, we need to fetch the current one.
+	if arg.NotebookCellVersion == "" {
+		notebook_manager, err := services.GetNotebookManager(config_obj)
+		if err != nil {
+			return nil, err
+		}
+
+		cell, err := notebook_manager.GetNotebookCell(ctx, arg.NotebookId,
+			arg.NotebookCellId, arg.NotebookCellVersion)
+		if err != nil {
+			return nil, err
+		}
+
+		arg.NotebookCellVersion = cell.CurrentVersion
+	}
+
+	table := arg.NotebookCellTable
+	if table == 0 {
+		table = 1
+	}
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+	path_manager := paths.NewNotebookPathManager(arg.NotebookId).
+		Cell(arg.NotebookCellId, arg.NotebookCellVersion).
+		QueryStorage(table)
+
+	return result_sets.NewResultSetReader(
+		file_store_factory, path_manager.Path())
+}
+
 func getResultSetReader(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	scope vfilter.Scope,
 	arg *SourcePluginArgs) (result_sets.ResultSetReader, error) {
 
-	file_store_factory := file_store.GetFileStore(config_obj)
-
 	// Is it a notebook?
 	if arg.NotebookId != "" && arg.NotebookCellId != "" {
-		table := arg.NotebookCellTable
-		if table == 0 {
-			table = 1
-		}
-		path_manager := paths.NewNotebookPathManager(arg.NotebookId).
-			Cell(arg.NotebookCellId, arg.NotebookCellVersion).
-			QueryStorage(table)
-
-		return result_sets.NewResultSetReader(
-			file_store_factory, path_manager.Path())
+		return getNotebookResultSetReader(ctx, config_obj, scope, arg)
 	}
 
+	file_store_factory := file_store.GetFileStore(config_obj)
 	if arg.Artifact != "" {
 		if arg.Source != "" {
 			arg.Artifact = arg.Artifact + "/" + arg.Source

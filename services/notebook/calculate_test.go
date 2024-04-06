@@ -77,9 +77,9 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerUpdateCell() {
 
 	assert.Equal(self.T(), len(notebook.CellMetadata), 1)
 	assert.Equal(self.T(),
-		notebook.CellMetadata[0].CurrentVersion, "04")
+		notebook.CellMetadata[0].CurrentVersion, "03")
 	assert.Equal(self.T(),
-		notebook.CellMetadata[0].AvailableVersions, []string{"04"})
+		notebook.CellMetadata[0].AvailableVersions, []string{"03"})
 
 	golden.Set("Notebook Metadata", notebook)
 
@@ -106,13 +106,22 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerUpdateCell() {
 
 	// The new cell should have a higher version
 	assert.Equal(self.T(), len(notebook.CellMetadata), 1)
-	assert.Equal(self.T(), cell.CurrentVersion, "06")
+	assert.Equal(self.T(), cell.CurrentVersion, "05")
 
 	// The old version is still there and available. There should be 3
 	// versions all up.
-	assert.Equal(self.T(), cell.AvailableVersions, []string{"04", "05", "06"})
+	assert.Equal(self.T(), cell.AvailableVersions, []string{"03", "04", "05"})
 
+	// The cell that is returned from the UpdateNotebookCell contains
+	// all the data.
 	golden.Set("VQL Cell", cell)
+
+	// The notebook itself should only contain summary cells.
+	new_notebook, err := notebook_manager.GetNotebook(
+		self.Ctx, notebook.NotebookId, services.DO_NOT_INCLUDE_UPLOADS)
+	assert.NoError(self.T(), err)
+	golden.Set("Full Notebook after update", new_notebook)
+
 	goldie.Assert(self.T(), "TestNotebookManagerUpdateCell",
 		json.MustMarshalIndent(golden))
 }
