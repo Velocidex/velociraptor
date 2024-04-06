@@ -141,7 +141,8 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 	}
 
 	// The notification is removed either inline or in the background.
-	cancel_notify, remove_notification := notifier.ListenForNotification(in.CellId + in.Version)
+	cancel_notify, remove_notification := notifier.ListenForNotification(
+		in.CellId + in.Version)
 	defer remove_notification()
 
 	// Watcher thread: Wait for cancellation from the GUI or a 10 min timeout.

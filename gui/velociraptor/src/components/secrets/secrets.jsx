@@ -17,6 +17,7 @@ import Row from 'react-bootstrap/Row';
 import DictEditor from '../forms/dict.jsx';
 import UserForm from '../utils/users.jsx';
 import Form from 'react-bootstrap/Form';
+import Alert from 'react-bootstrap/Alert';
 
 import "./secrets.css";
 
@@ -36,22 +37,37 @@ class AddSecretTypeDialog extends Component {
     }
 
     addSecretDefinition = () => {
+        // Check the template is ok
+        let template = "";
+        try {
+            template = JSON.parse(this.state.template_json);
+        } catch(e) {
+            this.setState({error: "Secret Template: " + e.toString()});
+            return;
+        };
+
         this.source.cancel();
         this.source = CancelToken.source();
 
         api.post("v1/DefineSecret", {
             type_name: this.state.type_name,
             verifier: this.state.verifier,
+            template: template,
         },  this.source.token).then(response=>{
             if (response.cancel)
                 return;
             this.props.onClose();
+        }).catch(e=>{
+            this.setState({error: "Secret Template: " + e.response.data.message});
         });
     }
 
     state = {
         type_name: "",
         verifier: "",
+        template_json: "{\"Key\":\"Value\"}",
+        error: "",
+
     }
 
     render() {
@@ -76,7 +92,17 @@ class AddSecretTypeDialog extends Component {
                    value={this.state.verifier}
                    setValue={x=>this.setState({verifier:x})}
                  />
+                 <VeloForm
+                   param={{name: T("Template"), description: T("A JSON object which serves as the template for the secret")}}
+                   value={this.state.template_json}
+                   setValue={x=>this.setState({template_json:x})}
+                 />
 
+                {this.state.error &&
+                 <Alert variant="warning">
+                   {this.state.error}
+                 </Alert>
+                }
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary"
@@ -221,6 +247,73 @@ class DeleteSecretDialog extends Component {
               <Modal.Body >
                 <h1>{this.props.secret.name }</h1>
                 {T("This secret will be permanently deleted")}
+              </Modal.Body>
+              <Modal.Footer>
+                <Button variant="secondary"
+                        onClick={this.props.onClose}>
+                  {T("Close")}
+                </Button>
+                <Button variant="primary"
+                        onClick={this.deleteSecret}>
+                  {T("Do it!")}
+                </Button>
+              </Modal.Footer>
+            </Modal>
+        );
+    }
+}
+
+class DeleteSecretTypeDialog extends Component {
+    static propTypes = {
+        secret: PropTypes.object,
+        onClose: PropTypes.func.isRequired,
+    }
+
+    componentDidMount = () => {
+        this.source = CancelToken.source();
+    }
+
+    componentWillUnmount = () => {
+        this.source.cancel();
+    }
+
+    deleteSecret = ()=>{
+        this.source.cancel();
+        this.source = CancelToken.source();
+
+        if(!this.props.secret) {
+            return;
+        }
+
+        api.post("v1/DeleteSecretDefinition", {
+            type_name: this.props.secret.type_name,
+        },  this.source.token).then(response=>{
+            if (response.cancel)
+                return;
+
+            this.props.onClose();
+        });
+    }
+
+    state = {
+        secret: {},
+        previous_users: [],
+        new_users: [],
+    }
+
+    render() {
+        return(
+            <Modal show={true}
+                   size="lg"
+                   enforceFocus={true}
+                   dialogClassName="modal-90w"
+                   onHide={this.props.onClose}>
+              <Modal.Header closeButton>
+                <Modal.Title>{T("Delete secret definition")}</Modal.Title>
+              </Modal.Header>
+              <Modal.Body >
+                <h1>{this.props.secret.name }</h1>
+                {T("This secret type will be permanently deleted")}
               </Modal.Body>
               <Modal.Footer>
                 <Button variant="secondary"
@@ -427,6 +520,13 @@ export default class SecretManager extends Component {
         });
     }
 
+    getItemIcon = item=>{
+        if (item.built_in) {
+            return <FontAwesomeIcon icon="house" /> ;
+        }
+        return <FontAwesomeIcon icon="user-edit" /> ;
+    };
+
     render() {
         return (
             <Row className="secret-manager">
@@ -469,6 +569,15 @@ export default class SecretManager extends Component {
                   }}
                 />
               }
+              { this.state.showDeleteSecretTypeDialog &&
+                <DeleteSecretTypeDialog
+                  secret={this.state.current_definition}
+                  onClose={()=>{
+                      this.setState({showDeleteSecretTypeDialog: false});
+                      this.getSecretDefinitions();
+                  }}
+                />
+              }
 
               <Col sm="4">
                 <Container className="selectable user-list">
@@ -477,6 +586,23 @@ export default class SecretManager extends Component {
                       <tr>
                         <th>
                           {T("Secret Types")}
+                          <Button
+                            data-tooltip={T("Delete Secret Type")}
+                            data-position="left"
+                            onClick={()=>this.setState({
+                                showDeleteSecretTypeDialog: true
+                            })}
+                            className="btn-tooltip new-user-btn"
+                            variant="outline-default"
+                            disabled={_.isEmpty(this.state.current_definition) ||
+                                      this.state.current_definition.built_in}
+                            as="button">
+                            <FontAwesomeIcon icon="trash"/>
+                            <span className="sr-only">
+                              {T("Delete Secret Type")}
+                            </span>
+                          </Button>
+
                           <Button
                             data-tooltip={T("Add new type")}
                             data-position="left"
@@ -505,6 +631,9 @@ export default class SecretManager extends Component {
                                            current_secret: {},
                                            current_definition: item});
                                    }}>
+                                     <span className="built-in-icon">
+                                       {this.getItemIcon(item)}
+                                     </span>
                                      {item.type_name}
                                    </td>
                                  </tr>;
@@ -536,7 +665,7 @@ export default class SecretManager extends Component {
                                 {T("Add new secret")}
                               </span>
                             </Button>
-                            { this.state.current_secret.name && <>
+                            { this.state.current_secret && this.state.current_secret.name && <>
                               <Button
                                 data-tooltip={T("Edit secret")}
                                 data-position="left"
@@ -588,7 +717,7 @@ export default class SecretManager extends Component {
                   </Container>
                 </Col>
               }
-              { this.state.current_secret.name &&
+              { this.state.current_secret && this.state.current_secret.name &&
                 <Col sm="3">
                   <Container className="selectable user-list">
                     <Table  bordered hover size="sm">

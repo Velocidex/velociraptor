@@ -20,11 +20,11 @@ func (self *NotebookManager) NewNotebookCell(
 	*api_proto.NotebookMetadata, error) {
 
 	// Calculate the cell first then insert it into the notebook.
-
 	new_version := GetNextVersion("")
 	new_cell_request := &api_proto.NotebookCellRequest{
 		Input:             in.Input,
 		Output:            in.Output,
+		CellId:            NewNotebookCellId(),
 		NotebookId:        in.NotebookId,
 		Version:           new_version,
 		AvailableVersions: []string{new_version},
@@ -34,13 +34,6 @@ func (self *NotebookManager) NewNotebookCell(
 
 		// New cells are opened for editing.
 		CurrentlyEditing: true,
-	}
-
-	// Allow the caller to specify the cell id
-	if in.CellId != "" {
-		new_cell_request.CellId = in.CellId
-	} else {
-		new_cell_request.CellId = NewNotebookCellId()
 	}
 
 	// TODO: This is not thread safe!
@@ -54,7 +47,8 @@ func (self *NotebookManager) NewNotebookCell(
 		in.Input = "\n\n\n\n\n\n"
 	}
 
-	new_cell, err := self.UpdateNotebookCell(ctx, notebook, username, new_cell_request)
+	new_cell, err := self.UpdateNotebookCell(
+		ctx, notebook, username, new_cell_request)
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +262,8 @@ func (self *NotebookManager) CreateInitialNotebook(ctx context.Context,
 		}
 
 		cell_req.Sync = true
-		_, err = self.NewNotebookCell(ctx, cell_req, principal)
+		_, err = self.UpdateNotebookCell(
+			ctx, notebook_metadata, principal, cell_req)
 		if err != nil {
 			return err
 		}
