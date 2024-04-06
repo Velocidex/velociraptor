@@ -403,7 +403,6 @@ export default class UserLabel extends React.Component {
     setSettings = (options) => {
         // Set the ACE theme according to the theme so they match.
         let ace_options = JSON.parse(this.context.traits.ui_settings || "{}");
-        ace_options.fontSize = "16px";
         if (options.theme === "no-theme") {
             ace_options.theme = "ace/theme/xcode";
             ace_options.fontFamily = "Iosevka Term";
