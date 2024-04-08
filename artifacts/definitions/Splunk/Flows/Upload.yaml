@@ -113,7 +113,11 @@ sources:
                                     timestamp(epoch=now()) AS timestamp,
                                     ClientId, Flow.session_id AS FlowId,
                                     "artifact_" + regex_replace(source=_value,
-                                       re='[/.]', replace='_') as _index
+                                       re='[/.]', replace='_') as _index,
+                                       {
+                                          SELECT Name FROM foreach(row={SELECT split(string=client_id,sep='-')[1]} as ORG
+                                          FROM clients() WHERE client_id=ClientID, query={SELECT Name FROM orgs() WHERE OrgId=ORG})
+                                       } as org_name
                              FROM source(
                                 client_id=ClientId,
                                 flow_id=Flow.session_id,
