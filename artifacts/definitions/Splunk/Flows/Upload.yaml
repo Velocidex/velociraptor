@@ -19,7 +19,7 @@ description: |
        * Go to Settings > Data Inputs > HTTP Event Collector > Global Settings
        * Ensure `All Tokens` is set to ENABLED
        * Copy the HTTP Port Number for this event
-    4. Configure your Splunk props.conf and tranforms.conf  
+    4. Configure your Splunk props.conf and tranforms.conf
        * Add the following to props.conf
         [vql]
         INDEXED_EXTRACTIONS = json
@@ -28,8 +28,8 @@ description: |
         category = Custom
         pulldown_type = 1
         TRANSFORMS-vql-sourcetype = vql-sourcetype,vql-timestamp
-        TRUNCATE = 512000  
-       * Add the following to transforms.conf  
+        TRUNCATE = 512000
+       * Add the following to transforms.conf
         [vql-sourcetype]
         INGEST_EVAL = sourcetype=lower(_index)
         [vql-timestamp]
@@ -53,7 +53,7 @@ description: |
                       _index="artifact_Custom_Windows_Application_IIS_IISLogs",strptime(event_time,"%Y-%m-%dT%H:%M:%SZ"), \
                       _index="artifact_MacOS_Applications_Chrome_History",strptime(last_visit_time,"%Y-%m-%dT%H:%M:%SZ"), \
                       _index="artifact_Windows_Registry_UserAssist",strptime(LastExecution,"%Y-%m-%dT%H:%M:%SZ") \
-                      )  
+                      )
 
 
        > Note: `Enable SSL` only works if SSL is properly configured on your
@@ -104,7 +104,7 @@ sources:
                  WHERE Flow.artifacts_with_results =~ ArtifactNameRegex
                      AND log(message=Flow.artifacts_with_results)
 
-        LET organization = org().name
+        LET organization <= org().name
 
         LET documents = SELECT * FROM foreach(row=completions,
                   query={

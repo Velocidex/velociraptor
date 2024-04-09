@@ -56,7 +56,7 @@ sources:
       LET completions = SELECT * FROM watch_monitoring(
              artifact="System.Flow.Completion")
              WHERE Flow.artifacts_with_results =~ ArtifactNameRegex
-      LET organization = org().name
+      LET organization <= org().name
 
       LET documents = SELECT * FROM foreach(row=completions,
           query={
