@@ -329,6 +329,7 @@ export default class NotebookCellRenderer extends React.Component {
 
         this.setState({cell: cell,
                        local_completions: [],
+                       loading: true,
                        local_completions_lookup: {},
                       });
 
@@ -357,6 +358,7 @@ export default class NotebookCellRenderer extends React.Component {
             }
 
             this.setState({cell: response.data,
+                           loading: false,
                            currently_editing: keep_editing});
         });
 
@@ -665,7 +667,8 @@ export default class NotebookCellRenderer extends React.Component {
               <Button data-tooltip={T("Stop Calculating")}
                       data-position="right"
                       className="btn-tooltip"
-                      disabled={!this.state.cell.calculating}
+                      disabled={!this.state.cell.calculating ||
+                                this.state.loading}
                       onClick={this.stopCalculating}
                       variant="default">
                 <FontAwesomeIcon icon="stop"/>
@@ -863,14 +866,6 @@ export default class NotebookCellRenderer extends React.Component {
 
                 <SettingsButton ace={this.state.ace}/>
 
-                <Button data-tooltip={T("Stop Calculating")}
-                        data-position="right"
-                        className="btn-tooltip"
-                        onClick={this.stopCalculating}
-                        variant="default">
-                  <FontAwesomeIcon icon="stop"/>
-                </Button>
-
                 { this.state.cell.type === "vql" &&
                   <Button data-tooltip={T("Reformat Format VQL")}
                           data-position="right"
@@ -887,6 +882,11 @@ export default class NotebookCellRenderer extends React.Component {
                             let cell = this.state.cell;
                             cell.input = this.state.ace.getValue();
                             this.saveCell(cell);
+
+                            // Do not allow the calculation to be
+                            // cancelled until we receive the version
+                            // id from the update API.
+                            this.setState({loading: true});
                         }}
                         variant="default">
                   <FontAwesomeIcon icon="save"/>

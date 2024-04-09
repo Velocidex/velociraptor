@@ -1,0 +1,38 @@
+.folder-icon {
+
+}
+
+.json-index {
+    color: rgb(108, 113, 196);
+}
+
+.json-key {
+    color: rgb(0, 43, 54);
+}
+
+.json-string {
+    padding-left: 5px;
+    color: rgb(203, 75, 22);
+}
+
+.json-number {
+    padding-left: 5px;
+    color: rgb(38, 139, 210);
+}
+
+.json-opener, .json-closer {
+    font-weight: bold;
+    padding-left: 2px;
+}
+
+.json-array-viewer {
+    width: 100%;
+    overflow: auto;
+    height: calc(100vh - 70px);
+    overflow-wrap: anywhere;
+}
+
+.json-expand-button {
+    width: 100%;
+    cursor: pointer;
+}
