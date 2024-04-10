@@ -274,7 +274,7 @@ func (self *Repository) LoadProto(
 			for _, cell := range source.Notebook {
 				cell.Type = strings.ToLower(cell.Type)
 				switch cell.Type {
-				case "md", "markdown", "vql", "vql_suggestion", "notebook":
+				case "md", "markdown", "vql", "vql_suggestion", "notebook", "none":
 				default:
 					return nil, fmt.Errorf(
 						"Artifact %s contains an invalid notebook cell type: %v",

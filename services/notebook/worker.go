@@ -117,6 +117,7 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 		version:       in.Version,
 		start:         utils.GetTime().Now(),
 		store:         store,
+		tmpl:          tmpl,
 	}
 
 	// Add the notebook environment into the cell template.
@@ -157,6 +158,7 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 
 		select {
 		case <-ctx.Done():
+			return
 
 		// Active cancellation from the GUI.
 		case <-cancel_notify:

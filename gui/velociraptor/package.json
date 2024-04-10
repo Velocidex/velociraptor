@@ -52,7 +52,6 @@
         "react-datetime-picker": "^4.2.1",
         "react-dom": "^16.14.0",
         "react-hotkeys": "^2.0.0",
-        "react-json-view": "^1.19.1",
         "react-overlays": "5.2.1",
         "react-router-dom": "^5.3.4",
         "react-select": "^3.2.0",
