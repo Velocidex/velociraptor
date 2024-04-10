@@ -969,3 +969,22 @@ body.veloci-dark {
     border-color: transparent;
     box-shadow: none;
 }
+
+
+.veloci-dark .json-index {
+    color: #817c36;
+}
+
+.veloci-dark .json-key {
+    color: #dcb8af;
+}
+
+.veloci-dark .json-string {
+    padding-left: 5px;
+    color: #33b0e3;
+}
+
+.veloci-dark .json-number {
+    padding-left: 5px;
+    color: #be6729;
+}

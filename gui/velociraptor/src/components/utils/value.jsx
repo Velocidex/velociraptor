@@ -1,60 +1,40 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import _ from 'lodash';
-import ReactJson from 'react-json-view';
 import UserConfig from '../core/user.jsx';
 import VeloTimestamp from "./time.jsx";
 import ContextMenu from './context.jsx';
+import JsonView from './json.jsx';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import Modal from 'react-bootstrap/Modal';
 
 // Try to detect something that looks like a timestamp.
 const timestamp_regex = /(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d(?:\.\d+)?(?:[+-][0-2]\d:?[0-5]\d|Z))/;
 
-const defaultTheme = {
-    scheme: 'rjv-default',
-    author: 'mac gainor',
+// When the json object is larger than this many lines we offer to open it in its own dialog.
+const maxSizeDialog = 50;
 
-    //transparent main background
-    base00: 'rgba(0, 0, 0, 0)',
-    base01: 'rgb(245, 245, 245)',
-    base02: 'rgb(235, 235, 235)',
-    base03: '#93a1a1',
-    base04: 'rgba(0, 0, 0, 0.3)',
-    base05: '#586e75',
-    base06: '#073642',
-    base07: '#002b36',
-    base08: '#d33682',
-    base09: '#cb4b16',
-    base0A: '#dc322f',
-    base0B: '#859900',
-    base0C: '#6c71c4',
-    base0D: '#586e75',
-    base0E: '#2aa198',
-    base0F: '#268bd2'
-};
+class ValueModal extends React.PureComponent {
+    static propTypes = {
+        value: PropTypes.object,
+        onClose: PropTypes.func.isRequired,
+    };
+
+    render() {
+        return <Modal show={true}
+                      enforceFocus={true}
+                      scrollable={false}
+                      size="lg"
+                      dialogClassName="modal-90w"
+                      onHide={this.props.onClose}>
+                 <Modal.Body className="json-array-viewer">
+                   <JsonView value={this.props.value}/>
+                 </Modal.Body>
+               </Modal>;
+    }
+}
 
 
-const darkTheme = {
-    scheme: 'rjv-default',
-    author: 'mac gainor',
-
-    //transparent main background
-    base00: 'rgba(0, 0, 0, 0)',
-    base01: 'rgb(245, 245, 245)',
-    base02: 'rgb(235, 235, 235)',
-    base03: '#93a1a1',
-    base04: 'rgba(0, 0, 0, 0.3)',
-    base05: '#586e75',
-    base06: '#073642',
-    base07: '#f0fbf6',
-    base08: '#d33682',
-    base09: '#cbcbc6',
-    base0A: '#dc322f',
-    base0B: '#859900',
-    base0C: '#6c71c4',
-    base0D: '#586e75',
-    base0E: '#8aa198',
-    base0F: '#268bd2'
-};
 
 export default class VeloValueRenderer extends React.Component {
     static contextType = UserConfig;
@@ -62,20 +42,6 @@ export default class VeloValueRenderer extends React.Component {
         value: PropTypes.any,
         collapsed: PropTypes.bool,
     };
-
-    getTheme = ()=> {
-        let theme = this.context.traits &&
-            this.context.traits.theme;
-
-        switch (theme) {
-        case "github-dimmed-dark":
-        case "coolgray-dark":
-            return darkTheme;
-
-        default:
-            return defaultTheme;
-        }
-    }
 
     // If the cell contains something that looks like a timestamp,
     // format it as such.
@@ -87,6 +53,15 @@ export default class VeloValueRenderer extends React.Component {
             }
             return x;
         });
+    }
+
+    state = {
+        showDialog: false,
+    }
+
+    estimateJsonSize = x=>{
+        let serialized = JSON.stringify(x || "", null, " ");
+        return serialized.split(/\n/).length;
     }
 
     render() {
@@ -104,19 +79,21 @@ export default class VeloValueRenderer extends React.Component {
             return "";
         }
 
-        let theme = this.getTheme();
+        let button = "";
+        if (this.estimateJsonSize(v) > maxSizeDialog) {
+            button = <a onClick={x=>this.setState({showDialog:true})}>
+                       <FontAwesomeIcon icon="plus"/>
+                     </a>;
+        }
 
-        return (
-            <ContextMenu value={v}>
-              <ReactJson name={false}
-                         collapsed={this.props.collapsed}
-                         theme={theme}
-                         enableClipboard={false}
-                         collapseStringsAfterLength={100}
-                         displayObjectSize={false}
-                         displayDataTypes={false}
-                         src={v} />
-            </ContextMenu>
-        );
+        return <>
+                 <div>{ button }
+                 </div>
+                 <JsonView value={v} indent={0}/>
+                 { this.state.showDialog &&
+                   <ValueModal
+                     onClose={x=>this.setState({showDialog:false})}
+                     value={this.props.value}/> }
+               </>;
     }
 }
