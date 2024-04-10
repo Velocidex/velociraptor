@@ -1216,3 +1216,22 @@ body.coolgray-dark {
   text-shadow: none;
   box-shadow: none;
 }
+
+
+.coolgray-dark .json-index {
+    color: #817c36;
+}
+
+.coolgray-dark .json-key {
+    color: #dcb8af;
+}
+
+.coolgray-dark .json-string {
+    padding-left: 5px;
+    color: #33b0e3;
+}
+
+.coolgray-dark .json-number {
+    padding-left: 5px;
+    color: #be6729;
+}

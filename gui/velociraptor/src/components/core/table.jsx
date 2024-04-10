@@ -31,11 +31,13 @@ import T from '../i8n/i8n.jsx';
 import TreeCell from './tree-cell.jsx';
 import ContextMenu from '../utils/context.jsx';
 import PreviewUpload from '../widgets/preview_uploads.jsx';
+import filterFactory from 'react-bootstrap-table2-filter';
 
 // Shows the InspectRawJson modal dialog UI.
 export class InspectRawJson extends Component {
     static propTypes = {
         rows: PropTypes.array,
+        start: PropTypes.number,
         env: PropTypes.object,
     }
 
@@ -60,13 +62,24 @@ export class InspectRawJson extends Component {
     };
 
     render() {
-        let rows = [];
-        let max_rows = this.props.rows.length;
-        if (max_rows > 100) {
-            max_rows = 100;
+        if (!this.state.show) {
+            return <Button variant="default"
+                      data-tooltip={T("Inspect Raw JSON")}
+                      data-position="right"
+                      className="btn-tooltip"
+                      onClick={() => this.setState({show: true})} >
+                <FontAwesomeIcon icon="binoculars"/>
+            </Button>;
         }
 
-        for(var i=0;i<max_rows;i++) {
+        let rows = [];
+        let start = this.props.start || 0;
+        let max_rows = 100;
+
+        for(var i=start;i<start + max_rows;i++) {
+            if (this.props.rows.length < i) {
+                break;
+            }
             let copy = Object.assign({}, this.props.rows[i]);
             delete copy["_id"];
             rows.push(copy);
@@ -76,13 +89,6 @@ export class InspectRawJson extends Component {
 
         return (
             <>
-              <Button variant="default"
-                      data-tooltip={T("Inspect Raw JSON")}
-                      data-position="right"
-                      className="btn-tooltip"
-                      onClick={() => this.setState({show: true})} >
-                <FontAwesomeIcon icon="binoculars"/>
-              </Button>
               <Modal show={this.state.show}
                      className="full-height"
                      enforceFocus={false}
@@ -232,11 +238,15 @@ class VeloTable extends Component {
         // context.
         name: PropTypes.string,
         headers: PropTypes.object,
+
+        column_renderers: PropTypes.object,
     }
 
     state = {
         download: false,
         toggles: {},
+        from_page: 0,
+        page_size: 10,
     }
 
     componentDidMount = () => {
@@ -253,24 +263,64 @@ class VeloTable extends Component {
         return <VeloValueRenderer value={cell}/>;
     }
 
-    customTotal = (from, to, size) => (
-        <span className="react-bootstrap-table-pagination-total">
-          {T("TablePagination", from, to, size)}
-        </span>
-    );
+    pageChange = (page, size)=>{
+        this.setState({from_page: page-1, page_size: size});
+    }
+
+    pageSizeChange = (size) => {
+        this.setState({page_size: size});
+    }
+
+    customTotal = (from, to, size) => {
+        return <span className="react-bootstrap-table-pagination-total">
+                 {T("TablePagination", from, to, size)}
+               </span>;
+    };
+
+    // Calculate the visible columns in the current page. This is
+    // needed to support tables with many columns which change on each
+    // page.
+    calculateColumns = ()=>{
+        let start_page = this.state.from_page || 0;
+        let page_size = this.state.page_size || 10;
+        let columns = [];
+        for(let i=start_page * page_size; i<(start_page + 1)*page_size;i++) {
+            if (this.props.rows.length < i) {
+                break;
+            };
+            _.forOwn(this.props.rows[i], (v, k)=>{
+                if (k==="_id") { return };
+
+                if(!_.find(columns, x=>x===k)) {
+                    columns.push(k);
+                };
+            });
+        }
+        return columns;
+    }
 
     render() {
-        if (!this.props.rows || !this.props.columns) {
+        let start = (this.state.from_page || 0) * (this.state.page_size || 10);
+
+        if (!this.props.rows) {
             return <div></div>;
         }
 
         let rows = this.props.rows;
+        let column_names = this.props.columns || this.calculateColumns();
+        if (_.isEmpty(column_names)) {
+            return <div></div>;
+        }
 
-        let columns = [{dataField: '_id', hidden: true}];
-        for(var i=0;i<this.props.columns.length;i++) {
-            var name = this.props.columns[i];
+        let columns = [{dataField: '_id', text: "id", hidden: true}];
+        for(var i=0;i<column_names.length;i++) {
+            var name = column_names[i];
             var header = (this.props.headers || {})[name] || name;
             let definition ={ dataField: name, text: header};
+            if (this.props.column_renderers && this.props.column_renderers[name]) {
+                definition = this.props.column_renderers[name];
+            }
+
             if (this.props.renderers && this.props.renderers[name]) {
                 definition.formatter = this.props.renderers[name];
             } else {
@@ -321,7 +371,8 @@ class VeloTable extends Component {
                                                 this.setState({toggles: toggles});
                                             }}
                                             toggles={this.state.toggles} />
-                          <InspectRawJson rows={this.props.rows} />
+                          <InspectRawJson rows={this.props.rows}
+                                          start={start}/>
                         </ButtonGroup>
                       </Navbar>
                       <div className="row col-12">
@@ -333,10 +384,13 @@ class VeloTable extends Component {
                           headerClasses="alert alert-secondary"
                           bodyClasses="fixed-table-body"
                           toggles={this.state.toggles}
+                          filter={filterFactory()}
                           pagination={ paginationFactory({
                               showTotal: true,
                               paginationTotalRenderer: this.customTotal,
-                              sizePerPageRenderer
+                              sizePerPageRenderer,
+                              onPageChange: this.pageChange,
+                              onSizePerPageChange: this.pageSizeChange,
                           }) }
                         />
                       </div>

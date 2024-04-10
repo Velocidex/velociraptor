@@ -8,6 +8,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -18,6 +19,7 @@ type progressReporter struct {
 	last, start                    time.Time
 
 	store NotebookStore
+	tmpl  *reporting.GuiTemplateEngine
 }
 
 func (self *progressReporter) Report(message string) {
@@ -46,6 +48,7 @@ func (self *progressReporter) Report(message string) {
 		html.EscapeString(message))
 	notebook_cell.Timestamp = now.Unix()
 	notebook_cell.Duration = int64(duration.Seconds())
+	notebook_cell.Messages = self.tmpl.Messages()
 
 	// Cant do anything if we can not set the notebook times
 	_ = self.store.SetNotebookCell(self.notebook_id, notebook_cell)

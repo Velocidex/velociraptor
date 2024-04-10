@@ -344,3 +344,31 @@ sources:
                  upload(accessor="data", file="Hello world",
                         name="test.txt") AS Upload
           FROM source()
+
+      - type: VQL
+        template: |
+          /* Test the JSON renderer. */
+          LET Strings = SELECT "Hello World" AS A FROM range(end=100)
+
+          LET MultiColumn = SELECT * FROM chain(a={
+            SELECT 1 AS A FROM range(end=10)
+          }, b={
+            SELECT 1 AS B FROM range(end=10)
+          })
+
+          SELECT dict(
+            MultiColumn=MultiColumn,
+            Strings=Strings.A,
+            Rows={
+              SELECT count() AS Count,
+                     rand() AS R
+              FROM range(end=20)
+            },
+            Integer=1, Float=1.235,
+            LongString="Hello world " * 100,
+            MixedList=[1, 2, dict(A=3)],
+            NestedDict=dict(
+                Foo=dict(A=1,
+                         B=dict(z=1,
+                                nesting=dict(Foo="Hello world"))))) AS A
+          FROM scope()

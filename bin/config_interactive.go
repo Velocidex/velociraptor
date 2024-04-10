@@ -1,3 +1,4 @@
+//go:build !aix
 // +build !aix
 
 package main
@@ -128,7 +129,10 @@ portable than plain HTTP. Be sure to test this in your environment.
 		Message: `Do you want to restrict VQL functionality on the server?
 
 This is useful for a shared server where users are not fully trusted.
-It removes potentially dangerous plugins like execve(),filesystem access etc.
+It removes potentially dangerous plugins like execve(), filesystem access etc.
+
+NOTE: This is an experimental feature only useful in limited situations. If you
+do not know you need it select N here!
 `,
 	}
 

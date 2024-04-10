@@ -1102,3 +1102,21 @@ body.github-dimmed-dark {
   text-shadow: none;
   box-shadow: none;
 }
+
+.github-dimmed-dark .json-index {
+    color: #817c36;
+}
+
+.github-dimmed-dark .json-key {
+    color: #dcb8af;
+}
+
+.github-dimmed-dark .json-string {
+    padding-left: 5px;
+    color: #33b0e3;
+}
+
+.github-dimmed-dark .json-number {
+    padding-left: 5px;
+    color: #be6729;
+}
