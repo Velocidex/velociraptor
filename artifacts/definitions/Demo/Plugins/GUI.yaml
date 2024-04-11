@@ -359,6 +359,10 @@ sources:
           SELECT dict(
             MultiColumn=MultiColumn,
             Strings=Strings.A,
+            `NULL`=NULL,
+            Bool=TRUE,
+            BoolF=FALSE,
+            BinaryData=base64encode(string="hello world"),
             Rows={
               SELECT count() AS Count,
                      rand() AS R

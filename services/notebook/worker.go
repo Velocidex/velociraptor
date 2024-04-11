@@ -246,7 +246,8 @@ func (self *NotebookWorker) updateCellContents(
 
 		store.SetNotebookCell(notebook_id, error_cell)
 
-		return error_cell, utils.InlineError
+		return error_cell, fmt.Errorf("%w: While rendering notebook cell: %v",
+			utils.InlineError, err)
 	}
 
 	// Do not let exceptions take down the server.
