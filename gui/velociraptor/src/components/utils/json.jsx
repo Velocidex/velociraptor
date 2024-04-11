@@ -15,6 +15,9 @@ const scale = 5;
 const collapse_string_length = 50;
 const collapse_array_length = 5;
 
+const base64regex = new RegExp("(^[-A-Za-z0-9+/=]$)|(={1,3}$)");
+
+
 class RenderString extends Component {
     static propTypes = {
         value: PropTypes.any,
@@ -23,25 +26,74 @@ class RenderString extends Component {
 
     state = {
         expanded: false,
+        base64: false,
+        base64_str: "",
+    }
+
+    componentDidMount = () => {
+        try {
+            // Try to decode it in base64.
+            if(base64regex.test(this.props.value)) {
+                this.setState({base64_str: atob(this.props.value)});
+            }
+        } catch(e) {}
     }
 
     render() {
         let value = this.props.value || "";
+        if (this.state.base64) {
+            value = this.state.base64_str;
+        }
+
+        let b64 = "";
+        if (this.state.base64_str) {
+            b64 = <a onClick={()=>this.setState({base64: !this.state.base64})}>
+                    <FontAwesomeIcon icon="eye"/>
+                  </a>;
+        }
+
         if (value.length > collapse_string_length) {
             let ellipsis = "";
             if (!this.state.expanded) {
                 value = value.substring(0, collapse_string_length);
                 ellipsis = <FontAwesomeIcon icon="ellipsis"/>;
             }
-            return <a onClick={x=>this.setState({expanded: !this.state.expanded})}>
-                     <span className="json-string">"{value}" {ellipsis}</span>
-                   </a>;
+            return <>
+                     <a onClick={x=>this.setState({expanded: !this.state.expanded})}>
+                       <span className="json-string">"{value}" {ellipsis}</span>
+                     </a> { b64 }
+                   </>;
         }
 
-        return <span className="json-string">"{this.props.value}"</span>;
+        return <>
+                 <span className="json-string">"{value}"</span> { b64 }
+               </>;
     }
 }
 
+class RenderBoolean extends Component {
+    static propTypes = {
+        value: PropTypes.any,
+    };
+
+    render() {
+        let v = "false";
+        if (this.props.value) {
+            v = "true";
+        }
+        return <span className="json-boolean">{v}</span>;
+    }
+}
+
+class RenderNull extends Component {
+    static propTypes = {
+        value: PropTypes.any,
+    };
+
+    render() {
+        return <span className="json-null">null</span>;
+    }
+}
 
 class RenderNumber extends Component {
     static propTypes = {
@@ -324,7 +376,13 @@ export default class JsonView extends PureComponent {
 
         } else if (_.isNumber(this.props.value)) {
             res = <RenderNumber value={this.props.value} />;
+        } else if (_.isBoolean(this.props.value)) {
+            res = <RenderBoolean value={this.props.value} />;
+        } else if (_.isNull(this.props.value)) {
+            res = <RenderNull value={this.props.value} />;
         }
+
+
 
         return <>
                  { pad }
