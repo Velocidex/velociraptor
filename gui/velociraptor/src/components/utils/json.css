@@ -15,7 +15,7 @@
     color: rgb(203, 75, 22);
 }
 
-.json-number {
+.json-number, .json-null, .json-boolean {
     padding-left: 5px;
     color: rgb(38, 139, 210);
 }
