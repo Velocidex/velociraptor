@@ -126,7 +126,8 @@ func init() {
 For Example
 
 FileName = pathspec(
-      DelegateAccessor="data", DelegatePath=MyData,
-      Path=[dict(Offset=0,Length=5), dict(Offset=10,Length=5)])
+      DelegateAccessor="data",
+      DelegatePath=MyData,
+      Path="/5")
 `)
 }

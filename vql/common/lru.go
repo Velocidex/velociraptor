@@ -88,6 +88,9 @@ func (self LRUFunction) Call(ctx context.Context, scope vfilter.Scope,
 	result := &LRUCache{
 		lru: ttlcache.NewCache(),
 	}
+	scope.AddDestructor(func() {
+		result.lru.Close()
+	})
 
 	if arg.Size <= 0 {
 		arg.Size = 1000
