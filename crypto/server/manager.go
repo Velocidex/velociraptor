@@ -208,5 +208,14 @@ func NewServerPublicKeyResolver(
 
 	result.negative_lru.SetTTL(timeout)
 
+	// Close the LRU when we are done here.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		<-ctx.Done()
+
+		result.negative_lru.Close()
+	}()
+
 	return result, nil
 }

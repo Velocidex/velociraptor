@@ -393,13 +393,16 @@ func (self *ProcessTracker) CallChain(
 	}
 }
 
-func NewProcessTracker(max_size int) *ProcessTracker {
+func NewProcessTracker(scope vfilter.Scope, max_size int) *ProcessTracker {
 	result := &ProcessTracker{
 		lookup:      ttlcache.NewCache(),
 		enrichments: ordereddict.NewDict(),
 	}
 
 	result.lookup.SetCacheSizeLimit(max_size)
+	scope.AddDestructor(func() {
+		result.lookup.Close()
+	})
 
 	return result
 }
@@ -445,7 +448,7 @@ func (self _InstallProcessTracker) Call(ctx context.Context,
 		max_size = 10000
 	}
 
-	tracker := NewProcessTracker(int(max_size))
+	tracker := NewProcessTracker(scope, int(max_size))
 
 	// Any any enrichments to the tracker.
 	for _, enrichment := range arg.Enrichments {

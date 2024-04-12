@@ -172,6 +172,7 @@ func NewSMBMountCache(scope vfilter.Scope) *SMBMountCache {
 
 	vql_subsystem.GetRootScope(scope).AddDestructor(func() {
 		result.lru.Flush()
+		result.lru.Close()
 		cancel()
 	})
 	return result
