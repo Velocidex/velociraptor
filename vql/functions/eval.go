@@ -33,7 +33,10 @@ func (self EvalFunction) Call(ctx context.Context, scope vfilter.Scope,
 	}
 
 	// Evaluate the lambda on the current scope.
-	return arg.Func.Reduce(ctx, scope, []vfilter.Any{scope})
+	res := arg.Func.Reduce(ctx, scope, []vfilter.Any{scope})
+
+	// Materialize the lambda
+	return vql_subsystem.Materialize(ctx, scope, res)
 }
 
 func init() {

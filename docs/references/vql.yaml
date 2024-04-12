@@ -1385,6 +1385,10 @@
   - name: action
     type: string
     description: Either index or create. For data streams this must be create.
+  - name: secret
+    type: string
+    description: Alternatively use a secret from the secrets service. Secret must
+      be of type 'AWS S3 Creds'
   category: server
   metadata:
     permissions: COLLECT_SERVER
@@ -1421,7 +1425,7 @@
   args:
   - name: items
     type: Any
-    description: Not used anymore
+    description: The items to enumerate
   category: basic
 - name: enumerate_flow
   description: |
@@ -1476,6 +1480,15 @@
     description: 'The count of sessions to retrieve (default 64) '
   metadata:
     permissions: MACHINE_STATE
+- name: eval
+  description: Evaluate a vql lambda function on the current scope.
+  type: Function
+  args:
+  - name: func
+    type: vfilter.Lambda
+    description: Lambda function to evaluate e.g. x=>1+1 where x will be the current
+      scope.
+    required: true
 - name: execve
   description: |
     This plugin launches an external command and captures its STDERR,
@@ -2800,6 +2813,14 @@
   - name: else
     type: StoredQuery
   category: plugin
+- name: import
+  description: Imports an artifact into the current scope. This only works in notebooks!
+  type: Function
+  args:
+  - name: artifact
+    type: string
+    description: The Artifact to import
+    required: true
 - name: import_collection
   description: |
     Imports an offline collection zip file (experimental).
@@ -3560,6 +3581,9 @@
   - name: period
     type: int64
     description: The latest age of the cache.
+  - name: name
+    type: string
+    description: The name of this cache.
   category: basic
 - name: min
   description: |
@@ -5818,6 +5842,7 @@
   - name: url
     type: string
     description: The Splunk Event Collector URL.
+    required: true
   - name: token
     type: string
     description: Splunk HEC Token.
@@ -5853,6 +5878,10 @@
   - name: hostname_field
     type: string
     description: Field to use as event hostname. Overrides hostname parameter.
+  - name: secret
+    type: string
+    description: Alternatively use a secret from the secrets service. Secret must
+      be of type 'AWS S3 Creds'
   category: server
   metadata:
     permissions: COLLECT_SERVER
@@ -5951,6 +5980,19 @@
     type: Any
     description: Dictionary of values to feed into Starlark environment
   category: parsers
+- name: stat
+  description: Get file information. Unlike glob() this does not support wildcards.
+  type: Function
+  args:
+  - name: filename
+    type: accessors.OSPath
+    description: One or more files to open.
+    required: true
+  - name: accessor
+    type: string
+    description: An accessor to use.
+  metadata:
+    permissions: FILESYSTEM_READ
 - name: stat
   description: Get file information. Unlike glob() this does not support wildcards.
   type: Plugin
@@ -6641,6 +6683,9 @@
   - name: hunt_id
     type: string
     description: A hunt ID
+  - name: notebook_id
+    type: string
+    description: A notebook ID
   category: server
   metadata:
     permissions: READ_RESULTS
@@ -7307,3 +7352,4 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+
