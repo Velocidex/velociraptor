@@ -392,6 +392,10 @@ func (self *RegFileSystemAccessor) New(scope vfilter.Scope) (
 		my_readdir_lru.SetCacheSizeLimit(1000)
 		my_readdir_lru.SetTTL(time.Minute)
 	}
+	scope.AddDestructor(func() {
+		my_lru.Close()
+		my_readdir_lru.Close()
+	})
 
 	return &RegFileSystemAccessor{
 		lru:         my_lru,

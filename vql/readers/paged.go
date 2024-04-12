@@ -25,7 +25,7 @@ know when is it safe to remove the file reference - at the end of
 the row? at the end the root scope?
 
 Having an LRU allows us to be flexible and not worry about the
-scope lifetime so much. Files will eventually get closed and cached
+scope lifetime so much. Files will eventually get closed and caches
 will be evicted.
 */
 package readers
@@ -74,6 +74,7 @@ func (self *ReaderPool) Close() {
 	for _, k := range self.lru.GetKeys() {
 		self.lru.Remove(k)
 	}
+	self.lru.Close()
 }
 
 type AccessorReader struct {
