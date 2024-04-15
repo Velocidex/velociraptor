@@ -44,7 +44,9 @@ func createRB(t *testing.T, filename string) (*FileBasedRingBuffer, *responder.F
 
 	flow_manager := responder.NewFlowManager(ctx, config_obj)
 
-	ring_buffer, err := NewFileBasedRingBuffer(ctx, config_obj, flow_manager, logger)
+	local_buffer_name := getLocalBufferName(config_obj)
+	ring_buffer, err := NewFileBasedRingBuffer(ctx, config_obj,
+		local_buffer_name, flow_manager, logger)
 	assert.NoError(t, err)
 
 	return ring_buffer, flow_manager
@@ -71,6 +73,8 @@ func openRB(t *testing.T, filename string,
 }
 
 func TestRingBuffer(t *testing.T) {
+	PREPARE_FOR_TESTS = true
+
 	filename := getTempFile(t)
 	test_string := "Hello"    // 5 bytes
 	test_string2 := "Goodbye" // 7 bytes

@@ -31,6 +31,13 @@ func createFile(filename string) (*os.File, error) {
 		return nil, err
 	}
 
+	// In tests the file has to be discoverable so we can read it -
+	// move to its known position.
+	if PREPARE_FOR_TESTS {
+		os.Rename(fd.Name(), filename)
+		return fd, err
+	}
+
 	// Try to just remove the file while keeping the file handle open
 	// - this should work on most unix like operating systems..
 	err = os.Remove(fd.Name())

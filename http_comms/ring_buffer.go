@@ -25,6 +25,14 @@ const (
 	FirstRecordOffset = 50
 )
 
+var (
+	// This controls the access level to the buffer file so tests can
+	// read it and check it. Normally the file is opened with
+	// exclusive access but this disables that and allows us to check
+	// the file.
+	PREPARE_FOR_TESTS = false
+)
+
 type IRingBuffer interface {
 	Enqueue(item []byte)
 
