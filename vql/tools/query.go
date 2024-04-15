@@ -24,6 +24,7 @@ type QueryPluginArgs struct {
 	ProgressTimeout float64           `vfilter:"optional,field=progress_timeout,doc=If no progress is detected in this many seconds, we terminate the query and output debugging information"`
 	OrgId           string            `vfilter:"optional,field=org_id,doc=If specified, the query will run in the specified org space (Use 'root' to refer to the root org)"`
 	Principal       string            `vfilter:"optional,field=runas,doc=If specified, the query will run as the specified user"`
+	InheritScope    bool              `vfilter:"optional,field=inherit,doc=If specified we inherit the scope instead of building a new one."`
 }
 
 type QueryPlugin struct{}
@@ -111,7 +112,12 @@ func (self QueryPlugin) Call(
 			ctx = subctx
 		}
 
-		subscope := manager.BuildScope(builder).AppendVars(arg.Env)
+		var subscope vfilter.Scope
+		if arg.InheritScope {
+			subscope = scope.Copy()
+		} else {
+			subscope = manager.BuildScope(builder).AppendVars(arg.Env)
+		}
 		defer subscope.Close()
 
 		throttler := actions.NewThrottler(

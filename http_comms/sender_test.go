@@ -245,7 +245,9 @@ func TestSenderWithFileBuffer(t *testing.T) {
 	defer cancel()
 
 	flow_manager := responder.NewFlowManager(ctx, config_obj)
-	rb, err := NewFileBasedRingBuffer(ctx, config_obj, flow_manager, logger)
+	local_buffer_name := getLocalBufferName(config_obj)
+	rb, err := NewFileBasedRingBuffer(ctx, config_obj,
+		local_buffer_name, flow_manager, logger)
 	require.NoError(t, err)
 
 	testRingBuffer(ctx, rb, config_obj, "0123456789", t)

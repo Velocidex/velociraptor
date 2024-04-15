@@ -2,6 +2,7 @@ package protocols
 
 import (
 	"context"
+	"encoding/json"
 	"reflect"
 
 	"github.com/Velocidex/ordereddict"
@@ -104,7 +105,31 @@ func (self _AddMap) Add(scope types.Scope, a types.Any, b types.Any) types.Any {
 	return a_dict
 }
 
+type _RegexDict struct{}
+
+func (self _RegexDict) Applicable(pattern types.Any, target types.Any) bool {
+	switch target.(type) {
+	case ordereddict.Dict, *ordereddict.Dict:
+		return true
+	}
+
+	rt := reflect.TypeOf(target)
+	if rt == nil {
+		return false
+	}
+	return rt.Kind() == reflect.Map
+}
+
+// Applying a regex on a dict means matching the serialized version of
+// the dict.
+func (self _RegexDict) Match(scope types.Scope,
+	pattern types.Any, target types.Any) bool {
+	serialized, _ := json.Marshal(target)
+	return scope.Match(pattern, string(serialized))
+}
+
 func init() {
+	vql_subsystem.RegisterProtocol(&_RegexDict{})
 	vql_subsystem.RegisterProtocol(&_BoolDict{})
 	vql_subsystem.RegisterProtocol(&_AddDict{})
 	vql_subsystem.RegisterProtocol(&_AddMap{})
