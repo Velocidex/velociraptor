@@ -5,7 +5,6 @@ import (
 	"encoding/binary"
 	"io"
 	"os"
-	"path/filepath"
 	"runtime"
 	"sync"
 
@@ -24,6 +23,14 @@ import (
 const (
 	FileMagic         = "VRB\x5e"
 	FirstRecordOffset = 50
+)
+
+var (
+	// This controls the access level to the buffer file so tests can
+	// read it and check it. Normally the file is opened with
+	// exclusive access but this disables that and allows us to check
+	// the file.
+	PREPARE_FOR_TESTS = false
 )
 
 type IRingBuffer interface {
@@ -341,59 +348,34 @@ func OpenFileBasedRingBuffer(
 		return nil, err
 	}
 
-	return newFileBasedRingBuffer(fd, config_obj, flow_manager, log_ctx)
+	return newFileBasedRingBuffer(fd, config_obj,
+		filename, flow_manager, log_ctx)
 }
 
 func NewFileBasedRingBuffer(
 	ctx context.Context,
 	config_obj *config_proto.Config,
+	filename string,
 	flow_manager *responder.FlowManager,
 	log_ctx *logging.LogContext) (*FileBasedRingBuffer, error) {
 
-	if config_obj.Client == nil || config_obj.Client.LocalBuffer == nil {
-		return nil, errors.New("Local buffer not configured")
-	}
-
-	filename := getLocalBufferName(config_obj)
 	if filename == "" {
 		return nil, errors.New("Unsupport platform")
 	}
 
-	// Reset the buffer file by removing old data. We prevent symlink
-	// attacks by replacing any existing file with a new file. In this
-	// case we do not want to use a random file name because the
-	// Velociraptor client is often killed without warning and
-	// restarted (e.g. system reboot). This means we dont always get a
-	// chance to cleanup and after a lot of restarts random file names
-	// will accumulate.  By default the temp directory is created
-	// inside a protected directory
-	// (`C:\Program Files\Velociraptor\Tools`) so symlink attacks are
-	// mitigated but in case Velociraptor is misconfigured we are
-	// extra careful.
-	fd, err := os.CreateTemp(filepath.Dir(filename), "")
+	fd, err := createFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	err = os.Rename(fd.Name(), filename)
-	if err != nil {
-		// On Windows the above rename operation does not work because
-		// the file is still open.
-		fd.Close()
-		os.Remove(fd.Name())
-
-		fd, err = os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0700)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return newFileBasedRingBuffer(fd, config_obj, flow_manager, log_ctx)
+	return newFileBasedRingBuffer(fd, config_obj,
+		filename, flow_manager, log_ctx)
 }
 
 func newFileBasedRingBuffer(
 	fd *os.File,
 	config_obj *config_proto.Config,
+	filename string,
 	flow_manager *responder.FlowManager,
 	log_ctx *logging.LogContext) (*FileBasedRingBuffer, error) {
 
@@ -453,7 +435,7 @@ func newFileBasedRingBuffer(
 	log_ctx.WithFields(logrus.Fields{
 		"filename": fd.Name(),
 		"max_size": result.header.MaxSize,
-	}).Info("Ring Buffer: Creation")
+	}).Info("FileBasedRingBuffer: Creation")
 
 	return result, nil
 }
@@ -706,15 +688,24 @@ func NewLocalBuffer(
 	ctx context.Context,
 	flow_manager *responder.FlowManager,
 	config_obj *config_proto.Config) IRingBuffer {
-	if config_obj.Client.LocalBuffer.DiskSize > 0 &&
-		getLocalBufferName(config_obj) != "" {
 
-		logger := logging.GetLogger(config_obj, &logging.ClientComponent)
-		rb, err := NewFileBasedRingBuffer(ctx, config_obj, flow_manager, logger)
-		if err == nil {
-			return rb
+	if config_obj.Client.LocalBuffer.DiskSize > 0 {
+		local_buffer_name := getLocalBufferName(config_obj)
+		if local_buffer_name != "" {
+			logger := logging.GetLogger(config_obj, &logging.ClientComponent)
+			rb, err := NewFileBasedRingBuffer(ctx, config_obj,
+				local_buffer_name, flow_manager, logger)
+			if err == nil {
+				// Creating the file worked! let's go.
+				return rb
+			}
+
+			// Could not create the file, just use memory instead.
+			logger.Error(
+				"Unable to create a file based ring buffer on %v - "+
+					"using in memory only: %v",
+				local_buffer_name, err)
 		}
-		logger.Error("Unable to create a file based ring buffer - using in memory only.")
 	}
 	return NewRingBuffer(config_obj, flow_manager,
 		config_obj.Client.LocalBuffer.MemorySize)

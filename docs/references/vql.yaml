@@ -1481,7 +1481,25 @@
   metadata:
     permissions: MACHINE_STATE
 - name: eval
-  description: Evaluate a vql lambda function on the current scope.
+  description: |
+    Evaluate a vql lambda function on the current scope.
+
+    This allows you to use a string as a VQL function - the string
+    will be parsed at runtime as a VQL expression and then evaluated.
+
+    You can access previously defined variables or functions within
+    the scope.
+
+    Note that when eval calls the function, the current scope will be
+    passed as the first parameter to the lambda.
+
+    Example:
+
+    ```vql
+    LET AddTwo(x) = x + 2
+
+    SELECT eval(func="x=>AddTwo(x=1)") AS Three FROM scope()
+    ```
   type: Function
   args:
   - name: func
@@ -5108,7 +5126,12 @@
     required: true
   category: basic
 - name: query
-  description: Evaluate a VQL query.
+  description: |
+    Evaluate a VQL query.
+
+    This plugin is useful for evaluating a query in a different
+    environment or context, or turning a string into a query.
+
   type: Plugin
   args:
   - name: query
@@ -5138,6 +5161,9 @@
   - name: runas
     type: string
     description: If specified, the query will run as the specified user
+  - name: inherit
+    type: bool
+    description: If specified we inherit the scope instead of building a new one.
   metadata:
     permissions: IMPERSONATION
 - name: rand
@@ -7352,4 +7378,3 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
-
