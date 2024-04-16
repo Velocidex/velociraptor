@@ -44,3 +44,13 @@ input[type="checkbox"][value="Y"] {
 .full-width {
     width: 100%;
 }
+
+
+.react-datetime-picker.btn-group {
+    height: 38px;
+}
+
+.react-datetime-picker.btn-group  .react-datetime-picker__wrapper {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+}
