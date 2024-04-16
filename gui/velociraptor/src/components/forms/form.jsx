@@ -19,6 +19,7 @@ import Alert from 'react-bootstrap/Alert';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import CSVForm from './csv.jsx';
 import Select from 'react-select';
+import T from '../i8n/i8n.jsx';
 
 import BootstrapTable from 'react-bootstrap-table-next';
 import cellEditFactory, { Type } from 'react-bootstrap-table2-editor';
@@ -348,39 +349,48 @@ export default class VeloForm extends React.Component {
                     </OverlayTrigger>
                   </Form.Label>
                   <Col sm="8">
-                    <DateTimePicker
-                      showLeadingZeros={true}
-                      onChange={(value) => {
-                          // Clear the prop value
-                          if (!_.isDate(value)) {
-                              this.props.setValue(undefined);
+                    <ButtonGroup>
+                      <DateTimePicker
+                        className="btn-group"
+                        showLeadingZeros={true}
+                        onChange={(value) => {
+                            // Clear the prop value
+                            if (!_.isDate(value)) {
+                                this.props.setValue(undefined);
 
-                              // If the form is in UTC we take the
-                              // date the form gives us (which is in
-                              // local timezone) and force the same
-                              // date into a serialized ISO in Z time.
-                          } else if(this.state.isUTC) {
-                              let local_time = convertToDate(value);
-                              let utc_time = utcTimeFromLocalTime(local_time);
-                              this.props.setValue(utc_time.toISOString());
+                                // If the form is in UTC we take the
+                                // date the form gives us (which is in
+                                // local timezone) and force the same
+                                // date into a serialized ISO in Z time.
+                            } else if(this.state.isUTC) {
+                                let local_time = convertToDate(value);
+                                let utc_time = utcTimeFromLocalTime(local_time);
+                                this.props.setValue(utc_time.toISOString());
 
-                          } else {
-                              // When in local time we just set the
-                              // time as it is.
-                              let local_time = convertToDate(value);
-                              this.props.setValue(local_time.toISOString());
-                          }
-                      }}
-                      value={date}
-                    />
-                    {this.state.isUTC ?
-                     <Button variant="default-outline"
-                             onClick={() => this.setState({isUTC: false})}
-                             size="sm">UTC</Button>:
-                     <Button variant="default-outline"
-                             onClick={() => this.setState({isUTC: true})}
-                             size="sm">Local</Button>
-                    }
+                            } else {
+                                // When in local time we just set the
+                                // time as it is.
+                                let local_time = convertToDate(value);
+                                this.props.setValue(local_time.toISOString());
+                            }
+                        }}
+                        value={date}
+                      />
+                      {this.state.isUTC ?
+                       <Button variant="default-outline"
+                               onClick={() => this.setState({isUTC: false})}
+                               size="sm">UTC</Button>:
+                       <Button variant="default-outline"
+                               onClick={() => this.setState({isUTC: true})}
+                               size="sm">{T("Local")}</Button>
+                      }
+                      <Button variant="default-outline"
+                              onClick={() => {
+                                  let now = new Date();
+                                  this.props.setValue(now.toISOString());
+                              }}
+                              size="sm">{T("Now")}</Button>
+                    </ButtonGroup>
                   </Col>
                 </Form.Group>
             );

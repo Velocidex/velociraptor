@@ -775,13 +775,16 @@ body.veloci-light {
   color: var(--color-foreground);
 }
 
+.veloci-light .react-datetime-picker.btn-group {
+    height: 37px;
+}
+
 .veloci-light .react-datepicker,
 .veloci-light .react-datetime-picker__calendar .react-calendar,
 .veloci-light .react-datetime-picker {
   font-family: var(--font-family-sans-serif);
   background: var(--color-form-control-background);
   color: var(--color-foreground);
-  z-index: 10;
 }
 
 .veloci-light .react-datetime-picker__button:enabled:hover .react-datetime-picker__button__icon,
