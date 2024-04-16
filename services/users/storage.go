@@ -345,7 +345,7 @@ func (self *UserStorageManager) SetUserOptions(ctx context.Context,
 
 	// For now we do not allow the user to set the links in their
 	// profile.
-	old_options.Links = nil
+	// old_options.Links = options.Links
 
 	if options.Lang != "" {
 		old_options.Lang = options.Lang

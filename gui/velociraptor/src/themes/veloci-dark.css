@@ -816,7 +816,6 @@ body.veloci-dark {
   font-family: var(--font-family-sans-serif);
   background: var(--color-form-control-background);
   color: var(--color-foreground);
-  z-index: 10;
 }
 
 .veloci-dark .react-datetime-picker__inputGroup__input,
