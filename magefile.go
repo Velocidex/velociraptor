@@ -236,7 +236,7 @@ func LinuxMusl386() error {
 		cc:            "musl-gcc",
 		extra_name:    "-musl",
 		disable_cgo:   true,
-		extra_ldflags: "-linkmode external -extldflags \"-static\"",
+		//extra_ldflags: "-linkmode external -extldflags \"-static\"",
 		arch:          "386"}.Run()
 }
 
