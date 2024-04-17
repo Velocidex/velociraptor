@@ -52,6 +52,7 @@ jobs:
         export PATH=$PATH:~/go/bin/:/usr/local/musl/bin
         go run make.go -v UpdateDependentTools
         go run make.go -v LinuxMusl
+        go run make.go -v LinuxMuslDebug
 
     - name: StoreBinaries
       uses: actions/upload-artifact@v3

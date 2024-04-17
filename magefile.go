@@ -73,6 +73,8 @@ type Builder struct {
 
 	disable_cgo bool
 
+	debug_build bool
+
 	// Set to override the output filename.
 	filename string
 
@@ -147,12 +149,18 @@ func (self Builder) Run() error {
 		return err
 	}
 
+	basic_flags := "-w -s "
+	if self.debug_build {
+		basic_flags = ""
+	}
+
 	tags := base_tags + self.extra_tags
 	args := []string{
 		"build",
 		"-o", filepath.Join("output", self.Name()),
 		"-tags", tags,
-		"-ldflags=-s -w " + self.extra_ldflags + flags(),
+		"-ldflags= " + basic_flags +
+			self.extra_ldflags + flags(),
 	}
 	args = append(args, self.extra_flags...)
 	args = append(args, "./bin/")
@@ -233,6 +241,17 @@ func LinuxMusl() error {
 		goos:          "linux",
 		cc:            "musl-gcc",
 		extra_name:    "-musl",
+		extra_ldflags: "-linkmode external -extldflags \"-static\"",
+		arch:          "amd64"}.Run()
+}
+
+func LinuxMuslDebug() error {
+	return Builder{
+		extra_tags:    " release yara ",
+		goos:          "linux",
+		cc:            "musl-gcc",
+		extra_name:    "-musl-debug",
+		debug_build:   true,
 		extra_ldflags: "-linkmode external -extldflags \"-static\"",
 		arch:          "amd64"}.Run()
 }
