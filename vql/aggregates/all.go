@@ -58,6 +58,13 @@ func evalAllCondition(
 	return false
 }
 
+// Aggregate functions must be copiable.
+func (self _AllFunction) Copy() types.FunctionInterface {
+	return _AllFunction{
+		Aggregator: functions.NewAggregator(),
+	}
+}
+
 func (self _AllFunction) Call(
 	ctx context.Context,
 	scope vfilter.Scope,
@@ -77,6 +84,7 @@ func (self _AllFunction) Call(
 	// Maintain aggregate state - triggered must be true for all items.
 	triggered := true
 	previous_triggered := true
+
 	defer func() {
 		// Only update the context if we need to.
 		if triggered != previous_triggered {

@@ -8,6 +8,7 @@
 
 .json-key {
     color: rgb(0, 43, 54);
+    cursor: pointer;
 }
 
 .json-string {
@@ -23,6 +24,7 @@
 .json-opener, .json-closer {
     font-weight: bold;
     padding-left: 2px;
+    cursor: pointer;
 }
 
 .json-array-viewer {
