@@ -45,6 +45,9 @@ linux_arm64:
 linux_musl:
 	go run make.go -v LinuxMusl
 
+linux_musl_debug:
+	go run make.go -v LinuxMuslDebug
+
 linux:
 	go run make.go -v linux
 
