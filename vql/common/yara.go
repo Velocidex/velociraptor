@@ -352,8 +352,11 @@ func (self *scanReporter) scanRange(start, end uint64, f accessors.ReadSeekClose
 			return
 		}
 
+		// There is no way to actively cancel the yara scan so this is
+		// as good as we can get - do not set the timeout too long or
+		// we wont be able to cancel it promptly.
 		err = scanner.SetCallback(self).
-			SetTimeout(10 * time.Second).
+			SetTimeout(100 * time.Second).
 			SetFlags(self.yara_flag).
 			ScanMem(scan_buf)
 		if err != nil {
@@ -395,8 +398,11 @@ func (self *scanReporter) scanFile(
 		return err
 	}
 
+	// There is no way to actively cancel the yara scan so this is as
+	// good as we can get - do not set the timeout too long or we wont
+	// be able to cancel it promptly.
 	err = scanner.SetCallback(self).
-		SetTimeout(10 * time.Second).
+		SetTimeout(100 * time.Second).
 		SetFlags(self.yara_flag).
 		ScanFile(underlying_file)
 	if err != nil {
@@ -652,8 +658,11 @@ func (self YaraProcPlugin) Call(
 			yara_flag: yara_flag,
 		}
 
+		// There is no way to actively cancel the yara scan so this is
+		// as good as we can get - do not set the timeout too long or
+		// we wont be able to cancel it promptly.
 		err = scanner.SetCallback(matcher).
-			SetTimeout(10 * time.Second).
+			SetTimeout(100 * time.Second).
 			SetFlags(yara_flag).
 			ScanProc(arg.Pid)
 		if err != nil {
