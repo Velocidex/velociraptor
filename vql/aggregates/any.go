@@ -49,6 +49,13 @@ func evalAnyCondition(
 	return false
 }
 
+// Aggregate functions must be copiable.
+func (self _AnyFunction) Copy() types.FunctionInterface {
+	return _AnyFunction{
+		Aggregator: functions.NewAggregator(),
+	}
+}
+
 func (self _AnyFunction) Call(
 	ctx context.Context,
 	scope vfilter.Scope,

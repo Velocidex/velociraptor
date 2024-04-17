@@ -8,6 +8,7 @@ import (
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/functions"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 type rateState struct {
@@ -29,6 +30,13 @@ func (self _RateFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 		Name:    "rate",
 		Doc:     "Calculates the rate (derivative) between two quantities.",
 		ArgType: type_map.AddType(scope, _RateFunctionArgs{}),
+	}
+}
+
+// Aggregate functions must be copiable.
+func (self _RateFunction) Copy() types.FunctionInterface {
+	return _RateFunction{
+		Aggregator: functions.NewAggregator(),
 	}
 }
 

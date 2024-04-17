@@ -241,7 +241,7 @@ require (
 )
 
 // replace github.com/Velocidex/grok => /home/mic/projects/grok
-// replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter
+replace www.velocidex.com/golang/vfilter => /home/mic/projects/vfilter
 // replace www.velocidex.com/golang/regparser => /home/mic/projects/regparser
 // replace www.velocidex.com/golang/go-ntfs => /home/mic/projects/go-ntfs
 // replace github.com/Velocidex/go-fat => /home/mic/projects/go-fat
