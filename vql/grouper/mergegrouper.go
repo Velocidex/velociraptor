@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/sorter"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/aggregators"
 	"www.velocidex.com/golang/vfilter/types"
 )
 
@@ -36,7 +37,7 @@ type AggregateContext struct {
 	row *ordereddict.Dict
 
 	// The context for evaluating the row.
-	context *ordereddict.Dict
+	context types.AggregatorCtx
 }
 
 /*
@@ -64,7 +65,7 @@ func (self *MergeSortGrouper) getContext(key string) *AggregateContext {
 	}
 
 	new_aggregate_ctx := &AggregateContext{
-		context: ordereddict.NewDict(),
+		context: aggregators.NewAggregatorCtx(),
 	}
 	self.bins.Set(key, new_aggregate_ctx)
 	return new_aggregate_ctx
@@ -157,7 +158,7 @@ func (self *MergeSortGrouper) groupWithSorting(
 
 func (self *MergeSortGrouper) transformRow(
 	ctx context.Context, scope types.Scope,
-	context *ordereddict.Dict,
+	context types.AggregatorCtx,
 	actor types.GroupbyActor, row *ordereddict.Dict) *ordereddict.Dict {
 
 	// Create a new scope over which we can evaluate the filter
@@ -172,8 +173,7 @@ func (self *MergeSortGrouper) transformRow(
 	// mask original row (from plugin).
 	new_scope.AppendVars(row)
 	new_scope.AppendVars(transformed_row)
-	new_scope.SetContext(
-		types.AGGREGATOR_CONTEXT_TAG, context)
+	new_scope.SetAggregatorCtx(context)
 
 	return actor.MaterializeRow(ctx, transformed_row, new_scope)
 }
@@ -206,9 +206,7 @@ func (self *MergeSortGrouper) Group(
 
 			// The transform function receives its own unique context
 			// for the specific aggregate group.
-			new_scope.SetContext(
-				types.AGGREGATOR_CONTEXT_TAG,
-				aggregate_ctx.context)
+			new_scope.SetAggregatorCtx(aggregate_ctx.context)
 
 			// Update the row with the transformed columns. Note we
 			// must materialize these rows because evaluating the row
