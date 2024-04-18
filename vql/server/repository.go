@@ -70,7 +70,7 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 	switch def_type {
 	case "client", "client_event", "":
 		permission = acls.ARTIFACT_WRITER
-	case "server", "server_event":
+	case "server", "server_event", "notebook":
 		permission = acls.SERVER_ARTIFACT_WRITER
 	default:
 		scope.Log("artifact_set: artifact type %v invalid", definition.Type)
