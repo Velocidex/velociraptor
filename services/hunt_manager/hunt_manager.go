@@ -179,6 +179,9 @@ func (self *HuntManager) processMutation(
 		ctx, mutation.HuntId,
 		func(hunt_obj *api_proto.Hunt) services.HuntModificationAction {
 			modification := services.HuntUnmodified
+			if hunt_obj == nil {
+				return modification
+			}
 
 			if hunt_obj.Stats == nil {
 				hunt_obj.Stats = &api_proto.HuntStats{}

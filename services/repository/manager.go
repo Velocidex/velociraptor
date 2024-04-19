@@ -395,7 +395,6 @@ func LoadArtifactsFromConfig(
 	return nil
 }
 
-// Load artifacts that are compiled into the binary.
 func LoadBuiltInArtifacts(ctx context.Context,
 	config_obj *config_proto.Config,
 	self *RepositoryManager) error {
