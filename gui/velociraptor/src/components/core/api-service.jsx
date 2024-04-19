@@ -251,7 +251,14 @@ const href = function(url, params, options) {
     options = options || {};
     Object.assign(options, {indices: false});
 
-    return base_path + url + "?" + qs.stringify(params, options);
+    // If the URL already contains a query string, we need to append
+    // to it with &
+    let joiner = "?";
+    if (url.match(/[&]/)) {
+        joiner = "&";
+    }
+
+    return base_path + url + joiner + qs.stringify(params, options);
 };
 
 const delete_req = function(url, params, cancel_token) {
