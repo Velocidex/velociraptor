@@ -72,10 +72,10 @@ func (self *NotebookUploader) Upload(
 	}
 
 	result := &uploads.UploadResponse{
-		Path:       store_as_name.String(),
+		Path:       res.Path,
 		StoredName: store_as_name.String(),
 		Accessor:   accessor,
-		Components: dest_path_spec.Components(),
+		Components: res.Components,
 		Size:       res.Size,
 		StoredSize: res.StoredSize,
 		Sha256:     res.Sha256,

@@ -336,13 +336,15 @@ sources:
 
           */
 
-          LET ColumnTypes = dict(`StartDate`='timestamp',
+          LET ColumnTypes = dict(`StartDate`='timestamp', Download='download',
                                  Hex='hex', Upload='preview_upload')
           LET Hex = "B0 EC 48 5F 18 77"
 
           SELECT Hex, StartDate, hash(accessor="data", path="Hello") AS Hash,
                  upload(accessor="data", file="Hello world",
-                        name="test.txt") AS Upload
+                        name="test.txt") AS Upload,
+                 upload(accessor="data", file="Hello world",
+                        name="test.txt") AS Download
           FROM source()
 
       - type: VQL
