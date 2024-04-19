@@ -20,7 +20,6 @@ package http_comms
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -195,18 +194,6 @@ func NewHTTPConnector(
 	} else {
 		// Not self signed - add the public roots for verifications.
 		crypto.AddPublicRoots(transport.TLSClientConfig.RootCAs)
-	}
-
-	// If we need to present client certs, add them now.
-	if config_obj.Client.Crypto != nil &&
-		config_obj.Client.Crypto.ClientCertificate != "" &&
-		config_obj.Client.Crypto.ClientCertificatePrivateKey != "" {
-		cert, err := tls.X509KeyPair([]byte(config_obj.Client.Crypto.ClientCertificate),
-			[]byte(config_obj.Client.Crypto.ClientCertificatePrivateKey))
-		if err != nil {
-			return nil, err
-		}
-		transport.TLSClientConfig.Certificates = []tls.Certificate{cert}
 	}
 
 	self := &HTTPConnector{

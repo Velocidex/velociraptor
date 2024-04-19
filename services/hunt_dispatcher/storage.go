@@ -129,8 +129,11 @@ func (self *HuntStorageManagerImpl) ModifyHuntObject(
 	defer self.mu.Unlock()
 
 	hunt_record, pres := self.hunts[hunt_id]
-	if !pres {
-		hunt_record = &HuntRecord{}
+	// Hunt does not exist, just ignore it.
+	if !pres ||
+		hunt_record == nil ||
+		hunt_record.Hunt == nil {
+		return services.HuntUnmodified
 	}
 
 	modification := cb(hunt_record)
@@ -178,7 +181,7 @@ func (self *HuntStorageManagerImpl) GetHunt(
 	defer self.mu.Unlock()
 
 	hunt, pres := self.hunts[hunt_id]
-	if !pres {
+	if !pres || hunt == nil {
 		return nil, fmt.Errorf("%w: %v", services.HuntNotFoundError, hunt_id)
 	}
 
@@ -189,6 +192,10 @@ func (self *HuntStorageManagerImpl) SetHunt(
 	ctx context.Context, hunt *api_proto.Hunt) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	if hunt == nil {
+		return utils.InvalidArgError
+	}
 
 	// The hunts start time could have been modified - we need to
 	// update ours then (and also the metrics).

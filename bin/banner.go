@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"strings"
 
 	"www.velocidex.com/golang/velociraptor/config"
@@ -36,4 +37,22 @@ func doBanner() {
 
 	logging.Prelog("<yellow>This is Velociraptor %v built on %v (%v)", version.Version,
 		version.BuildTime, version.Commit)
+
+	// Record some important environment variables to the log.
+	for _, e := range os.Environ() {
+		pair := strings.SplitN(e, "=", 2)
+		if len(pair) != 2 {
+			continue
+		}
+
+		switch pair[0] {
+		case // Ignore this one as it is the actual configuration "VELOCIRAPTOR_CONFIG",
+			"VELOCIRAPTOR_SLOW_FILESYSTEM",
+			"VELOCIRAPTOR_DISABLE_CSRF", "VELOCIRAPTOR_INJECT_API_SLEEP",
+			"GOGC", "GOTRACEBACK", "GOMAXPROCS", "GODEBUG", "GOMEMLIMIT",
+			"GORACE":
+			logging.Prelog("<yellow>Environment Variable %v:</> %v",
+				pair[0], pair[1])
+		}
+	}
 }
