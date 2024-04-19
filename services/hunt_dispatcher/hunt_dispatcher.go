@@ -276,6 +276,10 @@ func (self *HuntDispatcher) ModifyHuntObject(
 
 	return self.Store.ModifyHuntObject(ctx, hunt_id,
 		func(hunt_record *HuntRecord) services.HuntModificationAction {
+			if hunt_record == nil || hunt_record.Hunt == nil {
+				return services.HuntUnmodified
+			}
+
 			// Call the callback to see if we need to change this
 			// hunt.
 			modification := cb(hunt_record.Hunt)

@@ -36,6 +36,16 @@ type Conn struct {
 	mu sync.Mutex
 }
 
+// Control access to the underlying connection.
+func (self *Conn) WriteMessageWithDeadline(
+	message_type int, message []byte, deadline time.Time) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.Conn.SetWriteDeadline(deadline)
+	return self.Conn.WriteMessage(message_type, message)
+}
+
 func (self *Conn) WriteMessage(message_type int, message []byte) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
