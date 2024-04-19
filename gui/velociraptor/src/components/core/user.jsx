@@ -3,6 +3,7 @@ import React from 'react';
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 import PropTypes from 'prop-types';
+import qs from "qs";
 
 const UserConfig = React.createContext({
     traits: {},
@@ -29,7 +30,20 @@ export class UserSettings extends React.Component {
             }
 
             if (traits.org) {
-                window.globals.OrgId = traits.org;
+                // Get the org id from the url if possible. If it is
+                // not in the URL, get the default from the user
+                // traits.
+                let search = window.location.search.replace('?', '');
+                let params = qs.parse(search);
+                let org_id = params.org_id || traits.org;
+
+                // If the URL does not specify an org, then we need to
+                // set it to the default org from the traits.
+                if (_.isEmpty(params.org_id)) {
+                    params.org_id = traits.org;
+                    window.location.search = qs.stringify(params);
+                }
+                window.globals.OrgId = org_id;
             }
 
             if (traits.auth_redirect_template) {

@@ -20,6 +20,7 @@ package api
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
@@ -283,8 +284,9 @@ func GetAPIHandler(
 	}
 
 	gw_name := crypto_utils.GetSubjectName(gw_cert)
-	if gw_name != config_obj.API.PinnedGwName {
-		return nil, errors.New("GUI gRPC proxy Certificate is not correct")
+	if gw_name != utils.GetGatewayName(config_obj) {
+		return nil, fmt.Errorf(
+			"GUI gRPC proxy Certificate is not correct: %v", gw_name)
 	}
 
 	// The API server's TLS address is pinned to the frontend's
