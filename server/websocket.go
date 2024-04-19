@@ -188,8 +188,8 @@ func send_message(ws *http_comms.Conn, message []byte) error {
 		Data:     message,
 	}
 	serialized, _ := json.Marshal(msg)
-	ws.SetWriteDeadline(utils.GetTime().Now().Add(writeWait))
-	return ws.WriteMessage(websocket.BinaryMessage, serialized)
+	deadline := utils.GetTime().Now().Add(writeWait)
+	return ws.WriteMessageWithDeadline(websocket.BinaryMessage, serialized, deadline)
 }
 
 // Deliver the HTTP code to the remote end so it can be recreated.
@@ -202,8 +202,9 @@ func send_error(ws *http_comms.Conn, err error, code int) error {
 	}
 
 	serialized, _ := json.Marshal(msg)
-	ws.SetWriteDeadline(utils.GetTime().Now().Add(writeWait))
-	ws.WriteMessage(websocket.BinaryMessage, serialized)
+
+	deadline := utils.GetTime().Now().Add(writeWait)
+	ws.WriteMessageWithDeadline(websocket.BinaryMessage, serialized, deadline)
 
 	// Wait for the message to be sent to the client side
 	time.Sleep(time.Second)
@@ -215,8 +216,7 @@ func send_ping(
 	ws *http_comms.Conn,
 	config_obj *config_proto.Config) error {
 	deadline := utils.GetTime().Now().Add(http_comms.PongPeriod(config_obj))
-	ws.SetWriteDeadline(deadline)
-	return ws.WriteMessage(websocket.PingMessage, nil)
+	return ws.WriteMessageWithDeadline(websocket.PingMessage, nil, deadline)
 }
 
 func ws_send_client_messages(

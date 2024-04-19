@@ -400,6 +400,24 @@ func LoadBuiltInArtifacts(ctx context.Context,
 	config_obj *config_proto.Config,
 	self *RepositoryManager) error {
 
+	// Assume these will work because they are tested at build
+	// time. Therefore we can load them in the background for faster
+	// startup.
+	go func() {
+		err := _LoadBuiltInArtifacts(ctx, config_obj, self)
+		if err != nil {
+			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+			logger.Error("While loading built in artifacts: %v", err)
+		}
+	}()
+
+	return nil
+}
+
+func _LoadBuiltInArtifacts(ctx context.Context,
+	config_obj *config_proto.Config,
+	self *RepositoryManager) error {
+
 	// Load the built in artifacts as built in. NOTE: Built in
 	// artifacts can not be overwritten!
 	options := services.ArtifactOptions{

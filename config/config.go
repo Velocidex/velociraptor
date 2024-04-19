@@ -101,10 +101,9 @@ func GetDefaultConfig() *config_proto.Config {
 		API: &config_proto.APIConfig{
 			// Bind port for gRPC endpoint - this should not
 			// normally be exposed.
-			BindAddress:  "127.0.0.1",
-			BindPort:     8001,
-			BindScheme:   "tcp",
-			PinnedGwName: "GRPC_GW",
+			BindAddress: "127.0.0.1",
+			BindPort:    8001,
+			BindScheme:  "tcp",
 		},
 		GUI: &config_proto.GUIConfig{
 			// Bind port for GUI. If you expose this on a
