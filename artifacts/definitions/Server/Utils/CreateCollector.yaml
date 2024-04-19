@@ -429,7 +429,7 @@ sources:
 
       -- Add custom definition if needed. Built in definitions are not added
       LET definitions <= SELECT * FROM chain(
-      a = { SELECT name, description, tools, parameters, sources
+      a = { SELECT name, description, tools, export, parameters, sources
             FROM artifact_definitions(deps=TRUE, names=artifacts)
             WHERE NOT compiled_in AND
               log(message="Adding artifact_definition for " + name) },
