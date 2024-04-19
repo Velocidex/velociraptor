@@ -173,12 +173,12 @@ class UserSettings extends React.PureComponent {
         let search = window.location.search.replace('?', '');
         let params = qs.parse(search);
         params.org_id = org;
-        window.location.search = qs.stringify(params);
         window.globals.OrgId = org;
 
         // Force navigation to the welcome screen to make sure the GUI
         // is reset.
-        this.props.history.push("/welcome");
+        window.history.pushState({}, "", api.href("/app", {}));
+        this.props.history.replace("/welcome");
 
         // Set the new settings for the next reload. This will be the
         // default org id next time the user loads up the main page.

@@ -70,6 +70,7 @@ import './themes/midnight.css';
 class App extends Component {
     static propTypes = {
         history: PropTypes.any,
+        location: PropTypes.any,
     }
 
     state = {
@@ -101,7 +102,7 @@ class App extends Component {
     }
 
     updateOrgIdFromUrl = ()=>{
-        let search = window.location.search.replace('?', '');
+        let search = this.props.location.search.replace('?', '');
         let params = qs.parse(search);
         let org_id = params.org_id;
         if (org_id) {
@@ -111,6 +112,8 @@ class App extends Component {
 
     // Renders the entire app as normal.
     renderApp() {
+        this.updateOrgIdFromUrl();
+
         // We need to prepare a vfs_path for the navigator to link
         // to. Depending on the current node, we make a link with or
         // without a final "/".
@@ -125,8 +128,6 @@ class App extends Component {
                 vfs_path = Join(path) + "/";
             }
         }
-
-        this.updateOrgIdFromUrl();
 
         return <div>
                  <Navbar fixed="top" className="main-navbar justify-content-between">
