@@ -12,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -85,16 +86,26 @@ func (self UploadsPlugins) Call(
 					components = upload.Stats.Components
 				}
 
+				vfs_path := path_specs.NewUnsafeFilestorePath(components...).
+					SetType(api.PATH_TYPE_FILESTORE_ANY)
+
 				select {
 				case <-ctx.Done():
 					return
+
 				case output_chan <- ordereddict.NewDict().
 					Set("notebook_id", notebook_metadata.NotebookId).
 					Set("name", upload.Name).
-					Set("mtime", upload.Date).
-					Set("size", upload.Size).
-					Set("vfs_path", path_specs.NewUnsafeFilestorePath(components...).
-						SetType(api.PATH_TYPE_FILESTORE_ANY)):
+					Set("started", upload.Date).
+					Set("file_size", upload.Size).
+					Set("uploaded_size", upload.Size).
+					Set("vfs_path", vfs_path.String()).
+					Set("Upload", uploads.UploadResponse{
+						Path:       vfs_path.String(),
+						Size:       upload.Size,
+						StoredSize: upload.Size,
+						Components: components,
+					}):
 				}
 			}
 		}
@@ -177,11 +188,15 @@ func readFlowUploads(
 			continue
 		}
 
+		size, _ := row.GetInt64("file_size")
+		stored_size, _ := row.GetInt64("uploaded_size")
+		accessor, _ := row.GetString("_accessor")
+
 		var components []string
 		var pathspec api.FSPathSpec
 
-		// The we have the components we get the file store path
-		// from there.
+		// If we have the components we get the file store path from
+		// there.
 		components_any, ok := row.Get("_Components")
 		if ok {
 			components = utils.ConvertToStringSlice(components_any)
@@ -200,6 +215,15 @@ func readFlowUploads(
 		}
 
 		row.Update("vfs_path", pathspec)
+
+		// Build an upload record for the GUI
+		row.Set("Upload", uploads.UploadResponse{
+			Path:       vfs_path,
+			Size:       uint64(size),
+			StoredSize: uint64(stored_size),
+			Components: components,
+			Accessor:   accessor,
+		})
 
 		select {
 		case <-ctx.Done():

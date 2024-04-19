@@ -24,6 +24,7 @@ import Form from 'react-bootstrap/Form';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Pagination from 'react-bootstrap/Pagination';
 import classNames from "classnames";
+import Download from "../widgets/download.jsx";
 
 // https://en.wikipedia.org/wiki/List_of_file_signatures
 const patterns = [
@@ -377,6 +378,9 @@ class InspectDialog extends React.Component {
     }
 
     render() {
+        let filename = this.props.upload && this.props.upload.Path;
+        let components = this.props.upload && this.props.upload.Components;
+
         return (
             <Modal show={true}
                    dialogClassName="modal-90w"
@@ -410,9 +414,16 @@ class InspectDialog extends React.Component {
                   </Tab>
                   <Tab eventKey="details" title={T("Details")}>
                     { this.state.tab === "details" &&
-                      <div className="preview-json">
-                        <VeloValueRenderer value={this.props.upload}/>
-                      </div>}
+                      <>
+                        <Download fs_components={components}
+                                  filename={filename}
+                                  text={filename}/>
+
+                        <div className="preview-json">
+                          <VeloValueRenderer value={this.props.upload}/>
+                        </div>
+                      </>
+                    }
                   </Tab>
                 </Tabs>
               </Modal.Body>
