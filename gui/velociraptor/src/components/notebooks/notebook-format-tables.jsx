@@ -73,7 +73,7 @@ export default class FormatTableDialog extends Component {
         let selected_columns = [];
         let prefix = "";
         let suffix = "";
-        let match = vql.match(column_type_regex);
+        let match = vql && vql.match(column_type_regex);
         if(match && match.length > 0) {
             prefix = match[1];
             suffix = match[3];

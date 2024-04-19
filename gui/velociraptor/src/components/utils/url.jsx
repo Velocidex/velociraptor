@@ -29,7 +29,7 @@ export default class URLViewer extends Component {
     }
 
     render() {
-        let url = this.props.url;
+        let url = this.props.url || "";
         let desc = url;
         const md_regex = url.match(/\[([^\]]+)\]\(([^)]+)\)/);
         if (md_regex) {
