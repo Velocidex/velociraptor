@@ -280,7 +280,7 @@ class RenderArrayModal extends PureComponent {
 
     render() {
         if (_.isEmpty(this.state.data)) {
-            return <></>;
+            return <div key="1"></div>;
         }
         let column_renderers = {};
         _.each(this.state.columns, x=>{

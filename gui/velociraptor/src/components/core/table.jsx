@@ -33,6 +33,8 @@ import ContextMenu from '../utils/context.jsx';
 import PreviewUpload from '../widgets/preview_uploads.jsx';
 import filterFactory from 'react-bootstrap-table2-filter';
 
+import Download from "../widgets/download.jsx";
+
 // Shows the InspectRawJson modal dialog UI.
 export class InspectRawJson extends Component {
     static propTypes = {
@@ -620,6 +622,30 @@ export function formatColumns(columns, env, column_formatter) {
             x.formatter = (cell, row) => {
                 return <VeloValueRenderer
                          value={cell} collapsed={true}/>;
+            };
+            x.type = null;
+            break;
+
+        case "download":
+            x.formatter = (cell, row) => {
+                // Ideally this is a UploadResponse object described
+                // in /uploads/api.go. Such an object is emitted by
+                // the uploads() VQL plugin.
+                if(_.isObject(cell)) {
+                    let description = cell.Path;
+                    let fs_components = cell.Components || [];
+                    return <Download fs_components={fs_components}
+                                     text={description}
+                                     filename={description}/>;
+                }
+
+                let components = row._Components;
+                let description = cell;
+                let filename = row.client_path;
+
+                return <Download fs_components={components}
+                                 text={description}
+                                 filename={filename}/>;
             };
             x.type = null;
             break;

@@ -16,6 +16,21 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
   "file_size": 1319,
   "uploaded_size": 1319,
   "client_path": "C:\\1.zip",
+  "Upload": {
+   "Path": "C:\\1.zip",
+   "Size": 1319,
+   "StoredSize": 1319,
+   "Components": [
+    "clients",
+    "C.4f5e52adf0a337a9",
+    "collections",
+    "F.BN2HJCPOF5U7U",
+    "uploads",
+    "auto",
+    "C:",
+    "1.zip"
+   ]
+  },
   "basename(path=file_store(path=vfs_path))": "1.zip"
  },
  {
@@ -23,6 +38,10 @@ SELECT *, basename(path=file_store(path=vfs_path)) FROM uploads(client_id='C.4f5
   "started": "2019-11-08 07:30:59.920512962 +0000 UTC",
   "vfs_path": "fs:/clients/C.4f5e52adf0a337a9/collections/F.BN2HJCPOF5U7U/uploads/file/C:/old_style.zip",
   "expected_size": 1319,
+  "Upload": {
+   "Path": "/clients/C.4f5e52adf0a337a9/collections/F.BN2HJCPOF5U7U/uploads/file/C:/old_style.zip",
+   "Size": 0
+  },
   "basename(path=file_store(path=vfs_path))": "old_style.zip"
  }
 ]SELECT collect_client( client_id='C.11a3013ccaXXXXX', artifacts='Windows.KapeFiles.Targets', env=dict(Device ='C:', VSSAnalysisAge=2, KapeTriage='Y')).request AS Flow FROM scope()[

@@ -14,7 +14,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 // components/core/table.jsx formatColumns
 const column_types = [
     "string", "number", "mb", "timestamp", "nobreak", "tree", "url",
-    "safe_url", "flow", "preview_upload", "client", "hex",
+    "safe_url", "flow", "preview_upload", "download", "client", "hex",
     "base64", "collapsed"
 ];
 
@@ -73,7 +73,7 @@ export default class FormatTableDialog extends Component {
         let selected_columns = [];
         let prefix = "";
         let suffix = "";
-        let match = vql.match(column_type_regex);
+        let match = vql && vql.match(column_type_regex);
         if(match && match.length > 0) {
             prefix = match[1];
             suffix = match[3];
