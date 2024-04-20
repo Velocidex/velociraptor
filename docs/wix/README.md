@@ -11,9 +11,10 @@ are happy with the default settings it is easier to just use the
 official distributed MSI packages.
 
 To build MSI packages you will need to download and install the WIX
-distribution from the github page (it requires .NET 3.5):
+distribution from the github page. We currently recommend the 3.14
+release series:
 
-http://wixtoolset.org/releases/
+https://github.com/wixtoolset/wix3/releases/
 
 Next, follow these steps:
 

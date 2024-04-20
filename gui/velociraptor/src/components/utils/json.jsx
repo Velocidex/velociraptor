@@ -316,7 +316,7 @@ class RenderArray extends RenderObject {
             let abridged = this.props.value.slice(0, collapse_array_length-1);
             let indent = this.props.indent || 0;
             let buttons = [
-                <a className="json-expand-button"
+                <a className="json-expand-button" key="1"
                    onClick={x=>this.setState({showModal: true})}>
                   <span className="json-pad json-expand-button" style={{
                       paddingLeft: indent + 3 * scale}}>
