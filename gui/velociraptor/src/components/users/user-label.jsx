@@ -177,7 +177,7 @@ class UserSettings extends React.PureComponent {
 
         // Force navigation to the welcome screen to make sure the GUI
         // is reset.
-        window.history.pushState({}, "", api.href("/app", {}));
+        window.history.pushState({}, "", api.href("/app/index.html", {}));
         this.props.history.replace("/welcome");
 
         // Set the new settings for the next reload. This will be the
