@@ -29,7 +29,7 @@ func GetExtensionForFilestore(path_spec FSPathSpec) string {
 	case PATH_TYPE_DATASTORE_PROTO, PATH_TYPE_DATASTORE_JSON:
 		panic(fmt.Sprintf(
 			"datastore path used for filestore for %v ",
-			path_spec.Components))
+			path_spec.Components()))
 
 	case PATH_TYPE_FILESTORE_JSON:
 		return ".json"
