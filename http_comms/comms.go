@@ -489,6 +489,19 @@ func (self *HTTPConnector) rekeyNextServer(ctx context.Context) error {
 	// Try to fetch the server pem.
 	url := self.urls[self.current_url_idx]
 
+	// Try to get the server.pem over plain https
+	if strings.HasPrefix(url, "wss://") {
+		url = strings.Replace(url, "wss://", "https://", 1)
+		err := self.rekeyWithURL(ctx, url)
+		if err == nil {
+			return nil
+		}
+	}
+
+	return self.rekeyWithURL(ctx, url)
+}
+
+func (self *HTTPConnector) rekeyWithURL(ctx context.Context, url string) error {
 	req, err := http.NewRequest("GET", url+"server.pem", nil)
 	if err != nil {
 		return errors.Wrap(err, 0)
@@ -1051,6 +1064,13 @@ func SetProxy(handler func(*http.Request) (*url.URL, error)) {
 	defer mu.Unlock()
 
 	proxyHandler = handler
+}
+
+func GetProxy() func(*http.Request) (*url.URL, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	return proxyHandler
 }
 
 func init() {

@@ -1,19 +1,19 @@
 /*
-   Velociraptor - Dig Deeper
-   Copyright (C) 2019-2024 Rapid7 Inc.
+Velociraptor - Dig Deeper
+Copyright (C) 2019-2024 Rapid7 Inc.
 
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU Affero General Public License as published
-   by the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as published
+by the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
 
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
 
-   You should have received a copy of the GNU Affero General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 package main
 
@@ -33,6 +33,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/startup"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -48,6 +49,9 @@ var (
 
 	pool_client_concurrency = pool_client_command.Flag(
 		"concurrency", "How many real queries to run.").Default("10").Int()
+
+	pool_client_start_rate = pool_client_command.Flag(
+		"start_rate", "How many clients per second to start.").Default("20").Uint64()
 )
 
 type counter struct {
@@ -101,8 +105,16 @@ func doPoolClient() error {
 
 	c := counter{}
 
+	// Do not ramp up the pool client too fast or it will cause the
+	// server to loadshed.
+	throttler := utils.NewThrottler(*pool_client_start_rate)
+
 	for i := 0; i < number_of_clients; i++ {
 		go func(i int) error {
+
+			// Wait for our turn
+			throttler.Wait()
+
 			client_config := &config_proto.Config{}
 			err := json.Unmarshal(serialized, &client_config)
 			if err != nil {
