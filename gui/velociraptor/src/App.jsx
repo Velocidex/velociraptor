@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import './css/App.css';
+import qs from "qs";
 
 import PropTypes from 'prop-types';
 import VeloNavigator from './components/sidebar/navigator.jsx';
@@ -69,6 +70,7 @@ import './themes/midnight.css';
 class App extends Component {
     static propTypes = {
         history: PropTypes.any,
+        location: PropTypes.any,
     }
 
     state = {
@@ -99,8 +101,19 @@ class App extends Component {
         this.setState({current_node: node});
     }
 
+    updateOrgIdFromUrl = ()=>{
+        let search = this.props.location.search.replace('?', '');
+        let params = qs.parse(search);
+        let org_id = params.org_id;
+        if (org_id) {
+            window.globals.OrgId = org_id;
+        }
+    }
+
     // Renders the entire app as normal.
     renderApp() {
+        this.updateOrgIdFromUrl();
+
         // We need to prepare a vfs_path for the navigator to link
         // to. Depending on the current node, we make a link with or
         // without a final "/".

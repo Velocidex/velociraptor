@@ -295,7 +295,7 @@ func authenticateUserHandle(
 		}
 
 		// Does the user have access to the specified org?
-		err = CheckOrgAccess(r, user_record)
+		err = CheckOrgAccess(config_obj, r, user_record)
 		if err != nil {
 			reject_cb(w, r, errors.New("Insufficient permissions"), user_record.Name)
 			return

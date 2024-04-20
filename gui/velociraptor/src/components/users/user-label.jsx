@@ -2,6 +2,7 @@ import './user-label.css';
 import _ from 'lodash';
 import moment from 'moment';
 import 'moment-timezone';
+import qs from "qs";
 
 import React from 'react';
 import PropTypes from 'prop-types';
@@ -142,7 +143,7 @@ class UserSettings extends React.PureComponent {
                 theme: this.context.traits.theme || "veloci-light",
                 timezone: this.context.traits.timezone || "UTC",
                 lang: this.context.traits.lang || "en",
-                org: this.context.traits.org || "root",
+                org: window.globals.OrgId,
                 default_password: this.context.traits.default_password || "",
             });
         }
@@ -168,10 +169,19 @@ class UserSettings extends React.PureComponent {
     }
 
     changeOrg = org=>{
-        // Force navigation to the
-        // welcome screen to make sure
-        // the GUI is reset
-        this.props.history.push("/welcome");
+        // Set the URL to the required org_id
+        let search = window.location.search.replace('?', '');
+        let params = qs.parse(search);
+        params.org_id = org;
+        window.globals.OrgId = org;
+
+        // Force navigation to the welcome screen to make sure the GUI
+        // is reset.
+        window.history.pushState({}, "", api.href("/app", {}));
+        this.props.history.replace("/welcome");
+
+        // Set the new settings for the next reload. This will be the
+        // default org id next time the user loads up the main page.
         this.props.setSetting({
             theme: this.state.theme,
             timezone: this.state.timezone,
@@ -448,7 +458,8 @@ export default class UserLabel extends React.Component {
     }
 
     orgName() {
-        let id = this.context.traits && this.context.traits.org;
+        let id = window.globals.OrgId || (
+            this.context.traits && this.context.traits.org);
         if (!id || id==="root") {
             return <></>;
         }

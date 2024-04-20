@@ -107,7 +107,7 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 		}
 
 		// Does the user have access to the specified org?
-		err = CheckOrgAccess(r, user_record)
+		err = CheckOrgAccess(self.config_obj, r, user_record)
 		if err != nil {
 			services.LogAudit(r.Context(),
 				self.config_obj, user_record.Name, "Unauthorized username",

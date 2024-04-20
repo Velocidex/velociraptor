@@ -26,7 +26,7 @@ import { withRouter }  from "react-router-dom";
 
 import SplitPane from 'react-split-pane';
 
-const presetFilters = [
+const presetFilters = ()=>[
     {value: "type:CLIENT", label: T("Client Artifacts")},
     {value: "type:SERVER", label: T("Server Artifacts")},
     {value: "type:NOTEBOOK", label: T("Notebook templates")},
@@ -258,13 +258,13 @@ class ArtifactInspector extends React.Component {
     }
 
     renderFilter = ()=>{
-        let option_value = _.filter(presetFilters, x=>{
+        let option_value = _.filter(presetFilters(), x=>{
             return x.label === this.state.filter_name;
         });
         return <Select
                  className="org-selector artifact-filter"
                  classNamePrefix="velo"
-                 options={presetFilters}
+                 options={presetFilters()}
                  value={option_value}
                  onChange={x=>{
                      this.setState({

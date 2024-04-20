@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	constants "www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -145,7 +146,7 @@ func ValidateFrontendConfig(config_obj *config_proto.Config) error {
 	}
 
 	if config_obj.API.PinnedGwName == "" {
-		config_obj.API.PinnedGwName = "GRPC_GW"
+		config_obj.API.PinnedGwName = constants.PinnedGwName
 	}
 
 	return nil
