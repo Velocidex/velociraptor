@@ -12,12 +12,15 @@ import (
 
 	"github.com/go-errors/errors"
 	"github.com/gorilla/websocket"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/networking"
 )
 
 const (
@@ -26,6 +29,11 @@ const (
 
 var (
 	notConnectedError = errors.New("WS Socket is not conencted")
+
+	currentWsConnections = promauto.NewGaugeVec(prometheus.GaugeOpts{
+		Name: "client_comms_current_outgoing_ws_sockets",
+		Help: "Number of currently connected ws connections.",
+	}, []string{"url"})
 )
 
 // The websocket conenction is not thread safe so we need to
@@ -120,16 +128,28 @@ func (self *HTTPClientWithWebSocketTransport) NewWebSocketConnection(
 	ctx context.Context,
 	req *http.Request) (*WebSocketConnection, error) {
 	max_poll := uint64(60)
-	if self.config_obj.Client != nil &&
-		self.config_obj.Client.MaxPoll > 0 {
+	if self.config_obj.Client == nil {
+		return nil, errors.New("No Client config available")
+	}
+
+	if self.config_obj.Client.MaxPoll > 0 {
 		max_poll = self.config_obj.Client.MaxPoll
 	}
 
-	dialer := websocket.DefaultDialer
-	dialer.TLSClientConfig = self.transport.TLSClientConfig
+	tls_config, err := networking.GetTlsConfig(self.config_obj.Client, "")
+	if err != nil {
+		return nil, err
+	}
+
+	// Need to create a new dialer with a new tlsConfig so it is not
+	// shared with http dialer.
+	// See https://github.com/gorilla/websocket/issues/601
+	dialer := websocket.Dialer{
+		Proxy:           GetProxy(),
+		TLSClientConfig: tls_config,
+	}
 
 	key := req.URL.String()
-
 	ws_, _, err := dialer.Dial(key, nil)
 	if err != nil {
 		return nil, err
@@ -231,6 +251,7 @@ func (self *HTTPClientWithWebSocketTransport) removeConnection(req *http.Request
 	if pres {
 		conn.Close()
 		delete(self.ws_connections, key)
+		currentWsConnections.With(prometheus.Labels{"url": key}).Dec()
 	}
 }
 
@@ -249,6 +270,7 @@ func (self *HTTPClientWithWebSocketTransport) getConnection(
 		}
 
 		self.ws_connections[key] = conn
+		currentWsConnections.With(prometheus.Labels{"url": key}).Inc()
 	}
 	return conn, nil
 }

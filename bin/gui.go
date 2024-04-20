@@ -52,7 +52,7 @@ func generateGUIConfig(datastore_directory, server_config_path, client_config_pa
 	config_obj.Frontend.DoNotCompressArtifacts = true
 
 	// Client configuration.
-	config_obj.Client.ServerUrls = []string{"https://localhost:8000/"}
+	config_obj.Client.ServerUrls = []string{"wss://localhost:8000/"}
 	config_obj.Client.UseSelfSignedSsl = true
 
 	write_back := filepath.Join(datastore_directory, "Velociraptor.writeback.%NONCE%.yaml")

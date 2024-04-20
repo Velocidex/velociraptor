@@ -43,7 +43,7 @@ class _UserSettings extends React.Component {
                 // If the URL does not specify an org, then we need to
                 // set it to the default org from the traits.
                 if (_.isEmpty(params.org_id)) {
-                    window.history.pushState({}, "", api.href("/app", {}));
+                    window.history.pushState({}, "", api.href("/app/index.html", {}));
                     this.props.history.replace("/welcome");
                 }
             }

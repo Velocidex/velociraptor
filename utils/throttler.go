@@ -16,6 +16,13 @@ func (self *Throttler) Ready() bool {
 	}
 }
 
+func (self *Throttler) Wait() {
+	select {
+	case <-self.ticker:
+		return
+	}
+}
+
 func (self *Throttler) Close() {
 	close(self.done)
 }
