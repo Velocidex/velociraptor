@@ -67,7 +67,7 @@ func RegisterPlugin(plugin vfilter.PluginGeneratorInterface) {
 	name := plugin.Info(nil, nil).Name
 	_, pres := exportedPlugins[name]
 	if pres {
-		panic("Multiple plugins defined")
+		panic(fmt.Sprintf("Multiple plugins defined: %v", name))
 	}
 
 	exportedPlugins[name] = plugin
