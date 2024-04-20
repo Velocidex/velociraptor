@@ -446,7 +446,7 @@ export default class VeloForm extends React.Component {
                   </Form.Label>
                   <Col sm="8">
                     <Select
-                      placeholder="Choose one or more items"
+                      placeholder={T("Choose one or more items")}
                       className="velo"
                       classNamePrefix="velo"
                       closeMenuOnSelect={false}
