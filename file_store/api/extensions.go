@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -26,8 +27,9 @@ func GetExtensionForFilestore(path_spec FSPathSpec) string {
 
 	switch t {
 	case PATH_TYPE_DATASTORE_PROTO, PATH_TYPE_DATASTORE_JSON:
-		panic("datastore path used for filestore for " +
-			path_spec.AsClientPath())
+		panic(fmt.Sprintf(
+			"datastore path used for filestore for %v ",
+			path_spec.Components))
 
 	case PATH_TYPE_FILESTORE_JSON:
 		return ".json"

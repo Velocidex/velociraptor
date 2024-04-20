@@ -1,0 +1,54 @@
+{
+ "Stacked by Bar": [
+  {
+   "value": "Bar9.txt",
+   "idx": 0,
+   "c": 5
+  },
+  {
+   "value": "Bar8.txt",
+   "idx": 5,
+   "c": 5
+  },
+  {
+   "value": "Bar7.txt",
+   "idx": 10,
+   "c": 5
+  },
+  {
+   "value": "Bar6.txt",
+   "idx": 15,
+   "c": 5
+  },
+  {
+   "value": "Bar5.txt",
+   "idx": 20,
+   "c": 5
+  },
+  {
+   "value": "Bar4.txt",
+   "idx": 25,
+   "c": 5
+  },
+  {
+   "value": "Bar3.txt",
+   "idx": 30,
+   "c": 5
+  },
+  {
+   "value": "Bar2.txt",
+   "idx": 35,
+   "c": 5
+  },
+  {
+   "value": "Bar1.txt",
+   "idx": 40,
+   "c": 5
+  },
+  {
+   "value": "Bar0.txt",
+   "idx": 45,
+   "c": 5
+  }
+ ]
+}
