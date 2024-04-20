@@ -122,7 +122,6 @@ export default class DictEditor extends Component {
                       // old key and store the new value.
                       if (column.dataField == "key" &&
                           oldValue !== row.key) {
-                          console.log(row, oldValue, newValue);
                           this.setMetadata(row.key, row.value, oldValue);
                           return;
                       }

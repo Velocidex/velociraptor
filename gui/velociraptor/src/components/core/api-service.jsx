@@ -289,7 +289,6 @@ const src_of = function (url) {
     return window.base_path + url;
 };
 
-
 const error = function(msg) {
     _.each(hooks, h=>h(msg));
 };

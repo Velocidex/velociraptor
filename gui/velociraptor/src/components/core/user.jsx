@@ -3,6 +3,8 @@ import React from 'react';
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 import PropTypes from 'prop-types';
+import qs from "qs";
+import { withRouter }  from "react-router-dom";
 
 const UserConfig = React.createContext({
     traits: {},
@@ -12,7 +14,7 @@ const UserConfig = React.createContext({
 const POLL_TIME = 5000;
 
 // A component which maintains the user settings
-export class UserSettings extends React.Component {
+class _UserSettings extends React.Component {
     static propTypes = {
         children: PropTypes.node,
     }
@@ -29,7 +31,21 @@ export class UserSettings extends React.Component {
             }
 
             if (traits.org) {
-                window.globals.OrgId = traits.org;
+                // Get the org id from the url if possible. If it is
+                // not in the URL, get the default from the user
+                // traits.
+                let search = window.location.search.replace('?', '');
+                let params = qs.parse(search);
+                let org_id = params.org_id || traits.org;
+
+                window.globals.OrgId = org_id;
+
+                // If the URL does not specify an org, then we need to
+                // set it to the default org from the traits.
+                if (_.isEmpty(params.org_id)) {
+                    window.history.pushState({}, "", api.href("/app", {}));
+                    this.props.history.replace("/welcome");
+                }
             }
 
             if (traits.auth_redirect_template) {
@@ -82,5 +98,7 @@ export class UserSettings extends React.Component {
         );
     }
 };
+
+export const UserSettings = withRouter(_UserSettings);
 
 export default UserConfig;
