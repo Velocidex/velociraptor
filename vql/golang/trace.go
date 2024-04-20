@@ -11,13 +11,13 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"runtime/pprof"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/prometheus/client_golang/prometheus"
 	"www.velocidex.com/golang/velociraptor/actions"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -105,15 +105,28 @@ func getMetrics() ([]*ordereddict.Dict, error) {
 
 	for _, metric := range gathering {
 		for _, m := range metric.Metric {
-			var value interface{}
+			item := ordereddict.NewDict().
+				Set("name", *metric.Name).
+				Set("help", *metric.Help)
+
 			if m.Gauge != nil {
-				value = int64(*m.Gauge.Value)
+				item.Set("value", int64(*m.Gauge.Value))
+				if len(m.Label) > 0 {
+					labels := ordereddict.NewDict()
+					for _, l := range m.Label {
+						if l.Name != nil && l.Value != nil {
+							labels.Set(*l.Name, l.Value)
+						}
+					}
+					item.Set("label", labels)
+				}
+
 			} else if m.Counter != nil {
-				value = int64(*m.Counter.Value)
+				item.Set("value", int64(*m.Counter.Value))
 			} else if m.Histogram != nil {
 				// Histograms are buckets so we send a dict.
 				result := ordereddict.NewDict()
-				value = result
+				item.Set("value", result)
 
 				label := "_"
 				for _, l := range m.Label {
@@ -134,7 +147,7 @@ func getMetrics() ([]*ordereddict.Dict, error) {
 				result := ordereddict.NewDict().
 					Set(fmt.Sprintf("%v_sample_count", *metric.Name),
 						m.Summary.SampleCount)
-				value = result
+				item.Set("value", result)
 
 				for _, b := range m.Summary.Quantile {
 					name := fmt.Sprintf("%v_%v", *metric.Name, *b.Quantile)
@@ -142,17 +155,14 @@ func getMetrics() ([]*ordereddict.Dict, error) {
 				}
 
 			} else if m.Untyped != nil {
-				value = int64(*m.Untyped.Value)
+				item.Set("value", int64(*m.Untyped.Value))
 
 			} else {
 				// Unknown type just send the raw metric
-				value = m
+				item.Set("value", m)
 			}
 
-			result = append(result, ordereddict.NewDict().
-				Set("name", *metric.Name).
-				Set("help", *metric.Help).
-				Set("value", value))
+			result = append(result, item)
 		}
 	}
 
