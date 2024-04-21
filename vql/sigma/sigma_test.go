@@ -3,6 +3,7 @@ package sigma
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"log"
 	"os"
 	"sort"
@@ -50,6 +51,7 @@ type testCase struct {
 	fieldmappings     *ordereddict.Dict
 	rows              []*ordereddict.Dict
 	log_regex         string
+	debug             bool
 }
 
 var (
@@ -337,13 +339,20 @@ detection:
 `,
 			fieldmappings: ordereddict.NewDict().
 				Set("Foo", "x=>x.Foo"),
+			debug: true,
 			rows: []*ordereddict.Dict{
 				ordereddict.NewDict().
-					Set("Foo", "amVqZmplZmhlbGxvcmZyaXVmaXJ0ZXN0a2RrZGc="),
+					Set("Match", "Should match selection1 and selection2 contains single element").
+					Set("Decoded", "jejfjefhellorfriufirtestkdkdg").
+					Set("Foo", base64.StdEncoding.EncodeToString([]byte("jejfjefhellorfriufirtestkdkdg"))),
 				ordereddict.NewDict().
-					Set("Foo", "a2drcmdyZ3ZlbG9lZmplZmU="),
+					Set("Match", "Should match selection4 with contains one of members").
+					Set("Decoded", "kgkrgrgveloefjefe").
+					Set("Foo", base64.StdEncoding.EncodeToString([]byte("kgkrgrgveloefjefe"))),
 				ordereddict.NewDict().
-					Set("Foo", "a2drcmNpcmFwdG9yZ3JndmVsb2VmamVmZQ=="),
+					Set("Match", "Should match selection3 with all").
+					Set("Decoded", "kgkrciraptorgrgveloefjefe").
+					Set("Foo", base64.StdEncoding.EncodeToString([]byte("kgkrciraptorgrgveloefjefe"))),
 			},
 		},
 	}
@@ -379,6 +388,10 @@ func (self *SigmaTestSuite) TestSigma() {
 				},
 			}).
 			Set("field_mapping", test_case.fieldmappings)
+
+		if test_case.debug {
+			args.Set("debug", true)
+		}
 
 		if test_case.default_details != "" {
 			args.Set("default_details", test_case.default_details)
