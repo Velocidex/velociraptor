@@ -147,6 +147,11 @@ export default class NotebookCellRenderer extends React.Component {
         selected_cell_id: PropTypes.string,
         setSelectedCellId: PropTypes.func,
 
+        // Manage notebook lock state. The notebook tries to avoid
+        // confusing by locking updates while any cell is calculating.
+        notebookLocked: PropTypes.number,
+        incNotebookLocked: PropTypes.func,
+
         upCell: PropTypes.func,
         downCell: PropTypes.func,
         deleteCell: PropTypes.func,
@@ -254,13 +259,18 @@ export default class NotebookCellRenderer extends React.Component {
         this.source.cancel();
         this.source = CancelToken.source();
 
-        let cell_version = (this.props.cell_metadata && this.props.cell_metadata.current_version);
+        let cell_version = this.props.cell_metadata &&
+            this.props.cell_metadata.current_version;
+
+        this.props.incNotebookLocked(1);
 
         api.get("v1/GetNotebookCell", {
             notebook_id: this.props.notebook_id,
             cell_id: this.props.cell_metadata.cell_id,
             version: cell_version,
         }, this.source.token).then((response) => {
+            this.props.incNotebookLocked(-1);
+
             if (response.cancel) {
                 return;
             }
@@ -271,7 +281,17 @@ export default class NotebookCellRenderer extends React.Component {
                                input: cell.input,
                                loading: false});
             }
-        });
+
+
+        }).catch((e) => {
+            this.props.incNotebookLocked(-1);
+
+            let message = e.response && e.response.data &&
+                e.response.data.message;
+            let cell = Object.assign({}, this.props.cell_metadata || {});
+            cell.messages = [message];
+            this.setState({loading: false, cell: cell});
+        });;
     };
 
     setEditing = (edit) => {
@@ -281,10 +301,10 @@ export default class NotebookCellRenderer extends React.Component {
     getPlaceholder = () => {
         let type = this.ace_type(this.state.cell && this.state.cell.type);
         if (type === "vql") {
-            return "Type VQL to evaluate on the server (press ? for help)";
+            return T("Type VQL to evaluate on the server (press ? for help)");
         };
         if (type === "markdown") {
-            return "Enter markdown text to render in the notebook";
+            return T("Enter markdown text to render in the notebook");
         };
         return type;
     }
@@ -337,6 +357,9 @@ export default class NotebookCellRenderer extends React.Component {
         this.update_source.cancel();
         this.update_source = CancelToken.source();
 
+        // Lock the notebook until we refresh the notebook.
+        this.props.incNotebookLocked(1);
+
         api.post('v1/UpdateNotebookCell', {
             notebook_id: this.props.notebook_id,
             cell_id: this.state.cell.cell_id,
@@ -345,6 +368,8 @@ export default class NotebookCellRenderer extends React.Component {
             currently_editing: false,
             input: this.state.cell.input,
         }, this.update_source.token).then( (response) => {
+            this.props.incNotebookLocked(-1);
+
             if (response.cancel) {
                 this.setState({currently_editing: false});
                 return;
@@ -357,9 +382,17 @@ export default class NotebookCellRenderer extends React.Component {
                 keep_editing = true;
             }
 
-            this.setState({cell: response.data,
-                           loading: false,
-                           currently_editing: keep_editing});
+            let cell = response.data;
+            if (cell.cell_id === this.props.cell_metadata.cell_id) {
+                this.setState({cell: response.data,
+                               loading: false,
+                               currently_editing: keep_editing});
+            } else {
+                this.fetchCellContents();
+            }
+
+        }).catch(e=>{
+            this.props.incNotebookLocked(-1);
         });
 
     }
@@ -397,14 +430,18 @@ export default class NotebookCellRenderer extends React.Component {
         this.update_source.cancel();
         this.update_source = CancelToken.source();
 
+        this.props.incNotebookLocked(1);
+
         api.post('v1/UpdateNotebookCell', {
             notebook_id: this.props.notebook_id,
             cell_id: cell.cell_id,
-            type: cell.type || "Markdown",
+            type: cell.type || T("Markdown"),
             env: this.state.cell.env,
             currently_editing: false,
             input: cell.input,
         }, this.update_source.token).then( (response) => {
+            this.props.incNotebookLocked(-1);
+
             if (response.cancel) {
                 this.setState({currently_editing: false});
                 return;
@@ -416,11 +453,23 @@ export default class NotebookCellRenderer extends React.Component {
                 api.error(response.data.error);
                 keep_editing = true;
             }
-            this.setState({cell: response.data,
-                           currently_editing: keep_editing});
 
-            if(this.state.ace && this.state.ace.setValue && response.data.input) {
-                this.state.ace.setValue(response.data.input);
+            let cell = response.data;
+            if (cell.cell_id === this.props.cell_metadata.cell_id) {
+                this.setState({cell: response.data,
+                               loading: false,
+                               currently_editing: keep_editing});
+
+                // Update the ACL edit box if needed.
+                if (this.state.ace &&
+                    this.state.ace.setValue &&
+                    response.data.input) {
+
+                    this.state.ace.setValue(response.data.input);
+                }
+
+            } else {
+                this.fetchCellContents();
             }
         });
     };
@@ -703,6 +752,7 @@ export default class NotebookCellRenderer extends React.Component {
               <Button data-tooltip={T("Up Cell")}
                       data-position="right"
                       className="btn-tooltip"
+                      disabled={this.props.notebookLocked}
                       onClick={() => {
                           this.props.upCell(this.state.cell.cell_id);
                       }}
@@ -713,6 +763,7 @@ export default class NotebookCellRenderer extends React.Component {
               <Button data-tooltip={T("Down Cell")}
                       data-position="right"
                       className="btn-tooltip"
+                      disabled={this.props.notebookLocked}
                       onClick={() => {
                           this.props.downCell(this.state.cell.cell_id);
                       }}

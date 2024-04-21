@@ -41,7 +41,8 @@ func (self *progressReporter) Report(message string) {
                    params='{"notebook_id":"%s","cell_id":"%s","table_id":1,"cell_version": "%s", "message": "%s"}' />
 </div>
 `,
-		message, duration,
+		html.EscapeString(message),
+		html.EscapeString(duration.String()),
 		html.EscapeString(self.notebook_id),
 		html.EscapeString(self.notebook_cell.CellId),
 		html.EscapeString(self.version),

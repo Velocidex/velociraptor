@@ -102,22 +102,26 @@ func (self *MergeSortGrouper) groupWithSorting(
 		defer close(row_chan)
 
 		for {
-			_, row, bin_idx, _, err := actor.GetNextRow(ctx, scope)
+			_, row, bin_idx, new_scope, err := actor.GetNextRow(ctx, scope)
 			if err != nil {
 				break
 			}
-			materialized_row := actor.MaterializeRow(ctx, row, scope).
+
+			materialized_row := actor.MaterializeRow(ctx, row, new_scope).
 				Set(GROUPBY_COLUMN, bin_idx)
 
-			scope.ChargeOp()
+			new_scope.ChargeOp()
 
 			select {
 			case <-ctx.Done():
+				new_scope.Close()
 				return
 
 			case row_chan <- materialized_row:
 			}
+
 			groupByMergeSortCount.Inc()
+			new_scope.Close()
 		}
 	}()
 
@@ -218,11 +222,13 @@ func (self *MergeSortGrouper) Group(
 			// Bins are too large we switch to the slower sort method
 			// which is memory constrained.
 			if self.bins.Len() > int(max_in_memory_group_by) {
-				scope.Log("GROUP BY: %v bins exceeded, Switching to slower file based",
+				scope.Log("GROUP BY: %v bins exceeded, Switching to slower file based operation",
 					self.bins.Len())
-				self.groupWithSorting(ctx, scope, output_chan, actor)
+				self.groupWithSorting(ctx, new_scope, output_chan, actor)
+				new_scope.Close()
 				return
 			}
+			new_scope.Close()
 		}
 
 		self.emitBins(ctx, output_chan)

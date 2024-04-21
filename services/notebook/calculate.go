@@ -74,6 +74,7 @@ func (self *NotebookManager) UpdateNotebookCell(
 		Timestamp:         utils.GetTime().Now().Unix(),
 		CurrentlyEditing:  in.CurrentlyEditing,
 		Calculating:       true,
+		Output:            "Loading",
 		Env:               in.Env,
 		CurrentVersion:    in.Version,
 		AvailableVersions: in.AvailableVersions,
