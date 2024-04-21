@@ -662,6 +662,7 @@ body.midnight {
 
 .midnight .card-header {
   font-weight: 700;
+  color: #FFD500;
   border-bottom: 3px solid var(--color-accent-50);
 }
 
@@ -818,6 +819,14 @@ body.midnight {
   font-weight: 500 !important;
 }
 
+.midnight .ace_placeholder {
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-large);
+  letter-spacing: 0.4px;
+  color: var(--color-foreground) !important;
+  font-weight: 500 !important;
+}
+
 .midnight .velo__multi-value {
   border: 1px solid var(--color-accent-100);
   border-radius: 0;
@@ -939,7 +948,7 @@ body.midnight {
   background: var(--color-table-row-hover);
 }
 
-.midnight .artifact-search-table.selectable.container tr.row-selected,
+.midnight .artifact-search-table.selectable.container tr.row-selected .link-button,
 .midnight .artifact-search-table.selectable.container tr.row-selected:hover,
 .midnight .artifact-search-table.selectable.container tr.row_selected > td {
   background: var(--color-table-row-selected);
@@ -1021,8 +1030,62 @@ body.midnight {
 }
 
 /* react timelines */
+.midnight .react-calendar-timeline .rct-sidebar,
+.midnight .react-calendar-timeline .rct-dateHeader {
+  color: var(--color-foreground);
+  font-size: var(--font-size-small);
+}
+
 .midnight .react-calendar-timeline .rct-sidebar {
-    color: var(--color-foreground);
+  border-right: 1px solid var(--color-foreground-dimmed);
+}
+
+.midnight .react-calendar-timeline .rct-sidebar.rct-sidebar-right {
+  border-right: 0;
+  border-left: 1px solid var(--color-foreground-dimmed);
+}
+
+.midnight .react-calendar-timeline .rct-sidebar .rct-sidebar-row {
+  border-bottom: 1px solid var(--color-foreground-dimmed);
+}
+
+.midnight .react-calendar-timeline .rct-vertical-lines .rct-vl {
+  position: absolute;
+  border-left: 1px solid var(--color-foreground-dimmed);
+}
+
+.midnight .react-calendar-timeline .rct-horizontal-lines .rct-hl-even,
+.midnight .react-calendar-timeline .rct-horizontal-lines .rct-hl-odd {
+  border-bottom: 1px solid var(--color-foreground-dimmed);
+}
+
+.midnight .react-calendar-timeline .rct-dateHeader {
+  border-left: 2px solid var(--color-foreground-dimmed);
+  border-bottom: 1px solid var(--color-foreground-dimmed);
+}
+
+.midnight .react-calendar-timeline .rct-dateHeader-primary {
+  background-color: initial;
+  border-left: 1px solid var(--color-foreground-dimmed);
+  border-right: 1px solid var(--color-foreground-dimmed);
+  color: var(--color-foreground);
+}
+
+.midnight .react-calendar-timeline .rct-header-root {
+  border-bottom: 1px solid var(--color-foreground-dimmed);
+}
+
+.midnight .react-calendar-timeline .rct-calendar-header {
+  border: 1px solid var(--color-foreground-dimmed);
+}
+
+.midnight .react-calendar-timeline .timeline-marker {
+  color: #FFD500;
+}
+
+.midnight .react-calendar-timeline .rct-item * {
+  border: none;
+  background: #FFD500;
 }
 
 /* file tree */
@@ -1154,8 +1217,9 @@ body.midnight {
 }
 
 /* Shell output */
-.midnight .notebook-output pre {
-  filter: invert(1);
+.midnight .notebook-output pre,
+.midnight .notebook-input pre {
+  background-color: unset;
   border-color: var(--color-btn-border);
   font-size: inherit;
 }
@@ -1278,19 +1342,29 @@ body.midnight {
 
 
 .midnight .json-index {
-    color: #817c36;
+    color: #d90429;
 }
 
 .midnight .json-key {
-    color: #dcb8af;
+    color: #ec7505;
 }
 
 .midnight .json-string {
     padding-left: 5px;
-    color: #33b0e3;
+    color: #e89005;
 }
 
 .midnight .json-number {
     padding-left: 5px;
-    color: #be6729;
+    color: #FFD500;
+}
+
+.midnight .json-null {
+  padding-left: 5px;
+  color: #6a040f;
+}
+
+.midnight .json-boolean {
+  padding-left: 5px;
+  color: #FFD500;
 }
