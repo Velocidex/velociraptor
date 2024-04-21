@@ -446,6 +446,9 @@ export default class VeloForm extends React.Component {
                   </Form.Label>
                   <Col sm="8">
                     <Select
+                      placeholder="Choose one or more items"
+                      className="velo"
+                      classNamePrefix="velo"
                       closeMenuOnSelect={false}
                       isMulti
                       defaultValue={defaults}
@@ -454,7 +457,7 @@ export default class VeloForm extends React.Component {
                           this.props.setValue(JSON.stringify(data));
                       }}
                       options={options}
-                    />
+                      />
                   </Col>
                 </Form.Group>
             );
