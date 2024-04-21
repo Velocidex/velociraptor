@@ -195,10 +195,6 @@ func (self *ApiServer) UpdateNotebook(
 		return nil, InvalidStatus("Notebook is not shared with user.")
 	}
 
-	if old_notebook.ModifiedTime != in.ModifiedTime {
-		return nil, InvalidStatus("Edit clash detected.")
-	}
-
 	// When updating an existing notebook only certain fields may
 	// be changed by the user - definitely not the creator, created time or notebookId.
 	in.ModifiedTime = time.Now().Unix()

@@ -7,19 +7,19 @@ description: |
 
 tools:
   - name: VelociraptorWindows
-    url: https://github.com/Velocidex/velociraptor/releases/download/v0.72/velociraptor-v0.72-rc2-windows-amd64.exe
+    url: https://github.com/Velocidex/velociraptor/releases/download/v0.72/velociraptor-v0.72.0-windows-amd64.exe
     serve_locally: true
-    version: 0.72-rc2
+    version: 0.72.0
 
   - name: VelociraptorWindows_x86
-    url: https://github.com/Velocidex/velociraptor/releases/download/v0.72/velociraptor-v0.72-rc2-windows-386.exe
+    url: https://github.com/Velocidex/velociraptor/releases/download/v0.72/velociraptor-v0.72.0-windows-386.exe
     serve_locally: true
-    version: 0.72-rc2
+    version: 0.72.0
 
   - name: VelociraptorLinux
-    url: https://github.com/Velocidex/velociraptor/releases/download/v0.72/velociraptor-v0.72-rc2-linux-amd64-musl
+    url: https://github.com/Velocidex/velociraptor/releases/download/v0.72/velociraptor-v0.72.0-linux-amd64-musl
     serve_locally: true
-    version: 0.72-rc2
+    version: 0.72.0
 
   # On MacOS we can not embed the config in the binary so we use a
   # shell script stub instead. See
@@ -31,11 +31,11 @@ tools:
     serve_locally: true
 
   - name: VelociraptorWindowsMSI
-    url: https://github.com/Velocidex/velociraptor/releases/download/v0.72/velociraptor-v0.72-rc2-windows-amd64.msi
+    url: https://github.com/Velocidex/velociraptor/releases/download/v0.72/velociraptor-v0.72.0-windows-amd64.msi
     serve_locally: true
-    version: 0.72-rc2
+    version: 0.72.0
 
   - name: VelociraptorWindows_x86MSI
-    url: https://github.com/Velocidex/velociraptor/releases/download/v0.72/velociraptor-v0.72-rc2-windows-386.msi
+    url: https://github.com/Velocidex/velociraptor/releases/download/v0.72/velociraptor-v0.72.0-windows-386.msi
     serve_locally: true
-    version: 0.72-rc2
+    version: 0.72.0

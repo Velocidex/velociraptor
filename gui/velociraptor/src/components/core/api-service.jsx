@@ -53,8 +53,24 @@ function retryDelay(retryNumber = 0) {
 }
 
 function isRetryableError(error) {
-    return error.code !== 'ECONNABORTED' && (!error.response || (
-        error.response.status >= 500 && error.response.status <= 599));
+    if (error.code === 'ECONNABORTED') {
+        return false;
+    }
+
+    if (!error.response) {
+        return true;
+    }
+
+    // This represents a real server error no need to retry it.
+    if (error.response.data && error.response.data.code) {
+        return false;
+    }
+
+    if (error.response.status >= 500 && error.response.status <= 599) {
+        return true;
+    }
+
+    return false;
 }
 
 function isNetworkError(error) {

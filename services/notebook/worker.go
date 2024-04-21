@@ -62,6 +62,7 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 		Timestamp:         utils.GetTime().Now().Unix(),
 		CurrentlyEditing:  in.CurrentlyEditing,
 		Calculating:       true,
+		Output:            "Loading ...",
 		Env:               in.Env,
 		CurrentVersion:    in.Version,
 		AvailableVersions: in.AvailableVersions,
@@ -69,11 +70,6 @@ func (self *NotebookWorker) ProcessUpdateRequest(
 
 	notebook_path_manager := paths.NewNotebookPathManager(
 		notebook_metadata.NotebookId)
-
-	err := store.SetNotebook(notebook_metadata)
-	if err != nil {
-		return nil, err
-	}
 
 	// The query will run in a sub context of the main context to
 	// allow our notification to cancel it.  NOTE: The

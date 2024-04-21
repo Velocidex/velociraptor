@@ -19,6 +19,13 @@ export default class NotebookRenderer extends React.Component {
     state = {
         selected_cell_id: "",
         loading: false,
+
+        // A locked notebook can not be edited. Each time a cell is in
+        // flight, we increment the lock count until the notebook is in
+        // a valid state, then the lock is decremented. This ensures
+        // notebooks can only be edited is places where the server
+        // acknowledges the current state.
+        locked: 0,
     }
 
     setSelectedCellId = (cell_id) => {
@@ -35,7 +42,8 @@ export default class NotebookRenderer extends React.Component {
     }
 
     upCell = (cell_id) => {
-        let cell_metadata = this.props.notebook.cell_metadata;
+        let notebook = Object.assign({}, this.props.notebook);
+        let cell_metadata = [...notebook.cell_metadata];
         let changed = false;
 
         let new_cells = [];
@@ -51,22 +59,24 @@ export default class NotebookRenderer extends React.Component {
         }
 
         if (changed) {
-            this.props.notebook.cell_metadata = new_cells;
+            notebook.cell_metadata = new_cells;
             this.setState({loading: true});
-            api.post('v1/UpdateNotebook',
-                     this.props.notebook, this.source.token).then(response=>{
+            api.post('v1/UpdateNotebook', notebook,
+                     this.source.token).then(response=>{
                          if (response.cancel) return;
                          this.props.fetchNotebooks();
                          this.setState({loading: false});
-                     }, (response) => {
-                         console.log("Error " + response.data);
+                     }).catch(e=> {
+                         this.setState({loading: false});
+                         this.props.fetchNotebooks();
                      });
         }
     };
 
     deleteCell = (cell_id) => {
-        var changed = false;
-        var cell_metadata = this.props.notebook.cell_metadata;
+        let changed = false;
+        let notebook = Object.assign({}, this.props.notebook);
+        let cell_metadata = [...notebook.cell_metadata];
 
         // Dont allow us to remove all cells.
         if (cell_metadata.length <= 1) {
@@ -83,24 +93,25 @@ export default class NotebookRenderer extends React.Component {
         }
 
         if (changed) {
-            this.props.notebook.cell_metadata = new_cells;
+            notebook.cell_metadata = new_cells;
             this.setState({loading: true});
-            api.post('v1/UpdateNotebook',
-                     this.props.notebook,
+            api.post('v1/UpdateNotebook', notebook,
                      this.source.token).then(response=>{
                          if (response.cancel) return;
 
                          this.props.fetchNotebooks();
                          this.setState({loading: false});
-                     }, function failure(response) {
-                         console.log("Error " + response.data);
+                     }).catch(e=>{
+                         this.setState({loading: false});
+                         this.props.fetchNotebooks();
                      });
         }
     };
 
     downCell = (cell_id) => {
         var changed = false;
-        var cell_metadata = this.props.notebook.cell_metadata;
+        let notebook = Object.assign({}, this.props.notebook);
+        var cell_metadata = [...notebook.cell_metadata];
 
         var new_cells = [];
         for (var i=0; i<cell_metadata.length; i++) {
@@ -118,16 +129,16 @@ export default class NotebookRenderer extends React.Component {
         }
 
         if (changed) {
-            this.props.notebook.cell_metadata = new_cells;
+            notebook.cell_metadata = new_cells;
             this.setState({loading: true});
-            api.post('v1/UpdateNotebook',
-                     this.props.notebook,
+            api.post('v1/UpdateNotebook', notebook,
                      this.source.token).then(response=>{
                          if (response.cancel) return;
                          this.props.fetchNotebooks();
                          this.setState({loading: false});
-                     }, function failure(response) {
-                         console.log("Error " + response.data);
+                     }).catch(e=>{
+                         this.setState({loading: false});
+                         this.props.fetchNotebooks();
                      });
         }
     };
@@ -182,6 +193,13 @@ export default class NotebookRenderer extends React.Component {
                            downCell={this.downCell}
                            deleteCell={this.deleteCell}
                            addCell={this.addCell}
+                           notebookLocked={this.state.locked}
+                           incNotebookLocked={x=>this.setState(
+                               prevState=>{
+                                   // Atomic version of setState
+                                   // https://www.digitalocean.com/community/tutorials/react-getting-atomic-updates-with-setstate
+                                   return {locked: x+prevState.locked};
+                               })}
                       />;
               })}
             </>

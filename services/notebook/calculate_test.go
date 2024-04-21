@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/notebook"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
@@ -42,6 +43,9 @@ func (self *NotebookManagerTestSuite) SetupTest() {
 	self.ConfigObj.Defaults.NotebookVersions = 3
 
 	self.LoadArtifactsIntoConfig(mock_definitions)
+
+	// Stop automatic syncing
+	notebook.DO_NOT_SYNC_NOTEBOOKS_FOR_TEST = true
 
 	self.TestSuite.SetupTest()
 

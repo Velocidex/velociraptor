@@ -20,6 +20,8 @@ import (
 
 var (
 	IGNORE_REPORT chan *ordereddict.Dict = nil
+
+	DO_NOT_SYNC_NOTEBOOKS_FOR_TEST = true
 )
 
 type NotebookStore interface {
@@ -72,6 +74,11 @@ func NewNotebookStore(
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
+
+		if DO_NOT_SYNC_NOTEBOOKS_FOR_TEST {
+			return
+		}
+
 		for {
 			select {
 			case <-ctx.Done():
@@ -87,8 +94,15 @@ func NewNotebookStore(
 
 func (self *NotebookStoreImpl) SetNotebook(in *api_proto.NotebookMetadata) error {
 	self.mu.Lock()
-	self.global_notebooks[in.NotebookId] = in
-	self.mu.Unlock()
+	defer self.mu.Unlock()
+
+	return self._SetNotebook(in)
+}
+
+func (self *NotebookStoreImpl) _SetNotebook(in *api_proto.NotebookMetadata) error {
+	if isGlobalNotebooks(in.NotebookId) {
+		self.global_notebooks[in.NotebookId] = in
+	}
 
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
@@ -103,6 +117,13 @@ func (self *NotebookStoreImpl) SetNotebook(in *api_proto.NotebookMetadata) error
 }
 
 func (self *NotebookStoreImpl) GetNotebook(notebook_id string) (*api_proto.NotebookMetadata, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self._GetNotebook(notebook_id)
+}
+
+func (self *NotebookStoreImpl) _GetNotebook(notebook_id string) (*api_proto.NotebookMetadata, error) {
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return nil, err
@@ -113,6 +134,7 @@ func (self *NotebookStoreImpl) GetNotebook(notebook_id string) (*api_proto.Noteb
 	err = db.GetSubject(self.config_obj, notebook_path_manager.Path(),
 		notebook)
 
+	// Deduplicate cells
 	cell_metadata := ordereddict.NewDict()
 	for _, cell := range notebook.CellMetadata {
 		_, pres := cell_metadata.Get(cell.CellId)
@@ -133,8 +155,13 @@ func (self *NotebookStoreImpl) GetNotebook(notebook_id string) (*api_proto.Noteb
 	return notebook, err
 }
 
+// Update a notebook cell atomically.
 func (self *NotebookStoreImpl) SetNotebookCell(
 	notebook_id string, in *api_proto.NotebookCell) error {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
@@ -148,7 +175,7 @@ func (self *NotebookStoreImpl) SetNotebookCell(
 	}
 
 	// Open the notebook and update the cell's timestamp.
-	notebook, err := self.GetNotebook(notebook_id)
+	notebook, err := self._GetNotebook(notebook_id)
 	if err != nil {
 		return err
 	}
@@ -171,16 +198,20 @@ func (self *NotebookStoreImpl) SetNotebookCell(
 	if !found {
 		cell_md := proto.Clone(in).(*api_proto.NotebookCell)
 		cell_md.Timestamp = now
-		new_cell_md = append(new_cell_md, in)
+		new_cell_md = append(new_cell_md, cell_md)
 	}
 
 	notebook.CellMetadata = new_cell_md
-	return self.SetNotebook(notebook)
+	return self._SetNotebook(notebook)
 }
 
 func (self *NotebookStoreImpl) RemoveNotebookCell(
 	ctx context.Context, config_obj *config_proto.Config,
 	notebook_id, cell_id, version string, output_chan chan *ordereddict.Dict) error {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
@@ -241,7 +272,7 @@ func (self *NotebookStoreImpl) RemoveNotebookCell(
 	}
 
 	// Open the notebook and remove the cell
-	notebook, err := self.GetNotebook(notebook_id)
+	notebook, err := self._GetNotebook(notebook_id)
 	if err != nil {
 		return err
 	}
@@ -265,7 +296,7 @@ func (self *NotebookStoreImpl) RemoveNotebookCell(
 	}
 
 	notebook.CellMetadata = new_cell_md
-	return self.SetNotebook(notebook)
+	return self._SetNotebook(notebook)
 }
 
 func (self *NotebookStoreImpl) GetNotebookCell(
@@ -373,7 +404,8 @@ func (self *NotebookStoreImpl) syncAllNotebooks() error {
 		}
 
 		notebook := res.Message().(*api_proto.NotebookMetadata)
-		if notebook.NotebookId == "" {
+		if notebook.NotebookId == "" ||
+			!isGlobalNotebooks(notebook.NotebookId) {
 			continue
 		}
 		self.global_notebooks[notebook.NotebookId] = notebook
