@@ -9,78 +9,81 @@ import _ from 'lodash';
 
 import T from '../i8n/i8n.jsx';
 
-let gcompletions=[
+let gcompletions = ()=>[
     {name: "\\s",
      trigger: "\\",
-     description: "Match all spaces"},
+     description: T("Match all spaces")},
+
     {name: "\\w",
      trigger: "\\",
-     description: "Match all words"},
+     description: T("Match all words")},
+
     {name: "\\S",
      trigger: "\\",
-     description: "Match all non space"},
+     description: T("Match all non space")},
+
     {name: "\\\\",
      trigger: "\\",
      value: "\\\\\\\\",
-     description: "Plain backslash"},
+     description: T("Plain backslash")},
 
     {name: "|",
      trigger: "|",
-     description: "Alternatives"},
+     description: T("Alternatives")},
 
     {name: "[]",
      trigger: "[",
      cursor_offset: 1,
-     description: "Character class (Matches any character inside the [])"},
+     description: T("Character class (Matches any character inside the [])")},
 
     {name: "[^]",
      trigger: "[",
      cursor_offset: 2,
-     description: "Negated character class (Matches any character not in [])"},
+     description: T("Negated character class (Matches any character not in [])")},
 
     {name: "[0-9A-Z]",
      trigger: "[",
-     description: "Letters and numbers"},
+     description: T("Letters and numbers")},
 
     {name: "()",
      value: "()",
      trigger: "(",
      cursor_offset: 1,
-     description: "Capture groups"},
+     description: T("Capture groups")},
 
     {name: "(Alternate...|Alternate...)",
      value: "(|)",
      trigger: "(",
      cursor_offset: 1,
-     description: "Capture with alternates"},
+     description: T("Capture with alternates")},
 
     {name: "(?P<Name>...)",
      value: "(?P<>)",
      trigger: "(",
      cursor_offset: 4,
-     description: "Named capture group"},
+     description: T("Named capture group")},
 
     {name: "*?",
      trigger: "*",
-     description: "zero or more matches, prefer fewer"},
+     description: T("Zero or more matches, prefer fewer")},
 
     {name: "+?",
      trigger: "+",
-     description: "one or more matches, prefer fewer"},
+     description: T("One or more matches, prefer fewer")},
 
     {name: "*",
      trigger: "*",
-     description: "zero or more matches"},
+     description: T("Zero or more matches")},
 
     {name: "+",
      trigger: "+",
-     description: "one or more matches"},
+     description: T("One or more matches")},
 
     {name: "{min,max}",
      value: "{,}",
      cursor_offset: 1,
      trigger: "{",
-     description: "Match between min number and max number"},
+     description: T("Match between min number and max number")},
 
 ];
 
@@ -92,7 +95,7 @@ let Completer = {
     getCompletions: (editor, session, pos, prefix, callback) => {
         let completions = [];
 
-        _.each(gcompletions, x=>{
+        _.each(gcompletions(), x=>{
             if (prefix === "?" || x.trigger === prefix) {
                 let completion = {
                     caption: x.name,

@@ -742,8 +742,10 @@ body.pink-light {
 }
 
 /* react timelines */
-.pink-light .react-calendar-timeline .rct-sidebar {
+.pink-light .react-calendar-timeline .rct-sidebar,
+.pink-light .react-calendar-timeline .rct-dateHeader {
   color: var(--color-foreground);
+  font-size: var(--font-size-small);
 }
 
 /* file tree */
@@ -869,11 +871,30 @@ body.pink-light {
 }
 
 .pink-light .labels,
-.pink-light .velo__control,
 .pink-light .velo__menu {
   background: var(--color-canvas-background);
   border-color: var(--color-btn-default-border);
+  box-shadow: none;
   color: var(--color-foreground);
+}
+
+.pink-light .velo__control {
+  background: var(--color-canvas-background);
+  border-color: var(--color-btn-default-border);
+  color: var(--color-foreground);
+}
+
+.pink-light .velo__control--is-focused,
+.pink-light .velo__control--menu-is-open {
+  background: var(--color-canvas-background);
+  border-color: var(--color-btn-default-border);
+  box-shadow: 0 0 0 3px rgba(244, 143, 177,.3);
+  color: var(--color-foreground);
+}
+
+.pink-light .velo__control:hover {
+  border-color: var(--color-btn-default-border);
+  box-shadow: 0 0 0 3px rgba(244, 143, 177,.3);
 }
 
 .pink-light .velo__multi-value {
@@ -890,6 +911,13 @@ body.pink-light {
 
 .pink-light .velo__placeholder {
   color: var(--color-sidebar-foreground);
+}
+
+.pink-light .ace_placeholder {
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base);
+  letter-spacing: 0.4px;
+  color: var(--color-sidebar-foreground) !important;
 }
 
 .pink-light .velo__multi-value {
@@ -937,4 +965,36 @@ body.pink-light {
 
 .pink-light .flow-file-download-button {
     background: var(--color-accent-25);
+}
+
+.pink-light .json-expand-button {
+  color: #f57c00;
+}
+
+.pink-light .json-index {
+  color: darkgrey;
+}
+
+.pink-light .json-key {
+  color: #f06292;
+}
+
+.pink-light .json-string {
+  padding-left: 5px;
+  color: #388e3c;
+}
+
+.pink-light .json-number {
+  padding-left: 5px;
+  color: #1976d2;
+}
+
+.pink-light .json-null {
+padding-left: 5px;
+color: #8d6e63;
+}
+
+.pink-light .json-boolean {
+padding-left: 5px;
+color: #7e57c2;
 }
