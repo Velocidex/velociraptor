@@ -137,12 +137,6 @@ body.ncurses {
   background: var(--color-foreground-inverse);
 }
 
-.ncurses .ace_placeholder {
-  color: darkgrey;
-  font-family: var(--font-family-monospace);
-  font-size: var(--font-size-base) !important;
-}
-
 /* this is for the context help popup */
 .ncurses .ace_editor {
   font-family: var(--font-family-monospace) !important;
@@ -770,6 +764,13 @@ body.ncurses {
   color: var(--color-foreground-dimmed);
 }
 
+/* this is for form controls that use ace */
+.ncurses .ace_placeholder {
+  color: darkgrey;
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-large) !important;
+}
+
 .ncurses label.form-label {
   font-weight: 400;
   color: var(--color-foreground);
@@ -1274,4 +1275,36 @@ body.ncurses {
 
 .ncurses div.error-message {
   color: var(--color-level-error) !important;
+}
+
+.ncurses .json-expand-button {
+  color: darkgrey;
+}
+
+.ncurses .json-index {
+  color: darkgrey;
+}
+
+.ncurses .json-key {
+  color: #ffffff;
+}
+
+.ncurses .json-string {
+  padding-left: 5px;
+  color: darkgreen;
+}
+
+.ncurses .json-number {
+  padding-left: 5px;
+  color: #0000ff;
+}
+
+.ncurses .json-null {
+padding-left: 5px;
+color: #ffff00;
+}
+
+.ncurses .json-boolean {
+padding-left: 5px;
+color: #ff00ff;
 }
