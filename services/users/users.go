@@ -58,7 +58,7 @@ const (
   "showFoldWidgets":true,
   "displayIndentGuides":true,
   "showGutter":true,
-  "fontSize":20,
+  "fontSize":15,
   "fontFamily":"monospace",
   "scrollPastEnd":0,
   "theme":"ace/theme/xcode",
