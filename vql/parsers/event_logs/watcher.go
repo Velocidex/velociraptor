@@ -2,6 +2,7 @@ package event_logs
 
 import (
 	"context"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -97,6 +98,9 @@ func (self *EventLogWatcherService) StartMonitoring(
 	if frequency == 0 {
 		frequency = 15
 	}
+
+	// Add some jitter to ensure evtx parsing is not synchronized.
+	frequency = uint64(rand.Intn(int(frequency)*2/10)) + frequency
 
 	// A resolver for messages
 	resolver, _ := evtx.GetNativeResolver()

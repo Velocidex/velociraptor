@@ -19,10 +19,10 @@ parameters:
       - Velociraptor Hayabusa Ruleset
       - Velociraptor Hayabusa Live Detection
       - Velociraptor ChopChopGo Ruleset (Linux)
+      - Velociraptor Curated Windows Ruleset
 
   - name: Prefix
     description: Add artifacts with this prefix
-    default: Sigma.
 
 sources:
   - query: |
