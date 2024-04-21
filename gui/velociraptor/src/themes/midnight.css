@@ -1068,7 +1068,7 @@ body.midnight {
   background-color: initial;
   border-left: 1px solid var(--color-foreground-dimmed);
   border-right: 1px solid var(--color-foreground-dimmed);
-  color: var(--color-foreground-dimmed);
+  color: var(--color-foreground);
 }
 
 .midnight .react-calendar-timeline .rct-header-root {
