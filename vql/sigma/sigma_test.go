@@ -346,6 +346,14 @@ detection:
 					Set("Decoded", "jejfjefhellorfriufirtestkdkdg").
 					Set("Foo", base64.StdEncoding.EncodeToString([]byte("jejfjefhellorfriufirtestkdkdg"))),
 				ordereddict.NewDict().
+					Set("Match", "Should match selection1 and selection2 contains single element (Shift 1)").
+					Set("Decoded", "ejfjefhellorfriufirtestkdkdg").
+					Set("Foo", base64.StdEncoding.EncodeToString([]byte("ejfjefhellorfriufirtestkdkdg"))),
+				ordereddict.NewDict().
+					Set("Match", "Should match selection1 and selection2 contains single element (Shift 2)").
+					Set("Decoded", "jfjefhellorfriufirtestkdkdg").
+					Set("Foo", base64.StdEncoding.EncodeToString([]byte("jfjefhellorfriufirtestkdkdg"))),
+				ordereddict.NewDict().
 					Set("Match", "Should match selection4 with contains one of members").
 					Set("Decoded", "kgkrgrgveloefjefe").
 					Set("Foo", base64.StdEncoding.EncodeToString([]byte("kgkrgrgveloefjefe"))),
