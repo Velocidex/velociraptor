@@ -29,7 +29,7 @@ func (self *WritebackManager) MutateWriteback(
 		return self.store.WriteL1(self.writeback)
 	}
 
-	if cb_err == WritebackUpdateLevel2 {
+	if cb_err == nil || cb_err == WritebackUpdateLevel2 {
 		return self.store.WriteL2(self.writeback)
 	}
 

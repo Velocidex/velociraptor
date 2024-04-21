@@ -45,6 +45,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services/writeback"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
 )
@@ -562,7 +563,19 @@ func (self *HTTPConnector) rekeyWithURL(ctx context.Context, url string) error {
 
 	storage.SetCurrentServerPem(pem)
 
-	return nil
+	// Also write the server pem to the writeback if needed.
+	err = writeback.GetWritebackService().MutateWriteback(self.config_obj,
+		func(wb *config_proto.Writeback) error {
+			server_pem := string(pem)
+			if wb.LastServerPem == server_pem {
+				return writeback.WritebackNoUpdate
+			}
+
+			wb.LastServerPem = server_pem
+			return nil
+		})
+
+	return err
 }
 
 // Manages reading jobs from the reader notification channel.
