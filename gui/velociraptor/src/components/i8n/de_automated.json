@@ -94,6 +94,7 @@
     "Filter": "Filter",
     "Filter artifact": "Filterartefakt",
     "Filter name of artifacts to load": "Name der zu ladenden Artefakte filtern",
+    "Format Columns": "Spalten formatieren",
     "Format Tables": "Tabellen formatieren",
     "GCS Blob": "GCS-Blob",
     "GCS Bucket": "GCS-Bucket",
