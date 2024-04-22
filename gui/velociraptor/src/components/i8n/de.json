@@ -140,7 +140,6 @@
      "486578204f6666736574": "Hex-Offset",
      "4c696e7578204f6e6c79": "Nur Linux",
      "4c6f6164696e672041434c73": "ACLs werden geladen",
-     "4f5358204f6e6c79": "Nur OSX",
      "506c656173652053656c65637420616e204f7267": "Bitte wählen Sie eine Organisation aus",
      "507265666978": "Präfix",
      "50726576696577": "Vorschau",
@@ -252,5 +251,10 @@
      "4f6e65206f72206d6f7265206d6174636865732c20707265666572206665776572": "Eine oder mehrere Übereinstimmungen, lieber weniger",
      "506c61696e206261636b736c617368": "Einfacher Backslash",
      "5a65726f206f72206d6f7265206d617463686573": "Keine oder mehr Übereinstimmungen",
-     "5a65726f206f72206d6f7265206d6174636865732c20707265666572206665776572": "Keine oder mehr Übereinstimmungen, lieber weniger"
+     "5a65726f206f72206d6f7265206d6174636865732c20707265666572206665776572": "Keine oder mehr Übereinstimmungen, lieber weniger",
+     "456e746572206d61726b646f776e207465787420746f2072656e64657220696e20746865206e6f7465626f6f6b": "Geben Sie den Markdown-Text zum Rendern im Notizbuch ein",
+     "4d61726b646f776e": "Markdown",
+     "5369676d61": "Sigma",
+     "547970652056514c20746f206576616c75617465206f6e207468652073657276657220287072657373203f20666f722068656c7029": "Geben Sie VQL zur Auswertung auf dem Server ein (drücken Sie. ? um Hilfe)",
+     "6d61634f53204f6e6c79": "Nur macOS"
 }
