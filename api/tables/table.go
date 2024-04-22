@@ -27,12 +27,14 @@ import (
 	context "golang.org/x/net/context"
 	file_store "www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/timelines"
+	"www.velocidex.com/golang/velociraptor/utils"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -57,6 +59,9 @@ func GetTable(
 
 	} else if in.Type == "CLIENT_EVENT" || in.Type == "SERVER_EVENT" {
 		result, err = getEventTable(ctx, config_obj, in)
+
+	} else if in.Type == "STACK" {
+		result, err = getStackTable(ctx, config_obj, in)
 
 	} else {
 		result, err = getTable(ctx, config_obj, in)
@@ -106,6 +111,71 @@ func getTable(
 		return result, err
 	}
 
+	file_store_factory := file_store.GetFileStore(config_obj)
+
+	options, err := GetTableOptions(in)
+	if err != nil {
+		return result, err
+	}
+
+	rs_reader, err := result_sets.NewResultSetReaderWithOptions(
+		ctx, config_obj,
+		file_store_factory, path_spec, options)
+
+	if err != nil {
+		return result, nil
+	}
+	defer rs_reader.Close()
+
+	// Let the browser know how many rows we have in total.
+	result.TotalRows = rs_reader.TotalRows()
+
+	// FIXME: Backwards compatibility: Just give a few
+	// rows if the result set does not have an index. This
+	// is the same as the previous behavior but for new
+	// collections, an index is created and we respect the
+	// number of rows the callers asked for. Eventually
+	// this will not be needed.
+	if result.TotalRows < 0 {
+		in.Rows = 100
+	}
+
+	stack_path := rs_reader.Stacker()
+	if !utils.IsNil(stack_path) {
+		result.StackPath = stack_path.Components()
+	}
+
+	// Seek to the row we need.
+	err = rs_reader.SeekToRow(int64(in.StartRow))
+	if err == io.EOF {
+		return result, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return ConvertRowsToTableResponse(
+		rs_reader.Rows(ctx), result, in.Timezone, in.Rows), nil
+}
+
+func getStackTable(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	in *api_proto.GetTableRequest) (
+	*api_proto.GetTableResponse, error) {
+
+	if in.Rows == 0 {
+		in.Rows = 2000
+	}
+
+	result := &api_proto.GetTableResponse{
+		ColumnTypes: getColumnTypes(ctx, config_obj, in),
+	}
+
+	path_spec := path_specs.NewUnsafeFilestorePath(
+		utils.FilterSlice(in.StackPath)...).
+		SetType(api.PATH_TYPE_FILESTORE_JSON)
 	file_store_factory := file_store.GetFileStore(config_obj)
 
 	options, err := GetTableOptions(in)
