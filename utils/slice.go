@@ -64,3 +64,12 @@ func StringSliceEq(a []string, b []string) bool {
 
 	return true
 }
+
+func FilterSlice(a []string) (res []string) {
+	for _, i := range a {
+		if i != "" {
+			res = append(res, i)
+		}
+	}
+	return res
+}

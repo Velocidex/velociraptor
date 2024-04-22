@@ -244,6 +244,12 @@ type ResultSetReaderImpl struct {
 	idx_fd   api.FileReader
 	log_path api.FSPathSpec
 	idx      int64
+
+	stacker api.FSPathSpec
+}
+
+func (self *ResultSetReaderImpl) Stacker() api.FSPathSpec {
+	return self.stacker
 }
 
 func (self *ResultSetReaderImpl) TotalRows() int64 {
