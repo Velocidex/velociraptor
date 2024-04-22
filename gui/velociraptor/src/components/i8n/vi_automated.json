@@ -24,6 +24,7 @@
     "Edit Secret": "Ch\u1ec9nh s\u1eeda b\u00ed m\u1eadt",
     "Edit Secret properties": "Ch\u1ec9nh s\u1eeda thu\u1ed9c t\u00ednh b\u00ed m\u1eadt",
     "Edit secret": "Ch\u1ec9nh s\u1eeda b\u00ed m\u1eadt",
+    "Enter markdown text to render in the notebook": "Nh\u1eadp v\u0103n b\u1ea3n \u0111\u00e1nh d\u1ea5u \u0111\u1ec3 hi\u1ec3n th\u1ecb trong s\u1ed5 tay",
     "Errors": "L\u1ed7i",
     "Expand sidebar": "M\u1edf r\u1ed9ng thanh b\u00ean",
     "Export VFS Files": "Xu\u1ea5t t\u1ec7p VFS",
@@ -40,6 +41,7 @@
     "Letters and numbers": "Ch\u1eef c\u00e1i v\u00e0 s\u1ed1",
     "Loading": "\u0110ang t\u1ea3i",
     "Local": "\u0110\u1ecba ph\u01b0\u01a1ng",
+    "Markdown": "\u0110\u00e1nh d\u1ea5u",
     "Match all non space": "Kh\u1edbp t\u1ea5t c\u1ea3 kh\u00f4ng c\u00f3 d\u1ea5u c\u00e1ch",
     "Match all spaces": "Kh\u1edbp t\u1ea5t c\u1ea3 c\u00e1c kho\u1ea3ng tr\u1eafng",
     "Match all words": "Kh\u1edbp t\u1ea5t c\u1ea3 c\u00e1c t\u1eeb",
@@ -85,6 +87,7 @@
     "Share secret with these users": "Chia s\u1ebb b\u00ed m\u1eadt v\u1edbi nh\u1eefng ng\u01b0\u1eddi d\u00f9ng n\u00e0y",
     "Show all collections": "Hi\u1ec3n th\u1ecb t\u1ea5t c\u1ea3 b\u1ed9 s\u01b0u t\u1eadp",
     "Show only my collections": "Ch\u1ec9 hi\u1ec3n th\u1ecb b\u1ed9 s\u01b0u t\u1eadp c\u1ee7a t\u00f4i",
+    "Sigma": "Sigma",
     "Specify Resources": "Ch\u1ec9 \u0111\u1ecbnh t\u00e0i nguy\u00ean",
     "Template": "M\u1eabu",
     "Text": "V\u0103n b\u1ea3n",
@@ -92,10 +95,12 @@
     "This secret will be permanently deleted": "B\u00ed m\u1eadt n\u00e0y s\u1ebd b\u1ecb x\u00f3a v\u0129nh vi\u1ec5n",
     "Time hunt will expire": "Cu\u1ed9c s\u0103n th\u1eddi gian s\u1ebd h\u1ebft h\u1ea1n",
     "Total Matching Clients": "T\u1ed5ng s\u1ed1 kh\u00e1ch h\u00e0ng ph\u00f9 h\u1ee3p",
+    "Type VQL to evaluate on the server (press ? for help)": "Nh\u1eadp VQL \u0111\u1ec3 \u0111\u00e1nh gi\u00e1 tr\u00ean m\u00e1y ch\u1ee7 (nh\u1ea5n ? \u0111\u1ec3 \u0111\u01b0\u1ee3c tr\u1ee3 gi\u00fap) )",
     "Unlabeled Hosts": "M\u00e1y ch\u1ee7 ch\u01b0a \u0111\u01b0\u1ee3c g\u1eafn nh\u00e3n",
     "Update the table column types in this cell.": "C\u1eadp nh\u1eadt c\u00e1c lo\u1ea1i c\u1ed9t c\u1ee7a b\u1ea3ng trong \u00f4 n\u00e0y.",
     "Verify Expression": "X\u00e1c minh bi\u1ec3u th\u1ee9c",
     "View Cell Logs": "Xem nh\u1eadt k\u00fd di \u0111\u1ed9ng",
     "Zero or more matches": "Kh\u00f4ng c\u00f3 k\u1ebft qu\u1ea3 tr\u00f9ng kh\u1edbp tr\u1edf l\u00ean",
-    "Zero or more matches, prefer fewer": "Kh\u00f4ng ho\u1eb7c nhi\u1ec1u k\u1ebft qu\u1ea3 tr\u00f9ng kh\u1edbp, \u01b0u ti\u00ean \u00edt k\u1ebft qu\u1ea3 h\u01a1n"
+    "Zero or more matches, prefer fewer": "Kh\u00f4ng ho\u1eb7c nhi\u1ec1u k\u1ebft qu\u1ea3 tr\u00f9ng kh\u1edbp, \u01b0u ti\u00ean \u00edt k\u1ebft qu\u1ea3 h\u01a1n",
+    "macOS Only": "Ch\u1ec9 macOS"
 }
