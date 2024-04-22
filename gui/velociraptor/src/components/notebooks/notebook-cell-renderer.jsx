@@ -806,7 +806,7 @@ export default class NotebookCellRenderer extends React.Component {
                    <FontAwesomeIcon icon="calendar-alt"/>
                  </Button>
 
-                 <Button data-tooltip={T("Format Tables")}
+                 <Button data-tooltip={T("Format Columns")}
                          data-position="right"
                          className="btn-tooltip"
                          onClick={()=>this.setState({showFormatTablesDialog: true})}
