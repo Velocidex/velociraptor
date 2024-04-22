@@ -25,6 +25,7 @@ import api from '../core/api-service.jsx';
 import VeloTimestamp from "../utils/time.jsx";
 import ClientLink from '../clients/client-link.jsx';
 import HexView from '../utils/hex.jsx';
+import StackDialog from './stack.jsx';
 
 import T from '../i8n/i8n.jsx';
 import UserConfig from '../core/user.jsx';
@@ -182,8 +183,6 @@ class ColumnFilter extends Component {
 }
 
 
-
-
 class ColumnSort extends Component {
     static propTypes = {
         column:  PropTypes.string,
@@ -287,6 +286,7 @@ class VeloPagedTable extends Component {
         // Additional columns to add (should be formatted with a
         // custom renderer).
         extra_columns: PropTypes.array,
+        columns:  PropTypes.object,
 
         // A callback that will be called for each row fetched.
         row_filter: PropTypes.func,
@@ -320,6 +320,13 @@ class VeloPagedTable extends Component {
         transform: {},
 
         last_data: [],
+
+        stack_path: [],
+
+        showStackDialog: false,
+
+        // Keep state for individual stacking transforms
+        stack_transforms: {},
     }
 
     componentDidMount = () => {
@@ -392,7 +399,11 @@ class VeloPagedTable extends Component {
     // table. Shows the user what transforms are currnetly active.
     getTransformed = ()=>{
         let result = [];
-        let transform = this.state.transform || {};
+        let transform = Object.assign({}, this.state.transform || {});
+        if(_.isEmpty(transform) && !_.isEmpty(this.props.transform)) {
+            Object.assign(transform, this.props.transform);
+        }
+
         if (transform.filter_column) {
             result.push(
                 <Button key="1"
@@ -438,7 +449,12 @@ class VeloPagedTable extends Component {
         }
 
         let params = Object.assign({}, this.props.params);
-        Object.assign(params, this.state.transform);
+        let transform = Object.assign({}, this.state.transform || {});
+        if(_.isEmpty(transform) && !_.isEmpty(this.props.transform)) {
+            Object.assign(transform, this.props.transform);
+        }
+
+        Object.assign(params, transform);
         params.start_row = this.state.start_row || 0;
         if (params.start_row < 0) {
             params.start_row = 0;
@@ -458,6 +474,7 @@ class VeloPagedTable extends Component {
                 return;
             }
 
+            let stack_path = response.data && response.data.stack_path;
             let pageData = PrepareData(response.data);
             let toggles = Object.assign({}, this.state.toggles);
             let columns = pageData.columns;
@@ -497,10 +514,11 @@ class VeloPagedTable extends Component {
                            rows: pageData.rows,
                            all_columns: pageData.columns,
                            toggles: toggles,
+                           stack_path: stack_path || [],
                            column_types: response.data.column_types,
                            columns: columns });
         }).catch(() => {
-            this.setState({loading: false, rows: [], columns: []});
+            this.setState({loading: false, rows: [], columns: [], stack_path: []});
         });
     }
 
@@ -529,6 +547,14 @@ class VeloPagedTable extends Component {
         }
     }
 
+    isColumnStacked = name=>{
+        if (_.isEmpty(this.state.stack_path) ||
+            this.state.stack_path.length < 3) {
+            return false ;
+        }
+        return this.state.stack_path[this.state.stack_path.length-3] === name;
+    }
+
     // Format the column headers. Columns have a sort and an filter button
     // which keep track of their own filtering and sorting states but
     // update the primary transform.
@@ -540,12 +566,25 @@ class VeloPagedTable extends Component {
                   <td>{ column.text }</td>
                   <td className="sort-element">
                     <ButtonGroup>
-                      <ColumnSort column={column.text}
+                      { this.isColumnStacked(column.text) &&
+                        <Button variant="default"
+                                target="_blank" rel="noopener noreferrer"
+                                data-tooltip={T("Stack")}
+                                data-position="right"
+                                onClick={()=>this.setState({
+                                    showStackDialog: column.text,
+                                })}
+                                className="btn-tooltip">
+                          <FontAwesomeIcon icon="layer-group"/>
+                          <span className="sr-only">{T("Stack")}</span>
+                        </Button>
+                      }
+                      <ColumnSort column={column.dataField}
                                   transform={this.state.transform}
                                   setTransform={this.setTransform}
                       />
 
-                      <ColumnFilter column={column.text}
+                      <ColumnFilter column={column.dataField}
                                     transform={this.state.transform}
                                     setTransform={this.setTransform}
                       />
@@ -617,11 +656,18 @@ class VeloPagedTable extends Component {
         let rows = this.state.rows;
         let column_names = [];
         let columns = [{dataField: '_id', hidden: true}];
+        let prop_columns = this.props.columns || {};
         for(var i=0;i<this.state.columns.length;i++) {
             let name = this.state.columns[i];
+
             let definition ={ dataField: name,
                               text: this.props.translate_column_headers ?
                               T(name) : name};
+
+            if(_.isObject(prop_columns[name])) {
+                Object.assign(definition, prop_columns[name]);
+            }
+
             if (this.props.renderers && this.props.renderers[name]) {
                 definition.formatter = this.props.renderers[name];
             } else {
@@ -774,11 +820,12 @@ class VeloPagedTable extends Component {
                                   this.setState({page_size: value});
                               },
                               pageStartIndex: 0,
+                              page: parseInt(this.state.start_row / this.state.page_size),
                               pageListRenderer: ({pages, onPageChange})=>pageListRenderer({
                                   totalRows: total_size,
                                   pageSize: this.state.page_size,
                                   pages: pages,
-                                  currentPage: this.state.start_row / this.state.page_size,
+                                  currentPage: parseInt(this.state.start_row / this.state.page_size),
                                   onPageChange: onPageChange}),
                               sizePerPageRenderer
                           }) }
@@ -788,6 +835,22 @@ class VeloPagedTable extends Component {
                 )
             }
               </ToolkitProvider>
+              { this.state.showStackDialog &&
+                <StackDialog
+                  name={this.state.showStackDialog}
+                  onClose={()=>this.setState({showStackDialog: false})}
+                  navigateToRow={row=>this.setState({start_row: row})}
+                  stack_path={this.state.stack_path}
+
+                  transform={this.state.stack_transforms[
+                      this.state.showStackDialog] || {}}
+                  setTransform={t=>{
+                      let stack_transforms = this.state.stack_transforms;
+                      stack_transforms[this.state.showStackDialog] = t;
+                      this.setState({stack_transforms: stack_transforms});
+                  }}
+                />
+              }
             </div>
         );
     }

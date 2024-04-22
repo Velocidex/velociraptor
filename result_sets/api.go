@@ -55,6 +55,7 @@ type ResultSetReader interface {
 
 	TotalRows() int64
 	MTime() time.Time
+	Stacker() api.FSPathSpec
 }
 
 type TimedResultSetReader interface {
