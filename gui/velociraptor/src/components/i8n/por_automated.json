@@ -78,6 +78,7 @@
     "Endpoint": "Extremidade",
     "Endpoint (blank for AWS)": "Endpoint (em branco para AWS)",
     "Enter a username": "Digite um nome de usu\u00e1rio",
+    "Enter markdown text to render in the notebook": "Insira o texto de marca\u00e7\u00e3o para renderizar no notebook",
     "Errors": "Erros",
     "Every 10 Seconds": "A cada 10 segundos",
     "Every 30 Seconds": "A cada 30 segundos",
@@ -120,6 +121,7 @@
     "Loading": "Carregando",
     "Loading ACLs": "Carregando ACLs",
     "Local": "Local",
+    "Markdown": "Redu\u00e7\u00e3o",
     "Match all non space": "Corresponde a todos os que n\u00e3o s\u00e3o espa\u00e7os",
     "Match all spaces": "Corresponder todos os espa\u00e7os",
     "Match all words": "Corresponder todas as palavras",
@@ -140,7 +142,6 @@
     "Notebook templates": "Modelos de caderno",
     "Now": "Agora",
     "ONLINE": "ONLINE",
-    "OSX Only": "Somente OSX",
     "One or more matches": "Uma ou mais correspond\u00eancias",
     "One or more matches, prefer fewer": "Uma ou mais correspond\u00eancias, prefira menos",
     "Open All": "Abrir tudo",
@@ -210,6 +211,7 @@
     "Show all hunts": "Mostrar todas as ca\u00e7adas",
     "Show only my collections": "Mostrar apenas minhas cole\u00e7\u00f5es",
     "Show only my hunts": "Mostrar apenas minhas ca\u00e7adas",
+    "Sigma": "Sigma",
     "Skip Cert Verification": "Ignorar verifica\u00e7\u00e3o do certificado",
     "Sparse": "Esparso",
     "Sparse files will be expanded in export.": "Arquivos esparsos ser\u00e3o expandidos na exporta\u00e7\u00e3o.",
@@ -228,6 +230,7 @@
     "Tool Version": "Vers\u00e3o da ferramenta",
     "Total Matching Clients": "Total de clientes correspondentes",
     "Trace Frequency Seconds": "Segundos de frequ\u00eancia de rastreamento",
+    "Type VQL to evaluate on the server (press ? for help)": "Digite VQL para avaliar no servidor (pressione ? por ajuda)",
     "Type a URL": "Digite uma URL",
     "Uncompressed": "Descompactado",
     "Unlabeled Hosts": "Hosts n\u00e3o rotulados",
@@ -253,5 +256,6 @@
     "Windows Only": "Somente Windows",
     "X509 Certificate/Frontend Cert": "X509 Certificate/Frontend Cert",
     "Zero or more matches": "Zero ou mais correspond\u00eancias",
-    "Zero or more matches, prefer fewer": "Zero ou mais correspond\u00eancias, prefira menos"
+    "Zero or more matches, prefer fewer": "Zero ou mais correspond\u00eancias, prefira menos",
+    "macOS Only": "somente macOS"
 }
