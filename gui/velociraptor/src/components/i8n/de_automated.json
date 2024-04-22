@@ -77,6 +77,7 @@
     "Endpoint": "Endpunkt",
     "Endpoint (blank for AWS)": "Endpunkt (leer f\u00fcr AWS)",
     "Enter a username": "Geben Sie einen Benutzernamen ein",
+    "Enter markdown text to render in the notebook": "Geben Sie den Markdown-Text zum Rendern im Notizbuch ein",
     "Errors": "Fehler",
     "Every 10 Seconds": "Alle 10 Sekunden",
     "Every 30 Seconds": "Alle 30 Sekunden",
@@ -119,6 +120,7 @@
     "Loading": "Laden",
     "Loading ACLs": "ACLs werden geladen",
     "Local": "Lokal",
+    "Markdown": "Markdown",
     "Match all non space": "\u00dcbereinstimmung mit allen Nicht-Leerzeichen",
     "Match all spaces": "Alle Leerzeichen finden",
     "Match all words": "Alle W\u00f6rter finden",
@@ -139,7 +141,6 @@
     "Notebook templates": "Notebook-Vorlagen",
     "Now": "Jetzt",
     "ONLINE": "ONLINE",
-    "OSX Only": "Nur OSX",
     "One or more matches": "Eine oder mehrere \u00dcbereinstimmungen",
     "One or more matches, prefer fewer": "Eine oder mehrere \u00dcbereinstimmungen, lieber weniger",
     "Open All": "Alle \u00f6ffnen",
@@ -207,6 +208,7 @@
     "Show all hunts": "Alle Jagden anzeigen",
     "Show only my collections": "Nur meine Sammlungen anzeigen",
     "Show only my hunts": "Nur meine Jagden anzeigen",
+    "Sigma": "Sigma",
     "Skip Cert Verification": "Zertifikats\u00fcberpr\u00fcfung \u00fcberspringen",
     "Sparse": "Sp\u00e4rlich",
     "Sparse files will be expanded in export.": "Dateien mit geringer Dichte werden beim Export erweitert.",
@@ -225,6 +227,7 @@
     "Tool Version": "Tool-Version",
     "Total Matching Clients": "Gesamtzahl \u00fcbereinstimmender Kunden",
     "Trace Frequency Seconds": "Trace-Frequenz Sekunden",
+    "Type VQL to evaluate on the server (press ? for help)": "Geben Sie VQL zur Auswertung auf dem Server ein (dr\u00fccken Sie. ? um Hilfe)",
     "Type a URL": "URL eingeben",
     "Uncompressed": "Unkomprimiert",
     "Unlabeled Hosts": "Unbeschriftete Hosts",
@@ -249,5 +252,6 @@
     "Windows Only": "Nur Windows",
     "X509 Certificate/Frontend Cert": "X509-Zertifikat/Frontend-Zertifikat",
     "Zero or more matches": "Keine oder mehr \u00dcbereinstimmungen",
-    "Zero or more matches, prefer fewer": "Keine oder mehr \u00dcbereinstimmungen, lieber weniger"
+    "Zero or more matches, prefer fewer": "Keine oder mehr \u00dcbereinstimmungen, lieber weniger",
+    "macOS Only": "Nur macOS"
 }

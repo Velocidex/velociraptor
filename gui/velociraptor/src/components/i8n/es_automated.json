@@ -78,6 +78,7 @@
     "Endpoint": "Punto final",
     "Endpoint (blank for AWS)": "Punto final (en blanco para AWS)",
     "Enter a username": "Ingrese un nombre de usuario",
+    "Enter markdown text to render in the notebook": "Ingrese el texto de rebajas para representar en el cuaderno",
     "Errors": "Errores",
     "Every 10 Seconds": "Cada 10 segundos",
     "Every 30 Seconds": "Cada 30 segundos",
@@ -120,6 +121,7 @@
     "Loading": "Cargando",
     "Loading ACLs": "Cargando ACL",
     "Local": "Local",
+    "Markdown": "Rebaja",
     "Match all non space": "Coincidir con todo lo que no sea espacio",
     "Match all spaces": "Hacer coincidir todos los espacios",
     "Match all words": "Coincide con todas las palabras",
@@ -140,7 +142,6 @@
     "Notebook templates": "Plantillas de cuaderno",
     "Now": "Ahora",
     "ONLINE": "EN L\u00cdNEA",
-    "OSX Only": "Solo OSX",
     "One or more matches": "Una o m\u00e1s coincidencias",
     "One or more matches, prefer fewer": "Una o m\u00e1s coincidencias, prefiero menos",
     "Open All": "Abrir Todo",
@@ -211,6 +212,7 @@
     "Show all hunts": "Mostrar todas las b\u00fasquedas",
     "Show only my collections": "Mostrar solo mis colecciones",
     "Show only my hunts": "Mostrar solo mis b\u00fasquedas",
+    "Sigma": "Sigma",
     "Skip Cert Verification": "Omitir verificaci\u00f3n de certificado",
     "Sparse": "Escaso",
     "Sparse files will be expanded in export.": "Los archivos dispersos se expandir\u00e1n en la exportaci\u00f3n.",
@@ -229,6 +231,7 @@
     "Tool Version": "Versi\u00f3n de la herramienta",
     "Total Matching Clients": "Total de clientes coincidentes",
     "Trace Frequency Seconds": "Segundos de frecuencia de seguimiento",
+    "Type VQL to evaluate on the server (press ? for help)": "Escriba VQL para evaluar en el servidor (presione ? ayuda)",
     "Type a URL": "Escriba una URL",
     "Uncompressed": "Sin comprimir",
     "Unlabeled Hosts": "Hosts sin etiquetar",
@@ -254,5 +257,6 @@
     "Windows Only": "Solo Windows",
     "X509 Certificate/Frontend Cert": "Certificado X509/certificado de interfaz",
     "Zero or more matches": "Cero o m\u00e1s coincidencias",
-    "Zero or more matches, prefer fewer": "Cero o m\u00e1s coincidencias, prefiero menos"
+    "Zero or more matches, prefer fewer": "Cero o m\u00e1s coincidencias, prefiero menos",
+    "macOS Only": "S\u00f3lo macOS"
 }

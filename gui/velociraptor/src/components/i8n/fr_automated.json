@@ -78,6 +78,7 @@
     "Endpoint": "Point de terminaison",
     "Endpoint (blank for AWS)": "Point de terminaison (vide pour AWS)",
     "Enter a username": "Entrez un nom d'utilisateur",
+    "Enter markdown text to render in the notebook": "Entrez le texte de d\u00e9marque \u00e0 afficher dans le notebook",
     "Errors": "Erros",
     "Event Monitoring: Configure artifact parameters for label group ": "Surveillance des \u00e9v\u00e9nements\u00a0: configurer les param\u00e8tres d'artefact pour le groupe d'\u00e9tiquettes",
     "Every 10 Seconds": "Toutes les 10 secondes",
@@ -119,6 +120,7 @@
     "Loading": "Chargement",
     "Loading ACLs": "Chargement des ACL",
     "Local": "Local",
+    "Markdown": "Marquage",
     "Match all non space": "Faire correspondre tout ce qui n'est pas un espace",
     "Match all spaces": "Faire correspondre tous les espaces",
     "Match all words": "Faire correspondre tous les mots",
@@ -139,7 +141,6 @@
     "Notebook templates": "Modelos de caderno",
     "Now": "Maintenant",
     "ONLINE": "EN LIGNE",
-    "OSX Only": "OSX uniquement",
     "One or more matches": "Une ou plusieurs correspondances",
     "One or more matches, prefer fewer": "Une ou plusieurs correspondances, pr\u00e9f\u00e9rez moins",
     "Open All": "Ouvrir tout",
@@ -209,6 +210,7 @@
     "Show all hunts": "Afficher toutes les chasses",
     "Show only my collections": "Afficher uniquement mes collections",
     "Show only my hunts": "Afficher uniquement mes chasses",
+    "Sigma": "Sigma",
     "Skip Cert Verification": "Ignorer la v\u00e9rification du certificat",
     "Sparse": "\u00c9pars",
     "Sparse files will be expanded in export.": "Les fichiers fragment\u00e9s seront d\u00e9velopp\u00e9s lors de l'exportation.",
@@ -227,6 +229,7 @@
     "Tool Version": "Version de l'outil",
     "Total Matching Clients": "Nombre total de clients correspondants",
     "Trace Frequency Seconds": "Tracer la fr\u00e9quence en secondes",
+    "Type VQL to evaluate on the server (press ? for help)": "Tapez VQL \u00e0 \u00e9valuer sur le serveur (appuyez sur ? pour obtenir de l'aide )",
     "Type a URL": "Tapez une URL",
     "Uncompressed": "Non compress\u00e9",
     "Unlabeled Hosts": "H\u00f4tes sans \u00e9tiquette",
@@ -252,5 +255,6 @@
     "Windows Only": "Windows uniquement",
     "X509 Certificate/Frontend Cert": "Certificat X509/certificat frontal",
     "Zero or more matches": "Z\u00e9ro ou plusieurs correspondances",
-    "Zero or more matches, prefer fewer": "Z\u00e9ro ou plus de correspondances, pr\u00e9f\u00e9rez moins"
+    "Zero or more matches, prefer fewer": "Z\u00e9ro ou plus de correspondances, pr\u00e9f\u00e9rez moins",
+    "macOS Only": "macOS uniquement"
 }
