@@ -109,37 +109,31 @@ func (self *VQLRuleEvaluator) evaluateSearch(
 		return true, nil
 	}
 
-	// A Search is a series of EventMatchers (usually one)
+	// A Search is a series of EventMatchers (usually one).
 	// Each EventMatchers is a series of "does this field match this value" conditions
 	// all fields need to match for an EventMatcher to match, but only one EventMatcher needs to match for the Search to evaluate to true
 eventMatcher:
 	for _, eventMatcher := range search.EventMatchers {
 		for _, fieldMatcher := range eventMatcher {
-			// A field matcher can specify multiple values to match against
-			// either the field should match all of these values or it should match any of them
-			allValuesMustMatch := false
-			fieldModifiers := fieldMatcher.Modifiers
-			if len(fieldMatcher.Modifiers) > 0 && fieldModifiers[len(fieldModifiers)-1] == "all" {
-				allValuesMustMatch = true
-				fieldModifiers = fieldModifiers[:len(fieldModifiers)-1]
-			}
 
-			// field matchers can specify modifiers
-			// (FieldName|modifier1|modifier2) which change the
-			// matching behaviour
-			comparator, err := modifiers.GetComparator(fieldModifiers...)
-			if err != nil {
-				return false, err
-			}
-
+			// Get the field value.
 			values, err := self.GetFieldValuesFromEvent(
 				ctx, scope, fieldMatcher.Field, event)
 			if err != nil {
 				return false, err
 			}
-			if !self.matcherMatchesValues(
+
+			// Get all relevant modifiers
+			modifiers, err := modifiers.GetModifiers(fieldMatcher.Modifiers)
+			if err != nil {
+				return false, err
+			}
+
+			// Match using these modifiers
+			if !self.applyModifiers(
 				ctx, scope,
-				fieldMatcher.Values, comparator, allValuesMustMatch, values) {
+				fieldMatcher.Values, modifiers, values) {
+
 				// this field didn't match so the overall matcher
 				// doesn't match, try the next EventMatcher
 				continue eventMatcher
@@ -152,6 +146,31 @@ eventMatcher:
 
 	// None of the event matchers explicitly matched
 	return false, nil
+}
+
+func (self *VQLRuleEvaluator) applyModifiers(
+	ctx context.Context, scope types.Scope,
+	expected []interface{},
+	mods []modifiers.ValueModifier,
+	values []interface{}) bool {
+
+	for _, m := range mods {
+		new_values, new_expected, err := m.Modify(ctx, scope, values, expected)
+		if err != nil {
+			scope.Log("Sigma: %v\n", err)
+			return false
+		}
+		values = new_values
+		expected = new_expected
+	}
+
+	// If any value is true return true
+	for _, v := range values {
+		if scope.Bool(v) {
+			return true
+		}
+	}
+	return false
 }
 
 func (self *VQLRuleEvaluator) getMatcherValues(
@@ -176,37 +195,6 @@ func (self *VQLRuleEvaluator) GetFieldValuesFromEvent(
 	}
 
 	return toGenericSlice(value), nil
-}
-
-func (self *VQLRuleEvaluator) matcherMatchesValues(
-	ctx context.Context, scope types.Scope,
-	matcherValues []interface{},
-	comparator modifiers.ComparatorFunc,
-	allValuesMustMatch bool, actualValues []interface{}) bool {
-	matched := allValuesMustMatch
-	for _, expectedValue := range matcherValues {
-		valueMatchedEvent := false
-		// There are multiple possible event fields that each expected
-		// value needs to be compared against
-		for _, actualValue := range actualValues {
-			comparatorMatched, err := comparator(
-				ctx, scope, actualValue, expectedValue)
-			if err != nil {
-				// todo
-			}
-			if comparatorMatched {
-				valueMatchedEvent = true
-				break
-			}
-		}
-
-		if allValuesMustMatch {
-			matched = matched && valueMatchedEvent
-		} else {
-			matched = matched || valueMatchedEvent
-		}
-	}
-	return matched
 }
 
 func toGenericSlice(v interface{}) []interface{} {
