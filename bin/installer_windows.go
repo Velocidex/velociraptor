@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 /*
@@ -404,7 +405,9 @@ func loadClientConfig() (*config_proto.Config, error) {
 func doRun() error {
 	name := "Velociraptor"
 	config_obj, err := loadClientConfig()
-	if err == nil {
+	if err == nil && config_obj != nil &&
+		config_obj.Client != nil &&
+		config_obj.Client.WindowsInstaller != nil {
 		name = config_obj.Client.WindowsInstaller.ServiceName
 	}
 
@@ -452,18 +455,21 @@ func (self *VelociraptorService) SetPause(value bool) {
 func (self *VelociraptorService) Execute(args []string,
 	r <-chan svc.ChangeRequest,
 	changes chan<- svc.Status) (ssec bool, errno uint32) {
-	const cmdsAccepted = svc.AcceptStop | svc.AcceptShutdown | svc.AcceptPauseAndContinue
-	changes <- svc.Status{State: svc.StartPending}
-
-	// Start running and tell the SCM about it.
-	self.SetPause(false)
-	changes <- svc.Status{State: svc.Running, Accepts: cmdsAccepted}
+	const cmdsAccepted = svc.AcceptStop |
+		svc.AcceptShutdown | svc.AcceptPauseAndContinue
 
 	elog, err := getLogger(self.name)
 	if err != nil {
 		return
 	}
 	defer elog.Close()
+
+	changes <- svc.Status{State: svc.StartPending}
+
+	// Start running and tell the SCM about it.
+	self.SetPause(false)
+
+	changes <- svc.Status{State: svc.Running, Accepts: cmdsAccepted}
 
 loop:
 	for {

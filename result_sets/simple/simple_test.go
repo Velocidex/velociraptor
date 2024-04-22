@@ -1,7 +1,6 @@
 package simple_test
 
 import (
-	"context"
 	"io/ioutil"
 	"os"
 	"sync"
@@ -74,8 +73,6 @@ func (self *ResultSetTestSuite) TestResultSetSimple() {
 
 	writer.Close()
 
-	ctx := context.Background()
-
 	//	test_utils.GetMemoryFileStore(self.T(), self.config_obj).Debug()
 
 	result := ordereddict.NewDict()
@@ -91,7 +88,7 @@ func (self *ResultSetTestSuite) TestResultSetSimple() {
 
 		count := int64(test_case.start_row)
 		rows := make([]*ordereddict.Dict, 0)
-		for row := range rs_reader.Rows(ctx) {
+		for row := range rs_reader.Rows(self.Ctx) {
 			rows = append(rows, row)
 			count++
 			if count > test_case.end_row {

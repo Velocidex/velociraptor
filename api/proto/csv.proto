@@ -42,6 +42,7 @@ message GetTableRequest {
 
     // For timelines
     string timeline = 16;
+
     // Skip these timeline components.
     repeated string skip_components = 17;
 
@@ -60,6 +61,11 @@ message GetTableRequest {
     bool sort_direction = 20;
     string filter_column = 21;
     string filter_regex = 22;
+
+    // Set with the output of GetTableResponse to view the stack
+    // table. If this is set the transform options above refer to the
+    // stack table itself.
+    repeated string stack_path = 30;
 
     // This transformation takes a range from the larger result set
     // and pages within that range.
@@ -96,4 +102,7 @@ message GetTableResponse {
 
     int64 start_time = 5;
     int64 end_time = 6;
+
+    // If there is a stack table this is the path to it.
+    repeated string stack_path = 7;
 }
