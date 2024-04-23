@@ -942,6 +942,8 @@ body.veloci-dark {
   letter-spacing: 0.4px;
   color: var(--color-foreground) !important;
   font-weight: 500 !important;
+  position: inherit;
+  z-index: 1000;
 }
 
 .veloci-dark .velo__input {

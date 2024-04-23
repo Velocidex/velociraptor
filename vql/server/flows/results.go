@@ -140,8 +140,10 @@ func (self SourcePlugin) Call(
 
 	// Event artifacts just proxy for the monitoring plugin.
 	if arg.NotebookCellId == "" && arg.Artifact != "" {
-		ok, _ := isArtifactEvent(scope, ctx, config_obj, arg)
+		ok, client_id, _ := isArtifactEvent(scope, ctx, config_obj, arg)
 		if ok {
+			args.Set("client_id", client_id)
+
 			// Just delegate directly to the monitoring plugin.
 			return MonitoringPlugin{}.Call(ctx, scope, args)
 		}
@@ -197,33 +199,33 @@ func (self SourcePlugin) Info(
 // definition.
 func isArtifactEvent(
 	scope vfilter.Scope, ctx context.Context, config_obj *config_proto.Config,
-	arg *SourcePluginArgs) (bool, error) {
+	arg *SourcePluginArgs) (is_event bool, client_id string, err error) {
 
 	repository, err := vql_utils.GetRepository(scope)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 
 	artifact_definition, pres := repository.Get(ctx, config_obj, arg.Artifact)
 	if !pres {
-		return false, fmt.Errorf("Artifact %v not known", arg.Artifact)
+		return false, "", fmt.Errorf("Artifact %v not known", arg.Artifact)
 	}
 
 	switch artifact_definition.Type {
 	case "client_event":
 		if arg.ClientId == "" {
-			return false, fmt.Errorf(
+			return false, "", fmt.Errorf(
 				"Artifact %v is a client event artifact, "+
 					"therefore a client id is required.",
 				artifact_definition.Name)
 		}
-		return true, nil
+		return true, arg.ClientId, nil
 
 	case "server_event":
-		return true, nil
+		return true, "server", nil
 
 	default:
-		return false, nil
+		return false, "", nil
 	}
 }
 
@@ -281,7 +283,7 @@ func getResultSetReader(
 			arg.Source = ""
 		}
 
-		is_event, err := isArtifactEvent(scope, ctx, config_obj, arg)
+		is_event, _, err := isArtifactEvent(scope, ctx, config_obj, arg)
 		if err != nil {
 			return nil, err
 		}
