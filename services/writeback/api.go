@@ -23,7 +23,7 @@ import (
     - Client monitoring event data is updated when client events are changed.
     - Flow checkpoints are written when a flow is started.
 
-  In order to minimize the change of file corruption we write the two
+  In order to minimize the chance of file corruption we write the two
   levels into separate writeback files. The most important information
   to survive is the client id which should not change over time. The
   level 1 writeback file is only written when the client first starts
@@ -65,9 +65,10 @@ func GetWritebackService() WritebackServiceInterface {
 }
 
 type WritebackServiceInterface interface {
-	// Update the writeback atomically. The callback should return nil
-	// for a successful update, WritebackNoUpdate for no update
-	// required and another error if the update failed.
+	// Update the writeback atomically. The callback should return one
+	// of WritebackNoUpdate, WritebackUpdateLevel1 or
+	// WritebackUpdateLevel2 for a successful update, or another error
+	// if the update failed.
 
 	// If the client has no writeback yet (e.g. a fresh install) an
 	// empty writeback object is returned.

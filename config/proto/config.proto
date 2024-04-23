@@ -70,6 +70,10 @@ message Writeback {
             description: "The last certificate serial number we saw from the server. Clients refuse to connect to servers with older serial numbers as part of server key rotation protocol."
         }];
 
+    // Record the last seen server pem we saw. This is used in writing
+    // encrypted logs before being able to connect to the server.
+    string last_server_pem = 18;
+
     VQLEventTable event_queries = 1;
 
     repeated FlowCheckPoint checkpoints = 17;
@@ -264,6 +268,7 @@ message ClientConfig {
 
     CryptoConfig Crypto = 33;
 
+    // Deprecated - do not set.
     bool disable_compression = 37;
 
     // How often clients inform the server about flow progress
@@ -303,6 +308,12 @@ message ClientConfig {
     // collect in addition to the list sent by the server. This is
     // most useful to initialize the client.
     repeated string additional_event_artifacts = 43;
+
+    // Path relative to the relevant tmpdir above where client side
+    // logs are kept. These logs are encrypted client side and need to
+    // be decrypted on the server to read.
+    string logfile_name = 47;
+    uint64 logfile_size = 48;
 }
 
 message APIConfig {
