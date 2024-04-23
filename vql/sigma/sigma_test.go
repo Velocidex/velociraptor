@@ -312,6 +312,40 @@ detection:
 					Set("Foo", "Bar"),
 			},
 		},
+		{
+			description: "Match single base64offset field",
+			rule: `
+title: Base64 offsets
+logsource:
+  product: windows
+  service: application
+
+detection:
+  selection1:
+     Foo|base64offset|contains: hello
+  selection2:
+     Foo|base64offset|contains: test
+  selection3:
+    Foo|base64offset|contains|all:
+      - velo
+      - ciraptor
+  selection4:
+    Foo|contains:
+      - velo
+      - ciraptorex
+  condition: (selection1 and selection2) or selection3 or selection4
+`,
+			fieldmappings: ordereddict.NewDict().
+				Set("Foo", "x=>x.Foo"),
+			rows: []*ordereddict.Dict{
+				ordereddict.NewDict().
+					Set("Foo", "amVqZmplZmhlbGxvcmZyaXVmaXJ0ZXN0a2RrZGc="),
+				ordereddict.NewDict().
+					Set("Foo", "a2drcmdyZ3ZlbG9lZmplZmU="),
+				ordereddict.NewDict().
+					Set("Foo", "a2drcmNpcmFwdG9yZ3JndmVsb2VmamVmZQ=="),
+			},
+		},
 	}
 )
 

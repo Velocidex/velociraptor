@@ -691,5 +691,233 @@
     }
    }
   }
+ ],
+ "Match single base64offset field": [
+  {
+   "Foo": "a2drcmNpcmFwdG9yZ3JndmVsb2VmamVmZQ==",
+   "Details": null,
+   "_Match": {
+    "Match": true,
+    "SearchResults": {
+     "selection1": false,
+     "selection2": false,
+     "selection3": true,
+     "selection4": false
+    },
+    "ConditionResults": [
+     true
+    ]
+   },
+   "_Rule": {
+    "Title": "Base64 offsets",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "application"
+    },
+    "Detection": {
+     "Searches": {
+      "selection1": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Modifiers": [
+           "base64offset",
+           "contains"
+          ],
+          "Values": [
+           "hello"
+          ]
+         }
+        ]
+       ]
+      },
+      "selection2": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Modifiers": [
+           "base64offset",
+           "contains"
+          ],
+          "Values": [
+           "test"
+          ]
+         }
+        ]
+       ]
+      },
+      "selection3": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Modifiers": [
+           "base64offset",
+           "contains",
+           "all"
+          ],
+          "Values": [
+           "velo",
+           "ciraptor"
+          ]
+         }
+        ]
+       ]
+      },
+      "selection4": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Modifiers": [
+           "contains"
+          ],
+          "Values": [
+           "velo",
+           "ciraptorex"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "condition": [
+      {
+       "Search": [
+        [
+         {
+          "Name": "selection1"
+         },
+         {
+          "Name": "selection2"
+         }
+        ],
+        {
+         "Name": "selection3"
+        },
+        {
+         "Name": "selection4"
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  {
+   "Foo": "amVqZmplZmhlbGxvcmZyaXVmaXJ0ZXN0a2RrZGc=",
+   "Details": null,
+   "_Match": {
+    "Match": true,
+    "SearchResults": {
+     "selection1": true,
+     "selection2": true,
+     "selection3": false,
+     "selection4": false
+    },
+    "ConditionResults": [
+     true
+    ]
+   },
+   "_Rule": {
+    "Title": "Base64 offsets",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "application"
+    },
+    "Detection": {
+     "Searches": {
+      "selection1": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Modifiers": [
+           "base64offset",
+           "contains"
+          ],
+          "Values": [
+           "hello"
+          ]
+         }
+        ]
+       ]
+      },
+      "selection2": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Modifiers": [
+           "base64offset",
+           "contains"
+          ],
+          "Values": [
+           "test"
+          ]
+         }
+        ]
+       ]
+      },
+      "selection3": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Modifiers": [
+           "base64offset",
+           "contains",
+           "all"
+          ],
+          "Values": [
+           "velo",
+           "ciraptor"
+          ]
+         }
+        ]
+       ]
+      },
+      "selection4": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Modifiers": [
+           "contains"
+          ],
+          "Values": [
+           "velo",
+           "ciraptorex"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "condition": [
+      {
+       "Search": [
+        [
+         {
+          "Name": "selection1"
+         },
+         {
+          "Name": "selection2"
+         }
+        ],
+        {
+         "Name": "selection3"
+        },
+        {
+         "Name": "selection4"
+        }
+       ]
+      }
+     ]
+    }
+   }
+  }
  ]
 }
