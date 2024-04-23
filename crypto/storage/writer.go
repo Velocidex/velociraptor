@@ -251,21 +251,36 @@ func (self *CryptoFileWriter) writeCerts() error {
 
 func NewCryptoFileWriter(
 	config_obj *config_proto.Config,
+	max_size uint64,
 	filename string) (*CryptoFileWriter, error) {
 
 	if config_obj.Client == nil {
 		return nil, errors.New("Crypto files require a valid Client config")
 	}
 
-	fd, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0700)
+	// Open file as without truncate (can be append)
+	fd, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
 		return nil, err
+	}
+
+	stat, err := fd.Stat()
+	if err != nil {
+		fd.Close()
+		return nil, err
+	}
+
+	// It is a symlink - we dont support those here!
+	if stat.Mode()&os.ModeSymlink != 0 {
+		fd.Close()
+		return nil, errors.New("Symlink not supported")
 	}
 
 	result := &CryptoFileWriter{
 		config_obj: config_obj,
 		fd:         fd,
 		header:     &Header{},
+		max_size:   max_size,
 	}
 
 	// Try to read the header to see if there is an existing file

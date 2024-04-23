@@ -6,6 +6,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/executor"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/encrypted_logs"
 	"www.velocidex.com/golang/velociraptor/services/orgs"
 )
 
@@ -26,8 +27,14 @@ func StartClientServices(
 	// before we begin the comms.
 	sm := services.NewServiceManager(ctx, config_obj)
 
+	// Start encrypted logs service if possible
+	err := encrypted_logs.StartEncryptedLog(sm.Ctx, sm.Wg, sm.Config)
+	if err != nil {
+		return sm, err
+	}
+
 	// Start the nanny first so we are covered from here on.
-	err := sm.Start(executor.StartNannyService)
+	err = sm.Start(executor.StartNannyService)
 	if err != nil {
 		return sm, err
 	}
