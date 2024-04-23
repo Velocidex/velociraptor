@@ -53,14 +53,17 @@ func (self *EventLogWatcherService) Register(
 		output_chan: output_chan,
 		scope:       scope}
 
+	frequency := vql_subsystem.GetIntFromRow(
+		scope, scope, constants.EVTX_FREQUENCY)
+	if frequency == 0 {
+		frequency = 15
+	}
+
 	key := filename.String() + accessor
 	registration, pres := self.registrations[key]
 	if !pres {
 		registration = []*Handle{}
 		self.registrations[key] = registration
-
-		frequency := vql_subsystem.GetIntFromRow(
-			scope, scope, constants.EVTX_FREQUENCY)
 
 		// Create a scope with a completely different lifespan since
 		// it may outlive this query (if another query starts watching
@@ -78,7 +81,7 @@ func (self *EventLogWatcherService) Register(
 	registration = append(registration, handle)
 	self.registrations[key] = registration
 
-	scope.Log("Registering watcher for %v", filename)
+	scope.Log("Registering watcher for %v with frequency %v", filename, frequency)
 
 	return cancel
 }

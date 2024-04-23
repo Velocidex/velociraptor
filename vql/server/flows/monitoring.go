@@ -35,6 +35,19 @@ import (
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
+type MonitoringPluginArgs struct {
+	ClientId string `vfilter:"required,field=client_id,doc=The client id to extract"`
+
+	Artifact string `vfilter:"optional,field=artifact,doc=The name of the event artifact to read"`
+	Source   string `vfilter:"optional,field=source,doc=An optional named source within the artifact"`
+
+	StartTime vfilter.Any `vfilter:"optional,field=start_time,doc=Start return events from this date (for event sources)"`
+	EndTime   vfilter.Any `vfilter:"optional,field=end_time,doc=Stop end events reach this time (event sources)."`
+
+	StartRow int64 `vfilter:"optional,field=start_row,doc=Start reading the result set from this row"`
+	Limit    int64 `vfilter:"optional,field=count,doc=Maximum number of clients to fetch (default unlimited)'"`
+}
+
 type MonitoringPlugin struct{}
 
 func (self MonitoringPlugin) Call(
@@ -52,11 +65,7 @@ func (self MonitoringPlugin) Call(
 			return
 		}
 
-		arg := &SourcePluginArgs{}
-
-		// Allow the plugin to be filled in from the environment. Arg
-		// parser will override the environment with the actual args.
-		ParseSourceArgsFromScope(arg, scope)
+		arg := &MonitoringPluginArgs{}
 
 		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
@@ -78,7 +87,7 @@ func (self MonitoringPlugin) Call(
 		}
 
 		path_manager, err := artifact_paths.NewArtifactPathManager(ctx,
-			config_obj, arg.ClientId, arg.FlowId, arg.Artifact)
+			config_obj, arg.ClientId, "", arg.Artifact)
 		if err != nil {
 			scope.Log("monitoring: %v", err)
 			return
@@ -131,16 +140,15 @@ func (self MonitoringPlugin) Call(
 
 func (self MonitoringPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name: "monitoring",
-		Doc: "Extract monitoring log from a client. If client_id is not specified " +
-			"we watch the global journal which contains event logs from all clients.",
-		ArgType:  type_map.AddType(scope, &SourcePluginArgs{}),
+		Name:     "monitoring",
+		Doc:      "Read event monitoring log from a client (i.e. that was collected using client event artifacts).",
+		ArgType:  type_map.AddType(scope, &MonitoringPluginArgs{}),
 		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 
 type WatchMonitoringPluginArgs struct {
-	Artifact string `vfilter:"optional,field=artifact,doc=The artifact to watch"`
+	Artifact string `vfilter:"required,field=artifact,doc=The artifact to watch"`
 }
 
 // The watch_monitoring plugin watches for new rows written to the
