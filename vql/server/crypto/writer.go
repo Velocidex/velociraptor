@@ -75,7 +75,7 @@ func (self WriteCryptFilePlugin) Call(
 
 		fd, err := storage.NewCryptoFileWriter(&config_proto.Config{
 			Client: config_obj,
-		}, arg.Filename.String())
+		}, arg.MaxSize, arg.Filename.String())
 		if err != nil {
 			scope.Log("write_crypto_file: %v", err)
 			return

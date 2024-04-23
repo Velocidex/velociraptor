@@ -66,7 +66,7 @@ func (self *CrytpoStoreTestSuite) testWriting() {
 	// Initial state no server connection.
 	SetCurrentServerPem(nil)
 
-	fd, err := NewCryptoFileWriter(self.ConfigObj, output)
+	fd, err := NewCryptoFileWriter(self.ConfigObj, 10000, output)
 	assert.NoError(self.T(), err)
 	defer fd.Close()
 
