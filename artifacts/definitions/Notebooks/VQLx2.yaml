@@ -7,14 +7,12 @@ type: NOTEBOOK
 sources:
   - notebook:
     - type: vql
+      output: |
+        << 1st cell: Click here to edit >>
       template: |
-        /*
-        *<< 1st cell: Click here to edit >>*
-        */
         SELECT * FROM orgs()
     - type: vql
+      output: |
+        << 2nd cell: Click here to edit >>
       template: |
-        /*
-        *<< 2nd cell: Click here to edit >>*
-        */
         SELECT * FROM gui_users() WHERE name = whoami()
