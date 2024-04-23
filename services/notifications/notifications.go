@@ -84,7 +84,7 @@ func NewNotificationService(
 	config_obj *config_proto.Config) (services.Notifier, error) {
 
 	self := &Notifier{
-		notification_pool:         notifications.NewNotificationPool(),
+		notification_pool:         notifications.NewNotificationPool(ctx, wg),
 		uuid:                      utils.GetGUID(),
 		client_connection_tracker: make(map[string]*tracker),
 	}
@@ -124,10 +124,7 @@ func NewNotificationService(
 			self.mu.Lock()
 			defer self.mu.Unlock()
 
-			if self.notification_pool != nil {
-				self.notification_pool.Shutdown()
-			}
-			self.notification_pool = nil
+			self.notification_pool.Shutdown()
 		}()
 		defer logger.Info("<red>Exiting</> notification service for %v!",
 			services.GetOrgName(config_obj))
@@ -146,10 +143,8 @@ func NewNotificationService(
 				if !ok {
 					continue
 				}
-				if self.notification_pool != nil {
-					notificationsReceivedCounter.Inc()
-					self.notification_pool.Notify(target)
-				}
+				notificationsReceivedCounter.Inc()
+				self.notification_pool.Notify(target)
 			}
 		}
 	}()
@@ -218,10 +213,7 @@ func (self *Notifier) ProcessPing(ctx context.Context,
 		return nil
 	}
 
-	is_client_connected := false
-	if self.notification_pool != nil {
-		is_client_connected = self.notification_pool.IsClientConnected(client_id)
-	}
+	is_client_connected := self.notification_pool.IsClientConnected(client_id)
 
 	return journal.PushRowsToArtifact(ctx, config_obj,
 		[]*ordereddict.Dict{ordereddict.NewDict().
@@ -233,20 +225,10 @@ func (self *Notifier) ProcessPing(ctx context.Context,
 }
 
 func (self *Notifier) ListenForNotification(client_id string) (chan bool, func()) {
-	self.mu.Lock()
-	if self.notification_pool == nil {
-		self.notification_pool = notifications.NewNotificationPool()
-	}
-	notification_pool := self.notification_pool
-	self.mu.Unlock()
-
-	return notification_pool.Listen(client_id)
+	return self.notification_pool.Listen(client_id)
 }
 
 func (self *Notifier) CountConnectedClients() uint64 {
-	if self.notification_pool == nil {
-		return 0
-	}
 	return self.notification_pool.Count()
 }
 
@@ -273,8 +255,7 @@ func (self *Notifier) NotifyDirectListener(client_id string) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if self.notification_pool != nil &&
-		self.notification_pool.IsClientConnected(client_id) {
+	if self.notification_pool.IsClientConnected(client_id) {
 		self.notification_pool.Notify(client_id)
 	}
 }
@@ -298,18 +279,10 @@ func (self *Notifier) IsClientDirectlyConnected(client_id string) bool {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if self.notification_pool == nil {
-		return false
-	}
-
 	return self.notification_pool.IsClientConnected(client_id)
 }
 
 func (self *Notifier) ListClients() []string {
-	if self.notification_pool == nil {
-		return nil
-	}
-
 	return self.notification_pool.ListClients()
 }
 

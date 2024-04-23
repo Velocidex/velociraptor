@@ -1046,6 +1046,8 @@ body.github-dimmed-dark {
   font-size: var(--font-size-large);
   letter-spacing: 0.4px;
   color: var(--color-foreground) !important;
+  position: inherit;
+  z-index: 1000;
 }
 
 .github-dimmed-dark .velo__multi-value {
