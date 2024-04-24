@@ -761,8 +761,8 @@
            "all"
           ],
           "Values": [
-           "velo",
-           "ciraptor"
+           "sprite",
+           "pepsi"
           ]
          }
         ]
@@ -774,6 +774,7 @@
          {
           "Field": "Foo",
           "Modifiers": [
+           "base64offset",
            "contains"
           ],
           "Values": [
@@ -810,8 +811,8 @@
   },
   {
    "Match": "Should match selection3 with all",
-   "Decoded": "kgkrciraptorgrgveloefjefe",
-   "Foo": "a2drcmNpcmFwdG9yZ3JndmVsb2VmamVmZQ==",
+   "Decoded": "kgkrpepsigrgspriteefjefe",
+   "Foo": "a2drcnBlcHNpZ3Jnc3ByaXRlZWZqZWZl",
    "Details": null,
    "_Match": {
     "Match": true,
@@ -876,8 +877,8 @@
            "all"
           ],
           "Values": [
-           "velo",
-           "ciraptor"
+           "sprite",
+           "pepsi"
           ]
          }
         ]
@@ -889,6 +890,7 @@
          {
           "Field": "Foo",
           "Modifiers": [
+           "base64offset",
            "contains"
           ],
           "Values": [
@@ -929,15 +931,15 @@
    "Foo": "a2drcmdyZ3ZlbG9lZmplZmU=",
    "Details": null,
    "_Match": {
-    "Match": false,
+    "Match": true,
     "SearchResults": {
      "selection1": false,
      "selection2": false,
      "selection3": false,
-     "selection4": false
+     "selection4": true
     },
     "ConditionResults": [
-     false
+     true
     ]
    },
    "_Rule": {
@@ -991,8 +993,8 @@
            "all"
           ],
           "Values": [
-           "velo",
-           "ciraptor"
+           "sprite",
+           "pepsi"
           ]
          }
         ]
@@ -1004,6 +1006,7 @@
          {
           "Field": "Foo",
           "Modifiers": [
+           "base64offset",
            "contains"
           ],
           "Values": [

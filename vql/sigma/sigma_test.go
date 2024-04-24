@@ -329,10 +329,10 @@ detection:
      Foo|base64offset|contains: test
   selection3:
     Foo|base64offset|contains|all:
-      - velo
-      - ciraptor
+      - sprite
+      - pepsi
   selection4:
-    Foo|contains:
+    Foo|base64offset|contains:
       - velo
       - ciraptorex
   condition: (selection1 and selection2) or selection3 or selection4
@@ -351,8 +351,8 @@ detection:
 					Set("Foo", base64.StdEncoding.EncodeToString([]byte("kgkrgrgveloefjefe"))),
 				ordereddict.NewDict().
 					Set("Match", "Should match selection3 with all").
-					Set("Decoded", "kgkrciraptorgrgveloefjefe").
-					Set("Foo", base64.StdEncoding.EncodeToString([]byte("kgkrciraptorgrgveloefjefe"))),
+					Set("Decoded", "kgkrpepsigrgspriteefjefe").
+					Set("Foo", base64.StdEncoding.EncodeToString([]byte("kgkrpepsigrgspriteefjefe"))),
 			},
 		},
 	}
