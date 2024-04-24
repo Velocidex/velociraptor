@@ -26,6 +26,7 @@ func getComparator(comparators map[string]Comparator, modifiers ...string) (Comp
 	// A valid sequence of modifiers is ([ValueModifier]*)[Comparator]?
 	// If a comparator is specified, it must be in the last position and cannot be succeeded by any other modifiers
 	// If no comparator is specified, the default comparator is used
+	// TODO: The explanation above is incorrect (see https://github.com/SigmaHQ/pySigma/blob/main/sigma/modifiers.py)
 	var valueModifiers []ValueModifier
 	var eventValueModifiers []ValueModifier
 	var comparator Comparator
@@ -59,6 +60,7 @@ func getComparator(comparators map[string]Comparator, modifiers ...string) (Comp
 	return func(
 		ctx context.Context, scope types.Scope,
 		actual, expected any) (bool, error) {
+		expectedArr := []any{expected}
 		var err error
 		for _, modifier := range eventValueModifiers {
 			actual, err = modifier.Modify(actual)
@@ -67,14 +69,27 @@ func getComparator(comparators map[string]Comparator, modifiers ...string) (Comp
 			}
 		}
 		for _, modifier := range valueModifiers {
-			expected, err = modifier.Modify(expected)
+			newExpectedMod := []any{}
+			for _, expected := range expectedArr {
+				newExpected, err := modifier.Modify(expected)
+				if err != nil {
+					return false, err
+				}
+				newExpectedMod = append(newExpectedMod, newExpected...)
+			}
+			expectedArr = newExpectedMod
+		}
+		for _, expected := range expectedArr {
+			hasMatch, err := comparator.Matches(
+				ctx, scope, actual, expected)
 			if err != nil {
 				return false, err
 			}
+			if hasMatch {
+				return true, nil
+			}
 		}
-
-		return comparator.Matches(
-			ctx, scope, actual, expected)
+		return false, nil
 	}, nil
 }
 
@@ -94,7 +109,7 @@ type ComparatorFunc func(
 // ValueModifier modifies the expected value before it is passed to the comparator.
 // For example, the `base64` modifier converts the expected value to base64.
 type ValueModifier interface {
-	Modify(value any) (any, error)
+	Modify(value any) ([]any, error)
 }
 
 var Comparators = map[string]Comparator{
@@ -124,7 +139,8 @@ var ComparatorsCaseSensitive = map[string]Comparator{
 }
 
 var ValueModifiers = map[string]ValueModifier{
-	"base64": b64{},
+	"base64":       b64{},
+	"base64offset": b64offset{},
 }
 
 // EventValueModifiers modify the value in the event before comparison
@@ -192,10 +208,30 @@ func (startswithCS) Matches(
 	return strings.HasPrefix(coerceString(actual), coerceString(expected)), nil
 }
 
+var startOffsets = [3]int{0, 2, 3}
+var endOffsets = [3]int{0, -3, -2}
+
+func b64ShiftEncode(value any, shift int) any {
+	valueStr := coerceString(value)
+	endOffset := endOffsets[(len(valueStr)+shift)%3]
+	encoded := base64.StdEncoding.EncodeToString([]byte(strings.Repeat(" ", shift) + valueStr))
+	return encoded[startOffsets[shift]:(len(encoded) + endOffset)]
+}
+
 type b64 struct{}
 
-func (b64) Modify(value any) (any, error) {
-	return base64.StdEncoding.EncodeToString([]byte(coerceString(value))), nil
+func (b64) Modify(value any) ([]any, error) {
+	return []any{base64.StdEncoding.EncodeToString([]byte(coerceString(value)))}, nil
+}
+
+type b64offset struct{}
+
+func (b64offset) Modify(value any) ([]any, error) {
+	return []any{
+		b64ShiftEncode(value, 0),
+		b64ShiftEncode(value, 1),
+		b64ShiftEncode(value, 2),
+	}, nil
 }
 
 type re struct{}

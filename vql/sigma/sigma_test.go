@@ -3,6 +3,7 @@ package sigma
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"log"
 	"os"
 	"sort"
@@ -50,6 +51,7 @@ type testCase struct {
 	fieldmappings     *ordereddict.Dict
 	rows              []*ordereddict.Dict
 	log_regex         string
+	debug             bool
 }
 
 var (
@@ -312,6 +314,55 @@ detection:
 					Set("Foo", "Bar"),
 			},
 		},
+		{
+			description: "Match single base64offset field",
+			rule: `
+title: Base64 offsets
+logsource:
+  product: windows
+  service: application
+
+detection:
+  selection1:
+     Foo|base64offset|contains: hello
+  selection2:
+     Foo|base64offset|contains: test
+  selection3:
+    Foo|base64offset|contains|all:
+      - sprite
+      - pepsi
+  selection4:
+    Foo|base64offset|contains:
+      - velo
+      - ciraptorex
+  condition: (selection1 and selection2) or selection3 or selection4
+`,
+			fieldmappings: ordereddict.NewDict().
+				Set("Foo", "x=>x.Foo"),
+			debug: true,
+			rows: []*ordereddict.Dict{
+				ordereddict.NewDict().
+					Set("Match", "Should match selection1 and selection2 contains single element").
+					Set("Decoded", "jejfjefhellorfriufirtestkdkdg").
+					Set("Foo", base64.StdEncoding.EncodeToString([]byte("jejfjefhellorfriufirtestkdkdg"))),
+				ordereddict.NewDict().
+					Set("Match", "Should match selection1 and selection2 contains single element (Shift 1)").
+					Set("Decoded", "ejfjefhellorfriufirtestkdkdg").
+					Set("Foo", base64.StdEncoding.EncodeToString([]byte("ejfjefhellorfriufirtestkdkdg"))),
+				ordereddict.NewDict().
+					Set("Match", "Should match selection1 and selection2 contains single element (Shift 2)").
+					Set("Decoded", "jfjefhellorfriufirtestkdkdg").
+					Set("Foo", base64.StdEncoding.EncodeToString([]byte("jfjefhellorfriufirtestkdkdg"))),
+				ordereddict.NewDict().
+					Set("Match", "Should match selection4 with contains one of members").
+					Set("Decoded", "kgkrgrgveloefjefe").
+					Set("Foo", base64.StdEncoding.EncodeToString([]byte("kgkrgrgveloefjefe"))),
+				ordereddict.NewDict().
+					Set("Match", "Should match selection3 with all").
+					Set("Decoded", "kgkrpepsigrgspriteefjefe").
+					Set("Foo", base64.StdEncoding.EncodeToString([]byte("kgkrpepsigrgspriteefjefe"))),
+			},
+		},
 	}
 )
 
@@ -345,6 +396,10 @@ func (self *SigmaTestSuite) TestSigma() {
 				},
 			}).
 			Set("field_mapping", test_case.fieldmappings)
+
+		if test_case.debug {
+			args.Set("debug", true)
+		}
 
 		if test_case.default_details != "" {
 			args.Set("default_details", test_case.default_details)
