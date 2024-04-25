@@ -649,21 +649,23 @@
    "_Match": {
     "Match": true,
     "SearchResults": {
-     "selection": true
+     "contains_all_true": true,
+     "contains_no_match_false": false,
+     "contains_one_of_true": true
     },
     "ConditionResults": [
      true
     ]
    },
    "_Rule": {
-    "Title": "BadModifiers",
+    "Title": "All Modifiers",
     "Logsource": {
      "Product": "windows",
      "Service": "application"
     },
     "Detection": {
      "Searches": {
-      "selection": {
+      "contains_all_true": {
        "EventMatchers": [
         [
          {
@@ -679,12 +681,431 @@
          }
         ]
        ]
+      },
+      "contains_no_match_false": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Modifiers": [
+           "contains"
+          ],
+          "Values": [
+           "Z",
+           "C"
+          ]
+         }
+        ]
+       ]
+      },
+      "contains_one_of_true": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Modifiers": [
+           "contains"
+          ],
+          "Values": [
+           "a",
+           "C"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "condition": [
+      {
+       "Search": [
+        {
+         "Name": "contains_all_true"
+        },
+        {
+         "Name": "contains_one_of_true"
+        },
+        {
+         "Name": "contains_no_match_false"
+        }
+       ]
+      }
+     ]
+    }
+   }
+  }
+ ],
+ "Test Modifiers": [
+  {
+   "uri": "https://1.2.3.4/ecp/default.aspx?__VIEWSTATEGENERATOR=1\u0026__VIEWSTATE=2",
+   "ip_address1": "192.1.10.1",
+   "ip_address2": "192.168.0.2",
+   "fieldname": "needle is a needle",
+   "fieldname_int": 15,
+   "CommandLine": "ping /f ",
+   "CommandLineWide": "cABpAG4AZwAgAA==",
+   "Details": null,
+   "_Match": {
+    "Match": true,
+    "SearchResults": {
+     "cidr_1": true,
+     "cidr_2": true,
+     "contains": true,
+     "contains_all": false,
+     "contains_any": true,
+     "endswith": true,
+     "gt": false,
+     "gte": true,
+     "lt": false,
+     "lte": true,
+     "naked_all": false,
+     "re": true,
+     "re_multiple": true,
+     "re_multiple_all": true,
+     "startswith": true,
+     "wide": true,
+     "wide_all": false,
+     "wide_any": true,
+     "windash": true,
+     "windash_all": false
+    },
+    "ConditionResults": [
+     true
+    ]
+   },
+   "_Rule": {
+    "Title": "Test Modifiers",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "application"
+    },
+    "Detection": {
+     "Searches": {
+      "cidr_1": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "ip_address1",
+          "Modifiers": [
+           "cidr"
+          ],
+          "Values": [
+           "192.0.0.0/8"
+          ]
+         }
+        ]
+       ]
+      },
+      "cidr_2": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "ip_address2",
+          "Modifiers": [
+           "cidr"
+          ],
+          "Values": [
+           "192.168.0.0/23",
+           "192.168.1.0/23"
+          ]
+         }
+        ]
+       ]
+      },
+      "contains": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "fieldname",
+          "Modifiers": [
+           "contains"
+          ],
+          "Values": [
+           "needle"
+          ]
+         }
+        ]
+       ]
+      },
+      "contains_all": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "fieldname",
+          "Modifiers": [
+           "contains",
+           "all"
+          ],
+          "Values": [
+           "needle",
+           "haystack"
+          ]
+         }
+        ]
+       ]
+      },
+      "contains_any": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "fieldname",
+          "Modifiers": [
+           "contains"
+          ],
+          "Values": [
+           "needle",
+           "haystack"
+          ]
+         }
+        ]
+       ]
+      },
+      "endswith": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "fieldname",
+          "Modifiers": [
+           "endswith"
+          ],
+          "Values": [
+           "needle"
+          ]
+         }
+        ]
+       ]
+      },
+      "gt": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "fieldname_int",
+          "Modifiers": [
+           "gt"
+          ],
+          "Values": [
+           15
+          ]
+         }
+        ]
+       ]
+      },
+      "gte": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "fieldname_int",
+          "Modifiers": [
+           "gte"
+          ],
+          "Values": [
+           15
+          ]
+         }
+        ]
+       ]
+      },
+      "lt": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "fieldname_int",
+          "Modifiers": [
+           "lt"
+          ],
+          "Values": [
+           15
+          ]
+         }
+        ]
+       ]
+      },
+      "lte": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "fieldname_int",
+          "Modifiers": [
+           "lte"
+          ],
+          "Values": [
+           15
+          ]
+         }
+        ]
+       ]
+      },
+      "naked_all": {
+       "EventMatchers": [
+        [
+         {
+          "Modifiers": [
+           "all"
+          ],
+          "Values": [
+           "ping",
+           "ip_address2"
+          ]
+         }
+        ]
+       ]
+      },
+      "re": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "fieldname",
+          "Modifiers": [
+           "re"
+          ],
+          "Values": [
+           ".*needle$"
+          ]
+         }
+        ]
+       ]
+      },
+      "re_multiple": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "fieldname",
+          "Modifiers": [
+           "re"
+          ],
+          "Values": [
+           ".*needle$",
+           "foobar"
+          ]
+         }
+        ]
+       ]
+      },
+      "re_multiple_all": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "fieldname",
+          "Modifiers": [
+           "re",
+           "all"
+          ],
+          "Values": [
+           ".*needle$",
+           "is a"
+          ]
+         }
+        ]
+       ]
+      },
+      "startswith": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "fieldname",
+          "Modifiers": [
+           "startswith"
+          ],
+          "Values": [
+           "needle"
+          ]
+         }
+        ]
+       ]
+      },
+      "wide": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "CommandLineWide",
+          "Modifiers": [
+           "wide",
+           "base64offset",
+           "contains"
+          ],
+          "Values": [
+           "ping"
+          ]
+         }
+        ]
+       ]
+      },
+      "wide_all": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "CommandLineWide",
+          "Modifiers": [
+           "wide",
+           "base64offset",
+           "contains",
+           "all"
+          ],
+          "Values": [
+           "ping",
+           "pong"
+          ]
+         }
+        ]
+       ]
+      },
+      "wide_any": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "CommandLineWide",
+          "Modifiers": [
+           "wide",
+           "base64offset",
+           "contains"
+          ],
+          "Values": [
+           "ping",
+           "pong"
+          ]
+         }
+        ]
+       ]
+      },
+      "windash": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "CommandLine",
+          "Modifiers": [
+           "windash",
+           "contains"
+          ],
+          "Values": [
+           " -param-name ",
+           " -f "
+          ]
+         }
+        ]
+       ]
+      },
+      "windash_all": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "CommandLine",
+          "Modifiers": [
+           "windash",
+           "contains",
+           "all"
+          ],
+          "Values": [
+           " -param-name ",
+           " -f "
+          ]
+         }
+        ]
+       ]
       }
      },
      "condition": [
       {
        "Search": {
-        "Name": "selection"
+        "Name": "contains"
        }
       }
      ]
