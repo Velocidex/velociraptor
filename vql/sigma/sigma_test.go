@@ -295,23 +295,158 @@ detection:
 		{
 			description: "All modifier",
 			rule: `
-title: BadModifiers
+title: All Modifiers
 logsource:
    product: windows
    service: application
 
 detection:
-  selection:
+  contains_all_true:
      Foo|contains|all:
        - a
        - B
-  condition: selection
+
+  contains_one_of_true:
+     Foo|contains:
+       - a
+       - C
+
+  contains_no_match_false:
+     Foo|contains:
+       - Z
+       - C
+
+  condition: contains_all_true or contains_one_of_true or contains_no_match_false
 `,
 			fieldmappings: ordereddict.NewDict().
 				Set("Foo", "x=>x.Foo"),
 			rows: []*ordereddict.Dict{
 				ordereddict.NewDict().
 					Set("Foo", "Bar"),
+			},
+		},
+
+		// Taken from https://sigmahq.io/docs/basics/modifiers.html
+		{
+			description: "Test Modifiers",
+			rule: `
+title: Test Modifiers
+logsource:
+  product: windows
+  service: application
+
+detection:
+  contains_all:
+     uri|contains|all:
+        - '/ecp/default.aspx'
+        - '__VIEWSTATEGENERATOR='
+        - '__VIEWSTATE='
+
+  cidr_1:
+     ip_address1|cidr: 192.0.0.0/8
+
+  # Match any of the CIDR
+  cidr_2:
+     ip_address2|cidr:
+         - 192.168.0.0/23
+         - 192.168.1.0/23
+
+  contains:
+     fieldname|contains: needle
+
+  contains_any:
+     fieldname|contains:
+        - needle
+        - haystack
+
+  contains_all:
+     fieldname|contains|all:
+        - needle
+        - haystack
+
+  startswith:
+     fieldname|startswith: needle
+
+  endswith:
+     fieldname|endswith: needle
+
+  gt:
+     fieldname_int|gt: 15
+
+  gte:
+     fieldname_int|gte: 15
+
+  lt:
+     fieldname_int|lt: 15
+
+  lte:
+     fieldname_int|lte: 15
+
+  re:
+     fieldname|re: .*needle$
+
+  # Any regex should match
+  re_multiple:
+     fieldname|re:
+       - ".*needle$"
+       - foobar
+
+  # All regex need to match
+  re_multiple_all:
+     fieldname|re|all:
+       - ".*needle$"
+       - is a
+
+  wide:
+     CommandLineWide|wide|base64offset|contains: "ping"
+
+  wide_any:
+     CommandLineWide|wide|base64offset|contains:
+        - ping
+        - pong
+
+  # Should match all terms
+  wide_all:
+     CommandLineWide|wide|base64offset|contains|all:
+        - "ping"
+        - "pong"
+
+  windash:
+     CommandLine|windash|contains:
+        - " -param-name "
+        - " -f "
+
+  windash_all:
+     CommandLine|windash|contains|all:
+        - " -param-name "
+        - " -f "
+
+  # An all modifier without a field name
+  naked_all:
+     "|all":
+       - ping
+       - ip_address2
+
+  condition: contains
+`,
+			debug: true,
+			fieldmappings: ordereddict.NewDict().
+				Set("uri", "x=>x.uri").
+				Set("ip_address1", "x=>x.ip_address1").
+				Set("ip_address2", "x=>x.ip_address2").
+				Set("fieldname", "x=>x.fieldname").
+				Set("fieldname_int", "x=>x.fieldname_int").
+				Set("CommandLineWide", "x=>x.CommandLineWide").
+				Set("CommandLine", "x=>x.CommandLine"),
+			rows: []*ordereddict.Dict{
+				ordereddict.NewDict().
+					Set("uri", "https://1.2.3.4/ecp/default.aspx?__VIEWSTATEGENERATOR=1&__VIEWSTATE=2").
+					Set("ip_address1", "192.1.10.1").
+					Set("ip_address2", "192.168.0.2").
+					Set("fieldname", "needle is a needle").
+					Set("fieldname_int", 15).
+					Set("CommandLine", "ping /f ").
+					Set("CommandLineWide", base64.StdEncoding.EncodeToString([]byte("p\x00i\x00n\x00g\x00 \x00"))),
 			},
 		},
 		{
@@ -370,7 +505,7 @@ type SigmaTestSuite struct {
 	suite.Suite
 }
 
-func (self *SigmaTestSuite) TestSigma() {
+func (self *SigmaTestSuite) TestSigmaModifiers() {
 	result := ordereddict.NewDict()
 
 	ctx := context.Background()
@@ -382,6 +517,10 @@ func (self *SigmaTestSuite) TestSigma() {
 	plugin := SigmaPlugin{}
 
 	for _, test_case := range sigmaTestCases {
+		if false && test_case.description != "Match single base64offset field" {
+			continue
+		}
+
 		log_collector := &bytes.Buffer{}
 		scope.SetLogger(log.New(log_collector, "", 0))
 
