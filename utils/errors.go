@@ -18,6 +18,7 @@ var (
 	InvalidConfigError  = errors.New("InvalidConfigError")
 	NotFoundError       = Wrap(os.ErrNotExist, "NotFoundError")
 	InvalidArgError     = errors.New("InvalidArgError")
+	IOError             = errors.New("IOError")
 )
 
 // This is a custom error type that wraps an inner error but does not
