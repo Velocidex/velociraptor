@@ -834,9 +834,11 @@ body.midnight {
 }
 
 .midnight .velo__multi-value__label {
-  color: var(--color-foreground);
+  color: var(--color-foreground-inverse);
+  background-color: var(--color-accent-100);
   border: none;
   border-radius: 0;
+  font-size: var(--font-size-small);
 }
 
 .midnight .velo__multi-value__remove {

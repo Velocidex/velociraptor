@@ -449,7 +449,7 @@ export default class VeloForm extends React.Component {
                       placeholder={T("Choose one or more items")}
                       className="velo"
                       classNamePrefix="velo"
-                      closeMenuOnSelect={false}
+                      closeMenuOnSelect={true}
                       isMulti
                       defaultValue={defaults}
                       onChange={e=>{

@@ -708,18 +708,20 @@ body.coolgray-dark {
 
 .coolgray-dark .velo__multi-value {
   border: 1px solid var(--color-btn-default-border);
-  background-color: var(--color-canvas-background);
+  background-color: var(--color-btn-default-border);
   border-radius: 0;
 }
 
 .coolgray-dark .velo__multi-value__label {
   color: var(--color-foreground);
+  background-color: var(--color-btn-default-border);
   border: none;
   border-radius: 0;
+  font-size: var(--font-size-small);
 }
 
 .coolgray-dark .velo__multi-value__remove {
-  color: var(--color-foreground-inverse);
+  color: var(--color-foreground);
   background-color: var(--color-btn-default-border);
   border: none;
   border-radius: 0;

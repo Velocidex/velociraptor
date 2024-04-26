@@ -922,11 +922,13 @@ body.pink-light {
 
 .pink-light .velo__multi-value {
   border: 1px solid var(--color-btn-border);
-  background-color: var(--color-canvas-background);
+  background-color: var(--color-accent-100);
 }
 
 .pink-light .velo__multi-value__label {
+  font-size: var(--font-size-small);
   color: var(--color-foreground);
+  background-color: var(--color-accent-75);
   border: none;
 }
 
@@ -937,8 +939,8 @@ body.pink-light {
 }
 
 .pink-light .velo__multi-value__remove:hover {
-  color: var(--color-foreground-inverse);
-  background-color: var(--color-btn-default-border);
+  color: var(--color-foreground);
+  background-color: var(--color-canvas-background);
   font-weight: 700;
 }
 
