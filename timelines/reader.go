@@ -55,7 +55,11 @@ func (self *TimelineReader) getIndex(i int) (*IndexRecord, error) {
 
 func (self *TimelineReader) Stat() *timelines_proto.Timeline {
 	first_record, _ := self.getIndex(0)
-	last_record, _ := self.getIndex(int(self.index_stat.Size()/IndexRecordSize - 1))
+	last_record := first_record
+	last_idx := int(self.index_stat.Size()/IndexRecordSize - 1)
+	if last_idx >= 0 {
+		last_record, _ = self.getIndex(last_idx)
+	}
 
 	if first_record == nil || last_record == nil {
 		return &timelines_proto.Timeline{Id: self.id}

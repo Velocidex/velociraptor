@@ -38,7 +38,7 @@ import (
 type MonitoringPluginArgs struct {
 	ClientId string `vfilter:"required,field=client_id,doc=The client id to extract"`
 
-	Artifact string `vfilter:"optional,field=artifact,doc=The name of the event artifact to read"`
+	Artifact string `vfilter:"required,field=artifact,doc=The name of the event artifact to read"`
 	Source   string `vfilter:"optional,field=source,doc=An optional named source within the artifact"`
 
 	StartTime vfilter.Any `vfilter:"optional,field=start_time,doc=Start return events from this date (for event sources)"`
