@@ -304,6 +304,19 @@ Client:
     - Label1
     - Label1
 
+  ## The client normally does not write any logs on the
+  ## endpoint. However this makes it hard to debug any issues so you
+  ## can choose to have the client write its logs in a file on the
+  ## endpoint. The file will be written in an encrypted form which can
+  ## only be decrypted by the Generic.Client.LocalLogsRetrieve
+  ## artifact.
+
+  ## Path relative to the relevant tmpdir above where client side logs
+  ## are kept. These logs are encrypted client side and need to be
+  ## decrypted on the server to read.
+  logfile_name: "logfile.log"
+  logfile_size: 10000000
+
   ## Velociraptor keeps a local buffer file to store query results
   ## while they are being shipped across the network. There are two
   ## types of buffers - an in memory buffer and a local file based
@@ -1158,6 +1171,10 @@ defaults:
   # Minion.notebook_number_of_local_workers to 5.
   notebook_number_of_local_workers: 5
 
+  # Wait this long for a worker to become available before giving
+  # up. The default is 10 seconds.
+  notebook_wait_time_for_worker_ms: 10000
+
   # The default priority of notebook processors (Higher priority will
   # receive jobs over lower priority).
   notebook_worker_priority: 10
@@ -1253,6 +1270,12 @@ defaults:
 
   # Maximum length of the line that will be parsed (16kb)
   watch_plugin_buffer_size: 16384
+
+  # Period in seconds when to produce a backup. Velociraptor will
+  # generate a backup of important metadata about the server. By
+  # default this happens daily but you can change it here (set to -1)
+  # to disable backups.
+  backup_period_seconds: 86400
 
 # The Velociraptor server may be placed into "lockdown" mode. While in
 # lockdown mode certain permissions are denied - even for

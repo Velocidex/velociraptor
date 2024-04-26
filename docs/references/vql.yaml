@@ -3696,15 +3696,10 @@
   - name: client_id
     type: string
     description: The client id to extract
-  - name: flow_id
-    type: string
-    description: A flow ID (client or server artifacts)
-  - name: hunt_id
-    type: string
-    description: Retrieve sources from this hunt (combines all results from all clients)
+    required: true
   - name: artifact
     type: string
-    description: The name of the artifact collection to fetch
+    description: The name of the event artifact to read
   - name: source
     type: string
     description: An optional named source within the artifact
@@ -3714,29 +3709,12 @@
   - name: end_time
     type: Any
     description: Stop end events reach this time (event sources).
-  - name: notebook_id
-    type: string
-    description: The notebook to read from (should also include cell id)
-  - name: notebook_cell_id
-    type: string
-    description: The notebook cell read from (should also include notebook id)
-  - name: notebook_cell_version
-    type: string
-    description: The notebook cell version to read from (should also include notebook
-      id and notebook cell)
-  - name: notebook_cell_table
-    type: int64
-    description: A notebook cell can have multiple tables.)
   - name: start_row
     type: int64
     description: Start reading the result set from this row
   - name: count
     type: int64
     description: Maximum number of clients to fetch (default unlimited)'
-  - name: orgs
-    type: string
-    description: Run the query over these orgs. If empty use the current org.'
-    repeated: true
   category: server
   metadata:
     permissions: READ_RESULTS
@@ -5131,7 +5109,6 @@
 
     This plugin is useful for evaluating a query in a different
     environment or context, or turning a string into a query.
-
   type: Plugin
   args:
   - name: query
@@ -7068,6 +7045,7 @@
   - name: artifact
     type: string
     description: The artifact to watch
+    required: true
   category: event
   metadata:
     permissions: READ_RESULTS
@@ -7378,3 +7356,4 @@
   category: plugin
   metadata:
     permissions: FILESYSTEM_READ
+

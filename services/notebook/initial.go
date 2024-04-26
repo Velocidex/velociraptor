@@ -254,6 +254,8 @@ func (self *NotebookManager) CreateInitialNotebook(ctx context.Context,
 			notebook_metadata.CellMetadata, cell_metadata)
 	}
 
+	var final_err error
+
 	// When we create the notebook we need to wait for all the cells
 	// to be calculated otherwise we will overwhelm the workers.
 	for _, cell_req := range new_cell_requests {
@@ -265,11 +267,16 @@ func (self *NotebookManager) CreateInitialNotebook(ctx context.Context,
 		_, err = self.UpdateNotebookCell(
 			ctx, notebook_metadata, principal, cell_req)
 		if err != nil {
-			return err
+			// We failed to create this cell but we should not stop
+			// because this will ignore the next cells. Keep going
+			// anyway otherwise the next cells will be lost.
+			if final_err == nil {
+				final_err = err
+			}
 		}
 	}
 
-	return err
+	return final_err
 }
 
 func getCellsForEvents(ctx context.Context,
