@@ -114,7 +114,7 @@
 
   --color-danger-emphasis: #dd4b3920;
 
-  --invalid-form-control-error: #3f0505;
+  --invalid-form-control-error: #ff7f00;
 }
 
 .midnight img.velo-logo {
@@ -694,6 +694,12 @@ body.midnight {
 .midnight div.pretty-json-container {
   font-family: var(--font-family-monospace);
   filter: invert(0);
+}
+
+.midnight .invalid.form-control,
+.midnight .invalid.form-control:focus {
+  color: #FFFF00;
+  background: var(--invalid-form-control-error);
 }
 
 /* Tabs */

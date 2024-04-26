@@ -529,6 +529,11 @@ body.pink-light {
   filter: invert(0);
 }
 
+.pink-light .invalid.form-control,
+.pink-light .invalid.form-control:focus {
+  background: var(--invalid-form-control-error);
+}
+
 /* Tabs */
 .pink-light .tab-content {
   color: var(--color-foreground);

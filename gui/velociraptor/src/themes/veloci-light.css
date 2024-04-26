@@ -409,6 +409,11 @@ body.veloci-light {
   filter: invert(0);
 }
 
+.veloci-light .invalid.form-control,
+.veloci-light .invalid.form-control:focus {
+  background: var(--invalid-form-control-error);
+}
+
 /* Tabs */
 .veloci-light .tab-content {
   color: var(--color-foreground);

@@ -576,6 +576,11 @@ body.github-dimmed-dark {
   filter: invert(0);
 }
 
+.github-dimmed-dark .invalid.form-control,
+.github-dimmed-dark .invalid.form-control:focus {
+  background: var(--invalid-form-control-error);
+}
+
 /* Tabs */
 .github-dimmed-dark .tab-content {
   color: var(--color-foreground);

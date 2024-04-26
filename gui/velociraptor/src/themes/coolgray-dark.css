@@ -657,6 +657,11 @@ body.coolgray-dark {
   filter: invert(0);
 }
 
+.coolgray-dark .invalid.form-control,
+.coolgray-dark .invalid.form-control:focus {
+  background: var(--invalid-form-control-error);
+}
+
 /* Tabs */
 .coolgray-dark .tab-content {
   color: var(--color-foreground);

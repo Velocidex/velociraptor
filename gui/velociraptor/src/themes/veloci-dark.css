@@ -520,6 +520,11 @@ body.veloci-dark {
   filter: invert(1);
 }
 
+.veloci-dark .invalid.form-control,
+.veloci-dark .invalid.form-control:focus {
+  background: var(--invalid-form-control-error);
+}
+
 /* Tabs */
 .veloci-dark .tab-content {
   color: var(--color-foreground);

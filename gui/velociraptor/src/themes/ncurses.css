@@ -792,8 +792,9 @@ body.ncurses {
   font-family: var(--font-family-sans-serif);
 }
 
-.ncurses .invalid.form-control {
-  background: rgba(255,0,0,0.5);
+.ncurses .invalid.form-control,
+.ncurses .invalid.form-control:focus {
+  background: var(--invalid-form-control-error);
 }
 
 .ncurses .estimate.alert-info {
