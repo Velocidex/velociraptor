@@ -409,6 +409,11 @@ body.veloci-light {
   filter: invert(0);
 }
 
+.veloci-light .invalid.form-control,
+.veloci-light .invalid.form-control:focus {
+  background: var(--invalid-form-control-error);
+}
+
 /* Tabs */
 .veloci-light .tab-content {
   color: var(--color-foreground);
@@ -773,24 +778,26 @@ body.veloci-light {
 }
 
 .veloci-light .velo__multi-value {
-  border: 1px solid var(--color-btn-border);
-  background-color: var(--color-canvas-background);
+  border: 1px solid var(--color-btn-default-border);
+  background-color: var(--color-btn-default-background);
 }
 
 .veloci-light .velo__multi-value__label {
   color: var(--color-foreground);
+  background-color: var(--color-btn-default-background);
   border: none;
+  font-size: var(--font-size-small);
 }
 
 .veloci-light .velo__multi-value__remove {
   color: var(--color-foreground);
-  background-color: var(--color-btn-default-border);
+  background-color: var(--color-btn-default-background);
   border: none;
 }
 
 .veloci-light .velo__multi-value__remove:hover {
   color: var(--color-foreground-inverse);
-  background-color: var(--color-accent-75);
+  background-color: var(--color-accent-50);
   font-weight: 700;
 }
 
