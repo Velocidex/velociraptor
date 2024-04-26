@@ -62,11 +62,20 @@ const (
 	HuntFlushToDatastoreAsync
 )
 
+type HuntSearchOptions int
+
+const (
+	AllHunts HuntSearchOptions = iota
+
+	// Only visit non expired hunts
+	OnlyRunningHunts
+)
+
 type IHuntDispatcher interface {
 	// Applies the function on all the hunts. Functions may not
 	// modify the hunt but will have read only access to the hunt
 	// objects under lock.
-	ApplyFuncOnHunts(ctx context.Context,
+	ApplyFuncOnHunts(ctx context.Context, options HuntSearchOptions,
 		cb func(hunt *api_proto.Hunt) error) error
 
 	// As an optimization callers may get the latest hunt's

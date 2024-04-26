@@ -65,9 +65,6 @@ func (self *NotebookTestSuite) SetupTest() {
 }
 
 func (self *NotebookTestSuite) TestCreateNotebook() {
-	closer := utils.MockTime(utils.NewMockClock(time.Unix(100, 10)))
-	defer closer()
-
 	repository := self.LoadArtifacts(testArtifacts...)
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,

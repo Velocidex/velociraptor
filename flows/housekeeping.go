@@ -104,25 +104,26 @@ func CheckClientStatus(
 	// Take a snapshot of the hunts that we need to run on this
 	// client to reduce the time under lock.
 	hunts := make([]*api_proto.Hunt, 0)
-	err = dispatcher.ApplyFuncOnHunts(ctx, func(hunt *api_proto.Hunt) error {
-		// Hunt is stopped we dont care about it.
-		if hunt.State != api_proto.Hunt_RUNNING {
-			return nil
-		}
+	err = dispatcher.ApplyFuncOnHunts(ctx, services.OnlyRunningHunts,
+		func(hunt *api_proto.Hunt) error {
+			// Hunt is stopped we dont care about it.
+			if hunt.State != api_proto.Hunt_RUNNING {
+				return nil
+			}
 
-		// This hunt is not relevant to this client.
-		if hunt.StartTime <= stats.LastHuntTimestamp {
-			return nil
-		}
+			// This hunt is not relevant to this client.
+			if hunt.StartTime <= stats.LastHuntTimestamp {
+				return nil
+			}
 
-		// Take a snapshot of the hunt id and start time.
-		hunts = append(hunts, &api_proto.Hunt{
-			HuntId:    hunt.HuntId,
-			StartTime: hunt.StartTime,
+			// Take a snapshot of the hunt id and start time.
+			hunts = append(hunts, &api_proto.Hunt{
+				HuntId:    hunt.HuntId,
+				StartTime: hunt.StartTime,
+			})
+
+			return nil
 		})
-
-		return nil
-	})
 
 	if err != nil {
 		return err

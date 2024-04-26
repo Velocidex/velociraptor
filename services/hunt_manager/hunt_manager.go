@@ -337,7 +337,7 @@ func (self *HuntManager) ProcessInterrogation(
 		return errors.New("ClientId not found")
 	}
 
-	return self.participateInAllHunts(ctx, config_obj, client_id,
+	return self.participateInRunningHunts(ctx, config_obj, client_id,
 		// When a new client is interrogated, it can only really
 		// affect hunts with OS conditions.
 		func(hunt *api_proto.Hunt) bool {
@@ -446,7 +446,7 @@ func (self *HuntManager) ProcessLabelChange(
 		return nil
 	}
 
-	return self.participateInAllHunts(ctx, config_obj, client_id,
+	return self.participateInRunningHunts(ctx, config_obj, client_id,
 		// When a label changes it can only really affect hunts with
 		// include label conditions.
 		func(hunt *api_proto.Hunt) bool {
@@ -455,7 +455,7 @@ func (self *HuntManager) ProcessLabelChange(
 		})
 }
 
-func (self *HuntManager) participateInAllHunts(ctx context.Context,
+func (self *HuntManager) participateInRunningHunts(ctx context.Context,
 	config_obj *config_proto.Config, client_id string,
 	should_participate_cb func(hunt *api_proto.Hunt) bool) error {
 
@@ -470,18 +470,19 @@ func (self *HuntManager) participateInAllHunts(ctx context.Context,
 		return err
 	}
 
-	return dispatcher.ApplyFuncOnHunts(ctx, func(hunt *api_proto.Hunt) error {
-		if !should_participate_cb(hunt) {
+	return dispatcher.ApplyFuncOnHunts(ctx, services.OnlyRunningHunts,
+		func(hunt *api_proto.Hunt) error {
+			if !should_participate_cb(hunt) {
+				return nil
+			}
+
+			journal.PushRowsToArtifactAsync(ctx, config_obj,
+				ordereddict.NewDict().
+					Set("HuntId", hunt.HuntId).
+					Set("ClientId", client_id), "System.Hunt.Participation")
+
 			return nil
-		}
-
-		journal.PushRowsToArtifactAsync(ctx, config_obj,
-			ordereddict.NewDict().
-				Set("HuntId", hunt.HuntId).
-				Set("ClientId", client_id), "System.Hunt.Participation")
-
-		return nil
-	})
+		})
 }
 
 // When a client is found to be missing a hunt, the foreman sends the
