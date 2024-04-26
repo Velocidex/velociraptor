@@ -1,4 +1,4 @@
-name: Custom.Server.Import.CuratedSigma
+name: Server.Import.CuratedSigma
 description: |
   This artifact allows importing curated Sigma rules from
   https://sigma.velocidex.com
