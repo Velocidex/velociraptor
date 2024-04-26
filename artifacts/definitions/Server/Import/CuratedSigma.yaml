@@ -14,7 +14,7 @@ required_permissions:
 parameters:
   - name: PackageNames
     type: multichoice
-    default: Velociraptor Hayabusa Ruleset
+    default: '["Velociraptor Hayabusa Ruleset"]'
     choices:
       - Velociraptor Hayabusa Ruleset
       - Velociraptor Hayabusa Live Detection
