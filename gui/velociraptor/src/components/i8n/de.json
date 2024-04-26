@@ -254,8 +254,10 @@
      "5a65726f206f72206d6f7265206d6174636865732c20707265666572206665776572": "Keine oder mehr Übereinstimmungen, lieber weniger",
      "456e746572206d61726b646f776e207465787420746f2072656e64657220696e20746865206e6f7465626f6f6b": "Geben Sie den Markdown-Text zum Rendern im Notizbuch ein",
      "4d61726b646f776e": "Markdown",
-     "5369676d61": "Sigma",
      "547970652056514c20746f206576616c75617465206f6e207468652073657276657220287072657373203f20666f722068656c7029": "Geben Sie VQL zur Auswertung auf dem Server ein (drücken Sie. ? um Hilfe)",
      "6d61634f53204f6e6c79": "Nur macOS",
-     "466f726d617420436f6c756d6e73": "Spalten formatieren"
+     "466f726d617420436f6c756d6e73": "Spalten formatieren",
+     "436f756e74": "Anzahl",
+     "537461636b": "Stapel",
+     "537461636b696e67206f6620636f6c756d6e20": "Stapelung der Spalte"
 }
