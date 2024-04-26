@@ -38,7 +38,6 @@ const presetFilters = ()=>[
     {value: "type:SERVER_EVENT", label: T("Server Monitoring")},
     {value: "tool:.+", label: T("Using Tools")},
     {value: "^exchange.+", label: T("Exchange")},
-    {value: "^sigma.+", label: T("Sigma")},
     {value: "builtin:yes", label: T("BuiltIn Only")},
     {value: "builtin:no", label: T("Custom Only")},
 ];
