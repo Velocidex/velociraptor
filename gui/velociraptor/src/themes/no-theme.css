@@ -183,3 +183,27 @@ body.no-theme {
   font-size: var(--font-size-base);
   padding-left: 12px;
 }
+
+.no-theme .velo__multi-value {
+    border: 1px solid;
+    background-color: var(--color-proto-background);
+  }
+  
+  .no-theme .velo__multi-value__label {
+    color: var(--color-foreground);
+    border: none;
+    background-color: var(--color-proto-background);
+    font-size: var(--font-size-small);
+  }
+  
+  .no-theme .velo__multi-value__remove {
+    color: var(--color-foreground);
+    background-color: var(--color-proto-background);
+    border: none;
+  }
+  
+  .no-theme .velo__multi-value__remove:hover {
+    color: var(--color-foreground);
+    background: var(--color-nav-link-active-background);
+    font-weight: 700;
+  }
