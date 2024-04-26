@@ -27,14 +27,13 @@ parameters:
 
 sources:
   - query: |
-      LET PackageNames <= parse_json_array(data=PackageNames)
       LET URLlookup = dict(
         `Velociraptor ChopChopGo Ruleset (Linux)`="https://sigma.velocidex.com/Velociraptor-ChopChopGo-Rules.zip",
         `Velociraptor Hayabusa Ruleset`="https://sigma.velocidex.com/Velociraptor-Hayabusa-Rules.zip",
         `Velociraptor Hayabusa Live Detection`="https://sigma.velocidex.com/Velociraptor-Hayabusa-Monitoring.zip")
 
       SELECT * FROM foreach(row=PackageNames,
-                            query={SELECT * FROM 
+                            query={SELECT * FROM
                                 Artifact.Server.Import.ArtifactExchange(
                                 Prefix=Prefix,
                                 ExchangeURL=get(item= URLlookup, member= _value))})
