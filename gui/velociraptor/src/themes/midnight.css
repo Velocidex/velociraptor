@@ -114,7 +114,7 @@
 
   --color-danger-emphasis: #dd4b3920;
 
-  --invalid-form-control-error: #3f0505;
+  --invalid-form-control-error: #ff7f00;
 }
 
 .midnight img.velo-logo {
@@ -696,6 +696,12 @@ body.midnight {
   filter: invert(0);
 }
 
+.midnight .invalid.form-control,
+.midnight .invalid.form-control:focus {
+  color: #FFFF00;
+  background: var(--invalid-form-control-error);
+}
+
 /* Tabs */
 .midnight .tab-content {
   color: var(--color-foreground);
@@ -834,9 +840,11 @@ body.midnight {
 }
 
 .midnight .velo__multi-value__label {
-  color: var(--color-foreground);
+  color: var(--color-foreground-inverse);
+  background-color: var(--color-accent-100);
   border: none;
   border-radius: 0;
+  font-size: var(--font-size-small);
 }
 
 .midnight .velo__multi-value__remove {

@@ -23,7 +23,7 @@ parameters:
   - name: MultiChoiceSelector
     description: Choose one or more items from a selection
     type: multichoice
-    default: Bananas
+    default: '["Bananas"]'
     choices:
       - Apples
       - Bananas

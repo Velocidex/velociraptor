@@ -139,7 +139,7 @@ LET %v <= if(
 					escaped_name, escaped_name, escaped_name, escaped_name),
 			})
 
-		case "json_array", "regex_array":
+		case "json_array", "regex_array", "multichoice":
 			result.Query = append(result.Query, &actions_proto.VQLRequest{
 				VQL: fmt.Sprintf(`
 LET %v <= if(
