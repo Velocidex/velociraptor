@@ -259,5 +259,8 @@
      "4d61726b646f776e": "Redução",
      "547970652056514c20746f206576616c75617465206f6e207468652073657276657220287072657373203f20666f722068656c7029": "Digite VQL para avaliar no servidor (pressione ? por ajuda)",
      "6d61634f53204f6e6c79": "somente macOS",
-     "466f726d617420436f6c756d6e73": "Formatar Colunas"
+     "466f726d617420436f6c756d6e73": "Formatar Colunas",
+     "436f756e74": "Contagem",
+     "537461636b": "Pilha",
+     "537461636b696e67206f6620636f6c756d6e20": "Empilhamento de coluna"
 }
