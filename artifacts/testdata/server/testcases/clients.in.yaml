@@ -40,3 +40,7 @@ Queries:
        mac_addresses=["00:11:22", "22:33:44"])
 
   - SELECT *, client_record FROM clients(client_id=client_record.ClientId)
+
+  # Remove the new client.
+  - SELECT * FROM client_delete(client_id=client_record.ClientId, really_do_it=TRUE)
+  - SELECT * FROM clients(client_id=client_record.ClientId)

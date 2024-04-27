@@ -3,42 +3,8 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
   "Hostname": "DESKTOP-BP4S7TF",
   "client_id": "C.4f5e52adf0a337a9",
   "LastSeen": 1638362977.493088
- },
- {
-  "Hostname": "myHostname",
-  "client_id": "C.12345678",
-  "LastSeen": 0
  }
 ]SELECT os_info.fqdn as Hostname, os_info.system as System, client_id FROM clients(search='host:testcomputer') order by client_id[]SELECT * from clients() order by client_id[
- {
-  "client_id": "C.12345678",
-  "agent_information": {
-   "version": "",
-   "name": "",
-   "build_time": "",
-   "build_url": ""
-  },
-  "os_info": {
-   "system": "windows",
-   "hostname": "myHostname",
-   "release": "",
-   "machine": "",
-   "fqdn": "myHostname",
-   "mac_addresses": [
-    "00:11:22",
-    "22:33:44"
-   ]
-  },
-  "first_seen_at": 1601547083,
-  "last_seen_at": 0,
-  "last_ip": "",
-  "last_interrogate_flow_id": "",
-  "last_interrogate_artifact_name": "",
-  "labels": [],
-  "last_hunt_timestamp": 0,
-  "last_event_table_version": 0,
-  "last_label_timestamp": 0
- },
  {
   "client_id": "C.4f5e52adf0a337a9",
   "agent_information": {
@@ -147,4 +113,4 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
    ]
   }
  }
-]
+]SELECT * FROM client_delete(client_id=client_record.ClientId, really_do_it=TRUE)[]SELECT * FROM clients(client_id=client_record.ClientId)[]
