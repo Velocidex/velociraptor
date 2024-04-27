@@ -23,7 +23,7 @@ parameters:
 
   - name: Prefix
     description: Add this prefix to imported artifacts
-    validating_regex: '^[a-zA-Z0-9_.]$'
+    validating_regex: '^[a-zA-Z0-9_.]*$'
 
 sources:
   - query: |
