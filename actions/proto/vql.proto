@@ -187,6 +187,7 @@ message ClientInfo {
     string client_version = 12;
     string client_name = 13;
     uint64 first_seen_at = 20;
+    uint64 last_seen_at = 28;
     string build_time = 24;
     string build_url = 25;
     uint64 install_time = 26;
