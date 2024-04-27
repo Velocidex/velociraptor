@@ -442,11 +442,11 @@ func doRun() error {
 		}
 	}
 
-	fmt.Println("NewVelociraptorService: %v", err)
+	fmt.Printf("NewVelociraptorService: %v", err)
 	ctx := context.Background()
 	service, err := NewVelociraptorService(ctx, name)
 	if err != nil {
-		fmt.Println("NewVelociraptorService: %v", err)
+		fmt.Printf("NewVelociraptorService: %v", err)
 		return err
 	}
 	defer service.Close()
