@@ -80,7 +80,7 @@ func (self NewClientFunction) Call(ctx context.Context,
 	}
 
 	if !arg.LastSeenAt.IsZero() {
-		record.LastSeenAt = uint64(arg.LastSeenAt.Unix())
+		record.Ping = uint64(arg.LastSeenAt.UnixNano() / 1000)
 	}
 
 	err = client_info_manager.Set(ctx, &services.ClientInfo{record})

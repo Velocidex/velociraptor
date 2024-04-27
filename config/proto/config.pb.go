@@ -488,7 +488,7 @@ type RingBufferConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Deprecated: Marked as deprecated in config.proto.
+	// Deprecated: Do not use.
 	Filename        string `protobuf:"bytes,3,opt,name=filename,proto3" json:"filename,omitempty"`
 	MemorySize      uint64 `protobuf:"varint,1,opt,name=memory_size,json=memorySize,proto3" json:"memory_size,omitempty"`
 	DiskSize        uint64 `protobuf:"varint,2,opt,name=disk_size,json=diskSize,proto3" json:"disk_size,omitempty"`
@@ -529,7 +529,7 @@ func (*RingBufferConfig) Descriptor() ([]byte, []int) {
 	return file_config_proto_rawDescGZIP(), []int{6}
 }
 
-// Deprecated: Marked as deprecated in config.proto.
+// Deprecated: Do not use.
 func (x *RingBufferConfig) GetFilename() string {
 	if x != nil {
 		return x.Filename
@@ -1947,7 +1947,7 @@ type DynDNSConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Deprecated: Marked as deprecated in config.proto.
+	// Deprecated: Do not use.
 	Hostname string `protobuf:"bytes,1,opt,name=hostname,proto3" json:"hostname,omitempty"`
 	// Type of DynDNS server. Currently supported:
 	// * empty string or dyndns
@@ -2005,7 +2005,7 @@ func (*DynDNSConfig) Descriptor() ([]byte, []int) {
 	return file_config_proto_rawDescGZIP(), []int{17}
 }
 
-// Deprecated: Marked as deprecated in config.proto.
+// Deprecated: Do not use.
 func (x *DynDNSConfig) GetHostname() string {
 	if x != nil {
 		return x.Hostname
@@ -2343,7 +2343,7 @@ type FrontendConfig struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Deprecated: Marked as deprecated in config.proto.
+	// Deprecated: Do not use.
 	PublicPath string `protobuf:"bytes,8,opt,name=public_path,json=publicPath,proto3" json:"public_path,omitempty"`
 	// Publicly accessible hostname for this frontend.
 	Hostname string `protobuf:"bytes,19,opt,name=hostname,proto3" json:"hostname,omitempty"`
@@ -2452,7 +2452,7 @@ func (*FrontendConfig) Descriptor() ([]byte, []int) {
 	return file_config_proto_rawDescGZIP(), []int{19}
 }
 
-// Deprecated: Marked as deprecated in config.proto.
+// Deprecated: Do not use.
 func (x *FrontendConfig) GetPublicPath() string {
 	if x != nil {
 		return x.PublicPath
@@ -4334,7 +4334,7 @@ type Config struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Deprecated: Marked as deprecated in config.proto.
+	// Deprecated: Do not use.
 	AutocertDomain string          `protobuf:"bytes,21,opt,name=autocert_domain,json=autocertDomain,proto3" json:"autocert_domain,omitempty"`
 	Version        *Version        `protobuf:"bytes,8,opt,name=version,proto3" json:"version,omitempty"`
 	Client         *ClientConfig   `protobuf:"bytes,1,opt,name=Client,proto3" json:"Client,omitempty"`
@@ -4350,7 +4350,7 @@ type Config struct {
 	// Deprecated - Should not appear in new configs and will be
 	// ignored. It is only here for backwards compatibility.
 	//
-	// Deprecated: Marked as deprecated in config.proto.
+	// Deprecated: Do not use.
 	Writeback *Writeback `protobuf:"bytes,9,opt,name=Writeback,proto3" json:"Writeback,omitempty"`
 	// Deprecated - Mail plugin setting are now provided by args.
 	Mail    *MailConfig    `protobuf:"bytes,11,opt,name=Mail,proto3" json:"Mail,omitempty"`
@@ -4426,7 +4426,7 @@ func (*Config) Descriptor() ([]byte, []int) {
 	return file_config_proto_rawDescGZIP(), []int{32}
 }
 
-// Deprecated: Marked as deprecated in config.proto.
+// Deprecated: Do not use.
 func (x *Config) GetAutocertDomain() string {
 	if x != nil {
 		return x.AutocertDomain
@@ -4490,7 +4490,7 @@ func (x *Config) GetDatastore() *DatastoreConfig {
 	return nil
 }
 
-// Deprecated: Marked as deprecated in config.proto.
+// Deprecated: Do not use.
 func (x *Config) GetWriteback() *Writeback {
 	if x != nil {
 		return x.Writeback
