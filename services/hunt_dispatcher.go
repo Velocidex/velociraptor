@@ -106,7 +106,10 @@ type IHuntDispatcher interface {
 		acl_manager vql_subsystem.ACLManager,
 		hunt *api_proto.Hunt) (*api_proto.Hunt, error)
 
-	// Deprecated - use GetHunts for paged access
+	ListActiveHunts(ctx context.Context,
+		config_obj *config_proto.Config,
+		in *api_proto.ListHuntsRequest) (*api_proto.ListHuntsResponse, error)
+
 	ListHunts(ctx context.Context,
 		config_obj *config_proto.Config,
 		in *api_proto.ListHuntsRequest) (*api_proto.ListHuntsResponse, error)

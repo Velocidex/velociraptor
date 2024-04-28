@@ -38,6 +38,19 @@ func FindCollectedArtifacts(
 	}
 }
 
+func (self *HuntDispatcher) ListActiveHunts(
+	ctx context.Context, config_obj *config_proto.Config,
+	in *api_proto.ListHuntsRequest) (*api_proto.ListHuntsResponse, error) {
+	hunts, _ := self.ListHunts(ctx, config_obj, in)
+
+	for i, hunt := range hunts.GetItems() {
+		if hunt.State != api_proto.Hunt_RUNNING {
+			hunts.Items = append(hunts.Items[:i], hunts.Items[i+1:]...)
+		}
+	}
+	return hunts, nil
+}
+
 // This function is deprecated.
 func (self *HuntDispatcher) ListHunts(
 	ctx context.Context, config_obj *config_proto.Config,
