@@ -28,3 +28,19 @@ Queries:
   - SELECT client_set_metadata(client_id='C.4f5e52adf0a337a9',
          AnotherItem="Hello", Bar=NULL) FROM scope()
   - SELECT client_metadata(client_id='C.4f5e52adf0a337a9') FROM scope()
+
+  # Creating clients
+  - LET client_record <= client_create(
+       first_seen_at="2020-10-01T10:11:23",
+       last_seen_at="2021-02-03T12:12:24",
+       labels=["Label1", "Label2"],
+       os="windows",
+       hostname="myHostname",
+       client_id="C.12345678",
+       mac_addresses=["00:11:22", "22:33:44"])
+
+  - SELECT *, client_record FROM clients(client_id=client_record.ClientId)
+
+  # Remove the new client.
+  - SELECT * FROM client_delete(client_id=client_record.ClientId, really_do_it=TRUE)
+  - SELECT * FROM clients(client_id=client_record.ClientId)

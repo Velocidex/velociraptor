@@ -64,4 +64,53 @@ LET _ <= SELECT label(client_id=client_id, op='remove', labels=labels), client_i
    "AnotherItem": "Hello"
   }
  }
-]
+]LET client_record <= client_create( first_seen_at="2020-10-01T10:11:23", last_seen_at="2021-02-03T12:12:24", labels=["Label1", "Label2"], os="windows", hostname="myHostname", client_id="C.12345678", mac_addresses=["00:11:22", "22:33:44"])[]SELECT *, client_record FROM clients(client_id=client_record.ClientId)[
+ {
+  "client_id": "C.12345678",
+  "agent_information": {
+   "version": "",
+   "name": "",
+   "build_time": "",
+   "build_url": ""
+  },
+  "os_info": {
+   "system": "windows",
+   "hostname": "myHostname",
+   "release": "",
+   "machine": "",
+   "fqdn": "myHostname",
+   "mac_addresses": [
+    "00:11:22",
+    "22:33:44"
+   ]
+  },
+  "first_seen_at": 1601547083,
+  "last_seen_at": 1612354344000000,
+  "last_ip": "",
+  "last_interrogate_flow_id": "",
+  "last_interrogate_artifact_name": "",
+  "labels": [
+   "Label1",
+   "Label2"
+  ],
+  "last_hunt_timestamp": 0,
+  "last_event_table_version": 0,
+  "last_label_timestamp": 0,
+  "client_record": {
+   "client_id": "C.12345678",
+   "hostname": "myHostname",
+   "fqdn": "myHostname",
+   "system": "windows",
+   "ping": 1612354344000000,
+   "first_seen_at": 1601547083,
+   "labels": [
+    "Label1",
+    "Label2"
+   ],
+   "mac_addresses": [
+    "00:11:22",
+    "22:33:44"
+   ]
+  }
+ }
+]SELECT * FROM client_delete(client_id=client_record.ClientId, really_do_it=TRUE)[]SELECT * FROM clients(client_id=client_record.ClientId)[]
