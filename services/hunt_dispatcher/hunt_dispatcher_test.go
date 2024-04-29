@@ -182,7 +182,8 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntPropagateChanges() {
 func (self *HuntDispatcherTestSuite) getAllHunts() []*api_proto.Hunt {
 	// Get the list of all hunts
 	hunts := []*api_proto.Hunt{}
-	err := self.master_dispatcher.ApplyFuncOnHunts(self.Ctx,
+	err := self.master_dispatcher.ApplyFuncOnHunts(
+		self.Ctx, services.AllHunts,
 		func(hunt *api_proto.Hunt) error {
 			hunts = append(hunts, hunt)
 			return nil

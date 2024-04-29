@@ -191,21 +191,28 @@ func (self *HuntDispatcher) ProcessUpdate(
 // Applies a callback on all hunts. The callback is not allowed to
 // modify the hunts since it is getting a copy of the hunt object.
 func (self *HuntDispatcher) ApplyFuncOnHunts(
-	ctx context.Context,
+	ctx context.Context, options services.HuntSearchOptions,
 	cb func(hunt *api_proto.Hunt) error) (res_error error) {
+
+	now := uint64(utils.GetTime().Now().UnixNano() / 1000)
 
 	// Page through the hunts table and apply the function on each
 	// page.
 	var offset, length int64
 	length = 1000
-	options := result_sets.ResultSetOptions{}
+	rs_options := result_sets.ResultSetOptions{}
 	for {
-		hunts, total, err := self.Store.ListHunts(ctx, options, offset, length)
+		hunts, total, err := self.Store.ListHunts(ctx, rs_options, offset, length)
 		if err != nil {
 			return err
 		}
 
 		for _, hunt := range hunts {
+			if options == services.OnlyRunningHunts &&
+				(hunt.State != api_proto.Hunt_RUNNING || now > hunt.Expires) {
+				continue
+			}
+
 			err := cb(hunt)
 			if err != nil {
 				res_error = err
@@ -343,19 +350,20 @@ func (self *HuntDispatcher) checkForExpiry(
 		// Check if the hunt is expired and adjust its state if so
 		now := uint64(utils.GetTime().Now().UnixNano() / 1000)
 
-		self.ApplyFuncOnHunts(ctx, func(hunt_obj *api_proto.Hunt) error {
-			if hunt_obj.State == api_proto.Hunt_RUNNING &&
-				now > hunt_obj.Expires {
+		self.ApplyFuncOnHunts(ctx, services.OnlyRunningHunts,
+			func(hunt_obj *api_proto.Hunt) error {
+				if hunt_obj.State == api_proto.Hunt_RUNNING &&
+					now > hunt_obj.Expires {
 
-				self.MutateHunt(ctx, config_obj,
-					&api_proto.HuntMutation{
-						HuntId: hunt_obj.HuntId,
-						State:  api_proto.Hunt_STOPPED,
-						Stats:  &api_proto.HuntStats{Stopped: true},
-					})
-			}
-			return nil
-		})
+					self.MutateHunt(ctx, config_obj,
+						&api_proto.HuntMutation{
+							HuntId: hunt_obj.HuntId,
+							State:  api_proto.Hunt_STOPPED,
+							Stats:  &api_proto.HuntStats{Stopped: true},
+						})
+				}
+				return nil
+			})
 	}
 }
 

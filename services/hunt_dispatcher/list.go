@@ -10,6 +10,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/reporting"
+	"www.velocidex.com/golang/velociraptor/services"
 )
 
 // Backwards compatibility: Figure out the list of collected hunts
@@ -53,7 +54,7 @@ func (self *HuntDispatcher) ListHunts(
 	// creation time. This should be very fast because all hunts
 	// are kept in memory inside the hunt dispatcher.
 	items := make([]*api_proto.Hunt, 0, end)
-	err := self.ApplyFuncOnHunts(ctx,
+	err := self.ApplyFuncOnHunts(ctx, services.AllHunts,
 		func(hunt *api_proto.Hunt) error {
 			if in.UserFilter != "" &&
 				in.UserFilter != hunt.Creator {

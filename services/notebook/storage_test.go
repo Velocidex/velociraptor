@@ -1,18 +1,12 @@
 package notebook_test
 
 import (
-	"time"
-
 	"github.com/alecthomas/assert"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func (self *NotebookManagerTestSuite) TestNotebookStorage() {
-	closer := utils.MockTime(utils.NewMockClock(time.Unix(10, 10)))
-	defer closer()
-
 	notebook_manager, err := services.GetNotebookManager(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
