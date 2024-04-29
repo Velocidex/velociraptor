@@ -23,6 +23,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,6 +34,7 @@ import (
 
 	kingpin "github.com/alecthomas/kingpin/v2"
 	errors "github.com/go-errors/errors"
+	"github.com/virtuald/go-paniclog"
 	"golang.org/x/sys/windows/svc"
 	"golang.org/x/sys/windows/svc/debug"
 	"golang.org/x/sys/windows/svc/eventlog"
@@ -402,6 +404,28 @@ func loadClientConfig() (*config_proto.Config, error) {
 	return config_obj, nil
 }
 
+func maybeWritePanicFile(config_obj *config_proto.Config) {
+	if config_obj.Client == nil ||
+		config_obj.Client.PanicFile == "" {
+		return
+	}
+
+	fd, err := ioutil.TempFile("", config_obj.Client.PanicFile)
+	if err != nil {
+		Prelog("Error opening panic file: %v\n", err)
+		return
+	}
+
+	fmt.Printf("Redirecting output to %v\n", fd.Name())
+	_, err = paniclog.RedirectStderr(fd)
+	if err != nil {
+		fmt.Println("Error redirecting stderr:", err)
+		return
+	}
+
+	fd.Close()
+}
+
 func doRun() error {
 	name := "Velociraptor"
 	config_obj, err := loadClientConfig()
@@ -411,10 +435,18 @@ func doRun() error {
 		name = config_obj.Client.WindowsInstaller.ServiceName
 	}
 
+	if config_obj != nil {
+		maybeWritePanicFile(config_obj)
+		if config_obj.Client != nil {
+			config_obj.Client.PanicFile = ""
+		}
+	}
+
+	fmt.Printf("NewVelociraptorService: %v", err)
 	ctx := context.Background()
 	service, err := NewVelociraptorService(ctx, name)
 	if err != nil {
-		Prelog("NewVelociraptorService: %v", err)
+		fmt.Printf("NewVelociraptorService: %v", err)
 		return err
 	}
 	defer service.Close()
@@ -530,6 +562,8 @@ func runOnce(ctx context.Context,
 		}
 		return
 	}
+
+	maybeWritePanicFile(config_obj)
 
 	writeback_service := writeback.GetWritebackService()
 	writeback, err := writeback_service.GetWriteback(config_obj)

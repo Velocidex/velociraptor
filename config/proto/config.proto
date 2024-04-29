@@ -314,6 +314,8 @@ message ClientConfig {
     // be decrypted on the server to read.
     string logfile_name = 47;
     uint64 logfile_size = 48;
+
+    string panic_file = 49;
 }
 
 message APIConfig {
