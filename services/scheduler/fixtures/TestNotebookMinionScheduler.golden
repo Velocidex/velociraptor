@@ -5,7 +5,7 @@
   "data": "{}",
   "cell_id": "NC.XXX",
   "messages": [
-   "DEBUG:Query Stats: {\"RowsScanned\":1,\"PluginsCalled\":1,\"FunctionsCalled\":1,\"ProtocolSearch\":0,\"ScopeC ..."
+   "DEBUG:Query Stats: {\"RowsScanned\":1,\"PluginsCalled\":1,\"FunctionsCalled\":1,\"ProtocolSearch\":0,\"ScopeCopy\":3}\n"
   ],
   "type": "vql",
   "current_version": "XXX",
