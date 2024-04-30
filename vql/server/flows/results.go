@@ -142,10 +142,16 @@ func (self SourcePlugin) Call(
 	if arg.NotebookCellId == "" && arg.Artifact != "" {
 		ok, client_id, _ := isArtifactEvent(scope, ctx, config_obj, arg)
 		if ok {
-			args.Set("client_id", client_id)
+			new_args := ordereddict.NewDict().
+				Set("client_id", client_id).
+				Set("artifact", arg.Artifact).
+				Set("source", arg.Source).
+				Set("start_time", arg.StartTime).
+				Set("end_time", arg.EndTime).
+				Set("start_row", arg.StartRow)
 
 			// Just delegate directly to the monitoring plugin.
-			return MonitoringPlugin{}.Call(ctx, scope, args)
+			return MonitoringPlugin{}.Call(ctx, scope, new_args)
 		}
 	}
 
