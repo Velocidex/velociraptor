@@ -80,7 +80,7 @@ require (
 	golang.org/x/mod v0.10.0
 	golang.org/x/net v0.23.0
 	golang.org/x/sys v0.18.0
-	golang.org/x/text v0.14.0 // indirect
+	golang.org/x/text v0.14.0
 	golang.org/x/time v0.3.0
 	google.golang.org/api v0.146.0
 	google.golang.org/genproto v0.0.0-20231009173412-8bfb1ae86b6c // indirect
@@ -142,6 +142,7 @@ require (
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/valyala/fastjson v1.6.4
 	github.com/vincent-petithory/dataurl v1.0.0
+	github.com/virtuald/go-paniclog v0.0.0-20190812204905-43a7fa316459
 	golang.org/x/oauth2 v0.13.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20231009173412-8bfb1ae86b6c
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
@@ -226,7 +227,6 @@ require (
 	github.com/tklauser/go-sysconf v0.3.9 // indirect
 	github.com/tklauser/numcpus v0.3.0 // indirect
 	github.com/ulikunitz/xz v0.5.11 // indirect
-	github.com/virtuald/go-paniclog v0.0.0-20190812204905-43a7fa316459 // indirect
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.mongodb.org/mongo-driver v1.12.1 // indirect
