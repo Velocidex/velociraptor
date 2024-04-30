@@ -66,10 +66,11 @@ func (self *notebookCellLogger) Write(b []byte) (int, error) {
 	self.mu.Lock()
 	if len(self.messages) < 10 {
 		snippet := string(b)
-		if len(snippet) > 100 {
+		if len(snippet) > 1000 {
 			snippet = snippet[:100] + " ..."
 		}
 		self.messages = append(self.messages, snippet)
+
 	} else {
 		self.more_messages = true
 

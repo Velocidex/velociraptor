@@ -30,6 +30,7 @@ import (
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/server/hunts"
@@ -142,10 +143,22 @@ func (self SourcePlugin) Call(
 	if arg.NotebookCellId == "" && arg.Artifact != "" {
 		ok, client_id, _ := isArtifactEvent(scope, ctx, config_obj, arg)
 		if ok {
-			args.Set("client_id", client_id)
+			new_args := ordereddict.NewDict().
+				Set("client_id", client_id).
+				Set("artifact", arg.Artifact).
+				Set("source", arg.Source).
+				Set("start_row", arg.StartRow)
+
+			if !utils.IsNil(arg.StartTime) {
+				new_args.Set("start_time", arg.StartTime)
+			}
+
+			if !utils.IsNil(arg.EndTime) {
+				new_args.Set("end_time", arg.EndTime)
+			}
 
 			// Just delegate directly to the monitoring plugin.
-			return MonitoringPlugin{}.Call(ctx, scope, args)
+			return MonitoringPlugin{}.Call(ctx, scope, new_args)
 		}
 	}
 
