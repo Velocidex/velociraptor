@@ -112,6 +112,8 @@ func (self *BaseTemplateEngine) Expand(values ...interface{}) interface{} {
 	return results
 }
 
+// TODO: Deprecate this - it is only used in the main dashboard now.
+
 // GenerateMonitoringDailyReport Generates a report for daily
 // monitoring reports.
 
