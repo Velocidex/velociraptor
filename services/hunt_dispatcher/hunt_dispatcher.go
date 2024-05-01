@@ -194,8 +194,6 @@ func (self *HuntDispatcher) ApplyFuncOnHunts(
 	ctx context.Context, options services.HuntSearchOptions,
 	cb func(hunt *api_proto.Hunt) error) (res_error error) {
 
-	now := uint64(utils.GetTime().Now().UnixNano() / 1000)
-
 	// Page through the hunts table and apply the function on each
 	// page.
 	var offset, length int64
@@ -209,7 +207,7 @@ func (self *HuntDispatcher) ApplyFuncOnHunts(
 
 		for _, hunt := range hunts {
 			if options == services.OnlyRunningHunts &&
-				(hunt.State != api_proto.Hunt_RUNNING || now > hunt.Expires) {
+				hunt.State != api_proto.Hunt_RUNNING {
 				continue
 			}
 
@@ -269,7 +267,6 @@ func (self *HuntDispatcher) MutateHunt(
 			Set("hunt_id", mutation.HuntId).
 			Set("mutation", mutation),
 		"Server.Internal.HuntModification")
-
 	return nil
 }
 
@@ -549,7 +546,7 @@ func NewHuntDispatcher(
 
 			case <-time.After(time.Duration(refresh) * time.Second):
 				// Re-read the hunts from the data store.
-				err := service.Store.Refresh(ctx, config_obj)
+				err := service.Refresh(ctx, config_obj)
 				if err != nil {
 					logger.Error("Unable to sync hunts: %v", err)
 				}
