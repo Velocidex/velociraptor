@@ -53,6 +53,24 @@ func (self RealClock) Now() time.Time {
 	return time.Now()
 }
 
+// A clock that behaves like a real one with sleeps but can be moved
+// forward arbitrarily.
+type RealClockWithOffset struct {
+	Duration time.Duration
+}
+
+func (self RealClockWithOffset) Sleep(d time.Duration) {
+	time.Sleep(d)
+}
+
+func (self RealClockWithOffset) After(d time.Duration) <-chan time.Time {
+	return time.After(d)
+}
+
+func (self RealClockWithOffset) Now() time.Time {
+	return time.Now().Add(self.Duration)
+}
+
 type MockClock struct {
 	mu      sync.Mutex
 	mockNow time.Time

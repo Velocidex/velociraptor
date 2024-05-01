@@ -11,10 +11,13 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 
@@ -36,6 +39,10 @@ func (self *HuntDispatcherTestSuite) SetupTest() {
 	self.ConfigObj = self.TestSuite.LoadConfig()
 	self.ConfigObj.Services.FrontendServer = true
 	self.ConfigObj.Services.HuntDispatcher = true
+	self.ConfigObj.Services.HuntManager = true
+	self.ConfigObj.Services.RepositoryManager = true
+	self.ConfigObj.Services.JournalService = true
+	self.ConfigObj.Defaults.HuntDispatcherRefreshSec = 1
 
 	self.LoadArtifactsIntoConfig([]string{`
 name: Server.Internal.HuntUpdate
@@ -194,6 +201,54 @@ func (self *HuntDispatcherTestSuite) getAllHunts() []*api_proto.Hunt {
 		return hunts[i].HuntId < hunts[j].HuntId
 	})
 	return hunts
+}
+
+func (self *HuntDispatcherTestSuite) TestExpiringHunts() {
+	closer := utils.MockTime(utils.RealClock{})
+	defer closer()
+
+	hunt_id := "H.121222"
+
+	now := utils.GetTime().Now().Unix()
+	json.Dump(now)
+	acl_manager := acl_managers.NullACLManager{}
+
+	hunt_obj, err := self.master_dispatcher.CreateHunt(self.Ctx, self.ConfigObj,
+		acl_manager, &api_proto.Hunt{
+			HuntId:    hunt_id,
+			State:     api_proto.Hunt_RUNNING,
+			Version:   now,
+			StartTime: uint64(now),
+			Expires:   uint64(now+1) * 1000000,
+			StartRequest: &flows_proto.ArtifactCollectorArgs{
+				Artifacts: []string{"Generic.Client.Info"},
+			},
+		})
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_RUNNING)
+
+	// Fast forward the time
+	closer = utils.MockTime(utils.RealClockWithOffset{Duration: 600 * time.Second})
+	defer closer()
+
+	vtesting.WaitUntil(500*time.Second, self.T(), func() bool {
+		hunt_obj, pres := self.master_dispatcher.GetHunt(self.Ctx, hunt_id)
+		assert.True(self.T(), pres)
+
+		return hunt_obj.State == api_proto.Hunt_STOPPED
+	})
+
+	// Delete the new hunt
+	self.master_dispatcher.MutateHunt(self.Ctx, self.ConfigObj,
+		&api_proto.HuntMutation{
+			HuntId: hunt_id,
+			State:  api_proto.Hunt_ARCHIVED,
+		})
+
+	vtesting.WaitUntil(500*time.Second, self.T(), func() bool {
+		_, pres := self.master_dispatcher.GetHunt(self.Ctx, hunt_id)
+		return pres == false
+	})
 }
 
 func TestHuntDispatcherTestSuite(t *testing.T) {
