@@ -197,6 +197,18 @@ func (self *HuntStorageManagerImpl) SetHunt(
 		return utils.InvalidArgError
 	}
 
+	db, err := datastore.GetDB(self.config_obj)
+	if err != nil {
+		return err
+	}
+
+	hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
+
+	if hunt.State == api_proto.Hunt_ARCHIVED {
+		delete(self.hunts, hunt.HuntId)
+		return db.DeleteSubject(self.config_obj, hunt_path_manager.Path())
+	}
+
 	// The hunts start time could have been modified - we need to
 	// update ours then (and also the metrics).
 	if hunt.StartTime > self.GetLastTimestamp() {
@@ -210,12 +222,6 @@ func (self *HuntStorageManagerImpl) SetHunt(
 	}
 	self.dirty = true
 
-	db, err := datastore.GetDB(self.config_obj)
-	if err != nil {
-		return err
-	}
-
-	hunt_path_manager := paths.NewHuntPathManager(hunt.HuntId)
 	return db.SetSubject(self.config_obj, hunt_path_manager.Path(), hunt)
 }
 
