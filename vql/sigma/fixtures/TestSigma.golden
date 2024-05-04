@@ -1694,5 +1694,161 @@
     }
    }
   }
+ ],
+ "Test VQL Events": [
+  {
+   "Foo": 1,
+   "Bar": "Baz",
+   "Details": null,
+   "_Match": {
+    "Match": true,
+    "SearchResults": {
+     "selection1": true,
+     "selection2": true
+    },
+    "ConditionResults": [
+     true
+    ]
+   },
+   "_Rule": {
+    "Title": "VQL Events",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "application"
+    },
+    "Detection": {
+     "Searches": {
+      "selection1": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Values": [
+           1
+          ]
+         }
+        ]
+       ]
+      },
+      "selection2": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Bar",
+          "Modifiers": [
+           "contains"
+          ],
+          "Values": [
+           "B"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "condition": [
+      {
+       "Search": [
+        {
+         "Name": "selection1"
+        },
+        {
+         "Name": "selection2"
+        }
+       ]
+      }
+     ]
+    },
+    "AdditionalFields": {
+     "vql": "x=\u003edict(Foo=1, Bar=\"Baz\")"
+    }
+   }
+  }
+ ],
+ "Test Conditions": [
+  {
+   "Foo": 1,
+   "Bar": "Baz",
+   "Proc": 1,
+   "Details": null,
+   "_Match": {
+    "Match": true,
+    "SearchResults": {
+     "process_creation": true,
+     "selection_1_1": true,
+     "selection_1_2": true
+    },
+    "ConditionResults": [
+     true
+    ]
+   },
+   "_Rule": {
+    "Title": "VQL Events",
+    "Logsource": {
+     "Product": "windows",
+     "Service": "application"
+    },
+    "Detection": {
+     "Searches": {
+      "process_creation": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Proc",
+          "Values": [
+           1
+          ]
+         }
+        ]
+       ]
+      },
+      "selection_1_1": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Foo",
+          "Values": [
+           1
+          ]
+         }
+        ]
+       ]
+      },
+      "selection_1_2": {
+       "EventMatchers": [
+        [
+         {
+          "Field": "Bar",
+          "Modifiers": [
+           "contains"
+          ],
+          "Values": [
+           "B"
+          ]
+         }
+        ]
+       ]
+      }
+     },
+     "condition": [
+      {
+       "Search": [
+        {
+         "Name": "process_creation"
+        },
+        [
+         {
+          "Pattern": "selection_1_*"
+         },
+         {
+          "Pattern": "selection_1_*"
+         }
+        ]
+       ]
+      }
+     ]
+    }
+   }
+  }
  ]
 }

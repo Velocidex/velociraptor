@@ -42,6 +42,13 @@ type SigmaContext struct {
 	default_details *vfilter.Lambda
 }
 
+func (self *SigmaContext) GetHitCount() int {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.hit_count
+}
+
 func (self *SigmaContext) IncHitCount() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -61,12 +68,11 @@ func (self *SigmaContext) Rows(
 			defer subscope.Close()
 
 			count := 0
-			hit_count := 0
 			start := utils.GetTime().Now()
 
 			defer func() {
-				scope.Log("INFO:sigma: Consumed %v messages from log source %v with %v hits on %v rules (%v)",
-					count, runner.Name, hit_count, len(runner.rules),
+				scope.Log("INFO:sigma: Consumed %v messages from log source %v on %v rules (%v)",
+					count, runner.Name, len(runner.rules),
 					utils.GetTime().Now().Sub(start))
 			}()
 
@@ -140,9 +146,18 @@ func NewSigmaContext(
 
 		for _, r := range rules {
 			if matchLogSource(log_target, r) {
-				runner.rules = append(runner.rules,
-					evaluator.NewVQLRuleEvaluator(
-						scope, r, compiled_fieldmappings))
+				evaluator_rule := evaluator.NewVQLRuleEvaluator(
+					scope, r, compiled_fieldmappings)
+
+				// Check rule for sanity
+				err := evaluator_rule.CheckRule()
+				if err != nil {
+					scope.Log("sigma: Error parsing: %v in rule '%v'",
+						err, evaluator_rule.Rule.Title)
+					continue
+				}
+
+				runner.rules = append(runner.rules, evaluator_rule)
 				total_rules++
 			}
 		}

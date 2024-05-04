@@ -174,9 +174,8 @@ func (self *DirectoryFileStore) StatFile(
 		return nil, err
 	}
 
-	return &file_store_file_info.FileStoreFileInfo{
-		FileInfo: file,
-	}, nil
+	return file_store_file_info.NewFileStoreFileInfo(
+		self.config_obj, filename, file), nil
 }
 
 func (self *DirectoryFileStore) WriteFile(
