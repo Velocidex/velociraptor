@@ -498,6 +498,60 @@ detection:
 					Set("Foo", base64.StdEncoding.EncodeToString([]byte("kgkrpepsigrgspriteefjefe"))),
 			},
 		},
+		{
+			description: "Test VQL Events",
+			rule: `
+title: VQL Events
+logsource:
+  product: windows
+  service: application
+
+detection:
+  selection1:
+     Foo: 1
+  selection2:
+     Bar|contains: B
+
+  condition: selection1 and selection2
+
+vql: x=>dict(Foo=1, Bar="Baz")
+`,
+			fieldmappings: ordereddict.NewDict().
+				Set("Foo", "x=>x.Foo").
+				Set("Bar", "x=>x.Bar"),
+			rows: []*ordereddict.Dict{
+				ordereddict.NewDict(),
+			},
+		},
+		{
+			description: "Test Conditions",
+			rule: `
+title: VQL Events
+logsource:
+  product: windows
+  service: application
+
+detection:
+  process_creation:
+     Proc: 1
+  selection_1_1:
+     Foo: 1
+  selection_1_2:
+     Bar|contains: B
+
+  condition: "process_creation and (all of selection_1_* or all of selection_1_*)"
+`,
+			fieldmappings: ordereddict.NewDict().
+				Set("Foo", "x=>x.Foo").
+				Set("Bar", "x=>x.Bar").
+				Set("Proc", "x=>x.Proc"),
+			rows: []*ordereddict.Dict{
+				ordereddict.NewDict().
+					Set("Foo", 1).
+					Set("Bar", "Baz").
+					Set("Proc", 1),
+			},
+		},
 	}
 )
 
@@ -517,7 +571,7 @@ func (self *SigmaTestSuite) TestSigmaModifiers() {
 	plugin := SigmaPlugin{}
 
 	for _, test_case := range sigmaTestCases {
-		if false && test_case.description != "Match single base64offset field" {
+		if false && test_case.description != "Test Conditions" {
 			continue
 		}
 
